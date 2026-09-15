@@ -92,7 +92,7 @@ export function renderQuest(container) {
               <div class="stage-xp-tag">+${stageMeta.xp || 20} XP</div>
             </div>
 
-            <div class="stage-instruction">${instruction}</div>
+            ${currentStageIdx === 0 ? `<div class="stage-instruction">${instruction}</div>` : ''}
 
             <!-- Move vs Draw Toolbar -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.75rem 0; flex-wrap: wrap; gap: 0.5rem;">
@@ -109,10 +109,12 @@ export function renderQuest(container) {
               </button>
             </div>
 
+            ${currentStageIdx === 0 ? `
             <div style="font-size: 0.75rem; color: var(--text-muted); background: rgba(0,0,0,0.25); border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm); padding: 6px 10px; margin-bottom: 0.85rem; line-height: 1.4;">
-              <div>• <strong>Draw:</strong> Left-click and drag from red to blue (or tap red, then tap blue).</div>
+              <div>• <strong>Draw:</strong> Left-click and drag from red to blue.</div>
               <div>• <strong>Move view:</strong> Click 'Rotate View' or right-click drag anytime to orbit.</div>
             </div>
+            ` : ''}
 
             <!-- Interactive Stage Area -->
             <div id="stage-interactive-area" style="margin-bottom: 1rem;"></div>

@@ -49,7 +49,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 2',
-      prompt: 'Connect the donor site (red) to the polarized target site (blue).',
+      prompt: '',
       moleculeId: 'stage2_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -67,7 +67,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 3',
-      prompt: 'Multiple reactive sites: route the arrow between the strongest donor (extreme red) and the strongest acceptor (extreme blue).',
+      prompt: '',
       moleculeId: 'stage3_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -85,7 +85,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 4',
-      prompt: 'Select the primary reactive site (extreme red) and connect to the primary acceptor center (extreme blue).',
+      prompt: '',
       moleculeId: 'stage4_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -103,7 +103,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 5',
-      prompt: 'Steric hindrance: orbit the view to find the open, accessible target site (blue) and connect from the donor (red).',
+      prompt: '',
       moleculeId: 'stage5_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -121,7 +121,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 6',
-      prompt: 'Bulky groups shield one site: orbit the view to target the accessible center (blue).',
+      prompt: '',
       moleculeId: 'stage6_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -139,7 +139,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 7',
-      prompt: 'Master challenge: identify the unhindered active site among multiple centers and route the arrow from the strongest donor.',
+      prompt: '',
       moleculeId: 'stage7_pair',
       anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak']
     })

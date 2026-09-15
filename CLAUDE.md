@@ -55,6 +55,9 @@
 - Guarded bootstrap against network failures with local fallback and object validation (`boot = (raw && typeof raw === 'object') ? raw : {}`), resolving `TypeError: Cannot read properties of undefined (reading 'config')`.
 - Stripped all forbidden terminology ("electron", "electron-rich", "electron-deficient", "electrophile", "nucleophile") across all quest prompts, manifests, bridge cards, starmap, and inventory items, reserving explanations strictly for the final quest epilogue.
 - Fixed `notifySubscribers is not a function`: added `notifySubscribers()` method alias to `SessionManager` in `src/session.js` and updated `src/screens/quest.js` to call `session.notify()` and persist XP.
+- Simplified quest instructions: instructions and draw tips rendered strictly on Stage 1; stages 2-7 display zero prompt text (`src/screens/quest.js`, `src/quest3d/evaluator.js`, `api/[...route].js`, `apps-script/Quests.gs`).
+- Removed 3D visual site flags and glowing dots: hidden anchor rings and glowing core dots, keeping only pure molecules and electron densities in the 3D viewer (`src/quest3d/anchors.js`, `src/quest3d/viewer.js`).
+- Enhanced electron density visibility: upgraded isosurfaces to double-sided 0.65 opacity with saturated colormap and balanced neutral white key/ambient illumination (`src/quest3d/isosurface.js`, `src/quest3d/viewer.js`).
 
 
 

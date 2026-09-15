@@ -41,29 +41,15 @@ export class QuestViewer {
   }
 
   buildChamber() {
-    // Ambient & directional lighting for the containment chamber
-    const ambient = new THREE.AmbientLight(0x0f172a, 1.5);
-    const topLight = new THREE.DirectionalLight(0x00e5ff, 1.8);
-    topLight.position.set(0, 8, 4);
-    const rimLight = new THREE.PointLight(0xffea46, 1.2, 10);
-    rimLight.position.set(0, -2, -3);
-    this.scene.add(ambient, topLight, rimLight);
-
-    // Three concentric alien containment rings
-    for (let r = 0; r < 3; r++) {
-      const radius = 3.2 + r * 0.8;
-      const ringGeo = new THREE.TorusGeometry(radius, 0.04, 8, 48);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: 0x00e5ff,
-        transparent: true,
-        opacity: 0.35 + r * 0.15
-      });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.rotation.x = Math.PI / 2;
-      ring.position.y = -1.2 + r * 0.2;
-      this.scene.add(ring);
-      this.containmentRings.push(ring);
-    }
+    // Balanced neutral illumination for accurate electron density and molecular rendering
+    const ambient = new THREE.AmbientLight(0xffffff, 0.9);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.3);
+    keyLight.position.set(3, 6, 5);
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.7);
+    fillLight.position.set(-4, -2, 3);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    rimLight.position.set(0, 4, -4);
+    this.scene.add(ambient, keyLight, fillLight, rimLight);
   }
 
   bindEvents() {
@@ -169,33 +155,14 @@ export class QuestViewer {
   }
 
   triggerSuccessBloom() {
-    for (const ring of this.containmentRings) {
-      ring.material.color.setHex(0x00e676);
-      ring.material.opacity = 0.9;
-    }
-    setTimeout(() => {
-      for (let r = 0; r < this.containmentRings.length; r++) {
-        this.containmentRings[r].material.color.setHex(0x00e5ff);
-        this.containmentRings[r].material.opacity = 0.35 + r * 0.15;
-      }
-    }, 1200);
+    // Stage completed successfully
   }
 
   triggerFailure() {
     this.triggerShudder();
-    for (const ring of this.containmentRings) {
-      ring.material.color.setHex(0xd90429);
-      ring.material.opacity = 0.95;
-    }
     if (this.arrowController && this.arrowController.flashError) {
       this.arrowController.flashError();
     }
-    setTimeout(() => {
-      for (let r = 0; r < this.containmentRings.length; r++) {
-        this.containmentRings[r].material.color.setHex(0x00e5ff);
-        this.containmentRings[r].material.opacity = 0.35 + r * 0.15;
-      }
-    }, 1100);
   }
 
   triggerShudder() {
@@ -217,11 +184,6 @@ export class QuestViewer {
       this.currentIsosurface.update(time);
     }
     this.anchorManager.update(this.camera, time);
-
-    // Rotate containment rings slowly
-    for (let i = 0; i < this.containmentRings.length; i++) {
-      this.containmentRings[i].rotation.z += delta * (0.15 * (i % 2 === 0 ? 1 : -1));
-    }
   }
 
   dispose() {

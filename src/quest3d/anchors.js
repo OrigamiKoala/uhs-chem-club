@@ -72,47 +72,14 @@ export class AnchorManager {
       const isHindered = reg ? !!reg.hindered : !!def?.hindered;
       const label = def?.label || (type === 'red' ? 'Red Region' : (isHindered ? 'Blue Region (Crowded)' : 'Blue Region'));
 
-      const markerGeo = new THREE.RingGeometry(0.24, 0.34, 32);
-      const markerMat = new THREE.MeshBasicMaterial({
-        color: color,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.95,
-        depthTest: false
-      });
-      const marker = new THREE.Mesh(markerGeo, markerMat);
-      marker.renderOrder = 900;
-      marker.position.copy(pos);
-
-      // Inner glowing core dot
-      const coreDotGeo = new THREE.CircleGeometry(0.09, 16);
-      const coreDotMat = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.9,
-        depthTest: false
-      });
-      const coreDot = new THREE.Mesh(coreDotGeo, coreDotMat);
-      coreDot.renderOrder = 901;
-      marker.add(coreDot);
-
-      // Invisible hit proxy sphere
-      const proxyGeo = new THREE.SphereGeometry(0.55, 8, 8);
-      const proxyMat = new THREE.MeshBasicMaterial({ visible: false });
-      const proxy = new THREE.Mesh(proxyGeo, proxyMat);
-      marker.add(proxy);
-
-      this.group.add(marker);
-
+      // Anchors retained purely for invisible interaction / proximity without visual flags or glowing dots
       this.anchors.push({
         id,
         position: pos,
-        label: def.label,
-        color: def.color,
-        type: def.type,
-        hindered: !!def.hindered,
-        mesh: marker
+        label,
+        color,
+        type,
+        hindered: isHindered
       });
     }
 
@@ -120,20 +87,11 @@ export class AnchorManager {
   }
 
   highlight(anchorId, active = true) {
-    for (const a of this.anchors) {
-      if (a.id === anchorId) {
-        a.mesh.material.color.setHex(active ? 0x00e676 : (a.color || 0x00e5ff));
-        a.mesh.scale.setScalar(active ? 1.4 : 1.0);
-      }
-    }
+    // No-op: visual site flags disabled
   }
 
   update(camera, time) {
-    for (const a of this.anchors) {
-      a.mesh.lookAt(camera.position);
-      const pulse = 1.0 + 0.12 * Math.sin(time * 4.0);
-      a.mesh.scale.set(pulse, pulse, pulse);
-    }
+    // No-op: visual site flags disabled
   }
 
   clear() {

@@ -16,17 +16,17 @@ function sampleColormap(t) {
   const u = Math.max(0, Math.min(1, (t + 1) / 2));
   const color = new THREE.Color();
   if (u < 0.25) {
-    // Deep blue (#0066ff) to Sky blue (#00b0ff)
-    color.lerpColors(new THREE.Color(0.0, 0.4, 1.0), new THREE.Color(0.0, 0.72, 1.0), u / 0.25);
+    // Electric blue (#0055ff) to Sky blue (#00b4ff)
+    color.lerpColors(new THREE.Color(0.0, 0.35, 1.0), new THREE.Color(0.0, 0.75, 1.0), u / 0.25);
   } else if (u < 0.5) {
-    // Sky blue to Green/Cyan (#10b981)
-    color.lerpColors(new THREE.Color(0.0, 0.72, 1.0), new THREE.Color(0.06, 0.75, 0.52), (u - 0.25) / 0.25);
+    // Sky blue to Emerald green (#00e676)
+    color.lerpColors(new THREE.Color(0.0, 0.75, 1.0), new THREE.Color(0.05, 0.88, 0.48), (u - 0.25) / 0.25);
   } else if (u < 0.75) {
-    // Green/Cyan to Warm Yellow (#fbbf24)
-    color.lerpColors(new THREE.Color(0.06, 0.75, 0.52), new THREE.Color(1.0, 0.75, 0.14), (u - 0.5) / 0.25);
+    // Emerald green to Vivid amber-yellow (#ffb300)
+    color.lerpColors(new THREE.Color(0.05, 0.88, 0.48), new THREE.Color(1.0, 0.75, 0.05), (u - 0.5) / 0.25);
   } else {
-    // Warm Yellow to Intense Red (#ff1744)
-    color.lerpColors(new THREE.Color(1.0, 0.75, 0.14), new THREE.Color(1.0, 0.09, 0.27), (u - 0.75) / 0.25);
+    // Vivid amber-yellow to Intense pure crimson red (#ff1744)
+    color.lerpColors(new THREE.Color(1.0, 0.75, 0.05), new THREE.Color(1.0, 0.05, 0.22), (u - 0.75) / 0.25);
   }
   return color;
 }
@@ -78,30 +78,30 @@ export class DensityIsosurface {
       let minY = Infinity, maxY = -Infinity;
       let minZ = Infinity, maxZ = -Infinity;
       for (const a of clusterAtoms) {
-        minX = Math.min(minX, a.pos[0] - 1.25); maxX = Math.max(maxX, a.pos[0] + 1.25);
-        minY = Math.min(minY, a.pos[1] - 1.25); maxY = Math.max(maxY, a.pos[1] + 1.25);
-        minZ = Math.min(minZ, a.pos[2] - 1.25); maxZ = Math.max(maxZ, a.pos[2] + 1.25);
+        minX = Math.min(minX, a.pos[0] - 1.35); maxX = Math.max(maxX, a.pos[0] + 1.35);
+        minY = Math.min(minY, a.pos[1] - 1.35); maxY = Math.max(maxY, a.pos[1] + 1.35);
+        minZ = Math.min(minZ, a.pos[2] - 1.35); maxZ = Math.max(maxZ, a.pos[2] + 1.35);
       }
 
-      const maxDim = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 2.5);
+      const maxDim = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 2.8);
       const centerX = (minX + maxX) / 2;
       const centerY = (minY + maxY) / 2;
       const centerZ = (minZ + maxZ) / 2;
 
-      // Realistic charge density material: slightly translucent so ball-and-stick model is visible underneath
+      // Rich, prominent charge density material: double-sided with higher opacity for bold visibility
       const surfaceMat = new THREE.MeshStandardMaterial({
         vertexColors: true,
         transparent: true,
-        opacity: 0.36,
-        roughness: 0.28,
-        metalness: 0.08,
+        opacity: 0.65,
+        roughness: 0.22,
+        metalness: 0.02,
         depthWrite: false,
-        side: THREE.FrontSide
+        side: THREE.DoubleSide
       });
       this.materials.push(surfaceMat);
 
       const mc = new MarchingCubes(28, surfaceMat, false, true, 8000);
-      mc.isolation = 80;
+      mc.isolation = 75;
       mc.reset();
 
       // Add atomic centers to the scalar field
@@ -109,7 +109,7 @@ export class DensityIsosurface {
         const bx = (a.pos[0] - (centerX - maxDim / 2)) / maxDim;
         const by = (a.pos[1] - (centerY - maxDim / 2)) / maxDim;
         const bz = (a.pos[2] - (centerZ - maxDim / 2)) / maxDim;
-        mc.addBall(bx, by, bz, 0.44, 12);
+        mc.addBall(bx, by, bz, 0.48, 14);
       }
 
       // Add bond bridge centers to ensure smooth organic continuity between bonded atoms
@@ -123,13 +123,13 @@ export class DensityIsosurface {
           const bx = (midX - (centerX - maxDim / 2)) / maxDim;
           const by = (midY - (centerY - maxDim / 2)) / maxDim;
           const bz = (midZ - (centerZ - maxDim / 2)) / maxDim;
-          mc.addBall(bx, by, bz, 0.36, 12);
+          mc.addBall(bx, by, bz, 0.38, 14);
         }
       }
 
       mc.update();
 
-      // Color every generated vertex based on the exact electrostatic potential / charge density
+      // Color every generated vertex based on the electrostatic potential / charge density
       if (mc.count > 0 && mc.geometry.attributes.position && mc.geometry.attributes.color) {
         const pos = mc.geometry.attributes.position.array;
         const col = mc.geometry.attributes.color.array;
@@ -147,11 +147,11 @@ export class DensityIsosurface {
             const dz = wz - reg.pos[2];
             const distSq = dx * dx + dy * dy + dz * dz;
             const sign = reg.type === 'red' ? 1.0 : -1.0;
-            const weight = reg.intensity === 'extreme' ? 1.4 : (reg.intensity === 'moderate' ? 0.8 : 0.5);
-            potential += (sign * weight) / (distSq + 0.45);
+            const weight = reg.intensity === 'extreme' ? 1.5 : (reg.intensity === 'moderate' ? 0.85 : 0.5);
+            potential += (sign * weight) / (distSq + 0.42);
           }
 
-          const t = Math.tanh(potential * 1.15);
+          const t = Math.tanh(potential * 1.35);
           const c = sampleColormap(t);
 
           col[i * 3] = c.r;
