@@ -25,7 +25,7 @@ export async function apiCall(route, body = {}) {
       }
       throw result.error || { code: 'UNKNOWN_ERROR', message: 'An unknown error occurred.' };
     }
-    return result.data;
+    return result.data !== undefined ? result.data : result;
   } catch (err) {
     if (err.message && err.code !== 'RATE_LIMITED') {
       // Don't auto-toast if callers want to handle it

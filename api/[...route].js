@@ -232,13 +232,13 @@ function localDevHandler(route, body) {
         activeQuest: {
           quest: { quest_id: 'q1', title: 'The Charge Gardens of Erebus', world: 'Erebus' },
           stages: [
-            { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 1', prompt: 'Drag an arrow from the densest donor region (red) to the least dense acceptor center (blue).', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
-            { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 2', prompt: 'Connect the donor site (red) to the polarized target site (blue).', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
-            { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 3', prompt: 'Multiple reactive sites: route the arrow between the strongest donor (extreme red) and the strongest acceptor (extreme blue).', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
-            { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 4', prompt: 'Select the primary reactive site (extreme red) and connect to the primary acceptor center (extreme blue).', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
-            { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 5', prompt: 'Steric hindrance: orbit the view to find the open, accessible target site (blue) and connect from the donor (red).', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
-            { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 6', prompt: 'Bulky groups shield one site: orbit the view to target the accessible center (blue).', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
-            { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 3, scene_config: { title: 'Stage 7', prompt: 'Master challenge: identify the unhindered active site among multiple centers and route the arrow from the strongest donor.', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } }
+            { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 9999, scene_config: { title: 'Stage 1', prompt: 'Drag an arrow from the densest donor region (red) to the least dense acceptor center (blue).', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 9999, scene_config: { title: 'Stage 2', prompt: 'Connect the donor site (red) to the polarized target site (blue).', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 9999, scene_config: { title: 'Stage 3', prompt: 'Multiple reactive sites: route the arrow between the strongest donor (extreme red) and the strongest acceptor (extreme blue).', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 9999, scene_config: { title: 'Stage 4', prompt: 'Select the primary reactive site (extreme red) and connect to the primary acceptor center (extreme blue).', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 5', prompt: 'Steric hindrance: orbit the view to find the open, accessible target site (blue) and connect from the donor (red).', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 6', prompt: 'Bulky groups shield one site: orbit the view to target the accessible center (blue).', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 9999, scene_config: { title: 'Stage 7', prompt: 'Master challenge: identify the unhindered active site among multiple centers and route the arrow from the strongest donor.', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } }
           ]
         },
         player: player ? {
@@ -505,7 +505,7 @@ function localDevHandler(route, body) {
         correct,
         xpAwarded: correct ? (20 + stageIdx * 2) : 0,
         blocked: isBlocked,
-        attemptsLeft: 2,
+        attemptsLeft: 9999,
         nextStage: correct ? stageIdx + 1 : stageIdx
       }
     };
@@ -695,6 +695,23 @@ export default async function handler(req, res) {
       res.statusCode = result.ok ? 200 : 400;
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify(result));
+    }
+
+    if (path === 'bootstrap') {
+      try {
+        const result = await callAppsScript('bootstrap', body);
+        if (result && result.ok && result.data && result.data.config) {
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          return res.end(JSON.stringify(result));
+        }
+      } catch (e) {
+        console.warn('Apps Script bootstrap failed, falling back to local handler:', e.message);
+      }
+      const fallback = localDevHandler('bootstrap', body);
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      return res.end(JSON.stringify(fallback));
     }
 
     // Pass through any other routes to Apps Script backend

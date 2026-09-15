@@ -23,12 +23,14 @@ async function bootstrapApp() {
 
   // 4. Fetch Initial Bootstrap Config & User State asynchronously
   try {
-    const boot = await api.bootstrap();
+    const raw = await api.bootstrap();
+    const boot = (raw && typeof raw === 'object') ? raw : {};
+
     if (boot.config || boot.teams) {
       session.setConfigAndTeams(boot.config || {}, boot.teams || []);
     }
-    session.events = boot.events || {};
-    session.activeQuest = boot.activeQuest || null;
+    if (boot.events) session.events = boot.events;
+    if (boot.activeQuest) session.activeQuest = boot.activeQuest;
 
     if (boot.player) {
       session.setUserData(boot.player);

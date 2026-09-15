@@ -48,7 +48,12 @@
 - Freeform 3D arrow drawing: arrows now render and persist wherever drawn in 3D space (`src/quest3d/interactions/arrow.js`, `src/three/arrow-drag.js`), instead of only appearing when connecting exact anchors.
 - Proximity-based solution grading: users can draw anywhere close to the correct trajectory (`tolerance: 1.35` 3D radius) and it is evaluated as correct across all stages (`src/quest3d/evaluator.js`).
 - Immediate browser-side evaluation: quest grading now executes synchronously in 0ms directly in client (`src/screens/quest.js`), pre-loading solutions without waiting on Google Sheets network calls.
-- Stripped all forbidden terminology ("electron", "electron-rich", "electron-deficient", "electrophile") across all quest prompts, manifests, bridge cards, and inventory items.
+- Unlimited attempts: removed attempt caps, attempt counters, and attempt deduction penalties across client (`src/screens/quest.js`), proxy (`api/[...route].js`), and backend (`apps-script/Quests.gs`).
+- Obvious incorrect feedback: added full-screen emergency red flash vignette, stage card shake animation (`@keyframes cardErrorShake`), red warning border glow, and prominent inline alert banner (`#stage-feedback`) directly on the stage prompt card.
+- Freeform 3D arrow drawing: arrows now render and persist wherever drawn in 3D space (`src/quest3d/interactions/arrow.js`, `src/three/arrow-drag.js`), instead of only appearing when connecting exact anchors.
+- Proximity-based solution grading: users can draw anywhere close to the correct trajectory (`tolerance: 1.35` 3D radius) and it is evaluated as correct across all stages (`src/quest3d/evaluator.js`).
+- Guarded bootstrap against network failures with local fallback and object validation (`boot = (raw && typeof raw === 'object') ? raw : {}`), resolving `TypeError: Cannot read properties of undefined (reading 'config')`.
+- Stripped all forbidden terminology ("electron", "electron-rich", "electron-deficient", "electrophile", "nucleophile") across all quest prompts, manifests, bridge cards, starmap, and inventory items, reserving explanations strictly for the final quest epilogue.
 
 
 

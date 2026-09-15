@@ -43,7 +43,7 @@ export function renderStarMap(container) {
           </div>
           <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Erebus</h3>
           <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">
-            Charge distribution, nucleophile identification, and curved-arrow substitution mechanisms.
+            Charge distribution, donor-acceptor identification, and curved-arrow trajectory pathways.
           </p>
           <a href="#/quest" class="btn-primary" style="width: 100%; text-decoration: none; font-size: 0.8rem; padding: 8px 14px;">
             Start Quest
