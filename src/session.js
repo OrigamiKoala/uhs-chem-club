@@ -105,6 +105,10 @@ class SessionManager {
     }
   }
 
+  notifySubscribers() {
+    this.notify();
+  }
+
   setToken(token) {
     this.token = token;
     if (token) {

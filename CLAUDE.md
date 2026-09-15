@@ -54,6 +54,7 @@
 - Proximity-based solution grading: users can draw anywhere close to the correct trajectory (`tolerance: 1.35` 3D radius) and it is evaluated as correct across all stages (`src/quest3d/evaluator.js`).
 - Guarded bootstrap against network failures with local fallback and object validation (`boot = (raw && typeof raw === 'object') ? raw : {}`), resolving `TypeError: Cannot read properties of undefined (reading 'config')`.
 - Stripped all forbidden terminology ("electron", "electron-rich", "electron-deficient", "electrophile", "nucleophile") across all quest prompts, manifests, bridge cards, starmap, and inventory items, reserving explanations strictly for the final quest epilogue.
+- Fixed `notifySubscribers is not a function`: added `notifySubscribers()` method alias to `SessionManager` in `src/session.js` and updated `src/screens/quest.js` to call `session.notify()` and persist XP.
 
 
 

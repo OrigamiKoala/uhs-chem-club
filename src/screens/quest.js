@@ -254,7 +254,9 @@ export function renderQuest(container) {
       if (res.correct) {
         if (session.player) {
           session.player.xp = (session.player.xp || 0) + res.xpAwarded;
-          session.notifySubscribers();
+          session.xp = (session.xp || 0) + res.xpAwarded;
+          session.saveSession();
+          session.notify();
         }
         if (viewer) viewer.triggerSuccessBloom();
         if (feedback) {
