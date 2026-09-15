@@ -38,8 +38,12 @@
 - Onboarding, landing, login, register, and bridge vantage point configured to a 3D first-person starship cockpit looking out at deep space and celestial bodies.
 - Nano Banana generated assets: `/art/cockpit.jpg` (starship cockpit view), `/art/starmap.jpg` (multi-planet tactical projection), `/art/durasteel_plate.jpg` (weathered PBR plate texture), `/art/factions.jpg` (guild charter).
 - Three.js 3D assets: modeled faceted durasteel canopy trusses, overhead avionics rack, dual flight yokes, throttle quadrant, armored flight chairs, chromatic gas giant with planetary rings, tumbling asteroid debris belt, and deep-space starlight illumination.
-- Set Quest 1 primary world to Erebus across quest HUD, backend manifests, bridge telemetry, and starmap cartography.
 - Standardized teams to Earth, Air, Fire, Water: added auto-migration (`Db.ensureTeamsMigrated()`), legacy fallback aliases (`terra`, `zephyr`, `ignis`, `thalassa`), and client-side normalization across onboarding, session cache, and API proxy to resolve 400 team selection errors.
+- Fixed onboarding redirect loop & trap: synced `player.team_id` with `team.team_id` in `session.setUserData`, checked `session.teamId` in `router.js`, and handled `ALREADY_ASSIGNED` errors smoothly.
+- Fixed 3D Quest rendering: resolved blank scene caused by legacy choice stage 0 without `moleculeId`; added automatic stage fallback and normalization in `viewer.js`, `apps-script/Quests.gs`, and `api/[...route].js`.
+- Fixed 3D drawing vs rotation: added Draw vs Rotate mode toggle and Clear Line button in `src/screens/quest.js`, supported right-click camera orbit during draw mode in `src/three/lib/orbit.js`, and made drawn lines thick, bright (`#ffd166` / `#00ff88`), and rendered with `depthTest: false`.
+- Stripped unnecessary text, lore fluff, and feature advertisements across all screens (landing, onboarding, bridge, starmap, inventory, leaderboard, quarters, and quest).
+- Replaced nonsensical quest stage choices and vague directions with stage-specific chemistry prompts.
 
 
 
