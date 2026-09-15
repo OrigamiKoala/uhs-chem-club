@@ -19,7 +19,7 @@ export function renderInventory(container) {
     spare_coolant: { name: 'Cryo-Coolant Canister', flavor: 'Heavy insulated freon containment vessel.', rarity: 'common', effect: 'Restores one failed synthesis attempt' },
     overclock_module: { name: 'Smelter Overclock Unit', flavor: 'Bypasses catalyst thermal governors.', rarity: 'rare', effect: '×1.25 XP surge on active quest' },
     deflector_plate: { name: 'Ablative Durasteel Shield', flavor: 'Reinforced plating with anti-dust seal.', rarity: 'rare', effect: 'Negates adverse environmental event' },
-    scanner_upgrade: { name: 'Spectrographic Sensor Array', flavor: 'Optical diffraction lens for charge analysis.', rarity: 'rare', effect: 'Unlocks numeric electron density data' },
+    scanner_upgrade: { name: 'Spectrographic Sensor Array', flavor: 'Optical diffraction lens for charge analysis.', rarity: 'rare', effect: 'Unlocks numeric charge density telemetry' },
     star_chart: { name: 'Smuggler Star Route Map', flavor: 'Worn navigational holocron of old mining routes.', rarity: 'epic', effect: 'Bypass single stage at half XP' },
     resonance_key: { name: 'Spice Resonance Matrix', flavor: 'Vibrating crystal matrix attuned to guild vaults.', rarity: 'epic', effect: 'Instantaneous +50 XP surge' }
   };

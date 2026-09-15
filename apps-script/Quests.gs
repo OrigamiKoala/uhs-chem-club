@@ -31,7 +31,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 1',
-      prompt: 'Drag an arrow from the electron-rich lone pair (red) to the electron-deficient carbon center (blue).',
+      prompt: 'Drag an arrow from the densest donor region (red) to the least dense acceptor center (blue).',
       moleculeId: 'stage1_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -49,7 +49,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 2',
-      prompt: 'Connect the electron donor (red) to the polarized target site (blue).',
+      prompt: 'Connect the donor site (red) to the polarized target site (blue).',
       moleculeId: 'stage2_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -155,6 +155,12 @@ var Quests = {
     var qs = Db.getAll('QuestStages');
     var needsRebuild = qs.length === 0 || qs[0].kind === 'choice';
     if (needsRebuild) {
+      var ss = getDb_();
+      var s = ss.getSheetByName('QuestStages');
+      if (s) {
+        s.clear();
+        s.appendRow(DB_SCHEMA.QuestStages);
+      }
       for (var i = 0; i < DEFAULT_STAGES.length; i++) {
         Db.append('QuestStages', DEFAULT_STAGES[i]);
       }
@@ -283,9 +289,30 @@ var Quests = {
       if (payload && payload.order && answer.order) {
         isCorrect = JSON.stringify(payload.order) === JSON.stringify(answer.order);
       }
-    } else if (stage.kind === 'arrow') {
+    } else if (stage.kind === 'arrow' || !stage.kind) {
       if (payload && answer) {
-        isCorrect = payload.from === answer.from && payload.to === answer.to;
+        if (payload.from === answer.from && payload.to === answer.to) {
+          isCorrect = true;
+        } else if (payload.startPos && payload.endPos) {
+          var solMap = {
+            0: { s: [-1.4, 0.2, 0], t: [1.8, 0, 0] },
+            1: { s: [-1.5, 0.3, 0], t: [1.1, 0, 0] },
+            2: { s: [-0.8, -1.2, 0], t: [1.3, -0.3, 0] },
+            3: { s: [-0.8, -1.2, 0], t: [1.3, -0.3, 0] },
+            4: { s: [-1.4, 0.2, 0], t: [1.0, -1.0, 0], b: [2.0, 1.1, 0] },
+            5: { s: [-1.5, 0.2, 0], t: [1.6, -0.9, 0], b: [1.8, 1.2, 0] },
+            6: { s: [-0.4, 0, 0], t: [1.6, -0.8, 0], b: [2.0, 1.2, 0] }
+          };
+          var sol = solMap[stageIndex];
+          if (sol) {
+            var sDist = Math.sqrt(Math.pow(payload.startPos[0]-sol.s[0], 2) + Math.pow(payload.startPos[1]-sol.s[1], 2) + Math.pow((payload.startPos[2]||0)-sol.s[2], 2));
+            var eDist = Math.sqrt(Math.pow(payload.endPos[0]-sol.t[0], 2) + Math.pow(payload.endPos[1]-sol.t[1], 2) + Math.pow((payload.endPos[2]||0)-sol.t[2], 2));
+            var bDist = sol.b ? Math.sqrt(Math.pow(payload.endPos[0]-sol.b[0], 2) + Math.pow(payload.endPos[1]-sol.b[1], 2) + Math.pow((payload.endPos[2]||0)-sol.b[2], 2)) : 999;
+            if (sDist <= 1.35 && eDist <= 1.35 && bDist > 1.35) {
+              isCorrect = true;
+            }
+          }
+        }
       }
     } else if (stage.kind === 'chain') {
       if (payload && payload.steps && answer.steps) {

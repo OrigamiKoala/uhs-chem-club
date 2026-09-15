@@ -21,45 +21,73 @@ export class ArrowController {
       transparent: true,
       opacity: 0.9
     });
+    this.startPosition = null;
   }
 
-  startFrom(anchor) {
+  startFromPosition(pos, anchor = null) {
+    this.startPosition = pos.clone();
     this.sourceAnchor = anchor;
     this.targetAnchor = null;
     this.removeActiveMesh();
   }
 
-  updateDrag(currentPoint) {
-    if (!this.sourceAnchor) return;
-    this.renderArrow(this.sourceAnchor.position, currentPoint);
+  startFrom(anchor) {
+    if (!anchor) return;
+    this.startFromPosition(anchor.position, anchor);
   }
 
-  finishAt(anchor) {
-    if (!this.sourceAnchor || !anchor || this.sourceAnchor.id === anchor.id) {
+  updateDrag(currentPoint) {
+    const origin = this.startPosition || (this.sourceAnchor ? this.sourceAnchor.position : null);
+    if (!origin) return;
+    this.renderArrow(origin, currentPoint);
+  }
+
+  finishAtPosition(startPos, endPos, sourceAnchor = null, targetAnchor = null) {
+    const start = startPos || this.startPosition || (sourceAnchor ? sourceAnchor.position : null);
+    const end = endPos || (targetAnchor ? targetAnchor.position : null);
+    if (!start || !end) {
       this.cancel();
       return null;
     }
 
-    this.targetAnchor = anchor;
+    if (start.distanceTo(end) < 0.15) {
+      this.cancel();
+      return null;
+    }
+
+    this.clear(); // Keep only latest single active trajectory
+
     const arrowObj = {
-      from: this.sourceAnchor.id,
-      to: this.targetAnchor.id,
-      mesh: this.createPersistentArrow(this.sourceAnchor.position, this.targetAnchor.position)
+      from: sourceAnchor ? sourceAnchor.id : null,
+      to: targetAnchor ? targetAnchor.id : null,
+      startPos: start.clone(),
+      endPos: end.clone(),
+      mesh: this.createPersistentArrow(start, end)
     };
 
     this.completedArrows.push(arrowObj);
     this.removeActiveMesh();
 
-    const result = { from: arrowObj.from, to: arrowObj.to };
+    this.startPosition = null;
     this.sourceAnchor = null;
     this.targetAnchor = null;
 
-    if (this.onArrowComplete) this.onArrowComplete(result);
-    return result;
+    if (this.onArrowComplete) this.onArrowComplete(arrowObj);
+    return arrowObj;
+  }
+
+  finishAt(anchor) {
+    const start = this.startPosition || (this.sourceAnchor ? this.sourceAnchor.position : null);
+    if (!start || !anchor) {
+      this.cancel();
+      return null;
+    }
+    return this.finishAtPosition(start, anchor.position, this.sourceAnchor, anchor);
   }
 
   cancel() {
     this.removeActiveMesh();
+    this.startPosition = null;
     this.sourceAnchor = null;
     this.targetAnchor = null;
   }
@@ -73,6 +101,18 @@ export class ArrowController {
       }
     }
     this.completedArrows = [];
+  }
+
+  flashError() {
+    for (const item of this.completedArrows) {
+      if (item.mesh) {
+        item.mesh.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.color.setHex(0xd90429);
+          }
+        });
+      }
+    }
   }
 
   removeActiveMesh() {

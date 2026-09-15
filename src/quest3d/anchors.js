@@ -72,29 +72,33 @@ export class AnchorManager {
       const isHindered = reg ? !!reg.hindered : !!def?.hindered;
       const label = def?.label || (type === 'red' ? 'Red Region' : (isHindered ? 'Blue Region (Crowded)' : 'Blue Region'));
 
-      const markerGeo = new THREE.RingGeometry(0.18, 0.24, 32);
+      const markerGeo = new THREE.RingGeometry(0.24, 0.34, 32);
       const markerMat = new THREE.MeshBasicMaterial({
         color: color,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.9
+        opacity: 0.95,
+        depthTest: false
       });
       const marker = new THREE.Mesh(markerGeo, markerMat);
+      marker.renderOrder = 900;
       marker.position.copy(pos);
 
       // Inner glowing core dot
-      const coreDotGeo = new THREE.CircleGeometry(0.08, 16);
+      const coreDotGeo = new THREE.CircleGeometry(0.09, 16);
       const coreDotMat = new THREE.MeshBasicMaterial({
         color: 0xffffff,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.85
+        opacity: 0.9,
+        depthTest: false
       });
       const coreDot = new THREE.Mesh(coreDotGeo, coreDotMat);
+      coreDot.renderOrder = 901;
       marker.add(coreDot);
 
       // Invisible hit proxy sphere
-      const proxyGeo = new THREE.SphereGeometry(0.5, 8, 8);
+      const proxyGeo = new THREE.SphereGeometry(0.55, 8, 8);
       const proxyMat = new THREE.MeshBasicMaterial({ visible: false });
       const proxy = new THREE.Mesh(proxyGeo, proxyMat);
       marker.add(proxy);

@@ -10,6 +10,7 @@ import { tierManager } from '../three/tier.js';
 import { QuestViewer } from '../quest3d/viewer.js';
 import { renderFallbackInputs } from '../fallback2d/stages.js';
 import { showToast } from '../ui/toast.js';
+import { STAGE_CONFIGS, evaluateStageLocally } from '../quest3d/evaluator.js';
 
 export function renderQuest(container) {
   let questData = session.activeQuest || null;
@@ -17,6 +18,7 @@ export function renderQuest(container) {
   let currentPayload = null;
   let isGrading = false;
   let hintUsed = false;
+  let attemptsLeft = 3;
   let stageStartTime = Date.now();
   let viewer = null;
 
@@ -30,33 +32,31 @@ export function renderQuest(container) {
     currentStageIdx = idx;
     currentPayload = null;
     hintUsed = false;
+    attemptsLeft = 3;
     stageStartTime = Date.now();
 
+    const localCfg = STAGE_CONFIGS[currentStageIdx] || STAGE_CONFIGS[0];
     const stageMeta = questData?.stages?.[currentStageIdx] || {
       stage_index: currentStageIdx,
-      kind: 'pick',
-      xp: 20,
-      scene_config: { title: `Stage ${currentStageIdx}`, prompt: 'Analyze charge distribution.' }
+      kind: 'arrow',
+      xp: localCfg.xp,
+      scene_config: {
+        title: localCfg.title,
+        prompt: localCfg.prompt,
+        moleculeId: localCfg.moleculeId
+      }
     };
 
-    const cfg = stageMeta.scene_config || {};
+    const cfg = {
+      ...localCfg,
+      ...(stageMeta.scene_config || {})
+    };
 
-    const defaultPrompts = [
-      'Drag an arrow from the electron-rich donor region (red) to the electron-poor acceptor center (blue).',
-      'Connect the electron donor (red) to the polarized target site (blue).',
-      'Multiple reactive sites: route the arrow between the strongest donor (extreme red) and the strongest electrophile (extreme blue).',
-      'Select the primary reactive site (extreme red) and connect to the electrophilic center (extreme blue).',
-      'Steric hindrance: orbit the view to find the open, accessible target site (blue) and connect from the donor (red).',
-      'Bulky groups shield one site: orbit the view to target the accessible center (blue).',
-      'Master challenge: identify the unhindered active site among multiple centers and route the arrow from the strongest donor.'
-    ];
-
-    const instruction = cfg.prompt && !cfg.prompt.includes('Draw a line between the two regions')
-      ? cfg.prompt
-      : (defaultPrompts[currentStageIdx] || 'Drag an arrow from the red donor region to the blue target region.');
+    const instruction = localCfg.prompt;
 
     // 1. Render Quest HUD Overlay
     container.innerHTML = `
+      <div id="quest-screen-flash" class="quest-screen-flash"></div>
       <div class="quest-hud-overlay">
         <!-- Top HUD -->
         <div class="quest-hud-top">
@@ -117,6 +117,9 @@ export function renderQuest(container) {
             <!-- Interactive Stage Area -->
             <div id="stage-interactive-area" style="margin-bottom: 1rem;"></div>
 
+            <!-- Prominent Inline Feedback Banner -->
+            <div id="stage-feedback" class="hidden"></div>
+
             <!-- Stage Footer Actions -->
             <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem;">
               <button type="button" id="grade-btn" class="btn-primary" style="padding: 8px 24px; min-height: 40px;">
@@ -167,11 +170,22 @@ export function renderQuest(container) {
         viewer.setMode('rotate');
       });
 
+      function clearFeedback() {
+        const stageCard = container.querySelector('#stage-card');
+        if (stageCard) stageCard.classList.remove('error-state');
+        const feedback = container.querySelector('#stage-feedback');
+        if (feedback) feedback.className = 'hidden';
+      }
+
       clearBtn?.addEventListener('click', () => {
         viewer.clear();
         currentPayload = null;
+        clearFeedback();
         showToast('Line cleared.', 'info');
       });
+
+      drawBtn?.addEventListener('click', clearFeedback);
+      rotateBtn?.addEventListener('click', clearFeedback);
 
       // Also render DOM choice options for 'choice' stage if applicable
       if (stageMeta.kind === 'choice' && cfg.options) {
@@ -187,6 +201,7 @@ export function renderQuest(container) {
         `;
         interactiveArea.querySelectorAll('.choice-option').forEach(el => {
           el.addEventListener('click', () => {
+            clearFeedback();
             interactiveArea.querySelectorAll('.choice-option').forEach(x => x.classList.remove('selected'));
             el.classList.add('selected');
             currentPayload = { correct: [el.getAttribute('data-opt-id')] };
@@ -206,48 +221,114 @@ export function renderQuest(container) {
         return;
       }
 
+      const stageCard = container.querySelector('#stage-card');
+      const feedback = container.querySelector('#stage-feedback');
+      const flash = container.querySelector('#quest-screen-flash');
+      if (stageCard) stageCard.classList.remove('error-state');
+      if (feedback) feedback.className = 'hidden';
+
       isGrading = true;
       gradeBtn.disabled = true;
       gradeBtn.textContent = 'Evaluating…';
-      sweep.classList.remove('hidden');
-
-      const elapsed = Date.now() - stageStartTime;
-
       try {
-        await new Promise(r => setTimeout(r, 650));
+        const elapsed = Date.now() - stageStartTime;
 
-        const res = await api.gradeStage(
-          'q1',
-          currentStageIdx,
-          currentPayload,
-          elapsed,
-          hintUsed,
-          tierManager.currentTier
-        );
+      // Immediate in-browser evaluation with pre-loaded solutions (0ms latency)
+      const res = evaluateStageLocally(currentStageIdx, currentPayload);
 
-        sweep.classList.add('hidden');
-        gradeBtn.disabled = false;
-        gradeBtn.innerHTML = '<span>Submit</span><span>➔</span>';
-        isGrading = false;
+      // Asynchronously report submission to backend without blocking the player
+      api.gradeStage(
+        'q1',
+        currentStageIdx,
+        currentPayload,
+        elapsed,
+        hintUsed,
+        tierManager.currentTier
+      ).catch(() => {});
 
-        if (res.correct) {
-          if (viewer) viewer.triggerSuccessBloom();
-          showToast(`Correct! +${res.xpAwarded} XP`, 'success');
+      sweep.classList.add('hidden');
+      gradeBtn.disabled = false;
+      gradeBtn.innerHTML = '<span>Submit</span><span>➔</span>';
+      isGrading = false;
 
-          // Check if last stage completed
-          const isLastStage = currentStageIdx >= ((questData?.stages?.length || 7) - 1);
-          if (isLastStage) {
-            setTimeout(() => {
-              showCompletionModal();
-            }, 1800);
-          } else {
-            setTimeout(() => {
-              loadStage(currentStageIdx + 1);
-            }, 2400);
-          }
+      if (res.correct) {
+        if (session.player) {
+          session.player.xp = (session.player.xp || 0) + res.xpAwarded;
+          session.notifySubscribers();
+        }
+        if (viewer) viewer.triggerSuccessBloom();
+        if (feedback) {
+          feedback.className = 'stage-error-banner';
+          feedback.style.borderColor = 'var(--accent-green)';
+          feedback.style.borderLeftColor = 'var(--accent-green)';
+          feedback.style.background = 'rgba(56, 176, 0, 0.2)';
+          feedback.style.boxShadow = '0 0 20px rgba(56, 176, 0, 0.35)';
+          feedback.innerHTML = `
+            <span style="font-size: 1.25rem;">✓</span>
+            <div>
+              <div style="font-weight: 800; color: #00e676; letter-spacing: 0.05em;">CORRECT CONNECTION</div>
+              <div style="font-size: 0.82rem; color: #f1f5f9; margin-top: 2px;">+${res.xpAwarded} XP Awarded. Advancing...</div>
+            </div>
+          `;
+        }
+        showToast(`Correct! +${res.xpAwarded} XP`, 'success');
+
+        // Check if last stage completed
+        const isLastStage = currentStageIdx >= (STAGE_CONFIGS.length - 1);
+        if (isLastStage) {
+          setTimeout(() => {
+            showCompletionModal();
+          }, 1200);
         } else {
-          if (viewer) viewer.triggerShudder();
-          const msg = res.blocked ? 'Path is blocked. Rotate to find an open path.' : `Incorrect. ${res.attemptsLeft ?? 2} attempt(s) remaining.`;
+          setTimeout(() => {
+            loadStage(currentStageIdx + 1);
+          }, 1200);
+        }
+      } else {
+        attemptsLeft = Math.max(0, attemptsLeft - 1);
+        if (viewer) {
+          if (viewer.triggerFailure) viewer.triggerFailure();
+          else viewer.triggerShudder();
+        }
+
+        const isBlocked = !!res.blocked;
+        const msg = isBlocked
+          ? 'Trajectory obstructed. Rotate view to find an open path.'
+          : `Incorrect connection. ${attemptsLeft} attempt(s) remaining.`;
+
+          // 1. Red screen flash
+          if (flash) {
+            flash.classList.add('flash-active');
+            setTimeout(() => flash.classList.remove('flash-active'), 400);
+          }
+
+          // 2. Shake stage card with emergency red border glow
+          if (stageCard) {
+            stageCard.classList.remove('error-state');
+            void stageCard.offsetWidth; // Force DOM reflow to re-trigger shake
+            stageCard.classList.add('error-state');
+          }
+
+          // 3. Obvious inline error banner directly on stage card
+          if (feedback) {
+            feedback.className = 'stage-error-banner';
+            feedback.style.borderColor = '';
+            feedback.style.borderLeftColor = '';
+            feedback.style.background = '';
+            feedback.style.boxShadow = '';
+            feedback.innerHTML = `
+              <span style="font-size: 1.3rem; color: #ff5252;">⚠️</span>
+              <div style="flex: 1;">
+                <div style="font-weight: 800; color: #ff5252; letter-spacing: 0.06em;">
+                  ${isBlocked ? 'PATH BLOCKED' : 'INCORRECT'}
+                </div>
+                <div style="font-size: 0.82rem; color: #f1f5f9; margin-top: 2px; line-height: 1.4;">
+                  ${msg}
+                </div>
+              </div>
+            `;
+          }
+
           showToast(msg, 'error');
         }
       } catch (err) {

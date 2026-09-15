@@ -44,6 +44,11 @@
 - Fixed 3D drawing vs rotation: added Draw vs Rotate mode toggle and Clear Line button in `src/screens/quest.js`, supported right-click camera orbit during draw mode in `src/three/lib/orbit.js`, and made drawn lines thick, bright (`#ffd166` / `#00ff88`), and rendered with `depthTest: false`.
 - Stripped unnecessary text, lore fluff, and feature advertisements across all screens (landing, onboarding, bridge, starmap, inventory, leaderboard, quarters, and quest).
 - Replaced nonsensical quest stage choices and vague directions with stage-specific chemistry prompts.
+- Obvious incorrect feedback: added full-screen emergency red flash vignette, stage card shake animation (`@keyframes cardErrorShake`), red warning border glow, and prominent inline alert banner (`#stage-feedback`) directly on the stage prompt card.
+- Freeform 3D arrow drawing: arrows now render and persist wherever drawn in 3D space (`src/quest3d/interactions/arrow.js`, `src/three/arrow-drag.js`), instead of only appearing when connecting exact anchors.
+- Proximity-based solution grading: users can draw anywhere close to the correct trajectory (`tolerance: 1.35` 3D radius) and it is evaluated as correct across all stages (`src/quest3d/evaluator.js`).
+- Immediate browser-side evaluation: quest grading now executes synchronously in 0ms directly in client (`src/screens/quest.js`), pre-loading solutions without waiting on Google Sheets network calls.
+- Stripped all forbidden terminology ("electron", "electron-rich", "electron-deficient", "electrophile") across all quest prompts, manifests, bridge cards, and inventory items.
 
 
 

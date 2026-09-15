@@ -50,10 +50,10 @@ export function renderBridge(container) {
             </div>
 
             <h3 class="holo-title" style="font-size: 1.35rem; color: var(--text-bright); margin-bottom: 0.4rem;">
-              Quest 1: Electron Density & Reaction Arrows
+              Quest 1: Charge Density & Trajectory Arrows
             </h3>
             <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">
-              Identify electron-rich lone pairs and electrophilic centers, then route curved arrows to model substitution reactions.
+              Survey charge distributions across molecular structures, then route curved trajectory arrows from donor regions to acceptor centers.
             </p>
 
             <div style="background: #111317; border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between;">

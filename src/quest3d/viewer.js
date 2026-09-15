@@ -181,17 +181,34 @@ export class QuestViewer {
     }, 1200);
   }
 
+  triggerFailure() {
+    this.triggerShudder();
+    for (const ring of this.containmentRings) {
+      ring.material.color.setHex(0xd90429);
+      ring.material.opacity = 0.95;
+    }
+    if (this.arrowController && this.arrowController.flashError) {
+      this.arrowController.flashError();
+    }
+    setTimeout(() => {
+      for (let r = 0; r < this.containmentRings.length; r++) {
+        this.containmentRings[r].material.color.setHex(0x00e5ff);
+        this.containmentRings[r].material.opacity = 0.35 + r * 0.15;
+      }
+    }, 1100);
+  }
+
   triggerShudder() {
     const origX = this.camera.position.x;
     let step = 0;
     const interval = setInterval(() => {
       step++;
-      this.camera.position.x = origX + (Math.random() - 0.5) * 0.15;
-      if (step >= 8) {
+      this.camera.position.x = origX + (Math.random() - 0.5) * 0.25;
+      if (step >= 10) {
         clearInterval(interval);
         this.camera.position.x = origX;
       }
-    }, 40);
+    }, 35);
   }
 
   update(delta = 0.016, time = 0) {
