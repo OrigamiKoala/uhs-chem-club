@@ -1,0 +1,22 @@
+{
+  "name": "avalon",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy:backend": "cd apps-script && clasp push",
+    "seed": "node tools/seed.mjs",
+    "test:load": "node tools/loadtest.mjs",
+    "bake:stills": "node tools/bake-stills.mjs"
+  },
+  "dependencies": {
+    "three": "^0.174.0"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2",
+    "vite": "^6.2.0"
+  }
+}

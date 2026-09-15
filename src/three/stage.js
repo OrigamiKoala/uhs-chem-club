@@ -1,0 +1,155 @@
+/**
+ * stage.js — The master WebGL renderer and animation loop
+ * Manages color management, quality tiers, background pausing, and scene swapping
+ */
+
+import * as THREE from 'three';
+import { tierManager } from './tier.js';
+import { CameraRig } from './camera-rig.js';
+import { ShipInterior } from './ship.js';
+import { createStarfield } from './materials/starfield.js';
+
+class Stage {
+  constructor() {
+    this.canvas = null;
+    this.renderer = null;
+    this.camera = null;
+    this.cameraRig = null;
+
+    this.shipScene = null;
+    this.shipInterior = null;
+    this.activeQuestScene = null;
+    this.activeQuestViewer = null;
+
+    this.starfield = null;
+    this.isPaused = false;
+    this.clock = new THREE.Clock();
+    this.mode = 'ship'; // 'ship' | 'quest'
+  }
+
+  init() {
+    this.canvas = document.getElementById('webgl-canvas');
+    if (!this.canvas) return;
+
+    tierManager.init();
+    if (tierManager.currentTier === 'T1') {
+      return; // Skip WebGL initialization on T1
+    }
+
+    // 1. Perspective Camera
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    this.camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
+    this.camera.position.set(0, 1.8, 4.8);
+
+    // 2. WebGL Renderer with proper color management
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.canvas,
+      antialias: tierManager.currentTier === 'T3',
+      powerPreference: 'high-performance'
+    });
+
+    this.renderer.setSize(width, height);
+    this.applyTierSettings(tierManager.currentTier);
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.15;
+
+    // 3. Persistent Ship Scene
+    this.shipScene = new THREE.Scene();
+    this.shipScene.background = new THREE.Color(0x02040a);
+
+    // Lighting rig
+    const ambientLight = new THREE.AmbientLight(0x0d1b38, 1.2);
+    const keyLight = new THREE.DirectionalLight(0x00e5ff, 1.0);
+    keyLight.position.set(5, 10, 7);
+    const fillLight = new THREE.PointLight(0xffea46, 0.8, 15);
+    fillLight.position.set(0, 2, 2);
+    this.shipScene.add(ambientLight, keyLight, fillLight);
+
+    // Starfield
+    const starCount = tierManager.currentTier === 'T3' ? 12000 : 3500;
+    this.starfield = createStarfield(starCount, 300);
+    this.shipScene.add(this.starfield);
+
+    // Ship Interior Model
+    this.shipInterior = new ShipInterior(this.shipScene);
+
+    // Camera Rig
+    this.cameraRig = new CameraRig(this.camera);
+
+    // 4. Bind Events & Lifecycle
+    window.addEventListener('resize', this.onResize.bind(this));
+    document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this));
+    tierManager.subscribe((tier) => this.applyTierSettings(tier));
+
+    // 5. Start Animation Loop
+    this.renderer.setAnimationLoop(this.render.bind(this));
+  }
+
+  applyTierSettings(tier) {
+    if (!this.renderer) return;
+    if (tier === 'T1') {
+      this.renderer.setAnimationLoop(null);
+      return;
+    }
+    const maxDpr = tier === 'T3' ? Math.min(window.devicePixelRatio, 2) : 1;
+    this.renderer.setPixelRatio(maxDpr);
+  }
+
+  onResize() {
+    if (!this.renderer || !this.camera) return;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(width, height);
+  }
+
+  onVisibilityChange() {
+    this.isPaused = document.hidden;
+    if (this.isPaused) {
+      this.clock.stop();
+    } else {
+      this.clock.start();
+    }
+  }
+
+  setQuestScene(questViewer) {
+    this.activeQuestViewer = questViewer;
+    this.activeQuestScene = questViewer ? questViewer.scene : null;
+    this.mode = questViewer ? 'quest' : 'ship';
+  }
+
+  exitQuestScene() {
+    if (this.activeQuestViewer) {
+      this.activeQuestViewer.dispose();
+      this.activeQuestViewer = null;
+    }
+    this.activeQuestScene = null;
+    this.mode = 'ship';
+    if (this.cameraRig) {
+      this.cameraRig.moveTo('bridge');
+    }
+  }
+
+  render(now) {
+    if (this.isPaused || !this.renderer) return;
+
+    tierManager.recordFrame(now);
+    const delta = this.clock.getDelta();
+    const time = this.clock.getElapsedTime();
+
+    if (this.mode === 'quest' && this.activeQuestViewer) {
+      this.activeQuestViewer.update(delta, time);
+      this.renderer.render(this.activeQuestScene, this.activeQuestViewer.camera);
+    } else {
+      if (this.cameraRig) this.cameraRig.update(now);
+      if (this.shipInterior) this.shipInterior.update(delta, time);
+      if (this.starfield) this.starfield.rotation.y += delta * 0.005;
+      this.renderer.render(this.shipScene, this.camera);
+    }
+  }
+}
+
+export const stage = new Stage();

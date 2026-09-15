@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Avalon — UHS Chemistry Club</title>
+  <meta name="description" content="Avalon — UHS Chemistry Club competition portal.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Orbitron:wght@600;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/styles/tokens.css">
+  <link rel="stylesheet" href="/src/styles/main.css">
+  <link rel="stylesheet" href="/src/styles/holo.css">
+</head>
+<body class="theme-dark">
+  <!-- 3D Persistent Canvas -->
+  <canvas id="webgl-canvas" aria-hidden="true"></canvas>
+
+  <!-- Fallback static backdrop for T1 non-webgl tier -->
+  <div id="fallback-backdrop" class="fallback-backdrop hidden" aria-hidden="true"></div>
+
+  <!-- Global HUD / Header -->
+  <header id="hud" class="hud">
+    <div class="hud-left">
+      <a href="#/" class="hud-brand">
+        <span class="hud-logo-icon">⬡</span>
+        <span class="hud-title">AVALON</span>
+      </a>
+      <nav id="hud-nav" class="hud-nav hidden">
+        <button type="button" class="nav-btn" data-target="bridge">BRIDGE</button>
+        <button type="button" class="nav-btn" data-target="starmap">STAR MAP</button>
+        <button type="button" class="nav-btn" data-target="comms">COMMS</button>
+        <button type="button" class="nav-btn" data-target="cargo">CARGO</button>
+        <button type="button" class="nav-btn" data-target="quarters">CREW</button>
+      </nav>
+    </div>
+
+    <div class="hud-right">
+      <div id="hud-stats" class="hud-stats hidden">
+        <div class="xp-badge" id="hud-xp-badge">
+          <span class="xp-val" id="hud-xp-val">0</span>
+          <span class="xp-unit">XP</span>
+          <div class="xp-bar-mini"><div class="xp-fill-mini" id="hud-xp-fill"></div></div>
+        </div>
+        <div class="level-badge" id="hud-level-badge">LVL 1 CADET</div>
+        <div class="team-badge" id="hud-team-badge"></div>
+      </div>
+
+      <div class="hud-controls">
+        <button id="gfx-tier-toggle" class="btn-chip" title="Toggle Graphics Quality (T3/T2/T1)">
+          <span class="gfx-dot"></span>
+          <span id="gfx-tier-label">T3</span>
+        </button>
+        <button id="motion-toggle" class="btn-chip" title="Toggle Motion">MOTION ON</button>
+        <div id="user-menu-wrap" class="relative">
+          <button id="user-btn" class="btn-chip hidden">
+            <span id="user-display-name">EXPLORER</span>
+          </button>
+          <div id="user-dropdown" class="user-dropdown hidden">
+            <a href="#/quarters" class="dropdown-item">Quarters & Avatar</a>
+            <a href="#/settings" class="dropdown-item">Settings</a>
+            <a href="#/admin" id="admin-link" class="dropdown-item hidden">Admin</a>
+            <hr class="dropdown-divider">
+            <button id="logout-btn" class="dropdown-item text-danger">Log Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main id="app" class="app-viewport"></main>
+
+  <!-- Notification Toasts -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Modal / Overlay Container -->
+  <div id="modal-container" class="modal-container hidden" role="dialog" aria-modal="true"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
