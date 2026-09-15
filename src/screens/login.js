@@ -4,9 +4,14 @@
 
 import { api } from '../api.js';
 import { session } from '../session.js';
+import { stage } from '../three/stage.js';
 import { showToast } from '../ui/toast.js';
 
 export function renderLogin(container) {
+  if (stage.cameraRig) {
+    stage.cameraRig.moveTo('cockpit');
+  }
+
   if (session.token && session.player) {
     window.location.hash = session.player.team_id ? '#/bridge' : '#/onboarding';
     return;

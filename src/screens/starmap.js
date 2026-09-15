@@ -17,7 +17,7 @@ export function renderStarMap(container) {
           <img src="/art/starmap.jpg" alt="Tactical Holotable" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.85);" />
           <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 20%, rgba(12, 13, 17, 0.9) 100%);"></div>
           <div style="position: absolute; bottom: 8px; left: 12px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-amber); letter-spacing: 0.12em;">
-            [ TACTICAL HOLOTABLE // ORBITAL NAVIGATION ARRAY ]
+            [ TACTICAL HOLOTABLE // ORBITAL NAVIGATION ARRAY // MULTI-PLANET CARTOGRAPHY ]
           </div>
           <div style="position: absolute; bottom: 8px; right: 12px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-green);">
             ● PROJECTION SYNCHRONIZED
@@ -27,10 +27,10 @@ export function renderStarMap(container) {
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
           <div>
             <h2 style="font-family: var(--font-imperial); font-size: 1.6rem; letter-spacing: 0.12em; color: #fffdf7; margin-bottom: 0.2rem;">
-              Planetary Sectors & Field Trials
+              Planetary Sectors & Interstellar Expeditions
             </h2>
             <p style="font-family: var(--font-main); font-size: 0.9rem; color: var(--text-secondary);">
-              Select an uncharted planetary territory to initiate chemical synthesis and molecular probe trials.
+              Uncharted star systems across the Perseus Verge. Select an active celestial territory to initiate chemical synthesis and molecular probe trials.
             </p>
           </div>
           <a href="#/quest" class="btn-primary" style="text-decoration: none;">

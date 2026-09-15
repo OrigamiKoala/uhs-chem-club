@@ -239,8 +239,8 @@ export function createCrtScreenTexture(title = 'TELEMETRY', type = 'amber') {
   // Status telemetry readouts
   ctx.font = '11px monospace';
   ctx.fillStyle = primaryColor;
-  ctx.fillText('TEMP: 482 K    PRESS: 3.8 BAR', 16, 205);
-  ctx.fillText('FLUX: NORMAL   SECTOR: ARRAKIS-09', 16, 224);
+  ctx.fillText('SYS: AVALON-HELM   ORBIT: VARETH-9', 16, 205);
+  ctx.fillText('VECTOR: 044-STABLE WARP: STANDBY', 16, 224);
   ctx.fillText('STATUS: LOCKED // CALIB OK', 16, 242);
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -406,3 +406,101 @@ export function createDesertPlanetTexture(width = 1024, height = 512) {
   const texture = new THREE.CanvasTexture(canvas);
   return texture;
 }
+
+/**
+ * Creates Space Opera Gas Giant planet texture with chromatic bands and anticyclones
+ */
+export function createGasGiantPlanetTexture(width = 1024, height = 512) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  // Base chromatic Jovian gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, height);
+  grad.addColorStop(0.0, '#3a4454');
+  grad.addColorStop(0.15, '#c29b68');
+  grad.addColorStop(0.3, '#d4c0a0');
+  grad.addColorStop(0.42, '#a66938');
+  grad.addColorStop(0.5, '#e2cfa7');
+  grad.addColorStop(0.62, '#b87b47');
+  grad.addColorStop(0.78, '#cfba96');
+  grad.addColorStop(0.9, '#728096');
+  grad.addColorStop(1.0, '#2d3748');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Atmospheric shear bands
+  for (let i = 0; i < 60; i++) {
+    const y = Math.random() * height;
+    const h = 4 + Math.random() * 22;
+    const alpha = 0.05 + Math.random() * 0.15;
+    ctx.fillStyle = i % 3 === 0 
+      ? `rgba(240, 220, 180, ${alpha})` 
+      : (i % 3 === 1 ? `rgba(160, 80, 30, ${alpha})` : `rgba(70, 90, 120, ${alpha})`);
+    
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    for (let x = 0; x <= width; x += 40) {
+      const cy = y + Math.sin(x * 0.02 + i) * 8 + Math.cos(x * 0.04) * 4;
+      ctx.lineTo(x, cy);
+    }
+    ctx.lineTo(width, y + h);
+    ctx.lineTo(0, y + h);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Great Red/Amber storm eye
+  const cx = 0.65 * width;
+  const cy = 0.58 * height;
+  const stormGrad = ctx.createRadialGradient(cx, cy, 6, cx, cy, 75);
+  stormGrad.addColorStop(0, 'rgba(215, 85, 30, 0.85)');
+  stormGrad.addColorStop(0.4, 'rgba(185, 65, 25, 0.6)');
+  stormGrad.addColorStop(0.8, 'rgba(230, 160, 90, 0.3)');
+  stormGrad.addColorStop(1, 'rgba(230, 160, 90, 0)');
+  ctx.fillStyle = stormGrad;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 70, 35, -0.05, 0, Math.PI * 2);
+  ctx.fill();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+}
+
+/**
+ * Creates dusty planetary ring texture with Cassini divisions
+ */
+export function createPlanetRingsTexture(width = 512, height = 64) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  // Horizontal gradient across ring radius (0 to width)
+  const grad = ctx.createLinearGradient(0, 0, width, 0);
+  grad.addColorStop(0.0, 'rgba(0, 0, 0, 0)');
+  grad.addColorStop(0.12, 'rgba(200, 180, 150, 0.1)');
+  grad.addColorStop(0.25, 'rgba(225, 205, 175, 0.7)');
+  grad.addColorStop(0.48, 'rgba(210, 185, 150, 0.8)');
+  grad.addColorStop(0.52, 'rgba(10, 10, 15, 0.05)'); // Cassini division gap
+  grad.addColorStop(0.55, 'rgba(195, 170, 140, 0.65)');
+  grad.addColorStop(0.82, 'rgba(175, 150, 120, 0.4)');
+  grad.addColorStop(0.95, 'rgba(130, 110, 90, 0.15)');
+  grad.addColorStop(1.0, 'rgba(0, 0, 0, 0)');
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Micro-ring dust striations
+  for (let i = 0; i < 40; i++) {
+    const x = Math.random() * width;
+    const w = 1 + Math.random() * 3;
+    ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.3)' : 'rgba(255,240,210,0.15)';
+    ctx.fillRect(x, 0, w, height);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+}
+

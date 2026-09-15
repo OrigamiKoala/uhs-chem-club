@@ -7,7 +7,7 @@ import { stage } from '../three/stage.js';
 
 export function renderLanding(container) {
   if (stage.cameraRig) {
-    stage.cameraRig.moveTo('bridge');
+    stage.cameraRig.moveTo('cockpit');
   }
 
   const isAuthed = session.token && session.player;
@@ -18,20 +18,20 @@ export function renderLanding(container) {
     <div class="screen-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 85vh; text-align: center;">
       <div class="glass-panel" style="max-width: 580px; width: 100%; padding: 2.5rem 2rem; border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.94); box-shadow: 0 16px 48px rgba(0,0,0,0.85);">
         
-        <!-- Outpost Visual Header -->
+        <!-- Starship Cockpit Visual Header -->
         <div style="position: relative; border-radius: 2px; overflow: hidden; margin-bottom: 1.5rem; border: 1px solid var(--border-durasteel); height: 160px; box-shadow: inset 0 0 16px rgba(0,0,0,0.8);">
-          <img src="/art/hero_desert_outpost.jpg" alt="Expedition Outpost" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.9);" />
+          <img src="/art/cockpit.jpg" alt="Starship Cockpit View" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.9);" />
           <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(12, 13, 17, 0.95) 100%);"></div>
           <div style="position: absolute; bottom: 8px; left: 12px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-amber); letter-spacing: 0.12em;">
-            [ ARRAKIS SECTOR-4 // OUTPOST A-7 ]
+            [ STARSHIP AVALON // FLIGHT COCKPIT // HIGH ORBIT ]
           </div>
           <div style="position: absolute; bottom: 8px; right: 12px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-green); letter-spacing: 0.08em;">
-            ● TERMINAL ONLINE
+            ● AVIONICS ONLINE
           </div>
         </div>
 
         <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-amber); letter-spacing: 0.2em; margin-bottom: 0.4rem; text-transform: uppercase;">
-          UHS CHEMISTRY CLUB // EXPEDITION CORPS
+          UHS CHEMISTRY CLUB // INTERSTELLAR EXPEDITION
         </div>
 
         <h1 style="font-family: var(--font-imperial); font-size: 2.8rem; letter-spacing: 0.16em; font-weight: 900; margin-bottom: 0.75rem; color: #fffdf7; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);">
@@ -41,7 +41,7 @@ export function renderLanding(container) {
         <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.5; font-family: var(--font-main);">
           ${isAuthed 
             ? `Active operative logged in: <strong style="color: var(--text-bright); font-family: var(--font-display);">${p.display_name || 'Explorer'}</strong> (${t.name || t.team_id || 'Unassigned'}).` 
-            : 'Off-world chemical synthesis, molecular charge simulation, and tactical guild trials.'}
+            : 'Interstellar chemical synthesis, orbital molecular simulations, and multi-planet guild trials across uncharted star systems.'}
         </p>
 
         <div style="display: flex; flex-direction: column; gap: 0.85rem; max-width: 320px; margin: 0 auto;">

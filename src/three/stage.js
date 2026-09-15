@@ -57,20 +57,25 @@ class Stage {
 
     // 3. Persistent Ship Scene
     this.shipScene = new THREE.Scene();
-    this.shipScene.background = new THREE.Color(0x0c0b10);
+    this.shipScene.background = new THREE.Color(0x06080e);
 
-    // Dune / Star Wars lighting rig: harsh Arrakis desert sun + warm industrial sodium/amber task lights
-    const ambientLight = new THREE.AmbientLight(0x282018, 1.2);
-    // Sunbeam cutting in through the forward blast viewport
-    const sunLight = new THREE.DirectionalLight(0xffc585, 2.0);
-    sunLight.position.set(4, 10, -18);
+    // Star Wars / Dune Space Opera lighting rig: crisp cosmic starlight + warm cockpit avionics glow
+    const ambientLight = new THREE.AmbientLight(0x141824, 1.1);
+    // Cool celestial starlight cutting through the forward cockpit canopy
+    const starlight = new THREE.DirectionalLight(0xdce6f8, 2.2);
+    starlight.position.set(12, 16, -28);
+
+    // Cockpit instrument glow (warm amber phosphor from flight dash)
+    const cockpitDashLight = new THREE.PointLight(0xff9f1c, 1.3, 8);
+    cockpitDashLight.position.set(0, 1.1, 0.4);
+
+    // Overhead avionics switchboard light
+    const overheadLight = new THREE.PointLight(0xffd166, 0.6, 6);
+    overheadLight.position.set(0, 3.0, 0.2);
 
     // Section task lights
     const holoTableLight = new THREE.PointLight(0xff9f1c, 1.4, 12);
     holoTableLight.position.set(3.2, 2.4, 0);
-
-    const bridgeConsoleLight = new THREE.PointLight(0xffbe76, 0.8, 8);
-    bridgeConsoleLight.position.set(0, 1.6, 1.5);
 
     const commsLight = new THREE.PointLight(0x48c715, 0.5, 6);
     commsLight.position.set(-2.8, 2.0, -3.6);
@@ -81,7 +86,7 @@ class Stage {
     const cargoLight = new THREE.PointLight(0xe09838, 0.9, 10);
     cargoLight.position.set(4.2, 3.0, -3.8);
 
-    this.shipScene.add(ambientLight, sunLight, holoTableLight, bridgeConsoleLight, commsLight, quartersLight, cargoLight);
+    this.shipScene.add(ambientLight, starlight, cockpitDashLight, overheadLight, holoTableLight, commsLight, quartersLight, cargoLight);
 
     // Starfield
     const starCount = tierManager.currentTier === 'T3' ? 12000 : 3500;

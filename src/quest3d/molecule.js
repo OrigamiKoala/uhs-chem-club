@@ -305,6 +305,17 @@ export const MOLECULE_DATA = {
   }
 };
 
+export const BALL_RADII = {
+  H: 0.16,
+  C: 0.25,
+  N: 0.25,
+  O: 0.25,
+  F: 0.22,
+  Cl: 0.32,
+  Br: 0.35,
+  Li: 0.28
+};
+
 export class MoleculeMesh {
   constructor(moleculeKey) {
     this.group = new THREE.Group();
@@ -315,12 +326,12 @@ export class MoleculeMesh {
   build() {
     const { atoms = [], bonds = [] } = this.data;
 
-    // 1. Instanced Atoms
+    // 1. Instanced Atoms (Ball & stick spheres)
     if (atoms.length > 0) {
-      const atomGeo = new THREE.IcosahedronGeometry(1, 2);
+      const atomGeo = new THREE.SphereGeometry(1, 24, 24);
       const atomMat = new THREE.MeshStandardMaterial({
-        roughness: 0.3,
-        metalness: 0.2
+        roughness: 0.25,
+        metalness: 0.15
       });
       const instancedAtoms = new THREE.InstancedMesh(atomGeo, atomMat, atoms.length);
       const dummy = new THREE.Object3D();
@@ -329,8 +340,8 @@ export class MoleculeMesh {
       for (let i = 0; i < atoms.length; i++) {
         const a = atoms[i];
         dummy.position.set(a.pos[0], a.pos[1], a.pos[2]);
-        const s = a.scale || 0.45;
-        dummy.scale.set(s, s, s);
+        const r = BALL_RADII[a.element] || 0.25;
+        dummy.scale.set(r, r, r);
         dummy.updateMatrix();
         instancedAtoms.setMatrixAt(i, dummy.matrix);
 
@@ -343,13 +354,13 @@ export class MoleculeMesh {
       this.group.add(instancedAtoms);
     }
 
-    // 2. Instanced Bonds
+    // 2. Instanced Bonds (Cylinder sticks)
     if (bonds.length > 0) {
-      const bondGeo = new THREE.CylinderGeometry(0.07, 0.07, 1, 12);
+      const bondGeo = new THREE.CylinderGeometry(0.075, 0.075, 1, 16);
       const bondMat = new THREE.MeshStandardMaterial({
         color: 0x94a3b8,
-        roughness: 0.5,
-        metalness: 0.3
+        roughness: 0.35,
+        metalness: 0.25
       });
       const instancedBonds = new THREE.InstancedMesh(bondGeo, bondMat, bonds.length);
       const dummy = new THREE.Object3D();

@@ -58,13 +58,13 @@ export function renderQuest(container) {
             </div>
           </div>
 
-          <!-- Color Spectrum Indicator (No spoilers) -->
+          <!-- Density Legend -->
           <div class="colormap-legend" style="min-width: 170px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.72rem; font-family: var(--font-mono); font-weight: 800;">
-              <span style="color: #ff1744;">RED (SOURCE)</span>
-              <span style="color: #00b0ff;">BLUE (TARGET)</span>
+              <span style="color: #ff1744;">MOST DENSE</span>
+              <span style="color: #00b0ff;">LEAST DENSE</span>
             </div>
-            <div style="height: 8px; border-radius: 4px; background: linear-gradient(90deg, #ff1744 0%, #c2185b 30%, #334155 50%, #0288d1 70%, #00b0ff 100%); box-shadow: 0 0 10px rgba(0, 176, 255, 0.2);"></div>
+            <div style="height: 8px; border-radius: 4px; background: linear-gradient(90deg, #ff1744 0%, #fbbf24 25%, #10b981 50%, #00b0ff 100%); box-shadow: 0 0 10px rgba(0, 176, 255, 0.2);"></div>
           </div>
         </div>
 
@@ -74,23 +74,17 @@ export function renderQuest(container) {
             <div class="scanning-sweep hidden" id="scanning-sweep"></div>
 
             <div class="stage-header">
-              <div class="stage-title">${cfg.title || `Stage ${currentStageIdx + 1}`}</div>
+              <div class="stage-title">Stage ${currentStageIdx + 1}</div>
               <div class="stage-xp-tag">+${stageMeta.xp || 20} XP</div>
             </div>
 
-            <div class="stage-instruction">${cfg.prompt || 'Analyze charge distribution and route reaction flow.'}</div>
+            <div class="stage-instruction">Draw a line between the two regions.</div>
 
             <!-- Interactive Stage Area -->
             <div id="stage-interactive-area" style="margin-bottom: 1rem;"></div>
 
-            <!-- Hint Display -->
-            <div id="hint-box" class="hidden" style="margin-bottom: 1rem; padding: 10px 14px; background: rgba(255, 179, 0, 0.12); border: 1px solid rgba(255, 179, 0, 0.3); border-radius: var(--radius-sm); font-size: 0.85rem; color: #ffecb3;"></div>
-
             <!-- Stage Footer Actions -->
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;">
-              <button type="button" id="hint-btn" class="btn-secondary" style="font-size: 0.8rem; padding: 8px 14px; min-height: 40px;">
-                Hint (${stageMeta.hint_cost || 0} XP)
-              </button>
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem;">
               <button type="button" id="grade-btn" class="btn-primary" style="padding: 8px 24px; min-height: 40px;">
                 <span>Submit</span>
                 <span>➔</span>
@@ -138,30 +132,14 @@ export function renderQuest(container) {
     }
 
     // 3. Bind Hint Button
-    const hintBtn = container.querySelector('#hint-btn');
-    const hintBox = container.querySelector('#hint-box');
-    hintBtn.addEventListener('click', async () => {
-      try {
-        const hint = await api.getHint('q1', currentStageIdx);
-        hintUsed = true;
-        hintBox.textContent = hint.hintText;
-        hintBox.classList.remove('hidden');
-        if (viewer && hint.highlightAnchors) {
-          for (const a of hint.highlightAnchors) viewer.anchorManager.highlight(a, true);
-        }
-      } catch (e) {
-        showToast('Hint unavailable', 'warning');
-      }
-    });
-
-    // 4. Bind Grade Button
+    // 3. Bind Grade Button
     const gradeBtn = container.querySelector('#grade-btn');
     const sweep = container.querySelector('#scanning-sweep');
 
     gradeBtn.addEventListener('click', async () => {
       if (isGrading) return;
       if (!currentPayload) {
-        showToast('Please select or route the charge before submitting.', 'warning');
+        showToast('Please draw a line between the two regions before submitting.', 'warning');
         return;
       }
 
@@ -193,15 +171,6 @@ export function renderQuest(container) {
           if (viewer) viewer.triggerSuccessBloom();
           showToast(`Correct! +${res.xpAwarded} XP`, 'success');
 
-          // Reveal post-solve explanation
-          if (res.revealText) {
-            const revealEl = document.createElement('div');
-            revealEl.className = 'stage-reveal-box';
-            revealEl.style.cssText = 'margin-top: 1rem; padding: 12px 16px; background: rgba(0, 230, 118, 0.12); border: 1px solid rgba(0, 230, 118, 0.4); border-radius: var(--radius-sm); font-size: 0.88rem; color: #b9f6ca; line-height: 1.5;';
-            revealEl.innerHTML = `<strong>Insight:</strong> ${res.revealText}`;
-            interactiveArea.appendChild(revealEl);
-          }
-
           // Check if last stage completed
           const isLastStage = currentStageIdx >= ((questData?.stages?.length || 7) - 1);
           if (isLastStage) {
@@ -215,7 +184,7 @@ export function renderQuest(container) {
           }
         } else {
           if (viewer) viewer.triggerShudder();
-          const msg = res.blocked ? 'Trajectory obstructed by surrounding atoms.' : (res.revealText || `Incorrect route. ${res.attemptsLeft ?? 2} attempt(s) remaining.`);
+          const msg = res.blocked ? 'Path is blocked. Rotate to find an open path.' : `Incorrect. ${res.attemptsLeft ?? 2} attempt(s) remaining.`;
           showToast(msg, 'error');
         }
       } catch (err) {

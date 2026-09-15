@@ -87,7 +87,9 @@ async function callAppsScript(route, body) {
     }
     return result;
   } catch (err) {
-    throw new Error('Apps Script returned non-JSON response: ' + text.slice(0, 200));
+    const titleMatch = text.match(/<title>([^<]+)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : 'HTML page';
+    throw new Error(`Apps Script returned non-JSON (${title}). Verify in Apps Script: 1) Run 'setup' once to grant permissions; 2) Deploy as Web app with 'Execute as: Me' and 'Who has access: Anyone'; 3) In Manage Deployments, click Edit (pencil) and select Version: 'New version' then Deploy.`);
   }
 }
 
@@ -185,16 +187,15 @@ function localDevHandler(route, body) {
         },
         teams: teamSlots,
         activeQuest: {
-          quest: { quest_id: 'q1', title: 'The Charge Gardens of Vareth-9', world: 'Vareth-9' },
+          quest: { quest_id: 'q1', title: 'The Gardens of Vareth-9', world: 'Vareth-9' },
           stages: [
-            { stage_index: 0, kind: 'choice', xp: 0, max_attempts: 3, scene_config: { title: 'Arrival at Vareth-9', options: [{ id: 'a', label: 'Engage wideband electrostatic scanner' }, { id: 'b', label: 'Fire optical lidar' }] } },
-            { stage_index: 1, kind: 'pick', xp: 10, max_attempts: 3, scene_config: { title: 'Stage 1: Calibrate the Scanner', prompt: 'Click the brightest, highest-density lobe to lock calibration.', moleculeId: 'h2o', anchors: ['lp_o', 'h1', 'h2'] } },
-            { stage_index: 2, kind: 'rank', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 2: Read the Lean', prompt: 'Rank the beacons from most polarized to most symmetric.', items: [{ id: 'hf', label: 'Beacon A (HF)' }, { id: 'lih', label: 'Beacon B (LiH)' }, { id: 'h2', label: 'Beacon C (H2)' }] } },
-            { stage_index: 3, kind: 'pick_multi', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 3: Giver and Taker', prompt: 'Select the donor lone pair and the starved carbon center.', moleculeId: 'nu_sub_pair', anchors: ['lp_o', 'c1', 'cl1'] } },
-            { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 4: Route the Current', prompt: 'Drag an energy arrow from donor lone pair to starved carbon.', moleculeId: 'nu_sub_pair', anchors: ['lp_o', 'c1', 'cl1'] } },
-            { stage_index: 5, kind: 'choice', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 5: The Aftermath', options: [{ id: 'a', label: 'Pentavalent carbon' }, { id: 'b', label: 'C-O bond formed; chloride displaced' }, { id: 'c', label: 'Hydrogen detached' }] } },
-            { stage_index: 6, kind: 'chain', xp: 40, max_attempts: 3, scene_config: { title: 'Stage 6: The Lock', prompt: 'Attack arrow followed by leaving-group departure arrow.', moleculeId: 'sn2_reaction', anchors: ['lp_o', 'c1', 'c_cl', 'cl'] } },
-            { stage_index: 7, kind: 'chain', xp: 30, max_attempts: 3, scene_config: { title: 'Stage 7 (Bonus): Unlit Garden', prompt: 'Route both reaction arrows on the unscaffolded substrate.', moleculeId: 'bonus_reaction', anchors: ['lp_nu', 'c_sub', 'c_br', 'br'] } }
+            { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 1', prompt: 'Draw a line between the two regions.', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 2', prompt: 'Draw a line between the two regions.', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 3', prompt: 'Draw a line between the two regions.', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 4', prompt: 'Draw a line between the two regions.', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 5', prompt: 'Draw a line between the two regions.', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 6', prompt: 'Draw a line between the two regions.', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 3, scene_config: { title: 'Stage 7', prompt: 'Draw a line between the two regions.', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } }
           ]
         },
         player: player ? {
@@ -341,8 +342,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 0,
             scene_config: {
-              title: 'Phase 1: Direct Transfer',
-              prompt: 'Drag an arrow from the red region to the blue region to initiate the reaction.',
+              title: 'Stage 1',
+              prompt: 'Draw a line between the two regions.',
               moleculeId: 'stage1_pair',
               anchors: ['red_lp1', 'blue_c1']
             }
@@ -354,8 +355,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 1,
             scene_config: {
-              title: 'Phase 2: Polarized Target',
-              prompt: 'Connect the active red region to the blue target site.',
+              title: 'Stage 2',
+              prompt: 'Draw a line between the two regions.',
               moleculeId: 'stage2_pair',
               anchors: ['red_lp1', 'blue_c1']
             }
@@ -367,8 +368,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 2,
             scene_config: {
-              title: 'Phase 3: Competing Potentials',
-              prompt: 'Multiple colored regions detected. Find and connect the strongest match.',
+              title: 'Stage 3',
+              prompt: 'Draw a line between the two regions.',
               moleculeId: 'stage3_pair',
               anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
             }
@@ -380,8 +381,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 2,
             scene_config: {
-              title: 'Phase 4: Site Selectivity',
-              prompt: 'Analyze competing nodes across both molecules and route between the strongest pair.',
+              title: 'Stage 4',
+              prompt: 'Draw a line between the two regions.',
               moleculeId: 'stage4_pair',
               anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
             }
@@ -393,8 +394,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 3,
             scene_config: {
-              title: 'Phase 5: Spatial Pathways',
-              prompt: 'Connect the red source to an accessible blue target.',
+              title: 'Stage 5',
+              prompt: 'Draw a line between the two regions.',
               moleculeId: 'stage5_pair',
               anchors: ['red_nu', 'blue_open', 'blue_blocked']
             }
@@ -406,8 +407,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 3,
             scene_config: {
-              title: 'Phase 6: Geometric Clearance',
-              prompt: 'Inspect the 3D geometry and connect the red region to the unshielded blue site.',
+              title: 'Stage 6',
+              prompt: 'Draw a line between the two regions.',
               moleculeId: 'stage6_pair',
               anchors: ['red_nu', 'blue_open', 'blue_blocked']
             }
@@ -419,8 +420,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 4,
             scene_config: {
-              title: 'Phase 7: Nexus Reaction',
-              prompt: 'Identify the active pair among all competing and shielded sites.',
+              title: 'Stage 7',
+              prompt: 'Draw a line between the two regions.',
               moleculeId: 'stage7_pair',
               anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak']
             }
@@ -434,36 +435,25 @@ function localDevHandler(route, body) {
     const stageIdx = Number(body.stageIndex);
     const p = body.payload || {};
     let correct = false;
-    let revealText = '';
     let isBlocked = false;
 
     if (stageIdx === 0) {
       correct = (p.from === 'red_lp1' && p.to === 'blue_c1');
-      if (correct) revealText = 'The red region contains high electron density (lone pair) that seeks out the electron-deficient blue region (empty p-orbital) to form a bond.';
     } else if (stageIdx === 1) {
       correct = (p.from === 'red_lp1' && p.to === 'blue_c1');
-      if (correct) revealText = 'Electrons flow from the concentrated donor lone pair into the polarized carbon center, beginning a nucleophilic substitution.';
     } else if (stageIdx === 2) {
       correct = (p.from === 'red_extreme' && p.to === 'blue_extreme');
-      if (correct) revealText = 'When multiple sites compete, the most extreme electron density (strongest nucleophile) attacks the most electron-starved center (most electrophilic carbonyl carbon).';
     } else if (stageIdx === 3) {
       correct = (p.from === 'red_extreme' && p.to === 'blue_extreme');
-      if (correct) revealText = 'The less electronegative nitrogen holds its lone pair more loosely than oxygen, creating a more extreme nucleophile that attacks the carbonyl carbon.';
     } else if (stageIdx === 4) {
       if (p.to === 'blue_blocked') isBlocked = true;
       correct = (p.from === 'red_nu' && p.to === 'blue_open');
-      if (correct) revealText = 'Steric hindrance! Although the tertiary carbon is intensely electrophilic, bulky methyl groups physically block incoming groups, forcing the reaction to occur at the unhindered primary carbon.';
-      else if (isBlocked) revealText = 'Trajectory obstructed: surrounding atoms physically shield this center from entry.';
     } else if (stageIdx === 5) {
       if (p.to === 'blue_blocked') isBlocked = true;
       correct = (p.from === 'red_nu' && p.to === 'blue_open');
-      if (correct) revealText = 'Steric congestion shields the branched carbonyl site with bulky isopropyl wings. The nucleophile selectively attacks the open, unhindered carbonyl flank.';
-      else if (isBlocked) revealText = 'Trajectory obstructed: surrounding atoms physically shield this center from entry.';
     } else if (stageIdx === 6) {
       if (p.to === 'blue_caged') isBlocked = true;
       correct = (p.from === 'red_supreme' && p.to === 'blue_accessible');
-      if (correct) revealText = 'Mastery achieved! In complex organic synthesis, reaction outcome is dictated by the interplay of electron density (nucleophilicity/electrophilicity) and steric hindrance.';
-      else if (isBlocked) revealText = 'Trajectory obstructed: surrounding cage groups physically prevent donor approach.';
     }
 
     return {
@@ -471,7 +461,7 @@ function localDevHandler(route, body) {
       data: {
         correct,
         xpAwarded: correct ? (20 + stageIdx * 2) : 0,
-        revealText,
+        blocked: isBlocked,
         attemptsLeft: 2,
         nextStage: correct ? stageIdx + 1 : stageIdx
       }
@@ -485,7 +475,7 @@ function localDevHandler(route, body) {
         totalXp: 185,
         awardedItem: 'resonance_key',
         newLevel: 3,
-        epilogue: 'Quest complete! Here is the chemistry behind what you just discovered:\n\n1. Electron Density & Curved Arrows: The red regions represent high electron density (lone pairs / negative charge), while blue regions represent electron deficiency (positive partial charges / electrophiles). The arrows you drew match standard curved-arrow notation in organic chemistry, tracking the physical flow of electrons from source to target.\n\n2. Extremes & Selectivity: When multiple reactive sites compete, reactions preferentially proceed between the most electron-rich donor (strongest nucleophile) and most electron-poor center (strongest electrophile).\n\n3. Steric Hindrance: Physical geometry matters! Even when a site has strong positive charge, surrounding bulky groups (like methyl or isopropyl clusters) can physically block incoming molecules, steering reactions toward open, unhindered pathways.'
+        epilogue: 'Quest complete! You successfully navigated all stages and routed the connections across the structures.'
       }
     };
   }

@@ -21,7 +21,7 @@ export function renderBridge(container) {
         <div class="glass-panel" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.94);">
           <div>
             <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase;">
-              COMMAND DECK // SECTOR-4 // OUTPOST A-7
+              FLAGSHIP AVALON // COMMAND DECK // HIGH ORBIT
             </div>
             <h2 style="font-family: var(--font-imperial); font-size: 1.9rem; font-weight: 900; color: ${t.accent_hex || 'var(--accent-amber)'}; letter-spacing: 0.1em; text-transform: uppercase;">
               ${t.name || t.team_id || 'COMMAND BRIDGE'}
@@ -110,7 +110,7 @@ export function renderBridge(container) {
                 POLARITY: ${activeEv ? activeEv.polarity.toUpperCase() : 'BENEFICIAL'}
               </span>
               <span style="font-family: var(--font-mono); font-size: 0.75rem; padding: 4px 8px; border-radius: var(--radius-sm); background: rgba(255, 159, 28, 0.15); color: var(--accent-amber); border: 1px solid rgba(255, 159, 28, 0.35);">
-                SECTOR: ARRAKIS-09
+                ORBIT: VARETH-9 // SECTOR-01
               </span>
             </div>
 

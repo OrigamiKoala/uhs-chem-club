@@ -1,7 +1,7 @@
 :root {
-  /* Star Wars & Dune 'Used Universe' Color Palette */
+  /* Star Wars & Dune 'Used Universe' Space Opera Color Palette */
   /* Surfaces & Plating */
-  --bg-deep: #0c0d11;
+  --bg-deep: #08090d;             /* Deep cosmic void */
   --bg-surface: rgba(22, 24, 30, 0.94);
   --bg-surface-elevated: rgba(30, 33, 42, 0.96);
   --bg-card: rgba(24, 26, 33, 0.92);
@@ -23,7 +23,7 @@
 
   /* Primary Accents */
   --accent-amber: #ff9f1c;        /* Spice gold / CRT phosphor amber */
-  --accent-gold: #f4a261;         /* Arrakis desert sand */
+  --accent-gold: #f4a261;         /* Solar flare starlight / planetary horizon */
   --accent-rust: #c85a17;         /* Oxidized iron / hydraulic rust */
   --accent-green: #38b000;        /* Military oscilloscope phosphor green */
   --accent-danger: #d90429;       /* Emergency blast hazard red */

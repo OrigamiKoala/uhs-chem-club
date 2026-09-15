@@ -31,20 +31,29 @@
 - Auto-redirect authenticated users from `#/`, `#/login`, and `#/register` directly to `#/bridge` (or `#/onboarding` if team not assigned).
 - Made bridge dashboard reactive to session subscriber updates.
 - Added mock handlers for `player/me`, `player/update`, and `player/rename` in `api/[...route].js` for local development.
+- Converted 3D molecular renderer to ball-and-stick models with CPK colored spheres and connecting cylinder rods (`src/quest3d/molecule.js`).
+- Implemented realistic MarchingCubes electrostatic potential charge density isosurfaces: red for most dense, blue for least dense, green/cyan intermediate, slightly translucent to reveal ball-and-stick structure underneath (`src/quest3d/isosurface.js`).
+- Stripped all technical jargon ("electrons", "charge clouds", "nucleophile", "orbitals", etc.) across quest HUD, prompts, manifests, and backend (`src/screens/quest.js`, `apps-script/Quests.gs`, `api/[...route].js`). Set all prompts strictly to: "Draw a line between the two regions."
+- Space Opera overhaul: shifted theme to multi-planet space opera across uncharted star systems while keeping Quest 1 on the desert world Vareth-9.
+- Onboarding, landing, login, register, and bridge vantage point configured to a 3D first-person starship cockpit looking out at deep space and celestial bodies.
+- Nano Banana generated assets: `/art/cockpit.jpg` (starship cockpit view), `/art/starmap.jpg` (multi-planet tactical projection), `/art/durasteel_plate.jpg` (weathered PBR plate texture), `/art/factions.jpg` (guild charter).
+- Three.js 3D assets: modeled faceted durasteel canopy trusses, overhead avionics rack, dual flight yokes, throttle quadrant, armored flight chairs, chromatic gas giant with planetary rings, tumbling asteroid debris belt, and deep-space starlight illumination.
 
 
 
-## Star Wars & Dune Aesthetic Standards (MANDATORY FOR ALL AGENTS)
+## Star Wars & Dune Space Opera Aesthetic Standards (MANDATORY FOR ALL AGENTS)
 
-All visual designs, UI components, and 3D scenes MUST strictly follow a **Star Wars / Dune "Used Universe"** aesthetic.
+All visual designs, UI components, and 3D scenes MUST strictly follow a **Star Wars / Dune "Used Universe" Space Opera** aesthetic across multiple planetary systems.
 
 ### 1. Design Philosophy
-- **Grimy & Advanced**: Technology must look battle-tested, dusty, scratched, oil-stained, and mechanically tactile, while functioning as cutting-edge chemical engineering simulation hardware.
+- **Space Opera Scope**: Avalon spans multiple uncharted planets (Vareth-9 desert world, Pyros Prime volcanic forge, Cryo-Haven ice tundra, Vortex Strata gas giant). Quest 1 takes place on the desert planet Vareth-9.
+- **Starship Cockpit Perspective**: Non-quest screens (landing, onboarding, login, register, bridge) are viewed from the cockpit of the starship *Avalon*, looking through heavy faceted canopy framing out into deep space.
+- **Grimy & Advanced**: Technology looks battle-tested, dusty, scratched, oil-stained, and mechanically tactile (analog dials, CRT vector scopes, toggle switches, heavy bolted durasteel), while functioning as cutting-edge chemical engineering simulation hardware.
 - **Strictly Banned**: No "vibe-coded" synthwave, generic esports neon, modern web3 crypto cards, glossy blue glassmorphism, or electric cyan (`#00e5ff`) laser glows.
 
 ### 2. Color Palette
-- **Surfaces**: Scorched carbon durasteel (`#0c0d11`, `#14161c`), weathered iron plates (`#1c2024`, `#22262d`), desert basalt slate.
-- **Telemetry & Accents**: Spice Amber (`#ff9f1c`), Arrakis Sand Gold (`#f4a261`), Industrial Rust (`#c85a17`), CRT Phosphor Green (`#38b000`), Emergency Red (`#d90429`), Imperial Guild Bronze (`#a3824c`).
+- **Surfaces**: Scorched carbon durasteel (`#0c0d11`, `#14161c`), weathered iron plates (`#1c2024`, `#22262d`), deep cosmic void (`#08090d`).
+- **Telemetry & Accents**: Spice Amber (`#ff9f1c`), Solar Flare Sand Gold (`#f4a261`), Industrial Rust (`#c85a17`), CRT Phosphor Green (`#38b000`), Emergency Red (`#d90429`), Imperial Guild Bronze (`#a3824c`).
 - **Displays**: Monochromatic amber or green CRT tube scanlines with analog waveforms and telemetry grids.
 
 ### 3. Typography
@@ -54,9 +63,10 @@ All visual designs, UI components, and 3D scenes MUST strictly follow a **Star W
 
 ### 4. 3D Graphics & Nano Banana Assets
 - Combine Nano Banana (`generate_image`) realistic matte textures and backdrops with Three.js procedural geometries and PBR materials (`MeshStandardMaterial`).
-- Ship interior features riveted durasteel bulkheads, overhead cable runs, hydraulic pipes, tactile flight consoles with dual CRT monitors, and a Dune spice-amber particulate tactical holotable.
-- Lighting: Harsh low-angle Arrakis solar illumination through forward blast viewports, warm sodium task lamps, and 2,000 floating atmospheric dust motes.
-- All routes dynamically bind corresponding high-res environment stills (`/art/hero_desert_outpost.jpg`, `bridge.jpg`, `starmap.jpg`, `crucible.jpg`, `cargo.jpg`, `quarters.jpg`, `comms.jpg`, `airlock.jpg`).
+- Starship Cockpit features faceted durasteel canopy mullions, overhead avionics rack, dual analog flight yokes, dual throttle quadrant, armored bucket flight seats, and twin CRT flight monitors.
+- Space Opera Celestial Vista features a chromatic gas giant with planetary rings, the banded desert planet Vareth-9 (Quest 1), orbiting moons, and an asteroid debris belt drifting through space.
+- Lighting: Cool celestial starlight cutting through forward canopy, warm sodium/amber instrument task lamps, and floating micro-dust motes.
+- Routes bind corresponding high-res environment stills (`/art/cockpit.jpg`, `starmap.jpg`, `crucible.jpg`, `cargo.jpg`, `quarters.jpg`, `comms.jpg`, `airlock.jpg`).
 
 ### 5. UI Components
 - **Panels**: Heavy durasteel plating (`.glass-panel`) with riveted seams, chamfers, and warm amber indicator edges.

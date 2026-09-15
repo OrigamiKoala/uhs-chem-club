@@ -6,10 +6,15 @@ import * as THREE from 'three';
 import { session } from '../session.js';
 
 export const SHIP_ANCHORS = {
+  cockpit: {
+    name: 'Flight Cockpit',
+    pos: new THREE.Vector3(0, 1.45, 1.6),
+    target: new THREE.Vector3(0, 1.35, -20)
+  },
   bridge: {
     name: 'Command Bridge',
-    pos: new THREE.Vector3(0, 1.8, 4.8),
-    target: new THREE.Vector3(0, 1.2, 0)
+    pos: new THREE.Vector3(0, 1.55, 2.0),
+    target: new THREE.Vector3(0, 1.35, -20)
   },
   starmap: {
     name: 'Star Map & Navigation',

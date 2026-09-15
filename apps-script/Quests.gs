@@ -4,10 +4,10 @@
 
 var DEFAULT_QUEST = {
   quest_id: 'q1',
-  title: 'The Charge Gardens of Vareth-9',
+  title: 'The Gardens of Vareth-9',
   world: 'Vareth-9',
   blurb: 'Survey paired molecular structures across the Vareth anomaly.',
-  scene_id: 'charge_chamber',
+  scene_id: 'reaction_chamber',
   cover_image: '/art/q1_cover.webp',
   release_at: '2026-09-18T00:00:00Z',
   close_at: '2026-10-02T23:59:59Z',
@@ -24,14 +24,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 15,
     max_attempts: 3,
-    hint_text: 'Connect the red source to the blue target.',
+    hint_text: 'Draw a line from the red region to the blue region.',
     hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_lp1', to: 'blue_c1' }),
     tolerance: 0,
-    reveal_text: 'The red region contains high electron density (lone pair) that seeks out the electron-deficient blue region (empty p-orbital) to form a bond.',
+    reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Phase 1: Direct Transfer',
-      prompt: 'Drag an arrow from the red region to the blue region to initiate the reaction.',
+      title: 'Stage 1',
+      prompt: 'Draw a line between the two regions.',
       moleculeId: 'stage1_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -42,14 +42,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 15,
     max_attempts: 3,
-    hint_text: 'Trace the path from donor center to recipient site.',
+    hint_text: 'Draw a line from the red region to the blue region.',
     hint_cost: 1,
     answer_json: JSON.stringify({ from: 'red_lp1', to: 'blue_c1' }),
     tolerance: 0,
-    reveal_text: 'Electrons flow from the concentrated donor lone pair into the polarized carbon center, beginning a nucleophilic substitution.',
+    reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Phase 2: Polarized Target',
-      prompt: 'Connect the active red region to the blue target site.',
+      title: 'Stage 2',
+      prompt: 'Draw a line between the two regions.',
       moleculeId: 'stage2_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -60,14 +60,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 20,
     max_attempts: 3,
-    hint_text: 'Target the regions with the deepest color intensity.',
+    hint_text: 'Draw a line from the red region to the blue region.',
     hint_cost: 2,
     answer_json: JSON.stringify({ from: 'red_extreme', to: 'blue_extreme' }),
     tolerance: 0,
-    reveal_text: 'When multiple sites compete, the most extreme electron density (strongest nucleophile) attacks the most electron-starved center (most electrophilic carbonyl carbon).',
+    reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Phase 3: Competing Potentials',
-      prompt: 'Multiple colored regions detected. Find and connect the strongest match.',
+      title: 'Stage 3',
+      prompt: 'Draw a line between the two regions.',
       moleculeId: 'stage3_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -78,14 +78,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 20,
     max_attempts: 3,
-    hint_text: 'Compare the color saturation of each node before routing the path.',
+    hint_text: 'Draw a line from the red region to the blue region.',
     hint_cost: 2,
     answer_json: JSON.stringify({ from: 'red_extreme', to: 'blue_extreme' }),
     tolerance: 0,
-    reveal_text: 'The less electronegative nitrogen holds its lone pair more loosely than oxygen, creating a more extreme nucleophile that attacks the carbonyl carbon.',
+    reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Phase 4: Site Selectivity',
-      prompt: 'Analyze competing nodes across both molecules and route between the strongest pair.',
+      title: 'Stage 4',
+      prompt: 'Draw a line between the two regions.',
       moleculeId: 'stage4_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -96,14 +96,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 25,
     max_attempts: 3,
-    hint_text: 'Consider the physical pathway: is the destination shielded by surrounding groups?',
+    hint_text: 'Rotate the view to find an open path.',
     hint_cost: 3,
     answer_json: JSON.stringify({ from: 'red_nu', to: 'blue_open' }),
     tolerance: 0,
-    reveal_text: 'Steric hindrance! Although the tertiary carbon is intensely electrophilic, bulky methyl groups physically block incoming groups, forcing the reaction to occur at the unhindered primary carbon.',
+    reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Phase 5: Spatial Pathways',
-      prompt: 'Connect the red source to an accessible blue target.',
+      title: 'Stage 5',
+      prompt: 'Draw a line between the two regions.',
       moleculeId: 'stage5_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -114,14 +114,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 25,
     max_attempts: 3,
-    hint_text: 'Rotate the view. Watch for physical obstructions surrounding the candidate sites.',
+    hint_text: 'Rotate the view to find an open path.',
     hint_cost: 3,
     answer_json: JSON.stringify({ from: 'red_nu', to: 'blue_open' }),
     tolerance: 0,
-    reveal_text: 'Steric congestion shields the branched carbonyl site with bulky isopropyl wings. The nucleophile selectively attacks the open, unhindered carbonyl flank.',
+    reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Phase 6: Geometric Clearance',
-      prompt: 'Inspect the 3D geometry and connect the red region to the unshielded blue site.',
+      title: 'Stage 6',
+      prompt: 'Draw a line between the two regions.',
       moleculeId: 'stage6_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -132,14 +132,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 30,
     max_attempts: 3,
-    hint_text: 'Balance highest intensity with geometric accessibility.',
+    hint_text: 'Rotate the view to find an open path.',
     hint_cost: 4,
     answer_json: JSON.stringify({ from: 'red_supreme', to: 'blue_accessible' }),
     tolerance: 0,
-    reveal_text: 'Mastery achieved! In complex organic synthesis, reaction outcome is dictated by the interplay of electron density (nucleophilicity/electrophilicity) and steric hindrance.',
+    reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Phase 7: Nexus Reaction',
-      prompt: 'Identify the active pair among all competing and shielded sites.',
+      title: 'Stage 7',
+      prompt: 'Draw a line between the two regions.',
       moleculeId: 'stage7_pair',
       anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak']
     })

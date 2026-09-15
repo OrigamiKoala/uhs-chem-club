@@ -11,7 +11,9 @@ import {
   createHazardStripesTexture,
   createCrtScreenTexture,
   createControlPanelTexture,
-  createDesertPlanetTexture
+  createDesertPlanetTexture,
+  createGasGiantPlanetTexture,
+  createPlanetRingsTexture
 } from './materials/textures.js';
 
 export class ShipInterior {
@@ -22,7 +24,10 @@ export class ShipInterior {
     this.animatedElements = [];
     this.dustParticles = null;
     this.planet = null;
+    this.gasGiant = null;
+    this.rings = null;
     this.moons = [];
+    this.asteroids = [];
 
     this.initMaterials();
     this.buildArchitecture();
@@ -65,6 +70,8 @@ export class ShipInterior {
     this.crtAmberTex = createCrtScreenTexture('SYSTEM CALIB', 'amber');
     this.crtGreenTex = createCrtScreenTexture('ANALYSIS RF', 'green');
     this.planetTex = createDesertPlanetTexture(1024, 512);
+    this.gasGiantTex = createGasGiantPlanetTexture(1024, 512);
+    this.ringsTex = createPlanetRingsTexture(512, 64);
 
     // 3. Heavy Industrial Floor Grating Material
     this.floorMat = new THREE.MeshStandardMaterial({
@@ -171,52 +178,178 @@ export class ShipInterior {
   }
 
   buildBridgeSection() {
-    // Forward Blast Viewport Window Frame at Z = -9
-    const frameBase = new THREE.Mesh(new THREE.BoxGeometry(16, 1.2, 0.6), this.durasteelMat);
-    frameBase.position.set(0, 0.6, -9);
-    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(16, 1.2, 0.6), this.durasteelMat);
-    frameTop.position.set(0, 3.6, -9);
+    // === STARSHIP FLIGHT COCKPIT & CANOPY FRAMEWORK ===
+    // 1. Forward Viewport Heavy Canopy Framing (Millennium Falcon / Ornithopter faceted canopy)
+    const canopyRimBottom = new THREE.Mesh(new THREE.BoxGeometry(10, 0.45, 0.6), this.durasteelMat);
+    canopyRimBottom.position.set(0, 0.75, -2.4);
+    const canopyRimTop = new THREE.Mesh(new THREE.BoxGeometry(10, 0.45, 0.6), this.durasteelMat);
+    canopyRimTop.position.set(0, 3.4, -2.4);
+    this.group.add(canopyRimBottom, canopyRimTop);
 
-    // Multi-pane angled mullion struts
-    for (let mx of [-5, -2, 2, 5]) {
-      const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.45, 3.0, 0.5), this.durasteelMat);
-      mullion.position.set(mx, 2.1, -9);
-      mullion.rotation.z = mx < 0 ? 0.08 : -0.08;
-      this.group.add(mullion);
+    // Center vertical canopy divider strut
+    const centerStrut = new THREE.Mesh(new THREE.BoxGeometry(0.24, 2.7, 0.4), this.ironMat);
+    centerStrut.position.set(0, 2.05, -2.4);
+    this.group.add(centerStrut);
+
+    // Angled faceted canopy trusses
+    for (let side of [-1, 1]) {
+      // Main diagonal canopy mullion
+      const diagStrut = new THREE.Mesh(new THREE.BoxGeometry(0.28, 3.0, 0.4), this.durasteelMat);
+      diagStrut.position.set(side * 2.8, 2.1, -2.4);
+      diagStrut.rotation.z = side * 0.32;
+      this.group.add(diagStrut);
+
+      // Corner gusset bracket
+      const cornerBracket = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.45), this.ironMat);
+      cornerBracket.position.set(side * 4.2, 3.1, -2.35);
+      cornerBracket.rotation.z = side * Math.PI / 4;
+      this.group.add(cornerBracket);
+
+      // Angled cockpit ceiling support spars arching back toward the pilot
+      const archSpar = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 3.8), this.durasteelMat);
+      archSpar.position.set(side * 2.5, 3.45, -0.4);
+      archSpar.rotation.x = -0.12;
+      this.group.add(archSpar);
     }
-    this.group.add(frameBase, frameTop);
 
-    // Forward Command Deck Console Structure at Z = 1.2
-    const consoleChassis = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.9, 1.4), this.ironMat);
-    consoleChassis.position.set(0, 0.45, 1.2);
-    this.group.add(consoleChassis);
+    // Far forward blast viewport reinforcement at Z = -8
+    const farFrameBase = new THREE.Mesh(new THREE.BoxGeometry(16, 1.2, 0.6), this.durasteelMat);
+    farFrameBase.position.set(0, 0.6, -8);
+    const farFrameTop = new THREE.Mesh(new THREE.BoxGeometry(16, 1.2, 0.6), this.durasteelMat);
+    farFrameTop.position.set(0, 3.8, -8);
+    for (let mx of [-6, -2.5, 2.5, 6]) {
+      const farMullion = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3.4, 0.5), this.durasteelMat);
+      farMullion.position.set(mx, 2.2, -8);
+      farMullion.rotation.z = mx < 0 ? 0.07 : -0.07;
+      this.group.add(farMullion);
+    }
+    this.group.add(farFrameBase, farFrameTop);
 
-    // Angled Instrument Dashboard
-    const dashPanel = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.05, 1.0), this.controlPanelMat);
-    dashPanel.position.set(0, 0.92, 1.2);
-    dashPanel.rotation.x = -0.15;
+    // 2. Overhead Avionics Instrument Rack (directly above pilot head)
+    const overheadRack = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.4, 2.2), this.ironMat);
+    overheadRack.position.set(0, 3.2, 0.2);
+    overheadRack.rotation.x = 0.1;
+    this.group.add(overheadRack);
+
+    // Overhead switch panel plate
+    const overheadPanel = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.05, 1.8), this.controlPanelMat);
+    overheadPanel.position.set(0, 3.0, 0.2);
+    overheadPanel.rotation.x = 0.1;
+    this.group.add(overheadPanel);
+
+    // Overhead indicator diodes and breakers
+    for (let i = -1.2; i <= 1.2; i += 0.4) {
+      const diode = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.03, 0.03, 0.04, 8),
+        Math.abs(i) < 0.5 ? this.amberLampMat : (i > 0 ? this.greenLampMat : this.redLampMat)
+      );
+      diode.rotation.x = Math.PI / 2;
+      diode.position.set(i, 2.96, 0.0);
+      this.group.add(diode);
+    }
+
+    // Overhead conduit bundles feeding into dash
+    for (let cx of [-1.5, 1.5]) {
+      const conduit = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.8, 8), this.brassMat);
+      conduit.position.set(cx, 2.4, 0.8);
+      conduit.rotation.z = cx < 0 ? 0.2 : -0.2;
+      this.group.add(conduit);
+    }
+
+    // 3. Primary Flight Instrument Console (Angled Dashboard)
+    const consoleBase = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.85, 1.6), this.ironMat);
+    consoleBase.position.set(0, 0.42, 0.2);
+    this.group.add(consoleBase);
+
+    // Forward sloping main instrument board
+    const dashPanel = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.06, 1.3), this.controlPanelMat);
+    dashPanel.position.set(0, 0.86, 0.2);
+    dashPanel.rotation.x = -0.22;
     this.group.add(dashPanel);
 
-    // Recessed Dual CRT Flight Monitors on Bridge Console
-    const crtLeft = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.7, 0.1), this.crtAmberMat);
-    crtLeft.position.set(-1.1, 1.25, 0.9);
-    crtLeft.rotation.x = -0.15;
+    // Center auxiliary telemetry CRT (System Status)
+    const crtCenter = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.65, 0.1), this.crtAmberMat);
+    crtCenter.position.set(0, 1.15, -0.25);
+    crtCenter.rotation.x = -0.18;
+    this.group.add(crtCenter);
 
-    const crtRight = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.7, 0.1), this.crtGreenMat);
-    crtRight.position.set(1.1, 1.25, 0.9);
-    crtRight.rotation.x = -0.15;
-    this.group.add(crtLeft, crtRight);
+    // Pilot Helm CRT (Port - Amber Vector Scope)
+    const crtPilot = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.75, 0.1), this.crtAmberMat);
+    crtPilot.position.set(-1.45, 1.2, -0.15);
+    crtPilot.rotation.x = -0.18;
+    crtPilot.rotation.y = 0.1;
+    this.group.add(crtPilot);
 
-    // Dual Utilitarian Flight Chairs (Star Wars cockpit style)
-    for (let cx of [-1.3, 1.3]) {
-      const seatBase = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.6, 8), this.ironMat);
-      seatBase.position.set(cx, 0.3, 2.5);
-      const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.15, 0.7), this.durasteelMat);
-      cushion.position.set(cx, 0.65, 2.5);
-      const seatBack = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, 0.15), this.durasteelMat);
-      seatBack.position.set(cx, 1.1, 2.8);
-      seatBack.rotation.x = -0.1;
-      this.group.add(seatBase, cushion, seatBack);
+    // Co-Pilot Radar / Spectrometry CRT (Starboard - Green Sensor)
+    const crtCoPilot = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.75, 0.1), this.crtGreenMat);
+    crtCoPilot.position.set(1.45, 1.2, -0.15);
+    crtCoPilot.rotation.x = -0.18;
+    crtCoPilot.rotation.y = -0.1;
+    this.group.add(crtCoPilot);
+
+    // Tactical warning plate with hazard stripes
+    const hazardPlate = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 0.02), this.hazardMat);
+    hazardPlate.position.set(0, 0.85, 0.75);
+    this.group.add(hazardPlate);
+
+    // 4. Dual Tactile Flight Yokes / Control Columns
+    for (let yx of [-1.1, 1.1]) {
+      // Yoke pedestal column
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.65, 8), this.ironMat);
+      col.position.set(yx, 0.7, 0.75);
+      col.rotation.x = -0.25;
+
+      // Handlebar crossbar
+      const handle = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.05, 0.06), this.durasteelMat);
+      handle.position.set(yx, 0.95, 0.68);
+
+      // Left & Right handgrips with trigger
+      const gripL = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.14, 8), this.brassMat);
+      gripL.position.set(yx - 0.16, 0.98, 0.68);
+      const gripR = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.14, 8), this.brassMat);
+      gripR.position.set(yx + 0.16, 0.98, 0.68);
+
+      this.group.add(col, handle, gripL, gripR);
+    }
+
+    // Center Dual Throttle Lever Assembly
+    const throttleMount = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.12, 0.4), this.ironMat);
+    throttleMount.position.set(0, 0.92, 0.55);
+    for (let tx of [-0.08, 0.08]) {
+      const lever = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.18, 6), this.brassMat);
+      lever.position.set(tx, 1.0, 0.55);
+      lever.rotation.x = 0.2;
+      const knob = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), this.amberLampMat);
+      knob.position.set(tx, 1.08, 0.52);
+      this.group.add(lever, knob);
+    }
+    this.group.add(throttleMount);
+
+    // 5. Pilot and Co-Pilot Armored Flight Chairs (Star Wars / Dune Style)
+    for (let cx of [-1.2, 1.2]) {
+      // Swivel pedestal base
+      const seatBase = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 0.5, 8), this.ironMat);
+      seatBase.position.set(cx, 0.25, 1.8);
+
+      // Armored bucket seat bottom
+      const seatCushion = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.16, 0.75), this.durasteelMat);
+      seatCushion.position.set(cx, 0.56, 1.8);
+
+      // High-back spinal armor plate
+      const seatBack = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.95, 0.14), this.durasteelMat);
+      seatBack.position.set(cx, 1.08, 2.15);
+      seatBack.rotation.x = -0.08;
+
+      // Headrest with side support bolsters
+      const headRest = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.3, 0.15), this.ironMat);
+      headRest.position.set(cx, 1.62, 2.22);
+      headRest.rotation.x = -0.08;
+
+      // Restraint harness chest buckles
+      const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.04), this.brassMat);
+      buckle.position.set(cx, 1.05, 2.06);
+
+      this.group.add(seatBase, seatCushion, seatBack, headRest, buckle);
     }
   }
 
@@ -431,25 +564,55 @@ export class ShipInterior {
   }
 
   buildPlanetaryVista() {
-    // Giant Arrakis / Desert Planet visible through front viewport at Z = -85
-    const planetGeo = new THREE.SphereGeometry(24, 48, 48);
+    // === SPACE OPERA MULTI-PLANET CELESTIAL VISTA ===
+    // 1. Chromatic Gas Giant (Jovian class with atmospheric storms)
+    const gasGiantGeo = new THREE.SphereGeometry(22, 48, 48);
+    const gasGiantMat = new THREE.MeshStandardMaterial({
+      map: this.gasGiantTex,
+      roughness: 0.85,
+      metalness: 0.15,
+      emissive: 0x181e28,
+      emissiveIntensity: 0.2
+    });
+    this.gasGiant = new THREE.Mesh(gasGiantGeo, gasGiantMat);
+    this.gasGiant.position.set(-28, 12, -90);
+    this.group.add(this.gasGiant);
+
+    // Majestic Planetary Ring System (dusty icy rings with Cassini division)
+    const ringGeo = new THREE.RingGeometry(26, 50, 64);
+    const ringMat = new THREE.MeshStandardMaterial({
+      map: this.ringsTex,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.85,
+      roughness: 0.9,
+      metalness: 0.1
+    });
+    this.rings = new THREE.Mesh(ringGeo, ringMat);
+    this.rings.position.copy(this.gasGiant.position);
+    this.rings.rotation.x = Math.PI * 0.42;
+    this.rings.rotation.y = -0.22;
+    this.group.add(this.rings);
+
+    // 2. Vareth-9 (Quest 1 Destination — Banded Arid Desert World) in orbital descent
+    const planetGeo = new THREE.SphereGeometry(16, 48, 48);
     const planetMat = new THREE.MeshStandardMaterial({
       map: this.planetTex,
-      roughness: 0.95,
+      roughness: 0.92,
       metalness: 0.1,
-      emissive: 0x3d200a,
-      emissiveIntensity: 0.25
+      emissive: 0x2e1808,
+      emissiveIntensity: 0.2
     });
     this.planet = new THREE.Mesh(planetGeo, planetMat);
-    this.planet.position.set(0, 6, -85);
+    this.planet.position.set(22, -8, -80);
     this.group.add(this.planet);
 
-    // Warm Atmospheric Dust Halo
-    const haloGeo = new THREE.SphereGeometry(25.0, 48, 48);
+    // Vareth-9 Atmospheric Dust Halo
+    const haloGeo = new THREE.SphereGeometry(16.8, 48, 48);
     const haloMat = new THREE.MeshBasicMaterial({
       color: 0xf4a261,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.22,
       side: THREE.BackSide,
       blending: THREE.AdditiveBlending
     });
@@ -457,39 +620,87 @@ export class ShipInterior {
     halo.position.copy(this.planet.position);
     this.group.add(halo);
 
-    // Twin Cratered Moons in High Orbit
-    const moonMat = new THREE.MeshStandardMaterial({
-      color: 0x8a7f72,
-      roughness: 0.9
+    // 3. Distant Crystalline Ice Moon (Cryo-Haven Sector)
+    const iceMoonMat = new THREE.MeshStandardMaterial({
+      color: 0xa8c8e8,
+      roughness: 0.75,
+      emissive: 0x102035,
+      emissiveIntensity: 0.3
     });
-    const moon1 = new THREE.Mesh(new THREE.SphereGeometry(3.5, 24, 24), moonMat);
-    moon1.position.set(-36, 18, -95);
-    const moon2 = new THREE.Mesh(new THREE.SphereGeometry(1.8, 16, 16), moonMat);
-    moon2.position.set(38, 24, -110);
-    this.group.add(moon1, moon2);
-    this.moons.push(moon1, moon2);
+    const iceMoon = new THREE.Mesh(new THREE.SphereGeometry(3.6, 24, 24), iceMoonMat);
+    iceMoon.position.set(-6, 22, -120);
+    this.group.add(iceMoon);
+    this.moons.push(iceMoon);
+
+    // 4. Volcanic Smoldering Moon (Pyros Sector)
+    const pyroMoonMat = new THREE.MeshStandardMaterial({
+      color: 0x6e3820,
+      roughness: 0.9,
+      emissive: 0xd95a18,
+      emissiveIntensity: 0.25
+    });
+    const pyroMoon = new THREE.Mesh(new THREE.SphereGeometry(2.4, 20, 20), pyroMoonMat);
+    pyroMoon.position.set(38, 16, -95);
+    this.group.add(pyroMoon);
+    this.moons.push(pyroMoon);
+
+    // 5. Drifting Asteroid Debris Belt in Space
+    const asteroidMat = new THREE.MeshStandardMaterial({
+      color: 0x3d4148,
+      roughness: 0.95,
+      metalness: 0.2
+    });
+    for (let i = 0; i < 32; i++) {
+      const scale = 0.35 + Math.random() * 1.2;
+      const astGeo = new THREE.DodecahedronGeometry(scale, 1);
+      const ast = new THREE.Mesh(astGeo, asteroidMat);
+      ast.position.set(
+        (Math.random() - 0.5) * 80,
+        (Math.random() - 0.5) * 35,
+        -30 - Math.random() * 55
+      );
+      ast.userData = {
+        rotSpeedX: (Math.random() - 0.5) * 0.4,
+        rotSpeedY: (Math.random() - 0.5) * 0.4,
+        driftSpeedZ: 0.02 + Math.random() * 0.04
+      };
+      this.group.add(ast);
+      this.asteroids.push(ast);
+    }
   }
 
   update(delta = 0.016, time = 0) {
-    // Rotate desert planet slowly
+    // Slowly rotate planetary bodies
     if (this.planet) {
-      this.planet.rotation.y += delta * 0.03;
+      this.planet.rotation.y += delta * 0.025;
+    }
+    if (this.gasGiant) {
+      this.gasGiant.rotation.y += delta * 0.018;
+    }
+    if (this.rings) {
+      this.rings.rotation.z += delta * 0.008;
     }
 
-    // Orbit moons slightly
+    // Orbit moons in space
     if (this.moons.length >= 2) {
-      this.moons[0].position.x = -36 + Math.sin(time * 0.1) * 2;
-      this.moons[1].position.y = 24 + Math.cos(time * 0.12) * 2;
+      this.moons[0].position.x = -6 + Math.sin(time * 0.08) * 3;
+      this.moons[1].position.y = 16 + Math.cos(time * 0.1) * 2;
     }
 
-    // Swirl floating dust particles
+    // Tumble drifting asteroids
+    for (let ast of this.asteroids) {
+      ast.rotation.x += delta * ast.userData.rotSpeedX;
+      ast.rotation.y += delta * ast.userData.rotSpeedY;
+    }
+
+    // Swirl floating cabin air motes
     if (this.dustParticles) {
       const pos = this.dustParticles.geometry.attributes.position.array;
       for (let i = 0; i < pos.length; i += 3) {
-        pos[i + 1] -= delta * 0.08; // gentle settling
+        pos[i + 1] -= delta * 0.08;
         pos[i] += Math.sin(time * 0.5 + pos[i + 2]) * 0.002;
         if (pos[i + 1] < 0) {
-          pos[i + 1] = 4.0; // wrap to ceiling
+          pos[i + 1] = 4.0;
         }
       }
       this.dustParticles.geometry.attributes.position.needsUpdate = true;
@@ -503,7 +714,7 @@ export class ShipInterior {
       el.rotation.y += delta * 0.25;
     }
 
-    // Orbit animated elements (spice particle cloud)
+    // Orbit animated elements
     for (let el of this.animatedElements) {
       el.rotation.y += delta * 0.35;
     }

@@ -20,11 +20,11 @@ import { renderSettings } from './screens/settings.js';
 import { renderAdmin } from './screens/admin.js';
 
 const ROUTE_BACKDROPS = {
-  '/': '/art/hero_desert_outpost.jpg',
-  '/login': '/art/hero_desert_outpost.jpg',
-  '/register': '/art/hero_desert_outpost.jpg',
-  '/onboarding': '/art/hero_desert_outpost.jpg',
-  '/bridge': '/art/bridge.jpg',
+  '/': '/art/cockpit.jpg',
+  '/login': '/art/cockpit.jpg',
+  '/register': '/art/cockpit.jpg',
+  '/onboarding': '/art/cockpit.jpg',
+  '/bridge': '/art/cockpit.jpg',
   '/starmap': '/art/starmap.jpg',
   '/quest': '/art/crucible.jpg',
   '/demo': '/art/crucible.jpg',
@@ -111,7 +111,7 @@ export class Router {
     // Update fallback backdrop for T1
     const backdropEl = document.getElementById('fallback-backdrop');
     if (backdropEl) {
-      const bg = ROUTE_BACKDROPS[raw] || '/art/hero_desert_outpost.jpg';
+      const bg = ROUTE_BACKDROPS[raw] || '/art/cockpit.jpg';
       backdropEl.style.backgroundImage = `url("${bg}")`;
     }
 

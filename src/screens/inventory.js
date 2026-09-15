@@ -15,7 +15,7 @@ export function renderInventory(container) {
   let inventory = session.inventory || [];
 
   const ITEM_CATALOG = {
-    hint_chip: { name: 'Scanner Logic Core', flavor: 'Decompiled Arrakis field telemetry module.', rarity: 'common', effect: 'Free chemical sensor hint' },
+    hint_chip: { name: 'Scanner Logic Core', flavor: 'Decompiled deep-space sensor telemetry module.', rarity: 'common', effect: 'Free chemical sensor hint' },
     spare_coolant: { name: 'Cryo-Coolant Canister', flavor: 'Heavy insulated freon containment vessel.', rarity: 'common', effect: 'Restores one failed synthesis attempt' },
     overclock_module: { name: 'Smelter Overclock Unit', flavor: 'Bypasses catalyst thermal governors.', rarity: 'rare', effect: '×1.25 XP surge on active quest' },
     deflector_plate: { name: 'Ablative Durasteel Shield', flavor: 'Reinforced plating with anti-dust seal.', rarity: 'rare', effect: 'Negates adverse environmental event' },

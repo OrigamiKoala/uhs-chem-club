@@ -74,7 +74,7 @@ export function renderQuarters(container) {
             <div class="form-group">
               <label class="form-label">Visor Optical Filter</label>
               <select id="avatar-visor" class="form-select">
-                <option value="gold" ${avatar.visor === 'gold' ? 'selected' : ''}>Solar Sand Gold (Arrakis UV)</option>
+                <option value="gold" ${avatar.visor === 'gold' ? 'selected' : ''}>Solar Flare Amber (Starlight Filter)</option>
                 <option value="green" ${avatar.visor === 'green' ? 'selected' : ''}>Phosphor Sensor Green (Night Recon)</option>
                 <option value="red" ${avatar.visor === 'red' ? 'selected' : ''}>Smelter Thermal Rust (Infrared)</option>
               </select>

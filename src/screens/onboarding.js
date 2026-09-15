@@ -4,30 +4,31 @@
 
 import { api } from '../api.js';
 import { session } from '../session.js';
+import { stage } from '../three/stage.js';
 import { showToast } from '../ui/toast.js';
 
 const GUILD_METADATA = {
   earth: {
     title: 'Mineral Mining Guild',
-    sub: 'Heavy extraction & crystallographic lattice synthesis',
+    sub: 'Asteroid harvesting & deep-space crystal lattice synthesis',
     accent: '#a3824c',
     code: 'GUILD // SEC-01'
   },
   air: {
     title: 'Atmospheric Harvesters',
-    sub: 'Vortex gas separation & noble vapor telemetry',
+    sub: 'Gas giant vortex extraction & nebular vapor telemetry',
     accent: '#8a9ba8',
     code: 'GUILD // SEC-02'
   },
   fire: {
     title: 'Thermal Smelters Guild',
-    sub: 'High-temp pyrosynthesis & plasma reaction containment',
+    sub: 'Stellar pyrosynthesis & plasma containment reactors',
     accent: '#c85a17',
     code: 'GUILD // SEC-03'
   },
   water: {
     title: 'Moisture Extraction Guild',
-    sub: 'Hydro-recovery & ionic solvent filtration',
+    sub: 'Cometary hydro-recovery & ionic solvent filtration',
     accent: '#2a9d8f',
     code: 'GUILD // SEC-04'
   }
@@ -41,6 +42,10 @@ const DEFAULT_TEAMS = [
 ];
 
 export async function renderOnboarding(container) {
+  if (stage.cameraRig) {
+    stage.cameraRig.moveTo('cockpit');
+  }
+
   let selectedTeam = null;
   let teamsData = (session.teams && session.teams.length > 0) ? session.teams : DEFAULT_TEAMS;
 
@@ -54,16 +59,16 @@ export async function renderOnboarding(container) {
             <img src="/art/factions.jpg" alt="Imperial Guild Insignias" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.9);" />
             <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, rgba(12, 13, 17, 0.95) 100%);"></div>
             <div style="position: absolute; bottom: 8px; left: 12px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-amber); letter-spacing: 0.12em;">
-              [ EXPEDITION CONSORTIUM // GUILD CHARTER PACT ]
+              [ FLAGSHIP AVALON // INTERSTELLAR EXPEDITION CONSORTIUM // GUILD CHARTER ]
             </div>
           </div>
 
           <div style="border-bottom: 1px solid var(--border-durasteel); padding-bottom: 1rem; margin-bottom: 1.5rem; text-align: center;">
             <h2 style="font-family: var(--font-imperial); font-size: 1.6rem; letter-spacing: 0.12em; color: #fffdf7; margin-bottom: 0.25rem;">
-              Enlist With A Guild
+              Enlist With An Interstellar Guild
             </h2>
             <p style="font-family: var(--font-main); font-size: 0.9rem; color: var(--text-secondary);">
-              Select your expedition syndicate to claim your division colors and access field quests.
+              Select your expedition syndicate to claim your division flight colors, access starship consoles, and deploy to planetary field trials.
             </p>
           </div>
 
