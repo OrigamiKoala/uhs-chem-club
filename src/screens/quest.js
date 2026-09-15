@@ -1,6 +1,6 @@
 /**
  * quest.js — Master Quest 1 player HUD & simulation runner
- * The Charge Gardens of Vareth-9
+ * The Charge Gardens of Erebus
  */
 
 import { api } from '../api.js';

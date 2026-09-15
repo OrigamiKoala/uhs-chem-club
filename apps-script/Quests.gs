@@ -4,9 +4,9 @@
 
 var DEFAULT_QUEST = {
   quest_id: 'q1',
-  title: 'The Gardens of Vareth-9',
-  world: 'Vareth-9',
-  blurb: 'Survey paired molecular structures across the Vareth anomaly.',
+  title: 'The Charge Gardens of Erebus',
+  world: 'Erebus',
+  blurb: 'Survey paired molecular structures across the Erebus anomaly.',
   scene_id: 'reaction_chamber',
   cover_image: '/art/q1_cover.webp',
   release_at: '2026-09-18T00:00:00Z',

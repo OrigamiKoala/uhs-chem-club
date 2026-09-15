@@ -34,10 +34,12 @@
 - Converted 3D molecular renderer to ball-and-stick models with CPK colored spheres and connecting cylinder rods (`src/quest3d/molecule.js`).
 - Implemented realistic MarchingCubes electrostatic potential charge density isosurfaces: red for most dense, blue for least dense, green/cyan intermediate, slightly translucent to reveal ball-and-stick structure underneath (`src/quest3d/isosurface.js`).
 - Stripped all technical jargon ("electrons", "charge clouds", "nucleophile", "orbitals", etc.) across quest HUD, prompts, manifests, and backend (`src/screens/quest.js`, `apps-script/Quests.gs`, `api/[...route].js`). Set all prompts strictly to: "Draw a line between the two regions."
-- Space Opera overhaul: shifted theme to multi-planet space opera across uncharted star systems while keeping Quest 1 on the desert world Vareth-9.
+- Space Opera overhaul: shifted theme to multi-planet space opera across uncharted star systems while keeping Quest 1 on the desert world Erebus.
 - Onboarding, landing, login, register, and bridge vantage point configured to a 3D first-person starship cockpit looking out at deep space and celestial bodies.
 - Nano Banana generated assets: `/art/cockpit.jpg` (starship cockpit view), `/art/starmap.jpg` (multi-planet tactical projection), `/art/durasteel_plate.jpg` (weathered PBR plate texture), `/art/factions.jpg` (guild charter).
 - Three.js 3D assets: modeled faceted durasteel canopy trusses, overhead avionics rack, dual flight yokes, throttle quadrant, armored flight chairs, chromatic gas giant with planetary rings, tumbling asteroid debris belt, and deep-space starlight illumination.
+- Set Quest 1 primary world to Erebus across quest HUD, backend manifests, bridge telemetry, and starmap cartography.
+- Standardized teams to Earth, Air, Fire, Water: added auto-migration (`Db.ensureTeamsMigrated()`), legacy fallback aliases (`terra`, `zephyr`, `ignis`, `thalassa`), and client-side normalization across onboarding, session cache, and API proxy to resolve 400 team selection errors.
 
 
 
@@ -46,7 +48,7 @@
 All visual designs, UI components, and 3D scenes MUST strictly follow a **Star Wars / Dune "Used Universe" Space Opera** aesthetic across multiple planetary systems.
 
 ### 1. Design Philosophy
-- **Space Opera Scope**: Avalon spans multiple uncharted planets (Vareth-9 desert world, Pyros Prime volcanic forge, Cryo-Haven ice tundra, Vortex Strata gas giant). Quest 1 takes place on the desert planet Vareth-9.
+- **Space Opera Scope**: Avalon spans multiple uncharted planets (Erebus desert world, Pyros Prime volcanic forge, Cryo-Haven ice tundra, Vortex Strata gas giant). Quest 1 takes place on the desert planet Erebus.
 - **Starship Cockpit Perspective**: Non-quest screens (landing, onboarding, login, register, bridge) are viewed from the cockpit of the starship *Avalon*, looking through heavy faceted canopy framing out into deep space.
 - **Grimy & Advanced**: Technology looks battle-tested, dusty, scratched, oil-stained, and mechanically tactile (analog dials, CRT vector scopes, toggle switches, heavy bolted durasteel), while functioning as cutting-edge chemical engineering simulation hardware.
 - **Strictly Banned**: No "vibe-coded" synthwave, generic esports neon, modern web3 crypto cards, glossy blue glassmorphism, or electric cyan (`#00e5ff`) laser glows.
@@ -64,7 +66,7 @@ All visual designs, UI components, and 3D scenes MUST strictly follow a **Star W
 ### 4. 3D Graphics & Nano Banana Assets
 - Combine Nano Banana (`generate_image`) realistic matte textures and backdrops with Three.js procedural geometries and PBR materials (`MeshStandardMaterial`).
 - Starship Cockpit features faceted durasteel canopy mullions, overhead avionics rack, dual analog flight yokes, dual throttle quadrant, armored bucket flight seats, and twin CRT flight monitors.
-- Space Opera Celestial Vista features a chromatic gas giant with planetary rings, the banded desert planet Vareth-9 (Quest 1), orbiting moons, and an asteroid debris belt drifting through space.
+- Space Opera Celestial Vista features a chromatic gas giant with planetary rings, the banded desert planet Erebus (Quest 1), orbiting moons, and an asteroid debris belt drifting through space.
 - Lighting: Cool celestial starlight cutting through forward canopy, warm sodium/amber instrument task lamps, and floating micro-dust motes.
 - Routes bind corresponding high-res environment stills (`/art/cockpit.jpg`, `starmap.jpg`, `crucible.jpg`, `cargo.jpg`, `quarters.jpg`, `comms.jpg`, `airlock.jpg`).
 

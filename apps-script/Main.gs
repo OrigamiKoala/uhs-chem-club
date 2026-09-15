@@ -378,6 +378,9 @@ function doGet(e) {
 
 function setup() {
   Db.initDb();
+  Db.ensureTeamsMigrated();
   Quests.seedQuestsIfEmpty();
-  Logger.log('Avalon DB initialized successfully.');
+  Cache.drop('teams:slots');
+  Cache.drop('bootstrap:public');
+  Logger.log('Avalon DB initialized and teams migrated successfully.');
 }

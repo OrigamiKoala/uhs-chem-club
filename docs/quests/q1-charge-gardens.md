@@ -1,7 +1,7 @@
-# Quest 1: The Charge Gardens of Vareth-9
+# Quest 1: The Charge Gardens of Erebus
 
-**Title:** The Charge Gardens of Vareth-9  
-**World:** Vareth-9  
+**Title:** The Charge Gardens of Erebus  
+**World:** Erebus  
 **Target XP:** 165 Base XP (~200 with first-try and completion bonuses)  
 **Estimated Time:** 25–35 minutes  
 **Target Concept:** Curved-arrow notation and nucleophilic substitution ($S_N2$) discovered from electron density maps without upfront vocabulary.

@@ -47,7 +47,7 @@ export function renderStarMap(container) {
             <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-amber);">SECTOR 01 // DUNE SEA</span>
             <span style="color: var(--accent-green); font-size: 0.75rem; font-weight: 700; font-family: var(--font-mono);">● DEPLOYED</span>
           </div>
-          <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Vareth-9</h3>
+          <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Erebus</h3>
           <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">
             Electrostatic charge density mapping, nucleophilic attacks, and leaving group kinetics in harsh alkaline sand fields.
           </p>

@@ -9,6 +9,25 @@ const MOTION_KEY = 'avalon_motion_pref';
 const CONFIG_KEY = 'avalon_cached_config';
 const TEAMS_KEY = 'avalon_cached_teams';
 
+const ALIAS_MAP = { terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' };
+const PROPER_TEAM_NAMES = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
+
+function normalizeTeamId(tid) {
+  if (!tid) return tid;
+  const lc = String(tid).toLowerCase().trim();
+  return ALIAS_MAP[lc] || lc;
+}
+
+function normalizeTeamObj(t) {
+  if (!t || typeof t !== 'object') return t;
+  const tid = normalizeTeamId(t.team_id);
+  return {
+    ...t,
+    team_id: tid,
+    name: PROPER_TEAM_NAMES[tid] || t.name || tid
+  };
+}
+
 class SessionManager {
   constructor() {
     this.token = localStorage.getItem(TOKEN_KEY) || null;
@@ -32,7 +51,10 @@ class SessionManager {
       const cachedCfg = localStorage.getItem(CONFIG_KEY);
       if (cachedCfg) this.config = JSON.parse(cachedCfg);
       const cachedTeams = localStorage.getItem(TEAMS_KEY);
-      if (cachedTeams) this.teams = JSON.parse(cachedTeams);
+      if (cachedTeams) {
+        const parsed = JSON.parse(cachedTeams);
+        this.teams = Array.isArray(parsed) ? parsed.map(normalizeTeamObj) : [];
+      }
     } catch (e) {
       console.warn('Failed restoring cached config/teams:', e);
     }
@@ -43,8 +65,13 @@ class SessionManager {
       if (cachedUser) {
         try {
           const parsed = JSON.parse(cachedUser);
-          if (parsed.player) this.player = parsed.player;
-          if (parsed.team) this.team = parsed.team;
+          if (parsed.player) {
+            this.player = parsed.player;
+            if (this.player.team_id) {
+              this.player.team_id = normalizeTeamId(this.player.team_id);
+            }
+          }
+          if (parsed.team) this.team = normalizeTeamObj(parsed.team);
           if (typeof parsed.xp === 'number') this.xp = parsed.xp;
           if (typeof parsed.level === 'number') this.level = parsed.level;
           if (typeof parsed.isAdmin === 'boolean') this.isAdmin = parsed.isAdmin;
@@ -98,7 +125,10 @@ class SessionManager {
     }
 
     if (data.team !== undefined) {
-      this.team = data.team;
+      this.team = normalizeTeamObj(data.team);
+    }
+    if (this.player && this.player.team_id) {
+      this.player.team_id = normalizeTeamId(this.player.team_id);
     }
     if (typeof data.xp === 'number') {
       this.xp = data.xp;
@@ -152,8 +182,8 @@ class SessionManager {
       try { localStorage.setItem(CONFIG_KEY, JSON.stringify(config)); } catch (e) {}
     }
     if (teams && Array.isArray(teams)) {
-      this.teams = teams;
-      try { localStorage.setItem(TEAMS_KEY, JSON.stringify(teams)); } catch (e) {}
+      this.teams = teams.map(normalizeTeamObj);
+      try { localStorage.setItem(TEAMS_KEY, JSON.stringify(this.teams)); } catch (e) {}
     }
     if (this.player && this.player.team_id && (!this.team || this.team.team_id !== this.player.team_id)) {
       if (this.teams && this.teams.length > 0) {

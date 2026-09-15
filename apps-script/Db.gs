@@ -103,16 +103,83 @@ var Db = {
     }
 
     // Teams
+    Db.ensureTeamsMigrated();
+  },
+
+  ensureTeamsMigrated: function() {
+    var defaultTeams = [
+      { team_id: 'earth', name: 'Earth', corp_name: 'Earth', ship_name: 'Earth', color_hex: '#1b5e20', accent_hex: '#a3824c', slot_cap_override: '', lore: '', emblem: 'geo' },
+      { team_id: 'air', name: 'Air', corp_name: 'Air', ship_name: 'Air', color_hex: '#006064', accent_hex: '#8a9ba8', slot_cap_override: '', lore: '', emblem: 'aero' },
+      { team_id: 'fire', name: 'Fire', corp_name: 'Fire', ship_name: 'Fire', color_hex: '#bf360c', accent_hex: '#c85a17', slot_cap_override: '', lore: '', emblem: 'pyro' },
+      { team_id: 'water', name: 'Water', corp_name: 'Water', ship_name: 'Water', color_hex: '#0d47a1', accent_hex: '#2a9d8f', slot_cap_override: '', lore: '', emblem: 'hydro' }
+    ];
+
+    var aliasMap = {
+      terra: 'earth',
+      zephyr: 'air',
+      ignis: 'fire',
+      thalassa: 'water'
+    };
+
+    var properNames = {
+      earth: 'Earth',
+      air: 'Air',
+      fire: 'Fire',
+      water: 'Water'
+    };
+
     var teams = Db.getAll('Teams');
     if (teams.length === 0) {
-      var defaultTeams = [
-        { team_id: 'earth', name: 'earth', corp_name: 'earth', ship_name: 'earth', color_hex: '#1b5e20', accent_hex: '#4caf50', slot_cap_override: '', lore: '', emblem: 'geo' },
-        { team_id: 'air', name: 'air', corp_name: 'air', ship_name: 'air', color_hex: '#006064', accent_hex: '#00e5ff', slot_cap_override: '', lore: '', emblem: 'aero' },
-        { team_id: 'fire', name: 'fire', corp_name: 'fire', ship_name: 'fire', color_hex: '#bf360c', accent_hex: '#ff6e40', slot_cap_override: '', lore: '', emblem: 'pyro' },
-        { team_id: 'water', name: 'water', corp_name: 'water', ship_name: 'water', color_hex: '#0d47a1', accent_hex: '#2979ff', slot_cap_override: '', lore: '', emblem: 'hydro' }
-      ];
       for (var t = 0; t < defaultTeams.length; t++) {
         Db.append('Teams', defaultTeams[t]);
+      }
+    } else {
+      var needsCacheDrop = false;
+      for (var i = 0; i < teams.length; i++) {
+        var row = teams[i];
+        var oldId = String(row.team_id || '').toLowerCase().trim();
+        var newId = aliasMap[oldId] || oldId;
+        var targetName = properNames[newId] || properNames[oldId];
+
+        if (aliasMap[oldId] || (targetName && row.name !== targetName)) {
+          Db.update('Teams', function(r) { return r.team_id === row.team_id; }, {
+            team_id: newId,
+            name: targetName || properNames[newId],
+            corp_name: targetName || properNames[newId],
+            ship_name: targetName || properNames[newId]
+          });
+          needsCacheDrop = true;
+        }
+      }
+
+      // Ensure all 4 teams exist
+      var updatedTeams = Db.getAll('Teams');
+      var existingIds = {};
+      for (var j = 0; j < updatedTeams.length; j++) {
+        existingIds[String(updatedTeams[j].team_id || '').toLowerCase()] = true;
+      }
+      for (var k = 0; k < defaultTeams.length; k++) {
+        if (!existingIds[defaultTeams[k].team_id]) {
+          Db.append('Teams', defaultTeams[k]);
+          needsCacheDrop = true;
+        }
+      }
+
+      // Migrate any legacy team IDs in Players
+      var players = Db.getAll('Players');
+      for (var p = 0; p < players.length; p++) {
+        var pTid = String(players[p].team_id || '').toLowerCase().trim();
+        if (aliasMap[pTid]) {
+          Db.update('Players', function(pl) { return pl.player_id === players[p].player_id; }, {
+            team_id: aliasMap[pTid]
+          });
+          needsCacheDrop = true;
+        }
+      }
+
+      if (needsCacheDrop) {
+        Cache.drop('teams:slots');
+        Cache.drop('bootstrap:public');
       }
     }
 

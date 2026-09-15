@@ -82,6 +82,31 @@ async function callAppsScript(route, body) {
   const text = await response.text();
   try {
     const result = JSON.parse(text);
+    if (result && result.data) {
+      const properNames = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
+      if (Array.isArray(result.data.teams)) {
+        result.data.teams = result.data.teams.map(t => {
+          const normId = normalizeTeam(t.team_id);
+          return {
+            ...t,
+            team_id: normId,
+            name: properNames[normId] || t.name || normId
+          };
+        });
+      }
+      if (result.data.events) {
+        const normEv = {};
+        for (const k of Object.keys(result.data.events)) {
+          normEv[normalizeTeam(k)] = result.data.events[k];
+        }
+        result.data.events = normEv;
+      }
+      if (result.data.player && result.data.player.team) {
+        const pTid = normalizeTeam(result.data.player.team.team_id);
+        result.data.player.team.team_id = pTid;
+        result.data.player.team.name = properNames[pTid] || result.data.player.team.name || pTid;
+      }
+    }
     if (isPublicCacheable && result.ok) {
       setCached(cacheKey, result, route === 'leaderboard' ? 20000 : 60000);
     }
@@ -101,10 +126,10 @@ const localStore = {
   inventory: [],
   nameHistory: [],
   teams: [
-    { team_id: 'earth', name: 'earth', corp_name: 'earth', ship_name: 'earth', color_hex: '#1b5e20', accent_hex: '#4caf50', cap: 12, lore: '', emblem: 'geo' },
-    { team_id: 'air', name: 'air', corp_name: 'air', ship_name: 'air', color_hex: '#006064', accent_hex: '#00e5ff', cap: 12, lore: '', emblem: 'aero' },
-    { team_id: 'fire', name: 'fire', corp_name: 'fire', ship_name: 'fire', color_hex: '#bf360c', accent_hex: '#ff6e40', cap: 12, lore: '', emblem: 'pyro' },
-    { team_id: 'water', name: 'water', corp_name: 'water', ship_name: 'water', color_hex: '#0d47a1', accent_hex: '#2979ff', cap: 12, lore: '', emblem: 'hydro' }
+    { team_id: 'earth', name: 'Earth', corp_name: 'Earth', ship_name: 'Earth', color_hex: '#1b5e20', accent_hex: '#a3824c', cap: 12, lore: '', emblem: 'geo' },
+    { team_id: 'air', name: 'Air', corp_name: 'Air', ship_name: 'Air', color_hex: '#006064', accent_hex: '#8a9ba8', cap: 12, lore: '', emblem: 'aero' },
+    { team_id: 'fire', name: 'Fire', corp_name: 'Fire', ship_name: 'Fire', color_hex: '#bf360c', accent_hex: '#c85a17', cap: 12, lore: '', emblem: 'pyro' },
+    { team_id: 'water', name: 'Water', corp_name: 'Water', ship_name: 'Water', color_hex: '#0d47a1', accent_hex: '#2a9d8f', cap: 12, lore: '', emblem: 'hydro' }
   ]
 };
 
@@ -187,7 +212,7 @@ function localDevHandler(route, body) {
         },
         teams: teamSlots,
         activeQuest: {
-          quest: { quest_id: 'q1', title: 'The Gardens of Vareth-9', world: 'Vareth-9' },
+          quest: { quest_id: 'q1', title: 'The Charge Gardens of Erebus', world: 'Erebus' },
           stages: [
             { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 1', prompt: 'Draw a line between the two regions.', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
             { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 2', prompt: 'Draw a line between the two regions.', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
@@ -206,10 +231,10 @@ function localDevHandler(route, body) {
           isAdmin: true
         } : null,
         events: {
-          terra: { event_id: 'slipstream', name: 'Slipstream Current', polarity: 'good' },
-          zephyr: { event_id: 'quiet_space', name: 'Quiet Space', polarity: 'neutral' },
-          ignis: { event_id: 'solar_flare', name: 'Solar Flare', polarity: 'bad' },
-          thalassa: { event_id: 'stellar_wind', name: 'Stellar Wind', polarity: 'good' }
+          earth: { event_id: 'slipstream', name: 'Slipstream Current', polarity: 'good' },
+          air: { event_id: 'quiet_space', name: 'Quiet Space', polarity: 'neutral' },
+          fire: { event_id: 'solar_flare', name: 'Solar Flare', polarity: 'bad' },
+          water: { event_id: 'stellar_wind', name: 'Stellar Wind', polarity: 'good' }
         }
       }
     };
@@ -327,9 +352,9 @@ function localDevHandler(route, body) {
       data: {
         quest: {
           quest_id: 'q1',
-          title: 'The Charge Gardens of Vareth-9',
-          world: 'Vareth-9',
-          blurb: 'Survey paired molecular structures across the Vareth anomaly.',
+          title: 'The Charge Gardens of Erebus',
+          world: 'Erebus',
+          blurb: 'Survey paired molecular structures across the Erebus anomaly.',
           status: 'live',
           stage_count: 7,
           base_xp: 165

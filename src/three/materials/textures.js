@@ -239,7 +239,7 @@ export function createCrtScreenTexture(title = 'TELEMETRY', type = 'amber') {
   // Status telemetry readouts
   ctx.font = '11px monospace';
   ctx.fillStyle = primaryColor;
-  ctx.fillText('SYS: AVALON-HELM   ORBIT: VARETH-9', 16, 205);
+  ctx.fillText('SYS: AVALON-HELM   ORBIT: EREBUS', 16, 205);
   ctx.fillText('VECTOR: 044-STABLE WARP: STANDBY', 16, 224);
   ctx.fillText('STATUS: LOCKED // CALIB OK', 16, 242);
 

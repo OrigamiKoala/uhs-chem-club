@@ -594,7 +594,7 @@ export class ShipInterior {
     this.rings.rotation.y = -0.22;
     this.group.add(this.rings);
 
-    // 2. Vareth-9 (Quest 1 Destination — Banded Arid Desert World) in orbital descent
+    // 2. Erebus (Quest 1 Destination — Banded Arid Desert World) in orbital descent
     const planetGeo = new THREE.SphereGeometry(16, 48, 48);
     const planetMat = new THREE.MeshStandardMaterial({
       map: this.planetTex,
@@ -607,7 +607,7 @@ export class ShipInterior {
     this.planet.position.set(22, -8, -80);
     this.group.add(this.planet);
 
-    // Vareth-9 Atmospheric Dust Halo
+    // Erebus Atmospheric Dust Halo
     const haloGeo = new THREE.SphereGeometry(16.8, 48, 48);
     const haloMat = new THREE.MeshBasicMaterial({
       color: 0xf4a261,

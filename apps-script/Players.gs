@@ -41,9 +41,20 @@ var Players = {
       avatar = avatarOpt;
     }
 
-    teamId = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[teamId] || teamId);
+    teamId = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[String(teamId || '').toLowerCase()] || teamId);
 
     var team = Db.findOne('Teams', function(t) { return t.team_id === teamId; });
+    if (!team) {
+      Db.ensureTeamsMigrated();
+      team = Db.findOne('Teams', function(t) { return t.team_id === teamId; });
+    }
+    if (!team) {
+      var reverseMap = { earth: 'terra', air: 'zephyr', fire: 'ignis', water: 'thalassa' };
+      var legacyId = reverseMap[teamId];
+      if (legacyId) {
+        team = Db.findOne('Teams', function(t) { return t.team_id === legacyId; });
+      }
+    }
     if (!team) {
       throw { code: 'INVALID_TEAM', message: 'Invalid team selected.' };
     }
@@ -165,6 +176,19 @@ var Players = {
     if (cached) return cached;
 
     var teams = Db.getAll('Teams');
+    var hasLegacy = false;
+    for (var lt = 0; lt < teams.length; lt++) {
+      var checkTid = String(teams[lt].team_id || '').toLowerCase();
+      if (checkTid === 'terra' || checkTid === 'zephyr' || checkTid === 'ignis' || checkTid === 'thalassa') {
+        hasLegacy = true;
+        break;
+      }
+    }
+    if (hasLegacy || teams.length === 0) {
+      Db.ensureTeamsMigrated();
+      teams = Db.getAll('Teams');
+    }
+
     var players = Db.getAll('Players');
     var cfgCap = 12;
     var cfg = Db.findOne('Config', function(c) { return c.key === 'team_slot_cap'; });
@@ -174,18 +198,24 @@ var Players = {
     for (var i = 0; i < players.length; i++) {
       var tId = players[i].team_id;
       if (tId && players[i].status !== 'banned') {
-        counts[tId] = (counts[tId] || 0) + 1;
+        var normT = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[String(tId).toLowerCase()] || tId);
+        counts[normT] = (counts[normT] || 0) + 1;
       }
     }
 
+    var properNames = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
+
     var result = teams.map(function(t) {
+      var normId = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[String(t.team_id).toLowerCase()] || t.team_id);
       var cap = t.slot_cap_override ? Number(t.slot_cap_override) : cfgCap;
-      var count = counts[t.team_id] || 0;
+      var count = counts[normId] || counts[t.team_id] || 0;
+      var displayName = properNames[normId] || t.name || normId;
+
       return {
-        team_id: t.team_id,
-        name: t.name,
-        corp_name: t.corp_name,
-        ship_name: t.ship_name,
+        team_id: normId,
+        name: displayName,
+        corp_name: displayName,
+        ship_name: displayName,
         color_hex: t.color_hex,
         accent_hex: t.accent_hex,
         lore: t.lore,

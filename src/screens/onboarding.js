@@ -9,37 +9,67 @@ import { showToast } from '../ui/toast.js';
 
 const GUILD_METADATA = {
   earth: {
-    title: 'Mineral Mining Guild',
+    title: 'Earth',
     sub: 'Asteroid harvesting & deep-space crystal lattice synthesis',
     accent: '#a3824c',
-    code: 'GUILD // SEC-01'
+    code: 'DIVISION // EARTH'
   },
   air: {
-    title: 'Atmospheric Harvesters',
+    title: 'Air',
     sub: 'Gas giant vortex extraction & nebular vapor telemetry',
     accent: '#8a9ba8',
-    code: 'GUILD // SEC-02'
+    code: 'DIVISION // AIR'
   },
   fire: {
-    title: 'Thermal Smelters Guild',
+    title: 'Fire',
     sub: 'Stellar pyrosynthesis & plasma containment reactors',
     accent: '#c85a17',
-    code: 'GUILD // SEC-03'
+    code: 'DIVISION // FIRE'
   },
   water: {
-    title: 'Moisture Extraction Guild',
+    title: 'Water',
     sub: 'Cometary hydro-recovery & ionic solvent filtration',
     accent: '#2a9d8f',
-    code: 'GUILD // SEC-04'
+    code: 'DIVISION // WATER'
   }
 };
+GUILD_METADATA.terra = GUILD_METADATA.earth;
+GUILD_METADATA.zephyr = GUILD_METADATA.air;
+GUILD_METADATA.ignis = GUILD_METADATA.fire;
+GUILD_METADATA.thalassa = GUILD_METADATA.water;
 
 const DEFAULT_TEAMS = [
-  { team_id: 'earth', name: 'earth', color_hex: '#2b2114', accent_hex: '#a3824c', cap: 12, available: 12 },
-  { team_id: 'air', name: 'air', color_hex: '#1e242a', accent_hex: '#8a9ba8', cap: 12, available: 12 },
-  { team_id: 'fire', name: 'fire', color_hex: '#2d180d', accent_hex: '#c85a17', cap: 12, available: 12 },
-  { team_id: 'water', name: 'water', color_hex: '#0e2422', accent_hex: '#2a9d8f', cap: 12, available: 12 }
+  { team_id: 'earth', name: 'Earth', color_hex: '#2b2114', accent_hex: '#a3824c', cap: 12, available: 12 },
+  { team_id: 'air', name: 'Air', color_hex: '#1e242a', accent_hex: '#8a9ba8', cap: 12, available: 12 },
+  { team_id: 'fire', name: 'Fire', color_hex: '#2d180d', accent_hex: '#c85a17', cap: 12, available: 12 },
+  { team_id: 'water', name: 'Water', color_hex: '#0e2422', accent_hex: '#2a9d8f', cap: 12, available: 12 }
 ];
+
+const TEAM_ALIAS = {
+  terra: 'earth',
+  zephyr: 'air',
+  ignis: 'fire',
+  thalassa: 'water'
+};
+
+const PROPER_NAMES = {
+  earth: 'Earth',
+  air: 'Air',
+  fire: 'Fire',
+  water: 'Water'
+};
+
+function normalizeTeams(list) {
+  if (!list || !Array.isArray(list) || list.length === 0) return DEFAULT_TEAMS;
+  return list.map(t => {
+    const tid = TEAM_ALIAS[String(t.team_id || '').toLowerCase()] || String(t.team_id || '').toLowerCase();
+    return {
+      ...t,
+      team_id: tid,
+      name: PROPER_NAMES[tid] || t.name || tid
+    };
+  });
+}
 
 export async function renderOnboarding(container) {
   if (stage.cameraRig) {
@@ -47,7 +77,7 @@ export async function renderOnboarding(container) {
   }
 
   let selectedTeam = null;
-  let teamsData = (session.teams && session.teams.length > 0) ? session.teams : DEFAULT_TEAMS;
+  let teamsData = normalizeTeams(session.teams && session.teams.length > 0 ? session.teams : DEFAULT_TEAMS);
 
   function render() {
     container.innerHTML = `
@@ -179,7 +209,7 @@ export async function renderOnboarding(container) {
 
           if (err.code === 'TEAM_FULL') {
             const boot = await api.bootstrap();
-            teamsData = boot.teams || [];
+            teamsData = normalizeTeams(boot.teams || []);
             selectedTeam = null;
             errorEl.textContent = 'Guild reached capacity during transmission. Select another guild.';
             render();
@@ -193,7 +223,7 @@ export async function renderOnboarding(container) {
 
   api.bootstrap().then(boot => {
     if (boot && boot.teams && boot.teams.length > 0) {
-      teamsData = boot.teams;
+      teamsData = normalizeTeams(boot.teams);
       session.teams = teamsData;
       render();
     }

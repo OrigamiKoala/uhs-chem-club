@@ -607,7 +607,7 @@ The quest is built on reading a *glowing cloud*, so this is not decoration.
 
 ---
 
-## 8. Quest 1 — *The Charge Gardens of Vareth-9*
+## 8. Quest 1 — *The Charge Gardens of Erebus*
 
 ### 8.1 The teaching problem
 
@@ -621,7 +621,7 @@ This is the rare case where the 3D isn't decoration. A lone pair is a *spatial* 
 
 ### 8.3 The frame that makes density maps make sense
 
-Vareth-9 is wrapped in luminous fog. Your ship's scanner can't render solid matter — it renders **charge**. Everything you see is a false-color charge map, because that's the only instrument you have. Bright = crowded. Dark = starved. The alien machinery — a derelict terraforming lattice, the "charge gardens" — runs on charge flowing from crowded places to empty ones. To open a lock, you route the flow.
+Erebus is wrapped in luminous fog. Your ship's scanner can't render solid matter — it renders **charge**. Everything you see is a false-color charge map, because that's the only instrument you have. Bright = crowded. Dark = starved. The alien machinery — a derelict terraforming lattice, the "charge gardens" — runs on charge flowing from crowded places to empty ones. To open a lock, you route the flow.
 
 That conceit means a glowing density isosurface needs no apology: it's just what the scanner shows.
 

@@ -57,12 +57,12 @@ export function renderBridge(container) {
                 ● CHAMBER READY
               </div>
               <div style="position: absolute; bottom: 8px; left: 10px; font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-gold);">
-                EXPEDITION PROTOCOL: Q1-VARETH
+                EXPEDITION PROTOCOL: Q1-EREBUS
               </div>
             </div>
 
             <h3 class="holo-title" style="font-size: 1.35rem; color: var(--text-bright); margin-bottom: 0.4rem;">
-              The Charge Gardens of Vareth-9
+              The Charge Gardens of Erebus
             </h3>
             <p class="holo-subtitle" style="margin-bottom: 1.25rem;">
               Examine molecular electrostatic potential fields, lone pair geometries, and multi-center transition states inside the heavy containment crucible.
@@ -110,7 +110,7 @@ export function renderBridge(container) {
                 POLARITY: ${activeEv ? activeEv.polarity.toUpperCase() : 'BENEFICIAL'}
               </span>
               <span style="font-family: var(--font-mono); font-size: 0.75rem; padding: 4px 8px; border-radius: var(--radius-sm); background: rgba(255, 159, 28, 0.15); color: var(--accent-amber); border: 1px solid rgba(255, 159, 28, 0.35);">
-                ORBIT: VARETH-9 // SECTOR-01
+                ORBIT: EREBUS // SECTOR-01
               </span>
             </div>
 
