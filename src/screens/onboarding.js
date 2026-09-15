@@ -14,17 +14,17 @@ const ROLES = [
   { id: 'Comms Officer', title: 'Comms Officer', perk: 'View live teammate progress.', icon: '📡' }
 ];
 
+const DEFAULT_TEAMS = [
+  { team_id: 'terra', name: 'Terra', corp_name: 'Terra Dominion', ship_name: 'TDS Lodestone', color_hex: '#1b5e20', accent_hex: '#4caf50', cap: 12, available: 12, lore: 'Heavy metallurgy and mineral synthesis.', emblem: 'geo' },
+  { team_id: 'zephyr', name: 'Zephyr', corp_name: 'Zephyr Aeronautics', ship_name: 'ZAS Windward', color_hex: '#006064', accent_hex: '#00e5ff', cap: 12, available: 12, lore: 'Atmospheric distillation and fluid kinetics.', emblem: 'aero' },
+  { team_id: 'ignis', name: 'Ignis', corp_name: 'Ignis Combine', ship_name: 'ICS Emberline', color_hex: '#bf360c', accent_hex: '#ff6e40', cap: 12, available: 12, lore: 'High-energy combustion and plasma catalysis.', emblem: 'pyro' },
+  { team_id: 'thalassa', name: 'Thalassa', corp_name: 'Thalassa Deepworks', ship_name: 'TDW Tideglass', color_hex: '#0d47a1', accent_hex: '#2979ff', cap: 12, available: 12, lore: 'Aqueous solvent extractions and deep pressure chemistry.', emblem: 'hydro' }
+];
+
 export async function renderOnboarding(container) {
   let selectedRole = 'Navigator';
   let selectedTeam = null;
-  let teamsData = session.teams || [];
-
-  // Fetch live team slots
-  try {
-    const boot = await api.bootstrap();
-    teamsData = boot.teams || [];
-    session.teams = teamsData;
-  } catch (e) {}
+  let teamsData = (session.teams && session.teams.length > 0) ? session.teams : DEFAULT_TEAMS;
 
   function render() {
     container.innerHTML = `
@@ -172,4 +172,15 @@ export async function renderOnboarding(container) {
   }
 
   render();
+
+  // Refresh live team slots asynchronously in background
+  api.bootstrap().then(boot => {
+    if (boot && boot.teams && boot.teams.length > 0) {
+      teamsData = boot.teams;
+      session.teams = teamsData;
+      if (container.querySelector('#confirm-assignment-btn')) {
+        render();
+      }
+    }
+  }).catch(() => {});
 }

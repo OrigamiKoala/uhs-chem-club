@@ -5,38 +5,34 @@
 import { api } from '../api.js';
 import { showToast } from '../ui/toast.js';
 
-export async function renderAdmin(container) {
-  let stats = { totalPlayers: 0, totalSubmissions: 0, completions: 0, gfxTiers: { T1: 0, T2: 0, T3: 0 } };
-
-  try {
-    stats = await api.adminStats();
-  } catch (e) {}
+export function renderAdmin(container) {
+  let stats = { totalPlayers: '…', totalSubmissions: '…', completions: '…', gfxTiers: { T1: '…' } };
 
   container.innerHTML = `
-    <div class="screen-container" style="max-width: 920px;">
-      <div class="glass-panel" style="margin-bottom: 1.5rem;">
-        <h2 class="holo-title" style="margin-bottom: 0;">Admin</h2>
-      </div>
+      <div class="screen-container" style="max-width: 920px;">
+        <div class="glass-panel" style="margin-bottom: 1.5rem;">
+          <h2 class="holo-title" style="margin-bottom: 0;">Admin</h2>
+        </div>
 
-      <!-- Live Counters -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-        <div class="holo-card" style="padding: 1rem;">
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Total Players</div>
-          <div style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: var(--accent-cyan);">${stats.totalPlayers || 0}</div>
+        <!-- Live Counters -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="holo-card" style="padding: 1rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Total Players</div>
+            <div id="stat-total-players" style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: var(--accent-cyan);">${stats.totalPlayers}</div>
+          </div>
+          <div class="holo-card" style="padding: 1rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Submissions</div>
+            <div id="stat-total-subs" style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: var(--accent-green);">${stats.totalSubmissions}</div>
+          </div>
+          <div class="holo-card" style="padding: 1rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Completions</div>
+            <div id="stat-completions" style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: var(--accent-amber);">${stats.completions}</div>
+          </div>
+          <div class="holo-card" style="padding: 1rem;">
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Tier 1 Submissions</div>
+            <div id="stat-t1-subs" style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: #82b1ff;">${stats.gfxTiers?.T1 ?? 0}</div>
+          </div>
         </div>
-        <div class="holo-card" style="padding: 1rem;">
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Submissions</div>
-          <div style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: var(--accent-green);">${stats.totalSubmissions || 0}</div>
-        </div>
-        <div class="holo-card" style="padding: 1rem;">
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Completions</div>
-          <div style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: var(--accent-amber);">${stats.completions || 0}</div>
-        </div>
-        <div class="holo-card" style="padding: 1rem;">
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Tier 1 Submissions</div>
-          <div style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: #82b1ff;">${stats.gfxTiers?.T1 || 0}</div>
-        </div>
-      </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
         <!-- Reset Password Tool (§3.5) -->
@@ -134,4 +130,17 @@ export async function renderAdmin(container) {
       showToast(err.message || 'XP grant failed', 'error');
     }
   });
+
+  // Fetch live stats in background
+  api.adminStats().then(s => {
+    if (!s) return;
+    const pEl = container.querySelector('#stat-total-players');
+    const sEl = container.querySelector('#stat-total-subs');
+    const cEl = container.querySelector('#stat-completions');
+    const tEl = container.querySelector('#stat-t1-subs');
+    if (pEl) pEl.textContent = s.totalPlayers ?? 0;
+    if (sEl) sEl.textContent = s.totalSubmissions ?? 0;
+    if (cEl) cEl.textContent = s.completions ?? 0;
+    if (tEl) tEl.textContent = s.gfxTiers?.T1 ?? 0;
+  }).catch(() => {});
 }

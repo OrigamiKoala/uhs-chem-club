@@ -36,10 +36,34 @@ function derivePassword(password, saltB64) {
   });
 }
 
+// In-memory cache for public endpoints (bootstrap, quest manifest, leaderboards)
+const publicCache = new Map();
+
+function getCached(key) {
+  const item = publicCache.get(key);
+  if (!item) return null;
+  if (Date.now() > item.exp) {
+    publicCache.delete(key);
+    return null;
+  }
+  return item.data;
+}
+
+function setCached(key, data, ttlMs) {
+  publicCache.set(key, { data, exp: Date.now() + ttlMs });
+}
+
 // Call Google Apps Script backend
 async function callAppsScript(route, body) {
   if (!APPS_SCRIPT_URL) {
     return localDevHandler(route, body);
+  }
+
+  const isPublicCacheable = (route === 'bootstrap' && (!body || !body.token)) || route === 'quest/manifest' || route === 'leaderboard';
+  const cacheKey = route + ':' + JSON.stringify(body || {});
+  if (isPublicCacheable) {
+    const hit = getCached(cacheKey);
+    if (hit) return hit;
   }
 
   const response = await fetch(APPS_SCRIPT_URL, {
@@ -55,7 +79,11 @@ async function callAppsScript(route, body) {
 
   const text = await response.text();
   try {
-    return JSON.parse(text);
+    const result = JSON.parse(text);
+    if (isPublicCacheable && result.ok) {
+      setCached(cacheKey, result, route === 'leaderboard' ? 20000 : 60000);
+    }
+    return result;
   } catch (err) {
     throw new Error('Apps Script returned non-JSON response: ' + text.slice(0, 200));
   }

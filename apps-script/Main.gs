@@ -55,21 +55,29 @@ var ROUTES = {
   'bootstrap': {
     auth: false,
     fn: function(body) {
-      Db.initDb();
-      Quests.seedQuestsIfEmpty();
+      var publicData = Cache.get('bootstrap:public');
+      if (!publicData) {
+        var configRows = Db.getAll('Config');
+        var config = {};
+        for (var i = 0; i < configRows.length; i++) {
+          config[configRows[i].key] = configRows[i].value;
+        }
 
-      var configRows = Db.getAll('Config');
-      var config = {};
-      for (var i = 0; i < configRows.length; i++) {
-        config[configRows[i].key] = configRows[i].value;
+        var teams = Players.getTeamSlots();
+        var activeQuest = config.active_quest || 'q1';
+        var questManifest = null;
+        try {
+          questManifest = Quests.getManifest(activeQuest);
+        } catch (e) {}
+
+        publicData = {
+          config: config,
+          teams: teams,
+          activeQuest: questManifest,
+          events: Events.getActiveEvents()
+        };
+        Cache.put('bootstrap:public', publicData, 60);
       }
-
-      var teams = Players.getTeamSlots();
-      var activeQuest = config.active_quest || 'q1';
-      var questManifest = null;
-      try {
-        questManifest = Quests.getManifest(activeQuest);
-      } catch (e) {}
 
       var playerSession = null;
       if (body.token) {
@@ -81,11 +89,11 @@ var ROUTES = {
       }
 
       return {
-        config: config,
-        teams: teams,
-        activeQuest: questManifest,
-        player: playerSession,
-        events: Events.getActiveEvents()
+        config: publicData.config,
+        teams: publicData.teams,
+        activeQuest: publicData.activeQuest,
+        events: publicData.events,
+        player: playerSession
       };
     }
   },
@@ -366,4 +374,10 @@ function doPost(e) {
 
 function doGet(e) {
   return json({ ok: true, message: 'Avalon Apps Script Backend operational.' });
+}
+
+function setup() {
+  Db.initDb();
+  Quests.seedQuestsIfEmpty();
+  Logger.log('Avalon DB initialized successfully.');
 }

@@ -60,7 +60,7 @@ export class Router {
     }
 
     // Redirect to onboarding if logged in but no team chosen
-    if (session.token && session.player && !session.player.team_id && raw !== '/onboarding' && raw !== '/login') {
+    if (session.token && session.player && !session.player.team_id && raw !== '/onboarding' && raw !== '/login' && raw !== '/admin') {
       window.location.hash = '#/onboarding';
       return;
     }

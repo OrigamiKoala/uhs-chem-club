@@ -14,7 +14,14 @@ async function bootstrapApp() {
   // 1. Initialize 3D Engine
   stage.init();
 
-  // 2. Fetch Initial Bootstrap Config & User State
+  // 2. Setup HUD & Navigation immediately
+  setupHud();
+
+  // 3. Start Client Router immediately (foreground displays with zero network delay)
+  const router = new Router(appContainer);
+  router.init();
+
+  // 4. Fetch Initial Bootstrap Config & User State asynchronously
   try {
     const boot = await api.bootstrap();
     session.config = boot.config || {};
@@ -24,17 +31,13 @@ async function bootstrapApp() {
 
     if (boot.player) {
       session.setUserData(boot.player);
+      if (!boot.player.team_id && window.location.hash === '#/') {
+        window.location.hash = '#/onboarding';
+      }
     }
   } catch (err) {
     console.error('Bootstrap call failed, continuing with cached session:', err);
   }
-
-  // 3. Setup HUD & Navigation
-  setupHud();
-
-  // 4. Start Client Router
-  const router = new Router(appContainer);
-  router.init();
 }
 
 function setupHud() {

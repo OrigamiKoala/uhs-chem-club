@@ -19,7 +19,14 @@
 - `docs/runbook.md`: On-call operational runbook for live events.
 
 ## Recent Updates
+- Added `setup()` in `apps-script/Main.gs` for manual 1-click sheet schema and data initialization.
 - UI copy simplified: stripped feature advertisements, marketing text, and verbose lore across all screens.
 - Added `/comms` and `/inventory` route aliases.
+- Non-blocking initial bootstrap: HUD and Router initialize immediately in `src/main.js` so foreground loads in 0ms without waiting on backend network response.
+- Removed expensive `Db.initDb()` from Apps Script `bootstrap` route hot path and added 60s caching.
+- Added in-memory proxy cache for public routes (`bootstrap`, `quest/manifest`, `leaderboard`) in `api/[...route].js`.
+- Made screen rendering non-blocking across onboarding, leaderboards, inventory, and quest screens to eliminate blank screen loading delays.
+- Exempted `#/admin` from mandatory onboarding redirect in router.
 - Verified build and 2D/3D payload parity.
+
 

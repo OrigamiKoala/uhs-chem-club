@@ -11,8 +11,8 @@ import { QuestViewer } from '../quest3d/viewer.js';
 import { renderFallbackInputs } from '../fallback2d/stages.js';
 import { showToast } from '../ui/toast.js';
 
-export async function renderQuest(container) {
-  let questData = null;
+export function renderQuest(container) {
+  let questData = session.activeQuest || null;
   let currentStageIdx = 0;
   let currentPayload = null;
   let isGrading = false;
@@ -24,21 +24,6 @@ export async function renderQuest(container) {
   if (tierManager.currentTier !== 'T1' && stage.canvas) {
     viewer = new QuestViewer(stage.canvas);
     stage.setQuestScene(viewer);
-  }
-
-  // Fetch Manifest
-  try {
-    const manifest = await api.getQuestManifest('q1');
-    questData = manifest;
-    // Check progress
-    const me = await api.getMe();
-    session.setUserData(me);
-    const prog = (me.progress || []).find(p => p.quest_id === 'q1');
-    if (prog && prog.stage_reached) {
-      currentStageIdx = Math.min(Number(prog.stage_reached), manifest.stages.length - 1);
-    }
-  } catch (err) {
-    console.error('Failed to load quest manifest:', err);
   }
 
   function loadStage(idx) {
@@ -288,5 +273,37 @@ export async function renderQuest(container) {
     }
   }
 
-  loadStage(currentStageIdx);
+  if (questData) {
+    loadStage(currentStageIdx);
+  } else {
+    container.innerHTML = `
+      <div class="screen-container" style="max-width: 440px; margin: 4rem auto; text-align: center;">
+        <div class="glass-panel" style="padding: 2.5rem;">
+          <div style="font-size: 2rem; margin-bottom: 0.75rem;">🛰️</div>
+          <h3 class="holo-title" style="font-size: 1.15rem; margin-bottom: 0.5rem;">Aligning Sensor Array</h3>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">Connecting to quest beacon telemetry…</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // Fetch Manifest & Progress in background
+  Promise.all([
+    api.getQuestManifest('q1'),
+    api.getMe().catch(() => null)
+  ]).then(([manifest, me]) => {
+    if (manifest) questData = manifest;
+    if (me) {
+      session.setUserData(me);
+      const prog = (me.progress || []).find(p => p.quest_id === 'q1');
+      if (prog && prog.stage_reached && questData?.stages) {
+        currentStageIdx = Math.min(Number(prog.stage_reached), questData.stages.length - 1);
+      }
+    }
+    if (questData) {
+      loadStage(currentStageIdx);
+    }
+  }).catch(err => {
+    console.error('Failed to load quest manifest:', err);
+  });
 }

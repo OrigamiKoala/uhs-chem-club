@@ -13,12 +13,7 @@ export async function renderLeaderboard(container) {
 
   let activeTab = 'teams'; // 'teams' | 'individual'
   let lbData = { individual: [], teams: [] };
-
-  try {
-    lbData = await api.getLeaderboards();
-  } catch (e) {
-    console.error('Failed to load leaderboards:', e);
-  }
+  let loading = true;
 
   function render() {
     container.innerHTML = `
@@ -40,7 +35,12 @@ export async function renderLeaderboard(container) {
           </div>
         </div>
 
-        ${activeTab === 'teams' ? `
+        ${loading && (!lbData.teams || lbData.teams.length === 0) ? `
+          <div class="glass-panel" style="text-align: center; padding: 2.5rem; color: var(--text-secondary);">
+            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📡</div>
+            <div>Tuning comms array telemetry…</div>
+          </div>
+        ` : activeTab === 'teams' ? `
           <!-- Team Normalized Leaderboard (§4.4) -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
             ${(lbData.teams || []).map(t => `
@@ -133,4 +133,16 @@ export async function renderLeaderboard(container) {
   }
 
   render();
+
+  api.getLeaderboards().then(res => {
+    loading = false;
+    if (res) {
+      lbData = res;
+      if (container.querySelector('#tab-teams')) {
+        render();
+      }
+    }
+  }).catch(() => {
+    loading = false;
+  });
 }

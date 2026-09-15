@@ -7,17 +7,12 @@ import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { showToast } from '../ui/toast.js';
 
-export async function renderInventory(container) {
+export function renderInventory(container) {
   if (stage.cameraRig) {
     stage.cameraRig.moveTo('cargo');
   }
 
-  let inventory = [];
-  try {
-    const me = await api.getMe();
-    session.setUserData(me);
-    inventory = me.inventory || [];
-  } catch (e) {}
+  let inventory = session.inventory || [];
 
   const ITEM_CATALOG = {
     hint_chip: { name: 'Hint Chip', flavor: 'Decompiled scanner diagnostic module.', rarity: 'common', effect: 'Free sensor hint' },
@@ -115,4 +110,14 @@ export async function renderInventory(container) {
   }
 
   render();
+
+  api.getMe().then(me => {
+    if (me) {
+      session.setUserData(me);
+      inventory = me.inventory || [];
+      if (container.querySelector('.glass-panel')) {
+        render();
+      }
+    }
+  }).catch(() => {});
 }
