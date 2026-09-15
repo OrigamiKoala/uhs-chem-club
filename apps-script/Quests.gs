@@ -6,14 +6,14 @@ var DEFAULT_QUEST = {
   quest_id: 'q1',
   title: 'The Charge Gardens of Vareth-9',
   world: 'Vareth-9',
-  blurb: 'Navigate luminous charge fog to awaken an abandoned alien terraforming lattice.',
+  blurb: 'Survey paired molecular structures across the Vareth anomaly.',
   scene_id: 'charge_chamber',
   cover_image: '/art/q1_cover.webp',
   release_at: '2026-09-18T00:00:00Z',
   close_at: '2026-10-02T23:59:59Z',
   status: 'live',
   base_xp: 165,
-  stage_count: 8,
+  stage_count: 7,
   item_pool: 'hint_chip,spare_coolant,overclock_module,resonance_key'
 };
 
@@ -21,81 +21,73 @@ var DEFAULT_STAGES = [
   {
     quest_id: 'q1',
     stage_index: 0,
-    kind: 'choice',
-    xp: 0,
+    kind: 'arrow',
+    xp: 15,
     max_attempts: 3,
-    hint_text: 'Select the scanner activation frequency.',
+    hint_text: 'Connect the red source to the blue target.',
     hint_cost: 0,
-    answer_json: JSON.stringify({ correct: ['a'] }),
+    answer_json: JSON.stringify({ from: 'red_lp1', to: 'blue_c1' }),
     tolerance: 0,
-    reveal_text: 'Atmospheric penetration complete. Scanner locking onto localized electrostatic potentials.',
+    reveal_text: 'The red region contains high electron density (lone pair) that seeks out the electron-deficient blue region (empty p-orbital) to form a bond.',
     scene_config: JSON.stringify({
-      title: 'Arrival at Vareth-9',
-      prompt: 'Atmosphere dense with luminous ionized fog. Align your ship scanner to begin charge mapping.',
-      options: [
-        { id: 'a', label: 'Engage wideband electrostatic scanner' },
-        { id: 'b', label: 'Fire optical lidar pulses' },
-        { id: 'c', label: 'Descend blindly into the cloud' }
-      ]
+      title: 'Phase 1: Direct Transfer',
+      prompt: 'Drag an arrow from the red region to the blue region to initiate the reaction.',
+      moleculeId: 'stage1_pair',
+      anchors: ['red_lp1', 'blue_c1']
     })
   },
   {
     quest_id: 'q1',
     stage_index: 1,
-    kind: 'pick',
-    xp: 10,
+    kind: 'arrow',
+    xp: 15,
     max_attempts: 3,
-    hint_text: 'Look for the brightest, most saturated yellow-green lobe protruding from the core.',
-    hint_cost: 2,
-    answer_json: JSON.stringify({ anchors: ['lp_o'] }),
+    hint_text: 'Trace the path from donor center to recipient site.',
+    hint_cost: 1,
+    answer_json: JSON.stringify({ from: 'red_lp1', to: 'blue_c1' }),
     tolerance: 0,
-    reveal_text: 'Scanner calibrated! High charge density detected on the outer lobe.',
+    reveal_text: 'Electrons flow from the concentrated donor lone pair into the polarized carbon center, beginning a nucleophilic substitution.',
     scene_config: JSON.stringify({
-      title: 'Stage 1: Calibrate the Scanner',
-      prompt: 'Orbit the charge cloud. Click or tap the most crowded, high-density lobe to lock calibration.',
-      moleculeId: 'h2o',
-      anchors: ['lp_o', 'h1', 'h2'],
-      camera: { pos: [0, 0, 5], target: [0, 0, 0] }
+      title: 'Phase 2: Polarized Target',
+      prompt: 'Connect the active red region to the blue target site.',
+      moleculeId: 'stage2_pair',
+      anchors: ['red_lp1', 'blue_c1']
     })
   },
   {
     quest_id: 'q1',
     stage_index: 2,
-    kind: 'rank',
-    xp: 15,
+    kind: 'arrow',
+    xp: 20,
     max_attempts: 3,
-    hint_text: 'Drag items from most lopsided/polarized to most symmetric sharing.',
-    hint_cost: 3,
-    answer_json: JSON.stringify({ order: ['hf', 'lih', 'h2'] }),
+    hint_text: 'Target the regions with the deepest color intensity.',
+    hint_cost: 2,
+    answer_json: JSON.stringify({ from: 'red_extreme', to: 'blue_extreme' }),
     tolerance: 0,
-    reveal_text: 'Some pairs share evenly. Some don\'t. The lopsided ones are where things happen.',
+    reveal_text: 'When multiple sites compete, the most extreme electron density (strongest nucleophile) attacks the most electron-starved center (most electrophilic carbonyl carbon).',
     scene_config: JSON.stringify({
-      title: 'Stage 2: Read the Lean',
-      prompt: 'Three beacons detected (HF, LiH, H2). Rank them by polarity from most uneven density to most evenly shared.',
-      items: [
-        { id: 'hf', label: 'Beacon A (Fluoride Hydride): Intense charge pulled to one pole' },
-        { id: 'lih', label: 'Beacon B (Lithium Hydride): Moderate polarization' },
-        { id: 'h2', label: 'Beacon C (Diatomic Hydrogen): Completely symmetrical sharing' }
-      ]
+      title: 'Phase 3: Competing Potentials',
+      prompt: 'Multiple colored regions detected. Find and connect the strongest match.',
+      moleculeId: 'stage3_pair',
+      anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
   },
   {
     quest_id: 'q1',
     stage_index: 3,
-    kind: 'pick_multi',
+    kind: 'arrow',
     xp: 20,
     max_attempts: 3,
-    hint_text: 'Select the electron-rich lone pair on the donor first, then the electron-poor carbon center on the receiver.',
-    hint_cost: 4,
-    answer_json: JSON.stringify({ anchors: ['lp_o', 'c1'], ordered: false }),
+    hint_text: 'Compare the color saturation of each node before routing the path.',
+    hint_cost: 2,
+    answer_json: JSON.stringify({ from: 'red_extreme', to: 'blue_extreme' }),
     tolerance: 0,
-    reveal_text: 'Crowded places give. Starved places take. That\'s the whole game.',
+    reveal_text: 'The less electronegative nitrogen holds its lone pair more loosely than oxygen, creating a more extreme nucleophile that attacks the carbonyl carbon.',
     scene_config: JSON.stringify({
-      title: 'Stage 3: Giver and Taker',
-      prompt: 'Identify the active sites: select the most crowded donor lobe, and the most starved recipient site.',
-      moleculeId: 'nu_sub_pair',
-      anchors: ['lp_o', 'c1', 'cl1', 'h1'],
-      camera: { pos: [0, 1, 6], target: [0, 0, 0] }
+      title: 'Phase 4: Site Selectivity',
+      prompt: 'Analyze competing nodes across both molecules and route between the strongest pair.',
+      moleculeId: 'stage4_pair',
+      anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
   },
   {
@@ -104,76 +96,52 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 25,
     max_attempts: 3,
-    hint_text: 'Drag from the concentrated electron lobe (lp_o) towards the carbon electrophile center (c1).',
-    hint_cost: 5,
-    answer_json: JSON.stringify({ from: 'lp_o', to: 'c1' }),
+    hint_text: 'Consider the physical pathway: is the destination shielded by surrounding groups?',
+    hint_cost: 3,
+    answer_json: JSON.stringify({ from: 'red_nu', to: 'blue_open' }),
     tolerance: 0,
-    reveal_text: 'Charge flows along the potential gradient directly into the starved core.',
+    reveal_text: 'Steric hindrance! Although the tertiary carbon is intensely electrophilic, bulky methyl groups physically block incoming groups, forcing the reaction to occur at the unhindered primary carbon.',
     scene_config: JSON.stringify({
-      title: 'Stage 4: Route the Current',
-      prompt: 'Drag a curved energy arrow from the crowded donor lone pair to the starved carbon center.',
-      moleculeId: 'nu_sub_pair',
-      anchors: ['lp_o', 'c1', 'cl1'],
-      camera: { pos: [0, 1, 6], target: [0, 0, 0] }
+      title: 'Phase 5: Spatial Pathways',
+      prompt: 'Connect the red source to an accessible blue target.',
+      moleculeId: 'stage5_pair',
+      anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
   },
   {
     quest_id: 'q1',
     stage_index: 5,
-    kind: 'choice',
+    kind: 'arrow',
     xp: 25,
     max_attempts: 3,
-    hint_text: 'As the new bond forms to the carbon, the leaving group bond must break to keep octet stability.',
-    hint_cost: 5,
-    answer_json: JSON.stringify({ correct: ['b'] }),
+    hint_text: 'Rotate the view. Watch for physical obstructions surrounding the candidate sites.',
+    hint_cost: 3,
+    answer_json: JSON.stringify({ from: 'red_nu', to: 'blue_open' }),
     tolerance: 0,
-    reveal_text: 'Bond formed; leaving group displaced into solution with inverted stereochemistry.',
+    reveal_text: 'Steric congestion shields the branched carbonyl site with bulky isopropyl wings. The nucleophile selectively attacks the open, unhindered carbonyl flank.',
     scene_config: JSON.stringify({
-      title: 'Stage 5: The Aftermath',
-      prompt: 'Inspect the simulated outcome. Which molecular configuration accurately represents the displaced bond?',
-      options: [
-        { id: 'a', label: 'Carbon holds five active bonds simultaneously (Pentavalent)' },
-        { id: 'b', label: 'New C-O bond formed; chloride ion departs with the shared pair' },
-        { id: 'c', label: 'Both hydrogen atoms detach; carbon remains bonded to halogen' }
-      ]
+      title: 'Phase 6: Geometric Clearance',
+      prompt: 'Inspect the 3D geometry and connect the red region to the unshielded blue site.',
+      moleculeId: 'stage6_pair',
+      anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
   },
   {
     quest_id: 'q1',
     stage_index: 6,
-    kind: 'chain',
-    xp: 40,
-    max_attempts: 3,
-    hint_text: 'Step 1: Nucleophile lone pair attacks carbon. Step 2: Carbon-chlorine bond cleaves to chlorine.',
-    hint_cost: 8,
-    answer_json: JSON.stringify({ steps: [{ from: 'lp_o', to: 'c1' }, { from: 'c_cl', to: 'cl' }] }),
-    tolerance: 0,
-    reveal_text: 'The derelict terraforming lattice unlocks with a resonant hum!',
-    scene_config: JSON.stringify({
-      title: 'Stage 6: The Lock',
-      prompt: 'Execute the full substitution cascade: draw the attack arrow, followed by the leaving group departure arrow.',
-      moleculeId: 'sn2_reaction',
-      anchors: ['lp_o', 'c1', 'c_cl', 'cl'],
-      camera: { pos: [0, 1, 6], target: [0, 0, 0] }
-    })
-  },
-  {
-    quest_id: 'q1',
-    stage_index: 7,
-    kind: 'chain',
+    kind: 'arrow',
     xp: 30,
     max_attempts: 3,
-    hint_text: 'Scaffolding disabled. Nucleophile donor -> tertiary carbon center -> halide leaving group.',
-    hint_cost: 0,
-    answer_json: JSON.stringify({ steps: [{ from: 'lp_nu', to: 'c_sub' }, { from: 'c_br', to: 'br' }] }),
+    hint_text: 'Balance highest intensity with geometric accessibility.',
+    hint_cost: 4,
+    answer_json: JSON.stringify({ from: 'red_supreme', to: 'blue_accessible' }),
     tolerance: 0,
-    reveal_text: 'Mastery verified! The unlit garden blooms with coherent emerald luminescence.',
+    reveal_text: 'Mastery achieved! In complex organic synthesis, reaction outcome is dictated by the interplay of electron density (nucleophilicity/electrophilicity) and steric hindrance.',
     scene_config: JSON.stringify({
-      title: 'Stage 7 (Bonus): The Unlit Garden',
-      prompt: 'A challenging un-scaffolded substrate. Route both arrows correctly to claim the rare garden drop.',
-      moleculeId: 'bonus_reaction',
-      anchors: ['lp_nu', 'c_sub', 'c_br', 'br'],
-      camera: { pos: [0, 1, 6], target: [0, 0, 0] }
+      title: 'Phase 7: Nexus Reaction',
+      prompt: 'Identify the active pair among all competing and shielded sites.',
+      moleculeId: 'stage7_pair',
+      anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak']
     })
   }
 ];
@@ -331,16 +299,8 @@ var Quests = {
     if (isCorrect) {
       var mult = attemptNo === 1 ? 1.25 : attemptNo === 2 ? 1.0 : 0.75;
       var hintCost = hintUsed ? Number(stage.hint_cost || 0) : 0;
-      if (player && player.role === 'Engineer') {
-        hintCost = 0; // Engineer gets free hint
-      }
       var calcXp = Math.floor(baseStageXp * mult) - hintCost;
       xpAwarded = Math.max(Math.floor(baseStageXp * 0.25), calcXp);
-
-      // Check Xenobiologist perk: +10% XP on bonus stages (stage 7)
-      if (player && player.role === 'Xenobiologist' && stageIndex >= 7) {
-        xpAwarded = Math.floor(xpAwarded * 1.10);
-      }
     }
 
     var subId = generateId('sub');
@@ -461,7 +421,7 @@ var Quests = {
       totalXp: questXp,
       awardedItem: awardedItem,
       newLevel: newLevel,
-      epilogue: 'The crowded places you clicked are lone pairs and pi clouds. The starved places are electrophiles. The arrow you drew is curved-arrow notation — real nucleophilic substitution!'
+      epilogue: 'Quest complete! Here is the chemistry behind what you just discovered:\n\n1. Electron Density & Curved Arrows: The red regions represent high electron density (lone pairs / negative charge), while blue regions represent electron deficiency (positive partial charges / electrophiles). The arrows you drew match standard curved-arrow notation in organic chemistry, tracking the physical flow of electrons from source to target.\n\n2. Extremes & Selectivity: When multiple reactive sites compete, reactions preferentially proceed between the most electron-rich donor (strongest nucleophile) and most electron-poor center (strongest electrophile).\n\n3. Steric Hindrance: Physical geometry matters! Even when a site has strong positive charge, surrounding bulky groups (like methyl or isopropyl clusters) can physically block incoming molecules, steering reactions toward open, unhindered pathways.'
     };
   },
 

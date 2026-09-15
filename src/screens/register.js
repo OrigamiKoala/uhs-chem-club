@@ -7,6 +7,11 @@ import { session } from '../session.js';
 import { showToast } from '../ui/toast.js';
 
 export function renderRegister(container) {
+  if (session.token && session.player) {
+    window.location.hash = session.player.team_id ? '#/bridge' : '#/onboarding';
+    return;
+  }
+
   container.innerHTML = `
     <div class="screen-container" style="max-width: 440px; margin: 2rem auto;">
       <div class="glass-panel">

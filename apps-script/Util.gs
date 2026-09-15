@@ -7,7 +7,7 @@ var PROFANITY_LIST = [
   'bastard', 'nigger', 'nigga', 'faggot', 'retard', 'whore', 'slut', 'chink', 'kike'
 ];
 
-var RESERVED_PREFIXES = ['admin', 'mod', 'avalon', 'staff', 'terra', 'zephyr', 'ignis', 'thalassa'];
+var RESERVED_PREFIXES = ['admin', 'mod', 'avalon', 'staff', 'earth', 'air', 'fire', 'water', 'terra', 'zephyr', 'ignis', 'thalassa'];
 
 function generateId(prefix) {
   var ts = Date.now().toString(36);

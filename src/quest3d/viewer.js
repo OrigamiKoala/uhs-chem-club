@@ -72,7 +72,20 @@ export class QuestViewer {
         this.activeInteraction.handlePointerDown(e);
       }
     };
+    this._onPointerMove = (e) => {
+      if (this.activeInteraction && this.activeInteraction.handlePointerMove) {
+        this.activeInteraction.handlePointerMove(e);
+      }
+    };
+    this._onPointerUp = (e) => {
+      if (this.activeInteraction && this.activeInteraction.handlePointerUp) {
+        this.activeInteraction.handlePointerUp(e);
+      }
+    };
+
     this.domElement.addEventListener('pointerdown', this._onPointerDown);
+    window.addEventListener('pointermove', this._onPointerMove);
+    window.addEventListener('pointerup', this._onPointerUp);
   }
 
   loadStage(stageConfig = {}, kind = 'pick', onPayloadChange = null) {
@@ -104,23 +117,25 @@ export class QuestViewer {
 
     // 2. Load anchors
     const anchorIds = stageConfig.anchors || [];
-    const anchors = this.anchorManager.loadAnchors(anchorIds);
+    const anchors = this.anchorManager.loadAnchors(anchorIds, this.currentMolecule?.data?.regions);
     this.picker.setAnchors(anchors);
 
     // 3. Setup interaction based on kind
-    if (kind === 'pick') {
+    if (kind === 'arrow') {
+      this.activeInteraction = new ArrowInteraction(this.arrowController, this.picker, this.controls, (blockedAnchor) => {
+        this.triggerShudder();
+      });
+    } else if (kind === 'pick') {
       this.activeInteraction = new PickInteraction(this.picker, false);
     } else if (kind === 'pick_multi') {
       this.activeInteraction = new PickInteraction(this.picker, true);
-    } else if (kind === 'arrow') {
-      this.activeInteraction = new ArrowInteraction(this.arrowController, this.picker);
     } else if (kind === 'chain') {
       this.activeInteraction = new ChainInteraction(this.arrowController, this.picker);
     } else if (kind === 'rank') {
       const ids = (stageConfig.items || []).map(x => x.id);
       this.activeInteraction = new RankInteraction(ids);
     } else {
-      this.activeInteraction = null;
+      this.activeInteraction = new ArrowInteraction(this.arrowController, this.picker, this.controls, () => this.triggerShudder());
     }
 
     if (this.activeInteraction) {
@@ -180,6 +195,8 @@ export class QuestViewer {
 
   dispose() {
     this.domElement.removeEventListener('pointerdown', this._onPointerDown);
+    window.removeEventListener('pointermove', this._onPointerMove);
+    window.removeEventListener('pointerup', this._onPointerUp);
     this.controls.destroy();
     if (this.currentIsosurface) this.currentIsosurface.dispose();
     this.anchorManager.clear();

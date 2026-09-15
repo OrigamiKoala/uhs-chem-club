@@ -24,15 +24,22 @@ async function bootstrapApp() {
   // 4. Fetch Initial Bootstrap Config & User State asynchronously
   try {
     const boot = await api.bootstrap();
-    session.config = boot.config || {};
-    session.teams = boot.teams || [];
+    if (boot.config || boot.teams) {
+      session.setConfigAndTeams(boot.config || {}, boot.teams || []);
+    }
     session.events = boot.events || {};
     session.activeQuest = boot.activeQuest || null;
 
     if (boot.player) {
       session.setUserData(boot.player);
-      if (!boot.player.team_id && window.location.hash === '#/') {
+      const teamId = boot.player.player?.team_id || boot.player.team_id;
+      if (!teamId && (window.location.hash === '#/' || window.location.hash === '')) {
         window.location.hash = '#/onboarding';
+      }
+    } else if (session.token && boot.player === null) {
+      session.clear();
+      if (window.location.hash !== '#/' && window.location.hash !== '#/demo') {
+        window.location.hash = '#/login';
       }
     }
   } catch (err) {
@@ -114,7 +121,7 @@ function setupHud() {
       if (xpFill) xpFill.style.width = `${pct}%`;
 
       if (teamBadge && s.team) {
-        teamBadge.textContent = s.team.ship_name;
+        teamBadge.textContent = s.team.name || s.team.team_id;
         teamBadge.style.background = s.team.color_hex || 'rgba(0, 229, 255, 0.2)';
         teamBadge.style.color = '#fff';
       }

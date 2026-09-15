@@ -2,7 +2,7 @@
  * Players.gs — Profile, team balancing, and onboarding for Avalon
  */
 
-var VALID_ROLES = ['Navigator', 'Engineer', 'Xenobiologist', 'Quartermaster', 'Comms Officer'];
+var VALID_ROLES = [];
 
 var Players = {
   getMe: function(playerId) {
@@ -16,7 +16,8 @@ var Players = {
 
     var team = null;
     if (player.team_id) {
-      team = Db.findOne('Teams', function(t) { return t.team_id === player.team_id; });
+      var normTid = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[player.team_id] || player.team_id);
+      team = Db.findOne('Teams', function(t) { return t.team_id === normTid || t.team_id === player.team_id; });
     }
 
     return {
@@ -29,10 +30,18 @@ var Players = {
     };
   },
 
-  claimTeamSlot: function(playerId, role, teamId, avatar) {
-    if (VALID_ROLES.indexOf(role) === -1) {
-      throw { code: 'INVALID_ROLE', message: 'Invalid role selected.' };
+  claimTeamSlot: function(playerId, roleOrTeamId, teamIdOpt, avatarOpt) {
+    var role = '';
+    var teamId = roleOrTeamId;
+    var avatar = teamIdOpt;
+
+    // Handle legacy signature (playerId, role, teamId, avatar)
+    if (teamIdOpt && typeof teamIdOpt === 'string' && teamIdOpt.length > 0 && !teamIdOpt.startsWith('{')) {
+      teamId = teamIdOpt;
+      avatar = avatarOpt;
     }
+
+    teamId = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[teamId] || teamId);
 
     var team = Db.findOne('Teams', function(t) { return t.team_id === teamId; });
     if (!team) {

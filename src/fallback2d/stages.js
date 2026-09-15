@@ -59,17 +59,20 @@ export function renderFallbackInputs(container, stageConfig, kind, onPayloadChan
       wrap.appendChild(row);
     }
   } else if (kind === 'arrow') {
+    const redAnchors = (stageConfig.anchors || []).filter(a => ANCHOR_DEFINITIONS[a]?.type === 'red' || a.startsWith('red'));
+    const blueAnchors = (stageConfig.anchors || []).filter(a => ANCHOR_DEFINITIONS[a]?.type === 'blue' || a.startsWith('blue'));
+
     wrap.innerHTML = `
-      <label class="form-label">Route Electron Flow Arrow:</label>
+      <label class="form-label">Draw Reaction Arrow:</label>
       <div style="display: flex; gap: 0.5rem; align-items: center;">
         <select id="arrow-from" class="form-select" style="flex:1;">
-          <option value="">-- Donor (From) --</option>
-          ${(stageConfig.anchors || []).map(a => `<option value="${a}">${a} (${ANCHOR_DEFINITIONS[a]?.label || a})</option>`).join('')}
+          <option value="">-- Red Region (From) --</option>
+          ${(redAnchors.length > 0 ? redAnchors : stageConfig.anchors || []).map(a => `<option value="${a}">${ANCHOR_DEFINITIONS[a]?.label || a}</option>`).join('')}
         </select>
         <span style="color:var(--accent-cyan); font-weight:bold;">➔</span>
         <select id="arrow-to" class="form-select" style="flex:1;">
-          <option value="">-- Recipient (To) --</option>
-          ${(stageConfig.anchors || []).map(a => `<option value="${a}">${a} (${ANCHOR_DEFINITIONS[a]?.label || a})</option>`).join('')}
+          <option value="">-- Blue Region (To) --</option>
+          ${(blueAnchors.length > 0 ? blueAnchors : stageConfig.anchors || []).map(a => `<option value="${a}">${ANCHOR_DEFINITIONS[a]?.label || a}</option>`).join('')}
         </select>
       </div>
     `;

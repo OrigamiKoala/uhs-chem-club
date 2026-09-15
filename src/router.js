@@ -19,6 +19,24 @@ import { renderQuarters } from './screens/quarters.js';
 import { renderSettings } from './screens/settings.js';
 import { renderAdmin } from './screens/admin.js';
 
+const ROUTE_BACKDROPS = {
+  '/': '/art/hero_desert_outpost.jpg',
+  '/login': '/art/hero_desert_outpost.jpg',
+  '/register': '/art/hero_desert_outpost.jpg',
+  '/onboarding': '/art/hero_desert_outpost.jpg',
+  '/bridge': '/art/bridge.jpg',
+  '/starmap': '/art/starmap.jpg',
+  '/quest': '/art/crucible.jpg',
+  '/demo': '/art/crucible.jpg',
+  '/cargo': '/art/cargo.jpg',
+  '/inventory': '/art/cargo.jpg',
+  '/quarters': '/art/quarters.jpg',
+  '/settings': '/art/quarters.jpg',
+  '/leaderboard': '/art/comms.jpg',
+  '/comms': '/art/comms.jpg',
+  '/admin': '/art/airlock.jpg'
+};
+
 const ROUTES = {
   '/': { render: renderLanding, auth: false },
   '/register': { render: renderRegister, auth: false },
@@ -59,15 +77,42 @@ export class Router {
       return;
     }
 
+    // Already signed in: redirect guest auth routes (/login, /register) to bridge/onboarding
+    if (session.token && session.player && (raw === '/login' || raw === '/register')) {
+      const dest = session.player.team_id ? '#/bridge' : '#/onboarding';
+      window.location.hash = dest;
+      return;
+    }
+
+    // Already signed in: redirect landing page (/) to bridge/onboarding
+    if (session.token && session.player && raw === '/') {
+      const dest = session.player.team_id ? '#/bridge' : '#/onboarding';
+      window.location.hash = dest;
+      return;
+    }
+
     // Redirect to onboarding if logged in but no team chosen
     if (session.token && session.player && !session.player.team_id && raw !== '/onboarding' && raw !== '/login' && raw !== '/admin') {
       window.location.hash = '#/onboarding';
       return;
     }
 
+    // Admin gating
+    if (routeDef.admin && !session.isAdmin) {
+      window.location.hash = '#/bridge';
+      return;
+    }
+
     // If leaving quest scene, exit quest mode
     if (raw !== '/quest' && raw !== '/demo' && stage.mode === 'quest') {
       stage.exitQuestScene();
+    }
+
+    // Update fallback backdrop for T1
+    const backdropEl = document.getElementById('fallback-backdrop');
+    if (backdropEl) {
+      const bg = ROUTE_BACKDROPS[raw] || '/art/hero_desert_outpost.jpg';
+      backdropEl.style.backgroundImage = `url("${bg}")`;
     }
 
     // Render screen

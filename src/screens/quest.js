@@ -58,18 +58,13 @@ export function renderQuest(container) {
             </div>
           </div>
 
-          <!-- Colormap Legend (Cividis) -->
-          <div class="colormap-legend">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-              <span style="color: var(--cividis-100); font-weight: bold;">- CHARGE</span>
-              <span style="color: #94a3b8;">+ CORE</span>
+          <!-- Color Spectrum Indicator (No spoilers) -->
+          <div class="colormap-legend" style="min-width: 170px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.72rem; font-family: var(--font-mono); font-weight: 800;">
+              <span style="color: #ff1744;">RED (SOURCE)</span>
+              <span style="color: #00b0ff;">BLUE (TARGET)</span>
             </div>
-            <div class="colormap-bar"></div>
-            <div class="colormap-labels">
-              <span>LONE PAIR</span>
-              <span>NEUTRAL</span>
-              <span>STARVED</span>
-            </div>
+            <div style="height: 8px; border-radius: 4px; background: linear-gradient(90deg, #ff1744 0%, #c2185b 30%, #334155 50%, #0288d1 70%, #00b0ff 100%); box-shadow: 0 0 10px rgba(0, 176, 255, 0.2);"></div>
           </div>
         </div>
 
@@ -126,7 +121,7 @@ export function renderQuest(container) {
           <div class="choice-list">
             ${cfg.options.map(opt => `
               <div class="choice-option" data-opt-id="${opt.id}">
-                <span style="font-family: var(--font-mono); font-weight: bold; color: var(--accent-cyan);">${opt.id.toUpperCase()}</span>
+                <span style="font-family: var(--font-mono); font-weight: bold; color: var(--accent-amber);">${opt.id.toUpperCase()}</span>
                 <span>${opt.label}</span>
               </div>
             `).join('')}
@@ -198,17 +193,30 @@ export function renderQuest(container) {
           if (viewer) viewer.triggerSuccessBloom();
           showToast(`Correct! +${res.xpAwarded} XP`, 'success');
 
+          // Reveal post-solve explanation
+          if (res.revealText) {
+            const revealEl = document.createElement('div');
+            revealEl.className = 'stage-reveal-box';
+            revealEl.style.cssText = 'margin-top: 1rem; padding: 12px 16px; background: rgba(0, 230, 118, 0.12); border: 1px solid rgba(0, 230, 118, 0.4); border-radius: var(--radius-sm); font-size: 0.88rem; color: #b9f6ca; line-height: 1.5;';
+            revealEl.innerHTML = `<strong>Insight:</strong> ${res.revealText}`;
+            interactiveArea.appendChild(revealEl);
+          }
+
           // Check if last stage completed
-          if (currentStageIdx >= (questData.stages.length - 1)) {
-            showCompletionModal();
+          const isLastStage = currentStageIdx >= ((questData?.stages?.length || 7) - 1);
+          if (isLastStage) {
+            setTimeout(() => {
+              showCompletionModal();
+            }, 1800);
           } else {
             setTimeout(() => {
               loadStage(currentStageIdx + 1);
-            }, 900);
+            }, 2400);
           }
         } else {
           if (viewer) viewer.triggerShudder();
-          showToast(`Incorrect. ${res.attemptsLeft} attempt(s) remaining.`, 'error');
+          const msg = res.blocked ? 'Trajectory obstructed by surrounding atoms.' : (res.revealText || `Incorrect route. ${res.attemptsLeft ?? 2} attempt(s) remaining.`);
+          showToast(msg, 'error');
         }
       } catch (err) {
         sweep.classList.add('hidden');
@@ -232,9 +240,9 @@ export function renderQuest(container) {
             Quest Complete
           </h2>
 
-          <div style="background: rgba(3, 7, 18, 0.7); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem; text-align: left;">
-            <div style="font-family: var(--font-display); font-size: 0.85rem; color: var(--accent-cyan); margin-bottom: 0.5rem;">
-              Summary
+          <div style="background: rgba(14, 16, 21, 0.9); border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1.5rem; text-align: left;">
+            <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-amber); letter-spacing: 0.1em; margin-bottom: 0.5rem;">
+              [ SYNTHESIS EPILOGUE ]
             </div>
             <p style="font-size: 0.95rem; color: var(--text-primary); line-height: 1.6;">
               ${comp.epilogue}
@@ -243,12 +251,12 @@ export function renderQuest(container) {
 
           <div style="display: flex; justify-content: space-around; margin-bottom: 1.75rem;">
             <div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">XP Earned</div>
+              <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">XP YIELD</div>
               <div style="font-family: var(--font-mono); font-size: 1.5rem; font-weight: 800; color: var(--accent-amber);">+${comp.totalXp} XP</div>
             </div>
             <div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">Item Awarded</div>
-              <div style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--accent-cyan);">${comp.awardedItem}</div>
+              <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">SALVAGED MODULE</div>
+              <div style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--accent-gold);">${comp.awardedItem}</div>
             </div>
             <div>
               <div style="font-size: 0.75rem; color: var(--text-muted);">Level</div>

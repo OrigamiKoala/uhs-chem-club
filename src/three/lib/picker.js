@@ -49,4 +49,19 @@ export class AnchorPicker {
     const y = ((-projected.y + 1) * 0.5) * rect.height;
     return { x, y, inFront: projected.z < 1 };
   }
+
+  unprojectToPlane(e, referenceWorldPos) {
+    const rect = this.domElement.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(new THREE.Vector2(x, y), this.camera);
+
+    const normal = new THREE.Vector3();
+    this.camera.getWorldDirection(normal).negate();
+    const refPos = referenceWorldPos || new THREE.Vector3(0, 0, 0);
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, refPos);
+    const target = new THREE.Vector3();
+    const hit = this.raycaster.ray.intersectPlane(plane, target);
+    return hit || refPos;
+  }
 }

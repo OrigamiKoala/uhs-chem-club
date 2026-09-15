@@ -7,6 +7,11 @@ import { session } from '../session.js';
 import { showToast } from '../ui/toast.js';
 
 export function renderLogin(container) {
+  if (session.token && session.player) {
+    window.location.hash = session.player.team_id ? '#/bridge' : '#/onboarding';
+    return;
+  }
+
   container.innerHTML = `
     <div class="screen-container" style="max-width: 440px; margin: 2.5rem auto;">
       <div class="glass-panel">
@@ -55,18 +60,27 @@ export function renderLogin(container) {
     try {
       const res = await api.login(identifier, password);
       session.setToken(res.token);
-      session.setUserData({ player: res.player });
-
-      // Load full me details
-      const meData = await api.getMe();
-      session.setUserData(meData);
+      session.setUserData({
+        player: res.player,
+        team: res.team,
+        xp: res.xp,
+        level: res.level,
+        inventory: res.inventory,
+        config: res.config
+      });
 
       showToast('Signed in.', 'success');
-      if (res.player.team_id) {
+      const teamId = res.player?.team_id || session.player?.team_id;
+      if (teamId) {
         window.location.hash = '#/bridge';
       } else {
         window.location.hash = '#/onboarding';
       }
+
+      // Refresh full profile in background
+      api.getMe().then(meData => {
+        if (meData) session.setUserData(meData);
+      }).catch(meErr => console.warn('Background getMe:', meErr));
     } catch (err) {
       errorEl.textContent = err.message || 'Login failed.';
       errorEl.classList.remove('hidden');

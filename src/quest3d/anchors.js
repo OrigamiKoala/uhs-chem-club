@@ -1,61 +1,100 @@
 /**
  * anchors.js — Named interactive pick targets and visual proxy markers
+ * NEVER reveals "electron density" or "steric hindrance" in user-facing labels
  */
 
 import * as THREE from 'three';
 
 export const ANCHOR_DEFINITIONS = {
-  // Water
-  lp_o: { label: 'Oxygen Lone Pair (High Density)', pos: [0, 0.9, 0.45], color: 0xffea46 },
-  h1: { label: 'Hydrogen 1', pos: [-0.85, -0.55, 0], color: 0x00e5ff },
-  h2: { label: 'Hydrogen 2', pos: [0.85, -0.55, 0], color: 0x00e5ff },
+  // Stage 1
+  red_lp1: { label: 'Red Region', pos: [-1.4, 0.2, 0], color: 0xff1744, type: 'red' },
+  blue_c1: { label: 'Blue Region', pos: [1.8, 0, 0], color: 0x00b0ff, type: 'blue' },
 
-  // Nucleophile-Electrophile pair
-  c1: { label: 'Carbon Electrophile (Starved Core)', pos: [0.6, 0, 0], color: 0x00e5ff },
-  cl1: { label: 'Chloride Halogen', pos: [2.1, 0, 0], color: 0x22c55e },
-  c_cl: { label: 'C-Cl Sigma Bond', pos: [1.35, 0, 0], color: 0xffb300 },
-  cl: { label: 'Chloride Leaving Group', pos: [2.1, 0, 0], color: 0x22c55e },
+  // Stage 2 (matches stage2_pair coordinates)
+  // Reuses red_lp1 and blue_c1 (with positions adjusted dynamically or stage 2 coords)
+  stage2_red: { label: 'Red Region', pos: [-1.5, 0.3, 0], color: 0xff1744, type: 'red' },
+  stage2_blue: { label: 'Blue Region', pos: [1.1, 0, 0], color: 0x00b0ff, type: 'blue' },
 
-  // Bonus
-  lp_nu: { label: 'Nucleophile Lone Pair', pos: [-1.6, 0.7, 0], color: 0xffea46 },
-  c_sub: { label: 'Substrate Carbon Center', pos: [0.4, 0, 0], color: 0x00e5ff },
-  c_br: { label: 'C-Br Sigma Bond', pos: [1.3, 0, 0], color: 0xffb300 },
-  br: { label: 'Bromide Leaving Group', pos: [2.2, 0, 0], color: 0xef4444 },
+  // Stage 3 (Multiple regions)
+  red_weak: { label: 'Red Region 1', pos: [-1.3, 1.5, 0], color: 0xc2185b, type: 'red', intensity: 'moderate' },
+  red_extreme: { label: 'Red Region 2', pos: [-0.8, -1.2, 0], color: 0xff1744, type: 'red', intensity: 'extreme' },
+  blue_extreme: { label: 'Blue Region 1', pos: [1.3, -0.3, 0], color: 0x00b0ff, type: 'blue', intensity: 'extreme' },
+  blue_weak: { label: 'Blue Region 2', pos: [3.2, -0.7, 0], color: 0x0288d1, type: 'blue', intensity: 'moderate' },
 
-  // Molecular Beacons (HF, LiH, H2)
-  hf: { label: 'HF Beacon', pos: [-2.0, 0, 0], color: 0x00e5ff },
-  lih: { label: 'LiH Beacon', pos: [0, 0, 0], color: 0x00e5ff },
-  h2_beacon: { label: 'H2 Beacon', pos: [2.0, 0, 0], color: 0x00e5ff }
+  // Stage 4 (Competing sites)
+  stage4_red_weak: { label: 'Red Region 1', pos: [-3.7, 1.2, 0], color: 0xc2185b, type: 'red', intensity: 'moderate' },
+  stage4_red_extreme: { label: 'Red Region 2', pos: [-0.4, -0.4, 0], color: 0xff1744, type: 'red', intensity: 'extreme' },
+  stage4_blue_extreme: { label: 'Blue Region 1', pos: [1.8, -0.5, 0], color: 0x00b0ff, type: 'blue', intensity: 'extreme' },
+  stage4_blue_weak: { label: 'Blue Region 2', pos: [2.6, 0.8, 0], color: 0x0288d1, type: 'blue', intensity: 'moderate' },
+
+  // Stage 5 (Steric Hindrance 1)
+  red_nu: { label: 'Red Region', pos: [-1.4, 0.2, 0], color: 0xff1744, type: 'red', intensity: 'extreme' },
+  blue_open: { label: 'Blue Region (Open)', pos: [1.0, -1.0, 0], color: 0x00b0ff, type: 'blue', intensity: 'extreme' },
+  blue_blocked: { label: 'Blue Region (Crowded)', pos: [2.0, 1.1, 0], color: 0x00b0ff, type: 'blue', intensity: 'extreme', hindered: true },
+
+  // Stage 6 (Steric Hindrance 2)
+  stage6_red_nu: { label: 'Red Region', pos: [-1.5, 0.2, 0], color: 0xff1744, type: 'red', intensity: 'extreme' },
+  stage6_blue_open: { label: 'Blue Region (Open)', pos: [1.6, -0.9, 0], color: 0x00b0ff, type: 'blue', intensity: 'extreme' },
+  stage6_blue_blocked: { label: 'Blue Region (Crowded)', pos: [1.8, 1.2, 0], color: 0x00b0ff, type: 'blue', intensity: 'extreme', hindered: true },
+
+  // Stage 7 (Master Challenge)
+  red_weak1: { label: 'Red Region 1', pos: [-3.7, 1.4, 0], color: 0xc2185b, type: 'red', intensity: 'moderate' },
+  red_weak2: { label: 'Red Region 2', pos: [-2.4, -1.8, 0], color: 0xc2185b, type: 'red', intensity: 'moderate' },
+  red_supreme: { label: 'Red Region 3', pos: [-0.4, 0, 0], color: 0xff1744, type: 'red', intensity: 'extreme' },
+  blue_accessible: { label: 'Blue Region 1', pos: [1.6, -0.8, 0], color: 0x00b0ff, type: 'blue', intensity: 'extreme' },
+  blue_caged: { label: 'Blue Region 2', pos: [2.0, 1.2, 0], color: 0x00b0ff, type: 'blue', intensity: 'extreme', hindered: true },
+  stage7_blue_weak: { label: 'Blue Region 3', pos: [3.4, -1.1, 0], color: 0x0288d1, type: 'blue', intensity: 'moderate' }
 };
 
 export class AnchorManager {
   constructor(scene) {
     this.scene = scene;
     this.group = new THREE.Group();
-    this.anchors = []; // array of { id, position, label, mesh }
+    this.anchors = [];
     this.scene.add(this.group);
   }
 
-  loadAnchors(anchorIds = []) {
+  loadAnchors(anchorIds = [], regions = []) {
     this.clear();
 
     for (const id of anchorIds) {
       const def = ANCHOR_DEFINITIONS[id];
-      if (!def) continue;
+      const reg = regions.find(r => r.id === id);
+      if (!def && !reg) continue;
 
-      const pos = new THREE.Vector3(...def.pos);
-      const markerGeo = new THREE.RingGeometry(0.18, 0.22, 24);
+      const rawPos = reg ? reg.pos : def.pos;
+      const pos = new THREE.Vector3(...rawPos);
+      const type = reg ? reg.type : (def?.type || 'blue');
+      const isExtreme = reg ? reg.intensity === 'extreme' : def?.intensity === 'extreme';
+      const color = reg
+        ? (type === 'red' ? (isExtreme ? 0xff1744 : 0xc2185b) : (isExtreme ? 0x00b0ff : 0x0288d1))
+        : (def?.color || 0x00e5ff);
+      const isHindered = reg ? !!reg.hindered : !!def?.hindered;
+      const label = def?.label || (type === 'red' ? 'Red Region' : (isHindered ? 'Blue Region (Crowded)' : 'Blue Region'));
+
+      const markerGeo = new THREE.RingGeometry(0.18, 0.24, 32);
       const markerMat = new THREE.MeshBasicMaterial({
-        color: def.color || 0x00e5ff,
+        color: color,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.85
+        opacity: 0.9
       });
       const marker = new THREE.Mesh(markerGeo, markerMat);
       marker.position.copy(pos);
 
-      // Invisible larger hit proxy sphere
-      const proxyGeo = new THREE.SphereGeometry(0.4, 8, 8);
+      // Inner glowing core dot
+      const coreDotGeo = new THREE.CircleGeometry(0.08, 16);
+      const coreDotMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.85
+      });
+      const coreDot = new THREE.Mesh(coreDotGeo, coreDotMat);
+      marker.add(coreDot);
+
+      // Invisible hit proxy sphere
+      const proxyGeo = new THREE.SphereGeometry(0.5, 8, 8);
       const proxyMat = new THREE.MeshBasicMaterial({ visible: false });
       const proxy = new THREE.Mesh(proxyGeo, proxyMat);
       marker.add(proxy);
@@ -66,6 +105,9 @@ export class AnchorManager {
         id,
         position: pos,
         label: def.label,
+        color: def.color,
+        type: def.type,
+        hindered: !!def.hindered,
         mesh: marker
       });
     }
@@ -76,7 +118,7 @@ export class AnchorManager {
   highlight(anchorId, active = true) {
     for (const a of this.anchors) {
       if (a.id === anchorId) {
-        a.mesh.material.color.setHex(active ? 0x00e676 : (ANCHOR_DEFINITIONS[a.id]?.color || 0x00e5ff));
+        a.mesh.material.color.setHex(active ? 0x00e676 : (a.color || 0x00e5ff));
         a.mesh.scale.setScalar(active ? 1.4 : 1.0);
       }
     }
@@ -84,9 +126,7 @@ export class AnchorManager {
 
   update(camera, time) {
     for (const a of this.anchors) {
-      // Billboarding: make rings face camera
       a.mesh.lookAt(camera.position);
-      // Gentle pulse
       const pulse = 1.0 + 0.12 * Math.sin(time * 4.0);
       a.mesh.scale.set(pulse, pulse, pulse);
     }

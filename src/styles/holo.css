@@ -1,26 +1,25 @@
-/* Holographic UI & Quest Styling */
+/* Holographic Tactical UI & Chemical Quest Console */
 
 .holo-card {
   position: relative;
   background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-durasteel);
+  border-radius: var(--radius-sm);
   padding: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .holo-card:hover {
   border-color: var(--border-strong);
-  box-shadow: 0 12px 40px rgba(0, 229, 255, 0.15);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.8), 0 0 16px rgba(255, 159, 28, 0.2);
 }
 
 .holo-title {
   font-family: var(--font-display);
   font-size: 1.25rem;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   color: var(--text-bright);
   margin-bottom: 0.5rem;
 }
@@ -53,20 +52,22 @@
 .stage-pill-track {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(3, 7, 18, 0.85);
-  border: 1px solid var(--border-subtle);
+  gap: 8px;
+  background: #12141a;
+  border: 1px solid var(--border-durasteel);
   padding: 6px 14px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   pointer-events: auto;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .stage-dot {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  background: #2a2d36;
   transition: all 0.3s ease;
+  border: 1px solid #191b22;
 }
 
 .stage-dot.completed {
@@ -75,31 +76,32 @@
 }
 
 .stage-dot.active {
-  background: var(--accent-cyan);
-  box-shadow: 0 0 10px var(--accent-cyan);
-  transform: scale(1.25);
+  background: var(--accent-amber);
+  box-shadow: 0 0 10px var(--accent-amber);
+  transform: scale(1.2);
 }
 
-/* Colormap Legend */
+/* Colormap Legend — Cividis Electrostatic Charge Gradient */
 .colormap-legend {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: rgba(3, 7, 18, 0.8);
-  border: 1px solid var(--border-subtle);
+  background: #12141a;
+  border: 1px solid var(--border-durasteel);
   padding: 8px 12px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   pointer-events: auto;
   font-family: var(--font-mono);
   font-size: 0.75rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .colormap-bar {
   width: 140px;
   height: 8px;
-  border-radius: var(--radius-full);
+  border-radius: 1px;
   background: linear-gradient(90deg, var(--cividis-0) 0%, var(--cividis-50) 50%, var(--cividis-100) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.8);
 }
 
 .colormap-labels {
@@ -109,7 +111,7 @@
   font-size: 0.65rem;
 }
 
-/* Stage Prompt Card (Projected / Bottom) */
+/* Stage Prompt Card (Heavy Field Research Tablet) */
 .stage-card-wrap {
   display: flex;
   justify-content: center;
@@ -121,12 +123,11 @@
   pointer-events: auto;
   width: 100%;
   max-width: 680px;
-  background: rgba(11, 19, 38, 0.92);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-durasteel);
+  border-radius: var(--radius-sm);
   padding: 1.25rem 1.5rem;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.85);
   position: relative;
 }
 
@@ -134,11 +135,10 @@
   content: '';
   position: absolute;
   top: 0;
-  left: 10%;
-  right: 10%;
+  left: 0;
+  right: 0;
   height: 2px;
-  background: var(--accent-cyan);
-  box-shadow: var(--glow-cyan);
+  background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
 }
 
 .stage-header {
@@ -152,7 +152,8 @@
   font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--accent-cyan);
+  letter-spacing: 0.08em;
+  color: var(--accent-amber);
 }
 
 .stage-xp-tag {
@@ -160,8 +161,8 @@
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--accent-amber);
-  background: rgba(255, 179, 0, 0.15);
-  border: 1px solid rgba(255, 179, 0, 0.3);
+  background: rgba(255, 159, 28, 0.15);
+  border: 1px solid rgba(255, 159, 28, 0.35);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
 }
@@ -173,7 +174,7 @@
   line-height: 1.5;
 }
 
-/* Interactive Choices */
+/* Interactive Choices (Tactile Selector Toggles) */
 .choice-list {
   display: flex;
   flex-direction: column;
@@ -185,25 +186,28 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  background: #14171e;
+  border: 1px solid var(--border-durasteel);
+  border-radius: var(--radius-sm);
   padding: 10px 14px;
   color: var(--text-primary);
   cursor: pointer;
   min-height: 48px;
-  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: all 0.15s ease;
 }
 
 .choice-option:hover {
-  background: rgba(0, 229, 255, 0.1);
+  background: #1e222c;
   border-color: var(--border-strong);
+  color: var(--text-bright);
 }
 
 .choice-option.selected {
-  background: rgba(0, 229, 255, 0.2);
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+  background: rgba(255, 159, 28, 0.15);
+  border-color: var(--accent-amber);
+  box-shadow: inset 0 1px 0 rgba(255, 159, 28, 0.3), 0 0 14px rgba(255, 159, 28, 0.25);
+  color: var(--accent-amber);
 }
 
 /* Rank Rails */
@@ -218,9 +222,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  background: #161820;
+  border: 1px solid var(--border-durasteel);
+  border-radius: var(--radius-sm);
   padding: 10px 14px;
   color: var(--text-bright);
   cursor: grab;
@@ -237,8 +241,8 @@
 }
 
 .rank-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  background: #242732;
+  border: 1px solid var(--border-durasteel);
   color: var(--text-bright);
   padding: 4px 8px;
   border-radius: var(--radius-sm);
@@ -247,14 +251,19 @@
   min-height: 32px;
 }
 
+.rank-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--accent-amber);
+}
+
 /* Diegetic Scanning Sweep Animation */
 .scanning-sweep {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent, rgba(0, 229, 255, 0.25), transparent);
+  background: linear-gradient(180deg, transparent, rgba(255, 159, 28, 0.2), transparent);
   animation: scanWave 0.8s ease-in-out infinite alternate;
   pointer-events: none;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
 }
 
 @keyframes scanWave {
@@ -266,7 +275,7 @@
 .dice-cube {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, var(--accent-cyan), #0091ea);
+  background: linear-gradient(135deg, #ffb703, #c85a17);
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
@@ -274,8 +283,8 @@
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 800;
-  color: #030712;
-  box-shadow: var(--glow-cyan);
+  color: #0c0d11;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), var(--glow-amber);
   animation: spinDice 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 

@@ -106,10 +106,10 @@ var Db = {
     var teams = Db.getAll('Teams');
     if (teams.length === 0) {
       var defaultTeams = [
-        { team_id: 'terra', name: 'Terra', corp_name: 'Terra Dominion', ship_name: 'TDS Lodestone', color_hex: '#1b5e20', accent_hex: '#4caf50', slot_cap_override: '', lore: 'Heavy metallurgy and mineral synthesis.', emblem: 'geo' },
-        { team_id: 'zephyr', name: 'Zephyr', corp_name: 'Zephyr Aeronautics', ship_name: 'ZAS Windward', color_hex: '#006064', accent_hex: '#00e5ff', slot_cap_override: '', lore: 'Atmospheric distillation and fluid kinetics.', emblem: 'aero' },
-        { team_id: 'ignis', name: 'Ignis', corp_name: 'Ignis Combine', ship_name: 'ICS Emberline', color_hex: '#bf360c', accent_hex: '#ff6e40', slot_cap_override: '', lore: 'High-energy combustion and plasma catalysis.', emblem: 'pyro' },
-        { team_id: 'thalassa', name: 'Thalassa', corp_name: 'Thalassa Deepworks', ship_name: 'TDW Tideglass', color_hex: '#0d47a1', accent_hex: '#2979ff', slot_cap_override: '', lore: 'Aqueous solvent extractions and deep pressure chemistry.', emblem: 'hydro' }
+        { team_id: 'earth', name: 'earth', corp_name: 'earth', ship_name: 'earth', color_hex: '#1b5e20', accent_hex: '#4caf50', slot_cap_override: '', lore: '', emblem: 'geo' },
+        { team_id: 'air', name: 'air', corp_name: 'air', ship_name: 'air', color_hex: '#006064', accent_hex: '#00e5ff', slot_cap_override: '', lore: '', emblem: 'aero' },
+        { team_id: 'fire', name: 'fire', corp_name: 'fire', ship_name: 'fire', color_hex: '#bf360c', accent_hex: '#ff6e40', slot_cap_override: '', lore: '', emblem: 'pyro' },
+        { team_id: 'water', name: 'water', corp_name: 'water', ship_name: 'water', color_hex: '#0d47a1', accent_hex: '#2979ff', slot_cap_override: '', lore: '', emblem: 'hydro' }
       ];
       for (var t = 0; t < defaultTeams.length; t++) {
         Db.append('Teams', defaultTeams[t]);

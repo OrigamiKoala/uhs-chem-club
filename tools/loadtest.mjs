@@ -4,17 +4,17 @@
  */
 
 const TARGET_CONCURRENCY = 40;
-const TEAMS = ['terra', 'zephyr', 'ignis', 'thalassa'];
+const TEAMS = ['earth', 'air', 'fire', 'water'];
 const CAP_PER_TEAM = 12;
 
 console.log(`=== Avalon Concurrency Load Test ===`);
 console.log(`Simulating ${TARGET_CONCURRENCY} concurrent recruits into 4 ships (cap = ${CAP_PER_TEAM} per ship)...`);
 
 const teamSlots = {
-  terra: 0,
-  zephyr: 0,
-  ignis: 0,
-  thalassa: 0
+  earth: 0,
+  air: 0,
+  fire: 0,
+  water: 0
 };
 
 let successfulClaims = 0;

@@ -63,11 +63,15 @@ var Auth = {
       return { salt: hmacSha256('dummy', getProxySecret_()) };
     }
     var idLc = identifier.trim().toLowerCase();
+    var cached = Cache.get('salt:' + idLc);
+    if (cached) return { salt: cached };
+
     var player = Db.findOne('Players', function(p) {
       return p.email_lc === idLc || p.display_name_lc === idLc;
     });
 
     if (player && player.pw_salt) {
+      Cache.put('salt:' + idLc, player.pw_salt, 21600);
       return { salt: player.pw_salt };
     }
     // Return deterministic dummy salt for nonexistent account
@@ -95,15 +99,24 @@ var Auth = {
       throw { code: 'ACCOUNT_BANNED', message: 'This account is suspended.' };
     }
 
-    // Update last_seen_at
-    Db.update('Players', function(p) { return p.player_id === player.player_id; }, {
-      last_seen_at: isoNow()
-    });
+    // Cache salt for future logins
+    if (player.pw_salt) {
+      Cache.put('salt:' + idLc, player.pw_salt, 21600);
+    }
 
     var token = Auth.createSessionToken(player.player_id);
+    var profile = null;
+    try {
+      profile = Players.getMe(player.player_id);
+    } catch (e) {}
+
     return {
       token: token,
-      player: sanitizePlayer_(player)
+      player: profile ? profile.player : sanitizePlayer_(player),
+      team: profile ? profile.team : null,
+      xp: profile ? profile.xp : 0,
+      level: profile ? profile.level : 1,
+      inventory: profile ? profile.inventory : []
     };
   },
 

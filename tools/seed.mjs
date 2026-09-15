@@ -2,8 +2,7 @@
  * seed.mjs — Seed fake players and submissions for testing
  */
 
-const TEAMS = ['terra', 'zephyr', 'ignis', 'thalassa'];
-const ROLES = ['Navigator', 'Engineer', 'Xenobiologist', 'Quartermaster', 'Comms Officer'];
+const TEAMS = ['earth', 'air', 'fire', 'water'];
 const NAMES = [
   'AstraNova', 'ProtonPulse', 'KelvinZero', 'TerraFirm', 'ValenceViper',
   'QuantumQuark', 'NobleNeon', 'RedoxRider', 'IonStormer', 'CatalystCore',
@@ -15,7 +14,6 @@ console.log(`Generating ${NAMES.length} mock explorers across 4 flagships:`);
 
 const mockData = NAMES.map((name, i) => {
   const team = TEAMS[i % TEAMS.length];
-  const role = ROLES[i % ROLES.length];
   const xp = 140 + Math.floor(Math.random() * 180);
   const lvl = Math.min(12, Math.floor(Math.sqrt(xp / 45)) + 1);
 
@@ -24,7 +22,7 @@ const mockData = NAMES.map((name, i) => {
     email: `${name.toLowerCase()}@uhschem.club`,
     display_name: name,
     team_id: team,
-    role: role,
+    role: '',
     xp: xp,
     level: lvl
   };
