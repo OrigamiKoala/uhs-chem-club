@@ -19,61 +19,49 @@ export function renderLanding(container) {
       <div class="glass-panel" style="max-width: 580px; width: 100%; padding: 2.5rem 2rem; border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.94); box-shadow: 0 16px 48px rgba(0,0,0,0.85);">
         
         <!-- Starship Cockpit Visual Header -->
-        <div style="position: relative; border-radius: 2px; overflow: hidden; margin-bottom: 1.5rem; border: 1px solid var(--border-durasteel); height: 160px; box-shadow: inset 0 0 16px rgba(0,0,0,0.8);">
-          <img src="/art/cockpit.jpg" alt="Starship Cockpit View" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.9);" />
+        <div style="position: relative; border-radius: 2px; overflow: hidden; margin-bottom: 1.5rem; border: 1px solid var(--border-durasteel); height: 160px;">
+          <img src="/art/cockpit.jpg" alt="Cockpit View" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.9);" />
           <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(12, 13, 17, 0.95) 100%);"></div>
-          <div style="position: absolute; bottom: 8px; left: 12px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-amber); letter-spacing: 0.12em;">
-            [ STARSHIP AVALON // FLIGHT COCKPIT // HIGH ORBIT ]
-          </div>
-          <div style="position: absolute; bottom: 8px; right: 12px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-green); letter-spacing: 0.08em;">
-            ● AVIONICS ONLINE
-          </div>
         </div>
 
-        <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-amber); letter-spacing: 0.2em; margin-bottom: 0.4rem; text-transform: uppercase;">
-          UHS CHEMISTRY CLUB // INTERSTELLAR EXPEDITION
+        <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-amber); letter-spacing: 0.12em; margin-bottom: 0.4rem;">
+          UHS CHEMISTRY CLUB
         </div>
 
-        <h1 style="font-family: var(--font-imperial); font-size: 2.8rem; letter-spacing: 0.16em; font-weight: 900; margin-bottom: 0.75rem; color: #fffdf7; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);">
+        <h1 style="font-family: var(--font-imperial); font-size: 2.8rem; letter-spacing: 0.12em; font-weight: 900; margin-bottom: 0.75rem; color: #fffdf7;">
           AVALON
         </h1>
 
-        <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.5; font-family: var(--font-main);">
+        <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.5;">
           ${isAuthed 
-            ? `Active operative logged in: <strong style="color: var(--text-bright); font-family: var(--font-display);">${p.display_name || 'Explorer'}</strong> (${t.name || t.team_id || 'Unassigned'}).` 
-            : 'Interstellar chemical synthesis, orbital molecular simulations, and multi-planet guild trials across uncharted star systems.'}
+            ? `Signed in as <strong style="color: var(--text-bright);">${p.display_name || 'Explorer'}</strong> (${t.name || t.team_id || 'No Team'}).` 
+            : 'Interactive 3D chemistry mechanism challenges.'}
         </p>
 
-        <div style="display: flex; flex-direction: column; gap: 0.85rem; max-width: 320px; margin: 0 auto;">
+        <div style="display: flex; flex-direction: column; gap: 0.85rem; max-width: 300px; margin: 0 auto;">
           ${isAuthed ? `
-            <a href="${p.team_id ? '#/bridge' : '#/onboarding'}" class="btn-primary" style="text-decoration: none;">
-              <span>${p.team_id ? 'Enter Command Bridge' : 'Complete Guild Roster'}</span>
+            <a href="${session.teamId ? '#/bridge' : '#/onboarding'}" class="btn-primary" style="text-decoration: none;">
+              <span>${session.teamId ? 'Go to Bridge' : 'Choose Team'}</span>
               <span>➔</span>
             </a>
             <a href="#/leaderboard" class="btn-secondary" style="text-decoration: none;">
-              <span>Telemetry & Leaderboard</span>
+              <span>Standings</span>
             </a>
             <button type="button" id="landing-signout-btn" class="btn-secondary" style="border-color: rgba(217, 4, 41, 0.4); color: var(--accent-danger);">
-              <span>Disengage Terminal</span>
+              <span>Sign Out</span>
             </button>
           ` : `
             <a href="#/register" class="btn-primary" style="text-decoration: none;">
-              <span>Enlist Operative</span>
+              <span>Sign Up</span>
               <span>➔</span>
             </a>
-            <a href="#/demo" class="btn-secondary" style="text-decoration: none; border-color: var(--accent-amber); color: var(--accent-amber);">
-              <span>Launch Sim Demo</span>
-            </a>
             <a href="#/login" class="btn-secondary" style="text-decoration: none;">
-              <span>Access Terminal</span>
+              <span>Log In</span>
+            </a>
+            <a href="#/demo" class="btn-secondary" style="text-decoration: none; border-color: var(--accent-amber); color: var(--accent-amber);">
+              <span>Try Demo</span>
             </a>
           `}
-        </div>
-
-        <div style="margin-top: 1.75rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.06); font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); display: flex; justify-content: space-between;">
-          <span>SYS: BTR-994</span>
-          <span>FLUX: OPTIMAL</span>
-          <span>DECK: PERSISTENT 3D</span>
         </div>
 
       </div>

@@ -30,27 +30,21 @@ export function renderInventory(container) {
         <div class="glass-panel" style="margin-bottom: 1.5rem; border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.94);">
           <!-- Cargo Bay Banner -->
           <div style="position: relative; border-radius: 2px; overflow: hidden; margin-bottom: 1.25rem; border: 1px solid var(--border-durasteel); height: 140px;">
-            <img src="/art/cargo.jpg" alt="Cargo Hold" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.85);" />
+            <img src="/art/cargo.jpg" alt="Inventory" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.85);" />
             <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 20%, rgba(12, 13, 17, 0.9) 100%);"></div>
-            <div style="position: absolute; bottom: 8px; left: 12px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-amber); letter-spacing: 0.12em;">
-              [ CARGO HOLD // SPICE FREIGHT BAY // SEC-04 ]
-            </div>
-            <div style="position: absolute; bottom: 8px; right: 12px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-green);">
-              ● GANTRY CRANE OPERATIONAL
-            </div>
           </div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div>
               <h2 style="font-family: var(--font-imperial); font-size: 1.6rem; letter-spacing: 0.12em; color: #fffdf7; margin-bottom: 0.2rem;">
-                Cargo Bay & Gear Manifest
+                Inventory
               </h2>
-              <p style="font-family: var(--font-main); font-size: 0.9rem; color: var(--text-secondary);">
-                Tactical hardware canisters, chemical catalysts, and field survival consumables.
+              <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                Items and tools earned from quests.
               </p>
             </div>
             <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-amber); padding: 4px 10px; background: #111318; border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm);">
-              CAPACITY: ${inventory.length} / 8 SLOTS
+              ${inventory.length} / 8 slots
             </div>
           </div>
         </div>
@@ -59,13 +53,13 @@ export function renderInventory(container) {
           <div class="glass-panel" style="text-align: center; padding: 3.5rem 1.5rem; border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.94);">
             <div style="font-size: 2.5rem; margin-bottom: 0.8rem; filter: grayscale(0.5);">📦</div>
             <h3 style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: #fffdf7; margin-bottom: 0.5rem;">
-              Cargo Hold Depleted
+              Inventory Empty
             </h3>
-            <p style="font-size: 0.9rem; color: var(--text-secondary); max-width: 440px; margin: 0 auto 1.5rem; font-family: var(--font-main);">
-              No active modules or spice canisters in storage. Gear is salvaged by completing planetary synthesis quests and surviving regional events.
+            <p style="font-size: 0.9rem; color: var(--text-secondary); max-width: 440px; margin: 0 auto 1.5rem;">
+              Complete quests to earn rewards and items.
             </p>
-            <a href="#/starmap" class="btn-primary" style="text-decoration: none;">
-              Deploy to Sector Quests
+            <a href="#/quest" class="btn-primary" style="text-decoration: none;">
+              Go to Quest
             </a>
           </div>
         ` : `

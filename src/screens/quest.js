@@ -41,6 +41,20 @@ export function renderQuest(container) {
 
     const cfg = stageMeta.scene_config || {};
 
+    const defaultPrompts = [
+      'Drag an arrow from the electron-rich donor region (red) to the electron-poor acceptor center (blue).',
+      'Connect the electron donor (red) to the polarized target site (blue).',
+      'Multiple reactive sites: route the arrow between the strongest donor (extreme red) and the strongest electrophile (extreme blue).',
+      'Select the primary reactive site (extreme red) and connect to the electrophilic center (extreme blue).',
+      'Steric hindrance: orbit the view to find the open, accessible target site (blue) and connect from the donor (red).',
+      'Bulky groups shield one site: orbit the view to target the accessible center (blue).',
+      'Master challenge: identify the unhindered active site among multiple centers and route the arrow from the strongest donor.'
+    ];
+
+    const instruction = cfg.prompt && !cfg.prompt.includes('Draw a line between the two regions')
+      ? cfg.prompt
+      : (defaultPrompts[currentStageIdx] || 'Drag an arrow from the red donor region to the blue target region.');
+
     // 1. Render Quest HUD Overlay
     container.innerHTML = `
       <div class="quest-hud-overlay">
@@ -61,8 +75,8 @@ export function renderQuest(container) {
           <!-- Density Legend -->
           <div class="colormap-legend" style="min-width: 170px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.72rem; font-family: var(--font-mono); font-weight: 800;">
-              <span style="color: #ff1744;">MOST DENSE</span>
-              <span style="color: #00b0ff;">LEAST DENSE</span>
+              <span style="color: #ff1744;">MOST DENSE (DONOR)</span>
+              <span style="color: #00b0ff;">LEAST DENSE (ACCEPTOR)</span>
             </div>
             <div style="height: 8px; border-radius: 4px; background: linear-gradient(90deg, #ff1744 0%, #fbbf24 25%, #10b981 50%, #00b0ff 100%); box-shadow: 0 0 10px rgba(0, 176, 255, 0.2);"></div>
           </div>
@@ -78,7 +92,27 @@ export function renderQuest(container) {
               <div class="stage-xp-tag">+${stageMeta.xp || 20} XP</div>
             </div>
 
-            <div class="stage-instruction">Draw a line between the two regions.</div>
+            <div class="stage-instruction">${instruction}</div>
+
+            <!-- Move vs Draw Toolbar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.75rem 0; flex-wrap: wrap; gap: 0.5rem;">
+              <div style="display: flex; gap: 0.4rem;">
+                <button type="button" id="tool-draw-btn" class="btn-secondary active" style="font-size: 0.75rem; padding: 5px 12px; min-height: 32px; border-color: var(--accent-amber); color: var(--accent-amber);">
+                  ✏️ Draw Arrow
+                </button>
+                <button type="button" id="tool-rotate-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 5px 12px; min-height: 32px;">
+                  🔄 Rotate View
+                </button>
+              </div>
+              <button type="button" id="tool-clear-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 5px 12px; min-height: 32px;">
+                ✕ Clear Line
+              </button>
+            </div>
+
+            <div style="font-size: 0.75rem; color: var(--text-muted); background: rgba(0,0,0,0.25); border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm); padding: 6px 10px; margin-bottom: 0.85rem; line-height: 1.4;">
+              <div>• <strong>Draw:</strong> Left-click and drag from red to blue (or tap red, then tap blue).</div>
+              <div>• <strong>Move view:</strong> Click 'Rotate View' or right-click drag anytime to orbit.</div>
+            </div>
 
             <!-- Interactive Stage Area -->
             <div id="stage-interactive-area" style="margin-bottom: 1rem;"></div>
@@ -105,11 +139,41 @@ export function renderQuest(container) {
       });
     } else {
       // Tier 2 & 3: Configure 3D Viewer
+      viewer.setMode('draw');
       viewer.loadStage(cfg, stageMeta.kind, (payload) => {
         currentPayload = payload;
       });
 
-      // Also render DOM choice options for 'choice' stage
+      // Bind toolbar
+      const drawBtn = container.querySelector('#tool-draw-btn');
+      const rotateBtn = container.querySelector('#tool-rotate-btn');
+      const clearBtn = container.querySelector('#tool-clear-btn');
+
+      drawBtn?.addEventListener('click', () => {
+        drawBtn.classList.add('active');
+        drawBtn.style.color = 'var(--accent-amber)';
+        drawBtn.style.borderColor = 'var(--accent-amber)';
+        rotateBtn?.classList.remove('active');
+        if (rotateBtn) { rotateBtn.style.color = ''; rotateBtn.style.borderColor = ''; }
+        viewer.setMode('draw');
+      });
+
+      rotateBtn?.addEventListener('click', () => {
+        rotateBtn.classList.add('active');
+        rotateBtn.style.color = 'var(--accent-amber)';
+        rotateBtn.style.borderColor = 'var(--accent-amber)';
+        drawBtn?.classList.remove('active');
+        if (drawBtn) { drawBtn.style.color = ''; drawBtn.style.borderColor = ''; }
+        viewer.setMode('rotate');
+      });
+
+      clearBtn?.addEventListener('click', () => {
+        viewer.clear();
+        currentPayload = null;
+        showToast('Line cleared.', 'info');
+      });
+
+      // Also render DOM choice options for 'choice' stage if applicable
       if (stageMeta.kind === 'choice' && cfg.options) {
         interactiveArea.innerHTML = `
           <div class="choice-list">
@@ -131,7 +195,6 @@ export function renderQuest(container) {
       }
     }
 
-    // 3. Bind Hint Button
     // 3. Bind Grade Button
     const gradeBtn = container.querySelector('#grade-btn');
     const sweep = container.querySelector('#scanning-sweep');
@@ -139,7 +202,7 @@ export function renderQuest(container) {
     gradeBtn.addEventListener('click', async () => {
       if (isGrading) return;
       if (!currentPayload) {
-        showToast('Please draw a line between the two regions before submitting.', 'warning');
+        showToast('Please connect an arrow from red to blue before submitting.', 'warning');
         return;
       }
 

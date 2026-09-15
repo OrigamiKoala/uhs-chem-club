@@ -14,27 +14,21 @@ export function renderStarMap(container) {
       <div class="glass-panel" style="margin-bottom: 1.5rem; border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.94);">
         <!-- Starmap Banner -->
         <div style="position: relative; border-radius: 2px; overflow: hidden; margin-bottom: 1.25rem; border: 1px solid var(--border-durasteel); height: 140px;">
-          <img src="/art/starmap.jpg" alt="Tactical Holotable" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.85);" />
+          <img src="/art/starmap.jpg" alt="Starmap" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.85);" />
           <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 20%, rgba(12, 13, 17, 0.9) 100%);"></div>
-          <div style="position: absolute; bottom: 8px; left: 12px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-amber); letter-spacing: 0.12em;">
-            [ TACTICAL HOLOTABLE // ORBITAL NAVIGATION ARRAY // MULTI-PLANET CARTOGRAPHY ]
-          </div>
-          <div style="position: absolute; bottom: 8px; right: 12px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-green);">
-            ● PROJECTION SYNCHRONIZED
-          </div>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
           <div>
             <h2 style="font-family: var(--font-imperial); font-size: 1.6rem; letter-spacing: 0.12em; color: #fffdf7; margin-bottom: 0.2rem;">
-              Planetary Sectors & Interstellar Expeditions
+              Sectors
             </h2>
-            <p style="font-family: var(--font-main); font-size: 0.9rem; color: var(--text-secondary);">
-              Uncharted star systems across the Perseus Verge. Select an active celestial territory to initiate chemical synthesis and molecular probe trials.
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">
+              Explore active and upcoming chemistry problem sets.
             </p>
           </div>
           <a href="#/quest" class="btn-primary" style="text-decoration: none;">
-            <span>Deploy to Active Sector</span>
+            <span>Start Active Quest</span>
             <span>➔</span>
           </a>
         </div>
@@ -44,15 +38,15 @@ export function renderStarMap(container) {
         <!-- Sector 1 (Active) -->
         <div class="holo-card" style="border-color: var(--accent-amber); background: #14161c;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-            <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-amber);">SECTOR 01 // DUNE SEA</span>
-            <span style="color: var(--accent-green); font-size: 0.75rem; font-weight: 700; font-family: var(--font-mono);">● DEPLOYED</span>
+            <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-amber);">SECTOR 01</span>
+            <span style="color: var(--accent-green); font-size: 0.75rem; font-weight: 700; font-family: var(--font-mono);">ACTIVE</span>
           </div>
           <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem;">Erebus</h3>
           <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">
-            Electrostatic charge density mapping, nucleophilic attacks, and leaving group kinetics in harsh alkaline sand fields.
+            Charge distribution, nucleophile identification, and curved-arrow substitution mechanisms.
           </p>
           <a href="#/quest" class="btn-primary" style="width: 100%; text-decoration: none; font-size: 0.8rem; padding: 8px 14px;">
-            Engage Quest
+            Start Quest
           </a>
         </div>
 

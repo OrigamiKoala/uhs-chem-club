@@ -127,8 +127,15 @@ class SessionManager {
     if (data.team !== undefined) {
       this.team = normalizeTeamObj(data.team);
     }
-    if (this.player && this.player.team_id) {
+    if (this.team && this.team.team_id) {
+      if (!this.player) this.player = {};
+      this.player.team_id = this.team.team_id;
+    } else if (this.player && this.player.team_id) {
       this.player.team_id = normalizeTeamId(this.player.team_id);
+      if (!this.team && this.teams && this.teams.length > 0) {
+        const found = this.teams.find(t => t.team_id === this.player.team_id);
+        if (found) this.team = found;
+      }
     }
     if (typeof data.xp === 'number') {
       this.xp = data.xp;

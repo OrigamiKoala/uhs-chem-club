@@ -85,17 +85,17 @@ export class ArrowController {
 
   renderArrow(startVec, endVec) {
     this.removeActiveMesh();
-    this.activeArrowMesh = this.createArrowMesh(startVec, endVec, 0.04);
+    this.activeArrowMesh = this.createArrowMesh(startVec, endVec, 0.085, 0xffd166);
     this.scene.add(this.activeArrowMesh);
   }
 
   createPersistentArrow(startVec, endVec) {
-    const group = this.createArrowMesh(startVec, endVec, 0.05, 0x00e676);
+    const group = this.createArrowMesh(startVec, endVec, 0.095, 0x00ff88);
     this.scene.add(group);
     return group;
   }
 
-  createArrowMesh(start, end, radius = 0.04, color = 0x00e5ff) {
+  createArrowMesh(start, end, radius = 0.085, color = 0xffd166) {
     const group = new THREE.Group();
 
     // Compute curved midpoint
@@ -106,19 +106,21 @@ export class ArrowController {
 
     // Arch upwards relative to camera
     const up = new THREE.Vector3(0, 1, 0);
-    const archOffset = up.clone().multiplyScalar(Math.min(len * 0.4, 0.8));
+    const archOffset = up.clone().multiplyScalar(Math.min(len * 0.45, 0.9));
     const controlPoint = mid.clone().add(archOffset);
 
     const curve = new THREE.QuadraticBezierCurve3(start, controlPoint, end);
-    const tubeGeo = new THREE.TubeGeometry(curve, 24, radius, 8, false);
-    const tubeMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.85 });
+    const tubeGeo = new THREE.TubeGeometry(curve, 32, radius, 12, false);
+    const tubeMat = new THREE.MeshBasicMaterial({ color, depthTest: false, transparent: false });
     const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+    tubeMesh.renderOrder = 999;
     group.add(tubeMesh);
 
     // Arrowhead cone
-    const coneGeo = new THREE.ConeGeometry(radius * 2.8, radius * 5, 12);
-    const coneMat = new THREE.MeshBasicMaterial({ color });
+    const coneGeo = new THREE.ConeGeometry(radius * 2.6, radius * 4.2, 16);
+    const coneMat = new THREE.MeshBasicMaterial({ color, depthTest: false, transparent: false });
     const coneMesh = new THREE.Mesh(coneGeo, coneMat);
+    coneMesh.renderOrder = 999;
 
     // Position cone at end and orient along tangent
     const tangent = curve.getTangent(1.0).normalize();

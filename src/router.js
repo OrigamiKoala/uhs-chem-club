@@ -79,20 +79,20 @@ export class Router {
 
     // Already signed in: redirect guest auth routes (/login, /register) to bridge/onboarding
     if (session.token && session.player && (raw === '/login' || raw === '/register')) {
-      const dest = session.player.team_id ? '#/bridge' : '#/onboarding';
+      const dest = session.teamId ? '#/bridge' : '#/onboarding';
       window.location.hash = dest;
       return;
     }
 
     // Already signed in: redirect landing page (/) to bridge/onboarding
     if (session.token && session.player && raw === '/') {
-      const dest = session.player.team_id ? '#/bridge' : '#/onboarding';
+      const dest = session.teamId ? '#/bridge' : '#/onboarding';
       window.location.hash = dest;
       return;
     }
 
     // Redirect to onboarding if logged in but no team chosen
-    if (session.token && session.player && !session.player.team_id && raw !== '/onboarding' && raw !== '/login' && raw !== '/admin') {
+    if (session.token && session.player && !session.teamId && raw !== '/onboarding' && raw !== '/login' && raw !== '/admin') {
       window.location.hash = '#/onboarding';
       return;
     }

@@ -20,6 +20,7 @@ export class ArrowInteraction {
   }
 
   handlePointerDown(e) {
+    if (e.button === 2) return; // Right-click orbits view
     const picked = this.picker.pick(e);
     this.dragStartPos = { x: e.clientX, y: e.clientY };
 
@@ -108,5 +109,8 @@ export class ArrowInteraction {
     this.isDragging = false;
     if (this.controls) this.controls.enabled = true;
     this.arrowController.clear();
+    if (this.onChange) {
+      this.onChange(null);
+    }
   }
 }

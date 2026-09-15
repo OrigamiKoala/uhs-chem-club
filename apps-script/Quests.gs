@@ -24,14 +24,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 15,
     max_attempts: 3,
-    hint_text: 'Draw a line from the red region to the blue region.',
+    hint_text: 'Draw an arrow from the red donor to the blue acceptor.',
     hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_lp1', to: 'blue_c1' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 1',
-      prompt: 'Draw a line between the two regions.',
+      prompt: 'Drag an arrow from the electron-rich lone pair (red) to the electron-deficient carbon center (blue).',
       moleculeId: 'stage1_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -42,14 +42,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 15,
     max_attempts: 3,
-    hint_text: 'Draw a line from the red region to the blue region.',
+    hint_text: 'Draw an arrow from the red donor to the blue acceptor.',
     hint_cost: 1,
     answer_json: JSON.stringify({ from: 'red_lp1', to: 'blue_c1' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 2',
-      prompt: 'Draw a line between the two regions.',
+      prompt: 'Connect the electron donor (red) to the polarized target site (blue).',
       moleculeId: 'stage2_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -60,14 +60,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 20,
     max_attempts: 3,
-    hint_text: 'Draw a line from the red region to the blue region.',
+    hint_text: 'Connect the extreme red donor to the extreme blue acceptor.',
     hint_cost: 2,
     answer_json: JSON.stringify({ from: 'red_extreme', to: 'blue_extreme' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 3',
-      prompt: 'Draw a line between the two regions.',
+      prompt: 'Multiple reactive sites: route the arrow between the strongest donor (extreme red) and the strongest electrophile (extreme blue).',
       moleculeId: 'stage3_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -78,14 +78,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 20,
     max_attempts: 3,
-    hint_text: 'Draw a line from the red region to the blue region.',
+    hint_text: 'Select the primary reactive site and connect to the electrophilic center.',
     hint_cost: 2,
     answer_json: JSON.stringify({ from: 'red_extreme', to: 'blue_extreme' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 4',
-      prompt: 'Draw a line between the two regions.',
+      prompt: 'Select the primary reactive site (extreme red) and connect to the electrophilic center (extreme blue).',
       moleculeId: 'stage4_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -103,7 +103,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 5',
-      prompt: 'Draw a line between the two regions.',
+      prompt: 'Steric hindrance: orbit the view to find the open, accessible target site (blue) and connect from the donor (red).',
       moleculeId: 'stage5_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -121,7 +121,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 6',
-      prompt: 'Draw a line between the two regions.',
+      prompt: 'Bulky groups shield one site: orbit the view to target the accessible center (blue).',
       moleculeId: 'stage6_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -139,7 +139,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 7',
-      prompt: 'Draw a line between the two regions.',
+      prompt: 'Master challenge: identify the unhindered active site among multiple centers and route the arrow from the strongest donor.',
       moleculeId: 'stage7_pair',
       anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak']
     })
@@ -153,7 +153,8 @@ var Quests = {
       Db.append('Quests', DEFAULT_QUEST);
     }
     var qs = Db.getAll('QuestStages');
-    if (qs.length === 0) {
+    var needsRebuild = qs.length === 0 || qs[0].kind === 'choice';
+    if (needsRebuild) {
       for (var i = 0; i < DEFAULT_STAGES.length; i++) {
         Db.append('QuestStages', DEFAULT_STAGES[i]);
       }

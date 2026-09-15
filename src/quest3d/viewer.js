@@ -88,6 +88,19 @@ export class QuestViewer {
     window.addEventListener('pointerup', this._onPointerUp);
   }
 
+  setMode(mode) {
+    if (this.controls) {
+      this.controls.setMode(mode);
+    }
+  }
+
+  clear() {
+    if (this.activeInteraction && this.activeInteraction.clear) {
+      this.activeInteraction.clear();
+    }
+    this.arrowController.clear();
+  }
+
   loadStage(stageConfig = {}, kind = 'pick', onPayloadChange = null) {
     // Clear previous molecules
     if (this.currentMolecule) {
@@ -102,21 +115,22 @@ export class QuestViewer {
     this.arrowController.clear();
     this.anchorManager.clear();
 
-    const molId = stageConfig.moleculeId || 'h2o';
-
-    // 1. Build molecule and density shells
-    if (stageConfig.options && !stageConfig.moleculeId) {
-      // Story / Choice stage, no molecule needed
-    } else {
-      this.currentMolecule = new MoleculeMesh(molId);
-      this.scene.add(this.currentMolecule.group);
-
-      this.currentIsosurface = new DensityIsosurface(molId);
-      this.scene.add(this.currentIsosurface.group);
+    let molId = stageConfig.moleculeId;
+    if (!molId || (molId === 'h2o' && kind === 'arrow')) {
+      molId = 'stage1_pair';
     }
 
+    // 1. Build molecule and density shells
+    this.currentMolecule = new MoleculeMesh(molId);
+    this.scene.add(this.currentMolecule.group);
+
+    this.currentIsosurface = new DensityIsosurface(molId);
+    this.scene.add(this.currentIsosurface.group);
+
     // 2. Load anchors
-    const anchorIds = stageConfig.anchors || [];
+    const anchorIds = (stageConfig.anchors && stageConfig.anchors.length > 0)
+      ? stageConfig.anchors
+      : (this.currentMolecule?.data?.regions || []).map(r => r.id);
     const anchors = this.anchorManager.loadAnchors(anchorIds, this.currentMolecule?.data?.regions);
     this.picker.setAnchors(anchors);
 

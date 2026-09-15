@@ -106,6 +106,24 @@ async function callAppsScript(route, body) {
         result.data.player.team.team_id = pTid;
         result.data.player.team.name = properNames[pTid] || result.data.player.team.name || pTid;
       }
+      // Normalize stages: replace obsolete choice stage 0 or missing moleculeId
+      const checkStages = result.data.stages || result.data.activeQuest?.stages;
+      if (Array.isArray(checkStages) && checkStages.length > 0) {
+        const first = checkStages[0];
+        if (first.kind === 'choice' || !first.scene_config?.moleculeId) {
+          const canonical = [
+            { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 1', prompt: 'Drag an arrow from the electron-rich lone pair (red) to the electron-deficient carbon center (blue).', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 2', prompt: 'Connect the electron donor (red) to the polarized target site (blue).', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 3', prompt: 'Multiple reactive sites: route the arrow between the strongest donor (extreme red) and the strongest electrophile (extreme blue).', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 4', prompt: 'Select the primary reactive site (extreme red) and connect to the electrophilic center (extreme blue).', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 5', prompt: 'Steric hindrance: orbit the view to find the open, accessible target site (blue) and connect from the donor (red).', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 6', prompt: 'Bulky groups shield one site: orbit the view to target the accessible center (blue).', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 3, scene_config: { title: 'Stage 7', prompt: 'Master challenge: identify the unhindered active site among multiple centers and route the arrow from the strongest donor.', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } }
+          ];
+          if (result.data.stages) result.data.stages = canonical;
+          if (result.data.activeQuest) result.data.activeQuest.stages = canonical;
+        }
+      }
     }
     if (isPublicCacheable && result.ok) {
       setCached(cacheKey, result, route === 'leaderboard' ? 20000 : 60000);
@@ -214,13 +232,13 @@ function localDevHandler(route, body) {
         activeQuest: {
           quest: { quest_id: 'q1', title: 'The Charge Gardens of Erebus', world: 'Erebus' },
           stages: [
-            { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 1', prompt: 'Draw a line between the two regions.', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
-            { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 2', prompt: 'Draw a line between the two regions.', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
-            { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 3', prompt: 'Draw a line between the two regions.', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
-            { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 4', prompt: 'Draw a line between the two regions.', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
-            { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 5', prompt: 'Draw a line between the two regions.', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
-            { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 6', prompt: 'Draw a line between the two regions.', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
-            { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 3, scene_config: { title: 'Stage 7', prompt: 'Draw a line between the two regions.', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } }
+            { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 1', prompt: 'Drag an arrow from the electron-rich lone pair (red) to the electron-deficient carbon center (blue).', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 2', prompt: 'Connect the electron donor (red) to the polarized target site (blue).', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 3', prompt: 'Multiple reactive sites: route the arrow between the strongest donor (extreme red) and the strongest electrophile (extreme blue).', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 4', prompt: 'Select the primary reactive site (extreme red) and connect to the electrophilic center (extreme blue).', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 5', prompt: 'Steric hindrance: orbit the view to find the open, accessible target site (blue) and connect from the donor (red).', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 6', prompt: 'Bulky groups shield one site: orbit the view to target the accessible center (blue).', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 3, scene_config: { title: 'Stage 7', prompt: 'Master challenge: identify the unhindered active site among multiple centers and route the arrow from the strongest donor.', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } }
           ]
         },
         player: player ? {
@@ -368,7 +386,7 @@ function localDevHandler(route, body) {
             hint_cost: 0,
             scene_config: {
               title: 'Stage 1',
-              prompt: 'Draw a line between the two regions.',
+              prompt: 'Drag an arrow from the electron-rich lone pair (red) to the electron-deficient carbon center (blue).',
               moleculeId: 'stage1_pair',
               anchors: ['red_lp1', 'blue_c1']
             }
@@ -381,7 +399,7 @@ function localDevHandler(route, body) {
             hint_cost: 1,
             scene_config: {
               title: 'Stage 2',
-              prompt: 'Draw a line between the two regions.',
+              prompt: 'Connect the electron donor (red) to the polarized target site (blue).',
               moleculeId: 'stage2_pair',
               anchors: ['red_lp1', 'blue_c1']
             }
@@ -394,7 +412,7 @@ function localDevHandler(route, body) {
             hint_cost: 2,
             scene_config: {
               title: 'Stage 3',
-              prompt: 'Draw a line between the two regions.',
+              prompt: 'Multiple reactive sites: route the arrow between the strongest donor (extreme red) and the strongest electrophile (extreme blue).',
               moleculeId: 'stage3_pair',
               anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
             }
@@ -407,7 +425,7 @@ function localDevHandler(route, body) {
             hint_cost: 2,
             scene_config: {
               title: 'Stage 4',
-              prompt: 'Draw a line between the two regions.',
+              prompt: 'Select the primary reactive site (extreme red) and connect to the electrophilic center (extreme blue).',
               moleculeId: 'stage4_pair',
               anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
             }
@@ -420,7 +438,7 @@ function localDevHandler(route, body) {
             hint_cost: 3,
             scene_config: {
               title: 'Stage 5',
-              prompt: 'Draw a line between the two regions.',
+              prompt: 'Steric hindrance: orbit the view to find the open, accessible target site (blue) and connect from the donor (red).',
               moleculeId: 'stage5_pair',
               anchors: ['red_nu', 'blue_open', 'blue_blocked']
             }
@@ -433,7 +451,7 @@ function localDevHandler(route, body) {
             hint_cost: 3,
             scene_config: {
               title: 'Stage 6',
-              prompt: 'Draw a line between the two regions.',
+              prompt: 'Bulky groups shield one site: orbit the view to target the accessible center (blue).',
               moleculeId: 'stage6_pair',
               anchors: ['red_nu', 'blue_open', 'blue_blocked']
             }
@@ -446,7 +464,7 @@ function localDevHandler(route, body) {
             hint_cost: 4,
             scene_config: {
               title: 'Stage 7',
-              prompt: 'Draw a line between the two regions.',
+              prompt: 'Master challenge: identify the unhindered active site among multiple centers and route the arrow from the strongest donor.',
               moleculeId: 'stage7_pair',
               anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak']
             }

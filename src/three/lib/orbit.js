@@ -28,11 +28,13 @@ export class SmoothOrbitControls {
     this.previousPointer = { x: 0, y: 0 };
     this.damping = 0.12;
     this.enabled = true;
+    this.mode = 'draw'; // 'draw' | 'rotate'
 
     this._onPointerDown = this.onPointerDown.bind(this);
     this._onPointerMove = this.onPointerMove.bind(this);
     this._onPointerUp = this.onPointerUp.bind(this);
     this._onWheel = this.onWheel.bind(this);
+    this._onContextMenu = (e) => e.preventDefault();
 
     this.bindEvents();
   }
@@ -42,6 +44,7 @@ export class SmoothOrbitControls {
     window.addEventListener('pointermove', this._onPointerMove);
     window.addEventListener('pointerup', this._onPointerUp);
     this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
+    this.domElement.addEventListener('contextmenu', this._onContextMenu);
   }
 
   destroy() {
@@ -49,10 +52,18 @@ export class SmoothOrbitControls {
     window.removeEventListener('pointermove', this._onPointerMove);
     window.removeEventListener('pointerup', this._onPointerUp);
     this.domElement.removeEventListener('wheel', this._onWheel);
+    this.domElement.removeEventListener('contextmenu', this._onContextMenu);
+  }
+
+  setMode(mode) {
+    this.mode = mode;
   }
 
   onPointerDown(e) {
-    if (!this.enabled || e.button !== 0) return;
+    if (!this.enabled) return;
+    // In draw mode, only right-click (button 2) rotates view; left click is for drawing
+    if (this.mode === 'draw' && e.button !== 2) return;
+    if (e.button !== 0 && e.button !== 2) return;
     this.isDragging = true;
     this.previousPointer.x = e.clientX;
     this.previousPointer.y = e.clientY;
