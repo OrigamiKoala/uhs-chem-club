@@ -7,7 +7,7 @@
 export const STAGE_CONFIGS = [
   {
     stageIndex: 0,
-    title: 'Stage 1',
+    title: 'Stage 1 — Target Lock',
     prompt: 'Drag an arrow from the densest donor region (red) to the least dense acceptor center (blue).',
     moleculeId: 'stage1_pair',
     xp: 15,
@@ -19,20 +19,36 @@ export const STAGE_CONFIGS = [
   },
   {
     stageIndex: 1,
-    title: 'Stage 2',
-    prompt: '',
+    title: 'Stage 2 — Electrons & Charge',
+    prompt: 'Connect the electron-dense donor (red) to the electron-starved acceptor (blue).',
     moleculeId: 'stage2_pair',
     xp: 15,
     expectedFrom: 'red_lp1',
     expectedTo: 'blue_c1',
     sourcePos: [-1.5, 0.3, 0],
     targetPos: [1.1, 0, 0],
-    tolerance: 1.35
+    tolerance: 1.35,
+    concept: {
+      badge: 'NEW CONCEPT',
+      title: 'WHAT ARE YOU SEEING? ATOMS & ELECTRONS',
+      intro: 'The 3D spheres and rods represent <strong>atoms</strong> linked into <strong>molecules</strong> (the basic building blocks of all matter). The glowing clouds show <strong>electrons</strong> — tiny negative electrical charges buzzing around the atoms.',
+      pills: [
+        {
+          type: 'red-pill',
+          html: '<strong style="color: #ff5252;">🔴 Red = High Electron Density:</strong> Packed with extra electrons (negative charge). This is the <em>electron donor</em>.'
+        },
+        {
+          type: 'blue-pill',
+          html: '<strong style="color: #40c4ff;">🔵 Blue = Low Electron Density:</strong> Starving for electrons (positive pull). This is the <em>electron acceptor</em>.'
+        }
+      ],
+      action: '<strong>How chemistry works:</strong> Just like magnets, negative electrons naturally flow from where they are crowded (<strong>red</strong>) into empty spaces (<strong>blue</strong>). Draw your arrow to guide the electron flow!'
+    }
   },
   {
     stageIndex: 2,
-    title: 'Stage 3',
-    prompt: '',
+    title: 'Stage 3 — Comparing Densities',
+    prompt: 'Multiple reactive sites: when molecules have several regions, electrons flow between the strongest donor (deepest red) and the strongest acceptor (deepest blue).',
     moleculeId: 'stage3_pair',
     xp: 20,
     expectedFrom: 'red_extreme',
@@ -43,8 +59,8 @@ export const STAGE_CONFIGS = [
   },
   {
     stageIndex: 3,
-    title: 'Stage 4',
-    prompt: '',
+    title: 'Stage 4 — Competing Sites',
+    prompt: 'Identify the primary electron cloud (extreme red) and route the arrow into the primary electron-deficient center (extreme blue).',
     moleculeId: 'stage4_pair',
     xp: 20,
     expectedFrom: 'red_extreme',
@@ -55,8 +71,8 @@ export const STAGE_CONFIGS = [
   },
   {
     stageIndex: 4,
-    title: 'Stage 5',
-    prompt: '',
+    title: 'Stage 5 — Steric Hindrance',
+    prompt: 'Trace the molecule\'s path into the open, accessible target. Avoid the crowded obstacle!',
     moleculeId: 'stage5_pair',
     xp: 25,
     expectedFrom: 'red_nu',
@@ -65,12 +81,24 @@ export const STAGE_CONFIGS = [
     targetPos: [1.0, -1.0, 0],
     blockedAnchor: 'blue_blocked',
     blockedPos: [2.0, 1.1, 0],
-    tolerance: 1.35
+    tolerance: 1.35,
+    concept: {
+      badge: 'CRITICAL CONCEPT',
+      title: 'TRACING THE MOLECULE\'S PATH & STERIC HINDRANCE',
+      intro: 'You are now tracing the <strong>actual physical path the reacting molecules travel</strong> as they approach each other to collide and bond.',
+      pills: [
+        {
+          type: 'warning-pill',
+          html: '⚠️ <strong>Atoms take up real physical space!</strong> One of the blue targets is blocked by bulky surrounding atom clusters. Chemists call this <strong>steric hindrance</strong> (molecular crowding). The incoming molecule physically crashes into these bumper atoms and cannot squeeze through!'
+        }
+      ],
+      action: '<strong>Rotate the 3D view</strong> to inspect the obstacles. Spot the open, uncrowded side and trace the molecule\'s path into the <strong>accessible, unblocked blue target</strong>.'
+    }
   },
   {
     stageIndex: 5,
-    title: 'Stage 6',
-    prompt: '',
+    title: 'Stage 6 — Bulky Group Shielding',
+    prompt: 'Bulky atoms are physically blocking one route. Rotate your view, avoid the crowded cluster, and trace the molecule\'s path into the open target.',
     moleculeId: 'stage6_pair',
     xp: 25,
     expectedFrom: 'red_nu',
@@ -83,8 +111,8 @@ export const STAGE_CONFIGS = [
   },
   {
     stageIndex: 6,
-    title: 'Stage 7',
-    prompt: '',
+    title: 'Stage 7 — Final Synthesis Route',
+    prompt: 'Master challenge: Multiple electron clouds and crowded targets. Find the strongest electron donor (red) and trace a clear, unhindered collision path into the accessible target (blue).',
     moleculeId: 'stage7_pair',
     xp: 30,
     expectedFrom: 'red_supreme',

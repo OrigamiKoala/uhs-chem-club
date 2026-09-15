@@ -112,13 +112,13 @@ async function callAppsScript(route, body) {
         const first = checkStages[0];
         if (first.kind === 'choice' || !first.scene_config?.moleculeId) {
           const canonical = [
-            { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 1', prompt: 'Drag an arrow from the densest donor region (red) to the least dense acceptor center (blue).', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
-            { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 2', prompt: 'Connect the donor site (red) to the polarized target site (blue).', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
-            { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 3', prompt: 'Multiple reactive sites: route the arrow between the strongest donor (extreme red) and the strongest acceptor (extreme blue).', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
-            { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 4', prompt: 'Select the primary reactive site (extreme red) and connect to the primary acceptor center (extreme blue).', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
-            { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 5', prompt: 'Steric hindrance: orbit the view to find the open, accessible target site (blue) and connect from the donor (red).', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
-            { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 6', prompt: 'Bulky groups shield one site: orbit the view to target the accessible center (blue).', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
-            { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 3, scene_config: { title: 'Stage 7', prompt: 'Master challenge: identify the unhindered active site among multiple centers and route the arrow from the strongest donor.', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } }
+            { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 1 — Target Lock', prompt: 'Drag an arrow from the densest donor region (red) to the least dense acceptor center (blue).', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 3, scene_config: { title: 'Stage 2 — Electrons & Charge', prompt: 'Connect the electron-dense donor (red) to the electron-starved acceptor (blue).', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 3 — Comparing Densities', prompt: 'Multiple reactive sites: when molecules have several regions, electrons flow between the strongest donor (deepest red) and the strongest acceptor (deepest blue).', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 3, scene_config: { title: 'Stage 4 — Competing Sites', prompt: 'Identify the primary electron cloud (extreme red) and route the arrow into the primary electron-deficient center (extreme blue).', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 5 — Steric Hindrance', prompt: 'Trace the molecule\'s path into the open, accessible target. Avoid the crowded obstacle!', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 3, scene_config: { title: 'Stage 6 — Bulky Group Shielding', prompt: 'Bulky atoms are physically blocking one route. Rotate your view, avoid the crowded cluster, and trace the molecule\'s path into the open target.', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 3, scene_config: { title: 'Stage 7 — Final Synthesis Route', prompt: 'Master challenge: Multiple electron clouds and crowded targets. Find the strongest electron donor (red) and trace a clear, unhindered collision path into the accessible target (blue).', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } }
           ];
           if (result.data.stages) result.data.stages = canonical;
           if (result.data.activeQuest) result.data.activeQuest.stages = canonical;
@@ -232,13 +232,13 @@ function localDevHandler(route, body) {
         activeQuest: {
           quest: { quest_id: 'q1', title: 'The Charge Gardens of Erebus', world: 'Erebus' },
           stages: [
-            { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 9999, scene_config: { title: 'Stage 1', prompt: 'Drag an arrow from the densest donor region (red) to the least dense acceptor center (blue).', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
-            { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 9999, scene_config: { title: 'Stage 2', prompt: '', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
-            { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 9999, scene_config: { title: 'Stage 3', prompt: '', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
-            { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 9999, scene_config: { title: 'Stage 4', prompt: '', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
-            { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 5', prompt: '', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
-            { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 6', prompt: '', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
-            { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 9999, scene_config: { title: 'Stage 7', prompt: '', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } }
+            { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 9999, scene_config: { title: 'Stage 1 — Target Lock', prompt: 'Drag an arrow from the densest donor region (red) to the least dense acceptor center (blue).', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 9999, scene_config: { title: 'Stage 2 — Electrons & Charge', prompt: 'Connect the electron-dense donor (red) to the electron-starved acceptor (blue).', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
+            { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 9999, scene_config: { title: 'Stage 3 — Comparing Densities', prompt: 'Multiple reactive sites: when molecules have several regions, electrons flow between the strongest donor (deepest red) and the strongest acceptor (deepest blue).', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 9999, scene_config: { title: 'Stage 4 — Competing Sites', prompt: 'Identify the primary electron cloud (extreme red) and route the arrow into the primary electron-deficient center (extreme blue).', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+            { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 5 — Steric Hindrance', prompt: 'Trace the molecule\'s path into the open, accessible target. Avoid the crowded obstacle!', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 6 — Bulky Group Shielding', prompt: 'Bulky atoms are physically blocking one route. Rotate your view, avoid the crowded cluster, and trace the molecule\'s path into the open target.', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+            { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 9999, scene_config: { title: 'Stage 7 — Final Synthesis Route', prompt: 'Master challenge: Multiple electron clouds and crowded targets. Find the strongest electron donor (red) and trace a clear, unhindered collision path into the accessible target (blue).', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } }
           ]
         },
         player: player ? {
@@ -385,7 +385,7 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 0,
             scene_config: {
-              title: 'Stage 1',
+              title: 'Stage 1 — Target Lock',
               prompt: 'Drag an arrow from the densest donor region (red) to the least dense acceptor center (blue).',
               moleculeId: 'stage1_pair',
               anchors: ['red_lp1', 'blue_c1']
@@ -398,8 +398,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 1,
             scene_config: {
-              title: 'Stage 2',
-              prompt: '',
+              title: 'Stage 2 — Electrons & Charge',
+              prompt: 'Connect the electron-dense donor (red) to the electron-starved acceptor (blue).',
               moleculeId: 'stage2_pair',
               anchors: ['red_lp1', 'blue_c1']
             }
@@ -411,8 +411,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 2,
             scene_config: {
-              title: 'Stage 3',
-              prompt: '',
+              title: 'Stage 3 — Comparing Densities',
+              prompt: 'Multiple reactive sites: when molecules have several regions, electrons flow between the strongest donor (deepest red) and the strongest acceptor (deepest blue).',
               moleculeId: 'stage3_pair',
               anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
             }
@@ -424,8 +424,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 2,
             scene_config: {
-              title: 'Stage 4',
-              prompt: '',
+              title: 'Stage 4 — Competing Sites',
+              prompt: 'Identify the primary electron cloud (extreme red) and route the arrow into the primary electron-deficient center (extreme blue).',
               moleculeId: 'stage4_pair',
               anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
             }
@@ -437,8 +437,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 3,
             scene_config: {
-              title: 'Stage 5',
-              prompt: '',
+              title: 'Stage 5 — Steric Hindrance',
+              prompt: 'Trace the molecule\'s path into the open, accessible target. Avoid the crowded obstacle!',
               moleculeId: 'stage5_pair',
               anchors: ['red_nu', 'blue_open', 'blue_blocked']
             }
@@ -450,8 +450,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 3,
             scene_config: {
-              title: 'Stage 6',
-              prompt: '',
+              title: 'Stage 6 — Bulky Group Shielding',
+              prompt: 'Bulky atoms are physically blocking one route. Rotate your view, avoid the crowded cluster, and trace the molecule\'s path into the open target.',
               moleculeId: 'stage6_pair',
               anchors: ['red_nu', 'blue_open', 'blue_blocked']
             }
@@ -463,8 +463,8 @@ function localDevHandler(route, body) {
             max_attempts: 3,
             hint_cost: 4,
             scene_config: {
-              title: 'Stage 7',
-              prompt: '',
+              title: 'Stage 7 — Final Synthesis Route',
+              prompt: 'Master challenge: Multiple electron clouds and crowded targets. Find the strongest electron donor (red) and trace a clear, unhindered collision path into the accessible target (blue).',
               moleculeId: 'stage7_pair',
               anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak']
             }

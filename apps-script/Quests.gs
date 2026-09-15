@@ -30,7 +30,7 @@ var DEFAULT_STAGES = [
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 1',
+      title: 'Stage 1 — Target Lock',
       prompt: 'Drag an arrow from the densest donor region (red) to the least dense acceptor center (blue).',
       moleculeId: 'stage1_pair',
       anchors: ['red_lp1', 'blue_c1']
@@ -48,8 +48,8 @@ var DEFAULT_STAGES = [
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 2',
-      prompt: '',
+      title: 'Stage 2 — Electrons & Charge',
+      prompt: 'Connect the electron-dense donor (red) to the electron-starved acceptor (blue).',
       moleculeId: 'stage2_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -66,8 +66,8 @@ var DEFAULT_STAGES = [
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 3',
-      prompt: '',
+      title: 'Stage 3 — Comparing Densities',
+      prompt: 'Multiple reactive sites: when molecules have several regions, electrons flow between the strongest donor (deepest red) and the strongest acceptor (deepest blue).',
       moleculeId: 'stage3_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -84,8 +84,8 @@ var DEFAULT_STAGES = [
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 4',
-      prompt: '',
+      title: 'Stage 4 — Competing Sites',
+      prompt: 'Identify the primary electron cloud (extreme red) and route the arrow into the primary electron-deficient center (extreme blue).',
       moleculeId: 'stage4_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -102,8 +102,8 @@ var DEFAULT_STAGES = [
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 5',
-      prompt: '',
+      title: 'Stage 5 — Steric Hindrance',
+      prompt: 'Trace the molecule\'s path into the open, accessible target. Avoid the crowded obstacle!',
       moleculeId: 'stage5_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -120,8 +120,8 @@ var DEFAULT_STAGES = [
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 6',
-      prompt: '',
+      title: 'Stage 6 — Bulky Group Shielding',
+      prompt: 'Bulky atoms are physically blocking one route. Rotate your view, avoid the crowded cluster, and trace the molecule\'s path into the open target.',
       moleculeId: 'stage6_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -138,8 +138,8 @@ var DEFAULT_STAGES = [
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 7',
-      prompt: '',
+      title: 'Stage 7 — Final Synthesis Route',
+      prompt: 'Master challenge: Multiple electron clouds and crowded targets. Find the strongest electron donor (red) and trace a clear, unhindered collision path into the accessible target (blue).',
       moleculeId: 'stage7_pair',
       anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak']
     })

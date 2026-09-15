@@ -12,11 +12,36 @@ import { renderFallbackInputs } from '../fallback2d/stages.js';
 import { showToast } from '../ui/toast.js';
 import { STAGE_CONFIGS, evaluateStageLocally } from '../quest3d/evaluator.js';
 
+function renderConceptCard(concept) {
+  if (!concept) return '';
+  return `
+    <div class="concept-card">
+      <div class="concept-card-header">
+        <span class="concept-badge">${concept.badge}</span>
+        <span class="concept-card-title">${concept.title}</span>
+      </div>
+      <div class="concept-card-intro">${concept.intro}</div>
+      ${concept.pills && concept.pills.length ? `
+        <div class="concept-grid">
+          ${concept.pills.map(p => `
+            <div class="concept-pill ${p.type}">${p.html}</div>
+          `).join('')}
+        </div>
+      ` : ''}
+      ${concept.action ? `
+        <div class="concept-card-action">${concept.action}</div>
+      ` : ''}
+    </div>
+  `;
+}
+
 export function renderQuest(container) {
   let questData = session.activeQuest || null;
   let currentStageIdx = 0;
   let currentPayload = null;
   let isGrading = false;
+  let isAdvancing = false;
+  let advanceTimer = null;
   let hintUsed = false;
   let attemptsLeft = 3;
   let stageStartTime = Date.now();
@@ -29,6 +54,12 @@ export function renderQuest(container) {
   }
 
   function loadStage(idx) {
+    if (advanceTimer) {
+      clearTimeout(advanceTimer);
+      advanceTimer = null;
+    }
+    isAdvancing = false;
+    isGrading = false;
     currentStageIdx = idx;
     currentPayload = null;
     hintUsed = false;
@@ -49,10 +80,11 @@ export function renderQuest(container) {
 
     const cfg = {
       ...localCfg,
-      ...(stageMeta.scene_config || {})
+      ...(stageMeta.scene_config || {}),
+      concept: localCfg.concept || null
     };
 
-    const instruction = localCfg.prompt;
+    const instruction = cfg.prompt || localCfg.prompt;
 
     // 1. Render Quest HUD Overlay
     container.innerHTML = `
@@ -75,8 +107,8 @@ export function renderQuest(container) {
           <!-- Density Legend -->
           <div class="colormap-legend" style="min-width: 170px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.72rem; font-family: var(--font-mono); font-weight: 800;">
-              <span style="color: #ff1744;">MOST DENSE (DONOR)</span>
-              <span style="color: #00b0ff;">LEAST DENSE (ACCEPTOR)</span>
+              <span style="color: #ff1744;">${currentStageIdx >= 1 ? 'MORE ELECTRONS (RED)' : 'MOST DENSE (DONOR)'}</span>
+              <span style="color: #00b0ff;">${currentStageIdx >= 1 ? 'FEWER ELECTRONS (BLUE)' : 'LEAST DENSE (ACCEPTOR)'}</span>
             </div>
             <div style="height: 8px; border-radius: 4px; background: linear-gradient(90deg, #ff1744 0%, #fbbf24 25%, #10b981 50%, #00b0ff 100%); box-shadow: 0 0 10px rgba(0, 176, 255, 0.2);"></div>
           </div>
@@ -88,11 +120,13 @@ export function renderQuest(container) {
             <div class="scanning-sweep hidden" id="scanning-sweep"></div>
 
             <div class="stage-header">
-              <div class="stage-title">Stage ${currentStageIdx + 1}</div>
+              <div class="stage-title">${cfg.title || ('Stage ' + (currentStageIdx + 1))}</div>
               <div class="stage-xp-tag">+${stageMeta.xp || 20} XP</div>
             </div>
 
-            ${currentStageIdx === 0 ? `<div class="stage-instruction">${instruction}</div>` : ''}
+            ${renderConceptCard(cfg.concept)}
+
+            ${instruction ? `<div class="stage-instruction">${instruction}</div>` : ''}
 
             <!-- Move vs Draw Toolbar -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.75rem 0; flex-wrap: wrap; gap: 0.5rem;">
@@ -217,7 +251,7 @@ export function renderQuest(container) {
     const sweep = container.querySelector('#scanning-sweep');
 
     gradeBtn.addEventListener('click', async () => {
-      if (isGrading) return;
+      if (isGrading || isAdvancing) return;
       if (!currentPayload) {
         showToast('Please connect an arrow from red to blue before submitting.', 'warning');
         return;
@@ -235,70 +269,82 @@ export function renderQuest(container) {
       try {
         const elapsed = Date.now() - stageStartTime;
 
-      // Immediate in-browser evaluation with pre-loaded solutions (0ms latency)
-      const res = evaluateStageLocally(currentStageIdx, currentPayload);
+        // Immediate in-browser evaluation with pre-loaded solutions (0ms latency)
+        const res = evaluateStageLocally(currentStageIdx, currentPayload);
 
-      // Asynchronously report submission to backend without blocking the player
-      api.gradeStage(
-        'q1',
-        currentStageIdx,
-        currentPayload,
-        elapsed,
-        hintUsed,
-        tierManager.currentTier
-      ).catch(() => {});
+        // Asynchronously report submission to backend without blocking the player
+        api.gradeStage(
+          'q1',
+          currentStageIdx,
+          currentPayload,
+          elapsed,
+          hintUsed,
+          tierManager.currentTier
+        ).catch(() => {});
 
-      sweep.classList.add('hidden');
-      gradeBtn.disabled = false;
-      gradeBtn.innerHTML = '<span>Submit</span><span>➔</span>';
-      isGrading = false;
+        sweep.classList.add('hidden');
 
-      if (res.correct) {
-        if (session.player) {
-          session.player.xp = (session.player.xp || 0) + res.xpAwarded;
-          session.xp = (session.xp || 0) + res.xpAwarded;
-          session.saveSession();
-          session.notify();
-        }
-        if (viewer) viewer.triggerSuccessBloom();
-        if (feedback) {
-          feedback.className = 'stage-error-banner';
-          feedback.style.borderColor = 'var(--accent-green)';
-          feedback.style.borderLeftColor = 'var(--accent-green)';
-          feedback.style.background = 'rgba(56, 176, 0, 0.2)';
-          feedback.style.boxShadow = '0 0 20px rgba(56, 176, 0, 0.35)';
-          feedback.innerHTML = `
-            <span style="font-size: 1.25rem;">✓</span>
-            <div>
-              <div style="font-weight: 800; color: #00e676; letter-spacing: 0.05em;">CORRECT CONNECTION</div>
-              <div style="font-size: 0.82rem; color: #f1f5f9; margin-top: 2px;">+${res.xpAwarded} XP Awarded. Advancing...</div>
-            </div>
-          `;
-        }
-        showToast(`Correct! +${res.xpAwarded} XP`, 'success');
+        if (res.correct) {
+          isAdvancing = true;
+          gradeBtn.disabled = true;
+          gradeBtn.innerHTML = '<span>Correct!</span><span>✓</span>';
 
-        // Check if last stage completed
-        const isLastStage = currentStageIdx >= (STAGE_CONFIGS.length - 1);
-        if (isLastStage) {
-          setTimeout(() => {
-            showCompletionModal();
-          }, 1200);
+          if (session.player) {
+            session.player.xp = (session.player.xp || 0) + res.xpAwarded;
+            session.xp = (session.xp || 0) + res.xpAwarded;
+            session.saveSession();
+            session.notify();
+          }
+          if (viewer) viewer.triggerSuccessBloom();
+          if (feedback) {
+            feedback.className = 'stage-error-banner';
+            feedback.style.borderColor = 'var(--accent-green)';
+            feedback.style.borderLeftColor = 'var(--accent-green)';
+            feedback.style.background = 'rgba(56, 176, 0, 0.2)';
+            feedback.style.boxShadow = '0 0 20px rgba(56, 176, 0, 0.35)';
+
+            const nextText = currentStageIdx === 0
+              ? 'Stage 1 verified! Advancing to Stage 2: Introducing Electrons...'
+              : (currentStageIdx === 3
+                ? 'Target verified! Advancing to Stage 5: Tracing Molecule Paths & Steric Hindrance...'
+                : 'Advancing to next stage...');
+
+            feedback.innerHTML = `
+              <span style="font-size: 1.25rem;">✓</span>
+              <div>
+                <div style="font-weight: 800; color: #00e676; letter-spacing: 0.05em;">CORRECT CONNECTION</div>
+                <div style="font-size: 0.82rem; color: #f1f5f9; margin-top: 2px;">+${res.xpAwarded} XP Awarded. ${nextText}</div>
+              </div>
+            `;
+          }
+          showToast(`Correct! +${res.xpAwarded} XP`, 'success');
+
+          // Check if last stage completed
+          const targetStageIdx = currentStageIdx + 1;
+          const isLastStage = targetStageIdx >= STAGE_CONFIGS.length;
+          if (isLastStage) {
+            advanceTimer = setTimeout(() => {
+              showCompletionModal();
+            }, 1200);
+          } else {
+            advanceTimer = setTimeout(() => {
+              loadStage(targetStageIdx);
+            }, 1200);
+          }
         } else {
-          setTimeout(() => {
-            loadStage(currentStageIdx + 1);
-          }, 1200);
-        }
-      } else {
-        attemptsLeft = Math.max(0, attemptsLeft - 1);
-        if (viewer) {
-          if (viewer.triggerFailure) viewer.triggerFailure();
-          else viewer.triggerShudder();
-        }
+          gradeBtn.disabled = false;
+          gradeBtn.innerHTML = '<span>Submit</span><span>➔</span>';
+          isGrading = false;
+          attemptsLeft = Math.max(0, attemptsLeft - 1);
+          if (viewer) {
+            if (viewer.triggerFailure) viewer.triggerFailure();
+            else viewer.triggerShudder();
+          }
 
-        const isBlocked = !!res.blocked;
-        const msg = isBlocked
-          ? 'Trajectory obstructed. Rotate view to find an open path.'
-          : `Incorrect connection. ${attemptsLeft} attempt(s) remaining.`;
+          const isBlocked = !!res.blocked;
+          const msg = isBlocked
+            ? 'The molecule crashed into bulky surrounding atoms! That target is sterically hindered (too crowded). Rotate your 3D view to trace the open path into the accessible blue target.'
+            : `Incorrect connection. ${attemptsLeft} attempt(s) remaining.`;
 
           // 1. Red screen flash
           if (flash) {
@@ -324,7 +370,7 @@ export function renderQuest(container) {
               <span style="font-size: 1.3rem; color: #ff5252;">⚠️</span>
               <div style="flex: 1;">
                 <div style="font-weight: 800; color: #ff5252; letter-spacing: 0.06em;">
-                  ${isBlocked ? 'PATH BLOCKED' : 'INCORRECT'}
+                  ${isBlocked ? 'PATH BLOCKED (STERIC HINDRANCE)' : 'INCORRECT'}
                 </div>
                 <div style="font-size: 0.82rem; color: #f1f5f9; margin-top: 2px; line-height: 1.4;">
                   ${msg}
@@ -340,6 +386,7 @@ export function renderQuest(container) {
         gradeBtn.disabled = false;
         gradeBtn.innerHTML = '<span>Submit</span><span>➔</span>';
         isGrading = false;
+        isAdvancing = false;
         showToast(err.message || 'Submission error', 'error');
       }
     });

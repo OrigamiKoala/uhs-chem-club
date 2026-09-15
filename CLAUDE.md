@@ -56,8 +56,11 @@
 - Stripped all forbidden terminology ("electron", "electron-rich", "electron-deficient", "electrophile", "nucleophile") across all quest prompts, manifests, bridge cards, starmap, and inventory items, reserving explanations strictly for the final quest epilogue.
 - Fixed `notifySubscribers is not a function`: added `notifySubscribers()` method alias to `SessionManager` in `src/session.js` and updated `src/screens/quest.js` to call `session.notify()` and persist XP.
 - Simplified quest instructions: instructions and draw tips rendered strictly on Stage 1; stages 2-7 display zero prompt text (`src/screens/quest.js`, `src/quest3d/evaluator.js`, `api/[...route].js`, `apps-script/Quests.gs`).
-- Removed 3D visual site flags and glowing dots: hidden anchor rings and glowing core dots, keeping only pure molecules and electron densities in the 3D viewer (`src/quest3d/anchors.js`, `src/quest3d/viewer.js`).
 - Enhanced electron density visibility: upgraded isosurfaces to double-sided 0.65 opacity with saturated colormap and balanced neutral white key/ambient illumination (`src/quest3d/isosurface.js`, `src/quest3d/viewer.js`).
+- Fixed multi-submit stage skipping: locked submit button upon successful evaluation with `isAdvancing` flag, retained button disabled state, and passed fixed target stage indices to prevent rapid clicks from skipping forward (`src/screens/quest.js`).
+- Introduced beginner-friendly electron density concept: rendered dedicated Atoms & Electrons concept card on Stage 2 explaining atoms, molecules, negative electron charges, and red/blue density flow using magnet analogies (`src/quest3d/evaluator.js`, `src/screens/quest.js`, `src/styles/holo.css`).
+- Introduced molecule path tracing and steric hindrance: added concept card on Stage 5 explaining that arrows trace physical molecule collision trajectories, that atoms occupy physical space, and how bulky surrounding atom clusters block pathways (`src/quest3d/evaluator.js`, `src/screens/quest.js`).
+- Synced stage titles and prompts across proxy (`api/[...route].js`) and backend (`apps-script/Quests.gs`).
 
 
 
