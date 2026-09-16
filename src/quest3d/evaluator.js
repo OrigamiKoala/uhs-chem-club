@@ -215,9 +215,9 @@ export const STAGE_CONFIGS = [
       clusterLeft: [0, 1],
       clusterRight: [2, 3, 4, 5],
       targetBondLength: 1.0,
-      leavingBond: null,
+      leavingBond: { from: 2, to: 3 },
       leavingAtom: null,
-      explanation: 'Connected! The active spots snapped together while the bystander just watched.'
+      explanation: 'Connected! The shared piece hopped across to its new partner while the bystander just watched.'
     }
   },
   {
@@ -263,9 +263,9 @@ export const STAGE_CONFIGS = [
       clusterLeft: [0, 1, 2, 3],
       clusterRight: [4, 5, 6, 7],
       targetBondLength: 1.1,
-      leavingBond: null,
+      leavingBond: { from: 5, to: 7 },
       leavingAtom: null,
-      explanation: 'Relay complete! The helper powered up the target so it is ready for the next move.'
+      explanation: 'Relay complete! The shared piece hopped across to its new partner so the target is ready for the next move.'
     }
   },
   {
