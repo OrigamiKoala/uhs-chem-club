@@ -61,6 +61,7 @@
 - Introduced beginner-friendly electron density concept: rendered dedicated Atoms & Electrons concept card on Stage 2 explaining atoms, molecules, negative electron charges, and red/blue density flow using magnet analogies (`src/quest3d/evaluator.js`, `src/screens/quest.js`, `src/styles/holo.css`).
 - Introduced molecule path tracing and steric hindrance: added concept card on Stage 5 explaining that arrows trace physical molecule collision trajectories, that atoms occupy physical space, and how bulky surrounding atom clusters block pathways (`src/quest3d/evaluator.js`, `src/screens/quest.js`).
 - Synced stage titles and prompts across proxy (`api/[...route].js`) and backend (`apps-script/Quests.gs`).
+- Added dismiss and reopen buttons to Quest Key Concept cards (`src/screens/quest.js`, `src/styles/holo.css`) to allow expanding screen space for the 3D viewer.
 
 
 

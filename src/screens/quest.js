@@ -15,10 +15,16 @@ import { STAGE_CONFIGS, evaluateStageLocally } from '../quest3d/evaluator.js';
 function renderConceptCard(concept) {
   if (!concept) return '';
   return `
-    <div class="concept-card">
+    <div class="concept-card" id="stage-concept-card">
       <div class="concept-card-header">
-        <span class="concept-badge">${concept.badge}</span>
-        <span class="concept-card-title">${concept.title}</span>
+        <div class="concept-card-title-group">
+          <span class="concept-badge">${concept.badge}</span>
+          <span class="concept-card-title">${concept.title}</span>
+        </div>
+        <button type="button" class="concept-dismiss-btn" id="concept-dismiss-btn" title="Dismiss concept card" aria-label="Dismiss concept card">
+          <span>✕</span>
+          <span class="concept-dismiss-text">Dismiss</span>
+        </button>
       </div>
       <div class="concept-card-intro">${concept.intro}</div>
       ${concept.pills && concept.pills.length ? `
@@ -32,6 +38,10 @@ function renderConceptCard(concept) {
         <div class="concept-card-action">${concept.action}</div>
       ` : ''}
     </div>
+    <button type="button" class="concept-reopen-btn hidden" id="concept-reopen-btn" title="Show Key Concept Guide">
+      <span>💡</span>
+      <span>${concept.badge || 'KEY CONCEPT'}: Show Guide</span>
+    </button>
   `;
 }
 
@@ -168,7 +178,22 @@ export function renderQuest(container) {
       </div>
     `;
 
-    // 2. Setup 3D or Fallback Inputs
+    // 2. Setup Concept Card Dismiss & Reopen
+    const conceptCard = container.querySelector('#stage-concept-card');
+    const dismissBtn = container.querySelector('#concept-dismiss-btn');
+    const reopenBtn = container.querySelector('#concept-reopen-btn');
+
+    dismissBtn?.addEventListener('click', () => {
+      conceptCard?.classList.add('hidden');
+      reopenBtn?.classList.remove('hidden');
+    });
+
+    reopenBtn?.addEventListener('click', () => {
+      conceptCard?.classList.remove('hidden');
+      reopenBtn?.classList.add('hidden');
+    });
+
+    // 3. Setup 3D or Fallback Inputs
     const interactiveArea = container.querySelector('#stage-interactive-area');
 
     if (tierManager.currentTier === 'T1' || !viewer) {
