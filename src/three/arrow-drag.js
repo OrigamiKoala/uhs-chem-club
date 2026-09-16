@@ -13,8 +13,11 @@ export class ArrowController {
     this.activeArrowMesh = null;
     this.sourceAnchor = null;
     this.targetAnchor = null;
-    this.completedArrows = []; // array of { from, to, mesh }
+    this.completedArrows = []; // array of { id, from, to, startPos, endPos, mesh, badgeSprite, order }
+    this.maxArrows = 1;
+    this.multiArrow = false;
     this.onArrowComplete = null;
+    this.onArrowsChanged = null;
 
     this.material = new THREE.MeshBasicMaterial({
       color: 0x00e5ff,
@@ -22,6 +25,11 @@ export class ArrowController {
       opacity: 0.9
     });
     this.startPosition = null;
+  }
+
+  setMultiArrow(enabled, maxArrows = 4) {
+    this.multiArrow = !!enabled;
+    this.maxArrows = enabled ? maxArrows : 1;
   }
 
   startFromPosition(pos, anchor = null) {
@@ -55,14 +63,28 @@ export class ArrowController {
       return null;
     }
 
-    this.clear(); // Keep only latest single active trajectory
+    if (!this.multiArrow) {
+      this.clear();
+    } else if (this.completedArrows.length >= this.maxArrows) {
+      // Reached max arrows limit, cancel this addition
+      this.cancel();
+      return null;
+    }
+
+    const order = this.completedArrows.length + 1;
+    const { group, midPos } = this.createPersistentArrow(start, end);
+    const badgeSprite = this.multiArrow ? this.createBadgeSprite(order, midPos) : null;
 
     const arrowObj = {
+      id: 'arrow_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
       from: sourceAnchor ? sourceAnchor.id : null,
       to: targetAnchor ? targetAnchor.id : null,
       startPos: start.clone(),
       endPos: end.clone(),
-      mesh: this.createPersistentArrow(start, end)
+      midPos: midPos.clone(),
+      mesh: group,
+      badgeSprite,
+      order
     };
 
     this.completedArrows.push(arrowObj);
@@ -73,6 +95,7 @@ export class ArrowController {
     this.targetAnchor = null;
 
     if (this.onArrowComplete) this.onArrowComplete(arrowObj);
+    if (this.onArrowsChanged) this.onArrowsChanged(this.completedArrows);
     return arrowObj;
   }
 
@@ -97,10 +120,176 @@ export class ArrowController {
     for (const item of this.completedArrows) {
       if (item.mesh) {
         this.scene.remove(item.mesh);
-        item.mesh.geometry?.dispose();
+        item.mesh.traverse((child) => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) child.material.dispose();
+        });
+      }
+      if (item.badgeSprite) {
+        this.scene.remove(item.badgeSprite);
+        item.badgeSprite.material?.map?.dispose();
+        item.badgeSprite.material?.dispose();
       }
     }
     this.completedArrows = [];
+    if (this.onArrowsChanged) this.onArrowsChanged(this.completedArrows);
+  }
+
+  removeArrow(index) {
+    if (index < 0 || index >= this.completedArrows.length) return;
+    const item = this.completedArrows[index];
+    if (item.mesh) {
+      this.scene.remove(item.mesh);
+      item.mesh.traverse((child) => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) child.material.dispose();
+      });
+    }
+    if (item.badgeSprite) {
+      this.scene.remove(item.badgeSprite);
+      item.badgeSprite.material?.map?.dispose();
+      item.badgeSprite.material?.dispose();
+    }
+    this.completedArrows.splice(index, 1);
+
+    // Renumber remaining arrows
+    this.renumberArrows();
+    if (this.onArrowsChanged) this.onArrowsChanged(this.completedArrows);
+  }
+
+  renumberArrows() {
+    // Sort arrows by order then assign 1, 2, 3...
+    this.completedArrows.sort((a, b) => a.order - b.order);
+    this.completedArrows.forEach((arr, i) => {
+      arr.order = i + 1;
+      this.updateBadgeTexture(arr.badgeSprite, arr.order);
+    });
+  }
+
+  cycleArrowOrder(index) {
+    if (this.completedArrows.length <= 1) return;
+    const count = this.completedArrows.length;
+    const currOrder = this.completedArrows[index].order;
+    const nextOrder = currOrder >= count ? 1 : currOrder + 1;
+
+    // Swap order with the arrow currently having nextOrder
+    const other = this.completedArrows.find(a => a.order === nextOrder);
+    if (other) {
+      other.order = currOrder;
+      this.updateBadgeTexture(other.badgeSprite, other.order);
+    }
+    this.completedArrows[index].order = nextOrder;
+    this.updateBadgeTexture(this.completedArrows[index].badgeSprite, nextOrder);
+
+    // Keep completedArrows sorted by order
+    this.completedArrows.sort((a, b) => a.order - b.order);
+    if (this.onArrowsChanged) this.onArrowsChanged(this.completedArrows);
+  }
+
+  setArrowOrder(index, newOrder) {
+    if (index < 0 || index >= this.completedArrows.length) return;
+    const target = this.completedArrows[index];
+    const other = this.completedArrows.find(a => a !== target && a.order === newOrder);
+    if (other) {
+      other.order = target.order;
+      this.updateBadgeTexture(other.badgeSprite, other.order);
+    }
+    target.order = newOrder;
+    this.updateBadgeTexture(target.badgeSprite, target.order);
+    this.completedArrows.sort((a, b) => a.order - b.order);
+    if (this.onArrowsChanged) this.onArrowsChanged(this.completedArrows);
+  }
+
+  pickArrowOrBadge(e) {
+    const rect = this.camera ? this.picker.domElement.getBoundingClientRect() : null;
+    if (!rect) return null;
+    const mouse = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      -((e.clientY - rect.top) / rect.height) * 2 + 1
+    );
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, this.camera);
+
+    // 1. Check badge hit
+    for (let i = 0; i < this.completedArrows.length; i++) {
+      const arr = this.completedArrows[i];
+      if (arr.badgeSprite) {
+        const hits = raycaster.intersectObject(arr.badgeSprite);
+        if (hits.length > 0) {
+          return { type: 'badge', index: i, arrow: arr };
+        }
+      }
+    }
+
+    // 2. Check arrow mesh hit (tube or cone)
+    for (let i = 0; i < this.completedArrows.length; i++) {
+      const arr = this.completedArrows[i];
+      if (arr.mesh) {
+        const hits = raycaster.intersectObjects(arr.mesh.children, true);
+        if (hits.length > 0) {
+          return { type: 'arrow', index: i, arrow: arr };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  createBadgeSprite(order, pos) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    this.drawBadgeOnCanvas(canvas, order);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+
+    const spriteMat = new THREE.SpriteMaterial({
+      map: texture,
+      depthTest: false,
+      transparent: true
+    });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(0.65, 0.65, 1);
+    sprite.position.copy(pos).add(new THREE.Vector3(0, 0.28, 0));
+    sprite.renderOrder = 1000;
+    this.scene.add(sprite);
+    return sprite;
+  }
+
+  updateBadgeTexture(sprite, order) {
+    if (!sprite || !sprite.material || !sprite.material.map) return;
+    const canvas = sprite.material.map.image;
+    if (canvas && canvas.getContext) {
+      this.drawBadgeOnCanvas(canvas, order);
+      sprite.material.map.needsUpdate = true;
+    }
+  }
+
+  drawBadgeOnCanvas(canvas, order) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 128, 128);
+
+    // Glowing outer circle
+    ctx.beginPath();
+    ctx.arc(64, 64, 52, 0, Math.PI * 2);
+    ctx.fillStyle = '#0c0d11';
+    ctx.fill();
+
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = '#ff9f1c';
+    ctx.shadowColor = '#ff9f1c';
+    ctx.shadowBlur = 16;
+    ctx.stroke();
+
+    // Number text
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 56px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(order), 64, 66);
   }
 
   flashError() {
@@ -125,14 +314,15 @@ export class ArrowController {
 
   renderArrow(startVec, endVec) {
     this.removeActiveMesh();
-    this.activeArrowMesh = this.createArrowMesh(startVec, endVec, 0.085, 0xffd166);
+    const { group } = this.createArrowMesh(startVec, endVec, 0.085, 0xffd166);
+    this.activeArrowMesh = group;
     this.scene.add(this.activeArrowMesh);
   }
 
   createPersistentArrow(startVec, endVec) {
-    const group = this.createArrowMesh(startVec, endVec, 0.095, 0x00ff88);
+    const { group, controlPoint } = this.createArrowMesh(startVec, endVec, 0.095, 0x00ff88);
     this.scene.add(group);
-    return group;
+    return { group, midPos: controlPoint };
   }
 
   createArrowMesh(start, end, radius = 0.085, color = 0xffd166) {
@@ -142,7 +332,7 @@ export class ArrowController {
     const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
     const dir = new THREE.Vector3().subVectors(end, start);
     const len = dir.length();
-    if (len < 0.05) return group;
+    if (len < 0.05) return { group, controlPoint: mid };
 
     // Arch upwards relative to camera
     const up = new THREE.Vector3(0, 1, 0);
@@ -168,6 +358,6 @@ export class ArrowController {
     coneMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tangent);
     group.add(coneMesh);
 
-    return group;
+    return { group, controlPoint };
   }
 }

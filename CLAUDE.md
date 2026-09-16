@@ -62,6 +62,16 @@
 - Introduced molecule path tracing and steric hindrance: added concept card on Stage 5 explaining that arrows trace physical molecule collision trajectories, that atoms occupy physical space, and how bulky surrounding atom clusters block pathways (`src/quest3d/evaluator.js`, `src/screens/quest.js`).
 - Synced stage titles and prompts across proxy (`api/[...route].js`) and backend (`apps-script/Quests.gs`).
 - Added dismiss and reopen buttons to Quest Key Concept cards (`src/screens/quest.js`, `src/styles/holo.css`) to allow expanding screen space for the 3D viewer.
+- Middle-school friendly explanation cards across all 7 stages of Quest 1: added engaging LEGO brick, magnet, bumper car, and bodyguard analogies explaining atoms, molecules, energy clouds, and octet rules with zero confusing jargon (`src/quest3d/evaluator.js`, `api/[...route].js`, `apps-script/Quests.gs`).
+- Physically accurate 3D reaction animation upon correct arrow drawing: left and right molecules approach along the collision vector, covalent bond snaps into place with energy glow, and in $S_N2$ stages (Stage 2: $CH_3Cl$, Stage 5: alkyl bromide) the leaving halogen atom ($Cl^-$, $Br^-$) breaks off and accelerates away so carbon strictly preserves its octet and never has 5 full bonds at once (`src/quest3d/molecule.js`, `src/quest3d/viewer.js`, `src/screens/quest.js`, `src/quest3d/isosurface.js`).
+- Expanded Quest 1 to 20 stages:
+  - Stages 8–10: >2 molecules (3 molecules in chamber: acid, base, spectator / nucleophile, substrate, leaving group).
+  - Stages 11–20: Multi-step reactions with chronological numbered arrows.
+  - Multi-arrow interaction (`src/three/arrow-drag.js`, `src/quest3d/interactions/arrow.js`): apex numbered circular 3D badge sprites, raycast click on badge cycles order, click on arrow deletes it; dual HUD step sequence pills with click-to-reorder and delete.
+  - Cascade 3D animations: sequential multi-step reaction cascades in `MoleculeMesh.animateReaction`.
+  - Local & remote multi-step evaluation (`src/quest3d/evaluator.js`, `api/[...route].js`, `apps-script/Quests.gs`): ordered sequence checking with `wrongOrder` and `incomplete` warnings.
+  - Middle-school explanations across all 20 stages: magnets, LEGO bricks, bumper cars, relay passes, and musical chairs analogies with zero jargon.
+  - 2D DOM fallback updated with multi-step arrow selector rows (`src/fallback2d/stages.js`).
 
 
 

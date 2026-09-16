@@ -12,8 +12,8 @@ var DEFAULT_QUEST = {
   release_at: '2026-09-18T00:00:00Z',
   close_at: '2026-10-02T23:59:59Z',
   status: 'live',
-  base_xp: 165,
-  stage_count: 7,
+  base_xp: 660,
+  stage_count: 20,
   item_pool: 'hint_chip,spare_coolant,overclock_module,resonance_key'
 };
 
@@ -31,7 +31,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 1 — Target Lock',
-      prompt: 'Drag an arrow from the densest donor region (red) to the least dense acceptor center (blue).',
+      prompt: 'Drag a line from the crowded red zone to the hungry blue zone.',
       moleculeId: 'stage1_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -49,7 +49,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 2 — Electrons & Charge',
-      prompt: 'Connect the electron-dense donor (red) to the electron-starved acceptor (blue).',
+      prompt: 'Opposites attract! Connect the negative red cloud to the positive blue center.',
       moleculeId: 'stage2_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -67,7 +67,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 3 — Comparing Densities',
-      prompt: 'Multiple reactive sites: when molecules have several regions, electrons flow between the strongest donor (deepest red) and the strongest acceptor (deepest blue).',
+      prompt: 'Multiple reactive spots: connect the deepest red donor to the deepest blue acceptor.',
       moleculeId: 'stage3_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -85,7 +85,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 4 — Competing Sites',
-      prompt: 'Identify the primary electron cloud (extreme red) and route the arrow into the primary electron-deficient center (extreme blue).',
+      prompt: 'Ignore weak distractions: find the main power center (brightest red) and route into the deepest blue core.',
       moleculeId: 'stage4_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -103,7 +103,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 5 — Steric Hindrance',
-      prompt: 'Trace the molecule\'s path into the open, accessible target. Avoid the crowded obstacle!',
+      prompt: 'Traffic jam ahead! Trace the molecule\'s path into the open target. Avoid the crowded bumper obstacle!',
       moleculeId: 'stage5_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -121,7 +121,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 6 — Bulky Group Shielding',
-      prompt: 'Bulky atoms are physically blocking one route. Rotate your view, avoid the crowded cluster, and trace the molecule\'s path into the open target.',
+      prompt: 'Bulky atoms are blocking one route like a bodyguard shield. Rotate your view and connect to the open flank!',
       moleculeId: 'stage6_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -139,9 +139,273 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 7 — Final Synthesis Route',
-      prompt: 'Master challenge: Multiple electron clouds and crowded targets. Find the strongest electron donor (red) and trace a clear, unhindered collision path into the accessible target (blue).',
+      prompt: 'Master challenge: Find the single strongest red donor and trace an open path into the unhindered blue target!',
       moleculeId: 'stage7_pair',
       anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak']
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 7,
+    kind: 'arrow',
+    xp: 30,
+    max_attempts: 9999,
+    hint_text: 'Ignore the middle spectator. Connect the red base to the blue acid.',
+    hint_cost: 3,
+    answer_json: JSON.stringify({ from: 'red_base', to: 'blue_acid' }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 8 — Three\'s Company',
+      prompt: 'Three molecules in the chamber! Connect the active red giver directly to the hungry blue acid, ignoring the quiet spectator.',
+      moleculeId: 'stage8_trio',
+      anchors: ['red_base', 'blue_acid', 'spectator_mid']
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 8,
+    kind: 'arrow',
+    xp: 30,
+    max_attempts: 9999,
+    hint_text: 'Connect the strongest red nucleophile on the left to the blue target in the middle.',
+    hint_cost: 3,
+    answer_json: JSON.stringify({ from: 'red_strong', to: 'blue_target' }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 9 — The Tug-of-War',
+      prompt: 'Two givers want the same blue prize! Connect the super-bright red champion to the hungry blue receiver.',
+      moleculeId: 'stage9_trio',
+      anchors: ['red_strong', 'red_weak', 'blue_target']
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 9,
+    kind: 'arrow',
+    xp: 35,
+    max_attempts: 9999,
+    hint_text: 'De-protonate to activate! Connect the helper base to the alcohol proton.',
+    hint_cost: 3,
+    answer_json: JSON.stringify({ from: 'red_base', to: 'blue_proton' }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 10 — The Team Relay',
+      prompt: 'A molecule needs a teammate\'s help! Connect the helper base lone pair into the alcohol\'s blue proton to power it up.',
+      moleculeId: 'stage10_trio',
+      anchors: ['red_base', 'blue_proton', 'blue_substrate']
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 10,
+    kind: 'multi_arrow',
+    xp: 35,
+    max_attempts: 9999,
+    hint_text: '1st arrow: Red Oxygen into Carbon. 2nd arrow: C-Cl bond into Chlorine.',
+    hint_cost: 3,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_cl', expectedTo: 'cl_leave' }] }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 11 — The Knockout Punch',
+      prompt: 'Multi-step reaction! Draw 2 arrows in order: 1st: Red Oxygen ➔ Carbon. 2nd: C-Cl bond ➔ Chlorine.',
+      moleculeId: 'stage11_pair',
+      multiArrow: true,
+      maxArrows: 2,
+      anchors: ['red_nu', 'blue_c', 'bond_c_cl', 'cl_leave'],
+      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_cl', expectedTo: 'cl_leave' }]
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 11,
+    kind: 'multi_arrow',
+    xp: 35,
+    max_attempts: 9999,
+    hint_text: '1st arrow: Red donor into Carbon. 2nd arrow: C=O bond up into Oxygen.',
+    hint_cost: 3,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }] }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 12 — The Rooftop Bounce',
+      prompt: 'Two-step bounce! Arrow 1: Red donor ➔ central Carbon. Arrow 2: C=O double bond ➔ roof Oxygen.',
+      moleculeId: 'stage12_pair',
+      multiArrow: true,
+      maxArrows: 2,
+      anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o'],
+      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }]
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 12,
+    kind: 'multi_arrow',
+    xp: 35,
+    max_attempts: 9999,
+    hint_text: '1st arrow: Water into Acid H. 2nd arrow: O-H bond back onto acid Oxygen.',
+    hint_cost: 3,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h' }, { order: 2, expectedFrom: 'bond_o_h', expectedTo: 'red_o_acid' }] }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 13 — The Hot Potato',
+      prompt: 'Two-step proton relay! Arrow 1: Water ➔ Acid proton. Arrow 2: Old O-H bond ➔ Acid Oxygen.',
+      moleculeId: 'stage13_pair',
+      multiArrow: true,
+      maxArrows: 2,
+      anchors: ['red_base', 'blue_h', 'bond_o_h', 'red_o_acid'],
+      steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h' }, { order: 2, expectedFrom: 'bond_o_h', expectedTo: 'red_o_acid' }]
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 13,
+    kind: 'multi_arrow',
+    xp: 40,
+    max_attempts: 9999,
+    hint_text: '1: Donor to Carbon. 2: C=O bond to Oxygen. 3: Oxygen swings down and kicks Chlorine.',
+    hint_cost: 4,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'cl_leave' }] }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 14 — The Trampoline Kick-Back',
+      prompt: '3-Step Dance! 1: Donor ➔ Carbon. 2: C=O ➔ Oxygen. 3: Oxygen ➔ Chlorine departure.',
+      moleculeId: 'stage14_pair',
+      multiArrow: true,
+      maxArrows: 3,
+      anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o', 'cl_leave'],
+      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'cl_leave' }]
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 14,
+    kind: 'multi_arrow',
+    xp: 40,
+    max_attempts: 9999,
+    hint_text: '1: Oxygen gets protonated. 2: Water attacks carbon.',
+    hint_cost: 4,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_o_carbonyl', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_activated_c' }] }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 15 — The Key to the Lock',
+      prompt: 'Unlock then enter! Arrow 1: Carbonyl Oxygen ➔ Acid Proton. Arrow 2: Water ➔ Activated Carbon.',
+      moleculeId: 'stage15_trio',
+      multiArrow: true,
+      maxArrows: 2,
+      anchors: ['red_o_carbonyl', 'blue_proton', 'red_water', 'blue_activated_c'],
+      steps: [{ order: 1, expectedFrom: 'red_o_carbonyl', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_activated_c' }]
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 15,
+    kind: 'multi_arrow',
+    xp: 40,
+    max_attempts: 9999,
+    hint_text: '1: Hydroxide into carbonyl C. 2: C=O bond up to O. 3: O kicks off leaving group.',
+    hint_cost: 4,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'blue_ethoxide' }] }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 16 — The Soap Maker',
+      prompt: '3-Step ester cleavage! 1: OH- ➔ Carbon. 2: C=O ➔ Oxygen. 3: Oxygen ➔ Leaving Group.',
+      moleculeId: 'stage16_trio',
+      multiArrow: true,
+      maxArrows: 3,
+      anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o', 'blue_ethoxide'],
+      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'blue_ethoxide' }]
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 16,
+    kind: 'multi_arrow',
+    xp: 40,
+    max_attempts: 9999,
+    hint_text: '1: Nucleophile to strained Carbon. 2: Strained C-O bond snaps open to Oxygen.',
+    hint_cost: 4,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c_ring' }, { order: 2, expectedFrom: 'bond_ring', expectedTo: 'red_o_ring' }] }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 17 — The Snapping Spring',
+      prompt: 'Release trapped strain! Arrow 1: Hydroxide ➔ Ring Carbon. Arrow 2: Ring Bond ➔ Ring Oxygen.',
+      moleculeId: 'stage17_pair',
+      multiArrow: true,
+      maxArrows: 2,
+      anchors: ['red_nu', 'blue_c_ring', 'bond_ring', 'red_o_ring'],
+      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c_ring' }, { order: 2, expectedFrom: 'bond_ring', expectedTo: 'red_o_ring' }]
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 17,
+    kind: 'multi_arrow',
+    xp: 45,
+    max_attempts: 9999,
+    hint_text: '1: Base takes alpha proton. 2: Bond forms enolate. 3: Enolate attacks alkyl halide.',
+    hint_cost: 4,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h_alpha' }, { order: 2, expectedFrom: 'bond_c_h', expectedTo: 'blue_c_carbonyl' }, { order: 3, expectedFrom: 'c_alpha', expectedTo: 'blue_target' }] }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 18 — The Domino Chain',
+      prompt: '3-Domino cascade! 1: Base ➔ Alpha H. 2: C-H ➔ Carbonyl C. 3: Alpha C ➔ Alkyl Halide.',
+      moleculeId: 'stage18_pair',
+      multiArrow: true,
+      maxArrows: 3,
+      anchors: ['red_base', 'blue_h_alpha', 'bond_c_h', 'blue_c_carbonyl', 'c_alpha', 'blue_target'],
+      steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h_alpha' }, { order: 2, expectedFrom: 'bond_c_h', expectedTo: 'blue_c_carbonyl' }, { order: 3, expectedFrom: 'c_alpha', expectedTo: 'blue_target' }]
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 18,
+    kind: 'multi_arrow',
+    xp: 45,
+    max_attempts: 9999,
+    hint_text: '1: Leaving group departs to make vacancy. 2: Nucleophile fills the open spot.',
+    hint_cost: 4,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'bond_c_cl', expectedTo: 'red_cl' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_carbocation' }] }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 19 — Musical Chairs',
+      prompt: 'Leave first, enter second! Arrow 1: C-Cl ➔ Chlorine. Arrow 2: Water ➔ Carbocation.',
+      moleculeId: 'stage19_pair',
+      multiArrow: true,
+      maxArrows: 2,
+      anchors: ['bond_c_cl', 'red_cl', 'red_water', 'blue_carbocation'],
+      steps: [{ order: 1, expectedFrom: 'bond_c_cl', expectedTo: 'red_cl' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_carbocation' }]
+    })
+  },
+  {
+    quest_id: 'q1',
+    stage_index: 19,
+    kind: 'multi_arrow',
+    xp: 50,
+    max_attempts: 9999,
+    hint_text: '1: Catalyst activates proton. 2: Nucleophile attacks central hub. 3: Leaving group departs.',
+    hint_cost: 5,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_cat', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_core', expectedTo: 'blue_c_scaffold' }, { order: 3, expectedFrom: 'bond_leave', expectedTo: 'red_depart' }] }),
+    tolerance: 0,
+    reveal_text: '',
+    scene_config: JSON.stringify({
+      title: 'Stage 20 — The Master Conductor',
+      prompt: 'Grand Finale Synthesis! 1: Catalyst ➔ Proton. 2: Core Nucleophile ➔ Scaffold Carbon. 3: Leaving Group departs.',
+      moleculeId: 'stage20_multi',
+      multiArrow: true,
+      maxArrows: 3,
+      anchors: ['red_cat', 'blue_proton', 'red_core', 'blue_c_scaffold', 'bond_leave', 'red_depart'],
+      steps: [{ order: 1, expectedFrom: 'red_cat', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_core', expectedTo: 'blue_c_scaffold' }, { order: 3, expectedFrom: 'bond_leave', expectedTo: 'red_depart' }]
     })
   }
 ];
@@ -151,9 +415,14 @@ var Quests = {
     var q = Db.getAll('Quests');
     if (q.length === 0) {
       Db.append('Quests', DEFAULT_QUEST);
+    } else if (Number(q[0].stage_count || 0) < 20) {
+      Db.update('Quests', function(item) { return item.quest_id === 'q1'; }, {
+        stage_count: 20,
+        base_xp: 660
+      });
     }
     var qs = Db.getAll('QuestStages');
-    var needsRebuild = qs.length === 0 || qs[0].kind === 'choice';
+    var needsRebuild = qs.length === 0 || qs[0].kind === 'choice' || qs.length < 20;
     if (needsRebuild) {
       var ss = getDb_();
       var s = ss.getSheetByName('QuestStages');
@@ -265,8 +534,38 @@ var Quests = {
     // Evaluate answer
     var answer = JSON.parse(stage.answer_json || '{}');
     var isCorrect = false;
+    var wrongOrder = false;
+    var incomplete = false;
 
-    if (stage.kind === 'pick') {
+    if (stage.kind === 'multi_arrow') {
+      var expectedSteps = answer.steps || [];
+      var userArrows = (payload && payload.arrows ? payload.arrows : []).slice().sort(function(a, b) {
+        return (a.order || 0) - (b.order || 0);
+      });
+      if (userArrows.length < expectedSteps.length) {
+        incomplete = true;
+      } else {
+        var matches = true;
+        for (var si = 0; si < expectedSteps.length; si++) {
+          var act = userArrows[si];
+          var exp = expectedSteps[si];
+          if (!act || act.from !== exp.expectedFrom || act.to !== exp.expectedTo) {
+            matches = false;
+            break;
+          }
+        }
+        if (matches) {
+          isCorrect = true;
+        } else {
+          var matchedPairs = expectedSteps.every(function(exp) {
+            return userArrows.some(function(act) {
+              return act.from === exp.expectedFrom && act.to === exp.expectedTo;
+            });
+          });
+          if (matchedPairs) wrongOrder = true;
+        }
+      }
+    } else if (stage.kind === 'pick') {
       if (payload && payload.anchors && answer.anchors) {
         isCorrect = payload.anchors.length === answer.anchors.length &&
           payload.anchors[0] === answer.anchors[0];
@@ -290,7 +589,13 @@ var Quests = {
         isCorrect = JSON.stringify(payload.order) === JSON.stringify(answer.order);
       }
     } else if (stage.kind === 'arrow' || !stage.kind) {
-      if (payload && answer) {
+      var pFrom = payload ? (payload.from || (payload.arrows && payload.arrows[0] ? payload.arrows[0].from : null)) : null;
+      var pTo = payload ? (payload.to || (payload.arrows && payload.arrows[0] ? payload.arrows[0].to : null)) : null;
+      if (pFrom && pTo && answer) {
+        if (pFrom === answer.from && pTo === answer.to) {
+          isCorrect = true;
+        }
+      } else if (payload && answer) {
         if (payload.from === answer.from && payload.to === answer.to) {
           isCorrect = true;
         } else if (payload.startPos && payload.endPos) {
@@ -362,6 +667,8 @@ var Quests = {
 
     return {
       correct: isCorrect,
+      wrongOrder: wrongOrder,
+      incomplete: incomplete,
       xpAwarded: xpAwarded,
       revealText: isCorrect ? stage.reveal_text : '',
       attemptsLeft: 9999,

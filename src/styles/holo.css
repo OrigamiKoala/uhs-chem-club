@@ -52,33 +52,113 @@
 .stage-pill-track {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
   background: #12141a;
   border: 1px solid var(--border-durasteel);
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: var(--radius-sm);
   pointer-events: auto;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+  max-width: 380px;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .stage-dot {
-  width: 10px;
-  height: 10px;
+  width: 7px;
+  height: 7px;
   border-radius: 2px;
   background: #2a2d36;
   transition: all 0.3s ease;
   border: 1px solid #191b22;
+  flex-shrink: 0;
 }
 
 .stage-dot.completed {
   background: var(--accent-green);
-  box-shadow: 0 0 8px var(--accent-green);
+  box-shadow: 0 0 6px var(--accent-green);
 }
 
 .stage-dot.active {
   background: var(--accent-amber);
-  box-shadow: 0 0 10px var(--accent-amber);
-  transform: scale(1.2);
+  box-shadow: 0 0 8px var(--accent-amber);
+  transform: scale(1.25);
+}
+
+/* Multi-Step Arrows HUD tracker */
+.multi-step-track {
+  background: rgba(14, 16, 21, 0.7);
+  border: 1px dashed var(--border-durasteel);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin: 0.6rem 0;
+  font-family: var(--font-mono);
+}
+
+.multi-step-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+  color: var(--accent-amber);
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.multi-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.step-item-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #191c24;
+  border: 1px solid var(--border-durasteel);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  color: #f1f5f9;
+}
+
+.step-order-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #0c0d11;
+  border: 2px solid var(--accent-amber);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  margin-right: 6px;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.step-order-badge:hover {
+  transform: scale(1.15);
+  background: var(--accent-amber);
+  color: #0c0d11;
+}
+
+.step-del-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  border-radius: 2px;
+  transition: color 0.15s ease;
+}
+
+.step-del-btn:hover {
+  color: #ff5252;
 }
 
 /* Colormap Legend — Cividis Electrostatic Charge Gradient */

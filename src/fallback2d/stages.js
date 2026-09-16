@@ -87,6 +87,47 @@ export function renderFallbackInputs(container, stageConfig, kind, onPayloadChan
     };
     fromSel.addEventListener('change', update);
     toSel.addEventListener('change', update);
+  } else if (kind === 'multi_arrow') {
+    const steps = stageConfig.steps || [{ order: 1 }, { order: 2 }];
+    const anchors = stageConfig.anchors || [];
+    wrap.innerHTML = `
+      <label class="form-label">Multi-Step Reaction Sequence:</label>
+      ${steps.map((st, i) => `
+        <div style="margin-bottom: 0.6rem; background: rgba(0,0,0,0.25); padding: 6px; border-radius: 4px;">
+          <div style="font-size: 0.75rem; color: var(--accent-amber); margin-bottom: 4px; font-weight: bold;">
+            Step ${st.order || (i + 1)}:
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <select class="form-select multi-step-from" data-order="${st.order || (i + 1)}" style="flex:1;">
+              <option value="">-- From Region --</option>
+              ${anchors.map(a => `<option value="${a}">${ANCHOR_DEFINITIONS[a]?.label || a}</option>`).join('')}
+            </select>
+            <span style="color:var(--accent-amber); font-weight:bold;">➔</span>
+            <select class="form-select multi-step-to" data-order="${st.order || (i + 1)}" style="flex:1;">
+              <option value="">-- To Region --</option>
+              ${anchors.map(a => `<option value="${a}">${ANCHOR_DEFINITIONS[a]?.label || a}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      `).join('')}
+    `;
+
+    const updateMulti = () => {
+      const froms = wrap.querySelectorAll('.multi-step-from');
+      const tos = wrap.querySelectorAll('.multi-step-to');
+      const arrows = [];
+      for (let i = 0; i < froms.length; i++) {
+        const order = Number(froms[i].getAttribute('data-order')) || (i + 1);
+        const fVal = froms[i].value;
+        const tVal = tos[i].value;
+        if (fVal && tVal) {
+          arrows.push({ from: fVal, to: tVal, order });
+        }
+      }
+      onPayloadChange({ arrows });
+    };
+
+    wrap.querySelectorAll('select').forEach(s => s.addEventListener('change', updateMulti));
   } else if (kind === 'chain') {
     wrap.innerHTML = `
       <label class="form-label">Multi-Step Reaction Cascade:</label>

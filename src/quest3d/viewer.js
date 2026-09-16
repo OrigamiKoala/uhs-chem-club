@@ -90,6 +90,7 @@ export class QuestViewer {
   loadStage(stageConfig = {}, kind = 'pick', onPayloadChange = null) {
     // Clear previous molecules
     if (this.currentMolecule) {
+      this.currentMolecule.dispose();
       this.scene.remove(this.currentMolecule.group);
       this.currentMolecule = null;
     }
@@ -121,10 +122,16 @@ export class QuestViewer {
     this.picker.setAnchors(anchors);
 
     // 3. Setup interaction based on kind
-    if (kind === 'arrow') {
+    const isMultiArrow = kind === 'multi_arrow' || !!stageConfig.multiArrow;
+    if (kind === 'arrow' || isMultiArrow) {
       this.activeInteraction = new ArrowInteraction(this.arrowController, this.picker, this.controls, (blockedAnchor) => {
         this.triggerShudder();
       });
+      if (isMultiArrow) {
+        this.activeInteraction.setMultiArrow(true, stageConfig.maxArrows || 3);
+      } else {
+        this.activeInteraction.setMultiArrow(false, 1);
+      }
     } else if (kind === 'pick') {
       this.activeInteraction = new PickInteraction(this.picker, false);
     } else if (kind === 'pick_multi') {
@@ -136,6 +143,7 @@ export class QuestViewer {
       this.activeInteraction = new RankInteraction(ids);
     } else {
       this.activeInteraction = new ArrowInteraction(this.arrowController, this.picker, this.controls, () => this.triggerShudder());
+      this.activeInteraction.setMultiArrow(false, 1);
     }
 
     if (this.activeInteraction) {
@@ -151,6 +159,30 @@ export class QuestViewer {
     } else {
       this.camera.position.set(0, 1.2, 5.5);
       this.controls.radius = 5.5;
+    }
+  }
+
+  playReaction(reactionConfig, onComplete) {
+    // 1. Hide anchors so they don't distract during reaction
+    this.anchorManager.clear();
+
+    // 2. Dim electron density cloud so ball-and-stick interaction is prominent
+    if (this.currentIsosurface) {
+      this.currentIsosurface.setOpacity(0.12);
+    }
+
+    // 3. Clear drawn arrow line as reaction initiates
+    if (this.arrowController) {
+      this.arrowController.clear();
+    }
+
+    // 4. Trigger reaction animation on molecule
+    if (this.currentMolecule && this.currentMolecule.animateReaction) {
+      this.currentMolecule.animateReaction(reactionConfig, () => {
+        if (onComplete) onComplete();
+      });
+    } else {
+      if (onComplete) onComplete();
     }
   }
 
@@ -191,6 +223,7 @@ export class QuestViewer {
     window.removeEventListener('pointermove', this._onPointerMove);
     window.removeEventListener('pointerup', this._onPointerUp);
     this.controls.destroy();
+    if (this.currentMolecule) this.currentMolecule.dispose();
     if (this.currentIsosurface) this.currentIsosurface.dispose();
     this.anchorManager.clear();
     this.arrowController.clear();

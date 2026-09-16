@@ -167,6 +167,12 @@ export class DensityIsosurface {
     }
   }
 
+  setOpacity(val) {
+    for (const mat of this.materials) {
+      mat.opacity = val;
+    }
+  }
+
   update(time) {
     // Surface is dynamically illuminated by chamber lights
   }

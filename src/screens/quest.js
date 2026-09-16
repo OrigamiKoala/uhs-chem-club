@@ -96,20 +96,23 @@ export function renderQuest(container) {
 
     const instruction = cfg.prompt || localCfg.prompt;
 
+    const totalStagesCount = STAGE_CONFIGS.length;
+    const stageIndices = Array.from({ length: totalStagesCount }, (_, i) => i);
+
     // 1. Render Quest HUD Overlay
     container.innerHTML = `
       <div id="quest-screen-flash" class="quest-screen-flash"></div>
       <div class="quest-hud-overlay">
         <!-- Top HUD -->
         <div class="quest-hud-top">
-          <div style="display: flex; gap: 1rem; align-items: center;">
+          <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
             <a href="#/bridge" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 12px; min-height: 36px; text-decoration: none;">
               Exit Quest
             </a>
             <div class="stage-pill-track">
-              ${(questData?.stages || [0,1,2,3,4,5,6,7]).map((s, i) => `
+              ${stageIndices.map(i => `
                 <div class="stage-dot ${i < currentStageIdx ? 'completed' : ''} ${i === currentStageIdx ? 'active' : ''}"
-                     title="Stage ${i}"></div>
+                     title="Stage ${i + 1}"></div>
               `).join('')}
             </div>
           </div>
@@ -131,7 +134,7 @@ export function renderQuest(container) {
 
             <div class="stage-header">
               <div class="stage-title">${cfg.title || ('Stage ' + (currentStageIdx + 1))}</div>
-              <div class="stage-xp-tag">+${stageMeta.xp || 20} XP</div>
+              <div class="stage-xp-tag">+${stageMeta.xp || cfg.xp || 20} XP</div>
             </div>
 
             ${renderConceptCard(cfg.concept)}
@@ -149,7 +152,7 @@ export function renderQuest(container) {
                 </button>
               </div>
               <button type="button" id="tool-clear-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 5px 12px; min-height: 32px;">
-                ✕ Clear Line
+                ✕ Clear Line${cfg.multiArrow ? 's' : ''}
               </button>
             </div>
 
@@ -157,6 +160,21 @@ export function renderQuest(container) {
             <div style="font-size: 0.75rem; color: var(--text-muted); background: rgba(0,0,0,0.25); border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm); padding: 6px 10px; margin-bottom: 0.85rem; line-height: 1.4;">
               <div>• <strong>Draw:</strong> Left-click and drag from red to blue.</div>
               <div>• <strong>Move view:</strong> Click 'Rotate View' or right-click drag anytime to orbit.</div>
+            </div>
+            ` : ''}
+
+            ${cfg.multiArrow ? `
+            <!-- Multi-Step Arrows HUD Tracker -->
+            <div class="multi-step-track" id="multi-step-track">
+              <div class="multi-step-header">
+                <span>CHRONOLOGICAL STEPS (${cfg.steps ? cfg.steps.length : 2} REQUIRED)</span>
+                <span style="color: var(--text-muted); font-size: 0.7rem;">Click ① to change order • Click arrow to delete</span>
+              </div>
+              <div class="multi-step-list" id="multi-step-list">
+                <div style="font-size: 0.72rem; color: var(--text-muted); font-style: italic;">
+                  No arrows drawn yet. Drag in 3D space to add Step 1!
+                </div>
+              </div>
             </div>
             ` : ''}
 
@@ -178,6 +196,49 @@ export function renderQuest(container) {
       </div>
     `;
 
+    // Helper to update multi-step arrows list
+    function updateMultiStepList(arrows = []) {
+      const list = container.querySelector('#multi-step-list');
+      if (!list) return;
+      if (!arrows || arrows.length === 0) {
+        list.innerHTML = `<div style="font-size: 0.72rem; color: var(--text-muted); font-style: italic;">No arrows drawn yet. Drag in 3D space to add Step 1!</div>`;
+        return;
+      }
+      list.innerHTML = arrows.map((arr, idx) => `
+        <div class="step-item-pill">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <button type="button" class="step-order-badge" data-step-idx="${idx}" title="Click to cycle step order">
+              ${arr.order}
+            </button>
+            <span style="font-size: 0.75rem; color: #f1f5f9;">
+              ${arr.from || 'Source'} ➔ ${arr.to || 'Target'}
+            </span>
+          </div>
+          <button type="button" class="step-del-btn" data-del-idx="${idx}" title="Remove this arrow">
+            ✕ Delete
+          </button>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('.step-order-badge').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = Number(btn.getAttribute('data-step-idx'));
+          if (viewer && viewer.arrowController) {
+            viewer.arrowController.cycleArrowOrder(i);
+          }
+        });
+      });
+
+      list.querySelectorAll('.step-del-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = Number(btn.getAttribute('data-del-idx'));
+          if (viewer && viewer.arrowController) {
+            viewer.arrowController.removeArrow(i);
+          }
+        });
+      });
+    }
+
     // 2. Setup Concept Card Dismiss & Reopen
     const conceptCard = container.querySelector('#stage-concept-card');
     const dismissBtn = container.querySelector('#concept-dismiss-btn');
@@ -198,14 +259,32 @@ export function renderQuest(container) {
 
     if (tierManager.currentTier === 'T1' || !viewer) {
       // Tier 1 DOM-only fallback
-      renderFallbackInputs(interactiveArea, cfg, stageMeta.kind, (payload) => {
+      renderFallbackInputs(interactiveArea, cfg, cfg.multiArrow ? 'multi_arrow' : stageMeta.kind, (payload) => {
         currentPayload = payload;
+        if (cfg.multiArrow) {
+          updateMultiStepList(payload?.arrows || []);
+        }
+        if (payload && !isGrading && !isAdvancing) {
+          const res = evaluateStageLocally(currentStageIdx, payload);
+          if (res.correct) {
+            submitStage(payload);
+          }
+        }
       });
     } else {
       // Tier 2 & 3: Configure 3D Viewer
       viewer.setMode('draw');
-      viewer.loadStage(cfg, stageMeta.kind, (payload) => {
+      viewer.loadStage(cfg, cfg.multiArrow ? 'multi_arrow' : stageMeta.kind, (payload) => {
         currentPayload = payload;
+        if (cfg.multiArrow) {
+          updateMultiStepList(payload?.arrows || []);
+        }
+        if (payload && !isGrading && !isAdvancing) {
+          const res = evaluateStageLocally(currentStageIdx, payload);
+          if (res.correct) {
+            submitStage(payload);
+          }
+        }
       });
 
       // Bind toolbar
@@ -241,6 +320,9 @@ export function renderQuest(container) {
       clearBtn?.addEventListener('click', () => {
         viewer.clear();
         currentPayload = null;
+        if (cfg.multiArrow) {
+          updateMultiStepList([]);
+        }
         clearFeedback();
         showToast('Line cleared.', 'info');
       });
@@ -271,14 +353,14 @@ export function renderQuest(container) {
       }
     }
 
-    // 3. Bind Grade Button
+    // 3. Bind Grade Button and Submit Handler
     const gradeBtn = container.querySelector('#grade-btn');
     const sweep = container.querySelector('#scanning-sweep');
 
-    gradeBtn.addEventListener('click', async () => {
+    async function submitStage(payload) {
       if (isGrading || isAdvancing) return;
-      if (!currentPayload) {
-        showToast('Please connect an arrow from red to blue before submitting.', 'warning');
+      if (!payload || (cfg.multiArrow && (!payload.arrows || payload.arrows.length === 0))) {
+        showToast(cfg.multiArrow ? `Please draw all ${cfg.steps?.length || 2} reaction arrows before submitting.` : 'Please connect an arrow from red to blue before submitting.', 'warning');
         return;
       }
 
@@ -291,17 +373,18 @@ export function renderQuest(container) {
       isGrading = true;
       gradeBtn.disabled = true;
       gradeBtn.textContent = 'Evaluating…';
+
       try {
         const elapsed = Date.now() - stageStartTime;
 
         // Immediate in-browser evaluation with pre-loaded solutions (0ms latency)
-        const res = evaluateStageLocally(currentStageIdx, currentPayload);
+        const res = evaluateStageLocally(currentStageIdx, payload);
 
         // Asynchronously report submission to backend without blocking the player
         api.gradeStage(
           'q1',
           currentStageIdx,
-          currentPayload,
+          payload,
           elapsed,
           hintUsed,
           tierManager.currentTier
@@ -312,7 +395,7 @@ export function renderQuest(container) {
         if (res.correct) {
           isAdvancing = true;
           gradeBtn.disabled = true;
-          gradeBtn.innerHTML = '<span>Correct!</span><span>✓</span>';
+          gradeBtn.innerHTML = '<span>Reaction Starting…</span><span>⚡</span>';
 
           if (session.player) {
             session.player.xp = (session.player.xp || 0) + res.xpAwarded;
@@ -320,7 +403,7 @@ export function renderQuest(container) {
             session.saveSession();
             session.notify();
           }
-          if (viewer) viewer.triggerSuccessBloom();
+
           if (feedback) {
             feedback.className = 'stage-error-banner';
             feedback.style.borderColor = 'var(--accent-green)';
@@ -328,17 +411,13 @@ export function renderQuest(container) {
             feedback.style.background = 'rgba(56, 176, 0, 0.2)';
             feedback.style.boxShadow = '0 0 20px rgba(56, 176, 0, 0.35)';
 
-            const nextText = currentStageIdx === 0
-              ? 'Stage 1 verified! Advancing to Stage 2: Introducing Electrons...'
-              : (currentStageIdx === 3
-                ? 'Target verified! Advancing to Stage 5: Tracing Molecule Paths & Steric Hindrance...'
-                : 'Advancing to next stage...');
-
+            const explanation = cfg.reaction?.explanation || 'Bond created! Molecules approached and bonded.';
             feedback.innerHTML = `
-              <span style="font-size: 1.25rem;">✓</span>
-              <div>
-                <div style="font-weight: 800; color: #00e676; letter-spacing: 0.05em;">CORRECT CONNECTION</div>
-                <div style="font-size: 0.82rem; color: #f1f5f9; margin-top: 2px;">+${res.xpAwarded} XP Awarded. ${nextText}</div>
+              <span style="font-size: 1.4rem;">⚡</span>
+              <div style="flex: 1;">
+                <div style="font-weight: 800; color: #00e676; letter-spacing: 0.05em;">REACTION COMPLETE: NEW BOND FORMED!</div>
+                <div style="font-size: 0.85rem; color: #f1f5f9; margin-top: 3px; line-height: 1.45;">${explanation}</div>
+                <div style="font-size: 0.75rem; color: var(--accent-amber); margin-top: 4px; font-family: var(--font-mono); font-weight: 700;">+${res.xpAwarded} XP AWARDED</div>
               </div>
             `;
           }
@@ -347,14 +426,22 @@ export function renderQuest(container) {
           // Check if last stage completed
           const targetStageIdx = currentStageIdx + 1;
           const isLastStage = targetStageIdx >= STAGE_CONFIGS.length;
-          if (isLastStage) {
+
+          const onReactionDone = () => {
+            gradeBtn.innerHTML = '<span>Correct!</span><span>✓</span>';
             advanceTimer = setTimeout(() => {
-              showCompletionModal();
-            }, 1200);
+              if (isLastStage) {
+                showCompletionModal();
+              } else {
+                loadStage(targetStageIdx);
+              }
+            }, 600);
+          };
+
+          if (viewer && viewer.playReaction && cfg.reaction) {
+            viewer.playReaction(cfg.reaction, onReactionDone);
           } else {
-            advanceTimer = setTimeout(() => {
-              loadStage(targetStageIdx);
-            }, 1200);
+            advanceTimer = setTimeout(onReactionDone, 1200);
           }
         } else {
           gradeBtn.disabled = false;
@@ -367,9 +454,23 @@ export function renderQuest(container) {
           }
 
           const isBlocked = !!res.blocked;
-          const msg = isBlocked
-            ? 'The molecule crashed into bulky surrounding atoms! That target is sterically hindered (too crowded). Rotate your 3D view to trace the open path into the accessible blue target.'
-            : `Incorrect connection. ${attemptsLeft} attempt(s) remaining.`;
+          const isWrongOrder = !!res.wrongOrder;
+          const isIncomplete = !!res.incomplete;
+          let bannerTitle = 'INCORRECT';
+          let msg = `Incorrect connection. Connect the crowded red zone directly into the hungry blue zone.`;
+
+          if (isBlocked) {
+            bannerTitle = 'PATH BLOCKED (TRAFFIC JAM)';
+            msg = 'The molecule crashed into bulky surrounding atoms! That target is sterically hindered (too crowded). Rotate your 3D view to trace the open path into the accessible blue target.';
+          } else if (isWrongOrder) {
+            bannerTitle = 'WRONG CHRONOLOGICAL ORDER';
+            msg = res.message || 'You found all the correct steps, but the sequence is out of order! Click on the arrow numbers to change their sequence.';
+          } else if (isIncomplete) {
+            bannerTitle = 'INCOMPLETE SEQUENCE';
+            msg = res.message || 'Draw all required steps in order before submitting.';
+          } else if (res.message) {
+            msg = res.message;
+          }
 
           // 1. Red screen flash
           if (flash) {
@@ -387,15 +488,22 @@ export function renderQuest(container) {
           // 3. Obvious inline error banner directly on stage card
           if (feedback) {
             feedback.className = 'stage-error-banner';
-            feedback.style.borderColor = '';
-            feedback.style.borderLeftColor = '';
-            feedback.style.background = '';
-            feedback.style.boxShadow = '';
+            if (isWrongOrder || isIncomplete) {
+              feedback.style.borderColor = 'var(--accent-amber)';
+              feedback.style.borderLeftColor = 'var(--accent-amber)';
+              feedback.style.background = 'rgba(255, 159, 28, 0.15)';
+              feedback.style.boxShadow = '0 0 15px rgba(255, 159, 28, 0.25)';
+            } else {
+              feedback.style.borderColor = '';
+              feedback.style.borderLeftColor = '';
+              feedback.style.background = '';
+              feedback.style.boxShadow = '';
+            }
             feedback.innerHTML = `
-              <span style="font-size: 1.3rem; color: #ff5252;">⚠️</span>
+              <span style="font-size: 1.3rem; color: ${isWrongOrder || isIncomplete ? 'var(--accent-amber)' : '#ff5252'};">⚠️</span>
               <div style="flex: 1;">
-                <div style="font-weight: 800; color: #ff5252; letter-spacing: 0.06em;">
-                  ${isBlocked ? 'PATH BLOCKED (STERIC HINDRANCE)' : 'INCORRECT'}
+                <div style="font-weight: 800; color: ${isWrongOrder || isIncomplete ? 'var(--accent-amber)' : '#ff5252'}; letter-spacing: 0.06em;">
+                  ${bannerTitle}
                 </div>
                 <div style="font-size: 0.82rem; color: #f1f5f9; margin-top: 2px; line-height: 1.4;">
                   ${msg}
@@ -414,6 +522,10 @@ export function renderQuest(container) {
         isAdvancing = false;
         showToast(err.message || 'Submission error', 'error');
       }
+    }
+
+    gradeBtn.addEventListener('click', () => {
+      submitStage(currentPayload);
     });
   }
 

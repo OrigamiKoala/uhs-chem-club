@@ -17,6 +17,16 @@ export class ArrowInteraction {
     this.isDragging = false;
     this.dragStartPos = { x: 0, y: 0 };
     this.onChange = null;
+
+    this.arrowController.onArrowsChanged = () => {
+      if (this.onChange) {
+        this.onChange(this.getPayload());
+      }
+    };
+  }
+
+  setMultiArrow(enabled, maxArrows = 4) {
+    this.arrowController.setMultiArrow(enabled, maxArrows);
   }
 
   handlePointerDown(e) {
@@ -61,9 +71,21 @@ export class ArrowInteraction {
     const dragDist = Math.sqrt(dx * dx + dy * dy);
 
     if (dragDist < 8) {
-      // Tiny tap without drag — cancel active drag line
+      // Tiny tap without drag — check if tapped an existing arrow mesh or number badge
       this.arrowController.cancel();
       this.startWorldPos = null;
+
+      const hit = this.arrowController.pickArrowOrBadge(e);
+      if (hit) {
+        if (hit.type === 'badge') {
+          // Clicked number badge -> change/cycle order
+          this.arrowController.cycleArrowOrder(hit.index);
+        } else if (hit.type === 'arrow') {
+          // Clicked arrow mesh -> remove arrow
+          this.arrowController.removeArrow(hit.index);
+        }
+        if (this.onChange) this.onChange(this.getPayload());
+      }
       return;
     }
 
@@ -93,6 +115,20 @@ export class ArrowInteraction {
   }
 
   getPayload() {
+    if (this.arrowController.multiArrow) {
+      const arrs = this.arrowController.completedArrows || [];
+      if (arrs.length === 0) return null;
+      return {
+        arrows: arrs.map(a => ({
+          from: a.from || null,
+          to: a.to || null,
+          startPos: a.startPos ? [a.startPos.x, a.startPos.y, a.startPos.z] : null,
+          endPos: a.endPos ? [a.endPos.x, a.endPos.y, a.endPos.z] : null,
+          order: a.order
+        }))
+      };
+    }
+
     if (!this.currentArrow) return null;
     const s = this.currentArrow.startPos;
     const e = this.currentArrow.endPos;
