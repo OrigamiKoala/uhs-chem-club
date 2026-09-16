@@ -22,7 +22,7 @@ export function renderLogin(container) {
     <div class="screen-container" style="max-width: 460px;">
       <div class="glass-panel">
         <div style="text-align: center; margin-bottom: 1.5rem;">
-          <div class="eyebrow">Avalon · Access</div>
+          <div class="eyebrow">Account Access</div>
           <h1 class="page-title" style="font-size: 1.5rem;">Sign In</h1>
         </div>
 

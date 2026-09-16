@@ -38,7 +38,7 @@ export function renderRegister(container) {
       ${stepRail(1)}
       <div class="glass-panel">
         <div style="text-align: center; margin-bottom: 1.5rem;">
-          <div class="eyebrow">Avalon · Intake</div>
+          <div class="eyebrow">New Account</div>
           <h1 class="page-title" style="font-size: 1.5rem;">Create Account</h1>
         </div>
 

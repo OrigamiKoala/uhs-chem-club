@@ -6,12 +6,7 @@
 import { ANCHOR_DEFINITIONS } from '../quest3d/anchors.js';
 
 /**
- * Turn an anchor id into something a player without a 3D view can actually choose
- * between: its scanner site letter plus where it sits in the chamber.
- *
- * Deliberately says nothing about how strong or how crowded the site is. That is
- * what the scan buttons are for, here exactly as in the 3D chamber — a Tier 1
- * player has to explore for the same information, not be handed it in a dropdown.
+ * Turn an anchor id into a clear readable label for Tier 1 dropdowns.
  */
 function describeAnchor(anchorId, stageConfig, indexByType) {
   const region = (stageConfig.regions || []).find(r => r.id === anchorId);
@@ -22,9 +17,8 @@ function describeAnchor(anchorId, stageConfig, indexByType) {
   const horizontal = pos[0] < -0.7 ? 'left' : pos[0] > 0.7 ? 'right' : 'middle';
   const vertical = pos[1] > 0.6 ? 'upper ' : pos[1] < -0.6 ? 'lower ' : '';
 
-  const site = stageConfig.scans?.[anchorId]?.site;
   const n = (indexByType[type] = (indexByType[type] || 0) + 1);
-  const name = site ? `Site ${site}` : `${type === 'red' ? 'Red' : 'Blue'} zone ${n}`;
+  const name = `${type === 'red' ? 'Red' : 'Blue'} zone ${n}`;
   return `${name} — ${vertical}${horizontal}`;
 }
 
@@ -34,37 +28,8 @@ function anchorOptions(anchors, stageConfig) {
   return anchors.map(a => `<option value="${a}">${describeAnchor(a, stageConfig, counters)}</option>`).join('');
 }
 
-/**
- * The scanner, for players with no 3D chamber to tap. Same readout, same cost
- * (free), same requirement to compare several sites before committing.
- */
-function renderScanButtons(stageConfig, onScan) {
-  const scans = stageConfig.scans || {};
-  const ids = Object.keys(scans);
-  if (ids.length === 0 || typeof onScan !== 'function') return null;
-
-  const row = document.createElement('div');
-  row.className = 'fallback-scan-row';
-  row.innerHTML = `
-    <span class="fallback-scan-label">Scan a site:</span>
-    ${ids
-      .slice()
-      .sort((a, b) => String(scans[a].site).localeCompare(String(scans[b].site)))
-      .map(id => `<button type="button" class="quest-btn-sm btn-secondary fallback-scan-btn" data-scan="${id}">
-        Site ${scans[id].site}
-      </button>`).join('')}
-  `;
-  row.querySelectorAll('[data-scan]').forEach(btn => {
-    btn.addEventListener('click', () => onScan(btn.getAttribute('data-scan')));
-  });
-  return row;
-}
-
-export function renderFallbackInputs(container, stageConfig, kind, onPayloadChange, onScan = null) {
+export function renderFallbackInputs(container, stageConfig, kind, onPayloadChange) {
   container.innerHTML = '';
-
-  const scanRow = renderScanButtons(stageConfig, onScan);
-  if (scanRow) container.appendChild(scanRow);
 
   const wrap = document.createElement('div');
   wrap.className = 'fallback-controls form-group';

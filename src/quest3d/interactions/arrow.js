@@ -17,8 +17,6 @@ export class ArrowInteraction {
     this.isDragging = false;
     this.dragStartPos = { x: 0, y: 0 };
     this.onChange = null;
-    /** Fired when the player taps a site without dragging — the scan gesture. */
-    this.onProbe = null;
 
     this.arrowController.onArrowsChanged = () => {
       if (this.arrowController.completedArrows.length === 0) {
@@ -74,8 +72,7 @@ export class ArrowInteraction {
     const dragDist = Math.sqrt(dx * dx + dy * dy);
 
     if (dragDist < 8) {
-      // Tiny tap without drag. Three things can be under it, in priority order:
-      // an arrow's number badge, an arrow, or a glowing site the player wants to scan.
+      // Tiny tap without drag: check for an arrow's number badge or an arrow.
       const tapSource = this.selectedSource;
       this.arrowController.cancel();
       this.startWorldPos = null;
@@ -93,9 +90,6 @@ export class ArrowInteraction {
         return;
       }
 
-      // Nothing drawn under the tap: treat it as a scan of whatever site is there.
-      const probed = this.picker.pick(e) || tapSource;
-      if (probed && this.onProbe) this.onProbe(probed);
       this.selectedSource = null;
       return;
     }

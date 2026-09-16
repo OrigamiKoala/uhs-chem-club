@@ -35,8 +35,6 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
   builds its header from `pageHeader`**; do not hand-roll banner/title markup.
 - `ui/modal.js` — `showModal` / `closeModal`, with focus handling and Escape to dismiss.
 - `ui/toast.js` — transient messages; the `type` maps to `.toast-success/-error/-warning/-info`.
-- `ui/scan.js` — the site scanner readout (`renderScanReadout`, `meterBar`). Shared by
-  the quest HUD and the free sample so both teach the same loop.
 - `screens/` — one render function per route, all pure string templates.
 - `three/` — persistent WebGL stage, quality-tier probe (T3/T2/T1), ship interior, camera rig.
 - `quest3d/` — reusable containment chamber, `MOLECULE_DATA` (atoms, bonds and the

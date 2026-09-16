@@ -1,10 +1,7 @@
 /**
  * demo.js — One free puzzle, no account required.
  *
- * This is the same Stage 1 the real quest opens with, graded by the same local
- * evaluator, so what a visitor tries here is exactly what they get after signing up.
- * (It previously referenced a molecule that does not exist and graded an arrow
- * answer with pick logic, so it could never be solved.)
+ * Stage 1 preview graded locally. Stage info appears in a modal before the stage begins.
  */
 
 import { api } from '../api.js';
@@ -13,9 +10,42 @@ import { tierManager } from '../three/tier.js';
 import { QuestViewer } from '../quest3d/viewer.js';
 import { MOLECULE_DATA } from '../quest3d/molecule.js';
 import { renderFallbackInputs } from '../fallback2d/stages.js';
-import { renderScanReadout } from '../ui/scan.js';
 import { showToast } from '../ui/toast.js';
-import { STAGE_CONFIGS, evaluateStageLocally, diagnoseMiss, scanFor } from '../quest3d/evaluator.js';
+import { showModal, closeModal } from '../ui/modal.js';
+import { esc } from '../utils.js';
+import { STAGE_CONFIGS, evaluateStageLocally, diagnoseMiss } from '../quest3d/evaluator.js';
+
+function showDemoModal(cfg) {
+  showModal(`
+    <div style="text-align: center; margin-bottom: 1.25rem;">
+      <div class="eyebrow lit">Sample Stage 1</div>
+      <h2 id="demo-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.3rem;">
+        ${esc(cfg.title || 'Stage 1')}
+      </h2>
+      <div style="margin-top: 0.4rem;">
+        <span class="tag live">Free Demo</span>
+      </div>
+    </div>
+
+    <div style="background: var(--plate-100); border: 1px solid var(--border-durasteel); padding: 1rem 1.15rem; margin-bottom: 1.25rem; font-size: 0.95rem; line-height: 1.55; color: var(--text-bright);">
+      ${cfg.prompt ? esc(cfg.prompt) : 'Connect the molecules to trigger the reaction.'}
+    </div>
+
+    <div style="background: var(--plate-200); border-left: 2px solid var(--accent-cyan); padding: 8px 12px; margin-bottom: 1.25rem; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45;">
+      Drag from the electron donor (negative, red) to the electron acceptor (positive, blue).
+    </div>
+
+    <div style="margin-top: 1.25rem;">
+      <button type="button" id="modal-start-demo-btn" class="btn-primary" style="width: 100%; padding: 10px 0; font-size: 0.9rem;">
+        Start Stage
+      </button>
+    </div>
+  `, { labelledBy: 'demo-modal-title' });
+
+  document.getElementById('modal-start-demo-btn')?.addEventListener('click', () => {
+    closeModal();
+  });
+}
 
 export function renderDemo(container) {
   let viewer = null;
@@ -33,8 +63,6 @@ export function renderDemo(container) {
     regions: MOLECULE_DATA[base.moleculeId]?.regions || [],
     anchors: (MOLECULE_DATA[base.moleculeId]?.regions || []).map(r => r.id)
   };
-  const demoSiteCount = Object.keys(cfg.scans || {}).length;
-  const demoScanned = new Set();
 
   container.innerHTML = `
     <div id="quest-screen-flash" class="quest-screen-flash"></div>
@@ -60,29 +88,16 @@ export function renderDemo(container) {
               ${cfg.shape ? `<div class="stage-shape">${cfg.shape}</div>` : ''}
               <div class="stage-title">${cfg.title}</div>
             </div>
-            <div class="stage-xp-tag">Sample</div>
-          </div>
-
-          <div class="concept-card">
-            <div class="concept-card-header">
-              <div class="concept-card-title-group">
-                <span class="concept-badge">CONTROLS</span>
-                <span class="concept-card-title">SCAN FIRST, THEN CONNECT</span>
-              </div>
-            </div>
-            <div class="concept-card-intro">Glowing clouds are electric charge. Opposites pull — find out which is which.</div>
-            <div class="concept-grid">
-              <div class="concept-pill red-pill"><strong>Tap a cloud</strong> to scan that site.</div>
-              <div class="concept-pill blue-pill"><strong>Drag between clouds</strong> to connect them.</div>
+            <div style="display: flex; gap: 0.4rem; align-items: center;">
+              <button type="button" id="demo-info-btn" class="btn-secondary quest-btn-sm">Objective</button>
+              <div class="stage-xp-tag">Sample</div>
             </div>
           </div>
 
           <div class="stage-instruction">${cfg.prompt}</div>
 
-          <div id="demo-scan-slot">${renderScanReadout(null, 0, demoSiteCount)}</div>
-
           <div class="stage-toolbar">
-            <span class="stage-tip">Tap to scan · drag to connect · right-drag to rotate</span>
+            <span class="stage-tip">Drag to connect · right-drag to rotate</span>
             <button type="button" id="demo-clear-btn" class="btn-secondary quest-btn-sm">Clear</button>
           </div>
 
@@ -100,30 +115,24 @@ export function renderDemo(container) {
     </div>
   `;
 
+  // Show stage info modal before stage begins
+  showDemoModal(cfg);
+
   const interactiveArea = container.querySelector('#demo-interactive-area');
   const card = container.querySelector('#demo-card');
   const feedback = container.querySelector('#demo-feedback');
   const flash = container.querySelector('#quest-screen-flash');
   const gradeBtn = container.querySelector('#demo-grade-btn');
 
-  // The free sample teaches the loop the whole quest runs on, so the scanner has to
-  // work here too — otherwise stage 1's own prompt tells the player to do something
-  // that does nothing.
-  const demoScanSlot = container.querySelector('#demo-scan-slot');
-  function showDemoScan(regionId) {
-    const scan = scanFor(0, regionId);
-    if (!scan || !demoScanSlot) return;
-    demoScanned.add(regionId);
-    demoScanSlot.innerHTML = renderScanReadout(scan, demoScanned.size, demoSiteCount);
-    const el = demoScanSlot.querySelector('.scan-readout');
-    if (el) { void el.offsetWidth; el.classList.add('scan-sweep'); }
-  }
+  container.querySelector('#demo-info-btn')?.addEventListener('click', () => {
+    showDemoModal(cfg);
+  });
 
   if (tierManager.currentTier === 'T1' || !viewer) {
-    renderFallbackInputs(interactiveArea, cfg, 'arrow', (payload) => { currentPayload = payload; }, showDemoScan);
+    renderFallbackInputs(interactiveArea, cfg, 'arrow', (payload) => { currentPayload = payload; });
   } else {
     viewer.setMode('draw');
-    viewer.loadStage(cfg, 'arrow', (payload) => { currentPayload = payload; }, showDemoScan);
+    viewer.loadStage(cfg, 'arrow', (payload) => { currentPayload = payload; });
   }
 
   container.querySelector('#demo-clear-btn')?.addEventListener('click', () => {
@@ -139,7 +148,7 @@ export function renderDemo(container) {
       return;
     }
     if (!currentPayload) {
-      showToast('Nothing drawn yet. Scan the sites, then drag between two.', 'warning');
+      showToast('Nothing drawn yet. Drag between two sites.', 'warning');
       return;
     }
 
@@ -158,9 +167,13 @@ export function renderDemo(container) {
           <span class="banner-mark" aria-hidden="true">//</span>
           <div style="flex: 1;">
             <div class="banner-title" style="color: var(--accent-green);">Solved</div>
-            <div class="banner-body">One of twenty. Create an account to keep the rest.</div>
+            <div class="banner-body">Stage 1 solved. Create an account to continue.</div>
           </div>
+          <button type="button" class="banner-dismiss-btn" id="demo-dismiss-feedback-btn" aria-label="Dismiss feedback">✕</button>
         `;
+        feedback.querySelector('#demo-dismiss-feedback-btn')?.addEventListener('click', () => {
+          feedback.className = 'hidden';
+        });
         gradeBtn.disabled = false;
         gradeBtn.textContent = 'Create Account';
         gradeBtn.focus();
@@ -188,7 +201,11 @@ export function renderDemo(container) {
           <div class="banner-title" style="color: var(--lamp-red);">${diag.title}</div>
           <div class="banner-body">${diag.message}</div>
         </div>
+        <button type="button" class="banner-dismiss-btn" id="demo-dismiss-feedback-btn" aria-label="Dismiss feedback">✕</button>
       `;
+      feedback.querySelector('#demo-dismiss-feedback-btn')?.addEventListener('click', () => {
+        feedback.className = 'hidden';
+      });
     }
   });
 }

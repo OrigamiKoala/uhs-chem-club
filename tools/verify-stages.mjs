@@ -101,62 +101,18 @@ STAGE_CONFIGS.forEach((cfg, i) => {
     if (cfg.hint !== cfg.hints[0]) fail(`${label}: legacy hint field is out of sync with rung 1`);
   }
 
-  // The scanner is the only way a player learns anything about a site, so every
-  // region the chamber renders must be scannable. A site with no readout reads as
-  // a broken instrument.
-  const scans = cfg.scans || {};
-  for (const id of regionIds) {
-    const sc = scans[id];
-    if (!sc) { fail(`${label}: region "${id}" is rendered but has no scan readout`); continue; }
-    if (!sc.site) fail(`${label}: scan "${id}" has no site letter`);
-    if (sc.polarity !== 'giver' && sc.polarity !== 'taker') fail(`${label}: scan "${id}" has polarity "${sc.polarity}"`);
-    for (const k of ['strength', 'clearance']) {
-      if (typeof sc[k] !== 'number' || sc[k] < 0 || sc[k] > 10) fail(`${label}: scan "${id}" ${k} is not a 0-10 reading`);
-    }
-    if (!sc.note || sc.note.length < 15) fail(`${label}: scan "${id}" has no readable note`);
-  }
-  for (const id of Object.keys(scans)) {
-    if (!regionIds.includes(id)) fail(`${label}: scan "${id}" describes a site ${cfg.moleculeId} never renders`);
-  }
-  const letters = Object.values(scans).map(s => s.site);
-  if (new Set(letters).size !== letters.length) fail(`${label}: two sites share a scanner letter`);
-
-  // Scan readings must agree with the answer, or the readout lies to the player:
-  // the expected giver has to be the strongest giver, and the expected taker the
-  // strongest *reachable* taker.
-  const REACHABLE = 4;
-  const expectedSet = new Set(expected);
-  for (const [id, sc] of Object.entries(scans)) {
-    if (expectedSet.has(id) || sc.polarity !== 'giver') continue;
-    const rival = expected.map(e => scans[e]).find(e => e && e.polarity === 'giver');
-    if (rival && sc.strength > rival.strength) {
-      fail(`${label}: decoy giver "${id}" scans stronger (${sc.strength}) than the answer (${rival.strength})`);
-    }
-  }
-  for (const [id, sc] of Object.entries(scans)) {
-    if (expectedSet.has(id) || sc.polarity !== 'taker' || sc.clearance < REACHABLE) continue;
-    const rival = expected.map(e => scans[e]).find(e => e && e.polarity === 'taker');
-    if (rival && rival.clearance >= REACHABLE && sc.strength > rival.strength) {
-      fail(`${label}: reachable decoy taker "${id}" scans hungrier (${sc.strength}) than the answer (${rival.strength})`);
-    }
-  }
-  if (cfg.blockedAnchor && scans[cfg.blockedAnchor] && scans[cfg.blockedAnchor].clearance > 3) {
-    fail(`${label}: blocked site "${cfg.blockedAnchor}" scans ${scans[cfg.blockedAnchor].clearance}/10 clearance — the readout contradicts the grader`);
-  }
-
   // A miss has to say something more useful than "not quite".
-  const giverIds = Object.keys(scans).filter(id => scans[id].polarity === 'giver');
-  if (giverIds.length >= 2) {
+  const redIds = regionIds.filter(id => id.startsWith('red'));
+  if (redIds.length >= 2) {
     const bad = cfg.multiArrow
-      ? { arrows: [{ from: giverIds[0], to: giverIds[1], order: 1 }, { from: giverIds[0], to: giverIds[1], order: 2 }] }
-      : { from: giverIds[0], to: giverIds[1] };
+      ? { arrows: [{ from: redIds[0], to: redIds[1], order: 1 }, { from: redIds[0], to: redIds[1], order: 2 }] }
+      : { from: redIds[0], to: redIds[1] };
     const d = diagnoseMiss(i, bad, evaluateStageLocally(i, bad));
-    if (d.title !== 'TWO GIVERS') fail(`${label}: giver-to-giver miss diagnosed as "${d.title}"`);
+    if (d.title !== 'TWO DONORS' && d.title !== 'TWO GIVERS') fail(`${label}: donor-to-donor miss diagnosed as "${d.title}"`);
   }
 
   const copy = [cfg.title, cfg.prompt, ...(cfg.hints || [cfg.hint]), cfg.reaction?.explanation,
-    cfg.concept?.intro, cfg.concept?.action,
-    ...Object.values(scans).map(sc => sc.note)].filter(Boolean).join(' ').toLowerCase();
+    cfg.concept?.intro, cfg.concept?.action].filter(Boolean).join(' ').toLowerCase();
   const banned = ['electron', 'nucleophile', 'electrophile', 'carbonyl', 'carbocation',
     'alkyl', 'ester', 'epoxide', 'isopropyl'];
   for (const word of banned) {
@@ -174,7 +130,7 @@ STAGE_CONFIGS.forEach((cfg, i) => {
   }
 });
 
-if (failures === 0) ok(`all ${TOTAL_STAGES} stages solvable, scannable, consistent and jargon-free`);
+if (failures === 0) ok(`all ${TOTAL_STAGES} stages solvable, consistent and jargon-free`);
 
 console.log(`\n${failures === 0 ? 'QUEST 1 OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

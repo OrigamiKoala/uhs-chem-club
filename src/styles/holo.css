@@ -175,7 +175,8 @@
    =================================================================== */
 .stage-card-wrap {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  align-items: flex-end;
   width: 100%;
   min-height: 0;
   pointer-events: none;
@@ -185,7 +186,7 @@
   --c: var(--chamfer);
   pointer-events: auto;
   width: 100%;
-  max-width: 660px;
+  max-width: 440px;
   max-height: 62vh;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -460,6 +461,24 @@
   margin-top: 8px;
 }
 
+.banner-dismiss-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.banner-dismiss-btn:hover {
+  opacity: 1;
+  color: var(--text-bright);
+}
+
 @keyframes bannerPop {
   0% { opacity: 0; transform: translateY(-3px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -605,154 +624,7 @@
   margin-top: 7px;
 }
 
-/* ===================================================================
-   SITE SCANNER — a recessed cathode instrument.
-   The player is operating a sensor, not reading a tooltip.
-   =================================================================== */
-.scan-readout {
-  background: var(--plate-100);
-  border: 1px solid var(--border-durasteel);
-  border-left: 2px solid var(--plate-500);
-  padding: 9px 12px;
-  margin-bottom: 0.85rem;
-  position: relative;
-  overflow: hidden;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.7);
-}
 
-/* Faint phosphor raster across the readout face */
-.scan-readout::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.16) 50%);
-  background-size: 100% 3px;
-  pointer-events: none;
-}
-
-.scan-readout > * { position: relative; }
-
-.scan-readout.giver { border-left-color: var(--charge-red-ink); }
-.scan-readout.taker { border-left-color: var(--charge-blue-ink); }
-.scan-readout.idle { opacity: 0.7; }
-
-/* One sweep of the beam each time a site is read. */
-.scan-readout.scan-sweep::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(217, 148, 35, 0.12), transparent);
-  transform: translateX(-100%);
-  animation: scan-sweep 0.5s ease-out 1;
-  pointer-events: none;
-}
-
-@keyframes scan-sweep {
-  to { transform: translateX(100%); }
-}
-
-.scan-head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 7px;
-  flex-wrap: wrap;
-}
-
-.scan-site {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.22em;
-  color: var(--accent-amber);
-}
-
-.scan-polarity {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
-  padding: 1px 7px;
-  border: 1px solid;
-}
-
-.scan-polarity.giver { color: var(--charge-red-ink); border-color: rgba(224, 90, 85, 0.45); }
-.scan-polarity.taker { color: var(--charge-blue-ink); border-color: rgba(90, 169, 207, 0.45); }
-
-.scan-count {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.14em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.scan-meter {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 3px;
-}
-
-.scan-meter-label {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.16em;
-  color: var(--text-muted);
-  width: 76px;
-  flex-shrink: 0;
-}
-
-.scan-meter-bar {
-  display: flex;
-  gap: 2px;
-  flex: 1;
-  min-width: 70px;
-}
-
-.scan-seg {
-  flex: 1;
-  height: 8px;
-  background: rgba(0, 0, 0, 0.55);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-}
-
-.scan-seg.on {
-  background: var(--accent-amber);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
-}
-
-.scan-meter-val {
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  color: var(--accent-amber);
-  width: 38px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.scan-note {
-  font-size: 0.84rem;
-  line-height: 1.5;
-  color: var(--text-primary);
-  margin-top: 7px;
-}
-
-/* Tier 1 scanner: the same instrument, driven by keys. */
-.fallback-scan-row {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.7rem;
-}
-
-.fallback-scan-label {
-  font-family: var(--font-mono);
-  font-size: 0.64rem;
-  letter-spacing: 0.16em;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
 
 /* ===================================================================
    HINT LADDER — rungs stack so the player sees what they have spent
@@ -805,15 +677,14 @@
   .quest-hud-top { gap: 0.5rem; }
   .colormap-legend { display: none; }
   .stage-pill-track { max-width: 100%; padding: 5px 8px; }
-  .stage-prompt-card { padding: 0.9rem 1rem; max-height: 68vh; --c: 8px; }
+  .stage-card-wrap { justify-content: center; }
+  .stage-prompt-card { padding: 0.9rem 1rem; max-width: 100%; max-height: 68vh; --c: 8px; }
   .stage-title { font-size: 0.9rem; }
   .stage-instruction { font-size: 0.88rem; margin-bottom: 0.7rem; }
   /* Touch players need the rotate gesture most, so the tip stays — it wraps. */
   .stage-tip { font-size: 0.62rem; flex-basis: 100%; order: 3; }
   .stage-toolbar-right { margin-left: auto; }
   .clean-streak { display: none; }
-  .scan-meter-label { width: 62px; font-size: 0.58rem; }
-  .scan-note { font-size: 0.8rem; }
   .hint-rung { flex-direction: column; gap: 2px; }
   .hint-rung-label { min-width: 0; }
 }

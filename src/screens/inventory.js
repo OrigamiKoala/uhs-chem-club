@@ -19,11 +19,11 @@ export function renderInventory(container) {
   // saying so is better than a Deploy button that promises an effect and delivers nothing.
   const ITEM_CATALOG = {
     resonance_key: { name: 'Spice Resonance Matrix', rarity: 'epic', usable: true, effect: 'Deploy for +50 XP.' },
-    hint_chip: { name: 'Scanner Logic Core', rarity: 'common', usable: false, effect: 'Trophy.' },
+    hint_chip: { name: 'Logic Core', rarity: 'common', usable: false, effect: 'Trophy.' },
     spare_coolant: { name: 'Cryo-Coolant Canister', rarity: 'common', usable: false, effect: 'Trophy.' },
     overclock_module: { name: 'Smelter Overclock Unit', rarity: 'rare', usable: false, effect: 'Trophy.' },
     deflector_plate: { name: 'Ablative Durasteel Shield', rarity: 'rare', usable: false, effect: 'Trophy.' },
-    scanner_upgrade: { name: 'Spectrographic Sensor Array', rarity: 'rare', usable: false, effect: 'Trophy.' },
+    scanner_upgrade: { name: 'Sensor Array', rarity: 'rare', usable: false, effect: 'Trophy.' },
     star_chart: { name: 'Smuggler Star Route Map', rarity: 'epic', usable: false, effect: 'Trophy.' }
   };
 
