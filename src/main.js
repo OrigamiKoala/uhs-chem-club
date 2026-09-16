@@ -116,10 +116,16 @@ function setupHud() {
       userBtn?.classList.remove('hidden');
       if (userName) userName.textContent = (s.player.display_name || 'EXPLORER').toUpperCase();
 
-      if (xpVal) xpVal.textContent = String(s.xp || 0);
-      if (lvlBadge) lvlBadge.textContent = `LVL ${s.level || 1}`;
+      const totalXp = s.xp || 0;
+      const currentLevel = Math.max(1, Math.floor(Math.sqrt(totalXp / 45)) + 1);
+      const currentLevelBaseXp = 45 * Math.pow(currentLevel - 1, 2);
+      const nextLevelXp = 45 * Math.pow(currentLevel, 2);
+      const xpIntoLevel = totalXp - currentLevelBaseXp;
+      const xpNeededForLevel = nextLevelXp - currentLevelBaseXp;
+      const pct = Math.min(100, Math.max(0, Math.round((xpIntoLevel / xpNeededForLevel) * 100)));
 
-      const pct = Math.min(100, Math.round(((s.xp % 45) / 45) * 100));
+      if (xpVal) xpVal.textContent = String(totalXp);
+      if (lvlBadge) lvlBadge.textContent = `LVL ${currentLevel}`;
       if (xpFill) xpFill.style.width = `${pct}%`;
 
       if (teamBadge && s.team) {

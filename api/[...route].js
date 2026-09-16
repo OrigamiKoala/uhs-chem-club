@@ -57,25 +57,25 @@ function setCached(key, data, ttlMs) {
 
 export const CANONICAL_STAGES_20 = [
   { stage_index: 0, kind: 'arrow', xp: 15, max_attempts: 9999, scene_config: { title: 'Stage 1 — Target Lock', prompt: 'Drag a line from the crowded red zone to the hungry blue zone.', moleculeId: 'stage1_pair', anchors: ['red_lp1', 'blue_c1'] } },
-  { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 9999, scene_config: { title: 'Stage 2 — Electrons & Charge', prompt: 'Opposites attract! Connect the negative red cloud to the positive blue center.', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
-  { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 9999, scene_config: { title: 'Stage 3 — Comparing Densities', prompt: 'Multiple reactive spots: connect the deepest red donor to the deepest blue acceptor.', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
+  { stage_index: 1, kind: 'arrow', xp: 15, max_attempts: 9999, scene_config: { title: 'Stage 2 — Making Room', prompt: 'Connect the negative red cloud to the positive blue center to make a new bond.', moleculeId: 'stage2_pair', anchors: ['red_lp1', 'blue_c1'] } },
+  { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 9999, scene_config: { title: 'Stage 3 — Comparing Strengths', prompt: 'Multiple reactive spots: connect the brightest red donor to the deepest blue receiver.', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
   { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 9999, scene_config: { title: 'Stage 4 — Competing Sites', prompt: 'Ignore weak distractions: connect the brightest red donor into the deepest blue core.', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
-  { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 5 — Steric Hindrance', prompt: 'Trace the path into the open target. Avoid the crowded obstacle!', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
-  { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 6 — Bulky Group Shielding', prompt: 'Bulky groups block one route. Rotate view and connect to the open flank!', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
-  { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 9999, scene_config: { title: 'Stage 7 — Final Synthesis Route', prompt: 'Find the strongest red donor and trace an open path into the unhindered blue target!', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } },
-  { stage_index: 7, kind: 'arrow', xp: 30, max_attempts: 9999, scene_config: { title: 'Stage 8 — Three\'s Company', prompt: 'Three molecules in the chamber! Connect the active red donor directly to the hungry blue acceptor, ignoring the quiet spectator.', moleculeId: 'stage8_trio', anchors: ['red_base', 'blue_acid', 'spectator_mid'] } },
+  { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 5 — Crowded Spaces', prompt: 'Trace the path into the open target. Avoid the crowded obstacle!', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+  { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 6 — Bulky Group Shielding', prompt: 'Bulky groups block one route. Rotate view and connect to the open side!', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+  { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 9999, scene_config: { title: 'Stage 7 — Finding the Open Route', prompt: 'Find the brightest red spot and connect to the unblocked blue target!', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } },
+  { stage_index: 7, kind: 'arrow', xp: 30, max_attempts: 9999, scene_config: { title: 'Stage 8 — Three\'s Company', prompt: 'Three molecules in the chamber! Connect the active red donor directly to the hungry blue receiver, ignoring the quiet bystander.', moleculeId: 'stage8_trio', anchors: ['red_base', 'blue_acid', 'spectator_mid'] } },
   { stage_index: 8, kind: 'arrow', xp: 30, max_attempts: 9999, scene_config: { title: 'Stage 9 — The Tug-of-War', prompt: 'Two givers want the same blue prize! Connect the strongest red donor to the hungry blue receiver.', moleculeId: 'stage9_trio', anchors: ['red_strong', 'red_weak', 'blue_target'] } },
-  { stage_index: 9, kind: 'arrow', xp: 35, max_attempts: 9999, scene_config: { title: 'Stage 10 — The Team Relay', prompt: 'A molecule needs help! Connect the helper red donor into the blue target to activate it.', moleculeId: 'stage10_trio', anchors: ['red_base', 'blue_proton', 'blue_substrate'] } },
-  { stage_index: 10, kind: 'multi_arrow', xp: 35, max_attempts: 9999, scene_config: { title: 'Stage 11 — The Knockout Punch', prompt: 'Multi-step reaction! Draw 2 arrows in order: 1st: Red donor ➔ Blue center. 2nd: Connected bond ➔ Departing group.', moleculeId: 'stage11_pair', multiArrow: true, maxArrows: 2, anchors: ['red_nu', 'blue_c', 'bond_c_cl', 'cl_leave'], steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_cl', expectedTo: 'cl_leave' }] } },
-  { stage_index: 11, kind: 'multi_arrow', xp: 35, max_attempts: 9999, scene_config: { title: 'Stage 12 — The Rooftop Bounce', prompt: 'Two-step sequence! Arrow 1: Red donor ➔ Blue center. Arrow 2: Double bond ➔ Outer atom.', moleculeId: 'stage12_pair', multiArrow: true, maxArrows: 2, anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o'], steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }] } },
-  { stage_index: 12, kind: 'multi_arrow', xp: 35, max_attempts: 9999, scene_config: { title: 'Stage 13 — The Hot Potato', prompt: 'Two-step relay! Arrow 1: Red donor ➔ Blue target. Arrow 2: Old bond ➔ Adjacent atom.', moleculeId: 'stage13_pair', multiArrow: true, maxArrows: 2, anchors: ['red_base', 'blue_h', 'bond_o_h', 'red_o_acid'], steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h' }, { order: 2, expectedFrom: 'bond_o_h', expectedTo: 'red_o_acid' }] } },
-  { stage_index: 13, kind: 'multi_arrow', xp: 40, max_attempts: 9999, scene_config: { title: 'Stage 14 — The Trampoline Kick-Back', prompt: '3-Step sequence! 1: Red donor ➔ Blue center. 2: Double bond ➔ Outer atom. 3: Outer atom ➔ Departing group.', moleculeId: 'stage14_pair', multiArrow: true, maxArrows: 3, anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o', 'cl_leave'], steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'cl_leave' }] } },
-  { stage_index: 14, kind: 'multi_arrow', xp: 40, max_attempts: 9999, scene_config: { title: 'Stage 15 — The Key to the Lock', prompt: 'Unlock then enter! Arrow 1: Red donor ➔ Blue target (unlock). Arrow 2: Second donor ➔ Activated center (enter).', moleculeId: 'stage15_trio', multiArrow: true, maxArrows: 2, anchors: ['red_o_carbonyl', 'blue_proton', 'red_water', 'blue_activated_c'], steps: [{ order: 1, expectedFrom: 'red_o_carbonyl', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_activated_c' }] } },
-  { stage_index: 15, kind: 'multi_arrow', xp: 40, max_attempts: 9999, scene_config: { title: 'Stage 16 — The Soap Maker', prompt: '3-Step sequence! 1: Red donor ➔ Blue center. 2: Double bond ➔ Outer atom. 3: Outer atom ➔ Departing group.', moleculeId: 'stage16_trio', multiArrow: true, maxArrows: 3, anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o', 'blue_ethoxide'], steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'blue_ethoxide' }] } },
-  { stage_index: 16, kind: 'multi_arrow', xp: 40, max_attempts: 9999, scene_config: { title: 'Stage 17 — The Snapping Spring', prompt: 'Release trapped strain! Arrow 1: Red donor ➔ Ring center. Arrow 2: Ring bond ➔ Ring atom.', moleculeId: 'stage17_pair', multiArrow: true, maxArrows: 2, anchors: ['red_nu', 'blue_c_ring', 'bond_ring', 'red_o_ring'], steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c_ring' }, { order: 2, expectedFrom: 'bond_ring', expectedTo: 'red_o_ring' }] } },
-  { stage_index: 17, kind: 'multi_arrow', xp: 45, max_attempts: 9999, scene_config: { title: 'Stage 18 — The Domino Chain', prompt: '3-Step cascade! 1: Red donor ➔ Target atom. 2: Adjacent bond ➔ Center. 3: Reactive center ➔ Substrate.', moleculeId: 'stage18_pair', multiArrow: true, maxArrows: 3, anchors: ['red_base', 'blue_h_alpha', 'bond_c_h', 'blue_c_carbonyl', 'c_alpha', 'blue_target'], steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h_alpha' }, { order: 2, expectedFrom: 'bond_c_h', expectedTo: 'blue_c_carbonyl' }, { order: 3, expectedFrom: 'c_alpha', expectedTo: 'blue_target' }] } },
-  { stage_index: 18, kind: 'multi_arrow', xp: 45, max_attempts: 9999, scene_config: { title: 'Stage 19 — Musical Chairs', prompt: 'Leave first, enter second! Arrow 1: Bond ➔ Departing group (leave). Arrow 2: Red donor ➔ Empty blue center (enter).', moleculeId: 'stage19_pair', multiArrow: true, maxArrows: 2, anchors: ['bond_c_cl', 'red_cl', 'red_water', 'blue_carbocation'], steps: [{ order: 1, expectedFrom: 'bond_c_cl', expectedTo: 'red_cl' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_carbocation' }] } },
-  { stage_index: 19, kind: 'multi_arrow', xp: 50, max_attempts: 9999, scene_config: { title: 'Stage 20 — The Master Conductor', prompt: 'Grand Finale Synthesis! 1: Catalyst donor ➔ Target atom. 2: Core donor ➔ Central acceptor. 3: Bond ➔ Departing group.', moleculeId: 'stage20_multi', multiArrow: true, maxArrows: 3, anchors: ['red_cat', 'blue_proton', 'red_core', 'blue_c_scaffold', 'bond_leave', 'red_depart'], steps: [{ order: 1, expectedFrom: 'red_cat', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_core', expectedTo: 'blue_c_scaffold' }, { order: 3, expectedFrom: 'bond_leave', expectedTo: 'red_depart' }] } }
+  { stage_index: 9, kind: 'arrow', xp: 35, max_attempts: 9999, scene_config: { title: 'Stage 10 — The Team Relay', prompt: 'Teamwork! Connect the helper red spot into the blue target to activate it.', moleculeId: 'stage10_trio', anchors: ['red_base', 'blue_proton', 'blue_substrate'] } },
+  { stage_index: 10, kind: 'multi_arrow', xp: 35, max_attempts: 9999, scene_config: { title: 'Stage 11 — The Knockout Punch', prompt: 'Multi-step combo! Draw 2 arrows in order: 1st: Red spot ➔ Blue center. 2nd: Connected bond ➔ Departing piece.', moleculeId: 'stage11_pair', multiArrow: true, maxArrows: 2, anchors: ['red_nu', 'blue_c', 'bond_c_cl', 'cl_leave'], steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_cl', expectedTo: 'cl_leave' }] } },
+  { stage_index: 11, kind: 'multi_arrow', xp: 35, max_attempts: 9999, scene_config: { title: 'Stage 12 — The Rooftop Bounce', prompt: 'Two-step bounce! Arrow 1: Red spot ➔ Blue center. Arrow 2: Double bond ➔ Top spot.', moleculeId: 'stage12_pair', multiArrow: true, maxArrows: 2, anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o'], steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }] } },
+  { stage_index: 12, kind: 'multi_arrow', xp: 35, max_attempts: 9999, scene_config: { title: 'Stage 13 — The Hot Potato', prompt: 'Pass the hot potato! Arrow 1: Red spot ➔ Blue target. Arrow 2: Old bond ➔ Adjacent spot.', moleculeId: 'stage13_pair', multiArrow: true, maxArrows: 2, anchors: ['red_base', 'blue_h', 'bond_o_h', 'red_o_acid'], steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h' }, { order: 2, expectedFrom: 'bond_o_h', expectedTo: 'red_o_acid' }] } },
+  { stage_index: 13, kind: 'multi_arrow', xp: 40, max_attempts: 9999, scene_config: { title: 'Stage 14 — The Trampoline Kick-Back', prompt: '3-Step combo! 1: Red spot ➔ Blue center. 2: Double bond ➔ Top spot. 3: Top spot ➔ Departing piece.', moleculeId: 'stage14_pair', multiArrow: true, maxArrows: 3, anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o', 'cl_leave'], steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'cl_leave' }] } },
+  { stage_index: 14, kind: 'multi_arrow', xp: 40, max_attempts: 9999, scene_config: { title: 'Stage 15 — The Key to the Lock', prompt: 'Unlock then enter! Arrow 1: Red spot ➔ Blue target (unlock). Arrow 2: Second red spot ➔ Unlocked center (enter).', moleculeId: 'stage15_trio', multiArrow: true, maxArrows: 2, anchors: ['red_o_carbonyl', 'blue_proton', 'red_water', 'blue_activated_c'], steps: [{ order: 1, expectedFrom: 'red_o_carbonyl', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_activated_c' }] } },
+  { stage_index: 15, kind: 'multi_arrow', xp: 40, max_attempts: 9999, scene_config: { title: 'Stage 16 — The Clean Split', prompt: '3-Step snap! 1: Red spot ➔ Blue center. 2: Double bond ➔ Top spot. 3: Top spot ➔ Departing piece.', moleculeId: 'stage16_trio', multiArrow: true, maxArrows: 3, anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o', 'blue_ethoxide'], steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'blue_ethoxide' }] } },
+  { stage_index: 16, kind: 'multi_arrow', xp: 40, max_attempts: 9999, scene_config: { title: 'Stage 17 — The Snapping Spring', prompt: 'Release the spring! Arrow 1: Red spot ➔ Ring corner. Arrow 2: Ring bond ➔ Ring top.', moleculeId: 'stage17_pair', multiArrow: true, maxArrows: 2, anchors: ['red_nu', 'blue_c_ring', 'bond_ring', 'red_o_ring'], steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c_ring' }, { order: 2, expectedFrom: 'bond_ring', expectedTo: 'red_o_ring' }] } },
+  { stage_index: 17, kind: 'multi_arrow', xp: 45, max_attempts: 9999, scene_config: { title: 'Stage 18 — The Domino Chain', prompt: '3-Step domino chain! 1: Red spot ➔ Outer target. 2: Connecting bond ➔ Center. 3: Center ➔ Blue target.', moleculeId: 'stage18_pair', multiArrow: true, maxArrows: 3, anchors: ['red_base', 'blue_h_alpha', 'bond_c_h', 'blue_c_carbonyl', 'c_alpha', 'blue_target'], steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h_alpha' }, { order: 2, expectedFrom: 'bond_c_h', expectedTo: 'blue_c_carbonyl' }, { order: 3, expectedFrom: 'c_alpha', expectedTo: 'blue_target' }] } },
+  { stage_index: 18, kind: 'multi_arrow', xp: 45, max_attempts: 9999, scene_config: { title: 'Stage 19 — Musical Chairs', prompt: 'Musical chairs! Arrow 1: Bond ➔ Departing piece (leave chair). Arrow 2: Red spot ➔ Empty blue chair (sit down).', moleculeId: 'stage19_pair', multiArrow: true, maxArrows: 2, anchors: ['bond_c_cl', 'red_cl', 'red_water', 'blue_carbocation'], steps: [{ order: 1, expectedFrom: 'bond_c_cl', expectedTo: 'red_cl' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_carbocation' }] } },
+  { stage_index: 19, kind: 'multi_arrow', xp: 50, max_attempts: 9999, scene_config: { title: 'Stage 20 — The Master Conductor', prompt: 'Grand Finale! 1: Helper ➔ Target. 2: Main red piece ➔ Center. 3: Bond ➔ Departing piece.', moleculeId: 'stage20_multi', multiArrow: true, maxArrows: 3, anchors: ['red_cat', 'blue_proton', 'red_core', 'blue_c_scaffold', 'bond_leave', 'red_depart'], steps: [{ order: 1, expectedFrom: 'red_cat', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_core', expectedTo: 'blue_c_scaffold' }, { order: 3, expectedFrom: 'bond_leave', expectedTo: 'red_depart' }] } }
 ];
 
 // Call Google Apps Script backend
@@ -155,6 +155,7 @@ const localStore = {
   submissions: [],
   inventory: [],
   nameHistory: [],
+  progress: [],
   teams: [
     { team_id: 'earth', name: 'Earth', corp_name: 'Earth', ship_name: 'Earth', color_hex: '#1b5e20', accent_hex: '#a3824c', cap: 12, lore: '', emblem: 'geo' },
     { team_id: 'air', name: 'Air', corp_name: 'Air', ship_name: 'Air', color_hex: '#006064', accent_hex: '#8a9ba8', cap: 12, lore: '', emblem: 'aero' },
@@ -203,15 +204,18 @@ function localDevHandler(route, body) {
     const token = Buffer.from(JSON.stringify({ pid: p.player_id, exp: Date.now() + 864000000 })).toString('base64') + '.sig';
     const teamId = normalizeTeam(p.team_id);
     const team = localStore.teams.find(t => t.team_id === teamId) || null;
+    const pXp = typeof p.xp === 'number' ? p.xp : 0;
+    const pLevel = Math.max(1, Math.floor(Math.sqrt(pXp / 45)) + 1);
     return {
       ok: true,
       data: {
         token,
         player: p,
         team,
-        xp: 120,
-        level: 2,
-        inventory: []
+        xp: pXp,
+        level: pLevel,
+        inventory: [],
+        progress: (localStore.progress || []).filter(x => x.player_id === p.player_id)
       }
     };
   }
@@ -248,9 +252,10 @@ function localDevHandler(route, body) {
         player: player ? {
           player: player,
           team: localStore.teams.find(t => t.team_id === player.team_id),
-          xp: 120,
-          level: 2,
-          isAdmin: true
+          xp: typeof player.xp === 'number' ? player.xp : 0,
+          level: Math.max(1, Math.floor(Math.sqrt((player.xp || 0) / 45)) + 1),
+          isAdmin: true,
+          progress: (localStore.progress || []).filter(x => x.player_id === player.player_id)
         } : null,
         events: {
           earth: { event_id: 'slipstream', name: 'Slipstream Current', polarity: 'good' },
@@ -311,14 +316,17 @@ function localDevHandler(route, body) {
       return { ok: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated.' } };
     }
     const teamId = normalizeTeam(p.team_id);
+    const pXp = typeof p.xp === 'number' ? p.xp : 0;
+    const pLevel = Math.max(1, Math.floor(Math.sqrt(pXp / 45)) + 1);
     return {
       ok: true,
       data: {
         player: p,
         team: localStore.teams.find(t => t.team_id === teamId) || null,
-        xp: 120,
-        level: 2,
-        isAdmin: p.email_lc === 'uhschemclub@gmail.com' || p.display_name_lc === 'admin'
+        xp: pXp,
+        level: pLevel,
+        isAdmin: p.email_lc === 'uhschemclub@gmail.com' || p.display_name_lc === 'admin',
+        progress: (localStore.progress || []).filter(x => x.player_id === p.player_id)
       }
     };
   }
@@ -335,13 +343,15 @@ function localDevHandler(route, body) {
       p.display_name = body.displayName;
       p.display_name_lc = body.displayName.toLowerCase();
     }
+    const pXp = typeof p?.xp === 'number' ? p.xp : 0;
+    const pLevel = Math.max(1, Math.floor(Math.sqrt(pXp / 45)) + 1);
     return {
       ok: true,
       data: {
         player: p,
         team: p ? localStore.teams.find(t => t.team_id === p.team_id) : null,
-        xp: 120,
-        level: 2
+        xp: pXp,
+        level: pLevel
       }
     };
   }
@@ -357,13 +367,15 @@ function localDevHandler(route, body) {
     if (p && body.avatar_json) {
       p.avatar_json = typeof body.avatar_json === 'object' ? JSON.stringify(body.avatar_json) : body.avatar_json;
     }
+    const pXp = typeof p?.xp === 'number' ? p.xp : 0;
+    const pLevel = Math.max(1, Math.floor(Math.sqrt(pXp / 45)) + 1);
     return {
       ok: true,
       data: {
         player: p,
         team: p ? localStore.teams.find(t => t.team_id === p.team_id) : null,
-        xp: 120,
-        level: 2
+        xp: pXp,
+        level: pLevel
       }
     };
   }
@@ -433,6 +445,25 @@ function localDevHandler(route, body) {
     }
 
     const stageXp = CANONICAL_STAGES_20[stageIdx]?.xp || 25;
+
+    if (correct && body.token) {
+      try {
+        const pid = JSON.parse(Buffer.from(body.token.split('.')[0], 'base64').toString('utf8')).pid;
+        const playerObj = localStore.players.find(x => x.player_id === pid);
+        if (playerObj) {
+          playerObj.xp = (playerObj.xp || 0) + stageXp;
+          let prog = (localStore.progress || []).find(x => x.player_id === pid && x.quest_id === 'q1');
+          if (!prog) {
+            prog = { player_id: pid, quest_id: 'q1', stage_reached: stageIdx + 1, xp_earned: stageXp };
+            localStore.progress.push(prog);
+          } else {
+            prog.stage_reached = Math.max(prog.stage_reached || 0, stageIdx + 1);
+            prog.xp_earned = (prog.xp_earned || 0) + stageXp;
+          }
+        }
+      } catch (e) {}
+    }
+
     return {
       ok: true,
       data: {

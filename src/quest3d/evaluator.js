@@ -18,19 +18,19 @@ export const STAGE_CONFIGS = [
     tolerance: 1.35,
     concept: {
       badge: 'BASICS',
-      title: 'CHARGES & BONDS',
-      intro: 'Glowing clouds show electric charge. Opposite charges attract.',
+      title: 'OPPOSITES ATTRACT',
+      intro: 'Glowing clouds show electric charge. Opposite charges pull together.',
       pills: [
         {
           type: 'red-pill',
-          html: '<strong style="color: #ff5252;">🔴 Red:</strong> Negative donor region.'
+          html: '<strong style="color: #ff5252;">🔴 Red:</strong> Negative giver.'
         },
         {
           type: 'blue-pill',
-          html: '<strong style="color: #40c4ff;">🔵 Blue:</strong> Positive acceptor region.'
+          html: '<strong style="color: #40c4ff;">🔵 Blue:</strong> Positive receiver.'
         }
       ],
-      action: 'Drag from the <strong>red zone</strong> into the <strong>blue zone</strong> to bond them!'
+      action: 'Drag from <strong>red</strong> to <strong>blue</strong> to snap them together!'
     },
     reaction: {
       donorAtom: 0,
@@ -40,13 +40,13 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.35,
       leavingBond: null,
       leavingAtom: null,
-      explanation: 'Bond formed! The acceptor had 3 bonds; the new bond brings it to 4.'
+      explanation: 'Connected! The red and blue regions snapped together into a new bond.'
     }
   },
   {
     stageIndex: 1,
-    title: 'Stage 2 — Electrons & Charge',
-    prompt: 'Opposites attract! Connect the negative red cloud to the positive blue center.',
+    title: 'Stage 2 — Making Room',
+    prompt: 'Connect the negative red cloud to the positive blue center to make a new bond.',
     moleculeId: 'stage2_pair',
     xp: 15,
     expectedFrom: 'red_lp1',
@@ -55,16 +55,16 @@ export const STAGE_CONFIGS = [
     targetPos: [1.1, 0, 0],
     tolerance: 1.35,
     concept: {
-      badge: 'BOND LIMIT',
-      title: 'THE 4-BOND LIMIT',
-      intro: 'An atom can hold at most 4 bonds at once.',
+      badge: 'MAKING ROOM',
+      title: 'ONE IN, ONE OUT',
+      intro: 'There is only so much room at the center.',
       pills: [
         {
           type: 'warning-pill',
-          html: '⚡ <strong>Leaving Group:</strong> When a new bond forms, an existing group must break away so the center stays at 4 bonds.'
+          html: '⚡ <strong>Departing Piece:</strong> When a new piece snaps in, an old piece pops off to make room.'
         }
       ],
-      action: 'Connect the red cloud to the blue center to trigger substitution.'
+      action: 'Connect the red cloud to the blue center to pop off the old piece.'
     },
     reaction: {
       donorAtom: 0,
@@ -75,13 +75,13 @@ export const STAGE_CONFIGS = [
       leavingBond: { from: 4, to: 5 },
       leavingAtom: 5,
       departDirection: [1, 0, 0],
-      explanation: 'Bond formed! The central atom cannot exceed 4 bonds, so the leaving group departed.'
+      explanation: 'Connected! The new piece attached and popped off the old piece to make room.'
     }
   },
   {
     stageIndex: 2,
-    title: 'Stage 3 — Comparing Densities',
-    prompt: 'Multiple reactive spots: connect the deepest red donor to the deepest blue acceptor.',
+    title: 'Stage 3 — Comparing Strengths',
+    prompt: 'Multiple reactive spots: connect the brightest red donor to the deepest blue receiver.',
     moleculeId: 'stage3_pair',
     xp: 20,
     expectedFrom: 'red_extreme',
@@ -90,20 +90,20 @@ export const STAGE_CONFIGS = [
     targetPos: [1.3, -0.3, 0],
     tolerance: 1.35,
     concept: {
-      badge: 'CHARGE DENSITY',
-      title: 'STRONGEST SITES REACT FIRST',
-      intro: 'When multiple sites are present, reactions happen between the most intense charges.',
+      badge: 'STRENGTH',
+      title: 'STRONGEST SPOTS REACT FIRST',
+      intro: 'When multiple spots are present, the brightest charges pull hardest.',
       pills: [
         {
           type: 'red-pill',
-          html: '<strong style="color: #ff5252;">🔴 Brightest Red:</strong> Strongest donor.'
+          html: '<strong style="color: #ff5252;">🔴 Brightest Red:</strong> Strongest giver.'
         },
         {
           type: 'blue-pill',
-          html: '<strong style="color: #40c4ff;">🔵 Deepest Blue:</strong> Strongest acceptor.'
+          html: '<strong style="color: #40c4ff;">🔵 Deepest Blue:</strong> Strongest receiver.'
         }
       ],
-      action: 'Connect the deepest red spot straight into the deepest blue spot.'
+      action: 'Connect the brightest red spot directly into the deepest blue spot.'
     },
     reaction: {
       donorAtom: 3,
@@ -113,7 +113,7 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.35,
       leavingBond: null,
       leavingAtom: null,
-      explanation: 'Bond formed! The double bond shifted to make room, maintaining 4 bonds.'
+      explanation: 'Connected! The strongest spots reacted first, shifting a link over to make room.'
     }
   },
   {
@@ -136,12 +136,12 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.35,
       leavingBond: null,
       leavingAtom: null,
-      explanation: 'Bond formed! The strongest donor connected into the primary acceptor.'
+      explanation: 'Connected! The strongest spots paired up, ignoring the weaker distractions.'
     }
   },
   {
     stageIndex: 4,
-    title: 'Stage 5 — Steric Hindrance',
+    title: 'Stage 5 — Crowded Spaces',
     prompt: 'Trace the path into the open target. Avoid the crowded obstacle!',
     moleculeId: 'stage5_pair',
     xp: 25,
@@ -154,15 +154,15 @@ export const STAGE_CONFIGS = [
     tolerance: 1.35,
     concept: {
       badge: 'CROWDING',
-      title: 'STERIC HINDRANCE',
-      intro: 'Surrounding atoms can physically block access to a reactive center.',
+      title: 'AVOID THE TRAFFIC JAM',
+      intro: 'Surrounding pieces can physically block the way in.',
       pills: [
         {
           type: 'warning-pill',
-          html: '⚠️ <strong>Blocked Target:</strong> Crowded positions cannot be reached directly.'
+          html: '⚠️ <strong>Blocked Path:</strong> Too crowded to squeeze through directly.'
         }
       ],
-      action: 'Rotate the 3D view to find the unblocked, accessible blue target.'
+      action: 'Rotate the 3D view to find the open, unblocked blue target.'
     },
     reaction: {
       donorAtom: 1,
@@ -173,13 +173,13 @@ export const STAGE_CONFIGS = [
       leavingBond: { from: 4, to: 5 },
       leavingAtom: 5,
       departDirection: [1, -0.5, 0],
-      explanation: 'Bond formed! The donor reached the open target and the leaving group departed.'
+      explanation: 'Connected! You steered around the crowd, and the old piece popped off.'
     }
   },
   {
     stageIndex: 5,
     title: 'Stage 6 — Bulky Group Shielding',
-    prompt: 'Bulky groups block one route. Rotate view and connect to the open flank!',
+    prompt: 'Bulky groups block one route. Rotate view and connect to the open side!',
     moleculeId: 'stage6_pair',
     xp: 25,
     expectedFrom: 'red_nu',
@@ -198,13 +198,13 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.35,
       leavingBond: null,
       leavingAtom: null,
-      explanation: 'Bond formed! The donor accessed the open face, bypassing the bulky group.'
+      explanation: 'Connected! You snuck past the bulky shield and reached the open side.'
     }
   },
   {
     stageIndex: 6,
-    title: 'Stage 7 — Final Synthesis Route',
-    prompt: 'Find the strongest red donor and trace an open path into the unhindered blue target!',
+    title: 'Stage 7 — Finding the Open Route',
+    prompt: 'Find the brightest red spot and connect to the unblocked blue target!',
     moleculeId: 'stage7_pair',
     xp: 30,
     expectedFrom: 'red_supreme',
@@ -223,13 +223,13 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.35,
       leavingBond: null,
       leavingAtom: null,
-      explanation: 'Synthesis complete! Strongest donor connected into the accessible target.'
+      explanation: 'Route complete! The strongest red spot connected right into the open blue target.'
     }
   },
   {
     stageIndex: 7,
     title: 'Stage 8 — Three\'s Company',
-    prompt: 'Three molecules in the chamber! Connect the active red donor directly to the hungry blue acceptor, ignoring the quiet spectator.',
+    prompt: 'Three molecules in the chamber! Connect the active red donor directly to the hungry blue receiver, ignoring the quiet bystander.',
     moleculeId: 'stage8_trio',
     xp: 30,
     expectedFrom: 'red_base',
@@ -246,7 +246,7 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.0,
       leavingBond: null,
       leavingAtom: null,
-      explanation: 'Reaction complete! The donor connected to the active acceptor while the spectator remained untouched.'
+      explanation: 'Connected! The active spots snapped together while the bystander just watched.'
     }
   },
   {
@@ -269,13 +269,13 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.35,
       leavingBond: null,
       leavingAtom: null,
-      explanation: 'Reaction complete! The stronger donor outpaced the weaker site to form the bond.'
+      explanation: 'Tug-of-war won! The stronger red spot won the race and claimed the blue target.'
     }
   },
   {
     stageIndex: 9,
     title: 'Stage 10 — The Team Relay',
-    prompt: 'A molecule needs help! Connect the helper red donor into the blue target to activate it.',
+    prompt: 'Teamwork! Connect the helper red spot into the blue target to activate it.',
     moleculeId: 'stage10_trio',
     xp: 35,
     expectedFrom: 'red_base',
@@ -292,13 +292,13 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.1,
       leavingBond: null,
       leavingAtom: null,
-      explanation: 'Relay complete! The helper group activated the donor into a strong reactive center.'
+      explanation: 'Relay complete! The helper powered up the target so it is ready for the next move.'
     }
   },
   {
     stageIndex: 10,
     title: 'Stage 11 — The Knockout Punch',
-    prompt: 'Multi-step reaction! Draw 2 arrows in order: 1st: Red donor ➔ Blue center. 2nd: Connected bond ➔ Departing group.',
+    prompt: 'Multi-step combo! Draw 2 arrows in order: 1st: Red spot ➔ Blue center. 2nd: Connected bond ➔ Departing piece.',
     moleculeId: 'stage11_pair',
     xp: 35,
     multiArrow: true,
@@ -308,20 +308,20 @@ export const STAGE_CONFIGS = [
       { order: 2, expectedFrom: 'bond_c_cl', expectedTo: 'cl_leave', sourcePos: [2.2, 0, 0], targetPos: [3.3, 0, 0] }
     ],
     concept: {
-      badge: 'SEQUENCE',
-      title: 'MULTI-STEP ARROWS',
-      intro: 'Some reactions require multiple arrows in chronological sequence.',
+      badge: 'STEP BY STEP',
+      title: 'ONE-TWO COMBO',
+      intro: 'Steps happen in order, like a combo move in a game.',
       pills: [
         {
           type: 'red-pill',
-          html: '<strong>① Arrow 1:</strong> Donor connects to the central atom.'
+          html: '<strong>① Arrow 1:</strong> New piece snaps into the center.'
         },
         {
           type: 'warning-pill',
-          html: '<strong>② Arrow 2:</strong> Bond breaks to release the leaving group.'
+          html: '<strong>② Arrow 2:</strong> Old piece pops off into space.'
         }
       ],
-      action: 'Draw each arrow in order. Click step numbers to reorder if needed.'
+      action: 'Draw each arrow in order. Click numbers to swap their order if needed.'
     },
     reaction: {
       donorAtom: 0,
@@ -331,13 +331,13 @@ export const STAGE_CONFIGS = [
       leavingBond: { from: 2, to: 3 },
       leavingAtom: 3,
       departDirection: [1, 0, 0],
-      explanation: 'One in, one out! New bond formed as the leaving group departed.'
+      explanation: 'One in, one out! The new piece snapped on and kicked the old piece free.'
     }
   },
   {
     stageIndex: 11,
     title: 'Stage 12 — The Rooftop Bounce',
-    prompt: 'Two-step sequence! Arrow 1: Red donor ➔ Blue center. Arrow 2: Double bond ➔ Outer atom.',
+    prompt: 'Two-step bounce! Arrow 1: Red spot ➔ Blue center. Arrow 2: Double bond ➔ Top spot.',
     moleculeId: 'stage12_pair',
     xp: 35,
     multiArrow: true,
@@ -347,20 +347,20 @@ export const STAGE_CONFIGS = [
       { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o', sourcePos: [1.5, 0.7, 0], targetPos: [1.6, 1.6, 0] }
     ],
     concept: {
-      badge: 'DOUBLE BONDS',
-      title: 'BOND SHIFTING',
-      intro: 'When a new bond forms at a double-bonded atom, one bond shifts onto the adjacent atom.',
+      badge: 'BOND SHIFT',
+      title: 'THE ROOFTOP BOUNCE',
+      intro: 'When a new piece connects, an extra link swings up to the roof to make room.',
       pills: [
         {
           type: 'red-pill',
-          html: '<strong>① Arrow 1:</strong> Donor connects to the central atom.'
+          html: '<strong>① Arrow 1:</strong> Connect to the center.'
         },
         {
           type: 'blue-pill',
-          html: '<strong>② Arrow 2:</strong> Double bond shifts onto the adjacent atom.'
+          html: '<strong>② Arrow 2:</strong> Swing the extra link up to the top spot.'
         }
       ],
-      action: 'Draw Arrow 1 to the center, then Arrow 2 from the double bond to the adjacent atom.'
+      action: 'Draw Arrow 1 to the center, then Arrow 2 swinging up to the top spot.'
     },
     reaction: {
       donorAtom: 1,
@@ -370,13 +370,13 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.35,
       leavingBond: null,
       leavingAtom: null,
-      explanation: 'Bond formed! The donor attached and the double bond shifted onto the adjacent atom.'
+      explanation: 'Rooftop bounce complete! The new piece attached and the extra link swung up to the roof.'
     }
   },
   {
     stageIndex: 12,
     title: 'Stage 13 — The Hot Potato',
-    prompt: 'Two-step relay! Arrow 1: Red donor ➔ Blue target. Arrow 2: Old bond ➔ Adjacent atom.',
+    prompt: 'Pass the hot potato! Arrow 1: Red spot ➔ Blue target. Arrow 2: Old bond ➔ Adjacent spot.',
     moleculeId: 'stage13_pair',
     xp: 35,
     multiArrow: true,
@@ -394,13 +394,13 @@ export const STAGE_CONFIGS = [
       leavingBond: { from: 3, to: 4 },
       leavingAtom: 4,
       departDirection: [1, 0, 0],
-      explanation: 'Transfer complete! The target was transferred between the two centers.'
+      explanation: 'Hot potato passed! The target piece was handed smoothly from one partner to the other.'
     }
   },
   {
     stageIndex: 13,
     title: 'Stage 14 — The Trampoline Kick-Back',
-    prompt: '3-Step sequence! 1: Red donor ➔ Blue center. 2: Double bond ➔ Outer atom. 3: Outer atom ➔ Departing group.',
+    prompt: '3-Step combo! 1: Red spot ➔ Blue center. 2: Double bond ➔ Top spot. 3: Top spot ➔ Departing piece.',
     moleculeId: 'stage14_pair',
     xp: 40,
     multiArrow: true,
@@ -419,13 +419,13 @@ export const STAGE_CONFIGS = [
       leavingBond: { from: 4, to: 6 },
       leavingAtom: 6,
       departDirection: [1, -0.3, 0],
-      explanation: 'Addition-elimination complete! Double bond opened, reformed, and displaced the leaving group.'
+      explanation: 'Trampoline kick-back complete! The top link bounced up, snapped back down, and kicked the old piece away.'
     }
   },
   {
     stageIndex: 14,
     title: 'Stage 15 — The Key to the Lock',
-    prompt: 'Unlock then enter! Arrow 1: Red donor ➔ Blue target (unlock). Arrow 2: Second donor ➔ Activated center (enter).',
+    prompt: 'Unlock then enter! Arrow 1: Red spot ➔ Blue target (unlock). Arrow 2: Second red spot ➔ Unlocked center (enter).',
     moleculeId: 'stage15_trio',
     xp: 40,
     multiArrow: true,
@@ -443,13 +443,13 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.35,
       leavingBond: null,
       leavingAtom: null,
-      explanation: 'Activation complete! Activation opened the center for the second donor to bond.'
+      explanation: 'Door unlocked! The first step unlocked the door, letting the second piece snap right in.'
     }
   },
   {
     stageIndex: 15,
-    title: 'Stage 16 — The Soap Maker',
-    prompt: '3-Step sequence! 1: Red donor ➔ Blue center. 2: Double bond ➔ Outer atom. 3: Outer atom ➔ Departing group.',
+    title: 'Stage 16 — The Clean Split',
+    prompt: '3-Step snap! 1: Red spot ➔ Blue center. 2: Double bond ➔ Top spot. 3: Top spot ➔ Departing piece.',
     moleculeId: 'stage16_trio',
     xp: 40,
     multiArrow: true,
@@ -468,13 +468,13 @@ export const STAGE_CONFIGS = [
       leavingBond: { from: 2, to: 5 },
       leavingAtom: 5,
       departDirection: [1, -0.2, 0],
-      explanation: 'Cleavage complete! Donor bonded, double bond rebounded, and the leaving group departed.'
+      explanation: 'Clean split complete! The new piece attached, the top link bounced down, and the tail broke free.'
     }
   },
   {
     stageIndex: 16,
     title: 'Stage 17 — The Snapping Spring',
-    prompt: 'Release trapped strain! Arrow 1: Red donor ➔ Ring center. Arrow 2: Ring bond ➔ Ring atom.',
+    prompt: 'Release the spring! Arrow 1: Red spot ➔ Ring corner. Arrow 2: Ring bond ➔ Ring top.',
     moleculeId: 'stage17_pair',
     xp: 40,
     multiArrow: true,
@@ -492,13 +492,13 @@ export const STAGE_CONFIGS = [
       leavingBond: { from: 2, to: 4 },
       leavingAtom: 4,
       departDirection: [0.4, 1.0, 0],
-      explanation: 'Ring opened! The strained ring broke open into a stable chain.'
+      explanation: 'Spring popped open! Connecting to the corner popped the tight ring open into a relaxed chain.'
     }
   },
   {
     stageIndex: 17,
     title: 'Stage 18 — The Domino Chain',
-    prompt: '3-Step cascade! 1: Red donor ➔ Target atom. 2: Adjacent bond ➔ Center. 3: Reactive center ➔ Substrate.',
+    prompt: '3-Step domino chain! 1: Red spot ➔ Outer target. 2: Connecting bond ➔ Center. 3: Center ➔ Blue target.',
     moleculeId: 'stage18_pair',
     xp: 45,
     multiArrow: true,
@@ -517,13 +517,13 @@ export const STAGE_CONFIGS = [
       leavingBond: { from: 6, to: 7 },
       leavingAtom: 7,
       departDirection: [1, -0.3, 0],
-      explanation: 'Cascade complete! Sequence triggered and new bond formed.'
+      explanation: 'Domino effect! Each push triggered the next until the final pieces locked together.'
     }
   },
   {
     stageIndex: 18,
     title: 'Stage 19 — Musical Chairs',
-    prompt: 'Leave first, enter second! Arrow 1: Bond ➔ Departing group (leave). Arrow 2: Red donor ➔ Empty blue center (enter).',
+    prompt: 'Musical chairs! Arrow 1: Bond ➔ Departing piece (leave chair). Arrow 2: Red spot ➔ Empty blue chair (sit down).',
     moleculeId: 'stage19_pair',
     xp: 45,
     multiArrow: true,
@@ -541,13 +541,13 @@ export const STAGE_CONFIGS = [
       leavingBond: { from: 0, to: 1 },
       leavingAtom: 1,
       departDirection: [1, 0, 0],
-      explanation: 'Stepwise substitution complete! Leaving group departed first, then donor bonded to the empty center.'
+      explanation: 'Musical chairs won! The old piece vacated the spot first, leaving an open seat for the red piece to take.'
     }
   },
   {
     stageIndex: 19,
     title: 'Stage 20 — The Master Conductor',
-    prompt: 'Grand Finale Synthesis! 1: Catalyst donor ➔ Target atom. 2: Core donor ➔ Central acceptor. 3: Bond ➔ Departing group.',
+    prompt: 'Grand Finale! 1: Helper ➔ Target. 2: Main red piece ➔ Center. 3: Bond ➔ Departing piece.',
     moleculeId: 'stage20_multi',
     xp: 50,
     multiArrow: true,
@@ -566,7 +566,7 @@ export const STAGE_CONFIGS = [
       leavingBond: { from: 4, to: 7 },
       leavingAtom: 7,
       departDirection: [1, -0.3, 0],
-      explanation: 'GRAND SYNTHESIS MASTERED! Catalyst activated, core scaffold assembled, and leaving group cleared. All 20 stages conquered!'
+      explanation: 'MISSION ACCOMPLISHED! The helper kicked off the reaction, the core pieces locked together, and the old part cleared out. All 20 stages conquered!'
     }
   }
 ];

@@ -48,6 +48,19 @@ function renderConceptCard(concept) {
 export function renderQuest(container) {
   let questData = session.activeQuest || null;
   let currentStageIdx = 0;
+
+  try {
+    const savedStage = parseInt(localStorage.getItem('avalon_q1_stage_reached'), 10);
+    if (!isNaN(savedStage) && savedStage >= 0 && savedStage < STAGE_CONFIGS.length) {
+      currentStageIdx = savedStage;
+    } else if (session.progress && session.progress.length > 0) {
+      const prog = session.progress.find(p => p.quest_id === 'q1');
+      if (prog && typeof prog.stage_reached === 'number') {
+        currentStageIdx = Math.min(prog.stage_reached, STAGE_CONFIGS.length - 1);
+      }
+    }
+  } catch (e) {}
+
   let currentPayload = null;
   let isGrading = false;
   let isAdvancing = false;
@@ -121,8 +134,8 @@ export function renderQuest(container) {
           <!-- Density Legend -->
           <div class="colormap-legend" style="min-width: 170px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.72rem; font-family: var(--font-mono); font-weight: 800;">
-              <span style="color: #ff1744;">${currentStageIdx >= 1 ? 'MORE ELECTRONS (RED)' : 'MOST DENSE (DONOR)'}</span>
-              <span style="color: #00b0ff;">${currentStageIdx >= 1 ? 'FEWER ELECTRONS (BLUE)' : 'LEAST DENSE (ACCEPTOR)'}</span>
+              <span style="color: #ff1744;">GIVER (RED)</span>
+              <span style="color: #00b0ff;">RECEIVER (BLUE)</span>
             </div>
             <div style="height: 8px; border-radius: 4px; background: linear-gradient(90deg, #ff1744 0%, #fbbf24 25%, #10b981 50%, #00b0ff 100%); box-shadow: 0 0 10px rgba(0, 176, 255, 0.2);"></div>
           </div>
@@ -386,12 +399,9 @@ export function renderQuest(container) {
           gradeBtn.disabled = true;
           gradeBtn.innerHTML = '<span>Reacting…</span><span>⚡</span>';
 
-          if (session.player) {
-            session.player.xp = (session.player.xp || 0) + res.xpAwarded;
-            session.xp = (session.xp || 0) + res.xpAwarded;
-            session.saveSession();
-            session.notify();
-          }
+          session.addXp(res.xpAwarded);
+          const targetStageIdx = currentStageIdx + 1;
+          session.recordProgress('q1', targetStageIdx);
 
           // Keep explanation hidden while reaction animation is playing
           if (feedback) {
@@ -401,7 +411,6 @@ export function renderQuest(container) {
           showToast(`Correct! +${res.xpAwarded} XP`, 'success');
 
           // Check if last stage completed
-          const targetStageIdx = currentStageIdx + 1;
           const isLastStage = targetStageIdx >= STAGE_CONFIGS.length;
 
           const onReactionDone = () => {
@@ -460,7 +469,7 @@ export function renderQuest(container) {
 
           if (isBlocked) {
             bannerTitle = 'PATH BLOCKED (TRAFFIC JAM)';
-            msg = 'The molecule crashed into bulky surrounding atoms! That target is sterically hindered (too crowded). Rotate your 3D view to trace the open path into the accessible blue target.';
+            msg = 'Path blocked! It is too crowded to squeeze through there. Rotate your 3D view to find the open, unblocked path into the blue target.';
           } else if (isWrongOrder) {
             bannerTitle = 'WRONG CHRONOLOGICAL ORDER';
             msg = res.message || 'You found all the correct steps, but the sequence is out of order! Click on the arrow numbers to change their sequence.';
@@ -530,6 +539,7 @@ export function renderQuest(container) {
         if (isLastStage) {
           showCompletionModal();
         } else {
+          session.recordProgress('q1', targetStageIdx);
           loadStage(targetStageIdx);
         }
         return;
@@ -618,7 +628,11 @@ export function renderQuest(container) {
       const prog = (me.progress || []).find(p => p.quest_id === 'q1');
       if (prog && prog.stage_reached && questData?.stages) {
         const reached = Math.min(Number(prog.stage_reached), questData.stages.length - 1);
-        if (!hasLoadedInitialStage) {
+        if (reached > currentStageIdx) {
+          currentStageIdx = reached;
+          session.recordProgress('q1', reached);
+          loadStage(currentStageIdx);
+        } else if (!hasLoadedInitialStage) {
           currentStageIdx = reached;
         }
       }

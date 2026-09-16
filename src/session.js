@@ -84,6 +84,18 @@ class SessionManager {
     } else {
       localStorage.removeItem(USER_KEY);
     }
+
+    // Always restore persisted XP if higher than default
+    try {
+      const savedXp = localStorage.getItem('avalon_xp');
+      if (savedXp !== null) {
+        const parsedXp = Number(savedXp);
+        if (!isNaN(parsedXp) && parsedXp > this.xp) {
+          this.xp = parsedXp;
+          this.level = Math.max(1, Math.floor(Math.sqrt(this.xp / 45)) + 1);
+        }
+      }
+    } catch (e) {}
   }
 
   get isSignedIn() {
@@ -142,10 +154,14 @@ class SessionManager {
       }
     }
     if (typeof data.xp === 'number') {
-      this.xp = data.xp;
-    }
-    if (typeof data.level === 'number') {
-      this.level = data.level;
+      this.xp = Math.max(this.xp || 0, data.xp);
+      this.level = Math.max(this.level || 1, Math.floor(Math.sqrt(this.xp / 45)) + 1);
+      if (this.player) {
+        this.player.xp = this.xp;
+        this.player.level = this.level;
+      }
+    } else if (typeof data.level === 'number') {
+      this.level = Math.max(this.level || 1, data.level);
     }
     if (typeof data.isAdmin === 'boolean') {
       this.isAdmin = data.isAdmin;
@@ -169,8 +185,37 @@ class SessionManager {
     this.notify();
   }
 
+  addXp(amount) {
+    if (!amount || typeof amount !== 'number') return;
+    this.xp = (this.xp || 0) + amount;
+    this.level = Math.max(1, Math.floor(Math.sqrt(this.xp / 45)) + 1);
+    if (this.player) {
+      this.player.xp = this.xp;
+      this.player.level = this.level;
+    }
+    this.saveSession();
+    this.notify();
+  }
+
+  recordProgress(questId, stageReached) {
+    if (!this.progress) this.progress = [];
+    let entry = this.progress.find(p => p.quest_id === questId);
+    if (!entry) {
+      entry = { quest_id: questId, stage_reached: stageReached };
+      this.progress.push(entry);
+    } else {
+      entry.stage_reached = Math.max(entry.stage_reached || 0, stageReached);
+    }
+    try {
+      localStorage.setItem(`avalon_${questId}_stage_reached`, String(entry.stage_reached));
+    } catch (e) {}
+    this.saveSession();
+  }
+
   saveSession() {
     try {
+      localStorage.setItem('avalon_xp', String(this.xp || 0));
+      localStorage.setItem('avalon_level', String(this.level || 1));
       if (this.token && (this.player || this.team)) {
         localStorage.setItem(USER_KEY, JSON.stringify({
           player: this.player,
@@ -228,6 +273,9 @@ class SessionManager {
     this.progress = [];
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem('avalon_xp');
+    localStorage.removeItem('avalon_level');
+    localStorage.removeItem('avalon_q1_stage_reached');
     this.notify();
   }
 }

@@ -77,7 +77,8 @@
 - Disabled arrow snapping: arrows render freeform in 3D following cursor without snapping to anchors on hover, start, or release (`src/quest3d/interactions/arrow.js`).
 - Removed duplicate "Next Stage" button from the correct feedback banner, keeping solely the primary button below it (`src/screens/quest.js`).
 - Stripped all references to specific atoms and molecules (Carbon, Oxygen, Chlorine, Bromine, Nitrogen, C-O, C-Cl, C=O, water, methane, alcohol, etc.) from prompts, hints, concept cards, and reaction explanations across `src/quest3d/evaluator.js`, `api/[...route].js`, and `apps-script/Quests.gs`.
-- Removed redundant explanation/concept cards from non-introductory stages in Quest 1, retaining concise, non-fluff concept guides solely for stages introducing new mechanics (Stages 1, 2, 3, 5, 11, 12).
+- Stripped bond counts, octet rules, and 4-bond limits; simplified Quest 1 concept cards, hints, and explanations for middle school level (`src/quest3d/evaluator.js`, `api/[...route].js`, `apps-script/Quests.gs`).
+- Fixed XP bar reset and stage progress: persisted XP/level/stage reach in `localStorage` (`src/session.js`), corrected HUD XP progress curve (`src/main.js`), and auto-resumed stage on quest open (`src/screens/quest.js`, `api/[...route].js`).
 
 
 
