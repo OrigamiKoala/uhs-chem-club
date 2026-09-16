@@ -89,11 +89,11 @@ export const MOLECULE_DATA = {
     ],
     bonds: [
       { from: 0, to: 1 },
-      { from: 1, to: 2 },
+      { from: 1, to: 2, order: 2 },
       { from: 1, to: 3 },
       { from: 0, to: 4 },
       { from: 0, to: 5 },
-      { from: 6, to: 7 },
+      { from: 6, to: 7, order: 2 },
       { from: 6, to: 8 },
       { from: 6, to: 9 },
       { from: 9, to: 10 }
@@ -131,7 +131,7 @@ export const MOLECULE_DATA = {
       { from: 3, to: 5 },
       { from: 6, to: 7 },
       { from: 7, to: 8 },
-      { from: 8, to: 9 },
+      { from: 8, to: 9, order: 2 },
       { from: 8, to: 10 }
     ],
     regions: [
@@ -232,11 +232,11 @@ export const MOLECULE_DATA = {
     ],
     bonds: [
       { from: 0, to: 1 },
-      { from: 2, to: 3 },
+      { from: 2, to: 3, order: 2 },
       { from: 2, to: 4 },
       { from: 2, to: 5 },
       { from: 5, to: 6 },
-      { from: 6, to: 7 },
+      { from: 6, to: 7, order: 2 },
       { from: 6, to: 8 },
       { from: 8, to: 9 },
       { from: 8, to: 10 },
@@ -421,7 +421,7 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 11: Multi-Step S_N2 (Simultaneous attack and departure)
+  // Stage 11: Two-Step Substitution Cascade (OH- + CH3Cl + Halide Scavenger)
   stage11_pair: {
     atoms: [
       // Left: OH-
@@ -432,7 +432,9 @@ export const MOLECULE_DATA = {
       { element: 'Cl', pos: [3.1, 0, 0], scale: 0.65 },
       { element: 'H', pos: [1.4, 0.9, 0.4], scale: 0.32 },
       { element: 'H', pos: [1.4, -0.9, 0.4], scale: 0.32 },
-      { element: 'H', pos: [1.3, 0, -0.9], scale: 0.32 }
+      { element: 'H', pos: [1.3, 0, -0.9], scale: 0.32 },
+      // Scavenger
+      { element: 'H', pos: [4.0, 0.8, 0], scale: 0.35 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -444,12 +446,12 @@ export const MOLECULE_DATA = {
     regions: [
       { id: 'red_nu', pos: [-1.4, 0.2, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
       { id: 'blue_c', pos: [1.2, 0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      { id: 'bond_c_cl', pos: [2.2, 0, 0], type: 'blue', intensity: 'moderate', scale: 0.65 },
-      { id: 'cl_leave', pos: [3.3, 0, 0], type: 'red', intensity: 'moderate', scale: 0.75 }
+      { id: 'red_cl', pos: [3.1, 0, 0], type: 'red', intensity: 'moderate', scale: 0.75 },
+      { id: 'blue_scavenger', pos: [4.0, 0.8, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
-  // Stage 12: Carbonyl Addition (Methoxide + Formaldehyde)
+  // Stage 12: Carbonyl Addition + Proton Capture (Methoxide + Formaldehyde + Proton Donor)
   stage12_pair: {
     atoms: [
       // Left: Methoxide (CH3O-)
@@ -461,53 +463,69 @@ export const MOLECULE_DATA = {
       { element: 'C', pos: [1.6, 0, 0], scale: 0.54 },
       { element: 'O', pos: [1.6, 1.3, 0], scale: 0.58 },
       { element: 'H', pos: [1.0, -0.7, 0], scale: 0.32 },
-      { element: 'H', pos: [2.2, -0.7, 0], scale: 0.32 }
+      { element: 'H', pos: [2.2, -0.7, 0], scale: 0.32 },
+      // Acid donor
+      { element: 'H', pos: [2.1, 2.0, 0], scale: 0.35 },
+      { element: 'O', pos: [2.9, 2.4, 0], scale: 0.56 },
+      { element: 'H', pos: [3.5, 2.3, 0], scale: 0.3 }
     ],
     bonds: [
       { from: 0, to: 1 },
       { from: 0, to: 2 },
       { from: 0, to: 3 },
-      { from: 4, to: 5 },
+      { from: 4, to: 5, order: 2 },
       { from: 4, to: 6 },
-      { from: 4, to: 7 }
+      { from: 4, to: 7 },
+      { from: 8, to: 9 },
+      { from: 9, to: 10 }
     ],
     regions: [
       { id: 'red_nu', pos: [-1.4, 0.2, 0], type: 'red', intensity: 'extreme', scale: 0.9 },
       { id: 'blue_c', pos: [1.2, 0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      { id: 'bond_c_o', pos: [1.5, 0.7, 0], type: 'blue', intensity: 'moderate', scale: 0.65 },
-      { id: 'red_o', pos: [1.6, 1.6, 0], type: 'red', intensity: 'extreme', scale: 0.85 }
+      { id: 'red_o', pos: [1.6, 1.5, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_h', pos: [2.1, 2.0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
-  // Stage 13: Proton Transfer Relay (H2O + H3O+)
+  // Stage 13: Proton Transfer Relay (Two consecutive acid-base steps)
   stage13_pair: {
     atoms: [
-      // Left: Water (H2O)
-      { element: 'O', pos: [-2.2, 0, 0], scale: 0.58 },
-      { element: 'H', pos: [-2.8, 0.5, 0], scale: 0.32 },
-      { element: 'H', pos: [-2.8, -0.5, 0], scale: 0.32 },
-      // Right: Acid proton and conjugate
-      { element: 'H', pos: [0.3, 0.3, 0], scale: 0.35 },
-      { element: 'O', pos: [1.6, 0, 0], scale: 0.58 },
-      { element: 'H', pos: [2.1, 0.6, 0], scale: 0.32 },
-      { element: 'H', pos: [2.1, -0.6, 0], scale: 0.32 }
+      // Left: Water 1
+      { element: 'O', pos: [-2.4, 0.4, 0], scale: 0.58 },
+      { element: 'H', pos: [-3.0, 0.8, 0], scale: 0.32 },
+      { element: 'H', pos: [-3.0, -0.1, 0], scale: 0.32 },
+      // Acid 1
+      { element: 'H', pos: [-0.8, 0.4, 0], scale: 0.35 },
+      { element: 'O', pos: [0.3, 0.2, 0], scale: 0.58 },
+      { element: 'H', pos: [0.7, 0.8, 0], scale: 0.32 },
+      // Water 2
+      { element: 'O', pos: [1.8, -0.6, 0], scale: 0.58 },
+      { element: 'H', pos: [1.3, -1.2, 0], scale: 0.32 },
+      { element: 'H', pos: [2.5, -1.0, 0], scale: 0.32 },
+      // Acid 2
+      { element: 'H', pos: [3.1, -0.4, 0], scale: 0.35 },
+      { element: 'O', pos: [3.9, -0.6, 0], scale: 0.58 },
+      { element: 'H', pos: [4.4, -0.2, 0], scale: 0.32 }
     ],
     bonds: [
       { from: 0, to: 1 },
       { from: 0, to: 2 },
       { from: 3, to: 4 },
       { from: 4, to: 5 },
-      { from: 4, to: 6 }
+      { from: 6, to: 7 },
+      { from: 6, to: 8 },
+      { from: 9, to: 10 },
+      { from: 10, to: 11 }
     ],
     regions: [
-      { id: 'red_base', pos: [-1.5, 0.2, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
-      { id: 'blue_h', pos: [0.3, 0.3, 0], type: 'blue', intensity: 'extreme', scale: 0.8 },
-      { id: 'bond_o_h', pos: [0.9, 0.2, 0], type: 'blue', intensity: 'moderate', scale: 0.65 },
-      { id: 'red_o_acid', pos: [1.7, 0, 0], type: 'red', intensity: 'extreme', scale: 0.85 }
+      { id: 'red_base1', pos: [-2.0, 0.4, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_h1', pos: [-0.8, 0.4, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
+      { id: 'red_base2', pos: [1.8, -0.6, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_h2', pos: [3.1, -0.4, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
-  // Stage 14: Acyl Substitution (Methoxide + Acetyl Chloride)
+  // Stage 14: Acyl Substitution + Halide Capture (Methoxide + Acetyl Chloride + Scavenger)
   stage14_pair: {
     atoms: [
       // Left: Methoxide (CH3O-)
@@ -521,13 +539,15 @@ export const MOLECULE_DATA = {
       { element: 'Cl', pos: [3.0, -0.4, 0], scale: 0.62 },
       { element: 'C', pos: [0.6, -1.0, 0], scale: 0.5 },
       { element: 'H', pos: [0.9, -1.8, 0], scale: 0.3 },
-      { element: 'H', pos: [0.1, -0.8, 0.7], scale: 0.3 }
+      { element: 'H', pos: [0.1, -0.8, 0.7], scale: 0.3 },
+      // Halide Scavenger
+      { element: 'H', pos: [4.0, 0.3, 0], scale: 0.35 }
     ],
     bonds: [
       { from: 0, to: 1 },
       { from: 0, to: 2 },
       { from: 0, to: 3 },
-      { from: 4, to: 5 },
+      { from: 4, to: 5, order: 2 },
       { from: 4, to: 6 },
       { from: 4, to: 7 },
       { from: 7, to: 8 },
@@ -536,9 +556,8 @@ export const MOLECULE_DATA = {
     regions: [
       { id: 'red_nu', pos: [-1.4, 0.2, 0], type: 'red', intensity: 'extreme', scale: 0.9 },
       { id: 'blue_c', pos: [1.2, 0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      { id: 'bond_c_o', pos: [1.4, 0.6, 0], type: 'blue', intensity: 'moderate', scale: 0.65 },
-      { id: 'red_o', pos: [1.5, 1.5, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
-      { id: 'cl_leave', pos: [3.1, -0.4, 0], type: 'blue', intensity: 'moderate', scale: 0.7 }
+      { id: 'red_cl', pos: [3.0, -0.4, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_scavenger', pos: [4.0, 0.3, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
@@ -562,7 +581,7 @@ export const MOLECULE_DATA = {
     bonds: [
       { from: 0, to: 1 },
       { from: 0, to: 2 },
-      { from: 3, to: 4 },
+      { from: 3, to: 4, order: 2 },
       { from: 3, to: 5 },
       { from: 3, to: 6 },
       { from: 7, to: 8 },
@@ -576,7 +595,7 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 16: Transesterification Step (3 Molecules: Hydroxide + Ester + Leaving group)
+  // Stage 16: Transesterification Cascade (Hydroxide + Ester + Proton Donor)
   stage16_trio: {
     atoms: [
       // Hydroxide
@@ -589,26 +608,31 @@ export const MOLECULE_DATA = {
       { element: 'O', pos: [1.2, -0.3, 0], scale: 0.56 },
       // Alkyl group
       { element: 'C', pos: [2.3, -0.8, 0], scale: 0.48 },
-      { element: 'C', pos: [3.4, -0.2, 0], scale: 0.48 }
+      { element: 'C', pos: [3.4, -0.2, 0], scale: 0.48 },
+      // Proton donor
+      { element: 'H', pos: [2.8, 0.6, 0], scale: 0.35 },
+      { element: 'O', pos: [3.6, 0.8, 0], scale: 0.56 },
+      { element: 'H', pos: [4.2, 0.5, 0], scale: 0.3 }
     ],
     bonds: [
       { from: 0, to: 1 },
-      { from: 2, to: 3 },
+      { from: 2, to: 3, order: 2 },
       { from: 2, to: 4 },
       { from: 2, to: 5 },
       { from: 5, to: 6 },
-      { from: 6, to: 7 }
+      { from: 6, to: 7 },
+      { from: 8, to: 9 },
+      { from: 9, to: 10 }
     ],
     regions: [
       { id: 'red_nu', pos: [-2.2, 0.4, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
       { id: 'blue_c', pos: [0.0, 0.0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      { id: 'bond_c_o', pos: [0.0, 0.7, 0], type: 'blue', intensity: 'moderate', scale: 0.65 },
-      { id: 'red_o', pos: [0.0, 1.5, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
-      { id: 'blue_ethoxide', pos: [1.8, -0.4, 0], type: 'blue', intensity: 'moderate', scale: 0.7 }
+      { id: 'red_ethoxide', pos: [1.8, -0.4, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_proton', pos: [2.8, 0.6, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
-  // Stage 17: Epoxide Ring Opening
+  // Stage 17: Epoxide Ring Opening + Proton Quench
   stage17_pair: {
     atoms: [
       // Hydroxide
@@ -619,20 +643,26 @@ export const MOLECULE_DATA = {
       { element: 'C', pos: [2.2, -0.6, 0], scale: 0.52 },
       { element: 'O', pos: [1.5, 0.6, 0], scale: 0.58 },
       { element: 'H', pos: [0.4, -1.2, 0], scale: 0.3 },
-      { element: 'C', pos: [3.2, -1.3, 0], scale: 0.48 }
+      { element: 'C', pos: [3.2, -1.3, 0], scale: 0.48 },
+      // Proton donor
+      { element: 'H', pos: [2.4, 1.4, 0], scale: 0.35 },
+      { element: 'O', pos: [3.2, 1.7, 0], scale: 0.56 },
+      { element: 'H', pos: [3.8, 1.5, 0], scale: 0.3 }
     ],
     bonds: [
       { from: 0, to: 1 },
       { from: 2, to: 3 },
       { from: 2, to: 4 },
       { from: 3, to: 4 },
-      { from: 3, to: 6 }
+      { from: 3, to: 6 },
+      { from: 7, to: 8 },
+      { from: 8, to: 9 }
     ],
     regions: [
       { id: 'red_nu', pos: [-2.1, 0.2, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
       { id: 'blue_c_ring', pos: [0.7, -0.5, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      { id: 'bond_ring', pos: [1.1, 0.1, 0], type: 'blue', intensity: 'moderate', scale: 0.65 },
-      { id: 'red_o_ring', pos: [1.6, 0.8, 0], type: 'red', intensity: 'extreme', scale: 0.85 }
+      { id: 'red_o_ring', pos: [1.5, 0.6, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_proton', pos: [2.4, 1.4, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
@@ -655,20 +685,18 @@ export const MOLECULE_DATA = {
       { from: 0, to: 1 },
       { from: 2, to: 3 },
       { from: 2, to: 4 },
-      { from: 4, to: 5 },
+      { from: 4, to: 5, order: 2 },
       { from: 6, to: 7 }
     ],
     regions: [
       { id: 'red_base', pos: [-2.5, 1.2, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
       { id: 'blue_h_alpha', pos: [-0.8, 1.0, 0], type: 'blue', intensity: 'extreme', scale: 0.8 },
-      { id: 'bond_c_h', pos: [-0.5, 0.6, 0], type: 'blue', intensity: 'moderate', scale: 0.65 },
-      { id: 'blue_c_carbonyl', pos: [0.7, 0.0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
       { id: 'c_alpha', pos: [-0.2, -0.2, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
       { id: 'blue_target', pos: [2.3, -0.8, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
-  // Stage 19: S_N1 Carbocation Formation & Capture
+  // Stage 19: S_N1 Stepwise Substitution (Halide Scavenger + t-Butyl Chloride + Water)
   stage19_pair: {
     atoms: [
       // t-Butyl chloride
@@ -680,7 +708,9 @@ export const MOLECULE_DATA = {
       // Water
       { element: 'O', pos: [-2.8, 0.0, 0], scale: 0.58 },
       { element: 'H', pos: [-3.4, 0.5, 0], scale: 0.32 },
-      { element: 'H', pos: [-3.4, -0.5, 0], scale: 0.32 }
+      { element: 'H', pos: [-3.4, -0.5, 0], scale: 0.32 },
+      // Halide Scavenger
+      { element: 'H', pos: [4.0, 0.0, 0], scale: 0.35 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -691,8 +721,8 @@ export const MOLECULE_DATA = {
       { from: 5, to: 7 }
     ],
     regions: [
-      { id: 'bond_c_cl', pos: [1.8, 0.0, 0], type: 'blue', intensity: 'moderate', scale: 0.7 },
-      { id: 'red_cl', pos: [2.9, 0.0, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'red_cl', pos: [2.8, 0.0, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_scavenger', pos: [4.0, 0.0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
       { id: 'red_water', pos: [-2.1, 0.0, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
       { id: 'blue_carbocation', pos: [0.8, 0.0, 0], type: 'blue', intensity: 'extreme', scale: 0.9 }
     ]
@@ -716,7 +746,7 @@ export const MOLECULE_DATA = {
     bonds: [
       { from: 0, to: 1 },
       { from: 2, to: 3 },
-      { from: 4, to: 5 },
+      { from: 4, to: 5, order: 2 },
       { from: 4, to: 6 },
       { from: 4, to: 7 }
     ],
@@ -749,8 +779,7 @@ export class MoleculeMesh {
     this.atoms = [];
     this.atomMeshes = [];
     this.bonds = [];
-    this.newBondMesh = null;
-    this.newBondData = null;
+    this.newBonds = [];
     this.activeAnimation = null;
     this.build();
   }
@@ -780,6 +809,7 @@ export class MoleculeMesh {
         element: a.element,
         pos: new THREE.Vector3(...a.pos),
         initialPos: new THREE.Vector3(...a.pos),
+        startPos: new THREE.Vector3(...a.pos),
         radius: r,
         mesh,
         material: mat
@@ -788,7 +818,9 @@ export class MoleculeMesh {
     }
 
     // 2. Individual Bond Meshes (Cylinder sticks)
-    const bondGeo = new THREE.CylinderGeometry(0.075, 0.075, 1, 16);
+    const bondGeoSingle = new THREE.CylinderGeometry(0.075, 0.075, 1, 16);
+    const bondGeoDouble = new THREE.CylinderGeometry(0.048, 0.048, 1, 16);
+
     for (let j = 0; j < bonds.length; j++) {
       const b = bonds[j];
       if (!this.atoms[b.from] || !this.atoms[b.to]) continue;
@@ -802,31 +834,114 @@ export class MoleculeMesh {
         transparent: true,
         opacity: 1.0
       });
-      const mesh = new THREE.Mesh(bondGeo, mat);
-      this.updateBondMesh(mesh, p1, p2, 1.0);
-      this.group.add(mesh);
 
-      this.bonds.push({
-        from: b.from,
-        to: b.to,
-        mesh,
-        material: mat,
-        cleaved: false,
-        scale: 1.0
-      });
+      if (b.order === 2) {
+        const mat2 = mat.clone();
+        const mesh1 = new THREE.Mesh(bondGeoDouble, mat);
+        const mesh2 = new THREE.Mesh(bondGeoDouble, mat2);
+        this.group.add(mesh1);
+        this.group.add(mesh2);
+
+        const bondItem = {
+          from: b.from,
+          to: b.to,
+          order: 2,
+          mesh1,
+          mesh2,
+          material1: mat,
+          material2: mat2,
+          cleaved: false,
+          scale: 1.0,
+          doubleScale: 1.0
+        };
+        this.updateBondMesh(bondItem, p1, p2, 1.0);
+        this.bonds.push(bondItem);
+      } else {
+        const mesh = new THREE.Mesh(bondGeoSingle, mat);
+        this.group.add(mesh);
+        const bondItem = {
+          from: b.from,
+          to: b.to,
+          order: 1,
+          mesh,
+          material: mat,
+          cleaved: false,
+          scale: 1.0
+        };
+        this.updateBondMesh(bondItem, p1, p2, 1.0);
+        this.bonds.push(bondItem);
+      }
     }
   }
 
-  updateBondMesh(mesh, p1, p2, scale = 1.0) {
+  updateBondMesh(bondItem, p1, p2, scale = 1.0) {
+    if (bondItem.cleaved) {
+      if (bondItem.order === 2) {
+        bondItem.mesh1.visible = false;
+        bondItem.mesh2.visible = false;
+      } else if (bondItem.mesh) {
+        bondItem.mesh.visible = false;
+      }
+      return;
+    }
+
     const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
     const dir = new THREE.Vector3().subVectors(p2, p1);
     const len = dir.length();
-    mesh.position.copy(mid);
-    mesh.scale.set(1, Math.max(0.0001, len * scale), 1);
     const up = new THREE.Vector3(0, 1, 0);
-    if (len > 0.001) {
-      mesh.quaternion.setFromUnitVectors(up, dir.normalize());
+    const unitDir = len > 0.001 ? dir.clone().normalize() : new THREE.Vector3(0, 1, 0);
+    const quat = new THREE.Quaternion().setFromUnitVectors(up, unitDir);
+
+    if (bondItem.order === 2) {
+      let norm = new THREE.Vector3(0, 0, 1).cross(unitDir);
+      if (norm.lengthSq() < 0.01) {
+        norm = new THREE.Vector3(0, 1, 0).cross(unitDir);
+      }
+      norm.normalize();
+      const offset = norm.clone().multiplyScalar(0.08);
+
+      bondItem.mesh1.position.copy(mid).add(offset);
+      bondItem.mesh1.scale.set(1, Math.max(0.0001, len * scale), 1);
+      bondItem.mesh1.quaternion.copy(quat);
+      bondItem.mesh1.visible = scale > 0.005;
+
+      const dScale = bondItem.doubleScale !== undefined ? bondItem.doubleScale : scale;
+      bondItem.mesh2.position.copy(mid).sub(offset);
+      bondItem.mesh2.scale.set(1, Math.max(0.0001, len * dScale), 1);
+      bondItem.mesh2.quaternion.copy(quat);
+      bondItem.mesh2.visible = dScale > 0.005;
+    } else if (bondItem.mesh) {
+      bondItem.mesh.position.copy(mid);
+      bondItem.mesh.scale.set(1, Math.max(0.0001, len * scale), 1);
+      bondItem.mesh.quaternion.copy(quat);
+      bondItem.mesh.visible = scale > 0.005;
     }
+  }
+
+  addNewBond(fromIdx, toIdx) {
+    const newBondGeo = new THREE.CylinderGeometry(0.08, 0.08, 1, 16);
+    const newBondMat = new THREE.MeshStandardMaterial({
+      color: 0x00ff88,
+      emissive: 0x00e676,
+      emissiveIntensity: 0.8,
+      roughness: 0.2,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.0
+    });
+    const mesh = new THREE.Mesh(newBondGeo, newBondMat);
+    this.group.add(mesh);
+    const bondObj = {
+      from: fromIdx,
+      to: toIdx,
+      scale: 0.0,
+      material: newBondMat,
+      mesh,
+      order: 1,
+      cleaved: false
+    };
+    this.newBonds.push(bondObj);
+    return bondObj;
   }
 
   updateAllBonds() {
@@ -834,12 +949,13 @@ export class MoleculeMesh {
       if (b.cleaved) continue;
       const p1 = this.atoms[b.from].pos;
       const p2 = this.atoms[b.to].pos;
-      this.updateBondMesh(b.mesh, p1, p2, b.scale !== undefined ? b.scale : 1.0);
+      this.updateBondMesh(b, p1, p2, b.scale !== undefined ? b.scale : 1.0);
     }
-    if (this.newBondMesh && this.newBondData) {
-      const p1 = this.atoms[this.newBondData.from].pos;
-      const p2 = this.atoms[this.newBondData.to].pos;
-      this.updateBondMesh(this.newBondMesh, p1, p2, this.newBondData.scale !== undefined ? this.newBondData.scale : 1.0);
+    for (const nb of this.newBonds) {
+      if (nb.cleaved) continue;
+      const p1 = this.atoms[nb.from].pos;
+      const p2 = this.atoms[nb.to].pos;
+      this.updateBondMesh(nb, p1, p2, nb.scale !== undefined ? nb.scale : 1.0);
     }
   }
 
@@ -852,10 +968,13 @@ export class MoleculeMesh {
       return;
     }
 
+    this.cancelAnimation();
+
     if (reactionCfg.steps && Array.isArray(reactionCfg.steps) && reactionCfg.steps.length > 0) {
       let stepIdx = 0;
       const runNext = () => {
         if (stepIdx >= reactionCfg.steps.length) {
+          this.activeAnimation = null;
           if (onComplete) onComplete();
           return;
         }
@@ -864,15 +983,17 @@ export class MoleculeMesh {
       };
       runNext();
     } else {
-      this.animateReactionStep(reactionCfg, onComplete);
+      this.animateReactionStep(reactionCfg, () => {
+        this.activeAnimation = null;
+        if (onComplete) onComplete();
+      });
     }
   }
 
   /**
    * Animate single reaction step:
-   * 1. Approach: Left cluster glides smoothly toward right cluster along reaction vector
-   * 2. Bond formation: Covalent bond snaps into place between donor and acceptor
-   * 3. Octet preservation: If atom has 4 bonds, leaving group cleaves and departs
+   * Smoothly transitions atom positions from current state, forms new bonds,
+   * handles double bond opening/closing, and smoothly departs leaving groups.
    */
   animateReactionStep(stepCfg, onComplete) {
     if (!stepCfg) {
@@ -880,35 +1001,50 @@ export class MoleculeMesh {
       return;
     }
 
-    this.cancelAnimation();
+    // Capture starting positions for this step
+    for (const a of this.atoms) {
+      a.startPos = a.pos.clone();
+    }
 
     const donorIdx = stepCfg.donorAtom;
     const acceptorIdx = stepCfg.acceptorAtom;
     const clusterLeft = stepCfg.clusterLeft || [];
     const clusterRight = stepCfg.clusterRight || [];
     const leavingBond = stepCfg.leavingBond || null;
-    const leavingAtom = stepCfg.leavingAtom !== undefined ? stepCfg.leavingAtom : null;
     const targetBondLen = stepCfg.targetBondLength || 1.35;
+
+    // Support multi-atom leaving groups
+    let leavingCluster = [];
+    if (stepCfg.leavingCluster && Array.isArray(stepCfg.leavingCluster)) {
+      leavingCluster = [...stepCfg.leavingCluster];
+    } else if (stepCfg.leavingAtom !== undefined && stepCfg.leavingAtom !== null) {
+      leavingCluster = Array.isArray(stepCfg.leavingAtom) ? [...stepCfg.leavingAtom] : [stepCfg.leavingAtom];
+    }
 
     let shiftLeft = new THREE.Vector3(0, 0, 0);
     let shiftRight = new THREE.Vector3(0, 0, 0);
     let departDir = new THREE.Vector3(1, 0, 0);
 
     if (donorIdx !== undefined && acceptorIdx !== undefined && this.atoms[donorIdx] && this.atoms[acceptorIdx]) {
-      const pDonor0 = this.atoms[donorIdx].initialPos.clone();
-      const pAcceptor0 = this.atoms[acceptorIdx].initialPos.clone();
+      const pDonor0 = this.atoms[donorIdx].startPos.clone();
+      const pAcceptor0 = this.atoms[acceptorIdx].startPos.clone();
       const dir = new THREE.Vector3().subVectors(pAcceptor0, pDonor0);
       const initDist = dir.length();
       const unitDir = dir.clone().normalize();
       const distToClose = Math.max(0, initDist - targetBondLen);
-      shiftLeft = unitDir.clone().multiplyScalar(distToClose * 0.82);
-      shiftRight = unitDir.clone().multiplyScalar(-distToClose * 0.18);
+
+      if (stepCfg.approach !== false) {
+        shiftLeft = unitDir.clone().multiplyScalar(distToClose * (stepCfg.leftRatio !== undefined ? stepCfg.leftRatio : 0.82));
+        shiftRight = unitDir.clone().multiplyScalar(-distToClose * (stepCfg.rightRatio !== undefined ? stepCfg.rightRatio : 0.18));
+      }
 
       if (stepCfg.departDirection) {
         departDir.set(...stepCfg.departDirection).normalize();
       } else {
         departDir.copy(unitDir);
       }
+    } else if (stepCfg.departDirection) {
+      departDir.set(...stepCfg.departDirection).normalize();
     }
 
     // Find leaving bond if any
@@ -918,31 +1054,39 @@ export class MoleculeMesh {
         (b.from === leavingBond.from && b.to === leavingBond.to) ||
         (b.from === leavingBond.to && b.to === leavingBond.from)
       );
+      if (!leavingBondObj) {
+        leavingBondObj = this.newBonds.find(b =>
+          (b.from === leavingBond.from && b.to === leavingBond.to) ||
+          (b.from === leavingBond.to && b.to === leavingBond.from)
+        );
+      }
     }
 
-    // Create the new bond cylinder mesh if donor and acceptor are present
-    if (donorIdx !== undefined && acceptorIdx !== undefined && this.atoms[donorIdx] && this.atoms[acceptorIdx]) {
-      const newBondGeo = new THREE.CylinderGeometry(0.08, 0.08, 1, 16);
-      const newBondMat = new THREE.MeshStandardMaterial({
-        color: 0x00ff88,
-        emissive: 0x00e676,
-        emissiveIntensity: 0.8,
-        roughness: 0.2,
-        metalness: 0.1,
-        transparent: true,
-        opacity: 0.0
-      });
-      this.newBondMesh = new THREE.Mesh(newBondGeo, newBondMat);
-      this.group.add(this.newBondMesh);
-      this.newBondData = {
-        from: donorIdx,
-        to: acceptorIdx,
-        scale: 0.0,
-        material: newBondMat
-      };
+    // Find double bond to open (transition to single bond)
+    let openBondObj = null;
+    if (stepCfg.openDoubleBond) {
+      openBondObj = this.bonds.find(b =>
+        (b.from === stepCfg.openDoubleBond.from && b.to === stepCfg.openDoubleBond.to) ||
+        (b.from === stepCfg.openDoubleBond.to && b.to === stepCfg.openDoubleBond.from)
+      );
     }
 
-    const duration = 2000; // ms
+    // Find double bond to close (transition back to double bond)
+    let closeBondObj = null;
+    if (stepCfg.closeDoubleBond) {
+      closeBondObj = this.bonds.find(b =>
+        (b.from === stepCfg.closeDoubleBond.from && b.to === stepCfg.closeDoubleBond.to) ||
+        (b.from === stepCfg.closeDoubleBond.to && b.to === stepCfg.closeDoubleBond.from)
+      );
+    }
+
+    // Create new bond if donor and acceptor are present and formBond isn't false
+    let currentNewBond = null;
+    if (donorIdx !== undefined && acceptorIdx !== undefined && stepCfg.formBond !== false && this.atoms[donorIdx] && this.atoms[acceptorIdx]) {
+      currentNewBond = this.addNewBond(donorIdx, acceptorIdx);
+    }
+
+    const duration = stepCfg.duration || 1800; // ms
     const startTime = performance.now();
 
     const easeInOutCubic = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -952,55 +1096,94 @@ export class MoleculeMesh {
       const elapsed = now - startTime;
       const progress = Math.min(1.0, elapsed / duration);
 
-      // Phase 1: Approach (progress 0.0 -> 0.48)
+      // Phase 1: Approach & collision (0.0 -> 0.48)
       const approachProgress = Math.min(1.0, progress / 0.48);
       const easeApproach = easeInOutCubic(approachProgress);
 
       for (const idx of clusterLeft) {
-        if (!this.atoms[idx]) continue;
-        this.atoms[idx].pos.copy(this.atoms[idx].initialPos).addScaledVector(shiftLeft, easeApproach);
+        if (!this.atoms[idx] || leavingCluster.includes(idx)) continue;
+        this.atoms[idx].pos.copy(this.atoms[idx].startPos).addScaledVector(shiftLeft, easeApproach);
         this.atoms[idx].mesh.position.copy(this.atoms[idx].pos);
       }
 
       for (const idx of clusterRight) {
-        if (!this.atoms[idx]) continue;
-        if (idx === leavingAtom && progress > 0.48) continue;
-        this.atoms[idx].pos.copy(this.atoms[idx].initialPos).addScaledVector(shiftRight, easeApproach);
+        if (!this.atoms[idx] || leavingCluster.includes(idx)) continue;
+        this.atoms[idx].pos.copy(this.atoms[idx].startPos).addScaledVector(shiftRight, easeApproach);
         this.atoms[idx].mesh.position.copy(this.atoms[idx].pos);
       }
 
-      // Phase 2: Bond Formation & Octet Preservation (progress 0.48 -> 1.0)
+      // Phase 2: Bond Formation, Double Bond Shift, and Leaving Group Departure (0.48 -> 1.0)
       if (progress >= 0.48) {
-        const bondProgress = Math.min(1.0, (progress - 0.48) / 0.22);
+        const bondProgress = Math.min(1.0, (progress - 0.48) / 0.25);
         const easeBond = easeOutQuad(bondProgress);
 
-        if (this.newBondData) {
-          this.newBondData.scale = easeBond;
-          this.newBondData.material.opacity = Math.min(1.0, easeBond * 1.2);
+        if (currentNewBond) {
+          currentNewBond.scale = easeBond;
+          currentNewBond.material.opacity = Math.min(1.0, easeBond * 1.2);
           const glowPulse = Math.max(0.25, 0.85 * (1 - (progress - 0.48) / 0.52));
-          this.newBondData.material.emissiveIntensity = glowPulse;
+          currentNewBond.material.emissiveIntensity = glowPulse;
         }
 
-        if (leavingBondObj && leavingAtom !== null && this.atoms[leavingAtom]) {
+        // Open double bond (second cylinder smoothly disappears)
+        if (openBondObj && openBondObj.order === 2) {
+          openBondObj.doubleScale = Math.max(0, 1.0 - easeBond);
+          if (openBondObj.material2) {
+            openBondObj.material2.opacity = Math.max(0, 1.0 - easeBond);
+          }
+        }
+
+        // Close/reform double bond (second cylinder reappears)
+        if (closeBondObj && closeBondObj.order === 2) {
+          closeBondObj.doubleScale = easeBond;
+          if (closeBondObj.material2) {
+            closeBondObj.material2.opacity = easeBond;
+          }
+        }
+
+        // Handle Ring Opening relaxation (Stage 17)
+        if (stepCfg.ringOpen) {
+          const swingAtom = stepCfg.ringOpen.swingAtom;
+          const swingOffset = stepCfg.ringOpen.swingOffset || [0.3, 0.9, 0];
+          const easeSwing = easeInOutCubic(Math.min(1.0, (progress - 0.48) / 0.52));
+          if (this.atoms[swingAtom]) {
+            const basePos = this.atoms[swingAtom].startPos.clone().addScaledVector(shiftRight, 1.0);
+            this.atoms[swingAtom].pos.copy(basePos).add(new THREE.Vector3(...swingOffset).multiplyScalar(easeSwing));
+            this.atoms[swingAtom].mesh.position.copy(this.atoms[swingAtom].pos);
+          }
+        }
+
+        // Cleave leaving bond and smoothly depart leaving group cluster
+        if (leavingBondObj) {
           const breakProgress = Math.min(1.0, (progress - 0.48) / 0.16);
-          leavingBondObj.material.opacity = Math.max(0, 1.0 - breakProgress);
+          if (leavingBondObj.material) leavingBondObj.material.opacity = Math.max(0, 1.0 - breakProgress);
+          if (leavingBondObj.material1) leavingBondObj.material1.opacity = Math.max(0, 1.0 - breakProgress);
+          if (leavingBondObj.material2) leavingBondObj.material2.opacity = Math.max(0, 1.0 - breakProgress);
           leavingBondObj.scale = Math.max(0.001, 1.0 - breakProgress);
           if (breakProgress >= 1.0) {
             leavingBondObj.cleaved = true;
-            leavingBondObj.mesh.visible = false;
+            if (leavingBondObj.mesh) leavingBondObj.mesh.visible = false;
+            if (leavingBondObj.mesh1) leavingBondObj.mesh1.visible = false;
+            if (leavingBondObj.mesh2) leavingBondObj.mesh2.visible = false;
           }
+        }
 
+        if (leavingCluster.length > 0) {
           const departProgress = Math.min(1.0, (progress - 0.48) / 0.52);
           const easeDepart = easeInOutCubic(departProgress);
-          const departDist = easeDepart * 3.8;
+          const departDist = easeDepart * (stepCfg.departDistance || 3.8);
 
-          const baseLeavePos = this.atoms[leavingAtom].initialPos.clone().addScaledVector(shiftRight, 1.0);
-          this.atoms[leavingAtom].pos.copy(baseLeavePos).addScaledVector(departDir, departDist);
-          this.atoms[leavingAtom].mesh.position.copy(this.atoms[leavingAtom].pos);
+          for (const lAtomIdx of leavingCluster) {
+            if (!this.atoms[lAtomIdx]) continue;
+            const isLeft = clusterLeft.includes(lAtomIdx);
+            const clusterShift = isLeft ? shiftLeft : shiftRight;
+            const baseLeavePos = this.atoms[lAtomIdx].startPos.clone().addScaledVector(clusterShift, 1.0);
+            this.atoms[lAtomIdx].pos.copy(baseLeavePos).addScaledVector(departDir, departDist);
+            this.atoms[lAtomIdx].mesh.position.copy(this.atoms[lAtomIdx].pos);
 
-          if (this.atoms[leavingAtom].material) {
-            this.atoms[leavingAtom].material.emissive = new THREE.Color(0x38b000);
-            this.atoms[leavingAtom].material.emissiveIntensity = Math.max(0, 0.5 * (1 - easeDepart));
+            if (this.atoms[lAtomIdx].material) {
+              this.atoms[lAtomIdx].material.emissive = new THREE.Color(0x38b000);
+              this.atoms[lAtomIdx].material.emissiveIntensity = Math.max(0, 0.5 * (1 - easeDepart));
+            }
           }
         }
       }
@@ -1023,13 +1206,12 @@ export class MoleculeMesh {
       cancelAnimationFrame(this.activeAnimation);
       this.activeAnimation = null;
     }
-    if (this.newBondMesh) {
-      this.group.remove(this.newBondMesh);
-      this.newBondMesh.geometry?.dispose();
-      this.newBondMesh.material?.dispose();
-      this.newBondMesh = null;
-      this.newBondData = null;
+    for (const nb of this.newBonds) {
+      this.group.remove(nb.mesh);
+      nb.mesh.geometry?.dispose();
+      nb.material?.dispose();
     }
+    this.newBonds = [];
   }
 
   dispose() {
@@ -1039,8 +1221,15 @@ export class MoleculeMesh {
       a.material?.dispose();
     }
     for (const b of this.bonds) {
-      b.mesh.geometry?.dispose();
-      b.material?.dispose();
+      if (b.order === 2) {
+        b.mesh1.geometry?.dispose();
+        b.material1?.dispose();
+        b.mesh2.geometry?.dispose();
+        b.material2?.dispose();
+      } else {
+        b.mesh?.geometry?.dispose();
+        b.material?.dispose();
+      }
     }
     this.atoms = [];
     this.bonds = [];

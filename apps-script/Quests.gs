@@ -12,10 +12,27 @@ var DEFAULT_QUEST = {
   release_at: '2026-09-18T00:00:00Z',
   close_at: '2026-10-02T23:59:59Z',
   status: 'live',
-  base_xp: 660,
+  base_xp: 650,
   stage_count: 20,
   item_pool: 'hint_chip,spare_coolant,overclock_module,resonance_key'
 };
+
+/**
+ * The reveal at the end of Quest 1. This is the one place the real vocabulary is
+ * introduced, because by now the player has built the intuition to hang it on.
+ * Kept identical to the client-side fallback in src/screens/quest.js.
+ */
+var QUEST1_EPILOGUE = [
+  'Here is the chemistry you were actually doing.',
+  '',
+  'Every red cloud was a spot with extra electrons — a region of negative charge. Every blue spot was electron-poor and positively charged. Opposite charges attract, so reactions start where the reddest region meets the bluest one.',
+  '',
+  'The lines you drew are called curved arrows, and chemists use exactly this notation. An arrow shows a pair of electrons moving from where they are to where they are going.',
+  '',
+  'When two blue targets competed, geometry decided the winner: bulky groups physically block incoming molecules, so reactions take the open route. That is called steric hindrance.',
+  '',
+  'In the multi-step stages you were writing a reaction mechanism — the exact order in which bonds form and break. That is the core skill of organic chemistry, and you just did twenty of them.'
+].join('\n');
 
 var DEFAULT_STAGES = [
   {
@@ -24,14 +41,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 15,
     max_attempts: 9999,
-    hint_text: 'Draw an arrow from the red donor to the blue acceptor.',
+    hint_text: 'Tap a glowing cloud. The scan readout tells you whether that site has charge to spare or is short of it.',
     hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_lp1', to: 'blue_c1' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 1 — Target Lock',
-      prompt: 'Drag a line from the crowded red zone to the hungry blue zone.',
+      prompt: 'Two sites are glowing. Tap each one to scan it, then drag a line from the site that gives to the site that takes.',
       moleculeId: 'stage1_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -42,14 +59,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 15,
     max_attempts: 9999,
-    hint_text: 'Connect the red donor to the blue acceptor to pop off the old piece.',
-    hint_cost: 1,
+    hint_text: 'Scan the blue site and read its CLEARANCE. That number is how much room is left around it.',
+    hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_lp1', to: 'blue_c1' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 2 — Making Room',
-      prompt: 'Connect the negative red cloud to the positive blue center to make a new bond.',
+      prompt: 'Same move, new chamber — except the blue site already has something parked on it. Scan first, then connect, and watch what happens to the old tenant.',
       moleculeId: 'stage2_pair',
       anchors: ['red_lp1', 'blue_c1']
     })
@@ -60,14 +77,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 20,
     max_attempts: 9999,
-    hint_text: 'Connect the brightest red spot directly into the deepest blue spot.',
-    hint_cost: 2,
+    hint_text: 'Every scan reports a CHARGE number. These four are not equal — two of them are much stronger than the other two.',
+    hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_extreme', to: 'blue_extreme' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 3 — Comparing Strengths',
-      prompt: 'Multiple reactive spots: connect the brightest red donor to the deepest blue receiver.',
+      title: 'Stage 3 — Four Live Sites',
+      prompt: 'Four sites are live and only one pairing is strong enough to fire. Scan them all before you commit.',
       moleculeId: 'stage3_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -78,14 +95,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 20,
     max_attempts: 9999,
-    hint_text: 'Select the primary reactive site and connect to the receiver center.',
-    hint_cost: 2,
+    hint_text: 'No new idea here. The whole stage is reading four numbers and picking two.',
+    hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_extreme', to: 'blue_extreme' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 4 — Competing Sites',
-      prompt: 'Ignore weak distractions: connect the brightest red donor into the deepest blue core.',
+      title: 'Stage 4 — Decoys',
+      prompt: 'Four sites again, and two of them are decoys. You already know the rule — prove you can apply it.',
       moleculeId: 'stage4_pair',
       anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak']
     })
@@ -96,14 +113,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 25,
     max_attempts: 9999,
-    hint_text: 'Rotate the view to find an open path.',
-    hint_cost: 3,
+    hint_text: 'Strength decides nothing here: both blue sites scan the same. Look at the second number instead.',
+    hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_nu', to: 'blue_open' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 5 — Crowded Spaces',
-      prompt: 'Trace the path into the open target. Avoid the crowded obstacle!',
+      title: 'Stage 5 — The Trap',
+      prompt: 'Two blue sites, both starving, both exactly as strong as each other. Only one of them can actually be reached. Scan to find out which — spin the chamber if it helps.',
       moleculeId: 'stage5_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -114,14 +131,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 25,
     max_attempts: 9999,
-    hint_text: 'Rotate the view to find an open path.',
-    hint_cost: 3,
+    hint_text: 'Do not trust position or brightness. Scan both blue sites and compare CLEARANCE.',
+    hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_nu', to: 'blue_open' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 6 — Bulky Group Shielding',
-      prompt: 'Bulky groups shield the top center. Connect to the open blue target at the bottom!',
+      title: 'Stage 6 — Fenced In',
+      prompt: 'Same trap, better disguised. This time the unreachable site is the one that looks most inviting.',
       moleculeId: 'stage6_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })
@@ -132,14 +149,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 30,
     max_attempts: 9999,
-    hint_text: 'Rotate the view to find an open path.',
-    hint_cost: 4,
+    hint_text: 'Two numbers decide this. CHARGE alone picks the giver; the taker has to win on CHARGE and CLEARANCE together.',
+    hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_supreme', to: 'blue_accessible' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 7 — Finding the Open Route',
-      prompt: 'Find the brightest red spot and connect to the unblocked blue target!',
+      title: 'Stage 7 — Six Sites, One Answer',
+      prompt: 'Six live sites, and both rules you have worked out apply at once. Survey the whole chamber before you draw anything.',
       moleculeId: 'stage7_pair',
       anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak']
     })
@@ -150,14 +167,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 30,
     max_attempts: 9999,
-    hint_text: 'Ignore the bystander. Connect the active red spot to the blue target.',
-    hint_cost: 3,
+    hint_text: 'One of the three has nothing worth giving and nothing worth taking. Its scan will read flat.',
+    hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_base', to: 'blue_acid' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 8 — Three\'s Company',
-      prompt: 'Three molecules in the chamber! Connect the active red donor directly to the hungry blue receiver, ignoring the quiet bystander.',
+      title: 'Stage 8 — Three in the Chamber',
+      prompt: 'Three molecules now, and one of them has nothing to do with this reaction. Scan around and find the odd one out.',
       moleculeId: 'stage8_trio',
       anchors: ['red_base', 'blue_acid', 'spectator_mid']
     })
@@ -168,14 +185,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 30,
     max_attempts: 9999,
-    hint_text: 'Connect the strongest red donor to the blue target.',
-    hint_cost: 3,
+    hint_text: 'There is only one blue site, so the entire question is which red site wins the race to it.',
+    hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_strong', to: 'blue_target' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 9 — The Tug-of-War',
-      prompt: 'Two givers want the same blue prize! Connect the strongest red donor to the hungry blue receiver.',
+      title: 'Stage 9 — The Race',
+      prompt: 'Two givers, one prize, and they cannot both have it. Scan both and back the one that gets there first.',
       moleculeId: 'stage9_trio',
       anchors: ['red_strong', 'red_weak', 'blue_target']
     })
@@ -186,14 +203,14 @@ var DEFAULT_STAGES = [
     kind: 'arrow',
     xp: 35,
     max_attempts: 9999,
-    hint_text: 'Connect the helper donor to the blue target to activate it.',
-    hint_cost: 3,
+    hint_text: 'Scan the large molecule on the right. Its CHARGE reading is low — it is not hungry enough to pull anything in.',
+    hint_cost: 0,
     answer_json: JSON.stringify({ from: 'red_base', to: 'blue_proton' }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 10 — The Team Relay',
-      prompt: 'Teamwork! Connect the helper red spot into the blue target to activate it.',
+      title: 'Stage 10 — Warm-Up Act',
+      prompt: 'The main target is too comfortable to react with anything yet. Something else has to happen first. Find the move that sets it up.',
       moleculeId: 'stage10_trio',
       anchors: ['red_base', 'blue_proton', 'blue_substrate']
     })
@@ -204,19 +221,19 @@ var DEFAULT_STAGES = [
     kind: 'multi_arrow',
     xp: 35,
     max_attempts: 9999,
-    hint_text: '1st arrow: Red spot into blue center. 2nd arrow: Bond into departing piece.',
-    hint_cost: 3,
-    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_cl', expectedTo: 'cl_leave' }] }),
+    hint_text: 'Ask which of the two moves is even possible right now. One of them is not.',
+    hint_cost: 0,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger' }] }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 11 — The Knockout Punch',
-      prompt: 'Multi-step combo! Draw 2 arrows in order: 1st: Red spot ➔ Blue center. 2nd: Connected bond ➔ Departing piece.',
+      title: 'Stage 11 — One In, One Out',
+      prompt: 'Two arrows from here on, and the order is part of the answer. Scan all four sites, then work out which move cannot happen until the other one has.',
       moleculeId: 'stage11_pair',
       multiArrow: true,
       maxArrows: 2,
-      anchors: ['red_nu', 'blue_c', 'bond_c_cl', 'cl_leave'],
-      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_cl', expectedTo: 'cl_leave' }]
+      anchors: ['red_nu', 'blue_c', 'red_cl', 'blue_scavenger'],
+      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger' }]
     })
   },
   {
@@ -225,19 +242,19 @@ var DEFAULT_STAGES = [
     kind: 'multi_arrow',
     xp: 35,
     max_attempts: 9999,
-    hint_text: '1st arrow: Red spot into center. 2nd arrow: Double bond swinging up to top spot.',
-    hint_cost: 3,
-    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }] }),
+    hint_text: 'Find the double bar in the chamber. A double link can open up and dump its spare charge to one side — but only once it is pushed.',
+    hint_cost: 0,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'red_o', expectedTo: 'blue_h' }] }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 12 — The Rooftop Bounce',
-      prompt: 'Two-step bounce! Arrow 1: Red spot ➔ Blue center. Arrow 2: Double bond ➔ Top spot.',
+      title: 'Stage 12 — The Double Link',
+      prompt: 'Two atoms here are joined by a double bar. Something has to push before that bar can swing open. Two arrows.',
       moleculeId: 'stage12_pair',
       multiArrow: true,
       maxArrows: 2,
-      anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o'],
-      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }]
+      anchors: ['red_nu', 'blue_c', 'red_o', 'blue_h'],
+      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'red_o', expectedTo: 'blue_h' }]
     })
   },
   {
@@ -246,19 +263,19 @@ var DEFAULT_STAGES = [
     kind: 'multi_arrow',
     xp: 35,
     max_attempts: 9999,
-    hint_text: '1st arrow: Red spot into blue target. 2nd arrow: Old bond to adjacent spot.',
-    hint_cost: 3,
-    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h' }, { order: 2, expectedFrom: 'bond_o_h', expectedTo: 'red_o_acid' }] }),
+    hint_text: 'Scan the two blue sites. Each is a small piece loosely attached to a bigger molecule, ready to be pulled off.',
+    hint_cost: 0,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_base1', expectedTo: 'blue_h1' }, { order: 2, expectedFrom: 'red_base2', expectedTo: 'blue_h2' }] }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 13 — The Hot Potato',
-      prompt: 'Pass the hot potato! Arrow 1: Red spot ➔ Blue target. Arrow 2: Old bond ➔ Adjacent spot.',
+      title: 'Stage 13 — Passing It Along',
+      prompt: 'A small piece has to travel across the chamber. It cannot jump the whole way — it moves one hop at a time. Two arrows.',
       moleculeId: 'stage13_pair',
       multiArrow: true,
       maxArrows: 2,
-      anchors: ['red_base', 'blue_h', 'bond_o_h', 'red_o_acid'],
-      steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h' }, { order: 2, expectedFrom: 'bond_o_h', expectedTo: 'red_o_acid' }]
+      anchors: ['red_base1', 'blue_h1', 'red_base2', 'blue_h2'],
+      steps: [{ order: 1, expectedFrom: 'red_base1', expectedTo: 'blue_h1' }, { order: 2, expectedFrom: 'red_base2', expectedTo: 'blue_h2' }]
     })
   },
   {
@@ -267,19 +284,19 @@ var DEFAULT_STAGES = [
     kind: 'multi_arrow',
     xp: 40,
     max_attempts: 9999,
-    hint_text: '1: Red spot to center. 2: Double bond to top spot. 3: Top spot kicks off departing piece.',
-    hint_cost: 4,
-    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'cl_leave' }] }),
+    hint_text: 'You have solved this shape before, in Stage 11. The molecule is different; the ordering question is identical.',
+    hint_cost: 0,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger' }] }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 14 — The Trampoline Kick-Back',
-      prompt: '3-Step combo! 1: Red spot ➔ Blue center. 2: Double bond ➔ Top spot. 3: Top spot ➔ Departing piece.',
+      title: 'Stage 14 — Add, Then Drop',
+      prompt: 'The center is already full, something new still has to get on, and something old has to come off. Two arrows, and only one order works.',
       moleculeId: 'stage14_pair',
       multiArrow: true,
-      maxArrows: 3,
-      anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o', 'cl_leave'],
-      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'cl_leave' }]
+      maxArrows: 2,
+      anchors: ['red_nu', 'blue_c', 'red_cl', 'blue_scavenger'],
+      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger' }]
     })
   },
   {
@@ -288,14 +305,14 @@ var DEFAULT_STAGES = [
     kind: 'multi_arrow',
     xp: 40,
     max_attempts: 9999,
-    hint_text: '1: First red spot to blue target. 2: Second red spot to unlocked center.',
-    hint_cost: 4,
+    hint_text: 'Compare the CHARGE of the giver on the left with the CHARGE of the center. The giver is not strong enough as things stand.',
+    hint_cost: 0,
     answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_o_carbonyl', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_activated_c' }] }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 15 — The Key to the Lock',
-      prompt: 'Unlock then enter! Arrow 1: Red spot ➔ Blue target (unlock). Arrow 2: Second red spot ➔ Unlocked center (enter).',
+      title: 'Stage 15 — Wake It Up First',
+      prompt: 'Scan the center of the big molecule before anything else. It is not hungry enough to pull anything in yet — so fix that. Two arrows.',
       moleculeId: 'stage15_trio',
       multiArrow: true,
       maxArrows: 2,
@@ -309,19 +326,19 @@ var DEFAULT_STAGES = [
     kind: 'multi_arrow',
     xp: 40,
     max_attempts: 9999,
-    hint_text: '1: Red spot to center. 2: Double bond to top spot. 3: Top spot kicks off departing piece.',
-    hint_cost: 4,
-    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'blue_ethoxide' }] }),
+    hint_text: 'Scan the four sites and sort them: which is the newcomer arriving, and which is the piece on its way out?',
+    hint_cost: 0,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'red_ethoxide', expectedTo: 'blue_proton' }] }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 16 — The Clean Split',
-      prompt: '3-Step snap! 1: Red spot ➔ Blue center. 2: Double bond ➔ Top spot. 3: Top spot ➔ Departing piece.',
+      title: 'Stage 16 — Cutting the Tail',
+      prompt: 'A long tail hangs off this molecule and it is on its way out — but it will not let go until something takes its place. Two arrows.',
       moleculeId: 'stage16_trio',
       multiArrow: true,
-      maxArrows: 3,
-      anchors: ['red_nu', 'blue_c', 'bond_c_o', 'red_o', 'blue_ethoxide'],
-      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'bond_c_o', expectedTo: 'red_o' }, { order: 3, expectedFrom: 'red_o', expectedTo: 'blue_ethoxide' }]
+      maxArrows: 2,
+      anchors: ['red_nu', 'blue_c', 'red_ethoxide', 'blue_proton'],
+      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c' }, { order: 2, expectedFrom: 'red_ethoxide', expectedTo: 'blue_proton' }]
     })
   },
   {
@@ -330,19 +347,19 @@ var DEFAULT_STAGES = [
     kind: 'multi_arrow',
     xp: 40,
     max_attempts: 9999,
-    hint_text: '1: Red spot to ring corner. 2: Ring bond snaps open to top.',
-    hint_cost: 4,
-    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c_ring' }, { order: 2, expectedFrom: 'bond_ring', expectedTo: 'red_o_ring' }] }),
+    hint_text: 'A ring of only three atoms forces its connections into a sharp corner. Everything in it is under tension.',
+    hint_cost: 0,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c_ring' }, { order: 2, expectedFrom: 'red_o_ring', expectedTo: 'blue_proton' }] }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 17 — The Snapping Spring',
-      prompt: 'Release the spring! Arrow 1: Red spot ➔ Ring corner. Arrow 2: Ring bond ➔ Ring top.',
+      title: 'Stage 17 — Ring Opening',
+      prompt: 'That three-cornered ring is bent far past comfortable and it is waiting for an excuse to snap open. Give it one. Two arrows.',
       moleculeId: 'stage17_pair',
       multiArrow: true,
       maxArrows: 2,
-      anchors: ['red_nu', 'blue_c_ring', 'bond_ring', 'red_o_ring'],
-      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c_ring' }, { order: 2, expectedFrom: 'bond_ring', expectedTo: 'red_o_ring' }]
+      anchors: ['red_nu', 'blue_c_ring', 'red_o_ring', 'blue_proton'],
+      steps: [{ order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c_ring' }, { order: 2, expectedFrom: 'red_o_ring', expectedTo: 'blue_proton' }]
     })
   },
   {
@@ -351,19 +368,19 @@ var DEFAULT_STAGES = [
     kind: 'multi_arrow',
     xp: 45,
     max_attempts: 9999,
-    hint_text: '1: Red spot to outer target. 2: Connecting bond to center. 3: Center to blue target.',
-    hint_cost: 4,
-    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h_alpha' }, { order: 2, expectedFrom: 'bond_c_h', expectedTo: 'blue_c_carbonyl' }, { order: 3, expectedFrom: 'c_alpha', expectedTo: 'blue_target' }] }),
+    hint_text: 'Scan the middle site. It is nearly neutral right now — which is exactly why it is worth a second look.',
+    hint_cost: 0,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h_alpha' }, { order: 2, expectedFrom: 'c_alpha', expectedTo: 'blue_target' }] }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 18 — The Domino Chain',
-      prompt: '3-Step domino chain! 1: Red spot ➔ Outer target. 2: Connecting bond ➔ Center. 3: Center ➔ Blue target.',
+      title: 'Stage 18 — Domino',
+      prompt: 'Nothing in this chamber is reactive enough to start on its own. One move has to create the site that makes the next move possible. Two arrows.',
       moleculeId: 'stage18_pair',
       multiArrow: true,
-      maxArrows: 3,
-      anchors: ['red_base', 'blue_h_alpha', 'bond_c_h', 'blue_c_carbonyl', 'c_alpha', 'blue_target'],
-      steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h_alpha' }, { order: 2, expectedFrom: 'bond_c_h', expectedTo: 'blue_c_carbonyl' }, { order: 3, expectedFrom: 'c_alpha', expectedTo: 'blue_target' }]
+      maxArrows: 2,
+      anchors: ['red_base', 'blue_h_alpha', 'c_alpha', 'blue_target'],
+      steps: [{ order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h_alpha' }, { order: 2, expectedFrom: 'c_alpha', expectedTo: 'blue_target' }]
     })
   },
   {
@@ -372,19 +389,19 @@ var DEFAULT_STAGES = [
     kind: 'multi_arrow',
     xp: 45,
     max_attempts: 9999,
-    hint_text: '1: Departing piece leaves chair. 2: Red spot fills empty blue chair.',
-    hint_cost: 4,
-    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'bond_c_cl', expectedTo: 'red_cl' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_carbocation' }] }),
+    hint_text: 'Scan the center and read its CLEARANCE. Is there actually room for anything to move in right now?',
+    hint_cost: 0,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_carbocation' }] }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 19 — Musical Chairs',
-      prompt: 'Musical chairs! Arrow 1: Bond ➔ Departing piece (leave chair). Arrow 2: Red spot ➔ Empty blue chair (sit down).',
+      title: 'Stage 19 — Leave, Then Fill',
+      prompt: 'Every chamber so far has been add-first, then drop. This one is the exception. Scan it and work out why it has to run the other way round.',
       moleculeId: 'stage19_pair',
       multiArrow: true,
       maxArrows: 2,
-      anchors: ['bond_c_cl', 'red_cl', 'red_water', 'blue_carbocation'],
-      steps: [{ order: 1, expectedFrom: 'bond_c_cl', expectedTo: 'red_cl' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_carbocation' }]
+      anchors: ['red_cl', 'blue_scavenger', 'red_water', 'blue_carbocation'],
+      steps: [{ order: 1, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger' }, { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_carbocation' }]
     })
   },
   {
@@ -393,19 +410,19 @@ var DEFAULT_STAGES = [
     kind: 'multi_arrow',
     xp: 50,
     max_attempts: 9999,
-    hint_text: '1: Helper to target. 2: Main red piece to center. 3: Departing piece cleared.',
-    hint_cost: 5,
-    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_cat', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_core', expectedTo: 'blue_c_scaffold' }, { order: 3, expectedFrom: 'bond_leave', expectedTo: 'red_depart' }] }),
+    hint_text: 'Start with the question you have asked nineteen times: what can actually react right now, and what needs waking up first?',
+    hint_cost: 0,
+    answer_json: JSON.stringify({ steps: [{ order: 1, expectedFrom: 'red_cat', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_core', expectedTo: 'blue_c_scaffold' }] }),
     tolerance: 0,
     reveal_text: '',
     scene_config: JSON.stringify({
-      title: 'Stage 20 — The Master Conductor',
-      prompt: 'Grand Finale! 1: Helper ➔ Target. 2: Main red piece ➔ Center. 3: Bond ➔ Departing piece.',
+      title: 'Stage 20 — Grand Finish',
+      prompt: 'Last chamber. Six sites, two arrows, and no new rules — everything you need you already worked out. Survey it and finish the run.',
       moleculeId: 'stage20_multi',
       multiArrow: true,
-      maxArrows: 3,
-      anchors: ['red_cat', 'blue_proton', 'red_core', 'blue_c_scaffold', 'bond_leave', 'red_depart'],
-      steps: [{ order: 1, expectedFrom: 'red_cat', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_core', expectedTo: 'blue_c_scaffold' }, { order: 3, expectedFrom: 'bond_leave', expectedTo: 'red_depart' }]
+      maxArrows: 2,
+      anchors: ['red_cat', 'blue_proton', 'red_core', 'blue_c_scaffold'],
+      steps: [{ order: 1, expectedFrom: 'red_cat', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_core', expectedTo: 'blue_c_scaffold' }]
     })
   }
 ];
@@ -625,15 +642,24 @@ var Quests = {
       }
     }
 
-    // XP calculation
+    // XP calculation.
+    // Flat, once per stage:
+    //  - the client grades locally and shows "+N XP" before this call returns, so an
+    //    attempt-count multiplier here would contradict what the player was just told;
+    //  - a stage already cleared pays nothing, so replaying it (the Prev button) is
+    //    practice, not an XP faucet.
     var xpAwarded = 0;
     var baseStageXp = Number(stage.xp || 0);
 
     if (isCorrect) {
-      var mult = attemptNo === 1 ? 1.25 : attemptNo === 2 ? 1.0 : 0.75;
-      var hintCost = hintUsed ? Number(stage.hint_cost || 0) : 0;
-      var calcXp = Math.floor(baseStageXp * mult) - hintCost;
-      xpAwarded = Math.max(Math.floor(baseStageXp * 0.25), calcXp);
+      var alreadyCleared = false;
+      for (var pi = 0; pi < prior.length; pi++) {
+        if (String(prior[pi].correct).toUpperCase() === 'TRUE') {
+          alreadyCleared = true;
+          break;
+        }
+      }
+      xpAwarded = alreadyCleared ? 0 : baseStageXp;
     }
 
     var subId = generateId('sub');
@@ -657,10 +683,14 @@ var Quests = {
 
     // Update progress cache
     if (isCorrect) {
+      var existingProgress = Db.findOne('Progress', function(pr) {
+        return pr.player_id === playerId && pr.quest_id === questId;
+      });
+      var priorReached = existingProgress ? Number(existingProgress.stage_reached || 0) : 0;
       Db.update('Progress', function(pr) {
         return pr.player_id === playerId && pr.quest_id === questId;
       }, {
-        stage_reached: stageIndex + 1,
+        stage_reached: Math.max(priorReached, stageIndex + 1),
         updated_at: now
       });
     }
@@ -702,6 +732,20 @@ var Quests = {
   completeQuest: function(playerId, questId) {
     var quest = Db.findOne('Quests', function(q) { return q.quest_id === questId; });
     if (!quest) throw { code: 'NOT_FOUND', message: 'Quest not found.' };
+
+    // Finishing the same quest twice must not mint a second reward item.
+    var priorProgress = Db.findOne('Progress', function(pr) {
+      return pr.player_id === playerId && pr.quest_id === questId;
+    });
+    if (priorProgress && priorProgress.completed_at) {
+      return {
+        totalXp: Number(priorProgress.xp_earned || 0),
+        awardedItem: priorProgress.items_awarded || '',
+        newLevel: Scoring.computeLevel(Scoring.computePlayerTotalXp(playerId)),
+        alreadyCompleted: true,
+        epilogue: QUEST1_EPILOGUE
+      };
+    }
 
     var subs = Db.find('Submissions', function(s) {
       return s.player_id === playerId && s.quest_id === questId && s.correct === 'TRUE';
@@ -756,7 +800,7 @@ var Quests = {
       totalXp: questXp,
       awardedItem: awardedItem,
       newLevel: newLevel,
-      epilogue: 'Quest complete! Here is the chemistry behind what you just discovered:\n\n1. Electron Density & Curved Arrows: The red regions represent high electron density (lone pairs / negative charge), while blue regions represent electron deficiency (positive partial charges / electrophiles). The arrows you drew match standard curved-arrow notation in organic chemistry, tracking the physical flow of electrons from source to target.\n\n2. Extremes & Selectivity: When multiple reactive sites compete, reactions preferentially proceed between the most electron-rich donor (strongest nucleophile) and most electron-poor center (strongest electrophile).\n\n3. Steric Hindrance: Physical geometry matters! Even when a site has strong positive charge, surrounding bulky groups (like methyl or isopropyl clusters) can physically block incoming molecules, steering reactions toward open, unhindered pathways.'
+      epilogue: QUEST1_EPILOGUE
     };
   },
 

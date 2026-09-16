@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Avalon — UHS Chemistry Club</title>
   <meta name="description" content="Avalon — UHS Chemistry Club competition portal.">
+  <meta name="theme-color" content="#0a0908">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Cinzel:wght@700;800;900&family=JetBrains+Mono:wght@400;600;700&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -22,15 +23,19 @@
   <!-- Global HUD / Header -->
   <header id="hud" class="hud">
     <div class="hud-left">
-      <a href="#/" class="hud-brand">
-        <span class="hud-logo-icon">⬡</span>
+      <a href="#/" class="hud-brand" aria-label="Avalon home">
+        <svg class="hud-logo-icon" aria-hidden="true" width="15" height="17" viewBox="0 0 15 17" fill="none">
+          <path d="M7.5 1 14 4.75v7.5L7.5 16 1 12.25v-7.5L7.5 1Z" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M7.5 5.5 11 7.5v4l-3.5 2L4 11.5v-4l3.5-2Z" fill="currentColor" opacity=".55"/>
+        </svg>
         <span class="hud-title">AVALON</span>
+        <span class="hud-season-tag">UHS CHEM</span>
       </a>
       <nav id="hud-nav" class="hud-nav hidden">
         <button type="button" class="nav-btn" data-target="bridge">BRIDGE</button>
         <button type="button" class="nav-btn" data-target="starmap">STAR MAP</button>
-        <button type="button" class="nav-btn" data-target="comms">COMMS</button>
-        <button type="button" class="nav-btn" data-target="cargo">CARGO</button>
+        <button type="button" class="nav-btn" data-target="leaderboard">STANDINGS</button>
+        <button type="button" class="nav-btn" data-target="inventory">INVENTORY</button>
         <button type="button" class="nav-btn" data-target="quarters">CREW</button>
       </nav>
     </div>
@@ -47,21 +52,21 @@
       </div>
 
       <div class="hud-controls">
-        <button id="gfx-tier-toggle" class="btn-chip" title="Toggle Graphics Quality (T3/T2/T1)">
+        <button id="gfx-tier-toggle" class="btn-chip" title="Graphics quality">
           <span class="gfx-dot"></span>
           <span id="gfx-tier-label">T3</span>
         </button>
-        <button id="motion-toggle" class="btn-chip" title="Toggle Motion">MOTION ON</button>
+        <button id="motion-toggle" class="btn-chip" title="Motion">MOTION</button>
         <div id="user-menu-wrap" class="relative">
           <button id="user-btn" class="btn-chip hidden">
-            <span id="user-display-name">EXPLORER</span>
+            <span id="user-display-name">CREW</span>
           </button>
           <div id="user-dropdown" class="user-dropdown hidden">
-            <a href="#/quarters" class="dropdown-item">Quarters & Avatar</a>
+            <a href="#/quarters" class="dropdown-item">Crew</a>
             <a href="#/settings" class="dropdown-item">Settings</a>
             <a href="#/admin" id="admin-link" class="dropdown-item hidden">Admin</a>
             <hr class="dropdown-divider">
-            <button id="logout-btn" class="dropdown-item text-danger">Log Out</button>
+            <button id="logout-btn" class="dropdown-item text-danger">Sign Out</button>
           </div>
         </div>
       </div>
@@ -75,7 +80,7 @@
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
   <!-- Modal / Overlay Container -->
-  <div id="modal-container" class="modal-container hidden" role="dialog" aria-modal="true"></div>
+  <div id="modal-container" class="modal-container hidden" role="dialog" aria-modal="true" aria-label="Dialog"></div>
 
   <script type="module" src="/src/main.js"></script>
 </body>

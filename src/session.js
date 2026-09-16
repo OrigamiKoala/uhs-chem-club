@@ -18,6 +18,44 @@ function normalizeTeamId(tid) {
   return ALIAS_MAP[lc] || lc;
 }
 
+/**
+ * Single source of truth for the XP curve. Level N starts at 45*(N-1)^2 XP,
+ * capped at 12 to match Scoring.computeLevel in apps-script/Scoring.gs.
+ * Duplicated formulas in the HUD, the proxy and the backend used to drift apart.
+ */
+export const MAX_LEVEL = 12;
+
+export function levelForXp(xp) {
+  return Math.min(MAX_LEVEL, Math.max(1, Math.floor(Math.sqrt(Math.max(0, xp || 0) / 45)) + 1));
+}
+
+/** Rank name for a level — mirrors LEVEL_TITLES in apps-script/Scoring.gs. */
+export function levelTitle(level) {
+  if (level <= 2) return 'Cadet';
+  if (level <= 4) return 'Scout';
+  if (level <= 6) return 'Navigator';
+  if (level <= 8) return 'Voyager';
+  if (level <= 10) return 'Pathfinder';
+  return 'Starmarshal';
+}
+
+/** Progress within the current level, for the HUD bar. */
+export function levelProgress(xp) {
+  const total = Math.max(0, xp || 0);
+  const level = levelForXp(total);
+  const base = 45 * Math.pow(level - 1, 2);
+  const next = 45 * Math.pow(level, 2);
+  const into = total - base;
+  const needed = Math.max(1, next - base);
+  return {
+    level,
+    into,
+    needed,
+    nextLevelXp: next,
+    pct: Math.min(100, Math.max(0, Math.round((into / needed) * 100)))
+  };
+}
+
 function normalizeTeamObj(t) {
   if (!t || typeof t !== 'object') return t;
   const tid = normalizeTeamId(t.team_id);
@@ -92,7 +130,7 @@ class SessionManager {
         const parsedXp = Number(savedXp);
         if (!isNaN(parsedXp) && parsedXp > this.xp) {
           this.xp = parsedXp;
-          this.level = Math.max(1, Math.floor(Math.sqrt(this.xp / 45)) + 1);
+          this.level = levelForXp(this.xp);
         }
       }
     } catch (e) {}
@@ -131,7 +169,14 @@ class SessionManager {
     }
   }
 
-  setUserData(data) {
+  /**
+   * @param {object} data server payload
+   * @param {{trustXp?: boolean}} opts pass trustXp:false for endpoints that do not
+   *   return a real XP total (e.g. player/create during onboarding) so a stale 0
+   *   cannot wipe the player's score.
+   */
+  setUserData(data, opts = {}) {
+    const trustXp = opts.trustXp !== false;
     if (!data) return;
 
     if (data.player && typeof data.player === 'object') {
@@ -153,15 +198,15 @@ class SessionManager {
         if (found) this.team = found;
       }
     }
-    if (typeof data.xp === 'number') {
-      this.xp = Math.max(this.xp || 0, data.xp);
-      this.level = Math.max(this.level || 1, Math.floor(Math.sqrt(this.xp / 45)) + 1);
+    // The server is authoritative on XP. Taking Math.max here used to let locally
+    // awarded XP (including replayed stages) inflate forever and never reconcile.
+    if (trustXp && typeof data.xp === 'number') {
+      this.xp = data.xp;
+      this.level = levelForXp(this.xp);
       if (this.player) {
         this.player.xp = this.xp;
         this.player.level = this.level;
       }
-    } else if (typeof data.level === 'number') {
-      this.level = Math.max(this.level || 1, data.level);
     }
     if (typeof data.isAdmin === 'boolean') {
       this.isAdmin = data.isAdmin;
@@ -188,7 +233,7 @@ class SessionManager {
   addXp(amount) {
     if (!amount || typeof amount !== 'number') return;
     this.xp = (this.xp || 0) + amount;
-    this.level = Math.max(1, Math.floor(Math.sqrt(this.xp / 45)) + 1);
+    this.level = levelForXp(this.xp);
     if (this.player) {
       this.player.xp = this.xp;
       this.player.level = this.level;

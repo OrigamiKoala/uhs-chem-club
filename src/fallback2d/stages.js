@@ -5,8 +5,66 @@
 
 import { ANCHOR_DEFINITIONS } from '../quest3d/anchors.js';
 
-export function renderFallbackInputs(container, stageConfig, kind, onPayloadChange) {
+/**
+ * Turn an anchor id into something a player without a 3D view can actually choose
+ * between: its scanner site letter plus where it sits in the chamber.
+ *
+ * Deliberately says nothing about how strong or how crowded the site is. That is
+ * what the scan buttons are for, here exactly as in the 3D chamber — a Tier 1
+ * player has to explore for the same information, not be handed it in a dropdown.
+ */
+function describeAnchor(anchorId, stageConfig, indexByType) {
+  const region = (stageConfig.regions || []).find(r => r.id === anchorId);
+  const def = ANCHOR_DEFINITIONS[anchorId];
+  const type = region?.type || def?.type || (String(anchorId).startsWith('red') ? 'red' : 'blue');
+  const pos = region?.pos || def?.pos || [0, 0, 0];
+
+  const horizontal = pos[0] < -0.7 ? 'left' : pos[0] > 0.7 ? 'right' : 'middle';
+  const vertical = pos[1] > 0.6 ? 'upper ' : pos[1] < -0.6 ? 'lower ' : '';
+
+  const site = stageConfig.scans?.[anchorId]?.site;
+  const n = (indexByType[type] = (indexByType[type] || 0) + 1);
+  const name = site ? `Site ${site}` : `${type === 'red' ? 'Red' : 'Blue'} zone ${n}`;
+  return `${name} — ${vertical}${horizontal}`;
+}
+
+/** Build <option> markup for a set of anchors. */
+function anchorOptions(anchors, stageConfig) {
+  const counters = {};
+  return anchors.map(a => `<option value="${a}">${describeAnchor(a, stageConfig, counters)}</option>`).join('');
+}
+
+/**
+ * The scanner, for players with no 3D chamber to tap. Same readout, same cost
+ * (free), same requirement to compare several sites before committing.
+ */
+function renderScanButtons(stageConfig, onScan) {
+  const scans = stageConfig.scans || {};
+  const ids = Object.keys(scans);
+  if (ids.length === 0 || typeof onScan !== 'function') return null;
+
+  const row = document.createElement('div');
+  row.className = 'fallback-scan-row';
+  row.innerHTML = `
+    <span class="fallback-scan-label">Scan a site:</span>
+    ${ids
+      .slice()
+      .sort((a, b) => String(scans[a].site).localeCompare(String(scans[b].site)))
+      .map(id => `<button type="button" class="quest-btn-sm btn-secondary fallback-scan-btn" data-scan="${id}">
+        Site ${scans[id].site}
+      </button>`).join('')}
+  `;
+  row.querySelectorAll('[data-scan]').forEach(btn => {
+    btn.addEventListener('click', () => onScan(btn.getAttribute('data-scan')));
+  });
+  return row;
+}
+
+export function renderFallbackInputs(container, stageConfig, kind, onPayloadChange, onScan = null) {
   container.innerHTML = '';
+
+  const scanRow = renderScanButtons(stageConfig, onScan);
+  if (scanRow) container.appendChild(scanRow);
 
   const wrap = document.createElement('div');
   wrap.className = 'fallback-controls form-group';
@@ -59,20 +117,24 @@ export function renderFallbackInputs(container, stageConfig, kind, onPayloadChan
       wrap.appendChild(row);
     }
   } else if (kind === 'arrow') {
-    const redAnchors = (stageConfig.anchors || []).filter(a => ANCHOR_DEFINITIONS[a]?.type === 'red' || a.startsWith('red'));
-    const blueAnchors = (stageConfig.anchors || []).filter(a => ANCHOR_DEFINITIONS[a]?.type === 'blue' || a.startsWith('blue'));
+    const all = stageConfig.anchors || [];
+    const typeOf = (a) => (stageConfig.regions || []).find(r => r.id === a)?.type
+      || ANCHOR_DEFINITIONS[a]?.type
+      || (String(a).startsWith('red') ? 'red' : 'blue');
+    const redAnchors = all.filter(a => typeOf(a) === 'red');
+    const blueAnchors = all.filter(a => typeOf(a) !== 'red');
 
     wrap.innerHTML = `
-      <label class="form-label">Draw Reaction Arrow:</label>
-      <div style="display: flex; gap: 0.5rem; align-items: center;">
-        <select id="arrow-from" class="form-select" style="flex:1;">
-          <option value="">-- Red Region (From) --</option>
-          ${(redAnchors.length > 0 ? redAnchors : stageConfig.anchors || []).map(a => `<option value="${a}">${ANCHOR_DEFINITIONS[a]?.label || a}</option>`).join('')}
+      <label class="form-label">Connect a red zone to a blue zone</label>
+      <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+        <select id="arrow-from" class="form-select" style="flex:1; min-width: 150px;" aria-label="Start of the arrow">
+          <option value="">-- Start (red) --</option>
+          ${anchorOptions(redAnchors.length > 0 ? redAnchors : all, stageConfig)}
         </select>
-        <span style="color:var(--accent-cyan); font-weight:bold;">➔</span>
-        <select id="arrow-to" class="form-select" style="flex:1;">
-          <option value="">-- Blue Region (To) --</option>
-          ${(blueAnchors.length > 0 ? blueAnchors : stageConfig.anchors || []).map(a => `<option value="${a}">${ANCHOR_DEFINITIONS[a]?.label || a}</option>`).join('')}
+        <span style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
+        <select id="arrow-to" class="form-select" style="flex:1; min-width: 150px;" aria-label="End of the arrow">
+          <option value="">-- End (blue) --</option>
+          ${anchorOptions(blueAnchors.length > 0 ? blueAnchors : all, stageConfig)}
         </select>
       </div>
     `;
@@ -91,21 +153,21 @@ export function renderFallbackInputs(container, stageConfig, kind, onPayloadChan
     const steps = stageConfig.steps || [{ order: 1 }, { order: 2 }];
     const anchors = stageConfig.anchors || [];
     wrap.innerHTML = `
-      <label class="form-label">Multi-Step Reaction Sequence:</label>
+      <label class="form-label">Put the steps in order</label>
       ${steps.map((st, i) => `
-        <div style="margin-bottom: 0.6rem; background: rgba(0,0,0,0.25); padding: 6px; border-radius: 4px;">
-          <div style="font-size: 0.75rem; color: var(--accent-amber); margin-bottom: 4px; font-weight: bold;">
-            Step ${st.order || (i + 1)}:
+        <div style="margin-bottom: 0.6rem; background: var(--plate-100); padding: 9px; border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
+          <div class="eyebrow" style="color: var(--accent-amber); margin-bottom: 5px;">
+            Step ${st.order || (i + 1)}
           </div>
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <select class="form-select multi-step-from" data-order="${st.order || (i + 1)}" style="flex:1;">
-              <option value="">-- From Region --</option>
-              ${anchors.map(a => `<option value="${a}">${ANCHOR_DEFINITIONS[a]?.label || a}</option>`).join('')}
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <select class="form-select multi-step-from" data-order="${st.order || (i + 1)}" style="flex:1; min-width: 150px;" aria-label="Step ${st.order || (i + 1)} start">
+              <option value="">-- Start --</option>
+              ${anchorOptions(anchors, stageConfig)}
             </select>
-            <span style="color:var(--accent-amber); font-weight:bold;">➔</span>
-            <select class="form-select multi-step-to" data-order="${st.order || (i + 1)}" style="flex:1;">
-              <option value="">-- To Region --</option>
-              ${anchors.map(a => `<option value="${a}">${ANCHOR_DEFINITIONS[a]?.label || a}</option>`).join('')}
+            <span style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
+            <select class="form-select multi-step-to" data-order="${st.order || (i + 1)}" style="flex:1; min-width: 150px;" aria-label="Step ${st.order || (i + 1)} end">
+              <option value="">-- End --</option>
+              ${anchorOptions(anchors, stageConfig)}
             </select>
           </div>
         </div>
@@ -130,14 +192,14 @@ export function renderFallbackInputs(container, stageConfig, kind, onPayloadChan
     wrap.querySelectorAll('select').forEach(s => s.addEventListener('change', updateMulti));
   } else if (kind === 'chain') {
     wrap.innerHTML = `
-      <label class="form-label">Multi-Step Reaction Cascade:</label>
+      <label class="form-label">Reaction cascade</label>
       <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-secondary);">Step 1: Attack Arrow</div>
       <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.75rem;">
         <select id="step1-from" class="form-select" style="flex:1;">
           <option value="">-- From --</option>
           ${(stageConfig.anchors || []).map(a => `<option value="${a}">${a}</option>`).join('')}
         </select>
-        <span>➔</span>
+        <span style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
         <select id="step1-to" class="form-select" style="flex:1;">
           <option value="">-- To --</option>
           ${(stageConfig.anchors || []).map(a => `<option value="${a}">${a}</option>`).join('')}
@@ -149,7 +211,7 @@ export function renderFallbackInputs(container, stageConfig, kind, onPayloadChan
           <option value="">-- From --</option>
           ${(stageConfig.anchors || []).map(a => `<option value="${a}">${a}</option>`).join('')}
         </select>
-        <span>➔</span>
+        <span style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
         <select id="step2-to" class="form-select" style="flex:1;">
           <option value="">-- To --</option>
           ${(stageConfig.anchors || []).map(a => `<option value="${a}">${a}</option>`).join('')}

@@ -108,10 +108,10 @@ var Db = {
 
   ensureTeamsMigrated: function() {
     var defaultTeams = [
-      { team_id: 'earth', name: 'Earth', corp_name: 'Earth', ship_name: 'Earth', color_hex: '#1b5e20', accent_hex: '#a3824c', slot_cap_override: '', lore: '', emblem: 'geo' },
-      { team_id: 'air', name: 'Air', corp_name: 'Air', ship_name: 'Air', color_hex: '#006064', accent_hex: '#8a9ba8', slot_cap_override: '', lore: '', emblem: 'aero' },
-      { team_id: 'fire', name: 'Fire', corp_name: 'Fire', ship_name: 'Fire', color_hex: '#bf360c', accent_hex: '#c85a17', slot_cap_override: '', lore: '', emblem: 'pyro' },
-      { team_id: 'water', name: 'Water', corp_name: 'Water', ship_name: 'Water', color_hex: '#0d47a1', accent_hex: '#2a9d8f', slot_cap_override: '', lore: '', emblem: 'hydro' }
+      { team_id: 'earth', name: 'Earth', corp_name: 'Earth', ship_name: 'Earth', color_hex: '#241f14', accent_hex: '#8a7148', slot_cap_override: '', lore: '', emblem: 'geo' },
+      { team_id: 'air', name: 'Air', corp_name: 'Air', ship_name: 'Air', color_hex: '#1a2226', accent_hex: '#75818a', slot_cap_override: '', lore: '', emblem: 'aero' },
+      { team_id: 'fire', name: 'Fire', corp_name: 'Fire', ship_name: 'Fire', color_hex: '#2a1a0f', accent_hex: '#9c5423', slot_cap_override: '', lore: '', emblem: 'pyro' },
+      { team_id: 'water', name: 'Water', corp_name: 'Water', ship_name: 'Water', color_hex: '#12231f', accent_hex: '#3f7d76', slot_cap_override: '', lore: '', emblem: 'hydro' }
     ];
 
     var aliasMap = {

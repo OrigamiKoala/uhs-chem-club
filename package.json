@@ -10,7 +10,10 @@
     "deploy:backend": "cd apps-script && clasp push",
     "seed": "node tools/seed.mjs",
     "test:load": "node tools/loadtest.mjs",
-    "bake:stills": "node tools/bake-stills.mjs"
+    "bake:stills": "node tools/bake-stills.mjs",
+    "verify:quest": "node tools/verify-stages.mjs",
+    "verify:flows": "node tools/verify-flows.mjs",
+    "verify": "npm run verify:quest && npm run verify:flows && npm run build"
   },
   "dependencies": {
     "three": "^0.174.0"

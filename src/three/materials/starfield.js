@@ -9,9 +9,9 @@ export function createStarfield(count = 8000, radius = 250) {
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
 
-  const colA = new THREE.Color('#00e5ff');
+  const colA = new THREE.Color('#9fb8d8');
   const colB = new THREE.Color('#ffffff');
-  const colC = new THREE.Color('#ffea46');
+  const colC = new THREE.Color('#f4a261');
 
   for (let i = 0; i < count; i++) {
     const u = Math.random();

@@ -1,121 +1,248 @@
 # Avalon — Engineering Reference
 
+Avalon is the UHS Chemistry Club's competition portal. Its audience is middle- and
+high-school students who know little or no chemistry, so the product rule that outranks
+everything else is: **teach through play, reveal vocabulary last.** A player draws lines
+between glowing regions for twenty stages and only meets the words "electron", "curved
+arrow" and "steric hindrance" in the epilogue, after the intuition is already built.
+
 ## Build and Run
-- `npm run dev`: Start Vite local development server (port 3000) with embedded API middleware.
-- `npm run build`: Build production assets into `dist/`.
-- `npm run deploy:backend`: Push Apps Script code via clasp (`clasp push`).
-- `npm run bake:stills`: Generate fallback static SVG backdrops in `public/fallback/`.
-- `npm run test:load`: Execute concurrency simulation testing for 40 simultaneous signups.
-- `npm run seed`: Generate test roster data for the four corporate flagships.
+- `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
+- `npm run build` — production assets into `dist/`.
+- `npm run verify` — `verify:quest` + `verify:flows` + `build`. Run this before shipping.
+- `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below).
+- `npm run verify:flows` — end-to-end smoke test of the API a new student touches.
+- `npm run deploy:backend` — `clasp push` of `apps-script/`.
+- `npm run bake:stills` — regenerate the static SVG backdrops in `public/fallback/`.
+- `npm run seed` / `npm run test:load` — roster seeding and 40-user concurrency sim.
 
-## Code Architecture
-- `src/three/`: Master three.js WebGL2 engine, quality tier probe (T3/T2/T1), persistent ship interior, and spline camera rig.
-- `src/quest3d/`: Reusable containment chamber, InstancedMesh molecular renderer, dual-shell electron density isosurfaces, and 3D raycast interactions.
-- `src/fallback2d/`: Accessible DOM-only input fallbacks sharing the exact same payload contract.
-- `api/[...route].js`: Vercel serverless catch-all proxy with native `crypto.scrypt` password hashing and rate limiting.
-- `apps-script/`: Google Apps Script backend DAO (`Db.gs`), authentication (`Auth.gs`), scoring and normalized leaderboards (`Scoring.gs`), quests (`Quests.gs`), and deterministic random events (`Events.gs`).
-- `docs/plans/avalon-implementation-plan.md`: Master architectural specification.
-- `docs/quests/q1-charge-gardens.md`: Quest 1 curriculum and answer keys.
-- `docs/runbook.md`: On-call operational runbook for live events.
+## Architecture
 
-## Recent Updates
-- Added `setup()` in `apps-script/Main.gs` for manual 1-click sheet schema and data initialization.
-- UI copy simplified: stripped feature advertisements, marketing text, and verbose lore across all screens.
-- Added `/comms` and `/inventory` route aliases.
-- Non-blocking initial bootstrap: HUD and Router initialize immediately in `src/main.js` so foreground loads in 0ms without waiting on backend network response.
-- Removed expensive `Db.initDb()` from Apps Script `bootstrap` route hot path and added 60s caching.
-- Added in-memory proxy cache for public routes (`bootstrap`, `quest/manifest`, `leaderboard`) in `api/[...route].js`.
-- Made screen rendering non-blocking across onboarding, leaderboards, inventory, and quest screens to eliminate blank screen loading delays.
-- Exempted `#/admin` from mandatory onboarding redirect in router.
-- Added persistent authentication in `src/session.js`: session token, player profile, team, XP, level, inventory, and config are stored in `localStorage` under `avalon_user_session` and restored synchronously at app boot.
-- Auto-redirect authenticated users from `#/`, `#/login`, and `#/register` directly to `#/bridge` (or `#/onboarding` if team not assigned).
-- Made bridge dashboard reactive to session subscriber updates.
-- Added mock handlers for `player/me`, `player/update`, and `player/rename` in `api/[...route].js` for local development.
-- Converted 3D molecular renderer to ball-and-stick models with CPK colored spheres and connecting cylinder rods (`src/quest3d/molecule.js`).
-- Implemented realistic MarchingCubes electrostatic potential charge density isosurfaces: red for most dense, blue for least dense, green/cyan intermediate, slightly translucent to reveal ball-and-stick structure underneath (`src/quest3d/isosurface.js`).
-- Stripped all technical jargon ("electrons", "charge clouds", "nucleophile", "orbitals", etc.) across quest HUD, prompts, manifests, and backend (`src/screens/quest.js`, `apps-script/Quests.gs`, `api/[...route].js`). Set all prompts strictly to: "Draw a line between the two regions."
-- Space Opera overhaul: shifted theme to multi-planet space opera across uncharted star systems while keeping Quest 1 on the desert world Erebus.
-- Onboarding, landing, login, register, and bridge vantage point configured to a 3D first-person starship cockpit looking out at deep space and celestial bodies.
-- Nano Banana generated assets: `/art/cockpit.jpg` (starship cockpit view), `/art/starmap.jpg` (multi-planet tactical projection), `/art/durasteel_plate.jpg` (weathered PBR plate texture), `/art/factions.jpg` (guild charter).
-- Three.js 3D assets: modeled faceted durasteel canopy trusses, overhead avionics rack, dual flight yokes, throttle quadrant, armored flight chairs, chromatic gas giant with planetary rings, tumbling asteroid debris belt, and deep-space starlight illumination.
-- Standardized teams to Earth, Air, Fire, Water: added auto-migration (`Db.ensureTeamsMigrated()`), legacy fallback aliases (`terra`, `zephyr`, `ignis`, `thalassa`), and client-side normalization across onboarding, session cache, and API proxy to resolve 400 team selection errors.
-- Fixed onboarding redirect loop & trap: synced `player.team_id` with `team.team_id` in `session.setUserData`, checked `session.teamId` in `router.js`, and handled `ALREADY_ASSIGNED` errors smoothly.
-- Fixed 3D Quest rendering: resolved blank scene caused by legacy choice stage 0 without `moleculeId`; added automatic stage fallback and normalization in `viewer.js`, `apps-script/Quests.gs`, and `api/[...route].js`.
-- Fixed 3D drawing vs rotation: added Draw vs Rotate mode toggle and Clear Line button in `src/screens/quest.js`, supported right-click camera orbit during draw mode in `src/three/lib/orbit.js`, and made drawn lines thick, bright (`#ffd166` / `#00ff88`), and rendered with `depthTest: false`.
-- Stripped unnecessary text, lore fluff, and feature advertisements across all screens (landing, onboarding, bridge, starmap, inventory, leaderboard, quarters, and quest).
-- Replaced nonsensical quest stage choices and vague directions with stage-specific chemistry prompts.
-- Obvious incorrect feedback: added full-screen emergency red flash vignette, stage card shake animation (`@keyframes cardErrorShake`), red warning border glow, and prominent inline alert banner (`#stage-feedback`) directly on the stage prompt card.
-- Freeform 3D arrow drawing: arrows now render and persist wherever drawn in 3D space (`src/quest3d/interactions/arrow.js`, `src/three/arrow-drag.js`), instead of only appearing when connecting exact anchors.
-- Proximity-based solution grading: users can draw anywhere close to the correct trajectory (`tolerance: 1.35` 3D radius) and it is evaluated as correct across all stages (`src/quest3d/evaluator.js`).
-- Immediate browser-side evaluation: quest grading now executes synchronously in 0ms directly in client (`src/screens/quest.js`), pre-loading solutions without waiting on Google Sheets network calls.
-- Unlimited attempts: removed attempt caps, attempt counters, and attempt deduction penalties across client (`src/screens/quest.js`), proxy (`api/[...route].js`), and backend (`apps-script/Quests.gs`).
-- Obvious incorrect feedback: added full-screen emergency red flash vignette, stage card shake animation (`@keyframes cardErrorShake`), red warning border glow, and prominent inline alert banner (`#stage-feedback`) directly on the stage prompt card.
-- Freeform 3D arrow drawing: arrows now render and persist wherever drawn in 3D space (`src/quest3d/interactions/arrow.js`, `src/three/arrow-drag.js`), instead of only appearing when connecting exact anchors.
-- Proximity-based solution grading: users can draw anywhere close to the correct trajectory (`tolerance: 1.35` 3D radius) and it is evaluated as correct across all stages (`src/quest3d/evaluator.js`).
-- Guarded bootstrap against network failures with local fallback and object validation (`boot = (raw && typeof raw === 'object') ? raw : {}`), resolving `TypeError: Cannot read properties of undefined (reading 'config')`.
-- Stripped all forbidden terminology ("electron", "electron-rich", "electron-deficient", "electrophile", "nucleophile") across all quest prompts, manifests, bridge cards, starmap, and inventory items, reserving explanations strictly for the final quest epilogue.
-- Fixed `notifySubscribers is not a function`: added `notifySubscribers()` method alias to `SessionManager` in `src/session.js` and updated `src/screens/quest.js` to call `session.notify()` and persist XP.
-- Simplified quest instructions: instructions and draw tips rendered strictly on Stage 1; stages 2-7 display zero prompt text (`src/screens/quest.js`, `src/quest3d/evaluator.js`, `api/[...route].js`, `apps-script/Quests.gs`).
-- Enhanced electron density visibility: upgraded isosurfaces to double-sided 0.65 opacity with saturated colormap and balanced neutral white key/ambient illumination (`src/quest3d/isosurface.js`, `src/quest3d/viewer.js`).
-- Fixed multi-submit stage skipping: locked submit button upon successful evaluation with `isAdvancing` flag, retained button disabled state, and passed fixed target stage indices to prevent rapid clicks from skipping forward (`src/screens/quest.js`).
-- Introduced beginner-friendly electron density concept: rendered dedicated Atoms & Electrons concept card on Stage 2 explaining atoms, molecules, negative electron charges, and red/blue density flow using magnet analogies (`src/quest3d/evaluator.js`, `src/screens/quest.js`, `src/styles/holo.css`).
-- Introduced molecule path tracing and steric hindrance: added concept card on Stage 5 explaining that arrows trace physical molecule collision trajectories, that atoms occupy physical space, and how bulky surrounding atom clusters block pathways (`src/quest3d/evaluator.js`, `src/screens/quest.js`).
-- Synced stage titles and prompts across proxy (`api/[...route].js`) and backend (`apps-script/Quests.gs`).
-- Added dismiss and reopen buttons to Quest Key Concept cards (`src/screens/quest.js`, `src/styles/holo.css`) to allow expanding screen space for the 3D viewer.
-- Middle-school friendly explanation cards across all 7 stages of Quest 1: added engaging LEGO brick, magnet, bumper car, and bodyguard analogies explaining atoms, molecules, energy clouds, and octet rules with zero confusing jargon (`src/quest3d/evaluator.js`, `api/[...route].js`, `apps-script/Quests.gs`).
-- Physically accurate 3D reaction animation upon correct arrow drawing: left and right molecules approach along the collision vector, covalent bond snaps into place with energy glow, and in $S_N2$ stages (Stage 2: $CH_3Cl$, Stage 5: alkyl bromide) the leaving halogen atom ($Cl^-$, $Br^-$) breaks off and accelerates away so carbon strictly preserves its octet and never has 5 full bonds at once (`src/quest3d/molecule.js`, `src/quest3d/viewer.js`, `src/screens/quest.js`, `src/quest3d/isosurface.js`).
-- Expanded Quest 1 to 20 stages:
-  - Stages 8–10: >2 molecules (3 molecules in chamber: acid, base, spectator / nucleophile, substrate, leaving group).
-  - Stages 11–20: Multi-step reactions with chronological numbered arrows.
-  - Multi-arrow interaction (`src/three/arrow-drag.js`, `src/quest3d/interactions/arrow.js`): apex numbered circular 3D badge sprites, raycast click on badge cycles order, click on arrow deletes it; dual HUD step sequence pills with click-to-reorder and delete.
-  - Cascade 3D animations: sequential multi-step reaction cascades in `MoleculeMesh.animateReaction`.
-  - Local & remote multi-step evaluation (`src/quest3d/evaluator.js`, `api/[...route].js`, `apps-script/Quests.gs`): ordered sequence checking with `wrongOrder` and `incomplete` warnings.
-  - Middle-school explanations across all 20 stages: magnets, LEGO bricks, bumper cars, relay passes, and musical chairs analogies with zero jargon.
-  - 2D DOM fallback updated with multi-step arrow selector rows (`src/fallback2d/stages.js`).
-- Fixed stage skipping bug: cleared stale interaction payloads on stage reset, decoupled draw completion from auto-submit, and require explicit submit button click (`src/quest3d/interactions/arrow.js`, `src/quest3d/viewer.js`, `src/screens/quest.js`).
-- Fixed explanation window timing: hid explanation banner during 3D reaction animation; pop up explanation only after animation completes, with Next Stage button (`src/screens/quest.js`).
-- Disabled arrow snapping: arrows render freeform in 3D following cursor without snapping to anchors on hover, start, or release (`src/quest3d/interactions/arrow.js`).
-- Removed duplicate "Next Stage" button from the correct feedback banner, keeping solely the primary button below it (`src/screens/quest.js`).
-- Stripped all references to specific atoms and molecules (Carbon, Oxygen, Chlorine, Bromine, Nitrogen, C-O, C-Cl, C=O, water, methane, alcohol, etc.) from prompts, hints, concept cards, and reaction explanations across `src/quest3d/evaluator.js`, `api/[...route].js`, and `apps-script/Quests.gs`.
-- Stripped bond counts, octet rules, and 4-bond limits; simplified Quest 1 concept cards, hints, and explanations for middle school level (`src/quest3d/evaluator.js`, `api/[...route].js`, `apps-script/Quests.gs`).
-- Fixed Quest 1 Stage 6 impassability: clarified prompt and error banner to target the open blue site at the bottom, increased proximity tolerance to 1.85, resolved camera rotation unprojection skew in `arrow.js`, and expanded anchor hit testing with 3D ray-distance fallback (`src/quest3d/evaluator.js`, `src/quest3d/interactions/arrow.js`, `src/three/lib/picker.js`, `api/[...route].js`, `apps-script/Quests.gs`).
-- Removed Rotate View button from Quest HUD; added intuitive hint `"👆 Two-finger tap / right-click to rotate"` and two-finger gesture orbit detection (`src/screens/quest.js`, `src/three/lib/orbit.js`).
-- Fixed Stage 5 reaction animation visibility: hid static MarchingCubes electron density isosurface (`this.currentIsosurface.group.visible = false`) during `playReaction()` so ball-and-stick molecule approach, new bond formation, and leaving group departure are completely unobstructed (`src/quest3d/viewer.js`).
-- Instant quest stage loading: removed blocking "Aligning Sensor Array" loading screen; now immediately renders current stage at 0ms latency using bundled `STAGE_CONFIGS`, syncing remote manifest and progress non-blockingly in the background (`src/screens/quest.js`).
-- Optimized login latency: client now caches scrypt salt in `localStorage` and passes `cachedSalt` to `/api/auth/login`, skipping the sequential `auth/salt` roundtrip to Google Apps Script and cutting login time in half with automatic fallback (`src/screens/login.js`, `src/api.js`, `api/[...route].js`).
-- Purpose of `bootstrap`: returns complete game configuration, team slot availability, active quest stages, and authenticated user state in a single request to eliminate startup network waterfalls.
+### Client (`src/`)
+- `main.js` — boots the 3D stage, HUD and router immediately, then fetches `bootstrap`
+  in the background so first paint never waits on the network.
+- `router.js` — hash router. `ROUTES` declares auth/admin gating; `ROUTE_NAV` maps a route
+  to the HUD nav button that should light up; unknown hashes normalize to `#/`. Closes any
+  open modal and exits the quest scene on navigation.
+- `session.js` — token, player, team, XP, inventory and progress, persisted in
+  `localStorage` and restored synchronously at boot. Exports `levelForXp`, `levelProgress`
+  and `levelTitle` — **the only XP curve in the client** (45·(N−1)² per level, capped at
+  level 12 to match `Scoring.gs`). Server XP is authoritative: `setUserData` overwrites the
+  local total unless called with `{ trustXp: false }` (used by `player/create`, which does
+  not return a real total).
+- `api.js` — thin POST wrapper; clears the session on `UNAUTHORIZED`.
+- `ui/layout.js` — `pageHeader`, `statRow`, `stepRail`, `emptyState`, `esc`. **Every screen
+  builds its header from `pageHeader`**; do not hand-roll banner/title markup.
+- `ui/modal.js` — `showModal` / `closeModal`, with focus handling and Escape to dismiss.
+- `ui/toast.js` — transient messages; the `type` maps to `.toast-success/-error/-warning/-info`.
+- `ui/scan.js` — the site scanner readout (`renderScanReadout`, `meterBar`). Shared by
+  the quest HUD and the free sample so both teach the same loop.
+- `screens/` — one render function per route, all pure string templates.
+- `three/` — persistent WebGL stage, quality-tier probe (T3/T2/T1), ship interior, camera rig.
+- `quest3d/` — reusable containment chamber, `MOLECULE_DATA` (atoms, bonds and the
+  pickable `regions` that double as anchor definitions), `InstancedMesh` renderer,
+  MarchingCubes charge-density isosurfaces, and `evaluator.js`.
+- `fallback2d/stages.js` — DOM-only inputs for Tier 1, producing the identical payload
+  contract. Anchor labels are generated from region position and intensity
+  ("Blue zone 2 — bright, lower right") so a player with no 3D view can still choose.
 
+### Quest data — one source of truth
+`src/quest3d/evaluator.js` owns the player-facing copy and the answers. It is in two
+layers: `STAGE_CONFIGS` holds geometry, expected anchors, tolerance and reaction
+animation, and `STAGE_COPY` holds everything the player reads — `shape`, `prompt`,
+the three-rung `hints` ladder, the per-site `scans`, and the `concept` card plus its
+`conceptTiming`. `STAGE_COPY` is folded onto `STAGE_CONFIGS` at module load so the
+writing can be edited as writing; `cfg.hint` stays as an alias for `hints[0]` because
+the backend has one `hint_text` column. Also exported: `evaluateStageLocally`,
+`diagnoseMiss`, `scanFor`, `scansForStage`, `TOTAL_STAGES` and `TOTAL_QUEST_XP`.
+Grading happens **in the browser at 0 ms**; the server call is fire-and-forget telemetry.
+`CANONICAL_STAGES_20` in `api/[...route].js` and `DEFAULT_STAGES` in `apps-script/Quests.gs`
+mirror the same titles and prompts — `npm run verify:quest` fails if they drift.
 
+### API proxy (`api/[...route].js`)
+Vercel catch-all. Performs `crypto.scrypt` password derivation (never sends plaintext to
+Apps Script), rate limiting, salt caching, team-id normalization, and a 60 s in-memory cache
+for public routes. When `APPS_SCRIPT_URL` is unset it falls back to `localDevHandler`, a
+full in-memory mock of the backend — including the once-per-stage XP rule, so dev behaviour
+matches production.
 
-## Star Wars & Dune Space Opera Aesthetic Standards (MANDATORY FOR ALL AGENTS)
+### Backend (`apps-script/`)
+`Db.gs` (Sheets DAO), `Auth.gs`, `Players.gs`, `Quests.gs` (manifest, grading, hints,
+completion), `Scoring.gs` (normalized leaderboards, level curve, level titles),
+`Items.gs`, `Events.gs`, `Main.gs` (router + `setup()` for one-click sheet init).
 
-All visual designs, UI components, and 3D scenes MUST strictly follow a **Star Wars / Dune "Used Universe" Space Opera** aesthetic across multiple planetary systems.
+## Rules that keep the game fair
+- **XP is paid once per stage.** `Quests.gs` checks prior correct submissions, the proxy
+  mock tracks `progress.cleared`, and the client only calls `session.addXp` when the stage
+  is not a replay. Stage navigation lets players revisit any stage they have reached, so
+  without this the Prev button is an infinite XP faucet.
+- **Flat XP, no attempt multiplier.** The client grades locally and shows "+N XP" before the
+  server replies; a server-side multiplier would contradict what the player was just told.
+- **Hints are free** (`hint_cost: 0` on every stage). A stuck 8th grader should never be
+  taxed for asking.
+- **Completion is idempotent** — `completeQuest` returns the existing award if
+  `Progress.completed_at` is already set, instead of minting another item.
+- **Progress never regresses** — `stage_reached` is always `Math.max`'d.
+- **The clean-solve streak pays nothing.** It counts stages cleared first try without the
+  solution hint and is display only. Give it an XP value and it becomes an attempt
+  multiplier, which the rule above forbids.
+- **Hints are earned, not bought.** Rung 1 is free; rung 2 opens after one miss or 45 s;
+  rung 3 opens after two misses. Nobody is ever stranded — but nobody is handed the answer
+  before they have looked, either.
 
-### 1. Design Philosophy
-- **Space Opera Scope**: Avalon spans multiple uncharted planets (Erebus desert world, Pyros Prime volcanic forge, Cryo-Haven ice tundra, Vortex Strata gas giant). Quest 1 takes place on the desert planet Erebus.
-- **Starship Cockpit Perspective**: Non-quest screens (landing, onboarding, login, register, bridge) are viewed from the cockpit of the starship *Avalon*, looking through heavy faceted canopy framing out into deep space.
-- **Grimy & Advanced**: Technology looks battle-tested, dusty, scratched, oil-stained, and mechanically tactile (analog dials, CRT vector scopes, toggle switches, heavy bolted durasteel), while functioning as cutting-edge chemical engineering simulation hardware.
-- **Strictly Banned**: No "vibe-coded" synthwave, generic esports neon, modern web3 crypto cards, glossy blue glassmorphism, or electric cyan (`#00e5ff`) laser glows.
+## Quest 1 — The Charge Gardens of Erebus
+20 stages, 650 XP total.
 
-### 2. Color Palette
-- **Surfaces**: Scorched carbon durasteel (`#0c0d11`, `#14161c`), weathered iron plates (`#1c2024`, `#22262d`), deep cosmic void (`#08090d`).
-- **Telemetry & Accents**: Spice Amber (`#ff9f1c`), Solar Flare Sand Gold (`#f4a261`), Industrial Rust (`#c85a17`), CRT Phosphor Green (`#38b000`), Emergency Red (`#d90429`), Imperial Guild Bronze (`#a3824c`).
-- **Displays**: Monochromatic amber or green CRT tube scanlines with analog waveforms and telemetry grids.
+**The loop is scan → compare → commit.** A prompt states the situation and the goal and
+never the route; everything true about an individual site lives in that site's scan.
+Tapping a site (a click with no drag, handled in `interactions/arrow.js` → `onProbe`)
+rings it in the chamber and prints its readout: polarity, a 0–10 CHARGE bar, a 0–10
+CLEARANCE bar, and one plain sentence. One scan is never enough — every stage is solved
+by comparing two or more, which is what makes looking the core verb rather than reading.
+Tier 1 gets the identical readout from a row of Site buttons.
 
-### 3. Typography
-- **Headings / Military Titles**: `Chakra Petch`, `Cinzel` (Imperial House weight).
-- **Telemetry / Flight Recorders / Formulas**: `Share Tech Mono`, `JetBrains Mono`.
-- **UI Labels & Body**: `Rajdhani`.
+A miss is answered by `diagnoseMiss`, which names the physics — TWO GIVERS, BACKWARDS,
+TOO WEAK TO FIRE, PATH BLOCKED — and points at a site to go and scan. All 216 possible
+wrong site-pairings across the quest resolve to a specific message; none fall through.
 
-### 4. 3D Graphics & Nano Banana Assets
-- Combine Nano Banana (`generate_image`) realistic matte textures and backdrops with Three.js procedural geometries and PBR materials (`MeshStandardMaterial`).
-- Starship Cockpit features faceted durasteel canopy mullions, overhead avionics rack, dual analog flight yokes, dual throttle quadrant, armored bucket flight seats, and twin CRT flight monitors.
-- Space Opera Celestial Vista features a chromatic gas giant with planetary rings, the banded desert planet Erebus (Quest 1), orbiting moons, and an asteroid debris belt drifting through space.
-- Lighting: Cool celestial starlight cutting through forward canopy, warm sodium/amber instrument task lamps, and floating micro-dust motes.
-- Routes bind corresponding high-res environment stills (`/art/cockpit.jpg`, `starmap.jpg`, `crucible.jpg`, `cargo.jpg`, `quarters.jpg`, `comms.jpg`, `airlock.jpg`).
+Concept cards are rewards, not briefings. `conceptTiming: 'intro'` is reserved for cards
+that teach the *controls* (stage 1's scan/drag, stage 11's arrow ordering); every card
+that explains a *concept* is `'reward'` and appears after the solve, under
+"WHAT YOU JUST FOUND".
+- Stages 1–7: one arrow. Red giver → blue receiver, then competing sites, then blocked
+  paths that must be solved by rotating the view.
+- Stages 8–10: three molecules in the chamber, including a bystander.
+- Stages 11–20: two ordered arrows. Arrow badges are numbered; clicking a badge cycles its
+  step, clicking an arrow deletes it. Wrong order is reported distinctly from a wrong move.
+- Concept cards (bumper cars, two-handed handshakes, bent springs) appear after the solve
+  on the stages that introduce a new idea, and can be hidden and reopened.
+- A correct answer plays a physically honest 3D reaction: molecules approach along the
+  collision vector, a bond snaps in, leaving groups depart, double bonds open and re-form,
+  rings pop. The explainer appears **after** the animation, never on top of it.
+- The epilogue (`QUEST1_EPILOGUE`, duplicated verbatim in `Quests.gs`, the proxy and
+  `quest.js` as an offline fallback) is the single place real terminology is introduced.
 
-### 5. UI Components
-- **Panels**: Heavy durasteel plating (`.glass-panel`) with riveted seams, chamfers, and warm amber indicator edges.
-- **Buttons**: Tactile mechanical push buttons (`.btn-primary`) in spice gold with physical bevel drop shadows and active press translation; cast durasteel toggle buttons (`.btn-secondary`).
-- **Inputs**: Recessed analog cathode console screens (`.form-input`) with dark bezels and amber phosphor glow.
-- **Factions**: Four Imperial Guilds: Mineral Mining Guild (Earth), Atmospheric Harvesters (Air), Thermal Smelters (Fire), and Moisture Extraction (Water).
+`npm run verify:quest` asserts, for every stage: the molecule exists, every expected anchor
+is actually rendered, the intended solution grades correct for the configured XP, a
+backwards arrow fails, blocked targets report `blocked`, shuffled multi-arrow steps report
+`wrongOrder`, the solution coordinates pass the proximity check, and no player-facing string
+contains withheld vocabulary (electron, nucleophile, electrophile, carbonyl, carbocation,
+alkyl, ester, epoxide, isopropyl).
+
+It also asserts that **the scanner never lies**: every rendered region has a scan readout,
+letters are unique, readings are 0–10, no decoy giver scans stronger than the answer, no
+*reachable* decoy taker scans hungrier than the answer, a `blockedAnchor` scans ≤ 3
+clearance, every stage has exactly three distinct hint rungs, and a giver→giver submission
+is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
+
+## Player journey
+1. `#/` landing — what this is, three cards (Play / Score / Compete), and a free sample.
+2. `#/demo` — Stage 1 for real, no account, graded by the same evaluator.
+3. `#/register` — step 1 of 3 on the shared `stepRail`. Live validation mirrors
+   `validateDisplayName` in `Util.gs` exactly, so no rule bites only at submit time.
+4. `#/onboarding` — step 2. Four teams with guild names and live slot counts.
+5. `#/bridge` — step 3. Resume/start CTA, progress bar, XP, level and team conditions.
+6. `#/quest` → `#/leaderboard`, `#/inventory`, `#/quarters`, `#/settings`, `#/admin`.
+
+Nav labels match page titles exactly: BRIDGE, STAR MAP, STANDINGS, INVENTORY, CREW.
+
+## Aesthetic — "SCOURED PLATE" (MANDATORY FOR ALL AGENTS)
+
+Every screen, component and 3D scene obeys one brief: **hardware that has been in the
+dust for forty years and still works.** Advanced technology, poorly maintained. The
+reference points are the used-universe of a desert-planet space opera — never named in
+player-facing copy, only felt.
+
+### 1. The three material rules
+Read `src/styles/tokens.css` before styling anything; it is the contract.
+1. **Surfaces are warm dark.** The neutral scale (`--plate-000`…`--plate-600`) carries a
+   brown/sand bias. Never the blue-black of a generic dark-mode website.
+2. **Light is filament, not LED.** Amber comes from inside a thing, dim and local.
+   *Nothing blooms.* A `box-shadow: 0 0 20px <colour>` is the single loudest tell of
+   vibe-coded design and is banned. The only exceptions are things that are literally
+   lamps: `.gfx-dot`, `.stage-dot.active`, `.stage-dot.completed`.
+3. **Amber is a signal, not a surface.** If it is lit, something is live. Paint the whole
+   UI with it and it means nothing.
+
+### 2. Banned outright
+Neon and synthwave glow; electric cyan (`#00e5ff`); glossy blue glassmorphism; candy
+gradient buttons with white specular highlights; rounded corners (`--radius-sm` is `0`);
+**emoji anywhere in player-facing markup**; Tailwind-default palette hexes (`#fbbf24`,
+`#10b981`, `#ff5252`); auto-fit grids of "feature cards" advertising what the product does.
+
+### 3. Geometry and texture
+- Machined plate has **cut corners, not rounded ones**. `.plate`, `.glass-panel`,
+  `.holo-card` and `.stage-prompt-card` share one treatment: a `clip-path` chamfer plus a
+  matching hairline drawn as a 45° background gradient in the relieved corner.
+- Every large surface is sandblasted — a shared `--grain` noise tile at 3–4 % opacity via
+  `::before`, `mix-blend-mode: overlay`. Because a pseudo-element is not matched by
+  `> *`, the `position: relative` on direct children keeps content above the grain.
+- Seams are physical: `--seam-light` on the lamp-facing top edge, `--seam-dark` below.
+- Type is **engraved** (`--engrave`, a dark line under the glyph), never glowing.
+
+### 4. Colour
+- Surfaces: `--plate-*`. Seams: `--border-durasteel`, `--seam-light/dark`.
+- Signals: `--accent-amber` `#d99423`, `--accent-gold`, `--accent-rust`, `--accent-green`
+  `#6f8f3f`, `--accent-danger` `#a8342a`, `--accent-bronze`. Filaments: `--lamp-*`.
+- Guild liveries: `--team-earth/air/fire/water`. **The HUD badge derives its livery from
+  `TEAM_LIVERY` in `main.js`, never from the sheet's `accent_hex`** — a stale hex in the
+  Teams tab used to leak a bright web colour into the header.
+- **Charge red `#ff1744` and blue `#00b0ff` are reserved for the chemistry** and appear in
+  the 3D chamber only. In UI chrome they appear as printed ink on a hairline rule
+  (`--charge-red-ink`, `--charge-blue-ink`) — the polarity key, `.scan-readout` left
+  border, `.concept-pill` left border — never as a glowing block or a rainbow ramp.
+
+### 5. Typography
+- Page titles: `Cinzel` (`--font-imperial`) via `.page-title` — uppercase, tracked wide.
+- Section and card headings: `Chakra Petch` (`--font-display`) via `.section-title`.
+- Telemetry, labels, kickers, helper text: `Share Tech Mono` (`--font-mono`) via
+  `.eyebrow` (`.lit` when live), `.stat-value`, `.tag`, `.form-label`, `.form-help`.
+- Body: `Rajdhani` (`--font-main`).
+
+### 6. Components
+- **Panels**: `.glass-panel` / `.plate`. Banner art goes in `.panel-banner` — desaturated,
+  dimmed and sepia-shifted behind a scanline, so it reads as a viewport, not a hero image.
+- **Switchgear**: `.btn-primary` is a painted key cap (matte amber plate, engraved dark
+  legend, physical bottom lip, sinks on press). `.btn-secondary` is bare durasteel.
+  `.quest-btn-sm` is compact quest chrome. Labels are 1–2 words; **no arrow glyphs.**
+- **Inputs**: `.form-input` is a recessed well; focus turns the text amber rather than
+  adding a halo. `.choice-option` is a toggle with a lit left edge when selected.
+- **Banners**: `.form-banner` for faults; in the quest, `.stage-error-banner` with
+  `.banner-mark` / `.banner-title` / `.banner-body` / `.banner-meta`. The leading mark is
+  a stencilled `!!` or `//`, never an emoji.
+- **Scanner**: `.scan-readout` is a cathode instrument — phosphor raster, segment meters,
+  one beam sweep per read.
+- **Factions**: four Imperial Guilds — Mineral Mining (Earth), Atmospheric Harvesters
+  (Air), Thermal Smelters (Fire), Moisture Extraction (Water), shown as two-letter mono
+  designators (MM / AH / TS / ME). Legacy ids `terra`, `zephyr`, `ignis`, `thalassa` are
+  auto-migrated everywhere.
+
+### 7. Copy discipline
+The interface does not advertise itself. Delete any string that is not (a) a label,
+(b) a rule the player must satisfy, (c) an error, or (d) something being taught.
+- **No feature marketing.** The landing page is a name plate and two switches.
+- **A quest is described by three things and nothing else**: where it happens, its title,
+  and one short line. Sector 01 is `Erebus · Desert world / The Charge Gardens / "Find
+  what pulls. Draw the line."` — that is the template.
+- Screens carry no subtitle unless it is that one line.
+- **The teaching copy is exempt.** Prompts, `scans`, the three hint rungs, `diagnoseMiss`
+  messages, concept cards and the epilogue are the product; they are trimmed for
+  tightness, never for length.
+
+### 8. 3D and assets
+- Nano Banana (`generate_image`) matte textures with Three.js procedural geometry and
+  `MeshStandardMaterial`.
+- Starship cockpit: faceted durasteel canopy mullions, overhead avionics rack, dual analog
+  yokes, throttle quadrant, armored bucket seats, twin CRT monitors.
+- Celestial vista: chromatic gas giant with rings, the banded desert planet Erebus, moons,
+  an asteroid belt. Stars are blue-white and sand-gold, not neon.
+- Lighting: cool starlight through the canopy, warm sodium instrument task lamps, dust motes.
+- Routes bind environment stills: `/art/cockpit.jpg`, `starmap.jpg`, `crucible.jpg`,
+  `cargo.jpg`, `quarters.jpg`, `comms.jpg`, `airlock.jpg`.
+
+### 9. Layout invariants
+- `--hud-h` is the height of the fixed header. `.app-viewport` padding and the fixed
+  `.quest-hud-overlay` both derive from it; nothing may slide under the HUD.
+- Everything must work at 375 px wide. Media queries at 900 px / 760 px / 620 px collapse
+  the HUD, hide the legend and secondary chrome, shrink the chamfer, and cap the stage
+  card height.

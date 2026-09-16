@@ -18,9 +18,10 @@ export class ArrowController {
     this.multiArrow = false;
     this.onArrowComplete = null;
     this.onArrowsChanged = null;
+    this.onLimitReached = null;
 
     this.material = new THREE.MeshBasicMaterial({
-      color: 0x00e5ff,
+      color: 0xffd166,
       transparent: true,
       opacity: 0.9
     });
@@ -66,8 +67,9 @@ export class ArrowController {
     if (!this.multiArrow) {
       this.clear();
     } else if (this.completedArrows.length >= this.maxArrows) {
-      // Reached max arrows limit, cancel this addition
+      // At the arrow limit. Tell the player instead of silently eating the drag.
       this.cancel();
+      if (this.onLimitReached) this.onLimitReached(this.maxArrows);
       return null;
     }
 

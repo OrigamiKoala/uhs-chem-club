@@ -68,7 +68,7 @@ export class AnchorManager {
       const isExtreme = reg ? reg.intensity === 'extreme' : def?.intensity === 'extreme';
       const color = reg
         ? (type === 'red' ? (isExtreme ? 0xff1744 : 0xc2185b) : (isExtreme ? 0x00b0ff : 0x0288d1))
-        : (def?.color || 0x00e5ff);
+        : (def?.color || 0x00b0ff);
       const isHindered = reg ? !!reg.hindered : !!def?.hindered;
       const label = def?.label || (type === 'red' ? 'Red Region' : (isHindered ? 'Blue Region (Crowded)' : 'Blue Region'));
 

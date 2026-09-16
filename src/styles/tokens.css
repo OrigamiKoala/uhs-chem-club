@@ -1,79 +1,147 @@
+/* ===================================================================
+   AVALON — "SCOURED PLATE"
+   ===================================================================
+   Everything on this ship is forty years old and still works.
+
+   Three rules the whole palette obeys:
+     1. Surfaces are WARM dark. Sand gets into everything, so the neutrals
+        carry a brown bias — never the blue-black of a dark-mode website.
+     2. Light is FILAMENT, not LED. Amber comes from inside a thing, dim
+        and local. Nothing blooms. There is no halo on a piece of metal.
+     3. Amber is a SIGNAL, not a surface. If it is lit, it means something
+        is live. Paint the whole UI with it and it means nothing.
+   =================================================================== */
+
 :root {
-  /* Star Wars & Dune 'Used Universe' Space Opera Color Palette */
-  /* Surfaces & Plating */
-  --bg-deep: #08090d;             /* Deep cosmic void */
-  --bg-surface: rgba(22, 24, 30, 0.94);
-  --bg-surface-elevated: rgba(30, 33, 42, 0.96);
-  --bg-card: rgba(24, 26, 33, 0.92);
-  --bg-recessed: rgba(10, 11, 15, 0.9);
-  --bg-overlay: rgba(12, 13, 17, 0.94);
+  /* -----------------------------------------------------------------
+     PLATE — the material scale. Low numbers are recessed and dark,
+     high numbers are raised and catch light.
+     ----------------------------------------------------------------- */
+  --plate-000: #0a0908;   /* the void outside the canopy */
+  --plate-100: #100f0d;   /* deepest recess — instrument wells */
+  --plate-200: #171614;   /* panel ground */
+  --plate-300: #1f1d1a;   /* raised plate */
+  --plate-400: #2a2724;   /* bezel, button face */
+  --plate-500: #393430;   /* seam and scribe line */
+  --plate-600: #4a443d;   /* worn edge catching the task lamp */
 
-  /* Seams, Rivets & Industrial Borders */
-  --border-subtle: rgba(160, 140, 115, 0.22);
-  --border-strong: rgba(255, 159, 28, 0.45);
-  --border-bright: #ff9f1c;
-  --border-hazard: #c89218;
-  --border-durasteel: #3a3f4c;
+  /* Legacy surface names — repointed at the plate scale so every
+     existing rule shifts with the material, not against it. */
+  --bg-deep: var(--plate-000);
+  --bg-surface: rgba(23, 22, 20, 0.95);
+  --bg-surface-elevated: rgba(31, 29, 26, 0.96);
+  --bg-card: rgba(26, 24, 22, 0.93);
+  --bg-recessed: rgba(16, 15, 13, 0.92);
+  --bg-overlay: rgba(10, 9, 8, 0.95);
 
-  /* Phosphor & Incandescent Glows (No modern synthwave blue) */
-  --glow-amber: 0 0 14px rgba(255, 159, 28, 0.35);
-  --glow-green: 0 0 14px rgba(56, 176, 0, 0.35);
-  --glow-red: 0 0 14px rgba(217, 4, 41, 0.4);
-  --glow-cyan: 0 0 14px rgba(64, 165, 150, 0.3);
+  /* -----------------------------------------------------------------
+     SEAMS — a border is a machined edge, not a highlight.
+     ----------------------------------------------------------------- */
+  --border-durasteel: #2e2a26;
+  --border-subtle: rgba(150, 133, 110, 0.14);
+  --border-strong: rgba(217, 148, 35, 0.38);
+  --border-bright: #d99423;
+  --border-hazard: #9a7419;
+  --seam-light: rgba(214, 196, 168, 0.07);  /* top edge, lamp side */
+  --seam-dark: rgba(0, 0, 0, 0.55);         /* bottom edge, shadow side */
 
-  /* Primary Accents */
-  --accent-amber: #ff9f1c;        /* Spice gold / CRT phosphor amber */
-  --accent-gold: #f4a261;         /* Solar flare starlight / planetary horizon */
-  --accent-rust: #c85a17;         /* Oxidized iron / hydraulic rust */
-  --accent-green: #38b000;        /* Military oscilloscope phosphor green */
-  --accent-danger: #d90429;       /* Emergency blast hazard red */
-  --accent-bronze: #a3824c;       /* Imperial guild insignia bronze */
-  --accent-cyan: #40a596;         /* Weathered patina turquoise (subdued) */
-  --accent-orange: #e07a5f;
-  --accent-purple: #9d8189;
+  /* -----------------------------------------------------------------
+     SIGNAL — indicator colours. All pulled well below full brightness:
+     a lamp behind dusty glass, not a pixel at #ff.
+     ----------------------------------------------------------------- */
+  --accent-amber: #d99423;   /* spice amber — the primary live signal */
+  --accent-gold: #c39a63;    /* sunlit sand, horizon light */
+  --accent-rust: #9c5423;    /* oxidised iron, hydraulic stain */
+  --accent-green: #6f8f3f;   /* oscilloscope phosphor, aged */
+  --accent-danger: #a8342a;  /* blast hazard red, painted and chipped */
+  --accent-bronze: #8a7148;  /* guild insignia */
+  --accent-cyan: #5c7b7a;    /* patina — a dead instrument, never a glow */
+  --accent-orange: #b0664a;
+  --accent-purple: #7d6a70;
 
-  /* Guild / Faction Colors (Dune Great Houses & Outpost Guilds) */
-  --team-earth: #a3824c;          /* Mineral Mining Guild */
-  --team-earth-bg: rgba(163, 130, 76, 0.2);
-  --team-air: #8a9ba8;            /* Atmospheric Harvesters */
-  --team-air-bg: rgba(138, 155, 168, 0.2);
-  --team-fire: #c85a17;           /* Thermal Smelters Guild */
-  --team-fire-bg: rgba(200, 90, 23, 0.2);
-  --team-water: #2a9d8f;          /* Moisture Extraction Guild */
-  --team-water-bg: rgba(42, 157, 143, 0.2);
+  --lamp-amber: #f0b246;     /* the filament itself — small marks only */
+  --lamp-green: #8fb055;
+  --lamp-red: #c9483a;
 
-  --team-terra: #a3824c;
-  --team-terra-bg: rgba(163, 130, 76, 0.2);
-  --team-zephyr: #8a9ba8;
-  --team-zephyr-bg: rgba(138, 155, 168, 0.2);
-  --team-ignis: #c85a17;
-  --team-ignis-bg: rgba(200, 90, 23, 0.2);
-  --team-thalassa: #2a9d8f;
-  --team-thalassa-bg: rgba(42, 157, 143, 0.2);
+  /* Glows are kept for compatibility but reduced to the tight halo a
+     real indicator throws on the plate beside it. Nothing wide. */
+  --glow-amber: 0 0 4px rgba(217, 148, 35, 0.4);
+  --glow-green: 0 0 4px rgba(111, 143, 63, 0.4);
+  --glow-red: 0 0 4px rgba(168, 52, 42, 0.45);
+  --glow-cyan: 0 0 4px rgba(92, 123, 122, 0.3);
 
-  /* Typography */
+  /* -----------------------------------------------------------------
+     GUILDS — four working houses, four service liveries.
+     ----------------------------------------------------------------- */
+  --team-earth: #8a7148;
+  --team-earth-bg: rgba(138, 113, 72, 0.16);
+  --team-air: #75818a;
+  --team-air-bg: rgba(117, 129, 138, 0.16);
+  --team-fire: #9c5423;
+  --team-fire-bg: rgba(156, 84, 35, 0.16);
+  --team-water: #3f7d76;
+  --team-water-bg: rgba(63, 125, 118, 0.16);
+
+  --team-terra: var(--team-earth);
+  --team-terra-bg: var(--team-earth-bg);
+  --team-zephyr: var(--team-air);
+  --team-zephyr-bg: var(--team-air-bg);
+  --team-ignis: var(--team-fire);
+  --team-ignis-bg: var(--team-fire-bg);
+  --team-thalassa: var(--team-water);
+  --team-thalassa-bg: var(--team-water-bg);
+
+  /* -----------------------------------------------------------------
+     TYPE — engraved, stencilled, or printed on a label. Never neon.
+     ----------------------------------------------------------------- */
   --font-main: 'Rajdhani', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-display: 'Chakra Petch', monospace;
   --font-imperial: 'Cinzel', serif;
   --font-mono: 'Share Tech Mono', 'JetBrains Mono', monospace;
 
-  --text-primary: #e6e2dd;
-  --text-secondary: #a39e93;
-  --text-muted: #6e6a62;
-  --text-bright: #fffdfa;
-  --text-amber: #ffb703;
-  --text-green: #55a630;
+  --text-primary: #c9c0b1;   /* bone white, dust-warmed */
+  --text-secondary: #8f8678;
+  --text-muted: #635c52;
+  --text-bright: #e8e0d0;
+  --text-amber: #d99423;
+  --text-green: #6f8f3f;
 
-  /* Industrial Angled Chamfers & Mechanical Radii */
-  --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 6px;
+  /* Engraved type sits IN the surface: a dark line under the glyph. */
+  --engrave: 0 1px 0 rgba(0, 0, 0, 0.7);
+
+  /* -----------------------------------------------------------------
+     GEOMETRY — machined plate has cut corners, not rounded ones.
+     ----------------------------------------------------------------- */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
   --radius-full: 9999px;
 
-  /* Perceptually Uniform Cividis Ramp for Electrostatic Charge Density */
-  --cividis-0: #00204d;    /* Depleted / Positive / Starved */
+  --chamfer: 10px;         /* corner cut on a major panel */
+  --chamfer-sm: 6px;       /* corner cut on a card or button */
+
+  /* Fixed HUD height — layout anchors off this so nothing hides behind it */
+  --hud-h: 64px;
+
+  /* -----------------------------------------------------------------
+     GRAIN — every surface has been sandblasted. One shared noise tile,
+     applied at low opacity so it reads as tooth rather than texture.
+     ----------------------------------------------------------------- */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+
+  /* -----------------------------------------------------------------
+     CHEMISTRY — reserved. These two hues belong to the charge density
+     and to nothing else, so the label on a panel always means the same
+     thing as the cloud in the chamber.
+     ----------------------------------------------------------------- */
+  --charge-red: #ff1744;
+  --charge-blue: #00b0ff;
+  --charge-red-ink: #e05a55;   /* the same signal, printed on a label */
+  --charge-blue-ink: #5aa9cf;
+
+  --cividis-0: #00204d;
   --cividis-25: #2c476f;
   --cividis-50: #626d7f;
   --cividis-75: #9e9875;
-  --cividis-100: #ffea46;  /* Crowded / Negative Lone Pair */
+  --cividis-100: #ffea46;
 }

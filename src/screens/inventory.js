@@ -6,6 +6,7 @@ import { api } from '../api.js';
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { showToast } from '../ui/toast.js';
+import { pageHeader, emptyState } from '../ui/layout.js';
 
 export function renderInventory(container) {
   if (stage.cameraRig) {
@@ -14,86 +15,66 @@ export function renderInventory(container) {
 
   let inventory = session.inventory || [];
 
+  // `usable` marks the items that actually do something today. The rest are trophies —
+  // saying so is better than a Deploy button that promises an effect and delivers nothing.
   const ITEM_CATALOG = {
-    hint_chip: { name: 'Scanner Logic Core', flavor: 'Decompiled deep-space sensor telemetry module.', rarity: 'common', effect: 'Free chemical sensor hint' },
-    spare_coolant: { name: 'Cryo-Coolant Canister', flavor: 'Heavy insulated freon containment vessel.', rarity: 'common', effect: 'Restores one failed synthesis attempt' },
-    overclock_module: { name: 'Smelter Overclock Unit', flavor: 'Bypasses catalyst thermal governors.', rarity: 'rare', effect: '×1.25 XP surge on active quest' },
-    deflector_plate: { name: 'Ablative Durasteel Shield', flavor: 'Reinforced plating with anti-dust seal.', rarity: 'rare', effect: 'Negates adverse environmental event' },
-    scanner_upgrade: { name: 'Spectrographic Sensor Array', flavor: 'Optical diffraction lens for charge analysis.', rarity: 'rare', effect: 'Unlocks numeric charge density telemetry' },
-    star_chart: { name: 'Smuggler Star Route Map', flavor: 'Worn navigational holocron of old mining routes.', rarity: 'epic', effect: 'Bypass single stage at half XP' },
-    resonance_key: { name: 'Spice Resonance Matrix', flavor: 'Vibrating crystal matrix attuned to guild vaults.', rarity: 'epic', effect: 'Instantaneous +50 XP surge' }
+    resonance_key: { name: 'Spice Resonance Matrix', rarity: 'epic', usable: true, effect: 'Deploy for +50 XP.' },
+    hint_chip: { name: 'Scanner Logic Core', rarity: 'common', usable: false, effect: 'Trophy.' },
+    spare_coolant: { name: 'Cryo-Coolant Canister', rarity: 'common', usable: false, effect: 'Trophy.' },
+    overclock_module: { name: 'Smelter Overclock Unit', rarity: 'rare', usable: false, effect: 'Trophy.' },
+    deflector_plate: { name: 'Ablative Durasteel Shield', rarity: 'rare', usable: false, effect: 'Trophy.' },
+    scanner_upgrade: { name: 'Spectrographic Sensor Array', rarity: 'rare', usable: false, effect: 'Trophy.' },
+    star_chart: { name: 'Smuggler Star Route Map', rarity: 'epic', usable: false, effect: 'Trophy.' }
   };
 
   function render() {
     container.innerHTML = `
       <div class="screen-container">
-        <div class="glass-panel" style="margin-bottom: 1.5rem; border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.94);">
-          <!-- Cargo Bay Banner -->
-          <div style="position: relative; border-radius: 2px; overflow: hidden; margin-bottom: 1.25rem; border: 1px solid var(--border-durasteel); height: 140px;">
-            <img src="/art/cargo.jpg" alt="Inventory" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.85);" />
-            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 20%, rgba(12, 13, 17, 0.9) 100%);"></div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-            <div>
-              <h2 style="font-family: var(--font-imperial); font-size: 1.6rem; letter-spacing: 0.12em; color: #fffdf7; margin-bottom: 0.2rem;">
-                Inventory
-              </h2>
-              <p style="font-size: 0.9rem; color: var(--text-secondary);">
-                Items and tools earned from quests.
-              </p>
-            </div>
-            <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-amber); padding: 4px 10px; background: #111318; border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm);">
-              ${inventory.length} / 8 slots
-            </div>
-          </div>
-        </div>
+        ${pageHeader({
+          art: '/art/cargo.jpg',
+          artAlt: '',
+          eyebrow: 'Cargo manifest',
+          title: 'Inventory',
+          actions: `<span class="tag">${inventory.length} / 8 slots</span>`
+        })}
 
         ${inventory.length === 0 ? `
-          <div class="glass-panel" style="text-align: center; padding: 3.5rem 1.5rem; border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.94);">
-            <div style="font-size: 2.5rem; margin-bottom: 0.8rem; filter: grayscale(0.5);">📦</div>
-            <h3 style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: #fffdf7; margin-bottom: 0.5rem;">
-              Inventory Empty
-            </h3>
-            <p style="font-size: 0.9rem; color: var(--text-secondary); max-width: 440px; margin: 0 auto 1.5rem;">
-              Complete quests to earn rewards and items.
-            </p>
-            <a href="#/quest" class="btn-primary" style="text-decoration: none;">
-              Go to Quest
-            </a>
-          </div>
+          ${emptyState({
+            icon: '[ ]',
+            title: 'Hold empty',
+            body: 'Finish Sector 01.',
+            action: '<a href="#/quest" class="btn-primary" style="text-decoration: none;">Sector 01</a>'
+          })}
         ` : `
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
             ${inventory.map(inv => {
-              const def = ITEM_CATALOG[inv.item_id] || { name: inv.item_id, flavor: 'Consumable module', rarity: 'common', effect: 'Consumable' };
-              const rarityColor = def.rarity === 'epic' ? 'var(--accent-amber)' : def.rarity === 'rare' ? 'var(--accent-gold)' : 'var(--text-secondary)';
+              const def = ITEM_CATALOG[inv.item_id] || { name: inv.item_id, rarity: 'common', effect: 'Trophy.', usable: false };
+              const rarityColor = def.rarity === 'epic' ? 'var(--accent-amber)' : def.rarity === 'rare' ? 'var(--accent-gold)' : 'var(--text-muted)';
               return `
-                <div class="holo-card" style="border-color: ${rarityColor}; background: #14161c;">
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                <div class="holo-card" style="${def.usable ? 'border-left: 2px solid var(--accent-amber);' : ''} display: flex; flex-direction: column;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.9rem;">
                     <div>
-                      <span style="font-family: var(--font-mono); font-size: 0.65rem; text-transform: uppercase; color: ${rarityColor}; letter-spacing: 0.12em;">
-                        [ ${def.rarity.toUpperCase()} MODULE ]
-                      </span>
-                      <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: #fffdf7; margin-top: 0.2rem;">
+                      <span class="eyebrow" style="color: ${rarityColor};">${def.rarity}</span>
+                      <h3 style="font-family: var(--font-display); font-size: 1rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-bright); margin-top: 0.3rem; text-shadow: var(--engrave);">
                         ${def.name}
                       </h3>
                     </div>
-                    <span class="xp-badge" style="font-size: 0.8rem; font-weight: bold; color: var(--accent-amber);">
-                      x${inv.qty}
-                    </span>
+                    <span class="tag">x${inv.qty}</span>
                   </div>
 
-                  <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.45; font-family: var(--font-main);">
-                    ${def.flavor}
-                  </p>
-
-                  <div style="background: #111317; border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 0.75rem; color: var(--accent-amber); margin-bottom: 1.25rem; font-family: var(--font-mono);">
-                    <strong>EFFECT:</strong> ${def.effect}
+                  <div style="font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                    ${def.effect}
                   </div>
 
-                  <button type="button" class="btn-primary use-item-btn" data-item-id="${inv.item_id}" style="width: 100%; font-size: 0.8rem; padding: 8px 16px;">
-                    Deploy Module
-                  </button>
+                  <div style="margin-top: auto;">
+                    ${def.usable ? `
+                      <button type="button" class="btn-primary use-item-btn" data-item-id="${inv.item_id}" style="width: 100%; font-size: 0.7rem; padding: 9px 16px; min-height: 38px;">
+                        Deploy
+                      </button>
+                    ` : `
+                      <div class="eyebrow" style="text-align: center; padding: 10px 0;">Trophy</div>
+                    `}
+                  </div>
                 </div>
               `;
             }).join('')}
@@ -106,19 +87,19 @@ export function renderInventory(container) {
       btn.addEventListener('click', async () => {
         const itemId = btn.getAttribute('data-item-id');
         btn.disabled = true;
-        btn.textContent = 'Deploying...';
+        btn.textContent = 'Deploying…';
 
         try {
           const res = await api.useItem(itemId);
-          showToast(res.effect?.message || 'Module deployed.', 'success');
+          showToast(res.effect?.message || 'Deployed.', 'success');
           const me = await api.getMe();
           session.setUserData(me);
           inventory = me.inventory || [];
           render();
         } catch (err) {
-          showToast(err.message || 'Deployment failed', 'error');
+          showToast(err.message || 'Deployment failed.', 'error');
           btn.disabled = false;
-          btn.textContent = 'Deploy Module';
+          btn.textContent = 'Deploy';
         }
       });
     });

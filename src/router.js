@@ -4,6 +4,7 @@
 
 import { session } from './session.js';
 import { stage } from './three/stage.js';
+import { closeModal } from './ui/modal.js';
 
 import { renderLanding } from './screens/landing.js';
 import { renderRegister } from './screens/register.js';
@@ -37,6 +38,19 @@ const ROUTE_BACKDROPS = {
   '/admin': '/art/airlock.jpg'
 };
 
+/** Which HUD nav button should light up for a given route. */
+const ROUTE_NAV = {
+  '/bridge': 'bridge',
+  '/starmap': 'starmap',
+  '/quest': 'starmap',
+  '/leaderboard': 'leaderboard',
+  '/comms': 'leaderboard',
+  '/inventory': 'inventory',
+  '/cargo': 'inventory',
+  '/quarters': 'quarters',
+  '/settings': 'quarters'
+};
+
 const ROUTES = {
   '/': { render: renderLanding, auth: false },
   '/register': { render: renderRegister, auth: false },
@@ -51,7 +65,7 @@ const ROUTES = {
   '/cargo': { render: renderInventory, auth: true },
   '/inventory': { render: renderInventory, auth: true },
   '/quarters': { render: renderQuarters, auth: true },
-  '/settings': { render: renderSettings, auth: false },
+  '/settings': { render: renderSettings, auth: true },
   '/admin': { render: renderAdmin, auth: true, admin: true }
 };
 
@@ -69,7 +83,12 @@ export class Router {
     let raw = window.location.hash.slice(1);
     if (!raw || raw === '') raw = '/';
 
-    const routeDef = ROUTES[raw] || ROUTES['/'];
+    if (!ROUTES[raw]) {
+      // Unknown hash — normalize the URL instead of silently rendering the landing page
+      window.location.hash = '#/';
+      return;
+    }
+    const routeDef = ROUTES[raw];
 
     // Auth gating
     if (routeDef.auth && !session.token) {
@@ -103,6 +122,9 @@ export class Router {
       return;
     }
 
+    // A dialog must never survive a navigation
+    closeModal();
+
     // If leaving quest scene, exit quest mode
     if (raw !== '/quest' && raw !== '/demo' && stage.mode === 'quest') {
       stage.exitQuestScene();
@@ -120,13 +142,13 @@ export class Router {
     routeDef.render(this.appContainer);
 
     // Update active nav button
+    const activeNav = ROUTE_NAV[raw] || null;
     document.querySelectorAll('.nav-btn').forEach(btn => {
       const target = btn.getAttribute('data-target');
-      if (raw.includes(target)) {
-        btn.classList.add('active');
-      } else {
-        btn.classList.remove('active');
-      }
+      const isActive = Boolean(target) && target === activeNav;
+      btn.classList.toggle('active', isActive);
+      if (isActive) btn.setAttribute('aria-current', 'page');
+      else btn.removeAttribute('aria-current');
     });
 
     window.scrollTo(0, 0);

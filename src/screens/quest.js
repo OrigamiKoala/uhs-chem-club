@@ -1,16 +1,42 @@
 /**
- * quest.js — Master Quest 1 player HUD & simulation runner
+ * quest.js — Quest 1 player HUD & simulation runner
  * The Charge Gardens of Erebus
  */
 
 import { api } from '../api.js';
-import { session } from '../session.js';
+import { session, levelTitle } from '../session.js';
 import { stage } from '../three/stage.js';
 import { tierManager } from '../three/tier.js';
 import { QuestViewer } from '../quest3d/viewer.js';
+import { MOLECULE_DATA } from '../quest3d/molecule.js';
 import { renderFallbackInputs } from '../fallback2d/stages.js';
 import { showToast } from '../ui/toast.js';
-import { STAGE_CONFIGS, evaluateStageLocally } from '../quest3d/evaluator.js';
+import { showModal, closeModal } from '../ui/modal.js';
+import { esc } from '../ui/layout.js';
+import { renderScanReadout } from '../ui/scan.js';
+import { STAGE_CONFIGS, evaluateStageLocally, diagnoseMiss, scanFor, TOTAL_STAGES, TOTAL_QUEST_XP } from '../quest3d/evaluator.js';
+
+const QUEST_ID = 'q1';
+
+/**
+ * The hint ladder. Rung 0 is free and asks a question; rung 1 narrows the field and
+ * rung 2 names the move, and both have to be earned. A stuck player always reaches
+ * the answer within two misses, so nobody is ever stranded — but nobody is handed it
+ * for free either, which is the whole point of the scanner.
+ */
+const HINT_RUNGS = [
+  { label: 'Nudge', unlocked: () => true, locked: '' },
+  {
+    label: 'Narrow it down',
+    unlocked: (misses, elapsedMs) => misses >= 1 || elapsedMs >= 45000,
+    locked: 'Try once first. Opens after an attempt, or a little more time.'
+  },
+  {
+    label: 'Show the move',
+    unlocked: (misses) => misses >= 2,
+    locked: 'Opens after two attempts. Scan the sites you have not read yet.'
+  }
+];
 
 function renderConceptCard(concept) {
   if (!concept) return '';
@@ -21,9 +47,8 @@ function renderConceptCard(concept) {
           <span class="concept-badge">${concept.badge}</span>
           <span class="concept-card-title">${concept.title}</span>
         </div>
-        <button type="button" class="concept-dismiss-btn" id="concept-dismiss-btn" title="Dismiss concept card" aria-label="Dismiss concept card">
-          <span>✕</span>
-          <span class="concept-dismiss-text">Dismiss</span>
+        <button type="button" class="concept-dismiss-btn" id="concept-dismiss-btn" title="Hide this explainer" aria-label="Hide explainer">
+          Hide
         </button>
       </div>
       <div class="concept-card-intro">${concept.intro}</div>
@@ -38,9 +63,8 @@ function renderConceptCard(concept) {
         <div class="concept-card-action">${concept.action}</div>
       ` : ''}
     </div>
-    <button type="button" class="concept-reopen-btn hidden" id="concept-reopen-btn" title="Show Key Concept Guide">
-      <span>💡</span>
-      <span>${concept.badge || 'KEY CONCEPT'}: Show Guide</span>
+    <button type="button" class="concept-reopen-btn hidden" id="concept-reopen-btn" title="Show the explainer again">
+      ${concept.badge || 'Key concept'}
     </button>
   `;
 }
@@ -48,27 +72,44 @@ function renderConceptCard(concept) {
 export function renderQuest(container) {
   let questData = session.activeQuest || null;
   let currentStageIdx = 0;
+  let maxStageReached = 0;
 
+  // Resume where the player left off.
   try {
-    const savedStage = parseInt(localStorage.getItem('avalon_q1_stage_reached'), 10);
-    if (!isNaN(savedStage) && savedStage >= 0 && savedStage < STAGE_CONFIGS.length) {
-      currentStageIdx = savedStage;
-    } else if (session.progress && session.progress.length > 0) {
-      const prog = session.progress.find(p => p.quest_id === 'q1');
-      if (prog && typeof prog.stage_reached === 'number') {
-        currentStageIdx = Math.min(prog.stage_reached, STAGE_CONFIGS.length - 1);
-      }
+    const savedStage = parseInt(localStorage.getItem(`avalon_${QUEST_ID}_stage_reached`), 10);
+    if (!isNaN(savedStage) && savedStage >= 0) {
+      maxStageReached = Math.min(savedStage, TOTAL_STAGES - 1);
+      currentStageIdx = maxStageReached;
     }
   } catch (e) {}
+
+  const prog = (session.progress || []).find(p => p.quest_id === QUEST_ID);
+  if (prog && typeof prog.stage_reached === 'number') {
+    const reached = Math.min(Number(prog.stage_reached), TOTAL_STAGES - 1);
+    if (reached > maxStageReached) {
+      maxStageReached = reached;
+      currentStageIdx = reached;
+    }
+  }
 
   let currentPayload = null;
   let isGrading = false;
   let isAdvancing = false;
   let advanceTimer = null;
   let hintUsed = false;
-  let attemptsLeft = 3;
   let stageStartTime = Date.now();
   let viewer = null;
+
+  // Per-stage, reset by loadStage.
+  let misses = 0;
+  let hintRung = -1;          // highest hint rung revealed so far
+  let usedSolutionHint = false;
+  let scannedIds = new Set();
+
+  // Survives stage changes: consecutive stages solved first try without the
+  // solution rung. Display only — it pays no XP, so the once-per-stage flat XP
+  // rule is untouched.
+  let cleanStreak = 0;
 
   // Initialize 3D Quest Scene unless on Tier 1
   if (tierManager.currentTier !== 'T1' && stage.canvas) {
@@ -87,13 +128,16 @@ export function renderQuest(container) {
     currentStageIdx = idx;
     currentPayload = null;
     hintUsed = false;
-    attemptsLeft = 3;
     stageStartTime = Date.now();
+    misses = 0;
+    hintRung = -1;
+    usedSolutionHint = false;
+    scannedIds = new Set();
 
     const localCfg = STAGE_CONFIGS[currentStageIdx] || STAGE_CONFIGS[0];
     const stageMeta = questData?.stages?.[currentStageIdx] || {
       stage_index: currentStageIdx,
-      kind: 'arrow',
+      kind: localCfg.multiArrow ? 'multi_arrow' : 'arrow',
       xp: localCfg.xp,
       scene_config: {
         title: localCfg.title,
@@ -105,13 +149,36 @@ export function renderQuest(container) {
     const cfg = {
       ...localCfg,
       ...(stageMeta.scene_config || {}),
-      concept: localCfg.concept || null
+      // The bundled configs are authoritative for anything the player reads or is graded on.
+      title: localCfg.title,
+      prompt: localCfg.prompt,
+      hint: localCfg.hint,
+      hints: localCfg.hints,
+      shape: localCfg.shape,
+      scans: localCfg.scans || {},
+      steps: localCfg.steps,
+      concept: localCfg.concept || null,
+      conceptTiming: localCfg.conceptTiming || 'reward'
     };
 
-    const instruction = cfg.prompt || localCfg.prompt;
+    // Anchors come from the molecule itself, so the no-WebGL fallback has real
+    // targets to offer instead of an empty dropdown.
+    const regions = MOLECULE_DATA[cfg.moleculeId]?.regions || [];
+    if (!cfg.anchors || cfg.anchors.length === 0) {
+      cfg.anchors = regions.map(r => r.id);
+    }
+    cfg.regions = regions;
 
-    const totalStagesCount = STAGE_CONFIGS.length;
-    const stageIndices = Array.from({ length: totalStagesCount }, (_, i) => i);
+    const isMulti = Boolean(cfg.multiArrow);
+    const requiredArrows = isMulti ? (cfg.steps?.length || 2) : 1;
+    // A stage the player has already cleared: replayable, but it cannot pay out twice.
+    const isReplay = currentStageIdx < maxStageReached;
+    const stageXp = stageMeta.xp || cfg.xp || 20;
+    const scannableIds = Object.keys(cfg.scans || {});
+    const totalSites = scannableIds.length;
+    // Concept cards that explain an idea now land AFTER the player has found it.
+    // Only cards that teach the controls stay up front.
+    const showConceptNow = cfg.concept && cfg.conceptTiming === 'intro';
 
     // 1. Render Quest HUD Overlay
     container.innerHTML = `
@@ -119,239 +186,283 @@ export function renderQuest(container) {
       <div class="quest-hud-overlay">
         <!-- Top HUD -->
         <div class="quest-hud-top">
-          <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-            <a href="#/bridge" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 12px; min-height: 36px; text-decoration: none;">
-              Exit Quest
+          <div class="quest-nav-cluster">
+            <a href="#/bridge" class="btn-secondary quest-btn-sm" style="text-decoration: none;">
+              ← Exit
             </a>
-            <div class="stage-pill-track">
-              ${stageIndices.map(i => `
-                <div class="stage-dot ${i < currentStageIdx ? 'completed' : ''} ${i === currentStageIdx ? 'active' : ''}"
-                     title="Stage ${i + 1}"></div>
+            <button type="button" id="prev-stage-btn" class="btn-secondary quest-btn-sm" ${currentStageIdx === 0 ? 'disabled' : ''} title="Previous stage" aria-label="Previous stage">
+              ◀
+            </button>
+            <div class="stage-counter" aria-live="polite">
+              STAGE <strong>${currentStageIdx + 1}</strong> / ${TOTAL_STAGES}
+            </div>
+            <div class="clean-streak ${cleanStreak > 0 ? '' : 'hidden'}" id="clean-streak" title="Stages solved first try, without the solution hint">
+              ${cleanStreak} CLEAN
+            </div>
+            <button type="button" id="next-stage-btn" class="btn-secondary quest-btn-sm" ${currentStageIdx >= maxStageReached ? 'disabled' : ''} title="Next stage" aria-label="Next stage">
+              ▶
+            </button>
+            <div class="stage-pill-track" role="group" aria-label="Stage progress">
+              ${Array.from({ length: TOTAL_STAGES }, (_, i) => `
+                <button type="button" class="stage-dot ${i < maxStageReached ? 'completed' : ''} ${i === currentStageIdx ? 'active' : ''} ${i <= maxStageReached ? 'clickable' : ''}"
+                     data-stage-idx="${i}"
+                     ${i > maxStageReached ? 'disabled' : ''}
+                     aria-label="Stage ${i + 1}${i > maxStageReached ? ' (locked)' : ''}"
+                     title="Stage ${i + 1}${i > maxStageReached ? ' (locked)' : ''}"></button>
               `).join('')}
             </div>
           </div>
 
           <!-- Density Legend -->
-          <div class="colormap-legend" style="min-width: 170px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.72rem; font-family: var(--font-mono); font-weight: 800;">
-              <span style="color: #ff1744;">GIVER (RED)</span>
-              <span style="color: #00b0ff;">RECEIVER (BLUE)</span>
+          <div class="colormap-legend" style="min-width: 168px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.62rem; letter-spacing: 0.16em;">
+              <span style="color: var(--charge-red-ink);">GIVER</span>
+              <span style="color: var(--charge-blue-ink);">TAKER</span>
             </div>
-            <div style="height: 8px; border-radius: 4px; background: linear-gradient(90deg, #ff1744 0%, #fbbf24 25%, #10b981 50%, #00b0ff 100%); box-shadow: 0 0 10px rgba(0, 176, 255, 0.2);"></div>
+            <div style="height: 6px; background: linear-gradient(90deg, var(--charge-red) 0%, var(--plate-500) 50%, var(--charge-blue) 100%);"></div>
           </div>
         </div>
 
         <!-- Bottom Stage Card -->
         <div class="stage-card-wrap">
           <div class="stage-prompt-card" id="stage-card">
-            <div class="scanning-sweep hidden" id="scanning-sweep"></div>
-
             <div class="stage-header">
-              <div class="stage-title">${cfg.title || ('Stage ' + (currentStageIdx + 1))}</div>
-              <div class="stage-xp-tag">+${stageMeta.xp || cfg.xp || 20} XP</div>
+              <div>
+                ${cfg.shape ? `<div class="stage-shape">${esc(cfg.shape)}</div>` : ''}
+                <div class="stage-title">${cfg.title || ('Stage ' + (currentStageIdx + 1))}</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                ${isReplay ? '<span class="tag">Replay</span>' : ''}
+                <div class="stage-xp-tag">${isReplay ? 'Earned' : `+${stageXp} XP`}</div>
+              </div>
             </div>
 
-            ${renderConceptCard(cfg.concept)}
+            ${showConceptNow ? renderConceptCard(cfg.concept) : ''}
 
-            ${instruction ? `<div class="stage-instruction">${instruction}</div>` : ''}
+            ${cfg.prompt ? `<div class="stage-instruction">${cfg.prompt}</div>` : ''}
+
+            <div id="scan-slot">${totalSites ? renderScanReadout(null, 0, totalSites) : ''}</div>
 
             <!-- Toolbar -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.75rem 0; flex-wrap: wrap; gap: 0.5rem;">
-              <div style="display: flex; gap: 0.6rem; align-items: center;">
-                <button type="button" id="tool-draw-btn" class="btn-secondary active" style="font-size: 0.75rem; padding: 5px 12px; min-height: 32px; border-color: var(--accent-amber); color: var(--accent-amber); cursor: default;">
-                  ✏️ Draw Arrow
-                </button>
-                <span style="font-size: 0.74rem; color: var(--text-muted); font-family: var(--font-mono);">
-                  👆 Two-finger tap / right-click to rotate
+            <div class="stage-toolbar">
+              <div class="stage-toolbar-left">
+                ${isMulti ? `
+                  <span class="arrow-counter" id="arrow-counter" aria-live="polite">
+                    Arrows drawn: <strong id="arrow-count">0</strong> / ${requiredArrows}
+                  </span>
+                ` : ''}
+                <span class="stage-tip">
+                  Tap to scan · drag to connect · right-drag to rotate
                 </span>
               </div>
-              <button type="button" id="tool-clear-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 5px 12px; min-height: 32px;">
-                ✕ Clear Line${cfg.multiArrow ? 's' : ''}
-              </button>
-            </div>
-
-            ${currentStageIdx === 0 ? `
-            <div style="font-size: 0.75rem; color: var(--text-muted); background: rgba(0,0,0,0.25); border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm); padding: 6px 10px; margin-bottom: 0.85rem; line-height: 1.4;">
-              <div>• <strong>Draw:</strong> Left-click and drag from red to blue.</div>
-              <div>• <strong>Rotate:</strong> Two-finger tap (or right-click drag) anywhere to rotate view.</div>
-            </div>
-            ` : ''}
-
-            ${cfg.multiArrow ? `
-            <!-- Multi-Step Arrows HUD Tracker -->
-            <div class="multi-step-track" id="multi-step-track">
-              <div class="multi-step-header">
-                <span>CHRONOLOGICAL STEPS (${cfg.steps ? cfg.steps.length : 2} REQUIRED)</span>
-                <span style="color: var(--text-muted); font-size: 0.7rem;">Click ① to change order • Click arrow to delete</span>
-              </div>
-              <div class="multi-step-list" id="multi-step-list">
-                <div style="font-size: 0.72rem; color: var(--text-muted); font-style: italic;">
-                  No arrows drawn yet. Drag in 3D space to add Step 1!
-                </div>
+              <div class="stage-toolbar-right">
+                ${(cfg.hints || []).length ? `
+                  <button type="button" id="hint-btn" class="btn-secondary quest-btn-sm">
+                    ◈ Hint <span class="hint-rung-count" id="hint-rung-count">1/${cfg.hints.length}</span>
+                  </button>
+                ` : ''}
+                <button type="button" id="tool-clear-btn" class="btn-secondary quest-btn-sm">
+                  Clear
+                </button>
               </div>
             </div>
+
+            ${isMulti ? `
+              <div class="stage-note">
+                ${requiredArrows} arrows, in order. Click a number to change its step; click an arrow to delete it.
+              </div>
             ` : ''}
 
-            <!-- Interactive Stage Area -->
-            <div id="stage-interactive-area" style="margin-bottom: 1rem;"></div>
+            <!-- Interactive Stage Area (Tier 1 fallback inputs live here) -->
+            <div id="stage-interactive-area"></div>
 
-            <!-- Prominent Inline Feedback Banner -->
+            <!-- Hint / feedback banners -->
+            <div id="stage-hint" class="hint-stack hidden" role="status"></div>
             <div id="stage-feedback" class="hidden"></div>
 
             <!-- Stage Footer Actions -->
             <div style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem;">
-              <button type="button" id="grade-btn" class="btn-primary" style="padding: 8px 24px; min-height: 40px;">
-                <span>Submit</span>
-                <span>➔</span>
-              </button>
+              <button type="button" id="grade-btn" class="btn-primary" style="padding: 9px 26px; min-height: 40px;">Submit</button>
             </div>
           </div>
         </div>
       </div>
     `;
 
-    // Helper to update multi-step arrows list
-    function updateMultiStepList(arrows = []) {
-      const list = container.querySelector('#multi-step-list');
-      if (!list) return;
-      if (!arrows || arrows.length === 0) {
-        list.innerHTML = `<div style="font-size: 0.72rem; color: var(--text-muted); font-style: italic;">No arrows drawn yet. Drag in 3D space to add Step 1!</div>`;
+    const stageCard = container.querySelector('#stage-card');
+    const feedback = container.querySelector('#stage-feedback');
+    const hintBanner = container.querySelector('#stage-hint');
+    const flash = container.querySelector('#quest-screen-flash');
+    const arrowCountEl = container.querySelector('#arrow-count');
+
+    function clearFeedback() {
+      if (stageCard) stageCard.classList.remove('error-state');
+      if (feedback) {
+        feedback.className = 'hidden';
+        feedback.removeAttribute('style');
+      }
+    }
+
+    function onPayloadChange(payload) {
+      currentPayload = payload;
+      if (arrowCountEl) {
+        arrowCountEl.textContent = String(payload?.arrows?.length || 0);
+      }
+      if (!stageCompleted) clearFeedback();
+    }
+
+    // 2. Stage navigation
+    container.querySelector('#prev-stage-btn')?.addEventListener('click', () => {
+      if (currentStageIdx > 0) loadStage(currentStageIdx - 1);
+    });
+    container.querySelector('#next-stage-btn')?.addEventListener('click', () => {
+      if (currentStageIdx < maxStageReached) loadStage(currentStageIdx + 1);
+    });
+    container.querySelectorAll('.stage-dot.clickable').forEach(dot => {
+      dot.addEventListener('click', () => {
+        const targetIdx = Number(dot.getAttribute('data-stage-idx'));
+        if (!isNaN(targetIdx) && targetIdx >= 0 && targetIdx <= maxStageReached && targetIdx !== currentStageIdx) {
+          loadStage(targetIdx);
+        }
+      });
+    });
+
+    // 3. Concept card show/hide. Called again if the card is added after a solve.
+    function bindConceptCard() {
+      const conceptCard = container.querySelector('#stage-concept-card');
+      const dismissBtn = container.querySelector('#concept-dismiss-btn');
+      const reopenBtn = container.querySelector('#concept-reopen-btn');
+      dismissBtn?.addEventListener('click', () => {
+        conceptCard?.classList.add('hidden');
+        reopenBtn?.classList.remove('hidden');
+      });
+      reopenBtn?.addEventListener('click', () => {
+        conceptCard?.classList.remove('hidden');
+        reopenBtn?.classList.add('hidden');
+      });
+    }
+    bindConceptCard();
+
+    // 4. Scanner — the exploration loop. Tapping a site reads out that site alone,
+    //    so the answer only ever comes from comparing several of them.
+    const scanSlot = container.querySelector('#scan-slot');
+
+    function showScan(regionId) {
+      const scan = scanFor(currentStageIdx, regionId);
+      if (!scan || !scanSlot) return;
+      const isNew = !scannedIds.has(regionId);
+      scannedIds.add(regionId);
+      scanSlot.innerHTML = renderScanReadout(scan, scannedIds.size, totalSites);
+      const el = scanSlot.querySelector('.scan-readout');
+      if (el) {
+        // Replay the sweep so a repeat scan of the same site still feels like an action.
+        void el.offsetWidth;
+        el.classList.add('scan-sweep');
+      }
+      if (isNew && scannedIds.size === totalSites && totalSites > 2) {
+        showToast('Whole chamber scanned. Now compare the numbers.', 'info');
+      }
+    }
+
+    // 5. Hint ladder
+    const hintBtn = container.querySelector('#hint-btn');
+    const hintRungCount = container.querySelector('#hint-rung-count');
+    const availableHints = cfg.hints || [];
+
+    function renderHints() {
+      if (!hintBanner) return;
+      if (hintRung < 0) {
+        hintBanner.classList.add('hidden');
+        hintBanner.innerHTML = '';
         return;
       }
-      list.innerHTML = arrows.map((arr, idx) => `
-        <div class="step-item-pill">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <button type="button" class="step-order-badge" data-step-idx="${idx}" title="Click to cycle step order">
-              ${arr.order}
-            </button>
-            <span style="font-size: 0.75rem; color: #f1f5f9;">
-              ${arr.from || 'Source'} ➔ ${arr.to || 'Target'}
-            </span>
-          </div>
-          <button type="button" class="step-del-btn" data-del-idx="${idx}" title="Remove this arrow">
-            ✕ Delete
-          </button>
+      hintBanner.classList.remove('hidden');
+      hintBanner.innerHTML = availableHints.slice(0, hintRung + 1).map((text, i) => `
+        <div class="hint-rung ${i === hintRung ? 'fresh' : ''}">
+          <span class="hint-rung-label">${esc(HINT_RUNGS[i]?.label || 'Hint')}</span>
+          <span class="hint-rung-text">${text}</span>
         </div>
       `).join('');
-
-      list.querySelectorAll('.step-order-badge').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const i = Number(btn.getAttribute('data-step-idx'));
-          if (viewer && viewer.arrowController) {
-            viewer.arrowController.cycleArrowOrder(i);
-          }
-        });
-      });
-
-      list.querySelectorAll('.step-del-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const i = Number(btn.getAttribute('data-del-idx'));
-          if (viewer && viewer.arrowController) {
-            viewer.arrowController.removeArrow(i);
-          }
-        });
-      });
+      if (hintRungCount) {
+        const next = hintRung + 2;
+        hintRungCount.textContent = next > availableHints.length
+          ? `${availableHints.length}/${availableHints.length}`
+          : `${next}/${availableHints.length}`;
+      }
+      if (hintBtn && hintRung >= availableHints.length - 1) {
+        hintBtn.disabled = true;
+        hintBtn.innerHTML = '◈ No hints left';
+      }
     }
 
-    // 2. Setup Concept Card Dismiss & Reopen
-    const conceptCard = container.querySelector('#stage-concept-card');
-    const dismissBtn = container.querySelector('#concept-dismiss-btn');
-    const reopenBtn = container.querySelector('#concept-reopen-btn');
+    hintBtn?.addEventListener('click', () => {
+      const next = hintRung + 1;
+      if (next >= availableHints.length) return;
 
-    dismissBtn?.addEventListener('click', () => {
-      conceptCard?.classList.add('hidden');
-      reopenBtn?.classList.remove('hidden');
+      const rung = HINT_RUNGS[next] || HINT_RUNGS[0];
+      if (!rung.unlocked(misses, Date.now() - stageStartTime)) {
+        showToast(rung.locked, 'warning');
+        hintBtn.classList.remove('nudge');
+        return;
+      }
+
+      hintRung = next;
+      hintUsed = true;
+      if (next >= 2) usedSolutionHint = true;
+      hintBtn.classList.remove('nudge');
+      renderHints();
+      // Log the hint request for the club's telemetry; never block on it.
+      api.getHint(QUEST_ID, currentStageIdx).catch(() => {});
     });
 
-    reopenBtn?.addEventListener('click', () => {
-      conceptCard?.classList.remove('hidden');
-      reopenBtn?.classList.add('hidden');
-    });
-
-    // 3. Setup 3D or Fallback Inputs
+    // 6. Interactive inputs — 3D viewer, or DOM controls on Tier 1
     const interactiveArea = container.querySelector('#stage-interactive-area');
+    const interactionKind = isMulti ? 'multi_arrow' : (stageMeta.kind || 'arrow');
+    const usingFallback = tierManager.currentTier === 'T1' || !viewer;
 
-    if (tierManager.currentTier === 'T1' || !viewer) {
-      // Tier 1 DOM-only fallback
-      renderFallbackInputs(interactiveArea, cfg, cfg.multiArrow ? 'multi_arrow' : stageMeta.kind, (payload) => {
-        currentPayload = payload;
-        if (cfg.multiArrow) {
-          updateMultiStepList(payload?.arrows || []);
-        }
-      });
+    if (usingFallback) {
+      renderFallbackInputs(interactiveArea, cfg, interactionKind, onPayloadChange, showScan);
     } else {
-      // Tier 2 & 3: Configure 3D Viewer
       viewer.setMode('draw');
-      viewer.loadStage(cfg, cfg.multiArrow ? 'multi_arrow' : stageMeta.kind, (payload) => {
-        currentPayload = payload;
-        if (cfg.multiArrow) {
-          updateMultiStepList(payload?.arrows || []);
-        }
+      viewer.loadStage(cfg, interactionKind, onPayloadChange, showScan);
+      viewer.setArrowLimitHandler((max) => {
+        showToast(`${max} arrows max. Click an arrow to delete it.`, 'warning');
       });
-
-      // Bind toolbar
-      const clearBtn = container.querySelector('#tool-clear-btn');
-
-      function clearFeedback() {
-        const stageCard = container.querySelector('#stage-card');
-        if (stageCard) stageCard.classList.remove('error-state');
-        const feedback = container.querySelector('#stage-feedback');
-        if (feedback) feedback.className = 'hidden';
-      }
-
-      clearBtn?.addEventListener('click', () => {
-        viewer.clear();
-        currentPayload = null;
-        if (cfg.multiArrow) {
-          updateMultiStepList([]);
-        }
-        clearFeedback();
-        showToast('Line cleared.', 'info');
-      });
-
-      // Also render DOM choice options for 'choice' stage if applicable
-      if (stageMeta.kind === 'choice' && cfg.options) {
-        interactiveArea.innerHTML = `
-          <div class="choice-list">
-            ${cfg.options.map(opt => `
-              <div class="choice-option" data-opt-id="${opt.id}">
-                <span style="font-family: var(--font-mono); font-weight: bold; color: var(--accent-amber);">${opt.id.toUpperCase()}</span>
-                <span>${opt.label}</span>
-              </div>
-            `).join('')}
-          </div>
-        `;
-        interactiveArea.querySelectorAll('.choice-option').forEach(el => {
-          el.addEventListener('click', () => {
-            clearFeedback();
-            interactiveArea.querySelectorAll('.choice-option').forEach(x => x.classList.remove('selected'));
-            el.classList.add('selected');
-            currentPayload = { correct: [el.getAttribute('data-opt-id')] };
-          });
-        });
-      }
     }
 
-    // 3. Bind Grade Button and Submit Handler
+    container.querySelector('#tool-clear-btn')?.addEventListener('click', () => {
+      if (usingFallback) {
+        // Rebuild the dropdowns — there is no canvas to clear on Tier 1.
+        renderFallbackInputs(interactiveArea, cfg, interactionKind, onPayloadChange, showScan);
+      } else {
+        viewer.clear();
+      }
+      currentPayload = null;
+      if (arrowCountEl) arrowCountEl.textContent = '0';
+      clearFeedback();
+      showToast(isMulti ? 'Arrows cleared.' : 'Line cleared.', 'info');
+    });
+
+    // 7. Submit
     const gradeBtn = container.querySelector('#grade-btn');
-    const sweep = container.querySelector('#scanning-sweep');
 
     async function submitStage(payload) {
       if (isGrading || isAdvancing) return;
-      if (!payload || (cfg.multiArrow && (!payload.arrows || payload.arrows.length === 0))) {
-        showToast(cfg.multiArrow ? `Please draw all ${cfg.steps?.length || 2} reaction arrows before submitting.` : 'Please connect an arrow from red to blue before submitting.', 'warning');
+
+      const drawn = isMulti ? (payload?.arrows?.length || 0) : (payload ? 1 : 0);
+      if (drawn === 0) {
+        showToast('Nothing drawn yet. Scan a few sites, then drag between two.', 'warning');
+        return;
+      }
+      if (isMulti && drawn < requiredArrows) {
+        showToast(`${requiredArrows} arrows needed — ${drawn} drawn.`, 'warning');
         return;
       }
 
-      const stageCard = container.querySelector('#stage-card');
-      const feedback = container.querySelector('#stage-feedback');
-      const flash = container.querySelector('#quest-screen-flash');
-      if (stageCard) stageCard.classList.remove('error-state');
-      if (feedback) feedback.className = 'hidden';
-
+      clearFeedback();
       isGrading = true;
       gradeBtn.disabled = true;
-      gradeBtn.textContent = 'Evaluating…';
+      gradeBtn.textContent = 'Checking…';
 
       try {
         const elapsed = Date.now() - stageStartTime;
@@ -359,67 +470,70 @@ export function renderQuest(container) {
         // Immediate in-browser evaluation with pre-loaded solutions (0ms latency)
         const res = evaluateStageLocally(currentStageIdx, payload);
 
-        // Asynchronously report submission to backend without blocking the player
-        api.gradeStage(
-          'q1',
-          currentStageIdx,
-          payload,
-          elapsed,
-          hintUsed,
-          tierManager.currentTier
-        ).catch(() => {});
-
-        sweep.classList.add('hidden');
+        // Report the submission to the backend without making the player wait.
+        api.gradeStage(QUEST_ID, currentStageIdx, payload, elapsed, hintUsed, tierManager.currentTier)
+          .catch(() => {});
 
         if (res.correct) {
           isAdvancing = true;
           gradeBtn.disabled = true;
-          gradeBtn.innerHTML = '<span>Reacting…</span><span>⚡</span>';
+          gradeBtn.textContent = 'Reacting…';
 
-          session.addXp(res.xpAwarded);
+          // XP is paid once per stage. Replays are free to practise but pay nothing,
+          // otherwise the Prev button would be an infinite XP button.
+          const awarded = isReplay ? 0 : res.xpAwarded;
+          if (awarded > 0) session.addXp(awarded);
+
           const targetStageIdx = currentStageIdx + 1;
-          session.recordProgress('q1', targetStageIdx);
+          maxStageReached = Math.max(maxStageReached, targetStageIdx);
+          session.recordProgress(QUEST_ID, maxStageReached);
 
-          // Keep explanation hidden while reaction animation is playing
-          if (feedback) {
-            feedback.className = 'hidden';
-            feedback.innerHTML = '';
+          const isCleanSolve = misses === 0 && !usedSolutionHint;
+          if (!isReplay) {
+            if (isCleanSolve) cleanStreak++;
+            else cleanStreak = 0;
           }
-          showToast(`Correct! +${res.xpAwarded} XP`, 'success');
 
-          // Check if last stage completed
-          const isLastStage = targetStageIdx >= STAGE_CONFIGS.length;
+          showToast(awarded > 0 ? `Correct · +${awarded} XP` : 'Correct · replay, XP already earned', 'success');
+
+          const isLastStage = targetStageIdx >= TOTAL_STAGES;
 
           const onReactionDone = () => {
             stageCompleted = true;
             isAdvancing = false;
             isGrading = false;
 
-            // Explanation window pops up strictly AFTER the 3D animation finishes
+            // The explainer appears only after the 3D reaction has finished playing.
             if (feedback) {
-              feedback.className = 'stage-error-banner';
-              feedback.style.borderColor = 'var(--accent-green)';
-              feedback.style.borderLeftColor = 'var(--accent-green)';
-              feedback.style.background = 'rgba(56, 176, 0, 0.2)';
-              feedback.style.boxShadow = '0 0 20px rgba(56, 176, 0, 0.35)';
-
-              const explanation = cfg.reaction?.explanation || 'Bond created! Molecules approached and bonded.';
+              feedback.className = 'stage-error-banner stage-success-banner';
+              const explanation = cfg.reaction?.explanation || 'Bond created! The two regions snapped together.';
               feedback.innerHTML = `
-                <span style="font-size: 1.4rem;">⚡</span>
+                <span class="banner-mark" aria-hidden="true">//</span>
                 <div style="flex: 1;">
-                  <div style="font-weight: 800; color: #00e676; letter-spacing: 0.05em;">REACTION COMPLETE: NEW BOND FORMED!</div>
-                  <div style="font-size: 0.85rem; color: #f1f5f9; margin-top: 3px; line-height: 1.45;">${explanation}</div>
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; flex-wrap: wrap; gap: 0.5rem;">
-                    <div style="font-size: 0.75rem; color: var(--accent-amber); font-family: var(--font-mono); font-weight: 700;">+${res.xpAwarded} XP AWARDED</div>
+                  <div class="banner-title" style="color: var(--accent-green);">Reaction complete</div>
+                  <div class="banner-body">${explanation}</div>
+                  <div class="banner-meta">
+                    ${awarded > 0 ? `+${awarded} XP` : 'REPLAY · XP ALREADY EARNED'}${isCleanSolve && !isReplay ? ' · CLEAN SOLVE' : ''}
                   </div>
                 </div>
               `;
             }
 
+            // The concept card is the payoff, not the briefing: it names the idea the
+            // player just worked out, and only once they have worked it out.
+            if (cfg.concept && cfg.conceptTiming !== 'intro' && feedback) {
+              feedback.insertAdjacentHTML('afterend', renderConceptCard(cfg.concept));
+              bindConceptCard();
+            }
+
+            const streakEl = container.querySelector('#clean-streak');
+            if (streakEl) {
+              streakEl.textContent = `${cleanStreak} CLEAN`;
+              streakEl.classList.toggle('hidden', cleanStreak <= 0);
+            }
+
             gradeBtn.disabled = false;
-            gradeBtn.innerHTML = isLastStage
-              ? '<span>Finish Quest</span><span>✓</span>'
-              : '<span>Next Stage</span><span>➔</span>';
+            gradeBtn.textContent = isLastStage ? 'Finish' : 'Next Stage';
             gradeBtn.focus();
           };
 
@@ -430,95 +544,79 @@ export function renderQuest(container) {
           }
         } else {
           gradeBtn.disabled = false;
-          gradeBtn.innerHTML = '<span>Submit</span><span>➔</span>';
+          gradeBtn.textContent = 'Submit';
           isGrading = false;
-          attemptsLeft = Math.max(0, attemptsLeft - 1);
           if (viewer) {
             if (viewer.triggerFailure) viewer.triggerFailure();
             else viewer.triggerShudder();
           }
 
-          const isBlocked = !!res.blocked;
-          const isWrongOrder = !!res.wrongOrder;
-          const isIncomplete = !!res.incomplete;
-          let bannerTitle = 'INCORRECT';
-          let msg = `Incorrect connection. Connect the crowded red zone directly into the hungry blue zone.`;
+          // A miss is the most teachable moment in a stage, so name what actually
+          // went wrong and point at a site the player can go and scan.
+          const diag = diagnoseMiss(currentStageIdx, payload, res);
+          const bannerTitle = diag.title;
+          const msg = diag.message;
+          const isSoftError = diag.soft;
 
-          if (isBlocked) {
-            bannerTitle = currentStageIdx === 5 ? 'PATH BLOCKED (BULKY SHIELD)' : 'PATH BLOCKED (TRAFFIC JAM)';
-            msg = currentStageIdx === 5
-              ? 'Path blocked! That center is shielded by bulky isopropyl groups. Connect to the open blue target at the bottom instead.'
-              : 'Path blocked! It is too crowded to squeeze through there. Rotate your 3D view to find the open, unblocked path into the blue target.';
-          } else if (isWrongOrder) {
-            bannerTitle = 'WRONG CHRONOLOGICAL ORDER';
-            msg = res.message || 'You found all the correct steps, but the sequence is out of order! Click on the arrow numbers to change their sequence.';
-          } else if (isIncomplete) {
-            bannerTitle = 'INCOMPLETE SEQUENCE';
-            msg = res.message || 'Draw all required steps in order before submitting.';
-          } else if (res.message) {
-            msg = res.message;
+          // An incomplete submission is not really an attempt, so it neither unlocks
+          // hints nor breaks the streak.
+          if (!res.incomplete) {
+            misses++;
+            cleanStreak = 0;
+            const streakEl = container.querySelector('#clean-streak');
+            if (streakEl) streakEl.classList.add('hidden');
           }
 
-          // 1. Red screen flash
-          if (flash) {
+          if (flash && !isSoftError) {
             flash.classList.add('flash-active');
             setTimeout(() => flash.classList.remove('flash-active'), 400);
           }
 
-          // 2. Shake stage card with emergency red border glow
           if (stageCard) {
             stageCard.classList.remove('error-state');
-            void stageCard.offsetWidth; // Force DOM reflow to re-trigger shake
+            void stageCard.offsetWidth; // force reflow so the shake replays
             stageCard.classList.add('error-state');
           }
 
-          // 3. Obvious inline error banner directly on stage card
           if (feedback) {
-            feedback.className = 'stage-error-banner';
-            if (isWrongOrder || isIncomplete) {
-              feedback.style.borderColor = 'var(--accent-amber)';
-              feedback.style.borderLeftColor = 'var(--accent-amber)';
-              feedback.style.background = 'rgba(255, 159, 28, 0.15)';
-              feedback.style.boxShadow = '0 0 15px rgba(255, 159, 28, 0.25)';
-            } else {
-              feedback.style.borderColor = '';
-              feedback.style.borderLeftColor = '';
-              feedback.style.background = '';
-              feedback.style.boxShadow = '';
-            }
+            feedback.className = `stage-error-banner ${isSoftError ? 'soft' : ''}`;
             feedback.innerHTML = `
-              <span style="font-size: 1.3rem; color: ${isWrongOrder || isIncomplete ? 'var(--accent-amber)' : '#ff5252'};">⚠️</span>
+              <span class="banner-mark" aria-hidden="true">!!</span>
               <div style="flex: 1;">
-                <div style="font-weight: 800; color: ${isWrongOrder || isIncomplete ? 'var(--accent-amber)' : '#ff5252'}; letter-spacing: 0.06em;">
+                <div class="banner-title" style="color: ${isSoftError ? 'var(--accent-amber)' : 'var(--lamp-red)'};">
                   ${bannerTitle}
                 </div>
-                <div style="font-size: 0.82rem; color: #f1f5f9; margin-top: 2px; line-height: 1.4;">
-                  ${msg}
-                </div>
+                <div class="banner-body">${msg}</div>
               </div>
             `;
+          }
+
+          const nextRung = HINT_RUNGS[hintRung + 1];
+          if (hintBtn && !hintBtn.disabled && nextRung && nextRung.unlocked(misses, Date.now() - stageStartTime)) {
+            hintBtn.classList.add('nudge');
           }
 
           showToast(msg, 'error');
         }
       } catch (err) {
-        sweep.classList.add('hidden');
         gradeBtn.disabled = false;
-        gradeBtn.innerHTML = '<span>Submit</span><span>➔</span>';
+        gradeBtn.textContent = 'Submit';
         isGrading = false;
         isAdvancing = false;
-        showToast(err.message || 'Submission error', 'error');
+        showToast(err.message || 'Something went wrong checking that answer.', 'error');
       }
     }
 
     gradeBtn.addEventListener('click', () => {
       if (stageCompleted) {
         const targetStageIdx = currentStageIdx + 1;
-        const isLastStage = targetStageIdx >= STAGE_CONFIGS.length;
-        if (isLastStage) {
+        maxStageReached = Math.max(maxStageReached, targetStageIdx);
+        if (targetStageIdx >= TOTAL_STAGES) {
+          gradeBtn.disabled = true;
+          gradeBtn.textContent = 'Wrapping up…';
           showCompletionModal();
         } else {
-          session.recordProgress('q1', targetStageIdx);
+          session.recordProgress(QUEST_ID, maxStageReached);
           loadStage(targetStageIdx);
         }
         return;
@@ -528,80 +626,102 @@ export function renderQuest(container) {
   }
 
   async function showCompletionModal() {
+    // Never let a flaky network swallow the payoff: fall back to a local summary.
+    let comp = null;
     try {
-      const comp = await api.completeQuest('q1');
-      const modal = document.getElementById('modal-container');
-      if (!modal) return;
-
-      modal.innerHTML = `
-        <div class="glass-panel" style="max-width: 540px; width: 90%; margin: 4rem auto; text-align: center; border-color: var(--accent-green); box-shadow: 0 0 40px rgba(0, 230, 118, 0.25);">
-          <h2 style="font-family: var(--font-display); font-size: 1.85rem; font-weight: 900; color: #fff; margin-bottom: 1rem;">
-            Quest Complete
-          </h2>
-
-          <div style="background: rgba(14, 16, 21, 0.9); border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm); padding: 1.25rem; margin-bottom: 1.5rem; text-align: left;">
-            <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-amber); letter-spacing: 0.1em; margin-bottom: 0.5rem;">
-              [ SYNTHESIS EPILOGUE ]
-            </div>
-            <p style="font-size: 0.95rem; color: var(--text-primary); line-height: 1.6;">
-              ${comp.epilogue}
-            </p>
-          </div>
-
-          <div style="display: flex; justify-content: space-around; margin-bottom: 1.75rem;">
-            <div>
-              <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">XP YIELD</div>
-              <div style="font-family: var(--font-mono); font-size: 1.5rem; font-weight: 800; color: var(--accent-amber);">+${comp.totalXp} XP</div>
-            </div>
-            <div>
-              <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">SALVAGED MODULE</div>
-              <div style="font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--accent-gold);">${comp.awardedItem}</div>
-            </div>
-            <div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">Level</div>
-              <div style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: #82b1ff;">LVL ${comp.newLevel}</div>
-            </div>
-          </div>
-
-          <button type="button" id="modal-bridge-btn" class="btn-primary" style="width: 100%;">
-            Return to Bridge
-          </button>
-        </div>
-      `;
-
-      modal.classList.remove('hidden');
-      modal.querySelector('#modal-bridge-btn').addEventListener('click', () => {
-        modal.classList.add('hidden');
-        stage.exitQuestScene();
-        window.location.hash = '#/bridge';
-      });
+      comp = await api.completeQuest(QUEST_ID);
     } catch (e) {
-      window.location.hash = '#/bridge';
+      comp = null;
     }
+
+    const epilogue = comp?.epilogue || LOCAL_EPILOGUE;
+    const totalXp = comp?.totalXp ?? TOTAL_QUEST_XP;
+    const newLevel = comp?.newLevel ?? session.level ?? 1;
+    const item = comp?.awardedItem;
+
+    showModal(`
+      <div style="text-align: center;">
+        <div class="eyebrow lit">Sector 01 cleared</div>
+        <h2 id="quest-complete-title" class="page-title" style="font-size: 1.35rem;">The Charge Gardens</h2>
+      </div>
+
+      <div class="stat-row" style="margin: 1.25rem 0; justify-content: space-around;">
+        <div class="stat-tile">
+          <div class="stat-label">Stages</div>
+          <div class="stat-value">${TOTAL_STAGES} / ${TOTAL_STAGES}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Quest XP</div>
+          <div class="stat-value">${totalXp}</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Level</div>
+          <div class="stat-value plain">${newLevel} · ${levelTitle(newLevel)}</div>
+        </div>
+      </div>
+
+      <div style="background: var(--plate-100); border: 1px solid var(--border-durasteel); box-shadow: inset 0 2px 8px rgba(0,0,0,0.6); padding: 1.1rem 1.25rem; margin-bottom: 1.5rem;">
+        <div class="eyebrow lit" style="margin-bottom: 0.7rem;">Debrief</div>
+        <div class="prose-block">${epilogue}</div>
+      </div>
+
+      ${item ? `
+        <div style="text-align: center; margin-bottom: 1.25rem;">
+          <span class="tag warn">Salvaged · ${item.replace(/_/g, ' ')}</span>
+        </div>
+      ` : ''}
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <button type="button" id="modal-bridge-btn" class="btn-primary">Bridge</button>
+        <button type="button" id="modal-standings-btn" class="btn-secondary">Standings</button>
+      </div>
+    `, { labelledBy: 'quest-complete-title' });
+
+    const go = (hash) => {
+      closeModal();
+      stage.exitQuestScene();
+      window.location.hash = hash;
+    };
+    document.getElementById('modal-bridge-btn')?.addEventListener('click', () => go('#/bridge'));
+    document.getElementById('modal-standings-btn')?.addEventListener('click', () => go('#/leaderboard'));
+
+    // Pull the authoritative XP total once the run is banked.
+    api.getMe().then(me => { if (me) session.setUserData(me); }).catch(() => {});
   }
 
-  // 1. Immediately render initial stage using bundled STAGE_CONFIGS (0ms latency)
+  // 1. Render the current stage immediately from bundled configs (0ms latency)
   loadStage(currentStageIdx);
 
-  // 2. Sync remote manifest & player progress non-blockingly in background
+  // 2. Sync the remote manifest & player progress in the background
   Promise.all([
-    api.getQuestManifest('q1').catch(() => null),
+    api.getQuestManifest(QUEST_ID).catch(() => null),
     api.getMe().catch(() => null)
   ]).then(([manifest, me]) => {
     if (manifest) questData = manifest;
     if (me) {
       session.setUserData(me);
-      const prog = (me.progress || []).find(p => p.quest_id === 'q1');
-      if (prog && typeof prog.stage_reached === 'number') {
-        const reached = Math.min(Number(prog.stage_reached), STAGE_CONFIGS.length - 1);
-        if (reached > currentStageIdx) {
-          currentStageIdx = reached;
-          session.recordProgress('q1', reached);
-          loadStage(currentStageIdx);
+      const remote = (me.progress || []).find(p => p.quest_id === QUEST_ID);
+      if (remote && typeof remote.stage_reached === 'number') {
+        const reached = Math.min(Number(remote.stage_reached), TOTAL_STAGES - 1);
+        if (reached > maxStageReached) {
+          maxStageReached = reached;
+          // Only jump the player forward if they have not started playing yet.
+          if (currentStageIdx === 0) loadStage(reached);
         }
       }
     }
   }).catch(err => {
-    console.warn('Background quest manifest sync:', err);
+    console.warn('Background quest sync:', err);
   });
 }
+
+/** Shown if the backend cannot be reached when the quest is completed. */
+const LOCAL_EPILOGUE = `Here is the chemistry you were actually doing.
+
+Every red cloud was a spot with extra electrons — a region of negative charge. Every blue spot was electron-poor and positively charged. Opposite charges attract, so reactions start where the reddest region meets the bluest one.
+
+The lines you drew are called curved arrows, and chemists use exactly this notation. An arrow shows a pair of electrons moving from where they are to where they are going.
+
+When two blue targets competed, geometry decided the winner: bulky groups physically block incoming molecules, so reactions take the open route. That is called steric hindrance.
+
+In the multi-step stages you were writing a reaction mechanism — the exact order in which bonds form and break. That is the core skill of organic chemistry, and you just did twenty of them.`;

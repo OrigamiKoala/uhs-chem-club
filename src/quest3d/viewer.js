@@ -35,6 +35,8 @@ export class QuestViewer {
     this.currentIsosurface = null;
     this.activeInteraction = null;
     this.containmentRings = [];
+    this.scanMarker = null;
+    this.scanMarkerBorn = 0;
 
     this.buildChamber();
     this.bindEvents();
@@ -74,6 +76,11 @@ export class QuestViewer {
     window.addEventListener('pointerup', this._onPointerUp);
   }
 
+  /** Called when a drag is refused because the stage's arrow limit is reached. */
+  setArrowLimitHandler(fn) {
+    this.arrowController.onLimitReached = fn;
+  }
+
   setMode(mode) {
     if (this.controls) {
       this.controls.setMode(mode);
@@ -87,7 +94,7 @@ export class QuestViewer {
     this.arrowController.clear();
   }
 
-  loadStage(stageConfig = {}, kind = 'pick', onPayloadChange = null) {
+  loadStage(stageConfig = {}, kind = 'pick', onPayloadChange = null, onProbe = null) {
     // Detach listeners from arrowController so clearing doesn't fire stale events
     this.arrowController.onArrowsChanged = null;
     this.arrowController.onArrowComplete = null;
@@ -110,6 +117,7 @@ export class QuestViewer {
     }
     this.arrowController.clear();
     this.anchorManager.clear();
+    this.clearScanMarker();
 
     let molId = stageConfig.moleculeId;
     if (!molId || (molId === 'h2o' && kind === 'arrow')) {
@@ -159,6 +167,13 @@ export class QuestViewer {
       this.activeInteraction.onChange = (payload) => {
         if (onPayloadChange) onPayloadChange(payload);
       };
+      // Tapping a site without dragging is the scan gesture: mark it in the chamber
+      // and hand the id up to the HUD, which owns the readout.
+      this.activeInteraction.onProbe = (anchor) => {
+        if (!anchor) return;
+        this.showScanMarker(anchor.position);
+        if (onProbe) onProbe(anchor.id, anchor);
+      };
     }
 
     // Adjust camera framing
@@ -171,9 +186,46 @@ export class QuestViewer {
     }
   }
 
+  /**
+   * Ring the site the player just scanned. Purely a "you tapped this one" cue —
+   * it carries no information about the answer, so it looks the same everywhere.
+   */
+  showScanMarker(position) {
+    this.clearScanMarker();
+    if (!position) return;
+
+    const group = new THREE.Group();
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(0.62, 0.035, 10, 44),
+      new THREE.MeshBasicMaterial({ color: 0xff9f1c, transparent: true, opacity: 0.95, depthTest: false })
+    );
+    const pulse = new THREE.Mesh(
+      new THREE.TorusGeometry(0.62, 0.02, 10, 44),
+      new THREE.MeshBasicMaterial({ color: 0xf4a261, transparent: true, opacity: 0.6, depthTest: false })
+    );
+    group.add(ring, pulse);
+    group.position.copy(position);
+    group.renderOrder = 999;
+
+    this.scanMarker = { group, ring, pulse };
+    this.scanMarkerBorn = performance.now();
+    this.scene.add(group);
+  }
+
+  clearScanMarker() {
+    if (!this.scanMarker) return;
+    this.scene.remove(this.scanMarker.group);
+    for (const m of [this.scanMarker.ring, this.scanMarker.pulse]) {
+      m.geometry?.dispose();
+      m.material?.dispose();
+    }
+    this.scanMarker = null;
+  }
+
   playReaction(reactionConfig, onComplete) {
-    // 1. Hide anchors so they don't distract during reaction
+    // 1. Hide anchors and the scan ring so they don't distract during reaction
     this.anchorManager.clear();
+    this.clearScanMarker();
 
     // 2. Hide electron density cloud so ball-and-stick interaction is prominent
     if (this.currentIsosurface && this.currentIsosurface.group) {
@@ -221,6 +273,17 @@ export class QuestViewer {
 
   update(delta = 0.016, time = 0) {
     this.controls.update();
+    if (this.scanMarker) {
+      // Billboard the ring so it reads as a flat target from any angle, and let the
+      // outer ring breathe outwards once so the tap registers as a deliberate action.
+      this.scanMarker.group.quaternion.copy(this.camera.quaternion);
+      const age = (performance.now() - this.scanMarkerBorn) / 1000;
+      const t = Math.min(age / 0.45, 1);
+      this.scanMarker.ring.scale.setScalar(0.6 + 0.4 * t);
+      this.scanMarker.pulse.scale.setScalar(0.6 + 1.1 * t);
+      this.scanMarker.pulse.material.opacity = 0.6 * (1 - t);
+      this.scanMarker.ring.material.opacity = 0.35 + 0.35 * Math.sin(time * 3);
+    }
     if (this.currentIsosurface) {
       this.currentIsosurface.update(time);
     }
@@ -236,5 +299,6 @@ export class QuestViewer {
     if (this.currentIsosurface) this.currentIsosurface.dispose();
     this.anchorManager.clear();
     this.arrowController.clear();
+    this.clearScanMarker();
   }
 }

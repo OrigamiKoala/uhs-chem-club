@@ -3,10 +3,22 @@
  */
 
 import { api } from './api.js';
-import { session } from './session.js';
+import { session, levelProgress, levelTitle } from './session.js';
 import { stage } from './three/stage.js';
 import { tierManager } from './three/tier.js';
 import { Router } from './router.js';
+
+/** Guild liveries, keyed by team id. Legacy ids are aliased in session.js. */
+const TEAM_LIVERY = {
+  earth: 'var(--team-earth)',
+  air: 'var(--team-air)',
+  fire: 'var(--team-fire)',
+  water: 'var(--team-water)',
+  terra: 'var(--team-earth)',
+  zephyr: 'var(--team-air)',
+  ignis: 'var(--team-fire)',
+  thalassa: 'var(--team-water)'
+};
 
 async function bootstrapApp() {
   const appContainer = document.getElementById('app');
@@ -96,15 +108,11 @@ function setupHud() {
     window.location.hash = '#/';
   });
 
-  // Navigation buttons
+  // Navigation buttons — data-target is the route name itself
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const target = btn.getAttribute('data-target');
-      if (target === 'bridge') window.location.hash = '#/bridge';
-      else if (target === 'starmap') window.location.hash = '#/starmap';
-      else if (target === 'comms') window.location.hash = '#/leaderboard';
-      else if (target === 'cargo') window.location.hash = '#/cargo';
-      else if (target === 'quarters') window.location.hash = '#/quarters';
+      if (target) window.location.hash = `#/${target}`;
     });
   });
 
@@ -114,24 +122,26 @@ function setupHud() {
       navEl?.classList.remove('hidden');
       statsEl?.classList.remove('hidden');
       userBtn?.classList.remove('hidden');
-      if (userName) userName.textContent = (s.player.display_name || 'EXPLORER').toUpperCase();
+      if (userName) userName.textContent = (s.player.display_name || 'CREW').toUpperCase();
 
       const totalXp = s.xp || 0;
-      const currentLevel = Math.max(1, Math.floor(Math.sqrt(totalXp / 45)) + 1);
-      const currentLevelBaseXp = 45 * Math.pow(currentLevel - 1, 2);
-      const nextLevelXp = 45 * Math.pow(currentLevel, 2);
-      const xpIntoLevel = totalXp - currentLevelBaseXp;
-      const xpNeededForLevel = nextLevelXp - currentLevelBaseXp;
-      const pct = Math.min(100, Math.max(0, Math.round((xpIntoLevel / xpNeededForLevel) * 100)));
+      const prog = levelProgress(totalXp);
 
       if (xpVal) xpVal.textContent = String(totalXp);
-      if (lvlBadge) lvlBadge.textContent = `LVL ${currentLevel}`;
-      if (xpFill) xpFill.style.width = `${pct}%`;
+      if (lvlBadge) {
+        lvlBadge.textContent = `LVL ${prog.level} ${levelTitle(prog.level).toUpperCase()}`;
+        lvlBadge.title = `${prog.into} / ${prog.needed} XP toward level ${prog.level + 1}`;
+      }
+      if (xpFill) xpFill.style.width = `${prog.pct}%`;
 
       if (teamBadge && s.team) {
-        teamBadge.textContent = s.team.name || s.team.team_id;
-        teamBadge.style.background = s.team.color_hex || 'rgba(0, 229, 255, 0.2)';
-        teamBadge.style.color = '#fff';
+        // The guild livery comes from the palette, never from the sheet: a stale
+        // accent_hex in the Teams tab used to leak a bright web colour into the HUD.
+        const tid = String(s.team.team_id || '').toLowerCase();
+        const livery = TEAM_LIVERY[tid] || 'var(--accent-bronze)';
+        teamBadge.textContent = (s.team.name || s.team.team_id || '').toUpperCase();
+        teamBadge.style.borderColor = livery;
+        teamBadge.style.color = livery;
       }
 
       if (adminLink) {

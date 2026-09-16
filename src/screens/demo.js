@@ -1,61 +1,99 @@
 /**
- * demo.js — Kiosk showcase demo mode (unauthenticated Stage 1 play)
+ * demo.js — One free puzzle, no account required.
+ *
+ * This is the same Stage 1 the real quest opens with, graded by the same local
+ * evaluator, so what a visitor tries here is exactly what they get after signing up.
+ * (It previously referenced a molecule that does not exist and graded an arrow
+ * answer with pick logic, so it could never be solved.)
  */
 
 import { api } from '../api.js';
 import { stage } from '../three/stage.js';
 import { tierManager } from '../three/tier.js';
 import { QuestViewer } from '../quest3d/viewer.js';
+import { MOLECULE_DATA } from '../quest3d/molecule.js';
 import { renderFallbackInputs } from '../fallback2d/stages.js';
+import { renderScanReadout } from '../ui/scan.js';
 import { showToast } from '../ui/toast.js';
+import { STAGE_CONFIGS, evaluateStageLocally, diagnoseMiss, scanFor } from '../quest3d/evaluator.js';
 
 export function renderDemo(container) {
   let viewer = null;
   let currentPayload = null;
+  let solved = false;
 
   if (tierManager.currentTier !== 'T1' && stage.canvas) {
     viewer = new QuestViewer(stage.canvas);
     stage.setQuestScene(viewer);
   }
 
-  const stageConfig = {
-    title: 'Demo: Calibrate Scanner',
-    prompt: 'Orbit the charge cloud and click the highest-density lobe.',
-    moleculeId: 'h2o',
-    anchors: ['lp_o', 'h1', 'h2']
+  const base = STAGE_CONFIGS[0];
+  const cfg = {
+    ...base,
+    regions: MOLECULE_DATA[base.moleculeId]?.regions || [],
+    anchors: (MOLECULE_DATA[base.moleculeId]?.regions || []).map(r => r.id)
   };
+  const demoSiteCount = Object.keys(cfg.scans || {}).length;
+  const demoScanned = new Set();
 
   container.innerHTML = `
+    <div id="quest-screen-flash" class="quest-screen-flash"></div>
     <div class="quest-hud-overlay">
       <div class="quest-hud-top">
-        <a href="#/" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 12px; min-height: 36px; text-decoration: none;">
-          Exit Demo
-        </a>
-        <div style="font-family: var(--font-display); font-size: 0.8rem; color: var(--accent-amber); background: rgba(255, 179, 0, 0.15); border: 1px solid rgba(255, 179, 0, 0.3); padding: 4px 12px; border-radius: var(--radius-sm);">
-          Demo
+        <div class="quest-nav-cluster">
+          <a href="#/" class="btn-secondary quest-btn-sm" style="text-decoration: none;">← Exit</a>
+          <span class="stage-counter">SAMPLE · STAGE <strong>1</strong></span>
+        </div>
+        <div class="colormap-legend" style="min-width: 168px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.62rem; letter-spacing: 0.16em;">
+            <span style="color: var(--charge-red-ink);">GIVER</span>
+            <span style="color: var(--charge-blue-ink);">TAKER</span>
+          </div>
+          <div style="height: 6px; background: linear-gradient(90deg, var(--charge-red) 0%, var(--plate-500) 50%, var(--charge-blue) 100%);"></div>
         </div>
       </div>
 
       <div class="stage-card-wrap">
-        <div class="stage-prompt-card">
-          <div class="scanning-sweep hidden" id="demo-sweep"></div>
+        <div class="stage-prompt-card" id="demo-card">
           <div class="stage-header">
-            <div class="stage-title">${stageConfig.title}</div>
-            <div class="stage-xp-tag">+10 XP</div>
+            <div>
+              ${cfg.shape ? `<div class="stage-shape">${cfg.shape}</div>` : ''}
+              <div class="stage-title">${cfg.title}</div>
+            </div>
+            <div class="stage-xp-tag">Sample</div>
           </div>
-          <div class="stage-instruction">${stageConfig.prompt}</div>
 
-          <div id="demo-interactive-area" style="margin-bottom: 1rem;"></div>
-          <div id="demo-feedback" class="hidden" style="margin-bottom: 1rem; padding: 12px; border-radius: var(--radius-sm); font-size: 0.9rem;"></div>
+          <div class="concept-card">
+            <div class="concept-card-header">
+              <div class="concept-card-title-group">
+                <span class="concept-badge">CONTROLS</span>
+                <span class="concept-card-title">SCAN FIRST, THEN CONNECT</span>
+              </div>
+            </div>
+            <div class="concept-card-intro">Glowing clouds are electric charge. Opposites pull — find out which is which.</div>
+            <div class="concept-grid">
+              <div class="concept-pill red-pill"><strong>Tap a cloud</strong> to scan that site.</div>
+              <div class="concept-pill blue-pill"><strong>Drag between clouds</strong> to connect them.</div>
+            </div>
+          </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <button type="button" id="demo-grade-btn" class="btn-primary" style="padding: 8px 24px; min-height: 40px;">
-              <span>Submit</span>
-              <span>➔</span>
-            </button>
-            <a href="#/register" class="btn-secondary" style="font-size: 0.8rem; text-decoration: none;">
-              Sign Up
+          <div class="stage-instruction">${cfg.prompt}</div>
+
+          <div id="demo-scan-slot">${renderScanReadout(null, 0, demoSiteCount)}</div>
+
+          <div class="stage-toolbar">
+            <span class="stage-tip">Tap to scan · drag to connect · right-drag to rotate</span>
+            <button type="button" id="demo-clear-btn" class="btn-secondary quest-btn-sm">Clear</button>
+          </div>
+
+          <div id="demo-interactive-area"></div>
+          <div id="demo-feedback" class="hidden"></div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="#/register" class="btn-secondary quest-btn-sm" style="text-decoration: none;">
+              Create Account
             </a>
+            <button type="button" id="demo-grade-btn" class="btn-primary" style="padding: 9px 26px; min-height: 40px;">Submit</button>
           </div>
         </div>
       </div>
@@ -63,60 +101,94 @@ export function renderDemo(container) {
   `;
 
   const interactiveArea = container.querySelector('#demo-interactive-area');
+  const card = container.querySelector('#demo-card');
+  const feedback = container.querySelector('#demo-feedback');
+  const flash = container.querySelector('#quest-screen-flash');
+  const gradeBtn = container.querySelector('#demo-grade-btn');
 
-  if (tierManager.currentTier === 'T1' || !viewer) {
-    renderFallbackInputs(interactiveArea, stageConfig, 'pick', (payload) => {
-      currentPayload = payload;
-    });
-  } else {
-    viewer.loadStage(stageConfig, 'pick', (payload) => {
-      currentPayload = payload;
-    });
+  // The free sample teaches the loop the whole quest runs on, so the scanner has to
+  // work here too — otherwise stage 1's own prompt tells the player to do something
+  // that does nothing.
+  const demoScanSlot = container.querySelector('#demo-scan-slot');
+  function showDemoScan(regionId) {
+    const scan = scanFor(0, regionId);
+    if (!scan || !demoScanSlot) return;
+    demoScanned.add(regionId);
+    demoScanSlot.innerHTML = renderScanReadout(scan, demoScanned.size, demoSiteCount);
+    const el = demoScanSlot.querySelector('.scan-readout');
+    if (el) { void el.offsetWidth; el.classList.add('scan-sweep'); }
   }
 
-  const gradeBtn = container.querySelector('#demo-grade-btn');
-  const sweep = container.querySelector('#demo-sweep');
-  const feedback = container.querySelector('#demo-feedback');
+  if (tierManager.currentTier === 'T1' || !viewer) {
+    renderFallbackInputs(interactiveArea, cfg, 'arrow', (payload) => { currentPayload = payload; }, showDemoScan);
+  } else {
+    viewer.setMode('draw');
+    viewer.loadStage(cfg, 'arrow', (payload) => { currentPayload = payload; }, showDemoScan);
+  }
 
-  gradeBtn.addEventListener('click', async () => {
+  container.querySelector('#demo-clear-btn')?.addEventListener('click', () => {
+    if (viewer) viewer.clear();
+    currentPayload = null;
+    feedback.className = 'hidden';
+    card.classList.remove('error-state');
+  });
+
+  gradeBtn.addEventListener('click', () => {
+    if (solved) {
+      window.location.hash = '#/register';
+      return;
+    }
     if (!currentPayload) {
-      showToast('Select an anchor before submitting.', 'warning');
+      showToast('Nothing drawn yet. Scan the sites, then drag between two.', 'warning');
       return;
     }
 
-    sweep.classList.remove('hidden');
-    gradeBtn.disabled = true;
+    const res = evaluateStageLocally(0, currentPayload);
+    api.gradeDemo(0, currentPayload).catch(() => {});
 
-    try {
-      await new Promise(r => setTimeout(r, 600));
-      const res = await api.gradeDemo(1, currentPayload);
-      sweep.classList.add('hidden');
-      gradeBtn.disabled = false;
+    if (res.correct) {
+      solved = true;
+      gradeBtn.disabled = true;
+      gradeBtn.textContent = 'Reacting…';
 
-      if (res.correct) {
-        if (viewer) viewer.triggerSuccessBloom();
-        feedback.className = 'text-success';
-        feedback.style.background = 'rgba(0, 230, 118, 0.15)';
-        feedback.style.border = '1px solid var(--accent-green)';
+      const finish = () => {
+        solved = true;
+        feedback.className = 'stage-error-banner stage-success-banner';
         feedback.innerHTML = `
-          <strong>${res.revealText}</strong><br>
-          <span style="color: var(--text-primary);">Sign up to save progress and join a team.</span>
-          <div style="margin-top: 0.75rem;">
-            <a href="#/register" class="btn-primary" style="display: inline-block; padding: 6px 16px; font-size: 0.8rem; text-decoration: none;">Sign Up</a>
+          <span class="banner-mark" aria-hidden="true">//</span>
+          <div style="flex: 1;">
+            <div class="banner-title" style="color: var(--accent-green);">Solved</div>
+            <div class="banner-body">One of twenty. Create an account to keep the rest.</div>
           </div>
         `;
-        feedback.classList.remove('hidden');
+        gradeBtn.disabled = false;
+        gradeBtn.textContent = 'Create Account';
+        gradeBtn.focus();
+      };
+
+      if (viewer && viewer.playReaction && cfg.reaction) {
+        viewer.playReaction(cfg.reaction, finish);
       } else {
-        if (viewer) viewer.triggerShudder();
-        feedback.className = 'text-danger';
-        feedback.style.background = 'rgba(255, 82, 82, 0.15)';
-        feedback.style.border = '1px solid var(--accent-danger)';
-        feedback.textContent = res.revealText;
-        feedback.classList.remove('hidden');
+        setTimeout(finish, 1000);
       }
-    } catch (e) {
-      sweep.classList.add('hidden');
-      gradeBtn.disabled = false;
+    } else {
+      if (viewer) viewer.triggerFailure?.();
+      if (flash) {
+        flash.classList.add('flash-active');
+        setTimeout(() => flash.classList.remove('flash-active'), 400);
+      }
+      card.classList.remove('error-state');
+      void card.offsetWidth;
+      card.classList.add('error-state');
+      const diag = diagnoseMiss(0, currentPayload, res);
+      feedback.className = 'stage-error-banner';
+      feedback.innerHTML = `
+        <span class="banner-mark" aria-hidden="true">!!</span>
+        <div style="flex: 1;">
+          <div class="banner-title" style="color: var(--lamp-red);">${diag.title}</div>
+          <div class="banner-body">${diag.message}</div>
+        </div>
+      `;
     }
   });
 }

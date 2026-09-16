@@ -1,39 +1,29 @@
 /**
- * onboarding.js — Team selection flow
+ * onboarding.js — Step 2 of the sign-up journey: pick a team.
  */
 
 import { api } from '../api.js';
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { showToast } from '../ui/toast.js';
+import { stepRail } from '../ui/layout.js';
 
 const TEAM_INFO = {
-  earth: { title: 'Earth', accent: '#a3824c' },
-  air: { title: 'Air', accent: '#8a9ba8' },
-  fire: { title: 'Fire', accent: '#c85a17' },
-  water: { title: 'Water', accent: '#2a9d8f' }
+  earth: { title: 'Earth', guild: 'Mineral Mining Guild', accent: 'var(--team-earth)', mark: 'MM' },
+  air: { title: 'Air', guild: 'Atmospheric Harvesters', accent: 'var(--team-air)', mark: 'AH' },
+  fire: { title: 'Fire', guild: 'Thermal Smelters', accent: 'var(--team-fire)', mark: 'TS' },
+  water: { title: 'Water', guild: 'Moisture Extraction', accent: 'var(--team-water)', mark: 'ME' }
 };
 
 const DEFAULT_TEAMS = [
-  { team_id: 'earth', name: 'Earth', color_hex: '#2b2114', accent_hex: '#a3824c', cap: 12, available: 12 },
-  { team_id: 'air', name: 'Air', color_hex: '#1e242a', accent_hex: '#8a9ba8', cap: 12, available: 12 },
-  { team_id: 'fire', name: 'Fire', color_hex: '#2d180d', accent_hex: '#c85a17', cap: 12, available: 12 },
-  { team_id: 'water', name: 'Water', color_hex: '#0e2422', accent_hex: '#2a9d8f', cap: 12, available: 12 }
+  { team_id: 'earth', name: 'Earth', color_hex: '#241f14', accent_hex: '#8a7148', cap: 12, available: 12 },
+  { team_id: 'air', name: 'Air', color_hex: '#1a2226', accent_hex: '#75818a', cap: 12, available: 12 },
+  { team_id: 'fire', name: 'Fire', color_hex: '#2a1a0f', accent_hex: '#9c5423', cap: 12, available: 12 },
+  { team_id: 'water', name: 'Water', color_hex: '#12231f', accent_hex: '#3f7d76', cap: 12, available: 12 }
 ];
 
-const TEAM_ALIAS = {
-  terra: 'earth',
-  zephyr: 'air',
-  ignis: 'fire',
-  thalassa: 'water'
-};
-
-const PROPER_NAMES = {
-  earth: 'Earth',
-  air: 'Air',
-  fire: 'Fire',
-  water: 'Water'
-};
+const TEAM_ALIAS = { terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' };
+const PROPER_NAMES = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
 
 function normalizeTeams(list) {
   if (!list || !Array.isArray(list) || list.length === 0) return DEFAULT_TEAMS;
@@ -59,73 +49,74 @@ export async function renderOnboarding(container) {
     const hasExistingTeam = Boolean(session.teamId);
 
     container.innerHTML = `
-      <div class="screen-container" style="max-width: 680px; margin: 2rem auto;">
-        <div class="glass-panel" style="padding: 2rem; border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.95);">
-          
-          <div style="border-bottom: 1px solid var(--border-durasteel); padding-bottom: 1rem; margin-bottom: 1.5rem; text-align: center;">
-            <h2 style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 0.35rem;">
-              Select Your Team
-            </h2>
-            <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
-              Pick a team to record your progress and view team standings.
-            </p>
+      <div class="screen-container" style="max-width: 720px;">
+        ${hasExistingTeam ? '' : stepRail(2)}
+        <div class="glass-panel">
+
+          <div style="text-align: center; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 1.25rem; margin-bottom: 1.5rem;">
+            <div class="eyebrow">Avalon · Assignment</div>
+            <h1 class="page-title" style="font-size: 1.4rem;">${hasExistingTeam ? 'Change Guild' : 'Choose Guild'}</h1>
           </div>
 
-          <!-- Team Selection Grid -->
-          <div style="margin-bottom: 1.75rem;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
-              ${teamsData.map(t => {
-                const isFull = (t.available !== undefined && t.available <= 0);
-                const isSelected = selectedTeam === t.team_id;
-                const meta = TEAM_INFO[t.team_id] || {
-                  title: t.name || t.team_id,
-                  accent: t.accent_hex || 'var(--accent-amber)'
-                };
+          <div role="radiogroup" aria-label="Guild"
+               style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;">
+            ${teamsData.map(t => {
+              const isFull = (t.available !== undefined && t.available <= 0);
+              const isSelected = selectedTeam === t.team_id;
+              const meta = TEAM_INFO[t.team_id] || {
+                title: t.name || t.team_id,
+                guild: '',
+                accent: 'var(--accent-amber)',
+                mark: '--'
+              };
 
-                return `
-                  <div class="choice-option team-card ${isSelected ? 'selected' : ''} ${isFull ? 'disabled' : ''}"
-                       data-team="${t.team_id}"
-                       style="display: flex; flex-direction: column; align-items: flex-start; padding: 1.25rem; border-color: ${isSelected ? meta.accent : 'var(--border-durasteel)'}; opacity: ${isFull ? 0.45 : 1}; cursor: ${isFull ? 'not-allowed' : 'pointer'}; background: ${isSelected ? 'rgba(255,159,28,0.1)' : '#13151b'};">
-                    <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
-                      <span style="font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; color: ${meta.accent};">
-                        ${meta.title}
-                      </span>
-                      <span style="font-family: var(--font-mono); font-size: 0.75rem; color: ${isFull ? 'var(--accent-danger)' : 'var(--accent-green)'};">
-                        ${isFull ? 'Full' : `${t.available ?? 12} open`}
-                      </span>
-                    </div>
+              return `
+                <button type="button"
+                     class="choice-option team-card ${isSelected ? 'selected' : ''} ${isFull ? 'disabled' : ''}"
+                     role="radio"
+                     aria-checked="${isSelected}"
+                     ${isFull ? 'disabled aria-disabled="true"' : ''}
+                     data-team="${t.team_id}"
+                     style="flex-direction: column; align-items: flex-start; text-align: left; padding: 1.1rem; opacity: ${isFull ? 0.4 : 1}; cursor: ${isFull ? 'not-allowed' : 'pointer'}; ${isSelected ? `border-left-color: ${meta.accent};` : ''}">
+                  <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 0.45rem;">
+                    <span style="display: flex; align-items: baseline; gap: 0.6rem;">
+                      <span aria-hidden="true" style="font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.12em; color: ${meta.accent};">${meta.mark}</span>
+                      <span style="font-family: var(--font-imperial); font-weight: 700; font-size: 1.1rem; letter-spacing: 0.16em; text-transform: uppercase; color: ${meta.accent}; text-shadow: var(--engrave);">${meta.title}</span>
+                    </span>
+                    <span class="tag ${isFull ? 'danger' : 'live'}">
+                      ${isFull ? 'Full' : `${t.available ?? 12} open`}
+                    </span>
                   </div>
-                `;
-              }).join('')}
-            </div>
+                  <span class="eyebrow">${meta.guild}</span>
+                </button>
+              `;
+            }).join('')}
           </div>
 
-          <div id="onboarding-error" class="text-danger hidden" style="font-size: 0.85rem; margin-bottom: 1.25rem; padding: 0.75rem; background: rgba(217, 4, 41, 0.15); border: 1px solid var(--accent-danger); border-radius: var(--radius-sm);"></div>
+          <div id="onboarding-error" class="form-banner hidden" role="alert"></div>
 
           <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap;">
             ${hasExistingTeam ? `
               <a href="#/bridge" class="btn-secondary" style="font-size: 0.85rem; text-decoration: none;">
-                Return to Bridge
+                Cancel
               </a>
-            ` : `<div></div>`}
+            ` : '<span></span>'}
             <button type="button" id="confirm-assignment-btn" class="btn-primary" ${!selectedTeam ? 'disabled' : ''}>
-              <span>${hasExistingTeam ? 'Save Team' : 'Confirm Team'}</span>
-              <span>➔</span>
+              ${hasExistingTeam ? 'Save' : 'Confirm'}
             </button>
           </div>
         </div>
       </div>
     `;
 
-    // Bind team clicks
     container.querySelectorAll('.team-card:not(.disabled)').forEach(el => {
       el.addEventListener('click', () => {
         selectedTeam = el.getAttribute('data-team');
         render();
+        container.querySelector('#confirm-assignment-btn')?.focus();
       });
     });
 
-    // Submit assignment
     const confirmBtn = container.querySelector('#confirm-assignment-btn');
     const errorEl = container.querySelector('#onboarding-error');
 
@@ -133,7 +124,7 @@ export async function renderOnboarding(container) {
       confirmBtn.addEventListener('click', async () => {
         if (!selectedTeam) return;
         confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Saving...';
+        confirmBtn.textContent = 'Saving…';
         errorEl.classList.add('hidden');
 
         try {
@@ -143,28 +134,39 @@ export async function renderOnboarding(container) {
             visor: 'gold',
             skin: 'medium'
           });
-          session.setUserData(res);
-          showToast('Team saved.', 'success');
+          // player/create does not return a real XP total — never let it zero the score.
+          session.setUserData(res, { trustXp: false });
+          showToast(`${PROPER_NAMES[selectedTeam] || selectedTeam} Guild.`, 'success');
           window.location.hash = '#/bridge';
         } catch (err) {
           if (err.code === 'ALREADY_ASSIGNED') {
             if (session.player) session.player.team_id = selectedTeam;
-            session.setUserData({ team: { team_id: selectedTeam, name: PROPER_NAMES[selectedTeam] || selectedTeam } });
+            session.setUserData(
+              { team: { team_id: selectedTeam, name: PROPER_NAMES[selectedTeam] || selectedTeam } },
+              { trustXp: false }
+            );
             window.location.hash = '#/bridge';
             return;
           }
 
-          errorEl.textContent = err.message || 'Failed to select team.';
+          const isFull = err.code === 'TEAM_FULL';
+          errorEl.innerHTML = `<span>${
+            isFull ? 'That guild just filled up. Pick another.' : (err.message || 'Could not save. Try again.')
+          }</span>`;
           errorEl.classList.remove('hidden');
           confirmBtn.disabled = false;
-          confirmBtn.innerHTML = `<span>${hasExistingTeam ? 'Save Team' : 'Confirm Team'}</span><span>➔</span>`;
+          confirmBtn.textContent = hasExistingTeam ? 'Save' : 'Confirm';
 
-          if (err.code === 'TEAM_FULL') {
-            const boot = await api.bootstrap();
-            teamsData = normalizeTeams(boot.teams || []);
+          if (isFull) {
+            try {
+              const boot = await api.bootstrap();
+              teamsData = normalizeTeams(boot.teams || []);
+            } catch (e) { /* keep the cached roster */ }
             selectedTeam = null;
-            errorEl.textContent = 'That team is currently full. Please pick another team.';
             render();
+            const refreshedError = container.querySelector('#onboarding-error');
+            refreshedError.innerHTML = '<span>That guild just filled up. Pick another.</span>';
+            refreshedError.classList.remove('hidden');
           }
         }
       });

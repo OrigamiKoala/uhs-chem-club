@@ -1,11 +1,12 @@
 /**
- * login.js — Login screen
+ * login.js — Returning player sign-in.
  */
 
 import { api } from '../api.js';
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { showToast } from '../ui/toast.js';
+import { bindPasswordReveal } from './register.js';
 
 export function renderLogin(container) {
   if (stage.cameraRig) {
@@ -13,37 +14,43 @@ export function renderLogin(container) {
   }
 
   if (session.token && session.player) {
-    window.location.hash = session.player.team_id ? '#/bridge' : '#/onboarding';
+    window.location.hash = session.teamId ? '#/bridge' : '#/onboarding';
     return;
   }
 
   container.innerHTML = `
-    <div class="screen-container" style="max-width: 440px; margin: 2.5rem auto;">
+    <div class="screen-container" style="max-width: 460px;">
       <div class="glass-panel">
-        <h2 class="holo-title" style="text-align: center; margin-bottom: 1.5rem;">Sign In</h2>
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <div class="eyebrow">Avalon · Access</div>
+          <h1 class="page-title" style="font-size: 1.5rem;">Sign In</h1>
+        </div>
 
-        <form id="login-form">
+        <form id="login-form" novalidate>
           <div class="form-group">
             <label class="form-label" for="login-id">Email or Display Name</label>
-            <input type="text" id="login-id" class="form-input" placeholder="student@example.com or AstraNova" required autocomplete="username">
+            <input type="text" id="login-id" class="form-input" placeholder="student@example.com or AstraNova"
+                   required autocomplete="username" autocapitalize="off">
           </div>
 
           <div class="form-group">
             <label class="form-label" for="login-pw">Password</label>
-            <input type="password" id="login-pw" class="form-input" placeholder="Enter password" required autocomplete="current-password">
+            <div class="input-wrap">
+              <input type="password" id="login-pw" class="form-input" placeholder="Enter password"
+                     required autocomplete="current-password">
+              <button type="button" class="reveal-btn" data-reveal="login-pw" aria-label="Show password">SHOW</button>
+            </div>
           </div>
 
-          <div id="login-error" class="text-danger hidden" style="font-size: 0.85rem; margin-bottom: 1rem;"></div>
+          <div id="login-error" class="form-banner hidden" role="alert"></div>
 
           <button type="submit" id="login-submit-btn" class="btn-primary" style="width: 100%;">
             <span>Sign In</span>
-            <span>➔</span>
           </button>
         </form>
 
-        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem;">
-          <span style="color: var(--text-secondary);">Need an account? </span>
-          <a href="#/register" style="color: var(--accent-cyan); text-decoration: none; font-weight: 600;">Register</a>
+        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+          <a href="#/register" class="link-accent">Create account</a>
         </div>
       </div>
     </div>
@@ -53,14 +60,24 @@ export function renderLogin(container) {
   const errorEl = container.querySelector('#login-error');
   const submitBtn = container.querySelector('#login-submit-btn');
 
+  bindPasswordReveal(container);
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorEl.classList.add('hidden');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Signing in…';
 
     const identifier = container.querySelector('#login-id').value.trim();
     const password = container.querySelector('#login-pw').value;
+
+    if (!identifier || !password) {
+      errorEl.innerHTML = '<span>Enter your name and password.</span>';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>Signing in…</span>';
+
     const idLc = identifier.toLowerCase();
     const cachedSalt = localStorage.getItem('avalon_salt_' + idLc) || undefined;
 
@@ -76,26 +93,25 @@ export function renderLogin(container) {
         xp: res.xp,
         level: res.level,
         inventory: res.inventory,
-        config: res.config
+        progress: res.progress
       });
+      if (res.config) session.setConfigAndTeams(res.config, session.teams);
 
       showToast('Signed in.', 'success');
-      const teamId = res.player?.team_id || session.player?.team_id;
-      if (teamId) {
-        window.location.hash = '#/bridge';
-      } else {
-        window.location.hash = '#/onboarding';
-      }
+      window.location.hash = session.teamId ? '#/bridge' : '#/onboarding';
 
       // Refresh full profile in background
       api.getMe().then(meData => {
         if (meData) session.setUserData(meData);
       }).catch(meErr => console.warn('Background getMe:', meErr));
     } catch (err) {
-      errorEl.textContent = err.message || 'Login failed.';
+      const isBadCreds = err.code === 'INVALID_CREDENTIALS';
+      errorEl.innerHTML = `<span>${
+        isBadCreds ? 'That name or password is not right. Try again.' : (err.message || 'Sign-in failed.')
+      }</span>`;
       errorEl.classList.remove('hidden');
       submitBtn.disabled = false;
-      submitBtn.innerHTML = '<span>Sign In</span><span>➔</span>';
+      submitBtn.innerHTML = '<span>Sign In</span>';
     }
   });
 }

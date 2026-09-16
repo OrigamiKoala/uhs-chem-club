@@ -1,149 +1,164 @@
 /**
- * leaderboard.js — Comms Array Telemetry & Guild Transmissions (Star Wars / Dune style)
+ * leaderboard.js — Club standings: teams and individuals.
  */
 
 import { api } from '../api.js';
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
+import { pageHeader, esc } from '../ui/layout.js';
+
+const TEAM_ACCENTS = {
+  earth: 'var(--team-earth)',
+  air: 'var(--team-air)',
+  fire: 'var(--team-fire)',
+  water: 'var(--team-water)'
+};
+
+const PROPER = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
 
 export async function renderLeaderboard(container) {
   if (stage.cameraRig) {
     stage.cameraRig.moveTo('comms');
   }
 
-  let activeTab = 'teams'; // 'teams' | 'individual'
+  let activeTab = 'teams';
   let lbData = { individual: [], teams: [] };
   let loading = true;
+  let failed = false;
 
   function render() {
+    const hasData = (lbData.teams || []).length > 0 || (lbData.individual || []).length > 0;
+
     container.innerHTML = `
       <div class="screen-container">
-        <div class="glass-panel" style="margin-bottom: 1.5rem; border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.94);">
-          <!-- Comms Station Banner -->
-          <div style="position: relative; border-radius: 2px; overflow: hidden; margin-bottom: 1.25rem; border: 1px solid var(--border-durasteel); height: 140px;">
-            <img src="/art/comms.jpg" alt="Standings" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.1) brightness(0.85);" />
-            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 20%, rgba(12, 13, 17, 0.9) 100%);"></div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-            <div>
-              <h2 style="font-family: var(--font-imperial); font-size: 1.6rem; letter-spacing: 0.12em; color: #fffdf7; margin-bottom: 0.2rem;">
-                Standings
-              </h2>
-              <p style="font-size: 0.9rem; color: var(--text-secondary);">
-                Team rankings and individual scores.
-              </p>
-            </div>
-
-            <div style="display: flex; gap: 0.5rem;">
-              <button type="button" id="tab-teams" class="btn-chip ${activeTab === 'teams' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
-                Teams
+        ${pageHeader({
+          art: '/art/comms.jpg',
+          artAlt: 'Comms array',
+          eyebrow: 'Fleet standings',
+          title: 'Standings',
+          actions: `
+            <div style="display: flex; gap: 0.5rem;" role="tablist" aria-label="Standings view">
+              <button type="button" id="tab-teams" role="tab" aria-selected="${activeTab === 'teams'}"
+                      class="btn-chip ${activeTab === 'teams' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
+                Guilds
               </button>
-              <button type="button" id="tab-indiv" class="btn-chip ${activeTab === 'individual' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
-                Individuals
+              <button type="button" id="tab-indiv" role="tab" aria-selected="${activeTab === 'individual'}"
+                      class="btn-chip ${activeTab === 'individual' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
+                Players
               </button>
             </div>
-          </div>
-        </div>
+          `
+        })}
 
-        ${loading && (!lbData.teams || lbData.teams.length === 0) ? `
-          <div class="glass-panel" style="text-align: center; padding: 3rem; color: var(--text-secondary); border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.94);">
-            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📡</div>
-            <div style="font-family: var(--font-mono); color: var(--accent-amber);">Loading standings…</div>
+        ${loading && !hasData ? `
+          <div class="glass-panel empty-state">
+            <div class="empty-icon" aria-hidden="true">///</div>
+            <div style="font-family: var(--font-mono); letter-spacing: 0.16em; color: var(--accent-amber);">LINKING…</div>
           </div>
-        ` : activeTab === 'teams' ? `
-          <!-- Team Leaderboard -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
-            ${(lbData.teams || []).map(t => `
-              <div class="holo-card" style="border-color: ${t.color_hex || 'var(--border-durasteel)'}; background: #14161c;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                  <span style="font-family: var(--font-mono); font-size: 1.6rem; font-weight: 900; color: ${t.accent_hex || 'var(--accent-amber)'};">
-                    #${t.rank}
-                  </span>
-                  <span style="font-size: 0.75rem; color: var(--text-muted); background: #101216; padding: 3px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-durasteel);">
-                    ${t.active_members}/${t.roster_size} members
-                  </span>
-                </div>
-
-                <h3 style="font-family: var(--font-imperial); font-size: 1.35rem; font-weight: 800; color: ${t.accent_hex || '#fffdf7'}; margin-bottom: 1.25rem; text-transform: uppercase;">
-                  ${t.name || t.team_id}
-                </h3>
-
-                <div style="background: #101216; border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-size: 0.75rem; color: var(--text-muted);">Score</span>
-                  <span style="font-family: var(--font-mono); font-size: 1.35rem; font-weight: 800; color: var(--accent-amber);">
-                    ${t.team_score} pts
-                  </span>
-                </div>
-              </div>
-            `).join('')}
+        ` : failed && !hasData ? `
+          <div class="glass-panel empty-state">
+            <div class="empty-icon" aria-hidden="true">///</div>
+            <h2 class="section-title">Link lost</h2>
+            <div style="margin-top: 1.25rem;"><button type="button" id="lb-retry" class="btn-secondary">Retry</button></div>
           </div>
-        ` : `
-          <!-- Individual Leaderboard -->
-          <div class="glass-panel" style="padding: 1rem; border-color: var(--border-durasteel); background: rgba(18, 20, 26, 0.94);">
-            <div style="overflow-x: auto;">
-              <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-                <thead>
-                  <tr style="border-bottom: 1px solid var(--border-durasteel); color: var(--text-muted); font-size: 0.75rem; font-family: var(--font-mono);">
-                    <th style="padding: 10px 12px;">RANK</th>
-                    <th style="padding: 10px 12px;">NAME</th>
-                    <th style="padding: 10px 12px;">TEAM</th>
-                    <th style="padding: 10px 12px;">LEVEL</th>
-                    <th style="padding: 10px 12px; text-align: right;">TOTAL XP</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(lbData.individual || []).map(row => {
-                    const isMe = session.player && (session.player.player_id === row.player_id || session.player.display_name === row.display_name);
-                    return `
-                      <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: ${isMe ? 'rgba(255, 159, 28, 0.12)' : 'transparent'};">
-                        <td style="padding: 12px; font-family: var(--font-mono); font-weight: bold; color: ${row.rank <= 3 ? 'var(--accent-amber)' : 'var(--text-secondary)'};">
-                          #${row.rank}
-                        </td>
-                        <td style="padding: 12px; font-weight: 700; color: var(--text-bright);">
-                          ${row.display_name} ${isMe ? '<span style="font-size:0.7rem; color:var(--accent-amber);">[YOU]</span>' : ''}
-                        </td>
-                        <td style="padding: 12px; font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase;">
-                          ${row.team_id || '—'}
-                        </td>
-                        <td style="padding: 12px;">
-                          <span class="level-badge" style="font-size: 0.65rem;">LVL ${row.level || 1}</span>
-                        </td>
-                        <td style="padding: 12px; text-align: right; font-family: var(--font-mono); font-weight: bold; color: var(--accent-amber);">
-                          ${row.xp} XP
-                        </td>
-                      </tr>
-                    `;
-                  }).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        `}
+        ` : activeTab === 'teams' ? renderTeams() : renderIndividuals()}
       </div>
     `;
 
-    container.querySelector('#tab-teams')?.addEventListener('click', () => {
-      activeTab = 'teams';
+    container.querySelector('#tab-teams')?.addEventListener('click', () => { activeTab = 'teams'; render(); });
+    container.querySelector('#tab-indiv')?.addEventListener('click', () => { activeTab = 'individual'; render(); });
+    container.querySelector('#lb-retry')?.addEventListener('click', () => { loading = true; failed = false; render(); load(); });
+  }
+
+  function renderTeams() {
+    const rows = lbData.teams || [];
+    if (rows.length === 0) {
+      return `<div class="glass-panel empty-state"><div class="empty-icon" aria-hidden="true">—</div><h2 class="section-title">No guild scores yet</h2></div>`;
+    }
+    return `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
+        ${rows.map(t => {
+          const tid = String(t.team_id || '').toLowerCase();
+          const accent = TEAM_ACCENTS[tid] || 'var(--accent-amber)';
+          const isMine = session.teamId === tid;
+          return `
+            <article class="holo-card" style="${isMine ? `border-left: 2px solid ${accent};` : ''}">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+                <span style="font-family: var(--font-mono); font-size: 1.5rem; color: ${accent};">${String(t.rank).padStart(2, '0')}</span>
+                <span class="tag">${t.active_members ?? 0}/${t.roster_size ?? 0} active</span>
+              </div>
+              <h2 style="font-family: var(--font-imperial); font-size: 1.2rem; font-weight: 700; letter-spacing: 0.16em; color: ${accent}; margin-bottom: 1rem; text-transform: uppercase; text-shadow: var(--engrave);">
+                ${esc(PROPER[tid] || t.name || t.team_id)} ${isMine ? '<span class="tag warn" style="vertical-align: middle;">Yours</span>' : ''}
+              </h2>
+              <div class="stat-row" style="justify-content: space-between;">
+                <div class="stat-tile">
+                  <div class="stat-label">Guild score</div>
+                  <div class="stat-value">${t.team_score}</div>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function renderIndividuals() {
+    const rows = lbData.individual || [];
+    if (rows.length === 0) {
+      return `<div class="glass-panel empty-state"><div class="empty-icon" aria-hidden="true">—</div><h2 class="section-title">No players ranked yet</h2></div>`;
+    }
+    return `
+      <div class="glass-panel" style="padding: 1rem;">
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-durasteel); color: var(--text-muted); font-size: 0.72rem; font-family: var(--font-mono); letter-spacing: 0.08em;">
+                <th style="padding: 10px 12px;">RANK</th>
+                <th style="padding: 10px 12px;">PLAYER</th>
+                <th style="padding: 10px 12px;">TEAM</th>
+                <th style="padding: 10px 12px;">LEVEL</th>
+                <th style="padding: 10px 12px; text-align: right;">XP</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(row => {
+                const isMe = session.player &&
+                  (session.player.player_id === row.player_id || session.player.display_name === row.display_name);
+                const tid = String(row.team_id || '').toLowerCase();
+                return `
+                  <tr style="border-bottom: 1px solid var(--border-durasteel); background: ${isMe ? 'var(--plate-300)' : 'transparent'};">
+                    <td style="padding: 12px; font-family: var(--font-mono); color: ${row.rank <= 3 ? 'var(--accent-amber)' : 'var(--text-muted)'};">${String(row.rank).padStart(2, '0')}</td>
+                    <td style="padding: 12px; font-weight: 700; color: var(--text-bright);">
+                      ${esc(row.display_name)} ${isMe ? '<span class="tag warn">You</span>' : ''}
+                    </td>
+                    <td style="padding: 12px; font-size: 0.85rem; color: ${TEAM_ACCENTS[tid] || 'var(--text-secondary)'};">
+                      ${esc(PROPER[tid] || row.team_id || '—')}
+                    </td>
+                    <td style="padding: 12px;"><span class="level-badge" style="font-size: 0.65rem;">LVL ${row.level || 1}${row.level_title ? ' ' + esc(row.level_title).toUpperCase() : ''}</span></td>
+                    <td style="padding: 12px; text-align: right; font-family: var(--font-mono); color: var(--accent-amber);">${row.xp}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  function load() {
+    api.getLeaderboards().then(res => {
+      loading = false;
+      if (res) lbData = res;
       render();
-    });
-    container.querySelector('#tab-indiv')?.addEventListener('click', () => {
-      activeTab = 'individual';
+    }).catch(() => {
+      loading = false;
+      failed = true;
       render();
     });
   }
 
   render();
-
-  api.getLeaderboards().then(res => {
-    loading = false;
-    if (res) {
-      lbData = res;
-      if (container.querySelector('#tab-teams')) {
-        render();
-      }
-    }
-  }).catch(() => {
-    loading = false;
-  });
+  load();
 }

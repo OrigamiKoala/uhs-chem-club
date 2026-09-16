@@ -4,45 +4,43 @@
 
 import { api } from '../api.js';
 import { showToast } from '../ui/toast.js';
+import { pageHeader } from '../ui/layout.js';
 
 export function renderAdmin(container) {
   let stats = { totalPlayers: '…', totalSubmissions: '…', completions: '…', gfxTiers: { T1: '…' } };
 
   container.innerHTML = `
       <div class="screen-container" style="max-width: 920px;">
-        <div class="glass-panel" style="margin-bottom: 1.5rem;">
-          <h2 class="holo-title" style="margin-bottom: 0;">Admin</h2>
-        </div>
+        ${pageHeader({
+          eyebrow: 'Restricted · logged',
+          title: 'Admin',
+          actions: `<a href="#/bridge" class="btn-secondary" style="text-decoration: none;">Bridge</a>`
+        })}
 
         <!-- Live Counters -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
           <div class="holo-card" style="padding: 1rem;">
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Total Players</div>
-            <div id="stat-total-players" style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: var(--accent-cyan);">${stats.totalPlayers}</div>
+            <div class="stat-label">Total Players</div>
+            <div id="stat-total-players" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-amber);">${stats.totalPlayers}</div>
           </div>
           <div class="holo-card" style="padding: 1rem;">
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Submissions</div>
-            <div id="stat-total-subs" style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: var(--accent-green);">${stats.totalSubmissions}</div>
+            <div class="stat-label">Submissions</div>
+            <div id="stat-total-subs" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-green);">${stats.totalSubmissions}</div>
           </div>
           <div class="holo-card" style="padding: 1rem;">
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Completions</div>
-            <div id="stat-completions" style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: var(--accent-amber);">${stats.completions}</div>
+            <div class="stat-label">Completions</div>
+            <div id="stat-completions" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-amber);">${stats.completions}</div>
           </div>
           <div class="holo-card" style="padding: 1rem;">
-            <div style="font-size: 0.75rem; color: var(--text-muted);">Tier 1 Submissions</div>
-            <div id="stat-t1-subs" style="font-family: var(--font-mono); font-size: 1.75rem; font-weight: 800; color: #82b1ff;">${stats.gfxTiers?.T1 ?? 0}</div>
+            <div class="stat-label">Tier 1 Submissions</div>
+            <div id="stat-t1-subs" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-gold);">${stats.gfxTiers?.T1 ?? 0}</div>
           </div>
         </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
         <!-- Reset Password Tool (§3.5) -->
         <div class="glass-panel">
-          <h3 class="holo-title" style="font-size: 1.1rem; color: var(--accent-amber); margin-bottom: 0.4rem;">
-            Reset Password
-          </h3>
-          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
-            Set a temporary password for a student.
-          </p>
+          <h2 class="section-title" style="margin-bottom: 1.25rem;">Reset Password</h2>
 
           <form id="admin-reset-pw-form">
             <div class="form-group">
@@ -64,12 +62,7 @@ export function renderAdmin(container) {
 
         <!-- Grant XP Tool -->
         <div class="glass-panel">
-          <h3 class="holo-title" style="font-size: 1.1rem; color: var(--accent-green); margin-bottom: 0.4rem;">
-            Grant XP
-          </h3>
-          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
-            Award XP with a recorded reason.
-          </p>
+          <h2 class="section-title" style="margin-bottom: 1.25rem;">Grant XP</h2>
 
           <form id="admin-grant-xp-form">
             <div class="form-group">
@@ -110,9 +103,9 @@ export function renderAdmin(container) {
 
     try {
       await api.adminResetPassword(target, newPw);
-      showToast(`Password successfully reset for ${target}!`, 'success');
+      showToast(`Password reset for ${target}.`, 'success');
     } catch (err) {
-      showToast(err.message || 'Reset failed', 'error');
+      showToast(err.message || 'Reset failed.', 'error');
     }
   });
 
@@ -125,9 +118,9 @@ export function renderAdmin(container) {
 
     try {
       await api.adminGrantXp(target, amount, reason);
-      showToast(`+${amount} XP granted to ${target}!`, 'success');
+      showToast(`+${amount} XP to ${target}.`, 'success');
     } catch (err) {
-      showToast(err.message || 'XP grant failed', 'error');
+      showToast(err.message || 'XP grant failed.', 'error');
     }
   });
 
