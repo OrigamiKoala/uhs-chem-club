@@ -88,6 +88,7 @@ export const STAGE_CONFIGS = [
       clusterLeft: [0, 1, 2, 3, 4, 5],
       clusterRight: [6, 7, 8, 9, 10],
       targetBondLength: 1.35,
+      openDoubleBond: { from: 6, to: 7 },
       leavingBond: null,
       leavingAtom: null,
       explanation: 'Connected! The strongest spots reacted first, shifting a link over to make room.'
@@ -112,6 +113,7 @@ export const STAGE_CONFIGS = [
       clusterLeft: [0, 1, 2, 3, 4, 5],
       clusterRight: [6, 7, 8, 9, 10],
       targetBondLength: 1.35,
+      openDoubleBond: { from: 8, to: 9 },
       leavingBond: null,
       leavingAtom: null,
       explanation: 'Connected! The strongest spots paired up, ignoring the weaker distractions.'
@@ -165,6 +167,7 @@ export const STAGE_CONFIGS = [
       clusterLeft: [0, 1],
       clusterRight: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
       targetBondLength: 1.35,
+      openDoubleBond: { from: 2, to: 3 },
       leavingBond: null,
       leavingAtom: null,
       explanation: 'Connected! You found the open target and slipped past the bulky wings blocking the other one.'
