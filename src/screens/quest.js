@@ -378,17 +378,6 @@ export function renderQuest(container) {
         hintBtn.innerHTML = '◈ No hints left';
       }
     }
-      if (hintRungCount) {
-        const next = hintRung + 2;
-        hintRungCount.textContent = next > availableHints.length
-          ? `${availableHints.length}/${availableHints.length}`
-          : `${next}/${availableHints.length}`;
-      }
-      if (hintBtn && hintRung >= availableHints.length - 1) {
-        hintBtn.disabled = true;
-        hintBtn.innerHTML = '◈ No hints left';
-      }
-    }
 
     hintBtn?.addEventListener('click', () => {
       const next = hintRung + 1;

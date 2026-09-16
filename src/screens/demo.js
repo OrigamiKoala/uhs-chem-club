@@ -12,7 +12,7 @@ import { MOLECULE_DATA } from '../quest3d/molecule.js';
 import { renderFallbackInputs } from '../fallback2d/stages.js';
 import { showToast } from '../ui/toast.js';
 import { showModal, closeModal } from '../ui/modal.js';
-import { esc } from '../utils.js';
+import { esc } from '../ui/layout.js';
 import { STAGE_CONFIGS, evaluateStageLocally, diagnoseMiss } from '../quest3d/evaluator.js';
 
 function showDemoModal(cfg) {
