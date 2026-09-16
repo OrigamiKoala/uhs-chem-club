@@ -61,7 +61,7 @@ export const CANONICAL_STAGES_20 = [
   { stage_index: 2, kind: 'arrow', xp: 20, max_attempts: 9999, scene_config: { title: 'Stage 3 — Comparing Strengths', prompt: 'Multiple reactive spots: connect the brightest red donor to the deepest blue receiver.', moleculeId: 'stage3_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
   { stage_index: 3, kind: 'arrow', xp: 20, max_attempts: 9999, scene_config: { title: 'Stage 4 — Competing Sites', prompt: 'Ignore weak distractions: connect the brightest red donor into the deepest blue core.', moleculeId: 'stage4_pair', anchors: ['red_weak', 'red_extreme', 'blue_extreme', 'blue_weak'] } },
   { stage_index: 4, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 5 — Crowded Spaces', prompt: 'Trace the path into the open target. Avoid the crowded obstacle!', moleculeId: 'stage5_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
-  { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 6 — Bulky Group Shielding', prompt: 'Bulky groups block one route. Rotate view and connect to the open side!', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
+  { stage_index: 5, kind: 'arrow', xp: 25, max_attempts: 9999, scene_config: { title: 'Stage 6 — Bulky Group Shielding', prompt: 'Bulky groups shield the top center. Connect to the open blue target at the bottom!', moleculeId: 'stage6_pair', anchors: ['red_nu', 'blue_open', 'blue_blocked'] } },
   { stage_index: 6, kind: 'arrow', xp: 30, max_attempts: 9999, scene_config: { title: 'Stage 7 — Finding the Open Route', prompt: 'Find the brightest red spot and connect to the unblocked blue target!', moleculeId: 'stage7_pair', anchors: ['red_weak1', 'red_weak2', 'red_supreme', 'blue_accessible', 'blue_caged', 'blue_weak'] } },
   { stage_index: 7, kind: 'arrow', xp: 30, max_attempts: 9999, scene_config: { title: 'Stage 8 — Three\'s Company', prompt: 'Three molecules in the chamber! Connect the active red donor directly to the hungry blue receiver, ignoring the quiet bystander.', moleculeId: 'stage8_trio', anchors: ['red_base', 'blue_acid', 'spectator_mid'] } },
   { stage_index: 8, kind: 'arrow', xp: 30, max_attempts: 9999, scene_config: { title: 'Stage 9 — The Tug-of-War', prompt: 'Two givers want the same blue prize! Connect the strongest red donor to the hungry blue receiver.', moleculeId: 'stage9_trio', anchors: ['red_strong', 'red_weak', 'blue_target'] } },
@@ -214,6 +214,7 @@ function localDevHandler(route, body) {
         team,
         xp: pXp,
         level: pLevel,
+        salt: p.pw_salt,
         inventory: [],
         progress: (localStore.progress || []).filter(x => x.player_id === p.player_id)
       }
@@ -596,15 +597,16 @@ export default async function handler(req, res) {
         return res.end(JSON.stringify({ ok: false, error: { code: 'RATE_LIMITED', message: 'Too many login attempts. Slow down.' } }));
       }
 
-      const { identifier, password } = body;
+      const { identifier, password, cachedSalt } = body;
       if (!identifier || !password) {
         res.statusCode = 400;
         return res.end(JSON.stringify({ ok: false, error: { code: 'MISSING_FIELDS', message: 'Identifier and password are required.' } }));
       }
 
-      // 1. Fetch salt from cache or backend
       const idLc = identifier.toLowerCase();
-      let saltB64 = saltCache.get(idLc);
+      let saltB64 = cachedSalt || saltCache.get(idLc);
+      const usedCachedSalt = !!saltB64;
+
       if (!saltB64) {
         const saltResp = await callAppsScript('auth/salt', { identifier });
         saltB64 = saltResp?.data?.salt || Buffer.from(identifier).toString('base64');
@@ -612,10 +614,27 @@ export default async function handler(req, res) {
       }
 
       // 2. Derive key with scrypt
-      const dk = await derivePassword(password, saltB64);
+      let dk = await derivePassword(password, saltB64);
 
       // 3. Call backend auth/login with derived key
-      const result = await callAppsScript('auth/login', { identifier, dk });
+      let result = await callAppsScript('auth/login', { identifier, dk });
+
+      // If login failed using cached salt, try once more with freshly fetched salt from backend
+      if (!result.ok && usedCachedSalt) {
+        const freshSaltResp = await callAppsScript('auth/salt', { identifier });
+        const freshSalt = freshSaltResp?.data?.salt;
+        if (freshSalt && freshSalt !== saltB64) {
+          saltB64 = freshSalt;
+          saltCache.set(idLc, saltB64);
+          dk = await derivePassword(password, saltB64);
+          result = await callAppsScript('auth/login', { identifier, dk });
+        }
+      }
+
+      if (result.ok && result.data) {
+        saltCache.set(idLc, saltB64);
+        result.data.salt = saltB64;
+      }
 
       res.statusCode = result.ok ? 200 : 401;
       res.setHeader('Content-Type', 'application/json');

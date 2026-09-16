@@ -33,7 +33,11 @@ export class ArrowInteraction {
   }
 
   handlePointerDown(e) {
-    if (e.button === 2) return; // Right-click orbits view
+    if (e.button === 2) return; // Right-click / two-finger tap rotates view
+    if (e.pointerType === 'touch' && this.controls?.activeTouches?.size >= 2) {
+      this.cancel();
+      return;
+    }
     this.dragStartPos = { x: e.clientX, y: e.clientY };
 
     const picked = this.picker.pick(e);
@@ -87,17 +91,15 @@ export class ArrowInteraction {
     }
 
     let target = this.picker.pick(e);
-    // Never snap end position to anchor — arrow visually stays where cursor released
-    const endPoint = this.picker.unprojectToPlane(e, this.startWorldPos);
 
-    // If screen-space picker missed, check 3D proximity to registered anchors for ID matching
+    // If screen-space picker missed, check 3D ray proximity to registered anchors
     if (!target && this.picker && this.picker.anchors) {
       let closestAnchor = null;
-      let min3D = 1.35;
+      let minRayDist = 1.8;
       for (const a of this.picker.anchors) {
-        const d = endPoint.distanceTo(a.position);
-        if (d < min3D) {
-          min3D = d;
+        const d = this.picker.raycaster.ray.distanceToPoint(a.position);
+        if (d < minRayDist) {
+          minRayDist = d;
           closestAnchor = a;
         }
       }
@@ -109,11 +111,11 @@ export class ArrowInteraction {
     // Also check if selectedSource was missed on down
     if (!this.selectedSource && this.picker && this.picker.anchors) {
       let closestAnchor = null;
-      let min3D = 1.35;
+      let minRayDist = 1.8;
       for (const a of this.picker.anchors) {
-        const d = this.startWorldPos.distanceTo(a.position);
-        if (d < min3D) {
-          min3D = d;
+        const d = this.startWorldPos ? this.startWorldPos.distanceTo(a.position) : 999;
+        if (d < minRayDist) {
+          minRayDist = d;
           closestAnchor = a;
         }
       }
@@ -121,6 +123,10 @@ export class ArrowInteraction {
         this.selectedSource = closestAnchor;
       }
     }
+
+    // Unproject target position onto the plane of the target anchor (or source plane if freeform)
+    const targetRefPos = target ? target.position : (this.startWorldPos || new THREE.Vector3(0, 0, 0));
+    const endPoint = this.picker.unprojectToPlane(e, targetRefPos);
 
     if (target && target.hindered && this.onBlocked) {
       this.onBlocked(target);

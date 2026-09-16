@@ -61,9 +61,14 @@ export function renderLogin(container) {
 
     const identifier = container.querySelector('#login-id').value.trim();
     const password = container.querySelector('#login-pw').value;
+    const idLc = identifier.toLowerCase();
+    const cachedSalt = localStorage.getItem('avalon_salt_' + idLc) || undefined;
 
     try {
-      const res = await api.login(identifier, password);
+      const res = await api.login(identifier, password, cachedSalt);
+      if (res.salt) {
+        localStorage.setItem('avalon_salt_' + idLc, res.salt);
+      }
       session.setToken(res.token);
       session.setUserData({
         player: res.player,

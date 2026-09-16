@@ -179,7 +179,7 @@ export const STAGE_CONFIGS = [
   {
     stageIndex: 5,
     title: 'Stage 6 — Bulky Group Shielding',
-    prompt: 'Bulky groups block one route. Rotate view and connect to the open side!',
+    prompt: 'Bulky groups shield the top center. Connect to the open blue target at the bottom!',
     moleculeId: 'stage6_pair',
     xp: 25,
     expectedFrom: 'red_nu',
@@ -188,7 +188,7 @@ export const STAGE_CONFIGS = [
     targetPos: [1.6, -0.9, 0],
     blockedAnchor: 'blue_blocked',
     blockedPos: [1.8, 1.2, 0],
-    tolerance: 1.35,
+    tolerance: 1.85,
     concept: null,
     reaction: {
       donorAtom: 0,
@@ -198,7 +198,7 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.35,
       leavingBond: null,
       leavingAtom: null,
-      explanation: 'Connected! You snuck past the bulky shield and reached the open side.'
+      explanation: 'Connected! You reached the open unshielded carbonyl, bypassing the bulky isopropyl wings.'
     }
   },
   {

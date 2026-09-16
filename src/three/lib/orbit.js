@@ -26,6 +26,10 @@ export class SmoothOrbitControls {
 
     this.isDragging = false;
     this.previousPointer = { x: 0, y: 0 };
+    this.pointerDownPos = { x: 0, y: 0 };
+    this.pointerDownTime = 0;
+    this.dragDistance = 0;
+    this.activeTouches = new Map();
     this.damping = 0.12;
     this.enabled = true;
     this.mode = 'draw'; // 'draw' | 'rotate'
@@ -45,6 +49,11 @@ export class SmoothOrbitControls {
     window.addEventListener('pointerup', this._onPointerUp);
     this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
     this.domElement.addEventListener('contextmenu', this._onContextMenu);
+    window.addEventListener('contextmenu', (e) => {
+      if (e.target === this.domElement || this.domElement.contains(e.target)) {
+        e.preventDefault();
+      }
+    });
   }
 
   destroy() {
@@ -59,20 +68,63 @@ export class SmoothOrbitControls {
     this.mode = mode;
   }
 
+  stepRotate(angle = Math.PI / 4) {
+    this.targetTheta += angle;
+  }
+
   onPointerDown(e) {
     if (!this.enabled) return;
-    // In draw mode, only right-click (button 2) rotates view; left click is for drawing
-    if (this.mode === 'draw' && e.button !== 2) return;
-    if (e.button !== 0 && e.button !== 2) return;
+
+    if (e.pointerType === 'touch') {
+      this.activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (this.activeTouches.size >= 2) {
+        this.isDragging = true;
+        this.pointerDownTime = Date.now();
+        this.dragDistance = 0;
+        const pts = Array.from(this.activeTouches.values());
+        this.previousPointer.x = (pts[0].x + pts[1].x) / 2;
+        this.previousPointer.y = (pts[0].y + pts[1].y) / 2;
+        this.pointerDownPos = { ...this.previousPointer };
+        return;
+      }
+    }
+
+    // In draw mode, button 2 (two-finger tap / right-click on Mac) rotates view
+    const isRotateButton = (this.mode === 'rotate' && e.button === 0) || e.button === 2;
+    if (!isRotateButton) return;
+
     this.isDragging = true;
+    this.pointerDownTime = Date.now();
+    this.dragDistance = 0;
     this.previousPointer.x = e.clientX;
     this.previousPointer.y = e.clientY;
+    this.pointerDownPos = { x: e.clientX, y: e.clientY };
   }
 
   onPointerMove(e) {
     if (!this.enabled || !this.isDragging) return;
+
+    if (e.pointerType === 'touch' && this.activeTouches.has(e.pointerId)) {
+      this.activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (this.activeTouches.size >= 2) {
+        const pts = Array.from(this.activeTouches.values());
+        const midX = (pts[0].x + pts[1].x) / 2;
+        const midY = (pts[0].y + pts[1].y) / 2;
+        const deltaX = midX - this.previousPointer.x;
+        const deltaY = midY - this.previousPointer.y;
+        this.dragDistance += Math.hypot(deltaX, deltaY);
+        this.previousPointer.x = midX;
+        this.previousPointer.y = midY;
+
+        this.targetTheta -= deltaX * 0.007;
+        this.targetPhi = Math.max(this.minPhi, Math.min(this.maxPhi, this.targetPhi - deltaY * 0.007));
+        return;
+      }
+    }
+
     const deltaX = e.clientX - this.previousPointer.x;
     const deltaY = e.clientY - this.previousPointer.y;
+    this.dragDistance += Math.hypot(deltaX, deltaY);
     this.previousPointer.x = e.clientX;
     this.previousPointer.y = e.clientY;
 
@@ -80,8 +132,30 @@ export class SmoothOrbitControls {
     this.targetPhi = Math.max(this.minPhi, Math.min(this.maxPhi, this.targetPhi - deltaY * 0.007));
   }
 
-  onPointerUp() {
-    this.isDragging = false;
+  onPointerUp(e) {
+    if (e?.pointerType === 'touch' && this.activeTouches.has(e.pointerId)) {
+      const hadTwoTouches = this.activeTouches.size >= 2;
+      this.activeTouches.delete(e.pointerId);
+      if (hadTwoTouches) {
+        const duration = Date.now() - this.pointerDownTime;
+        if (this.dragDistance < 12 && duration < 350) {
+          // Quick two-finger tap: step rotate view 45 degrees
+          this.stepRotate(Math.PI / 4);
+        }
+        this.isDragging = false;
+        return;
+      }
+    }
+
+    if (this.isDragging) {
+      const isRotateButton = (this.mode === 'rotate' && e?.button === 0) || e?.button === 2;
+      const duration = Date.now() - this.pointerDownTime;
+      // Quick two-finger tap on Mac trackpad (right-click release with negligible drag):
+      if (isRotateButton && this.dragDistance < 8 && duration < 350) {
+        this.stepRotate(Math.PI / 4);
+      }
+      this.isDragging = false;
+    }
   }
 
   onWheel(e) {

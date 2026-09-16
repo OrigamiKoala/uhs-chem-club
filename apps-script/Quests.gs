@@ -121,7 +121,7 @@ var DEFAULT_STAGES = [
     reveal_text: '',
     scene_config: JSON.stringify({
       title: 'Stage 6 — Bulky Group Shielding',
-      prompt: 'Bulky groups block one route. Rotate view and connect to the open side!',
+      prompt: 'Bulky groups shield the top center. Connect to the open blue target at the bottom!',
       moleculeId: 'stage6_pair',
       anchors: ['red_nu', 'blue_open', 'blue_blocked']
     })

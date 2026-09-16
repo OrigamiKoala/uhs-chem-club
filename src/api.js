@@ -36,7 +36,7 @@ export async function apiCall(route, body = {}) {
 
 export const api = {
   bootstrap: () => apiCall('bootstrap'),
-  login: (identifier, password) => apiCall('auth/login', { identifier, password }),
+  login: (identifier, password, cachedSalt) => apiCall('auth/login', { identifier, password, cachedSalt }),
   register: (email, password, displayName) => apiCall('auth/register', { email, password, displayName }),
   changePassword: (oldPassword, newPassword) => apiCall('auth/change-password', { oldPassword, newPassword }),
   claimTeam: (teamId, avatar) => apiCall('player/create', { role: '', teamId, avatar }),

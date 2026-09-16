@@ -175,9 +175,9 @@ export class QuestViewer {
     // 1. Hide anchors so they don't distract during reaction
     this.anchorManager.clear();
 
-    // 2. Dim electron density cloud so ball-and-stick interaction is prominent
-    if (this.currentIsosurface) {
-      this.currentIsosurface.setOpacity(0.12);
+    // 2. Hide electron density cloud so ball-and-stick interaction is prominent
+    if (this.currentIsosurface && this.currentIsosurface.group) {
+      this.currentIsosurface.group.visible = false;
     }
 
     // 3. Clear drawn arrow line as reaction initiates

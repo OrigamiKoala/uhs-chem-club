@@ -24,18 +24,29 @@ export class AnchorPicker {
     const pointerX = e.clientX - rect.left;
     const pointerY = e.clientY - rect.top;
 
+    const x = (pointerX / rect.width) * 2 - 1;
+    const y = -(pointerY / rect.height) * 2 + 1;
+    this.raycaster.setFromCamera(new THREE.Vector2(x, y), this.camera);
+
     let closestAnchor = null;
-    let minDistance = 38; // Screen-space threshold in pixels (effective 76px diameter)
+    let minScore = Infinity;
 
     for (const anchor of this.anchors) {
       const screenPos = this.getScreenPosition(anchor.position);
+      if (!screenPos.inFront) continue;
+
       const dx = screenPos.x - pointerX;
       const dy = screenPos.y - pointerY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const screenDist = Math.sqrt(dx * dx + dy * dy);
+      const rayDist = this.raycaster.ray.distanceToPoint(anchor.position);
 
-      if (dist < minDistance) {
-        minDistance = dist;
-        closestAnchor = anchor;
+      // Generous threshold: within 1.6 3D world units of the ray OR within 75px on screen
+      if (rayDist < 1.6 || screenDist < 75) {
+        const score = rayDist * 35 + screenDist;
+        if (score < minScore) {
+          minScore = score;
+          closestAnchor = anchor;
+        }
       }
     }
 

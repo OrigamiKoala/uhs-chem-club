@@ -78,7 +78,12 @@
 - Removed duplicate "Next Stage" button from the correct feedback banner, keeping solely the primary button below it (`src/screens/quest.js`).
 - Stripped all references to specific atoms and molecules (Carbon, Oxygen, Chlorine, Bromine, Nitrogen, C-O, C-Cl, C=O, water, methane, alcohol, etc.) from prompts, hints, concept cards, and reaction explanations across `src/quest3d/evaluator.js`, `api/[...route].js`, and `apps-script/Quests.gs`.
 - Stripped bond counts, octet rules, and 4-bond limits; simplified Quest 1 concept cards, hints, and explanations for middle school level (`src/quest3d/evaluator.js`, `api/[...route].js`, `apps-script/Quests.gs`).
-- Fixed XP bar reset and stage progress: persisted XP/level/stage reach in `localStorage` (`src/session.js`), corrected HUD XP progress curve (`src/main.js`), and auto-resumed stage on quest open (`src/screens/quest.js`, `api/[...route].js`).
+- Fixed Quest 1 Stage 6 impassability: clarified prompt and error banner to target the open blue site at the bottom, increased proximity tolerance to 1.85, resolved camera rotation unprojection skew in `arrow.js`, and expanded anchor hit testing with 3D ray-distance fallback (`src/quest3d/evaluator.js`, `src/quest3d/interactions/arrow.js`, `src/three/lib/picker.js`, `api/[...route].js`, `apps-script/Quests.gs`).
+- Removed Rotate View button from Quest HUD; added intuitive hint `"👆 Two-finger tap / right-click to rotate"` and two-finger gesture orbit detection (`src/screens/quest.js`, `src/three/lib/orbit.js`).
+- Fixed Stage 5 reaction animation visibility: hid static MarchingCubes electron density isosurface (`this.currentIsosurface.group.visible = false`) during `playReaction()` so ball-and-stick molecule approach, new bond formation, and leaving group departure are completely unobstructed (`src/quest3d/viewer.js`).
+- Instant quest stage loading: removed blocking "Aligning Sensor Array" loading screen; now immediately renders current stage at 0ms latency using bundled `STAGE_CONFIGS`, syncing remote manifest and progress non-blockingly in the background (`src/screens/quest.js`).
+- Optimized login latency: client now caches scrypt salt in `localStorage` and passes `cachedSalt` to `/api/auth/login`, skipping the sequential `auth/salt` roundtrip to Google Apps Script and cutting login time in half with automatic fallback (`src/screens/login.js`, `src/api.js`, `api/[...route].js`).
+- Purpose of `bootstrap`: returns complete game configuration, team slot availability, active quest stages, and authenticated user state in a single request to eliminate startup network waterfalls.
 
 
 

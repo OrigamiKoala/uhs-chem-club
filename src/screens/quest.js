@@ -155,15 +155,15 @@ export function renderQuest(container) {
 
             ${instruction ? `<div class="stage-instruction">${instruction}</div>` : ''}
 
-            <!-- Move vs Draw Toolbar -->
+            <!-- Toolbar -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin: 0.75rem 0; flex-wrap: wrap; gap: 0.5rem;">
-              <div style="display: flex; gap: 0.4rem;">
-                <button type="button" id="tool-draw-btn" class="btn-secondary active" style="font-size: 0.75rem; padding: 5px 12px; min-height: 32px; border-color: var(--accent-amber); color: var(--accent-amber);">
+              <div style="display: flex; gap: 0.6rem; align-items: center;">
+                <button type="button" id="tool-draw-btn" class="btn-secondary active" style="font-size: 0.75rem; padding: 5px 12px; min-height: 32px; border-color: var(--accent-amber); color: var(--accent-amber); cursor: default;">
                   ✏️ Draw Arrow
                 </button>
-                <button type="button" id="tool-rotate-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 5px 12px; min-height: 32px;">
-                  🔄 Rotate View
-                </button>
+                <span style="font-size: 0.74rem; color: var(--text-muted); font-family: var(--font-mono);">
+                  👆 Two-finger tap / right-click to rotate
+                </span>
               </div>
               <button type="button" id="tool-clear-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 5px 12px; min-height: 32px;">
                 ✕ Clear Line${cfg.multiArrow ? 's' : ''}
@@ -173,7 +173,7 @@ export function renderQuest(container) {
             ${currentStageIdx === 0 ? `
             <div style="font-size: 0.75rem; color: var(--text-muted); background: rgba(0,0,0,0.25); border: 1px solid var(--border-durasteel); border-radius: var(--radius-sm); padding: 6px 10px; margin-bottom: 0.85rem; line-height: 1.4;">
               <div>• <strong>Draw:</strong> Left-click and drag from red to blue.</div>
-              <div>• <strong>Move view:</strong> Click 'Rotate View' or right-click drag anytime to orbit.</div>
+              <div>• <strong>Rotate:</strong> Two-finger tap (or right-click drag) anywhere to rotate view.</div>
             </div>
             ` : ''}
 
@@ -290,27 +290,7 @@ export function renderQuest(container) {
       });
 
       // Bind toolbar
-      const drawBtn = container.querySelector('#tool-draw-btn');
-      const rotateBtn = container.querySelector('#tool-rotate-btn');
       const clearBtn = container.querySelector('#tool-clear-btn');
-
-      drawBtn?.addEventListener('click', () => {
-        drawBtn.classList.add('active');
-        drawBtn.style.color = 'var(--accent-amber)';
-        drawBtn.style.borderColor = 'var(--accent-amber)';
-        rotateBtn?.classList.remove('active');
-        if (rotateBtn) { rotateBtn.style.color = ''; rotateBtn.style.borderColor = ''; }
-        viewer.setMode('draw');
-      });
-
-      rotateBtn?.addEventListener('click', () => {
-        rotateBtn.classList.add('active');
-        rotateBtn.style.color = 'var(--accent-amber)';
-        rotateBtn.style.borderColor = 'var(--accent-amber)';
-        drawBtn?.classList.remove('active');
-        if (drawBtn) { drawBtn.style.color = ''; drawBtn.style.borderColor = ''; }
-        viewer.setMode('rotate');
-      });
 
       function clearFeedback() {
         const stageCard = container.querySelector('#stage-card');
@@ -328,9 +308,6 @@ export function renderQuest(container) {
         clearFeedback();
         showToast('Line cleared.', 'info');
       });
-
-      drawBtn?.addEventListener('click', clearFeedback);
-      rotateBtn?.addEventListener('click', clearFeedback);
 
       // Also render DOM choice options for 'choice' stage if applicable
       if (stageMeta.kind === 'choice' && cfg.options) {
@@ -468,8 +445,10 @@ export function renderQuest(container) {
           let msg = `Incorrect connection. Connect the crowded red zone directly into the hungry blue zone.`;
 
           if (isBlocked) {
-            bannerTitle = 'PATH BLOCKED (TRAFFIC JAM)';
-            msg = 'Path blocked! It is too crowded to squeeze through there. Rotate your 3D view to find the open, unblocked path into the blue target.';
+            bannerTitle = currentStageIdx === 5 ? 'PATH BLOCKED (BULKY SHIELD)' : 'PATH BLOCKED (TRAFFIC JAM)';
+            msg = currentStageIdx === 5
+              ? 'Path blocked! That center is shielded by bulky isopropyl groups. Connect to the open blue target at the bottom instead.'
+              : 'Path blocked! It is too crowded to squeeze through there. Rotate your 3D view to find the open, unblocked path into the blue target.';
           } else if (isWrongOrder) {
             bannerTitle = 'WRONG CHRONOLOGICAL ORDER';
             msg = res.message || 'You found all the correct steps, but the sequence is out of order! Click on the arrow numbers to change their sequence.';
@@ -601,47 +580,28 @@ export function renderQuest(container) {
     }
   }
 
-  let hasLoadedInitialStage = false;
-  if (questData) {
-    hasLoadedInitialStage = true;
-    loadStage(currentStageIdx);
-  } else {
-    container.innerHTML = `
-      <div class="screen-container" style="max-width: 440px; margin: 4rem auto; text-align: center;">
-        <div class="glass-panel" style="padding: 2.5rem;">
-          <div style="font-size: 2rem; margin-bottom: 0.75rem;">🛰️</div>
-          <h3 class="holo-title" style="font-size: 1.15rem; margin-bottom: 0.5rem;">Aligning Sensor Array</h3>
-          <p style="font-size: 0.85rem; color: var(--text-secondary);">Connecting to quest beacon telemetry…</p>
-        </div>
-      </div>
-    `;
-  }
+  // 1. Immediately render initial stage using bundled STAGE_CONFIGS (0ms latency)
+  loadStage(currentStageIdx);
 
-  // Fetch Manifest & Progress in background
+  // 2. Sync remote manifest & player progress non-blockingly in background
   Promise.all([
-    api.getQuestManifest('q1'),
+    api.getQuestManifest('q1').catch(() => null),
     api.getMe().catch(() => null)
   ]).then(([manifest, me]) => {
     if (manifest) questData = manifest;
     if (me) {
       session.setUserData(me);
       const prog = (me.progress || []).find(p => p.quest_id === 'q1');
-      if (prog && prog.stage_reached && questData?.stages) {
-        const reached = Math.min(Number(prog.stage_reached), questData.stages.length - 1);
+      if (prog && typeof prog.stage_reached === 'number') {
+        const reached = Math.min(Number(prog.stage_reached), STAGE_CONFIGS.length - 1);
         if (reached > currentStageIdx) {
           currentStageIdx = reached;
           session.recordProgress('q1', reached);
           loadStage(currentStageIdx);
-        } else if (!hasLoadedInitialStage) {
-          currentStageIdx = reached;
         }
       }
     }
-    if (!hasLoadedInitialStage && questData) {
-      hasLoadedInitialStage = true;
-      loadStage(currentStageIdx);
-    }
   }).catch(err => {
-    console.error('Failed to load quest manifest:', err);
+    console.warn('Background quest manifest sync:', err);
   });
 }
