@@ -775,6 +775,9 @@ export const BALL_RADII = {
 export class MoleculeMesh {
   constructor(moleculeKey) {
     this.group = new THREE.Group();
+    if (!MOLECULE_DATA[moleculeKey]) {
+      console.warn(`Unknown molecule "${moleculeKey}", falling back to stage1_pair.`);
+    }
     this.data = MOLECULE_DATA[moleculeKey] || MOLECULE_DATA.stage1_pair;
     this.atoms = [];
     this.atomMeshes = [];
@@ -919,6 +922,12 @@ export class MoleculeMesh {
   }
 
   addNewBond(fromIdx, toIdx) {
+    if (
+      fromIdx === undefined || toIdx === undefined ||
+      !this.atoms[fromIdx] || !this.atoms[toIdx]
+    ) {
+      return null;
+    }
     const newBondGeo = new THREE.CylinderGeometry(0.08, 0.08, 1, 16);
     const newBondMat = new THREE.MeshStandardMaterial({
       color: 0x00ff88,
@@ -947,12 +956,14 @@ export class MoleculeMesh {
   updateAllBonds() {
     for (const b of this.bonds) {
       if (b.cleaved) continue;
+      if (!this.atoms[b.from] || !this.atoms[b.to]) continue;
       const p1 = this.atoms[b.from].pos;
       const p2 = this.atoms[b.to].pos;
       this.updateBondMesh(b, p1, p2, b.scale !== undefined ? b.scale : 1.0);
     }
     for (const nb of this.newBonds) {
       if (nb.cleaved) continue;
+      if (!this.atoms[nb.from] || !this.atoms[nb.to]) continue;
       const p1 = this.atoms[nb.from].pos;
       const p2 = this.atoms[nb.to].pos;
       this.updateBondMesh(nb, p1, p2, nb.scale !== undefined ? nb.scale : 1.0);

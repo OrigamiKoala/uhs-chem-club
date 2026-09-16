@@ -18,6 +18,48 @@ import { STAGE_CONFIGS, evaluateStageLocally, diagnoseMiss, TOTAL_STAGES, TOTAL_
 const QUEST_ID = 'q1';
 
 /**
+ * Stages that introduce a genuinely new mechanic and earn an auto-shown briefing.
+ * Every other stage starts immediately — its title and prompt are already visible
+ * in the stage card, and the Objective button reopens the briefing on demand.
+ * - 0 (Stage 1): first contact, drag controls + scan intro concept
+ * - 4 (Stage 5): first blocked path, rotate-the-view
+ * - 7 (Stage 8): first three-molecule chamber, ignore-the-bystander
+ * - 10 (Stage 11): first multi-arrow stage, numbered badges intro concept
+ * Stages with conceptTiming 'intro' always qualify as well, so future control
+ * changes stay covered without editing this list.
+ */
+const AUTO_MODAL_STAGES = new Set([0, 4, 7, 10]);
+
+const INTRO_SEEN_KEY = `avalon_${QUEST_ID}_intro_seen`;
+
+function hasSeenStageIntro(idx) {
+  try {
+    const seen = JSON.parse(localStorage.getItem(INTRO_SEEN_KEY) || '[]');
+    return Array.isArray(seen) && seen.includes(idx);
+  } catch (e) {
+    return false;
+  }
+}
+
+function markStageIntroSeen(idx) {
+  try {
+    const seen = JSON.parse(localStorage.getItem(INTRO_SEEN_KEY) || '[]');
+    const arr = Array.isArray(seen) ? seen : [];
+    if (!arr.includes(idx)) {
+      arr.push(idx);
+      localStorage.setItem(INTRO_SEEN_KEY, JSON.stringify(arr));
+    }
+  } catch (e) {}
+}
+
+function shouldAutoShowStageModal(cfg, idx, isReplay) {
+  if (isReplay) return false;
+  if (hasSeenStageIntro(idx)) return false;
+  if (cfg.conceptTiming === 'intro') return true;
+  return AUTO_MODAL_STAGES.has(idx);
+}
+
+/**
  * The hint ladder. Rung 0 is free and asks a question; rung 1 narrows the field and
  * rung 2 names the move, and both have to be earned.
  */
@@ -175,10 +217,15 @@ export function renderQuest(container) {
       }
     };
 
+    // The bundled configs are authoritative for everything the player sees, draws
+    // or is graded on. Backend scene_config is only trusted for transport-level
+    // fields — a stale Sheets row must never swap in another stage's molecule
+    // (Stage 8 once rendered Stage 7's atoms) or desync the reaction animation.
+    const regions = MOLECULE_DATA[localCfg.moleculeId]?.regions || [];
     const cfg = {
       ...localCfg,
       ...(stageMeta.scene_config || {}),
-      // The bundled configs are authoritative for anything the player reads or is graded on.
+      // Player-facing copy stays bundled.
       title: localCfg.title,
       prompt: localCfg.prompt,
       hint: localCfg.hint,
@@ -186,22 +233,31 @@ export function renderQuest(container) {
       shape: localCfg.shape,
       steps: localCfg.steps,
       concept: localCfg.concept || null,
-      conceptTiming: localCfg.conceptTiming || 'reward'
+      conceptTiming: localCfg.conceptTiming || 'reward',
+      // Gameplay truth stays bundled.
+      moleculeId: localCfg.moleculeId,
+      expectedFrom: localCfg.expectedFrom,
+      expectedTo: localCfg.expectedTo,
+      sourcePos: localCfg.sourcePos,
+      targetPos: localCfg.targetPos,
+      tolerance: localCfg.tolerance,
+      blockedAnchor: localCfg.blockedAnchor,
+      blockedPos: localCfg.blockedPos,
+      multiArrow: localCfg.multiArrow,
+      maxArrows: localCfg.maxArrows,
+      reaction: localCfg.reaction,
+      xp: localCfg.xp,
+      anchors: regions.map(r => r.id),
+      regions
     };
-
-    // Anchors come from the molecule itself, so the no-WebGL fallback has real
-    // targets to offer instead of an empty dropdown.
-    const regions = MOLECULE_DATA[cfg.moleculeId]?.regions || [];
-    if (!cfg.anchors || cfg.anchors.length === 0) {
-      cfg.anchors = regions.map(r => r.id);
-    }
-    cfg.regions = regions;
 
     const isMulti = Boolean(cfg.multiArrow);
     const requiredArrows = isMulti ? (cfg.steps?.length || 2) : 1;
     // A stage the player has already cleared: replayable, but it cannot pay out twice.
     const isReplay = currentStageIdx < maxStageReached;
-    const stageXp = stageMeta.xp || cfg.xp || 20;
+    // Displayed XP must match what evaluateStageLocally awards (local cfg.xp),
+    // otherwise the "+N XP" tag contradicts the grading result.
+    const stageXp = localCfg.xp || stageMeta.xp || 20;
 
     // 1. Render Quest HUD Overlay
     container.innerHTML = `
@@ -293,8 +349,12 @@ export function renderQuest(container) {
       </div>
     `;
 
-    // Show stage info modal before stage begins
-    showStageModal(cfg, currentStageIdx, isReplay, stageXp);
+    // Briefing modal only for genuinely new mechanics — every other stage starts
+    // immediately. The Objective button above reopens it on demand.
+    if (shouldAutoShowStageModal(cfg, currentStageIdx, isReplay)) {
+      markStageIntroSeen(currentStageIdx);
+      showStageModal(cfg, currentStageIdx, isReplay, stageXp);
+    }
 
     const stageCard = container.querySelector('#stage-card');
     const feedback = container.querySelector('#stage-feedback');
@@ -401,7 +461,7 @@ export function renderQuest(container) {
 
     // 6. Interactive inputs — 3D viewer, or DOM controls on Tier 1
     const interactiveArea = container.querySelector('#stage-interactive-area');
-    const interactionKind = isMulti ? 'multi_arrow' : (stageMeta.kind || 'arrow');
+    const interactionKind = isMulti ? 'multi_arrow' : 'arrow';
     const usingFallback = tierManager.currentTier === 'T1' || !viewer;
 
     if (usingFallback) {

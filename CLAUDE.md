@@ -117,6 +117,16 @@ that explains a *concept* is `'reward'` and appears after the solve, under
 - A correct answer plays a physically honest 3D reaction: molecules approach along the
   collision vector, a bond snaps in, leaving groups depart, double bonds open and re-form,
   rings pop. The explainer appears **after** the animation, never on top of it.
+  `playReaction` never strands the player on "Reacting…": a failed animation still
+  resolves so the explainer and Next button appear.
+- The stage briefing modal auto-shows only for genuinely new mechanics — stages 1, 5, 8,
+  11 (`AUTO_MODAL_STAGES` in `quest.js`, plus any `conceptTiming: 'intro'` stage), once each
+  and never on replay. Every other stage starts immediately; the Objective button reopens
+  the briefing on demand.
+- The bundled `STAGE_CONFIGS` are authoritative for everything rendered or graded
+  (`moleculeId`, anchors derived from its regions, expected anchors, positions, tolerance,
+  blocked sites, `reaction`, `multiArrow`, XP). Backend `scene_config` is transport only —
+  a stale Sheets row must never swap in another stage's molecule.
 - The epilogue (`QUEST1_EPILOGUE`, duplicated verbatim in `Quests.gs`, the proxy and
   `quest.js` as an offline fallback) is the single place real terminology is introduced.
 

@@ -177,6 +177,7 @@ export class QuestViewer {
   }
 
   playReaction(reactionConfig, onComplete) {
+    const done = () => { if (onComplete) onComplete(); };
     // 1. Hide anchors so they don't distract during reaction
     this.anchorManager.clear();
 
@@ -190,13 +191,18 @@ export class QuestViewer {
       this.arrowController.clear();
     }
 
-    // 4. Trigger reaction animation on molecule
+    // 4. Trigger reaction animation on molecule. Never leave the caller hanging
+    // on "Reacting…": a bad config still resolves so the explainer and Next
+    // button appear.
     if (this.currentMolecule && this.currentMolecule.animateReaction) {
-      this.currentMolecule.animateReaction(reactionConfig, () => {
-        if (onComplete) onComplete();
-      });
+      try {
+        this.currentMolecule.animateReaction(reactionConfig, done);
+      } catch (err) {
+        console.warn('Reaction animation failed:', err);
+        done();
+      }
     } else {
-      if (onComplete) onComplete();
+      done();
     }
   }
 
