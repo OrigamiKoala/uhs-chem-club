@@ -75,6 +75,9 @@
 - Fixed stage skipping bug: cleared stale interaction payloads on stage reset, decoupled draw completion from auto-submit, and require explicit submit button click (`src/quest3d/interactions/arrow.js`, `src/quest3d/viewer.js`, `src/screens/quest.js`).
 - Fixed explanation window timing: hid explanation banner during 3D reaction animation; pop up explanation only after animation completes, with Next Stage button (`src/screens/quest.js`).
 - Disabled arrow snapping: arrows render freeform in 3D following cursor without snapping to anchors on hover, start, or release (`src/quest3d/interactions/arrow.js`).
+- Removed duplicate "Next Stage" button from the correct feedback banner, keeping solely the primary button below it (`src/screens/quest.js`).
+- Stripped all references to specific atoms and molecules (Carbon, Oxygen, Chlorine, Bromine, Nitrogen, C-O, C-Cl, C=O, water, methane, alcohol, etc.) from prompts, hints, concept cards, and reaction explanations across `src/quest3d/evaluator.js`, `api/[...route].js`, and `apps-script/Quests.gs`.
+- Removed redundant explanation/concept cards from non-introductory stages in Quest 1, retaining concise, non-fluff concept guides solely for stages introducing new mechanics (Stages 1, 2, 3, 5, 11, 12).
 
 
 

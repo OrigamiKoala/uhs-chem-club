@@ -423,24 +423,11 @@ export function renderQuest(container) {
                 <div style="flex: 1;">
                   <div style="font-weight: 800; color: #00e676; letter-spacing: 0.05em;">REACTION COMPLETE: NEW BOND FORMED!</div>
                   <div style="font-size: 0.85rem; color: #f1f5f9; margin-top: 3px; line-height: 1.45;">${explanation}</div>
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 0.5rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; flex-wrap: wrap; gap: 0.5rem;">
                     <div style="font-size: 0.75rem; color: var(--accent-amber); font-family: var(--font-mono); font-weight: 700;">+${res.xpAwarded} XP AWARDED</div>
-                    <button type="button" class="btn-primary" id="feedback-next-btn" style="padding: 6px 18px; font-size: 0.8rem; min-height: 34px;">
-                      <span>${isLastStage ? 'Finish Quest' : 'Next Stage'}</span>
-                      <span>➔</span>
-                    </button>
                   </div>
                 </div>
               `;
-
-              const advBtn = feedback.querySelector('#feedback-next-btn');
-              advBtn?.addEventListener('click', () => {
-                if (isLastStage) {
-                  showCompletionModal();
-                } else {
-                  loadStage(targetStageIdx);
-                }
-              });
             }
 
             gradeBtn.disabled = false;
