@@ -137,6 +137,9 @@ class Stage {
   }
 
   setQuestScene(questViewer) {
+    if (this.activeQuestViewer && this.activeQuestViewer !== questViewer) {
+      this.activeQuestViewer.dispose();
+    }
     this.activeQuestViewer = questViewer;
     this.activeQuestScene = questViewer ? questViewer.scene : null;
     this.mode = questViewer ? 'quest' : 'ship';

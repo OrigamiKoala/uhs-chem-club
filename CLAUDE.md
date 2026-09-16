@@ -72,6 +72,9 @@
   - Local & remote multi-step evaluation (`src/quest3d/evaluator.js`, `api/[...route].js`, `apps-script/Quests.gs`): ordered sequence checking with `wrongOrder` and `incomplete` warnings.
   - Middle-school explanations across all 20 stages: magnets, LEGO bricks, bumper cars, relay passes, and musical chairs analogies with zero jargon.
   - 2D DOM fallback updated with multi-step arrow selector rows (`src/fallback2d/stages.js`).
+- Fixed stage skipping bug: cleared stale interaction payloads on stage reset, decoupled draw completion from auto-submit, and require explicit submit button click (`src/quest3d/interactions/arrow.js`, `src/quest3d/viewer.js`, `src/screens/quest.js`).
+- Fixed explanation window timing: hid explanation banner during 3D reaction animation; pop up explanation only after animation completes, with Next Stage button (`src/screens/quest.js`).
+- Disabled arrow snapping: arrows render freeform in 3D following cursor without snapping to anchors on hover, start, or release (`src/quest3d/interactions/arrow.js`).
 
 
 

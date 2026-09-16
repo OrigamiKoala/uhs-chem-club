@@ -70,6 +70,7 @@ export function renderQuest(container) {
     }
     isAdvancing = false;
     isGrading = false;
+    let stageCompleted = false;
     currentStageIdx = idx;
     currentPayload = null;
     hintUsed = false;
@@ -264,12 +265,6 @@ export function renderQuest(container) {
         if (cfg.multiArrow) {
           updateMultiStepList(payload?.arrows || []);
         }
-        if (payload && !isGrading && !isAdvancing) {
-          const res = evaluateStageLocally(currentStageIdx, payload);
-          if (res.correct) {
-            submitStage(payload);
-          }
-        }
       });
     } else {
       // Tier 2 & 3: Configure 3D Viewer
@@ -278,12 +273,6 @@ export function renderQuest(container) {
         currentPayload = payload;
         if (cfg.multiArrow) {
           updateMultiStepList(payload?.arrows || []);
-        }
-        if (payload && !isGrading && !isAdvancing) {
-          const res = evaluateStageLocally(currentStageIdx, payload);
-          if (res.correct) {
-            submitStage(payload);
-          }
         }
       });
 
@@ -395,7 +384,7 @@ export function renderQuest(container) {
         if (res.correct) {
           isAdvancing = true;
           gradeBtn.disabled = true;
-          gradeBtn.innerHTML = '<span>Reaction Starting…</span><span>⚡</span>';
+          gradeBtn.innerHTML = '<span>Reacting…</span><span>⚡</span>';
 
           if (session.player) {
             session.player.xp = (session.player.xp || 0) + res.xpAwarded;
@@ -404,22 +393,10 @@ export function renderQuest(container) {
             session.notify();
           }
 
+          // Keep explanation hidden while reaction animation is playing
           if (feedback) {
-            feedback.className = 'stage-error-banner';
-            feedback.style.borderColor = 'var(--accent-green)';
-            feedback.style.borderLeftColor = 'var(--accent-green)';
-            feedback.style.background = 'rgba(56, 176, 0, 0.2)';
-            feedback.style.boxShadow = '0 0 20px rgba(56, 176, 0, 0.35)';
-
-            const explanation = cfg.reaction?.explanation || 'Bond created! Molecules approached and bonded.';
-            feedback.innerHTML = `
-              <span style="font-size: 1.4rem;">⚡</span>
-              <div style="flex: 1;">
-                <div style="font-weight: 800; color: #00e676; letter-spacing: 0.05em;">REACTION COMPLETE: NEW BOND FORMED!</div>
-                <div style="font-size: 0.85rem; color: #f1f5f9; margin-top: 3px; line-height: 1.45;">${explanation}</div>
-                <div style="font-size: 0.75rem; color: var(--accent-amber); margin-top: 4px; font-family: var(--font-mono); font-weight: 700;">+${res.xpAwarded} XP AWARDED</div>
-              </div>
-            `;
+            feedback.className = 'hidden';
+            feedback.innerHTML = '';
           }
           showToast(`Correct! +${res.xpAwarded} XP`, 'success');
 
@@ -428,14 +405,49 @@ export function renderQuest(container) {
           const isLastStage = targetStageIdx >= STAGE_CONFIGS.length;
 
           const onReactionDone = () => {
-            gradeBtn.innerHTML = '<span>Correct!</span><span>✓</span>';
-            advanceTimer = setTimeout(() => {
-              if (isLastStage) {
-                showCompletionModal();
-              } else {
-                loadStage(targetStageIdx);
-              }
-            }, 600);
+            stageCompleted = true;
+            isAdvancing = false;
+            isGrading = false;
+
+            // Explanation window pops up strictly AFTER the 3D animation finishes
+            if (feedback) {
+              feedback.className = 'stage-error-banner';
+              feedback.style.borderColor = 'var(--accent-green)';
+              feedback.style.borderLeftColor = 'var(--accent-green)';
+              feedback.style.background = 'rgba(56, 176, 0, 0.2)';
+              feedback.style.boxShadow = '0 0 20px rgba(56, 176, 0, 0.35)';
+
+              const explanation = cfg.reaction?.explanation || 'Bond created! Molecules approached and bonded.';
+              feedback.innerHTML = `
+                <span style="font-size: 1.4rem;">⚡</span>
+                <div style="flex: 1;">
+                  <div style="font-weight: 800; color: #00e676; letter-spacing: 0.05em;">REACTION COMPLETE: NEW BOND FORMED!</div>
+                  <div style="font-size: 0.85rem; color: #f1f5f9; margin-top: 3px; line-height: 1.45;">${explanation}</div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="font-size: 0.75rem; color: var(--accent-amber); font-family: var(--font-mono); font-weight: 700;">+${res.xpAwarded} XP AWARDED</div>
+                    <button type="button" class="btn-primary" id="feedback-next-btn" style="padding: 6px 18px; font-size: 0.8rem; min-height: 34px;">
+                      <span>${isLastStage ? 'Finish Quest' : 'Next Stage'}</span>
+                      <span>➔</span>
+                    </button>
+                  </div>
+                </div>
+              `;
+
+              const advBtn = feedback.querySelector('#feedback-next-btn');
+              advBtn?.addEventListener('click', () => {
+                if (isLastStage) {
+                  showCompletionModal();
+                } else {
+                  loadStage(targetStageIdx);
+                }
+              });
+            }
+
+            gradeBtn.disabled = false;
+            gradeBtn.innerHTML = isLastStage
+              ? '<span>Finish Quest</span><span>✓</span>'
+              : '<span>Next Stage</span><span>➔</span>';
+            gradeBtn.focus();
           };
 
           if (viewer && viewer.playReaction && cfg.reaction) {
@@ -525,6 +537,16 @@ export function renderQuest(container) {
     }
 
     gradeBtn.addEventListener('click', () => {
+      if (stageCompleted) {
+        const targetStageIdx = currentStageIdx + 1;
+        const isLastStage = targetStageIdx >= STAGE_CONFIGS.length;
+        if (isLastStage) {
+          showCompletionModal();
+        } else {
+          loadStage(targetStageIdx);
+        }
+        return;
+      }
       submitStage(currentPayload);
     });
   }
@@ -582,7 +604,9 @@ export function renderQuest(container) {
     }
   }
 
+  let hasLoadedInitialStage = false;
   if (questData) {
+    hasLoadedInitialStage = true;
     loadStage(currentStageIdx);
   } else {
     container.innerHTML = `
@@ -606,10 +630,14 @@ export function renderQuest(container) {
       session.setUserData(me);
       const prog = (me.progress || []).find(p => p.quest_id === 'q1');
       if (prog && prog.stage_reached && questData?.stages) {
-        currentStageIdx = Math.min(Number(prog.stage_reached), questData.stages.length - 1);
+        const reached = Math.min(Number(prog.stage_reached), questData.stages.length - 1);
+        if (!hasLoadedInitialStage) {
+          currentStageIdx = reached;
+        }
       }
     }
-    if (questData) {
+    if (!hasLoadedInitialStage && questData) {
+      hasLoadedInitialStage = true;
       loadStage(currentStageIdx);
     }
   }).catch(err => {

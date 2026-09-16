@@ -19,6 +19,9 @@ export class ArrowInteraction {
     this.onChange = null;
 
     this.arrowController.onArrowsChanged = () => {
+      if (this.arrowController.completedArrows.length === 0) {
+        this.currentArrow = null;
+      }
       if (this.onChange) {
         this.onChange(this.getPayload());
       }
@@ -35,8 +38,9 @@ export class ArrowInteraction {
 
     const picked = this.picker.pick(e);
     const planeOrigin = picked ? picked.position : new THREE.Vector3(0, 0, 0);
+    // Never snap start position to anchor — follow user input freely
     const unprojected = this.picker.unprojectToPlane(e, planeOrigin);
-    const startPoint = picked ? picked.position.clone() : unprojected;
+    const startPoint = unprojected;
 
     this.startWorldPos = startPoint;
     this.selectedSource = picked;
@@ -49,15 +53,8 @@ export class ArrowInteraction {
   handlePointerMove(e) {
     if (!this.isDragging || !this.startWorldPos) return;
 
-    // Snap to candidate anchor if hovered nearby
-    const hovered = this.picker.pick(e);
-    let currentPoint;
-    if (hovered && (!this.selectedSource || hovered.id !== this.selectedSource.id)) {
-      currentPoint = hovered.position.clone();
-    } else {
-      currentPoint = this.picker.unprojectToPlane(e, this.startWorldPos);
-    }
-
+    // Never snap while dragging — arrow tip follows cursor freely in 3D
+    const currentPoint = this.picker.unprojectToPlane(e, this.startWorldPos);
     this.arrowController.updateDrag(currentPoint);
   }
 
@@ -89,10 +86,41 @@ export class ArrowInteraction {
       return;
     }
 
-    const target = this.picker.pick(e);
-    const endPoint = (target && (!this.selectedSource || target.id !== this.selectedSource.id))
-      ? target.position.clone()
-      : this.picker.unprojectToPlane(e, this.startWorldPos);
+    let target = this.picker.pick(e);
+    // Never snap end position to anchor — arrow visually stays where cursor released
+    const endPoint = this.picker.unprojectToPlane(e, this.startWorldPos);
+
+    // If screen-space picker missed, check 3D proximity to registered anchors for ID matching
+    if (!target && this.picker && this.picker.anchors) {
+      let closestAnchor = null;
+      let min3D = 1.35;
+      for (const a of this.picker.anchors) {
+        const d = endPoint.distanceTo(a.position);
+        if (d < min3D) {
+          min3D = d;
+          closestAnchor = a;
+        }
+      }
+      if (closestAnchor && (!this.selectedSource || closestAnchor.id !== this.selectedSource.id)) {
+        target = closestAnchor;
+      }
+    }
+
+    // Also check if selectedSource was missed on down
+    if (!this.selectedSource && this.picker && this.picker.anchors) {
+      let closestAnchor = null;
+      let min3D = 1.35;
+      for (const a of this.picker.anchors) {
+        const d = this.startWorldPos.distanceTo(a.position);
+        if (d < min3D) {
+          min3D = d;
+          closestAnchor = a;
+        }
+      }
+      if (closestAnchor) {
+        this.selectedSource = closestAnchor;
+      }
+    }
 
     if (target && target.hindered && this.onBlocked) {
       this.onBlocked(target);
@@ -129,7 +157,7 @@ export class ArrowInteraction {
       };
     }
 
-    if (!this.currentArrow) return null;
+    if (!this.currentArrow || this.arrowController.completedArrows.length === 0) return null;
     const s = this.currentArrow.startPos;
     const e = this.currentArrow.endPos;
     return {

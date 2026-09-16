@@ -88,6 +88,15 @@ export class QuestViewer {
   }
 
   loadStage(stageConfig = {}, kind = 'pick', onPayloadChange = null) {
+    // Detach listeners from arrowController so clearing doesn't fire stale events
+    this.arrowController.onArrowsChanged = null;
+    this.arrowController.onArrowComplete = null;
+
+    if (this.activeInteraction && this.activeInteraction.clear) {
+      this.activeInteraction.clear();
+    }
+    this.activeInteraction = null;
+
     // Clear previous molecules
     if (this.currentMolecule) {
       this.currentMolecule.dispose();
