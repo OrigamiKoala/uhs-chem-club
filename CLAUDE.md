@@ -9,8 +9,10 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
 ## Build and Run
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
-- `npm run verify` — `verify:quest` + `verify:flows` + `build`. Run this before shipping.
+- `npm run verify` — `verify:quest` + `verify:geometry` + `verify:flows` + `build`. Run this before shipping.
 - `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below).
+- `npm run verify:geometry` — runs all 20 reaction animations headlessly and checks the chemistry
+  on screen (see "Chemical realism" below). `--verbose` prints atom positions at every step.
 - `npm run verify:flows` — end-to-end smoke test of the API a new student touches.
 - `npm run deploy:backend` — `clasp push` of `apps-script/`.
 - `npm run bake:stills` — regenerate the static SVG backdrops in `public/fallback/`.
@@ -129,6 +131,31 @@ that explains a *concept* is `'reward'` and appears after the solve, under
   a stale Sheets row must never swap in another stage's molecule.
 - The epilogue (`QUEST1_EPILOGUE`, duplicated verbatim in `Quests.gs`, the proxy and
   `quest.js` as an offline fallback) is the single place real terminology is introduced.
+
+### Chemical realism (`molecule.js` + `reaction` blocks)
+Every molecule and animation must be chemically honest, even where the copy never says so:
+- No atom over its valence (double bonds count twice). Implicit hydrogens are fine.
+- A group landing on a flat center (C=O carbon, carbocation) arrives **face-on** (≥ 50° out of
+  the plane), and the center puckers afterwards (`bend` to 109.5°).
+- A backside displacement lines up nucleophile, carbon and leaving group (≥ 160°); the
+  remaining C–H bonds flip through (`bend`). Stage 11 shows the halfway point with faint
+  `partialBond` / `weakenBond` sticks, completed in step 2 with `completeBond`.
+- A transferred H sits on the receiver···H–X line (≥ 140°), and the fragment keeping it moves
+  away (`departures`). Acids are real acids (hydronium, not water or hydroxide); the stage 10
+  and 18 bases are amide (NH2−) because ammonia cannot deprotonate methanol or a C–H.
+- An arrow onto a "scavenger" H+ forms an H–Cl/H–Br bond; the pair leaves together.
+- A step that breaks two bonds passes `leavingBond` as an array.
+
+Animation step options (`animateReactionStep`): `donorAtom`/`acceptorAtom`, `clusterLeft`/`clusterRight`
+(move together along the donor→acceptor line; `leftRatio`/`rightRatio` split the closing
+distance), `targetBondLength`, `leavingBond` (object or array), `leavingCluster` + `departDirection`
++ `departDistance`, `departures: [{ atoms, direction, distance }]`, `openDoubleBond`,
+`closeDoubleBond`, `bend: [{ center, toward, atoms, angle }]` (an atom entry may be
+`{ atom, carry: [...] }` to move its hangers-on), `partialBond`, `weakenBond`, `completeBond`,
+`ringOpen`. Atoms that are bent or leaving must also belong to a cluster when that cluster moves.
+Region positions double as graded `sourcePos`/`targetPos`; keep them equal (the geometry check
+enforces it) and keep each region in the same screen zone, because the Tier 1 labels and the
+solution hints ("upper left", "lower corner") are derived from it.
 
 `npm run verify:quest` asserts, for every stage: the molecule exists, every expected anchor
 is actually rendered, the intended solution grades correct for the configured XP, a

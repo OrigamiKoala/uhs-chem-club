@@ -16,17 +16,23 @@ export const CPK_COLORS = {
 };
 
 export const MOLECULE_DATA = {
-  // Stage 1: Easy (1 obvious Red OH- + 1 obvious Blue CH3+)
+  // Geometry notes (apply to every stage):
+  // - A group landing on a flat (three-connected) center arrives along the face,
+  //   roughly perpendicular to the plane of that center, never edge-on.
+  // - A backside displacement lines up nucleophile, carbon and leaving group.
+  // - A hydrogen handed between two partners sits on the line between them.
+  // Hydrogens that play no part in the reaction are often left implicit.
+
+  // Stage 1: Hydroxide (OH-) + methyl cation (CH3+). The cation is flat; its
+  // empty face points at the incoming oxygen.
   stage1_pair: {
     atoms: [
-      // Left: Hydroxide ion (OH-)
       { element: 'O', pos: [-2.2, 0, 0], scale: 0.6 },
       { element: 'H', pos: [-2.9, -0.3, 0], scale: 0.35 },
-      // Right: Methyl carbocation (CH3+)
       { element: 'C', pos: [1.8, 0, 0], scale: 0.52 },
-      { element: 'H', pos: [2.5, 0.6, 0], scale: 0.32 },
-      { element: 'H', pos: [2.5, -0.6, 0], scale: 0.32 },
-      { element: 'H', pos: [1.3, 0, 0.7], scale: 0.32 }
+      { element: 'H', pos: [1.8, 0.375, 0.65], scale: 0.32 },
+      { element: 'H', pos: [1.8, -0.75, 0], scale: 0.32 },
+      { element: 'H', pos: [1.8, 0.375, -0.65], scale: 0.32 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -40,20 +46,19 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 2: Easy (1 obvious Red NH3 + 1 obvious Blue CH3-Cl)
+  // Stage 2: Ammonia (NH3) + chloromethane (CH3Cl). N, C and Cl are collinear
+  // (backside attack); the three C–H bonds flip through like an umbrella.
   stage2_pair: {
     atoms: [
-      // Left: Ammonia (NH3)
       { element: 'N', pos: [-2.2, 0, 0], scale: 0.58 },
-      { element: 'H', pos: [-2.8, -0.4, 0.4], scale: 0.32 },
-      { element: 'H', pos: [-2.8, -0.4, -0.4], scale: 0.32 },
-      { element: 'H', pos: [-2.4, 0.6, 0], scale: 0.32 },
-      // Right: Chloromethane (CH3Cl)
+      { element: 'H', pos: [-2.46, -0.38, 0.65], scale: 0.32 },
+      { element: 'H', pos: [-2.46, -0.38, -0.65], scale: 0.32 },
+      { element: 'H', pos: [-2.46, 0.75, 0], scale: 0.32 },
       { element: 'C', pos: [1.6, 0, 0], scale: 0.52 },
       { element: 'Cl', pos: [3.1, 0, 0], scale: 0.65 },
-      { element: 'H', pos: [1.4, 0.9, 0.4], scale: 0.32 },
-      { element: 'H', pos: [1.4, -0.9, 0.4], scale: 0.32 },
-      { element: 'H', pos: [1.3, 0, -0.9], scale: 0.32 }
+      { element: 'H', pos: [1.27, 0.81, 0.47], scale: 0.32 },
+      { element: 'H', pos: [1.27, -0.81, 0.47], scale: 0.32 },
+      { element: 'H', pos: [1.27, 0, -0.94], scale: 0.32 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -70,22 +75,21 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 3: Multiple regions (Acetate CH3COO- + Acetaldehyde CH3CHO) - Match Extremes
+  // Stage 3: Acetate (CH3COO-) + acetaldehyde (CH3CHO). The aldehyde's flat face
+  // is turned toward the charged acetate oxygen.
   stage3_pair: {
     atoms: [
-      // Left: Acetate (CH3-COO-)
       { element: 'C', pos: [-3.2, 0, 0], scale: 0.5 },
       { element: 'C', pos: [-2.0, 0, 0], scale: 0.52 },
-      { element: 'O', pos: [-1.6, 1.2, 0], scale: 0.56 }, // Carbonyl O (weaker red)
-      { element: 'O', pos: [-1.3, -1.0, 0], scale: 0.6 }, // Anionic O (extreme red)
+      { element: 'O', pos: [-1.6, 1.2, 0], scale: 0.56 }, // C=O oxygen (weaker red)
+      { element: 'O', pos: [-1.3, -1.0, 0], scale: 0.6 }, // charged oxygen (extreme red)
       { element: 'H', pos: [-3.6, 0.8, 0], scale: 0.3 },
       { element: 'H', pos: [-3.6, -0.8, 0], scale: 0.3 },
-      // Right: Formaldehyde/Acetaldehyde
-      { element: 'C', pos: [1.6, 0, 0], scale: 0.54 }, // Carbonyl C (extreme blue)
-      { element: 'O', pos: [1.6, 1.3, 0], scale: 0.58 },
-      { element: 'H', pos: [1.1, -0.8, 0], scale: 0.32 },
-      { element: 'C', pos: [2.9, -0.4, 0], scale: 0.48 }, // Methyl C (weak blue)
-      { element: 'H', pos: [3.4, 0.4, 0], scale: 0.3 }
+      { element: 'C', pos: [1.6, 0, 0], scale: 0.54 }, // C=O carbon (extreme blue)
+      { element: 'O', pos: [1.51, 1.25, 0], scale: 0.58 },
+      { element: 'H', pos: [1.3, -0.4, -0.56], scale: 0.32 },
+      { element: 'C', pos: [2.21, -0.61, 0.97], scale: 0.48 }, // methyl C (weak blue)
+      { element: 'H', pos: [2.76, -0.31, 1.37], scale: 0.3 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -102,26 +106,25 @@ export const MOLECULE_DATA = {
       { id: 'red_weak', pos: [-1.3, 1.5, 0], type: 'red', intensity: 'moderate', scale: 0.65 },
       { id: 'red_extreme', pos: [-0.8, -1.2, 0], type: 'red', intensity: 'extreme', scale: 0.9 },
       { id: 'blue_extreme', pos: [1.3, -0.3, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      { id: 'blue_weak', pos: [3.2, -0.7, 0], type: 'blue', intensity: 'moderate', scale: 0.55 }
+      { id: 'blue_weak', pos: [2.45, -0.75, 1.2], type: 'blue', intensity: 'moderate', scale: 0.55 }
     ]
   },
 
-  // Stage 4: Multiple competing sites (Aminoalcohol + Halo-carbonyl)
+  // Stage 4: 2-aminoethanol (H2N-CH2-CH2-OH) + chloroacetone (Cl-CH2-CO-CH3).
+  // The ketone's flat face is turned toward the nitrogen.
   stage4_pair: {
     atoms: [
-      // Left: H2N-CH2-CH2-OH
       { element: 'O', pos: [-3.5, 0.8, 0], scale: 0.56 }, // O lone pair (moderate red)
       { element: 'C', pos: [-2.8, 0, 0], scale: 0.5 },
       { element: 'C', pos: [-1.8, 0, 0], scale: 0.5 },
       { element: 'N', pos: [-1.0, -0.6, 0], scale: 0.58 }, // N lone pair (extreme red)
       { element: 'H', pos: [-3.8, 1.4, 0], scale: 0.3 },
-      { element: 'H', pos: [-0.6, -1.3, 0.3], scale: 0.3 },
-      // Right: Cl-CH2-CO-CH3
-      { element: 'Cl', pos: [3.8, 0.9, 0], scale: 0.62 },
-      { element: 'C', pos: [2.8, 0.5, 0], scale: 0.5 }, // Alkyl C (moderate blue)
-      { element: 'C', pos: [1.5, -0.2, 0], scale: 0.54 }, // Carbonyl C (extreme blue)
-      { element: 'O', pos: [1.1, -1.3, 0], scale: 0.58 },
-      { element: 'C', pos: [0.8, 0.8, 0], scale: 0.5 }
+      { element: 'H', pos: [-1.25, -1.3, 0.35], scale: 0.3 },
+      { element: 'Cl', pos: [2.55, 1.55, -1.75], scale: 0.62 },
+      { element: 'C', pos: [1.75, 0.62, -0.97], scale: 0.5 }, // CH2Cl carbon (moderate blue)
+      { element: 'C', pos: [1.5, -0.2, 0], scale: 0.54 }, // C=O carbon (extreme blue)
+      { element: 'O', pos: [2.01, -1.34, 0], scale: 0.58 },
+      { element: 'C', pos: [0.72, 0.16, 0.97], scale: 0.5 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -137,31 +140,30 @@ export const MOLECULE_DATA = {
     regions: [
       { id: 'red_weak', pos: [-3.7, 1.2, 0], type: 'red', intensity: 'moderate', scale: 0.65 },
       { id: 'red_extreme', pos: [-0.4, -0.4, 0], type: 'red', intensity: 'extreme', scale: 0.95 },
-      { id: 'blue_extreme', pos: [1.8, -0.5, 0], type: 'blue', intensity: 'extreme', scale: 0.9 },
-      { id: 'blue_weak', pos: [2.6, 0.8, 0], type: 'blue', intensity: 'moderate', scale: 0.6 }
+      { id: 'blue_extreme', pos: [1.15, -0.3, 0], type: 'blue', intensity: 'extreme', scale: 0.9 },
+      { id: 'blue_weak', pos: [2.0, 0.85, -1.2], type: 'blue', intensity: 'moderate', scale: 0.6 }
     ]
   },
 
-  // Stage 5: Steric Hindrance 1 (Crowded tertiary carbon vs Open primary carbon)
+  // Stage 5: Methoxide (CH3O-) + a substrate with an open CH2-Br (backside open,
+  // O···C···Br collinear) and a tertiary C-Cl walled in by methyl groups.
   stage5_pair: {
     atoms: [
-      // Left: Methoxide nucleophile (CH3O-)
       { element: 'C', pos: [-3.3, 0, 0], scale: 0.5 },
       { element: 'O', pos: [-2.1, 0, 0], scale: 0.6 },
       { element: 'H', pos: [-3.7, 0.7, 0], scale: 0.3 },
       { element: 'H', pos: [-3.7, -0.7, 0], scale: 0.3 },
 
-      // Right: Bifunctional substrate with crowded vs uncrowded sites
       // Uncrowded primary carbon (blue_open)
       { element: 'C', pos: [1.4, -1.2, 0], scale: 0.52 },
       { element: 'Br', pos: [2.7, -1.8, 0], scale: 0.65 },
       { element: 'H', pos: [0.8, -1.6, 0.6], scale: 0.32 },
       { element: 'H', pos: [0.8, -1.6, -0.6], scale: 0.32 },
 
-      // Central linker
+      // Central linker (CH carrying the forward shield methyl)
       { element: 'C', pos: [1.7, 0, 0], scale: 0.5 },
 
-      // Crowded tertiary carbon (blue_blocked) surrounded by methyl clusters
+      // Crowded tertiary carbon (blue_blocked): linker, Cl and two methyls
       { element: 'C', pos: [2.2, 1.2, 0], scale: 0.52 },
       { element: 'Cl', pos: [3.6, 1.4, 0], scale: 0.62 },
       // Bulky methyl 1
@@ -172,8 +174,8 @@ export const MOLECULE_DATA = {
       { element: 'C', pos: [1.8, 2.2, -0.8], scale: 0.48 },
       { element: 'H', pos: [1.1, 2.5, -0.8], scale: 0.3 },
       { element: 'H', pos: [2.5, 2.7, -0.8], scale: 0.3 },
-      // Bulky methyl 3 (forward shield)
-      { element: 'C', pos: [1.4, 0.8, 0], scale: 0.48 }
+      // Forward shield methyl, hung on the linker in front of the tertiary carbon
+      { element: 'C', pos: [0.75, 0.65, 0.3], scale: 0.48 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -191,43 +193,40 @@ export const MOLECULE_DATA = {
       { from: 9, to: 14 },
       { from: 14, to: 15 },
       { from: 14, to: 16 },
-      { from: 9, to: 17 }
+      { from: 8, to: 17 }
     ],
     regions: [
       { id: 'red_nu', pos: [-1.4, 0.2, 0], type: 'red', intensity: 'extreme', scale: 0.9 },
-      // Accessible open primary site
       { id: 'blue_open', pos: [1.0, -1.0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      // Crowded tertiary site (sterically shielded)
       { id: 'blue_blocked', pos: [2.0, 1.1, 0], type: 'blue', intensity: 'extreme', scale: 0.8, hindered: true }
     ]
   },
 
-  // Stage 6: Steric Hindrance 2 (Shielded branched center vs Open flank site)
+  // Stage 6: Hydroxide + a molecule with an open C=O (lower) and a C=O fenced in
+  // by two bulky branches (upper). The open C=O faces the hydroxide.
   stage6_pair: {
     atoms: [
-      // Left: Nucleophile
       { element: 'O', pos: [-2.2, 0, 0], scale: 0.6 },
       { element: 'H', pos: [-2.9, 0, 0], scale: 0.35 },
 
-      // Right: Substrate with bulky isopropyl guards protecting one carbonyl
-      // Accessible unhindered center
+      // Accessible C=O (CHO)
       { element: 'C', pos: [1.3, -1.2, 0], scale: 0.52 },
-      { element: 'O', pos: [0.8, -2.1, 0], scale: 0.56 },
-      { element: 'H', pos: [1.9, -1.4, 0], scale: 0.32 },
+      { element: 'O', pos: [1.46, -1.89, 1.04], scale: 0.56 },
+      { element: 'H', pos: [1.18, -1.56, -0.65], scale: 0.32 },
 
-      // Linker
+      // Linker (CH carrying branch 2)
       { element: 'C', pos: [1.7, 0, 0], scale: 0.5 },
 
-      // Hindered center (blue_blocked) with bulky wings
+      // Hindered C=O (CHO) with branch 1 alongside
       { element: 'C', pos: [2.1, 1.2, 0], scale: 0.54 },
       { element: 'O', pos: [3.3, 1.4, 0], scale: 0.58 },
-      // Isopropyl wing left
+      // Branch 1 (on the hindered carbon)
       { element: 'C', pos: [1.2, 1.6, 0.8], scale: 0.5 },
       { element: 'C', pos: [0.6, 2.4, 0.8], scale: 0.46 },
       { element: 'C', pos: [1.2, 1.1, 1.8], scale: 0.46 },
-      // Isopropyl wing right
-      { element: 'C', pos: [1.2, 1.6, -0.8], scale: 0.5 },
-      { element: 'C', pos: [0.6, 2.4, -0.8], scale: 0.46 },
+      // Branch 2 (on the linker)
+      { element: 'C', pos: [1.1, 0.8, -0.7], scale: 0.5 },
+      { element: 'C', pos: [0.4, 1.7, -0.9], scale: 0.46 },
       { element: 'C', pos: [1.2, 1.1, -1.8], scale: 0.46 }
     ],
     bonds: [
@@ -240,7 +239,7 @@ export const MOLECULE_DATA = {
       { from: 6, to: 8 },
       { from: 8, to: 9 },
       { from: 8, to: 10 },
-      { from: 6, to: 11 },
+      { from: 5, to: 11 },
       { from: 11, to: 12 },
       { from: 11, to: 13 }
     ],
@@ -251,26 +250,25 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 7: Master Challenge (Multiple Extremes & Steric Filtration)
+  // Stage 7: A donor with three red sites (the charged O is strongest) + a
+  // substrate with an open C=O, a caged tertiary C-Cl and a weak methyl.
   stage7_pair: {
     atoms: [
-      // Left: Complex donor with multiple red sites
       { element: 'O', pos: [-3.4, 1.0, 0], scale: 0.55 }, // red_weak1
       { element: 'C', pos: [-2.6, 0.4, 0], scale: 0.5 },
       { element: 'C', pos: [-1.8, -0.4, 0], scale: 0.5 },
       { element: 'N', pos: [-2.2, -1.4, 0], scale: 0.55 }, // red_weak2
-      { element: 'O', pos: [-0.9, -0.2, 0], scale: 0.62 }, // red_supreme (extreme nucleophile)
+      { element: 'O', pos: [-0.6, -0.1, 0], scale: 0.62 }, // red_supreme (charged O)
 
-      // Right: Complex substrate with multiple blue sites
-      // Open accessible blue site
-      { element: 'C', pos: [1.3, -1.1, 0], scale: 0.54 }, // blue_accessible
-      { element: 'O', pos: [1.0, -2.1, 0], scale: 0.58 },
-      { element: 'H', pos: [0.7, -0.8, 0.7], scale: 0.32 },
+      // Open C=O (blue_accessible), flat face toward the charged O
+      { element: 'C', pos: [1.3, -1.1, 0], scale: 0.54 },
+      { element: 'O', pos: [1.31, -1.76, 1.06], scale: 0.58 },
+      { element: 'H', pos: [1.12, -1.43, -0.65], scale: 0.32 },
 
-      // Central backbone
+      // Central backbone (carries the face shield and the weak methyl)
       { element: 'C', pos: [1.9, 0, 0], scale: 0.5 },
 
-      // Caged extreme blue site (sterically blocked)
+      // Caged tertiary C-Cl (sterically blocked)
       { element: 'C', pos: [2.3, 1.2, 0], scale: 0.54 }, // blue_caged
       { element: 'Cl', pos: [3.5, 1.5, 0], scale: 0.62 },
       // Shield cage
@@ -284,14 +282,14 @@ export const MOLECULE_DATA = {
       { from: 1, to: 2 },
       { from: 2, to: 3 },
       { from: 2, to: 4 },
-      { from: 5, to: 6 },
+      { from: 5, to: 6, order: 2 },
       { from: 5, to: 7 },
       { from: 5, to: 8 },
       { from: 8, to: 9 },
       { from: 9, to: 10 },
       { from: 9, to: 11 },
       { from: 9, to: 12 },
-      { from: 9, to: 13 },
+      { from: 8, to: 13 },
       { from: 8, to: 14 }
     ],
     regions: [
@@ -304,18 +302,16 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 8: 3 Molecules (Hydroxide Base + Acid + Methane Spectator)
+  // Stage 8: Hydroxide + hydronium (H3O+) + methane bystander. The transferred H
+  // sits on the O···H–O line.
   stage8_trio: {
     atoms: [
-      // Molecule 1: Hydroxide ion (OH-)
       { element: 'O', pos: [-2.8, 0.6, 0], scale: 0.6 },
       { element: 'H', pos: [-3.5, 0.4, 0], scale: 0.35 },
-      // Molecule 2: Hydronium (H3O+)
       { element: 'O', pos: [0.6, 0.2, 0], scale: 0.56 },
       { element: 'H', pos: [-0.2, 0.4, 0], scale: 0.35 },
-      { element: 'H', pos: [0.9, 0.9, 0], scale: 0.32 },
-      { element: 'H', pos: [0.9, -0.5, 0], scale: 0.32 },
-      // Molecule 3: Methane spectator (CH4)
+      { element: 'H', pos: [0.9, 0.55, 0.65], scale: 0.32 },
+      { element: 'H', pos: [0.9, 0.55, -0.65], scale: 0.32 },
       { element: 'C', pos: [3.0, -0.6, 0], scale: 0.5 },
       { element: 'H', pos: [2.5, -1.3, 0], scale: 0.3 },
       { element: 'H', pos: [3.7, -1.0, 0], scale: 0.3 },
@@ -339,27 +335,25 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 9: 3 Molecules (Strong Nucleophile + Weak Nucleophile + Carbocation Target)
+  // Stage 9: Ethoxide (strong) + methanol (weak) + ethyl cation. The cation is
+  // flat and its empty face points at the ethoxide oxygen.
   stage9_trio: {
     atoms: [
-      // Molecule 1: Ethoxide (Strong nucleophile CH3-CH2-O-)
       { element: 'C', pos: [-3.6, 1.4, 0], scale: 0.48 },
       { element: 'C', pos: [-2.4, 1.2, 0], scale: 0.5 },
       { element: 'O', pos: [-1.4, 1.6, 0], scale: 0.6 },
       { element: 'H', pos: [-4.0, 0.8, 0], scale: 0.3 },
       { element: 'H', pos: [-3.8, 2.2, 0], scale: 0.3 },
-      // Molecule 2: Methanol (Weak neutral nucleophile CH3-OH)
       { element: 'C', pos: [-3.2, -1.4, 0], scale: 0.48 },
       { element: 'O', pos: [-2.0, -1.0, 0], scale: 0.54 },
       { element: 'H', pos: [-1.6, -1.7, 0], scale: 0.3 },
       { element: 'H', pos: [-3.6, -2.0, 0], scale: 0.3 },
-      // Molecule 3: Ethyl carbocation (CH3-CH2+)
       { element: 'C', pos: [1.5, 0, 0], scale: 0.54 },
-      { element: 'C', pos: [2.8, -0.2, 0], scale: 0.48 },
-      { element: 'H', pos: [1.1, 0.7, 0], scale: 0.32 },
-      { element: 'H', pos: [1.1, -0.7, 0], scale: 0.32 },
-      { element: 'H', pos: [3.2, 0.6, 0], scale: 0.3 },
-      { element: 'H', pos: [3.2, -1.0, 0], scale: 0.3 }
+      { element: 'C', pos: [2.13, 1.14, 0], scale: 0.48 },
+      { element: 'H', pos: [1.32, -0.33, 0.65], scale: 0.32 },
+      { element: 'H', pos: [1.32, -0.33, -0.65], scale: 0.32 },
+      { element: 'H', pos: [2.74, 1.37, 0.38], scale: 0.3 },
+      { element: 'H', pos: [2.2, 1.59, -0.6], scale: 0.3 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -382,37 +376,36 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 10: 3 Molecules (Ammonia Base + Methanol + Bromomethane)
+  // Stage 10: Amide base (NH2-) + methanol + bromomethane. Only a base this strong
+  // can pull the O-H hydrogen off methanol; N···H–O are collinear. The methoxide
+  // left behind faces the back of the C-Br bond, ready for the next move.
   stage10_trio: {
     atoms: [
-      // Molecule 1: Ammonia base (NH3)
       { element: 'N', pos: [-2.8, 1.2, 0], scale: 0.58 },
-      { element: 'H', pos: [-3.4, 1.6, 0.4], scale: 0.32 },
-      { element: 'H', pos: [-3.4, 1.6, -0.4], scale: 0.32 },
-      { element: 'H', pos: [-2.4, 1.8, 0], scale: 0.32 },
-      // Molecule 2: Methanol (CH3OH)
-      { element: 'C', pos: [-0.4, 0.8, 0], scale: 0.5 },
-      { element: 'O', pos: [0.6, 0.2, 0], scale: 0.56 },
-      { element: 'H', pos: [-0.2, 1.6, 0], scale: 0.3 },
-      { element: 'H', pos: [0.3, -0.6, 0], scale: 0.35 }, // Acidic proton
-      // Molecule 3: Bromomethane (CH3Br)
-      { element: 'C', pos: [2.5, -0.8, 0], scale: 0.52 },
-      { element: 'Br', pos: [3.8, -1.2, 0], scale: 0.65 },
-      { element: 'H', pos: [2.1, -1.4, 0.4], scale: 0.3 },
-      { element: 'H', pos: [2.1, -1.4, -0.4], scale: 0.3 },
-      { element: 'H', pos: [2.5, 0.0, 0], scale: 0.3 }
+      { element: 'H', pos: [-3.22, 1.45, 0.63], scale: 0.32 },
+      { element: 'H', pos: [-3.22, 1.45, -0.63], scale: 0.32 },
+      // Methanol (CH3OH)
+      { element: 'C', pos: [0.72, -2.19, 0], scale: 0.5 },
+      { element: 'O', pos: [1.04, -1.03, 0], scale: 0.56 },
+      { element: 'H', pos: [0.26, -2.57, 0.46], scale: 0.3 },
+      { element: 'H', pos: [0.3, -0.6, 0], scale: 0.35 }, // O-H hydrogen
+      // Bromomethane (CH3Br)
+      { element: 'C', pos: [2.7, -0.7, 0], scale: 0.52 },
+      { element: 'Br', pos: [4.0, -1.1, 0], scale: 0.65 },
+      { element: 'H', pos: [2.66, 0.2, 0], scale: 0.3 },
+      { element: 'H', pos: [2.2, -1.31, -0.42], scale: 0.3 },
+      { element: 'H', pos: [2.2, -1.31, 0.42], scale: 0.3 }
     ],
     bonds: [
       { from: 0, to: 1 },
       { from: 0, to: 2 },
-      { from: 0, to: 3 },
-      { from: 4, to: 5 },
+      { from: 3, to: 4 },
+      { from: 3, to: 5 },
       { from: 4, to: 6 },
-      { from: 5, to: 7 },
-      { from: 8, to: 9 },
-      { from: 8, to: 10 },
-      { from: 8, to: 11 },
-      { from: 8, to: 12 }
+      { from: 7, to: 8 },
+      { from: 7, to: 9 },
+      { from: 7, to: 10 },
+      { from: 7, to: 11 }
     ],
     regions: [
       { id: 'red_base', pos: [-2.2, 1.2, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
@@ -421,19 +414,17 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 11: Two-Step Substitution Cascade (OH- + CH3Cl + Halide Scavenger)
+  // Stage 11: OH- + CH3Cl + a bare H+ that captures the chloride. Step 1 reaches
+  // the five-around-carbon halfway point (H3 flat); step 2 finishes the flip.
   stage11_pair: {
     atoms: [
-      // Left: OH-
       { element: 'O', pos: [-2.2, 0, 0], scale: 0.6 },
       { element: 'H', pos: [-2.9, -0.3, 0], scale: 0.35 },
-      // Right: CH3-Cl
       { element: 'C', pos: [1.6, 0, 0], scale: 0.52 },
       { element: 'Cl', pos: [3.1, 0, 0], scale: 0.65 },
-      { element: 'H', pos: [1.4, 0.9, 0.4], scale: 0.32 },
-      { element: 'H', pos: [1.4, -0.9, 0.4], scale: 0.32 },
-      { element: 'H', pos: [1.3, 0, -0.9], scale: 0.32 },
-      // Scavenger
+      { element: 'H', pos: [1.27, 0.81, 0.47], scale: 0.32 },
+      { element: 'H', pos: [1.27, -0.81, 0.47], scale: 0.32 },
+      { element: 'H', pos: [1.27, 0, -0.94], scale: 0.32 },
       { element: 'H', pos: [4.0, 0.8, 0], scale: 0.35 }
     ],
     bonds: [
@@ -451,23 +442,21 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 12: Carbonyl Addition + Proton Capture (Methoxide + Formaldehyde + Proton Donor)
+  // Stage 12: Methoxide + formaldehyde (face-on) + water as the H donor, lined up
+  // with where the new O- ends up after step 1.
   stage12_pair: {
     atoms: [
-      // Left: Methoxide (CH3O-)
       { element: 'C', pos: [-3.2, 0, 0], scale: 0.5 },
       { element: 'O', pos: [-2.0, 0, 0], scale: 0.6 },
       { element: 'H', pos: [-3.6, 0.6, 0], scale: 0.3 },
       { element: 'H', pos: [-3.6, -0.6, 0], scale: 0.3 },
-      // Right: Formaldehyde (H2C=O)
-      { element: 'C', pos: [1.6, 0, 0], scale: 0.54 },
-      { element: 'O', pos: [1.6, 1.3, 0], scale: 0.58 },
-      { element: 'H', pos: [1.0, -0.7, 0], scale: 0.32 },
-      { element: 'H', pos: [2.2, -0.7, 0], scale: 0.32 },
-      // Acid donor
-      { element: 'H', pos: [2.1, 2.0, 0], scale: 0.35 },
-      { element: 'O', pos: [2.9, 2.4, 0], scale: 0.56 },
-      { element: 'H', pos: [3.5, 2.3, 0], scale: 0.3 }
+      { element: 'C', pos: [1.6, -0.3, 0], scale: 0.54 },
+      { element: 'O', pos: [1.92, 0.91, 0], scale: 0.58 },
+      { element: 'H', pos: [1.5, -0.66, 0.65], scale: 0.32 },
+      { element: 'H', pos: [1.5, -0.66, -0.65], scale: 0.32 },
+      { element: 'H', pos: [3.18, 1.75, 0], scale: 0.35 },
+      { element: 'O', pos: [3.9, 2.29, 0], scale: 0.56 },
+      { element: 'H', pos: [4.36, 2.06, 0.57], scale: 0.3 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -482,30 +471,34 @@ export const MOLECULE_DATA = {
     regions: [
       { id: 'red_nu', pos: [-1.4, 0.2, 0], type: 'red', intensity: 'extreme', scale: 0.9 },
       { id: 'blue_c', pos: [1.2, 0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      { id: 'red_o', pos: [1.6, 1.5, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
-      { id: 'blue_h', pos: [2.1, 2.0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
+      { id: 'red_o', pos: [1.95, 1.15, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_h', pos: [3.18, 1.75, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
-  // Stage 13: Proton Transfer Relay (Two consecutive acid-base steps)
+  // Stage 13: Two water + hydronium (H3O+) handoffs. Each water points a lone
+  // pair straight at the H it receives.
   stage13_pair: {
     atoms: [
-      // Left: Water 1
+      // Water 1
       { element: 'O', pos: [-2.4, 0.4, 0], scale: 0.58 },
-      { element: 'H', pos: [-3.0, 0.8, 0], scale: 0.32 },
-      { element: 'H', pos: [-3.0, -0.1, 0], scale: 0.32 },
-      // Acid 1
+      { element: 'H', pos: [-2.67, 0.02, 0.6], scale: 0.32 },
+      { element: 'H', pos: [-2.67, 0.02, -0.6], scale: 0.32 },
+      // Hydronium 1
       { element: 'H', pos: [-0.8, 0.4, 0], scale: 0.35 },
       { element: 'O', pos: [0.3, 0.2, 0], scale: 0.58 },
-      { element: 'H', pos: [0.7, 0.8, 0], scale: 0.32 },
+      { element: 'H', pos: [0.65, 0.5, 0.63], scale: 0.32 },
       // Water 2
       { element: 'O', pos: [1.8, -0.6, 0], scale: 0.58 },
-      { element: 'H', pos: [1.3, -1.2, 0], scale: 0.32 },
-      { element: 'H', pos: [2.5, -1.0, 0], scale: 0.32 },
-      // Acid 2
+      { element: 'H', pos: [1.59, -1.02, 0.6], scale: 0.32 },
+      { element: 'H', pos: [1.59, -1.02, -0.6], scale: 0.32 },
+      // Hydronium 2
       { element: 'H', pos: [3.1, -0.4, 0], scale: 0.35 },
       { element: 'O', pos: [3.9, -0.6, 0], scale: 0.58 },
-      { element: 'H', pos: [4.4, -0.2, 0], scale: 0.32 }
+      { element: 'H', pos: [4.27, -0.32, 0.63], scale: 0.32 },
+      // Third hydrogens of the two hydronium ions
+      { element: 'H', pos: [0.65, 0.5, -0.63], scale: 0.32 },
+      { element: 'H', pos: [4.27, -0.32, -0.63], scale: 0.32 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -515,7 +508,9 @@ export const MOLECULE_DATA = {
       { from: 6, to: 7 },
       { from: 6, to: 8 },
       { from: 9, to: 10 },
-      { from: 10, to: 11 }
+      { from: 10, to: 11 },
+      { from: 4, to: 12 },
+      { from: 10, to: 13 }
     ],
     regions: [
       { id: 'red_base1', pos: [-2.0, 0.4, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
@@ -525,23 +520,20 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 14: Acyl Substitution + Halide Capture (Methoxide + Acetyl Chloride + Scavenger)
+  // Stage 14: Methoxide + acetyl chloride (face-on) + H+ that captures chloride.
   stage14_pair: {
     atoms: [
-      // Left: Methoxide (CH3O-)
       { element: 'C', pos: [-3.2, 0, 0], scale: 0.5 },
       { element: 'O', pos: [-2.0, 0, 0], scale: 0.6 },
       { element: 'H', pos: [-3.6, 0.7, 0], scale: 0.3 },
       { element: 'H', pos: [-3.6, -0.7, 0], scale: 0.3 },
-      // Right: Acetyl chloride
       { element: 'C', pos: [1.5, 0, 0], scale: 0.54 },
-      { element: 'O', pos: [1.5, 1.3, 0], scale: 0.58 },
-      { element: 'Cl', pos: [3.0, -0.4, 0], scale: 0.62 },
-      { element: 'C', pos: [0.6, -1.0, 0], scale: 0.5 },
-      { element: 'H', pos: [0.9, -1.8, 0], scale: 0.3 },
-      { element: 'H', pos: [0.1, -0.8, 0.7], scale: 0.3 },
-      // Halide Scavenger
-      { element: 'H', pos: [4.0, 0.3, 0], scale: 0.35 }
+      { element: 'O', pos: [1.82, 1.21, 0], scale: 0.58 },
+      { element: 'Cl', pos: [1.95, -0.92, 1.16], scale: 0.62 },
+      { element: 'C', pos: [0.79, -0.48, -0.97], scale: 0.5 },
+      { element: 'H', pos: [0.63, -0.71, -1.66], scale: 0.3 },
+      { element: 'H', pos: [0.4, -1.1, -1.05], scale: 0.3 },
+      { element: 'H', pos: [3.25, -0.45, 1.2], scale: 0.35 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -556,27 +548,26 @@ export const MOLECULE_DATA = {
     regions: [
       { id: 'red_nu', pos: [-1.4, 0.2, 0], type: 'red', intensity: 'extreme', scale: 0.9 },
       { id: 'blue_c', pos: [1.2, 0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      { id: 'red_cl', pos: [3.0, -0.4, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
-      { id: 'blue_scavenger', pos: [4.0, 0.3, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
+      { id: 'red_cl', pos: [2.1, -0.55, 1.2], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_scavenger', pos: [3.25, -0.45, 1.2], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
-  // Stage 15: Acid-Catalyzed Activation (3 Molecules: Acid H+ + Ketone + H2O Nucleophile)
+  // Stage 15: Water + acetone (face-on) + hydronium. The hydronium H sits on the
+  // C=O oxygen's side, in line with it.
   stage15_trio: {
     atoms: [
-      // Molecule 1: Water nucleophile
       { element: 'O', pos: [-2.8, -0.5, 0], scale: 0.58 },
-      { element: 'H', pos: [-3.4, -0.2, 0], scale: 0.32 },
-      { element: 'H', pos: [-3.3, -1.1, 0], scale: 0.32 },
-      // Molecule 2: Acetone
+      { element: 'H', pos: [-3.0, -0.92, 0.6], scale: 0.32 },
+      { element: 'H', pos: [-3.0, -0.92, -0.6], scale: 0.32 },
       { element: 'C', pos: [0.2, 0, 0], scale: 0.54 },
-      { element: 'O', pos: [0.2, 1.3, 0], scale: 0.58 },
-      { element: 'C', pos: [-0.6, -1.1, 0], scale: 0.48 },
-      { element: 'C', pos: [1.4, -0.5, 0], scale: 0.48 },
-      // Molecule 3: Acid donor
-      { element: 'O', pos: [2.4, 1.5, 0], scale: 0.56 },
+      { element: 'O', pos: [0.32, 1.24, 0], scale: 0.58 },
+      { element: 'C', pos: [-0.34, -0.6, -1.02], scale: 0.48 },
+      { element: 'C', pos: [0.61, -0.69, 1.02], scale: 0.48 },
+      { element: 'O', pos: [2.38, 2.14, 0], scale: 0.56 },
       { element: 'H', pos: [1.6, 1.8, 0], scale: 0.35 },
-      { element: 'H', pos: [3.1, 1.7, 0], scale: 0.3 }
+      { element: 'H', pos: [2.5, 2.59, 0.63], scale: 0.3 },
+      { element: 'H', pos: [2.5, 2.59, -0.63], scale: 0.3 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -585,7 +576,8 @@ export const MOLECULE_DATA = {
       { from: 3, to: 5 },
       { from: 3, to: 6 },
       { from: 7, to: 8 },
-      { from: 7, to: 9 }
+      { from: 7, to: 9 },
+      { from: 7, to: 10 }
     ],
     regions: [
       { id: 'red_o_carbonyl', pos: [0.2, 1.5, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
@@ -595,24 +587,21 @@ export const MOLECULE_DATA = {
     ]
   },
 
-  // Stage 16: Transesterification Cascade (Hydroxide + Ester + Proton Donor)
+  // Stage 16: Hydroxide + ethyl acetate (face-on) + water that protonates the
+  // departing ethoxide.
   stage16_trio: {
     atoms: [
-      // Hydroxide
       { element: 'O', pos: [-2.8, 0.4, 0], scale: 0.6 },
       { element: 'H', pos: [-3.4, 0.1, 0], scale: 0.35 },
-      // Ester
       { element: 'C', pos: [0.0, 0.0, 0], scale: 0.54 },
-      { element: 'O', pos: [0.0, 1.3, 0], scale: 0.58 },
-      { element: 'C', pos: [-1.0, -0.9, 0], scale: 0.48 },
-      { element: 'O', pos: [1.2, -0.3, 0], scale: 0.56 },
-      // Alkyl group
-      { element: 'C', pos: [2.3, -0.8, 0], scale: 0.48 },
-      { element: 'C', pos: [3.4, -0.2, 0], scale: 0.48 },
-      // Proton donor
-      { element: 'H', pos: [2.8, 0.6, 0], scale: 0.35 },
-      { element: 'O', pos: [3.6, 0.8, 0], scale: 0.56 },
-      { element: 'H', pos: [4.2, 0.5, 0], scale: 0.3 }
+      { element: 'O', pos: [0.49, 1.15, 0], scale: 0.58 },
+      { element: 'C', pos: [-0.77, -0.38, -0.97], scale: 0.48 },
+      { element: 'O', pos: [0.26, -0.82, 0.97], scale: 0.56 },
+      { element: 'C', pos: [1.55, -0.95, 1.35], scale: 0.48 },
+      { element: 'C', pos: [2.58, -0.31, 0.96], scale: 0.48 },
+      { element: 'H', pos: [1.1, 0.18, 1.15], scale: 0.35 },
+      { element: 'O', pos: [1.73, 0.81, 1.24], scale: 0.56 },
+      { element: 'H', pos: [2.3, 1.2, 0.9], scale: 0.3 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -627,27 +616,26 @@ export const MOLECULE_DATA = {
     regions: [
       { id: 'red_nu', pos: [-2.2, 0.4, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
       { id: 'blue_c', pos: [0.0, 0.0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      { id: 'red_ethoxide', pos: [1.8, -0.4, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
-      { id: 'blue_proton', pos: [2.8, 0.6, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
+      { id: 'red_ethoxide', pos: [0.75, -0.55, 1.1], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_proton', pos: [1.1, 0.18, 1.15], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
-  // Stage 17: Epoxide Ring Opening + Proton Quench
+  // Stage 17: Hydroxide + methyl-substituted three-ring (C, C, O) + water. Attack
+  // at the less crowded ring carbon, from directly behind its C-O bond.
   stage17_pair: {
     atoms: [
-      // Hydroxide
-      { element: 'O', pos: [-2.8, 0.2, 0], scale: 0.6 },
-      { element: 'H', pos: [-3.5, 0.0, 0], scale: 0.35 },
-      // Epoxide 3-ring
+      { element: 'O', pos: [-2.8, -0.3, 0], scale: 0.6 },
+      { element: 'H', pos: [-3.5, -0.5, 0], scale: 0.35 },
       { element: 'C', pos: [0.8, -0.6, 0], scale: 0.52 },
-      { element: 'C', pos: [2.2, -0.6, 0], scale: 0.52 },
-      { element: 'O', pos: [1.5, 0.6, 0], scale: 0.58 },
-      { element: 'H', pos: [0.4, -1.2, 0], scale: 0.3 },
-      { element: 'C', pos: [3.2, -1.3, 0], scale: 0.48 },
-      // Proton donor
-      { element: 'H', pos: [2.4, 1.4, 0], scale: 0.35 },
-      { element: 'O', pos: [3.2, 1.7, 0], scale: 0.56 },
-      { element: 'H', pos: [3.8, 1.5, 0], scale: 0.3 }
+      { element: 'C', pos: [1.28, 0.71, 0], scale: 0.52 },
+      { element: 'O', pos: [2.17, -0.36, 0], scale: 0.58 },
+      { element: 'H', pos: [0.56, -1.0, 0.65], scale: 0.3 },
+      { element: 'C', pos: [1.02, 1.81, 0.64], scale: 0.48 },
+      { element: 'H', pos: [3.24, 1.91, 0], scale: 0.35 },
+      { element: 'O', pos: [3.96, 2.45, 0], scale: 0.56 },
+      { element: 'H', pos: [4.56, 2.15, 0.4], scale: 0.3 },
+      { element: 'H', pos: [0.56, -1.0, -0.65], scale: 0.3 }
     ],
     bonds: [
       { from: 0, to: 1 },
@@ -656,60 +644,61 @@ export const MOLECULE_DATA = {
       { from: 3, to: 4 },
       { from: 3, to: 6 },
       { from: 7, to: 8 },
-      { from: 8, to: 9 }
+      { from: 8, to: 9 },
+      { from: 2, to: 5 },
+      { from: 2, to: 10 }
     ],
     regions: [
-      { id: 'red_nu', pos: [-2.1, 0.2, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'red_nu', pos: [-2.1, -0.25, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
       { id: 'blue_c_ring', pos: [0.7, -0.5, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      { id: 'red_o_ring', pos: [1.5, 0.6, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
-      { id: 'blue_proton', pos: [2.4, 1.4, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
+      { id: 'red_o_ring', pos: [2.35, -0.2, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_proton', pos: [3.24, 1.91, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
-  // Stage 18: Enolate Formation & Alkylation
+  // Stage 18: Amide base (NH2-) + acetaldehyde + bromomethane. The C-H being
+  // removed lines up with the C=O system; once it is gone the carbon attacks the
+  // CH3-Br from the opposite face, backside to the bromine.
   stage18_pair: {
     atoms: [
-      // Base (Amide ion)
-      { element: 'N', pos: [-3.2, 1.2, 0], scale: 0.58 },
-      { element: 'H', pos: [-3.8, 1.5, 0], scale: 0.32 },
-      // Carbonyl compound
-      { element: 'C', pos: [-0.4, 0.0, 0], scale: 0.5 },
-      { element: 'H', pos: [-0.8, 1.0, 0], scale: 0.35 },
-      { element: 'C', pos: [0.8, 0.0, 0], scale: 0.54 },
-      { element: 'O', pos: [1.2, 1.1, 0], scale: 0.58 },
-      // Alkyl halide
-      { element: 'C', pos: [2.4, -0.8, 0], scale: 0.5 },
-      { element: 'Br', pos: [3.6, -1.2, 0], scale: 0.65 }
+      { element: 'N', pos: [-2.58, 2.06, 0], scale: 0.58 },
+      { element: 'H', pos: [-3.1, 2.55, 0.5], scale: 0.32 },
+      { element: 'C', pos: [-0.5, 0.5, 0], scale: 0.5 },
+      { element: 'H', pos: [-1.3, 1.1, 0], scale: 0.35 },
+      { element: 'C', pos: [0.58, 1.22, 0], scale: 0.54 },
+      { element: 'O', pos: [1.1, 1.57, 1.08], scale: 0.58 },
+      { element: 'C', pos: [1.58, -1.06, 0], scale: 0.5 },
+      { element: 'Br', pos: [2.82, -1.99, 0], scale: 0.65 },
+      { element: 'H', pos: [-3.1, 2.55, -0.5], scale: 0.32 }
     ],
     bonds: [
       { from: 0, to: 1 },
       { from: 2, to: 3 },
       { from: 2, to: 4 },
       { from: 4, to: 5, order: 2 },
-      { from: 6, to: 7 }
+      { from: 6, to: 7 },
+      { from: 0, to: 8 }
     ],
     regions: [
-      { id: 'red_base', pos: [-2.5, 1.2, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
-      { id: 'blue_h_alpha', pos: [-0.8, 1.0, 0], type: 'blue', intensity: 'extreme', scale: 0.8 },
-      { id: 'c_alpha', pos: [-0.2, -0.2, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
-      { id: 'blue_target', pos: [2.3, -0.8, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
+      { id: 'red_base', pos: [-2.3, 1.85, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_h_alpha', pos: [-1.3, 1.1, 0], type: 'blue', intensity: 'extreme', scale: 0.8 },
+      { id: 'c_alpha', pos: [-0.22, 0.29, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_target', pos: [1.35, -0.85, 0], type: 'blue', intensity: 'extreme', scale: 0.85 }
     ]
   },
 
-  // Stage 19: S_N1 Stepwise Substitution (Halide Scavenger + t-Butyl Chloride + Water)
+  // Stage 19: tert-butyl chloride + water + H+ that captures chloride. The center
+  // flattens when Cl leaves and puckers again when water lands on the open face.
   stage19_pair: {
     atoms: [
-      // t-Butyl chloride
       { element: 'C', pos: [0.8, 0.0, 0], scale: 0.54 },
-      { element: 'Cl', pos: [2.8, 0.0, 0], scale: 0.65 },
-      { element: 'C', pos: [0.4, 1.3, 0], scale: 0.48 },
-      { element: 'C', pos: [0.4, -1.3, 0], scale: 0.48 },
-      { element: 'C', pos: [0.2, 0.0, 1.3], scale: 0.48 },
-      // Water
+      { element: 'Cl', pos: [2.4, 0.0, 0], scale: 0.65 },
+      { element: 'C', pos: [0.37, 1.23, 0], scale: 0.48 },
+      { element: 'C', pos: [0.37, -0.62, -1.07], scale: 0.48 },
+      { element: 'C', pos: [0.37, -0.62, 1.07], scale: 0.48 },
       { element: 'O', pos: [-2.8, 0.0, 0], scale: 0.58 },
-      { element: 'H', pos: [-3.4, 0.5, 0], scale: 0.32 },
-      { element: 'H', pos: [-3.4, -0.5, 0], scale: 0.32 },
-      // Halide Scavenger
+      { element: 'H', pos: [-3.07, -0.38, 0.6], scale: 0.32 },
+      { element: 'H', pos: [-3.07, -0.38, -0.6], scale: 0.32 },
       { element: 'H', pos: [4.0, 0.0, 0], scale: 0.35 }
     ],
     bonds: [
@@ -721,42 +710,44 @@ export const MOLECULE_DATA = {
       { from: 5, to: 7 }
     ],
     regions: [
-      { id: 'red_cl', pos: [2.8, 0.0, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'red_cl', pos: [2.5, 0.0, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
       { id: 'blue_scavenger', pos: [4.0, 0.0, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
       { id: 'red_water', pos: [-2.1, 0.0, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
       { id: 'blue_carbocation', pos: [0.8, 0.0, 0], type: 'blue', intensity: 'extreme', scale: 0.9 }
     ]
   },
 
-  // Stage 20: Grand Master Synthesis Cascade (3 Molecules)
+  // Stage 20: Hydronium + methylamine + acetyl bromide. The hydronium H sits in
+  // line with the C=O oxygen (upper left); the amine meets the C=O face-on.
   stage20_multi: {
     atoms: [
-      // Catalyst acid
-      { element: 'O', pos: [-3.2, 1.4, 0], scale: 0.56 },
-      { element: 'H', pos: [-2.5, 1.5, 0], scale: 0.35 },
-      // Core nucleophile
-      { element: 'N', pos: [-2.4, -0.8, 0], scale: 0.58 },
-      { element: 'C', pos: [-3.4, -0.8, 0], scale: 0.48 },
-      // Target scaffold with leaving group
-      { element: 'C', pos: [0.5, 0.0, 0], scale: 0.54 },
-      { element: 'O', pos: [0.5, 1.3, 0], scale: 0.58 },
-      { element: 'C', pos: [-0.4, -0.8, 0], scale: 0.48 },
-      { element: 'Br', pos: [2.4, -0.5, 0], scale: 0.65 }
+      { element: 'O', pos: [-2.53, 2.49, 0], scale: 0.56 },
+      { element: 'H', pos: [-1.83, 2.02, 0], scale: 0.35 },
+      { element: 'N', pos: [-1.9, -1.4, 0], scale: 0.58 },
+      { element: 'C', pos: [-3.06, -1.53, -0.58], scale: 0.48 },
+      { element: 'C', pos: [-0.2, 0.2, 0], scale: 0.54 },
+      { element: 'O', pos: [-0.79, 1.3, 0], scale: 0.58 },
+      { element: 'C', pos: [-0.31, -0.6, -1.02], scale: 0.48 },
+      { element: 'Br', pos: [0.67, -0.21, 1.22], scale: 0.65 },
+      { element: 'H', pos: [-2.98, 2.36, -0.63], scale: 0.3 },
+      { element: 'H', pos: [-2.98, 2.36, 0.63], scale: 0.3 }
     ],
     bonds: [
       { from: 0, to: 1 },
       { from: 2, to: 3 },
       { from: 4, to: 5, order: 2 },
       { from: 4, to: 6 },
-      { from: 4, to: 7 }
+      { from: 4, to: 7 },
+      { from: 0, to: 8 },
+      { from: 0, to: 9 }
     ],
     regions: [
-      { id: 'red_cat', pos: [-2.7, 1.4, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
-      { id: 'blue_proton', pos: [-1.8, 1.5, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
-      { id: 'red_core', pos: [-1.9, -0.8, 0], type: 'red', intensity: 'extreme', scale: 0.95 },
-      { id: 'blue_c_scaffold', pos: [0.4, 0.0, 0], type: 'blue', intensity: 'extreme', scale: 0.9 },
-      { id: 'bond_leave', pos: [1.4, -0.3, 0], type: 'blue', intensity: 'moderate', scale: 0.7 },
-      { id: 'red_depart', pos: [2.6, -0.5, 0], type: 'red', intensity: 'extreme', scale: 0.85 }
+      { id: 'red_cat', pos: [-1.0, 1.5, 0], type: 'red', intensity: 'extreme', scale: 0.85 },
+      { id: 'blue_proton', pos: [-1.83, 2.02, 0], type: 'blue', intensity: 'extreme', scale: 0.85 },
+      { id: 'red_core', pos: [-1.6, -1.13, 0], type: 'red', intensity: 'extreme', scale: 0.95 },
+      { id: 'blue_c_scaffold', pos: [-0.45, -0.05, 0], type: 'blue', intensity: 'extreme', scale: 0.9 },
+      { id: 'bond_leave', pos: [0.8, -0.1, 0.75], type: 'blue', intensity: 'moderate', scale: 0.7 },
+      { id: 'red_depart', pos: [1.05, -0.35, 1.45], type: 'red', intensity: 'extreme', scale: 0.85 }
     ]
   }
 };
@@ -1058,20 +1049,34 @@ export class MoleculeMesh {
       departDir.set(...stepCfg.departDirection).normalize();
     }
 
-    // Find leaving bond if any
-    let leavingBondObj = null;
-    if (leavingBond) {
-      leavingBondObj = this.bonds.find(b =>
-        (b.from === leavingBond.from && b.to === leavingBond.to) ||
-        (b.from === leavingBond.to && b.to === leavingBond.from)
-      );
-      if (!leavingBondObj) {
-        leavingBondObj = this.newBonds.find(b =>
-          (b.from === leavingBond.from && b.to === leavingBond.to) ||
-          (b.from === leavingBond.to && b.to === leavingBond.from)
-        );
-      }
+    // Find leaving bond(s) — a step may break more than one bond, e.g. a proton
+    // hopping between partners while a leaving group departs.
+    const findBond = (lb) =>
+      this.bonds.find(b => (b.from === lb.from && b.to === lb.to) || (b.from === lb.to && b.to === lb.from)) ||
+      this.newBonds.find(b => (b.from === lb.from && b.to === lb.to) || (b.from === lb.to && b.to === lb.from));
+    const leavingBondObjs = [].concat(leavingBond || []).map(findBond).filter(Boolean);
+    for (const lb of leavingBondObjs) {
+      // Fade from wherever the bond is now (it may already be drawn faint).
+      lb.fadeFrom = (lb.material || lb.material1)?.opacity ?? 1.0;
     }
+    // Transition states: a bond half-made or half-broken is drawn faint.
+    const weakenObjs = [].concat(stepCfg.weakenBond || []).map(findBond).filter(Boolean);
+    const completeObjs = [].concat(stepCfg.completeBond || []).map(findBond).filter(Boolean);
+    const PARTIAL_OPACITY = 0.4;
+
+    // Fragments that drift away once their bond is gone.
+    const departures = [];
+    if (leavingCluster.length > 0) {
+      departures.push({ atoms: leavingCluster, dir: departDir, dist: stepCfg.departDistance || 3.8 });
+    }
+    for (const dep of stepCfg.departures || []) {
+      departures.push({
+        atoms: dep.atoms || [],
+        dir: new THREE.Vector3(...(dep.direction || [1, 0, 0])).normalize(),
+        dist: dep.distance ?? 1.5
+      });
+    }
+    const inCluster = (idx) => clusterLeft.includes(idx) || clusterRight.includes(idx);
 
     // Find double bond to open (transition to single bond)
     let openBondObj = null;
@@ -1095,6 +1100,42 @@ export class MoleculeMesh {
     let currentNewBond = null;
     if (donorIdx !== undefined && acceptorIdx !== undefined && stepCfg.formBond !== false && this.atoms[donorIdx] && this.atoms[acceptorIdx]) {
       currentNewBond = this.addNewBond(donorIdx, acceptorIdx);
+      if (currentNewBond && stepCfg.partialBond) currentNewBond.partial = true;
+    }
+
+    // Geometry changes at a reacting center: a flat center puckers as a new group
+    // lands on it, a crowded center flattens as a group leaves, and a backside
+    // attack flips the remaining groups through like an umbrella. Each entry
+    // rotates `atoms` about `center`, away from (or toward) `toward`, until their
+    // angle to the center→toward axis equals `angle` (degrees). Bond lengths are
+    // preserved; `carry` atoms move rigidly with the atom they hang from.
+    const bends = [];
+    for (const bend of stepCfg.bend || []) {
+      const c = this.atoms[bend.center];
+      const t = this.atoms[bend.toward];
+      if (!c || !t) continue;
+      const n = new THREE.Vector3().subVectors(t.startPos, c.startPos).normalize();
+      for (const entry of bend.atoms || []) {
+        const idx = typeof entry === 'number' ? entry : entry.atom;
+        const carry = typeof entry === 'number' ? [] : (entry.carry || []);
+        const a = this.atoms[idx];
+        if (!a) continue;
+        const off = new THREE.Vector3().subVectors(a.startPos, c.startPos);
+        const len = off.length();
+        if (len < 1e-6) continue;
+        const theta0 = Math.acos(Math.max(-1, Math.min(1, off.dot(n) / len)));
+        let axis = new THREE.Vector3().crossVectors(n, off);
+        if (axis.lengthSq() < 1e-8) axis = new THREE.Vector3(0, 0, 1).cross(n);
+        axis.normalize();
+        bends.push({
+          center: bend.center,
+          idx,
+          carry,
+          off,
+          axis,
+          delta: THREE.MathUtils.degToRad(bend.angle) - theta0
+        });
+      }
     }
 
     const duration = stepCfg.duration || 1800; // ms
@@ -1111,14 +1152,16 @@ export class MoleculeMesh {
       const approachProgress = Math.min(1.0, progress / 0.48);
       const easeApproach = easeInOutCubic(approachProgress);
 
+      // Leaving atoms ride along with their cluster during the approach so they
+      // never jump at the phase boundary; they peel away in phase 2.
       for (const idx of clusterLeft) {
-        if (!this.atoms[idx] || leavingCluster.includes(idx)) continue;
+        if (!this.atoms[idx]) continue;
         this.atoms[idx].pos.copy(this.atoms[idx].startPos).addScaledVector(shiftLeft, easeApproach);
         this.atoms[idx].mesh.position.copy(this.atoms[idx].pos);
       }
 
       for (const idx of clusterRight) {
-        if (!this.atoms[idx] || leavingCluster.includes(idx)) continue;
+        if (!this.atoms[idx]) continue;
         this.atoms[idx].pos.copy(this.atoms[idx].startPos).addScaledVector(shiftRight, easeApproach);
         this.atoms[idx].mesh.position.copy(this.atoms[idx].pos);
       }
@@ -1130,7 +1173,8 @@ export class MoleculeMesh {
 
         if (currentNewBond) {
           currentNewBond.scale = easeBond;
-          currentNewBond.material.opacity = Math.min(1.0, easeBond * 1.2);
+          const maxOpacity = currentNewBond.partial ? PARTIAL_OPACITY : 1.0;
+          currentNewBond.material.opacity = Math.min(maxOpacity, easeBond * 1.2);
           const glowPulse = Math.max(0.25, 0.85 * (1 - (progress - 0.48) / 0.52));
           currentNewBond.material.emissiveIntensity = glowPulse;
         }
@@ -1163,37 +1207,69 @@ export class MoleculeMesh {
           }
         }
 
-        // Cleave leaving bond and smoothly depart leaving group cluster
-        if (leavingBondObj) {
-          const breakProgress = Math.min(1.0, (progress - 0.48) / 0.16);
-          if (leavingBondObj.material) leavingBondObj.material.opacity = Math.max(0, 1.0 - breakProgress);
-          if (leavingBondObj.material1) leavingBondObj.material1.opacity = Math.max(0, 1.0 - breakProgress);
-          if (leavingBondObj.material2) leavingBondObj.material2.opacity = Math.max(0, 1.0 - breakProgress);
-          leavingBondObj.scale = Math.max(0.001, 1.0 - breakProgress);
-          if (breakProgress >= 1.0) {
-            leavingBondObj.cleaved = true;
-            if (leavingBondObj.mesh) leavingBondObj.mesh.visible = false;
-            if (leavingBondObj.mesh1) leavingBondObj.mesh1.visible = false;
-            if (leavingBondObj.mesh2) leavingBondObj.mesh2.visible = false;
+        if (bends.length > 0) {
+          const easeBend = easeInOutCubic(Math.min(1.0, (progress - 0.48) / 0.52));
+          const rotated = new THREE.Vector3();
+          for (const b of bends) {
+            rotated.copy(b.off).applyAxisAngle(b.axis, b.delta * easeBend);
+            const centerPos = this.atoms[b.center].pos;
+            const atom = this.atoms[b.idx];
+            atom.pos.copy(centerPos).add(rotated);
+            atom.mesh.position.copy(atom.pos);
+            // Carried atoms keep their offset from the atom they hang on.
+            const moved = new THREE.Vector3().subVectors(atom.pos, atom.startPos);
+            for (const cIdx of b.carry) {
+              const ca = this.atoms[cIdx];
+              if (!ca) continue;
+              ca.pos.copy(ca.startPos).add(moved);
+              ca.mesh.position.copy(ca.pos);
+            }
           }
         }
 
-        if (leavingCluster.length > 0) {
+        // Cleave leaving bond and smoothly depart leaving group cluster
+        for (const wb of weakenObjs) {
+          const o = 1.0 - (1.0 - PARTIAL_OPACITY) * easeBond;
+          if (wb.material) wb.material.opacity = o;
+          if (wb.material1) wb.material1.opacity = o;
+          wb.partial = true;
+        }
+        const breakProgress = Math.min(1.0, (progress - 0.48) / 0.16);
+        for (const cb of completeObjs) {
+          // Full strength only once the departing bond is gone.
+          cb.partial = breakProgress < 1.0;
+          if (cb.material) cb.material.opacity = PARTIAL_OPACITY + (1.0 - PARTIAL_OPACITY) * easeBond;
+        }
+        for (const lb of leavingBondObjs) {
+          const o = Math.max(0, lb.fadeFrom * (1.0 - breakProgress));
+          if (lb.material) lb.material.opacity = o;
+          if (lb.material1) lb.material1.opacity = o;
+          if (lb.material2) lb.material2.opacity = o;
+          lb.scale = Math.max(0.001, 1.0 - breakProgress);
+          if (breakProgress >= 1.0) {
+            lb.cleaved = true;
+            if (lb.mesh) lb.mesh.visible = false;
+            if (lb.mesh1) lb.mesh1.visible = false;
+            if (lb.mesh2) lb.mesh2.visible = false;
+          }
+        }
+
+        if (departures.length > 0) {
           const departProgress = Math.min(1.0, (progress - 0.48) / 0.52);
           const easeDepart = easeInOutCubic(departProgress);
-          const departDist = easeDepart * (stepCfg.departDistance || 3.8);
-
-          for (const lAtomIdx of leavingCluster) {
-            if (!this.atoms[lAtomIdx]) continue;
-            const isLeft = clusterLeft.includes(lAtomIdx);
-            const clusterShift = isLeft ? shiftLeft : shiftRight;
-            const baseLeavePos = this.atoms[lAtomIdx].startPos.clone().addScaledVector(clusterShift, 1.0);
-            this.atoms[lAtomIdx].pos.copy(baseLeavePos).addScaledVector(departDir, departDist);
-            this.atoms[lAtomIdx].mesh.position.copy(this.atoms[lAtomIdx].pos);
-
-            if (this.atoms[lAtomIdx].material) {
-              this.atoms[lAtomIdx].material.emissive = new THREE.Color(0x38b000);
-              this.atoms[lAtomIdx].material.emissiveIntensity = Math.max(0, 0.5 * (1 - easeDepart));
+          for (const dep of departures) {
+            const departDist = easeDepart * dep.dist;
+            for (const lAtomIdx of dep.atoms) {
+              const atom = this.atoms[lAtomIdx];
+              if (!atom) continue;
+              // Cluster atoms were already placed (and bent) this frame.
+              const base = inCluster(lAtomIdx) ? atom.pos.clone() : atom.startPos.clone();
+              atom.pos.copy(base).addScaledVector(dep.dir, departDist);
+              atom.mesh.position.copy(atom.pos);
+              if (atom.material) {
+                atom.material.emissive = new THREE.Color(0x38b000);
+                atom.material.emissiveIntensity = Math.max(0, 0.5 * (1 - easeDepart));
+              }
             }
           }
         }

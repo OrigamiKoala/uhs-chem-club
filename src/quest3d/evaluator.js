@@ -14,8 +14,8 @@ export const STAGE_CONFIGS = [
     xp: 15,
     expectedFrom: 'red_lp1',
     expectedTo: 'blue_c1',
-    sourcePos: [-1.4, 0.2, 0],
-    targetPos: [1.8, 0, 0],
+    sourcePos: [-1.4, 0.2, 0.0],
+    targetPos: [1.8, 0.0, 0.0],
     tolerance: 1.35,
     concept: {
       badge: 'BASICS',
@@ -41,6 +41,11 @@ export const STAGE_CONFIGS = [
       targetBondLength: 1.35,
       leavingBond: null,
       leavingAtom: null,
+      // The flat cation puckers as the oxygen lands; C–O–H settles to a bent shape.
+      bend: [
+        { center: 2, toward: 0, atoms: [3, 4, 5], angle: 109.5 },
+        { center: 0, toward: 2, atoms: [1], angle: 109 }
+      ],
       explanation: 'Connected! The red and blue regions snapped together into a new bond.'
     }
   },
@@ -53,8 +58,8 @@ export const STAGE_CONFIGS = [
     xp: 15,
     expectedFrom: 'red_lp1',
     expectedTo: 'blue_c1',
-    sourcePos: [-1.5, 0.3, 0],
-    targetPos: [1.1, 0, 0],
+    sourcePos: [-1.5, 0.3, 0.0],
+    targetPos: [1.1, 0.0, 0.0],
     tolerance: 1.35,
     concept: null,
     reaction: {
@@ -66,6 +71,8 @@ export const STAGE_CONFIGS = [
       leavingBond: { from: 4, to: 5 },
       leavingAtom: 5,
       departDirection: [1, 0, 0],
+      // Backside attack turns the three C–H bonds inside out.
+      bend: [{ center: 4, toward: 0, atoms: [6, 7, 8], angle: 109.5 }],
       explanation: 'Connected! The new piece attached and popped off the old piece to make room.'
     }
   },
@@ -78,8 +85,8 @@ export const STAGE_CONFIGS = [
     xp: 20,
     expectedFrom: 'red_extreme',
     expectedTo: 'blue_extreme',
-    sourcePos: [-0.8, -1.2, 0],
-    targetPos: [1.3, -0.3, 0],
+    sourcePos: [-0.8, -1.2, 0.0],
+    targetPos: [1.3, -0.3, 0.0],
     tolerance: 1.35,
     concept: null,
     reaction: {
@@ -87,10 +94,11 @@ export const STAGE_CONFIGS = [
       acceptorAtom: 6,
       clusterLeft: [0, 1, 2, 3, 4, 5],
       clusterRight: [6, 7, 8, 9, 10],
-      targetBondLength: 1.35,
+      targetBondLength: 1.40,
       openDoubleBond: { from: 6, to: 7 },
       leavingBond: null,
       leavingAtom: null,
+      bend: [{ center: 6, toward: 3, atoms: [7, 8, { atom: 9, carry: [10] }], angle: 109.5 }],
       explanation: 'Connected! The strongest spots reacted first, shifting a link over to make room.'
     }
   },
@@ -103,8 +111,8 @@ export const STAGE_CONFIGS = [
     xp: 20,
     expectedFrom: 'red_extreme',
     expectedTo: 'blue_extreme',
-    sourcePos: [-0.8, -1.2, 0],
-    targetPos: [1.3, -0.3, 0],
+    sourcePos: [-0.4, -0.4, 0.0],
+    targetPos: [1.15, -0.3, 0.0],
     tolerance: 1.35,
     concept: null,
     reaction: {
@@ -112,10 +120,11 @@ export const STAGE_CONFIGS = [
       acceptorAtom: 8,
       clusterLeft: [0, 1, 2, 3, 4, 5],
       clusterRight: [6, 7, 8, 9, 10],
-      targetBondLength: 1.35,
+      targetBondLength: 1.45,
       openDoubleBond: { from: 8, to: 9 },
       leavingBond: null,
       leavingAtom: null,
+      bend: [{ center: 8, toward: 3, atoms: [9, { atom: 7, carry: [6] }, 10], angle: 109.5 }],
       explanation: 'Connected! The strongest spots paired up, ignoring the weaker distractions.'
     }
   },
@@ -128,10 +137,10 @@ export const STAGE_CONFIGS = [
     xp: 25,
     expectedFrom: 'red_nu',
     expectedTo: 'blue_open',
-    sourcePos: [-1.4, 0.2, 0],
-    targetPos: [1.0, -1.0, 0],
+    sourcePos: [-1.4, 0.2, 0.0],
+    targetPos: [1.0, -1.0, 0.0],
     blockedAnchor: 'blue_blocked',
-    blockedPos: [2.0, 1.1, 0],
+    blockedPos: [2.0, 1.1, 0.0],
     tolerance: 1.35,
     concept: null,
     reaction: {
@@ -139,10 +148,13 @@ export const STAGE_CONFIGS = [
       acceptorAtom: 4,
       clusterLeft: [0, 1, 2, 3],
       clusterRight: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
-      targetBondLength: 1.35,
+      targetBondLength: 1.40,
+      leftRatio: 1,
+      rightRatio: 0,
       leavingBond: { from: 4, to: 5 },
       leavingAtom: 5,
-      departDirection: [1, -0.5, 0],
+      departDirection: [1, -0.46, 0],
+      bend: [{ center: 4, toward: 1, atoms: [6, 7], angle: 112 }],
       explanation: 'Connected! You steered around the crowd, and the old piece popped off.'
     }
   },
@@ -155,10 +167,10 @@ export const STAGE_CONFIGS = [
     xp: 25,
     expectedFrom: 'red_nu',
     expectedTo: 'blue_open',
-    sourcePos: [-1.5, 0.2, 0],
-    targetPos: [1.6, -0.9, 0],
+    sourcePos: [-1.5, 0.2, 0.0],
+    targetPos: [1.6, -0.9, 0.0],
     blockedAnchor: 'blue_blocked',
-    blockedPos: [1.8, 1.2, 0],
+    blockedPos: [1.8, 1.2, 0.0],
     tolerance: 1.85,
     concept: null,
     reaction: {
@@ -166,10 +178,16 @@ export const STAGE_CONFIGS = [
       acceptorAtom: 2,
       clusterLeft: [0, 1],
       clusterRight: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
-      targetBondLength: 1.35,
+      targetBondLength: 1.40,
+      leftRatio: 1,
+      rightRatio: 0,
       openDoubleBond: { from: 2, to: 3 },
       leavingBond: null,
       leavingAtom: null,
+      bend: [
+        { center: 2, toward: 0, atoms: [3, 4], angle: 109.5 },
+        { center: 0, toward: 2, atoms: [1], angle: 109 }
+      ],
       explanation: 'Connected! You found the open target and slipped past the bulky wings blocking the other one.'
     }
   },
@@ -182,10 +200,10 @@ export const STAGE_CONFIGS = [
     xp: 30,
     expectedFrom: 'red_supreme',
     expectedTo: 'blue_accessible',
-    sourcePos: [-0.4, 0, 0],
-    targetPos: [1.6, -0.8, 0],
+    sourcePos: [-0.4, 0.0, 0.0],
+    targetPos: [1.6, -0.8, 0.0],
     blockedAnchor: 'blue_caged',
-    blockedPos: [2.0, 1.2, 0],
+    blockedPos: [2.0, 1.2, 0.0],
     tolerance: 1.35,
     concept: null,
     reaction: {
@@ -193,9 +211,11 @@ export const STAGE_CONFIGS = [
       acceptorAtom: 5,
       clusterLeft: [0, 1, 2, 3, 4],
       clusterRight: [5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-      targetBondLength: 1.35,
+      targetBondLength: 1.40,
+      openDoubleBond: { from: 5, to: 6 },
       leavingBond: null,
       leavingAtom: null,
+      bend: [{ center: 5, toward: 4, atoms: [6, 7], angle: 109.5 }],
       explanation: 'Route complete! The strongest red spot connected right into the open blue target.'
     }
   },
@@ -208,8 +228,8 @@ export const STAGE_CONFIGS = [
     xp: 30,
     expectedFrom: 'red_base',
     expectedTo: 'blue_acid',
-    sourcePos: [-2.2, 0.7, 0],
-    targetPos: [-0.2, 0.4, 0],
+    sourcePos: [-2.2, 0.7, 0.0],
+    targetPos: [-0.2, 0.4, 0.0],
     tolerance: 1.35,
     concept: null,
     reaction: {
@@ -217,9 +237,12 @@ export const STAGE_CONFIGS = [
       acceptorAtom: 3,
       clusterLeft: [0, 1],
       clusterRight: [2, 3, 4, 5],
-      targetBondLength: 1.0,
+      targetBondLength: 0.95,
       leavingBond: { from: 2, to: 3 },
       leavingAtom: null,
+      // The new water keeps the hydrogen and backs away bent; the old one stays.
+      departures: [{ atoms: [0, 1, 3], direction: [-1, 0.2, 0], distance: 1.2 }],
+      bend: [{ center: 0, toward: 3, atoms: [1], angle: 104.5 }],
       explanation: 'Connected! The shared piece hopped across to its new partner while the bystander just watched.'
     }
   },
@@ -232,8 +255,8 @@ export const STAGE_CONFIGS = [
     xp: 30,
     expectedFrom: 'red_strong',
     expectedTo: 'blue_target',
-    sourcePos: [-1.0, 1.8, 0],
-    targetPos: [1.2, 0, 0],
+    sourcePos: [-1.0, 1.8, 0.0],
+    targetPos: [1.2, 0.0, 0.0],
     tolerance: 1.35,
     concept: null,
     reaction: {
@@ -241,9 +264,10 @@ export const STAGE_CONFIGS = [
       acceptorAtom: 9,
       clusterLeft: [0, 1, 2, 3, 4],
       clusterRight: [9, 10, 11, 12, 13, 14],
-      targetBondLength: 1.35,
+      targetBondLength: 1.40,
       leavingBond: null,
       leavingAtom: null,
+      bend: [{ center: 9, toward: 2, atoms: [11, 12, { atom: 10, carry: [13, 14] }], angle: 109.5 }],
       explanation: 'Tug-of-war won! The stronger red spot won the race and claimed the blue target.'
     }
   },
@@ -256,18 +280,21 @@ export const STAGE_CONFIGS = [
     xp: 35,
     expectedFrom: 'red_base',
     expectedTo: 'blue_proton',
-    sourcePos: [-2.2, 1.2, 0],
-    targetPos: [0.3, -0.6, 0],
+    sourcePos: [-2.2, 1.2, 0.0],
+    targetPos: [0.3, -0.6, 0.0],
     tolerance: 1.35,
     concept: null,
     reaction: {
       donorAtom: 0,
-      acceptorAtom: 7,
-      clusterLeft: [0, 1, 2, 3],
-      clusterRight: [4, 5, 6, 7],
-      targetBondLength: 1.1,
-      leavingBond: { from: 5, to: 7 },
+      acceptorAtom: 6,
+      clusterLeft: [0, 1, 2],
+      clusterRight: [3, 4, 5, 6],
+      targetBondLength: 1.0,
+      leavingBond: { from: 4, to: 6 },
       leavingAtom: null,
+      // Ammonia leaves with the hydrogen; the methoxide stays facing the C–Br.
+      departures: [{ atoms: [0, 1, 2, 6], direction: [-0.865, 0.502, 0], distance: 1.4 }],
+      bend: [{ center: 0, toward: 6, atoms: [1, 2], angle: 108 }],
       explanation: 'Relay complete! The shared piece hopped across to its new partner so the target is ready for the next move.'
     }
   },
@@ -281,23 +308,42 @@ export const STAGE_CONFIGS = [
     multiArrow: true,
     maxArrows: 2,
     steps: [
-      { order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c', sourcePos: [-1.4, 0.2, 0], targetPos: [1.2, 0, 0] },
-      { order: 2, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger', sourcePos: [3.1, 0, 0], targetPos: [4.0, 0.8, 0] }
+      { order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c', sourcePos: [-1.4, 0.2, 0.0], targetPos: [1.2, 0.0, 0.0] },
+      { order: 2, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger', sourcePos: [3.1, 0.0, 0.0], targetPos: [4.0, 0.8, 0.0] }
     ],
     concept: null,
     reaction: {
       steps: [
         {
+          // Halfway point: O–C bond forming, C–Cl still attached, C–H bonds flat.
           donorAtom: 0,
           acceptorAtom: 2,
           clusterLeft: [0, 1],
           clusterRight: [2, 3, 4, 5, 6],
+          targetBondLength: 1.45,
+          partialBond: true,
+          weakenBond: { from: 2, to: 3 },
+          bend: [
+            { center: 2, toward: 0, atoms: [4, 5, 6], angle: 90 },
+            { center: 0, toward: 2, atoms: [1], angle: 109 }
+          ],
           duration: 1400
         },
         {
+          // Chloride leaves and is captured by the H+ as H–Cl; the C–H bonds finish flipping.
+          donorAtom: 3,
+          acceptorAtom: 7,
+          clusterLeft: [3],
+          clusterRight: [7],
+          leftRatio: 0.3,
+          rightRatio: 0.7,
+          targetBondLength: 1.0,
           leavingBond: { from: 2, to: 3 },
-          leavingCluster: [3],
-          departDirection: [1, 0.5, 0],
+          completeBond: { from: 0, to: 2 },
+          leavingCluster: [3, 7],
+          departDirection: [1, 0.35, 0],
+          departDistance: 1.6,
+          bend: [{ center: 2, toward: 0, atoms: [4, 5, 6], angle: 109.5 }],
           duration: 1400
         }
       ],
@@ -314,8 +360,8 @@ export const STAGE_CONFIGS = [
     multiArrow: true,
     maxArrows: 2,
     steps: [
-      { order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c', sourcePos: [-1.4, 0.2, 0], targetPos: [1.2, 0, 0] },
-      { order: 2, expectedFrom: 'red_o', expectedTo: 'blue_h', sourcePos: [1.6, 1.5, 0], targetPos: [2.1, 2.0, 0] }
+      { order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c', sourcePos: [-1.4, 0.2, 0.0], targetPos: [1.2, 0.0, 0.0] },
+      { order: 2, expectedFrom: 'red_o', expectedTo: 'blue_h', sourcePos: [1.95, 1.15, 0.0], targetPos: [3.18, 1.75, 0.0] }
     ],
     concept: null,
     reaction: {
@@ -325,17 +371,29 @@ export const STAGE_CONFIGS = [
           acceptorAtom: 4,
           clusterLeft: [0, 1, 2, 3],
           clusterRight: [4, 5, 6, 7],
+          leftRatio: 1,
+          rightRatio: 0,
+          targetBondLength: 1.40,
           openDoubleBond: { from: 4, to: 5 },
+          bend: [
+            { center: 4, toward: 1, atoms: [5, 6, 7], angle: 109.5 },
+            { center: 1, toward: 4, atoms: [{ atom: 0, carry: [2, 3] }], angle: 112 }
+          ],
           duration: 1400
         },
         {
+          // The new O- takes the water's hydrogen; hydroxide drifts off.
           donorAtom: 5,
           acceptorAtom: 8,
-          clusterLeft: [4, 5, 6, 7, 1],
+          clusterLeft: [0, 1, 2, 3, 4, 5, 6, 7],
           clusterRight: [8, 9, 10],
+          leftRatio: 0.15,
+          rightRatio: 0.85,
+          targetBondLength: 0.95,
           leavingBond: { from: 8, to: 9 },
           leavingCluster: [9, 10],
-          departDirection: [1, 0.4, 0],
+          departDirection: [0.8, 0.6, 0],
+          departDistance: 1.4,
           duration: 1400
         }
       ],
@@ -352,8 +410,8 @@ export const STAGE_CONFIGS = [
     multiArrow: true,
     maxArrows: 2,
     steps: [
-      { order: 1, expectedFrom: 'red_base1', expectedTo: 'blue_h1', sourcePos: [-2.0, 0.4, 0], targetPos: [-0.8, 0.4, 0] },
-      { order: 2, expectedFrom: 'red_base2', expectedTo: 'blue_h2', sourcePos: [1.8, -0.6, 0], targetPos: [3.1, -0.4, 0] }
+      { order: 1, expectedFrom: 'red_base1', expectedTo: 'blue_h1', sourcePos: [-2.0, 0.4, 0.0], targetPos: [-0.8, 0.4, 0.0] },
+      { order: 2, expectedFrom: 'red_base2', expectedTo: 'blue_h2', sourcePos: [1.8, -0.6, 0.0], targetPos: [3.1, -0.4, 0.0] }
     ],
     concept: null,
     reaction: {
@@ -362,20 +420,24 @@ export const STAGE_CONFIGS = [
           donorAtom: 0,
           acceptorAtom: 3,
           clusterLeft: [0, 1, 2],
-          clusterRight: [3, 4, 5],
+          clusterRight: [3, 4, 5, 12],
+          targetBondLength: 0.95,
           leavingBond: { from: 3, to: 4 },
-          leavingCluster: [4, 5],
+          leavingCluster: [4, 5, 12],
           departDirection: [0.5, 1, 0],
+          departDistance: 1.4,
           duration: 1400
         },
         {
           donorAtom: 6,
           acceptorAtom: 9,
           clusterLeft: [6, 7, 8],
-          clusterRight: [9, 10, 11],
+          clusterRight: [9, 10, 11, 13],
+          targetBondLength: 0.95,
           leavingBond: { from: 9, to: 10 },
-          leavingCluster: [10, 11],
+          leavingCluster: [10, 11, 13],
           departDirection: [1, 0, 0],
+          departDistance: 1.4,
           duration: 1400
         }
       ],
@@ -392,8 +454,8 @@ export const STAGE_CONFIGS = [
     multiArrow: true,
     maxArrows: 2,
     steps: [
-      { order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c', sourcePos: [-1.4, 0.2, 0], targetPos: [1.2, 0, 0] },
-      { order: 2, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger', sourcePos: [3.0, -0.4, 0], targetPos: [4.0, 0.3, 0] }
+      { order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c', sourcePos: [-1.4, 0.2, 0.0], targetPos: [1.2, 0.0, 0.0] },
+      { order: 2, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger', sourcePos: [2.1, -0.55, 1.2], targetPos: [3.25, -0.45, 1.2] }
     ],
     concept: null,
     reaction: {
@@ -403,14 +465,30 @@ export const STAGE_CONFIGS = [
           acceptorAtom: 4,
           clusterLeft: [0, 1, 2, 3],
           clusterRight: [4, 5, 6, 7, 8, 9],
+          targetBondLength: 1.40,
           openDoubleBond: { from: 4, to: 5 },
+          bend: [
+            { center: 4, toward: 1, atoms: [5, 6, { atom: 7, carry: [8, 9] }], angle: 109.5 },
+            { center: 1, toward: 4, atoms: [{ atom: 0, carry: [2, 3] }], angle: 112 }
+          ],
           duration: 1400
         },
         {
+          // The C=O closes again, chloride leaves and is captured as H–Cl, and the
+          // carbon flattens back out with the new group in its plane.
           closeDoubleBond: { from: 4, to: 5 },
+          donorAtom: 6,
+          acceptorAtom: 10,
+          clusterLeft: [6],
+          clusterRight: [10],
+          leftRatio: 0.3,
+          rightRatio: 0.7,
+          targetBondLength: 1.0,
           leavingBond: { from: 4, to: 6 },
-          leavingCluster: [6],
-          departDirection: [1, 0.3, 0],
+          leavingCluster: [6, 10],
+          departDirection: [0.55, -0.2, 0.8],
+          departDistance: 1.6,
+          bend: [{ center: 4, toward: 1, atoms: [5, { atom: 7, carry: [8, 9] }], angle: 120 }],
           duration: 1400
         }
       ],
@@ -427,8 +505,8 @@ export const STAGE_CONFIGS = [
     multiArrow: true,
     maxArrows: 2,
     steps: [
-      { order: 1, expectedFrom: 'red_o_carbonyl', expectedTo: 'blue_proton', sourcePos: [0.2, 1.5, 0], targetPos: [1.6, 1.8, 0] },
-      { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_activated_c', sourcePos: [-2.1, -0.5, 0], targetPos: [0.0, 0.0, 0] }
+      { order: 1, expectedFrom: 'red_o_carbonyl', expectedTo: 'blue_proton', sourcePos: [0.2, 1.5, 0.0], targetPos: [1.6, 1.8, 0.0] },
+      { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_activated_c', sourcePos: [-2.1, -0.5, 0.0], targetPos: [0.0, 0.0, 0.0] }
     ],
     concept: null,
     reaction: {
@@ -437,12 +515,14 @@ export const STAGE_CONFIGS = [
           donorAtom: 4,
           acceptorAtom: 8,
           clusterLeft: [3, 4, 5, 6],
-          clusterRight: [7, 8, 9],
+          clusterRight: [7, 8, 9, 10],
           leftRatio: 0.15,
           rightRatio: 0.85,
+          targetBondLength: 0.95,
           leavingBond: { from: 7, to: 8 },
-          leavingCluster: [7, 9],
+          leavingCluster: [7, 9, 10],
           departDirection: [1, 0.4, 0],
+          departDistance: 1.4,
           duration: 1500
         },
         {
@@ -450,7 +530,9 @@ export const STAGE_CONFIGS = [
           acceptorAtom: 3,
           clusterLeft: [0, 1, 2],
           clusterRight: [3, 4, 5, 6, 8],
+          targetBondLength: 1.45,
           openDoubleBond: { from: 3, to: 4 },
+          bend: [{ center: 3, toward: 0, atoms: [{ atom: 4, carry: [8] }, 5, 6], angle: 109.5 }],
           duration: 1500
         }
       ],
@@ -467,8 +549,8 @@ export const STAGE_CONFIGS = [
     multiArrow: true,
     maxArrows: 2,
     steps: [
-      { order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c', sourcePos: [-2.2, 0.4, 0], targetPos: [0.0, 0.0, 0] },
-      { order: 2, expectedFrom: 'red_ethoxide', expectedTo: 'blue_proton', sourcePos: [1.8, -0.4, 0], targetPos: [2.8, 0.6, 0] }
+      { order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c', sourcePos: [-2.2, 0.4, 0.0], targetPos: [0.0, 0.0, 0.0] },
+      { order: 2, expectedFrom: 'red_ethoxide', expectedTo: 'blue_proton', sourcePos: [0.75, -0.55, 1.1], targetPos: [1.1, 0.18, 1.15] }
     ],
     concept: null,
     reaction: {
@@ -478,14 +560,31 @@ export const STAGE_CONFIGS = [
           acceptorAtom: 2,
           clusterLeft: [0, 1],
           clusterRight: [2, 3, 4, 5, 6, 7],
+          targetBondLength: 1.40,
           openDoubleBond: { from: 2, to: 3 },
+          bend: [
+            { center: 2, toward: 0, atoms: [3, 4, { atom: 5, carry: [6, 7] }], angle: 109.5 },
+            { center: 0, toward: 2, atoms: [1], angle: 109 }
+          ],
           duration: 1400
         },
         {
+          // The C=O closes, the ethoxide tail breaks off and takes the water's
+          // hydrogen (leaving as ethanol), and hydroxide drifts away.
           closeDoubleBond: { from: 2, to: 3 },
-          leavingBond: { from: 2, to: 5 },
-          leavingCluster: [5, 6, 7],
-          departDirection: [1, -0.2, 0],
+          donorAtom: 5,
+          acceptorAtom: 8,
+          clusterLeft: [5, 6, 7],
+          clusterRight: [8, 9, 10],
+          leftRatio: 0.3,
+          rightRatio: 0.7,
+          targetBondLength: 0.95,
+          leavingBond: [{ from: 2, to: 5 }, { from: 8, to: 9 }],
+          departures: [
+            { atoms: [5, 6, 7, 8], direction: [0.35, -0.55, 0.75], distance: 1.4 },
+            { atoms: [9, 10], direction: [0.6, 0.8, 0], distance: 1.3 }
+          ],
+          bend: [{ center: 2, toward: 0, atoms: [3, 4], angle: 120 }],
           duration: 1400
         }
       ],
@@ -502,29 +601,40 @@ export const STAGE_CONFIGS = [
     multiArrow: true,
     maxArrows: 2,
     steps: [
-      { order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c_ring', sourcePos: [-2.1, 0.2, 0], targetPos: [0.7, -0.5, 0] },
-      { order: 2, expectedFrom: 'red_o_ring', expectedTo: 'blue_proton', sourcePos: [1.5, 0.6, 0], targetPos: [2.4, 1.4, 0] }
+      { order: 1, expectedFrom: 'red_nu', expectedTo: 'blue_c_ring', sourcePos: [-2.1, -0.25, 0.0], targetPos: [0.7, -0.5, 0.0] },
+      { order: 2, expectedFrom: 'red_o_ring', expectedTo: 'blue_proton', sourcePos: [2.35, -0.2, 0.0], targetPos: [3.24, 1.91, 0.0] }
     ],
     concept: null,
     reaction: {
       steps: [
         {
+          // Backside attack on the ring carbon: its C–O bond breaks, the two C–H
+          // bonds flip, and the freed oxygen swings open to a relaxed angle.
           donorAtom: 0,
           acceptorAtom: 2,
           clusterLeft: [0, 1],
-          clusterRight: [2, 3, 4, 5, 6],
+          clusterRight: [2, 3, 4, 5, 6, 10],
+          targetBondLength: 1.40,
           leavingBond: { from: 2, to: 4 },
-          ringOpen: { swingAtom: 4, swingOffset: [0.4, 0.9, 0] },
+          bend: [
+            { center: 2, toward: 0, atoms: [5, 10], angle: 110 },
+            { center: 3, toward: 2, atoms: [4], angle: 110 },
+            { center: 0, toward: 2, atoms: [1], angle: 109 }
+          ],
           duration: 1400
         },
         {
           donorAtom: 4,
           acceptorAtom: 7,
-          clusterLeft: [0, 1, 2, 3, 4, 5, 6],
+          clusterLeft: [0, 1, 2, 3, 4, 5, 6, 10],
           clusterRight: [7, 8, 9],
+          leftRatio: 0.15,
+          rightRatio: 0.85,
+          targetBondLength: 0.95,
           leavingBond: { from: 7, to: 8 },
           leavingCluster: [8, 9],
           departDirection: [1, 0.4, 0],
+          departDistance: 1.4,
           duration: 1400
         }
       ],
@@ -541,31 +651,39 @@ export const STAGE_CONFIGS = [
     multiArrow: true,
     maxArrows: 2,
     steps: [
-      { order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h_alpha', sourcePos: [-2.5, 1.2, 0], targetPos: [-0.8, 1.0, 0] },
-      { order: 2, expectedFrom: 'c_alpha', expectedTo: 'blue_target', sourcePos: [-0.2, -0.2, 0], targetPos: [2.3, -0.8, 0] }
+      { order: 1, expectedFrom: 'red_base', expectedTo: 'blue_h_alpha', sourcePos: [-2.3, 1.85, 0.0], targetPos: [-1.3, 1.1, 0.0] },
+      { order: 2, expectedFrom: 'c_alpha', expectedTo: 'blue_target', sourcePos: [-0.22, 0.29, 0.0], targetPos: [1.35, -0.85, 0.0] }
     ],
     concept: null,
     reaction: {
       steps: [
         {
+          // The base takes the hydrogen and leaves as ammonia; the carbon left
+          // behind flattens so its free side lines up with the C=O.
           donorAtom: 0,
           acceptorAtom: 3,
-          clusterLeft: [0, 1],
+          clusterLeft: [0, 1, 8],
           clusterRight: [2, 3, 4, 5],
+          targetBondLength: 1.0,
           leavingBond: { from: 2, to: 3 },
-          leavingCluster: [0, 1, 3],
-          departDirection: [0, 1, 0],
-          departDistance: 2.5,
+          leavingCluster: [0, 1, 3, 8],
+          departDirection: [-0.8, 0.6, 0],
+          departDistance: 1.6,
+          bend: [{ center: 2, toward: 0, atoms: [{ atom: 4, carry: [5] }], angle: 90 }],
           duration: 1400
         },
         {
+          // The carbon attacks CH3–Br from the far face, backside to the bromine.
           donorAtom: 2,
           acceptorAtom: 6,
           clusterLeft: [2, 4, 5],
           clusterRight: [6, 7],
+          targetBondLength: 1.40,
           leavingBond: { from: 6, to: 7 },
           leavingCluster: [7],
-          departDirection: [1, -0.3, 0],
+          departDirection: [0.8, -0.6, 0],
+          departDistance: 2.0,
+          bend: [{ center: 2, toward: 6, atoms: [{ atom: 4, carry: [5] }], angle: 109.5 }],
           duration: 1400
         }
       ],
@@ -582,23 +700,36 @@ export const STAGE_CONFIGS = [
     multiArrow: true,
     maxArrows: 2,
     steps: [
-      { order: 1, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger', sourcePos: [2.8, 0.0, 0], targetPos: [4.0, 0.0, 0] },
-      { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_carbocation', sourcePos: [-2.1, 0.0, 0], targetPos: [0.8, 0.0, 0] }
+      { order: 1, expectedFrom: 'red_cl', expectedTo: 'blue_scavenger', sourcePos: [2.5, 0.0, 0.0], targetPos: [4.0, 0.0, 0.0] },
+      { order: 2, expectedFrom: 'red_water', expectedTo: 'blue_carbocation', sourcePos: [-2.1, 0.0, 0.0], targetPos: [0.8, 0.0, 0.0] }
     ],
     concept: null,
     reaction: {
       steps: [
         {
+          // Chloride leaves (captured by the H+ as H–Cl); the center flattens.
+          donorAtom: 1,
+          acceptorAtom: 8,
+          clusterLeft: [1],
+          clusterRight: [8],
+          leftRatio: 0.1,
+          rightRatio: 0.9,
+          targetBondLength: 1.0,
           leavingBond: { from: 0, to: 1 },
-          leavingCluster: [1],
+          leavingCluster: [1, 8],
           departDirection: [1, 0, 0],
+          departDistance: 1.6,
+          bend: [{ center: 0, toward: 1, atoms: [2, 3, 4], angle: 90 }],
           duration: 1500
         },
         {
+          // Water lands on the open face and the center puckers again.
           donorAtom: 5,
           acceptorAtom: 0,
           clusterLeft: [5, 6, 7],
           clusterRight: [0, 2, 3, 4],
+          targetBondLength: 1.45,
+          bend: [{ center: 0, toward: 5, atoms: [2, 3, 4], angle: 109.5 }],
           duration: 1500
         }
       ],
@@ -615,31 +746,40 @@ export const STAGE_CONFIGS = [
     multiArrow: true,
     maxArrows: 2,
     steps: [
-      { order: 1, expectedFrom: 'red_cat', expectedTo: 'blue_proton', sourcePos: [-2.7, 1.4, 0], targetPos: [-1.8, 1.5, 0] },
-      { order: 2, expectedFrom: 'red_core', expectedTo: 'blue_c_scaffold', sourcePos: [-1.9, -0.8, 0], targetPos: [0.4, 0.0, 0] }
+      { order: 1, expectedFrom: 'red_cat', expectedTo: 'blue_proton', sourcePos: [-1.0, 1.5, 0.0], targetPos: [-1.83, 2.02, 0.0] },
+      { order: 2, expectedFrom: 'red_core', expectedTo: 'blue_c_scaffold', sourcePos: [-1.6, -1.13, 0.0], targetPos: [-0.45, -0.05, 0.0] }
     ],
     concept: null,
     reaction: {
       steps: [
         {
+          // The C=O oxygen takes a hydrogen from hydronium; water drifts off.
           donorAtom: 5,
           acceptorAtom: 1,
-          clusterLeft: [0, 1],
-          clusterRight: [4, 5, 6, 7],
+          clusterLeft: [4, 5, 6, 7],
+          clusterRight: [0, 1, 8, 9],
+          leftRatio: 0.15,
+          rightRatio: 0.85,
+          targetBondLength: 0.95,
           leavingBond: { from: 0, to: 1 },
-          leavingCluster: [0],
-          departDirection: [-0.8, 1, 0],
-          departDistance: 2.2,
+          leavingCluster: [0, 8, 9],
+          departDirection: [-0.8, 0.55, 0],
+          departDistance: 1.3,
           duration: 1400
         },
         {
+          // The amine meets the activated carbon face-on and bromide leaves; the
+          // carbon ends flat again with the nitrogen in its plane.
           donorAtom: 2,
           acceptorAtom: 4,
           clusterLeft: [2, 3],
           clusterRight: [1, 4, 5, 6, 7],
+          targetBondLength: 1.40,
           leavingBond: { from: 4, to: 7 },
           leavingCluster: [7],
-          departDirection: [1, -0.3, 0],
+          departDirection: [0.55, -0.1, 0.8],
+          departDistance: 2.0,
+          bend: [{ center: 4, toward: 2, atoms: [{ atom: 5, carry: [1] }, 6], angle: 120 }],
           duration: 1400
         }
       ],
