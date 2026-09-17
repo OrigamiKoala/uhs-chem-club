@@ -82,6 +82,9 @@ export function renderDemo(container) {
       </div>
 
       <div class="stage-card-wrap">
+        <button type="button" id="demo-open-btn" class="btn-secondary quest-btn-sm stage-reopen-btn hidden" title="Open stage panel" aria-label="Open stage panel">
+          Stage Panel
+        </button>
         <div class="stage-prompt-card" id="demo-card">
           <div class="stage-header">
             <div>
@@ -90,6 +93,7 @@ export function renderDemo(container) {
             </div>
             <div style="display: flex; gap: 0.4rem; align-items: center;">
               <button type="button" id="demo-info-btn" class="btn-secondary quest-btn-sm">Objective</button>
+              <button type="button" id="demo-close-btn" class="btn-secondary quest-btn-sm" title="Close stage panel" aria-label="Close stage panel">Close</button>
               <div class="stage-xp-tag">Sample</div>
             </div>
           </div>
@@ -115,6 +119,9 @@ export function renderDemo(container) {
     </div>
   `;
 
+  // Show stage info modal before stage begins to explain controls
+  showDemoModal(cfg);
+
   const interactiveArea = container.querySelector('#demo-interactive-area');
   const card = container.querySelector('#demo-card');
   const feedback = container.querySelector('#demo-feedback');
@@ -123,6 +130,29 @@ export function renderDemo(container) {
 
   container.querySelector('#demo-info-btn')?.addEventListener('click', () => {
     showDemoModal(cfg);
+  });
+
+  const demoCloseBtn = container.querySelector('#demo-close-btn');
+  const demoOpenBtn = container.querySelector('#demo-open-btn');
+
+  function setDemoCardClosed(closed) {
+    if (closed) {
+      card?.classList.add('hidden');
+      demoOpenBtn?.classList.remove('hidden');
+      demoOpenBtn?.focus();
+    } else {
+      card?.classList.remove('hidden');
+      demoOpenBtn?.classList.add('hidden');
+      demoCloseBtn?.focus();
+    }
+  }
+
+  demoCloseBtn?.addEventListener('click', () => {
+    setDemoCardClosed(true);
+  });
+
+  demoOpenBtn?.addEventListener('click', () => {
+    setDemoCardClosed(false);
   });
 
   if (tierManager.currentTier === 'T1' || !viewer) {
@@ -158,6 +188,7 @@ export function renderDemo(container) {
       gradeBtn.textContent = 'Reacting…';
 
       const finish = () => {
+        setDemoCardClosed(false);
         solved = true;
         feedback.className = 'stage-error-banner stage-success-banner';
         feedback.innerHTML = `

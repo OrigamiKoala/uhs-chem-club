@@ -117,72 +117,19 @@ class Soundscape {
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
 
-    // Stop old bed gently if running
+    // Stop old bed if running
     if (this.bedOsc1) {
       try {
-        this.bedOsc1.stop(now + 0.8);
-        this.bedOsc2?.stop(now + 0.8);
-        this.bedNoiseNode?.stop(now + 0.8);
+        this.bedOsc1.stop(now + 0.2);
+        this.bedOsc2?.stop(now + 0.2);
+        this.bedNoiseNode?.stop(now + 0.2);
       } catch (e) {}
+      this.bedOsc1 = null;
+      this.bedOsc2 = null;
+      this.bedNoiseNode = null;
     }
 
-    // Room tint filter frequencies
-    const roomFreqs = {
-      cockpit: 58,
-      bridge: 55,
-      starmap: 50,
-      comms: 65,
-      cargo: 45,
-      quarters: 52,
-      quest: 60
-    };
-    const baseFreq = roomFreqs[room] || 55;
-
-    // 1. Dual sub-harmonic oscillators
-    const osc1 = this.ctx.createOscillator();
-    const osc2 = this.ctx.createOscillator();
-    osc1.type = 'sine';
-    osc2.type = 'triangle';
-    osc1.frequency.setValueAtTime(baseFreq, now);
-    osc2.frequency.setValueAtTime(baseFreq * 1.99, now);
-
-    const oscGain = this.ctx.createGain();
-    oscGain.gain.setValueAtTime(0.001, now);
-    oscGain.gain.setTargetAtTime(0.18, now, 0.5);
-
-    osc1.connect(oscGain);
-    osc2.connect(oscGain);
-
-    // 2. Filtered ambient noise (air displacement / hull hiss)
-    const noiseBuf = this._createNoiseBuffer(2);
-    let noiseNode = null;
-    if (noiseBuf) {
-      noiseNode = this.ctx.createBufferSource();
-      noiseNode.buffer = noiseBuf;
-      noiseNode.loop = true;
-
-      const noiseFilter = this.ctx.createBiquadFilter();
-      noiseFilter.type = 'lowpass';
-      noiseFilter.frequency.setValueAtTime(room === 'comms' ? 850 : 260, now);
-
-      const noiseGain = this.ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.001, now);
-      noiseGain.gain.setTargetAtTime(room === 'comms' ? 0.08 : 0.04, now, 0.5);
-
-      noiseNode.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-      noiseGain.connect(this.ambienceGain);
-
-      noiseNode.start(now);
-    }
-
-    oscGain.connect(this.ambienceGain);
-    osc1.start(now);
-    osc2.start(now);
-
-    this.bedOsc1 = osc1;
-    this.bedOsc2 = osc2;
-    this.bedNoiseNode = noiseNode;
+    // Drone disabled: no continuous low-frequency oscillators or noise bed.
   }
 
   _createNoiseBuffer(seconds = 2) {

@@ -333,6 +333,9 @@ export function renderQuest(container) {
 
         <!-- Bottom Stage Deck -->
         <div class="stage-card-wrap">
+          <button type="button" id="stage-card-open-btn" class="btn-secondary quest-btn-sm stage-reopen-btn hidden" title="Open stage panel" aria-label="Open stage panel">
+            Stage Panel
+          </button>
           <div class="stage-prompt-card" id="stage-card">
             <!-- Vess Comms Transmission Card -->
             <div id="quest-transmission-slot" style="margin-bottom: 0.5rem;"></div>
@@ -342,9 +345,14 @@ export function renderQuest(container) {
                 <span class="stage-title">${cfg.title || ('Stage ' + (currentStageIdx + 1))}</span>
                 ${isReplay ? '<span class="tag">Replay</span>' : `<span class="tag live">+${stageXp} XP</span>`}
               </div>
-              <button type="button" id="stage-info-btn" class="btn-secondary quest-btn-sm" title="View stage instructions">
-                ◈ Objective
-              </button>
+              <div style="display: flex; gap: 0.4rem; align-items: center;">
+                <button type="button" id="stage-info-btn" class="btn-secondary quest-btn-sm" title="View stage instructions">
+                  ◈ Objective
+                </button>
+                <button type="button" id="stage-card-close-btn" class="btn-secondary quest-btn-sm" title="Close stage panel" aria-label="Close stage panel">
+                  Close
+                </button>
+              </div>
             </div>
 
             <!-- Toolbar -->
@@ -421,6 +429,31 @@ export function renderQuest(container) {
     // Stage instructions / info modal trigger
     container.querySelector('#stage-info-btn')?.addEventListener('click', () => {
       showStageModal(cfg, currentStageIdx, isReplay, stageXp);
+    });
+
+    const closeBtn = container.querySelector('#stage-card-close-btn');
+    const openBtn = container.querySelector('#stage-card-open-btn');
+
+    function setCardClosed(closed) {
+      if (closed) {
+        stageCard?.classList.add('hidden');
+        openBtn?.classList.remove('hidden');
+        openBtn?.focus();
+      } else {
+        stageCard?.classList.remove('hidden');
+        openBtn?.classList.add('hidden');
+        closeBtn?.focus();
+      }
+    }
+
+    closeBtn?.addEventListener('click', () => {
+      setCardClosed(true);
+      soundscape.playNavRelayClick();
+    });
+
+    openBtn?.addEventListener('click', () => {
+      setCardClosed(false);
+      soundscape.playNavRelayClick();
     });
 
     // 2. Stage navigation
@@ -585,6 +618,7 @@ export function renderQuest(container) {
           const isLastStage = targetStageIdx >= TOTAL_STAGES;
 
           const onReactionDone = () => {
+            setCardClosed(false);
             stageCompleted = true;
             isAdvancing = false;
             isGrading = false;

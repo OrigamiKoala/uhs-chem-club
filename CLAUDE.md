@@ -43,8 +43,8 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
 - `ui/transmission.js` — diegetic CRT transmission typewriter component with Vess murmur.
 - `ui/gardens-map.js` — 20-pylon status visualization for Bridge and Quest screen HUD.
 - `ui/cinematic.js` — fullscreen cinematic player with subtitles and T1 / reduced-motion fallback.
-- `audio/soundscape.js` — zero-dependency Web Audio procedural soundscape (engine bed, room tints,
-  relays, bond snaps, Vess murmur, volume controls).
+- `audio/soundscape.js` — zero-dependency Web Audio procedural soundscape (room tints,
+  relays, bond snaps, Vess murmur, volume controls; continuous drone disabled).
 - `story/quest1.js` — single source of truth for Quest 1 narrative, pylon communications, onClear logs,
   and milestone cutscenes.
 - `story/trinkets.js` — Session Zero deterministic d20 cosmetic trinkets and character backgrounds.
@@ -188,7 +188,7 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 ## Player journey
 1. `#/` landing — cold open comms transmission, cockpit loop banner, and Create Account / Try a Pylon CTAs.
-2. `#/demo` — Stage 1 for real, no account, graded by the same evaluator.
+2. `#/demo` — Stage 1 sample, no account, intro modal explains mechanics & controls, graded by the same evaluator.
 3. `#/register` — step 1 of 3 on the shared `stepRail`. Live validation mirrors
    `validateDisplayName` in `Util.gs` exactly, so no rule bites only at submit time.
 4. `#/onboarding` — step 2. Four teams with guild names and live slot counts.
@@ -256,6 +256,7 @@ gradient buttons with white specular highlights; rounded corners (`--radius-sm` 
 - **Switchgear**: `.btn-primary` is a painted key cap (matte amber plate, engraved dark
   legend, physical bottom lip, sinks on press). `.btn-secondary` is bare durasteel.
   `.quest-btn-sm` is compact quest chrome. Labels are 1–2 words; **no arrow glyphs.**
+- **Stage Deck**: collapsible bottom-left tablet in `quest.js` and `demo.js` (`Close` / `Stage Panel`).
 - **Inputs**: `.form-input` is a recessed well; focus turns the text amber rather than
   adding a halo. `.choice-option` is a toggle with a lit left edge when selected.
 - **Banners**: `.form-banner` for faults; in the quest, `.stage-error-banner` with
