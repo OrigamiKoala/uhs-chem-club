@@ -7,6 +7,7 @@ import { session, levelProgress, levelTitle } from './session.js';
 import { stage } from './three/stage.js';
 import { tierManager } from './three/tier.js';
 import { Router } from './router.js';
+import { soundscape } from './audio/soundscape.js';
 
 /** Guild liveries, keyed by team id. Legacy ids are aliased in session.js. */
 const TEAM_LIVERY = {
@@ -77,6 +78,7 @@ function setupHud() {
 
   const tierToggle = document.getElementById('gfx-tier-toggle');
   const motionToggle = document.getElementById('motion-toggle');
+  const soundToggle = document.getElementById('sound-toggle');
 
   // Graphics tier button
   tierToggle?.addEventListener('click', () => {
@@ -92,6 +94,36 @@ function setupHud() {
   if (motionToggle && session.reduceMotion) {
     motionToggle.textContent = 'MOTION REDUCED';
   }
+
+  // Sound toggle
+  const updateSoundBtn = () => {
+    if (!soundToggle) return;
+    const isMuted = session.sound?.muted;
+    soundToggle.textContent = isMuted ? '// SOUND OFF' : '// SOUND ON';
+    soundToggle.classList.toggle('warn', isMuted);
+  };
+  updateSoundBtn();
+
+  soundToggle?.addEventListener('click', () => {
+    const nextMuted = !session.sound?.muted;
+    session.setSound({ muted: nextMuted });
+    updateSoundBtn();
+    if (!nextMuted) soundscape.playToggleClack();
+  });
+
+  // Delegated UI foley listeners across entire application
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!target) return;
+
+    if (target.closest('.btn-primary')) {
+      soundscape.playKeyCapThunk();
+    } else if (target.closest('.nav-btn')) {
+      soundscape.playNavRelayClick();
+    } else if (target.closest('.choice-option') || target.closest('[role="tab"]') || target.closest('.btn-secondary') || target.closest('.btn-chip')) {
+      soundscape.playToggleClack();
+    }
+  });
 
   // User menu toggle
   userBtn?.addEventListener('click', (e) => {

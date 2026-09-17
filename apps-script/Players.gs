@@ -30,12 +30,12 @@ var Players = {
     };
   },
 
-  claimTeamSlot: function(playerId, roleOrTeamId, teamIdOpt, avatarOpt) {
+  claimTeamSlot: function(playerId, roleOrTeamId, teamIdOpt, avatarOpt, backgroundOpt, trinketOpt) {
     var role = '';
     var teamId = roleOrTeamId;
     var avatar = teamIdOpt;
 
-    // Handle legacy signature (playerId, role, teamId, avatar)
+    // Handle legacy signature (playerId, role, teamId, avatar, background, trinket)
     if (teamIdOpt && typeof teamIdOpt === 'string' && teamIdOpt.length > 0 && !teamIdOpt.startsWith('{')) {
       teamId = teamIdOpt;
       avatar = avatarOpt;
@@ -89,12 +89,30 @@ var Players = {
 
       var avatarStr = typeof avatar === 'object' ? JSON.stringify(avatar) : (avatar || player.avatar_json);
 
-      Db.update('Players', function(p) { return p.player_id === playerId; }, {
+      var patch = {
         role: role,
         team_id: teamId,
         avatar_json: avatarStr,
         last_seen_at: isoNow()
-      });
+      };
+      if (backgroundOpt) patch.background = backgroundOpt;
+      if (trinketOpt) {
+        patch.trinket = trinketOpt;
+        var existingTrinket = Db.findOne('Inventory', function(i) {
+          return i.player_id === playerId && i.item_id === trinketOpt;
+        });
+        if (!existingTrinket) {
+          Db.append('Inventory', {
+            inv_id: generateId('inv'),
+            player_id: playerId,
+            item_id: trinketOpt,
+            qty: 1,
+            acquired_at: isoNow()
+          });
+        }
+      }
+
+      Db.update('Players', function(p) { return p.player_id === playerId; }, patch);
 
       Cache.drop('teams:slots');
 
@@ -228,5 +246,22 @@ var Players = {
 
     Cache.put('teams:slots', result, 15);
     return result;
+  },
+
+  getTeamRoster: function(teamId) {
+    var normId = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[String(teamId || '').toLowerCase()] || teamId);
+    var members = Db.find('Players', function(p) {
+      var pTid = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[String(p.team_id || '').toLowerCase()] || p.team_id);
+      return pTid === normId && p.status !== 'banned';
+    });
+    return {
+      team_id: normId,
+      members: members.map(function(m) {
+        return {
+          display_name: m.display_name,
+          trinket: m.trinket || ''
+        };
+      })
+    };
   }
 };

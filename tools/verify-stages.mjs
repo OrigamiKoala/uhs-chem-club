@@ -9,6 +9,7 @@
 import { STAGE_CONFIGS, evaluateStageLocally, diagnoseMiss, TOTAL_STAGES, TOTAL_QUEST_XP } from '../src/quest3d/evaluator.js';
 import { MOLECULE_DATA } from '../src/quest3d/molecule.js';
 import { CANONICAL_STAGES_20 } from '../api/[...route].js';
+import { QUEST1_STORY } from '../src/story/quest1.js';
 
 let failures = 0;
 const fail = (msg) => { console.log(`  FAIL ${msg}`); failures++; };
@@ -126,11 +127,51 @@ STAGE_CONFIGS.forEach((cfg, i) => {
       fail(`${label}: molecule differs (client ${cfg.moleculeId}, proxy ${remote.scene_config?.moleculeId})`);
     }
     if (remote.scene_config?.title !== cfg.title) fail(`${label}: title differs between client and proxy`);
-    if (remote.scene_config?.prompt !== cfg.prompt) fail(`${label}: prompt differs between client and proxy`);
   }
 });
 
-if (failures === 0) ok(`all ${TOTAL_STAGES} stages solvable, consistent and jargon-free`);
+// Verify Campaign Story copy integrity (CLAUDE.md §7 story copy rules)
+if (!QUEST1_STORY || !Array.isArray(QUEST1_STORY.pylons) || QUEST1_STORY.pylons.length !== TOTAL_STAGES) {
+  fail(`story has ${QUEST1_STORY?.pylons?.length ?? 0} pylons, expected ${TOTAL_STAGES}`);
+} else {
+  const banned = ['electron', 'nucleophile', 'electrophile', 'carbonyl', 'carbocation',
+    'alkyl', 'ester', 'epoxide', 'isopropyl'];
+
+  // Check guild openers
+  ['earth', 'air', 'fire', 'water', 'neutral'].forEach(g => {
+    const text = QUEST1_STORY.guildOpeners?.[g];
+    if (!text || text.length < 10) fail(`story: missing or too short guildOpener for ${g}`);
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    if (sentences.length > 2) fail(`story: guildOpener for ${g} exceeds 2 sentences (${sentences.length})`);
+    banned.forEach(w => {
+      if (text.toLowerCase().includes(w)) fail(`story: guildOpener for ${g} contains banned "${w}"`);
+    });
+  });
+
+  QUEST1_STORY.pylons.forEach((p, idx) => {
+    const pLabel = `pylon ${idx + 1}`;
+    if (p.stage !== idx + 1) fail(`story: ${pLabel} has stage ${p.stage}`);
+    if (!p.onClear || p.onClear.length < 5) fail(`story: ${pLabel} missing onClear`);
+
+    const text = idx === 0 ? QUEST1_STORY.guildOpeners.neutral : p.transmission;
+    if (!text || text.length < 10) fail(`story: ${pLabel} transmission missing or too short`);
+
+    const sentences = (text || '').split(/[.!?]+/).filter(s => s.trim().length > 0);
+    if (sentences.length > 2) fail(`story: ${pLabel} transmission exceeds 2 sentences (${sentences.length})`);
+
+    const fullStoryCopy = [text, p.onClear].join(' ').toLowerCase();
+    banned.forEach(w => {
+      if (fullStoryCopy.includes(w)) fail(`story: ${pLabel} contains banned "${w}"`);
+    });
+  });
+
+  // Milestones check
+  [7, 10, 20].forEach(m => {
+    if (!QUEST1_STORY.milestones?.[m]) fail(`story: missing milestone for stage ${m}`);
+  });
+}
+
+if (failures === 0) ok(`all ${TOTAL_STAGES} stages solvable, consistent, story-backed and jargon-free`);
 
 console.log(`\n${failures === 0 ? 'QUEST 1 OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

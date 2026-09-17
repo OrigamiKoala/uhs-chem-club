@@ -9,13 +9,15 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
 ## Build and Run
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
-- `npm run verify` — `verify:quest` + `verify:geometry` + `verify:flows` + `build`. Run this before shipping.
+- `npm run verify` — `verify:quest` + `verify:geometry` + `verify:media` + `verify:flows` + `build`. Run this before shipping.
 - `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below).
 - `npm run verify:geometry` — runs all 20 reaction animations headlessly and checks the chemistry
   on screen (see "Chemical realism" below). `--verbose` prints atom positions at every step.
+- `npm run verify:media` — validates media manifest against assets and size budgets.
 - `npm run verify:flows` — end-to-end smoke test of the API a new student touches.
 - `npm run deploy:backend` — `clasp push` of `apps-script/`.
 - `npm run bake:stills` — regenerate the static SVG backdrops in `public/fallback/`.
+- `npm run bake:video` — encode raw MP4 clips in `assets-src/video/` to web-ready WebM, MP4, posters and audio.
 - `npm run seed` / `npm run test:load` — roster seeding and 40-user concurrency sim.
 
 ## Architecture
@@ -34,9 +36,19 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
   not return a real total).
 - `api.js` — thin POST wrapper; clears the session on `UNAUTHORIZED`.
 - `ui/layout.js` — `pageHeader`, `statRow`, `stepRail`, `emptyState`, `esc`. **Every screen
-  builds its header from `pageHeader`**; do not hand-roll banner/title markup.
+  builds its header from `pageHeader`**; do not hand-roll banner/title markup. Supports ambient
+  video loops via `video` parameter.
 - `ui/modal.js` — `showModal` / `closeModal`, with focus handling and Escape to dismiss.
 - `ui/toast.js` — transient messages; the `type` maps to `.toast-success/-error/-warning/-info`.
+- `ui/transmission.js` — diegetic CRT transmission typewriter component with Vess murmur.
+- `ui/gardens-map.js` — 20-pylon status visualization for Bridge and Quest screen HUD.
+- `ui/cinematic.js` — fullscreen cinematic player with subtitles and T1 / reduced-motion fallback.
+- `audio/soundscape.js` — zero-dependency Web Audio procedural soundscape (engine bed, room tints,
+  relays, bond snaps, Vess murmur, volume controls).
+- `story/quest1.js` — single source of truth for Quest 1 narrative, pylon communications, onClear logs,
+  and milestone cutscenes.
+- `story/trinkets.js` — Session Zero deterministic d20 cosmetic trinkets and character backgrounds.
+- `media/manifest.js` — media manifest mapping 19 loops and cinematics with WebM, MP4, posters, and captions.
 - `screens/` — one render function per route, all pure string templates.
 - `three/` — persistent WebGL stage, quality-tier probe (T3/T2/T1), ship interior, camera rig.
 - `quest3d/` — reusable containment chamber, `MOLECULE_DATA` (atoms, bonds and the
@@ -170,6 +182,10 @@ letters are unique, readings are 0–10, no decoy giver scans stronger than the 
 clearance, every stage has exactly three distinct hint rungs, and a giver→giver submission
 is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
+## Plans in flight
+- `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
+  Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
+
 ## Player journey
 1. `#/` landing — what this is, three cards (Play / Score / Compete), and a free sample.
 2. `#/demo` — Stage 1 for real, no account, graded by the same evaluator.
@@ -254,7 +270,8 @@ gradient buttons with white specular highlights; rounded corners (`--radius-sm` 
 
 ### 7. Copy discipline
 The interface does not advertise itself. Delete any string that is not (a) a label,
-(b) a rule the player must satisfy, (c) an error, or (d) something being taught.
+(b) a rule the player must satisfy, (c) an error, (d) something being taught, or
+(e) story — copy that builds the campaign fiction.
 - **No feature marketing.** The landing page is a name plate and two switches.
 - **A quest is described by three things and nothing else**: where it happens, its title,
   and one short line. Sector 01 is `Erebus · Desert world / The Charge Gardens / "Find
@@ -263,6 +280,18 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **The teaching copy is exempt.** Prompts, `scans`, the three hint rungs, `diagnoseMiss`
   messages, concept cards and the epilogue are the product; they are trimmed for
   tightness, never for length.
+- **Story copy is exempt too**, if it builds the fiction rather than describing the
+  product. This covers Vess's transmissions and `onClear` lines, Session Zero scenes,
+  guild pitches, mission-log entries, Fleet Comms intercepts and item provenance. It lives
+  in `src/story/`. Limits:
+  - Every line is diegetic: a character speaking, or the ship or the world reporting.
+    It never talks about "the app", "levels" or "features".
+  - A transmission is at most 2 sentences.
+  - No withheld vocabulary. That list is enforced for story copy exactly as for teaching copy.
+  - It never states a stage's route (which site gives, which takes). That belongs to the
+    scans.
+  - It never appears between a miss and its `diagnoseMiss` message, or over a reaction
+    animation.
 
 ### 8. 3D and assets
 - Nano Banana (`generate_image`) matte textures with Three.js procedural geometry and

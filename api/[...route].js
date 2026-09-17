@@ -245,8 +245,10 @@ function localDevHandler(route, body) {
     }
 
     const teamSlots = localStore.teams.map(t => {
-      const count = localStore.players.filter(p => p.team_id === t.team_id).length;
-      return { ...t, count, available: Math.max(0, t.cap - count) };
+      const members = localStore.players
+        .filter(p => normalizeTeam(p.team_id) === t.team_id && p.status !== 'banned')
+        .map(p => ({ display_name: p.display_name || 'Crew Member', trinket: p.trinket || '' }));
+      return { ...t, count: members.length, available: Math.max(0, t.cap - members.length), members };
     });
 
     return {
@@ -282,6 +284,23 @@ function localDevHandler(route, body) {
     };
   }
 
+  if (route === 'team/roster') {
+    const teamId = normalizeTeam(body.teamId);
+    const members = (localStore.players || [])
+      .filter(p => normalizeTeam(p.team_id) === teamId && p.status !== 'banned')
+      .map(p => ({
+        display_name: p.display_name || 'Crew Member',
+        trinket: p.trinket || ''
+      }));
+    return {
+      ok: true,
+      data: {
+        team_id: teamId,
+        members
+      }
+    };
+  }
+
   if (route === 'player/create') {
     let pid = 'p_demo';
     if (body.token) {
@@ -295,11 +314,18 @@ function localDevHandler(route, body) {
       p.role = '';
       p.team_id = teamId;
       p.avatar_json = typeof body.avatar === 'object' ? JSON.stringify(body.avatar) : (body.avatar || p.avatar_json);
+      if (body.background) p.background = body.background;
+      if (body.trinket) {
+        p.trinket = body.trinket;
+        if (!localStore.inventory.find(i => i.player_id === p.player_id && i.item_id === body.trinket)) {
+          localStore.inventory.push({ inv_id: `inv_${Date.now()}`, player_id: p.player_id, item_id: body.trinket, qty: 1 });
+        }
+      }
     }
     return {
       ok: true,
       data: {
-        player: p || { player_id: pid, role: '', team_id: teamId },
+        player: p || { player_id: pid, role: '', team_id: teamId, background: body.background || '', trinket: body.trinket || '' },
         team: localStore.teams.find(t => t.team_id === teamId),
         xp: 0,
         level: 1

@@ -14,6 +14,11 @@ import { showToast } from '../ui/toast.js';
 import { showModal, closeModal } from '../ui/modal.js';
 import { esc } from '../ui/layout.js';
 import { STAGE_CONFIGS, evaluateStageLocally, diagnoseMiss, TOTAL_STAGES, TOTAL_QUEST_XP } from '../quest3d/evaluator.js';
+import { soundscape } from '../audio/soundscape.js';
+import { playCinematic } from '../ui/cinematic.js';
+import { renderGardensMap } from '../ui/gardens-map.js';
+import { createTransmissionElement } from '../ui/transmission.js';
+import { QUEST1_STORY } from '../story/quest1.js';
 
 const QUEST_ID = 'q1';
 
@@ -109,9 +114,9 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
 
   showModal(`
     <div style="text-align: center; margin-bottom: 1.25rem;">
-      <div class="eyebrow lit">Stage ${currentStageIdx + 1} of ${TOTAL_STAGES}</div>
+      <div class="eyebrow lit">Pylon ${currentStageIdx + 1} of ${TOTAL_STAGES}</div>
       <h2 id="stage-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.3rem;">
-        ${esc(cfg.title || ('Stage ' + (currentStageIdx + 1)))}
+        Pylon ${currentStageIdx + 1} · ${esc(cfg.title || ('Pylon ' + (currentStageIdx + 1)))}
       </h2>
       <div style="margin-top: 0.4rem;">
         ${isReplay ? '<span class="tag">Replay · XP already earned</span>' : `<span class="tag live">+${stageXp} XP</span>`}
@@ -121,6 +126,15 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
     <div style="background: var(--plate-100); border: 1px solid var(--border-durasteel); padding: 1rem 1.15rem; margin-bottom: 1.25rem; font-size: 0.95rem; line-height: 1.55; color: var(--text-bright);">
       ${cfg.prompt ? esc(cfg.prompt) : 'Connect the molecules to trigger the reaction.'}
     </div>
+
+    ${currentStageIdx === 0 ? `
+      <div class="cold-open-box" style="margin-bottom: 1.25rem; padding: 0.8rem 1rem; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
+        <div class="eyebrow lit" style="margin-bottom: 0.3rem;">VESS // SCANNER CALIBRATION</div>
+        <p style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent-gold); margin: 0;">
+          "Tap anything that glows. Tell me what the needle says."
+        </p>
+      </div>
+    ` : ''}
 
     ${isMulti ? `
       <div style="background: var(--plate-200); border-left: 2px solid var(--accent-amber); padding: 8px 12px; margin-bottom: 1.25rem; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45;">
@@ -132,7 +146,7 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
 
     <div style="margin-top: 1.25rem;">
       <button type="button" id="modal-start-stage-btn" class="btn-primary" style="width: 100%; padding: 10px 0; font-size: 0.9rem;">
-        Start Stage
+        Power Pylon ${currentStageIdx + 1}
       </button>
     </div>
   `, { labelledBy: 'stage-modal-title' });
@@ -172,6 +186,7 @@ export function renderQuest(container) {
   let hintUsed = false;
   let stageStartTime = Date.now();
   let viewer = null;
+  let activeTransmission = null;
 
   // Per-stage, reset by loadStage.
   let misses = 0;
@@ -193,6 +208,10 @@ export function renderQuest(container) {
     if (advanceTimer) {
       clearTimeout(advanceTimer);
       advanceTimer = null;
+    }
+    if (activeTransmission?.destroy) {
+      activeTransmission.destroy();
+      activeTransmission = null;
     }
     isAdvancing = false;
     isGrading = false;
@@ -259,6 +278,11 @@ export function renderQuest(container) {
     // otherwise the "+N XP" tag contradicts the grading result.
     const stageXp = localCfg.xp || stageMeta.xp || 20;
 
+    const pylonStory = QUEST1_STORY.pylons[currentStageIdx];
+    const initialText = currentStageIdx === 0
+      ? (QUEST1_STORY.guildOpeners[session.guild] || QUEST1_STORY.guildOpeners.neutral)
+      : (pylonStory?.transmission || 'Calibrate your sensors.');
+
     // 1. Render Quest HUD Overlay
     container.innerHTML = `
       <div id="quest-screen-flash" class="quest-screen-flash"></div>
@@ -292,6 +316,11 @@ export function renderQuest(container) {
             </div>
           </div>
 
+          <!-- Compact Gardens Relay Grid -->
+          <div class="quest-gardens-slot">
+            ${renderGardensMap({ clearedCount: maxStageReached, currentStageIdx, compact: true })}
+          </div>
+
           <!-- Density Legend -->
           <div class="colormap-legend" style="min-width: 168px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.62rem; letter-spacing: 0.16em;">
@@ -305,6 +334,9 @@ export function renderQuest(container) {
         <!-- Bottom Stage Deck -->
         <div class="stage-card-wrap">
           <div class="stage-prompt-card" id="stage-card">
+            <!-- Vess Comms Transmission Card -->
+            <div id="quest-transmission-slot" style="margin-bottom: 0.5rem;"></div>
+
             <div class="stage-header" style="margin-bottom: 0.4rem; padding-bottom: 0.4rem;">
               <div style="display: flex; align-items: center; gap: 0.6rem;">
                 <span class="stage-title">${cfg.title || ('Stage ' + (currentStageIdx + 1))}</span>
@@ -348,6 +380,13 @@ export function renderQuest(container) {
         </div>
       </div>
     `;
+
+    // Mount Vess transmission
+    activeTransmission = createTransmissionElement({
+      speaker: 'VESS // COMMS',
+      text: initialText
+    });
+    container.querySelector('#quest-transmission-slot')?.appendChild(activeTransmission.element);
 
     // Briefing modal only for genuinely new mechanics — every other stage starts
     // immediately. The Objective button above reopens it on demand.
@@ -523,6 +562,9 @@ export function renderQuest(container) {
           gradeBtn.disabled = true;
           gradeBtn.textContent = 'Reacting…';
 
+          soundscape.playBondSnap();
+          soundscape.playPylonWake();
+
           // XP is paid once per stage. Replays are free to practise but pay nothing,
           // otherwise the Prev button would be an infinite XP button.
           const awarded = isReplay ? 0 : res.xpAwarded;
@@ -551,10 +593,12 @@ export function renderQuest(container) {
             if (feedback) {
               feedback.className = 'stage-error-banner stage-success-banner';
               const explanation = cfg.reaction?.explanation || 'Bond created! The two regions snapped together.';
+              const clearStory = pylonStory?.onClear || '';
               feedback.innerHTML = `
                 <span class="banner-mark" aria-hidden="true">//</span>
                 <div style="flex: 1;">
-                  <div class="banner-title" style="color: var(--accent-green);">Reaction complete</div>
+                  <div class="banner-title" style="color: var(--accent-green);">Pylon ${currentStageIdx + 1} Awakened</div>
+                  ${clearStory ? `<div style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent-gold); margin-bottom: 0.35rem;">"${esc(clearStory)}"</div>` : ''}
                   <div class="banner-body">${explanation}</div>
                   <div class="banner-meta">
                     ${awarded > 0 ? `+${awarded} XP` : 'REPLAY · XP ALREADY EARNED'}${isCleanSolve && !isReplay ? ' · CLEAN SOLVE' : ''}
@@ -564,6 +608,20 @@ export function renderQuest(container) {
               `;
               const dismissBtn = feedback.querySelector('#dismiss-feedback-btn');
               if (dismissBtn) dismissBtn.addEventListener('click', clearFeedback);
+            }
+
+            // Update transmission to show Vess confirming pylon activation
+            if (pylonStory?.onClear) {
+              if (activeTransmission?.destroy) activeTransmission.destroy();
+              activeTransmission = createTransmissionElement({
+                speaker: 'VESS // RELAY ONLINE',
+                text: pylonStory.onClear
+              });
+              const transSlot = container.querySelector('#quest-transmission-slot');
+              if (transSlot) {
+                transSlot.innerHTML = '';
+                transSlot.appendChild(activeTransmission.element);
+              }
             }
 
             // The concept card is the payoff, not the briefing: it names the idea the
@@ -589,6 +647,7 @@ export function renderQuest(container) {
             advanceTimer = setTimeout(onReactionDone, 1200);
           }
         } else {
+          soundscape.playMissBuzzer();
           gradeBtn.disabled = false;
           gradeBtn.textContent = 'Submit';
           isGrading = false;
@@ -656,10 +715,21 @@ export function renderQuest(container) {
       }
     }
 
-    gradeBtn.addEventListener('click', () => {
+    gradeBtn.addEventListener('click', async () => {
       if (stageCompleted) {
         const targetStageIdx = currentStageIdx + 1;
         maxStageReached = Math.max(maxStageReached, targetStageIdx);
+
+        // Milestone cinematic check (Stage 7, 10, 20)
+        const milestoneStageNum = currentStageIdx + 1;
+        const milestone = QUEST1_STORY.milestones[milestoneStageNum];
+        if (milestone && !session.hasFlag(`milestone_${milestoneStageNum}`)) {
+          session.setFlag(`milestone_${milestoneStageNum}`, true);
+          gradeBtn.disabled = true;
+          await playCinematic(milestone.cinematic);
+          gradeBtn.disabled = false;
+        }
+
         if (targetStageIdx >= TOTAL_STAGES) {
           gradeBtn.disabled = true;
           gradeBtn.textContent = 'Wrapping up…';
@@ -675,6 +745,10 @@ export function renderQuest(container) {
   }
 
   async function showCompletionModal() {
+    if (!session.hasFlag('cinematic_debrief')) {
+      session.setFlag('cinematic_debrief', true);
+      await playCinematic(QUEST1_STORY.debrief.cinematic);
+    }
     // Never let a flaky network swallow the payoff: fall back to a local summary.
     let comp = null;
     try {

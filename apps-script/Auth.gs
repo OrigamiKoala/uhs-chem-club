@@ -228,6 +228,8 @@ function sanitizePlayer_(p) {
     team_id: p.team_id,
     avatar_json: p.avatar_json,
     gfx_tier_pref: p.gfx_tier_pref || 'auto',
+    background: p.background || '',
+    trinket: p.trinket || '',
     status: p.status,
     created_at: p.created_at
   };

@@ -8,6 +8,8 @@ const GFX_KEY = 'avalon_gfx_tier';
 const MOTION_KEY = 'avalon_motion_pref';
 const CONFIG_KEY = 'avalon_cached_config';
 const TEAMS_KEY = 'avalon_cached_teams';
+const SOUND_KEY = 'avalon_sound_pref';
+const FLAGS_KEY = 'avalon_flags';
 
 const ALIAS_MAP = { terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' };
 const PROPER_TEAM_NAMES = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
@@ -82,7 +84,16 @@ class SessionManager {
     this.activeQuest = null;
     this.gfxTier = localStorage.getItem(GFX_KEY) || 'auto';
     this.reduceMotion = localStorage.getItem(MOTION_KEY) === 'true';
+    this.sound = { master: 60, ambience: 60, effects: 60, muted: false };
+    this.flags = { sessionZeroDone: false };
     this.listeners = new Set();
+
+    try {
+      const s = localStorage.getItem(SOUND_KEY);
+      if (s) this.sound = { ...this.sound, ...JSON.parse(s) };
+      const f = localStorage.getItem(FLAGS_KEY);
+      if (f) this.flags = { ...this.flags, ...JSON.parse(f) };
+    } catch (e) {}
 
     // Restore cached config & teams
     try {
@@ -304,6 +315,18 @@ class SessionManager {
   setReduceMotion(pref) {
     this.reduceMotion = Boolean(pref);
     localStorage.setItem(MOTION_KEY, String(this.reduceMotion));
+    this.notify();
+  }
+
+  setSound(updates = {}) {
+    this.sound = { ...this.sound, ...updates };
+    try { localStorage.setItem(SOUND_KEY, JSON.stringify(this.sound)); } catch (e) {}
+    this.notify();
+  }
+
+  setFlag(key, val) {
+    this.flags[key] = val;
+    try { localStorage.setItem(FLAGS_KEY, JSON.stringify(this.flags)); } catch (e) {}
     this.notify();
   }
 

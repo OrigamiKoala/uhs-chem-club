@@ -101,7 +101,14 @@ var ROUTES = {
   'player/create': {
     auth: true,
     fn: function(body, ctx) {
-      return Players.claimTeamSlot(ctx.player.player_id, body.role, body.teamId, body.avatar);
+      return Players.claimTeamSlot(ctx.player.player_id, body.role, body.teamId, body.avatar, body.background, body.trinket);
+    }
+  },
+
+  'team/roster': {
+    auth: false,
+    fn: function(body) {
+      return Players.getTeamRoster(body.teamId);
     }
   },
 

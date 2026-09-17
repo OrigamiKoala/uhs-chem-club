@@ -5,6 +5,7 @@
 import { session } from './session.js';
 import { stage } from './three/stage.js';
 import { closeModal } from './ui/modal.js';
+import { soundscape } from './audio/soundscape.js';
 
 import { renderLanding } from './screens/landing.js';
 import { renderRegister } from './screens/register.js';
@@ -19,6 +20,24 @@ import { renderInventory } from './screens/inventory.js';
 import { renderQuarters } from './screens/quarters.js';
 import { renderSettings } from './screens/settings.js';
 import { renderAdmin } from './screens/admin.js';
+
+const ROUTE_ROOM = {
+  '/': 'cockpit',
+  '/login': 'cockpit',
+  '/register': 'cockpit',
+  '/onboarding': 'cockpit',
+  '/bridge': 'bridge',
+  '/starmap': 'starmap',
+  '/quest': 'quest',
+  '/demo': 'quest',
+  '/inventory': 'cargo',
+  '/cargo': 'cargo',
+  '/quarters': 'quarters',
+  '/settings': 'quarters',
+  '/leaderboard': 'comms',
+  '/comms': 'comms',
+  '/admin': 'bridge'
+};
 
 const ROUTE_BACKDROPS = {
   '/': '/art/cockpit.jpg',
@@ -129,6 +148,9 @@ export class Router {
     if (raw !== '/quest' && raw !== '/demo' && stage.mode === 'quest') {
       stage.exitQuestScene();
     }
+
+    // Crossfade soundscape room ambient bed
+    soundscape.setRoom(ROUTE_ROOM[raw] || 'bridge');
 
     // Update fallback backdrop for T1
     const backdropEl = document.getElementById('fallback-backdrop');

@@ -7,15 +7,22 @@
 
 /**
  * Standard screen header: banner art, kicker, title, one-line subtitle, actions.
- * @param {{art?: string, artAlt?: string, eyebrow?: string, title: string, subtitle?: string, actions?: string, tall?: boolean}} opts
+ * @param {{art?: string, video?: string, artAlt?: string, eyebrow?: string, title: string, subtitle?: string, actions?: string, tall?: boolean}} opts
  */
 export function pageHeader(opts = {}) {
-  const { art, artAlt = '', eyebrow, title, subtitle, actions, tall } = opts;
+  const { art, video, artAlt = '', eyebrow, title, subtitle, actions, tall } = opts;
   return `
     <header class="glass-panel page-header">
-      ${art ? `
+      ${(art || video) ? `
         <div class="panel-banner ${tall ? 'tall' : ''}">
-          <img src="${art}" alt="${artAlt}" loading="lazy" />
+          ${video ? `
+            <video class="banner-video" poster="${art || ''}" playsinline autoplay loop muted preload="none">
+              <source src="${video}" type="video/webm">
+              <source src="${video.replace(/\.webm$/, '.mp4')}" type="video/mp4">
+            </video>
+          ` : `
+            <img src="${art}" alt="${artAlt}" loading="lazy" />
+          `}
         </div>
       ` : ''}
       <div class="page-header-body">

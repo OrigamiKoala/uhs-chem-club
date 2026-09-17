@@ -8,8 +8,11 @@ import { tierManager } from '../three/tier.js';
 import { showToast } from '../ui/toast.js';
 import { pageHeader } from '../ui/layout.js';
 import { bindPasswordReveal } from './register.js';
+import { soundscape } from '../audio/soundscape.js';
 
 export function renderSettings(container) {
+  const soundPrefs = session.sound;
+
   container.innerHTML = `
     <div class="screen-container" style="max-width: 680px;">
       ${pageHeader({
@@ -54,7 +57,43 @@ export function renderSettings(container) {
         </div>
       </div>
 
-      <!-- Section 2: Change Password -->
+      <!-- Section 2: Audio Systems -->
+      <div class="glass-panel" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+          <h2 class="section-title" style="margin: 0;">Audio Systems</h2>
+          <button type="button" id="audio-mute-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 14px;">
+            ${soundPrefs.muted ? 'UNMUTE SOUND' : 'MUTE SOUND'}
+          </button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
+              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Master Volume</span>
+              <span id="val-master" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.masterVolume * 100)}%</span>
+            </div>
+            <input type="range" id="slider-master" min="0" max="100" value="${Math.round(soundPrefs.masterVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
+              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Ambience & Engine Hum</span>
+              <span id="val-ambience" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.ambienceVolume * 100)}%</span>
+            </div>
+            <input type="range" id="slider-ambience" min="0" max="100" value="${Math.round(soundPrefs.ambienceVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
+              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Effects & Foley</span>
+              <span id="val-effects" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.effectsVolume * 100)}%</span>
+            </div>
+            <input type="range" id="slider-effects" min="0" max="100" value="${Math.round(soundPrefs.effectsVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Change Password -->
       <div class="glass-panel">
         <h2 class="section-title">Change Password</h2>
         <form id="pw-form">
@@ -94,6 +133,38 @@ export function renderSettings(container) {
       showToast(`Graphics: ${e.target.value}`, 'info');
       renderSettings(container);
     });
+  });
+
+  // Audio controls
+  const muteBtn = container.querySelector('#audio-mute-btn');
+  muteBtn?.addEventListener('click', () => {
+    const isMuted = soundscape.toggleMute();
+    muteBtn.textContent = isMuted ? 'UNMUTE SOUND' : 'MUTE SOUND';
+    showToast(isMuted ? 'Audio muted.' : 'Audio unmuted.', 'info');
+  });
+
+  const masterSlider = container.querySelector('#slider-master');
+  const masterVal = container.querySelector('#val-master');
+  masterSlider?.addEventListener('input', (e) => {
+    const val = Number(e.target.value) / 100;
+    soundscape.setMasterVolume(val);
+    if (masterVal) masterVal.textContent = `${e.target.value}%`;
+  });
+
+  const ambSlider = container.querySelector('#slider-ambience');
+  const ambVal = container.querySelector('#val-ambience');
+  ambSlider?.addEventListener('input', (e) => {
+    const val = Number(e.target.value) / 100;
+    soundscape.setAmbienceVolume(val);
+    if (ambVal) ambVal.textContent = `${e.target.value}%`;
+  });
+
+  const effSlider = container.querySelector('#slider-effects');
+  const effVal = container.querySelector('#val-effects');
+  effSlider?.addEventListener('input', (e) => {
+    const val = Number(e.target.value) / 100;
+    soundscape.setEffectsVolume(val);
+    if (effVal) effVal.textContent = `${e.target.value}%`;
   });
 
   // Motion checkbox

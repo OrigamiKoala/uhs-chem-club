@@ -62,8 +62,21 @@ const cached = await call('auth/login', { identifier: 'AstraNova', password: 'co
 check('cached-salt login works', cached.json.ok === true);
 
 console.log('\nteam selection');
-const team = await call('player/create', { token, teamId: 'fire', avatar: { visor: 'gold' } });
+const team = await call('player/create', {
+  token,
+  teamId: 'fire',
+  avatar: { visor: 'gold' },
+  background: 'salvager',
+  trinket: 'trinket_1'
+});
 check('claims team', team.json.ok === true && team.json.data.team.team_id === 'fire');
+check('saves background', team.json.data.player.background === 'salvager');
+check('saves trinket', team.json.data.player.trinket === 'trinket_1');
+check('cosmetic background and trinket grant zero xp', team.json.data.xp === 0);
+
+const roster = await call('team/roster', { teamId: 'fire' });
+check('returns team roster with trinkets', Array.isArray(roster.json.data.members) && roster.json.data.members.some(m => m.display_name === 'AstraNova' && m.trinket === 'trinket_1'));
+
 const legacy = await call('player/create', { token, teamId: 'ignis' });
 check('legacy alias normalizes to fire', legacy.json.data.team.team_id === 'fire');
 

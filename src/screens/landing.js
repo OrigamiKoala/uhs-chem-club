@@ -1,13 +1,16 @@
 /**
- * landing.js — Front door.
+ * landing.js — Front door & Scene 0 Cold Open.
  *
- * The ship's name plate and two switches. A visitor who wants to know what this
- * is presses the free puzzle; nothing here needs to argue for itself.
+ * An unauthenticated visitor lands directly into the Avalon cold open:
+ * CRT powers on, Vess speaks over comms:
+ * "Signal's weak out here. If you can read this, the Avalon's still hiring."
+ * Two switches: Sign On (#/register) and Try a Pylon (#/demo).
  */
 
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { esc } from '../ui/layout.js';
+import { soundscape } from '../audio/soundscape.js';
 
 export function renderLanding(container) {
   if (stage.cameraRig) {
@@ -17,6 +20,7 @@ export function renderLanding(container) {
   const isAuthed = session.token && session.player;
   const p = session.player || {};
   const t = session.team || {};
+  const isMuted = session.sound?.muted;
 
   container.innerHTML = `
     <div class="screen-container" style="max-width: 560px;">
@@ -26,36 +30,54 @@ export function renderLanding(container) {
           <img src="/art/cockpit.jpg" alt="" />
         </div>
 
-        <div style="padding: 1.9rem 1.9rem 2rem; text-align: center;">
-          <div class="eyebrow">UHS Chemistry Club</div>
-          <h1 style="font-family: var(--font-imperial); font-size: 2.4rem; letter-spacing: 0.34em; font-weight: 700; margin: 0.5rem 0 0 0.34em; color: var(--text-bright); text-shadow: var(--engrave);">
+        <div style="padding: 1.8rem 1.8rem 2rem; text-align: center;">
+          <div class="eyebrow">Sector 01 · Salvage Hauler Avalon</div>
+          <h1 style="font-family: var(--font-imperial); font-size: 2.3rem; letter-spacing: 0.32em; font-weight: 700; margin: 0.4rem 0 0 0.32em; color: var(--text-bright); text-shadow: var(--engrave);">
             AVALON
           </h1>
-          <div style="height: 1px; background: linear-gradient(90deg, transparent, var(--border-durasteel) 25%, var(--border-durasteel) 75%, transparent); margin: 1rem 0 0.9rem;"></div>
+          <div style="height: 1px; background: linear-gradient(90deg, transparent, var(--border-durasteel) 25%, var(--border-durasteel) 75%, transparent); margin: 0.9rem 0 0.85rem;"></div>
 
-          <p class="page-sub" style="margin: 0 auto 1.9rem; max-width: 34ch;">
-            ${isAuthed
-              ? `${esc(p.display_name || 'Explorer')} — ${esc(t.name || t.team_id || 'no guild')}`
-              : 'Puzzles you solve by drawing. No chemistry required.'}
-          </p>
+          ${isAuthed ? `
+            <p class="page-sub" style="margin: 0 auto 1.75rem; max-width: 34ch;">
+              ${esc(p.display_name || 'Crew')} — ${esc(t.name || t.team_id || 'unassigned')}
+            </p>
 
-          <div style="display: flex; flex-direction: column; gap: 0.6rem; max-width: 280px; margin: 0 auto;">
-            ${isAuthed ? `
+            <div style="display: flex; flex-direction: column; gap: 0.65rem; max-width: 280px; margin: 0 auto;">
               <a href="${session.teamId ? '#/bridge' : '#/onboarding'}" class="btn-primary" style="text-decoration: none;">
                 ${session.teamId ? 'Bridge' : 'Choose Guild'}
               </a>
-              <a href="#/leaderboard" class="btn-secondary" style="text-decoration: none;">Standings</a>
+              <a href="#/leaderboard" class="btn-secondary" style="text-decoration: none;">Fleet Comms</a>
               <button type="button" id="landing-signout-btn" class="btn-secondary" style="color: var(--text-muted); border-style: dashed;">
                 Sign Out
               </button>
-            ` : `
-              <a href="#/register" class="btn-primary" style="text-decoration: none;">Create Account</a>
-              <a href="#/demo" class="btn-secondary" style="text-decoration: none;">Try One Puzzle</a>
-              <div style="font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; color: var(--text-muted); margin-top: 0.4rem;">
-                <a href="#/login" class="link-accent">Sign in</a>
+            </div>
+          ` : `
+            <!-- Scene 0: Cold Open Comms Transmission -->
+            <div class="cold-open-box" style="margin-bottom: 1.6rem; text-align: left; padding: 1rem 1.1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                <span class="eyebrow lit">VESS // QUARTERMASTER</span>
+                <span class="tag live" style="font-size: 0.6rem;">COMMS LIVE</span>
               </div>
-            `}
-          </div>
+              <p style="font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--accent-gold); margin: 0;">
+                "Signal's weak out here. If you can read this, the Avalon's still hiring."
+              </p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.65rem; max-width: 280px; margin: 0 auto;">
+              <a href="#/register" class="btn-primary" id="sign-on-cta" style="text-decoration: none;">
+                Sign On
+              </a>
+              <a href="#/demo" class="btn-secondary" style="text-decoration: none;">
+                Try a Pylon
+              </a>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.8rem; font-family: var(--font-mono); font-size: 0.72rem;">
+                <a href="#/login" class="link-accent">Sign in</a>
+                <button type="button" id="landing-sound-btn" class="btn-chip" style="font-size: 0.65rem;">
+                  ${isMuted ? '// SOUND OFF' : '// SOUND ON'}
+                </button>
+              </div>
+            </div>
+          `}
         </div>
 
       </div>
@@ -67,6 +89,17 @@ export function renderLanding(container) {
     signoutBtn.addEventListener('click', () => {
       session.clear();
       renderLanding(container);
+    });
+  }
+
+  const landingSoundBtn = container.querySelector('#landing-sound-btn');
+  if (landingSoundBtn) {
+    landingSoundBtn.addEventListener('click', () => {
+      const nextMuted = !session.sound?.muted;
+      session.setSound({ muted: nextMuted });
+      landingSoundBtn.textContent = nextMuted ? '// SOUND OFF' : '// SOUND ON';
+      landingSoundBtn.classList.toggle('warn', nextMuted);
+      if (!nextMuted) soundscape.playToggleClack();
     });
   }
 }

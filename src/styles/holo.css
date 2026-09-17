@@ -670,6 +670,337 @@
 }
 
 /* ===================================================================
+   GARDENS MAP (20-PYLON RELAY GRID)
+   =================================================================== */
+.gardens-map {
+  background: var(--plate-200);
+  border: 1px solid var(--border-durasteel);
+  border-left: 2px solid var(--accent-amber);
+  padding: 0.85rem 1rem;
+}
+
+.gardens-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pylon-grid {
+  display: grid;
+  grid-template-columns: repeat(20, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.pylon-node {
+  height: 28px;
+  background: var(--plate-100);
+  border: 1px solid var(--border-durasteel);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+.pylon-node.milestone {
+  border-color: var(--accent-gold);
+}
+
+.pylon-filament {
+  width: 4px;
+  height: 8px;
+  border-radius: 1px;
+  background: var(--plate-500);
+  transition: all 0.25s ease;
+}
+
+.pylon-node.dark .pylon-filament {
+  background: #2a2520;
+}
+
+.pylon-node.active {
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 8px rgba(224, 150, 48, 0.4);
+}
+
+.pylon-node.active .pylon-filament {
+  background: var(--accent-amber);
+  box-shadow: 0 0 6px var(--accent-amber);
+  animation: filament-pulse 1.5s infinite alternate;
+}
+
+.pylon-node.lit {
+  border-color: var(--accent-green);
+}
+
+.pylon-node.lit .pylon-filament {
+  background: var(--accent-green);
+  box-shadow: 0 0 6px var(--accent-green);
+}
+
+.pylon-num {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+@keyframes filament-pulse {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+/* Compact version for Quest HUD */
+.gardens-map.compact {
+  padding: 4px 8px;
+  background: var(--plate-100);
+  border-left: 1px solid var(--border-durasteel);
+}
+
+.gardens-map.compact .gardens-header {
+  margin-bottom: 2px;
+}
+
+.gardens-map.compact .gardens-header .eyebrow {
+  font-size: 0.55rem;
+}
+
+.gardens-map.compact .pylon-grid {
+  gap: 2px;
+}
+
+.gardens-map.compact .pylon-node {
+  height: 12px;
+  min-width: 6px;
+}
+
+.gardens-map.compact .pylon-filament {
+  width: 2px;
+  height: 6px;
+}
+
+/* ===================================================================
+   DIEGETIC TRANSMISSION COMPONENT
+   =================================================================== */
+.transmission-card {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.65rem 0.85rem;
+  background: var(--plate-200);
+  border: 1px solid var(--border-durasteel);
+  border-left: 2px solid var(--accent-amber);
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+
+.transmission-crt {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  background: #0d0c0a;
+  border: 1px solid var(--border-durasteel);
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.transmission-silhouette {
+  position: absolute;
+  inset: 4px;
+  background: radial-gradient(circle, var(--accent-amber) 30%, transparent 70%);
+  opacity: 0.4;
+  mask-image: radial-gradient(circle, black 40%, transparent 80%);
+}
+
+.transmission-raster {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.4) 3px
+  );
+  pointer-events: none;
+}
+
+.transmission-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.transmission-speaker {
+  font-size: 0.62rem;
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.16em;
+}
+
+.transmission-text {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--accent-gold);
+}
+
+.transmission-text::after {
+  content: '▋';
+  display: inline-block;
+  margin-left: 2px;
+  animation: crt-cursor 0.8s infinite;
+  color: var(--accent-amber);
+}
+
+.transmission-card.finished .transmission-text::after {
+  display: none;
+}
+
+@keyframes crt-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.transmission-skip-hint {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+  opacity: 0.6;
+}
+
+/* ===================================================================
+   CINEMATIC FULLSCREEN PLAYER
+   =================================================================== */
+.cinematic-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(8, 7, 6, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 1rem;
+}
+
+.cinematic-frame {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border: 1px solid var(--border-durasteel);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+}
+
+.cinematic-video,
+.cinematic-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cinematic-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.3) 4px
+  );
+  pointer-events: none;
+}
+
+.cinematic-caption-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(14, 12, 10, 0.88);
+  border-top: 1px solid var(--border-durasteel);
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  color: var(--accent-gold);
+  text-align: center;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cinematic-skip-cue {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ===================================================================
+   3D DICE & COMMIT CONTROLS
+   =================================================================== */
+.dice-wrap {
+  perspective: 600px;
+}
+
+.dice-cube {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  transform-style: preserve-3d;
+  transition: transform 0.1s linear;
+}
+
+.dice-face {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  background: var(--plate-200);
+  border: 2px solid var(--accent-gold);
+  color: var(--accent-gold);
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 10px rgba(195, 154, 99, 0.3);
+}
+
+.hold-commit-btn {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+.hold-progress-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(224, 150, 48, 0.3);
+  pointer-events: none;
+  transition: width 0.05s linear;
+}
+
+/* ===================================================================
    SMALL SCREENS
    =================================================================== */
 @media (max-width: 760px) {

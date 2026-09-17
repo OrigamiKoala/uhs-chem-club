@@ -33,9 +33,10 @@ export async function renderLeaderboard(container) {
       <div class="screen-container">
         ${pageHeader({
           art: '/art/comms.jpg',
+          video: 'comms_sweep',
           artAlt: 'Comms array',
-          eyebrow: 'Fleet standings',
-          title: 'Standings',
+          eyebrow: 'Sector 01 Comms & Standings',
+          title: 'Fleet Comms',
           actions: `
             <div style="display: flex; gap: 0.5rem;" role="tablist" aria-label="Standings view">
               <button type="button" id="tab-teams" role="tab" aria-selected="${activeTab === 'teams'}"
@@ -49,6 +50,36 @@ export async function renderLeaderboard(container) {
             </div>
           `
         })}
+
+        <!-- Intercepted Comms Chatter -->
+        <div class="glass-panel" style="margin-bottom: 1.25rem; padding: 0.85rem 1.1rem; border-left: 2px solid var(--accent-amber);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span class="eyebrow lit" style="font-size: 0.65rem;">INTERCEPTED FLEET CHATTER // SECTOR 01</span>
+            <span class="tag live" style="font-size: 0.62rem;">ENCRYPTED COMM LINK</span>
+          </div>
+          <div class="comms-ticker" style="display: flex; flex-direction: column; gap: 0.35rem; font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-secondary);">
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+              <span style="color: var(--accent-amber);">[04:12]</span>
+              <span style="color: var(--team-fire);">Thermal Smelters:</span>
+              <span>"Core temp nominal on Pylon 12. Transfer arc locked."</span>
+            </div>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+              <span style="color: var(--accent-amber);">[04:08]</span>
+              <span style="color: var(--team-earth);">Mineral Mining:</span>
+              <span>"Conduit 7 cleared. Heavy silt dredged from lower manifold."</span>
+            </div>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+              <span style="color: var(--accent-amber);">[03:59]</span>
+              <span style="color: var(--team-water);">Moisture Rigs:</span>
+              <span>"Pressure needle holding at Relay 8. Basin moisture rising."</span>
+            </div>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+              <span style="color: var(--accent-amber);">[03:44]</span>
+              <span style="color: var(--team-air);">Atmospheric Crew:</span>
+              <span>"Squall clearing west of the dune rim. Field visibility 80%."</span>
+            </div>
+          </div>
+        </div>
 
         ${loading && !hasData ? `
           <div class="glass-panel empty-state">

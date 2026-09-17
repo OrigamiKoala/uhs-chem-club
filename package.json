@@ -11,10 +11,12 @@
     "seed": "node tools/seed.mjs",
     "test:load": "node tools/loadtest.mjs",
     "bake:stills": "node tools/bake-stills.mjs",
+    "bake:video": "bash tools/bake-video.sh",
     "verify:quest": "node tools/verify-stages.mjs",
     "verify:flows": "node tools/verify-flows.mjs",
     "verify:geometry": "node tools/verify-geometry.mjs",
-    "verify": "npm run verify:quest && npm run verify:geometry && npm run verify:flows && npm run build"
+    "verify:media": "node tools/verify-media.mjs",
+    "verify": "npm run verify:quest && npm run verify:geometry && npm run verify:media && npm run verify:flows && npm run build"
   },
   "dependencies": {
     "three": "^0.174.0"
