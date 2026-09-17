@@ -159,7 +159,7 @@ export const QUEST1_STORY = {
   },
 
   debrief: {
-    cinematic: 'gardens_restored',
+    cinematic: 'item_award',
     speaker: 'VESS // QUARTERMASTER',
     badge: 'MISSION COMPLETE · SECTOR 01',
     subtitle: 'THE CHARGE GARDENS // RESTORATION CONFIRMED',

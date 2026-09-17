@@ -847,9 +847,9 @@ export function renderQuest(container) {
   }
 
   async function showCompletionModal() {
-    if (!session.hasFlag('cinematic_debrief')) {
-      session.setFlag('cinematic_debrief', true);
-      await playCinematic(QUEST1_STORY.debrief.cinematic);
+    if (!session.hasFlag('cinematic_item_award')) {
+      session.setFlag('cinematic_item_award', true);
+      await playCinematic(QUEST1_STORY.debrief.cinematic || 'item_award');
     }
     // Never let a flaky network swallow the payoff: fall back to a local summary.
     let comp = null;

@@ -46,7 +46,7 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
 - `audio/soundscape.js` — zero-dependency Web Audio procedural soundscape (room tints,
   relays, bond snaps, Vess murmur, volume controls; continuous drone disabled).
 - `story/quest1.js` — single source of truth for Quest 1 narrative, pylon communications, onClear logs,
-  and cinematic cutscenes (`cold_open` in onboarding, `launch`, `erebus_descent`, `pylon_wake`, `gardens_restored`).
+  and cinematic cutscenes (`cold_open` in onboarding, `launch`, `erebus_descent`, `pylon_wake`, `gardens_restored`, `item_award`).
 - `story/trinkets.js` — Session Zero deterministic d20 cosmetic trinkets and character backgrounds.
 - `media/manifest.js` — media manifest mapping 19 loops and cinematics with WebM, MP4, posters, and captions.
 - `screens/` — one render function per route, all pure string templates.
