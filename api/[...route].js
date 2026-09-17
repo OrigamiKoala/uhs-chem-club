@@ -84,7 +84,7 @@ async function callAppsScript(route, body) {
     return localDevHandler(route, body);
   }
 
-  const isPublicCacheable = (route === 'bootstrap' && (!body || !body.token)) || route === 'quest/manifest' || route === 'leaderboard';
+  const isPublicCacheable = (route === 'bootstrap' && (!body || !body.token)) || route === 'quest/manifest' || route === 'leaderboard' || route === 'team/roster';
   const cacheKey = route + ':' + JSON.stringify(body || {});
   if (isPublicCacheable) {
     const hit = getCached(cacheKey);
@@ -750,6 +750,23 @@ export default async function handler(req, res) {
         console.warn('Apps Script bootstrap failed, falling back to local handler:', e.message);
       }
       const fallback = localDevHandler('bootstrap', body);
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      return res.end(JSON.stringify(fallback));
+    }
+
+    if (path === 'team/roster') {
+      try {
+        const result = await callAppsScript('team/roster', body);
+        if (result && result.ok) {
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json');
+          return res.end(JSON.stringify(result));
+        }
+      } catch (e) {
+        console.warn('Apps Script team/roster failed, falling back to local handler:', e.message);
+      }
+      const fallback = localDevHandler('team/roster', body);
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify(fallback));

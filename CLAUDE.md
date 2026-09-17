@@ -74,9 +74,9 @@ mirror the same titles and prompts — `npm run verify:quest` fails if they drif
 ### API proxy (`api/[...route].js`)
 Vercel catch-all. Performs `crypto.scrypt` password derivation (never sends plaintext to
 Apps Script), rate limiting, salt caching, team-id normalization, and a 60 s in-memory cache
-for public routes. When `APPS_SCRIPT_URL` is unset it falls back to `localDevHandler`, a
+for public routes (including `team/roster` with graceful local fallback). When `APPS_SCRIPT_URL` is unset it falls back to `localDevHandler`, a
 full in-memory mock of the backend — including the once-per-stage XP rule, so dev behaviour
-matches production.
+matches production. Guild switching in `onboarding.js` is optimistic at 0 ms with client-side roster caching and background prefetching.
 
 ### Backend (`apps-script/`)
 `Db.gs` (Sheets DAO), `Auth.gs`, `Players.gs`, `Quests.gs` (manifest, grading, hints,

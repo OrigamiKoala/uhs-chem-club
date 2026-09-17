@@ -83,7 +83,7 @@ export async function renderOnboarding(container) {
   let step = 2; // 2 = Guild Picker & Party, 3 = Oath & d20 Roll
   let selectedTeam = session.teamId || 'fire';
   let teamsData = normalizeTeams(session.teams && session.teams.length > 0 ? session.teams : DEFAULT_TEAMS);
-  let rosterMembers = [];
+  const rosterCache = new Map();
 
   // Determine user background from session or localStorage
   let userBg = session.player?.background || 'salvager';
@@ -93,17 +93,102 @@ export async function renderOnboarding(container) {
   } catch (e) {}
 
   async function fetchRoster(tid) {
+    if (rosterCache.has(tid)) {
+      if (selectedTeam === tid) updateRosterSection();
+      return;
+    }
     try {
       const res = await api.getTeamRoster(tid);
       if (res && Array.isArray(res.members)) {
-        rosterMembers = res.members;
+        rosterCache.set(tid, res.members);
+      } else {
+        rosterCache.set(tid, []);
       }
     } catch (e) {
-      rosterMembers = [];
+      if (!rosterCache.has(tid)) rosterCache.set(tid, []);
+    }
+    if (selectedTeam === tid) {
+      updateRosterSection();
     }
   }
 
-  await fetchRoster(selectedTeam);
+  function renderRosterListHtml(members) {
+    if (!members) {
+      return `
+        <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-muted); padding: 0.5rem 0;">
+          Syncing guild roster…
+        </div>
+      `;
+    }
+    if (members.length === 0) {
+      return `
+        <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-muted); padding: 0.5rem 0;">
+          You are the first to report for this shift.
+        </div>
+      `;
+    }
+    return `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem;">
+        ${members.slice(0, 8).map(m => {
+          const trId = m.trinket || 'trinket_1';
+          const trDef = TRINKETS.find(x => x.id === trId) || TRINKETS[0];
+          return `
+            <div style="display: flex; align-items: center; gap: 0.6rem; padding: 4px 8px; background: var(--plate-100); border: 1px solid var(--border-durasteel);">
+              <span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-amber);">[+]</span>
+              <div style="overflow: hidden;">
+                <div style="font-family: var(--font-display); font-size: 0.84rem; font-weight: 600; color: var(--text-bright); text-overflow: ellipsis; white-space: nowrap;">${esc(m.display_name)}</div>
+                <div style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted); text-overflow: ellipsis; white-space: nowrap;">${esc(trDef.name)}</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  function updateRosterSection() {
+    const activeMeta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
+    const members = rosterCache.get(selectedTeam);
+
+    const titleEl = container.querySelector('#party-manifest-title');
+    if (titleEl) titleEl.textContent = `YOUR PARTY · ${activeMeta.title.toUpperCase()} CREW`;
+
+    const countEl = container.querySelector('#party-manifest-count');
+    if (countEl) countEl.textContent = members ? `${members.length} Signed On` : 'Syncing…';
+
+    const listEl = container.querySelector('#party-manifest-list');
+    if (listEl) listEl.innerHTML = renderRosterListHtml(members);
+  }
+
+  function selectGuild(tid) {
+    if (tid === selectedTeam) return;
+    selectedTeam = tid;
+    soundscape.playToggleClack();
+
+    const activeMeta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
+
+    // 1. Instant card selection update
+    container.querySelectorAll('.team-card').forEach(btn => {
+      const bTid = btn.getAttribute('data-team');
+      const isSel = bTid === selectedTeam;
+      btn.classList.toggle('selected', isSel);
+      btn.setAttribute('aria-checked', String(isSel));
+      const bMeta = TEAM_INFO[bTid] || {};
+      btn.style.borderLeftColor = isSel ? bMeta.accent : '';
+    });
+
+    // 2. Instant Vess pitch box update
+    const pitchBox = container.querySelector('#vess-pitch-box');
+    if (pitchBox) pitchBox.style.borderLeftColor = activeMeta.accent;
+    const pitchEl = container.querySelector('#vess-guild-pitch');
+    if (pitchEl) pitchEl.textContent = activeMeta.pitch;
+
+    // 3. Instant roster update
+    updateRosterSection();
+
+    // 4. Background fetch if not in cache
+    fetchRoster(selectedTeam);
+  }
 
   function render() {
     if (step === 2) {
@@ -115,6 +200,7 @@ export async function renderOnboarding(container) {
 
   function renderScene2() {
     const activeMeta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
+    const members = rosterCache.get(selectedTeam);
 
     container.innerHTML = `
       <div class="screen-container" style="max-width: 760px;">
@@ -125,7 +211,7 @@ export async function renderOnboarding(container) {
 
         <div class="glass-panel">
           <!-- Vess Pitch Header -->
-          <div class="cold-open-box" style="margin-bottom: 1.5rem; padding: 0.9rem 1.1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid ${activeMeta.accent};">
+          <div id="vess-pitch-box" class="cold-open-box" style="margin-bottom: 1.5rem; padding: 0.9rem 1.1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid ${activeMeta.accent};">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
               <span class="eyebrow lit">VESS // QUARTERMASTER</span>
               <span class="tag live" style="font-size: 0.6rem;">SCENE 02 · GUILD BRIEFING</span>
@@ -167,32 +253,14 @@ export async function renderOnboarding(container) {
           </div>
 
           <!-- Party Manifest Roster -->
-          <div style="background: var(--plate-200); border: 1px solid var(--border-durasteel); padding: 1rem; margin-bottom: 1.5rem;">
+          <div id="party-manifest-card" style="background: var(--plate-200); border: 1px solid var(--border-durasteel); padding: 1rem; margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.4rem;">
-              <span class="eyebrow lit">YOUR PARTY · ${activeMeta.title.toUpperCase()} CREW</span>
-              <span class="eyebrow">${rosterMembers.length} Signed On</span>
+              <span id="party-manifest-title" class="eyebrow lit">YOUR PARTY · ${activeMeta.title.toUpperCase()} CREW</span>
+              <span id="party-manifest-count" class="eyebrow">${members ? `${members.length} Signed On` : 'Syncing…'}</span>
             </div>
-            ${rosterMembers.length === 0 ? `
-              <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-muted); padding: 0.5rem 0;">
-                You are the first to report for this shift.
-              </div>
-            ` : `
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem;">
-                ${rosterMembers.slice(0, 8).map(m => {
-                  const trId = m.trinket || 'trinket_1';
-                  const trDef = TRINKETS.find(x => x.id === trId) || TRINKETS[0];
-                  return `
-                    <div style="display: flex; align-items: center; gap: 0.6rem; padding: 4px 8px; background: var(--plate-100); border: 1px solid var(--border-durasteel);">
-                      <span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-amber);">[+]</span>
-                      <div style="overflow: hidden;">
-                        <div style="font-family: var(--font-display); font-size: 0.84rem; font-weight: 600; color: var(--text-bright); text-overflow: ellipsis; white-space: nowrap;">${esc(m.display_name)}</div>
-                        <div style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted); text-overflow: ellipsis; white-space: nowrap;">${esc(trDef.name)}</div>
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-            `}
+            <div id="party-manifest-list">
+              ${renderRosterListHtml(members)}
+            </div>
           </div>
 
           <div style="display: flex; justify-content: flex-end;">
@@ -205,10 +273,9 @@ export async function renderOnboarding(container) {
     `;
 
     container.querySelectorAll('.team-card:not(.disabled)').forEach(el => {
-      el.addEventListener('click', async () => {
-        selectedTeam = el.getAttribute('data-team');
-        await fetchRoster(selectedTeam);
-        render();
+      el.addEventListener('click', () => {
+        const tid = el.getAttribute('data-team');
+        selectGuild(tid);
       });
     });
 
@@ -217,6 +284,12 @@ export async function renderOnboarding(container) {
       render();
     });
   }
+
+  // Render Scene 2 immediately without awaiting network
+  render();
+
+  // Background prefetch rosters for all guilds
+  ['earth', 'air', 'fire', 'water'].forEach(tid => fetchRoster(tid));
 
   function renderScene3() {
     const activeMeta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;

@@ -249,19 +249,26 @@ var Players = {
   },
 
   getTeamRoster: function(teamId) {
-    var normId = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[String(teamId || '').toLowerCase()] || teamId);
-    var members = Db.find('Players', function(p) {
-      var pTid = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[String(p.team_id || '').toLowerCase()] || p.team_id);
-      return pTid === normId && p.status !== 'banned';
-    });
-    return {
-      team_id: normId,
-      members: members.map(function(m) {
-        return {
-          display_name: m.display_name,
-          trinket: m.trinket || ''
-        };
-      })
-    };
+    var normId = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[String(teamId || '').toLowerCase()] || teamId || 'fire');
+    try {
+      var members = Db.find('Players', function(p) {
+        var pTid = ({ terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' }[String(p.team_id || '').toLowerCase()] || p.team_id);
+        return pTid === normId && p.status !== 'banned';
+      });
+      return {
+        team_id: normId,
+        members: (members || []).map(function(m) {
+          return {
+            display_name: m.display_name,
+            trinket: m.trinket || ''
+          };
+        })
+      };
+    } catch (e) {
+      return {
+        team_id: normId,
+        members: []
+      };
+    }
   }
 };
