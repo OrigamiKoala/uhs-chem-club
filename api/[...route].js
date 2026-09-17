@@ -529,10 +529,22 @@ function localDevHandler(route, body) {
   if (route === 'quest/complete') {
     const questXp = CANONICAL_STAGES_20.reduce((sum, st) => sum + (st.xp || 0), 0);
     let playerXp = questXp;
+    // Completion is idempotent, exactly like Quests.gs: a replay of the final stage
+    // re-opens the debrief but must not mint a second item or move any total.
+    let alreadyCompleted = false;
     try {
       const pid = JSON.parse(Buffer.from(body.token.split('.')[0], 'base64').toString('utf8')).pid;
       const playerObj = localStore.players.find(x => x.player_id === pid);
       if (playerObj && typeof playerObj.xp === 'number') playerXp = playerObj.xp;
+      let prog = (localStore.progress || []).find(x => x.player_id === pid && x.quest_id === 'q1');
+      if (!prog) {
+        prog = { player_id: pid, quest_id: 'q1', stage_reached: 0, xp_earned: 0, cleared: [] };
+        localStore.progress.push(prog);
+      }
+      alreadyCompleted = Boolean(prog.completed_at);
+      if (!alreadyCompleted) prog.completed_at = new Date().toISOString();
+      prog.stage_reached = Math.max(prog.stage_reached || 0, CANONICAL_STAGES_20.length);
+      prog.items_awarded = prog.items_awarded || 'resonance_key';
     } catch (e) {}
 
     return {
@@ -541,6 +553,7 @@ function localDevHandler(route, body) {
         totalXp: questXp,
         awardedItem: 'resonance_key',
         newLevel: Math.max(1, Math.floor(Math.sqrt(playerXp / 45)) + 1),
+        alreadyCompleted,
         epilogue: QUEST1_EPILOGUE
       }
     };

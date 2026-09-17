@@ -131,6 +131,27 @@ check('epilogue present', typeof comp.json.data.epilogue === 'string' && comp.js
 check('epilogue has paragraphs', comp.json.data.epilogue.includes('\n'));
 check('quest xp is 650', comp.json.data.totalXp === 650, `got ${comp.json.data.totalXp}`);
 check('level is a number', Number.isFinite(comp.json.data.newLevel));
+check('first completion is not flagged as a repeat', comp.json.data.alreadyCompleted === false);
+
+// Redoing a finished quest: progress stands, the award is not minted twice, and no
+// stage pays out again.
+const comp2 = await call('quest/complete', { token, questId: 'q1' });
+check('re-completion is idempotent', comp2.json.data.alreadyCompleted === true);
+
+const afterComplete = await call('quest/grade', {
+  token, questId: 'q1', stageIndex: 0, payload: { from: 'red_lp1', to: 'blue_c1' }
+});
+check('replay after completion awards 0 XP',
+  afterComplete.json.data.correct === true && afterComplete.json.data.xpAwarded === 0,
+  JSON.stringify(afterComplete.json.data));
+
+const meAfter = await call('player/me', { token });
+check('xp unchanged by replay', meAfter.json.data.xp === me.json.data.xp,
+  `before=${me.json.data.xp} after=${meAfter.json.data.xp}`);
+const progAfter = (meAfter.json.data.progress || []).find(x => x.quest_id === 'q1');
+check('progress does not regress', progAfter && progAfter.stage_reached === 20,
+  JSON.stringify(progAfter));
+check('completion timestamp kept', Boolean(progAfter && progAfter.completed_at));
 
 console.log('\nmanifest + leaderboard');
 const man = await call('quest/manifest', { questId: 'q1' });

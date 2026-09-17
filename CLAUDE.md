@@ -95,7 +95,17 @@ completion), `Scoring.gs` (normalized leaderboards, level curve, level titles),
   taxed for asking.
 - **Completion is idempotent** — `completeQuest` returns the existing award if
   `Progress.completed_at` is already set, instead of minting another item.
-- **Progress never regresses** — `stage_reached` is always `Math.max`'d.
+- **Progress never regresses** — `stage_reached` is always `Math.max`'d. In `quest.js`
+  `maxStageReached` is the *cleared count* (0…`TOTAL_STAGES`), never clamped to
+  `TOTAL_STAGES - 1`; `navMaxIdx()` derives the highest openable stage index from it.
+  Clamping the two together used to leave a finished quest reading as 19/20 cleared and
+  made the last stage look unplayed, so replaying it paid its XP a second time (the
+  server paid 0, and the next `player/me` pulled the local total back down — XP that
+  appeared and then vanished).
+- **A finished quest replays for free.** Re-entering `#/quest` after completion opens at
+  Pylon 1 with every stage unlocked, `isReplay` true everywhere, and no XP awarded; the
+  background `player/me` sync never jumps a completed player to the last stage.
+  `verify:flows` covers re-completion, a post-completion replay and the unchanged total.
 - **The clean-solve streak pays nothing.** It counts stages cleared first try without the
   solution hint and is display only. Give it an XP value and it becomes an attempt
   multiplier, which the rule above forbids.
@@ -199,7 +209,7 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 ## Player journey
 1. `#/` landing — cold open comms transmission, cockpit loop banner, and Create Account / Try a Pylon CTAs.
-2. `#/demo` — Stage 1 sample, no account, intro modal explains mechanics & controls, graded by the same evaluator.
+2. `#/demo` — Stage 1 sample, no account, intro modal explains mechanics & controls, graded by the same evaluator. One CTA only: the primary Submit key becomes `Create Account` once the stage is solved.
 3. `#/register` — step 1 of 3 on the shared `stepRail`. Live validation mirrors
    `validateDisplayName` in `Util.gs` exactly, so no rule bites only at submit time.
 4. `#/onboarding` — step 2. Four teams with guild names and live slot counts.

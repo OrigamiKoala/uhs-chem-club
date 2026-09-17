@@ -194,25 +194,37 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
 export function renderQuest(container) {
   let questData = session.activeQuest || null;
   let currentStageIdx = 0;
+  // How many stages the player has cleared: 0..TOTAL_STAGES. A finished quest sits at
+  // TOTAL_STAGES, which is one past the last playable index — clamping this to
+  // TOTAL_STAGES - 1 used to make the final stage look unfinished and, worse, made it
+  // read as "not yet cleared", so replaying it paid XP again.
   let maxStageReached = 0;
+  /** Highest stage index the player may open. */
+  const navMaxIdx = () => Math.min(maxStageReached, TOTAL_STAGES - 1);
 
   // Resume where the player left off.
   try {
     const savedStage = parseInt(localStorage.getItem(`avalon_${QUEST_ID}_stage_reached`), 10);
     if (!isNaN(savedStage) && savedStage >= 0) {
-      maxStageReached = Math.min(savedStage, TOTAL_STAGES - 1);
-      currentStageIdx = maxStageReached;
+      maxStageReached = Math.min(savedStage, TOTAL_STAGES);
+      currentStageIdx = navMaxIdx();
     }
   } catch (e) {}
 
   const prog = (session.progress || []).find(p => p.quest_id === QUEST_ID);
   if (prog && typeof prog.stage_reached === 'number') {
-    const reached = Math.min(Number(prog.stage_reached), TOTAL_STAGES - 1);
+    const reached = Math.min(Number(prog.stage_reached), TOTAL_STAGES);
     if (reached > maxStageReached) {
       maxStageReached = reached;
-      currentStageIdx = reached;
+      currentStageIdx = navMaxIdx();
     }
   }
+
+  // A finished quest re-opens at Pylon 1 — every stage is unlocked, nothing pays XP
+  // again, and "Replay Gardens" on the Bridge should not drop the player on the last
+  // stage of a quest they have already cleared.
+  const questComplete = maxStageReached >= TOTAL_STAGES;
+  if (questComplete) currentStageIdx = 0;
 
   let currentPayload = null;
   let isGrading = false;
@@ -342,16 +354,16 @@ export function renderQuest(container) {
             <div class="clean-streak ${cleanStreak > 0 ? '' : 'hidden'}" id="clean-streak" title="Stages solved first try, without the solution hint">
               ${cleanStreak} CLEAN
             </div>
-            <button type="button" id="next-stage-btn" class="btn-secondary quest-btn-sm" ${currentStageIdx >= maxStageReached ? 'disabled' : ''} title="Next stage" aria-label="Next stage">
+            <button type="button" id="next-stage-btn" class="btn-secondary quest-btn-sm" ${currentStageIdx >= navMaxIdx() ? 'disabled' : ''} title="Next stage" aria-label="Next stage">
               ▶
             </button>
             <div class="stage-pill-track" role="group" aria-label="Stage progress">
               ${Array.from({ length: TOTAL_STAGES }, (_, i) => `
-                <button type="button" class="stage-dot ${i < maxStageReached ? 'completed' : ''} ${i === currentStageIdx ? 'active' : ''} ${i <= maxStageReached ? 'clickable' : ''}"
+                <button type="button" class="stage-dot ${i < maxStageReached ? 'completed' : ''} ${i === currentStageIdx ? 'active' : ''} ${i <= navMaxIdx() ? 'clickable' : ''}"
                      data-stage-idx="${i}"
-                     ${i > maxStageReached ? 'disabled' : ''}
-                     aria-label="Stage ${i + 1}${i > maxStageReached ? ' (locked)' : ''}"
-                     title="Stage ${i + 1}${i > maxStageReached ? ' (locked)' : ''}"></button>
+                     ${i > navMaxIdx() ? 'disabled' : ''}
+                     aria-label="Stage ${i + 1}${i > navMaxIdx() ? ' (locked)' : ''}"
+                     title="Stage ${i + 1}${i > navMaxIdx() ? ' (locked)' : ''}"></button>
               `).join('')}
             </div>
           </div>
@@ -524,12 +536,12 @@ export function renderQuest(container) {
       if (currentStageIdx > 0) loadStage(currentStageIdx - 1);
     });
     container.querySelector('#next-stage-btn')?.addEventListener('click', () => {
-      if (currentStageIdx < maxStageReached) loadStage(currentStageIdx + 1);
+      if (currentStageIdx < navMaxIdx()) loadStage(currentStageIdx + 1);
     });
     container.querySelectorAll('.stage-dot.clickable').forEach(dot => {
       dot.addEventListener('click', () => {
         const targetIdx = Number(dot.getAttribute('data-stage-idx'));
-        if (!isNaN(targetIdx) && targetIdx >= 0 && targetIdx <= maxStageReached && targetIdx !== currentStageIdx) {
+        if (!isNaN(targetIdx) && targetIdx >= 0 && targetIdx <= navMaxIdx() && targetIdx !== currentStageIdx) {
           loadStage(targetIdx);
         }
       });
@@ -1043,11 +1055,12 @@ export function renderQuest(container) {
       session.setUserData(me);
       const remote = (me.progress || []).find(p => p.quest_id === QUEST_ID);
       if (remote && typeof remote.stage_reached === 'number') {
-        const reached = Math.min(Number(remote.stage_reached), TOTAL_STAGES - 1);
+        const reached = Math.min(Number(remote.stage_reached), TOTAL_STAGES);
         if (reached > maxStageReached) {
           maxStageReached = reached;
-          // Only jump the player forward if they have not started playing yet.
-          if (currentStageIdx === 0) loadStage(reached);
+          // Only jump the player forward if they have not started playing yet, and
+          // never on a completed quest — there, stage 1 is a deliberate replay start.
+          if (currentStageIdx === 0 && maxStageReached < TOTAL_STAGES) loadStage(navMaxIdx());
         }
       }
     }

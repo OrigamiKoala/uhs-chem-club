@@ -113,10 +113,7 @@ export function renderDemo(container) {
           <div id="demo-interactive-area"></div>
           <div id="demo-feedback" class="hidden"></div>
 
-          <div class="demo-actions" style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-            <a href="#/register" class="btn-secondary quest-btn-sm" style="text-decoration: none;">
-              Create Account
-            </a>
+          <div class="demo-actions" style="display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
             <button type="button" id="demo-grade-btn" class="btn-primary" style="padding: 9px 26px; min-height: 40px;">Submit</button>
           </div>
         </div>
