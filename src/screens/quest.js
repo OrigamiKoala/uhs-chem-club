@@ -111,6 +111,50 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
   const isMulti = Boolean(cfg.multiArrow);
   const requiredArrows = isMulti ? (cfg.steps?.length || 2) : 1;
   const introConcept = cfg.concept && cfg.conceptTiming === 'intro' ? cfg.concept : null;
+  const b = QUEST1_STORY.briefing;
+
+  if (currentStageIdx === 0 && b) {
+    showModal(`
+      <div style="text-align: center; margin-bottom: 1.15rem;">
+        <div class="eyebrow lit" style="letter-spacing: 0.18em;">${esc(b.badge)}</div>
+        <h2 id="stage-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.25rem;">
+          Pylon 1 · ${esc(cfg.title || 'Target Lock')}
+        </h2>
+        <div style="margin-top: 0.35rem; display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+          <span class="tag">Sector 01 · Erebus</span>
+          <span class="tag live">Pylon 1 of ${TOTAL_STAGES}</span>
+          ${isReplay ? '<span class="tag">Replay · XP already earned</span>' : `<span class="tag live">+${stageXp} XP</span>`}
+        </div>
+      </div>
+
+      <!-- Live Typewriter Transmission Slot -->
+      <div id="modal-transmission-slot" style="margin-bottom: 1.15rem;"></div>
+
+      ${introConcept ? renderConceptCard(introConcept) : ''}
+
+      <div style="margin-top: 1.15rem;">
+        <button type="button" id="modal-start-stage-btn" class="btn-primary" style="width: 100%; padding: 11px 0; font-size: 0.92rem; letter-spacing: 0.08em;">
+          Power Pylon 1
+        </button>
+      </div>
+    `, { labelledBy: 'stage-modal-title' });
+
+    const modalTransmission = createTransmissionElement({
+      speaker: b.speaker,
+      badge: 'LIVE COMMS',
+      subtitle: b.subtitle,
+      text: b.message,
+      variant: 'hero'
+    });
+    document.getElementById('modal-transmission-slot')?.appendChild(modalTransmission.element);
+
+    document.getElementById('modal-start-stage-btn')?.addEventListener('click', () => {
+      if (modalTransmission?.destroy) modalTransmission.destroy();
+      closeModal();
+      soundscape.playNavRelayClick();
+    });
+    return;
+  }
 
   showModal(`
     <div style="text-align: center; margin-bottom: 1.25rem;">
@@ -126,15 +170,6 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
     <div style="background: var(--plate-100); border: 1px solid var(--border-durasteel); padding: 1rem 1.15rem; margin-bottom: 1.25rem; font-size: 0.95rem; line-height: 1.55; color: var(--text-bright);">
       ${cfg.prompt ? esc(cfg.prompt) : 'Connect the molecules to trigger the reaction.'}
     </div>
-
-    ${currentStageIdx === 0 ? `
-      <div class="cold-open-box" style="margin-bottom: 1.25rem; padding: 0.8rem 1rem; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
-        <div class="eyebrow lit" style="margin-bottom: 0.3rem;">VESS // SCANNER CALIBRATION</div>
-        <p style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent-gold); margin: 0;">
-          "Tap anything that glows. Tell me what the needle says."
-        </p>
-      </div>
-    ` : ''}
 
     ${isMulti ? `
       <div style="background: var(--plate-200); border-left: 2px solid var(--accent-amber); padding: 8px 12px; margin-bottom: 1.25rem; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45;">
@@ -153,6 +188,7 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
 
   document.getElementById('modal-start-stage-btn')?.addEventListener('click', () => {
     closeModal();
+    soundscape.playNavRelayClick();
   });
 }
 
@@ -285,7 +321,7 @@ export function renderQuest(container) {
 
     const pylonStory = QUEST1_STORY.pylons[currentStageIdx];
     const initialText = currentStageIdx === 0
-      ? (QUEST1_STORY.guildOpeners[session.guild] || QUEST1_STORY.guildOpeners.neutral)
+      ? (QUEST1_STORY.briefing?.message || QUEST1_STORY.guildOpeners[session.guild] || QUEST1_STORY.guildOpeners.neutral)
       : (pylonStory?.transmission || 'Calibrate your sensors.');
 
     // 1. Render Quest HUD Overlay
@@ -356,8 +392,8 @@ export function renderQuest(container) {
                 ${isReplay ? '<span class="tag">Replay</span>' : `<span class="tag live">+${stageXp} XP</span>`}
               </div>
               <div style="display: flex; gap: 0.4rem; align-items: center;">
-                <button type="button" id="stage-info-btn" class="btn-secondary quest-btn-sm" title="View stage instructions">
-                  ◈ Objective
+                <button type="button" id="stage-info-btn" class="btn-secondary quest-btn-sm" title="${currentStageIdx === 0 ? 'View mission briefing' : 'View stage instructions'}">
+                  ${currentStageIdx === 0 ? '◈ Briefing' : '◈ Objective'}
                 </button>
                 <button type="button" id="stage-card-close-btn" class="btn-secondary quest-btn-sm" title="Close stage panel" aria-label="Close stage panel">
                   Close
@@ -402,7 +438,10 @@ export function renderQuest(container) {
     // Mount Vess transmission
     activeTransmission = createTransmissionElement({
       speaker: 'VESS // COMMS',
-      text: initialText
+      badge: currentStageIdx === 0 ? 'SECTOR 01 · TRANSMISSION' : `PYLON ${currentStageIdx + 1}`,
+      subtitle: currentStageIdx === 0 ? 'EREBUS // CHARGE GARDENS' : '',
+      text: initialText,
+      variant: currentStageIdx === 0 ? 'hero' : ''
     });
     container.querySelector('#quest-transmission-slot')?.appendChild(activeTransmission.element);
 
@@ -821,18 +860,26 @@ export function renderQuest(container) {
       comp = null;
     }
 
-    const epilogue = comp?.epilogue || LOCAL_EPILOGUE;
     const totalXp = comp?.totalXp ?? TOTAL_QUEST_XP;
     const newLevel = comp?.newLevel ?? session.level ?? 1;
     const item = comp?.awardedItem;
+    const debriefStory = QUEST1_STORY.debrief || {};
+    const sections = debriefStory.sections || [
+      {
+        speaker: 'VESS // QUARTERMASTER',
+        badge: 'MISSION COMPLETE · SECTOR 01',
+        subtitle: 'EREBUS // CHARGE GARDENS',
+        text: debriefStory.message || 'Outstanding work restoring the grid. Thank you for completing the mission.'
+      }
+    ];
 
     showModal(`
-      <div style="text-align: center;">
-        <div class="eyebrow lit">Sector 01 cleared</div>
-        <h2 id="quest-complete-title" class="page-title" style="font-size: 1.35rem;">The Charge Gardens</h2>
+      <div style="text-align: center; margin-bottom: 0.85rem;">
+        <div class="eyebrow lit" style="letter-spacing: 0.18em;">SECTOR 01 CLEARED // MISSION DEBRIEF</div>
+        <h2 id="quest-complete-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.25rem;">The Charge Gardens</h2>
       </div>
 
-      <div class="stat-row" style="margin: 1.25rem 0; justify-content: space-around;">
+      <div class="stat-row" style="margin: 0.75rem 0 1rem; justify-content: space-around;">
         <div class="stat-tile">
           <div class="stat-label">Stages</div>
           <div class="stat-value">${TOTAL_STAGES} / ${TOTAL_STAGES}</div>
@@ -847,24 +894,122 @@ export function renderQuest(container) {
         </div>
       </div>
 
-      <div style="background: var(--plate-100); border: 1px solid var(--border-durasteel); box-shadow: inset 0 2px 8px rgba(0,0,0,0.6); padding: 1.1rem 1.25rem; margin-bottom: 1.5rem;">
-        <div class="eyebrow lit" style="margin-bottom: 0.7rem;">Debrief</div>
-        <div class="prose-block">${epilogue}</div>
+      <!-- Vess Multi-Section CRT Transmission Deck -->
+      <div id="modal-debrief-transmission-slot" style="margin-bottom: 0.75rem;"></div>
+
+      <!-- Dialogue Stepper & Controls -->
+      <div class="debrief-controls" style="display: flex; justify-content: space-between; align-items: center; background: var(--plate-100); border: 1px solid var(--border-durasteel); padding: 0.55rem 0.85rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+          <button type="button" id="debrief-prev-btn" class="btn-secondary quest-btn-sm" style="min-width: 62px;" disabled>
+            ◀ Prev
+          </button>
+          <div class="debrief-step-dots" style="display: flex; gap: 4px; align-items: center;" role="group" aria-label="Debrief sections">
+            ${sections.map((_, i) => `
+              <span class="stage-dot ${i === 0 ? 'active' : ''}" data-debrief-dot="${i}" style="width: 7px; height: 7px; pointer-events: none;"></span>
+            `).join('')}
+          </div>
+          <span class="eyebrow" id="debrief-counter" style="font-size: 0.65rem; color: var(--accent-gold); letter-spacing: 0.1em;">
+            SECTION 1 / ${sections.length}
+          </span>
+        </div>
+
+        <button type="button" id="debrief-next-btn" class="btn-primary quest-btn-sm" style="min-width: 80px; padding: 6px 14px;">
+          Next ▶
+        </button>
       </div>
 
       ${item ? `
-        <div style="text-align: center; margin-bottom: 1.25rem;">
+        <div id="salvage-banner" class="hidden" style="text-align: center; margin-bottom: 1.25rem;">
           <span class="tag warn">Salvaged · ${item.replace(/_/g, ' ')}</span>
         </div>
       ` : ''}
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+      <div id="debrief-exit-actions" class="hidden" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
         <button type="button" id="modal-bridge-btn" class="btn-primary">Bridge</button>
         <button type="button" id="modal-standings-btn" class="btn-secondary">Standings</button>
       </div>
     `, { labelledBy: 'quest-complete-title' });
 
+    let currentSecIdx = 0;
+    let transmissionFinished = false;
+
+    const debriefTransmission = createTransmissionElement({
+      speaker: sections[0].speaker || 'VESS // QUARTERMASTER',
+      badge: sections[0].badge || 'MISSION COMPLETE',
+      subtitle: sections[0].subtitle || 'SECTOR 01 · EREBUS',
+      text: sections[0].text,
+      variant: 'hero',
+      onComplete: () => {
+        transmissionFinished = true;
+      }
+    });
+    document.getElementById('modal-debrief-transmission-slot')?.appendChild(debriefTransmission.element);
+
+    function syncSection(idx) {
+      currentSecIdx = idx;
+      const sec = sections[idx];
+      transmissionFinished = false;
+
+      debriefTransmission.update({
+        speaker: sec.speaker || 'VESS // SCIENCE DEBRIEF',
+        badge: sec.badge || `DEBRIEF ${idx + 1}/${sections.length}`,
+        subtitle: sec.subtitle || 'SECTOR 01 · CHARGE GARDENS',
+        text: sec.text,
+        onComplete: () => {
+          transmissionFinished = true;
+        }
+      });
+
+      const prevBtn = document.getElementById('debrief-prev-btn');
+      const nextBtn = document.getElementById('debrief-next-btn');
+      const counter = document.getElementById('debrief-counter');
+      const exitActions = document.getElementById('debrief-exit-actions');
+      const salvageBanner = document.getElementById('salvage-banner');
+
+      if (prevBtn) prevBtn.disabled = (idx === 0);
+      if (counter) counter.textContent = `SECTION ${idx + 1} / ${sections.length}`;
+
+      document.querySelectorAll('[data-debrief-dot]').forEach((dot, dIdx) => {
+        dot.classList.toggle('active', dIdx === idx);
+        dot.classList.toggle('completed', dIdx < idx);
+      });
+
+      if (idx === sections.length - 1) {
+        if (nextBtn) nextBtn.textContent = 'Acknowledge ✓';
+        if (exitActions) exitActions.classList.remove('hidden');
+        if (salvageBanner) salvageBanner.classList.remove('hidden');
+      } else {
+        if (nextBtn) nextBtn.textContent = 'Next ▶';
+      }
+    }
+
+    document.getElementById('debrief-prev-btn')?.addEventListener('click', () => {
+      if (currentSecIdx > 0) {
+        soundscape.playNavRelayClick();
+        syncSection(currentSecIdx - 1);
+      }
+    });
+
+    document.getElementById('debrief-next-btn')?.addEventListener('click', () => {
+      if (!transmissionFinished) {
+        debriefTransmission.finish();
+        return;
+      }
+      if (currentSecIdx < sections.length - 1) {
+        soundscape.playNavRelayClick();
+        syncSection(currentSecIdx + 1);
+      } else {
+        soundscape.playPylonWake();
+        const exitActions = document.getElementById('debrief-exit-actions');
+        if (exitActions) {
+          exitActions.classList.remove('hidden');
+          document.getElementById('modal-bridge-btn')?.focus();
+        }
+      }
+    });
+
     const go = (hash) => {
+      if (debriefTransmission?.destroy) debriefTransmission.destroy();
       closeModal();
       stage.exitQuestScene();
       window.location.hash = hash;
@@ -878,12 +1023,15 @@ export function renderQuest(container) {
 
   // 1. Render the current stage immediately from bundled configs (0ms latency)
   // Play arrival cinematic (Erebus Descent) on first entry to Sector 01
-  if (QUEST1_STORY.arrival?.cinematic && !session.hasFlag('cinematic_erebus_descent')) {
-    session.setFlag('cinematic_erebus_descent', true);
-    playCinematic(QUEST1_STORY.arrival.cinematic);
-  }
-
-  loadStage(currentStageIdx);
+  const startQuest = async () => {
+    if (QUEST1_STORY.arrival?.cinematic && !session.hasFlag('cinematic_erebus_descent')) {
+      session.setFlag('cinematic_erebus_descent', true);
+      await playCinematic(QUEST1_STORY.arrival.cinematic);
+    }
+    if (window.location.hash.split('?')[0] !== '#/quest') return;
+    loadStage(currentStageIdx);
+  };
+  startQuest();
 
   // 2. Sync the remote manifest & player progress in the background
   Promise.all([

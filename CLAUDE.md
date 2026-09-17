@@ -136,14 +136,19 @@ that explains a *concept* is `'reward'` and appears after the solve, under
   resolves so the explainer and Next button appear.
 - The stage briefing modal auto-shows only for genuinely new mechanics — stages 1, 5, 8,
   11 (`AUTO_MODAL_STAGES` in `quest.js`, plus any `conceptTiming: 'intro'` stage), once each
-  and never on replay. Every other stage starts immediately; the Objective button reopens
-  the briefing on demand.
+  and never on replay. Stage 1 types out Vess's message at standard transmission speed via the CRT typewriter
+  (describing planet Erebus, Charge Gardens restoration, connecting circuit components from red giver
+  to blue receiver, and pylon reactivation); the Objective button reopens it on demand. Every other
+  stage starts immediately; the Objective button reopens that stage's briefing on demand.
 - The bundled `STAGE_CONFIGS` are authoritative for everything rendered or graded
   (`moleculeId`, anchors derived from its regions, expected anchors, positions, tolerance,
   blocked sites, `reaction`, `multiArrow`, XP). Backend `scene_config` is transport only —
   a stale Sheets row must never swap in another stage's molecule.
 - The epilogue (`QUEST1_EPILOGUE`, duplicated verbatim in `Quests.gs`, the proxy and
   `quest.js` as an offline fallback) is the single place real terminology is introduced.
+  The completion modal mounts Vess's multi-section interactive CRT debrief (with Next / Prev dialogue
+  stepper like an RPG), walking through the grid restoration thanks, charges and electrons, curved arrow
+  notation, steric hindrance, and reaction mechanisms before unlocking the final exit actions.
 
 ### Chemical realism (`molecule.js` + `reaction` blocks)
 Every molecule and animation must be chemically honest, even where the copy never says so:

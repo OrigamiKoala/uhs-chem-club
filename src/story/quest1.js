@@ -22,13 +22,22 @@ export const QUEST1_STORY = {
     ]
   },
 
+  briefing: {
+    title: 'Mission Comms · The Charge Gardens',
+    speaker: 'VESS // COMMS',
+    badge: 'PRIORITY TRANSMISSION',
+    subtitle: 'SECTOR 01 · EREBUS // CHARGE GARDENS',
+    message: 'We are down on Erebus — a scorched desert world scoured by iron-dust storms and abandoned refineries. The twenty relay pylons across the Charge Gardens went dark forty years ago. Your mission is to restore the power grid across the basin. Connect the circuit components inside each junction: drag a line from the glowing red power feed to the hungry blue receiver. If you connect them successfully, current surges through the junction and the pylons will turn back on.',
+    transmission: 'Down on Erebus. Twenty relay pylons in the Charge Gardens went dark decades ago. Connect the circuit components in each junction to turn them back on.'
+  },
+
   // Stage 1 opening transmission per guild; neutral used for demo / unassigned
   guildOpeners: {
-    earth: 'Mineral Mining brought you aboard to dig out heavy iron. Start by waking Pylon 1.',
-    air: 'Atmospheric crew reads thin pressure on the surface. Find the live seam and trip Pylon 1.',
-    fire: 'Thermal crew, the coils are cold out here. Fire up the first contact on Pylon 1.',
-    water: 'Moisture rigs need pressure before the suns rise. Wake Pylon 1 to start the feed.',
-    neutral: 'Signal is holding through the dust. Wake the first pylon to light the field.'
+    earth: 'Mineral Mining brought you to Erebus. Connect the circuit components in this junction to turn Pylon 1 back on.',
+    air: 'Thin air on Erebus today. Connect the circuit components in this junction to turn Pylon 1 back on.',
+    fire: 'Thermal crew, Erebus is ice cold. Connect the circuit components in this junction to turn Pylon 1 back on.',
+    water: 'Welcome to the dunes of Erebus. Connect the circuit components in this junction to turn Pylon 1 back on.',
+    neutral: 'Welcome to Erebus. Connect the circuit components in this junction to turn Pylon 1 back on.'
   },
 
   pylons: [
@@ -151,6 +160,47 @@ export const QUEST1_STORY = {
 
   debrief: {
     cinematic: 'gardens_restored',
+    speaker: 'VESS // QUARTERMASTER',
+    badge: 'MISSION COMPLETE · SECTOR 01',
+    subtitle: 'THE CHARGE GARDENS // RESTORATION CONFIRMED',
+    message: 'The entire field is singing in key — all twenty pylons are burning bright across the dunes. Outstanding work restoring the grid. The Avalon owes you for this one. Thank you for completing the mission.',
+    sections: [
+      {
+        title: 'Mission Complete',
+        speaker: 'VESS // QUARTERMASTER',
+        badge: 'DEBRIEF 1/5 · MISSION COMPLETE',
+        subtitle: 'EREBUS // CHARGE GARDENS RESTORATION',
+        text: 'The entire field is singing in key — all twenty pylons are burning bright across the dunes. Outstanding work out there restoring the grid. The Avalon and the guilds owe you for this one. Thank you for completing the mission.'
+      },
+      {
+        title: 'The Real Science',
+        speaker: 'VESS // SCIENCE DEBRIEF',
+        badge: 'DEBRIEF 2/5 · THE REAL SCIENCE',
+        subtitle: 'ANALYSIS // CHARGE & ELECTRONS',
+        text: 'Now let me tell you the chemistry you were actually doing in those junction boxes. Every red cloud was a spot with extra electrons — a region of negative charge. Every blue spot was electron-poor and positively charged. Opposite charges attract, so reactions start where the reddest region meets the bluest one.'
+      },
+      {
+        title: 'Curved Arrows',
+        speaker: 'VESS // SCIENCE DEBRIEF',
+        badge: 'DEBRIEF 3/5 · CURVED ARROWS',
+        subtitle: 'NOTATION // ELECTRON TRANSFERS',
+        text: 'Those lines you drew across the contacts are called curved arrows, and real-world chemists use exactly this notation. An arrow shows a pair of electrons moving from where they are to where they are going.'
+      },
+      {
+        title: 'Steric Hindrance',
+        speaker: 'VESS // SCIENCE DEBRIEF',
+        badge: 'DEBRIEF 4/5 · STERIC HINDRANCE',
+        subtitle: 'GEOMETRY // OBSTRUCTION & CLEARANCE',
+        text: 'When two blue targets competed for the line, geometry decided the winner: bulky groups physically block incoming molecules, so reactions take the open route. Chemists call that steric hindrance.'
+      },
+      {
+        title: 'Reaction Mechanisms',
+        speaker: 'VESS // SCIENCE DEBRIEF',
+        badge: 'DEBRIEF 5/5 · REACTION MECHANISMS',
+        subtitle: 'SYNTHESIS // ORGANIC CHEMISTRY',
+        text: 'In those multi-step stages, you were writing a full reaction mechanism — the exact order in which bonds form and break. That is the core skill of organic chemistry, and you just solved twenty of them. Outstanding work, recruit.'
+      }
+    ],
     lines: [
       'The entire field is singing in key.',
       'Check the cargo hold. The quartermaster left a crate for you.'

@@ -16,6 +16,7 @@ export function createTransmissionElement(opts = {}) {
     subtitle = '',
     accentColor = '',
     variant = '',
+    speed = 'normal',
     onComplete = null
   } = opts;
 
@@ -90,18 +91,23 @@ export function createTransmissionElement(opts = {}) {
 
     soundscape.startMurmur();
 
+    const isSlow = speed === 'slow';
+    const step = isSlow ? 1 : 2;
+    const interval = isSlow ? 38 : 28;
+    const tickMod = isSlow ? 3 : 6;
+
     timer = setInterval(() => {
-      charIndex += 2;
+      charIndex += step;
       if (charIndex >= currentText.length) {
         charIndex = currentText.length;
         finish();
       } else {
         textEl.textContent = currentText.slice(0, charIndex);
-        if (charIndex % 6 === 0) {
+        if (charIndex % tickMod === 0) {
           soundscape.playCrtTick();
         }
       }
-    }, 28);
+    }, interval);
   }
 
   startTyping();
