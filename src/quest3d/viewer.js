@@ -15,6 +15,13 @@ import { ArrowInteraction } from './interactions/arrow.js';
 import { ChainInteraction } from './interactions/chain.js';
 import { RankInteraction } from './interactions/rank.js';
 
+// Matches the phone breakpoints in mobile.css / mobile-landscape.css.
+const PHONE_QUERY = '(max-width: 760px), (pointer: coarse) and (max-height: 500px)';
+// Chrome that sits over the canvas on phones.
+const OBSTRUCTIONS = '.hud, .quest-hud-top, .stage-prompt-card:not(.hidden), .stage-dock-bar:not(.hidden)';
+// Horizontal reach of a desktop widescreen view; narrower open areas zoom out to match.
+const REFERENCE_ASPECT = 1.7;
+
 export class QuestViewer {
   constructor(domElement) {
     this.domElement = domElement;
@@ -230,7 +237,71 @@ export class QuestViewer {
     }, 35);
   }
 
+  /**
+   * Phones only: frame the chamber inside the part of the canvas the HUD and
+   * Stage Deck leave uncovered, and widen the view on narrow screens so the
+   * molecules stay on screen. Desktop keeps the default projection.
+   */
+  fitToOpenArea() {
+    const phone = window.matchMedia(PHONE_QUERY).matches;
+    const cam = this.camera;
+    if (!phone) {
+      if (this._fitted) {
+        this._fitted = false;
+        cam.clearViewOffset();
+        cam.zoom = 1;
+        cam.aspect = window.innerWidth / window.innerHeight;
+        cam.updateProjectionMatrix();
+      }
+      return;
+    }
+
+    const canvas = this.domElement.getBoundingClientRect();
+    const W = canvas.width;
+    const H = canvas.height;
+    if (W < 1 || H < 1) return;
+
+    let l = 0, t = 0, r = W, b = H;
+    for (const el of document.querySelectorAll(OBSTRUCTIONS)) {
+      const box = el.getBoundingClientRect();
+      if (box.width < 1 || box.height < 1) continue;
+      const top = box.top - canvas.top;
+      const bottom = box.bottom - canvas.top;
+      const left = box.left - canvas.left;
+      const right = box.right - canvas.left;
+      const midY = (top + bottom) / 2;
+      if (box.width > W * 0.6) {
+        if (midY < H / 2) t = Math.max(t, bottom);
+        else b = Math.min(b, top);
+      } else if (left > W * 0.4) {
+        r = Math.min(r, left);
+      } else if (box.height > H * 0.4) {
+        l = Math.max(l, right);
+      } else if (midY < H / 2) {
+        t = Math.max(t, bottom);
+      }
+    }
+
+    let w = r - l;
+    let h = b - t;
+    if (w < 80 || h < 80) { l = 0; t = 0; w = W; h = H; }
+
+    const aspect = w / h;
+    const zoom = Math.min(1, aspect / REFERENCE_ASPECT);
+    const key = `${W}|${H}|${l}|${t}|${w}|${h}`;
+    if (this._fitted && key === this._fitKey) return;
+    this._fitted = true;
+    this._fitKey = key;
+    cam.aspect = aspect;
+    cam.zoom = zoom;
+    cam.setViewOffset(w, h, -l, -t, W, H);
+  }
+
   update(delta = 0.016, time = 0) {
+    if (!this._lastFit || time - this._lastFit > 0.2 || time < this._lastFit) {
+      this._lastFit = time;
+      this.fitToOpenArea();
+    }
     this.controls.update();
     if (this.currentIsosurface) {
       this.currentIsosurface.update(time);

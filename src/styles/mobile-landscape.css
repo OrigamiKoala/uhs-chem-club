@@ -1,0 +1,193 @@
+/* ===================================================================
+   PHONES HELD SIDEWAYS — short touch screens of any width.
+   A sideways phone is often wider than 760px, so it would otherwise get
+   the desktop layout on a 360px-tall screen. The header collapses to
+   one row and the Stage Deck docks to the right edge, leaving the left
+   of the screen to the chamber. Desktop (fine pointer) never matches.
+   =================================================================== */
+
+@media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  /* ---- Header: one 44px row — brand | nav strip | telemetry + controls ---- */
+  :root,
+  :root:has(#hud-nav.hidden) { --hud-h: 44px; }
+
+  .hud,
+  :root:has(#hud-nav.hidden) .hud {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: 44px;
+    align-items: center;
+    column-gap: 0.5rem;
+    height: var(--hud-h);
+    min-height: 0;
+    padding: 0 max(0.75rem, env(safe-area-inset-right)) 0 max(0.75rem, env(safe-area-inset-left));
+    flex-wrap: nowrap;
+  }
+
+  .hud-left { display: contents; }
+  .hud-brand { grid-column: 1; grid-row: 1; min-height: 36px; gap: 0.4rem; }
+  .hud-title { font-size: 0.85rem; letter-spacing: 0.16em; }
+  .hud-season-tag { display: none; }
+
+  .hud-nav {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    margin: 0;
+    padding: 0;
+    width: auto;
+    order: 0;
+    display: flex;
+    gap: 2px;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hud-nav::-webkit-scrollbar { display: none; }
+  .hud-nav.hidden { display: none !important; }
+
+  .nav-btn {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 3px 9px;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+
+  .hud-right {
+    grid-column: 3;
+    grid-row: 1;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+
+  .hud-stats { gap: 0.3rem; flex-wrap: nowrap; }
+  .xp-badge { padding: 2px 6px; min-height: 30px; }
+  .xp-val { font-size: 0.75rem; }
+  .xp-bar-mini, .level-badge, .team-badge { display: none; }
+
+  .hud-controls { gap: 3px; flex-wrap: nowrap; }
+  .btn-chip {
+    min-height: 34px;
+    padding: 3px 8px;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  #gfx-tier-toggle, #motion-toggle { display: none; }
+  #user-btn { max-width: 88px; }
+  #user-display-name {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .user-dropdown {
+    position: fixed;
+    top: 44px;
+    right: max(0.75rem, env(safe-area-inset-right));
+    margin-top: 0;
+    max-height: calc(100dvh - 52px);
+    overflow-y: auto;
+  }
+
+  .app-viewport { padding-top: calc(var(--hud-h) + 6px); }
+
+  .screen-container {
+    padding: 0.6rem max(0.9rem, env(safe-area-inset-right))
+             calc(1rem + env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left));
+  }
+
+  .panel-banner { height: 72px; }
+  .panel-banner.tall { height: 96px; }
+  .form-input, .form-select { font-size: 16px; }
+
+  .modal-container {
+    align-items: flex-start;
+    padding: 0.5rem max(0.75rem, env(safe-area-inset-right)) 0.5rem max(0.75rem, env(safe-area-inset-left));
+  }
+  .modal-card { margin: 0 auto; }
+
+  /* ---- Quest / demo: chamber on the left, deck docked right ---- */
+  .quest-hud-overlay {
+    display: block;
+    padding: 0;
+  }
+
+  .quest-hud-top {
+    position: absolute;
+    top: 0.4rem;
+    left: max(0.6rem, env(safe-area-inset-left));
+    right: calc(min(46vw, 400px) + max(0.6rem, env(safe-area-inset-right)) + 0.5rem);
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+    min-width: 0;
+  }
+
+  .quest-nav-cluster { width: 100%; min-width: 0; gap: 3px; flex-wrap: wrap; }
+  .quest-btn-sm,
+  .btn-secondary.quest-btn-sm,
+  .btn-primary.quest-btn-sm { min-height: 36px; min-width: 36px; }
+  .quest-nav-cluster > .quest-btn-sm { flex: 0 0 auto; }
+  .quest-nav-cluster > .stage-counter {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    letter-spacing: 0.1em;
+    overflow: hidden;
+  }
+  .clean-streak { display: none; }
+
+  .stage-pill-track {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    gap: 2px;
+    padding: 0 6px;
+    justify-content: space-between;
+  }
+  .stage-pill-track .stage-dot { height: 30px; }
+
+  .quest-gardens-slot,
+  .colormap-legend { display: none; }
+
+  .stage-card-wrap {
+    position: absolute;
+    top: 0.4rem;
+    right: max(0.6rem, env(safe-area-inset-right));
+    bottom: calc(0.4rem + env(safe-area-inset-bottom));
+    width: min(46vw, 400px);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+  }
+
+  .stage-prompt-card,
+  .stage-prompt-card.stage-card-fallback {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    flex: 0 1 auto;
+    min-height: 0;
+    --c: 8px;
+  }
+
+  .stage-dock-bar { width: 100%; }
+  .stage-dock-bar > .quest-btn-sm { min-height: 40px; }
+}

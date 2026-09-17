@@ -340,6 +340,14 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   map). Inline template styles are overridden there through class hooks plus `!important`.
   Inputs are 16 px on phones so iOS does not zoom; safe-area insets are honoured
   (`viewport-fit=cover`).
+  `mobile-landscape.css` (linked last) targets sideways phones with
+  `(pointer: coarse) and (max-height: 500px) and (orientation: landscape)` — they are often
+  wider than 760 px — collapsing the HUD to one 44 px row and docking the Stage Deck to the
+  right edge (`min(46vw, 400px)`) so the chamber keeps the left of the screen.
+  On phones (`PHONE_QUERY` in `quest3d/viewer.js`, matching both files) `fitToOpenArea()`
+  measures the HUD, `.quest-hud-top` and the visible deck, then uses `setViewOffset` to
+  centre the chamber in the uncovered part of the canvas, zooming out when that area is
+  narrower than a 1.7 widescreen view. It re-measures every 0.2 s; desktop projection is untouched.
   In `mobile-screens.css`, every screen root carries `m-screen m-<screen>`, and there are
   shared hooks: `m-grid-1` (grid drops to one column), `m-head` (header row wraps),
   `m-topbar`/`m-skip` (step rail and skip link), `m-foot`, `m-cta-stack`/`m-cta-row`,
