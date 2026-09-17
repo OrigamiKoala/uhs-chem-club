@@ -60,7 +60,6 @@ export function renderLanding(container) {
             <div class="cold-open-box" style="margin-bottom: 1.6rem; text-align: left; padding: 1rem 1.1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
                 <span class="eyebrow lit">VESS // QUARTERMASTER</span>
-                <span class="tag live" style="font-size: 0.6rem;">COMMS LIVE</span>
               </div>
               <p style="font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--accent-gold); margin: 0;">
                 "Signal's weak out here. If you can read this, the Avalon's still hiring."

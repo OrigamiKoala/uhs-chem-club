@@ -29,14 +29,14 @@ export function renderLogin(container) {
         <form id="login-form" novalidate>
           <div class="form-group">
             <label class="form-label" for="login-id">Email or Display Name</label>
-            <input type="text" id="login-id" class="form-input" placeholder="student@example.com or AstraNova"
+            <input type="text" id="login-id" class="form-input"
                    required autocomplete="username" autocapitalize="off">
           </div>
 
           <div class="form-group">
             <label class="form-label" for="login-pw">Password</label>
             <div class="input-wrap">
-              <input type="password" id="login-pw" class="form-input" placeholder="Enter password"
+              <input type="password" id="login-pw" class="form-input"
                      required autocomplete="current-password">
               <button type="button" class="reveal-btn" data-reveal="login-pw" aria-label="Show password">SHOW</button>
             </div>

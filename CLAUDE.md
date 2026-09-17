@@ -264,7 +264,8 @@ gradient buttons with white specular highlights; rounded corners (`--radius-sm` 
   `.quest-btn-sm` is compact quest chrome. Labels are 1–2 words; **no arrow glyphs.**
 - **Stage Deck**: collapsible bottom-left tablet in `quest.js` and `demo.js` (`Close` / `Stage Panel` + docked mini `Submit` / `Next Stage`).
 - **Inputs**: `.form-input` is a recessed well; focus turns the text amber rather than
-  adding a halo. `.choice-option` is a toggle with a lit left edge when selected.
+  adding a halo. Forms use explicit labels and helper text; never use placeholder example text.
+  `.choice-option` is a toggle with a lit left edge when selected.
 - **Banners**: `.form-banner` for faults; in the quest, `.stage-error-banner` with
   `.banner-mark` / `.banner-title` / `.banner-body` / `.banner-meta`. The leading mark is
   a stencilled `!!` or `//`, never an emoji.
@@ -280,6 +281,8 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 (b) a rule the player must satisfy, (c) an error, (d) something being taught, or
 (e) story — copy that builds the campaign fiction.
 - **No feature marketing.** The landing page is a name plate and two switches.
+- **No live connection claims.** Never use "COMMS LIVE" or "LIVE COMMS" badges; comms
+  channels are labeled diegetically (e.g. `COMMS`) without claiming an active live connection.
 - **A quest is described by three things and nothing else**: where it happens, its title,
   and one short line. Sector 01 is `Erebus · Desert world / The Charge Gardens / "Find
   what pulls. Draw the line."` — that is the template.

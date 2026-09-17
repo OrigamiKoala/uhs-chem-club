@@ -55,7 +55,7 @@ export async function renderLeaderboard(container) {
         <div class="glass-panel" style="margin-bottom: 1.25rem; padding: 0.85rem 1.1rem; border-left: 2px solid var(--accent-amber);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
             <span class="eyebrow lit" style="font-size: 0.65rem;">INTERCEPTED FLEET CHATTER // SECTOR 01</span>
-            <span class="tag live" style="font-size: 0.62rem;">ENCRYPTED COMM LINK</span>
+            <span class="tag" style="font-size: 0.62rem;">ENCRYPTED</span>
           </div>
           <div class="comms-ticker" style="display: flex; flex-direction: column; gap: 0.35rem; font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-secondary);">
             <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">

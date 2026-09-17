@@ -45,7 +45,7 @@ export function renderAdmin(container) {
           <form id="admin-reset-pw-form">
             <div class="form-group">
               <label class="form-label">Email or Display Name</label>
-              <input type="text" id="target-id" class="form-input" placeholder="e.g. student@example.com or Nova" required>
+              <input type="text" id="target-id" class="form-input" required>
             </div>
             <div class="form-group">
               <label class="form-label">Temporary Password</label>
@@ -67,15 +67,15 @@ export function renderAdmin(container) {
           <form id="admin-grant-xp-form">
             <div class="form-group">
               <label class="form-label">Player ID or Display Name</label>
-              <input type="text" id="grant-target-id" class="form-input" placeholder="p_123 or display name" required>
+              <input type="text" id="grant-target-id" class="form-input" required>
             </div>
             <div class="form-group">
               <label class="form-label">XP Amount</label>
-              <input type="number" id="grant-amount" class="form-input" placeholder="e.g. 50" required>
+              <input type="number" id="grant-amount" class="form-input" required>
             </div>
             <div class="form-group">
               <label class="form-label">Reason</label>
-              <input type="text" id="grant-reason" class="form-input" placeholder="e.g. Meeting quiz winner" required>
+              <input type="text" id="grant-reason" class="form-input" required>
             </div>
             <button type="submit" class="btn-primary" style="width: 100%;">
               Grant XP

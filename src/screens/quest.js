@@ -141,7 +141,6 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
 
     const modalTransmission = createTransmissionElement({
       speaker: b.speaker,
-      badge: 'LIVE COMMS',
       subtitle: b.subtitle,
       text: b.message,
       variant: 'hero'

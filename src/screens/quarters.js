@@ -100,7 +100,7 @@ export function renderQuarters(container) {
           <form id="rename-form">
             <div class="form-group">
               <label class="form-label" for="new-display-name">New Name</label>
-              <input type="text" id="new-display-name" class="form-input" placeholder="Enter name" minlength="3" maxlength="20" required autocapitalize="off">
+              <input type="text" id="new-display-name" class="form-input" minlength="3" maxlength="20" required autocapitalize="off">
               <span class="form-help" id="rename-help">3–20 chars · letters, numbers, space, - _</span>
             </div>
 

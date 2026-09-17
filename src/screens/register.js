@@ -66,14 +66,14 @@ export function renderRegister(container) {
         <form id="register-form" novalidate>
           <div class="form-group">
             <label class="form-label" for="reg-name">Call Sign / Display Name</label>
-            <input type="text" id="reg-name" class="form-input" placeholder="e.g. AstraNova"
+            <input type="text" id="reg-name" class="form-input"
                    minlength="3" maxlength="20" required autocomplete="username" autocapitalize="off">
             <span class="form-help" id="reg-name-help">3–20 chars · letters, numbers, space, - _</span>
           </div>
 
           <div class="form-group">
             <label class="form-label" for="reg-email">Comms Frequency (Email)</label>
-            <input type="email" id="reg-email" class="form-input" placeholder="student@example.com"
+            <input type="email" id="reg-email" class="form-input"
                    required autocomplete="email" autocapitalize="off">
             <span class="form-help" id="reg-email-help">Sign-in only. Never shared or emailed.</span>
           </div>
@@ -81,7 +81,7 @@ export function renderRegister(container) {
           <div class="form-group">
             <label class="form-label" for="reg-pw">Passphrase</label>
             <div class="input-wrap">
-              <input type="password" id="reg-pw" class="form-input" placeholder="At least 8 characters"
+              <input type="password" id="reg-pw" class="form-input"
                      minlength="8" required autocomplete="new-password">
               <button type="button" class="reveal-btn" data-reveal="reg-pw" aria-label="Show password">SHOW</button>
             </div>
