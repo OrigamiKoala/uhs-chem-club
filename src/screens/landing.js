@@ -11,6 +11,7 @@ import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { esc } from '../ui/layout.js';
 import { soundscape } from '../audio/soundscape.js';
+import { playCinematic } from '../ui/cinematic.js';
 
 export function renderLanding(container) {
   if (stage.cameraRig) {
@@ -27,7 +28,11 @@ export function renderLanding(container) {
       <div class="glass-panel" style="padding: 0;">
 
         <div class="panel-banner tall" style="margin-bottom: 0; border: none; border-bottom: 1px solid var(--border-durasteel);">
-          <img src="/art/cockpit.jpg" alt="" />
+          <video class="banner-video" poster="/art/cockpit.jpg" playsinline autoplay loop muted preload="auto">
+            <source src="/video/cockpit_loop.webm" type="video/webm">
+            <source src="/video/cockpit_loop.mp4" type="video/mp4">
+            <img src="/art/cockpit.jpg" alt="" />
+          </video>
         </div>
 
         <div style="padding: 1.8rem 1.8rem 2rem; text-align: center;">
@@ -58,14 +63,17 @@ export function renderLanding(container) {
                 <span class="eyebrow lit">VESS // QUARTERMASTER</span>
                 <span class="tag live" style="font-size: 0.6rem;">COMMS LIVE</span>
               </div>
-              <p style="font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--accent-gold); margin: 0;">
+              <p style="font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--accent-gold); margin: 0 0 0.6rem 0;">
                 "Signal's weak out here. If you can read this, the Avalon's still hiring."
               </p>
+              <button type="button" id="play-cold-open-btn" class="btn-chip" style="font-size: 0.65rem; padding: 3px 8px;">
+                ▶ PLAY TRANSMISSION (0:10)
+              </button>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 0.65rem; max-width: 280px; margin: 0 auto;">
               <a href="#/register" class="btn-primary" id="sign-on-cta" style="text-decoration: none;">
-                Sign On
+                Create Account
               </a>
               <a href="#/demo" class="btn-secondary" style="text-decoration: none;">
                 Try a Pylon
@@ -83,6 +91,13 @@ export function renderLanding(container) {
       </div>
     </div>
   `;
+
+  const playColdOpenBtn = container.querySelector('#play-cold-open-btn');
+  if (playColdOpenBtn) {
+    playColdOpenBtn.addEventListener('click', () => {
+      playCinematic('cold_open');
+    });
+  }
 
   const signoutBtn = container.querySelector('#landing-signout-btn');
   if (signoutBtn) {

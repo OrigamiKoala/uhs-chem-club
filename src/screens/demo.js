@@ -115,9 +115,6 @@ export function renderDemo(container) {
     </div>
   `;
 
-  // Show stage info modal before stage begins
-  showDemoModal(cfg);
-
   const interactiveArea = container.querySelector('#demo-interactive-area');
   const card = container.querySelector('#demo-card');
   const feedback = container.querySelector('#demo-feedback');

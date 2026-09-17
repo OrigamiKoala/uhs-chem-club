@@ -163,6 +163,12 @@ export class Router {
     this.appContainer.innerHTML = '';
     routeDef.render(this.appContainer);
 
+    // Ensure all muted banner & inline videos play reliably after innerHTML mount
+    this.appContainer.querySelectorAll('video').forEach(v => {
+      v.muted = true;
+      v.play().catch(() => {});
+    });
+
     // Update active nav button
     const activeNav = ROUTE_NAV[raw] || null;
     document.querySelectorAll('.nav-btn').forEach(btn => {

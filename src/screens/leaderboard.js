@@ -33,7 +33,7 @@ export async function renderLeaderboard(container) {
       <div class="screen-container">
         ${pageHeader({
           art: '/art/comms.jpg',
-          video: 'comms_sweep',
+          video: '/video/comms_loop.webm',
           artAlt: 'Comms array',
           eyebrow: 'Sector 01 Comms & Standings',
           title: 'Fleet Comms',

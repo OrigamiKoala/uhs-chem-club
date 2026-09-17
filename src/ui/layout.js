@@ -11,14 +11,27 @@
  */
 export function pageHeader(opts = {}) {
   const { art, video, artAlt = '', eyebrow, title, subtitle, actions, tall } = opts;
+  let videoSrcWebm = null;
+  let videoSrcMp4 = null;
+  if (video) {
+    if (video.startsWith('/')) {
+      videoSrcWebm = video.endsWith('.webm') ? video : video.replace(/\.[^.]+$/, '.webm');
+      videoSrcMp4 = video.endsWith('.mp4') ? video : video.replace(/\.[^.]+$/, '.mp4');
+    } else {
+      videoSrcWebm = `/video/${video}.webm`;
+      videoSrcMp4 = `/video/${video}.mp4`;
+    }
+  }
+
   return `
     <header class="glass-panel page-header">
       ${(art || video) ? `
         <div class="panel-banner ${tall ? 'tall' : ''}">
           ${video ? `
-            <video class="banner-video" poster="${art || ''}" playsinline autoplay loop muted preload="none">
-              <source src="${video}" type="video/webm">
-              <source src="${video.replace(/\.webm$/, '.mp4')}" type="video/mp4">
+            <video class="banner-video" poster="${art || ''}" playsinline autoplay loop muted preload="auto">
+              <source src="${videoSrcWebm}" type="video/webm">
+              <source src="${videoSrcMp4}" type="video/mp4">
+              ${art ? `<img src="${art}" alt="${artAlt}" loading="lazy" />` : ''}
             </video>
           ` : `
             <img src="${art}" alt="${artAlt}" loading="lazy" />

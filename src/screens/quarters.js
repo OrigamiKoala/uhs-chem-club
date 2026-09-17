@@ -40,7 +40,7 @@ export function renderQuarters(container) {
     <div class="screen-container" style="max-width: 860px;">
       ${pageHeader({
         art: '/art/quarters.jpg',
-        video: 'crew_quarters_idle',
+        video: '/video/airlock_loop.webm',
         artAlt: '',
         eyebrow: 'Crew record',
         title: 'Crew Profile',

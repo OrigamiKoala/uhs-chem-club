@@ -62,6 +62,7 @@ export function renderBridge(container) {
       <div class="screen-container">
         ${pageHeader({
           art: '/art/bridge.jpg',
+          video: '/video/cockpit_loop.webm',
           eyebrow: esc(t.name || t.team_id || 'Unassigned') + ' Guild',
           title: esc(p.display_name || 'Explorer'),
           actions: statRow([

@@ -800,8 +800,8 @@
 }
 
 .transmission-crt {
-  width: 38px;
-  height: 38px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
   background: #0d0c0a;
   border: 1px solid var(--border-durasteel);
@@ -809,6 +809,14 @@
   overflow: hidden;
   border-radius: 2px;
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.transmission-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: contrast(1.1) brightness(0.85);
 }
 
 .transmission-silhouette {

@@ -34,7 +34,7 @@ export function renderInventory(container) {
       <div class="screen-container">
         ${pageHeader({
           art: '/art/cargo.jpg',
-          video: 'cargo_bay_idle',
+          video: '/video/cargo_loop.webm',
           artAlt: '',
           eyebrow: 'Cargo manifest',
           title: 'Inventory',

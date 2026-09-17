@@ -18,7 +18,10 @@ export function createTransmissionElement(opts = {}) {
 
   container.innerHTML = `
     <div class="transmission-crt">
-      <div class="transmission-silhouette" aria-hidden="true"></div>
+      <video class="transmission-video" poster="/video/vess_transmission.jpg" playsinline autoplay loop muted preload="auto">
+        <source src="/video/vess_transmission.webm" type="video/webm">
+        <source src="/video/vess_transmission.mp4" type="video/mp4">
+      </video>
       <div class="transmission-raster" aria-hidden="true"></div>
     </div>
     <div class="transmission-body">
@@ -27,6 +30,11 @@ export function createTransmissionElement(opts = {}) {
       <div class="transmission-skip-hint">TAP TO SKIP</div>
     </div>
   `;
+
+  const crtVideo = container.querySelector('video');
+  if (crtVideo) {
+    crtVideo.play().catch(() => {});
+  }
 
   const textEl = container.querySelector('#typewriter-text');
   let charIndex = 0;

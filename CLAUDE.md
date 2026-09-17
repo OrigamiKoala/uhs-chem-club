@@ -187,7 +187,7 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
 
 ## Player journey
-1. `#/` landing — what this is, three cards (Play / Score / Compete), and a free sample.
+1. `#/` landing — cold open comms transmission, cockpit loop banner, and Create Account / Try a Pylon CTAs.
 2. `#/demo` — Stage 1 for real, no account, graded by the same evaluator.
 3. `#/register` — step 1 of 3 on the shared `stepRail`. Live validation mirrors
    `validateDisplayName` in `Util.gs` exactly, so no rule bites only at submit time.
