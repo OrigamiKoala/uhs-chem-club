@@ -139,14 +139,14 @@ export async function renderOnboarding(container) {
       `;
     }
     return `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem;">
+      <div class="party-roster-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem;">
         ${members.slice(0, 8).map(m => {
           const trId = m.trinket || 'trinket_1';
           const trDef = TRINKETS.find(x => x.id === trId) || TRINKETS[0];
           return `
             <div style="display: flex; align-items: center; gap: 0.6rem; padding: 4px 8px; background: var(--plate-100); border: 1px solid var(--border-durasteel);">
               <span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-amber);">[+]</span>
-              <div style="overflow: hidden;">
+              <div class="party-roster-name" style="overflow: hidden;">
                 <div style="font-family: var(--font-display); font-size: 0.84rem; font-weight: 600; color: var(--text-bright); text-overflow: ellipsis; white-space: nowrap;">${esc(m.display_name)}</div>
                 <div style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted); text-overflow: ellipsis; white-space: nowrap;">${esc(trDef.name)}</div>
               </div>
@@ -246,10 +246,10 @@ export async function renderOnboarding(container) {
     const members = rosterCache.get(selectedTeam);
 
     container.innerHTML = `
-      <div class="screen-container" style="max-width: 760px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+      <div class="screen-container m-screen m-onboarding" style="max-width: 760px;">
+        <div class="m-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
           ${stepRail(2)}
-          <a href="#/bridge" id="skip-to-bridge-link" class="eyebrow" style="text-decoration: none; color: var(--text-muted);">Skip // Launch</a>
+          <a href="#/bridge" id="skip-to-bridge-link" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Skip // Launch</a>
         </div>
 
         <div class="glass-panel">
@@ -268,7 +268,7 @@ export async function renderOnboarding(container) {
           </div>
 
           <!-- Guild Cards Grid -->
-          <div role="radiogroup" aria-label="Guild"
+          <div role="radiogroup" aria-label="Guild" class="guild-grid"
                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
             ${teamsData.map(t => {
               const isFull = (t.available !== undefined && t.available <= 0);
@@ -283,7 +283,7 @@ export async function renderOnboarding(container) {
                      ${isFull ? 'disabled aria-disabled="true"' : ''}
                      data-team="${t.team_id}"
                      style="flex-direction: column; align-items: flex-start; text-align: left; padding: 0.9rem; opacity: ${isFull ? 0.4 : 1}; cursor: ${isFull ? 'not-allowed' : 'pointer'}; ${isSelected ? `border-left-color: ${meta.accent};` : ''}">
-                  <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 0.35rem;">
+                  <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 0.35rem;">
                     <span style="display: flex; align-items: baseline; gap: 0.4rem;">
                       <span aria-hidden="true" style="font-family: var(--font-mono); font-size: 0.68rem; color: ${meta.accent};">${meta.mark}</span>
                       <span style="font-family: var(--font-imperial); font-weight: 700; font-size: 0.96rem; letter-spacing: 0.14em; text-transform: uppercase; color: ${meta.accent}; text-shadow: var(--engrave);">${meta.title}</span>
@@ -299,8 +299,8 @@ export async function renderOnboarding(container) {
           </div>
 
           <!-- Party Manifest Roster -->
-          <div id="party-manifest-card" style="background: var(--plate-200); border: 1px solid var(--border-durasteel); padding: 1rem; margin-bottom: 1.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.4rem;">
+          <div id="party-manifest-card" class="m-subpanel" style="background: var(--plate-200); border: 1px solid var(--border-durasteel); padding: 1rem; margin-bottom: 1.5rem;">
+            <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.4rem;">
               <span id="party-manifest-title" class="eyebrow lit">YOUR PARTY · ${activeMeta.title.toUpperCase()} CREW</span>
               <span id="party-manifest-count" class="eyebrow">${members ? `${members.length} Signed On` : 'Syncing…'}</span>
             </div>
@@ -309,7 +309,7 @@ export async function renderOnboarding(container) {
             </div>
           </div>
 
-          <div style="display: flex; justify-content: flex-end;">
+          <div class="m-cta-row" style="display: flex; justify-content: flex-end;">
             <button type="button" id="proceed-to-oath-btn" class="btn-primary" ${!selectedTeam ? 'disabled' : ''}>
               Accept Assignment
             </button>
@@ -402,10 +402,10 @@ export async function renderOnboarding(container) {
     const awardedTrinket = getTrinketForRoll(roll);
 
     container.innerHTML = `
-      <div class="screen-container" style="max-width: 620px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+      <div class="screen-container m-screen m-onboarding m-oath" style="max-width: 620px;">
+        <div class="m-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
           ${stepRail(3)}
-          <a href="#/bridge" id="skip-to-bridge-link-3" class="eyebrow" style="text-decoration: none; color: var(--text-muted);">Skip // Bridge</a>
+          <a href="#/bridge" id="skip-to-bridge-link-3" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Skip // Bridge</a>
         </div>
 
         <div class="glass-panel">
@@ -413,7 +413,7 @@ export async function renderOnboarding(container) {
           <div id="scene3-transmission-slot" style="margin-bottom: 1.5rem;"></div>
 
           <!-- Hold-to-Commit Keycap -->
-          <div id="oath-section" style="text-align: center; margin-bottom: 2rem;">
+          <div id="oath-section" class="oath-section" style="text-align: center; margin-bottom: 2rem;">
             <div class="eyebrow" style="margin-bottom: 0.8rem;">HOLD 1 SECOND TO COMMIT</div>
             <div style="position: relative; max-width: 260px; margin: 0 auto;">
               <button type="button" id="hold-oath-btn" class="btn-primary" style="width: 100%; padding: 16px 0; font-size: 1.1rem; letter-spacing: 0.18em; position: relative; overflow: hidden;">
@@ -424,7 +424,7 @@ export async function renderOnboarding(container) {
           </div>
 
           <!-- d20 Issue Roll (Revealed after hold) -->
-          <div id="roll-section" class="hidden" style="text-align: center; padding: 1.5rem 0;">
+          <div id="roll-section" class="hidden roll-section" style="text-align: center; padding: 1.5rem 0;">
             <div class="eyebrow lit" style="margin-bottom: 1rem;">QUARTERMASTER'S CRATE // D20 ISSUE ROLL</div>
 
             <!-- CSS 3D Die Container -->
@@ -435,8 +435,8 @@ export async function renderOnboarding(container) {
             </div>
 
             <!-- Trinket Reveal Card -->
-            <div id="trinket-reveal-card" class="hidden" style="text-align: left; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid ${awardedTrinket.rarity === 'rare' ? 'var(--accent-gold)' : 'var(--accent-amber)'}; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <div id="trinket-reveal-card" class="hidden m-subpanel" style="text-align: left; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid ${awardedTrinket.rarity === 'rare' ? 'var(--accent-gold)' : 'var(--accent-amber)'}; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+              <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                 <span class="eyebrow" style="color: ${awardedTrinket.rarity === 'rare' ? 'var(--accent-gold)' : 'var(--text-muted)'};">${awardedTrinket.rarity.toUpperCase()} ISSUE · D20 ROLL [${roll}]</span>
                 <span class="tag live">AWARDED</span>
               </div>

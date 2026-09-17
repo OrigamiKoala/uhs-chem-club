@@ -17,7 +17,7 @@ import { STAGE_CONFIGS, evaluateStageLocally, diagnoseMiss } from '../quest3d/ev
 
 function showDemoModal(cfg) {
   showModal(`
-    <div style="text-align: center; margin-bottom: 1.25rem;">
+    <div class="quest-modal-head" style="text-align: center; margin-bottom: 1.25rem;">
       <div class="eyebrow lit">Sample Stage 1</div>
       <h2 id="demo-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.3rem;">
         ${esc(cfg.title || 'Stage 1')}
@@ -92,11 +92,11 @@ export function renderDemo(container) {
         </div>
         <div class="stage-prompt-card" id="demo-card">
           <div class="stage-header">
-            <div>
+            <div class="stage-header-main">
               ${cfg.shape ? `<div class="stage-shape">${cfg.shape}</div>` : ''}
               <div class="stage-title">${cfg.title}</div>
             </div>
-            <div style="display: flex; gap: 0.4rem; align-items: center;">
+            <div class="stage-header-actions" style="display: flex; gap: 0.4rem; align-items: center;">
               <button type="button" id="demo-info-btn" class="btn-secondary quest-btn-sm">Objective</button>
               <button type="button" id="demo-close-btn" class="btn-secondary quest-btn-sm" title="Close stage panel" aria-label="Close stage panel">Close</button>
               <div class="stage-xp-tag">Sample</div>
@@ -113,7 +113,7 @@ export function renderDemo(container) {
           <div id="demo-interactive-area"></div>
           <div id="demo-feedback" class="hidden"></div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <div class="demo-actions" style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
             <a href="#/register" class="btn-secondary quest-btn-sm" style="text-decoration: none;">
               Create Account
             </a>
@@ -182,6 +182,7 @@ export function renderDemo(container) {
   syncDemoDockGradeBtn();
 
   if (tierManager.currentTier === 'T1' || !viewer) {
+    card?.classList.add('stage-card-fallback');
     renderFallbackInputs(interactiveArea, cfg, 'arrow', (payload) => { currentPayload = payload; });
   } else {
     viewer.setMode('draw');
@@ -218,7 +219,7 @@ export function renderDemo(container) {
         feedback.className = 'stage-error-banner stage-success-banner';
         feedback.innerHTML = `
           <span class="banner-mark" aria-hidden="true">//</span>
-          <div style="flex: 1;">
+          <div class="banner-content" style="flex: 1;">
             <div class="banner-title" style="color: var(--accent-green);">Solved</div>
             <div class="banner-body">Stage 1 solved. Create an account to continue.</div>
           </div>
@@ -250,7 +251,7 @@ export function renderDemo(container) {
       feedback.className = 'stage-error-banner';
       feedback.innerHTML = `
         <span class="banner-mark" aria-hidden="true">!!</span>
-        <div style="flex: 1;">
+        <div class="banner-content" style="flex: 1;">
           <div class="banner-title" style="color: var(--lamp-red);">${diag.title}</div>
           <div class="banner-body">${diag.message}</div>
         </div>

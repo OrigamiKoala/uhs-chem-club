@@ -91,12 +91,12 @@ export function renderFallbackInputs(container, stageConfig, kind, onPayloadChan
 
     wrap.innerHTML = `
       <label class="form-label">Connect a red zone to a blue zone</label>
-      <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+      <div class="fallback-arrow-row" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
         <select id="arrow-from" class="form-select" style="flex:1; min-width: 150px;" aria-label="Start of the arrow">
           <option value="">-- Start (red) --</option>
           ${anchorOptions(redAnchors.length > 0 ? redAnchors : all, stageConfig)}
         </select>
-        <span style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
+        <span class="fallback-arrow-glyph" style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
         <select id="arrow-to" class="form-select" style="flex:1; min-width: 150px;" aria-label="End of the arrow">
           <option value="">-- End (blue) --</option>
           ${anchorOptions(blueAnchors.length > 0 ? blueAnchors : all, stageConfig)}
@@ -120,16 +120,16 @@ export function renderFallbackInputs(container, stageConfig, kind, onPayloadChan
     wrap.innerHTML = `
       <label class="form-label">Put the steps in order</label>
       ${steps.map((st, i) => `
-        <div style="margin-bottom: 0.6rem; background: var(--plate-100); padding: 9px; border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
+        <div class="fallback-step" style="margin-bottom: 0.6rem; background: var(--plate-100); padding: 9px; border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
           <div class="eyebrow" style="color: var(--accent-amber); margin-bottom: 5px;">
             Step ${st.order || (i + 1)}
           </div>
-          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <div class="fallback-arrow-row" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
             <select class="form-select multi-step-from" data-order="${st.order || (i + 1)}" style="flex:1; min-width: 150px;" aria-label="Step ${st.order || (i + 1)} start">
               <option value="">-- Start --</option>
               ${anchorOptions(anchors, stageConfig)}
             </select>
-            <span style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
+            <span class="fallback-arrow-glyph" style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
             <select class="form-select multi-step-to" data-order="${st.order || (i + 1)}" style="flex:1; min-width: 150px;" aria-label="Step ${st.order || (i + 1)} end">
               <option value="">-- End --</option>
               ${anchorOptions(anchors, stageConfig)}
@@ -159,24 +159,24 @@ export function renderFallbackInputs(container, stageConfig, kind, onPayloadChan
     wrap.innerHTML = `
       <label class="form-label">Reaction cascade</label>
       <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-secondary);">Step 1: Attack Arrow</div>
-      <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.75rem;">
+      <div class="fallback-arrow-row" style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.75rem;">
         <select id="step1-from" class="form-select" style="flex:1;">
           <option value="">-- From --</option>
           ${(stageConfig.anchors || []).map(a => `<option value="${a}">${a}</option>`).join('')}
         </select>
-        <span style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
+        <span class="fallback-arrow-glyph" style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
         <select id="step1-to" class="form-select" style="flex:1;">
           <option value="">-- To --</option>
           ${(stageConfig.anchors || []).map(a => `<option value="${a}">${a}</option>`).join('')}
         </select>
       </div>
       <div style="margin-bottom:0.5rem; font-size:0.85rem; color:var(--text-secondary);">Step 2: Departure Arrow</div>
-      <div style="display:flex; gap:0.5rem; align-items:center;">
+      <div class="fallback-arrow-row" style="display:flex; gap:0.5rem; align-items:center;">
         <select id="step2-from" class="form-select" style="flex:1;">
           <option value="">-- From --</option>
           ${(stageConfig.anchors || []).map(a => `<option value="${a}">${a}</option>`).join('')}
         </select>
-        <span style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
+        <span class="fallback-arrow-glyph" style="color: var(--text-muted); font-family: var(--font-mono);" aria-hidden="true">&rarr;</span>
         <select id="step2-to" class="form-select" style="flex:1;">
           <option value="">-- To --</option>
           ${(stageConfig.anchors || []).map(a => `<option value="${a}">${a}</option>`).join('')}

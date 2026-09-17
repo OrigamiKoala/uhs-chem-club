@@ -10,7 +10,7 @@ export function renderAdmin(container) {
   let stats = { totalPlayers: '…', totalSubmissions: '…', completions: '…', gfxTiers: { T1: '…' } };
 
   container.innerHTML = `
-      <div class="screen-container" style="max-width: 920px;">
+      <div class="screen-container m-screen m-admin" style="max-width: 920px;">
         ${pageHeader({
           eyebrow: 'Restricted · logged',
           title: 'Admin',
@@ -18,26 +18,26 @@ export function renderAdmin(container) {
         })}
 
         <!-- Live Counters -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-          <div class="holo-card" style="padding: 1rem;">
+        <div class="admin-counters" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="holo-card admin-counter" style="padding: 1rem;">
             <div class="stat-label">Total Players</div>
-            <div id="stat-total-players" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-amber);">${stats.totalPlayers}</div>
+            <div class="admin-counter-value" id="stat-total-players" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-amber);">${stats.totalPlayers}</div>
           </div>
-          <div class="holo-card" style="padding: 1rem;">
+          <div class="holo-card admin-counter" style="padding: 1rem;">
             <div class="stat-label">Submissions</div>
-            <div id="stat-total-subs" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-green);">${stats.totalSubmissions}</div>
+            <div class="admin-counter-value" id="stat-total-subs" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-green);">${stats.totalSubmissions}</div>
           </div>
-          <div class="holo-card" style="padding: 1rem;">
+          <div class="holo-card admin-counter" style="padding: 1rem;">
             <div class="stat-label">Completions</div>
-            <div id="stat-completions" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-amber);">${stats.completions}</div>
+            <div class="admin-counter-value" id="stat-completions" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-amber);">${stats.completions}</div>
           </div>
-          <div class="holo-card" style="padding: 1rem;">
+          <div class="holo-card admin-counter" style="padding: 1rem;">
             <div class="stat-label">Tier 1 Submissions</div>
-            <div id="stat-t1-subs" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-gold);">${stats.gfxTiers?.T1 ?? 0}</div>
+            <div class="admin-counter-value" id="stat-t1-subs" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-gold);">${stats.gfxTiers?.T1 ?? 0}</div>
           </div>
         </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+      <div class="m-grid-1 admin-tools" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
         <!-- Reset Password Tool (§3.5) -->
         <div class="glass-panel">
           <h2 class="section-title" style="margin-bottom: 1.25rem;">Reset Password</h2>
@@ -49,7 +49,7 @@ export function renderAdmin(container) {
             </div>
             <div class="form-group">
               <label class="form-label">Temporary Password</label>
-              <div style="display: flex; gap: 0.5rem;">
+              <div class="admin-pw-row" style="display: flex; gap: 0.5rem;">
                 <input type="text" id="target-new-pw" class="form-input" value="ember-42-drift" required style="font-family: var(--font-mono);">
                 <button type="button" id="gen-pw-btn" class="btn-secondary" style="font-size: 0.75rem; white-space: nowrap;">Generate</button>
               </div>

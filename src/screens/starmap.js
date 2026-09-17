@@ -55,7 +55,7 @@ export function renderStarMap(container) {
   const canPlay = Boolean(session.token && session.player);
 
   container.innerHTML = `
-    <div class="screen-container">
+    <div class="screen-container m-screen m-starmap">
       ${pageHeader({
         art: '/art/starmap.jpg',
         video: '/video/starmap_loop.webm',
@@ -67,17 +67,17 @@ export function renderStarMap(container) {
           : `<a href="#/register" class="btn-primary" style="text-decoration: none;">Create Account</a>`
       })}
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+      <div class="m-grid-1 sector-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
         ${SECTORS.map(s => {
           const isLive = s.status === 'live';
           return `
-            <article class="holo-card" style="${isLive ? '' : 'opacity: 0.5;'} display: flex; flex-direction: column;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.9rem;">
+            <article class="holo-card sector-card" style="${isLive ? '' : 'opacity: 0.5;'} display: flex; flex-direction: column;">
+              <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.9rem;">
                 <span class="eyebrow ${isLive ? 'lit' : ''}">Sector ${s.code}</span>
                 <span class="tag ${isLive ? 'live' : 'locked'}">${isLive ? 'Open' : 'No Charts'}</span>
               </div>
 
-              <h2 style="font-family: var(--font-imperial); font-size: 1.25rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: ${isLive ? 'var(--text-bright)' : 'var(--text-secondary)'}; text-shadow: var(--engrave);">
+              <h2 class="sector-world" style="font-family: var(--font-imperial); font-size: 1.25rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: ${isLive ? 'var(--text-bright)' : 'var(--text-secondary)'}; text-shadow: var(--engrave);">
                 ${s.world}
               </h2>
               <div class="eyebrow" style="margin-top: 4px;">${s.place}</div>
@@ -93,7 +93,7 @@ export function renderStarMap(container) {
 
               <div style="margin-top: auto;">
                 ${isLive ? `
-                  <button type="button" class="btn-primary sector-enter-btn" style="width: 100%; font-size: 0.7rem; padding: 9px 14px; min-height: 38px;">
+                  <button type="button" class="btn-primary sector-enter-btn m-tap" style="width: 100%; font-size: 0.7rem; padding: 9px 14px; min-height: 38px;">
                     ${canPlay ? `Enter · ${TOTAL_STAGES} stages` : 'Free puzzle'}
                   </button>
                 ` : `

@@ -115,7 +115,7 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
 
   if (currentStageIdx === 0 && b) {
     showModal(`
-      <div style="text-align: center; margin-bottom: 1.15rem;">
+      <div class="quest-modal-head" style="text-align: center; margin-bottom: 1.15rem;">
         <div class="eyebrow lit" style="letter-spacing: 0.18em;">${esc(b.badge)}</div>
         <h2 id="stage-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.25rem;">
           Pylon 1 · ${esc(cfg.title || 'Target Lock')}
@@ -156,7 +156,7 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
   }
 
   showModal(`
-    <div style="text-align: center; margin-bottom: 1.25rem;">
+    <div class="quest-modal-head" style="text-align: center; margin-bottom: 1.25rem;">
       <div class="eyebrow lit">Pylon ${currentStageIdx + 1} of ${TOTAL_STAGES}</div>
       <h2 id="stage-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.3rem;">
         Pylon ${currentStageIdx + 1} · ${esc(cfg.title || ('Pylon ' + (currentStageIdx + 1)))}
@@ -386,11 +386,11 @@ export function renderQuest(container) {
             <div id="quest-transmission-slot" style="margin-bottom: 0.5rem;"></div>
 
             <div class="stage-header" style="margin-bottom: 0.4rem; padding-bottom: 0.4rem;">
-              <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <div class="stage-header-main" style="display: flex; align-items: center; gap: 0.6rem;">
                 <span class="stage-title">${cfg.title || ('Stage ' + (currentStageIdx + 1))}</span>
                 ${isReplay ? '<span class="tag">Replay</span>' : `<span class="tag live">+${stageXp} XP</span>`}
               </div>
-              <div style="display: flex; gap: 0.4rem; align-items: center;">
+              <div class="stage-header-actions" style="display: flex; gap: 0.4rem; align-items: center;">
                 <button type="button" id="stage-info-btn" class="btn-secondary quest-btn-sm" title="${currentStageIdx === 0 ? 'View mission briefing' : 'View stage instructions'}">
                   ${currentStageIdx === 0 ? '◈ Briefing' : '◈ Objective'}
                 </button>
@@ -600,6 +600,7 @@ export function renderQuest(container) {
     const usingFallback = tierManager.currentTier === 'T1' || !viewer;
 
     if (usingFallback) {
+      stageCard?.classList.add('stage-card-fallback');
       renderFallbackInputs(interactiveArea, cfg, interactionKind, onPayloadChange);
     } else {
       viewer.setMode('draw');
@@ -698,7 +699,7 @@ export function renderQuest(container) {
               const clearStory = pylonStory?.onClear || '';
               feedback.innerHTML = `
                 <span class="banner-mark" aria-hidden="true">//</span>
-                <div style="flex: 1;">
+                <div class="banner-content" style="flex: 1;">
                   <div class="banner-title" style="color: var(--accent-green);">Pylon ${currentStageIdx + 1} Awakened</div>
                   ${clearStory ? `<div style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent-gold); margin-bottom: 0.35rem;">"${esc(clearStory)}"</div>` : ''}
                   <div class="banner-body">${explanation}</div>
@@ -789,7 +790,7 @@ export function renderQuest(container) {
             feedback.className = `stage-error-banner ${isSoftError ? 'soft' : ''}`;
             feedback.innerHTML = `
               <span class="banner-mark" aria-hidden="true">!!</span>
-              <div style="flex: 1;">
+              <div class="banner-content" style="flex: 1;">
                 <div class="banner-title" style="color: ${isSoftError ? 'var(--accent-amber)' : 'var(--lamp-red)'};">
                   ${bannerTitle}
                 </div>
@@ -873,12 +874,12 @@ export function renderQuest(container) {
     ];
 
     showModal(`
-      <div style="text-align: center; margin-bottom: 0.85rem;">
+      <div class="quest-modal-head" style="text-align: center; margin-bottom: 0.85rem;">
         <div class="eyebrow lit" style="letter-spacing: 0.18em;">SECTOR 01 CLEARED // MISSION DEBRIEF</div>
         <h2 id="quest-complete-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.25rem;">The Charge Gardens</h2>
       </div>
 
-      <div class="stat-row" style="margin: 0.75rem 0 1rem; justify-content: space-around;">
+      <div class="stat-row quest-debrief-stats" style="margin: 0.75rem 0 1rem; justify-content: space-around;">
         <div class="stat-tile">
           <div class="stat-label">Stages</div>
           <div class="stat-value">${TOTAL_STAGES} / ${TOTAL_STAGES}</div>
@@ -898,7 +899,7 @@ export function renderQuest(container) {
 
       <!-- Dialogue Stepper & Controls -->
       <div class="debrief-controls" style="display: flex; justify-content: space-between; align-items: center; background: var(--plate-100); border: 1px solid var(--border-durasteel); padding: 0.55rem 0.85rem; margin-bottom: 1.25rem;">
-        <div style="display: flex; align-items: center; gap: 0.65rem;">
+        <div class="debrief-controls-left" style="display: flex; align-items: center; gap: 0.65rem;">
           <button type="button" id="debrief-prev-btn" class="btn-secondary quest-btn-sm" style="min-width: 62px;" disabled>
             ◀ Prev
           </button>

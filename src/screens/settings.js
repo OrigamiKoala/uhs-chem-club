@@ -14,7 +14,7 @@ export function renderSettings(container) {
   const soundPrefs = session.sound;
 
   container.innerHTML = `
-    <div class="screen-container" style="max-width: 680px;">
+    <div class="screen-container m-screen m-settings" style="max-width: 680px;">
       ${pageHeader({
         eyebrow: 'Ship systems',
         title: 'Settings',
@@ -51,7 +51,7 @@ export function renderSettings(container) {
           </label>
         </div>
 
-        <div style="border-top: 1px solid var(--border-durasteel); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <div class="settings-motion-row" style="border-top: 1px solid var(--border-durasteel); padding-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
           <div style="font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-bright);">Reduce Motion</div>
           <input type="checkbox" id="reduce-motion-checkbox" ${session.reduceMotion ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
         </div>
@@ -59,7 +59,7 @@ export function renderSettings(container) {
 
       <!-- Section 2: Audio Systems -->
       <div class="glass-panel" style="margin-bottom: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div class="m-head settings-audio-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
           <h2 class="section-title" style="margin: 0;">Audio Systems</h2>
           <button type="button" id="audio-mute-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 14px;">
             ${soundPrefs.muted ? 'UNMUTE SOUND' : 'MUTE SOUND'}
@@ -68,27 +68,27 @@ export function renderSettings(container) {
 
         <div style="display: flex; flex-direction: column; gap: 1rem;">
           <div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
+            <div class="settings-slider-head" style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
               <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Master Volume</span>
               <span id="val-master" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.masterVolume * 100)}%</span>
             </div>
-            <input type="range" id="slider-master" min="0" max="100" value="${Math.round(soundPrefs.masterVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
+            <input type="range" class="settings-slider" id="slider-master" min="0" max="100" value="${Math.round(soundPrefs.masterVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
           </div>
 
           <div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
+            <div class="settings-slider-head" style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
               <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Ambience & Engine Hum</span>
               <span id="val-ambience" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.ambienceVolume * 100)}%</span>
             </div>
-            <input type="range" id="slider-ambience" min="0" max="100" value="${Math.round(soundPrefs.ambienceVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
+            <input type="range" class="settings-slider" id="slider-ambience" min="0" max="100" value="${Math.round(soundPrefs.ambienceVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
           </div>
 
           <div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
+            <div class="settings-slider-head" style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
               <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Effects & Foley</span>
               <span id="val-effects" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.effectsVolume * 100)}%</span>
             </div>
-            <input type="range" id="slider-effects" min="0" max="100" value="${Math.round(soundPrefs.effectsVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
+            <input type="range" class="settings-slider" id="slider-effects" min="0" max="100" value="${Math.round(soundPrefs.effectsVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
           </div>
         </div>
       </div>

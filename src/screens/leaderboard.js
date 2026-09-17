@@ -30,7 +30,7 @@ export async function renderLeaderboard(container) {
     const hasData = (lbData.teams || []).length > 0 || (lbData.individual || []).length > 0;
 
     container.innerHTML = `
-      <div class="screen-container">
+      <div class="screen-container m-screen m-leaderboard">
         ${pageHeader({
           art: '/art/comms.jpg',
           video: '/video/comms_loop.webm',
@@ -38,7 +38,7 @@ export async function renderLeaderboard(container) {
           eyebrow: 'Sector 01 Comms & Standings',
           title: 'Fleet Comms',
           actions: `
-            <div style="display: flex; gap: 0.5rem;" role="tablist" aria-label="Standings view">
+            <div class="lb-tabs" style="display: flex; gap: 0.5rem;" role="tablist" aria-label="Standings view">
               <button type="button" id="tab-teams" role="tab" aria-selected="${activeTab === 'teams'}"
                       class="btn-chip ${activeTab === 'teams' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
                 Guilds
@@ -52,28 +52,28 @@ export async function renderLeaderboard(container) {
         })}
 
         <!-- Intercepted Comms Chatter -->
-        <div class="glass-panel" style="margin-bottom: 1.25rem; padding: 0.85rem 1.1rem; border-left: 2px solid var(--accent-amber);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <div class="glass-panel lb-chatter" style="margin-bottom: 1.25rem; padding: 0.85rem 1.1rem; border-left: 2px solid var(--accent-amber);">
+          <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
             <span class="eyebrow lit" style="font-size: 0.65rem;">INTERCEPTED FLEET CHATTER // SECTOR 01</span>
             <span class="tag" style="font-size: 0.62rem;">ENCRYPTED</span>
           </div>
           <div class="comms-ticker" style="display: flex; flex-direction: column; gap: 0.35rem; font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-secondary);">
-            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+            <div class="lb-chatter-line" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
               <span style="color: var(--accent-amber);">[04:12]</span>
               <span style="color: var(--team-fire);">Thermal Smelters:</span>
               <span>"Core temp nominal on Pylon 12. Transfer arc locked."</span>
             </div>
-            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+            <div class="lb-chatter-line" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
               <span style="color: var(--accent-amber);">[04:08]</span>
               <span style="color: var(--team-earth);">Mineral Mining:</span>
               <span>"Conduit 7 cleared. Heavy silt dredged from lower manifold."</span>
             </div>
-            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+            <div class="lb-chatter-line" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
               <span style="color: var(--accent-amber);">[03:59]</span>
               <span style="color: var(--team-water);">Moisture Rigs:</span>
               <span>"Pressure needle holding at Relay 8. Basin moisture rising."</span>
             </div>
-            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+            <div class="lb-chatter-line" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
               <span style="color: var(--accent-amber);">[03:44]</span>
               <span style="color: var(--team-air);">Atmospheric Crew:</span>
               <span>"Squall clearing west of the dune rim. Field visibility 80%."</span>
@@ -107,18 +107,18 @@ export async function renderLeaderboard(container) {
       return `<div class="glass-panel empty-state"><div class="empty-icon" aria-hidden="true">—</div><h2 class="section-title">No guild scores yet</h2></div>`;
     }
     return `
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
+      <div class="m-grid-1 lb-team-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
         ${rows.map(t => {
           const tid = String(t.team_id || '').toLowerCase();
           const accent = TEAM_ACCENTS[tid] || 'var(--accent-amber)';
           const isMine = session.teamId === tid;
           return `
-            <article class="holo-card" style="${isMine ? `border-left: 2px solid ${accent};` : ''}">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+            <article class="holo-card lb-team-card" style="${isMine ? `border-left: 2px solid ${accent};` : ''}">
+              <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
                 <span style="font-family: var(--font-mono); font-size: 1.5rem; color: ${accent};">${String(t.rank).padStart(2, '0')}</span>
                 <span class="tag">${t.active_members ?? 0}/${t.roster_size ?? 0} active</span>
               </div>
-              <h2 style="font-family: var(--font-imperial); font-size: 1.2rem; font-weight: 700; letter-spacing: 0.16em; color: ${accent}; margin-bottom: 1rem; text-transform: uppercase; text-shadow: var(--engrave);">
+              <h2 class="lb-team-name" style="font-family: var(--font-imperial); font-size: 1.2rem; font-weight: 700; letter-spacing: 0.16em; color: ${accent}; margin-bottom: 1rem; text-transform: uppercase; text-shadow: var(--engrave);">
                 ${esc(PROPER[tid] || t.name || t.team_id)} ${isMine ? '<span class="tag warn" style="vertical-align: middle;">Yours</span>' : ''}
               </h2>
               <div class="stat-row" style="justify-content: space-between;">
@@ -140,9 +140,9 @@ export async function renderLeaderboard(container) {
       return `<div class="glass-panel empty-state"><div class="empty-icon" aria-hidden="true">—</div><h2 class="section-title">No players ranked yet</h2></div>`;
     }
     return `
-      <div class="glass-panel" style="padding: 1rem;">
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+      <div class="glass-panel lb-players" style="padding: 1rem;">
+        <div class="lb-table-wrap" style="overflow-x: auto;">
+          <table class="lb-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
             <thead>
               <tr style="border-bottom: 1px solid var(--border-durasteel); color: var(--text-muted); font-size: 0.72rem; font-family: var(--font-mono); letter-spacing: 0.08em;">
                 <th style="padding: 10px 12px;">RANK</th>
@@ -158,16 +158,16 @@ export async function renderLeaderboard(container) {
                   (session.player.player_id === row.player_id || session.player.display_name === row.display_name);
                 const tid = String(row.team_id || '').toLowerCase();
                 return `
-                  <tr style="border-bottom: 1px solid var(--border-durasteel); background: ${isMe ? 'var(--plate-300)' : 'transparent'};">
-                    <td style="padding: 12px; font-family: var(--font-mono); color: ${row.rank <= 3 ? 'var(--accent-amber)' : 'var(--text-muted)'};">${String(row.rank).padStart(2, '0')}</td>
-                    <td style="padding: 12px; font-weight: 700; color: var(--text-bright);">
+                  <tr class="lb-row" style="border-bottom: 1px solid var(--border-durasteel); background: ${isMe ? 'var(--plate-300)' : 'transparent'};">
+                    <td class="lb-rank" style="padding: 12px; font-family: var(--font-mono); color: ${row.rank <= 3 ? 'var(--accent-amber)' : 'var(--text-muted)'};">${String(row.rank).padStart(2, '0')}</td>
+                    <td class="lb-player" style="padding: 12px; font-weight: 700; color: var(--text-bright);">
                       ${esc(row.display_name)} ${isMe ? '<span class="tag warn">You</span>' : ''}
                     </td>
-                    <td style="padding: 12px; font-size: 0.85rem; color: ${TEAM_ACCENTS[tid] || 'var(--text-secondary)'};">
+                    <td class="lb-team" style="padding: 12px; font-size: 0.85rem; color: ${TEAM_ACCENTS[tid] || 'var(--text-secondary)'};">
                       ${esc(PROPER[tid] || row.team_id || '—')}
                     </td>
-                    <td style="padding: 12px;"><span class="level-badge" style="font-size: 0.65rem;">LVL ${row.level || 1}${row.level_title ? ' ' + esc(row.level_title).toUpperCase() : ''}</span></td>
-                    <td style="padding: 12px; text-align: right; font-family: var(--font-mono); color: var(--accent-amber);">${row.xp}</td>
+                    <td class="lb-level" style="padding: 12px;"><span class="level-badge" style="font-size: 0.65rem;">LVL ${row.level || 1}${row.level_title ? ' ' + esc(row.level_title).toUpperCase() : ''}</span></td>
+                    <td class="lb-xp" style="padding: 12px; text-align: right; font-family: var(--font-mono); color: var(--accent-amber);">${row.xp}</td>
                   </tr>
                 `;
               }).join('')}

@@ -1,0 +1,454 @@
+/* ===================================================================
+   MOBILE QUEST — phone layout for #/quest and #/demo (<= 760px).
+   Builds on the SMALL SCREENS block at the end of holo.css. Desktop is
+   untouched: every rule here sits inside a max-width: 760px query.
+   The shell (HUD, modal, toasts, transmission) is styled in mobile.css.
+   =================================================================== */
+
+@media (max-width: 760px) {
+
+  /* ---------------------------------------------------------------
+     1. CONSOLE FRAME — hug the edges, honour the notch and home bar
+     --------------------------------------------------------------- */
+  .quest-hud-overlay {
+    gap: 0.5rem;
+    padding:
+      0.5rem
+      calc(0.6rem + env(safe-area-inset-right, 0px))
+      calc(0.6rem + env(safe-area-inset-bottom, 0px))
+      calc(0.6rem + env(safe-area-inset-left, 0px));
+  }
+
+  .quest-hud-top {
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  /* ---------------------------------------------------------------
+     2. NAV CLUSTER — Exit / Prev / counter / Next on one row,
+        the channel-lamp track on a full-width row below it
+     --------------------------------------------------------------- */
+  .quest-nav-cluster {
+    width: 100%;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .quest-btn-sm,
+  .btn-secondary.quest-btn-sm,
+  .btn-primary.quest-btn-sm {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  .quest-nav-cluster > .quest-btn-sm { flex: 0 0 auto; }
+
+  .quest-nav-cluster > .stage-counter {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    letter-spacing: 0.12em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stage-pill-track {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    gap: 2px;
+    padding: 0 6px;
+    justify-content: space-between;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  /* Each lamp becomes a 40px-tall touch strip; the lamp itself is drawn
+     by ::before at its desktop size, so the look does not change. */
+  .stage-pill-track .stage-dot {
+    position: relative;
+    flex: 1 0 14px;
+    width: 14px;
+    height: 40px;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .stage-pill-track .stage-dot::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 8px;
+    height: 12px;
+    transform: translate(-50%, -50%);
+    background: var(--plate-400);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6);
+    transition: background 0.15s ease;
+  }
+
+  .stage-pill-track .stage-dot.clickable:hover { background: transparent; }
+
+  .stage-pill-track .stage-dot.completed::before {
+    background: var(--accent-green);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5), var(--glow-green);
+  }
+
+  .stage-pill-track .stage-dot.active::before {
+    background: var(--lamp-amber);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 6px rgba(240, 178, 70, 0.7);
+  }
+
+  .stage-pill-track .stage-dot:focus-visible::before {
+    outline: 1px solid var(--accent-amber);
+    outline-offset: 2px;
+  }
+
+  /* ---------------------------------------------------------------
+     3. GARDENS MAP (compact, quest HUD) — one slim line: tally + lamps
+     --------------------------------------------------------------- */
+  .quest-gardens-slot {
+    width: 100%;
+    min-width: 0;
+    pointer-events: none;
+  }
+
+  .quest-gardens-slot .gardens-map.compact {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    min-width: 0;
+  }
+
+  .quest-gardens-slot .gardens-map.compact .gardens-header {
+    margin: 0;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+  }
+
+  .quest-gardens-slot .gardens-map.compact .gardens-header .eyebrow { display: none; }
+
+  .quest-gardens-slot .gardens-map.compact .gardens-header .tag {
+    font-size: 0.56rem;
+    padding: 2px 5px;
+    white-space: nowrap;
+  }
+
+  .quest-gardens-slot .gardens-map.compact .pylon-grid {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 1px;
+  }
+
+  .quest-gardens-slot .gardens-map.compact .pylon-node {
+    min-width: 0;
+    height: 10px;
+  }
+
+  /* Full (Bridge) map: 20 columns do not fit a phone, so wrap to 10. */
+  .gardens-map:not(.compact) { padding: 0.7rem 0.75rem; }
+  .gardens-map:not(.compact) .pylon-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .gardens-header { min-width: 0; }
+  .gardens-header .tag,
+  .gardens-header .eyebrow { overflow-wrap: anywhere; }
+
+  /* ---------------------------------------------------------------
+     4. STAGE DECK — a bottom sheet that never eats the chamber
+     --------------------------------------------------------------- */
+  .stage-card-wrap { min-width: 0; }
+
+  .stage-prompt-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    max-height: 46vh;
+    max-height: 46dvh;
+    padding: 0 0.85rem 0.85rem;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+    overflow-wrap: anywhere;
+    box-shadow: inset 0 1px 0 var(--seam-light), 0 -8px 24px rgba(0, 0, 0, 0.7);
+  }
+
+  .stage-prompt-card > * {
+    flex-shrink: 0;
+    min-width: 0;
+  }
+
+  /* Tier 1 has no chamber to protect: let the deck take the room. */
+  .stage-prompt-card.stage-card-fallback {
+    max-height: calc(100vh - var(--hud-h) - 9.5rem);
+    max-height: calc(100dvh - var(--hud-h) - 9.5rem);
+  }
+
+  /* Header (title + Objective/Close) rides at the top of the sheet and
+     stays put while the body scrolls, so Close is always in reach. */
+  .stage-prompt-card > .stage-header {
+    order: -1;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.6rem;
+    margin: 0 -0.85rem 0.5rem !important;
+    padding: 0.6rem 0.85rem 0.5rem !important;
+    background:
+      linear-gradient(135deg, transparent calc(50% - 0.5px), var(--border-durasteel) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)) top left / var(--c) var(--c) no-repeat,
+      var(--bg-surface);
+  }
+
+  .stage-header-main {
+    flex: 1 1 10rem;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 0.4rem !important;
+  }
+
+  .stage-header-main .stage-title {
+    overflow-wrap: anywhere;
+    letter-spacing: 0.1em;
+  }
+
+  .stage-header-actions {
+    flex: 0 0 auto;
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  #quest-transmission-slot { min-width: 0; }
+
+  .stage-instruction {
+    overflow-wrap: anywhere;
+  }
+
+  /* ---- Toolbar: tip + counter on top, a full-width button row below ---- */
+  .stage-prompt-card .stage-toolbar {
+    margin: 0.35rem 0 0.6rem !important;
+    gap: 0.4rem;
+  }
+
+  .stage-toolbar-left {
+    flex: 1 1 100%;
+    min-width: 0;
+    gap: 0.35rem 0.5rem;
+  }
+
+  .stage-toolbar-left .stage-tip { overflow-wrap: anywhere; }
+
+  .stage-toolbar-right {
+    flex: 1 1 100%;
+    margin-left: 0;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .stage-toolbar-right > .quest-btn-sm {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-left: 6px;
+    padding-right: 6px;
+    white-space: nowrap;
+  }
+
+  #grade-btn {
+    flex: 1.4 1 0;
+    min-width: 0;
+    min-height: 44px !important;
+    padding: 0 10px !important;
+    white-space: nowrap;
+  }
+
+  /* Demo toolbar: tip wraps, Clear sits on its own right-hand edge. */
+  #demo-card .stage-toolbar > .stage-tip { flex: 1 1 60%; min-width: 0; order: 0; }
+  #demo-card .stage-toolbar > .quest-btn-sm { margin-left: auto; }
+
+  .demo-actions { gap: 6px !important; flex-wrap: nowrap !important; }
+  .demo-actions > a,
+  .demo-actions > button {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px !important;
+    padding: 0 10px !important;
+    white-space: nowrap;
+  }
+
+  /* ---- Docked bar (card closed): full-width, thumb-height ---- */
+  .stage-dock-bar {
+    display: flex;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .stage-dock-bar > .quest-btn-sm {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  /* ---------------------------------------------------------------
+     5. HINT LADDER, FAULT BANNERS, CONCEPT CARDS
+     --------------------------------------------------------------- */
+  .hint-stack > div:first-child { margin-bottom: -4px !important; }
+
+  .hint-rung { padding: 7px 10px; }
+  .hint-rung-text,
+  .hint-rung-label { overflow-wrap: anywhere; }
+  .hint-rung-label { white-space: normal; }
+
+  .stage-prompt-card .banner-dismiss-btn,
+  .hint-stack .banner-dismiss-btn {
+    min-width: 40px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stage-error-banner {
+    gap: 0.5rem;
+    padding: 8px 4px 10px 10px;
+    min-width: 0;
+  }
+
+  .stage-error-banner .banner-dismiss-btn { margin: -6px 0 -6px 0; }
+
+  .banner-content { min-width: 0; }
+  .banner-title,
+  .banner-body,
+  .banner-meta,
+  .banner-content { overflow-wrap: anywhere; }
+  .banner-title { letter-spacing: 0.1em; }
+
+  .concept-card { min-width: 0; }
+  .concept-card-header { flex-wrap: wrap; gap: 0.4rem; }
+  .concept-card-title-group { flex-wrap: wrap; min-width: 0; }
+  .concept-card-title,
+  .concept-card-intro,
+  .concept-pill,
+  .concept-card-action { overflow-wrap: anywhere; }
+  .concept-grid { grid-template-columns: 1fr; }
+  .concept-dismiss-btn,
+  .concept-reopen-btn { min-height: 40px; }
+
+  /* Scanner readout (when present): meters shrink, text wraps. */
+  .scan-readout { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+
+  /* ---------------------------------------------------------------
+     6. TIER 1 FALLBACK — builders stack into a single column
+     --------------------------------------------------------------- */
+  .fallback-controls { min-width: 0; }
+
+  .fallback-arrow-row {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 4px !important;
+  }
+
+  .fallback-arrow-row > .form-select {
+    flex: 0 0 auto !important;
+    width: 100%;
+    min-width: 0 !important;
+    max-width: 100%;
+    min-height: 44px;
+    font-size: 16px; /* below 16px iOS zooms the page on focus */
+    text-overflow: ellipsis;
+  }
+
+  .fallback-arrow-glyph {
+    align-self: center;
+    display: inline-block;
+    transform: rotate(90deg);
+    line-height: 1;
+    padding: 2px 0;
+  }
+
+  .fallback-step { padding: 8px !important; }
+
+  .fallback-controls .choice-option { min-width: 0; overflow-wrap: anywhere; }
+  .fallback-controls .choice-option input { flex-shrink: 0; width: 20px; height: 20px; }
+
+  .fallback-controls .rank-item { gap: 0.5rem; padding: 8px 10px; min-width: 0; }
+  .fallback-controls .rank-item > span { min-width: 0; overflow-wrap: anywhere; }
+  .fallback-controls .rank-btn { min-width: 40px; min-height: 40px; }
+
+  /* ---------------------------------------------------------------
+     7. QUEST MODALS — briefing, demo intro and the debrief
+     --------------------------------------------------------------- */
+  .quest-modal-head { min-width: 0; }
+  .quest-modal-head .page-title {
+    font-size: 1.1rem !important;
+    letter-spacing: 0.1em;
+    overflow-wrap: anywhere;
+  }
+  .quest-modal-head .eyebrow { overflow-wrap: anywhere; letter-spacing: 0.12em !important; }
+  .quest-modal-head .tag { white-space: normal; }
+
+  #modal-start-stage-btn,
+  #modal-start-demo-btn { min-height: 44px; }
+
+  .quest-debrief-stats {
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    justify-content: space-between !important;
+  }
+  .quest-debrief-stats .stat-tile { min-width: 0; flex: 1 1 5rem; }
+  .quest-debrief-stats .stat-value { overflow-wrap: anywhere; font-size: 0.95rem; }
+
+  .debrief-controls {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 0.6rem !important;
+  }
+  .debrief-controls-left {
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+  }
+  .debrief-controls #debrief-next-btn { flex: 0 0 auto; margin-left: auto; }
+  #debrief-exit-actions .btn-primary,
+  #debrief-exit-actions .btn-secondary { min-height: 44px; min-width: 0; }
+}
+
+/* ---------------------------------------------------------------
+   NARROW PHONES (<= 400px) — tighten the chrome another notch
+   --------------------------------------------------------------- */
+@media (max-width: 400px) {
+  .quest-nav-cluster > .stage-counter { font-size: 0.62rem; letter-spacing: 0.08em; }
+  .stage-toolbar-right > .quest-btn-sm { font-size: 0.62rem; letter-spacing: 0.06em; }
+  #grade-btn { letter-spacing: 0.12em; }
+  .stage-header-actions .quest-btn-sm { padding-left: 8px; padding-right: 8px; }
+  .quest-debrief-stats .stat-tile { flex-basis: 100%; }
+}
+
+/* ---------------------------------------------------------------
+   SHORT PHONES / LANDSCAPE — give the chamber every pixel
+   --------------------------------------------------------------- */
+@media (max-width: 760px) and (max-height: 700px) {
+  .quest-gardens-slot { display: none; }
+  .stage-prompt-card { max-height: 42vh; max-height: 42dvh; }
+}
+
+@media (max-width: 760px) and (max-height: 500px) {
+  .stage-prompt-card { max-height: 56vh; max-height: 56dvh; }
+  .stage-prompt-card.stage-card-fallback {
+    max-height: calc(100vh - var(--hud-h) - 6rem);
+    max-height: calc(100dvh - var(--hud-h) - 6rem);
+  }
+}

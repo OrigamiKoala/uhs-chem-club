@@ -1,0 +1,276 @@
+/* ===================================================================
+   MOBILE SCREENS — phone layout for the non-quest screens.
+
+   Every rule lives inside a max-width query, so desktop is untouched.
+   Hooks are the `m-*` and screen-specific classes added to the screen
+   templates in src/screens/ (landing, register, login, onboarding,
+   bridge, starmap, leaderboard, inventory, quarters, settings, admin).
+   Shared shell pieces (.page-header, .stat-row, .step-rail,
+   .panel-banner, .transmission-card, .modal-card) are styled elsewhere
+   and deliberately not touched here.
+
+   Many templates carry inline styles, so `!important` is used where an
+   inline declaration has to be beaten.
+   =================================================================== */
+
+@media (max-width: 760px) {
+
+  /* ---------- Shared screen furniture ---------- */
+
+  /* Nothing inside a screen may push the page sideways. */
+  .m-screen { min-width: 0; }
+  .m-screen p,
+  .m-screen h2,
+  .m-screen h3,
+  .m-screen .m-wrap { overflow-wrap: anywhere; }
+
+  /* Grid children may shrink below their content's min-content width. */
+  .m-screen [style*="display: grid"] > * { min-width: 0; }
+
+  /* 16px inputs stop iOS from zooming the page on focus. */
+  .m-screen .form-input,
+  .m-screen .form-select {
+    font-size: 16px;
+    width: 100%;
+    min-width: 0;
+  }
+  .m-screen .reveal-btn { min-height: 34px; padding: 5px 10px; }
+
+  /* Multi-column grids collapse to one column. */
+  .m-screen .m-grid-1 {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  /* Header rows (eyebrow + tag) wrap instead of overflowing. */
+  .m-screen .m-head {
+    flex-wrap: wrap;
+    gap: 0.35rem 0.6rem;
+  }
+  .m-screen .m-head > * { min-width: 0; }
+
+  /* Step rail + skip link: rail on its own line, link underneath. */
+  .m-screen .m-topbar {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 0.4rem;
+  }
+  .m-screen .m-topbar .step-rail { margin-bottom: 0; }
+  .m-screen .m-skip {
+    align-self: flex-end;
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 0.25rem;
+  }
+
+  /* Footer link rows: every link a real tap target. */
+  .m-screen .m-foot {
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+  }
+  .m-screen .m-foot a,
+  .m-screen .m-foot button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+  .m-screen .m-foot-center a { justify-content: center; padding: 0 0.5rem; }
+
+  /* Stacked CTAs span the panel. */
+  .m-screen .m-cta-stack { max-width: none !important; }
+  .m-screen .m-cta-row > .btn-primary,
+  .m-screen .m-cta-row > .btn-secondary { width: 100%; }
+
+  /* Inline small buttons get a full-size tap target. */
+  .m-screen .m-tap { min-height: 44px !important; }
+
+  /* Vess comms insets and sub-panels: trim the padding. */
+  .m-screen .m-inset { padding: 0.8rem 0.9rem !important; }
+  .m-screen .m-subpanel { padding: 0.85rem 0.9rem !important; }
+
+  .m-screen .holo-card { padding: 1.1rem 1rem; }
+
+  /* ---------- Landing ---------- */
+  .m-landing .landing-body { padding: 1.2rem 1rem 1.4rem !important; }
+  .m-landing .landing-title {
+    font-size: 1.9rem !important;
+    letter-spacing: 0.26em !important;
+    margin-left: 0.26em !important;
+  }
+  .m-landing .m-inset { margin-bottom: 1.2rem !important; }
+  .m-landing #landing-sound-btn { min-height: 40px; padding: 4px 10px; }
+
+  /* ---------- Register ---------- */
+  .m-register .bg-option { padding: 10px 12px !important; }
+
+  /* ---------- Onboarding (scene 2: guild picker) ---------- */
+  .m-onboarding .transmission-tabs { margin-bottom: 1.1rem !important; }
+  .m-onboarding .transmission-tabs .tag {
+    min-height: 40px;
+    padding: 4px 10px;
+    flex: 1 1 auto;
+    justify-content: center;
+    text-align: center;
+  }
+  .m-onboarding .guild-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)) !important;
+    gap: 0.6rem !important;
+    margin-bottom: 1.1rem !important;
+  }
+  .m-onboarding .team-card {
+    padding: 0.8rem 0.85rem !important;
+    min-height: 64px;
+  }
+  .m-onboarding .party-roster-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .m-onboarding .party-roster-name { min-width: 0; }
+  .m-onboarding #party-manifest-card { margin-bottom: 1.1rem !important; }
+  .m-onboarding #proceed-to-oath-btn { width: 100%; }
+
+  /* ---------- Onboarding (scene 3: oath + roll) ---------- */
+  .m-oath .oath-section { margin-bottom: 1rem !important; }
+  .m-oath #hold-oath-btn { min-height: 56px; }
+  .m-oath .roll-section { padding: 0.75rem 0 0 !important; }
+  .m-oath #trinket-reveal-card h3 { font-size: 1rem !important; }
+  .m-oath #launch-cta-btn { min-height: 48px; }
+
+  /* ---------- Bridge ---------- */
+  .m-bridge .bridge-grid { gap: 1rem !important; }
+  .m-bridge .bridge-quest-banner { height: 104px !important; }
+  .m-bridge .bridge-quest-cta {
+    min-height: 48px;
+    text-align: center;
+    white-space: normal;
+  }
+  .m-bridge .bridge-decks { gap: 0.5rem !important; }
+  .m-bridge .bridge-decks .btn-secondary {
+    padding: 8px 6px;
+    letter-spacing: 0.1em;
+    text-align: center;
+    white-space: normal;
+  }
+
+  /* ---------- Star map ---------- */
+  .m-starmap .sector-world { font-size: 1.1rem !important; }
+  .m-starmap .sector-card p { margin-bottom: 1rem !important; }
+
+  /* ---------- Fleet comms / standings ---------- */
+  .m-leaderboard .lb-tabs { width: 100%; }
+  .m-leaderboard .lb-tabs .btn-chip {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 10px !important;
+  }
+  .m-leaderboard .lb-chatter { padding: 0.8rem 0.9rem !important; }
+  .m-leaderboard .lb-chatter-line { gap: 0.15rem 0.5rem !important; }
+  .m-leaderboard .lb-team-name { font-size: 1.05rem !important; margin-bottom: 0.75rem !important; }
+  .m-leaderboard .lb-players { padding: 0.5rem 0.75rem !important; }
+
+  /* Player table becomes stacked rows:
+       RANK | PLAYER ........... | XP
+       RANK | TEAM  | LEVEL ........   */
+  .m-leaderboard .lb-table,
+  .m-leaderboard .lb-table tbody { display: block; width: 100%; }
+  .m-leaderboard .lb-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .m-leaderboard .lb-row {
+    display: grid;
+    grid-template-columns: 2.2rem auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "rank player player xp"
+      "rank team   level  level";
+    align-items: center;
+    gap: 0.3rem 0.6rem;
+    padding: 0.7rem 0.4rem;
+  }
+  .m-leaderboard .lb-row > td { padding: 0 !important; min-width: 0; }
+  .m-leaderboard .lb-rank { grid-area: rank; align-self: start; }
+  .m-leaderboard .lb-player { grid-area: player; overflow-wrap: anywhere; }
+  .m-leaderboard .lb-xp { grid-area: xp; }
+  .m-leaderboard .lb-team { grid-area: team; font-size: 0.8rem !important; }
+  .m-leaderboard .lb-level { grid-area: level; justify-self: end; text-align: right; }
+  .m-leaderboard .lb-level .level-badge {
+    display: inline-block;
+    white-space: normal;
+    font-size: 0.6rem !important;
+  }
+
+  /* ---------- Inventory ---------- */
+  .m-inventory .inv-locker {
+    padding: 0.9rem 0.95rem !important;
+    margin-bottom: 1rem !important;
+  }
+  .m-inventory .inv-locker-text { min-width: 0 !important; flex-basis: 12rem; }
+  .m-inventory .inv-card-title { min-width: 0; }
+
+  /* ---------- Crew / quarters ---------- */
+  .m-quarters .quarters-grid { margin-bottom: 1rem !important; }
+  .m-quarters .quarters-avatar {
+    width: 104px !important;
+    height: 104px !important;
+    margin-bottom: 1rem !important;
+  }
+  .m-quarters .quarters-avatar svg { width: 76px; height: 76px; }
+  .m-quarters .quarters-section {
+    padding: 1rem 0.9rem !important;
+    margin-bottom: 1rem !important;
+  }
+  .m-quarters .mission-log-entry { padding: 0.65rem 0.8rem !important; }
+  .m-quarters .crew-roster-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 136px), 1fr)) !important;
+    gap: 0.5rem !important;
+  }
+  .m-quarters .crew-roster-card { padding: 0.65rem 0.75rem !important; }
+
+  /* ---------- Settings ---------- */
+  .m-settings .settings-motion-row { min-height: 52px; gap: 0.75rem; }
+  .m-settings #reduce-motion-checkbox {
+    width: 26px !important;
+    height: 26px !important;
+    flex-shrink: 0;
+  }
+  .m-settings .settings-audio-head .section-title { flex: 1 1 auto; }
+  .m-settings #audio-mute-btn {
+    min-height: 40px;
+    padding: 6px 12px !important;
+  }
+  .m-settings .settings-slider-head { gap: 0.75rem; }
+  .m-settings .settings-slider { height: 32px; }
+
+  /* ---------- Admin ---------- */
+  .m-admin .admin-counters {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.6rem !important;
+    margin-bottom: 1rem !important;
+  }
+  .m-admin .admin-counter { padding: 0.75rem !important; }
+  .m-admin .admin-counter .stat-label { overflow-wrap: anywhere; }
+  .m-admin .admin-counter-value { font-size: 1.3rem !important; }
+  .m-admin .admin-pw-row { flex-direction: column; }
+  .m-admin .admin-pw-row .btn-secondary { width: 100%; }
+}
+
+/* Narrow phones (360–430 px): tighter panels, full-width stacked choices. */
+@media (max-width: 480px) {
+  .m-screen .glass-panel:not(.page-header) { padding: 1rem 0.9rem; }
+
+  .m-settings .settings-audio-head { align-items: stretch !important; }
+  .m-settings #audio-mute-btn { width: 100%; }
+
+  .m-register .m-foot { justify-content: space-between; }
+}
+
+/* Very narrow (≤ 359 px): the guild picker goes to a single column. */
+@media (max-width: 359px) {
+  .m-onboarding .guild-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .m-landing .landing-title { font-size: 1.6rem !important; letter-spacing: 0.2em !important; }
+}

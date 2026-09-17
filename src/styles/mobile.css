@@ -1,0 +1,212 @@
+/* ===================================================================
+   PHONE SHELL — header, viewport, modal, toasts, shared page furniture.
+   Every rule here is scoped to phone widths; desktop never sees it.
+   Screen-specific phone rules live in mobile-screens.css and
+   mobile-quest.css.
+   =================================================================== */
+
+@media (max-width: 760px) {
+  /* ---- Header: a fixed two-row bulkhead ----
+     Row 1: brand, telemetry, controls. Row 2: the nav switchgear strip.
+     --hud-h is exact so nothing can slide under it. */
+  :root { --hud-h: 92px; }
+  :root:has(#hud-nav.hidden) { --hud-h: 52px; }
+
+  html { -webkit-text-size-adjust: 100%; }
+  body { overflow-x: hidden; }
+
+  .hud {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 52px 40px;
+    align-items: center;
+    column-gap: 0.5rem;
+    height: var(--hud-h);
+    min-height: 0;
+    padding: 0 max(0.75rem, env(safe-area-inset-right)) 0 max(0.75rem, env(safe-area-inset-left));
+  }
+  :root:has(#hud-nav.hidden) .hud { grid-template-rows: 52px; }
+
+  .hud-left { display: contents; }
+  .hud-brand { grid-column: 1; grid-row: 1; gap: 0.45rem; min-height: 40px; }
+  .hud-title { font-size: 0.95rem; letter-spacing: 0.2em; }
+  .hud-season-tag { display: none; }
+
+  .hud-right {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    min-width: 0;
+    flex-wrap: nowrap;
+  }
+
+  .hud-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: stretch;
+    margin: 0;
+    padding: 0 0 4px;
+    width: auto;
+    order: 0;
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hud-nav::-webkit-scrollbar { display: none; }
+  .hud-nav.hidden { display: none !important; }
+
+  .nav-btn {
+    flex: 1 0 auto;
+    min-height: 36px;
+    padding: 4px 10px;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+
+  .hud-stats { gap: 0.3rem; flex-wrap: nowrap; }
+  .xp-badge { padding: 3px 7px; min-height: 30px; }
+  .xp-val { font-size: 0.78rem; }
+  .xp-bar-mini { display: none; }
+  .level-badge { font-size: 0.58rem; padding: 3px 6px; letter-spacing: 0.1em; white-space: nowrap; }
+  .team-badge { display: none; }
+
+  .hud-controls { gap: 3px; flex-wrap: nowrap; }
+  .btn-chip {
+    min-height: 38px;
+    padding: 4px 8px;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  #user-btn { max-width: 88px; }
+  #user-display-name {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .user-dropdown {
+    position: fixed;
+    top: 52px;
+    right: max(0.75rem, env(safe-area-inset-right));
+    margin-top: 0;
+    width: min(220px, calc(100vw - 1.5rem));
+  }
+  .dropdown-item { padding: 12px 16px; font-size: 0.78rem; }
+
+  /* ---- Viewport ---- */
+  .app-viewport {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-top: calc(var(--hud-h) + 8px);
+  }
+
+  .screen-container {
+    padding: 0.75rem max(0.75rem, env(safe-area-inset-right))
+             calc(1.25rem + env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+    overflow-wrap: anywhere;
+  }
+
+  .glass-panel, .plate { padding: 1rem; --c: 8px; }
+
+  /* ---- Switchgear and forms ---- */
+  .btn-primary, .btn-secondary {
+    padding-left: 14px;
+    padding-right: 14px;
+    letter-spacing: 0.14em;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;
+  }
+  /* 16px stops iOS Safari zooming the page on focus */
+  .form-input, .form-select { font-size: 16px; }
+
+  /* ---- Page furniture ---- */
+  .page-header { margin-bottom: 1rem; }
+  .page-header-body { gap: 0.9rem; align-items: stretch; flex-direction: column; }
+  .page-header-body > div:first-child { min-width: 0; }
+  .page-title { font-size: 1.15rem; letter-spacing: 0.12em; overflow-wrap: anywhere; }
+  .page-sub { font-size: 0.86rem; }
+  .page-actions { width: 100%; }
+  .page-actions .btn-primary, .page-actions .btn-secondary { flex: 1 1 140px; }
+
+  .panel-banner { height: 96px; margin-bottom: 0.9rem; }
+  .panel-banner.tall { height: 128px; }
+
+  .section-title { font-size: 0.95rem; letter-spacing: 0.1em; }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 0.75rem 1rem;
+    padding: 0.7rem 0.8rem;
+  }
+  .stat-tile { min-width: 0; }
+  .stat-value { font-size: 0.98rem; overflow-wrap: anywhere; }
+
+  .step-rail { flex-wrap: nowrap; margin-bottom: 1rem; }
+  .step-node { padding: 5px 8px; gap: 0.35rem; letter-spacing: 0.1em; font-size: 0.6rem; }
+  .step-sep { padding: 0; font-size: 0.6rem; }
+
+  .empty-state { padding-left: 0.5rem; padding-right: 0.5rem; }
+
+  /* ---- Toasts: full-width label tape above the home indicator ---- */
+  .toast-container {
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
+  .toast { max-width: none; font-size: 0.78rem; padding: 10px 12px; }
+
+  /* ---- Modal: near-full-width sheet that scrolls inside itself ---- */
+  .modal-container {
+    align-items: flex-start;
+    padding: calc(0.75rem + env(safe-area-inset-top)) 0.6rem calc(0.75rem + env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+  }
+  .modal-card { max-width: 100%; margin: 0 auto; }
+  .modal-card.glass-panel { padding: 1rem 0.9rem; }
+  .prose-block { font-size: 0.88rem; line-height: 1.6; }
+
+  /* ---- Vess transmissions ---- */
+  .transmission-card { gap: 0.6rem; padding: 0.6rem 0.7rem; }
+  .transmission-crt { width: 40px; height: 40px; }
+  .transmission-header-row { flex-wrap: wrap; gap: 0.25rem 0.5rem; }
+  .transmission-text { font-size: 0.8rem; overflow-wrap: anywhere; }
+
+  /* ---- Cinematics: captions sit under the frame so they never cover it ---- */
+  .cinematic-overlay {
+    flex-direction: column;
+    padding: calc(0.5rem + env(safe-area-inset-top)) 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+  }
+  .cinematic-frame { overflow: visible; }
+  .cinematic-caption-bar {
+    top: 100%;
+    bottom: auto;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    border: 1px solid var(--border-durasteel);
+  }
+  .cinematic-skip-cue { top: 8px; right: 8px; font-size: 0.56rem; padding: 3px 6px; }
+}
+
+/* Narrow phones: the level plate yields its space to the controls. */
+@media (max-width: 400px) {
+  .level-badge { display: none; }
+  .hud-title { font-size: 0.85rem; letter-spacing: 0.16em; }
+  #user-btn { max-width: 76px; }
+}
+
+/* Phones held sideways: the frame fits the short edge. */
+@media (max-height: 500px) and (pointer: coarse) {
+  .cinematic-frame { width: auto; height: calc(100dvh - 5.5rem); max-width: 100%; }
+  .cinematic-caption-bar { font-size: 0.74rem; padding: 6px 10px; min-height: 0; }
+}

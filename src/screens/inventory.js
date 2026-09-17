@@ -6,7 +6,7 @@ import { api } from '../api.js';
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { showToast } from '../ui/toast.js';
-import { pageHeader, emptyState } from '../ui/layout.js';
+import { pageHeader, emptyState, esc } from '../ui/layout.js';
 
 export function renderInventory(container) {
   if (stage.cameraRig) {
@@ -31,7 +31,7 @@ export function renderInventory(container) {
     const trinketData = session.player?.trinket || session.trinket || null;
 
     container.innerHTML = `
-      <div class="screen-container">
+      <div class="screen-container m-screen m-inventory">
         ${pageHeader({
           art: '/art/cargo.jpg',
           video: '/video/cargo_loop.webm',
@@ -42,8 +42,8 @@ export function renderInventory(container) {
         })}
 
         ${trinketData ? `
-          <div class="glass-panel" style="margin-bottom: 1.5rem; padding: 1.1rem 1.25rem; border-left: 2px solid var(--accent-gold);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+          <div class="glass-panel inv-locker" style="margin-bottom: 1.5rem; padding: 1.1rem 1.25rem; border-left: 2px solid var(--accent-gold);">
+            <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
               <span class="eyebrow lit" style="color: var(--accent-gold);">PERSONAL LOCKER // STARTER TRINKET</span>
               <span class="tag warn">SOULBOUND · COSMETIC</span>
             </div>
@@ -51,7 +51,7 @@ export function renderInventory(container) {
               <div style="font-family: var(--font-mono); font-size: 1.1rem; color: var(--accent-gold); width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: var(--plate-300); border: 1px solid var(--border-durasteel);">
                 #${trinketData.roll || '20'}
               </div>
-              <div style="flex: 1; min-width: 200px;">
+              <div class="inv-locker-text" style="flex: 1; min-width: 200px;">
                 <div style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; color: var(--text-bright); text-transform: uppercase; letter-spacing: 0.1em;">
                   ${esc(trinketData.name)}
                 </div>
@@ -74,14 +74,14 @@ export function renderInventory(container) {
             action: '<a href="#/quest" class="btn-primary" style="text-decoration: none;">Sector 01</a>'
           })}
         ` : `
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+          <div class="m-grid-1 inv-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
             ${inventory.map(inv => {
               const def = ITEM_CATALOG[inv.item_id] || { name: inv.item_id, rarity: 'common', effect: 'Trophy.', usable: false, provenance: 'Refinery salvage' };
               const rarityColor = def.rarity === 'epic' ? 'var(--accent-amber)' : def.rarity === 'rare' ? 'var(--accent-gold)' : 'var(--text-muted)';
               return `
-                <div class="holo-card" style="${def.usable ? 'border-left: 2px solid var(--accent-amber);' : ''} display: flex; flex-direction: column;">
+                <div class="holo-card inv-card" style="${def.usable ? 'border-left: 2px solid var(--accent-amber);' : ''} display: flex; flex-direction: column;">
                   <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.9rem;">
-                    <div>
+                    <div class="inv-card-title">
                       <span class="eyebrow" style="color: ${rarityColor};">${def.rarity}</span>
                       <h3 style="font-family: var(--font-display); font-size: 1rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-bright); margin-top: 0.3rem; text-shadow: var(--engrave);">
                         ${def.name}
@@ -100,7 +100,7 @@ export function renderInventory(container) {
 
                   <div style="margin-top: auto;">
                     ${def.usable ? `
-                      <button type="button" class="btn-primary use-item-btn" data-item-id="${inv.item_id}" style="width: 100%; font-size: 0.7rem; padding: 9px 16px; min-height: 38px;">
+                      <button type="button" class="btn-primary use-item-btn m-tap" data-item-id="${inv.item_id}" style="width: 100%; font-size: 0.7rem; padding: 9px 16px; min-height: 38px;">
                         Deploy
                       </button>
                     ` : `

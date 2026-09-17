@@ -19,7 +19,7 @@ export function renderLogin(container) {
   }
 
   container.innerHTML = `
-    <div class="screen-container" style="max-width: 460px;">
+    <div class="screen-container m-screen m-login" style="max-width: 460px;">
       <div class="glass-panel">
         <div style="text-align: center; margin-bottom: 1.5rem;">
           <div class="eyebrow">Account Access</div>
@@ -49,7 +49,7 @@ export function renderLogin(container) {
           </button>
         </form>
 
-        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+        <div class="m-foot m-foot-center" style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-secondary);">
           <a href="#/register" class="link-accent">Create account</a>
         </div>
       </div>

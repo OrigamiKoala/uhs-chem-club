@@ -59,7 +59,7 @@ export function renderBridge(container) {
     const transmissionText = getBridgeTransmission(cleared);
 
     container.innerHTML = `
-      <div class="screen-container">
+      <div class="screen-container m-screen m-bridge">
         ${pageHeader({
           art: '/art/bridge.jpg',
           video: '/video/cockpit_loop.webm',
@@ -72,17 +72,17 @@ export function renderBridge(container) {
           ])
         })}
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
+        <div class="m-grid-1 bridge-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
           <!-- Active Quest Card -->
           <section class="glass-panel">
-            <div class="panel-banner" style="height: 130px;">
+            <div class="panel-banner bridge-quest-banner" style="height: 130px;">
               <video class="banner-video" poster="/art/crucible.jpg" playsinline autoplay loop muted preload="none">
                 <source src="/video/crucible_loop.webm" type="video/webm">
               </video>
               <img src="/art/crucible.jpg" alt="The reaction chamber" loading="lazy" />
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+            <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
               <span class="eyebrow lit">Sector 01 · Erebus</span>
               <span class="tag ${isComplete ? 'live' : 'warn'}">${isComplete ? 'Complete' : cleared > 0 ? 'Underway' : 'Sealed'}</span>
             </div>
@@ -91,8 +91,8 @@ export function renderBridge(container) {
             <p class="page-sub" style="margin-bottom: 1.1rem;">Find what pulls. Draw the line.</p>
 
             <!-- Vess Comms Transmission Inset -->
-            <div class="cold-open-box" style="margin-bottom: 1.25rem; padding: 0.85rem 1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <div class="cold-open-box m-inset" style="margin-bottom: 1.25rem; padding: 0.85rem 1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
+              <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                 <span class="eyebrow lit">VESS // TRANSMISSION</span>
                 <span class="tag live" style="font-size: 0.58rem;">COMMS</span>
               </div>
@@ -112,7 +112,7 @@ export function renderBridge(container) {
               { label: 'Run time', value: '~30 min', plain: true }
             ])}
 
-            <a href="#/quest" class="btn-primary" style="width: 100%; text-decoration: none; margin-top: 1.25rem;">
+            <a href="#/quest" class="btn-primary bridge-quest-cta" style="width: 100%; text-decoration: none; margin-top: 1.25rem;">
               ${isComplete ? 'Replay Gardens' : cleared > 0 ? `Pylon ${currentPylonNum} awaits` : 'Begin · Pylon 1 awaits'}
             </a>
           </section>
@@ -135,7 +135,7 @@ export function renderBridge(container) {
 
             <div style="border-top: 1px solid var(--border-durasteel); padding-top: 1.25rem; margin-top: 1.25rem;">
               <div class="eyebrow" style="margin-bottom: 0.8rem;">Decks</div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+              <div class="bridge-decks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <a href="#/starmap" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Star Map</a>
                 <a href="#/leaderboard" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Fleet Comms</a>
                 <a href="#/inventory" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Inventory</a>

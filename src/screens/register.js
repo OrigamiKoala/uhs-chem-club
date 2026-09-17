@@ -44,16 +44,16 @@ export function renderRegister(container) {
   } catch (e) {}
 
   container.innerHTML = `
-    <div class="screen-container" style="max-width: 520px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+    <div class="screen-container m-screen m-register" style="max-width: 520px;">
+      <div class="m-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
         ${stepRail(1)}
-        <a href="#/login" class="eyebrow" style="text-decoration: none; color: var(--text-muted);">Skip // Sign In</a>
+        <a href="#/login" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Skip // Sign In</a>
       </div>
 
       <div class="glass-panel">
         <!-- Vess Dialogue Inset -->
-        <div class="cold-open-box" style="margin-bottom: 1.5rem; padding: 0.9rem 1.1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+        <div class="cold-open-box m-inset" style="margin-bottom: 1.5rem; padding: 0.9rem 1.1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
+          <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
             <span class="eyebrow lit">VESS // QUARTERMASTER</span>
             <span class="tag live" style="font-size: 0.6rem;">SCENE 01 · MANIFEST</span>
           </div>
@@ -96,7 +96,7 @@ export function renderRegister(container) {
                 <button type="button" class="choice-option bg-option ${bg.id === selectedBg ? 'selected' : ''}"
                         role="radio" aria-checked="${bg.id === selectedBg}" data-bg="${bg.id}"
                         style="padding: 9px 12px; text-align: left; display: flex; flex-direction: column; gap: 2px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                  <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <span style="font-family: var(--font-display); font-weight: 600; font-size: 0.92rem; color: var(--text-bright); text-transform: uppercase;">${bg.title}</span>
                     <span class="eyebrow" style="font-size: 0.65rem;">COSMETIC</span>
                   </div>
@@ -113,7 +113,7 @@ export function renderRegister(container) {
           </button>
         </form>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; font-family: var(--font-mono); font-size: 0.72rem;">
+        <div class="m-foot" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; font-family: var(--font-mono); font-size: 0.72rem;">
           <a href="#/login" class="link-accent">Sign in</a>
           <span style="color: var(--text-muted);">Step 1 of 3</span>
         </div>

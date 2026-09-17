@@ -331,3 +331,24 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - Everything must work at 375 px wide. Media queries at 900 px / 760 px / 620 px collapse
   the HUD, hide the legend and secondary chrome, shrink the chamfer, and cap the stage
   card height.
+- **Phone layout lives in its own stylesheets**, linked after `holo.css` and scoped entirely to
+  `max-width: 760px` (or narrower), so desktop is never affected:
+  `mobile.css` (shell: two-row fixed HUD with a scrolling nav strip, `--hud-h` 92 px, or
+  52 px when the nav is hidden via `:has()`; modal sheet, toasts, page furniture,
+  transmissions, cinematic captions under the frame), `mobile-screens.css` (per-screen
+  rules for landing → admin) and `mobile-quest.css` (quest, demo, Tier 1 fallback, gardens
+  map). Inline template styles are overridden there through class hooks plus `!important`.
+  Inputs are 16 px on phones so iOS does not zoom; safe-area insets are honoured
+  (`viewport-fit=cover`).
+  In `mobile-screens.css`, every screen root carries `m-screen m-<screen>`, and there are
+  shared hooks: `m-grid-1` (grid drops to one column), `m-head` (header row wraps),
+  `m-topbar`/`m-skip` (step rail and skip link), `m-foot`, `m-cta-stack`/`m-cta-row`,
+  `m-tap`, `m-inset`, `m-subpanel` and `m-wrap`. On phones the Standings player table turns
+  into stacked grid rows (`lb-row`, `lb-rank`, `lb-player`, `lb-team`, `lb-level`, `lb-xp`).
+  When a new grid or table goes into one of these screens, add a hook to it.
+  In `mobile-quest.css` the Stage Deck becomes a bottom sheet (≤ 46 dvh, internal scroll,
+  sticky header so Close is always reachable; `stage-card-fallback` on Tier 1 lets it grow),
+  stage lamps become 40 px-tall touch strips drawn by `::before`, and the quest hooks are
+  `stage-header-main`/`stage-header-actions`, `banner-content`, `demo-actions`,
+  `quest-modal-head`, `quest-debrief-stats`, `debrief-controls-left`, and in the Tier 1
+  builders `fallback-arrow-row`/`fallback-arrow-glyph`/`fallback-step` (stacked, arrow turned down).
