@@ -271,6 +271,17 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   yokes, throttle quadrant, armored bucket seats, twin CRT monitors.
 - Celestial vista: chromatic gas giant with rings, the banded desert planet Erebus, moons,
   an asteroid belt. Stars are blue-white and sand-gold, not neon.
+  - `three/materials/celestial.js` draws every body with its own shader instead of image
+    textures. Surfaces come from 3D simplex noise, and the only light is one sun
+    (`SUN_DIRECTION`). The cabin lamps do not light them, so night sides are truly dark.
+    Atmospheres are thin shells that only brighten on the day side, and the planet casts
+    its shadow on the rings. The gas giant's tilt is set on a parent group, which keeps the
+    rings on its equator. The asteroids are uneven, lumpy rocks built by
+    `createAsteroidGeometry`.
+  - `three/materials/starfield.js` puts the stars on a shell at radius 600–750, past every
+    planet, sized in screen pixels by brightness, plus a very faint galactic band.
+  - `stage.js` gives the ship scene a dim `RoomEnvironment` PMREM
+    (`environmentIntensity` 0.22) so the metal surfaces show reflections.
 - Lighting: cool starlight through the canopy, warm sodium instrument task lamps, dust motes.
 - Routes bind environment stills: `/art/cockpit.jpg`, `starmap.jpg`, `crucible.jpg`,
   `cargo.jpg`, `quarters.jpg`, `comms.jpg`, `airlock.jpg`.

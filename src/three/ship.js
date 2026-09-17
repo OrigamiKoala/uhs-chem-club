@@ -10,11 +10,15 @@ import {
   createFloorGrateTexture,
   createHazardStripesTexture,
   createCrtScreenTexture,
-  createControlPanelTexture,
-  createDesertPlanetTexture,
-  createGasGiantPlanetTexture,
-  createPlanetRingsTexture
+  createControlPanelTexture
 } from './materials/textures.js';
+import {
+  createPlanetMaterial,
+  createAtmosphereShell,
+  createRingMaterial,
+  createAsteroidGeometry
+} from './materials/celestial.js';
+import { tierManager } from './tier.js';
 
 export class ShipInterior {
   constructor(scene) {
@@ -69,9 +73,6 @@ export class ShipInterior {
     this.controlPanelTex = createControlPanelTexture(512, 256);
     this.crtAmberTex = createCrtScreenTexture('SYSTEM CALIB', 'amber');
     this.crtGreenTex = createCrtScreenTexture('ANALYSIS RF', 'green');
-    this.planetTex = createDesertPlanetTexture(1024, 512);
-    this.gasGiantTex = createGasGiantPlanetTexture(1024, 512);
-    this.ringsTex = createPlanetRingsTexture(512, 64);
 
     // 3. Heavy Industrial Floor Grating Material
     this.floorMat = new THREE.MeshStandardMaterial({
@@ -564,121 +565,123 @@ export class ShipInterior {
   }
 
   buildPlanetaryVista() {
-    // === SPACE OPERA MULTI-PLANET CELESTIAL VISTA ===
-    // 1. Chromatic Gas Giant (Jovian class with atmospheric storms)
-    const gasGiantGeo = new THREE.SphereGeometry(22, 48, 48);
-    const gasGiantMat = new THREE.MeshStandardMaterial({
-      map: this.gasGiantTex,
-      roughness: 0.85,
-      metalness: 0.15,
-      emissive: 0x181e28,
-      emissiveIntensity: 0.2
-    });
-    this.gasGiant = new THREE.Mesh(gasGiantGeo, gasGiantMat);
-    this.gasGiant.position.set(-28, 12, -90);
-    this.group.add(this.gasGiant);
+    // Every body is lit by one star (SUN_DIRECTION in celestial.js), not the cabin lamps.
+    const octaves = tierManager.currentTier === 'T3' ? 6 : 4;
+    const vista = new THREE.Group();
 
-    // Majestic Planetary Ring System (dusty icy rings with Cassini division)
-    const ringGeo = new THREE.RingGeometry(26, 50, 64);
-    const ringMat = new THREE.MeshStandardMaterial({
-      map: this.ringsTex,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.85,
-      roughness: 0.9,
-      metalness: 0.1
-    });
-    this.rings = new THREE.Mesh(ringGeo, ringMat);
-    this.rings.position.copy(this.gasGiant.position);
-    this.rings.rotation.x = Math.PI * 0.42;
-    this.rings.rotation.y = -0.22;
-    this.group.add(this.rings);
+    // 1. Ringed gas giant, tilted, with a single long-lived storm.
+    const giantCenter = new THREE.Vector3(-30, 13, -95);
+    const giantRadius = 22;
+    this.gasGiant = new THREE.Mesh(
+      new THREE.SphereGeometry(giantRadius, 96, 64),
+      createPlanetMaterial('gas', {
+        colors: ['#cdbb98', '#9c7a52', '#6f4a33', '#b8805a'],
+        atmo: '#c9c2b4',
+        atmoStrength: 0.35,
+        seed: [3.1, 0.0, 7.4],
+        octaves
+      })
+    );
+    // Axial tilt lives on a frame so the planet spins about its own pole and the rings stay equatorial.
+    const giantFrame = new THREE.Group();
+    giantFrame.position.copy(giantCenter);
+    giantFrame.rotation.set(0.32, 0, 0.3);
+    giantFrame.add(this.gasGiant);
+    vista.add(giantFrame);
+    vista.add(createAtmosphereShell(giantRadius, giantCenter, { color: '#b9b4a8', strength: 0.5, scaleHeight: 0.02 }));
 
-    // 2. Erebus (Quest 1 Destination — Banded Arid Desert World) in orbital descent
-    const planetGeo = new THREE.SphereGeometry(16, 48, 48);
-    const planetMat = new THREE.MeshStandardMaterial({
-      map: this.planetTex,
-      roughness: 0.92,
-      metalness: 0.1,
-      emissive: 0x2e1808,
-      emissiveIntensity: 0.2
-    });
-    this.planet = new THREE.Mesh(planetGeo, planetMat);
-    this.planet.position.set(22, -8, -80);
-    this.group.add(this.planet);
+    this.rings = new THREE.Mesh(
+      new THREE.RingGeometry(giantRadius * 1.3, giantRadius * 2.25, 256, 1),
+      createRingMaterial({
+        inner: giantRadius * 1.3,
+        outer: giantRadius * 2.25,
+        planetCenter: giantCenter,
+        planetRadius: giantRadius,
+        colors: ['#b7a891', '#8a7a66']
+      })
+    );
+    this.rings.rotation.x = Math.PI / 2;
+    giantFrame.add(this.rings);
 
-    // Erebus Atmospheric Dust Halo
-    const haloGeo = new THREE.SphereGeometry(16.8, 48, 48);
-    const haloMat = new THREE.MeshBasicMaterial({
-      color: 0xf4a261,
-      transparent: true,
-      opacity: 0.22,
-      side: THREE.BackSide,
-      blending: THREE.AdditiveBlending
-    });
-    const halo = new THREE.Mesh(haloGeo, haloMat);
-    halo.position.copy(this.planet.position);
-    this.group.add(halo);
+    // 2. Erebus — the Quest 1 desert world, thin dusty atmosphere.
+    const erebusCenter = new THREE.Vector3(22, -8, -80);
+    const erebusRadius = 16;
+    this.planet = new THREE.Mesh(
+      new THREE.SphereGeometry(erebusRadius, 96, 64),
+      createPlanetMaterial('desert', {
+        colors: ['#c79a66', '#a8714a', '#6e4a36', '#8d6a52'],
+        atmo: '#d8a77a',
+        atmoStrength: 0.45,
+        seed: [11.3, 4.2, 1.9],
+        octaves
+      })
+    );
+    this.planet.position.copy(erebusCenter);
+    this.planet.rotation.order = 'ZYX'; // tilt last, so the spin stays about the pole
+    this.planet.rotation.z = -0.18;
+    vista.add(this.planet);
+    vista.add(createAtmosphereShell(erebusRadius, erebusCenter, { color: '#d69a64', strength: 0.7, scaleHeight: 0.016 }));
 
-    // 3. Distant Crystalline Ice Moon (Cryo-Haven Sector)
-    const iceMoonMat = new THREE.MeshStandardMaterial({
-      color: 0xa8c8e8,
-      roughness: 0.75,
-      emissive: 0x102035,
-      emissiveIntensity: 0.3
-    });
-    const iceMoon = new THREE.Mesh(new THREE.SphereGeometry(3.6, 24, 24), iceMoonMat);
+    // 3. Distant fractured ice moon.
+    const iceMoon = new THREE.Mesh(
+      new THREE.SphereGeometry(3.6, 48, 32),
+      createPlanetMaterial('ice', {
+        colors: ['#b9c0c4', '#d9d6cf', '#7c6a5c', '#000000'],
+        seed: [2.2, 8.8, 5.5],
+        octaves
+      })
+    );
     iceMoon.position.set(-6, 22, -120);
-    this.group.add(iceMoon);
+    vista.add(iceMoon);
     this.moons.push(iceMoon);
 
-    // 4. Volcanic Smoldering Moon (Pyros Sector)
-    const pyroMoonMat = new THREE.MeshStandardMaterial({
-      color: 0x6e3820,
-      roughness: 0.9,
-      emissive: 0xd95a18,
-      emissiveIntensity: 0.25
-    });
-    const pyroMoon = new THREE.Mesh(new THREE.SphereGeometry(2.4, 20, 20), pyroMoonMat);
+    // 4. Small volcanic moon — sulphur plains, vents visible only in its night.
+    const pyroMoon = new THREE.Mesh(
+      new THREE.SphereGeometry(2.4, 48, 32),
+      createPlanetMaterial('volcanic', {
+        colors: ['#3a312b', '#6b5a48', '#a8904e', '#c2521c'],
+        seed: [7.7, 1.1, 9.9],
+        octaves
+      })
+    );
     pyroMoon.position.set(38, 16, -95);
-    this.group.add(pyroMoon);
+    vista.add(pyroMoon);
     this.moons.push(pyroMoon);
 
-    // 5. Drifting Asteroid Debris Belt in Space
+    // 5. A sparse scatter of irregular rocks, far enough out to read as debris, not props.
     const asteroidMat = new THREE.MeshStandardMaterial({
-      color: 0x3d4148,
-      roughness: 0.95,
-      metalness: 0.2
+      color: 0x4a4540,
+      roughness: 1.0,
+      metalness: 0.0,
+      flatShading: true
     });
-    for (let i = 0; i < 32; i++) {
-      const scale = 0.35 + Math.random() * 1.2;
-      const astGeo = new THREE.DodecahedronGeometry(scale, 1);
-      const ast = new THREE.Mesh(astGeo, asteroidMat);
+    for (let i = 0; i < 18; i++) {
+      const size = 0.25 + Math.pow(Math.random(), 2) * 1.1;
+      const ast = new THREE.Mesh(createAsteroidGeometry(size), asteroidMat);
       ast.position.set(
-        (Math.random() - 0.5) * 80,
-        (Math.random() - 0.5) * 35,
-        -30 - Math.random() * 55
+        (Math.random() - 0.5) * 90,
+        (Math.random() - 0.5) * 36,
+        -40 - Math.random() * 45
       );
+      ast.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
       ast.userData = {
-        rotSpeedX: (Math.random() - 0.5) * 0.4,
-        rotSpeedY: (Math.random() - 0.5) * 0.4,
-        driftSpeedZ: 0.02 + Math.random() * 0.04
+        rotSpeedX: (Math.random() - 0.5) * 0.12,
+        rotSpeedY: (Math.random() - 0.5) * 0.12
       };
-      this.group.add(ast);
+      vista.add(ast);
       this.asteroids.push(ast);
     }
+
+    this.group.add(vista);
   }
 
   update(delta = 0.016, time = 0) {
     // Slowly rotate planetary bodies
     if (this.planet) {
-      this.planet.rotation.y += delta * 0.025;
+      this.planet.rotation.y += delta * 0.012;
     }
     if (this.gasGiant) {
-      this.gasGiant.rotation.y += delta * 0.018;
-    }
-    if (this.rings) {
-      this.rings.rotation.z += delta * 0.008;
+      this.gasGiant.rotation.y += delta * 0.02;
     }
 
     // Orbit moons in space

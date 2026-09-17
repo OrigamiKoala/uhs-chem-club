@@ -5,6 +5,7 @@
 
 import * as THREE from 'three';
 import { tierManager } from './tier.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { CameraRig } from './camera-rig.js';
 import { ShipInterior } from './ship.js';
 import { createStarfield } from './materials/starfield.js';
@@ -57,7 +58,13 @@ class Stage {
 
     // 3. Persistent Ship Scene
     this.shipScene = new THREE.Scene();
-    this.shipScene.background = new THREE.Color(0x06080e);
+    this.shipScene.background = new THREE.Color(0x020203);
+
+    // Soft reflection environment so worn metal reads as metal instead of flat black.
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.shipScene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    this.shipScene.environmentIntensity = 0.22;
+    pmrem.dispose();
 
     // Star Wars / Dune Space Opera lighting rig: crisp cosmic starlight + warm cockpit avionics glow
     const ambientLight = new THREE.AmbientLight(0x141824, 1.1);
@@ -89,8 +96,8 @@ class Stage {
     this.shipScene.add(ambientLight, starlight, cockpitDashLight, overheadLight, holoTableLight, commsLight, quartersLight, cargoLight);
 
     // Starfield
-    const starCount = tierManager.currentTier === 'T3' ? 12000 : 3500;
-    this.starfield = createStarfield(starCount, 300);
+    const starCount = tierManager.currentTier === 'T3' ? 9000 : 4000;
+    this.starfield = createStarfield(starCount, 600);
     this.shipScene.add(this.starfield);
 
     // Ship Interior Model
@@ -170,7 +177,7 @@ class Stage {
     } else {
       if (this.cameraRig) this.cameraRig.update(now);
       if (this.shipInterior) this.shipInterior.update(delta, time);
-      if (this.starfield) this.starfield.rotation.y += delta * 0.005;
+      if (this.starfield) this.starfield.rotation.y += delta * 0.002;
       this.renderer.render(this.shipScene, this.camera);
     }
   }
