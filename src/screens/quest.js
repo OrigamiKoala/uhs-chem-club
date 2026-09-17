@@ -877,6 +877,12 @@ export function renderQuest(container) {
   }
 
   // 1. Render the current stage immediately from bundled configs (0ms latency)
+  // Play arrival cinematic (Erebus Descent) on first entry to Sector 01
+  if (QUEST1_STORY.arrival?.cinematic && !session.hasFlag('cinematic_erebus_descent')) {
+    session.setFlag('cinematic_erebus_descent', true);
+    playCinematic(QUEST1_STORY.arrival.cinematic);
+  }
+
   loadStage(currentStageIdx);
 
   // 2. Sync the remote manifest & player progress in the background

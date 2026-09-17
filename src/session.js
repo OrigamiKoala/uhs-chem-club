@@ -330,6 +330,14 @@ class SessionManager {
     this.notify();
   }
 
+  hasFlag(key) {
+    return Boolean(this.flags && this.flags[key]);
+  }
+
+  getFlag(key) {
+    return this.flags ? this.flags[key] : undefined;
+  }
+
   clear() {
     this.token = null;
     this.player = null;

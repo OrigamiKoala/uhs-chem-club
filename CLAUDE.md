@@ -28,7 +28,7 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
 - `router.js` — hash router. `ROUTES` declares auth/admin gating; `ROUTE_NAV` maps a route
   to the HUD nav button that should light up; unknown hashes normalize to `#/`. Closes any
   open modal and exits the quest scene on navigation.
-- `session.js` — token, player, team, XP, inventory and progress, persisted in
+- `session.js` — token, player, team, XP, inventory, progress, and flags (`hasFlag`, `setFlag`), persisted in
   `localStorage` and restored synchronously at boot. Exports `levelForXp`, `levelProgress`
   and `levelTitle` — **the only XP curve in the client** (45·(N−1)² per level, capped at
   level 12 to match `Scoring.gs`). Server XP is authoritative: `setUserData` overwrites the
@@ -46,7 +46,7 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
 - `audio/soundscape.js` — zero-dependency Web Audio procedural soundscape (room tints,
   relays, bond snaps, Vess murmur, volume controls; continuous drone disabled).
 - `story/quest1.js` — single source of truth for Quest 1 narrative, pylon communications, onClear logs,
-  and milestone cutscenes.
+  and arrival/milestone cutscenes (`erebus_descent`, `pylon_wake`, `gardens_restored`).
 - `story/trinkets.js` — Session Zero deterministic d20 cosmetic trinkets and character backgrounds.
 - `media/manifest.js` — media manifest mapping 19 loops and cinematics with WebM, MP4, posters, and captions.
 - `screens/` — one render function per route, all pure string templates.
