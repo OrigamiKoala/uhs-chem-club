@@ -37,6 +37,7 @@ export class SmoothOrbitControls {
     this._onPointerDown = this.onPointerDown.bind(this);
     this._onPointerMove = this.onPointerMove.bind(this);
     this._onPointerUp = this.onPointerUp.bind(this);
+    this._onPointerCancel = this.onPointerCancel.bind(this);
     this._onWheel = this.onWheel.bind(this);
     this._onContextMenu = (e) => e.preventDefault();
 
@@ -47,6 +48,7 @@ export class SmoothOrbitControls {
     this.domElement.addEventListener('pointerdown', this._onPointerDown);
     window.addEventListener('pointermove', this._onPointerMove);
     window.addEventListener('pointerup', this._onPointerUp);
+    window.addEventListener('pointercancel', this._onPointerCancel);
     this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
     this.domElement.addEventListener('contextmenu', this._onContextMenu);
     window.addEventListener('contextmenu', (e) => {
@@ -60,6 +62,7 @@ export class SmoothOrbitControls {
     this.domElement.removeEventListener('pointerdown', this._onPointerDown);
     window.removeEventListener('pointermove', this._onPointerMove);
     window.removeEventListener('pointerup', this._onPointerUp);
+    window.removeEventListener('pointercancel', this._onPointerCancel);
     this.domElement.removeEventListener('wheel', this._onWheel);
     this.domElement.removeEventListener('contextmenu', this._onContextMenu);
   }
@@ -73,8 +76,8 @@ export class SmoothOrbitControls {
   }
 
   onPointerDown(e) {
-    if (!this.enabled) return;
-
+    // Touches are counted even while an arrow drag has the controls disabled,
+    // so a second finger can still take over as a two-finger rotate.
     if (e.pointerType === 'touch') {
       this.activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (this.activeTouches.size >= 2) {
@@ -88,6 +91,8 @@ export class SmoothOrbitControls {
         return;
       }
     }
+
+    if (!this.enabled) return;
 
     // In draw mode, button 2 (two-finger tap / right-click on Mac) rotates view
     const isRotateButton = (this.mode === 'rotate' && e.button === 0) || e.button === 2;
@@ -156,6 +161,12 @@ export class SmoothOrbitControls {
       }
       this.isDragging = false;
     }
+  }
+
+  /** A cancelled touch never sends pointerup; forget it so it can't pose as a second finger. */
+  onPointerCancel(e) {
+    if (e.pointerType === 'touch') this.activeTouches.delete(e.pointerId);
+    if (this.activeTouches.size < 2) this.isDragging = false;
   }
 
   onWheel(e) {

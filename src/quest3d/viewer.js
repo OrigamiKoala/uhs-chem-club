@@ -76,9 +76,21 @@ export class QuestViewer {
       }
     };
 
+    this._onPointerCancel = (e) => {
+      if (this.activeInteraction && this.activeInteraction.handlePointerCancel) {
+        this.activeInteraction.handlePointerCancel(e);
+      }
+    };
+
+    // Touch drags on the chamber draw arrows; without this the browser claims
+    // them as scroll gestures and cancels the pointer mid-drag.
+    this._prevTouchAction = this.domElement.style.touchAction;
+    this.domElement.style.touchAction = 'none';
+
     this.domElement.addEventListener('pointerdown', this._onPointerDown);
     window.addEventListener('pointermove', this._onPointerMove);
     window.addEventListener('pointerup', this._onPointerUp);
+    window.addEventListener('pointercancel', this._onPointerCancel);
   }
 
   /** Called when a drag is refused because the stage's arrow limit is reached. */
@@ -313,6 +325,8 @@ export class QuestViewer {
     this.domElement.removeEventListener('pointerdown', this._onPointerDown);
     window.removeEventListener('pointermove', this._onPointerMove);
     window.removeEventListener('pointerup', this._onPointerUp);
+    window.removeEventListener('pointercancel', this._onPointerCancel);
+    this.domElement.style.touchAction = this._prevTouchAction || '';
     this.controls.destroy();
     if (this.currentMolecule) this.currentMolecule.dispose();
     if (this.currentIsosurface) this.currentIsosurface.dispose();

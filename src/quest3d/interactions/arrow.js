@@ -39,6 +39,7 @@ export class ArrowInteraction {
       return;
     }
     this.dragStartPos = { x: e.clientX, y: e.clientY };
+    this.dragPointerId = e.pointerId;
 
     const picked = this.picker.pick(e);
     const planeOrigin = picked ? picked.position : new THREE.Vector3(0, 0, 0);
@@ -56,6 +57,7 @@ export class ArrowInteraction {
 
   handlePointerMove(e) {
     if (!this.isDragging || !this.startWorldPos) return;
+    if (e.pointerId !== this.dragPointerId) return;
 
     // Never snap while dragging — arrow tip follows cursor freely in 3D
     const currentPoint = this.picker.unprojectToPlane(e, this.startWorldPos);
@@ -64,6 +66,9 @@ export class ArrowInteraction {
 
   handlePointerUp(e) {
     if (!this.isDragging || !this.startWorldPos) return;
+    // Only the finger that started the drag may finish it — a tap on a
+    // button elsewhere must never become the arrow's tip.
+    if (e.pointerId !== this.dragPointerId) return;
     this.isDragging = false;
     if (this.controls) this.controls.enabled = true;
 
@@ -152,6 +157,21 @@ export class ArrowInteraction {
     }
   }
 
+  /** Abandon an in-progress drag (touch cancelled, or a second finger landed). */
+  handlePointerCancel(e) {
+    if (e && this.isDragging && e.pointerId !== this.dragPointerId) return;
+    this.cancel();
+  }
+
+  cancel() {
+    if (this.isDragging) this.arrowController.cancel();
+    this.isDragging = false;
+    this.startWorldPos = null;
+    this.selectedSource = null;
+    this.dragPointerId = null;
+    if (this.controls) this.controls.enabled = true;
+  }
+
   getPayload() {
     if (this.arrowController.multiArrow) {
       const arrs = this.arrowController.completedArrows || [];
@@ -183,6 +203,7 @@ export class ArrowInteraction {
     this.selectedSource = null;
     this.startWorldPos = null;
     this.isDragging = false;
+    this.dragPointerId = null;
     if (this.controls) this.controls.enabled = true;
     this.arrowController.clear();
     if (this.onChange) {

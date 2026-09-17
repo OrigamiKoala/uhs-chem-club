@@ -127,6 +127,11 @@ that explains a *concept* is `'reward'` and appears after the solve, under
 - Stages 8–10: three molecules in the chamber, including a bystander.
 - Stages 11–20: two ordered arrows. Arrow badges are numbered; clicking a badge cycles its
   step, clicking an arrow deletes it. Wrong order is reported distinctly from a wrong move.
+- Touch input: `QuestViewer` sets `touch-action: none` on the canvas while a quest is mounted
+  (restored on dispose) and routes `pointercancel` to the interaction. `ArrowInteraction`
+  only lets the pointer that started a drag move or finish it, and `cancel()` abandons a
+  drag. `SmoothOrbitControls` forgets cancelled touches and counts fingers even while
+  disabled, so a stale touch can never pose as a second finger.
 - Concept cards (bumper cars, two-handed handshakes, bent springs) appear after the solve
   on the stages that introduce a new idea, and can be hidden and reopened.
 - A correct answer plays a physically honest 3D reaction: molecules approach along the
