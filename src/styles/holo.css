@@ -182,6 +182,13 @@
   pointer-events: none;
 }
 
+.stage-dock-bar {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  pointer-events: auto;
+}
+
 .stage-reopen-btn {
   pointer-events: auto;
   border-left: 2px solid var(--accent-amber);

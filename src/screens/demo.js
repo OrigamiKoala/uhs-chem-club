@@ -82,9 +82,14 @@ export function renderDemo(container) {
       </div>
 
       <div class="stage-card-wrap">
-        <button type="button" id="demo-open-btn" class="btn-secondary quest-btn-sm stage-reopen-btn hidden" title="Open stage panel" aria-label="Open stage panel">
-          Stage Panel
-        </button>
+        <div class="stage-dock-bar hidden" id="demo-dock-bar">
+          <button type="button" id="demo-open-btn" class="btn-secondary quest-btn-sm stage-reopen-btn" title="Open stage panel" aria-label="Open stage panel">
+            Stage Panel
+          </button>
+          <button type="button" id="demo-dock-grade-btn" class="btn-primary quest-btn-sm" title="Submit answer">
+            Submit
+          </button>
+        </div>
         <div class="stage-prompt-card" id="demo-card">
           <div class="stage-header">
             <div>
@@ -132,19 +137,29 @@ export function renderDemo(container) {
     showDemoModal(cfg);
   });
 
+  const demoDockBar = container.querySelector('#demo-dock-bar');
   const demoCloseBtn = container.querySelector('#demo-close-btn');
   const demoOpenBtn = container.querySelector('#demo-open-btn');
+  const demoDockGradeBtn = container.querySelector('#demo-dock-grade-btn');
+
+  function syncDemoDockGradeBtn() {
+    if (!demoDockGradeBtn || !gradeBtn) return;
+    demoDockGradeBtn.textContent = gradeBtn.textContent;
+    demoDockGradeBtn.disabled = gradeBtn.disabled;
+    demoDockGradeBtn.title = gradeBtn.textContent;
+  }
 
   function setDemoCardClosed(closed) {
     if (closed) {
       card?.classList.add('hidden');
-      demoOpenBtn?.classList.remove('hidden');
+      demoDockBar?.classList.remove('hidden');
       demoOpenBtn?.focus();
     } else {
       card?.classList.remove('hidden');
-      demoOpenBtn?.classList.add('hidden');
+      demoDockBar?.classList.add('hidden');
       demoCloseBtn?.focus();
     }
+    syncDemoDockGradeBtn();
   }
 
   demoCloseBtn?.addEventListener('click', () => {
@@ -154,6 +169,17 @@ export function renderDemo(container) {
   demoOpenBtn?.addEventListener('click', () => {
     setDemoCardClosed(false);
   });
+
+  demoDockGradeBtn?.addEventListener('click', () => {
+    gradeBtn?.click();
+    syncDemoDockGradeBtn();
+  });
+
+  const demoGradeObserver = new MutationObserver(() => syncDemoDockGradeBtn());
+  if (gradeBtn) {
+    demoGradeObserver.observe(gradeBtn, { attributes: true, childList: true, characterData: true, subtree: true });
+  }
+  syncDemoDockGradeBtn();
 
   if (tierManager.currentTier === 'T1' || !viewer) {
     renderFallbackInputs(interactiveArea, cfg, 'arrow', (payload) => { currentPayload = payload; });
@@ -188,7 +214,6 @@ export function renderDemo(container) {
       gradeBtn.textContent = 'Reacting…';
 
       const finish = () => {
-        setDemoCardClosed(false);
         solved = true;
         feedback.className = 'stage-error-banner stage-success-banner';
         feedback.innerHTML = `

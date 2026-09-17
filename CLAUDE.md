@@ -256,7 +256,7 @@ gradient buttons with white specular highlights; rounded corners (`--radius-sm` 
 - **Switchgear**: `.btn-primary` is a painted key cap (matte amber plate, engraved dark
   legend, physical bottom lip, sinks on press). `.btn-secondary` is bare durasteel.
   `.quest-btn-sm` is compact quest chrome. Labels are 1–2 words; **no arrow glyphs.**
-- **Stage Deck**: collapsible bottom-left tablet in `quest.js` and `demo.js` (`Close` / `Stage Panel`).
+- **Stage Deck**: collapsible bottom-left tablet in `quest.js` and `demo.js` (`Close` / `Stage Panel` + docked mini `Submit` / `Next Stage`).
 - **Inputs**: `.form-input` is a recessed well; focus turns the text amber rather than
   adding a halo. `.choice-option` is a toggle with a lit left edge when selected.
 - **Banners**: `.form-banner` for faults; in the quest, `.stage-error-banner` with

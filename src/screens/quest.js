@@ -187,6 +187,7 @@ export function renderQuest(container) {
   let stageStartTime = Date.now();
   let viewer = null;
   let activeTransmission = null;
+  let gradeObserver = null;
 
   // Per-stage, reset by loadStage.
   let misses = 0;
@@ -208,6 +209,10 @@ export function renderQuest(container) {
     if (advanceTimer) {
       clearTimeout(advanceTimer);
       advanceTimer = null;
+    }
+    if (gradeObserver) {
+      gradeObserver.disconnect();
+      gradeObserver = null;
     }
     if (activeTransmission?.destroy) {
       activeTransmission.destroy();
@@ -333,9 +338,14 @@ export function renderQuest(container) {
 
         <!-- Bottom Stage Deck -->
         <div class="stage-card-wrap">
-          <button type="button" id="stage-card-open-btn" class="btn-secondary quest-btn-sm stage-reopen-btn hidden" title="Open stage panel" aria-label="Open stage panel">
-            Stage Panel
-          </button>
+          <div class="stage-dock-bar hidden" id="stage-dock-bar">
+            <button type="button" id="stage-card-open-btn" class="btn-secondary quest-btn-sm stage-reopen-btn" title="Open stage panel" aria-label="Open stage panel">
+              Stage Panel
+            </button>
+            <button type="button" id="stage-dock-grade-btn" class="btn-primary quest-btn-sm" title="Submit answer">
+              Submit
+            </button>
+          </div>
           <div class="stage-prompt-card" id="stage-card">
             <!-- Vess Comms Transmission Card -->
             <div id="quest-transmission-slot" style="margin-bottom: 0.5rem;"></div>
@@ -431,19 +441,29 @@ export function renderQuest(container) {
       showStageModal(cfg, currentStageIdx, isReplay, stageXp);
     });
 
+    const dockBar = container.querySelector('#stage-dock-bar');
     const closeBtn = container.querySelector('#stage-card-close-btn');
     const openBtn = container.querySelector('#stage-card-open-btn');
+    const dockGradeBtn = container.querySelector('#stage-dock-grade-btn');
+
+    function syncDockGradeBtn() {
+      if (!dockGradeBtn || !gradeBtn) return;
+      dockGradeBtn.textContent = gradeBtn.textContent;
+      dockGradeBtn.disabled = gradeBtn.disabled;
+      dockGradeBtn.title = gradeBtn.textContent;
+    }
 
     function setCardClosed(closed) {
       if (closed) {
         stageCard?.classList.add('hidden');
-        openBtn?.classList.remove('hidden');
+        dockBar?.classList.remove('hidden');
         openBtn?.focus();
       } else {
         stageCard?.classList.remove('hidden');
-        openBtn?.classList.add('hidden');
+        dockBar?.classList.add('hidden');
         closeBtn?.focus();
       }
+      syncDockGradeBtn();
     }
 
     closeBtn?.addEventListener('click', () => {
@@ -454,6 +474,11 @@ export function renderQuest(container) {
     openBtn?.addEventListener('click', () => {
       setCardClosed(false);
       soundscape.playNavRelayClick();
+    });
+
+    dockGradeBtn?.addEventListener('click', () => {
+      gradeBtn?.click();
+      syncDockGradeBtn();
     });
 
     // 2. Stage navigation
@@ -562,6 +587,12 @@ export function renderQuest(container) {
     // 7. Submit
     const gradeBtn = container.querySelector('#grade-btn');
 
+    if (gradeBtn) {
+      gradeObserver = new MutationObserver(() => syncDockGradeBtn());
+      gradeObserver.observe(gradeBtn, { attributes: true, childList: true, characterData: true, subtree: true });
+    }
+    syncDockGradeBtn();
+
     async function submitStage(payload) {
       if (isGrading || isAdvancing) return;
 
@@ -618,7 +649,6 @@ export function renderQuest(container) {
           const isLastStage = targetStageIdx >= TOTAL_STAGES;
 
           const onReactionDone = () => {
-            setCardClosed(false);
             stageCompleted = true;
             isAdvancing = false;
             isGrading = false;
