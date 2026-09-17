@@ -57,7 +57,6 @@ const ROUTE_BACKDROPS = {
   '/admin': '/art/airlock.jpg'
 };
 
-/** Which HUD nav button should light up for a given route. */
 const ROUTE_NAV = {
   '/bridge': 'bridge',
   '/starmap': 'starmap',
@@ -72,6 +71,8 @@ const ROUTE_NAV = {
 
 const ROUTES = {
   '/': { render: renderLanding, auth: false },
+  '/landing': { render: renderLanding, auth: false },
+  '/cold-open': { render: renderOnboarding, auth: true },
   '/register': { render: renderRegister, auth: false },
   '/login': { render: renderLogin, auth: false },
   '/demo': { render: renderDemo, auth: false },

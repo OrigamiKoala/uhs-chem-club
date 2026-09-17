@@ -40,8 +40,9 @@ export class AnchorPicker {
       const screenDist = Math.sqrt(dx * dx + dy * dy);
       const rayDist = this.raycaster.ray.distanceToPoint(anchor.position);
 
-      // Generous threshold: within 1.6 3D world units of the ray OR within 75px on screen
-      if (rayDist < 1.6 || screenDist < 75) {
+      // Tight threshold: within 0.85 3D world units of the ray OR within 38px on screen
+      // Prevents snapping to neighboring wrong atoms (which are >=1.2 - 1.5 units away)
+      if (rayDist < 0.85 || screenDist < 38) {
         const score = rayDist * 35 + screenDist;
         if (score < minScore) {
           minScore = score;

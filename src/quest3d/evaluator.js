@@ -16,7 +16,7 @@ export const STAGE_CONFIGS = [
     expectedTo: 'blue_c1',
     sourcePos: [-1.4, 0.2, 0.0],
     targetPos: [1.8, 0.0, 0.0],
-    tolerance: 1.35,
+    tolerance: 0.85,
     concept: {
       badge: 'BASICS',
       title: 'OPPOSITES ATTRACT',
@@ -60,7 +60,7 @@ export const STAGE_CONFIGS = [
     expectedTo: 'blue_c1',
     sourcePos: [-1.5, 0.3, 0.0],
     targetPos: [1.1, 0.0, 0.0],
-    tolerance: 1.35,
+    tolerance: 0.85,
     concept: null,
     reaction: {
       donorAtom: 0,
@@ -87,7 +87,7 @@ export const STAGE_CONFIGS = [
     expectedTo: 'blue_extreme',
     sourcePos: [-0.8, -1.2, 0.0],
     targetPos: [1.3, -0.3, 0.0],
-    tolerance: 1.35,
+    tolerance: 0.85,
     concept: null,
     reaction: {
       donorAtom: 3,
@@ -113,7 +113,7 @@ export const STAGE_CONFIGS = [
     expectedTo: 'blue_extreme',
     sourcePos: [-0.4, -0.4, 0.0],
     targetPos: [1.15, -0.3, 0.0],
-    tolerance: 1.35,
+    tolerance: 0.85,
     concept: null,
     reaction: {
       donorAtom: 3,
@@ -141,7 +141,7 @@ export const STAGE_CONFIGS = [
     targetPos: [1.0, -1.0, 0.0],
     blockedAnchor: 'blue_blocked',
     blockedPos: [2.0, 1.1, 0.0],
-    tolerance: 1.35,
+    tolerance: 0.85,
     concept: null,
     reaction: {
       donorAtom: 1,
@@ -171,7 +171,7 @@ export const STAGE_CONFIGS = [
     targetPos: [1.6, -0.9, 0.0],
     blockedAnchor: 'blue_blocked',
     blockedPos: [1.8, 1.2, 0.0],
-    tolerance: 1.85,
+    tolerance: 0.85,
     concept: null,
     reaction: {
       donorAtom: 0,
@@ -204,7 +204,7 @@ export const STAGE_CONFIGS = [
     targetPos: [1.6, -0.8, 0.0],
     blockedAnchor: 'blue_caged',
     blockedPos: [2.0, 1.2, 0.0],
-    tolerance: 1.35,
+    tolerance: 0.85,
     concept: null,
     reaction: {
       donorAtom: 4,
@@ -230,7 +230,7 @@ export const STAGE_CONFIGS = [
     expectedTo: 'blue_acid',
     sourcePos: [-2.2, 0.7, 0.0],
     targetPos: [-0.2, 0.4, 0.0],
-    tolerance: 1.35,
+    tolerance: 0.85,
     concept: null,
     reaction: {
       donorAtom: 0,
@@ -257,7 +257,7 @@ export const STAGE_CONFIGS = [
     expectedTo: 'blue_target',
     sourcePos: [-1.0, 1.8, 0.0],
     targetPos: [1.2, 0.0, 0.0],
-    tolerance: 1.35,
+    tolerance: 0.85,
     concept: null,
     reaction: {
       donorAtom: 2,
@@ -282,7 +282,7 @@ export const STAGE_CONFIGS = [
     expectedTo: 'blue_proton',
     sourcePos: [-2.2, 1.2, 0.0],
     targetPos: [0.3, -0.6, 0.0],
-    tolerance: 1.35,
+    tolerance: 0.85,
     concept: null,
     reaction: {
       donorAtom: 0,
@@ -1107,9 +1107,11 @@ export function evaluateStageLocally(stageIndex, payload) {
     const checkArrowMatch = (arr, step) => {
       if (arr.from && arr.to && step.expectedFrom && step.expectedTo) {
         if (arr.from === step.expectedFrom && arr.to === step.expectedTo) return true;
+        // If explicit anchors were targeted and do not match, do not fall back to loose proximity
+        return false;
       }
       if (arr.startPos && arr.endPos && step.sourcePos && step.targetPos) {
-        const tol = step.tolerance || 1.45;
+        const tol = step.tolerance || 0.85;
         const sDist = dist3D(arr.startPos, step.sourcePos);
         const eDist = dist3D(arr.endPos, step.targetPos);
         if (sDist <= tol && eDist <= tol) return true;
@@ -1165,23 +1167,26 @@ export function evaluateStageLocally(stageIndex, payload) {
     if (cfg.blockedAnchor && payload.to === cfg.blockedAnchor) {
       return { correct: false, blocked: true, xpAwarded: 0 };
     }
+    // Explicit anchors targeted that do not match expected: reject immediately
+    // so connecting to neighboring wrong atoms is never accepted by loose coordinates.
+    return { correct: false, blocked: false, xpAwarded: 0 };
   }
 
-  // 3. Proximity check on 3D coordinates
+  // 3. Proximity check on 3D coordinates (when dragging without named discrete anchors)
   if (payload.startPos && payload.endPos) {
     const sPos = payload.startPos;
     const ePos = payload.endPos;
 
     if (cfg.blockedPos) {
       const distBlocked = dist3D(ePos, cfg.blockedPos);
-      if (distBlocked < (cfg.tolerance || 1.35)) {
+      if (distBlocked < (cfg.tolerance || 0.85)) {
         return { correct: false, blocked: true, xpAwarded: 0 };
       }
     }
 
     const startDist = dist3D(sPos, cfg.sourcePos);
     const endDist = dist3D(ePos, cfg.targetPos);
-    const tol = cfg.tolerance || 1.35;
+    const tol = cfg.tolerance || 0.85;
 
     if (startDist <= tol && endDist <= tol) {
       return { correct: true, blocked: false, xpAwarded: cfg.xp };

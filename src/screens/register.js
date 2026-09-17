@@ -57,6 +57,7 @@ export function renderRegister(container) {
             <span class="eyebrow lit">VESS // QUARTERMASTER</span>
             <span class="tag live" style="font-size: 0.6rem;">SCENE 01 · MANIFEST</span>
           </div>
+          <div style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted); letter-spacing: 0.08em; margin-bottom: 0.35rem;">AVALON SALVAGE HAULER // CHIEF OF LOGISTICS</div>
           <p id="vess-line" style="font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--accent-gold); margin: 0;">
             "Name for the manifest? We need to know who to credit when the haul lands."
           </p>

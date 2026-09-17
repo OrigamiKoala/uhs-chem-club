@@ -62,28 +62,72 @@ export function playCinematic(id) {
     document.body.appendChild(overlay);
 
     const captionEl = overlay.querySelector('#cinematic-caption');
+    const skipCue = overlay.querySelector('.cinematic-skip-cue');
     const video = overlay.querySelector('video');
 
     let cleanedUp = false;
-    function cleanup() {
+    function cleanup(immediate = false) {
       if (cleanedUp) return;
       cleanedUp = true;
       activeCinematicDismiss = null;
       window.removeEventListener('keydown', onKey);
       overlay.removeEventListener('click', onClick);
 
-      if (video) {
-        video.pause();
-        video.removeAttribute('src');
-        video.load();
-      }
+      if (skipCue) skipCue.style.opacity = '0';
 
-      overlay.classList.add('cinematic-fade-out');
-      setTimeout(() => {
+      if (immediate) {
+        if (video) {
+          try {
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+          } catch (e) {}
+        }
         overlay.remove();
         soundscape.duckBed(false);
         resolve();
-      }, 300);
+        return;
+      }
+
+      // Freeze on current / end frame immediately WITHOUT resetting src (eliminates flash)
+      if (video) {
+        video.pause();
+
+        // Smoothly fade audio over 1.0s while visual remains frozen
+        try {
+          const startVol = video.volume;
+          const fadeStart = performance.now();
+          const fadeDuration = 1000;
+          function fadeAudio(now) {
+            const elapsed = now - fadeStart;
+            const progress = Math.min(1, elapsed / fadeDuration);
+            if (video) {
+              video.volume = Math.max(0, startVol * (1 - progress));
+            }
+            if (progress < 1) {
+              requestAnimationFrame(fadeAudio);
+            }
+          }
+          if (startVol > 0 && !video.muted) {
+            requestAnimationFrame(fadeAudio);
+          }
+        } catch (e) {}
+      }
+
+      // 1.1s CSS opacity fade-out on overlay (frozen frame stays visible throughout fade)
+      overlay.classList.add('cinematic-fade-out');
+
+      setTimeout(() => {
+        if (video) {
+          try {
+            video.removeAttribute('src');
+            video.load();
+          } catch (e) {}
+        }
+        overlay.remove();
+        soundscape.duckBed(false);
+        resolve();
+      }, 1150);
     }
 
     activeCinematicDismiss = cleanup;
@@ -133,7 +177,10 @@ export function playCinematic(id) {
       updateCaption(video.currentTime);
     });
 
-    video.addEventListener('ended', cleanup);
+    video.addEventListener('ended', () => {
+      cleanup(false);
+    });
+
     video.addEventListener('error', () => {
       console.warn(`Video playback error for "${id}". Falling back to poster.`);
       // If video file isn't present or codec unsupported, show poster and captions
@@ -145,11 +192,15 @@ export function playCinematic(id) {
     });
 
     video.play().catch((err) => {
-      console.warn('Cinematic autoplay failed or blocked:', err);
-      if (captions.length > 0) {
-        captionEl.textContent = captions[0].text;
-      }
-      setTimeout(cleanup, 2500);
+      console.warn('Cinematic autoplay unmuted blocked, retrying muted:', err);
+      video.muted = true;
+      video.play().catch((e2) => {
+        console.warn('Cinematic playback failed:', e2);
+        if (captions.length > 0) {
+          captionEl.textContent = captions[0].text;
+        }
+        setTimeout(cleanup, 2500);
+      });
     });
   });
 }

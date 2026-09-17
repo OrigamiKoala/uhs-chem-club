@@ -13,6 +13,7 @@ import { stepRail, esc } from '../ui/layout.js';
 import { playCinematic } from '../ui/cinematic.js';
 import { soundscape } from '../audio/soundscape.js';
 import { TRINKETS, getTrinketForRoll, getDeterministicRoll } from '../story/trinkets.js';
+import { createTransmissionElement } from '../ui/transmission.js';
 
 const TEAM_INFO = {
   earth: {
@@ -80,10 +81,20 @@ export async function renderOnboarding(container) {
     stage.cameraRig.moveTo('cockpit');
   }
 
+  // Play Cold Open during onboarding
+  if (!session.hasFlag('cinematic_cold_open')) {
+    session.setFlag('cinematic_cold_open', true);
+    await playCinematic('cold_open');
+  }
+
   let step = 2; // 2 = Guild Picker & Party, 3 = Oath & d20 Roll
   let selectedTeam = session.teamId || 'fire';
   let teamsData = normalizeTeams(session.teams && session.teams.length > 0 ? session.teams : DEFAULT_TEAMS);
   const rosterCache = new Map();
+  let activeTransmission = null;
+  let currentTransmissionMode = 'intro'; // 'intro' | 'guild'
+
+  const VESS_INTRO_TEXT = "Quartermaster Vess here — I run crew logistics and keep this forty-year-old hauler flying through the black. Review the four rival guilds below, choose your crew, and report back to seal your oath.";
 
   // Determine user background from session or localStorage
   let userBg = session.player?.background || 'salvager';
@@ -160,9 +171,30 @@ export async function renderOnboarding(container) {
     if (listEl) listEl.innerHTML = renderRosterListHtml(members);
   }
 
+  function updateTransmissionButtons() {
+    const btnIntro = container.querySelector('#btn-vess-intro');
+    const btnGuild = container.querySelector('#btn-guild-briefing');
+    const meta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
+
+    if (btnIntro) {
+      const isIntro = currentTransmissionMode === 'intro';
+      btnIntro.className = `tag ${isIntro ? 'live' : ''}`;
+      btnIntro.style.borderColor = isIntro ? 'var(--accent-amber)' : 'var(--border-durasteel)';
+      btnIntro.style.color = isIntro ? 'var(--accent-gold)' : 'var(--text-muted)';
+    }
+    if (btnGuild) {
+      const isGuild = currentTransmissionMode === 'guild';
+      btnGuild.className = `tag ${isGuild ? 'live' : ''}`;
+      btnGuild.textContent = `GUILD BRIEFING · ${meta.title.toUpperCase()}`;
+      btnGuild.style.borderColor = isGuild ? meta.accent : 'var(--border-durasteel)';
+      btnGuild.style.color = isGuild ? 'var(--text-bright)' : 'var(--text-muted)';
+    }
+  }
+
   function selectGuild(tid) {
-    if (tid === selectedTeam) return;
+    if (tid === selectedTeam && currentTransmissionMode === 'guild') return;
     selectedTeam = tid;
+    currentTransmissionMode = 'guild';
     soundscape.playToggleClack();
 
     const activeMeta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
@@ -177,11 +209,17 @@ export async function renderOnboarding(container) {
       btn.style.borderLeftColor = isSel ? bMeta.accent : '';
     });
 
-    // 2. Instant Vess pitch box update
-    const pitchBox = container.querySelector('#vess-pitch-box');
-    if (pitchBox) pitchBox.style.borderLeftColor = activeMeta.accent;
-    const pitchEl = container.querySelector('#vess-guild-pitch');
-    if (pitchEl) pitchEl.textContent = activeMeta.pitch;
+    // 2. Instant transmission update
+    if (activeTransmission) {
+      activeTransmission.update({
+        speaker: `VESS // ${activeMeta.title.toUpperCase()} BRIEFING`,
+        badge: `${activeMeta.mark} · GUILD BRIEFING`,
+        subtitle: activeMeta.guild.toUpperCase(),
+        text: activeMeta.pitch,
+        accentColor: activeMeta.accent
+      });
+    }
+    updateTransmissionButtons();
 
     // 3. Instant roster update
     updateRosterSection();
@@ -199,6 +237,11 @@ export async function renderOnboarding(container) {
   }
 
   function renderScene2() {
+    if (activeTransmission?.destroy) {
+      activeTransmission.destroy();
+      activeTransmission = null;
+    }
+
     const activeMeta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
     const members = rosterCache.get(selectedTeam);
 
@@ -206,19 +249,22 @@ export async function renderOnboarding(container) {
       <div class="screen-container" style="max-width: 760px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
           ${stepRail(2)}
-          <a href="#/bridge" class="eyebrow" style="text-decoration: none; color: var(--text-muted);">Skip // Launch</a>
+          <a href="#/bridge" id="skip-to-bridge-link" class="eyebrow" style="text-decoration: none; color: var(--text-muted);">Skip // Launch</a>
         </div>
 
         <div class="glass-panel">
-          <!-- Vess Pitch Header -->
-          <div id="vess-pitch-box" class="cold-open-box" style="margin-bottom: 1.5rem; padding: 0.9rem 1.1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid ${activeMeta.accent};">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-              <span class="eyebrow lit">VESS // QUARTERMASTER</span>
-              <span class="tag live" style="font-size: 0.6rem;">SCENE 02 · GUILD BRIEFING</span>
-            </div>
-            <p id="vess-guild-pitch" style="font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--accent-gold); margin: 0;">
-              ${activeMeta.pitch}
-            </p>
+          <!-- Vess Transmission Component (plays vess_transmission CRT loop) -->
+          <div id="onboarding-transmission-slot" style="margin-bottom: 0.6rem;"></div>
+          <div class="transmission-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <button type="button" id="btn-vess-intro" class="tag ${currentTransmissionMode === 'intro' ? 'live' : ''}" style="cursor: pointer; background: var(--plate-200); border: 1px solid ${currentTransmissionMode === 'intro' ? 'var(--accent-amber)' : 'var(--border-durasteel)'}; color: ${currentTransmissionMode === 'intro' ? 'var(--accent-gold)' : 'var(--text-muted)'}; font-size: 0.62rem;">
+              ● VESS // INTRO
+            </button>
+            <button type="button" id="btn-guild-briefing" class="tag ${currentTransmissionMode === 'guild' ? 'live' : ''}" style="cursor: pointer; background: var(--plate-200); border: 1px solid ${currentTransmissionMode === 'guild' ? activeMeta.accent : 'var(--border-durasteel)'}; color: ${currentTransmissionMode === 'guild' ? 'var(--text-bright)' : 'var(--text-muted)'}; font-size: 0.62rem;">
+              GUILD BRIEFING · ${activeMeta.title.toUpperCase()}
+            </button>
+            <button type="button" id="btn-cold-open" class="tag" style="cursor: pointer; background: var(--plate-200); border: 1px solid var(--border-durasteel); color: var(--accent-gold); font-size: 0.62rem;">
+              ▶ COLD OPEN
+            </button>
           </div>
 
           <!-- Guild Cards Grid -->
@@ -272,6 +318,62 @@ export async function renderOnboarding(container) {
       </div>
     `;
 
+    // Mount Vess transmission
+    const initialText = currentTransmissionMode === 'intro' ? VESS_INTRO_TEXT : activeMeta.pitch;
+    const initialSpeaker = currentTransmissionMode === 'intro' ? 'VESS // QUARTERMASTER' : `VESS // ${activeMeta.title.toUpperCase()} BRIEFING`;
+    const initialBadge = currentTransmissionMode === 'intro' ? 'SCENE 02 · AVALON COMMS' : `${activeMeta.mark} · GUILD BRIEFING`;
+    const initialSubtitle = currentTransmissionMode === 'intro' ? 'STATION: SALVAGE HAULER AVALON // CREW LOGISTICS' : activeMeta.guild.toUpperCase();
+    const initialAccent = currentTransmissionMode === 'intro' ? 'var(--accent-amber)' : activeMeta.accent;
+
+    activeTransmission = createTransmissionElement({
+      speaker: initialSpeaker,
+      badge: initialBadge,
+      subtitle: initialSubtitle,
+      text: initialText,
+      variant: 'hero',
+      accentColor: initialAccent
+    });
+    container.querySelector('#onboarding-transmission-slot')?.appendChild(activeTransmission.element);
+
+    container.querySelector('#skip-to-bridge-link')?.addEventListener('click', () => {
+      if (activeTransmission?.destroy) activeTransmission.destroy();
+    });
+
+    container.querySelector('#btn-vess-intro')?.addEventListener('click', () => {
+      currentTransmissionMode = 'intro';
+      soundscape.playToggleClack();
+      if (activeTransmission) {
+        activeTransmission.update({
+          speaker: 'VESS // QUARTERMASTER',
+          badge: 'SCENE 02 · AVALON COMMS',
+          subtitle: 'STATION: SALVAGE HAULER AVALON // CREW LOGISTICS',
+          text: VESS_INTRO_TEXT,
+          accentColor: 'var(--accent-amber)'
+        });
+      }
+      updateTransmissionButtons();
+    });
+
+    container.querySelector('#btn-guild-briefing')?.addEventListener('click', () => {
+      currentTransmissionMode = 'guild';
+      soundscape.playToggleClack();
+      const meta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
+      if (activeTransmission) {
+        activeTransmission.update({
+          speaker: `VESS // ${meta.title.toUpperCase()} BRIEFING`,
+          badge: `${meta.mark} · GUILD BRIEFING`,
+          subtitle: meta.guild.toUpperCase(),
+          text: meta.pitch,
+          accentColor: meta.accent
+        });
+      }
+      updateTransmissionButtons();
+    });
+
+    container.querySelector('#btn-cold-open')?.addEventListener('click', () => {
+      playCinematic('cold_open');
+    });
+
     container.querySelectorAll('.team-card:not(.disabled)').forEach(el => {
       el.addEventListener('click', () => {
         const tid = el.getAttribute('data-team');
@@ -285,13 +387,15 @@ export async function renderOnboarding(container) {
     });
   }
 
-  // Render Scene 2 immediately without awaiting network
-  render();
-
   // Background prefetch rosters for all guilds
   ['earth', 'air', 'fire', 'water'].forEach(tid => fetchRoster(tid));
 
   function renderScene3() {
+    if (activeTransmission?.destroy) {
+      activeTransmission.destroy();
+      activeTransmission = null;
+    }
+
     const activeMeta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
     const seed = session.player?.player_id || session.player?.display_name || 'novice_crew';
     const roll = getDeterministicRoll(seed);
@@ -301,20 +405,12 @@ export async function renderOnboarding(container) {
       <div class="screen-container" style="max-width: 620px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
           ${stepRail(3)}
-          <a href="#/bridge" class="eyebrow" style="text-decoration: none; color: var(--text-muted);">Skip // Bridge</a>
+          <a href="#/bridge" id="skip-to-bridge-link-3" class="eyebrow" style="text-decoration: none; color: var(--text-muted);">Skip // Bridge</a>
         </div>
 
         <div class="glass-panel">
-          <!-- Vess Oath Inset -->
-          <div class="cold-open-box" style="margin-bottom: 1.5rem; padding: 0.9rem 1.1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-              <span class="eyebrow lit">VESS // QUARTERMASTER</span>
-              <span class="tag live" style="font-size: 0.6rem;">SCENE 03 · THE OATH & THE ROLL</span>
-            </div>
-            <p style="font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--accent-gold); margin: 0;">
-              "Hold the plate to seal your oath. Then reach into the crate and draw your issue."
-            </p>
-          </div>
+          <!-- Vess Oath Transmission (plays vess_transmission CRT loop) -->
+          <div id="scene3-transmission-slot" style="margin-bottom: 1.5rem;"></div>
 
           <!-- Hold-to-Commit Keycap -->
           <div id="oath-section" style="text-align: center; margin-bottom: 2rem;">
@@ -359,6 +455,21 @@ export async function renderOnboarding(container) {
         </div>
       </div>
     `;
+
+    // Mount Vess transmission for Scene 3
+    activeTransmission = createTransmissionElement({
+      speaker: 'VESS // QUARTERMASTER',
+      badge: 'SCENE 03 · THE OATH & THE ROLL',
+      subtitle: 'AVALON BRIDGE // QUARTERMASTER ENROLLMENT',
+      text: '"Hold the plate to seal your oath. Then reach into the crate and draw your issue."',
+      variant: 'hero',
+      accentColor: 'var(--accent-amber)'
+    });
+    container.querySelector('#scene3-transmission-slot')?.appendChild(activeTransmission.element);
+
+    container.querySelector('#skip-to-bridge-link-3')?.addEventListener('click', () => {
+      if (activeTransmission?.destroy) activeTransmission.destroy();
+    });
 
     // Hold-to-commit handler
     const holdBtn = container.querySelector('#hold-oath-btn');
@@ -421,10 +532,20 @@ export async function renderOnboarding(container) {
 
           trinketCard.classList.remove('hidden');
           launchBtn.classList.remove('hidden');
+
+          if (activeTransmission) {
+            activeTransmission.update({
+              speaker: 'VESS // QUARTERMASTER',
+              badge: 'AWARD CONFIRMED',
+              subtitle: 'QUARTERMASTER CRATE // ISSUE DRAWN',
+              text: '"Quartermaster crate unsealed. You earned this."'
+            });
+          }
         }
       }, 80);
 
       launchBtn.addEventListener('click', async () => {
+        if (activeTransmission?.destroy) activeTransmission.destroy();
         launchBtn.disabled = true;
         launchBtn.textContent = 'Launching…';
 
@@ -449,6 +570,13 @@ export async function renderOnboarding(container) {
       });
     }
   }
+
+  // Cleanup active transmission when navigating away
+  const onRouteCleanup = () => {
+    if (activeTransmission?.destroy) activeTransmission.destroy();
+    window.removeEventListener('hashchange', onRouteCleanup);
+  };
+  window.addEventListener('hashchange', onRouteCleanup);
 
   render();
 }

@@ -40,13 +40,13 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
   video loops via `video` parameter.
 - `ui/modal.js` — `showModal` / `closeModal`, with focus handling and Escape to dismiss.
 - `ui/toast.js` — transient messages; the `type` maps to `.toast-success/-error/-warning/-info`.
-- `ui/transmission.js` — diegetic CRT transmission typewriter component with Vess murmur.
+- `ui/transmission.js` — diegetic CRT transmission typewriter component with Vess murmur, looping video, and dynamic text updates.
 - `ui/gardens-map.js` — 20-pylon status visualization for Bridge and Quest screen HUD.
-- `ui/cinematic.js` — fullscreen cinematic player with subtitles and T1 / reduced-motion fallback.
+- `ui/cinematic.js` — fullscreen cinematic player with subtitles, frozen end-frame 1.1s fade-out, audio fade, and T1 / reduced-motion fallback.
 - `audio/soundscape.js` — zero-dependency Web Audio procedural soundscape (room tints,
   relays, bond snaps, Vess murmur, volume controls; continuous drone disabled).
 - `story/quest1.js` — single source of truth for Quest 1 narrative, pylon communications, onClear logs,
-  and arrival/milestone cutscenes (`erebus_descent`, `pylon_wake`, `gardens_restored`).
+  and cinematic cutscenes (`cold_open` in onboarding, `launch`, `erebus_descent`, `pylon_wake`, `gardens_restored`).
 - `story/trinkets.js` — Session Zero deterministic d20 cosmetic trinkets and character backgrounds.
 - `media/manifest.js` — media manifest mapping 19 loops and cinematics with WebM, MP4, posters, and captions.
 - `screens/` — one render function per route, all pure string templates.
@@ -60,7 +60,8 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
 
 ### Quest data — one source of truth
 `src/quest3d/evaluator.js` owns the player-facing copy and the answers. It is in two
-layers: `STAGE_CONFIGS` holds geometry, expected anchors, tolerance and reaction
+layers: `STAGE_CONFIGS` holds geometry, expected anchors, tolerance (tight 0.85 unit radius
+preventing overlap with neighbouring atoms) and reaction
 animation, and `STAGE_COPY` holds everything the player reads — `shape`, `prompt`,
 the three-rung `hints` ladder, the per-site `scans`, and the `concept` card plus its
 `conceptTiming`. `STAGE_COPY` is folded onto `STAGE_CONFIGS` at module load so the
@@ -76,7 +77,7 @@ Vercel catch-all. Performs `crypto.scrypt` password derivation (never sends plai
 Apps Script), rate limiting, salt caching, team-id normalization, and a 60 s in-memory cache
 for public routes (including `team/roster` with graceful local fallback). When `APPS_SCRIPT_URL` is unset it falls back to `localDevHandler`, a
 full in-memory mock of the backend — including the once-per-stage XP rule, so dev behaviour
-matches production. Guild switching in `onboarding.js` is optimistic at 0 ms with client-side roster caching and background prefetching.
+matches production. Guild switching in `onboarding.js` is optimistic at 0 ms with client-side roster caching and background prefetching; mounts Vess recruit introduction and guild briefings via looping `vess_transmission` CRT video.
 
 ### Backend (`apps-script/`)
 `Db.gs` (Sheets DAO), `Auth.gs`, `Players.gs`, `Quests.gs` (manifest, grading, hints,

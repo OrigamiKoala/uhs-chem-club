@@ -11,7 +11,6 @@ import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { esc } from '../ui/layout.js';
 import { soundscape } from '../audio/soundscape.js';
-import { playCinematic } from '../ui/cinematic.js';
 
 export function renderLanding(container) {
   if (stage.cameraRig) {
@@ -63,12 +62,9 @@ export function renderLanding(container) {
                 <span class="eyebrow lit">VESS // QUARTERMASTER</span>
                 <span class="tag live" style="font-size: 0.6rem;">COMMS LIVE</span>
               </div>
-              <p style="font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--accent-gold); margin: 0 0 0.6rem 0;">
+              <p style="font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--accent-gold); margin: 0;">
                 "Signal's weak out here. If you can read this, the Avalon's still hiring."
               </p>
-              <button type="button" id="play-cold-open-btn" class="btn-chip" style="font-size: 0.65rem; padding: 3px 8px;">
-                ▶ PLAY TRANSMISSION (0:10)
-              </button>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 0.65rem; max-width: 280px; margin: 0 auto;">
@@ -91,13 +87,6 @@ export function renderLanding(container) {
       </div>
     </div>
   `;
-
-  const playColdOpenBtn = container.querySelector('#play-cold-open-btn');
-  if (playColdOpenBtn) {
-    playColdOpenBtn.addEventListener('click', () => {
-      playCinematic('cold_open');
-    });
-  }
 
   const signoutBtn = container.querySelector('#landing-signout-btn');
   if (signoutBtn) {

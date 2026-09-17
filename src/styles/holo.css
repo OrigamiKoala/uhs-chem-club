@@ -817,6 +817,28 @@
   user-select: none;
 }
 
+.transmission-card.transmission-hero {
+  padding: 0.9rem 1.15rem;
+  background: var(--plate-100);
+  gap: 1rem;
+}
+
+.transmission-card.transmission-hero .transmission-crt {
+  width: 72px;
+  height: 54px;
+}
+
+@media (max-width: 480px) {
+  .transmission-card.transmission-hero {
+    gap: 0.75rem;
+    padding: 0.75rem 0.85rem;
+  }
+  .transmission-card.transmission-hero .transmission-crt {
+    width: 58px;
+    height: 44px;
+  }
+}
+
 .transmission-crt {
   width: 48px;
   height: 48px;
@@ -914,6 +936,13 @@
   justify-content: center;
   cursor: pointer;
   padding: 1rem;
+  opacity: 1;
+  transition: opacity 1.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cinematic-overlay.cinematic-fade-out {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .cinematic-frame {

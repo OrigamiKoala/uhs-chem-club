@@ -96,10 +96,10 @@ export class ArrowInteraction {
 
     let target = this.picker.pick(e);
 
-    // If screen-space picker missed, check 3D ray proximity to registered anchors
+    // If screen-space picker missed, check 3D ray proximity to registered anchors (tight threshold)
     if (!target && this.picker && this.picker.anchors) {
       let closestAnchor = null;
-      let minRayDist = 1.8;
+      let minRayDist = 0.85;
       for (const a of this.picker.anchors) {
         const d = this.picker.raycaster.ray.distanceToPoint(a.position);
         if (d < minRayDist) {
@@ -115,7 +115,7 @@ export class ArrowInteraction {
     // Also check if selectedSource was missed on down
     if (!this.selectedSource && this.picker && this.picker.anchors) {
       let closestAnchor = null;
-      let minRayDist = 1.8;
+      let minRayDist = 0.85;
       for (const a of this.picker.anchors) {
         const d = this.startWorldPos ? this.startWorldPos.distanceTo(a.position) : 999;
         if (d < minRayDist) {
