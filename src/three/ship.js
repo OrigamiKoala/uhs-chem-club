@@ -56,6 +56,7 @@ export class ShipInterior {
     this.buildCargoRoom();
     this.buildCommsRoom();
     this.buildAirlockRoom();
+    this.buildLightingFixtures();
     this.buildAtmosphericDust();
     this.buildPlanetaryVista();
 
@@ -128,6 +129,10 @@ export class ShipInterior {
     this.halogenMat = new THREE.MeshBasicMaterial({
       color: 0xd99423
     });
+
+    // 6b. Ceiling Luminaire Diffusers (Warm Sodium / Halogen #ffe6b0)
+    this.luminaireMat = new THREE.MeshBasicMaterial({ color: 0xffe6b0 });
+    this.luminaireWarmMat = new THREE.MeshBasicMaterial({ color: 0xffcaa0 });
 
     // 7. Indicators
     this.amberLampMat = new THREE.MeshBasicMaterial({ color: 0xd99423 });
@@ -324,10 +329,24 @@ export class ShipInterior {
       this.group.add(conduitCross);
     }
 
+    // Transverse deck runway guide strips
+    const stripCrossF = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.03, 0.08), this.halogenMat);
+    stripCrossF.position.set(0.7, 0.015, -2.45);
+    const stripCrossB = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.03, 0.08), this.halogenMat);
+    stripCrossB.position.set(0.7, 0.015, -1.65);
+    this.group.add(stripCrossF, stripCrossB);
+
     // 3. Port & Starboard Wing Corridors at Z = 2.0 (Connecting Bridge to Quarters X=-3.8 & Starmap X=3.2)
     const racewayWing = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.15, 1.0), this.ironMat);
     racewayWing.position.set(-0.3, 3.75, 2.0);
     this.group.add(racewayWing);
+
+    // Wing corridor deck runway guide strips
+    const stripWingF = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.03, 0.08), this.halogenMat);
+    stripWingF.position.set(-0.3, 0.015, 1.6);
+    const stripWingB = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.03, 0.08), this.halogenMat);
+    stripWingB.position.set(-0.3, 0.015, 2.4);
+    this.group.add(stripWingF, stripWingB);
 
     // 4. Chamfered Doorway / Hatch Bulkheads at exact hatchPos locations
     for (const [nodeKey, node] of Object.entries(SHIP_GRAPH.nodes)) {
@@ -453,8 +472,8 @@ export class ShipInterior {
       const lampCowl = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.1, 8), this.durasteelMat);
       lampCowl.position.set(deskX - side * 0.6, 1.22, deskZ - 0.08);
       lampCowl.rotation.z = side * -0.5;
-      const taskLight = new THREE.PointLight(0xd99423, 0.65, 2.5);
-      taskLight.position.set(deskX - side * 0.58, 1.18, deskZ - 0.06);
+      const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), this.luminaireWarmMat);
+      lampBulb.position.set(deskX - side * 0.58, 1.18, deskZ - 0.06);
 
       // Industrial pilot seat with heavy armrests & headrest
       const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.45, 8), this.ironMat);
@@ -479,7 +498,7 @@ export class ShipInterior {
       bridgeGroup.add(
         consoleChassis, crtLowerA, crtLowerB,
         upperGantry, crtUpperA, crtUpperB,
-        dialG, switchPlate, cable, lampStem, lampCowl, taskLight,
+        dialG, switchPlate, cable, lampStem, lampCowl, lampBulb,
         chairBase, chairFoot, seat, backrest, headrest
       );
 
@@ -603,11 +622,12 @@ export class ShipInterior {
     ohPanel.position.set(0, 3.01, 0.2);
     ohPanel.rotation.x = -0.12;
 
-    // Amber task lighting for cockpit
-    const cockpitTaskLight = new THREE.PointLight(0xd99423, 0.65, 3.2);
-    cockpitTaskLight.position.set(0, 2.85, 0.2);
+    // Amber luminaire strip on cockpit overhead console
+    const ohLamp = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.02, 0.15), this.luminaireWarmMat);
+    ohLamp.position.set(0, 2.99, 0.2);
+    ohLamp.rotation.x = -0.12;
 
-    cockpitGroup.add(overheadConsole, ohPanel, cockpitTaskLight);
+    cockpitGroup.add(overheadConsole, ohPanel, ohLamp);
     this.addCollider(-0.25, 0.25, 3.1, 3.6);
     this.group.add(cockpitGroup);
   }
@@ -671,8 +691,7 @@ export class ShipInterior {
       new THREE.SphereGeometry(0.11, 16, 16),
       new THREE.MeshBasicMaterial({ color: 0xffd166 })
     );
-    const sunLight = new THREE.PointLight(0xffaa22, 1.3, 5.5);
-    holoProjector.add(sunCore, sunLight);
+    holoProjector.add(sunCore);
 
     // 4 Inclined orbital paths with celestial bodies
     const orbitConfigs = [
@@ -824,8 +843,8 @@ export class ShipInterior {
     lampHead.position.set(0.72, 1.32, -0.65);
     lampHead.rotation.z = Math.PI * 0.85;
 
-    const lampLight = new THREE.PointLight(0xffb703, 0.85, 3.5);
-    lampLight.position.set(0.68, 1.25, -0.65);
+    const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.034, 8, 8), this.luminaireWarmMat);
+    lampBulb.position.set(0.68, 1.25, -0.65);
 
     // Stool at desk
     const stoolSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.06, 12), this.durasteelMat);
@@ -858,7 +877,7 @@ export class ShipInterior {
     canister.position.set(-0.22, 1.4, -0.55);
 
     quartersGroup.add(
-      deskShelf, miniCrt, lampBase, lowerArm, upperArm, lampHead, lampLight,
+      deskShelf, miniCrt, lampBase, lowerArm, upperArm, lampHead, lampBulb,
       stoolSeat, stoolLeg, stoolFoot, pack, jacket, canister
     );
 
@@ -1039,11 +1058,6 @@ export class ShipInterior {
     cageRoof.position.set(0, 2.76, -0.75);
     commsGroup.add(cageRoof);
 
-    // Warm sodium filament glow point light
-    const tubeLight = new THREE.PointLight(0xd99423, 1.1, 4.2);
-    tubeLight.position.set(0, 2.6, -0.6);
-    commsGroup.add(tubeLight);
-
     // 4. Operator Desk with mechanical keyboard and analog patch bay
     const desk = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.1, 0.85), this.durasteelMat);
     desk.position.set(0, 0.85, -0.48);
@@ -1135,9 +1149,7 @@ export class ShipInterior {
     beaconHousing.position.set(0, 3.52, -1.75);
     const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.22, 12), this.amberLampMat);
     beacon.position.set(0, 3.4, -1.75);
-    const beaconLight = new THREE.PointLight(0xd99423, 1.2, 5.5);
-    beaconLight.position.set(0, 3.3, -1.6);
-    airlockGroup.add(beaconHousing, beacon, beaconLight);
+    airlockGroup.add(beaconHousing, beacon);
 
     // Dual red "LOCKED" indicator lamps
     for (let lx of [-1.3, 1.3]) {
@@ -1176,6 +1188,71 @@ export class ShipInterior {
     // Outer airlock wall at Z = -6.5
     this.addCollider(-2.0, 2.0, -7.0, -6.0);
     this.group.add(airlockGroup);
+  }
+
+  createCeilingLuminaire(x, y, z, rotY = 0, length = 1.2) {
+    const fixture = new THREE.Group();
+    fixture.position.set(x, y, z);
+    fixture.rotation.y = rotY;
+
+    // Dark iron protective chassis housing mounted flush to ceiling slab
+    const housing = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.12, length), this.ironMat);
+    housing.position.set(0, 0, 0);
+
+    // Glowing diffuser panel facing down
+    const diffuser = new THREE.Mesh(new THREE.PlaneGeometry(0.24, length - 0.08), this.luminaireMat);
+    diffuser.rotation.x = Math.PI / 2;
+    diffuser.position.set(0, -0.061, 0);
+
+    // Brass wire guard cross-ribs
+    const ribCount = Math.max(2, Math.round(length / 0.28));
+    for (let i = 0; i < ribCount; i++) {
+      const ribZ = -(length - 0.16) / 2 + (i / (ribCount - 1)) * (length - 0.16);
+      const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.3, 6), this.brassMat);
+      wire.rotation.z = Math.PI / 2;
+      wire.position.set(0, -0.066, ribZ);
+      fixture.add(wire);
+    }
+
+    fixture.add(housing, diffuser);
+    this.group.add(fixture);
+    return fixture;
+  }
+
+  buildLightingFixtures() {
+    // 1. Central Spine Corridor (Bridge to Airlock)
+    this.createCeilingLuminaire(0, 3.94, 0.5, 0, 1.4);
+    this.createCeilingLuminaire(0, 3.94, -1.2, 0, 1.4);
+    this.createCeilingLuminaire(0, 3.94, -2.8, 0, 1.4);
+
+    // 2. Transverse Cross-Corridor (Comms to Cargo at Z = -2.0)
+    this.createCeilingLuminaire(-1.4, 3.94, -2.0, Math.PI / 2, 1.5);
+    this.createCeilingLuminaire(2.1, 3.94, -2.0, Math.PI / 2, 1.5);
+
+    // 3. Port & Starboard Wing Corridors at Z = 2.0 (Bridge to Quarters & Starmap)
+    this.createCeilingLuminaire(-1.9, 3.94, 2.0, Math.PI / 2, 1.5);
+    this.createCeilingLuminaire(1.6, 3.94, 2.0, Math.PI / 2, 1.5);
+
+    // 4. Command Bridge Ceiling
+    this.createCeilingLuminaire(0, 3.94, 1.8, 0, 1.8);
+
+    // 5. Cockpit Canopy Area
+    this.createCeilingLuminaire(0, 3.94, 2.8, 0, 1.4);
+
+    // 6. Star Map & Navigation Room
+    this.createCeilingLuminaire(3.2, 3.94, 1.8, 0, 1.6);
+
+    // 7. Crew Quarters
+    this.createCeilingLuminaire(-3.8, 3.94, 2.2, 0, 1.6);
+
+    // 8. Cargo Hold
+    this.createCeilingLuminaire(4.2, 3.94, -2.2, 0, 1.8);
+
+    // 9. Comms Array
+    this.createCeilingLuminaire(-2.8, 3.94, -2.0, 0, 1.6);
+
+    // 10. Airlock & Departure Bay
+    this.createCeilingLuminaire(0, 3.94, -4.5, 0, 1.8);
   }
 
   buildAtmosphericDust() {

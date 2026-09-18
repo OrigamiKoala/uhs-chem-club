@@ -504,9 +504,13 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     `createAsteroidGeometry`.
   - `three/materials/starfield.js` puts the stars on a shell at radius 600–750, past every
     planet, sized in screen pixels by brightness, plus a very faint galactic band.
-  - `stage.js` gives the ship scene a dim `RoomEnvironment` PMREM
-    (`environmentIntensity` 0.22) so the metal surfaces show reflections.
-- Lighting: cool starlight through the canopy, warm sodium instrument task lamps, dust motes.
+  - `stage.js` gives the ship scene `RoomEnvironment` PMREM
+    (`environmentIntensity` 0.58, tone mapping exposure 1.28) so metal surfaces show rich specular reflections.
+- Interior lighting rig:
+  - `src/three/ship-lighting.js` implements `ShipLightPool` dynamically selecting the 7 closest light sources to the camera from 21 compartment and corridor positions with soft decay (1.2) and generous distance, plus a camera-mounted suit inspection light (strictly <= 8 PointLights for locked 60fps forward rendering).
+  - Ambient base fill: `HemisphereLight` (0x8faac8 / 0x2e3544, 2.2) and `AmbientLight` (0x4a5668, 1.5) preventing crushed shadow voids.
+  - Forward canopy starlight: `DirectionalLight` (0xdce6f8, 2.6) aimed from (-8, 16, 26) through the front canopy into the cockpit and bridge.
+  - Physical 3D fixtures: `createCeilingLuminaire` mounts cast iron protective cages with warm sodium diffuser panels (`luminaireMat` #ffe6b0) across the central spine, transverse corridor, wing corridors, and all compartments, complemented by dual halogen runway guide strips embedded into the deck.
 - Routes bind environment stills: `/art/cockpit.jpg`, `starmap.jpg`, `crucible.jpg`,
   `cargo.jpg`, `quarters.jpg`, `comms.jpg`, `airlock.jpg`.
 

@@ -13,6 +13,7 @@ import { createStarfield } from "./materials/starfield.js";
 import { WorldScene } from "./world.js";
 import { FpsControls } from "./fps-controls.js";
 import { session } from "../session.js";
+import { ShipLightPool } from "./ship-lighting.js";
 
 class Stage {
   constructor() {
@@ -61,7 +62,7 @@ class Stage {
     this.applyTierSettings(tierManager.currentTier);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.15;
+    this.renderer.toneMappingExposure = 1.28;
 
     // 3. Persistent Ship Scene
     this.shipScene = new THREE.Scene();
@@ -69,33 +70,25 @@ class Stage {
 
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     this.shipScene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    this.shipScene.environmentIntensity = 0.22;
+    this.shipScene.environmentIntensity = 0.58;
     pmrem.dispose();
 
-    // Lighting rig: starlight + warm cockpit avionics glow
-    const ambientLight = new THREE.AmbientLight(0x141824, 1.1);
-    const starlight = new THREE.DirectionalLight(0xdce6f8, 2.2);
-    starlight.position.set(12, 16, -28);
+    // Lighting rig: atmospheric bounce + forward canopy starlight + personal inspection light
+    const hemiLight = new THREE.HemisphereLight(0x8faac8, 0x2e3544, 2.2);
+    const ambientLight = new THREE.AmbientLight(0x4a5668, 1.5);
+    const starlight = new THREE.DirectionalLight(0xdce6f8, 2.6);
+    starlight.position.set(-8, 16, 26);
+    starlight.target.position.set(0, 1.5, 0);
 
-    const cockpitDashLight = new THREE.PointLight(0xff9f1c, 1.3, 8);
-    cockpitDashLight.position.set(0, 1.1, 0.4);
+    // Personal camera inspection light (cadet suit chest luminaire)
+    this.cameraLight = new THREE.PointLight(0xffedd2, 1.4, 12, 1.3);
+    this.camera.add(this.cameraLight);
+    this.shipScene.add(this.camera);
 
-    const overheadLight = new THREE.PointLight(0xffd166, 0.6, 6);
-    overheadLight.position.set(0, 3.0, 0.2);
+    this.shipScene.add(hemiLight, ambientLight, starlight, starlight.target);
 
-    const holoTableLight = new THREE.PointLight(0xff9f1c, 1.4, 12);
-    holoTableLight.position.set(3.2, 2.4, 0);
-
-    const commsLight = new THREE.PointLight(0x48c715, 0.5, 6);
-    commsLight.position.set(-2.8, 2.0, -3.6);
-
-    const quartersLight = new THREE.PointLight(0xffaa50, 0.7, 7);
-    quartersLight.position.set(-3.8, 1.8, 0.5);
-
-    const cargoLight = new THREE.PointLight(0xe09838, 0.9, 10);
-    cargoLight.position.set(4.2, 3.0, -3.8);
-
-    this.shipScene.add(ambientLight, starlight, cockpitDashLight, overheadLight, holoTableLight, commsLight, quartersLight, cargoLight);
+    // Dynamic pooled interior compartment lighting rig
+    this.shipLightPool = new ShipLightPool(this.shipScene, 7);
 
     // Starfield
     const starCount = tierAtLeast("T3") ? 9000 : 4000;
@@ -333,6 +326,9 @@ class Stage {
         this.fpsControls.hidePrompt();
       }
 
+      if (this.shipLightPool) {
+        this.shipLightPool.update(this.camera.position);
+      }
       if (this.shipInterior) this.shipInterior.update(delta, time);
       if (this.starfield) this.starfield.rotation.y += delta * 0.002;
       this.renderer.render(this.shipScene, this.camera);

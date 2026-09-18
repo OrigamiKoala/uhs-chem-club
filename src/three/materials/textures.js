@@ -966,7 +966,7 @@ export function createFootlockerTexture(width = 512, height = 256, label = 'CREW
   ctx.fillRect(8, 8, cSize, cSize);
   ctx.fillRect(width - 8 - cSize, 8, cSize, cSize);
   ctx.fillRect(8, height - 8 - cSize, cSize, cSize);
-  ctx.fillRect(width - 8 - cSize, height - 8 - cSize, cSize);
+  ctx.fillRect(width - 8 - cSize, height - 8 - cSize, cSize, cSize);
 
   // Rivets on corners
   ctx.fillStyle = '#454a40';
