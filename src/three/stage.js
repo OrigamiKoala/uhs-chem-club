@@ -194,6 +194,7 @@ class Stage {
       this.renderer.setAnimationLoop(null);
       return;
     }
+    this.renderer.setAnimationLoop(this.render.bind(this));
     const maxDpr = tierAtLeast("T3", tier) ? Math.min(window.devicePixelRatio, 2) : 1;
     this.renderer.setPixelRatio(maxDpr);
   }
@@ -223,6 +224,8 @@ class Stage {
     this.mode = "world";
 
     if (this.worldScene) {
+      this.worldScene.scene.add(this.camera);
+
       const spawn = this.worldScene.data.spawn;
       const groundY = this.worldScene.getTerrainHeight(spawn.pos[0], spawn.pos[2]);
       const eyeHeight = this.fpsControls ? this.fpsControls.eyeHeight : 1.6;
@@ -230,6 +233,7 @@ class Stage {
 
       this.camera.position.set(spawn.pos[0], eyeY, spawn.pos[2]);
       this.camera.lookAt(spawn.lookAt[0], eyeY, spawn.lookAt[2]);
+      this.camera.updateMatrixWorld(true);
 
       if (this.fpsControls) {
         this.fpsControls.enabled = true;
@@ -250,6 +254,10 @@ class Stage {
 
   enterShipScene(locationKey = "bridge") {
     this.mode = "ship";
+    if (this.shipScene) {
+      this.shipScene.add(this.camera);
+      this.camera.updateMatrixWorld(true);
+    }
     if (this.fpsControls) {
       this.fpsControls.setMode(
         "ship",
@@ -280,6 +288,10 @@ class Stage {
     }
     this.activeQuestScene = null;
     this.mode = "world";
+    if (this.worldScene) {
+      this.worldScene.scene.add(this.camera);
+      this.camera.updateMatrixWorld(true);
+    }
   }
 
   render(now) {
@@ -305,6 +317,7 @@ class Stage {
         }
       }
       this.worldScene.update(delta, this.camera.position);
+      this.camera.updateMatrixWorld(true);
       this.renderer.render(this.worldScene.scene, this.camera);
     } else {
       // Ship Mode
