@@ -1,26 +1,23 @@
 /**
  * q1-grain.js — Tallow, site one: THE GRAIN OF THINGS.
  *
- * The first game on the Learn road. Eight stages on a salvage bench, and the
- * player leaves knowing what an atom, an element, a molecule, a compound and a
- * mixture are — without being told any of those words until the debrief.
+ * The first game on the Learn road. Eight stages on a salvage bench, introducing
+ * atoms, elements, atomic mass, chemical bonds, molecules, compounds, and mixtures
+ * immediately after each stage as the reward card payoff.
  *
  * THE ORDER IS THE WHOLE DESIGN. Every stage is a thing the player does with an
- * instrument, and the idea arrives afterwards as a reward card, never as a
- * briefing. Nothing on this bench is explained before it has been seen:
+ * instrument, and the concept arrives immediately afterwards as a reward card,
+ * connecting the player's hands-on observation to the real chemistry:
  *
- *   1  turn the power up until the picture stops getting finer   -> there is a floor
- *   2  find the crate that is one material                       -> one kind, or several
- *   3  count how many kinds are in one crate                     -> sample widely, trust the scale
- *   4  run a cutter over four objects                            -> one of them will not divide
- *   5  assemble the cluster that repeats                         -> a bound group is a fixed recipe
- *   6  file two vials against two manifests                      -> same ingredients, different recipe
- *   7  settle three crates and read the bands                    -> mixed, or not
- *   8  file a manifest of four unknown crates                    -> all of it at once
- *   -- debrief: atom, element, molecule, compound, mixture, and the real names.
- *
- * Player-facing vocabulary before the debrief: piece, kind, cluster, crate, band,
- * recipe, material. That is deliberate and it is the product.
+ *   1  determine where grit stops dividing       -> Atoms · The Discrete Floor of Matter
+ *   2  find the crate that is one material       -> Elements vs. Mixtures
+ *   3  determine kinds present in unverified ore -> Atomic Mass · Identifying Elements
+ *   4  test samples against the bench cutter     -> Atoms Cannot Be Divided Chemically
+ *   5  assemble cluster to replicate coolant     -> Molecules & Chemical Formulas
+ *   6  match vials to cargo manifests            -> Chemical Compounds · Structure Dictates Function
+ *   7  settle crates to find mixtures            -> Separating Mixtures vs. Chemical Bonds
+ *   8  classify all unknown salvage crates       -> Classifying All Matter
+ *   -- debrief: Periodic Table mappings & preview of atomic core.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings. It
  * reports through `ctx` and nothing else.
@@ -106,9 +103,9 @@ export const STAGES = [
     title: 'The Magnification Limit',
     briefing: {
       speaker: SPEAKER,
-      body: "We are set up in an old Imperial salvage bunker on the salt flats of Tallow, and an orbital Guild buyer is inbound to inspect our cargo. Our bench scope magnifies across six power levels; step the dial up to find where continuous grit stops breaking down and resolves into individual grains."
+      body: "We are set up in an old Imperial salvage bunker on the salt flats of Tallow, and an orbital Guild buyer is inbound to inspect our cargo. We need to verify our bench scope before the inspection: find the lowest magnification power where continuous matter resolves into individual grains."
     },
-    prompt: 'Step the power dial up from 1 to 6. Watch the crate, and log the lowest power where individual grains appear and turning the dial higher reveals no smaller pieces.',
+    prompt: 'Determine the lowest magnification power where individual grains appear.',
     controls: ['power'],
     samples: [
       { id: 'c7', label: 'CRATE 07', note: 'raw salvage, unrefined', floorPower: 4, particles: [{ kinds: ['k06'], n: 46 }] }
@@ -126,9 +123,9 @@ export const STAGES = [
       return { ok: false, msg: 'You went past the floor. Powers 5 and 6 only magnify the same pieces; log the lowest power where individual grains first appear.' };
     },
     reward: {
-      log: 'Crate 07 logged. Grain floor confirmed at power 4.',
-      title: 'The Floor of Matter',
-      body: 'Everything you handle is made of pieces too small to see with the naked eye. Turn the dial far enough and the texture stops getting finer — past power 4, you are simply viewing the same indivisible grains from closer up.'
+      log: 'Crate 07 logged. Discrete grains confirmed at power 4.',
+      title: 'Atoms · The Discrete Floor of Matter',
+      body: 'Everything you handle is made of microscopic particles called atoms (from the Greek atomos, meaning indivisible). Matter is not a continuous jelly — turn the magnification up far enough, and the texture stops dividing. You are looking at individual atoms, the fundamental building blocks of all physical matter.'
     }
   },
 
@@ -137,9 +134,9 @@ export const STAGES = [
     title: 'Two Crates of Grey Grit',
     briefing: {
       speaker: SPEAKER,
-      body: "A scavenger brought in two crates logged as identical 'grey grit', but I suspect one is diluted with cheap pale filler. Power up the scope to 4, probe both plates, and find the crate that contains only one material."
+      body: "A scavenger brought in two crates logged as identical 'grey grit', but one of them is suspected to be diluted with cheap filler. We need to certify which shipment is genuine before the buyer lands."
     },
-    prompt: 'Turn the power dial to 4 so the grains resolve clearly. Tap pieces in both crates to inspect their readings on the scope, then select the crate that contains only one kind of piece.',
+    prompt: 'Identify and select the crate that contains only a single material.',
     controls: ['power'],
     select: true,
     samples: [
@@ -148,19 +145,19 @@ export const STAGES = [
     ],
     widget: { type: 'sample' },
     hints: [
-      'Both crates look identical at low power. Raise the dial to power 4 so the scope resolves the individual pieces.',
+      'Both crates look identical at low power. Raise the dial until the scope resolves the individual pieces.',
       'Tap pieces on each plate to read their mass and size on the scope. Check multiple pieces across both crates.',
       'Crate 14 mixes dark pieces (CAT 06) with pale pieces (CAT 11). Crate 09 contains only dark pieces. Tap Crate 09 to select it.'
     ],
     check(state) {
       if (!state.sample) return { ok: false, msg: 'Nothing selected. Tap a crate on the bench first.' };
       if (state.sample === 'c09') return { ok: true };
-      return { ok: false, msg: 'Look at that crate again at power 4. It mixes dark pieces (CAT 06) with pale pieces (CAT 11) — it is not a single material.' };
+      return { ok: false, msg: 'Look at that crate again once the grains resolve. It mixes dark pieces (CAT 06) with pale pieces (CAT 11) — it is not a single material.' };
     },
     reward: {
       log: 'Crate 09 certified as single material. Crate 14 rejected.',
-      title: 'One Kind, or Several',
-      body: 'A crate containing only one kind of piece is uniform all the way down to the individual grain. A mixture of two kinds looks uniform from a distance, but the scope exposes the imposter.'
+      title: 'Elements vs. Mixtures',
+      body: 'When a substance is built from only one kind of atom, it is a pure chemical element. Crate 09 contains pure carbon (CAT 06). When different elements share a container without chemically bonding together, they form a mixture — exactly like the imposter pale grains mixed into Crate 14.'
     }
   },
 
@@ -169,9 +166,9 @@ export const STAGES = [
     title: 'Sold as Single Source',
     briefing: {
       speaker: SPEAKER,
-      body: "A prospector claims Crate 22 is rare 'single-source ore' from the deep flats and demands a triple premium. I suspect they padded the shipment with tailings; probe thoroughly across the plate and count how many distinct kinds of pieces hide inside."
+      body: "A prospector claims Crate 22 is rare single-source ore from the deep flats and demands a triple premium. We suspect the shipment has been padded with tailings."
     },
-    prompt: 'Set power to 4 and tap grains all across the plate to inspect their mass and size meters. Log the exact number of different kinds of pieces found in this crate.',
+    prompt: 'Determine the exact number of distinct kinds of material in Crate 22.',
     controls: ['power'],
     samples: [
       {
@@ -199,9 +196,9 @@ export const STAGES = [
       return { ok: false, msg: 'Fewer than that. Check your probe readings — some pieces belong to the same catalogue kind.' };
     },
     reward: {
-      log: 'Crate 22 rejected. Three kinds detected; premium denied.',
-      title: 'Look More Than Twice',
-      body: 'One reading only tells you what one piece is; it never speaks for the whole crate. Even if an impurity makes up only a fraction of the cargo, probing widely across the plate will reveal it.'
+      log: 'Crate 22 rejected. Three distinct elements detected.',
+      title: 'Atomic Mass · Identifying Elements',
+      body: 'Every chemical element has a characteristic atomic mass. By probing the grains on the scope, you identified three distinct elements in the ore: oxygen (CAT 08, mass 16.0), sulfur (CAT 16, mass 32.1), and chlorine (CAT 17, mass 35.5). In chemistry, measuring mass allows you to identify unknown elements.'
     }
   },
 
@@ -210,9 +207,9 @@ export const STAGES = [
     title: 'What the Blade Cannot Divide',
     briefing: {
       speaker: SPEAKER,
-      body: "The salvage crew claims any piece of matter can be chopped into smaller pieces forever. We have a precision cutter clamped to the bench; select each tray, run the blade, and find the one object that the blade cannot divide."
+      body: "The salvage crew argues that any piece of matter can be chopped into smaller pieces forever. We have a precision cutter on the bench to test their claim."
     },
-    prompt: 'Select each tray in turn and click "Run Cutter" to test it against the blade. Observe how each sample behaves, then select and log the tray that the blade cannot divide.',
+    prompt: 'Identify and select the sample that cannot be divided.',
     controls: ['cut'],
     select: true,
     samples: [
@@ -235,8 +232,8 @@ export const STAGES = [
     },
     reward: {
       log: 'Tray D tested. The blade cannot divide a single grain.',
-      title: 'The Piece That Will Not Divide',
-      body: 'A loose heap scatters into pieces. A bound cluster comes apart into pieces. But a single grain comes apart into nothing at all — it is the indivisible fundamental floor of matter.'
+      title: 'Atoms Cannot Be Divided Chemically',
+      body: 'The blade easily scattered loose heaps and severed the chemical bonds holding clusters together. But Tray D held a single individual atom, and the cutter found nothing inside it to split. In chemical reactions, atoms rearrange and form new bonds, but the atoms themselves are indivisible and preserved.'
     }
   },
 
@@ -245,16 +242,16 @@ export const STAGES = [
     title: 'The Cluster That Repeats',
     briefing: {
       speaker: SPEAKER,
-      body: "We salvaged a sealed vial of vital cooling fluid from an abandoned refinery pump, and every particle inside is a bound cluster built to an identical recipe. Probe a cluster to map its pieces, then assemble an exact replica on the bench tray."
+      body: "We salvaged a sealed vial of vital cooling fluid from an abandoned refinery pump. The liquid is made of identical repeating bound clusters."
     },
-    prompt: 'Turn power to 4. Probe a cluster to inspect its center piece and attached arms, then use the Assembly Tray (+ / -) to build an identical bound cluster.',
+    prompt: 'Assemble an exact replica of the cluster found in Vial 09.',
     controls: ['power'],
     samples: [
       { id: 'v9', label: 'VIAL 09', note: 'coolant sample · repeating clusters', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 20 }] }
     ],
     widget: { type: 'build', kinds: ['k01', 'k06', 'k08'], max: 4 },
     hints: [
-      'Turn the dial to power 4. Tap the large center piece of any cluster, then tap the smaller satellite pieces holding onto it.',
+      'Adjust the dial until clusters resolve clearly. Tap the large center piece of any cluster, then tap the smaller satellite pieces holding onto it.',
       'The center piece reads as CAT 08 (rust). The two attached arms read as CAT 01 (bone).',
       'In the assembly tray, set CAT 08 to 1 and CAT 01 to 2. Leave CAT 06 at 0.'
     ],
@@ -269,8 +266,8 @@ export const STAGES = [
     },
     reward: {
       log: 'Coolant cluster assembled: 1 heavy center, 2 light arms.',
-      title: 'A Fixed Recipe',
-      body: 'Loose pieces can pile together in any random ratio. But a bound cluster cannot: it is always the exact same count of the exact same kinds, repeated across every particle in the container.'
+      title: 'Molecules & Chemical Formulas',
+      body: 'When atoms bind together in a fixed, repeating recipe, they form a molecule. You just assembled a water molecule: one oxygen atom (CAT 08) bonded to two hydrogen atoms (CAT 01). Every molecule of a substance shares the exact same chemical formula — here, H2O.'
     }
   },
 
@@ -279,9 +276,9 @@ export const STAGES = [
     title: 'Two Manifests, Two Vials',
     briefing: {
       speaker: SPEAKER,
-      body: "Salt vapor dissolved the labels on two salvage vials in the hold, and one of them is a corrosive scouring agent eating through its seal! Both vials list the same two kinds of pieces; probe their clusters and match each vial to its manifest before a seal breaches."
+      body: "Salt vapor dissolved the labels on two salvage vials in the hold, and one of them is a corrosive scouring agent eating through its seal. Both vials contain the same kinds of pieces in different recipes."
     },
-    prompt: 'Set power to 4 and probe clusters in Vial A and Vial B. Count the heavy pieces in each cluster, then assign each vial to its matching manifest.',
+    prompt: 'Match each vial to its correct cargo manifest.',
     controls: ['power'],
     samples: [
       { id: 'vA', label: 'VIAL A', note: 'unlabeled container', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 16 }] },
@@ -307,8 +304,8 @@ export const STAGES = [
     },
     reward: {
       log: 'Vial B flagged as corrosive scouring agent and isolated.',
-      title: 'The Recipe Is the Thing',
-      body: 'The exact same kinds of pieces, bound in a different recipe, create entirely different materials. One sits harmlessly in coolant lines, while the other dissolves ship seals.'
+      title: 'Chemical Compounds · Structure Dictates Function',
+      body: 'When different elements chemically bond, they produce a compound with entirely new properties. Vial A is water (H2O), a stable coolant. Vial B has an extra oxygen atom linked into the chain: hydrogen peroxide (H2O2), an aggressive oxidizer that eats seals. In chemistry, changing a compound recipe completely transforms its behavior.'
     }
   },
 
@@ -317,9 +314,9 @@ export const STAGES = [
     title: 'Let It Settle',
     briefing: {
       speaker: SPEAKER,
-      body: "Three crates are queued for export as pure stock, but we must verify them before the buyer's shuttle lands. The bench shaker uses high-frequency vibration to separate loose materials by density; settle all three crates and file each as one material or a mixture."
+      body: "Three crates are queued for export as pure stock, but we must verify whether any are actually mixtures before the buyer's shuttle lands."
     },
-    prompt: 'Select each crate, click "Settle Crate", and watch how the layers come to rest. File each crate as "One material" (single band) or "More than one" (multiple bands).',
+    prompt: 'Classify each crate as a single material or a mixture.',
     controls: ['settle'],
     select: true,
     samples: [
@@ -347,9 +344,9 @@ export const STAGES = [
       return { ok: false, msg: 'At least one crate is filed incorrectly. Check the bands after settling: one band means one material; multiple bands mean a mixture.' };
     },
     reward: {
-      log: 'Crate 33 pulled from pure stock. Two distinct bands.',
-      title: 'Mixed, or Not',
-      body: 'Vibration causes unbonded materials to sort themselves by weight into separate bands. Notice that bound clusters settle together as a single band — mechanical shaking cannot break chemical bonds.'
+      log: 'Crate 33 separated into two bands. Pure stock verified.',
+      title: 'Separating Mixtures vs. Chemical Bonds',
+      body: 'Because a mixture is only a physical combination, its ingredients can be separated by physical properties like density. High-frequency vibration caused Crate 33 to separate into distinct elemental bands. But chemical bonds cannot be shaken apart — molecules in Crate 32 stayed bound and settled as a single band.'
     }
   },
 
@@ -358,9 +355,9 @@ export const STAGES = [
     title: 'The Manifest',
     briefing: {
       speaker: SPEAKER,
-      body: "The orbital buyer's transport has entered atmosphere, and four salvage crates sit on the bench with no labels. You have all bench tools at your disposal — power dial, probe, cutter, and shaker; inspect all four crates and file the final manifest."
+      body: "The orbital buyer's transport has entered atmosphere, and four salvage crates sit on the bench with no labels. Use your bench instruments to classify all four crates before docking."
     },
-    prompt: 'Examine Crates 41 through 44 using the scope, cutter, and shaker. Classify each crate as loose pieces (one kind), bound clusters (one recipe), or more than one material.',
+    prompt: 'Classify all four crates on the final export manifest.',
     controls: ['power', 'cut', 'settle'],
     select: true,
     samples: [
@@ -378,7 +375,7 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Power up to 4 to see if pieces are loose or bound. Run the shaker to check if a crate separates into bands.',
+      'Power up the scope until you can see whether pieces are loose or bound. Run the shaker to check if a crate separates into bands.',
       'Crate 43 separates into two bands (more than one material). Crate 41 has single unbonded pieces. Crates 42 and 44 contain bound clusters.',
       'File Crate 41 as "Loose pieces", Crate 42 as "Bound clusters", Crate 43 as "More than one material", and Crate 44 as "Bound clusters".'
     ],
@@ -395,53 +392,32 @@ export const STAGES = [
     },
     reward: {
       log: 'Final manifest submitted and verified. Buyer cleared for docking.',
-      title: 'Mastering the Bench',
+      title: 'Classifying All Matter',
       last: true,
-      body: 'Loose pieces of one kind, bound clusters of a single recipe, or loose mixtures sharing a container. You can now classify any sample of matter from first principles, with no labels required.'
+      body: 'You have mastered the fundamental hierarchy of matter: pure elements of lone atoms (carbon in Crate 41) or bonded pairs (diatomic hydrogen gas in Crate 44), pure chemical compounds (water in Crate 42), and physical mixtures (tailings in Crate 43). You can now classify any sample of matter from first principles.'
     }
   }
 ];
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
-   The only place in this quest where the real words are spoken. They are
-   spoken last on purpose: a student who has already separated a mixture
-   with a shaker has somewhere to put the word "mixture".
+   Vess concludes the mission, links the catalogue codes to the periodic table,
+   and previews the next bench on Tallow.
    ------------------------------------------------------------------ */
 const DEBRIEF = {
   speaker: 'VESS // TALLOW BENCH',
   sections: [
     {
       heading: 'The Buyer Signed',
-      body: 'Four crates filed with perfect accuracy, and the buyer just signed the transfer manifest without dispute. That pays for our fuel cells and keeps the Avalon flying. You solved it using only a dial, a probe, a blade, and a shaker.'
+      body: 'Four crates certified with zero discrepancies, and the buyer signed the transfer manifest without dispute. That pays for our fuel cells and keeps the Avalon flying. You deduced every sample from first principles.'
     },
     {
-      heading: 'Atom',
-      body: 'The single piece that the cutter blade could not divide has an ancient name: atom. Every scrap of salvage in the galaxy is an assemblage of atoms.'
+      heading: 'The Periodic Table',
+      body: 'Here are the real names for your logbook: CAT 01 is hydrogen (H), CAT 06 is carbon (C), CAT 08 is oxygen (O), CAT 11 is sodium (Na), CAT 16 is sulfur (S), and CAT 17 is chlorine (Cl). Water is H2O, and the corrosive scouring agent is hydrogen peroxide, H2O2.'
     },
     {
-      heading: 'Element',
-      body: 'A material built from only one kind of atom is an element. Crate 41 was pure carbon, and Crate 44 was pure hydrogen — even though hydrogen atoms travel bound together in pairs.'
-    },
-    {
-      heading: 'Molecule',
-      body: 'A bound cluster is a molecule: an exact, repeating architecture of atoms bonded together. That is why you were able to build an exact replica of the coolant cluster in your assembly tray.'
-    },
-    {
-      heading: 'Compound',
-      body: 'When a molecule binds two or more different kinds of atoms together, it is a chemical compound. Its properties depend entirely on the recipe: one oxygen with two hydrogens is water, but two oxygens with two hydrogens is the corrosive scouring agent that ate its own seal.'
-    },
-    {
-      heading: 'Mixture',
-      body: 'When two or more materials share a container without chemical bonds joining them, they form a mixture. That is why Crate 43 separated into distinct bands in the shaker, while pure elements and compounds never split apart.'
-    },
-    {
-      heading: 'The Real Names',
-      body: 'CAT 01 is hydrogen, CAT 06 is carbon, CAT 08 is oxygen, CAT 11 is sodium, CAT 16 is sulfur, and CAT 17 is chlorine. Water is H2O, and the corrosive scouring agent is hydrogen peroxide, H2O2.'
-    },
-    {
-      heading: 'One More Thing',
-      body: 'The scope catalogue numbers are not arbitrary filing codes — they count something fundamental inside each atom. When we reach Site 3 on Tallow, you will discover exactly what CAT numbers count.'
+      heading: 'Next: Inside the Atom',
+      body: 'The catalogue codes on your scope are not arbitrary filing stamps — they count something fundamental inside every atom. When we reach the next bench on Tallow, you will crack open the core and discover exactly what makes each element unique.'
     }
   ]
 };

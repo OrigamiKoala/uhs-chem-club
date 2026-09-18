@@ -1,0 +1,580 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-18T03:40:23Z",
+  "title": "Design System: Avalon",
+  "extensions": {
+    "colorMeta": {
+      "accent-amber": {
+        "role": "primary",
+        "displayName": "Spice Amber",
+        "canonical": "#d99423",
+        "tonalRamp": [
+          "#2a1c06",
+          "#4a310b",
+          "#6b4711",
+          "#8c5d17",
+          "#ad741d",
+          "#d99423",
+          "#e6ae53",
+          "#f3d19c"
+        ]
+      },
+      "lamp-amber": {
+        "role": "primary",
+        "displayName": "The Filament",
+        "canonical": "#f0b246",
+        "tonalRamp": [
+          "#2f2109",
+          "#503810",
+          "#714f18",
+          "#926620",
+          "#b37d28",
+          "#f0b246",
+          "#f5c877",
+          "#fae3b6"
+        ]
+      },
+      "accent-gold": {
+        "role": "secondary",
+        "displayName": "Sunlit Sand",
+        "canonical": "#c39a63",
+        "tonalRamp": [
+          "#261c0f",
+          "#42311a",
+          "#5e4526",
+          "#7a5a32",
+          "#96703f",
+          "#c39a63",
+          "#d5b58a",
+          "#e8d5bb"
+        ]
+      },
+      "accent-rust": {
+        "role": "secondary",
+        "displayName": "Oxidised Iron",
+        "canonical": "#9c5423",
+        "tonalRamp": [
+          "#1f1007",
+          "#381d0c",
+          "#512a12",
+          "#6a3717",
+          "#83441d",
+          "#9c5423",
+          "#c07a4a",
+          "#dcab8a"
+        ]
+      },
+      "accent-bronze": {
+        "role": "secondary",
+        "displayName": "Guild Bronze",
+        "canonical": "#8a7148",
+        "tonalRamp": [
+          "#1c170e",
+          "#302818",
+          "#443823",
+          "#58492d",
+          "#6c5a38",
+          "#8a7148",
+          "#ab946f",
+          "#cbbba1"
+        ]
+      },
+      "accent-green": {
+        "role": "tertiary",
+        "displayName": "Aged Phosphor",
+        "canonical": "#6f8f3f",
+        "tonalRamp": [
+          "#161d0c",
+          "#273217",
+          "#374721",
+          "#485c2c",
+          "#587636",
+          "#6f8f3f",
+          "#93ad6b",
+          "#c0d1a4"
+        ]
+      },
+      "accent-danger": {
+        "role": "tertiary",
+        "displayName": "Blast Hazard Red",
+        "canonical": "#a8342a",
+        "tonalRamp": [
+          "#220a08",
+          "#3c120f",
+          "#561a15",
+          "#70221c",
+          "#8a2a23",
+          "#a8342a",
+          "#c66258",
+          "#e0a099"
+        ]
+      },
+      "accent-cyan": {
+        "role": "tertiary",
+        "displayName": "Dead Instrument Patina",
+        "canonical": "#5c7b7a",
+        "tonalRamp": [
+          "#121818",
+          "#202b2b",
+          "#2e3d3d",
+          "#3c4f4f",
+          "#4a6161",
+          "#5c7b7a",
+          "#849b9a",
+          "#b8c6c5"
+        ]
+      },
+      "plate-200": {
+        "role": "neutral",
+        "displayName": "Panel Ground",
+        "canonical": "#171614",
+        "tonalRamp": [
+          "#0a0908",
+          "#100f0d",
+          "#171614",
+          "#1f1d1a",
+          "#2a2724",
+          "#393430",
+          "#4a443d",
+          "#6b6357"
+        ]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Bone White, Dust-Warmed",
+        "canonical": "#c9c0b1",
+        "tonalRamp": [
+          "#1a1815",
+          "#2e2b26",
+          "#433f38",
+          "#58524a",
+          "#6d665c",
+          "#8f8678",
+          "#c9c0b1",
+          "#e8e0d0"
+        ]
+      },
+      "border-durasteel": {
+        "role": "neutral",
+        "displayName": "Durasteel Seam",
+        "canonical": "#2e2a26",
+        "tonalRamp": [
+          "#0a0908",
+          "#151310",
+          "#1f1d1a",
+          "#2e2a26",
+          "#393430",
+          "#4a443d",
+          "#635c52",
+          "#8f8678"
+        ]
+      },
+      "team-earth": {
+        "role": "secondary",
+        "displayName": "Mineral Mining Bronze",
+        "canonical": "#8a7148",
+        "tonalRamp": [
+          "#1c170e",
+          "#302818",
+          "#443823",
+          "#58492d",
+          "#6c5a38",
+          "#8a7148",
+          "#ab946f",
+          "#cbbba1"
+        ]
+      },
+      "team-air": {
+        "role": "secondary",
+        "displayName": "Atmospheric Harvesters Storm",
+        "canonical": "#75818a",
+        "tonalRamp": [
+          "#181a1c",
+          "#282c30",
+          "#383e44",
+          "#485058",
+          "#58626c",
+          "#75818a",
+          "#9aa4ab",
+          "#c4cace"
+        ]
+      },
+      "team-fire": {
+        "role": "secondary",
+        "displayName": "Thermal Smelters Rust",
+        "canonical": "#9c5423",
+        "tonalRamp": [
+          "#1f1007",
+          "#381d0c",
+          "#512a12",
+          "#6a3717",
+          "#83441d",
+          "#9c5423",
+          "#c07a4a",
+          "#dcab8a"
+        ]
+      },
+      "team-water": {
+        "role": "secondary",
+        "displayName": "Moisture Extraction Deep Teal",
+        "canonical": "#3f7d76",
+        "tonalRamp": [
+          "#0d1918",
+          "#172c2a",
+          "#213f3b",
+          "#2b524d",
+          "#35655f",
+          "#3f7d76",
+          "#6ba49d",
+          "#a5c9c4"
+        ]
+      },
+      "charge-red": {
+        "role": "tertiary",
+        "displayName": "Charge Red (chamber only)",
+        "canonical": "#ff1744",
+        "tonalRamp": [
+          "#33040e",
+          "#570718",
+          "#7b0a22",
+          "#9f0d2c",
+          "#c31036",
+          "#ff1744",
+          "#ff5c7c",
+          "#ffa3b5"
+        ]
+      },
+      "charge-blue": {
+        "role": "tertiary",
+        "displayName": "Charge Blue (chamber only)",
+        "canonical": "#00b0ff",
+        "tonalRamp": [
+          "#002433",
+          "#003d57",
+          "#00567b",
+          "#006f9f",
+          "#0088c3",
+          "#00b0ff",
+          "#5ccaff",
+          "#a3e2ff"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Imperial Title",
+        "purpose": "Cinzel. Page titles only, one per screen, always via pageHeader."
+      },
+      "headline": {
+        "displayName": "Section Head",
+        "purpose": "Chakra Petch. Section and card headings."
+      },
+      "title": {
+        "displayName": "Legend",
+        "purpose": "Chakra Petch. Stage names and switchgear legends."
+      },
+      "body": {
+        "displayName": "Reading Copy",
+        "purpose": "Rajdhani. Prompts, concept cards, epilogue, story. The only untracked role."
+      },
+      "label": {
+        "displayName": "Telemetry",
+        "purpose": "Share Tech Mono. Kickers, form labels, helper text, tags, stat values, part numbers."
+      }
+    },
+    "shadows": [
+      {
+        "name": "seam-pair",
+        "value": "inset 0 1px 0 rgba(214,196,168,0.07), inset 0 -1px 0 rgba(0,0,0,0.55)",
+        "purpose": "Default on every raised surface. Lamp hairline on top, shadow line below — the edge of a separate piece of metal."
+      },
+      {
+        "name": "panel-cast",
+        "value": "0 14px 34px rgba(0,0,0,0.6)",
+        "purpose": "A major plate standing off the bulkhead. Structural, not atmospheric."
+      },
+      {
+        "name": "overlay-cast",
+        "value": "0 10px 28px rgba(0,0,0,0.8)",
+        "purpose": "Dropdowns and toasts, which float higher and therefore darker."
+      },
+      {
+        "name": "hud-cast",
+        "value": "inset 0 1px 0 rgba(214,196,168,0.07), inset 0 -2px 0 rgba(0,0,0,0.5), 0 6px 20px rgba(0,0,0,0.7)",
+        "purpose": "The overhead bulkhead the whole ship hangs off."
+      },
+      {
+        "name": "keycap-relief",
+        "value": "inset 0 1px 0 rgba(255,226,168,0.35), inset 0 -2px 0 rgba(0,0,0,0.3), 0 2px 0 #1a1610, 0 4px 10px rgba(0,0,0,0.55)",
+        "purpose": "The painted primary button. The 0 2px 0 is the physical side of the key, not a shadow."
+      },
+      {
+        "name": "recessed-well",
+        "value": "inset 0 2px 6px rgba(0,0,0,0.75)",
+        "purpose": "Inputs and pressed states. Depth going into the plate."
+      },
+      {
+        "name": "indicator-halo",
+        "value": "0 0 4px rgba(217,148,35,0.4)",
+        "purpose": "The ONLY outward glow permitted, and only on objects that are literally lamps."
+      }
+    ],
+    "motion": [
+      {
+        "name": "press",
+        "value": "transform 0.08s ease",
+        "purpose": "A pressed control travels 2px into the panel. Mechanical, not animated."
+      },
+      {
+        "name": "state-shift",
+        "value": "background 0.12s ease, color 0.15s ease",
+        "purpose": "Hover and focus colour changes on switchgear and inputs."
+      },
+      {
+        "name": "instrument",
+        "value": "all 0.25s ease",
+        "purpose": "A pylon filament coming up to temperature; slower because a lamp warms."
+      },
+      {
+        "name": "toast-in",
+        "value": "0.22s ease-out (translateX 14px + opacity)",
+        "purpose": "A toast slides in from the right edge."
+      },
+      {
+        "name": "banner-pop",
+        "value": "0.2s ease-out",
+        "purpose": "A fault banner arriving."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "desktop-collapse",
+        "value": "900px"
+      },
+      {
+        "name": "phone",
+        "value": "760px"
+      },
+      {
+        "name": "narrow",
+        "value": "620px"
+      },
+      {
+        "name": "small-phone",
+        "value": "480px"
+      },
+      {
+        "name": "floor",
+        "value": "375px"
+      },
+      {
+        "name": "landscape-phone",
+        "value": "(pointer: coarse) and (max-height: 500px) and (orientation: landscape)"
+      }
+    ],
+    "reserved": {
+      "chargeHues": [
+        "#ff1744",
+        "#00b0ff"
+      ],
+      "note": "Reserved for the 3D chamber's charge density. In UI chrome they appear only as printed ink on a hairline: --charge-red-ink #e05a55, --charge-blue-ink #5aa9cf.",
+      "cividisRamp": [
+        "#00204d",
+        "#2c476f",
+        "#626d7f",
+        "#9e9875",
+        "#ffea46"
+      ]
+    },
+    "grain": {
+      "value": "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E\")",
+      "purpose": "One shared sandblast tile. 3.5% opacity + mix-blend-mode overlay on plate surfaces; 10% + multiply on the painted key cap for worn paint."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The painted key cap. The only painted thing on a panel of bare durasteel — which is why it reads first.",
+      "html": "<button class=\"ds-btn-primary\">Launch</button>",
+      "css": ".ds-btn-primary { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; min-height: 44px; padding: 11px 24px; background: linear-gradient(180deg, #c08420, #a06c19); color: #14110b; font-family: 'Chakra Petch', monospace; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; border: 1px solid #6d4a12; border-radius: 0; cursor: pointer; overflow: hidden; text-shadow: 0 1px 0 rgba(255,220,160,0.25); box-shadow: inset 0 1px 0 rgba(255,226,168,0.35), inset 0 -2px 0 rgba(0,0,0,0.3), 0 2px 0 #1a1610, 0 4px 10px rgba(0,0,0,0.55); transition: background 0.12s ease, transform 0.08s ease, box-shadow 0.08s ease; } .ds-btn-primary::before { content: ''; position: absolute; inset: 0; background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E\"); opacity: 0.1; mix-blend-mode: multiply; pointer-events: none; } .ds-btn-primary:hover { background: linear-gradient(180deg, #d09424, #ac761c); } .ds-btn-primary:focus-visible { outline: 2px solid #f0b246; outline-offset: 2px; } .ds-btn-primary:active { transform: translateY(2px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.45), 0 0 0 #1a1610; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Bare durasteel with an engraved legend. The default control; it never competes with the painted key.",
+      "html": "<button class=\"ds-btn-secondary\">Stage Panel</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; min-height: 44px; padding: 11px 22px; background: #1f1d1a; color: #c9c0b1; font-family: 'Chakra Petch', monospace; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; border: 1px solid #2e2a26; border-radius: 0; cursor: pointer; text-shadow: 0 1px 0 rgba(0,0,0,0.7); box-shadow: inset 0 1px 0 rgba(214,196,168,0.07), inset 0 -1px 0 rgba(0,0,0,0.55), 0 2px 0 #0c0b0a; transition: background 0.12s ease, color 0.12s ease, transform 0.08s ease; } .ds-btn-secondary:hover { background: #2a2724; color: #e8e0d0; border-color: #393430; } .ds-btn-secondary:focus-visible { outline: 2px solid #d99423; outline-offset: 2px; } .ds-btn-secondary:active { transform: translateY(2px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "A recessed well. On focus the text itself lights amber — the instrument lights from inside, there is no ring.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Display Name</span><input class=\"ds-input\" type=\"text\" value=\"drift-42-ember\" /><span class=\"ds-field-help\">3–20 characters. Letters, numbers and dashes.</span></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; } .ds-field-label { font-family: 'Share Tech Mono', monospace; font-size: 0.66rem; font-weight: 400; color: #635c52; letter-spacing: 0.2em; text-transform: uppercase; } .ds-input { background: #100f0d; border: 1px solid #2e2a26; border-top-color: #000; border-radius: 0; color: #e8e0d0; font-family: 'Share Tech Mono', monospace; font-size: 0.95rem; letter-spacing: 0.04em; padding: 11px 14px; min-height: 44px; outline: none; box-shadow: inset 0 2px 6px rgba(0,0,0,0.75); transition: border-color 0.15s ease, color 0.15s ease; } .ds-input:focus { border-color: #d99423; color: #f0b246; } .ds-input::placeholder { color: #635c52; opacity: 0.7; } .ds-field-help { font-family: 'Share Tech Mono', monospace; font-size: 0.68rem; letter-spacing: 0.04em; color: #635c52; line-height: 1.4; }"
+    },
+    {
+      "name": "Nav Button",
+      "kind": "nav",
+      "refersTo": "nav-button",
+      "description": "HUD navigation. The active tab is pressed INTO the bulkhead and takes a 2px amber bar down its left edge.",
+      "html": "<nav class=\"ds-nav\"><button class=\"ds-nav-btn\">Bridge</button><button class=\"ds-nav-btn active\">Learn</button><button class=\"ds-nav-btn\">Standings</button></nav>",
+      "css": ".ds-nav { display: flex; gap: 6px; padding: 10px 14px; background: linear-gradient(180deg, #1f1d1a, #171614 70%, #100f0d); border-bottom: 1px solid #000; box-shadow: inset 0 1px 0 rgba(214,196,168,0.07), inset 0 -2px 0 rgba(0,0,0,0.5), 0 6px 20px rgba(0,0,0,0.7); } .ds-nav-btn { position: relative; background: #1f1d1a; border: 1px solid #2e2a26; border-radius: 0; color: #8f8678; font-family: 'Chakra Petch', monospace; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; padding: 6px 13px; min-height: 38px; cursor: pointer; box-shadow: inset 0 1px 0 rgba(214,196,168,0.07), inset 0 -1px 0 rgba(0,0,0,0.55); transition: color 0.15s ease, background 0.15s ease; } .ds-nav-btn:hover { color: #e8e0d0; background: #2a2724; } .ds-nav-btn:focus-visible { outline: 2px solid #d99423; outline-offset: 2px; } .ds-nav-btn.active { color: #d99423; background: #100f0d; box-shadow: inset 0 1px 3px rgba(0,0,0,0.7); } .ds-nav-btn.active::after { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 2px; background: #d99423; }"
+    },
+    {
+      "name": "Plate Panel",
+      "kind": "card",
+      "refersTo": "panel-plate",
+      "description": "The system's signature silhouette: two relieved corners with matching hairlines, the seam pair, a cast shadow, and sandblast grain.",
+      "html": "<section class=\"ds-plate\"><p class=\"ds-eyebrow\">Sector 01 · Erebus</p><h2 class=\"ds-plate-title\">The Charge Gardens</h2><p class=\"ds-plate-body\">Find what pulls. Draw the line.</p></section>",
+      "css": ".ds-plate { --c: 10px; position: relative; padding: 1.6rem 1.75rem; overflow: hidden; border: 1px solid #2e2a26; border-radius: 0; background: linear-gradient(135deg, transparent calc(50% - 0.5px), #2e2a26 calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)) top left / var(--c) var(--c) no-repeat, linear-gradient(135deg, transparent calc(50% - 0.5px), #2e2a26 calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)) bottom right / var(--c) var(--c) no-repeat, rgba(23,22,20,0.95); clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c)); box-shadow: inset 0 1px 0 rgba(214,196,168,0.07), inset 0 -1px 0 rgba(0,0,0,0.55), 0 14px 34px rgba(0,0,0,0.6); } .ds-plate::before { content: ''; position: absolute; inset: 0; background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E\"); opacity: 0.035; mix-blend-mode: overlay; pointer-events: none; } .ds-plate > * { position: relative; } .ds-eyebrow { font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: #635c52; margin: 0; } .ds-plate-title { font-family: 'Cinzel', serif; font-size: 1.55rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #e8e0d0; line-height: 1.2; margin: 0.45rem 0 0; text-shadow: 0 1px 0 rgba(0,0,0,0.7); } .ds-plate-body { font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; color: #8f8678; line-height: 1.5; margin: 0.5rem 0 0; }"
+    },
+    {
+      "name": "Status Tag",
+      "kind": "chip",
+      "refersTo": "status-tag",
+      "description": "A stamped marking. State recolours the text and border only — never the fill.",
+      "html": "<span class=\"ds-tag live\">Live</span> <span class=\"ds-tag warn\">Charted</span> <span class=\"ds-tag locked\">Locked</span> <span class=\"ds-tag danger\">Fault</span>",
+      "css": ".ds-tag { display: inline-flex; align-items: center; gap: 5px; font-family: 'Share Tech Mono', monospace; font-size: 0.62rem; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; padding: 3px 8px; border: 1px solid #2e2a26; border-radius: 0; color: #635c52; background: #100f0d; } .ds-tag.live { color: #6f8f3f; border-color: rgba(111,143,63,0.45); } .ds-tag.warn { color: #d99423; border-color: rgba(217,148,35,0.4); } .ds-tag.danger { color: #a8342a; border-color: rgba(168,52,42,0.5); } .ds-tag.locked { color: #635c52; opacity: 0.7; }"
+    },
+    {
+      "name": "Fault Banner",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The quest's miss display. Four parts, a 3px left edge carrying the state, and a stencilled leading mark — never an emoji.",
+      "html": "<div class=\"ds-banner\"><span class=\"ds-banner-mark\">!!</span><div><div class=\"ds-banner-title\">Two Givers</div><div class=\"ds-banner-body\">Both sites you picked are pushing. One of them has to be pulling.</div><div class=\"ds-banner-meta\">Scan the lower right site</div></div></div>",
+      "css": ".ds-banner { display: flex; align-items: flex-start; gap: 0.7rem; background: rgba(168,52,42,0.12); border: 1px solid rgba(168,52,42,0.45); border-left: 3px solid #a8342a; border-radius: 0; padding: 10px 13px; color: #e8e0d0; font-family: 'Share Tech Mono', monospace; animation: ds-bannerPop 0.2s ease-out; } @keyframes ds-bannerPop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } } .ds-banner-mark { font-family: 'Share Tech Mono', monospace; font-size: 0.95rem; line-height: 1.5; flex-shrink: 0; opacity: 0.9; } .ds-banner-title { font-family: 'Share Tech Mono', monospace; font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; } .ds-banner-body { font-family: 'Rajdhani', sans-serif; font-size: 0.86rem; color: #c9c0b1; margin-top: 3px; line-height: 1.5; } .ds-banner-meta { font-family: 'Share Tech Mono', monospace; font-size: 0.68rem; letter-spacing: 0.14em; color: #d99423; margin-top: 8px; }"
+    },
+    {
+      "name": "Toast",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "Transient message docked bottom-right. The 3px left edge is the only thing that carries the type.",
+      "html": "<div class=\"ds-toast success\">Pylon 07 back online.</div>",
+      "css": ".ds-toast { background: #171614; border: 1px solid #2e2a26; border-left: 3px solid #d99423; border-radius: 0; color: #c9c0b1; font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; letter-spacing: 0.03em; padding: 10px 16px; max-width: 340px; box-shadow: 0 8px 22px rgba(0,0,0,0.8), inset 0 1px 0 rgba(214,196,168,0.07); animation: ds-toastIn 0.22s ease-out; } @keyframes ds-toastIn { from { transform: translateX(14px); opacity: 0; } to { transform: none; opacity: 1; } } .ds-toast.success { border-left-color: #6f8f3f; } .ds-toast.error { border-left-color: #a8342a; } .ds-toast.warning { border-left-color: #c39a63; } .ds-toast.info { border-left-color: #4a443d; }"
+    },
+    {
+      "name": "Stage Lamps",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Signature. An 8x10px panel bulb, taller than wide. One of only three things in the system permitted to glow.",
+      "html": "<div class=\"ds-lamp-track\"><i class=\"ds-lamp completed\"></i><i class=\"ds-lamp completed\"></i><i class=\"ds-lamp active\"></i><i class=\"ds-lamp\"></i><i class=\"ds-lamp locked\"></i></div>",
+      "css": ".ds-lamp-track { display: flex; gap: 4px; align-items: center; padding: 8px 10px; background: #171614; border: 1px solid #2e2a26; } .ds-lamp { width: 8px; height: 10px; flex-shrink: 0; background: #2a2724; border: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6); transition: background 0.15s ease, box-shadow 0.15s ease; } .ds-lamp.completed { background: #6f8f3f; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.5), 0 0 4px rgba(111,143,63,0.4); } .ds-lamp.active { background: #f0b246; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.5), 0 0 6px rgba(240,178,70,0.7); } .ds-lamp.locked { opacity: 0.4; }"
+    },
+    {
+      "name": "Instrument Plate",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Signature. The Learn bench aperture: a phosphor field in a durasteel rim on a chamfered plate, with a six-segment power dial.",
+      "html": "<div class=\"ds-scope\"><div class=\"ds-scope-head\"><span class=\"ds-scope-label\">Crate B</span><span class=\"ds-scope-tag lit\">Probed</span></div><div class=\"ds-scope-aperture\"></div><div class=\"ds-scope-dial\"><span class=\"ds-scope-dial-label\">Power</span><span class=\"ds-scope-segs\"><i class=\"lit\"></i><i class=\"lit\"></i><i class=\"lit\"></i><i></i><i></i><i></i></span><span class=\"ds-scope-dial-value\">3</span></div></div>",
+      "css": ".ds-scope { --c: 6px; position: relative; padding: 0.7rem 0.8rem; background: #171614; border: 1px solid #2e2a26; clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c)); box-shadow: inset 0 1px 0 rgba(214,196,168,0.07), inset 0 -1px 0 rgba(0,0,0,0.55); max-width: 280px; } .ds-scope-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; } .ds-scope-label { font-family: 'Share Tech Mono', monospace; font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: #c9c0b1; } .ds-scope-tag { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; color: #635c52; } .ds-scope-tag.lit { color: #6f8f3f; } .ds-scope-aperture { aspect-ratio: 16 / 10; width: 100%; background: radial-gradient(circle at 42% 38%, #1a1714 0%, #0d0c0a 70%); border: 1px solid #2e2a26; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8); } .ds-scope-dial { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.55rem; } .ds-scope-dial-label { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: #635c52; } .ds-scope-segs { display: flex; gap: 3px; } .ds-scope-segs i { width: 3px; height: 12px; background: #2a2724; border: 1px solid #1a1714; display: block; } .ds-scope-segs i.lit { background: #d99423; border-color: #9a7419; } .ds-scope-dial-value { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: #d99423; margin-left: auto; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Scoured Plate",
+    "overview": "Everything on this ship is forty years old and still works. Avalon's interface is not a dark-mode website with a space theme laid over it — it is machined hardware that has been in the dust for four decades, maintained badly, and never once failed to do its job. Advanced technology, poorly maintained. Sand gets into everything, so the neutrals carry a brown bias; the light comes from filaments behind dusty glass, not from LEDs; and the metal is sandblasted rather than polished.\n\nThe system's discipline is restraint with one signal. Amber means live. It is the only painted thing on a panel of bare durasteel, which is exactly why the eye finds it without being shouted at. A screen that is mostly amber has said nothing. The corollary is that this interface never advertises itself: there are no feature cards, no hero gradients, no badges claiming a connection is active. Every string on screen is a label, a rule the player must satisfy, an error, something being taught, or a character speaking.\n\nDepth is structural, not atmospheric. A plate is bolted to a bulkhead, so it catches a hairline of lamp light on its top edge, drops a shadow along its bottom, and casts a real shadow onto the surface behind it. What it never does is emit. A wide coloured box-shadow is the single loudest tell of vibe-coded design and is banned outright; the only exceptions are objects that are literally lamps. The reference points are the used-universe of a desert-planet space opera, never named in player-facing copy, only felt.",
+    "keyCharacteristics": [
+      "Warm dark neutrals with a sand/brown bias — never blue-black.",
+      "Zero border radius. Machined plate has cut corners, not rounded ones.",
+      "A shared sandblast grain tile on every large surface at 3–4% opacity.",
+      "Amber as a scarce signal; bare durasteel as the default.",
+      "Engraved type — a dark line under the glyph — never a glowing one.",
+      "Four typefaces with four distinct jobs: imperial serif, display, body, telemetry mono.",
+      "Charge red and blue are reserved for chemistry and appear nowhere else as surfaces."
+    ],
+    "rules": [
+      {
+        "name": "The One Lamp Rule",
+        "body": "Amber is a signal, not a surface. If it is lit, something is live. Audit test: on any screen, the total amber area should read as a handful of indicator marks, not as a colour scheme. If you can describe the screen as 'the amber one', it fails.",
+        "section": "colors"
+      },
+      {
+        "name": "The Reserved Hues Rule",
+        "body": "Charge red (#ff1744) and charge blue (#00b0ff) belong to the chemistry and appear only inside the 3D chamber. In UI chrome the same signal appears as printed ink on a hairline rule — #e05a55 and #5aa9cf — never as a glowing block and never as a ramp between the two.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Web Colour Rule",
+        "body": "Tailwind-default palette hexes (#fbbf24, #10b981, #ff5252) and electric cyan (#00e5ff) are banned on sight. The HUD guild badge derives its livery from TEAM_LIVERY in main.js, never from the backend sheet's accent_hex.",
+        "section": "colors"
+      },
+      {
+        "name": "The Engraved Type Rule",
+        "body": "Type sits in the surface. Titles and legends carry text-shadow: 0 1px 0 rgba(0,0,0,0.7) — a dark line under the glyph, cut into the plate. Type never glows.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tracking Ladder Rule",
+        "body": "The smaller the type, the wider the tracking. A 0.65rem kicker runs at 0.3em; 16px body runs at normal. Small mono type in this system is a stencil, and a stencil is spaced.",
+        "section": "typography"
+      },
+      {
+        "name": "The Placeholder Ban",
+        "body": "Forms use explicit labels and helper text. Never use placeholder text to carry an example or an instruction — it disappears the moment a student starts typing, which is exactly when they need it.",
+        "section": "typography"
+      },
+      {
+        "name": "The 375 Rule",
+        "body": "Every screen, instrument and quest must work at 375px wide. This is the product's confirmed device floor, not a courtesy tier.",
+        "section": "layout"
+      },
+      {
+        "name": "The 44 Rule",
+        "body": "Every interactive control has min-height 44px (38px for the compact HUD nav). A student is playing this on a phone with dusty fingers.",
+        "section": "layout"
+      },
+      {
+        "name": "The Nothing Blooms Rule",
+        "body": "box-shadow: 0 0 20px <colour> is banned. The sole exceptions are objects that are physically lamps: .gfx-dot, .stage-dot.active, .stage-dot.completed. If you cannot justify a glow as a bulb behind glass, it is not allowed.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Press Rule",
+        "body": "A pressed control moves. Both button variants take transform: translateY(2px) on :active and swap their cast shadow for an inset one. Transitions are 0.08s for the press and 0.12–0.15s for colour; fast enough to feel mechanical rather than animated.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Cut Corner Rule",
+        "body": "If a container has a border and a fill, it gets the chamfer treatment — clip-path plus a matching corner hairline. Decide the grade first: a panel is relieved at top-left AND bottom-right (.plate, .glass-panel at 10px; .scope-plate at 6px); a card is relieved at top-left only (.holo-card at 6px; .stage-prompt-card at 10px). Never relieve bottom-right alone, and never relieve a corner without drawing its hairline.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Grain-Under-Content Rule",
+        "body": "Grain goes on ::before, content goes on position: relative. Forget the second half and the noise renders over the text.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Stencil, Not Colour Rule",
+        "body": "On the core bench a marked grain is told apart by a stencilled cross, never by its colour alone. It is the only version of the instrument that survives a colour-blind player, and it is non-negotiable.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do read src/styles/tokens.css before styling anything. It is the contract, and it is commented with the reasoning behind every group.",
+      "Do build every screen header from pageHeader in ui/layout.js. Hand-rolled banner markup is how a system drifts.",
+      "Do give every raised surface the seam pair — inset 0 1px 0 var(--seam-light), inset 0 -1px 0 var(--seam-dark). It is two lines of CSS and it is most of the look.",
+      "Do pick the chamfer grade by what the container is: two corners (top-left + bottom-right) for a panel, top-left only for a card — and always draw the matching corner hairline.",
+      "Do keep the grain on ::before and put position: relative on direct children.",
+      "Do add a phone hook (m-grid-1, m-head, m-cta-stack, m-subpanel…) when you add a grid or table to a screen, and verify it at 375px.",
+      "Do label state with a coloured left edge or a recoloured border, not a coloured fill.",
+      "Do keep every interactive control at min-height: 44px.",
+      "Do write copy that is a label, a rule, an error, teaching, or a character speaking. Delete anything else."
+    ],
+    "donts": [
+      "Don't add box-shadow: 0 0 Npx <colour> as a glow. The exceptions are .gfx-dot and the active/completed stage lamps, and there are no others.",
+      "Don't introduce a border radius. --radius-sm is 0 and that is a decision, not an oversight.",
+      "Don't use charge red (#ff1744) or charge blue (#00b0ff) outside the 3D chamber. In chrome they appear only as --charge-red-ink / --charge-blue-ink on a hairline.",
+      "Don't reach for blue-black neutrals, electric cyan (#00e5ff), glassmorphism, candy gradients with white specular highlights, or Tailwind-default palette hexes (#fbbf24, #10b981, #ff5252).",
+      "Don't put an emoji in player-facing markup. A banner's leading mark is a stencilled !! or //.",
+      "Don't put an arrow glyph in a button label, or write a label longer than two words.",
+      "Don't use placeholder text to carry an instruction or an example — use an explicit label and helper text.",
+      "Don't build an auto-fit grid of feature cards advertising what the product does. The interface does not describe itself.",
+      "Don't add a 'COMMS LIVE' or 'LIVE COMMS' badge, or any other claim that a connection is active. Comms channels are labelled diegetically (COMMS) and claim nothing.",
+      "Don't read a guild's colour from the backend accent_hex. TEAM_LIVERY in main.js is the only source.",
+      "Don't fix a phone bug in main.css or holo.css. Phone rules live in the max-width: 760px sheets so desktop cannot be collateral damage."
+    ]
+  }
+}

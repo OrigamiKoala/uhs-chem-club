@@ -1,25 +1,21 @@
 /**
- * q2-core.js — Tallow, site two: THE INSIDE OF A PIECE.
- *
- * Site one ended on a blade that would not divide one of the four objects on the
- * tray. This is what happens when somebody hits that object with something much
- * more violent than a blade. Eight stages on the core bench, and the player
- * leaves knowing what a nucleus, a proton, a neutron, an electron and a shell
- * are, plus isotopes and ions — and meets none of those words until the debrief.
+ * The second game on the Learn road. Eight stages on the core bench, introducing
+ * the nucleus, protons, neutrons, electrons, electron shells, valence electrons,
+ * isotopes, and ions immediately after each stage as the reward card payoff.
  *
  * THE ORDER IS THE WHOLE DESIGN. Every stage is a thing the player does with an
- * instrument, and the idea arrives afterwards as a reward card, never as a
- * briefing:
+ * instrument, and the concept arrives immediately afterwards as a reward card,
+ * connecting the player's hands-on observation to the real chemistry:
  *
- *   1  fire a beam through a piece and count what comes back  -> tiny, heavy middle
- *   2  count the marked grains in the core                    -> two sorts in there
- *   3  read a sealed piece at zero and work backwards         -> the books balance
- *   4  arrange the light pieces onto the rings                -> fixed distances, fixed room
- *   5  test two specimens, predict the other two              -> the outermost ring decides
- *   6  separate two specimens of identical weight             -> marked count is identity
- *   7  strip light pieces off until the needle moves          -> a piece can carry a charge
- *   8  file four specimens against a reference                -> all of it at once
- *   -- debrief: nucleus, proton, neutron, electron, shell, isotope, ion.
+ *   1  fire an alpha beam through matter        -> The Nucleus · Mostly Empty Space
+ *   2  probe the heavy grains in the core       -> Protons & Neutrons · The Nucleus
+ *   3  read net charge and deduce outer particles -> Electrons & Electrical Neutrality
+ *   4  distribute electrons across energy rings -> Electron Shells & The Bohr Model
+ *   5  test trading behavior with reagents     -> Valence Electrons & Chemical Reactivity
+ *   6  differentiate specimens of equal mass   -> Atomic Number & Isotopes
+ *   7  strip electrons to ionize a specimen    -> Ions & Net Charge
+ *   8  classify unknown canisters by structure -> The Subatomic Architecture of Matter
+ *   -- debrief: subatomic model summary & preview of the periodic table.
  *
  * Player-facing vocabulary before the debrief: piece, core, grain, mark, ring,
  * light piece, specimen, needle. That restraint is the product.
@@ -137,9 +133,9 @@ export const STAGES = [
     field: 'whole',
     briefing: {
       speaker: SPEAKER,
-      body: 'The cutter blade on the surface bench met a piece of hull scrap it could not divide, and standard sensors report it as uniform solid matter. In the Avalon\'s reactor coils, however, these pieces behave erratically—some pass radiation, some deflect it. I have mounted SPEC A in this bench\'s particle accelerator. Fire an alpha stream straight through the piece, and let us see what is actually inside.'
+      body: 'The cutter blade on the bench met a piece of scrap it could not divide, and standard sensors report it as uniform solid matter. In the reactor coils, however, radiation passes through it in an unexpected way. We mounted SPEC A in the accelerator chamber to determine its internal structure.'
     },
-    prompt: 'SPEC A is mounted in the aperture. Click the "Fire Beam" button to shoot 40 high-energy particles through it, inspect the beam counter readout, and file the internal structure that explains what happened.',
+    prompt: 'Determine the internal structure of specimen SPEC A.',
     controls: ['beam'],
     specimens: [
       { id: 'a', label: 'SPEC A', note: 'one piece, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
@@ -170,9 +166,9 @@ export const STAGES = [
       return { ok: true };
     },
     reward: {
-      log: 'SPEC A analyzed. Beam return: 1 in 40 direct rebound.',
-      title: 'Mostly Empty Space',
-      body: 'The indestructible piece is over 99.99% empty void. Almost every shot passes clean through as though nothing were there—and the single particle that rebounded bounced off an unimaginably dense, heavy core sitting dead center.'
+      log: 'SPEC A analyzed. Direct rebound: 1 in 40.',
+      title: 'The Nucleus · Mostly Empty Space',
+      body: 'Like Rutherford\'s famous gold foil experiment, firing energetic alpha particles reveals that an atom is over 99.99% empty space. Almost every particle passes straight through, while the rare rebound exposes a minute, incredibly dense central core: the atomic nucleus, where almost all mass is concentrated.'
     }
   },
 
@@ -182,9 +178,9 @@ export const STAGES = [
     field: 'core',
     briefing: {
       speaker: SPEAKER,
-      body: 'That single rebound came from a speck less than a ten-thousandth the width of the piece. I have tuned the bench\'s magnetic focus coils to zoom the field straight into the core of SPEC A. It is a tight huddle of heavy grains, but our radiation alarm is twitching. Tap individual grains to read their mass and charge, and log how many marked grains are in that middle.'
+      body: 'That particle rebound came from a speck less than a ten-thousandth the width of the atom. Focus coils reveal a cluster of heavy subatomic particles in the nucleus of SPEC A. We need to determine the count of marked particles inside this core.'
     },
-    prompt: 'The field is focused on the core of SPEC A. Tap individual grains to read their mass and needle readings on the probe card, then log the count of marked grains (the ones stamped with a cross).',
+    prompt: 'Determine the count of marked particles in the core of SPEC A.',
     controls: ['field'],
     specimens: [
       { id: 'a', label: 'SPEC A', note: 'one piece, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
@@ -206,9 +202,9 @@ export const STAGES = [
       return { ok: false, msg: 'Recount the marked grains. SPEC A has 12 grains in its core: count only those stamped with a cross.' };
     },
     reward: {
-      log: 'SPEC A core: 12 grains, 6 marked, 6 blank.',
-      title: 'Two Sorts in the Core',
-      body: 'Virtually all the mass of the piece is locked into two kinds of grains of identical weight. One sort is marked and kicks the needle positive; the other is blank and carries zero charge.'
+      log: 'SPEC A core: 12 subatomic particles (6 marked, 6 blank).',
+      title: 'Protons & Neutrons · The Nucleus',
+      body: 'The atomic nucleus consists of two types of nucleons of nearly identical mass: protons (the marked grains with a +1 positive charge) and neutrons (the blank grains with 0 charge). SPEC A has 6 protons and 6 neutrons, giving it a mass number of 12.'
     }
   },
 
@@ -218,9 +214,9 @@ export const STAGES = [
     field: 'whole',
     briefing: {
       speaker: SPEAKER,
-      body: 'We pulled canister SPEC B from an intact refinery storage vault. Its heavy casing is sealed tight against radiation, so sensor glare prevents the outer field from resolving. But we cannot wire it into the Avalon\'s auxiliary power bank if it carries a live static charge. Put the needle meter on the whole canister, count the marked grains in its core, and deduce how many light pieces must be out there.'
+      body: 'We salvaged sealed canister SPEC B from a refinery vault. The outer casing shields against radiation, preventing direct visual scans of its perimeter. Before connecting it to the power bank, we must confirm it is not carrying an unbalance of electrical charge.'
     },
-    prompt: 'Canister SPEC B is sealed and its outer rings cannot resolve directly. In the "Whole" field, click "Read Needle" to test net charge. Then switch to the "Core" field to count the marked grains, and deduce how many light pieces are outside.',
+    prompt: 'Deduce how many light particles surround the core of SPEC B.',
     controls: ['field', 'meter'],
     specimens: [
       {
@@ -248,9 +244,9 @@ export const STAGES = [
       return { ok: false, msg: 'Switch to the "Core" field and count the marked grains (8). To balance the core at zero, exactly 8 light pieces must be outside.' };
     },
     reward: {
-      log: 'SPEC B certified. 8 light pieces deduced, casing unopened.',
-      title: 'The Books Balance',
-      body: 'An undisturbed piece is electrically neutral. For every positively charged marked grain locked in the core, an identical number of negatively charged light pieces swarms outside to balance the books.'
+      log: 'SPEC B certified. 8 electrons deduced, casing unopened.',
+      title: 'Electrons & Electrical Neutrality',
+      body: 'In an undisturbed, neutral atom, the total positive charge of the protons in the nucleus is exactly balanced by an equal number of negatively charged electrons (-1) orbiting outside. Because SPEC B has 8 protons and a net charge of zero, it must have exactly 8 electrons.'
     }
   },
 
@@ -260,9 +256,9 @@ export const STAGES = [
     field: 'rings',
     briefing: {
       speaker: SPEAKER,
-      body: 'We are calibrating an ion emitter with raw specimen SPEC C, which holds 11 light pieces outside its core. But outside the middle, light pieces do not drift in a random cloud—field repulsion forces them onto fixed concentric rings. Inspect the two resolved reference specimens beside SPEC C to discover the capacity of each ring, then place all 11 light pieces onto SPEC C.'
+      body: 'We are calibrating an ion emitter with raw specimen SPEC C, containing 11 electrons. Electrons do not drift randomly around the nucleus; electrostatic and quantum constraints organize them into concentric energy shells.'
     },
-    prompt: 'Tap REF 01 and REF 02 to inspect how light pieces occupy their rings. Then use the "+" and "-" buttons on each ring row to place all 11 light pieces onto SPEC C from the inside out.',
+    prompt: 'Configure all 11 electrons into their proper shells on SPEC C.',
     controls: ['field'],
     specimens: [
       { id: 'r1', label: 'REF 01', note: 'resolved', core: { marked: 2, blank: 2 }, rings: [2] },
@@ -298,9 +294,9 @@ export const STAGES = [
       return { ok: true };
     },
     reward: {
-      log: 'SPEC C configured: 2 / 8 / 1.',
-      title: 'Fixed Distances, Fixed Room',
-      body: 'Light pieces occupy strict concentric energy rings. The nearest ring holds at most 2; the second holds 8. Only when an inner ring is completely full do pieces spill into the next ring outward.'
+      log: 'SPEC C electron configuration: 2 / 8 / 1.',
+      title: 'Electron Shells & The Bohr Model',
+      body: 'Electrons occupy quantized concentric energy levels called electron shells. The first shell closest to the nucleus holds at most 2 electrons; the second holds up to 8. Electrons fill lower-energy inner shells first, meaning element 11 (sodium) has the electron configuration 2, 8, 1.'
     }
   },
 
@@ -310,9 +306,9 @@ export const STAGES = [
     field: 'rings',
     briefing: {
       speaker: SPEAKER,
-      body: 'We must predict how four salvaged specimens (SPEC D, E, F, G) will react before mixing them into the Avalon\'s fuel manifold. The bench\'s automated reagent tester pushes a standard partner against a specimen to report trading behavior, but its auxiliary battery has only 2 charges left. Spend the two charges wisely, discover the pattern on their outermost rings, and file what all four will do.'
+      body: 'We must predict how four salvaged specimens (SPEC D, E, F, G) will react before mixing them into the fuel manifold. The reagent tester has only 2 charges left in its auxiliary battery; observe the electron architecture to deduce how all four will interact.'
     },
-    prompt: 'Four specimens on the bench, and the tester has 2 charges remaining. Select a specimen and click "Run Tester". Examine the outermost rings of all four specimens, then classify each on the manifest as giving, taking, or refusing to trade.',
+    prompt: 'Classify whether each specimen gives electrons, accepts electrons, or remains inert.',
     controls: ['field', 'tester'],
     specimens: [
       { id: 's1', label: 'SPEC D', note: 'resolved', core: { marked: 3, blank: 4 }, rings: [2, 1] },
@@ -352,8 +348,8 @@ export const STAGES = [
     },
     reward: {
       log: 'Four behaviors filed; two tester charges spent.',
-      title: 'The Outermost Ring Decides',
-      body: 'SPEC D and SPEC E look completely different, yet behave identically: both have 1 piece on their outermost ring. What a piece does to its neighbors is settled out at the edge by its outermost ring, never by its core.'
+      title: 'Valence Electrons & Chemical Reactivity',
+      body: 'Chemical reactivity is determined by valence electrons—the electrons in the outermost shell. Atoms strive for a full outer shell (the octet rule): atoms with 1 valence electron readily donate it, atoms with 7 aggressively take one, and atoms with a complete outer shell of 8 (like neon) are chemically inert noble gases.'
     }
   },
 
@@ -363,9 +359,9 @@ export const STAGES = [
     field: 'core',
     briefing: {
       speaker: SPEAKER,
-      body: 'The Avalon\'s cooling system requires pure coolant matching reference SPEC H. Salvage bins yielded two unlabelled canisters, SPEC K and SPEC L, each holding exactly 13 grains in their cores. Mass alone cannot tell them apart. If we pipe the wrong material into the cooling coils, the reactor will corrode. Switch to the Core field on all three, count the marks, and file which canister is genuine coolant.'
+      body: 'The cooling system requires pure coolant matching reference standard SPEC H. Salvage bins yielded two unlabelled canisters, SPEC K and SPEC L, both with 13 total particles in their cores. We must verify which canister is genuine coolant before introducing it to the reactor.'
     },
-    prompt: 'Reference SPEC H is certified coolant. Canisters SPEC K and SPEC L both hold 13 core grains. Switch to the "Core" field, count the marked grains on each, and file whether each is the same material as SPEC H or something else.',
+    prompt: 'Determine whether SPEC K and SPEC L match the chemical identity of SPEC H.',
     controls: ['field'],
     specimens: [
       { id: 'h', label: 'SPEC H', note: 'reference', core: { marked: 6, blank: 6 }, rings: [2, 4] },
@@ -402,8 +398,8 @@ export const STAGES = [
     },
     reward: {
       log: 'SPEC K certified with SPEC H. SPEC L held back.',
-      title: 'The Marked Count Is the Identity',
-      body: 'The number of marked grains in the core is what defines the material. Add a blank grain and you have the exact same element, slightly heavier. Change a marked grain and you are holding something else entirely, regardless of what the scales say.'
+      title: 'Atomic Number & Isotopes',
+      body: 'An element\'s chemical identity is governed strictly by its atomic number (the number of protons in its nucleus). SPEC H and SPEC K both have 6 protons (carbon): SPEC K has an extra neutron, making it carbon-13, an isotope of the same element. SPEC L has 7 protons (nitrogen), making it an entirely different element despite having the same mass number 13.'
     }
   },
 
@@ -413,9 +409,9 @@ export const STAGES = [
     field: 'rings',
     briefing: {
       speaker: SPEAKER,
-      body: 'The Avalon\'s electrostatic maneuvering thrusters need charged propellant to generate thrust; neutral atoms pass through magnetic accelerators without reacting. Neutral specimen SPEC M is mounted on the bench. Use the bench\'s electron stripper beam to knock light pieces off its outer ring until the needle meter reads plus two, then log how many pieces you removed.'
+      body: 'The electrostatic thrusters require charged propellant to generate thrust; neutral atoms pass through magnetic acceleration stages unaffected. Neutral specimen SPEC M must be ionized to a net charge of plus two.'
     },
-    prompt: 'SPEC M begins balanced with the needle at zero. Click "Fire Stripper" to knock light pieces off its outer ring, click "Read Needle" to check its net charge, and bring the reading to plus two. Then log the exact number of pieces stripped.',
+    prompt: 'Ionize specimen SPEC M to a net charge of plus two, and log the number of electrons removed.',
     controls: ['field', 'meter', 'strip', 'reset'],
     specimens: [
       { id: 'm', label: 'SPEC M', note: 'mounted, outside resolved', core: { marked: 11, blank: 12 }, rings: [2, 8, 1] }
@@ -441,8 +437,8 @@ export const STAGES = [
     },
     reward: {
       log: 'SPEC M brought to plus two. Core untouched.',
-      title: 'A Piece That Pulls',
-      body: 'Stripping light pieces breaks the balance: the core still pushes with +11, but with only 9 light pieces pulling back, the whole piece reads positive and responds to electromagnetic fields. The core was never touched—it is still the exact same material.'
+      title: 'Ions & Net Charge',
+      body: 'When a neutral atom loses or gains electrons, it becomes an ion. Removing 2 negative electrons from SPEC M left its 11 positive protons partially uncancelled, yielding a +2 cation. The nucleus is completely unchanged, so the elemental identity remains sodium, but it now interacts powerfully with electric fields.'
     }
   },
 
@@ -452,9 +448,9 @@ export const STAGES = [
     field: 'core',
     briefing: {
       speaker: SPEAKER,
-      body: 'The orbital cargo shuttle is clearing its docking clamps at our airlock. Three final salvage canisters (SPEC N, SPEC P, SPEC R) are on the bench. The certified reference standard has 7 marked grains, 7 blank grains, and 7 light pieces outside. Use the Core field, Rings field, and needle meter to classify each canister on the shipping manifest before transfer.'
+      body: 'The orbital cargo shuttle is clearing its docking clamps. Three unlabelled canisters (SPEC N, SPEC P, SPEC R) must be certified against a reference standard of 7 protons, 7 neutrons, and 7 electrons before transfer.'
     },
-    prompt: 'Reference standard: 7 marked, 7 blank, 7 light pieces. Inspect SPEC N, P, and R using the "Core" field, "Rings" field, and "Read Needle". Classify each canister as the same material heavier, the same material charged, or a different material.',
+    prompt: 'Classify all three canisters against the reference standard on the shipping manifest.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'n1', label: 'SPEC N', note: 'unlabelled', core: { marked: 7, blank: 8 }, rings: [2, 5] },
@@ -493,8 +489,8 @@ export const STAGES = [
     },
     reward: {
       log: 'Three canisters certified. Orbital transfer manifest sealed.',
-      title: 'All of It at Once',
-      body: 'In three canisters you solved the core architecture of matter: an isotope with an extra neutral grain, an ion stripped of an electron, and an entirely different element with an extra marked grain. You verified all three from physical readings without needing a single factory label.',
+      title: 'The Subatomic Architecture of Matter',
+      body: 'You have mastered the subatomic architecture of atoms: changing neutrons creates isotopes of different mass (nitrogen-15 in SPEC N), altering electrons creates charged ions (nitrogen cation in SPEC P), and altering protons changes the atomic number into an entirely different element (oxygen in SPEC R).',
       last: true
     }
   }
@@ -509,39 +505,15 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'Manifest Closed',
-      body: 'Eight specimens analyzed from the inside out using a particle beam, field coils, an electrostatic meter, and a stripper beam. The orbital buyer signed the transfer manifest without contest, our thrusters have ionized propellant, and the Avalon\'s reactor is stable. Now let us review the real names for what you discovered.'
+      body: 'Eight specimens verified from the subatomic level up. The buyer signed the transfer manifest without dispute, our thrusters have ionized propellant, and the Avalon\'s reactor is fully operational. You deduced every nuclear and electronic property from first principles.'
     },
     {
-      heading: 'Nucleus',
-      body: 'The tiny, dense middle that turned your particle beam around is the nucleus. It occupies less than one part in a hundred thousand of the atom\'s width yet contains over 99.9% of its mass—which is why the beam mostly shot through empty space before deflecting off the center.'
+      heading: 'The Subatomic Model',
+      body: 'You have uncovered the architecture that governs all chemistry: protons (+1) define the element, neutrons (0) stabilize the nucleus, and electrons (-1) fill quantized shells to dictate bonding and charge. Every reaction in the universe begins here.'
     },
     {
-      heading: 'Proton',
-      body: 'The marked grains in the core are protons. Each carries exactly one unit of positive electrical charge (+1). The number of protons in the nucleus defines the atomic number—the fundamental chemical identity of an element, as you proved with SPEC H, K, and L.'
-    },
-    {
-      heading: 'Neutron',
-      body: 'The blank grains in the core are neutrons. Each has the same mass as a proton but zero electrical charge. Atoms of the same element with different neutron counts are isotopes: chemically identical, but differing in mass and nuclear stability.'
-    },
-    {
-      heading: 'Electron',
-      body: 'The light pieces outside are electrons, each carrying one unit of negative electrical charge (-1) to balance the proton\'s positive charge. An undisturbed atom holds identical counts of protons and electrons, which is why the needle settles on zero.'
-    },
-    {
-      heading: 'Shells',
-      body: 'The concentric rings are electron shells, or principal energy levels. The first shell accommodates at most 2 electrons, the second holds up to 8, and electrons always settle into the lowest available inner shell before filling outer levels.'
-    },
-    {
-      heading: 'Valence',
-      body: 'Electrons occupying the outermost shell are valence electrons. They dictate chemical bonding and reactivity: atoms with 1 valence electron readily donate it, atoms with 7 aggressively capture one, and atoms with 8 full electrons are chemically inert.'
-    },
-    {
-      heading: 'Ion',
-      body: 'An atom that has lost or gained electrons carries a net electrical charge and is called an ion. Stripping electrons creates a positive cation without altering the nucleus or changing the element. Remember that when we reach the Charge Gardens.'
-    },
-    {
-      heading: 'One More Thing',
-      body: 'You logged proton counts for a dozen specimens on this bench without ever opening a catalogue. When we reach Site 3 on Tallow, you will discover that the scope\'s CAT numbers have been filing by exactly this proton count all along.'
+      heading: 'Next: The Periodic Table',
+      body: 'You logged proton counts for a dozen specimens on this bench without opening a reference catalogue. When we reach Site 3 on Tallow, you will discover how Dmitri Mendeleev organized every known element across the galaxy using these exact proton numbers.'
     }
   ]
 };

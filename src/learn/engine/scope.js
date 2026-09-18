@@ -81,21 +81,25 @@ function buildUnits(sample, kinds) {
   // A jittered grid across the aperture disc, shuffled so materials interleave
   // instead of arriving in blocks.
   const cells = [];
-  const across = Math.max(3, Math.ceil(Math.sqrt(total / 0.72)));
-  for (let gy = 0; gy < across; gy++) {
-    for (let gx = 0; gx < across; gx++) {
-      const x = ((gx + 0.5) / across) * 2 - 1;
-      const y = ((gy + 0.5) / across) * 2 - 1;
-      if (x * x + y * y > 0.92) continue;
-      cells.push([
-        x + (rand() - 0.5) * (1.1 / across),
-        y + (rand() - 0.5) * (1.1 / across)
-      ]);
+  if (total <= 1) {
+    cells.push([0, 0]);
+  } else {
+    const across = Math.max(3, Math.ceil(Math.sqrt(total / 0.72)));
+    for (let gy = 0; gy < across; gy++) {
+      for (let gx = 0; gx < across; gx++) {
+        const x = ((gx + 0.5) / across) * 2 - 1;
+        const y = ((gy + 0.5) / across) * 2 - 1;
+        if (x * x + y * y > 0.92) continue;
+        cells.push([
+          x + (rand() - 0.5) * (1.1 / across),
+          y + (rand() - 0.5) * (1.1 / across)
+        ]);
+      }
     }
-  }
-  for (let i = cells.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [cells[i], cells[j]] = [cells[j], cells[i]];
+    for (let i = cells.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [cells[i], cells[j]] = [cells[j], cells[i]];
+    }
   }
 
   const units = [];

@@ -6,6 +6,22 @@ everything else is: **teach through play, reveal vocabulary last.** A player dra
 between glowing regions for twenty stages and only meets the words "electron", "curved
 arrow" and "steric hindrance" in the epilogue, after the intuition is already built.
 
+`PRODUCT.md` is the companion record: durable product truth — who plays, what the product
+is for, what is confirmed versus deliberately undecided, and what future work must not
+fabricate. This file stays the engineering and aesthetic reference; PRODUCT.md answers
+"what is true about the product" without repeating implementation. Two facts it pins that
+nothing here states: Avalon is **pre-launch** (no real accounts, XP or play data exist),
+and the one confirmed device floor is **375 px**, with no formal accessibility standard
+agreed beyond it.
+
+`DESIGN.md` is the machine-readable half of the aesthetic. The "SCOURED PLATE" brief in
+§Aesthetic below stays the prose authority; DESIGN.md carries the same world as extracted
+tokens (34 colours, 5 type roles, the shadow and motion vocabulary) plus named rules, and
+`.impeccable/design.json` carries drop-in HTML/CSS for ten primitives. Two facts it pins
+that the prose below gets wrong: the chamfer has **two grades** — panels are relieved at
+top-left *and* bottom-right (`.plate`, `.glass-panel`, `.scope-plate`), cards at top-left
+only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non-zero radius.
+
 ## Build and Run
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
@@ -146,10 +162,19 @@ into grinding and would punish the students it exists to help.
   light piece off the outermost ring, and a reset. It knows no chemistry: a mark is a mark,
   and what a specimen *does* (`behaviourOf`) lives in the quest.
   `frame.js` is the **quest frame**: stage rail (cleared lamps are
-  walkable — there is no XP here for a replay to farm), reopenable briefing, prompt,
-  readout, answer region, Commit key, miss banner, hint ladder (rung 1 free, rung 2 after a
-  miss or 45 s, rung 3 after two misses), reward card and the debrief stepper. It never sees
-  an answer; the quest calls `clear()` or `miss()`.
+  walkable — there is no XP here for a replay to farm), reopenable briefing and debrief stepper
+  mounted via `createTransmissionElement` (diegetic CRT video loop, typewriter audio ticks and
+  Vess radio murmur), prompt, readout, answer region, Commit key, miss banner, hint ladder (rung 1 free,
+  rung 2 after a miss or 45 s, rung 3 after two misses), and reward card. It never sees an answer; the quest
+  calls `clear()` or `miss()`. Briefings establish narrative problem context while prompts state
+  un-prescriptive objectives giving players free reign over bench tools. Real chemistry concepts
+  are introduced immediately after each stage on its reward card (Quest 1: atoms, elements, atomic mass,
+  chemical bonds, molecules, compounds, mixture separation, matter classification; Quest 2: nucleus &
+  Rutherford model, protons & neutrons, electrons & neutrality, electron shells & Bohr model, valence
+  electrons & octet rule, atomic number & isotopes, ions & net charge, subatomic architecture) so learners
+  connect hands-on observations directly to chemistry rather than waiting for an end-of-quest lecture.
+  In `scope.js`, single-unit samples (`total <= 1`) are centered at `[0, 0]` so high-magnification targets
+  remain visible in the aperture.
 - **Screens** — `learn.js` (the road), `learn-world.js` (one world's quests),
   `learn-quest.js` (the host frame). Styling in `src/styles/learn.css` (`.lq-*` for the
   quest bench, `.scope-*` for the instrument); phone rules under `.m-learn`,

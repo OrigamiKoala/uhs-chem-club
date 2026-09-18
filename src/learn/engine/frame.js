@@ -20,6 +20,7 @@
 import { showModal, closeModal } from '../../ui/modal.js';
 import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
+import { createTransmissionElement } from '../../ui/transmission.js';
 
 const RUNG2_AFTER_MS = 45000;
 
@@ -139,6 +140,10 @@ export class LearnFrame {
    */
   setStage(stage) {
     const advancing = this.stage !== null;
+    if (this.activeBriefingTx?.destroy) {
+      this.activeBriefingTx.destroy();
+      this.activeBriefingTx = null;
+    }
     this.stage = stage;
     this.misses = 0;
     this.rung = 0;
@@ -282,19 +287,53 @@ export class LearnFrame {
   showBriefing() {
     const b = this.stage?.briefing;
     if (!b) return;
+
+    if (this.activeBriefingTx?.destroy) {
+      this.activeBriefingTx.destroy();
+      this.activeBriefingTx = null;
+    }
+
+    const speaker = b.speaker || this.opts.speaker || 'VESS // COMMS';
+    const stageIdx = this.stage ? this.stage.index + 1 : 1;
+
     showModal(`
-      <div class="quest-modal-head lq-modal-head">
+      <div class="quest-modal-head lq-modal-head" style="margin-bottom: 0.85rem;">
         <div>
-          <div class="eyebrow lit">${esc(b.speaker)}</div>
-          <h2 class="section-title">${esc(this.stage.title)}</h2>
+          <div class="eyebrow lit">${esc(speaker)}</div>
+          <h2 id="lq-briefing-title" class="section-title">${esc(this.stage.title)}</h2>
         </div>
+        <span class="tag live">STAGE ${stageIdx} OF ${this.stageCount}</span>
       </div>
-      <p class="lq-brief-body">${esc(b.body)}</p>
+      <div id="lq-modal-transmission" style="margin-bottom: 1.15rem;"></div>
       <div class="debrief-controls-left lq-modal-keys">
         <button type="button" class="btn-primary" data-lq-close>Understood</button>
       </div>
-    `, { labelledBy: null });
-    document.querySelector('[data-lq-close]')?.addEventListener('click', () => closeModal());
+    `, {
+      labelledBy: 'lq-briefing-title',
+      onClose: () => {
+        if (this.activeBriefingTx?.destroy) {
+          this.activeBriefingTx.destroy();
+          this.activeBriefingTx = null;
+        }
+      }
+    });
+
+    this.activeBriefingTx = createTransmissionElement({
+      speaker,
+      text: b.body,
+      badge: `STAGE ${stageIdx} OF ${this.stageCount}`,
+      variant: 'hero'
+    });
+    document.getElementById('lq-modal-transmission')?.appendChild(this.activeBriefingTx.element);
+
+    document.querySelector('[data-lq-close]')?.addEventListener('click', () => {
+      if (this.activeBriefingTx?.destroy) {
+        this.activeBriefingTx.destroy();
+        this.activeBriefingTx = null;
+      }
+      closeModal();
+      soundscape.playNavRelayClick?.();
+    });
   }
 
   /**
@@ -306,30 +345,59 @@ export class LearnFrame {
   showDebrief(debrief, onDone) {
     let i = 0;
     const total = debrief.sections.length;
+    let debriefTx = null;
+
+    const cleanupTx = () => {
+      if (debriefTx?.destroy) {
+        debriefTx.destroy();
+        debriefTx = null;
+      }
+    };
 
     const render = () => {
+      cleanupTx();
       const s = debrief.sections[i];
+      const speaker = debrief.speaker || 'VESS // DEBRIEF';
+
       showModal(`
-        <div class="quest-modal-head lq-modal-head">
+        <div class="quest-modal-head lq-modal-head" style="margin-bottom: 0.85rem;">
           <div>
-            <div class="eyebrow lit">${esc(debrief.speaker)}</div>
-            <h2 class="section-title">${esc(s.heading)}</h2>
+            <div class="eyebrow lit">${esc(speaker)}</div>
+            <h2 id="lq-debrief-title" class="section-title">${esc(s.heading)}</h2>
           </div>
-          <span class="tag">${i + 1} / ${total}</span>
+          <span class="tag live">${i + 1} / ${total}</span>
         </div>
-        <p class="lq-brief-body">${esc(s.body)}</p>
+        <div id="lq-debrief-transmission" style="margin-bottom: 1.15rem;"></div>
         <div class="debrief-controls-left lq-modal-keys">
           <button type="button" class="btn-secondary" data-step="-1" ${i === 0 ? 'disabled' : ''}>Back</button>
           ${i < total - 1
             ? '<button type="button" class="btn-primary" data-step="1">Next</button>'
             : '<button type="button" class="btn-primary" data-step="done">Close Channel</button>'}
         </div>
-      `, { dismissible: false });
+      `, {
+        dismissible: false,
+        labelledBy: 'lq-debrief-title',
+        onClose: cleanupTx
+      });
+
+      debriefTx = createTransmissionElement({
+        speaker,
+        text: s.body,
+        badge: `${i + 1} / ${total}`,
+        variant: 'hero'
+      });
+      document.getElementById('lq-debrief-transmission')?.appendChild(debriefTx.element);
 
       document.querySelectorAll('[data-step]').forEach(btn => {
         btn.addEventListener('click', () => {
           const v = btn.dataset.step;
-          if (v === 'done') { closeModal(); onDone?.(); return; }
+          if (v === 'done') {
+            cleanupTx();
+            closeModal();
+            soundscape.playNavRelayClick?.();
+            onDone?.();
+            return;
+          }
           i = Math.max(0, Math.min(total - 1, i + Number(v)));
           soundscape.playCrtTick?.();
           render();
@@ -342,6 +410,10 @@ export class LearnFrame {
 
   dispose() {
     this.disposed = true;
+    if (this.activeBriefingTx?.destroy) {
+      this.activeBriefingTx.destroy();
+      this.activeBriefingTx = null;
+    }
     this.container.removeEventListener('click', this.onClick);
     closeModal();
     this.container.innerHTML = '';
