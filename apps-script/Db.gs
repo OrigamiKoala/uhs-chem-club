@@ -12,6 +12,9 @@ var DB_SCHEMA = {
   QuestStages: ['quest_id', 'stage_index', 'kind', 'xp', 'max_attempts', 'hint_text', 'hint_cost', 'answer_json', 'tolerance', 'reveal_text', 'scene_config'],
   Submissions: ['submission_id', 'ts', 'player_id', 'quest_id', 'stage_index', 'attempt_no', 'payload_json', 'correct', 'xp_awarded', 'elapsed_ms', 'hint_used', 'gfx_tier', 'ip_hash'],
   Progress: ['player_id', 'quest_id', 'stage_reached', 'completed_at', 'xp_earned', 'hints_used', 'items_awarded', 'updated_at'],
+  // Learn track. Separate from Progress on purpose: Scoring reads Progress and
+  // Submissions to compute XP, and must never see a row from the study road.
+  LearnProgress: ['player_id', 'world_id', 'quest_id', 'stages', 'completed_at', 'updated_at'],
   Items: ['item_id', 'name', 'flavor', 'model_id', 'rarity', 'effect_code', 'consumable', 'max_stack'],
   Inventory: ['inv_id', 'player_id', 'item_id', 'qty', 'acquired_at', 'source'],
   Events: ['event_id', 'name', 'description', 'weight', 'effect_code', 'duration_quests', 'polarity', 'art'],

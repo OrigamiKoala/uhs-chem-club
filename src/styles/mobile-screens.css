@@ -257,7 +257,87 @@
   .m-admin .admin-counter-value { font-size: 1.3rem !important; }
   .m-admin .admin-pw-row { flex-direction: column; }
   .m-admin .admin-pw-row .btn-secondary { width: 100%; }
+
+  /* ---------- Learn (road, world, quest host) ---------- */
+  /* The world and quest rows drop their side columns: code and status stack
+     above the body, and the entry key spans the full width so it is reachable
+     with a thumb. */
+  .m-learn .learn-world-row,
+  .m-learn-world .learn-quest-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .m-learn .learn-world-code,
+  .m-learn-world .learn-quest-index {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.6rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-durasteel);
+    padding: 0 0 0.6rem;
+  }
+
+  .m-learn .learn-code-num { font-size: 1.3rem; }
+
+  .m-learn .learn-world-meta,
+  .m-learn-world .learn-quest-action {
+    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.6rem;
+  }
+
+  .m-learn .learn-world-count,
+  .m-learn .learn-world-blocked,
+  .m-learn-world .learn-quest-blocked { text-align: left; }
+
+  .m-learn .learn-enter,
+  .m-learn-world .learn-enter { width: 100%; min-height: 44px; }
+
+  .m-learn-quest .learn-host-bar { padding: 0.6rem 0.75rem; gap: 0.7rem; }
+  .m-learn-quest .learn-host-title { font-size: 0.82rem; }
+  .m-learn-quest .learn-host-back { min-height: 40px; }
+
+  /* ---- The Learn bench on a phone ----
+     The instrument goes first and full width, the deck follows underneath, and
+     every key is a 44 px target. The stage rail keeps one lamp per stage rather
+     than scrolling, so a player can always see how far the road runs. */
+  .m-learn-quest .lq-body { grid-template-columns: 1fr !important; gap: 0.7rem; }
+  .m-learn-quest .lq-deck { position: static !important; padding: 0.85rem 0.8rem; }
+
+  .m-learn-quest .lq-rail { gap: 3px; padding: 5px 6px; }
+  .m-learn-quest .lq-lamp { height: 26px; font-size: 0.5rem; letter-spacing: 0.02em; }
+
+  .m-learn-quest .lq-stage-head { align-items: flex-start; }
+  .m-learn-quest .lq-stage-title { font-size: 0.95rem; }
+
+  .m-learn-quest .lq-controls { gap: 0.5rem 0.7rem; padding: 7px 8px; }
+  .m-learn-quest .lq-dial { flex: 1 1 100%; justify-content: space-between; }
+  .m-learn-quest .lq-dial-segs i { width: 12px; height: 20px; }
+  .m-learn-quest .lq-tool { flex: 1; min-height: 44px; }
+  .m-learn-quest .lq-controls .quest-btn-sm { min-height: 44px; min-width: 44px; }
+
+  /* Four plates would be postage stamps side by side; two columns, taller
+     apertures, and a single sample gets the full width. */
+  .m-learn-quest .scope-n3,
+  .m-learn-quest .scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .m-learn-quest .scope-grid.scope-n1 .scope-aperture { aspect-ratio: 4 / 3 !important; }
+  .m-learn-quest .scope-plate-note { display: none; }
+
+  .m-learn-quest .lq-actions { flex-direction: column-reverse; align-items: stretch; }
+  .m-learn-quest .lq-actions .btn-primary,
+  .m-learn-quest .lq-actions .btn-secondary { width: 100%; min-height: 46px; }
+
+  .m-learn-quest .lq-number { justify-content: space-between; }
+  .m-learn-quest .lq-number .quest-btn-sm { min-height: 44px; min-width: 56px; }
+  .m-learn-quest .lq-build-row { grid-template-columns: 14px 1fr auto 2ch auto; gap: 6px; }
+  .m-learn-quest .lq-build-row .quest-btn-sm { min-height: 40px; min-width: 40px; }
+  .m-learn-quest .lq-bin-key { min-height: 46px; justify-content: center; }
 }
+
 
 /* Narrow phones (360–430 px): tighter panels, full-width stacked choices. */
 @media (max-width: 480px) {

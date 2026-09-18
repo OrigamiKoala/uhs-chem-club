@@ -20,13 +20,19 @@ var Players = {
       team = Db.findOne('Teams', function(t) { return t.team_id === normTid || t.team_id === player.team_id; });
     }
 
+    // Learn rows ride along so the client can restore the study road at boot.
+    // They carry no XP and are not part of `progress`.
+    var learn = [];
+    try { learn = Learn.getProgress(playerId).learn; } catch (e) {}
+
     return {
       player: sanitizePlayer_(player),
       team: team,
       xp: totalXp,
       level: level,
       progress: progress,
-      inventory: inventory
+      inventory: inventory,
+      learn: learn
     };
   },
 

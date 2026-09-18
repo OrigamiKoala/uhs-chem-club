@@ -170,6 +170,10 @@ const localStore = {
   inventory: [],
   nameHistory: [],
   progress: [],
+  // Learn-track rows live in their own list, never in `progress` or
+  // `submissions`, because those two are what XP and the leaderboard are
+  // computed from. The Learn track must stay invisible to both.
+  learn: [],
   teams: [
     { team_id: 'earth', name: 'Earth', corp_name: 'Earth', ship_name: 'Earth', color_hex: '#241f14', accent_hex: '#8a7148', cap: 12, lore: '', emblem: 'geo' },
     { team_id: 'air', name: 'Air', corp_name: 'Air', ship_name: 'Air', color_hex: '#1a2226', accent_hex: '#75818a', cap: 12, lore: '', emblem: 'aero' },
@@ -272,7 +276,8 @@ function localDevHandler(route, body) {
           xp: typeof player.xp === 'number' ? player.xp : 0,
           level: Math.max(1, Math.floor(Math.sqrt((player.xp || 0) / 45)) + 1),
           isAdmin: player.email_lc === 'uhschemclub@gmail.com' || player.display_name_lc === 'admin',
-          progress: (localStore.progress || []).filter(x => x.player_id === player.player_id)
+          progress: (localStore.progress || []).filter(x => x.player_id === player.player_id),
+          learn: (localStore.learn || []).filter(x => x.player_id === player.player_id)
         } : null,
         events: {
           earth: { event_id: 'slipstream', name: 'Slipstream Current', polarity: 'good' },
@@ -367,7 +372,8 @@ function localDevHandler(route, body) {
         xp: pXp,
         level: pLevel,
         isAdmin: p.email_lc === 'uhschemclub@gmail.com' || p.display_name_lc === 'admin',
-        progress: (localStore.progress || []).filter(x => x.player_id === p.player_id)
+        progress: (localStore.progress || []).filter(x => x.player_id === p.player_id),
+        learn: (localStore.learn || []).filter(x => x.player_id === p.player_id)
       }
     };
   }
@@ -557,6 +563,51 @@ function localDevHandler(route, body) {
         epilogue: QUEST1_EPILOGUE
       }
     };
+  }
+
+  /* -----------------------------------------------------------------
+     LEARN TRACK — progress only. These handlers never touch player.xp,
+     localStore.submissions or localStore.progress, so nothing recorded
+     here can reach the leaderboard.
+     ----------------------------------------------------------------- */
+  if (route === 'learn/progress' || route === 'learn/stage' || route === 'learn/complete') {
+    let pid = null;
+    try {
+      pid = JSON.parse(Buffer.from(String(body.token || '').split('.')[0], 'base64').toString('utf8')).pid;
+    } catch (e) {}
+    if (!pid) return { ok: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated.' } };
+
+    const rowsFor = () => localStore.learn.filter(r => r.player_id === pid);
+
+    if (route === 'learn/progress') {
+      return { ok: true, data: { learn: rowsFor() } };
+    }
+
+    const worldId = String(body.worldId || '');
+    const questId = String(body.questId || '');
+    if (!worldId || !questId) {
+      return { ok: false, error: { code: 'BAD_REQUEST', message: 'worldId and questId are required.' } };
+    }
+
+    let row = localStore.learn.find(r => r.player_id === pid && r.world_id === worldId && r.quest_id === questId);
+    if (!row) {
+      row = { player_id: pid, world_id: worldId, quest_id: questId, stages: [], completed_at: null };
+      localStore.learn.push(row);
+    }
+
+    if (route === 'learn/stage') {
+      const idx = Number(body.stageIndex);
+      if (isFinite(idx) && !row.stages.includes(idx)) row.stages.push(idx);
+      row.updated_at = now;
+      // No xpAwarded field, deliberately: there is nothing for a client to add.
+      return { ok: true, data: { world_id: worldId, quest_id: questId, stages: row.stages } };
+    }
+
+    // learn/complete — idempotent, and worth nothing either way.
+    const alreadyCompleted = Boolean(row.completed_at);
+    if (!alreadyCompleted) row.completed_at = now;
+    row.updated_at = now;
+    return { ok: true, data: { world_id: worldId, quest_id: questId, alreadyCompleted, completed_at: row.completed_at } };
   }
 
   if (route === 'leaderboard') {

@@ -135,6 +135,30 @@ var ROUTES = {
     }
   },
 
+  /* -----------------------------------------------------------------
+     LEARN TRACK — progress only, no XP, invisible to Standings.
+     ----------------------------------------------------------------- */
+  'learn/progress': {
+    auth: true,
+    fn: function(body, ctx) {
+      return Learn.getProgress(ctx.player.player_id);
+    }
+  },
+
+  'learn/stage': {
+    auth: true,
+    fn: function(body, ctx) {
+      return Learn.recordStage(ctx.player.player_id, body.worldId, body.questId, body.stageIndex);
+    }
+  },
+
+  'learn/complete': {
+    auth: true,
+    fn: function(body, ctx) {
+      return Learn.completeQuest(ctx.player.player_id, body.worldId, body.questId);
+    }
+  },
+
   'quest/manifest': {
     auth: true,
     fn: function(body) {

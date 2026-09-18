@@ -153,6 +153,44 @@ check('progress does not regress', progAfter && progAfter.stage_reached === 20,
   JSON.stringify(progAfter));
 check('completion timestamp kept', Boolean(progAfter && progAfter.completed_at));
 
+// The Learn track: progress is recorded, and none of it touches XP. This is the
+// check that keeps the study road out of the competition.
+console.log('\nlearn track');
+const xpBeforeLearn = meAfter.json.data.xp;
+
+const lp0 = await call('learn/progress', { token });
+check('learn progress starts empty', Array.isArray(lp0.json.data.learn) && lp0.json.data.learn.length === 0);
+
+const ls1 = await call('learn/stage', { token, worldId: 'unit01', questId: 'q1-counting', stageIndex: 0 });
+check('records a cleared stage', ls1.json.data.stages.includes(0), JSON.stringify(ls1.json.data));
+check('learn/stage returns no xp field', !('xpAwarded' in ls1.json.data) && !('xp' in ls1.json.data));
+
+await call('learn/stage', { token, worldId: 'unit01', questId: 'q1-counting', stageIndex: 1 });
+const lsDup = await call('learn/stage', { token, worldId: 'unit01', questId: 'q1-counting', stageIndex: 1 });
+check('re-clearing a stage does not duplicate it', lsDup.json.data.stages.length === 2, JSON.stringify(lsDup.json.data));
+
+const lc1 = await call('learn/complete', { token, worldId: 'unit01', questId: 'q1-counting' });
+check('first learn completion is not a repeat', lc1.json.data.alreadyCompleted === false);
+const lc2 = await call('learn/complete', { token, worldId: 'unit01', questId: 'q1-counting' });
+check('learn completion is idempotent', lc2.json.data.alreadyCompleted === true);
+check('learn/complete returns no xp field', !('totalXp' in lc2.json.data) && !('xpAwarded' in lc2.json.data));
+
+const meLearn = await call('player/me', { token });
+check('learn activity pays no XP', meLearn.json.data.xp === xpBeforeLearn,
+  `before=${xpBeforeLearn} after=${meLearn.json.data.xp}`);
+check('learn rows stay out of quest progress',
+  !(meLearn.json.data.progress || []).some(p => String(p.quest_id).startsWith('unit01')),
+  JSON.stringify(meLearn.json.data.progress));
+check('learn rows ride along on player/me',
+  (meLearn.json.data.learn || []).some(r => r.quest_id === 'q1-counting'),
+  JSON.stringify(meLearn.json.data.learn));
+
+const lpAfter = await call('learn/progress', { token });
+check('learn progress reads back', lpAfter.json.data.learn.length === 1);
+
+const lpBad = await call('learn/stage', { token, worldId: '', questId: '', stageIndex: 0 });
+check('learn/stage rejects a missing quest', lpBad.json.ok === false);
+
 console.log('\nmanifest + leaderboard');
 const man = await call('quest/manifest', { questId: 'q1' });
 check('manifest has 20 stages', man.json.data.stages.length === 20);

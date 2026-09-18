@@ -25,6 +25,11 @@ var Scoring = {
     return 'Starmarshal';
   },
 
+  /**
+   * Total XP for one player. Reads Submissions and Progress only — the Learn
+   * track writes to neither, which is what keeps the study road out of the
+   * leaderboard. Do not widen this to LearnProgress.
+   */
   computePlayerTotalXp: function(playerId) {
     var subs = Db.find('Submissions', function(s) {
       return s.player_id === playerId && s.correct === 'TRUE';

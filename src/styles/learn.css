@@ -1,0 +1,710 @@
+/* ===================================================================
+   LEARN — the training road: worlds, their quests, and the host frame
+   a Learn quest game mounts inside.
+   ===================================================================
+   Obeys the plate contract: cut corners, engraved type, amber only where
+   something is live. No glow, no rounded corners, no emoji.
+   Phone rules for these screens live in mobile-screens.css.
+   =================================================================== */
+
+/* ---- The road: one row per world, walked top to bottom ---- */
+.learn-road,
+.learn-quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.learn-world-row,
+.learn-quest-row {
+  display: grid;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.1rem 1.35rem;
+}
+
+.learn-world-row { grid-template-columns: 76px 1fr 200px; }
+.learn-quest-row { grid-template-columns: 54px 1fr 150px; }
+
+/* A world that is not yet built, or not yet reachable, is dimmed rather than
+   hidden: the whole road should be visible from the first day. */
+.learn-charted,
+.learn-locked { opacity: 0.45; }
+
+.learn-world-code {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  border-right: 1px solid var(--border-durasteel);
+  padding-right: 1rem;
+  align-self: stretch;
+  justify-content: center;
+}
+
+.learn-code-num {
+  font-family: var(--font-imperial);
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-secondary);
+  text-shadow: var(--engrave);
+}
+
+.learn-open .learn-code-num,
+.learn-complete .learn-code-num { color: var(--accent-gold); }
+
+.learn-world-head,
+.learn-quest-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 2px;
+}
+
+.learn-world-name {
+  font-family: var(--font-imperial);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+  text-shadow: var(--engrave);
+  margin: 0;
+}
+
+.learn-world-place { margin-bottom: 0.55rem; }
+
+.learn-world-title {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+}
+
+.learn-world-line,
+.learn-quest-line {
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0.25rem 0 0;
+}
+
+.learn-world-meta,
+.learn-quest-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.learn-world-count,
+.learn-world-blocked,
+.learn-quest-blocked {
+  text-align: right;
+  color: var(--text-muted);
+}
+
+.learn-enter {
+  width: 100%;
+  font-size: 0.7rem;
+  padding: 9px 14px;
+  min-height: 38px;
+}
+
+/* ---- Quest pips: one mark per quest in the world ---- */
+.learn-meter {
+  display: flex;
+  gap: 4px;
+}
+
+.learn-pip {
+  width: 16px;
+  height: 4px;
+  background: var(--plate-500);
+  border-top: 1px solid var(--seam-dark);
+}
+
+.learn-pip.built { background: var(--accent-bronze); }
+.learn-pip.done { background: var(--accent-green); }
+
+/* ---- One world's screen ---- */
+.learn-world-brief { margin-top: 1.5rem; }
+
+.learn-brief-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.7rem;
+}
+
+.learn-brief-body {
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+  margin: 0 0 0.9rem;
+}
+
+.learn-brief-count { color: var(--text-muted); }
+
+.learn-quest-index {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-durasteel);
+  padding-right: 0.9rem;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+
+.learn-open .learn-quest-index,
+.learn-complete .learn-quest-index { color: var(--accent-amber); }
+
+.learn-quest-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+  text-shadow: var(--engrave);
+  margin: 0;
+}
+
+.learn-quest-meta { margin-top: 0.5rem; color: var(--text-muted); }
+
+/* ---- Host frame: the strip above a mounted quest game ---- */
+.learn-host-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.learn-host-back {
+  font-size: 0.68rem;
+  padding: 7px 12px;
+  min-height: 34px;
+  flex-shrink: 0;
+}
+
+.learn-host-id {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.learn-host-title {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+  text-shadow: var(--engrave);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.learn-quest-mount { position: relative; }
+
+/* ---- The plate a charted-but-unbuilt quest shows ---- */
+.learn-build-plate { text-align: left; }
+
+.learn-build-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  background: var(--plate-100);
+  border: 1px solid var(--border-durasteel);
+  border-left: 2px solid var(--accent-bronze);
+  padding: 11px 14px;
+  margin: 1rem 0 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* ===================================================================
+   LEARN QUEST — the bench a Learn game is played on.
+   ===================================================================
+   Built by src/learn/engine/frame.js (chrome) and scope.js (instrument).
+   Same plate contract as the rest of the ship: cut corners, engraved type,
+   amber only where something is live, and nothing blooms. The reserved
+   charge hues do not appear here — this is salvage, not chemistry chrome.
+   Phone rules live in mobile-screens.css under .m-learn-quest.
+   =================================================================== */
+
+.lq { display: flex; flex-direction: column; gap: 0.85rem; }
+
+/* ---- Stage rail: one lamp per stage, lit as it is cleared ---- */
+.lq-rail {
+  display: flex;
+  gap: 4px;
+  padding: 7px 9px;
+  background: var(--plate-100);
+  border: 1px solid var(--border-durasteel);
+  box-shadow: inset 0 1px 0 var(--seam-dark);
+}
+
+.lq-lamp {
+  flex: 1;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--plate-200);
+  border: 1px solid var(--border-durasteel);
+  border-top-color: var(--seam-light);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 0;
+  margin: 0;
+  appearance: none;
+  min-width: 0;
+}
+
+.lq-lamp em { font-style: normal; }
+.lq-lamp.done { background: rgba(111, 143, 63, 0.16); border-color: #3f4a2a; color: var(--accent-green); }
+.lq-lamp.here { background: var(--plate-400); border-color: var(--border-strong); color: var(--lamp-amber); }
+
+/* ---- Two columns: the bench on the left, the deck on the right ---- */
+.lq-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.lq-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.lq-stage-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.lq-stage-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+  text-shadow: var(--engrave);
+  margin: 2px 0 0;
+}
+
+/* ---- Bench controls: the dial and the hand tools ---- */
+.lq-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 8px 11px;
+  background: var(--plate-200);
+  border: 1px solid var(--border-durasteel);
+  border-top-color: var(--seam-light);
+  border-bottom-color: var(--seam-dark);
+}
+
+.lq-controls:empty { display: none; }
+
+.lq-dial { display: flex; align-items: center; gap: 0.5rem; }
+.lq-dial .form-label { margin: 0; }
+
+.lq-dial-segs { display: flex; gap: 3px; }
+
+.lq-dial-segs i {
+  width: 9px;
+  height: 16px;
+  background: var(--plate-100);
+  border: 1px solid var(--border-durasteel);
+}
+
+/* A lit segment is a filament behind dusty glass, not an LED. */
+.lq-dial-segs i.lit { background: var(--accent-amber); border-color: var(--border-hazard); }
+
+.lq-dial-value {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-amber);
+  min-width: 1.1em;
+  text-align: center;
+}
+
+.lq-tool { letter-spacing: 0.09em; }
+
+/* ---- The scope: plates in an aperture grid ---- */
+.scope-grid { display: grid; gap: 0.7rem; }
+.scope-n1 { grid-template-columns: 1fr; }
+.scope-n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.scope-n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.scope-plate {
+  position: relative;
+  background: var(--plate-200);
+  border: 1px solid var(--border-durasteel);
+  border-top-color: var(--seam-light);
+  border-bottom-color: var(--seam-dark);
+  padding: 8px;
+  clip-path: polygon(var(--chamfer-sm) 0, 100% 0, 100% calc(100% - var(--chamfer-sm)), calc(100% - var(--chamfer-sm)) 100%, 0 100%, 0 var(--chamfer-sm));
+}
+
+.scope-plate > * { position: relative; }
+
+.scope-plate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--grain);
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.scope-grid.scope-n1 .scope-aperture { aspect-ratio: 16 / 10; }
+.scope-aperture { aspect-ratio: 1 / 1; width: 100%; background: var(--plate-000); }
+.scope-aperture canvas { display: block; touch-action: manipulation; }
+
+.scope-plate.selectable { cursor: pointer; }
+.scope-plate.selectable:hover { border-color: var(--accent-bronze); }
+.scope-plate.selected { border-color: var(--border-bright); background: var(--plate-300); }
+
+.scope-plate-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 6px;
+}
+
+.scope-plate-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+.scope-plate.selected .scope-plate-label { color: var(--text-amber); }
+
+.scope-plate-tag {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.scope-plate-tag.lit { color: var(--accent-green); }
+
+.scope-plate-note {
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+/* ---- The deck: prompt, readout, banner, answer, keys ---- */
+.lq-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.05rem;
+  position: sticky;
+  top: calc(var(--hud-h) + 12px);
+}
+
+.lq-prompt-body {
+  margin: 0;
+  font-size: 0.93rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+
+.lq-readout:empty, .lq-banner:empty, .lq-widget:empty, .lq-hints:empty { display: none; }
+
+/* Instrument card: a cathode readout, phosphor raster and segment meters. */
+.lq-readout-card {
+  background: var(--plate-100);
+  border: 1px solid var(--border-durasteel);
+  border-left: 2px solid var(--accent-bronze);
+  padding: 9px 11px;
+}
+
+.lq-readout-idle { border-left-color: var(--plate-500); }
+
+.lq-readout-head {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.lq-readout-code {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--accent-gold);
+  text-shadow: var(--engrave);
+  margin: 3px 0 7px;
+}
+
+.lq-meter {
+  display: grid;
+  grid-template-columns: 38px 1fr 40px;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 4px;
+}
+
+.lq-meter-label,
+.lq-meter-value {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.lq-meter-value { text-align: right; color: var(--text-secondary); }
+
+.lq-meter-bar { display: flex; gap: 2px; }
+
+.lq-meter-bar i {
+  flex: 1;
+  height: 9px;
+  background: var(--plate-300);
+  border: 1px solid var(--plate-100);
+}
+
+.lq-meter-bar i.on { background: var(--accent-green); border-color: #3f4a2a; }
+
+.lq-readout-hold {
+  margin-top: 7px;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  color: var(--text-amber);
+}
+
+.lq-readout-line {
+  margin: 5px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* ---- Answer widgets ---- */
+.lq-answer { display: flex; flex-direction: column; gap: 0.45rem; }
+.lq-answer .form-label { margin: 0; }
+
+.lq-number { display: flex; align-items: center; gap: 0.6rem; }
+
+.lq-number-value {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-amber);
+  text-shadow: var(--engrave);
+  min-width: 1.6em;
+  text-align: center;
+}
+
+.lq-answer-value {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  color: var(--text-amber);
+  background: var(--plate-100);
+  border: 1px solid var(--border-durasteel);
+  padding: 8px 11px;
+}
+
+.lq-build { display: flex; flex-direction: column; gap: 5px; }
+
+.lq-build-row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto 2ch auto;
+  align-items: center;
+  gap: 8px;
+  background: var(--plate-100);
+  border: 1px solid var(--border-durasteel);
+  padding: 6px 9px;
+}
+
+.lq-build-row.filled { border-color: var(--border-strong); }
+
+.lq-build-dot { width: 13px; height: 13px; border-radius: var(--radius-full); }
+.lq-build-dot[data-tint="bone"] { background: #b8afa0; }
+.lq-build-dot[data-tint="sand"] { background: #c39a63; }
+.lq-build-dot[data-tint="iron"] { background: #6b625a; }
+.lq-build-dot[data-tint="rust"] { background: #9c5423; }
+.lq-build-dot[data-tint="pale"] { background: #8f8678; }
+
+.lq-build-code,
+.lq-build-count {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+.lq-build-count { text-align: center; color: var(--text-amber); }
+
+.lq-bins { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.lq-bin-sample {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+.lq-bin-keys { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+
+.lq-bin-key {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: left;
+  padding: 7px 10px;
+  width: 100%;
+}
+
+.lq-bin-label {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.lq-bin-note {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.lq-bin-key.selected .lq-bin-label { color: var(--text-amber); }
+
+/* ---- Keys ---- */
+.lq-actions { display: flex; gap: 0.6rem; align-items: center; }
+.lq-actions .lq-commit { flex: 1; }
+
+/* ---- Hints: earned one rung at a time ---- */
+.lq-hints { display: flex; flex-direction: column; gap: 5px; }
+
+.lq-hint {
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: var(--plate-100);
+  border-left: 2px solid var(--accent-bronze);
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.lq-hint-wait { border-left-color: var(--plate-500); color: var(--text-muted); }
+
+.lq-hint-rung {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--accent-amber);
+  flex-shrink: 0;
+}
+
+/* ---- The reward card: what you just found, never a briefing ---- */
+.lq-reward {
+  background: var(--plate-100);
+  border: 1px solid var(--border-durasteel);
+  border-left: 2px solid var(--accent-green);
+  padding: 11px 13px;
+}
+
+.lq-reward-title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+  text-shadow: var(--engrave);
+  margin: 4px 0 6px;
+}
+
+.lq-reward-body {
+  margin: 0;
+  font-size: 0.87rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+/* ---- Briefing and debrief, inside the shared modal card ----
+   These carry the campaign's `quest-modal-head` / `debrief-controls-left`
+   hooks too, so the phone rules in mobile-quest.css still reach them. */
+.lq-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--border-durasteel);
+}
+
+.lq-modal-head .section-title { margin: 3px 0 0; }
+
+.lq-modal-keys {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.lq-modal-keys .btn-primary { min-width: 9rem; }
+
+
+.lq-brief-body {
+  font-size: 0.93rem;
+  line-height: 1.65;
+  color: var(--text-primary);
+  margin: 0.9rem 0 1.4rem;
+}
+
+/* ---- Narrow desktop / tablet: the deck drops under the bench ---- */
+@media (max-width: 1000px) {
+  .lq-body { grid-template-columns: 1fr; }
+  .lq-deck { position: static; }
+  .scope-grid.scope-n1 .scope-aperture { aspect-ratio: 16 / 9; }
+}
+
+/* A cleared lamp is a way back into that stage; the current one is not. */
+.lq-lamp { cursor: default; }
+.lq-lamp:not([disabled]) { cursor: pointer; }
+.lq-lamp:not([disabled]):hover { border-color: var(--border-strong); color: var(--text-primary); }

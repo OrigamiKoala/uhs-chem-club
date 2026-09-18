@@ -10,6 +10,7 @@ const CONFIG_KEY = 'avalon_cached_config';
 const TEAMS_KEY = 'avalon_cached_teams';
 const SOUND_KEY = 'avalon_sound_pref';
 const FLAGS_KEY = 'avalon_flags';
+const LEARN_KEY = 'avalon_learn';
 
 const ALIAS_MAP = { terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' };
 const PROPER_TEAM_NAMES = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
@@ -86,6 +87,9 @@ class SessionManager {
     this.reduceMotion = localStorage.getItem(MOTION_KEY) === 'true';
     this.sound = { master: 60, ambience: 60, effects: 60, muted: false };
     this.flags = { sessionZeroDone: false };
+    // Learn-track progress, keyed "<worldId>/<questId>". Deliberately NOT part of
+    // `progress`, which the server pays XP against — the Learn track pays none.
+    this.learn = {};
     this.listeners = new Set();
 
     try {
@@ -93,6 +97,8 @@ class SessionManager {
       if (s) this.sound = { ...this.sound, ...JSON.parse(s) };
       const f = localStorage.getItem(FLAGS_KEY);
       if (f) this.flags = { ...this.flags, ...JSON.parse(f) };
+      const l = localStorage.getItem(LEARN_KEY);
+      if (l) this.learn = JSON.parse(l) || {};
     } catch (e) {}
 
     // Restore cached config & teams
@@ -324,6 +330,69 @@ class SessionManager {
     this.notify();
   }
 
+  /* ---------------------------------------------------------------
+     LEARN TRACK
+     Cards cleared and quests finished, and nothing else. No XP crosses
+     this boundary in either direction: the Learn track is a study aid,
+     and a study aid that moved the leaderboard would turn reading into
+     grinding and punish the students it exists to help.
+     --------------------------------------------------------------- */
+  learnKey(worldId, questId) {
+    return `${worldId}/${questId}`;
+  }
+
+  getLearnQuest(worldId, questId) {
+    return this.learn[this.learnKey(worldId, questId)] || null;
+  }
+
+  saveLearn() {
+    try { localStorage.setItem(LEARN_KEY, JSON.stringify(this.learn)); } catch (e) {}
+  }
+
+  recordLearnStage(worldId, questId, stageIndex) {
+    if (!worldId || !questId || typeof stageIndex !== 'number') return;
+    const key = this.learnKey(worldId, questId);
+    const rec = this.learn[key] || { stages: [], completedAt: null };
+    if (!rec.stages.includes(stageIndex)) rec.stages.push(stageIndex);
+    this.learn[key] = rec;
+    this.saveLearn();
+    this.notify();
+  }
+
+  markLearnQuestComplete(worldId, questId) {
+    const key = this.learnKey(worldId, questId);
+    const rec = this.learn[key] || { stages: [], completedAt: null };
+    if (!rec.completedAt) rec.completedAt = new Date().toISOString();
+    this.learn[key] = rec;
+    this.saveLearn();
+    this.notify();
+  }
+
+  /**
+   * Merge the server's copy of learn progress in. Union, never overwrite: the
+   * local record may hold stages cleared while the fire-and-forget sync was
+   * offline, and losing them would silently re-lock a quest the player finished.
+   */
+  setLearnState(rows) {
+    if (!Array.isArray(rows)) return;
+    for (const row of rows) {
+      if (!row || !row.world_id || !row.quest_id) continue;
+      const key = this.learnKey(row.world_id, row.quest_id);
+      const rec = this.learn[key] || { stages: [], completedAt: null };
+      const remote = Array.isArray(row.stages)
+        ? row.stages
+        : String(row.stages || '').split(',').map(s => s.trim()).filter(Boolean);
+      for (const st of remote) {
+        const n = Number(st);
+        if (isFinite(n) && !rec.stages.includes(n)) rec.stages.push(n);
+      }
+      if (row.completed_at && !rec.completedAt) rec.completedAt = row.completed_at;
+      this.learn[key] = rec;
+    }
+    this.saveLearn();
+    this.notify();
+  }
+
   setFlag(key, val) {
     this.flags[key] = val;
     try { localStorage.setItem(FLAGS_KEY, JSON.stringify(this.flags)); } catch (e) {}
@@ -352,6 +421,8 @@ class SessionManager {
     localStorage.removeItem('avalon_xp');
     localStorage.removeItem('avalon_level');
     localStorage.removeItem('avalon_q1_stage_reached');
+    this.learn = {};
+    localStorage.removeItem(LEARN_KEY);
     this.notify();
   }
 }

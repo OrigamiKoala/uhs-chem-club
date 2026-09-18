@@ -9,8 +9,9 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
 ## Build and Run
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
-- `npm run verify` — `verify:quest` + `verify:geometry` + `verify:media` + `verify:flows` + `build`. Run this before shipping.
+- `npm run verify` — `verify:quest` + `verify:learn` + `verify:geometry` + `verify:media` + `verify:flows` + `build`. Run this before shipping.
 - `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below).
+- `npm run verify:learn` — integrity check of the Learn track registry and its no-XP invariant.
 - `npm run verify:geometry` — runs all 20 reaction animations headlessly and checks the chemistry
   on screen (see "Chemical realism" below). `--verbose` prints atom positions at every step.
 - `npm run verify:media` — validates media manifest against assets and size budgets.
@@ -27,8 +28,13 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
   in the background so first paint never waits on the network.
 - `router.js` — hash router. `ROUTES` declares auth/admin gating; `ROUTE_NAV` maps a route
   to the HUD nav button that should light up; unknown hashes normalize to `#/`. Closes any
-  open modal and exits the quest scene on navigation.
-- `session.js` — token, player, team, XP, inventory, progress, and flags (`hasFlag`, `setFlag`), persisted in
+  open modal and exits the quest scene on navigation. `PARAM_ROUTES` holds the patterned
+  routes (`/learn/:worldId`, `/learn/:worldId/:questId`), matched only after an exact hit
+  fails and handed to the render function as `params`; leaving a Learn quest route calls
+  `disposeLearnQuest()`.
+- `session.js` — token, player, team, XP, inventory, progress, flags (`hasFlag`, `setFlag`) and
+  Learn-track progress (`learn`, `recordLearnStage`, `markLearnQuestComplete`, `setLearnState`
+  — kept apart from `progress` because that is what the server pays XP against), persisted in
   `localStorage` and restored synchronously at boot. Exports `levelForXp`, `levelProgress`
   and `levelTitle` — **the only XP curve in the client** (45·(N−1)² per level, capped at
   level 12 to match `Scoring.gs`). Server XP is authoritative: `setUserData` overwrites the
@@ -49,6 +55,10 @@ arrow" and "steric hindrance" in the epilogue, after the intuition is already bu
   and cinematic cutscenes (`cold_open` in onboarding, `launch`, `erebus_descent`, `pylon_wake`, `gardens_restored`, `item_award`).
 - `story/trinkets.js` — Session Zero deterministic d20 cosmetic trinkets and character backgrounds.
 - `media/manifest.js` — media manifest mapping 19 loops and cinematics with WebM, MP4, posters, and captions.
+- `learn/` — the Learn track (see "Learn track" below): `curriculum.js` (the registry of
+  worlds and quests, pure data), `progress.js` (gating and completion, XP-free),
+  `worlds/unitNN-*.js` (one chart per AP unit), `quests/` (a game module per quest, plus
+  `_template.js`, the contract).
 - `screens/` — one render function per route, all pure string templates.
 - `three/` — persistent WebGL stage, quality-tier probe (T3/T2/T1), ship interior, camera rig.
 - `quest3d/` — reusable containment chamber, `MOLECULE_DATA` (atoms, bonds and the
@@ -83,6 +93,89 @@ matches production. Guild switching in `onboarding.js` is optimistic at 0 ms wit
 `Db.gs` (Sheets DAO), `Auth.gs`, `Players.gs`, `Quests.gs` (manifest, grading, hints,
 completion), `Scoring.gs` (normalized leaderboards, level curve, level titles),
 `Items.gs`, `Events.gs`, `Main.gs` (router + `setup()` for one-click sheet init).
+
+## Learn track — ten worlds, one per course unit
+
+A second road beside the campaign, reached from the LEARN nav tab (`#/learn`).
+Ten worlds in order — Atoms, Molecules, States of Matter, Stoichiometry and Reactions,
+Equilibrium, Acids and Bases, Gases, Thermodynamics, Kinetics, Nuclear Chemistry — and
+**every Learn quest is a game built the way the Charge Gardens was built** — it owns its
+stages, its 3D scene, its inputs and its grading. The plan and the authoring steps live in
+`docs/plans/learn-track.md`.
+
+**The rule that outranks the rest: the Learn track pays no XP and never reaches the
+leaderboard.** Nothing in `src/learn/` or the three learn screens may call `session.addXp`,
+`api.gradeStage`, `api.completeQuest` or `session.recordProgress`; `verify:learn` fails the
+build if one does. The backend writes to the `LearnProgress` tab, which
+`Scoring.computePlayerTotalXp` does not read, and the proxy keeps `localStore.learn` apart
+from `progress` and `submissions`. A study road that moved Standings would turn learning
+into grinding and would punish the students it exists to help.
+
+- **Registry** — `src/learn/curriculum.js` is the single source of truth for what exists:
+  `WORLDS` (sorted by `order`, with derived counts), `ARENAS`, `getWorld`, `getQuest`,
+  `allQuests`, `loadQuestModule`. Pure data and pure functions — no DOM, no three.js, no
+  localStorage, because the proxy and the verifier import it too.
+- **Charts** — one file per world in `src/learn/worlds/`. A world's `status` is **derived**,
+  never declared: it is `live` exactly when one of its quests has a module.
+- **Gating** (`src/learn/progress.js`) — world 1 is always open, world N opens when N-1 is
+  complete; quest 1 is open with its world, quest N opens when N-1 is complete. Charted
+  (unbuilt) entries are transparent: an unbuilt world between two built ones must not seal
+  the road, or world 2 would wait on the whole curriculum.
+- **The quest contract** — `src/learn/quests/_template.js`. A module exports
+  `mount(container, ctx)` and returns `{ dispose }`. `ctx` carries the world, the quest,
+  `stagesCleared`, `isComplete`, `reportStage(i)`, `reportComplete()` and `exit()`.
+  `screens/learn-quest.js` checks the gating, loads the module, and is the wall between the
+  track and the XP rails.
+- **The engine** (`src/learn/engine/`) — two content-free pieces every bench quest composes.
+  `scope.js` is the **sampler scope**: a canvas instrument with a 1–6 power dial
+  (`detailFor` walks 0 solid → 1 mottled → 2 lumps → 3 individual pieces, and past a
+  sample's `floorPower` nothing new resolves), a probe that reports a catalogue code, mass
+  and size meters and *how many* pieces hold this one but never which kinds, a cutter and a
+  shaker. Samples declare `particles: [{ kinds, n }]` — a one-entry `kinds` is a loose
+  piece, longer is a bound cluster, and an entry needing a real backbone supplies its own
+  `geom` and `bonds` (H–O–O–H is a chain; drawing it as a star would be the instrument
+  lying). **Every tool re-pours its sample first**, or a player who cut a crate and then
+  shook it would see the fragments band and wrongly call it mixed. Canvas, not the 3D
+  chamber, because the walk down through scales is a 2D reveal that runs the same on every
+  tier and holds at 375 px. `frame.js` is the **quest frame**: stage rail (cleared lamps are
+  walkable — there is no XP here for a replay to farm), reopenable briefing, prompt,
+  readout, answer region, Commit key, miss banner, hint ladder (rung 1 free, rung 2 after a
+  miss or 45 s, rung 3 after two misses), reward card and the debrief stepper. It never sees
+  an answer; the quest calls `clear()` or `miss()`.
+- **Screens** — `learn.js` (the road), `learn-world.js` (one world's quests),
+  `learn-quest.js` (the host frame). Styling in `src/styles/learn.css` (`.lq-*` for the
+  quest bench, `.scope-*` for the instrument); phone rules under `.m-learn`,
+  `.m-learn-world`, `.m-learn-quest` in `mobile-screens.css`.
+- **Endpoints** — `learn/progress`, `learn/stage`, `learn/complete`. None returns an XP
+  field; `learn/complete` is idempotent. Rows ride along on `bootstrap` and `player/me` as
+  `learn` and are merged with `session.setLearnState`, which unions rather than overwrites
+  so a stage cleared while the sync was offline cannot silently re-lock a quest.
+
+To build a quest: copy the template into `src/learn/quests/<worldId>/<questId>.js`, point
+the chart's `module` at it, flip its `status` to `'live'`, correct `stageCount`, and run
+`npm run verify`. Nothing else in the app needs editing.
+
+`verify:learn` also grades a built quest. A module must export `meta.stageCount` matching
+its chart, and a table-driven quest exports `STAGES`, `SOLUTIONS`, `MISSES` and `stateFor`
+so the check can assert — as `verify:quest` does for the Charge Gardens — that the intended
+solution grades correct, that a plausible wrong answer is refused **with a reason**, that an
+untouched bench never grades correct, that every stage has exactly three distinct hint rungs
+and a reward card, and that every bench sample is well formed (real kinds, `geom` covering
+every piece, bonds inside the cluster, no solution naming a sample or bin that is not there).
+
+### World 1 quest 1 — The Grain of Things (`unit01/q1-grain`, live)
+Eight stages on a salvage bench on Tallow; the player leaves knowing what an atom, an
+element, a molecule, a compound and a mixture are and meets none of those words until the
+debrief. **The order is the design**: every stage is something the player *does* with an
+instrument, and the idea lands afterwards as a reward card under "WHAT YOU JUST FOUND".
+Power up until the picture stops getting finer (there is a floor) → which of two
+identical-looking crates is one material → how many kinds hide in one crate sold as
+single-source → run a cutter over four objects (one will not divide) → assemble the cluster
+that repeats → file two vials against two manifests with the same ingredients → settle three
+crates and read the bands → file a manifest of four unlabelled crates. Player-facing
+vocabulary before the debrief is *piece, kind, cluster, crate, band, recipe, material*, and
+that restraint is the product. The catalogue codes (CAT 01, 06, 08, 11, 16, 17) are atomic
+numbers, never explained here; the debrief points at them as the hook into `q3-catalogue`.
 
 ## Rules that keep the game fair
 - **XP is paid once per stage.** `Quests.gs` checks prior correct submissions, the proxy
@@ -204,6 +297,8 @@ clearance, every stage has exactly three distinct hint rungs, and a giver→give
 is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 ## Plans in flight
+- `docs/plans/learn-track.md` — the Learn road: nine worlds, 35 quests charted, none built
+  yet. Scaffolding, gating, routes, backend tab and verifier are in place.
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
 
@@ -216,7 +311,7 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 5. `#/bridge` — step 3. Resume/start CTA, progress bar, XP, level and team conditions.
 6. `#/quest` → `#/leaderboard`, `#/inventory`, `#/quarters`, `#/settings`, `#/admin`.
 
-Nav labels match page titles exactly: BRIDGE, STAR MAP, STANDINGS, INVENTORY, CREW.
+Nav labels match page titles exactly: BRIDGE, STAR MAP, LEARN, STANDINGS, INVENTORY, CREW.
 
 ## Aesthetic — "SCOURED PLATE" (MANDATORY FOR ALL AGENTS)
 

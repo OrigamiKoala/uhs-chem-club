@@ -52,6 +52,15 @@ export const api = {
   getHint: (questId, stageIndex) => apiCall('quest/hint', { questId, stageIndex }),
   completeQuest: (questId) => apiCall('quest/complete', { questId }),
   gradeDemo: (stageIndex, payload) => apiCall('demo/grade', { stageIndex, payload }),
+
+  /**
+   * Learn track. These endpoints record progress and pay NO XP: nothing they
+   * return may be handed to session.addXp, and nothing they write is read by
+   * Scoring, so the Learn track can never move a player up the leaderboard.
+   */
+  getLearnProgress: () => apiCall('learn/progress'),
+  learnStage: (worldId, questId, stageIndex) => apiCall('learn/stage', { worldId, questId, stageIndex }),
+  learnComplete: (worldId, questId) => apiCall('learn/complete', { worldId, questId }),
   getLeaderboards: () => apiCall('leaderboard'),
   useItem: (itemId, context) => apiCall('inventory/use', { itemId, context }),
   getEvents: () => apiCall('events/current'),

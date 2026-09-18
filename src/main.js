@@ -47,6 +47,9 @@ async function bootstrapApp() {
 
     if (boot.player) {
       session.setUserData(boot.player);
+      // Learn-track rows ride along on the bootstrap payload but are merged
+      // separately: they carry no XP and must never go through setUserData.
+      if (Array.isArray(boot.player.learn)) session.setLearnState(boot.player.learn);
       const teamId = boot.player.player?.team_id || boot.player.team_id;
       if (!teamId && (window.location.hash === '#/' || window.location.hash === '')) {
         window.location.hash = '#/onboarding';
