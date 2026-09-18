@@ -25,13 +25,14 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 ## Build and Run
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
-- `npm run verify` — `verify:quest` + `verify:learn` + `verify:geometry` + `verify:media` + `verify:flows` + `build`. Run this before shipping.
+- `npm run verify` — `verify:quest` + `verify:learn` + `verify:geometry` + `verify:media` + `verify:flows` + `verify:ship` + `build`. Run this before shipping.
 - `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below).
 - `npm run verify:learn` — integrity check of the Learn track registry and its no-XP invariant.
 - `npm run verify:geometry` — runs all 20 reaction animations headlessly and checks the chemistry
   on screen (see "Chemical realism" below). `--verbose` prints atom positions at every step.
 - `npm run verify:media` — validates media manifest against assets and size budgets.
 - `npm run verify:flows` — end-to-end smoke test of the API a new student touches.
+- `npm run verify:ship` — asserts ship graph connectivity, 3-hop limit, hatch cones, and spline bounds.
 - `npm run deploy:backend` — `clasp push` of `apps-script/`.
 - `npm run bake:stills` — regenerate the static SVG backdrops in `public/fallback/`.
 - `npm run bake:video` — encode raw MP4 clips in `assets-src/video/` to web-ready WebM, MP4, posters and audio.
@@ -476,9 +477,17 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     animation.
 
 ### 8. 3D and assets
+- Quality tiers:
+  - `T4`: Ultra/enhanced tier (60fps, unconstrained WASD navigation, continuous walk splines, particle dust, full-res world).
+  - `T3`: High/Desktop (60fps, procedural interior, graph traversal, eased dolly).
+  - `T2`: Standard/Chromebook/Mobile (30fps, DPR 1, baked stills).
+  - `T1`: Non-WebGL Fallback (DOM-only).
+- Starship traversal spine: `src/three/ship-graph.js` defines an undirected navigation graph across all compartments (`bridge`, `cockpit`, `starmap`, `quarters`, `cargo`, `comms`, `airlock`) with 3–6 point `walkPath` splines, `hatchPos` view-cone markers, and `routeBinding`.
+- Starship 3D interior: `src/three/ship.js` builds hyper-realistic physical rooms and interconnecting corridor spines along `walkPath` splines with PBR durasteel plating (`/art/durasteel_cockpit_pbr.jpg`, `/art/durasteel_plate.jpg`), floor grating, runway halogen strips, chamfered hatch bulkheads, tactile CRT consoles, central holo-table with rotating orrery, 2-tier bunk beds, gantry crane with pallet racks, comms chassis with glowing vacuum tubes, and heavy airlock blast door. Solid AABB obstacle colliders prevent clipping.
+- Erebus world scene: `src/three/world.js` and `src/three/world-data/erebus.json` define The Charge Gardens basin with 20 instanced pylon structures along a walkable route, survey lander ("SANDSTALKER") with boarding ramp, stratified sedimentary rock outcrops, procedural terrain heightmap (`getTerrainHeight`), amber celestial sky, banded gas giant vista, and atmospheric dust motes.
+- First-person controls: `src/three/fps-controls.js` provides unconstrained WASD + sprint (Shift) + mouse look navigation with sliding physics collision against walls/obstacles, terrain height clamping on Erebus, and contextual `[E]` interaction prompts at ship terminals and pylons.
 - Hero/prop shapes: `tools/hunyuan3d-shape-t4.ipynb` batches concept PNG/JPG images via Hunyuan3D 2.1 shape-only pipeline into `/kaggle/working/raw/*.glb` on NVIDIA T4; texturing is handled in Blender.
-- Nano Banana (`generate_image`) matte textures with Three.js procedural geometry and
-  `MeshStandardMaterial`.
+- Nano Banana PBR textures with Three.js procedural geometry and `MeshStandardMaterial`.
 - Starship cockpit: faceted durasteel canopy mullions, overhead avionics rack, dual analog
   yokes, throttle quadrant, armored bucket seats, twin CRT monitors.
 - Celestial vista: chromatic gas giant with rings, the banded desert planet Erebus, moons,

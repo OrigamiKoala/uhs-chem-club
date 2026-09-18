@@ -17,7 +17,8 @@
     "verify:flows": "node tools/verify-flows.mjs",
     "verify:geometry": "node tools/verify-geometry.mjs",
     "verify:media": "node tools/verify-media.mjs",
-    "verify": "npm run verify:quest && npm run verify:learn && npm run verify:geometry && npm run verify:media && npm run verify:flows && npm run build"
+    "verify:ship": "node tools/verify-ship.mjs",
+    "verify": "npm run verify:quest && npm run verify:learn && npm run verify:geometry && npm run verify:media && npm run verify:flows && npm run verify:ship && npm run build"
   },
   "dependencies": {
     "three": "^0.174.0"

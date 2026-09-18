@@ -1,0 +1,728 @@
+{
+  "id": "erebus",
+  "name": "The Charge Gardens",
+  "oneLine": "Find what pulls. Draw the line.",
+  "sky": "erebus-sky",
+  "terrain": {
+    "heightmap": "erebus-heightmap",
+    "size": [
+      200,
+      200
+    ],
+    "maxHeight": 12,
+    "material": "desert-grit"
+  },
+  "ambience": {
+    "keyLight": 14259235,
+    "fillLight": 4015188,
+    "fogColor": 4864812,
+    "fogNear": 30,
+    "fogFar": 140,
+    "dustDensity": 0.35
+  },
+  "landmarks": [
+    {
+      "asset": "lander",
+      "pos": [
+        0,
+        0,
+        41
+      ],
+      "rotY": 0.35,
+      "scale": 1,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rock-a",
+      "pos": [
+        14,
+        0,
+        34
+      ],
+      "rotY": 1.2,
+      "scale": 1.4,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rock-b",
+      "pos": [
+        -16,
+        0,
+        30
+      ],
+      "rotY": 0.8,
+      "scale": 1.3,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rock-c",
+      "pos": [
+        28,
+        0,
+        -8
+      ],
+      "rotY": 2.1,
+      "scale": 1.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rock-a",
+      "pos": [
+        -30,
+        0,
+        -12
+      ],
+      "rotY": 1.7,
+      "scale": 1.5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rock-b",
+      "pos": [
+        0,
+        0,
+        -36
+      ],
+      "rotY": 0.5,
+      "scale": 1.8,
+      "minTier": "T3"
+    },
+    {
+      "asset": "rock-c",
+      "pos": [
+        18,
+        0,
+        -32
+      ],
+      "rotY": 2.5,
+      "scale": 1.1,
+      "minTier": "T4"
+    },
+    {
+      "asset": "rock-a",
+      "pos": [
+        -24,
+        0,
+        16
+      ],
+      "rotY": 0.3,
+      "scale": 1,
+      "minTier": "T4"
+    },
+    {
+      "asset": "rock-b",
+      "pos": [
+        34,
+        0,
+        16
+      ],
+      "rotY": 1.9,
+      "scale": 1.3,
+      "minTier": "T4"
+    }
+  ],
+  "sites": [
+    {
+      "id": "site-1",
+      "stage": 1,
+      "pos": [
+        7.01,
+        0,
+        43.44
+      ],
+      "approachPos": [
+        6.45,
+        1.6,
+        39.96
+      ],
+      "label": "Basin Relay"
+    },
+    {
+      "id": "site-2",
+      "stage": 2,
+      "pos": [
+        20.09,
+        0,
+        39.15
+      ],
+      "approachPos": [
+        18.48,
+        1.6,
+        36.02
+      ],
+      "label": "Ridge Pylon"
+    },
+    {
+      "id": "site-3",
+      "stage": 3,
+      "pos": [
+        31.2,
+        0,
+        31.02
+      ],
+      "approachPos": [
+        28.7,
+        1.6,
+        28.54
+      ],
+      "label": "Drift Mast"
+    },
+    {
+      "id": "site-4",
+      "stage": 4,
+      "pos": [
+        39.26,
+        0,
+        19.86
+      ],
+      "approachPos": [
+        36.12,
+        1.6,
+        18.27
+      ],
+      "label": "Terrace Relay"
+    },
+    {
+      "id": "site-5",
+      "stage": 5,
+      "pos": [
+        43.48,
+        0,
+        6.76
+      ],
+      "approachPos": [
+        40,
+        1.6,
+        6.22
+      ],
+      "label": "Hollow Pylon"
+    },
+    {
+      "id": "site-6",
+      "stage": 6,
+      "pos": [
+        43.44,
+        0,
+        -7.01
+      ],
+      "approachPos": [
+        39.96,
+        1.6,
+        -6.45
+      ],
+      "label": "Span Mast"
+    },
+    {
+      "id": "site-7",
+      "stage": 7,
+      "pos": [
+        39.15,
+        0,
+        -20.09
+      ],
+      "approachPos": [
+        36.02,
+        1.6,
+        -18.48
+      ],
+      "label": "Basin Ridge Relay"
+    },
+    {
+      "id": "site-8",
+      "stage": 8,
+      "pos": [
+        31.02,
+        0,
+        -31.2
+      ],
+      "approachPos": [
+        28.54,
+        1.6,
+        -28.7
+      ],
+      "label": "Drift Terrace Pylon"
+    },
+    {
+      "id": "site-9",
+      "stage": 9,
+      "pos": [
+        19.86,
+        0,
+        -39.26
+      ],
+      "approachPos": [
+        18.27,
+        1.6,
+        -36.12
+      ],
+      "label": "Hollow Span Mast"
+    },
+    {
+      "id": "site-10",
+      "stage": 10,
+      "pos": [
+        6.76,
+        0,
+        -43.48
+      ],
+      "approachPos": [
+        6.22,
+        1.6,
+        -40
+      ],
+      "label": "Ridge Basin Pylon"
+    },
+    {
+      "id": "site-11",
+      "stage": 11,
+      "pos": [
+        -7.01,
+        0,
+        -43.44
+      ],
+      "approachPos": [
+        -6.45,
+        1.6,
+        -39.96
+      ],
+      "label": "Terrace Mast"
+    },
+    {
+      "id": "site-12",
+      "stage": 12,
+      "pos": [
+        -20.09,
+        0,
+        -39.15
+      ],
+      "approachPos": [
+        -18.48,
+        1.6,
+        -36.02
+      ],
+      "label": "Hollow Relay"
+    },
+    {
+      "id": "site-13",
+      "stage": 13,
+      "pos": [
+        -31.2,
+        0,
+        -31.02
+      ],
+      "approachPos": [
+        -28.7,
+        1.6,
+        -28.54
+      ],
+      "label": "Span Pylon"
+    },
+    {
+      "id": "site-14",
+      "stage": 14,
+      "pos": [
+        -39.26,
+        0,
+        -19.86
+      ],
+      "approachPos": [
+        -36.12,
+        1.6,
+        -18.27
+      ],
+      "label": "Drift Relay"
+    },
+    {
+      "id": "site-15",
+      "stage": 15,
+      "pos": [
+        -43.48,
+        0,
+        -6.76
+      ],
+      "approachPos": [
+        -40,
+        1.6,
+        -6.22
+      ],
+      "label": "Ridge Mast"
+    },
+    {
+      "id": "site-16",
+      "stage": 16,
+      "pos": [
+        -43.44,
+        0,
+        7.01
+      ],
+      "approachPos": [
+        -39.96,
+        1.6,
+        6.45
+      ],
+      "label": "Basin Mast"
+    },
+    {
+      "id": "site-17",
+      "stage": 17,
+      "pos": [
+        -39.15,
+        0,
+        20.09
+      ],
+      "approachPos": [
+        -36.02,
+        1.6,
+        18.48
+      ],
+      "label": "Terrace Pylon"
+    },
+    {
+      "id": "site-18",
+      "stage": 18,
+      "pos": [
+        -31.02,
+        0,
+        31.2
+      ],
+      "approachPos": [
+        -28.54,
+        1.6,
+        28.7
+      ],
+      "label": "Hollow Mast"
+    },
+    {
+      "id": "site-19",
+      "stage": 19,
+      "pos": [
+        -19.86,
+        0,
+        39.26
+      ],
+      "approachPos": [
+        -18.27,
+        1.6,
+        36.12
+      ],
+      "label": "Span Relay"
+    },
+    {
+      "id": "site-20",
+      "stage": 20,
+      "pos": [
+        -6.76,
+        0,
+        43.48
+      ],
+      "approachPos": [
+        -6.22,
+        1.6,
+        40
+      ],
+      "label": "Basin Hollow Relay"
+    }
+  ],
+  "spawn": {
+    "pos": [
+      0,
+      1.6,
+      46
+    ],
+    "lookAt": [
+      7.01,
+      1.6,
+      0
+    ]
+  },
+  "t2": {
+    "stillCamera": {
+      "site-1": {
+        "pos": [
+          6.45,
+          1.6,
+          39.96
+        ],
+        "lookAt": [
+          7.01,
+          1.8,
+          43.44
+        ]
+      },
+      "site-2": {
+        "pos": [
+          18.48,
+          1.6,
+          36.02
+        ],
+        "lookAt": [
+          20.09,
+          1.8,
+          39.15
+        ]
+      },
+      "site-3": {
+        "pos": [
+          28.7,
+          1.6,
+          28.54
+        ],
+        "lookAt": [
+          31.2,
+          1.8,
+          31.02
+        ]
+      },
+      "site-4": {
+        "pos": [
+          36.12,
+          1.6,
+          18.27
+        ],
+        "lookAt": [
+          39.26,
+          1.8,
+          19.86
+        ]
+      },
+      "site-5": {
+        "pos": [
+          40,
+          1.6,
+          6.22
+        ],
+        "lookAt": [
+          43.48,
+          1.8,
+          6.76
+        ]
+      },
+      "site-6": {
+        "pos": [
+          39.96,
+          1.6,
+          -6.45
+        ],
+        "lookAt": [
+          43.44,
+          1.8,
+          -7.01
+        ]
+      },
+      "site-7": {
+        "pos": [
+          36.02,
+          1.6,
+          -18.48
+        ],
+        "lookAt": [
+          39.15,
+          1.8,
+          -20.09
+        ]
+      },
+      "site-8": {
+        "pos": [
+          28.54,
+          1.6,
+          -28.7
+        ],
+        "lookAt": [
+          31.02,
+          1.8,
+          -31.2
+        ]
+      },
+      "site-9": {
+        "pos": [
+          18.27,
+          1.6,
+          -36.12
+        ],
+        "lookAt": [
+          19.86,
+          1.8,
+          -39.26
+        ]
+      },
+      "site-10": {
+        "pos": [
+          6.22,
+          1.6,
+          -40
+        ],
+        "lookAt": [
+          6.76,
+          1.8,
+          -43.48
+        ]
+      },
+      "site-11": {
+        "pos": [
+          -6.45,
+          1.6,
+          -39.96
+        ],
+        "lookAt": [
+          -7.01,
+          1.8,
+          -43.44
+        ]
+      },
+      "site-12": {
+        "pos": [
+          -18.48,
+          1.6,
+          -36.02
+        ],
+        "lookAt": [
+          -20.09,
+          1.8,
+          -39.15
+        ]
+      },
+      "site-13": {
+        "pos": [
+          -28.7,
+          1.6,
+          -28.54
+        ],
+        "lookAt": [
+          -31.2,
+          1.8,
+          -31.02
+        ]
+      },
+      "site-14": {
+        "pos": [
+          -36.12,
+          1.6,
+          -18.27
+        ],
+        "lookAt": [
+          -39.26,
+          1.8,
+          -19.86
+        ]
+      },
+      "site-15": {
+        "pos": [
+          -40,
+          1.6,
+          -6.22
+        ],
+        "lookAt": [
+          -43.48,
+          1.8,
+          -6.76
+        ]
+      },
+      "site-16": {
+        "pos": [
+          -39.96,
+          1.6,
+          6.45
+        ],
+        "lookAt": [
+          -43.44,
+          1.8,
+          7.01
+        ]
+      },
+      "site-17": {
+        "pos": [
+          -36.02,
+          1.6,
+          18.48
+        ],
+        "lookAt": [
+          -39.15,
+          1.8,
+          20.09
+        ]
+      },
+      "site-18": {
+        "pos": [
+          -28.54,
+          1.6,
+          28.7
+        ],
+        "lookAt": [
+          -31.02,
+          1.8,
+          31.2
+        ]
+      },
+      "site-19": {
+        "pos": [
+          -18.27,
+          1.6,
+          36.12
+        ],
+        "lookAt": [
+          -19.86,
+          1.8,
+          39.26
+        ]
+      },
+      "site-20": {
+        "pos": [
+          -6.22,
+          1.6,
+          40
+        ],
+        "lookAt": [
+          -6.76,
+          1.8,
+          43.48
+        ]
+      }
+    }
+  },
+  "t1": {
+    "siteOrder": [
+      "site-1",
+      "site-2",
+      "site-3",
+      "site-4",
+      "site-5",
+      "site-6",
+      "site-7",
+      "site-8",
+      "site-9",
+      "site-10",
+      "site-11",
+      "site-12",
+      "site-13",
+      "site-14",
+      "site-15",
+      "site-16",
+      "site-17",
+      "site-18",
+      "site-19",
+      "site-20"
+    ],
+    "siteDescriptions": {
+      "site-1": "Stage 1 pylon situated along the south rim terrace, angled toward the central basin floor.",
+      "site-2": "Stage 2 pylon situated along the south-east rim terrace, angled toward the central basin floor.",
+      "site-3": "Stage 3 pylon situated along the south-east rim terrace, angled toward the central basin floor.",
+      "site-4": "Stage 4 pylon situated along the south-east rim terrace, angled toward the central basin floor.",
+      "site-5": "Stage 5 pylon situated along the east rim terrace, angled toward the central basin floor.",
+      "site-6": "Stage 6 pylon situated along the east rim terrace, angled toward the central basin floor.",
+      "site-7": "Stage 7 pylon situated along the north-east rim terrace, angled toward the central basin floor.",
+      "site-8": "Stage 8 pylon situated along the north-east rim terrace, angled toward the central basin floor.",
+      "site-9": "Stage 9 pylon situated along the north-east rim terrace, angled toward the central basin floor.",
+      "site-10": "Stage 10 pylon situated along the north rim terrace, angled toward the central basin floor.",
+      "site-11": "Stage 11 pylon situated along the north rim terrace, angled toward the central basin floor.",
+      "site-12": "Stage 12 pylon situated along the north-west rim terrace, angled toward the central basin floor.",
+      "site-13": "Stage 13 pylon situated along the north-west rim terrace, angled toward the central basin floor.",
+      "site-14": "Stage 14 pylon situated along the north-west rim terrace, angled toward the central basin floor.",
+      "site-15": "Stage 15 pylon situated along the west rim terrace, angled toward the central basin floor.",
+      "site-16": "Stage 16 pylon situated along the west rim terrace, angled toward the central basin floor.",
+      "site-17": "Stage 17 pylon situated along the south-west rim terrace, angled toward the central basin floor.",
+      "site-18": "Stage 18 pylon situated along the south-west rim terrace, angled toward the central basin floor.",
+      "site-19": "Stage 19 pylon situated along the south-west rim terrace, angled toward the central basin floor.",
+      "site-20": "Stage 20 pylon situated along the south rim terrace, angled toward the central basin floor."
+    }
+  }
+}

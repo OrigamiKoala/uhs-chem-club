@@ -1,46 +1,48 @@
 /**
- * ship.js — Comprehensive Star Wars / Dune 'Used Universe' 3D Ship Interior & Planetary Vista
- * Procedurally textured durasteel bulkheads, tactile CRT consoles, spice holo-table, and dust motes
+ * ship.js — Hyper-Realistic Starship Interior (T4 / T3)
+ * Scoured Plate / Used Universe industrial aesthetic matching 3d-conversion-prompts.md & dist/art/
+ *
+ * Implements physical room compartments, corridor spine network along walkPath splines,
+ * PBR weathered durasteel plating, CRT tactical displays, holographic star map,
+ * and solid collision physics bounds.
  */
 
-import * as THREE from 'three';
-import { createHoloMaterial } from './materials/holo.js';
+import * as THREE from "three";
+import { createHoloMaterial } from "./materials/holo.js";
 import {
   createDurasteelTexture,
   createFloorGrateTexture,
   createHazardStripesTexture,
   createCrtScreenTexture,
   createControlPanelTexture
-} from './materials/textures.js';
+} from "./materials/textures.js";
 import {
   createPlanetMaterial,
   createAtmosphereShell,
-  createRingMaterial,
-  createAsteroidGeometry
-} from './materials/celestial.js';
-import { tierManager } from './tier.js';
+  createRingMaterial
+} from "./materials/celestial.js";
+import { SHIP_GRAPH } from "./ship-graph.js";
+import { tierManager, tierAtLeast } from "./tier.js";
 
 export class ShipInterior {
   constructor(scene) {
     this.scene = scene;
     this.group = new THREE.Group();
-    this.holoElements = [];
+    this.colliders = []; // AABB { minX, maxX, minZ, maxZ } for physical collision
     this.animatedElements = [];
+    this.interactiveTerminals = []; // { id, name, pos, route }
     this.dustParticles = null;
-    this.planet = null;
-    this.gasGiant = null;
-    this.rings = null;
-    this.moons = [];
-    this.asteroids = [];
 
     this.initMaterials();
-    this.buildArchitecture();
-    this.buildBridgeSection();
-    this.buildStarmapSection();
-    this.buildQuartersSection();
-    this.buildCargoSection();
-    this.buildCommsSection();
-    this.buildAirlockSection();
+    this.buildHullArchitecture();
+    this.buildCorridorSpines();
+    this.buildBridgeRoom();
+    this.buildCockpitRoom();
+    this.buildStarmapRoom();
+    this.buildQuartersRoom();
+    this.buildCargoRoom();
+    this.buildCommsRoom();
+    this.buildAirlockRoom();
     this.buildAtmosphericDust();
     this.buildPlanetaryVista();
 
@@ -48,678 +50,738 @@ export class ShipInterior {
   }
 
   initMaterials() {
-    // 1. Textures & Nano Banana Asset Loading
     const loader = new THREE.TextureLoader();
+
+    // 1. Durasteel Bulkhead Material (Nano Banana PBR Asset)
     this.durasteelTex = createDurasteelTexture(512, 512);
-
-    // Weathered Durasteel Bulkhead Material with Nano Banana texture map
     this.durasteelMat = new THREE.MeshStandardMaterial({
-      color: 0x22252c,
+      color: 0x2a2d34,
       map: this.durasteelTex,
-      roughness: 0.82,
-      metalness: 0.65
+      roughness: 0.84,
+      metalness: 0.62
     });
 
-    loader.load('/art/durasteel_plate.jpg', (loadedTex) => {
-      loadedTex.wrapS = THREE.RepeatWrapping;
-      loadedTex.wrapT = THREE.RepeatWrapping;
-      loadedTex.repeat.set(2, 2);
-      this.durasteelMat.map = loadedTex;
+    loader.load("/art/durasteel_cockpit_pbr.jpg", (tex) => {
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(2, 2);
+      this.durasteelMat.map = tex;
       this.durasteelMat.needsUpdate = true;
+    }, undefined, () => {
+      loader.load("/art/durasteel_plate.jpg", (tex2) => {
+        tex2.wrapS = THREE.RepeatWrapping;
+        tex2.wrapT = THREE.RepeatWrapping;
+        tex2.repeat.set(2, 2);
+        this.durasteelMat.map = tex2;
+        this.durasteelMat.needsUpdate = true;
+      });
     });
 
+    // 2. Heavy Floor Grating
     this.floorGrateTex = createFloorGrateTexture(256, 256);
-    this.hazardTex = createHazardStripesTexture(256, 64);
-    this.controlPanelTex = createControlPanelTexture(512, 256);
-    this.crtAmberTex = createCrtScreenTexture('SYSTEM CALIB', 'amber');
-    this.crtGreenTex = createCrtScreenTexture('ANALYSIS RF', 'green');
-
-    // 3. Heavy Industrial Floor Grating Material
     this.floorMat = new THREE.MeshStandardMaterial({
-      color: 0x181a20,
+      color: 0x1a1c22,
       map: this.floorGrateTex,
       roughness: 0.88,
-      metalness: 0.7
+      metalness: 0.72
     });
 
-    // 4. Tarnished Brass & Conduit Material
+    // 3. Tarnished Brass & Conduit Material
     this.brassMat = new THREE.MeshStandardMaterial({
-      color: 0x8a6e38,
-      roughness: 0.6,
-      metalness: 0.8
+      color: 0x826732,
+      roughness: 0.58,
+      metalness: 0.82
     });
 
-    // 5. Dark Cast Iron / Chasis Material
+    // 4. Dark Cast Iron Chassis
     this.ironMat = new THREE.MeshStandardMaterial({
-      color: 0x121417,
-      roughness: 0.9,
-      metalness: 0.4
+      color: 0x14161a,
+      roughness: 0.92,
+      metalness: 0.38
     });
 
-    // 6. Hazard Stripe Material
+    // 5. Yellow/Black Hazard Chevrons
+    this.hazardTex = createHazardStripesTexture(256, 64);
     this.hazardMat = new THREE.MeshStandardMaterial({
       map: this.hazardTex,
-      roughness: 0.7,
-      metalness: 0.2
+      roughness: 0.72,
+      metalness: 0.22
     });
 
-    // 7. Recessed Halogen Guide Strips (Warm Amber / Sodium)
+    // 6. Recessed Halogen Guide Strips (Warm Amber / Sodium filament #d99423)
     this.halogenMat = new THREE.MeshBasicMaterial({
-      color: 0xd9822b
+      color: 0xd99423
     });
 
-    // 8. Indicator Lamps
-    this.amberLampMat = new THREE.MeshBasicMaterial({ color: 0xff9f1c });
-    this.redLampMat = new THREE.MeshBasicMaterial({ color: 0xd90429 });
+    // 7. Indicators
+    this.amberLampMat = new THREE.MeshBasicMaterial({ color: 0xd99423 });
     this.greenLampMat = new THREE.MeshBasicMaterial({ color: 0x38b000 });
+    this.redLampMat = new THREE.MeshBasicMaterial({ color: 0xc92a2a });
 
-    // 9. CRT Monitor Materials
+    // 8. CRT Displays
+    this.crtAmberTex = createCrtScreenTexture("SYSTEM CALIB", "amber");
+    this.crtGreenTex = createCrtScreenTexture("ANALYSIS RF", "green");
     this.crtAmberMat = new THREE.MeshBasicMaterial({ map: this.crtAmberTex });
     this.crtGreenMat = new THREE.MeshBasicMaterial({ map: this.crtGreenTex });
+
+    // 9. Analog Control Panel
+    this.controlPanelTex = createControlPanelTexture(512, 256);
     this.controlPanelMat = new THREE.MeshStandardMaterial({
       map: this.controlPanelTex,
-      roughness: 0.7,
-      metalness: 0.3
+      roughness: 0.75,
+      metalness: 0.28
+    });
+
+    // 10. Fabric / Bedding Material
+    this.fabricMat = new THREE.MeshStandardMaterial({
+      color: 0x3d3930,
+      roughness: 0.95,
+      metalness: 0.05
     });
   }
 
-  buildArchitecture() {
-    // Deck Floor Plates
+  addCollider(minX, maxX, minZ, maxZ) {
+    this.colliders.push({ minX, maxX, minZ, maxZ });
+  }
+
+  buildHullArchitecture() {
+    // Main deck floor slab (Y = -0.2 to 0.0)
     const floor = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 22), this.floorMat);
     floor.position.set(0, -0.2, 0);
+    floor.receiveShadow = true;
     this.group.add(floor);
 
-    // Floor Runway Halogen Strips (replacing cyan neon)
-    for (let x of [-4.5, -0.05, 4.5]) {
-      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.04, 20), this.halogenMat);
-      strip.position.set(x, 0.02, 0);
-      this.group.add(strip);
-    }
-
-    // Bulkhead Ceiling
+    // Main structural ceiling slab (Y = 4.0 to 4.4)
     const ceil = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 22), this.durasteelMat);
     ceil.position.set(0, 4.2, 0);
     this.group.add(ceil);
 
-    // Left & Right Armor Plated Bulkhead Walls
-    const wallLeft = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.4, 22), this.durasteelMat);
-    wallLeft.position.set(-8.5, 2.0, 0);
-    const wallRight = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.4, 22), this.durasteelMat);
-    wallRight.position.set(8.5, 2.0, 0);
-    this.group.add(wallLeft, wallRight);
+    // Perimeter outer hull armor walls
+    // Port outer wall
+    const wallPort = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.2, 22), this.durasteelMat);
+    wallPort.position.set(-8.25, 2.0, 0);
+    this.group.add(wallPort);
+    this.addCollider(-8.5, -8.0, -11, 11);
 
-    // 5 Heavy Industrial Ribbed Hull Arches
-    for (let z = -8; z <= 8; z += 4) {
-      const archL = new THREE.Mesh(new THREE.BoxGeometry(0.6, 4.4, 0.8), this.durasteelMat);
-      archL.position.set(-8.1, 2.0, z);
-      const archR = new THREE.Mesh(new THREE.BoxGeometry(0.6, 4.4, 0.8), this.durasteelMat);
-      archR.position.set(8.1, 2.0, z);
-      const archTop = new THREE.Mesh(new THREE.BoxGeometry(16.8, 0.6, 0.8), this.durasteelMat);
-      archTop.position.set(0, 4.1, z);
+    // Starboard outer wall
+    const wallStbd = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.2, 22), this.durasteelMat);
+    wallStbd.position.set(8.25, 2.0, 0);
+    this.group.add(wallStbd);
+    this.addCollider(8.0, 8.5, -11, 11);
 
-      // Angled corner gusset brackets
-      const gussetL = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 0.6), this.ironMat);
-      gussetL.position.set(-7.5, 3.6, z);
-      gussetL.rotation.z = Math.PI / 4;
-      const gussetR = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 0.6), this.ironMat);
-      gussetR.position.set(7.5, 3.6, z);
-      gussetR.rotation.z = -Math.PI / 4;
+    // Aft blast wall (behind airlock)
+    const wallAft = new THREE.Mesh(new THREE.BoxGeometry(18, 4.2, 0.5), this.durasteelMat);
+    wallAft.position.set(0, 2.0, -8.75);
+    this.group.add(wallAft);
+    this.addCollider(-9, 9, -9.0, -8.5);
 
-      this.group.add(archL, archR, archTop, gussetL, gussetR);
-    }
+    // Forward viewport wall with observation cutouts
+    const wallFwdPort = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4.2, 0.5), this.durasteelMat);
+    wallFwdPort.position.set(-6.5, 2.0, 4.25);
+    const wallFwdStbd = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4.2, 0.5), this.durasteelMat);
+    wallFwdStbd.position.set(6.5, 2.0, 4.25);
+    this.group.add(wallFwdPort, wallFwdStbd);
+    this.addCollider(-8.5, -4.75, 4.0, 4.5);
+    this.addCollider(4.75, 8.5, 4.0, 4.5);
 
-    // Overhead Cable Raceways & Hydraulic Pipes along ship spine
-    for (let c = -1.2; c <= 1.2; c += 0.6) {
-      const pipeGeo = new THREE.CylinderGeometry(0.06, 0.06, 20, 8);
-      const pipe = new THREE.Mesh(pipeGeo, this.brassMat);
-      pipe.rotation.x = Math.PI / 2;
-      pipe.position.set(c, 3.8, 0);
-      this.group.add(pipe);
+    // 6 Heavy Industrial Ribbed Bulkhead Hull Arches along the ship length
+    for (let z = -7.5; z <= 3.5; z += 2.2) {
+      const ribL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.0, 0.5), this.durasteelMat);
+      ribL.position.set(-8.0, 2.0, z);
+      const ribR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.0, 0.5), this.durasteelMat);
+      ribR.position.set(8.0, 2.0, z);
+      const ribRoof = new THREE.Mesh(new THREE.BoxGeometry(16.4, 0.4, 0.5), this.durasteelMat);
+      ribRoof.position.set(0, 3.9, z);
+
+      // Gusset brackets
+      const gusL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.4), this.ironMat);
+      gusL.position.set(-7.5, 3.5, z);
+      gusL.rotation.z = Math.PI / 4;
+      const gusR = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.4), this.ironMat);
+      gusR.position.set(7.5, 3.5, z);
+      gusR.rotation.z = -Math.PI / 4;
+
+      this.group.add(ribL, ribR, ribRoof, gusL, gusR);
     }
   }
 
-  buildBridgeSection() {
-    // === STARSHIP FLIGHT COCKPIT & CANOPY FRAMEWORK ===
-    // 1. Forward Viewport Heavy Canopy Framing (Millennium Falcon / Ornithopter faceted canopy)
-    const canopyRimBottom = new THREE.Mesh(new THREE.BoxGeometry(10, 0.45, 0.6), this.durasteelMat);
-    canopyRimBottom.position.set(0, 0.75, -2.4);
-    const canopyRimTop = new THREE.Mesh(new THREE.BoxGeometry(10, 0.45, 0.6), this.durasteelMat);
-    canopyRimTop.position.set(0, 3.4, -2.4);
-    this.group.add(canopyRimBottom, canopyRimTop);
+  buildCorridorSpines() {
+    // 1. Central Spine Corridor (Bridge to Airlock, Z: -4.5 to 2.0)
+    // Overhead cable raceway along central spine
+    const racewaySpine = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.15, 7.5), this.ironMat);
+    racewaySpine.position.set(0, 3.8, -1.25);
+    this.group.add(racewaySpine);
 
-    // Center vertical canopy divider strut
-    const centerStrut = new THREE.Mesh(new THREE.BoxGeometry(0.24, 2.7, 0.4), this.ironMat);
-    centerStrut.position.set(0, 2.05, -2.4);
-    this.group.add(centerStrut);
-
-    // Angled faceted canopy trusses
-    for (let side of [-1, 1]) {
-      // Main diagonal canopy mullion
-      const diagStrut = new THREE.Mesh(new THREE.BoxGeometry(0.28, 3.0, 0.4), this.durasteelMat);
-      diagStrut.position.set(side * 2.8, 2.1, -2.4);
-      diagStrut.rotation.z = side * 0.32;
-      this.group.add(diagStrut);
-
-      // Corner gusset bracket
-      const cornerBracket = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.45), this.ironMat);
-      cornerBracket.position.set(side * 4.2, 3.1, -2.35);
-      cornerBracket.rotation.z = side * Math.PI / 4;
-      this.group.add(cornerBracket);
-
-      // Angled cockpit ceiling support spars arching back toward the pilot
-      const archSpar = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 3.8), this.durasteelMat);
-      archSpar.position.set(side * 2.5, 3.45, -0.4);
-      archSpar.rotation.x = -0.12;
-      this.group.add(archSpar);
-    }
-
-    // Far forward blast viewport reinforcement at Z = -8
-    const farFrameBase = new THREE.Mesh(new THREE.BoxGeometry(16, 1.2, 0.6), this.durasteelMat);
-    farFrameBase.position.set(0, 0.6, -8);
-    const farFrameTop = new THREE.Mesh(new THREE.BoxGeometry(16, 1.2, 0.6), this.durasteelMat);
-    farFrameTop.position.set(0, 3.8, -8);
-    for (let mx of [-6, -2.5, 2.5, 6]) {
-      const farMullion = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3.4, 0.5), this.durasteelMat);
-      farMullion.position.set(mx, 2.2, -8);
-      farMullion.rotation.z = mx < 0 ? 0.07 : -0.07;
-      this.group.add(farMullion);
-    }
-    this.group.add(farFrameBase, farFrameTop);
-
-    // 2. Overhead Avionics Instrument Rack (directly above pilot head)
-    const overheadRack = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.4, 2.2), this.ironMat);
-    overheadRack.position.set(0, 3.2, 0.2);
-    overheadRack.rotation.x = 0.1;
-    this.group.add(overheadRack);
-
-    // Overhead switch panel plate
-    const overheadPanel = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.05, 1.8), this.controlPanelMat);
-    overheadPanel.position.set(0, 3.0, 0.2);
-    overheadPanel.rotation.x = 0.1;
-    this.group.add(overheadPanel);
-
-    // Overhead indicator diodes and breakers
-    for (let i = -1.2; i <= 1.2; i += 0.4) {
-      const diode = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.03, 0.03, 0.04, 8),
-        Math.abs(i) < 0.5 ? this.amberLampMat : (i > 0 ? this.greenLampMat : this.redLampMat)
-      );
-      diode.rotation.x = Math.PI / 2;
-      diode.position.set(i, 2.96, 0.0);
-      this.group.add(diode);
-    }
-
-    // Overhead conduit bundles feeding into dash
-    for (let cx of [-1.5, 1.5]) {
-      const conduit = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.8, 8), this.brassMat);
-      conduit.position.set(cx, 2.4, 0.8);
-      conduit.rotation.z = cx < 0 ? 0.2 : -0.2;
+    // 4 Copper/Brass hydraulic and electrical conduit runs along the spine
+    for (let cx of [-0.5, -0.2, 0.2, 0.5]) {
+      const conduit = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 7.5, 8), this.brassMat);
+      conduit.rotation.x = Math.PI / 2;
+      conduit.position.set(cx, 3.68, -1.25);
       this.group.add(conduit);
     }
 
-    // 3. Primary Flight Instrument Console (Angled Dashboard)
-    const consoleBase = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.85, 1.6), this.ironMat);
-    consoleBase.position.set(0, 0.42, 0.2);
-    this.group.add(consoleBase);
+    // Recessed halogen runway guide strips embedded into deck
+    const stripSpineL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 7.5), this.halogenMat);
+    stripSpineL.position.set(-0.8, 0.015, -1.25);
+    const stripSpineR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 7.5), this.halogenMat);
+    stripSpineR.position.set(0.8, 0.015, -1.25);
+    this.group.add(stripSpineL, stripSpineR);
 
-    // Forward sloping main instrument board
-    const dashPanel = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.06, 1.3), this.controlPanelMat);
-    dashPanel.position.set(0, 0.86, 0.2);
-    dashPanel.rotation.x = -0.22;
-    this.group.add(dashPanel);
+    // 2. Transverse Cross-Corridor (Connecting Comms at X=-2.8 across Spine X=0 to Cargo at X=4.2 at Z=-2.0)
+    const racewayCross = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.15, 1.2), this.ironMat);
+    racewayCross.position.set(0.7, 3.75, -2.05);
+    this.group.add(racewayCross);
 
-    // Center auxiliary telemetry CRT (System Status)
-    const crtCenter = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.65, 0.1), this.crtAmberMat);
-    crtCenter.position.set(0, 1.15, -0.25);
-    crtCenter.rotation.x = -0.18;
-    this.group.add(crtCenter);
-
-    // Pilot Helm CRT (Port - Amber Vector Scope)
-    const crtPilot = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.75, 0.1), this.crtAmberMat);
-    crtPilot.position.set(-1.45, 1.2, -0.15);
-    crtPilot.rotation.x = -0.18;
-    crtPilot.rotation.y = 0.1;
-    this.group.add(crtPilot);
-
-    // Co-Pilot Radar / Spectrometry CRT (Starboard - Green Sensor)
-    const crtCoPilot = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.75, 0.1), this.crtGreenMat);
-    crtCoPilot.position.set(1.45, 1.2, -0.15);
-    crtCoPilot.rotation.x = -0.18;
-    crtCoPilot.rotation.y = -0.1;
-    this.group.add(crtCoPilot);
-
-    // Tactical warning plate with hazard stripes
-    const hazardPlate = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 0.02), this.hazardMat);
-    hazardPlate.position.set(0, 0.85, 0.75);
-    this.group.add(hazardPlate);
-
-    // 4. Dual Tactile Flight Yokes / Control Columns
-    for (let yx of [-1.1, 1.1]) {
-      // Yoke pedestal column
-      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.65, 8), this.ironMat);
-      col.position.set(yx, 0.7, 0.75);
-      col.rotation.x = -0.25;
-
-      // Handlebar crossbar
-      const handle = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.05, 0.06), this.durasteelMat);
-      handle.position.set(yx, 0.95, 0.68);
-
-      // Left & Right handgrips with trigger
-      const gripL = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.14, 8), this.brassMat);
-      gripL.position.set(yx - 0.16, 0.98, 0.68);
-      const gripR = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.14, 8), this.brassMat);
-      gripR.position.set(yx + 0.16, 0.98, 0.68);
-
-      this.group.add(col, handle, gripL, gripR);
+    for (let cz of [-2.25, -1.85]) {
+      const conduitCross = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 7.0, 8), this.brassMat);
+      conduitCross.rotation.z = Math.PI / 2;
+      conduitCross.position.set(0.7, 3.65, cz);
+      this.group.add(conduitCross);
     }
 
-    // Center Dual Throttle Lever Assembly
-    const throttleMount = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.12, 0.4), this.ironMat);
-    throttleMount.position.set(0, 0.92, 0.55);
-    for (let tx of [-0.08, 0.08]) {
-      const lever = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.18, 6), this.brassMat);
-      lever.position.set(tx, 1.0, 0.55);
-      lever.rotation.x = 0.2;
-      const knob = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), this.amberLampMat);
-      knob.position.set(tx, 1.08, 0.52);
-      this.group.add(lever, knob);
-    }
-    this.group.add(throttleMount);
+    // 3. Port & Starboard Wing Corridors at Z = 2.0 (Connecting Bridge to Quarters X=-3.8 & Starmap X=3.2)
+    const racewayWing = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.15, 1.0), this.ironMat);
+    racewayWing.position.set(-0.3, 3.75, 2.0);
+    this.group.add(racewayWing);
 
-    // 5. Pilot and Co-Pilot Armored Flight Chairs (Star Wars / Dune Style)
-    for (let cx of [-1.2, 1.2]) {
-      // Swivel pedestal base
-      const seatBase = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 0.5, 8), this.ironMat);
-      seatBase.position.set(cx, 0.25, 1.8);
+    // 4. Chamfered Doorway / Hatch Bulkheads at exact hatchPos locations
+    for (const [nodeKey, node] of Object.entries(SHIP_GRAPH.nodes)) {
+      for (const [adjKey, hPos] of Object.entries(node.hatchPos)) {
+        const frame = new THREE.Group();
+        frame.position.set(hPos[0], 0, hPos[2]);
 
-      // Armored bucket seat bottom
-      const seatCushion = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.16, 0.75), this.durasteelMat);
-      seatCushion.position.set(cx, 0.56, 1.8);
+        const adjNode = SHIP_GRAPH.nodes[adjKey];
+        const dir = new THREE.Vector3(adjNode.pos[0] - node.pos[0], 0, adjNode.pos[2] - node.pos[2]).normalize();
+        frame.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
 
-      // High-back spinal armor plate
-      const seatBack = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.95, 0.14), this.durasteelMat);
-      seatBack.position.set(cx, 1.08, 2.15);
-      seatBack.rotation.x = -0.08;
+        const postL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.6, 0.3), this.durasteelMat);
+        postL.position.set(-0.75, 1.3, 0);
+        const postR = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.6, 0.3), this.durasteelMat);
+        postR.position.set(0.75, 1.3, 0);
+        const lintel = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.3, 0.3), this.durasteelMat);
+        lintel.position.set(0, 2.5, 0);
 
-      // Headrest with side support bolsters
-      const headRest = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.3, 0.15), this.ironMat);
-      headRest.position.set(cx, 1.62, 2.22);
-      headRest.rotation.x = -0.08;
+        const headerPlate = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.18, 0.04), this.ironMat);
+        headerPlate.position.set(0, 2.45, 0.18);
 
-      // Restraint harness chest buckles
-      const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 0.04), this.brassMat);
-      buckle.position.set(cx, 1.05, 2.06);
+        const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.04, 8), this.amberLampMat);
+        lamp.rotation.x = Math.PI / 2;
+        lamp.position.set(0, 2.45, 0.21);
 
-      this.group.add(seatBase, seatCushion, seatBack, headRest, buckle);
+        frame.add(postL, postR, lintel, headerPlate, lamp);
+        this.group.add(frame);
+      }
     }
   }
 
-  buildStarmapSection() {
-    // Monolithic Brutalist Octagonal Tactical Table (Dune style at X = 3.2, Z = 0)
-    const tableBase = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.6, 0.9, 8), this.durasteelMat);
-    tableBase.position.set(3.2, 0.45, 0);
+  buildBridgeRoom() {
+    // Command Bridge at anchor [0, 1.55, 2.0]
+    const bridgeGroup = new THREE.Group();
+    bridgeGroup.position.set(0, 0, 2.0);
 
-    // Weathered Brass Rim with Tactile Rotary Dials
-    const tableRim = new THREE.Mesh(new THREE.TorusGeometry(1.42, 0.08, 8, 16), this.brassMat);
-    tableRim.position.set(3.2, 0.92, 0);
-    tableRim.rotation.x = Math.PI / 2;
-    this.group.add(tableBase, tableRim);
+    const canopyBase = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.7, 0.4), this.durasteelMat);
+    canopyBase.position.set(0, 0.35, -2.2);
+    const canopyTop = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.7, 0.4), this.durasteelMat);
+    canopyTop.position.set(0, 3.65, -2.2);
+    bridgeGroup.add(canopyBase, canopyTop);
 
-    // Monolithic Holo Emitter Lens in table center
-    const emitterLens = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.45, 0.1, 16), this.ironMat);
-    emitterLens.position.set(3.2, 0.93, 0);
-    this.group.add(emitterLens);
-
-    // Dune Spice-Amber Particulate Hologram
-    const spiceHoloMat = createHoloMaterial('#ff9f1c', 35);
-    const globe = new THREE.Mesh(new THREE.IcosahedronGeometry(0.65, 2), spiceHoloMat);
-    globe.position.set(3.2, 1.7, 0);
-    this.group.add(globe);
-    this.holoElements.push(globe);
-
-    // Orbital Spice Navigation Rings
-    const ring1 = new THREE.Mesh(new THREE.RingGeometry(0.85, 0.92, 32), createHoloMaterial('#f4a261', 20));
-    ring1.position.set(3.2, 1.7, 0);
-    ring1.rotation.x = Math.PI / 3;
-
-    const ring2 = new THREE.Mesh(new THREE.RingGeometry(1.1, 1.15, 32), createHoloMaterial('#e76f51', 15));
-    ring2.position.set(3.2, 1.7, 0);
-    ring2.rotation.x = -Math.PI / 4;
-    ring2.rotation.y = Math.PI / 6;
-
-    this.group.add(ring1, ring2);
-    this.holoElements.push(ring1, ring2);
-
-    // Floating Golden Spice Particles orbiting tactical table
-    const particleCount = 200;
-    const pGeo = new THREE.BufferGeometry();
-    const pPos = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      const radius = 0.5 + Math.random() * 0.9;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = (Math.random() - 0.5) * Math.PI * 0.7;
-      pPos[i * 3] = 3.2 + radius * Math.cos(theta) * Math.cos(phi);
-      pPos[i * 3 + 1] = 1.7 + radius * Math.sin(phi);
-      pPos[i * 3 + 2] = radius * Math.sin(theta) * Math.cos(phi);
-    }
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-    const pMat = new THREE.PointsMaterial({
-      color: 0xffb703,
-      size: 0.035,
-      transparent: true,
-      opacity: 0.75,
-      blending: THREE.AdditiveBlending
-    });
-    const holoCloud = new THREE.Points(pGeo, pMat);
-    this.group.add(holoCloud);
-    this.animatedElements.push(holoCloud);
-  }
-
-  buildQuartersSection() {
-    // Crew Bunk Habitation Alcove (at X = -3.8, Z = 0)
-    // Welded Durasteel Bunk Frame
-    const bunkFrameL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.6, 2.2), this.ironMat);
-    bunkFrameL.position.set(-5.0, 1.3, 0);
-    const bunkFrameR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.6, 2.2), this.ironMat);
-    bunkFrameR.position.set(-2.8, 1.3, 0);
-
-    // Lower & Upper Bunk Slabs
-    const lowerBed = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.2, 2.0), this.durasteelMat);
-    lowerBed.position.set(-3.9, 0.4, 0);
-    const upperBed = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.2, 2.0), this.durasteelMat);
-    upperBed.position.set(-3.9, 1.7, 0);
-
-    // Footlocker Equipment Crates under bunk
-    const crateA = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.35, 0.8), this.durasteelMat);
-    crateA.position.set(-4.3, 0.18, 0);
-    const crateB = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.35, 0.8), this.durasteelMat);
-    crateB.position.set(-3.3, 0.18, 0);
-
-    // Small Fold-Down Field Desk with Amber Terminal
-    const desk = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 0.7), this.ironMat);
-    desk.position.set(-5.4, 0.85, 1.8);
-    const terminal = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.35, 0.15), this.crtAmberMat);
-    terminal.position.set(-5.4, 1.05, 1.8);
-    terminal.rotation.y = 0.3;
-
-    this.group.add(bunkFrameL, bunkFrameR, lowerBed, upperBed, crateA, crateB, desk, terminal);
-  }
-
-  buildCargoSection() {
-    // Cargo Bay at X = 4.2, Z = -3.8
-    // Overhead Gantry Crane Beam with Yellow Hazard Stripes
-    const gantry = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 7.0), this.hazardMat);
-    gantry.position.set(4.2, 3.7, -3.8);
-    this.group.add(gantry);
-
-    // Heavy Pallet Racks
-    for (let shelf = 0; shelf < 3; shelf++) {
-      const shelfSlab = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.08, 1.6), this.ironMat);
-      shelfSlab.position.set(4.2, 0.5 + shelf * 0.85, -3.8);
-      this.group.add(shelfSlab);
-
-      // Cylindrical Spice Canisters & Fuel Drums
-      const drum1 = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.65, 12), this.brassMat);
-      drum1.position.set(3.4, 0.86 + shelf * 0.85, -3.8);
-
-      const drum2 = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.65, 12), this.durasteelMat);
-      drum2.position.set(4.1, 0.86 + shelf * 0.85, -3.8);
-
-      const drum3 = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.65, 12), this.hazardMat);
-      drum3.position.set(4.8, 0.86 + shelf * 0.85, -3.8);
-
-      this.group.add(drum1, drum2, drum3);
+    for (let x of [-3.2, -1.1, 1.1, 3.2]) {
+      const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.24, 2.8, 0.35), this.durasteelMat);
+      mullion.position.set(x, 2.0, -2.2);
+      mullion.rotation.z = x < 0 ? -0.14 : 0.14;
+      bridgeGroup.add(mullion);
     }
 
-    // Heavy Stamped Durasteel Shipping Containers on deck
-    const containerGeo = new THREE.BoxGeometry(1.6, 1.0, 1.2);
-    const containerA = new THREE.Mesh(containerGeo, this.durasteelMat);
-    containerA.position.set(6.2, 0.5, -4.5);
-    const containerB = new THREE.Mesh(containerGeo, this.hazardMat);
-    containerB.position.set(6.2, 0.5, -3.0);
-    this.group.add(containerA, containerB);
-  }
+    for (let side of [-1, 1]) {
+      const deskX = side * 2.2;
+      const deskZ = -1.2;
 
-  buildCommsSection() {
-    // Comms & Signal Intercept Bay at X = -2.8, Z = -3.8
-    // Full Height Equipment Chassis
-    const rackChassis = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 0.8), this.ironMat);
-    rackChassis.position.set(-2.8, 1.6, -4.2);
-    this.group.add(rackChassis);
+      const deskTop = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 1.2), this.durasteelMat);
+      deskTop.position.set(deskX, 0.85, deskZ);
+      const deskLegL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.85, 1.1), this.ironMat);
+      deskLegL.position.set(deskX - 0.7, 0.425, deskZ);
+      const deskLegR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.85, 1.1), this.ironMat);
+      deskLegR.position.set(deskX + 0.7, 0.425, deskZ);
+      bridgeGroup.add(deskTop, deskLegL, deskLegR);
 
-    // Green Phosphor Oscilloscope Screen
-    const oscScreen = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.05), this.crtGreenMat);
-    oscScreen.position.set(-3.2, 2.2, -3.78);
-    this.group.add(oscScreen);
+      const consoleChassis = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.45, 0.45), this.ironMat);
+      consoleChassis.position.set(deskX, 1.12, deskZ - 0.35);
+      consoleChassis.rotation.x = 0.3;
 
-    // Amber Telemetry Screen
-    const statusScreen = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.05), this.crtAmberMat);
-    statusScreen.position.set(-2.3, 2.2, -3.78);
-    this.group.add(statusScreen);
+      const crtA = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.36, 0.04), this.crtAmberMat);
+      crtA.position.set(deskX - 0.32, 1.16, deskZ - 0.18);
+      crtA.rotation.x = 0.3;
 
-    // Lower Analog Tuner Panel
-    const tunerPanel = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.8, 0.05), this.controlPanelMat);
-    tunerPanel.position.set(-2.8, 1.3, -3.78);
-    this.group.add(tunerPanel);
+      const crtB = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.36, 0.04), this.crtGreenMat);
+      crtB.position.set(deskX + 0.32, 1.16, deskZ - 0.18);
+      crtB.rotation.x = 0.3;
 
-    // Glowing Radio Frequency Vacuum Tubes
-    for (let tx = -3.4; tx <= -2.2; tx += 0.3) {
-      const tubeGlass = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.25, 8), this.amberLampMat);
-      tubeGlass.position.set(tx, 2.7, -3.75);
-      this.group.add(tubeGlass);
+      const switchPlate = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.04, 0.3), this.controlPanelMat);
+      switchPlate.position.set(deskX, 0.91, deskZ + 0.2);
+
+      for (let l = -0.15; l <= 0.15; l += 0.1) {
+        const lever = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.12, 6), this.brassMat);
+        lever.position.set(deskX + l, 0.98, deskZ + 0.2);
+        lever.rotation.x = -0.25;
+        const knob = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), this.ironMat);
+        knob.position.set(deskX + l, 1.04, deskZ + 0.18);
+        bridgeGroup.add(lever, knob);
+      }
+
+      const cable = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.02, 6, 16), this.ironMat);
+      cable.rotation.x = Math.PI / 2;
+      cable.position.set(deskX + side * 0.45, 0.91, deskZ + 0.15);
+
+      const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.45, 8), this.ironMat);
+      chairBase.position.set(deskX, 0.25, deskZ + 0.85);
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.55), this.fabricMat);
+      seat.position.set(deskX, 0.52, deskZ + 0.85);
+      const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 0.08), this.fabricMat);
+      backrest.position.set(deskX, 0.82, deskZ + 1.1);
+      bridgeGroup.add(consoleChassis, crtA, crtB, switchPlate, cable, chairBase, seat, backrest);
+
+      this.addCollider(deskX - 0.9, deskX + 0.9, deskZ - 0.7 + 2.0, deskZ + 0.7 + 2.0);
     }
+
+    this.group.add(bridgeGroup);
   }
 
-  buildAirlockSection() {
-    // Massive Reinforced Airlock Blast Door at Z = -8.0
-    // Outer Bulkhead Frame with Hazard Chevrons
-    const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(5.2, 3.8, 0.4), this.hazardMat);
-    doorFrame.position.set(0, 1.9, -8.2);
-    this.group.add(doorFrame);
+  buildCockpitRoom() {
+    // Flight Cockpit at anchor [0, 1.45, 1.6] facing forward
+    const cockpitGroup = new THREE.Group();
+    cockpitGroup.position.set(0, 0, 1.6);
 
-    // Recessed Hydraulic Circular/Vault Pressure Door
-    const innerDoor = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.35, 16), this.durasteelMat);
-    innerDoor.rotation.x = Math.PI / 2;
-    innerDoor.position.set(0, 1.9, -8.0);
-    this.group.add(innerDoor);
+    const column = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.75, 8), this.ironMat);
+    column.position.set(0, 0.55, -0.6);
+    column.rotation.x = 0.22;
 
-    // Central Rotary Manual Override Handwheel
-    const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.05, 8, 16), this.ironMat);
-    wheel.position.set(0, 1.9, -7.8);
-    this.group.add(wheel);
+    const yokeBar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.42, 8), this.ironMat);
+    yokeBar.rotation.z = Math.PI / 2;
+    yokeBar.position.set(0, 0.92, -0.52);
 
-    // Dual Hydraulic Piston Locking Cylinders
-    for (let py of [1.2, 2.6]) {
-      const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1.8, 12), this.brassMat);
+    const gripL = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.22, 8), this.durasteelMat);
+    gripL.position.set(-0.21, 0.98, -0.52);
+    const gripR = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.22, 8), this.durasteelMat);
+    gripR.position.set(0.21, 0.98, -0.52);
+    cockpitGroup.add(column, yokeBar, gripL, gripR);
+
+    const dash = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.65, 0.55), this.durasteelMat);
+    dash.position.set(0, 0.95, -1.05);
+    dash.rotation.x = 0.35;
+
+    const radarScreen = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.48, 0.04), this.crtAmberMat);
+    radarScreen.position.set(0, 1.0, -0.85);
+    radarScreen.rotation.x = 0.35;
+
+    const atScreen = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.44, 0.04), this.crtGreenMat);
+    atScreen.position.set(-0.68, 1.0, -0.85);
+    atScreen.rotation.x = 0.35;
+
+    const auxScreen = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.44, 0.04), this.controlPanelMat);
+    auxScreen.position.set(0.68, 1.0, -0.85);
+    auxScreen.rotation.x = 0.35;
+
+    cockpitGroup.add(dash, radarScreen, atScreen, auxScreen);
+
+    const overheadConsole = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.25, 1.4), this.ironMat);
+    overheadConsole.position.set(0, 2.9, -0.2);
+    overheadConsole.rotation.x = 0.15;
+
+    const ohPanel = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.04, 1.1), this.controlPanelMat);
+    ohPanel.position.set(0, 2.76, -0.2);
+    ohPanel.rotation.x = 0.15;
+
+    for (let bx of [-0.9, 0.9]) {
+      const bundle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.8, 8), this.ironMat);
+      bundle.position.set(bx, 2.0, -0.6);
+      bundle.rotation.x = 0.45;
+      cockpitGroup.add(bundle);
+    }
+
+    cockpitGroup.add(overheadConsole, ohPanel);
+    this.addCollider(-1.3, 1.3, 0.3, 1.1);
+
+    this.group.add(cockpitGroup);
+  }
+
+  buildStarmapRoom() {
+    // Star Map & Navigation Room at anchor [3.2, 1.8, 1.8]
+    const starmapGroup = new THREE.Group();
+    starmapGroup.position.set(3.2, 0, 1.8);
+
+    const tableBase = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.6, 0.85, 8), this.durasteelMat);
+    tableBase.position.set(0, 0.425, 0);
+    tableBase.receiveShadow = true;
+    starmapGroup.add(tableBase);
+
+    const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.35, 0.1, 8), this.ironMat);
+    tableTop.position.set(0, 0.88, 0);
+    starmapGroup.add(tableTop);
+
+    const rail = new THREE.Mesh(new THREE.TorusGeometry(1.52, 0.035, 8, 32), this.brassMat);
+    rail.rotation.x = Math.PI / 2;
+    rail.position.set(0, 0.92, 0);
+
+    for (let a = 0; a < 8; a++) {
+      const angle = a * (Math.PI * 2 / 8);
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.25, 6), this.ironMat);
+      post.position.set(Math.cos(angle) * 1.5, 0.8, Math.sin(angle) * 1.5);
+      starmapGroup.add(post);
+    }
+    starmapGroup.add(rail);
+
+    const emitterRing = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.06, 24), this.brassMat);
+    emitterRing.position.set(0, 0.95, 0);
+    starmapGroup.add(emitterRing);
+
+    const holoProjector = new THREE.Group();
+    holoProjector.position.set(0, 1.45, 0);
+
+    const wireSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.65, 16, 12),
+      createHoloMaterial({ color: 0xffaa22, opacity: 0.35, wireframe: true })
+    );
+    holoProjector.add(wireSphere);
+
+    const sunCore = new THREE.Mesh(
+      new THREE.SphereGeometry(0.12, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xffd166 })
+    );
+    const sunLight = new THREE.PointLight(0xffaa22, 1.2, 6);
+    holoProjector.add(sunCore, sunLight);
+
+    for (let r = 0; r < 3; r++) {
+      const rad = 0.28 + r * 0.18;
+      const orbitRing = new THREE.Mesh(
+        new THREE.RingGeometry(rad - 0.005, rad + 0.005, 32),
+        new THREE.MeshBasicMaterial({ color: 0xffaa22, side: THREE.DoubleSide, transparent: true, opacity: 0.6 })
+      );
+      orbitRing.rotation.x = Math.PI / 2 + (r * 0.18);
+      orbitRing.rotation.y = r * 0.25;
+
+      const planetGeo = new THREE.SphereGeometry(0.035 + r * 0.015, 12, 12);
+      const planetMesh = new THREE.Mesh(
+        planetGeo,
+        new THREE.MeshBasicMaterial({ color: r === 0 ? 0xcc8833 : (r === 1 ? 0xddaa55 : 0xaa6622) })
+      );
+      planetMesh.position.set(rad, 0, 0);
+      orbitRing.add(planetMesh);
+
+      holoProjector.add(orbitRing);
+      this.animatedElements.push({ obj: orbitRing, speed: 0.3 / (r + 1) });
+    }
+
+    starmapGroup.add(holoProjector);
+    this.addCollider(3.2 - 1.6, 3.2 + 1.6, 1.8 - 1.6, 1.8 + 1.6);
+    this.group.add(starmapGroup);
+  }
+
+  buildQuartersRoom() {
+    // Crew Quarters at anchor [-3.8, 1.6, 2.2]
+    const quartersGroup = new THREE.Group();
+    quartersGroup.position.set(-3.8, 0, 2.2);
+
+    const bunkFrame = new THREE.Group();
+    bunkFrame.position.set(-1.0, 0, 0.4);
+
+    for (let cx of [-0.6, 0.6]) {
+      for (let cz of [-0.9, 0.9]) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.6, 0.08), this.durasteelMat);
+        post.position.set(cx, 1.3, cz);
+        bunkFrame.add(post);
+      }
+    }
+
+    for (let y = 0.4; y <= 2.2; y += 0.35) {
+      const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.45, 6), this.ironMat);
+      rung.rotation.z = Math.PI / 2;
+      rung.position.set(0.6, y, 0);
+      bunkFrame.add(rung);
+    }
+
+    const mattressLower = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.15, 1.7), this.fabricMat);
+    mattressLower.position.set(0, 0.45, 0);
+    const blanketLower = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.08, 1.2), this.durasteelMat);
+    blanketLower.position.set(0, 0.52, -0.2);
+    const pillowLower = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 0.35), this.fabricMat);
+    pillowLower.position.set(0, 0.55, 0.65);
+    bunkFrame.add(mattressLower, blanketLower, pillowLower);
+
+    const mattressUpper = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.15, 1.7), this.fabricMat);
+    mattressUpper.position.set(0, 1.65, 0);
+    const blanketUpper = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.08, 1.2), this.durasteelMat);
+    blanketUpper.position.set(0, 1.72, -0.2);
+    const pillowUpper = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 0.35), this.fabricMat);
+    pillowUpper.position.set(0, 1.75, 0.65);
+    bunkFrame.add(mattressUpper, blanketUpper, pillowUpper);
+
+    const lockerA = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 0.6), this.durasteelMat);
+    lockerA.position.set(0, 0.16, -0.45);
+    const lockerB = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 0.6), this.durasteelMat);
+    lockerB.position.set(0, 0.16, 0.45);
+    bunkFrame.add(lockerA, lockerB);
+
+    quartersGroup.add(bunkFrame);
+    this.addCollider(-3.8 - 1.8, -3.8 - 0.2, 2.2 - 0.7, 2.2 + 1.5);
+
+    const deskShelf = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.6), this.ironMat);
+    deskShelf.position.set(0.6, 0.9, -0.8);
+
+    for (let sx of [0.3, 0.9]) {
+      const strut = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.45), this.ironMat);
+      strut.position.set(sx, 0.65, -0.8);
+      quartersGroup.add(strut);
+    }
+
+    const miniCrt = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.28, 0.3), this.crtAmberMat);
+    miniCrt.position.set(0.6, 1.08, -0.8);
+
+    const lampArm = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.35, 6), this.brassMat);
+    lampArm.position.set(0.88, 1.15, -0.65);
+    lampArm.rotation.z = -0.35;
+    const lampHead = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.12, 8), this.durasteelMat);
+    lampHead.position.set(0.78, 1.3, -0.65);
+    lampHead.rotation.z = Math.PI * 0.8;
+    const lampLight = new THREE.PointLight(0xffb703, 0.8, 3.5);
+    lampLight.position.set(0.75, 1.25, -0.65);
+
+    quartersGroup.add(deskShelf, miniCrt, lampArm, lampHead, lampLight);
+    this.addCollider(-3.8 + 0.2, -3.8 + 1.1, 2.2 - 1.2, 2.2 - 0.4);
+
+    this.group.add(quartersGroup);
+  }
+
+  buildCargoRoom() {
+    // Cargo Hold at anchor [4.2, 1.6, -2.2]
+    const cargoGroup = new THREE.Group();
+    cargoGroup.position.set(4.2, 0, -2.2);
+
+    const craneBeam = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 6.5), this.hazardMat);
+    craneBeam.position.set(0, 3.75, 0);
+
+    const trolley = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.3, 0.8), this.ironMat);
+    trolley.position.set(0, 3.4, -0.5);
+    const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.2, 6), this.ironMat);
+    cable.position.set(0, 2.7, -0.5);
+    const hook = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.03, 6, 12, Math.PI * 1.5), this.ironMat);
+    hook.position.set(0, 2.05, -0.5);
+    cargoGroup.add(craneBeam, trolley, cable, hook);
+
+    const rackGroup = new THREE.Group();
+    rackGroup.position.set(1.8, 0, 0);
+
+    for (let rx of [-0.6, 0.6]) {
+      for (let rz of [-1.5, 0, 1.5]) {
+        const upright = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3.4, 0.1), this.hazardMat);
+        upright.position.set(rx, 1.7, rz);
+        rackGroup.add(upright);
+      }
+    }
+
+    for (let tier = 0; tier < 3; tier++) {
+      const sy = 0.5 + tier * 1.0;
+      const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 3.2), this.ironMat);
+      shelf.position.set(0, sy, 0);
+      rackGroup.add(shelf);
+
+      for (let dz of [-1.0, -0.4, 0.4, 1.0]) {
+        const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.75, 12), tier % 2 === 0 ? this.durasteelMat : this.brassMat);
+        drum.position.set(dz < 0 ? -0.25 : 0.25, sy + 0.42, dz);
+        rackGroup.add(drum);
+      }
+    }
+    cargoGroup.add(rackGroup);
+    this.addCollider(4.2 + 1.1, 4.2 + 2.5, -2.2 - 1.8, -2.2 + 1.8);
+
+    const containerA = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.2, 1.8), this.durasteelMat);
+    containerA.position.set(-1.4, 0.6, 1.2);
+    const containerB = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.2, 1.8), this.hazardMat);
+    containerB.position.set(-1.4, 0.6, -1.0);
+    cargoGroup.add(containerA, containerB);
+    this.addCollider(4.2 - 2.2, 4.2 - 0.6, -2.2 - 2.0, -2.2 + 2.2);
+
+    this.group.add(cargoGroup);
+  }
+
+  buildCommsRoom() {
+    // Comms Array at anchor [-2.8, 1.8, -2.0]
+    const commsGroup = new THREE.Group();
+    commsGroup.position.set(-2.8, 0, -2.0);
+
+    const rack = new THREE.Mesh(new THREE.BoxGeometry(2.6, 3.4, 0.75), this.ironMat);
+    rack.position.set(0, 1.7, -1.2);
+    commsGroup.add(rack);
+
+    const osc = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.65, 0.05), this.crtGreenMat);
+    osc.position.set(-0.6, 1.85, -0.8);
+    commsGroup.add(osc);
+
+    const tel = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.65, 0.05), this.crtAmberMat);
+    tel.position.set(0.6, 1.85, -0.8);
+    commsGroup.add(tel);
+
+    const tubeShelf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.06, 0.28), this.durasteelMat);
+    tubeShelf.position.set(0, 2.45, -0.75);
+    commsGroup.add(tubeShelf);
+
+    for (let tx = -0.7; tx <= 0.7; tx += 0.28) {
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.22, 8), this.amberLampMat);
+      tube.position.set(tx, 2.58, -0.75);
+      commsGroup.add(tube);
+    }
+    const tubeLight = new THREE.PointLight(0xd99423, 0.9, 4.0);
+    tubeLight.position.set(0, 2.6, -0.6);
+    commsGroup.add(tubeLight);
+
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.1, 0.8), this.durasteelMat);
+    desk.position.set(0, 0.85, -0.5);
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.05, 0.5), this.controlPanelMat);
+    panel.position.set(0, 0.92, -0.5);
+    commsGroup.add(desk, panel);
+
+    for (let c = -0.5; c <= 0.5; c += 0.35) {
+      const cord = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.018, 6, 12, Math.PI), this.ironMat);
+      cord.rotation.y = Math.PI / 2;
+      cord.position.set(c, 1.25, -0.75);
+      commsGroup.add(cord);
+    }
+
+    this.addCollider(-2.8 - 1.4, -2.8 + 1.4, -2.0 - 1.6, -2.0 - 0.1);
+    this.group.add(commsGroup);
+  }
+
+  buildAirlockRoom() {
+    // Airlock & Departure Bay at anchor [0, 1.8, -4.5]
+    const airlockGroup = new THREE.Group();
+    airlockGroup.position.set(0, 0, -4.5);
+
+    const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(4.8, 3.6, 0.6), this.hazardMat);
+    doorFrame.position.set(0, 1.8, -2.0);
+    airlockGroup.add(doorFrame);
+
+    const doorSlab = new THREE.Mesh(new THREE.BoxGeometry(3.4, 2.8, 0.3), this.durasteelMat);
+    doorSlab.position.set(0, 1.7, -1.9);
+    airlockGroup.add(doorSlab);
+
+    const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.045, 8, 20), this.ironMat);
+    wheel.position.set(0, 1.7, -1.72);
+    for (let s = 0; s < 2; s++) {
+      const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.84, 6), this.ironMat);
+      spoke.rotation.z = s * (Math.PI / 2);
+      spoke.position.set(0, 1.7, -1.72);
+      airlockGroup.add(spoke);
+    }
+    airlockGroup.add(wheel);
+
+    for (let py of [1.0, 2.4]) {
+      const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 2.4, 12), this.brassMat);
       cylinder.rotation.z = Math.PI / 2;
-      cylinder.position.set(0, py, -7.9);
-      this.group.add(cylinder);
+      cylinder.position.set(0, py, -1.72);
+
+      const hazardSleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.7, 12), this.hazardMat);
+      hazardSleeve.rotation.z = Math.PI / 2;
+      hazardSleeve.position.set(0, py, -1.72);
+
+      airlockGroup.add(cylinder, hazardSleeve);
     }
 
-    // Overhead Status Warning Beacon
-    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.2, 12), this.amberLampMat);
-    beacon.position.set(0, 3.5, -8.0);
-    this.group.add(beacon);
+    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.22, 12), this.amberLampMat);
+    beacon.position.set(0, 3.4, -1.75);
+    const beaconLight = new THREE.PointLight(0xd99423, 1.1, 5.0);
+    beaconLight.position.set(0, 3.3, -1.6);
+    airlockGroup.add(beacon, beaconLight);
+
+    for (let lx of [-1.2, 1.2]) {
+      const lockIndicator = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.04), this.redLampMat);
+      lockIndicator.position.set(lx, 3.2, -1.74);
+      airlockGroup.add(lockIndicator);
+    }
+
+    for (let vx of [-1.8, 1.8]) {
+      const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.4, 8), this.ironMat);
+      vent.position.set(vx, 1.6, -1.5);
+      const nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.2, 8), this.brassMat);
+      nozzle.rotation.x = Math.PI / 2;
+      nozzle.position.set(vx, 2.6, -1.4);
+      airlockGroup.add(vent, nozzle);
+    }
+
+    this.addCollider(-2.5, 2.5, -6.8, -6.2);
+    this.group.add(airlockGroup);
   }
 
   buildAtmosphericDust() {
-    // 2,000 Particulate Dust Motes floating in the cabin, catching sunbeams
-    const dustCount = 2000;
+    const dustCount = tierAtLeast("T4") ? 2200 : 1000;
     const dGeo = new THREE.BufferGeometry();
     const dPos = new Float32Array(dustCount * 3);
     for (let i = 0; i < dustCount; i++) {
-      dPos[i * 3] = (Math.random() - 0.5) * 16;
-      dPos[i * 3 + 1] = Math.random() * 4.0;
+      dPos[i * 3] = (Math.random() - 0.5) * 15;
+      dPos[i * 3 + 1] = 0.2 + Math.random() * 3.8;
       dPos[i * 3 + 2] = (Math.random() - 0.5) * 18;
     }
-    dGeo.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
+    dGeo.setAttribute("position", new THREE.BufferAttribute(dPos, 3));
     const dMat = new THREE.PointsMaterial({
-      color: 0xe0a96d,
-      size: 0.04,
+      color: 0xd99423,
+      size: 0.035,
       transparent: true,
-      opacity: 0.45,
-      blending: THREE.AdditiveBlending
+      opacity: 0.38,
+      blending: THREE.NormalBlending
     });
     this.dustParticles = new THREE.Points(dGeo, dMat);
     this.group.add(this.dustParticles);
   }
 
   buildPlanetaryVista() {
-    // Every body is lit by one star (SUN_DIRECTION in celestial.js), not the cabin lamps.
-    const octaves = tierManager.currentTier === 'T3' ? 6 : 4;
     const vista = new THREE.Group();
-
-    // 1. Ringed gas giant, tilted, with a single long-lived storm.
     const giantCenter = new THREE.Vector3(-30, 13, -95);
     const giantRadius = 22;
-    this.gasGiant = new THREE.Mesh(
-      new THREE.SphereGeometry(giantRadius, 96, 64),
-      createPlanetMaterial('gas', {
-        colors: ['#cdbb98', '#9c7a52', '#6f4a33', '#b8805a'],
-        atmo: '#c9c2b4',
+
+    const giant = new THREE.Mesh(
+      new THREE.SphereGeometry(giantRadius, 48, 32),
+      createPlanetMaterial("gas", {
+        colors: ["#cdbb98", "#9c7a52", "#6f4a33", "#b8805a"],
+        atmo: "#c9c2b4",
         atmoStrength: 0.35,
         seed: [3.1, 0.0, 7.4],
-        octaves
+        octaves: 4
       })
     );
-    // Axial tilt lives on a frame so the planet spins about its own pole and the rings stay equatorial.
     const giantFrame = new THREE.Group();
     giantFrame.position.copy(giantCenter);
     giantFrame.rotation.set(0.32, 0, 0.3);
-    giantFrame.add(this.gasGiant);
+    giantFrame.add(giant);
     vista.add(giantFrame);
-    vista.add(createAtmosphereShell(giantRadius, giantCenter, { color: '#b9b4a8', strength: 0.5, scaleHeight: 0.02 }));
 
-    this.rings = new THREE.Mesh(
-      new THREE.RingGeometry(giantRadius * 1.3, giantRadius * 2.25, 256, 1),
+    const rings = new THREE.Mesh(
+      new THREE.RingGeometry(giantRadius * 1.3, giantRadius * 2.25, 64, 1),
       createRingMaterial({
         inner: giantRadius * 1.3,
         outer: giantRadius * 2.25,
         planetCenter: giantCenter,
         planetRadius: giantRadius,
-        colors: ['#b7a891', '#8a7a66']
+        colors: ["#b7a891", "#8a7a66"]
       })
     );
-    this.rings.rotation.x = Math.PI / 2;
-    giantFrame.add(this.rings);
-
-    // 2. Erebus — the Quest 1 desert world, thin dusty atmosphere.
-    const erebusCenter = new THREE.Vector3(22, -8, -80);
-    const erebusRadius = 16;
-    this.planet = new THREE.Mesh(
-      new THREE.SphereGeometry(erebusRadius, 96, 64),
-      createPlanetMaterial('desert', {
-        colors: ['#c79a66', '#a8714a', '#6e4a36', '#8d6a52'],
-        atmo: '#d8a77a',
-        atmoStrength: 0.45,
-        seed: [11.3, 4.2, 1.9],
-        octaves
-      })
-    );
-    this.planet.position.copy(erebusCenter);
-    this.planet.rotation.order = 'ZYX'; // tilt last, so the spin stays about the pole
-    this.planet.rotation.z = -0.18;
-    vista.add(this.planet);
-    vista.add(createAtmosphereShell(erebusRadius, erebusCenter, { color: '#d69a64', strength: 0.7, scaleHeight: 0.016 }));
-
-    // 3. Distant fractured ice moon.
-    const iceMoon = new THREE.Mesh(
-      new THREE.SphereGeometry(3.6, 48, 32),
-      createPlanetMaterial('ice', {
-        colors: ['#b9c0c4', '#d9d6cf', '#7c6a5c', '#000000'],
-        seed: [2.2, 8.8, 5.5],
-        octaves
-      })
-    );
-    iceMoon.position.set(-6, 22, -120);
-    vista.add(iceMoon);
-    this.moons.push(iceMoon);
-
-    // 4. Small volcanic moon — sulphur plains, vents visible only in its night.
-    const pyroMoon = new THREE.Mesh(
-      new THREE.SphereGeometry(2.4, 48, 32),
-      createPlanetMaterial('volcanic', {
-        colors: ['#3a312b', '#6b5a48', '#a8904e', '#c2521c'],
-        seed: [7.7, 1.1, 9.9],
-        octaves
-      })
-    );
-    pyroMoon.position.set(38, 16, -95);
-    vista.add(pyroMoon);
-    this.moons.push(pyroMoon);
-
-    // 5. A sparse scatter of irregular rocks, far enough out to read as debris, not props.
-    const asteroidMat = new THREE.MeshStandardMaterial({
-      color: 0x4a4540,
-      roughness: 1.0,
-      metalness: 0.0,
-      flatShading: true
-    });
-    for (let i = 0; i < 18; i++) {
-      const size = 0.25 + Math.pow(Math.random(), 2) * 1.1;
-      const ast = new THREE.Mesh(createAsteroidGeometry(size), asteroidMat);
-      ast.position.set(
-        (Math.random() - 0.5) * 90,
-        (Math.random() - 0.5) * 36,
-        -40 - Math.random() * 45
-      );
-      ast.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
-      ast.userData = {
-        rotSpeedX: (Math.random() - 0.5) * 0.12,
-        rotSpeedY: (Math.random() - 0.5) * 0.12
-      };
-      vista.add(ast);
-      this.asteroids.push(ast);
-    }
+    rings.position.copy(giantCenter);
+    rings.rotation.set(0.32 + Math.PI / 2, 0, 0.3);
+    vista.add(rings);
 
     this.group.add(vista);
   }
 
-  update(delta = 0.016, time = 0) {
-    // Slowly rotate planetary bodies
-    if (this.planet) {
-      this.planet.rotation.y += delta * 0.012;
-    }
-    if (this.gasGiant) {
-      this.gasGiant.rotation.y += delta * 0.02;
+  update(delta, time) {
+    for (const el of this.animatedElements) {
+      if (el.obj) el.obj.rotation.z += delta * el.speed;
     }
 
-    // Orbit moons in space
-    if (this.moons.length >= 2) {
-      this.moons[0].position.x = -6 + Math.sin(time * 0.08) * 3;
-      this.moons[1].position.y = 16 + Math.cos(time * 0.1) * 2;
-    }
-
-    // Tumble drifting asteroids
-    for (let ast of this.asteroids) {
-      ast.rotation.x += delta * ast.userData.rotSpeedX;
-      ast.rotation.y += delta * ast.userData.rotSpeedY;
-    }
-
-    // Swirl floating cabin air motes
     if (this.dustParticles) {
-      const pos = this.dustParticles.geometry.attributes.position.array;
-      for (let i = 0; i < pos.length; i += 3) {
-        pos[i + 1] -= delta * 0.08;
-        pos[i] += Math.sin(time * 0.5 + pos[i + 2]) * 0.002;
-        if (pos[i + 1] < 0) {
-          pos[i + 1] = 4.0;
-        }
+      const pos = this.dustParticles.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        let y = pos.getY(i) - delta * 0.08;
+        if (y < 0.2) y = 3.8;
+        pos.setY(i, y);
       }
-      this.dustParticles.geometry.attributes.position.needsUpdate = true;
-    }
-
-    // Animate spice holo elements
-    for (let el of this.holoElements) {
-      if (el.material && el.material.uniforms && el.material.uniforms.uTime) {
-        el.material.uniforms.uTime.value = time;
-      }
-      el.rotation.y += delta * 0.25;
-    }
-
-    // Orbit animated elements
-    for (let el of this.animatedElements) {
-      el.rotation.y += delta * 0.35;
+      pos.needsUpdate = true;
     }
   }
 }

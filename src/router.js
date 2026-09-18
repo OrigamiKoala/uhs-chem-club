@@ -198,10 +198,15 @@ export class Router {
     // torn down on every navigation that is not back into the same quest.
     if (!isLearnQuestRoute(raw)) disposeLearnQuest();
 
-    // If leaving quest scene, exit quest mode
-    if (raw !== '/quest' && raw !== '/demo' && !isLearnQuestRoute(raw) && stage.mode === 'quest') {
-      stage.exitQuestScene();
+    // If leaving quest scene or navigating to ship compartments
+    if (raw !== '/quest' && raw !== '/demo' && !isLearnQuestRoute(raw)) {
+      if (stage.mode === 'quest' || stage.mode === 'world') {
+        stage.enterShipScene(ROUTE_ROOM[raw] || 'bridge');
+      } else if (stage.mode === 'ship' && stage.cameraRig) {
+        stage.cameraRig.moveTo(ROUTE_ROOM[raw] || 'bridge');
+      }
     }
+
 
     // Crossfade soundscape room ambient bed
     soundscape.setRoom(ROUTE_ROOM[raw] || routeDef.room || 'bridge');
