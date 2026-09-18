@@ -83,7 +83,7 @@ class SessionManager {
     this.teams = [];
     this.events = {};
     this.activeQuest = null;
-    this.gfxTier = localStorage.getItem(GFX_KEY) || 'auto';
+    this.gfxTier = localStorage.getItem(GFX_KEY) || 'T4';
     this.reduceMotion = localStorage.getItem(MOTION_KEY) === 'true';
     this.sound = { master: 60, ambience: 60, effects: 60, muted: false };
     this.flags = { sessionZeroDone: false };

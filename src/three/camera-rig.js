@@ -8,13 +8,13 @@ import { session } from '../session.js';
 export const SHIP_ANCHORS = {
   cockpit: {
     name: 'Flight Cockpit',
-    pos: new THREE.Vector3(0, 1.45, 1.6),
-    target: new THREE.Vector3(0, 1.35, -20)
+    pos: new THREE.Vector3(0, 1.45, 2.4),
+    target: new THREE.Vector3(0, 1.45, 20)
   },
   bridge: {
     name: 'Command Bridge',
-    pos: new THREE.Vector3(0, 1.55, 2.0),
-    target: new THREE.Vector3(0, 1.35, -20)
+    pos: new THREE.Vector3(0, 1.55, 1.8),
+    target: new THREE.Vector3(0, 1.55, 20)
   },
   starmap: {
     name: 'Star Map & Navigation',

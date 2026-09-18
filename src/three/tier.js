@@ -35,22 +35,17 @@ export function isT4Eligible() {
     return false;
   }
 
-  // 3. Hardware concurrency >= 8
-  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 8) {
+  // 3. Hardware concurrency >= 4
+  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) {
     return false;
   }
 
-  // 4. Device memory >= 8 if reported
-  if (navigator.deviceMemory && navigator.deviceMemory < 8) {
+  // 4. Device memory >= 4 if reported
+  if (navigator.deviceMemory && navigator.deviceMemory < 4) {
     return false;
   }
 
-  // 5. DPR <= 2
-  if (window.devicePixelRatio && window.devicePixelRatio > 2.0) {
-    return false;
-  }
-
-  // 6. T4 not previously downgraded in this session
+  // 5. T4 not previously downgraded in this session
   if (session.t4Downgraded) {
     return false;
   }
@@ -60,7 +55,7 @@ export function isT4Eligible() {
 
 class TierManager {
   constructor() {
-    this.currentTier = 'T3';
+    this.currentTier = 'T4';
     this.probeComplete = false;
     this.frameTimes = [];
     this.probeFrames = 90;
@@ -88,21 +83,25 @@ class TierManager {
       return;
     }
 
-    // GPU vendor probe — ceiling is strictly T3 (never auto-probe into T4)
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-    let renderer = '';
-    if (debugInfo) {
-      renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '';
-    }
-
-    const isMobileOrSlow = /mali|adreno|powervr|intel|chromebook/i.test(renderer) ||
-      (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
-      (window.devicePixelRatio && window.devicePixelRatio > 2.5);
-
-    if (isMobileOrSlow) {
-      this.setTier('T2');
+    // Default to T4 if eligible, else T3 / T2
+    if (isT4Eligible()) {
+      this.setTier('T4');
     } else {
-      this.setTier('T3');
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      let renderer = '';
+      if (debugInfo) {
+        renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '';
+      }
+
+      const isMobileOrSlow = /mali|adreno|powervr|intel|chromebook/i.test(renderer) ||
+        (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
+        (window.devicePixelRatio && window.devicePixelRatio > 2.5);
+
+      if (isMobileOrSlow) {
+        this.setTier('T2');
+      } else {
+        this.setTier('T3');
+      }
     }
   }
 

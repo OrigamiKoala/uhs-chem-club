@@ -61,67 +61,12 @@ export function renderBridge(container) {
 
     if (isT4) {
       container.innerHTML = `
-        <div class="in-world-terminal bridge-terminal">
-          <div class="terminal-header">
-            <div>
-              <span class="eyebrow lit">// STARSHIP HELM //</span>
-              <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">COMMAND BRIDGE TERMINAL</h2>
-            </div>
-            <button type="button" id="close-bridge-terminal-btn" class="terminal-close-btn">[X] FREE WALK</button>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-            <div>
-              <div style="font-family: var(--font-imperial); font-size: 1.1rem; color: var(--text-bright); text-transform: uppercase;">
-                ${esc(p.display_name || "Cadet")}
-              </div>
-              <div class="eyebrow" style="font-size: 0.68rem;">${esc(t.name || t.team_id || "Unassigned")} GUILD · LVL ${prog.level} ${levelTitle(prog.level).toUpperCase()}</div>
-            </div>
-            <div class="tag live">${session.xp || 0} XP</div>
-          </div>
-
-          <!-- Transmission Box -->
-          <div style="padding: 0.75rem 0.9rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber); margin-bottom: 1.1rem;">
-            <div class="eyebrow lit" style="font-size: 0.6rem; margin-bottom: 0.25rem;">VESS // BRIDGE TRANSMISSION</div>
-            <p style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--accent-gold); margin: 0; line-height: 1.45;">
-              "${esc(transmissionText)}"
-            </p>
-          </div>
-
-          <!-- Mission Hub Pointer -->
-          <div class="glass-panel" style="margin-bottom: 1.1rem; padding: 1rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-              <span class="eyebrow lit">MISSION HUB</span>
-              <span class="tag ${isComplete ? "live" : "warn"}">${cleared} / ${TOTAL_STAGES} PYLONS</span>
-            </div>
-            <div style="font-size: 0.9rem; font-weight: 700; color: var(--text-bright); margin-bottom: 0.4rem;">
-              SECTOR 01 · THE CHARGE GARDENS
-            </div>
-            <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.8rem;">
-              All mission briefings and cartography are integrated into the Star Map holo-table.
-            </p>
-            <a href="#/starmap" class="btn-primary" style="display: block; text-align: center; text-decoration: none; font-size: 0.78rem; padding: 9px 12px;">
-              ACCESS STAR MAP (MISSION CARTOGRAPHY)
-            </a>
-          </div>
-
-          <!-- Compartment Decks Quick Access -->
-          <div style="border-top: 1px solid var(--border-durasteel); padding-top: 0.8rem;">
-            <div class="eyebrow" style="margin-bottom: 0.5rem;">COMPARTMENTS</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-              <a href="#/starmap" class="btn-secondary" style="font-size: 0.7rem; text-decoration: none; text-align: center;">Star Map</a>
-              <a href="#/leaderboard" class="btn-secondary" style="font-size: 0.7rem; text-decoration: none; text-align: center;">Fleet Comms</a>
-              <a href="#/inventory" class="btn-secondary" style="font-size: 0.7rem; text-decoration: none; text-align: center;">Cargo Hold</a>
-              <a href="#/quarters" class="btn-secondary" style="font-size: 0.7rem; text-decoration: none; text-align: center;">Quarters</a>
-            </div>
+        <div class="bridge-3d-hud" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 50; pointer-events: none; text-align: center;">
+          <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-amber); letter-spacing: 0.12em; background: rgba(18, 20, 24, 0.85); padding: 6px 16px; border: 1px solid var(--border-durasteel); text-transform: uppercase;">
+            WASD WALK · MOUSE LOOK · WALK TO COMPARTMENTS TO ACCESS
           </div>
         </div>
       `;
-
-      container.querySelector("#close-bridge-terminal-btn")?.addEventListener("click", () => {
-        const term = container.querySelector(".in-world-terminal");
-        if (term) term.style.display = "none";
-      });
       return;
     }
 

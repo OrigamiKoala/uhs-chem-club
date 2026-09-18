@@ -14,7 +14,10 @@ import {
   createFloorGrateTexture,
   createHazardStripesTexture,
   createCrtScreenTexture,
-  createControlPanelTexture
+  createControlPanelTexture,
+  createQuestHoloTexture,
+  createCommsStandingsTexture,
+  createCargoManifestTexture
 } from "./materials/textures.js";
 import {
   createPlanetMaterial,
@@ -23,6 +26,8 @@ import {
 } from "./materials/celestial.js";
 import { SHIP_GRAPH } from "./ship-graph.js";
 import { tierManager, tierAtLeast } from "./tier.js";
+import { session } from "../session.js";
+import { QUEST1_STORY } from "../story/quest1.js";
 
 export class ShipInterior {
   constructor(scene) {
@@ -279,22 +284,24 @@ export class ShipInterior {
     const bridgeGroup = new THREE.Group();
     bridgeGroup.position.set(0, 0, 2.0);
 
+    // Forward Observation Canopy at Z = 2.25 (world Z = 4.25, framing the forward viewport cutout)
     const canopyBase = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.7, 0.4), this.durasteelMat);
-    canopyBase.position.set(0, 0.35, -2.2);
+    canopyBase.position.set(0, 0.35, 2.25);
     const canopyTop = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.7, 0.4), this.durasteelMat);
-    canopyTop.position.set(0, 3.65, -2.2);
+    canopyTop.position.set(0, 3.65, 2.25);
     bridgeGroup.add(canopyBase, canopyTop);
 
     for (let x of [-3.2, -1.1, 1.1, 3.2]) {
       const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.24, 2.8, 0.35), this.durasteelMat);
-      mullion.position.set(x, 2.0, -2.2);
+      mullion.position.set(x, 2.0, 2.25);
       mullion.rotation.z = x < 0 ? -0.14 : 0.14;
       bridgeGroup.add(mullion);
     }
 
+    // Side Tactical Bridge Consoles (flanking the central walkway)
     for (let side of [-1, 1]) {
       const deskX = side * 2.2;
-      const deskZ = -1.2;
+      const deskZ = -0.6; // world Z = 1.4
 
       const deskTop = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 1.2), this.durasteelMat);
       deskTop.position.set(deskX, 0.85, deskZ);
@@ -340,67 +347,69 @@ export class ShipInterior {
       backrest.position.set(deskX, 0.82, deskZ + 1.1);
       bridgeGroup.add(consoleChassis, crtA, crtB, switchPlate, cable, chairBase, seat, backrest);
 
-      this.addCollider(deskX - 0.9, deskX + 0.9, deskZ - 0.7 + 2.0, deskZ + 0.7 + 2.0);
+      // Tight desk collider leaving X: -1.4 to 1.4 completely open for central spine
+      this.addCollider(deskX - 0.75, deskX + 0.75, 0.8, 1.8);
     }
 
     this.group.add(bridgeGroup);
   }
 
   buildCockpitRoom() {
-    // Flight Cockpit at anchor [0, 1.45, 1.6] facing forward
+    // Flight Helm at anchor [0, 1.45, 1.6] facing forward
+    // Styled as dual pilot & navigator flight pods flanking a clear central aisle
     const cockpitGroup = new THREE.Group();
-    cockpitGroup.position.set(0, 0, 1.6);
+    cockpitGroup.position.set(0, 0, 2.7);
 
-    const column = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.75, 8), this.ironMat);
-    column.position.set(0, 0.55, -0.6);
-    column.rotation.x = 0.22;
+    for (let side of [-1, 1]) {
+      const podX = side * 1.25;
 
-    const yokeBar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.42, 8), this.ironMat);
-    yokeBar.rotation.z = Math.PI / 2;
-    yokeBar.position.set(0, 0.92, -0.52);
+      const column = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.75, 8), this.ironMat);
+      column.position.set(podX, 0.55, 0.4);
+      column.rotation.x = -0.22;
 
-    const gripL = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.22, 8), this.durasteelMat);
-    gripL.position.set(-0.21, 0.98, -0.52);
-    const gripR = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.22, 8), this.durasteelMat);
-    gripR.position.set(0.21, 0.98, -0.52);
-    cockpitGroup.add(column, yokeBar, gripL, gripR);
+      const yokeBar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.42, 8), this.ironMat);
+      yokeBar.rotation.z = Math.PI / 2;
+      yokeBar.position.set(podX, 0.92, 0.48);
 
-    const dash = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.65, 0.55), this.durasteelMat);
-    dash.position.set(0, 0.95, -1.05);
-    dash.rotation.x = 0.35;
+      const gripL = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.22, 8), this.durasteelMat);
+      gripL.position.set(podX - 0.21, 0.98, 0.48);
+      const gripR = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.22, 8), this.durasteelMat);
+      gripR.position.set(podX + 0.21, 0.98, 0.48);
+      cockpitGroup.add(column, yokeBar, gripL, gripR);
 
-    const radarScreen = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.48, 0.04), this.crtAmberMat);
-    radarScreen.position.set(0, 1.0, -0.85);
-    radarScreen.rotation.x = 0.35;
+      const podDash = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.55, 0.45), this.durasteelMat);
+      podDash.position.set(podX, 0.95, 0.85);
+      podDash.rotation.x = -0.35;
 
-    const atScreen = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.44, 0.04), this.crtGreenMat);
-    atScreen.position.set(-0.68, 1.0, -0.85);
-    atScreen.rotation.x = 0.35;
+      const screen = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.32, 0.04), side < 0 ? this.crtAmberMat : this.crtGreenMat);
+      screen.position.set(podX, 1.0, 0.72);
+      screen.rotation.x = -0.35;
 
-    const auxScreen = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.44, 0.04), this.controlPanelMat);
-    auxScreen.position.set(0.68, 1.0, -0.85);
-    auxScreen.rotation.x = 0.35;
+      cockpitGroup.add(podDash, screen);
 
-    cockpitGroup.add(dash, radarScreen, atScreen, auxScreen);
+      // Pilot seat
+      const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.45, 8), this.ironMat);
+      chairBase.position.set(podX, 0.25, -0.15);
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.55), this.fabricMat);
+      seat.position.set(podX, 0.52, -0.15);
+      const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 0.08), this.fabricMat);
+      backrest.position.set(podX, 0.82, -0.4);
+      cockpitGroup.add(chairBase, seat, backrest);
 
-    const overheadConsole = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.25, 1.4), this.ironMat);
-    overheadConsole.position.set(0, 2.9, -0.2);
-    overheadConsole.rotation.x = 0.15;
-
-    const ohPanel = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.04, 1.1), this.controlPanelMat);
-    ohPanel.position.set(0, 2.76, -0.2);
-    ohPanel.rotation.x = 0.15;
-
-    for (let bx of [-0.9, 0.9]) {
-      const bundle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.8, 8), this.ironMat);
-      bundle.position.set(bx, 2.0, -0.6);
-      bundle.rotation.x = 0.45;
-      cockpitGroup.add(bundle);
+      // Colliders for pods only, leaving X in [-0.75, 0.75] and wing corridor Z in [1.8, 2.3] completely clear
+      this.addCollider(podX - 0.5, podX + 0.5, 2.3, 3.7);
     }
 
-    cockpitGroup.add(overheadConsole, ohPanel);
-    this.addCollider(-1.3, 1.3, 0.3, 1.1);
+    // Overhead avionics rack suspended above eye height (Y = 3.1)
+    const overheadConsole = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.25, 1.2), this.ironMat);
+    overheadConsole.position.set(0, 3.15, 0.2);
+    overheadConsole.rotation.x = -0.12;
 
+    const ohPanel = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 0.9), this.controlPanelMat);
+    ohPanel.position.set(0, 3.01, 0.2);
+    ohPanel.rotation.x = -0.12;
+
+    cockpitGroup.add(overheadConsole, ohPanel);
     this.group.add(cockpitGroup);
   }
 
@@ -409,49 +418,49 @@ export class ShipInterior {
     const starmapGroup = new THREE.Group();
     starmapGroup.position.set(3.2, 0, 1.8);
 
-    const tableBase = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.6, 0.85, 8), this.durasteelMat);
+    const tableBase = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 0.85, 8), this.durasteelMat);
     tableBase.position.set(0, 0.425, 0);
     tableBase.receiveShadow = true;
     starmapGroup.add(tableBase);
 
-    const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.35, 0.1, 8), this.ironMat);
+    const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 0.1, 8), this.ironMat);
     tableTop.position.set(0, 0.88, 0);
     starmapGroup.add(tableTop);
 
-    const rail = new THREE.Mesh(new THREE.TorusGeometry(1.52, 0.035, 8, 32), this.brassMat);
+    const rail = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.035, 8, 32), this.brassMat);
     rail.rotation.x = Math.PI / 2;
     rail.position.set(0, 0.92, 0);
 
     for (let a = 0; a < 8; a++) {
       const angle = a * (Math.PI * 2 / 8);
       const post = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.25, 6), this.ironMat);
-      post.position.set(Math.cos(angle) * 1.5, 0.8, Math.sin(angle) * 1.5);
+      post.position.set(Math.cos(angle) * 1.3, 0.8, Math.sin(angle) * 1.3);
       starmapGroup.add(post);
     }
     starmapGroup.add(rail);
 
-    const emitterRing = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.06, 24), this.brassMat);
+    const emitterRing = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.06, 24), this.brassMat);
     emitterRing.position.set(0, 0.95, 0);
     starmapGroup.add(emitterRing);
 
     const holoProjector = new THREE.Group();
-    holoProjector.position.set(0, 1.45, 0);
+    holoProjector.position.set(0, 1.35, 0);
 
     const wireSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(0.65, 16, 12),
+      new THREE.SphereGeometry(0.48, 16, 12),
       createHoloMaterial({ color: 0xffaa22, opacity: 0.35, wireframe: true })
     );
     holoProjector.add(wireSphere);
 
     const sunCore = new THREE.Mesh(
-      new THREE.SphereGeometry(0.12, 16, 16),
+      new THREE.SphereGeometry(0.1, 16, 16),
       new THREE.MeshBasicMaterial({ color: 0xffd166 })
     );
-    const sunLight = new THREE.PointLight(0xffaa22, 1.2, 6);
+    const sunLight = new THREE.PointLight(0xffaa22, 1.2, 5);
     holoProjector.add(sunCore, sunLight);
 
     for (let r = 0; r < 3; r++) {
-      const rad = 0.28 + r * 0.18;
+      const rad = 0.22 + r * 0.15;
       const orbitRing = new THREE.Mesh(
         new THREE.RingGeometry(rad - 0.005, rad + 0.005, 32),
         new THREE.MeshBasicMaterial({ color: 0xffaa22, side: THREE.DoubleSide, transparent: true, opacity: 0.6 })
@@ -459,7 +468,7 @@ export class ShipInterior {
       orbitRing.rotation.x = Math.PI / 2 + (r * 0.18);
       orbitRing.rotation.y = r * 0.25;
 
-      const planetGeo = new THREE.SphereGeometry(0.035 + r * 0.015, 12, 12);
+      const planetGeo = new THREE.SphereGeometry(0.028 + r * 0.012, 12, 12);
       const planetMesh = new THREE.Mesh(
         planetGeo,
         new THREE.MeshBasicMaterial({ color: r === 0 ? 0xcc8833 : (r === 1 ? 0xddaa55 : 0xaa6622) })
@@ -470,9 +479,23 @@ export class ShipInterior {
       holoProjector.add(orbitRing);
       this.animatedElements.push({ obj: orbitRing, speed: 0.3 / (r + 1) });
     }
-
     starmapGroup.add(holoProjector);
-    this.addCollider(3.2 - 1.6, 3.2 + 1.6, 1.8 - 1.6, 1.8 + 1.6);
+
+    // 3D Holographic Quest Display floating above table
+    const qTex = createQuestHoloTexture(0, 20, '');
+    this.starmapHoloMat = new THREE.MeshBasicMaterial({
+      map: qTex,
+      transparent: true,
+      opacity: 0.92,
+      side: THREE.DoubleSide
+    });
+    const holoPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.8), this.starmapHoloMat);
+    holoPlane.position.set(0, 1.95, 0);
+    this.animatedElements.push({ obj: holoPlane, speed: 0.05, isHover: true });
+    starmapGroup.add(holoPlane);
+
+    // Tight pedestal-only collider, leaving room walkable on all sides
+    this.addCollider(3.2 - 0.85, 3.2 + 0.85, 1.8 - 0.85, 1.8 + 0.85);
     this.group.add(starmapGroup);
   }
 
@@ -522,7 +545,8 @@ export class ShipInterior {
     bunkFrame.add(lockerA, lockerB);
 
     quartersGroup.add(bunkFrame);
-    this.addCollider(-3.8 - 1.8, -3.8 - 0.2, 2.2 - 0.7, 2.2 + 1.5);
+    // Bunks tight against port outer wall
+    this.addCollider(-5.4, -4.2, 1.7, 3.5);
 
     const deskShelf = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.6), this.ironMat);
     deskShelf.position.set(0.6, 0.9, -0.8);
@@ -546,7 +570,8 @@ export class ShipInterior {
     lampLight.position.set(0.75, 1.25, -0.65);
 
     quartersGroup.add(deskShelf, miniCrt, lampArm, lampHead, lampLight);
-    this.addCollider(-3.8 + 0.2, -3.8 + 1.1, 2.2 - 1.2, 2.2 - 0.4);
+    // Desk against wall
+    this.addCollider(-3.6, -2.8, 1.0, 1.8);
 
     this.group.add(quartersGroup);
   }
@@ -591,14 +616,24 @@ export class ShipInterior {
       }
     }
     cargoGroup.add(rackGroup);
-    this.addCollider(4.2 + 1.1, 4.2 + 2.5, -2.2 - 1.8, -2.2 + 1.8);
+    // Storage racks against starboard outer wall
+    this.addCollider(5.3, 6.7, -3.8, -0.6);
 
-    const containerA = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.2, 1.8), this.durasteelMat);
+    const containerA = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.6), this.durasteelMat);
     containerA.position.set(-1.4, 0.6, 1.2);
-    const containerB = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.2, 1.8), this.hazardMat);
+    const containerB = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.6), this.hazardMat);
     containerB.position.set(-1.4, 0.6, -1.0);
     cargoGroup.add(containerA, containerB);
-    this.addCollider(4.2 - 2.2, 4.2 - 0.6, -2.2 - 2.0, -2.2 + 2.2);
+    // Crates collider leaving walkways clear
+    this.addCollider(2.1, 3.5, -1.8, -0.2);
+
+    // 3D Cargo Manifest Terminal on container A facing room center
+    const mTex = createCargoManifestTexture(0, 8, '');
+    this.cargoScreenMat = new THREE.MeshBasicMaterial({ map: mTex });
+    const manifestScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.55), this.cargoScreenMat);
+    manifestScreen.position.set(-1.4, 1.15, 0.39);
+    manifestScreen.rotation.y = Math.PI;
+    cargoGroup.add(manifestScreen);
 
     this.group.add(cargoGroup);
   }
@@ -616,7 +651,10 @@ export class ShipInterior {
     osc.position.set(-0.6, 1.85, -0.8);
     commsGroup.add(osc);
 
-    const tel = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.65, 0.05), this.crtAmberMat);
+    // 3D Live Standings Screen on main console
+    const sTex = createCommsStandingsTexture([], '');
+    this.commsScreenMat = new THREE.MeshBasicMaterial({ map: sTex });
+    const tel = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.65, 0.05), this.commsScreenMat);
     tel.position.set(0.6, 1.85, -0.8);
     commsGroup.add(tel);
 
@@ -646,7 +684,8 @@ export class ShipInterior {
       commsGroup.add(cord);
     }
 
-    this.addCollider(-2.8 - 1.4, -2.8 + 1.4, -2.0 - 1.6, -2.0 - 0.1);
+    // Equipment rack against wall only, leaving floor in front clear
+    this.addCollider(-3.8, -1.8, -3.6, -2.4);
     this.group.add(commsGroup);
   }
 
@@ -706,7 +745,8 @@ export class ShipInterior {
       airlockGroup.add(vent, nozzle);
     }
 
-    this.addCollider(-2.5, 2.5, -6.8, -6.2);
+    // Outer airlock wall at Z = -6.5
+    this.addCollider(-2.0, 2.0, -7.0, -6.0);
     this.group.add(airlockGroup);
   }
 
@@ -733,7 +773,8 @@ export class ShipInterior {
 
   buildPlanetaryVista() {
     const vista = new THREE.Group();
-    const giantCenter = new THREE.Vector3(-30, 13, -95);
+    // Gas giant & ring system placed ahead through forward canopy (Z = +85) and visible through windows
+    const giantCenter = new THREE.Vector3(-25, 14, 85);
     const giantRadius = 22;
 
     const giant = new THREE.Mesh(
@@ -769,9 +810,39 @@ export class ShipInterior {
     this.group.add(vista);
   }
 
+  updateDisplays(questData = {}, standingsData = {}, inventoryData = {}) {
+    if (this.starmapHoloMat) {
+      const q = questData;
+      const newQTex = createQuestHoloTexture(q.cleared || 0, q.total || 20, q.transmission || '');
+      this.starmapHoloMat.map?.dispose();
+      this.starmapHoloMat.map = newQTex;
+      this.starmapHoloMat.needsUpdate = true;
+    }
+
+    if (this.commsScreenMat) {
+      const s = standingsData;
+      const newSTex = createCommsStandingsTexture(s.teams || [], s.chatter || '');
+      this.commsScreenMat.map?.dispose();
+      this.commsScreenMat.map = newSTex;
+      this.commsScreenMat.needsUpdate = true;
+    }
+
+    if (this.cargoScreenMat) {
+      const inv = inventoryData;
+      const newMTex = createCargoManifestTexture(inv.count || 0, inv.max || 8, inv.trinket || '');
+      this.cargoScreenMat.map?.dispose();
+      this.cargoScreenMat.map = newMTex;
+      this.cargoScreenMat.needsUpdate = true;
+    }
+  }
+
   update(delta, time) {
     for (const el of this.animatedElements) {
-      if (el.obj) el.obj.rotation.z += delta * el.speed;
+      if (el.isHover) {
+        el.obj.position.y = 1.95 + Math.sin(time * 1.5) * 0.04;
+      } else if (el.obj) {
+        el.obj.rotation.z += delta * el.speed;
+      }
     }
 
     if (this.dustParticles) {

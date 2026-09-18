@@ -349,3 +349,223 @@ export function createControlPanelTexture(width = 512, height = 256) {
   const texture = new THREE.CanvasTexture(canvas);
   return texture;
 }
+
+/**
+ * Creates 3D Holographic mission projection texture for Star Map holo-table
+ */
+export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '') {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+
+  // Dark holo emitter ground
+  ctx.fillStyle = '#0e0c08';
+  ctx.fillRect(0, 0, 512, 256);
+
+  // Scanlines
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+  for (let y = 0; y < 256; y += 3) {
+    ctx.fillRect(0, y, 512, 1.2);
+  }
+
+  // Border & corner clips
+  ctx.strokeStyle = '#d99423';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(12, 12, 488, 232);
+
+  // Eyebrow
+  ctx.font = 'bold 13px monospace';
+  ctx.fillStyle = '#d99423';
+  ctx.fillText('// PRIMARY OBJECTIVE · SECTOR 01 //', 24, 36);
+
+  // Title
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillStyle = '#e8e0d0';
+  ctx.fillText('EREBUS · THE CHARGE GARDENS', 24, 68);
+
+  ctx.font = '13px sans-serif';
+  ctx.fillStyle = '#c39a63';
+  ctx.fillText('"Find what pulls. Draw the line."', 24, 88);
+
+  // Status & Pylon progress
+  ctx.strokeStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.moveTo(24, 102);
+  ctx.lineTo(488, 102);
+  ctx.stroke();
+
+  ctx.font = 'bold 15px monospace';
+  ctx.fillStyle = cleared >= total ? '#6f8f3f' : '#d99423';
+  ctx.fillText(`PYLON GRID STATUS: ${cleared} / ${total} RESTORED`, 24, 126);
+
+  // Mini pylon bar
+  const barW = 464;
+  const step = barW / total;
+  for (let i = 0; i < total; i++) {
+    const isLit = i < cleared;
+    ctx.fillStyle = isLit ? '#6f8f3f' : '#2a2724';
+    ctx.fillRect(24 + i * step + 1, 136, step - 3, 10);
+  }
+
+  // Transmission excerpt
+  const msg = transmission || 'Pylons await connection. Check gauges before committing.';
+  ctx.font = 'italic 12px monospace';
+  ctx.fillStyle = '#8f8678';
+  const truncated = msg.length > 58 ? msg.slice(0, 56) + '…' : msg;
+  ctx.fillText(`VESS: "${truncated}"`, 24, 175);
+
+  // CTA
+  ctx.fillStyle = '#1f1d1a';
+  ctx.fillRect(24, 192, 464, 38);
+  ctx.strokeStyle = '#d99423';
+  ctx.strokeRect(24, 192, 464, 38);
+
+  ctx.font = 'bold 13px monospace';
+  ctx.fillStyle = '#d99423';
+  ctx.textAlign = 'center';
+  ctx.fillText('[E] / CLICK HOLO-TABLE TO DISEMBARK', 256, 216);
+  ctx.textAlign = 'left';
+
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+}
+
+/**
+ * Creates 3D CRT Monitor texture for Comms room displaying live Standings & intercepted chatter
+ */
+export function createCommsStandingsTexture(teams = [], chatter = '') {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+
+  // Cathode phosphor background
+  ctx.fillStyle = '#061208';
+  ctx.fillRect(0, 0, 512, 256);
+
+  // Scanlines
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  for (let y = 0; y < 256; y += 3) {
+    ctx.fillRect(0, y, 512, 1.2);
+  }
+
+  // CRT bezel border
+  ctx.strokeStyle = '#38b000';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(10, 10, 492, 236);
+
+  ctx.font = 'bold 14px monospace';
+  ctx.fillStyle = '#38b000';
+  ctx.fillText('[ FLEET COMMS // GUILD STANDINGS ]', 22, 34);
+
+  // Guild leaderboard rows
+  const defaultTeams = [
+    { rank: 1, name: 'THERMAL SMELTERS', score: 1840 },
+    { rank: 2, name: 'MINERAL MINING', score: 1620 },
+    { rank: 3, name: 'MOISTURE RIGS', score: 1450 },
+    { rank: 4, name: 'ATMOSPHERIC HARVESTERS', score: 1290 }
+  ];
+  const list = (teams && teams.length > 0) ? teams : defaultTeams;
+
+  ctx.font = '12px monospace';
+  let yPos = 62;
+  list.slice(0, 4).forEach((t, idx) => {
+    const r = String(t.rank || idx + 1).padStart(2, '0');
+    const nm = (t.name || t.team_id || 'GUILD').toUpperCase();
+    const sc = `${t.team_score || t.score || 0} XP`;
+    ctx.fillStyle = idx === 0 ? '#ff9f1c' : '#8fb055';
+    ctx.fillText(`${r}  ${nm.padEnd(28, '.')} ${sc}`, 22, yPos);
+    yPos += 22;
+  });
+
+  // Divider
+  ctx.strokeStyle = 'rgba(56, 176, 0, 0.3)';
+  ctx.beginPath();
+  ctx.moveTo(22, 158);
+  ctx.lineTo(490, 158);
+  ctx.stroke();
+
+  // Chatter snippet
+  ctx.font = '11px monospace';
+  ctx.fillStyle = '#6f8f3f';
+  ctx.fillText('INTERCEPTED FLEET TRAFFIC:', 22, 178);
+  ctx.fillStyle = '#ff9f1c';
+  const chat = chatter || 'Thermal Smelters: "Core temp nominal on Pylon 12. Transfer arc locked."';
+  const truncatedChat = chat.length > 56 ? chat.slice(0, 54) + '…' : chat;
+  ctx.fillText(truncatedChat, 22, 198);
+
+  ctx.font = 'bold 11px monospace';
+  ctx.fillStyle = '#38b000';
+  ctx.fillText('PRESS [E] / CLICK CONSOLE TO ACCESS FULL FLEET COMMS', 22, 226);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+}
+
+/**
+ * Creates 3D Cargo Manifest texture for Cargo Hold containers & terminals
+ */
+export function createCargoManifestTexture(itemCount = 0, maxSlots = 8, trinketName = '') {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+
+  // Industrial durasteel amber terminal background
+  ctx.fillStyle = '#15130f';
+  ctx.fillRect(0, 0, 512, 256);
+
+  // Scanlines
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  for (let y = 0; y < 256; y += 3) {
+    ctx.fillRect(0, y, 512, 1.2);
+  }
+
+  // Border
+  ctx.strokeStyle = '#c89218';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(10, 10, 492, 236);
+
+  ctx.font = 'bold 14px monospace';
+  ctx.fillStyle = '#ff9f1c';
+  ctx.fillText('[ CARGO HOLD 04 // SPICE & REFINERY SALVAGE ]', 22, 34);
+
+  // Stats
+  ctx.font = '13px monospace';
+  ctx.fillStyle = '#e8e0d0';
+  ctx.fillText(`CAPACITY: ${itemCount} / ${maxSlots} SLOTS OCCUPIED`, 22, 68);
+
+  const tName = trinketName || 'Standard Cadet Issue';
+  ctx.fillStyle = '#c39a63';
+  ctx.fillText(`PERSONAL LOCKER: ${tName.toUpperCase()}`, 22, 94);
+
+  ctx.strokeStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.moveTo(22, 110);
+  ctx.lineTo(490, 110);
+  ctx.stroke();
+
+  // Manifest items list
+  ctx.font = '12px monospace';
+  ctx.fillStyle = '#8f8678';
+  ctx.fillText('• SPICE RESONANCE MATRIX [EPIC] — PRIMARY HOUSING', 22, 134);
+  ctx.fillText('• REFINERY SENSOR ARRAYS & LOGIC CORES [COMMON]', 22, 156);
+  ctx.fillText('• ABLATIVE CRYO-COOLANT CANISTERS [TROPHY]', 22, 178);
+
+  // CTA
+  ctx.fillStyle = '#1f1d1a';
+  ctx.fillRect(22, 196, 468, 34);
+  ctx.strokeStyle = '#c89218';
+  ctx.strokeRect(22, 196, 468, 34);
+
+  ctx.font = 'bold 12px monospace';
+  ctx.fillStyle = '#ff9f1c';
+  ctx.textAlign = 'center';
+  ctx.fillText('[E] / CLICK TERMINAL TO DEPLOY SALVAGE & VIEW LOCKER', 256, 218);
+  ctx.textAlign = 'left';
+
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+}
+

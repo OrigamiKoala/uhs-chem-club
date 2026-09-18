@@ -12,6 +12,7 @@ import { ShipInterior } from "./ship.js";
 import { createStarfield } from "./materials/starfield.js";
 import { WorldScene } from "./world.js";
 import { FpsControls } from "./fps-controls.js";
+import { session } from "../session.js";
 
 class Stage {
   constructor() {
@@ -46,7 +47,8 @@ class Stage {
     const width = window.innerWidth;
     const height = window.innerHeight;
     this.camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
-    this.camera.position.set(0, 1.55, 2.0);
+    this.camera.position.set(0, 1.55, 1.8);
+    this.camera.lookAt(0, 1.55, 20);
 
     // 2. WebGL Renderer with proper color management
     this.renderer = new THREE.WebGLRenderer({
@@ -103,11 +105,53 @@ class Stage {
     // Ship Interior Model
     this.shipInterior = new ShipInterior(this.shipScene);
 
+    // Sync in-world 3D displays with session state
+    const syncShipDisplays = () => {
+      if (!this.shipInterior) return;
+      const prog = (session.progress || []).find(p => p.quest_id === "q1");
+      let reached = prog && typeof prog.stage_reached === "number" ? Number(prog.stage_reached) : 0;
+      try {
+        const local = parseInt(localStorage.getItem("avalon_q1_stage_reached"), 10);
+        if (!isNaN(local)) reached = Math.max(reached, local);
+      } catch (e) {}
+
+      const questData = {
+        cleared: Math.min(reached, 20),
+        total: 20,
+        transmission: reached >= 20 ? "SECTOR 01 COMPLETE" : `PYLON ${reached + 1} AWAITS CONNECTION`
+      };
+
+      const standingsData = {
+        teams: (session.teams && session.teams.length) ? session.teams.map(t => ({
+          name: t.name || t.team_id,
+          score: t.score || t.xp || 0
+        })) : [
+          { name: 'Earth', score: 1420 },
+          { name: 'Fire', score: 1180 },
+          { name: 'Water', score: 950 },
+          { name: 'Air', score: 810 }
+        ],
+        chatter: session.player ? `PILOT: ${session.player.display_name || session.player.email || 'CADET'}` : 'COMMS MONITOR: STANDBY'
+      };
+
+      const inventoryData = {
+        count: Array.isArray(session.inventory) ? session.inventory.length : 0,
+        max: 8,
+        trinket: session.player?.trinket || 'SPECTROMETER'
+      };
+
+      this.shipInterior.updateDisplays(questData, standingsData, inventoryData);
+    };
+
+    session.subscribe(syncShipDisplays);
+    syncShipDisplays();
+
     // Camera Rig
     this.cameraRig = new CameraRig(this.camera);
 
     // 4. First-person WASD controls with collision sliding and interaction
     this.fpsControls = new FpsControls(this.camera, this.canvas);
+    this.fpsControls.enabled = Boolean(session.token && session.player);
     this.fpsControls.setMode(
       "ship",
       null,
@@ -259,9 +303,14 @@ class Stage {
       this.renderer.render(this.worldScene.scene, this.camera);
     } else {
       // Ship Mode
+      const canMove = Boolean(session.token && session.player);
+      if (this.fpsControls) {
+        this.fpsControls.enabled = canMove;
+      }
+
       if (this.cameraRig && this.cameraRig.isTransitioning) {
         this.cameraRig.update(now);
-      } else if (this.fpsControls) {
+      } else if (this.fpsControls && canMove) {
         this.fpsControls.update(delta);
         const px = this.camera.position.x;
         const pz = this.camera.position.z;
@@ -280,6 +329,8 @@ class Stage {
         } else {
           this.fpsControls.hidePrompt();
         }
+      } else if (this.fpsControls) {
+        this.fpsControls.hidePrompt();
       }
 
       if (this.shipInterior) this.shipInterior.update(delta, time);
