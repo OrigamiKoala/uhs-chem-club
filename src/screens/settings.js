@@ -1,10 +1,6 @@
-/**
- * settings.js — Settings, Graphics Tier, and Password Change screen
- */
-
 import { api } from '../api.js';
 import { session } from '../session.js';
-import { tierManager } from '../three/tier.js';
+import { tierManager, isT4Eligible } from '../three/tier.js';
 import { showToast } from '../ui/toast.js';
 import { pageHeader } from '../ui/layout.js';
 import { bindPasswordReveal } from './register.js';
@@ -12,20 +8,40 @@ import { soundscape } from '../audio/soundscape.js';
 
 export function renderSettings(container) {
   const soundPrefs = session.sound;
+  const isT4 = tierManager.currentTier === 'T4';
+  const eligibleT4 = isT4Eligible();
+
+  const terminalHeaderMarkup = isT4 ? `
+    <div class="terminal-header">
+      <div>
+        <span class="eyebrow lit">// SYSTEMS CONSOLE //</span>
+        <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">SHIP SYSTEMS & PREFERENCES</h2>
+      </div>
+      <button type="button" id="close-settings-terminal-btn" class="terminal-close-btn">[X] FREE WALK</button>
+    </div>
+  ` : pageHeader({
+    eyebrow: 'Ship systems',
+    title: 'Settings',
+    actions: `<a href="#/bridge" class="btn-secondary" style="text-decoration: none;">Bridge</a>`
+  });
 
   container.innerHTML = `
-    <div class="screen-container m-screen m-settings" style="max-width: 680px;">
-      ${pageHeader({
-        eyebrow: 'Ship systems',
-        title: 'Settings',
-        actions: `<a href="#/bridge" class="btn-secondary" style="text-decoration: none;">Bridge</a>`
-      })}
+    <div class="${isT4 ? 'in-world-terminal settings-terminal' : 'screen-container m-screen m-settings'}" ${isT4 ? '' : 'style="max-width: 680px;"'}>
+      ${terminalHeaderMarkup}
 
       <!-- Section 1: Graphics & Performance -->
       <div class="glass-panel" style="margin-bottom: 1.5rem;">
         <h2 class="section-title" style="margin-bottom: 1.25rem;">Graphics Quality</h2>
 
         <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+          <label class="choice-option ${tierManager.currentTier === 'T4' ? 'selected' : ''} ${!eligibleT4 ? 'disabled' : ''}">
+            <input type="radio" name="gfx-tier" value="T4" ${tierManager.currentTier === 'T4' ? 'checked' : ''} ${!eligibleT4 ? 'disabled' : ''}>
+            <div>
+              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">T4 — ULTRA (CONTINUOUS 3D)</div>
+              <div class="eyebrow" style="margin-top: 3px;">Full continuous walk · atmospheric dust · PBR${!eligibleT4 ? ' · Requires WebGL2 & concurrency ≥ 8' : ''}</div>
+            </div>
+          </label>
+
           <label class="choice-option ${tierManager.currentTier === 'T3' ? 'selected' : ''}">
             <input type="radio" name="gfx-tier" value="T3" ${tierManager.currentTier === 'T3' ? 'checked' : ''}>
             <div>
@@ -201,4 +217,10 @@ export function renderSettings(container) {
       pwBtn.textContent = 'Change Password';
     }
   });
+
+  container.querySelector('#close-settings-terminal-btn')?.addEventListener('click', () => {
+    const term = container.querySelector('.in-world-terminal');
+    if (term) term.style.display = 'none';
+  });
 }
+

@@ -7,17 +7,19 @@ import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { showToast } from '../ui/toast.js';
 import { pageHeader, esc } from '../ui/layout.js';
+import { tierManager } from '../three/tier.js';
 import { checkDisplayName } from './register.js';
 import { BACKGROUNDS } from '../story/trinkets.js';
 import { QUEST1_STORY } from '../story/quest1.js';
 import { STAGE_CONFIGS } from '../quest3d/evaluator.js';
 
 export function renderQuarters(container) {
-  if (stage.cameraRig) {
+  if (stage.cameraRig && tierManager.currentTier !== 'T4') {
     stage.cameraRig.moveTo('quarters');
   }
 
   const p = session.player || {};
+  const isT4 = tierManager.currentTier === 'T4';
   let avatar = { suitColor: 'default', helmet: 'mark1', visor: 'gold', skin: 'medium' };
   try {
     if (p.avatar_json) avatar = JSON.parse(p.avatar_json);
@@ -36,18 +38,28 @@ export function renderQuarters(container) {
     clearedCount = Math.max(clearedCount, prog.stage_reached);
   }
 
-  container.innerHTML = `
-    <div class="screen-container m-screen m-quarters" style="max-width: 860px;">
-      ${pageHeader({
-        art: '/art/quarters.jpg',
-        video: '/video/airlock_loop.webm',
-        artAlt: '',
-        eyebrow: 'Crew record',
-        title: 'Crew Profile',
-        actions: `<a href="#/settings" class="btn-secondary" style="text-decoration: none;">Settings</a>`
-      })}
+  const terminalHeaderMarkup = isT4 ? `
+    <div class="terminal-header">
+      <div>
+        <span class="eyebrow lit">// CREW COMPARTMENT //</span>
+        <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">CREW DOSSIER & QUARTERS</h2>
+      </div>
+      <button type="button" id="close-quarters-terminal-btn" class="terminal-close-btn">[X] FREE WALK</button>
+    </div>
+  ` : pageHeader({
+    art: '/art/quarters.jpg',
+    video: '/video/airlock_loop.webm',
+    artAlt: '',
+    eyebrow: 'Crew record',
+    title: 'Crew Profile',
+    actions: `<a href="#/settings" class="btn-secondary" style="text-decoration: none;">Settings</a>`
+  });
 
-      <div class="m-grid-1 quarters-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+  container.innerHTML = `
+    <div class="${isT4 ? 'in-world-terminal quarters-terminal' : 'screen-container m-screen m-quarters'}" ${isT4 ? '' : 'style="max-width: 860px;"'}>
+      ${terminalHeaderMarkup}
+
+      <div class="m-grid-1 quarters-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
         <!-- Left: Avatar & Dossier -->
         <div class="holo-card quarters-dossier" style="text-align: center;">
           <div class="quarters-avatar" style="width: 126px; height: 126px; margin: 0 auto 1.25rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 14px rgba(0,0,0,0.9);">
@@ -257,4 +269,10 @@ export function renderQuarters(container) {
       renameBtn.textContent = 'Update';
     }
   });
+
+  container.querySelector('#close-quarters-terminal-btn')?.addEventListener('click', () => {
+    const term = container.querySelector('.in-world-terminal');
+    if (term) term.style.display = 'none';
+  });
 }
+

@@ -247,10 +247,102 @@ export function renderQuest(container) {
   let cleanStreak = 0;
 
   // Initialize 3D Quest Scene unless on Tier 1
-  if (tierManager.currentTier !== 'T1' && stage.canvas) {
+  const isT4 = tierManager.currentTier === 'T4';
+
+  if (isT4) {
+    stage.enterWorldScene();
+    if (stage.worldScene) {
+      stage.worldScene.setClearedStages(new Set(Array.from({ length: maxStageReached }, (_, i) => i + 1)));
+    }
+  } else if (tierManager.currentTier !== 'T1' && stage.canvas) {
     viewer = new QuestViewer(stage.canvas);
     stage.setQuestScene(viewer);
   }
+
+  function renderErebusHUD() {
+    container.innerHTML = `
+      <div class="erebus-world-hud">
+        <div class="erebus-hud-card">
+          <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.35rem;">
+            <a href="#/bridge" class="btn-secondary quest-btn-sm" style="text-decoration: none; font-size: 0.7rem;">
+              ← Return to Ship
+            </a>
+            <span class="eyebrow lit" style="font-size: 0.68rem;">SECTOR 01 // EREBUS</span>
+          </div>
+          <div style="font-family: var(--font-display); font-size: 0.85rem; font-weight: 700; color: var(--text-bright); text-transform: uppercase;">
+            The Charge Gardens
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-gold); margin-top: 0.2rem;">
+            Active Relay: Pylon ${Math.min(maxStageReached + 1, TOTAL_STAGES)} / ${TOTAL_STAGES} · Approach pylon to calibrate
+          </div>
+          <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); margin-top: 0.35rem;">
+            Controls: WASD Walk · Mouse Drag Look · [E] Deploy Chamber · Lander to Exit
+          </div>
+        </div>
+
+        <div class="erebus-hud-card" style="min-width: 220px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span class="eyebrow lit">BASIN RELAY LOOP</span>
+            <span class="tag live">${maxStageReached} / ${TOTAL_STAGES} ONLINE</span>
+          </div>
+          ${renderGardensMap({ clearedCount: maxStageReached, currentStageIdx: Math.min(maxStageReached, TOTAL_STAGES - 1), compact: true })}
+        </div>
+      </div>
+    `;
+
+    container.querySelectorAll('.gardens-map-pylon.reachable, .gardens-map-pylon.cleared').forEach(dot => {
+      dot.addEventListener('click', () => {
+        const idx = parseInt(dot.getAttribute('data-stage-idx'), 10);
+        if (!isNaN(idx) && idx <= maxStageReached) {
+          deployChamber(idx);
+        }
+      });
+    });
+  }
+
+  function deployChamber(idx) {
+    if (stage.canvas) {
+      viewer = new QuestViewer(stage.canvas);
+      stage.setQuestScene(viewer);
+    }
+    loadStage(idx);
+  }
+
+  function exitChamber() {
+    if (advanceTimer) {
+      clearTimeout(advanceTimer);
+      advanceTimer = null;
+    }
+    if (gradeObserver) {
+      gradeObserver.disconnect();
+      gradeObserver = null;
+    }
+    if (activeTransmission?.destroy) {
+      activeTransmission.destroy();
+      activeTransmission = null;
+    }
+    stage.exitQuestScene();
+    renderErebusHUD();
+  }
+
+  const onPylonInteract = (e) => {
+    if (!isT4) return;
+    const site = e.detail;
+    if (!site) return;
+    const targetIdx = site.stage - 1;
+    if (targetIdx > maxStageReached) {
+      showToast(`Pylon ${site.stage} is dormant. Calibrate preceding conduit relays first.`, 'info');
+      return;
+    }
+    deployChamber(targetIdx);
+  };
+  window.addEventListener('pylon:interact', onPylonInteract);
+
+  const cleanupPylon = () => {
+    window.removeEventListener('pylon:interact', onPylonInteract);
+    window.removeEventListener('hashchange', cleanupPylon);
+  };
+  window.addEventListener('hashchange', cleanupPylon);
 
   function loadStage(idx) {
     if (advanceTimer) {
@@ -342,9 +434,9 @@ export function renderQuest(container) {
         <!-- Top HUD -->
         <div class="quest-hud-top">
           <div class="quest-nav-cluster">
-            <a href="#/bridge" class="btn-secondary quest-btn-sm" style="text-decoration: none;">
-              ← Exit
-            </a>
+            <button type="button" id="quest-exit-btn" class="btn-secondary quest-btn-sm" title="${isT4 ? 'Return to Erebus surface' : 'Return to bridge'}">
+              ${isT4 ? '← Surface' : '← Exit'}
+            </button>
             <button type="button" id="prev-stage-btn" class="btn-secondary quest-btn-sm" ${currentStageIdx === 0 ? 'disabled' : ''} title="Previous stage" aria-label="Previous stage">
               ◀
             </button>
@@ -529,6 +621,14 @@ export function renderQuest(container) {
     dockGradeBtn?.addEventListener('click', () => {
       gradeBtn?.click();
       syncDockGradeBtn();
+    });
+
+    container.querySelector('#quest-exit-btn')?.addEventListener('click', () => {
+      if (isT4) {
+        exitChamber();
+      } else {
+        window.location.hash = '#/bridge';
+      }
     });
 
     // 2. Stage navigation
@@ -749,6 +849,10 @@ export function renderQuest(container) {
             if (streakEl) {
               streakEl.textContent = `${cleanStreak} CLEAN`;
               streakEl.classList.toggle('hidden', cleanStreak <= 0);
+            }
+
+            if (isT4 && stage.worldScene) {
+              stage.worldScene.setClearedStages(new Set(Array.from({ length: maxStageReached }, (_, i) => i + 1)));
             }
 
             gradeBtn.disabled = false;
@@ -1041,7 +1145,11 @@ export function renderQuest(container) {
       await playCinematic(QUEST1_STORY.arrival.cinematic);
     }
     if (window.location.hash.split('?')[0] !== '#/quest') return;
-    loadStage(currentStageIdx);
+    if (isT4) {
+      renderErebusHUD();
+    } else {
+      loadStage(currentStageIdx);
+    }
   };
   startQuest();
 
@@ -1058,9 +1166,12 @@ export function renderQuest(container) {
         const reached = Math.min(Number(remote.stage_reached), TOTAL_STAGES);
         if (reached > maxStageReached) {
           maxStageReached = reached;
+          if (isT4 && stage.worldScene) {
+            stage.worldScene.setClearedStages(new Set(Array.from({ length: maxStageReached }, (_, i) => i + 1)));
+          }
           // Only jump the player forward if they have not started playing yet, and
           // never on a completed quest — there, stage 1 is a deliberate replay start.
-          if (currentStageIdx === 0 && maxStageReached < TOTAL_STAGES) loadStage(navMaxIdx());
+          if (!isT4 && currentStageIdx === 0 && maxStageReached < TOTAL_STAGES) loadStage(navMaxIdx());
         }
       }
     }

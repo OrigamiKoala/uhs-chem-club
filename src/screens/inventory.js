@@ -5,14 +5,16 @@
 import { api } from '../api.js';
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
+import { tierManager } from '../three/tier.js';
 import { showToast } from '../ui/toast.js';
 import { pageHeader, emptyState, esc } from '../ui/layout.js';
 
 export function renderInventory(container) {
-  if (stage.cameraRig) {
+  if (stage.cameraRig && tierManager.currentTier !== 'T4') {
     stage.cameraRig.moveTo('cargo');
   }
 
+  const isT4 = tierManager.currentTier === 'T4';
   let inventory = session.inventory || [];
 
   // `usable` marks the items that actually do something today. The rest are trophies —
@@ -30,16 +32,26 @@ export function renderInventory(container) {
   function render() {
     const trinketData = session.player?.trinket || session.trinket || null;
 
+    const terminalHeader = isT4 ? `
+      <div class="terminal-header">
+        <div>
+          <span class="eyebrow lit">// CARGO COMPARTMENT //</span>
+          <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">CARGO MANIFEST & SALVAGE</h2>
+        </div>
+        <button type="button" id="close-inv-terminal-btn" class="terminal-close-btn">[X] FREE WALK</button>
+      </div>
+    ` : pageHeader({
+      art: '/art/cargo.jpg',
+      video: '/video/cargo_loop.webm',
+      artAlt: '',
+      eyebrow: 'Cargo manifest',
+      title: 'Inventory',
+      actions: `<span class="tag">${inventory.length} / 8 slots</span>`
+    });
+
     container.innerHTML = `
-      <div class="screen-container m-screen m-inventory">
-        ${pageHeader({
-          art: '/art/cargo.jpg',
-          video: '/video/cargo_loop.webm',
-          artAlt: '',
-          eyebrow: 'Cargo manifest',
-          title: 'Inventory',
-          actions: `<span class="tag">${inventory.length} / 8 slots</span>`
-        })}
+      <div class="${isT4 ? 'in-world-terminal inventory-terminal' : 'screen-container m-screen m-inventory'}">
+        ${terminalHeader}
 
         ${trinketData ? `
           <div class="glass-panel inv-locker" style="margin-bottom: 1.5rem; padding: 1.1rem 1.25rem; border-left: 2px solid var(--accent-gold);">
@@ -134,6 +146,11 @@ export function renderInventory(container) {
           btn.textContent = 'Deploy';
         }
       });
+    });
+
+    container.querySelector('#close-inv-terminal-btn')?.addEventListener('click', () => {
+      const term = container.querySelector('.in-world-terminal');
+      if (term) term.style.display = 'none';
     });
   }
 

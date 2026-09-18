@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
+import { tierManager } from '../three/tier.js';
 import { pageHeader, esc } from '../ui/layout.js';
 
 const TEAM_ACCENTS = {
@@ -17,10 +18,11 @@ const TEAM_ACCENTS = {
 const PROPER = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
 
 export async function renderLeaderboard(container) {
-  if (stage.cameraRig) {
+  if (stage.cameraRig && tierManager.currentTier !== 'T4') {
     stage.cameraRig.moveTo('comms');
   }
 
+  const isT4 = tierManager.currentTier === 'T4';
   let activeTab = 'teams';
   let lbData = { individual: [], teams: [] };
   let loading = true;
@@ -29,27 +31,49 @@ export async function renderLeaderboard(container) {
   function render() {
     const hasData = (lbData.teams || []).length > 0 || (lbData.individual || []).length > 0;
 
+    const terminalHeaderMarkup = isT4 ? `
+      <div class="terminal-header">
+        <div>
+          <span class="eyebrow lit">// COMMS COMPARTMENT //</span>
+          <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">FLEET COMMS & STANDINGS</h2>
+        </div>
+        <button type="button" id="close-comms-terminal-btn" class="terminal-close-btn">[X] FREE WALK</button>
+      </div>
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 0.8rem;">
+        <div class="lb-tabs" style="display: flex; gap: 0.5rem;" role="tablist" aria-label="Standings view">
+          <button type="button" id="tab-teams" role="tab" aria-selected="${activeTab === 'teams'}"
+                  class="btn-chip ${activeTab === 'teams' ? 'active' : ''}" style="font-size: 0.76rem; padding: 6px 14px; font-weight: 700;">
+            Guilds
+          </button>
+          <button type="button" id="tab-indiv" role="tab" aria-selected="${activeTab === 'individual'}"
+                  class="btn-chip ${activeTab === 'individual' ? 'active' : ''}" style="font-size: 0.76rem; padding: 6px 14px; font-weight: 700;">
+            Players
+          </button>
+        </div>
+      </div>
+    ` : pageHeader({
+      art: '/art/comms.jpg',
+      video: '/video/comms_loop.webm',
+      artAlt: 'Comms array',
+      eyebrow: 'Sector 01 Comms & Standings',
+      title: 'Fleet Comms',
+      actions: `
+        <div class="lb-tabs" style="display: flex; gap: 0.5rem;" role="tablist" aria-label="Standings view">
+          <button type="button" id="tab-teams" role="tab" aria-selected="${activeTab === 'teams'}"
+                  class="btn-chip ${activeTab === 'teams' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
+            Guilds
+          </button>
+          <button type="button" id="tab-indiv" role="tab" aria-selected="${activeTab === 'individual'}"
+                  class="btn-chip ${activeTab === 'individual' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
+            Players
+          </button>
+        </div>
+      `
+    });
+
     container.innerHTML = `
-      <div class="screen-container m-screen m-leaderboard">
-        ${pageHeader({
-          art: '/art/comms.jpg',
-          video: '/video/comms_loop.webm',
-          artAlt: 'Comms array',
-          eyebrow: 'Sector 01 Comms & Standings',
-          title: 'Fleet Comms',
-          actions: `
-            <div class="lb-tabs" style="display: flex; gap: 0.5rem;" role="tablist" aria-label="Standings view">
-              <button type="button" id="tab-teams" role="tab" aria-selected="${activeTab === 'teams'}"
-                      class="btn-chip ${activeTab === 'teams' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
-                Guilds
-              </button>
-              <button type="button" id="tab-indiv" role="tab" aria-selected="${activeTab === 'individual'}"
-                      class="btn-chip ${activeTab === 'individual' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
-                Players
-              </button>
-            </div>
-          `
-        })}
+      <div class="${isT4 ? 'in-world-terminal comms-terminal' : 'screen-container m-screen m-leaderboard'}">
+        ${terminalHeaderMarkup}
 
         <!-- Intercepted Comms Chatter -->
         <div class="glass-panel lb-chatter" style="margin-bottom: 1.25rem; padding: 0.85rem 1.1rem; border-left: 2px solid var(--accent-amber);">
@@ -99,6 +123,11 @@ export async function renderLeaderboard(container) {
     container.querySelector('#tab-teams')?.addEventListener('click', () => { activeTab = 'teams'; render(); });
     container.querySelector('#tab-indiv')?.addEventListener('click', () => { activeTab = 'individual'; render(); });
     container.querySelector('#lb-retry')?.addEventListener('click', () => { loading = true; failed = false; render(); load(); });
+
+    container.querySelector('#close-comms-terminal-btn')?.addEventListener('click', () => {
+      const term = container.querySelector('.in-world-terminal');
+      if (term) term.style.display = 'none';
+    });
   }
 
   function renderTeams() {

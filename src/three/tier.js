@@ -152,6 +152,10 @@ class TierManager {
     this.currentTier = tier;
     session.setGfxTier(tier);
 
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.classList.toggle('tier-t4', tier === 'T4');
+    }
+
     // Toggle backdrop visibility
     const fallbackEl = document.getElementById('fallback-backdrop');
     const canvasEl = document.getElementById('webgl-canvas');

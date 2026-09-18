@@ -971,3 +971,127 @@ body::after {
   .toast { max-width: none; }
   .stat-row { gap: 1rem; }
 }
+
+/* ===================================================================
+   IN-WORLD TERMINAL OVERLAYS (T4 3D World Integration)
+   Tactical chamfered glass panels overlaid into the continuous 3D world.
+   =================================================================== */
+.in-world-terminal {
+  pointer-events: auto;
+  position: fixed;
+  right: 1.5rem;
+  top: calc(var(--hud-h) + 1.2rem);
+  bottom: 1.5rem;
+  width: min(580px, calc(100vw - 3rem));
+  max-height: calc(100vh - var(--hud-h) - 3rem);
+  overflow-y: auto;
+  background: rgba(14, 12, 10, 0.90);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-durasteel);
+  border-top: 2px solid var(--accent-amber);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+  padding: 1.25rem;
+  z-index: 50;
+  color: var(--text-primary);
+}
+
+.terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--border-durasteel);
+}
+
+.terminal-close-btn {
+  background: transparent;
+  border: 1px solid var(--border-durasteel);
+  color: var(--accent-gold);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  transition: all 0.15s ease;
+}
+
+.terminal-close-btn:hover {
+  background: var(--plate-200);
+  border-color: var(--accent-amber);
+  color: var(--text-bright);
+}
+
+body.tier-t4 .app-viewport {
+  pointer-events: none;
+}
+
+body.tier-t4 .app-viewport > * {
+  pointer-events: auto;
+}
+
+/* Erebus in-world exploration HUD */
+.erebus-world-hud {
+  pointer-events: none;
+  position: fixed;
+  top: calc(var(--hud-h) + 1rem);
+  left: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 40;
+}
+
+.erebus-hud-card {
+  pointer-events: auto;
+  background: rgba(14, 12, 10, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-durasteel);
+  border-left: 2px solid var(--accent-amber);
+  padding: 0.75rem 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+}
+
+.deployed-chamber-overlay {
+  pointer-events: auto;
+  position: fixed;
+  inset: calc(var(--hud-h) + 1rem) 1.5rem 1.5rem 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  background: rgba(10, 9, 8, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-durasteel);
+  border-top: 2px solid var(--accent-amber);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+  padding: 1.25rem;
+  z-index: 60;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .in-world-terminal {
+    right: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+    top: calc(var(--hud-h) + 0.5rem);
+    bottom: 0.5rem;
+  }
+  .erebus-world-hud {
+    left: 0.75rem;
+    right: 0.75rem;
+    top: calc(var(--hud-h) + 0.5rem);
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .deployed-chamber-overlay {
+    inset: calc(var(--hud-h) + 0.5rem) 0.5rem 0.5rem 0.5rem;
+    padding: 0.85rem;
+  }
+}
+
