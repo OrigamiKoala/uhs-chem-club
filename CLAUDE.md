@@ -158,26 +158,29 @@ into grinding and would punish the students it exists to help.
   with the core drawn to scale, which is a speck), `core` (the grains separated and
   probeable, marked ones told apart by a stencilled cross and never by colour) and `rings`
   (light pieces at fixed radii). It carries a beam whose return counts are fixed by which
-  track hits the axis rather than by a threshold on a spread, a stripper that knocks one
-  light piece off the outermost ring, and a reset. It knows no chemistry: a mark is a mark,
+  track hits the axis rather than by a threshold on a spread (drawn with high-contrast
+  through-tracks, bright #e0982b rebound beam, and central impact spark), a stripper that knocks
+  one light piece off the outermost ring, and a reset. It knows no chemistry: a mark is a mark,
   and what a specimen *does* (`behaviourOf`) lives in the quest.
   `frame.js` is the **quest frame**: stage rail (cleared lamps are
-  walkable — there is no XP here for a replay to farm), reopenable briefing and debrief stepper
+  walkable — there is no XP here for a replay to farm; 44px touch strips on mobile), diegetic
+  Exit and Findings review buttons, reopenable briefing and debrief stepper
   mounted via `createTransmissionElement` (diegetic CRT video loop, typewriter audio ticks and
   Vess radio murmur), prompt, readout, answer region, Commit key, miss banner, hint ladder (rung 1 free,
-  rung 2 after a miss or 45 s, rung 3 after two misses), and reward card. It never sees an answer; the quest
-  calls `clear()` or `miss()`. Briefings establish narrative problem context while prompts state
-  un-prescriptive objectives giving players free reign over bench tools. Real chemistry concepts
-  are introduced immediately after each stage on its reward card (Quest 1: atoms, elements, atomic mass,
-  chemical bonds, molecules, compounds, mixture separation, matter classification; Quest 2: nucleus &
-  Rutherford model, protons & neutrons, electrons & neutrality, electron shells & Bohr model, valence
-  electrons & octet rule, atomic number & isotopes, ions & net charge, subatomic architecture) so learners
-  connect hands-on observations directly to chemistry rather than waiting for an end-of-quest lecture.
+  rung 2 after a miss or 45 s, rung 3 after two misses; copy accurately conveys both paths), and reward card.
+  Supports soft refusals via `{ ok: false, notYet: true, msg }` routed through `frame.note()` without burning hint rungs.
+  It never sees an answer; the quest calls `clear()` or `miss()`. Briefings establish narrative problem context
+  (max 2 sentences per stage briefing per CLAUDE.md §7) while prompts state un-prescriptive objectives giving players
+  free reign over bench tools. Real chemistry concepts are introduced immediately after each stage on its reward card
+  (Quest 1: atoms, elements, atomic mass, chemical bonds, molecules, compounds, mixture separation, matter classification;
+  Quest 2: nucleus & Rutherford model, protons & neutrons, electrons & neutrality, electron shells & Bohr model, valence
+  electrons & octet rule, atomic number & isotopes, ions & net charge, subatomic architecture) so learners connect
+  hands-on observations directly to chemistry rather than waiting for an end-of-quest lecture.
   In `scope.js`, single-unit samples (`total <= 1`) are centered at `[0, 0]` so high-magnification targets
   remain visible in the aperture.
 - **Screens** — `learn.js` (the road), `learn-world.js` (one world's quests),
   `learn-quest.js` (the host frame). Styling in `src/styles/learn.css` (`.lq-*` for the
-  quest bench, `.scope-*` for the instrument); phone rules under `.m-learn`,
+  quest bench, `.scope-*` for the instrument, `.lq-choice-row`, `.lq-tally`); phone rules under `.m-learn`,
   `.m-learn-world`, `.m-learn-quest` in `mobile-screens.css`.
 - **Endpoints** — `learn/progress`, `learn/stage`, `learn/complete`. None returns an XP
   field; `learn/complete` is idempotent. Rows ride along on `bootstrap` and `player/me` as
@@ -193,7 +196,10 @@ its chart, and a table-driven quest exports `STAGES`, `SOLUTIONS`, `MISSES` and 
 so the check can assert — as `verify:quest` does for the Charge Gardens — that the intended
 solution grades correct, that a plausible wrong answer is refused **with a reason**, that an
 untouched bench never grades correct, that every stage has exactly three distinct hint rungs
-and a reward card, and that every bench declaration is well formed. It reads both styles:
+and a reward card, that every bench declaration is well formed, that all `quest-btn-sm` buttons carry
+`btn-secondary` or `btn-primary`, that stage briefings do not exceed 2 sentences, that sample notes
+describe provenance only without leaking answers, and that all prompt/hints/briefings/check messages
+comply with withheld vocabulary rules. It reads both styles:
 `samples` with `particles` for the sampler scope (real kinds, `geom` covering every piece,
 bonds inside the cluster) and `specimens` with `core` and `rings` for the core bench, where
 shell capacity is enforced — two on the nearest ring, eight after that, nothing further out
@@ -219,15 +225,13 @@ numbers, never explained here; the debrief points at them as the hook into `q3-c
 ### World 1 quest 2 — The Inside of a Piece (`unit01/q2-core`, live)
 Eight stages on the core bench in Tallow's sub-level diagnostic lab, picking up where quest 1's
 blade stopped. The Avalon needs reactor calibration and ion drive propellant from Imperial
-deep-salvage canisters. Vess delivers in-character briefings across all eight stages: fire an alpha
-particle beam through a mounted piece and read the 1-in-40 rebound → tune magnetic focus coils to
-count marked grains in the core → read a sealed radiation canister at zero net charge to deduce
-light count → arrange eleven light pieces on rings against two resolved references → test two
-specimens with a dying tester cell to predict outermost-ring valence trading → separate two
-specimens of identical weight by marked proton count to certify reactor coolant → strip light
-pieces until the needle reads plus two for ion drive propellant → certify three unlabelled
-canisters on the orbital transfer manifest (isotope, ion, distinct element). Player-facing
-vocabulary before the debrief is *piece, core, grain, mark, ring, light piece, specimen, needle*;
+deep-salvage canisters. Vess delivers clear, simple, jargon-free briefings across all eight stages:
+fire a beam through a mounted piece to find its structure → count marked grains in the core →
+deduce light particles from a sealed zero-charge canister → place eleven light pieces onto rings →
+test specimens with a low-charge tester to predict trading behavior → check core marks to find coolant
+match → strip light pieces to reach net charge plus two → classify three canisters on the manifest.
+Briefings state the problem simply and plainly without technobabble or premature jargon.
+Player-facing vocabulary before the debrief is *piece, core, grain, mark, ring, light piece, specimen, needle*;
 the debrief names nucleus, proton, neutron (with isotope), electron, shell, valence and ion. Every
 specimen is a real nuclide and balances unless a stage has stripped it. **The quest never connects
 the marked count to the scope's catalogue** — the core bench does not talk to the catalogue,

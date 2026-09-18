@@ -68,7 +68,8 @@ export class LearnFrame {
                 <h2 class="lq-stage-title"></h2>
               </div>
               <div class="lq-stage-actions">
-                <button type="button" class="quest-btn-sm" data-act="objective">Objective</button>
+                <button type="button" class="btn-secondary quest-btn-sm" data-act="exit">Exit</button>
+                <button type="button" class="btn-secondary quest-btn-sm" data-act="objective">Objective</button>
               </div>
             </div>
             <div class="lq-controls"></div>
@@ -95,6 +96,7 @@ export class LearnFrame {
       rail: q('.lq-rail'),
       kicker: q('.lq-kicker'),
       title: q('.lq-stage-title'),
+      stageActions: q('.lq-stage-actions'),
       controls: q('.lq-controls'),
       scope: q('.lq-scope'),
       prompt: q('.lq-prompt'),
@@ -114,6 +116,8 @@ export class LearnFrame {
       else if (act === 'next') this.opts.onNext();
       else if (act === 'hint') this.takeHint();
       else if (act === 'objective') this.showBriefing();
+      else if (act === 'exit') this.opts.onExit?.();
+      else if (act === 'reward') this.showFindings();
 
       // Any stage already cleared can be walked back into. This is a study road
       // and re-reading is the point of it; there is no XP here for a replay to
@@ -167,11 +171,22 @@ export class LearnFrame {
     this.el.commit = this.el.actions.querySelector('.lq-commit');
     this.el.hintKey = this.el.actions.querySelector('.lq-hint-key');
 
+    this.updateStageActions();
     this.updateRail();
     // Walking to the next stage should bring the bench back into view — on a
     // phone the Next key sits below it. Arriving at the quest should not move
     // the page at all.
     if (advancing) this.container.querySelector('.lq')?.scrollIntoView({ block: 'nearest' });
+  }
+
+  updateStageActions() {
+    if (!this.el.stageActions) return;
+    const canReview = this.stage?.reward && (this.cleared > (this.stage.index ?? 0) || this.solved);
+    this.el.stageActions.innerHTML = `
+      <button type="button" class="btn-secondary quest-btn-sm" data-act="exit">Exit</button>
+      <button type="button" class="btn-secondary quest-btn-sm" data-act="objective">Objective</button>
+      ${canReview ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="reward">Findings</button>' : ''}
+    `;
   }
 
   setControls(html) { this.el.controls.innerHTML = html; }
@@ -236,6 +251,8 @@ export class LearnFrame {
   clear(reward) {
     this.solved = true;
     soundscape.playBondSnap?.();
+    this.el.hints.innerHTML = '';
+    this.updateStageActions();
     this.el.banner.innerHTML = `
       <div class="stage-error-banner stage-success-banner">
         <span class="banner-mark" aria-hidden="true">//</span>
@@ -271,7 +288,7 @@ export class LearnFrame {
     const allowed = Math.min(this.availableRung(), hints.length);
     if (this.rung >= allowed) {
       this.el.hints.innerHTML += `
-        <p class="lq-hint lq-hint-wait">Keep looking. The next reading opens after another try.</p>
+        <p class="lq-hint lq-hint-wait">Keep looking. The next reading opens after another try or after 45 seconds.</p>
       `;
       return;
     }
@@ -302,7 +319,6 @@ export class LearnFrame {
           <div class="eyebrow lit">${esc(speaker)}</div>
           <h2 id="lq-briefing-title" class="section-title">${esc(this.stage.title)}</h2>
         </div>
-        <span class="tag live">STAGE ${stageIdx} OF ${this.stageCount}</span>
       </div>
       <div id="lq-modal-transmission" style="margin-bottom: 1.15rem;"></div>
       <div class="debrief-controls-left lq-modal-keys">
@@ -331,6 +347,29 @@ export class LearnFrame {
         this.activeBriefingTx.destroy();
         this.activeBriefingTx = null;
       }
+      closeModal();
+      soundscape.playNavRelayClick?.();
+    });
+  }
+
+  showFindings() {
+    if (!this.stage?.reward) return;
+    const r = this.stage.reward;
+    showModal(`
+      <div class="quest-modal-head lq-modal-head" style="margin-bottom: 0.85rem;">
+        <div>
+          <div class="eyebrow lit">What you found</div>
+          <h2 id="lq-findings-title" class="section-title">${esc(r.title)}</h2>
+        </div>
+      </div>
+      <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-primary); margin-bottom: 1.2rem;">${esc(r.body)}</p>
+      <div class="debrief-controls-left lq-modal-keys">
+        <button type="button" class="btn-primary" data-lq-close>Close</button>
+      </div>
+    `, {
+      labelledBy: 'lq-findings-title'
+    });
+    document.querySelector('[data-lq-close]')?.addEventListener('click', () => {
       closeModal();
       soundscape.playNavRelayClick?.();
     });

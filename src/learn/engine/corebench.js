@@ -479,12 +479,12 @@ export class CoreBench {
 
   drawBeam(ctx, plate, g) {
     const { tracks, t } = plate.beam;
-    ctx.lineWidth = 1.2;
     tracks.forEach(tr => {
       const head = Math.min(1, Math.max(0, (t - tr.delay) / 0.55));
       if (head <= 0) return;
-      ctx.strokeStyle = tr.kind === 'back' ? AMBER : 'rgba(111, 143, 63, 0.55)';
-      ctx.globalAlpha = tr.kind === 'through' ? 0.5 : 0.9;
+      ctx.lineWidth = tr.kind === 'back' ? 2.5 : tr.kind === 'wide' ? 2.0 : 1.5;
+      ctx.strokeStyle = tr.kind === 'back' ? AMBER : tr.kind === 'wide' ? '#8fa85b' : 'rgba(126, 168, 70, 0.85)';
+      ctx.globalAlpha = tr.kind === 'back' ? 1.0 : tr.kind === 'wide' ? 0.9 : 0.75;
       ctx.beginPath();
       const pts = tr.path;
       ctx.moveTo(g.cx + pts[0][0] * g.aperture, g.cy + pts[0][1] * g.aperture);
@@ -499,6 +499,13 @@ export class CoreBench {
         );
       }
       ctx.stroke();
+
+      if (tr.kind === 'back' && head > 0.25) {
+        ctx.fillStyle = AMBER;
+        ctx.beginPath();
+        ctx.arc(g.cx + pts[1][0] * g.aperture, g.cy + pts[1][1] * g.aperture, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.globalAlpha = 1;
     });
   }

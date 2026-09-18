@@ -94,10 +94,44 @@
 
 .btn-secondary.quest-btn-sm,
 .quest-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: var(--plate-300);
+  color: var(--text-primary);
+  font-family: var(--font-display);
   font-size: 0.68rem;
-  padding: 6px 11px;
-  min-height: 34px;
+  font-weight: 600;
   letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 6px 11px;
+  border: 1px solid var(--border-durasteel);
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 var(--seam-light),
+    inset 0 -1px 0 var(--seam-dark),
+    0 2px 0 #0c0b0a;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.08s ease;
+  min-height: 34px;
+  text-shadow: var(--engrave);
+}
+
+.quest-btn-sm:hover:not(:disabled) {
+  background: var(--plate-400);
+  color: var(--text-bright);
+  border-color: var(--plate-500);
+}
+
+.quest-btn-sm:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.quest-btn-sm:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .stage-counter {

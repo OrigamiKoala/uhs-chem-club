@@ -308,17 +308,30 @@
   .m-learn-quest .lq-body { grid-template-columns: 1fr !important; gap: 0.7rem; }
   .m-learn-quest .lq-deck { position: static !important; padding: 0.85rem 0.8rem; }
 
-  .m-learn-quest .lq-rail { gap: 3px; padding: 5px 6px; }
-  .m-learn-quest .lq-lamp { height: 26px; font-size: 0.5rem; letter-spacing: 0.02em; }
+  .m-learn-quest .lq-rail { gap: 4px; padding: 5px 6px; }
+  .m-learn-quest .lq-lamp {
+    height: 36px;
+    min-height: 36px;
+    font-size: 0.58rem;
+    letter-spacing: 0.02em;
+    position: relative;
+  }
+  .m-learn-quest .lq-lamp::before {
+    content: '';
+    position: absolute;
+    inset: -4px 0;
+  }
 
   .m-learn-quest .lq-stage-head { align-items: flex-start; }
   .m-learn-quest .lq-stage-title { font-size: 0.95rem; }
+  .m-learn-quest .lq-stage-actions .quest-btn-sm { min-height: 44px; min-width: 44px; }
 
   .m-learn-quest .lq-controls { gap: 0.5rem 0.7rem; padding: 7px 8px; }
   .m-learn-quest .lq-dial { flex: 1 1 100%; justify-content: space-between; }
   .m-learn-quest .lq-dial-segs i { width: 12px; height: 20px; }
   .m-learn-quest .lq-tool { flex: 1; min-height: 44px; }
   .m-learn-quest .lq-controls .quest-btn-sm { min-height: 44px; min-width: 44px; }
+  .m-learn-quest .lq-choice-btn { min-height: 44px; }
 
   /* Four plates would be postage stamps side by side; two columns, taller
      apertures, and a single sample gets the full width. */

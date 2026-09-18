@@ -30,7 +30,26 @@
 /* A world that is not yet built, or not yet reachable, is dimmed rather than
    hidden: the whole road should be visible from the first day. */
 .learn-charted,
-.learn-locked { opacity: 0.45; }
+.learn-locked {
+  background: var(--plate-200);
+  border-color: var(--plate-500);
+}
+.learn-charted .learn-world-title,
+.learn-locked .learn-world-title,
+.learn-charted .learn-quest-title,
+.learn-locked .learn-quest-title {
+  color: var(--text-muted);
+}
+.learn-charted .learn-world-line,
+.learn-locked .learn-world-line,
+.learn-charted .learn-quest-line,
+.learn-locked .learn-quest-line {
+  color: var(--text-dim);
+}
+.learn-charted .learn-code-num,
+.learn-locked .learn-code-num {
+  color: var(--text-muted);
+}
 
 .learn-world-code {
   display: flex;
@@ -397,7 +416,7 @@
 
 /* ---- The scope: plates in an aperture grid ---- */
 .scope-grid { display: grid; gap: 0.7rem; }
-.scope-n1 { grid-template-columns: 1fr; }
+.scope-n1 { grid-template-columns: minmax(0, 1fr); }
 .scope-n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .scope-n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -426,7 +445,7 @@
 
 .scope-grid.scope-n1 .scope-aperture { aspect-ratio: 16 / 10; }
 .scope-aperture { aspect-ratio: 1 / 1; width: 100%; background: var(--plate-000); }
-.scope-aperture canvas { display: block; touch-action: manipulation; }
+.scope-aperture canvas { display: block; max-width: 100%; touch-action: manipulation; }
 
 .scope-plate.selectable { cursor: pointer; }
 .scope-plate.selectable:hover { border-color: var(--accent-bronze); }
@@ -648,9 +667,37 @@
 
 .lq-bin-note {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
   letter-spacing: 0.04em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
+}
+
+.lq-choice-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.lq-choice-btn {
+  flex: 1;
+  min-height: 38px;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.lq-choice-btn.selected {
+  background: var(--plate-400);
+  border-color: var(--border-bright);
+  color: var(--text-amber);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.lq-tally {
+  margin-top: 4px;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
 }
 
 .lq-bin-key.selected .lq-bin-label { color: var(--text-amber); }

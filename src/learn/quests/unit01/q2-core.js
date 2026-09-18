@@ -133,7 +133,7 @@ export const STAGES = [
     field: 'whole',
     briefing: {
       speaker: SPEAKER,
-      body: 'The cutter blade on the bench met a piece of scrap it could not divide, and standard sensors report it as uniform solid matter. In the reactor coils, however, radiation passes through it in an unexpected way. We mounted SPEC A in the accelerator chamber to determine its internal structure.'
+      body: 'We mounted an uncuttable particle into the test chamber. Fire a beam through SPEC A and observe what happens to determine its internal structure.'
     },
     prompt: 'Determine the internal structure of specimen SPEC A.',
     controls: ['beam'],
@@ -145,23 +145,23 @@ export const STAGES = [
       label: 'Filed conclusion',
       options: [
         { id: 'solid', label: 'Solid all the way through', note: 'Packed dense matter, edge to edge.' },
-        { id: 'hollow', label: 'A hard outer shell around a hollow', note: 'Empty inside, tough at the surface.' },
-        { id: 'core', label: 'Mostly empty space, one heavy core in the middle', note: 'Vast empty void with a minute, dense center.' }
+        { id: 'hollow', label: 'A hard outer wall around a hollow', note: 'Empty inside, tough at the surface.' },
+        { id: 'core', label: 'Mostly empty space, one heavy core in the middle', note: 'Vast empty void with a tiny, dense center.' }
       ]
     },
     hints: [
       'Click the "Fire Beam" button beneath the controls to fire 40 particles through the specimen.',
       'Check the Beam readout: 37 particles passed straight through undisturbed, 2 grazed wide, and 1 bounced straight backward.',
-      'If the piece were solid, the stream would stop cold. A hollow shell would deflect at the edges. Only a minute, super-dense core in an empty void explains a direct rebound.'
+      'If the piece were solid, the stream would stop cold. A hollow wall would deflect at the edges. Only a tiny, super-dense core in an empty void explains a direct rebound.'
     ],
     check(state) {
-      if (!state.fired.has('a')) return { ok: false, msg: 'Nothing has been fired yet. Click "Fire Beam" to test the specimen first.' };
-      if (!state.choice) return { ok: false, msg: 'No conclusion filed. Select the structure that the beam counter proves.' };
+      if (!state.fired.has('a')) return { ok: false, notYet: true, msg: 'Nothing has been fired yet. Click "Fire Beam" to test the specimen first.' };
+      if (!state.choice) return { ok: false, notYet: true, msg: 'No conclusion filed. Select the structure that the beam counter proves.' };
       if (state.choice === 'solid') {
         return { ok: false, msg: 'Solid matter would have stopped the stream cold. 37 shots out of 40 passed straight through empty space.' };
       }
       if (state.choice === 'hollow') {
-        return { ok: false, msg: 'A hollow shell would deflect particles at the outer edges. These passed through the edges and bounced off the dead center.' };
+        return { ok: false, msg: 'A hollow wall would deflect particles at the outer edges. These passed through the edges and bounced off the dead center.' };
       }
       return { ok: true };
     },
@@ -178,7 +178,7 @@ export const STAGES = [
     field: 'core',
     briefing: {
       speaker: SPEAKER,
-      body: 'That particle rebound came from a speck less than a ten-thousandth the width of the atom. Focus coils reveal a cluster of heavy subatomic particles in the nucleus of SPEC A. We need to determine the count of marked particles inside this core.'
+      body: 'Almost all the mass is packed into a tiny core at the center. Zoom in on the core of SPEC A and count how many marked particles are inside.'
     },
     prompt: 'Determine the count of marked particles in the core of SPEC A.',
     controls: ['field'],
@@ -193,7 +193,7 @@ export const STAGES = [
     ],
     check(state) {
       if (!state.probed.has('marked') && !state.probed.has('blank')) {
-        return { ok: false, msg: 'No grains read yet. Tap a grain in the core cluster before committing a count.' };
+        return { ok: false, notYet: true, msg: 'No grains read yet. Tap a grain in the core cluster before committing a count.' };
       }
       if (state.number === 6) return { ok: true };
       if (state.number === 12) {
@@ -214,7 +214,7 @@ export const STAGES = [
     field: 'whole',
     briefing: {
       speaker: SPEAKER,
-      body: 'We salvaged sealed canister SPEC B from a refinery vault. The outer casing shields against radiation, preventing direct visual scans of its perimeter. Before connecting it to the power bank, we must confirm it is not carrying an unbalance of electrical charge.'
+      body: 'Canister B is sealed shut so we cannot see the outside, but the whole piece has zero net charge. Inspect the core and figure out how many light particles must be outside to balance it.'
     },
     prompt: 'Deduce how many light particles surround the core of SPEC B.',
     controls: ['field', 'meter'],
@@ -232,7 +232,7 @@ export const STAGES = [
     ],
     check(state) {
       if (!state.metered.has('b')) {
-        return { ok: false, msg: 'The needle has not touched SPEC B. With Field set to "Whole", click "Read Needle" first.' };
+        return { ok: false, notYet: true, msg: 'The needle has not touched SPEC B. With Field set to "Whole", click "Read Needle" first.' };
       }
       if (state.number === 8) return { ok: true };
       if (state.number === 0) {
@@ -256,9 +256,9 @@ export const STAGES = [
     field: 'rings',
     briefing: {
       speaker: SPEAKER,
-      body: 'We are calibrating an ion emitter with raw specimen SPEC C, containing 11 electrons. Electrons do not drift randomly around the nucleus; electrostatic and quantum constraints organize them into concentric energy shells.'
+      body: 'Specimen C has 11 light particles outside the core. Check the reference samples to see how many fit on each ring, then place all 11 into their proper rings.'
     },
-    prompt: 'Configure all 11 electrons into their proper shells on SPEC C.',
+    prompt: 'Place all 11 light pieces onto their proper rings on SPEC C.',
     controls: ['field'],
     specimens: [
       { id: 'r1', label: 'REF 01', note: 'resolved', core: { marked: 2, blank: 2 }, rings: [2] },
@@ -280,7 +280,7 @@ export const STAGES = [
     check(state) {
       const placed = state.rings.reduce((n, r) => n + r, 0);
       if (placed !== 11) {
-        return { ok: false, msg: `You have placed ${placed} of the 11 light pieces. All 11 must be distributed onto the rings.` };
+        return { ok: false, notYet: true, msg: `You have placed ${placed} of the 11 light pieces. All 11 must be distributed onto the rings.` };
       }
       if (state.rings[0] > 2) {
         return { ok: false, msg: 'Too many on Ring 1. Look at REF 01: the nearest ring has a strict capacity of 2.' };
@@ -306,9 +306,9 @@ export const STAGES = [
     field: 'rings',
     briefing: {
       speaker: SPEAKER,
-      body: 'We must predict how four salvaged specimens (SPEC D, E, F, G) will react before mixing them into the fuel manifold. The reagent tester has only 2 charges left in its auxiliary battery; observe the electron architecture to deduce how all four will interact.'
+      body: 'We need to predict how four specimens will react, but our tester only has 2 charges left. Test two of them, check their outer rings, and figure out what all four will do.'
     },
-    prompt: 'Classify whether each specimen gives electrons, accepts electrons, or remains inert.',
+    prompt: 'Classify whether each specimen gives a light piece, takes one on, or will not trade.',
     controls: ['field', 'tester'],
     specimens: [
       { id: 's1', label: 'SPEC D', note: 'resolved', core: { marked: 3, blank: 4 }, rings: [2, 1] },
@@ -328,16 +328,16 @@ export const STAGES = [
     hints: [
       'Select SPEC D or E and click "Run Tester". Then select SPEC F or G and spend your second charge.',
       'Compare the outermost rings: SPEC D and SPEC E both have 1 lonely piece. SPEC F has 7 (one short of a full ring of 8). SPEC G has a full ring of 8.',
-      'A ring with 1 gives it away (SPEC D and E). A ring with 7 takes one on to fill its shell (SPEC F). A full ring of 8 will not trade (SPEC G).'
+      'A ring with 1 gives it away (SPEC D and E). A ring with 7 takes one on to fill its ring (SPEC F). A full ring of 8 will not trade (SPEC G).'
     ],
     check(state) {
       if (state.tested.size < 1) {
-        return { ok: false, msg: 'Run the tester at least once. Do not file four predictions without empirical evidence.' };
+        return { ok: false, notYet: true, msg: 'Run the tester at least once. Do not file four predictions without empirical evidence.' };
       }
       const want = { s1: 'gives', s2: 'gives', s3: 'takes', s4: 'inert' };
       const labels = { s1: 'SPEC D', s2: 'SPEC E', s3: 'SPEC F', s4: 'SPEC G' };
       for (const id of ['s1', 's2', 's3', 's4']) {
-        if (!state.bins[id]) return { ok: false, msg: `${labels[id]} has no line on the manifest yet.` };
+        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no line on the manifest yet.` };
       }
       for (const id of ['s1', 's2', 's3', 's4']) {
         if (state.bins[id] !== want[id]) {
@@ -359,7 +359,7 @@ export const STAGES = [
     field: 'core',
     briefing: {
       speaker: SPEAKER,
-      body: 'The cooling system requires pure coolant matching reference standard SPEC H. Salvage bins yielded two unlabelled canisters, SPEC K and SPEC L, both with 13 total particles in their cores. We must verify which canister is genuine coolant before introducing it to the reactor.'
+      body: 'We need more coolant matching reference sample H. Both canisters K and L have 13 total particles in their core—check their marks to find the real match.'
     },
     prompt: 'Determine whether SPEC K and SPEC L match the chemical identity of SPEC H.',
     controls: ['field'],
@@ -383,16 +383,16 @@ export const STAGES = [
     ],
     check(state) {
       if (!state.probed.has('marked') && !state.probed.has('blank')) {
-        return { ok: false, msg: 'Nothing read yet. Switch to the "Core" field and tap the grains before filing.' };
+        return { ok: false, notYet: true, msg: 'Nothing read yet. Switch to the "Core" field and tap the grains before filing.' };
       }
       if (!state.bins.k || !state.bins.l) {
-        return { ok: false, msg: 'Both specimens need an assignment on the manifest.' };
+        return { ok: false, notYet: true, msg: 'Both specimens need an assignment on the manifest.' };
       }
       if (state.bins.k !== 'match') {
         return { ok: false, msg: 'SPEC K is filed incorrectly. It has 6 marked grains, matching reference SPEC H—the extra grain is merely an uncharged blank.' };
       }
       if (state.bins.l !== 'other') {
-        return { ok: false, msg: 'SPEC L is filed incorrectly. It has 7 marked grains. Even though its total weight is 13, having 7 marks makes it an entirely different element.' };
+        return { ok: false, msg: 'SPEC L is filed incorrectly. It has 7 marked grains. Even though its total weight is 13, having 7 marks makes it an entirely different kind of piece.' };
       }
       return { ok: true };
     },
@@ -409,9 +409,9 @@ export const STAGES = [
     field: 'rings',
     briefing: {
       speaker: SPEAKER,
-      body: 'The electrostatic thrusters require charged propellant to generate thrust; neutral atoms pass through magnetic acceleration stages unaffected. Neutral specimen SPEC M must be ionized to a net charge of plus two.'
+      body: 'Our ship thrusters need charged fuel, but Specimen M is neutral. Knock light particles off until the charge meter reads plus two.'
     },
-    prompt: 'Ionize specimen SPEC M to a net charge of plus two, and log the number of electrons removed.',
+    prompt: 'Strip light pieces from SPEC M until the needle reads plus 2, and log how many you took off.',
     controls: ['field', 'meter', 'strip', 'reset'],
     specimens: [
       { id: 'm', label: 'SPEC M', note: 'mounted, outside resolved', core: { marked: 11, blank: 12 }, rings: [2, 8, 1] }
@@ -425,7 +425,7 @@ export const STAGES = [
     check(state) {
       const taken = state.stripped.m || 0;
       if (taken === 0) {
-        return { ok: false, msg: 'The specimen is untouched and the needle sits at zero. Click "Fire Stripper" to knock pieces free.' };
+        return { ok: false, notYet: true, msg: 'The specimen is untouched and the needle sits at zero. Click "Fire Stripper" to knock pieces free.' };
       }
       if (taken !== 2) {
         return { ok: false, msg: `The needle is reading plus ${taken}. Bring it to plus two. (Use "Reset Specimen" if you stripped too many).` };
@@ -448,7 +448,7 @@ export const STAGES = [
     field: 'core',
     briefing: {
       speaker: SPEAKER,
-      body: 'The orbital cargo shuttle is clearing its docking clamps. Three unlabelled canisters (SPEC N, SPEC P, SPEC R) must be certified against a reference standard of 7 protons, 7 neutrons, and 7 electrons before transfer.'
+      body: 'The cargo shuttle is ready to load. Compare these three unlabelled canisters against our reference standard and classify them on the shipping manifest.'
     },
     prompt: 'Classify all three canisters against the reference standard on the shipping manifest.',
     controls: ['field', 'meter'],
@@ -474,16 +474,16 @@ export const STAGES = [
       const want = { n1: 'heavy', n2: 'charged', n3: 'other' };
       const labels = { n1: 'SPEC N', n2: 'SPEC P', n3: 'SPEC R' };
       for (const id of ['n1', 'n2', 'n3']) {
-        if (!state.bins[id]) return { ok: false, msg: `${labels[id]} has no line on the manifest yet.` };
+        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no line on the manifest yet.` };
       }
       if (state.bins.n1 !== want.n1) {
-        return { ok: false, msg: 'SPEC N is filed incorrectly. Its marked count matches 7 and its light pieces balance, but it carries 8 blank grains (heavier isotope).' };
+        return { ok: false, msg: 'SPEC N is filed incorrectly. Its marked count matches 7 and its light pieces balance, but it carries 8 blank grains (heavier variation).' };
       }
       if (state.bins.n2 !== want.n2) {
-        return { ok: false, msg: 'SPEC P is filed incorrectly. It has 7 marked grains and 7 blank, but only 6 light pieces outside, giving a +1 needle reading (charged ion).' };
+        return { ok: false, msg: 'SPEC P is filed incorrectly. It has 7 marked grains and 7 blank, but only 6 light pieces outside, giving a +1 needle reading (unbalanced charge).' };
       }
       if (state.bins.n3 !== want.n3) {
-        return { ok: false, msg: 'SPEC R is filed incorrectly. Count its marked grains in the Core field: 8 marks does not match the reference standard of 7 (different element).' };
+        return { ok: false, msg: 'SPEC R is filed incorrectly. Count its marked grains in the Core field: 8 marks does not match the reference standard of 7 (different material).' };
       }
       return { ok: true };
     },
@@ -645,7 +645,11 @@ export function mount(container, ctx) {
     const stage = STAGES[index];
     const result = stage.check(state);
     if (!result.ok) {
-      frame.miss(result.msg);
+      if (result.notYet) {
+        frame.note(result.msg);
+      } else {
+        frame.miss(result.msg);
+      }
       return;
     }
     frame.clearBanner();
@@ -669,25 +673,25 @@ export function mount(container, ctx) {
         <div class="cb-field" role="group" aria-label="Field">
           <span class="form-label">Field</span>
           ${Object.entries(FIELD_LABELS).map(([id, label]) => `
-            <button type="button" class="quest-btn-sm cb-field-key" data-field="${id}">${label}</button>
+            <button type="button" class="btn-secondary quest-btn-sm cb-field-key" data-field="${id}">${label}</button>
           `).join('')}
         </div>
       `);
     }
     if (stage.controls.includes('beam')) {
-      parts.push('<button type="button" class="quest-btn-sm lq-tool" data-tool="beam">Fire Beam</button>');
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="beam">Fire Beam</button>');
     }
     if (stage.controls.includes('meter')) {
-      parts.push('<button type="button" class="quest-btn-sm lq-tool" data-tool="meter">Read Needle</button>');
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="meter">Read Needle</button>');
     }
     if (stage.controls.includes('tester')) {
-      parts.push(`<button type="button" class="quest-btn-sm lq-tool" data-tool="tester">Run Tester <span class="cb-charges">${charges}</span></button>`);
+      parts.push(`<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="tester">Run Tester <span class="cb-charges">${charges}</span></button>`);
     }
     if (stage.controls.includes('strip')) {
-      parts.push('<button type="button" class="quest-btn-sm lq-tool" data-tool="strip">Fire Stripper</button>');
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="strip">Fire Stripper</button>');
     }
     if (stage.controls.includes('reset')) {
-      parts.push('<button type="button" class="quest-btn-sm lq-tool" data-tool="reset">Reset Specimen</button>');
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="reset">Reset Specimen</button>');
     }
 
     frame.setControls(parts.join(''));
@@ -933,9 +937,9 @@ export function mount(container, ctx) {
         <div class="lq-answer">
           <span class="form-label">${esc(w.label)}</span>
           <div class="lq-number">
-            <button type="button" class="quest-btn-sm" data-num="-1" aria-label="Lower">&minus;</button>
+            <button type="button" class="btn-secondary quest-btn-sm" data-num="-1" aria-label="Lower">&minus;</button>
             <span class="lq-number-value" aria-live="polite">${state.number}</span>
-            <button type="button" class="quest-btn-sm" data-num="1" aria-label="Raise">+</button>
+            <button type="button" class="btn-secondary quest-btn-sm" data-num="1" aria-label="Raise">+</button>
           </div>
         </div>
       `);
@@ -983,9 +987,9 @@ export function mount(container, ctx) {
               <div class="lq-build-row" data-ring="${ri}">
                 <span class="lq-build-dot" data-tint="bone"></span>
                 <span class="lq-build-code">${esc(label)}</span>
-                <button type="button" class="quest-btn-sm" data-ring-step="-1" aria-label="One fewer on ${esc(label)}">&minus;</button>
+                <button type="button" class="btn-secondary quest-btn-sm" data-ring-step="-1" aria-label="One fewer on ${esc(label)}">&minus;</button>
                 <span class="lq-build-count">0</span>
-                <button type="button" class="quest-btn-sm" data-ring-step="1" aria-label="One more on ${esc(label)}">+</button>
+                <button type="button" class="btn-secondary quest-btn-sm" data-ring-step="1" aria-label="One more on ${esc(label)}">+</button>
               </div>
             `).join('')}
           </div>

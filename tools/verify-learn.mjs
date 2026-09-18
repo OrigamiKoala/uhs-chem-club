@@ -171,6 +171,25 @@ for (const file of learnFiles) {
 if (failures === railFailures) ok(`${learnFiles.length} Learn files checked: none call the XP rails`);
 
 /* ------------------------------------------------------------------
+   BUTTON STYLING DISCIPLINE
+   Bench controls must never render as browser-default white buttons.
+   ------------------------------------------------------------------ */
+let unstyledButtons = 0;
+for (const file of learnFiles) {
+  if (!existsSync(file)) continue;
+  const content = readFileSync(file, 'utf8');
+  const matches = [...content.matchAll(/class=["`]([^"`]*quest-btn-sm[^"`]*)["`]/g)];
+  for (const m of matches) {
+    const cls = m[1];
+    if (!cls.includes('btn-secondary') && !cls.includes('btn-primary')) {
+      fail(`${file.replace(process.cwd() + '/', '')}: unstyled quest-btn-sm "${cls}" — must use btn-secondary or btn-primary`);
+      unstyledButtons++;
+    }
+  }
+}
+if (unstyledButtons === 0) ok('all quest-btn-sm controls carry btn-secondary or btn-primary');
+
+/* ------------------------------------------------------------------
    THE QUEST MODULE CONTRACT
    ------------------------------------------------------------------ */
 const templatePath = join(learnSrc, 'quests', '_template.js');
@@ -230,6 +249,12 @@ function checkStageTable(q, mod) {
   const emoji = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
   let bad = 0;
 
+  const WITHHELD_VOCAB = {
+    'unit01/q1-grain': /\b(atoms?|atomic|elements?|molecules?|molecular|compounds?|mixtures?)\b/i,
+    'unit01/q2-core': /\b(atoms?|atomic|elements?|molecules?|molecular|compounds?|mixtures?|nucle(us|i|ar)|protons?|neutrons?|isotopes?|electrons?|shells?|valence|ions?|ionic|ioniz\w*)\b/i
+  };
+  const withheldRx = WITHHELD_VOCAB[q.key];
+
   stages.forEach((st, i) => {
     const label = `${q.key} stage ${i + 1}`;
 
@@ -251,6 +276,15 @@ function checkStageTable(q, mod) {
       if (emoji.test(str)) { fail(`${label}: emoji in player-facing copy`); bad++; }
     }
 
+    // Stage briefings must not exceed 2 sentences (CLAUDE.md §7).
+    if (st.briefing?.body) {
+      const sentences = st.briefing.body.split(/[.!?]+/).filter(s => s.trim().length > 0);
+      if (sentences.length > 2) {
+        fail(`${label}: briefing exceeds 2 sentences (${sentences.length})`);
+        bad++;
+      }
+    }
+
     // The intended solution must pass.
     const solved = st.check(mod.stateFor(i, mod.SOLUTIONS[i] || {}));
     if (!solved?.ok) {
@@ -259,8 +293,9 @@ function checkStageTable(q, mod) {
     }
 
     // A plausible wrong answer must be refused, and must be told why.
+    let missed;
     if (Array.isArray(mod.MISSES) && mod.MISSES[i]) {
-      const missed = st.check(mod.stateFor(i, mod.MISSES[i]));
+      missed = st.check(mod.stateFor(i, mod.MISSES[i]));
       if (missed?.ok) { fail(`${label}: a wrong answer grades correct`); bad++; }
       else if (!missed?.msg) { fail(`${label}: a miss falls through with no message`); bad++; }
     }
@@ -270,6 +305,62 @@ function checkStageTable(q, mod) {
     if (empty?.ok && !(mod.SOLUTIONS[i] && Object.keys(mod.SOLUTIONS[i]).length === 0)) {
       fail(`${label}: an untouched bench grades correct`);
       bad++;
+    }
+
+    // Withheld vocabulary: prompt, hints, briefing, sample notes, widget labels/notes, check msgs.
+    if (withheldRx) {
+      const checkable = [
+        st.title,
+        st.prompt,
+        st.briefing?.body,
+        st.briefing?.speaker,
+        ...(st.hints || []),
+        ...(st.samples || []).flatMap(s => [s.label, s.note]),
+        ...(st.specimens || []).flatMap(s => [s.label, s.note]),
+        ...(st.widget?.options || []).flatMap(o => [o.label, o.note]),
+        ...(st.widget?.bins || []).flatMap(b => [b.label, b.note]),
+        st.widget?.label,
+        solved?.msg,
+        missed?.msg,
+        empty?.msg
+      ].filter(Boolean);
+
+      for (const text of checkable) {
+        const m = text.match(withheldRx);
+        if (m) {
+          fail(`${label}: player-facing copy contains withheld term "${m[0]}" in "${text.slice(0, 60)}"`);
+          bad++;
+        }
+      }
+
+      const checkCode = st.check.toString();
+      const codeMatch = checkCode.match(withheldRx);
+      if (codeMatch) {
+        fail(`${label}: check() code contains withheld term "${codeMatch[0]}"`);
+        bad++;
+      }
+    }
+
+    // Sample notes must describe provenance only, never leaking answers or check reasoning.
+    const leakWords = ['uniform', 'mixed', 'single grain', 'indivisible', 'scouring agent'];
+    const bench = Array.isArray(st.samples) ? st.samples : Array.isArray(st.specimens) ? st.specimens : [];
+    for (const s of bench) {
+      if (s.note) {
+        for (const w of leakWords) {
+          if (s.note.toLowerCase().includes(w)) {
+            fail(`${label}: sample "${s.id}" note leaks answer term "${w}"`);
+            bad++;
+          }
+        }
+        const sol = mod.SOLUTIONS?.[i] || {};
+        if (sol.bins && sol.bins[s.id]) {
+          const targetBin = (st.widget?.bins || []).find(b => b.id === sol.bins[s.id]);
+          if (targetBin && targetBin.label && s.note.toLowerCase().includes(targetBin.label.toLowerCase())) {
+            fail(`${label}: sample "${s.id}" note contains assigned bin label "${targetBin.label}"`);
+            bad++;
+          }
+        }
+      }
     }
   });
 

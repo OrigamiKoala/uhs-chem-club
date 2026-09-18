@@ -27,17 +27,17 @@ export const QUEST1_STORY = {
     speaker: 'VESS // COMMS',
     badge: 'PRIORITY TRANSMISSION',
     subtitle: 'SECTOR 01 · EREBUS // CHARGE GARDENS',
-    message: 'We are down on Erebus — a scorched desert world scoured by iron-dust storms and abandoned refineries. The twenty relay pylons across the Charge Gardens went dark forty years ago. Your mission is to restore the power grid across the basin. Connect the circuit components inside each junction: drag a line from the glowing red power feed to the hungry blue receiver. If you connect them successfully, current surges through the junction and the pylons will turn back on.',
-    transmission: 'Down on Erebus. Twenty relay pylons in the Charge Gardens went dark decades ago. Connect the circuit components in each junction to turn them back on.'
+    message: 'We are down on Erebus. The twenty relay pylons across the Charge Gardens went dark decades ago. To restore the power grid, open each junction and drag a line from the red power feed to the blue receiver. When the circuit connects, the pylon will power back on.',
+    transmission: 'Down on Erebus. Drag a line from the red feed to the blue receiver in each junction to power the pylons back on.'
   },
 
   // Stage 1 opening transmission per guild; neutral used for demo / unassigned
   guildOpeners: {
-    earth: 'Mineral Mining brought you to Erebus. Connect the circuit components in this junction to turn Pylon 1 back on.',
-    air: 'Thin air on Erebus today. Connect the circuit components in this junction to turn Pylon 1 back on.',
-    fire: 'Thermal crew, Erebus is ice cold. Connect the circuit components in this junction to turn Pylon 1 back on.',
-    water: 'Welcome to the dunes of Erebus. Connect the circuit components in this junction to turn Pylon 1 back on.',
-    neutral: 'Welcome to Erebus. Connect the circuit components in this junction to turn Pylon 1 back on.'
+    earth: 'Mineral Mining brought you to Erebus. Drag from red to blue in this junction to power Pylon 1 back on.',
+    air: 'Thin air on Erebus today. Drag from red to blue in this junction to power Pylon 1 back on.',
+    fire: 'Thermal crew, Erebus is ice cold. Drag from red to blue in this junction to power Pylon 1 back on.',
+    water: 'Welcome to the dunes of Erebus. Drag from red to blue in this junction to power Pylon 1 back on.',
+    neutral: 'Welcome to Erebus. Drag from red to blue in this junction to power Pylon 1 back on.'
   },
 
   pylons: [

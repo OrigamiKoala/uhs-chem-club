@@ -103,23 +103,29 @@ export const STAGES = [
     title: 'The Magnification Limit',
     briefing: {
       speaker: SPEAKER,
-      body: "We are set up in an old Imperial salvage bunker on the salt flats of Tallow, and an orbital Guild buyer is inbound to inspect our cargo. We need to verify our bench scope before the inspection: find the lowest magnification power where continuous matter resolves into individual grains."
+      body: "A buyer is coming to inspect our salvage. Zoom in on Crate 07 and find the lowest power where solid matter separates into individual grains."
     },
     prompt: 'Determine the lowest magnification power where individual grains appear.',
     controls: ['power'],
     samples: [
-      { id: 'c7', label: 'CRATE 07', note: 'raw salvage, unrefined', floorPower: 4, particles: [{ kinds: ['k06'], n: 46 }] }
+      { id: 'c7', label: 'CRATE 07', note: 'salvage scrap · dredge 12', floorPower: 4, particles: [{ kinds: ['k06'], n: 46 }] }
     ],
-    widget: { type: 'number', min: 1, max: 6, label: 'Power logged' },
+    widget: { type: 'choice-row', min: 1, max: 6, label: 'Logged reading' },
     answer: 4,
     hints: [
-      'Click the "+" button on the Power dial to step up through the magnification levels.',
+      'On the instrument controls above the scope, click "+" on the Power dial to step up through the magnification levels.',
       'Powers 1 through 3 show blurry solid clumps. At power 4, the clumps break apart into separate round grains.',
       'Powers 5 and 6 only zoom in closer on the same grains. Power 4 is the lowest power that reveals the grain floor.'
     ],
     check(state) {
+      if ((state.maxPower || 1) < 4) {
+        return { ok: false, notYet: true, msg: 'Raise the magnification power dial on the scope to inspect the sample before logging a reading.' };
+      }
+      if (!state.number) {
+        return { ok: false, notYet: true, msg: 'Select a reading on the 1–6 log before committing.' };
+      }
       if (state.number === 4) return { ok: true };
-      if (state.number < 4) return { ok: false, msg: 'Turn the power higher. Clumps are still breaking into smaller pieces above that level.' };
+      if (state.number < 4) return { ok: false, msg: 'The logged reading is too low. Raise the scope power dial to see clumps still breaking into smaller pieces above that level.' };
       return { ok: false, msg: 'You went past the floor. Powers 5 and 6 only magnify the same pieces; log the lowest power where individual grains first appear.' };
     },
     reward: {
@@ -134,14 +140,14 @@ export const STAGES = [
     title: 'Two Crates of Grey Grit',
     briefing: {
       speaker: SPEAKER,
-      body: "A scavenger brought in two crates logged as identical 'grey grit', but one of them is suspected to be diluted with cheap filler. We need to certify which shipment is genuine before the buyer lands."
+      body: "We received two crates of grey powder, but one is cut with cheap filler. Inspect both crates under the scope and select the one made of only a single pure material."
     },
     prompt: 'Identify and select the crate that contains only a single material.',
     controls: ['power'],
     select: true,
     samples: [
-      { id: 'c09', label: 'CRATE 09', note: 'grey grit · uniform', floorPower: 4, particles: [{ kinds: ['k06'], n: 44 }] },
-      { id: 'c14', label: 'CRATE 14', note: 'grey grit · mixed', floorPower: 4, particles: [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }] }
+      { id: 'c09', label: 'CRATE 09', note: 'salvage bin · hold bay 2', floorPower: 4, particles: [{ kinds: ['k06'], n: 44 }] },
+      { id: 'c14', label: 'CRATE 14', note: 'salvage bin · hold bay 4', floorPower: 4, particles: [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }] }
     ],
     widget: { type: 'sample' },
     hints: [
@@ -150,7 +156,10 @@ export const STAGES = [
       'Crate 14 mixes dark pieces (CAT 06) with pale pieces (CAT 11). Crate 09 contains only dark pieces. Tap Crate 09 to select it.'
     ],
     check(state) {
-      if (!state.sample) return { ok: false, msg: 'Nothing selected. Tap a crate on the bench first.' };
+      if ((state.resolved?.size || 0) < 2) {
+        return { ok: false, notYet: true, msg: 'Inspect both crates under high magnification until their grains resolve before committing.' };
+      }
+      if (!state.sample) return { ok: false, notYet: true, msg: 'Nothing selected. Tap a crate on the bench first.' };
       if (state.sample === 'c09') return { ok: true };
       return { ok: false, msg: 'Look at that crate again once the grains resolve. It mixes dark pieces (CAT 06) with pale pieces (CAT 11) — it is not a single material.' };
     },
@@ -166,13 +175,13 @@ export const STAGES = [
     title: 'Sold as Single Source',
     briefing: {
       speaker: SPEAKER,
-      body: "A prospector claims Crate 22 is rare single-source ore from the deep flats and demands a triple premium. We suspect the shipment has been padded with tailings."
+      body: "A prospector claims Crate 22 is pure ore, but we think it's a mix. Probe the grains across the sample and count how many different materials are inside."
     },
     prompt: 'Determine the exact number of distinct kinds of material in Crate 22.',
     controls: ['power'],
     samples: [
       {
-        id: 'ore', label: 'CRATE 22', note: 'unverified salt-flat ore', floorPower: 4,
+        id: 'ore', label: 'CRATE 22', note: 'salvage lot · salt-flat ore', floorPower: 4,
         particles: [
           { kinds: ['k17'], n: 26 },
           { kinds: ['k08'], n: 20 },
@@ -189,7 +198,7 @@ export const STAGES = [
     ],
     check(state) {
       if (state.probed.size < 3 && state.number !== 3) {
-        return { ok: false, msg: `You have probed ${state.probed.size} ${state.probed.size === 1 ? 'kind' : 'kinds'} so far. Tap grains all across the plate before committing your count.` };
+        return { ok: false, notYet: true, msg: `You have probed ${state.probed.size} ${state.probed.size === 1 ? 'kind' : 'kinds'} so far. Tap grains all across the plate before committing your count.` };
       }
       if (state.number === 3) return { ok: true };
       if (state.number < 3) return { ok: false, msg: 'There are more kinds hidden here. Two kinds look similar; check their mass meter readings to tell them apart.' };
@@ -207,16 +216,16 @@ export const STAGES = [
     title: 'What the Blade Cannot Divide',
     briefing: {
       speaker: SPEAKER,
-      body: "The salvage crew argues that any piece of matter can be chopped into smaller pieces forever. We have a precision cutter on the bench to test their claim."
+      body: "The crew claims you can cut matter into smaller pieces forever. Test each sample under the blade and find the one that cannot be divided."
     },
     prompt: 'Identify and select the sample that cannot be divided.',
     controls: ['cut'],
     select: true,
     samples: [
-      { id: 't1', label: 'TRAY A', note: 'loose heap', floorPower: 1, magnify: 1.5, particles: [{ kinds: ['k08'], n: 20 }] },
-      { id: 't2', label: 'TRAY B', note: 'bound cluster', floorPower: 1, magnify: 3.6, particles: [{ ...CLUSTER_A, n: 1 }] },
-      { id: 't3', label: 'TRAY C', note: 'bound pair', floorPower: 1, magnify: 3.6, particles: [{ ...PAIR_LIGHT, n: 1 }] },
-      { id: 't4', label: 'TRAY D', note: 'single grain', floorPower: 1, magnify: 3.6, particles: [{ kinds: ['k08'], n: 1 }] }
+      { id: 't1', label: 'TRAY A', note: 'salvage tray · cutter bed 1', floorPower: 1, magnify: 1.5, particles: [{ kinds: ['k08'], n: 20 }] },
+      { id: 't2', label: 'TRAY B', note: 'salvage tray · cutter bed 2', floorPower: 1, magnify: 3.6, particles: [{ ...CLUSTER_A, n: 1 }] },
+      { id: 't3', label: 'TRAY C', note: 'salvage tray · cutter bed 3', floorPower: 1, magnify: 3.6, particles: [{ ...PAIR_LIGHT, n: 1 }] },
+      { id: 't4', label: 'TRAY D', note: 'salvage tray · cutter bed 4', floorPower: 1, magnify: 3.6, particles: [{ kinds: ['k08'], n: 1 }] }
     ],
     widget: { type: 'sample' },
     hints: [
@@ -225,8 +234,8 @@ export const STAGES = [
       'Tray D holds a single individual grain, and the blade finds nothing inside it to split. Tap Tray D to select it.'
     ],
     check(state) {
-      if (state.cut.size < 4) return { ok: false, msg: 'Select and run the cutter on all four trays before committing. You must test every sample against the blade.' };
-      if (!state.sample) return { ok: false, msg: 'Nothing selected. Tap a tray on the bench first.' };
+      if (state.cut.size < 4) return { ok: false, notYet: true, msg: 'Select and run the cutter on all four trays before committing. You must test every sample against the blade.' };
+      if (!state.sample) return { ok: false, notYet: true, msg: 'Nothing selected. Tap a tray on the bench first.' };
       if (state.sample === 't4') return { ok: true };
       return { ok: false, msg: 'That sample broke apart or scattered under the blade. Select the tray that the cutter cannot divide.' };
     },
@@ -242,12 +251,12 @@ export const STAGES = [
     title: 'The Cluster That Repeats',
     briefing: {
       speaker: SPEAKER,
-      body: "We salvaged a sealed vial of vital cooling fluid from an abandoned refinery pump. The liquid is made of identical repeating bound clusters."
+      body: "We salvaged a vial of coolant made of repeating clusters. Look at a cluster under the scope and assemble an exact copy in the tray."
     },
     prompt: 'Assemble an exact replica of the cluster found in Vial 09.',
     controls: ['power'],
     samples: [
-      { id: 'v9', label: 'VIAL 09', note: 'coolant sample · repeating clusters', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 20 }] }
+      { id: 'v9', label: 'VIAL 09', note: 'refrigeration tap · cell 09', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 20 }] }
     ],
     widget: { type: 'build', kinds: ['k01', 'k06', 'k08'], max: 4 },
     hints: [
@@ -258,7 +267,7 @@ export const STAGES = [
     check(state) {
       const b = state.build;
       const total = Object.values(b).reduce((n, v) => n + v, 0);
-      if (total === 0) return { ok: false, msg: 'The tray is empty. Use the + and - buttons to assemble a cluster before committing.' };
+      if (total === 0) return { ok: false, notYet: true, msg: 'The tray is empty. Use the + and - buttons to assemble a cluster before committing.' };
       if (b.k06) return { ok: false, msg: 'There is no CAT 06 in this vial. Probe the cluster on the plate to verify the correct pieces.' };
       if (b.k01 === 2 && b.k08 === 1) return { ok: true };
       if (b.k01 > 0 && b.k08 > 0) return { ok: false, msg: 'Right kinds, wrong count. Probe a cluster on the plate and count the center piece and attached arms.' };
@@ -276,29 +285,29 @@ export const STAGES = [
     title: 'Two Manifests, Two Vials',
     briefing: {
       speaker: SPEAKER,
-      body: "Salt vapor dissolved the labels on two salvage vials in the hold, and one of them is a corrosive scouring agent eating through its seal. Both vials contain the same kinds of pieces in different recipes."
+      body: "The labels washed off two vials in the hold, and one is a corrosive cleaner eating through its seal. Check how many pieces are in each cluster and file them under the right manifest."
     },
     prompt: 'Match each vial to its correct cargo manifest.',
     controls: ['power'],
     samples: [
-      { id: 'vA', label: 'VIAL A', note: 'unlabeled container', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 16 }] },
-      { id: 'vB', label: 'VIAL B', note: 'unlabeled container · seal corroding', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_B, n: 14 }] }
+      { id: 'vA', label: 'VIAL A', note: 'salvaged flask · rack A', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 16 }] },
+      { id: 'vB', label: 'VIAL B', note: 'salvaged flask · rack B', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_B, n: 14 }] }
     ],
     widget: {
       type: 'bins',
       bins: [
-        { id: 'm9', label: 'Manifest 09', note: 'coolant · one heavy piece, two light' },
-        { id: 'm22', label: 'Manifest 22', note: 'scouring agent · two heavy pieces, two light' }
+        { id: 'm9', label: 'Manifest 09', note: 'one heavy center, two light arms' },
+        { id: 'm22', label: 'Manifest 22', note: 'two heavy centers, two light arms' }
       ]
     },
     hints: [
       'Both vials contain only CAT 01 and CAT 08. The difference is how many pieces are linked into a single cluster.',
       'Probe a cluster in each vial: Vial A has 1 heavy piece (CAT 08), while Vial B has a chain of 2 heavy pieces.',
-      'File Vial A under Manifest 09 (coolant) and Vial B under Manifest 22 (scouring agent).'
+      'File Vial A under Manifest 09 and Vial B under Manifest 22.'
     ],
     check(state) {
       const { bins } = state;
-      if (!bins.vA || !bins.vB) return { ok: false, msg: 'Both vials must be assigned to a manifest before committing.' };
+      if (!bins.vA || !bins.vB) return { ok: false, notYet: true, msg: 'Both vials must be assigned to a manifest before committing.' };
       if (bins.vA === 'm9' && bins.vB === 'm22') return { ok: true };
       return { ok: false, msg: 'Those assignments are inverted. Count the heavy pieces (CAT 08) in each cluster: Manifest 09 has 1 heavy piece, Manifest 22 has 2.' };
     },
@@ -314,21 +323,21 @@ export const STAGES = [
     title: 'Let It Settle',
     briefing: {
       speaker: SPEAKER,
-      body: "Three crates are queued for export as pure stock, but we must verify whether any are actually mixtures before the buyer's shuttle lands."
+      body: "We have three crates ready for export. Shake each crate on the bench to see which ones stay together as one material and which separate into multiple materials."
     },
-    prompt: 'Classify each crate as a single material or a mixture.',
+    prompt: 'Classify each crate as a single material or mixed.',
     controls: ['settle'],
     select: true,
     samples: [
-      { id: 'p1', label: 'CRATE 31', note: 'coarse yellow grit', floorPower: 1, particles: [{ kinds: ['k17'], n: 30 }] },
-      { id: 'p2', label: 'CRATE 32', note: 'bound fluid clusters', floorPower: 1, particles: [{ ...CLUSTER_A, n: 26 }] },
-      { id: 'p3', label: 'CRATE 33', note: 'coarse grey grit', floorPower: 1, particles: [{ kinds: ['k11'], n: 16 }, { kinds: ['k06'], n: 16 }] }
+      { id: 'p1', label: 'CRATE 31', note: 'salvage hopper · chute 31', floorPower: 1, particles: [{ kinds: ['k17'], n: 30 }] },
+      { id: 'p2', label: 'CRATE 32', note: 'salvage hopper · chute 32', floorPower: 1, particles: [{ ...CLUSTER_A, n: 26 }] },
+      { id: 'p3', label: 'CRATE 33', note: 'salvage hopper · chute 33', floorPower: 1, particles: [{ kinds: ['k11'], n: 16 }, { kinds: ['k06'], n: 16 }] }
     ],
     widget: {
       type: 'bins',
       bins: [
         { id: 'one', label: 'One material', note: 'settles into a single band' },
-        { id: 'mixed', label: 'More than one', note: 'separates into bands' }
+        { id: 'mixed', label: 'Mixed', note: 'separates into multiple bands' }
       ]
     },
     hints: [
@@ -338,10 +347,10 @@ export const STAGES = [
     ],
     check(state) {
       const { bins, settled } = state;
-      if (settled.size < 3) return { ok: false, msg: 'Select and settle all three crates before filing. The stratified bands reveal whether they are pure or mixed.' };
-      if (!bins.p1 || !bins.p2 || !bins.p3) return { ok: false, msg: 'Every crate must be filed on the manifest.' };
+      if (settled.size < 3) return { ok: false, notYet: true, msg: 'Select and settle all three crates before filing. The stratified bands reveal whether they are uniform or mixed.' };
+      if (!bins.p1 || !bins.p2 || !bins.p3) return { ok: false, notYet: true, msg: 'Every crate must be filed on the manifest.' };
       if (bins.p1 === 'one' && bins.p2 === 'one' && bins.p3 === 'mixed') return { ok: true };
-      return { ok: false, msg: 'At least one crate is filed incorrectly. Check the bands after settling: one band means one material; multiple bands mean a mixture.' };
+      return { ok: false, msg: 'At least one crate is filed incorrectly. Check the bands after settling: one band means one material; multiple bands mean mixed.' };
     },
     reward: {
       log: 'Crate 33 separated into two bands. Pure stock verified.',
@@ -355,16 +364,16 @@ export const STAGES = [
     title: 'The Manifest',
     briefing: {
       speaker: SPEAKER,
-      body: "The orbital buyer's transport has entered atmosphere, and four salvage crates sit on the bench with no labels. Use your bench instruments to classify all four crates before docking."
+      body: "The buyer's shuttle is landing soon, and four crates are missing labels. Test each crate on the bench and classify them on the shipping manifest."
     },
     prompt: 'Classify all four crates on the final export manifest.',
     controls: ['power', 'cut', 'settle'],
     select: true,
     samples: [
-      { id: 'm1', label: 'CRATE 41', note: 'dark solid scrap', floorPower: 4, particles: [{ kinds: ['k06'], n: 40 }] },
-      { id: 'm2', label: 'CRATE 42', note: 'clear fluid canisters', floorPower: 4, particles: [{ ...CLUSTER_A, n: 30 }] },
-      { id: 'm3', label: 'CRATE 43', note: 'mixed mineral tailings', floorPower: 4, particles: [{ kinds: ['k11'], n: 18 }, { kinds: ['k17'], n: 18 }] },
-      { id: 'm4', label: 'CRATE 44', note: 'light pressurized gas', floorPower: 4, particles: [{ ...PAIR_LIGHT, n: 34 }] }
+      { id: 'm1', label: 'CRATE 41', note: 'sealed container · bay 41', floorPower: 4, particles: [{ kinds: ['k06'], n: 40 }] },
+      { id: 'm2', label: 'CRATE 42', note: 'sealed container · bay 42', floorPower: 4, particles: [{ ...CLUSTER_A, n: 30 }] },
+      { id: 'm3', label: 'CRATE 43', note: 'sealed container · bay 43', floorPower: 4, particles: [{ kinds: ['k11'], n: 18 }, { kinds: ['k17'], n: 18 }] },
+      { id: 'm4', label: 'CRATE 44', note: 'sealed container · bay 44', floorPower: 4, particles: [{ ...PAIR_LIGHT, n: 34 }] }
     ],
     widget: {
       type: 'bins',
@@ -381,7 +390,7 @@ export const STAGES = [
     ],
     check(state) {
       const b = state.bins;
-      if (!b.m1 || !b.m2 || !b.m3 || !b.m4) return { ok: false, msg: 'Every crate must be assigned on the manifest before submitting.' };
+      if (!b.m1 || !b.m2 || !b.m3 || !b.m4) return { ok: false, notYet: true, msg: 'Every crate must be assigned on the manifest before submitting.' };
       const want = { m1: 'loose', m2: 'bound', m3: 'mixed', m4: 'bound' };
       const wrong = Object.keys(want).filter(k => b[k] !== want[k]);
       if (!wrong.length) return { ok: true };
@@ -428,9 +437,14 @@ const DEBRIEF = {
    eight stages, so the widgets stay interchangeable.
    ------------------------------------------------------------------ */
 function blankState(stage) {
+  const initialNum = (stage.widget.type === 'number' || stage.widget.type === 'choice-row')
+    ? (stage.widget.min ?? null)
+    : null;
   return {
     power: 1,
-    number: stage.widget.type === 'number' ? stage.widget.min : null,
+    maxPower: 1,
+    resolved: new Set(),
+    number: initialNum,
     sample: null,
     build: {},
     bins: {},
@@ -442,8 +456,8 @@ function blankState(stage) {
 
 /** The bench state that solves each stage, in order. Checked by verify:learn. */
 export const SOLUTIONS = [
-  { number: 4 },
-  { sample: 'c09' },
+  { number: 4, maxPower: 4 },
+  { sample: 'c09', resolved: new Set(['c09', 'c14']) },
   { number: 3, probed: new Set(['k08', 'k17', 'k16']) },
   { sample: 't4', cut: new Set(['t1', 't2', 't3', 't4']) },
   { build: { k08: 1, k01: 2 } },
@@ -454,8 +468,8 @@ export const SOLUTIONS = [
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { number: 6 },
-  { sample: 'c14' },
+  { number: 6, maxPower: 4 },
+  { sample: 'c14', resolved: new Set(['c09', 'c14']) },
   { number: 2, probed: new Set(['k08', 'k17', 'k16']) },
   { sample: 't2', cut: new Set(['t1', 't2', 't3', 't4']) },
   { build: { k08: 1, k01: 1 } },
@@ -538,7 +552,11 @@ export function mount(container, ctx) {
     const stage = STAGES[index];
     const result = stage.check(state);
     if (!result.ok) {
-      frame.miss(result.msg);
+      if (result.notYet) {
+        frame.note(result.msg);
+      } else {
+        frame.miss(result.msg);
+      }
       return;
     }
     frame.clearBanner();
@@ -561,20 +579,20 @@ export function mount(container, ctx) {
       parts.push(`
         <div class="lq-dial">
           <span class="form-label">Power</span>
-          <button type="button" class="quest-btn-sm" data-power="-1" aria-label="Lower power">&minus;</button>
+          <button type="button" class="btn-secondary quest-btn-sm" data-power="-1" aria-label="Lower power">&minus;</button>
           <span class="lq-dial-segs" aria-hidden="true">
             ${Array.from({ length: 6 }, (_, i) => `<i data-seg="${i + 1}"></i>`).join('')}
           </span>
           <span class="lq-dial-value" aria-live="polite">1</span>
-          <button type="button" class="quest-btn-sm" data-power="1" aria-label="Raise power">+</button>
+          <button type="button" class="btn-secondary quest-btn-sm" data-power="1" aria-label="Raise power">+</button>
         </div>
       `);
     }
     if (stage.controls.includes('cut')) {
-      parts.push('<button type="button" class="quest-btn-sm lq-tool" data-tool="cut">Run Cutter</button>');
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="cut">Run Cutter</button>');
     }
     if (stage.controls.includes('settle')) {
-      parts.push('<button type="button" class="quest-btn-sm lq-tool" data-tool="settle">Settle Crate</button>');
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="settle">Settle Crate</button>');
     }
 
     frame.setControls(parts.join(''));
@@ -589,14 +607,24 @@ export function mount(container, ctx) {
     paintDial();
   }
 
+  function checkResolved() {
+    if (!state.sample) return;
+    const s = STAGES[index].samples?.find(samp => samp.id === state.sample);
+    if (s && state.power >= (s.floorPower || 1)) {
+      state.resolved.add(s.id);
+    }
+  }
+
   function setPower(p) {
     const next = Math.max(1, Math.min(6, p));
     if (next === state.power) return;
     state.power = next;
+    state.maxPower = Math.max(state.maxPower || 1, next);
     scope.setPower(next);
     soundscape.playToggleClack?.();
     paintDial();
     renderReadout(null);
+    checkResolved();
   }
 
   function paintDial() {
@@ -663,11 +691,16 @@ export function mount(container, ctx) {
     state.probed.add(hit.kindId);
     soundscape.playScanSweep?.();
     renderReadout(hit);
+    if (index === 2) {
+      const tally = frame.el.widget.querySelector('.lq-tally');
+      if (tally) tally.textContent = `Probed so far: ${state.probed.size} distinct ${state.probed.size === 1 ? 'kind' : 'kinds'}`;
+    }
   }
 
   function onSelect(id) {
     state.sample = id;
     scope.setSelected(id);
+    checkResolved();
     if (STAGES[index].widget.type === 'sample') renderWidget();
   }
 
@@ -733,15 +766,43 @@ export function mount(container, ctx) {
     const stage = STAGES[index];
     const w = stage.widget;
 
+    if (w.type === 'choice-row') {
+      const min = w.min || 1;
+      const max = w.max || 6;
+      frame.setWidget(`
+        <div class="lq-answer">
+          <span class="form-label">${esc(w.label)}</span>
+          <div class="lq-choice-row">
+            ${Array.from({ length: max - min + 1 }, (_, i) => {
+              const val = min + i;
+              const sel = state.number === val;
+              return `<button type="button" class="btn-secondary quest-btn-sm lq-choice-btn ${sel ? 'selected' : ''}" data-choice-val="${val}">${val}</button>`;
+            }).join('')}
+          </div>
+        </div>
+      `);
+      frame.el.widget.querySelectorAll('[data-choice-val]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.number = Number(btn.dataset.choiceVal);
+          frame.el.widget.querySelectorAll('.lq-choice-btn').forEach(b => {
+            b.classList.toggle('selected', Number(b.dataset.choiceVal) === state.number);
+          });
+          soundscape.playToggleClack?.();
+        });
+      });
+      return;
+    }
+
     if (w.type === 'number') {
       frame.setWidget(`
         <div class="lq-answer">
           <span class="form-label">${esc(w.label)}</span>
           <div class="lq-number">
-            <button type="button" class="quest-btn-sm" data-num="-1" aria-label="Lower">&minus;</button>
+            <button type="button" class="btn-secondary quest-btn-sm" data-num="-1" aria-label="Lower">&minus;</button>
             <span class="lq-number-value" aria-live="polite">${state.number}</span>
-            <button type="button" class="quest-btn-sm" data-num="1" aria-label="Raise">+</button>
+            <button type="button" class="btn-secondary quest-btn-sm" data-num="1" aria-label="Raise">+</button>
           </div>
+          ${index === 2 ? `<div class="lq-tally eyebrow lit">Probed so far: ${state.probed.size} distinct ${state.probed.size === 1 ? 'kind' : 'kinds'}</div>` : ''}
         </div>
       `);
       frame.el.widget.querySelectorAll('[data-num]').forEach(btn => {
@@ -774,9 +835,9 @@ export function mount(container, ctx) {
               <div class="lq-build-row" data-kind="${kid}">
                 <span class="lq-build-dot" data-tint="${KINDS[kid].tint}"></span>
                 <span class="lq-build-code">${KINDS[kid].code}</span>
-                <button type="button" class="quest-btn-sm" data-build="-1" aria-label="One fewer ${KINDS[kid].code}">&minus;</button>
+                <button type="button" class="btn-secondary quest-btn-sm" data-build="-1" aria-label="One fewer ${KINDS[kid].code}">&minus;</button>
                 <span class="lq-build-count">0</span>
-                <button type="button" class="quest-btn-sm" data-build="1" aria-label="One more ${KINDS[kid].code}">+</button>
+                <button type="button" class="btn-secondary quest-btn-sm" data-build="1" aria-label="One more ${KINDS[kid].code}">+</button>
               </div>
             `).join('')}
           </div>
