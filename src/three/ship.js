@@ -11,13 +11,21 @@ import * as THREE from "three";
 import { createHoloMaterial } from "./materials/holo.js";
 import {
   createDurasteelTexture,
+  createDurasteelNormalTexture,
   createFloorGrateTexture,
   createHazardStripesTexture,
   createCrtScreenTexture,
   createControlPanelTexture,
   createQuestHoloTexture,
   createCommsStandingsTexture,
-  createCargoManifestTexture
+  createCargoManifestTexture,
+  createBlastDoorTexture,
+  createRackPanelTexture,
+  createFootlockerTexture,
+  createContainerStencilTexture,
+  createKeyboardTexture,
+  createDialGaugeTexture,
+  createVacuumTubeTexture
 } from "./materials/textures.js";
 import {
   createPlanetMaterial,
@@ -57,14 +65,17 @@ export class ShipInterior {
   initMaterials() {
     const loader = new THREE.TextureLoader();
 
-    // 1. Durasteel Bulkhead Material (Nano Banana PBR Asset)
+    // 1. Durasteel Bulkhead Material (Nano Banana PBR Asset with Normal Map)
     this.durasteelTex = createDurasteelTexture(512, 512);
+    this.durasteelNormTex = createDurasteelNormalTexture(256, 256);
     this.durasteelMat = new THREE.MeshStandardMaterial({
       color: 0x2a2d34,
       map: this.durasteelTex,
+      normalMap: this.durasteelNormTex,
       roughness: 0.84,
       metalness: 0.62
     });
+    this.durasteelMat.normalScale.set(0.75, 0.75);
 
     loader.load("/art/durasteel_cockpit_pbr.jpg", (tex) => {
       tex.wrapS = THREE.RepeatWrapping;
@@ -123,18 +134,28 @@ export class ShipInterior {
     this.greenLampMat = new THREE.MeshBasicMaterial({ color: 0x38b000 });
     this.redLampMat = new THREE.MeshBasicMaterial({ color: 0xc92a2a });
 
-    // 8. CRT Displays
-    this.crtAmberTex = createCrtScreenTexture("SYSTEM CALIB", "amber");
+    // 8. CRT Displays (Multiple functional channels)
+    this.crtAmberTex = createCrtScreenTexture("TELEMETRY", "amber");
     this.crtGreenTex = createCrtScreenTexture("ANALYSIS RF", "green");
+    this.crtRadarTex = createCrtScreenTexture("RADAR", "green");
+    this.crtReactorTex = createCrtScreenTexture("REACTOR", "amber");
     this.crtAmberMat = new THREE.MeshBasicMaterial({ map: this.crtAmberTex });
     this.crtGreenMat = new THREE.MeshBasicMaterial({ map: this.crtGreenTex });
+    this.crtRadarMat = new THREE.MeshBasicMaterial({ map: this.crtRadarTex });
+    this.crtReactorMat = new THREE.MeshBasicMaterial({ map: this.crtReactorTex });
 
-    // 9. Analog Control Panel
+    // 9. Analog Control Panel & Keyboards
     this.controlPanelTex = createControlPanelTexture(512, 256);
     this.controlPanelMat = new THREE.MeshStandardMaterial({
       map: this.controlPanelTex,
       roughness: 0.75,
       metalness: 0.28
+    });
+    this.keyboardTex = createKeyboardTexture(512, 256);
+    this.keyboardMat = new THREE.MeshStandardMaterial({
+      map: this.keyboardTex,
+      roughness: 0.72,
+      metalness: 0.25
     });
 
     // 10. Fabric / Bedding Material
@@ -142,6 +163,65 @@ export class ShipInterior {
       color: 0x3d3930,
       roughness: 0.95,
       metalness: 0.05
+    });
+
+    // 11. Stenciled Footlockers (Crew Quarters)
+    this.footlockerOrtegaTex = createFootlockerTexture(512, 256, "CREW 12 // J. ORTEGA");
+    this.footlockerOrtegaMat = new THREE.MeshStandardMaterial({
+      map: this.footlockerOrtegaTex,
+      roughness: 0.85,
+      metalness: 0.35
+    });
+    this.footlockerCadetTex = createFootlockerTexture(512, 256, "CREW 14 // CADET ISSUE");
+    this.footlockerCadetMat = new THREE.MeshStandardMaterial({
+      map: this.footlockerCadetTex,
+      roughness: 0.85,
+      metalness: 0.35
+    });
+
+    // 12. Heavy Blast Door (Airlock Bay)
+    this.blastDoorTex = createBlastDoorTexture(512, 512);
+    this.blastDoorMat = new THREE.MeshStandardMaterial({
+      map: this.blastDoorTex,
+      roughness: 0.82,
+      metalness: 0.52
+    });
+
+    // 13. 19-inch Equipment Rack Panels (Comms Array)
+    this.rackPanelTex = createRackPanelTexture(512, 512);
+    this.rackPanelMat = new THREE.MeshStandardMaterial({
+      map: this.rackPanelTex,
+      roughness: 0.8,
+      metalness: 0.45
+    });
+
+    // 14. Dial Gauges (PSI & BAR)
+    this.dialGaugePsiTex = createDialGaugeTexture(256, 256, "PSI");
+    this.dialGaugeBarTex = createDialGaugeTexture(256, 256, "BAR");
+    this.dialGaugePsiMat = new THREE.MeshStandardMaterial({
+      map: this.dialGaugePsiTex,
+      roughness: 0.4,
+      metalness: 0.5
+    });
+    this.dialGaugeBarMat = new THREE.MeshStandardMaterial({
+      map: this.dialGaugeBarTex,
+      roughness: 0.4,
+      metalness: 0.5
+    });
+
+    // 15. Shipping Container Stencils (Cargo Hold)
+    this.containerMat = new THREE.MeshStandardMaterial({
+      map: createContainerStencilTexture(512, 512, "MM", "44-B"),
+      roughness: 0.88,
+      metalness: 0.3
+    });
+
+    // 16. Glowing Vacuum Tubes (Comms Array)
+    this.vacuumTubeTex = createVacuumTubeTexture(128, 256);
+    this.vacuumTubeMat = new THREE.MeshBasicMaterial({
+      map: this.vacuumTubeTex,
+      transparent: true,
+      opacity: 0.92
     });
   }
 
@@ -301,115 +381,234 @@ export class ShipInterior {
     // Side Tactical Bridge Consoles (flanking the central walkway)
     for (let side of [-1, 1]) {
       const deskX = side * 2.2;
-      const deskZ = -0.6; // world Z = 1.4
+      const deskZ = -1.2; // world Z = 0.8
 
-      const deskTop = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 1.2), this.durasteelMat);
+      // Main heavy console desk
+      const deskTop = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 1.2), this.durasteelMat);
       deskTop.position.set(deskX, 0.85, deskZ);
       const deskLegL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.85, 1.1), this.ironMat);
-      deskLegL.position.set(deskX - 0.7, 0.425, deskZ);
+      deskLegL.position.set(deskX - 0.75, 0.425, deskZ);
       const deskLegR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.85, 1.1), this.ironMat);
-      deskLegR.position.set(deskX + 0.7, 0.425, deskZ);
+      deskLegR.position.set(deskX + 0.75, 0.425, deskZ);
       bridgeGroup.add(deskTop, deskLegL, deskLegR);
 
-      const consoleChassis = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.45, 0.45), this.ironMat);
-      consoleChassis.position.set(deskX, 1.12, deskZ - 0.35);
+      // Mechanical terminal keyboard on desk surface
+      const keyboard = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.025, 0.32), this.keyboardMat);
+      keyboard.position.set(deskX, 0.905, deskZ + 0.22);
+      bridgeGroup.add(keyboard);
+
+      // Console superstructure chassis
+      const consoleChassis = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.48, 0.45), this.ironMat);
+      consoleChassis.position.set(deskX, 1.14, deskZ - 0.35);
       consoleChassis.rotation.x = 0.3;
 
-      const crtA = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.36, 0.04), this.crtAmberMat);
-      crtA.position.set(deskX - 0.32, 1.16, deskZ - 0.18);
-      crtA.rotation.x = 0.3;
+      // Lower CRT screens: Telemetry (amber) and Reactor Core (amber/green)
+      const crtLowerA = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.38, 0.04), this.crtTelemetryMat);
+      crtLowerA.position.set(deskX - 0.34, 1.18, deskZ - 0.18);
+      crtLowerA.rotation.x = 0.3;
 
-      const crtB = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.36, 0.04), this.crtGreenMat);
-      crtB.position.set(deskX + 0.32, 1.16, deskZ - 0.18);
-      crtB.rotation.x = 0.3;
+      const crtLowerB = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.38, 0.04), this.crtReactorMat);
+      crtLowerB.position.set(deskX + 0.34, 1.18, deskZ - 0.18);
+      crtLowerB.rotation.x = 0.3;
 
-      const switchPlate = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.04, 0.3), this.controlPanelMat);
-      switchPlate.position.set(deskX, 0.91, deskZ + 0.2);
+      // Upper Monitor Bridge & secondary CRTs (Radar & Analysis Spectrum)
+      const upperGantry = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.25), this.ironMat);
+      upperGantry.position.set(deskX, 1.58, deskZ - 0.42);
 
-      for (let l = -0.15; l <= 0.15; l += 0.1) {
+      const crtUpperA = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.32, 0.04), this.crtRadarMat);
+      crtUpperA.position.set(deskX - 0.32, 1.62, deskZ - 0.32);
+      crtUpperA.rotation.x = -0.15;
+
+      const crtUpperB = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.32, 0.04), this.crtGreenMat);
+      crtUpperB.position.set(deskX + 0.32, 1.62, deskZ - 0.32);
+      crtUpperB.rotation.x = -0.15;
+
+      // Analog dial gauge mounted on console flank
+      const dialG = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.03, 16), side < 0 ? this.dialGaugePsiMat : this.dialGaugeBarMat);
+      dialG.rotation.x = Math.PI / 2;
+      dialG.position.set(deskX - side * 0.78, 1.25, deskZ - 0.2);
+
+      // Switchgear with toggle levers & safety guards
+      const switchPlate = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.03, 0.24), this.controlPanelMat);
+      switchPlate.position.set(deskX + side * 0.52, 0.91, deskZ + 0.22);
+
+      for (let l = -0.12; l <= 0.12; l += 0.08) {
         const lever = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.12, 6), this.brassMat);
-        lever.position.set(deskX + l, 0.98, deskZ + 0.2);
+        lever.position.set(deskX + side * 0.52 + l, 0.98, deskZ + 0.22);
         lever.rotation.x = -0.25;
         const knob = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), this.ironMat);
-        knob.position.set(deskX + l, 1.04, deskZ + 0.18);
+        knob.position.set(deskX + side * 0.52 + l, 1.04, deskZ + 0.2);
         bridgeGroup.add(lever, knob);
       }
 
-      const cable = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.02, 6, 16), this.ironMat);
+      // Cable bundle loop from under desk to deck floor
+      const cable = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.025, 6, 16), this.ironMat);
       cable.rotation.x = Math.PI / 2;
-      cable.position.set(deskX + side * 0.45, 0.91, deskZ + 0.15);
+      cable.position.set(deskX + side * 0.55, 0.91, deskZ - 0.05);
 
-      const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.45, 8), this.ironMat);
+      // Articulated tactical task lamp
+      const lampStem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.32, 6), this.brassMat);
+      lampStem.position.set(deskX - side * 0.65, 1.08, deskZ - 0.1);
+      lampStem.rotation.z = side * 0.25;
+      const lampCowl = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.1, 8), this.durasteelMat);
+      lampCowl.position.set(deskX - side * 0.6, 1.22, deskZ - 0.08);
+      lampCowl.rotation.z = side * -0.5;
+      const taskLight = new THREE.PointLight(0xd99423, 0.65, 2.5);
+      taskLight.position.set(deskX - side * 0.58, 1.18, deskZ - 0.06);
+
+      // Industrial pilot seat with heavy armrests & headrest
+      const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.45, 8), this.ironMat);
       chairBase.position.set(deskX, 0.25, deskZ + 0.85);
-      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.55), this.fabricMat);
+      const chairFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.05, 8), this.ironMat);
+      chairFoot.position.set(deskX, 0.025, deskZ + 0.85);
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.58), this.fabricMat);
       seat.position.set(deskX, 0.52, deskZ + 0.85);
-      const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 0.08), this.fabricMat);
-      backrest.position.set(deskX, 0.82, deskZ + 1.1);
-      bridgeGroup.add(consoleChassis, crtA, crtB, switchPlate, cable, chairBase, seat, backrest);
+      const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.62, 0.1), this.fabricMat);
+      backrest.position.set(deskX, 0.84, deskZ + 1.12);
+      const headrest = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.22, 0.08), this.fabricMat);
+      headrest.position.set(deskX, 1.22, deskZ + 1.14);
 
-      // Tight desk collider leaving X: -1.4 to 1.4 completely open for central spine
-      this.addCollider(deskX - 0.75, deskX + 0.75, 0.8, 1.8);
+      for (let armSide of [-0.34, 0.34]) {
+        const armPost = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.25, 0.04), this.ironMat);
+        armPost.position.set(deskX + armSide, 0.65, deskZ + 0.85);
+        const armRest = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.35), this.durasteelMat);
+        armRest.position.set(deskX + armSide, 0.78, deskZ + 0.85);
+        bridgeGroup.add(armPost, armRest);
+      }
+
+      bridgeGroup.add(
+        consoleChassis, crtLowerA, crtLowerB,
+        upperGantry, crtUpperA, crtUpperB,
+        dialG, switchPlate, cable, lampStem, lampCowl, taskLight,
+        chairBase, chairFoot, seat, backrest, headrest
+      );
+
+      // Tight desk collider shifted back to Z: [0.2, 1.4], leaving transverse corridor Z: [1.4, 2.6] completely clear
+      this.addCollider(deskX - 0.8, deskX + 0.8, 0.2, 1.4);
     }
 
     this.group.add(bridgeGroup);
   }
 
   buildCockpitRoom() {
-    // Flight Helm at anchor [0, 1.45, 1.6] facing forward
+    // Flight Helm facing forward
     // Styled as dual pilot & navigator flight pods flanking a clear central aisle
     const cockpitGroup = new THREE.Group();
-    cockpitGroup.position.set(0, 0, 2.7);
+    cockpitGroup.position.set(0, 0, 3.2);
 
     for (let side of [-1, 1]) {
       const podX = side * 1.25;
 
-      const column = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.75, 8), this.ironMat);
-      column.position.set(podX, 0.55, 0.4);
+      // Heavy flight steering column
+      const column = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, 0.78, 8), this.ironMat);
+      column.position.set(podX, 0.55, 0.2);
       column.rotation.x = -0.22;
 
-      const yokeBar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.42, 8), this.ironMat);
+      // Ergonomic dual-handle yoke
+      const yokeBar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.44, 8), this.ironMat);
       yokeBar.rotation.z = Math.PI / 2;
-      yokeBar.position.set(podX, 0.92, 0.48);
+      yokeBar.position.set(podX, 0.94, 0.28);
 
-      const gripL = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.22, 8), this.durasteelMat);
-      gripL.position.set(podX - 0.21, 0.98, 0.48);
-      const gripR = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.22, 8), this.durasteelMat);
-      gripR.position.set(podX + 0.21, 0.98, 0.48);
-      cockpitGroup.add(column, yokeBar, gripL, gripR);
+      const gripL = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.24, 8), this.durasteelMat);
+      gripL.position.set(podX - 0.22, 1.0, 0.28);
+      const gripR = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.24, 8), this.durasteelMat);
+      gripR.position.set(podX + 0.22, 1.0, 0.28);
 
-      const podDash = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.55, 0.45), this.durasteelMat);
-      podDash.position.set(podX, 0.95, 0.85);
+      // Center hub cap with amber status indicator
+      const hubCap = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.03, 12), this.brassMat);
+      hubCap.rotation.x = Math.PI / 2;
+      hubCap.position.set(podX, 0.94, 0.3);
+      const hubLamp = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), this.amberLampMat);
+      hubLamp.position.set(podX, 0.94, 0.32);
+
+      cockpitGroup.add(column, yokeBar, gripL, gripR, hubCap, hubLamp);
+
+      // Flight dash binnacle
+      const podDash = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.58, 0.48), this.durasteelMat);
+      podDash.position.set(podX, 0.96, 0.65);
       podDash.rotation.x = -0.35;
 
-      const screen = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.32, 0.04), side < 0 ? this.crtAmberMat : this.crtGreenMat);
-      screen.position.set(podX, 1.0, 0.72);
-      screen.rotation.x = -0.35;
+      // Primary flight CRT (Attitude/Vector & Radar)
+      const screenA = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.32, 0.04), side < 0 ? this.crtTelemetryMat : this.crtRadarMat);
+      screenA.position.set(podX - 0.2, 1.02, 0.52);
+      screenA.rotation.x = -0.35;
 
-      cockpitGroup.add(podDash, screen);
+      const screenB = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.28, 0.04), side < 0 ? this.crtReactorMat : this.crtGreenMat);
+      screenB.position.set(podX + 0.22, 1.04, 0.53);
+      screenB.rotation.x = -0.35;
 
-      // Pilot seat
-      const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.45, 8), this.ironMat);
-      chairBase.position.set(podX, 0.25, -0.15);
-      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.55), this.fabricMat);
-      seat.position.set(podX, 0.52, -0.15);
-      const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 0.08), this.fabricMat);
-      backrest.position.set(podX, 0.82, -0.4);
+      // Micro dial gauges on dash
+      const dashDial = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.02, 12), this.dialGaugePsiMat);
+      dashDial.rotation.x = Math.PI / 2 - 0.35;
+      dashDial.position.set(podX + 0.25, 0.84, 0.58);
+
+      // Rudder pedals on deck
+      for (let pSide of [-0.15, 0.15]) {
+        const pedal = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.025, 0.16), this.ironMat);
+        pedal.position.set(podX + pSide, 0.06, 0.62);
+        pedal.rotation.x = 0.45;
+        cockpitGroup.add(pedal);
+      }
+
+      cockpitGroup.add(podDash, screenA, screenB, dashDial);
+
+      // Armored bucket pilot seat with five-point harness straps
+      const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.45, 8), this.ironMat);
+      chairBase.position.set(podX, 0.25, -0.35);
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.09, 0.56), this.fabricMat);
+      seat.position.set(podX, 0.52, -0.35);
+      const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.58, 0.09), this.fabricMat);
+      backrest.position.set(podX, 0.82, -0.6);
+
+      // Safety harness straps
+      for (let s of [-0.14, 0.14]) {
+        const strap = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.52, 0.015), this.durasteelMat);
+        strap.position.set(podX + s, 0.82, -0.54);
+        cockpitGroup.add(strap);
+      }
+
       cockpitGroup.add(chairBase, seat, backrest);
 
-      // Colliders for pods only, leaving X in [-0.75, 0.75] and wing corridor Z in [1.8, 2.3] completely clear
-      this.addCollider(podX - 0.5, podX + 0.5, 2.3, 3.7);
+      // Colliders for pods shifted forward to Z: [2.6, 3.8], leaving transverse corridor Z: [1.4, 2.6] clear
+      this.addCollider(podX - 0.55, podX + 0.55, 2.6, 3.8);
     }
 
-    // Overhead avionics rack suspended above eye height (Y = 3.1)
-    const overheadConsole = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.25, 1.2), this.ironMat);
+    // Center Throttle Quadrant & Avionics Pedestal (X = 0, Z = 0.3)
+    const centerPedestal = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.65, 0.72), this.ironMat);
+    centerPedestal.position.set(0, 0.45, 0.1);
+    centerPedestal.rotation.x = -0.15;
+
+    // 4 Throttle levers with brass shafts and spherical knobs
+    for (let t = -0.12; t <= 0.12; t += 0.08) {
+      const tLever = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.14, 6), this.brassMat);
+      tLever.position.set(t, 0.82, 0.08);
+      tLever.rotation.x = -0.3;
+      const tKnob = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 8), this.ironMat);
+      tKnob.position.set(t, 0.88, 0.06);
+      cockpitGroup.add(tLever, tKnob);
+    }
+
+    // Attitude sphere gimbal housing
+    const attitudeSphere = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 16), this.brassMat);
+    attitudeSphere.position.set(0, 0.78, 0.32);
+
+    cockpitGroup.add(centerPedestal, attitudeSphere);
+
+    // Overhead avionics rack suspended above eye height (Y = 3.15)
+    const overheadConsole = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.26, 1.2), this.ironMat);
     overheadConsole.position.set(0, 3.15, 0.2);
     overheadConsole.rotation.x = -0.12;
 
-    const ohPanel = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 0.9), this.controlPanelMat);
+    const ohPanel = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.04, 0.95), this.controlPanelMat);
     ohPanel.position.set(0, 3.01, 0.2);
     ohPanel.rotation.x = -0.12;
 
-    cockpitGroup.add(overheadConsole, ohPanel);
+    // Amber task lighting for cockpit
+    const cockpitTaskLight = new THREE.PointLight(0xd99423, 0.65, 3.2);
+    cockpitTaskLight.position.set(0, 2.85, 0.2);
+
+    cockpitGroup.add(overheadConsole, ohPanel, cockpitTaskLight);
+    this.addCollider(-0.25, 0.25, 3.1, 3.6);
     this.group.add(cockpitGroup);
   }
 
@@ -418,67 +617,100 @@ export class ShipInterior {
     const starmapGroup = new THREE.Group();
     starmapGroup.position.set(3.2, 0, 1.8);
 
-    const tableBase = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 0.85, 8), this.durasteelMat);
+    // Chamfered octagonal tactical table pedestal
+    const tableBase = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.45, 0.85, 8), this.durasteelMat);
     tableBase.position.set(0, 0.425, 0);
     tableBase.receiveShadow = true;
     starmapGroup.add(tableBase);
 
-    const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 0.1, 8), this.ironMat);
+    // Tabletop rim with beveled control surfaces
+    const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(1.22, 1.22, 0.1, 8), this.ironMat);
     tableTop.position.set(0, 0.88, 0);
     starmapGroup.add(tableTop);
 
-    const rail = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.035, 8, 32), this.brassMat);
+    // Brass perimeter safety grab rail on stanchion posts
+    const rail = new THREE.Mesh(new THREE.TorusGeometry(1.34, 0.035, 8, 32), this.brassMat);
     rail.rotation.x = Math.PI / 2;
-    rail.position.set(0, 0.92, 0);
+    rail.position.set(0, 0.94, 0);
 
     for (let a = 0; a < 8; a++) {
       const angle = a * (Math.PI * 2 / 8);
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.25, 6), this.ironMat);
-      post.position.set(Math.cos(angle) * 1.3, 0.8, Math.sin(angle) * 1.3);
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.28, 6), this.ironMat);
+      post.position.set(Math.cos(angle) * 1.34, 0.8, Math.sin(angle) * 1.34);
       starmapGroup.add(post);
+
+      // Tactile pushbuttons and rotary dials on the table rim bevel
+      const button = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.03, 8), a % 2 === 0 ? this.amberLampMat : this.brassMat);
+      button.position.set(Math.cos(angle + 0.2) * 1.12, 0.94, Math.sin(angle + 0.2) * 1.12);
+      const dial = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.025, 12), this.ironMat);
+      dial.position.set(Math.cos(angle - 0.2) * 1.12, 0.94, Math.sin(angle - 0.2) * 1.12);
+      starmapGroup.add(button, dial);
     }
     starmapGroup.add(rail);
 
-    const emitterRing = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.06, 24), this.brassMat);
-    emitterRing.position.set(0, 0.95, 0);
-    starmapGroup.add(emitterRing);
+    // Stepped concentric holographic emitter rings
+    const emitterOuter = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.58, 0.04, 24), this.durasteelMat);
+    emitterOuter.position.set(0, 0.94, 0);
+    const emitterRing = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.07, 24), this.brassMat);
+    emitterRing.position.set(0, 0.97, 0);
+    const emitterCore = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.09, 16), this.halogenMat);
+    emitterCore.position.set(0, 0.99, 0);
+    starmapGroup.add(emitterOuter, emitterRing, emitterCore);
 
+    // Multi-tier planetary orrery projection
     const holoProjector = new THREE.Group();
     holoProjector.position.set(0, 1.35, 0);
 
     const wireSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(0.48, 16, 12),
-      createHoloMaterial({ color: 0xffaa22, opacity: 0.35, wireframe: true })
+      new THREE.SphereGeometry(0.52, 16, 12),
+      createHoloMaterial({ color: 0xffaa22, opacity: 0.32, wireframe: true })
     );
     holoProjector.add(wireSphere);
 
     const sunCore = new THREE.Mesh(
-      new THREE.SphereGeometry(0.1, 16, 16),
+      new THREE.SphereGeometry(0.11, 16, 16),
       new THREE.MeshBasicMaterial({ color: 0xffd166 })
     );
-    const sunLight = new THREE.PointLight(0xffaa22, 1.2, 5);
+    const sunLight = new THREE.PointLight(0xffaa22, 1.3, 5.5);
     holoProjector.add(sunCore, sunLight);
 
-    for (let r = 0; r < 3; r++) {
-      const rad = 0.22 + r * 0.15;
+    // 4 Inclined orbital paths with celestial bodies
+    const orbitConfigs = [
+      { rad: 0.22, color: 0xcc8833, size: 0.026, inclX: 0.15, inclY: 0.1, speed: 0.5 },
+      { rad: 0.36, color: 0xddaa55, size: 0.042, inclX: -0.22, inclY: 0.35, speed: 0.35, hasRings: true },
+      { rad: 0.48, color: 0x995533, size: 0.032, inclX: 0.28, inclY: -0.15, speed: 0.22 },
+      { rad: 0.62, color: 0x7788aa, size: 0.024, inclX: -0.1, inclY: 0.45, speed: 0.16 }
+    ];
+
+    orbitConfigs.forEach((cfg) => {
       const orbitRing = new THREE.Mesh(
-        new THREE.RingGeometry(rad - 0.005, rad + 0.005, 32),
-        new THREE.MeshBasicMaterial({ color: 0xffaa22, side: THREE.DoubleSide, transparent: true, opacity: 0.6 })
+        new THREE.RingGeometry(cfg.rad - 0.005, cfg.rad + 0.005, 32),
+        new THREE.MeshBasicMaterial({ color: 0xffaa22, side: THREE.DoubleSide, transparent: true, opacity: 0.65 })
       );
-      orbitRing.rotation.x = Math.PI / 2 + (r * 0.18);
-      orbitRing.rotation.y = r * 0.25;
+      orbitRing.rotation.x = Math.PI / 2 + cfg.inclX;
+      orbitRing.rotation.y = cfg.inclY;
 
-      const planetGeo = new THREE.SphereGeometry(0.028 + r * 0.012, 12, 12);
       const planetMesh = new THREE.Mesh(
-        planetGeo,
-        new THREE.MeshBasicMaterial({ color: r === 0 ? 0xcc8833 : (r === 1 ? 0xddaa55 : 0xaa6622) })
+        new THREE.SphereGeometry(cfg.size, 12, 12),
+        new THREE.MeshBasicMaterial({ color: cfg.color })
       );
-      planetMesh.position.set(rad, 0, 0);
-      orbitRing.add(planetMesh);
+      planetMesh.position.set(cfg.rad, 0, 0);
 
+      // Gas giant miniature ring disc
+      if (cfg.hasRings) {
+        const pRings = new THREE.Mesh(
+          new THREE.RingGeometry(cfg.size * 1.4, cfg.size * 2.2, 16),
+          new THREE.MeshBasicMaterial({ color: 0xcca877, side: THREE.DoubleSide, transparent: true, opacity: 0.75 })
+        );
+        pRings.rotation.x = Math.PI / 2 + 0.3;
+        planetMesh.add(pRings);
+      }
+
+      orbitRing.add(planetMesh);
       holoProjector.add(orbitRing);
-      this.animatedElements.push({ obj: orbitRing, speed: 0.3 / (r + 1) });
-    }
+      this.animatedElements.push({ obj: orbitRing, speed: cfg.speed });
+    });
+
     starmapGroup.add(holoProjector);
 
     // 3D Holographic Quest Display floating above table
@@ -486,7 +718,7 @@ export class ShipInterior {
     this.starmapHoloMat = new THREE.MeshBasicMaterial({
       map: qTex,
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.94,
       side: THREE.DoubleSide
     });
     const holoPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.8), this.starmapHoloMat);
@@ -504,6 +736,7 @@ export class ShipInterior {
     const quartersGroup = new THREE.Group();
     quartersGroup.position.set(-3.8, 0, 2.2);
 
+    // 1. Two-tier industrial bunk bed frame against port wall
     const bunkFrame = new THREE.Group();
     bunkFrame.position.set(-1.0, 0, 0.4);
 
@@ -515,6 +748,7 @@ export class ShipInterior {
       }
     }
 
+    // Access ladder rungs
     for (let y = 0.4; y <= 2.2; y += 0.35) {
       const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.45, 6), this.ironMat);
       rung.rotation.z = Math.PI / 2;
@@ -522,6 +756,7 @@ export class ShipInterior {
       bunkFrame.add(rung);
     }
 
+    // Lower bunk mattress, blanket & pillow
     const mattressLower = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.15, 1.7), this.fabricMat);
     mattressLower.position.set(0, 0.45, 0);
     const blanketLower = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.08, 1.2), this.durasteelMat);
@@ -530,17 +765,28 @@ export class ShipInterior {
     pillowLower.position.set(0, 0.55, 0.65);
     bunkFrame.add(mattressLower, blanketLower, pillowLower);
 
+    // Upper bunk mattress, blanket, pillow & safety rail
     const mattressUpper = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.15, 1.7), this.fabricMat);
     mattressUpper.position.set(0, 1.65, 0);
     const blanketUpper = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.08, 1.2), this.durasteelMat);
     blanketUpper.position.set(0, 1.72, -0.2);
     const pillowUpper = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 0.35), this.fabricMat);
     pillowUpper.position.set(0, 1.75, 0.65);
-    bunkFrame.add(mattressUpper, blanketUpper, pillowUpper);
+    const safetyRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 1.2), this.durasteelMat);
+    safetyRail.position.set(0.56, 1.82, -0.2);
+    bunkFrame.add(mattressUpper, blanketUpper, pillowUpper, safetyRail);
 
-    const lockerA = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 0.6), this.durasteelMat);
+    // Personal bunk cubbies with datapad
+    const cubbyLower = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.25, 0.15), this.durasteelMat);
+    cubbyLower.position.set(-0.4, 0.72, 0.82);
+    const datapad = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.02, 0.12), this.ironMat);
+    datapad.position.set(-0.4, 0.62, 0.82);
+    bunkFrame.add(cubbyLower, datapad);
+
+    // Under-bunk storage: Two stenciled metal footlockers resting cleanly on deck (Y = 0.16)
+    const lockerA = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 0.6), this.footlockerOrtegaMat);
     lockerA.position.set(0, 0.16, -0.45);
-    const lockerB = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 0.6), this.durasteelMat);
+    const lockerB = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 0.6), this.footlockerCadetMat);
     lockerB.position.set(0, 0.16, 0.45);
     bunkFrame.add(lockerA, lockerB);
 
@@ -548,29 +794,75 @@ export class ShipInterior {
     // Bunks tight against port outer wall
     this.addCollider(-5.4, -4.2, 1.7, 3.5);
 
-    const deskShelf = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.6), this.ironMat);
+    // 2. Fold-down Work Desk against bulkhead wall at X = 0.6 (world X = -3.2), Z = -0.8
+    const deskShelf = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.06, 0.65), this.durasteelMat);
     deskShelf.position.set(0.6, 0.9, -0.8);
 
-    for (let sx of [0.3, 0.9]) {
+    for (let sx of [0.28, 0.92]) {
       const strut = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.45), this.ironMat);
       strut.position.set(sx, 0.65, -0.8);
       quartersGroup.add(strut);
     }
 
-    const miniCrt = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.28, 0.3), this.crtAmberMat);
-    miniCrt.position.set(0.6, 1.08, -0.8);
+    // Mini CRT crew log terminal on desk
+    const miniCrt = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.3, 0.28), this.crtAmberMat);
+    miniCrt.position.set(0.52, 1.08, -0.82);
 
-    const lampArm = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.35, 6), this.brassMat);
-    lampArm.position.set(0.88, 1.15, -0.65);
-    lampArm.rotation.z = -0.35;
-    const lampHead = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.12, 8), this.durasteelMat);
-    lampHead.position.set(0.78, 1.3, -0.65);
-    lampHead.rotation.z = Math.PI * 0.8;
-    const lampLight = new THREE.PointLight(0xffb703, 0.8, 3.5);
-    lampLight.position.set(0.75, 1.25, -0.65);
+    // Realistic articulated anglepoise desk lamp: weighted base + dual hinged arms + conical shade
+    const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.025, 12), this.ironMat);
+    lampBase.position.set(0.88, 0.945, -0.65);
 
-    quartersGroup.add(deskShelf, miniCrt, lampArm, lampHead, lampLight);
-    // Desk against wall
+    const lowerArm = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.26, 6), this.brassMat);
+    lowerArm.position.set(0.88, 1.08, -0.65);
+    lowerArm.rotation.z = -0.28;
+
+    const upperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.24, 6), this.brassMat);
+    upperArm.position.set(0.82, 1.25, -0.65);
+    upperArm.rotation.z = 0.52;
+
+    const lampHead = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.14, 8), this.durasteelMat);
+    lampHead.position.set(0.72, 1.32, -0.65);
+    lampHead.rotation.z = Math.PI * 0.85;
+
+    const lampLight = new THREE.PointLight(0xffb703, 0.85, 3.5);
+    lampLight.position.set(0.68, 1.25, -0.65);
+
+    // Stool at desk
+    const stoolSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.06, 12), this.durasteelMat);
+    stoolSeat.position.set(0.6, 0.52, -0.32);
+    const stoolLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.5, 8), this.ironMat);
+    stoolLeg.position.set(0.6, 0.25, -0.32);
+    const stoolFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.26, 0.04, 8), this.ironMat);
+    stoolFoot.position.set(0.6, 0.02, -0.32);
+
+    // 3. Wall Utility Hooks with hanging expedition gear
+    const hookRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.08, 0.9), this.ironMat);
+    hookRail.position.set(-0.25, 1.65, -0.85);
+    quartersGroup.add(hookRail);
+
+    for (let hz of [-1.15, -0.85, -0.55]) {
+      const hook = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.008, 6, 8, Math.PI), this.brassMat);
+      hook.rotation.y = Math.PI / 2;
+      hook.position.set(-0.22, 1.63, hz);
+      quartersGroup.add(hook);
+    }
+
+    // Hanging canvas duffel / gear pack on hook 1
+    const pack = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.42, 0.24), this.fabricMat);
+    pack.position.set(-0.22, 1.35, -1.15);
+    // Hanging survival jacket on hook 2
+    const jacket = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.48, 0.22), this.durasteelMat);
+    jacket.position.set(-0.22, 1.32, -0.85);
+    // Hanging oxygen canister / rebreather on hook 3
+    const canister = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.32, 8), this.brassMat);
+    canister.position.set(-0.22, 1.4, -0.55);
+
+    quartersGroup.add(
+      deskShelf, miniCrt, lampBase, lowerArm, upperArm, lampHead, lampLight,
+      stoolSeat, stoolLeg, stoolFoot, pack, jacket, canister
+    );
+
+    // Desk and stool collider against wall
     this.addCollider(-3.6, -2.8, 1.0, 1.8);
 
     this.group.add(quartersGroup);
@@ -581,17 +873,39 @@ export class ShipInterior {
     const cargoGroup = new THREE.Group();
     cargoGroup.position.set(4.2, 0, -2.2);
 
-    const craneBeam = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 6.5), this.hazardMat);
-    craneBeam.position.set(0, 3.75, 0);
+    // 1. Overhead Gantry Crane with I-beam flange and motorized hoist
+    const craneBeamWeb = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.45, 6.8), this.hazardMat);
+    craneBeamWeb.position.set(0, 3.75, 0);
+    const craneTopFlange = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.08, 6.8), this.hazardMat);
+    craneTopFlange.position.set(0, 3.98, 0);
+    const craneBottomFlange = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.08, 6.8), this.hazardMat);
+    craneBottomFlange.position.set(0, 3.52, 0);
+    cargoGroup.add(craneBeamWeb, craneTopFlange, craneBottomFlange);
 
-    const trolley = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.3, 0.8), this.ironMat);
-    trolley.position.set(0, 3.4, -0.5);
-    const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.2, 6), this.ironMat);
-    cable.position.set(0, 2.7, -0.5);
-    const hook = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.03, 6, 12, Math.PI * 1.5), this.ironMat);
-    hook.position.set(0, 2.05, -0.5);
-    cargoGroup.add(craneBeam, trolley, cable, hook);
+    // Hoist trolley carriage riding bottom flange
+    const trolley = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.28, 0.78), this.ironMat);
+    trolley.position.set(0, 3.36, -0.4);
 
+    // Trolley flanged wheels
+    for (let wx of [-0.28, 0.28]) {
+      for (let wz of [-0.25, 0.25]) {
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.05, 12), this.durasteelMat);
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(wx, 3.52, -0.4 + wz);
+        cargoGroup.add(wheel);
+      }
+    }
+
+    // Steel wire rope cable & forged lifting hook with safety latch
+    const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 1.1, 6), this.ironMat);
+    cable.position.set(0, 2.7, -0.4);
+    const counterweight = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 10), this.ironMat);
+    counterweight.position.set(0, 2.15, -0.4);
+    const hook = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.035, 6, 14, Math.PI * 1.5), this.brassMat);
+    hook.position.set(0, 2.02, -0.4);
+    cargoGroup.add(trolley, cable, counterweight, hook);
+
+    // 2. Multi-tier Heavy Cantilever Storage Racks against starboard outer wall
     const rackGroup = new THREE.Group();
     rackGroup.position.set(1.8, 0, 0);
 
@@ -609,31 +923,69 @@ export class ShipInterior {
       shelf.position.set(0, sy, 0);
       rackGroup.add(shelf);
 
-      for (let dz of [-1.0, -0.4, 0.4, 1.0]) {
-        const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.75, 12), tier % 2 === 0 ? this.durasteelMat : this.brassMat);
-        drum.position.set(dz < 0 ? -0.25 : 0.25, sy + 0.42, dz);
-        rackGroup.add(drum);
+      // Sealed cylindrical chemical drums resting cleanly ON shelf surface (sy + 0.04 + 0.38)
+      for (let dz of [-1.0, -0.38, 0.38, 1.0]) {
+        const drumY = sy + 0.04 + 0.38;
+        const drumX = dz < 0 ? -0.26 : 0.26;
+        const drum = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.24, 0.24, 0.76, 16),
+          tier % 2 === 0 ? this.durasteelMat : this.brassMat
+        );
+        drum.position.set(drumX, drumY, dz);
+
+        // Chime reinforcement rings on drum top and bottom
+        const topChime = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.015, 6, 16), this.ironMat);
+        topChime.rotation.x = Math.PI / 2;
+        topChime.position.set(drumX, drumY + 0.37, dz);
+        const bungCap = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.02, 8), this.brassMat);
+        bungCap.position.set(drumX + 0.12, drumY + 0.39, dz + 0.05);
+
+        rackGroup.add(drum, topChime, bungCap);
       }
     }
     cargoGroup.add(rackGroup);
     // Storage racks against starboard outer wall
     this.addCollider(5.3, 6.7, -3.8, -0.6);
 
-    const containerA = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.6), this.durasteelMat);
+    // 3. Stenciled Shipping Freight Containers
+    // Container A (Primary unit with Guild stencil)
+    const containerA = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.6), this.containerMat);
     containerA.position.set(-1.4, 0.6, 1.2);
+
+    // Container B (Hazard striped freight unit)
     const containerB = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.6), this.hazardMat);
     containerB.position.set(-1.4, 0.6, -1.0);
-    cargoGroup.add(containerA, containerB);
+
+    // Top stacked smaller container unit C resting on container B
+    const containerC = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 1.2), this.durasteelMat);
+    containerC.position.set(-1.4, 1.6, -1.0);
+
+    // Twist-lock corner castings on container A
+    for (let cx of [-0.68, 0.68]) {
+      for (let cz of [-0.78, 0.78]) {
+        for (let cy of [0.05, 1.15]) {
+          const cornerCast = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.09), this.ironMat);
+          cornerCast.position.set(-1.4 + cx, cy, 1.2 + cz);
+          cargoGroup.add(cornerCast);
+        }
+      }
+    }
+
+    cargoGroup.add(containerA, containerB, containerC);
     // Crates collider leaving walkways clear
     this.addCollider(2.1, 3.5, -1.8, -0.2);
 
-    // 3D Cargo Manifest Terminal on container A facing room center
+    // 4. 3D Cargo Manifest Terminal on container A facing room center (X: -1.4, Z: 0.39)
     const mTex = createCargoManifestTexture(0, 8, '');
     this.cargoScreenMat = new THREE.MeshBasicMaterial({ map: mTex });
     const manifestScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.55), this.cargoScreenMat);
     manifestScreen.position.set(-1.4, 1.15, 0.39);
     manifestScreen.rotation.y = Math.PI;
-    cargoGroup.add(manifestScreen);
+
+    // Terminal bezel frame
+    const manifestFrame = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.63, 0.03), this.ironMat);
+    manifestFrame.position.set(-1.4, 1.15, 0.405);
+    cargoGroup.add(manifestScreen, manifestFrame);
 
     this.group.add(cargoGroup);
   }
@@ -643,10 +995,20 @@ export class ShipInterior {
     const commsGroup = new THREE.Group();
     commsGroup.position.set(-2.8, 0, -2.0);
 
-    const rack = new THREE.Mesh(new THREE.BoxGeometry(2.6, 3.4, 0.75), this.ironMat);
-    rack.position.set(0, 1.7, -1.2);
-    commsGroup.add(rack);
+    // 1. Floor-to-ceiling 19-inch Equipment Rack with authentic modular faceplates
+    const rackFrame = new THREE.Mesh(new THREE.BoxGeometry(2.6, 3.4, 0.75), this.ironMat);
+    rackFrame.position.set(0, 1.7, -1.2);
+    commsGroup.add(rackFrame);
 
+    // Modular 4U rack panels on rack face
+    for (let u = 0; u < 3; u++) {
+      const uPanel = new THREE.Mesh(new THREE.PlaneGeometry(2.48, 0.78), this.rackPanelMat);
+      uPanel.position.set(0, 0.85 + u * 0.84, -0.815);
+      commsGroup.add(uPanel);
+    }
+
+    // 2. Monitoring & Spectrum Consoles
+    // Green Oscilloscope CRT
     const osc = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.65, 0.05), this.crtGreenMat);
     osc.position.set(-0.6, 1.85, -0.8);
     commsGroup.add(osc);
@@ -654,35 +1016,68 @@ export class ShipInterior {
     // 3D Live Standings Screen on main console
     const sTex = createCommsStandingsTexture([], '');
     this.commsScreenMat = new THREE.MeshBasicMaterial({ map: sTex });
-    const tel = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.65, 0.05), this.commsScreenMat);
-    tel.position.set(0.6, 1.85, -0.8);
-    commsGroup.add(tel);
+    const standingsScreen = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.65, 0.05), this.commsScreenMat);
+    standingsScreen.position.set(0.6, 1.85, -0.8);
+    commsGroup.add(standingsScreen);
 
+    // 3. Glowing Vacuum Tube Gallery with protective wire cage
     const tubeShelf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.06, 0.28), this.durasteelMat);
     tubeShelf.position.set(0, 2.45, -0.75);
     commsGroup.add(tubeShelf);
 
     for (let tx = -0.7; tx <= 0.7; tx += 0.28) {
-      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.22, 8), this.amberLampMat);
-      tube.position.set(tx, 2.58, -0.75);
-      commsGroup.add(tube);
+      // Glass vacuum tube with internal filament
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.24, 12), this.vacuumTubeMat);
+      tube.position.set(tx, 2.6, -0.75);
+      const tubeBasePin = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.03, 8), this.brassMat);
+      tubeBasePin.position.set(tx, 2.47, -0.75);
+      commsGroup.add(tube, tubeBasePin);
     }
-    const tubeLight = new THREE.PointLight(0xd99423, 0.9, 4.0);
+
+    // Protective wire cage enclosing tubes
+    const cageRoof = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.02, 0.26), this.ironMat);
+    cageRoof.position.set(0, 2.76, -0.75);
+    commsGroup.add(cageRoof);
+
+    // Warm sodium filament glow point light
+    const tubeLight = new THREE.PointLight(0xd99423, 1.1, 4.2);
     tubeLight.position.set(0, 2.6, -0.6);
     commsGroup.add(tubeLight);
 
-    const desk = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.1, 0.8), this.durasteelMat);
-    desk.position.set(0, 0.85, -0.5);
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.05, 0.5), this.controlPanelMat);
+    // 4. Operator Desk with mechanical keyboard and analog patch bay
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.1, 0.85), this.durasteelMat);
+    desk.position.set(0, 0.85, -0.48);
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.05, 0.5), this.controlPanelMat);
     panel.position.set(0, 0.92, -0.5);
-    commsGroup.add(desk, panel);
 
-    for (let c = -0.5; c <= 0.5; c += 0.35) {
-      const cord = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.018, 6, 12, Math.PI), this.ironMat);
-      cord.rotation.y = Math.PI / 2;
-      cord.position.set(c, 1.25, -0.75);
-      commsGroup.add(cord);
+    // Mechanical keyboard on operator desk
+    const commsKeyboard = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.025, 0.28), this.keyboardMat);
+    commsKeyboard.position.set(-0.55, 0.92, -0.26);
+
+    commsGroup.add(desk, panel, commsKeyboard);
+
+    // Looping 3D patch cables connecting between patch bay jacks
+    const cordOffsets = [
+      { x1: -0.45, y1: 1.22, x2: -0.15, y2: 1.12, r: 0.18 },
+      { x1: -0.15, y1: 1.34, x2: 0.22, y2: 1.25, r: 0.22 },
+      { x1: 0.25, y1: 1.18, x2: 0.55, y2: 1.35, r: 0.19 }
+    ];
+
+    for (const cord of cordOffsets) {
+      const midX = (cord.x1 + cord.x2) / 2;
+      const midY = Math.min(cord.y1, cord.y2) - 0.08;
+      const loop = new THREE.Mesh(new THREE.TorusGeometry(cord.r, 0.016, 6, 14, Math.PI), this.ironMat);
+      loop.position.set(midX, midY, -0.76);
+      loop.rotation.y = Math.PI / 2;
+      commsGroup.add(loop);
     }
+
+    // Communication headset on rack side hook
+    const headsetBand = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.012, 6, 12, Math.PI), this.durasteelMat);
+    headsetBand.position.set(1.22, 1.45, -0.75);
+    const earpieceL = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.04, 8), this.fabricMat);
+    earpieceL.position.set(1.22, 1.35, -0.65);
+    commsGroup.add(headsetBand, earpieceL);
 
     // Equipment rack against wall only, leaving floor in front clear
     this.addCollider(-3.8, -1.8, -3.6, -2.4);
@@ -694,56 +1089,89 @@ export class ShipInterior {
     const airlockGroup = new THREE.Group();
     airlockGroup.position.set(0, 0, -4.5);
 
+    // 1. Massive chamfered octagonal bulkhead frame with hazard stripes
     const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(4.8, 3.6, 0.6), this.hazardMat);
     doorFrame.position.set(0, 1.8, -2.0);
     airlockGroup.add(doorFrame);
 
-    const doorSlab = new THREE.Mesh(new THREE.BoxGeometry(3.4, 2.8, 0.3), this.durasteelMat);
+    // 2. Heavy armored blast door slab with PBR blast door texture
+    const doorSlab = new THREE.Mesh(new THREE.BoxGeometry(3.4, 2.8, 0.3), this.blastDoorMat);
     doorSlab.position.set(0, 1.7, -1.9);
     airlockGroup.add(doorSlab);
 
-    const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.045, 8, 20), this.ironMat);
+    // 3. Manual Dogging Handwheel with spoke grips and center locking pin
+    const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.048, 8, 24), this.ironMat);
     wheel.position.set(0, 1.7, -1.72);
-    for (let s = 0; s < 2; s++) {
-      const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.84, 6), this.ironMat);
-      spoke.rotation.z = s * (Math.PI / 2);
+    for (let s = 0; s < 4; s++) {
+      const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.86, 6), this.ironMat);
+      spoke.rotation.z = s * (Math.PI / 4);
       spoke.position.set(0, 1.7, -1.72);
       airlockGroup.add(spoke);
     }
-    airlockGroup.add(wheel);
+    const centerPin = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.08, 12), this.brassMat);
+    centerPin.rotation.x = Math.PI / 2;
+    centerPin.position.set(0, 1.7, -1.68);
+    airlockGroup.add(wheel, centerPin);
 
-    for (let py of [1.0, 2.4]) {
-      const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 2.4, 12), this.brassMat);
+    // 4. Hydraulic locking rams with hazard sleeves and polished chrome rods
+    for (let py of [0.95, 2.45]) {
+      const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 2.6, 12), this.brassMat);
       cylinder.rotation.z = Math.PI / 2;
       cylinder.position.set(0, py, -1.72);
 
-      const hazardSleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.7, 12), this.hazardMat);
-      hazardSleeve.rotation.z = Math.PI / 2;
-      hazardSleeve.position.set(0, py, -1.72);
+      const hazardSleeveL = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.65, 12), this.hazardMat);
+      hazardSleeveL.rotation.z = Math.PI / 2;
+      hazardSleeveL.position.set(-1.0, py, -1.72);
 
-      airlockGroup.add(cylinder, hazardSleeve);
+      const hazardSleeveR = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.65, 12), this.hazardMat);
+      hazardSleeveR.rotation.z = Math.PI / 2;
+      hazardSleeveR.position.set(1.0, py, -1.72);
+
+      airlockGroup.add(cylinder, hazardSleeveL, hazardSleeveR);
     }
 
+    // 5. Overhead rotating amber warning beacon lamp
+    const beaconHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.1, 12), this.ironMat);
+    beaconHousing.position.set(0, 3.52, -1.75);
     const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.22, 12), this.amberLampMat);
     beacon.position.set(0, 3.4, -1.75);
-    const beaconLight = new THREE.PointLight(0xd99423, 1.1, 5.0);
+    const beaconLight = new THREE.PointLight(0xd99423, 1.2, 5.5);
     beaconLight.position.set(0, 3.3, -1.6);
-    airlockGroup.add(beacon, beaconLight);
+    airlockGroup.add(beaconHousing, beacon, beaconLight);
 
-    for (let lx of [-1.2, 1.2]) {
-      const lockIndicator = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 0.04), this.redLampMat);
+    // Dual red "LOCKED" indicator lamps
+    for (let lx of [-1.3, 1.3]) {
+      const lockIndicator = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.12, 0.04), this.redLampMat);
       lockIndicator.position.set(lx, 3.2, -1.74);
       airlockGroup.add(lockIndicator);
     }
 
-    for (let vx of [-1.8, 1.8]) {
-      const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.4, 8), this.ironMat);
+    // Pressure equalization dial gauges (PSI and BAR) on door frame
+    const airlockGaugeA = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.03, 16), this.dialGaugePsiMat);
+    airlockGaugeA.rotation.x = Math.PI / 2;
+    airlockGaugeA.position.set(-1.9, 2.0, -1.72);
+    const airlockGaugeB = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.03, 16), this.dialGaugeBarMat);
+    airlockGaugeB.rotation.x = Math.PI / 2;
+    airlockGaugeB.position.set(-1.9, 1.7, -1.72);
+    airlockGroup.add(airlockGaugeA, airlockGaugeB);
+
+    // 6. High-pressure steam decontamination nozzles and pipes
+    for (let vx of [-1.85, 1.85]) {
+      const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 2.6, 8), this.ironMat);
       vent.position.set(vx, 1.6, -1.5);
-      const nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.2, 8), this.brassMat);
+      const nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.22, 8), this.brassMat);
       nozzle.rotation.x = Math.PI / 2;
       nozzle.position.set(vx, 2.6, -1.4);
       airlockGroup.add(vent, nozzle);
     }
+
+    // Emergency wall-mounted oxygen rebreather pack
+    const rebreather = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.55, 0.22), this.redLampMat);
+    rebreather.position.set(1.95, 1.6, -1.65);
+    const rebreatherGauge = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.02, 12), this.brassMat);
+    rebreatherGauge.rotation.x = Math.PI / 2;
+    rebreatherGauge.position.set(1.95, 1.75, -1.53);
+    airlockGroup.add(rebreather, rebreatherGauge);
 
     // Outer airlock wall at Z = -6.5
     this.addCollider(-2.0, 2.0, -7.0, -6.0);

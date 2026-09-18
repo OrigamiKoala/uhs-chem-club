@@ -22,9 +22,13 @@ export class FpsControls {
     // Speeds & kinematics
     this.walkSpeed = 4.2; // m/s
     this.sprintSpeed = 7.0; // m/s
+    this.jumpSpeed = 5.2; // m/s
+    this.gravity = 18.0; // m/s^2
+    this.verticalVelocity = 0;
+    this.isGrounded = true;
     this.damping = 10.0;
     this.velocity = new THREE.Vector3();
-    this.playerRadius = 0.35;
+    this.playerRadius = 0.25;
 
     // Orientation
     this.euler = new THREE.Euler(0, 0, 0, "YXZ");
@@ -97,7 +101,7 @@ export class FpsControls {
     window.addEventListener("keyup", this._onKeyUp);
     document.addEventListener("pointerlockchange", this._onPointerlockChange);
 
-    this.domElement.addEventListener("mousedown", this._onMouseDown);
+    window.addEventListener("mousedown", this._onMouseDown);
     window.addEventListener("mouseup", this._onMouseUp);
     window.addEventListener("mousemove", this._onMouseMove);
   }
@@ -107,7 +111,7 @@ export class FpsControls {
     window.removeEventListener("keyup", this._onKeyUp);
     document.removeEventListener("pointerlockchange", this._onPointerlockChange);
 
-    this.domElement.removeEventListener("mousedown", this._onMouseDown);
+    window.removeEventListener("mousedown", this._onMouseDown);
     window.removeEventListener("mouseup", this._onMouseUp);
     window.removeEventListener("mousemove", this._onMouseMove);
     if (this.promptEl && this.promptEl.parentNode) {
@@ -133,10 +137,14 @@ export class FpsControls {
 
   onMouseDown(e) {
     if (!this.enabled) return;
+    const tag = e.target ? e.target.tagName.toLowerCase() : "";
+    if (tag === "input" || tag === "textarea" || tag === "select" || tag === "button" || tag === "a") return;
+    if (e.target.closest && (e.target.closest("button") || e.target.closest("a") || e.target.closest(".app-header") || e.target.closest(".modal-backdrop") || e.target.closest(".in-world-terminal"))) return;
+
     if (e.button === 0) { // Left click
       this.isDragging = true;
       this.previousMousePosition = { x: e.clientX, y: e.clientY };
-      if (e.target === this.domElement) {
+      if (!this.isPointerLocked) {
         this.requestPointerLock();
       }
     }
@@ -201,6 +209,12 @@ export class FpsControls {
       case "ShiftRight":
         this.isSprinting = true;
         break;
+      case "Space":
+        if (this.isGrounded) {
+          this.verticalVelocity = this.jumpSpeed;
+          this.isGrounded = false;
+        }
+        break;
       case "KeyE":
         if (this.onInteract) {
           this.onInteract();
@@ -258,6 +272,30 @@ export class FpsControls {
       }
     }
     return false;
+  }
+
+  resolveBoxCollisions(pos) {
+    const r = this.playerRadius;
+    for (const b of this.boxColliders) {
+      if (pos.x + r > b.minX && pos.x - r < b.maxX && pos.z + r > b.minZ && pos.z - r < b.maxZ) {
+        // Overlap distances to each edge
+        const dMinX = Math.abs((pos.x + r) - b.minX);
+        const dMaxX = Math.abs(b.maxX - (pos.x - r));
+        const dMinZ = Math.abs((pos.z + r) - b.minZ);
+        const dMaxZ = Math.abs(b.maxZ - (pos.z - r));
+
+        const minPush = Math.min(dMinX, dMaxX, dMinZ, dMaxZ);
+        if (minPush === dMinX) {
+          pos.x = b.minX - r;
+        } else if (minPush === dMaxX) {
+          pos.x = b.maxX + r;
+        } else if (minPush === dMinZ) {
+          pos.z = b.minZ - r;
+        } else {
+          pos.z = b.maxZ + r;
+        }
+      }
+    }
   }
 
   resolveRadialCollisions(pos) {
@@ -323,6 +361,9 @@ export class FpsControls {
       this.velocity.z = 0;
     }
 
+    // Penetration push-out fallback so player can never be stuck inside a collider
+    this.resolveBoxCollisions(this.camera.position);
+
     // Resolve radial obstacle collisions (e.g. pylons, rocks, lander)
     this.resolveRadialCollisions(this.camera.position);
 
@@ -334,12 +375,23 @@ export class FpsControls {
       this.camera.position.z = Math.max(b.minZ + r, Math.min(b.maxZ - r, this.camera.position.z));
     }
 
-    // Clamping to ground height
-    if (this.terrainHeightFn) {
-      const groundY = this.terrainHeightFn(this.camera.position.x, this.camera.position.z);
-      this.camera.position.y = groundY + this.eyeHeight;
+    // Vertical kinematics & jump
+    const baseGroundY = this.terrainHeightFn
+      ? this.terrainHeightFn(this.camera.position.x, this.camera.position.z)
+      : 0;
+    const targetBaseEyeY = baseGroundY + this.eyeHeight;
+
+    if (!this.isGrounded || this.verticalVelocity !== 0) {
+      this.verticalVelocity -= this.gravity * dt;
+      this.camera.position.y += this.verticalVelocity * dt;
+
+      if (this.camera.position.y <= targetBaseEyeY) {
+        this.camera.position.y = targetBaseEyeY;
+        this.verticalVelocity = 0;
+        this.isGrounded = true;
+      }
     } else {
-      this.camera.position.y = this.eyeHeight;
+      this.camera.position.y = targetBaseEyeY;
     }
   }
 }
