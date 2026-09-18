@@ -15,9 +15,9 @@
   "ambience": {
     "keyLight": 14259235,
     "fillLight": 4015188,
-    "fogColor": 4864812,
-    "fogNear": 30,
-    "fogFar": 140,
+    "fogColor": 7230008,
+    "fogNear": 70,
+    "fogFar": 280,
     "dustDensity": 0.35
   },
   "landmarks": [
@@ -427,12 +427,12 @@
     "pos": [
       0,
       1.6,
-      46
+      47.5
     ],
     "lookAt": [
       7.01,
       1.6,
-      0
+      43.44
     ]
   },
   "t2": {

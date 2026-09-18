@@ -106,7 +106,8 @@ export class WorldScene {
     const giantMat = new THREE.MeshStandardMaterial({
       color: 0x9c7442,
       roughness: 0.95,
-      metalness: 0.1
+      metalness: 0.1,
+      fog: false
     });
     const giantMesh = new THREE.Mesh(giantGeo, giantMat);
     giantGroup.add(giantMesh);
@@ -117,7 +118,8 @@ export class WorldScene {
       color: 0x6e5232,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.8
+      opacity: 0.8,
+      fog: false
     });
     const ringMesh = new THREE.Mesh(ringGeo, ringMat);
     ringMesh.rotation.x = Math.PI / 2;
@@ -125,7 +127,7 @@ export class WorldScene {
 
     // Small pale moon
     const moonGeo = new THREE.SphereGeometry(4.5, 16, 16);
-    const moonMat = new THREE.MeshStandardMaterial({ color: 0x8a847a, roughness: 0.9 });
+    const moonMat = new THREE.MeshStandardMaterial({ color: 0x8a847a, roughness: 0.9, fog: false });
     const moonMesh = new THREE.Mesh(moonGeo, moonMat);
     moonMesh.position.set(-65, 15, 20);
     giantGroup.add(moonMesh);
@@ -418,9 +420,9 @@ export class WorldScene {
 
     const mat = new THREE.PointsMaterial({
       color: 0xd99423,
-      size: 0.18,
+      size: 0.06,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.25,
       blending: THREE.NormalBlending
     });
 

@@ -157,7 +157,7 @@ class Stage {
         if (this.worldScene.nearbySite) {
           const pylonEvent = new CustomEvent("pylon:interact", { detail: this.worldScene.nearbySite });
           window.dispatchEvent(pylonEvent);
-        } else if (Math.hypot(this.camera.position.x, this.camera.position.z - 44) < 4.0) {
+        } else if (Math.hypot(this.camera.position.x, this.camera.position.z - 41) < 5.8) {
           window.location.hash = "#/bridge";
         }
       } else if (this.mode === "ship") {
@@ -224,9 +224,20 @@ class Stage {
 
     if (this.worldScene) {
       const spawn = this.worldScene.data.spawn;
-      this.camera.position.set(spawn.pos[0], spawn.pos[1], spawn.pos[2]);
-      this.camera.lookAt(spawn.lookAt[0], spawn.lookAt[1], spawn.lookAt[2]);
+      const groundY = this.worldScene.getTerrainHeight(spawn.pos[0], spawn.pos[2]);
+      const eyeHeight = this.fpsControls ? this.fpsControls.eyeHeight : 1.6;
+      const eyeY = groundY + eyeHeight;
+
+      this.camera.position.set(spawn.pos[0], eyeY, spawn.pos[2]);
+      this.camera.lookAt(spawn.lookAt[0], eyeY, spawn.lookAt[2]);
+
       if (this.fpsControls) {
+        this.fpsControls.enabled = true;
+        this.fpsControls.isGrounded = true;
+        this.fpsControls.verticalVelocity = 0;
+        this.fpsControls.velocity.set(0, 0, 0);
+        this.fpsControls.euler.setFromQuaternion(this.camera.quaternion);
+        this.fpsControls.euler.z = 0;
         this.fpsControls.setMode(
           "world",
           (x, z) => this.worldScene.getTerrainHeight(x, z),
@@ -283,10 +294,11 @@ class Stage {
       this.renderer.render(this.activeQuestScene, this.activeQuestViewer.camera);
     } else if (this.mode === "world" && this.worldScene) {
       if (this.fpsControls) {
+        this.fpsControls.enabled = true;
         this.fpsControls.update(delta);
         if (this.worldScene.nearbySite) {
           this.fpsControls.showPrompt(`[E] DEPLOY CHAMBER AT ${this.worldScene.nearbySite.label.toUpperCase()}`);
-        } else if (Math.hypot(this.camera.position.x, this.camera.position.z - 44) < 4.0) {
+        } else if (Math.hypot(this.camera.position.x, this.camera.position.z - 41) < 5.8) {
           this.fpsControls.showPrompt("[E] BOARD SURVEY LANDER (RETURN TO SHIP)");
         } else {
           this.fpsControls.hidePrompt();

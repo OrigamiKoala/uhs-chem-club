@@ -179,6 +179,7 @@ export class FpsControls {
 
     const maxPitch = (85 * Math.PI) / 180;
     this.euler.x = Math.max(-maxPitch, Math.min(maxPitch, this.euler.x));
+    this.euler.z = 0;
 
     this.camera.quaternion.setFromEuler(this.euler);
   }

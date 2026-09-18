@@ -58,8 +58,8 @@ for (let i = 1; i <= 20; i++) {
 }
 
 const spawn = {
-  pos: [0, 1.6, 46],
-  lookAt: [sites[0].pos[0], 1.6, sites[0].pos[1]]
+  pos: [0, 1.6, 47.5],
+  lookAt: [sites[0].pos[0], 1.6, sites[0].pos[2]]
 };
 
 const landmarks = [
@@ -108,9 +108,9 @@ const erebusWorld = {
   ambience: {
     keyLight: 0xd99423,
     fillLight: 0x3d4454,
-    fogColor: 0x4a3b2c,
-    fogNear: 30,
-    fogFar: 140,
+    fogColor: 0x6e5238,
+    fogNear: 70,
+    fogFar: 280,
     dustDensity: 0.35
   },
   landmarks,
