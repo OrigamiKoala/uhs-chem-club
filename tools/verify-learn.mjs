@@ -279,10 +279,15 @@ function checkStageTable(q, mod) {
 }
 
 /**
- * A bench quest lays samples out for the sampler scope. The scope reads those
- * declarations at draw time and a typo in one — a kind that does not exist, a
- * bond pointing past the end of a cluster — surfaces as a blank plate in a
- * student's hands rather than as an error. Catch it here instead.
+ * A bench quest lays specimens out for one of the two bench instruments. Both
+ * read those declarations at draw time, and a typo in one — a kind that does not
+ * exist, a bond pointing past the end of a cluster, a core with nothing in it —
+ * surfaces as a blank plate in a student's hands rather than as an error. Catch
+ * it here instead.
+ *
+ * Two declaration styles, one check. `samples` with `particles` is the sampler
+ * scope (`engine/scope.js`); `specimens` with `core` and `rings` is the core
+ * bench (`engine/corebench.js`).
  */
 function checkBench(q, mod, stages) {
   const kinds = mod.KINDS;
@@ -290,15 +295,53 @@ function checkBench(q, mod, stages) {
   let samples = 0;
 
   stages.forEach((st, i) => {
-    if (!Array.isArray(st.samples)) return;
+    const bench = Array.isArray(st.samples) ? st.samples
+      : Array.isArray(st.specimens) ? st.specimens : null;
+    if (!bench) return;
     const label = `${q.key} stage ${i + 1}`;
     const ids = new Set();
 
-    st.samples.forEach(sample => {
+    bench.forEach(sample => {
       samples++;
       if (ids.has(sample.id)) { fail(`${label}: two samples share the id "${sample.id}"`); bad++; }
       ids.add(sample.id);
       if (!sample.label) { fail(`${label}: sample "${sample.id}" has no label`); bad++; }
+
+      // ---- core bench: a middle with grains in it, and rings outside ----
+      if (sample.core || sample.rings) {
+        const marked = sample.core?.marked;
+        const blank = sample.core?.blank;
+        if (!Number.isInteger(marked) || marked < 1) {
+          fail(`${label}: specimen "${sample.id}" has no marked grains in its core`); bad++;
+        }
+        if (!Number.isInteger(blank) || blank < 0) {
+          fail(`${label}: specimen "${sample.id}" has a bad blank-grain count`); bad++;
+        }
+        if (sample.rings !== undefined) {
+          if (!Array.isArray(sample.rings) || sample.rings.some(r => !Number.isInteger(r) || r < 0)) {
+            fail(`${label}: specimen "${sample.id}" has a bad ring declaration`); bad++;
+          } else {
+            // Ring capacity is physics, not decoration: two closest in, eight
+            // after that. A specimen that breaks it would teach the rule wrong
+            // on the very screen the rule is learned from.
+            sample.rings.forEach((n, ri) => {
+              const room = ri === 0 ? 2 : 8;
+              if (n > room) {
+                fail(`${label}: specimen "${sample.id}" puts ${n} light pieces on ring ${ri + 1}, which holds ${room}`); bad++;
+              }
+            });
+            for (let ri = 1; ri < sample.rings.length; ri++) {
+              const room = ri - 1 === 0 ? 2 : 8;
+              if (sample.rings[ri] > 0 && sample.rings[ri - 1] < room) {
+                fail(`${label}: specimen "${sample.id}" fills ring ${ri + 1} while ring ${ri} still has room`); bad++;
+              }
+            }
+          }
+        }
+        return;
+      }
+
+      // ---- sampler scope: a heap of loose pieces and bound clusters ----
       if (!Array.isArray(sample.particles) || !sample.particles.length) {
         fail(`${label}: sample "${sample.id}" holds nothing`); bad++; return;
       }
@@ -335,14 +378,24 @@ function checkBench(q, mod, stages) {
 
     // Anything a widget or a solution names has to exist on the bench.
     const binIds = new Set((st.widget?.bins || []).map(b => b.id));
+    const choiceIds = new Set((st.widget?.options || []).map(o => o.id));
     const sol = mod.SOLUTIONS?.[i] || {};
     if (sol.sample && !ids.has(sol.sample)) { fail(`${label}: the solution names sample "${sol.sample}", which is not on the bench`); bad++; }
+    if (sol.choice && choiceIds.size && !choiceIds.has(sol.choice)) {
+      fail(`${label}: the solution picks "${sol.choice}", which the widget does not offer`); bad++;
+    }
     for (const [sid, bid] of Object.entries(sol.bins || {})) {
       if (!ids.has(sid)) { fail(`${label}: the solution files "${sid}", which is not on the bench`); bad++; }
       if (binIds.size && !binIds.has(bid)) { fail(`${label}: the solution uses bin "${bid}", which the widget does not offer`); bad++; }
     }
-    if (st.widget?.type === 'bins' && Object.keys(sol.bins || {}).length !== st.samples.length) {
-      fail(`${label}: a bins stage must have a solution line for every sample`); bad++;
+    // A manifest may cover a subset of the bench (a reference plate is not
+    // filed), but every row it does show needs a solution line.
+    const filed = st.widget?.rows || bench.map(s => s.id);
+    if (st.widget?.type === 'bins' && Object.keys(sol.bins || {}).length !== filed.length) {
+      fail(`${label}: a bins stage must have a solution line for every filed row`); bad++;
+    }
+    for (const rid of (st.widget?.rows || [])) {
+      if (!ids.has(rid)) { fail(`${label}: the manifest lists row "${rid}", which is not on the bench`); bad++; }
     }
   });
 

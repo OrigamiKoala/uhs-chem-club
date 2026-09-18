@@ -1,9 +1,10 @@
 # Learn track — worlds, quests, and how to build them
 
-**Status: ten worlds charted, world 1 quest 1 built and live.**
+**Status: ten worlds charted, world 1 quests 1 and 2 built and live.**
 The road, the gating, the routes, the progress store, the backend tab and the
-verifier all exist. `unit01/q1-grain` — *The Grain of Things* — is playable end to
-end and sets the pattern the other 38 quests follow.
+verifier all exist. `unit01/q1-grain` — *The Grain of Things* — and
+`unit01/q2-core` — *The Inside of a Piece* — are playable end to end and set the
+pattern the other 38 quests follow.
 
 ## The shape of it
 
@@ -36,9 +37,11 @@ exists to help.
 | `src/learn/worlds/unitNN-*.js` | One chart per unit: world name, place, one line, and its quests. |
 | `src/learn/progress.js` | Gating and completion. XP-free by construction. |
 | `src/learn/engine/scope.js` | The **sampler scope**: a canvas bench instrument. Power dial, probe, cutter, shaker. Content-free. |
+| `src/learn/engine/corebench.js` | The **core bench**: one piece in three fields (whole, core, rings). Beam, probe, stripper. Content-free. |
 | `src/learn/engine/frame.js` | The **quest frame**: stage rail, prompt, readout, answer region, miss banner, hint ladder, reward card, debrief stepper. Grading-free. |
 | `src/learn/quests/_template.js` | The contract a quest game module implements. |
 | `src/learn/quests/unit01/q1-grain.js` | World 1 quest 1. Content, samples and grading only. |
+| `src/learn/quests/unit01/q2-core.js` | World 1 quest 2. Content, specimens and grading only. |
 | `src/screens/learn.js` | The road: ten worlds with status and progress. |
 | `src/screens/learn-world.js` | One world: its quests, in order. |
 | `src/screens/learn-quest.js` | The host that mounts a quest module. |
@@ -172,12 +175,51 @@ The debrief names, in order: **atom**, **element**, **molecule**, **compound**,
 **mixture**, then hydrogen and oxygen, then water and the scouring agent that had
 been pitting its own seal in the hold since stage 6.
 
+## World 1 quest 2 — The Inside of a Piece
+
+Eight stages on the **core bench** (`src/learn/engine/corebench.js`), picking up
+exactly where site one's blade stopped: the object that would not divide, hit
+with something much more violent than a blade. Same shape as quest 1 — the player
+does something with an instrument and the idea arrives afterwards on a reward
+card.
+
+| # | What the player does | What it leaves them with |
+| --- | --- | --- |
+| 1 | fires a beam through one piece and reads the return counter | tiny, heavy middle; mostly empty |
+| 2 | counts the marked grains in the core | two sorts of grain in there |
+| 3 | reads a sealed piece at zero and works backwards | the books balance |
+| 4 | places eleven light pieces onto the rings against two references | fixed distances, fixed room |
+| 5 | tests two specimens with a dying cell, predicts the other two | the outermost ring decides |
+| 6 | separates two specimens of identical grain count | the marked count is the identity |
+| 7 | strips light pieces off until the needle reads plus two | a piece can carry a charge |
+| 8 | files three unlabelled specimens against a reference | all of it at once |
+
+Player-facing vocabulary before the debrief: *piece, core, grain, mark, ring,
+light piece, specimen, needle*. The debrief names, in order: **nucleus**,
+**proton**, **neutron**, **electron**, **shell**, **valence**, **ion** — with
+isotope arriving alongside the neutron.
+
+Every specimen on the bench is a real nuclide (C-12, C-13, N-13, N-14, N-15,
+O-16, He-4, Li-7, Ne-20, Na-23, Cl-35) and every one of them balances: its light
+pieces match its marked grains unless a stage has stripped some off. The verifier
+enforces shell capacity — two closest in, eight after that, nothing further out
+while a nearer ring has room — so a specimen cannot teach the rule wrong on the
+very screen the rule is learned from.
+
+**What this quest deliberately does not say.** The core bench does not talk to
+the sampler scope's catalogue, and Vess says so in stage one. The player leaves
+holding a proton count for a dozen specimens and no idea the scope has been
+filing by exactly that number since site one. That reveal is `q3-catalogue`, and
+spending it early would waste the best moment on this world.
+
 ## Next
 
-- `unit01/q2-counting` — the mole, on the same bench. The scope already weighs
-  and the crates already hold more pieces than anyone can count, so the setup is
-  in place.
-- Worlds 2, 5 and 9 want the 3D containment chamber rather than the scope. Decide
-  whether to lift a reusable runner out of `src/quest3d/` when the second chamber
-  quest needs it — not on the first.
+- `unit01/q3-catalogue` — the payoff both built quests point at: the catalogue
+  number is the proton count, and ordering by it is what makes the pattern.
+  Charted as a chamber quest; the core bench may suit it better.
+- `unit01/q4-counting` — the mole, back on the sampler scope. It already weighs,
+  and the crates already hold more pieces than anyone can count.
+- Worlds 2, 5 and 9 want the 3D containment chamber rather than a canvas bench.
+  Decide whether to lift a reusable runner out of `src/quest3d/` when the second
+  chamber quest needs it — not on the first.
 - Consider a `field` arena instrument. Nothing has needed one yet.

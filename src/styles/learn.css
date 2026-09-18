@@ -352,6 +352,49 @@
 
 .lq-tool { letter-spacing: 0.09em; }
 
+/* ---- Core bench: the field switch, the tester cell, the needle chip ----
+   The bench in `engine/corebench.js` looks at one piece in three fields. The
+   switch is switchgear: bare durasteel, and the live position is the only one
+   carrying any amber. */
+.cb-field { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.cb-field .form-label { margin: 0; }
+
+.cb-field-key { min-width: 4.4rem; }
+.cb-field-key.lit {
+  background: var(--plate-400);
+  border-color: var(--border-hazard);
+  color: var(--text-amber);
+}
+
+/* How many runs are left in the tester cell. Spent reads as dead, not as an
+   error — the stage expects it to run out. */
+.cb-charges {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  margin-left: 0.45rem;
+  padding: 0 5px;
+  border: 1px solid var(--border-durasteel);
+  color: var(--text-amber);
+}
+
+/* The needle, printed on a hairline. Charge is a signal, never a surface, and
+   the reserved hues stay as ink (CLAUDE.md §4). */
+.cb-charge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-left: 2px solid var(--plate-500);
+  padding: 3px 0 3px 8px;
+  margin: 6px 0 2px;
+}
+
+.cb-charge[data-sign="plus"] { border-left-color: var(--charge-red-ink); }
+.cb-charge[data-sign="minus"] { border-left-color: var(--charge-blue-ink); }
+
+.cb-remaining { margin: 2px 0 0; }
+
 /* ---- The scope: plates in an aperture grid ---- */
 .scope-grid { display: grid; gap: 0.7rem; }
 .scope-n1 { grid-template-columns: 1fr; }

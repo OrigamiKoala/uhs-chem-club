@@ -336,6 +336,13 @@
   .m-learn-quest .lq-build-row { grid-template-columns: 14px 1fr auto 2ch auto; gap: 6px; }
   .m-learn-quest .lq-build-row .quest-btn-sm { min-height: 40px; min-width: 40px; }
   .m-learn-quest .lq-bin-key { min-height: 46px; justify-content: center; }
+
+  /* The core bench: the field switch is three keys and has to stay thumbable,
+     so it takes its own row and the keys share it evenly. */
+  .m-learn-quest .cb-field { flex: 1 1 100%; }
+  .m-learn-quest .cb-field .form-label { flex: 1 1 100%; }
+  .m-learn-quest .cb-field-key { flex: 1; min-height: 44px; min-width: 0; }
+  .m-learn-quest .cb-charge { font-size: 0.68rem; }
 }
 
 

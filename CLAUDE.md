@@ -126,7 +126,7 @@ into grinding and would punish the students it exists to help.
   `stagesCleared`, `isComplete`, `reportStage(i)`, `reportComplete()` and `exit()`.
   `screens/learn-quest.js` checks the gating, loads the module, and is the wall between the
   track and the XP rails.
-- **The engine** (`src/learn/engine/`) — two content-free pieces every bench quest composes.
+- **The engine** (`src/learn/engine/`) — content-free pieces every bench quest composes.
   `scope.js` is the **sampler scope**: a canvas instrument with a 1–6 power dial
   (`detailFor` walks 0 solid → 1 mottled → 2 lumps → 3 individual pieces, and past a
   sample's `floorPower` nothing new resolves), a probe that reports a catalogue code, mass
@@ -137,7 +137,15 @@ into grinding and would punish the students it exists to help.
   lying). **Every tool re-pours its sample first**, or a player who cut a crate and then
   shook it would see the fragments band and wrongly call it mixed. Canvas, not the 3D
   chamber, because the walk down through scales is a 2D reveal that runs the same on every
-  tier and holds at 375 px. `frame.js` is the **quest frame**: stage rail (cleared lamps are
+  tier and holds at 375 px.
+  `corebench.js` is the **core bench**: one piece shown in three fields — `whole` (a haze
+  with the core drawn to scale, which is a speck), `core` (the grains separated and
+  probeable, marked ones told apart by a stencilled cross and never by colour) and `rings`
+  (light pieces at fixed radii). It carries a beam whose return counts are fixed by which
+  track hits the axis rather than by a threshold on a spread, a stripper that knocks one
+  light piece off the outermost ring, and a reset. It knows no chemistry: a mark is a mark,
+  and what a specimen *does* (`behaviourOf`) lives in the quest.
+  `frame.js` is the **quest frame**: stage rail (cleared lamps are
   walkable — there is no XP here for a replay to farm), reopenable briefing, prompt,
   readout, answer region, Commit key, miss banner, hint ladder (rung 1 free, rung 2 after a
   miss or 45 s, rung 3 after two misses), reward card and the debrief stepper. It never sees
@@ -160,15 +168,21 @@ its chart, and a table-driven quest exports `STAGES`, `SOLUTIONS`, `MISSES` and 
 so the check can assert — as `verify:quest` does for the Charge Gardens — that the intended
 solution grades correct, that a plausible wrong answer is refused **with a reason**, that an
 untouched bench never grades correct, that every stage has exactly three distinct hint rungs
-and a reward card, and that every bench sample is well formed (real kinds, `geom` covering
-every piece, bonds inside the cluster, no solution naming a sample or bin that is not there).
+and a reward card, and that every bench declaration is well formed. It reads both styles:
+`samples` with `particles` for the sampler scope (real kinds, `geom` covering every piece,
+bonds inside the cluster) and `specimens` with `core` and `rings` for the core bench, where
+shell capacity is enforced — two on the nearest ring, eight after that, nothing further out
+while a nearer ring still has room. No solution may name a sample, row, bin or choice that is
+not on the bench; a manifest may cover a subset of the plates (`widget.rows`), and every row
+it shows needs a solution line.
 
 ### World 1 quest 1 — The Grain of Things (`unit01/q1-grain`, live)
-Eight stages on a salvage bench on Tallow; the player leaves knowing what an atom, an
-element, a molecule, a compound and a mixture are and meets none of those words until the
-debrief. **The order is the design**: every stage is something the player *does* with an
-instrument, and the idea lands afterwards as a reward card under "WHAT YOU JUST FOUND".
-Power up until the picture stops getting finer (there is a floor) → which of two
+Eight stages on an Imperial salvage bench on Tallow with an orbital Guild buyer inbound;
+the player leaves knowing what an atom, an element, a molecule, a compound and a mixture
+are and meets none of those words until the debrief. **The order is the design**: every
+stage is something the player *does* with an instrument, introduced by diegetic Vess
+transmissions (reopenable via Objective) that ground the fiction in certifying salvage
+cargo. Power up until the picture stops getting finer (there is a floor) → which of two
 identical-looking crates is one material → how many kinds hide in one crate sold as
 single-source → run a cutter over four objects (one will not divide) → assemble the cluster
 that repeats → file two vials against two manifests with the same ingredients → settle three
@@ -176,6 +190,23 @@ crates and read the bands → file a manifest of four unlabelled crates. Player-
 vocabulary before the debrief is *piece, kind, cluster, crate, band, recipe, material*, and
 that restraint is the product. The catalogue codes (CAT 01, 06, 08, 11, 16, 17) are atomic
 numbers, never explained here; the debrief points at them as the hook into `q3-catalogue`.
+
+### World 1 quest 2 — The Inside of a Piece (`unit01/q2-core`, live)
+Eight stages on the core bench in Tallow's sub-level diagnostic lab, picking up where quest 1's
+blade stopped. The Avalon needs reactor calibration and ion drive propellant from Imperial
+deep-salvage canisters. Vess delivers in-character briefings across all eight stages: fire an alpha
+particle beam through a mounted piece and read the 1-in-40 rebound → tune magnetic focus coils to
+count marked grains in the core → read a sealed radiation canister at zero net charge to deduce
+light count → arrange eleven light pieces on rings against two resolved references → test two
+specimens with a dying tester cell to predict outermost-ring valence trading → separate two
+specimens of identical weight by marked proton count to certify reactor coolant → strip light
+pieces until the needle reads plus two for ion drive propellant → certify three unlabelled
+canisters on the orbital transfer manifest (isotope, ion, distinct element). Player-facing
+vocabulary before the debrief is *piece, core, grain, mark, ring, light piece, specimen, needle*;
+the debrief names nucleus, proton, neutron (with isotope), electron, shell, valence and ion. Every
+specimen is a real nuclide and balances unless a stage has stripped it. **The quest never connects
+the marked count to the scope's catalogue** — the core bench does not talk to the catalogue,
+preserving the proton-count reveal for `q3-catalogue`.
 
 ## Rules that keep the game fair
 - **XP is paid once per stage.** `Quests.gs` checks prior correct submissions, the proxy
@@ -297,8 +328,9 @@ clearance, every stage has exactly three distinct hint rungs, and a giver→give
 is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 ## Plans in flight
-- `docs/plans/learn-track.md` — the Learn road: nine worlds, 35 quests charted, none built
-  yet. Scaffolding, gating, routes, backend tab and verifier are in place.
+- `docs/plans/learn-track.md` — the Learn road: ten worlds, 40 quests charted, two built
+  (`unit01/q1-grain`, `unit01/q2-core`). Scaffolding, gating, routes, backend tab and
+  verifier are in place.
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
 

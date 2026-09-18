@@ -18,26 +18,26 @@ export const UNIT_01 = {
   place: 'Salt flats',
   title: 'Atoms',
   line: 'Turn the dial until the grit stops getting finer.',
-  brief: 'Tallow is a flat white nothing with good salvage under it. No buyer pays for a crate marked "assorted", so the work here is finding out what the stuff actually is.',
+  brief: 'Tallow is an abandoned salt-flat refinery packed with sealed Imperial salvage. An orbital buyer is inbound, and our job is certifying what is actually inside each crate.',
 
   quests: [
     {
       id: 'q1-grain',
       title: 'The Grain of Things',
-      line: 'Magnify far enough and the picture stops changing.',
+      line: 'Calibrate the bench scope to find the fundamental grain of matter.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit01/q1-grain.js')
     },
     {
-      id: 'q2-counting',
-      title: 'The Counting Problem',
-      line: 'A number too large to count, counted anyway.',
+      id: 'q2-core',
+      title: 'The Inside of a Piece',
+      line: 'The blade could not divide it. Something else can.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit01/q2-core.js')
     },
     {
       id: 'q3-catalogue',
@@ -45,6 +45,15 @@ export const UNIT_01 = {
       line: 'The scope orders every kind it meets. Find out what it is counting.',
       arena: 'chamber',
       stageCount: 10,
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'q4-counting',
+      title: 'The Counting Problem',
+      line: 'A number too large to count, counted anyway.',
+      arena: 'bench',
+      stageCount: 8,
       status: 'draft',
       module: null
     }
