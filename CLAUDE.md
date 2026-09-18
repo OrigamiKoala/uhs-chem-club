@@ -36,6 +36,7 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run bake:stills` — regenerate the static SVG backdrops in `public/fallback/`.
 - `npm run bake:video` — encode raw MP4 clips in `assets-src/video/` to web-ready WebM, MP4, posters and audio.
 - `npm run seed` / `npm run test:load` — roster seeding and 40-user concurrency sim.
+- `tools/hunyuan3d-shape-t4.ipynb` — Kaggle T4 batch shape generation (Hunyuan3D 2.1 shape-only pipeline, ~10 GB VRAM).
 
 ## Architecture
 
@@ -475,6 +476,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     animation.
 
 ### 8. 3D and assets
+- Hero/prop shapes: `tools/hunyuan3d-shape-t4.ipynb` batches concept PNG/JPG images via Hunyuan3D 2.1 shape-only pipeline into `/kaggle/working/raw/*.glb` on NVIDIA T4; texturing is handled in Blender.
 - Nano Banana (`generate_image`) matte textures with Three.js procedural geometry and
   `MeshStandardMaterial`.
 - Starship cockpit: faceted durasteel canopy mullions, overhead avionics rack, dual analog
