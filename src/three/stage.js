@@ -278,7 +278,15 @@ class Stage {
     this.activeQuestViewer = questViewer;
     this.activeQuestScene = questViewer ? questViewer.scene : null;
     this.mode = questViewer ? "quest" : "world";
-    if (this.fpsControls) this.fpsControls.hidePrompt();
+    if (this.fpsControls) {
+      this.fpsControls.hidePrompt();
+      if (questViewer) {
+        this.fpsControls.enabled = false;
+        this.fpsControls.exitPointerLock();
+      } else {
+        this.fpsControls.enabled = true;
+      }
+    }
   }
 
   exitQuestScene() {
@@ -288,6 +296,10 @@ class Stage {
     }
     this.activeQuestScene = null;
     this.mode = "world";
+    if (this.fpsControls) {
+      this.fpsControls.enabled = true;
+      this.fpsControls.exitPointerLock();
+    }
     if (this.worldScene) {
       this.worldScene.scene.add(this.camera);
       this.camera.updateMatrixWorld(true);

@@ -126,9 +126,13 @@ export class FpsControls {
   }
 
   exitPointerLock() {
-    if (document.exitPointerLock) {
-      document.exitPointerLock();
+    if (document.exitPointerLock && document.pointerLockElement) {
+      try {
+        document.exitPointerLock();
+      } catch (e) {}
     }
+    this.isPointerLocked = false;
+    this.isDragging = false;
   }
 
   onPointerlockChange() {
@@ -139,7 +143,18 @@ export class FpsControls {
     if (!this.enabled) return;
     const tag = e.target ? e.target.tagName.toLowerCase() : "";
     if (tag === "input" || tag === "textarea" || tag === "select" || tag === "button" || tag === "a") return;
-    if (e.target.closest && (e.target.closest("button") || e.target.closest("a") || e.target.closest(".app-header") || e.target.closest(".modal-backdrop") || e.target.closest(".in-world-terminal"))) return;
+    if (e.target.closest && (
+      e.target.closest("button") ||
+      e.target.closest("a") ||
+      e.target.closest(".app-header") ||
+      e.target.closest(".modal-backdrop") ||
+      e.target.closest(".in-world-terminal") ||
+      e.target.closest(".quest-hud-overlay") ||
+      e.target.closest(".deployed-chamber-overlay") ||
+      e.target.closest(".stage-prompt-card") ||
+      e.target.closest(".stage-card-wrap") ||
+      e.target.closest(".erebus-world-hud")
+    )) return;
 
     if (e.button === 0) { // Left click
       this.isDragging = true;
