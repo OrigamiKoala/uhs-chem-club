@@ -8,6 +8,7 @@ import { stage } from './three/stage.js';
 import { tierManager } from './three/tier.js';
 import { Router } from './router.js';
 import { soundscape } from './audio/soundscape.js';
+import { setBenchHost } from './learn/engine/bench-host.js';
 
 /** Guild liveries, keyed by team id. Legacy ids are aliased in session.js. */
 const TEAM_LIVERY = {
@@ -26,6 +27,16 @@ async function bootstrapApp() {
 
   // 1. Initialize 3D Engine
   stage.init();
+
+  // The Learn track's 3D benches render through the same loop the campaign's
+  // containment chamber does. Registered here rather than imported there, so a
+  // quest module stays loadable in plain Node for `npm run verify:learn`.
+  setBenchHost({
+    mount: viewer => stage.setQuestScene(viewer),
+    unmount: viewer => {
+      if (stage.activeQuestViewer === viewer) stage.exitQuestScene();
+    }
+  });
 
   // 2. Setup HUD & Navigation immediately
   setupHud();
@@ -54,11 +65,17 @@ async function bootstrapApp() {
       if (!teamId && (window.location.hash === '#/' || window.location.hash === '')) {
         window.location.hash = '#/onboarding';
       }
-    } else if (session.token && boot.player === null) {
+    } else if (session.token && boot.player === null && !boot.degraded) {
+      // `degraded` means the proxy could not reach the backend and answered
+      // with public config only. It does not know who is signed in, so a
+      // missing player there is no evidence the token is dead — clearing on it
+      // logged students out every time Apps Script hiccupped.
       session.clear();
       if (window.location.hash !== '#/' && window.location.hash !== '#/demo') {
         window.location.hash = '#/login';
       }
+    } else if (boot.degraded) {
+      console.warn('Bootstrap served from fallback; keeping cached session.');
     }
   } catch (err) {
     console.error('Bootstrap call failed, continuing with cached session:', err);
@@ -92,17 +109,17 @@ function setupHud() {
   motionToggle?.addEventListener('click', () => {
     const next = !session.reduceMotion;
     session.setReduceMotion(next);
-    motionToggle.textContent = next ? 'MOTION REDUCED' : 'MOTION ON';
+    motionToggle.textContent = next ? 'REDUCED MOTION' : 'MOTION';
   });
   if (motionToggle && session.reduceMotion) {
-    motionToggle.textContent = 'MOTION REDUCED';
+    motionToggle.textContent = 'REDUCED MOTION';
   }
 
   // Sound toggle
   const updateSoundBtn = () => {
     if (!soundToggle) return;
     const isMuted = session.sound?.muted;
-    soundToggle.textContent = isMuted ? '// SOUND OFF' : '// SOUND ON';
+    soundToggle.textContent = isMuted ? 'SOUND OFF' : 'SOUND ON';
     soundToggle.classList.toggle('warn', isMuted);
   };
   updateSoundBtn();
@@ -164,7 +181,7 @@ function setupHud() {
 
       if (xpVal) xpVal.textContent = String(totalXp);
       if (lvlBadge) {
-        lvlBadge.textContent = `LVL ${prog.level} ${levelTitle(prog.level).toUpperCase()}`;
+        lvlBadge.textContent = `LVL ${prog.level}`;
         lvlBadge.title = `${prog.into} / ${prog.needed} XP toward level ${prog.level + 1}`;
       }
       if (xpFill) xpFill.style.width = `${prog.pct}%`;

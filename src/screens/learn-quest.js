@@ -19,6 +19,7 @@ import {
   isWorldOpen, isQuestOpen, isQuestComplete, questProgress,
   markStage, markQuestComplete
 } from '../learn/progress.js';
+import { canWalk, world3dFor } from '../learn/worlds3d.js';
 
 /** The mounted game, so a navigation can tear it down. */
 let active = null;
@@ -35,14 +36,13 @@ export function disposeLearnQuest() {
   active = null;
 }
 
-function shell({ world, quest, body }) {
-  const arena = ARENAS[quest.arena]?.label || '';
+function shell({ world, quest, body, inWorld }) {
   return `
-    <div class="screen-container m-screen m-learn-quest">
+    <div class="screen-container m-screen m-learn-quest${inWorld ? ' learn-quest-inworld' : ''}">
       <div class="learn-host-bar plate">
         <a href="#/learn/${esc(world.id)}" class="btn-secondary learn-host-back m-tap" style="text-decoration: none;">${esc(world.world)}</a>
         <div class="learn-host-id">
-          <span class="eyebrow">${esc(world.unit)} · ${esc(arena)}</span>
+          <span class="eyebrow">${esc(world.unit)}</span>
           <span class="learn-host-title">${esc(quest.title)}</span>
         </div>
       </div>
@@ -55,12 +55,10 @@ function shell({ world, quest, body }) {
 function buildPlate(world, quest) {
   return `
     <section class="glass-panel learn-build-plate">
-      <div class="eyebrow">Charted</div>
       <h2 class="section-title">${esc(quest.title)}</h2>
       <p class="page-sub">${esc(quest.line)}</p>
       <div class="learn-build-note">
-        <span class="banner-mark" aria-hidden="true">//</span>
-        <span>This world is surveyed but the site is not built. ${esc(quest.stageCount ? `${quest.stageCount} stages planned.` : '')}</span>
+        <span>Coming soon.</span>
       </div>
       <a href="#/learn/${esc(world.id)}" class="btn-secondary" style="text-decoration: none;">Back to ${esc(world.world)}</a>
     </section>
@@ -89,7 +87,27 @@ export function renderLearnQuest(container, params = {}) {
     return;
   }
 
-  container.innerHTML = shell({ world, quest, body: '' });
+  // On a world that is built as a place, the bench is deployed where it stands:
+  // the world stays behind the frame and the player is put in front of the site.
+  const inWorld = canWalk(world.id);
+  if (inWorld) {
+    const w3d = world3dFor(world.id);
+    const site = w3d.siteForQuest(quest.id);
+    if (site) {
+      w3d.enter(stage, site.id);
+      // Remembered so that stepping back out of the bench returns the player to
+      // the site rather than to the pad they landed on.
+      try { sessionStorage.setItem('avalon_learn_last_site', site.id); } catch (e) {}
+    } else {
+      w3d.enter(stage, null);
+    }
+    w3d.syncProgress(stage, qid => {
+      const q = world.quests.find(x => x.id === qid);
+      return q ? isQuestComplete(q) : false;
+    });
+  }
+
+  container.innerHTML = shell({ world, quest, body: '', inWorld });
   const mountPoint = container.querySelector('#learn-quest-mount');
 
   if (quest.status !== 'live') {

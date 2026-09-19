@@ -1,10 +1,6 @@
-/**
- * settings.js — Settings, Graphics Tier, and Password Change screen
- */
-
 import { api } from '../api.js';
 import { session } from '../session.js';
-import { tierManager } from '../three/tier.js';
+import { tierManager, isT4Eligible } from '../three/tier.js';
 import { showToast } from '../ui/toast.js';
 import { pageHeader } from '../ui/layout.js';
 import { bindPasswordReveal } from './register.js';
@@ -12,41 +8,59 @@ import { soundscape } from '../audio/soundscape.js';
 
 export function renderSettings(container) {
   const soundPrefs = session.sound;
+  const isT4 = tierManager.currentTier === 'T4';
+  const eligibleT4 = isT4Eligible();
+
+  const terminalHeaderMarkup = isT4 ? `
+    <div class="terminal-header">
+      <div>
+        <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">SETTINGS</h2>
+      </div>
+      <button type="button" id="close-settings-terminal-btn" class="terminal-close-btn">CLOSE</button>
+    </div>
+  ` : pageHeader({
+    title: 'Settings',
+    actions: `<a href="#/bridge" class="btn-secondary" style="text-decoration: none;">Bridge</a>`
+  });
 
   container.innerHTML = `
-    <div class="screen-container m-screen m-settings" style="max-width: 680px;">
-      ${pageHeader({
-        eyebrow: 'Ship systems',
-        title: 'Settings',
-        actions: `<a href="#/bridge" class="btn-secondary" style="text-decoration: none;">Bridge</a>`
-      })}
+    <div class="${isT4 ? 'in-world-terminal settings-terminal' : 'screen-container m-screen m-settings'}" ${isT4 ? '' : 'style="max-width: 680px;"'}>
+      ${terminalHeaderMarkup}
 
       <!-- Section 1: Graphics & Performance -->
       <div class="glass-panel" style="margin-bottom: 1.5rem;">
-        <h2 class="section-title" style="margin-bottom: 1.25rem;">Graphics Quality</h2>
+        <h2 class="section-title" style="margin-bottom: 1.25rem;">Graphics</h2>
 
         <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+          <label class="choice-option ${tierManager.currentTier === 'T4' ? 'selected' : ''} ${!eligibleT4 ? 'disabled' : ''}">
+            <input type="radio" name="gfx-tier" value="T4" ${tierManager.currentTier === 'T4' ? 'checked' : ''} ${!eligibleT4 ? 'disabled' : ''}>
+            <div>
+              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">Continuous 3D</div>
+              <div class="eyebrow" style="margin-top: 3px;">Full 3D walk${!eligibleT4 ? ' · Requires WebGL2' : ''}</div>
+            </div>
+          </label>
+
           <label class="choice-option ${tierManager.currentTier === 'T3' ? 'selected' : ''}">
             <input type="radio" name="gfx-tier" value="T3" ${tierManager.currentTier === 'T3' ? 'checked' : ''}>
             <div>
-              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">T3 — HIGH</div>
-              <div class="eyebrow" style="margin-top: 3px;">Full effects</div>
+              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">High 3D</div>
+              <div class="eyebrow" style="margin-top: 3px;">High detail</div>
             </div>
           </label>
 
           <label class="choice-option ${tierManager.currentTier === 'T2' ? 'selected' : ''}">
             <input type="radio" name="gfx-tier" value="T2" ${tierManager.currentTier === 'T2' ? 'checked' : ''}>
             <div>
-              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">T2 — STANDARD</div>
-              <div class="eyebrow" style="margin-top: 3px;">Lighter effects</div>
+              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">Medium 3D</div>
+              <div class="eyebrow" style="margin-top: 3px;">Medium detail</div>
             </div>
           </label>
 
           <label class="choice-option ${tierManager.currentTier === 'T1' ? 'selected' : ''}">
             <input type="radio" name="gfx-tier" value="T1" ${tierManager.currentTier === 'T1' ? 'checked' : ''}>
             <div>
-              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">T1 — MINIMAL</div>
-              <div class="eyebrow" style="margin-top: 3px;">No 3D · menu input</div>
+              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">2D Only</div>
+              <div class="eyebrow" style="margin-top: 3px;">Minimal graphics</div>
             </div>
           </label>
         </div>
@@ -60,16 +74,16 @@ export function renderSettings(container) {
       <!-- Section 2: Audio Systems -->
       <div class="glass-panel" style="margin-bottom: 1.5rem;">
         <div class="m-head settings-audio-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-          <h2 class="section-title" style="margin: 0;">Audio Systems</h2>
+          <h2 class="section-title" style="margin: 0;">Audio</h2>
           <button type="button" id="audio-mute-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 14px;">
-            ${soundPrefs.muted ? 'UNMUTE SOUND' : 'MUTE SOUND'}
+            ${soundPrefs.muted ? 'Unmute' : 'Mute'}
           </button>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 1rem;">
           <div>
             <div class="settings-slider-head" style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
-              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Master Volume</span>
+              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Volume</span>
               <span id="val-master" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.masterVolume * 100)}%</span>
             </div>
             <input type="range" class="settings-slider" id="slider-master" min="0" max="100" value="${Math.round(soundPrefs.masterVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
@@ -77,7 +91,7 @@ export function renderSettings(container) {
 
           <div>
             <div class="settings-slider-head" style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
-              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Ambience & Engine Hum</span>
+              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Ambience</span>
               <span id="val-ambience" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.ambienceVolume * 100)}%</span>
             </div>
             <input type="range" class="settings-slider" id="slider-ambience" min="0" max="100" value="${Math.round(soundPrefs.ambienceVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
@@ -85,7 +99,7 @@ export function renderSettings(container) {
 
           <div>
             <div class="settings-slider-head" style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem;">
-              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Effects & Foley</span>
+              <span style="font-family: var(--font-display); font-weight: 600; color: var(--text-bright);">Sound Effects</span>
               <span id="val-effects" style="font-family: var(--font-mono); color: var(--accent-amber);">${Math.round(soundPrefs.effectsVolume * 100)}%</span>
             </div>
             <input type="range" class="settings-slider" id="slider-effects" min="0" max="100" value="${Math.round(soundPrefs.effectsVolume * 100)}" style="width: 100%; accent-color: var(--accent-amber);">
@@ -111,7 +125,7 @@ export function renderSettings(container) {
               <input type="password" id="new-pw" class="form-input" minlength="8" required autocomplete="new-password">
               <button type="button" class="reveal-btn" data-reveal="new-pw" aria-label="Show password">SHOW</button>
             </div>
-            <span class="form-help">8+ characters. No reset email.</span>
+            <span class="form-help">8+ characters</span>
           </div>
 
           <div id="pw-error" class="form-banner hidden" role="alert"></div>
@@ -139,7 +153,7 @@ export function renderSettings(container) {
   const muteBtn = container.querySelector('#audio-mute-btn');
   muteBtn?.addEventListener('click', () => {
     const isMuted = soundscape.toggleMute();
-    muteBtn.textContent = isMuted ? 'UNMUTE SOUND' : 'MUTE SOUND';
+    muteBtn.textContent = isMuted ? 'Unmute' : 'Mute';
     showToast(isMuted ? 'Audio muted.' : 'Audio unmuted.', 'info');
   });
 
@@ -201,4 +215,10 @@ export function renderSettings(container) {
       pwBtn.textContent = 'Change Password';
     }
   });
+
+  container.querySelector('#close-settings-terminal-btn')?.addEventListener('click', () => {
+    const term = container.querySelector('.in-world-terminal');
+    if (term) term.style.display = 'none';
+  });
 }
+

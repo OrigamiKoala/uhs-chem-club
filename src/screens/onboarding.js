@@ -249,24 +249,10 @@ export async function renderOnboarding(container) {
       <div class="screen-container m-screen m-onboarding" style="max-width: 760px;">
         <div class="m-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
           ${stepRail(2)}
-          <a href="#/bridge" id="skip-to-bridge-link" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Skip // Launch</a>
+          <a href="#/bridge" id="skip-to-bridge-link" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Skip</a>
         </div>
 
         <div class="glass-panel">
-          <!-- Vess Transmission Component (plays vess_transmission CRT loop) -->
-          <div id="onboarding-transmission-slot" style="margin-bottom: 0.6rem;"></div>
-          <div class="transmission-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-            <button type="button" id="btn-vess-intro" class="tag ${currentTransmissionMode === 'intro' ? 'live' : ''}" style="cursor: pointer; background: var(--plate-200); border: 1px solid ${currentTransmissionMode === 'intro' ? 'var(--accent-amber)' : 'var(--border-durasteel)'}; color: ${currentTransmissionMode === 'intro' ? 'var(--accent-gold)' : 'var(--text-muted)'}; font-size: 0.62rem;">
-              ● VESS // INTRO
-            </button>
-            <button type="button" id="btn-guild-briefing" class="tag ${currentTransmissionMode === 'guild' ? 'live' : ''}" style="cursor: pointer; background: var(--plate-200); border: 1px solid ${currentTransmissionMode === 'guild' ? activeMeta.accent : 'var(--border-durasteel)'}; color: ${currentTransmissionMode === 'guild' ? 'var(--text-bright)' : 'var(--text-muted)'}; font-size: 0.62rem;">
-              GUILD BRIEFING · ${activeMeta.title.toUpperCase()}
-            </button>
-            <button type="button" id="btn-cold-open" class="tag" style="cursor: pointer; background: var(--plate-200); border: 1px solid var(--border-durasteel); color: var(--accent-gold); font-size: 0.62rem;">
-              ▶ COLD OPEN
-            </button>
-          </div>
-
           <!-- Guild Cards Grid -->
           <div role="radiogroup" aria-label="Guild" class="guild-grid"
                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
@@ -301,8 +287,8 @@ export async function renderOnboarding(container) {
           <!-- Party Manifest Roster -->
           <div id="party-manifest-card" class="m-subpanel" style="background: var(--plate-200); border: 1px solid var(--border-durasteel); padding: 1rem; margin-bottom: 1.5rem;">
             <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.4rem;">
-              <span id="party-manifest-title" class="eyebrow lit">YOUR PARTY · ${activeMeta.title.toUpperCase()} CREW</span>
-              <span id="party-manifest-count" class="eyebrow">${members ? `${members.length} Signed On` : 'Syncing…'}</span>
+              <span id="party-manifest-title" class="eyebrow lit">MEMBERS · ${activeMeta.title.toUpperCase()}</span>
+              <span id="party-manifest-count" class="eyebrow">${members ? `${members.length} members` : 'Loading…'}</span>
             </div>
             <div id="party-manifest-list">
               ${renderRosterListHtml(members)}
@@ -311,7 +297,7 @@ export async function renderOnboarding(container) {
 
           <div class="m-cta-row" style="display: flex; justify-content: flex-end;">
             <button type="button" id="proceed-to-oath-btn" class="btn-primary" ${!selectedTeam ? 'disabled' : ''}>
-              Accept Assignment
+              Join Guild
             </button>
           </div>
         </div>
@@ -405,27 +391,24 @@ export async function renderOnboarding(container) {
       <div class="screen-container m-screen m-onboarding m-oath" style="max-width: 620px;">
         <div class="m-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
           ${stepRail(3)}
-          <a href="#/bridge" id="skip-to-bridge-link-3" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Skip // Bridge</a>
+          <a href="#/bridge" id="skip-to-bridge-link-3" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Skip</a>
         </div>
 
         <div class="glass-panel">
-          <!-- Vess Oath Transmission (plays vess_transmission CRT loop) -->
-          <div id="scene3-transmission-slot" style="margin-bottom: 1.5rem;"></div>
-
           <!-- Hold-to-Commit Keycap -->
-          <div id="oath-section" class="oath-section" style="text-align: center; margin-bottom: 2rem;">
-            <div class="eyebrow" style="margin-bottom: 0.8rem;">HOLD 1 SECOND TO COMMIT</div>
+          <div id="oath-section" class="oath-section" style="text-align: center; margin: 1.5rem 0 2rem;">
+            <div class="eyebrow" style="margin-bottom: 0.8rem;">HOLD TO CONFIRM</div>
             <div style="position: relative; max-width: 260px; margin: 0 auto;">
               <button type="button" id="hold-oath-btn" class="btn-primary" style="width: 100%; padding: 16px 0; font-size: 1.1rem; letter-spacing: 0.18em; position: relative; overflow: hidden;">
                 <span id="hold-fill-bar" style="position: absolute; inset: 0; background: rgba(255,255,255,0.22); width: 0%; transition: width 0.05s linear;"></span>
-                <span style="position: relative; z-index: 2;">SIGN ON</span>
+                <span style="position: relative; z-index: 2;">CONFIRM</span>
               </button>
             </div>
           </div>
 
-          <!-- d20 Issue Roll (Revealed after hold) -->
+          <!-- Item Roll (Revealed after hold) -->
           <div id="roll-section" class="hidden roll-section" style="text-align: center; padding: 1.5rem 0;">
-            <div class="eyebrow lit" style="margin-bottom: 1rem;">QUARTERMASTER'S CRATE // D20 ISSUE ROLL</div>
+            <div class="eyebrow lit" style="margin-bottom: 1rem;">STARTER ITEM</div>
 
             <!-- CSS 3D Die Container -->
             <div class="die-stage" style="perspective: 600px; width: 100px; height: 100px; margin: 0 auto 1.5rem;">
@@ -437,35 +420,20 @@ export async function renderOnboarding(container) {
             <!-- Trinket Reveal Card -->
             <div id="trinket-reveal-card" class="hidden m-subpanel" style="text-align: left; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid ${awardedTrinket.rarity === 'rare' ? 'var(--accent-gold)' : 'var(--accent-amber)'}; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
               <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                <span class="eyebrow" style="color: ${awardedTrinket.rarity === 'rare' ? 'var(--accent-gold)' : 'var(--text-muted)'};">${awardedTrinket.rarity.toUpperCase()} ISSUE · D20 ROLL [${roll}]</span>
-                <span class="tag live">AWARDED</span>
+                <span class="eyebrow" style="color: ${awardedTrinket.rarity === 'rare' ? 'var(--accent-gold)' : 'var(--text-muted)'};">${awardedTrinket.rarity.toUpperCase()}</span>
               </div>
               <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-bright); margin-bottom: 0.35rem;">
                 ${awardedTrinket.name}
               </h3>
-              <p style="font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-secondary); margin: 0; line-height: 1.45;">
-                ${awardedTrinket.provenance}
-              </p>
             </div>
 
             <button type="button" id="launch-cta-btn" class="btn-primary hidden" style="width: 100%; padding: 12px 0;">
-              Launch to Bridge
+              Continue to Bridge
             </button>
           </div>
         </div>
       </div>
     `;
-
-    // Mount Vess transmission for Scene 3
-    activeTransmission = createTransmissionElement({
-      speaker: 'VESS // QUARTERMASTER',
-      badge: 'SCENE 03 · THE OATH & THE ROLL',
-      subtitle: 'AVALON BRIDGE // QUARTERMASTER ENROLLMENT',
-      text: '"Hold the plate to seal your oath. Then reach into the crate and draw your issue."',
-      variant: 'hero',
-      accentColor: 'var(--accent-amber)'
-    });
-    container.querySelector('#scene3-transmission-slot')?.appendChild(activeTransmission.element);
 
     container.querySelector('#skip-to-bridge-link-3')?.addEventListener('click', () => {
       if (activeTransmission?.destroy) activeTransmission.destroy();

@@ -223,3 +223,47 @@ spending it early would waste the best moment on this world.
   Decide whether to lift a reusable runner out of `src/quest3d/` when the second
   chamber quest needs it — not on the first.
 - Consider a `field` arena instrument. Nothing has needed one yet.
+
+---
+
+## Progress — Tallow built as ground (T4)
+
+World 01 is now a place as well as a chart. Status:
+
+- [x] `src/three/world-data/tallow.json` — salt-flat refinery: 38 landmarks with declared
+      footprints, 4 sites, a sub-level excavation, spawn, and T1/T2 parity blocks.
+- [x] `src/three/tallow.js` — `TallowWorld`: bleached-overcast lighting, cracked hardpan
+      terrain with the excavation cut out of the mesh, evaporator drums, cracking towers,
+      pipe racks, conveyor, derelict hauler, buyer's pad, crate stacks, salt heaps, pan
+      rims, the lean-to bench, the sub-level lab and both sealed sites.
+- [x] `src/three/materials/tallow-textures.js` — procedural PBR set. Normals are derived
+      from the same height field that drew each albedo (`heightToNormal`), so every bump
+      registers with the crack or seam that caused it.
+- [x] `src/learn/engine/bench3d.js` + `scope3d.js` + `corebench3d.js` — both Unit 1
+      instruments rebuilt as physical benches, `InstancedMesh`-drawn, same API.
+- [x] `src/learn/engine/instruments.js` — the tier dispatcher both quests now import.
+- [x] `src/learn/engine/bench-host.js` — render dependency inverted so quest modules stay
+      loadable in plain Node for `verify:learn`.
+- [x] `src/learn/worlds3d.js` — the registry of walkable worlds. **One entry to add a second.**
+- [x] Star Map: two tabs, Active Quests and Learn Quests.
+- [x] `tools/verify-tallow.mjs`, wired into `npm run verify`.
+
+Deliberately **not** done, and why:
+
+- The other nine worlds have no ground. Build Tallow end-to-end first and let what breaks
+  inform the rest — the same order `3d-conversion-prompts.md` §6 sets out for Erebus.
+- `q3-catalogue` and `q4-counting` have sites on Tallow but no content. Their doors are
+  dogged shut and their `built` flag is `false`; `verify:tallow` fails if that ever
+  disagrees with the chart. **Nothing about those quests has been invented here.**
+- Tallow is T4 only. T3 and below keep the existing Learn screens, and every quest still
+  completes identically on them.
+
+### To make a second Learn world walkable
+
+1. Author `src/three/world-data/<world>.json` to the same schema.
+2. Write its `WorldScene` beside `tallow.js`.
+3. Add `enterXScene` to `stage.js` and one entry to `WORLDS_3D` in `src/learn/worlds3d.js`.
+4. Extend `tools/verify-tallow.mjs` to cover it (or copy it per world).
+
+Nothing else needs editing: the router, the star map's Learn tab, the walk HUD and the
+bench dispatcher all read the registry.

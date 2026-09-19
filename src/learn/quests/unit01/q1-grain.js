@@ -23,14 +23,14 @@
  * reports through `ctx` and nothing else.
  */
 
-import { SampleScope, detailFor } from '../../engine/scope.js';
+import { SampleScope, detailFor } from '../../engine/instruments.js';
 import { LearnFrame } from '../../engine/frame.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
 export const meta = { stageCount: 8 };
 
-const SPEAKER = 'VESS // TALLOW BENCH';
+const SPEAKER = 'Vess';
 
 /* ------------------------------------------------------------------
    THE CATALOGUE

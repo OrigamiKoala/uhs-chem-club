@@ -32,8 +32,8 @@ export function renderGardensMap(opts = {}) {
 
     lamps.push(`
       <div class="pylon-node ${stateClass} ${isMilestone ? 'milestone' : ''}"
-           title="Pylon ${i + 1}${isLit ? ' · Cleared' : isActive ? ' · Active' : ' · Dark'}"
-           aria-label="Pylon ${i + 1}: ${stateClass}">
+           title="Stage ${i + 1}${isLit ? ' · Cleared' : isActive ? ' · Active' : ' · Locked'}"
+           aria-label="Stage ${i + 1}: ${stateClass}">
         <span class="pylon-filament"></span>
         ${!compact ? `<span class="pylon-num">${i + 1}</span>` : ''}
       </div>
@@ -41,11 +41,11 @@ export function renderGardensMap(opts = {}) {
   }
 
   return `
-    <div class="gardens-map ${compact ? 'compact' : ''}" role="region" aria-label="Charge Gardens Pylon Grid">
+    <div class="gardens-map ${compact ? 'compact' : ''}" role="region" aria-label="Stages">
       <div class="gardens-header">
-        <span class="eyebrow lit">GARDENS RELAY GRID · EREBUS</span>
+        <span class="eyebrow lit">STAGES</span>
         <span class="tag ${clearedCount >= TOTAL_STAGES ? 'live' : 'warn'}">
-          ${clearedCount} / ${TOTAL_STAGES} PYLONS AWAKE
+          ${clearedCount} / ${TOTAL_STAGES} CLEARED
         </span>
       </div>
       <div class="pylon-grid">

@@ -47,39 +47,27 @@ export function renderRegister(container) {
     <div class="screen-container m-screen m-register" style="max-width: 520px;">
       <div class="m-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
         ${stepRail(1)}
-        <a href="#/login" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Skip // Sign In</a>
+        <a href="#/login" class="eyebrow m-skip" style="text-decoration: none; color: var(--text-muted);">Sign In</a>
       </div>
 
       <div class="glass-panel">
-        <!-- Vess Dialogue Inset -->
-        <div class="cold-open-box m-inset" style="margin-bottom: 1.5rem; padding: 0.9rem 1.1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
-          <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-            <span class="eyebrow lit">VESS // QUARTERMASTER</span>
-            <span class="tag live" style="font-size: 0.6rem;">SCENE 01 · MANIFEST</span>
-          </div>
-          <div style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted); letter-spacing: 0.08em; margin-bottom: 0.35rem;">AVALON SALVAGE HAULER // CHIEF OF LOGISTICS</div>
-          <p id="vess-line" style="font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--accent-gold); margin: 0;">
-            "Name for the manifest? We need to know who to credit when the haul lands."
-          </p>
-        </div>
-
         <form id="register-form" novalidate>
           <div class="form-group">
-            <label class="form-label" for="reg-name">Call Sign / Display Name</label>
+            <label class="form-label" for="reg-name">Display Name</label>
             <input type="text" id="reg-name" class="form-input"
                    minlength="3" maxlength="20" required autocomplete="username" autocapitalize="off">
             <span class="form-help" id="reg-name-help">3–20 chars · letters, numbers, space, - _</span>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="reg-email">Comms Frequency (Email)</label>
+            <label class="form-label" for="reg-email">Email</label>
             <input type="email" id="reg-email" class="form-input"
                    required autocomplete="email" autocapitalize="off">
-            <span class="form-help" id="reg-email-help">Sign-in only. Never shared or emailed.</span>
+            <span class="form-help" id="reg-email-help">Sign-in only.</span>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="reg-pw">Passphrase</label>
+            <label class="form-label" for="reg-pw">Password</label>
             <div class="input-wrap">
               <input type="password" id="reg-pw" class="form-input"
                      minlength="8" required autocomplete="new-password">
@@ -88,19 +76,15 @@ export function renderRegister(container) {
             <span class="form-help warn" id="reg-pw-help">Not your school password.</span>
           </div>
 
-          <!-- Background Selection (Purely cosmetic) -->
+          <!-- Background Selection -->
           <div class="form-group" style="margin-top: 1.4rem;">
-            <label class="form-label">Background // Prior Record</label>
+            <label class="form-label">Background</label>
             <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem;" role="radiogroup" aria-label="Background">
               ${Object.values(BACKGROUNDS).map(bg => `
                 <button type="button" class="choice-option bg-option ${bg.id === selectedBg ? 'selected' : ''}"
                         role="radio" aria-checked="${bg.id === selectedBg}" data-bg="${bg.id}"
                         style="padding: 9px 12px; text-align: left; display: flex; flex-direction: column; gap: 2px;">
-                  <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <span style="font-family: var(--font-display); font-weight: 600; font-size: 0.92rem; color: var(--text-bright); text-transform: uppercase;">${bg.title}</span>
-                    <span class="eyebrow" style="font-size: 0.65rem;">COSMETIC</span>
-                  </div>
-                  <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary);">${bg.flavor}</span>
+                  <span style="font-family: var(--font-display); font-weight: 600; font-size: 0.92rem; color: var(--text-bright); text-transform: uppercase;">${bg.title}</span>
                 </button>
               `).join('')}
             </div>
@@ -109,7 +93,7 @@ export function renderRegister(container) {
           <div id="reg-error" class="form-banner hidden" role="alert"></div>
 
           <button type="submit" id="reg-submit-btn" class="btn-primary" style="width: 100%; margin-top: 1.25rem;">
-            Record on Manifest
+            Create Account
           </button>
         </form>
 
@@ -173,7 +157,7 @@ export function renderRegister(container) {
     if (!val) return;
     const ok = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val);
     emailHelp.className = `form-help ${ok ? '' : 'bad'}`;
-    emailHelp.textContent = ok ? 'Comms frequency verified.' : 'That does not look like a valid comms address.';
+    emailHelp.textContent = ok ? 'Valid email.' : 'Enter a valid email address.';
   });
 
   pwInput.addEventListener('input', () => {
@@ -184,7 +168,7 @@ export function renderRegister(container) {
     }
     const short = pwInput.value.length < 8;
     pwHelp.className = `form-help ${short ? 'bad' : 'good'}`;
-    pwHelp.textContent = short ? `${8 - pwInput.value.length} more chars needed.` : 'Passphrase secure.';
+    pwHelp.textContent = short ? `${8 - pwInput.value.length} more chars needed.` : 'Password valid.';
   });
 
   form.addEventListener('submit', async (e) => {
@@ -201,7 +185,7 @@ export function renderRegister(container) {
     if (password.length < 8) return failWith('Password must be at least 8 characters.', pwInput);
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Recording…';
+    submitBtn.textContent = 'Creating account…';
 
     try {
       const res = await api.register(email, password, displayName);
@@ -214,7 +198,7 @@ export function renderRegister(container) {
         player: { ...(res.player || {}), background: selectedBg }
       });
 
-      showToast('Recorded on manifest.', 'success');
+      showToast('Account created.', 'success');
       window.location.hash = '#/onboarding';
     } catch (err) {
       failWith(err.message || 'Registration failed. Check connection and retry.');

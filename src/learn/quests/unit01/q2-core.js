@@ -31,14 +31,14 @@
  * reports through `ctx` and nothing else.
  */
 
-import { CoreBench } from '../../engine/corebench.js';
+import { CoreBench } from '../../engine/instruments.js';
 import { LearnFrame } from '../../engine/frame.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
 export const meta = { stageCount: 8 };
 
-const SPEAKER = 'VESS // TALLOW CORE BENCH';
+const SPEAKER = 'Vess';
 
 /* ------------------------------------------------------------------
    THE PARTS

@@ -18,13 +18,9 @@ import { STAGE_CONFIGS, evaluateStageLocally, diagnoseMiss } from '../quest3d/ev
 function showDemoModal(cfg) {
   showModal(`
     <div class="quest-modal-head" style="text-align: center; margin-bottom: 1.25rem;">
-      <div class="eyebrow lit">Sample Stage 1</div>
       <h2 id="demo-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.3rem;">
         ${esc(cfg.title || 'Stage 1')}
       </h2>
-      <div style="margin-top: 0.4rem;">
-        <span class="tag live">Free Demo</span>
-      </div>
     </div>
 
     <div style="background: var(--plate-100); border: 1px solid var(--border-durasteel); padding: 1rem 1.15rem; margin-bottom: 1.25rem; font-size: 0.95rem; line-height: 1.55; color: var(--text-bright);">
@@ -70,12 +66,12 @@ export function renderDemo(container) {
       <div class="quest-hud-top">
         <div class="quest-nav-cluster">
           <a href="#/" class="btn-secondary quest-btn-sm" style="text-decoration: none;">← Exit</a>
-          <span class="stage-counter">SAMPLE · STAGE <strong>1</strong></span>
+          <span class="stage-counter">STAGE <strong>1</strong></span>
         </div>
         <div class="colormap-legend" style="min-width: 168px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.62rem; letter-spacing: 0.16em;">
-            <span style="color: var(--charge-red-ink);">GIVER</span>
-            <span style="color: var(--charge-blue-ink);">TAKER</span>
+            <span style="color: var(--charge-red-ink);">NEGATIVE</span>
+            <span style="color: var(--charge-blue-ink);">POSITIVE</span>
           </div>
           <div style="height: 6px; background: linear-gradient(90deg, var(--charge-red) 0%, var(--plate-500) 50%, var(--charge-blue) 100%);"></div>
         </div>
@@ -99,7 +95,6 @@ export function renderDemo(container) {
             <div class="stage-header-actions" style="display: flex; gap: 0.4rem; align-items: center;">
               <button type="button" id="demo-info-btn" class="btn-secondary quest-btn-sm">Objective</button>
               <button type="button" id="demo-close-btn" class="btn-secondary quest-btn-sm" title="Close stage panel" aria-label="Close stage panel">Close</button>
-              <div class="stage-xp-tag">Sample</div>
             </div>
           </div>
 

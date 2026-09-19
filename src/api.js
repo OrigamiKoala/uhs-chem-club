@@ -3,7 +3,17 @@
  */
 
 import { session } from './session.js';
-import { showToast } from './ui/toast.js';
+
+/**
+ * Signing a player out is destructive — it drops their token, their cached
+ * profile and whatever screen they were on — so it takes two consecutive
+ * UNAUTHORIZED replies, not one. A single rejected call can be a backend
+ * hiccup that only *looked* like an expired token, and students were being
+ * thrown back to the login screen mid-quest because of it. Any successful
+ * call resets the count.
+ */
+let unauthorizedStrikes = 0;
+const UNAUTHORIZED_STRIKES_TO_SIGN_OUT = 2;
 
 export async function apiCall(route, body = {}) {
   const payload = { ...body };
@@ -11,27 +21,38 @@ export async function apiCall(route, body = {}) {
     payload.token = session.token;
   }
 
+  let res;
   try {
-    const res = await fetch(`/api/${route}`, {
+    res = await fetch(`/api/${route}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+  } catch (netErr) {
+    // Offline, DNS, a dropped connection. Says nothing about the session.
+    throw { code: 'NETWORK', message: 'No connection to the server. Try again in a moment.' };
+  }
 
-    const result = await res.json();
-    if (!result.ok) {
-      if (result.error?.code === 'UNAUTHORIZED') {
+  let result;
+  try {
+    result = await res.json();
+  } catch (parseErr) {
+    throw { code: 'BACKEND_UNAVAILABLE', message: 'The server is busy. Try that again in a moment.' };
+  }
+
+  if (!result.ok) {
+    if (result.error?.code === 'UNAUTHORIZED') {
+      unauthorizedStrikes++;
+      if (unauthorizedStrikes >= UNAUTHORIZED_STRIKES_TO_SIGN_OUT) {
+        unauthorizedStrikes = 0;
         session.clear();
       }
-      throw result.error || { code: 'UNKNOWN_ERROR', message: 'An unknown error occurred.' };
     }
-    return result.data !== undefined ? result.data : result;
-  } catch (err) {
-    if (err.message && err.code !== 'RATE_LIMITED') {
-      // Don't auto-toast if callers want to handle it
-    }
-    throw err;
+    throw result.error || { code: 'UNKNOWN_ERROR', message: 'An unknown error occurred.' };
   }
+
+  unauthorizedStrikes = 0;
+  return result.data !== undefined ? result.data : result;
 }
 
 export const api = {

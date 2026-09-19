@@ -25,13 +25,18 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 ## Build and Run
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
-- `npm run verify` — `verify:quest` + `verify:learn` + `verify:geometry` + `verify:media` + `verify:flows` + `build`. Run this before shipping.
+- `npm run verify` — `verify:quest` + `verify:learn` + `verify:geometry` + `verify:media` + `verify:flows` + `verify:ship` + `verify:tallow` + `build`. Run this before shipping.
 - `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below).
 - `npm run verify:learn` — integrity check of the Learn track registry and its no-XP invariant.
 - `npm run verify:geometry` — runs all 20 reaction animations headlessly and checks the chemistry
   on screen (see "Chemical realism" below). `--verbose` prints atom positions at every step.
 - `npm run verify:media` — validates media manifest against assets and size budgets.
 - `npm run verify:flows` — end-to-end smoke test of the API a new student touches.
+- `npm run verify:ship` — asserts ship graph connectivity, 3-hop limit, hatch cones, and spline bounds.
+- `npm run verify:tallow` — asserts the Tallow ground: every prop footprint disjoint
+  (no two objects share space), sites clear of props, the sub-level excavation walkable,
+  every charted Unit 1 quest sited, T4 decoration removable without stranding a site,
+  and no withheld vocabulary in a place name.
 - `npm run deploy:backend` — `clasp push` of `apps-script/`.
 - `npm run bake:stills` — regenerate the static SVG backdrops in `public/fallback/`.
 - `npm run bake:video` — encode raw MP4 clips in `assets-src/video/` to web-ready WebM, MP4, posters and audio.
@@ -77,7 +82,15 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   `worlds/unitNN-*.js` (one chart per AP unit), `quests/` (a game module per quest, plus
   `_template.js`, the contract).
 - `screens/` — one render function per route, all pure string templates.
-- `three/` — persistent WebGL stage, quality-tier probe (T3/T2/T1), ship interior, camera rig.
+- `three/` — persistent WebGL stage, quality-tier probe (T4/T3/T2/T1), ship interior, camera rig.
+  `stage.js` holds three modes (`ship` | `world` | `quest`) and `activeWorld`, which is
+  whichever planet the player is standing on — Erebus (`world.js`) or Tallow (`tallow.js`).
+  Tone-mapping exposure is per place: `SHIP_EXPOSURE` 1.28 for the ship and Erebus,
+  `TALLOW_EXPOSURE` 0.92 for the salt pan, because a bright overcast rendered at the dark
+  interior's exposure washes the crust out to paper. The renderer's shadow map is enabled
+  at T4 only; every world light already asked for shadows and none were drawn before.
+- `three/tallow.js` — **Tallow**, Learn world 01 (see "Tallow" below), built from
+  `three/world-data/tallow.json` with PBR surfaces from `materials/tallow-textures.js`.
 - `quest3d/` — reusable containment chamber, `MOLECULE_DATA` (atoms, bonds and the
   pickable `regions` that double as anchor definitions), `InstancedMesh` renderer,
   MarchingCubes charge-density isosurfaces, and `evaluator.js`.
@@ -105,6 +118,51 @@ Apps Script), rate limiting, salt caching, team-id normalization, and a 60 s in-
 for public routes (including `team/roster` with graceful local fallback). When `APPS_SCRIPT_URL` is unset it falls back to `localDevHandler`, a
 full in-memory mock of the backend — including the once-per-stage XP rule, so dev behaviour
 matches production. Guild switching in `onboarding.js` is optimistic at 0 ms with client-side roster caching and background prefetching; mounts Vess recruit introduction and guild briefings via looping `vess_transmission` CRT video.
+
+### Staying signed in — the rule that outranks the rest of the transport
+Apps Script is not a reliable service. Under load, or when Google's serving layer
+hiccups, `/exec` answers with an HTML page ("Page Not Found", a quota notice) instead
+of JSON, and Sheets reads fail with "timed out" or "Internal error". Every one of those
+is **transient and retryable**. None of them is evidence that a player's token is dead.
+
+**Nothing may turn a backend failure into a sign-out.** Four places enforce it, and a
+change to any one of them can silently reintroduce the bug where students were thrown
+back to the login screen mid-quest:
+
+1. `Auth.verifySessionToken` returns `null` **only** when the token is genuinely invalid
+   (bad signature, expired, revoked, banned, missing player). If the *lookup itself*
+   fails it throws `BACKEND_BUSY`. It used to swallow every error and return `null`,
+   which made a slow Sheets read indistinguishable from a forged token.
+2. `Main.doPost` answers `UNAUTHORIZED` only for that `null`. Anything whose message
+   looks like a transient Google failure (`isTransientServiceError_`) is relabelled
+   `BACKEND_BUSY`.
+3. `callAppsScript` retries 3× with backoff on a timeout, a 5xx, a non-JSON body or a
+   `BACKEND_BUSY` reply, each attempt capped at 9 s, and reports what is left as
+   `BACKEND_UNAVAILABLE` (HTTP 503) — never `UNAUTHORIZED`, never `INTERNAL_ERROR`. The
+   deployment checklist goes to the server log; the player sees one short sentence.
+4. The `bootstrap` fallback to `localDevHandler` sets `degraded: true` and **omits**
+   `player` rather than sending `player: null`. The mock has an empty roster, so it
+   cannot know who is signed in; `main.js` clears the session only on a non-degraded
+   `player === null`. This was the main cause of the random logouts — every Apps Script
+   hiccup returned the mock, and the mock said nobody was logged in.
+
+`api.js` adds the last backstop: `session.clear()` takes **two consecutive**
+`UNAUTHORIZED` replies, and any success resets the count. Network failures and
+unparseable responses throw `NETWORK` / `BACKEND_UNAVAILABLE` and never touch the session.
+
+**Latency.** Every `Db.find*` reads a whole tab, and one request did it many times over.
+`Db.getAll` memoizes per execution (`_rowCache`, dropped by `append`/`update`; globals do
+not survive between Apps Script invocations, so it cannot serve another request stale
+data), and a verified session is cached for `SESSION_CACHE_TTL_SEC` (180 s) under
+`sess:<jti>`, so a signed-in player no longer pays a Sessions scan plus a Players scan on
+every call. The cost is that a ban lags by up to that window; `revokeSession` drops the
+key so logout is immediate. On login, the proxy re-fetches the salt and re-derives only
+when the backend actually said `INVALID_CREDENTIALS` — retrying a hiccup there doubled an
+already slow sign-in with a second scrypt pass.
+
+**Rate limiting is per account, not per IP.** A club signs in from one school network, so
+a per-IP cap locked the room out of its own portal. Sign-in allows 10/min per identifier
+with a loose 150/min per IP to blunt a spray across many accounts.
 
 ### Backend (`apps-script/`)
 `Db.gs` (Sheets DAO), `Auth.gs`, `Players.gs`, `Quests.gs` (manifest, grading, hints,
@@ -179,8 +237,24 @@ into grinding and would punish the students it exists to help.
   hands-on observations directly to chemistry rather than waiting for an end-of-quest lecture.
   In `scope.js`, single-unit samples (`total <= 1`) are centered at `[0, 0]` so high-magnification targets
   remain visible in the aperture.
-- **Screens** — `learn.js` (the road), `learn-world.js` (one world's quests),
-  `learn-quest.js` (the host frame). Styling in `src/styles/learn.css` (`.lq-*` for the
+- **The benches in 3D** — at T4 the two Unit 1 instruments are built rather than drawn.
+  `engine/instruments.js` is the dispatcher every quest imports: it hands back the canvas
+  instrument at T3 and below and the 3D one at T4, and the two expose the *same API*, take
+  the same declarations and plan every tool through the same pure functions, so a stage that
+  grades correct on one grades correct on the other. Those planners live in the canvas
+  engines and are the single implementation: `planSettle`, `planCut` and `PIECE_TO_SPREAD`
+  in `scope.js`; `planBeam`, `planStrip`, `packCore` and `RING_RADII` in `corebench.js`.
+  `engine/bench3d.js` is the shared physical bench (plated top, a station per sample with a
+  recessed phosphor well, engraved plaques, a constrained lean-over camera, and
+  `fitToOpenArea`, which uses `setViewOffset` to centre the instrument in the part of the
+  screen the frame is not covering). `engine/scope3d.js` and `engine/corebench3d.js` are the
+  instruments themselves, drawn with `InstancedMesh` so a 400-piece sample is five draw
+  calls. `engine/bench-host.js` inverts the render dependency — the benches ask for a host
+  and `main.js` registers one — because a quest module must stay loadable in plain Node for
+  `verify:learn`, and importing the stage would drag three.js and two worlds' JSON in with it.
+  **Both quest modules changed by exactly one import line and not one character of copy.**
+- **Screens** — `learn.js` (the road), `learn-world.js` (one world's quests, or the walk HUD
+  when the world is built as a place), `learn-quest.js` (the host frame). Styling in `src/styles/learn.css` (`.lq-*` for the
   quest bench, `.scope-*` for the instrument, `.lq-choice-row`, `.lq-tally`); phone rules under `.m-learn`,
   `.m-learn-world`, `.m-learn-quest` in `mobile-screens.css`.
 - **Endpoints** — `learn/progress`, `learn/stage`, `learn/complete`. None returns an XP
@@ -237,6 +311,40 @@ the debrief names nucleus, proton, neutron (with isotope), electron, shell, vale
 specimen is a real nuclide and balances unless a stage has stripped it. **The quest never connects
 the marked count to the scope's catalogue** — the core bench does not talk to the catalogue,
 preserving the proton-count reveal for `q3-catalogue`.
+
+### Tallow — Learn world 01 as a place you walk (`three/tallow.js`, T4)
+
+At T4, `#/learn/unit01` is not a list of quests: it is the ground they are played on.
+The player walks a salt-flat refinery in first person, finds a bench, and presses `[E]`.
+
+- **The look is not Erebus.** Erebus is an amber basin at low sun; Tallow is a bleached
+  salt pan under flat overcast — the same SCOURED PLATE world with the colour leached out.
+  Ground bounce dominates (a `HemisphereLight` off white crust), the sun is broad and
+  weak with no disc, and the palette stays warm-neutral with a brown/sand bias throughout.
+  The sub-level is the one place the sun never reached, so the colour survives there: it is
+  built from `crucible.jpg`'s register, riveted and sodium-lit.
+- **Four charted sites, two built.** `site-1` Salvage Bench (`q1-grain`) under the lean-to
+  in the yard; `site-2` Core Bench (`q2-core`) down the stairwell in the diagnostic lab;
+  `site-3` Catalogue Vault and `site-4` Tally Floor are `built: false` — real places you can
+  walk to and read, which open nothing. **The world never invents a quest that has not been
+  written**; `verify:tallow` fails if a site's `built` flag disagrees with the chart.
+- **The sub-level is a real excavation.** The terrain mesh has a rectangular hole cut in it
+  (triangles whose centre falls inside the footprint are dropped), the pit is built as
+  geometry so its edges are machined rather than stretched, and `getTerrainHeight` resolves
+  the ramp — so the player walks down instead of being teleported under the ground. The pit
+  rim is box colliders split around the stair mouth, which is what makes the stair the only
+  way in.
+- **Nothing shares space with anything.** Every landmark in `tallow.json` declares a
+  footprint, every pair is disjoint, and `verify:tallow` proves it by computing the
+  distances rather than trusting the layout.
+- **Only lamps are lit.** Sodium luminaires in the lab, the mast's obstruction lamp, and one
+  indicator per built site, driven from the Learn track's own progress through
+  `setSiteComplete` — the world reads state, it never keeps it.
+- **Tier boundary.** Walking Tallow is T4. At T3 and below the Learn road is the screens it
+  has always been and every quest completes exactly as before. `learn/worlds3d.js` is the
+  registry that says which worlds are walkable and is the only file a second one needs.
+  `minTier: "T4"` landmarks are decoration: `verify:tallow` simulates removing every one of
+  them and asserts every site is still reachable.
 
 ## Rules that keep the game fair
 - **XP is paid once per stage.** `Quests.gs` checks prior correct submissions, the proxy
@@ -360,7 +468,8 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 ## Plans in flight
 - `docs/plans/learn-track.md` — the Learn road: ten worlds, 40 quests charted, two built
   (`unit01/q1-grain`, `unit01/q2-core`). Scaffolding, gating, routes, backend tab and
-  verifier are in place.
+  verifier are in place. World 01 (Tallow) is also built as walkable ground at T4, with
+  both of its benches as 3D instruments; the other nine worlds are charts only.
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
 
@@ -374,6 +483,13 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 6. `#/quest` → `#/leaderboard`, `#/inventory`, `#/quarters`, `#/settings`, `#/admin`.
 
 Nav labels match page titles exactly: BRIDGE, STAR MAP, LEARN, STANDINGS, INVENTORY, CREW.
+
+**The Star Map charts two roads.** `screens/starmap.js` carries a two-tab row in both the
+T4 holo-table and the 2D page: `Active Quests` (the four campaign sectors, unchanged) and
+`Learn Quests` (the ten Learn worlds, from `curriculum.js` with gating from
+`learn/progress.js`). A world that is built as a place reads *Disembark to <world>* and
+enters it in 3D; one that is not reads *Enter* and opens its quest list. The LEARN nav tab
+is untouched, so neither road is reachable only one way.
 
 ## Aesthetic — "SCOURED PLATE" (MANDATORY FOR ALL AGENTS)
 
@@ -464,7 +580,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   tightness, never for length.
 - **Story copy is exempt too**, if it builds the fiction rather than describing the
   product. This covers Vess's transmissions and `onClear` lines, Session Zero scenes,
-  guild pitches, mission-log entries, Fleet Comms intercepts and item provenance. It lives
+  guild pitches, and mission-log entries. It lives
   in `src/story/`. Limits:
   - Every line is diegetic: a character speaking, or the ship or the world reporting.
     It never talks about "the app", "levels" or "features".
@@ -476,11 +592,30 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     animation.
 
 ### 8. 3D and assets
+- Quality tiers:
+  - `T4`: Default ultra/enhanced tier (60fps, unconstrained WASD navigation, continuous walk splines, particle dust, full-res world). 2D page overlays are removed on the bridge (`#/bridge`); diegetic in-world terminals with `CLOSE` handle compartment interactions.
+  - `T3`: High/Desktop (60fps, procedural interior, graph traversal, eased dolly, standard 2D page overlays).
+  - `T2`: Standard/Chromebook/Mobile (30fps, DPR 1, baked stills).
+  - `T1`: Non-WebGL Fallback (DOM-only).
+- Authentication gating & 3D view: On unauthenticated routes (`/login`, `/register`, `/`, `/onboarding`), the 3D ship interior and vista are visible behind the account cards, but first-person WASD navigation and mouse look are locked (`fpsControls.enabled = false`) until the player signs in.
+- Starship traversal spine: `src/three/ship-graph.js` defines an undirected navigation graph across all compartments (`bridge`, `cockpit`, `starmap`, `quarters`, `cargo`, `comms`, `airlock`) with 3–6 point `walkPath` splines, `hatchPos` view-cone markers, and `routeBinding`.
+- Starship 3D interior: `src/three/ship.js` builds hyper-realistic physical rooms and interconnecting corridor spines along `walkPath` splines with procedural PBR durasteel plating with tangent-space normal mapping (`createDurasteelNormalTexture`), floor grating, runway halogen strips, chamfered hatch bulkheads, tactical quad-CRT bridge consoles with mechanical keyboards and dial gauges, dual flight pods with yokes and center throttle quadrant in cockpit, central holo-table with 4-planet orrery and live holographic quest projector, 2-tier bunk beds with canvas bedding and stenciled metal footlockers, anglepoise desk lamp and gear hooks in quarters, overhead gantry crane and stacked shipping containers with cargo manifest screen, 19-inch equipment racks with patch bay loops and glowing vacuum tube cages in comms, and heavy airlock blast door with manual dogging wheel, hydraulic rams, and pressure dials. Non-overlapping physics bounds, rear-shifted bridge consoles (`Z = [0.2, 1.4]`), forward-shifted cockpit pods (`Z = [2.6, 3.8]`), and center pedestal colliders ensure wide-open transverse corridors at `Z = [1.4, 2.6]` across all rooms.
+- In-World 3D content transfer: In T4, primary content lives diegetically in 3D: Quests in the Star Map holo-table, Standings on the Comms CRT terminal, Inventory on the Cargo Manifest, and the Bridge Welcome Hologram directly in front of the camera's original bridge position displaying "UHS Chem Club", meeting announcements, and directional wayfinding arrows. In T3 and below, 2D full-page screens (`.screen-container`) remain active.
+- Erebus world scene: `src/three/world.js` and `src/three/world-data/erebus.json` define The Charge Gardens basin with 20 instanced pylon structures along a walkable route, survey lander ("SANDSTALKER") with boarding ramp, stratified sedimentary rock outcrops, procedural terrain heightmap (`getTerrainHeight`), amber celestial sky, banded gas giant vista (with `fog: false` celestial bodies), tuned desert haze (`fogNear: 70`, `fogFar: 280`), and atmospheric dust motes.
+- T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `CLOSE` dismiss controls. Star Map holo-table integrates Sector 01 status and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates standings; Settings integrates graphics tier (T4 default) and audio sliders. Bridge displays the floating directory kiosk instead of WASD/mouse look text prompts.
+- T4 Learn deployment: In T4, `#/learn/unit01` enters the 3D Tallow world
+  (`stage.enterTallowScene(siteId)`); walking to a bench and pressing `[E]` raises a
+  `tallow:interact` event that routes to `#/learn/unit01/<questId>`, where the quest's
+  instrument is deployed as the 3D bench with the frame as an overlay beside it. The
+  router keeps the world scene across both routes (`isWalkableLearnRoute`), so stepping
+  in and out of a bench never passes through the ship, and the last site is remembered so
+  leaving a bench puts the player back in front of it rather than at the pad.
+- T4 World Quest Deployment: In T4, `#/quest` enters the 3D Erebus world (`stage.enterWorldScene()`). The camera is dynamically reparented to `worldScene.scene` (and returned to `shipScene` upon exit) so Three.js continuously updates `camera.matrixWorld` without freeze, spawning above ground level (`groundY + eyeHeight`) facing Pylon 1 with active FPS navigation. The chemistry chamber deploys as an in-world instrument only when the player interacts with an active pylon, suspending FPS controls and releasing pointer lock so the 2D cursor and curved-arrow interaction operate cleanly, lighting its amber indicator in 3D upon clearance and returning cleanly to 3D terrain walking. Full-screen wrappers (`.app-viewport`, `.quest-hud-overlay`, `.quest-screen-flash`) strictly maintain `pointer-events: none` so molecule clicks and right-drag rotation reach the WebGL canvas, while cards (`.stage-prompt-card`, `.stage-dock-bar`, `.quest-nav-cluster`) claim `pointer-events: auto`.
+- First-person controls: `src/three/fps-controls.js` provides unconstrained WASD + sprint (Shift) + Spacebar jump + mouse look navigation with sliding physics collision, penetration push-out resolution (`resolveBoxCollisions`), player radius of 0.25, terrain height clamping on Erebus, and contextual `[E]` interaction prompts at ship terminals and pylons. Movement is active in world exploration and gated behind active session authentication aboard ship; pointer lock automatically suspends in quest overlays and puzzle chamber views, and clicks on `.cinematic-overlay`, `.modal-container`, and HUD elements are excluded from pointer lock capture.
+- Planetary transit cinematics: Launch and atmospheric descent cinematics (`launch`, `erebus_descent`) trigger on transit to Sector 01 from the Star Map, Bridge, and Airlock without persistent one-time lockout, and are skippable via Click/Space/Esc. FPS controls are disabled during cinematic playback to prevent input leakage into the background world.
 - Hero/prop shapes: `tools/hunyuan3d-shape-t4.ipynb` batches concept PNG/JPG images via Hunyuan3D 2.1 shape-only pipeline into `/kaggle/working/raw/*.glb` on NVIDIA T4; texturing is handled in Blender.
-- Nano Banana (`generate_image`) matte textures with Three.js procedural geometry and
-  `MeshStandardMaterial`.
-- Starship cockpit: faceted durasteel canopy mullions, overhead avionics rack, dual analog
-  yokes, throttle quadrant, armored bucket seats, twin CRT monitors.
+- Nano Banana PBR textures: procedural canvas PBR pipeline in `src/three/materials/textures.js` generating albedo, tangent-space normal maps, roughness, phosphor cathode distortion vignettes, and custom station screens (`createDurasteelTexture`, `createDurasteelNormalTexture`, `createBlastDoorTexture`, `createRackPanelTexture`, `createFootlockerTexture`, `createContainerStencilTexture`, `createKeyboardTexture`, `createDialGaugeTexture`, `createVacuumTubeTexture`, `createCrtScreenTexture`) coupled with Three.js `MeshStandardMaterial`.
+- Starship cockpit: faceted durasteel canopy mullions, overhead avionics rack with amber task lighting, dual analog yokes, center throttle quadrant, armored bucket seats with 5-point harness straps, twin CRT monitors per pod, rudder pedals.
 - Celestial vista: chromatic gas giant with rings, the banded desert planet Erebus, moons,
   an asteroid belt. Stars are blue-white and sand-gold, not neon.
   - `three/materials/celestial.js` draws every body with its own shader instead of image
@@ -492,9 +627,13 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     `createAsteroidGeometry`.
   - `three/materials/starfield.js` puts the stars on a shell at radius 600–750, past every
     planet, sized in screen pixels by brightness, plus a very faint galactic band.
-  - `stage.js` gives the ship scene a dim `RoomEnvironment` PMREM
-    (`environmentIntensity` 0.22) so the metal surfaces show reflections.
-- Lighting: cool starlight through the canopy, warm sodium instrument task lamps, dust motes.
+  - `stage.js` gives the ship scene `RoomEnvironment` PMREM
+    (`environmentIntensity` 0.58, tone mapping exposure 1.28) so metal surfaces show rich specular reflections.
+- Interior lighting rig:
+  - `src/three/ship-lighting.js` implements `ShipLightPool` dynamically selecting the 7 closest light sources to the camera from 21 compartment and corridor positions with soft decay (1.2) and generous distance, plus a camera-mounted suit inspection light (strictly <= 8 PointLights for locked 60fps forward rendering).
+  - Ambient base fill: `HemisphereLight` (0x8faac8 / 0x2e3544, 2.2) and `AmbientLight` (0x4a5668, 1.5) preventing crushed shadow voids.
+  - Forward canopy starlight: `DirectionalLight` (0xdce6f8, 2.6) aimed from (-8, 16, 26) through the front canopy into the cockpit and bridge.
+  - Physical 3D fixtures: `createCeilingLuminaire` mounts cast iron protective cages with warm sodium diffuser panels (`luminaireMat` #ffe6b0) across the central spine, transverse corridor, wing corridors, and all compartments, complemented by dual halogen runway guide strips embedded into the deck.
 - Routes bind environment stills: `/art/cockpit.jpg`, `starmap.jpg`, `crucible.jpg`,
   `cargo.jpg`, `quarters.jpg`, `comms.jpg`, `airlock.jpg`.
 

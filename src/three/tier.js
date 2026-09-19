@@ -1,15 +1,61 @@
 /**
  * tier.js — Graphics quality tier probe and runtime management
- * T3 = High / Desktop (60fps)
- * T2 = Standard / Chromebook / Mobile (30fps, DPR 1, no post)
+ * T4 = Enhanced / Ultra (60fps, continuous walk, dust particles, full-res world)
+ * T3 = High / Desktop (60fps, procedural interior, graph traversal)
+ * T2 = Standard / Chromebook / Mobile (30fps, DPR 1, stills fallback)
  * T1 = Non-WebGL Fallback (DOM-only, zero GPU load)
  */
 
 import { session } from '../session.js';
 
+export const TIER_RANKS = {
+  T1: 1,
+  T2: 2,
+  T3: 3,
+  T4: 4
+};
+
+export function tierAtLeast(requiredTier, currentTier = tierManager.currentTier) {
+  return (TIER_RANKS[currentTier] || 1) >= (TIER_RANKS[requiredTier] || 1);
+}
+
+export function isT4Eligible() {
+  if (typeof window === 'undefined') return false;
+
+  // 1. WebGL2 present
+  try {
+    const c = document.createElement('canvas');
+    if (!c.getContext('webgl2')) return false;
+  } catch (e) {
+    return false;
+  }
+
+  // 2. Not coarse pointer (no touch-only phones/tablets)
+  if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+    return false;
+  }
+
+  // 3. Hardware concurrency >= 4
+  if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) {
+    return false;
+  }
+
+  // 4. Device memory >= 4 if reported
+  if (navigator.deviceMemory && navigator.deviceMemory < 4) {
+    return false;
+  }
+
+  // 5. T4 not previously downgraded in this session
+  if (session.t4Downgraded) {
+    return false;
+  }
+
+  return true;
+}
+
 class TierManager {
   constructor() {
-    this.currentTier = 'T3';
+    this.currentTier = 'T4';
     this.probeComplete = false;
     this.frameTimes = [];
     this.probeFrames = 90;
@@ -18,8 +64,12 @@ class TierManager {
 
   init() {
     const pref = session.gfxTier;
-    if (pref === 'T1' || pref === 'T2' || pref === 'T3') {
-      this.setTier(pref);
+    if (pref === 'T1' || pref === 'T2' || pref === 'T3' || pref === 'T4') {
+      if (pref === 'T4' && !isT4Eligible()) {
+        this.setTier('T3');
+      } else {
+        this.setTier(pref);
+      }
       this.probeComplete = true;
       return;
     }
@@ -33,27 +83,51 @@ class TierManager {
       return;
     }
 
-    // GPU vendor probe
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-    let renderer = '';
-    if (debugInfo) {
-      renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '';
-    }
-
-    const isMobileOrSlow = /mali|adreno|powervr|intel|chromebook/i.test(renderer) ||
-      (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
-      (window.devicePixelRatio && window.devicePixelRatio > 2.5);
-
-    if (isMobileOrSlow) {
-      this.setTier('T2');
+    // Default to T4 if eligible, else T3 / T2
+    if (isT4Eligible()) {
+      this.setTier('T4');
     } else {
-      this.setTier('T3');
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      let renderer = '';
+      if (debugInfo) {
+        renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '';
+      }
+
+      const isMobileOrSlow = /mali|adreno|powervr|intel|chromebook/i.test(renderer) ||
+        (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
+        (window.devicePixelRatio && window.devicePixelRatio > 2.5);
+
+      if (isMobileOrSlow) {
+        this.setTier('T2');
+      } else {
+        this.setTier('T3');
+      }
     }
   }
 
-  // Record a frame timestamp during boot probe
+  // Record a frame timestamp during boot probe or runtime downgrade monitoring
   recordFrame(now) {
-    if (this.probeComplete) return;
+    if (this.probeComplete) {
+      // Monitor runtime performance for downgrades
+      if (this.frameTimes.length > 120) this.frameTimes.shift();
+      this.frameTimes.push(now);
+
+      if (this.frameTimes.length >= 60) {
+        const delta = this.frameTimes[this.frameTimes.length - 1] - this.frameTimes[0];
+        const fps = (1000 * (this.frameTimes.length - 1)) / delta;
+
+        if (fps < 24 && this.currentTier === 'T4') {
+          session.t4Downgraded = true;
+          this.setTier('T3');
+        } else if (fps < 24 && this.currentTier === 'T3') {
+          this.setTier('T2');
+        } else if (fps < 15 && this.currentTier === 'T2') {
+          this.setTier('T1');
+        }
+      }
+      return;
+    }
+
     this.frameTimes.push(now);
     if (this.frameTimes.length >= this.probeFrames) {
       let total = 0;
@@ -73,9 +147,13 @@ class TierManager {
   }
 
   setTier(tier) {
-    if (tier !== 'T1' && tier !== 'T2' && tier !== 'T3') return;
+    if (tier !== 'T1' && tier !== 'T2' && tier !== 'T3' && tier !== 'T4') return;
     this.currentTier = tier;
     session.setGfxTier(tier);
+
+    if (typeof document !== 'undefined' && document.body) {
+      document.body.classList.toggle('tier-t4', tier === 'T4');
+    }
 
     // Toggle backdrop visibility
     const fallbackEl = document.getElementById('fallback-backdrop');
@@ -99,7 +177,16 @@ class TierManager {
   }
 
   cycleTier() {
-    const next = this.currentTier === 'T3' ? 'T2' : this.currentTier === 'T2' ? 'T1' : 'T3';
+    let next;
+    if (this.currentTier === 'T4') {
+      next = 'T3';
+    } else if (this.currentTier === 'T3') {
+      next = 'T2';
+    } else if (this.currentTier === 'T2') {
+      next = 'T1';
+    } else {
+      next = isT4Eligible() ? 'T4' : 'T3';
+    }
     this.setTier(next);
   }
 

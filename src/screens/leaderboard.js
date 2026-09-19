@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
+import { tierManager } from '../three/tier.js';
 import { pageHeader, esc } from '../ui/layout.js';
 
 const TEAM_ACCENTS = {
@@ -17,10 +18,11 @@ const TEAM_ACCENTS = {
 const PROPER = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
 
 export async function renderLeaderboard(container) {
-  if (stage.cameraRig) {
+  if (stage.cameraRig && tierManager.currentTier !== 'T4') {
     stage.cameraRig.moveTo('comms');
   }
 
+  const isT4 = tierManager.currentTier === 'T4';
   let activeTab = 'teams';
   let lbData = { individual: [], teams: [] };
   let loading = true;
@@ -29,67 +31,57 @@ export async function renderLeaderboard(container) {
   function render() {
     const hasData = (lbData.teams || []).length > 0 || (lbData.individual || []).length > 0;
 
-    container.innerHTML = `
-      <div class="screen-container m-screen m-leaderboard">
-        ${pageHeader({
-          art: '/art/comms.jpg',
-          video: '/video/comms_loop.webm',
-          artAlt: 'Comms array',
-          eyebrow: 'Sector 01 Comms & Standings',
-          title: 'Fleet Comms',
-          actions: `
-            <div class="lb-tabs" style="display: flex; gap: 0.5rem;" role="tablist" aria-label="Standings view">
-              <button type="button" id="tab-teams" role="tab" aria-selected="${activeTab === 'teams'}"
-                      class="btn-chip ${activeTab === 'teams' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
-                Guilds
-              </button>
-              <button type="button" id="tab-indiv" role="tab" aria-selected="${activeTab === 'individual'}"
-                      class="btn-chip ${activeTab === 'individual' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
-                Players
-              </button>
-            </div>
-          `
-        })}
-
-        <!-- Intercepted Comms Chatter -->
-        <div class="glass-panel lb-chatter" style="margin-bottom: 1.25rem; padding: 0.85rem 1.1rem; border-left: 2px solid var(--accent-amber);">
-          <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-            <span class="eyebrow lit" style="font-size: 0.65rem;">INTERCEPTED FLEET CHATTER // SECTOR 01</span>
-            <span class="tag" style="font-size: 0.62rem;">ENCRYPTED</span>
-          </div>
-          <div class="comms-ticker" style="display: flex; flex-direction: column; gap: 0.35rem; font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-secondary);">
-            <div class="lb-chatter-line" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-              <span style="color: var(--accent-amber);">[04:12]</span>
-              <span style="color: var(--team-fire);">Thermal Smelters:</span>
-              <span>"Core temp nominal on Pylon 12. Transfer arc locked."</span>
-            </div>
-            <div class="lb-chatter-line" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-              <span style="color: var(--accent-amber);">[04:08]</span>
-              <span style="color: var(--team-earth);">Mineral Mining:</span>
-              <span>"Conduit 7 cleared. Heavy silt dredged from lower manifold."</span>
-            </div>
-            <div class="lb-chatter-line" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-              <span style="color: var(--accent-amber);">[03:59]</span>
-              <span style="color: var(--team-water);">Moisture Rigs:</span>
-              <span>"Pressure needle holding at Relay 8. Basin moisture rising."</span>
-            </div>
-            <div class="lb-chatter-line" style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-              <span style="color: var(--accent-amber);">[03:44]</span>
-              <span style="color: var(--team-air);">Atmospheric Crew:</span>
-              <span>"Squall clearing west of the dune rim. Field visibility 80%."</span>
-            </div>
-          </div>
+    const terminalHeaderMarkup = isT4 ? `
+      <div class="terminal-header">
+        <div>
+          <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">STANDINGS</h2>
         </div>
+        <button type="button" id="close-comms-terminal-btn" class="terminal-close-btn">CLOSE</button>
+      </div>
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 0.8rem;">
+        <div class="lb-tabs" style="display: flex; gap: 0.5rem;" role="tablist" aria-label="Standings view">
+          <button type="button" id="tab-teams" role="tab" aria-selected="${activeTab === 'teams'}"
+                  class="btn-chip ${activeTab === 'teams' ? 'active' : ''}" style="font-size: 0.76rem; padding: 6px 14px; font-weight: 700;">
+            Guilds
+          </button>
+          <button type="button" id="tab-indiv" role="tab" aria-selected="${activeTab === 'individual'}"
+                  class="btn-chip ${activeTab === 'individual' ? 'active' : ''}" style="font-size: 0.76rem; padding: 6px 14px; font-weight: 700;">
+            Players
+          </button>
+        </div>
+      </div>
+    ` : pageHeader({
+      art: '/art/comms.jpg',
+      video: '/video/comms_loop.webm',
+      artAlt: 'Comms array',
+      title: 'Standings',
+      actions: `
+        <div class="lb-tabs" style="display: flex; gap: 0.5rem;" role="tablist" aria-label="Standings view">
+          <button type="button" id="tab-teams" role="tab" aria-selected="${activeTab === 'teams'}"
+                  class="btn-chip ${activeTab === 'teams' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
+            Guilds
+          </button>
+          <button type="button" id="tab-indiv" role="tab" aria-selected="${activeTab === 'individual'}"
+                  class="btn-chip ${activeTab === 'individual' ? 'active' : ''}" style="font-size: 0.85rem; padding: 8px 18px; font-weight: 700;">
+            Players
+          </button>
+        </div>
+      `
+    });
+
+    container.innerHTML = `
+      <div class="${isT4 ? 'in-world-terminal comms-terminal' : 'screen-container m-screen m-leaderboard'}">
+        ${terminalHeaderMarkup}
 
         ${loading && !hasData ? `
           <div class="glass-panel empty-state">
             <div class="empty-icon" aria-hidden="true">///</div>
-            <div style="font-family: var(--font-mono); letter-spacing: 0.16em; color: var(--accent-amber);">LINKING…</div>
+            <div style="font-family: var(--font-mono); letter-spacing: 0.16em; color: var(--accent-amber);">Loading…</div>
           </div>
         ` : failed && !hasData ? `
           <div class="glass-panel empty-state">
             <div class="empty-icon" aria-hidden="true">///</div>
-            <h2 class="section-title">Link lost</h2>
+            <h2 class="section-title">Could not load standings</h2>
             <div style="margin-top: 1.25rem;"><button type="button" id="lb-retry" class="btn-secondary">Retry</button></div>
           </div>
         ` : activeTab === 'teams' ? renderTeams() : renderIndividuals()}
@@ -99,6 +91,11 @@ export async function renderLeaderboard(container) {
     container.querySelector('#tab-teams')?.addEventListener('click', () => { activeTab = 'teams'; render(); });
     container.querySelector('#tab-indiv')?.addEventListener('click', () => { activeTab = 'individual'; render(); });
     container.querySelector('#lb-retry')?.addEventListener('click', () => { loading = true; failed = false; render(); load(); });
+
+    container.querySelector('#close-comms-terminal-btn')?.addEventListener('click', () => {
+      const term = container.querySelector('.in-world-terminal');
+      if (term) term.style.display = 'none';
+    });
   }
 
   function renderTeams() {

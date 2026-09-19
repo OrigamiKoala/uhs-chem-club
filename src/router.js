@@ -5,6 +5,7 @@
 import { session } from './session.js';
 import { stage } from './three/stage.js';
 import { closeModal } from './ui/modal.js';
+import { canWalk } from './learn/worlds3d.js';
 import { soundscape } from './audio/soundscape.js';
 
 import { renderLanding } from './screens/landing.js';
@@ -128,6 +129,19 @@ function isLearnQuestRoute(raw) {
   return Boolean(m && m.def.render === renderLearnQuest);
 }
 
+/**
+ * True for a route that is standing on a Learn world's ground.
+ *
+ * Walking from the yard into a bench and back out again must not pass through
+ * the ship: both routes live on the same planet, so the world scene is kept and
+ * only the camera moves.
+ */
+function isWalkableLearnRoute(raw) {
+  const m = matchParamRoute(raw);
+  if (!m) return false;
+  return canWalk(m.params.worldId);
+}
+
 export class Router {
   constructor(appContainer) {
     this.appContainer = appContainer;
@@ -198,10 +212,15 @@ export class Router {
     // torn down on every navigation that is not back into the same quest.
     if (!isLearnQuestRoute(raw)) disposeLearnQuest();
 
-    // If leaving quest scene, exit quest mode
-    if (raw !== '/quest' && raw !== '/demo' && !isLearnQuestRoute(raw) && stage.mode === 'quest') {
-      stage.exitQuestScene();
+    // If leaving quest scene or navigating to ship compartments
+    if (raw !== '/quest' && raw !== '/demo' && !isLearnQuestRoute(raw) && !isWalkableLearnRoute(raw)) {
+      if (stage.mode === 'quest' || stage.mode === 'world') {
+        stage.enterShipScene(ROUTE_ROOM[raw] || 'bridge');
+      } else if (stage.mode === 'ship' && stage.cameraRig) {
+        stage.cameraRig.moveTo(ROUTE_ROOM[raw] || 'bridge');
+      }
     }
+
 
     // Crossfade soundscape room ambient bed
     soundscape.setRoom(ROUTE_ROOM[raw] || routeDef.room || 'bridge');

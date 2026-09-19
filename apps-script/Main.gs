@@ -380,6 +380,10 @@ function doPost(e) {
     var ctx = null;
     if (handler.auth) {
       var token = req.body ? req.body.token : null;
+      // verifySessionToken throws BACKEND_BUSY when the lookup itself failed,
+      // which the catch below reports as retryable. Only a null return means
+      // the token is actually dead, and only that may answer UNAUTHORIZED —
+      // the client signs the player out on it.
       var session = Auth.verifySessionToken(token);
       if (!session) {
         return json({ ok: false, error: { code: 'UNAUTHORIZED', message: 'Session invalid or expired.' } });
@@ -393,14 +397,34 @@ function doPost(e) {
     var resultData = handler.fn(req.body || {}, ctx);
     return json({ ok: true, data: resultData });
   } catch (err) {
-    return json({
-      ok: false,
-      error: {
-        code: err && err.code ? err.code : 'INTERNAL_ERROR',
-        message: err && err.message ? err.message : String(err)
-      }
-    });
+    var code = err && err.code ? err.code : 'INTERNAL_ERROR';
+    var message = err && err.message ? err.message : String(err);
+
+    // Sheets and the other Google services fail transiently under load, with
+    // "timed out", "Internal error" or a lock message. Those are retryable and
+    // are labelled as such, so the proxy retries and the client leaves the
+    // player signed in instead of treating it as a dead session.
+    if (code === 'INTERNAL_ERROR' && isTransientServiceError_(message)) {
+      code = 'BACKEND_BUSY';
+      message = 'The server is busy. Try that again in a moment.';
+    }
+
+    return json({ ok: false, error: { code: code, message: message } });
   }
+}
+
+/** True for the Google service failures that are worth retrying rather than showing. */
+function isTransientServiceError_(message) {
+  var m = String(message || '').toLowerCase();
+  return m.indexOf('timed out') !== -1
+    || m.indexOf('timeout') !== -1
+    || m.indexOf('internal error') !== -1
+    || m.indexOf('try again') !== -1
+    || m.indexOf('temporarily unavailable') !== -1
+    || m.indexOf('service invoked too many times') !== -1
+    || m.indexOf('too many simultaneous') !== -1
+    || m.indexOf('server error') !== -1
+    || m.indexOf('lock') !== -1;
 }
 
 function doGet(e) {
