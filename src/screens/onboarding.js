@@ -77,14 +77,30 @@ function normalizeTeams(list) {
 }
 
 export async function renderOnboarding(container) {
+  // A player who already holds a guild slot has nothing to join. Sending them
+  // on rather than drawing the picker is what keeps the join screen from
+  // sitting over the bridge after an assignment that cannot happen.
+  if (session.teamId) {
+    container.innerHTML = '';
+    window.location.hash = '#/bridge';
+    return;
+  }
+
   if (stage.cameraRig) {
     stage.cameraRig.moveTo('cockpit');
   }
+
+  // The cold open is awaited, so the route can change underneath this render.
+  // Anything drawn after that would be a screen the router never asked for and
+  // never clears — it would sit on top of wherever the player actually went.
+  const routeAtEntry = window.location.hash;
+  const routeChanged = () => window.location.hash !== routeAtEntry;
 
   // Play Cold Open during onboarding
   if (!session.hasFlag('cinematic_cold_open')) {
     session.setFlag('cinematic_cold_open', true);
     await playCinematic('cold_open');
+    if (routeChanged()) return;
   }
 
   let step = 2; // 2 = Guild Picker & Party, 3 = Oath & d20 Roll
@@ -513,9 +529,29 @@ export async function renderOnboarding(container) {
       }, 80);
 
       launchBtn.addEventListener('click', async () => {
+        // The screen goes whatever the answer is. Leaving it up after a refused
+        // assignment stranded the player on a picker that could do nothing.
+        const leave = () => {
+          if (activeTransmission?.destroy) activeTransmission.destroy();
+          activeTransmission = null;
+          container.innerHTML = '';
+          if (window.location.hash === '#/bridge') {
+            window.dispatchEvent(new HashChangeEvent('hashchange'));
+          } else {
+            window.location.hash = '#/bridge';
+          }
+        };
+
         if (activeTransmission?.destroy) activeTransmission.destroy();
         launchBtn.disabled = true;
         launchBtn.textContent = 'Launching…';
+
+        // The slot may have been claimed on another device since this screen
+        // was drawn. Asking again would only earn an ALREADY_ASSIGNED.
+        if (session.teamId) {
+          leave();
+          return;
+        }
 
         try {
           const res = await api.claimTeam(selectedTeam, {
@@ -530,10 +566,21 @@ export async function renderOnboarding(container) {
 
           // Play launch cinematic
           await playCinematic('launch');
-          window.location.hash = '#/bridge';
+          leave();
         } catch (err) {
-          showToast(err.message || 'Error saving assignment.', 'error');
-          window.location.hash = '#/bridge';
+          if (err?.code === 'ALREADY_ASSIGNED') {
+            // The server knows the guild this player is on and the client does
+            // not. Pull it, so the bridge opens on the right livery.
+            try {
+              const me = await api.getMe();
+              session.setUserData(me);
+            } catch (e) {}
+            session.setFlag('sessionZeroDone', true);
+            showToast('You are already signed on to a guild.', 'info');
+          } else {
+            showToast(err.message || 'Error saving assignment.', 'error');
+          }
+          leave();
         }
       });
     }

@@ -102,6 +102,9 @@ export function renderBridge(container) {
               <button type="button" id="bridge-announcement-close" class="btn-chip" style="font-size: 0.72rem; padding: 2px 8px; color: var(--accent-amber); border-color: rgba(217, 148, 35, 0.4); cursor: pointer;" title="Close [X]">Close [X]</button>
             </div>
           </div>
+          <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-amber); margin-top: 0.6rem; border-top: 1px solid rgba(217, 148, 35, 0.2); padding-top: 0.45rem;">
+            Check out the star map for the latest quests!
+          </div>
         </div>
 
         <div class="m-grid-1 bridge-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">

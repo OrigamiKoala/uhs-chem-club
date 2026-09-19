@@ -439,6 +439,21 @@ export function createControlPanelTexture(width = 512, height = 256) {
 }
 
 /**
+ * The close badge a holo screen draws, expressed in UV so a raycast can tell a
+ * press on it from a press anywhere else on the screen. Canvas y runs down and
+ * UV v runs up, hence the flip. The padding is a fingertip's worth of slop:
+ * the badge is small, and missing it must not read as the screen ignoring you.
+ */
+function closeRectUv(x, y, w, h, texW, texH, padPx = 10) {
+  return {
+    u0: (x - padPx) / texW,
+    u1: (x + w + padPx) / texW,
+    v0: 1 - (y + h + padPx) / texH,
+    v1: 1 - (y - padPx) / texH
+  };
+}
+
+/**
  * Creates 3D Holographic mission projection texture for Star Map holo-table
  */
 export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '') {
@@ -539,6 +554,7 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
   ctx.textAlign = 'left';
 
   const texture = new THREE.CanvasTexture(canvas);
+  texture.userData.closeRect = closeRectUv(badgeX, badgeY, badgeW, badgeH, 512, 256);
   return texture;
 }
 
@@ -642,7 +658,7 @@ export function createClubHoloTexture() {
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.moveTo(512, 204);
-  ctx.lineTo(512, 460);
+  ctx.lineTo(512, 446);
   ctx.stroke();
 
   // LEFT COLUMN: arrows pointing left
@@ -685,17 +701,25 @@ export function createClubHoloTexture() {
 
   // Bottom corridor guide banner
   ctx.fillStyle = '#11141c';
-  ctx.fillRect(48, 484, 928, 50);
+  ctx.fillRect(48, 458, 928, 84);
   ctx.strokeStyle = '#d99423';
   ctx.lineWidth = 1;
-  ctx.strokeRect(48, 484, 928, 50);
+  ctx.strokeRect(48, 458, 928, 84);
 
   ctx.textAlign = 'center';
-  ctx.font = 'bold 16px monospace';
+  ctx.font = 'bold 14px monospace';
   ctx.fillStyle = '#c39a63';
-  ctx.fillText('▲ FORWARD: FLIGHT COCKPIT        AFT: AIRLOCK DEPARTURE ▼', 512, 515);
+  ctx.fillText('▲ FORWARD: FLIGHT COCKPIT        AFT: AIRLOCK DEPARTURE ▼', 512, 485);
+
+  ctx.font = 'bold 17px sans-serif';
+  ctx.fillStyle = '#ffaa38';
+  ctx.shadowColor = '#d99423';
+  ctx.shadowBlur = 6;
+  ctx.fillText('Check out the star map for the latest quests!', 512, 521);
+  ctx.shadowBlur = 0;
 
   const texture = new THREE.CanvasTexture(canvas);
+  texture.userData.closeRect = closeRectUv(badgeX, badgeY, badgeW, badgeH, 1024, 576);
   return texture;
 }
 

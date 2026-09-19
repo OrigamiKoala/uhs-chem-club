@@ -11,6 +11,7 @@ const TEAMS_KEY = 'avalon_cached_teams';
 const SOUND_KEY = 'avalon_sound_pref';
 const FLAGS_KEY = 'avalon_flags';
 const LEARN_KEY = 'avalon_learn';
+const SESSION_FLAGS = new Set(['clubHoloClosed', 'starmapHoloClosed']);
 
 /** Reading storage throws in a locked-down browser; a missing value is not a fault. */
 function safeRead(key) {
@@ -102,6 +103,13 @@ class SessionManager {
     this.reduceMotion = localStorage.getItem(MOTION_KEY) === 'true';
     this.sound = { master: 60, ambience: 60, effects: 60, muted: false };
     this.flags = { sessionZeroDone: false };
+    this.sessionFlags = {};
+    if (typeof sessionStorage !== 'undefined') {
+      try {
+        const sf = sessionStorage.getItem('avalon_session_flags');
+        if (sf) this.sessionFlags = JSON.parse(sf);
+      } catch (e) {}
+    }
     // Learn-track progress, keyed "<worldId>/<questId>". Deliberately NOT part of
     // `progress`, which the server pays XP against — the Learn track pays none.
     this.learn = {};
@@ -111,7 +119,19 @@ class SessionManager {
       const s = localStorage.getItem(SOUND_KEY);
       if (s) this.sound = { ...this.sound, ...JSON.parse(s) };
       const f = localStorage.getItem(FLAGS_KEY);
-      if (f) this.flags = { ...this.flags, ...JSON.parse(f) };
+      if (f) {
+        this.flags = { ...this.flags, ...JSON.parse(f) };
+        let purged = false;
+        for (const sf of SESSION_FLAGS) {
+          if (sf in this.flags) {
+            delete this.flags[sf];
+            purged = true;
+          }
+        }
+        if (purged) {
+          try { localStorage.setItem(FLAGS_KEY, JSON.stringify(this.flags)); } catch (e) {}
+        }
+      }
       const l = localStorage.getItem(LEARN_KEY);
       if (l) this.learn = JSON.parse(l) || {};
     } catch (e) {}
@@ -195,6 +215,10 @@ class SessionManager {
     this.token = token;
     if (token) {
       localStorage.setItem(TOKEN_KEY, token);
+      this.sessionFlags = {};
+      if (typeof sessionStorage !== 'undefined') {
+        try { sessionStorage.removeItem('avalon_session_flags'); } catch (e) {}
+      }
     } else {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
@@ -424,16 +448,32 @@ class SessionManager {
   }
 
   setFlag(key, val) {
+    if (SESSION_FLAGS.has(key)) {
+      this.sessionFlags[key] = val;
+      if (typeof sessionStorage !== 'undefined') {
+        try {
+          sessionStorage.setItem('avalon_session_flags', JSON.stringify(this.sessionFlags));
+        } catch (e) {}
+      }
+      this.notify();
+      return;
+    }
     this.flags[key] = val;
     try { localStorage.setItem(FLAGS_KEY, JSON.stringify(this.flags)); } catch (e) {}
     this.notify();
   }
 
   hasFlag(key) {
+    if (SESSION_FLAGS.has(key)) {
+      return Boolean(this.sessionFlags && this.sessionFlags[key]);
+    }
     return Boolean(this.flags && this.flags[key]);
   }
 
   getFlag(key) {
+    if (SESSION_FLAGS.has(key)) {
+      return this.sessionFlags ? this.sessionFlags[key] : undefined;
+    }
     return this.flags ? this.flags[key] : undefined;
   }
 
@@ -446,6 +486,10 @@ class SessionManager {
     this.isAdmin = false;
     this.inventory = [];
     this.progress = [];
+    this.sessionFlags = {};
+    if (typeof sessionStorage !== 'undefined') {
+      try { sessionStorage.removeItem('avalon_session_flags'); } catch (e) {}
+    }
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem('avalon_xp');

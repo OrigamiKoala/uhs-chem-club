@@ -30,6 +30,15 @@ import { gameMode } from "../game-mode.js";
 const SHIP_EXPOSURE = 1.28;
 const TALLOW_EXPOSURE = 0.92;
 
+/**
+ * The bridge directory board, as `ship.js` builds it: a 1.8 x 1.0125 m plate
+ * hung at eye level 1.4 m in front of where a player stands on the bridge.
+ * `fitClubHolo` scales it from these so the whole board is inside the glass.
+ */
+const CLUB_HOLO_W = 1.8;
+const CLUB_HOLO_H = 1.0125;
+const CLUB_HOLO_VIEW_DIST = 1.4;
+
 class Stage {
   constructor() {
     this.canvas = null;
@@ -166,13 +175,18 @@ class Stage {
 
       this.shipInterior.updateDisplays(questData, standingsData, inventoryData);
       const isAuthed = Boolean(session.token && session.player);
-      const showHolo = isAuthed && !session.hasFlag("clubHoloClosed") && !this.shipInterior.clubHoloClosed;
-      this.shipInterior.setClubHoloVisible(showHolo);
-      const showStarmapHolo = !session.hasFlag("starmapHoloClosed") && !this.shipInterior.starmapHoloClosed;
-      this.shipInterior.setStarmapHoloVisible(showStarmapHolo);
+      this.shipInterior.clubHoloClosed = session.hasFlag("clubHoloClosed");
+      this.shipInterior.starmapHoloClosed = session.hasFlag("starmapHoloClosed");
+      const showHolo = isAuthed && !this.shipInterior.clubHoloClosed;
+      this.shipInterior.setClubHoloVisible(showHolo, true);
+      const showStarmapHolo = !this.shipInterior.starmapHoloClosed;
+      this.shipInterior.setStarmapHoloVisible(showStarmapHolo, true);
       if (this.fpsControls) {
         this.fpsControls.enabled = isAuthed;
       }
+      // Signing in raises the HUD nav, which is 40px taller on a phone. The
+      // board has to be re-fitted under it, not just at boot.
+      this.fitClubHolo();
     };
 
     session.subscribe(syncShipDisplays);
@@ -271,9 +285,22 @@ class Stage {
       }
     });
 
-    // Pointer click on canvas to close holo screen when clicked
+    // Pointer click on the Close badge a holo screen draws. A press anywhere
+    // else on the screen is not a dismissal: the whole surface used to be one
+    // close button, so reading the board — or steadying the view with a click
+    // — took it away, and the badge in the corner was decoration.
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
+    const hitCloseBadge = (group) => {
+      const hits = raycaster.intersectObjects(group.children, true);
+      for (const hit of hits) {
+        const rect = hit.object?.material?.map?.userData?.closeRect;
+        if (!rect || !hit.uv) continue;
+        if (hit.uv.x >= rect.u0 && hit.uv.x <= rect.u1 &&
+            hit.uv.y >= rect.v0 && hit.uv.y <= rect.v1) return true;
+      }
+      return false;
+    };
     if (this.canvas) {
       this.canvas.addEventListener("pointerup", (e) => {
         if (this.mode !== "ship" || !this.camera) return;
@@ -286,15 +313,13 @@ class Stage {
         mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
         raycaster.setFromCamera(mouse, this.camera);
         if (this.shipInterior?.isClubHoloVisible() && this.shipInterior.clubHoloGroup) {
-          const hits = raycaster.intersectObjects(this.shipInterior.clubHoloGroup.children, true);
-          if (hits.length > 0) {
+          if (hitCloseBadge(this.shipInterior.clubHoloGroup)) {
             this.closeClubHolo();
             return;
           }
         }
         if (this.shipInterior?.isStarmapHoloVisible() && this.shipInterior.starmapHoloGroup) {
-          const hits = raycaster.intersectObjects(this.shipInterior.starmapHoloGroup.children, true);
-          if (hits.length > 0) {
+          if (hitCloseBadge(this.shipInterior.starmapHoloGroup)) {
             this.closeStarmapHolo();
             return;
           }
@@ -453,6 +478,45 @@ class Stage {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+    this.fitClubHolo(width, height);
+  }
+
+  /**
+   * Size the bridge directory board so the whole of it is inside the glass.
+   *
+   * It is a fixed plate in the room, and a window narrower than the one it was
+   * laid out for cropped its left and right edges — you could not read the
+   * columns or reach the Close badge. The camera's vertical field is fixed, so
+   * how many metres the glass spans at the board's standing distance is a
+   * matter of arithmetic; the board is scaled to fit inside that, minus the
+   * HUD, which covers the top of the view and is not part of the picture.
+   *
+   * It never scales above 1: the board is drawn at the size it was designed at
+   * whenever there is room for it.
+   */
+  fitClubHolo(w, h) {
+    if (!this.camera || !this.shipInterior?.setClubHoloScale) return;
+    const width = w || window.innerWidth;
+    const height = h || window.innerHeight;
+    if (!width || !height) return;
+
+    // Metres of world, at the board's distance, per pixel of glass.
+    const visibleH = 2 * CLUB_HOLO_VIEW_DIST * Math.tan((this.camera.fov * Math.PI) / 360);
+    const mPerPx = visibleH / height;
+
+    let hudPx = 0;
+    const hudEl = document.getElementById("hud");
+    if (hudEl) hudPx = hudEl.getBoundingClientRect().height || 0;
+
+    const margin = Math.max(16, Math.min(width, height) * 0.04);
+    // The board is hung at eye level, so it grows equally above and below the
+    // centre line: whatever the HUD takes off the top is taken off both halves.
+    const halfPx = Math.max(40, height / 2 - hudPx - margin);
+    const allowH = 2 * halfPx * mPerPx;
+    const allowW = Math.max(0, width - margin * 2) * mPerPx;
+
+    const scale = Math.min(1, allowW / CLUB_HOLO_W, allowH / CLUB_HOLO_H);
+    this.shipInterior.setClubHoloScale(Math.max(0.25, scale));
   }
 
   /**

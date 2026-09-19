@@ -1412,6 +1412,20 @@ export class ShipInterior {
     }
   }
 
+  /**
+   * The board is a physical object in the room, so nothing about it knows the
+   * shape of the glass it is being looked through. A narrow window cropped its
+   * left and right edges off. The screen and the beam that throws it scale
+   * together; `stage.fitClubHolo` decides by how much.
+   */
+  setClubHoloScale(scale) {
+    const s = Math.max(0.2, Math.min(1, Number(scale) || 1));
+    if (this.clubHoloGroup) this.clubHoloGroup.scale.setScalar(s);
+    // The beam is a cone standing on the deck: it keeps its height and narrows
+    // with the screen, or it would flare wider than the thing it projects.
+    if (this.clubHoloBeam) this.clubHoloBeam.scale.set(s, 1, s);
+  }
+
   setClubHoloVisible(visible, force = false) {
     if (!force && this.clubHoloClosed) {
       visible = false;
