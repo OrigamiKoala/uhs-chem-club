@@ -157,6 +157,11 @@ class Stage {
       };
 
       this.shipInterior.updateDisplays(questData, standingsData, inventoryData);
+      const isAuthed = Boolean(session.token && session.player);
+      this.shipInterior.setClubHoloVisible(isAuthed);
+      if (this.fpsControls) {
+        this.fpsControls.enabled = isAuthed;
+      }
     };
 
     session.subscribe(syncShipDisplays);

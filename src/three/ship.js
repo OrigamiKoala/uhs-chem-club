@@ -62,6 +62,9 @@ export class ShipInterior {
     this.buildPlanetaryVista();
 
     this.scene.add(this.group);
+
+    const isAuthed = Boolean(session?.token && session?.player);
+    this.setClubHoloVisible(isAuthed);
   }
 
   initMaterials() {
@@ -516,9 +519,10 @@ export class ShipInterior {
     this.clubHoloMat = new THREE.MeshBasicMaterial({
       map: clubTex,
       transparent: true,
-      opacity: 0.94,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide
+      opacity: 0.95,
+      blending: THREE.NormalBlending,
+      side: THREE.FrontSide,
+      depthWrite: false
     });
 
     const screenGeom = new THREE.PlaneGeometry(1.8, 1.0125);
@@ -533,7 +537,7 @@ export class ShipInterior {
     holoBack.position.set(0, 0, 0.005);
 
     holoScreenGroup.add(holoFront, holoBack);
-    this.animatedElements.push({ obj: holoScreenGroup, baseY: 1.55, speed: 0.05, isHover: true });
+    this.clubHoloGroup = holoScreenGroup;
 
     // Floor emitter base
     const emitterBase = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 0.04, 20), this.durasteelMat);
@@ -549,11 +553,12 @@ export class ShipInterior {
       transparent: true,
       opacity: 0.07,
       blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
+      side: THREE.FrontSide,
       depthWrite: false
     });
     const beam = new THREE.Mesh(beamGeom, beamMat);
     beam.position.set(0, 0.75, 1.2);
+    this.clubHoloBeam = beam;
     bridgeGroup.add(beam);
 
     bridgeGroup.add(holoScreenGroup);
@@ -1048,14 +1053,19 @@ export class ShipInterior {
 
     // 4. 3D Cargo Manifest Terminal on container A facing room center (X: -1.4, Z: 0.39)
     const mTex = createCargoManifestTexture(0, 8, '');
-    this.cargoScreenMat = new THREE.MeshBasicMaterial({ map: mTex });
+    this.cargoScreenMat = new THREE.MeshBasicMaterial({
+      map: mTex,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1
+    });
     const manifestScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.55), this.cargoScreenMat);
-    manifestScreen.position.set(-1.4, 1.15, 0.39);
+    manifestScreen.position.set(-1.4, 1.15, 0.37);
     manifestScreen.rotation.y = Math.PI;
 
     // Terminal bezel frame
     const manifestFrame = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.63, 0.03), this.ironMat);
-    manifestFrame.position.set(-1.4, 1.15, 0.405);
+    manifestFrame.position.set(-1.4, 1.15, 0.395);
     cargoGroup.add(manifestScreen, manifestFrame);
 
     this.group.add(cargoGroup);
@@ -1391,6 +1401,12 @@ export class ShipInterior {
       this.cargoScreenMat.map = newMTex;
       this.cargoScreenMat.needsUpdate = true;
     }
+  }
+
+  setClubHoloVisible(visible) {
+    const v = Boolean(visible);
+    if (this.clubHoloGroup) this.clubHoloGroup.visible = v;
+    if (this.clubHoloBeam) this.clubHoloBeam.visible = v;
   }
 
   update(delta, time) {

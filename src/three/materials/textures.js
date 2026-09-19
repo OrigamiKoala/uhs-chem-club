@@ -530,11 +530,11 @@ export function createClubHoloTexture() {
   const ctx = canvas.getContext('2d');
 
   // Dark translucent holo emitter ground
-  ctx.fillStyle = '#080a0f';
+  ctx.fillStyle = '#060a12';
   ctx.fillRect(0, 0, 1024, 576);
 
   // Scanlines
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
   for (let y = 0; y < 576; y += 4) {
     ctx.fillRect(0, y, 1024, 1.8);
   }
@@ -566,38 +566,38 @@ export function createClubHoloTexture() {
   ctx.stroke();
 
   // Eyebrow badge
-  ctx.font = 'bold 16px monospace';
+  ctx.font = 'bold 15px monospace';
   ctx.fillStyle = '#d99423';
   ctx.textAlign = 'center';
-  ctx.fillText('// AVALON STATION · DIRECTORY //', 512, 54);
+  ctx.fillText('// AVALON STATION · FLIGHT DECK DIRECTORY //', 512, 50);
 
   // Title: UHS Chem Club
-  ctx.font = 'bold 46px sans-serif';
+  ctx.font = 'bold 44px sans-serif';
   ctx.fillStyle = '#f6ecd9';
   ctx.shadowColor = '#d99423';
   ctx.shadowBlur = 14;
-  ctx.fillText('UHS Chem Club', 512, 115);
+  ctx.fillText('UHS Chem Club', 512, 108);
   ctx.shadowBlur = 0;
 
   // Subtitle: Next meeting 9/29 in 702
-  ctx.font = 'bold 28px monospace';
+  ctx.font = 'bold 24px monospace';
   ctx.fillStyle = '#ffb347';
-  ctx.fillText('Next meeting 9/29 in 702', 512, 165);
+  ctx.fillText('Next meeting 9/29 in 702', 512, 154);
 
   // Horizontal glowing divider
   ctx.strokeStyle = 'rgba(217, 148, 35, 0.6)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(48, 195);
-  ctx.lineTo(976, 195);
+  ctx.moveTo(48, 184);
+  ctx.lineTo(976, 184);
   ctx.stroke();
 
   // Vertical center divider
   ctx.strokeStyle = 'rgba(217, 148, 35, 0.3)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(512, 215);
-  ctx.lineTo(512, 465);
+  ctx.moveTo(512, 204);
+  ctx.lineTo(512, 460);
   ctx.stroke();
 
   // LEFT COLUMN: arrows pointing left
@@ -605,50 +605,50 @@ export function createClubHoloTexture() {
 
   // Item 1: Star Map
   ctx.fillStyle = '#ffaa38';
-  ctx.font = 'bold 30px sans-serif';
-  ctx.fillText('◀  STAR MAP', 64, 260);
-  ctx.font = '19px monospace';
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillText('◀  STAR MAP', 72, 252);
+  ctx.font = '17px monospace';
   ctx.fillStyle = '#b8aa94';
-  ctx.fillText('    Quests & World Charts', 64, 292);
+  ctx.fillText('Quests & World Charts', 72, 286);
 
   // Item 2: Cargo Hold
   ctx.fillStyle = '#ffaa38';
-  ctx.font = 'bold 30px sans-serif';
-  ctx.fillText('◀  CARGO HOLD', 64, 370);
-  ctx.font = '19px monospace';
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillText('◀  CARGO HOLD', 72, 362);
+  ctx.font = '17px monospace';
   ctx.fillStyle = '#b8aa94';
-  ctx.fillText('    Inventory & Locker', 64, 402);
+  ctx.fillText('Inventory & Manifest', 72, 396);
 
   // RIGHT COLUMN: arrows pointing right
   ctx.textAlign = 'right';
 
   // Item 1: Quarters
   ctx.fillStyle = '#ffaa38';
-  ctx.font = 'bold 30px sans-serif';
-  ctx.fillText('CREW QUARTERS  ▶', 960, 260);
-  ctx.font = '19px monospace';
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillText('CREW QUARTERS  ▶', 952, 252);
+  ctx.font = '17px monospace';
   ctx.fillStyle = '#b8aa94';
-  ctx.fillText('Profile & Guild Members    ', 960, 292);
+  ctx.fillText('Profile & Guild Members', 952, 286);
 
-  // Item 2: Standings
+  // Item 2: Standings / Fleet Comms
   ctx.fillStyle = '#ffaa38';
-  ctx.font = 'bold 30px sans-serif';
-  ctx.fillText('COMMS & STANDINGS  ▶', 960, 370);
-  ctx.font = '19px monospace';
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillText('FLEET COMMS  ▶', 952, 362);
+  ctx.font = '17px monospace';
   ctx.fillStyle = '#b8aa94';
-  ctx.fillText('Leaderboard & Guild Scores    ', 960, 402);
+  ctx.fillText('Leaderboard & Standings', 952, 396);
 
   // Bottom corridor guide banner
-  ctx.fillStyle = '#15171d';
-  ctx.fillRect(48, 485, 928, 52);
+  ctx.fillStyle = '#11141c';
+  ctx.fillRect(48, 484, 928, 50);
   ctx.strokeStyle = '#d99423';
   ctx.lineWidth = 1;
-  ctx.strokeRect(48, 485, 928, 52);
+  ctx.strokeRect(48, 484, 928, 50);
 
   ctx.textAlign = 'center';
-  ctx.font = 'bold 18px monospace';
+  ctx.font = 'bold 16px monospace';
   ctx.fillStyle = '#c39a63';
-  ctx.fillText('▲ FORWARD: FLIGHT COCKPIT        AFT: AIRLOCK DEPARTURE ▼', 512, 518);
+  ctx.fillText('▲ FORWARD: FLIGHT COCKPIT        AFT: AIRLOCK DEPARTURE ▼', 512, 515);
 
   const texture = new THREE.CanvasTexture(canvas);
   return texture;

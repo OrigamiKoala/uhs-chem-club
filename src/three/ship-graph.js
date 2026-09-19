@@ -159,9 +159,9 @@ export const SHIP_GRAPH = {
       adjacent: ['bridge', 'quarters', 'cargo'],
       lookLimits: { yaw: 85, pitch: 30 },
       hatchPos: {
-        bridge: [-1.6, 1.6, -3.2],
-        quarters: [-3.6, 1.6, -3.2],
-        cargo: [-1.2, 1.6, -3.6]
+        bridge: [-1.2, 1.6, -2.3],
+        quarters: [-4.4, 1.6, -2.3],
+        cargo: [-1.0, 1.6, -2.2]
       },
       walkPath: {
         bridge: [
