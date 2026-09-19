@@ -25,9 +25,16 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 ## Build and Run
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
-- `npm run verify` — `verify:quest` + `verify:learn` + `verify:geometry` + `verify:media` + `verify:flows` + `verify:ship` + `verify:tallow` + `build`. Run this before shipping.
-- `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below).
-- `npm run verify:learn` — integrity check of the Learn track registry and its no-XP invariant.
+- `npm run verify` — `verify:quest` + `verify:console` + `verify:learn` + `verify:geometry`
+  + `verify:media` + `verify:flows` + `verify:ship` + `verify:tallow` + `verify:bench`
+  + `verify:holo` + `build`. Run this before shipping.
+- `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below),
+  including the per-stage chemistry card and its three-sentence ceiling.
+- `npm run verify:console` — solves the T4 chamber console's fit at fourteen viewports and
+  asserts the ceiling the desk is held to: one surface, low, never more than 25% of the
+  height of the glass.
+- `npm run verify:learn` — integrity check of the Learn track registry, its no-XP
+  invariant, and the practice sets (five per built quest, assembled at world scope).
 - `npm run verify:geometry` — runs all 20 reaction animations headlessly and checks the chemistry
   on screen (see "Chemical realism" below). `--verbose` prints atom positions at every step.
 - `npm run verify:media` — validates media manifest against assets and size budgets.
@@ -35,6 +42,11 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run verify:ship` — asserts ship graph connectivity, 3-hop limit, hatch cones, and
   spline bounds, then **builds the Avalon and Erebus in Node** and asserts that nothing
   in either occupies the same space as anything else.
+- `npm run verify:bench` — deploys BOTH Unit 1 instruments onto the real Tallow benches in
+  Node and measures them: every site faces the ground the player walks in from, and every
+  screen, station and control lands inside the glass at six aspects, clear of the HUD.
+- `npm run verify:holo` — one owner for the `X` key, and the comms board never invents a
+  guild score.
 - `npm run verify:tallow` — asserts the Tallow ground: every prop footprint disjoint
   (no two objects share space), sites clear of props, the sub-level excavation walkable,
   every charted Unit 1 quest sited, T4 decoration removable without stranding a site,
@@ -81,7 +93,8 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `story/trinkets.js` — Session Zero deterministic d20 cosmetic trinkets and character backgrounds.
 - `media/manifest.js` — media manifest mapping 19 loops and cinematics with WebM, MP4, posters, and captions.
 - `learn/` — the Learn track (see "Learn track" below): `curriculum.js` (the registry of
-  worlds and quests, pure data), `progress.js` (gating and completion, XP-free),
+  worlds and quests, pure data, and `PROBLEMS_PER_QUEST`), `progress.js` (gating and
+  completion, XP-free), `practice.js` (the optional problem set a world ends on),
   `worlds/unitNN-*.js` (one chart per AP unit), `quests/` (a game module per quest, plus
   `_template.js`, the contract).
 - `screens/` — one render function per route, all pure string templates.
@@ -106,8 +119,19 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 layers: `STAGE_CONFIGS` holds geometry, expected anchors, tolerance (tight 0.85 unit radius
 preventing overlap with neighbouring atoms) and reaction
 animation, and `STAGE_COPY` holds everything the player reads — `shape`, `prompt`,
-the three-rung `hints` ladder, the per-site `scans`, and the `concept` card plus its
-`conceptTiming`. `STAGE_COPY` is folded onto `STAGE_CONFIGS` at module load so the
+the three-rung `hints` ladder, the per-site `scans`, the `concept` card plus its
+`conceptTiming`, and the `chem` card.
+
+**`concept` and `chem` are two different cards and the difference is the product.**
+`concept` with `conceptTiming: 'intro'` teaches the CONTROLS and appears before the stage
+— stages 1 and 11, and nothing else. `chem` teaches the CHEMISTRY, appears only after the
+solve, and is the one place in the campaign before the epilogue where the withheld
+vocabulary is used on purpose: nucleophile, electrophile, carbocation, SN1, SN2, angle
+strain, the real words for what the player has just done. Every stage has one, it is
+capped at **three sentences**, and `verify:quest` fails the build over both rules — over a
+chem card that runs long, and over an intro card that has started explaining chemistry.
+This replaced a single end-of-quest lecture; dropping it in bits, after the work, is the
+whole point. `STAGE_COPY` is folded onto `STAGE_CONFIGS` at module load so the
 writing can be edited as writing; `cfg.hint` stays as an alias for `hints[0]` because
 the backend has one `hint_text` column. Also exported: `evaluateStageLocally`,
 `diagnoseMiss`, `scanFor`, `scansForStage`, `TOTAL_STAGES` and `TOTAL_QUEST_XP`.
@@ -181,6 +205,20 @@ Equilibrium, Acids and Bases, Gases, Thermodynamics, Kinetics, Nuclear Chemistry
 stages, its 3D scene, its inputs and its grading. The plan and the authoring steps live in
 `docs/plans/learn-track.md`.
 
+**Every world ends on a set of practice problems** (`src/learn/practice.js`): five per
+built quest, gathered across the whole unit and shown once every bench in it has been
+worked. They are optional, skippable a question at a time or all at once, and they GATE
+NOTHING — the next world opens on the last quest's completion whether or not a single
+question is answered, because gating is `worldProgress`, which knows nothing about
+practice. They are offered once automatically (a `learnPracticeOffered:<worldId>` session
+flag) and come back for ever through a **Problems** key beside a finished world on the
+star map, on the Learn road, in the world brief and in the walk HUD. They are a **2D
+overlay on every tier**, including T4: this is the player's own revision, not a
+transmission, and no instrument in the fiction asks multiple-choice questions.
+`verify:learn` asserts five well-formed problems per built quest, that each names an
+answer that is one of its own options, that each carries an explanation, and that nothing
+is offered on an unfinished world.
+
 **The rule that outranks the rest: the Learn track pays no XP and never reaches the
 leaderboard.** Nothing in `src/learn/` or the three learn screens may call `session.addXp`,
 `api.gradeStage`, `api.completeQuest` or `session.recordProgress`; `verify:learn` fails the
@@ -213,9 +251,9 @@ into grinding and would punish the students it exists to help.
   piece, longer is a bound cluster, and an entry needing a real backbone supplies its own
   `geom` and `bonds` (H–O–O–H is a chain; drawing it as a star would be the instrument
   lying). **Every tool re-pours its sample first**, or a player who cut a crate and then
-  shook it would see the fragments band and wrongly call it mixed. Canvas, not the 3D
-  chamber, because the walk down through scales is a 2D reveal that runs the same on every
-  tier and holds at 375 px.
+  shook it would see the fragments band and wrongly call it mixed. At T3 and below this runs
+  on canvas and holds at 375 px; at T4 the same declarations build the instrument on the
+  bench (`scope3d.js`), through the same planners, to the same answers.
   `corebench.js` is the **core bench**: one piece shown in three fields — `whole` (a haze
   with the core drawn to scale, which is a speck), `core` (the grains separated and
   probeable, marked ones told apart by a stencilled cross and never by colour) and `rings`
@@ -240,24 +278,34 @@ into grinding and would punish the students it exists to help.
   hands-on observations directly to chemistry rather than waiting for an end-of-quest lecture.
   In `scope.js`, single-unit samples (`total <= 1`) are centered at `[0, 0]` so high-magnification targets
   remain visible in the aperture.
-- **The power control is a knob** (`engine/dial.js`). A magnification setting is a thing you
-  turn, so the scope carries a milled cap with an engraved index and detents cut round its
-  collar, over a 270 deg sweep, and not a minus key with a number beside a plus key. It turns
-  three ways — drag it round (pointer capture), focus it and use the arrows / Home / End, or
-  roll the wheel on it — because a bench control that answers only to a drag is unusable on a
-  trackpad and invisible to a keyboard. `dialMarkup` / `bindDial` / `paintDial` know nothing
-  about magnification; they report an integer in a range.
-- **A built bench and a drawn one are different claims, not different tiers.** An instrument
-  whose parts are real positions in space is built at T4: that is the core bench, a rig with
-  a specimen mounted in it, a beam through it and rings at fixed radii. An instrument that is
-  a *picture* of something too small to stand next to stays a screen on **every** tier: that
-  is the sampler scope. Built in 3D a microscope reads as the sample inflating — pieces
-  swelling to the size of your head as the dial comes up — which is not what a scope does and
-  not what matter does, and a student who notices is right. `BUILT_BENCHES` in
-  `engine/instruments.js` names the quests in the first camp (`q2-core` alone today);
-  `benchIsBuilt(questId)` is what `screens/learn-quest.js` asks to decide whether the frame is
-  bolted to a bench or drawn as a page over the flat. `SampleScope3D` is kept whole and
-  exported for the day a sample is something you can sensibly walk around.
+- **The power control is a knob, and on a built bench it is a knob you can reach.** A
+  magnification setting is a thing you turn, never a minus key with a number beside a plus
+  key. There are two of them and they are the same control:
+  - `engine/dial.js` draws it on the panel — a milled cap with an engraved index and
+    detents cut round its collar over a 270 deg sweep, turned three ways: drag it round
+    (pointer capture), focus it and use the arrows / Home / End, or roll the wheel on it.
+    That third and second path are why it is usable on a trackpad and visible to a keyboard.
+  - `buildPowerDial()` in `engine/bench3d.js` builds it as REAL GEOMETRY on a raked plinth
+    bolted to the plate — knurled cap, lit index, one notch per step with long stops at
+    each end, and a generous invisible hit target so it can be grabbed at a glancing angle.
+    `SampleScope3D` mounts it outboard of the leftmost station (so it keeps the same place
+    in the player's VIEW whether a stage lays out one crate or four) and registers it with
+    `BenchViewer3D.addGrabbable`, which hands a press to a control before it hands it to
+    the view — a knob and a camera swing are the same gesture, so whichever the pointer
+    went down on has to win.
+  - **They cannot disagree.** Both call `angleFor` / `valueForAngle` from `dial.js`, which
+    is the single implementation of where a detent is. A quest passes `onPower` once; the
+    drawn instrument ignores it and the built one reports through it, and both end in the
+    quest's own `setPower`.
+- **Both Unit 1 benches are BUILT at T4.** `BUILT_BENCHES` in `engine/instruments.js` holds
+  `q1-grain` and `q2-core`, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
+  asks to decide whether the frame is bolted to a bench or drawn as a page over the flat.
+  The sampler scope used to be excluded on the argument that a microscope's picture is a
+  picture and that building it would read as the sample inflating. What that missed is
+  where the picture belongs: on a bench the player has walked to there is a SCREEN to put
+  it on, the crates of bulk matter sit in real wells on the plate in front of them, and the
+  power control is a milled cap they reach over and turn. That is exactly the relationship
+  a scope has to its sample, and it is what the salvage bench on Tallow now is.
 - **The benches in 3D** — `engine/instruments.js` is the dispatcher every quest imports: it
   hands back the canvas instrument or the built one, and the two expose the *same API*, take
   the same declarations and plan every tool through the same pure functions, so a stage that
@@ -265,9 +313,11 @@ into grinding and would punish the students it exists to help.
   engines and are the single implementation: `planSettle`, `planCut` and `PIECE_TO_SPREAD`
   in `scope.js`; `planBeam`, `planStrip`, `packCore` and `RING_RADII` in `corebench.js`.
   `engine/bench3d.js` is the shared physical bench (plated top, a station per sample with a
-  recessed phosphor well, engraved plaques, a constrained lean-over camera, and
+  recessed phosphor well, engraved plaques, a constrained lean-over camera, `addGrabbable`
+  for controls that must take a press before the view does, `buildPowerDial`, and
   `fitToOpenArea`, which uses `setViewOffset` to centre the instrument in the part of the
-  screen the frame is not covering). `engine/scope3d.js` and `engine/corebench3d.js` are the
+  screen the frame is not covering — skipped when deployed, where the interface is bolted
+  to the bench rather than laid over it). `engine/scope3d.js` and `engine/corebench3d.js` are the
   instruments themselves, drawn with `InstancedMesh` so a 400-piece sample is five draw
   calls. `engine/bench-host.js` inverts the render dependency — the benches ask for a host
   and `main.js` registers one — because a quest module must stay loadable in plain Node for
@@ -278,7 +328,17 @@ into grinding and would punish the students it exists to help.
   would step the player off the bench and an arrow key aimed at the power dial would also be
   a step backwards. The page carries `.learn-quest-overworld`, a flat scrim over the live
   flat — no backdrop blur, because blurring a full-screen WebGL frame is the most expensive
-  thing this app could ask a handset for.
+  thing this app could ask a handset for. Nothing in Unit 1 takes that path any more; it
+  stays because the next world's first quest may.
+- **A screen bolted to a bench never moves.** `PANEL_LAYOUT` in `engine/frame.js` is fixed,
+  and nothing may animate a panel's height: a readout that drifts while you are reading it
+  is the instrument moving, which no instrument does. The plates hang LOWER than they first
+  did, because at the original height the tops of all four came out above the fixed HUD
+  band — the player saw the bottom half of a briefing with no way to scroll the world to
+  reach the rest, since a CSS3D plane is not clipped and gives no sign anything is missing.
+  `verify:bench` measures every plate through the real projection at six aspects and fails
+  the build if one runs under the chrome, and `.lq-world-comms .modal-container` scrolls so
+  a long transmission stays on its screen instead of hanging in the air beside the bench.
 - **Screens** — `learn.js` (the road), `learn-world.js` (one world's quests, or the walk HUD
   when the world is built as a place), `learn-quest.js` (the host frame). Styling in `src/styles/learn.css` (`.lq-*` for the
   quest bench, `.scope-*` for the instrument, `.lq-knob*` for the power dial, `.lq-choice-row`,
@@ -290,8 +350,12 @@ into grinding and would punish the students it exists to help.
   so a stage cleared while the sync was offline cannot silently re-lock a quest.
 
 To build a quest: copy the template into `src/learn/quests/<worldId>/<questId>.js`, point
-the chart's `module` at it, flip its `status` to `'live'`, correct `stageCount`, and run
-`npm run verify`. Nothing else in the app needs editing.
+the chart's `module` at it, flip its `status` to `'live'`, correct `stageCount`, write its
+five `PRACTICE` problems, and run `npm run verify`. Nothing else in the app needs editing.
+
+**Every stage owes a reward card of one to three sentences**, naming in real chemical terms
+the idea the player just worked out. The chemistry lands in bits, after each stage; saving
+it for the debrief is the thing this replaced, and `verify:learn` enforces the ceiling.
 
 `verify:learn` also grades a built quest. A module must export `meta.stageCount` matching
 its chart, and a table-driven quest exports `STAGES`, `SOLUTIONS`, `MISSES` and `stateFor`
@@ -364,6 +428,13 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
 - **Nothing shares space with anything.** Every landmark in `tallow.json` declares a
   footprint, every pair is disjoint, and `verify:tallow` proves it by computing the
   distances rather than trusting the layout.
+- **A site faces the ground the player walks in from.** `siteFacing(site)` derives the
+  group's rotation from `approachPos`, so moving an approach mark turns the site to meet
+  it. Both built sites used to carry a hardcoded `Math.PI`, which was backwards: a site
+  group's local +z is its front — the bench's back lip is at local -z, and the lean-to's
+  back sheet and the lab's gauge board stand behind it — so the player walked in through
+  the back wall, and the instrument docked its camera on the far side of the plate looking
+  at the lip. `verify:bench` asserts the angle rather than trusting the number.
 - **Only lamps are lit.** Sodium luminaires in the lab, the mast's obstruction lamp, and one
   indicator per built site, driven from the Learn track's own progress through
   `setSiteComplete` — the world reads state, it never keeps it.
@@ -470,6 +541,40 @@ the render — they are screens bolted to the bench the player is standing at.
   every time the player did the thing the stage is asking for. The fiction is
   the true one — the operator stands at a fixed station and the containment
   field turns the sample in front of them.
+  - **ONE surface, and it is a control desk.** It used to raise three: a deck low
+    and centre, and two plates angled in at eye height from the left and the
+    right. Those two sat exactly where the molecule is, so the thing the stage
+    was asking the player to look at was the thing they could not see. Now there
+    is a single raked fascia across the bottom of the glass — the deck on the
+    left of it, the stage rail and the relay strip on the right — with toggle
+    banks, indicator lamps, rotaries, a hand rail and legs built in WebGL
+    strictly around the aperture.
+  - **It never covers more than a quarter of the height of the view**, and its
+    top edge stays below -0.33 NDC. `fitConsole()` solves the width by BISECTION
+    on the MEASURED projection rather than by trigonometry, because the fascia is
+    raked and its near edge projects larger: the flat estimate put a "quarter
+    height" desk at 29% of a 16:9 screen with its lip hanging off the bottom of
+    the glass. `npm run verify:console` asserts both numbers at fourteen
+    viewports, against the same pure function the live mount calls.
+  - **Below 900 px of glass it is not raised at all** and the quest keeps the 2D
+    stage deck, which is the interface `mobile-quest.css` was written for. The
+    fascia is authored 1560 CSS px wide and scaled to fit; on a narrow window
+    that lands one CSS pixel on a fraction of a device pixel, and a diegetic desk
+    nobody can read is worse than an honest card.
+  - **THE MOUNT IS THE LAST STATEMENT IN THE STAGE RENDER, AND THAT IS
+    LOAD-BEARING.** Mounting the console MOVES the deck, the nav cluster, the
+    relay map and the legend out of the quest screen's container and into the
+    CSS3D layer, which hangs off `document.body`. Every `container.querySelector`
+    after that point returns null, and because they are all written as
+    `?.addEventListener` they fail silently — which is exactly what happened: at
+    T4 not one control in the Charge Gardens worked. Submit, Hint, Clear, Exit,
+    Prev, Next and every stage lamp were dead. Two things keep it fixed: the
+    mount now runs after every listener is attached, and the stage's lookups go
+    through `q()` / `qa()` in `quest.js`, which fall back to the document once a
+    node has left the container. Either alone would do it; both together mean a
+    reordering cannot quietly break the controls again.
+- `WorldPanel` takes `housing: 'none'` for a caller that builds its own case, and
+  `setWidth(metres)` to be re-fitted in place without re-flowing its DOM.
 - Styling lives under `.lq-world-panel` in `learn.css` and `.quest-console-panel`
   in `holo.css`. Both are additive; T3 and below never load a different frame.
 
@@ -495,6 +600,15 @@ its own little room exactly as before.
   bench colliders are boxes rather than a single radius.
 
 ## Rules that keep the game fair
+- **A screen that claims to be telemetry never invents a reading.** The comms CRT used to
+  fall back to four hardcoded guild totals whenever it was handed nothing, and it was
+  handed nothing every time, because `stage.js` was reading `t.score` off
+  `session.teams` — the roster manifest, which carries names, liveries and slot caps and
+  no scores at all. A pre-launch club with no submissions read a fully populated season off
+  an instrument. `stage.refreshStandings()` now fetches the real `leaderboard` route (the
+  same computation Standings reads, floored at a 20 s refresh) and
+  `createCommsStandingsTexture` draws `NO GUILD TELEMETRY ON THIS CHANNEL` when it has no
+  rows. `verify:holo` fails the build if either fabrication comes back.
 - **A guild's score is a mean, never a sum.** `Scoring.getLeaderboards` computes
   `mean(xp of members with xp > 0) x (0.75 + 0.5 x active/roster)`, and the proxy mock
   mirrors it. A sum hands the season to whichever guild recruits hardest, which is what
@@ -558,10 +672,17 @@ A miss is answered by `diagnoseMiss`, which names the physics — TWO GIVERS, BA
 TOO WEAK TO FIRE, PATH BLOCKED — and points at a site to go and scan. All 216 possible
 wrong site-pairings across the quest resolve to a specific message; none fall through.
 
-Concept cards are rewards, not briefings. `conceptTiming: 'intro'` is reserved for cards
-that teach the *controls* (stage 1's scan/drag, stage 11's arrow ordering); every card
-that explains a *concept* is `'reward'` and appears after the solve, under
-"WHAT YOU JUST FOUND".
+Concept cards are rewards, not briefings. `conceptTiming: 'intro'` is reserved for the two
+cards that teach the *controls* (stage 1's scan/drag, stage 11's arrow ordering) and those
+obey the withheld-vocabulary list like everything else.
+
+**The chemistry itself lands on `cfg.chem`, after every single solve.** One to three
+sentences naming what the player just did in the words chemists use — nucleophilic
+substitution, steric hindrance, regioselectivity, SN1 and SN2, angle strain, catalysis. It
+is the one place in the campaign before the epilogue where the withheld vocabulary is used
+deliberately, and it is drawn by `renderChemCard` only once the stage is cleared. The
+epilogue is still there; it is now a gathering-up rather than the first time any of this is
+said.
 - Stages 1–7: one arrow. Red giver → blue receiver, then competing sites, then blocked
   paths that must be solved by rotating the view.
 - Stages 8–10: three molecules in the chamber, including a bystander.
@@ -635,9 +756,10 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 ## Plans in flight
 - `docs/plans/learn-track.md` — the Learn road: ten worlds, 40 quests charted, two built
-  (`unit01/q1-grain`, `unit01/q2-core`). Scaffolding, gating, routes, backend tab and
-  verifier are in place. World 01 (Tallow) is also built as walkable ground at T4, with
-  both of its benches as 3D instruments; the other nine worlds are charts only.
+  (`unit01/q1-grain`, `unit01/q2-core`). Scaffolding, gating, routes, backend tab,
+  per-world practice sets and the verifier are in place. World 01 (Tallow) is also built as
+  walkable ground at T4, with both of its benches as instruments you stand at; the other
+  nine worlds are charts only.
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
 
@@ -661,9 +783,14 @@ Nav labels match page titles exactly: BRIDGE, STAR MAP, LEARN, STANDINGS, INVENT
 **The Star Map charts two roads.** `screens/starmap.js` carries a two-tab row in both the
 T4 holo-table and the 2D page: `Active Quests` (the four campaign sectors, unchanged) and
 `Learn Quests` (the ten Learn worlds, from `curriculum.js` with gating from
-`learn/progress.js`). A world that is built as a place reads *Disembark to <world>* and
-enters it in 3D; one that is not reads *Enter* and opens its quest list. The LEARN nav tab
-is untouched, so neither road is reachable only one way.
+`learn/progress.js`). A world that is built as a place reads *Enter <world>* and enters it
+in 3D; one that is not reads *Enter* and opens its quest list. The LEARN nav tab is
+untouched, so neither road is reachable only one way.
+
+A **finished** world also carries a **Problems** key, which reopens that world's practice
+set. `practiceKey()` and `bindPracticeKeys()` live in `screens/learn-world.js` and are
+imported by the star map and the Learn road, so the key is authored once and appears in
+every list that shows a world.
 
 ## Aesthetic — "SCOURED PLATE" (MANDATORY FOR ALL AGENTS)
 
@@ -868,6 +995,12 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - Starship traversal spine: `src/three/ship-graph.js` defines an undirected navigation graph across all compartments (`bridge`, `cockpit`, `starmap`, `quarters`, `cargo`, `comms`, `airlock`) with 3–6 point `walkPath` splines, `hatchPos` view-cone markers, and `routeBinding`.
 - Starship 3D interior: `src/three/ship.js` builds hyper-realistic physical rooms and interconnecting corridor spines along `walkPath` splines with procedural PBR durasteel plating with tangent-space normal mapping (`createDurasteelNormalTexture`), floor grating, runway halogen strips, chamfered hatch bulkheads, tactical quad-CRT bridge consoles with mechanical keyboards and dial gauges, dual flight pods with yokes and center throttle quadrant in cockpit, central holo-table with 4-planet orrery and live holographic quest projector, 2-tier bunk beds with canvas bedding and stenciled metal footlockers, anglepoise desk lamp and gear hooks in quarters, overhead gantry crane and stacked shipping containers with cargo manifest screen, 19-inch equipment racks with patch bay loops and glowing vacuum tube cages in comms, and heavy airlock blast door with manual dogging wheel, hydraulic rams, and pressure dials. Non-overlapping physics bounds, rear-shifted bridge consoles (`Z = [0.2, 1.4]`), forward-shifted cockpit pods (`Z = [2.6, 3.8]`), and center pedestal colliders ensure wide-open transverse corridors at `Z = [1.4, 2.6]` across all rooms.
 - In-World 3D content transfer: In T4, primary content lives diegetically in 3D: Quests in the Star Map holo-table, Standings on the Comms CRT terminal, Inventory on the Cargo Manifest, and the Bridge Welcome Hologram directly in front of the camera's original bridge position displaying "UHS Chem Club", meeting announcements ("Next meeting 9/29 in 702"), a top-right "Close [X]" badge, directional wayfinding arrows, and a bottom prompt ("Check out the star map for the latest quests!"). Any holographic projection (Bridge announcement directory screen & vertical beam via `clubHoloGroup`/`clubHoloBeam`, or Star Map holo-table planetary orrery & floating quest screen via `starmapHoloGroup`) always displays by default; dismissal flags (`clubHoloClosed`, `starmapHoloClosed`) are session-scoped (`sessionStorage`, cleared on new session/sign-in) so holograms only stay dismissed for the active session and pop back up on the next session. Projections can be closed and opened by pressing the "X" key (`stage.toggleAnyHolo()`, `stage.toggleClubHolo()`, `stage.toggleStarmapHolo()`), dispatching `club-holo:open|close` and `starmap-holo:open|close` events with debounced key handling.
+  - **ONE HANDLER OWNS THE `X` KEY.** It is the window listener in `stage.js`,
+    and nothing else may bind it. `FpsControls` used to bind it too, so every
+    press toggled the board twice — open and shut inside one frame — and the key
+    read as dead. The listener also ignores `e.repeat`, or holding the key would
+    strobe the projection. `verify:holo` fails the build if a second owner
+    appears.
   - **A press on a holo screen is not a dismissal.** The canvas raycast closes a
     projection only when the ray lands on the "Close [X]" badge the screen draws
     in its own top-right corner: each holo texture attaches that badge as a UV

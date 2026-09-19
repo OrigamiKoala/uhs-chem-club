@@ -54,6 +54,16 @@ export const ARENAS = {
 
 export const QUEST_STATUSES = ['live', 'draft'];
 
+/**
+ * How many practice problems a built quest owes.
+ *
+ * The set itself lives in the quest module (`export const PRACTICE`) and is shown
+ * at the END OF THE WORLD, not the end of the quest — see `learn/practice.js`.
+ * The number lives here because the registry is the one file the browser, the
+ * proxy and `verify:learn` all import without pulling the DOM in behind it.
+ */
+export const PROBLEMS_PER_QUEST = 5;
+
 /** Worlds, sorted by `order` and stamped with their derived counts. */
 export const WORLDS = WORLD_MODULES
   .slice()

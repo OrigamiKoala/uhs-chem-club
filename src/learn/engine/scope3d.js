@@ -21,7 +21,8 @@
 
 import * as THREE from 'three';
 import { buildUnits, detailFor, planSettle, planCut, TINTS } from './scope.js';
-import { BenchViewer3D, TINT_HEX, AMBER } from './bench3d.js';
+import { BenchViewer3D, TINT_HEX, AMBER, buildPowerDial } from './bench3d.js';
+import { valueForAngle, angleFor as angleOf } from './dial.js';
 import { benchHost } from './bench-host.js';
 
 /** The well's radius in metres. Plays the part `aperture` plays on canvas. */
@@ -59,6 +60,13 @@ export class SampleScope3D {
     this.kinds = opts.kinds || {};
     this.onProbe = opts.onProbe || null;
     this.onSelect = opts.onSelect || null;
+
+    // The quest's power handler, when it gave one. THE DIAL ON THE BENCH IS A
+    // REAL DIAL: at T4 the player reaches over and turns it, and this is how
+    // the turn gets back to the quest. The drawn instrument ignores the option
+    // entirely, so a quest module passes it once and works on both benches.
+    this.onPower = opts.onPower || null;
+    this.powerRange = opts.powerRange || { min: 1, max: 6 };
 
     this.samples = [];
     // Set before any stage runs: setSelected / setPlateTag can be called by a
@@ -111,6 +119,9 @@ export class SampleScope3D {
   setPower(p) {
     this.power = p;
     this.probe = null;
+    // Keep the knob pointing where the instrument actually is, whichever
+    // control moved it — the bench dial, the panel dial, or a stage load.
+    this.dial?.setValue(p);
     this.drawAll();
   }
 
@@ -203,7 +214,81 @@ export class SampleScope3D {
     });
 
     this.viewer.layoutStations();
+    this.buildDial();
     this.drawAll();
+  }
+
+  /**
+   * Bolt the power dial to the plate, outboard of the last station.
+   *
+   * WHY IT MOVES WITH THE STATION COUNT. A stage with one sample frames the
+   * camera close and a stage with four frames it back, so a dial at a fixed
+   * coordinate would be off the left of the glass on the short stages and lost
+   * in the middle of the bench on the long ones. Standing it half a metre
+   * outboard of the leftmost tray keeps it in the same place in the player's
+   * VIEW — front left, within reach — on every stage, and keeps it clear of the
+   * trays and the provenance slips, which is where the physics check would
+   * otherwise find it.
+   */
+  buildDial() {
+    this.disposeDial();
+    if (!this.onPower) return;
+
+    const n = Math.max(1, this.stations.length);
+    const span = (n - 1) * 0.92;
+    const x = -(span / 2 + 0.50);
+
+    const dial = buildPowerDial({
+      min: this.powerRange.min,
+      max: this.powerRange.max,
+      value: this.power,
+      label: 'POWER'
+    });
+    dial.group.position.set(x, 0.895, 0.10);
+    this.viewer.root.add(dial.group);
+    this.dial = dial;
+
+    // The camera is pulled back a touch so the dial is inside the glass at the
+    // short station counts too. Measured in `verify:bench`.
+    this.viewer.camDist += 0.18;
+    this.viewer.applyCamera();
+
+    // TURNING IT. A knob and a view are the same gesture — a drag — so the
+    // viewer hands the press to whichever the pointer went down on. The angle
+    // is accumulated from the drag and run through `valueForAngle`, the SAME
+    // pure function the drawn dial uses, so the two cannot land on different
+    // detents. Horizontal and vertical both contribute, because a knob under
+    // your fingers turns whichever way you sweep across it.
+    let deg = 0;
+    const { min, max } = this.powerRange;
+    this.releaseDial = this.viewer.addGrabbable({
+      object: dial.hit,
+      onStart: () => {
+        deg = angleOf(this.power, min, max);
+      },
+      onMove: (dx, dy) => {
+        deg += (dx - dy) * 0.9;
+        const v = valueForAngle(deg, min, max);
+        if (v !== this.power && this.onPower) this.onPower(v);
+      },
+      onWheel: (deltaY) => {
+        const v = Math.max(min, Math.min(max, this.power + (deltaY > 0 ? -1 : 1)));
+        if (v !== this.power && this.onPower) this.onPower(v);
+      }
+    });
+  }
+
+  disposeDial() {
+    this.releaseDial?.();
+    this.releaseDial = null;
+    if (!this.dial) return;
+    this.viewer.root.remove(this.dial.group);
+    for (const g of this.dial.geos || []) g.dispose();
+    for (const m of this.dial.mats || []) {
+      if (m.userData?.ownTexture) m.userData.ownTexture.dispose();
+      m.dispose();
+    }
+    this.dial = null;
   }
 
   /** Grow an instanced mesh when a sample needs more instances than it holds. */
@@ -569,6 +654,7 @@ export class SampleScope3D {
 
   dispose() {
     this.disposed = true;
+    this.disposeDial();
     window.removeEventListener('resize', this.onResize);
     this.unmountScene(this.viewer);
     this.viewer.dispose();

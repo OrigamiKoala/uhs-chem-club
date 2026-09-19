@@ -11,6 +11,22 @@ import { MOLECULE_DATA } from '../src/quest3d/molecule.js';
 import { CANONICAL_STAGES_20 } from '../api/[...route].js';
 import { QUEST1_STORY } from '../src/story/quest1.js';
 
+/**
+ * The vocabulary Quest 1 withholds until the epilogue. It is enforced against
+ * every player-facing string EXCEPT `cfg.chem`, the chemistry card: that card is
+ * drawn only after a stage is solved, and using the real words there is what
+ * turns twenty puzzles into twenty lessons.
+ */
+const BANNED = ['electron', 'nucleophile', 'electrophile', 'carbonyl', 'carbocation',
+  'alkyl', 'ester', 'epoxide', 'isopropyl'];
+
+/**
+ * Sentence count that survives chemistry. A naive split on [.!?] reads "H2O2."
+ * and "mass 16.0" as sentence breaks and would fail a card well inside its
+ * limit, so only a stop followed by whitespace or the end of the string counts.
+ */
+const sentenceCount = (str) => (String(str || '').match(/[.!?]+(?=\s|$)/g) || []).length;
+
 let failures = 0;
 const fail = (msg) => { console.log(`  FAIL ${msg}`); failures++; };
 const ok = (msg) => console.log(`  ok   ${msg}`);
@@ -112,12 +128,37 @@ STAGE_CONFIGS.forEach((cfg, i) => {
     if (d.title !== 'TWO DONORS' && d.title !== 'TWO GIVERS') fail(`${label}: donor-to-donor miss diagnosed as "${d.title}"`);
   }
 
+  // The gameplay copy stays in plain language. `cfg.chem` is deliberately NOT in
+  // this list: it is the chemistry card, it is drawn only after the solve, and
+  // real terminology there is the whole point of it (see below).
   const copy = [cfg.title, cfg.prompt, ...(cfg.hints || [cfg.hint]), cfg.reaction?.explanation,
     cfg.concept?.intro, cfg.concept?.action].filter(Boolean).join(' ').toLowerCase();
-  const banned = ['electron', 'nucleophile', 'electrophile', 'carbonyl', 'carbocation',
-    'alkyl', 'ester', 'epoxide', 'isopropyl'];
-  for (const word of banned) {
+  for (const word of BANNED) {
     if (copy.includes(word)) fail(`${label}: player-facing copy contains "${word}"`);
+  }
+
+  // THE CHEMISTRY CARD. Every stage teaches something the moment it is cleared,
+  // and it is held to a hard ceiling: a card that ran to a paragraph would be the
+  // end-of-quest lecture moved earlier, which is the thing this replaces.
+  if (!cfg.chem) {
+    fail(`${label}: no chemistry card — every stage must explain what just happened`);
+  } else {
+    if (!cfg.chem.badge) fail(`${label}: chemistry card has no badge`);
+    if (!cfg.chem.title) fail(`${label}: chemistry card has no title`);
+    const body = cfg.chem.body || '';
+    if (body.length < 40) fail(`${label}: chemistry card body is empty or too terse`);
+    const n = sentenceCount(body);
+    if (n > 3) fail(`${label}: chemistry card runs to ${n} sentences (max 3)`);
+  }
+
+  // An intro concept card teaches the CONTROLS and nothing else. The moment one
+  // starts explaining chemistry it has become a briefing, which this quest does
+  // not do — the card comes after the work, never before it.
+  if (cfg.conceptTiming === 'intro' && cfg.concept) {
+    const intro = `${cfg.concept.intro || ''} ${cfg.concept.action || ''}`.toLowerCase();
+    for (const word of BANNED) {
+      if (intro.includes(word)) fail(`${label}: intro concept card contains "${word}"`);
+    }
   }
 
   // Client and proxy must describe the same stage.
@@ -134,15 +175,14 @@ STAGE_CONFIGS.forEach((cfg, i) => {
 if (!QUEST1_STORY || !Array.isArray(QUEST1_STORY.pylons) || QUEST1_STORY.pylons.length !== TOTAL_STAGES) {
   fail(`story has ${QUEST1_STORY?.pylons?.length ?? 0} pylons, expected ${TOTAL_STAGES}`);
 } else {
-  const banned = ['electron', 'nucleophile', 'electrophile', 'carbonyl', 'carbocation',
-    'alkyl', 'ester', 'epoxide', 'isopropyl'];
+  const banned = BANNED;
 
   // Check guild openers
   ['earth', 'air', 'fire', 'water', 'neutral'].forEach(g => {
     const text = QUEST1_STORY.guildOpeners?.[g];
     if (!text || text.length < 10) fail(`story: missing or too short guildOpener for ${g}`);
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    if (sentences.length > 2) fail(`story: guildOpener for ${g} exceeds 2 sentences (${sentences.length})`);
+    const n = sentenceCount(text);
+    if (n > 2) fail(`story: guildOpener for ${g} exceeds 2 sentences (${n})`);
     banned.forEach(w => {
       if (text.toLowerCase().includes(w)) fail(`story: guildOpener for ${g} contains banned "${w}"`);
     });
@@ -156,8 +196,8 @@ if (!QUEST1_STORY || !Array.isArray(QUEST1_STORY.pylons) || QUEST1_STORY.pylons.
     const text = idx === 0 ? QUEST1_STORY.guildOpeners.neutral : p.transmission;
     if (!text || text.length < 10) fail(`story: ${pLabel} transmission missing or too short`);
 
-    const sentences = (text || '').split(/[.!?]+/).filter(s => s.trim().length > 0);
-    if (sentences.length > 2) fail(`story: ${pLabel} transmission exceeds 2 sentences (${sentences.length})`);
+    const n = sentenceCount(text);
+    if (n > 2) fail(`story: ${pLabel} transmission exceeds 2 sentences (${n})`);
 
     const fullStoryCopy = [text, p.onClear].join(' ').toLowerCase();
     banned.forEach(w => {

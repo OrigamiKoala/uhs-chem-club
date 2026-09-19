@@ -1,17 +1,27 @@
 /**
- * ship.js — Hyper-Realistic Starship Interior (T4 / T3)
- * Scoured Plate / Used Universe industrial aesthetic matching 3d-conversion-prompts.md & dist/art/
+ * ship.js — The Avalon's interior: a set of compartments, not a hall.
  *
- * Implements physical room compartments, corridor spine network along walkPath splines,
- * PBR weathered durasteel plating, CRT tactical displays, holographic star map,
- * and solid collision physics bounds.
+ * THE DECK PLAN IS DATA. `ship-rooms.js` says where every bulkhead stands, how
+ * wide its opening is and how high the deckhead is; this file builds plate from
+ * that description and registers one collider per SOLID wall segment, so a
+ * doorway is walkable because there is genuinely nothing in it — never because
+ * a hole was drawn in a mesh that still collides as a slab.
+ *
+ * The bow is the bridge: canopy, both flight pods, the tactical console bank
+ * and the star-map holo-table, one room with three stations. Aft of it a spine
+ * corridor bisects the ship; berth A, berth B and comms open off it to port,
+ * storage, the stairwell vestibule and the airlock to starboard, and the
+ * furnace room closes the far end across the beam.
+ *
+ * Scoured Plate throughout: warm dark plate, filament light, cut corners, and
+ * the only lit things are lamps.
  */
 
 import * as THREE from "three";
 import {
   platedMetal, treadPlate, buildMaterial, enableAO, texSize,
   dressMaterialFromAlbedo, mergeStatic, boltLine,
-  pipeFlange, placard, weldBead
+  pipeFlange, placard, weldBead, sedimentaryRock
 } from "./materials/pbr-kit.js";
 import { createHoloMaterial } from "./materials/holo.js";
 import {
@@ -32,13 +42,18 @@ import {
 } from "./materials/textures.js";
 import {
   createPlanetMaterial,
-  createAtmosphereShell,
   createRingMaterial
 } from "./materials/celestial.js";
-import { SHIP_GRAPH } from "./ship-graph.js";
-import { tierManager, tierAtLeast } from "./tier.js";
+import {
+  HULL, ROOMS, WALLS, CEIL, WALL_T, DOOR_H,
+  wallSegments, doorways
+} from "./ship-rooms.js";
+import { tierAtLeast } from "./tier.js";
 import { session } from "../session.js";
-import { QUEST1_STORY } from "../story/quest1.js";
+
+/** Where the club board hangs, and where a player stands to read it. */
+export const CLUB_BOARD_POS = [0, 1.55, 2.7];
+export const BRIDGE_STAND = [0, 1.55, 1.3];
 
 export class ShipInterior {
   constructor(scene) {
@@ -51,18 +66,19 @@ export class ShipInterior {
 
     this.initMaterials();
     this.buildHullArchitecture();
-    this.buildCorridorSpines();
+    this.buildCorridorServices();
     this.buildBridgeRoom();
     this.buildCockpitRoom();
     this.buildStarmapRoom();
-    this.buildQuartersRoom();
+    this.buildBerth('quarters', { locker: 'ortega', designator: 'BERTH A' });
+    this.buildBerth('berth_b', { locker: 'cadet', designator: 'BERTH B' });
     this.buildCargoRoom();
+    this.buildStairwellRoom();
     this.buildCommsRoom();
     this.buildAirlockRoom();
+    this.buildFurnaceRoom();
     this.buildLightingFixtures();
     this.buildAtmosphericDust();
-    // Last, so it can see what every room has already put on the deck.
-    this.buildDoorways();
     this.buildServiceDressing();
     this.buildPlanetaryVista();
     this.enableAmbientOcclusion();
@@ -74,158 +90,6 @@ export class ShipInterior {
     const isAuthed = Boolean(session?.token && session?.player);
     this.setClubHoloVisible(isAuthed);
     this.setStarmapHoloVisible(true);
-  }
-
-  /**
-   * THE SERVICES.
-   *
-   * A hull is believable because of what is bolted to it, not because of its
-   * shape. This ship had rooms, furniture and lights, and between them bare
-   * plate — which is what a set looks like. A vessel that people live inside
-   * is mostly the things that keep it running: pipe along the deckhead, cable
-   * tray clipped beside it, conduit dropping to junction boxes, welded seams
-   * where the plate meets the deck, a stencilled designator in every bay, and
-   * a fire bottle where somebody decided one should be.
-   *
-   * Everything here is kept in the overhead band and against the hull sides,
-   * clear of every room's own furniture — the ribs project to |x| = 7.8, the
-   * luminaires sit at y = 3.94 within |x| < 4.3, and nothing below runs
-   * through either. Baked into one mesh per material at the end, so the whole
-   * of it costs a handful of draw calls.
-   */
-  buildServiceDressing() {
-    const dressing = new THREE.Group();
-    const zA = -8.4;
-    const zB = 3.9;
-    const span = zB - zA;
-    const midZ = (zA + zB) / 2;
-    const ribZ = [];
-    for (let z = -7.5; z <= 3.5; z += 2.2) ribZ.push(z);
-
-    for (const side of [-1, 1]) {
-      // --- two process runs along the deckhead ---
-      for (const [px, rad, mat] of [
-        [7.5 * side, 0.11, this.brassMat],
-        [7.22 * side, 0.07, this.ironMat]
-      ]) {
-        const pipe = new THREE.Mesh(
-          new THREE.CylinderGeometry(rad, rad, span, 12), mat
-        );
-        pipe.rotation.x = Math.PI / 2;
-        pipe.position.set(px, 2.62, midZ);
-        pipe.castShadow = true;
-        dressing.add(pipe);
-
-        // A bolted joint at every frame, with the hanger that carries it.
-        for (const z of ribZ) {
-          const fl = pipeFlange(rad, this.ironMat, this.ironMat);
-          fl.rotation.x = Math.PI / 2;
-          fl.position.set(px, 2.62, z);
-          dressing.add(fl);
-
-          // A collar at every frame, not a drop hanger: the gusset bracing
-          // that corner occupies the space a hanger would want, and the run is
-          // carried on the frame itself.
-          const collar = new THREE.Mesh(
-            new THREE.TorusGeometry(rad + 0.02, 0.016, 5, 10), this.ironMat
-          );
-          collar.rotation.y = Math.PI / 2;
-          collar.position.set(px, 2.62, z);
-          dressing.add(collar);
-        }
-      }
-
-      // --- cable tray, and the loom sitting in it ---
-      const tray = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.05, span), this.ironMat);
-      tray.position.set(7.5 * side, 2.18, midZ);
-      dressing.add(tray);
-      for (const cx of [-0.16, 0.16]) {
-        const cheek = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.12, span), this.ironMat);
-        cheek.position.set(7.5 * side + cx, 2.22, midZ);
-        dressing.add(cheek);
-      }
-      for (let i = 0; i < 3; i++) {
-        const loom = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.028, 0.028, span, 6), this.ironMat
-        );
-        loom.rotation.x = Math.PI / 2;
-        loom.position.set(7.5 * side - 0.09 + i * 0.09, 2.25, midZ);
-        dressing.add(loom);
-      }
-
-      // --- conduit dropping to a junction box in every frame bay ---
-      for (const z of ribZ) {
-        const drop = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.035, 0.035, 0.42, 8), this.ironMat
-        );
-        drop.position.set(7.66 * side, 1.95, z);
-        dressing.add(drop);
-
-        const box = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.3, 0.16), this.ironMat);
-        box.position.set(7.66 * side, 1.68, z);
-        dressing.add(box);
-        dressing.add(boltLine(
-          [7.66 * side - 0.09, 1.55, z], [7.66 * side + 0.09, 1.55, z],
-          2, this.brassMat, { size: 0.012, normalAxis: 'y' }
-        ));
-      }
-
-      // --- the bay designators, stencilled on the hull between frames ---
-      ribZ.slice(0, -1).forEach((z, i) => {
-        const tag = placard(`FR ${String(i + 3).padStart(2, '0')}`, { w: 0.36, h: 0.13 });
-        tag.position.set(7.97 * side, 2.46, z + 1.1);
-        tag.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
-        dressing.add(tag);
-      });
-
-      // --- the weld seam where the hull plate meets the deck ---
-      const seam = weldBead(span, this.ironMat, { radius: 0.03, seed: 0x90 + side });
-      seam.rotation.x = Math.PI / 2;
-      seam.position.set(7.94 * side, 0.03, midZ);
-      dressing.add(seam);
-
-      // --- overhead trunk, inboard of the frames and clear of the lamps ---
-      const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.09, 0.09, span, 10), this.ironMat
-      );
-      trunk.rotation.x = Math.PI / 2;
-      trunk.position.set(5.9 * side, 3.5, midZ);
-      dressing.add(trunk);
-      for (const z of ribZ) {
-        const clamp = new THREE.Mesh(
-          new THREE.TorusGeometry(0.105, 0.018, 5, 10), this.brassMat
-        );
-        clamp.rotation.y = Math.PI / 2;
-        clamp.position.set(5.9 * side, 3.5, z);
-        dressing.add(clamp);
-      }
-
-      // --- a fire bottle in the aft corner, on its bracket ---
-      const bottle = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.11, 0.11, 0.62, 12), this.hazardMat
-      );
-      bottle.position.set(7.35 * side, 0.75, -8.1);
-      bottle.castShadow = true;
-      dressing.add(bottle);
-      const neck = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.04, 0.06, 0.12, 8), this.brassMat
-      );
-      neck.position.set(7.35 * side, 1.12, -8.1);
-      dressing.add(neck);
-      const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.26), this.ironMat);
-      bracket.position.set(7.52 * side, 0.85, -8.1);
-      dressing.add(bracket);
-      this.addCollider(7.2 * side - 0.18, 7.2 * side + 0.42, -8.35, -7.85);
-    }
-
-    // Hazard striping along the foot of the aft blast wall.
-    const chevrons = new THREE.Mesh(new THREE.BoxGeometry(16, 0.22, 0.04), this.hazardMat);
-    chevrons.position.set(0, 0.13, -8.46);
-    dressing.add(chevrons);
-
-    // One mesh per material for the lot.
-    mergeStatic(dressing);
-    this.group.add(dressing);
   }
 
   /**
@@ -260,11 +124,6 @@ export class ShipInterior {
      * roughness and occlusion are derived from the plate itself, so a bolt
      * head catches the light because that bolt head is there.
      *
-     * Before, the albedo was that photograph and the normal map was unrelated
-     * procedural noise laid over it. The bumps did not line up with the bolts,
-     * so every grazing light contradicted the picture — which is exactly the
-     * failure that makes a surface read as a texture rather than as metal.
-     *
      * A procedural plate is built first and stands in until the image arrives,
      * so the ship is never briefly untextured and a failed load is survivable.
      */
@@ -284,6 +143,23 @@ export class ShipInterior {
     });
 
     /*
+     * 1b. COMPARTMENT BULKHEAD.
+     *
+     * The interior walls went up after the hull did and have been painted
+     * since: a lighter, flatter plate with a finer panel grid, so a doorway
+     * reads as a partition standing inside the shell rather than as more hull.
+     */
+    this.bulkheadMat = buildMaterial(
+      platedMetal({
+        paint: '#4a463f', metal: '#6b675f', rust: '#71452a',
+        panels: 3, seed: 61, weather: 0.5, size: texSize(512)
+      }),
+      { repeat: 3, roughness: 1.0 }
+    );
+    this.bulkheadMat.normalScale.set(1.1, 1.1);
+    this.bulkheadMat.aoMapIntensity = 0.85;
+
+    /*
      * 2. HEAVY FLOOR GRATING.
      *
      * A deck is walked on, so it is treadplate with the pattern ground flat
@@ -297,6 +173,12 @@ export class ShipInterior {
     this.floorMat.normalScale.set(1.4, 1.4);
     this.floorMat.aoMapIntensity = 0.9;
 
+    // 2b. The furnace room's floor plate: scorched, and never repainted.
+    this.ashMat = buildMaterial(
+      sedimentaryRock({ warm: '#5a4a3a', cool: '#3b332c', seed: 44, size: texSize(256) }),
+      { repeat: [3, 1], roughness: 1.0, metalness: 0.0 }
+    );
+
     // 3. Tarnished Brass & Conduit Material
     this.brassMat = new THREE.MeshStandardMaterial({
       color: 0x826732,
@@ -309,6 +191,13 @@ export class ShipInterior {
       color: 0x14161a,
       roughness: 0.92,
       metalness: 0.38
+    });
+
+    // 4b. Riveted firebox iron: hotter, greasier, soot over rust.
+    this.fireboxMat = new THREE.MeshStandardMaterial({
+      color: 0x2a211c,
+      roughness: 0.95,
+      metalness: 0.45
     });
 
     // 5. Yellow/Black Hazard Chevrons
@@ -328,6 +217,9 @@ export class ShipInterior {
     this.luminaireMat = new THREE.MeshBasicMaterial({ color: 0xffe6b0 });
     this.luminaireWarmMat = new THREE.MeshBasicMaterial({ color: 0xffcaa0 });
 
+    // 6c. The fire behind the grate. A firebox is a lamp, so it is allowed lit.
+    this.emberMat = new THREE.MeshBasicMaterial({ color: 0xe0762a });
+
     // 7. Indicators
     this.amberLampMat = new THREE.MeshBasicMaterial({ color: 0xd99423 });
     this.greenLampMat = new THREE.MeshBasicMaterial({ color: 0x38b000 });
@@ -342,6 +234,10 @@ export class ShipInterior {
     this.crtGreenMat = new THREE.MeshBasicMaterial({ map: this.crtGreenTex });
     this.crtRadarMat = new THREE.MeshBasicMaterial({ map: this.crtRadarTex });
     this.crtReactorMat = new THREE.MeshBasicMaterial({ map: this.crtReactorTex });
+    // The tactical consoles and the flight pods ask for a "telemetry" channel
+    // by name. It is the amber one; without this alias every screen that asked
+    // for it was built with an undefined material and rendered flat white.
+    this.crtTelemetryMat = this.crtAmberMat;
 
     // 9. Analog Control Panel & Keyboards
     this.controlPanelTex = createControlPanelTexture(512, 256);
@@ -364,7 +260,7 @@ export class ShipInterior {
       metalness: 0.05
     });
 
-    // 11. Stenciled Footlockers (Crew Quarters)
+    // 11. Stenciled Footlockers (Crew Berths)
     this.footlockerOrtegaTex = createFootlockerTexture(512, 256, "CREW 12 // J. ORTEGA");
     this.footlockerOrtegaMat = new THREE.MeshStandardMaterial({
       map: this.footlockerOrtegaTex,
@@ -378,7 +274,7 @@ export class ShipInterior {
       metalness: 0.35
     });
 
-    // 12. Heavy Blast Door (Airlock Bay)
+    // 12. Heavy Blast Door (Airlock Bay & the sealed lower-deck door)
     this.blastDoorTex = createBlastDoorTexture(512, 512);
     this.blastDoorMat = new THREE.MeshStandardMaterial({
       map: this.blastDoorTex,
@@ -408,7 +304,7 @@ export class ShipInterior {
       metalness: 0.5
     });
 
-    // 15. Shipping Container Stencils (Cargo Hold)
+    // 15. Shipping Container Stencils (Storage)
     this.containerMat = new THREE.MeshStandardMaterial({
       map: createContainerStencilTexture(512, 512, "MM", "44-B"),
       roughness: 0.88,
@@ -428,15 +324,23 @@ export class ShipInterior {
     this.colliders.push({ minX, maxX, minZ, maxZ });
   }
 
+  /* ====================================================================
+     THE HULL AND THE BULKHEADS
+     ==================================================================== */
+
   /**
-   * THE HULL IS ONE OBJECT.
+   * THE STRUCTURE IS ONE OBJECT.
    *
-   * Deck, deckhead, side plating, blast wall, frames and gussets are welded
-   * together into a single structure, and their joints are supposed to
-   * interpenetrate — a gusset that merely touched the corner it braces would
-   * be holding nothing. Building them into one group says so, which lets the
-   * physics check go on being strict about everything that is genuinely a
-   * separate object standing in the ship.
+   * Deck, deckheads, side plating, blast wall, frames, every interior
+   * bulkhead and every doorway frame are welded into a single structure, and
+   * their joints are supposed to interpenetrate — a jamb post that merely
+   * touched the plate it is welded to would be holding nothing. Building them
+   * into one group says so, which lets the physics check go on being strict
+   * about everything that is genuinely a separate object standing in the ship.
+   *
+   * The COLLIDERS, on the other hand, are drawn segment by segment: a wall
+   * with a doorway in it contributes two boxes and a gap, so the gap is
+   * walkable for the same reason it is see-through.
    */
   buildHullArchitecture() {
     const hull = new THREE.Group();
@@ -444,378 +348,376 @@ export class ShipInterior {
     this.group.add(hull);
     const add = (...objs) => hull.add(...objs);
 
-    // Main deck floor slab (Y = -0.2 to 0.0)
-    const floor = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 22), this.floorMat);
-    floor.position.set(0, -0.2, 0);
+    const W = HULL.maxX - HULL.minX;          // 11.2 m beam
+    const L = HULL.maxZ - HULL.minZ;          // 15.6 m overall
+    const midZ = (HULL.minZ + HULL.maxZ) / 2;
+    const outerX = HULL.maxX + HULL.plate / 2;
+    const inset = HULL.frame;                  // frames stand this proud
+
+    // --- Deck slab, one plate under the whole ship ---
+    const floor = new THREE.Mesh(
+      new THREE.BoxGeometry(W + 1.0, 0.4, L + 1.0), this.floorMat
+    );
+    floor.position.set(0, -0.2, midZ);
     floor.receiveShadow = true;
     add(floor);
 
-    // Main structural ceiling slab (Y = 4.0 to 4.4)
-    const ceil = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 22), this.durasteelMat);
-    ceil.position.set(0, 4.2, 0);
-    add(ceil);
+    // --- Deckheads. Three heights: rooms low, bridge tall, furnace taller. ---
+    const bridgeR = ROOMS.bridge;
+    const ceilMain = new THREE.Mesh(
+      new THREE.BoxGeometry(W + 1.0, 0.3, 8.6), this.durasteelMat
+    );
+    ceilMain.position.set(0, CEIL.room + 0.15, -3.65);
+    add(ceilMain);
 
-    // Perimeter outer hull armor walls
-    // Port outer wall
-    const wallPort = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.2, 22), this.durasteelMat);
-    wallPort.position.set(-8.25, 2.0, 0);
-    add(wallPort);
-    this.addCollider(-8.5, -8.0, -11, 11);
+    const ceilBridge = new THREE.Mesh(
+      new THREE.BoxGeometry(W + 1.0, 0.4, (bridgeR.maxZ - bridgeR.minZ) + 0.4), this.durasteelMat
+    );
+    ceilBridge.position.set(0, CEIL.bridge + 0.2, (bridgeR.minZ + bridgeR.maxZ) / 2);
+    add(ceilBridge);
 
-    // Starboard outer wall
-    const wallStbd = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.2, 22), this.durasteelMat);
-    wallStbd.position.set(8.25, 2.0, 0);
-    add(wallStbd);
-    this.addCollider(8.0, 8.5, -11, 11);
+    const fr = ROOMS.furnace;
+    const ceilFurnace = new THREE.Mesh(
+      new THREE.BoxGeometry(W + 1.0, 0.3, (fr.maxZ - fr.minZ) + 0.4), this.durasteelMat
+    );
+    ceilFurnace.position.set(0, CEIL.furnace + 0.15, (fr.minZ + fr.maxZ) / 2);
+    add(ceilFurnace);
 
-    // Aft blast wall (behind airlock)
-    const wallAft = new THREE.Mesh(new THREE.BoxGeometry(18, 4.2, 0.5), this.durasteelMat);
-    wallAft.position.set(0, 2.0, -8.75);
-    add(wallAft);
-    this.addCollider(-9, 9, -9.0, -8.5);
+    // --- Outer plating ---
+    for (const side of [-1, 1]) {
+      const plate = new THREE.Mesh(
+        new THREE.BoxGeometry(HULL.plate, 4.0, L + 1.0), this.durasteelMat
+      );
+      plate.position.set(outerX * side, 2.0, midZ);
+      add(plate);
+    }
+    this.addCollider(-(HULL.maxX + HULL.plate), -(HULL.maxX - inset), HULL.minZ - HULL.plate, HULL.maxZ + HULL.plate);
+    this.addCollider(HULL.maxX - inset, HULL.maxX + HULL.plate, HULL.minZ - HULL.plate, HULL.maxZ + HULL.plate);
 
-    // Forward viewport wall with observation cutouts
-    const wallFwdPort = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4.2, 0.5), this.durasteelMat);
-    wallFwdPort.position.set(-6.5, 2.0, 4.25);
-    const wallFwdStbd = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4.2, 0.5), this.durasteelMat);
-    wallFwdStbd.position.set(6.5, 2.0, 4.25);
-    add(wallFwdPort, wallFwdStbd);
-    this.addCollider(-8.5, -4.75, 4.0, 4.5);
-    this.addCollider(4.75, 8.5, 4.0, 4.5);
+    // Aft blast wall, closing the stern behind the furnace room.
+    const aft = new THREE.Mesh(
+      new THREE.BoxGeometry(W + 1.0, 3.6, HULL.plate), this.durasteelMat
+    );
+    aft.position.set(0, 1.8, HULL.minZ - HULL.plate / 2);
+    add(aft);
+    this.addCollider(-(HULL.maxX + HULL.plate), HULL.maxX + HULL.plate,
+      HULL.minZ - HULL.plate, HULL.minZ + inset);
 
-    // 6 Heavy Industrial Ribbed Bulkhead Hull Arches along the ship length
-    for (let z = -7.5; z <= 3.5; z += 2.2) {
-      const ribL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.0, 0.5), this.durasteelMat);
-      ribL.position.set(-8.0, 2.0, z);
-      const ribR = new THREE.Mesh(new THREE.BoxGeometry(0.4, 4.0, 0.5), this.durasteelMat);
-      ribR.position.set(8.0, 2.0, z);
-      const ribRoof = new THREE.Mesh(new THREE.BoxGeometry(16.4, 0.4, 0.5), this.durasteelMat);
-      ribRoof.position.set(0, 3.9, z);
+    // Forward face: solid plate outboard, the canopy aperture between.
+    for (const side of [-1, 1]) {
+      const fwd = new THREE.Mesh(
+        new THREE.BoxGeometry(1.4, 3.9, HULL.plate), this.durasteelMat
+      );
+      fwd.position.set(4.9 * side, 1.95, HULL.maxZ + HULL.plate / 2);
+      add(fwd);
+    }
+    this.addCollider(-(HULL.maxX + HULL.plate), HULL.maxX + HULL.plate,
+      HULL.maxZ - inset, HULL.maxZ + HULL.plate);
 
-      // Gusset brackets
-      const gusL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.4), this.ironMat);
-      gusL.position.set(-7.5, 3.5, z);
-      gusL.rotation.z = Math.PI / 4;
-      const gusR = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.4), this.ironMat);
-      gusR.position.set(7.5, 3.5, z);
-      gusR.rotation.z = -Math.PI / 4;
+    // Frames standing proud of the plating, where a room is wide enough to
+    // show them: the bridge and the furnace room. The corridor has a bulkhead
+    // on both sides, so a frame in there would be buried in the partition.
+    const ribZones = [
+      { z0: bridgeR.minZ + 0.6, z1: bridgeR.maxZ - 0.4, h: CEIL.bridge },
+      { z0: fr.minZ + 0.6, z1: fr.maxZ - 0.4, h: CEIL.furnace }
+    ];
+    for (const zone of ribZones) {
+      for (let z = zone.z0; z <= zone.z1; z += 1.5) {
+        for (const side of [-1, 1]) {
+          const rib = new THREE.Mesh(
+            new THREE.BoxGeometry(inset, zone.h, 0.32), this.durasteelMat
+          );
+          rib.position.set((HULL.maxX - inset / 2) * side, zone.h / 2, z);
+          add(rib);
+          const gus = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.42, 0.28), this.ironMat);
+          gus.position.set((HULL.maxX - 0.3) * side, zone.h - 0.32, z);
+          gus.rotation.z = side > 0 ? -Math.PI / 4 : Math.PI / 4;
+          add(gus);
+        }
+      }
+    }
 
-      add(ribL, ribR, ribRoof, gusL, gusR);
+    // --- Interior bulkheads, drawn segment by segment around the openings ---
+    for (const wall of WALLS) {
+      for (const [a, b] of wallSegments(wall)) {
+        const span = b - a;
+        const geom = wall.axis === 'x'
+          ? new THREE.BoxGeometry(WALL_T, wall.top, span)
+          : new THREE.BoxGeometry(span, wall.top, WALL_T);
+        const panel = new THREE.Mesh(geom, this.bulkheadMat);
+        const cx = wall.axis === 'x' ? wall.at : (a + b) / 2;
+        const cz = wall.axis === 'x' ? (a + b) / 2 : wall.at;
+        panel.position.set(cx, wall.top / 2, cz);
+        panel.castShadow = panel.receiveShadow = true;
+        add(panel);
+
+        // A welded foot at the deck, both sides, so the wall meets the plate.
+        for (const s of [-1, 1]) {
+          const kick = new THREE.Mesh(
+            wall.axis === 'x'
+              ? new THREE.BoxGeometry(0.06, 0.14, span)
+              : new THREE.BoxGeometry(span, 0.14, 0.06),
+            this.ironMat
+          );
+          kick.position.set(
+            cx + (wall.axis === 'x' ? s * (WALL_T / 2 + 0.03) : 0),
+            0.07,
+            cz + (wall.axis === 'z' ? s * (WALL_T / 2 + 0.03) : 0)
+          );
+          add(kick);
+        }
+
+        if (wall.axis === 'x') {
+          this.addCollider(wall.at - WALL_T / 2 - 0.06, wall.at + WALL_T / 2 + 0.06, a, b);
+        } else {
+          this.addCollider(a, b, wall.at - WALL_T / 2 - 0.06, wall.at + WALL_T / 2 + 0.06);
+        }
+      }
+    }
+
+    this.buildDoorwayFrames(hull);
+  }
+
+  /**
+   * DOORWAY FRAMES — one per real opening, and nowhere else.
+   *
+   * These used to be invented at runtime from the traversal graph: one frame
+   * per graph edge, placed at the midpoint of two compartment anchors, nudged
+   * along that line until it found deck nobody had already furnished. That was
+   * the right answer when the ship was one room with markers in it — the
+   * frames stood free, so they had to hunt for somewhere sensible to stand.
+   *
+   * With real bulkheads the openings are ARCHITECTURE. The frame belongs to
+   * the wall, at the opening the wall declares, and its posts stand on the
+   * ends of the plate rather than inside the clear span, so the opening a
+   * player walks through is exactly `DOOR_CLEAR` wide.
+   *
+   * The sightline rule the old placer encoded is kept, and kept as an
+   * assertion rather than a search: nothing structural may stand between the
+   * bridge standing position and the club board. It cannot any more — the
+   * bridge has no bulkhead in it at all, and the one opening on its aft face
+   * is the corridor mouth, dead astern of the board. `assertClearSightline`
+   * below is what proves it, and `verify:ship` calls it.
+   */
+  buildDoorwayFrames(hull) {
+    for (const d of doorways()) {
+      const frame = new THREE.Group();
+      frame.position.set(d.pos[0], 0, d.pos[1]);
+      // Rotate so the frame's local X runs along the wall.
+      if (d.axis === 'x') frame.rotation.y = Math.PI / 2;
+
+      const half = d.clear / 2;
+      const postW = 0.16;
+      const depth = WALL_T + 0.08;
+
+      for (const s of [-1, 1]) {
+        const post = new THREE.Mesh(
+          new THREE.BoxGeometry(postW, DOOR_H + 0.1, depth), this.durasteelMat
+        );
+        post.position.set(s * (half + postW / 2), (DOOR_H + 0.1) / 2, 0);
+        frame.add(post);
+
+        frame.add(boltLine(
+          [s * (half + postW / 2), 0.35, depth / 2 + 0.01],
+          [s * (half + postW / 2), DOOR_H - 0.1, depth / 2 + 0.01],
+          6, this.brassMat, { size: 0.022, normalAxis: 'z' }
+        ));
+      }
+
+      const lintel = new THREE.Mesh(
+        new THREE.BoxGeometry(d.clear + postW * 2, 0.3, depth), this.durasteelMat
+      );
+      lintel.position.set(0, DOOR_H + 0.15, 0);
+      frame.add(lintel);
+
+      // Stencilled header plate with its own small filament, so a threshold
+      // is legible from down the spine.
+      const header = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.16, 0.03), this.ironMat);
+      header.position.set(0, DOOR_H + 0.12, depth / 2 + 0.02);
+      frame.add(header);
+
+      const lamp = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.028, 0.028, 0.03, 8), this.amberLampMat
+      );
+      lamp.rotation.x = Math.PI / 2;
+      lamp.position.set(0, DOOR_H + 0.12, depth / 2 + 0.045);
+      frame.add(lamp);
+
+      // A dogging cleat on each jamb: this is a pressure door aperture, even
+      // where the door itself was taken off its hinges decades ago.
+      for (const s of [-1, 1]) {
+        const cleat = new THREE.Mesh(
+          new THREE.BoxGeometry(0.07, 0.1, 0.06), this.brassMat
+        );
+        cleat.position.set(s * (half - 0.02), 1.05, depth / 2 + 0.02);
+        frame.add(cleat);
+      }
+
+      hull.add(frame);
     }
   }
 
   /**
-   * The corridor services are one installation too: a raceway, the conduit
-   * bundle clipped inside it and the guide strips let into the deck are fitted
-   * together, not stood next to each other.
+   * Is anything standing between the bridge standing position and the club
+   * board? Exposed so `verify:ship` can ask the built ship rather than trust a
+   * comment. Pure collider arithmetic: the board is read from head height and
+   * everything that would block it has a footprint.
    */
-  buildCorridorSpines() {
+  assertClearSightline(from = BRIDGE_STAND, to = CLUB_BOARD_POS) {
+    const steps = 48;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = from[0] + (to[0] - from[0]) * t;
+      const z = from[2] + (to[2] - from[2]) * t;
+      const hit = this.colliders.find(c =>
+        x > c.minX && x < c.maxX && z > c.minZ && z < c.maxZ
+      );
+      if (hit) return { clear: false, at: [+x.toFixed(2), +z.toFixed(2)], box: hit };
+    }
+    return { clear: true };
+  }
+
+  /* ====================================================================
+     THE SPINE
+     ==================================================================== */
+
+  /**
+   * The corridor services are one installation: a pipe run each side, the tray
+   * and loom clipped beside them, junction boxes on the plate and the guide
+   * strips let into the deck. They are fitted together, not stood next to each
+   * other, so they are one object.
+   */
+  buildCorridorServices() {
     const spine = new THREE.Group();
     spine.name = 'corridor-services';
     this.group.add(spine);
-    const add = (...objs) => spine.add(...objs);
 
-    // 1. Central Spine Corridor (Bridge to Airlock, Z: -4.5 to 2.0)
-    // Overhead cable raceway along central spine
-    // Slung UNDER the frames, at 3.58 rather than 3.8: the deckhead frames run
-    // from 3.7 to 4.1 across the full beam, so a raceway at 3.8 was drawn
-    // straight through every one of them.
-    const racewaySpine = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.15, 7.5), this.ironMat);
-    racewaySpine.position.set(0, 3.58, -1.25);
-    add(racewaySpine);
+    const c = ROOMS.corridor;
+    const z0 = c.minZ + 0.3;
+    const z1 = c.maxZ - 0.3;
+    const span = z1 - z0;
+    const mz = (z0 + z1) / 2;
 
-    // 4 Copper/Brass hydraulic and electrical conduit runs along the spine
-    for (let cx of [-0.5, -0.2, 0.2, 0.5]) {
-      const conduit = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 7.5, 8), this.brassMat);
-      conduit.rotation.x = Math.PI / 2;
-      conduit.position.set(cx, 3.46, -1.25);
-      add(conduit);
+    for (const side of [-1, 1]) {
+      const px = 0.88 * side;
+      const pipe = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.1, span, 12), this.brassMat
+      );
+      pipe.rotation.x = Math.PI / 2;
+      pipe.position.set(px, 2.4, mz);
+      pipe.castShadow = true;
+      spine.add(pipe);
+
+      for (let z = z0 + 0.9; z < z1; z += 1.7) {
+        const fl = pipeFlange(0.1, this.ironMat, this.ironMat);
+        fl.rotation.x = Math.PI / 2;
+        fl.position.set(px, 2.4, z);
+        spine.add(fl);
+      }
+
+      // Deck guide strips, let in against the kick plate.
+      const strip = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, 0.03, span), this.halogenMat
+      );
+      strip.position.set(0.95 * side, 0.015, mz);
+      spine.add(strip);
     }
 
-    // Recessed halogen runway guide strips embedded into deck
-    const stripSpineL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 7.5), this.halogenMat);
-    stripSpineL.position.set(-0.8, 0.015, -1.25);
-    const stripSpineR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 7.5), this.halogenMat);
-    stripSpineR.position.set(0.8, 0.015, -1.25);
-    add(stripSpineL, stripSpineR);
-
-    // 2. Transverse Cross-Corridor (Connecting Comms at X=-2.8 across Spine X=0 to Cargo at X=4.2 at Z=-2.0)
-    const racewayCross = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.15, 1.2), this.ironMat);
-    racewayCross.position.set(0.7, 3.75, -2.05);
-    add(racewayCross);
-
-    for (let cz of [-2.25, -1.85]) {
-      const conduitCross = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 7.0, 8), this.brassMat);
-      conduitCross.rotation.z = Math.PI / 2;
-      conduitCross.position.set(0.7, 3.65, cz);
-      add(conduitCross);
+    // Cable tray and the loom sitting in it, run to port of the lamps.
+    const tray = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.05, span), this.ironMat);
+    tray.position.set(-0.55, 2.55, mz);
+    spine.add(tray);
+    for (const cx of [-0.63, -0.55, -0.47]) {
+      const loom = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.025, 0.025, span, 6), this.ironMat
+      );
+      loom.rotation.x = Math.PI / 2;
+      loom.position.set(cx, 2.6, mz);
+      spine.add(loom);
     }
 
-    // Transverse deck runway guide strips
-    const stripCrossF = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.03, 0.08), this.halogenMat);
-    stripCrossF.position.set(0.7, 0.015, -2.45);
-    const stripCrossB = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.03, 0.08), this.halogenMat);
-    stripCrossB.position.set(0.7, 0.015, -1.65);
-    add(stripCrossF, stripCrossB);
+    // Junction boxes on the plate, in the stretches between doorways.
+    const boxes = [
+      [-0.93, -2.3], [-0.93, -5.1], [0.93, -2.5], [0.93, -5.35]
+    ];
+    for (const [bx, bz] of boxes) {
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.3, 0.24), this.ironMat);
+      box.position.set(bx, 1.75, bz);
+      spine.add(box);
+      const drop = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.03, 0.03, 0.5, 8), this.ironMat
+      );
+      drop.position.set(bx, 2.12, bz);
+      spine.add(drop);
+    }
 
-    // 3. Port & Starboard Wing Corridors at Z = 2.0 (Connecting Bridge to Quarters X=-3.8 & Starmap X=3.2)
-    const racewayWing = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.15, 1.0), this.ironMat);
-    racewayWing.position.set(-0.3, 3.75, 2.0);
-    add(racewayWing);
+    // Frame designators, stencilled down the spine.
+    let n = 3;
+    for (let z = -0.6; z > c.minZ + 0.6; z -= 2.4) {
+      const tag = placard(`FR ${String(n).padStart(2, '0')}`, { w: 0.34, h: 0.12 });
+      tag.position.set(-1.02, 2.0, z);
+      tag.rotation.y = Math.PI / 2;
+      spine.add(tag);
+      n += 1;
+    }
 
-    // Wing corridor deck runway guide strips
-    const stripWingF = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.03, 0.08), this.halogenMat);
-    stripWingF.position.set(-0.3, 0.015, 1.6);
-    const stripWingB = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.03, 0.08), this.halogenMat);
-    stripWingB.position.set(-0.3, 0.015, 2.4);
-    add(stripWingF, stripWingB);
+    // The weld seam where the partition meets the deck, both sides.
+    for (const side of [-1, 1]) {
+      const seam = weldBead(span, this.ironMat, { radius: 0.024, seed: 0x90 + side });
+      seam.rotation.x = Math.PI / 2;
+      seam.position.set(1.0 * side, 0.03, mz);
+      spine.add(seam);
+    }
+
+    mergeStatic(spine);
   }
 
-  /**
-   * DOORWAYS — one per threshold, on ground that is actually clear.
-   *
-   * Three things were wrong with how these were placed.
-   *
-   * Every graph edge was drawn from BOTH ends, so bridge→starmap and
-   * starmap→bridge raised two frames a few centimetres apart for one doorway.
-   * Each was positioned at its own `hatchPos`, which is a view-cone marker
-   * sitting inside a compartment rather than the line between two of them. And
-   * nothing checked whether anything was already standing there — so nine
-   * frames stood in a thicket around the bridge, several of them drawn straight
-   * through the tactical consoles.
-   *
-   * Now: one frame per unordered pair, at the midpoint of the two compartments
-   * it joins, and only where the deck is free. This runs LAST, after every room
-   * has registered its furniture, so the test is against what is really there:
-   * put a locker in a threshold and the doorway moves along the line to the
-   * nearest clear spot, or is not drawn at all. `hatchPos` is untouched — the
-   * traversal graph and its view cones are a separate thing from where the
-   * plate is welded.
-   */
-  buildDoorways() {
-    const doorways = new THREE.Group();
-    doorways.name = 'doorways';
-    this.group.add(doorways);
-
-    /**
-     * Is a doorway standing here clear of everything already built?
-     *
-     * The two JAMBS are tested where they actually land, not a box around the
-     * frame's centre: a doorway is rotated to face the compartment it serves,
-     * so its posts can be a metre and a half away from its origin in a
-     * direction a centred box knows nothing about.
-     */
-    const clear = (x, z, dir) => {
-      // Perpendicular to the direction the doorway faces.
-      const px = -dir.z, pz = dir.x;
-      for (const side of [-0.75, 0.75]) {
-        const jx = x + px * side;
-        const jz = z + pz * side;
-        const hit = this.colliders.some(c =>
-          jx + 0.3 > c.minX && jx - 0.3 < c.maxX &&
-          jz + 0.3 > c.minZ && jz - 0.3 < c.maxZ
-        );
-        if (hit) return false;
-      }
-      return true;
-    };
-
-    const built = new Set();
-    for (const [nodeKey, node] of Object.entries(SHIP_GRAPH.nodes)) {
-      for (const adjKey of node.adjacent) {
-        const pairKey = [nodeKey, adjKey].sort().join('|');
-        if (built.has(pairKey)) continue;
-        built.add(pairKey);
-
-        // The airlock threshold already carries the heavy blast door and its
-        // own dogged frame. A second, lighter doorway in the same opening would
-        // put two frames in one aperture.
-        if (nodeKey === 'airlock' || adjKey === 'airlock') continue;
-
-        const adjNode = SHIP_GRAPH.nodes[adjKey];
-        if (!adjNode) continue;
-
-        const dir = new THREE.Vector3(
-          adjNode.pos[0] - node.pos[0], 0, adjNode.pos[2] - node.pos[2]
-        );
-        const span = dir.length();
-        if (span < 0.1) continue;
-        dir.normalize();
-
-        const midX = (node.pos[0] + adjNode.pos[0]) / 2;
-        const midZ = (node.pos[2] + adjNode.pos[2]) / 2;
-
-        // Walk outward from the midpoint along the line joining the two
-        // compartments, taking the first clear place. A threshold slightly off
-        // centre is a doorway; a threshold inside a console is not.
-        let placed = null;
-        for (let step = 0; step <= 8 && !placed; step++) {
-          for (const sign of step === 0 ? [0] : [-1, 1]) {
-            const t = sign * step * 0.3;
-            if (Math.abs(t) > span * 0.4) continue;
-            const x = midX + dir.x * t;
-            const z = midZ + dir.z * t;
-            if (clear(x, z, dir)) { placed = [x, z]; break; }
-          }
-        }
-        if (!placed) continue;
-
-        const frame = new THREE.Group();
-        frame.position.set(placed[0], 0, placed[1]);
-        frame.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
-
-        const postL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.6, 0.3), this.durasteelMat);
-        postL.position.set(-0.75, 1.3, 0);
-        const postR = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.6, 0.3), this.durasteelMat);
-        postR.position.set(0.75, 1.3, 0);
-        const lintel = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.3, 0.3), this.durasteelMat);
-        lintel.position.set(0, 2.5, 0);
-
-        const headerPlate = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.18, 0.04), this.ironMat);
-        headerPlate.position.set(0, 2.45, 0.18);
-
-        const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.04, 8), this.amberLampMat);
-        lamp.rotation.x = Math.PI / 2;
-        lamp.position.set(0, 2.45, 0.21);
-
-        frame.add(postL, postR, lintel, headerPlate, lamp);
-        doorways.add(frame);
-      }
-    }
-  }
+  /* ====================================================================
+     THE BRIDGE — canopy, tactical console bank, club board
+     ==================================================================== */
 
   buildBridgeRoom() {
-    // Command Bridge at anchor [0, 1.55, 2.0]
     const bridgeGroup = new THREE.Group();
-    bridgeGroup.position.set(0, 0, 2.0);
+    bridgeGroup.name = 'bridge';
 
-    // Forward Observation Canopy at Z = 2.25 (world Z = 4.25, framing the forward viewport cutout)
-    const canopyBase = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.7, 0.4), this.durasteelMat);
-    canopyBase.position.set(0, 0.35, 2.25);
-    const canopyTop = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.7, 0.4), this.durasteelMat);
-    canopyTop.position.set(0, 3.65, 2.25);
+    // --- Forward observation canopy, in the bow face ---
+    const canopyZ = HULL.maxZ - 0.15;
+    const canopyBase = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.7, 0.3), this.durasteelMat);
+    canopyBase.position.set(0, 0.35, canopyZ);
+    const canopyTop = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.7, 0.3), this.durasteelMat);
+    canopyTop.position.set(0, 3.15, canopyZ);
     bridgeGroup.add(canopyBase, canopyTop);
 
-    for (let x of [-3.2, -1.1, 1.1, 3.2]) {
-      const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.24, 2.8, 0.35), this.durasteelMat);
-      mullion.position.set(x, 2.0, 2.25);
-      mullion.rotation.z = x < 0 ? -0.14 : 0.14;
+    for (const x of [-3.2, -1.1, 1.1, 3.2]) {
+      const mullion = new THREE.Mesh(new THREE.BoxGeometry(0.24, 2.4, 0.28), this.durasteelMat);
+      mullion.position.set(x, 1.95, canopyZ);
+      mullion.rotation.z = x < 0 ? -0.1 : 0.1;
       bridgeGroup.add(mullion);
     }
 
-    // Side Tactical Bridge Consoles (flanking the central walkway)
-    for (let side of [-1, 1]) {
-      const deskX = side * 2.2;
-      const deskZ = -1.2; // world Z = 0.8
+    // The glazing itself. Transparent, so it is a window and not a wall.
+    const glass = new THREE.Mesh(
+      new THREE.PlaneGeometry(8.2, 2.4),
+      new THREE.MeshBasicMaterial({
+        color: 0x1a2028, transparent: true, opacity: 0.16,
+        side: THREE.DoubleSide, depthWrite: false
+      })
+    );
+    glass.position.set(0, 1.95, canopyZ + 0.02);
+    bridgeGroup.add(glass);
 
-      // Main heavy console desk
-      const deskTop = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 1.2), this.durasteelMat);
-      deskTop.position.set(deskX, 0.85, deskZ);
-      const deskLegL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.85, 1.1), this.ironMat);
-      deskLegL.position.set(deskX - 0.75, 0.425, deskZ);
-      const deskLegR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.85, 1.1), this.ironMat);
-      deskLegR.position.set(deskX + 0.75, 0.425, deskZ);
-      bridgeGroup.add(deskTop, deskLegL, deskLegR);
-
-      // Mechanical terminal keyboard on desk surface
-      const keyboard = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.025, 0.32), this.keyboardMat);
-      keyboard.position.set(deskX, 0.905, deskZ + 0.22);
-      bridgeGroup.add(keyboard);
-
-      // Console superstructure chassis
-      const consoleChassis = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.48, 0.45), this.ironMat);
-      consoleChassis.position.set(deskX, 1.14, deskZ - 0.35);
-      consoleChassis.rotation.x = 0.3;
-
-      // Lower CRT screens: Telemetry (amber) and Reactor Core (amber/green)
-      const crtLowerA = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.38, 0.04), this.crtTelemetryMat);
-      crtLowerA.position.set(deskX - 0.34, 1.18, deskZ - 0.18);
-      crtLowerA.rotation.x = 0.3;
-
-      const crtLowerB = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.38, 0.04), this.crtReactorMat);
-      crtLowerB.position.set(deskX + 0.34, 1.18, deskZ - 0.18);
-      crtLowerB.rotation.x = 0.3;
-
-      // Upper Monitor Bridge & secondary CRTs (Radar & Analysis Spectrum)
-      const upperGantry = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.25), this.ironMat);
-      upperGantry.position.set(deskX, 1.58, deskZ - 0.42);
-
-      const crtUpperA = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.32, 0.04), this.crtRadarMat);
-      crtUpperA.position.set(deskX - 0.32, 1.62, deskZ - 0.32);
-      crtUpperA.rotation.x = -0.15;
-
-      const crtUpperB = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.32, 0.04), this.crtGreenMat);
-      crtUpperB.position.set(deskX + 0.32, 1.62, deskZ - 0.32);
-      crtUpperB.rotation.x = -0.15;
-
-      // Analog dial gauge mounted on console flank
-      const dialG = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.03, 16), side < 0 ? this.dialGaugePsiMat : this.dialGaugeBarMat);
-      dialG.rotation.x = Math.PI / 2;
-      dialG.position.set(deskX - side * 0.78, 1.25, deskZ - 0.2);
-
-      // Switchgear with toggle levers & safety guards
-      const switchPlate = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.03, 0.24), this.controlPanelMat);
-      switchPlate.position.set(deskX + side * 0.52, 0.91, deskZ + 0.22);
-
-      for (let l = -0.12; l <= 0.12; l += 0.08) {
-        const lever = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.12, 6), this.brassMat);
-        lever.position.set(deskX + side * 0.52 + l, 0.98, deskZ + 0.22);
-        lever.rotation.x = -0.25;
-        const knob = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), this.ironMat);
-        knob.position.set(deskX + side * 0.52 + l, 1.04, deskZ + 0.2);
-        bridgeGroup.add(lever, knob);
-      }
-
-      // Cable bundle loop from under desk to deck floor
-      const cable = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.025, 6, 16), this.ironMat);
-      cable.rotation.x = Math.PI / 2;
-      cable.position.set(deskX + side * 0.55, 0.91, deskZ - 0.05);
-
-      // Articulated tactical task lamp
-      const lampStem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.32, 6), this.brassMat);
-      lampStem.position.set(deskX - side * 0.65, 1.08, deskZ - 0.1);
-      lampStem.rotation.z = side * 0.25;
-      const lampCowl = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.1, 8), this.durasteelMat);
-      lampCowl.position.set(deskX - side * 0.6, 1.22, deskZ - 0.08);
-      lampCowl.rotation.z = side * -0.5;
-      const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), this.luminaireWarmMat);
-      lampBulb.position.set(deskX - side * 0.58, 1.18, deskZ - 0.06);
-
-      // Industrial pilot seat with heavy armrests & headrest
-      const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.45, 8), this.ironMat);
-      chairBase.position.set(deskX, 0.25, deskZ + 0.85);
-      const chairFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.05, 8), this.ironMat);
-      chairFoot.position.set(deskX, 0.025, deskZ + 0.85);
-      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.1, 0.58), this.fabricMat);
-      seat.position.set(deskX, 0.52, deskZ + 0.85);
-      const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.62, 0.1), this.fabricMat);
-      backrest.position.set(deskX, 0.84, deskZ + 1.12);
-      const headrest = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.22, 0.08), this.fabricMat);
-      headrest.position.set(deskX, 1.22, deskZ + 1.14);
-
-      for (let armSide of [-0.34, 0.34]) {
-        const armPost = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.25, 0.04), this.ironMat);
-        armPost.position.set(deskX + armSide, 0.65, deskZ + 0.85);
-        const armRest = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.35), this.durasteelMat);
-        armRest.position.set(deskX + armSide, 0.78, deskZ + 0.85);
-        bridgeGroup.add(armPost, armRest);
-      }
-
-      bridgeGroup.add(
-        consoleChassis, crtLowerA, crtLowerB,
-        upperGantry, crtUpperA, crtUpperB,
-        dialG, switchPlate, cable, lampStem, lampCowl, lampBulb,
-        chairBase, chairFoot, seat, backrest, headrest
-      );
-
-      // Tight desk collider shifted back to Z: [0.2, 1.4], leaving transverse corridor Z: [1.4, 2.6] completely clear
-      this.addCollider(deskX - 0.8, deskX + 0.8, 0.2, 1.4);
+    // --- Tactical console bank, along the port bulkhead ---
+    for (const [gz, side] of [[1.55, -1], [3.5, 1]]) {
+      const console_ = this.buildTacticalConsole(side);
+      console_.position.set(-4.85, 0, gz);
+      console_.rotation.y = Math.PI / 2;
+      bridgeGroup.add(console_);
+      this.addCollider(-5.6, -3.55, gz - 0.95, gz + 0.95);
     }
 
-    // 3D Holographic Directory & Club Notice Screen
-    // Positioned in front of camera's original bridge position [0, 1.55, 1.8] (world Z = 3.2)
+    // --- The club board: a plate thrown from an emitter in the deck ---
     const holoScreenGroup = new THREE.Group();
-    holoScreenGroup.position.set(0, 1.55, 1.2);
+    holoScreenGroup.position.set(CLUB_BOARD_POS[0], CLUB_BOARD_POS[1], CLUB_BOARD_POS[2]);
 
     const clubTex = createClubHoloTexture();
     this.clubHoloMat = new THREE.MeshBasicMaterial({
@@ -828,190 +730,286 @@ export class ShipInterior {
     });
 
     const screenGeom = new THREE.PlaneGeometry(1.8, 1.0125);
-
-    // Front plane facing camera at Z = 1.8 (normal facing -Z)
     const holoFront = new THREE.Mesh(screenGeom, this.clubHoloMat);
     holoFront.rotation.y = Math.PI;
     holoFront.position.set(0, 0, -0.005);
-
-    // Back plane facing forward (normal facing +Z)
     const holoBack = new THREE.Mesh(screenGeom, this.clubHoloMat);
     holoBack.position.set(0, 0, 0.005);
-
     holoScreenGroup.add(holoFront, holoBack);
     this.clubHoloGroup = holoScreenGroup;
 
-    // Floor emitter base
-    const emitterBase = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 0.04, 20), this.durasteelMat);
-    emitterBase.position.set(0, 0.02, 1.2);
-    const emitterLens = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.05, 20), this.brassMat);
-    emitterLens.position.set(0, 0.03, 1.2);
+    const emitterBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.3, 0.38, 0.04, 20), this.durasteelMat
+    );
+    emitterBase.position.set(CLUB_BOARD_POS[0], 0.02, CLUB_BOARD_POS[2]);
+    const emitterLens = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.22, 0.05, 20), this.brassMat
+    );
+    emitterLens.position.set(CLUB_BOARD_POS[0], 0.03, CLUB_BOARD_POS[2]);
     bridgeGroup.add(emitterBase, emitterLens);
 
-    // Vertical holographic projection beam
-    const beamGeom = new THREE.CylinderGeometry(0.9, 0.18, 1.5, 16, 1, true);
-    const beamMat = new THREE.MeshBasicMaterial({
-      color: 0xd99423,
-      transparent: true,
-      opacity: 0.07,
-      blending: THREE.AdditiveBlending,
-      side: THREE.FrontSide,
-      depthWrite: false
-    });
-    const beam = new THREE.Mesh(beamGeom, beamMat);
-    beam.position.set(0, 0.75, 1.2);
+    const beam = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.9, 0.18, 1.5, 16, 1, true),
+      new THREE.MeshBasicMaterial({
+        color: 0xd99423, transparent: true, opacity: 0.07,
+        blending: THREE.AdditiveBlending, side: THREE.FrontSide, depthWrite: false
+      })
+    );
+    beam.position.set(CLUB_BOARD_POS[0], 0.75, CLUB_BOARD_POS[2]);
     this.clubHoloBeam = beam;
-    bridgeGroup.add(beam);
+    bridgeGroup.add(beam, holoScreenGroup);
 
-    bridgeGroup.add(holoScreenGroup);
+    // Guide strips down the bridge aisle, picking up where the spine's stop.
+    for (const side of [-1, 1]) {
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 1.6), this.halogenMat);
+      strip.position.set(0.62 * side, 0.015, 1.5);
+      bridgeGroup.add(strip);
+    }
 
     this.group.add(bridgeGroup);
+    this.interactiveTerminals.push(
+      { id: 'bridge', name: ROOMS.bridge.name, pos: BRIDGE_STAND, route: '#/bridge' }
+    );
   }
 
+  /**
+   * One tactical console, built in its own frame: desk at the origin, operator
+   * standing at +Z, screens raked away from them. The bridge places two of
+   * them against the port bulkhead by rotating this whole thing, which is why
+   * not one coordinate in here knows where the room is.
+   */
+  buildTacticalConsole(side) {
+    const g = new THREE.Group();
+
+    const deskTop = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 1.2), this.durasteelMat);
+    deskTop.position.set(0, 0.85, 0);
+    const legL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.85, 1.1), this.ironMat);
+    legL.position.set(-0.75, 0.425, 0);
+    const legR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.85, 1.1), this.ironMat);
+    legR.position.set(0.75, 0.425, 0);
+    g.add(deskTop, legL, legR);
+
+    const keyboard = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.025, 0.32), this.keyboardMat);
+    keyboard.position.set(0, 0.905, 0.22);
+    g.add(keyboard);
+
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.48, 0.45), this.ironMat);
+    chassis.position.set(0, 1.14, -0.35);
+    chassis.rotation.x = 0.3;
+
+    const crtLowerA = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.38, 0.04), this.crtTelemetryMat);
+    crtLowerA.position.set(-0.34, 1.18, -0.18);
+    crtLowerA.rotation.x = 0.3;
+    const crtLowerB = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.38, 0.04), this.crtReactorMat);
+    crtLowerB.position.set(0.34, 1.18, -0.18);
+    crtLowerB.rotation.x = 0.3;
+
+    const gantry = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.25), this.ironMat);
+    gantry.position.set(0, 1.58, -0.42);
+    const crtUpperA = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.32, 0.04), this.crtRadarMat);
+    crtUpperA.position.set(-0.32, 1.62, -0.32);
+    crtUpperA.rotation.x = -0.15;
+    const crtUpperB = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.32, 0.04), this.crtGreenMat);
+    crtUpperB.position.set(0.32, 1.62, -0.32);
+    crtUpperB.rotation.x = -0.15;
+
+    const dialG = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.12, 0.12, 0.03, 16),
+      side < 0 ? this.dialGaugePsiMat : this.dialGaugeBarMat
+    );
+    dialG.rotation.x = Math.PI / 2;
+    dialG.position.set(-side * 0.78, 1.25, -0.2);
+
+    const switchPlate = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.03, 0.24), this.controlPanelMat);
+    switchPlate.position.set(side * 0.52, 0.91, 0.22);
+
+    for (let l = -0.12; l <= 0.12; l += 0.08) {
+      const lever = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.12, 6), this.brassMat);
+      lever.position.set(side * 0.52 + l, 0.98, 0.22);
+      lever.rotation.x = -0.25;
+      const knob = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), this.ironMat);
+      knob.position.set(side * 0.52 + l, 1.04, 0.2);
+      g.add(lever, knob);
+    }
+
+    const cable = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.025, 6, 16), this.ironMat);
+    cable.rotation.x = Math.PI / 2;
+    cable.position.set(side * 0.55, 0.91, -0.05);
+
+    const lampStem = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.32, 6), this.brassMat);
+    lampStem.position.set(-side * 0.65, 1.08, -0.1);
+    lampStem.rotation.z = side * 0.25;
+    const lampCowl = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.1, 8), this.durasteelMat);
+    lampCowl.position.set(-side * 0.6, 1.22, -0.08);
+    lampCowl.rotation.z = side * -0.5;
+    const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), this.luminaireWarmMat);
+    lampBulb.position.set(-side * 0.58, 1.18, -0.06);
+
+    // Industrial pilot seat, tucked so the console bank stays under two metres
+    // of deck: a berth-sized bridge does not get a metre of chair behind it.
+    const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.45, 8), this.ironMat);
+    chairBase.position.set(0, 0.25, 0.7);
+    const chairFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.3, 0.05, 8), this.ironMat);
+    chairFoot.position.set(0, 0.025, 0.7);
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.1, 0.5), this.fabricMat);
+    seat.position.set(0, 0.52, 0.7);
+    const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.56, 0.1), this.fabricMat);
+    backrest.position.set(0, 0.8, 0.9);
+    const headrest = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.2, 0.08), this.fabricMat);
+    headrest.position.set(0, 1.16, 0.91);
+    for (const armSide of [-0.32, 0.32]) {
+      const armPost = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.25, 0.04), this.ironMat);
+      armPost.position.set(armSide, 0.65, 0.7);
+      const armRest = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.32), this.durasteelMat);
+      armRest.position.set(armSide, 0.78, 0.7);
+      g.add(armPost, armRest);
+    }
+
+    g.add(
+      chassis, crtLowerA, crtLowerB, gantry, crtUpperA, crtUpperB,
+      dialG, switchPlate, cable, lampStem, lampCowl, lampBulb,
+      chairBase, chairFoot, seat, backrest, headrest
+    );
+    return g;
+  }
+
+  /* ====================================================================
+     THE FLIGHT PODS — the `cockpit` station, in the bridge
+     ==================================================================== */
+
   buildCockpitRoom() {
-    // Flight Helm facing forward
-    // Styled as dual pilot & navigator flight pods flanking a clear central aisle
     const cockpitGroup = new THREE.Group();
-    cockpitGroup.position.set(0, 0, 3.2);
+    cockpitGroup.name = 'flight-pods';
+    cockpitGroup.position.set(0, 0, 3.45);
 
-    for (let side of [-1, 1]) {
-      const podX = side * 1.25;
+    for (const side of [-1, 1]) {
+      const podX = side * 1.35;
 
-      // Heavy flight steering column
       const column = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.06, 0.78, 8), this.ironMat);
-      column.position.set(podX, 0.55, 0.2);
+      column.position.set(podX, 0.55, 0.1);
       column.rotation.x = -0.22;
 
-      // Ergonomic dual-handle yoke
       const yokeBar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.44, 8), this.ironMat);
       yokeBar.rotation.z = Math.PI / 2;
-      yokeBar.position.set(podX, 0.94, 0.28);
+      yokeBar.position.set(podX, 0.94, 0.18);
 
       const gripL = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.24, 8), this.durasteelMat);
-      gripL.position.set(podX - 0.22, 1.0, 0.28);
+      gripL.position.set(podX - 0.22, 1.0, 0.18);
       const gripR = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.24, 8), this.durasteelMat);
-      gripR.position.set(podX + 0.22, 1.0, 0.28);
+      gripR.position.set(podX + 0.22, 1.0, 0.18);
 
-      // Center hub cap with amber status indicator
       const hubCap = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.03, 12), this.brassMat);
       hubCap.rotation.x = Math.PI / 2;
-      hubCap.position.set(podX, 0.94, 0.3);
+      hubCap.position.set(podX, 0.94, 0.2);
       const hubLamp = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), this.amberLampMat);
-      hubLamp.position.set(podX, 0.94, 0.32);
+      hubLamp.position.set(podX, 0.94, 0.22);
 
       cockpitGroup.add(column, yokeBar, gripL, gripR, hubCap, hubLamp);
 
-      // Flight dash binnacle
       const podDash = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.58, 0.48), this.durasteelMat);
-      podDash.position.set(podX, 0.96, 0.65);
+      podDash.position.set(podX, 0.96, 0.45);
       podDash.rotation.x = -0.35;
 
-      // Primary flight CRT (Attitude/Vector & Radar)
-      const screenA = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.32, 0.04), side < 0 ? this.crtTelemetryMat : this.crtRadarMat);
-      screenA.position.set(podX - 0.2, 1.02, 0.52);
+      const screenA = new THREE.Mesh(
+        new THREE.BoxGeometry(0.42, 0.32, 0.04),
+        side < 0 ? this.crtTelemetryMat : this.crtRadarMat
+      );
+      screenA.position.set(podX - 0.2, 1.02, 0.32);
       screenA.rotation.x = -0.35;
 
-      const screenB = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.28, 0.04), side < 0 ? this.crtReactorMat : this.crtGreenMat);
-      screenB.position.set(podX + 0.22, 1.04, 0.53);
+      const screenB = new THREE.Mesh(
+        new THREE.BoxGeometry(0.38, 0.28, 0.04),
+        side < 0 ? this.crtReactorMat : this.crtGreenMat
+      );
+      screenB.position.set(podX + 0.22, 1.04, 0.33);
       screenB.rotation.x = -0.35;
 
-      // Micro dial gauges on dash
       const dashDial = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.02, 12), this.dialGaugePsiMat);
       dashDial.rotation.x = Math.PI / 2 - 0.35;
-      dashDial.position.set(podX + 0.25, 0.84, 0.58);
+      dashDial.position.set(podX + 0.25, 0.84, 0.38);
 
-      // Rudder pedals on deck
-      for (let pSide of [-0.15, 0.15]) {
+      for (const pSide of [-0.15, 0.15]) {
         const pedal = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.025, 0.16), this.ironMat);
-        pedal.position.set(podX + pSide, 0.06, 0.62);
+        pedal.position.set(podX + pSide, 0.06, 0.42);
         pedal.rotation.x = 0.45;
         cockpitGroup.add(pedal);
       }
 
       cockpitGroup.add(podDash, screenA, screenB, dashDial);
 
-      // Armored bucket pilot seat with five-point harness straps
       const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.45, 8), this.ironMat);
       chairBase.position.set(podX, 0.25, -0.35);
       const seat = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.09, 0.56), this.fabricMat);
       seat.position.set(podX, 0.52, -0.35);
       const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.58, 0.09), this.fabricMat);
       backrest.position.set(podX, 0.82, -0.6);
-
-      // Safety harness straps
-      for (let s of [-0.14, 0.14]) {
+      for (const s of [-0.14, 0.14]) {
         const strap = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.52, 0.015), this.durasteelMat);
         strap.position.set(podX + s, 0.82, -0.54);
         cockpitGroup.add(strap);
       }
-
       cockpitGroup.add(chairBase, seat, backrest);
 
-      // Colliders for pods shifted forward to Z: [2.6, 3.8], leaving transverse corridor Z: [1.4, 2.6] clear
-      this.addCollider(podX - 0.55, podX + 0.55, 2.6, 3.8);
+      // Pod footprint. The aisle between them is 1.5 m of clear deck, which is
+      // the same width as every doorway on the ship.
+      this.addCollider(podX - 0.6, podX + 0.6, 2.75, 4.30);
     }
 
-    // Center Throttle Quadrant & Avionics Pedestal (X = 0, Z = 0.3)
+    // Centre throttle quadrant and avionics pedestal, under the canopy.
     const centerPedestal = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.65, 0.72), this.ironMat);
-    centerPedestal.position.set(0, 0.45, 0.1);
+    centerPedestal.position.set(0, 0.45, 0.35);
     centerPedestal.rotation.x = -0.15;
 
-    // 4 Throttle levers with brass shafts and spherical knobs
     for (let t = -0.12; t <= 0.12; t += 0.08) {
       const tLever = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.14, 6), this.brassMat);
-      tLever.position.set(t, 0.82, 0.08);
+      tLever.position.set(t, 0.82, 0.33);
       tLever.rotation.x = -0.3;
       const tKnob = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 8), this.ironMat);
-      tKnob.position.set(t, 0.88, 0.06);
+      tKnob.position.set(t, 0.88, 0.31);
       cockpitGroup.add(tLever, tKnob);
     }
 
-    // Attitude sphere gimbal housing
     const attitudeSphere = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 16), this.brassMat);
-    attitudeSphere.position.set(0, 0.78, 0.32);
-
+    attitudeSphere.position.set(0, 0.78, 0.55);
     cockpitGroup.add(centerPedestal, attitudeSphere);
 
-    // Overhead avionics rack suspended above eye height (Y = 3.15)
-    const overheadConsole = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.26, 1.2), this.ironMat);
-    overheadConsole.position.set(0, 3.15, 0.2);
+    // Overhead avionics rack, hung under the bridge deckhead.
+    const overheadConsole = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.26, 1.1), this.ironMat);
+    overheadConsole.position.set(0, 2.95, 0.1);
     overheadConsole.rotation.x = -0.12;
-
-    const ohPanel = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.04, 0.95), this.controlPanelMat);
-    ohPanel.position.set(0, 3.01, 0.2);
+    const ohPanel = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.04, 0.9), this.controlPanelMat);
+    ohPanel.position.set(0, 2.81, 0.1);
     ohPanel.rotation.x = -0.12;
-
-    // Amber luminaire strip on cockpit overhead console
-    const ohLamp = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.02, 0.15), this.luminaireWarmMat);
-    ohLamp.position.set(0, 2.99, 0.2);
+    const ohLamp = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.02, 0.15), this.luminaireWarmMat);
+    ohLamp.position.set(0, 2.79, 0.1);
     ohLamp.rotation.x = -0.12;
-
     cockpitGroup.add(overheadConsole, ohPanel, ohLamp);
-    this.addCollider(-0.25, 0.25, 3.1, 3.6);
+
+    this.addCollider(-0.3, 0.3, 3.40, 4.20);
     this.group.add(cockpitGroup);
+    this.interactiveTerminals.push(
+      { id: 'cockpit', name: 'FLIGHT PODS', pos: [0, 1.45, 3.05], route: '#/settings' }
+    );
   }
 
-  buildStarmapRoom() {
-    // Star Map & Navigation Room at anchor [3.2, 1.8, 1.8]
-    const starmapGroup = new THREE.Group();
-    starmapGroup.position.set(3.2, 0, 1.8);
+  /* ====================================================================
+     THE STAR MAP — starboard side of the bridge
+     ==================================================================== */
 
-    // Chamfered octagonal tactical table pedestal
-    // The skirt was flared to 1.45, which put its lower edge inside the jamb of
-    // the hatch beside it — the table and the doorway were occupying the same
-    // corner of the compartment. Taken in to 1.10: still a 2.2 m chamfered
-    // octagonal tactical table, now one you can walk past.
+  buildStarmapRoom() {
+    const starmapGroup = new THREE.Group();
+    starmapGroup.name = 'star-map';
+    starmapGroup.position.set(3.5, 0, 2.1);
+
     const tableBase = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.10, 0.85, 8), this.durasteelMat);
     tableBase.position.set(0, 0.425, 0);
     tableBase.receiveShadow = true;
     starmapGroup.add(tableBase);
 
-    // Tabletop rim with beveled control surfaces
     const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(1.22, 1.22, 0.1, 8), this.ironMat);
     tableTop.position.set(0, 0.88, 0);
     starmapGroup.add(tableTop);
 
-    // Brass perimeter safety grab rail on stanchion posts
     const rail = new THREE.Mesh(new THREE.TorusGeometry(1.34, 0.035, 8, 32), this.brassMat);
     rail.rotation.x = Math.PI / 2;
     rail.position.set(0, 0.94, 0);
@@ -1022,8 +1020,10 @@ export class ShipInterior {
       post.position.set(Math.cos(angle) * 1.34, 0.8, Math.sin(angle) * 1.34);
       starmapGroup.add(post);
 
-      // Tactile pushbuttons and rotary dials on the table rim bevel
-      const button = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.03, 8), a % 2 === 0 ? this.amberLampMat : this.brassMat);
+      const button = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.025, 0.025, 0.03, 8),
+        a % 2 === 0 ? this.amberLampMat : this.brassMat
+      );
       button.position.set(Math.cos(angle + 0.2) * 1.12, 0.94, Math.sin(angle + 0.2) * 1.12);
       const dial = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.025, 12), this.ironMat);
       dial.position.set(Math.cos(angle - 0.2) * 1.12, 0.94, Math.sin(angle - 0.2) * 1.12);
@@ -1031,7 +1031,6 @@ export class ShipInterior {
     }
     starmapGroup.add(rail);
 
-    // Stepped concentric holographic emitter rings
     const emitterOuter = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.58, 0.04, 24), this.durasteelMat);
     emitterOuter.position.set(0, 0.94, 0);
     const emitterRing = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.07, 24), this.brassMat);
@@ -1040,7 +1039,6 @@ export class ShipInterior {
     emitterCore.position.set(0, 0.99, 0);
     starmapGroup.add(emitterOuter, emitterRing, emitterCore);
 
-    // Multi-tier planetary orrery projection
     const holoProjector = new THREE.Group();
     holoProjector.position.set(0, 1.35, 0);
 
@@ -1056,7 +1054,6 @@ export class ShipInterior {
     );
     holoProjector.add(sunCore);
 
-    // 4 Inclined orbital paths with celestial bodies
     const orbitConfigs = [
       { rad: 0.22, color: 0xcc8833, size: 0.026, inclX: 0.15, inclY: 0.1, speed: 0.5 },
       { rad: 0.36, color: 0xddaa55, size: 0.042, inclX: -0.22, inclY: 0.35, speed: 0.35, hasRings: true },
@@ -1078,7 +1075,6 @@ export class ShipInterior {
       );
       planetMesh.position.set(cfg.rad, 0, 0);
 
-      // Gas giant miniature ring disc
       if (cfg.hasRings) {
         const pRings = new THREE.Mesh(
           new THREE.RingGeometry(cfg.size * 1.4, cfg.size * 2.2, 16),
@@ -1093,19 +1089,14 @@ export class ShipInterior {
       this.animatedElements.push({ obj: orbitRing, speed: cfg.speed });
     });
 
-    // 3D Holographic Quest Display floating above table
     const qTex = createQuestHoloTexture(0, 20, '');
     this.starmapHoloMat = new THREE.MeshBasicMaterial({
-      map: qTex,
-      transparent: true,
-      opacity: 0.94,
-      side: THREE.DoubleSide
+      map: qTex, transparent: true, opacity: 0.94, side: THREE.DoubleSide
     });
     const holoPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.8), this.starmapHoloMat);
     holoPlane.position.set(0, 1.95, 0);
     this.animatedElements.push({ obj: holoPlane, speed: 0.05, isHover: true });
 
-    // Starmap holographic projection group (planetary orrery + quest display)
     const starmapHoloGroup = new THREE.Group();
     starmapHoloGroup.add(holoProjector);
     starmapHoloGroup.add(holoPlane);
@@ -1114,475 +1105,727 @@ export class ShipInterior {
     this.starmapHoloPlane = holoPlane;
     starmapGroup.add(starmapHoloGroup);
 
-    // Tight pedestal-only collider, leaving room walkable on all sides
-    this.addCollider(3.2 - 0.85, 3.2 + 0.85, 1.8 - 0.85, 1.8 + 0.85);
+    // Pedestal only: the rail is a handhold, so you walk right up to it.
+    this.addCollider(3.5 - 0.85, 3.5 + 0.85, 2.1 - 0.85, 2.1 + 0.85);
     this.group.add(starmapGroup);
+    this.interactiveTerminals.push(
+      { id: 'starmap', name: 'STAR MAP', pos: [1.9, 1.55, 1.6], route: '#/starmap' }
+    );
   }
 
-  buildQuartersRoom() {
-    // Crew Quarters at anchor [-3.8, 1.6, 2.2]
-    const quartersGroup = new THREE.Group();
-    quartersGroup.position.set(-3.8, 0, 2.2);
+  /* ====================================================================
+     THE BERTHS — two of them, port side
+     ==================================================================== */
 
-    // 1. Two-tier industrial bunk bed frame against port wall
-    const bunkFrame = new THREE.Group();
-    bunkFrame.position.set(-1.0, 0, 0.4);
+  /**
+   * A crew berth: bunks along the outer plating, a fold-down desk on the
+   * forward bulkhead, gear on hooks. Built twice. Berth A carries the
+   * `#/quarters` route; berth B carries nothing at all and is a real room
+   * anyway — a ship with one bunk room and four crew would be lying.
+   */
+  buildBerth(roomId, { locker, designator }) {
+    const room = ROOMS[roomId];
+    const g = new THREE.Group();
+    g.name = `berth-${roomId}`;
 
-    for (let cx of [-0.6, 0.6]) {
-      for (let cz of [-0.9, 0.9]) {
-        const post = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.6, 0.08), this.durasteelMat);
-        post.position.set(cx, 1.3, cz);
-        bunkFrame.add(post);
+    // Which way the desk faces: berth A's forward bulkhead is its +Z face.
+    const bunkZ = room.minZ + 0.85;
+    const deskZ = room.maxZ - 0.45;
+
+    // --- Two-tier bunk frame, long axis along the beam, against the plating ---
+    const bunk = new THREE.Group();
+    bunk.position.set(-4.65, 0, bunkZ);
+    bunk.rotation.y = Math.PI / 2;
+
+    for (const cx of [-0.58, 0.58]) {
+      for (const cz of [-0.78, 0.78]) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.3, 0.08), this.durasteelMat);
+        post.position.set(cx, 1.15, cz);
+        bunk.add(post);
       }
     }
-
-    // Access ladder rungs
-    for (let y = 0.4; y <= 2.2; y += 0.35) {
+    for (let y = 0.4; y <= 2.0; y += 0.35) {
       const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.45, 6), this.ironMat);
       rung.rotation.z = Math.PI / 2;
-      rung.position.set(0.6, y, 0);
-      bunkFrame.add(rung);
+      rung.position.set(0.58, y, 0);
+      bunk.add(rung);
     }
 
-    // Lower bunk mattress, blanket & pillow
-    const mattressLower = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.15, 1.7), this.fabricMat);
+    const mattressLower = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.15, 1.5), this.fabricMat);
     mattressLower.position.set(0, 0.45, 0);
-    const blanketLower = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.08, 1.2), this.durasteelMat);
-    blanketLower.position.set(0, 0.52, -0.2);
-    const pillowLower = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 0.35), this.fabricMat);
-    pillowLower.position.set(0, 0.55, 0.65);
-    bunkFrame.add(mattressLower, blanketLower, pillowLower);
+    const blanketLower = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 1.05), this.durasteelMat);
+    blanketLower.position.set(0, 0.52, -0.18);
+    const pillowLower = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.1, 0.32), this.fabricMat);
+    pillowLower.position.set(0, 0.55, 0.56);
+    bunk.add(mattressLower, blanketLower, pillowLower);
 
-    // Upper bunk mattress, blanket, pillow & safety rail
-    const mattressUpper = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.15, 1.7), this.fabricMat);
-    mattressUpper.position.set(0, 1.65, 0);
-    const blanketUpper = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.08, 1.2), this.durasteelMat);
-    blanketUpper.position.set(0, 1.72, -0.2);
-    const pillowUpper = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.1, 0.35), this.fabricMat);
-    pillowUpper.position.set(0, 1.75, 0.65);
-    const safetyRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 1.2), this.durasteelMat);
-    safetyRail.position.set(0.56, 1.82, -0.2);
-    bunkFrame.add(mattressUpper, blanketUpper, pillowUpper, safetyRail);
+    const mattressUpper = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.15, 1.5), this.fabricMat);
+    mattressUpper.position.set(0, 1.5, 0);
+    const blanketUpper = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 1.05), this.durasteelMat);
+    blanketUpper.position.set(0, 1.57, -0.18);
+    const pillowUpper = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.1, 0.32), this.fabricMat);
+    pillowUpper.position.set(0, 1.6, 0.56);
+    const safetyRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.22, 1.05), this.durasteelMat);
+    safetyRail.position.set(0.54, 1.67, -0.18);
+    bunk.add(mattressUpper, blanketUpper, pillowUpper, safetyRail);
 
-    // Personal bunk cubbies with datapad
-    const cubbyLower = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.25, 0.15), this.durasteelMat);
-    cubbyLower.position.set(-0.4, 0.72, 0.82);
+    const cubby = new THREE.Mesh(new THREE.BoxGeometry(0.33, 0.25, 0.14), this.durasteelMat);
+    cubby.position.set(-0.38, 0.72, 0.7);
     const datapad = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.02, 0.12), this.ironMat);
-    datapad.position.set(-0.4, 0.62, 0.82);
-    bunkFrame.add(cubbyLower, datapad);
+    datapad.position.set(-0.38, 0.62, 0.7);
+    bunk.add(cubby, datapad);
 
-    // Under-bunk storage: Two stenciled metal footlockers resting cleanly on deck (Y = 0.16)
-    const lockerA = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 0.6), this.footlockerOrtegaMat);
-    lockerA.position.set(0, 0.16, -0.45);
-    const lockerB = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 0.6), this.footlockerCadetMat);
-    lockerB.position.set(0, 0.16, 0.45);
-    bunkFrame.add(lockerA, lockerB);
+    const lockerMat = locker === 'ortega' ? this.footlockerOrtegaMat : this.footlockerCadetMat;
+    const lockerA = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.32, 0.55), lockerMat);
+    lockerA.position.set(0, 0.16, -0.4);
+    const lockerB = new THREE.Mesh(
+      new THREE.BoxGeometry(0.9, 0.32, 0.55),
+      locker === 'ortega' ? this.footlockerCadetMat : this.footlockerOrtegaMat
+    );
+    lockerB.position.set(0, 0.16, 0.4);
+    bunk.add(lockerA, lockerB);
 
-    quartersGroup.add(bunkFrame);
-    // Bunks tight against port outer wall
-    this.addCollider(-5.4, -4.2, 1.7, 3.5);
+    g.add(bunk);
+    this.addCollider(-5.58, -3.72, bunkZ - 0.72, bunkZ + 0.8);
 
-    // 2. Fold-down Work Desk against bulkhead wall at X = 0.6 (world X = -3.2), Z = -0.8
-    const deskShelf = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.06, 0.65), this.durasteelMat);
-    deskShelf.position.set(0.6, 0.9, -0.8);
-
-    for (let sx of [0.28, 0.92]) {
-      const strut = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.45), this.ironMat);
-      strut.position.set(sx, 0.65, -0.8);
-      quartersGroup.add(strut);
+    // --- Fold-down work desk on the bulkhead the room shares forward ---
+    const deskX = -2.2;
+    const deskShelf = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.06, 0.6), this.durasteelMat);
+    deskShelf.position.set(deskX, 0.9, deskZ);
+    g.add(deskShelf);
+    for (const sx of [-0.32, 0.32]) {
+      const strut = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.42), this.ironMat);
+      strut.position.set(deskX + sx, 0.65, deskZ);
+      g.add(strut);
     }
 
-    // Mini CRT crew log terminal on desk
-    const miniCrt = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.3, 0.28), this.crtAmberMat);
-    miniCrt.position.set(0.52, 1.08, -0.82);
+    const miniCrt = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.3, 0.26), this.crtAmberMat);
+    miniCrt.position.set(deskX - 0.1, 1.08, deskZ + 0.1);
 
-    // Realistic articulated anglepoise desk lamp: weighted base + dual hinged arms + conical shade
     const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.025, 12), this.ironMat);
-    lampBase.position.set(0.88, 0.945, -0.65);
-
+    lampBase.position.set(deskX + 0.3, 0.945, deskZ + 0.04);
     const lowerArm = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.26, 6), this.brassMat);
-    lowerArm.position.set(0.88, 1.08, -0.65);
+    lowerArm.position.set(deskX + 0.3, 1.08, deskZ + 0.04);
     lowerArm.rotation.z = -0.28;
-
     const upperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.24, 6), this.brassMat);
-    upperArm.position.set(0.82, 1.25, -0.65);
+    upperArm.position.set(deskX + 0.24, 1.25, deskZ + 0.04);
     upperArm.rotation.z = 0.52;
-
     const lampHead = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.14, 8), this.durasteelMat);
-    lampHead.position.set(0.72, 1.32, -0.65);
+    lampHead.position.set(deskX + 0.14, 1.32, deskZ + 0.04);
     lampHead.rotation.z = Math.PI * 0.85;
-
     const lampBulb = new THREE.Mesh(new THREE.SphereGeometry(0.034, 8, 8), this.luminaireWarmMat);
-    lampBulb.position.set(0.68, 1.25, -0.65);
+    lampBulb.position.set(deskX + 0.1, 1.25, deskZ + 0.04);
 
-    // Stool at desk
-    const stoolSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.06, 12), this.durasteelMat);
-    stoolSeat.position.set(0.6, 0.52, -0.32);
+    const stoolSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.06, 12), this.durasteelMat);
+    stoolSeat.position.set(deskX, 0.52, deskZ - 0.5);
     const stoolLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.5, 8), this.ironMat);
-    stoolLeg.position.set(0.6, 0.25, -0.32);
-    const stoolFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.26, 0.04, 8), this.ironMat);
-    stoolFoot.position.set(0.6, 0.02, -0.32);
+    stoolLeg.position.set(deskX, 0.25, deskZ - 0.5);
+    const stoolFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.23, 0.04, 8), this.ironMat);
+    stoolFoot.position.set(deskX, 0.02, deskZ - 0.5);
 
-    // 3. Wall Utility Hooks with hanging expedition gear
+    g.add(miniCrt, lampBase, lowerArm, upperArm, lampHead, lampBulb,
+      stoolSeat, stoolLeg, stoolFoot);
+    this.addCollider(-2.85, -1.55, deskZ - 0.75, room.maxZ - 0.11);
+
+    // --- Gear on hooks, on the plating, above head height ---
+    const hookZ = (room.minZ + room.maxZ) / 2 + 0.6;
     const hookRail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.08, 0.9), this.ironMat);
-    hookRail.position.set(-0.25, 1.65, -0.85);
-    quartersGroup.add(hookRail);
-
-    for (let hz of [-1.15, -0.85, -0.55]) {
+    hookRail.position.set(-5.5, 1.65, hookZ);
+    g.add(hookRail);
+    const gear = [
+      new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.22), this.fabricMat),
+      new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.44, 0.2), this.durasteelMat),
+      new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.3, 8), this.brassMat)
+    ];
+    gear.forEach((m, i) => {
       const hook = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.008, 6, 8, Math.PI), this.brassMat);
       hook.rotation.y = Math.PI / 2;
-      hook.position.set(-0.22, 1.63, hz);
-      quartersGroup.add(hook);
+      hook.position.set(-5.47, 1.63, hookZ - 0.3 + i * 0.3);
+      m.position.set(-5.44, 1.36, hookZ - 0.3 + i * 0.3);
+      g.add(hook, m);
+    });
+
+    // The berth's own designator, stencilled beside its doorway.
+    const tag = placard(designator, { w: 0.5, h: 0.16 });
+    tag.position.set(-1.3, 2.05, (room.minZ + room.maxZ) / 2 + 1.05);
+    tag.rotation.y = -Math.PI / 2;
+    g.add(tag);
+
+    this.group.add(g);
+    if (room.route) {
+      this.interactiveTerminals.push(
+        { id: roomId, name: room.name, pos: [-3.2, 1.55, -1.2], route: room.route }
+      );
     }
-
-    // Hanging canvas duffel / gear pack on hook 1
-    const pack = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.42, 0.24), this.fabricMat);
-    pack.position.set(-0.22, 1.35, -1.15);
-    // Hanging survival jacket on hook 2
-    const jacket = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.48, 0.22), this.durasteelMat);
-    jacket.position.set(-0.22, 1.32, -0.85);
-    // Hanging oxygen canister / rebreather on hook 3
-    const canister = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.32, 8), this.brassMat);
-    canister.position.set(-0.22, 1.4, -0.55);
-
-    quartersGroup.add(
-      deskShelf, miniCrt, lampBase, lowerArm, upperArm, lampHead, lampBulb,
-      stoolSeat, stoolLeg, stoolFoot, pack, jacket, canister
-    );
-
-    // Desk and stool collider against wall
-    this.addCollider(-3.6, -2.8, 1.0, 1.8);
-
-    this.group.add(quartersGroup);
   }
 
+  /* ====================================================================
+     STORAGE — starboard, forward
+     ==================================================================== */
+
   buildCargoRoom() {
-    // Cargo Hold at anchor [4.2, 1.6, -2.2]
     const cargoGroup = new THREE.Group();
-    cargoGroup.position.set(4.2, 0, -2.2);
+    cargoGroup.name = 'storage';
 
-    // 1. Overhead Gantry Crane with I-beam flange and motorized hoist
-    const craneBeamWeb = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.45, 6.8), this.hazardMat);
-    craneBeamWeb.position.set(0, 3.75, 0);
-    const craneTopFlange = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.08, 6.8), this.hazardMat);
-    craneTopFlange.position.set(0, 3.98, 0);
-    const craneBottomFlange = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.08, 6.8), this.hazardMat);
-    craneBottomFlange.position.set(0, 3.52, 0);
-    cargoGroup.add(craneBeamWeb, craneTopFlange, craneBottomFlange);
+    // --- Overhead gantry, run across the beam over the container stack ---
+    const beamZ = -2.35;
+    const craneWeb = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.45, 0.12), this.hazardMat);
+    craneWeb.position.set(2.8, 2.40, beamZ);
+    const craneTop = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.08, 0.48), this.hazardMat);
+    craneTop.position.set(2.8, 2.63, beamZ);
+    const craneBottom = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.08, 0.48), this.hazardMat);
+    craneBottom.position.set(2.8, 2.17, beamZ);
+    cargoGroup.add(craneWeb, craneTop, craneBottom);
 
-    // Hoist trolley carriage riding bottom flange
-    const trolley = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.28, 0.78), this.ironMat);
-    trolley.position.set(0, 3.36, -0.4);
-
-    // Trolley flanged wheels
-    for (let wx of [-0.28, 0.28]) {
-      for (let wz of [-0.25, 0.25]) {
+    const trolley = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.26, 0.6), this.ironMat);
+    trolley.position.set(3.3, 2.03, beamZ);
+    for (const wx of [-0.24, 0.24]) {
+      for (const wz of [-0.2, 0.2]) {
         const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.05, 12), this.durasteelMat);
         wheel.rotation.z = Math.PI / 2;
-        wheel.position.set(wx, 3.52, -0.4 + wz);
+        wheel.position.set(3.3 + wx, 2.15, beamZ + wz);
         cargoGroup.add(wheel);
       }
     }
-
-    // Steel wire rope cable & forged lifting hook with safety latch
-    const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 1.1, 6), this.ironMat);
-    cable.position.set(0, 2.7, -0.4);
-    const counterweight = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 10), this.ironMat);
-    counterweight.position.set(0, 2.15, -0.4);
-    const hook = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.035, 6, 14, Math.PI * 1.5), this.brassMat);
-    hook.position.set(0, 2.02, -0.4);
+    const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.42, 6), this.ironMat);
+    cable.position.set(3.3, 1.75, beamZ);
+    const counterweight = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 10), this.ironMat);
+    counterweight.position.set(3.3, 1.56, beamZ);
+    const hook = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.032, 6, 14, Math.PI * 1.5), this.brassMat);
+    hook.position.set(3.3, 1.45, beamZ);
     cargoGroup.add(trolley, cable, counterweight, hook);
 
-    // 2. Multi-tier Heavy Cantilever Storage Racks against starboard outer wall
-    const rackGroup = new THREE.Group();
-    rackGroup.position.set(1.8, 0, 0);
-
-    for (let rx of [-0.6, 0.6]) {
-      for (let rz of [-1.5, 0, 1.5]) {
-        const upright = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3.4, 0.1), this.hazardMat);
-        upright.position.set(rx, 1.7, rz);
-        rackGroup.add(upright);
+    // --- Cantilever storage rack against the starboard plating ---
+    const rackX = 4.95;
+    for (const rx of [-0.55, 0.55]) {
+      for (const rz of [-1.05, 0, 1.05]) {
+        const upright = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.4, 0.1), this.hazardMat);
+        upright.position.set(rackX + rx, 1.2, -1.0 + rz);
+        cargoGroup.add(upright);
       }
     }
+    for (let tier = 0; tier < 2; tier++) {
+      const sy = 0.45 + tier * 0.9;
+      const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 2.3), this.ironMat);
+      shelf.position.set(rackX, sy, -1.0);
+      cargoGroup.add(shelf);
 
-    for (let tier = 0; tier < 3; tier++) {
-      const sy = 0.5 + tier * 1.0;
-      const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 3.2), this.ironMat);
-      shelf.position.set(0, sy, 0);
-      rackGroup.add(shelf);
-
-      // Sealed cylindrical chemical drums resting cleanly ON shelf surface (sy + 0.04 + 0.38)
-      for (let dz of [-1.0, -0.38, 0.38, 1.0]) {
+      for (const dz of [-1.9, -1.25, -0.6, -0.05]) {
         const drumY = sy + 0.04 + 0.38;
-        const drumX = dz < 0 ? -0.26 : 0.26;
+        const drumX = rackX + (dz < -1.0 ? -0.25 : 0.25);
         const drum = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.24, 0.24, 0.76, 16),
+          new THREE.CylinderGeometry(0.23, 0.23, 0.74, 16),
           tier % 2 === 0 ? this.durasteelMat : this.brassMat
         );
         drum.position.set(drumX, drumY, dz);
-
-        // Chime reinforcement rings on drum top and bottom
-        const topChime = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.015, 6, 16), this.ironMat);
+        const topChime = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.015, 6, 16), this.ironMat);
         topChime.rotation.x = Math.PI / 2;
-        topChime.position.set(drumX, drumY + 0.37, dz);
-        const bungCap = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.02, 8), this.brassMat);
-        bungCap.position.set(drumX + 0.12, drumY + 0.39, dz + 0.05);
-
-        rackGroup.add(drum, topChime, bungCap);
+        topChime.position.set(drumX, drumY + 0.36, dz);
+        const bung = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.02, 8), this.brassMat);
+        bung.position.set(drumX + 0.1, drumY + 0.38, dz + 0.05);
+        cargoGroup.add(drum, topChime, bung);
       }
     }
-    cargoGroup.add(rackGroup);
-    // Storage racks against starboard outer wall
-    this.addCollider(5.3, 6.7, -3.8, -0.6);
+    this.addCollider(4.3, 5.6, -2.3, 0.3);
 
-    // 3. Stenciled Shipping Freight Containers
-    // Container A (Primary unit with Guild stencil)
-    const containerA = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.6), this.containerMat);
-    containerA.position.set(-1.4, 0.6, 1.2);
-
-    // Container B (Hazard striped freight unit)
-    // Stacked outboard of the hatch line. At x = -1.4 this stack stood square
-    // in the doorway between the hold and the compartment aft of it — and the
-    // hold has doorways at both ends, so there was no clearance to be had by
-    // sliding it along; it had to come off that line entirely.
-    const containerB = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.6), this.hazardMat);
-    containerB.position.set(-2.4, 0.6, -1.0);
-
-    // Top stacked smaller container unit C resting on container B
-    const containerC = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 1.2), this.durasteelMat);
-    containerC.position.set(-2.4, 1.6, -1.0);
-
-    // Twist-lock corner castings on container A
-    for (let cx of [-0.68, 0.68]) {
-      for (let cz of [-0.78, 0.78]) {
-        for (let cy of [0.05, 1.15]) {
-          const cornerCast = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.09), this.ironMat);
-          cornerCast.position.set(-1.4 + cx, cy, 1.2 + cz);
-          cargoGroup.add(cornerCast);
+    // --- Stencilled freight, stacked against the aft bulkhead ---
+    const containerA = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.4), this.containerMat);
+    containerA.position.set(3.3, 0.6, -2.05);
+    const containerB = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), this.hazardMat);
+    containerB.position.set(1.9, 0.6, -2.05);
+    const containerC = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.55, 1.0), this.durasteelMat);
+    containerC.position.set(1.9, 1.475, -2.05);
+    for (const cx of [-0.68, 0.68]) {
+      for (const cz of [-0.68, 0.68]) {
+        for (const cy of [0.05, 1.15]) {
+          const cast = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.09), this.ironMat);
+          cast.position.set(3.3 + cx, cy, -2.05 + cz);
+          cargoGroup.add(cast);
         }
       }
     }
-
     cargoGroup.add(containerA, containerB, containerC);
-    // Crates collider leaving walkways clear
-    this.addCollider(2.1, 3.5, -1.8, -0.2);
+    this.addCollider(1.25, 4.05, -2.85, -1.3);
 
-    // 4. 3D Cargo Manifest Terminal on container A facing room center (X: -1.4, Z: 0.39)
+    // --- Cargo manifest terminal, on the face of container A ---
     const mTex = createCargoManifestTexture(0, 8, '');
     this.cargoScreenMat = new THREE.MeshBasicMaterial({
-      map: mTex,
-      polygonOffset: true,
-      polygonOffsetFactor: -1,
-      polygonOffsetUnits: -1
+      map: mTex, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1
     });
-    const manifestScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.55), this.cargoScreenMat);
-    manifestScreen.position.set(-1.4, 1.15, 0.37);
-    manifestScreen.rotation.y = Math.PI;
-
-    // Terminal bezel frame
-    const manifestFrame = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.63, 0.03), this.ironMat);
-    manifestFrame.position.set(-1.4, 1.15, 0.395);
+    const manifestScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.5), this.cargoScreenMat);
+    manifestScreen.position.set(3.3, 1.02, -1.32);
+    const manifestFrame = new THREE.Mesh(new THREE.BoxGeometry(1.08, 0.58, 0.03), this.ironMat);
+    manifestFrame.position.set(3.3, 1.02, -1.345);
     cargoGroup.add(manifestScreen, manifestFrame);
 
+    const tag = placard('STORAGE', { w: 0.56, h: 0.16 });
+    tag.position.set(1.3, 2.05, -0.25);
+    tag.rotation.y = Math.PI / 2;
+    cargoGroup.add(tag);
+
     this.group.add(cargoGroup);
+    this.interactiveTerminals.push(
+      { id: 'cargo', name: ROOMS.cargo.name, pos: [3.3, 1.55, -1.0], route: '#/inventory' }
+    );
   }
 
-  buildCommsRoom() {
-    // Comms Array at anchor [-2.8, 1.8, -2.0]
-    const commsGroup = new THREE.Group();
-    commsGroup.position.set(-2.8, 0, -2.0);
+  /* ====================================================================
+     THE STAIRWELL VESTIBULE — a door that never opens
+     ==================================================================== */
 
-    // 1. Floor-to-ceiling 19-inch Equipment Rack with authentic modular faceplates
-    const rackFrame = new THREE.Mesh(new THREE.BoxGeometry(2.6, 3.4, 0.75), this.ironMat);
-    rackFrame.position.set(0, 1.7, -1.2);
+  /**
+   * THE SHIP IS LARGER THAN WHAT IS BUILT.
+   *
+   * A sealed door with a deck designator on it does more for the size of a
+   * vessel than another room would: the player learns there is a deck below
+   * without anybody having to build one. It has no interaction — walking up
+   * to it states what it is and nothing more, because there is no key, there
+   * was never going to be a key, and a prompt offering `[E]` would be the
+   * interface promising something it cannot do.
+   */
+  buildStairwellRoom() {
+    const g = new THREE.Group();
+    g.name = 'stairwell';
+    const room = ROOMS.stairwell;
+    const midZ = (room.minZ + room.maxZ) / 2;
+
+    // --- The sealed lower-deck door, in the starboard plating ---
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.32, 2.5, 2.1), this.hazardMat);
+    frame.position.set(5.36, 1.25, midZ);
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.0, 1.5), this.blastDoorMat);
+    slab.position.set(5.2, 1.1, midZ);
+    g.add(frame, slab);
+
+    const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.042, 8, 20), this.ironMat);
+    wheel.rotation.y = Math.PI / 2;
+    wheel.position.set(5.06, 1.15, midZ);
+    for (let s = 0; s < 4; s++) {
+      const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.66, 6), this.ironMat);
+      spoke.rotation.z = Math.PI / 2;
+      spoke.rotation.x = s * (Math.PI / 4);
+      spoke.position.set(5.06, 1.15, midZ);
+      g.add(spoke);
+    }
+    const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.08, 12), this.brassMat);
+    pin.rotation.z = Math.PI / 2;
+    pin.position.set(5.02, 1.15, midZ);
+    g.add(wheel, pin);
+
+    // Sealed indicator. A red lamp is a state, not decoration.
+    const indicator = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.34), this.redLampMat);
+    indicator.position.set(5.04, 2.16, midZ);
+    const indHousing = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.44), this.ironMat);
+    indHousing.position.set(5.09, 2.16, midZ);
+    g.add(indicator, indHousing);
+
+    const deckTag = placard('DECK 02', { w: 0.6, h: 0.18 });
+    deckTag.position.set(5.03, 1.78, midZ);
+    deckTag.rotation.y = -Math.PI / 2;
+    g.add(deckTag);
+    const sealTag = placard('SEALED', { w: 0.44, h: 0.15 });
+    sealTag.position.set(5.03, 0.55, midZ);
+    sealTag.rotation.y = -Math.PI / 2;
+    g.add(sealTag);
+
+    // Welded straps across the jamb: this was shut and then made sure of.
+    for (const dz of [-0.55, 0.55]) {
+      const strap = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.14, 0.9), this.ironMat);
+      strap.position.set(5.06, 1.9, midZ + dz);
+      strap.rotation.x = 0.35;
+      g.add(strap);
+    }
+    this.addCollider(4.95, 5.6, midZ - 1.15, midZ + 1.15);
+
+    // --- What else is in a vestibule: a stowed ladder and a bottle rack ---
+    const ladderRails = new THREE.Group();
+    for (const dz of [-0.16, 0.16]) {
+      const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.0, 8), this.durasteelMat);
+      rail.position.set(1.42, 1.15, midZ + 1.0 + dz);
+      ladderRails.add(rail);
+    }
+    for (let y = 0.35; y <= 2.0; y += 0.3) {
+      const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.32, 6), this.ironMat);
+      rung.rotation.x = Math.PI / 2;
+      rung.position.set(1.42, y, midZ + 1.0);
+      ladderRails.add(rung);
+    }
+    g.add(ladderRails);
+    this.addCollider(1.26, 1.62, midZ + 0.74, midZ + 1.26);
+
+    const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.62, 12), this.hazardMat);
+    bottle.position.set(1.5, 0.75, midZ - 0.95);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.12, 8), this.brassMat);
+    neck.position.set(1.5, 1.12, midZ - 0.95);
+    const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.26), this.ironMat);
+    bracket.position.set(1.34, 0.85, midZ - 0.95);
+    g.add(bottle, neck, bracket);
+    this.addCollider(1.26, 1.66, midZ - 1.2, midZ - 0.7);
+
+    // A deck drain, because a vestibule at the foot of a stair collects water.
+    const drain = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.02, 12), this.ironMat);
+    drain.position.set(3.3, 0.012, midZ - 0.5);
+    g.add(drain);
+
+    this.group.add(g);
+  }
+
+  /* ====================================================================
+     COMMS — port, aft
+     ==================================================================== */
+
+  buildCommsRoom() {
+    const commsGroup = new THREE.Group();
+    commsGroup.name = 'comms';
+    const room = ROOMS.comms;
+
+    // --- 19-inch equipment rack, floor to deckhead against the aft bulkhead ---
+    const rackZ = room.minZ + 0.5;
+    const rackFrame = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.4, 0.7), this.ironMat);
+    rackFrame.position.set(-3.4, 1.2, rackZ);
     commsGroup.add(rackFrame);
 
-    // Modular 4U rack panels on rack face
     for (let u = 0; u < 3; u++) {
-      const uPanel = new THREE.Mesh(new THREE.PlaneGeometry(2.48, 0.78), this.rackPanelMat);
-      uPanel.position.set(0, 0.85 + u * 0.84, -0.815);
+      const uPanel = new THREE.Mesh(new THREE.PlaneGeometry(2.48, 0.64), this.rackPanelMat);
+      uPanel.position.set(-3.4, 0.55 + u * 0.7, rackZ + 0.355);
       commsGroup.add(uPanel);
     }
 
-    // 2. Monitoring & Spectrum Consoles
-    // Green Oscilloscope CRT
-    const osc = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.65, 0.05), this.crtGreenMat);
-    osc.position.set(-0.6, 1.85, -0.8);
+    const osc = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.05), this.crtGreenMat);
+    osc.position.set(-4.1, 1.85, rackZ + 0.38);
     commsGroup.add(osc);
 
-    // 3D Live Standings Screen on main console
     const sTex = createCommsStandingsTexture([], '');
     this.commsScreenMat = new THREE.MeshBasicMaterial({ map: sTex });
-    const standingsScreen = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.65, 0.05), this.commsScreenMat);
-    standingsScreen.position.set(0.6, 1.85, -0.8);
+    const standingsScreen = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.05), this.commsScreenMat);
+    standingsScreen.position.set(-2.7, 1.85, rackZ + 0.38);
     commsGroup.add(standingsScreen);
 
-    // 3. Glowing Vacuum Tube Gallery with protective wire cage
-    const tubeShelf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.06, 0.28), this.durasteelMat);
-    tubeShelf.position.set(0, 2.45, -0.75);
+    // --- Vacuum tube gallery in its wire cage, over the rack ---
+    const tubeShelf = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.06, 0.26), this.durasteelMat);
+    tubeShelf.position.set(-3.4, 2.28, rackZ + 0.4);
     commsGroup.add(tubeShelf);
-
     for (let tx = -0.7; tx <= 0.7; tx += 0.28) {
-      // Glass vacuum tube with internal filament
-      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.24, 12), this.vacuumTubeMat);
-      tube.position.set(tx, 2.6, -0.75);
-      const tubeBasePin = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.03, 8), this.brassMat);
-      tubeBasePin.position.set(tx, 2.47, -0.75);
-      commsGroup.add(tube, tubeBasePin);
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.2, 12), this.vacuumTubeMat);
+      tube.position.set(-3.4 + tx, 2.41, rackZ + 0.4);
+      const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.038, 0.03, 8), this.brassMat);
+      pin.position.set(-3.4 + tx, 2.3, rackZ + 0.4);
+      commsGroup.add(tube, pin);
     }
-
-    // Protective wire cage enclosing tubes
-    const cageRoof = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.02, 0.26), this.ironMat);
-    cageRoof.position.set(0, 2.76, -0.75);
+    const cageRoof = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.02, 0.24), this.ironMat);
+    cageRoof.position.set(-3.4, 2.53, rackZ + 0.4);
     commsGroup.add(cageRoof);
+    this.addCollider(-4.8, -2.0, room.minZ + 0.11, rackZ + 0.45);
 
-    // 4. Operator Desk with mechanical keyboard and analog patch bay
-    const desk = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.1, 0.85), this.durasteelMat);
-    desk.position.set(0, 0.85, -0.48);
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.05, 0.5), this.controlPanelMat);
-    panel.position.set(0, 0.92, -0.5);
-
-    // Mechanical keyboard on operator desk
-    const commsKeyboard = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.025, 0.28), this.keyboardMat);
-    commsKeyboard.position.set(-0.55, 0.92, -0.26);
-
+    // --- Operator desk along the port plating ---
+    const deskZ = -6.2;
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.1, 1.6), this.durasteelMat);
+    desk.position.set(-5.15, 0.85, deskZ);
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 1.3), this.controlPanelMat);
+    panel.position.set(-5.2, 0.92, deskZ);
+    const commsKeyboard = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.025, 0.62), this.keyboardMat);
+    commsKeyboard.position.set(-4.9, 0.92, deskZ - 0.2);
     commsGroup.add(desk, panel, commsKeyboard);
 
-    // Looping 3D patch cables connecting between patch bay jacks
-    const cordOffsets = [
-      { x1: -0.45, y1: 1.22, x2: -0.15, y2: 1.12, r: 0.18 },
-      { x1: -0.15, y1: 1.34, x2: 0.22, y2: 1.25, r: 0.22 },
-      { x1: 0.25, y1: 1.18, x2: 0.55, y2: 1.35, r: 0.19 }
-    ];
-
-    for (const cord of cordOffsets) {
-      const midX = (cord.x1 + cord.x2) / 2;
-      const midY = Math.min(cord.y1, cord.y2) - 0.08;
+    for (const cord of [
+      { y1: 1.22, y2: 1.12, z: -6.7, r: 0.17 },
+      { y1: 1.34, y2: 1.25, z: -6.3, r: 0.2 },
+      { y1: 1.18, y2: 1.35, z: -5.9, r: 0.18 }
+    ]) {
       const loop = new THREE.Mesh(new THREE.TorusGeometry(cord.r, 0.016, 6, 14, Math.PI), this.ironMat);
-      loop.position.set(midX, midY, -0.76);
-      loop.rotation.y = Math.PI / 2;
+      loop.position.set(-5.42, Math.min(cord.y1, cord.y2) - 0.06, cord.z);
       commsGroup.add(loop);
     }
 
-    // Communication headset on rack side hook
     const headsetBand = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.012, 6, 12, Math.PI), this.durasteelMat);
-    headsetBand.position.set(1.22, 1.45, -0.75);
-    const earpieceL = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.04, 8), this.fabricMat);
-    earpieceL.position.set(1.22, 1.35, -0.65);
-    commsGroup.add(headsetBand, earpieceL);
+    headsetBand.rotation.y = Math.PI / 2;
+    headsetBand.position.set(-5.4, 1.45, deskZ + 0.7);
+    const earpiece = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.04, 8), this.fabricMat);
+    earpiece.rotation.z = Math.PI / 2;
+    earpiece.position.set(-5.3, 1.35, deskZ + 0.7);
+    commsGroup.add(headsetBand, earpiece);
+    this.addCollider(-5.6, -4.65, deskZ - 0.95, deskZ + 0.95);
 
-    // Equipment rack against wall only, leaving floor in front clear
-    this.addCollider(-3.8, -1.8, -3.6, -2.4);
+    const tag = placard('COMMS', { w: 0.5, h: 0.16 });
+    tag.position.set(-1.3, 2.05, -5.55);
+    tag.rotation.y = -Math.PI / 2;
+    commsGroup.add(tag);
+
     this.group.add(commsGroup);
+    this.interactiveTerminals.push(
+      { id: 'comms', name: ROOMS.comms.name, pos: [-3.3, 1.55, -6.3], route: '#/leaderboard' }
+    );
   }
+
+  /* ====================================================================
+     THE AIRLOCK — starboard, aft. The way off the ship.
+     ==================================================================== */
 
   buildAirlockRoom() {
-    // Airlock & Departure Bay at anchor [0, 1.8, -4.5]
-    const airlockGroup = new THREE.Group();
-    airlockGroup.position.set(0, 0, -4.5);
+    const g = new THREE.Group();
+    g.name = 'airlock';
+    /*
+     * The hatch is in the STARBOARD plating, not the stern: the furnace room
+     * closes the stern now, and a bay door opening into a firebox would be a
+     * lie about the deck plan. Everything below is drawn in a frame where the
+     * door faces +Z, then the whole assembly is turned to face inboard, so the
+     * dogging wheel, the rams and the gauges keep the relationship to each
+     * other they were designed with.
+     */
+    const midZ = (ROOMS.airlock.minZ + ROOMS.airlock.maxZ) / 2;
+    g.position.set(3.45, 0, midZ);
+    g.rotation.y = -Math.PI / 2;
 
-    // 1. Massive chamfered octagonal bulkhead frame with hazard stripes
-    const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(4.8, 3.6, 0.6), this.hazardMat);
-    doorFrame.position.set(0, 1.8, -2.0);
-    airlockGroup.add(doorFrame);
+    const doorFrame = new THREE.Mesh(new THREE.BoxGeometry(2.3, 2.55, 0.5), this.hazardMat);
+    doorFrame.position.set(0, 1.27, -1.95);
+    g.add(doorFrame);
 
-    // 2. Heavy armored blast door slab with PBR blast door texture
-    const doorSlab = new THREE.Mesh(new THREE.BoxGeometry(3.4, 2.8, 0.3), this.blastDoorMat);
-    doorSlab.position.set(0, 1.7, -1.9);
-    airlockGroup.add(doorSlab);
+    const doorSlab = new THREE.Mesh(new THREE.BoxGeometry(1.7, 2.0, 0.28), this.blastDoorMat);
+    doorSlab.position.set(0, 1.12, -1.85);
+    g.add(doorSlab);
 
-    // 3. Manual Dogging Handwheel with spoke grips and center locking pin
-    const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.048, 8, 24), this.ironMat);
-    wheel.position.set(0, 1.7, -1.72);
+    const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.044, 8, 22), this.ironMat);
+    wheel.position.set(0, 1.12, -1.68);
     for (let s = 0; s < 4; s++) {
-      const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.86, 6), this.ironMat);
+      const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.7, 6), this.ironMat);
       spoke.rotation.z = s * (Math.PI / 4);
-      spoke.position.set(0, 1.7, -1.72);
-      airlockGroup.add(spoke);
+      spoke.position.set(0, 1.12, -1.68);
+      g.add(spoke);
     }
-    const centerPin = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.08, 12), this.brassMat);
+    const centerPin = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.08, 12), this.brassMat);
     centerPin.rotation.x = Math.PI / 2;
-    centerPin.position.set(0, 1.7, -1.68);
-    airlockGroup.add(wheel, centerPin);
+    centerPin.position.set(0, 1.12, -1.64);
+    g.add(wheel, centerPin);
 
-    // 4. Hydraulic locking rams with hazard sleeves and polished chrome rods
-    for (let py of [0.95, 2.45]) {
-      const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 2.6, 12), this.brassMat);
+    for (const py of [0.55, 1.95]) {
+      const cylinder = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.9, 12), this.brassMat);
       cylinder.rotation.z = Math.PI / 2;
-      cylinder.position.set(0, py, -1.72);
-
-      const hazardSleeveL = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.65, 12), this.hazardMat);
-      hazardSleeveL.rotation.z = Math.PI / 2;
-      hazardSleeveL.position.set(-1.0, py, -1.72);
-
-      const hazardSleeveR = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.65, 12), this.hazardMat);
-      hazardSleeveR.rotation.z = Math.PI / 2;
-      hazardSleeveR.position.set(1.0, py, -1.72);
-
-      airlockGroup.add(cylinder, hazardSleeveL, hazardSleeveR);
+      cylinder.position.set(0, py, -1.68);
+      const sleeveL = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.5, 12), this.hazardMat);
+      sleeveL.rotation.z = Math.PI / 2;
+      sleeveL.position.set(-0.72, py, -1.68);
+      const sleeveR = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.5, 12), this.hazardMat);
+      sleeveR.rotation.z = Math.PI / 2;
+      sleeveR.position.set(0.72, py, -1.68);
+      g.add(cylinder, sleeveL, sleeveR);
     }
 
-    // 5. Overhead rotating amber warning beacon lamp
-    const beaconHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.1, 12), this.ironMat);
-    beaconHousing.position.set(0, 3.52, -1.75);
-    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.22, 12), this.amberLampMat);
-    beacon.position.set(0, 3.4, -1.75);
-    airlockGroup.add(beaconHousing, beacon);
+    const beaconHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.19, 0.09, 12), this.ironMat);
+    beaconHousing.position.set(0, 2.62, -1.7);
+    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.18, 12), this.amberLampMat);
+    beacon.position.set(0, 2.5, -1.7);
+    g.add(beaconHousing, beacon);
 
-    // Dual red "LOCKED" indicator lamps
-    for (let lx of [-1.3, 1.3]) {
-      const lockIndicator = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.12, 0.04), this.redLampMat);
-      lockIndicator.position.set(lx, 3.2, -1.74);
-      airlockGroup.add(lockIndicator);
+    for (const lx of [-0.88, 0.88]) {
+      const lock = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.11, 0.04), this.redLampMat);
+      lock.position.set(lx, 2.3, -1.67);
+      g.add(lock);
     }
 
-    // Pressure equalization dial gauges (PSI and BAR) on door frame
-    const airlockGaugeA = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.03, 16), this.dialGaugePsiMat);
-    airlockGaugeA.rotation.x = Math.PI / 2;
-    airlockGaugeA.position.set(-1.9, 2.0, -1.72);
-    const airlockGaugeB = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.03, 16), this.dialGaugeBarMat);
-    airlockGaugeB.rotation.x = Math.PI / 2;
-    airlockGaugeB.position.set(-1.9, 1.7, -1.72);
-    airlockGroup.add(airlockGaugeA, airlockGaugeB);
+    const gaugeA = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.03, 16), this.dialGaugePsiMat);
+    gaugeA.rotation.x = Math.PI / 2;
+    gaugeA.position.set(-1.0, 1.5, -1.66);
+    const gaugeB = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.03, 16), this.dialGaugeBarMat);
+    gaugeB.rotation.x = Math.PI / 2;
+    gaugeB.position.set(-1.0, 1.18, -1.66);
+    g.add(gaugeA, gaugeB);
 
-    // 6. High-pressure steam decontamination nozzles and pipes
-    for (let vx of [-1.85, 1.85]) {
-      const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 2.6, 8), this.ironMat);
-      vent.position.set(vx, 1.6, -1.5);
-      const nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.22, 8), this.brassMat);
+    for (const vx of [-1.0, 1.0]) {
+      const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.3, 8), this.ironMat);
+      vent.position.set(vx, 1.35, -1.42);
+      const nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.18, 8), this.brassMat);
       nozzle.rotation.x = Math.PI / 2;
-      nozzle.position.set(vx, 2.6, -1.4);
-      airlockGroup.add(vent, nozzle);
+      nozzle.position.set(vx, 2.35, -1.34);
+      g.add(vent, nozzle);
     }
 
-    // Emergency wall-mounted oxygen rebreather pack
-    const rebreather = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.55, 0.22), this.redLampMat);
-    rebreather.position.set(1.95, 1.6, -1.65);
+    const rebreather = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.5, 0.2), this.redLampMat);
+    rebreather.position.set(1.05, 1.2, -1.55);
     const rebreatherGauge = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.02, 12), this.brassMat);
     rebreatherGauge.rotation.x = Math.PI / 2;
-    rebreatherGauge.position.set(1.95, 1.75, -1.53);
-    airlockGroup.add(rebreather, rebreatherGauge);
+    rebreatherGauge.position.set(1.05, 1.34, -1.44);
+    g.add(rebreather, rebreatherGauge);
 
-    // Outer airlock wall at Z = -6.5
-    this.addCollider(-2.0, 2.0, -7.0, -6.0);
-    this.group.add(airlockGroup);
+    const tag = placard('AIRLOCK', { w: 0.56, h: 0.16 });
+    tag.position.set(0, 2.05, 1.18);
+    tag.rotation.y = Math.PI;
+    g.add(tag);
+
+    // Everything above stands between x = 4.80 and the plating.
+    this.addCollider(4.80, 5.6, midZ - 1.2, midZ + 1.2);
+
+    this.group.add(g);
+    this.interactiveTerminals.push(
+      { id: 'airlock', name: ROOMS.airlock.name, pos: [3.4, 1.6, -6.6], route: '#/quest' }
+    );
   }
+
+  /* ====================================================================
+     THE FURNACE ROOM — across the beam, at the stern
+     ==================================================================== */
+
+  /**
+   * The one compartment on the ship that is still hot.
+   *
+   * Drawn from the same register as Tallow's sub-level: riveted iron, sodium
+   * light, soot over rust, and a fire behind a grate that is genuinely the
+   * brightest thing aboard. It binds to no route and answers no key — it is a
+   * place, and the ship is more plausible for having one.
+   */
+  buildFurnaceRoom() {
+    const g = new THREE.Group();
+    g.name = 'furnace';
+    const room = ROOMS.furnace;
+
+    // --- Scorched deck plate in front of the firebox ---
+    const apron = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.02, 2.9), this.ashMat);
+    apron.position.set(0, 0.011, (room.minZ + room.maxZ) / 2);
+    g.add(apron);
+
+    /* ---------------- THE FIREBOX, port side ---------------- */
+    const fx = -3.0, fz = -9.8;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(3.0, 2.2, 1.8), this.fireboxMat);
+    body.position.set(fx, 1.1, fz);
+    body.castShadow = true;
+    g.add(body);
+
+    // Riveted straps: the seams a pressure vessel is actually made of.
+    for (const sx of [-1.0, 0, 1.0]) {
+      const strap = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.2, 1.86), this.ironMat);
+      strap.position.set(fx + sx, 1.1, fz);
+      g.add(strap);
+    }
+    for (const sy of [0.4, 1.1, 1.8]) {
+      g.add(boltLine([fx - 1.4, sy, fz + 0.92], [fx + 1.4, sy, fz + 0.92], 9,
+        this.brassMat, { size: 0.03, normalAxis: 'z' }));
+    }
+
+    // The grate door, and the fire behind it.
+    const doorPlate = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 0.12), this.ironMat);
+    doorPlate.position.set(fx, 0.85, fz + 0.94);
+    g.add(doorPlate);
+    const ember = new THREE.Mesh(new THREE.PlaneGeometry(1.02, 0.82), this.emberMat);
+    ember.position.set(fx, 0.85, fz + 1.01);
+    g.add(ember);
+    for (let i = 0; i < 6; i++) {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.86, 0.05), this.ironMat);
+      bar.position.set(fx - 0.45 + i * 0.18, 0.85, fz + 1.02);
+      g.add(bar);
+    }
+    const doorHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 8), this.brassMat);
+    doorHandle.position.set(fx + 0.78, 0.85, fz + 1.02);
+    const doorHinge = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.9, 0.1), this.ironMat);
+    doorHinge.position.set(fx - 0.72, 0.85, fz + 1.0);
+    g.add(doorHandle, doorHinge);
+
+    // Ash pans on their runners under the grate.
+    for (const px of [-0.7, 0.7]) {
+      const pan = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.26, 0.44), this.ironMat);
+      pan.position.set(fx + px, 0.15, fz + 1.12);
+      const pull = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3, 6), this.brassMat);
+      pull.rotation.z = Math.PI / 2;
+      pull.position.set(fx + px, 0.22, fz + 1.35);
+      g.add(pan, pull);
+    }
+
+    // Flue, up through the deckhead.
+    const flue = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 1.05, 14), this.ironMat);
+    flue.position.set(fx, 2.68, fz - 0.2);
+    g.add(flue);
+    const flueCollar = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.04, 6, 16), this.brassMat);
+    flueCollar.rotation.x = Math.PI / 2;
+    flueCollar.position.set(fx, 2.3, fz - 0.2);
+    g.add(flueCollar);
+
+    // Pressure gauges on the firebox head, and a relief valve beside them.
+    for (const [gx, mat] of [[-0.75, this.dialGaugePsiMat], [0.75, this.dialGaugeBarMat]]) {
+      const gauge = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.04, 20), mat);
+      gauge.rotation.x = Math.PI / 2;
+      gauge.position.set(fx + gx, 1.78, fz + 0.93);
+      g.add(gauge);
+    }
+    const relief = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.3, 10), this.brassMat);
+    relief.position.set(fx, 2.35, fz + 0.5);
+    g.add(relief);
+
+    this.addCollider(fx - 1.65, fx + 1.65, fz - 1.0, fz + 1.45);
+
+    /* ---------------- THE HOPPER, starboard side ---------------- */
+    const hx = 3.3, hz = -9.9;
+    const hopper = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.0, 0.36, 1.5, 4), this.durasteelMat
+    );
+    hopper.rotation.y = Math.PI / 4;
+    hopper.position.set(hx, 1.75, hz);
+    g.add(hopper);
+    const hopperRim = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.1, 2.0), this.ironMat);
+    hopperRim.position.set(hx, 2.52, hz);
+    g.add(hopperRim);
+    for (const [lx, lz] of [[-0.8, -0.8], [0.8, -0.8], [-0.8, 0.8], [0.8, 0.8]]) {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.0, 0.1), this.ironMat);
+      leg.position.set(hx + lx, 0.5, hz + lz);
+      g.add(leg);
+    }
+    const chute = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.5), this.ironMat);
+    chute.position.set(hx, 0.72, hz + 0.5);
+    chute.rotation.x = 0.3;
+    g.add(chute);
+    const gate = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.1, 0.12), this.brassMat);
+    gate.position.set(hx, 0.4, hz + 0.72);
+    g.add(gate);
+    this.addCollider(hx - 1.15, hx + 1.15, hz - 1.05, hz + 0.95);
+
+    // Slag bin between the hopper and the firebox, and the shovel in it.
+    const bin = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.55, 0.8), this.ironMat);
+    bin.position.set(1.2, 0.275, -8.7);
+    const shovel = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 1.2, 6), this.brassMat);
+    shovel.position.set(1.2, 0.85, -8.7);
+    shovel.rotation.z = 0.4;
+    g.add(bin, shovel);
+    this.addCollider(0.65, 1.75, -9.15, -8.25);
+
+    /* ---------------- INSTRUMENTATION on the starboard plating ---------- */
+    const board = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.1, 1.5), this.ironMat);
+    board.position.set(5.36, 1.5, -8.6);
+    g.add(board);
+    for (let i = 0; i < 3; i++) {
+      const dial = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.17, 0.17, 0.05, 20),
+        i === 1 ? this.dialGaugeBarMat : this.dialGaugePsiMat
+      );
+      dial.rotation.z = Math.PI / 2;
+      dial.position.set(5.27, 1.5, -9.05 + i * 0.45);
+      g.add(dial);
+    }
+    const boardTag = placard('FURNACE', { w: 0.56, h: 0.16 });
+    boardTag.position.set(5.25, 2.2, -8.6);
+    boardTag.rotation.y = -Math.PI / 2;
+    g.add(boardTag);
+    this.addCollider(5.2, 5.6, -9.45, -7.95);
+
+    // Hazard striping along the foot of the blast wall.
+    const chevrons = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.22, 0.04), this.hazardMat);
+    chevrons.position.set(0, 0.13, room.minZ + 0.13);
+    g.add(chevrons);
+
+    this.group.add(g);
+  }
+
+  /* ====================================================================
+     LIGHT, DUST, DRESSING, VISTA
+     ==================================================================== */
 
   createCeilingLuminaire(x, y, z, rotY = 0, length = 1.2) {
     const fixture = new THREE.Group();
     fixture.position.set(x, y, z);
     fixture.rotation.y = rotY;
 
-    // Dark iron protective chassis housing mounted flush to ceiling slab
     const housing = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.12, length), this.ironMat);
     housing.position.set(0, 0, 0);
 
-    // Glowing diffuser panel facing down
     const diffuser = new THREE.Mesh(new THREE.PlaneGeometry(0.24, length - 0.08), this.luminaireMat);
     diffuser.rotation.x = Math.PI / 2;
     diffuser.position.set(0, -0.061, 0);
 
-    // Brass wire guard cross-ribs
     const ribCount = Math.max(2, Math.round(length / 0.28));
     for (let i = 0; i < ribCount; i++) {
       const ribZ = -(length - 0.16) / 2 + (i / (ribCount - 1)) * (length - 0.16);
@@ -1598,65 +1841,132 @@ export class ShipInterior {
   }
 
   buildLightingFixtures() {
-    // 1. Central Spine Corridor (Bridge to Airlock)
-    this.createCeilingLuminaire(0, 3.94, 0.5, 0, 1.4);
-    this.createCeilingLuminaire(0, 3.94, -1.2, 0, 1.4);
-    this.createCeilingLuminaire(0, 3.94, -2.8, 0, 1.4);
+    const room = CEIL.room - 0.08;
+    const bridge = CEIL.bridge - 0.08;
+    const furnace = CEIL.furnace - 0.08;
 
-    // 2. Transverse Cross-Corridor (Comms to Cargo at Z = -2.0)
-    this.createCeilingLuminaire(-1.4, 3.94, -2.0, Math.PI / 2, 1.5);
-    this.createCeilingLuminaire(2.1, 3.94, -2.0, Math.PI / 2, 1.5);
+    // Bridge: aisle, console bank, star map.
+    this.createCeilingLuminaire(0, bridge, 2.55, 0, 1.8);
+    this.createCeilingLuminaire(-4.55, bridge, 2.5, Math.PI / 2, 1.6);
+    this.createCeilingLuminaire(3.5, bridge, 2.1, 0, 1.6);
 
-    // 3. Port & Starboard Wing Corridors at Z = 2.0 (Bridge to Quarters & Starmap)
-    this.createCeilingLuminaire(-1.9, 3.94, 2.0, Math.PI / 2, 1.5);
-    this.createCeilingLuminaire(1.6, 3.94, 2.0, Math.PI / 2, 1.5);
+    // The spine, one fixture per stretch between doorways.
+    this.createCeilingLuminaire(0, room, -0.9, 0, 1.4);
+    this.createCeilingLuminaire(0, room, -3.6, 0, 1.4);
+    this.createCeilingLuminaire(0, room, -6.3, 0, 1.4);
 
-    // 4. Command Bridge Ceiling
-    this.createCeilingLuminaire(0, 3.94, 1.8, 0, 1.8);
+    // The berths.
+    this.createCeilingLuminaire(-3.4, room, -0.9, 0, 1.4);
+    this.createCeilingLuminaire(-3.4, room, -3.7, 0, 1.4);
 
-    // 5. Cockpit Canopy Area
-    this.createCeilingLuminaire(0, 3.94, 2.8, 0, 1.4);
+    // Comms, storage, the vestibule, the airlock.
+    this.createCeilingLuminaire(-3.4, room, -6.0, 0, 1.4);
+    this.createCeilingLuminaire(2.9, room, -0.7, Math.PI / 2, 1.6);
+    this.createCeilingLuminaire(3.3, room, -4.15, 0, 1.4);
+    this.createCeilingLuminaire(3.2, room, -6.6, Math.PI / 2, 1.4);
 
-    // 6. Star Map & Navigation Room
-    this.createCeilingLuminaire(3.2, 3.94, 1.8, 0, 1.6);
-
-    // 7. Crew Quarters
-    this.createCeilingLuminaire(-3.8, 3.94, 2.2, 0, 1.6);
-
-    // 8. Cargo Hold
-    this.createCeilingLuminaire(4.2, 3.94, -2.2, 0, 1.8);
-
-    // 9. Comms Array
-    this.createCeilingLuminaire(-2.8, 3.94, -2.0, 0, 1.6);
-
-    // 10. Airlock & Departure Bay
-    this.createCeilingLuminaire(0, 3.94, -4.5, 0, 1.8);
+    // The furnace room, which is tall enough to need two.
+    this.createCeilingLuminaire(0, furnace, -9.4, 0, 1.8);
+    this.createCeilingLuminaire(-3.0, furnace, -8.55, 0, 1.4);
   }
 
   buildAtmosphericDust() {
     const dustCount = tierAtLeast("T4") ? 2200 : 1000;
     const dGeo = new THREE.BufferGeometry();
     const dPos = new Float32Array(dustCount * 3);
+    const spanX = HULL.maxX - HULL.minX;
+    const spanZ = HULL.maxZ - HULL.minZ;
+    const midZ = (HULL.maxZ + HULL.minZ) / 2;
     for (let i = 0; i < dustCount; i++) {
-      dPos[i * 3] = (Math.random() - 0.5) * 15;
-      dPos[i * 3 + 1] = 0.2 + Math.random() * 3.8;
-      dPos[i * 3 + 2] = (Math.random() - 0.5) * 18;
+      dPos[i * 3] = (Math.random() - 0.5) * spanX;
+      dPos[i * 3 + 1] = 0.2 + Math.random() * (CEIL.room - 0.3);
+      dPos[i * 3 + 2] = midZ + (Math.random() - 0.5) * spanZ;
     }
     dGeo.setAttribute("position", new THREE.BufferAttribute(dPos, 3));
     const dMat = new THREE.PointsMaterial({
-      color: 0xd99423,
-      size: 0.035,
-      transparent: true,
-      opacity: 0.38,
-      blending: THREE.NormalBlending
+      color: 0xd99423, size: 0.035, transparent: true,
+      opacity: 0.38, blending: THREE.NormalBlending
     });
     this.dustParticles = new THREE.Points(dGeo, dMat);
     this.group.add(this.dustParticles);
   }
 
+  /**
+   * THE SERVICES.
+   *
+   * A hull is believable because of what is bolted to it. This run lives in the
+   * one place a narrow ship has room for it: the overhead band inside the
+   * bridge and the furnace room, where the frames stand proud and nothing
+   * below runs through them. Baked into one mesh per material, so the whole of
+   * it costs a handful of draw calls.
+   */
+  buildServiceDressing() {
+    const dressing = new THREE.Group();
+    dressing.name = 'hull-services';
+
+    for (const zone of [
+      { z0: ROOMS.bridge.minZ + 0.7, z1: ROOMS.bridge.maxZ - 0.5, h: CEIL.bridge },
+      { z0: ROOMS.furnace.minZ + 0.7, z1: ROOMS.furnace.maxZ - 0.5, h: CEIL.furnace }
+    ]) {
+      const span = zone.z1 - zone.z0;
+      const midZ = (zone.z0 + zone.z1) / 2;
+      const y = zone.h - 0.62;
+
+      for (const side of [-1, 1]) {
+        const px = (HULL.maxX - 0.42) * side;
+
+        for (const [dx, rad, mat] of [[0, 0.1, this.brassMat], [-0.26 * side, 0.07, this.ironMat]]) {
+          const pipe = new THREE.Mesh(
+            new THREE.CylinderGeometry(rad, rad, span, 12), mat
+          );
+          pipe.rotation.x = Math.PI / 2;
+          pipe.position.set(px + dx, y, midZ);
+          pipe.castShadow = true;
+          dressing.add(pipe);
+
+          for (let z = zone.z0 + 0.7; z < zone.z1; z += 1.5) {
+            const fl = pipeFlange(rad, this.ironMat, this.ironMat);
+            fl.rotation.x = Math.PI / 2;
+            fl.position.set(px + dx, y, z);
+            dressing.add(fl);
+          }
+        }
+
+        // Cable tray, slung under the pipes.
+        const tray = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, span), this.ironMat);
+        tray.position.set(px - 0.1 * side, y - 0.36, midZ);
+        dressing.add(tray);
+        for (let i = 0; i < 3; i++) {
+          const loom = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.026, 0.026, span, 6), this.ironMat
+          );
+          loom.rotation.x = Math.PI / 2;
+          loom.position.set(px - 0.1 * side - 0.08 + i * 0.08, y - 0.3, midZ);
+          dressing.add(loom);
+        }
+
+        // The weld seam where the plating meets the deck.
+        const seam = weldBead(span, this.ironMat, { radius: 0.028, seed: 0x90 + side });
+        seam.rotation.x = Math.PI / 2;
+        seam.position.set((HULL.maxX - 0.05) * side, 0.03, midZ);
+        dressing.add(seam);
+
+        // Bay designators, stencilled on the plating between frames.
+        const tag = placard(zone.h === CEIL.bridge ? 'FR 01' : 'FR 09', { w: 0.34, h: 0.12 });
+        tag.position.set((HULL.maxX - 0.02) * side, 1.95, midZ);
+        tag.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+        dressing.add(tag);
+      }
+    }
+
+    mergeStatic(dressing);
+    this.group.add(dressing);
+  }
+
   buildPlanetaryVista() {
     const vista = new THREE.Group();
-    // Gas giant & ring system placed ahead through forward canopy (Z = +85) and visible through windows
+    vista.name = 'vista';
+    vista.userData.phys = 'ambient';
     const giantCenter = new THREE.Vector3(-25, 14, 85);
     const giantRadius = 22;
 
@@ -1693,6 +2003,10 @@ export class ShipInterior {
     this.group.add(vista);
   }
 
+  /* ====================================================================
+     DISPLAYS AND HOLOGRAMS
+     ==================================================================== */
+
   updateDisplays(questData = {}, standingsData = {}, inventoryData = {}) {
     if (this.starmapHoloMat) {
       const q = questData;
@@ -1728,8 +2042,6 @@ export class ShipInterior {
   setClubHoloScale(scale) {
     const s = Math.max(0.2, Math.min(1, Number(scale) || 1));
     if (this.clubHoloGroup) this.clubHoloGroup.scale.setScalar(s);
-    // The beam is a cone standing on the deck: it keeps its height and narrows
-    // with the screen, or it would flare wider than the thing it projects.
     if (this.clubHoloBeam) this.clubHoloBeam.scale.set(s, 1, s);
   }
 
@@ -1809,7 +2121,7 @@ export class ShipInterior {
       const pos = this.dustParticles.geometry.attributes.position;
       for (let i = 0; i < pos.count; i++) {
         let y = pos.getY(i) - delta * 0.08;
-        if (y < 0.2) y = 3.8;
+        if (y < 0.2) y = CEIL.room - 0.3;
         pos.setY(i, y);
       }
       pos.needsUpdate = true;

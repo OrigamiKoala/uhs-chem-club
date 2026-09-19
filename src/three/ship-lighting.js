@@ -8,49 +8,51 @@
 
 import * as THREE from 'three';
 
+/**
+ * The 21 fixtures the pool chooses from.
+ *
+ * ONE PER COMPARTMENT, and one per stretch of corridor between doorways. A
+ * ship of small rooms needs its light distributed the way its walls are: a
+ * single bright source in the middle of the deck used to reach everywhere
+ * because there was nothing in the way, and now there is. Both berths, the
+ * stairwell vestibule and the furnace room are on this list because they are
+ * rooms, not because anything routes to them.
+ *
+ * The pool lights the 7 nearest, which with the camera's own inspection light
+ * keeps the forward renderer inside its 8 PointLight budget.
+ */
 export const SHIP_LIGHT_SOURCES = [
-  // 1. Command Bridge Overhead Main
-  { id: 'bridge-overhead', pos: new THREE.Vector3(0, 3.2, 1.8), color: new THREE.Color(0xffd88a), intensity: 3.4, distance: 16, decay: 1.2 },
-  // 2. Cockpit Overhead Avionics
-  { id: 'cockpit-overhead', pos: new THREE.Vector3(0, 2.95, 2.8), color: new THREE.Color(0xffb844), intensity: 3.0, distance: 13, decay: 1.2 },
-  // 3. Cockpit Forward Avionics Dash
-  { id: 'cockpit-dash', pos: new THREE.Vector3(0, 1.3, 3.2), color: new THREE.Color(0xff9f1c), intensity: 2.2, distance: 8, decay: 1.2 },
-  // 4. Tactical Port Console
-  { id: 'bridge-port-console', pos: new THREE.Vector3(-2.2, 1.4, 0.8), color: new THREE.Color(0xffaa30), intensity: 2.2, distance: 8, decay: 1.2 },
-  // 5. Tactical Starboard Console
-  { id: 'bridge-stbd-console', pos: new THREE.Vector3(2.2, 1.4, 0.8), color: new THREE.Color(0xffaa30), intensity: 2.2, distance: 8, decay: 1.2 },
-  // 6. Star Map Holo-Bay Overhead
-  { id: 'starmap-holo-bay', pos: new THREE.Vector3(3.2, 2.8, 1.8), color: new THREE.Color(0xffaa38), intensity: 3.6, distance: 15, decay: 1.2 },
-  // 7. Star Map Sun Core
-  { id: 'starmap-sun', pos: new THREE.Vector3(3.2, 1.45, 1.8), color: new THREE.Color(0xffdd55), intensity: 2.8, distance: 9, decay: 1.2 },
-  // 8. Crew Quarters Ceiling
-  { id: 'quarters-ceiling', pos: new THREE.Vector3(-3.8, 2.8, 2.2), color: new THREE.Color(0xffba52), intensity: 3.2, distance: 14, decay: 1.2 },
-  // 9. Crew Quarters Desk Area
-  { id: 'quarters-desk', pos: new THREE.Vector3(-3.12, 1.35, 1.55), color: new THREE.Color(0xffc86b), intensity: 2.2, distance: 8, decay: 1.2 },
-  // 10. Cargo Hold High-Bay
-  { id: 'cargo-gantry', pos: new THREE.Vector3(4.2, 3.2, -2.2), color: new THREE.Color(0xffa838), intensity: 3.8, distance: 16, decay: 1.2 },
-  // 11. Cargo Freight Staging Bay
-  { id: 'cargo-staging', pos: new THREE.Vector3(2.8, 1.8, -1.8), color: new THREE.Color(0xffc24a), intensity: 2.4, distance: 9, decay: 1.2 },
-  // 12. Comms Array Equipment Rack Overhead
-  { id: 'comms-bay', pos: new THREE.Vector3(-2.8, 2.8, -2.0), color: new THREE.Color(0xffb442), intensity: 3.2, distance: 14, decay: 1.2 },
-  // 13. Comms Vacuum Tube Gallery
-  { id: 'comms-tubes', pos: new THREE.Vector3(-2.8, 2.5, -2.6), color: new THREE.Color(0xff9018), intensity: 2.2, distance: 7, decay: 1.2 },
-  // 14. Airlock Staging Floodlight
-  { id: 'airlock-staging', pos: new THREE.Vector3(0, 3.3, -4.5), color: new THREE.Color(0xffaa38), intensity: 3.4, distance: 15, decay: 1.2 },
-  // 15. Airlock Warning Beacon
-  { id: 'airlock-beacon', pos: new THREE.Vector3(0, 3.2, -6.1), color: new THREE.Color(0xff9418), intensity: 2.6, distance: 10, decay: 1.2 },
-  // 16. Central Spine North Corridor
-  { id: 'corridor-spine-n', pos: new THREE.Vector3(0, 3.2, 0.5), color: new THREE.Color(0xffd68a), intensity: 2.6, distance: 11, decay: 1.2 },
-  // 17. Central Spine South Corridor
-  { id: 'corridor-spine-s', pos: new THREE.Vector3(0, 3.2, -2.2), color: new THREE.Color(0xffd68a), intensity: 2.6, distance: 11, decay: 1.2 },
-  // 18. Transverse Corridor Port Junction (toward Comms)
-  { id: 'corridor-cross-port', pos: new THREE.Vector3(-1.5, 3.1, -2.0), color: new THREE.Color(0xffcc7a), intensity: 2.4, distance: 10, decay: 1.2 },
-  // 19. Transverse Corridor Starboard Junction (toward Cargo)
-  { id: 'corridor-cross-stbd', pos: new THREE.Vector3(2.1, 3.1, -2.0), color: new THREE.Color(0xffcc7a), intensity: 2.4, distance: 10, decay: 1.2 },
-  // 20. Port Wing Corridor (toward Quarters)
-  { id: 'corridor-wing-port', pos: new THREE.Vector3(-1.9, 3.1, 2.0), color: new THREE.Color(0xffcc7a), intensity: 2.4, distance: 10, decay: 1.2 },
-  // 21. Starboard Wing Corridor (toward Starmap)
-  { id: 'corridor-wing-stbd', pos: new THREE.Vector3(1.6, 3.1, 2.0), color: new THREE.Color(0xffcc7a), intensity: 2.4, distance: 10, decay: 1.2 }
+  /* ---- THE BRIDGE: tall, and the only room with a view ---- */
+  { id: 'bridge-overhead', pos: new THREE.Vector3(0, 3.1, 2.55), color: new THREE.Color(0xffd88a), intensity: 3.6, distance: 14, decay: 1.2 },
+  { id: 'bridge-canopy', pos: new THREE.Vector3(0, 2.7, 4.0), color: new THREE.Color(0xffb844), intensity: 2.6, distance: 10, decay: 1.2 },
+  { id: 'bridge-console-bank', pos: new THREE.Vector3(-4.2, 1.5, 2.5), color: new THREE.Color(0xffaa30), intensity: 2.4, distance: 8, decay: 1.2 },
+  { id: 'cockpit-dash', pos: new THREE.Vector3(0, 1.3, 3.6), color: new THREE.Color(0xff9f1c), intensity: 2.2, distance: 7, decay: 1.2 },
+  { id: 'starmap-holo-bay', pos: new THREE.Vector3(3.5, 2.7, 2.1), color: new THREE.Color(0xffaa38), intensity: 3.4, distance: 12, decay: 1.2 },
+  { id: 'starmap-sun', pos: new THREE.Vector3(3.5, 1.45, 2.1), color: new THREE.Color(0xffdd55), intensity: 2.6, distance: 8, decay: 1.2 },
+
+  /* ---- THE SPINE: one per stretch between doorways ---- */
+  { id: 'spine-fwd', pos: new THREE.Vector3(0, 2.5, -0.9), color: new THREE.Color(0xffd68a), intensity: 2.6, distance: 9, decay: 1.2 },
+  { id: 'spine-mid', pos: new THREE.Vector3(0, 2.5, -3.6), color: new THREE.Color(0xffd68a), intensity: 2.6, distance: 9, decay: 1.2 },
+  { id: 'spine-aft', pos: new THREE.Vector3(0, 2.5, -6.3), color: new THREE.Color(0xffd68a), intensity: 2.6, distance: 9, decay: 1.2 },
+  { id: 'spine-furnace-mouth', pos: new THREE.Vector3(0, 2.4, -7.6), color: new THREE.Color(0xffc24a), intensity: 2.2, distance: 8, decay: 1.2 },
+
+  /* ---- PORT: berth A, berth B, comms ---- */
+  { id: 'berth-a-ceiling', pos: new THREE.Vector3(-3.4, 2.5, -0.9), color: new THREE.Color(0xffba52), intensity: 3.0, distance: 11, decay: 1.2 },
+  { id: 'berth-a-desk', pos: new THREE.Vector3(-2.2, 1.35, 0.0), color: new THREE.Color(0xffc86b), intensity: 2.0, distance: 6, decay: 1.2 },
+  { id: 'berth-b-ceiling', pos: new THREE.Vector3(-3.4, 2.5, -3.7), color: new THREE.Color(0xffba52), intensity: 3.0, distance: 11, decay: 1.2 },
+  { id: 'berth-b-desk', pos: new THREE.Vector3(-2.2, 1.35, -2.8), color: new THREE.Color(0xffc86b), intensity: 2.0, distance: 6, decay: 1.2 },
+  { id: 'comms-bay', pos: new THREE.Vector3(-3.4, 2.5, -6.0), color: new THREE.Color(0xffb442), intensity: 3.0, distance: 11, decay: 1.2 },
+  { id: 'comms-tubes', pos: new THREE.Vector3(-3.4, 2.2, -6.8), color: new THREE.Color(0xff9018), intensity: 2.0, distance: 6, decay: 1.2 },
+
+  /* ---- STARBOARD: storage, the vestibule, the airlock ---- */
+  { id: 'storage-bay', pos: new THREE.Vector3(2.9, 2.5, -0.7), color: new THREE.Color(0xffa838), intensity: 3.2, distance: 12, decay: 1.2 },
+  { id: 'storage-rack', pos: new THREE.Vector3(4.6, 1.7, -1.4), color: new THREE.Color(0xffc24a), intensity: 2.0, distance: 6, decay: 1.2 },
+  { id: 'stairwell-vestibule', pos: new THREE.Vector3(3.3, 2.5, -4.15), color: new THREE.Color(0xffb442), intensity: 2.8, distance: 10, decay: 1.2 },
+  { id: 'airlock-staging', pos: new THREE.Vector3(3.2, 2.5, -6.6), color: new THREE.Color(0xffaa38), intensity: 3.0, distance: 11, decay: 1.2 },
+
+  /* ---- THE FURNACE ROOM: the fire is the brightest thing aboard ---- */
+  { id: 'furnace-firebox', pos: new THREE.Vector3(-3.0, 1.0, -8.7), color: new THREE.Color(0xe0762a), intensity: 4.2, distance: 12, decay: 1.2 },
+  { id: 'furnace-bay', pos: new THREE.Vector3(0.4, 2.9, -9.4), color: new THREE.Color(0xffa838), intensity: 2.8, distance: 12, decay: 1.2 }
 ];
 
 export class ShipLightPool {

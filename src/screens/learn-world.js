@@ -10,6 +10,8 @@ import { pageHeader, esc } from '../ui/layout.js';
 import { getWorld, ARENAS } from '../learn/curriculum.js';
 import { worldStatus, worldProgress, questStatus, questProgress, nextQuest, isQuestComplete } from '../learn/progress.js';
 import { canWalk, world3dFor } from '../learn/worlds3d.js';
+import { openWorldPractice, worldHasPractice, practiceOfferedFlag } from '../learn/practice.js';
+import { session } from '../session.js';
 
 const STATUS_TAG = {
   open: { label: 'Open', cls: 'live' },
@@ -44,6 +46,37 @@ function installSiteListener() {
   });
 }
 
+/**
+ * Offer the world's problem set the first time the player comes back here with
+ * every bench in it worked.
+ *
+ * It is an offer and not a gate: the next world has ALREADY opened by the time
+ * this runs (gating is `worldProgress`, which knows nothing about practice), the
+ * screen behind it is already drawn, and Close is the first key on the card.
+ * Once offered it never auto-opens again — the Problems key is how it comes back.
+ */
+function maybeOfferPractice(world) {
+  if (!worldHasPractice(world)) return;
+  if (session.hasFlag(practiceOfferedFlag(world.id))) return;
+  openWorldPractice(world);
+}
+
+/** The key that reopens a finished world's problem set, or nothing. */
+export function practiceKey(world, cls = 'btn-secondary quest-btn-sm') {
+  if (!worldHasPractice(world)) return '';
+  return `<button type="button" class="${cls} m-tap" data-practice-world="${esc(world.id)}">Problems</button>`;
+}
+
+/** Wire every Problems key inside `root`. Safe to call on a root with none. */
+export function bindPracticeKeys(root) {
+  root.querySelectorAll('[data-practice-world]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const w = getWorld(btn.dataset.practiceWorld);
+      if (w) openWorldPractice(w);
+    });
+  });
+}
+
 export function renderLearnWorld(container, params = {}) {
   const world = getWorld(params.worldId);
 
@@ -66,6 +99,8 @@ export function renderLearnWorld(container, params = {}) {
       return q ? isQuestComplete(q) : false;
     });
     renderWalkHud(container, world);
+    bindPracticeKeys(container);
+    maybeOfferPractice(world);
     return;
   }
 
@@ -95,8 +130,11 @@ export function renderLearnWorld(container, params = {}) {
           <span class="tag ${(STATUS_TAG[wStatus] || STATUS_TAG.charted).cls}">${(STATUS_TAG[wStatus] || STATUS_TAG.charted).label}</span>
         </div>
         <p class="learn-brief-body">${esc(world.brief)}</p>
-        <div class="eyebrow learn-brief-count">
-          ${world.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete} of ${prog.liveTotal} complete` : ''}
+        <div class="learn-brief-foot">
+          <div class="eyebrow learn-brief-count">
+            ${world.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete} of ${prog.liveTotal} complete` : ''}
+          </div>
+          ${practiceKey(world)}
         </div>
       </section>
 
@@ -132,6 +170,9 @@ export function renderLearnWorld(container, params = {}) {
       </div>
     </div>
   `;
+
+  bindPracticeKeys(container);
+  maybeOfferPractice(world);
 }
 
 /**
@@ -146,7 +187,10 @@ function renderWalkHud(container, world) {
         <div class="eyebrow lit">${esc(world.unit)}</div>
         <div class="learn-walk-name">${esc(world.world)}</div>
         <p class="learn-walk-line">${esc(world.line)}</p>
-        <a href="#/learn" class="btn-secondary quest-btn-sm learn-walk-back" style="text-decoration: none;">All Worlds</a>
+        <div class="learn-walk-keys">
+          <a href="#/learn" class="btn-secondary quest-btn-sm learn-walk-back" style="text-decoration: none;">All Worlds</a>
+          ${practiceKey(world)}
+        </div>
       </div>
 
       <div class="learn-walk-card learn-walk-sites">

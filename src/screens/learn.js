@@ -13,6 +13,7 @@ import { stage } from '../three/stage.js';
 import { pageHeader, esc } from '../ui/layout.js';
 import { WORLDS } from '../learn/curriculum.js';
 import { worldStatus, worldProgress, isQuestComplete, nextQuest, currentWorld, trackProgress } from '../learn/progress.js';
+import { practiceKey, bindPracticeKeys } from './learn-world.js';
 
 const STATUS_TAG = {
   open: { label: 'Open', cls: 'live' },
@@ -76,9 +77,12 @@ export function renderLearn(container) {
                 <div class="eyebrow learn-world-count">
                   ${w.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} complete` : ''}
                 </div>
-                ${enterable
-                  ? `<a href="#/learn/${esc(w.id)}" class="btn-primary learn-enter m-tap" style="text-decoration: none;">Enter</a>`
-                  : `<span class="eyebrow learn-world-blocked">${st === 'locked' ? 'Locked' : 'Coming soon'}</span>`}
+                <div class="learn-world-keys">
+                  ${enterable
+                    ? `<a href="#/learn/${esc(w.id)}" class="btn-primary learn-enter m-tap" style="text-decoration: none;">Enter</a>`
+                    : `<span class="eyebrow learn-world-blocked">${st === 'locked' ? 'Locked' : 'Coming soon'}</span>`}
+                  ${practiceKey(w)}
+                </div>
               </div>
             </article>
           `;
@@ -86,4 +90,6 @@ export function renderLearn(container) {
       </div>
     </div>
   `;
+
+  bindPracticeKeys(container);
 }

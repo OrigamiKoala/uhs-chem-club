@@ -315,7 +315,7 @@ export const STAGES = [
     reward: {
       log: 'Vial B flagged as corrosive scouring agent and isolated.',
       title: 'Chemical Compounds · Structure Dictates Function',
-      body: 'When different elements chemically bond, they produce a compound with entirely new properties. Vial A is water (H2O), a stable coolant. Vial B has an extra oxygen atom linked into the chain: hydrogen peroxide (H2O2), an aggressive oxidizer that eats seals. In chemistry, changing a compound recipe completely transforms its behavior.'
+      body: 'When different elements bond in a fixed ratio they form a compound, and the ratio IS the substance. Vial A is water, H2O; Vial B carries one more oxygen in the chain and is hydrogen peroxide, H2O2, an oxidizer that eats seals. One atom of difference, and the two behave nothing alike.'
     }
   },
 
@@ -433,6 +433,69 @@ const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
+   PRACTICE PROBLEMS
+   Five questions covering atoms, elements, molecules, compounds, and
+   mixtures. Appear after the debrief, before the player exits.
+   ------------------------------------------------------------------ */
+export const PRACTICE = [
+  {
+    question: 'You zoom in until matter stops dividing into smaller pieces. What are those smallest pieces called?',
+    options: [
+      { id: 'a', label: 'Molecules' },
+      { id: 'b', label: 'Atoms' },
+      { id: 'c', label: 'Elements' },
+      { id: 'd', label: 'Compounds' }
+    ],
+    answer: 'b',
+    explanation: 'Atoms are the smallest discrete units of matter — the indivisible floor you found at the scope\'s magnification limit.'
+  },
+  {
+    question: 'A crate contains only carbon (C) atoms and nothing else. What type of substance is it?',
+    options: [
+      { id: 'a', label: 'A compound' },
+      { id: 'b', label: 'A mixture' },
+      { id: 'c', label: 'A pure element' },
+      { id: 'd', label: 'A molecule' }
+    ],
+    answer: 'c',
+    explanation: 'A pure element is built from atoms of only one kind. Carbon alone is element C, atomic number 6.'
+  },
+  {
+    question: 'A cluster holds one oxygen (O) bonded to two hydrogen (H) atoms. What is this cluster?',
+    options: [
+      { id: 'a', label: 'An element' },
+      { id: 'b', label: 'A mixture' },
+      { id: 'c', label: 'A molecule (H₂O)' },
+      { id: 'd', label: 'An atom' }
+    ],
+    answer: 'c',
+    explanation: 'Two or more atoms bonded together form a molecule. H₂O — water — is the molecule you assembled in stage 5.'
+  },
+  {
+    question: 'Crate 14 mixes carbon (C) and sodium (Na) grains together without any bonds between them. What is Crate 14?',
+    options: [
+      { id: 'a', label: 'A compound' },
+      { id: 'b', label: 'A mixture' },
+      { id: 'c', label: 'A pure element' },
+      { id: 'd', label: 'A molecule' }
+    ],
+    answer: 'b',
+    explanation: 'Different elements sharing a container without chemical bonds form a mixture — easily separated, unlike a compound.'
+  },
+  {
+    question: 'Hydrogen peroxide (H₂O₂) has two H atoms bonded to two O atoms in a fixed ratio. What is H₂O₂?',
+    options: [
+      { id: 'a', label: 'A mixture' },
+      { id: 'b', label: 'An element' },
+      { id: 'c', label: 'A chemical compound' },
+      { id: 'd', label: 'A loose heap of atoms' }
+    ],
+    answer: 'c',
+    explanation: 'A chemical compound is two or more different elements joined by chemical bonds in a fixed ratio. H₂O₂ cannot be separated by physical means alone.'
+  }
+];
+
+/* ------------------------------------------------------------------
    BENCH STATE
    Everything a stage's `check` is allowed to look at. One shape for all
    eight stages, so the widgets stay interchangeable.
@@ -500,7 +563,14 @@ export function mount(container, ctx) {
   const scope = new SampleScope(frame.instrumentHost, {
     kinds: KINDS,
     onProbe: hit => onProbe(hit),
-    onSelect: id => onSelect(id)
+    onSelect: id => onSelect(id),
+    // THE DIAL ON THE BENCH. Where the bench is built (T4 on Tallow) the power
+    // control is a real knob standing on the plate, and turning it arrives
+    // here. Where the bench is drawn the option is ignored and the panel dial
+    // is the only one there is. Either way the quest calls the same `setPower`,
+    // which is the rule that keeps the two instruments one instrument.
+    onPower: v => setPower(v),
+    powerRange: { min: 1, max: 6 }
   });
 
   // A finished quest replays from the top and costs nothing, the way a cleared

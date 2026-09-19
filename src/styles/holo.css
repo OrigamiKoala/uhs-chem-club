@@ -403,6 +403,43 @@
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
 }
 
+/* A latched answer key. The marks are ink on a hairline rule — the palette is
+   the brief's own --accent-green / --accent-danger, not a web-default red. */
+.choice-option.correct {
+  background: rgba(111, 143, 63, 0.14);
+  border-color: var(--border-durasteel);
+  border-left-color: var(--accent-green);
+  color: var(--text-bright);
+}
+
+.choice-option.incorrect {
+  background: rgba(168, 52, 42, 0.14);
+  border-color: var(--border-durasteel);
+  border-left-color: var(--accent-danger);
+  color: var(--text-bright);
+}
+
+/* A latched key does not take another press, but the two that are MARKED must
+   stay legible: dimming the answer you are meant to read is the one thing this
+   state must not do. */
+.choice-option:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.choice-option:disabled.correct,
+.choice-option:disabled.incorrect {
+  opacity: 1;
+}
+
+.choice-option:disabled:hover {
+  background: var(--plate-300);
+  color: var(--text-primary);
+}
+
+.choice-option:disabled.correct:hover { background: rgba(111, 143, 63, 0.14); }
+.choice-option:disabled.incorrect:hover { background: rgba(168, 52, 42, 0.14); }
+
 /* ---- Rank rails ---- */
 .rank-list {
   display: flex;
@@ -554,6 +591,58 @@
 /* ===================================================================
    FIELD NOTE — the concept card. A printed slip clipped to the tablet.
    =================================================================== */
+/* ===================================================================
+   THE CHEMISTRY CARD
+   One to three sentences of real chemistry, drawn after a solve and
+   never before it. Amber ink on bare plate, chamfered top-left like
+   every other card in the world — it is a note stamped into the log,
+   not a lesson panel.
+   =================================================================== */
+.chem-card {
+  background: var(--plate-000);
+  border: 1px solid var(--border-durasteel);
+  border-left: 2px solid var(--accent-amber);
+  border-top-color: var(--seam-light);
+  border-bottom-color: var(--seam-dark);
+  padding: 11px 13px;
+  margin-bottom: 0.85rem;
+  box-shadow: inset 0 1px 0 var(--seam-light);
+  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+}
+
+.chem-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 7px;
+}
+
+.chem-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  color: var(--plate-000);
+  background: var(--accent-amber);
+  padding: 2px 7px;
+}
+
+.chem-card-title {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--accent-gold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: var(--engrave);
+}
+
+.chem-card-body {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  margin: 0;
+}
+
 .concept-card {
   background: var(--plate-100);
   border: 1px solid var(--border-durasteel);
@@ -1129,14 +1218,18 @@
 .quest-console-panel {
   position: relative;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
+  /* ONE DASHBOARD, TWO REGIONS. The deck reads across the left of the fascia;
+     the stage rail and the relay strip stack down the right. Both are the nodes
+     `quest.js` built — only their parent changed. */
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  grid-template-areas: 'deck rail';
+  gap: 14px;
+  padding: 12px 16px;
   overflow: hidden;
   pointer-events: auto;
   background:
-    linear-gradient(180deg, var(--plate-200), var(--plate-100) 62%, var(--plate-000));
+    linear-gradient(180deg, var(--plate-300), var(--plate-100) 46%, var(--plate-000));
   border: 1px solid var(--border-durasteel);
   border-top-color: var(--seam-light);
   border-bottom-color: var(--seam-dark);
@@ -1144,9 +1237,11 @@
     inset 0 1px 0 var(--seam-light),
     inset 0 -1px 0 var(--seam-dark),
     inset 0 0 40px rgba(0, 0, 0, 0.5);
+  /* A fascia is cut away at both outer corners so it reads as a panel let into
+     a desk rather than a rectangle hung in the air. */
   clip-path: polygon(
-    13px 0, 100% 0, 100% calc(100% - 13px),
-    calc(100% - 13px) 100%, 0 100%, 0 13px
+    16px 0, calc(100% - 16px) 0, 100% 16px,
+    100% 100%, 0 100%, 0 16px
   );
 }
 
@@ -1164,7 +1259,22 @@
   opacity: 0.5;
 }
 
-.quest-console-panel > * { position: relative; z-index: 1; }
+.quest-console-panel > * { position: relative; z-index: 1; min-width: 0; }
+
+.quest-console-panel .qc-deck { grid-area: deck; display: flex; min-height: 0; }
+.quest-console-panel .qc-rail {
+  grid-area: rail;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow: hidden;
+  /* A hairline seam between the two halves of the desk, the way a real fascia
+     is two plates bolted up. */
+  border-left: 1px solid var(--border-durasteel);
+  box-shadow: inset 1px 0 0 var(--seam-light);
+  padding-left: 12px;
+}
 
 /* The deck fills its plate: on the desk there is no page to scroll past it. */
 .quest-console-panel .stage-card-wrap {
@@ -1187,6 +1297,13 @@
   padding: 0;
 }
 
+/* The desk is short, so the deck's own furniture tightens up on it. */
+.quest-console-panel .stage-header { margin-bottom: 0.3rem !important; padding-bottom: 0.3rem !important; }
+.quest-console-panel .stage-instruction { font-size: 0.95rem; line-height: 1.4; }
+.quest-console-panel .stage-toolbar { margin: 0.35rem 0 !important; }
+.quest-console-panel .stage-tip { display: none; }
+.quest-console-panel .stage-dock-bar { display: none !important; }
+
 .quest-console-panel .quest-nav-cluster,
 .quest-console-panel .quest-gardens-slot,
 .quest-console-panel .colormap-legend {
@@ -1199,6 +1316,7 @@
 }
 
 .quest-console-panel .quest-nav-cluster { gap: 6px; }
+.quest-console-panel .quest-gardens-slot { flex: 1; min-height: 0; overflow: hidden; }
 .quest-console-panel .stage-pill-track { flex-wrap: wrap; }
 
 .quest-console-panel ::-webkit-scrollbar { width: 7px; }

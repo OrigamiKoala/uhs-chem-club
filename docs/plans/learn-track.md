@@ -36,6 +36,7 @@ exists to help.
 | `src/learn/curriculum.js` | The registry. Worlds, quests, arenas, lookups. Pure data — no DOM, no three.js. |
 | `src/learn/worlds/unitNN-*.js` | One chart per unit: world name, place, one line, and its quests. |
 | `src/learn/progress.js` | Gating and completion. XP-free by construction. |
+| `src/learn/practice.js` | The optional problem set a WORLD ends on. Five per built quest, gathered across the unit. Gates nothing. |
 | `src/learn/engine/scope.js` | The **sampler scope**: a canvas bench instrument. Power dial, probe, cutter, shaker. Content-free. |
 | `src/learn/engine/corebench.js` | The **core bench**: one piece in three fields (whole, core, rings). Beam, probe, stripper. Content-free. |
 | `src/learn/engine/frame.js` | The **quest frame**: stage rail, prompt, readout, answer region, miss banner, hint ladder, reward card, debrief stepper. Grading-free. |
@@ -47,7 +48,8 @@ exists to help.
 | `src/screens/learn-quest.js` | The host that mounts a quest module. |
 | `src/styles/learn.css` | Plate styling for the three screens and the quest bench. Phone rules in `mobile-screens.css`. |
 | `apps-script/Learn.gs` | `LearnProgress` DAO: stages cleared, quest completed. |
-| `tools/verify-learn.mjs` | Registry integrity, the no-XP invariant, and every built quest's grading. |
+| `tools/verify-learn.mjs` | Registry integrity, the no-XP invariant, every built quest's grading, and its five practice problems. |
+| `tools/verify-bench.mjs` | Deploys both built instruments onto the real Tallow benches in Node: every site faces its approach, every screen and control lands inside the glass. |
 
 ## Gating
 
@@ -60,6 +62,10 @@ exists to help.
   least one of its quests has a module.
 - A cleared stage can be walked back into from the stage rail. There is no XP
   here for a replay to farm, and re-reading is the point of a study road.
+- **The practice set gates nothing.** A world's problems are offered once, after
+  its last bench is worked, and the next world is already open by then — gating
+  is `worldProgress`, which knows nothing about practice. Skip every question and
+  the road is identical.
 
 ## The engine
 
@@ -71,8 +77,10 @@ sample of matter at a chosen magnification and knows four verbs:
 - **power** (1–6). `detailFor(power, floorPower)` gives 0 solid → 1 mottled →
   2 lumps → 3 individual pieces. Past `floorPower` nothing new resolves, the
   pieces only get bigger. That walk down through scales is the whole reveal, and
-  it is why this is canvas and not the 3D chamber: it runs identically on every
-  graphics tier and holds up at 375 px.
+  it is the whole reveal. At T3 and below it runs on canvas and holds up at
+  375 px; at T4 the same declarations build the instrument on the bench the
+  player walked to (`scope3d.js`), with the crates in real wells and the power
+  control a milled cap they reach over and turn.
 - **probe** — tap a piece for its catalogue code, a 0–10 mass meter, a 0–10 size
   meter, how many pieces are holding it, and one plain sentence. It reports the
   *count* of neighbours and never their kinds, so counting a cluster stays work.
@@ -105,8 +113,11 @@ to tax.
    only content: kinds, samples, prompts, three hint rungs, a `check(state)` per
    stage and a reward card. Report each cleared stage with `ctx.reportStage(i)`
    and the finish with `ctx.reportComplete()`. Dispose what you created.
-3. Export `meta.stageCount`, and — for a table-driven quest — `STAGES`,
-   `SOLUTIONS`, `MISSES` and `stateFor`, so the verifier can grade it.
+3. Export `meta.stageCount`, five `PRACTICE` problems, and — for a table-driven
+   quest — `STAGES`, `SOLUTIONS`, `MISSES` and `stateFor`, so the verifier can
+   grade it. Every stage owes a `reward` card of one to three sentences naming,
+   in real chemical terms, what the player just worked out: the chemistry lands
+   in bits, after each stage, never saved up for the debrief.
 4. In the world chart, point the quest's `module` at
    `() => import('../quests/<worldId>/<questId>.js')` and set `status: 'live'`.
    Update `stageCount` to the real figure.

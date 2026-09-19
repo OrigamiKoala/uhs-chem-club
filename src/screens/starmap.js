@@ -16,6 +16,7 @@ import { tierManager } from "../three/tier.js";
 import { WORLDS } from "../learn/curriculum.js";
 import { worldStatus, worldProgress } from "../learn/progress.js";
 import { canWalk } from "../learn/worlds3d.js";
+import { practiceKey, bindPracticeKeys } from "./learn-world.js";
 
 const SECTORS = [
   {
@@ -105,6 +106,7 @@ function learnPanel() {
               ${enterable
                 ? `<a href="#/learn/${esc(w.id)}" class="btn-primary quest-btn-sm m-tap" style="text-decoration: none;">${walk ? `Enter ${esc(w.world)}` : "Enter"}</a>`
                 : `<span class="eyebrow map-learn-blocked">${st === "locked" ? "Locked" : "Coming soon"}</span>`}
+              ${practiceKey(w)}
             </div>
           </article>
         `;
@@ -115,6 +117,9 @@ function learnPanel() {
 
 /** Wire the two tabs. Switching panels changes nothing about either road. */
 function bindTabs(container) {
+  // The Learn panel is drawn on both tiers, so its Problems keys are wired here
+  // rather than twice in renderStarMap.
+  bindPracticeKeys(container);
   const tabs = container.querySelectorAll("[data-map-tab]");
   const panels = container.querySelectorAll("[data-map-panel]");
   tabs.forEach(btn => {

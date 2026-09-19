@@ -21,6 +21,8 @@
  */
 
 import * as THREE from 'three';
+import { angleFor } from './dial.js';
+import { boltLine } from '../../three/materials/pbr-kit.js';
 
 /** Dust palette, in 3D. Mirrors TINTS in scope.js exactly. */
 export const TINT_HEX = {
@@ -143,6 +145,140 @@ export function engravedPlaque(text, opts = {}) {
  *
  * Subclasses build what goes into a station and say what a click on it means.
  */
+/**
+ * A POWER DIAL YOU CAN ACTUALLY TURN.
+ *
+ * The magnification control is a thing you turn, and on a bench that is built
+ * rather than drawn it has to be a thing that is THERE: a milled cap on a raked
+ * plinth bolted to the plate, with detents cut round its collar, a scale
+ * engraved on the panel and an index that is lit because the instrument is
+ * live. Reaching over and turning it is the gesture; nothing about it is a
+ * widget wearing a bench's clothes.
+ *
+ * It shares its maths with the drawn dial. `angleFor` and `valueForAngle` come
+ * from `engine/dial.js` and are the single implementation, so the knob on the
+ * bench and the knob on the panel cannot disagree about which detent a given
+ * power sits at — the same rule the tools follow (CLAUDE.md, "the two are the
+ * same instrument").
+ *
+ * It knows no chemistry. It reports an integer in a range; the quest decides
+ * what the integer means.
+ *
+ * @param {{min: number, max: number, value: number, label: string,
+ *          materials: {steel: THREE.Material, dark: THREE.Material}}} opts
+ * @returns {{group: THREE.Group, cap: THREE.Mesh, hit: THREE.Mesh,
+ *            setValue: Function, geos: THREE.BufferGeometry[], mats: THREE.Material[]}}
+ */
+export function buildPowerDial(opts) {
+  const { min = 1, max = 6, value = min, label = 'POWER', materials = null } = opts || {};
+  const g = new THREE.Group();
+  const geos = [];
+  const mats = [];
+  const own = x => { geos.push(x); return x; };
+  const ownMat = m => { mats.push(m); return m; };
+
+  const steel = materials?.steel || ownMat(new THREE.MeshStandardMaterial({
+    color: 0x6f6657, roughness: 0.72, metalness: 0.62
+  }));
+  const dark = materials?.dark || ownMat(new THREE.MeshStandardMaterial({
+    color: 0x24211c, roughness: 0.9, metalness: 0.4
+  }));
+  const cap = ownMat(new THREE.MeshStandardMaterial({
+    color: 0x8d7f68, roughness: 0.5, metalness: 0.72
+  }));
+  const index = ownMat(new THREE.MeshStandardMaterial({
+    color: AMBER, emissive: AMBER, emissiveIntensity: 1.2, roughness: 0.45
+  }));
+
+  // The plinth: a wedge standing on the plate, raked toward the operator so the
+  // cap's face is something you look at rather than down onto.
+  const RAKE = 0.62;
+  const base = new THREE.Mesh(own(new THREE.BoxGeometry(0.30, 0.035, 0.24)), dark);
+  base.position.y = 0.017;
+  base.castShadow = base.receiveShadow = true;
+  g.add(base);
+  g.add(boltLine([-0.13, 0.036, -0.09], [0.13, 0.036, -0.09], 3, dark,
+    { size: 0.011, normalAxis: 'y' }));
+
+  const face = new THREE.Group();
+  face.position.set(0, 0.075, 0.012);
+  face.rotation.x = -RAKE;
+  g.add(face);
+
+  const panel = new THREE.Mesh(own(new THREE.BoxGeometry(0.28, 0.022, 0.21)), steel);
+  panel.castShadow = panel.receiveShadow = true;
+  face.add(panel);
+
+  // The engraved scale plate, set into the panel above the cap.
+  const plaqueTex = engravedPlaque(label, { w: 320, h: 80, size: 34, align: 'center' });
+  const plaqueMat = ownMat(new THREE.MeshStandardMaterial({
+    map: plaqueTex, roughness: 0.85, metalness: 0.2
+  }));
+  const plaque = new THREE.Mesh(own(new THREE.PlaneGeometry(0.115, 0.029)), plaqueMat);
+  plaque.rotation.x = -Math.PI / 2;
+  plaque.position.set(0, 0.0115, -0.073);
+  face.add(plaque);
+  plaqueMat.userData = { ownTexture: plaqueTex };
+
+  // Detents round the collar: one notch per step, the low and high stops long.
+  const notchGeo = own(new THREE.BoxGeometry(0.006, 0.006, 0.018));
+  const stopGeo = own(new THREE.BoxGeometry(0.007, 0.007, 0.030));
+  for (let v = min; v <= max; v++) {
+    const deg = angleFor(v, min, max);
+    const rad = deg * Math.PI / 180;
+    const r = 0.070;
+    const isStop = v === min || v === max;
+    const notch = new THREE.Mesh(isStop ? stopGeo : notchGeo, dark);
+    notch.position.set(Math.sin(rad) * r, 0.012, -Math.cos(rad) * r);
+    notch.rotation.y = rad;
+    face.add(notch);
+  }
+
+  // The cap. Knurled, because a knob you turn with oily gloves is knurled.
+  const knob = new THREE.Group();
+  knob.position.y = 0.011;
+  face.add(knob);
+
+  const body = new THREE.Mesh(own(new THREE.CylinderGeometry(0.048, 0.052, 0.036, 24)), cap);
+  body.position.y = 0.018;
+  body.castShadow = true;
+  knob.add(body);
+
+  const knurlGeo = own(new THREE.BoxGeometry(0.006, 0.030, 0.010));
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2;
+    const k = new THREE.Mesh(knurlGeo, cap);
+    k.position.set(Math.sin(a) * 0.050, 0.018, Math.cos(a) * 0.050);
+    k.rotation.y = a;
+    knob.add(k);
+  }
+
+  // The index groove, and the filament let into the end of it.
+  const groove = new THREE.Mesh(own(new THREE.BoxGeometry(0.006, 0.004, 0.040)), dark);
+  groove.position.set(0, 0.037, -0.024);
+  knob.add(groove);
+  const lamp = new THREE.Mesh(own(new THREE.BoxGeometry(0.008, 0.005, 0.010)), index);
+  lamp.position.set(0, 0.038, -0.041);
+  knob.add(lamp);
+
+  // A generous invisible target, so the knob is grabbable at a glancing angle
+  // without having to hit a knurl exactly.
+  const hitMat = ownMat(new THREE.MeshBasicMaterial({ visible: false }));
+  const hit = new THREE.Mesh(own(new THREE.CylinderGeometry(0.082, 0.082, 0.09, 12)), hitMat);
+  hit.position.y = 0.03;
+  knob.add(hit);
+
+  const setValue = v => {
+    const deg = angleFor(v, min, max);
+    // Dial degrees run clockwise from the top; a positive turn about +Y reads
+    // anticlockwise from above, so the sign flips here and only here.
+    knob.rotation.y = -deg * Math.PI / 180;
+  };
+  setValue(value);
+
+  return { group: g, knob, hit, setValue, geos, mats };
+}
+
 export class BenchViewer3D {
   /**
    * @param {HTMLElement} domElement the element pointer events are read from
@@ -212,6 +348,11 @@ export class BenchViewer3D {
     this.dragging = false;
     this.dragPointerId = null;
     this.lastPointer = { x: 0, y: 0 };
+    // Controls bolted to the bench — a power knob, a lever — which take a press
+    // before the view does. See `addGrabbable`.
+    this.grabbables = [];
+    this.grabbing = null;
+    this.grabPointerId = null;
 
     this.buildLighting();
     this.buildBench();
@@ -550,6 +691,23 @@ export class BenchViewer3D {
 
     this._onPointerDown = e => {
       if (this._isChrome(e)) { this.dragging = false; this.dragPointerId = null; return; }
+
+      // A CONTROL ON THE BENCH TAKES THE PRESS BEFORE THE VIEW DOES.
+      // A knob you turn and a view you swing are the same gesture — a drag —
+      // so whichever one the pointer went down on has to win, or every attempt
+      // to turn the power dial would also lean the camera over the bench.
+      this.setPointer(e);
+      const grabbed = this.grabUnderRay();
+      if (grabbed) {
+        this.dragging = false;
+        this.grabbing = grabbed;
+        this.grabPointerId = e.pointerId;
+        this.lastPointer = { x: e.clientX, y: e.clientY };
+        grabbed.onStart?.(e);
+        e.preventDefault?.();
+        return;
+      }
+
       this.dragging = true;
       this.dragPointerId = e.pointerId;
       this.lastPointer = { x: e.clientX, y: e.clientY };
@@ -557,6 +715,13 @@ export class BenchViewer3D {
     };
 
     this._onPointerMove = e => {
+      if (this.grabbing && e.pointerId === this.grabPointerId) {
+        const gx = e.clientX - this.lastPointer.x;
+        const gy = e.clientY - this.lastPointer.y;
+        this.lastPointer = { x: e.clientX, y: e.clientY };
+        this.grabbing.onMove?.(gx, gy, e);
+        return;
+      }
       if (!this.dragging || e.pointerId !== this.dragPointerId) return;
       const dx = e.clientX - this.lastPointer.x;
       const dy = e.clientY - this.lastPointer.y;
@@ -572,6 +737,12 @@ export class BenchViewer3D {
     };
 
     this._onPointerUp = e => {
+      if (this.grabbing && e.pointerId === this.grabPointerId) {
+        this.grabbing.onEnd?.(e);
+        this.grabbing = null;
+        this.grabPointerId = null;
+        return;
+      }
       if (e.pointerId !== this.dragPointerId) return;
       this.dragging = false;
       this.dragPointerId = null;
@@ -581,23 +752,90 @@ export class BenchViewer3D {
     };
 
     this._onPointerCancel = () => {
+      if (this.grabbing) this.grabbing.onEnd?.();
+      this.grabbing = null;
+      this.grabPointerId = null;
       this.dragging = false;
       this.dragPointerId = null;
+    };
+
+    // The wheel over a bench control turns it. Over anything else it is left
+    // alone: the bench camera is on a fixed arc and has no zoom to give away.
+    this._onWheel = e => {
+      if (this._isChrome(e)) return;
+      this.setPointer(e);
+      const g = this.grabUnderRay();
+      if (!g || !g.onWheel) return;
+      e.preventDefault?.();
+      g.onWheel(e.deltaY, e);
     };
 
     this.domElement.addEventListener('pointerdown', this._onPointerDown);
     window.addEventListener('pointermove', this._onPointerMove);
     window.addEventListener('pointerup', this._onPointerUp);
     window.addEventListener('pointercancel', this._onPointerCancel);
+    this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
   }
 
-  /** Screen point to normalised device coordinates for the raycaster. */
+  /**
+   * Register something on the bench the player can take hold of.
+   *
+   * @param {{
+   *   object: THREE.Object3D,   what the ray has to hit
+   *   onStart?: Function,
+   *   onMove?: (dx: number, dy: number, e: PointerEvent) => void,
+   *   onEnd?: Function,
+   *   onWheel?: (deltaY: number, e: WheelEvent) => void
+   * }} spec
+   * @returns {Function} call it to unregister
+   */
+  addGrabbable(spec) {
+    if (!spec?.object) return () => {};
+    this.grabbables = this.grabbables || [];
+    this.grabbables.push(spec);
+    return () => {
+      this.grabbables = (this.grabbables || []).filter(g => g !== spec);
+      if (this.grabbing === spec) { this.grabbing = null; this.grabPointerId = null; }
+    };
+  }
+
+  /** The nearest registered control the current ray passes through, or null. */
+  grabUnderRay() {
+    let best = null;
+    let bestDist = Infinity;
+    for (const g of this.grabbables || []) {
+      if (!g.object.visible) continue;
+      const hit = this.raycaster.intersectObject(g.object, true);
+      if (hit.length && hit[0].distance < bestDist) {
+        bestDist = hit[0].distance;
+        best = g;
+      }
+    }
+    return best;
+  }
+
+  /**
+   * Screen point to normalised device coordinates for the raycaster.
+   *
+   * Measured against the GLASS, not against the element the listener happens to
+   * be bound to. The deployed bench binds to `document.body`, whose box is the
+   * whole scrolling document — taller than the viewport the scene was rendered
+   * into — and dividing by that height aims every ray high by the difference.
+   * `visualViewport` is what is actually visible once a phone's toolbars are
+   * accounted for, which is the same rule `stage.onResize` sizes the canvas by.
+   */
   setPointer(e) {
-    const rect = this.domElement.getBoundingClientRect
-      ? this.domElement.getBoundingClientRect()
-      : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
-    const w = rect.width || window.innerWidth;
-    const h = rect.height || window.innerHeight;
+    const el = this.domElement;
+    const isBody = !el || el === document.body || el === document.documentElement;
+    const vv = window.visualViewport;
+    const vw = (vv && vv.width) || window.innerWidth;
+    const vh = (vv && vv.height) || window.innerHeight;
+
+    const rect = (!isBody && el.getBoundingClientRect)
+      ? el.getBoundingClientRect()
+      : { left: 0, top: 0, width: vw, height: vh };
+    const w = rect.width || vw;
+    const h = rect.height || vh;
     this.pointer.x = ((e.clientX - rect.left) / w) * 2 - 1;
     this.pointer.y = -((e.clientY - rect.top) / h) * 2 + 1;
     this.raycaster.setFromCamera(this.pointer, this.camera);
@@ -764,6 +1002,9 @@ export class BenchViewer3D {
     window.removeEventListener('pointermove', this._onPointerMove);
     window.removeEventListener('pointerup', this._onPointerUp);
     window.removeEventListener('pointercancel', this._onPointerCancel);
+    this.domElement.removeEventListener('wheel', this._onWheel);
+    this.grabbables = [];
+    this.grabbing = null;
     this.clearStations();
     for (const d of this.disposables) {
       try { d.dispose(); } catch (e) {}

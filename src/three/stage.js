@@ -19,6 +19,7 @@ import { ShipLightPool } from "./ship-lighting.js";
 import { soundscape } from "../audio/soundscape.js";
 import { gameMode } from "../game-mode.js";
 import { worldUI } from "./world-ui.js";
+import { api } from "../api.js";
 
 /**
  * Tone-mapping exposure per place.
@@ -155,17 +156,32 @@ class Stage {
         transmission: reached >= 20 ? "SECTOR 01 COMPLETE" : `PYLON ${reached + 1} AWAITS CONNECTION`
       };
 
+      // THE BOARD SHOWS THE REAL BOARD, OR IT SHOWS NOTHING.
+      //
+      // `session.teams` is the roster manifest from `bootstrap` — guild names,
+      // liveries and slot caps. It carries no scores, so reading `t.score` off
+      // it produced a row of zeroes, and the four invented totals that stood in
+      // when it was empty were simply fiction on a screen that claims to be
+      // telemetry. Avalon is pre-launch (PRODUCT.md): there is no play data yet,
+      // and a board that makes some up is worse than a board that says so.
+      //
+      // The real figures come from `leaderboard`, which is the same computation
+      // Standings reads — mean XP of active members scaled by participation
+      // (Scoring.gs §4.4), NEVER a sum and never labelled XP.
+      const board = this.standings;
       const standingsData = {
-        teams: (session.teams && session.teams.length) ? session.teams.map(t => ({
-          name: t.name || t.team_id,
-          score: t.score || t.xp || 0
-        })) : [
-          { name: 'Earth', score: 1420 },
-          { name: 'Fire', score: 1180 },
-          { name: 'Water', score: 950 },
-          { name: 'Air', score: 810 }
-        ],
-        chatter: session.player ? `PILOT: ${session.player.display_name || session.player.email || 'CADET'}` : 'COMMS MONITOR: STANDBY'
+        teams: (board?.teams || []).map(t => ({
+          rank: t.rank,
+          name: t.corp_name || t.name || t.team_id,
+          team_score: t.team_score,
+          active: t.active_members,
+          roster: t.roster_size
+        })),
+        chatter: board
+          ? (board.myRank
+            ? `RANK ${board.myRank.rank} // ${board.myRank.display_name} // LVL ${board.myRank.level}`
+            : 'NO RATED TRAFFIC ON THIS CHANNEL')
+          : ''
       };
 
       const inventoryData = {
@@ -190,8 +206,38 @@ class Stage {
       this.fitClubHolo();
     };
 
-    session.subscribe(syncShipDisplays);
+    /**
+     * Pull the real standings for the comms board.
+     *
+     * Fire-and-forget: a board that cannot be fetched stays blank and says
+     * "awaiting telemetry", which is true. It is never allowed to throw into the
+     * render path, and a failure here can never sign anybody out — `api.js`
+     * takes two consecutive UNAUTHORIZED replies for that, and this route is
+     * public anyway.
+     */
+    this.refreshStandings = () => {
+      const now = Date.now();
+      if (this._standingsPending) return;
+      if (this._standingsAt && now - this._standingsAt < 20000) return;
+      this._standingsPending = true;
+      api.getLeaderboards()
+        .then(data => {
+          this.standings = data && typeof data === 'object' ? data : null;
+          this._standingsAt = Date.now();
+          syncShipDisplays();
+        })
+        .catch(() => { this._standingsAt = Date.now(); })
+        .finally(() => { this._standingsPending = false; });
+    };
+
+    session.subscribe(() => {
+      syncShipDisplays();
+      // Signing in, or finishing a stage, can move the board. The 20 s floor in
+      // refreshStandings keeps a chatty session from hammering the route.
+      this.refreshStandings();
+    });
     syncShipDisplays();
+    this.refreshStandings();
 
     // Camera Rig
     this.cameraRig = new CameraRig(this.camera);
@@ -199,10 +245,6 @@ class Stage {
     // 4. First-person WASD controls with collision sliding and interaction
     this.fpsControls = new FpsControls(this.camera, this.canvas);
     this.fpsControls.enabled = Boolean(session.token && session.player);
-    this.fpsControls.onToggleHolo = () => {
-      this.toggleAnyHolo();
-    };
-    this.fpsControls.onCloseHolo = this.fpsControls.onToggleHolo;
 
     // On a phone the mouse path stands down and the twin sticks take over.
     this.isTouch = isTouchPrimary();
@@ -281,6 +323,7 @@ class Stage {
       const modal = document.getElementById("modal-container");
       if (modal && !modal.classList.contains("hidden")) return;
 
+      if (e.repeat) return;
       if (e.key === "x" || e.key === "X" || e.code === "KeyX") {
         handleKeyX();
       }

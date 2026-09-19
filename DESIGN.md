@@ -514,10 +514,13 @@ campaign is about.
 
 ### Signature: The Bench Instruments
 
-The Learn track's two canvas instruments — the **sampler scope** (`scope.js`) and the
-**core bench** (`corebench.js`) — are the most distinctive surfaces in the product. Canvas
-cannot inherit a CSS custom property, so each file mirrors the dust palette as literal
-constants; those constants are part of this system and must stay in step with the tokens.
+The Learn track's two instruments — the **sampler scope** and the **core bench** — are the
+most distinctive surfaces in the product. Each exists twice: as a canvas instrument
+(`scope.js`, `corebench.js`) at T3 and below, and as a **built object on a bench the player
+has walked to** (`scope3d.js`, `corebench3d.js`) at T4. Canvas cannot inherit a CSS custom
+property, so each 2D file mirrors the dust palette as literal constants; those constants
+are part of this system and must stay in step with the tokens, and `TINT_HEX` in
+`bench3d.js` mirrors them again for the built versions.
 
 - **The aperture:** a `#0d0c0a` field inside a `#2e2a26` rim on a chamfered `.scope-plate`,
   square at `aspect-ratio: 1/1` (16:10 when a single plate stands alone).
@@ -526,8 +529,15 @@ constants; those constants are part of this system and must stay in step with th
   `#d99423` are the instrument's own indicators.
 - **Plate states:** `selectable` borders bronze on hover; `selected` borders bright amber,
   raises the fill to `plate-300` and turns its label amber.
-- **The power dial** is a row of six 3px segments that light amber as the dial climbs —
-  a real instrument's segment meter, not a slider.
+- **The power dial** is a **milled cap you turn**, never a slider and never a
+  minus/readout/plus row. On the drawn instrument it is `engine/dial.js` — a knurled cap
+  with an engraved index, detents cut round its collar and a 270° sweep, turned by drag, by
+  arrow keys once focused, or by the wheel. On the built instrument it is
+  `buildPowerDial()` in `bench3d.js` — the same cap as real geometry on a raked plinth
+  bolted to the plate, turned by reaching over and dragging it or by rolling the wheel over
+  it. **Both call `angleFor` / `valueForAngle` from `dial.js`**, which is the single
+  implementation of where a detent is, so the knob on the bench and the knob on the panel
+  can never disagree about which power a given angle means.
 
 **The Stencil, Not Colour Rule.** On the core bench a marked grain is told apart by a
 **stencilled cross**, never by its colour alone. It is the only version of the instrument
@@ -536,6 +546,62 @@ that survives a colour-blind player, and it is non-negotiable.
 **The Reserved Hues Rule applies here too.** Charge red and blue stay in the 3D chamber.
 An instrument that borrowed them would break the promise that those two colours mean one
 specific thing.
+
+### Signature: The Chemistry Card
+
+`.chem-card` — one to three sentences of **real chemistry**, drawn after a stage is solved
+and never before it. Bare `plate-000` with an amber left edge, a top-left chamfer, an amber
+stencil badge and a mono gold title. It is the one surface in the campaign where the
+withheld vocabulary is allowed, and that permission is the reason it exists: the player has
+just done the thing, so naming it is a payoff rather than a lecture.
+
+It is deliberately NOT the `.concept-card` next to it. A concept card teaches the
+**controls** and appears before a stage (`conceptTiming: 'intro'`, bronze edge, pills). A
+chemistry card teaches the **chemistry** and appears after it. `verify:quest` holds the
+chem card to three sentences and holds the intro card to the withheld-vocabulary list.
+
+The Learn track's equivalent is `.lq-reward` — same rule, same three-sentence ceiling,
+enforced by `verify:learn`.
+
+### Signature: The Practice Overlay
+
+The optional problem set a Learn world ends on (`learn/practice.js`). A **2D card on every
+tier**, including T4: these are the player's own revision, not a transmission from anyone,
+and no instrument in the fiction asks multiple-choice questions.
+
+- Options are `.choice-option` buttons stacked full width. A latched answer is marked by a
+  **left edge in `--accent-green` or `--accent-danger` over a 14%-opacity wash** — ink on a
+  hairline rule, never a coloured fill and never a glow.
+- The verdict block (`.lq-practice-verdict`) leads with a stencilled `//` or `!!`, exactly
+  as a banner does, and always carries the explanation. A question that is only marked
+  wrong teaches nothing.
+- Three keys, always: **Close** (leave), **Skip** (this question), **Next / Finish**. The
+  set is optional at every point and nothing is gated behind it.
+- The **Problems** key (`practiceKey()` in `screens/learn-world.js`) appears beside a
+  finished world's Enter key on the star map, on the Learn road, in the world brief and in
+  the walk HUD. It is a `btn-secondary`, because reopening revision is not the primary act
+  on any of those screens.
+
+### Signature: The Chamber Console
+
+At T4 the Charge Gardens' stage deck is not a card over the render — it is a **control desk
+across the bottom of the glass** (`quest3d/console.js`). One surface, not three: a raked
+fascia with the deck on the left and the stage rail and relay strip on the right, cut away
+at both outer corners, with toggle banks, indicator lamps, rotaries and a hand rail built
+in WebGL strictly around the aperture.
+
+Two numbers are the design, and `npm run verify:console` asserts both at fourteen
+viewports:
+
+- **It never covers more than 25% of the height of the view.** Three quarters of the glass
+  is always the chamber, because the molecule is the thing the stage is asking about.
+- **Its top edge stays below −0.33 NDC** — it is low, not central.
+
+The fit is solved by **measuring the projected corners**, not by trigonometry: the fascia is
+raked, so its near edge projects larger, and the flat estimate put a "quarter height" desk
+at 29% of a 16:9 screen with its lip off the bottom of the glass. Below 900 px of glass the
+console is not raised at all and the quest keeps the 2D stage deck, which is the interface
+`mobile-quest.css` was written for. A desk nobody can read is worse than an honest card.
 
 ## Do's and Don'ts
 
@@ -556,6 +622,12 @@ specific thing.
 - **Do** keep every interactive control at `min-height: 44px`.
 - **Do** write copy that is a label, a rule, an error, teaching, or a character speaking.
   Delete anything else.
+- **Do** cap a teaching card at three sentences. Both the campaign's `.chem-card` and the
+  Learn track's `.lq-reward` land after the work, in bits, and a card that runs to a
+  paragraph is the end-of-quest lecture moved earlier.
+- **Do** make an instrument's control a thing you turn, press or slide in the world when
+  the bench is built — and keep a keyboard path to the same value. A control that answers
+  only to a drag is invisible to a keyboard and unusable on a trackpad.
 
 ### Don't:
 
@@ -577,6 +649,13 @@ specific thing.
   interface does not describe itself.
 - **Don't** add a "COMMS LIVE" or "LIVE COMMS" badge, or any other claim that a connection
   is active. Comms channels are labelled diegetically (`COMMS`) and claim nothing.
+- **Don't** let an instrument invent a reading. The comms board shows the real standings or
+  says `NO GUILD TELEMETRY ON THIS CHANNEL`; it never falls back to a plausible season.
+  Avalon is pre-launch and a screen that makes data up is lying to a student.
+  `verify:holo` enforces it.
+- **Don't** put chemistry vocabulary anywhere but the chemistry card and the debrief. The
+  prompts, scans, hints, miss messages and briefings stay in plain language — that order is
+  the product, and `verify:quest` / `verify:learn` fail the build over it.
 - **Don't** read a guild's colour from the backend `accent_hex`. `TEAM_LIVERY` in
   `main.js` is the only source.
 - **Don't** fix a phone bug in `main.css` or `holo.css`. Phone rules live in the

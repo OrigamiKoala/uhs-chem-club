@@ -68,14 +68,32 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
 ## Capabilities and Constraints
 
 - **Campaign — Quest 1, The Charge Gardens of Erebus:** 20 stages, 650 XP, a scan →
-  compare → commit loop, physically honest 3D reaction animations, and an epilogue that
-  is the single place real terminology is introduced.
+  compare → commit loop, physically honest 3D reaction animations, a chemistry card of
+  one to three sentences after every solve, and an epilogue that gathers the terminology
+  into a debrief.
+- **The chemistry arrives in bits, after the work, on every quest.** Each stage of the
+  campaign and of each Learn quest ends on a card that names — in real chemical terms —
+  the idea the player just worked out. Capped at three sentences and checked by
+  `verify:quest` / `verify:learn`. The gameplay copy around it stays in plain language:
+  the card is where the vocabulary lands, not the prompt.
+- **Practice problems close a Learn world.** Five per built quest, gathered and shown at
+  the end of the WORLD rather than the end of a quest. They are **optional and skippable
+  at every point**, they pay nothing, they gate nothing — the next world opens on the last
+  quest's completion whether or not a question is answered — and they come back for ever
+  through a **Problems** key beside a finished world on the star map and on the Learn
+  road. They are a 2D overlay on every tier.
 - **Learn track:** ten worlds, one per AP Chemistry unit, 40 quests charted and two built
   (`unit01/q1-grain`, `unit01/q2-core`). Every Learn quest is a game with its own stages,
   scene, inputs and grading.
-- **Hardware tiers:** T3 (discrete GPU), T2 (Chromebook-class), T1 (no WebGL at all).
-  Every quest stage is 100% solvable in T1 through DOM-only inputs producing the same
-  payload contract.
+- **Hardware tiers:** T4 (walk the ship and the worlds in first person), T3 (discrete
+  GPU), T2 (Chromebook-class), T1 (no WebGL at all). Every quest stage is 100% solvable in
+  T1 through DOM-only inputs producing the same payload contract.
+- **At T4 the interface is in the world.** The Charge Gardens' stage deck is a control desk
+  in the chamber; both Unit 1 Learn instruments are built objects on a bench the player has
+  walked to, with their screens bolted over them and their power control a knob you reach
+  over and turn. Nothing a player reads differs between the two presentations — the DOM is
+  moved onto a plane, never re-authored — and a stage that grades correct on one grades
+  correct on the other.
 - **Grading is local and instant.** The browser grades at 0 ms; the server call is
   fire-and-forget telemetry.
 - **Fairness rules that are product facts, not implementation details:** XP is paid once
@@ -111,15 +129,22 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
 
 ## Evidence on Hand
 
-- A playable campaign and two built Learn quests, verified by five check scripts
-  (`verify:quest`, `verify:learn`, `verify:geometry`, `verify:media`, `verify:flows`).
+- A playable campaign and two built Learn quests, verified by ten check scripts
+  (`verify:quest`, `verify:console`, `verify:learn`, `verify:geometry`, `verify:media`,
+  `verify:flows`, `verify:ship`, `verify:tallow`, `verify:bench`, `verify:holo`). Several
+  of them build the real world in Node and measure it rather than trusting a table beside
+  it: nothing may occupy the same space as anything else, no screen may hang off the edge
+  of the glass, and the chamber console may not cover more than a quarter of the view.
 - Baked media: 19 mapped loops and cinematics with WebM, MP4, posters and captions, plus
   static SVG backdrops for T1 and environment stills under `/art/`.
 - Written plans under `docs/plans/` and the quest design doc `docs/quests/q1-charge-gardens.md`.
 - An officer runbook at `docs/runbook.md`.
 - **Absences future work must not fabricate:** there are no students, no play data, no
   testimonials, no screenshots of real use, no press and no institutional endorsement.
-  The product has never been in a student's hands.
+  The product has never been in a student's hands. **The product must not fabricate them
+  either:** the comms board shows the standings the backend actually computes, or it says
+  it has no telemetry. It used to fall back to four invented guild totals, which showed a
+  finished season to a club that has never played a stage.
 
 ## Product Principles
 
@@ -129,11 +154,16 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
    comparing two or more, which is what makes investigation the gameplay rather than
    reading comprehension.
 3. **Learning must never become grinding.** The study road pays no XP and never touches
-   Standings; hints are free; a replay costs and earns nothing.
+   Standings; hints are free; a replay costs and earns nothing; the practice problems are
+   optional, skippable and gate nothing. A study aid that held the road shut would be a
+   test, and this is not one.
 4. **The floor is the student who knows nothing and is holding a phone.** Low-end
    hardware and 375 px are the design target, not a degraded mode.
 5. **Nothing in the interface advertises the product.** Every string is a label, a rule,
    an error, something being taught, or a character speaking.
+6. **An instrument never invents a reading.** A screen that claims to be telemetry shows
+   what was measured or says it has none. This is a pre-launch product, and a plausible
+   number in place of a missing one is the easiest lie to ship and the hardest to notice.
 
 ## Accessibility & Inclusion
 

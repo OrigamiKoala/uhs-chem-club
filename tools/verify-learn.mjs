@@ -13,7 +13,8 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 
 import { join } from 'node:path';
 import {
-  WORLDS, TOTAL_WORLDS, ARENAS, QUEST_STATUSES, allQuests, getWorld, getQuest
+  WORLDS, TOTAL_WORLDS, ARENAS, QUEST_STATUSES, PROBLEMS_PER_QUEST,
+  allQuests, getWorld, getQuest
 } from '../src/learn/curriculum.js';
 
 /*
@@ -43,6 +44,15 @@ globalThis.document = globalThis.document || {
     appendChild: noop, addEventListener: noop, querySelector: () => null, querySelectorAll: () => [],
     getContext: () => null, setAttribute: noop })
 };
+
+/**
+ * Sentence count, done in a way that survives chemistry.
+ *
+ * A naive split on [.!?] reads "mass 16.0" and "H2O2." as three sentences, which
+ * would fail a card that is perfectly within its limit. Only a stop followed by
+ * whitespace or the end of the string counts.
+ */
+const sentenceCount = (str) => (String(str || '').match(/[.!?]+(?=\s|$)/g) || []).length;
 
 let failures = 0;
 const fail = (msg) => { console.log(`  FAIL ${msg}`); failures++; };
@@ -220,6 +230,10 @@ for (const q of quests.filter(q => q.status === 'live')) {
   }
 
   checkStageTable(q, mod);
+  // Owed by EVERY live quest, not only a table-driven one: the world's problem
+  // set is five per built quest, and a quest that grades some other way still
+  // owes its five.
+  checkPractice(q, mod);
 }
 
 /**
@@ -278,9 +292,24 @@ function checkStageTable(q, mod) {
 
     // Stage briefings must not exceed 2 sentences (CLAUDE.md §7).
     if (st.briefing?.body) {
-      const sentences = st.briefing.body.split(/[.!?]+/).filter(s => s.trim().length > 0);
-      if (sentences.length > 2) {
-        fail(`${label}: briefing exceeds 2 sentences (${sentences.length})`);
+      const n = sentenceCount(st.briefing.body);
+      if (n > 2) {
+        fail(`${label}: briefing exceeds 2 sentences (${n})`);
+        bad++;
+      }
+    }
+
+    // THE CHEMISTRY LANDS IN BITS. Every stage's reward card names the idea the
+    // player just worked out, in the words chemists use — and is capped at three
+    // sentences, because the thing this replaces is the end-of-quest lecture.
+    if (st.reward?.body) {
+      const n = sentenceCount(st.reward.body);
+      if (n > 3) {
+        fail(`${label}: reward card runs to ${n} sentences (max 3)`);
+        bad++;
+      }
+      if (st.reward.body.length < 40) {
+        fail(`${label}: reward card body is too terse to teach anything`);
         bad++;
       }
     }
@@ -367,6 +396,62 @@ function checkStageTable(q, mod) {
   if (!bad) ok(`${q.key}: ${stages.length} stages graded — solutions pass, misses are diagnosed`);
 
   checkBench(q, mod, stages);
+}
+
+/**
+ * THE PROBLEM SET. Five per built quest, gathered and shown at the END OF THE
+ * WORLD (`src/learn/practice.js`), optional and skippable, reopenable for ever
+ * from the star map.
+ *
+ * Checked here because the set is the one piece of Learn content a player meets
+ * outside a quest's own frame: a malformed answer id or an option list of one
+ * would be a dead question in a student's hands with nothing to catch it.
+ *
+ * Practice copy is EXEMPT from the withheld vocabulary. The set runs after the
+ * world's last debrief, which is where the real words are introduced — a
+ * revision question that had to call an atom "a piece" would be teaching the
+ * game's fiction rather than the chemistry.
+ */
+function checkPractice(q, mod) {
+  const set = mod.PRACTICE;
+  if (!Array.isArray(set)) {
+    fail(`${q.key}: exports no PRACTICE — every built quest owes ${PROBLEMS_PER_QUEST} problems`);
+    return;
+  }
+  if (set.length !== PROBLEMS_PER_QUEST) {
+    fail(`${q.key}: PRACTICE has ${set.length} problems, expected ${PROBLEMS_PER_QUEST}`);
+    return;
+  }
+
+  let bad = 0;
+  const emoji = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
+
+  set.forEach((p, i) => {
+    const label = `${q.key} problem ${i + 1}`;
+    if (!p.question || typeof p.question !== 'string') { fail(`${label}: no question`); bad++; }
+    if (!p.explanation || p.explanation.length < 20) {
+      // A question that is only marked wrong teaches nothing.
+      fail(`${label}: no explanation, or too terse to teach`); bad++;
+    }
+    if (!Array.isArray(p.options) || p.options.length < 3) {
+      fail(`${label}: needs at least three options (got ${p.options?.length ?? 0})`); bad++; return;
+    }
+    const ids = new Set();
+    for (const o of p.options) {
+      if (!o || !o.id || !o.label) { fail(`${label}: an option has no id or label`); bad++; continue; }
+      if (ids.has(o.id)) { fail(`${label}: duplicate option id "${o.id}"`); bad++; }
+      ids.add(o.id);
+      if (emoji.test(o.label)) { fail(`${label}: emoji in an option`); bad++; }
+    }
+    if (!ids.has(p.answer)) {
+      fail(`${label}: answer "${p.answer}" is not one of its own options`); bad++;
+    }
+    if (new Set(p.options.map(o => o.label)).size !== p.options.length) {
+      fail(`${label}: two options read the same`); bad++;
+    }
+  });
+
+  if (!bad) ok(`${q.key}: ${set.length} practice problems, all answerable`);
 }
 
 /**
@@ -503,11 +588,51 @@ for (const w of WORLDS) {
     .concat(w.quests.flatMap(q => [q.title, q.line]));
   for (const str of strings) {
     if (emoji.test(str)) fail(`world ${w.id}: emoji in player-facing copy — "${str}"`);
-    const sentences = String(str).split(/[.!?]+/).filter(s => s.trim().length > 0);
-    if (sentences.length > 2) fail(`world ${w.id}: "${str.slice(0, 40)}..." runs to ${sentences.length} sentences (limit 2)`);
+    const n = sentenceCount(str);
+    if (n > 2) fail(`world ${w.id}: "${str.slice(0, 40)}..." runs to ${n} sentences (limit 2)`);
   }
 }
 if (failures === copyFailures) ok('copy is emoji-free and within length');
+
+/* ------------------------------------------------------------------
+   THE PROBLEM SET IS A WORLD'S, NOT A QUEST'S
+   Five per quest, gathered and shown once the whole unit is worked — and
+   never before. A set that opened at the end of a quest would be a gate
+   in the middle of a road; a set that opened before the world was done
+   would ask about benches the player has not reached yet.
+   ------------------------------------------------------------------ */
+{
+  const before = failures;
+  const { loadWorldPractice, worldHasPractice, practiceOfferedFlag } =
+    await import('../src/learn/practice.js');
+
+  for (const w of WORLDS.filter(x => x.status === 'live')) {
+    const set = await loadWorldPractice(w);
+    const expected = w.liveQuestCount * PROBLEMS_PER_QUEST;
+    if (set.length !== expected) {
+      fail(`world ${w.id}: the set has ${set.length} problems, expected ${expected} (${w.liveQuestCount} built quests)`);
+    }
+    // Every problem says which bench it came from, so the card can name it.
+    for (const p of set) {
+      if (!p.questId || !p.questTitle) fail(`world ${w.id}: a problem is not stamped with its quest`);
+    }
+    // Nothing is offered on a world the player has not finished. The session
+    // store is empty here, so nothing is complete, so nothing may be offered.
+    if (worldHasPractice(w)) {
+      fail(`world ${w.id}: offers its problems on an unfinished world`);
+    }
+    if (!practiceOfferedFlag(w.id).includes(w.id)) {
+      fail(`world ${w.id}: the offered-once flag is not scoped to the world`);
+    }
+  }
+
+  // `practice.js` is inside `src/learn`, so the XP-rail scan above already
+  // covers it. Nothing to repeat here.
+
+  if (failures === before) {
+    ok(`${WORLDS.filter(x => x.status === 'live').length} live world(s): the problem set is assembled at world scope, XP-free, and withheld until the world is done`);
+  }
+}
 
 console.log(`\n${failures === 0 ? 'LEARN TRACK OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

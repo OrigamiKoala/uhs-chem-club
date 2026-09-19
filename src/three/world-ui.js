@@ -141,14 +141,15 @@ export class WorldPanel {
    *   tilt?: number,                 extra lean-back, radians (a console rake)
    *   designator?: string,           the stencil on the bezel, e.g. 'RDT-02'
    *   materials?: {frame, dark},     housing materials; defaults are built here
-   *   glow?: number                  filament spill intensity, 0 disables
+   *   glow?: number,                 filament spill intensity, 0 disables
+   *   housing?: 'bezel'|'none'       'none' when the caller builds its own case
    * }} opts
    */
   constructor(opts) {
     const {
       element, widthPx, heightPx, metres,
       scene, position = [0, 0, 0], rotation = [0, 0, 0], tilt = 0,
-      designator = null, materials = null, glow = 0.55
+      designator = null, materials = null, glow = 0.55, housing = 'bezel'
     } = opts;
 
     this.scene = scene;
@@ -175,14 +176,40 @@ export class WorldPanel {
     this.object.rotation.set(rotation[0] + tilt, rotation[1], rotation[2]);
 
     /* --- the hardware --- */
+    // A caller that is building its OWN case — a console fascia, a bench
+    // instrument — asks for no bezel. Issuing one anyway would put a second
+    // frame around an aperture that already has one.
     this.housing = new THREE.Group();
     this.housing.position.copy(this.object.position);
     this.housing.rotation.copy(this.object.rotation);
-    this.buildHousing(materials, designator, glow);
+    this.ownedGeos = [];
+    this.ownedMats = [];
+    if (housing !== 'none') this.buildHousing(materials, designator, glow);
 
     scene.add(this.object);
     scene.add(this.housing);
     worldUI.register(this);
+  }
+
+  /**
+   * Re-size the screen in place, keeping its authored pixel layout.
+   *
+   * The DOM is never re-flowed: the element stays `widthPx` wide and the plane
+   * it rides on is scaled, so a panel fitted to a phone and one fitted to a
+   * monitor lay out identically and only differ in how large they are drawn.
+   * The housing is scaled by the same factor, because it was built around this
+   * aperture and has to keep being built around it.
+   *
+   * @param {number} metres the new physical width
+   */
+  setWidth(metres) {
+    if (!(metres > 0)) return;
+    const factor = metres / this.width;
+    if (Math.abs(factor - 1) < 1e-4) return;
+    this.width = metres;
+    this.height = metres * (this.heightPx / this.widthPx);
+    this.object.scale.setScalar(metres / this.widthPx);
+    this.housing.scale.multiplyScalar(factor);
   }
 
   /**

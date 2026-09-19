@@ -63,8 +63,10 @@ export class FpsControls {
     this.boxColliders = []; // [{ minX, maxX, minZ, maxZ }]
     this.radialColliders = []; // [{ x, z, radius }]
     this.onInteract = null; // Callback for [E] / click on interactive target
-    this.onToggleHolo = null; // Callback for [X] key toggle
-    this.onCloseHolo = null; // Backwards-compatible callback for [X] key
+    // [X] is owned by stage.js's window-level keydown handler. A second handler
+    // here toggled the holograms twice per press — open and shut in one frame,
+    // which reads as "X does nothing". Kept as a no-op field so nothing that
+    // assigns it throws.
 
     // UI Prompt element
     this.promptEl = null;
@@ -306,13 +308,8 @@ export class FpsControls {
           this.onInteract();
         }
         break;
-      case "KeyX":
-        if (this.onToggleHolo) {
-          this.onToggleHolo();
-        } else if (this.onCloseHolo) {
-          this.onCloseHolo();
-        }
-        break;
+      // No KeyX case: hologram toggling belongs to stage.js alone. Two handlers
+      // on the same key used to cancel each other out.
     }
   }
 

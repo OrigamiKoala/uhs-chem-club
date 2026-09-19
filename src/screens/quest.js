@@ -108,6 +108,27 @@ function renderConceptCard(concept) {
   `;
 }
 
+/**
+ * The chemistry card: what the player just did, in the words chemists use.
+ *
+ * It is drawn ONLY after a solve, and it is the one place before the epilogue
+ * where the withheld vocabulary is allowed (CLAUDE.md §7). The teaching copy —
+ * prompts, scans, hints, miss messages — stays in plain language, because the
+ * order is the design: do the thing, then meet the word for it.
+ */
+function renderChemCard(chem) {
+  if (!chem) return '';
+  return `
+    <div class="chem-card" style="margin-top: 0.75rem;">
+      <div class="chem-card-header">
+        <span class="chem-badge">${esc(chem.badge)}</span>
+        <span class="chem-card-title">${esc(chem.title)}</span>
+      </div>
+      <p class="chem-card-body">${esc(chem.body)}</p>
+    </div>
+  `;
+}
+
 function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
   const isMulti = Boolean(cfg.multiArrow);
   const requiredArrows = isMulti ? (cfg.steps?.length || 2) : 1;
@@ -351,6 +372,23 @@ export function renderQuest(container) {
   };
   window.addEventListener('hashchange', cleanupPylon);
 
+  /**
+   * Find a node this stage built, wherever it now lives.
+   *
+   * At T4 the deck, the nav cluster, the relay map and the legend are MOVED out
+   * of `container` and onto the console in the scene. They keep their ids and
+   * their handlers, but they are no longer descendants of the quest screen, so
+   * a bare `container.querySelector` finds nothing and every `?.` after it is a
+   * silent no-op. Searching the container first keeps two mounted quests from
+   * stealing each other's controls; falling back to the document is what makes
+   * the diegetic console work at all.
+   */
+  const q = sel => container.querySelector(sel) || document.querySelector(sel);
+  const qa = sel => {
+    const local = container.querySelectorAll(sel);
+    return local.length ? local : document.querySelectorAll(sel);
+  };
+
   function loadStage(idx) {
     if (advanceTimer) {
       clearTimeout(advanceTimer);
@@ -405,6 +443,9 @@ export function renderQuest(container) {
       steps: localCfg.steps,
       concept: localCfg.concept || null,
       conceptTiming: localCfg.conceptTiming || 'reward',
+      // The chemistry card. Bundled, never taken from the sheet — the whole
+      // point of it is that the words are the real ones and are checked.
+      chem: localCfg.chem || null,
       // Gameplay truth stays bundled.
       moleculeId: localCfg.moleculeId,
       expectedFrom: localCfg.expectedFrom,
@@ -554,11 +595,11 @@ export function renderQuest(container) {
       showStageModal(cfg, currentStageIdx, isReplay, stageXp);
     }
 
-    const stageCard = container.querySelector('#stage-card');
-    const feedback = container.querySelector('#stage-feedback');
-    const hintBanner = container.querySelector('#stage-hint');
-    const flash = container.querySelector('#quest-screen-flash');
-    const arrowCountEl = container.querySelector('#arrow-count');
+    const stageCard = q('#stage-card');
+    const feedback = q('#stage-feedback');
+    const hintBanner = q('#stage-hint');
+    const flash = q('#quest-screen-flash');
+    const arrowCountEl = q('#arrow-count');
 
     function clearFeedback() {
       if (stageCard) stageCard.classList.remove('error-state');
@@ -578,19 +619,14 @@ export function renderQuest(container) {
     }
 
     // Stage instructions / info modal trigger
-    container.querySelector('#stage-info-btn')?.addEventListener('click', () => {
+    q('#stage-info-btn')?.addEventListener('click', () => {
       showStageModal(cfg, currentStageIdx, isReplay, stageXp);
     });
 
-    // The deck goes onto the desk once every handler above is attached. Moving
-    // a node does not detach its listeners, so this is safe at any point after
-    // the markup exists — it is done here so nothing below has to know.
-    questConsole = mountQuestConsole(container, viewer);
-
-    const dockBar = container.querySelector('#stage-dock-bar');
-    const closeBtn = container.querySelector('#stage-card-close-btn');
-    const openBtn = container.querySelector('#stage-card-open-btn');
-    const dockGradeBtn = container.querySelector('#stage-dock-grade-btn');
+    const dockBar = q('#stage-dock-bar');
+    const closeBtn = q('#stage-card-close-btn');
+    const openBtn = q('#stage-card-open-btn');
+    const dockGradeBtn = q('#stage-dock-grade-btn');
 
     function syncDockGradeBtn() {
       if (!dockGradeBtn || !gradeBtn) return;
@@ -627,7 +663,7 @@ export function renderQuest(container) {
       syncDockGradeBtn();
     });
 
-    container.querySelector('#quest-exit-btn')?.addEventListener('click', () => {
+    q('#quest-exit-btn')?.addEventListener('click', () => {
       if (isT4) {
         exitChamber();
       } else {
@@ -636,13 +672,13 @@ export function renderQuest(container) {
     });
 
     // 2. Stage navigation
-    container.querySelector('#prev-stage-btn')?.addEventListener('click', () => {
+    q('#prev-stage-btn')?.addEventListener('click', () => {
       if (currentStageIdx > 0) loadStage(currentStageIdx - 1);
     });
-    container.querySelector('#next-stage-btn')?.addEventListener('click', () => {
+    q('#next-stage-btn')?.addEventListener('click', () => {
       if (currentStageIdx < navMaxIdx()) loadStage(currentStageIdx + 1);
     });
-    container.querySelectorAll('.stage-dot.clickable').forEach(dot => {
+    qa('.stage-dot.clickable').forEach(dot => {
       dot.addEventListener('click', () => {
         const targetIdx = Number(dot.getAttribute('data-stage-idx'));
         if (!isNaN(targetIdx) && targetIdx >= 0 && targetIdx <= navMaxIdx() && targetIdx !== currentStageIdx) {
@@ -652,8 +688,8 @@ export function renderQuest(container) {
     });
 
     // 5. Hint ladder
-    const hintBtn = container.querySelector('#hint-btn');
-    const hintRungCount = container.querySelector('#hint-rung-count');
+    const hintBtn = q('#hint-btn');
+    const hintRungCount = q('#hint-rung-count');
     const availableHints = cfg.hints || [];
 
     function renderHints() {
@@ -711,7 +747,7 @@ export function renderQuest(container) {
     });
 
     // 6. Interactive inputs — 3D viewer, or DOM controls on Tier 1
-    const interactiveArea = container.querySelector('#stage-interactive-area');
+    const interactiveArea = q('#stage-interactive-area');
     const interactionKind = isMulti ? 'multi_arrow' : 'arrow';
     const usingFallback = tierManager.currentTier === 'T1' || !viewer;
 
@@ -726,7 +762,7 @@ export function renderQuest(container) {
       });
     }
 
-    container.querySelector('#tool-clear-btn')?.addEventListener('click', () => {
+    q('#tool-clear-btn')?.addEventListener('click', () => {
       if (usingFallback) {
         // Rebuild the dropdowns — there is no canvas to clear on Tier 1.
         renderFallbackInputs(interactiveArea, cfg, interactionKind, onPayloadChange);
@@ -740,7 +776,7 @@ export function renderQuest(container) {
     });
 
     // 7. Submit
-    const gradeBtn = container.querySelector('#grade-btn');
+    const gradeBtn = q('#grade-btn');
 
     if (gradeBtn) {
       gradeObserver = new MutationObserver(() => syncDockGradeBtn());
@@ -835,7 +871,15 @@ export function renderQuest(container) {
               feedback.insertAdjacentHTML('afterend', renderConceptCard(cfg.concept));
             }
 
-            const streakEl = container.querySelector('#clean-streak');
+            // And the chemistry itself, in one to three sentences, every stage.
+            // This is the one place in the campaign where the real words are
+            // used before the epilogue: the player has just done the thing, so
+            // naming it here is a payoff rather than a lecture.
+            if (cfg.chem && feedback) {
+              feedback.insertAdjacentHTML('afterend', renderChemCard(cfg.chem));
+            }
+
+            const streakEl = q('#clean-streak');
             if (streakEl) {
               streakEl.textContent = `${cleanStreak} CLEAN`;
               streakEl.classList.toggle('hidden', cleanStreak <= 0);
@@ -877,7 +921,7 @@ export function renderQuest(container) {
           if (!res.incomplete) {
             misses++;
             cleanStreak = 0;
-            const streakEl = container.querySelector('#clean-streak');
+            const streakEl = q('#clean-streak');
             if (streakEl) streakEl.classList.add('hidden');
           }
 
@@ -951,6 +995,25 @@ export function renderQuest(container) {
       }
       submitStage(currentPayload);
     });
+
+    /**
+     * THE DECK GOES ONTO THE DASHBOARD LAST, AND THAT ORDER IS LOAD-BEARING.
+     *
+     * Mounting the console MOVES the deck, the nav cluster, the relay map and
+     * the legend out of `container` and into the CSS3D layer, which hangs off
+     * `document.body`. Every `container.querySelector` after that point returns
+     * null, and because they are all written as `?.addEventListener` they fail
+     * silently — which is exactly what happened: at T4 the mount ran before the
+     * handlers were wired and not one control in the Charge Gardens worked.
+     * Submit, Hint, Clear, Exit, Prev, Next and every stage lamp were dead.
+     *
+     * Two things keep it fixed. This call is now the last statement in the
+     * stage render, after every listener is attached; and the queries above go
+     * through `q()` / `qa()`, which look in the document when the node has
+     * already left the container. Either alone would do it. Both together mean
+     * a future reordering cannot quietly break the controls again.
+     */
+    questConsole = mountQuestConsole(container, viewer);
   }
 
   async function showCompletionModal() {

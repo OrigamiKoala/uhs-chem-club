@@ -2030,7 +2030,7 @@ export class TallowWorld {
     }
 
     g.position.set(site.pos[0], baseY, site.pos[2]);
-    g.rotation.y = Math.PI;
+    g.rotation.y = this.siteFacing(site);
     this.scene.add(g);
 
     this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
@@ -2126,7 +2126,7 @@ export class TallowWorld {
     }
 
     g.position.set(site.pos[0], this.sub.floorY, site.pos[2]);
-    g.rotation.y = Math.PI;
+    g.rotation.y = this.siteFacing(site);
     this.scene.add(g);
 
     this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
@@ -2141,6 +2141,27 @@ export class TallowWorld {
    * plate it actually has. `dormant` is the cased-up instrument, which is
    * hidden for exactly as long as the deployed one is standing in its place.
    */
+  /**
+   * Which way a site faces: toward the ground a player walks in from.
+   *
+   * THIS USED TO BE A HARDCODED `Math.PI` ON BOTH BUILT SITES, AND IT WAS
+   * BACKWARDS. A site group's local +z is its front — the bench's back lip sits
+   * at local -z, the lean-to's back sheet and the lab's gauge board are behind
+   * it — so a site turned 180° away from its approach put its back wall between
+   * the player and the bench, and docked the instrument's camera on the far
+   * side of the plate looking at the lip. That is what "I can't adjust my
+   * viewport to see the entire thing" was.
+   *
+   * Derived from `approachPos` so it can never drift from where the player
+   * actually arrives: move the approach mark and the site turns to meet it.
+   */
+  siteFacing(site) {
+    const ax = (site.approachPos?.[0] ?? site.pos[0]) - site.pos[0];
+    const az = (site.approachPos?.[2] ?? site.pos[2]) - site.pos[2];
+    if (Math.hypot(ax, az) < 0.01) return 0;
+    return Math.atan2(ax, az);
+  }
+
   registerBenchAnchor(site, group, bench, local) {
     const cos = Math.cos(group.rotation.y);
     const sin = Math.sin(group.rotation.y);

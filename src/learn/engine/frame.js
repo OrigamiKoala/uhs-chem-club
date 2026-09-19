@@ -31,35 +31,47 @@ const RUNG2_AFTER_MS = 45000;
 /**
  * Where each region of the frame is bolted, in the bench's own local frame.
  *
- * Read these against the station layout in `bench3d.js`: stations run along
- * x at 0.92 m centres with their trays at z = 0, so every screen here sits
- * behind them (z negative) and above them (y above 1.1), cantilevered off the
- * gantry. Nothing overlaps the working surface, and no two panels overlap each
- * other — the same physics the props on the flat are held to.
+ * Read these against the station layout in `bench3d.js`: stations run along x at
+ * 0.92 m centres with their trays at z = 0, so every screen here sits behind
+ * them (z negative) and above them, cantilevered off the gantry. Nothing
+ * overlaps the working surface, and no two panels overlap each other — the same
+ * physics the props on the flat are held to.
  *
  * `px` is the authored CSS size. Dividing by PX_PER_M (760) gives the physical
- * size, so the deck below is a 0.74 x 0.95 m console screen: big enough to read
+ * size, so the deck below is a 0.74 x 0.87 m console screen: big enough to read
  * standing at the bench, small enough to belong to it.
+ *
+ * THE SCREENS HANG LOWER THAN THEY USED TO, AND THAT IS A FIX, NOT A TASTE.
+ * The gantry was tall enough that the tops of all four plates came out above
+ * the fixed HUD band — the player saw the bottom half of a briefing with no way
+ * to scroll the world to reach the rest of it, because a CSS3D plane is not
+ * clipped and gives no sign that anything is missing. `npm run verify:bench`
+ * now measures every plate through the real projection at every aspect the
+ * product supports and fails the build if one runs under the chrome.
+ *
+ * They are also FIXED. Nothing animates a panel's height, and nothing may: a
+ * readout that drifts up and down while you are reading it is the instrument
+ * moving, which no instrument does.
  */
-const PANEL_LAYOUT = {
+export const PANEL_LAYOUT = {
   deck: {
-    widthPx: 560, heightPx: 720,
-    position: [-0.94, 1.54, -0.68], rotation: [0, 0.40, 0], tilt: -0.07,
+    widthPx: 560, heightPx: 660,
+    position: [-0.94, 1.34, -0.68], rotation: [0, 0.40, 0], tilt: -0.07,
     designator: 'RDT-01'
   },
   rail: {
     widthPx: 460, heightPx: 250,
-    position: [0.94, 1.83, -0.68], rotation: [0, -0.40, 0], tilt: -0.05,
+    position: [0.94, 1.62, -0.68], rotation: [0, -0.40, 0], tilt: -0.05,
     designator: 'STG-02'
   },
   controls: {
     widthPx: 460, heightPx: 330,
-    position: [0.94, 1.36, -0.63], rotation: [0, -0.40, 0], tilt: -0.20,
+    position: [0.94, 1.16, -0.63], rotation: [0, -0.40, 0], tilt: -0.20,
     designator: 'TOOL-03'
   },
   comms: {
-    widthPx: 700, heightPx: 500,
-    position: [0, 1.74, -0.44], rotation: [0, 0, 0], tilt: -0.06,
+    widthPx: 700, heightPx: 460,
+    position: [0, 1.46, -0.44], rotation: [0, 0, 0], tilt: -0.06,
     designator: 'CMS-00'
   }
 };

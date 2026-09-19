@@ -1281,6 +1281,11 @@
   inset: 0;
   z-index: 1;
   padding: 16px;
+  /* A transmission is longer than the plate is tall. The screen scrolls rather
+     than spilling off its own edges — a CSS3D plane is not clipped, so an
+     overflow here would be text hanging in the air beside the bench. */
+  overflow-y: auto;
+  align-items: flex-start;
   /* No scrim: the screen is the thing being looked at, and dimming a world
      the player is standing in would be a page's idea of focus. */
   background: var(--plate-000);
@@ -1292,3 +1297,94 @@
   width: 100%;
   animation: none;
 }
+
+/* ===================================================================
+   PRACTICE PROBLEMS
+   The optional set a world ends on (`learn/practice.js`). A 2D card on
+   every tier — these are the player's own revision, not a transmission,
+   and there is no instrument in the fiction that asks them.
+   =================================================================== */
+.lq-practice-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+  margin-bottom: 0.9rem;
+}
+
+.lq-practice-question {
+  font-size: 1rem;
+  max-width: 36ch;
+  line-height: 1.45;
+}
+
+.lq-practice-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 0.9rem;
+}
+
+.lq-practice-opt {
+  text-align: left;
+  padding: 0.6rem 0.9rem;
+  width: 100%;
+}
+
+.lq-practice-feedback { min-height: 2.2rem; margin-bottom: 0.9rem; }
+
+.lq-practice-verdict {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-primary);
+  background: var(--plate-000);
+  border: 1px solid var(--border-durasteel);
+  border-left-width: 2px;
+}
+
+.lq-practice-verdict.correct { border-left-color: var(--accent-green); }
+.lq-practice-verdict.incorrect { border-left-color: var(--accent-danger); }
+
+.lq-practice-mark {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  flex: none;
+}
+
+.lq-practice-verdict.correct .lq-practice-mark { color: var(--accent-green); }
+.lq-practice-verdict.incorrect .lq-practice-mark { color: var(--accent-danger); }
+
+.lq-practice-keys { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.lq-practice-keys .btn-primary { margin-left: auto; }
+
+.lq-practice-summary {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-bright);
+  margin-bottom: 0.5rem;
+}
+
+.lq-practice-note {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 1.1rem;
+}
+
+/* The Problems key sits beside Enter on every list that shows a world. */
+.learn-world-keys,
+.learn-walk-keys,
+.learn-brief-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.learn-brief-foot { justify-content: space-between; }
+.map-learn-action { display: flex; flex-direction: column; gap: 0.4rem; align-items: stretch; }

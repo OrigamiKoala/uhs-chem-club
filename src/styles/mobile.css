@@ -173,6 +173,16 @@
   }
   .modal-card { max-width: 100%; margin: 0 auto; }
   .modal-card.glass-panel { padding: 1rem 0.9rem; }
+
+  /* The practice set is read on a phone as often as anywhere else. The question
+     wraps rather than being capped in ch, the option keys stay full-width 48 px
+     targets, and Close / Skip / Next sit on one row with Next pushed right. */
+  .lq-practice-head { flex-direction: column; gap: 0.4rem; }
+  .lq-practice-question { max-width: none; font-size: 0.95rem; }
+  .lq-practice-opt { width: 100%; }
+  .lq-practice-keys { gap: 0.45rem; }
+  .lq-practice-keys .btn-secondary,
+  .lq-practice-keys .btn-primary { min-height: 44px; flex: 1 1 auto; }
   .prose-block { font-size: 0.88rem; line-height: 1.6; }
 
   /* ---- Vess transmissions ---- */

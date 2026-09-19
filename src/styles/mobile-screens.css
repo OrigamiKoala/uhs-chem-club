@@ -297,6 +297,29 @@
   .m-learn .learn-enter,
   .m-learn-world .learn-enter { width: 100%; min-height: 44px; }
 
+  /* Enter and Problems stack on a phone rather than squeezing side by side.
+     The Problems key is how a finished world's practice set comes back, so it
+     has to be a full 44 px target like everything else. */
+  .m-learn .learn-world-keys,
+  .m-learn-world .learn-walk-keys,
+  .m-learn-world .learn-brief-foot,
+  .m-starmap .map-learn-action {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .m-learn .learn-world-keys > *,
+  .m-learn-world .learn-walk-keys > *,
+  .m-learn-world .learn-brief-foot > *,
+  .m-starmap .map-learn-action > * {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .m-learn-world .learn-brief-foot .learn-brief-count,
+  .m-starmap .map-learn-action .map-learn-blocked { min-height: 0; }
+
   .m-learn-quest .learn-host-bar { padding: 0.6rem 0.75rem; gap: 0.7rem; }
   .m-learn-quest .learn-host-title { font-size: 0.82rem; }
   .m-learn-quest .learn-host-back { min-height: 40px; }

@@ -751,27 +751,34 @@ export function createCommsStandingsTexture(teams = [], chatter = '') {
   ctx.fillStyle = '#38b000';
   ctx.fillText('[ FLEET COMMS // GUILD STANDINGS ]', 22, 34);
 
-  // Guild leaderboard rows
-  const defaultTeams = [
-    { rank: 1, name: 'THERMAL SMELTERS', score: 1840 },
-    { rank: 2, name: 'MINERAL MINING', score: 1620 },
-    { rank: 3, name: 'MOISTURE RIGS', score: 1450 },
-    { rank: 4, name: 'ATMOSPHERIC HARVESTERS', score: 1290 }
-  ];
-  const list = (teams && teams.length > 0) ? teams : defaultTeams;
+  // Guild leaderboard rows.
+  //
+  // THE BOARD NEVER INVENTS A NUMBER. It used to fall back to four hardcoded
+  // guild totals whenever the caller passed nothing, so a pre-launch club with
+  // no play data at all read a fully populated season off the comms CRT. An
+  // instrument that makes telemetry up is worse than one that says it has none.
+  const list = Array.isArray(teams) ? teams : [];
 
   ctx.font = '12px monospace';
   let yPos = 62;
+
+  if (!list.length) {
+    ctx.fillStyle = '#6f8f3f';
+    ctx.fillText('NO GUILD TELEMETRY ON THIS CHANNEL.', 22, yPos);
+    ctx.fillText('SCORES POST ONCE CREWS START EARNING.', 22, yPos + 22);
+  }
+
   list.slice(0, 4).forEach((t, idx) => {
     const r = String(t.rank || idx + 1).padStart(2, '0');
     const nm = (t.name || t.team_id || 'GUILD').toUpperCase();
-    // Not XP: a guild's score is the mean of its active members' XP scaled by
+    // Not XP: a guild's score is the mean of its ACTIVE members' XP scaled by
     // participation (Scoring.gs §4.4), so it neither equals nor tracks any one
     // player's total. Labelling it XP made the board look broken to a player who
     // earned 20 and saw the guild move 5.
-    const sc = String(t.team_score || t.score || 0);
+    const sc = String(t.team_score ?? t.score ?? 0);
+    const crew = (t.active != null && t.roster != null) ? `${t.active}/${t.roster}` : '';
     ctx.fillStyle = idx === 0 ? '#ff9f1c' : '#8fb055';
-    ctx.fillText(`${r}  ${nm.padEnd(28, '.')} ${sc}`, 22, yPos);
+    ctx.fillText(`${r}  ${nm.slice(0, 22).padEnd(24, '.')} ${sc.padStart(5)}  ${crew}`, 22, yPos);
     yPos += 22;
   });
 
@@ -785,9 +792,11 @@ export function createCommsStandingsTexture(teams = [], chatter = '') {
   // Chatter snippet
   ctx.font = '11px monospace';
   ctx.fillStyle = '#6f8f3f';
-  ctx.fillText('INTERCEPTED FLEET TRAFFIC:', 22, 178);
+  ctx.fillText(list.length ? 'GUILD SCORE = MEAN OF ACTIVE CREW' : 'CHANNEL STATUS:', 22, 178);
   ctx.fillStyle = '#ff9f1c';
-  const chat = chatter || 'Thermal Smelters: "Core temp nominal on Pylon 12. Transfer arc locked."';
+  // The chatter line is whatever the caller measured, never a scripted quote
+  // dressed as intercepted traffic.
+  const chat = chatter || 'AWAITING TELEMETRY';
   const truncatedChat = chat.length > 56 ? chat.slice(0, 54) + '…' : chat;
   ctx.fillText(truncatedChat, 22, 198);
 

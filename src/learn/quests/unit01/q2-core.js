@@ -519,6 +519,69 @@ export const DEBRIEF = {
 };
 
 /* ------------------------------------------------------------------
+   PRACTICE PROBLEMS
+   Five questions covering nucleus, protons, neutrons, electrons, shells,
+   and ions. Appear after the debrief, before the player exits.
+   ------------------------------------------------------------------ */
+export const PRACTICE = [
+  {
+    question: 'A beam fires through a specimen. 39 of 40 particles pass straight through empty space, and 1 rebounds backward. What does this prove?',
+    options: [
+      { id: 'a', label: 'The specimen is solid all the way through' },
+      { id: 'b', label: 'The specimen is mostly empty space with a tiny dense nucleus' },
+      { id: 'c', label: 'The specimen has a hollow outer shell' },
+      { id: 'd', label: 'The specimen has no internal structure' }
+    ],
+    answer: 'b',
+    explanation: 'The rare direct rebound reveals a tiny, incredibly dense nucleus — exactly what Rutherford\'s gold foil experiment demonstrated.'
+  },
+  {
+    question: 'You probe a nucleus and count 8 marked grains (protons) and 8 blank grains (neutrons). What element is this?',
+    options: [
+      { id: 'a', label: 'Carbon (6 protons)' },
+      { id: 'b', label: 'Nitrogen (7 protons)' },
+      { id: 'c', label: 'Oxygen (8 protons)' },
+      { id: 'd', label: 'Neon (10 protons)' }
+    ],
+    answer: 'c',
+    explanation: 'The number of protons (atomic number) defines the element. 8 protons = oxygen, regardless of the neutron count.'
+  },
+  {
+    question: 'A specimen has 6 protons and 6 electrons. What is its net electrical charge?',
+    options: [
+      { id: 'a', label: '+6' },
+      { id: 'b', label: '−6' },
+      { id: 'c', label: '0 (electrically neutral)' },
+      { id: 'd', label: '+12' }
+    ],
+    answer: 'c',
+    explanation: 'Equal numbers of protons (+1 each) and electrons (−1 each) cancel out, giving a net charge of zero.'
+  },
+  {
+    question: 'Carbon has 6 electrons distributed as 2 in the first shell and 4 in the second. How many valence electrons does carbon have?',
+    options: [
+      { id: 'a', label: '2' },
+      { id: 'b', label: '4' },
+      { id: 'c', label: '6' },
+      { id: 'd', label: '8' }
+    ],
+    answer: 'b',
+    explanation: 'Valence electrons are in the outermost shell. Carbon\'s second (outer) shell holds 4 electrons — which is why carbon forms 4 bonds.'
+  },
+  {
+    question: 'You strip 2 electrons off a neutral sodium atom (11 protons, 11 electrons). What is the resulting ion?',
+    options: [
+      { id: 'a', label: 'Na⁻ (charge −1)' },
+      { id: 'b', label: 'Na⁺ (charge +1)' },
+      { id: 'c', label: 'Na²⁺ (charge +2)' },
+      { id: 'd', label: 'Na²⁻ (charge −2)' }
+    ],
+    answer: 'c',
+    explanation: 'Removing 2 electrons from a neutral atom leaves 11 protons and 9 electrons: net charge = +2, written Na²⁺.'
+  }
+];
+
+/* ------------------------------------------------------------------
    BENCH STATE
    Everything a stage's `check` is allowed to look at. One shape for all
    eight stages, so the widgets stay interchangeable.
