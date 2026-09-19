@@ -116,39 +116,29 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
   if (currentStageIdx === 0 && b) {
     showModal(`
       <div class="quest-modal-head" style="text-align: center; margin-bottom: 1.15rem;">
-        <div class="eyebrow lit" style="letter-spacing: 0.18em;">${esc(b.badge)}</div>
         <h2 id="stage-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.25rem;">
-          Pylon 1 · ${esc(cfg.title || 'Target Lock')}
+          Stage 1 · ${esc(cfg.title || 'Target Lock')}
         </h2>
         <div style="margin-top: 0.35rem; display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
-          <span class="tag">Sector 01 · Erebus</span>
-          <span class="tag live">Pylon 1 of ${TOTAL_STAGES}</span>
-          ${isReplay ? '<span class="tag">Replay · XP already earned</span>' : `<span class="tag live">+${stageXp} XP</span>`}
+          <span class="tag live">Stage 1 of ${TOTAL_STAGES}</span>
+          ${isReplay ? '<span class="tag">Replay</span>' : `<span class="tag live">+${stageXp} XP</span>`}
         </div>
       </div>
 
-      <!-- Live Typewriter Transmission Slot -->
-      <div id="modal-transmission-slot" style="margin-bottom: 1.15rem;"></div>
+      <div style="background: var(--plate-100); border: 1px solid var(--border-durasteel); padding: 1rem 1.15rem; margin-bottom: 1.15rem; font-size: 0.95rem; line-height: 1.55; color: var(--text-bright);">
+        ${cfg.prompt ? esc(cfg.prompt) : 'Connect the molecules to trigger the reaction.'}
+      </div>
 
       ${introConcept ? renderConceptCard(introConcept) : ''}
 
       <div style="margin-top: 1.15rem;">
         <button type="button" id="modal-start-stage-btn" class="btn-primary" style="width: 100%; padding: 11px 0; font-size: 0.92rem; letter-spacing: 0.08em;">
-          Power Pylon 1
+          Start Stage
         </button>
       </div>
     `, { labelledBy: 'stage-modal-title' });
 
-    const modalTransmission = createTransmissionElement({
-      speaker: b.speaker,
-      subtitle: b.subtitle,
-      text: b.message,
-      variant: 'hero'
-    });
-    document.getElementById('modal-transmission-slot')?.appendChild(modalTransmission.element);
-
     document.getElementById('modal-start-stage-btn')?.addEventListener('click', () => {
-      if (modalTransmission?.destroy) modalTransmission.destroy();
       closeModal();
       soundscape.playNavRelayClick();
     });
@@ -157,12 +147,11 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
 
   showModal(`
     <div class="quest-modal-head" style="text-align: center; margin-bottom: 1.25rem;">
-      <div class="eyebrow lit">Pylon ${currentStageIdx + 1} of ${TOTAL_STAGES}</div>
       <h2 id="stage-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.3rem;">
-        Pylon ${currentStageIdx + 1} · ${esc(cfg.title || ('Pylon ' + (currentStageIdx + 1)))}
+        Stage ${currentStageIdx + 1} · ${esc(cfg.title || ('Stage ' + (currentStageIdx + 1)))}
       </h2>
       <div style="margin-top: 0.4rem;">
-        ${isReplay ? '<span class="tag">Replay · XP already earned</span>' : `<span class="tag live">+${stageXp} XP</span>`}
+        ${isReplay ? '<span class="tag">Replay</span>' : `<span class="tag live">+${stageXp} XP</span>`}
       </div>
     </div>
 
@@ -180,7 +169,7 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
 
     <div style="margin-top: 1.25rem;">
       <button type="button" id="modal-start-stage-btn" class="btn-primary" style="width: 100%; padding: 10px 0; font-size: 0.9rem;">
-        Power Pylon ${currentStageIdx + 1}
+        Start Stage
       </button>
     </div>
   `, { labelledBy: 'stage-modal-title' });
@@ -268,25 +257,25 @@ export function renderQuest(container) {
         <div class="erebus-hud-card">
           <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.35rem;">
             <a href="#/bridge" class="btn-secondary quest-btn-sm" style="text-decoration: none; font-size: 0.7rem;">
-              ← Return to Ship
+              ← Bridge
             </a>
-            <span class="eyebrow lit" style="font-size: 0.68rem;">SECTOR 01 // EREBUS</span>
+            <span class="eyebrow lit" style="font-size: 0.68rem;">EREBUS</span>
           </div>
           <div style="font-family: var(--font-display); font-size: 0.85rem; font-weight: 700; color: var(--text-bright); text-transform: uppercase;">
             The Charge Gardens
           </div>
           <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-gold); margin-top: 0.2rem;">
-            Active Relay: Pylon ${Math.min(maxStageReached + 1, TOTAL_STAGES)} / ${TOTAL_STAGES} · Approach pylon to calibrate
+            Stage ${Math.min(maxStageReached + 1, TOTAL_STAGES)} of ${TOTAL_STAGES}
           </div>
           <div style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); margin-top: 0.35rem;">
-            Controls: WASD Walk · Mouse Drag Look · [E] Deploy Chamber · Lander to Exit
+            WASD: Move · Drag: Look · E: Interact
           </div>
         </div>
 
         <div class="erebus-hud-card" style="min-width: 220px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-            <span class="eyebrow lit">BASIN RELAY LOOP</span>
-            <span class="tag live">${maxStageReached} / ${TOTAL_STAGES} ONLINE</span>
+            <span class="eyebrow lit">STAGES</span>
+            <span class="tag live">${maxStageReached} / ${TOTAL_STAGES} CLEARED</span>
           </div>
           ${renderGardensMap({ clearedCount: maxStageReached, currentStageIdx: Math.min(maxStageReached, TOTAL_STAGES - 1), compact: true })}
         </div>
@@ -471,8 +460,8 @@ export function renderQuest(container) {
           <!-- Density Legend -->
           <div class="colormap-legend" style="min-width: 168px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.62rem; letter-spacing: 0.16em;">
-              <span style="color: var(--charge-red-ink);">GIVER</span>
-              <span style="color: var(--charge-blue-ink);">TAKER</span>
+              <span style="color: var(--charge-red-ink);">NEGATIVE</span>
+              <span style="color: var(--charge-blue-ink);">POSITIVE</span>
             </div>
             <div style="height: 6px; background: linear-gradient(90deg, var(--charge-red) 0%, var(--plate-500) 50%, var(--charge-blue) 100%);"></div>
           </div>
@@ -489,22 +478,23 @@ export function renderQuest(container) {
             </button>
           </div>
           <div class="stage-prompt-card" id="stage-card">
-            <!-- Vess Comms Transmission Card -->
-            <div id="quest-transmission-slot" style="margin-bottom: 0.5rem;"></div>
-
             <div class="stage-header" style="margin-bottom: 0.4rem; padding-bottom: 0.4rem;">
               <div class="stage-header-main" style="display: flex; align-items: center; gap: 0.6rem;">
                 <span class="stage-title">${cfg.title || ('Stage ' + (currentStageIdx + 1))}</span>
                 ${isReplay ? '<span class="tag">Replay</span>' : `<span class="tag live">+${stageXp} XP</span>`}
               </div>
               <div class="stage-header-actions" style="display: flex; gap: 0.4rem; align-items: center;">
-                <button type="button" id="stage-info-btn" class="btn-secondary quest-btn-sm" title="${currentStageIdx === 0 ? 'View mission briefing' : 'View stage instructions'}">
-                  ${currentStageIdx === 0 ? '◈ Briefing' : '◈ Objective'}
+                <button type="button" id="stage-info-btn" class="btn-secondary quest-btn-sm" title="Instructions">
+                  Instructions
                 </button>
                 <button type="button" id="stage-card-close-btn" class="btn-secondary quest-btn-sm" title="Close stage panel" aria-label="Close stage panel">
                   Close
                 </button>
               </div>
+            </div>
+
+            <div class="stage-instruction" style="font-size: 0.88rem; line-height: 1.45; color: var(--text-bright); margin-bottom: 0.4rem;">
+              ${esc(cfg.prompt || '')}
             </div>
 
             <!-- Toolbar -->
@@ -520,7 +510,7 @@ export function renderQuest(container) {
               <div class="stage-toolbar-right">
                 ${(cfg.hints || []).length ? `
                   <button type="button" id="hint-btn" class="btn-secondary quest-btn-sm">
-                    ◈ Hint <span class="hint-rung-count" id="hint-rung-count">1/${cfg.hints.length}</span>
+                    Hint <span class="hint-rung-count" id="hint-rung-count">1/${cfg.hints.length}</span>
                   </button>
                 ` : ''}
                 <button type="button" id="tool-clear-btn" class="btn-secondary quest-btn-sm">
@@ -540,16 +530,6 @@ export function renderQuest(container) {
         </div>
       </div>
     `;
-
-    // Mount Vess transmission
-    activeTransmission = createTransmissionElement({
-      speaker: 'VESS // COMMS',
-      badge: currentStageIdx === 0 ? 'SECTOR 01 · TRANSMISSION' : `PYLON ${currentStageIdx + 1}`,
-      subtitle: currentStageIdx === 0 ? 'EREBUS // CHARGE GARDENS' : '',
-      text: initialText,
-      variant: currentStageIdx === 0 ? 'hero' : ''
-    });
-    container.querySelector('#quest-transmission-slot')?.appendChild(activeTransmission.element);
 
     // Briefing modal only for genuinely new mechanics — every other stage starts
     // immediately. The Objective button above reopens it on demand.
@@ -828,20 +808,6 @@ export function renderQuest(container) {
               if (dismissBtn) dismissBtn.addEventListener('click', clearFeedback);
             }
 
-            // Update transmission to show Vess confirming pylon activation
-            if (pylonStory?.onClear) {
-              if (activeTransmission?.destroy) activeTransmission.destroy();
-              activeTransmission = createTransmissionElement({
-                speaker: 'VESS // RELAY ONLINE',
-                text: pylonStory.onClear
-              });
-              const transSlot = container.querySelector('#quest-transmission-slot');
-              if (transSlot) {
-                transSlot.innerHTML = '';
-                transSlot.appendChild(activeTransmission.element);
-              }
-            }
-
             // The concept card is the payoff, not the briefing: it names the idea the
             // player just worked out, and only once they have worked it out.
             if (cfg.concept && cfg.conceptTiming !== 'intro' && feedback) {
@@ -985,16 +951,14 @@ export function renderQuest(container) {
     const debriefStory = QUEST1_STORY.debrief || {};
     const sections = debriefStory.sections || [
       {
-        speaker: 'VESS // QUARTERMASTER',
-        badge: 'MISSION COMPLETE · SECTOR 01',
-        subtitle: 'EREBUS // CHARGE GARDENS',
+        speaker: 'Vess',
         text: debriefStory.message || 'Outstanding work restoring the grid. Thank you for completing the mission.'
       }
     ];
 
     showModal(`
       <div class="quest-modal-head" style="text-align: center; margin-bottom: 0.85rem;">
-        <div class="eyebrow lit" style="letter-spacing: 0.18em;">SECTOR 01 CLEARED // MISSION DEBRIEF</div>
+        <div class="eyebrow lit" style="letter-spacing: 0.18em;">COMPLETE</div>
         <h2 id="quest-complete-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.25rem;">The Charge Gardens</h2>
       </div>
 
@@ -1013,10 +977,8 @@ export function renderQuest(container) {
         </div>
       </div>
 
-      <!-- Vess Multi-Section CRT Transmission Deck -->
       <div id="modal-debrief-transmission-slot" style="margin-bottom: 0.75rem;"></div>
 
-      <!-- Dialogue Stepper & Controls -->
       <div class="debrief-controls" style="display: flex; justify-content: space-between; align-items: center; background: var(--plate-100); border: 1px solid var(--border-durasteel); padding: 0.55rem 0.85rem; margin-bottom: 1.25rem;">
         <div class="debrief-controls-left" style="display: flex; align-items: center; gap: 0.65rem;">
           <button type="button" id="debrief-prev-btn" class="btn-secondary quest-btn-sm" style="min-width: 62px;" disabled>
@@ -1028,7 +990,7 @@ export function renderQuest(container) {
             `).join('')}
           </div>
           <span class="eyebrow" id="debrief-counter" style="font-size: 0.65rem; color: var(--accent-gold); letter-spacing: 0.1em;">
-            SECTION 1 / ${sections.length}
+            1 / ${sections.length}
           </span>
         </div>
 
@@ -1039,7 +1001,7 @@ export function renderQuest(container) {
 
       ${item ? `
         <div id="salvage-banner" class="hidden" style="text-align: center; margin-bottom: 1.25rem;">
-          <span class="tag warn">Salvaged · ${item.replace(/_/g, ' ')}</span>
+          <span class="tag warn">Item earned · ${item.replace(/_/g, ' ')}</span>
         </div>
       ` : ''}
 
@@ -1053,9 +1015,7 @@ export function renderQuest(container) {
     let transmissionFinished = false;
 
     const debriefTransmission = createTransmissionElement({
-      speaker: sections[0].speaker || 'VESS // QUARTERMASTER',
-      badge: sections[0].badge || 'MISSION COMPLETE',
-      subtitle: sections[0].subtitle || 'SECTOR 01 · EREBUS',
+      speaker: sections[0].speaker || 'Vess',
       text: sections[0].text,
       variant: 'hero',
       onComplete: () => {
@@ -1070,9 +1030,7 @@ export function renderQuest(container) {
       transmissionFinished = false;
 
       debriefTransmission.update({
-        speaker: sec.speaker || 'VESS // SCIENCE DEBRIEF',
-        badge: sec.badge || `DEBRIEF ${idx + 1}/${sections.length}`,
-        subtitle: sec.subtitle || 'SECTOR 01 · CHARGE GARDENS',
+        speaker: sec.speaker || 'Vess',
         text: sec.text,
         onComplete: () => {
           transmissionFinished = true;
@@ -1086,7 +1044,7 @@ export function renderQuest(container) {
       const salvageBanner = document.getElementById('salvage-banner');
 
       if (prevBtn) prevBtn.disabled = (idx === 0);
-      if (counter) counter.textContent = `SECTION ${idx + 1} / ${sections.length}`;
+      if (counter) counter.textContent = `${idx + 1} / ${sections.length}`;
 
       document.querySelectorAll('[data-debrief-dot]').forEach((dot, dIdx) => {
         dot.classList.toggle('active', dIdx === idx);
@@ -1094,7 +1052,7 @@ export function renderQuest(container) {
       });
 
       if (idx === sections.length - 1) {
-        if (nextBtn) nextBtn.textContent = 'Acknowledge ✓';
+        if (nextBtn) nextBtn.textContent = 'Done';
         if (exitActions) exitActions.classList.remove('hidden');
         if (salvageBanner) salvageBanner.classList.remove('hidden');
       } else {

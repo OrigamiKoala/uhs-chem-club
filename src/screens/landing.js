@@ -35,7 +35,6 @@ export function renderLanding(container) {
         </div>
 
         <div class="landing-body" style="padding: 1.8rem 1.8rem 2rem; text-align: center;">
-          <div class="eyebrow">Sector 01 · Salvage Hauler Avalon</div>
           <h1 class="landing-title" style="font-family: var(--font-imperial); font-size: 2.3rem; letter-spacing: 0.32em; font-weight: 700; margin: 0.4rem 0 0 0.32em; color: var(--text-bright); text-shadow: var(--engrave);">
             AVALON
           </h1>
@@ -50,33 +49,23 @@ export function renderLanding(container) {
               <a href="${session.teamId ? '#/bridge' : '#/onboarding'}" class="btn-primary" style="text-decoration: none;">
                 ${session.teamId ? 'Bridge' : 'Choose Guild'}
               </a>
-              <a href="#/leaderboard" class="btn-secondary" style="text-decoration: none;">Fleet Comms</a>
+              <a href="#/leaderboard" class="btn-secondary" style="text-decoration: none;">Standings</a>
               <button type="button" id="landing-signout-btn" class="btn-secondary" style="color: var(--text-muted); border-style: dashed;">
                 Sign Out
               </button>
             </div>
           ` : `
-            <!-- Scene 0: Cold Open Comms Transmission -->
-            <div class="cold-open-box m-inset" style="margin-bottom: 1.6rem; text-align: left; padding: 1rem 1.1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                <span class="eyebrow lit">VESS // QUARTERMASTER</span>
-              </div>
-              <p style="font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.45; color: var(--accent-gold); margin: 0;">
-                "Signal's weak out here. If you can read this, the Avalon's still hiring."
-              </p>
-            </div>
-
             <div class="m-cta-stack" style="display: flex; flex-direction: column; gap: 0.65rem; max-width: 280px; margin: 0 auto;">
               <a href="#/register" class="btn-primary" id="sign-on-cta" style="text-decoration: none;">
                 Create Account
               </a>
               <a href="#/demo" class="btn-secondary" style="text-decoration: none;">
-                Try a Pylon
+                Try Demo
               </a>
               <div class="m-foot" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.8rem; font-family: var(--font-mono); font-size: 0.72rem;">
                 <a href="#/login" class="link-accent">Sign in</a>
                 <button type="button" id="landing-sound-btn" class="btn-chip" style="font-size: 0.65rem;">
-                  ${isMuted ? '// SOUND OFF' : '// SOUND ON'}
+                  ${isMuted ? 'Sound off' : 'Sound on'}
                 </button>
               </div>
             </div>
@@ -100,7 +89,7 @@ export function renderLanding(container) {
     landingSoundBtn.addEventListener('click', () => {
       const nextMuted = !session.sound?.muted;
       session.setSound({ muted: nextMuted });
-      landingSoundBtn.textContent = nextMuted ? '// SOUND OFF' : '// SOUND ON';
+      landingSoundBtn.textContent = nextMuted ? 'Sound off' : 'Sound on';
       landingSoundBtn.classList.toggle('warn', nextMuted);
       if (!nextMuted) soundscape.playToggleClack();
     });

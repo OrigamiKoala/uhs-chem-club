@@ -95,16 +95,16 @@ function learnPanel() {
             </div>
             <div class="map-learn-body">
               <div class="map-learn-name">${esc(w.world)}</div>
-              <div class="eyebrow map-learn-place">${esc(w.place)} · ${esc(w.title)}</div>
+              <div class="eyebrow map-learn-place">${esc(w.title)}</div>
               <p class="map-learn-line">${esc(w.line)}</p>
               <div class="eyebrow map-learn-count">
-                ${w.questCount} quests charted${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} built` : ""}
+                ${w.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} complete` : ""}
               </div>
             </div>
             <div class="map-learn-action">
               ${enterable
-                ? `<a href="#/learn/${esc(w.id)}" class="btn-primary quest-btn-sm m-tap" style="text-decoration: none;">${walk ? `Disembark to ${esc(w.world)}` : "Enter"}</a>`
-                : `<span class="eyebrow map-learn-blocked">${st === "locked" ? "Finish the world before" : "Not yet built"}</span>`}
+                ? `<a href="#/learn/${esc(w.id)}" class="btn-primary quest-btn-sm m-tap" style="text-decoration: none;">${walk ? `Enter ${esc(w.world)}` : "Enter"}</a>`
+                : `<span class="eyebrow map-learn-blocked">${st === "locked" ? "Locked" : "Coming soon"}</span>`}
             </div>
           </article>
         `;
@@ -164,10 +164,9 @@ export function renderStarMap(container) {
       <div class="in-world-terminal starmap-terminal">
         <div class="terminal-header">
           <div>
-            <span class="eyebrow lit">// TACTICAL HOLO-TABLE //</span>
-            <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">STAR MAP & MISSION CARTOGRAPHY</h2>
+            <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">STAR MAP</h2>
           </div>
-          <button type="button" id="close-terminal-btn" class="terminal-close-btn">[X] FREE WALK</button>
+          <button type="button" id="close-terminal-btn" class="terminal-close-btn">CLOSE</button>
         </div>
 
         ${tabRow("sectors")}
@@ -176,36 +175,28 @@ export function renderStarMap(container) {
 
         <!-- Integrated Active Quest: Sector 01 (The Charge Gardens) -->
         <section class="glass-panel" style="margin-bottom: 1.2rem; padding: 1.1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-            <span class="eyebrow lit">PRIMARY OBJECTIVE · SECTOR 01</span>
+          <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.4rem;">
             <span class="tag ${isComplete ? "live" : "warn"}">${isComplete ? "RESOLVED" : cleared > 0 ? "UNDERWAY" : "STANDBY"}</span>
           </div>
 
           <h3 style="font-family: var(--font-imperial); font-size: 1.2rem; color: var(--text-bright); text-transform: uppercase; margin-bottom: 0.2rem;">
-            EREBUS — THE CHARGE GARDENS
+            THE CHARGE GARDENS
           </h3>
           <p style="font-size: 0.82rem; color: var(--accent-gold); margin-bottom: 0.8rem;">
             "Find what pulls. Draw the line."
           </p>
 
-          <div style="padding: 0.7rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber); margin-bottom: 0.9rem;">
-            <div class="eyebrow lit" style="font-size: 0.6rem; margin-bottom: 0.25rem;">VESS // TRANSMISSION</div>
-            <p style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-primary); margin: 0; line-height: 1.4;">
-              "${esc(transmissionText)}"
-            </p>
-          </div>
-
           ${renderGardensMap({ clearedCount: cleared, compact: true })}
 
           <div style="margin-top: 1rem;">
             <button type="button" id="launch-sector1-btn" class="btn-primary" style="width: 100%; min-height: 42px; font-size: 0.85rem; letter-spacing: 0.12em;">
-              ${canPlay ? (isComplete ? "EXPLORE THE CHARGE GARDENS [SECTOR 01]" : `DISEMBARK TO EREBUS · PYLON ${cleared + 1}`) : "LAUNCH FREE SIMULATION"}
+              ${canPlay ? (isComplete ? "Replay The Charge Gardens" : `Continue Stage ${cleared + 1}`) : "Try Demo"}
             </button>
           </div>
         </section>
 
         <!-- Charted Sectors Grid -->
-        <div class="eyebrow" style="margin-bottom: 0.5rem; letter-spacing: 0.12em;">SECTOR ARCHIVE</div>
+        <div class="eyebrow" style="margin-bottom: 0.5rem; letter-spacing: 0.12em;">SECTORS</div>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem;">
           ${SECTORS.map(s => {
             const isLive = s.status === "live";
@@ -225,7 +216,6 @@ export function renderStarMap(container) {
         </div><!-- /sectors -->
 
         <div data-map-panel="learn" hidden>
-          <div class="eyebrow" style="margin-bottom: 0.5rem; letter-spacing: 0.12em;">LEARN ROAD · TEN WORLDS</div>
           ${learnPanel()}
         </div>
       </div>
@@ -245,7 +235,6 @@ export function renderStarMap(container) {
           art: "/art/starmap.jpg",
           video: "/video/starmap_loop.webm",
           artAlt: "",
-          eyebrow: "Charted sectors",
           title: "Star Map",
           actions: canPlay
             ? `<button type="button" id="launch-sector1-btn" class="btn-primary">Sector 01</button>`
@@ -261,7 +250,7 @@ export function renderStarMap(container) {
               <article class="holo-card sector-card" style="${isLive ? "" : "opacity: 0.5;"} display: flex; flex-direction: column;">
                 <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.9rem;">
                   <span class="eyebrow ${isLive ? "lit" : ""}">Sector ${s.code}</span>
-                  <span class="tag ${isLive ? "live" : "locked"}">${isLive ? "Open" : "No Charts"}</span>
+                  <span class="tag ${isLive ? "live" : "locked"}">${isLive ? "Open" : "Coming soon"}</span>
                 </div>
 
                 <h2 class="sector-world" style="font-family: var(--font-imperial); font-size: 1.25rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: ${isLive ? "var(--text-bright)" : "var(--text-secondary)"}; text-shadow: var(--engrave);">
@@ -281,10 +270,10 @@ export function renderStarMap(container) {
                 <div style="margin-top: auto;">
                   ${isLive ? `
                     <button type="button" class="btn-primary sector-enter-btn m-tap" style="width: 100%; font-size: 0.7rem; padding: 9px 14px; min-height: 38px;">
-                      ${canPlay ? `Enter · ${TOTAL_STAGES} stages` : "Free puzzle"}
+                      ${canPlay ? `Enter (${TOTAL_STAGES} stages)` : "Try Demo"}
                     </button>
                   ` : `
-                    <div class="eyebrow" style="text-align: center; padding: 10px 0; color: var(--text-muted);">No Charts</div>
+                    <div class="eyebrow" style="text-align: center; padding: 10px 0; color: var(--text-muted);">Coming soon</div>
                   `}
                 </div>
               </article>

@@ -535,7 +535,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   tightness, never for length.
 - **Story copy is exempt too**, if it builds the fiction rather than describing the
   product. This covers Vess's transmissions and `onClear` lines, Session Zero scenes,
-  guild pitches, mission-log entries, Fleet Comms intercepts and item provenance. It lives
+  guild pitches, and mission-log entries. It lives
   in `src/story/`. Limits:
   - Every line is diegetic: a character speaking, or the ship or the world reporting.
     It never talks about "the app", "levels" or "features".
@@ -548,7 +548,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 
 ### 8. 3D and assets
 - Quality tiers:
-  - `T4`: Default ultra/enhanced tier (60fps, unconstrained WASD navigation, continuous walk splines, particle dust, full-res world). 2D page overlays are removed on the bridge (`#/bridge`); diegetic in-world terminals with `[X] FREE WALK` handle compartment interactions.
+  - `T4`: Default ultra/enhanced tier (60fps, unconstrained WASD navigation, continuous walk splines, particle dust, full-res world). 2D page overlays are removed on the bridge (`#/bridge`); diegetic in-world terminals with `CLOSE` handle compartment interactions.
   - `T3`: High/Desktop (60fps, procedural interior, graph traversal, eased dolly, standard 2D page overlays).
   - `T2`: Standard/Chromebook/Mobile (30fps, DPR 1, baked stills).
   - `T1`: Non-WebGL Fallback (DOM-only).
@@ -557,7 +557,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - Starship 3D interior: `src/three/ship.js` builds hyper-realistic physical rooms and interconnecting corridor spines along `walkPath` splines with procedural PBR durasteel plating with tangent-space normal mapping (`createDurasteelNormalTexture`), floor grating, runway halogen strips, chamfered hatch bulkheads, tactical quad-CRT bridge consoles with mechanical keyboards and dial gauges, dual flight pods with yokes and center throttle quadrant in cockpit, central holo-table with 4-planet orrery and live holographic quest projector, 2-tier bunk beds with canvas bedding and stenciled metal footlockers, anglepoise desk lamp and gear hooks in quarters, overhead gantry crane and stacked shipping containers with cargo manifest screen, 19-inch equipment racks with patch bay loops and glowing vacuum tube cages in comms, and heavy airlock blast door with manual dogging wheel, hydraulic rams, and pressure dials. Non-overlapping physics bounds, rear-shifted bridge consoles (`Z = [0.2, 1.4]`), forward-shifted cockpit pods (`Z = [2.6, 3.8]`), and center pedestal colliders ensure wide-open transverse corridors at `Z = [1.4, 2.6]` across all rooms.
 - In-World 3D content transfer: In T4, primary content lives diegetically in 3D: Quests in the Star Map holo-table, Standings on the Comms CRT terminal, Inventory on the Cargo Manifest. In T3 and below, 2D full-page screens (`.screen-container`) remain active.
 - Erebus world scene: `src/three/world.js` and `src/three/world-data/erebus.json` define The Charge Gardens basin with 20 instanced pylon structures along a walkable route, survey lander ("SANDSTALKER") with boarding ramp, stratified sedimentary rock outcrops, procedural terrain heightmap (`getTerrainHeight`), amber celestial sky, banded gas giant vista (with `fog: false` celestial bodies), tuned desert haze (`fogNear: 70`, `fogFar: 280`), and atmospheric dust motes.
-- T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `[X] FREE WALK` dismiss controls. Star Map holo-table integrates Sector 01 status, transmission, and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates fleet chatter and leaderboards; Settings integrates graphics tier (T4 default) and audio sliders.
+- T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `CLOSE` dismiss controls. Star Map holo-table integrates Sector 01 status and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates standings; Settings integrates graphics tier (T4 default) and audio sliders.
 - T4 Learn deployment: In T4, `#/learn/unit01` enters the 3D Tallow world
   (`stage.enterTallowScene(siteId)`); walking to a bench and pressing `[E]` raises a
   `tallow:interact` event that routes to `#/learn/unit01/<questId>`, where the quest's

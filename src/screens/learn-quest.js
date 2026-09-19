@@ -37,13 +37,12 @@ export function disposeLearnQuest() {
 }
 
 function shell({ world, quest, body, inWorld }) {
-  const arena = ARENAS[quest.arena]?.label || '';
   return `
     <div class="screen-container m-screen m-learn-quest${inWorld ? ' learn-quest-inworld' : ''}">
       <div class="learn-host-bar plate">
         <a href="#/learn/${esc(world.id)}" class="btn-secondary learn-host-back m-tap" style="text-decoration: none;">${esc(world.world)}</a>
         <div class="learn-host-id">
-          <span class="eyebrow">${esc(world.unit)} · ${esc(arena)}</span>
+          <span class="eyebrow">${esc(world.unit)}</span>
           <span class="learn-host-title">${esc(quest.title)}</span>
         </div>
       </div>
@@ -56,12 +55,10 @@ function shell({ world, quest, body, inWorld }) {
 function buildPlate(world, quest) {
   return `
     <section class="glass-panel learn-build-plate">
-      <div class="eyebrow">Charted</div>
       <h2 class="section-title">${esc(quest.title)}</h2>
       <p class="page-sub">${esc(quest.line)}</p>
       <div class="learn-build-note">
-        <span class="banner-mark" aria-hidden="true">//</span>
-        <span>This world is surveyed but the site is not built. ${esc(quest.stageCount ? `${quest.stageCount} stages planned.` : '')}</span>
+        <span>Coming soon.</span>
       </div>
       <a href="#/learn/${esc(world.id)}" class="btn-secondary" style="text-decoration: none;">Back to ${esc(world.world)}</a>
     </section>

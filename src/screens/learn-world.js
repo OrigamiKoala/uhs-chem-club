@@ -14,8 +14,8 @@ import { canWalk, world3dFor } from '../learn/worlds3d.js';
 const STATUS_TAG = {
   open: { label: 'Open', cls: 'live' },
   complete: { label: 'Complete', cls: 'live' },
-  locked: { label: 'Sealed', cls: 'warn' },
-  charted: { label: 'No Charts', cls: 'locked' }
+  locked: { label: 'Locked', cls: 'warn' },
+  charted: { label: 'Coming soon', cls: 'locked' }
 };
 
 /**
@@ -83,7 +83,7 @@ export function renderLearnWorld(container, params = {}) {
         art: '/art/crucible.jpg',
         video: '/video/crucible_loop.webm',
         artAlt: '',
-        eyebrow: `${esc(world.unit)} · ${esc(world.place)}`,
+        eyebrow: esc(world.unit),
         title: esc(world.world),
         subtitle: esc(world.line),
         actions: `<a href="#/learn" class="btn-secondary" style="text-decoration: none;">All Worlds</a>`
@@ -96,7 +96,7 @@ export function renderLearnWorld(container, params = {}) {
         </div>
         <p class="learn-brief-body">${esc(world.brief)}</p>
         <div class="eyebrow learn-brief-count">
-          ${world.questCount} quests charted${prog.liveTotal ? ` · ${prog.questsComplete} of ${prog.liveTotal} built quests complete` : ' · none built yet'}
+          ${world.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete} of ${prog.liveTotal} complete` : ''}
         </div>
       </section>
 
@@ -105,9 +105,7 @@ export function renderLearnWorld(container, params = {}) {
           const st = questStatus(world, q);
           const tag = STATUS_TAG[st] || STATUS_TAG.charted;
           const qp = questProgress(q);
-          const arena = ARENAS[q.arena]?.label || '';
           const enterable = st === 'open' || st === 'complete';
-          const isResume = resume && resume.id === q.id;
           return `
             <article class="plate learn-quest-row learn-${st}">
               <div class="learn-quest-index">${String(q.index + 1).padStart(2, '0')}</div>
@@ -119,14 +117,14 @@ export function renderLearnWorld(container, params = {}) {
                 </div>
                 <p class="learn-quest-line">${esc(q.line)}</p>
                 <div class="eyebrow learn-quest-meta">
-                  ${esc(arena)}${q.stageCount ? ` · ${q.stageCount} stages` : ''}${qp.complete ? ' · cleared' : qp.cleared ? ` · ${qp.cleared}/${qp.total}` : ''}
+                  ${q.stageCount ? `${q.stageCount} stages` : ''}${qp.complete ? ' · Cleared' : qp.cleared ? ` · ${qp.cleared}/${qp.total}` : ''}
                 </div>
               </div>
 
               <div class="learn-quest-action">
                 ${enterable
-                  ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" class="btn-primary learn-enter m-tap" style="text-decoration: none;">${qp.complete ? 'Replay' : isResume ? 'Begin' : 'Open'}</a>`
-                  : `<span class="eyebrow learn-quest-blocked">${st === 'locked' ? 'Clear the one before' : 'Not yet built'}</span>`}
+                  ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" class="btn-primary learn-enter m-tap" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Play'}</a>`
+                  : `<span class="eyebrow learn-quest-blocked">${st === 'locked' ? 'Locked' : 'Coming soon'}</span>`}
               </div>
             </article>
           `;
@@ -138,14 +136,6 @@ export function renderLearnWorld(container, params = {}) {
 
 /**
  * The HUD worn while walking a Learn world.
- *
- * Two cards, in the register the Erebus exploration HUD already uses: where you
- * are on the left, the site roster on the right. The roster is also how a player
- * who would rather not walk opens a bench — nothing on this road is reachable
- * only by crossing a yard.
- *
- * It states no rule and sells nothing. Every string is the world's own or the
- * quest's own, and none of them is new.
  */
 function renderWalkHud(container, world) {
   const prog = worldProgress(world);
@@ -153,12 +143,9 @@ function renderWalkHud(container, world) {
   container.innerHTML = `
     <div class="learn-walk-hud" data-world="${esc(world.id)}">
       <div class="learn-walk-card">
-        <div class="eyebrow lit">${esc(world.unit)} · ${esc(world.place)}</div>
+        <div class="eyebrow lit">${esc(world.unit)}</div>
         <div class="learn-walk-name">${esc(world.world)}</div>
         <p class="learn-walk-line">${esc(world.line)}</p>
-        <div class="eyebrow learn-walk-count">
-          ${world.questCount} quests charted${prog.liveTotal ? ` · ${prog.questsComplete} of ${prog.liveTotal} built quests complete` : ' · none built yet'}
-        </div>
         <a href="#/learn" class="btn-secondary quest-btn-sm learn-walk-back" style="text-decoration: none;">All Worlds</a>
       </div>
 
@@ -176,11 +163,11 @@ function renderWalkHud(container, world) {
                 <span class="learn-site-body">
                   <span class="learn-site-title">${esc(q.title)}</span>
                   <span class="eyebrow learn-site-meta">
-                    ${esc(ARENAS[q.arena]?.label || '')}${q.stageCount ? ` · ${q.stageCount} stages` : ''}${qp.complete ? ' · cleared' : qp.cleared ? ` · ${qp.cleared}/${qp.total}` : ''}
+                    ${q.stageCount ? `${q.stageCount} stages` : ''}${qp.complete ? ' · Cleared' : qp.cleared ? ` · ${qp.cleared}/${qp.total}` : ''}
                   </span>
                 </span>
                 ${enterable
-                  ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" class="btn-primary quest-btn-sm learn-site-open" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Open'}</a>`
+                  ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" class="btn-primary quest-btn-sm learn-site-open" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Play'}</a>`
                   : `<span class="tag ${tag.cls}">${tag.label}</span>`}
               </li>
             `;

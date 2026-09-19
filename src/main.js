@@ -103,17 +103,17 @@ function setupHud() {
   motionToggle?.addEventListener('click', () => {
     const next = !session.reduceMotion;
     session.setReduceMotion(next);
-    motionToggle.textContent = next ? 'MOTION REDUCED' : 'MOTION ON';
+    motionToggle.textContent = next ? 'REDUCED MOTION' : 'MOTION';
   });
   if (motionToggle && session.reduceMotion) {
-    motionToggle.textContent = 'MOTION REDUCED';
+    motionToggle.textContent = 'REDUCED MOTION';
   }
 
   // Sound toggle
   const updateSoundBtn = () => {
     if (!soundToggle) return;
     const isMuted = session.sound?.muted;
-    soundToggle.textContent = isMuted ? '// SOUND OFF' : '// SOUND ON';
+    soundToggle.textContent = isMuted ? 'SOUND OFF' : 'SOUND ON';
     soundToggle.classList.toggle('warn', isMuted);
   };
   updateSoundBtn();
@@ -175,7 +175,7 @@ function setupHud() {
 
       if (xpVal) xpVal.textContent = String(totalXp);
       if (lvlBadge) {
-        lvlBadge.textContent = `LVL ${prog.level} ${levelTitle(prog.level).toUpperCase()}`;
+        lvlBadge.textContent = `LVL ${prog.level}`;
         lvlBadge.title = `${prog.into} / ${prog.needed} XP toward level ${prog.level + 1}`;
       }
       if (xpFill) xpFill.style.width = `${prog.pct}%`;

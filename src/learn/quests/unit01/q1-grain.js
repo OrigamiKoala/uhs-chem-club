@@ -30,7 +30,7 @@ import { soundscape } from '../../../audio/soundscape.js';
 
 export const meta = { stageCount: 8 };
 
-const SPEAKER = 'VESS // TALLOW BENCH';
+const SPEAKER = 'Vess';
 
 /* ------------------------------------------------------------------
    THE CATALOGUE

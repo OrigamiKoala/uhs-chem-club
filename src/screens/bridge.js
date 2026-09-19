@@ -64,7 +64,7 @@ export function renderBridge(container) {
       container.innerHTML = `
         <div class="bridge-3d-hud" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 50; pointer-events: none; text-align: center;">
           <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-amber); letter-spacing: 0.12em; background: rgba(18, 20, 24, 0.85); padding: 6px 16px; border: 1px solid var(--border-durasteel); text-transform: uppercase;">
-            WASD WALK · MOUSE LOOK · WALK TO COMPARTMENTS TO ACCESS
+            WASD WALK · MOUSE LOOK
           </div>
         </div>
       `;
@@ -94,36 +94,25 @@ export function renderBridge(container) {
               <img src="/art/crucible.jpg" alt="The reaction chamber" loading="lazy" />
             </div>
 
-            <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-              <span class="eyebrow lit">Sector 01 · Erebus</span>
+            <div class="m-head" style="display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
               <span class="tag ${isComplete ? "live" : "warn"}">${isComplete ? "Complete" : cleared > 0 ? "Underway" : "Sealed"}</span>
             </div>
 
             <h2 class="section-title">The Charge Gardens</h2>
             <p class="page-sub" style="margin-bottom: 1.1rem;">Find what pulls. Draw the line.</p>
 
-            <div class="cold-open-box m-inset" style="margin-bottom: 1.25rem; padding: 0.85rem 1rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
-              <div class="m-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                <span class="eyebrow lit">VESS // TRANSMISSION</span>
-                <span class="tag live" style="font-size: 0.58rem;">COMMS</span>
-              </div>
-              <p style="font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.45; color: var(--accent-gold); margin: 0;">
-                "${esc(transmissionText)}"
-              </p>
-            </div>
-
             <div style="margin-bottom: 1.25rem;">
               ${renderGardensMap({ clearedCount: cleared, currentStageIdx: isComplete ? null : cleared })}
             </div>
 
             ${statRow([
-              { label: "Pylons", value: `${cleared} / ${TOTAL_STAGES}`, plain: true },
+              { label: "Stages", value: `${cleared} / ${TOTAL_STAGES}`, plain: true },
               { label: "Quest XP", value: TOTAL_QUEST_XP },
               { label: "Run time", value: "~30 min", plain: true }
             ])}
 
             <a href="#/quest" class="btn-primary bridge-quest-cta" style="width: 100%; text-decoration: none; margin-top: 1.25rem;">
-              ${isComplete ? "Replay Gardens" : cleared > 0 ? `Pylon ${currentPylonNum} awaits` : "Begin · Pylon 1 awaits"}
+              ${isComplete ? "Replay Gardens" : cleared > 0 ? `Continue Stage ${currentPylonNum}` : "Start Stage 1"}
             </a>
           </section>
 
@@ -143,10 +132,9 @@ export function renderBridge(container) {
             ` : ""}
 
             <div style="border-top: 1px solid var(--border-durasteel); padding-top: 1.25rem; margin-top: 1.25rem;">
-              <div class="eyebrow" style="margin-bottom: 0.8rem;">Decks</div>
               <div class="bridge-decks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <a href="#/starmap" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Star Map</a>
-                <a href="#/leaderboard" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Fleet Comms</a>
+                <a href="#/leaderboard" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Standings</a>
                 <a href="#/inventory" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Inventory</a>
                 <a href="#/quarters" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Crew</a>
               </div>
