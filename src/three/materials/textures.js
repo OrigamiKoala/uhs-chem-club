@@ -777,17 +777,28 @@ export function createCommsHoloTexture(teams = [], chatter = '') {
   ctx.stroke();
 
   // Guild rows
-  const list = Array.isArray(teams) && teams.length ? teams : [
-    { rank: 1, name: 'Mineral Mining Guild', team_score: 0, active: 0, roster: 0 },
-    { rank: 2, name: 'Atmospheric Harvesters', team_score: 0, active: 0, roster: 0 },
-    { rank: 3, name: 'Thermal Smelters', team_score: 0, active: 0, roster: 0 },
-    { rank: 4, name: 'Ocean Salvagers', team_score: 0, active: 0, roster: 0 }
-  ];
+  const list = Array.isArray(teams) ? teams : [];
 
   const rowStartY = 175;
   const rowH = 68;
 
-  list.slice(0, 4).forEach((t, idx) => {
+  if (!list.length) {
+    ctx.fillStyle = 'rgba(0, 245, 212, 0.14)';
+    ctx.fillRect(48, rowStartY, 928, 220);
+    ctx.strokeStyle = 'rgba(0, 245, 212, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(48, rowStartY, 928, 220);
+
+    ctx.font = 'bold 22px monospace';
+    ctx.fillStyle = '#7bf1a8';
+    ctx.textAlign = 'center';
+    ctx.fillText('NO GUILD TELEMETRY ON THIS CHANNEL', 512, rowStartY + 90);
+    ctx.font = '16px monospace';
+    ctx.fillStyle = '#68d391';
+    ctx.fillText('SCORES POST ONCE CREWS START EARNING', 512, rowStartY + 130);
+    ctx.textAlign = 'left';
+  } else {
+    list.slice(0, 4).forEach((t, idx) => {
     const y = rowStartY + idx * rowH;
     const isFirst = idx === 0;
 
@@ -828,7 +839,8 @@ export function createCommsHoloTexture(teams = [], chatter = '') {
     ctx.shadowBlur = isFirst ? 8 : 0;
     ctx.fillText(`${scoreStr} PTS`, 950, y + 37);
     ctx.shadowBlur = 0;
-  });
+    });
+  }
 
   // Footer status bar
   ctx.fillStyle = '#061a1a';

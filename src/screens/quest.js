@@ -1001,19 +1001,14 @@ export function renderQuest(container) {
      *
      * Mounting the console MOVES the deck, the nav cluster, the relay map and
      * the legend out of `container` and into the CSS3D layer, which hangs off
-     * `document.body`. Every `container.querySelector` after that point returns
-     * null, and because they are all written as `?.addEventListener` they fail
-     * silently — which is exactly what happened: at T4 the mount ran before the
-     * handlers were wired and not one control in the Charge Gardens worked.
-     * Submit, Hint, Clear, Exit, Prev, Next and every stage lamp were dead.
+     * `document.body`.
      *
-     * Two things keep it fixed. This call is now the last statement in the
-     * stage render, after every listener is attached; and the queries above go
-     * through `q()` / `qa()`, which look in the document when the node has
-     * already left the container. Either alone would do it. Both together mean
-     * a future reordering cannot quietly break the controls again.
+     * In T4, we keep the interactive 2D HUD overlay (`.quest-hud-overlay`) as in T3,
+     * while retaining the 3D scene backdrop and surface exploration.
      */
-    questConsole = mountQuestConsole(container, viewer);
+    if (!isT4) {
+      questConsole = mountQuestConsole(container, viewer);
+    }
   }
 
   async function showCompletionModal() {

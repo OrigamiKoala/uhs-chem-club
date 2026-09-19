@@ -283,7 +283,7 @@ class Stage {
       } else if (this.mode === "ship") {
         const px = this.camera.position.x;
         const pz = this.camera.position.z;
-        const nearDoor = this.shipInterior?.getDoorNear(px, pz, 1.8);
+        const nearDoor = this.shipInterior?.getDoorNear(px, pz, 1.6);
         if (nearDoor) {
           this.shipInterior.toggleDoor(nearDoor);
           this.fpsControls.colliders = this.shipInterior.getActiveColliders();
@@ -375,6 +375,12 @@ class Stage {
         if (this.shipInterior?.isStarmapHoloVisible() && this.shipInterior.starmapHoloGroup) {
           if (hitCloseBadge(this.shipInterior.starmapHoloGroup)) {
             this.closeStarmapHolo();
+            return;
+          }
+        }
+        if (this.shipInterior?.isCommsHoloVisible() && this.shipInterior.commsHoloGroup) {
+          if (hitCloseBadge(this.shipInterior.commsHoloGroup)) {
+            this.closeCommsHolo();
             return;
           }
         }
@@ -969,7 +975,7 @@ class Stage {
         this.fpsControls.update(delta);
         const px = this.camera.position.x;
         const pz = this.camera.position.z;
-        const nearDoor = this.shipInterior?.getDoorNear(px, pz, 1.8);
+        const nearDoor = this.shipInterior?.getDoorNear(px, pz, 1.6);
         if (nearDoor) {
           this.fpsControls.showPrompt(nearDoor.isOpen ? "[E] CLOSE DOOR" : "[E] OPEN DOOR");
         } else if (Math.hypot(px - 3.375, pz - (-6.6)) < 2.2) {

@@ -97,7 +97,7 @@ export function renderBridge(container) {
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
               <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);">
-                ← Star Map · Standings →
+                ◀ Star Map / Quests & World Charts
               </div>
               <button type="button" id="bridge-announcement-close" class="btn-chip" style="font-size: 0.72rem; padding: 2px 8px; color: var(--accent-amber); border-color: rgba(217, 148, 35, 0.4); cursor: pointer;" title="Close [X]">Close [X]</button>
             </div>
