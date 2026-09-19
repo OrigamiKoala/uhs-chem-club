@@ -5,7 +5,7 @@
  */
 
 import * as THREE from "three";
-import { tierManager, tierAtLeast } from "./tier.js";
+import { tierManager, tierAtLeast, isTouchPrimary } from "./tier.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { CameraRig } from "./camera-rig.js";
 import { ShipInterior } from "./ship.js";
@@ -13,9 +13,11 @@ import { createStarfield } from "./materials/starfield.js";
 import { WorldScene } from "./world.js";
 import { TallowWorld } from "./tallow.js";
 import { FpsControls } from "./fps-controls.js";
+import { TouchControls } from "./touch-controls.js";
 import { session } from "../session.js";
 import { ShipLightPool } from "./ship-lighting.js";
 import { soundscape } from "../audio/soundscape.js";
+import { gameMode } from "../game-mode.js";
 
 /**
  * Tone-mapping exposure per place.
@@ -35,6 +37,9 @@ class Stage {
     this.camera = null;
     this.cameraRig = null;
     this.fpsControls = null;
+    this.touchControls = null;
+    this.isTouch = false;
+    this.lastTouchSync = 0;
 
     this.shipScene = null;
     this.shipInterior = null;
@@ -82,8 +87,10 @@ class Stage {
     this.renderer.toneMappingExposure = SHIP_EXPOSURE;
 
     // Contact shadows are a T4 enhancement. Every world light already asks for
-    // them; without this they were simply never drawn.
-    if (tierAtLeast("T4")) {
+    // them; without this they were simply never drawn. A phone runs T4 without
+    // them: soft shadow maps are the one T4 feature a mobile GPU cannot hold
+    // 60fps through, and losing them costs far less than losing the tier.
+    if (tierAtLeast("T4") && !isTouchPrimary()) {
       this.renderer.shadowMap.enabled = true;
       this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     }
@@ -181,6 +188,15 @@ class Stage {
       this.toggleAnyHolo();
     };
     this.fpsControls.onCloseHolo = this.fpsControls.onToggleHolo;
+
+    // On a phone the mouse path stands down and the twin sticks take over.
+    this.isTouch = isTouchPrimary();
+    if (this.isTouch) {
+      document.body.classList.add("touch-primary");
+      this.fpsControls.touchMode = true;
+      this.touchControls = new TouchControls(this.fpsControls);
+    }
+
     this.fpsControls.setMode(
       "ship",
       null,
@@ -224,9 +240,16 @@ class Stage {
     };
 
     // 5. Bind Events & Lifecycle
-    window.addEventListener("resize", this.onResize.bind(this));
+    this._onResize = this.onResize.bind(this);
+    window.addEventListener("resize", this._onResize);
+    // A phone collapsing its address bar fires this and not `resize`.
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", this._onResize);
+    }
+    window.addEventListener("orientationchange", () => setTimeout(this._onResize, 120));
     document.addEventListener("visibilitychange", this.onVisibilityChange.bind(this));
     tierManager.subscribe((tier) => this.applyTierSettings(tier));
+    this.onResize();
 
     // Global 'X' key handler to close and open any holographic display
     let lastXPress = 0;
@@ -254,8 +277,13 @@ class Stage {
     if (this.canvas) {
       this.canvas.addEventListener("pointerup", (e) => {
         if (this.mode !== "ship" || !this.camera) return;
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        // Measured off the canvas, not the window: on a phone the drawing
+        // buffer tracks the visual viewport, which is shorter than the window
+        // while the address bar is up, and window-relative NDC would aim the
+        // ray below where the finger actually landed.
+        const r = this.canvas.getBoundingClientRect();
+        mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+        mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
         raycaster.setFromCamera(mouse, this.camera);
         if (this.shipInterior?.isClubHoloVisible() && this.shipInterior.clubHoloGroup) {
           const hits = raycaster.intersectObjects(this.shipInterior.clubHoloGroup.children, true);
@@ -405,17 +433,63 @@ class Stage {
       return;
     }
     this.renderer.setAnimationLoop(this.render.bind(this));
-    const maxDpr = tierAtLeast("T3", tier) ? Math.min(window.devicePixelRatio, 2) : 1;
+    // A phone's devicePixelRatio is commonly 3; rendering the walk at even 2x
+    // there is four times the pixels of 1x for no visible gain on a 6-inch
+    // panel, and it is the difference between 60fps and 30.
+    const dpr = window.devicePixelRatio || 1;
+    let maxDpr = 1;
+    if (tierAtLeast("T3", tier)) maxDpr = Math.min(dpr, isTouchPrimary() ? 1.5 : 2);
     this.renderer.setPixelRatio(maxDpr);
   }
 
   onResize() {
     if (!this.renderer || !this.camera) return;
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    // `visualViewport` is what is actually visible once a phone's toolbars are
+    // accounted for. Sizing to innerWidth/innerHeight there renders a canvas
+    // taller than the window and the horizon sits off the bottom of the glass.
+    const vv = window.visualViewport;
+    const width = Math.round(vv && this.isTouch ? vv.width : window.innerWidth);
+    const height = Math.round(vv && this.isTouch ? vv.height : window.innerHeight);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+  }
+
+  /**
+   * Raise or lower the twin sticks. The walk owns the screen only when it is
+   * the foreground: a deployed chamber, an in-world terminal or a cinematic
+   * takes the sticks away, and a push held through that transition is released
+   * rather than left stuck on.
+   *
+   * Throttled, because it asks the DOM a question and the answer changes at
+   * the speed of navigation, not of frames.
+   */
+  syncTouchControls(now) {
+    if (now - this.lastTouchSync < 200) return;
+    this.lastTouchSync = now;
+
+    // Driven from here rather than from each entry point so no scene swap can
+    // forget it; the class is read by CSS, not per frame.
+    this.syncWorldOrientation();
+    if (!this.touchControls) return;
+
+    const walking = Boolean(
+      this.fpsControls &&
+      this.fpsControls.enabled &&
+      this.mode !== "quest" &&
+      tierAtLeast("T3")
+    );
+    const show = walking && !TouchControls.overlayBlocking();
+    this.touchControls.setVisible(show);
+    if (show) {
+      const prompt = this.fpsControls.promptEl;
+      const offered = Boolean(
+        this.fpsControls.promptVisible &&
+        prompt &&
+        prompt.textContent.includes("[USE]")
+      );
+      this.touchControls.setInteractAvailable(offered);
+    }
   }
 
   onVisibilityChange() {
@@ -428,6 +502,10 @@ class Stage {
   }
 
   enterWorldScene() {
+    // Stepping onto a planet on a phone is the moment to take the screen and
+    // turn it sideways. The request rides the gesture that navigated here; a
+    // refusal costs nothing but the rotate notice.
+    if (this.isTouch) gameMode.enterWorld();
     if (!this.worldScene && this.renderer) {
       this.worldScene = new WorldScene(this.renderer);
     }
@@ -472,6 +550,7 @@ class Stage {
    * than at the far end of the yard.
    */
   enterTallowScene(focusSiteId = null) {
+    if (this.isTouch) gameMode.enterWorld();
     if (!this.tallowWorld && this.renderer) {
       this.tallowWorld = new TallowWorld(this.renderer);
     }
@@ -521,6 +600,21 @@ class Stage {
         this.tallowWorld.colliders
       );
     }
+  }
+
+  /**
+   * The landscape lock is taken when the player steps onto a planet and given
+   * back when they leave it. "On a planet" is `activeWorld` set and the mode
+   * either `world` or `quest` — walking the ground, or working an instrument
+   * deployed on it. The ship reads fine in portrait, and a chamber opened at
+   * T3 or below has no world behind it and has always been portrait.
+   */
+  syncWorldOrientation() {
+    if (!this.isTouch) return;
+    const onPlanet = Boolean(
+      this.activeWorld && (this.mode === "world" || this.mode === "quest")
+    );
+    if (!onPlanet) gameMode.unlockOrientation();
   }
 
   /** Light a Tallow site's indicator when its quest is finished. */
@@ -591,6 +685,7 @@ class Stage {
     tierManager.recordFrame(now);
     const delta = this.clock.getDelta();
     const time = this.clock.getElapsedTime();
+    this.syncTouchControls(now);
 
     if (this.mode === "quest" && this.activeQuestViewer) {
       this.activeQuestViewer.update(delta, time);

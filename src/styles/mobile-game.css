@@ -1,0 +1,196 @@
+/* ===================================================================
+   GAME MODE — full-screen play and the twin sticks.
+
+   The sticks are hardware, not UI: a machined ring cut into the plate with
+   a knurled cap riding in it. Nothing blooms; the ring is an engraved groove
+   and the cap is a lit key only while a thumb is on it.
+
+   The stick layer is only built on a touch device (`stage.js` asks
+   `isTouchPrimary()` before constructing it), so a desktop never renders any
+   of this; `body.touch-primary` is the hook for chrome that does exist on
+   both, such as the full-screen key.
+   =================================================================== */
+
+/* ---- Full-bleed: the canvas follows the SMALL viewport ----
+   100vh on a phone is the tall viewport, which is taller than the glass while
+   the address bar is up; the horizon then sits below the bottom edge. dvh is
+   what is actually visible, and it tracks the toolbar collapsing. */
+@supports (height: 100dvh) {
+  #webgl-canvas,
+  .fallback-backdrop {
+    height: 100dvh;
+  }
+}
+
+body.game-mode {
+  overscroll-behavior: none;
+}
+
+/* ---- The full-screen key ---- */
+#fullscreen-toggle { display: none; }
+body.touch-primary #fullscreen-toggle { display: inline-flex; }
+
+/* ===================================================================
+   TWIN STICKS
+   =================================================================== */
+.touch-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-controls.hidden { display: none; }
+
+.tc-zone {
+  position: absolute;
+  bottom: 0;
+  width: 162px;
+  height: 172px;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+/* No padding on the zones: the ring is placed from the zone's own box in JS,
+   and a safe-area pad here would put the drawn ring and the measured origin a
+   notch apart. The sticks float to the thumb, so the inset buys nothing. */
+.tc-zone-look { left: 0; }
+.tc-zone-move { right: 0; }
+
+/* The ring is repositioned in JS to wherever the thumb lands. */
+.tc-ring {
+  position: absolute;
+  left: 81px;
+  top: 82px;
+  width: 112px;
+  height: 112px;
+  margin: -56px 0 0 -56px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-durasteel);
+  background:
+    radial-gradient(circle at 38% 32%, rgba(217, 148, 35, 0.06), transparent 62%),
+    rgba(14, 12, 10, 0.52);
+  box-shadow:
+    inset 0 1px 0 var(--seam-light),
+    inset 0 -1px 0 var(--seam-dark);
+  opacity: 0.5;
+  transition: opacity 0.18s ease;
+}
+
+.tc-zone.active .tc-ring { opacity: 0.92; }
+
+.tc-ring-label {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.22em;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.tc-zone.active .tc-ring-label { color: var(--accent-bronze); }
+
+.tc-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 54px;
+  height: 54px;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-durasteel);
+  background:
+    linear-gradient(180deg, var(--plate-300) 0%, var(--plate-100) 100%);
+  box-shadow:
+    inset 0 1px 0 var(--seam-light),
+    inset 0 -2px 0 var(--seam-dark),
+    0 2px 5px rgba(0, 0, 0, 0.6);
+}
+
+.tc-zone.active .tc-knob {
+  border-color: var(--accent-amber);
+  background: linear-gradient(180deg, var(--plate-400) 0%, var(--plate-200) 100%);
+}
+
+/* ===================================================================
+   ACTION KEYS — the two presses a finger otherwise has no way to make.
+   Stacked above the move stick, thumb-reachable from the right corner.
+   =================================================================== */
+.tc-keys {
+  position: absolute;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: calc(168px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.tc-key {
+  pointer-events: auto;
+  touch-action: manipulation;
+  width: 66px;
+  height: 66px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-durasteel);
+  background: linear-gradient(180deg, var(--plate-200) 0%, var(--plate-000) 100%);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-shadow: var(--engrave);
+  box-shadow:
+    inset 0 1px 0 var(--seam-light),
+    inset 0 -2px 0 var(--seam-dark);
+  opacity: 0.58;
+  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.tc-key:disabled { opacity: 0.26; }
+
+.tc-key.armed {
+  opacity: 1;
+  color: var(--accent-amber);
+  border-color: var(--accent-amber);
+  background: linear-gradient(180deg, var(--plate-300) 0%, var(--plate-100) 100%);
+}
+
+.tc-key:active {
+  background: linear-gradient(180deg, var(--plate-000) 0%, var(--plate-200) 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* ---- The interaction prompt clears the stick layer ---- */
+body.touch-walking #fps-interact-prompt {
+  bottom: calc(250px + env(safe-area-inset-bottom)) !important;
+  max-width: calc(100vw - 2rem);
+  text-align: center;
+}
+
+/* ===================================================================
+   LANDSCAPE — a sideways phone is short, so everything shrinks and the
+   keys move beside the move stick instead of above it.
+   =================================================================== */
+@media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  .tc-zone { width: 136px; height: 136px; }
+  .tc-ring { left: 68px; top: 68px; width: 94px; height: 94px; margin: -47px 0 0 -47px; }
+  .tc-knob { width: 46px; height: 46px; }
+  .tc-keys {
+    flex-direction: row;
+    right: max(148px, calc(env(safe-area-inset-right) + 148px));
+    bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+  .tc-key { width: 56px; height: 56px; font-size: 0.6rem; }
+  body.touch-walking #fps-interact-prompt {
+    bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+}
+

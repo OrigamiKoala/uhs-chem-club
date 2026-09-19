@@ -2,6 +2,12 @@
  * fps-controls.js — First-Person WASD + Mouse Look controller with sliding physics collision
  * Handles pointer lock, drag-look fallback, smooth kinematic movement,
  * AABB and radial cylinder collision sliding, terrain clamping, and [E] interaction.
+ *
+ * On a touch device the same rig is driven by the twin sticks in
+ * `touch-controls.js` through `analogMove` / `analogLook`. `touchMode` stands
+ * the mouse path down entirely: pointer lock does not exist on a phone, and the
+ * synthetic mouse events a browser fires after a tap would otherwise read as a
+ * look drag and snap the camera.
  */
 
 import * as THREE from "three";
@@ -18,6 +24,14 @@ export class FpsControls {
     this.moveLeft = false;
     this.moveRight = false;
     this.isSprinting = false;
+
+    // Analogue input from the twin sticks. x is strafe, y is forward for move;
+    // for look these are -1..1 rates applied per second, not per event.
+    this.analogMove = { x: 0, y: 0 };
+    this.analogLook = { x: 0, y: 0 };
+    this.analogSprint = false;
+    this.lookRate = { yaw: 2.7, pitch: 1.9 }; // radians/second at full deflection
+    this.touchMode = false;
 
     // Speeds & kinematics
     this.walkSpeed = 4.2; // m/s
@@ -87,14 +101,17 @@ export class FpsControls {
 
   showPrompt(text) {
     if (this.promptEl) {
-      this.promptEl.textContent = text;
+      // There is no E key on a phone; the stick layer offers a USE key instead.
+      this.promptEl.textContent = this.touchMode ? String(text).replace("[E]", "[USE]") : text;
       this.promptEl.style.display = "block";
+      this.promptVisible = true;
     }
   }
 
   hidePrompt() {
     if (this.promptEl) {
       this.promptEl.style.display = "none";
+      this.promptVisible = false;
     }
   }
 
@@ -122,6 +139,7 @@ export class FpsControls {
   }
 
   requestPointerLock() {
+    if (this.touchMode) return;
     if (!this.isPointerLocked && this.domElement.requestPointerLock) {
       this.domElement.requestPointerLock();
     }
@@ -142,7 +160,7 @@ export class FpsControls {
   }
 
   onMouseDown(e) {
-    if (!this.enabled) return;
+    if (!this.enabled || this.touchMode) return;
     const tag = e.target ? e.target.tagName.toLowerCase() : "";
     if (tag === "input" || tag === "textarea" || tag === "select" || tag === "button" || tag === "a") return;
     if (e.target.closest && (
@@ -175,7 +193,7 @@ export class FpsControls {
   }
 
   onMouseMove(e) {
-    if (!this.enabled) return;
+    if (!this.enabled || this.touchMode) return;
 
     let movementX = 0;
     let movementY = 0;
@@ -192,16 +210,28 @@ export class FpsControls {
     }
 
     const sensitivity = 0.0024;
+    this.rotate(movementX * sensitivity, movementY * sensitivity);
+  }
+
+  /** Turn by yaw/pitch in radians, clamped so the horizon never inverts. */
+  rotate(yaw, pitch) {
     this.euler.setFromQuaternion(this.camera.quaternion);
 
-    this.euler.y -= movementX * sensitivity;
-    this.euler.x -= movementY * sensitivity;
+    this.euler.y -= yaw;
+    this.euler.x -= pitch;
 
     const maxPitch = (85 * Math.PI) / 180;
     this.euler.x = Math.max(-maxPitch, Math.min(maxPitch, this.euler.x));
     this.euler.z = 0;
 
     this.camera.quaternion.setFromEuler(this.euler);
+  }
+
+  /** Jump, from the Space key or the touch layer's JUMP key. */
+  requestJump() {
+    if (!this.enabled || !this.isGrounded) return;
+    this.verticalVelocity = this.jumpSpeed;
+    this.isGrounded = false;
   }
 
   onKeyDown(e) {
@@ -231,10 +261,7 @@ export class FpsControls {
         this.isSprinting = true;
         break;
       case "Space":
-        if (this.isGrounded) {
-          this.verticalVelocity = this.jumpSpeed;
-          this.isGrounded = false;
-        }
+        this.requestJump();
         break;
       case "KeyE":
         if (this.onInteract) {
@@ -347,6 +374,14 @@ export class FpsControls {
 
     const dt = Math.min(delta, 0.1);
 
+    // Stick look is a rate, not a delta: a held stick keeps turning.
+    if (this.analogLook.x !== 0 || this.analogLook.y !== 0) {
+      this.rotate(
+        this.analogLook.x * this.lookRate.yaw * dt,
+        this.analogLook.y * this.lookRate.pitch * dt
+      );
+    }
+
     this.velocity.x -= this.velocity.x * this.damping * dt;
     this.velocity.z -= this.velocity.z * this.damping * dt;
 
@@ -363,12 +398,17 @@ export class FpsControls {
     if (this.moveBackward) moveDir.sub(forward);
     if (this.moveRight) moveDir.add(right);
     if (this.moveLeft) moveDir.sub(right);
+    if (this.analogMove.y !== 0) moveDir.addScaledVector(forward, this.analogMove.y);
+    if (this.analogMove.x !== 0) moveDir.addScaledVector(right, this.analogMove.x);
 
     if (moveDir.lengthSq() > 0.0001) {
+      // A half-pushed stick walks at half speed; a key is always full throw.
+      const throttle = Math.min(1, moveDir.length());
       moveDir.normalize();
-      const speed = this.isSprinting ? this.sprintSpeed : this.walkSpeed;
-      this.velocity.x += moveDir.x * speed * 8.0 * dt;
-      this.velocity.z += moveDir.z * speed * 8.0 * dt;
+      const sprinting = this.isSprinting || this.analogSprint;
+      const speed = sprinting ? this.sprintSpeed : this.walkSpeed;
+      this.velocity.x += moveDir.x * speed * throttle * 8.0 * dt;
+      this.velocity.z += moveDir.z * speed * throttle * 8.0 * dt;
     }
 
     // Attempt translation with sliding collision

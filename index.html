@@ -7,6 +7,15 @@
   <meta name="description" content="Avalon — UHS Chemistry Club competition portal.">
   <meta name="theme-color" content="#0a0908">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-180.png">
+  <!-- Installed to a Home Screen, Avalon launches with no address bar. That is
+       the only route to a full screen on iPhone Safari, which has no
+       Fullscreen API; see src/game-mode.js. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Avalon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Cinzel:wght@700;800;900&family=JetBrains+Mono:wght@400;600;700&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/styles/tokens.css">
@@ -17,6 +26,7 @@
   <link rel="stylesheet" href="/src/styles/mobile-screens.css">
   <link rel="stylesheet" href="/src/styles/mobile-quest.css">
   <link rel="stylesheet" href="/src/styles/mobile-landscape.css">
+  <link rel="stylesheet" href="/src/styles/mobile-game.css">
 </head>
 <body class="theme-dark">
   <!-- 3D Persistent Canvas -->
@@ -62,6 +72,7 @@
           <span class="gfx-dot"></span>
           <span id="gfx-tier-label">T3</span>
         </button>
+        <button id="fullscreen-toggle" class="btn-chip" title="Full screen">FULL</button>
         <button id="motion-toggle" class="btn-chip" title="Motion">MOTION</button>
         <button id="sound-toggle" class="btn-chip" title="Sound">SOUND</button>
         <div id="user-menu-wrap" class="relative">

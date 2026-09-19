@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { session } from '../session.js';
-import { tierManager, isT4Eligible } from '../three/tier.js';
+import { tierManager, isT4Eligible, isTouchPrimary } from '../three/tier.js';
 import { showToast } from '../ui/toast.js';
 import { pageHeader } from '../ui/layout.js';
 import { bindPasswordReveal } from './register.js';
@@ -10,6 +10,10 @@ export function renderSettings(container) {
   const soundPrefs = session.sound;
   const isT4 = tierManager.currentTier === 'T4';
   const eligibleT4 = isT4Eligible();
+  // On a phone the continuous walk is driven by the twin sticks, not WASD.
+  const t4Note = !eligibleT4
+    ? ' · Requires WebGL2'
+    : (isTouchPrimary() ? ' · Twin sticks' : '');
 
   const terminalHeaderMarkup = isT4 ? `
     <div class="terminal-header">
@@ -36,7 +40,7 @@ export function renderSettings(container) {
             <input type="radio" name="gfx-tier" value="T4" ${tierManager.currentTier === 'T4' ? 'checked' : ''} ${!eligibleT4 ? 'disabled' : ''}>
             <div>
               <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">Continuous 3D</div>
-              <div class="eyebrow" style="margin-top: 3px;">Full 3D walk${!eligibleT4 ? ' · Requires WebGL2' : ''}</div>
+              <div class="eyebrow" style="margin-top: 3px;">Full 3D walk${t4Note}</div>
             </div>
           </label>
 

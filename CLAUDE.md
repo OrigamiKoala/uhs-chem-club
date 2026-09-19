@@ -617,6 +617,57 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   - `T3`: High/Desktop (60fps, procedural interior, graph traversal, eased dolly, standard 2D page overlays).
   - `T2`: Standard/Chromebook/Mobile (30fps, DPR 1, baked stills).
   - `T1`: Non-WebGL Fallback (DOM-only).
+- **A phone is not disqualified from T4 by being a phone.** `isT4Eligible` in
+  `three/tier.js` asks about WebGL2, cores and reported memory and nothing else; the
+  rule that refused T4 to every coarse pointer is gone, and `recordFrame` remains the
+  honest backstop (under 24fps demotes on the spot). Because the old refusal was
+  *persisted* as T3, `migrateStoredTier` clears exactly that stored value once —
+  touch device, stored T3, now eligible — behind `avalon_gfx_rev`; it never touches a
+  desktop preference or a phone that is genuinely not capable. Two things are cheaper
+  on a handset and are the only fidelity differences: DPR is capped at 1.5 rather than
+  2 (a phone commonly reports 3), and `shadowMap` stays off, because soft shadow maps
+  are the one T4 feature a mobile GPU cannot hold 60fps through.
+- **Mobile T4 is driven by twin sticks** (`three/touch-controls.js`, styling in
+  `styles/mobile-game.css`). A 360-degree look stick bottom-left and a 360-degree move
+  stick bottom-right, both floating — the ring jumps to wherever the thumb lands in its
+  corner zone — plus `USE` and `JUMP` keys, which are the two presses a finger otherwise
+  has no way to make. The sticks feed `FpsControls.analogMove` / `.analogLook`, which
+  `update()` consumes exactly as it consumes W/A/S/D and mouse delta, so collision,
+  terrain and interaction prompts know no difference; deflection is analogue (half push,
+  half speed) and the rim sprints. `fpsControls.touchMode` stands the mouse path down
+  entirely — there is no pointer lock on a phone, and the synthetic mouse events a
+  browser fires after a tap would read as a look drag and snap the camera. `showPrompt`
+  rewrites `[E]` to `[USE]` in that mode. `stage.syncTouchControls` raises and lowers
+  the layer on a 200 ms throttle; an in-world terminal, a deployed chamber, a cinematic,
+  a `.screen-container` or a live modal takes the sticks away, and a push held through
+  that transition is released rather than left stuck on.
+- **Game mode** (`src/game-mode.js`, `body.game-mode`) takes the screen on a handset.
+  Three routes in order: the Fullscreen API, granted only inside a user gesture, so the
+  callers are the `FULL` HUD key and the navigation that enters a world (Android Chrome,
+  Firefox, iPadOS and current iPhone Safari all honour it — **feature-detected, never
+  sniffed for a browser or a version**); an installed Home Screen launch, which is why
+  `manifest.webmanifest`, `apple-mobile-web-app-capable` and the `icon-*.png` set exist;
+  and failing both, the full-bleed `100dvh` layout plus a once-ever hint on how to
+  install. `active` is read back from `fullscreenchange` only where the API exists, or
+  the fallback state would be cleared on every sync.
+  The third route is where an older iPhone lands. Safari used to expose full screen for
+  `<video>` only (`HTMLVideoElement.webkitEnterFullscreen`, which is how a video site
+  takes the screen there) and not for an arbitrary element — that path is no use to a
+  WebGL canvas, since it accepts a `<video>` and nothing else, and piping the canvas
+  through `captureStream()` into one would hand back a one-way picture with no touch
+  mapping. It is deliberately not attempted.
+- **Entering a 3D world on a phone turns the handset sideways.** `enterWorldScene` and
+  `enterTallowScene` call `gameMode.enterWorld()` — full screen, then
+  `screen.orientation.lock('landscape')`, which browsers grant only to a document that
+  is already full screen. Support for the lock is narrower than support for full screen
+  itself; where it is refused, nothing is said and nothing is shown — the player turns
+  the device or does not. `stage.syncWorldOrientation` gives the lock back the moment the player is
+  no longer standing on a planet (`activeWorld` set, mode `world` or `quest`) — the ship
+  reads fine in portrait, and a chamber opened at T3 or below has no world behind it.
+- Canvas sizing follows `visualViewport` on touch, not `window.innerHeight`: a phone
+  collapsing its address bar fires only the `visualViewport` resize, and sizing to the
+  window renders a buffer taller than the glass with the horizon off the bottom edge.
+  The holo-close raycast reads NDC off the canvas rect for the same reason.
 - Authentication gating & 3D view: On unauthenticated routes (`/login`, `/register`, `/`, `/onboarding`), the 3D ship interior and vista are visible behind the account cards, but first-person WASD navigation and mouse look are locked (`fpsControls.enabled = false`) until the player signs in.
 - Starship traversal spine: `src/three/ship-graph.js` defines an undirected navigation graph across all compartments (`bridge`, `cockpit`, `starmap`, `quarters`, `cargo`, `comms`, `airlock`) with 3–6 point `walkPath` splines, `hatchPos` view-cone markers, and `routeBinding`.
 - Starship 3D interior: `src/three/ship.js` builds hyper-realistic physical rooms and interconnecting corridor spines along `walkPath` splines with procedural PBR durasteel plating with tangent-space normal mapping (`createDurasteelNormalTexture`), floor grating, runway halogen strips, chamfered hatch bulkheads, tactical quad-CRT bridge consoles with mechanical keyboards and dial gauges, dual flight pods with yokes and center throttle quadrant in cockpit, central holo-table with 4-planet orrery and live holographic quest projector, 2-tier bunk beds with canvas bedding and stenciled metal footlockers, anglepoise desk lamp and gear hooks in quarters, overhead gantry crane and stacked shipping containers with cargo manifest screen, 19-inch equipment racks with patch bay loops and glowing vacuum tube cages in comms, and heavy airlock blast door with manual dogging wheel, hydraulic rams, and pressure dials. Non-overlapping physics bounds, rear-shifted bridge consoles (`Z = [0.2, 1.4]`), forward-shifted cockpit pods (`Z = [2.6, 3.8]`), and center pedestal colliders ensure wide-open transverse corridors at `Z = [1.4, 2.6]` across all rooms.
@@ -656,6 +707,10 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   - Physical 3D fixtures: `createCeilingLuminaire` mounts cast iron protective cages with warm sodium diffuser panels (`luminaireMat` #ffe6b0) across the central spine, transverse corridor, wing corridors, and all compartments, complemented by dual halogen runway guide strips embedded into the deck.
 - Routes bind environment stills: `/art/cockpit.jpg`, `starmap.jpg`, `crucible.jpg`,
   `cargo.jpg`, `quarters.jpg`, `comms.jpg`, `airlock.jpg`.
+- The app mark (`public/icon.svg`, rasterized to `icon-180/192/512.png`, and
+  `favicon.svg`) is the HUD's hexagon in `--accent-amber` on `--plate-000`. It was
+  electric cyan `#00e5ff`, which §2 bans outright; an installed Home Screen icon is
+  the single most visible surface the product has, so it is held to the brief.
 
 ### 9. Layout invariants
 - `--hud-h` is the height of the fixed header. `.app-viewport` padding and the fixed
@@ -672,7 +727,10 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   map). Inline template styles are overridden there through class hooks plus `!important`.
   Inputs are 16 px on phones so iOS does not zoom; safe-area insets are honoured
   (`viewport-fit=cover`).
-  `mobile-landscape.css` (linked last) targets sideways phones with
+  `mobile-game.css` (linked last) carries the twin sticks, the `100dvh` full-bleed
+  canvas and the full-screen key; none of it is width-scoped, because a
+  landscape-locked phone is routinely wider than 760 px.
+  `mobile-landscape.css` targets sideways phones with
   `(pointer: coarse) and (max-height: 500px) and (orientation: landscape)` — they are often
   wider than 760 px — collapsing the HUD to one 44 px row and docking the Stage Deck to the
   right edge (`min(46vw, 400px)`) so the chamber keeps the left of the screen.

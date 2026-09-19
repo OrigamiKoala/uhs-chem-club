@@ -9,6 +9,7 @@ import { tierManager } from './three/tier.js';
 import { Router } from './router.js';
 import { soundscape } from './audio/soundscape.js';
 import { setBenchHost } from './learn/engine/bench-host.js';
+import { gameMode } from './game-mode.js';
 
 /** Guild liveries, keyed by team id. Legacy ids are aliased in session.js. */
 const TEAM_LIVERY = {
@@ -24,6 +25,10 @@ const TEAM_LIVERY = {
 
 async function bootstrapApp() {
   const appContainer = document.getElementById('app');
+
+  // 0. Full-screen play. Installed to a Home Screen there is no chrome to
+  //    hide, so this reports game mode as already on from the first frame.
+  gameMode.init();
 
   // 1. Initialize 3D Engine
   stage.init();
@@ -99,11 +104,31 @@ function setupHud() {
   const tierToggle = document.getElementById('gfx-tier-toggle');
   const motionToggle = document.getElementById('motion-toggle');
   const soundToggle = document.getElementById('sound-toggle');
+  const fullscreenToggle = document.getElementById('fullscreen-toggle');
 
   // Graphics tier button
   tierToggle?.addEventListener('click', () => {
     tierManager.cycleTier();
   });
+
+  // Full-screen key. Only shown on a touch device (CSS in mobile-game.css),
+  // and the press itself is the user gesture the Fullscreen API demands — a
+  // request made anywhere else is refused by the browser.
+  if (fullscreenToggle) {
+    const syncFullscreenBtn = (active) => {
+      fullscreenToggle.textContent = active ? 'WINDOW' : 'FULL';
+      fullscreenToggle.classList.toggle('active', Boolean(active));
+    };
+    // An installed launch has no chrome to give back, so the key would do
+    // nothing; it is not offered there.
+    if (gameMode.isStandalone()) {
+      fullscreenToggle.classList.add('hidden');
+    } else {
+      syncFullscreenBtn(gameMode.active);
+      gameMode.subscribe(syncFullscreenBtn);
+      fullscreenToggle.addEventListener('click', () => { gameMode.toggle(); });
+    }
+  }
 
   // Motion toggle
   motionToggle?.addEventListener('click', () => {
