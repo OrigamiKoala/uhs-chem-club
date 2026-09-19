@@ -1,0 +1,44 @@
+[
+  {
+    "id": "2232a3d7",
+    "title": "Rotate star map hologram to face the bridge spawn/chairs",
+    "status": "in_progress",
+    "createdAt": "2026-09-19T22:44:26.622Z",
+    "updatedAt": "2026-09-19T22:44:26.622Z"
+  },
+  {
+    "id": "26727cc8",
+    "title": "Close the gap above every doorway (doorframe glitch) + add open doors to all rooms",
+    "status": "pending",
+    "createdAt": "2026-09-19T22:44:26.622Z",
+    "updatedAt": "2026-09-19T22:44:26.622Z"
+  },
+  {
+    "id": "357acc58",
+    "title": "Add comms-room hologram showing real guild standings",
+    "status": "pending",
+    "createdAt": "2026-09-19T22:44:26.622Z",
+    "updatedAt": "2026-09-19T22:44:26.622Z"
+  },
+  {
+    "id": "09953810",
+    "title": "Make Erebus + Tallow quests use the T3 (2D overlay) presentation at T4",
+    "status": "pending",
+    "createdAt": "2026-09-19T22:44:26.622Z",
+    "updatedAt": "2026-09-19T22:44:26.622Z"
+  },
+  {
+    "id": "f88f92f9",
+    "title": "Trim UHS Chem Club hologram directions to Star map + message only",
+    "status": "pending",
+    "createdAt": "2026-09-19T22:44:26.622Z",
+    "updatedAt": "2026-09-19T22:44:26.622Z"
+  },
+  {
+    "id": "c6567dd7",
+    "title": "Run verifiers and build",
+    "status": "pending",
+    "createdAt": "2026-09-19T22:44:26.622Z",
+    "updatedAt": "2026-09-19T22:44:26.622Z"
+  }
+]

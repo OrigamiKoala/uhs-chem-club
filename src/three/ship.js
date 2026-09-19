@@ -473,6 +473,34 @@ export class ShipInterior {
           this.addCollider(a, b, wall.at - WALL_T / 2 - 0.06, wall.at + WALL_T / 2 + 0.06);
         }
       }
+
+      /*
+       * THE TRANSOM — the plate above the door, and the doorframe glitch.
+       *
+       * The solid segments stop at the opening's jambs, and the doorway frame's
+       * lintel only reaches DOOR_H + 0.3. Everything from there up to the
+       * deckhead was therefore AIR — a slot exactly as wide as the door, open
+       * from the head of the frame to the ceiling, that you could see and light
+       * straight through. Every threshold on the ship had it; a doorway you can
+       * read the next room over the top of is the "glitching doorframe".
+       *
+       * It is closed here, as wall, so it is built once and collides with
+       * nothing: the player never gets their head above 2.45 m.
+       */
+      for (const [a, b] of wall.openings || []) {
+        const headroom = wall.top - (DOOR_H + 0.3);
+        if (headroom <= 0.02) continue;
+        const span = b - a;
+        const geom = wall.axis === 'x'
+          ? new THREE.BoxGeometry(WALL_T, headroom, span)
+          : new THREE.BoxGeometry(span, headroom, WALL_T);
+        const transom = new THREE.Mesh(geom, this.bulkheadMat);
+        const tx = wall.axis === 'x' ? wall.at : (a + b) / 2;
+        const tz = wall.axis === 'x' ? (a + b) / 2 : wall.at;
+        transom.position.set(tx, DOOR_H + 0.3 + headroom / 2, tz);
+        transom.castShadow = transom.receiveShadow = true;
+        add(transom);
+      }
     }
 
     this.buildDoorwayFrames(hull);
@@ -552,6 +580,51 @@ export class ShipInterior {
         cleat.position.set(s * (half - 0.02), 1.05, depth / 2 + 0.02);
         frame.add(cleat);
       }
+
+      // THE DOOR ITSELF — one leaf per opening, hinged on the port (or -X)
+      // jamb and swung back against the wall so it stands clear of the walk.
+      //
+      // Every compartment on the Avalon has a doorway, and every doorway has a
+      // frame — but until now not one of them had a door, so the whole ship
+      // read as a set of open archways. A leaf hung and latched open is what a
+      // working interior actually looks like: it says the aperture can be shut,
+      // and it does not pretend a bulkhead has a door when the hole is the door.
+      //
+      // The leaf lives INSIDE the frame group, which is welded into the hull,
+      // so it is one object with the wall it hangs on and the physics check
+      // reads it as such. Its thickness is under the frame's own depth, so it
+      // sits in the reveal rather than proud of it.
+      const hinge = new THREE.Group();
+      hinge.position.set(-half + 0.02, 0, 0);
+      hinge.rotation.y = -1.62;                 // ~93°: flat back, not 90° flush
+      const leafW = d.clear * 0.9;
+      const leaf = new THREE.Mesh(
+        new THREE.BoxGeometry(leafW, DOOR_H - 0.06, 0.05), this.durasteelMat
+      );
+      leaf.position.set(leafW / 2, (DOOR_H - 0.06) / 2 + 0.03, 0);
+      hinge.add(leaf);
+
+      // A window in the leaf, and a pull handle on the free edge. A blank
+      // slab reads as plate; a port in it reads as a door you could look
+      // through before you opened it.
+      const port = new THREE.Mesh(
+        new THREE.BoxGeometry(0.42, 0.42, 0.02), this.ironMat
+      );
+      port.position.set(leafW / 2, 1.5, 0.035);
+      const portGlass = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.3, 0.3),
+        new THREE.MeshBasicMaterial({
+          color: 0x0a0f16, transparent: true, opacity: 0.5, side: THREE.DoubleSide
+        })
+      );
+      portGlass.position.set(leafW / 2, 1.5, 0.048);
+      const handle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.018, 0.018, 0.24, 8), this.brassMat
+      );
+      handle.rotation.z = Math.PI / 2;
+      handle.position.set(leafW - 0.1, 1.05, 0.05);
+      hinge.add(port, portGlass, handle);
+      frame.add(hinge);
 
       hull.add(frame);
     }
@@ -1098,6 +1171,14 @@ export class ShipInterior {
     this.animatedElements.push({ obj: holoPlane, speed: 0.05, isHover: true });
 
     const starmapHoloGroup = new THREE.Group();
+    // The orrery turns about its own axis and is symmetric, so it does not care
+    // which way it faces. The DATA PLATE hanging over it is a flat one-sided
+    // plane and does: it was drawn facing the bow, so the player who spawns on
+    // the bridge and looks left (the table is to starboard, which is their left
+    // when facing forward) saw the BACK of it — mirrored text. A quarter turn
+    // clockwise brings its face round to the crew side, where the chairs and the
+    // spawn are, so it is legible without walking anywhere.
+    starmapHoloGroup.rotation.y = -Math.PI / 2;
     starmapHoloGroup.add(holoProjector);
     starmapHoloGroup.add(holoPlane);
     this.starmapHoloGroup = starmapHoloGroup;
