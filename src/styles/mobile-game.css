@@ -120,25 +120,38 @@ body.touch-primary #fullscreen-toggle { display: inline-flex; }
   background: linear-gradient(180deg, var(--plate-400) 0%, var(--plate-200) 100%);
 }
 
+:root {
+  --tc-stick-center-y: 90px;
+}
+
+@media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --tc-stick-center-y: 68px;
+  }
+}
+
 /* ===================================================================
    ACTION KEYS — the two presses a finger otherwise has no way to make.
-   Stacked above the move stick, thumb-reachable from the right corner.
+   Aligned along the line connecting the centers of the joysticks.
    =================================================================== */
 .tc-keys {
   position: absolute;
-  right: max(14px, env(safe-area-inset-right));
-  bottom: calc(168px + env(safe-area-inset-bottom));
+  right: max(136px, calc(env(safe-area-inset-right) + 136px));
+  bottom: var(--tc-stick-center-y);
+  transform: translateY(50%);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 10px;
   pointer-events: none;
+  z-index: 2;
 }
 
 .tc-key {
   pointer-events: auto;
   touch-action: manipulation;
-  width: 66px;
-  height: 66px;
+  width: 54px;
+  height: 54px;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-durasteel);
   background: linear-gradient(180deg, var(--plate-200) 0%, var(--plate-000) 100%);
@@ -147,7 +160,7 @@ body.touch-primary #fullscreen-toggle { display: inline-flex; }
   /* A one-glyph legend, so it is sized like an engraved key cap rather than a
      word, and tracking is off — trailing letter-spacing pushes a single
      character off the centre of its key. */
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   letter-spacing: normal;
   text-shadow: var(--engrave);
   box-shadow:
@@ -171,51 +184,38 @@ body.touch-primary #fullscreen-toggle { display: inline-flex; }
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
-/* ---- The interaction prompt sits in the band, not over the view ----
-   What the E key does belongs beside the E key. Centred in the middle of the
-   glass it covered the thing the player had walked up to read; here it occupies
-   the strip the stick layer already owns — right of the look stick, left of the
-   keys, on the keys' own line — so the whole upper screen stays the world.
-
-   The inline styles in `fps-controls.js` set `left: 50%` and a centring
-   transform, so both are overridden rather than merely nudged. */
+/* ---- The interaction prompt sits on the joystick center line ----
+   What the E key does sits directly beside the E key, centered on the line
+   connecting the centers of the joysticks. */
 body.touch-walking #fps-interact-prompt {
-  /* Upright, the keys are a column above the move stick and the look stick's
-     box stops well below their line, so the strip runs from the left edge to
-     just short of the E key — 113px between the stick's *width* and the keys
-     would wrap a six-word prompt into a tower. */
   left: max(14px, env(safe-area-inset-left)) !important;
-  right: calc(92px + env(safe-area-inset-right)) !important;
-  transform: none !important;
-  bottom: calc(246px + env(safe-area-inset-bottom)) !important;
+  right: calc(260px + env(safe-area-inset-right)) !important;
+  bottom: var(--tc-stick-center-y) !important;
+  transform: translateY(50%) !important;
   max-width: none;
   text-align: left;
   font-size: 11px;
-  line-height: 1.35;
+  line-height: 1.3;
   padding: 5px 8px;
+  box-sizing: border-box;
+  pointer-events: none !important;
 }
 
 /* ===================================================================
    LANDSCAPE — a sideways phone is short, so everything shrinks and the
-   keys move beside the move stick instead of above it.
+   keys move beside the move stick with center line at 68px.
    =================================================================== */
 @media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
   .tc-zone { width: 136px; height: 136px; }
   .tc-ring { left: 68px; top: 68px; width: 94px; height: 94px; margin: -47px 0 0 -47px; }
   .tc-knob { width: 46px; height: 46px; }
   .tc-keys {
-    flex-direction: row;
     right: max(148px, calc(env(safe-area-inset-right) + 148px));
-    bottom: calc(16px + env(safe-area-inset-bottom));
   }
   .tc-key { width: 56px; height: 56px; font-size: 1rem; }
-  /* Sideways, the keys are a row beside the move stick and the band is the
-     bottom strip between the two sticks: start clear of the look stick, stop
-     clear of the keys, and sit on their line. */
   body.touch-walking #fps-interact-prompt {
     left: calc(146px + env(safe-area-inset-left)) !important;
-    right: calc(282px + env(safe-area-inset-right)) !important;
-    bottom: calc(30px + env(safe-area-inset-bottom)) !important;
+    right: calc(280px + env(safe-area-inset-right)) !important;
     font-size: 10.5px;
   }
 }

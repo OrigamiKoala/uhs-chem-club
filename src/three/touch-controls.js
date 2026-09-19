@@ -100,8 +100,8 @@ export class TouchControls {
   }
 
   homeRing(z) {
-    z.ring.style.left = `${HOME.x}px`;
-    z.ring.style.top = `${HOME.y}px`;
+    z.ring.style.left = '';
+    z.ring.style.top = '';
     z.knob.style.transform = 'translate(-50%, -50%)';
     z.el.classList.remove('active');
   }

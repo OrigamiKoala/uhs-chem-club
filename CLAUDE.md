@@ -777,10 +777,10 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   wider than 760 px — collapsing the HUD to one 44 px row and docking the Stage Deck to the
   right edge (`min(46vw, 400px)`) so the chamber keeps the left of the screen.
   The `[E]` prompt lives in the stick band, not over the view: `body.touch-walking`
-  pins `#fps-interact-prompt` to the keys' own line — left edge to just short of the E
-  key upright, between the look stick and the key row sideways — overriding the `left:
-  50%` and centring transform that `fps-controls.js` sets inline. Centred mid-glass it
-  covered the very thing the player had walked up to read.
+  aligns `#fps-interact-prompt`, the `E` and `X` keys (`.tc-keys`), and the twin joysticks
+  so their centers all lie on the exact line connecting the centers of the joysticks
+  (`--tc-stick-center-y`: 90 px in portrait, 68 px in landscape via `transform: translateY(50%)`).
+  Centred mid-glass it covered the very thing the player had walked up to read.
   On phones (`PHONE_QUERY` in `quest3d/viewer.js`, matching both files) `fitToOpenArea()`
   measures the HUD, `.quest-hud-top` and the visible deck, then uses `setViewOffset` to
   centre the chamber in the uncovered part of the canvas, zooming out when that area is
