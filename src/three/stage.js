@@ -15,6 +15,7 @@ import { TallowWorld } from "./tallow.js";
 import { FpsControls } from "./fps-controls.js";
 import { session } from "../session.js";
 import { ShipLightPool } from "./ship-lighting.js";
+import { soundscape } from "../audio/soundscape.js";
 
 /**
  * Tone-mapping exposure per place.
@@ -158,7 +159,8 @@ class Stage {
 
       this.shipInterior.updateDisplays(questData, standingsData, inventoryData);
       const isAuthed = Boolean(session.token && session.player);
-      this.shipInterior.setClubHoloVisible(isAuthed);
+      const showHolo = isAuthed && !session.hasFlag("clubHoloClosed") && !this.shipInterior.clubHoloClosed;
+      this.shipInterior.setClubHoloVisible(showHolo);
       if (this.fpsControls) {
         this.fpsControls.enabled = isAuthed;
       }
@@ -173,6 +175,9 @@ class Stage {
     // 4. First-person WASD controls with collision sliding and interaction
     this.fpsControls = new FpsControls(this.camera, this.canvas);
     this.fpsControls.enabled = Boolean(session.token && session.player);
+    this.fpsControls.onCloseHolo = () => {
+      this.closeClubHolo();
+    };
     this.fpsControls.setMode(
       "ship",
       null,
@@ -220,8 +225,53 @@ class Stage {
     document.addEventListener("visibilitychange", this.onVisibilityChange.bind(this));
     tierManager.subscribe((tier) => this.applyTierSettings(tier));
 
+    // Global 'X' key handler to close club holographic display
+    window.addEventListener("keydown", (e) => {
+      const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+      if (tag === "input" || tag === "textarea" || tag === "select" || document.activeElement?.isContentEditable) return;
+      const modal = document.getElementById("modal-container");
+      if (modal && !modal.classList.contains("hidden")) return;
+
+      if (e.key === "x" || e.key === "X" || e.code === "KeyX") {
+        if (this.shipInterior?.isClubHoloVisible()) {
+          this.closeClubHolo();
+        }
+      }
+    });
+
+    // Pointer click on canvas to close holo screen when clicked
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    if (this.canvas) {
+      this.canvas.addEventListener("pointerup", (e) => {
+        if (this.mode !== "ship" || !this.shipInterior?.isClubHoloVisible() || !this.camera) return;
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, this.camera);
+        const hits = raycaster.intersectObjects(this.shipInterior.clubHoloGroup.children, true);
+        if (hits.length > 0) {
+          this.closeClubHolo();
+        }
+      });
+    }
+
     // 6. Start Animation Loop
     this.renderer.setAnimationLoop(this.render.bind(this));
+  }
+
+  closeClubHolo() {
+    let wasVisible = false;
+    if (this.shipInterior && this.shipInterior.isClubHoloVisible?.()) {
+      this.shipInterior.closeClubHolo();
+      wasVisible = true;
+    } else if (this.shipInterior) {
+      this.shipInterior.closeClubHolo();
+    }
+    session.setFlag("clubHoloClosed", true);
+    window.dispatchEvent(new CustomEvent("club-holo:close"));
+    if (wasVisible) {
+      soundscape.playNavRelayClick?.();
+    }
   }
 
   applyTierSettings(tier) {

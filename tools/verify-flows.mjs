@@ -138,6 +138,13 @@ check('first completion is not flagged as a repeat', comp.json.data.alreadyCompl
 const comp2 = await call('quest/complete', { token, questId: 'q1' });
 check('re-completion is idempotent', comp2.json.data.alreadyCompleted === true);
 
+// The baseline is taken *after* completion, not before it: completing a quest
+// legitimately pays the 40 + 25 bonus, so comparing across that boundary would
+// assert the total must not move for a reason that has nothing to do with replay.
+const meCompleted = await call('player/me', { token });
+check('completion bonus is banked', meCompleted.json.data.xp === me.json.data.xp + 65,
+  `before=${me.json.data.xp} after=${meCompleted.json.data.xp}`);
+
 const afterComplete = await call('quest/grade', {
   token, questId: 'q1', stageIndex: 0, payload: { from: 'red_lp1', to: 'blue_c1' }
 });
@@ -146,8 +153,8 @@ check('replay after completion awards 0 XP',
   JSON.stringify(afterComplete.json.data));
 
 const meAfter = await call('player/me', { token });
-check('xp unchanged by replay', meAfter.json.data.xp === me.json.data.xp,
-  `before=${me.json.data.xp} after=${meAfter.json.data.xp}`);
+check('xp unchanged by replay', meAfter.json.data.xp === meCompleted.json.data.xp,
+  `before=${meCompleted.json.data.xp} after=${meAfter.json.data.xp}`);
 const progAfter = (meAfter.json.data.progress || []).find(x => x.quest_id === 'q1');
 check('progress does not regress', progAfter && progAfter.stage_reached === 20,
   JSON.stringify(progAfter));
@@ -199,6 +206,24 @@ const stageXpSum = man.json.data.stages.reduce((s, x) => s + x.xp, 0);
 check('stage xp sums to base xp', stageXpSum === 650, `sum=${stageXpSum}`);
 const lb = await call('leaderboard', {});
 check('leaderboard returns teams + players', lb.json.data.teams.length === 4 && lb.json.data.individual.length > 0);
+
+// XP must actually reach the standings. A leaderboard that ignores what a player
+// earned is the failure mode this suite exists to catch: the backend used to
+// filter correct submissions with `correct === 'TRUE'` while Sheets stored a
+// boolean, so every total read as zero and no guild score ever moved.
+const meFinal = await call('player/me', { token });
+const myRow = lb.json.data.individual.find(r => r.display_name === meFinal.json.data.player.display_name);
+check('the player appears on the individual board', Boolean(myRow),
+  JSON.stringify(lb.json.data.individual));
+check('board XP matches player/me', myRow && myRow.xp === meFinal.json.data.xp,
+  `board=${myRow && myRow.xp} me=${meFinal.json.data.xp}`);
+check('earned XP is not zero', myRow && myRow.xp > 0, `xp=${myRow && myRow.xp}`);
+
+const myTeam = lb.json.data.teams.find(t => t.team_id === 'fire');
+check('the guild counts the player as active', myTeam && myTeam.active_members >= 1,
+  JSON.stringify(myTeam));
+check('the guild score moves with member XP', myTeam && myTeam.team_score > 0,
+  JSON.stringify(myTeam));
 
 console.log(`\n${failures === 0 ? 'ALL CHECKS PASSED' : failures + ' CHECK(S) FAILED'}`);
 process.exit(failures === 0 ? 0 : 1);

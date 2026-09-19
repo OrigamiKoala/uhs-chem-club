@@ -16,11 +16,16 @@ import { tierManager } from "../three/tier.js";
 import { playCinematic } from "../ui/cinematic.js";
 
 let unsubscribeBridge = null;
+let bridgeHoloListener = null;
 
 export function renderBridge(container) {
   if (unsubscribeBridge) {
     unsubscribeBridge();
     unsubscribeBridge = null;
+  }
+  if (bridgeHoloListener) {
+    window.removeEventListener("club-holo:close", bridgeHoloListener);
+    bridgeHoloListener = null;
   }
 
   if (stage.cameraRig && tierManager.currentTier !== "T4") {
@@ -33,7 +38,7 @@ export function renderBridge(container) {
     try {
       const local = parseInt(localStorage.getItem("avalon_q1_stage_reached"), 10);
       if (!isNaN(local)) reached = Math.max(reached, local);
-    } catch (e) {}
+    } catch (e) { }
     return Math.max(0, Math.min(reached, TOTAL_STAGES));
   }
 
@@ -68,25 +73,28 @@ export function renderBridge(container) {
     container.innerHTML = `
       <div class="screen-container m-screen m-bridge">
         ${pageHeader({
-          art: "/art/bridge.jpg",
-          video: "/video/cockpit_loop.webm",
-          eyebrow: esc(t.name || t.team_id || "Unassigned") + " Guild",
-          title: esc(p.display_name || "Explorer"),
-          actions: statRow([
-            { label: "Total XP", value: `${session.xp || 0}` },
-            { label: "Level", value: `${prog.level} · ${levelTitle(prog.level)}`, plain: true },
-            { label: "To next level", value: `${Math.max(0, prog.needed - prog.into)} XP`, plain: true }
-          ])
-        })}
+      art: "/art/bridge.jpg",
+      video: "/video/cockpit_loop.webm",
+      eyebrow: esc(t.name || t.team_id || "Unassigned") + " Guild",
+      title: esc(p.display_name || "Explorer"),
+      actions: statRow([
+        { label: "Total XP", value: `${session.xp || 0}` },
+        { label: "Level", value: `${prog.level} · ${levelTitle(prog.level)}`, plain: true },
+        { label: "To next level", value: `${Math.max(0, prog.needed - prog.into)} XP`, plain: true }
+      ])
+    })}
 
-        <div class="glass-panel" style="margin-bottom: 1.25rem; border-left: 2px solid var(--accent-amber); padding: 0.9rem 1.15rem;">
+        <div id="bridge-announcement-panel" class="glass-panel" style="margin-bottom: 1.25rem; border-left: 2px solid var(--accent-amber); padding: 0.9rem 1.15rem; ${session.hasFlag('clubHoloClosed') ? 'display: none;' : ''}">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
             <div>
-              <div style="font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; color: var(--accent-amber);">UHS Chem Club</div>
-              <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); margin-top: 2px;">Next meeting 9/29 in 702</div>
+              <div style="font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; color: var(--accent-amber);">UHS Chemistry Club</div>
+              <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); margin-top: 2px;">Next meeting Tuesday 9/29 in 702</div>
             </div>
-            <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);">
-              ← Star Map · Standings →
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);">
+                ← Star Map · Standings →
+              </div>
+              <button type="button" id="bridge-announcement-close" class="btn-chip" style="font-size: 0.72rem; padding: 2px 8px; color: var(--accent-amber); border-color: rgba(217, 148, 35, 0.4); cursor: pointer;" title="Close [X]">Close [X]</button>
             </div>
           </div>
         </div>
@@ -112,10 +120,10 @@ export function renderBridge(container) {
             </div>
 
             ${statRow([
-              { label: "Stages", value: `${cleared} / ${TOTAL_STAGES}`, plain: true },
-              { label: "Quest XP", value: TOTAL_QUEST_XP },
-              { label: "Run time", value: "~30 min", plain: true }
-            ])}
+      { label: "Stages", value: `${cleared} / ${TOTAL_STAGES}`, plain: true },
+      { label: "Quest XP", value: TOTAL_QUEST_XP },
+      { label: "Run time", value: "~30 min", plain: true }
+    ])}
 
             <a href="#/quest" class="btn-primary bridge-quest-cta" style="width: 100%; text-decoration: none; margin-top: 1.25rem;">
               ${isComplete ? "Replay Gardens" : cleared > 0 ? `Continue Stage ${currentPylonNum}` : "Start Stage 1"}
@@ -154,9 +162,26 @@ export function renderBridge(container) {
       e.preventDefault();
       try {
         await playCinematic("launch");
-      } catch (err) {}
+      } catch (err) { }
       window.location.hash = "#/quest";
     });
+
+    const panel = container.querySelector("#bridge-announcement-panel");
+    const closeBtn = container.querySelector("#bridge-announcement-close");
+    closeBtn?.addEventListener("click", () => {
+      if (panel) panel.style.display = "none";
+      session.setFlag("clubHoloClosed", true);
+      stage.closeClubHolo?.();
+    });
+
+    if (bridgeHoloListener) {
+      window.removeEventListener("club-holo:close", bridgeHoloListener);
+    }
+    bridgeHoloListener = () => {
+      const p = container.querySelector("#bridge-announcement-panel");
+      if (p) p.style.display = "none";
+    };
+    window.addEventListener("club-holo:close", bridgeHoloListener);
   }
 
   render();
@@ -165,6 +190,10 @@ export function renderBridge(container) {
     if (!window.location.hash.includes("bridge")) {
       if (unsubscribeBridge) unsubscribeBridge();
       unsubscribeBridge = null;
+      if (bridgeHoloListener) {
+        window.removeEventListener("club-holo:close", bridgeHoloListener);
+        bridgeHoloListener = null;
+      }
       return;
     }
     render();

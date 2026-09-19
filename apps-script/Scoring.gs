@@ -32,7 +32,7 @@ var Scoring = {
    */
   computePlayerTotalXp: function(playerId) {
     var subs = Db.find('Submissions', function(s) {
-      return s.player_id === playerId && s.correct === 'TRUE';
+      return s.player_id === playerId && isTrueFlag(s.correct);
     });
     var total = 0;
     // Track best XP per stage to avoid duplicate awarding on replay

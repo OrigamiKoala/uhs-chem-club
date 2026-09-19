@@ -254,6 +254,18 @@ const localStore = {
   ]
 };
 
+// Stage XP plus the 40 + 25 completion bonus per finished quest — the same sum
+// Scoring.computePlayerTotalXp produces. player/me, auth/login and the leaderboard
+// all read through here, because a mock whose profile and standings disagree about
+// a player's total teaches a dev run the wrong thing about production.
+function localTotalXp(player) {
+  const stageXp = typeof player.xp === 'number' ? player.xp : 0;
+  const completed = localStore.progress.filter(
+    pr => pr.player_id === player.player_id && pr.completed_at
+  ).length;
+  return stageXp + completed * 65;
+}
+
 function localDevHandler(route, body) {
   const now = new Date().toISOString();
 
@@ -294,7 +306,7 @@ function localDevHandler(route, body) {
     const token = Buffer.from(JSON.stringify({ pid: p.player_id, exp: Date.now() + 864000000 })).toString('base64') + '.sig';
     const teamId = normalizeTeam(p.team_id);
     const team = localStore.teams.find(t => t.team_id === teamId) || null;
-    const pXp = typeof p.xp === 'number' ? p.xp : 0;
+    const pXp = localTotalXp(p);
     const pLevel = Math.max(1, Math.floor(Math.sqrt(pXp / 45)) + 1);
     return {
       ok: true,
@@ -434,7 +446,7 @@ function localDevHandler(route, body) {
       return { ok: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated.' } };
     }
     const teamId = normalizeTeam(p.team_id);
-    const pXp = typeof p.xp === 'number' ? p.xp : 0;
+    const pXp = localTotalXp(p);
     const pLevel = Math.max(1, Math.floor(Math.sqrt(pXp / 45)) + 1);
     return {
       ok: true,
@@ -683,23 +695,64 @@ function localDevHandler(route, body) {
   }
 
   if (route === 'leaderboard') {
-    return {
-      ok: true,
-      data: {
-        individual: [
-          { rank: 1, display_name: 'AstraNova', team_id: 'air', role: '', xp: 245, level: 3, level_title: 'Scout' },
-          { rank: 2, display_name: 'ProtonPulse', team_id: 'fire', role: '', xp: 210, level: 3, level_title: 'Scout' },
-          { rank: 3, display_name: 'KelvinZero', team_id: 'water', role: '', xp: 195, level: 2, level_title: 'Cadet' },
-          { rank: 4, display_name: 'TerraFirm', team_id: 'earth', role: '', xp: 180, level: 2, level_title: 'Cadet' }
-        ],
-        teams: [
-          { rank: 1, team_id: 'air', name: 'air', team_score: 220, roster_size: 10, active_members: 9 },
-          { rank: 2, team_id: 'fire', name: 'fire', team_score: 205, roster_size: 11, active_members: 9 },
-          { rank: 3, team_id: 'water', name: 'water', team_score: 190, roster_size: 9, active_members: 8 },
-          { rank: 4, team_id: 'earth', name: 'earth', team_score: 185, roster_size: 10, active_members: 7 }
-        ]
-      }
-    };
+    // Computed from localStore, not hardcoded. A fixed board cannot show whether
+    // XP reaches the standings, which is the one thing a dev run needs to prove;
+    // the formulas below mirror Scoring.gs so dev behaviour matches production.
+    const LEVEL_TITLES = [[2, 'Cadet'], [4, 'Scout'], [6, 'Navigator'], [8, 'Voyager'], [10, 'Pathfinder'], [12, 'Starmarshal']];
+    const levelOf = xp => Math.min(12, Math.max(1, xp > 0 ? Math.floor(Math.sqrt(xp / 45)) + 1 : 1));
+    const titleOf = lvl => (LEVEL_TITLES.find(([max]) => lvl <= max) || [0, 'Starmarshal'])[1];
+
+    const individual = localStore.players
+      .filter(p => p.status !== 'banned')
+      .map(p => {
+        const xp = localTotalXp(p);
+        const level = levelOf(xp);
+        return {
+          player_id: p.player_id,
+          display_name: p.display_name,
+          team_id: normalizeTeam(p.team_id),
+          role: p.role || '',
+          xp,
+          level,
+          level_title: titleOf(level)
+        };
+      })
+      .sort((a, b) => b.xp - a.xp)
+      .map((row, i) => ({ ...row, rank: i + 1 }));
+
+    // §4.4 — mean of active members, not the sum, scaled by participation.
+    const teams = localStore.teams.map(tm => {
+      const roster = individual.filter(r => r.team_id === tm.team_id);
+      const active = roster.filter(r => r.xp > 0);
+      const meanXp = active.length ? active.reduce((sum, r) => sum + r.xp, 0) / active.length : 0;
+      const partMult = roster.length ? 0.75 + 0.5 * (active.length / roster.length) : 1.0;
+      return {
+        team_id: tm.team_id,
+        name: tm.name,
+        corp_name: tm.corp_name,
+        ship_name: tm.ship_name,
+        color_hex: tm.color_hex,
+        accent_hex: tm.accent_hex,
+        emblem: tm.emblem,
+        roster_size: roster.length,
+        active_members: active.length,
+        team_score: Math.round(meanXp * partMult)
+      };
+    })
+      .sort((a, b) => b.team_score - a.team_score)
+      .map((row, i) => ({ ...row, rank: i + 1 }));
+
+    const data = { individual: individual.slice(0, 50), teams };
+
+    if (body && body.token) {
+      try {
+        const pid = JSON.parse(Buffer.from(body.token.split('.')[0], 'base64').toString('utf8')).pid;
+        const me = individual.find(r => r.player_id === pid);
+        if (me) data.myRank = { rank: me.rank, display_name: me.display_name, xp: me.xp, level: me.level };
+      } catch (e) {}
+    }
+
+    return { ok: true, data };
   }
 
   return { ok: true, data: { status: 'mock_dev_ready', route } };

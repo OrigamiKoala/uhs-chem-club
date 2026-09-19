@@ -63,6 +63,7 @@ export class ShipInterior {
 
     this.scene.add(this.group);
 
+    this.clubHoloClosed = false;
     const isAuthed = Boolean(session?.token && session?.player);
     this.setClubHoloVisible(isAuthed);
   }
@@ -1403,10 +1404,22 @@ export class ShipInterior {
     }
   }
 
-  setClubHoloVisible(visible) {
+  setClubHoloVisible(visible, force = false) {
+    if (!force && this.clubHoloClosed) {
+      visible = false;
+    }
     const v = Boolean(visible);
     if (this.clubHoloGroup) this.clubHoloGroup.visible = v;
     if (this.clubHoloBeam) this.clubHoloBeam.visible = v;
+  }
+
+  closeClubHolo() {
+    this.clubHoloClosed = true;
+    this.setClubHoloVisible(false, true);
+  }
+
+  isClubHoloVisible() {
+    return Boolean(this.clubHoloGroup && this.clubHoloGroup.visible);
   }
 
   update(delta, time) {

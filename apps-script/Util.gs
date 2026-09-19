@@ -105,3 +105,17 @@ function validateEmail(email) {
   if (!email || typeof email !== 'string') return false;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
+
+/**
+ * Sheets truthiness for a flag column.
+ *
+ * `Db.append` writes the string 'TRUE', but `appendRow` applies the same parsing
+ * as typing into a cell, so Sheets stores a *boolean* and `getValues` reads it
+ * back as JavaScript `true` — never the string. A strict `=== 'TRUE'` therefore
+ * matches nothing, which silently zeroed every player's stage XP and, because
+ * the team score only counts members with xp > 0 as active, froze the guild
+ * board. Accept both forms; never compare a flag column directly.
+ */
+function isTrueFlag(v) {
+  return v === true || String(v).trim().toUpperCase() === 'TRUE';
+}

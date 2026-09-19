@@ -43,6 +43,7 @@ export class FpsControls {
     this.boxColliders = []; // [{ minX, maxX, minZ, maxZ }]
     this.radialColliders = []; // [{ x, z, radius }]
     this.onInteract = null; // Callback for [E] / click on interactive target
+    this.onCloseHolo = null; // Callback for [X] key
 
     // UI Prompt element
     this.promptEl = null;
@@ -237,6 +238,11 @@ export class FpsControls {
       case "KeyE":
         if (this.onInteract) {
           this.onInteract();
+        }
+        break;
+      case "KeyX":
+        if (this.onCloseHolo) {
+          this.onCloseHolo();
         }
         break;
     }

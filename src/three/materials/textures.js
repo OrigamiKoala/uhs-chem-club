@@ -571,6 +571,28 @@ export function createClubHoloTexture() {
   ctx.textAlign = 'center';
   ctx.fillText('// AVALON STATION · FLIGHT DECK DIRECTORY //', 512, 50);
 
+  // Top-right Close [X] badge
+  ctx.font = 'bold 15px monospace';
+  const closeText = 'Close [X]';
+  const closeW = ctx.measureText(closeText).width;
+  const badgeX = 964 - closeW - 14;
+  const badgeY = 34;
+  const badgeW = closeW + 14;
+  const badgeH = 26;
+
+  ctx.fillStyle = 'rgba(217, 148, 35, 0.16)';
+  ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
+  ctx.strokeStyle = '#d99423';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffaa38';
+  ctx.shadowColor = '#d99423';
+  ctx.shadowBlur = 6;
+  ctx.fillText(closeText, badgeX + badgeW / 2, badgeY + 18);
+  ctx.shadowBlur = 0;
+
   // Title: UHS Chem Club
   ctx.font = 'bold 44px sans-serif';
   ctx.fillStyle = '#f6ecd9';
@@ -696,7 +718,11 @@ export function createCommsStandingsTexture(teams = [], chatter = '') {
   list.slice(0, 4).forEach((t, idx) => {
     const r = String(t.rank || idx + 1).padStart(2, '0');
     const nm = (t.name || t.team_id || 'GUILD').toUpperCase();
-    const sc = `${t.team_score || t.score || 0} XP`;
+    // Not XP: a guild's score is the mean of its active members' XP scaled by
+    // participation (Scoring.gs §4.4), so it neither equals nor tracks any one
+    // player's total. Labelling it XP made the board look broken to a player who
+    // earned 20 and saw the guild move 5.
+    const sc = String(t.team_score || t.score || 0);
     ctx.fillStyle = idx === 0 ? '#ff9f1c' : '#8fb055';
     ctx.fillText(`${r}  ${nm.padEnd(28, '.')} ${sc}`, 22, yPos);
     yPos += 22;

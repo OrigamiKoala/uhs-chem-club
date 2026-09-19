@@ -347,6 +347,26 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
   them and asserts every site is still reachable.
 
 ## Rules that keep the game fair
+- **A guild's score is a mean, never a sum.** `Scoring.getLeaderboards` computes
+  `mean(xp of members with xp > 0) x (0.75 + 0.5 x active/roster)`, and the proxy mock
+  mirrors it. A sum hands the season to whichever guild recruits hardest, which is what
+  `docs/plans/avalon-implementation-plan.md` §4.4 was written to prevent. The consequence
+  to expect: earning 20 XP moves your guild by a few points, not by 20, and a teammate
+  crossing from 0 XP to a low total can pull the mean *down*. Because it is not XP,
+  nothing may label it "XP" — the Comms CRT once did, and it made the board read as broken.
+- **A Sheets flag column is never compared to a string.** `Db.append` writes `'TRUE'`, but
+  `appendRow` applies cell-entry parsing, so Sheets stores a *boolean* and `getValues`
+  reads back `true`. A strict `correct === 'TRUE'` therefore matched nothing: every
+  player's stage XP summed to zero, leaving only completion bonuses, and since the team
+  score counts only members with `xp > 0` as active, no guild score moved either. Read
+  flags through `isTrueFlag` in `Util.gs` (accepts both forms) and never inline the compare.
+  `verify:flows` guards it: the board must carry the signed-in player's XP, it must be
+  non-zero, and their guild must count them active.
+- **The mock's totals must match production's.** `localTotalXp` in `api/[...route].js` is
+  the mock's `Scoring.computePlayerTotalXp` — stage XP plus 65 per completed quest — and
+  `player/me`, `auth/login` and `leaderboard` all read through it. The leaderboard route is
+  computed from `localStore`, not hardcoded; a fixed board cannot show whether XP reaches
+  the standings, which is the one thing a dev run needs to prove.
 - **XP is paid once per stage.** `Quests.gs` checks prior correct submissions, the proxy
   mock tracks `progress.cleared`, and the client only calls `session.addXp` when the stage
   is not a replay. Stage navigation lets players revisit any stage they have reached, so
@@ -600,7 +620,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - Authentication gating & 3D view: On unauthenticated routes (`/login`, `/register`, `/`, `/onboarding`), the 3D ship interior and vista are visible behind the account cards, but first-person WASD navigation and mouse look are locked (`fpsControls.enabled = false`) until the player signs in.
 - Starship traversal spine: `src/three/ship-graph.js` defines an undirected navigation graph across all compartments (`bridge`, `cockpit`, `starmap`, `quarters`, `cargo`, `comms`, `airlock`) with 3–6 point `walkPath` splines, `hatchPos` view-cone markers, and `routeBinding`.
 - Starship 3D interior: `src/three/ship.js` builds hyper-realistic physical rooms and interconnecting corridor spines along `walkPath` splines with procedural PBR durasteel plating with tangent-space normal mapping (`createDurasteelNormalTexture`), floor grating, runway halogen strips, chamfered hatch bulkheads, tactical quad-CRT bridge consoles with mechanical keyboards and dial gauges, dual flight pods with yokes and center throttle quadrant in cockpit, central holo-table with 4-planet orrery and live holographic quest projector, 2-tier bunk beds with canvas bedding and stenciled metal footlockers, anglepoise desk lamp and gear hooks in quarters, overhead gantry crane and stacked shipping containers with cargo manifest screen, 19-inch equipment racks with patch bay loops and glowing vacuum tube cages in comms, and heavy airlock blast door with manual dogging wheel, hydraulic rams, and pressure dials. Non-overlapping physics bounds, rear-shifted bridge consoles (`Z = [0.2, 1.4]`), forward-shifted cockpit pods (`Z = [2.6, 3.8]`), and center pedestal colliders ensure wide-open transverse corridors at `Z = [1.4, 2.6]` across all rooms.
-- In-World 3D content transfer: In T4, primary content lives diegetically in 3D: Quests in the Star Map holo-table, Standings on the Comms CRT terminal, Inventory on the Cargo Manifest, and the Bridge Welcome Hologram directly in front of the camera's original bridge position displaying "UHS Chem Club", meeting announcements, and directional wayfinding arrows. The bridge hologram only displays when authenticated (`setClubHoloVisible(isAuthed)`), remains stationary without bobbing (`isHover: false`), uses `side: THREE.FrontSide` to prevent mirrored text overlap, and features polished directory typography. Doorway frames in comms are positioned at corridor thresholds to prevent obstructing the Fleet Comms standings screen, and the Cargo Manifest terminal screen is offset (`Z = 0.370`) with polygon offsetting to eliminate coplanar Z-fighting and screen glitching. In T3 and below, 2D full-page screens (`.screen-container`) remain active.
+- In-World 3D content transfer: In T4, primary content lives diegetically in 3D: Quests in the Star Map holo-table, Standings on the Comms CRT terminal, Inventory on the Cargo Manifest, and the Bridge Welcome Hologram directly in front of the camera's original bridge position displaying "UHS Chem Club", meeting announcements ("Next meeting 9/29 in 702"), a top-right "Close [X]" badge, and directional wayfinding arrows. The bridge hologram displays when authenticated (`setClubHoloVisible(isAuthed)`), can be dismissed by pressing the "X" key or clicking the holo screen (`stage.closeClubHolo()`), remains stationary without bobbing (`isHover: false`), uses `side: THREE.FrontSide` to prevent mirrored text overlap, and features polished directory typography. Doorway frames in comms are positioned at corridor thresholds to prevent obstructing the Fleet Comms standings screen, and the Cargo Manifest terminal screen is offset (`Z = 0.370`) with polygon offsetting to eliminate coplanar Z-fighting and screen glitching. In T3 and below, 2D full-page screens (`.screen-container`) remain active with a matching dismissible announcement card.
 - Erebus world scene: `src/three/world.js` and `src/three/world-data/erebus.json` define The Charge Gardens basin with 20 instanced pylon structures along a walkable route, survey lander ("SANDSTALKER") with boarding ramp, stratified sedimentary rock outcrops, procedural terrain heightmap (`getTerrainHeight`), amber celestial sky, banded gas giant vista (with `fog: false` celestial bodies), tuned desert haze (`fogNear: 70`, `fogFar: 280`), and atmospheric dust motes.
 - T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `CLOSE` dismiss controls. Star Map holo-table integrates Sector 01 status and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates standings; Settings integrates graphics tier (T4 default) and audio sliders. Bridge displays the floating directory kiosk instead of WASD/mouse look text prompts.
 - T4 Learn deployment: In T4, `#/learn/unit01` enters the 3D Tallow world

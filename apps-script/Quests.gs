@@ -654,7 +654,7 @@ var Quests = {
     if (isCorrect) {
       var alreadyCleared = false;
       for (var pi = 0; pi < prior.length; pi++) {
-        if (String(prior[pi].correct).toUpperCase() === 'TRUE') {
+        if (isTrueFlag(prior[pi].correct)) {
           alreadyCleared = true;
           break;
         }
@@ -748,7 +748,7 @@ var Quests = {
     }
 
     var subs = Db.find('Submissions', function(s) {
-      return s.player_id === playerId && s.quest_id === questId && s.correct === 'TRUE';
+      return s.player_id === playerId && s.quest_id === questId && isTrueFlag(s.correct);
     });
 
     var totalStageXp = 0;
