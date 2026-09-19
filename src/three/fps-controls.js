@@ -101,8 +101,9 @@ export class FpsControls {
 
   showPrompt(text) {
     if (this.promptEl) {
-      // There is no E key on a phone; the stick layer offers a USE key instead.
-      this.promptEl.textContent = this.touchMode ? String(text).replace("[E]", "[USE]") : text;
+      // The stick layer's interact key is engraved E, the same legend the prompt
+      // carries, so there is nothing to rewrite on a phone any more.
+      this.promptEl.textContent = text;
       this.promptEl.style.display = "block";
       this.promptVisible = true;
     }

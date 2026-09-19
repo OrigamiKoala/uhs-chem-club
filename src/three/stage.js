@@ -483,10 +483,12 @@ class Stage {
     this.touchControls.setVisible(show);
     if (show) {
       const prompt = this.fpsControls.promptEl;
+      // The prompt reads `[E]` on every device now — the stick key is engraved
+      // with the same legend — so this is the one string to look for.
       const offered = Boolean(
         this.fpsControls.promptVisible &&
         prompt &&
-        prompt.textContent.includes("[USE]")
+        prompt.textContent.includes("[E]")
       );
       this.touchControls.setInteractAvailable(offered);
     }

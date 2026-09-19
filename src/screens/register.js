@@ -13,6 +13,7 @@ import { stage } from '../three/stage.js';
 import { showToast } from '../ui/toast.js';
 import { stepRail, esc } from '../ui/layout.js';
 import { BACKGROUNDS } from '../story/trinkets.js';
+import { gameMode } from '../game-mode.js';
 
 const NAME_PATTERN = /^[a-zA-Z0-9 _-]+$/;
 
@@ -173,6 +174,9 @@ export function renderRegister(container) {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    // The gesture that creates the account is the one that can take the screen;
+    // see the note in login.js.
+    gameMode.autoEnter();
     errorEl.classList.add('hidden');
 
     const email = emailInput.value.trim();

@@ -7,6 +7,7 @@ import { stage } from './three/stage.js';
 import { closeModal } from './ui/modal.js';
 import { canWalk } from './learn/worlds3d.js';
 import { soundscape } from './audio/soundscape.js';
+import { gameMode } from './game-mode.js';
 
 import { renderLanding } from './screens/landing.js';
 import { renderRegister } from './screens/register.js';
@@ -178,6 +179,13 @@ export class Router {
       window.location.hash = '#/login';
       return;
     }
+
+    // A signed-in player on a phone should be playing full screen. The gesture
+    // that got them here may already have been spent (a sign-in awaits the
+    // network; a returning player with a stored token made no gesture at all),
+    // so this arms their next tap instead. Once per page load, and never after
+    // they have taken the screen back with the FULL key.
+    if (routeDef.auth && session.token) gameMode.armOnNextGesture();
 
     // Already signed in: redirect guest auth routes (/login, /register) to bridge/onboarding
     if (session.token && session.player && (raw === '/login' || raw === '/register')) {

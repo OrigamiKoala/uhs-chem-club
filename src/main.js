@@ -10,6 +10,7 @@ import { Router } from './router.js';
 import { soundscape } from './audio/soundscape.js';
 import { setBenchHost } from './learn/engine/bench-host.js';
 import { gameMode } from './game-mode.js';
+import { showToast } from './ui/toast.js';
 
 /** Guild liveries, keyed by team id. Legacy ids are aliased in session.js. */
 const TEAM_LIVERY = {
@@ -123,6 +124,15 @@ function setupHud() {
     // nothing; it is not offered there.
     if (gameMode.isStandalone()) {
       fullscreenToggle.classList.add('hidden');
+    } else if (!gameMode.canFullscreen()) {
+      // An iPhone: Safari has full screen for `<video>` and nothing else, so a
+      // key reading WINDOW would be claiming a state the device cannot be in.
+      // The one route that does work is installing, so that is what it says and
+      // what it does — repeatably, unlike the once-ever hint.
+      fullscreenToggle.textContent = 'INSTALL';
+      fullscreenToggle.addEventListener('click', () => {
+        showToast('Full screen needs Avalon on your Home Screen: Share, then Add to Home Screen.', 'info', 7000);
+      });
     } else {
       syncFullscreenBtn(gameMode.active);
       gameMode.subscribe(syncFullscreenBtn);

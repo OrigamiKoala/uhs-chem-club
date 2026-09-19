@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
+import { gameMode } from '../game-mode.js';
 import { showToast } from '../ui/toast.js';
 import { bindPasswordReveal } from './register.js';
 
@@ -64,6 +65,12 @@ export function renderLogin(container) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorEl.classList.add('hidden');
+
+    // Take the screen here, before the await. This is the gesture: by the time
+    // the bridge renders, the sign-in request has resolved and the browser has
+    // let the activation lapse, so a request made there is refused in silence.
+    // On a desktop this is a no-op (`autoEnter` asks for a coarse pointer).
+    gameMode.autoEnter();
 
     const identifier = container.querySelector('#login-id').value.trim();
     const password = container.querySelector('#login-pw').value;

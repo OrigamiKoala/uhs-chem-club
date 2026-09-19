@@ -654,8 +654,12 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **Mobile T4 is driven by twin sticks** (`three/touch-controls.js`, styling in
   `styles/mobile-game.css`). A 360-degree look stick bottom-left and a 360-degree move
   stick bottom-right, both floating — the ring jumps to wherever the thumb lands in its
-  corner zone — plus `USE` and `JUMP` keys, which are the two presses a finger otherwise
-  has no way to make. The sticks feed `FpsControls.analogMove` / `.analogLook`, which
+  corner zone — plus the `E` and `X` keys, which are the two presses a finger otherwise
+  has no way to make: E uses what the world is offering (it lights only then) and X
+  jumps. They are engraved with one glyph each, sized as key caps with tracking off, and
+  carry `aria-label` Use / Jump. Because the key legend is now the same `E` the prompt
+  uses, `showPrompt` no longer rewrites `[E]` to `[USE]` on a phone, and
+  `stage.syncTouchControls` reads `[E]` when deciding whether the E key is armed. The sticks feed `FpsControls.analogMove` / `.analogLook`, which
   `update()` consumes exactly as it consumes W/A/S/D and mouse delta, so collision,
   terrain and interaction prompts know no difference; deflection is analogue (half push,
   half speed) and the rim sprints. `fpsControls.touchMode` stands the mouse path down
@@ -666,14 +670,28 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   a `.screen-container` or a live modal takes the sticks away, and a push held through
   that transition is released rather than left stuck on.
 - **Game mode** (`src/game-mode.js`, `body.game-mode`) takes the screen on a handset.
-  Three routes in order: the Fullscreen API, granted only inside a user gesture, so the
-  callers are the `FULL` HUD key and the navigation that enters a world (Android Chrome,
-  Firefox, iPadOS and current iPhone Safari all honour it — **feature-detected, never
-  sniffed for a browser or a version**); an installed Home Screen launch, which is why
-  `manifest.webmanifest`, `apple-mobile-web-app-capable` and the `icon-*.png` set exist;
-  and failing both, the full-bleed `100dvh` layout plus a once-ever hint on how to
-  install. `active` is read back from `fullscreenchange` only where the API exists, or
-  the fallback state would be cleared on every sync.
+  Three routes in order: the Fullscreen API, granted only inside a user gesture
+  (**feature-detected, never sniffed for a browser or a version**); an installed Home
+  Screen launch, which is why `manifest.webmanifest`, `apple-mobile-web-app-capable` and
+  the `icon-*.png` set exist; and failing both, the full-bleed `100dvh` layout plus a
+  once-ever hint on how to install. `active` is read back from `fullscreenchange` only
+  where the API exists, or the fallback state would be cleared on every sync.
+- **The gesture that signs a player in cannot be the gesture that takes the screen.**
+  `requestFullscreen` is granted only during a live user activation, and a sign-in spends
+  it on `await api.login(...)`; by the time the bridge renders the request is refused
+  without a word, which is why full screen never arrived after logging in. Three callers
+  now cover it. `login.js` and `register.js` call `gameMode.autoEnter()` **synchronously,
+  before the await**, so the press itself asks. The router arms
+  `gameMode.armOnNextGesture()` on every authenticated route, which spends the player's
+  next tap — anywhere — on the request; that is the only route a returning player with a
+  stored token has, since they arrive from a page load having pressed nothing. And the
+  `FULL` key and world entry are unchanged. Arming happens **once per page load**
+  (`armUsed`), so a player who takes the screen back with `FULL` is not fought for it on
+  their next navigation. Where there is no element full screen at all — an iPhone, where
+  Safari has it for `<video>` only and an iPad does not — arming instead runs route 3 at
+  once: no gesture is needed for a layout change. On that device the HUD key reads
+  `INSTALL` and shows the Home Screen instructions instead of toggling; a key reading
+  `WINDOW` would be claiming a state the device cannot be in, which §7 forbids.
   The third route is where an older iPhone lands. Safari used to expose full screen for
   `<video>` only (`HTMLVideoElement.webkitEnterFullscreen`, which is how a video site
   takes the screen there) and not for an arbitrary element — that path is no use to a
@@ -758,6 +776,11 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   `(pointer: coarse) and (max-height: 500px) and (orientation: landscape)` — they are often
   wider than 760 px — collapsing the HUD to one 44 px row and docking the Stage Deck to the
   right edge (`min(46vw, 400px)`) so the chamber keeps the left of the screen.
+  The `[E]` prompt lives in the stick band, not over the view: `body.touch-walking`
+  pins `#fps-interact-prompt` to the keys' own line — left edge to just short of the E
+  key upright, between the look stick and the key row sideways — overriding the `left:
+  50%` and centring transform that `fps-controls.js` sets inline. Centred mid-glass it
+  covered the very thing the player had walked up to read.
   On phones (`PHONE_QUERY` in `quest3d/viewer.js`, matching both files) `fitToOpenArea()`
   measures the HUD, `.quest-hud-top` and the visible deck, then uses `setViewOffset` to
   centre the chamber in the uncovered part of the canvas, zooming out when that area is

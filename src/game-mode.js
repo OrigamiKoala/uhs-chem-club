@@ -38,6 +38,10 @@ function el() {
 
 export const gameMode = {
   active: false,
+  armed: false,
+  /** One arm per page load. A player who leaves full screen stays out of it. */
+  armUsed: false,
+  _armedFire: null,
   listeners: new Set(),
 
   /** The Fullscreen API is present and permitted on this element. */
@@ -72,6 +76,8 @@ export const gameMode = {
    * its own.
    */
   async enter() {
+    this.disarm();
+    this.armUsed = true;
     if (this.isStandalone() || this.isFullscreen()) {
       this.setActive(true);
       return true;
@@ -114,6 +120,59 @@ export const gameMode = {
   },
 
   /**
+   * Arm a one-shot: the player's next tap anywhere takes the screen.
+   *
+   * The Fullscreen API is only granted inside a user gesture, and the gesture
+   * that signs a player in is spent by the time the bridge exists — the request
+   * waits behind `await api.login(...)`, and a browser that has since dropped
+   * the activation refuses it without a word. A returning player with a stored
+   * token makes no gesture at all: they arrive on the bridge from a page load.
+   *
+   * So the tap itself becomes the gesture. Whatever the player touches first —
+   * a nav button, a panel, bare plate — is a trusted activation, and the
+   * listener is spent on it. It costs the player nothing and asks nothing.
+   */
+  armOnNextGesture() {
+    if (typeof document === 'undefined') return false;
+    if (this.armed || this.armUsed) return false;
+    if (this.active || this.isStandalone() || this.isFullscreen()) return false;
+    const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (!coarse) return false;
+
+    // No element full screen at all — an iPhone, where Safari has it for
+    // `<video>` and nothing else (an iPad does have it). Route 3 is the whole of
+    // game mode there and needs no gesture: the full-bleed layout goes on and
+    // the install hint is shown once, exactly as stepping onto a planet does it.
+    if (!this.canFullscreen()) {
+      this.enter();
+      return false;
+    }
+
+    this.armed = true;
+    this.armUsed = true;
+    const fire = () => {
+      this.disarm();
+      this.enter();
+    };
+    this._armedFire = fire;
+    // `click` and `touchend` are the events every browser counts as an
+    // activation; `pointerdown` is not honoured everywhere.
+    document.addEventListener('click', fire, { capture: true, once: true });
+    document.addEventListener('touchend', fire, { capture: true, once: true });
+    return true;
+  },
+
+  disarm() {
+    if (!this.armed) return;
+    this.armed = false;
+    const fire = this._armedFire;
+    this._armedFire = null;
+    if (!fire) return;
+    document.removeEventListener('click', fire, { capture: true });
+    document.removeEventListener('touchend', fire, { capture: true });
+  },
+
+  /**
    * Pin the handset sideways. A planet surface is a horizon, and a horizon in
    * a 375px-wide portrait window is a letterbox with two sticks in it.
    *
@@ -148,6 +207,7 @@ export const gameMode = {
   },
 
   async exit() {
+    this.disarm();
     this.setActive(false);
     this.unlockOrientation();
     if (!this.isFullscreen()) return;

@@ -144,8 +144,11 @@ body.touch-primary #fullscreen-toggle { display: inline-flex; }
   background: linear-gradient(180deg, var(--plate-200) 0%, var(--plate-000) 100%);
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.14em;
+  /* A one-glyph legend, so it is sized like an engraved key cap rather than a
+     word, and tracking is off — trailing letter-spacing pushes a single
+     character off the centre of its key. */
+  font-size: 1.15rem;
+  letter-spacing: normal;
   text-shadow: var(--engrave);
   box-shadow:
     inset 0 1px 0 var(--seam-light),
@@ -168,11 +171,28 @@ body.touch-primary #fullscreen-toggle { display: inline-flex; }
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
-/* ---- The interaction prompt clears the stick layer ---- */
+/* ---- The interaction prompt sits in the band, not over the view ----
+   What the E key does belongs beside the E key. Centred in the middle of the
+   glass it covered the thing the player had walked up to read; here it occupies
+   the strip the stick layer already owns — right of the look stick, left of the
+   keys, on the keys' own line — so the whole upper screen stays the world.
+
+   The inline styles in `fps-controls.js` set `left: 50%` and a centring
+   transform, so both are overridden rather than merely nudged. */
 body.touch-walking #fps-interact-prompt {
-  bottom: calc(250px + env(safe-area-inset-bottom)) !important;
-  max-width: calc(100vw - 2rem);
-  text-align: center;
+  /* Upright, the keys are a column above the move stick and the look stick's
+     box stops well below their line, so the strip runs from the left edge to
+     just short of the E key — 113px between the stick's *width* and the keys
+     would wrap a six-word prompt into a tower. */
+  left: max(14px, env(safe-area-inset-left)) !important;
+  right: calc(92px + env(safe-area-inset-right)) !important;
+  transform: none !important;
+  bottom: calc(246px + env(safe-area-inset-bottom)) !important;
+  max-width: none;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.35;
+  padding: 5px 8px;
 }
 
 /* ===================================================================
@@ -188,9 +208,15 @@ body.touch-walking #fps-interact-prompt {
     right: max(148px, calc(env(safe-area-inset-right) + 148px));
     bottom: calc(16px + env(safe-area-inset-bottom));
   }
-  .tc-key { width: 56px; height: 56px; font-size: 0.6rem; }
+  .tc-key { width: 56px; height: 56px; font-size: 1rem; }
+  /* Sideways, the keys are a row beside the move stick and the band is the
+     bottom strip between the two sticks: start clear of the look stick, stop
+     clear of the keys, and sit on their line. */
   body.touch-walking #fps-interact-prompt {
-    bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+    left: calc(146px + env(safe-area-inset-left)) !important;
+    right: calc(282px + env(safe-area-inset-right)) !important;
+    bottom: calc(30px + env(safe-area-inset-bottom)) !important;
+    font-size: 10.5px;
   }
 }
 
