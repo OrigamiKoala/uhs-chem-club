@@ -636,12 +636,12 @@ export class ShipInterior {
         };
       }
 
-      // Swing towards room interior
+      // Swing towards room interior (inward into the room, away from the hallway)
       let openAngle = -1.60;
-      if (d.axis === 'x' && d.pos[0] > 0) {
-        openAngle = 1.60;
-      } else if (d.axis === 'z' && d.pos[1] < 0) {
-        openAngle = 1.60;
+      if (d.axis === 'x') {
+        openAngle = d.pos[0] < 0 ? 1.60 : -1.60;
+      } else if (d.axis === 'z') {
+        openAngle = d.pos[1] > 0 ? -1.60 : 1.60;
       }
 
       this.doors.push({

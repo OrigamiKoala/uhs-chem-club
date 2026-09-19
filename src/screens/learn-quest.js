@@ -100,17 +100,14 @@ export function renderLearnQuest(container, params = {}) {
   // that is DRAWN — the sampler scope, which is a microscope — is worked as a
   // page, because there is nothing in the world to stand the picture against.
   const walkable = canWalk(world.id);
-  const inWorld = walkable && benchIsBuilt(quest.id);
+  // Configure learn quest frame to use 2D overlay (`learn-quest-overworld`) in T4 rather than deploying into CSS3D in-world bench panels
+  const inWorld = false;
   if (walkable) {
     const w3d = world3dFor(world.id);
     const site = w3d.siteForQuest(quest.id);
     if (site) {
       w3d.enter(stage, site.id);
-      // Say which bench is about to be worked, so the instrument is deployed on
-      // the plate the player is standing at rather than in a room of its own.
-      // A drawn instrument names no site: `benchDeployment()` then answers null
-      // and the quest frame stays the page it is on every other tier.
-      setBenchSite(inWorld ? quest.id : null);
+      setBenchSite(null);
       // Remembered so that stepping back out of the bench returns the player to
       // the site rather than to the pad they landed on.
       try { sessionStorage.setItem('avalon_learn_last_site', site.id); } catch (e) {}
@@ -122,14 +119,10 @@ export function renderLearnQuest(container, params = {}) {
       const q = world.quests.find(x => x.id === qid);
       return q ? isQuestComplete(q) : false;
     });
-    // A drawn instrument has no scene of its own, so nothing else will stand the
-    // walk down. Without this the player keeps walking Tallow behind the page:
-    // W steps off the bench, and an arrow key meant for the power dial is also
-    // a step backwards. A built bench docks its own camera and is left alone.
-    stage.setWalkSuspended?.(!inWorld);
+    stage.setWalkSuspended?.(true);
   }
 
-  container.innerHTML = shell({ world, quest, body: '', inWorld, overWorld: walkable && !inWorld });
+  container.innerHTML = shell({ world, quest, body: '', inWorld: false, overWorld: walkable });
   const mountPoint = container.querySelector('#learn-quest-mount');
 
   if (quest.status !== 'live') {
