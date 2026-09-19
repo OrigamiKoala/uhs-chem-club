@@ -148,6 +148,9 @@ export class FpsControls {
       e.target.closest("a") ||
       e.target.closest(".app-header") ||
       e.target.closest(".modal-backdrop") ||
+      e.target.closest(".modal-container") ||
+      e.target.closest(".modal-card") ||
+      e.target.closest(".cinematic-overlay") ||
       e.target.closest(".in-world-terminal") ||
       e.target.closest(".quest-hud-overlay") ||
       e.target.closest(".deployed-chamber-overlay") ||

@@ -203,13 +203,9 @@ export function renderStarMap(container) {
       return;
     }
 
-    const hasLaunched = localStorage.getItem("avalon_sector01_launched") === "true";
-    if (!hasLaunched) {
-      try {
-        localStorage.setItem("avalon_sector01_launched", "true");
-        await playCinematic("launch");
-      } catch (e) {}
-    }
+    try {
+      await playCinematic("launch");
+    } catch (e) {}
     window.location.hash = "#/quest";
   }
 

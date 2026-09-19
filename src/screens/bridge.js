@@ -13,6 +13,7 @@ import { TOTAL_STAGES, TOTAL_QUEST_XP } from "../quest3d/evaluator.js";
 import { renderGardensMap } from "../ui/gardens-map.js";
 import { QUEST1_STORY } from "../story/quest1.js";
 import { tierManager } from "../three/tier.js";
+import { playCinematic } from "../ui/cinematic.js";
 
 let unsubscribeBridge = null;
 
@@ -154,6 +155,14 @@ export function renderBridge(container) {
         </div>
       </div>
     `;
+
+    container.querySelector(".bridge-quest-cta")?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        await playCinematic("launch");
+      } catch (err) {}
+      window.location.hash = "#/quest";
+    });
   }
 
   render();

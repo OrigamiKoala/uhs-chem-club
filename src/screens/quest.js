@@ -251,6 +251,9 @@ export function renderQuest(container) {
 
   if (isT4) {
     stage.enterWorldScene();
+    if (stage.fpsControls && QUEST1_STORY.arrival?.cinematic) {
+      stage.fpsControls.enabled = false;
+    }
     if (stage.worldScene) {
       stage.worldScene.setClearedStages(new Set(Array.from({ length: maxStageReached }, (_, i) => i + 1)));
     }
@@ -1138,14 +1141,15 @@ export function renderQuest(container) {
   }
 
   // 1. Render the current stage immediately from bundled configs (0ms latency)
-  // Play arrival cinematic (Erebus Descent) on first entry to Sector 01
+  // Play arrival cinematic (Erebus Descent) on entry to Sector 01
   const startQuest = async () => {
-    if (QUEST1_STORY.arrival?.cinematic && !session.hasFlag('cinematic_erebus_descent')) {
-      session.setFlag('cinematic_erebus_descent', true);
+    if (QUEST1_STORY.arrival?.cinematic) {
+      if (stage.fpsControls) stage.fpsControls.enabled = false;
       await playCinematic(QUEST1_STORY.arrival.cinematic);
     }
     if (window.location.hash.split('?')[0] !== '#/quest') return;
     if (isT4) {
+      if (stage.fpsControls) stage.fpsControls.enabled = true;
       renderErebusHUD();
     } else {
       loadStage(currentStageIdx);

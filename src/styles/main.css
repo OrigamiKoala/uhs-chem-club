@@ -1023,13 +1023,6 @@ body::after {
   color: var(--text-bright);
 }
 
-body.tier-t4 .app-viewport {
-  pointer-events: none;
-}
-
-body.tier-t4 .app-viewport > * {
-  pointer-events: auto;
-}
 
 /* Erebus in-world exploration HUD */
 .erebus-world-hud {
