@@ -8,11 +8,13 @@
  */
 
 import * as THREE from "three";
+import {
+  platedMetal, treadPlate, buildMaterial, enableAO, texSize,
+  dressMaterialFromAlbedo, mergeStatic, boltLine,
+  pipeFlange, placard, weldBead
+} from "./materials/pbr-kit.js";
 import { createHoloMaterial } from "./materials/holo.js";
 import {
-  createDurasteelTexture,
-  createDurasteelNormalTexture,
-  createFloorGrateTexture,
   createHazardStripesTexture,
   createCrtScreenTexture,
   createControlPanelTexture,
@@ -59,7 +61,11 @@ export class ShipInterior {
     this.buildAirlockRoom();
     this.buildLightingFixtures();
     this.buildAtmosphericDust();
+    // Last, so it can see what every room has already put on the deck.
+    this.buildDoorways();
+    this.buildServiceDressing();
     this.buildPlanetaryVista();
+    this.enableAmbientOcclusion();
 
     this.scene.add(this.group);
 
@@ -70,45 +76,226 @@ export class ShipInterior {
     this.setStarmapHoloVisible(true);
   }
 
-  initMaterials() {
-    const loader = new THREE.TextureLoader();
+  /**
+   * THE SERVICES.
+   *
+   * A hull is believable because of what is bolted to it, not because of its
+   * shape. This ship had rooms, furniture and lights, and between them bare
+   * plate — which is what a set looks like. A vessel that people live inside
+   * is mostly the things that keep it running: pipe along the deckhead, cable
+   * tray clipped beside it, conduit dropping to junction boxes, welded seams
+   * where the plate meets the deck, a stencilled designator in every bay, and
+   * a fire bottle where somebody decided one should be.
+   *
+   * Everything here is kept in the overhead band and against the hull sides,
+   * clear of every room's own furniture — the ribs project to |x| = 7.8, the
+   * luminaires sit at y = 3.94 within |x| < 4.3, and nothing below runs
+   * through either. Baked into one mesh per material at the end, so the whole
+   * of it costs a handful of draw calls.
+   */
+  buildServiceDressing() {
+    const dressing = new THREE.Group();
+    const zA = -8.4;
+    const zB = 3.9;
+    const span = zB - zA;
+    const midZ = (zA + zB) / 2;
+    const ribZ = [];
+    for (let z = -7.5; z <= 3.5; z += 2.2) ribZ.push(z);
 
-    // 1. Durasteel Bulkhead Material (Nano Banana PBR Asset with Normal Map)
-    this.durasteelTex = createDurasteelTexture(512, 512);
-    this.durasteelNormTex = createDurasteelNormalTexture(256, 256);
-    this.durasteelMat = new THREE.MeshStandardMaterial({
-      color: 0x2a2d34,
-      map: this.durasteelTex,
-      normalMap: this.durasteelNormTex,
-      roughness: 0.84,
-      metalness: 0.62
-    });
-    this.durasteelMat.normalScale.set(0.75, 0.75);
+    for (const side of [-1, 1]) {
+      // --- two process runs along the deckhead ---
+      for (const [px, rad, mat] of [
+        [7.5 * side, 0.11, this.brassMat],
+        [7.22 * side, 0.07, this.ironMat]
+      ]) {
+        const pipe = new THREE.Mesh(
+          new THREE.CylinderGeometry(rad, rad, span, 12), mat
+        );
+        pipe.rotation.x = Math.PI / 2;
+        pipe.position.set(px, 2.62, midZ);
+        pipe.castShadow = true;
+        dressing.add(pipe);
 
-    loader.load("/art/durasteel_cockpit_pbr.jpg", (tex) => {
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(2, 2);
-      this.durasteelMat.map = tex;
-      this.durasteelMat.needsUpdate = true;
-    }, undefined, () => {
-      loader.load("/art/durasteel_plate.jpg", (tex2) => {
-        tex2.wrapS = THREE.RepeatWrapping;
-        tex2.wrapT = THREE.RepeatWrapping;
-        tex2.repeat.set(2, 2);
-        this.durasteelMat.map = tex2;
-        this.durasteelMat.needsUpdate = true;
+        // A bolted joint at every frame, with the hanger that carries it.
+        for (const z of ribZ) {
+          const fl = pipeFlange(rad, this.ironMat, this.ironMat);
+          fl.rotation.x = Math.PI / 2;
+          fl.position.set(px, 2.62, z);
+          dressing.add(fl);
+
+          // A collar at every frame, not a drop hanger: the gusset bracing
+          // that corner occupies the space a hanger would want, and the run is
+          // carried on the frame itself.
+          const collar = new THREE.Mesh(
+            new THREE.TorusGeometry(rad + 0.02, 0.016, 5, 10), this.ironMat
+          );
+          collar.rotation.y = Math.PI / 2;
+          collar.position.set(px, 2.62, z);
+          dressing.add(collar);
+        }
+      }
+
+      // --- cable tray, and the loom sitting in it ---
+      const tray = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.05, span), this.ironMat);
+      tray.position.set(7.5 * side, 2.18, midZ);
+      dressing.add(tray);
+      for (const cx of [-0.16, 0.16]) {
+        const cheek = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.12, span), this.ironMat);
+        cheek.position.set(7.5 * side + cx, 2.22, midZ);
+        dressing.add(cheek);
+      }
+      for (let i = 0; i < 3; i++) {
+        const loom = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.028, 0.028, span, 6), this.ironMat
+        );
+        loom.rotation.x = Math.PI / 2;
+        loom.position.set(7.5 * side - 0.09 + i * 0.09, 2.25, midZ);
+        dressing.add(loom);
+      }
+
+      // --- conduit dropping to a junction box in every frame bay ---
+      for (const z of ribZ) {
+        const drop = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.035, 0.035, 0.42, 8), this.ironMat
+        );
+        drop.position.set(7.66 * side, 1.95, z);
+        dressing.add(drop);
+
+        const box = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.3, 0.16), this.ironMat);
+        box.position.set(7.66 * side, 1.68, z);
+        dressing.add(box);
+        dressing.add(boltLine(
+          [7.66 * side - 0.09, 1.55, z], [7.66 * side + 0.09, 1.55, z],
+          2, this.brassMat, { size: 0.012, normalAxis: 'y' }
+        ));
+      }
+
+      // --- the bay designators, stencilled on the hull between frames ---
+      ribZ.slice(0, -1).forEach((z, i) => {
+        const tag = placard(`FR ${String(i + 3).padStart(2, '0')}`, { w: 0.36, h: 0.13 });
+        tag.position.set(7.97 * side, 2.46, z + 1.1);
+        tag.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+        dressing.add(tag);
       });
+
+      // --- the weld seam where the hull plate meets the deck ---
+      const seam = weldBead(span, this.ironMat, { radius: 0.03, seed: 0x90 + side });
+      seam.rotation.x = Math.PI / 2;
+      seam.position.set(7.94 * side, 0.03, midZ);
+      dressing.add(seam);
+
+      // --- overhead trunk, inboard of the frames and clear of the lamps ---
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.09, 0.09, span, 10), this.ironMat
+      );
+      trunk.rotation.x = Math.PI / 2;
+      trunk.position.set(5.9 * side, 3.5, midZ);
+      dressing.add(trunk);
+      for (const z of ribZ) {
+        const clamp = new THREE.Mesh(
+          new THREE.TorusGeometry(0.105, 0.018, 5, 10), this.brassMat
+        );
+        clamp.rotation.y = Math.PI / 2;
+        clamp.position.set(5.9 * side, 3.5, z);
+        dressing.add(clamp);
+      }
+
+      // --- a fire bottle in the aft corner, on its bracket ---
+      const bottle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.11, 0.11, 0.62, 12), this.hazardMat
+      );
+      bottle.position.set(7.35 * side, 0.75, -8.1);
+      bottle.castShadow = true;
+      dressing.add(bottle);
+      const neck = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.06, 0.12, 8), this.brassMat
+      );
+      neck.position.set(7.35 * side, 1.12, -8.1);
+      dressing.add(neck);
+      const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.26), this.ironMat);
+      bracket.position.set(7.52 * side, 0.85, -8.1);
+      dressing.add(bracket);
+      this.addCollider(7.2 * side - 0.18, 7.2 * side + 0.42, -8.35, -7.85);
+    }
+
+    // Hazard striping along the foot of the aft blast wall.
+    const chevrons = new THREE.Mesh(new THREE.BoxGeometry(16, 0.22, 0.04), this.hazardMat);
+    chevrons.position.set(0, 0.13, -8.46);
+    dressing.add(chevrons);
+
+    // One mesh per material for the lot.
+    mergeStatic(dressing);
+    this.group.add(dressing);
+  }
+
+  /**
+   * Turn on ambient occlusion everywhere a material carries one.
+   *
+   * `aoMap` samples the SECOND uv set, which a primitive geometry does not
+   * have, so a generated occlusion map does nothing at all until the mesh is
+   * told to reuse its own UVs for it. Done once here rather than remembered at
+   * a hundred call sites — cavity occlusion is what turns a panel gap into a
+   * gap instead of a dark line painted on a sheet, and it is the cheapest
+   * realism in the ship.
+   */
+  enableAmbientOcclusion() {
+    const done = new Set();
+    this.group.traverse(o => {
+      if (!o.geometry || !o.material) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      if (!mats.some(m => m && m.aoMap)) return;
+      if (done.has(o.geometry)) return;
+      done.add(o.geometry);
+      enableAO(o.geometry);
+    });
+  }
+
+  initMaterials() {
+    /*
+     * 1. DURASTEEL BULKHEAD.
+     *
+     * `/art/durasteel_plate.jpg` is the authority for what this ship is made
+     * of — panels, bolt rings, scratches, rust streaks, stencil text — so it
+     * stays. What changes is that it now has maps that AGREE with it: normal,
+     * roughness and occlusion are derived from the plate itself, so a bolt
+     * head catches the light because that bolt head is there.
+     *
+     * Before, the albedo was that photograph and the normal map was unrelated
+     * procedural noise laid over it. The bumps did not line up with the bolts,
+     * so every grazing light contradicted the picture — which is exactly the
+     * failure that makes a surface read as a texture rather than as metal.
+     *
+     * A procedural plate is built first and stands in until the image arrives,
+     * so the ship is never briefly untextured and a failed load is survivable.
+     */
+    this.durasteelMat = buildMaterial(
+      platedMetal({
+        paint: '#3b3c3e', metal: '#63605c', rust: '#6c4326',
+        panels: 2, seed: 5, weather: 0.34, size: texSize(512)
+      }),
+      { repeat: 2, roughness: 1.0 }
+    );
+    this.durasteelMat.color.setHex(0xb9b6b2);
+    this.durasteelMat.normalScale.set(0.95, 0.95);
+    this.durasteelMat.aoMapIntensity = 0.8;
+    dressMaterialFromAlbedo(this.durasteelMat, "/art/durasteel_plate.jpg", {
+      repeat: 2, size: texSize(512), strength: 2.6, normalScale: 1.1,
+      onReady: mat => { mat.color.setHex(0xffffff); }
     });
 
-    // 2. Heavy Floor Grating
-    this.floorGrateTex = createFloorGrateTexture(256, 256);
-    this.floorMat = new THREE.MeshStandardMaterial({
-      color: 0x1a1c22,
-      map: this.floorGrateTex,
-      roughness: 0.88,
-      metalness: 0.72
-    });
+    /*
+     * 2. HEAVY FLOOR GRATING.
+     *
+     * A deck is walked on, so it is treadplate with the pattern ground flat
+     * along the line people take. That worn stripe does more for a floor than
+     * any amount of resolution.
+     */
+    this.floorMat = buildMaterial(
+      treadPlate({ base: '#3f4247', seed: 21, weather: 0.7, size: texSize(512) }),
+      { repeat: 7, roughness: 1.0 }
+    );
+    this.floorMat.normalScale.set(1.4, 1.4);
+    this.floorMat.aoMapIntensity = 0.9;
 
     // 3. Tarnished Brass & Conduit Material
     this.brassMat = new THREE.MeshStandardMaterial({
@@ -241,35 +428,50 @@ export class ShipInterior {
     this.colliders.push({ minX, maxX, minZ, maxZ });
   }
 
+  /**
+   * THE HULL IS ONE OBJECT.
+   *
+   * Deck, deckhead, side plating, blast wall, frames and gussets are welded
+   * together into a single structure, and their joints are supposed to
+   * interpenetrate — a gusset that merely touched the corner it braces would
+   * be holding nothing. Building them into one group says so, which lets the
+   * physics check go on being strict about everything that is genuinely a
+   * separate object standing in the ship.
+   */
   buildHullArchitecture() {
+    const hull = new THREE.Group();
+    hull.name = 'hull';
+    this.group.add(hull);
+    const add = (...objs) => hull.add(...objs);
+
     // Main deck floor slab (Y = -0.2 to 0.0)
     const floor = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 22), this.floorMat);
     floor.position.set(0, -0.2, 0);
     floor.receiveShadow = true;
-    this.group.add(floor);
+    add(floor);
 
     // Main structural ceiling slab (Y = 4.0 to 4.4)
     const ceil = new THREE.Mesh(new THREE.BoxGeometry(18, 0.4, 22), this.durasteelMat);
     ceil.position.set(0, 4.2, 0);
-    this.group.add(ceil);
+    add(ceil);
 
     // Perimeter outer hull armor walls
     // Port outer wall
     const wallPort = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.2, 22), this.durasteelMat);
     wallPort.position.set(-8.25, 2.0, 0);
-    this.group.add(wallPort);
+    add(wallPort);
     this.addCollider(-8.5, -8.0, -11, 11);
 
     // Starboard outer wall
     const wallStbd = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.2, 22), this.durasteelMat);
     wallStbd.position.set(8.25, 2.0, 0);
-    this.group.add(wallStbd);
+    add(wallStbd);
     this.addCollider(8.0, 8.5, -11, 11);
 
     // Aft blast wall (behind airlock)
     const wallAft = new THREE.Mesh(new THREE.BoxGeometry(18, 4.2, 0.5), this.durasteelMat);
     wallAft.position.set(0, 2.0, -8.75);
-    this.group.add(wallAft);
+    add(wallAft);
     this.addCollider(-9, 9, -9.0, -8.5);
 
     // Forward viewport wall with observation cutouts
@@ -277,7 +479,7 @@ export class ShipInterior {
     wallFwdPort.position.set(-6.5, 2.0, 4.25);
     const wallFwdStbd = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4.2, 0.5), this.durasteelMat);
     wallFwdStbd.position.set(6.5, 2.0, 4.25);
-    this.group.add(wallFwdPort, wallFwdStbd);
+    add(wallFwdPort, wallFwdStbd);
     this.addCollider(-8.5, -4.75, 4.0, 4.5);
     this.addCollider(4.75, 8.5, 4.0, 4.5);
 
@@ -298,23 +500,36 @@ export class ShipInterior {
       gusR.position.set(7.5, 3.5, z);
       gusR.rotation.z = -Math.PI / 4;
 
-      this.group.add(ribL, ribR, ribRoof, gusL, gusR);
+      add(ribL, ribR, ribRoof, gusL, gusR);
     }
   }
 
+  /**
+   * The corridor services are one installation too: a raceway, the conduit
+   * bundle clipped inside it and the guide strips let into the deck are fitted
+   * together, not stood next to each other.
+   */
   buildCorridorSpines() {
+    const spine = new THREE.Group();
+    spine.name = 'corridor-services';
+    this.group.add(spine);
+    const add = (...objs) => spine.add(...objs);
+
     // 1. Central Spine Corridor (Bridge to Airlock, Z: -4.5 to 2.0)
     // Overhead cable raceway along central spine
+    // Slung UNDER the frames, at 3.58 rather than 3.8: the deckhead frames run
+    // from 3.7 to 4.1 across the full beam, so a raceway at 3.8 was drawn
+    // straight through every one of them.
     const racewaySpine = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.15, 7.5), this.ironMat);
-    racewaySpine.position.set(0, 3.8, -1.25);
-    this.group.add(racewaySpine);
+    racewaySpine.position.set(0, 3.58, -1.25);
+    add(racewaySpine);
 
     // 4 Copper/Brass hydraulic and electrical conduit runs along the spine
     for (let cx of [-0.5, -0.2, 0.2, 0.5]) {
       const conduit = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 7.5, 8), this.brassMat);
       conduit.rotation.x = Math.PI / 2;
-      conduit.position.set(cx, 3.68, -1.25);
-      this.group.add(conduit);
+      conduit.position.set(cx, 3.46, -1.25);
+      add(conduit);
     }
 
     // Recessed halogen runway guide strips embedded into deck
@@ -322,18 +537,18 @@ export class ShipInterior {
     stripSpineL.position.set(-0.8, 0.015, -1.25);
     const stripSpineR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 7.5), this.halogenMat);
     stripSpineR.position.set(0.8, 0.015, -1.25);
-    this.group.add(stripSpineL, stripSpineR);
+    add(stripSpineL, stripSpineR);
 
     // 2. Transverse Cross-Corridor (Connecting Comms at X=-2.8 across Spine X=0 to Cargo at X=4.2 at Z=-2.0)
     const racewayCross = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.15, 1.2), this.ironMat);
     racewayCross.position.set(0.7, 3.75, -2.05);
-    this.group.add(racewayCross);
+    add(racewayCross);
 
     for (let cz of [-2.25, -1.85]) {
       const conduitCross = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 7.0, 8), this.brassMat);
       conduitCross.rotation.z = Math.PI / 2;
       conduitCross.position.set(0.7, 3.65, cz);
-      this.group.add(conduitCross);
+      add(conduitCross);
     }
 
     // Transverse deck runway guide strips
@@ -341,28 +556,112 @@ export class ShipInterior {
     stripCrossF.position.set(0.7, 0.015, -2.45);
     const stripCrossB = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.03, 0.08), this.halogenMat);
     stripCrossB.position.set(0.7, 0.015, -1.65);
-    this.group.add(stripCrossF, stripCrossB);
+    add(stripCrossF, stripCrossB);
 
     // 3. Port & Starboard Wing Corridors at Z = 2.0 (Connecting Bridge to Quarters X=-3.8 & Starmap X=3.2)
     const racewayWing = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.15, 1.0), this.ironMat);
     racewayWing.position.set(-0.3, 3.75, 2.0);
-    this.group.add(racewayWing);
+    add(racewayWing);
 
     // Wing corridor deck runway guide strips
     const stripWingF = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.03, 0.08), this.halogenMat);
     stripWingF.position.set(-0.3, 0.015, 1.6);
     const stripWingB = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.03, 0.08), this.halogenMat);
     stripWingB.position.set(-0.3, 0.015, 2.4);
-    this.group.add(stripWingF, stripWingB);
+    add(stripWingF, stripWingB);
+  }
 
-    // 4. Chamfered Doorway / Hatch Bulkheads at exact hatchPos locations
+  /**
+   * DOORWAYS — one per threshold, on ground that is actually clear.
+   *
+   * Three things were wrong with how these were placed.
+   *
+   * Every graph edge was drawn from BOTH ends, so bridge→starmap and
+   * starmap→bridge raised two frames a few centimetres apart for one doorway.
+   * Each was positioned at its own `hatchPos`, which is a view-cone marker
+   * sitting inside a compartment rather than the line between two of them. And
+   * nothing checked whether anything was already standing there — so nine
+   * frames stood in a thicket around the bridge, several of them drawn straight
+   * through the tactical consoles.
+   *
+   * Now: one frame per unordered pair, at the midpoint of the two compartments
+   * it joins, and only where the deck is free. This runs LAST, after every room
+   * has registered its furniture, so the test is against what is really there:
+   * put a locker in a threshold and the doorway moves along the line to the
+   * nearest clear spot, or is not drawn at all. `hatchPos` is untouched — the
+   * traversal graph and its view cones are a separate thing from where the
+   * plate is welded.
+   */
+  buildDoorways() {
+    const doorways = new THREE.Group();
+    doorways.name = 'doorways';
+    this.group.add(doorways);
+
+    /**
+     * Is a doorway standing here clear of everything already built?
+     *
+     * The two JAMBS are tested where they actually land, not a box around the
+     * frame's centre: a doorway is rotated to face the compartment it serves,
+     * so its posts can be a metre and a half away from its origin in a
+     * direction a centred box knows nothing about.
+     */
+    const clear = (x, z, dir) => {
+      // Perpendicular to the direction the doorway faces.
+      const px = -dir.z, pz = dir.x;
+      for (const side of [-0.75, 0.75]) {
+        const jx = x + px * side;
+        const jz = z + pz * side;
+        const hit = this.colliders.some(c =>
+          jx + 0.3 > c.minX && jx - 0.3 < c.maxX &&
+          jz + 0.3 > c.minZ && jz - 0.3 < c.maxZ
+        );
+        if (hit) return false;
+      }
+      return true;
+    };
+
+    const built = new Set();
     for (const [nodeKey, node] of Object.entries(SHIP_GRAPH.nodes)) {
-      for (const [adjKey, hPos] of Object.entries(node.hatchPos)) {
-        const frame = new THREE.Group();
-        frame.position.set(hPos[0], 0, hPos[2]);
+      for (const adjKey of node.adjacent) {
+        const pairKey = [nodeKey, adjKey].sort().join('|');
+        if (built.has(pairKey)) continue;
+        built.add(pairKey);
+
+        // The airlock threshold already carries the heavy blast door and its
+        // own dogged frame. A second, lighter doorway in the same opening would
+        // put two frames in one aperture.
+        if (nodeKey === 'airlock' || adjKey === 'airlock') continue;
 
         const adjNode = SHIP_GRAPH.nodes[adjKey];
-        const dir = new THREE.Vector3(adjNode.pos[0] - node.pos[0], 0, adjNode.pos[2] - node.pos[2]).normalize();
+        if (!adjNode) continue;
+
+        const dir = new THREE.Vector3(
+          adjNode.pos[0] - node.pos[0], 0, adjNode.pos[2] - node.pos[2]
+        );
+        const span = dir.length();
+        if (span < 0.1) continue;
+        dir.normalize();
+
+        const midX = (node.pos[0] + adjNode.pos[0]) / 2;
+        const midZ = (node.pos[2] + adjNode.pos[2]) / 2;
+
+        // Walk outward from the midpoint along the line joining the two
+        // compartments, taking the first clear place. A threshold slightly off
+        // centre is a doorway; a threshold inside a console is not.
+        let placed = null;
+        for (let step = 0; step <= 8 && !placed; step++) {
+          for (const sign of step === 0 ? [0] : [-1, 1]) {
+            const t = sign * step * 0.3;
+            if (Math.abs(t) > span * 0.4) continue;
+            const x = midX + dir.x * t;
+            const z = midZ + dir.z * t;
+            if (clear(x, z, dir)) { placed = [x, z]; break; }
+          }
+        }
+        if (!placed) continue;
+
+        const frame = new THREE.Group();
+        frame.position.set(placed[0], 0, placed[1]);
         frame.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
 
         const postL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.6, 0.3), this.durasteelMat);
@@ -380,7 +679,7 @@ export class ShipInterior {
         lamp.position.set(0, 2.45, 0.21);
 
         frame.add(postL, postR, lintel, headerPlate, lamp);
-        this.group.add(frame);
+        doorways.add(frame);
       }
     }
   }
@@ -698,7 +997,11 @@ export class ShipInterior {
     starmapGroup.position.set(3.2, 0, 1.8);
 
     // Chamfered octagonal tactical table pedestal
-    const tableBase = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.45, 0.85, 8), this.durasteelMat);
+    // The skirt was flared to 1.45, which put its lower edge inside the jamb of
+    // the hatch beside it — the table and the doorway were occupying the same
+    // corner of the compartment. Taken in to 1.10: still a 2.2 m chamfered
+    // octagonal tactical table, now one you can walk past.
+    const tableBase = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.10, 0.85, 8), this.durasteelMat);
     tableBase.position.set(0, 0.425, 0);
     tableBase.receiveShadow = true;
     starmapGroup.add(tableBase);
@@ -1038,12 +1341,16 @@ export class ShipInterior {
     containerA.position.set(-1.4, 0.6, 1.2);
 
     // Container B (Hazard striped freight unit)
+    // Stacked outboard of the hatch line. At x = -1.4 this stack stood square
+    // in the doorway between the hold and the compartment aft of it — and the
+    // hold has doorways at both ends, so there was no clearance to be had by
+    // sliding it along; it had to come off that line entirely.
     const containerB = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 1.6), this.hazardMat);
-    containerB.position.set(-1.4, 0.6, -1.0);
+    containerB.position.set(-2.4, 0.6, -1.0);
 
     // Top stacked smaller container unit C resting on container B
     const containerC = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 1.2), this.durasteelMat);
-    containerC.position.set(-1.4, 1.6, -1.0);
+    containerC.position.set(-2.4, 1.6, -1.0);
 
     // Twist-lock corner castings on container A
     for (let cx of [-0.68, 0.68]) {

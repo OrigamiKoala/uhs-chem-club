@@ -74,7 +74,13 @@ export class CoreBench3D {
     this.probe = null;
     this.disposed = false;
 
-    this.viewer = new BenchViewer3D(document.body, { backdrop: opts.backdrop || 'lab' });
+    // `opts.world`, when the dispatcher supplied one, deploys the instrument
+    // onto the bench that is already standing on the ground in front of the
+    // player instead of building a private room for it.
+    this.viewer = new BenchViewer3D(document.body, {
+      backdrop: opts.backdrop || 'lab',
+      world: opts.world || null
+    });
     this.viewer.handleClick = e => this.onPointer(e);
 
     if (this.host) this.host.innerHTML = '';

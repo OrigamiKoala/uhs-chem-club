@@ -52,7 +52,7 @@
       ],
       "rotY": 0.0,
       "scale": 1.0,
-      "radius": 5.2,
+      "radius": 6.0,
       "minTier": "T3"
     },
     {
@@ -64,7 +64,7 @@
       ],
       "rotY": 0.12,
       "scale": 1.06,
-      "radius": 5.2,
+      "radius": 6.0,
       "minTier": "T3"
     },
     {
@@ -76,7 +76,7 @@
       ],
       "rotY": 0.24,
       "scale": 1.0,
-      "radius": 5.2,
+      "radius": 6.0,
       "minTier": "T3"
     },
     {
@@ -88,7 +88,7 @@
       ],
       "rotY": 0.36,
       "scale": 1.06,
-      "radius": 5.2,
+      "radius": 6.0,
       "minTier": "T3"
     },
     {
@@ -130,7 +130,7 @@
     {
       "asset": "pipe-bridge",
       "pos": [
-        24,
+        26.5,
         0,
         -31
       ],
@@ -370,7 +370,7 @@
     {
       "asset": "conveyor",
       "pos": [
-        18,
+        11.0,
         0,
         -18
       ],

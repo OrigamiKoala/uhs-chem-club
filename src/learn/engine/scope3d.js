@@ -71,7 +71,13 @@ export class SampleScope3D {
     this.disposed = false;
     this.animating = false;
 
-    this.viewer = new BenchViewer3D(document.body, { backdrop: opts.backdrop || 'awning' });
+    // `opts.world`, when the dispatcher supplied one, deploys the instrument
+    // onto the bench that is already standing on the ground in front of the
+    // player instead of building a private room for it.
+    this.viewer = new BenchViewer3D(document.body, {
+      backdrop: opts.backdrop || 'awning',
+      world: opts.world || null
+    });
     this.viewer.handleClick = e => this.onPointer(e);
 
     // The host stays empty. Anything drawn into it would sit over the bench.

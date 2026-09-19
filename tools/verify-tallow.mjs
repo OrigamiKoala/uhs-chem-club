@@ -269,6 +269,79 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
     `landmarks off the edge of the world: ${outside.map(l => l.asset).join(', ')}`);
 }
 
+/* --------------------------------------------- the world as it is built
+ *
+ * Everything above reads the world's DATA. This reads the world ITSELF: the
+ * real `TallowWorld` is constructed in Node behind a DOM shim, and every pair
+ * of separate props is measured with three.js's own bounding boxes.
+ *
+ * This is the check that actually enforces "no two objects occupy the same
+ * space", because it cannot be satisfied by keeping a table tidy. A crate
+ * nudged 40 cm in the builder fails here and passes everything above.
+ */
+
+{
+  const { installDomShim } = await import('./lib/dom-shim.mjs');
+  installDomShim({ tier: 'T4' });
+  const { findOverlaps } = await import('./lib/overlap.mjs');
+  const { TallowWorld } = await import('../src/three/tallow.js');
+
+  let built = null;
+  try {
+    built = new TallowWorld(null);
+  } catch (err) {
+    check(false, 'the world builds', `TallowWorld threw while building: ${err.message}`);
+  }
+
+  if (built) {
+    let meshes = 0;
+    built.scene.traverse(o => { if (o.isMesh) meshes++; });
+    check(meshes > 200, `the world builds — ${meshes} meshes on the ground`,
+      `only ${meshes} meshes were built: something failed silently`);
+
+    const hits = findOverlaps(built.scene, {
+      tolerance: 0.06,
+      label: owner => owner.name || `${owner.type}#${owner.id}`
+    });
+
+    // One line per offending PAIR, not per box: a 26 m structure intersecting
+    // another one reports a dozen boxes and only one problem.
+    const pairs = new Map();
+    for (const h of hits) {
+      const key = [h.a, h.b].sort().join(' <-> ');
+      if (!pairs.has(key) || pairs.get(key).depth < h.depth) pairs.set(key, h);
+    }
+
+    check(pairs.size === 0,
+      `no two props share space — ${meshes} meshes measured, every pair disjoint`,
+      `props occupy the same space:\n${[...pairs.entries()]
+        .map(([k, h]) => `         ${h.depth.toFixed(2)}m  ${k}  at ${h.at.join(', ')}`)
+        .join('\n')}`);
+
+    // The instrument has to have somewhere to deploy, and it has to be a real
+    // surface at a real height — a bench anchor that drifted would put four
+    // stations in mid-air or sink them into the plate.
+    const anchored = built.data.sites.filter(s => s.built);
+    for (const site of anchored) {
+      const anchor = built.benchAnchor(site.questId);
+      check(Boolean(anchor), `${site.id}: the bench reports a working surface`,
+        `${site.id} is built but has no bench anchor to deploy onto`);
+      if (!anchor) continue;
+      // The ground the bench stands on, not the site's nominal y: a bench on
+      // the flat sits on whatever the crust does there, and a bench in the lab
+      // sits on the deck.
+      const ground = built.getTerrainHeight(anchor.position[0], anchor.position[2]);
+      const expected = ground + 0.995;
+      check(Math.abs(anchor.topY - expected) < 0.4,
+        `${site.id}: the working surface is at ${anchor.topY.toFixed(2)}u, on ground at ${ground.toFixed(2)}u`,
+        `${site.id}: bench top at ${anchor.topY.toFixed(2)} but the ground under it is at ${ground.toFixed(2)}`);
+      check(Boolean(anchor.dormant),
+        `${site.id}: the cased instrument can be opened`,
+        `${site.id}: no dormant cabinet, so deploying would draw two instruments in one place`);
+    }
+  }
+}
+
 console.log('');
 if (failures) {
   console.log(`TALLOW FAILED — ${failures} problem${failures === 1 ? '' : 's'}`);

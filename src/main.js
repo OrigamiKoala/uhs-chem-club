@@ -41,7 +41,9 @@ async function bootstrapApp() {
     mount: viewer => stage.setQuestScene(viewer),
     unmount: viewer => {
       if (stage.activeQuestViewer === viewer) stage.exitQuestScene();
-    }
+    },
+    // Where that quest's bench physically stands, when the player walked to it.
+    deployment: questId => stage.benchDeployment(questId)
   });
 
   // 2. Setup HUD & Navigation immediately

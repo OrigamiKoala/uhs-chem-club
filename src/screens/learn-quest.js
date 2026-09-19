@@ -20,6 +20,8 @@ import {
   markStage, markQuestComplete
 } from '../learn/progress.js';
 import { canWalk, world3dFor } from '../learn/worlds3d.js';
+import { setBenchSite } from '../learn/engine/bench-host.js';
+import { benchIsBuilt } from '../learn/engine/instruments.js';
 
 /** The mounted game, so a navigation can tear it down. */
 let active = null;
@@ -33,12 +35,17 @@ export function disposeLearnQuest() {
     console.error('Learn quest dispose failed:', err);
   }
   if (stage.mode === 'quest') stage.exitQuestScene();
+  // Whatever stood the walk down, give it back. The router calls this on every
+  // navigation away from a quest route, including back out onto the flat.
+  stage.setWalkSuspended?.(false);
+  setBenchSite(null);
   active = null;
 }
 
-function shell({ world, quest, body, inWorld }) {
+function shell({ world, quest, body, inWorld, overWorld }) {
+  const mod = inWorld ? ' learn-quest-inworld' : (overWorld ? ' learn-quest-overworld' : '');
   return `
-    <div class="screen-container m-screen m-learn-quest${inWorld ? ' learn-quest-inworld' : ''}">
+    <div class="screen-container m-screen m-learn-quest${mod}">
       <div class="learn-host-bar plate">
         <a href="#/learn/${esc(world.id)}" class="btn-secondary learn-host-back m-tap" style="text-decoration: none;">${esc(world.world)}</a>
         <div class="learn-host-id">
@@ -87,27 +94,42 @@ export function renderLearnQuest(container, params = {}) {
     return;
   }
 
-  // On a world that is built as a place, the bench is deployed where it stands:
-  // the world stays behind the frame and the player is put in front of the site.
-  const inWorld = canWalk(world.id);
-  if (inWorld) {
+  // On a world that is built as a place, the player is put in front of the site
+  // either way. What differs is the instrument: a bench that is BUILT keeps the
+  // world behind the frame and bolts its screens to the bench, while a bench
+  // that is DRAWN — the sampler scope, which is a microscope — is worked as a
+  // page, because there is nothing in the world to stand the picture against.
+  const walkable = canWalk(world.id);
+  const inWorld = walkable && benchIsBuilt(quest.id);
+  if (walkable) {
     const w3d = world3dFor(world.id);
     const site = w3d.siteForQuest(quest.id);
     if (site) {
       w3d.enter(stage, site.id);
+      // Say which bench is about to be worked, so the instrument is deployed on
+      // the plate the player is standing at rather than in a room of its own.
+      // A drawn instrument names no site: `benchDeployment()` then answers null
+      // and the quest frame stays the page it is on every other tier.
+      setBenchSite(inWorld ? quest.id : null);
       // Remembered so that stepping back out of the bench returns the player to
       // the site rather than to the pad they landed on.
       try { sessionStorage.setItem('avalon_learn_last_site', site.id); } catch (e) {}
     } else {
       w3d.enter(stage, null);
+      setBenchSite(null);
     }
     w3d.syncProgress(stage, qid => {
       const q = world.quests.find(x => x.id === qid);
       return q ? isQuestComplete(q) : false;
     });
+    // A drawn instrument has no scene of its own, so nothing else will stand the
+    // walk down. Without this the player keeps walking Tallow behind the page:
+    // W steps off the bench, and an arrow key meant for the power dial is also
+    // a step backwards. A built bench docks its own camera and is left alone.
+    stage.setWalkSuspended?.(!inWorld);
   }
 
-  container.innerHTML = shell({ world, quest, body: '', inWorld });
+  container.innerHTML = shell({ world, quest, body: '', inWorld, overWorld: walkable && !inWorld });
   const mountPoint = container.querySelector('#learn-quest-mount');
 
   if (quest.status !== 'live') {

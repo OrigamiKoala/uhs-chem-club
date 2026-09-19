@@ -146,18 +146,57 @@ export function engravedPlaque(text, opts = {}) {
 export class BenchViewer3D {
   /**
    * @param {HTMLElement} domElement the element pointer events are read from
-   * @param {{backdrop?: 'awning'|'lab'}} opts
+   * @param {{
+   *   backdrop?: 'awning'|'lab',
+   *   world?: {
+   *     scene: THREE.Scene,      the world the player is standing in
+   *     camera: THREE.Camera,    the world camera, docked at the bench
+   *     position: [x, y, z],     where the real bench stands
+   *     rotationY: number,       which way it faces
+   *     topY: number             the height of its working surface
+   *   }
+   * }} opts
+   *
+   * DEPLOYED, OR STANDALONE. With `opts.world` the instrument is deployed onto
+   * the bench that already stands on Tallow: the player walks up to it, the
+   * camera docks, and the stations appear on the real working surface with the
+   * salt flat still behind them. Without it — T3 and below, and the verifier —
+   * the bench builds its own little room exactly as before.
+   *
+   * The instrument's LOCAL FRAME IS IDENTICAL in both cases. Only the transform
+   * on `this.root` differs, so every station coordinate, every sweep and every
+   * hit test below is written once and cannot drift between the two.
    */
   constructor(domElement, opts = {}) {
     this.domElement = domElement || document.body;
     this.opts = opts;
 
-    this.scene = new THREE.Scene();
-    this.scene.background = null;
+    const world = opts.world || null;
+    this.world = world;
+    this.inWorld = Boolean(world);
 
-    this.camera = new THREE.PerspectiveCamera(
-      42, window.innerWidth / window.innerHeight, 0.05, 60
-    );
+    // Everything the instrument builds hangs off this one node, which is what
+    // makes deploying it into a world a transform rather than a rewrite.
+    this.root = new THREE.Group();
+
+    if (world) {
+      this.scene = world.scene;
+      this.camera = world.camera;
+      this.root.position.set(world.position[0], 0, world.position[2]);
+      // Local y = 0.895 is the standalone bench's working surface. Lining that
+      // up with the real one puts every station on the actual plate rather than
+      // hovering over it or sunk into it.
+      this.root.position.y = world.topY - 0.895;
+      this.root.rotation.y = world.rotationY || 0;
+      this.scene.add(this.root);
+    } else {
+      this.scene = new THREE.Scene();
+      this.scene.background = null;
+      this.camera = new THREE.PerspectiveCamera(
+        42, window.innerWidth / window.innerHeight, 0.05, 60
+      );
+      this.scene.add(this.root);
+    }
 
     this.raycaster = new THREE.Raycaster();
     this.pointer = new THREE.Vector2();
@@ -188,6 +227,11 @@ export class BenchViewer3D {
   /* ---------------- room ---------------- */
 
   buildLighting() {
+    // Deployed on Tallow the room is already lit — the lean-to has its caged
+    // lamp and the lab has four. Adding a second rig here would double every
+    // shadow and give the bench a light with no fixture attached to it.
+    if (this.inWorld) return;
+
     // A work light over the bench and a broad fill. Warm sodium, local and dim:
     // the light comes from inside the room, not from an unexplained sky.
     const key = new THREE.SpotLight(0xffdfae, 26, 7.5, Math.PI * 0.32, 0.55, 1.4);
@@ -219,6 +263,17 @@ export class BenchViewer3D {
     }));
     this.steelMat = steel;
     this.darkMat = dark;
+
+    // PHYSICS: the bench on Tallow is already built, already collided and
+    // already standing in that square metre. Building a second one here would
+    // put two objects in one place, which is the one thing the world is not
+    // allowed to do. Deployed, the instrument brings its stations and nothing
+    // else, and they are laid on the plate that is already there.
+    if (this.inWorld) {
+      this.benchGroup = g;
+      this.root.add(g);
+      return;
+    }
 
     // The bench top. Wide enough for four stations with room at each end.
     const top = new THREE.Mesh(this.own(new THREE.BoxGeometry(4.6, 0.07, 1.5)), steel);
@@ -297,7 +352,7 @@ export class BenchViewer3D {
     g.add(deck);
 
     this.benchGroup = g;
-    this.scene.add(g);
+    this.root.add(g);
   }
 
   /**
@@ -410,7 +465,7 @@ export class BenchViewer3D {
 
     // The whole station sits at its place along the bench.
     g.position.x = 0;
-    this.scene.add(g);
+    this.root.add(g);
 
     const station = {
       index, group: g, tray, wellFloor, sweep, indicator,
@@ -458,6 +513,23 @@ export class BenchViewer3D {
     const z = t.z + Math.cos(yaw) * d * Math.cos(pitch) + 0.55;
     const y = this.camHeight + Math.sin(pitch) * d;
 
+    if (this.inWorld) {
+      // Deployed, the arc is the same arc — it is just expressed in the bench's
+      // frame and then taken out into the world, so a player who walked up to
+      // the bench from the yard keeps standing where they were standing.
+      this._camLocal = this._camLocal || new THREE.Vector3();
+      this._tgtLocal = this._tgtLocal || new THREE.Vector3();
+      this.root.updateMatrixWorld();
+      this._camLocal.set(x, y, z);
+      this._tgtLocal.copy(t);
+      this.root.localToWorld(this._camLocal);
+      this.root.localToWorld(this._tgtLocal);
+      this.camera.position.copy(this._camLocal);
+      this.camera.lookAt(this._tgtLocal);
+      this.camera.updateMatrixWorld(true);
+      return;
+    }
+
     this.camera.position.set(x, y, z);
     this.camera.lookAt(t);
   }
@@ -470,7 +542,10 @@ export class BenchViewer3D {
     // pressing Commit would also probe whatever piece was under the button.
     this._isChrome = e => Boolean(
       e.target && e.target.closest &&
-      e.target.closest('.lq, .learn-walk-hud, .hud, .in-world-terminal, .modal-container, .modal-backdrop, .learn-host-bar, .toast-stack, #fps-interact-prompt')
+      // `.lq-world-panel` is the diegetic case: the deck and the tool plate have
+      // left the page and are standing on the bench as screens. A press on one
+      // is still a press on a control, not a lean on the instrument behind it.
+      e.target.closest('.lq, .lq-world-panel, #world-ui-layer, .learn-walk-hud, .hud, .in-world-terminal, .modal-container, .modal-backdrop, .learn-host-bar, .toast-stack, #fps-interact-prompt')
     );
 
     this._onPointerDown = e => {
@@ -576,6 +651,12 @@ export class BenchViewer3D {
    * deck on a phone, applied to the bench and its deck panel.
    */
   fitToOpenArea() {
+    // Deployed, the interface is not a panel over the view — it is bolted to the
+    // bench inside it. There is nothing to dodge, and applying a view offset to
+    // the world camera would skew the whole of Tallow to make room for a card
+    // that is not there.
+    if (this.inWorld) return;
+
     const cam = this.camera;
     const W = window.innerWidth;
     const H = window.innerHeight;
@@ -641,6 +722,10 @@ export class BenchViewer3D {
 
   onResize() {
     this._fitKey = null;
+    // The world camera belongs to the stage, which sizes it against the glass
+    // and the visual viewport. Taking it over here would fight that every time
+    // a phone collapsed its address bar.
+    if (this.inWorld) return;
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.fitToOpenArea();
@@ -657,7 +742,7 @@ export class BenchViewer3D {
   clearStations() {
     const owned = new Set(this.disposables);
     for (const st of this.stations) {
-      this.scene.remove(st.group);
+      this.root.remove(st.group);
       st.group.traverse(o => {
         if (o.geometry && !owned.has(o.geometry)) o.geometry.dispose();
         if (o.material) {
@@ -684,6 +769,13 @@ export class BenchViewer3D {
       try { d.dispose(); } catch (e) {}
     }
     this.disposables = [];
-    this.scene.clear();
+    if (this.inWorld) {
+      // The scene is the world's, and the world is still standing in it. Take
+      // back exactly what was brought.
+      this.scene.remove(this.root);
+      this.root.clear();
+    } else {
+      this.scene.clear();
+    }
   }
 }

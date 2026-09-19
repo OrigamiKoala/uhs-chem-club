@@ -25,6 +25,7 @@
 
 import { SampleScope, detailFor } from '../../engine/instruments.js';
 import { LearnFrame } from '../../engine/frame.js';
+import { dialMarkup, bindDial, paintDial as paintDialControl } from '../../engine/dial.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
@@ -113,13 +114,13 @@ export const STAGES = [
     widget: { type: 'choice-row', min: 1, max: 6, label: 'Logged reading' },
     answer: 4,
     hints: [
-      'On the instrument controls above the scope, click "+" on the Power dial to step up through the magnification levels.',
+      'Turn the Power dial on the instrument panel above the scope. Drag it round, or click it and use the arrow keys.',
       'Powers 1 through 3 show blurry solid clumps. At power 4, the clumps break apart into separate round grains.',
       'Powers 5 and 6 only zoom in closer on the same grains. Power 4 is the lowest power that reveals the grain floor.'
     ],
     check(state) {
       if ((state.maxPower || 1) < 4) {
-        return { ok: false, notYet: true, msg: 'Raise the magnification power dial on the scope to inspect the sample before logging a reading.' };
+        return { ok: false, notYet: true, msg: 'Turn the Power dial up and watch the sample before logging a reading.' };
       }
       if (!state.number) {
         return { ok: false, notYet: true, msg: 'Select a reading on the 1–6 log before committing.' };
@@ -151,13 +152,13 @@ export const STAGES = [
     ],
     widget: { type: 'sample' },
     hints: [
-      'Both crates look identical at low power. Raise the dial until the scope resolves the individual pieces.',
+      'Both crates look identical at low power. Turn the Power dial up until the scope resolves the individual pieces.',
       'Tap pieces on each plate to read their mass and size on the scope. Check multiple pieces across both crates.',
       'Crate 14 mixes dark pieces (CAT 06) with pale pieces (CAT 11). Crate 09 contains only dark pieces. Tap Crate 09 to select it.'
     ],
     check(state) {
       if ((state.resolved?.size || 0) < 2) {
-        return { ok: false, notYet: true, msg: 'Inspect both crates under high magnification until their grains resolve before committing.' };
+        return { ok: false, notYet: true, msg: 'Turn the Power dial up until the grains in both crates resolve, then select a crate.' };
       }
       if (!state.sample) return { ok: false, notYet: true, msg: 'Nothing selected. Tap a crate on the bench first.' };
       if (state.sample === 'c09') return { ok: true };
@@ -509,6 +510,7 @@ export function mount(container, ctx) {
   let state = null;
   let busy = false;
   let disposed = false;
+  let unbindDial = null;
 
   /* ---------------- stage lifecycle ---------------- */
 
@@ -576,17 +578,9 @@ export function mount(container, ctx) {
     const parts = [];
 
     if (stage.controls.includes('power')) {
-      parts.push(`
-        <div class="lq-dial">
-          <span class="form-label">Power</span>
-          <button type="button" class="btn-secondary quest-btn-sm" data-power="-1" aria-label="Lower power">&minus;</button>
-          <span class="lq-dial-segs" aria-hidden="true">
-            ${Array.from({ length: 6 }, (_, i) => `<i data-seg="${i + 1}"></i>`).join('')}
-          </span>
-          <span class="lq-dial-value" aria-live="polite">1</span>
-          <button type="button" class="btn-secondary quest-btn-sm" data-power="1" aria-label="Raise power">+</button>
-        </div>
-      `);
+      // A magnification setting is a thing you turn, so it is a knob. See
+      // `engine/dial.js`: drag it round, arrow-key it, or roll the wheel on it.
+      parts.push(dialMarkup({ label: 'Power', min: 1, max: 6, value: state.power, id: 'scope-power' }));
     }
     if (stage.controls.includes('cut')) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="cut">Run Cutter</button>');
@@ -598,21 +592,33 @@ export function mount(container, ctx) {
     frame.setControls(parts.join(''));
     const host = frame.el.controls;
 
-    host.querySelectorAll('[data-power]').forEach(btn => {
-      btn.addEventListener('click', () => setPower(state.power + Number(btn.dataset.power)));
-    });
+    unbindDial?.();
+    unbindDial = stage.controls.includes('power')
+      ? bindDial(host, { min: 1, max: 6, onChange: v => setPower(v) })
+      : null;
+
     host.querySelectorAll('[data-tool]').forEach(btn => {
       btn.addEventListener('click', () => runTool(btn.dataset.tool));
     });
     paintDial();
   }
 
+  /**
+   * Which plates are resolved at the power the dial is on.
+   *
+   * ONE DIAL DRIVES EVERY PLATE. The scope magnifies the whole bench at once,
+   * so a power that resolves one crate has resolved the crate beside it — the
+   * player can see both without touching either. This used to record only the
+   * *selected* plate, which meant stage two's "inspect both crates" could not be
+   * satisfied by looking: the only way through was to tap the wrong crate first,
+   * and a player who raised the dial and then tapped the right one was told to
+   * go and do the thing they had just done.
+   */
   function checkResolved() {
-    if (!state.sample) return;
-    const s = STAGES[index].samples?.find(samp => samp.id === state.sample);
-    if (s && state.power >= (s.floorPower || 1)) {
-      state.resolved.add(s.id);
-    }
+    const samples = STAGES[index].samples || [];
+    samples.forEach(s => {
+      if (state.power >= (s.floorPower || 1)) state.resolved.add(s.id);
+    });
   }
 
   function setPower(p) {
@@ -628,12 +634,7 @@ export function mount(container, ctx) {
   }
 
   function paintDial() {
-    const host = frame.el.controls;
-    const value = host.querySelector('.lq-dial-value');
-    if (value) value.textContent = String(state.power);
-    host.querySelectorAll('[data-seg]').forEach(seg => {
-      seg.classList.toggle('lit', Number(seg.dataset.seg) <= state.power);
-    });
+    paintDialControl(frame.el.controls, state.power, { min: 1, max: 6 });
   }
 
   async function runTool(tool) {
@@ -900,6 +901,8 @@ export function mount(container, ctx) {
     dispose() {
       if (disposed) return;
       disposed = true;
+      unbindDial?.();
+      unbindDial = null;
       scope.dispose();
       frame.dispose();
     }

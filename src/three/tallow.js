@@ -30,15 +30,18 @@
  */
 
 import * as THREE from 'three';
-import tallowData from './world-data/tallow.json';
+import tallowData from './world-data/tallow.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import {
-  createSaltCrustTexture,
+  saltHardpan, platedMetal, treadPlate, sedimentaryRock,
+  buildMaterial, enableAO, addDetailNormal, addMacroVariation,
+  texSize, heightField, heightToNormal, asDataTexture, fbm,
+  boltRing, boltLine, weldBead, cableRun, pipeFlange, placard,
+  hazardStripe, mergeStatic
+} from './materials/pbr-kit.js';
+import {
   createBleachedPlateTexture,
-  createDrumShellTexture,
   createSalvageCrateTexture,
-  createLabDeckTexture,
-  createLabBulkheadTexture,
   createSealedDoorTexture
 } from './materials/tallow-textures.js';
 
@@ -53,6 +56,13 @@ function mulberry32(seed) {
   };
 }
 
+/** A bare canvas, for the one texture this file draws itself. */
+function canvas2dLocal(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  return c;
+}
+
 /** Sodium filament, from inside a thing. The one warm colour on the flat. */
 const SODIUM = 0xd99423;
 
@@ -64,6 +74,10 @@ export class TallowWorld {
 
     this.colliders = [];
     this.siteMarkers = new Map();   // questId -> { indicator, group, site }
+    // questId -> the physical frame of that site's working surface, so the
+    // Learn instrument can be deployed onto the plate that is actually there
+    // rather than onto a second bench conjured at the same coordinates.
+    this.benchAnchors = new Map();
     this.nearbySite = null;
     this.dustParticles = null;
     this.disposables = [];
@@ -87,6 +101,31 @@ export class TallowWorld {
     this.initSealedSites();
     this.initDust();
     this.buildColliders();
+    this.enableAmbientOcclusion();
+  }
+
+  /**
+   * Turn on ambient occlusion everywhere it was generated.
+   *
+   * `aoMap` samples the SECOND uv set, which a primitive geometry does not have
+   * — so a generated AO map is a silent no-op until the mesh is told to reuse
+   * its own UVs for it. Rather than remember that at every one of the hundred
+   * call sites below, it is done once, here, for anything whose material
+   * actually carries one.
+   *
+   * Cavity occlusion is the cheapest realism in the whole world: it is what
+   * makes a panel gap read as a gap rather than a dark line painted on a sheet.
+   */
+  enableAmbientOcclusion() {
+    const done = new Set();
+    this.scene.traverse(o => {
+      if (!o.geometry || !o.material) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      if (!mats.some(m => m && m.aoMap)) return;
+      if (done.has(o.geometry)) return;
+      done.add(o.geometry);
+      enableAO(o.geometry);
+    });
   }
 
   /** Track a texture/geometry/material so dispose() can actually free it. */
@@ -182,7 +221,12 @@ export class TallowWorld {
         }
       `
     }));
-    this.scene.add(new THREE.Mesh(skyGeo, skyMat));
+    const skyMesh = new THREE.Mesh(skyGeo, skyMat);
+    // `phys` tells the physics verifier what kind of thing this is. The sky is
+    // not an object in the world; it is the world's backdrop, and it encloses
+    // everything by design.
+    skyMesh.userData.phys = 'ambient';
+    this.scene.add(skyMesh);
 
     // Distant mesa silhouettes along the horizon, flattened into the haze so they
     // read as depth rather than as scenery you could ever walk to.
@@ -202,6 +246,7 @@ export class TallowWorld {
       m.lookAt(0, h * 0.45, 0);
       mesaGroup.add(m);
     }
+    mesaGroup.userData.phys = 'ambient';   // horizon silhouettes, not places
     this.scene.add(mesaGroup);
   }
 
@@ -295,20 +340,45 @@ export class TallowWorld {
     geo.computeVertexNormals();
     this.own(geo);
 
-    const crust = createSaltCrustTexture(tierAtLeast('T4') ? 512 : 256, 30);
-    this.own(crust.map, crust.normalMap, crust.roughnessMap);
+    // THE CRUST, IN THREE LAYERS.
+    //
+    // A dry lakebed is a Worley cell field: the pan dries, shrinks, and tears
+    // along the cell walls, and each plate between the tears curls up at its
+    // rim. `saltHardpan` draws that once at 512 and every map — colour, normal,
+    // roughness, ambient occlusion — comes off the same height field, so the
+    // shadow in a crack belongs to that crack.
+    //
+    // One tile of anything repeats every eight metres across 240 m of ground,
+    // and from standing height a repeat reads as printed paper no matter how
+    // good the tile is. Two layers fix that and neither costs a draw call:
+    // a DETAIL normal sampled far below the repeat, which is the grit a player
+    // sees at their feet, and a MACRO variation sampled across the whole mesh
+    // with no repeat at all, which is the slow drift of damp and dust that
+    // makes one end of the pan a different colour from the other.
+    const crust = saltHardpan({ size: texSize(512), seed: 4 });
+    const mat = this.own(buildMaterial(crust, { repeat: 30, roughness: 1.0, metalness: 0.0 }));
+    mat.normalScale.set(1.3, 1.3);
+    mat.aoMapIntensity = 0.9;
 
-    const mat = this.own(new THREE.MeshStandardMaterial({
-      map: crust.map,
-      normalMap: crust.normalMap,
-      roughnessMap: crust.roughnessMap,
-      normalScale: new THREE.Vector2(1.15, 1.15),
-      roughness: 1.0,
-      metalness: 0.0,
-      color: 0xffffff
-    }));
+    const gritHeight = heightField(texSize(256), (u, v) =>
+      0.5 + (fbm(u * 34, v * 34, { octaves: 4, period: 34, seed: 0x9f1 }) - 0.5) * 0.9
+    );
+    this.gritNormal = asDataTexture(heightToNormal(gritHeight, 1.5), 1);
+    this.own(this.gritNormal);
+    addDetailNormal(mat, this.gritNormal, { scale: 7.5, strength: 0.42 });
 
+    const macro = heightField(texSize(256), (u, v) =>
+      fbm(u * 3, v * 3, { octaves: 5, period: 3, seed: 0x2ee })
+    );
+    this.macroMap = asDataTexture(macro, 1);
+    this.macroMap.wrapS = this.macroMap.wrapT = THREE.ClampToEdgeWrapping;
+    this.own(this.macroMap);
+    addMacroVariation(mat, this.macroMap, { strength: 0.13, roughShift: 0.14 });
+
+    enableAO(geo);
     this.terrainMesh = new THREE.Mesh(geo, mat);
+    // The ground everything else stands on and is bedded into.
+    this.terrainMesh.userData.phys = 'ground';
     this.terrainMesh.receiveShadow = tierAtLeast('T4');
     this.scene.add(this.terrainMesh);
   }
@@ -323,23 +393,36 @@ export class TallowWorld {
     const s = this.sub.stair;
     const fy = this.sub.floorY;
 
-    const deck = createLabDeckTexture(tierAtLeast('T4') ? 512 : 256, 8);
-    const bulk = createLabBulkheadTexture(tierAtLeast('T4') ? 512 : 256, 3);
-    this.own(deck.map, deck.normalMap, deck.roughnessMap,
-      bulk.map, bulk.normalMap, bulk.roughnessMap);
+    // The lab deck is walked on, so it is treadplate — raised durbar pattern,
+    // ground flat down the line people actually take. That worn stripe is the
+    // single most convincing thing about an industrial floor.
+    this.deckMat = this.own(buildMaterial(
+      // Repeated nine times across the deck, so 256 carries more detail per
+      // metre than 512 repeated twice would. Resolution is only ever worth what
+      // the repeat does not already give you.
+      treadPlate({ base: '#6a6254', seed: 13, weather: 0.85, size: texSize(256) }),
+      { repeat: 9, roughness: 1.0 }
+    ));
+    this.deckMat.normalScale.set(1.5, 1.5);
 
-    this.deckMat = this.own(new THREE.MeshStandardMaterial({
-      map: deck.map, normalMap: deck.normalMap, roughnessMap: deck.roughnessMap,
-      roughness: 1.0, metalness: 0.25
-    }));
-    this.bulkMat = this.own(new THREE.MeshStandardMaterial({
-      map: bulk.map, normalMap: bulk.normalMap, roughnessMap: bulk.roughnessMap,
-      roughness: 0.88, metalness: 0.32
-    }));
-    // The raw cut face: hardpan in section, the strata the excavator went through.
-    this.cutMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0x8e8472, roughness: 1.0, metalness: 0.0
-    }));
+    // Bulkheads below ground kept the colour the sun took off everything above.
+    // This is the one place on Tallow that still looks like the crucible plate.
+    this.bulkMat = this.own(buildMaterial(
+      platedMetal({
+        paint: '#5a4f42', metal: '#6a6055', rust: '#7d4726',
+        panels: 3, seed: 97, weather: 0.55, size: texSize(256)
+      }),
+      { repeat: 4, roughness: 1.0 }
+    ));
+    this.bulkMat.normalScale.set(1.35, 1.35);
+
+    // The raw cut face: hardpan in section, the strata the excavator went
+    // through, faulted so the bedding is not wallpaper.
+    this.cutMat = this.own(buildMaterial(
+      sedimentaryRock({ warm: '#9b8b73', cool: '#6e6453', seed: 23, size: texSize(256) }),
+      { repeat: [3, 1], roughness: 1.0, metalness: 0.0 }
+    ));
+    this.cutMat.normalScale.set(1.6, 1.6);
 
     const g = new THREE.Group();
 
@@ -500,6 +583,134 @@ export class TallowWorld {
       g.add(this.buildLuminaire(lx, this.sub.ceilingY - 0.42, lz));
     }
 
+    /* ================= THE SERVICES =================
+       A roofed industrial room is mostly the things that run across its
+       ceiling. Bare walls and a floor is a box; pipe, conduit, cable tray and
+       the brackets holding them up is a room that was built for a purpose and
+       then left. This is where the sub-level stops looking like a corridor in
+       a game and starts looking like the crucible plate it is drawn from.
+       ================================================ */
+
+    const runZ0 = r.minZ + 1.0;
+    const runZ1 = r.maxZ - 1.0;
+    const ceil = this.sub.ceilingY;
+
+    // Two process pipes and a lagged one, running the length of the ceiling on
+    // the east side, dropping to a valve station at the far end.
+    for (const [px, rad, mat] of [
+      [r.maxX - 1.5, 0.15, this.pipeMat],
+      [r.maxX - 1.9, 0.11, this.pipeMat],
+      [r.maxX - 2.35, 0.2, this.plateMat]
+    ]) {
+      const run = new THREE.Mesh(
+        this.own(new THREE.CylinderGeometry(rad, rad, runZ1 - runZ0, 12)), mat
+      );
+      run.rotation.x = Math.PI / 2;
+      run.position.set(px, ceil - 0.5, (runZ0 + runZ1) / 2);
+      run.castShadow = tierAtLeast('T4');
+      g.add(run);
+
+      // Bolted joints every few metres, and a hanger at each one.
+      for (let z = runZ0 + 2.2; z < runZ1 - 1; z += 3.6) {
+        const fl = pipeFlange(rad, this.darkSteelMat, this.darkSteelMat);
+        fl.rotation.x = Math.PI / 2;
+        fl.position.set(px, ceil - 0.5, z);
+        g.add(fl);
+
+        const hanger = new THREE.Mesh(
+          this.own(new THREE.BoxGeometry(0.04, 0.42, 0.04)), this.darkSteelMat
+        );
+        hanger.position.set(px, ceil - 0.28, z + 0.3);
+        g.add(hanger);
+      }
+    }
+
+    // Cable tray on the west side: a perforated channel with a loom in it.
+    const tray = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.42, 0.06, runZ1 - runZ0)), this.darkSteelMat
+    );
+    tray.position.set(r.minX + 1.7, ceil - 0.42, (runZ0 + runZ1) / 2);
+    g.add(tray);
+    for (const tx of [-0.2, 0.2]) {
+      const cheek = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.04, 0.14, runZ1 - runZ0)), this.darkSteelMat
+      );
+      cheek.position.set(r.minX + 1.7 + tx, ceil - 0.38, (runZ0 + runZ1) / 2);
+      g.add(cheek);
+    }
+    const loomMat = this.own(new THREE.MeshStandardMaterial({
+      color: 0x2a251f, roughness: 0.95, metalness: 0.2
+    }));
+    for (let i = 0; i < 3; i++) {
+      const loom = new THREE.Mesh(
+        this.own(new THREE.CylinderGeometry(0.035, 0.035, runZ1 - runZ0, 6)), loomMat
+      );
+      loom.rotation.x = Math.PI / 2;
+      loom.position.set(r.minX + 1.58 + i * 0.12, ceil - 0.36, (runZ0 + runZ1) / 2);
+      g.add(loom);
+    }
+
+    // Conduit dropping down the end wall to a distribution box, with the box's
+    // door hanging open. Every abandoned plant has exactly one of these.
+    const conduit = new THREE.Mesh(
+      this.own(new THREE.CylinderGeometry(0.05, 0.05, 2.4, 8)), this.darkSteelMat
+    );
+    conduit.position.set(r.minX + 1.7, ceil - 1.6, r.minZ + 0.35);
+    g.add(conduit);
+    const box = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.5, 0.7, 0.22)), this.bulkMat
+    );
+    box.position.set(r.minX + 1.7, fy + 1.5, r.minZ + 0.32);
+    g.add(box);
+    const door = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.48, 0.68, 0.03)), this.darkSteelMat
+    );
+    door.position.set(r.minX + 2.18, fy + 1.5, r.minZ + 0.55);
+    door.rotation.y = -1.05;
+    g.add(door);
+
+    // A floor drain where the deck falls to it, and the stain around it.
+    const drain = new THREE.Mesh(
+      this.own(new THREE.CylinderGeometry(0.17, 0.17, 0.04, 14)), this.darkSteelMat
+    );
+    drain.position.set(-3.5, fy + 0.005, -24.0);
+    g.add(drain);
+    const stain = new THREE.Mesh(
+      this.own(new THREE.CircleGeometry(0.72, 20)),
+      this.own(new THREE.MeshStandardMaterial({
+        color: 0x3a342c, transparent: true, opacity: 0.45, roughness: 0.5,
+        polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3
+      }))
+    );
+    stain.rotation.x = -Math.PI / 2;
+    stain.position.set(-3.5, fy + 0.002, -24.0);
+    g.add(stain);
+
+    // Hazard striping across the stair head, where the floor stops being floor.
+    const edge = hazardStripe(s.maxX - s.minX, 0.3);
+    edge.rotation.x = -Math.PI / 2;
+    edge.position.set(
+      (s.minX + s.maxX) / 2,
+      this.surfaceHeight((s.minX + s.maxX) / 2, s.maxZ) + 0.012,
+      s.maxZ + 0.28
+    );
+    g.add(edge);
+    this.own(edge.geometry, edge.material, edge.material.map);
+
+    // Wall placards: the room's own designations, stencilled on plate.
+    for (const [tx, tz, code] of [
+      [r.minX + 0.18, -26.0, 'LAB-02'],
+      [r.maxX - 0.18, -29.0, 'VENT-7'],
+      [-2.0, r.minZ + 0.18, 'DIAG BAY']
+    ]) {
+      const tag = placard(code, { w: 0.62, h: 0.2 });
+      tag.position.set(tx, fy + 1.85, tz);
+      if (tz === r.minZ + 0.18) tag.rotation.y = 0;
+      else tag.rotation.y = tx < 0 ? Math.PI / 2 : -Math.PI / 2;
+      g.add(tag);
+      this.own(tag.geometry, tag.material, tag.material.map);
+    }
+
     this.scene.add(g);
   }
 
@@ -549,25 +760,52 @@ export class TallowWorld {
      ====================================================================== */
 
   initRefinery() {
-    const drum = createDrumShellTexture(512, 512);
-    const plate = createBleachedPlateTexture(512, '#948a79', null, 2);
-    this.own(drum.map, drum.normalMap, drum.roughnessMap,
-      plate.map, plate.normalMap, plate.roughnessMap);
+    /*
+     * FOUR METALS, ONE GENERATOR, FOUR AMOUNTS OF WEATHER.
+     *
+     * Every surface here comes out of `platedMetal`, which builds a plate the
+     * way the real object acquired it: rolled steel, a pressed panel grid,
+     * rivet lines along the seams, paint, paint worn off the high edges, and
+     * rust blooming out of the bare metal and streaking downward with gravity.
+     * The four differ almost entirely in the `weather` number — which is the
+     * difference between a drum that has stood in the wind for forty years and
+     * a handrail that people still hold.
+     *
+     * They are cached by key, so the four generators run once for the whole
+     * world no matter how many props ask for them.
+     */
+    // RESOLUTION IS SPENT WHERE THE PLAYER'S FACE GOES.
+    // `pale` is the bench top, the lean-to and the site plate — surfaces read
+    // from half a metre — so it is drawn at full size. The drums, the columns
+    // and the pipe runs are read from ten metres and across four repeats, and
+    //256 there is indistinguishable from 512 while costing a quarter as much.
+    // Generating everything at 512 is most of what a world costs to build.
+    const pale = platedMetal({
+      paint: '#9a9081', metal: '#6d6559', rust: '#7c4826',
+      panels: 2, seed: 31, weather: 0.78, size: texSize(512)
+    });
+    const drum = platedMetal({
+      paint: '#8e8371', metal: '#6a6153', rust: '#84492a',
+      panels: 1, seed: 47, weather: 0.92, grain: 1.1, size: texSize(256)
+    });
+    const dark = platedMetal({
+      paint: '#4e463c', metal: '#5c554b', rust: '#6d3f22',
+      panels: 4, seed: 59, weather: 0.62, size: texSize(256)
+    });
+    const pipe = platedMetal({
+      paint: '#7f7565', metal: '#776e61', rust: '#8a5029',
+      panels: 1, seed: 71, weather: 0.85, rivets: false, size: texSize(256)
+    });
 
-    this.drumMat = this.own(new THREE.MeshStandardMaterial({
-      map: drum.map, normalMap: drum.normalMap, roughnessMap: drum.roughnessMap,
-      roughness: 1.0, metalness: 0.42
-    }));
-    this.plateMat = this.own(new THREE.MeshStandardMaterial({
-      map: plate.map, normalMap: plate.normalMap, roughnessMap: plate.roughnessMap,
-      roughness: 0.94, metalness: 0.38
-    }));
-    this.pipeMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0x7b7060, roughness: 0.86, metalness: 0.52
-    }));
-    this.darkSteelMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0x4a4339, roughness: 0.9, metalness: 0.55
-    }));
+    this.drumMat = this.own(buildMaterial(drum, { repeat: [3, 1.6], roughness: 1.0 }));
+    this.plateMat = this.own(buildMaterial(pale, { repeat: 2, roughness: 1.0 }));
+    this.pipeMat = this.own(buildMaterial(pipe, { repeat: [4, 1], roughness: 1.0 }));
+    this.darkSteelMat = this.own(buildMaterial(dark, { repeat: 3, roughness: 1.0 }));
+
+    for (const m of [this.drumMat, this.plateMat, this.pipeMat, this.darkSteelMat]) {
+      m.normalScale.set(1.25, 1.25);
+      m.aoMapIntensity = 0.85;
+    }
 
     for (const lm of this.data.landmarks) {
       if (lm.minTier === 'T4' && !tierAtLeast('T4')) continue;
@@ -584,8 +822,14 @@ export class TallowWorld {
         default: node = null;
       }
       if (!node) continue;
+      // Bake the prop into one mesh per material before it is placed. An
+      // evaporator is about sixty meshes once it is dressed, and there are
+      // four of them — this is what keeps the detail affordable.
+      mergeStatic(node);
       node.position.set(lm.pos[0], y, lm.pos[2]);
       node.rotation.y = lm.rotY;
+      // Named so the physics check can say WHICH evaporator is in the way.
+      node.name = `${lm.asset}@${lm.pos[0]},${lm.pos[2]}`;
       this.scene.add(node);
     }
   }
@@ -672,15 +916,65 @@ export class TallowWorld {
       stub.rotation.y = -a;
       g.add(stub);
 
-      const flange = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.32 * scale, 0.32 * scale, 0.09 * scale, 12)),
-        this.darkSteelMat
-      );
+      // A flange is a bolted joint, and the bolts are the thing that says so.
+      const flange = pipeFlange(0.22 * scale, this.darkSteelMat, this.darkSteelMat);
       flange.rotation.z = Math.PI / 2;
       flange.position.set(Math.cos(a) * R * 1.55, H * h, Math.sin(a) * R * 1.55);
       flange.rotation.y = -a;
       g.add(flange);
     }
+
+    /* ---- the small parts ---- */
+
+    // Weld beads where the shell courses meet. A pressure vessel is rolled in
+    // courses and welded round, and the bead stands proud of the plate — a
+    // circumferential seam is the clearest read of how a big drum was made.
+    for (let i = 1; i <= 2; i++) {
+      const ring = new THREE.Mesh(
+        this.own(new THREE.TorusGeometry(R * 1.004, 0.026 * scale, 5, 40)), this.pipeMat
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = (H / 3) * i + 0.1;
+      g.add(ring);
+    }
+
+    // The ring of bolts holding the cap down onto the shell flange.
+    const capRing = new THREE.Mesh(
+      this.own(new THREE.CylinderGeometry(R * 1.05, R * 1.05, 0.14 * scale, 28)),
+      this.darkSteelMat
+    );
+    capRing.position.y = H - 0.02;
+    g.add(capRing);
+    const capBolts = boltRing(R * 1.02, 24, this.darkSteelMat, { size: 0.05 * scale });
+    capBolts.position.y = H + 0.06 * scale;
+    g.add(capBolts);
+
+    // Hazard striping round the skirt: the paint everyone walks into.
+    const stripe = hazardStripe(R * 1.9, 0.28 * scale);
+    stripe.position.set(0, 0.62 * scale, R * 1.172);
+    g.add(stripe);
+    this.own(stripe.geometry, stripe.material, stripe.material.map);
+
+    // The vessel's number plate, at chest height beside the ladder.
+    const tag = placard(`EV-${(Math.round(scale * 100) % 9) + 1}7`, { w: 0.46, h: 0.17 });
+    tag.position.set(0.52, 1.5, R * 1.062);
+    g.add(tag);
+    this.own(tag.geometry, tag.material, tag.material.map);
+
+    // A cable dropping from the instrument stub to a junction box on the skirt.
+    const junction = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.26, 0.34, 0.18)), this.darkSteelMat
+    );
+    junction.position.set(-1.1, 1.2, R * 1.04);
+    g.add(junction);
+    const cable = cableRun(
+      [Math.cos(2.4) * R * 1.5, H * 0.55, Math.sin(2.4) * R * 1.5],
+      [-1.1, 1.36, R * 1.04],
+      this.darkSteelMat,
+      { sag: 0.9, radius: 0.022, segments: 16 }
+    );
+    g.add(cable);
+    this.own(cable.userData.ownGeometry);
 
     return g;
   }
@@ -755,7 +1049,71 @@ export class TallowWorld {
         top.clone().sub(anchor).normalize()
       );
       g.add(wire);
+
+      // A turnbuckle two thirds of the way up each guy: the part that tells you
+      // the wire was tensioned by hand, by someone, once.
+      const buckle = new THREE.Mesh(
+        this.own(new THREE.CylinderGeometry(0.055, 0.055, 0.34, 6)), this.darkSteelMat
+      );
+      const at = anchor.clone().lerp(top, 0.26);
+      buckle.position.copy(at);
+      buckle.quaternion.copy(wire.quaternion);
+      g.add(buckle);
     }
+
+    /* ---- the small parts ---- */
+
+    // Every tray band is a bolted flange joint, not a painted stripe.
+    for (let i = 1; i < 9; i += 2) {
+      const bolts = boltRing(R * 0.95, 18, this.darkSteelMat, { size: 0.045 * scale });
+      bolts.position.y = (H / 9) * i;
+      g.add(bolts);
+    }
+
+    // A caged ladder the full height. The hoops are what stop a tall cylinder
+    // reading as a chimney and start it reading as something people climbed.
+    const ladder = new THREE.Group();
+    const railGeo = this.own(new THREE.CylinderGeometry(0.04, 0.04, H * 0.8, 6));
+    for (const dx of [-0.22, 0.22]) {
+      const rail = new THREE.Mesh(railGeo, this.darkSteelMat);
+      rail.position.set(dx, H * 0.4, 0);
+      ladder.add(rail);
+    }
+    const rungGeo = this.own(new THREE.CylinderGeometry(0.024, 0.024, 0.44, 5));
+    for (let i = 0; i < Math.floor(H * 2.2); i++) {
+      const rung = new THREE.Mesh(rungGeo, this.darkSteelMat);
+      rung.rotation.z = Math.PI / 2;
+      rung.position.set(0, 0.4 + i * 0.36, 0);
+      ladder.add(rung);
+    }
+    const hoopGeo = this.own(new THREE.TorusGeometry(0.38, 0.018, 5, 14, Math.PI * 1.35));
+    for (let i = 0; i < Math.floor(H / 1.1); i++) {
+      const hoop = new THREE.Mesh(hoopGeo, this.darkSteelMat);
+      hoop.rotation.y = Math.PI / 2;
+      hoop.rotation.z = -Math.PI * 0.17;
+      hoop.position.set(0, 2.4 + i * 1.1, 0.16);
+      ladder.add(hoop);
+    }
+    ladder.position.set(0, 0, R * 1.02);
+    g.add(ladder);
+
+    // The manway: a bolted oval door at working height, with a swing handle.
+    const manway = new THREE.Mesh(
+      this.own(new THREE.CylinderGeometry(0.46, 0.46, 0.1, 18)), this.darkSteelMat
+    );
+    manway.rotation.x = Math.PI / 2;
+    manway.position.set(-R * 0.95, 1.85, 0.2);
+    manway.rotation.z = Math.PI / 2;
+    g.add(manway);
+    const manBolts = boltRing(0.4, 12, this.darkSteelMat, { size: 0.035, axis: 'x' });
+    manBolts.rotation.z = Math.PI / 2;
+    manBolts.position.set(-R * 1.0, 1.85, 0.2);
+    g.add(manBolts);
+
+    const tag = placard('FR-04', { w: 0.5, h: 0.19 });
+    tag.position.set(0.62, 2.4, R * 1.01);
+    g.add(tag);
+    this.own(tag.geometry, tag.material, tag.material.map);
 
     return g;
   }
@@ -938,6 +1296,9 @@ export class TallowWorld {
       }))
     );
     lampBody.position.y = H + 0.2;
+    // Kept out of the static bake: the obstruction lamp flickers, and a baked
+    // one would be a painted dot.
+    lampBody.userData.noMerge = true;
     g.add(lampBody);
     this.mastLamp = lampBody;
 
@@ -1108,6 +1469,9 @@ export class TallowWorld {
       g.add(floor);
 
       g.position.set(lm.pos[0], y, lm.pos[2]);
+      // An evaporation pan is a surface, not an obstacle: the crust runs under
+      // it and props stand on it, exactly as they stand on the terrain.
+      g.userData.phys = 'ground';
       this.scene.add(g);
     }
   }
@@ -1257,6 +1621,7 @@ export class TallowWorld {
     sock.rotation.z = Math.PI / 2;
     sock.position.set(7.4, 4.2, -5.4);
     g.add(sock);
+    sock.userData.noMerge = true;   // it turns in the wind
     this.windsock = sock;
 
     g.position.set(lm.pos[0], this.surfaceHeight(lm.pos[0], lm.pos[2]), lm.pos[2]);
@@ -1273,7 +1638,11 @@ export class TallowWorld {
    * quest is complete. Built twice — once under the awning, once in the lab.
    */
   buildBench(opts = {}) {
-    const { width = 2.6, depth = 1.1, height = 0.95 } = opts;
+    // A salvage bench is long. It has to be: the instrument that deploys on it
+    // lays out up to four stations at 0.92 m centres, and a station is 0.72 m
+    // across its tray. Anything shorter and the end trays would hang off the
+    // plate — the bench has to be able to hold what is put on it.
+    const { width = 4.8, depth = 1.3, height = 0.95 } = opts;
     const g = new THREE.Group();
 
     const top = new THREE.Mesh(
@@ -1319,7 +1688,7 @@ export class TallowWorld {
     );
     shelf.position.set(0, height * 0.42, 0);
     g.add(shelf);
-    for (const sx of [-0.55, 0.45]) {
+    for (const sx of [-width * 0.28, width * 0.22]) {
       const c = new THREE.Mesh(
         this.own(new THREE.BoxGeometry(0.42, 0.32, 0.42)),
         this.crateMats ? this.crateMats[0] : this.plateMat
@@ -1328,6 +1697,17 @@ export class TallowWorld {
       g.add(c);
     }
 
+    // THE DORMANT INSTRUMENT.
+    // What stands on the bench when nobody is working at it is the instrument,
+    // cased up: cabinet, aperture, dial, tool rail. When the player presses [E]
+    // the case opens and the stations deploy on this same plate — so the two are
+    // never drawn at once, and no two objects ever share that square of bench.
+    const dormant = new THREE.Group();
+    // Held out of any static bake: this whole subtree is hidden while the
+    // instrument is deployed, and a baked cabinet could never be cased up.
+    dormant.userData.noMerge = true;
+    g.add(dormant);
+
     // The instrument housing: a cabinet standing on the bench, chamfered at the
     // top-left the way a plate is, with a recessed dark aperture in its face.
     const housing = new THREE.Mesh(
@@ -1335,13 +1715,13 @@ export class TallowWorld {
     );
     housing.position.set(0, height + 0.43, -0.16);
     housing.castShadow = housing.receiveShadow = tierAtLeast('T4');
-    g.add(housing);
+    dormant.add(housing);
 
     const bezel = new THREE.Mesh(
       this.own(new THREE.TorusGeometry(0.26, 0.035, 8, 26)), this.darkSteelMat
     );
     bezel.position.set(0, height + 0.5, 0.11);
-    g.add(bezel);
+    dormant.add(bezel);
 
     // The aperture face. Dark phosphor glass, not a screen: what it shows is the
     // instrument, and the instrument lives in its own scene (see scope3d.js).
@@ -1352,7 +1732,7 @@ export class TallowWorld {
       }))
     );
     aperture.position.set(0, height + 0.5, 0.108);
-    g.add(aperture);
+    dormant.add(aperture);
 
     // The power dial: a knurled knob with a pointer and a ring of detents.
     const dialBody = new THREE.Mesh(
@@ -1360,13 +1740,13 @@ export class TallowWorld {
     );
     dialBody.rotation.x = Math.PI / 2;
     dialBody.position.set(0.42, height + 0.28, 0.1);
-    g.add(dialBody);
+    dormant.add(dialBody);
     const pointer = new THREE.Mesh(
       this.own(new THREE.BoxGeometry(0.012, 0.07, 0.012)),
       this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
     );
     pointer.position.set(0.42, height + 0.32, 0.13);
-    g.add(pointer);
+    dormant.add(pointer);
     for (let i = 0; i < 6; i++) {
       const a = -Math.PI * 0.7 + (i / 5) * Math.PI * 1.4;
       const detent = new THREE.Mesh(
@@ -1374,7 +1754,7 @@ export class TallowWorld {
       );
       detent.position.set(0.42 + Math.sin(a) * 0.11, height + 0.28 + Math.cos(a) * 0.11, 0.115);
       detent.rotation.z = -a;
-      g.add(detent);
+      dormant.add(detent);
     }
 
     // Tool rail: the cutter and the shaker, racked where a hand would reach.
@@ -1393,13 +1773,18 @@ export class TallowWorld {
     }
 
     // The one indicator. Dead until the site's quest is finished.
+    //
+    // Set into the APRON, not into the cabinet face: the cabinet is cased up
+    // while the instrument is deployed, and a status lamp that disappeared the
+    // moment you started working would be a lamp attached to nothing.
     const indicator = new THREE.Mesh(
       this.own(new THREE.SphereGeometry(0.035, 10, 8)),
       this.own(new THREE.MeshStandardMaterial({
         color: 0x4a4038, emissive: SODIUM, emissiveIntensity: 0, roughness: 0.6
       }))
     );
-    indicator.position.set(-0.44, height + 0.62, 0.13);
+    indicator.position.set(width / 2 - 0.42, height - 0.12, depth / 2 + 0.035);
+    indicator.userData.noMerge = true;   // its emissive changes on completion
     g.add(indicator);
 
     // A recessed well for the indicator, so it reads as set into the plate.
@@ -1407,10 +1792,100 @@ export class TallowWorld {
       this.own(new THREE.CylinderGeometry(0.055, 0.055, 0.02, 12)), this.darkSteelMat
     );
     well.rotation.x = Math.PI / 2;
-    well.position.set(-0.44, height + 0.62, 0.118);
+    well.position.set(width / 2 - 0.42, height - 0.12, depth / 2 + 0.018);
     g.add(well);
 
-    return { group: g, indicator };
+    /* ================= THE SMALL PARTS =================
+       This is the one object in the world the player stands at with their face
+       half a metre from it, so it is the one that has to survive being looked
+       at closely. Everything below is a thing a working bench actually has.
+       ================================================== */
+
+    // Bolt lines down both ends of the top, through into the leg frames.
+    for (const bx of [-width / 2 + 0.12, width / 2 - 0.12]) {
+      g.add(boltLine(
+        [bx, height + 0.047, -depth / 2 + 0.14],
+        [bx, height + 0.047, depth / 2 - 0.14],
+        4, this.darkSteelMat, { size: 0.016, normalAxis: 'y' }
+      ));
+    }
+
+    // The seam down the middle: the top is two plates, welded.
+    const seam = weldBead(width - 0.08, this.pipeMat, { radius: 0.013, seed: 0x5e });
+    seam.rotation.z = Math.PI / 2;
+    seam.position.set(0, height + 0.047, 0);
+    g.add(seam);
+    this.own(seam.userData.ownGeometry);
+
+    // A bench vice, bolted to the near left corner with its jaws open. Nothing
+    // says workshop faster, and nothing is more obviously missing without it.
+    const vice = new THREE.Group();
+    const viceBody = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.2, 0.15, 0.13)), this.darkSteelMat
+    );
+    viceBody.position.y = 0.075;
+    vice.add(viceBody);
+    for (const [jx, jw] of [[-0.08, 0.05], [0.07, 0.05]]) {
+      const jaw = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(jw, 0.1, 0.17)), this.pipeMat
+      );
+      jaw.position.set(jx, 0.13, 0);
+      vice.add(jaw);
+    }
+    const screw = new THREE.Mesh(
+      this.own(new THREE.CylinderGeometry(0.018, 0.018, 0.3, 8)), this.pipeMat
+    );
+    screw.rotation.z = Math.PI / 2;
+    screw.position.set(0.06, 0.085, 0);
+    vice.add(screw);
+    const handle = new THREE.Mesh(
+      this.own(new THREE.CylinderGeometry(0.012, 0.012, 0.19, 6)), this.darkSteelMat
+    );
+    handle.position.set(0.21, 0.085, 0);
+    vice.add(handle);
+    vice.position.set(-width / 2 + 0.34, height + 0.045, depth / 2 - 0.26);
+    vice.rotation.y = 0.22;
+    g.add(vice);
+
+    // A rag, left where it was dropped. One quad, folded, and it is the thing
+    // that stops a bench top being a rendered rectangle.
+    const rag = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.22, 0.012, 0.16)),
+      this.own(new THREE.MeshStandardMaterial({ color: 0x6f6553, roughness: 1.0 }))
+    );
+    rag.position.set(width / 2 - 0.5, height + 0.051, depth / 2 - 0.3);
+    rag.rotation.set(0.04, 0.6, 0.02);
+    g.add(rag);
+    const ragFold = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.13, 0.02, 0.1)), rag.material
+    );
+    ragFold.position.set(width / 2 - 0.44, height + 0.063, depth / 2 - 0.26);
+    ragFold.rotation.set(0.1, 0.9, -0.06);
+    g.add(ragFold);
+
+    // Swarf and offcuts: a scatter of small salvage along the back lip, where
+    // everything that is not in use ends up.
+    const rand = mulberry32(0x71a3 + Math.round(width * 100));
+    const chipGeo = this.own(new THREE.BoxGeometry(0.05, 0.02, 0.04));
+    for (let i = 0; i < 14; i++) {
+      const chip = new THREE.Mesh(chipGeo, this.darkSteelMat);
+      chip.position.set(
+        (rand() - 0.5) * (width - 0.6),
+        height + 0.056,
+        -depth / 2 + 0.1 + rand() * 0.12
+      );
+      chip.rotation.set(rand() * 0.4, rand() * Math.PI, rand() * 0.3);
+      chip.scale.setScalar(0.6 + rand() * 0.9);
+      g.add(chip);
+    }
+
+    // The bench's own plate number, riveted to the apron.
+    const tag = placard('BN-01', { w: 0.28, h: 0.11 });
+    tag.position.set(-width / 2 + 0.42, height - 0.12, depth / 2 + 0.005);
+    g.add(tag);
+    this.own(tag.geometry, tag.material, tag.material.map);
+
+    return { group: g, indicator, dormant, topY: height + 0.045 };
   }
 
   initSalvageBench() {
@@ -1422,7 +1897,7 @@ export class TallowWorld {
     // The lean-to: four posts, a sagging roof plate, and a torn side sheet that
     // takes the worst of the wind off the bench.
     const postGeo = this.own(new THREE.BoxGeometry(0.16, 2.9, 0.16));
-    for (const [px, pz] of [[-2.1, -1.6], [2.1, -1.6], [-2.1, 1.6], [2.1, 1.6]]) {
+    for (const [px, pz] of [[-2.95, -1.85], [2.95, -1.85], [-2.95, 1.85], [2.95, 1.85]]) {
       const p = new THREE.Mesh(postGeo, this.darkSteelMat);
       p.position.set(px, 1.45, pz);
       p.castShadow = tierAtLeast('T4');
@@ -1435,7 +1910,7 @@ export class TallowWorld {
     }
 
     const roof = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(4.8, 0.08, 3.6)), this.plateMat
+      this.own(new THREE.BoxGeometry(6.5, 0.08, 4.1)), this.plateMat
     );
     roof.position.set(0, 2.95, 0);
     roof.rotation.x = 0.07;
@@ -1443,32 +1918,107 @@ export class TallowWorld {
     g.add(roof);
 
     // Corrugation on the roof: ribs, so it is sheet and not a slab.
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 12; i++) {
       const rib = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.07, 0.05, 3.6)), this.darkSteelMat
+        this.own(new THREE.BoxGeometry(0.07, 0.05, 4.1)), this.darkSteelMat
       );
-      rib.position.set(-2.2 + i * 0.55, 3.025, 0);
+      rib.position.set(-3.03 + i * 0.55, 3.025, 0);
       rib.rotation.x = 0.07;
       g.add(rib);
     }
 
     const sheet = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(4.8, 1.9, 0.06)), this.plateMat
+      this.own(new THREE.BoxGeometry(6.5, 1.9, 0.06)), this.plateMat
     );
-    sheet.position.set(0, 1.9, -1.66);
+    sheet.position.set(0, 1.9, -1.99);
     sheet.castShadow = sheet.receiveShadow = tierAtLeast('T4');
     g.add(sheet);
 
     // Bench under the lean-to, facing the yard.
-    const bench = this.buildBench({ width: 2.8, depth: 1.15, height: 0.95 });
+    const bench = this.buildBench({ width: 4.8, depth: 1.3, height: 0.95 });
     bench.group.position.set(0, 0, -0.5);
     g.add(bench.group);
 
     // A caged work lamp clipped to the roof frame. A lamp, so it is lit.
-    g.add(this.buildLuminaire(0, 2.7, 0.2));
+    const workLamp = this.buildLuminaire(0, 2.7, 0.2);
+    g.add(workLamp);
+
+    // Its feed, dropping from the roof and looped round the nearest post. A
+    // lamp with no cable is a lamp that runs on nothing.
+    const feed = cableRun([0, 2.68, 0.2], [-2.86, 2.4, 0.2], this.darkSteelMat,
+      { sag: 0.5, radius: 0.016, segments: 14 });
+    g.add(feed);
+    this.own(feed.userData.ownGeometry);
+    const drop = cableRun([-2.86, 2.4, 0.2], [-2.9, 1.1, -0.1], this.darkSteelMat,
+      { sag: 0.14, radius: 0.016, segments: 10 });
+    g.add(drop);
+    this.own(drop.userData.ownGeometry);
+
+    // Wind drift: the flat blows one way, so sand banks against the windward
+    // posts and the windward side of the crates and nowhere else. Directional
+    // drift is the cheapest way to say a place has weather.
+    const driftMat = this.own(new THREE.MeshStandardMaterial({
+      color: 0xbcb096, roughness: 1.0, metalness: 0.0
+    }));
+    // Each drift tails DOWNWIND of the post that made it, clear of the post
+    // itself: a lee deposit, not a heap dropped on top of the thing. It also
+    // keeps the rule the whole world is held to — nothing is drawn inside
+    // anything else.
+    for (const [dx, dz, dr] of [[-2.95, -1.85, 0.62], [2.95, -1.85, 0.5], [-2.95, 1.85, 0.36]]) {
+      const drift = new THREE.Mesh(
+        this.own(new THREE.SphereGeometry(dr, 12, 7, 0, Math.PI * 2, 0, Math.PI * 0.5)),
+        driftMat
+      );
+      drift.scale.set(0.55, 0.22, 1.5);
+      // The wind runs +z across the yard, so the tail lies on the far side of
+      // the post from it, starting just clear of the post's 0.08 half-width.
+      drift.position.set(dx, 0.0, dz + 0.12 + dr * 1.5);
+      drift.receiveShadow = tierAtLeast('T4');
+      g.add(drift);
+    }
+
+    // The roof leaks where a sheet has torn away, so one strip of crust under
+    // it is a shade darker and a shade smoother than the rest.
+    const damp = new THREE.Mesh(
+      this.own(new THREE.PlaneGeometry(1.5, 0.75)),
+      this.own(new THREE.MeshStandardMaterial({
+        color: 0x948871, transparent: true, opacity: 0.4, roughness: 0.62,
+        polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3
+      }))
+    );
+    damp.rotation.x = -Math.PI / 2;
+    damp.position.set(1.4, 0.012, 1.0);
+    g.add(damp);
+
+    // A torn corner out of the side sheet, and the flap still hanging off it.
+    const flap = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.9, 0.7, 0.04)), this.plateMat
+    );
+    flap.position.set(2.2, 1.62, -2.09);
+    flap.rotation.set(0.0, 0.0, -0.34);
+    flap.castShadow = tierAtLeast('T4');
+    g.add(flap);
+
+    // A stack of empty pans against the back sheet, and a coil of hose.
+    for (let i = 0; i < 4; i++) {
+      const pan = new THREE.Mesh(
+        this.own(new THREE.CylinderGeometry(0.34, 0.31, 0.09, 14)), this.darkSteelMat
+      );
+      pan.position.set(-2.35, 0.05 + i * 0.085, -1.62);
+      pan.rotation.y = i * 0.4;
+      pan.castShadow = tierAtLeast('T4');
+      g.add(pan);
+    }
+    const hose = new THREE.Mesh(
+      this.own(new THREE.TorusGeometry(0.34, 0.045, 6, 22)),
+      this.own(new THREE.MeshStandardMaterial({ color: 0x3b332b, roughness: 0.95 }))
+    );
+    hose.rotation.x = Math.PI / 2;
+    hose.position.set(2.3, 0.05, -1.66);
+    g.add(hose);
 
     // Crates staged beside the bench, awaiting certification.
-    for (const [cx, cz, cr] of [[-1.85, 0.9, 0.2], [1.9, 1.0, -0.35]]) {
+    for (const [cx, cz, cr] of [[-2.0, 1.0, 0.2], [2.0, 1.05, -0.35]]) {
       const c = new THREE.Mesh(
         this.own(new THREE.BoxGeometry(1.0, 0.8, 1.0)),
         this.crateMats[Math.abs(Math.round(cx)) % this.crateMats.length]
@@ -1484,6 +2034,10 @@ export class TallowWorld {
     this.scene.add(g);
 
     this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
+    // The lean-to is turned to face the yard, so the bench inside it sits half a
+    // metre the other side of the site marker. Recorded rather than recomputed:
+    // move the bench and the instrument follows it.
+    this.registerBenchAnchor(site, g, bench, [0, 0, -0.5]);
   }
 
   initCoreBench() {
@@ -1491,7 +2045,7 @@ export class TallowWorld {
     if (!site) return;
     const g = new THREE.Group();
 
-    const bench = this.buildBench({ width: 3.0, depth: 1.2, height: 0.95 });
+    const bench = this.buildBench({ width: 4.8, depth: 1.3, height: 0.95 });
     g.add(bench.group);
 
     // The lab's own apparatus around the bench: a beam column on one side, an
@@ -1499,20 +2053,20 @@ export class TallowWorld {
     const column = new THREE.Mesh(
       this.own(new THREE.CylinderGeometry(0.34, 0.4, 2.3, 18)), this.plateMat
     );
-    column.position.set(-2.2, 1.15, 0);
+    column.position.set(-3.35, 1.15, 0);
     column.castShadow = column.receiveShadow = tierAtLeast('T4');
     g.add(column);
     const emitter = new THREE.Mesh(
       this.own(new THREE.CylinderGeometry(0.12, 0.2, 0.7, 14)), this.darkSteelMat
     );
     emitter.rotation.z = -Math.PI / 2;
-    emitter.position.set(-1.72, 1.45, 0);
+    emitter.position.set(-2.87, 1.45, 0);
     g.add(emitter);
 
     const rack = new THREE.Mesh(
       this.own(new THREE.BoxGeometry(0.7, 1.95, 0.85)), this.bulkMat
     );
-    rack.position.set(2.35, 0.98, -0.1);
+    rack.position.set(3.45, 0.98, -0.1);
     rack.castShadow = rack.receiveShadow = tierAtLeast('T4');
     g.add(rack);
     // Rack units: nineteen-inch modules with handles.
@@ -1520,13 +2074,13 @@ export class TallowWorld {
       const unit = new THREE.Mesh(
         this.own(new THREE.BoxGeometry(0.62, 0.2, 0.04)), this.darkSteelMat
       );
-      unit.position.set(2.35, 0.34 + i * 0.24, 0.34);
+      unit.position.set(3.45, 0.34 + i * 0.24, 0.34);
       g.add(unit);
       for (const hx of [-0.22, 0.22]) {
         const handle = new THREE.Mesh(
           this.own(new THREE.BoxGeometry(0.05, 0.1, 0.03)), this.plateMat
         );
-        handle.position.set(2.35 + hx, 0.34 + i * 0.24, 0.37);
+        handle.position.set(3.45 + hx, 0.34 + i * 0.24, 0.37);
         g.add(handle);
       }
     }
@@ -1535,7 +2089,7 @@ export class TallowWorld {
     const board = new THREE.Mesh(
       this.own(new THREE.BoxGeometry(1.9, 0.75, 0.08)), this.plateMat
     );
-    board.position.set(0, 1.85, -1.05);
+    board.position.set(0, 1.85, -1.35);
     g.add(board);
     for (let i = 0; i < 4; i++) {
       const face = new THREE.Mesh(
@@ -1543,13 +2097,13 @@ export class TallowWorld {
         this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.75 }))
       );
       face.rotation.x = Math.PI / 2;
-      face.position.set(-0.69 + i * 0.46, 1.9, -1.0);
+      face.position.set(-0.69 + i * 0.46, 1.9, -1.30);
       g.add(face);
       const needle = new THREE.Mesh(
         this.own(new THREE.BoxGeometry(0.012, 0.1, 0.008)),
         this.own(new THREE.MeshStandardMaterial({ color: 0x3a332b, roughness: 0.8 }))
       );
-      needle.position.set(-0.69 + i * 0.46, 1.94, -0.98);
+      needle.position.set(-0.69 + i * 0.46, 1.94, -1.28);
       needle.rotation.z = -0.9 + i * 0.4;
       g.add(needle);
     }
@@ -1560,10 +2114,10 @@ export class TallowWorld {
     }));
     for (let i = 0; i < 3; i++) {
       const curve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(2.1, 1.4 - i * 0.1, 0.2),
-        new THREE.Vector3(0.6, 0.55 - i * 0.08, 0.55),
-        new THREE.Vector3(-1.0, 0.5 - i * 0.06, 0.4),
-        new THREE.Vector3(-2.0, 1.1 - i * 0.1, 0.1)
+        new THREE.Vector3(3.2, 1.4 - i * 0.1, 0.3),
+        new THREE.Vector3(1.4, 0.44 - i * 0.07, 0.86),
+        new THREE.Vector3(-1.4, 0.4 - i * 0.05, 0.86),
+        new THREE.Vector3(-3.1, 1.1 - i * 0.1, 0.2)
       ]);
       const tube = new THREE.Mesh(
         this.own(new THREE.TubeGeometry(curve, 26, 0.022, 6, false)), cableMat
@@ -1576,6 +2130,46 @@ export class TallowWorld {
     this.scene.add(g);
 
     this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
+    this.registerBenchAnchor(site, g, bench, [0, 0, 0]);
+  }
+
+  /**
+   * Record where a bench's working surface is, in world terms.
+   *
+   * `local` is where the bench sits inside the site group; the group's own
+   * rotation is applied so a site that faces the other way still reports the
+   * plate it actually has. `dormant` is the cased-up instrument, which is
+   * hidden for exactly as long as the deployed one is standing in its place.
+   */
+  registerBenchAnchor(site, group, bench, local) {
+    const cos = Math.cos(group.rotation.y);
+    const sin = Math.sin(group.rotation.y);
+    const [lx, , lz] = local;
+    this.benchAnchors.set(site.questId, {
+      siteId: site.id,
+      position: [
+        group.position.x + lx * cos + lz * sin,
+        group.position.y,
+        group.position.z - lx * sin + lz * cos
+      ],
+      rotationY: group.rotation.y,
+      topY: group.position.y + bench.topY,
+      dormant: bench.dormant
+    });
+  }
+
+  /**
+   * Case the bench instrument up, or open it. One object, two states — never
+   * two objects in one place.
+   */
+  setBenchDeployed(questId, deployed) {
+    const anchor = this.benchAnchors.get(questId);
+    if (anchor?.dormant) anchor.dormant.visible = !deployed;
+  }
+
+  /** The working surface for a quest's site, or null if it has no bench. */
+  benchAnchor(questId) {
+    return this.benchAnchors.get(questId) || null;
   }
 
   /**
@@ -1694,36 +2288,64 @@ export class TallowWorld {
      ATMOSPHERE
      ====================================================================== */
 
+  /**
+   * Airborne dust, in two layers.
+   *
+   * ONE layer of particles always looks like particles. A real flat under wind
+   * has motes hanging in the column, which drift slowly and are lit from every
+   * side, and grit running along the surface, which moves several times faster
+   * and stays inside the first metre. Separating the two is what makes the wind
+   * legible: the player sees the ground moving past their boots while the haze
+   * above barely shifts.
+   *
+   * The sprite is a soft round grain, not the square a default point draws.
+   * A square particle is the single most recognisable "this is a game engine"
+   * artefact there is.
+   */
   initDust() {
     if (!tierAtLeast('T4')) return;   // T3 renders the same flat without particles.
 
-    const count = Math.round(1400 * this.data.ambience.dustDensity / 0.2);
-    const positions = new Float32Array(count * 3);
-    const speeds = new Float32Array(count);
+    const grain = canvas2dLocal(64, 64);
+    const gctx = grain.getContext('2d');
+    const grad = gctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.45, 'rgba(255,255,255,0.45)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    gctx.fillStyle = grad;
+    gctx.fillRect(0, 0, 64, 64);
+    const sprite = this.own(new THREE.CanvasTexture(grain));
+    sprite.colorSpace = THREE.SRGBColorSpace;
+
     const rand = mulberry32(0xd057);
+    const density = this.data.ambience.dustDensity / 0.2;
 
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (rand() - 0.5) * 170;
-      positions[i * 3 + 1] = rand() * 16;
-      positions[i * 3 + 2] = (rand() - 0.5) * 170;
-      speeds[i] = 0.35 + rand() * 1.1;
-    }
+    /** One drifting layer. `lift` is how high it hangs, `rate` how fast it runs. */
+    const layer = (count, lift, rate, size, opacity, color) => {
+      const positions = new Float32Array(count * 3);
+      const speeds = new Float32Array(count);
+      for (let i = 0; i < count; i++) {
+        positions[i * 3] = (rand() - 0.5) * 170;
+        positions[i * 3 + 1] = rand() * lift;
+        positions[i * 3 + 2] = (rand() - 0.5) * 170;
+        speeds[i] = rate * (0.5 + rand());
+      }
+      const geo = this.own(new THREE.BufferGeometry());
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const mat = this.own(new THREE.PointsMaterial({
+        color, size, map: sprite, sizeAttenuation: true,
+        transparent: true, opacity, depthWrite: false,
+        blending: THREE.NormalBlending
+      }));
+      const pts = new THREE.Points(geo, mat);
+      this.scene.add(pts);
+      return { points: pts, speeds, lift };
+    };
 
-    const geo = this.own(new THREE.BufferGeometry());
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-    const mat = this.own(new THREE.PointsMaterial({
-      color: 0xd8cfb8,
-      size: 0.06,
-      sizeAttenuation: true,
-      transparent: true,
-      opacity: 0.38,
-      depthWrite: false
-    }));
-
-    this.dustParticles = new THREE.Points(geo, mat);
-    this.dustSpeeds = speeds;
-    this.scene.add(this.dustParticles);
+    // The hanging column: slow, pale, high.
+    this.dustParticles = layer(Math.round(1100 * density), 16, 1.0, 0.075, 0.34, 0xd8cfb8);
+    // The running surface: fast, warmer, and never more than a metre up.
+    this.groundGrit = layer(Math.round(900 * density), 1.1, 3.4, 0.045, 0.3, 0xc8b894);
+    this.dustSpeeds = this.dustParticles.speeds;
   }
 
   /* ======================================================================
@@ -1734,6 +2356,8 @@ export class TallowWorld {
   buildColliders() {
     const r = this.sub.room;
     const s = this.sub.stair;
+    const W = 0.4;
+    const push = (minX, maxX, minZ, maxZ) => this.colliders.push({ minX, maxX, minZ, maxZ });
 
     for (const lm of this.data.landmarks) {
       if (lm.minTier === 'T4' && !tierAtLeast('T4')) continue;
@@ -1741,20 +2365,46 @@ export class TallowWorld {
       if (lm.asset === 'stake-marker' || lm.asset === 'debris-field') continue;
       // Pan rims and the landing pad are walked on, not walked into.
       if (lm.asset === 'pan-rim' || lm.asset === 'landing-pad') continue;
+
+      /*
+       * ELEVATED STRUCTURES ARE THEIR SUPPORTS.
+       *
+       * A pipe bridge and a conveyor are twenty-odd metres long and carried
+       * five metres in the air. One radius at their centre is wrong in both
+       * directions at once: it seals a square of open ground nobody could walk
+       * into anyway, and it leaves the rest of the span with nothing, so the
+       * player strolls straight through the piers at either end.
+       *
+       * What is actually in the way is the legs. So that is what is collided.
+       */
+      const supports = this.supportPoints(lm);
+      if (supports) {
+        for (const sp of supports) this.colliders.push(sp);
+        continue;
+      }
+
       this.colliders.push({ x: lm.pos[0], z: lm.pos[2], radius: lm.radius });
     }
 
-    // Bench furniture: you stand at a bench, you do not walk through it.
-    this.colliders.push({ x: -15.0, z: 16.5, radius: 1.7 });   // site-1 bench
-    this.colliders.push({ x: 7.0, z: -27.0, radius: 1.8 });    // site-2 bench
+    // Bench furniture: you stand at a bench, you do not walk through it. A bench
+    // is 4.8 m long and 1.3 m deep, so a single radius either leaves both ends
+    // walk-through or seals the aisle beside it. Box colliders match the plate.
+    push(-17.4, -12.6, 16.85, 18.15);   // site-1 bench (lean-to faces the yard)
+    push(4.6, 9.4, -27.65, -26.35);     // site-2 bench (sub-level lab)
+    // The lean-to's four posts. Thin, but a post you can walk through is worse
+    // than no post at all, and they stand just clear of the bench at both ends.
+    for (const px of [-17.95, -12.05]) {
+      for (const pz of [15.15, 18.85]) {
+        this.colliders.push({ x: px, z: pz, radius: 0.24 });
+      }
+    }
+    this.colliders.push({ x: 3.55, z: -26.9, radius: 0.55 });  // lab equipment rack
+    this.colliders.push({ x: 10.35, z: -27.0, radius: 0.48 }); // beam column
     this.colliders.push({ x: 25.0, z: 3.0, radius: 2.6 });     // vault blockhouse
     this.colliders.push({ x: -27.0, z: -13.0, radius: 2.6 });  // gantry legs
 
     // The pit rim. Thin box colliders around the excavation, split so the stair
     // mouth is the only way down — which is what makes the descent a walk.
-    const W = 0.4;
-    const push = (minX, maxX, minZ, maxZ) => this.colliders.push({ minX, maxX, minZ, maxZ });
-
     push(r.minX - W, r.maxX + W, r.minZ - W, r.minZ);           // far wall
     push(r.minX - W, r.minX, r.minZ, r.maxZ);                   // west wall
     push(r.maxX, r.maxX + W, r.minZ, r.maxZ);                   // east wall
@@ -1767,6 +2417,31 @@ export class TallowWorld {
   /* ======================================================================
      STATE AND FRAME
      ====================================================================== */
+
+  /**
+   * The feet of an elevated structure, in world terms, or null if the landmark
+   * is an ordinary solid object.
+   *
+   * The local coordinates below are the same ones the builders place their
+   * piers and legs at — `buildPipeBridge` uses span 26 with piers a metre in
+   * from each end, `buildConveyor` uses length 22 with legs at 0.12, 0.5 and
+   * 0.88 of it.
+   */
+  supportPoints(lm) {
+    const local = {
+      'pipe-bridge': [[-1.5, -12], [1.5, -12], [-1.5, 0], [1.5, 0], [-1.5, 12], [1.5, 12]],
+      'conveyor': [[-0.7, -8.36], [0.7, -8.36], [-0.7, 0], [0.7, 0], [-0.7, 8.36], [0.7, 8.36]]
+    }[lm.asset];
+    if (!local) return null;
+
+    const cos = Math.cos(lm.rotY || 0);
+    const sin = Math.sin(lm.rotY || 0);
+    return local.map(([lx, lz]) => ({
+      x: lm.pos[0] + lx * cos + lz * sin,
+      z: lm.pos[2] - lx * sin + lz * cos,
+      radius: 0.55
+    }));
+  }
 
   /**
    * Light a site's indicator when its quest is complete. Driven by the Learn
@@ -1807,14 +2482,17 @@ export class TallowWorld {
     // Dust drifts downwind and recycles at the far edge. The flat has a steady
     // wind; this is the only thing in the scene that moves on its own besides
     // the sock.
-    if (this.dustParticles) {
-      const p = this.dustParticles.geometry.attributes.position;
+    for (const l of [this.dustParticles, this.groundGrit]) {
+      if (!l) continue;
+      const p = l.points.geometry.attributes.position;
       const arr = p.array;
-      for (let i = 0; i < this.dustSpeeds.length; i++) {
-        arr[i * 3] += this.dustSpeeds[i] * delta * 1.6;
-        arr[i * 3 + 1] -= this.dustSpeeds[i] * delta * 0.12;
+      for (let i = 0; i < l.speeds.length; i++) {
+        arr[i * 3] += l.speeds[i] * delta * 1.6;
+        // Settling is proportional to speed, so the fast grit skips along the
+        // surface and the slow motes hang; both recycle at the upwind edge.
+        arr[i * 3 + 1] -= l.speeds[i] * delta * 0.12;
         if (arr[i * 3] > 85) arr[i * 3] = -85;
-        if (arr[i * 3 + 1] < 0.1) arr[i * 3 + 1] = 16;
+        if (arr[i * 3 + 1] < 0.04) arr[i * 3 + 1] = l.lift;
       }
       p.needsUpdate = true;
     }
@@ -1836,6 +2514,7 @@ export class TallowWorld {
     this.disposables = [];
     this.scene.clear();
     this.siteMarkers.clear();
+    this.benchAnchors.clear();
     this.colliders = [];
   }
 }

@@ -11,7 +11,7 @@
  */
 
 import { tierAtLeast } from '../three/tier.js';
-import tallowData from '../three/world-data/tallow.json';
+import tallowData from '../three/world-data/tallow.json' with { type: 'json' };
 
 /**
  * A walkable Learn world.

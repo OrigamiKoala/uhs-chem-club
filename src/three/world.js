@@ -9,7 +9,13 @@
  */
 
 import * as THREE from "three";
-import erebusData from "./world-data/erebus.json";
+import {
+  desertSand, sedimentaryRock, platedMetal,
+  buildMaterial, enableAO, addDetailNormal, addMacroVariation,
+  texSize, heightField, heightToNormal, asDataTexture, fbm,
+  boltRing, cableRun, placard, hazardStripe, mergeStatic
+} from "./materials/pbr-kit.js";
+import erebusData from "./world-data/erebus.json" with { type: "json" };
 import { tierManager, tierAtLeast } from "./tier.js";
 
 export class WorldScene {
@@ -95,6 +101,11 @@ export class WorldScene {
       `
     });
     const skyMesh = new THREE.Mesh(skyGeo, skyMat);
+    // `phys` tells the physics check what kind of thing this is. A sky encloses
+    // the world by definition and is not an object standing in it; neither are
+    // the bodies hanging in it, which are two hundred metres out and drawn
+    // without fog so they read as distance.
+    skyMesh.userData.phys = 'ambient';
     this.scene.add(skyMesh);
 
     // Low-horizon banded Gas Giant with edge-on rings
@@ -132,6 +143,7 @@ export class WorldScene {
     moonMesh.position.set(-65, 15, 20);
     giantGroup.add(moonMesh);
 
+    giantGroup.userData.phys = 'ambient';   // a planet, not a prop on the basin
     this.scene.add(giantGroup);
   }
 
@@ -172,34 +184,45 @@ export class WorldScene {
     }
     geo.computeVertexNormals();
 
-    // Procedural weathered grit texture
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 512;
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#6e543c";
-    ctx.fillRect(0, 0, 512, 512);
+    /*
+     * THE BASIN FLOOR.
+     *
+     * This used to be forty thousand random two-pixel squares on a brown
+     * rectangle, with no normal, no roughness and no occlusion — which meant
+     * the ground had no shape at all and every light fell on it flat.
+     *
+     * It is now a real wind-worked ripple field: asymmetric crests with a long
+     * windward slope and a short slip face, coarse pale sand stranded on the
+     * crests and fines in the troughs, lag gravel the wind could not lift, and
+     * albedo, normal, roughness and ambient occlusion all taken off the one
+     * height field so a ripple's shadow belongs to that ripple.
+     *
+     * The same two anti-repeat layers Tallow uses: grit below the tile, and a
+     * drift across the whole basin above it. Sixteen repeats over 240 m is a
+     * tile every fifteen metres, which is exactly the range the eye is best at
+     * spotting, so neither layer is optional.
+     */
+    const sand = desertSand({ size: texSize(512), seed: 9 });
+    const mat = buildMaterial(sand, { repeat: 16, roughness: 1.0, metalness: 0.0 });
+    mat.normalScale.set(1.25, 1.25);
+    mat.aoMapIntensity = 0.85;
 
-    for (let i = 0; i < 40000; i++) {
-      const x = Math.random() * 512;
-      const y = Math.random() * 512;
-      const lum = 40 + Math.random() * 45;
-      ctx.fillStyle = `rgb(${lum + 40}, ${lum + 20}, ${lum})`;
-      ctx.fillRect(x, y, 2, 2);
-    }
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(16, 16);
+    const gritHeight = heightField(texSize(256), (u, v) =>
+      0.5 + (fbm(u * 40, v * 40, { octaves: 4, period: 40, seed: 0x5c2 }) - 0.5) * 0.9
+    );
+    this.gritNormal = asDataTexture(heightToNormal(gritHeight, 1.4), 1);
+    addDetailNormal(mat, this.gritNormal, { scale: 8, strength: 0.38 });
 
-    const mat = new THREE.MeshStandardMaterial({
-      map: tex,
-      color: 0x8a6e4d,
-      roughness: 0.88,
-      metalness: 0.15
-    });
+    const macroHeight = heightField(texSize(256), (u, v) =>
+      fbm(u * 3, v * 3, { octaves: 5, period: 3, seed: 0x811 })
+    );
+    this.macroMap = asDataTexture(macroHeight, 1);
+    this.macroMap.wrapS = this.macroMap.wrapT = THREE.ClampToEdgeWrapping;
+    addMacroVariation(mat, this.macroMap, { strength: 0.12, roughShift: 0.1 });
 
+    enableAO(geo);
     this.terrainMesh = new THREE.Mesh(geo, mat);
+    this.terrainMesh.userData.phys = 'ground';   // everything is bedded into it
     this.terrainMesh.receiveShadow = true;
     this.scene.add(this.terrainMesh);
   }
@@ -324,20 +347,40 @@ export class WorldScene {
   }
 
   initPylons() {
-    const mastMat = new THREE.MeshStandardMaterial({
-      color: 0x3d3832,
-      roughness: 0.78,
-      metalness: 0.6
-    });
-    const ceramicMat = new THREE.MeshStandardMaterial({
-      color: 0x5c5348,
-      roughness: 0.85,
-      metalness: 0.2
-    });
+    /*
+     * A pylon is the object in this world the player walks up to twenty times,
+     * stands in front of, and studies. It is the one prop that has to survive
+     * being looked at from half a metre, so it is built like hardware: rolled
+     * and painted plate, a bolted base, a guyed mast, an insulator stack, a
+     * cable feed that goes somewhere, a service hatch with hinges, and a
+     * stencilled number. Everything below is something the real object needs
+     * in order to work.
+     */
+    const mastMat = buildMaterial(
+      platedMetal({
+        paint: '#4a423a', metal: '#6a6055', rust: '#7d4726',
+        // A pylon is walked up to and studied, so this one keeps full size.
+        panels: 2, seed: 17, weather: 0.72, size: texSize(512)
+      }),
+      { repeat: [2, 3], roughness: 1.0 }
+    );
+    mastMat.normalScale.set(1.3, 1.3);
+    mastMat.aoMapIntensity = 0.85;
+
+    // The crown is fired ceramic, not metal: matte, non-conductive, crazed.
+    const ceramicMat = buildMaterial(
+      sedimentaryRock({ warm: '#7a6f5f', cool: '#544c42', seed: 61, size: texSize(256) }),
+      { repeat: [3, 1], roughness: 1.0, metalness: 0.0 }
+    );
+    ceramicMat.normalScale.set(0.9, 0.9);
+
     const ironMat = new THREE.MeshStandardMaterial({
       color: 0x221f1c,
       roughness: 0.92,
       metalness: 0.4
+    });
+    const cableMat = new THREE.MeshStandardMaterial({
+      color: 0x1c1916, roughness: 0.96, metalness: 0.15
     });
 
     for (const site of this.data.sites) {
@@ -376,10 +419,112 @@ export class WorldScene {
       recess.position.set(0, 1.4, 0.35);
       pylonGroup.add(recess);
 
+      /* ---- the small parts ---- */
+
+      // Base plates, bolted through into the footings. A four-tonne mast does
+      // not simply rest on the sand, and showing how it is held down is most of
+      // what makes it read as heavy.
+      for (let a = 0; a < 3; a++) {
+        const angle = a * (Math.PI * 2 / 3);
+        const plate = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.05, 0.56), ironMat);
+        plate.position.set(Math.sin(angle) * 0.8, 0.31, Math.cos(angle) * 0.8);
+        plate.rotation.y = angle;
+        pylonGroup.add(plate);
+        const bolts = boltRing(0.19, 4, ironMat, { size: 0.035 });
+        bolts.position.set(Math.sin(angle) * 0.8, 0.35, Math.cos(angle) * 0.8);
+        pylonGroup.add(bolts);
+      }
+
+      // The ring of bolts holding the mast down onto its own base flange.
+      const baseFlange = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.62, 0.62, 0.09, 16), ironMat
+      );
+      baseFlange.position.y = 0.09;
+      pylonGroup.add(baseFlange);
+      const flangeBolts = boltRing(0.52, 10, ironMat, { size: 0.04 });
+      flangeBolts.position.y = 0.15;
+      pylonGroup.add(flangeBolts);
+
+      // Insulator stack under the crown: stacked ceramic sheds, the part that
+      // says this thing carries something it must not leak.
+      for (let i = 0; i < 4; i++) {
+        const shed = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.2 - i * 0.012, 0.23 - i * 0.012, 0.055, 12),
+          ceramicMat
+        );
+        shed.position.y = 3.72 + i * 0.09;
+        pylonGroup.add(shed);
+      }
+
+      // Service hatch on the mast, with hinges and a quarter-turn latch.
+      const hatch = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.42, 0.03), mastMat);
+      hatch.position.set(0, 0.95, 0.4);
+      pylonGroup.add(hatch);
+      for (const hy of [1.11, 0.79]) {
+        const hinge = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.018, 0.018, 0.09, 6), ironMat
+        );
+        hinge.rotation.z = Math.PI / 2;
+        hinge.position.set(-0.15, hy, 0.41);
+        pylonGroup.add(hinge);
+      }
+      const latch = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.09, 0.03), ironMat);
+      latch.position.set(0.12, 0.95, 0.43);
+      latch.rotation.z = 0.5;
+      pylonGroup.add(latch);
+
+      // The feed: armoured cable out of a gland at the foot, sagging away
+      // across the sand to the next pylon in the line. The gardens are a
+      // circuit, and a circuit that is never shown is only a claim.
+      const gland = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.07, 0.09, 0.16, 10), ironMat
+      );
+      gland.rotation.x = Math.PI / 2;
+      gland.position.set(0, 0.42, 0.44);
+      pylonGroup.add(gland);
+      const feed = cableRun([0, 0.42, 0.5], [0.15, 0.08, 2.4], cableMat,
+        { sag: 0.3, radius: 0.035, segments: 12 });
+      pylonGroup.add(feed);
+
+      // Guy wires out to three anchor stakes.
+      for (let a = 0; a < 3; a++) {
+        const angle = a * (Math.PI * 2 / 3) + 0.5;
+        const anchor = new THREE.Vector3(Math.sin(angle) * 2.6, 0.1, Math.cos(angle) * 2.6);
+        const top = new THREE.Vector3(Math.sin(angle) * 0.3, 3.3, Math.cos(angle) * 0.3);
+        const len = anchor.distanceTo(top);
+        const wire = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.012, 0.012, len, 4), ironMat
+        );
+        wire.position.copy(anchor.clone().add(top).multiplyScalar(0.5));
+        wire.quaternion.setFromUnitVectors(
+          new THREE.Vector3(0, 1, 0), top.clone().sub(anchor).normalize()
+        );
+        pylonGroup.add(wire);
+
+        const stake = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.08), ironMat);
+        stake.position.copy(anchor).setY(0.1);
+        pylonGroup.add(stake);
+      }
+
+      // The pylon's own number, stencilled on plate at eye level. `site.stage`
+      // is the pylon's position in the line, which is the number painted on it.
+      const tag = placard(String(site.stage).padStart(2, '0'), { w: 0.22, h: 0.16 });
+      tag.position.set(-0.22, 1.72, 0.385);
+      tag.rotation.y = 0.16;
+      pylonGroup.add(tag);
+
+      // Hazard striping round the base: the paint you walk into in the dark.
+      const stripe = hazardStripe(1.1, 0.16);
+      stripe.position.set(0, 0.22, 0.63);
+      pylonGroup.add(stripe);
+
       const lampGeo = new THREE.SphereGeometry(0.06, 8, 8);
       const lampMat = new THREE.MeshBasicMaterial({ color: 0x35200c }); // dormant
       const lamp = new THREE.Mesh(lampGeo, lampMat);
       lamp.position.set(0, 1.4, 0.44);
+      // Held out of the static bake: this is the one part of a pylon that
+      // changes, and a baked lamp could never be lit.
+      lamp.userData.noMerge = true;
       pylonGroup.add(lamp);
 
       const pylonLight = new THREE.PointLight(0xd99423, 0, 4);
@@ -393,6 +538,11 @@ export class WorldScene {
         lampMat,
         pylonLight
       };
+
+      // Bake the mast, the base, the guys, the hatch and every bolt into one
+      // mesh per material. Forty meshes become four, twenty times over, and the
+      // pylon the player walks up to is the same pylon it was.
+      mergeStatic(pylonGroup);
 
       this.pylonMeshes.push(pylonGroup);
       this.scene.add(pylonGroup);

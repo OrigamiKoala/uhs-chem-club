@@ -1,5 +1,22 @@
 /**
- * tools/verify-ship.mjs — Asserts ship graph invariants from 3d-conversion-prompts.md §3.2 & §4.3
+ * tools/verify-ship.mjs — The ship and Erebus, as graph and as geometry.
+ *
+ * Two halves. The first asserts the traversal graph invariants from
+ * 3d-conversion-prompts.md §3.2 & §4.3 — connectivity, the three-hop limit,
+ * hatch cones, spline bounds.
+ *
+ * The second builds the REAL `ShipInterior` and the REAL `WorldScene` in Node,
+ * behind a DOM shim, and measures every pair of separate objects in them.
+ * Nothing may occupy the same space as anything else: a locker standing in a
+ * doorway, a pipe run drawn through a frame gusset, a container stacked across
+ * a hatch. That is a claim about the world that is actually built, so it is
+ * checked against the world that is actually built rather than against a table
+ * kept beside it — a table drifts the first time somebody nudges a crate.
+ *
+ * Parts INSIDE one object are expected to interpenetrate: a gusset that merely
+ * touched the corner it braces would be holding nothing up. So the hull, the
+ * corridor services and each prop are each one object, and the check runs
+ * strictly between them.
  */
 
 import { SHIP_GRAPH } from '../src/three/ship-graph.js';
@@ -136,26 +153,20 @@ for (const [r, nKey] of Object.entries(SHIP_GRAPH.routeBinding)) {
 
 // 7. Holographic Projections — Open/Close/Toggle with [X] key invariants
 console.log('\nHolographic Projection Controls Invariant Check\n');
-globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
-globalThis.window = { location: { hash: '#/bridge' }, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => {} };
-const ctxMock = {
-  fillRect: () => {}, strokeRect: () => {}, fillText: () => {}, measureText: () => ({ width: 50 }),
-  beginPath: () => {}, moveTo: () => {}, lineTo: () => {}, stroke: () => {},
-  createLinearGradient: () => ({ addColorStop: () => {} }),
-  createRadialGradient: () => ({ addColorStop: () => {} }),
-  arc: () => {}, fill: () => {}, closePath: () => {},
-  getImageData: () => ({ data: new Uint8ClampedArray(512 * 512 * 4) }),
-  createImageData: (w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }),
-  putImageData: () => {}
-};
-globalThis.document = {
-  createElement: () => ({ getContext: () => ctxMock, width: 512, height: 512 }),
-  createElementNS: () => ({ setAttribute: () => {}, addEventListener: () => {} }),
-  activeElement: null
-};
+/*
+ * One DOM shim for the whole file.
+ *
+ * There used to be a hand-rolled context mock here with about a dozen of the
+ * canvas methods on it, which worked right up until a texture generator used a
+ * thirteenth. `tools/lib/dom-shim.mjs` is the single stand-in every verifier
+ * that has to BUILD something shares, so a new drawing call is handled once.
+ */
+const { installDomShim } = await import('./lib/dom-shim.mjs');
+installDomShim({ tier: 'T4' });
 
+const THREE = await import('three');
 const { ShipInterior } = await import('../src/three/ship.js');
-const ship = new ShipInterior({ add: () => {} });
+const ship = new ShipInterior(new THREE.Scene());
 
 // Bridge club hologram methods
 assert(typeof ship.openClubHolo === 'function', 'ShipInterior has openClubHolo');
@@ -188,6 +199,53 @@ ship.toggleStarmapHolo();
 assert(ship.isStarmapHoloVisible() === true, 'toggleStarmapHolo re-opens closed starmap hologram');
 ship.toggleStarmapHolo();
 assert(ship.isStarmapHoloVisible() === false, 'toggleStarmapHolo closes open starmap hologram');
+
+/* ============================================================== GEOMETRY */
+
+console.log('\nPhysical occupancy — nothing shares space with anything else\n');
+
+{
+  const { findOverlaps } = await import('./lib/overlap.mjs');
+  const worldModule = await import('../src/three/world.js');
+
+  const label = owner => owner.name || `${owner.type}#${owner.id}`;
+
+  /** Build one place and assert nothing in it is drawn through anything else. */
+  const measure = async (name, build) => {
+    let root = null;
+    try {
+      root = build(THREE);
+    } catch (err) {
+      assert(false, `${name}: builds without throwing (${err.message})`);
+      console.error(err.stack.split('\n').slice(0, 6).join('\n'));
+      return;
+    }
+
+    let meshes = 0;
+    root.traverse(o => { if (o.isMesh) meshes++; });
+    assert(meshes > 100, `${name}: builds — ${meshes} meshes`);
+
+    const hits = findOverlaps(root, { tolerance: 0.06, label });
+    const pairs = new Map();
+    for (const h of hits) {
+      const key = [h.a, h.b].sort().join(' <-> ');
+      if (!pairs.has(key) || pairs.get(key).depth < h.depth) pairs.set(key, h);
+    }
+    if (pairs.size) {
+      for (const [key, h] of pairs) {
+        console.error(`       ${h.depth.toFixed(2)}m  ${key}  at ${h.at.join(', ')}`);
+      }
+    }
+    assert(pairs.size === 0,
+      `${name}: every pair of separate objects is disjoint`);
+  };
+
+  // The ship built above, not a second one: the object under test is the one
+  // every other assertion in this file has already been made about.
+  await measure('the Avalon', () => ship.group);
+
+  await measure('Erebus', () => new worldModule.WorldScene(null).scene);
+}
 
 if (failed) {
   console.error('\nSHIP GRAPH VERIFY FAILED');

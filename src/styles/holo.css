@@ -1112,3 +1112,98 @@
 @media (max-height: 620px) {
   .stage-prompt-card { max-height: 58vh; }
 }
+
+/* ==========================================================================
+   THE CHAMBER CONSOLE (T4)
+   When the containment chamber is deployed at a pylon, the stage deck is moved
+   onto the operator's desk in the scene (`quest3d/console.js`). These rules
+   only re-size the moved regions to their plates; the markup, the copy and the
+   handlers are the same ones `quest.js` built.
+   ========================================================================== */
+
+/* With every region gone to the desk, the overlay has nothing left to hold
+   and must stop covering the chamber. */
+.quest-hud-diegetic { pointer-events: none; }
+.quest-hud-diegetic .quest-hud-top { display: none; }
+
+.quest-console-panel {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  overflow: hidden;
+  pointer-events: auto;
+  background:
+    linear-gradient(180deg, var(--plate-200), var(--plate-100) 62%, var(--plate-000));
+  border: 1px solid var(--border-durasteel);
+  border-top-color: var(--seam-light);
+  border-bottom-color: var(--seam-dark);
+  box-shadow:
+    inset 0 1px 0 var(--seam-light),
+    inset 0 -1px 0 var(--seam-dark),
+    inset 0 0 40px rgba(0, 0, 0, 0.5);
+  clip-path: polygon(
+    13px 0, 100% 0, 100% calc(100% - 13px),
+    calc(100% - 13px) 100%, 0 100%, 0 13px
+  );
+}
+
+.quest-console-panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0 2px,
+    rgba(0, 0, 0, 0.13) 2px 3px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
+
+.quest-console-panel > * { position: relative; z-index: 1; }
+
+/* The deck fills its plate: on the desk there is no page to scroll past it. */
+.quest-console-panel .stage-card-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.quest-console-panel .stage-prompt-card {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  max-height: none;
+  background: none;
+  border: none;
+  box-shadow: none;
+  clip-path: none;
+  padding: 0;
+}
+
+.quest-console-panel .quest-nav-cluster,
+.quest-console-panel .quest-gardens-slot,
+.quest-console-panel .colormap-legend {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.quest-console-panel .quest-nav-cluster { gap: 6px; }
+.quest-console-panel .stage-pill-track { flex-wrap: wrap; }
+
+.quest-console-panel ::-webkit-scrollbar { width: 7px; }
+.quest-console-panel ::-webkit-scrollbar-track { background: var(--plate-000); }
+.quest-console-panel ::-webkit-scrollbar-thumb {
+  background: var(--plate-400);
+  border: 1px solid var(--border-durasteel);
+}

@@ -32,11 +32,14 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   on screen (see "Chemical realism" below). `--verbose` prints atom positions at every step.
 - `npm run verify:media` — validates media manifest against assets and size budgets.
 - `npm run verify:flows` — end-to-end smoke test of the API a new student touches.
-- `npm run verify:ship` — asserts ship graph connectivity, 3-hop limit, hatch cones, and spline bounds.
+- `npm run verify:ship` — asserts ship graph connectivity, 3-hop limit, hatch cones, and
+  spline bounds, then **builds the Avalon and Erebus in Node** and asserts that nothing
+  in either occupies the same space as anything else.
 - `npm run verify:tallow` — asserts the Tallow ground: every prop footprint disjoint
   (no two objects share space), sites clear of props, the sub-level excavation walkable,
   every charted Unit 1 quest sited, T4 decoration removable without stranding a site,
-  and no withheld vocabulary in a place name.
+  and no withheld vocabulary in a place name. It also **builds the real world in Node**
+  behind `tools/lib/dom-shim.mjs` and measures every pair of objects in it.
 - `npm run deploy:backend` — `clasp push` of `apps-script/`.
 - `npm run bake:stills` — regenerate the static SVG backdrops in `public/fallback/`.
 - `npm run bake:video` — encode raw MP4 clips in `assets-src/video/` to web-ready WebM, MP4, posters and audio.
@@ -237,9 +240,26 @@ into grinding and would punish the students it exists to help.
   hands-on observations directly to chemistry rather than waiting for an end-of-quest lecture.
   In `scope.js`, single-unit samples (`total <= 1`) are centered at `[0, 0]` so high-magnification targets
   remain visible in the aperture.
-- **The benches in 3D** — at T4 the two Unit 1 instruments are built rather than drawn.
-  `engine/instruments.js` is the dispatcher every quest imports: it hands back the canvas
-  instrument at T3 and below and the 3D one at T4, and the two expose the *same API*, take
+- **The power control is a knob** (`engine/dial.js`). A magnification setting is a thing you
+  turn, so the scope carries a milled cap with an engraved index and detents cut round its
+  collar, over a 270 deg sweep, and not a minus key with a number beside a plus key. It turns
+  three ways — drag it round (pointer capture), focus it and use the arrows / Home / End, or
+  roll the wheel on it — because a bench control that answers only to a drag is unusable on a
+  trackpad and invisible to a keyboard. `dialMarkup` / `bindDial` / `paintDial` know nothing
+  about magnification; they report an integer in a range.
+- **A built bench and a drawn one are different claims, not different tiers.** An instrument
+  whose parts are real positions in space is built at T4: that is the core bench, a rig with
+  a specimen mounted in it, a beam through it and rings at fixed radii. An instrument that is
+  a *picture* of something too small to stand next to stays a screen on **every** tier: that
+  is the sampler scope. Built in 3D a microscope reads as the sample inflating — pieces
+  swelling to the size of your head as the dial comes up — which is not what a scope does and
+  not what matter does, and a student who notices is right. `BUILT_BENCHES` in
+  `engine/instruments.js` names the quests in the first camp (`q2-core` alone today);
+  `benchIsBuilt(questId)` is what `screens/learn-quest.js` asks to decide whether the frame is
+  bolted to a bench or drawn as a page over the flat. `SampleScope3D` is kept whole and
+  exported for the day a sample is something you can sensibly walk around.
+- **The benches in 3D** — `engine/instruments.js` is the dispatcher every quest imports: it
+  hands back the canvas instrument or the built one, and the two expose the *same API*, take
   the same declarations and plan every tool through the same pure functions, so a stage that
   grades correct on one grades correct on the other. Those planners live in the canvas
   engines and are the single implementation: `planSettle`, `planCut` and `PIECE_TO_SPREAD`
@@ -253,9 +273,16 @@ into grinding and would punish the students it exists to help.
   and `main.js` registers one — because a quest module must stay loadable in plain Node for
   `verify:learn`, and importing the stage would drag three.js and two worlds' JSON in with it.
   **Both quest modules changed by exactly one import line and not one character of copy.**
+  A **drawn** bench brings a page, not a scene, so nothing else would stand the walk down:
+  `learn-quest.js` calls `stage.setWalkSuspended(true)` for it (released on dispose), or W
+  would step the player off the bench and an arrow key aimed at the power dial would also be
+  a step backwards. The page carries `.learn-quest-overworld`, a flat scrim over the live
+  flat — no backdrop blur, because blurring a full-screen WebGL frame is the most expensive
+  thing this app could ask a handset for.
 - **Screens** — `learn.js` (the road), `learn-world.js` (one world's quests, or the walk HUD
   when the world is built as a place), `learn-quest.js` (the host frame). Styling in `src/styles/learn.css` (`.lq-*` for the
-  quest bench, `.scope-*` for the instrument, `.lq-choice-row`, `.lq-tally`); phone rules under `.m-learn`,
+  quest bench, `.scope-*` for the instrument, `.lq-knob*` for the power dial, `.lq-choice-row`,
+  `.lq-tally`); phone rules under `.m-learn`,
   `.m-learn-world`, `.m-learn-quest` in `mobile-screens.css`.
 - **Endpoints** — `learn/progress`, `learn/stage`, `learn/complete`. None returns an XP
   field; `learn/complete` is idempotent. Rows ride along on `bootstrap` and `player/me` as
@@ -345,6 +372,127 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
   registry that says which worlds are walkable and is the only file a second one needs.
   `minTier: "T4"` landmarks are decoration: `verify:tallow` simulates removing every one of
   them and asserts every site is still reachable.
+
+### Surfaces, small parts and the draw-call budget (`materials/pbr-kit.js`)
+
+One toolkit builds every surface and every small part in all three places, so a
+bolt on the ship is the same bolt as a bolt on the flat, ground down by a
+different amount of weather.
+
+- **A surface is convincing when its maps AGREE.** Albedo, normal, roughness and
+  ambient occlusion all come off the same height field in every generator:
+  `platedMetal`, `saltHardpan`, `desertSand`, `treadPlate`, `sedimentaryRock`.
+  A scratch is lighter *because* it is raised, less rough *because* it is
+  scoured, unoccluded *because* it stands proud. Draw those four independently
+  and the eye reads plastic no matter how many octaves went in.
+- **`platedMetal` builds a plate the way the object acquired it** — rolled steel,
+  a pressed panel grid, rivet lines, paint, paint worn off the high edges, rust
+  blooming out of the bare metal and streaking downward. `weather` 0…1 is most
+  of the difference between the ship (0.34, in service) and Tallow (0.92).
+- **All noise tiles.** Value noise and Worley run on a wrapped lattice with an
+  explicit period, so nothing seams.
+- **Two layers kill the repeat.** `addDetailNormal` adds grit far below the tile
+  (what a player sees at their feet); `addMacroVariation` adds a drift across the
+  whole mesh with no repeat at all. A 240 m ground plane needs both.
+- **`aoMap` samples the SECOND uv set.** A generated occlusion map does nothing
+  until the mesh is told to reuse its own UVs, so both worlds and the ship run
+  one `enableAmbientOcclusion()` pass rather than remembering at every call site.
+- **`mapsFromAlbedo` / `dressMaterialFromAlbedo`** derive maps from painted art.
+  `/art/durasteel_plate.jpg` is the authority for the ship and it stays; height
+  is a HIGH-PASS of luminance, so a bolt head becomes a bump while a darker panel
+  does not become a pit. It previously had an unrelated procedural normal beside
+  it, and the light contradicted the picture.
+- **`mergeStatic` bakes a prop into one mesh per material.** Detail costs draw
+  calls: a dressed pylon is forty meshes and there are twenty of them. Anything
+  that must stay addressable — a lamp that lights, a sock that turns, a cabinet
+  that cases up — sets `userData.noMerge`, which protects its whole subtree.
+  `mergeStatic` records each part's box in `userData.partBoxes` so the physics
+  check stays as precise as it was on the unbaked prop.
+
+### Nothing occupies the same space as anything else
+
+The rule is checked against the world that is **actually built**, not against a
+table kept beside it — a table drifts the first time somebody nudges a crate.
+
+`tools/lib/dom-shim.mjs` is enough of a browser for a world to be constructed in
+Node; `tools/lib/overlap.mjs` walks the scene and measures every pair of separate
+objects. `verify:tallow` runs it on Tallow, `verify:ship` on the Avalon and
+Erebus.
+
+- Parts **inside** one object are exempt: a gusset that merely touched the corner
+  it braces would be holding nothing. So the hull, the corridor services and each
+  prop are each one object, and the test runs strictly between them.
+- `phys: 'ground'` (terrain, evaporation pans, landing aprons) and
+  `phys: 'ambient'` (sky dome, horizon mesas, celestial bodies) are exempt by
+  kind, as are transparent decals — a stain is a mark on a surface, not a body.
+- Tolerance is 0.06 m, because a bounding box is a loose fit around a rotated or
+  round body.
+- **Elevated structures collide as their supports.** A pipe bridge and a conveyor
+  are their piers and legs; you walk under the span. `supportPoints` in
+  `tallow.js` is where that lives.
+- What it found on its first run, all now fixed: a pipe bridge through a drum
+  line, a conveyor through a pipe bridge, a container stacked across a hatch, a
+  cable raceway through every deckhead frame, a tactical table skirt inside a
+  doorway, a crate inside a lean-to post — and a missing import that would have
+  crashed Tallow outright.
+- **Doorways are drawn where the deck is free.** `buildDoorways` runs last, after
+  every room has registered its furniture, draws ONE frame per unordered graph
+  edge at the midpoint of the two compartments, and walks along that line to the
+  first clear spot. `hatchPos` is untouched: the traversal graph and its view
+  cones are a separate thing from where the plate is welded.
+
+### The interface is in the world (`three/world-ui.js`, T4)
+
+At T4 a quest's prompt, readout, hint ladder and Commit key are not a card over
+the render — they are screens bolted to the bench the player is standing at.
+
+- **The DOM is moved, never rebuilt.** A `CSS3DObject` carries the real element,
+  with the real handlers and the real stylesheet, onto a plane in the scene.
+  Rasterising a quest's HTML into a texture would mean re-implementing its
+  layout, and re-implemented layout is how copy quietly changes. **Not one
+  player-facing string differs between the two presentations, by construction.**
+- Every panel gets a WebGL housing built strictly **around** the screen
+  rectangle — back plate, bezel, standoffs, bolts, a stencilled designator, a dim
+  filament that spills onto the bench. The CSS layer composites above WebGL, so
+  an overlapping bezel would simply vanish.
+- That compositing also means a panel is not occluded by geometry in front of it,
+  so panels are only ever raised while the player is docked at the station that
+  owns them.
+- `LearnFrame.deployPanels()` re-homes `.lq-deck`, `.lq-rail` + `.lq-stage-head`
+  and `.lq-controls` onto a gantry standing on the bench, and relocates
+  `#modal-container` whole into a comms head above it — so `showModal`'s focus
+  handling and Escape key are untouched, and briefings, findings and the debrief
+  arrive on a screen instead of in a dialog. Off a walkable world it returns
+  immediately and the frame is the page it has always been.
+- `quest3d/console.js` does the same for the Charge Gardens, onto the operator's
+  desk. That console is parented to the CAMERA, because the chamber's controls
+  orbit the sample: bolting the desk to the room would swing it out of sight
+  every time the player did the thing the stage is asking for. The fiction is
+  the true one — the operator stands at a fixed station and the containment
+  field turns the sample in front of them.
+- Styling lives under `.lq-world-panel` in `learn.css` and `.quest-console-panel`
+  in `holo.css`. Both are additive; T3 and below never load a different frame.
+
+### A Learn instrument deploys onto the bench that is already there
+
+`BenchViewer3D` takes an optional `world` frame (scene, camera, position,
+rotationY, topY). With it, the stations are laid on the plate that stands on
+Tallow, the stage camera docks in front of it, and the salt flat keeps running
+behind — dust drifts, lamps flicker, the sock turns. Without it the bench builds
+its own little room exactly as before.
+
+- **The instrument's local frame is identical either way.** Only the transform on
+  `this.root` differs, so every station coordinate and every hit test is written
+  once and cannot drift between the two.
+- **The bench is not built twice.** What stands on the plate when nobody is
+  working is the instrument, cased up (`dormant`); pressing `[E]` hides the case
+  and deploys the stations in its place. One object, two states.
+- The deployment frame travels through `bench-host.js` (`setBenchSite`,
+  `benchDeployment`) so quest modules never learn any of this happened, and
+  `verify:learn` can still import them in plain Node.
+- Both benches are 4.8 m long because a four-station instrument needs them to be;
+  the lab's beam column and equipment rack moved outboard to make room, and the
+  bench colliders are boxes rather than a single radius.
 
 ## Rules that keep the game fair
 - **A guild's score is a mean, never a sum.** `Scoring.getLeaderboards` computes
@@ -669,8 +817,8 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   `update()` consumes exactly as it consumes W/A/S/D and mouse delta, so collision,
   terrain and interaction prompts know no difference; deflection is analogue (half push,
   half speed) and the rim sprints. `fpsControls.touchMode` stands the mouse path down
-  entirely — there is no pointer lock on a phone, and the synthetic mouse events a
-  browser fires after a tap would read as a look drag and snap the camera. `showPrompt`
+  entirely, because the synthetic mouse events a browser fires after a tap would read as a
+  look drag and snap the camera. `showPrompt`
   rewrites `[E]` to `[USE]` in that mode. `stage.syncTouchControls` raises and lowers
   the layer on a 200 ms throttle; an in-world terminal, a deployed chamber, a cinematic,
   a `.screen-container` or a live modal takes the sticks away, and a push held through
@@ -743,8 +891,20 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   router keeps the world scene across both routes (`isWalkableLearnRoute`), so stepping
   in and out of a bench never passes through the ship, and the last site is remembered so
   leaving a bench puts the player back in front of it rather than at the pad.
-- T4 World Quest Deployment: In T4, `#/quest` enters the 3D Erebus world (`stage.enterWorldScene()`). The camera is dynamically reparented to `worldScene.scene` (and returned to `shipScene` upon exit) so Three.js continuously updates `camera.matrixWorld` without freeze, spawning above ground level (`groundY + eyeHeight`) facing Pylon 1 with active FPS navigation. The chemistry chamber deploys as an in-world instrument only when the player interacts with an active pylon, suspending FPS controls and releasing pointer lock so the 2D cursor and curved-arrow interaction operate cleanly, lighting its amber indicator in 3D upon clearance and returning cleanly to 3D terrain walking. Full-screen wrappers (`.app-viewport`, `.quest-hud-overlay`, `.quest-screen-flash`) strictly maintain `pointer-events: none` so molecule clicks and right-drag rotation reach the WebGL canvas, while cards (`.stage-prompt-card`, `.stage-dock-bar`, `.quest-nav-cluster`) claim `pointer-events: auto`.
-- First-person controls: `src/three/fps-controls.js` provides unconstrained WASD + sprint (Shift) + Spacebar jump + mouse look navigation with sliding physics collision, penetration push-out resolution (`resolveBoxCollisions`), player radius of 0.25, terrain height clamping on Erebus, and contextual `[E]` interaction prompts at ship terminals and pylons. Movement is active in world exploration and gated behind active session authentication aboard ship; pointer lock automatically suspends in quest overlays and puzzle chamber views, and clicks on `.cinematic-overlay`, `.modal-container`, and HUD elements are excluded from pointer lock capture.
+- T4 World Quest Deployment: In T4, `#/quest` enters the 3D Erebus world (`stage.enterWorldScene()`). The camera is dynamically reparented to `worldScene.scene` (and returned to `shipScene` upon exit) so Three.js continuously updates `camera.matrixWorld` without freeze, spawning above ground level (`groundY + eyeHeight`) facing Pylon 1 with active FPS navigation. The chemistry chamber deploys as an in-world instrument only when the player interacts with an active pylon, suspending FPS controls so the cursor and curved-arrow interaction operate cleanly, lighting its amber indicator in 3D upon clearance and returning cleanly to 3D terrain walking. Full-screen wrappers (`.app-viewport`, `.quest-hud-overlay`, `.quest-screen-flash`) strictly maintain `pointer-events: none` so molecule clicks and right-drag rotation reach the WebGL canvas, while cards (`.stage-prompt-card`, `.stage-dock-bar`, `.quest-nav-cluster`) claim `pointer-events: auto`.
+- **The cursor is never captured.** Avalon is a teaching portal whose instruments are
+  clicked — crates, bins, holo badges, a power dial — not an immersive shooter, and a pointer
+  that disappears on the first click takes the very thing the player was pressing with it.
+  `FpsControls.requestPointerLock` is therefore a **documented no-op**, not a missing call;
+  looking around is left-click-and-drag on the view, everywhere, on every route. A caller who
+  "just needs lock for this one case" reintroduces the trap. Two guards keep the walk out of
+  the interface: `onMouseDown` ignores a press that landed on `.screen-container`, `.lq`,
+  `.lq-world-panel`, a modal, a terminal or the HUD, and `onKeyDown` ignores a key aimed at a
+  focused control inside any of those — without it an arrow key turning the scope's dial also
+  walks the player off the bench. `stage.setWalkSuspended(on)` stands the walk down for an
+  instrument that has no scene of its own (`FpsControls.releaseKeys` drops anything held, so a
+  key that was down when the controls were disabled cannot come back latched).
+- First-person controls: `src/three/fps-controls.js` provides unconstrained WASD + sprint (Shift) + Spacebar jump + drag-look navigation with sliding physics collision, penetration push-out resolution (`resolveBoxCollisions`), player radius of 0.25, terrain height clamping on Erebus, and contextual `[E]` interaction prompts at ship terminals and pylons. Movement is active in world exploration and gated behind active session authentication aboard ship; it suspends in quest overlays and puzzle chamber views, and clicks on `.cinematic-overlay`, `.modal-container`, and HUD elements never start a look drag.
 - Planetary transit cinematics: Launch and atmospheric descent cinematics (`launch`, `erebus_descent`) trigger on transit to Sector 01 from the Star Map, Bridge, and Airlock without persistent one-time lockout, and are skippable via Click/Space/Esc. FPS controls are disabled during cinematic playback to prevent input leakage into the background world.
 - Hero/prop shapes: `tools/hunyuan3d-shape-t4.ipynb` batches concept PNG/JPG images via Hunyuan3D 2.1 shape-only pipeline into `/kaggle/working/raw/*.glb` on NVIDIA T4; texturing is handled in Blender.
 - Nano Banana PBR textures: procedural canvas PBR pipeline in `src/three/materials/textures.js` generating albedo, tangent-space normal maps, roughness, phosphor cathode distortion vignettes, and custom station screens (`createDurasteelTexture`, `createDurasteelNormalTexture`, `createBlastDoorTexture`, `createRackPanelTexture`, `createFootlockerTexture`, `createContainerStencilTexture`, `createKeyboardTexture`, `createDialGaugeTexture`, `createVacuumTubeTexture`, `createCrtScreenTexture`) coupled with Three.js `MeshStandardMaterial`.

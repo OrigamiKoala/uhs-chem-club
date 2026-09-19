@@ -18,6 +18,7 @@ import { session } from "../session.js";
 import { ShipLightPool } from "./ship-lighting.js";
 import { soundscape } from "../audio/soundscape.js";
 import { gameMode } from "../game-mode.js";
+import { worldUI } from "./world-ui.js";
 
 /**
  * Tone-mapping exposure per place.
@@ -709,6 +710,62 @@ class Stage {
     }
   }
 
+  /**
+   * Where a Learn quest's bench physically is, for the instrument that is about
+   * to be deployed onto it. Null unless the player is standing on a world that
+   * is built as a place and that bench is one of its sites.
+   *
+   * The world owns the answer — `registerBenchAnchor` recorded it when the bench
+   * was built — so moving a bench moves the instrument with it and there is no
+   * second copy of the coordinates to fall out of step.
+   */
+  benchDeployment(questId) {
+    if (!this.tallowWorld || this.activeWorld !== this.tallowWorld) return null;
+    const anchor = this.tallowWorld.benchAnchor(questId);
+    if (!anchor || !this.camera) return null;
+    this._deployedQuestId = questId;
+    this.tallowWorld.setBenchDeployed(questId, true);
+    return {
+      scene: this.tallowWorld.scene,
+      camera: this.camera,
+      position: anchor.position,
+      rotationY: anchor.rotationY,
+      topY: anchor.topY
+    };
+  }
+
+  /** Case the worked bench back up once the player steps away from it. */
+  releaseBenchDeployment() {
+    if (this._deployedQuestId && this.tallowWorld) {
+      this.tallowWorld.setBenchDeployed(this._deployedQuestId, false);
+    }
+    this._deployedQuestId = null;
+  }
+
+  /**
+   * Stand the walk down while the player is working an instrument that is NOT
+   * a scene of its own.
+   *
+   * `setQuestScene` covers the built benches and the containment chamber: they
+   * bring a viewer, so there is something to hand the renderer. A drawn
+   * instrument — the sampler scope — brings a page instead, and without this the
+   * player would still be walking Tallow behind it: W would step off the bench,
+   * and an arrow key aimed at a dial would also be aimed at the ground.
+   *
+   * @param {boolean} on
+   */
+  setWalkSuspended(on) {
+    this._walkSuspended = Boolean(on);
+    if (!this.fpsControls) return;
+    this.fpsControls.hidePrompt();
+    if (on) {
+      this.fpsControls.releaseKeys?.();
+      this.fpsControls.enabled = false;
+    } else if (this.mode !== "quest") {
+      this.fpsControls.enabled = true;
+    }
+  }
+
   setQuestScene(questViewer) {
     if (this.activeQuestViewer && this.activeQuestViewer !== questViewer) {
       this.activeQuestViewer.dispose();
@@ -732,6 +789,7 @@ class Stage {
       this.activeQuestViewer.dispose();
       this.activeQuestViewer = null;
     }
+    this.releaseBenchDeployment();
     this.activeQuestScene = null;
     this.mode = "world";
     if (this.fpsControls) {
@@ -755,7 +813,16 @@ class Stage {
 
     if (this.mode === "quest" && this.activeQuestViewer) {
       this.activeQuestViewer.update(delta, time);
+      // An instrument deployed on a world the player walked to is standing IN
+      // that world: its dust still drifts, its lamps still flicker and its sock
+      // still turns while the player works. Without this the flat would freeze
+      // solid the moment a bench was opened.
+      if (this.activeQuestViewer.inWorld && this.activeWorld) {
+        this.activeWorld.update(delta, this.camera.position);
+      }
       this.renderer.render(this.activeQuestScene, this.activeQuestViewer.camera);
+      worldUI.render(this.activeQuestScene, this.activeQuestViewer.camera);
+      return;
     } else if (this.mode === "world" && this.activeWorld === this.tallowWorld && this.tallowWorld) {
       if (this.fpsControls) {
         this.fpsControls.enabled = true;
@@ -778,6 +845,7 @@ class Stage {
       this.tallowWorld.update(delta, this.camera.position);
       this.camera.updateMatrixWorld(true);
       this.renderer.render(this.tallowWorld.scene, this.camera);
+      worldUI.render(this.tallowWorld.scene, this.camera);
     } else if (this.mode === "world" && this.worldScene) {
       if (this.fpsControls) {
         this.fpsControls.enabled = true;
@@ -793,6 +861,7 @@ class Stage {
       this.worldScene.update(delta, this.camera.position);
       this.camera.updateMatrixWorld(true);
       this.renderer.render(this.worldScene.scene, this.camera);
+      worldUI.render(this.worldScene.scene, this.camera);
     } else {
       // Ship Mode
       const canMove = Boolean(session.token && session.player);
@@ -831,6 +900,7 @@ class Stage {
       if (this.shipInterior) this.shipInterior.update(delta, time);
       if (this.starfield) this.starfield.rotation.y += delta * 0.002;
       this.renderer.render(this.shipScene, this.camera);
+      worldUI.render(this.shipScene, this.camera);
     }
   }
 }

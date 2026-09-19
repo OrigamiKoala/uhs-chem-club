@@ -21,8 +21,48 @@ import { showModal, closeModal } from '../../ui/modal.js';
 import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
 import { createTransmissionElement } from '../../ui/transmission.js';
+import { benchDeployment } from './bench-host.js';
+import {
+  PanelRig, createBenchAnchor, createPanelGantry, disposeGantry
+} from '../../three/world-ui.js';
 
 const RUNG2_AFTER_MS = 45000;
+
+/**
+ * Where each region of the frame is bolted, in the bench's own local frame.
+ *
+ * Read these against the station layout in `bench3d.js`: stations run along
+ * x at 0.92 m centres with their trays at z = 0, so every screen here sits
+ * behind them (z negative) and above them (y above 1.1), cantilevered off the
+ * gantry. Nothing overlaps the working surface, and no two panels overlap each
+ * other — the same physics the props on the flat are held to.
+ *
+ * `px` is the authored CSS size. Dividing by PX_PER_M (760) gives the physical
+ * size, so the deck below is a 0.74 x 0.95 m console screen: big enough to read
+ * standing at the bench, small enough to belong to it.
+ */
+const PANEL_LAYOUT = {
+  deck: {
+    widthPx: 560, heightPx: 720,
+    position: [-0.94, 1.54, -0.68], rotation: [0, 0.40, 0], tilt: -0.07,
+    designator: 'RDT-01'
+  },
+  rail: {
+    widthPx: 460, heightPx: 250,
+    position: [0.94, 1.83, -0.68], rotation: [0, -0.40, 0], tilt: -0.05,
+    designator: 'STG-02'
+  },
+  controls: {
+    widthPx: 460, heightPx: 330,
+    position: [0.94, 1.36, -0.63], rotation: [0, -0.40, 0], tilt: -0.20,
+    designator: 'TOOL-03'
+  },
+  comms: {
+    widthPx: 700, heightPx: 500,
+    position: [0, 1.74, -0.44], rotation: [0, 0, 0], tilt: -0.06,
+    designator: 'CMS-00'
+  }
+};
 
 export class LearnFrame {
   /**
@@ -126,6 +166,125 @@ export class LearnFrame {
       if (lamp && this.opts.onJump) this.opts.onJump(Number(lamp.dataset.lamp));
     };
     this.container.addEventListener('click', this.onClick);
+
+    this.deployPanels();
+  }
+
+  /* ---------------- diegesis ---------------- */
+
+  /**
+   * Bolt the frame to the bench, when the player is standing at one.
+   *
+   * NOTHING IS REBUILT HERE. The markup above is already correct, already
+   * styled and already wired; this moves the finished nodes onto screens that
+   * are physically present in the world and leaves every string, every class and
+   * every handler exactly as it was. That is the whole reason the frame can be
+   * diegetic without a single word of copy being retyped.
+   *
+   * Off a walkable world — T3 and below, and the verifier — `benchDeployment()`
+   * is null, this returns immediately, and the frame is the page it has always
+   * been.
+   */
+  deployPanels() {
+    let deployment = null;
+    try {
+      deployment = benchDeployment();
+    } catch (err) {
+      deployment = null;
+    }
+    if (!deployment || !deployment.scene) return;
+
+    const q = sel => this.container.querySelector(sel);
+    const root = q('.lq');
+    if (!root) return;
+
+    this.anchor = createBenchAnchor(deployment);
+    deployment.scene.add(this.anchor);
+
+    this.gantry = createPanelGantry();
+    this.anchor.add(this.gantry);
+
+    this.rig = new PanelRig(deployment.scene, this.anchor);
+    this.panelWrappers = [];
+
+    /**
+     * Move a set of live nodes onto one screen. The wrapper carries the same
+     * click handler the container carries, because a node that has left the
+     * container has left that listener behind with it.
+     */
+    const mount = (id, nodes, extraClass = '') => {
+      const wrap = document.createElement('div');
+      wrap.className = `lq-world-panel lq-world-${id} ${extraClass}`.trim();
+      for (const n of nodes) if (n) wrap.appendChild(n);
+      wrap.addEventListener('click', this.onClick);
+      this.panelWrappers.push(wrap);
+      return this.rig.add(id, wrap, PANEL_LAYOUT[id]);
+    };
+
+    mount('deck', [q('.lq-deck')]);
+    mount('rail', [q('.lq-stage-head'), q('.lq-rail')]);
+    mount('controls', [q('.lq-controls')]);
+
+    // The comms head: a transmission and a findings card are messages arriving
+    // at the bench, so they land on their own screen above it rather than in a
+    // dialog over the world. `#modal-container` is relocated whole, so focus
+    // handling, Escape-to-dismiss and every caller of showModal are untouched.
+    const modal = document.getElementById('modal-container');
+    if (modal) {
+      this.modalHome = modal.parentNode;
+      this.modalNextSibling = modal.nextSibling;
+      this.commsPanel = mount('comms', [modal], 'lq-world-comms');
+      this.commsPanel.setVisible(false);
+      // The head is only lit while there is something on it. A blank screen
+      // hanging over the bench would be a prop with nothing to say.
+      this.commsObserver = new MutationObserver(() => this.syncComms());
+      this.commsObserver.observe(modal, { attributes: true, attributeFilter: ['class'] });
+    }
+
+    // The page shell keeps the instrument host and nothing else: with the deck,
+    // the rail and the controls gone to the bench, what is left would otherwise
+    // draw an empty card over the world.
+    root.classList.add('lq-diegetic');
+    this.diegetic = true;
+  }
+
+  /** Raise the comms head exactly while a message is on it. */
+  syncComms() {
+    if (!this.commsPanel) return;
+    const modal = document.getElementById('modal-container');
+    const open = Boolean(modal && !modal.classList.contains('hidden'));
+    this.commsPanel.setVisible(open);
+  }
+
+  /** Put the relocated nodes back where the page expects them. */
+  retirePanels() {
+    if (!this.diegetic) return;
+    this.commsObserver?.disconnect();
+    this.commsObserver = null;
+
+    const modal = document.getElementById('modal-container');
+    if (modal && this.modalHome) {
+      // Returned before the rig is torn down, or disposing the comms panel
+      // would take the application's only modal host down with it.
+      this.modalHome.insertBefore(modal, this.modalNextSibling || null);
+      modal.style.cssText = '';
+    }
+    this.modalHome = null;
+    this.commsPanel = null;
+
+    this.rig?.dispose();
+    this.rig = null;
+    if (this.gantry) {
+      this.anchor?.remove(this.gantry);
+      disposeGantry(this.gantry);
+      this.gantry = null;
+    }
+    if (this.anchor) {
+      this.anchor.parent?.remove(this.anchor);
+      this.anchor = null;
+    }
+    this.panelWrappers = [];
+    this.diegetic = false;
   }
 
   /** The element the quest's instrument renders into. */
@@ -455,6 +614,7 @@ export class LearnFrame {
     }
     this.container.removeEventListener('click', this.onClick);
     closeModal();
+    this.retirePanels();
     this.container.innerHTML = '';
   }
 }

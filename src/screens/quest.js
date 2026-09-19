@@ -8,6 +8,7 @@ import { session, levelTitle } from '../session.js';
 import { stage } from '../three/stage.js';
 import { tierManager } from '../three/tier.js';
 import { QuestViewer } from '../quest3d/viewer.js';
+import { mountQuestConsole } from '../quest3d/console.js';
 import { MOLECULE_DATA } from '../quest3d/molecule.js';
 import { renderFallbackInputs } from '../fallback2d/stages.js';
 import { showToast } from '../ui/toast.js';
@@ -234,6 +235,15 @@ export function renderQuest(container) {
   // solution rung. Display only — it pays no XP, so the once-per-stage flat XP
   // rule is untouched.
   let cleanStreak = 0;
+  // The deck, once it has been moved onto the chamber's own desk. Torn down
+  // before every re-render, because the nodes it is holding are the very nodes
+  // the next render is about to rebuild.
+  let questConsole = null;
+  const retireConsole = () => {
+    if (!questConsole) return;
+    try { questConsole.dispose(); } catch (err) { console.error('Console teardown failed:', err); }
+    questConsole = null;
+  };
 
   // Initialize 3D Quest Scene unless on Tier 1
   const isT4 = tierManager.currentTier === 'T4';
@@ -313,6 +323,7 @@ export function renderQuest(container) {
       activeTransmission.destroy();
       activeTransmission = null;
     }
+    retireConsole();
     stage.exitQuestScene();
     renderErebusHUD();
   }
@@ -333,6 +344,10 @@ export function renderQuest(container) {
   const cleanupPylon = () => {
     window.removeEventListener('pylon:interact', onPylonInteract);
     window.removeEventListener('hashchange', cleanupPylon);
+    // Navigating away from the chamber has to put the deck's nodes back in the
+    // page before the router empties it, or the next screen inherits a set of
+    // orphaned panels standing in a scene nobody is rendering.
+    retireConsole();
   };
   window.addEventListener('hashchange', cleanupPylon);
 
@@ -349,6 +364,7 @@ export function renderQuest(container) {
       activeTransmission.destroy();
       activeTransmission = null;
     }
+    retireConsole();
     isAdvancing = false;
     isGrading = false;
     let stageCompleted = false;
@@ -565,6 +581,11 @@ export function renderQuest(container) {
     container.querySelector('#stage-info-btn')?.addEventListener('click', () => {
       showStageModal(cfg, currentStageIdx, isReplay, stageXp);
     });
+
+    // The deck goes onto the desk once every handler above is attached. Moving
+    // a node does not detach its listeners, so this is safe at any point after
+    // the markup exists — it is done here so nothing below has to know.
+    questConsole = mountQuestConsole(container, viewer);
 
     const dockBar = container.querySelector('#stage-dock-bar');
     const closeBtn = container.querySelector('#stage-card-close-btn');
@@ -1088,6 +1109,7 @@ export function renderQuest(container) {
     const go = (hash) => {
       if (debriefTransmission?.destroy) debriefTransmission.destroy();
       closeModal();
+      retireConsole();
       stage.exitQuestScene();
       window.location.hash = hash;
     };

@@ -1,13 +1,19 @@
 /**
- * fps-controls.js — First-Person WASD + Mouse Look controller with sliding physics collision
- * Handles pointer lock, drag-look fallback, smooth kinematic movement,
- * AABB and radial cylinder collision sliding, terrain clamping, and [E] interaction.
+ * fps-controls.js — First-Person WASD + drag-look controller with sliding physics collision
+ * Handles drag-look, smooth kinematic movement, AABB and radial cylinder
+ * collision sliding, terrain clamping, and [E] interaction.
+ *
+ * THE CURSOR IS NEVER CAPTURED. Looking around is left-click-and-drag on the
+ * view, and the pointer stays where the player put it — Avalon is a teaching
+ * portal with clickable instruments in the world, not an immersive shooter, and
+ * a cursor that disappears on the first click takes the crate, the bin or the
+ * holo badge with it. `requestPointerLock` is kept as a documented no-op so a
+ * future caller finds the reason rather than the gap.
  *
  * On a touch device the same rig is driven by the twin sticks in
  * `touch-controls.js` through `analogMove` / `analogLook`. `touchMode` stands
- * the mouse path down entirely: pointer lock does not exist on a phone, and the
- * synthetic mouse events a browser fires after a tap would otherwise read as a
- * look drag and snap the camera.
+ * the mouse path down entirely, because the synthetic mouse events a browser
+ * fires after a tap would otherwise read as a look drag and snap the camera.
  */
 
 import * as THREE from "three";
@@ -139,11 +145,18 @@ export class FpsControls {
     }
   }
 
+  /**
+   * THE CURSOR IS NEVER TAKEN. This is deliberate and it is a product decision,
+   * not an oversight: Avalon is not an immersive shooter, and a pointer that
+   * disappears the moment a player clicks a crate, a bin or a holo screen is a
+   * trap — the one thing they were trying to press is the thing that vanishes.
+   *
+   * Looking around is therefore always left-click-and-drag, the path
+   * `onMouseMove` has always had as its fallback. Keep this a no-op; a caller
+   * that "just needs lock for this one case" will reintroduce the trap.
+   */
   requestPointerLock() {
-    if (this.touchMode) return;
-    if (!this.isPointerLocked && this.domElement.requestPointerLock) {
-      this.domElement.requestPointerLock();
-    }
+    /* intentionally empty — see above */
   }
 
   exitPointerLock() {
@@ -177,15 +190,15 @@ export class FpsControls {
       e.target.closest(".deployed-chamber-overlay") ||
       e.target.closest(".stage-prompt-card") ||
       e.target.closest(".stage-card-wrap") ||
-      e.target.closest(".erebus-world-hud")
+      e.target.closest(".erebus-world-hud") ||
+      e.target.closest(".screen-container") ||
+      e.target.closest(".lq") ||
+      e.target.closest(".lq-world-panel")
     )) return;
 
     if (e.button === 0) { // Left click
       this.isDragging = true;
       this.previousMousePosition = { x: e.clientX, y: e.clientY };
-      if (!this.isPointerLocked) {
-        this.requestPointerLock();
-      }
     }
   }
 
@@ -228,6 +241,23 @@ export class FpsControls {
     this.camera.quaternion.setFromEuler(this.euler);
   }
 
+  /**
+   * Drop every held key and stop dead.
+   *
+   * A key that was down when the controls were disabled stays latched, so the
+   * player who pressed W, opened an instrument and closed it again would find
+   * themselves already walking. Callers that stand the walk down call this.
+   */
+  releaseKeys() {
+    this.moveForward = false;
+    this.moveBackward = false;
+    this.moveLeft = false;
+    this.moveRight = false;
+    this.isSprinting = false;
+    this.isDragging = false;
+    this.velocity.set(0, 0, 0);
+  }
+
   /** Jump, from the Space key or the touch layer's JUMP key. */
   requestJump() {
     if (!this.enabled || !this.isGrounded) return;
@@ -237,8 +267,15 @@ export class FpsControls {
 
   onKeyDown(e) {
     if (!this.enabled) return;
-    const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+    const active = document.activeElement;
+    const tag = active ? active.tagName.toLowerCase() : "";
     if (tag === "input" || tag === "textarea" || tag === "select") return;
+    // A key aimed at a focused control is not aimed at the ground. Without this
+    // an arrow key turning the scope's power dial also walks the player off the
+    // bench, and Space on a focused key cap jumps.
+    if (active && active !== document.body && active.closest && active.closest(
+      ".screen-container, .lq, .lq-world-panel, .modal-container, .in-world-terminal, [contenteditable]"
+    )) return;
 
     switch (e.code) {
       case "KeyW":
