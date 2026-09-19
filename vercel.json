@@ -1,6 +1,17 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/[...route].js" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/[...route].js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "api/[...route].js": {
+      "maxDuration": 60
+    }
+  }
 }

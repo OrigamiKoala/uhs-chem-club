@@ -78,6 +78,81 @@ export const CANONICAL_STAGES_20 = [
   { stage_index: 19, kind: 'multi_arrow', xp: 50, max_attempts: 9999, scene_config: { title: 'Stage 20 — Grand Finish', prompt: 'Activate the scaffold with the helper first, then connect the core piece. Two arrows.', moleculeId: 'stage20_multi', multiArrow: true, maxArrows: 2, anchors: ['red_cat', 'blue_proton', 'red_core', 'blue_c_scaffold'], steps: [{ order: 1, expectedFrom: 'red_cat', expectedTo: 'blue_proton' }, { order: 2, expectedFrom: 'red_core', expectedTo: 'blue_c_scaffold' }] } }
 ];
 
+/**
+ * A transport-level failure talking to Apps Script — a timeout, a 5xx, or one of
+ * Google's intermittent HTML error pages. It is explicitly NOT an auth failure:
+ * the whole point of the separate class is that nothing downstream may turn a
+ * backend hiccup into UNAUTHORIZED and log a signed-in student out.
+ */
+class BackendUnavailableError extends Error {
+  constructor(message, detail) {
+    super(message);
+    this.name = 'BackendUnavailableError';
+    this.code = 'BACKEND_UNAVAILABLE';
+    this.detail = detail || '';
+  }
+}
+
+// Apps Script normally answers in 1-4s. The per-attempt cap is what stops a
+// wedged execution from holding the request open until Vercel kills it, which
+// is what a sign-in that "takes forever" actually was.
+const APPS_SCRIPT_TIMEOUT_MS = 9000;
+const APPS_SCRIPT_ATTEMPTS = 3;
+const APPS_SCRIPT_BACKOFF_MS = [200, 600];
+
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Apps Script answers an HTML page — "Page Not Found", a quota notice, a sign-in
+// interstitial — instead of JSON whenever Google's serving layer hiccups or the
+// script hits its simultaneous-execution limit. It is almost always transient,
+// so it is retried rather than surfaced.
+function describeHtml(text) {
+  const titleMatch = text.match(/<title>([^<]+)<\/title>/i);
+  return titleMatch ? titleMatch[1].trim() : 'an HTML page';
+}
+
+async function fetchAppsScriptOnce(route, body) {
+  let response;
+  try {
+    response = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ k: PROXY_SECRET, route: route, body: body }),
+      redirect: 'follow',
+      signal: AbortSignal.timeout(APPS_SCRIPT_TIMEOUT_MS)
+    });
+  } catch (err) {
+    const why = err?.name === 'TimeoutError' || err?.name === 'AbortError'
+      ? `timed out after ${APPS_SCRIPT_TIMEOUT_MS}ms`
+      : String(err?.message || err);
+    throw new BackendUnavailableError('Backend did not respond.', why);
+  }
+
+  const text = await response.text();
+
+  if (response.status >= 500 || response.status === 429) {
+    throw new BackendUnavailableError('Backend is busy.', `HTTP ${response.status}`);
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (err) {
+    throw new BackendUnavailableError(
+      'Backend returned an unexpected response.',
+      `HTTP ${response.status}, ${describeHtml(text)}`
+    );
+  }
+
+  // The script itself reporting that Sheets was busy. Same treatment as a
+  // transport failure: worth another attempt, never worth signing anyone out.
+  if (parsed && parsed.ok === false && parsed.error?.code === 'BACKEND_BUSY') {
+    throw new BackendUnavailableError('Backend is busy.', 'BACKEND_BUSY from Apps Script');
+  }
+
+  return parsed;
+}
+
 // Call Google Apps Script backend
 async function callAppsScript(route, body) {
   if (!APPS_SCRIPT_URL) {
@@ -91,61 +166,58 @@ async function callAppsScript(route, body) {
     if (hit) return hit;
   }
 
-  const response = await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      k: PROXY_SECRET,
-      route: route,
-      body: body
-    }),
-    redirect: 'follow'
-  });
-
-  const text = await response.text();
-  try {
-    const result = JSON.parse(text);
-    if (result && result.data) {
-      const properNames = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
-      if (Array.isArray(result.data.teams)) {
-        result.data.teams = result.data.teams.map(t => {
-          const normId = normalizeTeam(t.team_id);
-          return {
-            ...t,
-            team_id: normId,
-            name: properNames[normId] || t.name || normId
-          };
-        });
-      }
-      if (result.data.events) {
-        const normEv = {};
-        for (const k of Object.keys(result.data.events)) {
-          normEv[normalizeTeam(k)] = result.data.events[k];
-        }
-        result.data.events = normEv;
-      }
-      if (result.data.player && result.data.player.team) {
-        const pTid = normalizeTeam(result.data.player.team.team_id);
-        result.data.player.team.team_id = pTid;
-        result.data.player.team.name = properNames[pTid] || result.data.player.team.name || pTid;
-      }
-      // Normalize stages: replace obsolete choice stage 0 or missing moleculeId
-      // Normalize stages: replace obsolete or incomplete stage lists with the canonical 20 stages
-      const checkStages = result.data.stages || result.data.activeQuest?.stages;
-      if (Array.isArray(checkStages) && (checkStages.length < 20 || checkStages[0].kind === 'choice' || !checkStages[0].scene_config?.moleculeId)) {
-        if (result.data.stages) result.data.stages = CANONICAL_STAGES_20;
-        if (result.data.activeQuest) result.data.activeQuest.stages = CANONICAL_STAGES_20;
-      }
+  let result;
+  let lastErr;
+  for (let attempt = 0; attempt < APPS_SCRIPT_ATTEMPTS; attempt++) {
+    try {
+      result = await fetchAppsScriptOnce(route, body);
+      lastErr = null;
+      break;
+    } catch (err) {
+      if (!(err instanceof BackendUnavailableError)) throw err;
+      lastErr = err;
+      console.warn(`Apps Script ${route} attempt ${attempt + 1}/${APPS_SCRIPT_ATTEMPTS} failed: ${err.detail || err.message}`);
+      if (attempt < APPS_SCRIPT_ATTEMPTS - 1) await sleep(APPS_SCRIPT_BACKOFF_MS[attempt] || 900);
     }
-    if (isPublicCacheable && result.ok) {
-      setCached(cacheKey, result, route === 'leaderboard' ? 20000 : 60000);
-    }
-    return result;
-  } catch (err) {
-    const titleMatch = text.match(/<title>([^<]+)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : 'HTML page';
-    throw new Error(`Apps Script returned non-JSON (${title}). Verify in Apps Script: 1) Run 'setup' once to grant permissions; 2) Deploy as Web app with 'Execute as: Me' and 'Who has access: Anyone'; 3) In Manage Deployments, click Edit (pencil) and select Version: 'New version' then Deploy.`);
   }
+  if (lastErr) throw lastErr;
+
+  if (result && result.data) {
+    const properNames = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
+    if (Array.isArray(result.data.teams)) {
+      result.data.teams = result.data.teams.map(t => {
+        const normId = normalizeTeam(t.team_id);
+        return {
+          ...t,
+          team_id: normId,
+          name: properNames[normId] || t.name || normId
+        };
+      });
+    }
+    if (result.data.events) {
+      const normEv = {};
+      for (const k of Object.keys(result.data.events)) {
+        normEv[normalizeTeam(k)] = result.data.events[k];
+      }
+      result.data.events = normEv;
+    }
+    if (result.data.player && result.data.player.team) {
+      const pTid = normalizeTeam(result.data.player.team.team_id);
+      result.data.player.team.team_id = pTid;
+      result.data.player.team.name = properNames[pTid] || result.data.player.team.name || pTid;
+    }
+    // Normalize stages: replace obsolete choice stage 0 or missing moleculeId
+    // Normalize stages: replace obsolete or incomplete stage lists with the canonical 20 stages
+    const checkStages = result.data.stages || result.data.activeQuest?.stages;
+    if (Array.isArray(checkStages) && (checkStages.length < 20 || checkStages[0].kind === 'choice' || !checkStages[0].scene_config?.moleculeId)) {
+      if (result.data.stages) result.data.stages = CANONICAL_STAGES_20;
+      if (result.data.activeQuest) result.data.activeQuest.stages = CANONICAL_STAGES_20;
+    }
+  }
+  if (isPublicCacheable && result.ok) {
+    setCached(cacheKey, result, route === 'leaderboard' ? 20000 : 60000);
+  }
+  return result;
 }
 
 // The reveal at the end of Quest 1 — the one place jargon is allowed, because the
@@ -671,12 +743,14 @@ export default async function handler(req, res) {
     }
   }
 
-  const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'local';
+  // x-forwarded-for is a chain; the client is the first entry.
+  const clientIp = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'local')
+    .split(',')[0].trim();
 
   try {
     // Intercept auth routes to perform scrypt hashing
     if (path === 'auth/register') {
-      if (isRateLimited('reg:' + clientIp, 10, 60000)) {
+      if (isRateLimited('reg:' + clientIp, 40, 60000)) {
         res.statusCode = 429;
         return res.end(JSON.stringify({ ok: false, error: { code: 'RATE_LIMITED', message: 'Too many registrations. Slow down.' } }));
       }
@@ -713,11 +787,6 @@ export default async function handler(req, res) {
     }
 
     if (path === 'auth/login') {
-      if (isRateLimited('login:' + clientIp, 20, 60000)) {
-        res.statusCode = 429;
-        return res.end(JSON.stringify({ ok: false, error: { code: 'RATE_LIMITED', message: 'Too many login attempts. Slow down.' } }));
-      }
-
       const { identifier, password, cachedSalt } = body;
       if (!identifier || !password) {
         res.statusCode = 400;
@@ -725,6 +794,15 @@ export default async function handler(req, res) {
       }
 
       const idLc = identifier.toLowerCase();
+
+      // Guessing is per-account, so the tight limit is per-account. A whole
+      // club signing in from one school's network shares a single outbound IP,
+      // and a 20/min cap on that IP locked the room out of its own portal; the
+      // per-IP limit stays only to blunt a spray across many accounts.
+      if (isRateLimited('login-id:' + idLc, 10, 60000) || isRateLimited('login-ip:' + clientIp, 150, 60000)) {
+        res.statusCode = 429;
+        return res.end(JSON.stringify({ ok: false, error: { code: 'RATE_LIMITED', message: 'Too many sign-in attempts. Wait a minute and try again.' } }));
+      }
       let saltB64 = cachedSalt || saltCache.get(idLc);
       const usedCachedSalt = !!saltB64;
 
@@ -740,8 +818,11 @@ export default async function handler(req, res) {
       // 3. Call backend auth/login with derived key
       let result = await callAppsScript('auth/login', { identifier, dk });
 
-      // If login failed using cached salt, try once more with freshly fetched salt from backend
-      if (!result.ok && usedCachedSalt) {
+      // If login was REFUSED while using a cached salt, the cache may be stale
+      // (the password was changed elsewhere), so re-fetch and try once more.
+      // Only on a refusal: retrying a backend hiccup here used to double an
+      // already-slow sign-in with a second salt fetch and a second scrypt pass.
+      if (!result.ok && usedCachedSalt && result.error?.code === 'INVALID_CREDENTIALS') {
         const freshSaltResp = await callAppsScript('auth/salt', { identifier });
         const freshSalt = freshSaltResp?.data?.salt;
         if (freshSalt && freshSalt !== saltB64) {
@@ -810,10 +891,19 @@ export default async function handler(req, res) {
           res.setHeader('Content-Type', 'application/json');
           return res.end(JSON.stringify(result));
         }
+        console.warn('Apps Script bootstrap returned no config:', JSON.stringify(result?.error || result));
       } catch (e) {
-        console.warn('Apps Script bootstrap failed, falling back to local handler:', e.message);
+        console.warn('Apps Script bootstrap failed, falling back to local handler:', e.detail || e.message);
       }
+      // The fallback is a mock with an empty roster, so it cannot know who is
+      // signed in. It must say so: a client that reads `player: null` from it
+      // as "your token is dead" would log a student out every time Apps Script
+      // hiccupped. `degraded` marks the payload as public config only.
       const fallback = localDevHandler('bootstrap', body);
+      if (APPS_SCRIPT_URL && fallback?.data) {
+        fallback.data.degraded = true;
+        if (body && body.token && !fallback.data.player) delete fallback.data.player;
+      }
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       return res.end(JSON.stringify(fallback));
@@ -828,7 +918,7 @@ export default async function handler(req, res) {
           return res.end(JSON.stringify(result));
         }
       } catch (e) {
-        console.warn('Apps Script team/roster failed, falling back to local handler:', e.message);
+        console.warn('Apps Script team/roster failed, falling back to local handler:', e.detail || e.message);
       }
       const fallback = localDevHandler('team/roster', body);
       res.statusCode = 200;
@@ -842,6 +932,21 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json');
     return res.end(JSON.stringify(result));
   } catch (err) {
+    // A transport failure is reported as its own retryable code. It must never
+    // reach the client as UNAUTHORIZED, and it must never read as a permanent
+    // misconfiguration: the deployment checklist goes to the server log, where
+    // it is useful, instead of into a student's face mid-quest.
+    if (err instanceof BackendUnavailableError) {
+      console.error(`Backend unavailable on ${path}: ${err.detail || err.message}. ` +
+        "If this persists, check Apps Script: run 'setup' once, deploy as Web app with " +
+        "'Execute as: Me' / 'Who has access: Anyone', and redeploy a New version.");
+      res.statusCode = 503;
+      res.setHeader('Content-Type', 'application/json');
+      return res.end(JSON.stringify({
+        ok: false,
+        error: { code: 'BACKEND_UNAVAILABLE', message: 'The server is busy. Try that again in a moment.' }
+      }));
+    }
     console.error('Proxy Error:', err);
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');

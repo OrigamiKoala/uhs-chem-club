@@ -17,6 +17,7 @@ import {
   createCrtScreenTexture,
   createControlPanelTexture,
   createQuestHoloTexture,
+  createClubHoloTexture,
   createCommsStandingsTexture,
   createCargoManifestTexture,
   createBlastDoorTexture,
@@ -505,6 +506,57 @@ export class ShipInterior {
       // Tight desk collider shifted back to Z: [0.2, 1.4], leaving transverse corridor Z: [1.4, 2.6] completely clear
       this.addCollider(deskX - 0.8, deskX + 0.8, 0.2, 1.4);
     }
+
+    // 3D Holographic Directory & Club Notice Screen
+    // Positioned in front of camera's original bridge position [0, 1.55, 1.8] (world Z = 3.2)
+    const holoScreenGroup = new THREE.Group();
+    holoScreenGroup.position.set(0, 1.55, 1.2);
+
+    const clubTex = createClubHoloTexture();
+    this.clubHoloMat = new THREE.MeshBasicMaterial({
+      map: clubTex,
+      transparent: true,
+      opacity: 0.94,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide
+    });
+
+    const screenGeom = new THREE.PlaneGeometry(1.8, 1.0125);
+
+    // Front plane facing camera at Z = 1.8 (normal facing -Z)
+    const holoFront = new THREE.Mesh(screenGeom, this.clubHoloMat);
+    holoFront.rotation.y = Math.PI;
+    holoFront.position.set(0, 0, -0.005);
+
+    // Back plane facing forward (normal facing +Z)
+    const holoBack = new THREE.Mesh(screenGeom, this.clubHoloMat);
+    holoBack.position.set(0, 0, 0.005);
+
+    holoScreenGroup.add(holoFront, holoBack);
+    this.animatedElements.push({ obj: holoScreenGroup, baseY: 1.55, speed: 0.05, isHover: true });
+
+    // Floor emitter base
+    const emitterBase = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 0.04, 20), this.durasteelMat);
+    emitterBase.position.set(0, 0.02, 1.2);
+    const emitterLens = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.05, 20), this.brassMat);
+    emitterLens.position.set(0, 0.03, 1.2);
+    bridgeGroup.add(emitterBase, emitterLens);
+
+    // Vertical holographic projection beam
+    const beamGeom = new THREE.CylinderGeometry(0.9, 0.18, 1.5, 16, 1, true);
+    const beamMat = new THREE.MeshBasicMaterial({
+      color: 0xd99423,
+      transparent: true,
+      opacity: 0.07,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const beam = new THREE.Mesh(beamGeom, beamMat);
+    beam.position.set(0, 0.75, 1.2);
+    bridgeGroup.add(beam);
+
+    bridgeGroup.add(holoScreenGroup);
 
     this.group.add(bridgeGroup);
   }
@@ -1344,7 +1396,7 @@ export class ShipInterior {
   update(delta, time) {
     for (const el of this.animatedElements) {
       if (el.isHover) {
-        el.obj.position.y = 1.95 + Math.sin(time * 1.5) * 0.04;
+        el.obj.position.y = (el.baseY !== undefined ? el.baseY : 1.95) + Math.sin(time * 1.5) * 0.04;
       } else if (el.obj) {
         el.obj.rotation.z += delta * el.speed;
       }

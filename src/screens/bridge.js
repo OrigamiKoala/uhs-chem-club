@@ -61,13 +61,7 @@ export function renderBridge(container) {
     const isT4 = tierManager.currentTier === "T4";
 
     if (isT4) {
-      container.innerHTML = `
-        <div class="bridge-3d-hud" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 50; pointer-events: none; text-align: center;">
-          <div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-amber); letter-spacing: 0.12em; background: rgba(18, 20, 24, 0.85); padding: 6px 16px; border: 1px solid var(--border-durasteel); text-transform: uppercase;">
-            WASD WALK · MOUSE LOOK
-          </div>
-        </div>
-      `;
+      container.innerHTML = '';
       return;
     }
 
@@ -84,6 +78,18 @@ export function renderBridge(container) {
             { label: "To next level", value: `${Math.max(0, prog.needed - prog.into)} XP`, plain: true }
           ])
         })}
+
+        <div class="glass-panel" style="margin-bottom: 1.25rem; border-left: 2px solid var(--accent-amber); padding: 0.9rem 1.15rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+              <div style="font-family: var(--font-display); font-size: 0.95rem; font-weight: 700; color: var(--accent-amber);">UHS Chem Club</div>
+              <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); margin-top: 2px;">Next meeting 9/29 in 702</div>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);">
+              ← Star Map · Standings →
+            </div>
+          </div>
+        </div>
 
         <div class="m-grid-1 bridge-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
           <section class="glass-panel">

@@ -119,6 +119,51 @@ for public routes (including `team/roster` with graceful local fallback). When `
 full in-memory mock of the backend — including the once-per-stage XP rule, so dev behaviour
 matches production. Guild switching in `onboarding.js` is optimistic at 0 ms with client-side roster caching and background prefetching; mounts Vess recruit introduction and guild briefings via looping `vess_transmission` CRT video.
 
+### Staying signed in — the rule that outranks the rest of the transport
+Apps Script is not a reliable service. Under load, or when Google's serving layer
+hiccups, `/exec` answers with an HTML page ("Page Not Found", a quota notice) instead
+of JSON, and Sheets reads fail with "timed out" or "Internal error". Every one of those
+is **transient and retryable**. None of them is evidence that a player's token is dead.
+
+**Nothing may turn a backend failure into a sign-out.** Four places enforce it, and a
+change to any one of them can silently reintroduce the bug where students were thrown
+back to the login screen mid-quest:
+
+1. `Auth.verifySessionToken` returns `null` **only** when the token is genuinely invalid
+   (bad signature, expired, revoked, banned, missing player). If the *lookup itself*
+   fails it throws `BACKEND_BUSY`. It used to swallow every error and return `null`,
+   which made a slow Sheets read indistinguishable from a forged token.
+2. `Main.doPost` answers `UNAUTHORIZED` only for that `null`. Anything whose message
+   looks like a transient Google failure (`isTransientServiceError_`) is relabelled
+   `BACKEND_BUSY`.
+3. `callAppsScript` retries 3× with backoff on a timeout, a 5xx, a non-JSON body or a
+   `BACKEND_BUSY` reply, each attempt capped at 9 s, and reports what is left as
+   `BACKEND_UNAVAILABLE` (HTTP 503) — never `UNAUTHORIZED`, never `INTERNAL_ERROR`. The
+   deployment checklist goes to the server log; the player sees one short sentence.
+4. The `bootstrap` fallback to `localDevHandler` sets `degraded: true` and **omits**
+   `player` rather than sending `player: null`. The mock has an empty roster, so it
+   cannot know who is signed in; `main.js` clears the session only on a non-degraded
+   `player === null`. This was the main cause of the random logouts — every Apps Script
+   hiccup returned the mock, and the mock said nobody was logged in.
+
+`api.js` adds the last backstop: `session.clear()` takes **two consecutive**
+`UNAUTHORIZED` replies, and any success resets the count. Network failures and
+unparseable responses throw `NETWORK` / `BACKEND_UNAVAILABLE` and never touch the session.
+
+**Latency.** Every `Db.find*` reads a whole tab, and one request did it many times over.
+`Db.getAll` memoizes per execution (`_rowCache`, dropped by `append`/`update`; globals do
+not survive between Apps Script invocations, so it cannot serve another request stale
+data), and a verified session is cached for `SESSION_CACHE_TTL_SEC` (180 s) under
+`sess:<jti>`, so a signed-in player no longer pays a Sessions scan plus a Players scan on
+every call. The cost is that a ban lags by up to that window; `revokeSession` drops the
+key so logout is immediate. On login, the proxy re-fetches the salt and re-derives only
+when the backend actually said `INVALID_CREDENTIALS` — retrying a hiccup there doubled an
+already slow sign-in with a second scrypt pass.
+
+**Rate limiting is per account, not per IP.** A club signs in from one school network, so
+a per-IP cap locked the room out of its own portal. Sign-in allows 10/min per identifier
+with a loose 150/min per IP to blunt a spray across many accounts.
+
 ### Backend (`apps-script/`)
 `Db.gs` (Sheets DAO), `Auth.gs`, `Players.gs`, `Quests.gs` (manifest, grading, hints,
 completion), `Scoring.gs` (normalized leaderboards, level curve, level titles),
@@ -555,9 +600,9 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - Authentication gating & 3D view: On unauthenticated routes (`/login`, `/register`, `/`, `/onboarding`), the 3D ship interior and vista are visible behind the account cards, but first-person WASD navigation and mouse look are locked (`fpsControls.enabled = false`) until the player signs in.
 - Starship traversal spine: `src/three/ship-graph.js` defines an undirected navigation graph across all compartments (`bridge`, `cockpit`, `starmap`, `quarters`, `cargo`, `comms`, `airlock`) with 3–6 point `walkPath` splines, `hatchPos` view-cone markers, and `routeBinding`.
 - Starship 3D interior: `src/three/ship.js` builds hyper-realistic physical rooms and interconnecting corridor spines along `walkPath` splines with procedural PBR durasteel plating with tangent-space normal mapping (`createDurasteelNormalTexture`), floor grating, runway halogen strips, chamfered hatch bulkheads, tactical quad-CRT bridge consoles with mechanical keyboards and dial gauges, dual flight pods with yokes and center throttle quadrant in cockpit, central holo-table with 4-planet orrery and live holographic quest projector, 2-tier bunk beds with canvas bedding and stenciled metal footlockers, anglepoise desk lamp and gear hooks in quarters, overhead gantry crane and stacked shipping containers with cargo manifest screen, 19-inch equipment racks with patch bay loops and glowing vacuum tube cages in comms, and heavy airlock blast door with manual dogging wheel, hydraulic rams, and pressure dials. Non-overlapping physics bounds, rear-shifted bridge consoles (`Z = [0.2, 1.4]`), forward-shifted cockpit pods (`Z = [2.6, 3.8]`), and center pedestal colliders ensure wide-open transverse corridors at `Z = [1.4, 2.6]` across all rooms.
-- In-World 3D content transfer: In T4, primary content lives diegetically in 3D: Quests in the Star Map holo-table, Standings on the Comms CRT terminal, Inventory on the Cargo Manifest. In T3 and below, 2D full-page screens (`.screen-container`) remain active.
+- In-World 3D content transfer: In T4, primary content lives diegetically in 3D: Quests in the Star Map holo-table, Standings on the Comms CRT terminal, Inventory on the Cargo Manifest, and the Bridge Welcome Hologram directly in front of the camera's original bridge position displaying "UHS Chem Club", meeting announcements, and directional wayfinding arrows. In T3 and below, 2D full-page screens (`.screen-container`) remain active.
 - Erebus world scene: `src/three/world.js` and `src/three/world-data/erebus.json` define The Charge Gardens basin with 20 instanced pylon structures along a walkable route, survey lander ("SANDSTALKER") with boarding ramp, stratified sedimentary rock outcrops, procedural terrain heightmap (`getTerrainHeight`), amber celestial sky, banded gas giant vista (with `fog: false` celestial bodies), tuned desert haze (`fogNear: 70`, `fogFar: 280`), and atmospheric dust motes.
-- T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `CLOSE` dismiss controls. Star Map holo-table integrates Sector 01 status and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates standings; Settings integrates graphics tier (T4 default) and audio sliders.
+- T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `CLOSE` dismiss controls. Star Map holo-table integrates Sector 01 status and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates standings; Settings integrates graphics tier (T4 default) and audio sliders. Bridge displays the floating directory kiosk instead of WASD/mouse look text prompts.
 - T4 Learn deployment: In T4, `#/learn/unit01` enters the 3D Tallow world
   (`stage.enterTallowScene(siteId)`); walking to a bench and pressing `[E]` raises a
   `tallow:interact` event that routes to `#/learn/unit01/<questId>`, where the quest's

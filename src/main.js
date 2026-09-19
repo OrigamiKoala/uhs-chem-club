@@ -65,11 +65,17 @@ async function bootstrapApp() {
       if (!teamId && (window.location.hash === '#/' || window.location.hash === '')) {
         window.location.hash = '#/onboarding';
       }
-    } else if (session.token && boot.player === null) {
+    } else if (session.token && boot.player === null && !boot.degraded) {
+      // `degraded` means the proxy could not reach the backend and answered
+      // with public config only. It does not know who is signed in, so a
+      // missing player there is no evidence the token is dead — clearing on it
+      // logged students out every time Apps Script hiccupped.
       session.clear();
       if (window.location.hash !== '#/' && window.location.hash !== '#/demo') {
         window.location.hash = '#/login';
       }
+    } else if (boot.degraded) {
+      console.warn('Bootstrap served from fallback; keeping cached session.');
     }
   } catch (err) {
     console.error('Bootstrap call failed, continuing with cached session:', err);

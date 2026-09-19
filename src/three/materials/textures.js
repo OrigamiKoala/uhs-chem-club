@@ -520,6 +520,141 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
 }
 
 /**
+ * Creates 3D Holographic announcement texture for Bridge welcome screen
+ * Displaying "UHS Chem Club", "Next meeting 9/29 in 702", and directional navigation arrows.
+ */
+export function createClubHoloTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 576;
+  const ctx = canvas.getContext('2d');
+
+  // Dark translucent holo emitter ground
+  ctx.fillStyle = '#080a0f';
+  ctx.fillRect(0, 0, 1024, 576);
+
+  // Scanlines
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  for (let y = 0; y < 576; y += 4) {
+    ctx.fillRect(0, y, 1024, 1.8);
+  }
+
+  // Outer glowing border
+  ctx.strokeStyle = '#d99423';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(18, 18, 988, 540);
+
+  // Corner tech brackets
+  ctx.strokeStyle = '#ffaa38';
+  ctx.lineWidth = 5;
+  const bLen = 40;
+  // Top-left
+  ctx.beginPath();
+  ctx.moveTo(18, 18 + bLen); ctx.lineTo(18, 18); ctx.lineTo(18 + bLen, 18);
+  ctx.stroke();
+  // Top-right
+  ctx.beginPath();
+  ctx.moveTo(1006 - bLen, 18); ctx.lineTo(1006, 18); ctx.lineTo(1006, 18 + bLen);
+  ctx.stroke();
+  // Bottom-left
+  ctx.beginPath();
+  ctx.moveTo(18, 558 - bLen); ctx.lineTo(18, 558); ctx.lineTo(18 + bLen, 558);
+  ctx.stroke();
+  // Bottom-right
+  ctx.beginPath();
+  ctx.moveTo(1006 - bLen, 558); ctx.lineTo(1006, 558); ctx.lineTo(1006, 558 - bLen);
+  ctx.stroke();
+
+  // Eyebrow badge
+  ctx.font = 'bold 16px monospace';
+  ctx.fillStyle = '#d99423';
+  ctx.textAlign = 'center';
+  ctx.fillText('// AVALON STATION · DIRECTORY //', 512, 54);
+
+  // Title: UHS Chem Club
+  ctx.font = 'bold 46px sans-serif';
+  ctx.fillStyle = '#f6ecd9';
+  ctx.shadowColor = '#d99423';
+  ctx.shadowBlur = 14;
+  ctx.fillText('UHS Chem Club', 512, 115);
+  ctx.shadowBlur = 0;
+
+  // Subtitle: Next meeting 9/29 in 702
+  ctx.font = 'bold 28px monospace';
+  ctx.fillStyle = '#ffb347';
+  ctx.fillText('Next meeting 9/29 in 702', 512, 165);
+
+  // Horizontal glowing divider
+  ctx.strokeStyle = 'rgba(217, 148, 35, 0.6)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(48, 195);
+  ctx.lineTo(976, 195);
+  ctx.stroke();
+
+  // Vertical center divider
+  ctx.strokeStyle = 'rgba(217, 148, 35, 0.3)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(512, 215);
+  ctx.lineTo(512, 465);
+  ctx.stroke();
+
+  // LEFT COLUMN: arrows pointing left
+  ctx.textAlign = 'left';
+
+  // Item 1: Star Map
+  ctx.fillStyle = '#ffaa38';
+  ctx.font = 'bold 30px sans-serif';
+  ctx.fillText('◀  STAR MAP', 64, 260);
+  ctx.font = '19px monospace';
+  ctx.fillStyle = '#b8aa94';
+  ctx.fillText('    Quests & World Charts', 64, 292);
+
+  // Item 2: Cargo Hold
+  ctx.fillStyle = '#ffaa38';
+  ctx.font = 'bold 30px sans-serif';
+  ctx.fillText('◀  CARGO HOLD', 64, 370);
+  ctx.font = '19px monospace';
+  ctx.fillStyle = '#b8aa94';
+  ctx.fillText('    Inventory & Locker', 64, 402);
+
+  // RIGHT COLUMN: arrows pointing right
+  ctx.textAlign = 'right';
+
+  // Item 1: Quarters
+  ctx.fillStyle = '#ffaa38';
+  ctx.font = 'bold 30px sans-serif';
+  ctx.fillText('CREW QUARTERS  ▶', 960, 260);
+  ctx.font = '19px monospace';
+  ctx.fillStyle = '#b8aa94';
+  ctx.fillText('Profile & Guild Members    ', 960, 292);
+
+  // Item 2: Standings
+  ctx.fillStyle = '#ffaa38';
+  ctx.font = 'bold 30px sans-serif';
+  ctx.fillText('COMMS & STANDINGS  ▶', 960, 370);
+  ctx.font = '19px monospace';
+  ctx.fillStyle = '#b8aa94';
+  ctx.fillText('Leaderboard & Guild Scores    ', 960, 402);
+
+  // Bottom corridor guide banner
+  ctx.fillStyle = '#15171d';
+  ctx.fillRect(48, 485, 928, 52);
+  ctx.strokeStyle = '#d99423';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(48, 485, 928, 52);
+
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 18px monospace';
+  ctx.fillStyle = '#c39a63';
+  ctx.fillText('▲ FORWARD: FLIGHT COCKPIT        AFT: AIRLOCK DEPARTURE ▼', 512, 518);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
+}
+
+/**
  * Creates 3D CRT Monitor texture for Comms room displaying live Standings & intercepted chatter
  */
 export function createCommsStandingsTexture(teams = [], chatter = '') {

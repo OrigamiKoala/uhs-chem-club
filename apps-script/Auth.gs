@@ -9,6 +9,9 @@ function getSessionSecret_() {
   return props.getProperty('SESSION_SECRET') || 'avalon_default_session_secret_change_in_prod';
 }
 
+/** How long a verified session is trusted without re-reading the sheets. */
+var SESSION_CACHE_TTL_SEC = 180;
+
 function getProxySecret_() {
   var props = PropertiesService.getScriptProperties();
   return props.getProperty('PROXY_SECRET') || 'avalon_proxy_secret_change_in_prod';
@@ -25,6 +28,21 @@ var Auth = {
     return payloadB64 + '.' + sig;
   },
 
+  /**
+   * Returns the session for a token, or null if the token is genuinely not
+   * valid. It THROWS BACKEND_BUSY if the lookup itself failed.
+   *
+   * The distinction is the whole point. This used to swallow every error and
+   * return null, so a Sheets read that timed out under load reported the same
+   * thing as a forged token — the router answered UNAUTHORIZED and the client
+   * signed the student out mid-quest. A null here now means "this token is
+   * dead"; anything else is the caller's problem to retry.
+   *
+   * The verified identity is cached for SESSION_CACHE_TTL_SEC so a signed-in
+   * player does not pay two full-sheet scans (Sessions, then Players) on every
+   * single authenticated request. The cost is that a revocation or a ban can
+   * lag by up to that window; revokeSession drops the key to cover logout.
+   */
   verifySessionToken: function(token) {
     if (!token || typeof token !== 'string') return null;
     var parts = token.split('.');
@@ -35,27 +53,47 @@ var Auth = {
     var expectedSig = hmacSha256(payloadB64, getSessionSecret_());
     if (!timingSafeEqual(sig, expectedSig)) return null;
 
+    var payload;
     try {
-      var payloadStr = base64UrlDecode(payloadB64);
-      var payload = JSON.parse(payloadStr);
-      var nowSec = Math.floor(Date.now() / 1000);
-      if (!payload.exp || payload.exp < nowSec) return null;
-
-      // Check revocation in Sessions tab
-      var revoked = Db.findOne('Sessions', function(s) {
-        return s.jti === payload.jti;
-      });
-      if (revoked) return null;
-
-      var player = Db.findOne('Players', function(p) {
-        return p.player_id === payload.pid;
-      });
-      if (!player || player.status === 'banned') return null;
-
-      return { player: player, jti: payload.jti };
+      payload = JSON.parse(base64UrlDecode(payloadB64));
     } catch (e) {
       return null;
     }
+    if (!payload || !payload.jti || !payload.pid) return null;
+    var nowSec = Math.floor(Date.now() / 1000);
+    if (!payload.exp || payload.exp < nowSec) return null;
+
+    var cacheKey = 'sess:' + payload.jti;
+    var cached = Cache.get(cacheKey);
+    if (cached) return { player: cached, jti: payload.jti };
+
+    var revoked, player;
+    try {
+      revoked = Db.findOne('Sessions', function(s) {
+        return s.jti === payload.jti;
+      });
+      player = Db.findOne('Players', function(p) {
+        return p.player_id === payload.pid;
+      });
+    } catch (e) {
+      throw {
+        code: 'BACKEND_BUSY',
+        message: 'The server is busy. Try that again in a moment.'
+      };
+    }
+
+    if (revoked) return null;
+    if (!player || player.status === 'banned') return null;
+
+    // Only the three fields the routes actually read. The password hash and
+    // salt have no business sitting in a cache.
+    var identity = {
+      player_id: player.player_id,
+      email_lc: player.email_lc,
+      display_name: player.display_name
+    };
+    Cache.put(cacheKey, identity, SESSION_CACHE_TTL_SEC);
+    return { player: identity, jti: payload.jti };
   },
 
   getSalt: function(identifier) {
@@ -211,6 +249,7 @@ var Auth = {
   },
 
   revokeSession: function(jti, playerId, reason) {
+    Cache.drop('sess:' + jti);
     Db.append('Sessions', {
       jti: jti,
       player_id: playerId,

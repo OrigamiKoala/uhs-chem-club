@@ -27,6 +27,29 @@ var DB_SCHEMA = {
 var _sheetCache = {};
 var _headerIndexCache = {};
 
+/**
+ * Rows read so far during THIS execution, keyed by tab.
+ *
+ * Every Db.find/findOne reads the whole tab, and a single request does that
+ * many times over — verifying the session reads Sessions and Players, then
+ * getMe reads Players, Teams, Progress, Submissions and Inventory again. Each
+ * read is a round trip to Sheets, which is what made sign-in slow and what put
+ * executions near the limits where Google starts answering with error pages.
+ *
+ * The memo lives for one execution only (Apps Script discards globals between
+ * invocations), so it can never serve another request stale data. Writes drop
+ * the tab they touched.
+ */
+var _rowCache = {};
+
+function invalidateRowCache_(tabName) {
+  if (tabName) {
+    delete _rowCache[tabName];
+  } else {
+    _rowCache = {};
+  }
+}
+
 function getDb_() {
   var props = PropertiesService.getScriptProperties();
   var sheetId = props.getProperty('SPREADSHEET_ID');
@@ -227,6 +250,7 @@ var Db = {
   },
 
   getAll: function(tabName) {
+    if (_rowCache[tabName]) return _rowCache[tabName];
     var sheet = getSheet_(tabName);
     var lastRow = sheet.getLastRow();
     var lastCol = sheet.getLastColumn();
@@ -242,6 +266,7 @@ var Db = {
       }
       results.push(obj);
     }
+    _rowCache[tabName] = results;
     return results;
   },
 
@@ -273,6 +298,7 @@ var Db = {
       }
     }
     sheet.appendRow(row);
+    invalidateRowCache_(tabName);
     return rowObj;
   },
 
@@ -303,6 +329,7 @@ var Db = {
         updatedCount++;
       }
     }
+    invalidateRowCache_(tabName);
     return updatedCount;
   }
 };
