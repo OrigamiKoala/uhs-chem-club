@@ -134,6 +134,61 @@ for (const [r, nKey] of Object.entries(SHIP_GRAPH.routeBinding)) {
   assert(nodes[nKey] !== undefined, `routeBinding ${r} points to valid node ${nKey}`);
 }
 
+// 7. Holographic Projections — Open/Close/Toggle with [X] key invariants
+console.log('\nHolographic Projection Controls Invariant Check\n');
+globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+globalThis.window = { location: { hash: '#/bridge' }, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => {} };
+const ctxMock = {
+  fillRect: () => {}, strokeRect: () => {}, fillText: () => {}, measureText: () => ({ width: 50 }),
+  beginPath: () => {}, moveTo: () => {}, lineTo: () => {}, stroke: () => {},
+  createLinearGradient: () => ({ addColorStop: () => {} }),
+  createRadialGradient: () => ({ addColorStop: () => {} }),
+  arc: () => {}, fill: () => {}, closePath: () => {},
+  getImageData: () => ({ data: new Uint8ClampedArray(512 * 512 * 4) }),
+  createImageData: (w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }),
+  putImageData: () => {}
+};
+globalThis.document = {
+  createElement: () => ({ getContext: () => ctxMock, width: 512, height: 512 }),
+  createElementNS: () => ({ setAttribute: () => {}, addEventListener: () => {} }),
+  activeElement: null
+};
+
+const { ShipInterior } = await import('../src/three/ship.js');
+const ship = new ShipInterior({ add: () => {} });
+
+// Bridge club hologram methods
+assert(typeof ship.openClubHolo === 'function', 'ShipInterior has openClubHolo');
+assert(typeof ship.closeClubHolo === 'function', 'ShipInterior has closeClubHolo');
+assert(typeof ship.toggleClubHolo === 'function', 'ShipInterior has toggleClubHolo');
+assert(typeof ship.isClubHoloVisible === 'function', 'ShipInterior has isClubHoloVisible');
+
+// Starmap quest hologram methods
+assert(typeof ship.openStarmapHolo === 'function', 'ShipInterior has openStarmapHolo');
+assert(typeof ship.closeStarmapHolo === 'function', 'ShipInterior has closeStarmapHolo');
+assert(typeof ship.toggleStarmapHolo === 'function', 'ShipInterior has toggleStarmapHolo');
+assert(typeof ship.isStarmapHoloVisible === 'function', 'ShipInterior has isStarmapHoloVisible');
+
+// Test Bridge hologram toggle behavior
+ship.openClubHolo();
+assert(ship.isClubHoloVisible() === true, 'openClubHolo sets visible to true');
+ship.closeClubHolo();
+assert(ship.isClubHoloVisible() === false, 'closeClubHolo sets visible to false');
+ship.toggleClubHolo();
+assert(ship.isClubHoloVisible() === true, 'toggleClubHolo re-opens closed club hologram');
+ship.toggleClubHolo();
+assert(ship.isClubHoloVisible() === false, 'toggleClubHolo closes open club hologram');
+
+// Test Starmap hologram toggle behavior
+ship.openStarmapHolo();
+assert(ship.isStarmapHoloVisible() === true, 'openStarmapHolo sets visible to true');
+ship.closeStarmapHolo();
+assert(ship.isStarmapHoloVisible() === false, 'closeStarmapHolo sets visible to false');
+ship.toggleStarmapHolo();
+assert(ship.isStarmapHoloVisible() === true, 'toggleStarmapHolo re-opens closed starmap hologram');
+ship.toggleStarmapHolo();
+assert(ship.isStarmapHoloVisible() === false, 'toggleStarmapHolo closes open starmap hologram');
+
 if (failed) {
   console.error('\nSHIP GRAPH VERIFY FAILED');
   process.exit(1);

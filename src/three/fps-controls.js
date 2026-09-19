@@ -43,7 +43,8 @@ export class FpsControls {
     this.boxColliders = []; // [{ minX, maxX, minZ, maxZ }]
     this.radialColliders = []; // [{ x, z, radius }]
     this.onInteract = null; // Callback for [E] / click on interactive target
-    this.onCloseHolo = null; // Callback for [X] key
+    this.onToggleHolo = null; // Callback for [X] key toggle
+    this.onCloseHolo = null; // Backwards-compatible callback for [X] key
 
     // UI Prompt element
     this.promptEl = null;
@@ -241,7 +242,9 @@ export class FpsControls {
         }
         break;
       case "KeyX":
-        if (this.onCloseHolo) {
+        if (this.onToggleHolo) {
+          this.onToggleHolo();
+        } else if (this.onCloseHolo) {
           this.onCloseHolo();
         }
         break;

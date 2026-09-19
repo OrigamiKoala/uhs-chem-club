@@ -64,8 +64,10 @@ export class ShipInterior {
     this.scene.add(this.group);
 
     this.clubHoloClosed = false;
+    this.starmapHoloClosed = false;
     const isAuthed = Boolean(session?.token && session?.player);
     this.setClubHoloVisible(isAuthed);
+    this.setStarmapHoloVisible(true);
   }
 
   initMaterials() {
@@ -788,8 +790,6 @@ export class ShipInterior {
       this.animatedElements.push({ obj: orbitRing, speed: cfg.speed });
     });
 
-    starmapGroup.add(holoProjector);
-
     // 3D Holographic Quest Display floating above table
     const qTex = createQuestHoloTexture(0, 20, '');
     this.starmapHoloMat = new THREE.MeshBasicMaterial({
@@ -801,7 +801,15 @@ export class ShipInterior {
     const holoPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.8), this.starmapHoloMat);
     holoPlane.position.set(0, 1.95, 0);
     this.animatedElements.push({ obj: holoPlane, speed: 0.05, isHover: true });
-    starmapGroup.add(holoPlane);
+
+    // Starmap holographic projection group (planetary orrery + quest display)
+    const starmapHoloGroup = new THREE.Group();
+    starmapHoloGroup.add(holoProjector);
+    starmapHoloGroup.add(holoPlane);
+    this.starmapHoloGroup = starmapHoloGroup;
+    this.starmapHoloProjector = holoProjector;
+    this.starmapHoloPlane = holoPlane;
+    starmapGroup.add(starmapHoloGroup);
 
     // Tight pedestal-only collider, leaving room walkable on all sides
     this.addCollider(3.2 - 0.85, 3.2 + 0.85, 1.8 - 0.85, 1.8 + 0.85);
@@ -1418,8 +1426,53 @@ export class ShipInterior {
     this.setClubHoloVisible(false, true);
   }
 
+  openClubHolo() {
+    this.clubHoloClosed = false;
+    this.setClubHoloVisible(true, true);
+  }
+
+  toggleClubHolo() {
+    if (this.isClubHoloVisible()) {
+      this.closeClubHolo();
+    } else {
+      this.openClubHolo();
+    }
+    return this.isClubHoloVisible();
+  }
+
   isClubHoloVisible() {
     return Boolean(this.clubHoloGroup && this.clubHoloGroup.visible);
+  }
+
+  setStarmapHoloVisible(visible, force = false) {
+    if (!force && this.starmapHoloClosed) {
+      visible = false;
+    }
+    const v = Boolean(visible);
+    if (this.starmapHoloGroup) this.starmapHoloGroup.visible = v;
+  }
+
+  closeStarmapHolo() {
+    this.starmapHoloClosed = true;
+    this.setStarmapHoloVisible(false, true);
+  }
+
+  openStarmapHolo() {
+    this.starmapHoloClosed = false;
+    this.setStarmapHoloVisible(true, true);
+  }
+
+  toggleStarmapHolo() {
+    if (this.isStarmapHoloVisible()) {
+      this.closeStarmapHolo();
+    } else {
+      this.openStarmapHolo();
+    }
+    return this.isStarmapHoloVisible();
+  }
+
+  isStarmapHoloVisible() {
+    return Boolean(this.starmapHoloGroup && this.starmapHoloGroup.visible);
   }
 
   update(delta, time) {

@@ -467,6 +467,29 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
   ctx.fillStyle = '#d99423';
   ctx.fillText('// PRIMARY OBJECTIVE · SECTOR 01 //', 24, 36);
 
+  // Top-right Close [X] badge
+  ctx.font = 'bold 11px monospace';
+  const closeText = 'Close [X]';
+  const closeW = ctx.measureText(closeText).width;
+  const badgeX = 488 - closeW - 10;
+  const badgeY = 22;
+  const badgeW = closeW + 10;
+  const badgeH = 20;
+
+  ctx.fillStyle = 'rgba(217, 148, 35, 0.16)';
+  ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
+  ctx.strokeStyle = '#d99423';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffaa38';
+  ctx.shadowColor = '#d99423';
+  ctx.shadowBlur = 4;
+  ctx.fillText(closeText, badgeX + badgeW / 2, badgeY + 14);
+  ctx.shadowBlur = 0;
+  ctx.textAlign = 'left';
+
   // Title
   ctx.font = 'bold 22px sans-serif';
   ctx.fillStyle = '#e8e0d0';

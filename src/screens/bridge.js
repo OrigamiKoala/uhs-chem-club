@@ -17,6 +17,7 @@ import { playCinematic } from "../ui/cinematic.js";
 
 let unsubscribeBridge = null;
 let bridgeHoloListener = null;
+let bridgeHoloOpenListener = null;
 
 export function renderBridge(container) {
   if (unsubscribeBridge) {
@@ -26,6 +27,10 @@ export function renderBridge(container) {
   if (bridgeHoloListener) {
     window.removeEventListener("club-holo:close", bridgeHoloListener);
     bridgeHoloListener = null;
+  }
+  if (bridgeHoloOpenListener) {
+    window.removeEventListener("club-holo:open", bridgeHoloOpenListener);
+    bridgeHoloOpenListener = null;
   }
 
   if (stage.cameraRig && tierManager.currentTier !== "T4") {
@@ -182,6 +187,15 @@ export function renderBridge(container) {
       if (p) p.style.display = "none";
     };
     window.addEventListener("club-holo:close", bridgeHoloListener);
+
+    if (bridgeHoloOpenListener) {
+      window.removeEventListener("club-holo:open", bridgeHoloOpenListener);
+    }
+    bridgeHoloOpenListener = () => {
+      const p = container.querySelector("#bridge-announcement-panel");
+      if (p) p.style.display = "";
+    };
+    window.addEventListener("club-holo:open", bridgeHoloOpenListener);
   }
 
   render();
@@ -193,6 +207,10 @@ export function renderBridge(container) {
       if (bridgeHoloListener) {
         window.removeEventListener("club-holo:close", bridgeHoloListener);
         bridgeHoloListener = null;
+      }
+      if (bridgeHoloOpenListener) {
+        window.removeEventListener("club-holo:open", bridgeHoloOpenListener);
+        bridgeHoloOpenListener = null;
       }
       return;
     }

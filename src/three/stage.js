@@ -161,6 +161,8 @@ class Stage {
       const isAuthed = Boolean(session.token && session.player);
       const showHolo = isAuthed && !session.hasFlag("clubHoloClosed") && !this.shipInterior.clubHoloClosed;
       this.shipInterior.setClubHoloVisible(showHolo);
+      const showStarmapHolo = !session.hasFlag("starmapHoloClosed") && !this.shipInterior.starmapHoloClosed;
+      this.shipInterior.setStarmapHoloVisible(showStarmapHolo);
       if (this.fpsControls) {
         this.fpsControls.enabled = isAuthed;
       }
@@ -175,9 +177,10 @@ class Stage {
     // 4. First-person WASD controls with collision sliding and interaction
     this.fpsControls = new FpsControls(this.camera, this.canvas);
     this.fpsControls.enabled = Boolean(session.token && session.player);
-    this.fpsControls.onCloseHolo = () => {
-      this.closeClubHolo();
+    this.fpsControls.onToggleHolo = () => {
+      this.toggleAnyHolo();
     };
+    this.fpsControls.onCloseHolo = this.fpsControls.onToggleHolo;
     this.fpsControls.setMode(
       "ship",
       null,
@@ -225,7 +228,15 @@ class Stage {
     document.addEventListener("visibilitychange", this.onVisibilityChange.bind(this));
     tierManager.subscribe((tier) => this.applyTierSettings(tier));
 
-    // Global 'X' key handler to close club holographic display
+    // Global 'X' key handler to close and open any holographic display
+    let lastXPress = 0;
+    const handleKeyX = () => {
+      const now = Date.now();
+      if (now - lastXPress < 150) return;
+      lastXPress = now;
+      this.toggleAnyHolo();
+    };
+
     window.addEventListener("keydown", (e) => {
       const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
       if (tag === "input" || tag === "textarea" || tag === "select" || document.activeElement?.isContentEditable) return;
@@ -233,9 +244,7 @@ class Stage {
       if (modal && !modal.classList.contains("hidden")) return;
 
       if (e.key === "x" || e.key === "X" || e.code === "KeyX") {
-        if (this.shipInterior?.isClubHoloVisible()) {
-          this.closeClubHolo();
-        }
+        handleKeyX();
       }
     });
 
@@ -244,13 +253,23 @@ class Stage {
     const mouse = new THREE.Vector2();
     if (this.canvas) {
       this.canvas.addEventListener("pointerup", (e) => {
-        if (this.mode !== "ship" || !this.shipInterior?.isClubHoloVisible() || !this.camera) return;
+        if (this.mode !== "ship" || !this.camera) return;
         mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, this.camera);
-        const hits = raycaster.intersectObjects(this.shipInterior.clubHoloGroup.children, true);
-        if (hits.length > 0) {
-          this.closeClubHolo();
+        if (this.shipInterior?.isClubHoloVisible() && this.shipInterior.clubHoloGroup) {
+          const hits = raycaster.intersectObjects(this.shipInterior.clubHoloGroup.children, true);
+          if (hits.length > 0) {
+            this.closeClubHolo();
+            return;
+          }
+        }
+        if (this.shipInterior?.isStarmapHoloVisible() && this.shipInterior.starmapHoloGroup) {
+          const hits = raycaster.intersectObjects(this.shipInterior.starmapHoloGroup.children, true);
+          if (hits.length > 0) {
+            this.closeStarmapHolo();
+            return;
+          }
         }
       });
     }
@@ -271,6 +290,111 @@ class Stage {
     window.dispatchEvent(new CustomEvent("club-holo:close"));
     if (wasVisible) {
       soundscape.playNavRelayClick?.();
+    }
+  }
+
+  openClubHolo() {
+    let wasHidden = false;
+    if (this.shipInterior && !this.shipInterior.isClubHoloVisible?.()) {
+      this.shipInterior.openClubHolo();
+      wasHidden = true;
+    } else if (this.shipInterior) {
+      this.shipInterior.openClubHolo();
+    }
+    session.setFlag("clubHoloClosed", false);
+    window.dispatchEvent(new CustomEvent("club-holo:open"));
+    if (wasHidden) {
+      soundscape.playNavRelayClick?.();
+    }
+  }
+
+  toggleClubHolo() {
+    if (this.isClubHoloVisible()) {
+      this.closeClubHolo();
+    } else {
+      this.openClubHolo();
+    }
+    return this.isClubHoloVisible();
+  }
+
+  isClubHoloVisible() {
+    if (this.shipInterior?.isClubHoloVisible) {
+      return this.shipInterior.isClubHoloVisible();
+    }
+    return !session.hasFlag("clubHoloClosed");
+  }
+
+  closeStarmapHolo() {
+    let wasVisible = false;
+    if (this.shipInterior && this.shipInterior.isStarmapHoloVisible?.()) {
+      this.shipInterior.closeStarmapHolo();
+      wasVisible = true;
+    } else if (this.shipInterior) {
+      this.shipInterior.closeStarmapHolo();
+    }
+    session.setFlag("starmapHoloClosed", true);
+    window.dispatchEvent(new CustomEvent("starmap-holo:close"));
+    if (wasVisible) {
+      soundscape.playNavRelayClick?.();
+    }
+  }
+
+  openStarmapHolo() {
+    let wasHidden = false;
+    if (this.shipInterior && !this.shipInterior.isStarmapHoloVisible?.()) {
+      this.shipInterior.openStarmapHolo();
+      wasHidden = true;
+    } else if (this.shipInterior) {
+      this.shipInterior.openStarmapHolo();
+    }
+    session.setFlag("starmapHoloClosed", false);
+    window.dispatchEvent(new CustomEvent("starmap-holo:open"));
+    if (wasHidden) {
+      soundscape.playNavRelayClick?.();
+    }
+  }
+
+  toggleStarmapHolo() {
+    if (this.isStarmapHoloVisible()) {
+      this.closeStarmapHolo();
+    } else {
+      this.openStarmapHolo();
+    }
+    return this.isStarmapHoloVisible();
+  }
+
+  isStarmapHoloVisible() {
+    if (this.shipInterior?.isStarmapHoloVisible) {
+      return this.shipInterior.isStarmapHoloVisible();
+    }
+    return !session.hasFlag("starmapHoloClosed");
+  }
+
+  toggleAnyHolo() {
+    if (this.mode === "ship" && this.camera) {
+      const px = this.camera.position.x;
+      const pz = this.camera.position.z;
+      const distBridge = Math.hypot(px - 0, pz - 1.2);
+      const distStarmap = Math.hypot(px - 3.2, pz - 1.8);
+
+      if (window.location.hash.includes("starmap")) {
+        this.toggleStarmapHolo();
+        return;
+      }
+      if (window.location.hash.includes("bridge")) {
+        this.toggleClubHolo();
+        return;
+      }
+
+      if (distStarmap < distBridge) {
+        this.toggleStarmapHolo();
+      } else {
+        this.toggleClubHolo();
+      }
+    } else if (window.location.hash.includes("starmap")) {
+      this.toggleStarmapHolo();
+    } else {
+      this.toggleClubHolo();
     }
   }
 

@@ -132,7 +132,19 @@ function bindTabs(container) {
   });
 }
 
+let starmapHoloCloseListener = null;
+let starmapHoloOpenListener = null;
+
 export function renderStarMap(container) {
+  if (starmapHoloCloseListener) {
+    window.removeEventListener("starmap-holo:close", starmapHoloCloseListener);
+    starmapHoloCloseListener = null;
+  }
+  if (starmapHoloOpenListener) {
+    window.removeEventListener("starmap-holo:open", starmapHoloOpenListener);
+    starmapHoloOpenListener = null;
+  }
+
   if (stage.cameraRig && tierManager.currentTier !== "T4") {
     stage.cameraRig.moveTo("starmap");
   }
@@ -226,7 +238,19 @@ export function renderStarMap(container) {
     container.querySelector("#close-terminal-btn")?.addEventListener("click", () => {
       const term = container.querySelector(".in-world-terminal");
       if (term) term.style.display = "none";
+      stage.closeStarmapHolo?.();
     });
+
+    starmapHoloCloseListener = () => {
+      const term = container.querySelector(".in-world-terminal");
+      if (term) term.style.display = "none";
+    };
+    starmapHoloOpenListener = () => {
+      const term = container.querySelector(".in-world-terminal");
+      if (term) term.style.display = "";
+    };
+    window.addEventListener("starmap-holo:close", starmapHoloCloseListener);
+    window.addEventListener("starmap-holo:open", starmapHoloOpenListener);
   } else {
     // Lower Tiers (T1, T2, T3) Standard 2D Page
     container.innerHTML = `
