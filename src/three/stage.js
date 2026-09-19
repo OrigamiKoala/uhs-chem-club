@@ -194,10 +194,13 @@ class Stage {
       const isAuthed = Boolean(session.token && session.player);
       this.shipInterior.clubHoloClosed = session.hasFlag("clubHoloClosed");
       this.shipInterior.starmapHoloClosed = session.hasFlag("starmapHoloClosed");
+      this.shipInterior.commsHoloClosed = session.hasFlag("commsHoloClosed");
       const showHolo = isAuthed && !this.shipInterior.clubHoloClosed;
       this.shipInterior.setClubHoloVisible(showHolo, true);
       const showStarmapHolo = !this.shipInterior.starmapHoloClosed;
       this.shipInterior.setStarmapHoloVisible(showStarmapHolo, true);
+      const showCommsHolo = !this.shipInterior.commsHoloClosed;
+      this.shipInterior.setCommsHoloVisible(showCommsHolo, true);
       if (this.fpsControls) {
         this.fpsControls.enabled = isAuthed;
       }
@@ -258,7 +261,7 @@ class Stage {
       "ship",
       null,
       { minX: -7.8, maxX: 7.8, minZ: -8.5, maxZ: 3.8 },
-      this.shipInterior.colliders
+      this.shipInterior.getActiveColliders()
     );
 
     this.fpsControls.onInteract = () => {
@@ -280,15 +283,22 @@ class Stage {
       } else if (this.mode === "ship") {
         const px = this.camera.position.x;
         const pz = this.camera.position.z;
-        if (pz < -5.0 && Math.abs(px) < 2.0) {
+        const nearDoor = this.shipInterior?.getDoorNear(px, pz, 1.8);
+        if (nearDoor) {
+          this.shipInterior.toggleDoor(nearDoor);
+          this.fpsControls.colliders = this.shipInterior.getActiveColliders();
+          soundscape.playNavRelayClick?.();
+          return;
+        }
+        if (Math.hypot(px - 3.375, pz - (-6.6)) < 2.2) {
           window.location.hash = "#/quest";
-        } else if (Math.hypot(px - 3.2, pz - 1.8) < 2.2) {
+        } else if (Math.hypot(px - 3.2, pz - 1.8) < 2.0) {
           window.location.hash = "#/starmap";
-        } else if (Math.hypot(px - 4.2, pz - (-2.2)) < 2.4) {
+        } else if (Math.hypot(px - 3.3, pz - (-1.2)) < 2.2) {
           window.location.hash = "#/inventory";
-        } else if (Math.hypot(px - (-2.8), pz - (-2.0)) < 2.2) {
+        } else if (Math.hypot(px - (-3.375), pz - (-6.45)) < 2.2) {
           window.location.hash = "#/leaderboard";
-        } else if (Math.hypot(px - (-3.8), pz - 2.2) < 2.2) {
+        } else if (Math.hypot(px - (-3.375), pz - (-0.9)) < 2.2) {
           window.location.hash = "#/quarters";
         } else if (Math.hypot(px, pz - 1.6) < 1.4) {
           window.location.hash = "#/settings";
@@ -467,13 +477,50 @@ class Stage {
     return !session.hasFlag("starmapHoloClosed");
   }
 
+  closeCommsHolo() {
+    session.setFlag("commsHoloClosed", true);
+    if (this.shipInterior?.closeCommsHolo) {
+      this.shipInterior.closeCommsHolo();
+      soundscape.playNavRelayClick?.();
+    }
+  }
+
+  openCommsHolo() {
+    session.setFlag("commsHoloClosed", false);
+    if (this.shipInterior?.openCommsHolo) {
+      this.shipInterior.openCommsHolo();
+      soundscape.playNavRelayClick?.();
+    }
+  }
+
+  toggleCommsHolo() {
+    if (this.isCommsHoloVisible()) {
+      this.closeCommsHolo();
+    } else {
+      this.openCommsHolo();
+    }
+    return this.isCommsHoloVisible();
+  }
+
+  isCommsHoloVisible() {
+    if (this.shipInterior?.isCommsHoloVisible) {
+      return this.shipInterior.isCommsHoloVisible();
+    }
+    return !session.hasFlag("commsHoloClosed");
+  }
+
   toggleAnyHolo() {
     if (this.mode === "ship" && this.camera) {
       const px = this.camera.position.x;
       const pz = this.camera.position.z;
       const distBridge = Math.hypot(px - 0, pz - 1.2);
       const distStarmap = Math.hypot(px - 3.2, pz - 1.8);
+      const distComms = Math.hypot(px - (-3.35), pz - (-6.1));
 
+      if (window.location.hash.includes("leaderboard") || distComms < 3.0) {
+        this.toggleCommsHolo();
+        return;
+      }
       if (window.location.hash.includes("starmap")) {
         this.toggleStarmapHolo();
         return;
@@ -483,11 +530,15 @@ class Stage {
         return;
       }
 
-      if (distStarmap < distBridge) {
+      if (distComms < distBridge && distComms < distStarmap) {
+        this.toggleCommsHolo();
+      } else if (distStarmap < distBridge) {
         this.toggleStarmapHolo();
       } else {
         this.toggleClubHolo();
       }
+    } else if (window.location.hash.includes("leaderboard")) {
+      this.toggleCommsHolo();
     } else if (window.location.hash.includes("starmap")) {
       this.toggleStarmapHolo();
     } else {
@@ -918,15 +969,18 @@ class Stage {
         this.fpsControls.update(delta);
         const px = this.camera.position.x;
         const pz = this.camera.position.z;
-        if (pz < -5.0 && Math.abs(px) < 2.0) {
+        const nearDoor = this.shipInterior?.getDoorNear(px, pz, 1.8);
+        if (nearDoor) {
+          this.fpsControls.showPrompt(nearDoor.isOpen ? "[E] CLOSE DOOR" : "[E] OPEN DOOR");
+        } else if (Math.hypot(px - 3.375, pz - (-6.6)) < 2.2) {
           this.fpsControls.showPrompt("[E] AIRLOCK: DISEMBARK TO EREBUS (CHARGE GARDENS)");
-        } else if (Math.hypot(px - 3.2, pz - 1.8) < 2.2) {
+        } else if (Math.hypot(px - 3.2, pz - 1.8) < 2.0) {
           this.fpsControls.showPrompt("[E] ACCESS STAR MAP & NAVIGATION");
-        } else if (Math.hypot(px - 4.2, pz - (-2.2)) < 2.4) {
+        } else if (Math.hypot(px - 3.3, pz - (-1.2)) < 2.2) {
           this.fpsControls.showPrompt("[E] ACCESS CARGO & INVENTORY");
-        } else if (Math.hypot(px - (-2.8), pz - (-2.0)) < 2.2) {
+        } else if (Math.hypot(px - (-3.375), pz - (-6.45)) < 2.2) {
           this.fpsControls.showPrompt("[E] ACCESS SUB-SPACE COMMS RELAY");
-        } else if (Math.hypot(px - (-3.8), pz - 2.2) < 2.2) {
+        } else if (Math.hypot(px - (-3.375), pz - (-0.9)) < 2.2) {
           this.fpsControls.showPrompt("[E] ACCESS CREW QUARTERS & LOGS");
         } else if (Math.hypot(px, pz - 1.6) < 1.4) {
           this.fpsControls.showPrompt("[E] ACCESS FLIGHT COCKPIT & SETTINGS");

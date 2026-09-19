@@ -31,6 +31,7 @@ import {
   createQuestHoloTexture,
   createClubHoloTexture,
   createCommsStandingsTexture,
+  createCommsHoloTexture,
   createCargoManifestTexture,
   createBlastDoorTexture,
   createRackPanelTexture,
@@ -528,6 +529,7 @@ export class ShipInterior {
    * below is what proves it, and `verify:ship` calls it.
    */
   buildDoorwayFrames(hull) {
+    this.doors = [];
     for (const d of doorways()) {
       const frame = new THREE.Group();
       frame.position.set(d.pos[0], 0, d.pos[1]);
@@ -539,10 +541,12 @@ export class ShipInterior {
       const depth = WALL_T + 0.08;
 
       for (const s of [-1, 1]) {
+        // Height is exactly DOOR_H so posts meet the bottom of the lintel at DOOR_H
+        // without vertical overlap or coplanar Z-fighting.
         const post = new THREE.Mesh(
-          new THREE.BoxGeometry(postW, DOOR_H + 0.1, depth), this.durasteelMat
+          new THREE.BoxGeometry(postW, DOOR_H, depth), this.durasteelMat
         );
-        post.position.set(s * (half + postW / 2), (DOOR_H + 0.1) / 2, 0);
+        post.position.set(s * (half + postW / 2), DOOR_H / 2, 0);
         frame.add(post);
 
         frame.add(boltLine(
@@ -571,8 +575,7 @@ export class ShipInterior {
       lamp.position.set(0, DOOR_H + 0.12, depth / 2 + 0.045);
       frame.add(lamp);
 
-      // A dogging cleat on each jamb: this is a pressure door aperture, even
-      // where the door itself was taken off its hinges decades ago.
+      // A dogging cleat on each jamb: this is a pressure door aperture
       for (const s of [-1, 1]) {
         const cleat = new THREE.Mesh(
           new THREE.BoxGeometry(0.07, 0.1, 0.06), this.brassMat
@@ -581,32 +584,19 @@ export class ShipInterior {
         frame.add(cleat);
       }
 
-      // THE DOOR ITSELF — one leaf per opening, hinged on the port (or -X)
-      // jamb and swung back against the wall so it stands clear of the walk.
-      //
-      // Every compartment on the Avalon has a doorway, and every doorway has a
-      // frame — but until now not one of them had a door, so the whole ship
-      // read as a set of open archways. A leaf hung and latched open is what a
-      // working interior actually looks like: it says the aperture can be shut,
-      // and it does not pretend a bulkhead has a door when the hole is the door.
-      //
-      // The leaf lives INSIDE the frame group, which is welded into the hull,
-      // so it is one object with the wall it hangs on and the physics check
-      // reads it as such. Its thickness is under the frame's own depth, so it
-      // sits in the reveal rather than proud of it.
+      // THE DOOR ITSELF — closed by default across the opening.
+      // Opens by swinging cleanly inside the room against the bulkhead when E is pressed.
       const hinge = new THREE.Group();
       hinge.position.set(-half + 0.02, 0, 0);
-      hinge.rotation.y = -1.62;                 // ~93°: flat back, not 90° flush
-      const leafW = d.clear * 0.9;
+      hinge.rotation.y = 0; // CLOSED by default
+      const leafW = d.clear - 0.04;
       const leaf = new THREE.Mesh(
         new THREE.BoxGeometry(leafW, DOOR_H - 0.06, 0.05), this.durasteelMat
       );
       leaf.position.set(leafW / 2, (DOOR_H - 0.06) / 2 + 0.03, 0);
       hinge.add(leaf);
 
-      // A window in the leaf, and a pull handle on the free edge. A blank
-      // slab reads as plate; a port in it reads as a door you could look
-      // through before you opened it.
+      // A window in the leaf, and a pull handle on the free edge.
       const port = new THREE.Mesh(
         new THREE.BoxGeometry(0.42, 0.42, 0.02), this.ironMat
       );
@@ -627,6 +617,46 @@ export class ShipInterior {
       frame.add(hinge);
 
       hull.add(frame);
+
+      // Calculate closed-door collider
+      let doorCollider = null;
+      if (d.axis === 'x') {
+        doorCollider = {
+          minX: d.pos[0] - WALL_T / 2 - 0.06,
+          maxX: d.pos[0] + WALL_T / 2 + 0.06,
+          minZ: d.pos[1] - d.clear / 2,
+          maxZ: d.pos[1] + d.clear / 2
+        };
+      } else {
+        doorCollider = {
+          minX: d.pos[0] - d.clear / 2,
+          maxX: d.pos[0] + d.clear / 2,
+          minZ: d.pos[1] - WALL_T / 2 - 0.06,
+          maxZ: d.pos[1] + WALL_T / 2 + 0.06
+        };
+      }
+
+      // Swing towards room interior
+      let openAngle = -1.60;
+      if (d.axis === 'x' && d.pos[0] > 0) {
+        openAngle = 1.60;
+      } else if (d.axis === 'z' && d.pos[1] < 0) {
+        openAngle = 1.60;
+      }
+
+      this.doors.push({
+        id: `door-${d.wall}-${d.pos[0].toFixed(2)}_${d.pos[1].toFixed(2)}`,
+        doorway: d,
+        pos: d.pos,
+        axis: d.axis,
+        hinge,
+        leaf,
+        isOpen: false,
+        openAngle,
+        currentAngle: 0,
+        targetAngle: 0,
+        collider: doorCollider
+      });
     }
   }
 
@@ -1426,7 +1456,7 @@ export class ShipInterior {
       }
     }
     cargoGroup.add(containerA, containerB, containerC);
-    this.addCollider(1.25, 4.05, -2.85, -1.3);
+    this.addCollider(1.30, 4.05, -2.75, -1.48);
 
     // --- Cargo manifest terminal, on the face of container A ---
     const mTex = createCargoManifestTexture(0, 8, '');
@@ -1631,6 +1661,47 @@ export class ShipInterior {
     tag.rotation.y = -Math.PI / 2;
     commsGroup.add(tag);
 
+    // --- Comms Room Hologram: Fleet Guild Standings ---
+    const commsHoloGroup = new THREE.Group();
+    commsHoloGroup.position.set(-3.35, 1.45, -6.1);
+    commsHoloGroup.rotation.y = Math.PI / 2; // Face towards the doorway entrance (+X)
+
+    const holoTex = createCommsHoloTexture([], '');
+    this.commsHoloMat = new THREE.MeshBasicMaterial({
+      map: holoTex,
+      transparent: true,
+      opacity: 0.88,
+      blending: THREE.NormalBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    const holoScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9), this.commsHoloMat);
+    commsHoloGroup.add(holoScreen);
+    this.commsHoloGroup = commsHoloGroup;
+    this.animatedElements.push({ obj: holoScreen, speed: 0.05, isHover: true, baseY: 0 });
+
+    const emitterBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.24, 0.3, 0.04, 16), this.durasteelMat
+    );
+    emitterBase.position.set(-3.35, 0.02, -6.1);
+    const emitterLens = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.14, 0.18, 0.05, 16), this.brassMat
+    );
+    emitterLens.position.set(-3.35, 0.03, -6.1);
+
+    const beam = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.8, 0.15, 1.45, 16, 1, true),
+      new THREE.MeshBasicMaterial({
+        color: 0x00f5d4, transparent: true, opacity: 0.07,
+        blending: THREE.AdditiveBlending, side: THREE.FrontSide, depthWrite: false
+      })
+    );
+    beam.position.set(-3.35, 0.725, -6.1);
+    this.commsHoloBeam = beam;
+
+    commsGroup.add(emitterBase, emitterLens, beam, commsHoloGroup);
+
     this.group.add(commsGroup);
     this.interactiveTerminals.push(
       { id: 'comms', name: ROOMS.comms.name, pos: [-3.3, 1.55, -6.3], route: '#/leaderboard' }
@@ -1831,7 +1902,7 @@ export class ShipInterior {
     this.addCollider(fx - 1.65, fx + 1.65, fz - 1.0, fz + 1.45);
 
     /* ---------------- THE HOPPER, starboard side ---------------- */
-    const hx = 3.3, hz = -9.9;
+    const hx = 3.3, hz = -9.7;
     const hopper = new THREE.Mesh(
       new THREE.CylinderGeometry(1.0, 0.36, 1.5, 4), this.durasteelMat
     );
@@ -1853,7 +1924,7 @@ export class ShipInterior {
     const gate = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.1, 0.12), this.brassMat);
     gate.position.set(hx, 0.4, hz + 0.72);
     g.add(gate);
-    this.addCollider(hx - 1.15, hx + 1.15, hz - 1.05, hz + 0.95);
+    this.addCollider(hx - 1.15, hx + 1.15, hz - 0.95, hz + 0.95);
 
     // Slag bin between the hopper and the firebox, and the shovel in it.
     const bin = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.55, 0.8), this.ironMat);
@@ -2105,6 +2176,14 @@ export class ShipInterior {
       this.commsScreenMat.needsUpdate = true;
     }
 
+    if (this.commsHoloMat) {
+      const s = standingsData;
+      const newHTex = createCommsHoloTexture(s.teams || [], s.chatter || '');
+      this.commsHoloMat.map?.dispose();
+      this.commsHoloMat.map = newHTex;
+      this.commsHoloMat.needsUpdate = true;
+    }
+
     if (this.cargoScreenMat) {
       const inv = inventoryData;
       const newMTex = createCargoManifestTexture(inv.count || 0, inv.max || 8, inv.trinket || '');
@@ -2189,7 +2268,101 @@ export class ShipInterior {
     return Boolean(this.starmapHoloGroup && this.starmapHoloGroup.visible);
   }
 
+  setCommsHoloVisible(visible, force = false) {
+    if (!force && this.commsHoloClosed) {
+      visible = false;
+    }
+    const v = Boolean(visible);
+    if (this.commsHoloGroup) this.commsHoloGroup.visible = v;
+    if (this.commsHoloBeam) this.commsHoloBeam.visible = v;
+  }
+
+  closeCommsHolo() {
+    this.commsHoloClosed = true;
+    this.setCommsHoloVisible(false, true);
+  }
+
+  openCommsHolo() {
+    this.commsHoloClosed = false;
+    this.setCommsHoloVisible(true, true);
+  }
+
+  toggleCommsHolo() {
+    if (this.isCommsHoloVisible()) {
+      this.closeCommsHolo();
+    } else {
+      this.openCommsHolo();
+    }
+    return this.isCommsHoloVisible();
+  }
+
+  isCommsHoloVisible() {
+    return Boolean(this.commsHoloGroup && this.commsHoloGroup.visible);
+  }
+
+  /* ====================================================================
+     DOOR INTERACTION AND COLLIDERS
+     ==================================================================== */
+
+  getActiveColliders() {
+    const closed = this.doors
+      ? this.doors.filter(d => !d.isOpen).map(d => d.collider).filter(Boolean)
+      : [];
+    return [...this.colliders, ...closed];
+  }
+
+  getDoorNear(x, z, maxDist = 1.6) {
+    if (!this.doors || !this.doors.length) return null;
+    let closest = null;
+    let minD = maxDist;
+    for (const door of this.doors) {
+      const dist = Math.hypot(x - door.pos[0], z - door.pos[1]);
+      if (dist < minD) {
+        minD = dist;
+        closest = door;
+      }
+    }
+    return closest;
+  }
+
+  toggleDoor(door) {
+    if (!door) return false;
+    door.isOpen = !door.isOpen;
+    door.targetAngle = door.isOpen ? door.openAngle : 0;
+    return door.isOpen;
+  }
+
+  openDoor(door) {
+    if (!door) return;
+    door.isOpen = true;
+    door.targetAngle = door.openAngle;
+  }
+
+  closeDoor(door) {
+    if (!door) return;
+    door.isOpen = false;
+    door.targetAngle = 0;
+  }
+
+  updateDoors(delta) {
+    if (!this.doors) return;
+    const speed = 4.5;
+    for (const d of this.doors) {
+      if (Math.abs(d.currentAngle - d.targetAngle) > 0.005) {
+        const step = Math.sign(d.targetAngle - d.currentAngle) * speed * delta;
+        if (Math.abs(step) >= Math.abs(d.targetAngle - d.currentAngle)) {
+          d.currentAngle = d.targetAngle;
+        } else {
+          d.currentAngle += step;
+        }
+        d.hinge.rotation.y = d.currentAngle;
+      }
+    }
+  }
+
   update(delta, time) {
+    this.updateDoors(delta);
+
     for (const el of this.animatedElements) {
       if (el.isHover) {
         el.obj.position.y = (el.baseY !== undefined ? el.baseY : 1.95) + Math.sin(time * 1.5) * 0.04;

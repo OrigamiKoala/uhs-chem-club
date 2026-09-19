@@ -653,70 +653,200 @@ export function createClubHoloTexture() {
   ctx.lineTo(976, 184);
   ctx.stroke();
 
-  // Vertical center divider
-  ctx.strokeStyle = 'rgba(217, 148, 35, 0.3)';
+  // DIRECTIONS: ONLY show Star Map & message to check out star map
+  ctx.textAlign = 'center';
+
+  // Star Map Box
+  ctx.fillStyle = 'rgba(217, 148, 35, 0.08)';
+  ctx.fillRect(160, 224, 704, 150);
+  ctx.strokeStyle = 'rgba(217, 148, 35, 0.4)';
   ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(512, 204);
-  ctx.lineTo(512, 446);
-  ctx.stroke();
+  ctx.strokeRect(160, 224, 704, 150);
 
-  // LEFT COLUMN: arrows pointing left
-  ctx.textAlign = 'left';
-
-  // Item 1: Star Map
   ctx.fillStyle = '#ffaa38';
-  ctx.font = 'bold 26px sans-serif';
-  ctx.fillText('◀  STAR MAP', 72, 252);
-  ctx.font = '17px monospace';
-  ctx.fillStyle = '#b8aa94';
-  ctx.fillText('Quests & World Charts', 72, 286);
+  ctx.font = 'bold 36px sans-serif';
+  ctx.shadowColor = '#d99423';
+  ctx.shadowBlur = 8;
+  ctx.fillText('◀  STAR MAP  ▶', 512, 282);
+  ctx.shadowBlur = 0;
 
-  // Item 2: Cargo Hold
-  ctx.fillStyle = '#ffaa38';
-  ctx.font = 'bold 26px sans-serif';
-  ctx.fillText('◀  CARGO HOLD', 72, 362);
-  ctx.font = '17px monospace';
-  ctx.fillStyle = '#b8aa94';
-  ctx.fillText('Inventory & Manifest', 72, 396);
-
-  // RIGHT COLUMN: arrows pointing right
-  ctx.textAlign = 'right';
-
-  // Item 1: Quarters
-  ctx.fillStyle = '#ffaa38';
-  ctx.font = 'bold 26px sans-serif';
-  ctx.fillText('CREW QUARTERS  ▶', 952, 252);
-  ctx.font = '17px monospace';
-  ctx.fillStyle = '#b8aa94';
-  ctx.fillText('Profile & Guild Members', 952, 286);
-
-  // Item 2: Standings / Fleet Comms
-  ctx.fillStyle = '#ffaa38';
-  ctx.font = 'bold 26px sans-serif';
-  ctx.fillText('FLEET COMMS  ▶', 952, 362);
-  ctx.font = '17px monospace';
-  ctx.fillStyle = '#b8aa94';
-  ctx.fillText('Leaderboard & Standings', 952, 396);
+  ctx.font = '20px monospace';
+  ctx.fillStyle = '#f6ecd9';
+  ctx.fillText('Charge Gardens & Planet Exploration Charts', 512, 332);
 
   // Bottom corridor guide banner
   ctx.fillStyle = '#11141c';
-  ctx.fillRect(48, 458, 928, 84);
+  ctx.fillRect(100, 420, 824, 96);
   ctx.strokeStyle = '#d99423';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(48, 458, 928, 84);
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(100, 420, 824, 96);
 
-  ctx.textAlign = 'center';
-  ctx.font = 'bold 14px monospace';
-  ctx.fillStyle = '#c39a63';
-  ctx.fillText('▲ FORWARD: FLIGHT COCKPIT        AFT: AIRLOCK DEPARTURE ▼', 512, 485);
-
-  ctx.font = 'bold 17px sans-serif';
+  ctx.font = 'bold 22px sans-serif';
   ctx.fillStyle = '#ffaa38';
   ctx.shadowColor = '#d99423';
-  ctx.shadowBlur = 6;
-  ctx.fillText('Check out the star map for the latest quests!', 512, 521);
+  ctx.shadowBlur = 10;
+  ctx.fillText('Check out the star map for the latest quests!', 512, 478);
   ctx.shadowBlur = 0;
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.userData.closeRect = closeRectUv(badgeX, badgeY, badgeW, badgeH, 1024, 576);
+  return texture;
+}
+
+/**
+ * Creates 3D Hologram texture for Comms room displaying accurate Guild Standings
+ */
+export function createCommsHoloTexture(teams = [], chatter = '') {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 576;
+  const ctx = canvas.getContext('2d');
+
+  // Dark translucent holo ground
+  ctx.fillStyle = '#051014';
+  ctx.fillRect(0, 0, 1024, 576);
+
+  // Hologram scanlines
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+  for (let y = 0; y < 576; y += 4) {
+    ctx.fillRect(0, y, 1024, 1.6);
+  }
+
+  // Cyan-green glowing border
+  ctx.strokeStyle = '#00f5d4';
+  ctx.lineWidth = 2.5;
+  ctx.strokeRect(18, 18, 988, 540);
+
+  // Corner brackets
+  ctx.strokeStyle = '#7bf1a8';
+  ctx.lineWidth = 4;
+  const bLen = 36;
+  ctx.beginPath();
+  ctx.moveTo(18, 18 + bLen); ctx.lineTo(18, 18); ctx.lineTo(18 + bLen, 18);
+  ctx.moveTo(1006 - bLen, 18); ctx.lineTo(1006, 18); ctx.lineTo(1006, 18 + bLen);
+  ctx.moveTo(18, 558 - bLen); ctx.lineTo(18, 558); ctx.lineTo(18 + bLen, 558);
+  ctx.moveTo(1006 - bLen, 558); ctx.lineTo(1006, 558); ctx.lineTo(1006, 558 - bLen);
+  ctx.stroke();
+
+  // Eyebrow badge
+  ctx.font = 'bold 15px monospace';
+  ctx.fillStyle = '#00f5d4';
+  ctx.textAlign = 'center';
+  ctx.fillText('// FLEET COMMS · SUB-SPACE RELAY · GUILD STANDINGS //', 512, 48);
+
+  // Top-right Close [X] badge
+  ctx.font = 'bold 15px monospace';
+  const closeText = 'Close [X]';
+  const closeW = ctx.measureText(closeText).width;
+  const badgeX = 964 - closeW - 14;
+  const badgeY = 32;
+  const badgeW = closeW + 14;
+  const badgeH = 26;
+
+  ctx.fillStyle = 'rgba(0, 245, 212, 0.15)';
+  ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
+  ctx.strokeStyle = '#00f5d4';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#7bf1a8';
+  ctx.shadowColor = '#00f5d4';
+  ctx.shadowBlur = 6;
+  ctx.fillText(closeText, badgeX + badgeW / 2, badgeY + 18);
+  ctx.shadowBlur = 0;
+
+  // Title: GUILD STANDINGS
+  ctx.font = 'bold 36px sans-serif';
+  ctx.fillStyle = '#f0fff4';
+  ctx.shadowColor = '#00f5d4';
+  ctx.shadowBlur = 12;
+  ctx.fillText('FLEET GUILD STANDINGS', 512, 102);
+  ctx.shadowBlur = 0;
+
+  ctx.font = '14px monospace';
+  ctx.fillStyle = '#68d391';
+  ctx.fillText('LIVE TELEMETRY · SCALED CREW PARTICIPATION SCORES', 512, 128);
+
+  // Horizontal divider
+  ctx.strokeStyle = 'rgba(0, 245, 212, 0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(48, 148);
+  ctx.lineTo(976, 148);
+  ctx.stroke();
+
+  // Guild rows
+  const list = Array.isArray(teams) && teams.length ? teams : [
+    { rank: 1, name: 'Mineral Mining Guild', team_score: 0, active: 0, roster: 0 },
+    { rank: 2, name: 'Atmospheric Harvesters', team_score: 0, active: 0, roster: 0 },
+    { rank: 3, name: 'Thermal Smelters', team_score: 0, active: 0, roster: 0 },
+    { rank: 4, name: 'Ocean Salvagers', team_score: 0, active: 0, roster: 0 }
+  ];
+
+  const rowStartY = 175;
+  const rowH = 68;
+
+  list.slice(0, 4).forEach((t, idx) => {
+    const y = rowStartY + idx * rowH;
+    const isFirst = idx === 0;
+
+    // Row card background
+    ctx.fillStyle = isFirst ? 'rgba(0, 245, 212, 0.14)' : 'rgba(10, 35, 30, 0.55)';
+    ctx.fillRect(48, y, 928, 56);
+    ctx.strokeStyle = isFirst ? '#00f5d4' : 'rgba(0, 245, 212, 0.25)';
+    ctx.lineWidth = isFirst ? 1.5 : 1;
+    ctx.strokeRect(48, y, 928, 56);
+
+    // Rank pill
+    const rankStr = String(t.rank || idx + 1).padStart(2, '0');
+    ctx.fillStyle = isFirst ? '#00f5d4' : '#48bb78';
+    ctx.font = 'bold 22px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`#${rankStr}`, 70, y + 36);
+
+    // Guild name
+    const nm = (t.name || t.corp_name || t.team_id || 'GUILD').toUpperCase();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillText(nm, 160, y + 36);
+
+    // Crew telemetry
+    if (t.active != null && t.roster != null) {
+      ctx.fillStyle = '#7bf1a8';
+      ctx.font = '14px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`CREW: ${t.active}/${t.roster}`, 740, y + 35);
+    }
+
+    // Score
+    const scoreStr = String(t.team_score ?? t.score ?? 0);
+    ctx.textAlign = 'right';
+    ctx.font = 'bold 26px monospace';
+    ctx.fillStyle = isFirst ? '#00f5d4' : '#e6fffa';
+    ctx.shadowColor = isFirst ? '#00f5d4' : 'transparent';
+    ctx.shadowBlur = isFirst ? 8 : 0;
+    ctx.fillText(`${scoreStr} PTS`, 950, y + 37);
+    ctx.shadowBlur = 0;
+  });
+
+  // Footer status bar
+  ctx.fillStyle = '#061a1a';
+  ctx.fillRect(48, 470, 928, 54);
+  ctx.strokeStyle = 'rgba(0, 245, 212, 0.35)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(48, 470, 928, 54);
+
+  ctx.textAlign = 'left';
+  ctx.font = '13px monospace';
+  ctx.fillStyle = '#7bf1a8';
+  const chat = chatter || 'SIGNAL STABLE · STANDINGS SYNCHRONIZED ACROSS SYSTEM';
+  ctx.fillText(`TRANS: ${chat}`, 72, 502);
+
+  ctx.textAlign = 'right';
+  ctx.font = 'bold 13px monospace';
+  ctx.fillStyle = '#00f5d4';
+  ctx.fillText('PRESS [E] AT TERMINAL FOR DETAILED RECORD', 950, 502);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.userData.closeRect = closeRectUv(badgeX, badgeY, badgeW, badgeH, 1024, 576);
