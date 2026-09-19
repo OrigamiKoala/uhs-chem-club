@@ -173,7 +173,7 @@ export function renderStarMap(container) {
   if (isT4) {
     // Integrated in-world 3D Star Map & Quest Command Terminal
     container.innerHTML = `
-      <div class="in-world-terminal starmap-terminal">
+      <div class="in-world-terminal starmap-terminal m-screen m-starmap">
         <div class="terminal-header">
           <div>
             <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">STAR MAP</h2>

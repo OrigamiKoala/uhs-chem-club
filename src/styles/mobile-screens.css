@@ -377,9 +377,9 @@
 
 /* ===================================================================
    Phones: the star map's two roads, and the Learn walk HUD.
-   Walking a world is T4 and T4 is desktop-only (isT4Eligible rejects a
-   coarse pointer), so the walk HUD only has to survive a narrow window,
-   not a phone. The tabs do have to work at 375 px.
+   A phone does walk a world now — T4 is decided by the GPU and the cores,
+   not by the pointer — so the walk HUD has to hold at 375 px as well, and
+   its phone rules are below rather than only surviving a narrow window.
    =================================================================== */
 
 @media (max-width: 760px) {

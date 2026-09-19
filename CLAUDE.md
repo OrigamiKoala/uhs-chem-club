@@ -617,16 +617,40 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   - `T3`: High/Desktop (60fps, procedural interior, graph traversal, eased dolly, standard 2D page overlays).
   - `T2`: Standard/Chromebook/Mobile (30fps, DPR 1, baked stills).
   - `T1`: Non-WebGL Fallback (DOM-only).
-- **A phone is not disqualified from T4 by being a phone.** `isT4Eligible` in
-  `three/tier.js` asks about WebGL2, cores and reported memory and nothing else; the
-  rule that refused T4 to every coarse pointer is gone, and `recordFrame` remains the
-  honest backstop (under 24fps demotes on the spot). Because the old refusal was
-  *persisted* as T3, `migrateStoredTier` clears exactly that stored value once —
-  touch device, stored T3, now eligible — behind `avalon_gfx_rev`; it never touches a
-  desktop preference or a phone that is genuinely not capable. Two things are cheaper
-  on a handset and are the only fidelity differences: DPR is capped at 1.5 rather than
-  2 (a phone commonly reports 3), and `shadowMap` stays off, because soft shadow maps
-  are the one T4 feature a mobile GPU cannot hold 60fps through.
+- **A phone is not disqualified from T4 by being a phone.** `isT4Capable` in
+  `three/tier.js` asks about WebGL2, cores and reported memory and nothing else — no
+  pointer test, and Apple's mobile GPU is deliberately absent from the slow-renderer
+  regex, because a renderer string is not a frame rate. `isT4Eligible` is that plus
+  "not demoted earlier in this page session"; Settings and the HUD chip ask
+  `isT4Capable`, so a handset the monitor demoted can always be put back by hand.
+  Two things are cheaper on a handset and are the only fidelity differences: DPR is
+  capped at 1.5 rather than 2 (a phone commonly reports 3), and `shadowMap` stays off,
+  because soft shadow maps are the one T4 feature a mobile GPU cannot hold 60fps
+  through.
+- **A measured tier is never written down; only a chosen one is.** This is the rule that
+  keeps a phone out of the stills. `session.gfxTierPref` holds a tier the *player* picked
+  — `tierManager.chooseTier`, from the Settings radios or the HUD chip, is the only path
+  that writes it — and `null` means "probe the device". `setTier` is the automatic path
+  and persists nothing, so a bad afternoon is never inherited by the next visit.
+  `session.gfxTier` is just what is running now. They used to be one value, and every
+  automatic demotion was stored as though the player had asked for it.
+- **A boot is not evidence.** `recordFrame` is one judgement window for the boot probe
+  and the runtime monitor alike (90 frames), and it is blind for `WARM_UP_MS` (6 s) after
+  boot and after every tier change, because textures uploading and shaders compiling read
+  as 10fps. A demotion is **one step**, then the window is discarded and
+  `DEMOTE_COOLDOWN_MS` (8 s) has to pass. The old monitor kept its slow samples after
+  each change, so one hitch walked a capable iPhone from T4 to T1 within a few frames —
+  and stored T1 — which is how a phone ended up looking at static backdrops. A device
+  that really cannot render still lands where it belongs, it just has to prove it.
+  `migrateStoredTier` (behind `avalon_gfx_rev`, rev 3) clears any stored sub-T4 tier once
+  on a T4-capable touch device, since none of them were chosen; a desktop preference and
+  a phone that is genuinely not capable are untouched.
+- **T4 is a phone layout too.** The five in-world terminals (star map, quarters, cargo,
+  comms, settings) carry their `m-screen m-<name>` hooks in the T4 branch as well as the
+  2D one, so every phone rule in `mobile-screens.css` still applies inside a terminal.
+  `mobile.css` takes the terminal to the glass edges below the HUD and drops the backdrop
+  blur (the most expensive thing on the screen over a live 3D frame);
+  `mobile-landscape.css` docks it to the right so the walk keeps the left of the glass.
 - **Mobile T4 is driven by twin sticks** (`three/touch-controls.js`, styling in
   `styles/mobile-game.css`). A 360-degree look stick bottom-left and a 360-degree move
   stick bottom-right, both floating — the ring jumps to wherever the thumb lands in its

@@ -210,3 +210,44 @@
   .cinematic-frame { width: auto; height: calc(100dvh - 5.5rem); max-width: 100%; }
   .cinematic-caption-bar { font-size: 0.74rem; padding: 6px 10px; min-height: 0; }
 }
+
+/* ===================================================================
+   T4 ON A PHONE — the in-world terminals.
+
+   A phone runs the continuous walk (`isT4Capable` asks about the GPU and the
+   cores, never about the pointer), so the terminals the ship's compartments
+   open are not desktop-only furniture any more. They take the glass edge to
+   edge below the HUD, and the plate goes opaque: a backdrop blur over a live
+   3D frame is the most expensive thing on the screen and the first thing a
+   handset should stop paying for. The screens themselves carry their usual
+   `m-screen m-<name>` hooks inside, so every grid still collapses.
+   =================================================================== */
+@media (max-width: 760px) {
+  .in-world-terminal {
+    left: max(0.5rem, env(safe-area-inset-left));
+    right: max(0.5rem, env(safe-area-inset-right));
+    width: auto;
+    top: calc(var(--hud-h) + 6px);
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+    max-height: none;
+    padding: 0.9rem;
+    background: rgba(14, 12, 10, 0.97);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Close is the way out of a terminal and a thumb has to be able to hit it. */
+  .terminal-close-btn { min-height: 38px; padding: 6px 12px; }
+  .terminal-header { position: sticky; top: 0; z-index: 1; background: rgba(14, 12, 10, 0.97); }
+
+  .deployed-chamber-overlay {
+    inset: calc(var(--hud-h) + 6px) max(0.5rem, env(safe-area-inset-right))
+           max(0.5rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
+    padding: 0.85rem;
+    background: rgba(10, 9, 8, 0.97);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

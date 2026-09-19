@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { session } from '../session.js';
-import { tierManager, isT4Eligible, isTouchPrimary } from '../three/tier.js';
+import { tierManager, isT4Capable, isTouchPrimary } from '../three/tier.js';
 import { showToast } from '../ui/toast.js';
 import { pageHeader } from '../ui/layout.js';
 import { bindPasswordReveal } from './register.js';
@@ -9,7 +9,9 @@ import { soundscape } from '../audio/soundscape.js';
 export function renderSettings(container) {
   const soundPrefs = session.sound;
   const isT4 = tierManager.currentTier === 'T4';
-  const eligibleT4 = isT4Eligible();
+  // The device's capability, not this page session's history: a handset the
+  // frame monitor demoted must still be able to ask for the walk back.
+  const eligibleT4 = isT4Capable();
   // On a phone the continuous walk is driven by the twin sticks, not WASD.
   const t4Note = !eligibleT4
     ? ' · Requires WebGL2'
@@ -28,7 +30,7 @@ export function renderSettings(container) {
   });
 
   container.innerHTML = `
-    <div class="${isT4 ? 'in-world-terminal settings-terminal' : 'screen-container m-screen m-settings'}" ${isT4 ? '' : 'style="max-width: 680px;"'}>
+    <div class="${isT4 ? 'in-world-terminal settings-terminal m-screen m-settings' : 'screen-container m-screen m-settings'}" ${isT4 ? '' : 'style="max-width: 680px;"'}>
       ${terminalHeaderMarkup}
 
       <!-- Section 1: Graphics & Performance -->
@@ -147,7 +149,7 @@ export function renderSettings(container) {
   // Tier radio changes
   container.querySelectorAll('input[name="gfx-tier"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
-      tierManager.setTier(e.target.value);
+      tierManager.chooseTier(e.target.value);
       showToast(`Graphics: ${e.target.value}`, 'info');
       renderSettings(container);
     });

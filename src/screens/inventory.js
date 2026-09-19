@@ -48,7 +48,7 @@ export function renderInventory(container) {
     });
 
     container.innerHTML = `
-      <div class="${isT4 ? 'in-world-terminal inventory-terminal' : 'screen-container m-screen m-inventory'}">
+      <div class="${isT4 ? 'in-world-terminal inventory-terminal m-screen m-inventory' : 'screen-container m-screen m-inventory'}">
         ${terminalHeader}
 
         ${trinketData ? `

@@ -70,7 +70,7 @@ export async function renderLeaderboard(container) {
     });
 
     container.innerHTML = `
-      <div class="${isT4 ? 'in-world-terminal comms-terminal' : 'screen-container m-screen m-leaderboard'}">
+      <div class="${isT4 ? 'in-world-terminal comms-terminal m-screen m-leaderboard' : 'screen-container m-screen m-leaderboard'}">
         ${terminalHeaderMarkup}
 
         ${loading && !hasData ? `

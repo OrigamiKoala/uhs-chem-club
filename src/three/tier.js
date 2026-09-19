@@ -16,7 +16,26 @@ import { session } from '../session.js';
 
 /** Bumped when a change to the probe invalidates tiers stored by older builds. */
 const TIER_REV_KEY = 'avalon_gfx_rev';
-const TIER_REV = '2';
+const TIER_REV = '3';
+
+/**
+ * A boot, a scene swap and the first walk into a room all cost frames: textures
+ * upload, shaders compile, a world's JSON becomes geometry. Nothing is judged
+ * inside this window. Judging it is what used to strand a phone on stills — the
+ * slow first seconds read as 12fps, and the monitor demoted on the spot.
+ */
+const WARM_UP_MS = 6000;
+
+/**
+ * After a demotion the window is thrown away and this much time has to pass
+ * before another. One bad stretch is worth one step down, never four: the old
+ * monitor kept the same slow samples after each change, so T4 fell to T1 within
+ * a handful of frames and the player was left looking at a still image.
+ */
+const DEMOTE_COOLDOWN_MS = 8000;
+
+/** Frames in a judgement window. At 60fps this is a second and a half. */
+const WINDOW_FRAMES = 90;
 
 export const TIER_RANKS = {
   T1: 1,
@@ -42,7 +61,12 @@ export function isTouchPrimary() {
   return !fine && (navigator.maxTouchPoints || 0) > 0;
 }
 
-export function isT4Eligible() {
+/**
+ * What the *device* can do, ignoring anything that happened this page session.
+ * Settings and the HUD chip ask this, so a handset that dipped below 24fps once
+ * can still be put back on T4 by hand.
+ */
+export function isT4Capable() {
   if (typeof window === 'undefined') return false;
 
   // 1. WebGL2 present
@@ -64,12 +88,12 @@ export function isT4Eligible() {
     return false;
   }
 
-  // 4. T4 not previously downgraded in this session
-  if (session.t4Downgraded) {
-    return false;
-  }
-
   return true;
+}
+
+/** Capable, and not demoted by the frame monitor earlier in this page session. */
+export function isT4Eligible() {
+  return isT4Capable() && !session.t4Downgraded;
 }
 
 class TierManager {
@@ -77,8 +101,18 @@ class TierManager {
     this.currentTier = 'T4';
     this.probeComplete = false;
     this.frameTimes = [];
-    this.probeFrames = 90;
     this.listeners = new Set();
+    this.warmUpUntil = 0;
+    this.lastDemotion = 0;
+  }
+
+  /** Stop judging frames for a while — something expensive just happened. */
+  beginWarmUp() {
+    const now = (typeof performance !== 'undefined' && performance.now)
+      ? performance.now()
+      : Date.now();
+    this.warmUpUntil = now + WARM_UP_MS;
+    this.frameTimes.length = 0;
   }
 
   /**
@@ -97,14 +131,22 @@ class TierManager {
     if (done) return;
     try { localStorage.setItem(TIER_REV_KEY, TIER_REV); } catch (e) {}
 
-    if (session.gfxTier === 'T3' && isTouchPrimary() && isT4Eligible()) {
-      session.setGfxTier('T4');
+    // Any sub-T4 tier a *phone* carries from an older build was written for it,
+    // not chosen by it: T4 was refused to every coarse pointer outright, and a
+    // single slow load cascaded a capable handset down to the 2D stills. Clear
+    // it and let this build look at the device again. A desktop's stored choice
+    // and a phone that genuinely cannot hold T4 are both left alone.
+    if (isTouchPrimary() && session.gfxTierPref && session.gfxTierPref !== 'T4' && isT4Capable()) {
+      session.clearGfxTierPref();
     }
   }
 
   init() {
     this.migrateStoredTier();
-    const pref = session.gfxTier;
+
+    // A tier the player chose is honoured, and the device is not re-probed for
+    // it. Only a choice reaches here: an automatic tier is never written.
+    const pref = session.gfxTierPref;
     if (pref === 'T1' || pref === 'T2' || pref === 'T3' || pref === 'T4') {
       if (pref === 'T4' && !isT4Eligible()) {
         this.setTier('T3');
@@ -112,6 +154,7 @@ class TierManager {
         this.setTier(pref);
       }
       this.probeComplete = true;
+      this.beginWarmUp();
       return;
     }
 
@@ -134,9 +177,12 @@ class TierManager {
         renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '';
       }
 
-      const isMobileOrSlow = /mali|adreno|powervr|intel|chromebook/i.test(renderer) ||
-        (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
-        (window.devicePixelRatio && window.devicePixelRatio > 2.5);
+      // Apple's mobile GPU is not in this list and must not be added to it: a
+      // recent iPhone carries the walk, and a renderer string is not a frame
+      // rate. What cannot hold 60fps is demoted by `recordFrame`, which has
+      // measured it rather than guessed from a name.
+      const isMobileOrSlow = /mali|adreno|powervr|chromebook/i.test(renderer) ||
+        (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2);
 
       if (isMobileOrSlow) {
         this.setTier('T2');
@@ -144,53 +190,61 @@ class TierManager {
         this.setTier('T3');
       }
     }
+    this.beginWarmUp();
   }
 
-  // Record a frame timestamp during boot probe or runtime downgrade monitoring
+  /**
+   * One judgement window, whether this is the boot probe or the runtime
+   * monitor — the two used to disagree, and the boot one measured exactly the
+   * frames a boot makes slow.
+   *
+   * A tier arrived at here is *measured*, never stored: the next visit looks at
+   * the device again instead of inheriting one bad afternoon.
+   */
   recordFrame(now) {
-    if (this.probeComplete) {
-      // Monitor runtime performance for downgrades
-      if (this.frameTimes.length > 120) this.frameTimes.shift();
-      this.frameTimes.push(now);
-
-      if (this.frameTimes.length >= 60) {
-        const delta = this.frameTimes[this.frameTimes.length - 1] - this.frameTimes[0];
-        const fps = (1000 * (this.frameTimes.length - 1)) / delta;
-
-        if (fps < 24 && this.currentTier === 'T4') {
-          session.t4Downgraded = true;
-          this.setTier('T3');
-        } else if (fps < 24 && this.currentTier === 'T3') {
-          this.setTier('T2');
-        } else if (fps < 15 && this.currentTier === 'T2') {
-          this.setTier('T1');
-        }
-      }
+    if (now < this.warmUpUntil) {
+      this.frameTimes.length = 0;
       return;
     }
 
     this.frameTimes.push(now);
-    if (this.frameTimes.length >= this.probeFrames) {
-      let total = 0;
-      for (let i = 1; i < this.frameTimes.length; i++) {
-        total += (this.frameTimes[i] - this.frameTimes[i - 1]);
-      }
-      const avgMs = total / (this.frameTimes.length - 1);
-      const fps = 1000 / avgMs;
+    if (this.frameTimes.length > WINDOW_FRAMES) this.frameTimes.shift();
+    if (this.frameTimes.length < WINDOW_FRAMES) return;
 
-      if (fps < 24 && this.currentTier === 'T3') {
-        this.setTier('T2');
-      } else if (fps < 15 && this.currentTier === 'T2') {
-        this.setTier('T1');
-      }
-      this.probeComplete = true;
-    }
+    const span = this.frameTimes[this.frameTimes.length - 1] - this.frameTimes[0];
+    if (span <= 0) return;
+    const fps = (1000 * (this.frameTimes.length - 1)) / span;
+    this.probeComplete = true;
+
+    if (now - this.lastDemotion < DEMOTE_COOLDOWN_MS) return;
+
+    let next = null;
+    if (fps < 24 && this.currentTier === 'T4') next = 'T3';
+    else if (fps < 24 && this.currentTier === 'T3') next = 'T2';
+    else if (fps < 15 && this.currentTier === 'T2') next = 'T1';
+    if (!next) return;
+
+    // Only within this page session. A reload asks the question again.
+    if (this.currentTier === 'T4') session.t4Downgraded = true;
+
+    this.lastDemotion = now;
+    this.setTier(next);
   }
 
-  setTier(tier) {
+  /**
+   * @param {string} tier
+   * @param {{persist?: boolean}} [opts] `persist` only when the player picked
+   *   it; use `chooseTier` for that rather than passing it by hand.
+   */
+  setTier(tier, opts = {}) {
     if (tier !== 'T1' && tier !== 'T2' && tier !== 'T3' && tier !== 'T4') return;
+    const changed = this.currentTier !== tier;
     this.currentTier = tier;
-    session.setGfxTier(tier);
+    session.setGfxTier(tier, Boolean(opts.persist));
+
+    // Changing tier rebuilds render settings and re-uploads what the new one
+    // wants; the frames that costs are not evidence about the new tier.
+    if (changed) this.beginWarmUp();
 
     if (typeof document !== 'undefined' && document.body) {
       document.body.classList.toggle('tier-t4', tier === 'T4');
@@ -217,6 +271,16 @@ class TierManager {
     }
   }
 
+  /**
+   * The player picked this tier — in Settings or with the HUD chip. This is the
+   * only path that writes the preference, and it clears an earlier automatic
+   * demotion so asking for T4 by hand actually gets T4.
+   */
+  chooseTier(tier) {
+    if (tier === 'T4') session.t4Downgraded = false;
+    this.setTier(tier, { persist: true });
+  }
+
   cycleTier() {
     let next;
     if (this.currentTier === 'T4') {
@@ -226,9 +290,9 @@ class TierManager {
     } else if (this.currentTier === 'T2') {
       next = 'T1';
     } else {
-      next = isT4Eligible() ? 'T4' : 'T3';
+      next = isT4Capable() ? 'T4' : 'T3';
     }
-    this.setTier(next);
+    this.chooseTier(next);
   }
 
   subscribe(fn) {

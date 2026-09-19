@@ -191,3 +191,30 @@
   .stage-dock-bar { width: 100%; }
   .stage-dock-bar > .quest-btn-sm { min-height: 40px; }
 }
+
+/* ---- T4 terminals: docked right, so the walk keeps the left of the glass ---- */
+@media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  .in-world-terminal {
+    left: auto;
+    right: max(6px, env(safe-area-inset-right));
+    width: min(58vw, 460px);
+    top: calc(var(--hud-h) + 4px);
+    bottom: max(6px, env(safe-area-inset-bottom));
+    padding: 0.7rem 0.8rem;
+    background: rgba(14, 12, 10, 0.97);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .in-world-terminal .section-title { font-size: 1rem; }
+
+  .erebus-world-hud,
+  .learn-walk-hud {
+    top: calc(var(--hud-h) + 4px);
+    left: max(6px, env(safe-area-inset-left));
+    right: auto;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .erebus-hud-card,
+  .learn-walk-card { padding: 0.45rem 0.7rem; font-size: 0.72rem; }
+}

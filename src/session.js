@@ -12,6 +12,11 @@ const SOUND_KEY = 'avalon_sound_pref';
 const FLAGS_KEY = 'avalon_flags';
 const LEARN_KEY = 'avalon_learn';
 
+/** Reading storage throws in a locked-down browser; a missing value is not a fault. */
+function safeRead(key) {
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+
 const ALIAS_MAP = { terra: 'earth', zephyr: 'air', ignis: 'fire', thalassa: 'water' };
 const PROPER_TEAM_NAMES = { earth: 'Earth', air: 'Air', fire: 'Fire', water: 'Water' };
 
@@ -83,7 +88,17 @@ class SessionManager {
     this.teams = [];
     this.events = {};
     this.activeQuest = null;
-    this.gfxTier = localStorage.getItem(GFX_KEY) || 'T4';
+    // Two facts, deliberately apart. `gfxTierPref` is a tier the *player* chose
+    // in Settings or with the HUD chip, and nothing else may write it; `null`
+    // means "probe the device". `gfxTier` is whatever is running right now.
+    // They used to be one value, so every automatic demotion — including one
+    // caused by a slow first load — was stored as though it had been chosen,
+    // and the device never got a second look.
+    this.gfxTierPref = safeRead(GFX_KEY) || null;
+    this.gfxTier = this.gfxTierPref || 'T4';
+    // Set by the frame monitor when a measured tier falls below T4. Page-session
+    // only and deliberately not persisted: a reload measures the device again.
+    this.t4Downgraded = false;
     this.reduceMotion = localStorage.getItem(MOTION_KEY) === 'true';
     this.sound = { master: 60, ambience: 60, effects: 60, muted: false };
     this.flags = { sessionZeroDone: false };
@@ -312,10 +327,25 @@ class SessionManager {
     this.notify();
   }
 
-  setGfxTier(tier) {
+  /**
+   * @param {string} tier
+   * @param {boolean} persist true only when the player picked this tier. A tier
+   *   the frame monitor or the capability probe arrived at is never written, so
+   *   a device is re-judged on its next visit instead of being filed away.
+   */
+  setGfxTier(tier, persist = false) {
     this.gfxTier = tier;
-    localStorage.setItem(GFX_KEY, tier);
+    if (persist) {
+      this.gfxTierPref = tier;
+      try { localStorage.setItem(GFX_KEY, tier); } catch (e) {}
+    }
     this.notify();
+  }
+
+  /** Forget a stored choice so the probe decides again. */
+  clearGfxTierPref() {
+    this.gfxTierPref = null;
+    try { localStorage.removeItem(GFX_KEY); } catch (e) {}
   }
 
   setReduceMotion(pref) {

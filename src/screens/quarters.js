@@ -54,7 +54,7 @@ export function renderQuarters(container) {
   });
 
   container.innerHTML = `
-    <div class="${isT4 ? 'in-world-terminal quarters-terminal' : 'screen-container m-screen m-quarters'}" ${isT4 ? '' : 'style="max-width: 860px;"'}>
+    <div class="${isT4 ? 'in-world-terminal quarters-terminal m-screen m-quarters' : 'screen-container m-screen m-quarters'}" ${isT4 ? '' : 'style="max-width: 860px;"'}>
       ${terminalHeaderMarkup}
 
       <div class="m-grid-1 quarters-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
