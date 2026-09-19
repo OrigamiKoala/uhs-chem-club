@@ -13,6 +13,9 @@ import { playCinematic } from "../ui/cinematic.js";
 import { renderGardensMap } from "../ui/gardens-map.js";
 import { QUEST1_STORY } from "../story/quest1.js";
 import { tierManager } from "../three/tier.js";
+import { WORLDS } from "../learn/curriculum.js";
+import { worldStatus, worldProgress } from "../learn/progress.js";
+import { canWalk } from "../learn/worlds3d.js";
 
 const SECTORS = [
   {
@@ -48,6 +51,86 @@ const SECTORS = [
     status: "locked"
   }
 ];
+
+const LEARN_STATUS_TAG = {
+  open: { label: "Open", cls: "live" },
+  complete: { label: "Complete", cls: "live" },
+  locked: { label: "Sealed", cls: "warn" },
+  charted: { label: "No Charts", cls: "locked" }
+};
+
+/**
+ * The two roads the star map charts. The campaign's sectors are one; the Learn
+ * track's worlds are the other. Both are destinations, so both belong on the
+ * table a pilot picks a destination from.
+ */
+function tabRow(active) {
+  return `
+    <div class="map-tabs" role="tablist">
+      <button type="button" class="map-tab${active === "sectors" ? " active" : ""}" data-map-tab="sectors" role="tab" aria-selected="${active === "sectors"}">Active Quests</button>
+      <button type="button" class="map-tab${active === "learn" ? " active" : ""}" data-map-tab="learn" role="tab" aria-selected="${active === "learn"}">Learn Quests</button>
+    </div>
+  `;
+}
+
+/**
+ * The Learn road, as destinations. A world that is built as a place is entered
+ * by disembarking onto it; one that is not is entered as its quest list. The
+ * label says which, and nothing here claims a world exists that does not.
+ */
+function learnPanel() {
+  return `
+    <div class="map-learn-list">
+      ${WORLDS.map(w => {
+        const st = worldStatus(w);
+        const tag = LEARN_STATUS_TAG[st] || LEARN_STATUS_TAG.charted;
+        const prog = worldProgress(w);
+        const enterable = st === "open" || st === "complete";
+        const walk = enterable && canWalk(w.id);
+        return `
+          <article class="holo-card map-learn-row learn-${st}">
+            <div class="map-learn-code">
+              <span class="eyebrow ${enterable ? "lit" : ""}">${esc(w.code)}</span>
+              <span class="tag ${tag.cls}">${tag.label}</span>
+            </div>
+            <div class="map-learn-body">
+              <div class="map-learn-name">${esc(w.world)}</div>
+              <div class="eyebrow map-learn-place">${esc(w.place)} · ${esc(w.title)}</div>
+              <p class="map-learn-line">${esc(w.line)}</p>
+              <div class="eyebrow map-learn-count">
+                ${w.questCount} quests charted${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} built` : ""}
+              </div>
+            </div>
+            <div class="map-learn-action">
+              ${enterable
+                ? `<a href="#/learn/${esc(w.id)}" class="btn-primary quest-btn-sm m-tap" style="text-decoration: none;">${walk ? `Disembark to ${esc(w.world)}` : "Enter"}</a>`
+                : `<span class="eyebrow map-learn-blocked">${st === "locked" ? "Finish the world before" : "Not yet built"}</span>`}
+            </div>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+/** Wire the two tabs. Switching panels changes nothing about either road. */
+function bindTabs(container) {
+  const tabs = container.querySelectorAll("[data-map-tab]");
+  const panels = container.querySelectorAll("[data-map-panel]");
+  tabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const want = btn.dataset.mapTab;
+      tabs.forEach(t => {
+        const on = t.dataset.mapTab === want;
+        t.classList.toggle("active", on);
+        t.setAttribute("aria-selected", String(on));
+      });
+      panels.forEach(pl => {
+        pl.hidden = pl.dataset.mapPanel !== want;
+      });
+    });
+  });
+}
 
 export function renderStarMap(container) {
   if (stage.cameraRig && tierManager.currentTier !== "T4") {
@@ -86,6 +169,10 @@ export function renderStarMap(container) {
           </div>
           <button type="button" id="close-terminal-btn" class="terminal-close-btn">[X] FREE WALK</button>
         </div>
+
+        ${tabRow("sectors")}
+
+        <div data-map-panel="sectors">
 
         <!-- Integrated Active Quest: Sector 01 (The Charge Gardens) -->
         <section class="glass-panel" style="margin-bottom: 1.2rem; padding: 1.1rem;">
@@ -134,8 +221,17 @@ export function renderStarMap(container) {
             `;
           }).join("")}
         </div>
+
+        </div><!-- /sectors -->
+
+        <div data-map-panel="learn" hidden>
+          <div class="eyebrow" style="margin-bottom: 0.5rem; letter-spacing: 0.12em;">LEARN ROAD · TEN WORLDS</div>
+          ${learnPanel()}
+        </div>
       </div>
     `;
+
+    bindTabs(container);
 
     container.querySelector("#close-terminal-btn")?.addEventListener("click", () => {
       const term = container.querySelector(".in-world-terminal");
@@ -156,7 +252,9 @@ export function renderStarMap(container) {
             : `<a href="#/register" class="btn-primary" style="text-decoration: none;">Create Account</a>`
         })}
 
-        <div class="m-grid-1 sector-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        ${tabRow("sectors")}
+
+        <div class="m-grid-1 sector-grid" data-map-panel="sectors" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
           ${SECTORS.map(s => {
             const isLive = s.status === "live";
             return `
@@ -193,8 +291,14 @@ export function renderStarMap(container) {
             `;
           }).join("")}
         </div>
+
+        <div data-map-panel="learn" hidden>
+          ${learnPanel()}
+        </div>
       </div>
     `;
+
+    bindTabs(container);
   }
 
   async function handleSector01Enter() {

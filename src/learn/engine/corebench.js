@@ -22,7 +22,7 @@
  */
 
 /* Dust palette. Mirrors tokens.css; canvas cannot inherit a custom property. */
-const TINTS = {
+export const CORE_TINTS = {
   marked: { fill: '#9c5423', rim: '#5c3116' },   // rust
   blank: { fill: '#6b625a', rim: '#3b3631' },    // iron
   light: { fill: '#b8afa0', rim: '#6f685d' }     // bone
@@ -35,7 +35,7 @@ const AMBER = '#d99423';
 const HAZE = '#b8afa0';
 
 /** The distances the light pieces keep, as a fraction of the aperture radius. */
-const RING_RADII = [0.30, 0.50, 0.68, 0.84, 0.95];
+export const RING_RADII = [0.30, 0.50, 0.68, 0.84, 0.95];
 
 export const FIELDS = ['whole', 'core', 'rings'];
 
@@ -70,7 +70,7 @@ function hashId(str) {
  * not a grid, and a grid would read as a crystal — which would be the instrument
  * making a claim the quest never asked it to make.
  */
-function packCore(n, rand) {
+export function packCore(n, rand) {
   const out = [];
   let shell = 0;
   while (out.length < n) {
@@ -84,6 +84,81 @@ function packCore(n, rand) {
     shell++;
   }
   return out;
+}
+
+/** How many shots the tester fires at a specimen. Fixed by the instrument. */
+export const BEAM_SHOTS = 40;
+
+/**
+ * Plan one pass of the tester.
+ *
+ * The counts are fixed by the instrument, not by the quest: this is a
+ * measurement, and a measurement that could be authored to say anything would be
+ * worthless. The one shot that comes back is the one that arrives dead on the
+ * axis, and its two neighbours only graze what is there — decided by WHICH TRACK
+ * HITS THE MIDDLE rather than by a threshold on a spread, because a threshold
+ * that happened to fall between two tracks would quietly report a solid piece,
+ * and the whole stage is the return count.
+ *
+ * Pure: the canvas bench and the 3D bench both plan through here, so they can
+ * never disagree about what came back.
+ *
+ * @returns {{tracks: Array, wide: number, back: number, shots: number}}
+ */
+export function planBeam(specimenId) {
+  const rand = mulberry32(hashId(specimenId) ^ 0xb33f);
+  const tracks = [];
+  let wide = 0;
+  let back = 0;
+
+  const centre = Math.round((BEAM_SHOTS - 1) / 2);
+
+  for (let i = 0; i < BEAM_SHOTS; i++) {
+    const off = Math.abs(i - centre);
+    const kind = off === 0 ? 'back' : off === 1 ? 'wide' : 'through';
+    const y = kind === 'back' ? 0
+      : kind === 'wide' ? (i < centre ? -0.035 : 0.035)
+        : -0.86 + (i / (BEAM_SHOTS - 1)) * 1.72;
+    const delay = rand() * 0.35;
+
+    let path;
+    if (kind === 'back') {
+      path = [[-1.05, y], [-0.02, y], [-0.35, y - 0.16], [-1.05, y - 0.42]];
+      back++;
+    } else if (kind === 'wide') {
+      const bend = (y >= 0 ? 1 : -1) * 0.34;
+      path = [[-1.05, y], [0, y], [0.6, y + bend * 0.6], [1.05, y + bend]];
+      wide++;
+    } else {
+      path = [[-1.05, y], [1.05, y]];
+    }
+    tracks.push({ kind, delay, path });
+  }
+
+  return { tracks, wide, back, shots: BEAM_SHOTS };
+}
+
+/**
+ * Plan a strip: find the outermost ring that still holds a light piece, take one
+ * off it, and say which ring it came from. Returns null when there was nothing
+ * left to take. Mutates `sp.rings` and pushes onto `sp.pulled`, which is what
+ * both benches animate.
+ */
+export function planStrip(sp) {
+  if (!sp) return null;
+  let ri = -1;
+  for (let i = sp.rings.length - 1; i >= 0; i--) {
+    if (sp.rings[i] > 0) { ri = i; break; }
+  }
+  if (ri < 0) return null;
+
+  sp.rings[ri] -= 1;
+  sp.pulled.push({
+    a: Math.random() * Math.PI * 2,
+    r0: RING_RADII[ri] ?? 0.98,
+    t: 0
+  });
+  return ri;
 }
 
 export class CoreBench {
@@ -398,7 +473,7 @@ export class CoreBench {
       const x = g.cx + ox * unit;
       const y = g.cy + oy * unit;
       const sort = order[i];
-      this.disc(ctx, x, y, r, TINTS[sort]);
+      this.disc(ctx, x, y, r, CORE_TINTS[sort]);
       if (sort === 'marked') this.stencilMark(ctx, x, y, r);
       plate.hits.push({ key: `core:${i}`, part: sort, x, y, r });
     });
@@ -410,7 +485,7 @@ export class CoreBench {
     const rand = mulberry32(hashId(specimen.id) ^ 0x2c99);
 
     // The core is one mark at this scale — the point of the previous field.
-    this.disc(ctx, g.cx, g.cy, Math.max(4, g.aperture * 0.075), TINTS.marked);
+    this.disc(ctx, g.cx, g.cy, Math.max(4, g.aperture * 0.075), CORE_TINTS.marked);
     this.stencilMark(ctx, g.cx, g.cy, Math.max(4, g.aperture * 0.075));
     plate.hits.push({ key: 'core', part: 'core', x: g.cx, y: g.cy, r: g.aperture * 0.08 });
 
@@ -440,7 +515,7 @@ export class CoreBench {
         const a = base + (i * Math.PI * 2) / Math.max(count, 1);
         const x = g.cx + Math.cos(a) * rad;
         const y = g.cy + Math.sin(a) * rad;
-        this.disc(ctx, x, y, dotR, TINTS.light);
+        this.disc(ctx, x, y, dotR, CORE_TINTS.light);
         plate.hits.push({ key: `ring:${ri}:${i}`, part: 'light', ring: ri, x, y, r: dotR });
       }
     });
@@ -449,7 +524,7 @@ export class CoreBench {
     specimen.pulled.forEach(p => {
       const r = (p.r0 + p.t * 1.4) * g.aperture;
       ctx.globalAlpha = Math.max(0, 1 - p.t);
-      this.disc(ctx, g.cx + Math.cos(p.a) * r, g.cy + Math.sin(p.a) * r, dotR, TINTS.light);
+      this.disc(ctx, g.cx + Math.cos(p.a) * r, g.cy + Math.sin(p.a) * r, dotR, CORE_TINTS.light);
       ctx.globalAlpha = 1;
     });
   }
@@ -523,40 +598,7 @@ export class CoreBench {
     const plate = this.plates.find(p => p.specimen.id === specimenId);
     if (!plate) return Promise.resolve({ shots: 0, through: 0, wide: 0, back: 0 });
 
-    const rand = mulberry32(hashId(specimenId) ^ 0xb33f);
-    const SHOTS = 40;
-    const tracks = [];
-    let wide = 0;
-    let back = 0;
-
-    // The one shot that comes back is the one that arrives dead on the axis, and
-    // its two neighbours only graze what is there. The counts are fixed by which
-    // track hits the middle rather than by a threshold on a spread, because a
-    // threshold that happened to fall between two tracks would quietly report a
-    // solid piece — and the whole stage is the return count.
-    const centre = Math.round((SHOTS - 1) / 2);
-
-    for (let i = 0; i < SHOTS; i++) {
-      const off = Math.abs(i - centre);
-      const kind = off === 0 ? 'back' : off === 1 ? 'wide' : 'through';
-      const y = kind === 'back' ? 0
-        : kind === 'wide' ? (i < centre ? -0.035 : 0.035)
-          : -0.86 + (i / (SHOTS - 1)) * 1.72;
-      const delay = rand() * 0.35;
-
-      let path;
-      if (kind === 'back') {
-        path = [[-1.05, y], [-0.02, y], [-0.35, y - 0.16], [-1.05, y - 0.42]];
-        back++;
-      } else if (kind === 'wide') {
-        const bend = (y >= 0 ? 1 : -1) * 0.34;
-        path = [[-1.05, y], [0, y], [0.6, y + bend * 0.6], [1.05, y + bend]];
-        wide++;
-      } else {
-        path = [[-1.05, y], [1.05, y]];
-      }
-      tracks.push({ kind, delay, path });
-    }
+    const { tracks, wide, back, shots: SHOTS } = planBeam(specimenId);
 
     plate.beam = { tracks, t: 0 };
     this.startAnim();
@@ -581,18 +623,8 @@ export class CoreBench {
     const sp = this.specimens.find(s => s.id === specimenId);
     if (!sp) return Promise.resolve(null);
 
-    let ri = -1;
-    for (let i = sp.rings.length - 1; i >= 0; i--) {
-      if (sp.rings[i] > 0) { ri = i; break; }
-    }
-    if (ri < 0) return Promise.resolve(null);
-
-    sp.rings[ri] -= 1;
-    sp.pulled.push({
-      a: Math.random() * Math.PI * 2,
-      r0: RING_RADII[ri] ?? 0.98,
-      t: 0
-    });
+    const ri = planStrip(sp);
+    if (ri === null) return Promise.resolve(null);
     this.drawAll();
     this.startAnim();
 

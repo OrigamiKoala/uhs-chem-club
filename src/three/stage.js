@@ -11,9 +11,21 @@ import { CameraRig } from "./camera-rig.js";
 import { ShipInterior } from "./ship.js";
 import { createStarfield } from "./materials/starfield.js";
 import { WorldScene } from "./world.js";
+import { TallowWorld } from "./tallow.js";
 import { FpsControls } from "./fps-controls.js";
 import { session } from "../session.js";
 import { ShipLightPool } from "./ship-lighting.js";
+
+/**
+ * Tone-mapping exposure per place.
+ *
+ * The ship is a dark interior lit by filaments; Tallow is a salt pan under flat
+ * overcast, which is roughly two stops brighter in the real world. Rendering both
+ * at the ship's exposure washes the crust out to white paper. Erebus keeps the
+ * ship's value, which is what it was tuned against.
+ */
+const SHIP_EXPOSURE = 1.28;
+const TALLOW_EXPOSURE = 0.92;
 
 class Stage {
   constructor() {
@@ -26,6 +38,10 @@ class Stage {
     this.shipScene = null;
     this.shipInterior = null;
     this.worldScene = null;
+    this.tallowWorld = null;
+    // Whichever world the player is standing on. `mode === "world"` renders this
+    // one; there is never more than one live at a time.
+    this.activeWorld = null;
     this.activeQuestScene = null;
     this.activeQuestViewer = null;
 
@@ -62,7 +78,14 @@ class Stage {
     this.applyTierSettings(tierManager.currentTier);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.28;
+    this.renderer.toneMappingExposure = SHIP_EXPOSURE;
+
+    // Contact shadows are a T4 enhancement. Every world light already asks for
+    // them; without this they were simply never drawn.
+    if (tierAtLeast("T4")) {
+      this.renderer.shadowMap.enabled = true;
+      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    }
 
     // 3. Persistent Ship Scene
     this.shipScene = new THREE.Scene();
@@ -153,7 +176,15 @@ class Stage {
     );
 
     this.fpsControls.onInteract = () => {
-      if (this.mode === "world" && this.worldScene) {
+      if (this.mode === "world" && this.activeWorld === this.tallowWorld && this.tallowWorld) {
+        const site = this.tallowWorld.nearbySite;
+        if (site) {
+          window.dispatchEvent(new CustomEvent("tallow:interact", { detail: site }));
+        } else if (Math.hypot(this.camera.position.x - 34, this.camera.position.z - 42) < 9) {
+          // The buyer's pad is the way off Tallow, the way the lander is on Erebus.
+          window.location.hash = "#/bridge";
+        }
+      } else if (this.mode === "world" && this.worldScene) {
         if (this.worldScene.nearbySite) {
           const pylonEvent = new CustomEvent("pylon:interact", { detail: this.worldScene.nearbySite });
           window.dispatchEvent(pylonEvent);
@@ -222,6 +253,8 @@ class Stage {
       this.worldScene = new WorldScene(this.renderer);
     }
     this.mode = "world";
+    this.activeWorld = this.worldScene;
+    if (this.renderer) this.renderer.toneMappingExposure = SHIP_EXPOSURE;
 
     if (this.worldScene) {
       this.worldScene.scene.add(this.camera);
@@ -252,8 +285,74 @@ class Stage {
     }
   }
 
+  /**
+   * Walk out onto Tallow, the salt-flat refinery (Learn world 01).
+   *
+   * `focusSiteId` puts the player at that site's approach mark instead of the
+   * shuttle pad, so stepping out of a bench puts them back in front of it rather
+   * than at the far end of the yard.
+   */
+  enterTallowScene(focusSiteId = null) {
+    if (!this.tallowWorld && this.renderer) {
+      this.tallowWorld = new TallowWorld(this.renderer);
+    }
+    this.mode = "world";
+    this.activeWorld = this.tallowWorld;
+
+    if (!this.tallowWorld) return;
+    if (this.renderer) this.renderer.toneMappingExposure = TALLOW_EXPOSURE;
+
+    this.tallowWorld.scene.add(this.camera);
+
+    const data = this.tallowWorld.data;
+    const site = focusSiteId ? data.sites.find(s => s.id === focusSiteId) : null;
+
+    let px, pz, lookX, lookZ;
+    if (site) {
+      px = site.approachPos[0];
+      pz = site.approachPos[2];
+      lookX = site.pos[0];
+      lookZ = site.pos[2];
+    } else {
+      px = data.spawn.pos[0];
+      pz = data.spawn.pos[2];
+      lookX = data.spawn.lookAt[0];
+      lookZ = data.spawn.lookAt[2];
+    }
+
+    const groundY = this.tallowWorld.getTerrainHeight(px, pz);
+    const eyeHeight = this.fpsControls ? this.fpsControls.eyeHeight : 1.6;
+    const eyeY = groundY + eyeHeight;
+
+    this.camera.position.set(px, eyeY, pz);
+    this.camera.lookAt(lookX, eyeY, lookZ);
+    this.camera.updateMatrixWorld(true);
+
+    if (this.fpsControls) {
+      this.fpsControls.enabled = true;
+      this.fpsControls.isGrounded = true;
+      this.fpsControls.verticalVelocity = 0;
+      this.fpsControls.velocity.set(0, 0, 0);
+      this.fpsControls.euler.setFromQuaternion(this.camera.quaternion);
+      this.fpsControls.euler.z = 0;
+      this.fpsControls.setMode(
+        "world",
+        (x, z) => this.tallowWorld.getTerrainHeight(x, z),
+        { minX: -100, maxX: 100, minZ: -100, maxZ: 100 },
+        this.tallowWorld.colliders
+      );
+    }
+  }
+
+  /** Light a Tallow site's indicator when its quest is finished. */
+  setTallowSiteComplete(questId, complete) {
+    if (this.tallowWorld) this.tallowWorld.setSiteComplete(questId, complete);
+  }
+
   enterShipScene(locationKey = "bridge") {
     this.mode = "ship";
+    this.activeWorld = null;
+    if (this.renderer) this.renderer.toneMappingExposure = SHIP_EXPOSURE;
     if (this.shipScene) {
       this.shipScene.add(this.camera);
       this.camera.updateMatrixWorld(true);
@@ -300,8 +399,9 @@ class Stage {
       this.fpsControls.enabled = true;
       this.fpsControls.exitPointerLock();
     }
-    if (this.worldScene) {
-      this.worldScene.scene.add(this.camera);
+    // Back to whichever world the instrument was deployed on, not always Erebus.
+    if (this.activeWorld) {
+      this.activeWorld.scene.add(this.camera);
       this.camera.updateMatrixWorld(true);
     }
   }
@@ -316,6 +416,28 @@ class Stage {
     if (this.mode === "quest" && this.activeQuestViewer) {
       this.activeQuestViewer.update(delta, time);
       this.renderer.render(this.activeQuestScene, this.activeQuestViewer.camera);
+    } else if (this.mode === "world" && this.activeWorld === this.tallowWorld && this.tallowWorld) {
+      if (this.fpsControls) {
+        this.fpsControls.enabled = true;
+        this.fpsControls.update(delta);
+        const site = this.tallowWorld.nearbySite;
+        if (site) {
+          // A site that has no module yet says so when you reach it rather than
+          // pretending to open. The world never invents a quest.
+          this.fpsControls.showPrompt(
+            site.built === false
+              ? `${site.label.toUpperCase()} — SEALED`
+              : `[E] WORK AT ${site.label.toUpperCase()}`
+          );
+        } else if (Math.hypot(this.camera.position.x - 34, this.camera.position.z - 42) < 9) {
+          this.fpsControls.showPrompt("[E] BOARD AT THE PAD (RETURN TO SHIP)");
+        } else {
+          this.fpsControls.hidePrompt();
+        }
+      }
+      this.tallowWorld.update(delta, this.camera.position);
+      this.camera.updateMatrixWorld(true);
+      this.renderer.render(this.tallowWorld.scene, this.camera);
     } else if (this.mode === "world" && this.worldScene) {
       if (this.fpsControls) {
         this.fpsControls.enabled = true;

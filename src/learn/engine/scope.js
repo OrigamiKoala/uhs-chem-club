@@ -73,7 +73,7 @@ function satelliteAngles(n) {
  * one-entry `kinds` is a loose piece and a longer one is a group whose FIRST entry
  * is the centre.
  */
-function buildUnits(sample, kinds) {
+export function buildUnits(sample, kinds) {
   const rand = mulberry32(hashId(sample.id));
   const entries = sample.particles || [];
   const total = entries.reduce((n, e) => n + e.n, 0);
@@ -155,6 +155,93 @@ function buildUnits(sample, kinds) {
 /** How much structure the scope resolves: 0 solid, 1 mottled, 2 lumps, 3 pieces. */
 export function detailFor(power, floorPower) {
   return Math.max(0, Math.min(3, power - (floorPower - 3)));
+}
+
+/**
+ * The ratio between a piece's drawn radius and the spread of the field. It falls
+ * out of `geometry()` as (0.085 * 2) / 0.94 and is independent of both aperture
+ * size and power, which is why a cut can be planned without knowing either.
+ */
+export const PIECE_TO_SPREAD = (0.085 * 2) / 0.94;
+
+/**
+ * Plan a shake-down: set every unit's `tx`/`ty` to where it lands once the crate
+ * has settled into bands. Pure — it moves no pixels and starts no animation, so
+ * the canvas instrument and the 3D bench can both run it and land in the same
+ * arrangement.
+ *
+ * Heaviest material sinks, so the bands come out in a believable order.
+ */
+export function planSettle(units, kinds) {
+  const sigs = [...new Set(units.map(u => u.signature))];
+  const massOf = sig => sig.split('+').reduce((n, k) => n + (kinds[k]?.mass || 0), 0);
+  sigs.sort((a, b) => massOf(b) - massOf(a));
+
+  const bands = sigs.length;
+  const perBand = new Map(sigs.map(s => [s, 0]));
+  const counts = new Map(sigs.map(s => [s, units.filter(u => u.signature === s).length]));
+
+  units.forEach(u => {
+    const band = sigs.indexOf(u.signature);
+    const i = perBand.get(u.signature);
+    perBand.set(u.signature, i + 1);
+    const n = counts.get(u.signature);
+    const across = Math.max(1, Math.ceil(Math.sqrt(n * 2.4)));
+    const row = Math.floor(i / across);
+    const col = i % across;
+    const rows = Math.ceil(n / across);
+    // Bands stack from the bottom up, with a visible gap between them.
+    const bandTop = 0.9 - ((bands - band) / bands) * 1.8;
+    const bandH = (1.8 / bands) * 0.78;
+    u.tx = -0.86 + ((col + 0.5) / across) * 1.72;
+    u.ty = bandTop + bandH * ((rows - row - 0.5) / rows);
+  });
+}
+
+/**
+ * Plan a pass of the cutter. Returns what the blade found and, when it found
+ * something to break, the replacement unit list.
+ *
+ * Loose piles scatter, groups come apart into their members, and a lone piece
+ * does not move at all — which is the whole point of the stage that uses it.
+ *
+ * @returns {{result: 'scatter'|'broke'|'none', units?: Array, ms: number}}
+ */
+export function planCut(units, sampleId) {
+  const hasGroups = units.some(u => u.members.length > 1);
+  const loosePile = units.length > 1;
+
+  if (!hasGroups && !loosePile) return { result: 'none', ms: 0 };
+
+  if (hasGroups) {
+    const next = [];
+    units.forEach(unit => {
+      unit.members.forEach(m => {
+        const cos = Math.cos(unit.spin);
+        const sin = Math.sin(unit.spin);
+        const ox = (m.ox * cos - m.oy * sin) * PIECE_TO_SPREAD;
+        const oy = (m.ox * sin + m.oy * cos) * PIECE_TO_SPREAD;
+        next.push({
+          x: unit.x + ox, y: unit.y + oy,
+          tx: unit.x + ox * 3.2, ty: unit.y + oy * 3.2,
+          spin: unit.spin,
+          signature: m.kindId,
+          entryIndex: unit.entryIndex,
+          bonds: [],
+          members: [{ kindId: m.kindId, size: m.size, ox: 0, oy: 0 }]
+        });
+      });
+    });
+    return { result: 'broke', units: next, ms: 560 };
+  }
+
+  const rand = mulberry32(hashId(sampleId) ^ 0x5eed);
+  units.forEach(u => {
+    const a = rand() * Math.PI * 2;
+    u.tx = Math.max(-0.92, Math.min(0.92, u.x + Math.cos(a) * 0.3));
+    u.ty = Math.max(-0.92, Math.min(0.92, u.y + Math.sin(a) * 0.3));
+  });
+  return { result: 'scatter', ms: 480 };
 }
 
 export class SampleScope {
@@ -537,31 +624,7 @@ export class SampleScope {
     if (!plate) return Promise.resolve();
     const sample = plate.sample;
 
-    const sigs = [...new Set(sample.units.map(u => u.signature))];
-    // Heaviest material sinks, so the bands come out in a believable order.
-    const massOf = sig => sig.split('+').reduce((n, k) => n + (this.kinds[k]?.mass || 0), 0);
-    sigs.sort((a, b) => massOf(b) - massOf(a));
-
-    const bands = sigs.length;
-    const perBand = new Map(sigs.map(s => [s, 0]));
-    const counts = new Map(sigs.map(s => [s, sample.units.filter(u => u.signature === s).length]));
-
-    sample.units.forEach(u => {
-      const band = sigs.indexOf(u.signature);
-      const i = perBand.get(u.signature);
-      perBand.set(u.signature, i + 1);
-      const n = counts.get(u.signature);
-      const across = Math.max(1, Math.ceil(Math.sqrt(n * 2.4)));
-      const row = Math.floor(i / across);
-      const col = i % across;
-      const rows = Math.ceil(n / across);
-      // Bands stack from the bottom up, with a visible gap between them.
-      const bandTop = 0.9 - ((bands - band) / bands) * 1.8;
-      const bandH = (1.8 / bands) * 0.78;
-      u.tx = -0.86 + ((col + 0.5) / across) * 1.72;
-      u.ty = bandTop + bandH * ((rows - row - 0.5) / rows);
-    });
-
+    planSettle(sample.units, this.kinds);
     return this.runAnim(700);
   }
 
@@ -576,44 +639,14 @@ export class SampleScope {
     if (!plate) return Promise.resolve('none');
     const sample = plate.sample;
 
-    const hasGroups = sample.units.some(u => u.members.length > 1);
-    const loosePile = sample.units.length > 1;
+    const plan = planCut(sample.units, sampleId);
+    if (plan.result === 'none') return Promise.resolve('none');
 
-    if (!hasGroups && !loosePile) return Promise.resolve('none');
-
-    if (hasGroups) {
-      // Every group becomes its own loose members, placed where they already were.
-      const next = [];
-      const g = this.geometry(plate);
-      sample.units.forEach(unit => {
-        unit.members.forEach(m => {
-          const cos = Math.cos(unit.spin);
-          const sin = Math.sin(unit.spin);
-          const ox = (m.ox * cos - m.oy * sin) * (g.pieceR * 2) / g.spread;
-          const oy = (m.ox * sin + m.oy * cos) * (g.pieceR * 2) / g.spread;
-          next.push({
-            x: unit.x + ox, y: unit.y + oy,
-            tx: unit.x + ox * 3.2, ty: unit.y + oy * 3.2,
-            spin: unit.spin,
-            signature: m.kindId,
-            entryIndex: unit.entryIndex,
-            bonds: [],
-            members: [{ kindId: m.kindId, size: m.size, ox: 0, oy: 0 }]
-          });
-        });
-      });
-      sample.units = next;
+    if (plan.result === 'broke') {
+      sample.units = plan.units;
       this.probe = null;
-      return this.runAnim(560).then(() => 'broke');
     }
-
-    const rand = mulberry32(hashId(sample.id) ^ 0x5eed);
-    sample.units.forEach(u => {
-      const a = rand() * Math.PI * 2;
-      u.tx = Math.max(-0.92, Math.min(0.92, u.x + Math.cos(a) * 0.3));
-      u.ty = Math.max(-0.92, Math.min(0.92, u.y + Math.sin(a) * 0.3));
-    });
-    return this.runAnim(480).then(() => 'scatter');
+    return this.runAnim(plan.ms).then(() => plan.result);
   }
 
   /* ---------------- animation ---------------- */

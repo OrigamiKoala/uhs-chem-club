@@ -25,7 +25,7 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 ## Build and Run
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
-- `npm run verify` — `verify:quest` + `verify:learn` + `verify:geometry` + `verify:media` + `verify:flows` + `verify:ship` + `build`. Run this before shipping.
+- `npm run verify` — `verify:quest` + `verify:learn` + `verify:geometry` + `verify:media` + `verify:flows` + `verify:ship` + `verify:tallow` + `build`. Run this before shipping.
 - `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below).
 - `npm run verify:learn` — integrity check of the Learn track registry and its no-XP invariant.
 - `npm run verify:geometry` — runs all 20 reaction animations headlessly and checks the chemistry
@@ -33,6 +33,10 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run verify:media` — validates media manifest against assets and size budgets.
 - `npm run verify:flows` — end-to-end smoke test of the API a new student touches.
 - `npm run verify:ship` — asserts ship graph connectivity, 3-hop limit, hatch cones, and spline bounds.
+- `npm run verify:tallow` — asserts the Tallow ground: every prop footprint disjoint
+  (no two objects share space), sites clear of props, the sub-level excavation walkable,
+  every charted Unit 1 quest sited, T4 decoration removable without stranding a site,
+  and no withheld vocabulary in a place name.
 - `npm run deploy:backend` — `clasp push` of `apps-script/`.
 - `npm run bake:stills` — regenerate the static SVG backdrops in `public/fallback/`.
 - `npm run bake:video` — encode raw MP4 clips in `assets-src/video/` to web-ready WebM, MP4, posters and audio.
@@ -78,7 +82,15 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   `worlds/unitNN-*.js` (one chart per AP unit), `quests/` (a game module per quest, plus
   `_template.js`, the contract).
 - `screens/` — one render function per route, all pure string templates.
-- `three/` — persistent WebGL stage, quality-tier probe (T3/T2/T1), ship interior, camera rig.
+- `three/` — persistent WebGL stage, quality-tier probe (T4/T3/T2/T1), ship interior, camera rig.
+  `stage.js` holds three modes (`ship` | `world` | `quest`) and `activeWorld`, which is
+  whichever planet the player is standing on — Erebus (`world.js`) or Tallow (`tallow.js`).
+  Tone-mapping exposure is per place: `SHIP_EXPOSURE` 1.28 for the ship and Erebus,
+  `TALLOW_EXPOSURE` 0.92 for the salt pan, because a bright overcast rendered at the dark
+  interior's exposure washes the crust out to paper. The renderer's shadow map is enabled
+  at T4 only; every world light already asked for shadows and none were drawn before.
+- `three/tallow.js` — **Tallow**, Learn world 01 (see "Tallow" below), built from
+  `three/world-data/tallow.json` with PBR surfaces from `materials/tallow-textures.js`.
 - `quest3d/` — reusable containment chamber, `MOLECULE_DATA` (atoms, bonds and the
   pickable `regions` that double as anchor definitions), `InstancedMesh` renderer,
   MarchingCubes charge-density isosurfaces, and `evaluator.js`.
@@ -180,8 +192,24 @@ into grinding and would punish the students it exists to help.
   hands-on observations directly to chemistry rather than waiting for an end-of-quest lecture.
   In `scope.js`, single-unit samples (`total <= 1`) are centered at `[0, 0]` so high-magnification targets
   remain visible in the aperture.
-- **Screens** — `learn.js` (the road), `learn-world.js` (one world's quests),
-  `learn-quest.js` (the host frame). Styling in `src/styles/learn.css` (`.lq-*` for the
+- **The benches in 3D** — at T4 the two Unit 1 instruments are built rather than drawn.
+  `engine/instruments.js` is the dispatcher every quest imports: it hands back the canvas
+  instrument at T3 and below and the 3D one at T4, and the two expose the *same API*, take
+  the same declarations and plan every tool through the same pure functions, so a stage that
+  grades correct on one grades correct on the other. Those planners live in the canvas
+  engines and are the single implementation: `planSettle`, `planCut` and `PIECE_TO_SPREAD`
+  in `scope.js`; `planBeam`, `planStrip`, `packCore` and `RING_RADII` in `corebench.js`.
+  `engine/bench3d.js` is the shared physical bench (plated top, a station per sample with a
+  recessed phosphor well, engraved plaques, a constrained lean-over camera, and
+  `fitToOpenArea`, which uses `setViewOffset` to centre the instrument in the part of the
+  screen the frame is not covering). `engine/scope3d.js` and `engine/corebench3d.js` are the
+  instruments themselves, drawn with `InstancedMesh` so a 400-piece sample is five draw
+  calls. `engine/bench-host.js` inverts the render dependency — the benches ask for a host
+  and `main.js` registers one — because a quest module must stay loadable in plain Node for
+  `verify:learn`, and importing the stage would drag three.js and two worlds' JSON in with it.
+  **Both quest modules changed by exactly one import line and not one character of copy.**
+- **Screens** — `learn.js` (the road), `learn-world.js` (one world's quests, or the walk HUD
+  when the world is built as a place), `learn-quest.js` (the host frame). Styling in `src/styles/learn.css` (`.lq-*` for the
   quest bench, `.scope-*` for the instrument, `.lq-choice-row`, `.lq-tally`); phone rules under `.m-learn`,
   `.m-learn-world`, `.m-learn-quest` in `mobile-screens.css`.
 - **Endpoints** — `learn/progress`, `learn/stage`, `learn/complete`. None returns an XP
@@ -238,6 +266,40 @@ the debrief names nucleus, proton, neutron (with isotope), electron, shell, vale
 specimen is a real nuclide and balances unless a stage has stripped it. **The quest never connects
 the marked count to the scope's catalogue** — the core bench does not talk to the catalogue,
 preserving the proton-count reveal for `q3-catalogue`.
+
+### Tallow — Learn world 01 as a place you walk (`three/tallow.js`, T4)
+
+At T4, `#/learn/unit01` is not a list of quests: it is the ground they are played on.
+The player walks a salt-flat refinery in first person, finds a bench, and presses `[E]`.
+
+- **The look is not Erebus.** Erebus is an amber basin at low sun; Tallow is a bleached
+  salt pan under flat overcast — the same SCOURED PLATE world with the colour leached out.
+  Ground bounce dominates (a `HemisphereLight` off white crust), the sun is broad and
+  weak with no disc, and the palette stays warm-neutral with a brown/sand bias throughout.
+  The sub-level is the one place the sun never reached, so the colour survives there: it is
+  built from `crucible.jpg`'s register, riveted and sodium-lit.
+- **Four charted sites, two built.** `site-1` Salvage Bench (`q1-grain`) under the lean-to
+  in the yard; `site-2` Core Bench (`q2-core`) down the stairwell in the diagnostic lab;
+  `site-3` Catalogue Vault and `site-4` Tally Floor are `built: false` — real places you can
+  walk to and read, which open nothing. **The world never invents a quest that has not been
+  written**; `verify:tallow` fails if a site's `built` flag disagrees with the chart.
+- **The sub-level is a real excavation.** The terrain mesh has a rectangular hole cut in it
+  (triangles whose centre falls inside the footprint are dropped), the pit is built as
+  geometry so its edges are machined rather than stretched, and `getTerrainHeight` resolves
+  the ramp — so the player walks down instead of being teleported under the ground. The pit
+  rim is box colliders split around the stair mouth, which is what makes the stair the only
+  way in.
+- **Nothing shares space with anything.** Every landmark in `tallow.json` declares a
+  footprint, every pair is disjoint, and `verify:tallow` proves it by computing the
+  distances rather than trusting the layout.
+- **Only lamps are lit.** Sodium luminaires in the lab, the mast's obstruction lamp, and one
+  indicator per built site, driven from the Learn track's own progress through
+  `setSiteComplete` — the world reads state, it never keeps it.
+- **Tier boundary.** Walking Tallow is T4. At T3 and below the Learn road is the screens it
+  has always been and every quest completes exactly as before. `learn/worlds3d.js` is the
+  registry that says which worlds are walkable and is the only file a second one needs.
+  `minTier: "T4"` landmarks are decoration: `verify:tallow` simulates removing every one of
+  them and asserts every site is still reachable.
 
 ## Rules that keep the game fair
 - **XP is paid once per stage.** `Quests.gs` checks prior correct submissions, the proxy
@@ -361,7 +423,8 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 ## Plans in flight
 - `docs/plans/learn-track.md` — the Learn road: ten worlds, 40 quests charted, two built
   (`unit01/q1-grain`, `unit01/q2-core`). Scaffolding, gating, routes, backend tab and
-  verifier are in place.
+  verifier are in place. World 01 (Tallow) is also built as walkable ground at T4, with
+  both of its benches as 3D instruments; the other nine worlds are charts only.
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
 
@@ -375,6 +438,13 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 6. `#/quest` → `#/leaderboard`, `#/inventory`, `#/quarters`, `#/settings`, `#/admin`.
 
 Nav labels match page titles exactly: BRIDGE, STAR MAP, LEARN, STANDINGS, INVENTORY, CREW.
+
+**The Star Map charts two roads.** `screens/starmap.js` carries a two-tab row in both the
+T4 holo-table and the 2D page: `Active Quests` (the four campaign sectors, unchanged) and
+`Learn Quests` (the ten Learn worlds, from `curriculum.js` with gating from
+`learn/progress.js`). A world that is built as a place reads *Disembark to <world>* and
+enters it in 3D; one that is not reads *Enter* and opens its quest list. The LEARN nav tab
+is untouched, so neither road is reachable only one way.
 
 ## Aesthetic — "SCOURED PLATE" (MANDATORY FOR ALL AGENTS)
 
@@ -488,6 +558,13 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - In-World 3D content transfer: In T4, primary content lives diegetically in 3D: Quests in the Star Map holo-table, Standings on the Comms CRT terminal, Inventory on the Cargo Manifest. In T3 and below, 2D full-page screens (`.screen-container`) remain active.
 - Erebus world scene: `src/three/world.js` and `src/three/world-data/erebus.json` define The Charge Gardens basin with 20 instanced pylon structures along a walkable route, survey lander ("SANDSTALKER") with boarding ramp, stratified sedimentary rock outcrops, procedural terrain heightmap (`getTerrainHeight`), amber celestial sky, banded gas giant vista (with `fog: false` celestial bodies), tuned desert haze (`fogNear: 70`, `fogFar: 280`), and atmospheric dust motes.
 - T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `[X] FREE WALK` dismiss controls. Star Map holo-table integrates Sector 01 status, transmission, and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates fleet chatter and leaderboards; Settings integrates graphics tier (T4 default) and audio sliders.
+- T4 Learn deployment: In T4, `#/learn/unit01` enters the 3D Tallow world
+  (`stage.enterTallowScene(siteId)`); walking to a bench and pressing `[E]` raises a
+  `tallow:interact` event that routes to `#/learn/unit01/<questId>`, where the quest's
+  instrument is deployed as the 3D bench with the frame as an overlay beside it. The
+  router keeps the world scene across both routes (`isWalkableLearnRoute`), so stepping
+  in and out of a bench never passes through the ship, and the last site is remembered so
+  leaving a bench puts the player back in front of it rather than at the pad.
 - T4 World Quest Deployment: In T4, `#/quest` enters the 3D Erebus world (`stage.enterWorldScene()`). The camera is dynamically reparented to `worldScene.scene` (and returned to `shipScene` upon exit) so Three.js continuously updates `camera.matrixWorld` without freeze, spawning above ground level (`groundY + eyeHeight`) facing Pylon 1 with active FPS navigation. The chemistry chamber deploys as an in-world instrument only when the player interacts with an active pylon, suspending FPS controls and releasing pointer lock so the 2D cursor and curved-arrow interaction operate cleanly, lighting its amber indicator in 3D upon clearance and returning cleanly to 3D terrain walking. Full-screen wrappers (`.app-viewport`, `.quest-hud-overlay`, `.quest-screen-flash`) strictly maintain `pointer-events: none` so molecule clicks and right-drag rotation reach the WebGL canvas, while cards (`.stage-prompt-card`, `.stage-dock-bar`, `.quest-nav-cluster`) claim `pointer-events: auto`.
 - First-person controls: `src/three/fps-controls.js` provides unconstrained WASD + sprint (Shift) + Spacebar jump + mouse look navigation with sliding physics collision, penetration push-out resolution (`resolveBoxCollisions`), player radius of 0.25, terrain height clamping on Erebus, and contextual `[E]` interaction prompts at ship terminals and pylons. Movement is active in world exploration and gated behind active session authentication aboard ship; pointer lock automatically suspends in quest overlays and puzzle chamber views, and clicks on `.cinematic-overlay`, `.modal-container`, and HUD elements are excluded from pointer lock capture.
 - Planetary transit cinematics: Launch and atmospheric descent cinematics (`launch`, `erebus_descent`) trigger on transit to Sector 01 from the Star Map, Bridge, and Airlock without persistent one-time lockout, and are skippable via Click/Space/Esc. FPS controls are disabled during cinematic playback to prevent input leakage into the background world.

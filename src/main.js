@@ -8,6 +8,7 @@ import { stage } from './three/stage.js';
 import { tierManager } from './three/tier.js';
 import { Router } from './router.js';
 import { soundscape } from './audio/soundscape.js';
+import { setBenchHost } from './learn/engine/bench-host.js';
 
 /** Guild liveries, keyed by team id. Legacy ids are aliased in session.js. */
 const TEAM_LIVERY = {
@@ -26,6 +27,16 @@ async function bootstrapApp() {
 
   // 1. Initialize 3D Engine
   stage.init();
+
+  // The Learn track's 3D benches render through the same loop the campaign's
+  // containment chamber does. Registered here rather than imported there, so a
+  // quest module stays loadable in plain Node for `npm run verify:learn`.
+  setBenchHost({
+    mount: viewer => stage.setQuestScene(viewer),
+    unmount: viewer => {
+      if (stage.activeQuestViewer === viewer) stage.exitQuestScene();
+    }
+  });
 
   // 2. Setup HUD & Navigation immediately
   setupHud();

@@ -31,7 +31,7 @@
  * reports through `ctx` and nothing else.
  */
 
-import { CoreBench } from '../../engine/corebench.js';
+import { CoreBench } from '../../engine/instruments.js';
 import { LearnFrame } from '../../engine/frame.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
