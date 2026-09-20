@@ -546,6 +546,28 @@ unless a stage has stripped it. **The quest never connects the proton count to t
 catalogue** — the core bench does not talk to the catalogue, preserving that reveal for
 `q3-catalogue`.
 
+### World 1 quest 3 — The Catalogue Numbers (`unit01/q3-catalogue`, live)
+Eight stages at the open vault, on the catalogue board (`engine/catalogue.js`, canvas at
+every tier: a drawer of cards and a board of slots, two-tap place). The payoff both earlier
+benches pointed at: the CAT number the scope has filed by since site one is the proton count,
+and ordering by it makes the periodic pattern. Periods, groups, noble gases, metals and
+nonmetals land as earned vocabulary; the question it leaves lying — why the card's mass is
+never a whole number — is `q5-assay`'s.
+
+### World 1 quest 4 — The Buyer's Ledger (`unit01/q4-ledger`, live)
+Eight stages on the Tally Floor, with the core bench `CoreBench` reused. Counting protons,
+neutrons and electrons off one specimen; isotope notation; charge from the needle; cations
+and anions; a shipment balanced to zero. It ends the unit able to describe any piece with
+three numbers.
+
+### World 1 quest 5 — The Weight On The Card (`unit01/q5-assay`, live)
+Eight stages at the Hopper Gantry on the assay floor (`engine/assay.js`, also used by the
+charted Ligar `q4-weigh`): a hopper tips over a deflector, one bin per weight, tallies
+counted; a balance weighs a hopper whole and reports the average. A real sample is a mix of
+isotopes, the proportions are fixed, the card quotes a weighted average that leans toward the
+common isotope, and the average runs both ways — a sealed hopper or an unmarked one gets
+named off its number. The bench never counts by weighing at scale: moles are Ligar's.
+
 ### Tallow — Learn world 01 as a place you walk (`three/tallow.js`, T4)
 
 At T4, `#/learn/unit01` is not a list of quests: it is the ground they are played on.
@@ -557,11 +579,15 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
   weak with no disc, and the palette stays warm-neutral with a brown/sand bias throughout.
   The sub-level is the one place the sun never reached, so the colour survives there: it is
   built from `crucible.jpg`'s register, riveted and sodium-lit.
-- **Four charted sites, two built.** `site-1` Salvage Bench (`q1-grain`) under the lean-to
+- **Five sites, one per quest, all live.** `site-1` Salvage Bench (`q1-grain`) under the lean-to
   in the yard; `site-2` Core Bench (`q2-core`) down the stairwell in the diagnostic lab;
-  `site-3` Catalogue Vault and `site-4` Tally Floor are `built: false` — real places you can
-  walk to and read, which open nothing. **The world never invents a quest that has not been
-  written**; `verify:tallow` fails if a site's `built` flag disagrees with the chart.
+  `site-3` Catalogue Vault (`q3-catalogue`, the blockhouse with its door racked back);
+  `site-4` Tally Floor (`q4-ledger`, painted floor and ledger board);
+  `site-5` Hopper Gantry (`q5-assay`, a hopper over a chute with catch bins, south of the
+  yard). Sites 1 and 2 carry their instruments as built objects (`BUILT_BENCHES`); sites
+  3–5 stand as real places whose quests draw the bench as a page over the world —
+  nothing sealed, nothing invented. `verify:tallow` still fails if a site's `built` flag
+  disagrees with the chart.
 - **The sub-level is a real excavation.** The terrain mesh has a rectangular hole cut in it
   (triangles whose centre falls inside the footprint are dropped), the pit is built as
   geometry so its edges are machined rather than stretched, and `getTerrainHeight` resolves
@@ -578,9 +604,10 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
   back sheet and the lab's gauge board stand behind it — so the player walked in through
   the back wall, and the instrument docked its camera on the far side of the plate looking
   at the lip. `verify:bench` asserts the angle rather than trusting the number.
-- **Only lamps are lit.** Sodium luminaires in the lab, the mast's obstruction lamp, and one
-  indicator per built site, driven from the Learn track's own progress through
-  `setSiteComplete` — the world reads state, it never keeps it.
+- **Only lamps are lit.** Sodium luminaires in the lab, the mast's obstruction lamp, the
+  doorway light over the open vault, and one indicator per built site, driven from the
+  Learn track's own progress through `setSiteComplete` — the world reads state, it never
+  keeps it.
 - **Tier boundary.** Walking Tallow is T4. At T3 and below the Learn road is the screens it
   has always been and every quest completes exactly as before. `learn/worlds3d.js` is the
   registry that says which worlds are walkable and is the only file a second one needs.
@@ -908,11 +935,13 @@ clearance, every stage has exactly three distinct hint rungs, and a giver→give
 is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 ## Plans in flight
-- `docs/plans/learn-track.md` — the Learn road: ten worlds, 40 quests charted, two built
-  (`unit01/q1-grain`, `unit01/q2-core`). Scaffolding, gating, routes, backend tab,
-  per-world practice sets and the verifier are in place. World 01 (Tallow) is also built as
-  walkable ground at T4, with both of its benches as instruments you stand at; the other
-  nine worlds are charts only.
+- `docs/plans/learn-track.md` — the Learn road: ten worlds, 41 quests charted, five built
+  (`unit01/q1-grain` … `unit01/q5-assay`, the whole of Tallow). Scaffolding, gating, routes,
+  backend tab, per-world practice sets and the verifier are in place. World 01 (Tallow) is
+  also built as walkable ground at T4: sites 1–2 are benches you stand at, sites 3–5 are
+  real places whose quests draw the bench as a page over the world; the other nine worlds
+  are charts only. The Tallow→Ligar pass (`tallow-ligar-build.md`) carries the bench order
+  and what is deliberately left out of Unit 1.
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
 

@@ -225,11 +225,9 @@ spending it early would waste the best moment on this world.
 
 ## Next
 
-- `unit01/q3-catalogue` — the payoff both built quests point at: the catalogue
-  number is the proton count, and ordering by it is what makes the pattern.
-  Charted as a chamber quest; the core bench may suit it better.
-- `unit01/q4-counting` — the mole, back on the sampler scope. It already weighs,
-  and the crates already hold more pieces than anyone can count.
+- All five Tallow quests are live — `q3-catalogue`, `q4-ledger` and `q5-assay`
+  were finished in the Tallow/Ligar pass (see `tallow-ligar-build.md`). The
+  mole moved off Tallow entirely: it is Ligar `q4-weigh`'s subject.
 - Worlds 2, 5 and 9 want the 3D containment chamber rather than a canvas bench.
   Decide whether to lift a reusable runner out of `src/quest3d/` when the second
   chamber quest needs it — not on the first.
@@ -263,9 +261,10 @@ Deliberately **not** done, and why:
 
 - The other nine worlds have no ground. Build Tallow end-to-end first and let what breaks
   inform the rest — the same order `3d-conversion-prompts.md` §6 sets out for Erebus.
-- `q3-catalogue` and `q4-counting` have sites on Tallow but no content. Their doors are
-  dogged shut and their `built` flag is `false`; `verify:tallow` fails if that ever
-  disagrees with the chart. **Nothing about those quests has been invented here.**
+- ~~`q3-catalogue` and `q4-counting` have sites but no content~~ — superseded:
+  every charted quest now exists, every site's `built` flag is `true`, and
+  sites 3–5 stand as real places (open vault, tally floor, hopper gantry)
+  whose quests play as a page over the world at T4.
 - Tallow is T4 only. T3 and below keep the existing Learn screens, and every quest still
   completes identically on them.
 

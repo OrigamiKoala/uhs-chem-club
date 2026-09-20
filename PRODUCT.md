@@ -82,9 +82,9 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
   quest's completion whether or not a question is answered — and they come back for ever
   through a **Problems** key beside a finished world on the star map and on the Learn
   road. They are a 2D overlay on every tier.
-- **Learn track:** ten worlds, one per AP Chemistry unit, 40 quests charted and two built
-  (`unit01/q1-grain`, `unit01/q2-core`). Every Learn quest is a game with its own stages,
-  scene, inputs and grading.
+- **Learn track:** ten worlds, one per AP Chemistry unit, 41 quests charted and five built
+  (all of Tallow: `unit01/q1-grain` through `unit01/q5-assay`). Every Learn quest is a
+  game with its own stages, scene, inputs and grading.
 - **Hardware tiers:** T4 (walk the ship and the worlds in first person), T3 (discrete
   GPU), T2 (Chromebook-class), T1 (no WebGL at all). Every quest stage is 100% solvable in
   T1 through DOM-only inputs producing the same payload contract.
@@ -129,7 +129,7 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
 
 ## Evidence on Hand
 
-- A playable campaign and two built Learn quests, verified by ten check scripts
+- A playable campaign and five built Learn quests, verified by ten check scripts
   (`verify:quest`, `verify:console`, `verify:learn`, `verify:geometry`, `verify:media`,
   `verify:flows`, `verify:ship`, `verify:tallow`, `verify:bench`, `verify:holo`). Several
   of them build the real world in Node and measure it rather than trusting a table beside

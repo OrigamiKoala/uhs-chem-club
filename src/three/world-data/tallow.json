@@ -552,12 +552,12 @@
         3.0
       ],
       "label": "Catalogue Vault",
-      "structure": "sealed-vault",
-      "built": false
+      "structure": "vault",
+      "built": true
     },
     {
       "id": "site-4",
-      "questId": "q4-counting",
+      "questId": "q4-ledger",
       "stage": 4,
       "pos": [
         -27.0,
@@ -570,8 +570,26 @@
         -13.0
       ],
       "label": "Tally Floor",
-      "structure": "sealed-gantry",
-      "built": false
+      "structure": "tally-floor",
+      "built": true
+    },
+    {
+      "id": "site-5",
+      "questId": "q5-assay",
+      "stage": 5,
+      "pos": [
+        6.0,
+        0,
+        30.0
+      ],
+      "approachPos": [
+        6.0,
+        1.6,
+        34.4
+      ],
+      "label": "Hopper Gantry",
+      "structure": "hopper-gantry",
+      "built": true
     }
   ],
   "spawn": {
@@ -635,6 +653,18 @@
           1.2,
           -13.0
         ]
+      },
+      "site-5": {
+        "pos": [
+          6.0,
+          1.6,
+          34.4
+        ],
+        "lookAt": [
+          6.0,
+          1.2,
+          30.0
+        ]
       }
     }
   },
@@ -643,13 +673,15 @@
       "site-1",
       "site-2",
       "site-3",
-      "site-4"
+      "site-4",
+      "site-5"
     ],
     "siteDescriptions": {
       "site-1": "The certification bench under the lean-to awning, west of the crate stacks in the middle of the yard.",
       "site-2": "The diagnostic bench on the lower floor, down the stairwell that opens north of the conveyor gantry.",
-      "site-3": "The sealed vault door in the east wall of the yard, opposite the awning.",
-      "site-4": "The sealed gantry platform on the west side of the yard, beyond the derelict hauler."
+      "site-3": "The vault stood open in the east wall of the yard, opposite the awning, with its bench set out in front of the doorway.",
+      "site-4": "The tally floor on the west side of the yard, beyond the derelict hauler, marked out with a ledger board.",
+      "site-5": "The sorting gantry south of the yard, a raised hopper over a chute with a row of catch bins under its mouth."
     }
   }
 }

@@ -241,7 +241,7 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
   const emoji = strings.filter(s => /\p{Extended_Pictographic}/u.test(s));
   check(emoji.length === 0, 'the world is emoji-free', `emoji in: ${emoji.join(', ')}`);
 
-  const placeWords = /^(pylon|mast|basin|ridge|drift|terrace|hollow|span|relay|bench|vault|floor|core|salvage|catalogue|tally|yard|pan|flat)$/i;
+  const placeWords = /^(pylon|mast|basin|ridge|drift|terrace|hollow|span|relay|bench|vault|floor|core|salvage|catalogue|tally|yard|pan|flat|hopper|gantry)$/i;
   const offLabel = world.sites
     .filter(s => !s.label.split(/\s+/).every(w => placeWords.test(w)))
     .map(s => s.label);

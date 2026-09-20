@@ -7,13 +7,18 @@
  * different light and a different crust.
  *
  * WHAT IS HERE, AND WHY IT IS HERE
- * Four charted Unit 1 sites stand on the flat as physical places:
- *   site-1  Salvage Bench   — q1-grain, built. Under the lean-to in the yard.
- *   site-2  Core Bench      — q2-core, built. Down the stairwell, in the lab.
- *   site-3  Catalogue Vault — q3-catalogue, charted. A door that is dogged shut.
- *   site-4  Tally Floor     — q4-counting, charted. A gantry with its stair pulled.
- * The two unbuilt sites are walkable and readable and open nothing: this file
- * invents no content for quests that have not been written.
+ * Five Unit 1 sites stand on the flat as physical places, one per written quest:
+ *   site-1  Salvage Bench   — q1-grain. Under the lean-to in the yard.
+ *   site-2  Core Bench      — q2-core. Down the stairwell, in the lab.
+ *   site-3  Catalogue Vault — q3-catalogue. The blockhouse in the east wall,
+ *           its door racked back, with the card bench stood outside.
+ *   site-4  Tally Floor     — q4-ledger. A painted floor with a ledger board,
+ *           west of the yard beyond the hauler.
+ *   site-5  Hopper Gantry   — q5-assay. A raised hopper over a chute with a row
+ *           of catch bins, south of the yard.
+ * Sites 1 and 2 carry their instruments as built objects (`BUILT_BENCHES`); the
+ * other three are real standing places whose quests draw the bench as a page
+ * over the world — no instrument is built there, and none is pretended.
  *
  * PHYSICS: every prop declares a footprint in `tallow.json` and every footprint is
  * disjoint — no two objects occupy the same space, which `verify:tallow` proves by
@@ -41,8 +46,7 @@ import {
 } from './materials/pbr-kit.js';
 import {
   createBleachedPlateTexture,
-  createSalvageCrateTexture,
-  createSealedDoorTexture
+  createSalvageCrateTexture
 } from './materials/tallow-textures.js';
 
 /* Deterministic layout noise: the refinery is the same refinery every visit. */
@@ -98,7 +102,9 @@ export class TallowWorld {
     this.initLandingPad();
     this.initSalvageBench();
     this.initCoreBench();
-    this.initSealedSites();
+    this.initCatalogueVault();
+    this.initTallyFloor();
+    this.initHopperGantry();
     this.initDust();
     this.buildColliders();
     this.enableAmbientOcclusion();
@@ -2197,115 +2203,269 @@ export class TallowWorld {
   }
 
   /**
-   * The two charted-but-unbuilt sites. They are real places you can stand in
-   * front of, and they open nothing — this file does not invent a quest that
-   * has not been written.
+   * Site 3 — the Catalogue Vault. The blockhouse in the yard's east wall, and
+   * it STOOD SEALED until this quest was written. Now the blast door is racked
+   * back flat against the face, the mouth stands open, and the work bench the
+   * card catalogue is laid out on sits in front of the doorway. The instrument
+   * itself still plays as a page — what stands here is the place.
    */
-  initSealedSites() {
-    const specs = [
-      { id: 'site-3', code: '03', kind: 'vault' },
-      { id: 'site-4', code: '04', kind: 'gantry' }
-    ];
+  initCatalogueVault() {
+    const site = this.data.sites.find(s => s.id === 'site-3');
+    if (!site) return;
+    const y = this.surfaceHeight(site.pos[0], site.pos[2]);
+    const g = new THREE.Group();
 
-    for (const spec of specs) {
-      const site = this.data.sites.find(s => s.id === spec.id);
-      if (!site) continue;
-      const y = this.surfaceHeight(site.pos[0], site.pos[2]);
-      const g = new THREE.Group();
+    // The blockhouse itself.
+    const block = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(5.2, 4.0, 3.0)), this.plateMat
+    );
+    block.position.set(0, 2.0, 0);
+    block.castShadow = block.receiveShadow = tierAtLeast('T4');
+    g.add(block);
 
-      const doorTex = createSealedDoorTexture(256, spec.code);
-      this.own(doorTex.map, doorTex.normalMap, doorTex.roughnessMap);
-      const doorMat = this.own(new THREE.MeshStandardMaterial({
-        map: doorTex.map, normalMap: doorTex.normalMap, roughnessMap: doorTex.roughnessMap,
-        roughness: 0.93, metalness: 0.42
-      }));
+    // The open mouth: a dark recess where the door used to sit.
+    const mouth = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(1.7, 2.5, 0.14)),
+      this.own(new THREE.MeshStandardMaterial({ color: 0x0d0c0a, roughness: 1.0, metalness: 0 }))
+    );
+    mouth.position.set(0, 1.3, 1.47);
+    g.add(mouth);
 
-      if (spec.kind === 'vault') {
-        // A blockhouse cut into the yard's east wall, with a dogged blast door.
-        const block = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(5.2, 4.0, 3.0)), this.plateMat
-        );
-        block.position.y = 2.0;
-        block.castShadow = block.receiveShadow = tierAtLeast('T4');
-        g.add(block);
-
-        const door = new THREE.Mesh(this.own(new THREE.BoxGeometry(2.3, 2.7, 0.22)), doorMat);
-        door.position.set(0, 1.35, 1.55);
-        door.castShadow = tierAtLeast('T4');
-        g.add(door);
-
-        // The dogging wheel, and the frame it is set in.
-        const wheel = new THREE.Mesh(
-          this.own(new THREE.TorusGeometry(0.34, 0.045, 8, 22)), this.darkSteelMat
-        );
-        wheel.position.set(0, 1.35, 1.72);
-        g.add(wheel);
-        for (let i = 0; i < 4; i++) {
-          const spoke = new THREE.Mesh(
-            this.own(new THREE.BoxGeometry(0.66, 0.04, 0.04)), this.darkSteelMat
-          );
-          spoke.position.set(0, 1.35, 1.72);
-          spoke.rotation.z = (i / 4) * Math.PI;
-          g.add(spoke);
-        }
-        const frame = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(2.7, 3.1, 0.14)), this.darkSteelMat
-        );
-        frame.position.set(0, 1.5, 1.48);
-        g.add(frame);
-
-        // Salt has grown across the sill. Nobody has opened this in a long time.
-        const sill = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(2.6, 0.18, 0.7)),
-          this.own(new THREE.MeshStandardMaterial({ color: 0xd4cbb5, roughness: 1.0 }))
-        );
-        sill.position.set(0, 0.09, 1.85);
-        g.add(sill);
-      } else {
-        // A raised gantry platform whose access stair has been pulled and stacked
-        // underneath it — the reason it cannot be reached.
-        for (const [px, pz] of [[-2.2, -1.4], [2.2, -1.4], [-2.2, 1.4], [2.2, 1.4]]) {
-          const leg = new THREE.Mesh(
-            this.own(new THREE.BoxGeometry(0.22, 4.2, 0.22)), this.darkSteelMat
-          );
-          leg.position.set(px, 2.1, pz);
-          leg.castShadow = tierAtLeast('T4');
-          g.add(leg);
-        }
-        const deckPlate = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(5.2, 0.16, 3.4)), this.plateMat
-        );
-        deckPlate.position.y = 4.28;
-        deckPlate.castShadow = deckPlate.receiveShadow = tierAtLeast('T4');
-        g.add(deckPlate);
-        for (let i = 0; i < 12; i++) {
-          const post = new THREE.Mesh(
-            this.own(new THREE.CylinderGeometry(0.03, 0.03, 1.0, 6)), this.darkSteelMat
-          );
-          const t = i / 12;
-          post.position.set(-2.5 + t * 5.0, 4.86, i % 2 ? 1.6 : -1.6);
-          g.add(post);
-        }
-        // The pulled stair, stacked on the crust.
-        const stair = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(1.1, 0.4, 4.0)), this.darkSteelMat
-        );
-        stair.position.set(2.9, 0.2, 0.4);
-        stair.rotation.y = 0.35;
-        stair.castShadow = tierAtLeast('T4');
-        g.add(stair);
-
-        const plaque = new THREE.Mesh(this.own(new THREE.BoxGeometry(1.1, 1.4, 0.1)), doorMat);
-        plaque.position.set(0, 1.5, 1.5);
-        g.add(plaque);
-      }
-
-      g.position.set(site.pos[0], y, site.pos[2]);
-      g.rotation.y = site.pos[0] > 0 ? -Math.PI / 2 : Math.PI / 2;
-      this.scene.add(g);
-
-      this.siteMarkers.set(site.questId, { site, group: g, indicator: null, sealed: true });
+    // Dogs frame and lintel around the mouth.
+    for (const jx of [-1.0, 1.0]) {
+      const jamb = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.16, 2.5, 0.16)), this.darkSteelMat
+      );
+      jamb.position.set(jx, 1.25, 1.5);
+      g.add(jamb);
     }
+    const lintel = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(2.2, 0.18, 0.16)), this.darkSteelMat
+    );
+    lintel.position.set(0, 2.58, 1.5);
+    g.add(lintel);
+
+    // The door leaf, hauled off its hinges and stowed against the face. There is
+    // no going back to sealed; the wheel went with it.
+    const leaf = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(2.0, 2.7, 0.14)), this.darkSteelMat
+    );
+    leaf.position.set(-1.58, 1.35, 1.58);
+    leaf.rotation.x = -0.04;
+    leaf.castShadow = tierAtLeast('T4');
+    g.add(leaf);
+    const wheel = new THREE.Mesh(
+      this.own(new THREE.TorusGeometry(0.34, 0.045, 8, 22)), this.darkSteelMat
+    );
+    wheel.position.set(-1.58, 1.35, 1.68);
+    g.add(wheel);
+
+    // The lamp over the doorway is lit: somebody works here now.
+    const lampBar = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.5, 0.05, 0.05)),
+      this.own(new THREE.MeshStandardMaterial({
+        color: 0x2a251c, emissive: SODIUM, emissiveIntensity: 1.4, roughness: 0.6
+      }))
+    );
+    lampBar.position.set(0, 2.76, 1.56);
+    g.add(lampBar);
+
+    const tag = placard('VLT-03', { w: 0.5, h: 0.19 });
+    tag.position.set(1.75, 2.86, 1.52);
+    g.add(tag);
+    this.own(tag.geometry, tag.material, tag.material.map);
+
+    // The bench the catalogue cards are worked on, stood out in the yard air.
+    const bench = this.buildBench({ width: 4.8, depth: 1.3, height: 0.95 });
+    bench.group.position.set(0, 0, 2.2);
+    g.add(bench.group);
+
+    g.position.set(site.pos[0], y, site.pos[2]);
+    g.rotation.y = this.siteFacing(site);
+    this.scene.add(g);
+
+    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
+    this.registerBenchAnchor(site, g, bench, [0, 0, 2.2]);
+  }
+
+  /**
+   * Site 4 — the Tally Floor. Sealed gantry once; now the floor itself is the
+   * place: painted margin lines on the crust, a ledger board on posts behind
+   * the bench, and canister crates stacked at the board's end.
+   */
+  initTallyFloor() {
+    const site = this.data.sites.find(s => s.id === 'site-4');
+    if (!site) return;
+    const y = this.surfaceHeight(site.pos[0], site.pos[2]);
+    const g = new THREE.Group();
+
+    // The floor is marked, not built: paint lines on the crust, 5.6 x 3.6.
+    const lineMat = this.own(new THREE.MeshStandardMaterial({ color: 0xb9ab8c, roughness: 0.95, metalness: 0 }));
+    for (const [lx, lz, w, d] of [
+      [0, -1.4, 5.6, 0.08], [0, 2.2, 5.6, 0.08],
+      [-2.8, 0.4, 0.08, 3.6], [2.8, 0.4, 0.08, 3.6]
+    ]) {
+      const strip = new THREE.Mesh(this.own(new THREE.BoxGeometry(w, 0.02, d)), lineMat);
+      strip.position.set(lx, 0.011, lz);
+      g.add(strip);
+    }
+
+    // The ledger board: two posts, a plate, and the tally columns chalked on it.
+    for (const px of [-1.6, 1.6]) {
+      const post = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.1, 1.9, 0.1)), this.darkSteelMat
+      );
+      post.position.set(px, 0.95, -1.0);
+      post.castShadow = tierAtLeast('T4');
+      g.add(post);
+    }
+    const board = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(3.6, 1.05, 0.07)), this.plateMat
+    );
+    board.position.set(0, 1.42, -1.0);
+    board.castShadow = tierAtLeast('T4');
+    g.add(board);
+    const chalkMat = this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 1.0, metalness: 0 }));
+    for (let c = 0; c < 7; c++) {
+      const mark = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.035, 0.3, 0.012)), chalkMat);
+      mark.position.set(-1.24 + c * 0.24, 1.42 + (c % 3) * 0.09, -0.955);
+      mark.rotation.z = c % 2 ? 0.06 : -0.05;
+      g.add(mark);
+    }
+    const tag = placard('TALLY-04', { w: 0.62, h: 0.2 });
+    tag.position.set(0, 2.14, -0.955);
+    g.add(tag);
+    this.own(tag.geometry, tag.material, tag.material.map);
+
+    // Canister crates waiting at the board's end.
+    for (let i = 0; i < 2; i++) {
+      const c = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.8, 0.6, 0.8)), this.crateMats[i % this.crateMats.length]
+      );
+      c.position.set(2.4, 0.3 + i * 0.62, -0.4);
+      c.rotation.y = 0.0 + i * 0.28;
+      c.castShadow = c.receiveShadow = tierAtLeast('T4');
+      g.add(c);
+    }
+
+    // The bench, on the crust toward the yard.
+    const bench = this.buildBench({ width: 4.8, depth: 1.3, height: 0.95 });
+    bench.group.position.set(0, 0, 0.9);
+    g.add(bench.group);
+
+    g.position.set(site.pos[0], y, site.pos[2]);
+    g.rotation.y = this.siteFacing(site);
+    this.scene.add(g);
+
+    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
+    this.registerBenchAnchor(site, g, bench, [0, 0, 0.9]);
+  }
+
+  /**
+   * Site 5 — the Hopper Gantry. Bulk salvage goes in the top, the chute runs
+   * it over the deflector, and the catch bins underneath take one weight each.
+   * The bench with the assay kit stands in front of the works.
+   */
+  initHopperGantry() {
+    const site = this.data.sites.find(s => s.id === 'site-5');
+    if (!site) return;
+    const y = this.surfaceHeight(site.pos[0], site.pos[2]);
+    const g = new THREE.Group();
+
+    // The hopper on four legs, its throat hanging over the chute.
+    const legGeo = this.own(new THREE.BoxGeometry(0.16, 2.3, 0.16));
+    for (const [px, pz] of [[-0.75, -2.1], [0.75, -2.1], [-0.75, -0.9], [0.75, -0.9]]) {
+      const leg = new THREE.Mesh(legGeo, this.darkSteelMat);
+      leg.position.set(px, 1.15, pz);
+      leg.castShadow = tierAtLeast('T4');
+      g.add(leg);
+    }
+    const body = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(1.9, 1.25, 1.7)), this.plateMat
+    );
+    body.position.set(0, 2.95, -1.5);
+    body.castShadow = body.receiveShadow = tierAtLeast('T4');
+    g.add(body);
+    const throat = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.5, 0.5, 0.5)), this.darkSteelMat
+    );
+    throat.position.set(0, 2.05, -1.4);
+    g.add(throat);
+    const lid = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(2.0, 0.06, 1.8)), this.darkSteelMat
+    );
+    lid.position.set(0.1, 3.62, -1.55);
+    lid.rotation.z = 0.05;
+    g.add(lid);
+
+    // The chute off the throat, sloping down to the bins, with side rails.
+    const chute = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.55, 0.06, 2.4)), this.plateMat
+    );
+    chute.position.set(0, 1.42, -0.3);
+    chute.rotation.x = 0.42;
+    chute.castShadow = tierAtLeast('T4');
+    g.add(chute);
+    for (const rx of [-0.25, 0.25]) {
+      const railChute = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.04, 0.09, 2.4)), this.darkSteelMat
+      );
+      railChute.position.set(rx, 1.47, -0.3);
+      railChute.rotation.x = 0.42;
+      g.add(railChute);
+    }
+    // The deflector comb across the middle of the run.
+    const deflector = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.4, 0.3, 0.03)), this.darkSteelMat
+    );
+    deflector.position.set(0, 1.72, -0.55);
+    deflector.rotation.x = 0.42;
+    g.add(deflector);
+
+    // Four catch bins in a row under the chute's mouth.
+    for (let i = 0; i < 4; i++) {
+      const bin = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.5, 0.42, 0.5)), this.bulkMat
+      );
+      bin.position.set(-1.05 + i * 0.7, 0.21, 1.05);
+      bin.castShadow = bin.receiveShadow = tierAtLeast('T4');
+      g.add(bin);
+    }
+
+    // The floor balance: post, dial drum, and pan.
+    const post = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.12, 1.05, 0.12)), this.darkSteelMat
+    );
+    post.position.set(2.3, 0.53, 0.9);
+    g.add(post);
+    const dialDrum = new THREE.Mesh(
+      this.own(new THREE.CylinderGeometry(0.16, 0.16, 0.1, 18)), this.plateMat
+    );
+    dialDrum.rotation.z = Math.PI / 2;
+    dialDrum.position.set(2.3, 1.18, 0.9);
+    g.add(dialDrum);
+    const pan = new THREE.Mesh(
+      this.own(new THREE.CylinderGeometry(0.24, 0.2, 0.035, 18)), this.darkSteelMat
+    );
+    pan.position.set(2.3, 1.3, 0.9);
+    g.add(pan);
+
+    const tag = placard('GNT-05', { w: 0.5, h: 0.19 });
+    tag.position.set(0, 3.05, -0.63);
+    g.add(tag);
+    this.own(tag.geometry, tag.material, tag.material.map);
+
+    // The assay bench, out front where the certificates get worked.
+    const bench = this.buildBench({ width: 4.8, depth: 1.3, height: 0.95 });
+    bench.group.position.set(0, 0, 2.3);
+    g.add(bench.group);
+
+    g.position.set(site.pos[0], y, site.pos[2]);
+    g.rotation.y = this.siteFacing(site);
+    this.scene.add(g);
+
+    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
+    this.registerBenchAnchor(site, g, bench, [0, 0, 2.3]);
   }
 
   /* ======================================================================
@@ -2425,7 +2585,14 @@ export class TallowWorld {
     this.colliders.push({ x: 3.55, z: -26.9, radius: 0.55 });  // lab equipment rack
     this.colliders.push({ x: 10.35, z: -27.0, radius: 0.48 }); // beam column
     this.colliders.push({ x: 25.0, z: 3.0, radius: 2.6 });     // vault blockhouse
-    this.colliders.push({ x: -27.0, z: -13.0, radius: 2.6 });  // gantry legs
+    push(22.15, 23.45, 0.6, 5.4);           // site-3 bench, before the open vault
+    push(-26.75, -25.45, -15.4, -10.6);     // site-4 tally bench
+    push(-28.15, -27.85, -14.9, -11.1);     // site-4 ledger board
+    this.colliders.push({ x: -27.2, z: -15.4, radius: 0.5 });  // tally crate stack
+    push(5.25, 6.75, 27.9, 29.1);           // site-5 hopper legs
+    push(4.7, 7.3, 30.8, 31.3);             // site-5 catch bins
+    push(3.6, 8.4, 31.65, 32.95);           // site-5 bench
+    this.colliders.push({ x: 8.3, z: 30.9, radius: 0.35 });    // site-5 balance post
 
     // The pit rim. Thin box colliders around the excavation, split so the stair
     // mouth is the only way down — which is what makes the descent a walk.
