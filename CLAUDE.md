@@ -547,8 +547,11 @@ catalogue** — the core bench does not talk to the catalogue, preserving that r
 `q3-catalogue`.
 
 ### World 1 quest 3 — The Catalogue Numbers (`unit01/q3-catalogue`, live)
-Eight stages at the open vault, on the catalogue board (`engine/catalogue.js`, canvas at
-every tier: a drawer of cards and a board of slots, two-tap place). The payoff both earlier
+Eight stages at the open vault, on the catalogue board (`engine/catalogue.js`, the one
+Learn instrument that is NOT drawn into an aperture: a catalogue is a card index, so it
+is built out of real plate elements — a drawer of cards and a board of slots, two-tap
+place, no drag — which is the only version of it that reflows at 375 px and can be read
+out loud). The payoff both earlier
 benches pointed at: the CAT number the scope has filed by since site one is the proton count,
 and ordering by it makes the periodic pattern. Periods, groups, noble gases, metals and
 nonmetals land as earned vocabulary; the question it leaves lying — why the card's mass is

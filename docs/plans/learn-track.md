@@ -240,11 +240,12 @@ spending it early would waste the best moment on this world.
 World 01 is now a place as well as a chart. Status:
 
 - [x] `src/three/world-data/tallow.json` — salt-flat refinery: 38 landmarks with declared
-      footprints, 4 sites, a sub-level excavation, spawn, and T1/T2 parity blocks.
+      footprints, 5 sites, a sub-level excavation, spawn, and T1/T2 parity blocks.
 - [x] `src/three/tallow.js` — `TallowWorld`: bleached-overcast lighting, cracked hardpan
       terrain with the excavation cut out of the mesh, evaporator drums, cracking towers,
       pipe racks, conveyor, derelict hauler, buyer's pad, crate stacks, salt heaps, pan
-      rims, the lean-to bench, the sub-level lab and both sealed sites.
+      rims, the lean-to bench, the sub-level lab, the open catalogue vault, the tally
+      floor and the hopper gantry.
 - [x] `src/three/materials/tallow-textures.js` — procedural PBR set. Normals are derived
       from the same height field that drew each albedo (`heightToNormal`), so every bump
       registers with the crack or seam that caused it.

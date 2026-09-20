@@ -1000,7 +1000,7 @@ export function mount(container, ctx) {
           <span class="form-label">${esc(w.label)}</span>
           <div class="lq-build">
             ${w.fields.map((label, fi) => `
-              <div class="lq-build-row" data-slot="${fi}">
+              <div class="lq-build-row no-dot" data-slot="${fi}">
                 <span class="lq-build-code">${esc(label)}</span>
                 <button type="button" class="btn-secondary quest-btn-sm" data-slot-step="-1" aria-label="Lower ${esc(label)}">&minus;</button>
                 <span class="lq-build-count">0</span>
