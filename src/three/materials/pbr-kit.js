@@ -163,7 +163,7 @@ export function texSize(base = 512) {
  */
 export function heightField(size, fn) {
   const c = canvas2d(size, size);
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext('2d', { willReadFrequently: true });
   const img = ctx.createImageData(size, size);
   const d = img.data;
   for (let y = 0; y < size; y++) {
@@ -181,7 +181,7 @@ export function heightField(size, fn) {
 /** Read a height canvas into a Float32Array once, so passes below are cheap. */
 export function readHeight(c) {
   const { width: w, height: h } = c;
-  const src = c.getContext('2d').getImageData(0, 0, w, h).data;
+  const src = c.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, w, h).data;
   const out = new Float32Array(w * h);
   for (let i = 0; i < out.length; i++) out[i] = src[i * 4] / 255;
   return { data: out, w, h };
@@ -190,7 +190,7 @@ export function readHeight(c) {
 /** Write a Float32Array field back out as a greyscale canvas. */
 export function writeField({ data, w, h }) {
   const c = canvas2d(w, h);
-  const ctx = c.getContext('2d');
+  const ctx = c.getContext('2d', { willReadFrequently: true });
   const img = ctx.createImageData(w, h);
   const d = img.data;
   for (let i = 0; i < data.length; i++) {
@@ -210,7 +210,7 @@ export function heightToNormal(heightCanvas, strength = 2.2) {
   const at = (x, y) => data[(((y % h) + h) % h) * w + (((x % w) + w) % w)];
 
   const out = canvas2d(w, h);
-  const octx = out.getContext('2d');
+  const octx = out.getContext('2d', { willReadFrequently: true });
   const img = octx.createImageData(w, h);
   const d = img.data;
 
@@ -251,7 +251,7 @@ export function heightToAO(heightCanvas, { radius = 6, strength = 1.0 } = {}) {
   const src = readHeight(heightCanvas);
   const half = canvas2d(src.w >> 1, src.h >> 1);
   {
-    const ctx = half.getContext('2d');
+    const ctx = half.getContext('2d', { willReadFrequently: true });
     const img = ctx.createImageData(half.width, half.height);
     for (let y = 0; y < half.height; y++) {
       for (let x = 0; x < half.width; x++) {
@@ -536,7 +536,7 @@ export function platedMetal(opts = {}) {
   const rustRgb = hexToRgb(rust);
 
   const alb = canvas2d(S, S);
-  const actx = alb.getContext('2d');
+  const actx = alb.getContext('2d', { willReadFrequently: true });
   const aimg = actx.createImageData(S, S);
   const rough = new Float32Array(S * S);
   const metalness = new Float32Array(S * S);
@@ -1479,7 +1479,7 @@ export function mergeStatic(group) {
  */
 export function mapsFromAlbedo(image, { size = 512, strength = 2.4, rough = [0.42, 0.92] } = {}) {
   const src = canvas2d(size, size);
-  const sctx = src.getContext('2d');
+  const sctx = src.getContext('2d', { willReadFrequently: true });
   sctx.drawImage(image, 0, 0, size, size);
   const px = sctx.getImageData(0, 0, size, size).data;
 

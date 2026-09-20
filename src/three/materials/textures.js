@@ -11,7 +11,7 @@ export function createDurasteelTexture(width = 512, height = 512) {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   // Base metal gradient
   const grad = ctx.createLinearGradient(0, 0, width, height);
@@ -90,7 +90,7 @@ export function createFloorGrateTexture(width = 256, height = 256) {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   // Dark oily under-deck
   ctx.fillStyle = '#111317';
@@ -667,7 +667,7 @@ export function createClubHoloTexture() {
   ctx.font = 'bold 36px sans-serif';
   ctx.shadowColor = '#d99423';
   ctx.shadowBlur = 8;
-  ctx.fillText('◀  STAR MAP  ▶', 512, 282);
+  ctx.fillText('◀  STAR MAP', 512, 282);
   ctx.shadowBlur = 0;
 
   ctx.font = '20px monospace';

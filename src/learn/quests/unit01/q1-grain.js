@@ -132,7 +132,7 @@ export const STAGES = [
     reward: {
       log: 'Crate 07 logged. Discrete grains confirmed at power 4.',
       title: 'Atoms · The Discrete Floor of Matter',
-      body: 'Everything you handle is made of microscopic particles called atoms (from the Greek atomos, meaning indivisible). Matter is not a continuous jelly — turn the magnification up far enough, and the texture stops dividing. You are looking at individual atoms, the fundamental building blocks of all physical matter.'
+      body: 'Everything around you is built from tiny particles called atoms. When you zoom in far enough, matter stops splitting smoothly and separates into individual atoms — the building blocks of everything in the universe!'
     }
   },
 
@@ -167,7 +167,7 @@ export const STAGES = [
     reward: {
       log: 'Crate 09 certified as single material. Crate 14 rejected.',
       title: 'Elements vs. Mixtures',
-      body: 'When a substance is built from only one kind of atom, it is a pure chemical element. Crate 09 contains pure carbon (CAT 06). When different elements share a container without chemically bonding together, they form a mixture — exactly like the imposter pale grains mixed into Crate 14.'
+      body: 'When a material contains only one single kind of atom, it is a pure element (like pure carbon). When different kinds of atoms are mixed together without sticking, they form a mixture!'
     }
   },
 
@@ -208,7 +208,7 @@ export const STAGES = [
     reward: {
       log: 'Crate 22 rejected. Three distinct elements detected.',
       title: 'Atomic Mass · Identifying Elements',
-      body: 'Every chemical element has a characteristic atomic mass. By probing the grains on the scope, you identified three distinct elements in the ore: oxygen (CAT 08, mass 16.0), sulfur (CAT 16, mass 32.1), and chlorine (CAT 17, mass 35.5). In chemistry, measuring mass allows you to identify unknown elements.'
+      body: 'Every element has its own special weight (atomic mass). By measuring how heavy each grain is, you can identify which element it is!'
     }
   },
 
@@ -243,7 +243,7 @@ export const STAGES = [
     reward: {
       log: 'Tray D tested. The blade cannot divide a single grain.',
       title: 'Atoms Cannot Be Divided Chemically',
-      body: 'The blade easily scattered loose heaps and severed the chemical bonds holding clusters together. But Tray D held a single individual atom, and the cutter found nothing inside it to split. In chemical reactions, atoms rearrange and form new bonds, but the atoms themselves are indivisible and preserved.'
+      body: 'You can chop up big clumps, but individual atoms cannot be cut in half by chemical tools. In chemical reactions, atoms move around and form new groups, but the atoms themselves stay whole.'
     }
   },
 
@@ -277,7 +277,7 @@ export const STAGES = [
     reward: {
       log: 'Coolant cluster assembled: 1 heavy center, 2 light arms.',
       title: 'Molecules & Chemical Formulas',
-      body: 'When atoms bind together in a fixed, repeating recipe, they form a molecule. You just assembled a water molecule: one oxygen atom (CAT 08) bonded to two hydrogen atoms (CAT 01). Every molecule of a substance shares the exact same chemical formula — here, H2O.'
+      body: 'When atoms snap together in a fixed recipe, they form a molecule! For example, one oxygen atom bonded to two hydrogen atoms makes a water molecule (H2O).'
     }
   },
 
@@ -315,7 +315,7 @@ export const STAGES = [
     reward: {
       log: 'Vial B flagged as corrosive scouring agent and isolated.',
       title: 'Chemical Compounds · Structure Dictates Function',
-      body: 'When different elements bond in a fixed ratio they form a compound, and the ratio IS the substance. Vial A is water, H2O; Vial B carries one more oxygen in the chain and is hydrogen peroxide, H2O2, an oxidizer that eats seals. One atom of difference, and the two behave nothing alike.'
+      body: 'When different elements bond together, they form a compound. Water (H2O) is safe to drink, but adding just one more oxygen atom makes hydrogen peroxide (H2O2) — a harsh chemical that eats through seals!'
     }
   },
 
@@ -356,7 +356,7 @@ export const STAGES = [
     reward: {
       log: 'Crate 33 separated into two bands. Pure stock verified.',
       title: 'Separating Mixtures vs. Chemical Bonds',
-      body: 'Because a mixture is only a physical combination, its ingredients can be separated by physical properties like density. High-frequency vibration caused Crate 33 to separate into distinct elemental bands. But chemical bonds cannot be shaken apart — molecules in Crate 32 stayed bound and settled as a single band.'
+      body: 'Shaking a mixture separates different loose pieces by weight. But chemical bonds are much stronger — shaking cannot break connected molecules apart!'
     }
   },
 
@@ -404,7 +404,7 @@ export const STAGES = [
       log: 'Final manifest submitted and verified. Buyer cleared for docking.',
       title: 'Classifying All Matter',
       last: true,
-      body: 'You have mastered the fundamental hierarchy of matter: pure elements of lone atoms (carbon in Crate 41) or bonded pairs (diatomic hydrogen gas in Crate 44), pure chemical compounds (water in Crate 42), and physical mixtures (tailings in Crate 43). You can now classify any sample of matter from first principles.'
+      body: 'You can now identify all matter: pure elements (single atoms or matched pairs), chemical compounds (bonded recipes), and physical mixtures (loose mixes).'
     }
   }
 ];

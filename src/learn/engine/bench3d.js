@@ -55,7 +55,7 @@ export function engravedPlaque(text, opts = {}) {
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);

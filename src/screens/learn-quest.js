@@ -107,7 +107,7 @@ export function renderLearnQuest(container, params = {}) {
     const site = w3d.siteForQuest(quest.id);
     if (site) {
       w3d.enter(stage, site.id);
-      setBenchSite(null);
+      setBenchSite(quest.id);
       // Remembered so that stepping back out of the bench returns the player to
       // the site rather than to the pad they landed on.
       try { sessionStorage.setItem('avalon_learn_last_site', site.id); } catch (e) {}

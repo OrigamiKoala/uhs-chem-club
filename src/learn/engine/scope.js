@@ -335,7 +335,7 @@ export class SampleScope {
         sample,
         root,
         canvas,
-        ctx: canvas.getContext('2d'),
+        ctx: canvas.getContext('2d', { willReadFrequently: true }),
         tagEl: root.querySelector('.scope-plate-tag'),
         w: 0, h: 0
       };

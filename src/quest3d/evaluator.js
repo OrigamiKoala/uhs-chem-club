@@ -818,7 +818,7 @@ const STAGE_COPY = [
     chem: {
       badge: 'CHEMISTRY',
       title: 'ELECTRONS MOVE, BONDS FORM',
-      body: 'The red region is a cloud of electrons; the blue region is an atom short of them. A curved arrow in chemistry means exactly what you just drew: a pair of electrons leaving one place and forming a bond in another.'
+      body: 'The red part has extra electrons, and the blue part is hungry for them! Drawing an arrow moves electrons over so the two parts snap together into a new bond.'
     }
   },
   {
@@ -834,8 +834,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'NUCLEOPHILIC SUBSTITUTION',
-      body: 'The red giver is a nucleophile — it donates a pair of electrons to form a new bond. The old group is the leaving group, displaced because the carbon center can only hold four bonds.'
+      title: 'MAKING ROOM FOR NEW BONDS',
+      body: 'The red giver donates electrons to form a new bond. But the blue center can only hold so many connections, so attaching the new piece pushes the old piece off!'
     },
   },
   {
@@ -851,8 +851,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'REACTIVITY',
-      title: 'NUCLEOPHILIC STRENGTH',
-      body: 'Nucleophiles vary in strength. A stronger nucleophile has greater electron density and reacts preferentially — it outcompetes weaker donors for the electrophilic site.'
+      title: 'STRONGEST SPOTS REACT FIRST',
+      body: 'Some givers have more extra electrons than others! The brightest red spot has the most electrons to give, so it reacts first with the bluest target.'
     },
   },
   {
@@ -868,8 +868,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'REACTIVITY',
-      title: 'ELECTROPHILICITY',
-      body: 'Partial charges appear on many atoms, but only strongly electrophilic sites — those with significant electron deficiency — are reactive enough to accept a nucleophile.'
+      title: 'HUNGRY TARGETS ONLY',
+      body: 'Some spots only have a tiny charge. Only the spots with strong charges — the brightest red and deepest blue — pull hard enough to react.'
     },
   },
   {
@@ -885,8 +885,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'STERICS',
-      title: 'STERIC HINDRANCE',
-      body: 'Even when two sites are equally electrophilic, bulky substituents can block the nucleophile\'s approach. This is steric hindrance — the physical shape of a molecule controls which bonds can form.'
+      title: 'FINDING AN OPEN PATH',
+      body: 'Even if two blue spots are both hungry for electrons, nearby atoms can crowd around one and block the way. You have to find the open route!'
     },
   },
   {
@@ -902,8 +902,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'STERICS',
-      title: 'STERIC SHIELDING',
-      body: 'Large alkyl groups around a reactive center create a steric shield. The nucleophile is physically blocked, forcing the reaction to occur at a less hindered position.'
+      title: 'BLOCKED BY BIG NEIGHBORS',
+      body: 'Big bulky groups act like a shield around a target. If a spot is walled in by big neighbors, incoming pieces get blocked and must attach to an unblocked spot instead.'
     },
   },
   {
@@ -919,8 +919,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'SELECTIVITY',
-      title: 'REGIOSELECTIVITY',
-      body: 'When a molecule has multiple electrophilic sites, the nucleophile targets the one that is both electronically favorable and sterically accessible. This preference is called regioselectivity.'
+      title: 'PICKING THE BEST TARGET',
+      body: 'When a molecule has several targets, incoming pieces pick the spot that is both hungry for electrons and has an open path without obstacles.'
     },
   },
   {
@@ -936,8 +936,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'KINETICS',
-      title: 'SPECTATOR SPECIES',
-      body: 'Not every molecule in a reaction mixture participates. Spectator species are present in solution but do not react — they remain chemically unchanged.'
+      title: 'BYSTANDER MOLECULES',
+      body: 'Not every molecule nearby takes part in the action! Spectator molecules just float nearby and watch while the active ones react.'
     },
   },
   {
@@ -953,8 +953,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'KINETICS',
-      title: 'COMPETING NUCLEOPHILES',
-      body: 'When two nucleophiles compete for the same electrophile, the stronger nucleophile — the one with greater electron density — reacts preferentially.'
+      title: 'WINNING THE RACE',
+      body: 'When two red givers race for the same blue target, the one with the brightest electron cloud wins the race and claims the target first.'
     },
   },
   {
@@ -970,8 +970,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'SUBSTRATE ACTIVATION',
-      body: 'Some substrates are too electron-rich to react with a nucleophile. A Lewis acid or proton source activates the substrate by withdrawing electron density, making the electrophilic center reactive.'
+      title: 'WAKING UP A SLEEPY TARGET',
+      body: 'Some targets are too sleepy to react on their own. Adding a helper piece first pulls electrons away, making the center super hungry and ready to react.'
     },
   },
   {
@@ -996,8 +996,8 @@ const STAGE_COPY = [
     },
     chem: {
       badge: 'MECHANISM',
-      title: 'ELEMENTARY STEPS',
-      body: 'A reaction mechanism is an ordered list of elementary steps, and the order is chemistry, not bookkeeping. Numbering the arrows is how chemists state which bond forms first.'
+      title: 'ONE STEP AT A TIME',
+      body: 'In multi-step reactions, order matters! Drawing numbered arrows shows the exact step-by-step order in which bonds form and break.'
     }
   },
   {
@@ -1013,8 +1013,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'ELECTROPHILIC ADDITION',
-      body: 'A double bond (π bond) is an electron-rich target. A nucleophile attacks one carbon, breaking the π bond and forming a new σ bond. The other carbon becomes a carbocation — an electrophilic center.'
+      title: 'SWINGING OPEN A DOUBLE LINK',
+      body: 'A double link between two atoms shares two pairs of electrons. When a new piece attaches, one pair of electrons in the double link swings open into a single link.'
     },
   },
   {
@@ -1030,8 +1030,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'PROTON TRANSFER',
-      body: 'A proton (H⁺) can transfer from one molecule to another in an acid-base equilibrium. This is the simplest reaction in chemistry — a Brønsted acid donates H⁺ to a Brønsted base.'
+      title: 'PASSING A PIECE ALONG',
+      body: 'Small pieces like hydrogen can hop easily from one molecule to another, passing along a chain one step at a time.'
     },
   },
   {
@@ -1047,8 +1047,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'SN2 — CONCERTED SUBSTITUTION',
-      body: 'In an SN2 reaction, bond formation and bond breaking happen simultaneously. The nucleophile attacks the electrophilic carbon at the same moment the leaving group departs — a single concerted step.'
+      title: 'ATTACH, THEN DROP',
+      body: 'When a new piece attaches, the double link swings open to make room, then snaps back shut to kick out the leaving group.'
     },
   },
   {
@@ -1064,8 +1064,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'LEWIS ACID ACTIVATION',
-      body: 'A Lewis acid accepts an electron pair from the substrate, withdrawing electron density and generating a stronger electrophile. This lowers the activation energy for nucleophilic attack.'
+      title: 'HELPERS WAKE UP TARGETS',
+      body: 'A helper piece attaches first to pull electrons away. This wakes up the center so the next piece can move in!'
     },
   },
   {
@@ -1081,8 +1081,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'LEAVING GROUP ABILITY',
-      body: 'A good leaving group is stable on its own once it goes, which means it is a weak base — a halide or a tosylate, never a hydroxide. The weaker the base, the better the leaving group.'
+      title: 'LEAVING PIECES',
+      body: 'A good leaving piece is happy on its own once it leaves. The easier a piece can float away on its own, the easier it pops off.'
     },
   },
   {
@@ -1098,8 +1098,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'THERMODYNAMICS',
-      title: 'ANGLE STRAIN',
-      body: 'Cyclopropane and epoxides have bond angles compressed to ~60°, far from the ideal 109.5°. This angle strain stores ~115 kJ/mol of energy, making the ring highly susceptible to nucleophilic ring-opening.'
+      title: 'SNAPPING OPEN TIGHT RINGS',
+      body: 'A tiny three-cornered ring is bent like a tight spring! Attacking one corner snaps the strained ring open into a comfortable, relaxed chain.'
     },
   },
   {
@@ -1115,8 +1115,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'TANDEM REACTIONS',
-      body: 'In a tandem (cascade) mechanism, the product of one elementary step is the reactive intermediate for the next. Deprotonation reveals a carbanion that immediately attacks a nearby electrophile.'
+      title: 'DOMINO REACTION',
+      body: 'In a domino chain reaction, finishing one step creates the active spot needed for the next step.'
     },
   },
   {
@@ -1132,8 +1132,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'SN1 — STEPWISE SUBSTITUTION',
-      body: 'In an SN1 reaction, the leaving group departs first, forming a carbocation intermediate. Only then does the nucleophile attack the now-vacant electrophilic center — two distinct steps.'
+      title: 'LEAVE FIRST, THEN FILL',
+      body: 'When a center is too crowded, the old piece must leave first to free up an empty seat before the new piece can land.'
     },
   },
   {
@@ -1149,8 +1149,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'CATALYSIS',
-      body: 'A catalyst lowers the activation energy without being consumed. Here the helper activates the scaffold by coordinating to it, enabling the main nucleophilic attack to proceed at a lower energy barrier.'
+      title: 'HELPER CATALYSTS',
+      body: 'A helper catalyst wakes up the structure so the reaction happens easily, without being used up itself. You solved all 20 stages!'
     },
   }
 ];

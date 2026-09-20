@@ -984,8 +984,22 @@
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: rgba(10, 9, 8, 0.86);
+  background: transparent;
   pointer-events: none;
+}
+
+.lq-dock-bar {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.5rem;
+  display: flex;
+  gap: 0.6rem;
+  z-index: 50;
+  background: rgba(14, 12, 10, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-durasteel);
+  padding: 6px 10px;
 }
 
 /* The quest frame, deployed over the world. The instrument is the 3D bench

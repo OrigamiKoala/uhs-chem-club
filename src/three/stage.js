@@ -286,7 +286,7 @@ class Stage {
         const nearDoor = this.shipInterior?.getDoorNear(px, pz, 1.6);
         if (nearDoor) {
           this.shipInterior.toggleDoor(nearDoor);
-          this.fpsControls.colliders = this.shipInterior.getActiveColliders();
+          this.fpsControls.setColliders(this.shipInterior.getActiveColliders());
           soundscape.playNavRelayClick?.();
           return;
         }

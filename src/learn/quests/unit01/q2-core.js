@@ -168,7 +168,7 @@ export const STAGES = [
     reward: {
       log: 'SPEC A analyzed. Direct rebound: 1 in 40.',
       title: 'The Nucleus · Mostly Empty Space',
-      body: 'Like Rutherford\'s famous gold foil experiment, firing energetic alpha particles reveals that an atom is over 99.99% empty space. Almost every particle passes straight through, while the rare rebound exposes a minute, incredibly dense central core: the atomic nucleus, where almost all mass is concentrated.'
+      body: 'Firing energetic particles reveals that an atom is mostly empty space! Almost every particle passes straight through, but a rare rebound shows a tiny, dense core in the center: the nucleus!'
     }
   },
 
@@ -204,7 +204,7 @@ export const STAGES = [
     reward: {
       log: 'SPEC A core: 12 subatomic particles (6 marked, 6 blank).',
       title: 'Protons & Neutrons · The Nucleus',
-      body: 'The atomic nucleus consists of two types of nucleons of nearly identical mass: protons (the marked grains with a +1 positive charge) and neutrons (the blank grains with 0 charge). SPEC A has 6 protons and 6 neutrons, giving it a mass number of 12.'
+      body: 'The center of an atom (the nucleus) holds two kinds of heavy pieces: protons (the marked pieces with a +1 positive charge) and neutrons (blank pieces with no charge).'
     }
   },
 
@@ -246,7 +246,7 @@ export const STAGES = [
     reward: {
       log: 'SPEC B certified. 8 electrons deduced, casing unopened.',
       title: 'Electrons & Electrical Neutrality',
-      body: 'In an undisturbed, neutral atom, the total positive charge of the protons in the nucleus is exactly balanced by an equal number of negatively charged electrons (-1) orbiting outside. Because SPEC B has 8 protons and a net charge of zero, it must have exactly 8 electrons.'
+      body: 'In a neutral atom, positive protons (+1) in the nucleus are balanced by an equal number of negative electrons (-1) orbiting outside. Because SPEC B has 8 protons and zero net charge, it must have 8 electrons outside!'
     }
   },
 
@@ -296,7 +296,7 @@ export const STAGES = [
     reward: {
       log: 'SPEC C electron configuration: 2 / 8 / 1.',
       title: 'Electron Shells & The Bohr Model',
-      body: 'Electrons occupy quantized concentric energy levels called electron shells. The first shell closest to the nucleus holds at most 2 electrons; the second holds up to 8. Electrons fill lower-energy inner shells first, meaning element 11 (sodium) has the electron configuration 2, 8, 1.'
+      body: 'Electrons orbit outside the nucleus in rings called electron shells. The first ring holds up to 2 electrons, and the second ring holds up to 8. Inner rings fill up completely before any electrons sit on outer rings!'
     }
   },
 
@@ -349,7 +349,7 @@ export const STAGES = [
     reward: {
       log: 'Four behaviors filed; two tester charges spent.',
       title: 'Valence Electrons & Chemical Reactivity',
-      body: 'Chemical reactivity is determined by valence electrons—the electrons in the outermost shell. Atoms strive for a full outer shell (the octet rule): atoms with 1 valence electron readily donate it, atoms with 7 aggressively take one, and atoms with a complete outer shell of 8 (like neon) are chemically inert noble gases.'
+      body: 'Outer electrons (valence electrons) decide how an atom reacts! Atoms love full outer rings: atoms with 1 outer electron easily give it away, atoms with 7 take one to fill up, and atoms with a full ring of 8 do not trade at all.'
     }
   },
 
@@ -399,7 +399,7 @@ export const STAGES = [
     reward: {
       log: 'SPEC K certified with SPEC H. SPEC L held back.',
       title: 'Atomic Number & Isotopes',
-      body: 'An element\'s chemical identity is governed strictly by its atomic number (the number of protons in its nucleus). SPEC H and SPEC K both have 6 protons (carbon): SPEC K has an extra neutron, making it carbon-13, an isotope of the same element. SPEC L has 7 protons (nitrogen), making it an entirely different element despite having the same mass number 13.'
+      body: 'An element\'s identity depends ONLY on its proton count (atomic number). SPEC H and SPEC K both have 6 protons (carbon), but SPEC K has an extra neutron — making it an isotope. SPEC L has 7 protons, so it is a completely different element (nitrogen)!'
     }
   },
 
@@ -438,7 +438,7 @@ export const STAGES = [
     reward: {
       log: 'SPEC M brought to plus two. Core untouched.',
       title: 'Ions & Net Charge',
-      body: 'When a neutral atom loses or gains electrons, it becomes an ion. Removing 2 negative electrons from SPEC M left its 11 positive protons partially uncancelled, yielding a +2 cation. The nucleus is completely unchanged, so the elemental identity remains sodium, but it now interacts powerfully with electric fields.'
+      body: 'When an atom gains or loses electrons, it becomes a charged ion! Removing 2 negative electrons leaves positive protons uncancelled, making a +2 ion.'
     }
   },
 
@@ -490,7 +490,7 @@ export const STAGES = [
     reward: {
       log: 'Three canisters certified. Orbital transfer manifest sealed.',
       title: 'The Subatomic Architecture of Matter',
-      body: 'You have mastered the subatomic architecture of atoms: changing neutrons creates isotopes of different mass (nitrogen-15 in SPEC N), altering electrons creates charged ions (nitrogen cation in SPEC P), and altering protons changes the atomic number into an entirely different element (oxygen in SPEC R).',
+      body: 'Changing neutrons creates isotopes of different weight, changing electrons creates charged ions, and changing protons creates a completely different element!',
       last: true
     }
   }
