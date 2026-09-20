@@ -18,6 +18,9 @@
 
 import * as THREE from "three";
 
+/** Keys that only ever mean "move", so nothing on a panel can want them. */
+const WALK_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ShiftLeft", "ShiftRight"]);
+
 export class FpsControls {
   constructor(camera, domElement) {
     this.camera = camera;
@@ -55,6 +58,16 @@ export class FpsControls {
     this.isPointerLocked = false;
     this.isDragging = false;
     this.previousMousePosition = { x: 0, y: 0 };
+
+    // Drag-look handed to somebody else. A Learn bench deployed on a world the
+    // player walked to reads its own pointer drags — it has to, because a press
+    // that lands on a crate or a dial is the bench's before it is the view's —
+    // and forwards what is left here through `rotate`. Without this the same
+    // drag would be counted twice and the camera would turn at double rate.
+    this.mouseLookLocked = false;
+    // Set while an instrument is deployed on ground the player is standing on:
+    // see `onKeyDown`.
+    this.walkKeysAtBench = false;
 
     // Height & environment
     this.eyeHeight = 1.6;
@@ -176,7 +189,7 @@ export class FpsControls {
   }
 
   onMouseDown(e) {
-    if (!this.enabled || this.touchMode) return;
+    if (!this.enabled || this.touchMode || this.mouseLookLocked) return;
     const tag = e.target ? e.target.tagName.toLowerCase() : "";
     if (tag === "input" || tag === "textarea" || tag === "select" || tag === "button" || tag === "a") return;
     if (e.target.closest && (
@@ -210,6 +223,7 @@ export class FpsControls {
 
   onMouseMove(e) {
     if (!this.enabled || this.touchMode) return;
+    if (this.mouseLookLocked && !this.isPointerLocked) return;
 
     let movementX = 0;
     let movementY = 0;
@@ -275,7 +289,16 @@ export class FpsControls {
     // A key aimed at a focused control is not aimed at the ground. Without this
     // an arrow key turning the scope's power dial also walks the player off the
     // bench, and Space on a focused key cap jumps.
-    if (active && active !== document.body && active.closest && active.closest(
+    //
+    // W/A/S/D and Shift are the exception AT A BENCH THAT STANDS IN THE WORLD,
+    // because no key cap, lamp or dial in this product does anything with them
+    // and a player working that bench must be able to take a step straight
+    // after pressing Commit. Without the exception the walk went dead the
+    // moment they touched a control and only came back if they thought to click
+    // the ground. It is not on for an overlay that owns the whole glass — a
+    // terminal the player is reading is not a place to be walking behind.
+    if (!(this.walkKeysAtBench && WALK_KEYS.has(e.code)) &&
+        active && active !== document.body && active.closest && active.closest(
       ".screen-container, .lq, .lq-world-panel, .modal-container, .in-world-terminal, [contenteditable]"
     )) return;
 

@@ -423,6 +423,25 @@ into grinding and would punish the students it exists to help.
   be used on the world camera: it would re-frame the whole of Tallow. `verify:bench` drives
   `aimForChrome` at six aspects and fails the build if a screen still runs under the frame
   or a well is aimed off the bottom.
+- **AND THE AIMING STOPS THE MOMENT THE PLAYER TAKES A STEP.** A deployed bench stands on
+  ground that is still underfoot, so the player keeps their feet while they work it: W/A/S/D
+  walks, a drag on the view turns, and collision and the terrain clamp are the world's as
+  usual. The instrument stands them in front of the stations and aims them clear of the
+  chrome, and `playerWalked()` in `bench3d.js` — the camera anywhere but the spot it was
+  last stood on — flips `playerControlled` for good, after which `applyCamera` and
+  `fitDeployedAim` return without touching anything. Two rules make that possible and both
+  are load-bearing: the deployment frame declares `walkOwnsHeight`, so the instrument aims
+  but never sets how high the head is (the walk clamps the same camera to the terrain every
+  frame, and the two writing the same y is exactly the fight that made the view judder and
+  W go nowhere); and the bench reads the look drag itself, through `turnCamera`, with the
+  walk's own mouse path stood down by `fpsControls.mouseLookLocked` — a press that lands on
+  a crate or a dial is the bench's before it is the view's, and two readers of one drag turn
+  the view twice as far as the hand moved. `fpsControls.walkKeysAtBench` lets W/A/S/D and
+  Shift through a focused panel control while a bench is up, because no key cap or dial in
+  this product wants them and a player who has just pressed Commit must be able to step
+  sideways without first thinking to click the ground; arrows and Space stay blocked, since
+  the power dial does want those. In Node there is no walk, `walkOwnsHeight` is absent, and
+  `verify:bench` measures the bench the way it always did.
 - **A briefing never blacks out the bench it is describing.** `#modal-container` normally
   paints a near-opaque scrim over the whole glass, which is right for a dialog over a page
   and wrong over an instrument: the transmission telling the player to read the needle on
@@ -467,9 +486,10 @@ into grinding and would punish the students it exists to help.
   `verify:learn`, and importing the stage would drag three.js and two worlds' JSON in with it.
   **Both quest modules changed by exactly one import line and not one character of copy.**
   A **drawn** bench brings a page, not a scene, so nothing else would stand the walk down:
-  `learn-quest.js` calls `stage.setWalkSuspended(true)` for it (released on dispose), or W
-  would step the player off the bench and an arrow key aimed at the power dial would also be
-  a step backwards. The page carries `.learn-quest-overworld`, a flat scrim over the live
+  `learn-quest.js` calls `stage.setWalkSuspended(true)` for it — and ONLY for it, since a
+  built bench is a real object on real ground the player is meant to keep walking on —
+  (released on dispose), or W would step the player off the bench and an arrow key aimed at
+  the power dial would also be a step backwards. The page carries `.learn-quest-overworld`, a flat scrim over the live
   flat — no backdrop blur, because blurring a full-screen WebGL frame is the most expensive
   thing this app could ask a handset for. Nothing in Unit 1 takes that path any more; it
   stays because the next world's first quest may.

@@ -389,6 +389,24 @@ export class BenchViewer3D {
     // A constrained look-around: the player can lean over the bench and see a
     // piece from another side, but never get behind or under it.
     this.orbit = { yaw: 0, pitch: 0, targetYaw: 0, targetPitch: 0 };
+    // DEPLOYED, THE CAMERA ENDS UP BELONGING TO THE PLAYER. The instrument
+    // stands them in front of the stations and aims them clear of the frame,
+    // and the FIRST STEP THEY TAKE it lets go and never writes to the camera
+    // again. Holding the camera on the bench's own arc while a walkable world
+    // was underneath meant every press of W was undone in the same frame, and
+    // the aim correction re-solved against a view that was being fought over —
+    // which is what juddered.
+    this.playerControlled = false;
+    // Where `applyCamera` last stood the player. Anything else on the ground
+    // next frame is the player having moved themselves.
+    this._standX = 0;
+    this._standZ = 0;
+    this._stood = false;
+    // Deployed on a world, the walk clamps the camera to the terrain every
+    // frame, so the instrument aims but never sets how high the head is. In
+    // Node — where `verify:bench` measures the deployed bench and there is no
+    // walk — it sets the height as it always did.
+    this.walkOwnsHeight = Boolean(world && world.walkOwnsHeight);
     this.dragging = false;
     this.dragPointerId = null;
     this.lastPointer = { x: 0, y: 0 };
@@ -811,6 +829,10 @@ export class BenchViewer3D {
   }
 
   applyCamera() {
+    // Once the player has moved themselves, the bench is a thing standing in
+    // the world and nothing more. It does not reach for the camera again.
+    if (this.inWorld && this.playerControlled) return;
+
     const yaw = this.orbit.yaw;
     const pitch = this.orbit.pitch;
     const d = this.camDist;
@@ -835,14 +857,60 @@ export class BenchViewer3D {
       this._tgtLocal.set(t.x + shift, t.y + lift, t.z);
       this.root.localToWorld(this._camLocal);
       this.root.localToWorld(this._tgtLocal);
+      const headY = this.camera.position.y;
       this.camera.position.copy(this._camLocal);
+      // The ground the player is standing on decides how high their head is.
+      if (this.walkOwnsHeight) this.camera.position.y = headY;
       this.camera.lookAt(this._tgtLocal);
       this.camera.updateMatrixWorld(true);
+      // Remember where they were stood, so the next frame can tell a player who
+      // walked from a camera the instrument simply left where it was.
+      this._standX = this.camera.position.x;
+      this._standZ = this.camera.position.z;
+      this._stood = true;
       return;
     }
 
     this.camera.position.set(x, y, z);
     this.camera.lookAt(t.x + shift, t.y + lift, t.z);
+  }
+
+  /**
+   * Has the player walked off the spot the instrument stood them on?
+   *
+   * Read off the ground rather than off an input, so it is true for every way
+   * a world can be walked — keys, sticks, anything added later — and false for
+   * the one thing that moves the camera without the player asking, which is the
+   * walk clamping their head to the terrain. A single frame of walking covers
+   * about 70 mm, so the threshold catches a step immediately and ignores a
+   * collider easing them out of a corner.
+   */
+  playerWalked() {
+    if (!this._stood) return false;
+    const dx = this.camera.position.x - this._standX;
+    const dz = this.camera.position.z - this._standZ;
+    return (dx * dx + dz * dz) > (0.004 * 0.004);
+  }
+
+  /**
+   * Turn the player's head. The deployed bench reads its own pointer drags —
+   * it has to, because a press that lands on a crate or a dial is the bench's
+   * before it is the view's — and the walk's own mouse path is stood down while
+   * one is up, so this is where a drag on the view becomes a look.
+   *
+   * @param {number} yaw radians to turn right by.
+   * @param {number} pitch radians to look down by.
+   */
+  turnCamera(yaw, pitch) {
+    const e = this._lookEuler || (this._lookEuler = new THREE.Euler(0, 0, 0, 'YXZ'));
+    e.setFromQuaternion(this.camera.quaternion);
+    e.y -= yaw;
+    e.x -= pitch;
+    const maxPitch = (85 * Math.PI) / 180;
+    e.x = Math.max(-maxPitch, Math.min(maxPitch, e.x));
+    e.z = 0;
+    this.camera.quaternion.setFromEuler(e);
+    this.camera.updateMatrixWorld(true);
   }
 
   /* ---------------- input ---------------- */
@@ -897,6 +965,25 @@ export class BenchViewer3D {
       const dy = e.clientY - this.lastPointer.y;
       this.lastPointer = { x: e.clientX, y: e.clientY };
       this.movedWhileDown += Math.abs(dx) + Math.abs(dy);
+
+      if (this.inWorld) {
+        // Deployed, a drag on the view is the player turning their head, not
+        // the instrument swinging on a short arc — same sign and the same
+        // sensitivity as a drag anywhere else on the flat, because at a bench
+        // standing in a world turning has to feel like turning did on the walk
+        // in. It is the bench that reads it, on every device: the walk's own
+        // mouse path is stood down while a bench is up (`mouseLookLocked`), or
+        // the two would each apply the drag and the view would turn twice as
+        // far as the hand did.
+        // A press that has not travelled yet is still a click on a crate, and
+        // a click must not end the framing: below the same threshold the click
+        // test uses, nothing turns and nothing is handed over.
+        if (this.movedWhileDown >= 6) {
+          this.playerControlled = true;
+          this.turnCamera(dx * 0.0024, dy * 0.0024);
+        }
+        return;
+      }
 
       this.orbit.targetYaw = THREE.MathUtils.clamp(
         this.orbit.targetYaw - dx * 0.004, -0.55, 0.55
@@ -1260,18 +1347,28 @@ export class BenchViewer3D {
     if (this.disposed) return;
     this.elapsed += delta;
 
-    // Re-measure a few times a second: the frame's deck changes height as hints
-    // open and a reward card appears, and the bench should stay clear of it.
-    this._sinceFit = (this._sinceFit || 0) + delta;
-    if (this._sinceFit > 0.2) {
-      this._sinceFit = 0;
-      this.fitToOpenArea();
+    // The handover, checked before anything else reads the camera: the moment
+    // the player takes a step, the bench stops standing them anywhere and stops
+    // aiming for them.
+    if (this.inWorld && !this.playerControlled && this.playerWalked()) {
+      this.playerControlled = true;
     }
 
-    // Damped look: the view settles, it does not snap.
-    this.orbit.yaw += (this.orbit.targetYaw - this.orbit.yaw) * Math.min(1, delta * 9);
-    this.orbit.pitch += (this.orbit.targetPitch - this.orbit.pitch) * Math.min(1, delta * 9);
-    this.applyCamera();
+    if (!(this.inWorld && this.playerControlled)) {
+      // Re-measure a few times a second: the frame's deck changes height as
+      // hints open and a reward card appears, and the bench should stay clear
+      // of it — right up until the player takes the view for themselves.
+      this._sinceFit = (this._sinceFit || 0) + delta;
+      if (this._sinceFit > 0.2) {
+        this._sinceFit = 0;
+        this.fitToOpenArea();
+      }
+
+      // Damped look: the view settles, it does not snap.
+      this.orbit.yaw += (this.orbit.targetYaw - this.orbit.yaw) * Math.min(1, delta * 9);
+      this.orbit.pitch += (this.orbit.targetPitch - this.orbit.pitch) * Math.min(1, delta * 9);
+      this.applyCamera();
+    }
 
     for (const st of this.stations) {
       if (st.sweepT > 0) {

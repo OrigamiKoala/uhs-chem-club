@@ -830,7 +830,14 @@ class Stage {
       camera: this.camera,
       position: anchor.position,
       rotationY: anchor.rotationY,
-      topY: anchor.topY
+      topY: anchor.topY,
+      // THE PLAYER KEEPS THEIR FEET AT A DEPLOYED BENCH, so the walk owns how
+      // high off the ground their head is and the instrument must not write it.
+      // The bench used to set the whole camera — position and all — several
+      // times a second to stay out from under the frame, and with the walk
+      // clamping the same camera to the terrain in the same frame the two
+      // fought over it: the view juddered and W went nowhere.
+      walkOwnsHeight: true
     };
   }
 
@@ -875,10 +882,19 @@ class Stage {
     this.mode = questViewer ? "quest" : "world";
     if (this.fpsControls) {
       this.fpsControls.hidePrompt();
-      if (questViewer) {
+      // An instrument DEPLOYED on ground the player walked to leaves them on
+      // their feet: the bench stands in the world, and a player who wants a
+      // different angle on it should be able to take a step rather than wait
+      // for the camera to be adjusted for them. An instrument that brings its
+      // own room (the containment chamber) has no ground to walk.
+      const deployed = Boolean(questViewer && questViewer.inWorld);
+      this.fpsControls.mouseLookLocked = deployed;
+      this.fpsControls.walkKeysAtBench = deployed;
+      if (questViewer && !deployed) {
         this.fpsControls.enabled = false;
         this.fpsControls.exitPointerLock();
       } else {
+        this.fpsControls.releaseKeys?.();
         this.fpsControls.enabled = true;
       }
     }
@@ -894,6 +910,9 @@ class Stage {
     this.mode = "world";
     if (this.fpsControls) {
       this.fpsControls.enabled = true;
+      this.fpsControls.mouseLookLocked = false;
+      this.fpsControls.walkKeysAtBench = false;
+      this.fpsControls.releaseKeys?.();
       this.fpsControls.exitPointerLock();
     }
     // Back to whichever world the instrument was deployed on, not always Erebus.
@@ -912,6 +931,13 @@ class Stage {
     this.syncTouchControls(now);
 
     if (this.mode === "quest" && this.activeQuestViewer) {
+      // Walk the player first, then let the instrument see where they ended
+      // up. A deployed bench is standing on ground that is still underfoot, so
+      // W/A/S/D, the terrain clamp and the colliders all keep working while it
+      // is being worked; the bench reads the camera rather than writing it.
+      if (this.activeQuestViewer.inWorld && this.fpsControls && this.fpsControls.enabled) {
+        this.fpsControls.update(delta);
+      }
       this.activeQuestViewer.update(delta, time);
       // An instrument deployed on a world the player walked to is standing IN
       // that world: its dust still drifts, its lamps still flicker and its sock

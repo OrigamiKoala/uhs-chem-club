@@ -120,7 +120,12 @@ export function renderLearnQuest(container, params = {}) {
       const q = world.quests.find(x => x.id === qid);
       return q ? isQuestComplete(q) : false;
     });
-    stage.setWalkSuspended?.(true);
+    // A DRAWN bench brings a page, not a scene: there is nothing in the world
+    // to stand at, so the walk goes down or W would step off the bench. A BUILT
+    // bench is a real object on real ground, and the player keeps their feet —
+    // W/A/S/D repositions them at it, which is how they get a different angle
+    // on a well instead of waiting for the camera to be adjusted for them.
+    stage.setWalkSuspended?.(!benchIsBuilt(quest.id));
 
     /* THE BRIEFING MUST NOT BLACK OUT THE BENCH.
        A modal on this product paints a near-opaque scrim over the whole glass,
