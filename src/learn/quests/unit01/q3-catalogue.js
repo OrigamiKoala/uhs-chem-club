@@ -2,23 +2,21 @@
  * q3-catalogue.js — Tallow, site three: THE CATALOGUE NUMBERS.
  *
  * The third game on the Learn road, and the one the last two benches have been
- * setting up. The sampler scope has been filing every kind it meets under a CAT
- * number since site one and never said what the number counts. The core bench
- * spent eight stages counting protons and was told, out loud, that it does not
- * talk to the catalogue. This bench puts the two together, and the answer is the
- * periodic table.
+ * setting up. The sampler scope has filed every kind it meets under a CAT number
+ * since site one and never said what the number counts. The core bench spent
+ * eight stages counting protons. This bench puts the two together, and the
+ * answer is the periodic table.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  order six unmarked cards by proton count -> Atomic Number · the filing order
+ *   1  order six unmarked cards by proton count -> Atomic Number
  *   2  measure how long the pattern runs        -> Periods · the rows
  *   3  lay the third row into the board         -> The Periodic Table
  *   4  read a column instead of a row           -> Groups · the columns
- *   5  find the column that never trades        -> Noble Gases · a full outer shell
- *   6  file six cards by what they do           -> Metals, Nonmetals and two families
- *   7  price a card that is not in the drawer   -> The table predicts what is missing
- *   8  file four unmarked cards into the chart  -> One number orders every kind there is
- *   -- debrief: the chart the buyer takes away, and what two kinds do when they meet.
+ *   5  find the column that never trades        -> Noble Gases
+ *   6  file six cards by what they do           -> Metals and Nonmetals
+ *   7  price a card that is not in the drawer   -> The chart predicts
+ *   8  file four unmarked cards into the chart  -> One number orders everything
  *
  * VOCABULARY IS EARNED, THEN USED. Everything the first two benches taught —
  * proton, neutron, electron, shell, valence, element, isotope, ion — is a plain
@@ -26,10 +24,9 @@
  * vocabulary, and `VOCABULARY` below says which stage's reward card pays each
  * one out. `verify:learn` fails the build both ways round.
  *
- * WHAT THIS QUEST DOES NOT DO. It never weighs anything against a count. The
- * cards carry a mass and stage one uses it as the wrong answer, but the reason
- * the listed mass is not a whole number is site five's, and counting by weighing
- * is a whole other world's.
+ * COPY RULE: one briefing, on stage one, saying what the bench does. After that
+ * every stage is a plain imperative prompt, three short hints and a reward card.
+ * No story rides on top of it.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings. It
  * reports through `ctx` and nothing else.
@@ -64,28 +61,26 @@ const SPEAKER = 'Vess';
 /* ------------------------------------------------------------------
    THE KEY LEGEND
 
-   NOTHING ON THIS BENCH IS NAMED WITHOUT BEING EXPLAINED (CLAUDE.md, and
-   PRODUCT.md principle 2). That covers the affordances as well as the keys:
-   "tap a card to read it" is not obvious to somebody who has never seen a card
-   index, and the two-tap file is the only gesture in this quest that has to be
-   taught. `verify:learn` fails the build over a control with no line and runs
-   every line through the withheld-vocabulary gate.
+   Every control says what it does in one short sentence, for as long as it is
+   on the plate. That covers the affordances as well as the keys: tapping a card
+   and tapping a slot are the only two gestures in this quest, and neither is
+   obvious. `verify:learn` fails the build over a control with no line.
    ------------------------------------------------------------------ */
 const TOOL_TEXT = {
   reader: [{
     from: 1,
     key: 'Tapping a card',
-    what: 'Puts that card under the reader. The readout gives its proton count, how many electrons it keeps in its outermost shell, what one piece of it weighs, and what the tester recorded it doing.'
+    what: 'Reads that card: its protons, its outer-shell electrons, its mass, and what it does.'
   }],
   file: [{
     from: 1,
     key: 'Tapping a slot',
-    what: 'Files the card you are holding into that slot. Take a card first by tapping it in the drawer, and tap a card already filed to lift it back out.'
+    what: 'Files the card in your hand into that slot. Tap a filed card to lift it out again.'
   }],
   clear: [{
     from: 1,
     key: 'Clear Board',
-    what: 'Lifts every card you have filed back into the drawer. The cards that were pinned to the board before you started are not yours to move and stay where they are.'
+    what: 'Sends every card you filed back to the drawer. Cards that were already pinned do not move.'
   }]
 };
 
@@ -102,16 +97,14 @@ export function toolNoteFor(controlId, stageNumber) {
 }
 
 /* ------------------------------------------------------------------
-   THE CATALOGUE
-   One card per kind the scope has logged, in the order the vault files
-   them. Every reading on a card is one the player has already taken with
-   their own hands on an earlier bench: the proton count came off the core
-   bench, the outer-shell count came off the ring field, the mass came off
-   the sampler scope, and the behaviour is the tester's own record.
+   THE CARDS
+   One card per kind the scope has logged. Every reading on a card is one
+   the player has already taken with their own hands on an earlier bench:
+   the proton count came off the core bench, the outer-shell count off the
+   ring field, the mass off the sampler scope.
 
-   The codes are the catalogue's, unchanged since site one. That they are
-   also the proton counts is the thing this whole bench exists to reveal,
-   so nothing below says so.
+   That the CAT codes are also the proton counts is the thing this bench
+   exists to reveal, so nothing below says so.
    ------------------------------------------------------------------ */
 export const CARDS = {
   c01: { code: 'CAT 01', name: 'HYDROGEN', z: 1, outer: 1, mass: 1.0, does: 'shares' },
@@ -126,7 +119,7 @@ export const CARDS = {
   c10: { code: 'CAT 10', name: 'NEON', z: 10, outer: 8, mass: 20.2, does: 'inert' },
   c11: { code: 'CAT 11', name: 'SODIUM', z: 11, outer: 1, mass: 23.0, does: 'gives' },
   c12: { code: 'CAT 12', name: 'MAGNESIUM', z: 12, outer: 2, mass: 24.3, does: 'gives' },
-  c13: { code: 'CAT 13', name: 'ALUMINIUM', z: 13, outer: 3, mass: 27.0, does: 'gives' },
+  c13: { code: 'CAT 13', name: 'ALUMINUM', z: 13, outer: 3, mass: 27.0, does: 'gives' },
   c14: { code: 'CAT 14', name: 'SILICON', z: 14, outer: 4, mass: 28.1, does: 'shares' },
   c15: { code: 'CAT 15', name: 'PHOSPHORUS', z: 15, outer: 5, mass: 31.0, does: 'takes' },
   c16: { code: 'CAT 16', name: 'SULFUR', z: 16, outer: 6, mass: 32.1, does: 'takes' },
@@ -135,15 +128,15 @@ export const CARDS = {
   c19: { code: 'CAT 19', name: 'POTASSIUM', z: 19, outer: 1, mass: 39.1, does: 'gives' }
 };
 
-/** What the tester recorded against each card, in the words it recorded it in. */
+/** What each card does when another atom is pushed at it. */
 export const DOES_TEXT = {
-  gives: 'Hands one electron over and holds still afterwards.',
-  takes: 'Pulls one electron off a partner and keeps it.',
-  shares: 'Neither hands one over nor takes one. It holds on to a partner instead.',
+  gives: 'Hands one electron over.',
+  takes: 'Pulls one electron off the other atom and keeps it.',
+  shares: 'Neither gives nor takes. It holds on to a partner instead.',
   inert: 'Nothing at all. It will not trade either way.'
 };
 
-/** The run of cards the vault files, in its own order. */
+/** The run of cards in catalogue order. */
 const RUN_18 = ['c01', 'c02', 'c03', 'c04', 'c05', 'c06', 'c07', 'c08', 'c09',
   'c10', 'c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18'];
 
@@ -174,93 +167,85 @@ export const STAGES = [
     title: 'Put Them In Order',
     briefing: {
       speaker: SPEAKER,
-      body: 'The vault is the refinery\'s card index and the buyer wants a reference chart out of it. Six cards came out of the drawer with their filing codes stripped off.'
+      body: 'This bench is a card index with one card for every kind of atom. Tap a card to read it, tap a slot to file it.'
     },
-    prompt: 'Read all six cards and lay them into the six slots from fewest protons on the left to most protons on the right.',
+    prompt: 'Read all six cards and file them in the slots, fewest protons on the left.',
     controls: ['reader', 'file', 'clear'],
     masked: true,
     board: { label: 'Reference strip', rows: [['#p1', '#p2', '#p3', '#p4', '#p5', '#p6']] },
     drawer: ['c11', 'c19', 'c01', 'c18', 'c08', 'c06'],
     widget: { type: 'board', label: 'Reference strip' },
     hints: [
-      'Tap a card in the drawer to take it and read it. The readout gives that card\'s proton count. Tap a slot to file the card you are holding, and tap a filed card to lift it back out.',
-      'Read all six before you file any of them. The counts you want are 1, 6, 8, 11, 18 and 19.',
-      'Left to right: HYDROGEN, CARBON, OXYGEN, SODIUM, ARGON, POTASSIUM. ARGON is heavier than POTASSIUM, and it still goes first, because it has fewer protons.'
+      'Tap a card in the drawer to read it, then tap a slot to put it there.',
+      'Read all six first. The proton counts are 1, 6, 8, 11, 18 and 19.',
+      'Left to right: HYDROGEN, CARBON, OXYGEN, SODIUM, ARGON, POTASSIUM.'
     ],
     check(state) {
       const want = ['c01', 'c06', 'c08', 'c11', 'c18', 'c19'];
       const slots = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
       const filed = slots.filter(s => state.board[s]).length;
       if (filed < 6) {
-        return { ok: false, notYet: true, msg: `${filed} of the six slots are filled. Take a card from the drawer and tap a slot to file it.` };
+        return { ok: false, notYet: true, msg: `Fill all six slots first — ${filed} of them are filled.` };
       }
       const got = slots.map(s => state.board[s]);
       if (got.join() === want.join()) return { ok: true };
       const byMass = ['c01', 'c06', 'c08', 'c11', 'c19', 'c18'];
       if (got.join() === byMass.join()) {
-        return { ok: false, msg: 'That is the order they weigh, not the order they count. ARGON is the heavier of the last two and still carries fewer protons, so it goes first.' };
+        return { ok: false, msg: 'That is the order they weigh, not the order they count — ARGON is heavier than POTASSIUM but has fewer protons.' };
       }
       for (let i = 1; i < got.length; i++) {
         const a = CARDS[got[i - 1]];
         const b = CARDS[got[i]];
         if (a && b && a.z > b.z) {
-          return { ok: false, msg: `Slot ${i} holds ${a.name} at ${a.z} protons and slot ${i + 1} holds ${b.name} at ${b.z}. The bigger count cannot come first.` };
+          return { ok: false, msg: `${a.name} has ${a.z} protons and ${b.name} has ${b.z}, so ${a.name} cannot come first.` };
         }
       }
-      return { ok: false, msg: 'Something is out of order. Read each card again and compare the proton counts, lowest on the left.' };
+      return { ok: false, msg: 'Something is out of order — read the proton counts again and put the smallest on the left.' };
     },
     reward: {
-      log: 'Six cards laid in count order. Vault codes restored.',
-      title: 'Atomic Number · What The Catalogue Counts',
-      body: 'Put the codes back on those cards and they read CAT 01, 06, 08, 11, 18, 19 — the exact order you just laid them in. The scope has been filing every kind by its proton count since the day it was switched on, and that count has a name: the atomic number.'
+      log: 'Six cards laid in count order.',
+      title: 'Atomic Number',
+      body: 'Put the codes back on those cards and they read CAT 01, 06, 08, 11, 18, 19 — the order you just laid them in. The scope has been filing every kind by its proton count all along. That count is called the atomic number.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
-    title: 'How Long The Pattern Runs',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Here is the whole run in atomic number order, with each card stamped with how many electrons it keeps in its outermost shell. The buyer says there is a pattern in it and will not say what.'
-    },
-    prompt: 'After the first two cards, count how many cards the run takes before the outer-shell count starts over at 1.',
+    title: 'Find The Repeat',
+    prompt: 'Read the outer-shell count along the row. Ignoring the first two cards, count how many cards go by before that count starts over at 1.',
     controls: ['reader'],
-    board: { label: 'The run, in atomic number order', rows: [RUN_18] },
+    board: { label: 'All 18 cards, in atomic number order', rows: [RUN_18] },
     drawer: [],
     widget: { type: 'number', min: 2, max: 18, label: 'Cards before it starts over' },
     hints: [
-      'The tally marks under each code are the outer-shell count. Read them straight along the run: 1, 2, then 1, 2, 3, 4, 5, 6, 7, 8, then 1 again.',
-      'Ignore the first two cards. Start counting at LITHIUM, where the outer count drops back to 1, and stop on the card before the next card that reads 1.',
-      'LITHIUM through NEON is eight cards, and SODIUM starts the count over. The answer is 8.'
+      'Tap the cards one by one and read the outer-shell electron count on each.',
+      'Along the row the counts go 1, 2, then 1, 2, 3, 4, 5, 6, 7, 8, then 1 again.',
+      'LITHIUM to NEON is eight cards, and SODIUM starts over, so the answer is 8.'
     ],
     check(state) {
       if (state.number === 8) return { ok: true };
       if (state.number === 2) {
-        return { ok: false, notYet: true, msg: 'The counter has not been moved. Read the tally marks along the run and set it.' };
+        return { ok: false, notYet: true, msg: 'The counter has not moved yet — read the cards and set it.' };
       }
       if (state.number === 18) {
-        return { ok: false, msg: '18 is the whole run. The question is how far it gets before the outer-shell count returns to 1.' };
+        return { ok: false, msg: 'That is every card in the row, not how far it gets before the count starts over.' };
       }
       if (state.number === 10) {
-        return { ok: false, msg: 'That counts the first two cards as well. Start at LITHIUM, which is where the outer count first drops back to 1.' };
+        return { ok: false, msg: 'That includes the first two cards — start counting at LITHIUM, where the count drops back to 1.' };
       }
-      return { ok: false, msg: 'Recount along the tally marks. LITHIUM reads 1 and the next card to read 1 is SODIUM; count the cards from one to the other.' };
+      return { ok: false, msg: 'Count again from LITHIUM, which reads 1, up to the card before SODIUM, which reads 1 again.' };
     },
     reward: {
-      log: 'Repeat measured at 8. First run measured at 2.',
-      title: 'Periods · Why The Chart Has Rows',
-      body: 'The outer-shell count climbs and starts over, again and again, which is what a shell filling up and a new one opening looks like from outside. Break the run wherever it starts over and you get rows, and a row is called a period: the first holds 2 because the first shell holds 2, and the next two hold 8.'
+      log: 'Repeat measured at 8.',
+      title: 'Periods',
+      body: 'The outer-shell count climbs and starts over, again and again, because one shell fills up and a new one opens. Break the row wherever it starts over and you get shorter rows: 2, then 8, then 8. Each of those rows is called a period.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Lay The Last Row',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Two periods are pinned to the board already, broken exactly where you measured. The eight cards of the third are loose in the drawer.'
-    },
-    prompt: 'File the eight loose cards into the third row, in atomic number order, left to right.',
+    prompt: 'File the eight loose cards into the empty bottom row, in atomic number order, left to right.',
     controls: ['reader', 'file', 'clear'],
     board: {
       label: 'Reference chart',
@@ -272,18 +257,18 @@ export const STAGES = [
       ]
     },
     drawer: ['c16', 'c11', 'c14', 'c18', 'c12', 'c17', 'c13', 'c15'],
-    widget: { type: 'board', label: 'Third period' },
+    widget: { type: 'board', label: 'Bottom row' },
     hints: [
-      'The codes are on these cards, so the order is on the cards themselves: CAT 11 first, CAT 18 last.',
-      'Lay them so each one sits under a card of the row above with the same outer-shell count. SODIUM belongs under LITHIUM, which is under HYDROGEN.',
-      'Left to right: SODIUM, MAGNESIUM, ALUMINIUM, SILICON, PHOSPHORUS, SULFUR, CHLORINE, ARGON.'
+      'Tap a card in the drawer to pick it up, then tap the slot you want it in.',
+      'These cards still carry their codes: CAT 11 is the lowest and CAT 18 is the highest.',
+      'Left to right: SODIUM, MAGNESIUM, ALUMINUM, SILICON, PHOSPHORUS, SULFUR, CHLORINE, ARGON.'
     ],
     check(state) {
       const want = ['c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18'];
       const slots = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8'];
       const filed = slots.filter(s => state.board[s]).length;
       if (filed < 8) {
-        return { ok: false, notYet: true, msg: `${filed} of the eight slots are filled. Keep filing.` };
+        return { ok: false, notYet: true, msg: `Fill all eight slots first — ${filed} of them are filled.` };
       }
       const got = slots.map(s => state.board[s]);
       if (got.join() === want.join()) return { ok: true };
@@ -291,72 +276,64 @@ export const STAGES = [
         if (got[i] !== want[i]) {
           const here = CARDS[got[i]];
           const there = CARDS[want[i]];
-          return { ok: false, msg: `Slot ${i + 1} holds ${here.name}, and the column above it reads ${CARDS[CHART_ROWS[1][i]].name} with ${CARDS[CHART_ROWS[1][i]].outer} in its outer shell. ${there.name} is the card that matches.` };
+          return { ok: false, msg: `Slot ${i + 1} holds ${here.name} with ${here.z} protons, but ${there.name} with ${there.z} belongs there.` };
         }
       }
-      return { ok: false, msg: 'The row is not in atomic number order. Read the codes and lay them lowest on the left.' };
+      return { ok: false, msg: 'The row is out of order — read the codes and lay them lowest on the left.' };
     },
     reward: {
-      log: 'Reference chart complete: 18 cards, three rows.',
+      log: 'Chart complete: 18 cards, three rows.',
       title: 'The Periodic Table',
-      body: 'That is the periodic table, and you built it out of two readings you took yourself: one number to order every card, and one pattern to say where the row breaks. Chemists have drawn it this way since Dmitri Mendeleev laid his own cards out in 1869.'
+      body: 'That chart is the periodic table. You built it from two things you measured yourself: one number to put the cards in order, and one pattern to say where a row ends. Chemists have drawn it this way since Dmitri Mendeleev laid his own cards out in 1869.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Read Down, Not Along',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The chart is pinned and the buyer wants it usable without an instrument. Rows were the easy direction; try the other one.'
-    },
-    prompt: 'Read the cards in column 6 and log how many electrons every one of them keeps in its outer shell.',
+    prompt: 'Read the cards in column 6 and say how many electrons each one keeps in its outer shell.',
     controls: ['reader'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
     widget: { type: 'number', min: 0, max: 8, label: 'Outer-shell electrons in column 6' },
     hints: [
-      'Column 6 is the sixth from the left. Tap OXYGEN and then SULFUR and compare the two readouts.',
-      'Both cards report the same outer-shell count, and it is not a coincidence — the chart was built by breaking the run wherever that count started over.',
-      'OXYGEN keeps 6 in its outer shell, and so does SULFUR. The answer is 6.'
+      'Column 6 is the sixth from the left. Tap OXYGEN, then tap SULFUR.',
+      'Compare the two readouts. Both cards report the same outer-shell count.',
+      'OXYGEN keeps 6 in its outer shell and so does SULFUR, so the answer is 6.'
     ],
     check(state) {
       if (state.read.size < 2) {
-        return { ok: false, notYet: true, msg: 'Read at least two cards in that column before logging a figure.' };
+        return { ok: false, notYet: true, msg: 'Read at least two cards in that column before answering.' };
       }
       if (state.number === 6) return { ok: true };
       if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'The counter is still on zero. Set it to what the cards in column 6 report.' };
+        return { ok: false, notYet: true, msg: 'The counter is still on zero — set it to what the cards report.' };
       }
       if (state.number === 8) {
-        return { ok: false, msg: '8 is the outer count in column 8, on the far right. Column 6 is two to the left of it.' };
+        return { ok: false, msg: 'That is the count in column 8, on the far right. Column 6 is two columns to the left.' };
       }
       if (state.number === 16) {
-        return { ok: false, msg: '16 is SULFUR\'s proton count, not what it keeps outside. Read the outer-shell line on the card.' };
+        return { ok: false, msg: 'That is how many protons SULFUR has, not how many electrons it keeps outside.' };
       }
-      return { ok: false, msg: 'Compare OXYGEN and SULFUR again. Both report the same outer-shell count, and that figure is what the column is worth.' };
+      return { ok: false, msg: 'Read OXYGEN and SULFUR again and use the outer-shell number they both report.' };
     },
     reward: {
       log: 'Column 6 logged at 6 outer electrons.',
-      title: 'Groups · Why The Chart Has Columns',
-      body: 'A column of the periodic table is called a group, and every card in one carries the same number of outer-shell electrons. That is the whole reason the chart is worth drawing: valence electrons decide how a kind behaves, so a group is a list of kinds that behave alike.'
+      title: 'Groups',
+      body: 'A column of the periodic table is called a group, and every card in a group has the same number of outer-shell electrons. Those outer electrons decide how an atom behaves, so a group is a list of atoms that behave alike.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Ones That Will Not Trade',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The buyer wants to ship one group in unlined canisters, on the grounds that it will not attack the lining. Find the group that earns that.'
-    },
-    prompt: 'Find the group whose cards all refuse to trade an electron, and file which group it is.',
+    prompt: 'Read cards from each of the four groups below and pick the group whose cards never trade an electron.',
     controls: ['reader'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
     widget: {
       type: 'choice',
-      label: 'Group cleared for unlined canisters',
+      label: 'The group that never trades',
       options: [
         { id: 'g1', label: 'Group 1', note: 'HYDROGEN, LITHIUM, SODIUM.' },
         { id: 'g4', label: 'Group 4', note: 'CARBON, SILICON.' },
@@ -365,41 +342,37 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Every card reports what the tester recorded against it. Read one card from each of the four groups on offer and compare the four readouts.',
-      'Three of those groups trade: one hands an electron over, one takes one on, one holds on to a partner instead. Only one does nothing at all.',
-      'HELIUM, NEON and ARGON all report no trade of any kind, and all three sit in group 8 with a full outer shell.'
+      'Tap one card from each of the four groups and read the last line of each readout.',
+      'Three of them trade: one hands an electron over, one takes one on, one holds on to a partner.',
+      'HELIUM, NEON and ARGON all do nothing at all, and all three sit in group 8.'
     ],
     check(state) {
       if (state.read.size < 2) {
-        return { ok: false, notYet: true, msg: 'Read some cards first. Do not file a group on the strength of where it sits.' };
+        return { ok: false, notYet: true, msg: 'Read some cards first instead of guessing from where they sit.' };
       }
       if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'No group filed yet. Pick one on the deck.' };
+        return { ok: false, notYet: true, msg: 'Pick one of the four groups.' };
       }
       if (state.choice === 'g8') return { ok: true };
       if (state.choice === 'g1') {
-        return { ok: false, msg: 'Group 1 hands an electron over — LITHIUM and SODIUM both do. A canister lining would not survive that.' };
+        return { ok: false, msg: 'Group 1 does trade — LITHIUM and SODIUM both hand an electron over.' };
       }
       if (state.choice === 'g7') {
-        return { ok: false, msg: 'Group 7 takes an electron on. FLUORINE and CHLORINE will pull one off whatever they are shipped in.' };
+        return { ok: false, msg: 'Group 7 does trade — FLUORINE and CHLORINE both pull an electron off a partner.' };
       }
-      return { ok: false, msg: 'Group 4 does not hand one over or take one on, but CARBON and SILICON still hold on to a partner. Look for the group that does nothing at all.' };
+      return { ok: false, msg: 'CARBON and SILICON do not give or take, but they still hold on to a partner, so look for the group that does nothing at all.' };
     },
     reward: {
-      log: 'Group 8 cleared for unlined shipment.',
-      title: 'Noble Gases · A Shell With No Room Left',
-      body: 'Group 8 is the noble gases, and they are unreactive for one reason: eight outer-shell electrons is a full shell, so there is nothing to gain by trading. Everything else on the chart is reaching for that arrangement, which is why it trades at all.'
+      log: 'Group 8 never trades.',
+      title: 'Noble Gases',
+      body: 'Group 8 are the noble gases, and they almost never react. Eight outer-shell electrons is a full shell, so there is nothing to gain by trading. Every other atom on the chart is reaching for that full shell, which is why it trades at all.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Sort Them By What They Do',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Six cards are pulled for the buyer\'s handling notes. Each one needs a line saying what it does when something is pushed at it.'
-    },
-    prompt: 'File each of the six cards by what the tester recorded against it.',
+    prompt: 'Read the six cards below and file each one by what it does when another atom is pushed at it.',
     controls: ['reader'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
@@ -415,39 +388,35 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Read all six cards. Each readout ends with the line the tester recorded, and the outer-shell count above it explains the line.',
-      'A card with 1, 2 or 3 outer electrons is close to empty and lets them go. A card with 5, 6 or 7 is close to full and pulls one in. A full 8 does neither.',
-      'LITHIUM and MAGNESIUM hand one over. OXYGEN and CHLORINE take one on. CARBON holds on to a partner with its 4. NEON does nothing.'
+      'Tap all six cards. The last line of each readout says what that card does.',
+      'A card with 1, 2 or 3 outer electrons lets them go; one with 5, 6 or 7 pulls one in.',
+      'LITHIUM and MAGNESIUM hand one over, OXYGEN and CHLORINE take one on, CARBON holds on to a partner, and NEON does nothing.'
     ],
     check(state) {
       const want = { c03: 'gives', c12: 'gives', c08: 'takes', c17: 'takes', c06: 'holds', c10: 'none' };
       for (const id of Object.keys(want)) {
         if (!state.bins[id]) {
-          return { ok: false, notYet: true, msg: `${CARDS[id].name} has no line on the handling notes yet.` };
+          return { ok: false, notYet: true, msg: `${CARDS[id].name} has no answer yet.` };
         }
       }
       for (const [id, expect] of Object.entries(want)) {
         if (state.bins[id] !== expect) {
-          return { ok: false, msg: `${CARDS[id].name} is filed incorrectly. It keeps ${CARDS[id].outer} in its outer shell; work out whether that is nearer empty or nearer full.` };
+          return { ok: false, msg: `${CARDS[id].name} is filed wrong — it keeps ${CARDS[id].outer} electrons in its outer shell, so read what its card says it does.` };
         }
       }
       return { ok: true };
     },
     reward: {
-      log: 'Six handling notes filed.',
-      title: 'Metals, Nonmetals And Two Families',
-      body: 'The left of the chart hands electrons over and is called the metals; the right takes them on and is called the nonmetals. Two groups matter most because they are the most eager: group 1, the alkali metals, which give one away, and group 7, the halogens, which take one on.'
+      log: 'All six filed by what they do.',
+      title: 'Metals and Nonmetals',
+      body: 'Atoms on the left of the chart hand electrons over, and those are the metals. Atoms on the right take electrons on, and those are the nonmetals. The keenest of each get their own name: group 1 are the alkali metals and group 7 are the halogens.'
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'The Card That Is Not There',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'One card was lost out of the chart long before we got here and the buyer still wants it priced. Nothing about it has been measured.'
-    },
-    prompt: 'Work out the missing card\'s atomic number, and what it will do, from the slot it has to go in.',
+    prompt: 'One slot in the chart is empty, so work out the missing card\'s atomic number and what it will do.',
     controls: ['reader'],
     board: {
       label: 'Reference chart — one slot empty',
@@ -457,7 +426,7 @@ export const STAGES = [
     drawer: [],
     widget: {
       type: 'numchoice',
-      label: 'Missing card',
+      label: 'The missing card',
       min: 0,
       max: 20,
       numberLabel: 'Atomic number',
@@ -469,43 +438,39 @@ export const STAGES = [
       ]
     },
     hints: [
-      'The chart is in atomic number order, so the slot is boxed in by its neighbours. Read the card to its left and the card to its right.',
-      'ALUMINIUM sits at 13 and PHOSPHORUS at 15, so only one number can go between them.',
-      'The slot is in group 4, and the only other card in group 4 is CARBON, which holds on to a partner. So the missing card is atomic number 14 and it does the same.'
+      'Tap the card to the left of the empty slot and the card to its right.',
+      'ALUMINUM is 13 and PHOSPHORUS is 15, and the other card in that column is CARBON.',
+      'The missing card is atomic number 14, and like CARBON above it, it holds on to a partner.'
     ],
     check(state) {
       if (state.read.size < 1) {
-        return { ok: false, notYet: true, msg: 'Nothing on the chart has been read. Look at what sits either side of the empty slot.' };
+        return { ok: false, notYet: true, msg: 'Read the cards on either side of the empty slot first.' };
       }
       if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'The counter is still on zero. Set the atomic number you are claiming.' };
+        return { ok: false, notYet: true, msg: 'The counter is still on zero — set the number you are claiming.' };
       }
       if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'No behaviour filed. Pick what the missing card will do.' };
+        return { ok: false, notYet: true, msg: 'Pick what the missing card will do.' };
       }
       if (state.number !== 14) {
-        return { ok: false, msg: `The chart runs in atomic number order and that slot sits between ALUMINIUM at 13 and PHOSPHORUS at 15. ${state.number} cannot go there.` };
+        return { ok: false, msg: `The slot sits between ALUMINUM at 13 and PHOSPHORUS at 15, so ${state.number} cannot go there.` };
       }
       if (state.choice !== 'holds') {
-        return { ok: false, msg: 'A card takes its behaviour from its group, and that slot is in group 4 with CARBON, which holds on to a partner rather than trading.' };
+        return { ok: false, msg: 'A card behaves like the rest of its column, and the other card in that column is CARBON, which holds on to a partner.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Missing card priced at 14, group 4 behaviour.',
+      log: 'Missing card worked out: 14.',
       title: 'A Chart That Predicts',
-      body: 'You just described a kind of matter nobody on this bench has ever measured, purely from the shape of the table — and the card that belongs in that slot is silicon, atomic number 14. Mendeleev did exactly this with three empty slots in 1871 and was proved right on all three.'
+      body: 'You just described an atom nobody at this bench has ever measured, using nothing but the shape of the chart. The card that belongs in that slot is silicon, atomic number 14. Mendeleev did exactly this with three empty slots in 1871 and was proved right on all three.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
-    title: 'File The Chart',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Four cards came back from the buyer\'s surveyor with the codes burned off and four slots are open in the chart. Transfer closes when the chart does.'
-    },
-    prompt: 'Read the four unmarked cards and file each one into the slot its proton count puts it in.',
+    title: 'Fill The Chart',
+    prompt: 'Read the four unmarked cards and file each one into the slot its proton count gives it.',
     controls: ['reader', 'file', 'clear'],
     masked: true,
     board: {
@@ -516,28 +481,28 @@ export const STAGES = [
     drawer: ['c16', 'c04', 'c13', 'c07'],
     widget: { type: 'board', label: 'Open slots' },
     hints: [
-      'Take each card and read it. The readout gives a proton count even with the code burned off, and the chart runs in atomic number order.',
-      'The four counts are 4, 7, 13 and 16. The cards on either side of each open slot tell you which slot each one belongs in.',
-      'Row one is unchanged. In row two the open slots take the card reading 4 and the card reading 7; in row three they take the card reading 13 and the card reading 16.'
+      'Tap each card to read it. The readout still gives a proton count with the code missing.',
+      'The four counts are 4, 7, 13 and 16, and the chart runs in atomic number order.',
+      'The cards reading 4 and 7 go in the middle row; the cards reading 13 and 16 go in the bottom row.'
     ],
     check(state) {
       const want = { s1: 'c04', s2: 'c07', s3: 'c13', s4: 'c16' };
       const filed = Object.keys(want).filter(s => state.board[s]).length;
       if (filed < 4) {
-        return { ok: false, notYet: true, msg: `${filed} of the four slots are filled. Take a card and tap the slot it belongs in.` };
+        return { ok: false, notYet: true, msg: `Fill all four slots first — ${filed} of them are filled.` };
       }
       for (const [slot, card] of Object.entries(want)) {
         if (state.board[slot] !== card) {
           const got = CARDS[state.board[slot]];
-          return { ok: false, msg: `One slot is wrong. It is holding a card that counts ${got.z} protons, and its neighbours on the chart put ${CARDS[card].z} in that place.` };
+          return { ok: false, msg: `One slot holds a card with ${got.z} protons, but the cards beside it put ${CARDS[card].z} in that place.` };
         }
       }
       return { ok: true };
     },
     reward: {
-      log: 'Chart closed. Nineteen cards, all filed.',
-      title: 'One Number Orders Every Kind There Is',
-      body: 'Every card on this chart was placed by one measurement: how many protons sit in the middle of it. Everything else — the row it lands in, the group it joins, whether it gives, takes, holds or does nothing — falls out of that one number, which is why the periodic table is the only reference a chemist really needs.',
+      log: 'Chart filled. Nineteen cards, all in place.',
+      title: 'One Number Orders Everything',
+      body: 'Every card on this chart was placed by one measurement: how many protons sit in its nucleus. The row it lands in, the group it joins, and whether it gives, takes, holds or does nothing all follow from that one number. That is why the periodic table is the reference chemists reach for first.',
       last: true
     }
   }
@@ -545,21 +510,23 @@ export const STAGES = [
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
+   Three short cards: what the player found, why the chart is shaped the
+   way it is, and what the next bench is about.
    ------------------------------------------------------------------ */
 export const DEBRIEF = {
-  speaker: 'VESS // TALLOW CATALOGUE VAULT',
+  speaker: 'Vess',
   sections: [
     {
-      heading: 'Chart Transferred',
-      body: 'The buyer has the reference chart and stopped arguing about it the moment they saw the codes line up. Every one of those nineteen cards was filed by a number you took off a bench with your own hands.'
+      heading: 'What You Found',
+      body: 'Every kind of atom has an atomic number, which is simply how many protons it has. Put them in that order and a pattern repeats, which is what the periodic table is.'
     },
     {
-      heading: 'Why The Shape Is The Shape',
-      body: 'Rows are periods, and a period ends when a shell fills. Columns are groups, and a group is a list of kinds with the same outer-shell count, which is why they behave alike — metals on the left handing electrons over, nonmetals on the right taking them on, and the noble gases at the far edge wanting nothing.'
+      heading: 'Rows and Columns',
+      body: 'A row is a period, and it ends when a shell fills up. A column is a group, and everything in it has the same outer-shell count, which is why it behaves the same way: metals on the left hand electrons over, nonmetals on the right take them on, and the noble gases at the edge want nothing.'
     },
     {
-      heading: 'Next: Two Numbers Are Not Enough',
-      body: 'A card carries a proton count and a mass, and on the Tally Floor you will find that no single piece in a hopper actually weighs what the card says. Before that, the buyer wants a ledger: every canister on this flat described by what is in its core and what is riding outside it.'
+      heading: 'Next',
+      body: 'Each card also carries a mass. The next bench describes every atom by its protons, its neutrons and its electrons, and the one after that asks why that mass is never a whole number.'
     }
   ]
 };
@@ -574,25 +541,25 @@ export const PRACTICE = [
     options: [
       { id: 'a', label: 'The protons in its nucleus' },
       { id: 'b', label: 'The neutrons in its nucleus' },
-      { id: 'c', label: 'The total particles in its nucleus' },
+      { id: 'c', label: 'Everything in its nucleus added up' },
       { id: 'd', label: 'Its mass in grams' }
     ],
     answer: 'a',
-    explanation: 'The atomic number is the proton count, and it is what the periodic table is ordered by. Change it and you have a different element entirely.'
+    explanation: 'The atomic number is the proton count, and the periodic table is ordered by it. Change it and you have a different element.'
   },
   {
-    question: 'Two elements sit in the same group (column) of the periodic table. What do they share?',
+    question: 'Two elements sit in the same column of the periodic table. What do they share?',
     options: [
       { id: 'a', label: 'The same number of protons' },
-      { id: 'b', label: 'The same number of valence electrons' },
+      { id: 'b', label: 'The same number of outer-shell electrons' },
       { id: 'c', label: 'The same mass' },
       { id: 'd', label: 'The same number of neutrons' }
     ],
     answer: 'b',
-    explanation: 'A group is a column of elements with the same outer-shell (valence) electron count, which is why they react in similar ways. Protons and mass differ down a group.'
+    explanation: 'A column is a group, and everything in it has the same outer-shell count. That is why they react in similar ways.'
   },
   {
-    question: 'Why are the noble gases in group 8 almost completely unreactive?',
+    question: 'Why do the noble gases in group 8 hardly react with anything?',
     options: [
       { id: 'a', label: 'They have no electrons at all' },
       { id: 'b', label: 'They are too heavy to move' },
@@ -600,10 +567,10 @@ export const PRACTICE = [
       { id: 'd', label: 'They have no protons in the nucleus' }
     ],
     answer: 'c',
-    explanation: 'Eight valence electrons is a full outer shell. Every other element reacts because it is reaching for that arrangement; a noble gas already has it.'
+    explanation: 'Eight outer-shell electrons is a full shell. Every other element reacts because it is reaching for that; a noble gas already has it.'
   },
   {
-    question: 'An element has 3 valence electrons and sits on the left of the periodic table. What is it most likely to do?',
+    question: 'An element has 3 outer-shell electrons and sits on the left of the periodic table. What is it most likely to do?',
     options: [
       { id: 'a', label: 'Take electrons on, like a halogen' },
       { id: 'b', label: 'Hand its outer electrons over, like a metal' },
@@ -611,18 +578,18 @@ export const PRACTICE = [
       { id: 'd', label: 'Lose protons from its nucleus' }
     ],
     answer: 'b',
-    explanation: 'Elements with few valence electrons (1, 2 or 3) are metals: it takes less to give those few away than to collect five more, so they hand them over.'
+    explanation: 'With only 1, 2 or 3 outer electrons it is easier to give them away than to collect five more. Elements that do this are the metals.'
   },
   {
-    question: 'A slot in the periodic table sits between aluminium (13) and phosphorus (15), in the same group as carbon. What can you say about the missing element?',
+    question: 'A slot in the periodic table sits between aluminium (13) and phosphorus (15), in the same column as carbon. What can you say about the missing element?',
     options: [
       { id: 'a', label: 'Nothing, until someone measures it' },
       { id: 'b', label: 'Its atomic number is 14 and it behaves like carbon' },
-      { id: 'c', label: 'Its atomic number is 14 but its behaviour is unpredictable' },
+      { id: 'c', label: 'Its atomic number is 14 but there is no telling what it does' },
       { id: 'd', label: 'It must be a noble gas' }
     ],
     answer: 'b',
-    explanation: 'The table is ordered by atomic number, so the slot is 14, and a group shares valence electrons and therefore behaviour. This is exactly how Mendeleev predicted elements nobody had found yet.'
+    explanation: 'The table runs in atomic number order, so the slot is 14. A column shares outer-shell electrons, so it behaves like carbon.'
   }
 ];
 
@@ -697,7 +664,7 @@ export function mount(container, ctx) {
   function faceFor(id, masked) {
     const c = CARDS[id];
     return masked
-      ? { code: c.name, name: 'code burned off', pips: null }
+      ? { code: c.name, name: 'code missing', pips: null }
       : { code: c.code, name: c.name, pips: c.outer };
   }
 
@@ -720,7 +687,7 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: stage.widget.type === 'bins' ? 'File Notes' : 'Commit'
+      commitLabel: 'Commit'
     });
 
     board.setStage({
@@ -798,7 +765,7 @@ export function mount(container, ctx) {
 
   function onPlace(slotId, cardId) {
     if (!cardId) {
-      frame.note('Nothing in hand. Take a card out of the drawer first, then tap the slot.');
+      frame.note('Take a card from the drawer first, then tap the slot.');
       return;
     }
     soundscape.playToggleClack?.();
@@ -816,7 +783,7 @@ export function mount(container, ctx) {
       frame.setReadout(`
         <div class="lq-readout-card lq-readout-idle">
           <div class="lq-readout-head">Card reader // standby</div>
-          <p class="lq-readout-line">Tap any card on the board or in the drawer to put it under the reader.</p>
+          <p class="lq-readout-line">Tap any card to read it.</p>
         </div>
       `);
       return;
@@ -826,10 +793,10 @@ export function mount(container, ctx) {
     frame.setReadout(`
       <div class="lq-readout-card">
         <div class="lq-readout-head">Card reader // ${esc(c.name)}</div>
-        <div class="lq-readout-code">${masked ? 'FILING CODE BURNED OFF' : esc(c.code)}</div>
-        ${line('Protons in the core', String(c.z))}
-        ${line('Outer-shell electrons', String(c.outer))}
-        ${line('Mass, one piece', c.mass.toFixed(1))}
+        <div class="lq-readout-code">${masked ? 'CODE MISSING' : esc(c.code)}</div>
+        ${line('Protons', String(c.z))}
+        ${line('Electrons in the outer shell', String(c.outer))}
+        ${line('Mass of one atom', c.mass.toFixed(1))}
         <p class="lq-readout-line">${esc(DOES_TEXT[c.does])}</p>
       </div>
     `);
@@ -854,7 +821,7 @@ export function mount(container, ctx) {
       frame.setWidget(`
         <div class="lq-answer">
           <span class="form-label">${esc(w.label)}</span>
-          <p class="form-help">Filed on the board above. Commit when every slot is full.</p>
+          <p class="form-help">Fill every slot on the board above, then press Commit.</p>
         </div>
       `);
       return;
@@ -907,7 +874,7 @@ export function mount(container, ctx) {
     if (w.type === 'bins') {
       frame.setWidget(`
         <div class="lq-answer">
-          <span class="form-label">Handling notes</span>
+          <span class="form-label">What each card does</span>
           <div class="lq-bins">
             ${w.rows.map(id => `
               <div class="lq-bin-row" data-row="${id}">

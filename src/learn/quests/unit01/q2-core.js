@@ -54,14 +54,12 @@ export const meta = { stageCount: 8 };
  * debrief. `verify:learn` reads this table; nothing here is player-facing.
  */
 export const VOCABULARY = [
-  { term: /\b(atoms?|atomic)\b/i, introducedAt: 1 },
   { term: /\bnucle(us|i|ar)\b/i, introducedAt: 1 },
   { term: /\bprotons?\b/i, introducedAt: 2 },
   { term: /\bneutrons?\b/i, introducedAt: 2 },
-  { term: /\belectrons?\b/i, introducedAt: 3 },
+  { term: /\belectrons?\b/i, introducedAt: 2 },
   { term: /\bshells?\b/i, introducedAt: 4 },
   { term: /\bvalence\b/i, introducedAt: 5 },
-  { term: /\belements?\b/i, introducedAt: 6 },
   { term: /\bisotopes?\b/i, introducedAt: 6 },
   { term: /\bions?\b/i, introducedAt: 7 }
 ];
@@ -71,60 +69,52 @@ const SPEAKER = 'Vess';
 /* ------------------------------------------------------------------
    THE KEY LEGEND
 
-   NOTHING ON THIS BENCH IS NAMED WITHOUT BEING EXPLAINED. Every control a
-   stage puts on the plate carries one plain sentence saying what it does, and
-   the sentence stays there for as long as the control does. A player who has
-   never touched a bench cannot be asked to "read the needle" by a key that
-   says "Read Needle" and nothing else — that is an instruction addressed to
-   somebody who already knows, which is the one reader this road is not for.
-
-   A tool can have more than one line over the course of the quest, keyed to
-   the stage it is being read on. The needle's description says "light pieces"
-   while that is the only name the player has for them, and says "electrons"
-   from stage four, because by then the word has been earned and CLAUDE.md's
-   rule is that the earned word is the word the game uses.
+   Every control on the plate says what it does, in one short sentence, for as
+   long as it is on the plate. A line can change once a word has been earned:
+   the needle says "light pieces" until the stage after electrons are named,
+   and "electrons" from then on.
 
    `verify:learn` fails the build over a control with no line, and runs every
-   line through the same withheld-vocabulary gate as a prompt or a hint.
+   line through the same vocabulary gate as a prompt or a hint.
    ------------------------------------------------------------------ */
 const TOOL_TEXT = {
   field: [{
     from: 1,
-    key: 'The three view keys',
-    what: 'Three ways of looking at the same piece. "Whole piece" is it at its own size, "The middle" magnifies the heavy centre until the grains in it separate, and "Outside" pulls back to show the light pieces that sit out around it.'
+    key: 'Whole piece / The middle / Outside',
+    what: 'Three ways of looking at the same atom: all of it, a close-up of the heavy center, or a pull-back showing the light pieces around it.'
   }, {
-    from: 4,
-    key: 'The three view keys',
-    what: 'Three ways of looking at the same piece. "Whole piece" is it at its own size, "The middle" magnifies the nucleus until its grains separate, and "Outside" pulls back to show the electrons on their rings.'
+    from: 3,
+    key: 'Whole piece / The middle / Outside',
+    what: 'Three ways of looking at the same atom: all of it, a close-up of the nucleus, or a pull-back showing the electrons on their rings.'
   }],
   beam: [{
     from: 1,
     key: 'Fire Beam',
-    what: 'Fires forty tiny shots at the selected piece and counts what becomes of each one: straight through, turned aside, or bounced back the way it came.'
+    what: 'Fires 40 tiny shots at the selected atom and counts what happened to each one.'
   }],
   meter: [{
     from: 1,
     key: 'Read Needle',
-    what: 'Swings the charge balance onto the selected piece. Marked grains push the needle one way, the light pieces outside push it the other, and it settles wherever the two leave it — on zero if they cancel.'
+    what: 'Weighs the charge of the selected atom. It sits on zero when the two sides cancel.'
   }, {
-    from: 4,
+    from: 3,
     key: 'Read Needle',
-    what: 'Swings the charge balance onto the selected piece. Protons push the needle one way, electrons push it the other, and it settles wherever the two leave it — on zero if they cancel exactly.'
+    what: 'Weighs the charge of the selected atom: protons push the needle up, electrons push it down.'
   }],
   tester: [{
     from: 1,
     key: 'Run Tester',
-    what: 'Pushes a partner piece at the selected one and reports what it does about it. The cell holds only the charges shown on the key, and a piece already run cannot be run again.'
+    what: 'Pushes another atom at the selected one and reports what it does. Each sample can only be tested once.'
   }],
   strip: [{
     from: 1,
     key: 'Fire Stripper',
-    what: 'Knocks one electron off the furthest-out ring of the selected piece. Nothing in the nucleus is touched.'
+    what: 'Knocks one electron off the outermost ring. The nucleus is not touched.'
   }],
   reset: [{
     from: 1,
-    key: 'Reset Specimen',
-    what: 'Puts back every electron the stripper has taken off the selected piece.'
+    key: 'Reset Sample',
+    what: 'Puts back every electron the stripper has taken off.'
   }]
 };
 
@@ -147,24 +137,24 @@ export function toolNoteFor(controlId, stageNumber) {
    ------------------------------------------------------------------ */
 export const PARTS = {
   marked: {
-    code: 'GRAIN // MARKED', mass: 1.0, charge: 1,
-    note: 'Heavy, and it throws the needle one way every single time.'
+    code: 'GRAIN // CROSSED', mass: 1.0, charge: 1,
+    note: 'Heavy, and it pushes the needle up every time.'
   },
   blank: {
     code: 'GRAIN // BLANK', mass: 1.0, charge: 0,
-    note: 'The same size and the same weight as a marked one. The needle does not move for it at all.'
+    note: 'Same size and weight as a crossed grain, but the needle does not move for it at all.'
   },
   light: {
     code: 'OUTER // LIGHT', mass: 0.0005, charge: -1,
-    note: 'Almost nothing on the scale, and it throws the needle the opposite way to a marked grain.'
+    note: 'Almost weightless, and it pushes the needle the opposite way to a crossed grain.'
   },
   core: {
     code: 'CORE // WHOLE', mass: null, charge: null,
-    note: 'The whole middle at once, too tight to separate at this field.'
+    note: 'The whole center at once, packed too tight to separate from here.'
   },
   whole: {
     code: 'SPECIMEN // WHOLE', mass: null, charge: null,
-    note: 'One piece, edge to edge. Almost all of that width is nothing at all.'
+    note: 'The whole atom, edge to edge. Almost all of that width is empty.'
   }
 };
 
@@ -212,19 +202,18 @@ export function behaviourOf(spec) {
 }
 
 const BEHAVIOUR_TEXT = {
-  gives: 'Hands one light piece over and holds still afterwards.',
-  takes: 'Pulls one light piece off the partner and keeps it.',
+  gives: 'It hands one electron over.',
+  takes: 'It pulls one electron off the other atom and keeps it.',
   inert: 'Nothing happens. It will not trade either way.'
 };
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
 
-   Exported because every `check` here is a pure function of the bench state,
-   which is what makes them checkable without a browser. `npm run verify:learn`
-   runs SOLUTIONS and MISSES below through them, so a stage whose grading has
-   drifted away from its specimens fails the build instead of stranding a
-   student halfway down the road.
+   One idea per stage, one thing to do, one thing to answer. Every `check` is
+   a pure function of the bench state, so `npm run verify:learn` can run
+   SOLUTIONS and MISSES below through them without a browser: a stage whose
+   grading has drifted fails the build instead of stranding a student.
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -233,368 +222,340 @@ export const STAGES = [
     field: 'whole',
     briefing: {
       speaker: SPEAKER,
-      body: 'We mounted a piece of salvage no blade on this ship will cut. Fire the beam through it and watch what comes back out.'
+      body: 'This bench looks inside a single atom. It can fire a beam through one, magnify its middle, weigh its charge, and knock pieces off the outside.'
     },
-    prompt: 'Work out what SPEC A is like on the inside, and file the conclusion.',
+    prompt: 'Fire the beam through Sample A, read what came back, and say what the inside of an atom is like.',
     controls: ['beam'],
     specimens: [
-      { id: 'a', label: 'SPEC A', note: 'one piece, mounted in the chamber', core: { marked: 6, blank: 6 }, rings: [2, 4] }
+      { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
     ],
     widget: {
       type: 'choice',
-      label: 'Filed conclusion',
+      label: 'Your answer',
       options: [
-        { id: 'solid', label: 'Solid all the way through', note: 'Packed dense matter, edge to edge.' },
-        { id: 'hollow', label: 'A hard outer wall around a hollow', note: 'Empty inside, tough at the surface.' },
-        { id: 'core', label: 'Mostly empty space, one heavy lump in the middle', note: 'Almost all nothing, with a tiny dense centre.' }
+        { id: 'solid', label: 'Solid all the way through', note: 'Packed dense, edge to edge.' },
+        { id: 'hollow', label: 'A hard crust around a hollow', note: 'Empty inside, tough at the surface.' },
+        { id: 'core', label: 'Mostly empty, with one tiny heavy lump in the middle', note: 'Almost all nothing, plus a dense center.' }
       ]
     },
     hints: [
-      'Press "Fire Beam". Forty shots go in, and the readout tells you what happened to every one of them.',
-      'Read the count: 37 went straight through as though nothing were there, 2 turned aside, and 1 came back the way it went in.',
-      'Solid matter would stop the whole stream. A hard wall round a hollow would turn shots aside at its edges. Only a tiny, very dense lump sitting in a lot of nothing lets 37 pass and throws 1 straight back at you.'
+      'Press "Fire Beam". Forty shots go in, and the readout says what happened to each one.',
+      '37 of the 40 went straight through as if nothing were there. 2 were knocked aside and 1 bounced straight back.',
+      'Solid matter would stop the whole beam. Only a tiny, very dense lump sitting in a lot of empty space lets 37 through and throws 1 back.'
     ],
     check(state) {
-      if (!state.fired.has('a')) return { ok: false, notYet: true, msg: 'Nothing has been fired yet. Press "Fire Beam" to test the specimen first.' };
-      if (!state.choice) return { ok: false, notYet: true, msg: 'No conclusion filed. Pick the structure the beam count actually proves.' };
+      if (!state.fired.has('a')) return { ok: false, notYet: true, msg: 'Press "Fire Beam" first.' };
+      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
       if (state.choice === 'solid') {
-        return { ok: false, msg: 'Solid matter would have stopped the stream cold. 37 shots out of 40 went straight through as if nothing were in the way.' };
+        return { ok: false, msg: 'Solid matter would have stopped the beam. 37 shots out of 40 went straight through.' };
       }
       if (state.choice === 'hollow') {
-        return { ok: false, msg: 'A hard wall round a hollow would turn shots aside at its outer edges. These passed clean through the edges, and one bounced off the dead centre.' };
+        return { ok: false, msg: 'A hard crust would have deflected shots at the edges. These passed clean through the edges, and one bounced off the dead center.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'SPEC A analyzed. Direct rebound: 1 in 40.',
-      title: 'The Nucleus · Mostly Empty Space',
-      body: 'Firing energetic particles reveals that an atom is mostly empty space! Almost every particle passes straight through, but a rare rebound shows a tiny, dense core in the center: the nucleus!'
+      log: '37 through, 2 deflected, 1 straight back.',
+      title: 'The Nucleus',
+      body: 'An atom is almost entirely empty space. Nearly everything it weighs is packed into a tiny lump at its center called the nucleus, which is what the one rebound hit.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
-    title: 'What Is In The Middle',
+    title: 'What Is In the Middle',
     field: 'core',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Almost all the weight of that piece is in the nucleus, and the bench has SPEC A\'s up on the screen. Some of the grains packed into it carry a stencilled cross and some do not.'
-    },
-    prompt: 'Count the grains stamped with a cross in SPEC A\'s nucleus, and log the number.',
+    prompt: 'Press the "The middle" key and count how many grains in Sample A\'s nucleus are stamped with a cross.',
     controls: ['field', 'meter'],
     specimens: [
-      { id: 'a', label: 'SPEC A', note: 'one piece, mounted in the chamber', core: { marked: 6, blank: 6 }, rings: [2, 4] }
+      { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
     ],
-    widget: { type: 'number', min: 0, max: 20, label: 'Marked grains counted' },
+    widget: { type: 'number', min: 0, max: 20, label: 'Crossed grains' },
     hints: [
-      'Set the view to "The middle". The nucleus is drawn flat, so no grain is hiding behind another one — twelve of them are packed in there.',
-      'Blank grains are the same size and the same weight as marked ones, and they are not what is being counted. Click any grain to put the probe on it, and work round the cluster from the outside in so you never count one twice.',
-      'Six of the twelve grains carry a cross. Set the counter to 6 and commit.'
+      'Press "The middle". The nucleus is drawn flat, so no grain is hiding behind another one.',
+      'Twelve grains are packed in there. Some carry a cross and some are blank — count only the crossed ones.',
+      'Six of the twelve carry a cross. Set the counter to 6.'
     ],
     check(state) {
       if (state.number === 6) return { ok: true };
       if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'The counter is still on zero. Count the crosses on the screen and set it.' };
+        return { ok: false, notYet: true, msg: 'The counter is still on zero. Count the crosses and set it.' };
       }
       if (state.number === 12) {
-        return { ok: false, msg: '12 is every grain in there, crossed or not. Count only the ones stamped with a cross.' };
+        return { ok: false, msg: 'That is every grain, crossed and blank together. Count only the crossed ones.' };
       }
-      return { ok: false, msg: 'Recount. Twelve grains are packed into that nucleus and six of them carry a cross.' };
+      return { ok: false, msg: 'Count again: twelve grains in the nucleus, and six of them carry a cross.' };
     },
     reward: {
-      log: 'SPEC A nucleus: 12 grains, 6 marked.',
-      title: 'Protons & Neutrons · The Nucleus',
-      body: 'The nucleus holds two kinds of heavy particle: protons (the marked ones, each carrying a charge of +1) and neutrons (the blank ones, with no charge at all). They weigh the same, which is why the needle is the only thing that tells them apart.'
+      log: 'Sample A: 12 grains, 6 crossed.',
+      title: 'Protons, Neutrons and Electrons',
+      body: 'The crossed grains are protons, each with a charge of +1, and the blank ones are neutrons, with no charge at all. Much further out, so light they barely weigh anything, sit the electrons, each with a charge of -1.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'The Books Balance',
+    title: 'The Charge Balance',
     field: 'rings',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Three reference pieces are open to the instrument and SPEC B is welded shut, so nothing outside it will resolve. Read the needle on all four and work out what it is actually weighing.'
-    },
-    prompt: 'Work out how many light pieces are sitting outside SPEC B\'s sealed core.',
+    prompt: 'Sample D is sealed, so you cannot see its electrons. Use the needle on all four samples to work out how many electrons Sample D has.',
     controls: ['field', 'meter'],
     specimens: [
-      { id: 'r1', label: 'REF 01', note: 'reference, open to the instrument', core: { marked: 3, blank: 4 }, rings: [2, 1] },
-      { id: 'r2', label: 'REF 02', note: 'reference, open to the instrument', core: { marked: 6, blank: 6 }, rings: [2, 4] },
-      { id: 'r3', label: 'REF 03', note: 'reference, open to the instrument', core: { marked: 6, blank: 6 }, rings: [2, 2] },
+      { id: 'r1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 3, blank: 4 }, rings: [2, 1] },
+      { id: 'r2', label: 'SAMPLE B', note: 'open to the instrument', core: { marked: 6, blank: 6 }, rings: [2, 4] },
+      { id: 'r3', label: 'SAMPLE C', note: 'open to the instrument', core: { marked: 6, blank: 6 }, rings: [2, 2] },
       {
-        id: 'b', label: 'SPEC B', note: 'welded casing, outside will not resolve',
+        id: 'b', label: 'SAMPLE D', note: 'sealed, electrons will not resolve',
         core: { marked: 8, blank: 8 }, rings: [2, 6], sealed: true
       }
     ],
-    widget: { type: 'number', min: 0, max: 20, label: 'Light pieces deduced' },
+    widget: { type: 'number', min: 0, max: 20, label: 'Electrons on Sample D' },
     hints: [
-      'Read the needle on every piece, then look at the same pieces in the "Outside" view. The instrument draws the light pieces on circles it calls rings, and on an open piece you can count them.',
-      'REF 03 is the useful one, because its needle is the only one that is not on zero. Count its crosses in "The middle" and its light pieces in "Outside", and see what the two numbers do to the needle.',
-      'The needle reads crosses minus light pieces. REF 03 has 6 crosses and 4 light pieces and reads plus 2; REF 01 and REF 02 read zero because their two counts match. SPEC B reads zero and has 8 crosses, so it is carrying 8.'
+      'Press "Read Needle" on each sample, then press "Outside" and count the electrons on the three you can see.',
+      'Sample C is the useful one — its needle is the only one that is not on zero. Count its protons and its electrons and compare them.',
+      'The needle reads protons minus electrons. Sample C has 6 protons and 4 electrons and reads +2. Sample D reads 0 with 8 protons, so it has 8 electrons.'
     ],
     check(state) {
       if (!state.metered.has('b')) {
-        return { ok: false, notYet: true, msg: 'The needle has not been on SPEC B yet. Select it and press "Read Needle".' };
+        return { ok: false, notYet: true, msg: 'Put the needle on Sample D first: select it and press "Read Needle".' };
       }
       if (!['r1', 'r2', 'r3'].some(id => state.metered.has(id))) {
-        return { ok: false, notYet: true, msg: 'Read the needle on the open references too. SPEC B on its own cannot tell you what the needle is measuring.' };
+        return { ok: false, notYet: true, msg: 'Read the needle on the open samples too. Sample D alone cannot tell you what the needle measures.' };
       }
       if (state.number === 8) return { ok: true };
       if (state.number === 0) {
-        return { ok: false, msg: 'Zero is what the needle reads, not a count of what is doing the balancing. REF 01 and REF 02 read zero as well, and they are carrying 3 and 6.' };
+        return { ok: false, msg: 'Zero is what the needle reads, not how many electrons are there. Samples A and B read zero too, and they have 3 and 6.' };
       }
       if (state.number === 16) {
-        return { ok: false, msg: '16 is every grain in that core, crossed and blank together. Only the crosses move the needle.' };
+        return { ok: false, msg: 'That is every grain in the nucleus. Only the protons push the needle.' };
       }
-      return { ok: false, msg: 'Work from REF 03: 6 crosses, 4 light pieces, needle on plus 2. SPEC B reads zero with 8 crosses.' };
+      return { ok: false, msg: 'Work from Sample C: 6 protons, 4 electrons, needle on +2. Sample D reads 0 with 8 protons.' };
     },
     reward: {
-      log: 'SPEC B certified at 8 outside. Casing unopened.',
-      title: 'Electrons & Electrical Neutrality',
-      body: 'Those light pieces are electrons, and each one carries a charge of -1. A specimen reads zero on the needle exactly when its electrons match its protons one for one, which is why counting one side of a neutral piece tells you the other.'
+      log: 'Sample D carries 8 electrons.',
+      title: 'Neutral Atoms Balance',
+      body: 'The needle reads protons minus electrons. An atom sits on zero exactly when it has one electron for every proton, so on a neutral atom counting one side tells you the other.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    title: 'Where They Sit',
+    title: 'Where the Electrons Sit',
     field: 'rings',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'SPEC C reads zero with 11 protons in its nucleus, so 11 electrons are out there somewhere. They are not free to sit wherever they like, and three open references show the arrangement they are allowed.'
-    },
-    prompt: 'Put all 11 of SPEC C\'s electrons onto its rings, in the arrangement the references follow.',
+    prompt: 'Sample D has 11 protons and reads zero, so it has 11 electrons. Put all 11 on its rings, following the pattern the other three samples show.',
     controls: ['field'],
     specimens: [
-      { id: 'r1', label: 'REF 01', note: 'reference, open to the instrument', core: { marked: 2, blank: 2 }, rings: [2] },
-      { id: 'r2', label: 'REF 02', note: 'reference, open to the instrument', core: { marked: 10, blank: 10 }, rings: [2, 8] },
-      { id: 'r3', label: 'REF 03', note: 'reference, open to the instrument', core: { marked: 13, blank: 14 }, rings: [2, 8, 3] },
-      { id: 'u', label: 'SPEC C', note: 'eleven electrons, not yet placed', core: { marked: 11, blank: 12 }, rings: [] }
+      { id: 'r1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 2, blank: 2 }, rings: [2] },
+      { id: 'r2', label: 'SAMPLE B', note: 'open to the instrument', core: { marked: 10, blank: 10 }, rings: [2, 8] },
+      { id: 'r3', label: 'SAMPLE C', note: 'open to the instrument', core: { marked: 13, blank: 14 }, rings: [2, 8, 3] },
+      { id: 'u', label: 'SAMPLE D', note: '11 electrons, not yet placed', core: { marked: 11, blank: 12 }, rings: [] }
     ],
     target: 'u',
     widget: {
       type: 'rings',
-      label: 'SPEC C — where the electrons go',
+      label: 'Sample D — where the electrons go',
       total: 11,
       rings: ['Ring 1 — closest in', 'Ring 2 — middle', 'Ring 3 — furthest out']
     },
     hints: [
-      'Set the view to "Outside" and count the electrons on each ring of REF 01, REF 02 and REF 03. Each + key below puts one of SPEC C\'s electrons on that ring, each - key takes one off, and SPEC C redraws on the bench as you go.',
-      'No reference carries more than 2 on its first ring or more than 8 on its second. And none of them puts anything on a further-out ring while a ring closer in still has room.',
-      'Put 2 on Ring 1 and 8 on Ring 2. That is 10, and the eleventh electron goes on Ring 3.'
+      'Press "Outside" and count how many electrons Samples A, B and C keep on each ring. The + and - keys move Sample D\'s electrons.',
+      'No sample here has more than 2 on ring 1 or more than 8 on ring 2, and none of them starts a new ring while a closer one still has room.',
+      'Put 2 on Ring 1 and 8 on Ring 2. That is 10, so the last electron goes on Ring 3.'
     ],
     check(state) {
       const placed = state.rings.reduce((n, r) => n + r, 0);
       if (placed !== 11) {
-        return { ok: false, notYet: true, msg: `${placed} of the 11 electrons are on a ring. Use the + keys under the readout to place the rest.` };
+        return { ok: false, notYet: true, msg: `${placed} of the 11 electrons are placed. Use the + keys to place the rest.` };
       }
       if (state.rings[0] > 2) {
-        return { ok: false, msg: 'Too many on Ring 1. Every reference on the bench carries 2 there, and none of them carries more.' };
+        return { ok: false, msg: 'Too many on Ring 1. Every other sample here holds exactly 2 there.' };
       }
       if (state.rings[1] > 8) {
-        return { ok: false, msg: 'Too many on Ring 2. REF 02 and REF 03 both carry 8 there, and neither carries more.' };
+        return { ok: false, msg: 'Too many on Ring 2. Samples B and C both hold 8 there and no more.' };
       }
       if (state.rings[0] < 2 || (state.rings[2] > 0 && state.rings[1] < 8)) {
-        return { ok: false, msg: 'No reference puts an electron on a further-out ring while a ring closer in still has room. Fill Ring 1, then Ring 2, then whatever is left over.' };
+        return { ok: false, msg: 'Fill each ring before starting the next one: 2 on Ring 1, then 8 on Ring 2, then whatever is left.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'SPEC C loaded 2 / 8 / 1.',
-      title: 'Electron Shells & The Bohr Model',
-      body: 'Electrons are not scattered at random: they sit in rings called shells, and a shell holds a fixed number — 2 on the first, 8 on the second. Each shell fills before the next one starts, which is why SPEC C came out 2, 8 and 1.'
+      log: 'Sample D loaded 2 / 8 / 1.',
+      title: 'Electron Shells',
+      body: 'Electrons sit in rings called shells, and each shell holds a fixed number: 2 in the first, 8 in the second. A shell fills up before the next one starts, which is why 11 electrons come out as 2, 8 and 1.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
-    title: 'Two Charges Left',
+    title: 'The Outer Shell Decides',
     field: 'rings',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'We have to predict how four specimens will trade electrons, and the tester cell has 2 charges left in it. Spend them on two of the four, then work the other two out from what you can see.'
-    },
-    prompt: 'File whether each specimen gives an electron away, takes one on, or will not trade at all.',
+    prompt: 'The tester has only 2 charges left. Test two of the four samples, then work out the other two, and say whether each one gives an electron away, takes one on, or will not trade.',
     controls: ['field', 'tester'],
     specimens: [
-      { id: 's1', label: 'SPEC D', note: 'open to the instrument', core: { marked: 3, blank: 4 }, rings: [2, 1] },
-      { id: 's2', label: 'SPEC E', note: 'open to the instrument', core: { marked: 11, blank: 12 }, rings: [2, 8, 1] },
-      { id: 's3', label: 'SPEC F', note: 'open to the instrument', core: { marked: 17, blank: 18 }, rings: [2, 8, 7] },
-      { id: 's4', label: 'SPEC G', note: 'open to the instrument', core: { marked: 10, blank: 10 }, rings: [2, 8] }
+      { id: 's1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 3, blank: 4 }, rings: [2, 1] },
+      { id: 's2', label: 'SAMPLE B', note: 'open to the instrument', core: { marked: 11, blank: 12 }, rings: [2, 8, 1] },
+      { id: 's3', label: 'SAMPLE C', note: 'open to the instrument', core: { marked: 17, blank: 18 }, rings: [2, 8, 7] },
+      { id: 's4', label: 'SAMPLE D', note: 'open to the instrument', core: { marked: 10, blank: 10 }, rings: [2, 8] }
     ],
     testerCharges: 2,
     widget: {
       type: 'bins',
       bins: [
         { id: 'gives', label: 'Gives one away', note: 'Hands an electron over.' },
-        { id: 'takes', label: 'Takes one on', note: 'Pulls an electron off the partner.' },
+        { id: 'takes', label: 'Takes one on', note: 'Pulls an electron off the other atom.' },
         { id: 'inert', label: 'Will not trade', note: 'Does nothing either way.' }
       ]
     },
     hints: [
-      'Spend one charge, then the other. Two readings against four specimens means the last two have to be reasoned out rather than measured.',
-      'Set the view to "Outside" and count the electrons on the furthest-out ring of all four. You already know from the last stage how much room a ring has.',
-      'A furthest-out ring holding 1 hands it over (SPEC D and SPEC E). A ring holding 7 is one short of the 8 it can hold, so it takes one on (SPEC F). A ring already full at 8 does neither (SPEC G).'
+      'Press "Outside" and count the electrons on the outermost shell of all four samples.',
+      'A shell that holds 8 is full. Ask of each sample whether its outer shell has almost none, almost 8, or exactly 8.',
+      'An outer shell with 1 gives it away (A and B). One with 7 is one short of full, so it takes one on (C). One already full at 8 does neither (D).'
     ],
     check(state) {
       if (state.tested.size < 1) {
-        return { ok: false, notYet: true, msg: 'Run the tester at least once. Four predictions filed without a single reading is a guess, not a finding.' };
+        return { ok: false, notYet: true, msg: 'Run the tester on at least one sample before filing four answers.' };
       }
       const want = { s1: 'gives', s2: 'gives', s3: 'takes', s4: 'inert' };
-      const labels = { s1: 'SPEC D', s2: 'SPEC E', s3: 'SPEC F', s4: 'SPEC G' };
+      const labels = { s1: 'Sample A', s2: 'Sample B', s3: 'Sample C', s4: 'Sample D' };
       for (const id of ['s1', 's2', 's3', 's4']) {
-        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no line on the manifest yet.` };
+        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       for (const id of ['s1', 's2', 's3', 's4']) {
         if (state.bins[id] !== want[id]) {
-          return { ok: false, msg: `${labels[id]} is filed incorrectly. Count the electrons on its furthest-out ring, then work out how much room that ring has left.` };
+          return { ok: false, msg: `${labels[id]} is wrong. Count the electrons on its outer shell, then work out how much room that shell has left.` };
         }
       }
       return { ok: true };
     },
     reward: {
-      log: 'Four behaviors filed; two tester charges spent.',
-      title: 'Valence Electrons & Chemical Reactivity',
-      body: 'The electrons in the outermost shell are called valence electrons, and they decide everything about how an atom reacts. An atom with 1 of them gives it away, an atom with 7 takes one on to fill the shell, and an atom whose outer shell is already full of 8 does neither.'
+      log: 'All four predictions correct.',
+      title: 'Valence Electrons',
+      body: 'The electrons in the outermost shell are the valence electrons, and they decide how an atom reacts. One valence electron is given away, seven pulls one in to make eight, and a full shell of eight trades nothing at all.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
-    title: 'The Same Weight Twice',
+    title: 'Same Weight, Different Atom',
     field: 'core',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The reactor needs more coolant matching SPEC H, and canisters K and L weigh exactly the same as each other. Two pieces are the same material when they behave the same way, and you already know what decides that.'
-    },
-    prompt: 'Decide whether SPEC K and SPEC L are the same material as SPEC H.',
+    prompt: 'Samples B and C weigh the same as each other. Decide which of them is the same kind of atom as Sample A.',
     controls: ['field', 'meter'],
     specimens: [
-      { id: 'h', label: 'SPEC H', note: 'certified coolant, the standard to match', core: { marked: 6, blank: 6 }, rings: [2, 4] },
-      { id: 'k', label: 'SPEC K', note: 'unlabelled, 13 grains in the nucleus', core: { marked: 6, blank: 7 }, rings: [2, 4] },
-      { id: 'l', label: 'SPEC L', note: 'unlabelled, 13 grains in the nucleus', core: { marked: 7, blank: 6 }, rings: [2, 5] }
+      { id: 'h', label: 'SAMPLE A', note: 'the one to match', core: { marked: 6, blank: 6 }, rings: [2, 4] },
+      { id: 'k', label: 'SAMPLE B', note: '13 grains in the nucleus', core: { marked: 6, blank: 7 }, rings: [2, 4] },
+      { id: 'l', label: 'SAMPLE C', note: '13 grains in the nucleus', core: { marked: 7, blank: 6 }, rings: [2, 5] }
     ],
     widget: {
       type: 'bins',
       rows: ['k', 'l'],
       bins: [
-        { id: 'match', label: 'Same material as SPEC H', note: 'Sell it on the same manifest line.' },
-        { id: 'other', label: 'Something else', note: 'It does not belong with SPEC H.' }
+        { id: 'match', label: 'Same kind as Sample A', note: 'It behaves the same way.' },
+        { id: 'other', label: 'A different kind', note: 'It behaves differently.' }
       ]
     },
     hints: [
-      'Count all three in both views: the crosses and the blanks in "The middle", and the electrons on every ring in "Outside". Put the needle on each one as well.',
-      'K and L hold the same 13 grains, so the total will not separate them. What does differ is the proton count — and with it, the arrangement outside, which is the thing that decides behaviour.',
-      'SPEC H and SPEC K both have 6 protons and the identical 2 and 4 outside them, so everything that governs how they behave is the same and the extra neutron only makes K heavier. SPEC L has 7 protons and therefore 7 electrons, arranged 2 and 5 — a different outermost ring, so it behaves differently.'
+      'Use "The middle" to count protons and neutrons on all three, then "Outside" to count their electrons.',
+      'B and C both hold 13 grains, so the total will not separate them. Their proton counts are different, and so are their outer shells.',
+      'Sample B has 6 protons and the same 2 and 4 outer arrangement as Sample A, so it behaves the same; its extra grain is just a neutron. Sample C has 7 protons and an outer shell of 5, so it behaves differently.'
     ],
     check(state) {
       if (!state.bins.k || !state.bins.l) {
-        return { ok: false, notYet: true, msg: 'Both canisters need a line on the manifest.' };
+        return { ok: false, notYet: true, msg: 'Both samples need an answer.' };
       }
       if (state.bins.k !== 'match') {
-        return { ok: false, msg: 'SPEC K is filed incorrectly. It has the same 6 protons as SPEC H and the identical 2 and 4 outside it, so it behaves identically; the thirteenth grain is an uncharged neutron, and it adds weight and nothing else.' };
+        return { ok: false, msg: 'Sample B has the same 6 protons as Sample A and the same electrons outside, so it behaves identically. Its 13th grain is a neutron, which adds weight and nothing else.' };
       }
       if (state.bins.l !== 'other') {
-        return { ok: false, msg: 'SPEC L is filed incorrectly. It has 7 protons, so it carries 7 electrons arranged 2 and 5 — a different outermost ring from SPEC H, which means it will not behave like SPEC H at all.' };
+        return { ok: false, msg: 'Sample C has 7 protons, so it has 7 electrons arranged 2 and 5 — a different outer shell from Sample A, so it behaves differently.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'SPEC K certified with SPEC H. SPEC L held back.',
-      title: 'Atomic Number & Isotopes',
-      body: 'An element\'s identity depends ONLY on its proton count (atomic number). SPEC H and SPEC K both have 6 protons (carbon), but SPEC K has an extra neutron — making it an isotope. SPEC L has 7 protons, so it is a completely different element (nitrogen)!'
+      log: 'Sample B matches Sample A. Sample C does not.',
+      title: 'Elements and Isotopes',
+      body: 'What kind of atom you have depends only on the proton count, and that count is called the atomic number. Samples A and B are both carbon, 6 protons, but B carries an extra neutron, which makes it an isotope; Sample C has 7 protons, so it is nitrogen, a different element.'
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
-    title: 'Take One Off',
+    title: 'Take Electrons Off',
     field: 'rings',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The thrusters need charged propellant and SPEC M is sitting neutral on the needle. Knock electrons off it until the needle reads plus two.'
-    },
-    prompt: 'Strip electrons off SPEC M until the needle reads plus 2, then log how many came off.',
+    prompt: 'Sample A reads zero on the needle. Knock electrons off it until the needle reads +2, then log how many you took.',
     controls: ['field', 'meter', 'strip', 'reset'],
     specimens: [
-      { id: 'm', label: 'SPEC M', note: 'mounted, open to the instrument', core: { marked: 11, blank: 12 }, rings: [2, 8, 1] }
+      { id: 'm', label: 'SAMPLE A', note: 'mounted, open to the instrument', core: { marked: 11, blank: 12 }, rings: [2, 8, 1] }
     ],
-    widget: { type: 'number', min: 0, max: 6, label: 'Electrons stripped' },
+    widget: { type: 'number', min: 0, max: 6, label: 'Electrons taken off' },
     hints: [
-      'Press "Fire Stripper" to knock one electron off the furthest-out ring, then "Read Needle" to see what that did to the balance.',
-      'Every electron taken off leaves one proton in the nucleus with nothing to cancel it, so the needle climbs by one each time.',
-      'Fire the stripper twice, so the needle reads plus two. Then set the counter to 2 and commit.'
+      'Press "Fire Stripper" to knock one electron off the outer shell, then "Read Needle" to see what it did.',
+      'Every electron you take off leaves one proton with nothing to cancel it, so the needle climbs by 1 each time.',
+      'Fire the stripper twice to reach +2, then set the counter to 2.'
     ],
     check(state) {
       const taken = state.stripped.m || 0;
       if (taken === 0) {
-        return { ok: false, notYet: true, msg: 'The specimen is untouched and the needle sits at zero. Press "Fire Stripper" to knock an electron free.' };
+        return { ok: false, notYet: true, msg: 'Nothing has been taken off yet. Press "Fire Stripper".' };
       }
       if (taken !== 2) {
-        return { ok: false, msg: `The needle is reading plus ${taken}. Bring it to plus two — "Reset Specimen" puts them all back if you went too far.` };
+        return { ok: false, msg: `The needle reads +${taken}. Bring it to +2 — "Reset Sample" puts every electron back if you went too far.` };
       }
       if (state.number !== 2) {
-        return { ok: false, msg: `The count logged (${state.number}) does not match the 2 electrons taken off the specimen. Set the counter to 2.` };
+        return { ok: false, msg: `You took 2 electrons off but logged ${state.number}. Set the counter to 2.` };
       }
       return { ok: true };
     },
     reward: {
-      log: 'SPEC M brought to plus two. Core untouched.',
-      title: 'Ions & Net Charge',
-      body: 'An atom that has gained or lost electrons is called an ion. Taking 2 electrons off left 2 protons with nothing to cancel them, so what is in the chamber now is a +2 ion — same element, different charge.'
+      log: 'Sample A brought to +2.',
+      title: 'Ions',
+      body: 'An atom that has gained or lost electrons is called an ion. Taking 2 electrons off left 2 protons with nothing to cancel them, so this is now a +2 ion — the same element, carrying a charge.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
-    title: 'File The Manifest',
+    title: 'Tell Them Apart',
     field: 'core',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The shuttle is ready to load and three canisters came off the salvage unlabelled. The standard they are being filed against is 7 protons, 7 neutrons and a needle on zero.'
-    },
-    prompt: 'File all three canisters against the standard of 7 protons, 7 neutrons and zero charge.',
+    prompt: 'The standard is 7 protons, 7 neutrons and a needle on zero. Say how each of the three samples differs from it.',
     controls: ['field', 'meter'],
     specimens: [
-      { id: 'n1', label: 'SPEC N', note: 'unlabelled', core: { marked: 7, blank: 8 }, rings: [2, 5] },
-      { id: 'n2', label: 'SPEC P', note: 'unlabelled', core: { marked: 7, blank: 7 }, rings: [2, 4] },
-      { id: 'n3', label: 'SPEC R', note: 'unlabelled', core: { marked: 8, blank: 8 }, rings: [2, 6] }
+      { id: 'n1', label: 'SAMPLE A', note: 'unlabelled', core: { marked: 7, blank: 8 }, rings: [2, 5] },
+      { id: 'n2', label: 'SAMPLE B', note: 'unlabelled', core: { marked: 7, blank: 7 }, rings: [2, 4] },
+      { id: 'n3', label: 'SAMPLE C', note: 'unlabelled', core: { marked: 8, blank: 8 }, rings: [2, 6] }
     ],
     widget: {
       type: 'bins',
       bins: [
-        { id: 'heavy', label: 'Same element, heavier', note: 'An extra neutron in the nucleus.' },
-        { id: 'charged', label: 'Same element, carrying a charge', note: 'Short of electrons outside.' },
+        { id: 'heavy', label: 'Same element, extra neutron', note: 'An isotope of the standard.' },
+        { id: 'charged', label: 'Same element, missing an electron', note: 'An ion of the standard.' },
         { id: 'other', label: 'A different element', note: 'The proton count does not match.' }
       ]
     },
     hints: [
-      'Set the view to "The middle" and count the protons on all three first. Only a canister with exactly 7 can be the standard\'s element at all.',
-      'SPEC R has 8 protons, so it is out on the first count. For SPEC N and SPEC P, count the neutrons as well and put the needle on each of them.',
-      'SPEC N is 7 protons and 8 neutrons with the needle on zero — the same element, one neutron heavier. SPEC P is 7 and 7 but reads plus one, so it is the same element short an electron. SPEC R is a different element.'
+      'Count the protons of all three first. Only a sample with exactly 7 can be the same element as the standard.',
+      'Sample C has 8 protons, so it is out straight away. For A and B, count the neutrons too and read the needle on each.',
+      'Sample A is 7 protons and 8 neutrons, needle on zero — an isotope. Sample B is 7 and 7 but reads +1 — an ion. Sample C is a different element.'
     ],
     check(state) {
       const want = { n1: 'heavy', n2: 'charged', n3: 'other' };
-      const labels = { n1: 'SPEC N', n2: 'SPEC P', n3: 'SPEC R' };
+      const labels = { n1: 'Sample A', n2: 'Sample B', n3: 'Sample C' };
       for (const id of ['n1', 'n2', 'n3']) {
-        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no line on the manifest yet.` };
+        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       if (state.bins.n1 !== want.n1) {
-        return { ok: false, msg: 'SPEC N is filed incorrectly. It has 7 protons and its needle reads zero, but it carries 8 neutrons — the same element, one neutron heavier.' };
+        return { ok: false, msg: 'Sample A has 7 protons and its needle reads zero, but it carries 8 neutrons — the same element, one neutron heavier.' };
       }
       if (state.bins.n2 !== want.n2) {
-        return { ok: false, msg: 'SPEC P is filed incorrectly. It has 7 protons and 7 neutrons like the standard, but only 6 electrons outside, which is why the needle reads plus one.' };
+        return { ok: false, msg: 'Sample B has 7 protons and 7 neutrons like the standard, but only 6 electrons, which is why the needle reads +1.' };
       }
       if (state.bins.n3 !== want.n3) {
-        return { ok: false, msg: 'SPEC R is filed incorrectly. Count its protons in "The middle": 8 against the standard\'s 7 makes it a different element.' };
+        return { ok: false, msg: 'Sample C has 8 protons against the standard\'s 7, so it is a different element.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Three canisters certified. Orbital transfer manifest sealed.',
-      title: 'The Subatomic Architecture of Matter',
-      body: 'Three ways a piece of matter can differ, and only one of them changes what it is: change the neutrons and you have an isotope, change the electrons and you have an ion, change the protons and you have a different element altogether.',
+      log: 'All three identified.',
+      title: 'Three Ways to Differ',
+      body: 'Change the neutrons and you get an isotope. Change the electrons and you get an ion. Change the protons and you get a different element altogether.',
       last: true
     }
   }
@@ -602,22 +563,23 @@ export const STAGES = [
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
-   Where the words finally arrive, after the intuition that earns them.
+   Three short cards: what the player found, the model it adds up to, and
+   what the next bench is about.
    ------------------------------------------------------------------ */
 export const DEBRIEF = {
-  speaker: 'VESS // TALLOW CORE BENCH',
+  speaker: 'Vess',
   sections: [
     {
-      heading: 'Manifest Closed',
-      body: 'Eight specimens verified from the inside out. The buyer signed the transfer manifest without dispute, the thrusters have charged propellant, and the Avalon\'s reactor is running — and every one of those readings you worked out yourself, from what the bench would actually show you.'
+      heading: 'What You Found',
+      body: 'An atom is mostly empty space with a nucleus at the center. The nucleus holds protons and neutrons, and electrons sit outside it in shells.'
     },
     {
-      heading: 'The Subatomic Model',
-      body: 'You have uncovered the architecture that governs all chemistry: protons (+1) define the element, neutrons (0) stabilize the nucleus, and electrons (-1) fill quantized shells to dictate bonding and charge. Every reaction in the universe begins here.'
+      heading: 'What Each One Does',
+      body: 'Protons (+1) decide which element you have. Neutrons (0) only add weight. Electrons (-1) cancel the protons, and the ones in the outer shell decide how the atom reacts.'
     },
     {
-      heading: 'Next: The Periodic Table',
-      body: 'You logged proton counts for a dozen specimens on this bench without opening a reference catalogue. When we reach Site 3 on Tallow, you will discover how Dmitri Mendeleev organized every known element across the galaxy using these exact proton numbers.'
+      heading: 'Next',
+      body: 'You have now counted protons for a dozen atoms. The next bench shows you what happens when you line every element up by that number.'
     }
   ]
 };
@@ -629,18 +591,18 @@ export const DEBRIEF = {
    ------------------------------------------------------------------ */
 export const PRACTICE = [
   {
-    question: 'A beam fires through a specimen. 39 of 40 particles pass straight through empty space, and 1 rebounds backward. What does this prove?',
+    question: 'You fire 40 shots at an atom. 39 go straight through and 1 bounces back. What does that tell you?',
     options: [
-      { id: 'a', label: 'The specimen is solid all the way through' },
-      { id: 'b', label: 'The specimen is mostly empty space with a tiny dense nucleus' },
-      { id: 'c', label: 'The specimen has a hollow outer shell' },
-      { id: 'd', label: 'The specimen has no internal structure' }
+      { id: 'a', label: 'The atom is solid all the way through' },
+      { id: 'b', label: 'The atom is mostly empty space with a tiny dense nucleus' },
+      { id: 'c', label: 'The atom is a hollow ball' },
+      { id: 'd', label: 'The atom has nothing inside it' }
     ],
     answer: 'b',
-    explanation: 'The rare direct rebound reveals a tiny, incredibly dense nucleus — exactly what Rutherford\'s gold foil experiment demonstrated.'
+    explanation: 'Almost everything passes through because the atom is mostly empty. The one rebound hit the tiny, very dense nucleus.'
   },
   {
-    question: 'You probe a nucleus and count 8 marked grains (protons) and 8 blank grains (neutrons). What element is this?',
+    question: 'A nucleus holds 8 protons and 8 neutrons. Which element is it?',
     options: [
       { id: 'a', label: 'Carbon (6 protons)' },
       { id: 'b', label: 'Nitrogen (7 protons)' },
@@ -648,10 +610,10 @@ export const PRACTICE = [
       { id: 'd', label: 'Neon (10 protons)' }
     ],
     answer: 'c',
-    explanation: 'The number of protons (atomic number) defines the element. 8 protons = oxygen, regardless of the neutron count.'
+    explanation: 'The proton count decides the element. 8 protons is oxygen, whatever the neutron count is.'
   },
   {
-    question: 'A specimen has 6 protons and 6 electrons. What is its net electrical charge?',
+    question: 'An atom has 6 protons and 6 electrons. What is its charge?',
     options: [
       { id: 'a', label: '+6' },
       { id: 'b', label: '−6' },
@@ -659,10 +621,10 @@ export const PRACTICE = [
       { id: 'd', label: '+12' }
     ],
     answer: 'c',
-    explanation: 'Equal numbers of protons (+1 each) and electrons (−1 each) cancel out, giving a net charge of zero.'
+    explanation: 'Protons are +1 and electrons are −1, so equal numbers of them cancel out to zero.'
   },
   {
-    question: 'Carbon has 6 electrons distributed as 2 in the first shell and 4 in the second. How many valence electrons does carbon have?',
+    question: 'Carbon has 6 electrons: 2 in the first shell and 4 in the second. How many valence electrons is that?',
     options: [
       { id: 'a', label: '2' },
       { id: 'b', label: '4' },
@@ -670,10 +632,10 @@ export const PRACTICE = [
       { id: 'd', label: '8' }
     ],
     answer: 'b',
-    explanation: 'Valence electrons are in the outermost shell. Carbon\'s second (outer) shell holds 4 electrons — which is why carbon forms 4 bonds.'
+    explanation: 'Valence electrons are the ones in the outermost shell, and carbon keeps 4 there.'
   },
   {
-    question: 'You strip 2 electrons off a neutral sodium atom (11 protons, 11 electrons). What is the resulting ion?',
+    question: 'You knock 2 electrons off a sodium atom that had 11 protons and 11 electrons. What have you made?',
     options: [
       { id: 'a', label: 'Na⁻ (charge −1)' },
       { id: 'b', label: 'Na⁺ (charge +1)' },
@@ -681,7 +643,7 @@ export const PRACTICE = [
       { id: 'd', label: 'Na²⁻ (charge −2)' }
     ],
     answer: 'c',
-    explanation: 'Removing 2 electrons from a neutral atom leaves 11 protons and 9 electrons: net charge = +2, written Na²⁺.'
+    explanation: '11 protons and 9 electrons left, so the charge is +2. An atom that has lost electrons is an ion.'
   }
 ];
 
@@ -788,7 +750,7 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: stage.widget.type === 'bins' ? 'File Manifest' : 'Commit'
+      commitLabel: 'Commit'
     });
 
     bench.setSpecimens(stage.specimens);
@@ -866,7 +828,7 @@ export function mount(container, ctx) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="strip">Fire Stripper</button>');
     }
     if (stage.controls.includes('reset')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="reset">Reset Specimen</button>');
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="reset">Reset Sample</button>');
     }
 
     // The legend, under the keys: what each one of them actually does.
@@ -913,13 +875,13 @@ export function mount(container, ctx) {
       soundscape.playToggleClack?.();
       renderReadout(null, {
         head: `Bench // ${labelFor(state.sample)}`,
-        body: 'Specimen restored. Everything that was taken off it is back where it was.'
+        body: 'Every electron is back where it started.'
       });
       return;
     }
 
     if (!state.sample) {
-      frame.note('Nothing selected. Tap a specimen on the bench first.');
+      frame.note('Tap a sample on the bench first.');
       return;
     }
     const id = state.sample;
@@ -932,7 +894,7 @@ export function mount(container, ctx) {
       renderReadout(null, {
         head: `Needle // ${labelFor(id)}`,
         body: net === 0
-          ? 'The needle settles on zero and stays there. Nothing to report on the whole specimen.'
+          ? 'The needle settles on zero and stays there.'
           : `The needle swings to ${net > 0 ? 'plus' : 'minus'} ${Math.abs(net)} and holds.`
       });
       return;
@@ -940,11 +902,11 @@ export function mount(container, ctx) {
 
     if (tool === 'tester') {
       if (charges <= 0) {
-        frame.note('The tester cell is dead. Whatever is left on this bench, you work out from the rings.');
+        frame.note('The tester is out of charges. Work the rest out from what you can see.');
         return;
       }
       if (state.tested.has(id)) {
-        frame.note('That specimen has already been run. Spend the charge on one you have not read.');
+        frame.note('That sample has already been tested. Try one you have not tested yet.');
         return;
       }
       charges--;
@@ -976,7 +938,7 @@ export function mount(container, ctx) {
       if (ring === null) {
         renderReadout(null, {
           head: `Stripper // ${labelFor(id)}`,
-          body: 'Nothing left outside to take. The core does not come off with this.'
+          body: 'There are no electrons left to take off.'
         });
       } else {
         state.stripped[id] = (state.stripped[id] || 0) + 1;
@@ -1047,10 +1009,10 @@ export function mount(container, ctx) {
         <div class="lq-readout-card lq-readout-idle">
           <div class="lq-readout-head">Probe // standby</div>
           <p class="lq-readout-line">${state.field === 'whole'
-            ? 'The whole piece, at its own size. Nothing in it separates at this magnification — that is what the other two keys are for.'
+            ? 'The whole atom at its own size. Use the other two keys to look inside it.'
             : state.field === 'core'
-              ? 'The middle, magnified until the grains in it come apart. Click any grain to put the probe on that one.'
-              : 'The view is pulled back to the light pieces outside, drawn on the circles they keep to. Click any one of them to put the probe on it.'}</p>
+              ? 'The center, magnified until the grains come apart. Click any grain to read it.'
+              : 'Pulled back to the light pieces outside, drawn on the rings they sit on. Click any one to read it.'}</p>
         </div>
       `);
       return;
@@ -1065,13 +1027,13 @@ export function mount(container, ctx) {
         ${part.mass === null ? '' : meter('Mass', massBar(hit.part), massText(hit.part))}
         ${part.charge === null ? '' : chargeChip(part.charge)}
         ${hit.part === 'core' && spec
-          ? `<div class="lq-readout-hold">Packed with ${coreTotal(spec)} grains in all, both sorts together.</div>`
+          ? `<div class="lq-readout-hold">Packed with ${coreTotal(spec)} grains in all.</div>`
           : ''}
         ${hit.part === 'marked' || hit.part === 'blank'
-          ? `<div class="lq-readout-hold">This core holds ${coreTotal(spec)} grains in all.</div>`
+          ? `<div class="lq-readout-hold">This center holds ${coreTotal(spec)} grains in all.</div>`
           : ''}
         ${hit.part === 'light'
-          ? `<div class="lq-readout-hold">Sitting on ring ${hit.ring + 1}, counting outward from the middle.</div>`
+          ? `<div class="lq-readout-hold">On ring ${hit.ring + 1}, counting outward.</div>`
           : ''}
         <p class="lq-readout-line">${esc(part.note)}</p>
       </div>
@@ -1173,7 +1135,7 @@ export function mount(container, ctx) {
               </div>
             `).join('')}
           </div>
-          <p class="form-help cb-remaining">${w.total} still to place. The + key on a row puts one on that ring, the &minus; key takes one off, and the piece redraws on the bench as you go.</p>
+          <p class="form-help cb-remaining">${w.total} still to place. The + key adds one to that ring and the &minus; key takes one off.</p>
         </div>
       `);
       frame.el.widget.querySelectorAll('[data-ring-step]').forEach(btn => {
@@ -1189,7 +1151,7 @@ export function mount(container, ctx) {
           const left = w.total - state.rings.reduce((n, r) => n + r, 0);
           frame.el.widget.querySelector('.cb-remaining').textContent =
             left === 0
-              ? 'All placed. Move them between rings with the + and \u2212 keys until the arrangement looks right, then commit.'
+              ? 'All placed. Move them between rings until it matches the pattern, then commit.'
               : `${left} still to place. The + key on a row puts one on that ring, the \u2212 key takes one off.`;
           if (stage.target) bench.setRings(stage.target, state.rings);
           soundscape.playToggleClack?.();

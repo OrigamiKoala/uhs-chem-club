@@ -213,11 +213,20 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
 /* ---------------------------------------------------------------- the words */
 
 {
-  // The same list verify:quest enforces, plus the terms Tallow itself withholds.
+  /**
+   * WHAT TALLOW MAY SAY OUT LOUD.
+   *
+   * The campaign's own withheld list still applies — Erebus teaches those words
+   * in its epilogue and a place name must not spend them early. Unit 1's
+   * vocabulary is a different matter: `q1-grain` names the atom on its first
+   * reward card and the unit is called Atoms on the star map, so a bench the
+   * player is walking towards is allowed to say what it is about. A sign
+   * reading "Bench 3 - The Periodic Table" is how somebody finds the right
+   * bench; "Catalogue Vault" is how they find it by trial and error.
+   */
   const WITHHELD = [
-    'electron', 'nucleophile', 'electrophile', 'carbonyl', 'carbocation',
-    'alkyl', 'ester', 'epoxide', 'isopropyl', 'atom', 'molecule', 'element',
-    'proton', 'neutron', 'nucleus', 'isotope', 'compound', 'mixture'
+    'nucleophile', 'electrophile', 'carbonyl', 'carbocation',
+    'alkyl', 'ester', 'epoxide', 'isopropyl'
   ];
 
   const strings = [
@@ -241,13 +250,11 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
   const emoji = strings.filter(s => /\p{Extended_Pictographic}/u.test(s));
   check(emoji.length === 0, 'the world is emoji-free', `emoji in: ${emoji.join(', ')}`);
 
-  const placeWords = /^(pylon|mast|basin|ridge|drift|terrace|hollow|span|relay|bench|vault|floor|core|salvage|catalogue|tally|yard|pan|flat|hopper|gantry)$/i;
-  const offLabel = world.sites
-    .filter(s => !s.label.split(/\s+/).every(w => placeWords.test(w)))
-    .map(s => s.label);
-  check(offLabel.length === 0,
-    'every site label is a place name',
-    `site labels outside the allowed place vocabulary: ${offLabel.join(', ')}`);
+  // A site label is a signpost, so it is short and it is readable at a glance.
+  const tooLong = world.sites.filter(s => s.label.split(/\s+/).length > 6).map(s => s.label);
+  check(tooLong.length === 0,
+    'every site label is short enough to read at a glance',
+    `site labels running long: ${tooLong.join(', ')}`);
 }
 
 /* -------------------------------------------------------------------- spawn */

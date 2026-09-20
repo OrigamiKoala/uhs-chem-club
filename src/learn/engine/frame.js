@@ -201,8 +201,7 @@ export class LearnFrame {
       actions: q('.lq-actions'),
       hints: q('.lq-hints'),
       commit: q('.lq-commit'),
-      hintKey: q('.lq-hint-key'),
-      objective: q('[data-act="objective"]')
+      hintKey: q('.lq-hint-key')
     };
 
     this.onClick = e => {
@@ -393,7 +392,6 @@ export class LearnFrame {
     this.el.hints.innerHTML = '';
     this.el.controls.innerHTML = '';
     this.el.widget.innerHTML = '';
-    this.el.objective.hidden = !stage.briefing;
 
     this.el.actions.innerHTML = `
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
@@ -416,9 +414,12 @@ export class LearnFrame {
   updateStageActions() {
     if (!this.el.stageActions) return;
     const canReview = this.stage?.reward && (this.cleared > (this.stage.index ?? 0) || this.solved);
+    // The Objective key reopens the stage briefing, so it only exists on a
+    // stage that has one. Most stages do not: the prompt on the deck is the
+    // whole task, and a key that opens an empty modal is a key that lies.
     this.el.stageActions.innerHTML = `
       <button type="button" class="btn-secondary quest-btn-sm" data-act="exit">Exit</button>
-      <button type="button" class="btn-secondary quest-btn-sm" data-act="objective">Objective</button>
+      ${this.stage?.briefing ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="objective">Objective</button>' : ''}
       ${canReview ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="reward">Findings</button>' : ''}
       <button type="button" class="btn-secondary quest-btn-sm" data-act="close-panel" title="Close stage panel" aria-label="Close stage panel">Close</button>
     `;
@@ -530,7 +531,7 @@ export class LearnFrame {
     const allowed = Math.min(this.availableRung(), hints.length);
     if (this.rung >= allowed) {
       this.el.hints.innerHTML += `
-        <p class="lq-hint lq-hint-wait">Keep looking. The next reading opens after another try or after 45 seconds.</p>
+        <p class="lq-hint lq-hint-wait">Keep looking. The next hint opens after another try, or after 45 seconds.</p>
       `;
       return;
     }
@@ -564,7 +565,7 @@ export class LearnFrame {
       </div>
       <div id="lq-modal-transmission" style="margin-bottom: 1.15rem;"></div>
       <div class="debrief-controls-left lq-modal-keys">
-        <button type="button" class="btn-primary" data-lq-close>Understood</button>
+        <button type="button" class="btn-primary" data-lq-close>Start</button>
       </div>
     `, {
       labelledBy: 'lq-briefing-title',

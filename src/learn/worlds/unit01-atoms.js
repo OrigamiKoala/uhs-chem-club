@@ -23,14 +23,14 @@ export const UNIT_01 = {
   world: 'Tallow',
   place: 'Salt flats',
   title: 'Atoms',
-  line: 'Turn the dial until the grit stops getting finer.',
-  brief: 'Tallow is an abandoned salt-flat refinery packed with sealed Imperial salvage. An orbital buyer is inbound, and our job is certifying what is actually inside each crate.',
+  line: 'What everything is made of, and how to tell one kind from another.',
+  brief: 'Tallow is an abandoned refinery on a salt flat. Five benches are still working, and each one answers a different question about what matter is made of.',
 
   quests: [
     {
       id: 'q1-grain',
-      title: 'The Grain of Things',
-      line: 'Calibrate the bench scope to find the fundamental grain of matter.',
+      title: 'Atoms, Elements and Mixtures',
+      line: 'Zoom in until matter stops being smooth.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -38,8 +38,8 @@ export const UNIT_01 = {
     },
     {
       id: 'q2-core',
-      title: 'The Inside of a Piece',
-      line: 'The blade could not divide it. Something else can.',
+      title: 'Inside an Atom',
+      line: 'Protons, neutrons and electrons, and where each one sits.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -47,8 +47,8 @@ export const UNIT_01 = {
     },
     {
       id: 'q3-catalogue',
-      title: 'The Catalogue Numbers',
-      line: 'The scope has filed every kind it met under a number. Find out what it counts.',
+      title: 'The Periodic Table',
+      line: 'Line the elements up by proton count and a pattern appears.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -56,8 +56,8 @@ export const UNIT_01 = {
     },
     {
       id: 'q4-ledger',
-      title: 'The Buyer\'s Ledger',
-      line: 'Three numbers describe any piece on this flat. The buyer wants all three.',
+      title: 'Isotopes and Ions',
+      line: 'Three numbers are enough to describe any atom.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -65,8 +65,8 @@ export const UNIT_01 = {
     },
     {
       id: 'q5-assay',
-      title: 'The Weight On The Card',
-      line: 'Nothing in the hopper weighs what the card says it does.',
+      title: 'Atomic Mass',
+      line: 'Why the mass on the card is never a whole number.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',

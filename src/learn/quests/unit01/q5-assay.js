@@ -1,23 +1,23 @@
 /**
  * q5-assay.js — Tallow, site five: THE WEIGHT ON THE CARD.
  *
- * The last bench on Tallow, worked on the Hopper Gantry where bulk salvage is
- * tipped over a deflector and sorted by weight. It answers a question the
- * catalogue vault left lying there and the ledger sharpened: a mass number is
- * always a whole number, and almost none of the masses printed on the catalogue
- * cards are.
+ * The last bench on Tallow. A sample is tipped down a chute, a deflector sorts
+ * its pieces by weight into bins, and a balance weighs a whole sample without
+ * opening it. It answers the question the catalogue left lying there: a single
+ * atom always has a whole-number mass, and almost none of the listed masses are
+ * whole numbers.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  tip one kind and watch it split in two  -> A real sample is a mix of isotopes
- *   2  run two hoppers of the same stock       -> Abundance · the proportions are fixed
- *   3  place the card's figure against the bins-> The card is an average, and it leans
- *   4  do the weighting on a fresh hopper      -> Average Atomic Mass
- *   5  a hopper that lands in one bin          -> Why some cards ARE whole numbers
- *   6  a sealed hopper, weighed whole          -> The average pins the mix
- *   7  name three unmarked hoppers             -> A card identifies stock unopened
- *   8  three claims of the same stock          -> The card is a fingerprint of the mix
- *   -- debrief: what a catalogue card really quotes, and what comes after Tallow.
+ *   1  tip one kind and watch it split in two  -> A sample is a mix of isotopes
+ *   2  run two samples of the same stock       -> Abundance
+ *   3  put the listed mass against the bins    -> The listed mass is an average
+ *   4  do the weighting on a fresh sample      -> Average atomic mass
+ *   5  a sample that lands in one bin          -> Why some masses are whole
+ *   6  a sealed sample, weighed whole          -> The average pins the mix
+ *   7  name three unlabelled samples           -> The mass names the element
+ *   8  three claims of the same stock          -> The mass is a fingerprint
+ *   -- debrief: what a listed mass really is, and what comes after Tallow.
  *
  * WHAT THIS BENCH DOES NOT DO. It never counts a heap too large to count, and
  * it never converts a weight into a number of pieces. Counting by weighing —
@@ -48,10 +48,9 @@ export const VOCABULARY = [
 const SPEAKER = 'Vess';
 
 /* ------------------------------------------------------------------
-   THE CATALOGUE EXTRACT
-   The cards the player built the chart out of at site three, quoted
-   here as the floor's own reference sheet. These are the listed masses
-   and nothing on this bench is allowed to change one.
+   THE LISTED MASSES
+   The figures the player charted at site three, kept here as the bench's
+   own reference sheet. Nothing on this bench may change one.
    ------------------------------------------------------------------ */
 export const CARD_MASS = {
   'CAT 05': 10.8,
@@ -68,18 +67,18 @@ export const CARD_MASS = {
 const TOOL_TEXT = {
   pour: [{
     from: 1,
-    key: 'Tip Hopper',
-    what: 'Empties the selected hopper down the chute. The deflector turns a light piece aside further than a heavy one, so every piece lands in the bin stencilled with its own weight, and the figure above each bin is how many landed in it.'
+    key: 'Tip Sample',
+    what: 'Tips the selected sample down the chute. Each piece lands in the bin marked with its own weight, and the figure above a bin is how many landed in it.'
   }],
   code: [{
     from: 1,
-    key: 'Read Catalogue Code',
-    what: 'Puts the code reader on whichever bin you last tapped and reports the catalogue code of the pieces in it — the same code the sampler scope files a kind under.'
+    key: 'Read Code',
+    what: 'Reads the catalogue code of the pieces in whichever bin you last tapped.'
   }],
   balance: [{
     from: 6,
-    key: 'Weigh Whole Hopper',
-    what: 'Weighs a hopper without opening it and counts what is inside, then divides one by the other. It reports the average weight of one piece and says nothing about how the pieces differ.'
+    key: 'Weigh Sample',
+    what: 'Weighs a whole sample without opening it and reports what one piece weighs on average.'
   }]
 };
 
@@ -112,305 +111,281 @@ export function averageOf(hopper) {
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
-    title: 'Tip It Over The Deflector',
+    title: 'Tip It Out',
     briefing: {
       speaker: SPEAKER,
-      body: 'The gantry sorts bulk salvage by weight and the buyer wants a certificate for every hopper on it. HOPPER 01 came off a single-source seam, so it should land in one bin.'
+      body: 'This bench tips a sample down a chute, where a deflector sorts the pieces by weight into numbered bins. A balance can also weigh a whole sample without opening it.'
     },
-    prompt: 'Tip HOPPER 01, read the catalogue code on every bin that catches anything, and file what the split means.',
+    prompt: 'Tip Sample A down the chute, read the code on each bin that caught pieces, and say what the split means.',
     controls: ['pour', 'code'],
     hoppers: [
-      { id: 'h1', label: 'HOPPER 01', code: 'CAT 17', note: 'single-source seam, sealed at the face', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
+      { id: 'h1', label: 'SAMPLE A', code: 'CAT 17', note: '40 pieces, sealed at the mine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
     ],
     reference: ['CAT 17 — listed mass 35.5'],
     widget: {
       type: 'choice',
-      label: 'Certificate note',
+      label: 'Your answer',
       options: [
-        { id: 'mixed', label: 'Two different kinds got into the crate', note: 'The seam was not single-source after all.' },
-        { id: 'weights', label: 'One kind, whose pieces do not all weigh the same', note: 'Same material, two different weights.' },
-        { id: 'fault', label: 'The deflector is out of true', note: 'The floor is splitting a heap that is really uniform.' }
+        { id: 'mixed', label: 'Two different kinds of atom got mixed together', note: 'Two kinds in one sample.' },
+        { id: 'weights', label: 'One kind of atom, with pieces of two different weights', note: 'Same kind, two weights.' },
+        { id: 'fault', label: 'The deflector is broken', note: 'It split a sample that is really all one weight.' }
       ]
     },
     hints: [
-      'Click "Tip Hopper" first, then tap one of the bins on the floor and click "Read Catalogue Code". Do the same on the other bin.',
-      'The two bins are stencilled 35 and 37, so the pieces in them really do weigh different amounts. What you need to know is whether they are different KINDS.',
-      'Both bins read CAT 17. Two different kinds would read two different codes, and a deflector out of true would not sort a heap into two tidy weights — so it is one kind with two weights in it.'
+      'Press "Tip Sample", then tap a bin and press "Read Code", and do the same on the other bin.',
+      'The bins are marked 35 and 37, so compare the two codes to see whether the pieces are different kinds.',
+      'Both bins read CAT 17, so this is one kind of atom with two weights in it.'
     ],
     check(state) {
       if (!state.poured.has('h1')) {
-        return { ok: false, notYet: true, msg: 'Nothing has been tipped yet. Click "Tip Hopper".' };
+        return { ok: false, notYet: true, msg: 'Press "Tip Sample" first.' };
       }
       if (state.coded.size < 2) {
-        return { ok: false, notYet: true, msg: 'Only one bin has been under the code reader. Read both before certifying a split.' };
+        return { ok: false, notYet: true, msg: 'Read the code on both bins before you answer.' };
       }
       if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'No note filed. Pick what the split means.' };
+        return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
       }
       if (state.choice === 'mixed') {
-        return { ok: false, msg: 'Two kinds would read two catalogue codes. Both bins came back CAT 17.' };
+        return { ok: false, msg: 'Both bins read CAT 17, so the pieces are all the same kind.' };
       }
       if (state.choice === 'fault') {
-        return { ok: false, msg: 'A deflector out of true would smear one heap across the floor, not drop it into two clean bins at 35 and 37.' };
+        return { ok: false, msg: 'A broken deflector would scatter the pieces instead of sorting them into two tidy bins.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'HOPPER 01 certified: CAT 17, two weights, 30 and 10.',
-      title: 'A Real Sample Is A Mix Of Isotopes',
-      body: 'Both bins read CAT 17, so every piece has 17 protons and every piece is the same element — the 35s and the 37s differ only in neutrons, which makes them isotopes of one another. Salvage does not come sorted: a natural sample of an element is a mixture of its isotopes, and this is what that looks like on a floor.'
+      log: 'Sample A: 30 pieces at 35, 10 at 37, all CAT 17.',
+      title: 'A Sample Is a Mix of Isotopes',
+      body: 'Both bins read CAT 17, so every piece has 17 protons and every piece is the same element. The 35s and the 37s differ only in neutrons, which makes them isotopes of each other. A natural sample of an element is a mixture of its isotopes, and this is what that looks like.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Run It Twice',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The surveyor says the split we certified was luck and wants it shown again on a different hopper off the same seam. HOPPER 02 is twice the size.'
-    },
-    prompt: 'Tip both hoppers and log what share of the pieces land in the lighter bin, out of every hundred.',
+    prompt: 'Tip both samples and work out how many pieces out of every hundred land in the lighter bin.',
     controls: ['pour'],
     hoppers: [
-      { id: 'h1', label: 'HOPPER 01', note: 'seam four, forty pieces', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
-      { id: 'h2', label: 'HOPPER 02', note: 'seam four, eighty pieces', bins: [{ mass: 35, n: 60 }, { mass: 37, n: 20 }] }
+      { id: 'h1', label: 'SAMPLE A', note: '40 pieces', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
+      { id: 'h2', label: 'SAMPLE B', note: '80 pieces', bins: [{ mass: 35, n: 60 }, { mass: 37, n: 20 }] }
     ],
     reference: ['CAT 17 — listed mass 35.5'],
     widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Lighter bin, per hundred pieces' },
     hints: [
-      'Select a hopper by tapping its plate, then click "Tip Hopper". Do the same for the other one. The figure above each bin is how many pieces landed in it.',
-      'HOPPER 01 drops 30 pieces out of 40 into the 35 bin. HOPPER 02 drops 60 out of 80. Work out what each of those is out of a hundred.',
-      '30 out of 40 is the same share as 60 out of 80, and both come to 75 out of every hundred. Set the counter to 75.'
+      'Tap a sample to select it, press "Tip Sample", then do the same for the other one.',
+      'Sample A drops 30 of its 40 pieces into the 35 bin, and Sample B drops 60 of its 80.',
+      '30 out of 40 and 60 out of 80 both come to 75 out of 100, so set the counter to 75.'
     ],
     check(state) {
       if (state.poured.size < 2) {
-        return { ok: false, notYet: true, msg: 'Both hoppers need tipping. One run on its own cannot show that a share holds.' };
+        return { ok: false, notYet: true, msg: 'Tip both samples before you answer.' };
       }
       if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'The counter is still on zero. Set the share you measured.' };
+        return { ok: false, notYet: true, msg: 'Set the counter to the share you measured.' };
       }
       if (state.number === 30) {
-        return { ok: false, msg: '30 is the count in HOPPER 01\'s lighter bin, not a share out of a hundred. That 30 is out of 40.' };
+        return { ok: false, msg: 'That is a count, not a share: 30 pieces out of 40.' };
       }
       if (state.number === 25) {
-        return { ok: false, msg: '25 per hundred is the HEAVIER bin\'s share. The question is the lighter one.' };
+        return { ok: false, msg: 'That is the heavier bin\'s share, and the question asks about the lighter bin.' };
       }
       if (state.number === 50) {
-        return { ok: false, msg: 'A 50 share would mean the two bins caught the same number, and the lighter bin caught three times as many.' };
+        return { ok: false, msg: 'The lighter bin caught three times as many pieces, not the same number.' };
       }
       if (state.number !== 75) {
-        return { ok: false, msg: 'Work it from either hopper: 30 out of 40, or 60 out of 80. Both come to the same share out of a hundred.' };
+        return { ok: false, msg: 'Work it out from 30 out of 40, or from 60 out of 80.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Share confirmed at 75 per hundred across two hoppers.',
-      title: 'Abundance · The Proportions Are Fixed',
-      body: 'Two hoppers of different sizes gave the same split, because the proportions of an element\'s isotopes are a property of the material and not of the sample you happened to scoop. That share is called the isotope\'s abundance, and for this stock it is 75 percent of mass 35 and 25 percent of mass 37.'
+      log: 'Both samples split 75 to 25.',
+      title: 'Abundance',
+      body: 'Two samples of different sizes gave the same split, because the proportions of an element\'s isotopes belong to the material and not to the scoop you took. The share of a sample that is one isotope is called that isotope\'s abundance. Here it is 75 percent at weight 35 and 25 percent at weight 37.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Where The Card Sits',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The catalogue card for this stock has quoted 35.5 since site three, and nothing that came off that floor weighs 35.5. Tip the hopper again and put the card against what lands.'
-    },
-    prompt: 'Tip the hopper, then file where the card\'s 35.5 sits between the two bins and why.',
+    title: 'Where 35.5 Sits',
+    prompt: 'Tip Sample A down the chute, then pick where its listed mass of 35.5 sits between the 35 bin and the 37 bin.',
     controls: ['pour'],
     hoppers: [
-      { id: 'h1', label: 'HOPPER 01', note: 'seam four, forty pieces', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
+      { id: 'h1', label: 'SAMPLE A', note: '40 pieces', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
     ],
     reference: ['CAT 17 — listed mass 35.5'],
     widget: {
       type: 'choice',
-      label: 'Certificate note',
+      label: 'Your answer',
       options: [
-        { id: 'half', label: 'Halfway between them, because there are two weights', note: '35 and 37 give a middle of 36.' },
-        { id: 'light', label: 'Nearer 35, because most of the pieces weigh 35', note: 'The common weight pulls it.' },
-        { id: 'heavy', label: 'Nearer 37, because the heavy pieces count for more', note: 'Weight decides, not number.' },
-        { id: 'wrong', label: 'Nowhere — the card is simply wrong', note: 'No piece weighs that, so the figure is bad.' }
+        { id: 'half', label: 'Halfway between them', note: 'Halfway from 35 to 37 is 36.' },
+        { id: 'light', label: 'Near 35, because most of the pieces weigh 35', note: 'The common weight pulls it down.' },
+        { id: 'heavy', label: 'Near 37, because heavy pieces count for more', note: 'Weight decides, not how many.' },
+        { id: 'wrong', label: 'Nowhere — 35.5 is simply wrong', note: 'No piece weighs 35.5.' }
       ]
     },
     hints: [
-      'Read the two bin stencils and the two tallies above them, then read the card. 35, 37, and a card that says 35.5.',
-      'Halfway between 35 and 37 is 36, and the card does not say 36. It sits much closer to one end than the other.',
-      'Three quarters of the pieces weigh 35, so the card lands close to 35 — a quarter of the way along to 37, which is exactly 35.5.'
+      'Tip it, then read the number on each bin and the tally above it.',
+      'Halfway between 35 and 37 is 36, and 35.5 is not 36, so compare how many pieces landed in each bin.',
+      '30 of the 40 pieces weigh 35, so 35.5 sits a quarter of the way from 35 up to 37.'
     ],
     check(state) {
       if (!state.poured.has('h1')) {
-        return { ok: false, notYet: true, msg: 'Nothing has been tipped yet. The card has to be put against something.' };
+        return { ok: false, notYet: true, msg: 'Press "Tip Sample" first.' };
       }
       if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'No note filed. Pick where the card\'s figure sits.' };
+        return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === 'half') {
-        return { ok: false, msg: 'Halfway between 35 and 37 is 36, and the card says 35.5. The two bins did not catch equal numbers, so the middle is not where it lands.' };
+        return { ok: false, msg: 'Halfway between 35 and 37 is 36, and the listed mass is 35.5.' };
       }
       if (state.choice === 'heavy') {
-        return { ok: false, msg: '35.5 is below 36, so it is on the light side. The heavy bin caught a quarter of the pieces, not most of them.' };
+        return { ok: false, msg: '35.5 is below 36, so it leans toward the light end, not the heavy one.' };
       }
       if (state.choice === 'wrong') {
-        return { ok: false, msg: 'Nothing weighs 35.5 and the card is still right, the same way nothing in a crate of 30 and 10 weighs the crate\'s own figure. It is not quoting one piece.' };
+        return { ok: false, msg: '35.5 is not the weight of one piece; it is the average over all of them.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Card figure placed a quarter of the way from 35 to 37.',
-      title: 'The Card Quotes An Average, And It Leans',
-      body: 'A catalogue card does not quote any single piece — it quotes what one piece weighs on average across a natural sample. And the average leans toward whichever isotope is common: three quarters of this stock is mass 35, so the figure sits a quarter of the way along to 37, at 35.5.'
+      log: '35.5 sits a quarter of the way from 35 to 37.',
+      title: 'The Listed Mass Is an Average',
+      body: 'The mass listed for an element is not the weight of any single atom. It is what one atom weighs on average across a natural sample, so it leans toward whichever isotope is common. Three quarters of this sample weighs 35, which is why the figure lands at 35.5.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    title: 'Do The Weighting',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'HOPPER 03 is a different stock and its card has been lost. The buyer will accept a figure we work out ourselves if the floor backs it.'
-    },
-    prompt: 'Tip HOPPER 03, then work out and log what one piece of it weighs on average.',
+    title: 'Work Out the Average',
+    prompt: 'Tip Sample A down the chute, then work out what one of its pieces weighs on average and set the dial to that figure.',
     controls: ['pour'],
     hoppers: [
-      { id: 'h3', label: 'HOPPER 03', note: 'unfiled stock, forty pieces', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
+      { id: 'h3', label: 'SAMPLE A', note: '40 pieces, nothing listed for it', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
     ],
-    reference: ['CAT 05 — card lost'],
+    reference: ['CAT 05 — listed mass missing'],
     widget: { type: 'decimal', min: 10.0, max: 11.0, step: 0.1, label: 'Average weight of one piece' },
     hints: [
-      'Tip it and read both tallies. 8 pieces landed at weight 10 and 32 landed at weight 11, which is 40 in all.',
-      'That is 8 out of 40 at weight 10 — a fifth of them — and 32 out of 40 at weight 11, which is four fifths. The heavier weight is much the more common, so the answer sits close to 11.',
-      'Take a fifth of 10 and add four fifths of 11: 2 plus 8.8 comes to 10.8.'
+      'Tip it and read both tallies: 8 pieces at weight 10 and 32 pieces at weight 11.',
+      '8 out of 40 is one fifth of the pieces at weight 10, and 32 out of 40 is four fifths at weight 11.',
+      'Multiply each weight by its share and add them: (0.2 x 10) + (0.8 x 11) = 2 + 8.8 = 10.8.'
     ],
     check(state) {
       if (!state.poured.has('h3')) {
-        return { ok: false, notYet: true, msg: 'Nothing has been tipped yet. Click "Tip Hopper".' };
+        return { ok: false, notYet: true, msg: 'Press "Tip Sample" first.' };
       }
       const v = state.decimal;
       if (v === 10.0) {
-        return { ok: false, notYet: true, msg: 'The dial is still at the bottom of its travel. Work the figure out and set it.' };
+        return { ok: false, notYet: true, msg: 'Set the dial to the figure you worked out.' };
       }
       if (v === 10.5) {
-        return { ok: false, msg: '10.5 is the plain middle of 10 and 11, which would be right if the two bins had caught equal numbers. They caught 8 and 32.' };
+        return { ok: false, msg: '10.5 is the plain middle of 10 and 11, but the bins caught 8 and 32, not equal numbers.' };
       }
       if (Math.abs(v - 10.8) > 0.001) {
-        return { ok: false, msg: `The floor caught 8 at weight 10 and 32 at weight 11. A fifth of the pieces at 10 and four fifths at 11 does not come to ${v.toFixed(1)}.` };
+        return { ok: false, msg: `One fifth at weight 10 and four fifths at weight 11 does not come to ${v.toFixed(1)}.` };
       }
       return { ok: true };
     },
     reward: {
-      log: 'HOPPER 03 assayed at 10.8 per piece.',
+      log: 'Sample A averages 10.8 per piece.',
       title: 'Average Atomic Mass',
-      body: 'What you just computed is the average atomic mass: each isotope\'s mass counted in proportion to how much of it there is, which is why it is called a weighted average rather than a plain one. It is the figure on every catalogue card, and it is why a card almost never reads a whole number.'
+      body: 'You just worked out the average atomic mass: each isotope\'s mass counted in proportion to how much of it there is. Because the two amounts are not equal, that is called a weighted average rather than a plain one. It is the mass listed for every element, and it is why those numbers are almost never whole.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
-    title: 'The Hopper That Lands In One Bin',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'HOPPER 04 carries a card that reads 19.0 exactly, and the surveyor is convinced somebody rounded it. Tip it and settle the argument.'
-    },
-    prompt: 'Tip HOPPER 04 and file why its card is a whole number when the last two were not.',
+    title: 'Only One Bin',
+    prompt: 'Tip Sample A down the chute and say why its listed mass of 19.0 is a whole number when the last two were not.',
     controls: ['pour'],
     hoppers: [
-      { id: 'h4', label: 'HOPPER 04', note: 'filed stock, forty pieces', bins: [{ mass: 19, n: 40 }] }
+      { id: 'h4', label: 'SAMPLE A', note: '40 pieces', bins: [{ mass: 19, n: 40 }] }
     ],
     reference: ['CAT 09 — listed mass 19.0'],
     widget: {
       type: 'choice',
-      label: 'Certificate note',
+      label: 'Your answer',
       options: [
         { id: 'one', label: 'Every piece weighs the same, so there is nothing to average', note: 'One weight in, one weight out.' },
-        { id: 'round', label: 'The card was rounded off at some point', note: 'The real figure has decimals.' },
-        { id: 'fault', label: 'The deflector failed to separate them', note: 'A split is being missed.' }
+        { id: 'round', label: 'Somebody rounded the number off', note: 'The real figure has decimals.' },
+        { id: 'fault', label: 'The deflector failed to split them', note: 'A split is being missed.' }
       ]
     },
     hints: [
-      'Tip it and look at the floor. Count how many bins caught anything at all.',
-      'Everything landed in the bin stencilled 19, and forty out of forty pieces weigh 19. Work out the weighted average of a set where every member is the same.',
-      'Averaging 19 against 19 against 19 gives 19, every time. The card is a whole number because this stock has only one isotope in it, not because anybody rounded.'
+      'Tip it and count how many bins caught anything at all.',
+      'All 40 pieces landed in the bin marked 19, so every piece weighs exactly the same.',
+      'The weighted average of 19 and 19 and 19 is 19, so this element has only one isotope.'
     ],
     check(state) {
       if (!state.poured.has('h4')) {
-        return { ok: false, notYet: true, msg: 'Nothing has been tipped yet. Click "Tip Hopper".' };
+        return { ok: false, notYet: true, msg: 'Press "Tip Sample" first.' };
       }
       if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'No note filed. Pick the reason the card reads a whole number.' };
+        return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
       }
       if (state.choice === 'round') {
-        return { ok: false, msg: 'Nothing has been rounded. Every one of the forty pieces weighs 19, so the average across them is 19 and no decimal ever arises.' };
+        return { ok: false, msg: 'All 40 pieces weigh 19, so the average is exactly 19 and no decimal ever turns up.' };
       }
       if (state.choice === 'fault') {
-        return { ok: false, msg: 'The deflector split HOPPER 01 into two clean bins on the same floor a moment ago. There is nothing here for it to separate.' };
+        return { ok: false, msg: 'The deflector split the earlier samples into two bins, so it is working fine.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'HOPPER 04 certified: one weight, card confirmed at 19.0.',
-      title: 'Why Some Cards Are Whole Numbers After All',
-      body: 'A handful of elements occur as only one isotope, and their cards read a whole number because there is nothing to weight. So the decimal on a card is information rather than untidiness: it tells you the element turns up as a mixture, and roughly where in that mixture the weight sits.'
+      log: 'Sample A: one weight only, 19.0 confirmed.',
+      title: 'Why Some Masses Are Whole',
+      body: 'A few elements occur as only one isotope, so there is nothing to weight and the listed mass comes out whole. That means the decimal on a listed mass is information, not untidiness. It tells you the element turns up as a mixture of isotopes, and roughly where in that mixture the weight sits.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Weighed Without Opening It',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'HOPPER 05 carries an intact Guild seal that cannot be broken before transfer, so nothing goes down the chute. The gantry balance will weigh it shut and count what is inside.'
-    },
-    prompt: 'Weigh HOPPER 05 whole, and work out what share of its pieces are the lighter of the two weights its bins are cut for.',
+    prompt: 'Weigh Sample A without opening it, then work out how many of its pieces out of every hundred weigh 20 rather than 22.',
     controls: ['balance'],
     hoppers: [
-      { id: 'h5', label: 'HOPPER 05', note: 'Guild seal intact, bins cut for 20 and 22', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] }
+      { id: 'h5', label: 'SAMPLE A', note: 'sealed, 40 pieces, bins cut for weights 20 and 22', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] }
     ],
     reference: ['CAT 10 — listed mass 20.2'],
-    widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Lighter weight, per hundred pieces' },
+    widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Weight 20, per hundred pieces' },
     hints: [
-      'Click "Weigh Whole Hopper". It reports one figure: what a single piece weighs on average across everything in there.',
-      'The balance says 20.2, and the bins under the chute are stencilled 20 and 22. The whole span from one to the other is 2, and 20.2 is only a tenth of the way along it.',
-      'A tenth of the way from 20 to 22 means a tenth of the pieces are the heavy ones. So 90 out of every hundred are the lighter weight.'
+      'Press "Weigh Sample", which reports what one piece weighs on average.',
+      'The balance reads 20.2, and the two weights are 20 and 22, so 20.2 is one tenth of the way from 20 up to 22.',
+      'Try one tenth heavy: (0.9 x 20) + (0.1 x 22) = 18 + 2.2 = 20.2, so 90 pieces in every hundred weigh 20.'
     ],
     check(state) {
       if (!state.weighed.has('h5')) {
-        return { ok: false, notYet: true, msg: 'The hopper has not been on the balance. Click "Weigh Whole Hopper".' };
+        return { ok: false, notYet: true, msg: 'Press "Weigh Sample" first.' };
       }
       if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'The counter is still on zero. Set the share you worked out.' };
+        return { ok: false, notYet: true, msg: 'Set the counter to the share you worked out.' };
       }
       if (state.number === 50) {
-        return { ok: false, msg: 'An even split would put the average at 21, halfway between 20 and 22. The balance read 20.2, which is far nearer the light end.' };
+        return { ok: false, msg: 'An even split would weigh 21 a piece, and the balance read 20.2.' };
       }
       if (state.number === 10) {
-        return { ok: false, msg: '10 per hundred is the share of the HEAVY pieces. The question asks for the lighter weight, which is everything else.' };
+        return { ok: false, msg: 'That is the share of the heavy pieces, and the question asks about the light ones.' };
       }
       if (state.number !== 90) {
-        return { ok: false, msg: 'Measure 20.2 along the span from 20 to 22: it is a tenth of the way. The heavy pieces are that tenth, so the light ones are the rest.' };
+        return { ok: false, msg: '20.2 is one tenth of the way from 20 to 22, so one tenth of the pieces are the heavy ones.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'HOPPER 05 read at 20.2 per piece: 90 light, 10 heavy.',
-      title: 'The Average Pins The Mix',
-      body: 'The weighting runs both ways: given the abundances you can work out the average, and given the average and the two weights you can work out the abundances. That is how a sealed hopper gets certified without a seal being broken, and it is how the isotope proportions of an element were first measured.'
+      log: 'Sample A reads 20.2: 90 pieces light, 10 heavy.',
+      title: 'The Average Pins the Mix',
+      body: 'The weighting runs both ways: the abundances give you the average, and the average plus the two weights gives you the abundances. That is how a sealed sample is identified without being opened. It is also how the isotope proportions of the elements were first measured.'
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
-    title: 'Name Three Hoppers',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Three hoppers came up from the lower yard with their code plates burned off and the buyer will not take unnamed stock. The catalogue extract is on the plate.'
-    },
-    prompt: 'Weigh or tip each hopper and file it against the catalogue card its stock matches.',
+    title: 'Name Three Samples',
+    prompt: 'Weigh each sample, then match it to the element whose listed mass it fits.',
     controls: ['pour', 'balance'],
     hoppers: [
-      { id: 'ha', label: 'HOPPER A', note: 'lower yard, code plate burned off', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] },
-      { id: 'hb', label: 'HOPPER B', note: 'lower yard, code plate burned off', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
-      { id: 'hc', label: 'HOPPER C', note: 'lower yard, code plate burned off', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
+      { id: 'ha', label: 'SAMPLE A', note: 'unlabelled, 40 pieces', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] },
+      { id: 'hb', label: 'SAMPLE B', note: 'unlabelled, 40 pieces', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
+      { id: 'hc', label: 'SAMPLE C', note: 'unlabelled, 40 pieces', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
     ],
     reference: ['CAT 05 — listed mass 10.8', 'CAT 10 — listed mass 20.2', 'CAT 17 — listed mass 35.5'],
     widget: {
@@ -423,87 +398,84 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Select a hopper and click "Weigh Whole Hopper". That gives you its average weight per piece in one reading, which is the figure a card quotes.',
-      'Do it on all three and you have three figures to hold against the three cards on the extract. Tipping a hopper gives the same answer the long way round.',
-      'HOPPER A weighs 20.2, HOPPER B weighs 35.5 and HOPPER C weighs 10.8. Each one matches exactly one card.'
+      'Select a sample, press "Weigh Sample", and do the same for the other two.',
+      'Each reading is an average weight per piece, and so is each listed mass on the plate.',
+      'Sample A reads 20.2, Sample B reads 35.5 and Sample C reads 10.8.'
     ],
     check(state) {
       if (state.weighed.size + state.poured.size < 3) {
-        return { ok: false, notYet: true, msg: 'Every hopper needs a reading of its own before it can be named. Weigh or tip all three.' };
+        return { ok: false, notYet: true, msg: 'Weigh or tip all three samples before you answer.' };
       }
       const want = { ha: 'c10', hb: 'c17', hc: 'c05' };
-      const labels = { ha: 'HOPPER A', hb: 'HOPPER B', hc: 'HOPPER C' };
+      const labels = { ha: 'Sample A', hb: 'Sample B', hc: 'Sample C' };
       const listed = { ha: '20.2', hb: '35.5', hc: '10.8' };
       for (const id of ['ha', 'hb', 'hc']) {
-        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no card against it yet.` };
+        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       for (const id of ['ha', 'hb', 'hc']) {
         if (state.bins[id] !== want[id]) {
-          return { ok: false, msg: `${labels[id]} is filed against the wrong card. One piece of it weighs ${listed[id]} on average, and only one card on the extract quotes that.` };
+          return { ok: false, msg: `${labels[id]} is wrong: one piece of it weighs ${listed[id]} on average, and only one listed mass matches that.` };
         }
       }
       return { ok: true };
     },
     reward: {
-      log: 'Three hoppers named off the extract.',
-      title: 'A Card Names Stock Without Opening A Piece',
-      body: 'Every element has its own isotopes in its own proportions, so the weighted average that comes out is as good as a name — no two cards on the extract quote the same figure. Weighing a heap and dividing by the count identified three unmarked hoppers without a single piece being opened.'
+      log: 'All three samples named off their weights.',
+      title: 'The Mass Names the Element',
+      body: 'Every element has its own isotopes in its own proportions, so its average weight is as good as a name. No two listed masses are the same. Weighing a heap and dividing by the number of pieces named all three samples without opening any of them.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
-    title: 'Three Claims Of The Same Stock',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Three sellers on this flat have all invoiced us for natural CAT 17 at the card price, and the card reads 35.5. One of them is telling the truth.'
-    },
-    prompt: 'Assay all three hoppers and file whether each one really is natural CAT 17 stock.',
+    title: 'Three Claims',
+    prompt: 'Weigh all three samples and say which of them really are natural CAT 17.',
     controls: ['pour', 'balance'],
     hoppers: [
-      { id: 'j1', label: 'HOPPER J', note: 'invoiced as natural CAT 17', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
-      { id: 'j2', label: 'HOPPER K', note: 'invoiced as natural CAT 17', bins: [{ mass: 35, n: 20 }, { mass: 37, n: 20 }] },
-      { id: 'j3', label: 'HOPPER L', note: 'invoiced as natural CAT 17', bins: [{ mass: 35, n: 38 }, { mass: 37, n: 2 }] }
+      { id: 'j1', label: 'SAMPLE A', note: 'sold as natural CAT 17', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
+      { id: 'j2', label: 'SAMPLE B', note: 'sold as natural CAT 17', bins: [{ mass: 35, n: 20 }, { mass: 37, n: 20 }] },
+      { id: 'j3', label: 'SAMPLE C', note: 'sold as natural CAT 17', bins: [{ mass: 35, n: 38 }, { mass: 37, n: 2 }] }
     ],
     reference: ['CAT 17 — listed mass 35.5'],
     widget: {
       type: 'bins',
       rows: ['j1', 'j2', 'j3'],
       bins: [
-        { id: 'natural', label: 'Natural stock, pay the invoice', note: 'The assay matches the card.' },
-        { id: 'altered', label: 'Not natural, hold the invoice', note: 'The proportions have been meddled with.' }
+        { id: 'natural', label: 'Natural CAT 17', note: 'Its weight matches the listed mass.' },
+        { id: 'altered', label: 'Not natural', note: 'Its mix of isotopes has been changed.' }
       ]
     },
     hints: [
-      'Weigh all three. Every one of them is CAT 17 — the bins are 35 and 37 in all three cases — so the codes will not separate them.',
-      'The card says 35.5, and that figure comes out of a fixed set of proportions: 75 of the light for every 25 of the heavy. Compare what each hopper actually holds against that.',
-      'HOPPER J is 30 and 10, which weighs 35.5 and matches. HOPPER K is 20 and 20, which weighs 36.0. HOPPER L is 38 and 2, which weighs 35.1. Only HOPPER J is natural stock.'
+      'Weigh all three: every one is CAT 17, so the code will not tell them apart.',
+      'Natural CAT 17 is 75 pieces at weight 35 for every 25 at weight 37, which averages 35.5.',
+      'Sample A reads 35.5, Sample B reads 36.0 and Sample C reads 35.1, so only Sample A is natural.'
     ],
     check(state) {
       if (state.weighed.size + state.poured.size < 3) {
-        return { ok: false, notYet: true, msg: 'All three hoppers need assaying before an invoice is settled.' };
+        return { ok: false, notYet: true, msg: 'Weigh or tip all three samples before you answer.' };
       }
       const want = { j1: 'natural', j2: 'altered', j3: 'altered' };
+      const labels = { j1: 'Sample A', j2: 'Sample B', j3: 'Sample C' };
       for (const id of ['j1', 'j2', 'j3']) {
         if (!state.bins[id]) {
-          return { ok: false, notYet: true, msg: `${id === 'j1' ? 'HOPPER J' : id === 'j2' ? 'HOPPER K' : 'HOPPER L'} has no line on the invoice yet.` };
+          return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
         }
       }
       if (state.bins.j1 !== want.j1) {
-        return { ok: false, msg: 'HOPPER J is filed incorrectly. It holds 30 light to 10 heavy, which weighs 35.5 a piece — exactly what the card quotes.' };
+        return { ok: false, msg: 'Sample A holds 30 light to 10 heavy, which weighs 35.5 a piece — exactly the listed mass.' };
       }
       if (state.bins.j2 !== want.j2) {
-        return { ok: false, msg: 'HOPPER K is filed incorrectly. An even 20 and 20 weighs 36.0 a piece, and no natural CAT 17 does that.' };
+        return { ok: false, msg: 'Sample B holds 20 light to 20 heavy, which weighs 36.0 a piece, not 35.5.' };
       }
       if (state.bins.j3 !== want.j3) {
-        return { ok: false, msg: 'HOPPER L is filed incorrectly. 38 light to 2 heavy weighs 35.1 a piece, well under the card, so the heavy pieces have been taken out of it.' };
+        return { ok: false, msg: 'Sample C holds 38 light to 2 heavy, which weighs 35.1 a piece, not 35.5.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'One invoice paid, two held. Gantry closed.',
-      title: 'The Card Is A Fingerprint Of The Mix',
-      body: 'Every one of those hoppers was CAT 17 and only one of them was natural CAT 17, because the card does not just say which element it is — it says what proportions that element occurs in. Change the mix and the assayed weight moves off the card, which is how altered stock is caught without a single piece being opened.',
+      log: 'One sample natural, two altered.',
+      title: 'The Mass Is a Fingerprint of the Mix',
+      body: 'All three samples were CAT 17, and only one of them had the natural mix. A listed mass says more than which element you have: it says what proportions that element\'s isotopes turn up in. Change the mix and the weight moves off the listed figure.',
       last: true
     }
   }
@@ -511,21 +483,23 @@ export const STAGES = [
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
+   Three short cards: what the player found, what the number means, and
+   what the next world is about.
    ------------------------------------------------------------------ */
 export const DEBRIEF = {
-  speaker: 'VESS // TALLOW HOPPER GANTRY',
+  speaker: 'Vess',
   sections: [
     {
-      heading: 'Gantry Closed',
-      body: 'Every hopper on this flat is assayed, two bad invoices are held and the buyer has signed the last of it. Tallow is finished, and there is nothing in this refinery you have not opened, counted or weighed yourself.'
+      heading: 'What You Found',
+      body: 'A real sample of an element is a mixture of isotopes, and the proportions are fixed for that element. The mass listed for it is what one atom weighs on average across that mixture.'
     },
     {
-      heading: 'What The Card Really Says',
-      body: 'A catalogue card carries two numbers and they are different kinds of thing. The atomic number is a count and never moves; the mass is an average over a natural mixture of isotopes, weighted by how much of each there is, which is why it carries a decimal and why no single piece ever weighs it.'
+      heading: 'Why It Has a Decimal',
+      body: 'A single atom always has a whole-number mass, but an average over a mixture usually does not. The average leans toward the most common isotope, so the decimal tells you how the mix sits.'
     },
     {
-      heading: 'Next: Ligar',
-      body: 'Everything on this flat was one kind at a time, and almost nothing in the galaxy is. Ligar is a field of black stone arches that should have fallen a thousand years ago, and what holds them up is the thing you have not looked at yet: what happens when two kinds are joined.'
+      heading: 'Next',
+      body: 'Everything on Tallow was one kind of atom at a time. The next world is about what happens when two kinds join together.'
     }
   ]
 };
@@ -535,18 +509,18 @@ export const DEBRIEF = {
    ------------------------------------------------------------------ */
 export const PRACTICE = [
   {
-    question: 'Why is chlorine\'s atomic mass listed as 35.5 when no chlorine atom weighs 35.5?',
+    question: 'Chlorine is listed at 35.5, but no chlorine atom weighs 35.5. Why?',
     options: [
       { id: 'a', label: 'The measurement is not precise enough' },
-      { id: 'b', label: 'It is the weighted average over chlorine\'s natural mix of isotopes' },
+      { id: 'b', label: 'It is the average over chlorine\'s natural mix of isotopes' },
       { id: 'c', label: 'Chlorine atoms lose mass when weighed' },
       { id: 'd', label: 'It is the mass of a chlorine molecule, not an atom' }
     ],
     answer: 'b',
-    explanation: 'Natural chlorine is about 75% chlorine-35 and 25% chlorine-37. Averaging 35 and 37 in those proportions gives 35.5, so the listed value describes the mixture, not any single atom.'
+    explanation: 'Natural chlorine is about 75% chlorine-35 and 25% chlorine-37. Averaging 35 and 37 in those amounts gives 35.5, so the number describes the mixture, not one atom.'
   },
   {
-    question: 'An element has two isotopes, mass 10 (20% abundance) and mass 11 (80%). What is its average atomic mass?',
+    question: 'An element has two isotopes: mass 10 at 20% and mass 11 at 80%. What is its average atomic mass?',
     options: [
       { id: 'a', label: '10.2' },
       { id: 'b', label: '10.5' },
@@ -554,40 +528,40 @@ export const PRACTICE = [
       { id: 'd', label: '11.0' }
     ],
     answer: 'c',
-    explanation: 'Weight each mass by its abundance: (0.20 x 10) + (0.80 x 11) = 2 + 8.8 = 10.8. It sits nearer 11 because mass 11 is the more abundant isotope.'
+    explanation: 'Multiply each mass by its share and add: (0.20 x 10) + (0.80 x 11) = 2 + 8.8 = 10.8. It sits near 11 because mass 11 is the common one.'
   },
   {
-    question: 'An element\'s average atomic mass is listed as exactly 19.0. What does that most likely tell you?',
+    question: 'An element\'s average atomic mass is listed as exactly 19.0. What does that most likely mean?',
     options: [
-      { id: 'a', label: 'It occurs as essentially one isotope' },
+      { id: 'a', label: 'It occurs as only one isotope' },
       { id: 'b', label: 'It has no neutrons' },
-      { id: 'c', label: 'The value has been rounded from something else' },
+      { id: 'c', label: 'The number has been rounded off' },
       { id: 'd', label: 'Its isotopes are present in equal amounts' }
     ],
     answer: 'a',
-    explanation: 'A mass number is always a whole number, so an average that is also a whole number means there is nothing to average — fluorine is essentially 100% fluorine-19.'
+    explanation: 'A single atom always has a whole-number mass, so a whole-number average means there is nothing to average. Fluorine is essentially all fluorine-19.'
   },
   {
-    question: 'Copper has isotopes of mass 63 and 65, and its average atomic mass is 63.5. Which isotope is more abundant?',
+    question: 'Copper has isotopes of mass 63 and 65, and its average atomic mass is 63.5. Which isotope is more common?',
     options: [
       { id: 'a', label: 'Copper-65, because it is heavier' },
       { id: 'b', label: 'Copper-63, because the average sits closer to 63' },
-      { id: 'c', label: 'They are equally abundant' },
-      { id: 'd', label: 'There is no way to tell from the average' }
+      { id: 'c', label: 'They are equally common' },
+      { id: 'd', label: 'You cannot tell from the average' }
     ],
     answer: 'b',
-    explanation: 'A weighted average always leans toward the more abundant isotope. 63.5 is a quarter of the way from 63 to 65, so copper-63 makes up about three quarters of natural copper.'
+    explanation: 'The average always leans toward the more common isotope. 63.5 is a quarter of the way from 63 to 65, so about three quarters of copper is copper-63.'
   },
   {
-    question: 'Two samples are both pure chlorine, but one assays at 35.5 and the other at 36.0. What is true of the second sample?',
+    question: 'Two samples are both pure chlorine, but one weighs 35.5 per atom and the other 36.0. What is true of the second one?',
     options: [
       { id: 'a', label: 'It contains a different element' },
       { id: 'b', label: 'Its atoms each carry extra electrons' },
-      { id: 'c', label: 'Its isotope proportions have been altered from the natural mix' },
-      { id: 'd', label: 'It was weighed incorrectly' }
+      { id: 'c', label: 'Its mix of isotopes has been changed from the natural one' },
+      { id: 'd', label: 'It was weighed wrong' }
     ],
     answer: 'c',
-    explanation: 'Both samples are chlorine — same protons — but natural chlorine has a fixed 75:25 isotope ratio giving 35.5. An assay of 36.0 means the sample has been enriched in chlorine-37, which is exactly how enriched material is detected.'
+    explanation: 'Both are chlorine, so both have 17 protons. Natural chlorine is 75% mass 35 and 25% mass 37, which averages 35.5, so 36.0 means the sample holds extra chlorine-37.'
   }
 ];
 
@@ -675,7 +649,7 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: stage.widget.type === 'bins' ? 'File Certificate' : 'Commit'
+      commitLabel: 'Commit'
     });
 
     floor.setHoppers(stage.hoppers);
@@ -723,18 +697,18 @@ export function mount(container, ctx) {
     const parts = [];
 
     if (stage.controls.includes('pour')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="pour">Tip Hopper</button>');
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="pour">Tip Sample</button>');
     }
     if (stage.controls.includes('code')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="code">Read Catalogue Code</button>');
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="code">Read Code</button>');
     }
     if (stage.controls.includes('balance')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="balance">Weigh Whole Hopper</button>');
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="balance">Weigh Sample</button>');
     }
     if (stage.reference?.length) {
       parts.push(`
         <div class="assay-extract">
-          <span class="form-label">Catalogue extract</span>
+          <span class="form-label">Listed masses</span>
           <ul>${stage.reference.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
         </div>
       `);
@@ -752,7 +726,7 @@ export function mount(container, ctx) {
   async function runTool(tool) {
     if (busy) return;
     if (!state.sample) {
-      frame.note('No hopper selected. Tap a hopper plate on the gantry first.');
+      frame.note('No sample selected. Tap one of the samples first.');
       return;
     }
     const id = state.sample;
@@ -760,11 +734,11 @@ export function mount(container, ctx) {
 
     if (tool === 'code') {
       if (state.bin === null) {
-        frame.note('The code reader needs a bin. Tap one of the bins on the floor, then read it.');
+        frame.note('Tap one of the bins first, then read it.');
         return;
       }
       if (!floor.poured(id)) {
-        frame.note('That hopper has not been tipped, so there is nothing in its bins to read.');
+        frame.note('That sample has not been tipped, so its bins are empty.');
         return;
       }
       soundscape.playScanSweep?.();
@@ -772,15 +746,15 @@ export function mount(container, ctx) {
         // The floor never invents a reading. A hopper whose code plate is gone
         // gets an honest refusal, not a plausible code.
         renderReadout(null, {
-          head: `Code reader // ${hopper.label}, bin ${state.bin + 1}`,
-          body: 'No code comes back off this stock. Whatever this hopper is, it will have to be worked out from what it weighs.'
+          head: `Code // ${hopper.label}, bin ${state.bin + 1}`,
+          body: 'No code comes back from this sample. You will have to work out what it is from what it weighs.'
         });
         return;
       }
       state.coded.add(`${id}:${state.bin}`);
       renderReadout(null, {
-        head: `Code reader // ${hopper.label}, bin ${state.bin + 1}`,
-        body: `Every piece in that bin reads ${hopper.code}. Each one weighs ${hopper.bins[state.bin].mass}.`
+        head: `Code // ${hopper.label}, bin ${state.bin + 1}`,
+        body: `Every piece in that bin reads ${hopper.code}, and each one weighs ${hopper.bins[state.bin].mass}.`
       });
       return;
     }
@@ -792,14 +766,14 @@ export function mount(container, ctx) {
       soundscape.playScanSweep?.();
       renderReadout(null, {
         head: `Balance // ${hopper.label}`,
-        body: `${mass} in all, over ${count} pieces. That is ${averageOf(hopper).toFixed(1)} for one piece, averaged across everything in there.`
+        body: `${mass} in total, over ${count} pieces. That is ${mass} divided by ${count}, which is ${averageOf(hopper).toFixed(1)} for one piece on average.`
       });
       return;
     }
 
     if (tool === 'pour') {
       if (floor.poured(id)) {
-        frame.note(`${hopper.label} has already gone down the chute. The tallies above its bins are still there.`);
+        frame.note(`${hopper.label} has already been tipped, and the tallies above its bins are still there.`);
         return;
       }
       busy = true;
@@ -809,8 +783,8 @@ export function mount(container, ctx) {
       state.poured.add(id);
       soundscape.playPylonWake?.();
       renderReadout(null, {
-        head: `Floor // ${hopper.label}`,
-        body: `${shot.total} pieces down the chute. ${shot.totals.map((n, i) => `${n} at weight ${hopper.bins[i].mass}`).join(', ')}.`
+        head: `Chute // ${hopper.label}`,
+        body: `${shot.total} pieces landed: ${shot.totals.map((n, i) => `${n} at weight ${hopper.bins[i].mass}`).join(', ')}.`
       });
       busy = false;
       frame.setCommitEnabled(true);
@@ -852,8 +826,8 @@ export function mount(container, ctx) {
     if (!hit) {
       frame.setReadout(`
         <div class="lq-readout-card lq-readout-idle">
-          <div class="lq-readout-head">Gantry // standby</div>
-          <p class="lq-readout-line">Each bin on the floor catches one weight, stencilled under it. Tap a bin to put the reader on it.</p>
+          <div class="lq-readout-head">Bench // standby</div>
+          <p class="lq-readout-line">Each bin catches one weight, marked under it. Tap a bin to read it.</p>
         </div>
       `);
       return;
@@ -861,11 +835,11 @@ export function mount(container, ctx) {
     frame.setReadout(`
       <div class="lq-readout-card">
         <div class="lq-readout-head">Bin // ${esc(hit.hopperLabel)}, bin ${hit.bin + 1}</div>
-        <div class="lq-readout-code">CUT FOR WEIGHT ${esc(String(hit.mass))}</div>
+        <div class="lq-readout-code">CATCHES WEIGHT ${esc(String(hit.mass))}</div>
         <div class="lq-readout-hold">${hit.poured
           ? `${hit.count} piece${hit.count === 1 ? '' : 's'} landed in it.`
-          : 'Empty. Nothing has been tipped into it yet.'}</div>
-        <p class="lq-readout-line">The deflector turns a light piece aside further than a heavy one, so a bin only ever catches the weight it is cut for.</p>
+          : 'Empty. Nothing has been tipped yet.'}</div>
+        <p class="lq-readout-line">A bin only catches pieces of the weight marked under it.</p>
       </div>
     `);
   }
@@ -935,7 +909,7 @@ export function mount(container, ctx) {
       const rows = w.rows || stage.hoppers.map(h => h.id);
       frame.setWidget(`
         <div class="lq-answer">
-          <span class="form-label">Certificate</span>
+          <span class="form-label">Your answer</span>
           <div class="lq-bins">
             ${rows.map(id => `
               <div class="lq-bin-row" data-hopper="${id}">

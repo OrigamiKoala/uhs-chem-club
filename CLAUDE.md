@@ -6,17 +6,34 @@ everything else is: **teach through play, reveal vocabulary last — then use it
 draws lines between glowing regions for twenty stages and only meets the words "electron",
 "curved arrow" and "steric hindrance" in the epilogue, after the intuition is already built.
 
-**Withholding a word is a schedule, not a policy.** The rule is that a player must be able
-to arrive knowing virtually nothing, so nothing may be named before it has been done and
+**Withholding a word is a schedule, and the schedule is SHORT.** A player must be able to
+arrive knowing virtually nothing, so nothing may be named before it has been done and
 nothing may arrive faster than about one new idea per stage: introducing "nucleophilic
 aromatic substitution" at stage one, to someone who has not met a molecule, is a broken
 stage rather than a hard one. But once a reward card has named a thing the player has
 already worked out, **that word is the word the game uses** — in the prompt, the hints, the
-widget labels, the readouts and the refusal messages, not only on the explanation card. A
-stage may ask a player to count the electrons, as long as an earlier stage let them
-discover charge balance as a needle that sits on zero, with no word attached. Discover,
-then name, then use; saying "light piece" for eight stages after the player knows better is
-the instrument being coy.
+widget labels, the readouts and the refusal messages, not only on the explanation card.
+
+**A withheld word is usually replaced by a HARDER one, and that is the failure mode to
+watch for.** Every Unit 1 bench once ran a second, invented vocabulary so it could avoid
+the real one: *light piece*, *marked grain*, *SPEC A*, *REF 03*, *CRATE 22*, *VIAL B*,
+*Manifest 09*. A twelve-year-old holds "electron" more easily than "light piece", because
+"electron" is a word they will hear again and "light piece" is a private code they must
+maintain alongside the chemistry. So a word is withheld for **one stage** — long enough for
+the player to find the thing, never long enough for the game to be talking in cipher — and
+the fallback name is the plainest English available (*grain*, *cluster*, *layer*), never a
+coinage. Discover, then name, then use, and do it inside two stages.
+
+**Story is a frame, not a puzzle.** Erebus is the model: one transmission at the start, one
+at the end, and in between a prompt that states the task and nothing else. Tallow used to
+open every stage with a typewriter modal about an inbound buyer, a prospector's claim, a
+corrosive cleaner eating its seal or a tester cell with two charges left, and the player had
+to decode the fiction to find out what they were being asked to do. A bench stage now
+carries **one briefing on stage one** — what the instrument is and what its tools do — and
+every other stage is prompt, tools, answer. `frame.js` renders the `Objective` key only when
+a stage actually has a briefing, because a key that opens an empty modal is a key that lies.
+Samples are `SAMPLE A`, `SAMPLE B`, `SAMPLE C`, restarting at A on every stage: a player
+should never be tracking which of CRATE 41 and SPEC R is the one under discussion.
 
 **Two rules sit beside it and are enforced the same way.**
 
@@ -29,30 +46,39 @@ sentence saying what it does, drawn under the keys and left there for as long as
 offers it — never a tooltip, never once on first use, never only inside an earned hint. A
 quest exports `toolNoteFor(controlId, stageNumber)`; `engine/frame.js`'s `toolNotes()`
 draws it; `verify:learn` fails the build over a control with no line and runs every line
-through the same withheld-vocabulary gate as a prompt. A tool's line may change as words
-are earned: the needle's says "light pieces" until the stage after electrons are named and
-"electrons" from then on. Key labels obey it too — the core bench's three views read
-**Whole piece / The middle / Outside** under **View**, not Whole / Core / Rings under
-"Field".
+through the same withheld-vocabulary gate as a prompt. **A legend is one short sentence**,
+under about eighteen words; it is a key legend, not a manual. A tool's line may change as
+words are earned: the needle's says "light pieces" until the stage after electrons are
+named and "electrons" from then on. When a prompt, hint or refusal names a control, it
+quotes it — `Press "Fire Beam"`, `Press "The middle"` — so the sentence cannot be read as
+prose. Key labels obey all of this too: the core bench's three views read **Whole piece /
+The middle / Outside** under **View**, not Whole / Core / Rings under "Field".
+
+**A hint rung is ONE sentence.** Rung 1 says what to do with the tool, rung 2 says what to
+look at or compare, rung 3 gives the answer plainly — and where there is arithmetic, rung 3
+shows the actual sum (`(0.2 x 10) + (0.8 x 11) = 2 + 8.8 = 10.8`), never the method alone. A
+three-clause hint is a paragraph a stuck player has to parse before they can use it.
 
 **A stage must be solvable by somebody who does not already know the answer.** This is the
 test every bench stage has to pass and the easiest one to fail, because the author knows
 the chemistry. A stage only a player who already knows can finish is not teaching, it is
 checking — and it is checking the one thing this audience has not got. The evidence has to
 be ON THE BENCH, not in hint rung three: stage 3 of `q2-core` carries an open reference
-reading plus two with six crosses and four light pieces, which is what makes "the needle
-reads crosses minus light pieces" a discovery rather than an assertion, and stage 6 is
-answerable because the piece with the extra neutron has a visibly identical outside and
-stage 5 established that the outside decides behaviour. Hints point at that evidence; they
-are not a substitute for it.
+reading plus two with six protons and four electrons, which is what makes "the needle reads
+protons minus electrons" a discovery rather than an assertion, and stage 6 is answerable
+because the sample with the extra neutron has a visibly identical outside and stage 5
+established that the outer shell decides behaviour. Hints point at that evidence; they are
+not a substitute for it.
 
-A Learn quest publishes its own schedule — `VOCABULARY` in `src/learn/quests/unit01/q2-core.js`
-is the worked example, mapping each gated term to the stage whose reward card introduces
-it. `verify:learn` fails the build both ways round: a term used one stage early, and a term
-the schedule promises that no card ever delivers. A quest with no schedule (the Charge
-Gardens, `q1-grain`) keeps the older arrangement — withheld through all of play, taught on
-the cards — and `PRODUCT.md` §Product Principles 1 is the product-level statement of all
-of this.
+A Learn quest publishes its own schedule — `VOCABULARY` in `src/learn/quests/unit01/q1-grain.js`
+and `q2-core.js` are the worked examples, mapping each gated term to the stage whose reward
+card introduces it. `verify:learn` fails the build both ways round: a term used one stage
+early, and a term the schedule promises that no card ever delivers. Every built Unit 1 quest
+now publishes one; `WITHHELD_VOCAB` in `tools/verify-learn.mjs` holds only what a quest has
+yet to earn, so words an earlier bench taught (atom, element, compound, mixture, proton,
+neutron, electron, shell, valence, isotope, ion) are plain words downstream and using them
+is the rule rather than a leak. `PRODUCT.md` §Product Principles 1 is the product-level
+statement of all of this.
 
 `PRODUCT.md` is the companion record: durable product truth — who plays, what the product
 is for, what is confirmed versus deliberately undecided, and what future work must not
@@ -103,7 +129,10 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run verify:tallow` — asserts the Tallow ground: every prop footprint disjoint
   (no two objects share space), sites clear of props, the sub-level excavation walkable,
   every charted Unit 1 quest sited, T4 decoration removable without stranding a site,
-  and no withheld vocabulary in a place name. It also **builds the real world in Node**
+  and no campaign vocabulary in a place name. A SITE LABEL IS A SIGNPOST, so it names the
+  bench's topic — `Bench 3 - The Periodic Table`, not `Catalogue Vault` — and the checker
+  only holds it to the Erebus withheld list and a six-word ceiling. It also **builds the
+  real world in Node**
   behind `tools/lib/dom-shim.mjs` and measures every pair of objects in it.
 - `npm run deploy:backend` — `clasp push` of `apps-script/`.
 - `npm run bake:stills` — regenerate the static SVG backdrops in `public/fallback/`.
@@ -321,18 +350,25 @@ into grinding and would punish the students it exists to help.
   and what a specimen *does* (`behaviourOf`) lives in the quest.
   `frame.js` is the **quest frame**: stage rail (cleared lamps are
   walkable — there is no XP here for a replay to farm; 44px touch strips on mobile), diegetic
-  Exit and Findings review buttons, reopenable briefing and debrief stepper
+  Exit and Findings review buttons, a briefing and debrief stepper
   mounted via `createTransmissionElement` (diegetic CRT video loop, typewriter audio ticks and
   Vess radio murmur), prompt, readout, answer region, Commit key, miss banner, hint ladder (rung 1 free,
   rung 2 after a miss or 45 s, rung 3 after two misses; copy accurately conveys both paths), and reward card.
   Supports soft refusals via `{ ok: false, notYet: true, msg }` routed through `frame.note()` without burning hint rungs.
-  It never sees an answer; the quest calls `clear()` or `miss()`. Briefings establish narrative problem context
-  (max 2 sentences per stage briefing per CLAUDE.md §7) while prompts state un-prescriptive objectives giving players
-  free reign over bench tools. Real chemistry concepts are introduced immediately after each stage on its reward card
-  (Quest 1: atoms, elements, atomic mass, chemical bonds, molecules, compounds, mixture separation, matter classification;
-  Quest 2: nucleus & Rutherford model, protons & neutrons, electrons & neutrality, electron shells & Bohr model, valence
-  electrons & octet rule, atomic number & isotopes, ions & net charge, subatomic architecture) so learners connect
-  hands-on observations directly to chemistry rather than waiting for an end-of-quest lecture.
+  It never sees an answer; the quest calls `clear()` or `miss()`.
+  **A BRIEFING IS A QUEST'S, NOT A STAGE'S.** Every built Unit 1 quest carries exactly one —
+  on stage 1, at most 2 sentences, saying what the instrument is and what its tools do — and
+  every other stage opens straight onto prompt, tools and answer. A briefing per stage meant a
+  typewriter modal between the player and the bench eight times in a row, each one wrapping the
+  task in a business situation they had to decode first. `setStage` therefore renders the
+  `Objective` key only when `stage.briefing` exists, since a key that opens an empty modal is
+  a key that lies. Prompts state the objective in one plain imperative sentence and leave the
+  route to the player. Real chemistry lands immediately after each stage on its reward card
+  (Quest 1: atoms, elements and mixtures, atomic mass, indivisibility, molecules, compounds,
+  separation, classification; Quest 2: nucleus, protons/neutrons/electrons, neutrality,
+  shells, valence, atomic number and isotopes, ions, the three ways matter can differ) so
+  learners connect what they just did to the chemistry instead of waiting for an
+  end-of-quest lecture.
   In `scope.js`, single-unit samples (`total <= 1`) are centered at `[0, 0]` so high-magnification targets
   remain visible in the aperture.
 - **The power control is a knob, and on a built bench it is a knob you can reach.** A
@@ -470,7 +506,8 @@ so the check can assert — as `verify:quest` does for the Charge Gardens — th
 solution grades correct, that a plausible wrong answer is refused **with a reason**, that an
 untouched bench never grades correct, that every stage has exactly three distinct hint rungs
 and a reward card, that every bench declaration is well formed, that all `quest-btn-sm` buttons carry
-`btn-secondary` or `btn-primary`, that stage briefings do not exceed 2 sentences, that sample notes
+`btn-secondary` or `btn-primary`, that a stage briefing (where a stage has one at all — in Unit 1
+only stage 1 does) does not exceed 2 sentences, that sample notes
 describe provenance only without leaking answers, **that every control a stage offers has a
 key legend** (`toolNoteFor(controlId, stageNumber)` — see "Nothing is NAMED without being
 explained" at the top of this file), and that all prompt/hints/briefings/legends/check
@@ -482,94 +519,84 @@ while a nearer ring still has room. No solution may name a sample, row, bin or c
 not on the bench; a manifest may cover a subset of the plates (`widget.rows`), and every row
 it shows needs a solution line.
 
-### World 1 quest 1 — The Grain of Things (`unit01/q1-grain`, live)
-Eight stages on an Imperial salvage bench on Tallow with an orbital Guild buyer inbound;
-the player leaves knowing what an atom, an element, a molecule, a compound and a mixture
-are and meets none of those words until the debrief. **The order is the design**: every
-stage is something the player *does* with an instrument, introduced by diegetic Vess
-transmissions (reopenable via Objective) that ground the fiction in certifying salvage
-cargo. Power up until the picture stops getting finer (there is a floor) → which of two
-identical-looking crates is one material → how many kinds hide in one crate sold as
-single-source → run a cutter over four objects (one will not divide) → assemble the cluster
-that repeats → file two vials against two manifests with the same ingredients → settle three
-crates and read the bands → file a manifest of four unlabelled crates. Player-facing
-vocabulary before the debrief is *piece, kind, cluster, crate, band, recipe, material*, and
-that restraint is the product. The catalogue codes (CAT 01, 06, 08, 11, 16, 17) are atomic
-numbers, never explained here; the debrief points at them as the hook into `q3-catalogue`.
+### World 1 quest 1 — Atoms, Elements and Mixtures (`unit01/q1-grain`, live)
+Eight stages on a bench with three tools: a scope on a power dial, a cutter and a shaker.
+One briefing, on stage one, naming those three tools; every other stage is prompt, tools,
+answer. Zoom up until the picture stops getting finer (there is a floor) → which of two
+identical-looking samples is one kind of atom → how many kinds hide in one sample → run the
+cutter over four samples, one of which will not divide → copy the cluster that repeats →
+file two samples by how many heavy atoms each molecule holds → settle three samples and read
+the layers → file four samples as **element, compound or mixture**. `VOCABULARY` introduces
+*atom* on stage 1's card, *element* and *mixture* on stage 2's, *molecule* on 5 and
+*compound* on 6, and each word is used plainly from the next stage on. The last sample is
+bonded pairs of one kind, so "still an element" is a real question rather than a lookup.
+The catalogue codes (CAT 01, 06, 08, 11, 16, 17) are atomic numbers, never explained here;
+the debrief points at them as the hook into `q3-catalogue`.
 
-### World 1 quest 2 — The Inside of a Piece (`unit01/q2-core`, live)
-Eight stages on the core bench in Tallow's sub-level diagnostic lab, picking up where quest 1's
-blade stopped. The Avalon needs reactor calibration and charged propellant from Imperial
-deep-salvage canisters. Fire a beam through a mounted piece to find its structure → count the
-grains stamped with a cross in the nucleus → find the balance rule on three open references
-and apply it to a sealed canister → place eleven electrons on rings by copying what three
-references do → predict trading from the outermost shell → tell two 13-grain cores apart by
-what is outside them → strip electrons to reach plus two → file three unlabelled canisters.
+### World 1 quest 2 — Inside an Atom (`unit01/q2-core`, live)
+Eight stages on the core bench in Tallow's sub-level lab. Fire a beam through an atom and
+say what is inside it → count the crossed grains in the nucleus → work out a sealed sample's
+electrons from the charge needle → place eleven electrons on rings by copying three open
+samples → predict trading from the outer shell → tell two 13-grain samples apart by what is
+outside them → strip electrons to reach plus two → say how three samples differ from a
+standard.
 
-**This quest is where the vocabulary SCHEDULE is worked out** (see the top of this file).
-`VOCABULARY` in the module maps each gated term to the stage whose reward card introduces
-it — nucleus at 1, proton and neutron at 2, electron at 3, shell at 4, valence at 5, element
-and isotope at 6, ion at 7 — and from the stage after, the game simply says the word.
-Stage 4's prompt asks for electrons because stage 3 is where the player found them.
+**The vocabulary schedule is short on purpose.** Stage 2's reward card names protons,
+neutrons **and** electrons together — all three are on screen by then, in "The middle" and
+"Outside" — so from stage 3 the game says "electron" rather than "light piece", which is
+what made the old stage 3 unreadable. *Shell* lands on 4, *valence* on 5, *isotope* on 6,
+*ion* on 7.
 
-**Stages 3, 4 and 6 are the ones that have to be DISCOVERED rather than asserted**, and
-each of them was rebuilt because it was not. The failure mode is identical every time: the
-stage is easy for a reader who already knows the chemistry and impossible for the reader it
-was written for, and hint rung three is quietly carrying the whole lesson.
+**Stages 3, 4 and 6 are the ones that have to be DISCOVERED rather than asserted**, and each
+was rebuilt because it was not. The failure mode is identical every time: the stage is easy
+for a reader who already knows the chemistry and impossible for the reader it was written
+for, and hint rung three is quietly carrying the whole lesson.
 
-- **Stage 3 — the needle.** Three open references stand beside one welded shut. Two of them
-  read zero, and **REF 03 reads plus two with six crosses and four light pieces** — that
-  third reference is the stage. With only the balanced pair the needle never moved, so
-  there was nothing to learn from it: the player read zero three times and was asked to
-  infer a rule from an instrument that had shown them no variation at all. With REF 03 the
-  rule "the needle reads crosses minus light pieces" is visible in the data, and the sealed
-  piece is then an application of it. The commit is soft-refused until the needle has been
-  on the sealed piece AND on at least one open reference, because the comparison is the
-  work.
-- **Stage 4 — the rings.** Three open references, not two: 2 alone, 2 and 8, and **2, 8 and
-  3**. The third one is what makes "each ring fills before the next one starts" a pattern
-  in three data points rather than an assertion in a hint. The widget says what its keys do
-  in the widget, and the word "ring" is introduced on stage 3, where the circles are first
-  on screen.
-- **Stage 6 — why the neutron does not matter.** This is the question the stage used to
-  answer only in hint three. It is now derivable from the stage before it: SPEC H and SPEC
-  K have the same protons and therefore the **identical outside, 2 and 4**, and stage 5
-  established that the outermost ring is what decides how a piece behaves; SPEC L has a
-  different outside, 2 and 5. The briefing states the criterion as a question — two pieces
-  are the same material when they behave the same way, and you already know what decides
-  that — and the bench carries the evidence.
+- **Stage 3 — the needle.** Three open samples stand beside one sealed. Two read zero, and
+  **Sample C reads plus two with six protons and four electrons** — that third sample is the
+  stage. With only the balanced pair the needle never moved, so there was nothing to learn
+  from it. The commit is soft-refused until the needle has been on the sealed sample AND on
+  at least one open one, because the comparison is the work.
+- **Stage 4 — the rings.** Three open samples, not two: 2 alone, 2 and 8, and **2, 8 and 3**.
+  The third is what makes "each ring fills before the next one starts" a pattern in three
+  data points rather than an assertion in a hint.
+- **Stage 6 — why the neutron does not matter.** Derivable from the stage before it: Samples
+  A and B have the same protons and therefore the **identical outside, 2 and 4**, and stage 5
+  established that the outer shell decides behaviour; Sample C has a different outside, 2 and
+  5.
 
 **Nothing in this quest requires clicking a particle.** Counting is the task on stages 2, 3,
 6 and 8, so the answer is a number the player enters; the probe is a tool that is there if
-they want a reading, never a gate on a commit. Every specimen is a real nuclide and balances
+they want a reading, never a gate on a commit. Every sample is a real nuclide and balances
 unless a stage has stripped it. **The quest never connects the proton count to the scope's
-catalogue** — the core bench does not talk to the catalogue, preserving that reveal for
-`q3-catalogue`.
+catalogue** — that reveal belongs to `q3-catalogue`.
 
-### World 1 quest 3 — The Catalogue Numbers (`unit01/q3-catalogue`, live)
-Eight stages at the open vault, on the catalogue board (`engine/catalogue.js`, the one
-Learn instrument that is NOT drawn into an aperture: a catalogue is a card index, so it
-is built out of real plate elements — a drawer of cards and a board of slots, two-tap
-place, no drag — which is the only version of it that reflows at 375 px and can be read
-out loud). The payoff both earlier
-benches pointed at: the CAT number the scope has filed by since site one is the proton count,
-and ordering by it makes the periodic pattern. Periods, groups, noble gases, metals and
-nonmetals land as earned vocabulary; the question it leaves lying — why the card's mass is
-never a whole number — is `q5-assay`'s.
+### World 1 quest 3 — The Periodic Table (`unit01/q3-catalogue`, live)
+Eight stages on the catalogue board (`engine/catalogue.js`, the one Learn instrument that is
+NOT drawn into an aperture: a card index is a card index, so it is built out of real plate
+elements — a drawer of cards and a board of slots, two-tap place, no drag — which is the only
+version of it that reflows at 375 px and can be read out loud). The payoff both earlier
+benches pointed at: the CAT number the scope has filed by since bench one is the proton
+count, and ordering by it makes the periodic pattern. Periods, groups, noble gases, metals
+and nonmetals land as earned vocabulary; stage 7 has the player predict a card that is not
+there, the way Mendeleev did. The question it leaves lying — why a listed mass is never a
+whole number — is `q5-assay`'s.
 
-### World 1 quest 4 — The Buyer's Ledger (`unit01/q4-ledger`, live)
-Eight stages on the Tally Floor, with the core bench `CoreBench` reused. Counting protons,
-neutrons and electrons off one specimen; isotope notation; charge from the needle; cations
-and anions; a shipment balanced to zero. It ends the unit able to describe any piece with
-three numbers.
+### World 1 quest 4 — Isotopes and Ions (`unit01/q4-ledger`, live)
+Eight stages reusing `CoreBench`. Counting protons, neutrons and electrons off one atom;
+reading a sealed sample off its label; why isotopes react alike; charge from the needle;
+driving an atom positive and another negative; cancelling charges in whole numbers (which is
+why magnesium and chlorine combine one to two); and four sealed samples against a standard.
+It ends able to describe any atom with three numbers.
 
-### World 1 quest 5 — The Weight On The Card (`unit01/q5-assay`, live)
-Eight stages at the Hopper Gantry on the assay floor (`engine/assay.js`, also used by the
-charted Ligar `q4-weigh`): a hopper tips over a deflector, one bin per weight, tallies
-counted; a balance weighs a hopper whole and reports the average. A real sample is a mix of
-isotopes, the proportions are fixed, the card quotes a weighted average that leans toward the
-common isotope, and the average runs both ways — a sealed hopper or an unmarked one gets
-named off its number. The bench never counts by weighing at scale: moles are Ligar's.
+### World 1 quest 5 — Atomic Mass (`unit01/q5-assay`, live)
+Eight stages on the sorting bench (`engine/assay.js`, also used by the charted Ligar
+`q4-weigh`): a sample tips down a chute over a deflector, one bin per weight, tallies
+counted; a balance weighs a sample whole and reports what one piece weighs on average. A real
+sample is a mix of isotopes, the proportions are fixed, the listed mass is a weighted average
+that leans toward the common isotope, and the average runs both ways — a sealed sample gets
+named off its number. Every hint rung three shows the actual sum. The bench never counts by
+weighing at scale: moles are Ligar's.
 
 ### Tallow — Learn world 01 as a place you walk (`three/tallow.js`, T4)
 
@@ -582,12 +609,14 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
   weak with no disc, and the palette stays warm-neutral with a brown/sand bias throughout.
   The sub-level is the one place the sun never reached, so the colour survives there: it is
   built from `crucible.jpg`'s register, riveted and sodium-lit.
-- **Five sites, one per quest, all live.** `site-1` Salvage Bench (`q1-grain`) under the lean-to
-  in the yard; `site-2` Core Bench (`q2-core`) down the stairwell in the diagnostic lab;
-  `site-3` Catalogue Vault (`q3-catalogue`, the blockhouse with its door racked back);
-  `site-4` Tally Floor (`q4-ledger`, painted floor and ledger board);
-  `site-5` Hopper Gantry (`q5-assay`, a hopper over a chute with catch bins, south of the
-  yard). Sites 1 and 2 carry their instruments as built objects (`BUILT_BENCHES`); sites
+- **Five sites, one per quest, all live, and each sign says what its bench teaches.**
+  `site-1` *Bench 1 - Atoms* (`q1-grain`) under the lean-to in the yard; `site-2` *Bench 2 -
+  Inside an Atom* (`q2-core`) down the stairwell in the diagnostic lab; `site-3` *Bench 3 -
+  The Periodic Table* (`q3-catalogue`, the blockhouse with its door racked back); `site-4`
+  *Bench 4 - Isotopes and Ions* (`q4-ledger`, painted floor and ledger board); `site-5`
+  *Bench 5 - Atomic Mass* (`q5-assay`, a hopper over a chute with catch bins, south of the
+  yard). The structures are unchanged — only the signs are, because a player choosing a
+  bench should not have to enter it to find out what it is. Sites 1 and 2 carry their instruments as built objects (`BUILT_BENCHES`); sites
   3–5 stand as real places whose quests draw the bench as a page over the world —
   nothing sealed, nothing invented. `verify:tallow` still fails if a site's `built` flag
   disagrees with the chart.

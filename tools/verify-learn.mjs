@@ -280,7 +280,10 @@ function checkStageTable(q, mod) {
    */
   const WITHHELD_VOCAB = {
     'unit01/q1-grain': /\b(atoms?|atomic|elements?|molecules?|molecular|compounds?|mixtures?)\b/i,
-    'unit01/q2-core': /\b(atoms?|atomic|elements?|molecules?|molecular|compounds?|mixtures?|nucle(us|i|ar)|protons?|neutrons?|isotopes?|electrons?|shells?|valence|ions?|ionic|ioniz\w*)\b/i,
+    // `q1-grain` teaches atom, element, molecule, compound and mixture on its
+    // own cards, so by the time a player is standing here those are plain words
+    // and using them is the rule rather than a leak.
+    'unit01/q2-core': /\b(nucle(us|i|ar)|protons?|neutrons?|isotopes?|electrons?|shells?|valence|ions?|ionic|ioniz\w*)\b/i,
     // From here on the list is only what the quest itself has yet to earn. The
     // first two benches taught proton, electron, shell, valence, element,
     // isotope and ion, so those are plain words now and using them is the rule
