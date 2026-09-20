@@ -2,9 +2,13 @@
  * touch-controls.js — Twin virtual sticks and action keys for the T4 walk on a phone.
  *
  * A phone can render the walk; it cannot press W or swing a mouse. This mounts
- * the two things that replace them: a 360-degree look stick in the bottom-left
- * corner and a 360-degree move stick in the bottom-right, plus the two keys a
+ * the two things that replace them: a 360-degree move stick in the bottom-left
+ * corner and a 360-degree look stick in the bottom-right, plus the two keys a
  * walk needs that a finger otherwise has no way to press — E (use) and X (jump).
+ *
+ * Move is on the left and look is on the right because that is where every
+ * twin-stick control scheme a player has already used puts them; a walk that
+ * steers backwards from muscle memory reads as broken input, not as a choice.
  *
  * Both sticks float: the ring jumps to wherever the thumb lands inside its
  * corner zone, because a fixed centre is only reachable if you looked first.
@@ -56,9 +60,9 @@ export class TouchControls {
     const root = document.createElement('div');
     root.className = 'touch-controls hidden';
     root.innerHTML = `
-      <div class="tc-zone tc-zone-look" data-stick="look">
+      <div class="tc-zone tc-zone-move" data-stick="move">
         <div class="tc-ring">
-          <span class="tc-ring-label">LOOK</span>
+          <span class="tc-ring-label">MOVE</span>
           <div class="tc-knob"></div>
         </div>
       </div>
@@ -66,9 +70,9 @@ export class TouchControls {
         <button type="button" class="tc-key" data-key="interact" aria-label="Use" disabled>E</button>
         <button type="button" class="tc-key" data-key="jump" aria-label="Jump">X</button>
       </div>
-      <div class="tc-zone tc-zone-move" data-stick="move">
+      <div class="tc-zone tc-zone-look" data-stick="look">
         <div class="tc-ring">
-          <span class="tc-ring-label">MOVE</span>
+          <span class="tc-ring-label">LOOK</span>
           <div class="tc-knob"></div>
         </div>
       </div>

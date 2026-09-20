@@ -263,11 +263,73 @@ function checkStageTable(q, mod) {
   const emoji = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
   let bad = 0;
 
+  /**
+   * The words a quest is not allowed to use until it has EARNED them.
+   *
+   * A player arrives at Unit 1 not knowing what a molecule is, so a stage that
+   * opens with one is talking past them. The list below is the whole gated
+   * vocabulary of a quest.
+   *
+   * WITHHELD IS NOT THE SAME AS BANNED. A quest may publish a `VOCABULARY`
+   * schedule saying which stage's REWARD CARD introduces each term. That card
+   * may name it; play copy — titles, prompts, briefings, hints, widget labels,
+   * refusal messages — may use it from the NEXT stage on, because by then the
+   * player has found the thing and been handed the word for it. A term absent
+   * from the schedule stays withheld for the whole quest, which is how
+   * `q1-grain` keeps "atom" and "molecule" for its debrief.
+   */
   const WITHHELD_VOCAB = {
     'unit01/q1-grain': /\b(atoms?|atomic|elements?|molecules?|molecular|compounds?|mixtures?)\b/i,
     'unit01/q2-core': /\b(atoms?|atomic|elements?|molecules?|molecular|compounds?|mixtures?|nucle(us|i|ar)|protons?|neutrons?|isotopes?|electrons?|shells?|valence|ions?|ionic|ioniz\w*)\b/i
   };
   const withheldRx = WITHHELD_VOCAB[q.key];
+
+  const schedule = Array.isArray(mod.VOCABULARY) ? mod.VOCABULARY : [];
+  for (const entry of schedule) {
+    if (!(entry?.term instanceof RegExp) || !Number.isInteger(entry.introducedAt)) {
+      fail(`${q.key}: VOCABULARY entries need a RegExp term and an integer introducedAt`);
+      bad++;
+    }
+  }
+
+  /**
+   * The stage a word becomes sayable in play, or null when it never does.
+   * `forReward` allows the very stage that introduces it, which is the card
+   * doing the introducing.
+   */
+  const sayableAt = (word, stage, forReward) => {
+    for (const entry of schedule) {
+      if (!(entry.term instanceof RegExp)) continue;
+      if (!new RegExp(entry.term.source, 'i').test(word)) continue;
+      return forReward ? entry.introducedAt <= stage : entry.introducedAt < stage;
+    }
+    return false;
+  };
+
+  /** Every withheld word in a string that this stage has not earned yet. */
+  const tooEarly = (text, stage, forReward) => {
+    if (!withheldRx) return null;
+    const all = new RegExp(withheldRx.source, 'gi');
+    let m;
+    while ((m = all.exec(String(text))) !== null) {
+      if (!sayableAt(m[0], stage, forReward)) return m[0];
+    }
+    return null;
+  };
+
+  // A schedule that promises a word and never delivers it is worse than no
+  // schedule: the player is taught nothing and the gate silently opens.
+  if (schedule.length) {
+    const rewards = stages.map(st => `${st.reward?.title || ''} ${st.reward?.body || ''}`);
+    for (const entry of schedule) {
+      const at = entry.introducedAt;
+      const card = rewards[at - 1];
+      if (!card || !new RegExp(entry.term.source, 'i').test(card)) {
+        fail(`${q.key}: VOCABULARY says stage ${at} introduces ${entry.term}, but that reward card never says it`);
+        bad++;
+      }
+    }
+  }
 
   stages.forEach((st, i) => {
     const label = `${q.key} stage ${i + 1}`;
@@ -355,17 +417,32 @@ function checkStageTable(q, mod) {
       ].filter(Boolean);
 
       for (const text of checkable) {
-        const m = text.match(withheldRx);
-        if (m) {
-          fail(`${label}: player-facing copy contains withheld term "${m[0]}" in "${text.slice(0, 60)}"`);
+        const early = tooEarly(text, i + 1, false);
+        if (early) {
+          fail(`${label}: player-facing copy says "${early}" before it has been taught, in "${text.slice(0, 60)}"`);
           bad++;
         }
       }
 
-      const checkCode = st.check.toString();
-      const codeMatch = checkCode.match(withheldRx);
-      if (codeMatch) {
-        fail(`${label}: check() code contains withheld term "${codeMatch[0]}"`);
+      // The reward card is where a word is allowed to arrive, so it may use
+      // the terms this stage introduces — and nothing from later stages.
+      //
+      // Only checked against a published schedule. A quest without one holds
+      // every withheld word out of PLAY for its whole length and teaches them
+      // on the cards regardless of order, which is what `q1-grain` does.
+      for (const text of (schedule.length
+        ? [st.reward?.title, st.reward?.body, st.reward?.log]
+        : []).filter(Boolean)) {
+        const early = tooEarly(text, i + 1, true);
+        if (early) {
+          fail(`${label}: reward card says "${early}" before it has been taught, in "${text.slice(0, 60)}"`);
+          bad++;
+        }
+      }
+
+      const early = tooEarly(st.check.toString(), i + 1, false);
+      if (early) {
+        fail(`${label}: check() code says "${early}" before it has been taught`);
         bad++;
       }
     }

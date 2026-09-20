@@ -1863,8 +1863,11 @@ export class TallowWorld {
     ragFold.rotation.set(0.1, 0.9, -0.06);
     g.add(ragFold);
 
-    // Swarf and offcuts: a scatter of small salvage along the back lip, where
-    // everything that is not in use ends up.
+    // Swarf and offcuts: a scatter of small salvage tight against the back lip,
+    // where everything that is not in use ends up. The band is narrow on
+    // purpose — a Learn instrument deployed on this bench stands its screens on
+    // the plate just in front of it, and a chip under a stand foot is two
+    // objects in one place.
     const rand = mulberry32(0x71a3 + Math.round(width * 100));
     const chipGeo = this.own(new THREE.BoxGeometry(0.05, 0.02, 0.04));
     for (let i = 0; i < 14; i++) {
@@ -1872,7 +1875,7 @@ export class TallowWorld {
       chip.position.set(
         (rand() - 0.5) * (width - 0.6),
         height + 0.056,
-        -depth / 2 + 0.1 + rand() * 0.12
+        -depth / 2 + 0.085 + rand() * 0.05
       );
       chip.rotation.set(rand() * 0.4, rand() * Math.PI, rand() * 0.3);
       chip.scale.setScalar(0.6 + rand() * 0.9);

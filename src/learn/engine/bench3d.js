@@ -41,6 +41,10 @@ export const AMBER = 0xd99423;
 /** Station pitch along the bench, in metres. */
 const STATION_PITCH = 0.92;
 
+/** The screen over each well: its size in metres, and its raster in pixels. */
+const SCREEN_M = 0.52;
+const SCREEN_PX = 512;
+
 /**
  * Draw a legend the way the plate shop would: engraved, mono, tracked wide.
  * Returns a CanvasTexture. The text passed in is rendered verbatim — this
@@ -546,28 +550,109 @@ export class BenchViewer3D {
     sweep.position.y = 0.95;
     g.add(sweep);
 
-    // Label plate, standing at the back of the station.
+    // ---------------------------------------------------------------
+    // THE HEAD: a raked screen on a stand behind the well.
+    //
+    // THE INSTRUMENT IS BUILT; ITS PICTURE IS FLAT. A scope and a core
+    // bench both produce one thing — an image — and an image staged as
+    // solid bodies sitting in a hole cannot be read: pieces at the back
+    // hide behind pieces at the front, so a player asked to COUNT what
+    // is in front of them counts five of six and is told they are wrong
+    // by an instrument that never showed them the sixth. So the bench,
+    // the crate, the wells and the dial are real geometry the player
+    // leans over, and what the instrument RESOLVES is drawn in two
+    // dimensions on the screen over the well, by the same code that
+    // draws it on a Chromebook. Every piece is in the picture, in the
+    // same place, on every tier.
+    //
+    // It is raked rather than laid flat because the player is standing
+    // at a bench and looking DOWN at it: a picture lying in the well is
+    // foreshortened to about a third of its height and stops being
+    // legible before it stops being present.
+    // ---------------------------------------------------------------
+    const head = new THREE.Group();
+    // Far enough forward to stand clear of the swarf scattered along the bench's
+    // back lip, and far enough back to leave the tray and its well alone. There
+    // is about 0.2 m of free plate between the two and the stand lives in it.
+    head.position.set(0, 1.02, -0.43);
+    head.rotation.x = -0.10;
+    g.add(head);
+
+    const headBack = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.66, 0.62, 0.035)), this.darkMat
+    );
+    headBack.position.set(0, 0.31, -0.022);
+    head.add(headBack);
+
+    for (const sx of [-0.27, 0.27]) {
+      const strut = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.035, 0.14, 0.035)), this.steelMat
+      );
+      strut.position.set(sx, -0.06, -0.02);
+      head.add(strut);
+    }
+
+    // The screen itself: a canvas the instrument draws its field into.
+    const screenCanvas = document.createElement('canvas');
+    screenCanvas.width = SCREEN_PX;
+    screenCanvas.height = SCREEN_PX;
+    const screenCtx = screenCanvas.getContext('2d', { willReadFrequently: true });
+    screenCtx.fillStyle = '#0d0c0a';
+    screenCtx.fillRect(0, 0, SCREEN_PX, SCREEN_PX);
+
+    // NOT `own`ed: a station is rebuilt on every stage load, and a half-megabyte
+    // canvas texture per station held to the end of the quest is the one thing
+    // on this bench large enough to be worth freeing early. `clearStations`
+    // disposes anything the viewer does not own, which is exactly this.
+    const screenTex = new THREE.CanvasTexture(screenCanvas);
+    screenTex.colorSpace = THREE.SRGBColorSpace;
+    // No mipmaps: the picture is redrawn every frame while a crate settles or
+    // a beam crosses, and regenerating a mip chain per upload is the most
+    // expensive thing on this bench. The screen is never seen minified.
+    screenTex.generateMipmaps = false;
+    screenTex.minFilter = THREE.LinearFilter;
+    screenTex.magFilter = THREE.LinearFilter;
+
+    const screenMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(SCREEN_M, SCREEN_M),
+      // Unlit: a phosphor screen makes its own light and must not pick up the
+      // bench lamp, or the picture dims when the player leans away from it.
+      new THREE.MeshBasicMaterial({ map: screenTex })
+    );
+    screenMesh.position.set(0, 0.37, 0.004);
+    head.add(screenMesh);
+
+    // A dim filament behind the glass, spilling onto the plate. It is a lamp,
+    // so it is allowed to be lit (CLAUDE.md §1).
+    const screenGlow = new THREE.Mesh(
+      this.own(new THREE.PlaneGeometry(SCREEN_M + 0.03, SCREEN_M + 0.03)),
+      this.own(new THREE.MeshBasicMaterial({
+        color: 0x2a2c1f, transparent: true, opacity: 0.55, depthWrite: false
+      }))
+    );
+    screenGlow.position.set(0, 0.37, -0.002);
+    head.add(screenGlow);
+
+    // Where the top of the picture is, so the camera can be aimed to keep it
+    // out from under the frame. A marker, not a mesh: nothing to draw.
+    const topMark = new THREE.Object3D();
+    topMark.position.set(0, 0.37 + SCREEN_M / 2, 0.004);
+    head.add(topMark);
+
+    // Label plate, engraved on the bezel under the screen.
     const labelTex = this.own(engravedPlaque(label, {
       w: 512, h: 96, size: 42, align: 'center', lit: false
     }));
     const labelPlate = new THREE.Mesh(
-      this.own(new THREE.PlaneGeometry(0.62, 0.116)),
+      this.own(new THREE.PlaneGeometry(0.54, 0.101)),
       this.own(new THREE.MeshStandardMaterial({
         map: labelTex, roughness: 0.9, metalness: 0.2
       }))
     );
-    labelPlate.position.set(0, 1.09, -0.3);
-    labelPlate.rotation.x = -0.22;
-    g.add(labelPlate);
+    labelPlate.position.set(0, 0.115, 0.004);
+    head.add(labelPlate);
 
-    const labelBack = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.66, 0.14, 0.02)), this.darkMat
-    );
-    labelBack.position.set(0, 1.088, -0.308);
-    labelBack.rotation.x = -0.22;
-    g.add(labelBack);
-
-    // Status tag beside the label — blank until the quest sets one.
+    // Status tag under the label — blank until the quest sets one.
     const tagMesh = new THREE.Mesh(
       this.own(new THREE.PlaneGeometry(0.34, 0.07)),
       this.own(new THREE.MeshStandardMaterial({
@@ -575,9 +660,8 @@ export class BenchViewer3D {
         roughness: 0.9, metalness: 0.2, transparent: true
       }))
     );
-    tagMesh.position.set(0, 1.185, -0.28);
-    tagMesh.rotation.x = -0.22;
-    g.add(tagMesh);
+    tagMesh.position.set(0, 0.038, 0.004);
+    head.add(tagMesh);
 
     // Note plate, lying flat on the bench in front of the tray: the provenance
     // slip that came with the sample.
@@ -611,6 +695,11 @@ export class BenchViewer3D {
     const station = {
       index, group: g, tray, wellFloor, sweep, indicator,
       labelPlate, notePlate, tagMesh,
+      head, topMark,
+      screen: {
+        mesh: screenMesh, canvas: screenCanvas, ctx: screenCtx,
+        texture: screenTex, w: SCREEN_PX, h: SCREEN_PX
+      },
       content: new THREE.Group(),   // whatever the instrument puts in the well
       sweepT: 0
     };
@@ -642,11 +731,32 @@ export class BenchViewer3D {
     this.applyCamera();
   }
 
+  /**
+   * Aim the camera higher, which puts the bench LOWER in the glass.
+   *
+   * Deployed, the quest frame is a page over the world (the panels only leave
+   * the page on a bench that is drawn rather than built), so the top of the
+   * glass belongs to the header, the stage rail and the tool plate, and the
+   * bench was being drawn straight through the middle of them. The camera does
+   * not move — moving it would change how steeply the player looks into the
+   * wells — it is only aimed up, which slides the whole instrument down into
+   * the open glass underneath the frame.
+   *
+   * @param {number} lift metres the look-at point rises by. 0 is dead level.
+   */
+  setAimLift(lift) {
+    const v = Math.max(0, Math.min(0.95, lift || 0));
+    if (Math.abs(v - (this.aimLift || 0)) < 0.002) return;
+    this.aimLift = v;
+    this.applyCamera();
+  }
+
   applyCamera() {
     const yaw = this.orbit.yaw;
     const pitch = this.orbit.pitch;
     const d = this.camDist;
     const t = this.camTarget;
+    const lift = this.aimLift || 0;
 
     // The camera swings on a short arc around the bench centre. Pitch is clamped
     // by the caller, so the player can lean in but never get under the plate.
@@ -662,7 +772,7 @@ export class BenchViewer3D {
       this._tgtLocal = this._tgtLocal || new THREE.Vector3();
       this.root.updateMatrixWorld();
       this._camLocal.set(x, y, z);
-      this._tgtLocal.copy(t);
+      this._tgtLocal.set(t.x, t.y + lift, t.z);
       this.root.localToWorld(this._camLocal);
       this.root.localToWorld(this._tgtLocal);
       this.camera.position.copy(this._camLocal);
@@ -672,7 +782,7 @@ export class BenchViewer3D {
     }
 
     this.camera.position.set(x, y, z);
-    this.camera.lookAt(t);
+    this.camera.lookAt(t.x, t.y + lift, t.z);
   }
 
   /* ---------------- input ---------------- */
@@ -855,6 +965,36 @@ export class BenchViewer3D {
     return null;
   }
 
+  /**
+   * Which station's SCREEN the ray passes through, and where on it.
+   *
+   * Returns the hit in the screen's own pixel coordinates, so an instrument
+   * can run the identical hit test it runs on a Chromebook: the picture is the
+   * same picture, drawn by the same function, at a different size.
+   */
+  screenUnderRay() {
+    let best = null;
+    for (const st of this.stations) {
+      if (!st.screen || !st.screen.mesh.visible) continue;
+      const hit = this.raycaster.intersectObject(st.screen.mesh, false);
+      if (!hit.length || !hit[0].uv) continue;
+      if (best && hit[0].distance >= best.distance) continue;
+      best = {
+        station: st,
+        distance: hit[0].distance,
+        px: hit[0].uv.x * st.screen.w,
+        // Canvas y runs down the picture; a uv runs up it.
+        py: (1 - hit[0].uv.y) * st.screen.h
+      };
+    }
+    return best;
+  }
+
+  /** Push whatever an instrument has drawn into a station's screen onto the glass. */
+  refreshScreen(station) {
+    if (station?.screen) station.screen.texture.needsUpdate = true;
+  }
+
   /** Fire the read sweep across one station's well. */
   runSweep(station) {
     if (!station) return;
@@ -893,7 +1033,7 @@ export class BenchViewer3D {
     // bench inside it. There is nothing to dodge, and applying a view offset to
     // the world camera would skew the whole of Tallow to make room for a card
     // that is not there.
-    if (this.inWorld) return;
+    if (this.inWorld) { this.fitDeployedAim(); return; }
 
     const cam = this.camera;
     const W = window.innerWidth;
@@ -927,6 +1067,82 @@ export class BenchViewer3D {
     cam.zoom = Math.min(1, (w / h) / 1.7);
     cam.setViewOffset(w, h, -l, -t, W, H);
     cam.updateProjectionMatrix();
+  }
+
+  /**
+   * Deployed: keep the instrument out from under the frame by AIMING, not by
+   * skewing the projection.
+   *
+   * `fitToOpenArea` cannot be used here. The camera is the world's camera, and
+   * a view offset on it would re-frame the whole of Tallow — the sky, the
+   * lean-to and the salt flat — to make room for a card that is standing in
+   * front of them. So this measures the same thing (how far down the glass the
+   * frame's chrome reaches over the middle of the view) and answers it by
+   * pitching the camera up until the top of the screens clears the chrome.
+   *
+   * It is a correction applied once every fit rather than a closed-form solve
+   * because the deck grows and shrinks as hints open and a reward card appears,
+   * and because the projection is not linear in the angle. The deadband keeps
+   * it from hunting.
+   */
+  fitDeployedAim() {
+    if (!this.inWorld || !this.stations.length) return;
+    if (typeof document === 'undefined') return;
+
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    const W = (vv && vv.width) || window.innerWidth;
+    const H = (vv && vv.height) || window.innerHeight;
+    if (W < 1 || H < 1) return;
+
+    // How far down the glass the frame reaches, over the middle of the view —
+    // the bench is centred there, so a panel off to one side is not in the way.
+    let chromeBottom = 0;
+    for (const el of document.querySelectorAll(
+      '.hud, .learn-host-bar, .lq-rail, .lq-stage-head, .lq-controls, .lq-deck'
+    )) {
+      const box = el.getBoundingClientRect?.();
+      if (!box || box.width < 1 || box.height < 1) continue;
+      if (box.right < W * 0.32 || box.left > W * 0.68) continue;
+      if (box.top > H * 0.6) continue;          // already low: not overhead chrome
+      chromeBottom = Math.max(chromeBottom, box.bottom);
+    }
+    // Never give away more than the top half: on a narrow window the deck
+    // column reaches the middle of the glass, and an instrument aimed clear of
+    // THAT would be aimed off the bottom of the view.
+    chromeBottom = Math.min(chromeBottom, H * 0.52);
+    this.aimForChrome(1 - (2 * (chromeBottom + 12)) / H);
+  }
+
+  /**
+   * One correction step toward putting the tops of the screens just under
+   * `chromeNdc`. Split out from the measurement so `verify:bench` can drive it
+   * with a chrome height rather than a browser, and assert on the result.
+   *
+   * @param {number} chromeNdc the NDC y the frame's chrome reaches down to.
+   * @returns {number} how far above that line the screens still are.
+   */
+  aimForChrome(chromeNdc) {
+    if (!this.stations.length) return 0;
+    this.camera.updateMatrixWorld();
+    let topNdc = -Infinity;
+    const p = this._aimProbe || (this._aimProbe = new THREE.Vector3());
+    for (const st of this.stations) {
+      if (!st.topMark) continue;
+      st.topMark.getWorldPosition(p);
+      p.project(this.camera);
+      topNdc = Math.max(topNdc, p.y);
+    }
+    if (topNdc === -Infinity) return 0;
+
+    const excess = topNdc - chromeNdc;
+    if (excess < 0.012 && excess > -0.07) return excess;   // close enough; hold still
+
+    // NDC back to metres of aim: one half-height of the frustum at the target's
+    // distance is d * tan(fov/2).
+    const fov = (this.camera.fov || 55) * Math.PI / 180;
+    const d = this.camDist + 0.6;
+    this.setAimLift((this.aimLift || 0) + excess * d * Math.tan(fov / 2));
+    return excess;
   }
 
   update(delta) {

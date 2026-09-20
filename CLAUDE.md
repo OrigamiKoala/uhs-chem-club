@@ -2,9 +2,29 @@
 
 Avalon is the UHS Chemistry Club's competition portal. Its audience is middle- and
 high-school students who know little or no chemistry, so the product rule that outranks
-everything else is: **teach through play, reveal vocabulary last.** A player draws lines
-between glowing regions for twenty stages and only meets the words "electron", "curved
-arrow" and "steric hindrance" in the epilogue, after the intuition is already built.
+everything else is: **teach through play, reveal vocabulary last — then use it.** A player
+draws lines between glowing regions for twenty stages and only meets the words "electron",
+"curved arrow" and "steric hindrance" in the epilogue, after the intuition is already built.
+
+**Withholding a word is a schedule, not a policy.** The rule is that a player must be able
+to arrive knowing virtually nothing, so nothing may be named before it has been done and
+nothing may arrive faster than about one new idea per stage: introducing "nucleophilic
+aromatic substitution" at stage one, to someone who has not met a molecule, is a broken
+stage rather than a hard one. But once a reward card has named a thing the player has
+already worked out, **that word is the word the game uses** — in the prompt, the hints, the
+widget labels, the readouts and the refusal messages, not only on the explanation card. A
+stage may ask a player to count the electrons, as long as an earlier stage let them
+discover charge balance as a needle that sits on zero, with no word attached. Discover,
+then name, then use; saying "light piece" for eight stages after the player knows better is
+the instrument being coy.
+
+A Learn quest publishes its own schedule — `VOCABULARY` in `src/learn/quests/unit01/q2-core.js`
+is the worked example, mapping each gated term to the stage whose reward card introduces
+it. `verify:learn` fails the build both ways round: a term used one stage early, and a term
+the schedule promises that no card ever delivers. A quest with no schedule (the Charge
+Gardens, `q1-grain`) keeps the older arrangement — withheld through all of play, taught on
+the cards — and `PRODUCT.md` §Product Principles 1 is the product-level statement of all
+of this.
 
 `PRODUCT.md` is the companion record: durable product truth — who plays, what the product
 is for, what is confirmed versus deliberately undecided, and what future work must not
@@ -44,7 +64,12 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   in either occupies the same space as anything else.
 - `npm run verify:bench` — deploys BOTH Unit 1 instruments onto the real Tallow benches in
   Node and measures them: every site faces the ground the player walks in from, and every
-  screen, station and control lands inside the glass at six aspects, clear of the HUD.
+  screen, station and control lands inside the glass at six aspects, clear of the HUD. It
+  also drives `aimForChrome` — the camera correction a deployed bench applies — and asserts
+  it converges with the station screens under the frame and the wells still in view; and it
+  measures every station stand against the world it is standing in, in the BENCH's own
+  frame and per mesh (a world AABB of a 4.8 m back lip on a rotated site says everything
+  hits everything). That check found every screen stand seated inside a swarf chip.
 - `npm run verify:holo` — one owner for the `X` key, and the comms board never invents a
   guild score.
 - `npm run verify:tallow` — asserts the Tallow ground: every prop footprint disjoint
@@ -297,6 +322,31 @@ into grinding and would punish the students it exists to help.
     is the single implementation of where a detent is. A quest passes `onPower` once; the
     drawn instrument ignores it and the built one reports through it, and both end in the
     quest's own `setPower`.
+- **A BUILT INSTRUMENT SHOWS A FLAT PICTURE.** The bench, the wells, the crate of bulk
+  matter in them and the power dial are real geometry the player leans over — and what the
+  instrument RESOLVES is drawn in two dimensions on a **raked screen standing behind each
+  well** (`buildStation` in `engine/bench3d.js`), by the same `drawScopeField` /
+  `drawCoreField` that paint the canvas instrument. Three bugs became this one rule: a
+  microscope's output is a flat image, so pieces rising out of a hole as the dial came up
+  read as the crate inflating; a core is a huddle, so staged as spheres in a well half its
+  grains sat behind the other half and a player told to COUNT them counted five of six and
+  was refused by an instrument that never showed them the sixth; and a light piece staged
+  at ring scale was a speck indistinguishable from the dust of the planet behind it. Drawn
+  flat, every piece is in the picture, in one place, at a countable size, on every tier —
+  which is also what keeps a hint that names a position honest on both benches. Picking
+  goes through `BenchViewer3D.screenUnderRay()`, which hands back the press in the screen's
+  own pixels so the 3D bench runs the identical `hitTestField` / `hitTestCore`.
+- **Deployed, the instrument is AIMED into the open glass, never skewed into it.** On a
+  walkable world the quest frame stays a page over the view (`deployPanels` returns early
+  when the bench is built), so the top of the glass belongs to the header, the stage rail
+  and the tool plate. `fitDeployedAim` / `aimForChrome` in `bench3d.js` measure how far down
+  the middle of the view that chrome reaches and pitch the camera UP until the tops of the
+  screens clear it — which slides the whole bench down into the empty glass without moving
+  the camera, so how steeply the player looks into the wells is unchanged. `fitToOpenArea`'s
+  `setViewOffset` is still the answer for a bench that builds its own room, and must never
+  be used on the world camera: it would re-frame the whole of Tallow. `verify:bench` drives
+  `aimForChrome` at six aspects and fails the build if a screen still runs under the frame
+  or a well is aimed off the bottom.
 - **Both Unit 1 benches are BUILT at T4.** `BUILT_BENCHES` in `engine/instruments.js` holds
   `q1-grain` and `q2-core`, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
   asks to decide whether the frame is bolted to a bench or drawn as a page over the flat.
@@ -310,16 +360,22 @@ into grinding and would punish the students it exists to help.
   hands back the canvas instrument or the built one, and the two expose the *same API*, take
   the same declarations and plan every tool through the same pure functions, so a stage that
   grades correct on one grades correct on the other. Those planners live in the canvas
-  engines and are the single implementation: `planSettle`, `planCut` and `PIECE_TO_SPREAD`
-  in `scope.js`; `planBeam`, `planStrip`, `packCore` and `RING_RADII` in `corebench.js`.
+  engines and are the single implementation. That now covers the PICTURE as well as the
+  tools: `drawScopeField`, `fieldGeometry` and `hitTestField` in `scope.js`, and
+  `drawCoreField`, `coreGeometry` and `hitTestCore` in `corebench.js`, are pure functions
+  over a 2D context that both instruments call — so the built bench and the drawn bench
+  cannot show different things, and a hint naming a position is true on both. Alongside
+  them: `planSettle`, `planCut`, `PIECE_TO_SPREAD` and `packCore`, `planBeam`, `planStrip`,
+  `RING_RADII`.
   `engine/bench3d.js` is the shared physical bench (plated top, a station per sample with a
-  recessed phosphor well, engraved plaques, a constrained lean-over camera, `addGrabbable`
-  for controls that must take a press before the view does, `buildPowerDial`, and
+  recessed phosphor well and a raked screen on a stand behind it, engraved plaques, a
+  constrained lean-over camera, `addGrabbable` for controls that must take a press before
+  the view does, `buildPowerDial`, `screenUnderRay` for a press that lands on a picture,
   `fitToOpenArea`, which uses `setViewOffset` to centre the instrument in the part of the
-  screen the frame is not covering — skipped when deployed, where the interface is bolted
-  to the bench rather than laid over it). `engine/scope3d.js` and `engine/corebench3d.js` are the
-  instruments themselves, drawn with `InstancedMesh` so a 400-piece sample is five draw
-  calls. `engine/bench-host.js` inverts the render dependency — the benches ask for a host
+  screen the frame is not covering, and `fitDeployedAim`, which does the same job by aiming
+  when the camera belongs to a world). `engine/scope3d.js` and `engine/corebench3d.js` are
+  the instruments themselves: the physical crate or specimen in the well drawn with
+  `InstancedMesh`, and the resolved picture drawn onto the station screen. `engine/bench-host.js` inverts the render dependency — the benches ask for a host
   and `main.js` registers one — because a quest module must stay loadable in plain Node for
   `verify:learn`, and importing the stage would drag three.js and two worlds' JSON in with it.
   **Both quest modules changed by exactly one import line and not one character of copy.**
@@ -390,18 +446,32 @@ numbers, never explained here; the debrief points at them as the hook into `q3-c
 
 ### World 1 quest 2 — The Inside of a Piece (`unit01/q2-core`, live)
 Eight stages on the core bench in Tallow's sub-level diagnostic lab, picking up where quest 1's
-blade stopped. The Avalon needs reactor calibration and ion drive propellant from Imperial
-deep-salvage canisters. Vess delivers clear, simple, jargon-free briefings across all eight stages:
-fire a beam through a mounted piece to find its structure → count marked grains in the core →
-deduce light particles from a sealed zero-charge canister → place eleven light pieces onto rings →
-test specimens with a low-charge tester to predict trading behavior → check core marks to find coolant
-match → strip light pieces to reach net charge plus two → classify three canisters on the manifest.
-Briefings state the problem simply and plainly without technobabble or premature jargon.
-Player-facing vocabulary before the debrief is *piece, core, grain, mark, ring, light piece, specimen, needle*;
-the debrief names nucleus, proton, neutron (with isotope), electron, shell, valence and ion. Every
-specimen is a real nuclide and balances unless a stage has stripped it. **The quest never connects
-the marked count to the scope's catalogue** — the core bench does not talk to the catalogue,
-preserving the proton-count reveal for `q3-catalogue`.
+blade stopped. The Avalon needs reactor calibration and charged propellant from Imperial
+deep-salvage canisters. Fire a beam through a mounted piece to find its structure → count the
+grains stamped with a cross in the nucleus → find the balance rule on two open references and
+apply it to a sealed canister → load eleven electrons onto rings → predict trading from the
+outermost shell → tell two 13-grain cores apart by their proton count → strip electrons to
+reach plus two → file three unlabelled canisters.
+
+**This quest is where the vocabulary SCHEDULE is worked out** (see the top of this file).
+`VOCABULARY` in the module maps each gated term to the stage whose reward card introduces
+it — nucleus at 1, proton and neutron at 2, electron at 3, shell at 4, valence at 5, element
+and isotope at 6, ion at 7 — and from the stage after, the game simply says the word.
+Stage 4's prompt asks for electrons because stage 3 is where the player found them.
+
+**Stage 3 is the one that has to be discovered rather than asserted.** It puts two open
+reference pieces beside one welded shut: on the open ones both sides can be counted and the
+needle sits on zero, so the player works out for themselves that the crosses and the light
+pieces come out equal — and only then applies it to the sealed one. Asking for the deduction
+without the references was the version that made no sense, because nothing had established
+that the outside existed or that it cancelled anything.
+
+**Nothing in this quest requires clicking a particle.** Counting is the task on stages 2, 3,
+6 and 8, so the answer is a number the player enters; the probe is a tool that is there if
+they want a reading, never a gate on a commit. Every specimen is a real nuclide and balances
+unless a stage has stripped it. **The quest never connects the proton count to the scope's
+catalogue** — the core bench does not talk to the catalogue, preserving that reveal for
+`q3-catalogue`.
 
 ### Tallow — Learn world 01 as a place you walk (`three/tallow.js`, T4)
 

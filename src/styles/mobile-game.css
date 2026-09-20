@@ -58,8 +58,8 @@ body.touch-primary #fullscreen-toggle { display: inline-flex; }
 /* No padding on the zones: the ring is placed from the zone's own box in JS,
    and a safe-area pad here would put the drawn ring and the measured origin a
    notch apart. The sticks float to the thumb, so the inset buys nothing. */
-.tc-zone-look { left: 0; }
-.tc-zone-move { right: 0; }
+.tc-zone-move { left: 0; }
+.tc-zone-look { right: 0; }
 
 /* The ring is repositioned in JS to wherever the thumb lands. */
 .tc-ring {
@@ -203,7 +203,7 @@ body.touch-walking #fps-interact-prompt {
 
 /* ===================================================================
    LANDSCAPE — a sideways phone is short, so everything shrinks and the
-   keys move beside the move stick with center line at 68px.
+   keys move beside the look stick with center line at 68px.
    =================================================================== */
 @media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
   .tc-zone { width: 136px; height: 136px; }

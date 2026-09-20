@@ -539,6 +539,29 @@ are part of this system and must stay in step with the tokens, and `TINT_HEX` in
   implementation of where a detent is, so the knob on the bench and the knob on the panel
   can never disagree about which power a given angle means.
 
+**The Flat Picture Rule.** A built instrument is real geometry — a plate, a well with the
+bulk matter actually in it, a milled cap you reach over and turn — but **what the
+instrument RESOLVES is drawn in two dimensions**, on a raked screen standing behind each
+well (`buildStation` in `bench3d.js`), by the same `drawScopeField` / `drawCoreField` that
+paint the canvas instrument. Three reasons, and each one was a bug before it was a rule:
+a microscope's output is a flat image, so pieces rising out of a hole as the dial comes up
+read as the sample inflating; a core is a huddle, so staged as spheres half its grains hide
+behind the other half and a player asked to COUNT is refused over a grain they were never
+shown; and at ring scale a piece staged in the world is a speck indistinguishable from the
+dust of the planet behind it. Drawn flat, every piece is in the picture, in the same place,
+at the same size, on every tier — which is also what keeps a hint that names a position
+honest on both benches. The screen is raked rather than laid in the well because the player
+is looking down at a bench: flat, the picture foreshortens to about a third of its height.
+
+**The Aimed, Not Skewed Rule.** Deployed on a walkable world the quest frame is a page over
+the glass, so the instrument has to sit in the part of the view the frame is not covering.
+It gets there by **aiming the camera higher**, never by skewing the projection: a
+`setViewOffset` on the world camera would re-frame the whole planet to make room for a card
+standing in front of it. `fitDeployedAim` / `aimForChrome` in `bench3d.js` measure how far
+down the glass the chrome reaches over the middle of the view and pitch up until the tops
+of the screens clear it; `verify:bench` drives the same function and fails the build if a
+screen still runs under the frame or a well ends up off the bottom.
+
 **The Stencil, Not Colour Rule.** On the core bench a marked grain is told apart by a
 **stencilled cross**, never by its colour alone. It is the only version of the instrument
 that survives a colour-blind player, and it is non-negotiable.
@@ -628,6 +651,13 @@ console is not raised at all and the quest keeps the 2D stage deck, which is the
 - **Do** make an instrument's control a thing you turn, press or slide in the world when
   the bench is built — and keep a keyboard path to the same value. A control that answers
   only to a drag is invisible to a keyboard and unusable on a trackpad.
+- **Do** put the move stick bottom-LEFT and the look stick bottom-RIGHT on a phone. That
+  is where every twin-stick scheme a player has already used puts them, and a walk that
+  steers backwards from muscle memory reads as broken input rather than as a choice.
+- **Do** inset a part into the part it is carried by rather than ending it flush. Two faces
+  in the same plane cannot be ordered by a depth buffer, and the surface flickers — a shelf
+  as wide as the posts holding it, a box whose underside is exactly the lid below it, an
+  I-beam web the same length as its flanges. A few millimetres of overlap is the fix.
 
 ### Don't:
 
@@ -653,9 +683,19 @@ console is not raised at all and the quest keeps the 2D stage deck, which is the
   says `NO GUILD TELEMETRY ON THIS CHANNEL`; it never falls back to a plausible season.
   Avalon is pre-launch and a screen that makes data up is lying to a student.
   `verify:holo` enforces it.
-- **Don't** put chemistry vocabulary anywhere but the chemistry card and the debrief. The
-  prompts, scans, hints, miss messages and briefings stay in plain language — that order is
-  the product, and `verify:quest` / `verify:learn` fail the build over it.
+- **Don't** name a chemical idea before the player has done it. A term enters on the card
+  that follows the stage which earned it, never in the prompt that introduces it, and
+  never more than about one new idea per stage — a player who has not met a molecule
+  cannot be handed "nucleophilic aromatic substitution" and the stage is broken, not hard.
+  `verify:quest` and `verify:learn` fail the build over it.
+- **Don't** keep saying "light piece" after the player has been told it is an electron,
+  either. **Withholding is a schedule, not a policy**: once a reward card has named the
+  thing, the plain word is the word the game uses — in prompts, hints, widget labels,
+  readouts and refusal messages alike. A quest publishes that schedule as `VOCABULARY` in
+  its module (see `unit01/q2-core.js`), `verify:learn` refuses a word used one stage early
+  AND a word the schedule promises that no card delivers, and the campaign's Charge
+  Gardens keeps the older arrangement — withheld throughout play, taught on the chemistry
+  card — because it has no schedule of its own.
 - **Don't** read a guild's colour from the backend `accent_hex`. `TEAM_LIVERY` in
   `main.js` is the only source.
 - **Don't** fix a phone bug in `main.css` or `holo.css`. Phone rules live in the

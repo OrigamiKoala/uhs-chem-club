@@ -1385,7 +1385,8 @@ export class ShipInterior {
 
     // --- Overhead gantry, run across the beam over the container stack ---
     const beamZ = -2.35;
-    const craneWeb = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.45, 0.12), this.hazardMat);
+    // The web is shorter than its flanges, so no two end faces share a plane.
+    const craneWeb = new THREE.Mesh(new THREE.BoxGeometry(2.82, 0.45, 0.12), this.hazardMat);
     craneWeb.position.set(2.8, 2.40, beamZ);
     const craneTop = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.08, 0.48), this.hazardMat);
     craneTop.position.set(2.8, 2.63, beamZ);
@@ -1422,7 +1423,12 @@ export class ShipInterior {
     }
     for (let tier = 0; tier < 2; tier++) {
       const sy = 0.45 + tier * 0.9;
-      const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 2.3), this.ironMat);
+      // A SHELF IS WELDED BETWEEN ITS POSTS, NOT FLUSH WITH THEM. The shelf was
+      // 1.2 wide against uprights 1.2 apart outside face to outside face, so the
+      // two ends were exactly coplanar with the posts — a depth buffer cannot
+      // order two surfaces in the same plane, and the whole rack flickered.
+      // 1.1 lands each end 0.05 INSIDE the post it is carried by.
+      const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.08, 2.3), this.ironMat);
       shelf.position.set(rackX, sy, -1.0);
       cargoGroup.add(shelf);
 
@@ -1450,7 +1456,10 @@ export class ShipInterior {
     const containerB = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), this.hazardMat);
     containerB.position.set(1.9, 0.6, -2.05);
     const containerC = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.55, 1.0), this.durasteelMat);
-    containerC.position.set(1.9, 1.475, -2.05);
+    // Sits 6 mm DOWN into B's lid rather than exactly on it: a box resting with
+    // its underside in the same plane as the lid below flickers across its whole
+    // footprint.
+    containerC.position.set(1.9, 1.469, -2.05);
     for (const cx of [-0.68, 0.68]) {
       for (const cz of [-0.68, 0.68]) {
         for (const cy of [0.05, 1.15]) {

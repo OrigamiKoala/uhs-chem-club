@@ -7,21 +7,30 @@
  * the canvas engine rather than reimplemented, so what the blade finds and where
  * the bands land can never differ between the two.
  *
- * What changes is only what the player's eye does. On canvas, the walk down
- * through scales is a 2D reveal in an aperture. Here, each sample sits in a real
- * recessed well in the bench top: at low power it is a solid puck of dust, and as
- * the dial comes up it breaks into grit, then into lumps, then into individual
- * pieces with visible sticks between the ones that are held together — and the
- * player can lean over the bench and look at a cluster from another side to see
- * that a chain is a chain and not a star.
+ * What changes is only where the player stands. The crate of bulk matter sits
+ * in a real recessed well in the bench top, the power control is a milled cap
+ * they reach over and turn — and the PICTURE the scope resolves is on the screen
+ * raked over the well, drawn by `drawScopeField` from `scope.js`: the same
+ * function, the same layout, the same pieces in the same places as on a
+ * Chromebook.
+ *
+ * A MICROSCOPE'S OUTPUT IS A FLAT IMAGE. This used to stage the magnified
+ * sample as spheres standing in the well, which is not what a scope does and is
+ * not something a player can read: pieces at the back of the well hide behind
+ * pieces at the front, and loose balls appearing inside the ring as the dial
+ * came up read as the crate inflating rather than as the instrument resolving.
+ * The instrument is built; its picture is drawn.
  *
  * It knows no chemistry. A piece is a piece, and what any of it means is the
  * quest's business.
  */
 
 import * as THREE from 'three';
-import { buildUnits, detailFor, planSettle, planCut, TINTS } from './scope.js';
-import { BenchViewer3D, TINT_HEX, AMBER, buildPowerDial } from './bench3d.js';
+import {
+  buildUnits, detailFor, planSettle, planCut, TINTS,
+  drawScopeField, fieldGeometry, hitTestField
+} from './scope.js';
+import { BenchViewer3D, TINT_HEX, buildPowerDial } from './bench3d.js';
 import { valueForAngle, angleFor as angleOf } from './dial.js';
 import { benchHost } from './bench-host.js';
 
@@ -76,6 +85,8 @@ export class SampleScope3D {
     this.selectable = false;
     this.selected = null;
     this.probe = null;
+    this.sweep = 0;
+    this.sweepRaf = null;
     this.disposed = false;
     this.animating = false;
 
@@ -150,66 +161,30 @@ export class SampleScope3D {
     this.samples.forEach((sample, i) => {
       const station = this.viewer.buildStation(i, sample.label, sample.note || '');
 
-      // One instanced mesh per dust tint, so a station of 400 pieces is five
-      // draw calls rather than four hundred.
-      const piecesByTint = {};
-      const geo = new THREE.SphereGeometry(1, 14, 10);
-      for (const tint of Object.keys(TINT_HEX)) {
-        const mat = new THREE.MeshStandardMaterial({
-          color: TINT_HEX[tint].fill,
-          roughness: 0.86,
-          metalness: 0.08
-        });
-        // 3 members is the widest cluster the quests declare; the cap is generous.
-        const mesh = new THREE.InstancedMesh(geo, mat, 1);
-        mesh.count = 0;
-        mesh.frustumCulled = false;
-        station.content.add(mesh);
-        piecesByTint[tint] = { mesh, geo, mat, capacity: 1 };
-      }
-
-      // The sticks that hold a cluster together, also instanced.
-      const bondGeo = new THREE.CylinderGeometry(1, 1, 1, 7);
-      const bondMat = new THREE.MeshStandardMaterial({
-        color: 0x4a443d, roughness: 0.9, metalness: 0.2
-      });
-      const bonds = new THREE.InstancedMesh(bondGeo, bondMat, 1);
-      bonds.count = 0;
-      bonds.frustumCulled = false;
-      station.content.add(bonds);
-
-      // The dust puck shown at low power, and its mottling.
-      const puckGeo = new THREE.CylinderGeometry(WELL_R * 0.98, WELL_R * 0.98, 0.012, 40);
+      // WHAT IS IN THE WELL IS THE CRATE, NOT THE PICTURE. Bulk matter, poured
+      // out at the size it actually is: a puck of grit that does not change
+      // when the dial does, because turning a scope up does not make a crate
+      // bigger. Everything the instrument resolves is on the screen above it.
+      const puckGeo = new THREE.CylinderGeometry(WELL_R * 0.98, WELL_R * 0.98, 0.014, 40);
       const puckMat = new THREE.MeshStandardMaterial({
         color: 0x8f8678, roughness: 0.96, metalness: 0.0
       });
       const puck = new THREE.Mesh(puckGeo, puckMat);
-      puck.position.y = 0.006;
-      puck.visible = false;
+      puck.position.y = 0.007;
       station.content.add(puck);
 
+      // Grit on top of it, so the crate reads as poured rather than machined.
       const mottleGeo = new THREE.SphereGeometry(1, 8, 6);
       const mottleMat = new THREE.MeshStandardMaterial({
         color: 0x8f8678, roughness: 0.98, metalness: 0.0
       });
-      const mottle = new THREE.InstancedMesh(mottleGeo, mottleMat, 182);
+      const mottle = new THREE.InstancedMesh(mottleGeo, mottleMat, 160);
       mottle.count = 0;
       mottle.frustumCulled = false;
       station.content.add(mottle);
 
-      // The ring the instrument scratches around a piece it has just read.
-      const ringGeo = new THREE.TorusGeometry(1, 0.1, 8, 22);
-      const ringMat = new THREE.MeshBasicMaterial({ color: AMBER });
-      const probeRing = new THREE.Mesh(ringGeo, ringMat);
-      probeRing.rotation.x = -Math.PI / 2;
-      probeRing.visible = false;
-      station.content.add(probeRing);
-
       this.stations.push({
-        sample, station, piecesByTint, bonds, bondGeo, bondMat,
-        puck, puckGeo, puckMat, mottle, mottleGeo, mottleMat,
-        probeRing, ringGeo, ringMat, pieceGeo: geo,
-        hitMap: new Map()    // "tint:instanceId" -> {unitIndex, memberIndex}
+        sample, station, puck, puckGeo, puckMat, mottle, mottleGeo, mottleMat
       });
     });
 
@@ -291,58 +266,6 @@ export class SampleScope3D {
     this.dial = null;
   }
 
-  /** Grow an instanced mesh when a sample needs more instances than it holds. */
-  ensureCapacity(rec, tint, needed) {
-    const slot = rec.piecesByTint[tint];
-    if (needed <= slot.capacity) return slot;
-    const cap = Math.max(needed, Math.ceil(slot.capacity * 2));
-    const mesh = new THREE.InstancedMesh(slot.geo, slot.mat, cap);
-    mesh.count = 0;
-    mesh.frustumCulled = false;
-    rec.station.content.remove(slot.mesh);
-    slot.mesh.dispose();
-    slot.mesh = mesh;
-    slot.capacity = cap;
-    rec.station.content.add(mesh);
-    return slot;
-  }
-
-  ensureBondCapacity(rec, needed) {
-    if (needed <= rec.bonds.instanceMatrix.count) return;
-    const cap = Math.max(needed, rec.bonds.instanceMatrix.count * 2);
-    rec.station.content.remove(rec.bonds);
-    rec.bonds.dispose();
-    const mesh = new THREE.InstancedMesh(rec.bondGeo, rec.bondMat, cap);
-    mesh.count = 0;
-    mesh.frustumCulled = false;
-    rec.bonds = mesh;
-    rec.station.content.add(mesh);
-  }
-
-  /* ---------------- geometry, in the same terms the canvas uses ---------------- */
-
-  geometry(sample) {
-    // Higher power magnifies: the same pieces, larger, with the edge of the
-    // field falling outside the well — exactly as it falls outside the aperture.
-    const zoom = (1 + 0.34 * (this.power - 1)) * (sample.magnify || 1);
-    return {
-      spread: WELL_R * 0.94 * zoom,
-      pieceR: WELL_R * 0.085 * zoom
-    };
-  }
-
-  memberPos(g, unit, m) {
-    const cos = Math.cos(unit.spin);
-    const sin = Math.sin(unit.spin);
-    const ox = m.ox * cos - m.oy * sin;
-    const oy = m.ox * sin + m.oy * cos;
-    return {
-      x: unit.x * g.spread + ox * g.pieceR * 2,
-      z: unit.y * g.spread + oy * g.pieceR * 2,
-      r: g.pieceR * m.size * 2
-    };
-  }
-
   /* ---------------- drawing ---------------- */
 
   drawAll() {
@@ -350,191 +273,61 @@ export class SampleScope3D {
     for (const rec of this.stations) this.draw(rec);
   }
 
+  /**
+   * One station: the crate in the well, and the picture on the screen.
+   *
+   * The picture is `drawScopeField` and nothing else, so the built bench and
+   * the drawn bench cannot show different things — which is what lets a hint
+   * that says "the lower right of the field" stay true on both.
+   */
   draw(rec) {
     const sample = rec.sample;
-    const detail = detailFor(this.power, sample.floorPower);
-    const g = this.geometry(sample);
+    const sc = rec.station.screen;
 
-    // Everything off first, then only what this detail level resolves is turned
-    // back on. A level never leaves a fragment of the level before it behind.
-    rec.puck.visible = false;
-    rec.mottle.count = 0;
-    rec.bonds.count = 0;
-    rec.probeRing.visible = false;
-    for (const tint of Object.keys(rec.piecesByTint)) rec.piecesByTint[tint].mesh.count = 0;
-    rec.hitMap.clear();
+    drawScopeField(sc.ctx, {
+      w: sc.w, h: sc.h, sample, kinds: this.kinds, power: this.power,
+      probe: this.probe && this.probe.sampleId === sample.id ? this.probe : null,
+      sweep: this.probe && this.probe.sampleId === sample.id ? this.sweep : 0
+    });
+    this.viewer.refreshScreen(rec.station);
 
-    if (detail === 0) this.drawSolid(rec, 1);
-    else if (detail === 1) this.drawSolid(rec, 7);
-    else if (detail === 2) this.drawLumps(rec, g);
-    else this.drawPieces(rec, g);
+    this.drawCrate(rec);
   }
 
-  /** Detail 0 and 1: the sample as a solid, then as something merely mottled. */
-  drawSolid(rec, blobs) {
+  /** The bulk matter in the well. Fixed: the dial magnifies, it does not pour. */
+  drawCrate(rec) {
     const sample = rec.sample;
+    if (rec.crateDrawn === sample.id) return;
+    rec.crateDrawn = sample.id;
+
     const rand = mulberry32(hashId(sample.id) ^ 0x9e37);
     const firstTint = this.kinds[sample.units[0]?.members[0]?.kindId]?.tint || 'pale';
     const base = TINT_HEX[firstTint] || TINT_HEX.pale;
-
-    rec.puck.visible = true;
     rec.puckMat.color.setHex(base.fill);
+    rec.mottleMat.color.setHex(base.rim);
 
-    // At detail 0 the puck is all there is. At detail 1 the surface is mottled:
-    // the sample has begun to admit it is made of something.
-    const n = blobs === 1 ? 0 : 160;
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
     const scale = new THREE.Vector3();
     const pos = new THREE.Vector3();
-
+    const n = 150;
     for (let i = 0; i < n; i++) {
       const a = rand() * Math.PI * 2;
       const rr = Math.sqrt(rand()) * WELL_R * 0.93;
-      const size = (WELL_R / (blobs + 1)) * (0.14 + rand() * 0.3);
-      pos.set(Math.cos(a) * rr, 0.012 + size * 0.3, Math.sin(a) * rr);
+      const size = WELL_R * (0.016 + rand() * 0.034);
+      pos.set(Math.cos(a) * rr, 0.014 + size * 0.4, Math.sin(a) * rr);
       scale.setScalar(size);
       m.compose(pos, q, scale);
       rec.mottle.setMatrixAt(i, m);
     }
-    rec.mottleMat.color.setHex(base.rim);
     rec.mottle.count = n;
     rec.mottle.instanceMatrix.needsUpdate = true;
   }
 
-  /** Detail 2: the units are there but merged — grit, not pieces. */
-  drawLumps(rec, g) {
-    const sample = rec.sample;
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    const scale = new THREE.Vector3();
-    const pos = new THREE.Vector3();
-
-    // A lump carries its unit's tint, so a two-material crate already looks
-    // like two materials before the pieces resolve.
-    const counts = {};
-    for (const tint of Object.keys(rec.piecesByTint)) counts[tint] = 0;
-
-    const needed = {};
-    sample.units.forEach(u => {
-      const tint = this.kinds[u.members[0].kindId]?.tint || 'pale';
-      needed[tint] = (needed[tint] || 0) + 1;
-    });
-    for (const tint of Object.keys(needed)) this.ensureCapacity(rec, tint, needed[tint]);
-
-    sample.units.forEach(unit => {
-      const tint = this.kinds[unit.members[0].kindId]?.tint || 'pale';
-      const slot = rec.piecesByTint[tint];
-      if (!slot) return;
-      const x = unit.x * g.spread;
-      const z = unit.y * g.spread;
-      if (Math.hypot(x, z) > WELL_R * 1.02) return;   // outside the field
-      const r = g.pieceR * 1.9;
-      pos.set(x, r * 0.72, z);
-      scale.setScalar(r);
-      m.compose(pos, q, scale);
-      slot.mesh.setMatrixAt(counts[tint]++, m);
-    });
-
-    for (const tint of Object.keys(counts)) {
-      const slot = rec.piecesByTint[tint];
-      slot.mesh.count = counts[tint];
-      slot.mesh.instanceMatrix.needsUpdate = true;
-      slot.mat.color.setHex(TINT_HEX[tint].fill);
-    }
-  }
-
-  /** Detail 3: individual pieces, and the sticks that hold groups together. */
-  drawPieces(rec, g) {
-    const sample = rec.sample;
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    const scale = new THREE.Vector3();
-    const pos = new THREE.Vector3();
-
-    const needed = {};
-    let bondCount = 0;
-    sample.units.forEach(u => {
-      u.members.forEach(mem => {
-        const tint = this.kinds[mem.kindId]?.tint || 'pale';
-        needed[tint] = (needed[tint] || 0) + 1;
-      });
-      bondCount += u.bonds.length;
-    });
-    for (const tint of Object.keys(needed)) this.ensureCapacity(rec, tint, needed[tint]);
-    this.ensureBondCapacity(rec, Math.max(bondCount, 1));
-
-    const counts = {};
-    for (const tint of Object.keys(rec.piecesByTint)) counts[tint] = 0;
-
-    sample.units.forEach((unit, ui) => {
-      unit.members.forEach((mem, mi) => {
-        const p = this.memberPos(g, unit, mem);
-        // The well clips the field the way the aperture does: what has been
-        // magnified past the rim is simply not in view any more.
-        if (Math.hypot(p.x, p.z) > WELL_R * 1.02) return;
-
-        const tint = this.kinds[mem.kindId]?.tint || 'pale';
-        const slot = rec.piecesByTint[tint];
-        if (!slot) return;
-
-        pos.set(p.x, p.r, p.z);
-        scale.setScalar(p.r);
-        m.compose(pos, q, scale);
-        const id = counts[tint]++;
-        slot.mesh.setMatrixAt(id, m);
-        rec.hitMap.set(`${tint}:${id}`, { unitIndex: ui, memberIndex: mi });
-      });
-    });
-
-    for (const tint of Object.keys(counts)) {
-      const slot = rec.piecesByTint[tint];
-      slot.mesh.count = counts[tint];
-      slot.mesh.instanceMatrix.needsUpdate = true;
-      slot.mat.color.setHex(TINT_HEX[tint].fill);
-    }
-
-    // Sticks. A stick is drawn between the two members it actually joins, taken
-    // from the unit's own bond list — a cluster that is a chain looks like a
-    // chain from every angle, which is the reason this bench is worth building.
-    let bi = 0;
-    const up = new THREE.Vector3(0, 1, 0);
-    const dir = new THREE.Vector3();
-    const mid = new THREE.Vector3();
-    sample.units.forEach(unit => {
-      if (unit.members.length < 2) return;
-      unit.bonds.forEach(([a, b]) => {
-        const pa = this.memberPos(g, unit, unit.members[a]);
-        const pb = this.memberPos(g, unit, unit.members[b]);
-        if (Math.hypot(pa.x, pa.z) > WELL_R * 1.02 && Math.hypot(pb.x, pb.z) > WELL_R * 1.02) return;
-
-        const ax = new THREE.Vector3(pa.x, pa.r, pa.z);
-        const bx = new THREE.Vector3(pb.x, pb.r, pb.z);
-        dir.subVectors(bx, ax);
-        const len = dir.length();
-        if (len < 1e-5) return;
-        mid.addVectors(ax, bx).multiplyScalar(0.5);
-        q.setFromUnitVectors(up, dir.clone().normalize());
-        scale.set(g.pieceR * 0.21, len, g.pieceR * 0.21);
-        m.compose(mid, q, scale);
-        rec.bonds.setMatrixAt(bi++, m);
-      });
-    });
-    rec.bonds.count = bi;
-    rec.bonds.instanceMatrix.needsUpdate = true;
-    q.identity();
-
-    // The read ring, if this station is the one holding the probe.
-    if (this.probe && this.probe.sampleId === sample.id) {
-      const unit = sample.units[this.probe.unitIndex];
-      const mem = unit?.members[this.probe.memberIndex];
-      if (mem) {
-        const p = this.memberPos(g, unit, mem);
-        rec.probeRing.visible = true;
-        rec.probeRing.position.set(p.x, p.r * 0.35, p.z);
-        rec.probeRing.scale.setScalar(p.r * 1.5);
-      }
-    }
+  /** Where the picture sits on a station's screen, in that screen's pixels. */
+  screenGeometry(rec) {
+    const sc = rec.station.screen;
+    return fieldGeometry(sc.w, sc.h, this.power, rec.sample.magnify);
   }
 
   /* ---------------- interaction ---------------- */
@@ -543,48 +336,61 @@ export class SampleScope3D {
     if (this.disposed) return;
     this.viewer.setPointer(e);
 
-    // Which station was clicked at all — the tray, the well, or a piece in it.
-    const station = this.viewer.stationUnderRay();
-    let rec = station ? this.stations.find(s => s.station === station) : null;
+    // A PIECE IS READ WHERE IT IS SHOWN. The picture is on the screen, so that
+    // is where a press on a piece lands, and the hit test is `hitTestField` —
+    // the same one the drawn instrument runs, against the same geometry.
+    const onScreen = this.viewer.screenUnderRay();
+    let rec = onScreen ? this.stations.find(s => s.station === onScreen.station) : null;
 
-    // A piece can stand proud of the tray, so pieces are tested on their own and
-    // win over the tray behind them.
-    let hit = null;
-    for (const r of this.stations) {
-      for (const tint of Object.keys(r.piecesByTint)) {
-        const slot = r.piecesByTint[tint];
-        if (!slot.mesh.count) continue;
-        const res = this.viewer.raycaster.intersectObject(slot.mesh, false);
-        if (res.length && (!hit || res[0].distance < hit.distance)) {
-          const found = r.hitMap.get(`${tint}:${res[0].instanceId}`);
-          if (found) hit = { rec: r, distance: res[0].distance, ...found };
+    if (rec) {
+      const detail = detailFor(this.power, rec.sample.floorPower);
+      if (detail >= 3) {
+        const hit = hitTestField(this.screenGeometry(rec), rec.sample, onScreen.px, onScreen.py);
+        if (hit) {
+          this.probe = { sampleId: rec.sample.id, ...hit };
+          this.sweep = 1;
+          this.startSweep();
+          this.viewer.runSweep(rec.station);
+          this.draw(rec);
+          if (this.onProbe) {
+            const unit = rec.sample.units[hit.unitIndex];
+            this.onProbe({
+              sampleId: rec.sample.id,
+              sampleLabel: rec.sample.label,
+              kindId: unit.members[hit.memberIndex].kindId,
+              neighbours: unit.bonds.filter(b => b.includes(hit.memberIndex)).length,
+              groupSize: unit.members.length
+            });
+          }
         }
       }
+    } else {
+      // Not on a screen: the tray, the well and the crate in it all choose
+      // this station, the same rule the canvas plate follows.
+      const station = this.viewer.stationUnderRay();
+      rec = station ? this.stations.find(s => s.station === station) : null;
     }
-    if (hit) rec = hit.rec;
+
     if (!rec) return;
-
-    const detail = detailFor(this.power, rec.sample.floorPower);
-
-    if (hit && detail >= 3) {
-      this.probe = { sampleId: rec.sample.id, unitIndex: hit.unitIndex, memberIndex: hit.memberIndex };
-      this.viewer.runSweep(rec.station);
-      this.draw(rec);
-      if (this.onProbe) {
-        const unit = rec.sample.units[hit.unitIndex];
-        this.onProbe({
-          sampleId: rec.sample.id,
-          sampleLabel: rec.sample.label,
-          kindId: unit.members[hit.memberIndex].kindId,
-          neighbours: unit.bonds.filter(b => b.includes(hit.memberIndex)).length,
-          groupSize: unit.members.length
-        });
-      }
-    }
-
-    // Tapping anywhere on a station is also how a station is chosen, whether or
-    // not anything was resolved to read — the same rule the canvas plate uses.
     if (this.selectable && this.onSelect) this.onSelect(rec.sample.id);
+  }
+
+  /** The probe beam sweep across the picture, which fades on its own. */
+  startSweep() {
+    if (this.sweepRaf) return;
+    const tick = () => {
+      if (this.disposed) { this.sweepRaf = null; return; }
+      this.sweep -= 0.055;
+      if (this.sweep <= 0) {
+        this.sweep = 0;
+        this.sweepRaf = null;
+        this.drawAll();
+        return;
+      }
+      this.drawAll();
+      this.sweepRaf = requestAnimationFrame(tick);
+    };
+    this.sweepRaf = requestAnimationFrame(tick);
   }
 
   /* ---------------- bench actions ---------------- */
@@ -654,6 +460,8 @@ export class SampleScope3D {
 
   dispose() {
     this.disposed = true;
+    if (this.sweepRaf) cancelAnimationFrame(this.sweepRaf);
+    this.sweepRaf = null;
     this.disposeDial();
     window.removeEventListener('resize', this.onResize);
     this.unmountScene(this.viewer);

@@ -148,8 +148,29 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
 
 ## Product Principles
 
-1. **The mechanic teaches; the word comes last.** If a screen has to name a concept
-   before the player has done it, the stage is designed wrong.
+1. **The mechanic teaches; the word comes last — and then the word is used.** A player
+   arrives knowing virtually nothing, so a concept is met as something they DO before it
+   is ever named: a stage that opens by naming what it is about is designed wrong, and a
+   stage that introduces "nucleophilic aromatic substitution" to someone who has not met
+   a molecule is not a hard stage, it is a broken one.
+
+   **Withholding a word is a schedule, not a policy.** Once a reward card has named a
+   thing the player has already found, that word is the plain word for it and the game
+   uses it — the prompt, the hints, the readouts and the refusal messages all say
+   "electron" from the stage after the stage that earned it. Going on saying "light
+   piece" once the player knows better is the instrument being coy, and it reads as the
+   game hiding the ball. The rules that follow from this:
+
+   - Nothing is introduced faster than it can be absorbed: roughly one new named idea per
+     stage, and each one has to rest on something the player has already worked out.
+   - A term is introduced at a stage's reward card, and is usable in play from the NEXT
+     stage on. A quest declares that schedule in its module (`VOCABULARY` in
+     `src/learn/quests/unit01/q2-core.js` is the worked example) and `npm run verify:learn`
+     fails the build both ways round — a word said one stage early, and a word the
+     schedule promises that no card ever delivers.
+   - The intuition still comes first and it comes WITHOUT the word. Charge balance is met
+     as a needle that sits on zero when two counts happen to be equal; only afterwards is
+     it called an electron and a proton. Discover, then name, then use.
 2. **Looking is the verb.** One reading is never enough — every stage is solved by
    comparing two or more, which is what makes investigation the gameplay rather than
    reading comprehension.

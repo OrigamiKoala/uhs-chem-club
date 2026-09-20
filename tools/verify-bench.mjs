@@ -84,6 +84,32 @@ if (!failures) ok(`${world.data.sites.length} sites all face the ground the play
 const corner = new THREE.Vector3();
 const box = new THREE.Box3();
 
+/** How far two bodies may share space before it counts: a bounding box is a
+    loose fit around a rotated body, the same reasoning as `verify:tallow`. */
+const TOUCH = 0.006;
+
+const shrunk = (b, t) => new THREE.Box3(
+  b.min.clone().addScalar(t), b.max.clone().subScalar(t));
+
+/** AABB of an object's meshes, expressed in the frame `inv` inverts into. */
+function localBox(obj, inv) {
+  const b = new THREE.Box3();
+  const v = new THREE.Vector3();
+  const m = new THREE.Matrix4();
+  obj.traverse(o => {
+    if (!o.isMesh || !o.geometry) return;
+    if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+    const g = o.geometry.boundingBox;
+    m.multiplyMatrices(inv, o.matrixWorld);
+    for (const x of [g.min.x, g.max.x]) {
+      for (const y of [g.min.y, g.max.y]) {
+        for (const z of [g.min.z, g.max.z]) b.expandByPoint(v.set(x, y, z).applyMatrix4(m));
+      }
+    }
+  });
+  return b.isEmpty() ? null : b;
+}
+
 /** NDC bounds of an object, as this camera would draw it. */
 function ndcBounds(obj, camera) {
   box.setFromObject(obj);
@@ -181,12 +207,91 @@ function check(questId, label, build, widest) {
       }
     });
 
-    // 4. The power dial, where the instrument carries one, is reachable in view.
+    // 4. The instrument is AIMED into the open glass below the frame.
+    //
+    // Deployed, the quest frame is a page over the world, so the top of the
+    // glass belongs to the header, the stage rail and the tool plate and the
+    // bench has to sit under them. `aimForChrome` is the correction the live
+    // bench applies once every fit; driving it here proves that it converges
+    // and that nothing important ends up off the bottom of the view instead.
+    const chromeNdc = 1 - TOP_CHROME * 2;
+    for (let pass = 0; pass < 10; pass++) bench.viewer.aimForChrome(chromeNdc);
+    camera.updateMatrixWorld(true);
+
+    for (const st of bench.viewer.stations) {
+      const b = ndcBounds(st.screen.mesh, camera);
+      if (!b) continue;
+      if (b.maxY > chromeNdc + 0.02) {
+        fail(`${tag}: a station screen still runs under the frame — top at ${b.maxY.toFixed(2)}, chrome at ${chromeNdc.toFixed(2)}`);
+      }
+      if (b.minY < -0.99 || b.minX < -0.99 || b.maxX > 0.99) {
+        fail(`${tag}: a station screen hangs off the glass — x[${b.minX.toFixed(2)}, ${b.maxX.toFixed(2)}] y[${b.minY.toFixed(2)}, ${b.maxY.toFixed(2)}]`);
+      }
+    }
+    // The wells stay in view too: the crate is what the player reaches for.
+    bench.viewer.stations.forEach((st, i) => {
+      const b = ndcBounds(st.tray, camera);
+      if (!b) return;
+      if (b.minY < -0.99) {
+        fail(`${tag}: station ${i + 1} has been aimed off the bottom of the glass (${b.minY.toFixed(2)})`);
+      }
+    });
+
+    // 5. The power dial, where the instrument carries one, is reachable in view.
     if (bench.dial) {
       const b = ndcBounds(bench.dial.group, camera);
       if (b && (b.minX < -0.98 || b.maxX > 0.98 || b.minY < -0.98 || b.maxY > 0.98)) {
         fail(`${tag}: the power dial is off the glass — x[${b.minX.toFixed(2)}, ${b.maxX.toFixed(2)}] y[${b.minY.toFixed(2)}, ${b.maxY.toFixed(2)}]`);
       }
+    }
+
+    // 6. NOTHING THE INSTRUMENT BRINGS STANDS INSIDE SOMETHING ALREADY THERE.
+    //
+    // A deployed instrument is laid on a bench that is a prop with its own
+    // clutter, and the stands under the station screens come down on the plate
+    // between it. The first run of this found every stand foot sitting inside a
+    // swarf chip scattered along the bench's back lip.
+    //
+    // Measured per MESH and in the bench's own frame: a world AABB of a 4.8 m
+    // lip on a rotated site is enormous and says everything hits everything.
+    // Exempt: the working surface itself and anything at or below it (a foot is
+    // MEANT to be seated in the plate), and ambient bodies like the sky dome.
+    if (aspectName === '16:9') {
+      const inv = new THREE.Matrix4().copy(bench.viewer.root.matrixWorld).invert();
+      const own = new Set();
+      bench.viewer.root.traverse(o => own.add(o));
+
+      const heads = [];
+      for (const st of bench.viewer.stations) {
+        if (!st.head) continue;
+        st.head.traverse(o => {
+          if (!o.isMesh) return;
+          const b = localBox(o, inv);
+          if (b) heads.push(b);
+        });
+      }
+
+      const seen = new Set();
+      world.scene.traverse(o => {
+        if (!o.isMesh || own.has(o) || !o.geometry) return;
+        const b = localBox(o, inv);
+        if (!b) return;
+        // At or below the plate the instrument is standing on: a stand foot is
+        // seated there on purpose, and the plate is what it is seated in.
+        if (b.max.y <= 0.905) return;
+        // Ambient bodies — the sky dome, the horizon, the celestial vista.
+        if (b.getSize(new THREE.Vector3()).length() > 50) return;
+        for (const h of heads) {
+          if (!shrunk(h, TOUCH).intersectsBox(shrunk(b, TOUCH))) continue;
+          const c = b.getCenter(new THREE.Vector3());
+          const key = `${c.x.toFixed(2)}|${c.y.toFixed(2)}|${c.z.toFixed(2)}`;
+          if (seen.has(key)) return;
+          seen.add(key);
+          fail(`${tag}: a station stand is inside world geometry at bench-local ` +
+            `(${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)})`);
+          return;
+        }
+      });
     }
 
     bench.dispose?.();

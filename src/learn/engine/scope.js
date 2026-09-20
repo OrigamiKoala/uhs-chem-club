@@ -244,6 +244,213 @@ export function planCut(units, sampleId) {
   return { result: 'scatter', ms: 480 };
 }
 
+/* ==================================================================
+   THE FIELD — one implementation, two instruments.
+
+   Everything below draws or measures the picture in the aperture and
+   nothing else: no DOM, no plate, no class. `SampleScope` renders it into
+   its own canvas; the BUILT bench in `scope3d.js` renders the SAME
+   functions into a canvas texture on the screen bolted over its wells.
+
+   That is the whole reason a scope can be an instrument you stand at and
+   still show a picture: a microscope's output is a flat image, so the
+   picture is drawn once, in two dimensions, and the 3D bench displays it
+   rather than re-staging it as spheres in a hole. It also means a piece
+   is in exactly the same place on both, which is what keeps a hint that
+   says "lower right" honest.
+   ================================================================== */
+
+/** Where the field sits in a w x h picture, at this power. */
+export function fieldGeometry(w, h, power, magnify = 1) {
+  const cx = w / 2;
+  const cy = h / 2;
+  const aperture = Math.min(w, h) / 2 - 4;
+  // Higher power magnifies: the same pieces, drawn larger, with the edge of the
+  // field falling outside the aperture.
+  const zoom = (1 + 0.34 * (power - 1)) * (magnify || 1);
+  return { cx, cy, aperture, spread: aperture * 0.94 * zoom, pieceR: aperture * 0.085 * zoom };
+}
+
+/** Where one member of one unit lands in the picture. */
+export function memberScreen(g, unit, m) {
+  const r = g.pieceR * m.size * 2;
+  const cos = Math.cos(unit.spin);
+  const sin = Math.sin(unit.spin);
+  const ox = m.ox * cos - m.oy * sin;
+  const oy = m.ox * sin + m.oy * cos;
+  return {
+    x: g.cx + unit.x * g.spread + ox * g.pieceR * 2,
+    y: g.cy + unit.y * g.spread + oy * g.pieceR * 2,
+    r
+  };
+}
+
+/** Which piece a press at (px, py) landed on, or null. */
+export function hitTestField(g, sample, px, py) {
+  let best = null;
+  let bestD = Infinity;
+  sample.units.forEach((unit, ui) => {
+    unit.members.forEach((m, mi) => {
+      const { x, y, r } = memberScreen(g, unit, m);
+      const d = Math.hypot(px - x, py - y);
+      // A generous touch radius: fingers are not styluses.
+      if (d < Math.max(r + 6, 14) && d < bestD) {
+        bestD = d;
+        best = { unitIndex: ui, memberIndex: mi };
+      }
+    });
+  });
+  return best;
+}
+
+function fieldSolid(ctx, g, sample, kinds, blobs) {
+  const rand = mulberry32(hashId(sample.id) ^ 0x9e37);
+  const tints = sample.units.map(u => kinds[u.members[0].kindId]?.tint || 'pale');
+  const base = TINTS[tints[0] || 'pale'];
+  ctx.fillStyle = base.fill;
+  ctx.globalAlpha = 0.55;
+  ctx.beginPath();
+  ctx.arc(g.cx, g.cy, g.aperture, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  for (let i = 0; i < blobs * 26; i++) {
+    const a = rand() * Math.PI * 2;
+    const rr = Math.sqrt(rand()) * g.aperture;
+    const size = (g.aperture / (blobs + 1)) * (0.5 + rand() * 0.9);
+    ctx.globalAlpha = 0.16 + rand() * 0.16;
+    ctx.fillStyle = rand() > 0.5 ? base.rim : base.fill;
+    ctx.beginPath();
+    ctx.arc(g.cx + Math.cos(a) * rr, g.cy + Math.sin(a) * rr, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function fieldLumps(ctx, g, sample, kinds) {
+  sample.units.forEach(unit => {
+    const tint = TINTS[kinds[unit.members[0].kindId]?.tint || 'pale'];
+    const x = g.cx + unit.x * g.spread;
+    const y = g.cy + unit.y * g.spread;
+    const r = g.pieceR * 1.9;
+    ctx.globalAlpha = 0.75;
+    ctx.fillStyle = tint.fill;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = tint.rim;
+    ctx.beginPath();
+    ctx.arc(x + r * 0.2, y + r * 0.25, r * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function fieldPieces(ctx, g, sample, kinds, probe) {
+  // Joins first, so a stick reads as being behind the pieces it holds.
+  ctx.strokeStyle = '#4a443d';
+  ctx.lineCap = 'round';
+  sample.units.forEach(unit => {
+    if (unit.members.length < 2) return;
+    ctx.lineWidth = Math.max(2, g.pieceR * 0.42);
+    unit.bonds.forEach(([a, b]) => {
+      const pa = memberScreen(g, unit, unit.members[a]);
+      const pb = memberScreen(g, unit, unit.members[b]);
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+    });
+  });
+
+  sample.units.forEach((unit, ui) => {
+    // Big pieces first so small ones are never swallowed.
+    const order = unit.members
+      .map((m, mi) => mi)
+      .sort((a, b) => unit.members[b].size - unit.members[a].size);
+    order.forEach(mi => {
+      const m = unit.members[mi];
+      const { x, y, r } = memberScreen(g, unit, m);
+      const tint = TINTS[kinds[m.kindId]?.tint || 'pale'];
+
+      ctx.fillStyle = tint.fill;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // A machined shoulder, not a specular highlight.
+      ctx.strokeStyle = tint.rim;
+      ctx.lineWidth = Math.max(1, r * 0.18);
+      ctx.beginPath();
+      ctx.arc(x, y, r * 0.92, 0.5, 3.1);
+      ctx.stroke();
+
+      if (probe && probe.unitIndex === ui && probe.memberIndex === mi) {
+        ctx.strokeStyle = AMBER;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, r + 5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    });
+  });
+}
+
+/**
+ * Draw the whole picture the scope is showing, into any 2D context.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {{w:number, h:number, sample:object, kinds:object, power:number,
+ *          probe?: {unitIndex:number, memberIndex:number}|null,
+ *          sweep?: number}} o
+ */
+export function drawScopeField(ctx, o) {
+  const { w, h, sample, kinds, power } = o;
+  const probe = o.probe || null;
+  const sweep = o.sweep || 0;
+  const g = fieldGeometry(w, h, power, sample.magnify);
+  const detail = detailFor(power, sample.floorPower);
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(g.cx, g.cy, g.aperture, 0, Math.PI * 2);
+  ctx.clip();
+
+  ctx.fillStyle = FIELD_BG;
+  ctx.fillRect(0, 0, w, h);
+
+  if (detail === 0) fieldSolid(ctx, g, sample, kinds, 1);
+  else if (detail === 1) fieldSolid(ctx, g, sample, kinds, 7);
+  else if (detail === 2) fieldLumps(ctx, g, sample, kinds);
+  else fieldPieces(ctx, g, sample, kinds, probe);
+
+  // Raster lines: this is a cathode instrument, not a window.
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = '#000';
+  for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1);
+  ctx.globalAlpha = 1;
+
+  if (sweep > 0) {
+    const y = g.cy - g.aperture + (1 - sweep) * g.aperture * 2;
+    ctx.globalAlpha = 0.5 * sweep;
+    ctx.fillStyle = PHOSPHOR;
+    ctx.fillRect(0, y, w, 2);
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+
+  ctx.strokeStyle = APERTURE_RIM;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(g.cx, g.cy, g.aperture, 0, Math.PI * 2);
+  ctx.stroke();
+
+  return g;
+}
+
 export class SampleScope {
   /**
    * @param {HTMLElement} host element the plates are rendered into
@@ -402,48 +609,17 @@ export class SampleScope {
   }
 
   hitTest(plate, px, py) {
-    const g = this.geometry(plate);
-    let best = null;
-    let bestD = Infinity;
-    plate.sample.units.forEach((unit, ui) => {
-      unit.members.forEach((m, mi) => {
-        const { x, y, r } = this.memberScreen(g, unit, m);
-        const d = Math.hypot(px - x, py - y);
-        // A generous touch radius: fingers are not styluses.
-        if (d < Math.max(r + 6, 14) && d < bestD) {
-          bestD = d;
-          best = { unitIndex: ui, memberIndex: mi };
-        }
-      });
-    });
-    return best;
+    return hitTestField(this.geometry(plate), plate.sample, px, py);
   }
 
   /* ---------------- geometry ---------------- */
 
   geometry(plate) {
-    const cx = plate.w / 2;
-    const cy = plate.h / 2;
-    const aperture = Math.min(plate.w, plate.h) / 2 - 4;
-    // Higher power magnifies: the same pieces, drawn larger, with the edge of the
-    // field falling outside the aperture.
-    const zoom = (1 + 0.34 * (this.power - 1)) * (plate.sample.magnify || 1);
-    const spread = aperture * 0.94 * zoom;
-    const pieceR = aperture * 0.085 * zoom;
-    return { cx, cy, aperture, spread, pieceR };
+    return fieldGeometry(plate.w, plate.h, this.power, plate.sample.magnify);
   }
 
   memberScreen(g, unit, m) {
-    const r = g.pieceR * m.size * 2;
-    const cos = Math.cos(unit.spin);
-    const sin = Math.sin(unit.spin);
-    const ox = m.ox * cos - m.oy * sin;
-    const oy = m.ox * sin + m.oy * cos;
-    return {
-      x: g.cx + unit.x * g.spread + ox * g.pieceR * 2,
-      y: g.cy + unit.y * g.spread + oy * g.pieceR * 2,
-      r
-    };
+    return memberScreen(g, unit, m);
   }
 
   /* ---------------- drawing ---------------- */
@@ -455,143 +631,10 @@ export class SampleScope {
   draw(plate) {
     const { ctx, w, h, sample } = plate;
     if (!w || !h) return;
-    const g = this.geometry(plate);
-    const detail = detailFor(this.power, sample.floorPower);
-
-    ctx.clearRect(0, 0, w, h);
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(g.cx, g.cy, g.aperture, 0, Math.PI * 2);
-    ctx.clip();
-
-    ctx.fillStyle = FIELD_BG;
-    ctx.fillRect(0, 0, w, h);
-
-    if (detail === 0) this.drawSolid(ctx, g, sample, 1);
-    else if (detail === 1) this.drawSolid(ctx, g, sample, 7);
-    else if (detail === 2) this.drawLumps(ctx, g, sample);
-    else this.drawPieces(ctx, plate, g);
-
-    // Raster lines: this is a cathode instrument, not a window.
-    ctx.globalAlpha = 0.16;
-    ctx.fillStyle = '#000';
-    for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1);
-    ctx.globalAlpha = 1;
-
-    if (this.sweep > 0 && this.probe && this.probe.sampleId === sample.id) {
-      const y = g.cy - g.aperture + (1 - this.sweep) * g.aperture * 2;
-      ctx.globalAlpha = 0.5 * this.sweep;
-      ctx.fillStyle = PHOSPHOR;
-      ctx.fillRect(0, y, w, 2);
-      ctx.globalAlpha = 1;
-    }
-
-    ctx.restore();
-
-    ctx.strokeStyle = APERTURE_RIM;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(g.cx, g.cy, g.aperture, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  /** Detail 0 and 1: the sample as a solid, then as something merely mottled. */
-  drawSolid(ctx, g, sample, blobs) {
-    const rand = mulberry32(hashId(sample.id) ^ 0x9e37);
-    const tints = sample.units.map(u => this.kinds[u.members[0].kindId]?.tint || 'pale');
-    const base = TINTS[tints[0] || 'pale'];
-    ctx.fillStyle = base.fill;
-    ctx.globalAlpha = 0.55;
-    ctx.beginPath();
-    ctx.arc(g.cx, g.cy, g.aperture, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    for (let i = 0; i < blobs * 26; i++) {
-      const a = rand() * Math.PI * 2;
-      const rr = Math.sqrt(rand()) * g.aperture;
-      const size = (g.aperture / (blobs + 1)) * (0.5 + rand() * 0.9);
-      ctx.globalAlpha = 0.16 + rand() * 0.16;
-      ctx.fillStyle = rand() > 0.5 ? base.rim : base.fill;
-      ctx.beginPath();
-      ctx.arc(g.cx + Math.cos(a) * rr, g.cy + Math.sin(a) * rr, size, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  /** Detail 2: the units are there but merged — grit, not pieces. */
-  drawLumps(ctx, g, sample) {
-    sample.units.forEach(unit => {
-      const tint = TINTS[this.kinds[unit.members[0].kindId]?.tint || 'pale'];
-      const x = g.cx + unit.x * g.spread;
-      const y = g.cy + unit.y * g.spread;
-      const r = g.pieceR * 1.9;
-      ctx.globalAlpha = 0.75;
-      ctx.fillStyle = tint.fill;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = 0.5;
-      ctx.fillStyle = tint.rim;
-      ctx.beginPath();
-      ctx.arc(x + r * 0.2, y + r * 0.25, r * 0.7, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    ctx.globalAlpha = 1;
-  }
-
-  /** Detail 3: individual pieces, and the sticks that hold groups together. */
-  drawPieces(ctx, plate, g) {
-    const sample = plate.sample;
-    const probed = this.probe && this.probe.sampleId === sample.id ? this.probe : null;
-
-    // Joins first, so a stick reads as being behind the pieces it holds.
-    ctx.strokeStyle = '#4a443d';
-    ctx.lineCap = 'round';
-    sample.units.forEach(unit => {
-      if (unit.members.length < 2) return;
-      ctx.lineWidth = Math.max(2, g.pieceR * 0.42);
-      unit.bonds.forEach(([a, b]) => {
-        const pa = this.memberScreen(g, unit, unit.members[a]);
-        const pb = this.memberScreen(g, unit, unit.members[b]);
-        ctx.beginPath();
-        ctx.moveTo(pa.x, pa.y);
-        ctx.lineTo(pb.x, pb.y);
-        ctx.stroke();
-      });
-    });
-
-    sample.units.forEach((unit, ui) => {
-      // Big pieces first so small ones are never swallowed.
-      const order = unit.members
-        .map((m, mi) => mi)
-        .sort((a, b) => unit.members[b].size - unit.members[a].size);
-      order.forEach(mi => {
-        const m = unit.members[mi];
-        const { x, y, r } = this.memberScreen(g, unit, m);
-        const tint = TINTS[this.kinds[m.kindId]?.tint || 'pale'];
-
-        ctx.fillStyle = tint.fill;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
-
-        // A machined shoulder, not a specular highlight.
-        ctx.strokeStyle = tint.rim;
-        ctx.lineWidth = Math.max(1, r * 0.18);
-        ctx.beginPath();
-        ctx.arc(x, y, r * 0.92, 0.5, 3.1);
-        ctx.stroke();
-
-        if (probed && probed.unitIndex === ui && probed.memberIndex === mi) {
-          ctx.strokeStyle = AMBER;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(x, y, r + 5, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      });
+    drawScopeField(ctx, {
+      w, h, sample, kinds: this.kinds, power: this.power,
+      probe: this.probe && this.probe.sampleId === sample.id ? this.probe : null,
+      sweep: this.probe && this.probe.sampleId === sample.id ? this.sweep : 0
     });
   }
 

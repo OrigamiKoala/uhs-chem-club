@@ -161,6 +161,303 @@ export function planStrip(sp) {
   return ri;
 }
 
+/* ==================================================================
+   THE FIELD — one implementation, two instruments.
+
+   Everything below draws or measures the picture in the aperture and
+   nothing else: no DOM, no plate, no class. `CoreBench` renders it into
+   its own canvas; the BUILT bench in `corebench3d.js` renders the SAME
+   functions into a canvas texture on the screen bolted over its wells.
+
+   WHY THE BUILT BENCH SHOWS A FLAT PICTURE. A core is a huddle: staged as
+   spheres in a hole, the grains at the back sit behind the grains at the
+   front, and a player asked to COUNT the marks counts five of six and is
+   told they are wrong by an instrument that never showed them the sixth.
+   A picture laid out in a plane has every piece in it, every time, which
+   is the only way counting can be the task.
+   ================================================================== */
+
+/** Where the field sits in a w x h picture. */
+export function coreGeometry(w, h) {
+  return { cx: w / 2, cy: h / 2, aperture: Math.min(w, h) * 0.46 };
+}
+
+function disc(ctx, x, y, r, tint) {
+  ctx.fillStyle = tint.fill;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = tint.rim;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+/** A mark, stencilled. Not a colour: the instrument scratches what it finds. */
+function stencilMark(ctx, x, y, r) {
+  const a = r * 0.52;
+  ctx.strokeStyle = 'rgba(16, 15, 13, 0.85)';
+  ctx.lineWidth = Math.max(1.2, r * 0.22);
+  ctx.beginPath();
+  ctx.moveTo(x - a, y);
+  ctx.lineTo(x + a, y);
+  ctx.moveTo(x, y - a);
+  ctx.lineTo(x, y + a);
+  ctx.stroke();
+}
+
+/**
+ * The whole piece, at its own scale. A haze with a speck in the middle of it —
+ * and the speck is drawn to scale, which is the entire content of this view.
+ */
+function fieldWhole(ctx, g, specimen, hits) {
+  const rand = mulberry32(hashId(specimen.id) ^ 0x51ed);
+  const edge = g.aperture * 0.86;
+
+  const haze = ctx.createRadialGradient(g.cx, g.cy, edge * 0.05, g.cx, g.cy, edge);
+  haze.addColorStop(0, 'rgba(184, 175, 160, 0.22)');
+  haze.addColorStop(0.55, 'rgba(184, 175, 160, 0.10)');
+  haze.addColorStop(1, 'rgba(184, 175, 160, 0)');
+  ctx.fillStyle = haze;
+  ctx.beginPath();
+  ctx.arc(g.cx, g.cy, edge, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Grain in the haze, so it reads as a swarm too fast to resolve rather than
+  // as a painted ball.
+  ctx.fillStyle = HAZE;
+  for (let i = 0; i < 220; i++) {
+    const a = rand() * Math.PI * 2;
+    const r = Math.sqrt(rand()) * edge;
+    ctx.globalAlpha = 0.05 + (1 - r / edge) * 0.12;
+    ctx.fillRect(g.cx + Math.cos(a) * r, g.cy + Math.sin(a) * r, 1.3, 1.3);
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.strokeStyle = 'rgba(184, 175, 160, 0.13)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 5]);
+  ctx.beginPath();
+  ctx.arc(g.cx, g.cy, edge, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // The core, to scale. It is about one part in ten thousand across; at this
+  // aperture that is well under a pixel, so it is drawn at the smallest mark
+  // the raster can hold and the caption carries the rest.
+  ctx.fillStyle = AMBER;
+  ctx.fillRect(g.cx - 1, g.cy - 1, 2, 2);
+
+  hits.push({ key: 'whole', part: 'whole', x: g.cx, y: g.cy, r: g.aperture * 0.7 });
+}
+
+/**
+ * The middle, magnified until the heavy pieces separate.
+ *
+ * LAID OUT SO IT CAN BE COUNTED. The pack is walked outward and drawn far
+ * pieces first, and every grain keeps its own place in the plane — nothing is
+ * behind anything. Marked grains carry a stencilled cross; blanks do not.
+ */
+function fieldCore(ctx, g, specimen, hits) {
+  const marked = specimen.core?.marked || 0;
+  const blank = specimen.core?.blank || 0;
+  const total = marked + blank;
+  if (!total) return;
+
+  const rand = mulberry32(hashId(specimen.id) ^ 0x7a31);
+  const pack = packCore(total, rand);
+  const spread = Math.max(1, ...pack.map(([x, y]) => Math.hypot(x, y))) + 1;
+  const unit = (g.aperture * 0.74) / spread;
+  const r = unit * 0.88;
+
+  // Alternate the two sorts as the pack is walked outward, so neither ends up
+  // segregated into its own half of the core.
+  const order = [];
+  let m = marked;
+  let b = blank;
+  for (let i = 0; i < total; i++) {
+    const takeMarked = b === 0 || (m > 0 && (i % 2 === 0 ? m >= b : m > b));
+    if (takeMarked) { order.push('marked'); m--; } else { order.push('blank'); b--; }
+  }
+
+  // Far pieces first, so the near ones overlap them the way a huddle looks.
+  const idx = pack.map((p, i) => i).sort(
+    (a, c) => Math.hypot(...pack[c]) - Math.hypot(...pack[a])
+  );
+
+  idx.forEach(i => {
+    const [ox, oy] = pack[i];
+    const x = g.cx + ox * unit;
+    const y = g.cy + oy * unit;
+    const sort = order[i];
+    disc(ctx, x, y, r, CORE_TINTS[sort]);
+    if (sort === 'marked') stencilMark(ctx, x, y, r);
+    hits.push({ key: `core:${i}`, part: sort, x, y, r });
+  });
+}
+
+/** The light pieces, out at the distances they keep. */
+function fieldRings(ctx, g, specimen, hits) {
+  const rand = mulberry32(hashId(specimen.id) ^ 0x2c99);
+
+  // The core is one mark at this scale — the point of the previous field.
+  const coreR = Math.max(4, g.aperture * 0.075);
+  disc(ctx, g.cx, g.cy, coreR, CORE_TINTS.marked);
+  stencilMark(ctx, g.cx, g.cy, coreR);
+  hits.push({ key: 'core', part: 'core', x: g.cx, y: g.cy, r: g.aperture * 0.08 });
+
+  if (specimen.sealed) {
+    ctx.fillStyle = 'rgba(184, 175, 160, 0.10)';
+    ctx.beginPath();
+    ctx.arc(g.cx, g.cy, g.aperture * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+
+  // Big enough to be seen and counted from across a bench, which is what this
+  // field exists for. A light piece is the thing the stage is asking about; it
+  // must never read as one of the specks in the haze.
+  const dotR = Math.max(5, g.aperture * 0.062);
+
+  (specimen.rings || []).forEach((count, ri) => {
+    const rad = (RING_RADII[ri] ?? 0.98) * g.aperture;
+
+    ctx.strokeStyle = 'rgba(184, 175, 160, 0.26)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 6]);
+    ctx.beginPath();
+    ctx.arc(g.cx, g.cy, rad, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const base = rand() * Math.PI * 2;
+    for (let i = 0; i < count; i++) {
+      const a = base + (i * Math.PI * 2) / Math.max(count, 1);
+      const x = g.cx + Math.cos(a) * rad;
+      const y = g.cy + Math.sin(a) * rad;
+      disc(ctx, x, y, dotR, CORE_TINTS.light);
+      hits.push({ key: `ring:${ri}:${i}`, part: 'light', ring: ri, x, y, r: dotR });
+    }
+  });
+
+  // Anything the beam has knocked loose, on its way out of the field.
+  (specimen.pulled || []).forEach(p => {
+    const r = (p.r0 + p.t * 1.4) * g.aperture;
+    ctx.globalAlpha = Math.max(0, 1 - p.t);
+    disc(ctx, g.cx + Math.cos(p.a) * r, g.cy + Math.sin(p.a) * r, dotR, CORE_TINTS.light);
+    ctx.globalAlpha = 1;
+  });
+}
+
+function fieldBeam(ctx, g, beam) {
+  const { tracks, t } = beam;
+  tracks.forEach(tr => {
+    const head = Math.min(1, Math.max(0, (t - tr.delay) / 0.55));
+    if (head <= 0) return;
+    ctx.lineWidth = tr.kind === 'back' ? 2.5 : tr.kind === 'wide' ? 2.0 : 1.5;
+    ctx.strokeStyle = tr.kind === 'back' ? AMBER : tr.kind === 'wide' ? '#8fa85b' : 'rgba(126, 168, 70, 0.85)';
+    ctx.globalAlpha = tr.kind === 'back' ? 1.0 : tr.kind === 'wide' ? 0.9 : 0.75;
+    ctx.beginPath();
+    const pts = tr.path;
+    ctx.moveTo(g.cx + pts[0][0] * g.aperture, g.cy + pts[0][1] * g.aperture);
+    const span = head * (pts.length - 1);
+    for (let i = 1; i <= Math.ceil(span); i++) {
+      const p = pts[Math.min(i, pts.length - 1)];
+      const prev = pts[i - 1];
+      const f = Math.min(1, span - (i - 1));
+      ctx.lineTo(
+        g.cx + (prev[0] + (p[0] - prev[0]) * f) * g.aperture,
+        g.cy + (prev[1] + (p[1] - prev[1]) * f) * g.aperture
+      );
+    }
+    ctx.stroke();
+
+    if (tr.kind === 'back' && head > 0.25) {
+      ctx.fillStyle = AMBER;
+      ctx.beginPath();
+      ctx.arc(g.cx + pts[1][0] * g.aperture, g.cy + pts[1][1] * g.aperture, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  });
+}
+
+/**
+ * Draw one specimen in one field, into any 2D context, and return the hit list
+ * the picture just produced.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {{w:number, h:number, specimen:object, field:'whole'|'core'|'rings',
+ *          beam?: object|null, probeKey?: string|null, sweep?: number}} o
+ * @returns {Array<{key:string, part:string, x:number, y:number, r:number}>}
+ */
+export function drawCoreField(ctx, o) {
+  const { w, h, specimen, field } = o;
+  const g = coreGeometry(w, h);
+  const hits = [];
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(g.cx, g.cy, g.aperture, 0, Math.PI * 2);
+  ctx.clip();
+
+  ctx.fillStyle = FIELD_BG;
+  ctx.fillRect(0, 0, w, h);
+
+  if (field === 'whole') fieldWhole(ctx, g, specimen, hits);
+  else if (field === 'core') fieldCore(ctx, g, specimen, hits);
+  else fieldRings(ctx, g, specimen, hits);
+
+  if (o.beam) fieldBeam(ctx, g, o.beam);
+
+  // Raster lines: this is a cathode instrument, not a window.
+  ctx.globalAlpha = 0.16;
+  ctx.fillStyle = '#000';
+  for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1);
+  ctx.globalAlpha = 1;
+
+  if (o.sweep > 0) {
+    const y = g.cy - g.aperture + (1 - o.sweep) * g.aperture * 2;
+    ctx.globalAlpha = 0.5 * o.sweep;
+    ctx.fillStyle = PHOSPHOR;
+    ctx.fillRect(0, y, w, 2);
+    ctx.globalAlpha = 1;
+  }
+
+  // The read ring, scratched around whatever the needle last sat on.
+  if (o.probeKey) {
+    const hit = hits.find(hh => hh.key === o.probeKey);
+    if (hit) {
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(hit.x, hit.y, hit.r + 5, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+
+  ctx.strokeStyle = APERTURE_RIM;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(g.cx, g.cy, g.aperture, 0, Math.PI * 2);
+  ctx.stroke();
+
+  return hits;
+}
+
+/** Which piece a press at (px, py) landed on, or null. */
+export function hitTestCore(hits, px, py) {
+  let best = null;
+  let bestD = Infinity;
+  for (const hit of hits || []) {
+    const d = Math.hypot(hit.x - px, hit.y - py);
+    if (d < Math.max(hit.r + 7, 13) && d < bestD) { best = hit; bestD = d; }
+  }
+  return best;
+}
+
 export class CoreBench {
   /**
    * @param {HTMLElement} host element the plates are rendered into
@@ -311,9 +608,7 @@ export class CoreBench {
   }
 
   geometry(plate) {
-    const cx = plate.w / 2;
-    const cy = plate.h / 2;
-    return { cx, cy, aperture: Math.min(plate.w, plate.h) * 0.46 };
+    return coreGeometry(plate.w, plate.h);
   }
 
   /* ---------------- input ---------------- */
@@ -323,12 +618,7 @@ export class CoreBench {
     const px = e.clientX - rect.left;
     const py = e.clientY - rect.top;
 
-    let best = null;
-    let bestD = Infinity;
-    for (const hit of plate.hits) {
-      const d = Math.hypot(hit.x - px, hit.y - py);
-      if (d < Math.max(hit.r + 7, 13) && d < bestD) { best = hit; bestD = d; }
-    }
+    const best = hitTestCore(plate.hits, px, py);
     if (!best || !this.onProbe) return;
 
     this.probe = { specimenId: plate.specimen.id, key: best.key };
@@ -352,236 +642,10 @@ export class CoreBench {
   draw(plate) {
     const { ctx, w, h, specimen } = plate;
     if (!w || !h) return;
-    const g = this.geometry(plate);
-    plate.hits = [];
-
-    ctx.clearRect(0, 0, w, h);
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(g.cx, g.cy, g.aperture, 0, Math.PI * 2);
-    ctx.clip();
-
-    ctx.fillStyle = FIELD_BG;
-    ctx.fillRect(0, 0, w, h);
-
-    if (this.field === 'whole') this.drawWhole(ctx, plate, g);
-    else if (this.field === 'core') this.drawCore(ctx, plate, g);
-    else this.drawRings(ctx, plate, g);
-
-    if (plate.beam) this.drawBeam(ctx, plate, g);
-
-    // Raster lines: this is a cathode instrument, not a window.
-    ctx.globalAlpha = 0.16;
-    ctx.fillStyle = '#000';
-    for (let y = 0; y < h; y += 3) ctx.fillRect(0, y, w, 1);
-    ctx.globalAlpha = 1;
-
-    if (this.sweep > 0 && this.probe && this.probe.specimenId === specimen.id) {
-      const y = g.cy - g.aperture + (1 - this.sweep) * g.aperture * 2;
-      ctx.globalAlpha = 0.5 * this.sweep;
-      ctx.fillStyle = PHOSPHOR;
-      ctx.fillRect(0, y, w, 2);
-      ctx.globalAlpha = 1;
-    }
-
-    ctx.restore();
-
-    ctx.strokeStyle = APERTURE_RIM;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(g.cx, g.cy, g.aperture, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  /**
-   * The whole piece, at its own scale. A haze with a speck in the middle of it —
-   * and the speck is drawn to scale, which is the entire content of this view.
-   */
-  drawWhole(ctx, plate, g) {
-    const { specimen } = plate;
-    const rand = mulberry32(hashId(specimen.id) ^ 0x51ed);
-    const edge = g.aperture * 0.86;
-
-    const haze = ctx.createRadialGradient(g.cx, g.cy, edge * 0.05, g.cx, g.cy, edge);
-    haze.addColorStop(0, 'rgba(184, 175, 160, 0.22)');
-    haze.addColorStop(0.55, 'rgba(184, 175, 160, 0.10)');
-    haze.addColorStop(1, 'rgba(184, 175, 160, 0)');
-    ctx.fillStyle = haze;
-    ctx.beginPath();
-    ctx.arc(g.cx, g.cy, edge, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Grain in the haze, so it reads as a swarm too fast to resolve rather than
-    // as a painted ball.
-    ctx.fillStyle = HAZE;
-    for (let i = 0; i < 220; i++) {
-      const a = rand() * Math.PI * 2;
-      const r = Math.sqrt(rand()) * edge;
-      ctx.globalAlpha = 0.05 + (1 - r / edge) * 0.12;
-      ctx.fillRect(g.cx + Math.cos(a) * r, g.cy + Math.sin(a) * r, 1.3, 1.3);
-    }
-    ctx.globalAlpha = 1;
-
-    ctx.strokeStyle = 'rgba(184, 175, 160, 0.13)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([2, 5]);
-    ctx.beginPath();
-    ctx.arc(g.cx, g.cy, edge, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // The core, to scale. It is about one part in ten thousand across; at this
-    // aperture that is well under a pixel, so it is drawn at the smallest mark
-    // the raster can hold and the caption carries the rest.
-    ctx.fillStyle = AMBER;
-    ctx.fillRect(g.cx - 1, g.cy - 1, 2, 2);
-
-    plate.hits.push({ key: 'whole', part: 'whole', x: g.cx, y: g.cy, r: g.aperture * 0.7 });
-  }
-
-  /** The middle, magnified until the heavy pieces separate. */
-  drawCore(ctx, plate, g) {
-    const { specimen } = plate;
-    const marked = specimen.core?.marked || 0;
-    const blank = specimen.core?.blank || 0;
-    const total = marked + blank;
-    if (!total) return;
-
-    const rand = mulberry32(hashId(specimen.id) ^ 0x7a31);
-    const pack = packCore(total, rand);
-    const spread = Math.max(1, ...pack.map(([x, y]) => Math.hypot(x, y))) + 1;
-    const unit = (g.aperture * 0.74) / spread;
-    const r = unit * 0.88;
-
-    // Alternate the two sorts as the pack is walked outward, so neither ends up
-    // segregated into its own half of the core.
-    const order = [];
-    let m = marked;
-    let b = blank;
-    for (let i = 0; i < total; i++) {
-      const takeMarked = b === 0 || (m > 0 && (i % 2 === 0 ? m >= b : m > b));
-      if (takeMarked) { order.push('marked'); m--; } else { order.push('blank'); b--; }
-    }
-
-    // Far pieces first, so the near ones overlap them the way a huddle looks.
-    const idx = pack.map((p, i) => i).sort(
-      (a, c) => Math.hypot(...pack[c]) - Math.hypot(...pack[a])
-    );
-
-    idx.forEach(i => {
-      const [ox, oy] = pack[i];
-      const x = g.cx + ox * unit;
-      const y = g.cy + oy * unit;
-      const sort = order[i];
-      this.disc(ctx, x, y, r, CORE_TINTS[sort]);
-      if (sort === 'marked') this.stencilMark(ctx, x, y, r);
-      plate.hits.push({ key: `core:${i}`, part: sort, x, y, r });
-    });
-  }
-
-  /** The light pieces, out at the distances they keep. */
-  drawRings(ctx, plate, g) {
-    const { specimen } = plate;
-    const rand = mulberry32(hashId(specimen.id) ^ 0x2c99);
-
-    // The core is one mark at this scale — the point of the previous field.
-    this.disc(ctx, g.cx, g.cy, Math.max(4, g.aperture * 0.075), CORE_TINTS.marked);
-    this.stencilMark(ctx, g.cx, g.cy, Math.max(4, g.aperture * 0.075));
-    plate.hits.push({ key: 'core', part: 'core', x: g.cx, y: g.cy, r: g.aperture * 0.08 });
-
-    if (specimen.sealed) {
-      ctx.fillStyle = 'rgba(184, 175, 160, 0.10)';
-      ctx.beginPath();
-      ctx.arc(g.cx, g.cy, g.aperture * 0.9, 0, Math.PI * 2);
-      ctx.fill();
-      return;
-    }
-
-    const dotR = Math.max(2.6, g.aperture * 0.045);
-
-    specimen.rings.forEach((count, ri) => {
-      const rad = (RING_RADII[ri] ?? 0.98) * g.aperture;
-
-      ctx.strokeStyle = 'rgba(184, 175, 160, 0.16)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([3, 6]);
-      ctx.beginPath();
-      ctx.arc(g.cx, g.cy, rad, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      const base = rand() * Math.PI * 2;
-      for (let i = 0; i < count; i++) {
-        const a = base + (i * Math.PI * 2) / Math.max(count, 1);
-        const x = g.cx + Math.cos(a) * rad;
-        const y = g.cy + Math.sin(a) * rad;
-        this.disc(ctx, x, y, dotR, CORE_TINTS.light);
-        plate.hits.push({ key: `ring:${ri}:${i}`, part: 'light', ring: ri, x, y, r: dotR });
-      }
-    });
-
-    // Anything the beam has knocked loose, on its way out of the field.
-    specimen.pulled.forEach(p => {
-      const r = (p.r0 + p.t * 1.4) * g.aperture;
-      ctx.globalAlpha = Math.max(0, 1 - p.t);
-      this.disc(ctx, g.cx + Math.cos(p.a) * r, g.cy + Math.sin(p.a) * r, dotR, CORE_TINTS.light);
-      ctx.globalAlpha = 1;
-    });
-  }
-
-  disc(ctx, x, y, r, tint) {
-    ctx.fillStyle = tint.fill;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = tint.rim;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  }
-
-  /** A mark, stencilled. Not a colour: the instrument scratches what it finds. */
-  stencilMark(ctx, x, y, r) {
-    const a = r * 0.52;
-    ctx.strokeStyle = 'rgba(16, 15, 13, 0.85)';
-    ctx.lineWidth = Math.max(1.2, r * 0.22);
-    ctx.beginPath();
-    ctx.moveTo(x - a, y);
-    ctx.lineTo(x + a, y);
-    ctx.moveTo(x, y - a);
-    ctx.lineTo(x, y + a);
-    ctx.stroke();
-  }
-
-  drawBeam(ctx, plate, g) {
-    const { tracks, t } = plate.beam;
-    tracks.forEach(tr => {
-      const head = Math.min(1, Math.max(0, (t - tr.delay) / 0.55));
-      if (head <= 0) return;
-      ctx.lineWidth = tr.kind === 'back' ? 2.5 : tr.kind === 'wide' ? 2.0 : 1.5;
-      ctx.strokeStyle = tr.kind === 'back' ? AMBER : tr.kind === 'wide' ? '#8fa85b' : 'rgba(126, 168, 70, 0.85)';
-      ctx.globalAlpha = tr.kind === 'back' ? 1.0 : tr.kind === 'wide' ? 0.9 : 0.75;
-      ctx.beginPath();
-      const pts = tr.path;
-      ctx.moveTo(g.cx + pts[0][0] * g.aperture, g.cy + pts[0][1] * g.aperture);
-      const span = head * (pts.length - 1);
-      for (let i = 1; i <= Math.ceil(span); i++) {
-        const p = pts[Math.min(i, pts.length - 1)];
-        const prev = pts[i - 1];
-        const f = Math.min(1, span - (i - 1));
-        ctx.lineTo(
-          g.cx + (prev[0] + (p[0] - prev[0]) * f) * g.aperture,
-          g.cy + (prev[1] + (p[1] - prev[1]) * f) * g.aperture
-        );
-      }
-      ctx.stroke();
-
-      if (tr.kind === 'back' && head > 0.25) {
-        ctx.fillStyle = AMBER;
-        ctx.beginPath();
-        ctx.arc(g.cx + pts[1][0] * g.aperture, g.cy + pts[1][1] * g.aperture, 3.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
+    plate.hits = drawCoreField(ctx, {
+      w, h, specimen, field: this.field, beam: plate.beam,
+      probeKey: this.probe && this.probe.specimenId === specimen.id ? this.probe.key : null,
+      sweep: this.probe && this.probe.specimenId === specimen.id ? this.sweep : 0
     });
   }
 

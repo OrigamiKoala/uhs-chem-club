@@ -988,6 +988,33 @@
   pointer-events: none;
 }
 
+/* THE FRAME IS PLATES OVER A LIVE BENCH, NOT A PAGE OVER A PICTURE.
+   The instrument is standing BEHIND these plates and the player has to be able
+   to reach it: to click a grain on a station screen, or to lean the view by
+   dragging the glass beside one. A transparent box still takes a press, and
+   `.lq` is a full-width box whose height is the tallest column in it — so the
+   empty area beside the tool plate was quietly eating every click aimed at the
+   bench behind it, and a picture the player could see was one they could not
+   touch. Only the plates themselves take a press; everything between them
+   passes it through. */
+.learn-quest-overworld,
+.learn-quest-overworld .learn-quest-mount,
+.learn-quest-overworld .lq,
+.learn-quest-overworld .lq-body,
+.learn-quest-overworld .lq-stage {
+  pointer-events: none;
+}
+
+.learn-quest-overworld .learn-host-bar,
+.learn-quest-overworld .lq-rail,
+.learn-quest-overworld .lq-stage-head,
+.learn-quest-overworld .lq-controls,
+.learn-quest-overworld .lq-scope,
+.learn-quest-overworld .lq-deck,
+.learn-quest-overworld .lq-dock-bar {
+  pointer-events: auto;
+}
+
 .lq-dock-bar {
   position: fixed;
   bottom: 1.25rem;
