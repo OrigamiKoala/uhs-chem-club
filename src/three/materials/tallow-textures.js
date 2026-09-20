@@ -66,10 +66,10 @@ function finishData(canvas, repeat = 1) {
 export function heightToNormal(heightCanvas, strength = 2.2) {
   const w = heightCanvas.width;
   const h = heightCanvas.height;
-  const src = heightCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+  const src = heightCanvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, w, h).data;
 
   const out = makeCanvas(w, h);
-  const octx = out.getContext('2d');
+  const octx = out.getContext('2d', { willReadFrequently: true });
   const img = octx.createImageData(w, h);
   const d = img.data;
 
@@ -110,9 +110,9 @@ export function heightToNormal(heightCanvas, strength = 2.2) {
 function heightToRoughness(heightCanvas, lo = 0.62, hi = 0.97) {
   const w = heightCanvas.width;
   const h = heightCanvas.height;
-  const src = heightCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+  const src = heightCanvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, w, h).data;
   const out = makeCanvas(w, h);
-  const octx = out.getContext('2d');
+  const octx = out.getContext('2d', { willReadFrequently: true });
   const img = octx.createImageData(w, h);
   const d = img.data;
   for (let i = 0; i < d.length; i += 4) {
@@ -136,7 +136,7 @@ function heightToRoughness(heightCanvas, lo = 0.62, hi = 0.97) {
 function saltCrustHeight(size, seed) {
   const rand = mulberry32(seed);
   const canvas = makeCanvas(size, size);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   ctx.fillStyle = '#c8c8c8';
   ctx.fillRect(0, 0, size, size);
@@ -187,10 +187,10 @@ function saltCrustHeight(size, seed) {
 export function createSaltCrustTexture(size = 512, repeat = 26) {
   const rand = mulberry32(0x5a17);
   const height = saltCrustHeight(size, 0x5a17);
-  const hData = height.getContext('2d').getImageData(0, 0, size, size).data;
+  const hData = height.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, size, size).data;
 
   const canvas = makeCanvas(size, size);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const img = ctx.createImageData(size, size);
   const d = img.data;
 
@@ -237,7 +237,7 @@ export function createSaltCrustTexture(size = 512, repeat = 26) {
 function bleachedPlateHeight(size, seed) {
   const rand = mulberry32(seed);
   const canvas = makeCanvas(size, size);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   ctx.fillStyle = '#b4b4b4';
   ctx.fillRect(0, 0, size, size);
 
@@ -300,10 +300,10 @@ function bleachedPlateHeight(size, seed) {
 export function createBleachedPlateTexture(size = 512, tint = '#9a9080', code = null, repeat = 1) {
   const rand = mulberry32(0x71ed ^ size);
   const height = bleachedPlateHeight(size, 0x71ed);
-  const hData = height.getContext('2d').getImageData(0, 0, size, size).data;
+  const hData = height.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, size, size).data;
 
   const canvas = makeCanvas(size, size);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
   ctx.fillStyle = tint;
   ctx.fillRect(0, 0, size, size);
@@ -386,7 +386,7 @@ export function createBleachedPlateTexture(size = 512, tint = '#9a9080', code = 
 export function createDrumShellTexture(w = 512, h = 512) {
   const rand = mulberry32(0x0dd7);
   const heightC = makeCanvas(w, h);
-  const hctx = heightC.getContext('2d');
+  const hctx = heightC.getContext('2d', { willReadFrequently: true });
   hctx.fillStyle = '#a8a8a8';
   hctx.fillRect(0, 0, w, h);
 
@@ -414,7 +414,7 @@ export function createDrumShellTexture(w = 512, h = 512) {
   hctx.globalAlpha = 1;
 
   const canvas = makeCanvas(w, h);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const grad = ctx.createLinearGradient(0, 0, 0, h);
   grad.addColorStop(0, '#8e8574');
   grad.addColorStop(0.55, '#7a7161');
@@ -481,7 +481,7 @@ export function createSalvageCrateTexture(size = 512, guildCode = 'MM', serial =
   const rand = mulberry32(hashStr(guildCode + serial));
 
   const heightC = makeCanvas(size, size);
-  const hctx = heightC.getContext('2d');
+  const hctx = heightC.getContext('2d', { willReadFrequently: true });
   hctx.fillStyle = '#9e9e9e';
   hctx.fillRect(0, 0, size, size);
   // Corner castings and a strapping band: the crate's structure, raised.
@@ -507,7 +507,7 @@ export function createSalvageCrateTexture(size = 512, guildCode = 'MM', serial =
   hctx.globalAlpha = 1;
 
   const canvas = makeCanvas(size, size);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   ctx.fillStyle = '#6f6656';
   ctx.fillRect(0, 0, size, size);
 
@@ -563,7 +563,7 @@ export function createSalvageCrateTexture(size = 512, guildCode = 'MM', serial =
 export function createLabDeckTexture(size = 512, repeat = 7) {
   const rand = mulberry32(0x1abd);
   const heightC = makeCanvas(size, size);
-  const hctx = heightC.getContext('2d');
+  const hctx = heightC.getContext('2d', { willReadFrequently: true });
   hctx.fillStyle = '#7e7e7e';
   hctx.fillRect(0, 0, size, size);
 
@@ -586,7 +586,7 @@ export function createLabDeckTexture(size = 512, repeat = 7) {
   hctx.globalAlpha = 1;
 
   const canvas = makeCanvas(size, size);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   ctx.fillStyle = '#403a33';
   ctx.fillRect(0, 0, size, size);
   const hData = hctx.getImageData(0, 0, size, size).data;
@@ -621,7 +621,7 @@ export function createLabDeckTexture(size = 512, repeat = 7) {
 export function createLabBulkheadTexture(size = 512, repeat = 3) {
   const rand = mulberry32(0x8c41);
   const heightC = makeCanvas(size, size);
-  const hctx = heightC.getContext('2d');
+  const hctx = heightC.getContext('2d', { willReadFrequently: true });
   hctx.fillStyle = '#a4a4a4';
   hctx.fillRect(0, 0, size, size);
 
@@ -655,7 +655,7 @@ export function createLabBulkheadTexture(size = 512, repeat = 3) {
   hctx.globalAlpha = 1;
 
   const canvas = makeCanvas(size, size);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   ctx.fillStyle = '#4a443b';
   ctx.fillRect(0, 0, size, size);
   const hData = hctx.getImageData(0, 0, size, size).data;
@@ -703,7 +703,7 @@ export function createLabBulkheadTexture(size = 512, repeat = 3) {
 export function createSealedDoorTexture(size = 512, siteCode = '03') {
   const rand = mulberry32(hashStr('sealed' + siteCode));
   const heightC = makeCanvas(size, size);
-  const hctx = heightC.getContext('2d');
+  const hctx = heightC.getContext('2d', { willReadFrequently: true });
   hctx.fillStyle = '#909090';
   hctx.fillRect(0, 0, size, size);
 
@@ -733,7 +733,7 @@ export function createSealedDoorTexture(size = 512, siteCode = '03') {
   hctx.globalAlpha = 1;
 
   const canvas = makeCanvas(size, size);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   ctx.fillStyle = '#5c5346';
   ctx.fillRect(0, 0, size, size);
   const hData = hctx.getImageData(0, 0, size, size).data;

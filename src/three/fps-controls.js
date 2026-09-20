@@ -338,10 +338,7 @@ export class FpsControls {
     }
   }
 
-  setMode(mode, terrainFn = null, bounds = null, colliders = []) {
-    this.terrainHeightFn = terrainFn;
-    this.boundaryBounds = bounds;
-
+  setColliders(colliders = []) {
     this.boxColliders = [];
     this.radialColliders = [];
 
@@ -352,6 +349,12 @@ export class FpsControls {
         this.boxColliders.push(c);
       }
     }
+  }
+
+  setMode(mode, terrainFn = null, bounds = null, colliders = []) {
+    this.terrainHeightFn = terrainFn;
+    this.boundaryBounds = bounds;
+    this.setColliders(colliders);
   }
 
   testBoxCollision(x, z) {

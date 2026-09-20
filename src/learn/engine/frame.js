@@ -22,6 +22,7 @@ import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
 import { createTransmissionElement } from '../../ui/transmission.js';
 import { benchDeployment } from './bench-host.js';
+import { benchesAre3D } from './instruments.js';
 import {
   PanelRig, createBenchAnchor, createPanelGantry, disposeGantry
 } from '../../three/world-ui.js';
@@ -112,6 +113,15 @@ export class LearnFrame {
           ).join('')}
         </div>
 
+        <div class="lq-dock-bar hidden" id="lq-dock-bar">
+          <button type="button" class="btn-secondary quest-btn-sm lq-reopen-btn" data-act="open-panel" title="Open stage panel" aria-label="Open stage panel">
+            Stage Panel
+          </button>
+          <button type="button" class="btn-primary quest-btn-sm lq-dock-commit" data-act="submit" title="Commit answer">
+            Commit
+          </button>
+        </div>
+
         <div class="lq-body">
           <div class="lq-stage">
             <div class="lq-stage-head">
@@ -170,6 +180,8 @@ export class LearnFrame {
       else if (act === 'objective') this.showBriefing();
       else if (act === 'exit') this.opts.onExit?.();
       else if (act === 'reward') this.showFindings();
+      else if (act === 'close-panel') this.setPanelClosed(true);
+      else if (act === 'open-panel') this.setPanelClosed(false);
 
       // Any stage already cleared can be walked back into. This is a study road
       // and re-reading is the point of it; there is no XP here for a replay to
@@ -197,7 +209,22 @@ export class LearnFrame {
    * is null, this returns immediately, and the frame is the page it has always
    * been.
    */
+  setPanelClosed(closed) {
+    const body = this.container.querySelector('.lq-body');
+    const dock = this.container.querySelector('#lq-dock-bar');
+    if (closed) {
+      body?.classList.add('hidden');
+      dock?.classList.remove('hidden');
+      soundscape.playNavRelayClick?.();
+    } else {
+      body?.classList.remove('hidden');
+      dock?.classList.add('hidden');
+      soundscape.playNavRelayClick?.();
+    }
+  }
+
   deployPanels() {
+    if (benchesAre3D()) return;
     let deployment = null;
     try {
       deployment = benchDeployment();
@@ -342,6 +369,9 @@ export class LearnFrame {
     this.el.commit = this.el.actions.querySelector('.lq-commit');
     this.el.hintKey = this.el.actions.querySelector('.lq-hint-key');
 
+    const dockCommit = this.container.querySelector('.lq-dock-commit');
+    if (dockCommit) dockCommit.textContent = esc(stage.commitLabel || 'Commit');
+
     this.updateStageActions();
     this.updateRail();
     // Walking to the next stage should bring the bench back into view — on a
@@ -357,6 +387,7 @@ export class LearnFrame {
       <button type="button" class="btn-secondary quest-btn-sm" data-act="exit">Exit</button>
       <button type="button" class="btn-secondary quest-btn-sm" data-act="objective">Objective</button>
       ${canReview ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="reward">Findings</button>' : ''}
+      <button type="button" class="btn-secondary quest-btn-sm" data-act="close-panel" title="Close stage panel" aria-label="Close stage panel">Close</button>
     `;
   }
 
@@ -366,6 +397,8 @@ export class LearnFrame {
 
   setCommitEnabled(on) {
     if (this.el.commit) this.el.commit.disabled = !on;
+    const dockCommit = this.container.querySelector('.lq-dock-commit');
+    if (dockCommit) dockCommit.disabled = !on;
   }
 
   setCleared(n) {
@@ -441,6 +474,11 @@ export class LearnFrame {
       <button type="button" class="btn-primary lq-commit" data-act="next">${reward.last ? 'Finish' : 'Next Stage'}</button>
     `;
     this.el.commit = this.el.actions.querySelector('.lq-commit');
+    const dockCommit = this.container.querySelector('.lq-dock-commit');
+    if (dockCommit) {
+      dockCommit.textContent = reward.last ? 'Finish' : 'Next Stage';
+      dockCommit.dataset.act = 'next';
+    }
     this.el.commit.focus();
   }
 

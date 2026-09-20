@@ -2327,7 +2327,7 @@ export class TallowWorld {
     if (!tierAtLeast('T4')) return;   // T3 renders the same flat without particles.
 
     const grain = canvas2dLocal(64, 64);
-    const gctx = grain.getContext('2d');
+    const gctx = grain.getContext('2d', { willReadFrequently: true });
     const grad = gctx.createRadialGradient(32, 32, 0, 32, 32, 32);
     grad.addColorStop(0, 'rgba(255,255,255,1)');
     grad.addColorStop(0.45, 'rgba(255,255,255,0.45)');

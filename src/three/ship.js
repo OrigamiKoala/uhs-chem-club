@@ -439,8 +439,11 @@ export class ShipInterior {
     }
 
     // --- Interior bulkheads, drawn segment by segment around the openings ---
+    const postW = 0.16;
     for (const wall of WALLS) {
-      for (const [a, b] of wallSegments(wall)) {
+      const frameOpenings = (wall.openings || []).map(([a, b]) => [a - postW, b + postW]);
+      const frameWall = { ...wall, openings: frameOpenings };
+      for (const [a, b] of wallSegments(frameWall)) {
         const span = b - a;
         const geom = wall.axis === 'x'
           ? new THREE.BoxGeometry(WALL_T, wall.top, span)
@@ -491,13 +494,15 @@ export class ShipInterior {
       for (const [a, b] of wall.openings || []) {
         const headroom = wall.top - (DOOR_H + 0.3);
         if (headroom <= 0.02) continue;
-        const span = b - a;
+        const frameA = a - postW;
+        const frameB = b + postW;
+        const span = frameB - frameA;
         const geom = wall.axis === 'x'
           ? new THREE.BoxGeometry(WALL_T, headroom, span)
           : new THREE.BoxGeometry(span, headroom, WALL_T);
         const transom = new THREE.Mesh(geom, this.bulkheadMat);
-        const tx = wall.axis === 'x' ? wall.at : (a + b) / 2;
-        const tz = wall.axis === 'x' ? (a + b) / 2 : wall.at;
+        const tx = wall.axis === 'x' ? wall.at : (frameA + frameB) / 2;
+        const tz = wall.axis === 'x' ? (frameA + frameB) / 2 : wall.at;
         transom.position.set(tx, DOOR_H + 0.3 + headroom / 2, tz);
         transom.castShadow = transom.receiveShadow = true;
         add(transom);

@@ -277,7 +277,7 @@ export class CoreBench {
         specimen,
         root,
         canvas,
-        ctx: canvas.getContext('2d'),
+        ctx: canvas.getContext('2d', { willReadFrequently: true }),
         tagEl: root.querySelector('.scope-plate-tag'),
         hits: [],
         beam: null,

@@ -270,7 +270,7 @@ export class ArrowController {
   }
 
   drawBadgeOnCanvas(canvas, order) {
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.clearRect(0, 0, 128, 128);
 
     // Glowing outer circle
