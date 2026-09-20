@@ -24,7 +24,7 @@
  */
 
 import { SampleScope, detailFor } from '../../engine/instruments.js';
-import { LearnFrame } from '../../engine/frame.js';
+import { LearnFrame, toolNotes } from '../../engine/frame.js';
 import { dialMarkup, bindDial, paintDial as paintDialControl } from '../../engine/dial.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
@@ -32,6 +32,48 @@ import { soundscape } from '../../../audio/soundscape.js';
 export const meta = { stageCount: 8 };
 
 const SPEAKER = 'Vess';
+
+/* ------------------------------------------------------------------
+   THE KEY LEGEND
+
+   Every control the scope puts on the plate says what it does, in one plain
+   sentence, for as long as it is on the plate. A key reading "Run Cutter"
+   tells a player nothing about what a cutter is for; a prompt that then asks
+   them to divide something is addressed to a reader who already knows.
+
+   `verify:learn` fails the build over a control with no line, and runs every
+   line through the same withheld-vocabulary gate as a prompt or a hint — so
+   these say "piece" and "kind", never "atom" or "element".
+   ------------------------------------------------------------------ */
+const TOOL_TEXT = {
+  power: [{
+    from: 1,
+    key: 'Power',
+    what: 'The magnification knob. Turning it up makes the scope look closer at the same sample, so the picture gets finer — drag it round, or click it and use the arrow keys.'
+  }],
+  cut: [{
+    from: 1,
+    key: 'Run Cutter',
+    what: 'Drives a blade through the selected sample and splits whatever it can into smaller halves. Anything it cannot split it leaves exactly as it was.'
+  }],
+  settle: [{
+    from: 1,
+    key: 'Settle Crate',
+    what: 'Stands the selected crate still and lets its contents sink. Pieces of one weight end up level with each other, so a crate holding two kinds settles into two separate layers and a crate holding one settles into a single even bed.'
+  }]
+};
+
+/**
+ * The legend line for one control on one stage, or null if there is none.
+ * `stageNumber` is one-based, the way a player counts stages.
+ */
+export function toolNoteFor(controlId, stageNumber) {
+  const rows = TOOL_TEXT[controlId];
+  if (!rows) return null;
+  let out = null;
+  for (const r of rows) if (stageNumber >= r.from) out = r;
+  return out ? { key: out.key, what: out.what } : null;
+}
 
 /* ------------------------------------------------------------------
    THE CATALOGUE
@@ -658,6 +700,11 @@ export function mount(container, ctx) {
     if (stage.controls.includes('settle')) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="settle">Settle Crate</button>');
     }
+
+    // The legend, under the keys: what each one of them actually does.
+    parts.push(toolNotes(
+      stage.controls.map(id => toolNoteFor(id, index + 1)).filter(Boolean)
+    ));
 
     frame.setControls(parts.join(''));
     const host = frame.el.controls;

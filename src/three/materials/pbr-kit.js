@@ -1104,10 +1104,19 @@ export function placard(text, { w = 0.42, h = 0.16, fg = '#1d1a16', bg = '#b9ab8
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = fg;
-  ctx.font = `bold ${Math.round(H * 0.56)}px "Share Tech Mono", monospace`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(String(text), W / 2, H / 2 + H * 0.04);
+  // Shrink to fit rather than run off the plate. A stencilled legend that is
+  // clipped names nothing, and the longest designator on the ship (COMMAND
+  // BRIDGE) is twice the length of the shortest.
+  const str = String(text);
+  let fs = Math.round(H * 0.56);
+  const room = W * 0.9;
+  for (; fs > 6; fs--) {
+    ctx.font = `bold ${fs}px "Share Tech Mono", monospace`;
+    if (ctx.measureText(str).width <= room) break;
+  }
+  ctx.fillText(str, W / 2, H / 2 + H * 0.04);
   // Chip the paint: scratches taken back out of the placard.
   const rand = makeRng(hashStr(text));
   ctx.globalCompositeOperation = 'destination-out';

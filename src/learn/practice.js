@@ -143,7 +143,12 @@ function runSet(world, problems, onDone) {
           <div class="eyebrow lit">Practice · ${esc(p.questTitle)}</div>
           <h2 id="lq-practice-title" class="section-title lq-practice-question">${esc(p.question)}</h2>
         </div>
-        <span class="tag">${i + 1} / ${total}</span>
+        <div class="lq-practice-head-keys">
+          <span class="tag">${i + 1} / ${total}</span>
+          <button type="button" class="btn-secondary quest-btn-sm lq-practice-close"
+                  data-practice="quit" title="Skip the rest of these problems"
+                  aria-label="Skip the rest of these problems and close">Close</button>
+        </div>
       </div>
 
       <div class="lq-practice-options">
@@ -157,8 +162,8 @@ function runSet(world, problems, onDone) {
       <div id="lq-practice-feedback" class="lq-practice-feedback"></div>
 
       <div class="debrief-controls-left lq-modal-keys lq-practice-keys">
-        <button type="button" class="btn-secondary" data-practice="quit">Close</button>
-        <button type="button" class="btn-secondary" data-practice="skip">Skip</button>
+        <button type="button" class="btn-secondary" data-practice="quit">Skip All</button>
+        <button type="button" class="btn-secondary" data-practice="skip">Skip This One</button>
         <button type="button" class="btn-primary" data-practice="next" disabled>
           ${i < total - 1 ? 'Next' : 'Finish'}
         </button>
@@ -168,7 +173,12 @@ function runSet(world, problems, onDone) {
     const modal = document.getElementById('modal-container');
     if (!modal) return;
 
-    modal.querySelector('[data-practice="quit"]')?.addEventListener('click', finish);
+    // BOTH close keys leave the WHOLE set, not just this question: the one in
+    // the corner of the card and the one in the key row are the same action.
+    // Practice gates nothing, so walking out of it costs the player nothing and
+    // must never take more than one press.
+    modal.querySelectorAll('[data-practice="quit"]')
+      .forEach(btn => btn.addEventListener('click', finish));
     modal.querySelector('[data-practice="skip"]')?.addEventListener('click', () => {
       soundscape.playCrtTick?.();
       advance();

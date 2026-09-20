@@ -30,6 +30,39 @@ import {
 const RUNG2_AFTER_MS = 45000;
 
 /**
+ * The key legend: what every control on this stage's plate actually DOES, in
+ * one plain sentence each.
+ *
+ * NOTHING ON A BENCH IS NAMED WITHOUT BEING EXPLAINED. A key reading "Read
+ * Needle" tells a player who has never seen a needle nothing at all, and a
+ * prompt that then asks them to read one is asking them to already know. So
+ * every control a stage offers carries its description beside it, for as long
+ * as the stage offers it — not once, not in a tooltip, and not only in a hint
+ * they have to earn. `verify:learn` fails the build over a control with no
+ * note, and runs the notes through the same withheld-vocabulary gate as every
+ * other player-facing string.
+ *
+ * @param {Array<{key: string, what: string}>} items
+ */
+export function toolNotes(items) {
+  const list = (items || []).filter(it => it && it.key && it.what);
+  if (!list.length) return '';
+  return `
+    <div class="lq-tool-notes">
+      <span class="form-label">What these do</span>
+      <dl>
+        ${list.map(it => `
+          <div class="lq-tool-note">
+            <dt>${esc(it.key)}</dt>
+            <dd>${esc(it.what)}</dd>
+          </div>
+        `).join('')}
+      </dl>
+    </div>
+  `;
+}
+
+/**
  * Where each region of the frame is bolted, in the bench's own local frame.
  *
  * Read these against the station layout in `bench3d.js`: stations run along x at

@@ -194,8 +194,16 @@ export function buildPowerDial(opts) {
     color: AMBER, emissive: AMBER, emissiveIntensity: 1.2, roughness: 0.45
   }));
 
-  // The plinth: a wedge standing on the plate, raked toward the operator so the
+  // The plinth: a wedge standing on the plate, raked TOWARD THE OPERATOR so the
   // cap's face is something you look at rather than down onto.
+  //
+  // WHICH WAY IS TOWARD. A bench's local +z is its front — the player walks in
+  // from there, the station screens stand at -z and face +z, and the camera
+  // docks on the +z side. So the raked face must tilt its FAR edge up and its
+  // NEAR edge down, which is a POSITIVE rotation about x. It used to be
+  // negative, which raked the panel away from the player: the legend and the
+  // whole scale plate faced the back of the bench, and what the operator saw
+  // was the underside of the cap.
   const RAKE = 0.62;
   const base = new THREE.Mesh(own(new THREE.BoxGeometry(0.30, 0.035, 0.24)), dark);
   base.position.y = 0.017;
@@ -206,23 +214,54 @@ export function buildPowerDial(opts) {
 
   const face = new THREE.Group();
   face.position.set(0, 0.075, 0.012);
-  face.rotation.x = -RAKE;
+  face.rotation.x = RAKE;
   g.add(face);
 
   const panel = new THREE.Mesh(own(new THREE.BoxGeometry(0.28, 0.022, 0.21)), steel);
   panel.castShadow = panel.receiveShadow = true;
   face.add(panel);
 
-  // The engraved scale plate, set into the panel above the cap.
-  const plaqueTex = engravedPlaque(label, { w: 320, h: 80, size: 34, align: 'center' });
+  // THE LEGEND IS ON THE NEAR EDGE, which is the piece of the instrument
+  // closest to the player's eye and the one nothing else stands in front of.
+  // A knob whose name is engraved behind it is a knob with no name.
+  const plaqueTex = engravedPlaque(label, {
+    w: 384, h: 96, size: 52, align: 'center', tracking: 5
+  });
   const plaqueMat = ownMat(new THREE.MeshStandardMaterial({
     map: plaqueTex, roughness: 0.85, metalness: 0.2
   }));
-  const plaque = new THREE.Mesh(own(new THREE.PlaneGeometry(0.115, 0.029)), plaqueMat);
+  const plaque = new THREE.Mesh(own(new THREE.PlaneGeometry(0.152, 0.038)), plaqueMat);
   plaque.rotation.x = -Math.PI / 2;
-  plaque.position.set(0, 0.0115, -0.073);
+  plaque.position.set(0, 0.0115, 0.076);
   face.add(plaque);
   plaqueMat.userData = { ownTexture: plaqueTex };
+
+  // The setting, in figures, on the raised far edge of the same panel. A dial
+  // with an index groove tells you WHERE it is; a player who has never used one
+  // still needs to be told WHAT it is on, and "TURN UP" is the whole of stage 1.
+  const readCanvas = document.createElement('canvas');
+  readCanvas.width = 256;
+  readCanvas.height = 96;
+  const readCtx = readCanvas.getContext('2d', { willReadFrequently: true });
+  const readTex = new THREE.CanvasTexture(readCanvas);
+  readTex.colorSpace = THREE.SRGBColorSpace;
+  const readMat = ownMat(new THREE.MeshBasicMaterial({ map: readTex }));
+  const readout = new THREE.Mesh(own(new THREE.PlaneGeometry(0.108, 0.041)), readMat);
+  readout.rotation.x = -Math.PI / 2;
+  readout.position.set(0, 0.0115, -0.078);
+  face.add(readout);
+  readMat.userData = { ownTexture: readTex };
+
+  const paintReadout = v => {
+    readCtx.fillStyle = '#0d0c0a';
+    readCtx.fillRect(0, 0, 256, 96);
+    readCtx.fillStyle = '#d99423';
+    readCtx.font = '56px "Share Tech Mono", monospace';
+    readCtx.textAlign = 'center';
+    readCtx.textBaseline = 'middle';
+    readCtx.fillText(`${v} / ${max}`, 128, 50);
+    readTex.needsUpdate = true;
+  };
 
   // Detents round the collar: one notch per step, the low and high stops long.
   const notchGeo = own(new THREE.BoxGeometry(0.006, 0.006, 0.018));
@@ -277,6 +316,7 @@ export function buildPowerDial(opts) {
     // Dial degrees run clockwise from the top; a positive turn about +Y reads
     // anticlockwise from above, so the sign flips here and only here.
     knob.rotation.y = -deg * Math.PI / 180;
+    paintReadout(Math.min(max, Math.max(min, Math.round(v))));
   };
   setValue(value);
 
@@ -751,12 +791,32 @@ export class BenchViewer3D {
     this.applyCamera();
   }
 
+  /**
+   * Aim the camera sideways, which slides the bench the OTHER way in the glass.
+   *
+   * The vertical twin of this (`setAimLift`) keeps the instrument out from
+   * under the header and the tool plate. This one keeps it out from behind a
+   * transmission: at a deployed bench the briefing docks down one side of the
+   * view, and a bench centred in the glass puts its leftmost stations behind
+   * it. Aiming left walks the whole instrument right into the clear part of
+   * the view without the player's standing position changing.
+   *
+   * @param {number} shift metres the look-at point moves along the bench.
+   */
+  setAimShift(shift) {
+    const v = Math.max(-1.6, Math.min(1.6, shift || 0));
+    if (Math.abs(v - (this.aimShift || 0)) < 0.002) return;
+    this.aimShift = v;
+    this.applyCamera();
+  }
+
   applyCamera() {
     const yaw = this.orbit.yaw;
     const pitch = this.orbit.pitch;
     const d = this.camDist;
     const t = this.camTarget;
     const lift = this.aimLift || 0;
+    const shift = this.aimShift || 0;
 
     // The camera swings on a short arc around the bench centre. Pitch is clamped
     // by the caller, so the player can lean in but never get under the plate.
@@ -772,7 +832,7 @@ export class BenchViewer3D {
       this._tgtLocal = this._tgtLocal || new THREE.Vector3();
       this.root.updateMatrixWorld();
       this._camLocal.set(x, y, z);
-      this._tgtLocal.set(t.x, t.y + lift, t.z);
+      this._tgtLocal.set(t.x + shift, t.y + lift, t.z);
       this.root.localToWorld(this._camLocal);
       this.root.localToWorld(this._tgtLocal);
       this.camera.position.copy(this._camLocal);
@@ -782,7 +842,7 @@ export class BenchViewer3D {
     }
 
     this.camera.position.set(x, y, z);
-    this.camera.lookAt(t.x, t.y + lift, t.z);
+    this.camera.lookAt(t.x + shift, t.y + lift, t.z);
   }
 
   /* ---------------- input ---------------- */
@@ -1111,6 +1171,57 @@ export class BenchViewer3D {
     // THAT would be aimed off the bottom of the view.
     chromeBottom = Math.min(chromeBottom, H * 0.52);
     this.aimForChrome(1 - (2 * (chromeBottom + 12)) / H);
+
+    // And sideways, out from behind an open transmission. A briefing at a
+    // deployed bench docks down one edge of the glass rather than blacking the
+    // whole of it out, so the clear part of the view is the rest of the width —
+    // and the instrument belongs in the MIDDLE of that, not in the middle of
+    // the window.
+    let clearL = 0;
+    let clearR = W;
+    const modal = document.getElementById('modal-container');
+    const card = modal && !modal.classList.contains('hidden')
+      ? modal.querySelector('.modal-card') : null;
+    const box = card?.getBoundingClientRect?.();
+    if (box && box.width > 40 && box.width < W * 0.7) {
+      if (box.left < W * 0.3) clearL = Math.max(clearL, box.right + 10);
+      else if (box.right > W * 0.7) clearR = Math.min(clearR, box.left - 10);
+    }
+    this.aimForClear(((clearL + clearR) / W) - 1);
+  }
+
+  /**
+   * One correction step toward putting the middle of the bench on `wantNdc`.
+   *
+   * Split out the way `aimForChrome` is, and for the same reason: it is a
+   * correction rather than a closed-form solve, because the projection is not
+   * linear in the angle and the docked card's width changes with the viewport.
+   *
+   * @param {number} wantNdc the NDC x the instrument should be centred on.
+   * @returns {number} how far off that it still is.
+   */
+  aimForClear(wantNdc) {
+    if (!this.stations.length) return 0;
+    this.camera.updateMatrixWorld();
+    const p = this._sideProbe || (this._sideProbe = new THREE.Vector3());
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const st of this.stations) {
+      st.group.getWorldPosition(p);
+      p.project(this.camera);
+      lo = Math.min(lo, p.x);
+      hi = Math.max(hi, p.x);
+    }
+    if (lo === Infinity) return 0;
+
+    const off = ((lo + hi) / 2) - wantNdc;
+    if (Math.abs(off) < 0.015) return off;          // close enough; hold still
+
+    const fov = (this.camera.fov || 55) * Math.PI / 180;
+    const d = this.camDist + 0.6;
+    const halfW = d * Math.tan(fov / 2) * (this.camera.aspect || 1.6);
+    this.setAimShift((this.aimShift || 0) + off * halfW);
+    return off;
   }
 
   /**

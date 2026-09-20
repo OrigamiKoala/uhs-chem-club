@@ -244,10 +244,45 @@ function fieldWhole(ctx, g, specimen, hits) {
   // The core, to scale. It is about one part in ten thousand across; at this
   // aperture that is well under a pixel, so it is drawn at the smallest mark
   // the raster can hold and the caption carries the rest.
-  ctx.fillStyle = AMBER;
-  ctx.fillRect(g.cx - 1, g.cy - 1, 2, 2);
+  if (!specimen.casing) {
+    ctx.fillStyle = AMBER;
+    ctx.fillRect(g.cx - 1, g.cy - 1, 2, 2);
+  }
 
   hits.push({ key: 'whole', part: 'whole', x: g.cx, y: g.cy, r: g.aperture * 0.7 });
+}
+
+/**
+ * A welded casing, drawn instead of whatever is inside it.
+ *
+ * `sealed` on a specimen means only that its OUTSIDE will not resolve — the
+ * middle still counts, which is what `q2-core` stage three is built on.
+ * `casing` is the stronger statement: the piece is shut and NOTHING in it
+ * resolves in any view, so the label stamped on the plate is the only reading
+ * there is. The instrument draws the shut casing rather than a blank field,
+ * because an empty aperture reads as a fault and this is not one.
+ */
+function drawCasing(ctx, g) {
+  ctx.fillStyle = 'rgba(107, 98, 90, 0.30)';
+  ctx.beginPath();
+  ctx.arc(g.cx, g.cy, g.aperture * 0.62, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(184, 175, 160, 0.20)';
+  ctx.lineWidth = 1;
+  const step = Math.max(7, g.aperture * 0.10);
+  for (let o = -g.aperture; o < g.aperture; o += step) {
+    ctx.beginPath();
+    ctx.moveTo(g.cx + o, g.cy - g.aperture);
+    ctx.lineTo(g.cx + o + g.aperture * 2, g.cy + g.aperture);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = 'rgba(184, 175, 160, 0.34)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(g.cx, g.cy, g.aperture * 0.62, 0, Math.PI * 2);
+  ctx.stroke();
 }
 
 /**
@@ -258,6 +293,7 @@ function fieldWhole(ctx, g, specimen, hits) {
  * behind anything. Marked grains carry a stencilled cross; blanks do not.
  */
 function fieldCore(ctx, g, specimen, hits) {
+  if (specimen.casing) { drawCasing(ctx, g); return; }
   const marked = specimen.core?.marked || 0;
   const blank = specimen.core?.blank || 0;
   const total = marked + blank;
@@ -297,13 +333,52 @@ function fieldCore(ctx, g, specimen, hits) {
 
 /** The light pieces, out at the distances they keep. */
 function fieldRings(ctx, g, specimen, hits) {
+  if (specimen.casing) { drawCasing(ctx, g); return; }
   const rand = mulberry32(hashId(specimen.id) ^ 0x2c99);
 
-  // The core is one mark at this scale — the point of the previous field.
-  const coreR = Math.max(4, g.aperture * 0.075);
-  disc(ctx, g.cx, g.cy, coreR, CORE_TINTS.marked);
-  stencilMark(ctx, g.cx, g.cy, coreR);
-  hits.push({ key: 'core', part: 'core', x: g.cx, y: g.cy, r: g.aperture * 0.08 });
+  /* THE CORE IS A HUDDLE HERE TOO, NOT ONE GRAIN.
+     It used to be drawn as a single marked disc with a single cross on it,
+     which is a picture of a specimen with ONE marked grain in it — so from the
+     moment the rings field takes over, every specimen on the bench looked
+     identical and looked wrong, and a stage asking the player to reason about
+     how many marked grains are in there was arguing with its own screen.
+     It is drawn small, because at ring distances that is how small it is, but
+     it is drawn HONESTLY: the same grains the core field resolves, in the same
+     proportions, packed the same way. */
+  const marked = specimen.core?.marked || 0;
+  const blank = specimen.core?.blank || 0;
+  const totalGrains = marked + blank;
+  const coreR = Math.max(6, g.aperture * 0.165);
+
+  if (totalGrains > 0) {
+    const crand = mulberry32(hashId(specimen.id) ^ 0x7a31);
+    const pack = packCore(totalGrains, crand);
+    const spread = Math.max(1, ...pack.map(([x, y]) => Math.hypot(x, y))) + 1;
+    const unit = coreR / spread;
+    const gr = Math.max(1.6, unit * 0.86);
+
+    // Same alternation as the core field, so a specimen does not rearrange
+    // itself between the two views.
+    const order = [];
+    let m = marked;
+    let b = blank;
+    for (let i = 0; i < totalGrains; i++) {
+      const takeMarked = b === 0 || (m > 0 && (i % 2 === 0 ? m >= b : m > b));
+      if (takeMarked) { order.push('marked'); m--; } else { order.push('blank'); b--; }
+    }
+    pack.map((pt, i) => i)
+      .sort((a, c) => Math.hypot(...pack[c]) - Math.hypot(...pack[a]))
+      .forEach(i => {
+        const [ox, oy] = pack[i];
+        const x = g.cx + ox * unit;
+        const y = g.cy + oy * unit;
+        disc(ctx, x, y, gr, CORE_TINTS[order[i]]);
+        if (order[i] === 'marked' && gr > 3) stencilMark(ctx, x, y, gr);
+      });
+  } else {
+    disc(ctx, g.cx, g.cy, Math.max(4, g.aperture * 0.075), CORE_TINTS.marked);
+  }
+  hits.push({ key: 'core', part: 'core', x: g.cx, y: g.cy, r: coreR + g.aperture * 0.02 });
 
   if (specimen.sealed) {
     ctx.fillStyle = 'rgba(184, 175, 160, 0.10)';
@@ -489,7 +564,8 @@ export class CoreBench {
    *   id: string, label: string, note?: string,
    *   core: {marked: number, blank: number},
    *   rings?: number[],
-   *   sealed?: boolean        // the outside will not resolve on this one
+   *   sealed?: boolean,       // the outside will not resolve on this one
+   *   casing?: boolean        // welded shut: nothing resolves in any view
    * }>} specimens
    */
   setSpecimens(specimens) {

@@ -7,6 +7,12 @@
  *
  * Quests are played in order. `stageCount` is the intended length and is what the
  * map shows before the quest exists; the module reports the real figure once built.
+ *
+ * FIVE BENCHES, AND THE LAST TWO ARE THE END OF THE UNIT. The road runs from
+ * "what is the smallest piece" to "describe any piece with three numbers" and
+ * stops there. Counting by weighing — the mole and molar mass — is Ligar's, not
+ * Tallow's: a unit that has only just learned what a proton is has no business
+ * being handed Avogadro's number.
  */
 
 export const UNIT_01 = {
@@ -42,20 +48,29 @@ export const UNIT_01 = {
     {
       id: 'q3-catalogue',
       title: 'The Catalogue Numbers',
-      line: 'The scope orders every kind it meets. Find out what it is counting.',
-      arena: 'chamber',
-      stageCount: 10,
-      status: 'draft',
-      module: null
-    },
-    {
-      id: 'q4-counting',
-      title: 'The Counting Problem',
-      line: 'A number too large to count, counted anyway.',
+      line: 'The scope has filed every kind it met under a number. Find out what it counts.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit01/q3-catalogue.js')
+    },
+    {
+      id: 'q4-ledger',
+      title: 'The Buyer\'s Ledger',
+      line: 'Three numbers describe any piece on this flat. The buyer wants all three.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'live',
+      module: () => import('../quests/unit01/q4-ledger.js')
+    },
+    {
+      id: 'q5-assay',
+      title: 'The Weight On The Card',
+      line: 'Nothing in the hopper weighs what the card says it does.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'live',
+      module: () => import('../quests/unit01/q5-assay.js')
     }
   ]
 };

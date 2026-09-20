@@ -47,7 +47,7 @@ import {
 } from "./materials/celestial.js";
 import {
   HULL, ROOMS, WALLS, CEIL, WALL_T, DOOR_H,
-  wallSegments, doorways
+  wallSegments, doorways, roomAt
 } from "./ship-rooms.js";
 import { tierAtLeast } from "./tier.js";
 import { session } from "../session.js";
@@ -567,18 +567,55 @@ export class ShipInterior {
       lintel.position.set(0, DOOR_H + 0.15, 0);
       frame.add(lintel);
 
-      // Stencilled header plate with its own small filament, so a threshold
-      // is legible from down the spine.
-      const header = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.16, 0.03), this.ironMat);
-      header.position.set(0, DOOR_H + 0.12, depth / 2 + 0.02);
-      frame.add(header);
+      /* ------------------------------------------------------------------
+         EVERY THRESHOLD SAYS WHERE IT GOES, ON BOTH SIDES.
+ 
+         A ship of identical grey doorways is a maze: the player walks the
+         spine, opens three of them looking for the one with the star map in
+         it, and learns the deck plan by trial and error. So each frame
+         carries a stencilled header plate on EACH face, naming the
+         compartment you walk into on THAT side — the room's name read from
+         the spine, SPINE read from inside the room.
+ 
+         The name is not written down here. `roomAt` is asked what is
+         actually half a metre through the opening in each direction, so a
+         bulkhead that moves takes its legend with it and a plate can never
+         name a compartment that is no longer behind it.
+         ------------------------------------------------------------------ */
+      const probe = 0.5;
+      // The frame's local +z is the doorway's `through` direction in world
+      // space, for both wall axes: an x-axis wall is rotated a quarter turn
+      // about y, which carries local +z onto world +x.
+      const sideName = sign => {
+        const id = roomAt(
+          d.pos[0] + d.through[0] * probe * sign,
+          d.pos[1] + d.through[1] * probe * sign
+        );
+        return id ? ROOMS[id].name : null;
+      };
 
-      const lamp = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.028, 0.028, 0.03, 8), this.amberLampMat
-      );
-      lamp.rotation.x = Math.PI / 2;
-      lamp.position.set(0, DOOR_H + 0.12, depth / 2 + 0.045);
-      frame.add(lamp);
+      for (const s of [1, -1]) {
+        const header = new THREE.Mesh(
+          new THREE.BoxGeometry(1.16, 0.2, 0.03), this.ironMat
+        );
+        header.position.set(0, DOOR_H + 0.12, s * (depth / 2 + 0.02));
+        frame.add(header);
+
+        const name = sideName(s);
+        if (name) {
+          const tag = placard(name, { w: 1.04, h: 0.15 });
+          tag.position.set(0, DOOR_H + 0.12, s * (depth / 2 + 0.042));
+          if (s < 0) tag.rotation.y = Math.PI;
+          frame.add(tag);
+        }
+
+        const lamp = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.024, 0.024, 0.03, 8), this.amberLampMat
+        );
+        lamp.rotation.x = Math.PI / 2;
+        lamp.position.set(s * 0.66, DOOR_H + 0.12, s * (depth / 2 + 0.045));
+        frame.add(lamp);
+      }
 
       // A dogging cleat on each jamb: this is a pressure door aperture
       for (const s of [-1, 1]) {

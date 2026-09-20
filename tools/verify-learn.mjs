@@ -280,7 +280,18 @@ function checkStageTable(q, mod) {
    */
   const WITHHELD_VOCAB = {
     'unit01/q1-grain': /\b(atoms?|atomic|elements?|molecules?|molecular|compounds?|mixtures?)\b/i,
-    'unit01/q2-core': /\b(atoms?|atomic|elements?|molecules?|molecular|compounds?|mixtures?|nucle(us|i|ar)|protons?|neutrons?|isotopes?|electrons?|shells?|valence|ions?|ionic|ioniz\w*)\b/i
+    'unit01/q2-core': /\b(atoms?|atomic|elements?|molecules?|molecular|compounds?|mixtures?|nucle(us|i|ar)|protons?|neutrons?|isotopes?|electrons?|shells?|valence|ions?|ionic|ioniz\w*)\b/i,
+    // From here on the list is only what the quest itself has yet to earn. The
+    // first two benches taught proton, electron, shell, valence, element,
+    // isotope and ion, so those are plain words now and using them is the rule
+    // rather than a leak (CLAUDE.md, "Discover, then name, then use").
+    'unit01/q3-catalogue': /\b(atomic number|periodic|periods?|groups?|noble|metals?|nonmetals?|non-metals?|alkali|halogens?)\b/i,
+    'unit01/q4-ledger': /\b(mass number|cations?|anions?)\b/i,
+    'unit01/q5-assay': /\b(abundances?|weighted average|average atomic mass|relative atomic mass|mass spectrum|mass spectrometry)\b/i,
+    'unit02/q1-joins': /\b(bonds?|bonded|bonding|ionic|covalent|shares? a pair|lone pairs?|double bonds?|triple bonds?|formula unit)\b/i,
+    'unit02/q2-lattice': /\b(lattices?|crystals?|crystalline|conduct\w*|electrolytes?|dissociat\w*|brittle|melting points?)\b/i,
+    'unit02/q3-recipe': /\b(fixed composition|constant composition|definite proportions|multiple proportions|empirical formulas?|percent composition)\b/i,
+    'unit02/q4-weigh': /\b(moles?|molar|avogadro\w*|formula mass|gram formula mass)\b/i
   };
   const withheldRx = WITHHELD_VOCAB[q.key];
 
@@ -444,6 +455,47 @@ function checkStageTable(q, mod) {
       if (early) {
         fail(`${label}: check() code says "${early}" before it has been taught`);
         bad++;
+      }
+    }
+
+    /* ------------------------------------------------------------------
+       NOTHING IS NAMED WITHOUT BEING EXPLAINED.
+
+       A stage that puts a key on the plate owes the player one plain sentence
+       saying what that key does, on the stage the key first appears and on
+       every stage after it. A quest exports `toolNoteFor(controlId, stageNo)`
+       and the frame draws what it returns. Without this rule a bench grows a
+       vocabulary of its own — needle, field, ring, stripper — that a player
+       only ever meets as a button legend, and the prompts then talk to
+       somebody who already knows what the buttons are.
+
+       The notes are player-facing copy, so they are held to the same withheld
+       vocabulary as a prompt or a hint.
+       ------------------------------------------------------------------ */
+    if (Array.isArray(st.controls) && st.controls.length) {
+      if (typeof mod.toolNoteFor !== 'function') {
+        fail(`${label}: the quest offers controls but exports no toolNoteFor()`);
+        bad++;
+      } else {
+        for (const control of st.controls) {
+          const note = mod.toolNoteFor(control, i + 1);
+          if (!note || !note.key || !note.what) {
+            fail(`${label}: control "${control}" has no key legend — say what it does`);
+            bad++;
+            continue;
+          }
+          if (sentenceCount(note.what) < 1) {
+            fail(`${label}: the legend for "${control}" is not a sentence`);
+            bad++;
+          }
+          if (withheldRx) {
+            const earlyWord = tooEarly(`${note.key} ${note.what}`, i + 1, false);
+            if (earlyWord) {
+              fail(`${label}: the legend for "${control}" says "${earlyWord}" before it has been taught`);
+              bad++;
+            }
+          }
+        }
       }
     }
 

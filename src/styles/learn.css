@@ -346,6 +346,55 @@
 
 .lq-controls:empty { display: none; }
 
+/* THE KEY LEGEND. Every control on the plate says what it does, in one line,
+   for as long as it is on the plate. Engraved plate text, never a tooltip:
+   a legend you have to hover for is a legend a student on a trackpad in a
+   classroom never reads. */
+.lq-tool-notes {
+  flex: 1 1 100%;
+  min-width: 0;
+  padding: 7px 9px 8px;
+  background: var(--plate-100);
+  border: 1px solid var(--border-durasteel);
+  border-top-color: var(--seam-light);
+  border-bottom-color: var(--seam-dark);
+}
+
+.lq-tool-notes .form-label { margin: 0 0 5px; }
+
+.lq-tool-notes dl {
+  margin: 0;
+  display: grid;
+  gap: 3px 10px;
+}
+
+.lq-tool-note {
+  display: grid;
+  grid-template-columns: minmax(84px, max-content) 1fr;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.lq-tool-note dt {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-amber);
+}
+
+.lq-tool-note dd {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 620px) {
+  .lq-tool-note { grid-template-columns: 1fr; gap: 0; }
+  .lq-tool-note dd { margin-bottom: 3px; }
+}
+
 /* The power knob. A magnification setting is a thing you turn, so it is a
    milled cap with an engraved index and detents cut round its collar — not a
    pair of keys with a number between them. See `engine/dial.js` for the three
@@ -1353,6 +1402,15 @@
   margin-bottom: 0.9rem;
 }
 
+/* The corner key. Practice gates nothing, so the way out of the whole set is
+   one press in the place every player already looks for one. */
+.lq-practice-head-keys {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
 .lq-practice-question {
   font-size: 1rem;
   max-width: 36ch;
@@ -1429,3 +1487,50 @@
 
 .learn-brief-foot { justify-content: space-between; }
 .map-learn-action { display: flex; flex-direction: column; gap: 0.4rem; align-items: stretch; }
+
+/* ==========================================================================
+   A TRANSMISSION AT A DEPLOYED BENCH DOES NOT BLACK OUT THE BENCH
+
+   `body.bench-deployed` is set by `screens/learn-quest.js` while the player is
+   standing at a bench that is built in the world. A modal is normally a dialog
+   over a page and paints a near-opaque scrim across the whole glass — which is
+   exactly wrong here, because the briefing's job is to tell the player what to
+   look at, and the thing to look at was behind it. The transmission docks down
+   the left of the glass at a readable width and the scrim goes to a thin veil,
+   so every station on the bench stays visible while it is being read.
+   `BenchViewer3D.fitDeployedAim` aims the instrument out from behind it, so
+   nothing is trusted to a stacking order.
+
+   Scoped to the class, so every other modal in the product is untouched.
+   ========================================================================== */
+body.bench-deployed .modal-container {
+  justify-content: flex-start;
+  align-items: stretch;
+  background: rgba(6, 5, 4, 0.34);
+  padding: calc(var(--hud-h, 64px) + 12px) 1rem 1rem;
+}
+
+body.bench-deployed .modal-container .modal-card {
+  width: min(430px, 44vw);
+  max-width: 430px;
+  margin: 0;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+/* Below the width where a docked card would leave no bench beside it, the
+   transmission goes back to being a card over the view — an unreadable panel
+   next to an unreadable bench helps nobody. */
+@media (max-width: 860px) {
+  body.bench-deployed .modal-container {
+    justify-content: center;
+    align-items: center;
+    background: rgba(6, 5, 4, 0.82);
+    padding: 1.5rem;
+  }
+  body.bench-deployed .modal-container .modal-card {
+    width: 100%;
+    max-width: 560px;
+    margin: auto;
+  }
+}

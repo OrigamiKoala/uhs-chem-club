@@ -18,6 +18,34 @@ discover charge balance as a needle that sits on zero, with no word attached. Di
 then name, then use; saying "light piece" for eight stages after the player knows better is
 the instrument being coy.
 
+**Two rules sit beside it and are enforced the same way.**
+
+**Nothing is NAMED without being explained — including the instrument's own words.** The
+vocabulary schedule governs the chemistry; this governs everything else the player has to
+touch. "Read the needle", "load the rings", "the ring counters on the deck" and "set the
+field" are clear sentences addressed to somebody who has already used the bench, which is
+the one reader this product is not for. So every control a stage offers carries one plain
+sentence saying what it does, drawn under the keys and left there for as long as the stage
+offers it — never a tooltip, never once on first use, never only inside an earned hint. A
+quest exports `toolNoteFor(controlId, stageNumber)`; `engine/frame.js`'s `toolNotes()`
+draws it; `verify:learn` fails the build over a control with no line and runs every line
+through the same withheld-vocabulary gate as a prompt. A tool's line may change as words
+are earned: the needle's says "light pieces" until the stage after electrons are named and
+"electrons" from then on. Key labels obey it too — the core bench's three views read
+**Whole piece / The middle / Outside** under **View**, not Whole / Core / Rings under
+"Field".
+
+**A stage must be solvable by somebody who does not already know the answer.** This is the
+test every bench stage has to pass and the easiest one to fail, because the author knows
+the chemistry. A stage only a player who already knows can finish is not teaching, it is
+checking — and it is checking the one thing this audience has not got. The evidence has to
+be ON THE BENCH, not in hint rung three: stage 3 of `q2-core` carries an open reference
+reading plus two with six crosses and four light pieces, which is what makes "the needle
+reads crosses minus light pieces" a discovery rather than an assertion, and stage 6 is
+answerable because the piece with the extra neutron has a visibly identical outside and
+stage 5 established that the outside decides behaviour. Hints point at that evidence; they
+are not a substitute for it.
+
 A Learn quest publishes its own schedule — `VOCABULARY` in `src/learn/quests/unit01/q2-core.js`
 is the worked example, mapping each gated term to the stage whose reward card introduces
 it. `verify:learn` fails the build both ways round: a term used one stage early, and a term
@@ -242,7 +270,11 @@ overlay on every tier**, including T4: this is the player's own revision, not a
 transmission, and no instrument in the fiction asks multiple-choice questions.
 `verify:learn` asserts five well-formed problems per built quest, that each names an
 answer that is one of its own options, that each carries an explanation, and that nothing
-is offered on an unfinished world.
+is offered on an unfinished world. **Leaving the whole set is one press, in the corner.**
+The card carries a `Close` key in its top-right beside the `n / total` tag and a `Skip
+All` key in the row; both call the same `finish()`, and `Skip This One` is the only key
+that advances a single question. A player who wants none of it must never have to press
+Skip five times to escape something that gates nothing.
 
 **The rule that outranks the rest: the Learn track pays no XP and never reaches the
 leaderboard.** Nothing in `src/learn/` or the three learn screens may call `session.addXp`,
@@ -333,7 +365,15 @@ into grinding and would punish the students it exists to help.
   was refused by an instrument that never showed them the sixth; and a light piece staged
   at ring scale was a speck indistinguishable from the dust of the planet behind it. Drawn
   flat, every piece is in the picture, in one place, at a countable size, on every tier —
-  which is also what keeps a hint that names a position honest on both benches. Picking
+  which is also what keeps a hint that names a position honest on both benches.
+  **AND THE PICTURE IS HONEST ABOUT WHAT IS IN IT.** What a field draws is what the quest
+  grades against. `fieldRings` in `corebench.js` used to draw the nucleus as ONE marked
+  disc with ONE cross on it — a picture of a specimen holding a single marked grain — so
+  from the stage the rings field takes over, every specimen on the bench looked identical
+  and looked wrong, and a stage reasoning about how many marked grains were in there was
+  arguing with its own screen. It is drawn small, because at ring distances it is small,
+  but it is drawn as the same huddle `fieldCore` resolves, in the same proportions and
+  the same packing. Picking
   goes through `BenchViewer3D.screenUnderRay()`, which hands back the press in the screen's
   own pixels so the 3D bench runs the identical `hitTestField` / `hitTestCore`.
 - **Deployed, the instrument is AIMED into the open glass, never skewed into it.** On a
@@ -347,6 +387,17 @@ into grinding and would punish the students it exists to help.
   be used on the world camera: it would re-frame the whole of Tallow. `verify:bench` drives
   `aimForChrome` at six aspects and fails the build if a screen still runs under the frame
   or a well is aimed off the bottom.
+- **A briefing never blacks out the bench it is describing.** `#modal-container` normally
+  paints a near-opaque scrim over the whole glass, which is right for a dialog over a page
+  and wrong over an instrument: the transmission telling the player to read the needle on
+  all four specimens was itself the thing hiding all four. `screens/learn-quest.js` sets
+  `body.bench-deployed` whenever the player is at a bench built in the world, and the rule
+  under it in `learn.css` docks the card down the left of the glass at `min(430px, 44vw)`
+  and drops the scrim to 34%. The bench then comes out from behind it by the SIDEWAYS twin
+  of the aim above: `fitDeployedAim` measures the docked card and `aimForClear` /
+  `setAimShift` walk the look-at point along the bench until the stations are centred in
+  the clear part of the view. Below 860 px it reverts to the centred card, because a
+  docked panel beside a bench too narrow to read helps nobody.
 - **Both Unit 1 benches are BUILT at T4.** `BUILT_BENCHES` in `engine/instruments.js` holds
   `q1-grain` and `q2-core`, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
   asks to decide whether the frame is bolted to a bench or drawn as a page over the flat.
@@ -420,8 +471,10 @@ solution grades correct, that a plausible wrong answer is refused **with a reaso
 untouched bench never grades correct, that every stage has exactly three distinct hint rungs
 and a reward card, that every bench declaration is well formed, that all `quest-btn-sm` buttons carry
 `btn-secondary` or `btn-primary`, that stage briefings do not exceed 2 sentences, that sample notes
-describe provenance only without leaking answers, and that all prompt/hints/briefings/check messages
-comply with withheld vocabulary rules. It reads both styles:
+describe provenance only without leaking answers, **that every control a stage offers has a
+key legend** (`toolNoteFor(controlId, stageNumber)` — see "Nothing is NAMED without being
+explained" at the top of this file), and that all prompt/hints/briefings/legends/check
+messages comply with withheld vocabulary rules. It reads both styles:
 `samples` with `particles` for the sampler scope (real kinds, `geom` covering every piece,
 bonds inside the cluster) and `specimens` with `core` and `rings` for the core bench, where
 shell capacity is enforced — two on the nearest ring, eight after that, nothing further out
@@ -448,10 +501,10 @@ numbers, never explained here; the debrief points at them as the hook into `q3-c
 Eight stages on the core bench in Tallow's sub-level diagnostic lab, picking up where quest 1's
 blade stopped. The Avalon needs reactor calibration and charged propellant from Imperial
 deep-salvage canisters. Fire a beam through a mounted piece to find its structure → count the
-grains stamped with a cross in the nucleus → find the balance rule on two open references and
-apply it to a sealed canister → load eleven electrons onto rings → predict trading from the
-outermost shell → tell two 13-grain cores apart by their proton count → strip electrons to
-reach plus two → file three unlabelled canisters.
+grains stamped with a cross in the nucleus → find the balance rule on three open references
+and apply it to a sealed canister → place eleven electrons on rings by copying what three
+references do → predict trading from the outermost shell → tell two 13-grain cores apart by
+what is outside them → strip electrons to reach plus two → file three unlabelled canisters.
 
 **This quest is where the vocabulary SCHEDULE is worked out** (see the top of this file).
 `VOCABULARY` in the module maps each gated term to the stage whose reward card introduces
@@ -459,12 +512,32 @@ it — nucleus at 1, proton and neutron at 2, electron at 3, shell at 4, valence
 and isotope at 6, ion at 7 — and from the stage after, the game simply says the word.
 Stage 4's prompt asks for electrons because stage 3 is where the player found them.
 
-**Stage 3 is the one that has to be discovered rather than asserted.** It puts two open
-reference pieces beside one welded shut: on the open ones both sides can be counted and the
-needle sits on zero, so the player works out for themselves that the crosses and the light
-pieces come out equal — and only then applies it to the sealed one. Asking for the deduction
-without the references was the version that made no sense, because nothing had established
-that the outside existed or that it cancelled anything.
+**Stages 3, 4 and 6 are the ones that have to be DISCOVERED rather than asserted**, and
+each of them was rebuilt because it was not. The failure mode is identical every time: the
+stage is easy for a reader who already knows the chemistry and impossible for the reader it
+was written for, and hint rung three is quietly carrying the whole lesson.
+
+- **Stage 3 — the needle.** Three open references stand beside one welded shut. Two of them
+  read zero, and **REF 03 reads plus two with six crosses and four light pieces** — that
+  third reference is the stage. With only the balanced pair the needle never moved, so
+  there was nothing to learn from it: the player read zero three times and was asked to
+  infer a rule from an instrument that had shown them no variation at all. With REF 03 the
+  rule "the needle reads crosses minus light pieces" is visible in the data, and the sealed
+  piece is then an application of it. The commit is soft-refused until the needle has been
+  on the sealed piece AND on at least one open reference, because the comparison is the
+  work.
+- **Stage 4 — the rings.** Three open references, not two: 2 alone, 2 and 8, and **2, 8 and
+  3**. The third one is what makes "each ring fills before the next one starts" a pattern
+  in three data points rather than an assertion in a hint. The widget says what its keys do
+  in the widget, and the word "ring" is introduced on stage 3, where the circles are first
+  on screen.
+- **Stage 6 — why the neutron does not matter.** This is the question the stage used to
+  answer only in hint three. It is now derivable from the stage before it: SPEC H and SPEC
+  K have the same protons and therefore the **identical outside, 2 and 4**, and stage 5
+  established that the outermost ring is what decides how a piece behaves; SPEC L has a
+  different outside, 2 and 5. The briefing states the criterion as a question — two pieces
+  are the same material when they behave the same way, and you already know what decides
+  that — and the bench carries the evidence.
 
 **Nothing in this quest requires clicking a particle.** Counting is the task on stages 2, 3,
 6 and 8, so the answer is a number the player enters; the probe is a tool that is there if
@@ -576,6 +649,16 @@ Erebus.
   cable raceway through every deckhead frame, a tactical table skirt inside a
   doorway, a crate inside a lean-to post — and a missing import that would have
   crashed Tallow outright.
+- **Every doorway says where it goes, on both faces.** A ship of identical grey
+  openings is a maze, and a player who finds the star map by opening three doors has
+  learned the deck plan by trial and error. `buildDoorwayFrames` hangs a stencilled
+  header plate on each side of every frame, naming the compartment you walk INTO on
+  that side — the room's designator read from the spine, `SPINE` read from inside the
+  room. **The names are not written down at the frame:** `roomAt()` is asked what is
+  actually half a metre through the opening in each direction, so a bulkhead that moves
+  takes its legend with it and a plate can never name a compartment that is no longer
+  behind it. `placard()` shrinks its face to fit rather than clipping, because
+  `COMMAND BRIDGE` is twice the length of `COMMS`.
 - **Doorways are drawn where the deck is free.** `buildDoorways` runs last, after
   every room has registered its furniture, draws ONE frame per unordered graph
   edge at the midpoint of the two compartments, and walks along that line to the

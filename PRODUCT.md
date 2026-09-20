@@ -171,20 +171,53 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
    - The intuition still comes first and it comes WITHOUT the word. Charge balance is met
      as a needle that sits on zero when two counts happen to be equal; only afterwards is
      it called an electron and a proton. Discover, then name, then use.
-2. **Looking is the verb.** One reading is never enough — every stage is solved by
+2. **A name is never used before it is explained, including the instrument's own.**
+   Principle 1 governs the CHEMISTRY vocabulary; this one governs everything else the
+   player is asked to touch. "Read the needle", "load the rings", "the ring counters on
+   the deck" and "set the field" are all perfectly clear sentences addressed to somebody
+   who has already used the bench, and that reader is the one person this product is not
+   for. So every control a stage offers carries a plain sentence saying what it does,
+   beside it, for as long as the stage offers it — not in a tooltip, not once on first
+   use, and not inside a hint the player has to earn. A quest exports
+   `toolNoteFor(controlId, stageNumber)` and `npm run verify:learn` fails the build over
+   a control with no line. The line follows principle 1's schedule too: the needle's
+   legend says "light pieces" until the stage after electrons are named, and says
+   "electrons" from then on.
+3. **A stage must be solvable by somebody who does not already know the answer.** This is
+   the test every bench stage has to pass and the easiest one to fail, because the author
+   knows the chemistry. A stage that can only be finished by a player who already knows
+   what protons do is not teaching, it is checking — and it is checking the one thing
+   this product's audience has not got. In practice the evidence a stage needs has to be
+   ON THE BENCH: the rule that the needle reads crosses minus light pieces is
+   discoverable because an open reference on the same bench reads plus two with six
+   crosses and four light pieces; the rule that neutrons do not change what a piece IS is
+   discoverable because the piece with the extra neutron has an identical outside, and
+   the stage before established that the outside is what decides behaviour. Asserting
+   either of those in a hint instead is the failure mode, and hint rung three is not a
+   substitute for evidence.
+4. **Looking is the verb.** One reading is never enough — every stage is solved by
    comparing two or more, which is what makes investigation the gameplay rather than
    reading comprehension.
-3. **Learning must never become grinding.** The study road pays no XP and never touches
+5. **Learning must never become grinding.** The study road pays no XP and never touches
    Standings; hints are free; a replay costs and earns nothing; the practice problems are
    optional, skippable and gate nothing. A study aid that held the road shut would be a
    test, and this is not one.
-4. **The floor is the student who knows nothing and is holding a phone.** Low-end
+6. **The floor is the student who knows nothing and is holding a phone.** Low-end
    hardware and 375 px are the design target, not a degraded mode.
-5. **Nothing in the interface advertises the product.** Every string is a label, a rule,
+7. **Nothing in the interface advertises the product.** Every string is a label, a rule,
    an error, something being taught, or a character speaking.
-6. **An instrument never invents a reading.** A screen that claims to be telemetry shows
+8. **An instrument never invents a reading.** A screen that claims to be telemetry shows
    what was measured or says it has none. This is a pre-launch product, and a plausible
    number in place of a missing one is the easiest lie to ship and the hardest to notice.
+   The same honesty binds a PICTURE: what an instrument draws is what the quest grades
+   against. A core holding six marked grains is drawn with six, not with one grain
+   standing in for the idea of a core, or the player is being asked to reason about a
+   specimen the screen is misreporting to them.
+9. **A place the player is told to look at is never blacked out to tell them.** A modal
+   over a page is a dialog; the same modal over an instrument the briefing is describing
+   hides the thing it is describing. At a bench built in the world the transmission docks
+   down one side of the glass at a readable width, the scrim goes to a veil, and the
+   instrument is aimed out from behind it.
 
 ## Accessibility & Inclusion
 

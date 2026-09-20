@@ -35,6 +35,7 @@ export function disposeLearnQuest() {
     console.error('Learn quest dispose failed:', err);
   }
   if (stage.mode === 'quest') stage.exitQuestScene();
+  document.body.classList.remove('bench-deployed');
   // Whatever stood the walk down, give it back. The router calls this on every
   // navigation away from a quest route, including back out onto the flat.
   stage.setWalkSuspended?.(false);
@@ -120,6 +121,16 @@ export function renderLearnQuest(container, params = {}) {
       return q ? isQuestComplete(q) : false;
     });
     stage.setWalkSuspended?.(true);
+
+    /* THE BRIEFING MUST NOT BLACK OUT THE BENCH.
+       A modal on this product paints a near-opaque scrim over the whole glass,
+       which is right for a dialog over a page and wrong over an instrument the
+       player is being told to look at: the transmission that says "read the
+       needle on all four" was itself hiding all four. With a bench standing in
+       the world, the transmission docks down one side and lets the light
+       through, and `fitDeployedAim` slides the bench out from behind it. */
+    if (benchIsBuilt(quest.id)) document.body.classList.add('bench-deployed');
+    else document.body.classList.remove('bench-deployed');
   }
 
   container.innerHTML = shell({ world, quest, body: '', inWorld: false, overWorld: walkable });

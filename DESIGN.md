@@ -538,6 +538,24 @@ are part of this system and must stay in step with the tokens, and `TINT_HEX` in
   it. **Both call `angleFor` / `valueForAngle` from `dial.js`**, which is the single
   implementation of where a detent is, so the knob on the bench and the knob on the panel
   can never disagree about which power a given angle means.
+- **A control faces the operator and says its own name.** The built dial's plinth is raked
+  toward the player — a POSITIVE rotation about x, because a bench's local +z is its front
+  — with the engraved `POWER` plate on the NEAR edge of the panel, the edge closest to the
+  eye and the one nothing stands in front of, and a lit `n / max` readout on the raised far
+  edge. The rake used to be negative and the plate sat behind the cap, so the legend and
+  the whole scale faced the back of the bench and the operator saw the underside of a knob
+  with no name on it.
+
+**The Key Legend Rule.** Every control a stage offers carries one plain sentence saying
+what it does, drawn under the keys (`toolNotes()` in `engine/frame.js`, `.lq-tool-notes`)
+for as long as the stage offers it. Not a tooltip — a legend you have to hover for is a
+legend a student on a school trackpad never reads — and not a one-time card. A quest
+exports `toolNoteFor(controlId, stageNumber)`, so a tool's line can change as its
+vocabulary is earned; `verify:learn` fails the build over a control with no line and runs
+every line through the same withheld-vocabulary gate as a prompt. The keys themselves are
+named in English for the same reason: the core bench's three views read **Whole piece /
+The middle / Outside** under a label reading **View**, not Whole / Core / Rings under
+"Field".
 
 **The Flat Picture Rule.** A built instrument is real geometry — a plate, a well with the
 bulk matter actually in it, a milled cap you reach over and turn — but **what the
@@ -561,6 +579,22 @@ standing in front of it. `fitDeployedAim` / `aimForChrome` in `bench3d.js` measu
 down the glass the chrome reaches over the middle of the view and pitch up until the tops
 of the screens clear it; `verify:bench` drives the same function and fails the build if a
 screen still runs under the frame or a well ends up off the bottom.
+
+**The Honest Picture Rule.** What a field DRAWS is what the quest grades against. The core
+bench's `Outside` view used to draw the nucleus as one marked disc with one cross on it,
+which is a picture of a specimen holding a single marked grain — so from the stage the
+rings take over, every specimen on the bench looked identical and looked wrong, and a
+stage reasoning about how many marked grains were in there was arguing with its own
+screen. It is drawn small, because at ring distances it IS small, but it is drawn as the
+same huddle the `The middle` view resolves, in the same proportions and the same packing.
+
+**The Docked Transmission Rule.** `body.bench-deployed` (set by `screens/learn-quest.js`
+whenever the player is at a bench built in the world) docks the modal down the left of the
+glass at `min(430px, 44vw)` and drops the scrim from `rgba(6,5,4,0.88)` to `0.34`, and
+`fitDeployedAim` / `aimForClear` slide the instrument into the clear part of the view. A
+briefing whose job is to say what to look at must not be the thing covering it. Below
+860 px it reverts to the centred card, because a docked panel next to a bench too narrow
+to read helps nobody.
 
 **The Stencil, Not Colour Rule.** On the core bench a marked grain is told apart by a
 **stencilled cross**, never by its colour alone. It is the only version of the instrument
@@ -598,12 +632,35 @@ and no instrument in the fiction asks multiple-choice questions.
 - The verdict block (`.lq-practice-verdict`) leads with a stencilled `//` or `!!`, exactly
   as a banner does, and always carries the explanation. A question that is only marked
   wrong teaches nothing.
-- Three keys, always: **Close** (leave), **Skip** (this question), **Next / Finish**. The
-  set is optional at every point and nothing is gated behind it.
+- Four keys, and two of them are the same key: **Close** in the top-right corner of the
+  card (`.lq-practice-close`, beside the `n / total` tag) and **Skip All** in the key row
+  both leave the WHOLE set in one press, **Skip This One** advances a single question, and
+  **Next / Finish** commits. The set is optional at every point and nothing is gated behind
+  it, so the way out belongs in the corner every reader already looks in — a player who
+  wants none of it should never have to press Skip five times to escape.
 - The **Problems** key (`practiceKey()` in `screens/learn-world.js`) appears beside a
   finished world's Enter key on the star map, on the Learn road, in the world brief and in
   the walk HUD. It is a `btn-secondary`, because reopening revision is not the primary act
   on any of those screens.
+
+### Signature: Wayfinding — The Doorway Plates
+
+Every architectural opening on the Avalon carries a **stencilled header plate on each
+face**, naming the compartment you walk INTO on that side: the room's designator read from
+the spine, `SPINE` read from inside the room. An iron header bar under the lintel with a
+`placard()` plate on it and one small amber filament outboard of it, on both sides of the
+frame.
+
+The names are not authored at the frame. `buildDoorwayFrames` asks `roomAt()` what is
+actually half a metre through the opening in each direction, so a bulkhead that moves takes
+its legend with it and a plate can never name a compartment that is no longer behind it.
+`placard()` shrinks its face to fit rather than clipping, because `COMMAND BRIDGE` is twice
+the length of `COMMS`.
+
+The rule behind it: a ship of identical grey doorways is a maze, and a player who learns
+the deck plan by opening three doors looking for the star map has been taught the layout by
+trial and error. Signage is the cheapest possible fix and the most diegetic — a working
+ship labels its own hatches.
 
 ### Signature: The Chamber Console
 
