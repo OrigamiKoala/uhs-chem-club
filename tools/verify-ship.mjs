@@ -291,6 +291,35 @@ for (const d of DOORS) {
     `doorway on ${d.wall} at (${x.toFixed(2)}, ${z.toFixed(2)}) is walkable${reach.reachable(x, z) ? '' : ` — ${reach.explain(x, z)}`}`);
 }
 
+/*
+ * THE NAV BAR TELEPORTS, SO WHERE IT LANDS YOU IS A COLLIDER QUESTION.
+ *
+ * `CameraRig.moveTo` sets the camera position outright — pressing INVENTORY
+ * puts the player in the cargo hold with no walk in between — and the walk
+ * takes over from wherever it was left. So every anchor has to be deck a body
+ * fits on, and reachable deck at that: a standable pocket sealed behind the
+ * furniture is a room with the player locked in it. Four of the seven anchors
+ * were inside a collider when this check was written, and the cargo one sat in
+ * a 0.25 m pinch between two of them, where the push-out fights itself and the
+ * player cannot move at all.
+ *
+ * The anchors are derived from `SHIP_GRAPH` now, and the nodes are measured
+ * above — but a derivation is only as good as what it derives from, and this is
+ * the thing the player actually gets teleported to, so it is measured itself.
+ */
+const { SHIP_ANCHORS } = await import('../src/three/camera-rig.js');
+const { isFree } = await import('./lib/reach.mjs');
+for (const [id, a] of Object.entries(SHIP_ANCHORS)) {
+  const x = a.pos.x, z = a.pos.z;
+  const clear = isFree(ship.colliders, x, z, 0.25);
+  const boxes = ship.colliders
+    .filter(b => x + 0.25 > b.minX && x - 0.25 < b.maxX && z + 0.25 > b.minZ && z - 0.25 < b.maxZ)
+    .map(b => `[x ${b.minX}..${b.maxX}, z ${b.minZ}..${b.maxZ}]`);
+  assert(clear && reach.reachable(x, z),
+    `nav anchor "${id}" at (${x}, ${z}) is deck the player can stand on and walk off${
+      clear ? (reach.reachable(x, z) ? '' : ` — ${reach.explain(x, z)}`) : ` — inside ${boxes.join(' and ')}`}`);
+}
+
 let splineBad = [];
 for (const [aKey, aNode] of Object.entries(nodes)) {
   for (const bKey of aNode.adjacent) {

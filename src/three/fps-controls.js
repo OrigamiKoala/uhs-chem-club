@@ -412,6 +412,43 @@ export class FpsControls {
         }
       }
     }
+
+    // ONE PUSH PER BOX IS NOT ENOUGH, AND THIS IS WHAT MAKES THE PROMISE ABOVE
+    // TRUE. Each box is escaped along its own shortest edge, which is right for
+    // one box and can be exactly wrong for two: where two colliders overlap the
+    // body from opposite sides, the second push undoes the first, so the loop
+    // ends with the body still in the solid. Every step out of there is refused
+    // (the slide test above asks whether the DESTINATION is clear, and from
+    // inside a box nothing is), so the player oscillates between two positions
+    // for ever and cannot move — which is what the nav bar's cargo anchor did
+    // for as long as it stood in the 0.25 m pinch between the drum racks and
+    // the freight. A pinch is a dead end however the body got into it, so if
+    // the body is STILL in the solid, it steps out to the nearest clear deck
+    // rather than to the nearest edge. Nothing runs here unless the player is
+    // genuinely stuck.
+    if (this.testBoxCollision(pos.x, pos.z)) {
+      const free = this.nearestFreeSpot(pos.x, pos.z);
+      if (free) { pos.x = free.x; pos.z = free.z; }
+    }
+  }
+
+  /**
+   * The closest place a body of this size actually fits, searched outward in
+   * rings. Null if there is none within `maxRadius`, in which case the caller
+   * leaves the position alone — moving somebody somewhere arbitrary is worse
+   * than leaving them where they can at least see where they are.
+   */
+  nearestFreeSpot(x, z, maxRadius = 3.2, step = 0.1) {
+    for (let d = step; d <= maxRadius + 1e-9; d += step) {
+      const n = Math.max(8, Math.round((2 * Math.PI * d) / step));
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2;
+        const cx = x + Math.cos(a) * d;
+        const cz = z + Math.sin(a) * d;
+        if (!this.testBoxCollision(cx, cz)) return { x: cx, z: cz };
+      }
+    }
+    return null;
   }
 
   resolveRadialCollisions(pos) {

@@ -474,6 +474,26 @@ const { STAGES: CAT_STAGES, CARDS } = await import('../src/learn/quests/unit01/q
 const { STAGES: ASSAY_STAGES } = await import('../src/learn/quests/unit01/q5-assay.js');
 const { planPour } = await import('../src/learn/engine/assay.js');
 
+/**
+ * One press on the middle of a body, through the instrument's own pointer path.
+ * The point is projected the way a finger arrives — screen coordinates into
+ * `setPointer` into the real raycast — so what the ray resolves is what is
+ * being measured, not a stubbed answer.
+ */
+function press(board, camera, node) {
+  if (!node) { fail('press: nothing to press'); return; }
+  node.updateMatrixWorld(true);
+  const p = new THREE.Vector3();
+  node.getWorldPosition(p);
+  camera.updateMatrixWorld(true);
+  p.project(camera);
+  board.onPointer({
+    clientX: (p.x + 1) / 2 * 1280,
+    clientY: (1 - p.y) / 2 * 720,
+    preventDefault() {}
+  });
+}
+
 function stagePasses() {
   const anchor = world.benchAnchor('q3-catalogue');
   const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
@@ -503,21 +523,51 @@ function stagePasses() {
       if (!board.slots.has(id)) fail(`q3-catalogue stage ${i + 1}: slot "${id}" has no place on the board`);
     }
 
-    // Filing a loose card really moves it, and lifting it really puts it back.
+    // FILING IS PRESSED, NOT POKED. This used to set `placed` and `drawer` by
+    // hand and assert they read back, which is a test of an assignment. Every
+    // rule the board has lives in `onPointer`, behind a real ray, so the press
+    // is what has to be driven: aim at the middle of the thing a player would
+    // aim at and let the instrument resolve it.
     const loose = (st.drawer || [])[0];
     if (loose && want.length) {
-      board.held = loose;
-      board.layout();
-      board.placed[want[0]] = loose;
-      board.drawer = board.drawer.filter(x => x !== loose);
-      board.held = null;
-      board.layout();
-      if (board.placements()[want[0]] !== loose) {
-        fail(`q3-catalogue stage ${i + 1}: a filed card is not reported as filed`);
+      const slotId = want[0];
+      const held = () => board.heldCard();
+      const filed = () => board.placements()[slotId];
+      const cards = () => board.drawer.length + Object.keys(board.placements()).length;
+      const before = cards();
+
+      // 1. A press on a loose card takes it into the hand.
+      press(board, camera, board.bodies.get(loose));
+      if (held() !== loose) {
+        fail(`q3-catalogue stage ${i + 1}: a press on a loose card did not take it into the hand`);
       }
-      if (!board.slots.get(want[0]).card) {
+
+      // 2. A press on the empty slot files it.
+      press(board, camera, board.slots.get(slotId).hit);
+      if (filed() !== loose) {
+        fail(`q3-catalogue stage ${i + 1}: a press on an empty slot did not file the held card`);
+      }
+      if (!board.slots.get(slotId).card) {
         fail(`q3-catalogue stage ${i + 1}: a filed card has no body on the board`);
       }
+
+      // 3. A press on the filed CARD lifts it back out — and this is the one
+      // that fails if the board trusts the ray. The slot's pick target is a
+      // deep invisible box that swallows the card standing in it, so the ray
+      // answers "slot" whether the slot is full or empty; a board that reads
+      // that as an empty slot leaves the card unliftable and then overwrites
+      // it with the next card placed, which the player watches vanish.
+      press(board, camera, board.slots.get(slotId).card);
+      if (filed()) {
+        fail(`q3-catalogue stage ${i + 1}: a press on a filed card did not lift it out of its slot`);
+      }
+      if (!board.drawer.includes(loose)) {
+        fail(`q3-catalogue stage ${i + 1}: a lifted card did not come back to the drawer`);
+      }
+      if (cards() !== before) {
+        fail(`q3-catalogue stage ${i + 1}: filing and lifting one card left ${cards()} of ${before} cards`);
+      }
+
       board.clearBoard();
       if (Object.keys(board.placements()).length) {
         fail(`q3-catalogue stage ${i + 1}: clearing the board left cards filed`);

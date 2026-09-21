@@ -144,7 +144,9 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run verify:flows` — end-to-end smoke test of the API a new student touches.
 - `npm run verify:ship` — asserts ship graph connectivity, 3-hop limit, hatch cones, and
   spline bounds, then **builds the Avalon and Erebus in Node** and asserts that nothing
-  in either occupies the same space as anything else.
+  in either occupies the same space as anything else. It also flood-fills the deck against
+  the real colliders and holds **every nav anchor the HUD dollies to** to standable,
+  reachable deck — the check that was missing when four of the seven stood in the solid.
 - `npm run verify:bench` — deploys ALL FIVE Unit 1 instruments onto the real Tallow benches
   in Node and measures them: every site faces the ground the player walks in from, and every
   body, readable face and control lands inside the glass at six aspects, clear of the HUD. It
@@ -162,7 +164,9 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   metres away — nothing was wrong with the bench, the ruler was. Finally it puts **every
   stage `q3-catalogue` and `q5-assay` declare** through the built instrument: the board
   offers the slots the quest is about to grade against, and a pour places every piece
-  `planPour` says it places.
+  `planPour` says it places. On the board it **presses**, through the real pointer path —
+  project the target, `setPointer`, real raycast — so a card taken, filed and lifted is
+  measured as the instrument resolves it, and one card is never turned into none.
 - `npm run verify:holo` — one owner for the `X` key, and the comms board never invents a
   guild score.
 - `npm run verify:tallow` — asserts the Tallow ground: every prop footprint disjoint
@@ -539,6 +543,19 @@ into grinding and would punish the students it exists to help.
     gives: a drag across small targets is the gesture this audience cannot make, and
     dragging a body through a 3D scene is worse. A card in the hand lifts off the tray,
     stands up face-on and turns its ink amber; open slots light while you are holding one.
+    **A PRESS IS RESOLVED BY THE STATE, NEVER BY WHAT THE RAY HIT FIRST — AND NOTHING MAY
+    CONSUME A CARD.** Every slot carries a generous invisible pick box, because a card-sized
+    slot at a glancing angle is a small thing to hit with a fingertip, and that box is deep
+    enough to swallow the card standing in it: the ray therefore answers "slot" whether the
+    slot is full or empty. `onPointer` reading that as an empty slot is what made a filed
+    card unliftable on stages 1, 3 and 8 and then silently overwrote it with the next card
+    placed — a card the player watched vanish off the bench. A press the ray resolves as a
+    FULL slot is a press on the card in it, and a card leaves a slot only through
+    `liftFrom`, so it is always either in the drawer or in a slot and never nowhere.
+    `verify:bench` drives the real pointer path — project the target, `setPointer`, real
+    raycast — and asserts a filed card lifts and the card count never drops; the check it
+    replaced set `placed` and `drawer` by hand and asserted they read back, which tested an
+    assignment and could not have caught this.
   - The **assay floor** (`assay3d.js`) is the one built instrument with NO flat picture at
     all, because its output is not an image — it is objects falling into containers at
     arm's length. A hopper on legs, a chute, a deflector plate, a row of catch bins, and
@@ -1386,6 +1403,28 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   The holo-close raycast reads NDC off the canvas rect for the same reason.
 - Authentication gating & 3D view: On unauthenticated routes (`/login`, `/register`, `/`, `/onboarding`), the 3D ship interior and vista are visible behind the account cards, but first-person WASD navigation and mouse look are locked (`fpsControls.enabled = false`) until the player signs in.
 - Starship traversal spine: `src/three/ship-graph.js` defines an undirected navigation graph across all compartments (`bridge`, `cockpit`, `starmap`, `quarters`, `cargo`, `comms`, `airlock`) with 3–6 point `walkPath` splines, `hatchPos` view-cone markers, and `routeBinding`.
+  - **THE NAV BAR TELEPORTS, SO ITS ANCHORS ARE A COLLIDER QUESTION AND THERE IS
+    ONLY ONE COPY OF THEM.** `CameraRig.moveTo` sets the camera outright — pressing
+    INVENTORY puts the player in the cargo hold with no walk in between — and then the
+    walk takes over from wherever it was dropped. `SHIP_ANCHORS` in `camera-rig.js` is
+    therefore **derived from `SHIP_GRAPH.nodes`**, which already carries a standing
+    position and look target per station that `verify:ship` flood-fills. It used to be a
+    hand-written table beside the graph, written when the ship was one open room: once the
+    Avalon grew walls and furniture, FOUR of its seven anchors stood inside a collider and
+    the comms one was not even in the comms compartment. `verify:ship` measures the anchors
+    themselves as well as the nodes, because a derivation is only as good as its source.
+  - **A PINCH IS A DEAD END, AND THE PUSH-OUT'S PROMISE IS NOW TRUE.**
+    `FpsControls.resolveBoxCollisions` escapes each box along its own shortest edge, which
+    is right for one box and exactly wrong for two: where two colliders overlap the body
+    from opposite sides the second push undoes the first, and since the slide test asks
+    whether the DESTINATION is clear, every step out of the solid is refused. The player
+    oscillates between two positions for ever and cannot move — which is what the cargo
+    anchor did, standing in the 0.25 m gap between the drum racks at `x 4.3` and the
+    freight ending at `x 4.05`, in a 0.5 m body. So after the per-box pass, a body STILL in
+    the solid steps out to the nearest clear deck (`nearestFreeSpot`), which is the
+    invariant that code's comment always claimed. Nothing runs there unless the player is
+    genuinely stuck, so a teleport nobody has thought of yet — a cinematic, a world spawn —
+    cannot strand them either.
 - Starship 3D interior: `src/three/ship.js` builds hyper-realistic physical rooms and interconnecting corridor spines along `walkPath` splines with procedural PBR durasteel plating with tangent-space normal mapping (`createDurasteelNormalTexture`), floor grating, runway halogen strips, chamfered hatch bulkheads, tactical quad-CRT bridge consoles with mechanical keyboards and dial gauges, dual flight pods with yokes and center throttle quadrant in cockpit, central holo-table with 4-planet orrery and live holographic quest projector, 2-tier bunk beds with canvas bedding and stenciled metal footlockers, anglepoise desk lamp and gear hooks in quarters, overhead gantry crane and stacked shipping containers with cargo manifest screen, 19-inch equipment racks with patch bay loops and glowing vacuum tube cages in comms, and heavy airlock blast door with manual dogging wheel, hydraulic rams, and pressure dials. Non-overlapping physics bounds, rear-shifted bridge consoles (`Z = [0.2, 1.4]`), forward-shifted cockpit pods (`Z = [2.6, 3.8]`), and center pedestal colliders ensure wide-open transverse corridors at `Z = [1.4, 2.6]` across all rooms.
 - In-World 3D content transfer: In T4, primary content lives diegetically in 3D: Quests in the Star Map holo-table, Standings on the Comms CRT terminal, Inventory on the Cargo Manifest, and the Bridge Welcome Hologram directly in front of the camera's original bridge position displaying "UHS Chem Club", meeting announcements ("Next meeting 9/29 in 702"), a top-right "Close [X]" badge, directional wayfinding arrows, and a bottom prompt ("Check out the star map for the latest quests!"). Any holographic projection (Bridge announcement directory screen & vertical beam via `clubHoloGroup`/`clubHoloBeam`, or Star Map holo-table planetary orrery & floating quest screen via `starmapHoloGroup`) always displays by default; dismissal flags (`clubHoloClosed`, `starmapHoloClosed`) are session-scoped (`sessionStorage`, cleared on new session/sign-in) so holograms only stay dismissed for the active session and pop back up on the next session. Projections can be closed and opened by pressing the "X" key (`stage.toggleAnyHolo()`, `stage.toggleClubHolo()`, `stage.toggleStarmapHolo()`), dispatching `club-holo:open|close` and `starmap-holo:open|close` events with debounced key handling.
   - **ONE HANDLER OWNS THE `X` KEY.** It is the window listener in `stage.js`,

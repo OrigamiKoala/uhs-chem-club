@@ -644,6 +644,13 @@ export class CatalogueBoard3D {
    * goes into the hand and reads itself, the card already in the hand goes back
    * down, an empty slot takes whatever is held, and a filed card lifts back
    * into the drawer and reads itself on the way.
+   *
+   * A FILED SLOT IS RESOLVED BY THE STATE, NEVER BY THE RAY. The slot's pick
+   * target is a generous box that a fingertip can hit at a glancing angle, and
+   * it is deep enough to swallow the card standing in it — so the ray reports
+   * the slot whether or not the slot is full, and a `pick` that trusted the
+   * ray's own order left every filed card unliftable and quietly overwrote it
+   * with the next card placed, which is a card the player watched vanish.
    */
   onPointer(e) {
     if (this.disposed || !this.rig) return;
@@ -660,15 +667,7 @@ export class CatalogueBoard3D {
 
       // A card sitting in a slot: lift it out.
       const slotId = this.slotHolding(cardId);
-      if (slotId) {
-        delete this.placed[slotId];
-        if (!this.drawer.includes(cardId)) this.drawer.push(cardId);
-        this.held = null;
-        this.layout();
-        this.onLift?.(slotId, cardId);
-        this.onProbe?.(cardId);
-        return;
-      }
+      if (slotId) { this.liftFrom(slotId, cardId); return; }
 
       // A loose card: into the hand, or back down if it was already there.
       this.held = this.held === cardId ? null : cardId;
@@ -677,8 +676,13 @@ export class CatalogueBoard3D {
       return;
     }
 
-    // An empty slot.
+    // A slot. If it is holding a card, the press is a press on that card
+    // however the ray resolved it, so it lifts out exactly as tapping its face
+    // does — the one place the built board could disagree with the drawn one.
     const slotId = hit.slotId;
+    const sitting = this.placed[slotId];
+    if (sitting) { this.liftFrom(slotId, sitting); return; }
+
     if (!this.held) { this.onPlace?.(slotId, null); return; }
     const cardId = this.held;
     this.placed[slotId] = cardId;
@@ -686,6 +690,20 @@ export class CatalogueBoard3D {
     this.held = null;
     this.layout();
     this.onPlace?.(slotId, cardId);
+  }
+
+  /**
+   * Take the card out of a slot and put it back in the drawer, reading it on
+   * the way. NOTHING MAY CONSUME A CARD: a card leaves a slot only through
+   * here, so it is always in the drawer or in a slot and never nowhere.
+   */
+  liftFrom(slotId, cardId) {
+    delete this.placed[slotId];
+    if (!this.drawer.includes(cardId)) this.drawer.push(cardId);
+    this.held = null;
+    this.layout();
+    this.onLift?.(slotId, cardId);
+    this.onProbe?.(cardId);
   }
 
   /** Which slot a card is filed in, or null. */

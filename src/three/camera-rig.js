@@ -4,44 +4,43 @@
 
 import * as THREE from 'three';
 import { session } from '../session.js';
+import { SHIP_GRAPH } from './ship-graph.js';
 
-export const SHIP_ANCHORS = {
-  cockpit: {
-    name: 'Flight Cockpit',
-    pos: new THREE.Vector3(0, 1.45, 2.4),
-    target: new THREE.Vector3(0, 1.45, 20)
-  },
-  bridge: {
-    name: 'Command Bridge',
-    pos: new THREE.Vector3(0, 1.55, 1.8),
-    target: new THREE.Vector3(0, 1.55, 20)
-  },
-  starmap: {
-    name: 'Star Map & Navigation',
-    pos: new THREE.Vector3(3.2, 2.2, 1.8),
-    target: new THREE.Vector3(3.2, 0.9, 0)
-  },
-  quarters: {
-    name: 'Crew Quarters',
-    pos: new THREE.Vector3(-3.8, 1.6, 2.2),
-    target: new THREE.Vector3(-3.8, 1.2, 0)
-  },
-  cargo: {
-    name: 'Cargo Hold',
-    pos: new THREE.Vector3(4.2, 1.6, -2.2),
-    target: new THREE.Vector3(4.2, 1.0, -4.2)
-  },
-  comms: {
-    name: 'Comms Array',
-    pos: new THREE.Vector3(-2.8, 1.8, -2.0),
-    target: new THREE.Vector3(-2.8, 1.2, -3.8)
-  },
-  airlock: {
-    name: 'Airlock & Departure',
-    pos: new THREE.Vector3(0, 1.8, -4.5),
-    target: new THREE.Vector3(0, 1.8, -8.0)
-  }
-};
+/**
+ * Where the dolly stands the player at each station, and what it faces.
+ *
+ * DERIVED FROM THE GRAPH, NEVER AUTHORED TWICE. This was a hand-written table
+ * beside `SHIP_GRAPH`, and it dated from the ship that was one open room: it
+ * stood the player at (3.2, 1.8) for the star map, (-3.8, 2.2) for quarters,
+ * (-2.8, -2.0) for comms and (4.2, -2.2) for cargo. Once the Avalon grew walls
+ * and furniture, four of those seven anchors were INSIDE a collider — the comms
+ * one was not even in the comms compartment any more — and the nav bar dollied
+ * the player into the solid.
+ *
+ * **THAT IS NOT A CAMERA BUG, IT IS A DEAD END.** `FpsControls.update` tests
+ * the destination of every step, so from inside a box every direction is
+ * refused and the velocity is zeroed; `resolveBoxCollisions` then pushes out of
+ * one box per frame, which is why its "player can never be stuck" comment does
+ * not hold where two boxes overlap the player from opposite sides. The cargo
+ * anchor sat in exactly that pinch — 0.25 m between the drum racks at x 4.3 and
+ * the freight containers ending at x 4.05, in a 0.5 m body — so the push-out
+ * shoved it back and forth between two positions for ever and the player could
+ * not move at all. Pressing INVENTORY was a trap door.
+ *
+ * `SHIP_GRAPH` already carries the standing position and look target for every
+ * station, in the right compartment, and `verify:ship` flood-fills every one of
+ * them against the colliders the ship actually builds. So the rig reads them
+ * from there and there is no second copy to fall out of step with the deck
+ * plan. `verify:ship` measures these anchors too, because a derivation is only
+ * as good as the thing it derives from.
+ */
+export const SHIP_ANCHORS = Object.fromEntries(
+  Object.entries(SHIP_GRAPH.nodes).map(([id, node]) => [id, {
+    name: node.name,
+    pos: new THREE.Vector3(...node.pos),
+    target: new THREE.Vector3(...node.target)
+  }])
+);
 
 export class CameraRig {
   constructor(camera) {
