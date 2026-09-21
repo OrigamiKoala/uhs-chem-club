@@ -1719,3 +1719,21 @@ body.bench-deployed .modal-container .modal-card {
   letter-spacing: 0.06em;
   color: var(--text-secondary);
 }
+
+/* ===================================================================
+   THE JOIN BENCH — Ligar (engine/joinbench.js)
+   Two plate grades, two shapes. A PAIR plate is two pieces side by
+   side with their shells drawn round them, so it is wide and shallow;
+   a SLAB plate is a block of finished material, so it is closer to
+   square. A square pair plate would waste the top and bottom of the
+   aperture and shrink the very dots the stage asks you to count.
+   =================================================================== */
+.scope-aperture.join-aperture { aspect-ratio: 2 / 1; }
+.scope-grid.scope-n1 .scope-aperture.join-aperture { aspect-ratio: 5 / 2; }
+.scope-aperture.slab-aperture { aspect-ratio: 4 / 3; }
+.scope-grid.scope-n1 .scope-aperture.slab-aperture { aspect-ratio: 16 / 9; }
+
+/* Pair plates never run three to a row. Two columns at most, and one when a
+   stage puts a single pair up, so the shells always have room to be counted. */
+.scope-grid.join-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.scope-grid.join-grid.scope-n1 { grid-template-columns: minmax(0, 1fr); }

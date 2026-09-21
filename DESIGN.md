@@ -514,13 +514,15 @@ campaign is about.
 
 ### Signature: The Bench Instruments
 
-The Learn track's two instruments — the **sampler scope** and the **core bench** — are the
-most distinctive surfaces in the product. Each exists twice: as a canvas instrument
-(`scope.js`, `corebench.js`) at T3 and below, and as a **built object on a bench the player
-has walked to** (`scope3d.js`, `corebench3d.js`) at T4. Canvas cannot inherit a CSS custom
-property, so each 2D file mirrors the dust palette as literal constants; those constants
-are part of this system and must stay in step with the tokens, and `TINT_HEX` in
-`bench3d.js` mirrors them again for the built versions.
+The Learn track's instruments are the most distinctive surfaces in the product. Two of them
+exist twice — the **sampler scope** and the **core bench**, as canvas instruments
+(`scope.js`, `corebench.js`) at T3 and below and as **built objects on a bench the player
+has walked to** (`scope3d.js`, `corebench3d.js`) at T4. Three more are canvas or plate only:
+the **catalogue board** (`catalogue.js`), the **assay floor** (`assay.js`) and Ligar's
+**join bench** (`joinbench.js`). Canvas cannot inherit a CSS custom property, so each 2D
+file mirrors the dust palette as literal constants; those constants are part of this system
+and must stay in step with the tokens, and `TINT_HEX` in `bench3d.js` mirrors them again for
+the built versions.
 
 - **The aperture:** a `#0d0c0a` field inside a `#2e2a26` rim on a chamfered `.scope-plate`,
   square at `aspect-ratio: 1/1` (16:10 when a single plate stands alone).
@@ -597,8 +599,17 @@ briefing whose job is to say what to look at must not be the thing covering it. 
 to read helps nobody.
 
 **The Stencil, Not Colour Rule.** On the core bench a marked grain is told apart by a
-**stencilled cross**, never by its colour alone. It is the only version of the instrument
-that survives a colour-blind player, and it is non-negotiable.
+**stencilled cross**, never by its colour alone, and on the join bench a charged piece in a
+block is told apart by a stencilled **plus or minus**. It is the only version of either
+instrument that survives a colour-blind player, and it is non-negotiable.
+
+**A Plate Is Shaped Like What It Holds.** The aperture grade follows the picture, not the
+grid: the assay floor is 4:3 because it is a chute at one end and bins along the bottom, and
+a join bench PAIR plate is 2:1 (5:2 alone) because it is two pieces side by side with their
+shells drawn round them. A pair plate also never runs three to a row — `.join-grid` caps it
+at two columns, and one on a phone — because the light pieces on those shells are the thing
+several stages ask the player to COUNT, and a postage stamp cannot be counted. A square
+aperture would waste half of either plate and shrink the very thing being measured.
 
 **The Reserved Hues Rule applies here too.** Charge red and blue stay in the 3D chamber.
 An instrument that borrowed them would break the promise that those two colours mean one

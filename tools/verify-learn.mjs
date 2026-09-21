@@ -16,6 +16,9 @@ import {
   WORLDS, TOTAL_WORLDS, ARENAS, QUEST_STATUSES, PROBLEMS_PER_QUEST,
   allQuests, getWorld, getQuest
 } from '../src/learn/curriculum.js';
+// The join bench's pure part. Imported so a pair plate can be PRESSED here and
+// the result measured, rather than trusting the declaration beside it.
+import { planJoin, shellPlan, shellsAfter } from '../src/learn/engine/joinbench.js';
 
 /*
  * A Learn quest module is browser code: it imports the session store, the modal
@@ -422,6 +425,8 @@ function checkStageTable(q, mod) {
         ...(st.hints || []),
         ...(st.samples || []).flatMap(s => [s.label, s.note]),
         ...(st.specimens || []).flatMap(s => [s.label, s.note]),
+        ...(st.pairs || []).flatMap(s => [s.label, s.note]),
+        ...(st.slabs || []).flatMap(s => [s.label, s.note]),
         ...(st.widget?.options || []).flatMap(o => [o.label, o.note]),
         ...(st.widget?.bins || []).flatMap(b => [b.label, b.note]),
         st.widget?.label,
@@ -504,7 +509,10 @@ function checkStageTable(q, mod) {
 
     // Sample notes must describe provenance only, never leaking answers or check reasoning.
     const leakWords = ['uniform', 'mixed', 'single grain', 'indivisible', 'scouring agent'];
-    const bench = Array.isArray(st.samples) ? st.samples : Array.isArray(st.specimens) ? st.specimens : [];
+    const bench = Array.isArray(st.samples) ? st.samples
+      : Array.isArray(st.specimens) ? st.specimens
+        : Array.isArray(st.pairs) ? st.pairs
+          : Array.isArray(st.slabs) ? st.slabs : [];
     for (const s of bench) {
       if (s.note) {
         for (const w of leakWords) {
@@ -604,7 +612,9 @@ function checkBench(q, mod, stages) {
 
   stages.forEach((st, i) => {
     const bench = Array.isArray(st.samples) ? st.samples
-      : Array.isArray(st.specimens) ? st.specimens : null;
+      : Array.isArray(st.specimens) ? st.specimens
+        : Array.isArray(st.pairs) ? st.pairs
+          : Array.isArray(st.slabs) ? st.slabs : null;
     if (!bench) return;
     const label = `${q.key} stage ${i + 1}`;
     const ids = new Set();
@@ -614,6 +624,79 @@ function checkBench(q, mod, stages) {
       if (ids.has(sample.id)) { fail(`${label}: two samples share the id "${sample.id}"`); bad++; }
       ids.add(sample.id);
       if (!sample.label) { fail(`${label}: sample "${sample.id}" has no label`); bad++; }
+
+      // ---- join bench: a pair of pieces in clamps, or a block of material ----
+      if (sample.left || sample.right) {
+        for (const side of ['left', 'right']) {
+          const piece = sample[side];
+          if (!piece) { fail(`${label}: pair "${sample.id}" has no ${side} piece`); bad++; continue; }
+          if (!piece.code) { fail(`${label}: the ${side} piece of "${sample.id}" has no catalogue code`); bad++; }
+          if (!['metal', 'nonmetal'].includes(piece.kind)) {
+            fail(`${label}: the ${side} piece of "${sample.id}" is neither a metal nor a nonmetal`); bad++;
+          }
+          const shells = piece.shells;
+          if (!Array.isArray(shells) || !shells.length || shells.some(n => !Number.isInteger(n) || n < 1)) {
+            fail(`${label}: the ${side} piece of "${sample.id}" has a bad shell declaration`); bad++;
+            continue;
+          }
+          // The same capacity the core bench draws its rings to: two on the
+          // innermost shell, eight on every one after it, and nothing further
+          // out while a nearer shell still has room. A piece that broke it
+          // would teach the rule wrong on the screen the rule is read from.
+          shells.forEach((n, si) => {
+            const room = si === 0 ? 2 : 8;
+            if (n > room) {
+              fail(`${label}: the ${side} piece of "${sample.id}" puts ${n} electrons on shell ${si + 1}, which holds ${room}`); bad++;
+            }
+            if (si > 0 && shells[si - 1] < (si - 1 === 0 ? 2 : 8)) {
+              fail(`${label}: the ${side} piece of "${sample.id}" fills shell ${si + 1} while shell ${si} still has room`); bad++;
+            }
+          });
+        }
+
+        /*
+         * PRESS IT AND MEASURE WHAT COMES OUT.
+         *
+         * The declaration above says what is on the bench; this says what the
+         * bench DOES with it, which is what a stage is actually graded on. Two
+         * things must hold however a pair is written:
+         *
+         *   - electrons are conserved. A transfer moves them and a shared pair
+         *     is counted by both pieces, and nothing else may appear or vanish.
+         *   - no piece comes out over the capacity of its outer shell. A piece
+         *     that joined may still have room — that is the whole premise of
+         *     the ratio stages — but nine electrons on a shell that holds eight
+         *     is the instrument drawing a specimen that cannot exist.
+         */
+        const plan = planJoin(sample);
+        const totalOf = sh => sh.reduce((n, x) => n + x, 0);
+        const before = totalOf(sample.left.shells || []) + totalOf(sample.right.shells || []);
+        const after = totalOf(shellsAfter(sample, 'left')) + totalOf(shellsAfter(sample, 'right'));
+        const shared = plan.type === 'share' ? plan.pairs * 2 : 0;
+        if (after !== before + shared) {
+          fail(`${label}: pressing "${sample.id}" turns ${before} electrons into ${after} — the bench is inventing or losing them`);
+          bad++;
+        }
+        for (const side of ['left', 'right']) {
+          const pl = shellPlan({ shells: shellsAfter(sample, side) });
+          if (pl.outer > pl.cap) {
+            fail(`${label}: pressing "${sample.id}" leaves its ${side} piece with ${pl.outer} electrons on a shell that holds ${pl.cap}`);
+            bad++;
+          }
+        }
+        return;
+      }
+
+      // ---- join bench: a block of finished material ----
+      if (sample.build) {
+        if (!['grid', 'clusters', 'web'].includes(sample.build)) {
+          fail(`${label}: slab "${sample.id}" has an unknown build "${sample.build}"`); bad++;
+        }
+        if (!Number.isInteger(sample.melt) || sample.melt < 0) {
+          fail(`${label}: slab "${sample.id}" has no temperature to come apart at`); bad++;
+        }
+        return;
+      }
 
       // ---- core bench: a middle with grains in it, and rings outside ----
       if (sample.core || sample.rings) {

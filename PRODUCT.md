@@ -82,9 +82,21 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
   quest's completion whether or not a question is answered — and they come back for ever
   through a **Problems** key beside a finished world on the star map and on the Learn
   road. They are a 2D overlay on every tier.
-- **Learn track:** ten worlds, one per AP Chemistry unit, 41 quests charted and five built
-  (all of Tallow: `unit01/q1-grain` through `unit01/q5-assay`). Every Learn quest is a
-  game with its own stages, scene, inputs and grading.
+- **Learn track:** ten worlds, one per AP Chemistry unit, 41 quests charted and nine built —
+  all of Tallow (`unit01/q1-grain` through `unit01/q5-assay`) and all of Ligar
+  (`unit02/q1-joins` through `unit02/q4-weigh`). Every Learn quest is a game with its own
+  stages, scene, inputs and grading. Tallow is also walkable ground at T4; **Ligar is games
+  only** — four playable benches on every tier with no walkable world behind them, which is
+  a separate piece of work rather than a gap in the quests.
+- **What Ligar teaches.** Four benches: what a bond is and why ionic and covalent are the
+  only two kinds (`q1-joins`); what each kind builds, and how that decides whether a block
+  shatters, melts low or conducts (`q2-lattice`); why a compound always has the same recipe,
+  by count and by mass (`q3-recipe`); and how a count far too big to count is taken as a
+  mass instead — the mole and molar mass (`q4-weigh`). The law of definite proportions is
+  the spine of the third bench and is deliberately never named: the player counts the same
+  recipe out of three samples from three places, and a name hung on that adds nothing they
+  have not just done. Avogadro's number IS named, on the card after the stage that measures
+  out equal counts without counting anything.
 - **Hardware tiers:** T4 (walk the ship and the worlds in first person), T3 (discrete
   GPU), T2 (Chromebook-class), T1 (no WebGL at all). Every quest stage is 100% solvable in
   T1 through DOM-only inputs producing the same payload contract.
@@ -108,7 +120,7 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
   reduced-motion fallback, T1 uses native form controls — but it is not a stated bar.
   Future work should not claim compliance that was never agreed.
 - **Not established:** season length and start date, roster size, guild slot cap beyond
-  the documented default of 12, and whether the Learn track's remaining 38 quests ship
+  the documented default of 12, and whether the Learn track's remaining 32 quests ship
   this season.
 
 ## Brand Commitments

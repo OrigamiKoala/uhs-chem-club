@@ -194,6 +194,10 @@ export function drawAssayField(ctx, o) {
   /* ---- the chute, with whatever has not gone down it yet ---- */
   const declared = bins.reduce((n, b) => n + b.n, 0);
   const remaining = bins.reduce((n, b, i) => n + (b.n - landed[i]), 0);
+  // A hopper too full to tip: the gate is dogged shut across the chute mouth.
+  // The floor says so rather than pretending the chute is open, because the
+  // whole point of such a sample is that it CANNOT be counted by tipping it.
+  const gated = Boolean(hopper.bulk);
   ctx.strokeStyle = 'rgba(184, 175, 160, 0.30)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
@@ -209,6 +213,15 @@ export function drawAssayField(ctx, o) {
     ctx.globalAlpha = 0.55;
     ctx.fillRect(g.chute.x + 1.5, g.chute.y + g.chute.h - heapH, g.chute.w - 3, heapH);
     ctx.globalAlpha = 1;
+  }
+
+  if (gated) {
+    ctx.fillStyle = PLATE;
+    ctx.fillRect(g.chute.x - 3, g.chute.y + g.chute.h - 3, g.chute.w + 6, 5);
+    ctx.fillStyle = 'rgba(184, 175, 160, 0.45)';
+    ctx.font = `${Math.max(7, Math.round(g.aperture * 0.09))}px "Share Tech Mono", monospace`;
+    ctx.textAlign = 'left';
+    ctx.fillText('GATE SHUT', g.chute.x + g.chute.w + 8, g.chute.y + g.chute.h + 2);
   }
 
   /* ---- the deflector: one plate the stream falls across ---- */
@@ -486,6 +499,10 @@ export class AssayFloor {
   pour(id) {
     const hp = this.hoppers.find(h => h.id === id);
     if (!hp) return Promise.resolve({ totals: [], total: 0 });
+    // A bulk hopper never goes down the chute. Tipping it and reporting a tally
+    // would be the floor claiming a count nobody made, which is the one thing
+    // this instrument is not allowed to do.
+    if (hp.bulk) return Promise.resolve({ refused: true, totals: hp.bins.map(() => 0), total: 0 });
     if (this.poured(id)) {
       return Promise.resolve({ totals: hp.landed.slice(), total: hp.landed.reduce((n, x) => n + x, 0) });
     }

@@ -10,10 +10,9 @@ new quests are worked as a page over the live world, which is the fallback
 
 ## Status
 
-**TALLOW IS FINISHED. LIGAR IS NOT STARTED** — the pass was stopped after Tallow
-at the user's request, before any Ligar module was written. `unit02-molecules.js`
-is back to its charted state: four quests, all `draft`, no modules. Nothing in
-the Ligar column below exists yet.
+**TALLOW AND LIGAR ARE BOTH FINISHED** as games. All nine quests are built,
+playable at T3 and below, and `npm run verify` is green. `unit02-molecules.js`
+charts four quests, all `live`, all with modules.
 
 | | Quest | Site | Instrument | State |
 | --- | --- | --- | --- | --- |
@@ -22,10 +21,16 @@ the Ligar column below exists yet.
 | 1.3 | `unit01/q3-catalogue` The Catalogue Numbers | Catalogue Vault | catalogue board (new) | **DONE** |
 | 1.4 | `unit01/q4-ledger` The Buyer's Ledger | Tally Floor | core bench (reused) | **DONE** |
 | 1.5 | `unit01/q5-assay` The Weight On The Card | Hopper Gantry | assay floor (new) | **DONE** |
-| 2.1 | `unit02/q1-joins` What Holds | — | join bench (to write) | not started |
-| 2.2 | `unit02/q2-lattice` Stone and Wire | — | join bench | not started |
-| 2.3 | `unit02/q3-recipe` The Same Recipe | — | sampler scope (reuse) | not started |
-| 2.4 | `unit02/q4-weigh` Counting By Weight | — | assay floor (reuse) | not started |
+| 2.1 | `unit02/q1-joins` What Holds | — | join bench (new) | **DONE** |
+| 2.2 | `unit02/q2-lattice` Stone and Wire | — | join bench, slab plates | **DONE** |
+| 2.3 | `unit02/q3-recipe` The Same Recipe | — | sampler scope (reused) | **DONE** |
+| 2.4 | `unit02/q4-weigh` Counting By Weight | — | assay floor (reused) | **DONE** |
+
+The Ligar column has no Site, and that is deliberate: **Ligar is not walkable
+ground.** `worlds3d.js` still registers Tallow only and `BUILT_BENCHES` is still
+`q1-grain` and `q2-core`, so all four Ligar quests draw as a page over whatever
+is behind them, on every tier — the fallback `screens/learn-quest.js` has always
+taken. Building the arches as a place is a separate pass.
 
 ## Why the order is what it is
 
@@ -53,9 +58,19 @@ asked for is that the content exists as one more bench on Tallow, and it does.
   1 content, no mole in sight — and the module's header says so, so a later pass
   cannot quietly put one there.
 
+Ligar's four benches are ordered the same way, by what each one needs to already
+be true. `q1-joins` has to come first because everything after it rests on a bond
+being a thing that fills an outer shell. `q2-lattice` follows immediately, while
+the two bond types are fresh, and spends itself entirely on what each kind builds
+— which is the only reason a student holding a piece of salvage cares which one
+they have. `q3-recipe` can then ask why a compound has one recipe, because
+`q1-joins` stage 8 already showed the counts leaving it no choice. `q4-weigh` is
+last because the mole is only worth having once a recipe is a count you want and
+a balance is the only instrument you have.
+
 ## New engines
 
-Two, both content-free, both `.scope-plate` grid tenants so they inherit the
+Three, all content-free, all `.scope-plate` grid tenants so they inherit the
 existing plate styling and every phone rule already written for it.
 
 - `engine/catalogue.js` — the **catalogue board**. The one Learn instrument that
@@ -70,6 +85,19 @@ existing plate styling and every phone rule already written for it.
   the hopper's declaration, never a random draw, so the same hopper sorts the
   same way every time and a stage built on the tally is answerable. Written to be
   reused by Ligar `q4-weigh`.
+- `engine/joinbench.js` — the **join bench**, Ligar's instrument and the only
+  one that answers a question at two scales. A PAIR plate clamps two pieces face
+  to face and presses them together, drawing their shells as rings with the light
+  pieces on them; a SLAB plate holds a block of finished material to hit, heat,
+  cool and put a current through. Everything it reports is derived by a pure
+  function from the declaration — `planJoin` from the two pieces' shells and
+  kinds, `planSlab` from a block's `build`, `conductionOf` from that build and
+  the state the block is in. Only the melting point is simply told to it, because
+  a temperature is a measurement. Two rules of the engine earned their place the
+  hard way: a slab may be `sealed`, so a stage can ask the player to identify a
+  material from how it BEHAVES rather than from a picture; and `cool()` exists
+  because without it the furnace is a one-way door and a stage that wants a cold
+  reading AND a molten one is unfinishable once the block has been melted.
 
 `CoreBench` is reused unchanged by `q4-ledger`, with one additive change to the
 engine: a specimen may now declare `casing: true`, meaning welded shut so that
@@ -81,7 +109,8 @@ meaning.
 ## Rules this pass had to satisfy
 
 Two rules landed in `CLAUDE.md` and `PRODUCT.md` while this was in flight, and
-all three new quests are built to them:
+every quest in this pass — the three new Tallow benches and all four of Ligar —
+is built to them:
 
 - **Nothing is named without being explained.** Every stage that offers a control
   exports a legend for it through `toolNoteFor(controlId, stageNumber)`, drawn
@@ -100,6 +129,18 @@ all three new quests are built to them:
   runs two hoppers of different sizes so "the proportions are fixed" is two data
   points rather than an assertion.
 
+  Ligar is held to the same test and it is where the rule cost the most design.
+  `q1-joins` stage 2 asks why one pair would not hold, and its two wrong answers
+  are refutable ON THE BENCH: "they were the same kind" is refuted by the pair of
+  identical pieces that DID hold, and "they were too heavy" by the heaviest pair
+  on the plate holding as well. `q2-lattice` stage 3 asks what a current needs,
+  and the obvious wrong answer — heat — is refuted by the second block, which is
+  molten, just as hot, and passes nothing. `q4-weigh` reaches the mole through
+  stage 3, where three samples of exactly sixty pieces are weighed and come out in
+  the ratio of their listed masses; stage 4 inverts that one sentence, and only
+  then does a card say the word. A bench that opened by asserting 6.02 x 10^23
+  would be checking, not teaching.
+
 ## Vocabulary schedules
 
 Each new quest publishes a `VOCABULARY` table and `tools/verify-learn.mjs`
@@ -111,15 +152,28 @@ freely, because `q2-core` taught them.
   metal / nonmetal / alkali / halogen 6.
 - `q4-ledger`: mass number 1, cation 5, anion 6.
 - `q5-assay`: abundance 2, average atomic mass and weighted average 4.
+- `q1-joins`: bond 1, ionic and covalent 4, double bond and triple bond 6.
+- `q2-lattice`: melting point 1, lattice and brittle 2, conduct 3.
+- `q3-recipe`: fixed composition 1, percent composition 5, empirical formula 6.
+- `q4-weigh`: formula mass 2, mole and Avogadro 4, molar 5.
+
+**The law of definite proportions is never named**, on the brief's own
+instruction. `q3-recipe` has the player count the same recipe out of three
+samples from three places and out of a sample whose proportions are wrong, and a
+name hung on that afterwards would add nothing the counting has not already
+shown. Avogadro's number IS named, because it is a measured constant the player
+has no other way to arrive at, and it lands on the card immediately after the
+stage that measures out equal counts without counting anything.
 
 ## Work not in this pass
 
-- **Ligar.** Nothing written. The design above stands and the assay floor was
-  built with `q4-weigh` in mind, but `unit02-molecules.js` charts four drafts and
-  no module exists.
-- **T4 instruments for sites 3–5.** The three new sites are built as real places
-  on the flat and their `built` flags are true, but their instruments are not
-  built as objects: they draw as a page over the world. `BUILT_BENCHES` in
+- **T4 instruments for Tallow sites 3–5.** The three sites are built as real
+  places on the flat and their `built` flags are true, but their instruments are
+  not built as objects: they draw as a page over the world. `BUILT_BENCHES` in
   `engine/instruments.js` is still `q1-grain` and `q2-core`.
-- **Ligar as walkable ground.** Charted, not built; `worlds3d.js` still registers
-  Tallow only.
+- **Ligar as walkable ground.** The four benches are built and playable; the
+  basalt arches are not a place you can walk. `worlds3d.js` still registers
+  Tallow only, there is no `world-data/ligar.json`, and nothing in `verify:tallow`
+  or `verify:bench` has a Ligar equivalent to run against. That is the next pass
+  if Ligar is to match Tallow.
+- **Units 3–10.** Charts only, unchanged.

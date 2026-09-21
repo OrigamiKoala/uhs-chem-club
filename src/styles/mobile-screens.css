@@ -384,6 +384,15 @@
   .m-learn-quest .cat-drawer .cat-cell { min-width: 0; flex: 1 1 42%; }
   .m-learn-quest .cat-drawer .cat-cell-name { display: block; }
 
+  /* The join bench: a pair plate is two pieces side by side with their shells
+     drawn round them, so it takes the whole width of the glass. Two to a row
+     on a phone would shrink the light pieces below the size a stage asks the
+     player to count them at. */
+  .m-learn-quest .scope-grid.join-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .m-learn-quest .scope-aperture.join-aperture { aspect-ratio: 5 / 2 !important; }
+  .m-learn-quest .scope-grid.scope-n3 .slab-aperture,
+  .m-learn-quest .scope-grid.scope-n4 .slab-aperture { aspect-ratio: 1 / 1; }
+
   /* The assay floor is read across, so it keeps the full width of the glass
      even when a stage puts three hoppers on it. */
   .m-learn-quest .scope-grid.scope-n3 .assay-aperture,

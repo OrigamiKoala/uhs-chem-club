@@ -73,7 +73,7 @@ not a substitute for it.
 A Learn quest publishes its own schedule — `VOCABULARY` in `src/learn/quests/unit01/q1-grain.js`
 and `q2-core.js` are the worked examples, mapping each gated term to the stage whose reward
 card introduces it. `verify:learn` fails the build both ways round: a term used one stage
-early, and a term the schedule promises that no card ever delivers. Every built Unit 1 quest
+early, and a term the schedule promises that no card ever delivers. Every built quest in Units 1 and 2
 now publishes one; `WITHHELD_VOCAB` in `tools/verify-learn.mjs` holds only what a quest has
 yet to earn, so words an earlier bench taught (atom, element, compound, mixture, proton,
 neutron, electron, shell, valence, isotope, ion) are plain words downstream and using them
@@ -109,6 +109,8 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   height of the glass.
 - `npm run verify:learn` — integrity check of the Learn track registry, its no-XP
   invariant, and the practice sets (five per built quest, assembled at world scope).
+  It also **presses every join-bench pair plate in Node** and measures what comes
+  out: electrons conserved, and no piece left over the capacity of its outer shell.
 - `npm run verify:geometry` — runs all 20 reaction animations headlessly and checks the chemistry
   on screen (see "Chemical realism" below). `--verbose` prints atom positions at every step.
 - `npm run verify:media` — validates media manifest against assets and size budgets.
@@ -340,6 +342,19 @@ into grinding and would punish the students it exists to help.
   shook it would see the fragments band and wrongly call it mixed. At T3 and below this runs
   on canvas and holds at 375 px; at T4 the same declarations build the instrument on the
   bench (`scope3d.js`), through the same planners, to the same answers.
+  `joinbench.js` is the **join bench**, Ligar's instrument, and it answers one
+  question at two scales — which is why it is one bench and not two. A PAIR plate
+  clamps two pieces face to face and presses them together; a SLAB plate holds a
+  block of finished material you can hit, heat, cool and put a current through.
+  Everything it reports is derived by a pure function from the declaration —
+  `planJoin` decides what a press does from the two pieces' shells and kinds,
+  `planSlab` decides the picture from a block's `build`, `conductionOf` decides
+  whether a current passes from that build and the state the block is in. The one
+  figure a block is simply told is the temperature it comes apart at, because that
+  is a measurement. A slab may be `sealed`, meaning the bench resolves nothing
+  inside it and says so; that is what makes "identify it from how it behaves" a
+  real task rather than a look-up. A charge in a block is told apart by a
+  STENCILLED plus or minus and never by colour.
   `corebench.js` is the **core bench**: one piece shown in three fields — `whole` (a haze
   with the core drawn to scale, which is a speck), `core` (the grains separated and
   probeable, marked ones told apart by a stencilled cross and never by colour) and `rings`
@@ -356,7 +371,7 @@ into grinding and would punish the students it exists to help.
   rung 2 after a miss or 45 s, rung 3 after two misses; copy accurately conveys both paths), and reward card.
   Supports soft refusals via `{ ok: false, notYet: true, msg }` routed through `frame.note()` without burning hint rungs.
   It never sees an answer; the quest calls `clear()` or `miss()`.
-  **A BRIEFING IS A QUEST'S, NOT A STAGE'S.** Every built Unit 1 quest carries exactly one —
+  **A BRIEFING IS A QUEST'S, NOT A STAGE'S.** Every built quest carries exactly one —
   on stage 1, at most 2 sentences, saying what the instrument is and what its tools do — and
   every other stage opens straight onto prompt, tools and answer. A briefing per stage meant a
   typewriter modal between the player and the bench eight times in a row, each one wrapping the
@@ -526,7 +541,7 @@ so the check can assert — as `verify:quest` does for the Charge Gardens — th
 solution grades correct, that a plausible wrong answer is refused **with a reason**, that an
 untouched bench never grades correct, that every stage has exactly three distinct hint rungs
 and a reward card, that every bench declaration is well formed, that all `quest-btn-sm` buttons carry
-`btn-secondary` or `btn-primary`, that a stage briefing (where a stage has one at all — in Unit 1
+`btn-secondary` or `btn-primary`, that a stage briefing (where a stage has one at all — in Units 1 and 2
 only stage 1 does) does not exceed 2 sentences, that sample notes
 describe provenance only without leaking answers, **that every control a stage offers has a
 key legend** (`toolNoteFor(controlId, stageNumber)` — see "Nothing is NAMED without being
@@ -610,13 +625,64 @@ why magnesium and chlorine combine one to two); and four sealed samples against 
 It ends able to describe any atom with three numbers.
 
 ### World 1 quest 5 — Atomic Mass (`unit01/q5-assay`, live)
-Eight stages on the sorting bench (`engine/assay.js`, also used by the charted Ligar
+Eight stages on the sorting bench (`engine/assay.js`, also used by Ligar's
 `q4-weigh`): a sample tips down a chute over a deflector, one bin per weight, tallies
 counted; a balance weighs a sample whole and reports what one piece weighs on average. A real
 sample is a mix of isotopes, the proportions are fixed, the listed mass is a weighted average
 that leans toward the common isotope, and the average runs both ways — a sealed sample gets
 named off its number. Every hint rung three shows the actual sum. The bench never counts by
 weighing at scale: moles are Ligar's.
+
+### World 2 — Ligar (`unit02`, four benches, all live, T3 and below)
+
+Ligar is the field of basalt arches. Tallow spent five benches on one atom at a
+time; Ligar is about what happens when two of them touch. All four quests are
+built as games and are played as a page on every tier — **Ligar is not walkable
+ground**, `worlds3d.js` still registers Tallow only, and nothing in `BUILT_BENCHES`
+changed. Everything Tallow earned (atom, element, compound, molecule, proton,
+neutron, electron, shell, valence, isotope, ion, cation, anion, metal, nonmetal,
+atomic number, mass number) is a plain word from here on.
+
+- **`q1-joins` What Holds** — the join bench, pair plates. Press three pairs and
+  see which held (**bond**) → why the third would not, read off the outer shells →
+  the needle says one pair handed an electron over and the other holds a pair
+  between them → predict which from the two kinds (**ionic**, **covalent**) → a
+  giver with two to give needs two takers → count the pairs between (**double**
+  and **triple bonds**) → file four pairs off the catalogue alone → how many of
+  one kind a giver can hold. It ends on the fact bench three needs: the counts on
+  the outer shells leave a compound one recipe and no choice about it.
+- **`q2-lattice` Stone and Wire** — the same bench, slab plates. Heat three blocks
+  (**melting point**) → strike the salt block and read the face it left
+  (**lattice**, **brittle**) → current through a block cold, molten, and through a
+  molten block that carries no charge (**conduct**) → what survives a blow on a
+  molecular solid → the block the blade will not cut → which of the three holds a
+  molecule you could lift out (and the **formula unit** an ionic solid has
+  instead) → three SEALED blocks named from the tests alone → pick a liner for a
+  900 degree vessel. **The furnace is not a one-way door**: `Let It Cool` exists
+  because a stage that asks for a cold reading and a molten one is unfinishable if
+  heating cannot be undone.
+- **`q3-recipe` The Same Recipe** — the sampler scope, reused unchanged. Three
+  samples of one compound from three places (**fixed composition**) → a sample
+  with pieces no group would take → two compounds of the same two kinds, one to
+  one and one to two → what one group weighs → what share of that weight is the
+  heavy kind (**percent composition**) → a weight ratio turned back into a count
+  (**empirical formula**) → name three samples → check three claims. The law of
+  definite proportions is the whole spine of this bench and is never named, because
+  the name teaches nothing the counting has not already shown.
+- **`q4-weigh` Counting By Weight** — the assay floor, reused with one additive
+  change: a hopper may declare `bulk`, meaning the gate is dogged shut, the chute
+  refuses it and the balance is all you get. Count a crate too full to tip → add up
+  a recipe (**formula mass**) → three samples of sixty weighed against each other →
+  measure out a matching count (**mole**, **Avogadro's number**) → a mole of a
+  compound (**molar mass**) → grams to moles → a recipe read in moles → which of
+  three drums holds the most atoms, which is the lightest one.
+
+**The mole arrives by being DISCOVERED, and the order is the whole point.** Stage
+three puts three samples of exactly sixty pieces on the floor and weighs them: the
+totals come out in the ratio of the listed masses, which they have to. Stage four
+inverts that one sentence — take the listed masses in grams and you have taken
+equal counts — and only then does the card name it. A bench that opened by
+asserting 6.02 x 10^23 would be checking, not teaching.
 
 ### Tallow — Learn world 01 as a place you walk (`three/tallow.js`, T4)
 
@@ -987,13 +1053,16 @@ clearance, every stage has exactly three distinct hint rungs, and a giver→give
 is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 ## Plans in flight
-- `docs/plans/learn-track.md` — the Learn road: ten worlds, 41 quests charted, five built
-  (`unit01/q1-grain` … `unit01/q5-assay`, the whole of Tallow). Scaffolding, gating, routes,
-  backend tab, per-world practice sets and the verifier are in place. World 01 (Tallow) is
-  also built as walkable ground at T4: sites 1–2 are benches you stand at, sites 3–5 are
-  real places whose quests draw the bench as a page over the world; the other nine worlds
-  are charts only. The Tallow→Ligar pass (`tallow-ligar-build.md`) carries the bench order
-  and what is deliberately left out of Unit 1.
+- `docs/plans/learn-track.md` — the Learn road: ten worlds, 41 quests charted, nine built
+  (`unit01/q1-grain` … `unit01/q5-assay`, the whole of Tallow, and `unit02/q1-joins` …
+  `unit02/q4-weigh`, the whole of Ligar). Scaffolding, gating, routes, backend tab,
+  per-world practice sets and the verifier are in place. World 01 (Tallow) is also built as
+  walkable ground at T4: sites 1–2 are benches you stand at, sites 3–5 are real places whose
+  quests draw the bench as a page over the world. **Ligar is games only** — four playable
+  benches on every tier, no walkable ground, nothing in `worlds3d.js` or `BUILT_BENCHES`;
+  that is a separate pass. The other eight worlds are charts only. The Tallow→Ligar pass
+  (`tallow-ligar-build.md`) carries the bench order and what is deliberately left out of
+  each unit.
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
 

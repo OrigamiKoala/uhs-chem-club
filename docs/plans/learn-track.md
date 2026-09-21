@@ -1,10 +1,11 @@
 # Learn track — worlds, quests, and how to build them
 
-**Status: ten worlds charted, world 1 quests 1 and 2 built and live.**
-The road, the gating, the routes, the progress store, the backend tab and the
-verifier all exist. `unit01/q1-grain` — *The Grain of Things* — and
-`unit01/q2-core` — *The Inside of a Piece* — are playable end to end and set the
-pattern the other 38 quests follow.
+**Status: ten worlds charted, nine quests built and live — all of world 1
+(Tallow) and all of world 2 (Ligar).** The road, the gating, the routes, the
+progress store, the backend tab and the verifier all exist. Tallow's five benches
+and Ligar's four are playable end to end and set the pattern the other 32 quests
+follow. Tallow is additionally walkable ground at T4; **Ligar is games only**,
+with no world behind them, which is a separate pass and not a gap in the quests.
 
 ## The shape of it
 
@@ -143,8 +144,8 @@ opens it in the right place, and the host loads it.
 
 | # | World | Place | Unit | Quests |
 | --- | --- | --- | --- | --- |
-| 01 | Tallow | Salt flats | Atoms | 3 (1 built) |
-| 02 | Ligar | Basalt arches | Molecules | 4 |
+| 01 | Tallow | Salt flats | Atoms | 5 (5 built, walkable at T4) |
+| 02 | Ligar | Basalt arches | Molecules | 4 (4 built, no ground) |
 | 03 | Mirrowen | Tidal shelf | States of Matter | 4 |
 | 04 | Kettle | Soda lake | Stoichiometry and Reactions | 4 |
 | 05 | Teeter | Salt pans | Equilibrium | 4 |
@@ -260,8 +261,10 @@ World 01 is now a place as well as a chart. Status:
 
 Deliberately **not** done, and why:
 
-- The other nine worlds have no ground. Build Tallow end-to-end first and let what breaks
-  inform the rest — the same order `3d-conversion-prompts.md` §6 sets out for Erebus.
+- The other nine worlds have no ground, Ligar included: its four benches are built and
+  playable, but the arches are not a place you can walk. Build Tallow end-to-end first and
+  let what breaks inform the rest — the same order `3d-conversion-prompts.md` §6 sets out
+  for Erebus.
 - ~~`q3-catalogue` and `q4-counting` have sites but no content~~ — superseded:
   every charted quest now exists, every site's `built` flag is `true`, and
   sites 3–5 stand as real places (open vault, tally floor, hopper gantry)
