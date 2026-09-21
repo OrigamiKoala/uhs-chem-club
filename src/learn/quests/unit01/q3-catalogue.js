@@ -32,7 +32,7 @@
  * reports through `ctx` and nothing else.
  */
 
-import { CatalogueBoard } from '../../engine/catalogue.js';
+import { CatalogueBoard } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
@@ -61,28 +61,16 @@ const SPEAKER = 'Vess';
 /* ------------------------------------------------------------------
    THE KEY LEGEND
 
-   Every control says what it does in one short sentence, for as long as it is
-   on the plate. That covers the affordances as well as the keys: tapping a card
-   and tapping a slot are the only two gestures in this quest, and neither is
-   obvious. `verify:learn` fails the build over a control with no line.
+   A CARD INDEX DOES NOT COME WITH A MANUAL.
+
+   This table used to carry three lines: that tapping a card reads it,
+   that tapping a slot files the card in your hand, and that Clear Board
+   clears the board. A player who has picked up a card and put it in a
+   slot has learned all three by doing them once, and reading about it
+   first is slower than trying it. The lines are gone and nothing was
+   lost with them.
    ------------------------------------------------------------------ */
-const TOOL_TEXT = {
-  reader: [{
-    from: 1,
-    key: 'Tapping a card',
-    what: 'Reads that card: its protons, its outer-shell electrons, its mass, and what it does.'
-  }],
-  file: [{
-    from: 1,
-    key: 'Tapping a slot',
-    what: 'Files the card in your hand into that slot. Tap a filed card to lift it out again.'
-  }],
-  clear: [{
-    from: 1,
-    key: 'Clear Board',
-    what: 'Sends every card you filed back to the drawer. Cards that were already pinned do not move.'
-  }]
-};
+const TOOL_TEXT = {};
 
 /**
  * The legend line for one control on one stage, or null if there is none.
@@ -167,9 +155,9 @@ export const STAGES = [
     title: 'Put Them In Order',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench is a card index with one card for every kind of atom. Tap a card to read it, tap a slot to file it.'
+      body: 'This bench is a card index with one card for every kind of atom, and a board to lay them out on.'
     },
-    prompt: 'Read all six cards and file them in the slots, fewest protons on the left.',
+    prompt: 'File the six cards in the slots, fewest protons on the left.',
     controls: ['reader', 'file', 'clear'],
     masked: true,
     board: { label: 'Reference strip', rows: [['#p1', '#p2', '#p3', '#p4', '#p5', '#p6']] },
@@ -212,7 +200,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Find The Repeat',
-    prompt: 'Read the outer-shell count along the row. Ignoring the first two cards, count how many cards go by before that count starts over at 1.',
+    prompt: 'Ignoring the first two cards, count how many go by before the outer-shell count starts over at 1.',
     controls: ['reader'],
     board: { label: 'All 18 cards, in atomic number order', rows: [RUN_18] },
     drawer: [],
@@ -291,7 +279,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Read Down, Not Along',
-    prompt: 'Read the cards in column 6 and say how many electrons each one keeps in its outer shell.',
+    prompt: 'Say how many electrons the cards in column 6 keep in their outer shells.',
     controls: ['reader'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
@@ -302,9 +290,6 @@ export const STAGES = [
       'OXYGEN keeps 6 in its outer shell and so does SULFUR, so the answer is 6.'
     ],
     check(state) {
-      if (state.read.size < 2) {
-        return { ok: false, notYet: true, msg: 'Read at least two cards in that column before answering.' };
-      }
       if (state.number === 6) return { ok: true };
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'The counter is still on zero — set it to what the cards report.' };
@@ -327,7 +312,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Ones That Will Not Trade',
-    prompt: 'Read cards from each of the four groups below and pick the group whose cards never trade an electron.',
+    prompt: 'Pick the group whose cards never trade an electron.',
     controls: ['reader'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
@@ -347,9 +332,6 @@ export const STAGES = [
       'HELIUM, NEON and ARGON all do nothing at all, and all three sit in group 8.'
     ],
     check(state) {
-      if (state.read.size < 2) {
-        return { ok: false, notYet: true, msg: 'Read some cards first instead of guessing from where they sit.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four groups.' };
       }
@@ -372,7 +354,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Sort Them By What They Do',
-    prompt: 'Read the six cards below and file each one by what it does when another atom is pushed at it.',
+    prompt: 'File each of the six cards by what it does when another atom is pushed at it.',
     controls: ['reader'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
@@ -416,7 +398,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'The Card That Is Not There',
-    prompt: 'One slot in the chart is empty, so work out the missing card\'s atomic number and what it will do.',
+    prompt: 'One slot in the chart is empty. Work out the missing card\'s atomic number and what it will do.',
     controls: ['reader'],
     board: {
       label: 'Reference chart — one slot empty',
@@ -443,9 +425,6 @@ export const STAGES = [
       'The missing card is atomic number 14, and like CARBON above it, it holds on to a partner.'
     ],
     check(state) {
-      if (state.read.size < 1) {
-        return { ok: false, notYet: true, msg: 'Read the cards on either side of the empty slot first.' };
-      }
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'The counter is still on zero — set the number you are claiming.' };
       }
@@ -470,7 +449,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Fill The Chart',
-    prompt: 'Read the four unmarked cards and file each one into the slot its proton count gives it.',
+    prompt: 'File each of the four unmarked cards into the slot its proton count gives it.',
     controls: ['reader', 'file', 'clear'],
     masked: true,
     board: {

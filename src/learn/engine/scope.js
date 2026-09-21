@@ -548,8 +548,17 @@ export class SampleScope {
       };
       this.plates.push(plate);
 
+      // Cleared at the START of every press (capture runs outside-in, so this
+      // fires before the canvas handler below), then set by a probe that hits.
+      root.addEventListener('pointerdown', () => { plate.pieceTaken = false; }, true);
       canvas.addEventListener('pointerdown', e => this.onPointer(plate, e));
       root.addEventListener('click', () => {
+        /* A PRESS ON WHAT IS IN THE APERTURE IS NOT A PRESS ON THE PLATE.
+           `pointerdown` on the canvas runs first and reports what was hit; the
+           same press then bubbles here as a `click` on the plate and selects the
+           plate, wiping any finer selection the probe just made. A press that
+           resolved to something inside the picture is spent. */
+        if (plate.pieceTaken) { plate.pieceTaken = false; return; }
         if (this.selectable && this.onSelect) this.onSelect(sample.id);
       });
     });
@@ -588,6 +597,9 @@ export class SampleScope {
     const px = e.clientX - rect.left;
     const py = e.clientY - rect.top;
     const hit = this.hitTest(plate, px, py);
+
+    // Claim the click this press is about to become.
+    if (hit) plate.pieceTaken = true;
 
     if (hit) {
       e.stopPropagation();

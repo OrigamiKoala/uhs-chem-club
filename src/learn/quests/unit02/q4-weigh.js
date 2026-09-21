@@ -57,17 +57,19 @@ export const CARD_MASS = {
 
 /* ------------------------------------------------------------------
    THE KEY LEGEND
+
+   A KEY WHOSE LABEL SAYS WHAT IT DOES OWES NOTHING.
+
+   Only the keys below carry a line, and each one carries it because
+   its label leaves something out. Everything else on this bench — the
+   keys that were once explained back to the player in their own words —
+   is left to say what it says.
    ------------------------------------------------------------------ */
 const TOOL_TEXT = {
-  pour: [{
-    from: 1,
-    key: 'Tip Sample',
-    what: 'Tips the selected sample down the chute. The figure above a bin is how many landed in it.'
-  }],
   balance: [{
     from: 1,
     key: 'Weigh Sample',
-    what: 'Weighs the selected sample whole, without opening it, and reports what the pan reads.'
+    what: 'Weighs the sample whole, without opening it.'
   }]
 };
 
@@ -100,7 +102,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This is the assay floor from Tallow: a chute that tips a sample past a deflector into bins, and a balance that weighs a whole sample without opening it. Some of the samples here hold far too many pieces for the chute, so the gate stays shut on them and the balance is all you get.'
     },
-    prompt: 'Tip Sample A and weigh it, then weigh Sample B and say how many pieces Sample B holds.',
+    prompt: 'Sample B is too full to tip. Say how many pieces it holds.',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', code: 'CAT 06', note: '40 pieces, kept as the counting standard', bins: [{ mass: 12, n: 40 }] },
@@ -114,12 +116,6 @@ export const STAGES = [
       '480 over 40 pieces is 12.0 each, and Sample B weighs 3600, so 3600 divided by 12.0 = 300 pieces.'
     ],
     check(state) {
-      if (!state.poured.has('h1')) {
-        return { ok: false, notYet: true, msg: 'Tip Sample A first — it is the one the chute will take.' };
-      }
-      if (state.weighed.size < 2) {
-        return { ok: false, notYet: true, msg: 'Weigh both samples before you answer.' };
-      }
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
       }
@@ -141,7 +137,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'What One Unit Weighs',
-    prompt: 'Tip Sample A, check the weight its bin catches against the recipe on its plate, then say what one unit of Sample B weighs.',
+    prompt: 'Say what one unit of Sample B weighs.',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'h3', label: 'SAMPLE A', note: '40 units, one CAT 08 to two CAT 01', bins: [{ mass: 18, n: 40 }] },
@@ -155,9 +151,6 @@ export const STAGES = [
       'Do the same for Sample B: 12.0 for the CAT 06 plus 1.0 for each of the four CAT 01 is 12 + 4 = 16.'
     ],
     check(state) {
-      if (!state.poured.has('h3')) {
-        return { ok: false, notYet: true, msg: 'Tip Sample A first and read what its bin caught.' };
-      }
       if (state.number === 10) {
         return { ok: false, notYet: true, msg: 'Set the counter to the figure you worked out.' };
       }
@@ -185,7 +178,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Three Samples of Sixty',
-    prompt: 'Every one of these three samples holds sixty pieces. Tip all three and say what their totals have in common.',
+    prompt: 'Every one of these three samples holds sixty pieces. Say what their weights have in common.',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'h5', label: 'SAMPLE A', code: 'CAT 01', note: '60 pieces, counted in', bins: [{ mass: 1, n: 60 }] },
@@ -209,9 +202,6 @@ export const STAGES = [
       '60 / 60 = 1.0, 720 / 60 = 12.0 and 960 / 60 = 16.0, which are the three listed masses exactly.'
     ],
     check(state) {
-      if (state.poured.size < 3) {
-        return { ok: false, notYet: true, msg: 'Tip all three samples before you answer.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -251,9 +241,6 @@ export const STAGES = [
       'CAT 06 is listed at 12.0 and CAT 08 at 16.0, so 12.0 grams of the one matches 16.0 grams of the other.'
     ],
     check(state) {
-      if (state.poured.size < 2) {
-        return { ok: false, notYet: true, msg: 'Tip at least two of the samples before you answer.' };
-      }
       if (state.number === 8) {
         return { ok: false, notYet: true, msg: 'Set the counter to the figure you worked out.' };
       }
@@ -300,9 +287,6 @@ export const STAGES = [
       '23.0 + 35.5 = 58.5, so 58.5 grams of it is one mole of units.'
     ],
     check(state) {
-      if (!state.weighed.has('h8')) {
-        return { ok: false, notYet: true, msg: 'Weigh Sample A before you answer.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -324,7 +308,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Drum of Seventy-Two',
-    prompt: 'Weigh Sample A and say how many moles of it the drum holds.',
+    prompt: 'Say how many moles of Sample A the drum holds.',
     controls: ['balance'],
     hoppers: [
       { id: 'h9', label: 'SAMPLE A', note: 'one drum, one CAT 08 to two CAT 01, gate shut', bulk: true, bins: [{ mass: 18, n: 4 }] }
@@ -337,9 +321,6 @@ export const STAGES = [
       'One unit is 16.0 + 1.0 + 1.0 = 18.0, so a mole weighs 18 grams, and 72 / 18 = 4 moles.'
     ],
     check(state) {
-      if (!state.weighed.has('h9')) {
-        return { ok: false, notYet: true, msg: 'Weigh the drum before you answer.' };
-      }
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
       }
@@ -377,9 +358,6 @@ export const STAGES = [
       'Two moles of units at two CAT 01 each is 2 x 2 = 4 moles of CAT 01.'
     ],
     check(state) {
-      if (!state.weighed.has('h10')) {
-        return { ok: false, notYet: true, msg: 'Weigh Sample A before you answer.' };
-      }
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
       }
@@ -404,7 +382,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Which Drum Holds the Most',
-    prompt: 'Weigh all three drums and say which of them holds the most atoms.',
+    prompt: 'Say which of the three drums holds the most atoms.',
     controls: ['balance'],
     hoppers: [
       { id: 'd1', label: 'SAMPLE A', code: 'CAT 06', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 12, n: 5 }] },
@@ -427,9 +405,6 @@ export const STAGES = [
       '60 / 12.0 = 5 moles, 64 / 16.0 = 4 moles and 6 / 1.0 = 6 moles, so the lightest drum holds the most atoms.'
     ],
     check(state) {
-      if (state.weighed.size < 3) {
-        return { ok: false, notYet: true, msg: 'Weigh all three drums before you answer.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the three drums.' };
       }

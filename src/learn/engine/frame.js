@@ -33,14 +33,23 @@ const RUNG2_AFTER_MS = 45000;
  * The key legend: what every control on this stage's plate actually DOES, in
  * one plain sentence each.
  *
- * NOTHING ON A BENCH IS NAMED WITHOUT BEING EXPLAINED. A key reading "Read
- * Needle" tells a player who has never seen a needle nothing at all, and a
- * prompt that then asks them to read one is asking them to already know. So
- * every control a stage offers carries its description beside it, for as long
- * as the stage offers it — not once, not in a tooltip, and not only in a hint
- * they have to earn. `verify:learn` fails the build over a control with no
- * note, and runs the notes through the same withheld-vocabulary gate as every
- * other player-facing string.
+ * A KEY WHOSE LABEL DOES NOT SAY WHAT IT DOES CARRIES ONE SENTENCE. A key
+ * reading "Read Needle" tells a player who has never seen a needle nothing at
+ * all, and a prompt that then asks them to read one is asking them to already
+ * know — so that one gets a line, beside the key, for as long as the stage
+ * offers it, not once, not in a tooltip, and not only in a hint they have to
+ * earn.
+ *
+ * A KEY WHOSE LABEL DOES SAY IT CARRIES NOTHING. "Tip Sample" tips the sample.
+ * "Strike It" strikes it. "Reset Sample" resets the sample. Every bench once
+ * opened with a panel of such sentences restating its own key caps back at the
+ * player, which is a manual standing between them and the instrument and
+ * teaches nothing pressing the key once would not. A quest declines a legend by
+ * leaving the control out of its `TOOL_TEXT`, and this returns nothing at all
+ * rather than an empty "What these do" heading.
+ *
+ * `verify:learn` still runs every legend that EXISTS through the same
+ * withheld-vocabulary gate as every other player-facing string.
  *
  * @param {Array<{key: string, what: string}>} items
  */

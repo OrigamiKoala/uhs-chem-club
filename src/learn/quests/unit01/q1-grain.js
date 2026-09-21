@@ -36,27 +36,25 @@ const SPEAKER = 'Vess';
 /* ------------------------------------------------------------------
    THE KEY LEGEND
 
-   Every control on the plate says what it does, in one short sentence, for as
-   long as it is on the plate. `verify:learn` fails the build over a control
-   with no line, and runs every line through the same vocabulary gate as a
-   prompt or a hint.
+   A KEY WHOSE LABEL SAYS WHAT IT DOES OWES NOTHING.
+
+   Only the keys below carry a line, and each one carries it because
+   its label leaves something out. Everything else on this bench — the
+   keys that were once explained back to the player in their own words —
+   is left to say what it says.
    ------------------------------------------------------------------ */
 const TOOL_TEXT = {
   power: [{
     from: 1,
     key: 'Power',
-    what: 'Zooms the scope in. Drag it round, or click it and use the arrow keys.'
-  }],
-  cut: [{
-    from: 1,
-    key: 'Run Cutter',
-    what: 'Tries to split the selected sample. Whatever it cannot split it leaves alone.'
+    what: 'Zooms the scope in.'
   }],
   settle: [{
     from: 1,
     key: 'Settle',
-    what: 'Shakes the selected sample and lets it sink. Heavier things end up below lighter ones.'
+    what: 'Shakes the sample and lets it sink. Heavier pieces end up lower.'
   }]
+  // Run Cutter runs the cutter.
 };
 
 /**
@@ -162,7 +160,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench has a scope that zooms in on a sample, a cutter that tries to split it, and a shaker that settles it into layers. Eight samples, eight questions — take them in order.'
     },
-    prompt: 'Turn the Power dial up. Find the lowest power where the grey solid stops looking solid and breaks into separate grains.',
+    prompt: 'Find the lowest power at which this grey solid stops looking solid and breaks into separate grains.',
     controls: ['power'],
     samples: [
       { id: 'c7', label: 'SAMPLE A', note: 'grey powder', floorPower: 4, particles: [{ kinds: ['k06'], n: 46 }] }
@@ -175,9 +173,6 @@ export const STAGES = [
       'The grains first show up at power 4. Powers 5 and 6 only draw the same grains bigger.'
     ],
     check(state) {
-      if ((state.maxPower || 1) < 4) {
-        return { ok: false, notYet: true, msg: 'Turn the Power dial up and watch the sample first.' };
-      }
       if (!state.number) {
         return { ok: false, notYet: true, msg: 'Pick a power from 1 to 6 first.' };
       }
@@ -195,7 +190,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'One Kind or Two?',
-    prompt: 'Both samples look like the same grey powder. Zoom in and pick the one built from only one kind of atom.',
+    prompt: 'Both samples look like the same grey powder. Pick the one built from only one kind of atom.',
     controls: ['power'],
     select: true,
     samples: [
@@ -209,10 +204,6 @@ export const STAGES = [
       'Sample B mixes dark grains with pale ones. Tap Sample A to pick it.'
     ],
     check(state) {
-      if ((state.resolved?.size || 0) < 2) {
-        return { ok: false, notYet: true, msg: 'Turn the Power dial up until you can see the grains in both samples.' };
-      }
-      if (!state.sample) return { ok: false, notYet: true, msg: 'Tap one of the samples on the bench to pick it.' };
       if (state.sample === 'c09') return { ok: true };
       return { ok: false, msg: 'Look again: that one has dark grains and pale grains mixed together, so it is two kinds, not one.' };
     },
@@ -226,7 +217,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Count the Kinds',
-    prompt: 'Tap grains all over this sample and count how many different kinds of atom are in it.',
+    prompt: 'Count how many different kinds of atom are in this sample.',
     controls: ['power'],
     samples: [
       {
@@ -246,9 +237,6 @@ export const STAGES = [
       'There are three kinds here: CAT 08, CAT 16 and CAT 17. Set the counter to 3.'
     ],
     check(state) {
-      if (state.probed.size < 3 && state.number !== 3) {
-        return { ok: false, notYet: true, msg: `You have read ${state.probed.size} different ${state.probed.size === 1 ? 'kind' : 'kinds'} so far. Tap more grains before answering.` };
-      }
       if (state.number === 3) return { ok: true };
       if (state.number < 3) return { ok: false, msg: 'There is at least one more kind in there. Two of them look alike — check their mass readings.' };
       return { ok: false, msg: 'Too many. Some of the grains you read are the same kind as each other.' };
@@ -263,7 +251,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'What the Blade Cannot Cut',
-    prompt: 'Run the cutter on all four samples and pick the one it cannot split.',
+    prompt: 'Pick the one of these four samples that cannot be split.',
     controls: ['cut'],
     select: true,
     samples: [
@@ -279,8 +267,6 @@ export const STAGES = [
       'Sample D is a single atom, and the blade finds nothing inside it to split. Tap Sample D.'
     ],
     check(state) {
-      if (state.cut.size < 4) return { ok: false, notYet: true, msg: 'Run the cutter on all four samples before answering.' };
-      if (!state.sample) return { ok: false, notYet: true, msg: 'Tap one of the samples on the bench to pick it.' };
       if (state.sample === 't4') return { ok: true };
       return { ok: false, msg: 'That one came apart under the blade. Pick the sample the cutter left exactly as it was.' };
     },
@@ -358,7 +344,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Shake It Out',
-    prompt: 'Settle all three samples and file each one as a single substance or a mixture.',
+    prompt: 'File each of the three samples as a single substance or a mixture.',
     controls: ['settle'],
     select: true,
     samples: [
@@ -380,7 +366,6 @@ export const STAGES = [
     ],
     check(state) {
       const { bins, settled } = state;
-      if (settled.size < 3) return { ok: false, notYet: true, msg: 'Settle all three samples before you file them.' };
       if (!bins.p1 || !bins.p2 || !bins.p3) return { ok: false, notYet: true, msg: 'File all three samples before you commit.' };
       if (bins.p1 === 'one' && bins.p2 === 'one' && bins.p3 === 'mixed') return { ok: true };
       return { ok: false, msg: 'At least one is filed wrong. One layer means one substance; two layers mean a mixture.' };
@@ -395,7 +380,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Sort Them All',
-    prompt: 'Use the scope, the cutter and the shaker on all four samples, then file each one as an element, a compound or a mixture.',
+    prompt: 'File each of the four samples as an element, a compound or a mixture.',
     controls: ['power', 'cut', 'settle'],
     select: true,
     samples: [

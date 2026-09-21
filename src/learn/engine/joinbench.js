@@ -792,8 +792,20 @@ export class JoinBench {
       };
       this.plates.push(plate);
 
+      // Cleared at the START of every press (capture runs outside-in, so this
+      // fires before the canvas handler below), then set by a probe that hits.
+      root.addEventListener('pointerdown', () => { plate.pieceTaken = false; }, true);
       canvas.addEventListener('pointerdown', e => this.onPointer(plate, e));
       root.addEventListener('click', () => {
+        /* A PRESS ON A PIECE IS NOT A PRESS ON THE PLATE.
+           `pointerdown` on the canvas runs first and reports the piece; the same
+           press then bubbles here as a `click` on the plate. A quest that tracks
+           WHICH PIECE is selected as well as which plate had the piece wiped out
+           from under it by the plate selection a few milliseconds later, every
+           time — which is why "Read Piece" answered "No piece selected" on a
+           piece the player had just tapped. A press that resolved to a piece is
+           spent; only a press on the plate around it selects the plate. */
+        if (plate.pieceTaken) { plate.pieceTaken = false; return; }
         if (this.selectable && this.onSelect) this.onSelect(item.id);
       });
     });
@@ -823,6 +835,10 @@ export class JoinBench {
     const rect = plate.canvas.getBoundingClientRect();
     const hit = hitTestJoin(plate.hits, e.clientX - rect.left, e.clientY - rect.top);
     if (!hit || !this.onProbe) return;
+
+    // Claim the click this press is about to become, so the plate handler above
+    // does not undo the selection this one is making.
+    plate.pieceTaken = true;
 
     this.probe = { plateId: plate.item.id, side: hit.side };
     this.sweep = 1;

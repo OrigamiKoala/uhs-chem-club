@@ -265,10 +265,28 @@ Deliberately **not** done, and why:
   playable, but the arches are not a place you can walk. Build Tallow end-to-end first and
   let what breaks inform the rest — the same order `3d-conversion-prompts.md` §6 sets out
   for Erebus.
-- ~~`q3-catalogue` and `q4-counting` have sites but no content~~ — superseded:
-  every charted quest now exists, every site's `built` flag is `true`, and
-  sites 3–5 stand as real places (open vault, tally floor, hopper gantry)
-  whose quests play as a page over the world at T4.
+- ~~`q3-catalogue` and `q4-counting` have sites but no content~~ — superseded.
+- ~~Sites 3–5 stand as real places whose quests play as a page over the world~~ —
+  superseded: **all five Tallow benches are BUILT at T4.** `BUILT_BENCHES` holds
+  the whole of Unit 1.
+  - `q4-ledger` is the core bench again and needed only its name in that list.
+  - `q3-catalogue` got `engine/catalogue3d.js` — a raked card board on the bench
+    with a milled slot per place and a tray of loose cards in front of it. It is
+    built rather than drawn (which the drawn board's own header argues against)
+    because a card index RESOLVES nothing: there is no picture of a card, there
+    is a card. Still two taps, never a drag.
+  - `q5-assay` got `engine/assay3d.js` — a hopper on legs over a chute over a
+    deflector over a row of catch bins, and the pieces really fall. This is the
+    one built instrument with no flat picture at all, because its output is
+    objects landing in containers. The counting that rule protects is protected
+    by the geometry instead: each bin is open-fronted behind a sight glass and
+    every piece stacks into ONE PLANE just inside it, on the grid `packBin`
+    computes, so nothing is ever behind anything.
+  - `BenchViewer3D` grew `addFitNode` / `framedNodes` / `releaseGroup`, because
+    the aim used to be written directly against `this.stations` and an
+    instrument that lays out none simply was not aimed.
+  - `verify:bench` now measures all five at six aspects AND puts every stage
+    each new quest declares through its built instrument.
 - Tallow is T4 only. T3 and below keep the existing Learn screens, and every quest still
   completes identically on them.
 

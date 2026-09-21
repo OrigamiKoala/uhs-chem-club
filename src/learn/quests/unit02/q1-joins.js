@@ -78,26 +78,15 @@ export const PIECES = {
 
 /* ------------------------------------------------------------------
    THE KEY LEGEND
-   Nothing on this bench is named without being explained. Every control
-   a stage offers carries one plain sentence for as long as it is there.
+
+   A KEY WHOSE LABEL SAYS WHAT IT DOES OWES NOTHING.
+
+   Only the keys below carry a line, and each one carries it because
+   its label leaves something out. Everything else on this bench — the
+   keys that were once explained back to the player in their own words —
+   is left to say what it says.
    ------------------------------------------------------------------ */
-const TOOL_TEXT = {
-  press: [{
-    from: 1,
-    key: 'Press Together',
-    what: 'Closes the clamps on the selected pair and shows whether the two pieces hold.'
-  }],
-  read: [{
-    from: 1,
-    key: 'Read Piece',
-    what: 'Reports the piece you tapped: its code, whether it is a metal, and its outer shell.'
-  }],
-  needle: [{
-    from: 3,
-    key: 'Read Charge',
-    what: 'Reports the charge on the piece you tapped, the way the needle on Tallow did.'
-  }]
-};
+const TOOL_TEXT = {};
 
 /**
  * The legend line for one control on one stage, or null if there is none.
@@ -125,9 +114,9 @@ export const STAGES = [
     title: 'Press Them Together',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench clamps two pieces face to face and presses them together to see whether they hold. Tap a piece and press "Read Piece" to find out what it is and what sits on its outer shell.'
+      body: 'This bench clamps two pieces face to face and presses them together to see whether they hold.'
     },
-    prompt: 'Press each of the three pairs together, then file each pair by whether it held.',
+    prompt: 'File each of the three pairs by whether its two pieces hold together.',
     controls: ['press', 'read'],
     pairs: [
       pair('p1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -148,9 +137,6 @@ export const STAGES = [
       'Pair A held and Pair C held. Pair B sprang apart.'
     ],
     check(state) {
-      if (state.pressed.size < 3) {
-        return { ok: false, notYet: true, msg: 'Press all three pairs before you answer.' };
-      }
       const labels = { p1: 'Pair A', p2: 'Pair B', p3: 'Pair C' };
       for (const id of ['p1', 'p2', 'p3']) {
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
@@ -176,7 +162,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Why B Would Not Hold',
-    prompt: 'Read the pieces before and after the presses, then say why Pair B would not hold when the other two did.',
+    prompt: 'Say why Pair B will not hold when the other two do.',
     controls: ['press', 'read'],
     pairs: [
       pair('p1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -199,12 +185,6 @@ export const STAGES = [
       'Both Pair B pieces carry eight electrons on the outer shell, which is as many as that shell holds. Every piece that joined ended up with a full outer shell too.'
     ],
     check(state) {
-      if (state.pressed.size < 3) {
-        return { ok: false, notYet: true, msg: 'Press all three pairs before you answer.' };
-      }
-      if (state.read.size < 2) {
-        return { ok: false, notYet: true, msg: 'Read at least two of the pieces before you answer.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -229,7 +209,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where the Electron Went',
-    prompt: 'Press both pairs, read the charge on all four pieces, and say how the two joins differ.',
+    prompt: 'Say how the two joins differ.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('j1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -251,12 +231,6 @@ export const STAGES = [
       'Pair A reads plus one and minus one, because one electron crossed over. Pair B reads zero and zero, because its pair of electrons sits between the two pieces.'
     ],
     check(state) {
-      if (state.pressed.size < 2) {
-        return { ok: false, notYet: true, msg: 'Press both pairs before you answer.' };
-      }
-      if (state.chargedPlates.size < 2) {
-        return { ok: false, notYet: true, msg: 'Read the charge on a piece in each of the two pairs before you answer.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -281,7 +255,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Which Way It Goes',
-    prompt: 'Press each pair, read both of its pieces, and file every pair by what happened to the electrons.',
+    prompt: 'File every pair by what happens to its electrons.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('r1', 'PAIR A', 'off the arch quarry', PIECES.mg, PIECES.o),
@@ -303,12 +277,6 @@ export const STAGES = [
       'Pair A and Pair C handed electrons over. Pair B and Pair D hold pairs between them.'
     ],
     check(state) {
-      if (state.pressed.size < 4) {
-        return { ok: false, notYet: true, msg: 'Press all four pairs before you answer.' };
-      }
-      if (state.readPlates.size < 4) {
-        return { ok: false, notYet: true, msg: 'Read a piece in each of the four pairs before you answer.' };
-      }
       const labels = { r1: 'Pair A', r2: 'Pair B', r3: 'Pair C', r4: 'Pair D' };
       for (const id of ['r1', 'r2', 'r3', 'r4']) {
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
@@ -337,7 +305,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'How Many It Takes',
-    prompt: 'Press both pairs, read the left-hand piece in each one afterwards, and say how many CAT 17 pieces one CAT 12 piece needs in order to give away everything it has.',
+    prompt: 'Say how many CAT 17 pieces one CAT 12 piece needs in order to give away everything it has.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('t1', 'PAIR A', 'off the arch quarry', PIECES.mg, PIECES.cl),
@@ -350,12 +318,6 @@ export const STAGES = [
       'A CAT 12 piece starts with two electrons on its outer shell and each CAT 17 takes one of them, so it needs two: (1 x 2 given) = (2 x 1 taken).'
     ],
     check(state) {
-      if (state.pressed.size < 2) {
-        return { ok: false, notYet: true, msg: 'Press both pairs before you answer.' };
-      }
-      if (state.readPlates.size < 2) {
-        return { ok: false, notYet: true, msg: 'Read the left-hand piece on each plate after the press.' };
-      }
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
       }
@@ -377,7 +339,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'More Than One Pair',
-    prompt: 'Press all three pairs and file each one by how many pairs of electrons it holds between its two pieces.',
+    prompt: 'File each of the three pairs by how many pairs of electrons it holds between its two pieces.',
     controls: ['press', 'read'],
     pairs: [
       pair('u1', 'PAIR A', 'off the gas line', PIECES.h, PIECES.h),
@@ -399,9 +361,6 @@ export const STAGES = [
       'Pair A holds one pair, Pair B holds two and Pair C holds three.'
     ],
     check(state) {
-      if (state.pressed.size < 3) {
-        return { ok: false, notYet: true, msg: 'Press all three pairs before you answer.' };
-      }
       const labels = { u1: 'Pair A', u2: 'Pair B', u3: 'Pair C' };
       const counts = { u1: 'two electrons, which is one pair', u2: 'four electrons, which is two pairs', u3: 'six electrons, which is three pairs' };
       for (const id of ['u1', 'u2', 'u3']) {
@@ -425,7 +384,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Read It Off the Catalogue',
-    prompt: 'Read both pieces in each pair, file every pair from what you read, then press them to check.',
+    prompt: 'File every pair by what it will do, from the two pieces alone.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('v1', 'PAIR A', 'off the arch quarry', PIECES.ca, PIECES.s),
@@ -448,9 +407,6 @@ export const STAGES = [
       'Pair A and Pair D are ionic, Pair B is covalent, and Pair C makes no bond because CAT 18 already carries eight.'
     ],
     check(state) {
-      if (state.readPlates.size < 4) {
-        return { ok: false, notYet: true, msg: 'Read a piece in each of the four pairs before you answer.' };
-      }
       const labels = { v1: 'Pair A', v2: 'Pair B', v3: 'Pair C', v4: 'Pair D' };
       for (const id of ['v1', 'v2', 'v3', 'v4']) {
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
@@ -477,7 +433,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Build the Recipe',
-    prompt: 'Press both pairs, read the left-hand piece in each one afterwards, and say how many CAT 01 pieces one CAT 06 piece can hold.',
+    prompt: 'Say how many CAT 01 pieces one CAT 06 piece can hold.',
     controls: ['press', 'read'],
     pairs: [
       pair('w1', 'PAIR A', 'off the gas line', PIECES.c, PIECES.h),
@@ -490,12 +446,6 @@ export const STAGES = [
       'One pair is already held, and three places are still open, so one CAT 06 holds 1 + 3 = 4 of them.'
     ],
     check(state) {
-      if (state.pressed.size < 2) {
-        return { ok: false, notYet: true, msg: 'Press both pairs before you answer.' };
-      }
-      if (state.readPlates.size < 2) {
-        return { ok: false, notYet: true, msg: 'Read the left-hand piece on each plate after the press.' };
-      }
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
       }

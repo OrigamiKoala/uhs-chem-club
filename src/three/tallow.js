@@ -1648,7 +1648,13 @@ export class TallowWorld {
     // lays out up to four stations at 0.92 m centres, and a station is 0.72 m
     // across its tray. Anything shorter and the end trays would hang off the
     // plate — the bench has to be able to hold what is put on it.
-    const { width = 4.8, depth = 1.3, height = 0.95 } = opts;
+    // `kind` is which instrument is cased up on this bench. It changes the
+    // face of the dormant cabinet and nothing else: five sites used to stand
+    // five identical cabinets with a microscope's round aperture in them, so a
+    // player walking the flat could not tell the card index from the assay
+    // works until they were standing at it. The bench under them is the same
+    // bench — one builder, one plate, one set of colliders.
+    const { width = 4.8, depth = 1.3, height = 0.95, kind = 'scope' } = opts;
     const g = new THREE.Group();
 
     const top = new THREE.Mesh(
@@ -1717,50 +1723,126 @@ export class TallowWorld {
     // The instrument housing: a cabinet standing on the bench, chamfered at the
     // top-left the way a plate is, with a recessed dark aperture in its face.
     const housing = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.15, 0.78, 0.52)), this.plateMat
+      this.own(new THREE.BoxGeometry(1.15, 0.78, 0.52)),
+      kind === 'cards' ? this.darkSteelMat : this.plateMat
     );
     housing.position.set(0, height + 0.43, -0.16);
     housing.castShadow = housing.receiveShadow = tierAtLeast('T4');
     dormant.add(housing);
 
-    const bezel = new THREE.Mesh(
-      this.own(new THREE.TorusGeometry(0.26, 0.035, 8, 26)), this.darkSteelMat
-    );
-    bezel.position.set(0, height + 0.5, 0.11);
-    dormant.add(bezel);
+    /* WHAT IS ON THE CABINET'S FACE IS WHAT THE BENCH IS FOR. */
+    if (kind === 'cards') {
+      // A CARD INDEX, cased up: a bank of shallow drawers, each with a pull and
+      // a brass index-card holder, and the drawer that is half out.
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          const out = (r === 1 && c === 1) ? 0.06 : 0;
+          const drawer = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.33, 0.20, 0.44)), this.plateMat
+          );
+          drawer.position.set(-0.35 + c * 0.35, height + 0.16 + r * 0.22, -0.16 + out);
+          dormant.add(drawer);
 
-    // The aperture face. Dark phosphor glass, not a screen: what it shows is the
-    // instrument, and the instrument lives in its own scene (see scope3d.js).
-    const aperture = new THREE.Mesh(
-      this.own(new THREE.CircleGeometry(0.245, 26)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0x0d0c0a, roughness: 0.42, metalness: 0.1
-      }))
-    );
-    aperture.position.set(0, height + 0.5, 0.108);
-    dormant.add(aperture);
+          const holder = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.16, 0.055, 0.012)), this.darkSteelMat
+          );
+          holder.position.set(-0.35 + c * 0.35, height + 0.16 + r * 0.22, 0.065 + out);
+          dormant.add(holder);
 
-    // The power dial: a knurled knob with a pointer and a ring of detents.
-    const dialBody = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.075, 0.085, 0.05, 18)), this.darkSteelMat
-    );
-    dialBody.rotation.x = Math.PI / 2;
-    dialBody.position.set(0.42, height + 0.28, 0.1);
-    dormant.add(dialBody);
-    const pointer = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.012, 0.07, 0.012)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
-    );
-    pointer.position.set(0.42, height + 0.32, 0.13);
-    dormant.add(pointer);
-    for (let i = 0; i < 6; i++) {
-      const a = -Math.PI * 0.7 + (i / 5) * Math.PI * 1.4;
-      const detent = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.008, 0.022, 0.006)), this.darkSteelMat
+          const pull = new THREE.Mesh(
+            this.own(new THREE.CylinderGeometry(0.009, 0.009, 0.10, 8)), this.darkSteelMat
+          );
+          pull.rotation.z = Math.PI / 2;
+          pull.position.set(-0.35 + c * 0.35, height + 0.095 + r * 0.22, 0.068 + out);
+          dormant.add(pull);
+        }
+      }
+    } else if (kind === 'assay') {
+      // THE ASSAY WORKS, cased up: a weigh-head with a big round scale on the
+      // front of it, its needle dead, over a shrouded chute.
+      const scaleRim = new THREE.Mesh(
+        this.own(new THREE.TorusGeometry(0.235, 0.032, 8, 26)), this.darkSteelMat
       );
-      detent.position.set(0.42 + Math.sin(a) * 0.11, height + 0.28 + Math.cos(a) * 0.11, 0.115);
-      detent.rotation.z = -a;
-      dormant.add(detent);
+      scaleRim.position.set(0, height + 0.52, 0.11);
+      dormant.add(scaleRim);
+
+      const dialFace = new THREE.Mesh(
+        this.own(new THREE.CircleGeometry(0.225, 28)),
+        this.own(new THREE.MeshStandardMaterial({
+          color: 0x2a251d, roughness: 0.74, metalness: 0.08
+        }))
+      );
+      dialFace.position.set(0, height + 0.52, 0.107);
+      dormant.add(dialFace);
+
+      // Graduations round the face, and a needle resting on the bottom stop.
+      const tickGeo = this.own(new THREE.BoxGeometry(0.008, 0.034, 0.004));
+      for (let i = 0; i < 12; i++) {
+        const a = -Math.PI * 0.78 + (i / 11) * Math.PI * 1.56;
+        const tick = new THREE.Mesh(tickGeo, this.pipeMat);
+        tick.position.set(Math.sin(a) * 0.185, height + 0.52 + Math.cos(a) * 0.185, 0.113);
+        tick.rotation.z = -a;
+        dormant.add(tick);
+      }
+      const needle = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.010, 0.185, 0.008)),
+        this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
+      );
+      needle.position.set(-0.062, height + 0.435, 0.118);
+      needle.rotation.z = 0.78;
+      dormant.add(needle);
+
+      // The shrouded chute under it, and the shutter dogged across its mouth.
+      const shroud = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.30, 0.20, 0.22)), this.plateMat
+      );
+      shroud.position.set(0, height + 0.13, 0.02);
+      dormant.add(shroud);
+      const shutter = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.34, 0.05, 0.02)), this.darkSteelMat
+      );
+      shutter.position.set(0, height + 0.06, 0.135);
+      dormant.add(shutter);
+    } else {
+      const bezel = new THREE.Mesh(
+        this.own(new THREE.TorusGeometry(0.26, 0.035, 8, 26)), this.darkSteelMat
+      );
+      bezel.position.set(0, height + 0.5, 0.11);
+      dormant.add(bezel);
+
+      // The aperture face. Dark phosphor glass, not a screen: what it shows is
+      // the instrument, and the instrument lives in its own scene.
+      const aperture = new THREE.Mesh(
+        this.own(new THREE.CircleGeometry(0.245, 26)),
+        this.own(new THREE.MeshStandardMaterial({
+          color: 0x0d0c0a, roughness: 0.42, metalness: 0.1
+        }))
+      );
+      aperture.position.set(0, height + 0.5, 0.108);
+      dormant.add(aperture);
+
+      // The power dial: a knurled knob with a pointer and a ring of detents.
+      const dialBody = new THREE.Mesh(
+        this.own(new THREE.CylinderGeometry(0.075, 0.085, 0.05, 18)), this.darkSteelMat
+      );
+      dialBody.rotation.x = Math.PI / 2;
+      dialBody.position.set(0.42, height + 0.28, 0.1);
+      dormant.add(dialBody);
+      const pointer = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.012, 0.07, 0.012)),
+        this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
+      );
+      pointer.position.set(0.42, height + 0.32, 0.13);
+      dormant.add(pointer);
+      for (let i = 0; i < 6; i++) {
+        const a = -Math.PI * 0.7 + (i / 5) * Math.PI * 1.4;
+        const detent = new THREE.Mesh(
+          this.own(new THREE.BoxGeometry(0.008, 0.022, 0.006)), this.darkSteelMat
+        );
+        detent.position.set(0.42 + Math.sin(a) * 0.11, height + 0.28 + Math.cos(a) * 0.11, 0.115);
+        detent.rotation.z = -a;
+        dormant.add(detent);
+      }
     }
 
     // Tool rail: the cutter and the shaker, racked where a hand would reach.
@@ -1889,7 +1971,7 @@ export class TallowWorld {
     }
 
     // The bench's own plate number, riveted to the apron.
-    const tag = placard('BN-01', { w: 0.28, h: 0.11 });
+    const tag = placard(opts.plate || 'BN-01', { w: 0.28, h: 0.11 });
     tag.position.set(-width / 2 + 0.42, height - 0.12, depth / 2 + 0.005);
     g.add(tag);
     this.own(tag.geometry, tag.material, tag.material.map);
@@ -1944,7 +2026,9 @@ export class TallowWorld {
     g.add(sheet);
 
     // Bench under the lean-to, facing the yard.
-    const bench = this.buildBench({ width: 4.8, depth: 1.3, height: 0.95 });
+    const bench = this.buildBench({
+      width: 4.8, depth: 1.3, height: 0.95, kind: 'scope', plate: 'BN-01'
+    });
     bench.group.position.set(0, 0, -0.5);
     g.add(bench.group);
 
@@ -2054,7 +2138,9 @@ export class TallowWorld {
     if (!site) return;
     const g = new THREE.Group();
 
-    const bench = this.buildBench({ width: 4.8, depth: 1.3, height: 0.95 });
+    const bench = this.buildBench({
+      width: 4.8, depth: 1.3, height: 0.95, kind: 'core', plate: 'BN-02'
+    });
     g.add(bench.group);
 
     // The lab's own apparatus around the bench: a beam column on one side, an
@@ -2276,7 +2362,9 @@ export class TallowWorld {
     this.own(tag.geometry, tag.material, tag.material.map);
 
     // The bench the catalogue cards are worked on, stood out in the yard air.
-    const bench = this.buildBench({ width: 4.8, depth: 1.3, height: 0.95 });
+    const bench = this.buildBench({
+      width: 4.8, depth: 1.3, height: 0.95, kind: 'cards', plate: 'BN-03'
+    });
     bench.group.position.set(0, 0, 2.2);
     g.add(bench.group);
 
@@ -2349,7 +2437,9 @@ export class TallowWorld {
     }
 
     // The bench, on the crust toward the yard.
-    const bench = this.buildBench({ width: 4.8, depth: 1.3, height: 0.95 });
+    const bench = this.buildBench({
+      width: 4.8, depth: 1.3, height: 0.95, kind: 'core', plate: 'BN-04'
+    });
     bench.group.position.set(0, 0, 0.9);
     g.add(bench.group);
 
@@ -2456,7 +2546,9 @@ export class TallowWorld {
     this.own(tag.geometry, tag.material, tag.material.map);
 
     // The assay bench, out front where the certificates get worked.
-    const bench = this.buildBench({ width: 4.8, depth: 1.3, height: 0.95 });
+    const bench = this.buildBench({
+      width: 4.8, depth: 1.3, height: 0.95, kind: 'assay', plate: 'BN-05'
+    });
     bench.group.position.set(0, 0, 2.3);
     g.add(bench.group);
 

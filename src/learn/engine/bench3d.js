@@ -382,6 +382,17 @@ export class BenchViewer3D {
     this.pointer = new THREE.Vector2();
 
     this.stations = [];
+    // WHAT THE AIM KEEPS IN THE GLASS.
+    //
+    // Two of the five Learn instruments are not station-shaped. A card index is
+    // a board and a drawer; an assay rig is a hopper over a chute over a row of
+    // bins. Neither has a well with a screen raked over it, and the aiming below
+    // used to be written directly against `this.stations` — so an instrument
+    // that laid out none simply was not aimed, and hung whereever the bench
+    // happened to put it. An instrument that builds its own bodies registers
+    // them here instead, and every fit reads `framedNodes()`, which falls back
+    // to the stations when nothing has.
+    this.fitNodes = [];
     this.disposables = [];
     this.elapsed = 0;
     this.disposed = false;
@@ -766,6 +777,31 @@ export class BenchViewer3D {
 
     this.stations.push(station);
     return station;
+  }
+
+  /**
+   * Declare a body the camera fit must keep in the glass.
+   * `topMark` is whatever must stay clear of the frame's chrome — the top edge
+   * of a board, of a screen, of a hopper — or the body itself when it is all
+   * one piece.
+   */
+  addFitNode(group, topMark, face) {
+    this.fitNodes.push({ group, topMark: topMark || group, face: face || null });
+  }
+
+  /**
+   * Everything the fit is solving for: registered bodies, or the stations.
+   *
+   * `face` is the READABLE surface, where the body has one — a station's
+   * screen, a board's plate. It has to be wholly inside the glass, because
+   * half a picture is not a picture; the rest of a body only has to be
+   * roughly in frame, since a note plate clipped at the edge costs nothing.
+   */
+  framedNodes() {
+    if (this.fitNodes.length) return this.fitNodes;
+    return this.stations.map(st => ({
+      group: st.group, topMark: st.topMark, face: st.screen?.mesh || null
+    }));
   }
 
   /** Re-space the stations so N of them sit centred on the bench. */
@@ -1233,7 +1269,7 @@ export class BenchViewer3D {
    * it from hunting.
    */
   fitDeployedAim() {
-    if (!this.inWorld || !this.stations.length) return;
+    if (!this.inWorld || !this.framedNodes().length) return;
     if (typeof document === 'undefined') return;
 
     const vv = typeof window !== 'undefined' ? window.visualViewport : null;
@@ -1288,12 +1324,13 @@ export class BenchViewer3D {
    * @returns {number} how far off that it still is.
    */
   aimForClear(wantNdc) {
-    if (!this.stations.length) return 0;
+    const nodes = this.framedNodes();
+    if (!nodes.length) return 0;
     this.camera.updateMatrixWorld();
     const p = this._sideProbe || (this._sideProbe = new THREE.Vector3());
     let lo = Infinity;
     let hi = -Infinity;
-    for (const st of this.stations) {
+    for (const st of nodes) {
       st.group.getWorldPosition(p);
       p.project(this.camera);
       lo = Math.min(lo, p.x);
@@ -1320,11 +1357,12 @@ export class BenchViewer3D {
    * @returns {number} how far above that line the screens still are.
    */
   aimForChrome(chromeNdc) {
-    if (!this.stations.length) return 0;
+    const nodes = this.framedNodes();
+    if (!nodes.length) return 0;
     this.camera.updateMatrixWorld();
     let topNdc = -Infinity;
     const p = this._aimProbe || (this._aimProbe = new THREE.Vector3());
-    for (const st of this.stations) {
+    for (const st of nodes) {
       if (!st.topMark) continue;
       st.topMark.getWorldPosition(p);
       p.project(this.camera);
@@ -1402,22 +1440,38 @@ export class BenchViewer3D {
    * bench owns is protected and only what the station made is freed.
    */
   clearStations() {
-    const owned = new Set(this.disposables);
-    for (const st of this.stations) {
-      this.root.remove(st.group);
-      st.group.traverse(o => {
-        if (o.geometry && !owned.has(o.geometry)) o.geometry.dispose();
-        if (o.material) {
-          const mats = Array.isArray(o.material) ? o.material : [o.material];
-          for (const m of mats) {
-            if (owned.has(m)) continue;
-            if (m.map) m.map.dispose();
-            m.dispose();
-          }
-        }
-      });
-    }
+    for (const st of this.stations) this.releaseGroup(st.group);
     this.stations = [];
+  }
+
+  /**
+   * Take a subtree off the bench and free everything it owns.
+   *
+   * Anything the VIEWER owns (`own()`d geometry and materials it shares across
+   * every station) is left alone — it is still in use by whatever is built
+   * next. An instrument that builds its own bodies tears them down through
+   * here, which is the same disposal `clearStations` has always done.
+   */
+  releaseGroup(group) {
+    if (!group) return;
+    const owned = new Set(this.disposables);
+    group.parent?.remove(group);
+    group.traverse(o => {
+      if (o.geometry && !owned.has(o.geometry)) o.geometry.dispose();
+      if (o.material) {
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        for (const m of mats) {
+          if (owned.has(m)) continue;
+          if (m.map) m.map.dispose();
+          m.dispose();
+        }
+      }
+    });
+  }
+
+  /** Drop every registered fit body. Whoever added them owns them. */
+  clearFitNodes() {
+    this.fitNodes = [];
   }
 
   dispose() {

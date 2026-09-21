@@ -457,12 +457,102 @@ function fieldBeam(ctx, g, beam) {
 }
 
 /**
+ * THE CHARGE NEEDLE, AS A NEEDLE.
+ *
+ * It used to be a sentence — "The needle swings to plus one and holds" — printed
+ * into the readout card, where the next thing the player did wiped it. So on the
+ * stages that are ABOUT the needle, the reading a player was asked to compare
+ * against was never on screen at the same time as the thing they were comparing
+ * it to, and driving a sample to plus two meant remembering a number through four
+ * presses of a stripper. A needle you can read is the whole instrument.
+ *
+ * Drawn here, in the field, so it is on the specimen it belongs to: four samples
+ * on the bench carry four needles and the player compares them by looking. It
+ * holds its reading until the quest clears it, because a real meter does.
+ *
+ * Pure, and called by both benches, so the built one and the drawn one cannot
+ * disagree about where a pointer is sitting.
+ */
+function fieldNeedle(ctx, g, needle) {
+  const max = Math.max(1, needle.max || 3);
+  const v = Math.max(-max, Math.min(max, needle.value));
+  const r = g.aperture * 0.34;
+  const px = g.cx;
+  const py = g.cy + g.aperture * 0.60;
+  const live = v !== 0;
+
+  // The case: a recessed plate with a cut corner, the way every plate is cut.
+  ctx.fillStyle = 'rgba(13, 12, 10, 0.88)';
+  ctx.beginPath();
+  ctx.moveTo(px - r * 1.18, py - r * 0.92);
+  ctx.lineTo(px + r * 1.18, py - r * 0.92);
+  ctx.lineTo(px + r * 1.18, py + r * 0.34);
+  ctx.lineTo(px - r * 1.18, py + r * 0.34);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = APERTURE_RIM;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // The scale, swept 150 degrees with zero straight up.
+  const SWEEP = Math.PI * 0.84;
+  const angleOf = n => -Math.PI / 2 + (n / max) * (SWEEP / 2);
+
+  ctx.strokeStyle = 'rgba(184, 175, 160, 0.34)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(px, py, r * 0.80, angleOf(-max), angleOf(max));
+  ctx.stroke();
+
+  for (let n = -max; n <= max; n++) {
+    const a = angleOf(n);
+    const long = n === 0;
+    const r0 = r * (long ? 0.62 : 0.70);
+    ctx.strokeStyle = long ? 'rgba(184, 175, 160, 0.75)' : 'rgba(184, 175, 160, 0.34)';
+    ctx.lineWidth = long ? 1.6 : 1;
+    ctx.beginPath();
+    ctx.moveTo(px + Math.cos(a) * r0, py + Math.sin(a) * r0);
+    ctx.lineTo(px + Math.cos(a) * r * 0.82, py + Math.sin(a) * r * 0.82);
+    ctx.stroke();
+  }
+
+  // Which way is which, stencilled on the case rather than left to be guessed.
+  ctx.fillStyle = 'rgba(184, 175, 160, 0.5)';
+  ctx.font = `${Math.max(7, Math.round(r * 0.30))}px "Share Tech Mono", monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('-', px - r * 0.96, py - r * 0.34);
+  ctx.fillText('+', px + r * 0.96, py - r * 0.34);
+
+  // The pointer.
+  const a = angleOf(v);
+  ctx.strokeStyle = live ? AMBER : '#b8afa0';
+  ctx.lineWidth = Math.max(1.8, r * 0.09);
+  ctx.beginPath();
+  ctx.moveTo(px, py);
+  ctx.lineTo(px + Math.cos(a) * r * 0.76, py + Math.sin(a) * r * 0.76);
+  ctx.stroke();
+
+  ctx.fillStyle = '#b8afa0';
+  ctx.beginPath();
+  ctx.arc(px, py, Math.max(2, r * 0.10), 0, Math.PI * 2);
+  ctx.fill();
+
+  // The reading, in figures, because a pointer between two ticks is an argument.
+  ctx.fillStyle = live ? AMBER : 'rgba(184, 175, 160, 0.6)';
+  ctx.font = `${Math.max(9, Math.round(r * 0.36))}px "Share Tech Mono", monospace`;
+  ctx.fillText(v > 0 ? `+${v}` : `${v}`, px, py + r * 0.17);
+  ctx.textBaseline = 'alphabetic';
+}
+
+/**
  * Draw one specimen in one field, into any 2D context, and return the hit list
  * the picture just produced.
  *
  * @param {CanvasRenderingContext2D} ctx
  * @param {{w:number, h:number, specimen:object, field:'whole'|'core'|'rings',
- *          beam?: object|null, probeKey?: string|null, sweep?: number}} o
+ *          beam?: object|null, probeKey?: string|null, sweep?: number,
+ *          needle?: {value: number, max: number}|null}} o
  * @returns {Array<{key:string, part:string, x:number, y:number, r:number}>}
  */
 export function drawCoreField(ctx, o) {
@@ -484,6 +574,10 @@ export function drawCoreField(ctx, o) {
   else fieldRings(ctx, g, specimen, hits);
 
   if (o.beam) fieldBeam(ctx, g, o.beam);
+
+  // The needle sits over the picture, not beside it: it is a reading OF this
+  // specimen and belongs on the same plate as the thing it read.
+  if (o.needle && Number.isFinite(o.needle.value)) fieldNeedle(ctx, g, o.needle);
 
   // Raster lines: this is a cathode instrument, not a window.
   ctx.globalAlpha = 0.16;
@@ -550,6 +644,7 @@ export class CoreBench {
     this.selected = null;
     this.probe = null;      // {specimenId, key}
     this.sweep = 0;         // 0..1 beam sweep after a read
+    this.needles = {};      // specimenId -> {value, max}, parked until cleared
     this.raf = null;
     this.disposed = false;
 
@@ -580,6 +675,9 @@ export class CoreBench {
     }));
     this.probe = null;
     this.selected = null;
+    // A needle belongs to the specimen it read, so a new set of specimens
+    // arrives with every pointer back on its rest.
+    this.needles = {};
     this.build();
   }
 
@@ -588,6 +686,26 @@ export class CoreBench {
     this.field = field;
     this.probe = null;
     this.drawAll();
+  }
+
+  /**
+   * Park the charge needle on a specimen at `value`, or clear it with `null`.
+   *
+   * The bench knows no chemistry and does not compute this: the quest hands it
+   * the figure its own arithmetic produced, and the bench does the one thing an
+   * instrument does with a figure — it shows it, and keeps showing it. `max` is
+   * the full-scale deflection, so a stage that drives a sample to plus two does
+   * not leave the pointer pinned against the stop.
+   */
+  setNeedle(id, value, max = 3) {
+    if (value === null || value === undefined) delete this.needles[id];
+    else this.needles[id] = { value, max: Math.max(Math.abs(value), max) };
+    this.drawAll();
+  }
+
+  /** What the needle on this specimen is sitting at, or null. */
+  needleOf(id) {
+    return this.needles[id] ? this.needles[id].value : null;
   }
 
   setSelectable(on) {
@@ -658,8 +776,17 @@ export class CoreBench {
       };
       this.plates.push(plate);
 
+      // Cleared at the START of every press (capture runs outside-in, so this
+      // fires before the canvas handler below), then set by a probe that hits.
+      root.addEventListener('pointerdown', () => { plate.pieceTaken = false; }, true);
       canvas.addEventListener('pointerdown', e => this.onPointer(plate, e));
       root.addEventListener('click', () => {
+        /* A PRESS ON WHAT IS IN THE APERTURE IS NOT A PRESS ON THE PLATE.
+           `pointerdown` on the canvas runs first and reports what was hit; the
+           same press then bubbles here as a `click` on the plate and selects the
+           plate, wiping any finer selection the probe just made. A press that
+           resolved to something inside the picture is spent. */
+        if (plate.pieceTaken) { plate.pieceTaken = false; return; }
         if (this.selectable && this.onSelect) this.onSelect(specimen.id);
       });
     });
@@ -697,6 +824,9 @@ export class CoreBench {
     const best = hitTestCore(plate.hits, px, py);
     if (!best || !this.onProbe) return;
 
+    // Claim the click this press is about to become.
+    plate.pieceTaken = true;
+
     this.probe = { specimenId: plate.specimen.id, key: best.key };
     this.sweep = 1;
     this.startAnim();
@@ -720,6 +850,7 @@ export class CoreBench {
     if (!w || !h) return;
     plate.hits = drawCoreField(ctx, {
       w, h, specimen, field: this.field, beam: plate.beam,
+      needle: this.needles[specimen.id] || null,
       probeKey: this.probe && this.probe.specimenId === specimen.id ? this.probe.key : null,
       sweep: this.probe && this.probe.specimenId === specimen.id ? this.sweep : 0
     });

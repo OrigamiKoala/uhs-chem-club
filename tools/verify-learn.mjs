@@ -467,18 +467,25 @@ function checkStageTable(q, mod) {
     }
 
     /* ------------------------------------------------------------------
-       NOTHING IS NAMED WITHOUT BEING EXPLAINED.
+       NOTHING IS NAMED WITHOUT BEING EXPLAINED — BUT A LABEL IS AN
+       EXPLANATION, AND RESTATING IT IS NOISE.
 
-       A stage that puts a key on the plate owes the player one plain sentence
-       saying what that key does, on the stage the key first appears and on
-       every stage after it. A quest exports `toolNoteFor(controlId, stageNo)`
-       and the frame draws what it returns. Without this rule a bench grows a
-       vocabulary of its own — needle, field, ring, stripper — that a player
-       only ever meets as a button legend, and the prompts then talk to
-       somebody who already knows what the buttons are.
+       This used to demand a legend under EVERY key a stage offered, and the
+       result was a bench that opened with a manual: "Tip Sample tips the
+       selected sample down the chute", "Tapping a card reads that card",
+       "Reset Sample puts back every electron the stripper has taken off".
+       A player reads those, learns nothing they would not have learned by
+       pressing the key once, and has three sentences between them and the
+       instrument. The rule the product actually wants is narrower: a key
+       whose label does not say what it does owes one sentence. A key whose
+       label does say it owes nothing, and a quest declines by leaving it out
+       of its `TOOL_TEXT`.
 
-       The notes are player-facing copy, so they are held to the same withheld
-       vocabulary as a prompt or a hint.
+       So a missing legend is no longer a failure. What is still enforced is
+       everything that made the rule worth having: a quest that offers controls
+       at all must export `toolNoteFor`, a legend that EXISTS must be one plain
+       sentence, and it is held to the same withheld vocabulary as a prompt or
+       a hint — because a legend nobody can read is worse than no legend.
        ------------------------------------------------------------------ */
     if (Array.isArray(st.controls) && st.controls.length) {
       if (typeof mod.toolNoteFor !== 'function') {
@@ -487,8 +494,10 @@ function checkStageTable(q, mod) {
       } else {
         for (const control of st.controls) {
           const note = mod.toolNoteFor(control, i + 1);
-          if (!note || !note.key || !note.what) {
-            fail(`${label}: control "${control}" has no key legend — say what it does`);
+          // No legend is a deliberate answer: this key says what it does.
+          if (!note) continue;
+          if (!note.key || !note.what) {
+            fail(`${label}: the legend for "${control}" is missing its key or its line`);
             bad++;
             continue;
           }

@@ -49,29 +49,26 @@ const SPEAKER = 'Vess';
 
 /* ------------------------------------------------------------------
    THE KEY LEGEND
-   Nothing on this bench is named without being explained.
+
+   A KEY WHOSE LABEL SAYS WHAT IT DOES OWES NOTHING.
+
+   Only the keys below carry a line, and each one carries it because
+   its label leaves something out. Everything else on this bench — the
+   keys that were once explained back to the player in their own words —
+   is left to say what it says.
    ------------------------------------------------------------------ */
 const TOOL_TEXT = {
-  strike: [{
-    from: 1,
-    key: 'Strike It',
-    what: 'Hits the selected block once with the hammer and reports how it broke.'
-  }],
   heat: [{
     from: 1,
     key: 'Heat It',
-    what: 'Raises the heat until the selected block comes apart, and reports the temperature that took.'
+    what: 'Raises the heat until the block comes apart, and reports the temperature that took.'
   }],
   current: [{
     from: 3,
     key: 'Test Current',
-    what: 'Puts a current through the selected block as it is right now and reports whether anything flows.'
-  }],
-  cool: [{
-    from: 1,
-    key: 'Let It Cool',
-    what: 'Lets the selected block set solid again after it has been melted.'
+    what: 'Puts a current through the block in the state it is in right now.'
   }]
+  // Strike It strikes it, and Let It Cool lets it cool.
 };
 
 export function toolNoteFor(controlId, stageNumber) {
@@ -105,9 +102,9 @@ export const STAGES = [
     title: 'Heat All Three',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench takes a whole block of finished material and does three things to it: hits it, heats it until it comes apart, and puts a current through it. Tap a block to select it, then press one of the keys.'
+      body: 'This bench takes a whole block of finished material and does three things to it: hits it, heats it until it comes apart, and puts a current through it.'
     },
-    prompt: 'Heat each of the three blocks until it comes apart, then pick the one whose pieces are being held together hardest.',
+    prompt: 'Pick the block whose pieces are being held together hardest.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {
@@ -125,9 +122,6 @@ export const STAGES = [
       'Block B went at 115 degrees, Block A at 801 and Block C at 1710, so Block C is held hardest.'
     ],
     check(state) {
-      if (state.heated.size < 3) {
-        return { ok: false, notYet: true, msg: 'Heat all three blocks before you answer.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the three blocks.' };
       }
@@ -149,7 +143,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Hit the Salt',
-    prompt: 'Strike both blocks, look at what each blow left behind, and say why Block A came apart along one flat face.',
+    prompt: 'Say why Block A comes apart along one flat face and Block B does not.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B')],
     widget: {
@@ -168,9 +162,6 @@ export const STAGES = [
       'Slide one layer of that pattern sideways by a single step and every plus lands beside a plus. They push each other apart, and the block splits straight along that plane.'
     ],
     check(state) {
-      if (state.struck.size < 2) {
-        return { ok: false, notYet: true, msg: 'Strike both blocks before you answer.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -195,7 +186,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Put a Current Through It',
-    prompt: 'Test the current through both blocks cold, heat them both, test both again, then say what a current needs in order to pass.',
+    prompt: 'Say what a current needs in order to pass through a block.',
     controls: ['heat', 'current', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B')],
     widget: {
@@ -214,12 +205,6 @@ export const STAGES = [
       'Block A holds charged pieces, locked in place while it is solid and loose once it is melted. Block B has no charged pieces to move, hot or cold.'
     ],
     check(state) {
-      if (!state.tested.has('s1:solid') || !state.tested.has('s1:molten')) {
-        return { ok: false, notYet: true, msg: 'Test Block A both cold and melted before you answer.' };
-      }
-      if (!state.tested.has('s2:molten')) {
-        return { ok: false, notYet: true, msg: 'Melt Block B and test that one too.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -244,7 +229,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'What Survives the Blow',
-    prompt: 'Strike Block B and then melt it, watch the picture each time, and say what actually gives way when it comes apart.',
+    prompt: 'Say what actually gives way when Block B comes apart.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [VENT('s2', 'BLOCK A'), SALT('s1', 'BLOCK B')],
     widget: {
@@ -263,12 +248,6 @@ export const STAGES = [
       'The groups drift apart from each other but every one of them is still whole, with its own joins still drawn. Only the pull between groups gave way.'
     ],
     check(state) {
-      if (!state.struck.has('s2')) {
-        return { ok: false, notYet: true, msg: 'Strike Block A before you answer.' };
-      }
-      if (!state.heated.has('s2')) {
-        return { ok: false, notYet: true, msg: 'Melt Block A as well, and watch what happens to the groups.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -293,7 +272,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Block the Blade Will Not Cut',
-    prompt: 'Strike Block A, heat it and put a current through it, then say what is different about the way it is built.',
+    prompt: 'Say what is different about the way Block A is built.',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [ARCH('s3', 'BLOCK A'), VENT('s2', 'BLOCK B')],
     widget: {
@@ -312,9 +291,6 @@ export const STAGES = [
       'Every piece in Block A has lines running from it to its neighbours, right across the picture, with no gaps and no separate groups anywhere.'
     ],
     check(state) {
-      if (!state.struck.has('s3') || !state.heated.has('s3') || !state.tested.has('s3:molten')) {
-        return { ok: false, notYet: true, msg: 'Strike, heat and test Block A before you answer.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -339,7 +315,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Lift One Out',
-    prompt: 'Strike all three blocks, then pick the one you could lift a single whole molecule out of.',
+    prompt: 'Pick the block you could lift a single whole molecule out of.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {
@@ -357,9 +333,6 @@ export const STAGES = [
       'Block B is the only one drawn as separate groups with space between them. Block A repeats without a break and Block C is joined right across.'
     ],
     check(state) {
-      if (state.struck.size < 3) {
-        return { ok: false, notYet: true, msg: 'Strike all three blocks before you answer.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the three blocks.' };
       }
@@ -381,7 +354,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Three Sealed Blocks',
-    prompt: 'Run the tests on all three sealed blocks and file each one by how it is built.',
+    prompt: 'File each of the three sealed blocks by how it is built.',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [
       slab('x1', 'BLOCK A', 'sealed at the mine, cased shut', 'grid', 1074, 'bone', { sealed: true }),
@@ -404,14 +377,8 @@ export const STAGES = [
     ],
     check(state) {
       for (const id of ['x1', 'x2', 'x3']) {
-        if (!state.heated.has(id)) {
-          return { ok: false, notYet: true, msg: 'Heat all three blocks before you answer.' };
-        }
       }
       for (const id of ['x1', 'x2', 'x3']) {
-        if (!state.tested.has(`${id}:molten`)) {
-          return { ok: false, notYet: true, msg: 'Test the current through all three blocks once they are molten.' };
-        }
       }
       const labels = { x1: 'Block A', x2: 'Block B', x3: 'Block C' };
       for (const id of ['x1', 'x2', 'x3']) {
@@ -438,7 +405,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Pick the Liner',
-    prompt: 'The yard needs a liner for a vessel that runs at 900 degrees and must never pass a current. Run the tests and pick the block that will do it.',
+    prompt: 'The yard needs a liner for a vessel that runs at 900 degrees and must never pass a current. Pick the block that will do it.',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {
@@ -456,9 +423,6 @@ export const STAGES = [
       'Block B goes at 115 and Block A at 801, both under 900. Block C holds to 1710 and passes nothing even molten.'
     ],
     check(state) {
-      if (state.heated.size < 3) {
-        return { ok: false, notYet: true, msg: 'Heat all three blocks before you answer.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the three blocks.' };
       }

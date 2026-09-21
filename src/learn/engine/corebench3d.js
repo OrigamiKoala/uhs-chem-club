@@ -65,6 +65,7 @@ export class CoreBench3D {
     this.selected = null;
     this.probe = null;
     this.sweep = 0;
+    this.needles = {};
     this.disposed = false;
 
     // `opts.world`, when the dispatcher supplied one, deploys the instrument
@@ -110,7 +111,30 @@ export class CoreBench3D {
     }));
     this.probe = null;
     this.selected = null;
+    // A needle belongs to the specimen it read, so a new set of specimens
+    // arrives with every pointer back on its rest.
+    this.needles = {};
     this.build();
+  }
+
+  /**
+   * Park the charge needle on a specimen at `value`, or clear it with `null`.
+   *
+   * The bench knows no chemistry and does not compute this: the quest hands it
+   * the figure its own arithmetic produced, and the bench does the one thing an
+   * instrument does with a figure — it shows it, and keeps showing it. `max` is
+   * the full-scale deflection, so a stage that drives a sample to plus two does
+   * not leave the pointer pinned against the stop.
+   */
+  setNeedle(id, value, max = 3) {
+    if (value === null || value === undefined) delete this.needles[id];
+    else this.needles[id] = { value, max: Math.max(Math.abs(value), max) };
+    this.drawAll();
+  }
+
+  /** What the needle on this specimen is sitting at, or null. */
+  needleOf(id) {
+    return this.needles[id] ? this.needles[id].value : null;
   }
 
   setField(field) {
@@ -236,6 +260,7 @@ export class CoreBench3D {
       specimen: rec.specimen,
       field: this.field,
       beam: rec.beam,
+      needle: this.needles[rec.specimen.id] || null,
       probeKey: mine ? this.probe.key : null,
       sweep: mine ? this.sweep : 0
     });

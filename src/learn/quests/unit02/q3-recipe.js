@@ -94,29 +94,24 @@ const PEROXIDE = {
 
 /* ------------------------------------------------------------------
    THE KEY LEGEND
-   Nothing on this bench is named without being explained — including
-   the tap, which has no key of its own and still has to be told.
+
+   A KEY WHOSE LABEL SAYS WHAT IT DOES OWES NOTHING.
+
+   Only the keys below carry a line, and each one carries it because
+   its label leaves something out. Everything else on this bench — the
+   keys that were once explained back to the player in their own words —
+   is left to say what it says.
    ------------------------------------------------------------------ */
 const TOOL_TEXT = {
   power: [{
     from: 1,
     key: 'Power',
-    what: 'Zooms the scope in. Drag it round, or click it and use the arrow keys.'
-  }],
-  probe: [{
-    from: 1,
-    key: 'Tap a piece',
-    what: 'Reads the piece you tap: its code, what it weighs, and how many others hold it.'
-  }],
-  cut: [{
-    from: 1,
-    key: 'Run Cutter',
-    what: 'Tries to split the selected sample. Whatever it cannot split it leaves alone.'
+    what: 'Zooms the scope in.'
   }],
   settle: [{
     from: 1,
     key: 'Settle',
-    what: 'Shakes the selected sample and lets it sink. Each substance in it forms its own layer.'
+    what: 'Shakes the sample and lets it sink into layers.'
   }]
 };
 
@@ -139,7 +134,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This is the sampler scope from Tallow: a power dial that zooms in, a cutter that tries to split a sample, and a shaker that settles it into layers. Turn the power up until the groups come apart, then tap a piece to read it.'
     },
-    prompt: 'Turn the power up until the groups separate on all three samples, count the pieces in one group, and set the tray to that recipe.',
+    prompt: 'Set the tray to the recipe one group in these samples is built to.',
     controls: ['power', 'probe'],
     samples: [
       { id: 'a1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 12 }] },
@@ -153,9 +148,6 @@ export const STAGES = [
       'One group holds one CAT 08 and two CAT 01, and all three samples are drawn the same way.'
     ],
     check(state) {
-      if ((state.maxPower || 1) < 4) {
-        return { ok: false, notYet: true, msg: 'Turn the Power dial up until the groups come apart.' };
-      }
       const n01 = state.build.k01 || 0;
       const n08 = state.build.k08 || 0;
       if (!n01 && !n08) {
@@ -179,7 +171,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'The Wrong Proportions',
-    prompt: 'Raise the power on both samples, run the shaker over each of them, and say which one is not a compound.',
+    prompt: 'Say which of the two samples is not a compound.',
     controls: ['power', 'probe', 'settle'],
     samples: [
       { id: 'b1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 20 }] },
@@ -204,12 +196,6 @@ export const STAGES = [
       'Raise the power on Sample B and look between the groups: there are loose CAT 01 pieces in there that no group would take.'
     ],
     check(state) {
-      if (state.settled.size < 2) {
-        return { ok: false, notYet: true, msg: 'Settle both samples before you answer.' };
-      }
-      if ((state.maxPower || 1) < 4) {
-        return { ok: false, notYet: true, msg: 'Turn the Power dial up and look at what is actually in each one.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -234,7 +220,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Two Recipes, Same Two Kinds',
-    prompt: 'Raise the power on both samples, count one group in each, and say how much CAT 08 goes with one CAT 06 in each of them.',
+    prompt: 'Say how much CAT 08 goes with one CAT 06 in each of the two samples.',
     controls: ['power', 'probe', 'cut'],
     samples: [
       { id: 'c1', label: 'SAMPLE A', note: 'off the flare stack', floorPower: 4, particles: [{ ...OXIDE_1, n: 22 }] },
@@ -256,12 +242,6 @@ export const STAGES = [
       'Sample A is one CAT 06 to one CAT 08. Sample B is one CAT 06 to two CAT 08 — exactly twice as much, for the same one CAT 06.'
     ],
     check(state) {
-      if ((state.maxPower || 1) < 4) {
-        return { ok: false, notYet: true, msg: 'Turn the Power dial up until the groups come apart.' };
-      }
-      if (state.probed.size < 2) {
-        return { ok: false, notYet: true, msg: 'Tap at least two different pieces to read what they are.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -286,7 +266,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'What One Group Weighs',
-    prompt: 'Raise the power on the sample, tap each piece in one group to read what it weighs, and set the counter to what the whole group weighs.',
+    prompt: 'Set the counter to what one whole group in this sample weighs.',
     controls: ['power', 'probe'],
     samples: [
       { id: 'd1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 20 }] }
@@ -298,9 +278,6 @@ export const STAGES = [
       '16.0 + 1.0 + 1.0 = 18.0, so one group weighs 18.'
     ],
     check(state) {
-      if (!state.probed.has('k08') || !state.probed.has('k01')) {
-        return { ok: false, notYet: true, msg: 'Tap both kinds of piece and read what each one weighs first.' };
-      }
       if (state.number === 14) {
         return { ok: false, notYet: true, msg: 'Set the counter to the figure you worked out.' };
       }
@@ -346,9 +323,6 @@ export const STAGES = [
       '16.0 out of 18.0 is 0.889, so 89 out of every 100 by weight is CAT 08.'
     ],
     check(state) {
-      if (!state.probed.has('k08') || !state.probed.has('k01')) {
-        return { ok: false, notYet: true, msg: 'Tap both kinds of piece and read what each one weighs first.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -370,7 +344,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Backwards From the Weight',
-    prompt: 'A sealed drum off the vent line runs 3 parts CAT 06 to 8 parts CAT 08 by weight. Count one group in each bench sample, then pick the recipe the drum must hold.',
+    prompt: 'A sealed drum off the vent line runs 3 parts CAT 06 to 8 parts CAT 08 by weight. Pick the recipe it must hold.',
     controls: ['power', 'probe'],
     samples: [
       { id: 'f1', label: 'SAMPLE A', note: 'off the flare stack', floorPower: 4, particles: [{ ...OXIDE_1, n: 20 }] },
@@ -392,12 +366,6 @@ export const STAGES = [
       '3 divided by 12.0 is 0.25, and 8 divided by 16.0 is 0.5. 0.25 to 0.5 is 1 to 2, which is Sample B.'
     ],
     check(state) {
-      if ((state.maxPower || 1) < 4) {
-        return { ok: false, notYet: true, msg: 'Turn the Power dial up until the groups come apart.' };
-      }
-      if (state.probed.size < 2) {
-        return { ok: false, notYet: true, msg: 'Tap a piece of each kind and read what it weighs.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -422,7 +390,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Name Three Samples',
-    prompt: 'Raise the power on all three samples, count one group in each, and file each sample under the recipe it matches.',
+    prompt: 'File each of the three samples under the recipe it matches.',
     controls: ['power', 'probe', 'cut'],
     samples: [
       { id: 'g1', label: 'SAMPLE A', note: 'unlabelled, off a hauler', floorPower: 4, particles: [{ ...WATER, n: 18 }] },
@@ -444,12 +412,6 @@ export const STAGES = [
       'Sample A is one CAT 08 to two CAT 01, Sample B is one CAT 07 to three, and Sample C is one CAT 06 to four.'
     ],
     check(state) {
-      if ((state.maxPower || 1) < 4) {
-        return { ok: false, notYet: true, msg: 'Turn the Power dial up until the groups come apart.' };
-      }
-      if (state.probed.size < 2) {
-        return { ok: false, notYet: true, msg: 'Tap the large piece in a group to read what it is.' };
-      }
       const labels = { g1: 'Sample A', g2: 'Sample B', g3: 'Sample C' };
       for (const id of ['g1', 'g2', 'g3']) {
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
@@ -475,7 +437,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Claims',
-    prompt: 'All three samples are sold as the same compound. Raise the power, settle each one, and say which of them really are what the label says.',
+    prompt: 'All three samples are sold as the same compound. Say which of them really are what the label says.',
     controls: ['power', 'probe', 'settle', 'cut'],
     samples: [
       { id: 'h1', label: 'SAMPLE A', note: 'sold as vent-stack condensate', floorPower: 4, particles: [{ ...WATER, n: 20 }] },
@@ -499,12 +461,6 @@ export const STAGES = [
       'Sample A is the claim exactly. Sample B has the right groups with loose CAT 01 alongside. Sample C draws four pieces to a group, not three.'
     ],
     check(state) {
-      if ((state.maxPower || 1) < 4) {
-        return { ok: false, notYet: true, msg: 'Turn the Power dial up until the groups come apart.' };
-      }
-      if (state.settled.size < 3) {
-        return { ok: false, notYet: true, msg: 'Settle all three samples before you answer.' };
-      }
       const labels = { h1: 'Sample A', h2: 'Sample B', h3: 'Sample C' };
       for (const id of ['h1', 'h2', 'h3']) {
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };

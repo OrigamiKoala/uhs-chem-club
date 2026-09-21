@@ -109,10 +109,22 @@ export function assayGeometry(w, h, binCount) {
   const n = Math.max(1, binCount);
   const gap = (right - left) * 0.05;
   const binW = ((right - left) - gap * (n - 1)) / n;
+
+  // THE WEIGHT STENCIL IS PART OF THE PICTURE, SO THE PICTURE HAS TO INCLUDE IT.
+  // The band under the bins carries the one thing that tells the bins apart —
+  // the pieces really are all the same material, so the number under a bin IS
+  // its identity. It used to be drawn below the clip, and at the sizes this
+  // instrument actually renders at (an aperture near 190 px, a baseline 21 px
+  // down, a clip 12 px down) all a player ever saw was the top sliver of the
+  // digits. The band is measured here and every clip, rim and baseline below
+  // reads it, so the label can never fall outside the field again.
+  const labelBand = Math.max(14, aperture * 0.16);
   const binH = aperture * 0.86;
 
   return {
-    w, h, cx, cy, aperture, left, right, top, floorY,
+    w, h, cx, cy, aperture, left, right, top, floorY, labelBand,
+    labelY: floorY + labelBand * 0.72,
+    fieldBottom: floorY + labelBand,
     chute: { x: left + (right - left) * 0.12, y: top, w: (right - left) * 0.24, h: aperture * 0.24 },
     deflect: { x: left + (right - left) * 0.12, y: top + aperture * 0.42 },
     bins: Array.from({ length: n }, (_, i) => ({
@@ -142,27 +154,45 @@ function disc(ctx, x, y, r, tint) {
  * and nothing stands in for a group, because the tally under the bin and the
  * heap inside it are the same measurement and a player is entitled to check one
  * against the other.
+ *
+ * PURE, AND THE ONLY IMPLEMENTATION. The built rig on Tallow stacks its real
+ * pieces through this same function: it asks for the packing in a unit bin and
+ * lays its discs out on that grid in metres. A heap that packed one way on a
+ * Chromebook and another way on the bench would be two different counts of the
+ * same measurement.
+ *
+ * @param {number} count how many pieces landed
+ * @param {number} wide  the bin's width in whatever unit `tall` is in
+ * @param {number} tall  the bin's height
+ * @returns {{cells: Array<[number, number]>, r: number, step: number, perRow: number}}
+ *   `cells` are offsets from the bottom-centre of the bin, in that same unit.
  */
-function stackPoints(bin, count) {
-  if (count <= 0) return { pts: [], r: 0 };
-  // Choose a piece radius that fits `count` inside the bin with a little air.
-  const area = (bin.w - 4) * (bin.h - 6);
+export function packBin(count, wide, tall) {
+  if (count <= 0) return { cells: [], r: 0, step: 0, perRow: 1 };
+  const inset = wide * 0.06;
+  const area = (wide - inset * 2) * (tall - inset * 3);
   let r = Math.sqrt((area * 0.55) / (Math.PI * count));
-  r = Math.max(1.4, Math.min(r, bin.w / 8));
+  r = Math.max(wide * 0.018, Math.min(r, wide / 8));
   const step = r * 2.15;
-  const perRow = Math.max(1, Math.floor((bin.w - 4) / step));
-  const pts = [];
+  const perRow = Math.max(1, Math.floor((wide - inset * 2) / step));
+  const cells = [];
   for (let i = 0; i < count; i++) {
     const row = Math.floor(i / perRow);
     const col = i % perRow;
     const rowCount = Math.min(perRow, count - row * perRow);
     const rowW = (rowCount - 1) * step;
-    pts.push([
-      bin.x + bin.w / 2 - rowW / 2 + col * step,
-      bin.y + bin.h - 4 - r - row * step * 0.92
-    ]);
+    cells.push([-rowW / 2 + col * step, r + row * step * 0.92]);
   }
-  return { pts, r };
+  return { cells, r, step, perRow };
+}
+
+/** `packBin` placed into one drawn bin's rectangle, in canvas pixels. */
+function stackPoints(bin, count) {
+  const { cells, r } = packBin(count, bin.w, bin.h);
+  return {
+    r,
+    pts: cells.map(([dx, dy]) => [bin.x + bin.w / 2 + dx, bin.y + bin.h - 4 - dy])
+  };
 }
 
 /**
@@ -185,7 +215,7 @@ export function drawAssayField(ctx, o) {
   ctx.clearRect(0, 0, w, h);
   ctx.save();
   ctx.beginPath();
-  ctx.rect(g.left - 4, g.top - 4, (g.right - g.left) + 8, (g.floorY - g.top) + 12);
+  ctx.rect(g.left - 4, g.top - 4, (g.right - g.left) + 8, (g.fieldBottom - g.top) + 6);
   ctx.clip();
 
   ctx.fillStyle = FIELD_BG;
@@ -250,9 +280,11 @@ export function drawAssayField(ctx, o) {
     // Weight stencil under the bin. This is the bin's identity: the pieces
     // themselves are the same material and are drawn the same.
     ctx.fillStyle = poured ? AMBER : 'rgba(184, 175, 160, 0.45)';
-    ctx.font = `${Math.max(8, Math.round(g.aperture * 0.10))}px "Share Tech Mono", monospace`;
+    ctx.font = `${Math.max(9, Math.round(g.labelBand * 0.62))}px "Share Tech Mono", monospace`;
     ctx.textAlign = 'center';
-    ctx.fillText(`${b.mass}`, box.x + box.w / 2, g.floorY + Math.max(9, g.aperture * 0.11));
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${b.mass}`, box.x + box.w / 2, g.labelY);
+    ctx.textBaseline = 'alphabetic';
 
     if (o.tally && poured) {
       ctx.fillStyle = PHOSPHOR;
@@ -302,7 +334,7 @@ export function drawAssayField(ctx, o) {
 
   ctx.strokeStyle = APERTURE_RIM;
   ctx.lineWidth = 2;
-  ctx.strokeRect(g.left - 4, g.top - 4, (g.right - g.left) + 8, (g.floorY - g.top) + 12);
+  ctx.strokeRect(g.left - 4, g.top - 4, (g.right - g.left) + 8, (g.fieldBottom - g.top) + 6);
 
   return hits;
 }
@@ -425,8 +457,17 @@ export class AssayFloor {
       };
       this.plates.push(plate);
 
+      // Cleared at the START of every press (capture runs outside-in, so this
+      // fires before the canvas handler below), then set by a probe that hits.
+      root.addEventListener('pointerdown', () => { plate.pieceTaken = false; }, true);
       canvas.addEventListener('pointerdown', e => this.onPointer(plate, e));
       root.addEventListener('click', () => {
+        /* A PRESS ON WHAT IS IN THE APERTURE IS NOT A PRESS ON THE PLATE.
+           `pointerdown` on the canvas runs first and reports what was hit; the
+           same press then bubbles here as a `click` on the plate and selects the
+           plate, wiping any finer selection the probe just made. A press that
+           resolved to something inside the picture is spent. */
+        if (plate.pieceTaken) { plate.pieceTaken = false; return; }
         if (this.selectable && this.onSelect) this.onSelect(hopper.id);
       });
     });
@@ -456,6 +497,9 @@ export class AssayFloor {
     const rect = plate.canvas.getBoundingClientRect();
     const hit = hitTestAssay(plate.hits, e.clientX - rect.left, e.clientY - rect.top);
     if (!hit || !this.onProbe) return;
+
+    // Claim the click this press is about to become.
+    plate.pieceTaken = true;
 
     this.probe = { hopperId: plate.hopper.id, bin: hit.bin };
     this.sweep = 1;

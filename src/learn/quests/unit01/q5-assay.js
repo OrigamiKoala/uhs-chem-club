@@ -27,7 +27,7 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { AssayFloor } from '../../engine/assay.js';
+import { AssayFloor } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
@@ -61,26 +61,16 @@ export const CARD_MASS = {
 
 /* ------------------------------------------------------------------
    THE KEY LEGEND
-   Nothing on this floor is named without being explained. Every control
-   a stage offers carries one plain sentence for as long as it is there.
+
+   THIS FLOOR HAS NOTHING TO EXPLAIN, AND SAYS NOTHING.
+
+   Tip Sample tips the sample. Read Code reads the code. Weigh Sample
+   weighs the sample. A line under each key restating its own label is
+   not a legend, it is noise between the player and the bench, and it
+   was here for all three. A legend earns its place only where a key
+   does something its label does not say; none of these do.
    ------------------------------------------------------------------ */
-const TOOL_TEXT = {
-  pour: [{
-    from: 1,
-    key: 'Tip Sample',
-    what: 'Tips the selected sample down the chute. Each piece lands in the bin marked with its own weight, and the figure above a bin is how many landed in it.'
-  }],
-  code: [{
-    from: 1,
-    key: 'Read Code',
-    what: 'Reads the catalogue code of the pieces in whichever bin you last tapped.'
-  }],
-  balance: [{
-    from: 6,
-    key: 'Weigh Sample',
-    what: 'Weighs a whole sample without opening it and reports what one piece weighs on average.'
-  }]
-};
+const TOOL_TEXT = {};
 
 /**
  * The legend line for one control on one stage, or null if there is none.
@@ -94,7 +84,15 @@ export function toolNoteFor(controlId, stageNumber) {
   return out ? { key: out.key, what: out.what } : null;
 }
 
-/** The average weight of one piece in a hopper, as the balance computes it. */
+/**
+ * The average weight of one piece in a hopper.
+ *
+ * NOT WHAT THE BALANCE REPORTS, AND THAT IS THE POINT. A balance weighs; the
+ * division is the player's. This is kept because it is the arithmetic every
+ * stage from four on is grading against, and having it written once means a
+ * hint rung that quotes a figure and a check that refuses one cannot drift
+ * apart from each other.
+ */
 export function averageOf(hopper) {
   const bins = hopper.bins || [];
   const count = bins.reduce((n, b) => n + b.n, 0);
@@ -116,7 +114,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench tips a sample down a chute, where a deflector sorts the pieces by weight into numbered bins. A balance can also weigh a whole sample without opening it.'
     },
-    prompt: 'Tip Sample A down the chute, read the code on each bin that caught pieces, and say what the split means.',
+    prompt: 'Say why Sample A splits across two bins instead of landing in one.',
     controls: ['pour', 'code'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', code: 'CAT 17', note: '40 pieces, sealed at the mine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
@@ -137,12 +135,6 @@ export const STAGES = [
       'Both bins read CAT 17, so this is one kind of atom with two weights in it.'
     ],
     check(state) {
-      if (!state.poured.has('h1')) {
-        return { ok: false, notYet: true, msg: 'Press "Tip Sample" first.' };
-      }
-      if (state.coded.size < 2) {
-        return { ok: false, notYet: true, msg: 'Read the code on both bins before you answer.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
       }
@@ -164,7 +156,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Run It Twice',
-    prompt: 'Tip both samples and work out how many pieces out of every hundred land in the lighter bin.',
+    prompt: 'Work out how many pieces in every hundred are the lighter weight.',
     controls: ['pour'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', note: '40 pieces', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
@@ -178,9 +170,6 @@ export const STAGES = [
       '30 out of 40 and 60 out of 80 both come to 75 out of 100, so set the counter to 75.'
     ],
     check(state) {
-      if (state.poured.size < 2) {
-        return { ok: false, notYet: true, msg: 'Tip both samples before you answer.' };
-      }
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the share you measured.' };
       }
@@ -208,7 +197,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where 35.5 Sits',
-    prompt: 'Tip Sample A down the chute, then pick where its listed mass of 35.5 sits between the 35 bin and the 37 bin.',
+    prompt: 'Sample A is listed at mass 35.5. Say where that figure sits between its two weights.',
     controls: ['pour'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', note: '40 pieces', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
@@ -230,9 +219,6 @@ export const STAGES = [
       '30 of the 40 pieces weigh 35, so 35.5 sits a quarter of the way from 35 up to 37.'
     ],
     check(state) {
-      if (!state.poured.has('h1')) {
-        return { ok: false, notYet: true, msg: 'Press "Tip Sample" first.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
@@ -257,7 +243,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Work Out the Average',
-    prompt: 'Tip Sample A down the chute, then work out what one of its pieces weighs on average and set the dial to that figure.',
+    prompt: 'Work out what one piece of Sample A weighs on average.',
     controls: ['pour'],
     hoppers: [
       { id: 'h3', label: 'SAMPLE A', note: '40 pieces, nothing listed for it', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
@@ -270,9 +256,6 @@ export const STAGES = [
       'Multiply each weight by its share and add them: (0.2 x 10) + (0.8 x 11) = 2 + 8.8 = 10.8.'
     ],
     check(state) {
-      if (!state.poured.has('h3')) {
-        return { ok: false, notYet: true, msg: 'Press "Tip Sample" first.' };
-      }
       const v = state.decimal;
       if (v === 10.0) {
         return { ok: false, notYet: true, msg: 'Set the dial to the figure you worked out.' };
@@ -295,7 +278,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Only One Bin',
-    prompt: 'Tip Sample A down the chute and say why its listed mass of 19.0 is a whole number when the last two were not.',
+    prompt: 'Say why Sample A\'s listed mass of 19.0 is a whole number when the last two were not.',
     controls: ['pour'],
     hoppers: [
       { id: 'h4', label: 'SAMPLE A', note: '40 pieces', bins: [{ mass: 19, n: 40 }] }
@@ -316,9 +299,6 @@ export const STAGES = [
       'The weighted average of 19 and 19 and 19 is 19, so this element has only one isotope.'
     ],
     check(state) {
-      if (!state.poured.has('h4')) {
-        return { ok: false, notYet: true, msg: 'Press "Tip Sample" first.' };
-      }
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
       }
@@ -340,7 +320,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Weighed Without Opening It',
-    prompt: 'Weigh Sample A without opening it, then work out how many of its pieces out of every hundred weigh 20 rather than 22.',
+    prompt: 'Sample A is sealed. Work out how many of its pieces in every hundred weigh 20 rather than 22.',
     controls: ['balance'],
     hoppers: [
       { id: 'h5', label: 'SAMPLE A', note: 'sealed, 40 pieces, bins cut for weights 20 and 22', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] }
@@ -348,19 +328,16 @@ export const STAGES = [
     reference: ['CAT 10 — listed mass 20.2'],
     widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Weight 20, per hundred pieces' },
     hints: [
-      'Press "Weigh Sample", which reports what one piece weighs on average.',
-      'The balance reads 20.2, and the two weights are 20 and 22, so 20.2 is one tenth of the way from 20 up to 22.',
+      'Press "Weigh Sample" on Sample A and divide what it reads by the number of pieces.',
+      '808 over 40 pieces is 20.2 each, and the two weights are 20 and 22, so 20.2 is one tenth of the way from 20 up to 22.',
       'Try one tenth heavy: (0.9 x 20) + (0.1 x 22) = 18 + 2.2 = 20.2, so 90 pieces in every hundred weigh 20.'
     ],
     check(state) {
-      if (!state.weighed.has('h5')) {
-        return { ok: false, notYet: true, msg: 'Press "Weigh Sample" first.' };
-      }
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the share you worked out.' };
       }
       if (state.number === 50) {
-        return { ok: false, msg: 'An even split would weigh 21 a piece, and the balance read 20.2.' };
+        return { ok: false, msg: 'An even split would weigh 21 a piece, and 808 over 40 pieces is 20.2.' };
       }
       if (state.number === 10) {
         return { ok: false, msg: 'That is the share of the heavy pieces, and the question asks about the light ones.' };
@@ -371,7 +348,7 @@ export const STAGES = [
       return { ok: true };
     },
     reward: {
-      log: 'Sample A reads 20.2: 90 pieces light, 10 heavy.',
+      log: 'Sample A averages 20.2: 90 pieces light, 10 heavy.',
       title: 'The Average Pins the Mix',
       body: 'The weighting runs both ways: the abundances give you the average, and the average plus the two weights gives you the abundances. That is how a sealed sample is identified without being opened. It is also how the isotope proportions of the elements were first measured.'
     }
@@ -380,7 +357,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Name Three Samples',
-    prompt: 'Weigh each sample, then match it to the element whose listed mass it fits.',
+    prompt: 'Match each sample to the element whose listed mass it fits.',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'ha', label: 'SAMPLE A', note: 'unlabelled, 40 pieces', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] },
@@ -398,14 +375,11 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Select a sample, press "Weigh Sample", and do the same for the other two.',
-      'Each reading is an average weight per piece, and so is each listed mass on the plate.',
-      'Sample A reads 20.2, Sample B reads 35.5 and Sample C reads 10.8.'
+      'Weigh each sample and divide what the balance reads by the number of pieces.',
+      'A weight per piece is what a listed mass on the plate is too, so the two can be compared directly.',
+      '808 / 40 = 20.2, 1420 / 40 = 35.5, 432 / 40 = 10.8.'
     ],
     check(state) {
-      if (state.weighed.size + state.poured.size < 3) {
-        return { ok: false, notYet: true, msg: 'Weigh or tip all three samples before you answer.' };
-      }
       const want = { ha: 'c10', hb: 'c17', hc: 'c05' };
       const labels = { ha: 'Sample A', hb: 'Sample B', hc: 'Sample C' };
       const listed = { ha: '20.2', hb: '35.5', hc: '10.8' };
@@ -429,7 +403,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Claims',
-    prompt: 'Weigh all three samples and say which of them really are natural CAT 17.',
+    prompt: 'Say which of the three samples really are natural CAT 17.',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'j1', label: 'SAMPLE A', note: 'sold as natural CAT 17', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
@@ -448,12 +422,9 @@ export const STAGES = [
     hints: [
       'Weigh all three: every one is CAT 17, so the code will not tell them apart.',
       'Natural CAT 17 is 75 pieces at weight 35 for every 25 at weight 37, which averages 35.5.',
-      'Sample A reads 35.5, Sample B reads 36.0 and Sample C reads 35.1, so only Sample A is natural.'
+      '1420 / 40 = 35.5, 1440 / 40 = 36.0, 1404 / 40 = 35.1, so only Sample A is natural.'
     ],
     check(state) {
-      if (state.weighed.size + state.poured.size < 3) {
-        return { ok: false, notYet: true, msg: 'Weigh or tip all three samples before you answer.' };
-      }
       const want = { j1: 'natural', j2: 'altered', j3: 'altered' };
       const labels = { j1: 'Sample A', j2: 'Sample B', j3: 'Sample C' };
       for (const id of ['j1', 'j2', 'j3']) {
@@ -760,13 +731,21 @@ export function mount(container, ctx) {
     }
 
     if (tool === 'balance') {
+      // A BALANCE WEIGHS. IT DOES NOT DIVIDE.
+      //
+      // It used to report the total, the count, the division and the answer,
+      // which handed the player every stage from six on: press the key, read
+      // 20.2 off the readout, find 20.2 on the reference plate, commit. The one
+      // piece of arithmetic this whole bench exists to teach was being done for
+      // them by the instrument. So it reports the two figures it actually
+      // measures and stops there.
       const count = hopper.bins.reduce((n, b) => n + b.n, 0);
       const mass = hopper.bins.reduce((m, b) => m + b.mass * b.n, 0);
       state.weighed.add(id);
       soundscape.playScanSweep?.();
       renderReadout(null, {
         head: `Balance // ${hopper.label}`,
-        body: `${mass} in total, over ${count} pieces. That is ${mass} divided by ${count}, which is ${averageOf(hopper).toFixed(1)} for one piece on average.`
+        body: `${mass} in total, over ${count} pieces.`
       });
       return;
     }
@@ -827,7 +806,7 @@ export function mount(container, ctx) {
       frame.setReadout(`
         <div class="lq-readout-card lq-readout-idle">
           <div class="lq-readout-head">Bench // standby</div>
-          <p class="lq-readout-line">Each bin catches one weight, marked under it. Tap a bin to read it.</p>
+          <p class="lq-readout-line">Each bin catches one weight, marked under it.</p>
         </div>
       `);
       return;

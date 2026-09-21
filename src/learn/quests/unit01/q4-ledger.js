@@ -52,23 +52,19 @@ const TOOL_TEXT = {
   field: [{
     from: 1,
     key: 'Whole piece / The middle / Outside',
-    what: 'Three ways of looking at the same atom: all of it, a close-up of the nucleus, or a pull-back showing the electrons on their shells.'
+    what: 'Three views of the same atom: all of it, the nucleus close up, or the electrons on their shells.'
   }],
   meter: [{
     from: 1,
     key: 'Read Needle',
-    what: 'Weighs the charge of the selected atom: protons push the needle up, electrons push it down.'
+    what: 'Clips the charge meter to the atom: protons push the needle up, electrons pull it down.'
   }],
   strip: [{
     from: 1,
     key: 'Fire Stripper',
     what: 'Knocks one electron off the outermost shell. The nucleus is not touched.'
-  }],
-  reset: [{
-    from: 1,
-    key: 'Reset Sample',
-    what: 'Puts back every electron the stripper has taken off.'
   }]
+  // Reset Sample is not listed. It resets the sample.
 };
 
 /**
@@ -186,7 +182,7 @@ export const STAGES = [
   {
     title: 'Read The Label',
     field: 'core',
-    prompt: 'Use Sample A\'s label to work out how many neutrons and electrons the sealed Sample B has.',
+    prompt: 'Work out how many neutrons and electrons the sealed Sample B has.',
     controls: ['field', 'meter'],
     specimens: [
       {
@@ -287,7 +283,7 @@ export const STAGES = [
   {
     title: 'The Needle Is Not On Zero',
     field: 'rings',
-    prompt: 'Read the needle on both samples, then work out how many protons and electrons Sample B has.',
+    prompt: 'Work out how many protons and electrons the sealed Sample B has.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'r2', label: 'SAMPLE A', note: 'Label: CAT 03, mass number 7. Open.', core: { marked: 3, blank: 4 }, rings: [2] },
@@ -309,12 +305,6 @@ export const STAGES = [
       'Sample B reads plus one and stamps CAT 11, so it has 11 protons and 10 electrons.'
     ],
     check(state) {
-      if (!state.metered.has('c')) {
-        return { ok: false, notYet: true, msg: 'The needle has not been on Sample B yet. Select it and press "Read Needle".' };
-      }
-      if (!state.metered.has('r2')) {
-        return { ok: false, notYet: true, msg: 'Put the needle on Sample A too. One reading on its own says nothing.' };
-      }
       const [p, e] = state.numbers;
       if (p === 0 && e === 0) {
         return { ok: false, notYet: true, msg: 'The answer is still blank. Set the two counts.' };
@@ -344,7 +334,7 @@ export const STAGES = [
   {
     title: 'Drive It Positive',
     field: 'rings',
-    prompt: 'Knock electrons off Sample A until the needle reads plus two, then log how many you took.',
+    prompt: 'Drive Sample A to a charge of plus two, and log how many electrons that took.',
     controls: ['field', 'meter', 'strip', 'reset'],
     specimens: [
       { id: 'd', label: 'SAMPLE A', note: 'mounted, open to the instrument', core: { marked: 12, blank: 12 }, rings: [2, 8, 2] }
@@ -357,10 +347,13 @@ export const STAGES = [
     ],
     check(state) {
       const taken = state.stripped.d || 0;
-      if (taken === 0) {
-        return { ok: false, notYet: true, msg: 'Nothing has been taken off yet. Press "Fire Stripper".' };
-      }
       if (taken !== 2) {
+        // Driving the sample IS the answer here, so a sample still sitting on
+        // zero is a wrong answer with a reason, not a gate on having pressed a
+        // key. Nothing on this bench refuses a player who already knows.
+        if (taken === 0) {
+          return { ok: false, msg: 'Sample A is still neutral. Take electrons off it until the charge reads plus two.' };
+        }
         return { ok: false, msg: `The needle reads plus ${taken}. Bring it to plus two — "Reset Sample" puts every electron back.` };
       }
       if (state.number !== 2) {
@@ -447,9 +440,6 @@ export const STAGES = [
       'One Sample A at plus two needs two Sample B at minus one, so the answer is 1 and 2.'
     ],
     check(state) {
-      if (state.metered.size < 2) {
-        return { ok: false, notYet: true, msg: 'Both samples need a needle reading first.' };
-      }
       const [s, t] = state.numbers;
       if (s === 0 && t === 0) {
         return { ok: false, notYet: true, msg: 'Nothing is set yet. Choose how many of each.' };
@@ -812,6 +802,7 @@ export function mount(container, ctx) {
       if (!state.sample) return;
       bench.reset(state.sample);
       delete state.stripped[state.sample];
+      refreshNeedles();
       soundscape.playToggleClack?.();
       renderReadout(null, {
         head: `Bench // ${labelFor(state.sample)}`,
@@ -827,9 +818,19 @@ export function mount(container, ctx) {
     const id = state.sample;
 
     if (tool === 'meter') {
+      /* THE NEEDLE STAYS ON THE SAMPLE.
+         It used to print one sentence into the readout and leave, so the very
+         stages that are ABOUT the needle asked a player to compare a reading
+         against a thing that had already scrolled away, and driving a sample to
+         a given charge meant carrying a number in your head through four presses
+         of a stripper. A meter you clip to something stays clipped: the gauge is
+         drawn on that sample's own plate, it follows the sample when an electron
+         comes off, and four samples on the bench carry four gauges you can read
+         side by side. `refreshNeedles` below is what keeps them honest. */
       const net = liveCharge(id);
       state.metered.add(id);
       soundscape.playScanSweep?.();
+      refreshNeedles();
       renderReadout(null, {
         head: `Needle // ${labelFor(id)}`,
         body: net === 0
@@ -852,9 +853,10 @@ export function mount(container, ctx) {
       } else {
         state.stripped[id] = (state.stripped[id] || 0) + 1;
         soundscape.playBondSnap?.();
+        refreshNeedles();
         renderReadout(null, {
           head: `Stripper // ${labelFor(id)}`,
-          body: `One electron knocked clear of shell ${ring + 1}. Put the needle back on it.`
+          body: `One electron knocked clear of shell ${ring + 1}.`
         });
       }
       busy = false;
@@ -870,6 +872,17 @@ export function mount(container, ctx) {
 
   function labelFor(id) {
     return specFor(id)?.label || id;
+  }
+
+  /**
+   * Re-read every needle that is clipped to a sample.
+   *
+   * A meter left on a sample keeps measuring it, so anything that changes what
+   * is on a sample has to come through here. The bench does no arithmetic of its
+   * own: it is handed the figure and shows it.
+   */
+  function refreshNeedles() {
+    for (const mid of state.metered) bench.setNeedle(mid, liveCharge(mid));
   }
 
   /** The needle reads the specimen as it stands now, stripped pieces included. */

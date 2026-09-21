@@ -30,6 +30,8 @@ const THREE = await import('three');
 const { TallowWorld } = await import('../src/three/tallow.js');
 const { SampleScope3D } = await import('../src/learn/engine/scope3d.js');
 const { CoreBench3D } = await import('../src/learn/engine/corebench3d.js');
+const { CatalogueBoard3D } = await import('../src/learn/engine/catalogue3d.js');
+const { AssayFloor3D } = await import('../src/learn/engine/assay3d.js');
 const { getWorld } = await import('../src/learn/curriculum.js');
 
 let failures = 0;
@@ -91,21 +93,42 @@ const TOUCH = 0.006;
 const shrunk = (b, t) => new THREE.Box3(
   b.min.clone().addScalar(t), b.max.clone().subScalar(t));
 
-/** AABB of an object's meshes, expressed in the frame `inv` inverts into. */
+/**
+ * AABB of an object's meshes, expressed in the frame `inv` inverts into.
+ *
+ * AN INSTANCED BODY IS MEASURED PER INSTANCE. Its geometry's bounding box is
+ * the UNIT body — a 1 m cylinder for a piece of salvage — and every instance
+ * carries its own transform on top of it. Taking the geometry box at face value
+ * therefore reports a metre-wide box wrapped round every heap in every bin, and
+ * the overlap check duly finds that the assay floor is inside the bench vice
+ * two metres away. Nothing was wrong with the bench; the ruler was.
+ */
+const _im = new THREE.Matrix4();
+
 function localBox(obj, inv) {
   const b = new THREE.Box3();
   const v = new THREE.Vector3();
   const m = new THREE.Matrix4();
+  const corners = (g, mat) => {
+    for (const x of [g.min.x, g.max.x]) {
+      for (const y of [g.min.y, g.max.y]) {
+        for (const z of [g.min.z, g.max.z]) b.expandByPoint(v.set(x, y, z).applyMatrix4(mat));
+      }
+    }
+  };
   obj.traverse(o => {
     if (!o.isMesh || !o.geometry) return;
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
     const g = o.geometry.boundingBox;
     m.multiplyMatrices(inv, o.matrixWorld);
-    for (const x of [g.min.x, g.max.x]) {
-      for (const y of [g.min.y, g.max.y]) {
-        for (const z of [g.min.z, g.max.z]) b.expandByPoint(v.set(x, y, z).applyMatrix4(m));
+    if (o.isInstancedMesh) {
+      for (let i = 0; i < o.count; i++) {
+        o.getMatrixAt(i, _im);
+        corners(g, _im.premultiply(m));
       }
+      return;
     }
+    corners(g, m);
   });
   return b.isEmpty() ? null : b;
 }
@@ -151,6 +174,13 @@ function check(questId, label, build, widest) {
   const anchor = world.benchAnchor(questId);
   if (!anchor) { fail(`${questId}: the world reports no bench`); return; }
 
+  // AN INSTRUMENT IS DEPLOYED, SO THE CABINET IS CASED OPEN. What stands on the
+  // plate when nobody is working is the instrument cased up; pressing [E] hides
+  // it and deploys the stations in its place, so the two are never drawn at
+  // once. Measuring against a bench that still had its cabinet on it would
+  // report a collision the player can never be in.
+  world.setBenchDeployed(questId, true);
+
   // The anchor frame the frame's panels are expressed in (createBenchAnchor).
   const anchorNode = new THREE.Group();
   anchorNode.position.set(anchor.position[0], anchor.topY - 0.895, anchor.position[2]);
@@ -194,16 +224,23 @@ function check(questId, label, build, widest) {
       }
     }
 
-    // 3. Every station the instrument laid out is in the frame.
-    const stations = bench.viewer.stations || [];
-    if (!stations.length) fail(`${tag}: the instrument laid out no stations`);
-    stations.forEach((st, i) => {
+    // 3. Every body the instrument laid out is in the frame.
+    //
+    // NOT EVERY INSTRUMENT IS STATION-SHAPED. The scope and the core bench lay
+    // out wells with screens raked over them; the catalogue is a board and a
+    // drawer, and the assay floor is a hopper over a chute over a row of bins.
+    // `framedNodes()` is what the aim itself solves for, so it is what is
+    // measured here — a check written against `stations` would simply skip the
+    // two instruments most likely to hang off the edge of the glass.
+    const bodies = bench.viewer.framedNodes();
+    if (!bodies.length) fail(`${tag}: the instrument laid out nothing`);
+    bodies.forEach((st, i) => {
       const b = ndcBounds(st.group, camera);
       if (!b) return;
       const cx = (b.minX + b.maxX) / 2;
       const cy = (b.minY + b.maxY) / 2;
       if (Math.abs(cx) > 0.95 || Math.abs(cy) > 0.95) {
-        fail(`${tag}: station ${i + 1} sits at (${cx.toFixed(2)}, ${cy.toFixed(2)}) — outside the frame`);
+        fail(`${tag}: body ${i + 1} sits at (${cx.toFixed(2)}, ${cy.toFixed(2)}) — outside the frame`);
       }
     });
 
@@ -218,22 +255,39 @@ function check(questId, label, build, widest) {
     for (let pass = 0; pass < 10; pass++) bench.viewer.aimForChrome(chromeNdc);
     camera.updateMatrixWorld(true);
 
-    for (const st of bench.viewer.stations) {
-      const b = ndcBounds(st.screen.mesh, camera);
+    // THE READABLE SURFACE IS WHOLLY IN THE GLASS AND CLEAR OF THE CHROME.
+    // Half a picture is not a picture, and a board whose bottom row is off the
+    // bottom of the view is a board with eight cards missing.
+    for (const st of bench.viewer.framedNodes()) {
+      if (!st.face) continue;
+      const b = ndcBounds(st.face, camera);
       if (!b) continue;
       if (b.maxY > chromeNdc + 0.02) {
-        fail(`${tag}: a station screen still runs under the frame — top at ${b.maxY.toFixed(2)}, chrome at ${chromeNdc.toFixed(2)}`);
+        fail(`${tag}: a readable face still runs under the frame — top at ${b.maxY.toFixed(2)}, chrome at ${chromeNdc.toFixed(2)}`);
       }
       if (b.minY < -0.99 || b.minX < -0.99 || b.maxX > 0.99) {
-        fail(`${tag}: a station screen hangs off the glass — x[${b.minX.toFixed(2)}, ${b.maxX.toFixed(2)}] y[${b.minY.toFixed(2)}, ${b.maxY.toFixed(2)}]`);
+        fail(`${tag}: a readable face hangs off the glass — x[${b.minX.toFixed(2)}, ${b.maxX.toFixed(2)}] y[${b.minY.toFixed(2)}, ${b.maxY.toFixed(2)}]`);
       }
     }
-    // The wells stay in view too: the crate is what the player reaches for.
-    bench.viewer.stations.forEach((st, i) => {
-      const b = ndcBounds(st.tray, camera);
+    // The tops the instrument declared clear the chrome, measured as points.
+    {
+      const p = new THREE.Vector3();
+      for (const st of bench.viewer.framedNodes()) {
+        if (!st.topMark) continue;
+        st.topMark.getWorldPosition(p).project(camera);
+        if (p.y > chromeNdc + 0.03) {
+          fail(`${tag}: a body's top still runs under the frame at ${p.y.toFixed(2)} (chrome ${chromeNdc.toFixed(2)})`);
+        }
+      }
+    }
+    // And the working end stays in view: the crate, the drawer, the bins are
+    // what the player reaches for.
+    bench.viewer.framedNodes().forEach((st, i) => {
+      const reach = bench.viewer.stations[i]?.tray || st.group;
+      const b = ndcBounds(reach, camera);
       if (!b) return;
       if (b.minY < -0.99) {
-        fail(`${tag}: station ${i + 1} has been aimed off the bottom of the glass (${b.minY.toFixed(2)})`);
+        fail(`${tag}: body ${i + 1} has been aimed off the bottom of the glass (${b.minY.toFixed(2)})`);
       }
     });
 
@@ -261,19 +315,29 @@ function check(questId, label, build, widest) {
       const own = new Set();
       bench.viewer.root.traverse(o => own.add(o));
 
+      // Everything the instrument STANDS on the plate: a screen head, a board
+      // and its stays, a hopper on its legs. Whatever it is, it must not come
+      // down inside the bench's own clutter.
       const heads = [];
-      for (const st of bench.viewer.stations) {
-        if (!st.head) continue;
-        st.head.traverse(o => {
-          if (!o.isMesh) return;
+      const standing = bench.viewer.stations.length
+        ? bench.viewer.stations.map(st => st.head).filter(Boolean)
+        : bench.viewer.framedNodes().map(n => n.group);
+      for (const node of standing) {
+        node.traverse(o => {
+          if (!o.isMesh || o.material?.visible === false) return;
           const b = localBox(o, inv);
-          if (b) heads.push(b);
+          if (b && b.max.y > 0.905) heads.push(b);
         });
       }
 
       const seen = new Set();
       world.scene.traverse(o => {
         if (!o.isMesh || own.has(o) || !o.geometry) return;
+        // A body that is not drawn is not in the way. The cased-up instrument
+        // is hidden for exactly as long as the deployed one stands in its
+        // place, so it is not a thing the player can ever be inside.
+        if (!o.visible) return;
+        for (let a = o.parent; a; a = a.parent) if (!a.visible) return;
         const b = localBox(o, inv);
         if (!b) return;
         // At or below the plate the instrument is standing on: a stand foot is
@@ -287,8 +351,10 @@ function check(questId, label, build, widest) {
           const key = `${c.x.toFixed(2)}|${c.y.toFixed(2)}|${c.z.toFixed(2)}`;
           if (seen.has(key)) return;
           seen.add(key);
-          fail(`${tag}: a station stand is inside world geometry at bench-local ` +
-            `(${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)})`);
+          const hc = h.getCenter(new THREE.Vector3());
+          fail(`${tag}: the instrument stands inside world geometry — its body at ` +
+            `(${hc.x.toFixed(2)}, ${hc.y.toFixed(2)}, ${hc.z.toFixed(2)}) ` +
+            `meets a fitting at (${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)})`);
           return;
         }
       });
@@ -296,6 +362,8 @@ function check(questId, label, build, widest) {
 
     bench.dispose?.();
   }
+
+  world.setBenchDeployed(questId, false);
 }
 
 const worldFrame = (camera, anchor) => ({
@@ -333,9 +401,174 @@ check('q2-core', 'core bench',
   ])
 );
 
+check('q4-ledger', 'ledger bench',
+  (camera, anchor) => new CoreBench3D(null, { world: worldFrame(camera, anchor) }),
+  // Four sealed samples is the widest stage q4-ledger declares.
+  bench => bench.setSpecimens([
+    { id: 'a', label: 'SAMPLE A', note: '', core: { marked: 12, blank: 12 }, rings: [2, 8, 2] },
+    { id: 'b', label: 'SAMPLE B', note: '', core: { marked: 12, blank: 14 }, rings: [2, 8, 2] },
+    { id: 'c', label: 'SAMPLE C', note: '', core: { marked: 12, blank: 12 }, rings: [2, 8] },
+    { id: 'd', label: 'SAMPLE D', note: '', core: { marked: 13, blank: 14 }, rings: [2, 8, 3] }
+  ])
+);
+
+/* THE CATALOGUE BOARD. The widest thing this quest puts on the bench is the
+   full chart — three rows of eight, with the column heads over them — which is
+   also the widest thing any Learn instrument builds. If anything is going to
+   hang off the glass at phone landscape, it is this. */
+check('q3-catalogue', 'catalogue board',
+  (camera, anchor) => new CatalogueBoard3D(null, { world: worldFrame(camera, anchor) }),
+  bench => {
+    const cards = {};
+    for (let z = 1; z <= 20; z++) {
+      cards[`c${z}`] = { code: `CAT ${String(z).padStart(2, '0')}`, name: 'BERYLLIUM', pips: (z % 8) + 1 };
+    }
+    const row = n => Array.from({ length: 8 }, (_, c) => `c${n * 8 + c + 1}`);
+    bench.setStage({
+      cards,
+      board: {
+        label: 'Reference chart',
+        columns: ['1', '2', '3', '4', '5', '6', '7', '8'],
+        rows: [row(0), row(1), ['#s1', '#s2', '#s3', '#s4', '#s5', '#s6', '#s7', '#s8']]
+      },
+      drawer: ['c17', 'c18', 'c19', 'c20']
+    });
+  }
+);
+
+/* THE ASSAY FLOOR, BUILT. Three rigs is the widest stage, and each of them
+   stands a hopper on legs well above the plate — the one instrument whose
+   bodies are TALL rather than wide, and so the one most likely to run up under
+   the frame's chrome rather than off the side. */
+check('q5-assay', 'assay floor',
+  (camera, anchor) => new AssayFloor3D(null, { world: worldFrame(camera, anchor) }),
+  bench => bench.setHoppers([
+    { id: 'ha', label: 'SAMPLE A', note: 'unlabelled, 40 pieces', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] },
+    { id: 'hb', label: 'SAMPLE B', note: 'unlabelled, 40 pieces', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
+    { id: 'hc', label: 'SAMPLE C', note: 'unlabelled, 40 pieces', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
+  ])
+);
+
 if (!failures) {
-  ok(`both instruments frame every screen, station and control at ${ASPECTS.length} aspects`);
+  ok(`all five instruments frame every body and control at ${ASPECTS.length} aspects`);
 }
+
+/* ------------------------------------------------------- every real stage
+
+   THE TWO NEW INSTRUMENTS TAKE WHAT THEIR QUEST ACTUALLY DECLARES.
+
+   The framing check above feeds each bench the widest stage by hand, which
+   proves the geometry fits but proves nothing about the other seven stages. A
+   built instrument is a second implementation of an interface the quest module
+   uses blind, so the failure to be afraid of is a stage whose declaration the
+   drawn bench handles and the built one does not — a board row of a shape it
+   does not lay out, a hopper it cannot pour. Both quests export their tables,
+   so every stage can simply be put through the built instrument here.
+
+   It asserts the two things a player would notice: that the board offers the
+   slots the quest is about to grade against, and that a pour lands exactly what
+   `planPour` says it lands, in the bins it says, with the pieces really placed.
+*/
+
+const { STAGES: CAT_STAGES, CARDS } = await import('../src/learn/quests/unit01/q3-catalogue.js');
+const { STAGES: ASSAY_STAGES } = await import('../src/learn/quests/unit01/q5-assay.js');
+const { planPour } = await import('../src/learn/engine/assay.js');
+
+function stagePasses() {
+  const anchor = world.benchAnchor('q3-catalogue');
+  const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+  world.setBenchDeployed('q3-catalogue', true);
+
+  const board = new CatalogueBoard3D(null, { world: worldFrame(camera, anchor) });
+  CAT_STAGES.forEach((st, i) => {
+    // The same faces the quest hands the drawn board, masked stages included.
+    const cards = {};
+    for (const [id, c] of Object.entries(CARDS)) {
+      cards[id] = st.masked
+        ? { code: c.name, name: 'code missing', pips: null }
+        : { code: c.code, name: c.name, pips: c.outer };
+    }
+    board.setStage({ cards, board: st.board || null, drawer: st.drawer || [] });
+
+    // Every slot the stage declares is a slot the board actually built.
+    const want = [];
+    for (const row of st.board?.rows || []) {
+      for (const e of row) if (typeof e === 'string' && e.startsWith('#')) want.push(e.slice(1));
+    }
+    const got = board.slotIds();
+    if (want.join(',') !== got.join(',')) {
+      fail(`q3-catalogue stage ${i + 1}: the built board offers slots [${got}] for declared [${want}]`);
+    }
+    for (const id of want) {
+      if (!board.slots.has(id)) fail(`q3-catalogue stage ${i + 1}: slot "${id}" has no place on the board`);
+    }
+
+    // Filing a loose card really moves it, and lifting it really puts it back.
+    const loose = (st.drawer || [])[0];
+    if (loose && want.length) {
+      board.held = loose;
+      board.layout();
+      board.placed[want[0]] = loose;
+      board.drawer = board.drawer.filter(x => x !== loose);
+      board.held = null;
+      board.layout();
+      if (board.placements()[want[0]] !== loose) {
+        fail(`q3-catalogue stage ${i + 1}: a filed card is not reported as filed`);
+      }
+      if (!board.slots.get(want[0]).card) {
+        fail(`q3-catalogue stage ${i + 1}: a filed card has no body on the board`);
+      }
+      board.clearBoard();
+      if (Object.keys(board.placements()).length) {
+        fail(`q3-catalogue stage ${i + 1}: clearing the board left cards filed`);
+      }
+    }
+  });
+  board.dispose();
+  world.setBenchDeployed('q3-catalogue', false);
+  ok(`q3-catalogue: the built board lays out all ${CAT_STAGES.length} stages and files a card on each`);
+
+  /* ---- the assay floor ---- */
+  const anchor5 = world.benchAnchor('q5-assay');
+  const camera5 = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+  world.setBenchDeployed('q5-assay', true);
+  const floor = new AssayFloor3D(null, { world: worldFrame(camera5, anchor5) });
+
+  ASSAY_STAGES.forEach((st, i) => {
+    floor.setHoppers(st.hoppers || []);
+    if ((st.hoppers || []).length !== floor.rigs.length) {
+      fail(`q5-assay stage ${i + 1}: ${st.hoppers.length} samples declared, ${floor.rigs.length} rigs built`);
+      return;
+    }
+    for (const hp of st.hoppers || []) {
+      const rig = floor.rigs.find(r => r.hopper.id === hp.id);
+      if (rig.bins.length !== hp.bins.length) {
+        fail(`q5-assay stage ${i + 1}: ${hp.label} declares ${hp.bins.length} bins, the rig built ${rig.bins.length}`);
+        continue;
+      }
+      // Pour it the way the quest does, straight to the end, and count.
+      const { totals } = planPour(hp);
+      rig.hopper.landed = totals.slice();
+      rig.hopper.tally = true;
+      floor.refreshBin(rig, null);
+      rig.bins.forEach((bin, b) => {
+        if (bin.pieces.count !== totals[b]) {
+          fail(`q5-assay stage ${i + 1}: ${hp.label} bin ${b + 1} holds ${totals[b]} but draws ${bin.pieces.count}`);
+        }
+      });
+      const drawn = rig.bins.reduce((n, b) => n + b.pieces.count, 0);
+      const declared = hp.bins.reduce((n, b) => n + b.n, 0);
+      if (drawn !== declared) {
+        fail(`q5-assay stage ${i + 1}: ${hp.label} declares ${declared} pieces, the bins hold ${drawn}`);
+      }
+    }
+  });
+  floor.dispose();
+  world.setBenchDeployed('q5-assay', false);
+  ok(`q5-assay: the built floor pours all ${ASSAY_STAGES.length} stages and every piece is placed`);
+}
+
+stagePasses();
 
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

@@ -37,27 +37,52 @@ should never be tracking which of CRATE 41 and SPEC R is the one under discussio
 
 **Two rules sit beside it and are enforced the same way.**
 
-**Nothing is NAMED without being explained — including the instrument's own words.** The
-vocabulary schedule governs the chemistry; this governs everything else the player has to
-touch. "Read the needle", "load the rings", "the ring counters on the deck" and "set the
-field" are clear sentences addressed to somebody who has already used the bench, which is
-the one reader this product is not for. So every control a stage offers carries one plain
-sentence saying what it does, drawn under the keys and left there for as long as the stage
-offers it — never a tooltip, never once on first use, never only inside an earned hint. A
-quest exports `toolNoteFor(controlId, stageNumber)`; `engine/frame.js`'s `toolNotes()`
-draws it; `verify:learn` fails the build over a control with no line and runs every line
-through the same withheld-vocabulary gate as a prompt. **A legend is one short sentence**,
-under about eighteen words; it is a key legend, not a manual. A tool's line may change as
+**Nothing is NAMED without being explained — AND NOTHING SELF-EVIDENT IS EXPLAINED
+ANYWAY.** The vocabulary schedule governs the chemistry; this governs everything else the
+player has to touch. "Read the needle", "load the rings" and "set the field" are clear
+sentences addressed to somebody who has already used the bench, which is the one reader
+this product is not for — so a key whose LABEL does not say what it does carries one plain
+sentence, drawn under the keys and left there for as long as the stage offers it, never a
+tooltip, never once on first use, never only inside an earned hint.
+
+**But a key whose label does say it carries nothing.** "Tip Sample" tips the sample.
+"Strike It" strikes it. "Reset Sample" resets the sample. "Tapping a card" reads the card.
+Every bench once opened with a panel of such sentences restating its own key caps back at
+the player: a manual standing between them and the instrument, teaching nothing that
+pressing the key once would not. Nine quests carried about thirty such lines and now carry
+ten. A quest declines a legend by leaving the control out of its `TOOL_TEXT`, and
+`toolNotes()` draws nothing rather than an empty "What these do" heading. `verify:learn`
+therefore does NOT fail over a missing legend; it fails over a legend that exists and is
+malformed, and runs every one that exists through the same withheld-vocabulary gate as a
+prompt. **A legend is one short sentence**, under about eighteen words; it is a key legend,
+not a manual. A tool's line may change as
 words are earned: the needle's says "light pieces" until the stage after electrons are
 named and "electrons" from then on. When a prompt, hint or refusal names a control, it
 quotes it — `Press "Fire Beam"`, `Press "The middle"` — so the sentence cannot be read as
 prose. Key labels obey all of this too: the core bench's three views read **Whole piece /
 The middle / Outside** under **View**, not Whole / Core / Rings under "Field".
 
+**A PROMPT STATES THE OBJECTIVE AND NEVER THE ROUTE.** "Tip Sample A down the chute, read
+the code on each bin that caught pieces, and say what the split means" is not a task, it is
+a procedure — the player executes three instructions and the discovery has already been
+made for them. It is now "Say why Sample A splits across two bins instead of landing in
+one." The route is what the bench is for. Rung 1 of the hint ladder is where "press this
+key" belongs, because a hint is earned.
+
 **A hint rung is ONE sentence.** Rung 1 says what to do with the tool, rung 2 says what to
 look at or compare, rung 3 gives the answer plainly — and where there is arithmetic, rung 3
 shows the actual sum (`(0.2 x 10) + (0.8 x 11) = 2 + 8.8 = 10.8`), never the method alone. A
 three-clause hint is a paragraph a stuck player has to parse before they can use it.
+
+**NOTHING EVER BLOCKS A PLAYER WHO HAS THE RIGHT ANSWER.** A stage may refuse a blank
+answer — there is nothing there to grade — and it may refuse a wrong one with a reason. It
+may not refuse a correct one because the player did not first press a key. Seventy such
+gates existed across the nine built quests ("Press \"Tip Sample\" first", "Read at least
+two cards in that column before answering", "Turn the Power dial up and watch the sample
+first") and every one of them is gone. A player who already knows, or who worked it out
+from something the stage did not anticipate, is right, and the bench says so. Where driving
+the instrument IS the answer — `q2-core` stage 7 and `q4-ledger` stage 5 ask for a sample
+brought to a given charge — the untouched case is a wrong answer WITH A REASON, not a gate.
 
 **A stage must be solvable by somebody who does not already know the answer.** This is the
 test every bench stage has to pass and the easiest one to fail, because the author knows
@@ -109,6 +134,8 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   height of the glass.
 - `npm run verify:learn` — integrity check of the Learn track registry, its no-XP
   invariant, and the practice sets (five per built quest, assembled at world scope).
+  It does **not** demand a legend under every key (see "Nothing is NAMED" above); it holds
+  every legend that exists to one well-formed, vocabulary-clean sentence.
   It also **presses every join-bench pair plate in Node** and measures what comes
   out: electrons conserved, and no piece left over the capacity of its outer shell.
 - `npm run verify:geometry` — runs all 20 reaction animations headlessly and checks the chemistry
@@ -118,14 +145,24 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run verify:ship` — asserts ship graph connectivity, 3-hop limit, hatch cones, and
   spline bounds, then **builds the Avalon and Erebus in Node** and asserts that nothing
   in either occupies the same space as anything else.
-- `npm run verify:bench` — deploys BOTH Unit 1 instruments onto the real Tallow benches in
-  Node and measures them: every site faces the ground the player walks in from, and every
-  screen, station and control lands inside the glass at six aspects, clear of the HUD. It
+- `npm run verify:bench` — deploys ALL FIVE Unit 1 instruments onto the real Tallow benches
+  in Node and measures them: every site faces the ground the player walks in from, and every
+  body, readable face and control lands inside the glass at six aspects, clear of the HUD. It
   also drives `aimForChrome` — the camera correction a deployed bench applies — and asserts
-  it converges with the station screens under the frame and the wells still in view; and it
-  measures every station stand against the world it is standing in, in the BENCH's own
-  frame and per mesh (a world AABB of a 4.8 m back lip on a rotated site says everything
-  hits everything). That check found every screen stand seated inside a swarf chip.
+  it converges with the readable faces under the frame and the working end still in view;
+  and it measures everything the instrument STANDS on the plate against the world it is
+  standing in, in the BENCH's own frame and per mesh (a world AABB of a 4.8 m back lip on a
+  rotated site says everything hits everything), with the cabinet cased open and hidden
+  bodies skipped, because one object has two states. That check found every screen stand
+  seated inside a swarf chip, the assay hopper's legs inside the bench's tool rail, its bin
+  floors inside the weld bead down the middle of the plate, and a catalogue board so tall it
+  leaned back through the bench's own lip into the lean-to behind it. **An instanced body is
+  measured per instance**: its geometry box is the UNIT body, so taken at face value it
+  reported a metre-wide box round every heap and duly found the assay floor inside a vice two
+  metres away — nothing was wrong with the bench, the ruler was. Finally it puts **every
+  stage `q3-catalogue` and `q5-assay` declare** through the built instrument: the board
+  offers the slots the quest is about to grade against, and a pour places every piece
+  `planPour` says it places.
 - `npm run verify:holo` — one owner for the `X` key, and the comms board never invents a
   guild score.
 - `npm run verify:tallow` — asserts the Tallow ground: every prop footprint disjoint
@@ -355,6 +392,10 @@ into grinding and would punish the students it exists to help.
   inside it and says so; that is what makes "identify it from how it behaves" a
   real task rather than a look-up. A charge in a block is told apart by a
   STENCILLED plus or minus and never by colour.
+  `catalogue3d.js` is the **catalogue board built** and `assay3d.js` the **assay works
+  built** — see "ALL FIVE Unit 1 benches are BUILT at T4" below. Each exposes its drawn
+  counterpart's API method for method and plans through the same pure functions
+  (`readEntry`, `planPour`, `packBin`), so a stage grades identically on either.
   `corebench.js` is the **core bench**: one piece shown in three fields — `whole` (a haze
   with the core drawn to scale, which is a speck), `core` (the grains separated and
   probeable, marked ones told apart by a stencilled cross and never by colour) and `rings`
@@ -432,12 +473,23 @@ into grinding and would punish the students it exists to help.
   when the bench is built), so the top of the glass belongs to the header, the stage rail
   and the tool plate. `fitDeployedAim` / `aimForChrome` in `bench3d.js` measure how far down
   the middle of the view that chrome reaches and pitch the camera UP until the tops of the
-  screens clear it — which slides the whole bench down into the empty glass without moving
+  instrument's bodies clear it. **They solve for `framedNodes()`, not for stations**: two
+  of the five instruments are not station-shaped, and an aim written against `this.stations`
+  simply did not aim them. An instrument that builds its own bodies registers each with
+  `addFitNode(group, topMark, face)`, where `face` is the readable surface that must be
+  WHOLLY in the glass — half a picture is not a picture — which slides the whole bench down into the empty glass without moving
   the camera, so how steeply the player looks into the wells is unchanged. `fitToOpenArea`'s
   `setViewOffset` is still the answer for a bench that builds its own room, and must never
   be used on the world camera: it would re-frame the whole of Tallow. `verify:bench` drives
   `aimForChrome` at six aspects and fails the build if a screen still runs under the frame
   or a well is aimed off the bottom.
+- **THE FRAME IS A CLOSEABLE 2D OVERLAY OVER THE LIVE BENCH.** At T4 the quest frame stays
+  a page over the view on every Tallow bench (`learn-quest.js` sets `inWorld = false`), and
+  its `Close` key folds every plate away to a `Stage Panel` / `Commit` dock in the corner —
+  so a player who wants to look at the instrument they are standing at can have the whole
+  glass. `.learn-quest-overworld` in `learn.css` is what makes that work at all: the frame's
+  containers are `pointer-events: none` and only the plates themselves take a press, because
+  a transparent full-width box still swallows every click aimed at the bench behind it.
 - **AND THE AIMING STOPS THE MOMENT THE PLAYER TAKES A STEP.** A deployed bench stands on
   ground that is still underfoot, so the player keeps their feet while they work it: W/A/S/D
   walks, a drag on the view turns, and collision and the terrain clamp are the world's as
@@ -468,15 +520,38 @@ into grinding and would punish the students it exists to help.
   `setAimShift` walk the look-at point along the bench until the stations are centred in
   the clear part of the view. Below 860 px it reverts to the centred card, because a
   docked panel beside a bench too narrow to read helps nobody.
-- **Both Unit 1 benches are BUILT at T4.** `BUILT_BENCHES` in `engine/instruments.js` holds
-  `q1-grain` and `q2-core`, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
-  asks to decide whether the frame is bolted to a bench or drawn as a page over the flat.
-  The sampler scope used to be excluded on the argument that a microscope's picture is a
-  picture and that building it would read as the sample inflating. What that missed is
-  where the picture belongs: on a bench the player has walked to there is a SCREEN to put
-  it on, the crates of bulk matter sit in real wells on the plate in front of them, and the
-  power control is a milled cap they reach over and turn. That is exactly the relationship
-  a scope has to its sample, and it is what the salvage bench on Tallow now is.
+- **ALL FIVE Unit 1 benches are BUILT at T4.** `BUILT_BENCHES` in `engine/instruments.js`
+  holds the whole of Unit 1, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
+  asks to decide whether the player keeps their feet at a real object or the bench is drawn
+  as a page over the flat.
+  - The **sampler scope** (`scope3d.js`) used to be excluded on the argument that a
+    microscope's picture is a picture. What that missed is where the picture belongs: on a
+    bench the player has walked to there is a SCREEN to put it on, the crates sit in real
+    wells on the plate, and the power control is a milled cap they reach over and turn.
+  - The **core bench** (`corebench3d.js`) was always the other case, and serves both
+    `q2-core` and `q4-ledger` — the second needed nothing but its name in the list.
+  - The **catalogue board** (`catalogue3d.js`) is the case the flat-picture rule does not
+    reach, and reverses the drawn board's own header. A card index RESOLVES nothing: it is
+    a drawer of cards and a board of slots, objects the size of a hand. There is no picture
+    of a card; there is a card. So it is built the whole way — a raked drafting board on an
+    easel across the back of the plate with a milled slot per place, and a tray of loose
+    cards in front of it. **Still two taps, never a drag**, for the reason the drawn board
+    gives: a drag across small targets is the gesture this audience cannot make, and
+    dragging a body through a 3D scene is worse. A card in the hand lifts off the tray,
+    stands up face-on and turns its ink amber; open slots light while you are holding one.
+  - The **assay floor** (`assay3d.js`) is the one built instrument with NO flat picture at
+    all, because its output is not an image — it is objects falling into containers at
+    arm's length. A hopper on legs, a chute, a deflector plate, a row of catch bins, and
+    the pieces really fall down it. **The counting the flat-picture rule exists to protect
+    is protected by the geometry instead**: every bin is open-fronted behind a sight glass
+    and every piece that lands stacks into ONE PLANE just inside it, on the grid `packBin`
+    computes, so nothing is ever behind anything, every piece is at a countable size, and
+    the heap and the tally stencilled over it are the same measurement.
+  - **The cased-up cabinet says which bench it is.** `buildBench({ kind })` in `tallow.js`
+    gives site 3 a bank of card-index drawers and site 5 a weigh-head with a big round
+    scale over a shrouded chute. Five identical cabinets with a microscope's aperture in
+    them meant a player walking the flat could not tell the card index from the assay works
+    until they were standing at it. The bench under them is the same bench.
 - **The benches in 3D** — `engine/instruments.js` is the dispatcher every quest imports: it
   hands back the canvas instrument or the built one, and the two expose the *same API*, take
   the same declarations and plan every tool through the same pure functions, so a stage that
@@ -543,10 +618,10 @@ untouched bench never grades correct, that every stage has exactly three distinc
 and a reward card, that every bench declaration is well formed, that all `quest-btn-sm` buttons carry
 `btn-secondary` or `btn-primary`, that a stage briefing (where a stage has one at all — in Units 1 and 2
 only stage 1 does) does not exceed 2 sentences, that sample notes
-describe provenance only without leaking answers, **that every control a stage offers has a
-key legend** (`toolNoteFor(controlId, stageNumber)` — see "Nothing is NAMED without being
-explained" at the top of this file), and that all prompt/hints/briefings/legends/check
-messages comply with withheld vocabulary rules. It reads both styles:
+describe provenance only without leaking answers, that **any key legend a quest does
+supply** is one well-formed sentence (`toolNoteFor(controlId, stageNumber)`; a missing one
+is a deliberate answer — see "Nothing is NAMED" at the top of this file), and that all
+prompt/hints/briefings/legends/check messages comply with withheld vocabulary rules. It reads both styles:
 `samples` with `particles` for the sampler scope (real kinds, `geom` covering every piece,
 bonds inside the cluster) and `specimens` with `core` and `rings` for the core bench, where
 shell capacity is enforced — two on the nearest ring, eight after that, nothing further out
@@ -600,6 +675,16 @@ for, and hint rung three is quietly carrying the whole lesson.
   established that the outer shell decides behaviour; Sample C has a different outside, 2 and
   5.
 
+**THE NEEDLE IS A METER YOU CLIP ON, AND IT STAYS ON.** It used to print one sentence into
+the readout — "The needle swings to plus one and holds" — which the next thing the player
+did wiped. So the stages that are ABOUT the needle asked for a comparison against a reading
+that was no longer on screen, and driving a sample to a given charge meant carrying a number
+through four presses of a stripper. `drawCoreField` now draws a real gauge on the specimen's
+own plate: `CoreBench.setNeedle(id, value)` parks it, `refreshNeedles()` in the quest re-reads
+every needle that is clipped on whenever a strip or a reset changes what is on a sample, and
+four samples on the bench carry four gauges the player reads side by side. The bench still
+knows no chemistry — it is handed the figure and shows it.
+
 **Nothing in this quest requires clicking a particle.** Counting is the task on stages 2, 3,
 6 and 8, so the answer is a number the player enters; the probe is a tool that is there if
 they want a reading, never a gate on a commit. Every sample is a real nuclide and balances
@@ -627,7 +712,12 @@ It ends able to describe any atom with three numbers.
 ### World 1 quest 5 — Atomic Mass (`unit01/q5-assay`, live)
 Eight stages on the sorting bench (`engine/assay.js`, also used by Ligar's
 `q4-weigh`): a sample tips down a chute over a deflector, one bin per weight, tallies
-counted; a balance weighs a sample whole and reports what one piece weighs on average. A real
+counted; a balance weighs a sample whole. **A BALANCE WEIGHS; IT DOES NOT DIVIDE.** It used
+to report the total, the count, the division and the answer, which handed the player every
+stage from six on — press the key, read 20.2 off the readout, find 20.2 on the reference
+plate, commit. The one piece of arithmetic this whole bench exists to teach was being done
+for them by the instrument. It now reports the two figures it actually measures, a total and
+a count, and stops. A real
 sample is a mix of isotopes, the proportions are fixed, the listed mass is a weighted average
 that leans toward the common isotope, and the average runs both ways — a sealed sample gets
 named off its number. Every hint rung three shows the actual sum. The bench never counts by

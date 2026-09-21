@@ -40,7 +40,7 @@ function escText(str) {
  *   'card-id'   a card already filed, fixed, readable but not movable
  *   null        a gap in the layout — structure, not a place
  */
-function readEntry(entry) {
+export function readEntry(entry) {
   if (entry === null || entry === undefined) return { kind: 'gap' };
   const str = String(entry);
   return str.startsWith('#')

@@ -26,6 +26,10 @@ import { SampleScope as SampleScope2D } from './scope.js';
 import { CoreBench as CoreBench2D } from './corebench.js';
 import { SampleScope3D } from './scope3d.js';
 import { CoreBench3D } from './corebench3d.js';
+import { CatalogueBoard as CatalogueBoard2D } from './catalogue.js';
+import { AssayFloor as AssayFloor2D } from './assay.js';
+import { CatalogueBoard3D } from './catalogue3d.js';
+import { AssayFloor3D } from './assay3d.js';
 
 /** True when this client is drawing the Learn benches in three dimensions. */
 export function benchesAre3D() {
@@ -49,11 +53,36 @@ export function benchesAre3D() {
  * a beam fired through it and rings standing off it at fixed radii. Those are
  * real positions in space.
  *
+ * THE LAST THREE FOLLOW, AND TWO OF THEM ARE EASIER CASES THAN EITHER.
+ *
+ * `q4-ledger` is the core bench again, at site four, and needed nothing but its
+ * name in this list.
+ *
+ * `q3-catalogue` is a card index, and a card index resolves nothing: it is a
+ * drawer of cards and a board of slots, objects the size of a hand that a
+ * filing clerk picks up and puts down. There is no picture of a card; there is
+ * a card. `catalogue3d.js` builds it the whole way, and filing one is reaching
+ * over and moving it — still two taps, never a drag.
+ *
+ * `q5-assay` tips a heap down a chute past a deflector into a row of bins.
+ * Those are objects falling into containers at arm's length, so `assay3d.js`
+ * builds the works and the pieces really fall. The counting the flat-picture
+ * rule exists to protect is protected by the geometry instead: each bin is
+ * open-fronted behind a sight glass and every piece stacks into ONE PLANE just
+ * inside it, on the grid `packBin` computes, so nothing is ever behind anything
+ * and the heap and the tally over it are the same measurement.
+ *
  * Below T4 both are the canvas instruments, and both grade identically — the
  * planners (`planSettle`, `planCut`, `planBeam`, `planStrip`) live in the 2D
  * engines and are the single implementation.
  */
-const BUILT_BENCHES = new Set(['q1-grain', 'q2-core']);
+const BUILT_BENCHES = new Set([
+  'q1-grain',      // the sampler scope   — scope3d.js
+  'q2-core',       // the core bench      — corebench3d.js
+  'q3-catalogue',  // the catalogue board — catalogue3d.js
+  'q4-ledger',     // the core bench again, at site four
+  'q5-assay'       // the assay floor     — assay3d.js
+]);
 
 /**
  * True when `questId` is played on an instrument that is built in the world.
@@ -100,8 +129,31 @@ export function CoreBench(host, opts = {}) {
     : new CoreBench2D(host, opts);
 }
 
+/**
+ * The catalogue board. Signature and behaviour match `CatalogueBoard` in
+ * catalogue.js.
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onPlace?: Function, onLift?: Function}} opts
+ */
+export function CatalogueBoard(host, opts = {}) {
+  return benchesAre3D()
+    ? new CatalogueBoard3D(host, deployed(opts))
+    : new CatalogueBoard2D(host, opts);
+}
+
+/**
+ * The assay floor. Signature and behaviour match `AssayFloor` in assay.js.
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onSelect?: Function}} opts
+ */
+export function AssayFloor(host, opts = {}) {
+  return benchesAre3D()
+    ? new AssayFloor3D(host, deployed(opts))
+    : new AssayFloor2D(host, opts);
+}
+
 /* Exported so a caller that wants the built instrument by name can have it. */
-export { SampleScope3D };
+export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D };
 
 /* Re-exported so a quest module needs exactly one import line for its bench. */
 export { detailFor, TINTS } from './scope.js';

@@ -69,52 +69,46 @@ const SPEAKER = 'Vess';
 /* ------------------------------------------------------------------
    THE KEY LEGEND
 
-   Every control on the plate says what it does, in one short sentence, for as
-   long as it is on the plate. A line can change once a word has been earned:
-   the needle says "light pieces" until the stage after electrons are named,
-   and "electrons" from then on.
+   A KEY WHOSE LABEL SAYS WHAT IT DOES OWES NOTHING.
 
-   `verify:learn` fails the build over a control with no line, and runs every
-   line through the same vocabulary gate as a prompt or a hint.
+   Only the keys below carry a line, and each one carries it because
+   its label leaves something out. Everything else on this bench — the
+   keys that were once explained back to the player in their own words —
+   is left to say what it says.
    ------------------------------------------------------------------ */
 const TOOL_TEXT = {
   field: [{
     from: 1,
     key: 'Whole piece / The middle / Outside',
-    what: 'Three ways of looking at the same atom: all of it, a close-up of the heavy center, or a pull-back showing the light pieces around it.'
+    what: 'Three views of the same atom: all of it, the heavy center close up, or the light pieces around it.'
   }, {
     from: 3,
     key: 'Whole piece / The middle / Outside',
-    what: 'Three ways of looking at the same atom: all of it, a close-up of the nucleus, or a pull-back showing the electrons on their rings.'
+    what: 'Three views of the same atom: all of it, the nucleus close up, or the electrons on their rings.'
   }],
   beam: [{
     from: 1,
     key: 'Fire Beam',
-    what: 'Fires 40 tiny shots at the selected atom and counts what happened to each one.'
+    what: 'Fires 40 tiny shots at the atom and counts what happened to each one.'
   }],
   meter: [{
     from: 1,
     key: 'Read Needle',
-    what: 'Weighs the charge of the selected atom. It sits on zero when the two sides cancel.'
+    what: 'Clips the charge meter to the atom. It sits on zero when the two sides cancel.'
   }, {
     from: 3,
     key: 'Read Needle',
-    what: 'Weighs the charge of the selected atom: protons push the needle up, electrons push it down.'
+    what: 'Clips the charge meter to the atom: protons push the needle up, electrons pull it down.'
   }],
   tester: [{
     from: 1,
     key: 'Run Tester',
-    what: 'Pushes another atom at the selected one and reports what it does. Each sample can only be tested once.'
+    what: 'Pushes another atom at this one and reports what happens. One test per sample.'
   }],
   strip: [{
     from: 1,
     key: 'Fire Stripper',
-    what: 'Knocks one electron off the outermost ring. The nucleus is not touched.'
-  }],
-  reset: [{
-    from: 1,
-    key: 'Reset Sample',
-    what: 'Puts back every electron the stripper has taken off.'
+    what: 'Knocks one light piece off the outermost ring. The middle is not touched.'
   }]
 };
 
@@ -224,7 +218,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench looks inside a single atom. It can fire a beam through one, magnify its middle, weigh its charge, and knock pieces off the outside.'
     },
-    prompt: 'Fire the beam through Sample A, read what came back, and say what the inside of an atom is like.',
+    prompt: 'Say what the inside of Sample A\'s atom is like.',
     controls: ['beam'],
     specimens: [
       { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
@@ -244,7 +238,6 @@ export const STAGES = [
       'Solid matter would stop the whole beam. Only a tiny, very dense lump sitting in a lot of empty space lets 37 through and throws 1 back.'
     ],
     check(state) {
-      if (!state.fired.has('a')) return { ok: false, notYet: true, msg: 'Press "Fire Beam" first.' };
       if (!state.choice) return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
       if (state.choice === 'solid') {
         return { ok: false, msg: 'Solid matter would have stopped the beam. 37 shots out of 40 went straight through.' };
@@ -265,7 +258,7 @@ export const STAGES = [
   {
     title: 'What Is In the Middle',
     field: 'core',
-    prompt: 'Press the "The middle" key and count how many grains in Sample A\'s nucleus are stamped with a cross.',
+    prompt: 'Count how many grains in Sample A\'s nucleus are stamped with a cross.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
@@ -297,7 +290,7 @@ export const STAGES = [
   {
     title: 'The Charge Balance',
     field: 'rings',
-    prompt: 'Sample D is sealed, so you cannot see its electrons. Use the needle on all four samples to work out how many electrons Sample D has.',
+    prompt: 'Sample D is sealed, so you cannot see its electrons. Work out how many it has.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'r1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 3, blank: 4 }, rings: [2, 1] },
@@ -315,12 +308,6 @@ export const STAGES = [
       'The needle reads protons minus electrons. Sample C has 6 protons and 4 electrons and reads +2. Sample D reads 0 with 8 protons, so it has 8 electrons.'
     ],
     check(state) {
-      if (!state.metered.has('b')) {
-        return { ok: false, notYet: true, msg: 'Put the needle on Sample D first: select it and press "Read Needle".' };
-      }
-      if (!['r1', 'r2', 'r3'].some(id => state.metered.has(id))) {
-        return { ok: false, notYet: true, msg: 'Read the needle on the open samples too. Sample D alone cannot tell you what the needle measures.' };
-      }
       if (state.number === 8) return { ok: true };
       if (state.number === 0) {
         return { ok: false, msg: 'Zero is what the needle reads, not how many electrons are there. Samples A and B read zero too, and they have 3 and 6.' };
@@ -341,7 +328,7 @@ export const STAGES = [
   {
     title: 'Where the Electrons Sit',
     field: 'rings',
-    prompt: 'Sample D has 11 protons and reads zero, so it has 11 electrons. Put all 11 on its rings, following the pattern the other three samples show.',
+    prompt: 'Sample D has 11 protons and reads zero, so it has 11 electrons. Put all 11 on its rings.',
     controls: ['field'],
     specimens: [
       { id: 'r1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 2, blank: 2 }, rings: [2] },
@@ -388,7 +375,7 @@ export const STAGES = [
   {
     title: 'The Outer Shell Decides',
     field: 'rings',
-    prompt: 'The tester has only 2 charges left. Test two of the four samples, then work out the other two, and say whether each one gives an electron away, takes one on, or will not trade.',
+    prompt: 'The tester has only 2 charges left. Say whether each of the four samples gives an electron away, takes one on, or will not trade.',
     controls: ['field', 'tester'],
     specimens: [
       { id: 's1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 3, blank: 4 }, rings: [2, 1] },
@@ -411,9 +398,6 @@ export const STAGES = [
       'An outer shell with 1 gives it away (A and B). One with 7 is one short of full, so it takes one on (C). One already full at 8 does neither (D).'
     ],
     check(state) {
-      if (state.tested.size < 1) {
-        return { ok: false, notYet: true, msg: 'Run the tester on at least one sample before filing four answers.' };
-      }
       const want = { s1: 'gives', s2: 'gives', s3: 'takes', s4: 'inert' };
       const labels = { s1: 'Sample A', s2: 'Sample B', s3: 'Sample C', s4: 'Sample D' };
       for (const id of ['s1', 's2', 's3', 's4']) {
@@ -480,7 +464,7 @@ export const STAGES = [
   {
     title: 'Take Electrons Off',
     field: 'rings',
-    prompt: 'Sample A reads zero on the needle. Knock electrons off it until the needle reads +2, then log how many you took.',
+    prompt: 'Bring Sample A to a charge of +2, and log how many electrons that took.',
     controls: ['field', 'meter', 'strip', 'reset'],
     specimens: [
       { id: 'm', label: 'SAMPLE A', note: 'mounted, open to the instrument', core: { marked: 11, blank: 12 }, rings: [2, 8, 1] }
@@ -493,10 +477,13 @@ export const STAGES = [
     ],
     check(state) {
       const taken = state.stripped.m || 0;
-      if (taken === 0) {
-        return { ok: false, notYet: true, msg: 'Nothing has been taken off yet. Press "Fire Stripper".' };
-      }
       if (taken !== 2) {
+        // Driving the sample IS the answer here, so a sample still sitting on
+        // zero is a wrong answer with a reason, not a gate on having pressed a
+        // key. Nothing on this bench refuses a player who already knows.
+        if (taken === 0) {
+          return { ok: false, msg: 'Sample A is still neutral. Take electrons off it until the charge reads +2.' };
+        }
         return { ok: false, msg: `The needle reads +${taken}. Bring it to +2 — "Reset Sample" puts every electron back if you went too far.` };
       }
       if (state.number !== 2) {
@@ -872,6 +859,7 @@ export function mount(container, ctx) {
       if (!state.sample) return;
       bench.reset(state.sample);
       delete state.stripped[state.sample];
+      refreshNeedles();
       soundscape.playToggleClack?.();
       renderReadout(null, {
         head: `Bench // ${labelFor(state.sample)}`,
@@ -888,9 +876,14 @@ export function mount(container, ctx) {
     const spec = specFor(id);
 
     if (tool === 'meter') {
+      /* THE NEEDLE STAYS ON THE SAMPLE — see `refreshNeedles` below. A meter
+         you clip to something keeps reading it, so the gauge is drawn on that
+         sample's own plate and four samples on the bench carry four gauges the
+         player can read side by side. */
       const net = liveCharge(id);
       state.metered.add(id);
       soundscape.playScanSweep?.();
+      refreshNeedles();
       renderReadout(null, {
         head: `Needle // ${labelFor(id)}`,
         body: net === 0
@@ -943,9 +936,10 @@ export function mount(container, ctx) {
       } else {
         state.stripped[id] = (state.stripped[id] || 0) + 1;
         soundscape.playBondSnap?.();
+        refreshNeedles();
         renderReadout(null, {
           head: `Stripper // ${labelFor(id)}`,
-          body: `One light piece knocked clear of ring ${ring + 1}. Put the needle back on it.`
+          body: `One light piece knocked clear of ring ${ring + 1}.`
         });
       }
     }
@@ -962,6 +956,17 @@ export function mount(container, ctx) {
 
   function labelFor(id) {
     return specFor(id)?.label || id;
+  }
+
+  /**
+   * Re-read every needle that is clipped to a sample.
+   *
+   * A meter left on a sample keeps measuring it, so anything that changes what
+   * is on a sample comes through here. The bench does no arithmetic of its own:
+   * it is handed the figure and shows it.
+   */
+  function refreshNeedles() {
+    for (const mid of state.metered) bench.setNeedle(mid, liveCharge(mid));
   }
 
   /**
