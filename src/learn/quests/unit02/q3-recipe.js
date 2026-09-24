@@ -132,7 +132,7 @@ export const STAGES = [
     title: 'Three Sources, One Group',
     briefing: {
       speaker: SPEAKER,
-      body: 'This is the sampler scope from Tallow: a power dial that zooms in, a cutter that tries to split a sample, and a shaker that settles it into layers. Turn the power up until the groups come apart, then tap a piece to read it.'
+      body: 'Inspect the samples at high magnification to observe how their groups are built.'
     },
     prompt: 'Set the tray to the recipe one group in these samples is built to.',
     controls: ['power', 'probe'],
@@ -145,7 +145,7 @@ export const STAGES = [
     hints: [
       'Turn the Power dial up to 4 or past it, then look at one group on any of the three plates.',
       'Every group is the same shape: one larger piece with two smaller ones on it. Tap each to read its code.',
-      'One group holds one CAT 08 and two CAT 01, and all three samples are drawn the same way.'
+      'Count the number of larger pieces and smaller pieces attached together in a single group.'
     ],
     check(state) {
       const n01 = state.build.k01 || 0;
@@ -193,7 +193,7 @@ export const STAGES = [
     hints: [
       'Tap a sample to select it, press "Settle", and do the same for the other one.',
       'Sample A settles into one even layer. Sample B settles into two, so there is more than one substance in it.',
-      'Raise the power on Sample B and look between the groups: there are loose CAT 01 pieces in there that no group would take.'
+      'Observe whether all pieces in Sample B are bonded into groups or if unbonded pieces remain.'
     ],
     check(state) {
       if (!state.choice) {
@@ -239,7 +239,7 @@ export const STAGES = [
     hints: [
       'Turn the power up past 4, then count the pieces in one group on each plate and tap them to read the codes.',
       'Sample A draws two pieces to a group and Sample B draws three, with the dark CAT 06 in the middle of each.',
-      'Sample A is one CAT 06 to one CAT 08. Sample B is one CAT 06 to two CAT 08 — exactly twice as much, for the same one CAT 06.'
+      'Count how many CAT 08 pieces surround the central CAT 06 piece in each sample.'
     ],
     check(state) {
       if (!state.choice) {
@@ -275,7 +275,7 @@ export const STAGES = [
     hints: [
       'Turn the power up past 4, then tap the large piece in a group and tap one of the small ones.',
       'The CAT 08 reads 16.0 and each CAT 01 reads 1.0, and a group holds one of the first and two of the second.',
-      '16.0 + 1.0 + 1.0 = 18.0, so one group weighs 18.'
+      'Add the listed mass of the central atom to the masses of both attached atoms.'
     ],
     check(state) {
       if (state.number === 14) {
@@ -320,7 +320,7 @@ export const STAGES = [
     hints: [
       'Read one group again: 16.0 for the CAT 08 and 1.0 for each CAT 01, making 18.0 in all.',
       'The question asks for a share of the WEIGHT, not a share of the pieces. Two of the three pieces are CAT 01, but they are the light ones.',
-      '16.0 out of 18.0 is 0.889, so 89 out of every 100 by weight is CAT 08.'
+      'Divide the mass of the CAT 08 by the total group mass of 18.0 to find its percentage.'
     ],
     check(state) {
       if (!state.choice) {
@@ -363,7 +363,7 @@ export const STAGES = [
     hints: [
       'Count one group on each plate first: Sample A holds one CAT 08 to its CAT 06, and Sample B holds two.',
       'A weight is not a count. Divide each of the drum\'s two parts by what one piece of that kind weighs, and you get how many pieces that part is.',
-      '3 divided by 12.0 is 0.25, and 8 divided by 16.0 is 0.5. 0.25 to 0.5 is 1 to 2, which is Sample B.'
+      'Divide each part by its atomic mass (12.0 for CAT 06 and 16.0 for CAT 08) and compare the ratio.'
     ],
     check(state) {
       if (!state.choice) {
@@ -409,7 +409,7 @@ export const STAGES = [
     hints: [
       'Turn the power up past 4, then count how many small pieces are hanging off the large one in each sample.',
       'Tap the large piece in each group to read its code — the three are CAT 06, CAT 07 and CAT 08, and they are hard to tell apart by eye.',
-      'Sample A is one CAT 08 to two CAT 01, Sample B is one CAT 07 to three, and Sample C is one CAT 06 to four.'
+      'Read the center piece code and count the attached CAT 01 pieces for each sample.'
     ],
     check(state) {
       const labels = { g1: 'Sample A', g2: 'Sample B', g3: 'Sample C' };
@@ -458,7 +458,7 @@ export const STAGES = [
     hints: [
       'Turn the power up past 4, then settle each sample and count one group on each plate.',
       'The claim is one CAT 08 to two CAT 01. A sample fails it either by holding a different group, or by holding anything at all besides that group.',
-      'Sample A is the claim exactly. Sample B has the right groups with loose CAT 01 alongside. Sample C draws four pieces to a group, not three.'
+      'Check whether each sample contains unbonded pieces or groups with a different piece count.'
     ],
     check(state) {
       const labels = { h1: 'Sample A', h2: 'Sample B', h3: 'Sample C' };
@@ -640,7 +640,8 @@ export function mount(container, ctx) {
   const scope = SampleScope(frame.instrumentHost, {
     kinds: KINDS,
     onProbe: hit => onProbe(hit),
-    onSelect: id => onSelect(id)
+    onSelect: id => onSelect(id),
+    onPower: v => setPower(v)
   });
 
   let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);

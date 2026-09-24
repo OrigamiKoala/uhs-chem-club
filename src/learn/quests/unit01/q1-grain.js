@@ -158,7 +158,7 @@ export const STAGES = [
     title: 'Zoom In',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench has a scope that zooms in on a sample, a cutter that tries to split it, and a shaker that settles it into layers. Eight samples, eight questions — take them in order.'
+      body: 'Examine the samples under the scope to observe their structure and determine what they are made of.'
     },
     prompt: 'Find the lowest power at which this grey solid stops looking solid and breaks into separate grains.',
     controls: ['power'],
@@ -170,7 +170,7 @@ export const STAGES = [
     hints: [
       'Turn the Power dial up one step at a time and watch the picture change.',
       'At low power you see solid clumps. Keep going until the clumps break into separate round grains.',
-      'The grains first show up at power 4. Powers 5 and 6 only draw the same grains bigger.'
+      'Compare the lowest power where individual particles appear against higher settings that merely enlarge them.'
     ],
     check(state) {
       if (!state.number) {
@@ -201,7 +201,7 @@ export const STAGES = [
     hints: [
       'They look identical until the scope resolves the grains, so turn the Power dial up first.',
       'Compare the two pictures. One sample has grains that all match; the other has two different grains mixed in together.',
-      'Sample B mixes dark grains with pale ones. Tap Sample A to pick it.'
+      'Look closely at grain shades: choose the sample where every grain has the exact same appearance.'
     ],
     check(state) {
       if (state.sample === 'c09') return { ok: true };
@@ -234,7 +234,7 @@ export const STAGES = [
     hints: [
       'Tapping one grain only tells you about that grain. Tap plenty of them, spread across the whole picture.',
       'Two of the kinds look almost the same. Their mass readings are different: one reads 32.1, the other 35.5.',
-      'There are three kinds here: CAT 08, CAT 16 and CAT 17. Set the counter to 3.'
+      'Group the grains by mass reading: note how many distinct mass values appear across all grains.'
     ],
     check(state) {
       if (state.number === 3) return { ok: true };
@@ -262,9 +262,9 @@ export const STAGES = [
     ],
     widget: { type: 'sample' },
     hints: [
-      'Tap a sample to select it, then press "Run Cutter". Do that for all four.',
+      'Tap a sample to select it, press "Run Cutter". Do that for all four.',
       'A heap scatters. A joined group breaks into its parts. One sample does neither.',
-      'Sample D is a single atom, and the blade finds nothing inside it to split. Tap Sample D.'
+      'Find the sample consisting of an individual atom rather than a cluster or collection of loose pieces.'
     ],
     check(state) {
       if (state.sample === 't4') return { ok: true };
@@ -289,7 +289,7 @@ export const STAGES = [
     hints: [
       'Turn the Power dial up until one cluster is clear, then tap the atom in the middle and each one attached to it.',
       'The middle atom reads CAT 08. The two attached to it both read CAT 01.',
-      'In the tray set CAT 08 to 1 and CAT 01 to 2, and leave CAT 06 on 0.'
+      'Set the tray counts to match the exact number of each atom kind found in a single cluster.'
     ],
     check(state) {
       const b = state.build;
@@ -326,7 +326,7 @@ export const STAGES = [
     hints: [
       'Turn the Power dial up until single molecules are clear, then count the atoms in one from each sample.',
       'Both use only CAT 01 and CAT 08. The difference is how many CAT 08 atoms each molecule holds.',
-      'Sample A has one heavy atom, Sample B has two. File them that way round.'
+      'Count whether the center contains a single heavy atom or a connected pair of them in each sample.'
     ],
     check(state) {
       const { bins } = state;
@@ -362,7 +362,7 @@ export const STAGES = [
     hints: [
       'Tap a sample, press "Settle", and watch where the contents come to rest. Do all three.',
       'Heavier things sink and lighter things float, so two different substances end up in two separate layers.',
-      'Samples A and B each settle into one layer. Sample C splits into two, so it is the mixture.'
+      'Any sample that separates into distinct strata contains multiple unbonded substances.'
     ],
     check(state) {
       const { bins, settled } = state;
@@ -400,7 +400,7 @@ export const STAGES = [
     hints: [
       'Zoom in on each sample to see how many kinds of atom it holds and whether they are bonded. Settle one if you are unsure.',
       'Sample C separates into layers when you settle it. Samples B and D are bonded groups; Sample A is loose single atoms.',
-      'Sample D is bonded pairs, but both atoms are the same kind, so it is still an element. A is an element, B is a compound, C is a mixture.'
+      'Remember that bonded atoms of only one kind remain an element, while different bonded atoms form a compound.'
     ],
     check(state) {
       const b = state.bins;

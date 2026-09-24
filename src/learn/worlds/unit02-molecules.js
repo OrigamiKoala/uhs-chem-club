@@ -16,14 +16,14 @@ export const UNIT_02 = {
   world: 'Ligar',
   place: 'Basalt arches',
   title: 'Molecules',
-  line: 'Nothing here stands alone.',
-  brief: 'Ligar is a field of black stone arches that should have fallen a thousand years ago. The arches teach the same lesson as the cargo: what holds a thing up is what it is joined to.',
+  line: 'Chemical bonding, molecular structures, and stoichiometry.',
+  brief: 'Learn how chemical bonds form, what structures they build, and how to measure chemical quantities by mass.',
 
   quests: [
     {
       id: 'q1-joins',
       title: 'What Holds',
-      line: 'Some pieces cling, some will not touch.',
+      line: 'How chemical bonds form between atoms.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -32,7 +32,7 @@ export const UNIT_02 = {
     {
       id: 'q2-lattice',
       title: 'Stone and Wire',
-      line: 'Why one block shatters and the next one will not break.',
+      line: 'Structure and properties of ionic, molecular, and network solids.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -41,7 +41,7 @@ export const UNIT_02 = {
     {
       id: 'q3-recipe',
       title: 'The Same Recipe',
-      line: 'Every batch of it comes out the same way.',
+      line: 'Definite proportions and percent composition in compounds.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -50,7 +50,7 @@ export const UNIT_02 = {
     {
       id: 'q4-weigh',
       title: 'Counting By Weight',
-      line: 'Nobody has ever counted them. The yard still knows how many.',
+      line: 'Using molar mass to count atoms and molecules by weighing.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',

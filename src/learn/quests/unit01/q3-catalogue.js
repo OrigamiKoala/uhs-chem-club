@@ -155,7 +155,7 @@ export const STAGES = [
     title: 'Put Them In Order',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench is a card index with one card for every kind of atom, and a board to lay them out on.'
+      body: 'This bench holds a card for each kind of atom.'
     },
     prompt: 'File the six cards in the slots, fewest protons on the left.',
     controls: ['reader', 'file', 'clear'],
@@ -166,7 +166,7 @@ export const STAGES = [
     hints: [
       'Tap a card in the drawer to read it, then tap a slot to put it there.',
       'Read all six first. The proton counts are 1, 6, 8, 11, 18 and 19.',
-      'Left to right: HYDROGEN, CARBON, OXYGEN, SODIUM, ARGON, POTASSIUM.'
+      'Arrange the six cards from lowest proton count on the far left to highest on the far right.'
     ],
     check(state) {
       const want = ['c01', 'c06', 'c08', 'c11', 'c18', 'c19'];
@@ -208,7 +208,7 @@ export const STAGES = [
     hints: [
       'Tap the cards one by one and read the outer-shell electron count on each.',
       'Along the row the counts go 1, 2, then 1, 2, 3, 4, 5, 6, 7, 8, then 1 again.',
-      'LITHIUM to NEON is eight cards, and SODIUM starts over, so the answer is 8.'
+      'Count how many cards sit between the first reset at LITHIUM and the next reset at SODIUM.'
     ],
     check(state) {
       if (state.number === 8) return { ok: true };
@@ -249,7 +249,7 @@ export const STAGES = [
     hints: [
       'Tap a card in the drawer to pick it up, then tap the slot you want it in.',
       'These cards still carry their codes: CAT 11 is the lowest and CAT 18 is the highest.',
-      'Left to right: SODIUM, MAGNESIUM, ALUMINUM, SILICON, PHOSPHORUS, SULFUR, CHLORINE, ARGON.'
+      'Order the cards across the bottom row so their catalogue numbers increase by one in each slot.'
     ],
     check(state) {
       const want = ['c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18'];
@@ -263,8 +263,7 @@ export const STAGES = [
       for (let i = 0; i < got.length; i++) {
         if (got[i] !== want[i]) {
           const here = CARDS[got[i]];
-          const there = CARDS[want[i]];
-          return { ok: false, msg: `Slot ${i + 1} holds ${here.name} with ${here.z} protons, but ${there.name} with ${there.z} belongs there.` };
+          return { ok: false, msg: `Slot ${i + 1} holds ${here.name} with ${here.z} protons, which is out of order with its neighbors.` };
         }
       }
       return { ok: false, msg: 'The row is out of order — read the codes and lay them lowest on the left.' };
@@ -287,7 +286,7 @@ export const STAGES = [
     hints: [
       'Column 6 is the sixth from the left. Tap OXYGEN, then tap SULFUR.',
       'Compare the two readouts. Both cards report the same outer-shell count.',
-      'OXYGEN keeps 6 in its outer shell and so does SULFUR, so the answer is 6.'
+      'Check the outer-shell electron count shared by every card in column 6.'
     ],
     check(state) {
       if (state.number === 6) return { ok: true };
@@ -329,7 +328,7 @@ export const STAGES = [
     hints: [
       'Tap one card from each of the four groups and read the last line of each readout.',
       'Three of them trade: one hands an electron over, one takes one on, one holds on to a partner.',
-      'HELIUM, NEON and ARGON all do nothing at all, and all three sit in group 8.'
+      'Look for the column whose cards report that they will not trade either way.'
     ],
     check(state) {
       if (!state.choice) {
@@ -372,7 +371,7 @@ export const STAGES = [
     hints: [
       'Tap all six cards. The last line of each readout says what that card does.',
       'A card with 1, 2 or 3 outer electrons lets them go; one with 5, 6 or 7 pulls one in.',
-      'LITHIUM and MAGNESIUM hand one over, OXYGEN and CHLORINE take one on, CARBON holds on to a partner, and NEON does nothing.'
+      'Read what each card does on its last line and match it to the description on the bin.'
     ],
     check(state) {
       const want = { c03: 'gives', c12: 'gives', c08: 'takes', c17: 'takes', c06: 'holds', c10: 'none' };
@@ -422,7 +421,7 @@ export const STAGES = [
     hints: [
       'Tap the card to the left of the empty slot and the card to its right.',
       'ALUMINUM is 13 and PHOSPHORUS is 15, and the other card in that column is CARBON.',
-      'The missing card is atomic number 14, and like CARBON above it, it holds on to a partner.'
+      'Find the number between its left and right neighbors, and match its behavior to the card above it.'
     ],
     check(state) {
       if (state.number === 0) {
@@ -435,7 +434,7 @@ export const STAGES = [
         return { ok: false, msg: `The slot sits between ALUMINUM at 13 and PHOSPHORUS at 15, so ${state.number} cannot go there.` };
       }
       if (state.choice !== 'holds') {
-        return { ok: false, msg: 'A card behaves like the rest of its column, and the other card in that column is CARBON, which holds on to a partner.' };
+        return { ok: false, msg: 'A card behaves like the rest of its column — check what the other card in that column does.' };
       }
       return { ok: true };
     },
@@ -462,7 +461,7 @@ export const STAGES = [
     hints: [
       'Tap each card to read it. The readout still gives a proton count with the code missing.',
       'The four counts are 4, 7, 13 and 16, and the chart runs in atomic number order.',
-      'The cards reading 4 and 7 go in the middle row; the cards reading 13 and 16 go in the bottom row.'
+      'Match each card’s proton count to the empty spot between the surrounding numbers on the chart.'
     ],
     check(state) {
       const want = { s1: 'c04', s2: 'c07', s3: 'c13', s4: 'c16' };
@@ -473,7 +472,7 @@ export const STAGES = [
       for (const [slot, card] of Object.entries(want)) {
         if (state.board[slot] !== card) {
           const got = CARDS[state.board[slot]];
-          return { ok: false, msg: `One slot holds a card with ${got.z} protons, but the cards beside it put ${CARDS[card].z} in that place.` };
+          return { ok: false, msg: `One slot holds a card with ${got.z} protons, which does not fit between its neighbors.` };
         }
       }
       return { ok: true };

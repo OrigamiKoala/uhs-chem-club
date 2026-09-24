@@ -135,7 +135,7 @@ export const STAGES = [
     hints: [
       'Tap a pair to select it, press "Press Together", and do the same for the other two.',
       'Watch the clamps after each press: a pair that holds stays closed, and a pair that does not springs back to where it started.',
-      'Pair A held and Pair C held. Pair B sprang apart.'
+      'Press each pair together and check whether the clamps remain clamped shut.'
     ],
     check(state) {
       const labels = { p1: 'Pair A', p2: 'Pair B', p3: 'Pair C' };
@@ -143,13 +143,13 @@ export const STAGES = [
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       if (state.bins.p1 !== 'held') {
-        return { ok: false, msg: 'Pair A stayed closed after the press, so it held.' };
+        return { ok: false, msg: 'Pair A remained clamped shut after the press — check its clamps.' };
       }
       if (state.bins.p2 !== 'apart') {
-        return { ok: false, msg: 'Pair B sprang straight back out of the clamps, so nothing held it.' };
+        return { ok: false, msg: 'Pair B sprang back out of the clamps when released.' };
       }
       if (state.bins.p3 !== 'held') {
-        return { ok: false, msg: 'Pair C stayed closed after the press, so it held.' };
+        return { ok: false, msg: 'Pair C remained clamped shut after the press — check its clamps.' };
       }
       return { ok: true };
     },
@@ -183,7 +183,7 @@ export const STAGES = [
     hints: [
       'Tap a piece, press "Read Piece", and do it for a piece in each of the three pairs.',
       'Compare the outer shell of a Pair B piece with the outer shell of a Pair A piece, and then read the Pair A pieces again after the press.',
-      'Both Pair B pieces carry eight electrons on the outer shell, which is as many as that shell holds. Every piece that joined ended up with a full outer shell too.'
+      'Count the outer electrons on each Pair B piece to see if either shell has vacancies to fill.'
     ],
     check(state) {
       if (!state.choice) {
@@ -229,7 +229,7 @@ export const STAGES = [
     hints: [
       'Press both pairs, then tap a piece and press "Read Charge" on each of the four.',
       'Two of the four pieces read something other than zero. Look at which plate they are on, and at where the electrons are drawn afterwards.',
-      'Pair A reads plus one and minus one, because one electron crossed over. Pair B reads zero and zero, because its pair of electrons sits between the two pieces.'
+      'Check the charge reading and electron positions to see whether electrons transferred or stayed positioned in the middle.'
     ],
     check(state) {
       if (!state.choice) {
@@ -275,7 +275,7 @@ export const STAGES = [
     hints: [
       'Press a pair, then tap each of its pieces and press "Read Piece", and do the same for the other three.',
       'Every plate where something was handed over has a metal in it, and every plate where a pair sits between them has two nonmetals.',
-      'Pair A and Pair C handed electrons over. Pair B and Pair D hold pairs between them.'
+      'Check whether each pair combines a metal with a nonmetal, or two nonmetals together.'
     ],
     check(state) {
       const labels = { r1: 'Pair A', r2: 'Pair B', r3: 'Pair C', r4: 'Pair D' };
@@ -316,7 +316,7 @@ export const STAGES = [
     hints: [
       'Press both pairs, then tap the left-hand piece on each plate and press "Read Piece".',
       'The CAT 11 piece on Pair B has nothing left on its outer shell afterwards, but the CAT 12 piece on Pair A still has something sitting on its outer shell.',
-      'A CAT 12 piece starts with two electrons on its outer shell and each CAT 17 takes one of them, so it needs two: (1 x 2 given) = (2 x 1 taken).'
+      'Divide the electrons CAT 12 needs to give away by how many electrons each CAT 17 can accept.'
     ],
     check(state) {
       if (state.number === 0) {
@@ -359,18 +359,17 @@ export const STAGES = [
     hints: [
       'Press each pair, then count the electrons drawn in the middle, between the two pieces.',
       'Read a piece before the press to see how many places its outer shell still has open, and check that against what ends up between them.',
-      'Pair A holds one pair, Pair B holds two and Pair C holds three.'
+      'Count the total electrons held between the two pieces and divide by two to get the number of pairs.'
     ],
     check(state) {
       const labels = { u1: 'Pair A', u2: 'Pair B', u3: 'Pair C' };
-      const counts = { u1: 'two electrons, which is one pair', u2: 'four electrons, which is two pairs', u3: 'six electrons, which is three pairs' };
       for (const id of ['u1', 'u2', 'u3']) {
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       const want = { u1: 'one', u2: 'two', u3: 'three' };
       for (const id of ['u1', 'u2', 'u3']) {
         if (state.bins[id] !== want[id]) {
-          return { ok: false, msg: `${labels[id]} holds ${counts[id]} between its two pieces.` };
+          return { ok: false, msg: `${labels[id]} has a different electron count in the middle — count the pairs between the pieces.` };
         }
       }
       return { ok: true };
@@ -405,7 +404,7 @@ export const STAGES = [
     hints: [
       'Tap each piece and press "Read Piece": the line that matters is whether it is a metal, and whether its outer shell has any room left.',
       'A metal with a nonmetal is ionic, two nonmetals are covalent, and any pair holding a full outer shell makes nothing.',
-      'Pair A and Pair D are ionic, Pair B is covalent, and Pair C makes no bond because CAT 18 already carries eight.'
+      'Identify which pairs have full outer shells, which mix a metal with a nonmetal, and which have only nonmetals.'
     ],
     check(state) {
       const labels = { v1: 'Pair A', v2: 'Pair B', v3: 'Pair C', v4: 'Pair D' };
@@ -413,10 +412,10 @@ export const STAGES = [
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       const reasons = {
-        v1: 'Pair A is a metal with a nonmetal, so it is ionic.',
-        v2: 'Neither Pair B piece is a metal, so it is covalent.',
-        v3: 'CAT 18 already carries eight electrons on its outer shell, so Pair C makes no bond at all.',
-        v4: 'Pair D is a metal with a nonmetal, so it is ionic.'
+        v1: 'Pair A pairs a metal with a nonmetal — check what type of bond that forms.',
+        v2: 'Neither Pair B piece is a metal — check what type of bond forms between nonmetals.',
+        v3: 'CAT 18 already carries eight electrons on its outer shell with no room for a bond.',
+        v4: 'Pair D pairs a metal with a nonmetal — check what type of bond that forms.'
       };
       const want = { v1: 'ionic', v2: 'covalent', v3: 'none', v4: 'ionic' };
       for (const id of ['v1', 'v2', 'v3', 'v4']) {
@@ -444,7 +443,7 @@ export const STAGES = [
     hints: [
       'Press both pairs, then tap the left-hand piece on each plate and press "Read Piece".',
       'After one CAT 01, the CAT 06 piece still has room for three more, and the CAT 07 piece still has room for two.',
-      'One pair is already held, and three places are still open, so one CAT 06 holds 1 + 3 = 4 of them.'
+      'Count how many open spots CAT 06 has in total on its outer shell when empty.'
     ],
     check(state) {
       if (state.number === 0) {
@@ -457,7 +456,7 @@ export const STAGES = [
         return { ok: false, msg: 'One CAT 01 fills only one of the four places on a CAT 06 outer shell.' };
       }
       if (state.number !== 4) {
-        return { ok: false, msg: 'A CAT 06 outer shell has four places open and each CAT 01 fills exactly one of them.' };
+        return { ok: false, msg: 'Check how many open spots CAT 06 needs filled on its outer shell.' };
       }
       return { ok: true };
     },

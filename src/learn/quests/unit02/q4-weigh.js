@@ -100,7 +100,7 @@ export const STAGES = [
     title: 'Count What You Cannot Tip',
     briefing: {
       speaker: SPEAKER,
-      body: 'This is the assay floor from Tallow: a chute that tips a sample past a deflector into bins, and a balance that weighs a whole sample without opening it. Some of the samples here hold far too many pieces for the chute, so the gate stays shut on them and the balance is all you get.'
+      body: 'Use the balance to find the piece count of bulk samples by weight.'
     },
     prompt: 'Sample B is too full to tip. Say how many pieces it holds.',
     controls: ['pour', 'balance'],
@@ -113,7 +113,7 @@ export const STAGES = [
     hints: [
       'Tap Sample A, press "Tip Sample", then press "Weigh Sample" on it, and weigh Sample B as well.',
       'Sample A is 40 pieces weighing 480 in all, and Sample B is the same kind of piece, so each of its pieces weighs the same.',
-      '480 over 40 pieces is 12.0 each, and Sample B weighs 3600, so 3600 divided by 12.0 = 300 pieces.'
+      'Divide the total weight of Sample B by the weight of a single piece from Sample A.'
     ],
     check(state) {
       if (state.number === 0) {
@@ -148,7 +148,7 @@ export const STAGES = [
     hints: [
       'Tap Sample A, press "Tip Sample", and read the weight stencilled under the bin that caught everything.',
       'Sample A\'s bin caught at 18, and its recipe is one CAT 08 at 16.0 with two CAT 01 at 1.0 each — so a unit weighs what its atoms weigh added up.',
-      'Do the same for Sample B: 12.0 for the CAT 06 plus 1.0 for each of the four CAT 01 is 12 + 4 = 16.'
+      'Sum the listed masses of every atom specified in Sample B’s recipe.'
     ],
     check(state) {
       if (state.number === 10) {
@@ -199,7 +199,7 @@ export const STAGES = [
     hints: [
       'Tap a sample, press "Tip Sample", and do the same for the other two.',
       'The three totals came to 60, 720 and 960, so divide each one by the 60 pieces it holds.',
-      '60 / 60 = 1.0, 720 / 60 = 12.0 and 960 / 60 = 16.0, which are the three listed masses exactly.'
+      'Compare the average weight per piece for each sample against the reference card values.'
     ],
     check(state) {
       if (!state.choice) {
@@ -238,7 +238,7 @@ export const STAGES = [
     hints: [
       'Tip at least two of the samples and put each total next to the sixty pieces it came from.',
       'Equal counts weigh in the ratio of the listed masses, so to get equal counts you weigh out the listed masses themselves.',
-      'CAT 06 is listed at 12.0 and CAT 08 at 16.0, so 12.0 grams of the one matches 16.0 grams of the other.'
+      'Look up the listed mass of CAT 08 to find the mass in grams that yields the same count.'
     ],
     check(state) {
       if (state.number === 8) {
@@ -284,7 +284,7 @@ export const STAGES = [
     hints: [
       'Work out what one unit of Sample A weighs first, the way you did two stages back.',
       'One mole of an element is its listed mass in grams, and a unit of a compound weighs the sum of the atoms in it.',
-      '23.0 + 35.5 = 58.5, so 58.5 grams of it is one mole of units.'
+      'Add the listed masses of one CAT 11 and one CAT 17 to get the grams in one mole.'
     ],
     check(state) {
       if (!state.choice) {
@@ -318,7 +318,7 @@ export const STAGES = [
     hints: [
       'Tap Sample A and press "Weigh Sample" to read what the drum holds.',
       'Work out what one mole of this compound weighs first, the way you did on the last stage.',
-      'One unit is 16.0 + 1.0 + 1.0 = 18.0, so a mole weighs 18 grams, and 72 / 18 = 4 moles.'
+      'Divide the total measured mass by the molar mass of 18 grams per mole.'
     ],
     check(state) {
       if (state.number === 0) {
@@ -355,7 +355,7 @@ export const STAGES = [
     hints: [
       'Write down the recipe of one unit first: one CAT 08 and two CAT 01.',
       'A ratio does not care what you count in, so two CAT 01 per unit is also two moles of CAT 01 for every mole of units.',
-      'Two moles of units at two CAT 01 each is 2 x 2 = 4 moles of CAT 01.'
+      'Multiply the number of moles of the compound by the count of CAT 01 atoms in each unit.'
     ],
     check(state) {
       if (state.number === 0) {
@@ -402,7 +402,7 @@ export const STAGES = [
     hints: [
       'Tap each drum and press "Weigh Sample" to read what it holds.',
       'A weight tells you nothing about a count until you divide it by the listed mass of what is in the drum.',
-      '60 / 12.0 = 5 moles, 64 / 16.0 = 4 moles and 6 / 1.0 = 6 moles, so the lightest drum holds the most atoms.'
+      'Divide each drum’s mass by its element’s listed mass to compare their mole counts.'
     ],
     check(state) {
       if (!state.choice) {
@@ -437,7 +437,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'A formula is a count and a balance reads a mass, and until you can turn one into the other a recipe is not something you can actually make. The molar mass is that conversion, and it is the last thing Ligar had to give you.'
+      body: 'A formula is a count and a balance reads a mass, and until you can turn one into the other a recipe cannot be prepared. The molar mass provides that conversion.'
     },
     {
       heading: 'Next',

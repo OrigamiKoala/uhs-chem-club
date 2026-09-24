@@ -299,9 +299,12 @@
 .lq-lamp.here { background: var(--plate-400); border-color: var(--border-strong); color: var(--lamp-amber); }
 
 /* ---- Two columns: the bench on the left, the deck on the right ---- */
+/* The deck widens with the glass. At 350 px a sorting answer had room for one
+   key per line, which is most of why it ran a screen and a half tall; at a
+   third of a wide window a row of three short keys sits beside its sample. */
 .lq-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 350px;
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 30vw, 440px);
   gap: 0.85rem;
   align-items: start;
 }
@@ -615,14 +618,73 @@
   color: var(--text-muted);
 }
 
-/* ---- The deck: prompt, readout, banner, answer, keys ---- */
+/* ---- The deck: prompt, readout, banner, answer, keys ----
+
+   THE DECK IS HELD TO THE GLASS AND COMMIT NEVER LEAVES IT.
+   It used to be one column that grew with whatever a stage put in it, so a
+   long prompt over four samples sorted three ways ran far below the fold, and
+   the key that submits the answer — and the banner that says why an answer was
+   wrong — were the two things a player had to go looking for. It is three
+   zones now, in the order the task is done:
+
+     prompt  pinned at the top: what is being asked is never scrolled away
+     body    the readout, the answer and any hints; scrolls only if it must
+     foot    the miss banner and Hint / Commit, pinned at the bottom
+
+   Where the deck stands beside the bench (sticky, wide windows) `LearnFrame`
+   holds its height to the glass below it (`fitDeck`); the calc here is the
+   same bound before the first measure. Where it stacks under the bench
+   (narrow windows, phones) it is part of the page and grows with it. */
 .lq-deck {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem 1.05rem;
+  padding: 0;
   position: sticky;
   top: calc(var(--hud-h) + 12px);
+  max-height: calc(100dvh - var(--hud-h) - 24px);
+  container: lq-deck / inline-size;
+}
+
+.lq-prompt {
+  flex: none;
+  padding: 0.95rem 1.05rem 0.85rem;
+  border-bottom: 1px solid var(--seam-dark);
+}
+
+.lq-deck-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0.85rem 1.05rem;
+  border-top: 1px solid var(--seam-light);
+  scrollbar-width: thin;
+  scrollbar-color: var(--plate-500) var(--plate-000);
+}
+
+.lq-deck-body::-webkit-scrollbar { width: 7px; }
+.lq-deck-body::-webkit-scrollbar-track { background: var(--plate-000); }
+.lq-deck-body::-webkit-scrollbar-thumb {
+  background: var(--plate-400);
+  border: 1px solid var(--border-durasteel);
+}
+
+.lq-deck-body:not(:has(> :not(:empty))) { display: none; }
+
+/* The key shelf. A step down in tone and a seam above it, so it reads as the
+   lip of the console the keys are set into rather than more of the page. */
+.lq-deck-foot {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.75rem 1.05rem 0.95rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid var(--seam-dark);
+  box-shadow: inset 0 1px 0 var(--seam-light);
 }
 
 .lq-prompt-body {
@@ -835,6 +897,119 @@
 
 .lq-bin-key.selected .lq-bin-label { color: var(--text-amber); }
 
+/* A widget may stack two questions (a number and a choice); they are two
+   answers, so they are spaced as two. */
+.lq-widget { display: flex; flex-direction: column; gap: 0.8rem; }
+
+/* An option key in the deck is a line of text and a note, not a landing
+   target: the base `.choice-option` is sized for a settings page. */
+.lq-deck .lq-bin-key { min-height: 40px; padding: 6px 10px; gap: 2px; }
+
+/* ---- A sorting answer as a matrix (see `compactBins` in frame.js) ----
+   The notes are the same on every row, so they are printed once, here, as a
+   legend; each row is then the sample's name and a line of short keys. */
+.lq-bin-legend {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  padding: 7px 9px 8px;
+  background: var(--plate-100);
+  border: 1px solid var(--border-durasteel);
+  border-top-color: var(--seam-light);
+  border-bottom-color: var(--seam-dark);
+}
+
+.lq-bin-legend-line {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, max-content) minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+
+.lq-bin-legend dt {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+
+.lq-bin-legend dd {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.lq-bins-matrix { gap: 0; }
+
+.lq-bins-matrix .lq-bin-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding: 7px 0;
+}
+
+.lq-bins-matrix .lq-bin-row + .lq-bin-row { border-top: 1px solid var(--border-durasteel); }
+.lq-bins-matrix .lq-bin-row:last-child { padding-bottom: 0; }
+
+/* A row that has been answered says so on its name, so which samples are
+   still open reads down the left edge without scanning every key. */
+.lq-bins-matrix .lq-bin-row:has(.lq-bin-key.selected) .lq-bin-sample { color: var(--text-amber); }
+
+.lq-bins-matrix .lq-bin-keys { flex-direction: row; gap: 4px; margin: 0; }
+
+.lq-bins-matrix .lq-bin-key {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 36px;
+  padding: 5px 6px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-left-width: 1px;
+}
+
+.lq-bins-matrix .lq-bin-note { display: none; }
+
+.lq-bins-matrix .lq-bin-label {
+  font-size: 0.7rem;
+  line-height: 1.2;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
+/* Selected in a row of peers: a lit sill under the key, since a lit left
+   edge on a key this narrow reads as a stray rule rather than a lamp. */
+.lq-bins-matrix .lq-bin-key.selected {
+  border-color: rgba(217, 148, 35, 0.45);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6), inset 0 -2px 0 var(--accent-amber);
+}
+
+/* Room beside the keys for the sample's name: one line per sample. */
+@container lq-deck (min-width: 380px) {
+  .lq-bins-matrix .lq-bin-row {
+    grid-template-columns: 4.8rem minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+/* ---- Keys that went to the bench (`engine/bench-keys.js`) ----
+   Where the bench is built, every key that drives it — and the power dial —
+   stands on the bench as an engraved cap, and pressing it presses the key
+   here. What stays on the plate is the legend saying what they do. */
+.lq-controls.lq-keys-on-bench button,
+.lq-controls.lq-keys-on-bench [role="group"],
+.lq-controls.lq-keys-on-bench .lq-dial { display: none; }
+
+.lq-controls.lq-keys-on-bench .lq-tool-notes button { display: revert; }
+
+.lq-controls.lq-keys-on-bench:not(:has(> :not(button, [role="group"], .lq-dial))) { display: none; }
+
+.lq-controls.lq-keys-on-bench .lq-tool-notes { background: none; border: 0; padding: 0; }
+
 /* ---- Keys ---- */
 .lq-actions { display: flex; gap: 0.6rem; align-items: center; }
 .lq-actions .lq-commit { flex: 1; }
@@ -923,8 +1098,18 @@
 /* ---- Narrow desktop / tablet: the deck drops under the bench ---- */
 @media (max-width: 1000px) {
   .lq-body { grid-template-columns: 1fr; }
-  .lq-deck { position: static; }
+  .lq-deck { position: static; max-height: none; }
   .scope-grid.scope-n1 .scope-aperture { aspect-ratio: 16 / 9; }
+}
+
+/* Over a built bench the left column holds no instrument — the bench is in the
+   world behind the page — so there is nothing for the deck to make way for,
+   and dropping it under an empty column would lay it across the very bench it
+   is about. It stays docked on the right down to phone widths, which is also
+   where a phone turned sideways to walk a world lands. */
+@media (min-width: 761px) and (max-width: 1000px) {
+  .learn-quest-overworld .lq-body { grid-template-columns: minmax(0, 1fr) min(48vw, 420px); }
+  .learn-quest-overworld .lq-deck { position: sticky; top: calc(var(--hud-h) + 8px); }
 }
 
 /* A cleared lamp is a way back into that stage; the current one is not. */

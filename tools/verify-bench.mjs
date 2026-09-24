@@ -142,6 +142,28 @@ function shellTouches(mesh, inv, box) {
   return false;
 }
 
+/**
+ * Whether a TUBE — a cable, a hose — actually passes through `box` (bench
+ * frame). A tube is a body drawn along a curve, and the box round a cable
+ * slung in a catenary is the box round the whole sag: every bench standing
+ * in front of the lab's cable run was "inside" it, though the cable hangs
+ * half a metre under the plate. So the verdict is the tube itself: its
+ * surface crossing the box, or the box sitting inside its bore.
+ */
+function tubeTouches(mesh, inv, box) {
+  if (shellTouches(mesh, inv, box)) return true;
+  const { path, radius } = mesh.geometry.parameters || {};
+  if (!path?.getPoints) return true;              // cannot tell: the box stands
+  const m = new THREE.Matrix4().multiplyMatrices(inv, mesh.matrixWorld);
+  const c = box.getCenter(new THREE.Vector3());
+  const pts = path.getPoints(128).map(p => p.clone().applyMatrix4(m));
+  for (let i = 1; i < pts.length; i++) {
+    const seg = new THREE.Line3(pts[i - 1], pts[i]);
+    if (seg.closestPointToPoint(c, true, new THREE.Vector3()).distanceTo(c) <= (radius || 0)) return true;
+  }
+  return false;
+}
+
 function localBox(obj, inv) {
   const b = new THREE.Box3();
   const v = new THREE.Vector3();
@@ -206,6 +228,68 @@ function panelCorners(spec) {
     .map(([dx, dy]) => new THREE.Vector3(dx, dy, 0).applyMatrix4(o.matrixWorld));
 }
 
+/**
+ * THE KEYS ON THE BENCH. At T4 a stage's tool keys stand on the plate as a
+ * switch panel (`BenchViewer3D.setKeys`, mirrored from the frame's DOM buttons
+ * by `bench-keys.js`). Every instrument is made to carry two sets of them at
+ * its widest stage:
+ *   - FOUR KEYS UNDER A NAME, which is the most any stage in Units 1 and 2
+ *     offers beside a bench of three or more samples (q2-core's View group of
+ *     three and a tool; q4-ledger's, beside five). This is the panel.
+ *   - SIX, the most any stage offers at all (the View group and three tools,
+ *     which q2-core and q4-ledger only ever lay beside ONE sample). Beside a
+ *     full bench there is no plate for that panel, so this is the rail.
+ */
+const KEY_SETS = [
+  ['four keys', [
+    { label: 'View', keys: [
+      { id: 'v1', label: 'Whole piece', lit: true },
+      { id: 'v2', label: 'The middle' },
+      { id: 'v3', label: 'Outside' }
+    ] },
+    { label: null, keys: [{ id: 't1', label: 'Run Tester', badge: '2' }] }
+  ]],
+  ['six keys', [
+    { label: 'View', keys: [
+      { id: 'v1', label: 'Whole piece' },
+      { id: 'v2', label: 'The middle', lit: true },
+      { id: 'v3', label: 'Outside' }
+    ] },
+    { label: null, keys: [
+      { id: 't1', label: 'Press Together' },
+      { id: 't2', label: 'Read Charge' },
+      { id: 't3', label: 'Reset Sample', disabled: true }
+    ] }
+  ]]
+];
+
+/**
+ * Per-mesh boxes of a subtree in the frame `inv` inverts into; hidden bodies
+ * skipped. A plain mesh is boxed by its own points, not by its geometry's box
+ * turned with it: the station trays are octagons set a sixteenth of a turn
+ * round, and the box of a turned box is a quarter wider than the tray.
+ */
+function pointBox(mesh, inv) {
+  const pos = mesh.geometry.attributes?.position;
+  if (!pos) return localBox(mesh, inv);
+  const m = new THREE.Matrix4().multiplyMatrices(inv, mesh.matrixWorld);
+  const b = new THREE.Box3();
+  const v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) b.expandByPoint(v.fromBufferAttribute(pos, i).applyMatrix4(m));
+  return b.isEmpty() ? null : b;
+}
+
+function meshBoxes(node, inv) {
+  const out = [];
+  node.traverse(o => {
+    if (!o.isMesh || o.material?.visible === false) return;
+    for (let a = o; a; a = a.parent) if (!a.visible) return;
+    const bodies = o.isInstancedMesh ? instanceBoxes(o, inv) : [pointBox(o, inv)];
+    for (const b of bodies) if (b) out.push(b);
+  });
+  return out;
+}
+
 /** Deploy one quest's instrument and measure everything it puts on the plate. */
 function check(questId, label, build, widest) {
   const anchor = world.benchAnchor(questId);
@@ -224,13 +308,19 @@ function check(questId, label, build, widest) {
   anchorNode.rotation.y = anchor.rotationY;
   anchorNode.updateMatrixWorld(true);
 
+  for (const [keySetName, keySet] of KEY_SETS)
   for (const [aspectName, aspect] of ASPECTS) {
     const camera = new THREE.PerspectiveCamera(FOV, aspect, 0.05, 80);
     const bench = build(camera, anchor);
     widest(bench);
+    let pressed = null;
+    bench.viewer.setKeys(keySet, id => { pressed = id; });
+    bench.viewer.placeKeys();
+    const bank = bench.viewer.keyBank;
+    if (!bank) fail(`${label}: setKeys stood no key bank on the bench`);
     camera.updateMatrixWorld(true);
 
-    const tag = `${label} @ ${aspectName}`;
+    const tag = `${label} @ ${aspectName}, ${keySetName}`;
 
     // 1. The camera stands on the side the player walked in from.
     const site = world.data.sites.find(s => s.questId === questId);
@@ -336,6 +426,53 @@ function check(questId, label, build, widest) {
       }
     }
 
+    // 5b. THE KEY BANK is in the glass, on the plate, clear of the instrument,
+    // and a press on each key reaches the key under it and nothing else.
+    if (bank) {
+      const b = ndcBounds(bank.group, camera);
+      if (b && (b.minX < -0.98 || b.maxX > 0.98 || b.minY < -0.98 || b.maxY > 0.98)) {
+        fail(`${tag}: the key bank is off the glass — x[${b.minX.toFixed(2)}, ${b.maxX.toFixed(2)}] y[${b.minY.toFixed(2)}, ${b.maxY.toFixed(2)}]`);
+      }
+      const inv = new THREE.Matrix4().copy(bench.viewer.root.matrixWorld).invert();
+      const kb = localBox(bank.group, inv);
+      if (kb && (kb.min.x < -2.3 || kb.max.x > 2.3)) {
+        fail(`${tag}: the key bank runs off the end of the bench — x[${kb.min.x.toFixed(2)}, ${kb.max.x.toFixed(2)}]`);
+      }
+      if (kb && kb.max.y - 0.895 > 0.52) {
+        fail(`${tag}: the key bank stands ${(kb.max.y - 0.895).toFixed(2)} m over the plate — it is a panel, not a tower`);
+      }
+      const others = bench.viewer.framedNodes().map(n => n.group);
+      if (bench.dial) others.push(bench.dial.group);
+      let hitBody = null;
+      for (const node of others) {
+        for (const ob of meshBoxes(node, inv)) {
+          if (kb && shrunk(kb, TOUCH).intersectsBox(shrunk(ob, TOUCH))) { hitBody = ob; break; }
+        }
+        if (hitBody) break;
+      }
+      if (hitBody) {
+        const c = hitBody.getCenter(new THREE.Vector3());
+        fail(`${tag}: the key bank at x[${kb.min.x.toFixed(2)}, ${kb.max.x.toFixed(2)}] stands in the instrument's body at (${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)})`);
+      }
+
+      if (aspectName === '16:9') {
+        // Pressed the way a finger arrives: the cap projected to the screen,
+        // then the viewer's own pointerdown and pointerup, through the real ray.
+        const p = new THREE.Vector3();
+        for (const key of bank.keys) {
+          pressed = null;
+          key.cap.getWorldPosition(p).project(camera);
+          const ev = { clientX: (p.x + 1) / 2 * 1280, clientY: (1 - p.y) / 2 * 720, pointerId: 7, preventDefault() {} };
+          bench.viewer._onPointerDown(ev);
+          bench.viewer._onPointerUp(ev);
+          const want = key.disabled ? null : key.id;
+          if (pressed !== want) {
+            fail(`${tag}: a press on key "${key.id}" reported ${pressed === null ? 'nothing' : `"${pressed}"`}${want ? '' : ' (it is disabled)'}`);
+          }
+        }
+      }
+    }
+
     // 6. NOTHING THE INSTRUMENT BRINGS STANDS INSIDE SOMETHING ALREADY THERE.
     //
     // A deployed instrument is laid on a bench that is a prop with its own
@@ -359,6 +496,8 @@ function check(questId, label, build, widest) {
       const standing = bench.viewer.stations.length
         ? bench.viewer.stations.map(st => st.head).filter(Boolean)
         : bench.viewer.framedNodes().map(n => n.group);
+      // The key bank stands on the plate too, and is held to the same rule.
+      if (bank) standing.push(bank.group);
       for (const node of standing) {
         node.traverse(o => {
           if (!o.isMesh || o.material?.visible === false) return;
@@ -401,6 +540,7 @@ function check(questId, label, build, widest) {
         for (const h of heads) {
           if (!shrunk(h, TOUCH).intersectsBox(shrunk(b, TOUCH))) continue;
           if (o.userData?.openShell && !shellTouches(o, inv, shrunk(h, TOUCH))) continue;
+          if (o.geometry?.type === 'TubeGeometry' && !tubeTouches(o, inv, shrunk(h, TOUCH))) continue;
           const c = b.getCenter(new THREE.Vector3());
           const key = `${c.x.toFixed(2)}|${c.y.toFixed(2)}|${c.z.toFixed(2)}`;
           if (seen.has(key)) return true;
@@ -456,15 +596,15 @@ check('q2-core', 'core bench',
   ])
 );
 
+/* The widest stage q4-ledger declares is read out of its own table: stage 8
+   lays four samples beside a standard, FIVE stations end to end, which leaves
+   no plate beside them for a key panel. That is the case the front rail is
+   for, so it is the case measured. */
+const { STAGES: LEDGER_STAGES } = await import('../src/learn/quests/unit01/q4-ledger.js');
 check('q4-ledger', 'ledger bench',
   (camera, anchor) => new CoreBench3D(null, { world: worldFrame(camera, anchor) }),
-  // Four sealed samples is the widest stage q4-ledger declares.
-  bench => bench.setSpecimens([
-    { id: 'a', label: 'SAMPLE A', note: '', core: { marked: 12, blank: 12 }, rings: [2, 8, 2] },
-    { id: 'b', label: 'SAMPLE B', note: '', core: { marked: 12, blank: 14 }, rings: [2, 8, 2] },
-    { id: 'c', label: 'SAMPLE C', note: '', core: { marked: 12, blank: 12 }, rings: [2, 8] },
-    { id: 'd', label: 'SAMPLE D', note: '', core: { marked: 13, blank: 14 }, rings: [2, 8, 3] }
-  ])
+  bench => bench.setSpecimens(LEDGER_STAGES.reduce((a, b) =>
+    ((b.specimens?.length || 0) > (a.specimens?.length || 0) ? b : a)).specimens)
 );
 
 /* THE CATALOGUE BOARD. The widest thing this quest puts on the bench is the

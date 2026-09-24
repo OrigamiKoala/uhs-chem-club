@@ -216,7 +216,7 @@ export const STAGES = [
     field: 'whole',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench looks inside a single atom. It can fire a beam through one, magnify its middle, weigh its charge, and knock pieces off the outside.'
+      body: 'Investigate the interior of an atom to determine where its mass and substance reside.'
     },
     prompt: 'Say what the inside of Sample A\'s atom is like.',
     controls: ['beam'],
@@ -235,7 +235,7 @@ export const STAGES = [
     hints: [
       'Press "Fire Beam". Forty shots go in, and the readout says what happened to each one.',
       '37 of the 40 went straight through as if nothing were there. 2 were knocked aside and 1 bounced straight back.',
-      'Solid matter would stop the whole beam. Only a tiny, very dense lump sitting in a lot of empty space lets 37 through and throws 1 back.'
+      'Consider what arrangement of mass allows almost all particles to pass through while an occasional particle rebounds.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
@@ -267,7 +267,7 @@ export const STAGES = [
     hints: [
       'Press "The middle". The nucleus is drawn flat, so no grain is hiding behind another one.',
       'Twelve grains are packed in there. Some carry a cross and some are blank — count only the crossed ones.',
-      'Six of the twelve carry a cross. Set the counter to 6.'
+      'Distinguish between the marked particles and the blank particles to count only those with a cross.'
     ],
     check(state) {
       if (state.number === 6) return { ok: true };
@@ -305,7 +305,7 @@ export const STAGES = [
     hints: [
       'Press "Read Needle" on each sample, then press "Outside" and count the electrons on the three you can see.',
       'Sample C is the useful one — its needle is the only one that is not on zero. Count its protons and its electrons and compare them.',
-      'The needle reads protons minus electrons. Sample C has 6 protons and 4 electrons and reads +2. Sample D reads 0 with 8 protons, so it has 8 electrons.'
+      'Use the needle reading: if net charge is protons minus electrons, a neutral reading means both counts must balance.'
     ],
     check(state) {
       if (state.number === 8) return { ok: true };
@@ -346,7 +346,7 @@ export const STAGES = [
     hints: [
       'Press "Outside" and count how many electrons Samples A, B and C keep on each ring. The + and - keys move Sample D\'s electrons.',
       'No sample here has more than 2 on ring 1 or more than 8 on ring 2, and none of them starts a new ring while a closer one still has room.',
-      'Put 2 on Ring 1 and 8 on Ring 2. That is 10, so the last electron goes on Ring 3.'
+      'Fill each inner ring to capacity before placing any remaining electrons on outer rings.'
     ],
     check(state) {
       const placed = state.rings.reduce((n, r) => n + r, 0);
@@ -395,7 +395,7 @@ export const STAGES = [
     hints: [
       'Press "Outside" and count the electrons on the outermost shell of all four samples.',
       'A shell that holds 8 is full. Ask of each sample whether its outer shell has almost none, almost 8, or exactly 8.',
-      'An outer shell with 1 gives it away (A and B). One with 7 is one short of full, so it takes one on (C). One already full at 8 does neither (D).'
+      'Atoms tend to lose a few loose outer electrons, gain electrons when nearly full at eight, or remain inert when already full.'
     ],
     check(state) {
       const want = { s1: 'gives', s2: 'gives', s3: 'takes', s4: 'inert' };
@@ -439,7 +439,7 @@ export const STAGES = [
     hints: [
       'Use "The middle" to count protons and neutrons on all three, then "Outside" to count their electrons.',
       'B and C both hold 13 grains, so the total will not separate them. Their proton counts are different, and so are their outer shells.',
-      'Sample B has 6 protons and the same 2 and 4 outer arrangement as Sample A, so it behaves the same; its extra grain is just a neutron. Sample C has 7 protons and an outer shell of 5, so it behaves differently.'
+      'An atom\'s identity and chemical behavior depend on its proton count and electron arrangement, not its total mass.'
     ],
     check(state) {
       if (!state.bins.k || !state.bins.l) {
@@ -473,7 +473,7 @@ export const STAGES = [
     hints: [
       'Press "Fire Stripper" to knock one electron off the outer shell, then "Read Needle" to see what it did.',
       'Every electron you take off leaves one proton with nothing to cancel it, so the needle climbs by 1 each time.',
-      'Fire the stripper twice to reach +2, then set the counter to 2.'
+      'Remove electrons until the meter confirms a charge of +2, then record how many were stripped.'
     ],
     check(state) {
       const taken = state.stripped.m || 0;
@@ -487,7 +487,7 @@ export const STAGES = [
         return { ok: false, msg: `The needle reads +${taken}. Bring it to +2 — "Reset Sample" puts every electron back if you went too far.` };
       }
       if (state.number !== 2) {
-        return { ok: false, msg: `You took 2 electrons off but logged ${state.number}. Set the counter to 2.` };
+        return { ok: false, msg: 'Set the counter to match how many electrons were removed.' };
       }
       return { ok: true };
     },
@@ -520,7 +520,7 @@ export const STAGES = [
     hints: [
       'Count the protons of all three first. Only a sample with exactly 7 can be the same element as the standard.',
       'Sample C has 8 protons, so it is out straight away. For A and B, count the neutrons too and read the needle on each.',
-      'Sample A is 7 protons and 8 neutrons, needle on zero — an isotope. Sample B is 7 and 7 but reads +1 — an ion. Sample C is a different element.'
+      'Varying neutrons changes mass without charge, varying electrons changes net charge, and varying protons changes the element itself.'
     ],
     check(state) {
       const want = { n1: 'heavy', n2: 'charged', n3: 'other' };

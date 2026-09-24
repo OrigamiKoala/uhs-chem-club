@@ -2,7 +2,7 @@
   "id": "tallow",
   "name": "Tallow",
   "place": "Salt flats",
-  "oneLine": "Turn the dial until the grit stops getting finer.",
+  "oneLine": "Learn atomic structure, elements, and isotopes.",
   "sky": "tallow-sky",
   "terrain": {
     "heightmap": "tallow-hardpan",

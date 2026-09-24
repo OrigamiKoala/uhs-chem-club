@@ -102,7 +102,7 @@ export const STAGES = [
     title: 'Heat All Three',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench takes a whole block of finished material and does three things to it: hits it, heats it until it comes apart, and puts a current through it.'
+      body: 'This bench tests how blocks of solid material hold together.'
     },
     prompt: 'Pick the block whose pieces are being held together hardest.',
     controls: ['strike', 'heat', 'cool'],
@@ -119,7 +119,7 @@ export const STAGES = [
     hints: [
       'Tap a block to select it, press "Heat It", and do the same for the other two.',
       'Each block reports the temperature it came apart at. The harder its pieces are held, the more heat it takes to pull them apart.',
-      'Block B went at 115 degrees, Block A at 801 and Block C at 1710, so Block C is held hardest.'
+      'Compare the temperatures at which each block melted to see which required the most heat.'
     ],
     check(state) {
       if (!state.choice) {
@@ -159,7 +159,7 @@ export const STAGES = [
     hints: [
       'Tap a block, press "Strike It", and do the same for the other one.',
       'Look at what the picture shows in Block A before the blow: every piece marked plus has pieces marked minus all round it, in a pattern that repeats.',
-      'Slide one layer of that pattern sideways by a single step and every plus lands beside a plus. They push each other apart, and the block splits straight along that plane.'
+      'Notice how alternating charges in the grid shift when a layer slides sideways.'
     ],
     check(state) {
       if (!state.choice) {
@@ -202,7 +202,7 @@ export const STAGES = [
     hints: [
       'Test each block cold first, then press "Heat It" on it and test the same block again.',
       'Block A passes nothing cold and passes a current once it is molten. Block B is molten too, and just as hot, and passes nothing at all.',
-      'Block A holds charged pieces, locked in place while it is solid and loose once it is melted. Block B has no charged pieces to move, hot or cold.'
+      'Consider whether charges are present in the material and whether they are able to move.'
     ],
     check(state) {
       if (!state.choice) {
@@ -245,7 +245,7 @@ export const STAGES = [
     hints: [
       'Tap Block A, press "Strike It", then press "Heat It" on the same block and look at the picture after each.',
       'Count the pieces in one of the small groups before the blow and count them again afterwards.',
-      'The groups drift apart from each other but every one of them is still whole, with its own joins still drawn. Only the pull between groups gave way.'
+      'Observe whether individual groups broken apart remain intact internally.'
     ],
     check(state) {
       if (!state.choice) {
@@ -288,7 +288,7 @@ export const STAGES = [
     hints: [
       'Tap Block A and press all three keys on it, one after the other.',
       'The hammer does nothing to Block A, it needs 1710 degrees, and it passes no current even when it is molten. Then look at how its pieces are drawn.',
-      'Every piece in Block A has lines running from it to its neighbours, right across the picture, with no gaps and no separate groups anywhere.'
+      'Inspect the diagram to see whether connections form one continuous structure across the entire block.'
     ],
     check(state) {
       if (!state.choice) {
@@ -330,7 +330,7 @@ export const STAGES = [
     hints: [
       'Strike each block, then look at what the picture leaves you holding.',
       'A molecule is a group of atoms joined to each other and to nothing else. Look for a picture with gaps in it.',
-      'Block B is the only one drawn as separate groups with space between them. Block A repeats without a break and Block C is joined right across.'
+      'Look for the diagram that shows separate, distinct groups with space between them.'
     ],
     check(state) {
       if (!state.choice) {
@@ -373,7 +373,7 @@ export const STAGES = [
     hints: [
       'Nothing resolves inside a cased block, so heat each one, test each one molten, and hit each one.',
       'A block that comes apart low and crumbles is one build; a block that comes apart high, splits flat and conducts once molten is another; a block that will not break at all is the third.',
-      'Block A went at 1074, cleaved flat and conducted molten. Block B went at 80 and crumbled. Block C went at 3550, would not break and never conducted.'
+      'Use the melting point, cleavage behavior, and molten conductivity to identify each structure.'
     ],
     check(state) {
       for (const id of ['x1', 'x2', 'x3']) {
@@ -420,7 +420,7 @@ export const STAGES = [
     hints: [
       'Heat all three and write down the three temperatures, then test each one after it has melted.',
       'Anything that comes apart below 900 degrees is out before you even reach the current test.',
-      'Block B goes at 115 and Block A at 801, both under 900. Block C holds to 1710 and passes nothing even molten.'
+      'Eliminate any block that melts below 900 degrees, then check conductivity on whatever remains.'
     ],
     check(state) {
       if (!state.choice) {

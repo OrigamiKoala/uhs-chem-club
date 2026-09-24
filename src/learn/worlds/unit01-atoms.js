@@ -23,14 +23,14 @@ export const UNIT_01 = {
   world: 'Tallow',
   place: 'Salt flats',
   title: 'Atoms',
-  line: 'What everything is made of, and how to tell one kind from another.',
-  brief: 'Tallow is an abandoned refinery on a salt flat. Five benches are still working, and each one answers a different question about what matter is made of.',
+  line: 'Atomic structure, elements, and the periodic table.',
+  brief: 'Investigate the structure of atoms, subatomic particles, isotopes, and atomic mass across five benches.',
 
   quests: [
     {
       id: 'q1-grain',
       title: 'Atoms, Elements and Mixtures',
-      line: 'Zoom in until matter stops being smooth.',
+      line: 'Distinguish atoms, elements, compounds, and mixtures.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -39,7 +39,7 @@ export const UNIT_01 = {
     {
       id: 'q2-core',
       title: 'Inside an Atom',
-      line: 'Protons, neutrons and electrons, and where each one sits.',
+      line: 'Protons, neutrons, and electron shells.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -48,7 +48,7 @@ export const UNIT_01 = {
     {
       id: 'q3-catalogue',
       title: 'The Periodic Table',
-      line: 'Line the elements up by proton count and a pattern appears.',
+      line: 'Periodic patterns, periods, and groups.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -57,7 +57,7 @@ export const UNIT_01 = {
     {
       id: 'q4-ledger',
       title: 'Isotopes and Ions',
-      line: 'Three numbers are enough to describe any atom.',
+      line: 'Atomic number, mass number, and ions.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -66,7 +66,7 @@ export const UNIT_01 = {
     {
       id: 'q5-assay',
       title: 'Atomic Mass',
-      line: 'Why the mass on the card is never a whole number.',
+      line: 'Isotopes and average atomic mass.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',

@@ -23,6 +23,7 @@ import { soundscape } from '../../audio/soundscape.js';
 import { createTransmissionElement } from '../../ui/transmission.js';
 import { benchDeployment } from './bench-host.js';
 import { benchesAre3D } from './instruments.js';
+import { mirrorBenchKeys } from './bench-keys.js';
 import {
   PanelRig, createBenchAnchor, createPanelGantry, disposeGantry
 } from '../../three/world-ui.js';
@@ -56,9 +57,13 @@ const RUNG2_AFTER_MS = 45000;
 export function toolNotes(items) {
   const list = (items || []).filter(it => it && it.key && it.what);
   if (!list.length) return '';
+  // Where the bench is built, the keys this legend names are no longer beside
+  // it: they are engraved caps on the bench (see `bench-keys.js`), and "these"
+  // would point at nothing. The legend says where they went.
+  const heading = benchesAre3D() ? 'Keys on the bench' : 'What these do';
   return `
     <div class="lq-tool-notes">
-      <span class="form-label">What these do</span>
+      <span class="form-label">${heading}</span>
       <dl>
         ${list.map(it => `
           <div class="lq-tool-note">
@@ -69,6 +74,51 @@ export function toolNotes(items) {
       </dl>
     </div>
   `;
+}
+
+/**
+ * A sorting answer, laid out as a matrix rather than a stack.
+ *
+ * A bins widget asks the same question of every sample on the bench — "which
+ * of these is it?" — and every quest draws it the plain way: each sample's row
+ * carries every bin's key, and every key carries its label AND its one-line
+ * note. Four pairs sorted three ways was twelve full-width two-line keys, and
+ * the same three notes printed four times over pushed Commit a screen and a
+ * half below the prompt. The notes are the same on every row, so they are
+ * read once: this lifts them into a legend over the rows, ties each key to
+ * its line with `aria-describedby`, and marks the list so the stylesheet can
+ * lay each row out as one line of short keys beside the sample's name.
+ *
+ * Nothing is re-authored. The keys, their data attributes and the quest's own
+ * handlers are exactly the ones the quest wrote; a row of one sample, where
+ * nothing repeats, is left alone.
+ *
+ * @param {HTMLElement} root the answer region, just filled
+ */
+let legendSeq = 0;
+function compactBins(root) {
+  root?.querySelectorAll?.('.lq-bins').forEach(list => {
+    const rows = list.querySelectorAll('.lq-bin-row');
+    if (rows.length < 2) return;
+    const lines = [];
+    const ids = new Map();
+    rows[0].querySelectorAll('.lq-bin-key').forEach(key => {
+      const bin = key.dataset.bin;
+      const label = key.querySelector('.lq-bin-label')?.textContent.trim();
+      const note = key.querySelector('.lq-bin-note')?.textContent.trim();
+      if (!bin || !label || !note || ids.has(bin)) return;
+      const id = `lq-bin-legend-${++legendSeq}`;
+      ids.set(bin, id);
+      lines.push(`<div class="lq-bin-legend-line" id="${id}"><dt>${esc(label)}</dt><dd>${esc(note)}</dd></div>`);
+    });
+    if (!lines.length) return;
+    list.insertAdjacentHTML('beforebegin', `<dl class="lq-bin-legend">${lines.join('')}</dl>`);
+    list.classList.add('lq-bins-matrix');
+    list.querySelectorAll('.lq-bin-key').forEach(key => {
+      const id = ids.get(key.dataset.bin);
+      if (id) key.setAttribute('aria-describedby', id);
+    });
+  });
 }
 
 /**
@@ -182,14 +232,18 @@ export class LearnFrame {
 
           <aside class="lq-deck plate">
             <div class="lq-prompt"></div>
-            <div class="lq-readout"></div>
-            <div class="lq-banner" role="status" aria-live="polite"></div>
-            <div class="lq-widget"></div>
-            <div class="lq-actions">
-              <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
-              <button type="button" class="btn-primary lq-commit" data-act="submit">Commit</button>
+            <div class="lq-deck-body">
+              <div class="lq-readout"></div>
+              <div class="lq-widget"></div>
+              <div class="lq-hints"></div>
             </div>
-            <div class="lq-hints"></div>
+            <div class="lq-deck-foot">
+              <div class="lq-banner" role="status" aria-live="polite"></div>
+              <div class="lq-actions">
+                <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
+                <button type="button" class="btn-primary lq-commit" data-act="submit">Commit</button>
+              </div>
+            </div>
           </aside>
         </div>
       </section>
@@ -204,6 +258,7 @@ export class LearnFrame {
       controls: q('.lq-controls'),
       scope: q('.lq-scope'),
       prompt: q('.lq-prompt'),
+      deckBody: q('.lq-deck-body'),
       readout: q('.lq-readout'),
       banner: q('.lq-banner'),
       widget: q('.lq-widget'),
@@ -233,6 +288,48 @@ export class LearnFrame {
     this.container.addEventListener('click', this.onClick);
 
     this.deployPanels();
+
+    // WHERE THE BENCH IS BUILT, ITS KEYS ARE ON IT. Every key a quest puts on
+    // the tool plate is mirrored onto the bench as an engraved cap, and a press
+    // there presses the key here — so the quest's handlers, and its grading,
+    // are the ones it always had. The plate keeps only the legend.
+    if (benchesAre3D()) this.benchKeys = mirrorBenchKeys(this.el.controls);
+
+    // Held to the glass: see `fitDeck`. Scroll is listened for in the capture
+    // phase because the page that scrolls is a container, not the window.
+    this.el.deck = q('.lq-deck');
+    this.onFit = () => {
+      if (this.fitQueued) return;
+      this.fitQueued = true;
+      requestAnimationFrame(() => { this.fitQueued = false; this.fitDeck(); });
+    };
+    window.addEventListener('resize', this.onFit);
+    window.addEventListener('scroll', this.onFit, { capture: true, passive: true });
+    this.onFit();
+  }
+
+  /**
+   * Hold the deck to the glass that is left below it.
+   *
+   * Beside the bench the deck is sticky, and its CSS bound assumes it is
+   * already stuck under the HUD. It is not, until the page has scrolled: at the
+   * top of a stage the host bar and the stage rail stand above it, and a deck
+   * bounded as though they did not would still put Commit below the fold. So
+   * the bound is measured from where the deck's top actually is, and re-taken
+   * as the page moves. The top of the deck never moves because of this; only
+   * its bottom edge tracks the bottom of the glass. Stacked under the bench
+   * (narrow windows, phones) the deck is part of the page and is left alone.
+   */
+  fitDeck() {
+    const deck = this.el.deck;
+    if (this.disposed || !deck || this.diegetic) return;
+    if (getComputedStyle(deck).position !== 'sticky') {
+      deck.style.maxHeight = '';
+      return;
+    }
+    const vh = window.visualViewport?.height || window.innerHeight;
+    const top = Math.max(0, deck.getBoundingClientRect().top);
+    deck.style.maxHeight = `${Math.max(300, Math.floor(vh - top - 14))}px`;
   }
 
   /* ---------------- diegesis ---------------- */
@@ -401,6 +498,7 @@ export class LearnFrame {
     this.el.hints.innerHTML = '';
     this.el.controls.innerHTML = '';
     this.el.widget.innerHTML = '';
+    if (this.el.deckBody) this.el.deckBody.scrollTop = 0;
 
     this.el.actions.innerHTML = `
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
@@ -414,6 +512,7 @@ export class LearnFrame {
 
     this.updateStageActions();
     this.updateRail();
+    this.onFit?.();
     // Walking to the next stage should bring the bench back into view — on a
     // phone the Next key sits below it. Arriving at the quest should not move
     // the page at all.
@@ -435,7 +534,10 @@ export class LearnFrame {
   }
 
   setControls(html) { this.el.controls.innerHTML = html; }
-  setWidget(html) { this.el.widget.innerHTML = html; }
+  setWidget(html) {
+    this.el.widget.innerHTML = html;
+    compactBins(this.el.widget);
+  }
   setReadout(html) { this.el.readout.innerHTML = html; }
 
   setCommitEnabled(on) {
@@ -517,6 +619,7 @@ export class LearnFrame {
       <button type="button" class="btn-primary lq-commit" data-act="next">${reward.last ? 'Finish' : 'Next Stage'}</button>
     `;
     this.el.commit = this.el.actions.querySelector('.lq-commit');
+    this.reveal(this.el.widget.firstElementChild);
     const dockCommit = this.container.querySelector('.lq-dock-commit');
     if (dockCommit) {
       dockCommit.textContent = reward.last ? 'Finish' : 'Next Stage';
@@ -542,6 +645,7 @@ export class LearnFrame {
       this.el.hints.innerHTML += `
         <p class="lq-hint lq-hint-wait">Keep looking. The next hint opens after another try, or after 45 seconds.</p>
       `;
+      this.reveal(this.el.hints.lastElementChild);
       return;
     }
     this.rung++;
@@ -549,6 +653,24 @@ export class LearnFrame {
     this.el.hints.innerHTML += `
       <p class="lq-hint"><span class="lq-hint-rung">${this.rung}</span>${esc(hints[this.rung - 1])}</p>
     `;
+    this.reveal(this.el.hints.lastElementChild);
+  }
+
+  /**
+   * Bring something that has just arrived in the deck's body into view.
+   *
+   * Where the deck is held to the height of the glass its body scrolls, and a
+   * hint or a reward card that lands below the fold is one the player never
+   * sees arrive. Only the body moves: scrolling the element into view would
+   * also scroll the page, which drags the bench out from beside the deck.
+   */
+  reveal(el) {
+    const body = this.el.deckBody;
+    if (!el || !body || body.scrollHeight <= body.clientHeight + 1) return;
+    const b = body.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    if (r.bottom > b.bottom) body.scrollTop += Math.min(r.bottom - b.bottom + 8, r.top - b.top);
+    else if (r.top < b.top) body.scrollTop -= b.top - r.top + 8;
   }
 
   /* ---------------- briefing ---------------- */
@@ -706,6 +828,10 @@ export class LearnFrame {
       this.activeBriefingTx = null;
     }
     this.container.removeEventListener('click', this.onClick);
+    this.benchKeys?.dispose();
+    this.benchKeys = null;
+    window.removeEventListener('resize', this.onFit);
+    window.removeEventListener('scroll', this.onFit, { capture: true });
     closeModal();
     this.retirePanels();
     this.container.innerHTML = '';

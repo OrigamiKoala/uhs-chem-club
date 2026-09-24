@@ -64,3 +64,55 @@ export function benchDeployment() {
     return null;
   }
 }
+
+/* ------------------------------------------------------------ live viewer
+
+   THE KEYS ON THE BENCH FIND THE BENCH THROUGH HERE. A quest's tool keys are
+   DOM buttons in the frame's `.lq-controls`, and at T4 they are mirrored onto
+   the instrument as real keys (`bench-keys.js`). The frame is built before the
+   instrument, and neither knows about the other, so the viewer announces
+   itself here when it is constructed and withdraws when it is disposed. Still
+   no three.js: this module only holds a reference. */
+
+/** Live viewers, oldest first. The last one is the one being worked. */
+const liveViewers = [];
+const viewerListeners = new Set();
+
+/** Called by `BenchViewer3D`'s constructor. */
+export function registerBenchViewer(v) {
+  if (!v) return;
+  const at = liveViewers.indexOf(v);
+  if (at >= 0) liveViewers.splice(at, 1);
+  liveViewers.push(v);
+  for (const cb of [...viewerListeners]) {
+    try { cb(v); } catch (err) { console.error('Bench viewer listener failed:', err); }
+  }
+}
+
+/** Called by `BenchViewer3D.dispose()`. */
+export function unregisterBenchViewer(v) {
+  const at = liveViewers.indexOf(v);
+  if (at >= 0) liveViewers.splice(at, 1);
+  for (const cb of [...viewerListeners]) {
+    try { cb(activeBenchViewer()); } catch (err) { console.error('Bench viewer listener failed:', err); }
+  }
+}
+
+/** The most recently registered viewer that has not been disposed, or null. */
+export function activeBenchViewer() {
+  for (let i = liveViewers.length - 1; i >= 0; i--) {
+    if (!liveViewers[i].disposed) return liveViewers[i];
+  }
+  return null;
+}
+
+/**
+ * Hear about a viewer coming up (and, with `null` or the survivor, one going
+ * away). Returns the unsubscribe function.
+ * @param {(viewer: object|null) => void} cb
+ */
+export function onBenchViewer(cb) {
+  if (typeof cb !== 'function') return () => {};
+  viewerListeners.add(cb);
+  return () => viewerListeners.delete(cb);
+}

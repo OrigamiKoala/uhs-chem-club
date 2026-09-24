@@ -70,9 +70,10 @@ one." The route is what the bench is for. Rung 1 of the hint ladder is where "pr
 key" belongs, because a hint is earned.
 
 **A hint rung is ONE sentence.** Rung 1 says what to do with the tool, rung 2 says what to
-look at or compare, rung 3 gives the answer plainly — and where there is arithmetic, rung 3
-shows the actual sum (`(0.2 x 10) + (0.8 x 11) = 2 + 8.8 = 10.8`), never the method alone. A
-three-clause hint is a paragraph a stuck player has to parse before they can use it.
+look at or compare, rung 3 gives the exact method or calculation structure, but NEVER reveals
+the final answer or arithmetic result. Hints must guide the user to solve the problem themselves,
+never spoon-feed solutions or answers. Strip all feature advertisements and decorative fluff;
+keep instructions necessary, clear, and direct.
 
 **NOTHING EVER BLOCKS A PLAYER WHO HAS THE RIGHT ANSWER.** A stage may refuse a blank
 answer — there is nothing there to grade — and it may refuse a wrong one with a reason. It
@@ -477,7 +478,33 @@ into grinding and would punish the students it exists to help.
   - **They cannot disagree.** Both call `angleFor` / `valueForAngle` from `dial.js`, which
     is the single implementation of where a detent is. A quest passes `onPower` once; the
     drawn instrument ignores it and the built one reports through it, and both end in the
-    quest's own `setPower`.
+    quest's own `setPower`. (`q3-recipe` did not pass it, so its built scope had no knob.)
+- **The tool keys are keys ON THE BENCH, and the DOM is still the only copy of them.** At
+  T4 "Fire Beam", "Press Together", the View keys and the rest used to be buttons in the
+  overlay's `.lq-controls`, pressed on a page floating over the instrument. Now
+  `engine/bench-keys.js` `mirrorBenchKeys(controlsEl)` (called by the frame when
+  `benchesAre3D()`) reads those buttons — groups from `[role="group"]` and its
+  `aria-label`, legend from the button's own text, badge from a child element (the
+  tester's charges), lit from `lit` / `selected` / `aria-pressed`, disabled from the
+  button — and hands them to `BenchViewer3D.setKeys(groups, onPress)`; a press on a key on
+  the bench calls `.click()` on the real button, so handlers and grading are untouched and
+  identical on every tier. It finds the viewer through the registry in `bench-host.js`
+  (`registerBenchViewer` / `activeBenchViewer` / `onBenchViewer`), because the frame is
+  built before the instrument; a MutationObserver re-syncs once per frame, and the class
+  `lq-keys-on-bench` on the controls element is what lets the CSS hide the mirrored DOM
+  keys. `buildKeyBank()` (pure builder, like `buildPowerDial`) makes a raked steel face on
+  a dark plinth with a proud durasteel cap per key, the legend engraved on it verbatim, a
+  filament lens beside it lit only when the key is, and a dull legend when disabled; the
+  keys are grabbables, so a press is never a camera drag, and a key fires on release only
+  if the pointer is still on it. **Where it stands is a collision question**: the plate
+  carries a weld bead down z = 0, swarf along the back lip, a vice and a tool block on the
+  front corners and the note slips in front of every station, so the panel stands in the
+  band BEHIND the bead (z -0.04 to -0.47), outboard of the instrument, right first then
+  left, one column or two (over five keys); a bench laid end to end (q4-ledger stage 8,
+  five samples) leaves no plate beside it, and there the keys stand as a low rail along
+  the front edge. `verify:bench` makes every instrument carry four keys and six at its
+  widest stage and holds the bank to the glass, the bench ends, clear of the instrument,
+  clear of the world, and pressed through the real pointer path.
 - **A BUILT INSTRUMENT SHOWS A FLAT PICTURE.** The bench, the wells, the crate of bulk
   matter in them and the power dial are real geometry the player leans over — and what the
   instrument RESOLVES is drawn in two dimensions on a **raked screen standing behind each
@@ -522,6 +549,23 @@ into grinding and would punish the students it exists to help.
   glass. `.learn-quest-overworld` in `learn.css` is what makes that work at all: the frame's
   containers are `pointer-events: none` and only the plates themselves take a press, because
   a transparent full-width box still swallows every click aimed at the bench behind it.
+- **THE DECK IS HELD TO THE GLASS AND COMMIT NEVER LEAVES IT.** `.lq-deck` used to be
+  one column that grew with the stage, so a long prompt over four samples sorted three
+  ways ran a screen and a half tall and Commit (and the miss banner) were what the player
+  had to scroll to find. It is three zones now: `.lq-prompt` pinned at the top,
+  `.lq-deck-body` (readout, answer, hints) which scrolls only if it must, and
+  `.lq-deck-foot` (banner, Hint, Commit) pinned at the bottom. Beside the bench the deck
+  is sticky and `LearnFrame.fitDeck()` bounds it to the glass below where its top
+  ACTUALLY is (the host bar and rail stand above it until the page scrolls); `reveal()`
+  scrolls only the body to a new hint or reward, never the page. Stacked under the bench
+  (≤1000 px, phones) it is part of the page. The column is `clamp(340px, 30vw, 440px)`,
+  and over a built bench (`.learn-quest-overworld`) it stays docked right down to 761 px,
+  because there the left column holds no instrument. **A sorting answer is a matrix, not
+  a stack:** `compactBins()` in `setWidget` lifts the per-bin notes (identical on every
+  row) into one `.lq-bin-legend`, ties each key to its line with `aria-describedby`, and
+  marks the list `.lq-bins-matrix` so each sample is one row of short keys beside its name
+  (the name turns amber once answered). No quest markup changed; a one-row list is left
+  alone.
 - **AND THE AIMING STOPS THE MOMENT THE PLAYER TAKES A STEP.** A deployed bench stands on
   ground that is still underfoot, so the player keeps their feet while they work it: W/A/S/D
   walks, a drag on the view turns, and collision and the terrain clamp are the world's as
@@ -781,7 +825,7 @@ for them by the instrument. It now reports the two figures it actually measures,
 a count, and stops. A real
 sample is a mix of isotopes, the proportions are fixed, the listed mass is a weighted average
 that leans toward the common isotope, and the average runs both ways — a sealed sample gets
-named off its number. Every hint rung three shows the actual sum. The bench never counts by
+named off its number. Hint rung three shows how to set up the average without revealing the calculated sum. The bench never counts by
 weighing at scale: moles are Ligar's.
 
 ### World 2 — Ligar (`unit02`, four benches, all live, walkable at T4)

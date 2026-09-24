@@ -112,7 +112,7 @@ export const STAGES = [
     title: 'Tip It Out',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench tips a sample down a chute, where a deflector sorts the pieces by weight into numbered bins. A balance can also weigh a whole sample without opening it.'
+      body: 'This bench sorts samples by particle weight into numbered bins.'
     },
     prompt: 'Say why Sample A splits across two bins instead of landing in one.',
     controls: ['pour', 'code'],
@@ -132,7 +132,7 @@ export const STAGES = [
     hints: [
       'Press "Tip Sample", then tap a bin and press "Read Code", and do the same on the other bin.',
       'The bins are marked 35 and 37, so compare the two codes to see whether the pieces are different kinds.',
-      'Both bins read CAT 17, so this is one kind of atom with two weights in it.'
+      'Check whether the CAT codes in both bins match to see if they belong to the same element.'
     ],
     check(state) {
       if (!state.choice) {
@@ -167,7 +167,7 @@ export const STAGES = [
     hints: [
       'Tap a sample to select it, press "Tip Sample", then do the same for the other one.',
       'Sample A drops 30 of its 40 pieces into the 35 bin, and Sample B drops 60 of its 80.',
-      '30 out of 40 and 60 out of 80 both come to 75 out of 100, so set the counter to 75.'
+      'Divide the count in the lighter bin by the sample total to find the percentage.'
     ],
     check(state) {
       if (state.number === 0) {
@@ -216,7 +216,7 @@ export const STAGES = [
     hints: [
       'Tip it, then read the number on each bin and the tally above it.',
       'Halfway between 35 and 37 is 36, and 35.5 is not 36, so compare how many pieces landed in each bin.',
-      '30 of the 40 pieces weigh 35, so 35.5 sits a quarter of the way from 35 up to 37.'
+      'Observe which bin holds the larger share of pieces to see which mass pulls the average toward it.'
     ],
     check(state) {
       if (!state.choice) {
@@ -253,7 +253,7 @@ export const STAGES = [
     hints: [
       'Tip it and read both tallies: 8 pieces at weight 10 and 32 pieces at weight 11.',
       '8 out of 40 is one fifth of the pieces at weight 10, and 32 out of 40 is four fifths at weight 11.',
-      'Multiply each weight by its share and add them: (0.2 x 10) + (0.8 x 11) = 2 + 8.8 = 10.8.'
+      'Multiply each bin mass by its fractional share of the total pieces, then sum the results.'
     ],
     check(state) {
       const v = state.decimal;
@@ -296,7 +296,7 @@ export const STAGES = [
     hints: [
       'Tip it and count how many bins caught anything at all.',
       'All 40 pieces landed in the bin marked 19, so every piece weighs exactly the same.',
-      'The weighted average of 19 and 19 and 19 is 19, so this element has only one isotope.'
+      'Consider what happens to an average when every single piece in the sample has the identical mass.'
     ],
     check(state) {
       if (!state.choice) {
@@ -330,7 +330,7 @@ export const STAGES = [
     hints: [
       'Press "Weigh Sample" on Sample A and divide what it reads by the number of pieces.',
       '808 over 40 pieces is 20.2 each, and the two weights are 20 and 22, so 20.2 is one tenth of the way from 20 up to 22.',
-      'Try one tenth heavy: (0.9 x 20) + (0.1 x 22) = 18 + 2.2 = 20.2, so 90 pieces in every hundred weigh 20.'
+      'Use how close the average is to 20 compared to 22 to deduce what fraction of the pieces must be mass 20.'
     ],
     check(state) {
       if (state.number === 0) {
@@ -377,18 +377,17 @@ export const STAGES = [
     hints: [
       'Weigh each sample and divide what the balance reads by the number of pieces.',
       'A weight per piece is what a listed mass on the plate is too, so the two can be compared directly.',
-      '808 / 40 = 20.2, 1420 / 40 = 35.5, 432 / 40 = 10.8.'
+      'Calculate total mass divided by 40 for each sample, then match each result to a plate.'
     ],
     check(state) {
       const want = { ha: 'c10', hb: 'c17', hc: 'c05' };
       const labels = { ha: 'Sample A', hb: 'Sample B', hc: 'Sample C' };
-      const listed = { ha: '20.2', hb: '35.5', hc: '10.8' };
       for (const id of ['ha', 'hb', 'hc']) {
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       for (const id of ['ha', 'hb', 'hc']) {
         if (state.bins[id] !== want[id]) {
-          return { ok: false, msg: `${labels[id]} is wrong: one piece of it weighs ${listed[id]} on average, and only one listed mass matches that.` };
+          return { ok: false, msg: `${labels[id]} is filed wrong — divide its total weight by its piece count and match the result.` };
         }
       }
       return { ok: true };
@@ -422,7 +421,7 @@ export const STAGES = [
     hints: [
       'Weigh all three: every one is CAT 17, so the code will not tell them apart.',
       'Natural CAT 17 is 75 pieces at weight 35 for every 25 at weight 37, which averages 35.5.',
-      '1420 / 40 = 35.5, 1440 / 40 = 36.0, 1404 / 40 = 35.1, so only Sample A is natural.'
+      'Divide each sample mass by 40 pieces to see which one equals the listed mass of 35.5.'
     ],
     check(state) {
       const want = { j1: 'natural', j2: 'altered', j3: 'altered' };

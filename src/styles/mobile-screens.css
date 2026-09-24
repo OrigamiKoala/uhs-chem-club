@@ -329,7 +329,11 @@
      every key is a 44 px target. The stage rail keeps one lamp per stage rather
      than scrolling, so a player can always see how far the road runs. */
   .m-learn-quest .lq-body { grid-template-columns: 1fr !important; gap: 0.7rem; }
-  .m-learn-quest .lq-deck { position: static !important; padding: 0.85rem 0.8rem; }
+  .m-learn-quest .lq-deck { position: static !important; max-height: none !important; padding: 0; }
+  .m-learn-quest .lq-prompt { padding: 0.8rem 0.8rem 0.7rem; }
+  .m-learn-quest .lq-deck-body { padding: 0.75rem 0.8rem; overflow: visible; }
+  .m-learn-quest .lq-deck-foot { padding: 0.7rem 0.8rem 0.85rem; }
+  .m-learn-quest .lq-bin-legend-line { grid-template-columns: minmax(0, 1fr); gap: 0; }
 
   .m-learn-quest .lq-rail { gap: 4px; padding: 5px 6px; }
   .m-learn-quest .lq-lamp {

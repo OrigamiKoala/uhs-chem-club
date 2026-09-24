@@ -23,6 +23,8 @@
 import * as THREE from 'three';
 import { angleFor } from './dial.js';
 import { boltLine } from '../../three/materials/pbr-kit.js';
+import { registerBenchViewer, unregisterBenchViewer } from './bench-host.js';
+import { soundscape } from '../../audio/soundscape.js';
 
 /** Dust palette, in 3D. Mirrors TINTS in scope.js exactly. */
 export const TINT_HEX = {
@@ -323,6 +325,352 @@ export function buildPowerDial(opts) {
   return { group: g, knob, hit, setValue, geos, mats };
 }
 
+/* ------------------------------------------------------------------ keys */
+
+/** Key cap, in metres: wide enough for "Press Together" at a readable size. */
+const KEY_CAP_W = 0.32;
+const KEY_CAP_H = 0.075;
+const KEY_CAP_D = 0.02;
+/** The filament lens beside each cap, and the clearance between the two. */
+const KEY_LAMP = 0.018;
+const KEY_LAMP_GAP = 0.012;
+/** One key cell: lens, gap, cap. */
+const KEY_COL_W = KEY_LAMP + KEY_LAMP_GAP + KEY_CAP_W;
+const KEY_COL_GAP = 0.05;
+const KEY_ROW_PITCH = 0.094;
+const KEY_HEAD_H = 0.042;
+const KEY_HEAD_PITCH = 0.056;
+/** A group's name, in the front-rail layout, is a plate at the head of its keys. */
+const KEY_LABEL_W = 0.13;
+const KEY_MARGIN = 0.022;
+/** How far the base plate stands proud of the face on each side, in total. */
+const KEY_BASE_OVER = 0.02;
+const KEY_FACE_T = 0.022;
+const KEY_BASE_H = 0.035;
+/** The steepest a face stands: leaning back about twenty degrees, like a station screen. */
+const KEY_MAX_RAKE = 1.22;
+
+/**
+ * Where everything on a key bank goes, without building any of it. Pure, so
+ * the viewer can ask how big a bank would be before deciding where it fits.
+ *
+ * Three layouts. A PANEL of one column, or of two when a stage offers more
+ * than five keys: a raked switch panel standing beside the instrument, each
+ * group's name engraved over its keys. A RAIL (`'row'`): every key side by
+ * side in one low row, for a bench so full there is no plate left beside it,
+ * standing along the front edge; a group's name is a plate at the head of its
+ * keys instead of over them, because a rail has no rows to put it over.
+ *
+ * Cells are in the FACE's own frame: x across it, z from its far (top) edge
+ * toward its near edge, each with its top-left corner, width and height.
+ *
+ * @param {{label: string|null, keys: object[]}[]} groups
+ * @param {1|2|'row'} layout
+ * @param {{maxRise?: number, lip?: number}} [limits]
+ */
+export function planKeyBank(groups, layout = 1, limits = {}) {
+  const live = (groups || []).filter(gr => gr && gr.keys && gr.keys.length);
+  const row = layout === 'row';
+  const maxRise = limits.maxRise ?? (row ? 0.12 : 0.42);
+  const lip = limits.lip ?? (row ? 0.04 : 0.05);
+  const cells = [];
+  let length;
+  let width;
+
+  if (row) {
+    let x = KEY_MARGIN;
+    const z = KEY_MARGIN;
+    live.forEach((gr, gi) => {
+      if (gi > 0) x += KEY_COL_GAP;
+      if (gr.label) {
+        cells.push({ type: 'head', text: gr.label, x, z, w: KEY_LABEL_W, h: KEY_CAP_H });
+        x += KEY_LABEL_W + KEY_LAMP_GAP;
+      }
+      gr.keys.forEach((k, ki) => {
+        if (ki > 0) x += KEY_COL_GAP;
+        cells.push({ type: 'key', key: k, x, z, w: KEY_COL_W, h: KEY_CAP_H });
+        x += KEY_COL_W;
+      });
+    });
+    width = x + KEY_MARGIN;
+    length = KEY_CAP_H + KEY_MARGIN * 2;
+  } else {
+    // Every group as a run of rows: its engraved name, then its keys.
+    const all = [];
+    for (const gr of live) {
+      if (gr.label) all.push({ type: 'head', text: gr.label });
+      for (const k of gr.keys) all.push({ type: 'key', key: k });
+    }
+    const pitch = r => (r.type === 'head' ? KEY_HEAD_PITCH : KEY_ROW_PITCH);
+    const lenOf = rows => rows.reduce((s, r) => s + pitch(r), 0);
+
+    let columns = [all];
+    if (layout === 2 && all.length > 1) {
+      // Split where the two columns come out most even, preferring the end of
+      // a group, and never leaving a name at the foot of one column with its
+      // keys at the head of the other.
+      const ends = new Set();
+      let at = 0;
+      for (const gr of live) { at += (gr.label ? 1 : 0) + gr.keys.length; ends.add(at); }
+      let best = null;
+      for (let i = 1; i < all.length; i++) {
+        if (all[i - 1].type === 'head') continue;
+        const cost = Math.abs(lenOf(all.slice(0, i)) - lenOf(all.slice(i))) - (ends.has(i) ? 0.05 : 0);
+        if (!best || cost < best.cost) best = { i, cost };
+      }
+      if (best) columns = [all.slice(0, best.i), all.slice(best.i)];
+    }
+
+    columns.forEach((rows, ci) => {
+      const x = KEY_MARGIN + ci * (KEY_COL_W + KEY_COL_GAP);
+      let z = KEY_MARGIN;
+      for (const r of rows) {
+        if (r.type === 'head') cells.push({ type: 'head', text: r.text, x, z, w: KEY_COL_W, h: KEY_HEAD_H });
+        else cells.push({ type: 'key', key: r.key, x, z, w: KEY_COL_W, h: KEY_CAP_H });
+        z += pitch(r);
+      }
+    });
+    length = Math.max(...columns.map(r => lenOf(r))) - (KEY_ROW_PITCH - KEY_CAP_H) + KEY_MARGIN * 2;
+    width = columns.length * KEY_COL_W + (columns.length - 1) * KEY_COL_GAP + KEY_MARGIN * 2;
+  }
+
+  const rake = Math.min(KEY_MAX_RAKE, Math.asin(Math.min(1, maxRise / length)));
+  // The footprint is the face's run plus the base plate's lip round it.
+  const depth = length * Math.cos(rake) + KEY_FACE_T * Math.sin(rake) + 0.03;
+  const height = lip + length * Math.sin(rake) + (KEY_FACE_T + KEY_CAP_D) * Math.cos(rake);
+  return { layout, cells, length, width, depth, height, rake, lip };
+}
+
+/**
+ * A BANK OF KEYS YOU CAN ACTUALLY PRESS.
+ *
+ * The tools a stage offers — "Fire Beam", "Press Together", "Tip Sample" —
+ * are DOM buttons in the quest frame, and at T4 they used to be the only way
+ * to make the instrument do anything: a player standing at a bench in the
+ * world reached for a card floating over it. This is the same set of keys as
+ * a switch panel on the plate: a dark plinth, a steel face raked toward the
+ * operator, one proud durasteel cap per key with its legend engraved on it in
+ * the quest's own words, and a filament lens beside each that is lit when the
+ * key is. It knows nothing about what a key does; the viewer reports an id.
+ *
+ * WHICH WAY IS TOWARD is the dial's rule: local +z is the bench front, so the
+ * face tilts its FAR edge up with a POSITIVE rotation about x.
+ *
+ * @param {{label: string|null, keys: {id: string, label: string, badge?: string,
+ *          disabled?: boolean, lit?: boolean}[]}[]} groups
+ * @param {{layout?: 1|2|'row', columns?: number,
+ *          materials?: {steel?: THREE.Material, dark?: THREE.Material}}} opts
+ * @returns {{group: THREE.Group, keys: {id: string, cap: THREE.Object3D, hit: THREE.Mesh,
+ *            lamp: THREE.Mesh, setState: Function}[], geos: THREE.BufferGeometry[],
+ *            mats: THREE.Material[], width: number, height: number, depth: number}}
+ */
+export function buildKeyBank(groups, opts = {}) {
+  const plan = planKeyBank(groups, opts.layout ?? opts.columns ?? 1);
+  const g = new THREE.Group();
+  const geos = [];
+  const mats = [];
+  const own = x => { geos.push(x); return x; };
+  const ownMat = m => { mats.push(m); return m; };
+
+  const steel = opts.materials?.steel || ownMat(new THREE.MeshStandardMaterial({
+    color: 0x6f6657, roughness: 0.72, metalness: 0.62
+  }));
+  const dark = opts.materials?.dark || ownMat(new THREE.MeshStandardMaterial({
+    color: 0x24211c, roughness: 0.9, metalness: 0.4
+  }));
+  // Bare durasteel: every tool key is a secondary key (CLAUDE.md §6).
+  const capMat = ownMat(new THREE.MeshStandardMaterial({
+    color: 0x8a8070, roughness: 0.62, metalness: 0.66
+  }));
+  const hitMat = ownMat(new THREE.MeshBasicMaterial({ visible: false }));
+
+  const { length: L, width: W, rake, lip } = plan;
+  const T = KEY_FACE_T;
+  const sin = Math.sin(rake);
+  const cos = Math.cos(rake);
+
+  // The base plate, bolted down front and back.
+  const baseD = plan.depth;
+  const base = new THREE.Mesh(own(new THREE.BoxGeometry(W + KEY_BASE_OVER, KEY_BASE_H, baseD)), dark);
+  base.position.y = KEY_BASE_H / 2;
+  base.castShadow = base.receiveShadow = true;
+  g.add(base);
+  for (const bz of [baseD / 2 - 0.009, -baseD / 2 + 0.009]) {
+    const bolts = boltLine([-W / 2, KEY_BASE_H + 0.001, bz], [W / 2, KEY_BASE_H + 0.001, bz],
+      Math.max(2, Math.round(W / 0.14)), dark, { size: 0.007, normalAxis: 'y' });
+    geos.push(bolts.geometry);
+    g.add(bolts);
+  }
+
+  // The raked face. Its near edge starts at the front lip, and the whole
+  // footprint is centred on the base.
+  const face = new THREE.Group();
+  face.position.set(0, lip + (L / 2) * sin + (T / 2) * cos, 0);
+  face.rotation.x = rake;
+  g.add(face);
+
+  const panel = new THREE.Mesh(own(new THREE.BoxGeometry(W, T, L)), steel);
+  panel.castShadow = panel.receiveShadow = true;
+  face.add(panel);
+
+  // The housing under the face: a solid wedge from the base up to the face's
+  // underside, so the panel stands on something rather than on a pivot.
+  const nearZ = (-T / 2) * sin + (L / 2) * cos;
+  const farZ = (-T / 2) * sin - (L / 2) * cos;
+  const inset = 0.006;
+  const shape = new THREE.Shape();
+  // Shape x is -z (see the rotation below), shape y is y.
+  shape.moveTo(-(nearZ - inset), KEY_BASE_H);
+  shape.lineTo(-(nearZ - inset), Math.max(KEY_BASE_H + 0.004, lip));
+  shape.lineTo(-(farZ + inset), lip + L * sin - 0.004);
+  shape.lineTo(-(farZ + inset), KEY_BASE_H);
+  shape.closePath();
+  const housingGeo = own(new THREE.ExtrudeGeometry(shape, { depth: W - 0.02, bevelEnabled: false }));
+  // Extrusion runs along +z; turn it so it runs along x, and the shape's x
+  // becomes -z: (sx, sy, e) -> (e, sy, -sx).
+  housingGeo.rotateY(Math.PI / 2);
+  housingGeo.translate(-(W - 0.02) / 2, 0, 0);
+  const housing = new THREE.Mesh(housingGeo, dark);
+  housing.castShadow = housing.receiveShadow = true;
+  g.add(housing);
+
+  // Bolt heads at the ends of the face.
+  for (const bx of [-W / 2 + 0.012, W / 2 - 0.012]) {
+    const bolts = boltLine([bx, T / 2 + 0.001, -L / 2 + 0.012], [bx, T / 2 + 0.001, L / 2 - 0.012], 2, dark,
+      { size: 0.006, normalAxis: 'y' });
+    geos.push(bolts.geometry);
+    face.add(bolts);
+  }
+
+  const capGeo = own(new THREE.BoxGeometry(KEY_CAP_W, KEY_CAP_D, KEY_CAP_H));
+  const lampGeo = own(new THREE.BoxGeometry(KEY_LAMP, 0.008, KEY_LAMP));
+  const bezelGeo = own(new THREE.BoxGeometry(KEY_LAMP + 0.008, 0.004, KEY_LAMP + 0.008));
+  const hitGeo = own(new THREE.BoxGeometry(KEY_COL_W + 0.02, 0.07, KEY_ROW_PITCH));
+  const faceTop = T / 2;
+  // Cells are laid out from the face's top-left corner.
+  const fx = x => -W / 2 + x;
+  const fz = z => -L / 2 + z;
+
+  const keys = [];
+  for (const cell of plan.cells) {
+    if (cell.type === 'head') {
+      // The group's name, engraved into the panel itself rather than on a key.
+      const pxW = Math.round(1460 * cell.w);
+      const pxH = Math.round(1460 * cell.h);
+      const tex = engravedPlaque(cell.text, {
+        w: pxW, h: pxH, size: 40, align: plan.layout === 'row' ? 'middle' : 'left',
+        pad: 6, tracking: 4, bg: '#3a352c'
+      });
+      const mat = ownMat(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, metalness: 0.3 }));
+      mat.userData = { ownTexture: tex };
+      const plate = new THREE.Mesh(own(new THREE.PlaneGeometry(cell.w, cell.h)), mat);
+      plate.rotation.x = -Math.PI / 2;
+      plate.position.set(fx(cell.x + cell.w / 2), faceTop + 0.0008, fz(cell.z + cell.h / 2));
+      face.add(plate);
+      continue;
+    }
+
+    const spec = cell.key;
+    const lampX = fx(cell.x + KEY_LAMP / 2);
+    const capX = fx(cell.x + KEY_LAMP + KEY_LAMP_GAP + KEY_CAP_W / 2);
+    const cz = fz(cell.z + KEY_CAP_H / 2);
+
+    // The cap and everything engraved on it move together when pressed.
+    const cap = new THREE.Group();
+    cap.position.set(capX, faceTop + KEY_CAP_D / 2, cz);
+    face.add(cap);
+    const body = new THREE.Mesh(capGeo, capMat);
+    body.castShadow = true;
+    cap.add(body);
+
+    // A badge — a count the key carries, such as the tester's charges — is a
+    // small counter window let into the right end of the cap. It is a live
+    // readout, so it is amber; the legend is the rest of the cap.
+    const badge = spec.badge != null && String(spec.badge).trim() !== '' ? String(spec.badge).trim() : null;
+    const badgeW = badge ? Math.min(0.09, 0.03 + badge.length * 0.018) : 0;
+    const legendW = KEY_CAP_W - 0.012 - (badge ? badgeW + 0.008 : 0);
+    const legendH = KEY_CAP_H - 0.01;
+
+    // The raster keeps the plate's own proportions, so the legend is neither
+    // squashed nor stretched, and the face size is as large as the cap allows:
+    // legibility at two and a half metres is the whole point of the key.
+    // The text is the button's own label, verbatim.
+    const legendPx = Math.round(512 * legendW / (KEY_CAP_W - 0.012));
+    const legendPy = Math.round(legendPx * legendH / legendW);
+    const legendTex = engravedPlaque(spec.label, {
+      w: legendPx, h: legendPy, size: 60, align: 'middle', pad: 10, tracking: 3, bg: '#4a4439'
+    });
+    const legendMat = ownMat(new THREE.MeshStandardMaterial({
+      map: legendTex, roughness: 0.8, metalness: 0.35
+    }));
+    legendMat.userData = { ownTexture: legendTex };
+    const legend = new THREE.Mesh(own(new THREE.PlaneGeometry(legendW, legendH)), legendMat);
+    legend.rotation.x = -Math.PI / 2;
+    legend.position.set(-KEY_CAP_W / 2 + 0.006 + legendW / 2, KEY_CAP_D / 2 + 0.0008, 0);
+    cap.add(legend);
+
+    if (badge) {
+      const bc = document.createElement('canvas');
+      bc.width = 128;
+      bc.height = 96;
+      const bctx = bc.getContext('2d', { willReadFrequently: true });
+      bctx.fillStyle = '#0d0c0a';
+      bctx.fillRect(0, 0, 128, 96);
+      bctx.fillStyle = '#d99423';
+      bctx.font = '64px "Share Tech Mono", monospace';
+      bctx.textAlign = 'center';
+      bctx.textBaseline = 'middle';
+      bctx.fillText(badge, 64, 50);
+      const btex = new THREE.CanvasTexture(bc);
+      btex.colorSpace = THREE.SRGBColorSpace;
+      const bmat = ownMat(new THREE.MeshBasicMaterial({ map: btex }));
+      bmat.userData = { ownTexture: btex };
+      const win = new THREE.Mesh(own(new THREE.PlaneGeometry(badgeW, KEY_CAP_H - 0.022)), bmat);
+      win.rotation.x = -Math.PI / 2;
+      win.position.set(KEY_CAP_W / 2 - 0.006 - badgeW / 2, KEY_CAP_D / 2 + 0.0008, 0);
+      cap.add(win);
+    }
+
+    // The filament lens, in a dark bezel beside the cap.
+    const bezel = new THREE.Mesh(bezelGeo, dark);
+    bezel.position.set(lampX, faceTop + 0.002, cz);
+    face.add(bezel);
+    const lampMat = ownMat(new THREE.MeshStandardMaterial({
+      color: 0x3a3128, emissive: AMBER, emissiveIntensity: 0, roughness: 0.45
+    }));
+    const lamp = new THREE.Mesh(lampGeo, lampMat);
+    lamp.position.set(lampX, faceTop + 0.006, cz);
+    face.add(lamp);
+
+    // A generous invisible target over the whole cell, so a key is pressable
+    // at a glancing angle without landing on the cap exactly.
+    const hit = new THREE.Mesh(hitGeo, hitMat);
+    hit.position.set(fx(cell.x + KEY_COL_W / 2), faceTop + 0.02, cz);
+    face.add(hit);
+
+    const key = {
+      id: spec.id, cap, hit, lamp, legendMat, lampMat,
+      disabled: false, lit: false, restY: cap.position.y,
+      setState({ lit = false, disabled = false } = {}) {
+        key.disabled = Boolean(disabled);
+        key.lit = Boolean(lit) && !key.disabled;
+        lampMat.color.setHex(key.lit ? AMBER : 0x3a3128);
+        lampMat.emissiveIntensity = key.lit ? 1.4 : 0;
+        // A dead key's legend is worn dull, not hidden: it is still a key.
+        legendMat.color.setHex(key.disabled ? 0x6a655c : 0xffffff);
+      },
+      // Sunk along the face's own normal, which is the cap's local y.
+      setPressed(on) {
+        cap.position.y = key.restY - (on ? 0.008 : 0);
+      }
+    };
+    key.setState(spec);
+    keys.push(key);
+  }
+
+  return { group: g, keys, geos, mats, width: W + KEY_BASE_OVER, height: plan.height, depth: baseD, plan };
+}
+
 export class BenchViewer3D {
   /**
    * @param {HTMLElement} domElement the element pointer events are read from
@@ -427,10 +775,24 @@ export class BenchViewer3D {
     this.grabbing = null;
     this.grabPointerId = null;
 
+    // The tool keys, mirrored onto the plate as a switch panel. See `setKeys`.
+    this.keyBank = null;
+    this.keyGroups = [];
+    this.keySig = '';
+    this.onKeyPress = null;
+    this.keyRelease = [];
+    this.keysDirty = false;
+    // How much further back the camera stands so the key bank is in the glass.
+    this.keyPull = 0;
+
     this.buildLighting();
     this.buildBench();
     this.bindEvents();
     this.frameCamera(1);
+
+    // Announce the viewer, so the frame's tool keys can find the bench they
+    // belong on (`bench-keys.js`). The frame is built before the instrument.
+    registerBenchViewer(this);
   }
 
   own(...objs) {
@@ -787,6 +1149,7 @@ export class BenchViewer3D {
    */
   addFitNode(group, topMark, face) {
     this.fitNodes.push({ group, topMark: topMark || group, face: face || null });
+    this.keysDirty = true;
   }
 
   /**
@@ -811,6 +1174,7 @@ export class BenchViewer3D {
     this.stations.forEach((st, i) => {
       st.group.position.x = -span / 2 + i * STATION_PITCH;
     });
+    this.keysDirty = true;
     this.frameCamera(n);
   }
 
@@ -871,7 +1235,9 @@ export class BenchViewer3D {
 
     const yaw = this.orbit.yaw;
     const pitch = this.orbit.pitch;
-    const d = this.camDist;
+    // The key bank's pull is kept apart from `camDist`, which instruments set
+    // outright on every layout; added here it can never accumulate.
+    const d = this.camDist + (this.keyPull || 0);
     const t = this.camTarget;
     const lift = this.aimLift || 0;
     const shift = this.aimShift || 0;
@@ -1201,6 +1567,264 @@ export class BenchViewer3D {
     station.indicator.material.color.setHex(on ? AMBER : 0x4a4038);
   }
 
+  /* ---------------- keys ---------------- */
+
+  /**
+   * Put the stage's tool keys on the plate as a switch panel.
+   *
+   * THE DOM STAYS THE SOURCE OF TRUTH. These are a physical mirror of the
+   * frame's buttons (`bench-keys.js` reads them and calls this); pressing one
+   * reports its id and the mirror clicks the real button, so grading is
+   * identical on every tier and nothing here knows what a key does.
+   *
+   * @param {{label: string|null, keys: {id: string, label: string, badge?: string,
+   *          disabled?: boolean, lit?: boolean}[]}[]} groups
+   * @param {(id: string) => void} onPress
+   */
+  setKeys(groups, onPress) {
+    if (this.disposed) return;
+    const clean = (groups || [])
+      .map(gr => ({
+        label: gr?.label ? String(gr.label) : null,
+        keys: (gr?.keys || []).filter(k => k && k.id != null && String(k.label ?? '').trim())
+      }))
+      .filter(gr => gr.keys.length);
+    this.onKeyPress = typeof onPress === 'function' ? onPress : null;
+
+    const sig = JSON.stringify(clean.map(gr => [
+      gr.label, gr.keys.map(k => [String(k.id), String(k.label), k.badge == null ? '' : String(k.badge)])
+    ]));
+    this.keyGroups = clean;
+
+    if (!clean.length) {
+      this.keySig = '';
+      this.disposeKeyBank();
+      this.keyPull = 0;
+      return;
+    }
+
+    if (sig === this.keySig && this.keyBank) {
+      // Same keys, same legends: only the lamps and the dull legends change.
+      const byId = new Map(this.keyBank.keys.map(k => [k.id, k]));
+      for (const gr of clean) {
+        for (const k of gr.keys) byId.get(String(k.id))?.setState(k);
+      }
+      return;
+    }
+
+    this.keySig = sig;
+    this.disposeKeyBank();
+    this.keysDirty = true;
+    this.placeKeys();
+  }
+
+  /** Take the key bank off the plate and free what it built. */
+  disposeKeyBank() {
+    for (const release of this.keyRelease) release();
+    this.keyRelease = [];
+    const bank = this.keyBank;
+    if (!bank) return;
+    this.keyBank = null;
+    bank.group.parent?.remove(bank.group);
+    for (const g of bank.geos || []) g.dispose();
+    for (const m of bank.mats || []) {
+      if (m.userData?.ownTexture) m.userData.ownTexture.dispose();
+      m.dispose();
+    }
+  }
+
+  /**
+   * The bench-local x extent of everything the instrument has laid out, and of
+   * any other control bolted to the plate (the scope's power dial), so the key
+   * bank can stand clear of all of it. Hidden bodies are not in the way;
+   * an instanced field is measured one instance at a time, because its
+   * geometry box is the unit body and not the field.
+   */
+  occupiedExtentX(zLo = -Infinity, zHi = Infinity) {
+    this.root.updateMatrixWorld(true);
+    const inv = new THREE.Matrix4().copy(this.root.matrixWorld).invert();
+    const m = new THREE.Matrix4();
+    const im = new THREE.Matrix4();
+    const v = new THREE.Vector3();
+    let lo = Infinity;
+    let hi = -Infinity;
+    const keyObjs = new Set();
+    if (this.keyBank) this.keyBank.group.traverse(o => keyObjs.add(o));
+
+    const measure = (node, includeHidden) => {
+      node.traverse(o => {
+        if (!o.isMesh || !o.geometry || keyObjs.has(o)) return;
+        if (!includeHidden && (o.material?.visible === false)) return;
+        for (let a = o; a && a !== this.root; a = a.parent) if (!a.visible) return;
+        if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+        const gb = o.geometry.boundingBox;
+        if (!gb || gb.isEmpty()) return;
+        m.multiplyMatrices(inv, o.matrixWorld);
+        // One body's box; it counts only if it reaches into the band of plate
+        // the bank would stand on.
+        const corners = mat => {
+          let bl = Infinity, bh = -Infinity, zl = Infinity, zh = -Infinity;
+          for (const x of [gb.min.x, gb.max.x]) {
+            for (const y of [gb.min.y, gb.max.y]) {
+              for (const z of [gb.min.z, gb.max.z]) {
+                v.set(x, y, z).applyMatrix4(mat);
+                bl = Math.min(bl, v.x); bh = Math.max(bh, v.x);
+                zl = Math.min(zl, v.z); zh = Math.max(zh, v.z);
+              }
+            }
+          }
+          if (zh < zLo || zl > zHi) return;
+          lo = Math.min(lo, bl);
+          hi = Math.max(hi, bh);
+        };
+        if (o.isInstancedMesh) {
+          for (let i = 0; i < o.count; i++) {
+            o.getMatrixAt(i, im);
+            corners(im.premultiply(m));
+          }
+          return;
+        }
+        // A body turned on the bench — the octagonal trays are set a sixteenth
+        // of a turn round — has a box a quarter wider than the body. Measured
+        // by its own points, a tray is as wide as a tray.
+        const pos = o.geometry.attributes?.position;
+        if (pos && pos.count <= 4096) {
+          let bl = Infinity, bh = -Infinity, zl = Infinity, zh = -Infinity;
+          for (let i = 0; i < pos.count; i++) {
+            v.fromBufferAttribute(pos, i).applyMatrix4(m);
+            bl = Math.min(bl, v.x); bh = Math.max(bh, v.x);
+            zl = Math.min(zl, v.z); zh = Math.max(zh, v.z);
+          }
+          if (zh < zLo || zl > zHi) return;
+          lo = Math.min(lo, bl);
+          hi = Math.max(hi, bh);
+          return;
+        }
+        corners(m);
+      });
+    };
+
+    for (const n of this.framedNodes()) measure(n.group, false);
+    // Controls someone else bolted on — the power dial — including their
+    // invisible grab targets, which is where a hand will be.
+    for (const gr of this.grabbables || []) {
+      if (!gr.object || keyObjs.has(gr.object)) continue;
+      let top = gr.object;
+      while (top.parent && top.parent !== this.root) top = top.parent;
+      measure(top, true);
+    }
+    return lo === Infinity ? null : { lo, hi };
+  }
+
+  /**
+   * Stand the key bank on free plate beside the instrument.
+   *
+   * WHERE THE FREE PLATE IS. A bench is not an empty table: a weld bead runs
+   * the length of it down the middle (local z = 0), swarf chips lie along the
+   * back lip (z < -0.48), a vice and a tool block sit on the front corners,
+   * the note slips lie across the front of every station, and on the lab
+   * bench a rail stands a hand's width in front of it. What is left clear the
+   * whole length of every bench is the band BEHIND THE BEAD and in front of
+   * the chips — so the panel stands there, outboard of the instrument, as far
+   * forward as the bead lets it.
+   *
+   * Right first, mirroring the power dial on the left; then the left, beyond
+   * everything that reaches into that band (the dial does not: it stands in
+   * front of the bead); as one column rather than two if two do not fit.
+   * A bench laid out end to end has no plate beside it at all, and there the
+   * keys stand as a low RAIL along the front edge, in front of the slips.
+   */
+  placeKeys() {
+    this.keysDirty = false;
+    if (this.disposed || !this.keyGroups.length) return;
+
+    const EDGE = 2.25;        // |x| + half width, on a 4.6 m top or a 4.8 m bench
+    const GAP = 0.05;
+    const BAND_FRONT = -0.04; // just behind the weld bead
+    const BAND_BACK = -0.47;  // just in front of the swarf on the back lip
+    const RAIL_FRONT = 0.645; // the front edge of the plate, less a margin
+    const total = this.keyGroups.reduce((n, gr) => n + gr.keys.length, 0);
+
+    let pick = null;
+    for (const layout of (total > 5 ? [2, 1] : [1])) {
+      const plan = planKeyBank(this.keyGroups, layout);
+      const depth = plan.depth;
+      if (depth > BAND_FRONT - BAND_BACK) continue;
+      const z = BAND_FRONT - depth / 2;
+      const ext = this.occupiedExtentX(z - depth / 2, z + depth / 2) || { lo: 0, hi: 0 };
+      const half = (plan.width + KEY_BASE_OVER) / 2;
+      const right = ext.hi + GAP + half;
+      if (right + half <= EDGE) { pick = { layout, x: right, z }; break; }
+      const left = ext.lo - GAP - half;
+      if (left - half >= -EDGE) { pick = { layout, x: left, z }; break; }
+    }
+    if (!pick) {
+      // No plate beside the instrument: a rail along the front edge, centred,
+      // clear of the note slips in front of the stations.
+      const plan = planKeyBank(this.keyGroups, 'row');
+      const z = RAIL_FRONT - plan.depth / 2;
+      pick = { layout: 'row', x: 0, z };
+    }
+
+    if (!this.keyBank || this.keyBank.layout !== pick.layout) {
+      this.disposeKeyBank();
+      const bank = buildKeyBank(this.keyGroups, {
+        layout: pick.layout,
+        materials: { steel: this.steelMat, dark: this.darkMat }
+      });
+      bank.layout = pick.layout;
+      this.keyBank = bank;
+      this.root.add(bank.group);
+      for (const key of bank.keys) {
+        this.keyRelease.push(this.addGrabbable({
+          object: key.hit,
+          onStart: () => { key.setPressed(true); },
+          onEnd: e => {
+            key.setPressed(false);
+            // A cancelled press (no event) is not a press, and neither is one
+            // released somewhere else: like any key, it fires on the way up
+            // only if the finger is still on it.
+            if (!e || key.disabled) return;
+            if (e.clientX != null) {
+              this.setPointer(e);
+              if (!this.raycaster.intersectObject(key.hit, false).length) return;
+            }
+            soundscape.playToggleClack?.();
+            this.onKeyPress?.(key.id);
+          }
+        }));
+      }
+    }
+
+    this.keyBank.group.position.set(pick.x, 0.895, pick.z);
+    this.keyBank.x = pick.x;
+    this.keyBank.z = pick.z;
+    this.updateKeyPull();
+    this.applyCamera();
+  }
+
+  /**
+   * Stand the camera back just far enough that the key bank's outer edge is
+   * inside the glass at this camera's aspect. Closed form, ignoring the small
+   * downward pitch, with a margin for it.
+   */
+  updateKeyPull() {
+    const bank = this.keyBank;
+    if (!bank) { this.keyPull = 0; return; }
+    const cam = this.camera;
+    const fov = (cam.fov || 55) * Math.PI / 180;
+    const tanH = Math.tan(fov / 2) * (cam.aspect || 1.6) / (cam.zoom || 1);
+    const edge = Math.abs(bank.x) + bank.width / 2;
+    const nearZ = bank.z + bank.depth / 2;
+    const t = this.camTarget || { z: -0.02 };
+    const need = edge / (tanH * 0.86) + nearZ - 0.55 - t.z;
+    const pull = Math.max(0, Math.min(1.4, need - this.camDist));
+    if (Math.abs(pull - this.keyPull) > 0.002) {
+      this.keyPull = pull;
+      this.applyCamera();
+    }
+  }
+
   /* ---------------- frame ---------------- */
 
   /**
@@ -1342,7 +1966,7 @@ export class BenchViewer3D {
     if (Math.abs(off) < 0.015) return off;          // close enough; hold still
 
     const fov = (this.camera.fov || 55) * Math.PI / 180;
-    const d = this.camDist + 0.6;
+    const d = this.camDist + (this.keyPull || 0) + 0.6;
     const halfW = d * Math.tan(fov / 2) * (this.camera.aspect || 1.6);
     this.setAimShift((this.aimShift || 0) + off * halfW);
     return off;
@@ -1376,7 +2000,7 @@ export class BenchViewer3D {
     // NDC back to metres of aim: one half-height of the frustum at the target's
     // distance is d * tan(fov/2).
     const fov = (this.camera.fov || 55) * Math.PI / 180;
-    const d = this.camDist + 0.6;
+    const d = this.camDist + (this.keyPull || 0) + 0.6;
     this.setAimLift((this.aimLift || 0) + excess * d * Math.tan(fov / 2));
     return excess;
   }
@@ -1392,7 +2016,10 @@ export class BenchViewer3D {
       this.playerControlled = true;
     }
 
+    if (this.keysDirty) this.placeKeys();
+
     if (!(this.inWorld && this.playerControlled)) {
+      this.updateKeyPull();
       // Re-measure a few times a second: the frame's deck changes height as
       // hints open and a reward card appears, and the bench should stay clear
       // of it — right up until the player takes the view for themselves.
@@ -1442,6 +2069,7 @@ export class BenchViewer3D {
   clearStations() {
     for (const st of this.stations) this.releaseGroup(st.group);
     this.stations = [];
+    this.keysDirty = true;
   }
 
   /**
@@ -1472,10 +2100,15 @@ export class BenchViewer3D {
   /** Drop every registered fit body. Whoever added them owns them. */
   clearFitNodes() {
     this.fitNodes = [];
+    this.keysDirty = true;
   }
 
   dispose() {
     this.disposed = true;
+    unregisterBenchViewer(this);
+    this.disposeKeyBank();
+    this.keyGroups = [];
+    this.onKeyPress = null;
     this.domElement.removeEventListener('pointerdown', this._onPointerDown);
     window.removeEventListener('pointermove', this._onPointerMove);
     window.removeEventListener('pointerup', this._onPointerUp);

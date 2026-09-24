@@ -2,7 +2,7 @@
   "id": "ligar",
   "name": "Ligar",
   "place": "Basalt arches",
-  "oneLine": "Nothing here stands alone.",
+  "oneLine": "Learn chemical bonds, molecular structures, and molar mass.",
   "sky": "ligar-sky",
   "terrain": {
     "heightmap": "ligar-basalt",
