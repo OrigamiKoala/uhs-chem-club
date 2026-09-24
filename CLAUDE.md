@@ -141,6 +141,12 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   every legend that exists to one well-formed, vocabulary-clean sentence.
   It also **presses every join-bench pair plate in Node** and measures what comes
   out: electrons conserved, and no piece left over the capacity of its outer shell.
+  **A refusal may not carry its stage's answer**: every miss message the stage can produce
+  (its MISSES, the untouched bench, and its check run over every other value the widget
+  offers) is searched for the answer read from `SOLUTIONS` — a number as a standalone
+  token or word, a `rings` sequence, the sample named by a "which one" answer, a sample
+  beside its correct bin. Signed figures are exempt (they are charges), and any collision
+  that remains is a documented per-stage allowlist entry. **Every hint rung is one sentence.**
 - `npm run verify:geometry` — runs all 20 reaction animations headlessly and checks the chemistry
   on screen (see "Chemical realism" below). `--verbose` prints atom positions at every step.
 - `npm run verify:media` — validates media manifest against assets and size budgets.
@@ -228,6 +234,10 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   builds its header from `pageHeader`**; do not hand-roll banner/title markup. Supports ambient
   video loops via `video` parameter.
 - `ui/modal.js` — `showModal` / `closeModal`, with focus handling and Escape to dismiss.
+  `#modal-container` is one element shared by every dialog, so both its listeners (the
+  backdrop click and the Escape key) are held and detached on close, and on a show over
+  an open dialog — which replaces it without running its `onClose`. A listener left
+  behind made every later backdrop press run every earlier dialog's close.
 - `ui/toast.js` — transient messages; the `type` maps to `.toast-success/-error/-warning/-info`.
 - `ui/transmission.js` — diegetic CRT transmission typewriter component with Vess murmur, looping video, and dynamic text updates.
 - `ui/gardens-map.js` — 20-pylon status visualization for Bridge and Quest screen HUD.
@@ -438,11 +448,26 @@ into grinding and would punish the students it exists to help.
   one light piece off the outermost ring, and a reset. It knows no chemistry: a mark is a mark,
   and what a specimen *does* (`behaviourOf`) lives in the quest.
   `frame.js` is the **quest frame**: stage rail (cleared lamps are
-  walkable — there is no XP here for a replay to farm; 44px touch strips on mobile), diegetic
-  Exit and Findings review buttons, a briefing and debrief stepper
+  walkable — there is no XP here for a replay to farm; 44px touch targets on phones, the
+  current lamp carries `aria-current="step"`), a Findings review, a briefing and debrief stepper
   mounted via `createTransmissionElement` (diegetic CRT video loop, typewriter audio ticks and
   Vess radio murmur), prompt, readout, answer region, Commit key, miss banner, hint ladder (rung 1 free,
-  rung 2 after a miss or 45 s, rung 3 after two misses; copy accurately conveys both paths), and reward card.
+  rung 2 after a miss or 45 s, rung 3 after two misses; ONE wait line, replaced rather than
+  appended, naming the true condition for the next rung), and reward card.
+  **There is ONE way out, and it is the host bar's `Leave Bench`.** The frame's own Exit key is
+  gone. `Hide Panel` (which folds the plates to the dock) renders only over a BUILT bench, since
+  on a drawn bench there is nothing behind the page to reveal.
+  **`setStage` resets everything a stage can leave behind**: the dock key's `data-act` goes
+  back to `submit` (a clear sets it to `next`, and a stale `next` once let a player with the
+  panel folded skip an unsolved stage), along with banners, hints, the wait line and the reward.
+  **Findings is the gathering-up**: it lists the reward card of every cleared stage in order
+  (quests pass `rewards: STAGES.map(s => s.reward)`), not a copy of the card already on screen.
+  **The debrief can be left** by Escape, the backdrop or `Close`; `onDone` still runs exactly
+  once. A repeated identical miss is re-announced (the banner empties, then refills), and
+  selection keys carry `aria-pressed` synced from their `selected`/`lit` class by the frame,
+  so no quest has to remember it; a "Lower"/"Raise" stepper is named after its field.
+  `.lq-prompt-strip` repeats the prompt above the bench wherever the deck stacks under it
+  (≤1000 px), because a phone player working the bench had scrolled the objective away.
   Supports soft refusals via `{ ok: false, notYet: true, msg }` routed through `frame.note()` without burning hint rungs.
   It never sees an answer; the quest calls `clear()` or `miss()`.
   **A BRIEFING IS A QUEST'S, NOT A STAGE'S.** Every built quest carries exactly one —
@@ -492,7 +517,9 @@ into grinding and would punish the students it exists to help.
   (`registerBenchViewer` / `activeBenchViewer` / `onBenchViewer`), because the frame is
   built before the instrument; a MutationObserver re-syncs once per frame, and the class
   `lq-keys-on-bench` on the controls element is what lets the CSS hide the mirrored DOM
-  keys. `buildKeyBank()` (pure builder, like `buildPowerDial`) makes a raked steel face on
+  keys — VISUALLY, never with `display:none`: they stay focusable and in the accessibility
+  tree, and the strip shows itself on `:focus-within`, because the 3D keys are pointer
+  targets and a keyboard or screen-reader player would otherwise have no tools at all. `buildKeyBank()` (pure builder, like `buildPowerDial`) makes a raked steel face on
   a dark plinth with a proud durasteel cap per key, the legend engraved on it verbatim, a
   filament lens beside it lit only when the key is, and a dull legend when disabled; the
   keys are grabbables, so a press is never a camera drag, and a key fires on release only
@@ -544,7 +571,7 @@ into grinding and would punish the students it exists to help.
   or a well is aimed off the bottom.
 - **THE FRAME IS A CLOSEABLE 2D OVERLAY OVER THE LIVE BENCH.** At T4 the quest frame stays
   a page over the view on every Tallow bench (`learn-quest.js` sets `inWorld = false`), and
-  its `Close` key folds every plate away to a `Stage Panel` / `Commit` dock in the corner —
+  its `Hide Panel` key folds every plate away to a `Stage Panel` / `Commit` dock in the corner —
   so a player who wants to look at the instrument they are standing at can have the whole
   glass. `.learn-quest-overworld` in `learn.css` is what makes that work at all: the frame's
   containers are `pointer-events: none` and only the plates themselves take a press, because
@@ -770,8 +797,8 @@ for, and hint rung three is quietly carrying the whole lesson.
 - **Stage 3 — the needle.** Three open samples stand beside one sealed. Two read zero, and
   **Sample C reads plus two with six protons and four electrons** — that third sample is the
   stage. With only the balanced pair the needle never moved, so there was nothing to learn
-  from it. The commit is soft-refused until the needle has been on the sealed sample AND on
-  at least one open one, because the comparison is the work.
+  from it. Like every stage, it never refuses a correct answer for want of a key press; the
+  comparison is where the hints point.
 - **Stage 4 — the rings.** Three open samples, not two: 2 alone, 2 and 8, and **2, 8 and 3**.
   The third is what makes "each ring fills before the next one starts" a pattern in three
   data points rather than an assertion in a hint.
@@ -838,6 +865,20 @@ Learn world 02 as a place you walk"). Everything Tallow earned (atom, element, c
 neutron, electron, shell, valence, isotope, ion, cation, anion, metal, nonmetal,
 atomic number, mass number) is a plain word from here on.
 
+**And Ligar uses them.** Its four benches once said *piece* for atom (about 210
+times), *group* for molecule (about 80, colliding with the periodic-table group
+`q3-catalogue` had just taught), *kind* for element and *unit* for molecule. Each
+is now the real word, chosen per sample and never by search-and-replace: a charged
+piece is an **ion**, the repeating unit of an ionic solid is a **formula unit**
+(from `q2-lattice` stage 6, where the card earns it), and an ionic sample on
+`q4-weigh` is counted in formula units, which is why its readouts name each
+hopper's own particle (`particleWord`, from an optional `particle` on the hopper,
+defaulting to atom). A neutral word stays only where the real one would hand over
+an answer — `q2-lattice`'s strike readout says a sealed block crumbles into
+"small clusters", not molecules, because filing it as molecular is the stage — or
+where it is plain English ("one connected piece"). The join bench's probe key is
+`Read Atom`.
+
 - **`q1-joins` What Holds** — the join bench, pair plates. Press three pairs and
   see which held (**bond**) → why the third would not, read off the outer shells →
   the needle says one pair handed an electron over and the other holds a pair
@@ -858,12 +899,13 @@ atomic number, mass number) is a plain word from here on.
   heating cannot be undone.
 - **`q3-recipe` The Same Recipe** — the sampler scope, reused unchanged. Three
   samples of one compound from three places (**fixed composition**) → a sample
-  with pieces no group would take → two compounds of the same two kinds, one to
-  one and one to two → what one group weighs → what share of that weight is the
-  heavy kind (**percent composition**) → a weight ratio turned back into a count
-  (**empirical formula**) → name three samples → check three claims. The law of
-  definite proportions is the whole spine of this bench and is never named, because
-  the name teaches nothing the counting has not already shown.
+  with loose atoms no molecule would take → two compounds of the same two
+  elements, one to one and one to two → what one molecule weighs → what share of
+  that weight is the heavy element (**percent composition**) → a weight ratio
+  turned back into a count (**empirical formula**) → name three samples → check
+  three claims. The law of definite proportions is the whole spine of this bench
+  and is never named, because the name teaches nothing the counting has not
+  already shown.
 - **`q4-weigh` Counting By Weight** — the assay floor, reused with one additive
   change: a hopper may declare `bulk`, meaning the gate is dogged shut, the chute
   refuses it and the balance is all you get. Count a crate too full to tip → add up
@@ -873,7 +915,7 @@ atomic number, mass number) is a plain word from here on.
   three drums holds the most atoms, which is the lightest one.
 
 **The mole arrives by being DISCOVERED, and the order is the whole point.** Stage
-three puts three samples of exactly sixty pieces on the floor and weighs them: the
+three puts three samples of exactly sixty atoms on the floor and weighs them: the
 totals come out in the ratio of the listed masses, which they have to. Stage four
 inverts that one sentence — take the listed masses in grams and you have taken
 equal counts — and only then does the card name it. A bench that opened by
@@ -1362,8 +1404,10 @@ player-facing copy, only felt.
 
 ### 1. The three material rules
 Read `src/styles/tokens.css` before styling anything; it is the contract.
-1. **Surfaces are warm dark.** The neutral scale (`--plate-000`…`--plate-600`) carries a
-   brown/sand bias. Never the blue-black of a generic dark-mode website.
+1. **Surfaces are obsidian and titanium.** The neutral scale (`--plate-000`…`--plate-600`)
+   is near-neutral dark with the faintest cool cast (`--plate-200` `#161519`) — deliberate, and
+   confirmed. Warmth comes from the text ramp and the filament amber, not from the plates.
+   What stays banned is the saturated navy of a generic dark-mode website.
 2. **Light is filament, not LED.** Amber comes from inside a thing, dim and local.
    *Nothing blooms.* A `box-shadow: 0 0 20px <colour>` is the single loudest tell of
    vibe-coded design and is banned. The only exceptions are things that are literally
@@ -1388,8 +1432,10 @@ gradient buttons with white specular highlights; rounded corners (`--radius-sm` 
 ### 4. Colour
 - Surfaces: Deep obsidian and titanium neutrals (`--plate-000` through `--plate-600`). Seams: `--border-durasteel`, `--seam-light/dark`.
 - Text: High contrast typography (`--text-primary: #dcd6cc`, `--text-secondary: #a49c90`, `--text-bright: #fbf9f5`).
-- Signals: `--accent-amber` `#d99423`, `--accent-gold`, `--accent-rust`, `--accent-green`
-  `#6f8f3f`, `--accent-danger` `#a8342a`, `--accent-bronze`. Filaments: `--lamp-*`.
+- Signals: `--accent-amber` `#e59b24`, `--accent-gold`, `--accent-rust`, `--accent-green`
+  `#78a142` (with `--accent-green-deep` `#3f4a2a` as the recess border a lit lamp sits in),
+  `--accent-danger` `#b8382c`, `--accent-bronze`. Filaments: `--lamp-*`. `--text-muted`
+  `#8c8376` is held to 4.5:1 on `--plate-200`; never darken it below that.
 - Guild liveries: `--team-earth/air/fire/water`. **The HUD badge derives its livery from
   `TEAM_LIVERY` in `main.js`, never from the sheet's `accent_hex`** — a stale hex in the
   Teams tab used to leak a bright web colour into the header.

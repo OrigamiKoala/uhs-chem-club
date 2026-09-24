@@ -8,7 +8,7 @@
  *
  *   1  press three pairs and see which held      -> a join has a name: a bond
  *   2  read the outer shells before and after    -> a bond fills the outer shell
- *   3  read the charge on all four pieces        -> handed over, or held between
+ *   3  read the charge on all four atoms         -> handed over, or held between
  *   4  press four pairs and file what happened   -> ionic and covalent
  *   5  a giver with two to give                  -> the counts fix the ratio
  *   6  count the pairs sitting between           -> double and triple bonds
@@ -17,7 +17,7 @@
  *   -- debrief: two ways to join, and why a compound has only one recipe.
  *
  * WHAT THIS BENCH DOES NOT DO. It never weighs anything and it never counts a
- * heap. What a compound weighs, and how you count pieces too small to count,
+ * heap. What a compound weighs, and how you count atoms too small to count,
  * are benches four and five of this world.
  *
  * Everything Tallow taught is a plain word here: atom, element, compound,
@@ -115,9 +115,9 @@ export const STAGES = [
     title: 'Press Them Together',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench clamps two pieces face to face and presses them together to see whether they hold.'
+      body: 'This bench clamps two atoms face to face and presses them together to see whether they hold. "Read Atom" shows what is on an atom\'s outer shell, and "Read Charge" clips a needle to it.'
     },
-    prompt: 'File each of the three pairs by whether its two pieces hold together.',
+    prompt: 'File each of the three pairs by whether its two atoms hold together.',
     controls: ['press', 'read'],
     pairs: [
       pair('p1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -128,14 +128,14 @@ export const STAGES = [
       type: 'bins',
       rows: ['p1', 'p2', 'p3'],
       bins: [
-        { id: 'held', label: 'Held', note: 'The two pieces stayed against each other.' },
+        { id: 'held', label: 'Held', note: 'The two atoms stayed against each other.' },
         { id: 'apart', label: 'Sprang apart', note: 'The clamps let go and nothing stayed.' }
       ]
     },
     hints: [
       'Tap a pair to select it, press "Press Together", and do the same for the other two.',
       'Watch the clamps after each press: a pair that holds stays closed, and a pair that does not springs back to where it started.',
-      'Press each pair together and check whether the clamps remain clamped shut.'
+      'Press all three one after another, and file each as held if its clamps are still shut when the press lets go, or sprang apart if they open.'
     ],
     check(state) {
       const labels = { p1: 'Pair A', p2: 'Pair B', p3: 'Pair C' };
@@ -143,13 +143,13 @@ export const STAGES = [
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       if (state.bins.p1 !== 'held') {
-        return { ok: false, msg: 'Pair A remained clamped shut after the press — check its clamps.' };
+        return { ok: false, msg: 'Pair A is filed wrong. Press it again and watch whether its clamps stay shut once the press lets go.' };
       }
       if (state.bins.p2 !== 'apart') {
-        return { ok: false, msg: 'Pair B sprang back out of the clamps when released.' };
+        return { ok: false, msg: 'Pair B is filed wrong. Press it again and watch whether its clamps stay shut once the press lets go.' };
       }
       if (state.bins.p3 !== 'held') {
-        return { ok: false, msg: 'Pair C remained clamped shut after the press — check its clamps.' };
+        return { ok: false, msg: 'Pair C is filed wrong. Press it again and watch whether its clamps stay shut once the press lets go.' };
       }
       return { ok: true };
     },
@@ -174,36 +174,36 @@ export const STAGES = [
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'full', label: 'Both of its pieces already had a full outer shell', note: 'Neither one had room for anything.' },
-        { id: 'same', label: 'Its two pieces were the same kind as each other', note: 'Like will not hold like.' },
-        { id: 'heavy', label: 'Its two pieces were the heaviest on the bench', note: 'Weight decided it.' },
-        { id: 'few', label: 'Neither of its pieces had enough electrons', note: 'Both outsides were nearly empty.' }
+        { id: 'full', label: 'Both of its atoms already had a full outer shell', note: 'Neither one had room for anything.' },
+        { id: 'same', label: 'Its two atoms were the same element', note: 'Like will not hold like.' },
+        { id: 'heavy', label: 'Its two atoms were the heaviest on the bench', note: 'Weight decided it.' },
+        { id: 'few', label: 'Neither of its atoms had enough electrons', note: 'Both outsides were nearly empty.' }
       ]
     },
     hints: [
-      'Tap a piece, press "Read Piece", and do it for a piece in each of the three pairs.',
-      'Compare the outer shell of a Pair B piece with the outer shell of a Pair A piece, and then read the Pair A pieces again after the press.',
-      'Count the outer electrons on each Pair B piece to see if either shell has vacancies to fill.'
+      'Tap an atom, press "Read Atom", and do it for an atom in each of the three pairs.',
+      'Compare the outer shell of a Pair B atom with the outer shell of a Pair A atom, and then read the Pair A atoms again after the press.',
+      'Read a Pair B atom and a Pair A atom, count the electrons on each outer shell, and ask which of them still has room for more.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === 'same') {
-        return { ok: false, msg: 'Pair C is two pieces of the same kind and it held, so that is not what stopped Pair B.' };
+        return { ok: false, msg: 'Pair C is two atoms of the same element and it held, so that is not what stopped Pair B.' };
       }
       if (state.choice === 'heavy') {
-        return { ok: false, msg: 'Pair A holds the two heaviest pieces on the bench and it held, so weight is not what stopped Pair B.' };
+        return { ok: false, msg: 'Pair A holds the two heaviest atoms on the bench and it held, so weight is not what stopped Pair B.' };
       }
       if (state.choice === 'few') {
-        return { ok: false, msg: 'Read a Pair B piece: it carries eight electrons on its outer shell, which is not nearly empty.' };
+        return { ok: false, msg: 'Read a Pair B atom and count its outer shell before deciding it is nearly empty.' };
       }
       return { ok: true };
     },
     reward: {
       log: 'Pair B: eight on each outer shell, no room on either.',
       title: 'A Bond Fills the Outer Shell',
-      body: 'Both pieces of every pair that joined here came out of the press with a full outer shell, and a full outer shell is eight electrons — two, on the innermost one. Pair B started full on both sides, so a bond had nothing left to do for it. Atoms bond in order to fill the outer shell, and one that is already full has no reason to bond at all.'
+      body: 'Both atoms of every pair that joined here came out of the press with a full outer shell, and a full outer shell is eight electrons — two, on the innermost one. Pair B started full on both sides, so a bond had nothing left to do for it. Atoms bond in order to fill the outer shell, and one that is already full has no reason to bond at all.'
     }
   },
 
@@ -220,36 +220,36 @@ export const STAGES = [
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'moved', label: 'In Pair A an electron crossed over to the other piece; in Pair B the two pieces hold a pair between them', note: 'Handed over on one plate, held between on the other.' },
-        { id: 'swap', label: 'The two pieces traded places in the clamps', note: 'The pieces moved, not the electrons.' },
+        { id: 'moved', label: 'In Pair A an electron crossed over to the other atom; in Pair B the two atoms hold a pair between them', note: 'Handed over on one plate, held between on the other.' },
+        { id: 'swap', label: 'The two atoms traded places in the clamps', note: 'The atoms moved, not the electrons.' },
         { id: 'noise', label: 'The joins are the same and the charge reading is instrument noise', note: 'Nothing real is different.' },
-        { id: 'both', label: 'In both pairs each piece gave an electron away', note: 'Everything was handed over.' }
+        { id: 'both', label: 'In both pairs each atom gave an electron away', note: 'Everything was handed over.' }
       ]
     },
     hints: [
-      'Press both pairs, then tap a piece and press "Read Charge" on each of the four.',
-      'Two of the four pieces read something other than zero. Look at which plate they are on, and at where the electrons are drawn afterwards.',
-      'Check the charge reading and electron positions to see whether electrons transferred or stayed positioned in the middle.'
+      'Press both pairs, then tap an atom and press "Read Charge" on each of the four.',
+      'Two of the four atoms read something other than zero, so look at which plate they are on and where the electrons are drawn afterwards.',
+      'An atom reading plus has lost an electron and one reading minus has gained it; if both atoms read zero, look at where their electrons are drawn.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === 'swap') {
-        return { ok: false, msg: 'The code plates under the clamps never changed, so neither piece went anywhere.' };
+        return { ok: false, msg: 'The code plates under the clamps never changed, so neither atom went anywhere.' };
       }
       if (state.choice === 'noise') {
-        return { ok: false, msg: 'Pair A reads plus one and minus one while both Pair B pieces read zero. That is a difference, not noise.' };
+        return { ok: false, msg: 'Read the charge on all four atoms: if the two joins were the same, the readings would be too.' };
       }
       if (state.choice === 'both') {
-        return { ok: false, msg: 'Both Pair B pieces read zero, so neither of them gave anything away.' };
+        return { ok: false, msg: 'Read the charge on the Pair B atoms: an atom that gave an electron away would not read zero.' };
       }
       return { ok: true };
     },
     reward: {
       log: 'Pair A: plus one and minus one. Pair B: zero and zero.',
       title: 'Two Ways to Fill a Shell',
-      body: 'In Pair A one atom handed an electron over, which left a cation reading plus one and an anion reading minus one, and the pull between those opposite charges is what holds them together. In Pair B neither piece would give one up, so the two hold a pair of electrons between them and each of them counts that pair as its own. Every join you will ever meet is one of those two.'
+      body: 'In Pair A one atom handed an electron over, which left a cation reading plus one and an anion reading minus one, and the pull between those opposite charges is what holds them together. In Pair B neither atom would give one up, so the two hold a pair of electrons between them and each of them counts that pair as its own. Every join you will ever meet is one of those two.'
     }
   },
 
@@ -268,14 +268,14 @@ export const STAGES = [
       type: 'bins',
       rows: ['r1', 'r2', 'r3', 'r4'],
       bins: [
-        { id: 'handed', label: 'Handed over', note: 'One piece gave electrons to the other.' },
-        { id: 'shared', label: 'Held between', note: 'The two pieces hold a pair between them.' }
+        { id: 'handed', label: 'Handed over', note: 'One atom gave electrons to the other.' },
+        { id: 'shared', label: 'Held between', note: 'The two atoms hold a pair between them.' }
       ]
     },
     hints: [
-      'Press a pair, then tap each of its pieces and press "Read Piece", and do the same for the other three.',
+      'Press a pair, then tap each of its atoms and press "Read Atom", and do the same for the other three.',
       'Every plate where something was handed over has a metal in it, and every plate where a pair sits between them has two nonmetals.',
-      'Check whether each pair combines a metal with a nonmetal, or two nonmetals together.'
+      'Press each pair and read the charge on both atoms: a plus and a minus means handed over, two zeros means held between.'
     ],
     check(state) {
       const labels = { r1: 'Pair A', r2: 'Pair B', r3: 'Pair C', r4: 'Pair D' };
@@ -283,16 +283,16 @@ export const STAGES = [
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       if (state.bins.r1 !== 'handed') {
-        return { ok: false, msg: 'Pair A holds a metal, and after the press one piece reads plus two and the other minus two.' };
+        return { ok: false, msg: 'Pair A is filed wrong. Check whether it holds a metal, and read the charge on both atoms after the press.' };
       }
       if (state.bins.r2 !== 'shared') {
-        return { ok: false, msg: 'Neither Pair B piece is a metal, and both read zero after the press, so nothing was handed over.' };
+        return { ok: false, msg: 'Pair B is filed wrong. Check whether it holds a metal, and read the charge on both atoms after the press.' };
       }
       if (state.bins.r3 !== 'handed') {
-        return { ok: false, msg: 'Pair C holds a metal, and after the press one piece reads plus one and the other minus one.' };
+        return { ok: false, msg: 'Pair C is filed wrong. Check whether it holds a metal, and read the charge on both atoms after the press.' };
       }
       if (state.bins.r4 !== 'shared') {
-        return { ok: false, msg: 'Neither Pair D piece is a metal, and both read zero after the press.' };
+        return { ok: false, msg: 'Pair D is filed wrong. Check whether it holds a metal, and read the charge on both atoms after the press.' };
       }
       return { ok: true };
     },
@@ -306,16 +306,16 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'How Many It Takes',
-    prompt: 'Say how many CAT 17 pieces one CAT 12 piece needs in order to give away everything it has.',
+    prompt: 'Say how many CAT 17 atoms one CAT 12 atom needs in order to give away everything it has.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('t1', 'PAIR A', 'off the arch quarry', PIECES.mg, PIECES.cl),
       pair('t2', 'PAIR B', 'off the salt pan', PIECES.na, PIECES.cl)
     ],
-    widget: { type: 'number', min: 0, max: 5, step: 1, label: 'CAT 17 pieces per CAT 12 piece' },
+    widget: { type: 'number', min: 0, max: 5, step: 1, label: 'CAT 17 atoms per CAT 12 atom' },
     hints: [
-      'Press both pairs, then tap the left-hand piece on each plate and press "Read Piece".',
-      'The CAT 11 piece on Pair B has nothing left on its outer shell afterwards, but the CAT 12 piece on Pair A still has something sitting on its outer shell.',
+      'Press both pairs, then tap the left-hand atom on each plate and press "Read Atom".',
+      'The CAT 11 ion on Pair B has nothing left on its outer shell afterwards, but the CAT 12 ion on Pair A still has something sitting on its outer shell.',
       'Divide the electrons CAT 12 needs to give away by how many electrons each CAT 17 can accept.'
     ],
     check(state) {
@@ -323,10 +323,10 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
       }
       if (state.number === 1) {
-        return { ok: false, msg: 'One CAT 17 took a single electron, and the CAT 12 piece still has one sitting on its outer shell.' };
+        return { ok: false, msg: 'After one CAT 17, read the CAT 12 ion again: has it given away everything it had?' };
       }
       if (state.number !== 2) {
-        return { ok: false, msg: 'A CAT 12 piece starts with two electrons on its outer shell, and each CAT 17 takes exactly one.' };
+        return { ok: false, msg: 'Read how many electrons a CAT 12 atom has on its outer shell before the press, and how many one CAT 17 takes from it.' };
       }
       return { ok: true };
     },
@@ -340,7 +340,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'More Than One Pair',
-    prompt: 'File each of the three pairs by how many pairs of electrons it holds between its two pieces.',
+    prompt: 'File each of the three pairs by how many pairs of electrons it holds between its two atoms.',
     controls: ['press', 'read'],
     pairs: [
       pair('u1', 'PAIR A', 'off the gas line', PIECES.h, PIECES.h),
@@ -357,9 +357,9 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Press each pair, then count the electrons drawn in the middle, between the two pieces.',
-      'Read a piece before the press to see how many places its outer shell still has open, and check that against what ends up between them.',
-      'Count the total electrons held between the two pieces and divide by two to get the number of pairs.'
+      'Press each pair, then count the electrons drawn in the middle, between the two atoms.',
+      'Read an atom before the press to see how many places its outer shell still has open, and check that against what ends up between them.',
+      'Count the total electrons held between the two atoms and divide by two to get the number of pairs.'
     ],
     check(state) {
       const labels = { u1: 'Pair A', u2: 'Pair B', u3: 'Pair C' };
@@ -369,7 +369,7 @@ export const STAGES = [
       const want = { u1: 'one', u2: 'two', u3: 'three' };
       for (const id of ['u1', 'u2', 'u3']) {
         if (state.bins[id] !== want[id]) {
-          return { ok: false, msg: `${labels[id]} has a different electron count in the middle — count the pairs between the pieces.` };
+          return { ok: false, msg: `${labels[id]} has a different electron count in the middle — count the pairs between the atoms.` };
         }
       }
       return { ok: true };
@@ -377,14 +377,14 @@ export const STAGES = [
     reward: {
       log: 'One pair, two pairs, three pairs.',
       title: 'Double and Triple Bonds',
-      body: 'A piece with two places to fill holds two pairs with its partner, and one with three places holds three, because each shared pair fills one place on each side at once. One shared pair is a single bond, two is a double bond and three is a triple bond. The more pairs a join holds, the shorter and the stronger it is.'
+      body: 'An atom with two places to fill holds two pairs with its partner, and one with three places holds three, because each shared pair fills one place on each side at once. One shared pair is a single bond, two is a double bond and three is a triple bond. The more pairs a join holds, the shorter and the stronger it is.'
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Read It Off the Catalogue',
-    prompt: 'File every pair by what it will do, from the two pieces alone.',
+    prompt: 'File every pair by what it will do, from the two atoms alone.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('v1', 'PAIR A', 'off the arch quarry', PIECES.ca, PIECES.s),
@@ -402,9 +402,9 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Tap each piece and press "Read Piece": the line that matters is whether it is a metal, and whether its outer shell has any room left.',
+      'Tap each atom and press "Read Atom": the line that matters is whether it is a metal, and whether its outer shell has any room left.',
       'A metal with a nonmetal is ionic, two nonmetals are covalent, and any pair holding a full outer shell makes nothing.',
-      'Identify which pairs have full outer shells, which mix a metal with a nonmetal, and which have only nonmetals.'
+      'Go pair by pair: if either atom has a full outer shell it is no bond; otherwise one metal with one nonmetal is ionic and two nonmetals is covalent.'
     ],
     check(state) {
       const labels = { v1: 'Pair A', v2: 'Pair B', v3: 'Pair C', v4: 'Pair D' };
@@ -412,10 +412,10 @@ export const STAGES = [
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       const reasons = {
-        v1: 'Pair A pairs a metal with a nonmetal — check what type of bond that forms.',
-        v2: 'Neither Pair B piece is a metal — check what type of bond forms between nonmetals.',
-        v3: 'CAT 18 already carries eight electrons on its outer shell with no room for a bond.',
-        v4: 'Pair D pairs a metal with a nonmetal — check what type of bond that forms.'
+        v1: 'Pair A is filed wrong. Read both atoms: is either one a metal, and is either outer shell already full?',
+        v2: 'Pair B is filed wrong. Read both atoms: is either one a metal, and is either outer shell already full?',
+        v3: 'Pair C is filed wrong. Read both atoms: is either one a metal, and is either outer shell already full?',
+        v4: 'Pair D is filed wrong. Read both atoms: is either one a metal, and is either outer shell already full?'
       };
       const want = { v1: 'ionic', v2: 'covalent', v3: 'none', v4: 'ionic' };
       for (const id of ['v1', 'v2', 'v3', 'v4']) {
@@ -426,34 +426,34 @@ export const STAGES = [
     reward: {
       log: 'Two ionic, one covalent, one that will not join.',
       title: 'The Catalogue Decides It',
-      body: 'A metal with a nonmetal gives an ionic bond, two nonmetals give a covalent bond, and a piece whose outer shell is already full gives no bond at all. You did not have to press anything to know which was which. Where two kinds sit in the catalogue is enough to say what they will do.'
+      body: 'A metal with a nonmetal gives an ionic bond, two nonmetals give a covalent bond, and an atom whose outer shell is already full gives no bond at all. You did not have to press anything to know which was which. Where two kinds sit in the catalogue is enough to say what they will do.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Build the Recipe',
-    prompt: 'Say how many CAT 01 pieces one CAT 06 piece can hold.',
+    prompt: 'Say how many CAT 01 atoms one CAT 06 atom can hold.',
     controls: ['press', 'read'],
     pairs: [
       pair('w1', 'PAIR A', 'off the gas line', PIECES.c, PIECES.h),
       pair('w2', 'PAIR B', 'off the air plant', PIECES.n, PIECES.h)
     ],
-    widget: { type: 'number', min: 0, max: 6, step: 1, label: 'CAT 01 pieces per CAT 06 piece' },
+    widget: { type: 'number', min: 0, max: 6, step: 1, label: 'CAT 01 atoms per CAT 06 atom' },
     hints: [
-      'Press both pairs, then tap the left-hand piece on each plate and press "Read Piece".',
-      'After one CAT 01, the CAT 06 piece still has room for three more, and the CAT 07 piece still has room for two.',
-      'Count how many open spots CAT 06 has in total on its outer shell when empty.'
+      'Press both pairs, then tap the left-hand atom on each plate and press "Read Atom".',
+      'Compare the two left-hand atoms after the press: each has taken one CAT 01, and each shows how much room its outer shell still has.',
+      'Add the one CAT 01 the CAT 06 atom already holds to the number of places it still has open.'
     ],
     check(state) {
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
       }
       if (state.number === 3) {
-        return { ok: false, msg: 'Three is how many CAT 01 one CAT 07 piece holds. Read the CAT 06 piece again: it has room for three more on top of the one it already holds.' };
+        return { ok: false, msg: 'That is what the CAT 07 atom holds. Read the CAT 06 atom after its press, and count the room it still has on top of the one it already holds.' };
       }
       if (state.number === 1) {
-        return { ok: false, msg: 'One CAT 01 fills only one of the four places on a CAT 06 outer shell.' };
+        return { ok: false, msg: 'Read the CAT 06 atom after the press: one CAT 01 did not fill its outer shell.' };
       }
       if (state.number !== 4) {
         return { ok: false, msg: 'Check how many open spots CAT 06 needs filled on its outer shell.' };
@@ -671,6 +671,7 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const frame = new LearnFrame(container, {
     stageCount: STAGES.length,
+    rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),
     onNext: () => next(),
     onJump: i => loadStage(i),
@@ -753,7 +754,7 @@ export function mount(container, ctx) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="press">Press Together</button>');
     }
     if (stage.controls.includes('read')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="read">Read Piece</button>');
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="read">Read Atom</button>');
     }
     if (stage.controls.includes('needle')) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="needle">Read Charge</button>');
@@ -800,7 +801,7 @@ export function mount(container, ctx) {
     }
 
     if (!state.side) {
-      frame.note('No piece selected. Tap one of the two pieces on the plate first.');
+      frame.note('No atom selected. Tap one of the two atoms on the plate first.');
       return;
     }
 
@@ -828,16 +829,16 @@ export function mount(container, ctx) {
   /** What the clamps actually did, read off the plan and nothing else. */
   function pressLine(plan) {
     if (plan.type === 'none') {
-      return 'The clamps close, the two pieces touch and then spring straight back apart. Nothing held.';
+      return 'The clamps close, the two atoms touch and then spring straight back apart. Nothing held.';
     }
     if (plan.type === 'transfer') {
       const n = plan.moved;
       const from = plan.giverSide === 'left' ? 'left' : 'right';
       const to = plan.giverSide === 'left' ? 'right' : 'left';
-      return `The clamps close, ${n === 1 ? 'one electron crosses' : `${n} electrons cross`} from the ${from} piece to the ${to} one, and the two stay together.`;
+      return `The clamps close, ${n === 1 ? 'one electron crosses' : `${n} electrons cross`} from the ${from} atom to the ${to} one, and the two stay together.`;
     }
     const p = plan.pairs;
-    return `The clamps close and ${p === 1 ? 'a pair of electrons settles' : `${p} pairs of electrons settle`} in the middle, between the two pieces, which stay together.`;
+    return `The clamps close and ${p === 1 ? 'a pair of electrons settles' : `${p} pairs of electrons settle`} in the middle, between the two atoms, which stay together.`;
   }
 
   /* ---------------- probe readout ---------------- */
@@ -852,7 +853,7 @@ export function mount(container, ctx) {
       <div class="lq-readout-card">
         <div class="lq-readout-head">Clamp // ${esc(item.label)}, ${hit.side === 'right' ? 'right' : 'left'}</div>
         <div class="lq-readout-code">${esc(hit.piece.code)}</div>
-        <p class="lq-readout-line">Selected. Press "Read Piece" to read it, or one of the other keys.</p>
+        <p class="lq-readout-line">Selected. Press "Read Atom" to read it, or one of the other keys.</p>
       </div>
     `);
   }
@@ -866,7 +867,7 @@ export function mount(container, ctx) {
   function renderPiece(item, piece, shells, held) {
     const plan = shellPlan({ shells });
     const sideName = state.side === 'right' ? 'right' : 'left';
-    // The room figure is reported for a piece that could still take something
+    // The room figure is reported for an atom that could still take something
     // in. On a metal it would read as "room for seven more", which is the exact
     // opposite of what a metal does with its outer shell, and the bench has no
     // business implying it — stage four is where the player finds that out.
@@ -894,8 +895,8 @@ export function mount(container, ctx) {
         <div class="lq-readout-code">${esc(piece.code)}</div>
         <p class="cb-charge" data-sign="${sign}">CHARGE ${text}</p>
         <p class="lq-readout-line">${held
-          ? 'The needle reads the piece as it is now, after the press.'
-          : 'Nothing has been pressed on this plate yet, so the piece is as it came in.'}</p>
+          ? 'The needle reads it as it is now, after the press.'
+          : 'Nothing has been pressed on this plate yet, so the atom is as it came in.'}</p>
       </div>
     `);
   }
@@ -913,7 +914,7 @@ export function mount(container, ctx) {
     frame.setReadout(`
       <div class="lq-readout-card lq-readout-idle">
         <div class="lq-readout-head">Bench // standby</div>
-        <p class="lq-readout-line">Each plate holds two pieces in clamps, with their shells drawn round them. Tap a piece to aim the tools at it.</p>
+        <p class="lq-readout-line">Each plate holds two atoms in clamps, with their shells drawn round them. Tap an atom to aim the tools at it.</p>
       </div>
     `);
   }

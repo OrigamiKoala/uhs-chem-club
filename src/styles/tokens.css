@@ -52,6 +52,7 @@
   --accent-gold: #cca56e;    /* sunlit titanium, milestone light */
   --accent-rust: #ab5722;    /* oxidized thermal alloy */
   --accent-green: #78a142;   /* aged phosphor telemetry */
+  --accent-green-deep: #3f4a2a; /* the recess a lit green lamp or meter cell sits in (a border, never text) */
   --accent-danger: #b8382c;  /* emergency & fault indicator */
   --accent-bronze: #967c50;  /* guild insignia metal */
   --accent-cyan: #628786;    /* weathered patina */
@@ -100,7 +101,7 @@
 
   --text-primary: #dcd6cc;   /* crisp warm titanium */
   --text-secondary: #a49c90; /* legible subtext */
-  --text-muted: #7d7568;     /* helper labels with clean contrast */
+  --text-muted: #8c8376;     /* helper labels: 4.87:1 on plate-200, 5.15:1 on plate-100 (AA) */
   --text-bright: #fbf9f5;    /* pure illuminated bone white */
   --text-amber: #e59b24;
   --text-green: #78a142;

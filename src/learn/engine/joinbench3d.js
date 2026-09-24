@@ -12,7 +12,7 @@
  * What changes is only where the player stands, and what is drawn where.
  *
  * THE PICTURE IS FLAT, THE INSTRUMENT IS BUILT. What the bench RESOLVES — the
- * two pieces, their shells, the light pieces that move or are shared, the
+ * two atoms, their shells, the electrons that move or are shared, the
  * pattern inside a block — is drawn on the raked screen over each station by
  * `drawJoinField` / `drawSlabField`, the very functions the canvas plate calls.
  * A shell picture staged as rings of beads in a well would hide the back of

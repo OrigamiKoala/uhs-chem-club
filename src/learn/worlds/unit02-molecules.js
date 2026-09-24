@@ -3,7 +3,7 @@
  *
  * Ligar. Four benches, in the order the ideas have to arrive in: what a join IS,
  * what each kind of join builds, why a compound only ever has one recipe, and
- * how you count pieces far too small to count.
+ * how you count atoms far too small to count.
  *
  * See unit01-atoms.js for how a quest is built and flipped live.
  */

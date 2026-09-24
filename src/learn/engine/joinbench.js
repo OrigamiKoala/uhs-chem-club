@@ -4,8 +4,8 @@
  * Ligar's bench. It answers one question at two scales, which is why it is one
  * instrument and not two:
  *
- *   - a PAIR plate clamps two pieces face to face and presses them together, so
- *     you can watch what their outer shells do and where the light pieces end up;
+ *   - a PAIR plate clamps two atoms face to face and presses them together, so
+ *     you can watch what their outer shells do and where the electrons end up;
  *   - a SLAB plate holds a block of finished material, so you can hit it, heat it
  *     and put a current through it.
  *
@@ -105,8 +105,8 @@ export function shellPlan(piece) {
  * What happens when the clamps close on a pair.
  *
  * Three outcomes and nothing else:
- *   'none'     nothing holds — at least one piece has a full outer shell
- *   'transfer' one piece hands light pieces over; both end up charged
+ *   'none'     nothing holds — at least one atom has a full outer shell
+ *   'transfer' one atom hands electrons over; both end up charged (ions)
  *   'share'    neither will give one up, so pairs sit between them
  *
  * `moved` and `pairs` are counts the picture draws and the quest may grade
@@ -137,7 +137,7 @@ export function planJoin(pair) {
   const bMetal = b.kind === 'metal';
 
   if (aMetal && bMetal) {
-    // Two metals both want to hand light pieces away, so neither takes. The
+    // Two metals both want to hand electrons away, so neither takes. The
     // bench never claims more than that; metals holding each other up is a
     // third story and no Ligar stage tells it.
     return { type: 'none', reason: 'both-give', moved: 0, pairs: 0, charge: { left: 0, right: 0 } };
@@ -191,8 +191,8 @@ export function shellsAfter(pair, side) {
   const plan = planJoin(pair);
   const shells = (piece.shells || []).slice();
   if (plan.type === 'share') {
-    // A shared pair belongs to BOTH pieces: each one contributes one light
-    // piece to it and then counts the whole pair. So an outer shell of six
+    // A shared pair belongs to BOTH atoms: each one contributes one
+    // electron to it and then counts the whole pair. So an outer shell of six
     // holding two pairs counts eight, which is what makes "it ended up full"
     // something the player can read off the instrument rather than be told.
     shells[shells.length - 1] += plan.pairs;
@@ -347,7 +347,7 @@ export function drawJoinField(ctx, o) {
     }
   }
 
-  /* ---- each piece: nucleus, shells, light pieces ---- */
+  /* ---- each atom: nucleus, shells, electrons ---- */
   for (const side of ['left', 'right']) {
     const s = g[side];
     const shells = s.shells;
@@ -403,7 +403,7 @@ export function drawJoinField(ctx, o) {
   /* ---- the shared pairs, drawn last so they sit over both shells ---- */
   for (const [x, y] of sharedPts) disc(ctx, x, y, g.dotR, ELECTRON);
 
-  /* ---- a light piece in flight, while the transfer is happening ---- */
+  /* ---- an electron in flight, while the transfer is happening ---- */
   if (plan.type === 'transfer' && t > 0 && t < 1) {
     const from = plan.giverSide === 'left' ? g.left : g.right;
     const to = plan.giverSide === 'left' ? g.right : g.left;
@@ -802,7 +802,7 @@ export class JoinBench {
            press then bubbles here as a `click` on the plate. A quest that tracks
            WHICH PIECE is selected as well as which plate had the piece wiped out
            from under it by the plate selection a few milliseconds later, every
-           time — which is why "Read Piece" answered "No piece selected" on a
+           time — which is why "Read Atom" answered "No atom selected" on a
            piece the player had just tapped. A press that resolved to a piece is
            spent; only a press on the plate around it selects the plate. */
         if (plate.pieceTaken) { plate.pieceTaken = false; return; }

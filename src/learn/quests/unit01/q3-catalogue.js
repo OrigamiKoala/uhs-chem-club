@@ -155,7 +155,7 @@ export const STAGES = [
     title: 'Put Them In Order',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench holds a card for each kind of atom.'
+      body: 'This bench holds a card for each kind of atom, and tapping a card reads it. To file a card, tap it, then tap the slot on the board you want it in.'
     },
     prompt: 'File the six cards in the slots, fewest protons on the left.',
     controls: ['reader', 'file', 'clear'],
@@ -165,8 +165,8 @@ export const STAGES = [
     widget: { type: 'board', label: 'Reference strip' },
     hints: [
       'Tap a card in the drawer to read it, then tap a slot to put it there.',
-      'Read all six first. The proton counts are 1, 6, 8, 11, 18 and 19.',
-      'Arrange the six cards from lowest proton count on the far left to highest on the far right.'
+      'Read all six and note the proton count on each; how heavy a card is does not matter here.',
+      'Write the six proton counts down, sort them smallest to largest, and file the cards in that order from the leftmost slot to the rightmost.'
     ],
     check(state) {
       const want = ['c01', 'c06', 'c08', 'c11', 'c18', 'c19'];
@@ -179,13 +179,13 @@ export const STAGES = [
       if (got.join() === want.join()) return { ok: true };
       const byMass = ['c01', 'c06', 'c08', 'c11', 'c19', 'c18'];
       if (got.join() === byMass.join()) {
-        return { ok: false, msg: 'That is the order they weigh, not the order they count — ARGON is heavier than POTASSIUM but has fewer protons.' };
+        return { ok: false, msg: 'That is the order they weigh, not the order of their proton counts. Read the proton count on each card and order by that alone.' };
       }
       for (let i = 1; i < got.length; i++) {
         const a = CARDS[got[i - 1]];
         const b = CARDS[got[i]];
         if (a && b && a.z > b.z) {
-          return { ok: false, msg: `${a.name} has ${a.z} protons and ${b.name} has ${b.z}, so ${a.name} cannot come first.` };
+          return { ok: false, msg: `${a.name} and ${b.name} are in the wrong order. Compare their proton counts.` };
         }
       }
       return { ok: false, msg: 'Something is out of order — read the proton counts again and put the smallest on the left.' };
@@ -207,8 +207,8 @@ export const STAGES = [
     widget: { type: 'number', min: 2, max: 18, label: 'Cards before it starts over' },
     hints: [
       'Tap the cards one by one and read the outer-shell electron count on each.',
-      'Along the row the counts go 1, 2, then 1, 2, 3, 4, 5, 6, 7, 8, then 1 again.',
-      'Count how many cards sit between the first reset at LITHIUM and the next reset at SODIUM.'
+      'After the first two cards, find the card where the count drops back to 1, then the next card where it drops to 1 again.',
+      'Count LITHIUM as card one and keep counting along the row, stopping at the card just before SODIUM.'
     ],
     check(state) {
       if (state.number === 8) return { ok: true };
@@ -249,7 +249,7 @@ export const STAGES = [
     hints: [
       'Tap a card in the drawer to pick it up, then tap the slot you want it in.',
       'These cards still carry their codes: CAT 11 is the lowest and CAT 18 is the highest.',
-      'Order the cards across the bottom row so their catalogue numbers increase by one in each slot.'
+      'Put the lowest code in the first slot, then for each next slot find the card whose code is one higher than the card before it.'
     ],
     check(state) {
       const want = ['c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18'];
@@ -284,9 +284,9 @@ export const STAGES = [
     drawer: [],
     widget: { type: 'number', min: 0, max: 8, label: 'Outer-shell electrons in column 6' },
     hints: [
-      'Column 6 is the sixth from the left. Tap OXYGEN, then tap SULFUR.',
-      'Compare the two readouts. Both cards report the same outer-shell count.',
-      'Check the outer-shell electron count shared by every card in column 6.'
+      'Column 6 is the sixth from the left: tap OXYGEN, then tap SULFUR.',
+      'Compare the two readouts, which report the same outer-shell count.',
+      'Read the outer-shell line on OXYGEN\'s card and enter that number; SULFUR\'s card is there to confirm it.'
     ],
     check(state) {
       if (state.number === 6) return { ok: true };
@@ -328,7 +328,7 @@ export const STAGES = [
     hints: [
       'Tap one card from each of the four groups and read the last line of each readout.',
       'Three of them trade: one hands an electron over, one takes one on, one holds on to a partner.',
-      'Look for the column whose cards report that they will not trade either way.'
+      'Read the last line on one card from each group and pick the group whose card says it does nothing either way.'
     ],
     check(state) {
       if (!state.choice) {
@@ -369,9 +369,9 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Tap all six cards. The last line of each readout says what that card does.',
-      'A card with 1, 2 or 3 outer electrons lets them go; one with 5, 6 or 7 pulls one in.',
-      'Read what each card does on its last line and match it to the description on the bin.'
+      'Tap all six cards: the last line of each readout says what that card does.',
+      'Match each card\'s last line to the bin whose note says the same thing, and check it against the outer-shell count on the card.',
+      'A card with 1, 2 or 3 outer electrons hands them over, 5, 6 or 7 takes one on, 4 holds on to a partner, and a full shell does nothing.'
     ],
     check(state) {
       const want = { c03: 'gives', c12: 'gives', c08: 'takes', c17: 'takes', c06: 'holds', c10: 'none' };
@@ -382,7 +382,7 @@ export const STAGES = [
       }
       for (const [id, expect] of Object.entries(want)) {
         if (state.bins[id] !== expect) {
-          return { ok: false, msg: `${CARDS[id].name} is filed wrong — it keeps ${CARDS[id].outer} electrons in its outer shell, so read what its card says it does.` };
+          return { ok: false, msg: `${CARDS[id].name} is filed wrong. Read what its card says it does, and check that against its outer-shell count.` };
         }
       }
       return { ok: true };
@@ -431,7 +431,7 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: 'Pick what the missing card will do.' };
       }
       if (state.number !== 14) {
-        return { ok: false, msg: `The slot sits between ALUMINUM at 13 and PHOSPHORUS at 15, so ${state.number} cannot go there.` };
+        return { ok: false, msg: `${state.number} does not fit that slot. Read the atomic numbers on the cards either side of it.` };
       }
       if (state.choice !== 'holds') {
         return { ok: false, msg: 'A card behaves like the rest of its column — check what the other card in that column does.' };
@@ -459,9 +459,9 @@ export const STAGES = [
     drawer: ['c16', 'c04', 'c13', 'c07'],
     widget: { type: 'board', label: 'Open slots' },
     hints: [
-      'Tap each card to read it. The readout still gives a proton count with the code missing.',
-      'The four counts are 4, 7, 13 and 16, and the chart runs in atomic number order.',
-      'Match each card’s proton count to the empty spot between the surrounding numbers on the chart.'
+      'Tap each card to read it: the readout still gives a proton count with the code missing.',
+      'Read the atomic numbers on the cards either side of each open slot; each slot takes the one number that fits between them.',
+      'For each unmarked card, find the open slot whose neighbors are one below and one above its proton count, and file it there.'
     ],
     check(state) {
       const want = { s1: 'c04', s2: 'c07', s3: 'c13', s4: 'c16' };
@@ -620,6 +620,7 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const frame = new LearnFrame(container, {
     stageCount: STAGES.length,
+    rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),
     onNext: () => next(),
     onJump: i => loadStage(i),

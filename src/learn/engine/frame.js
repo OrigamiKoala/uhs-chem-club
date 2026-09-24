@@ -122,6 +122,48 @@ function compactBins(root) {
 }
 
 /**
+ * What a quest's chosen key looks like, read back for a screen reader.
+ *
+ * Every quest marks a selection the same two ways: `selected` on an answer key
+ * (`[data-choice]`, `[data-bin]`, `[data-choice-val]`) and `lit` on a view key
+ * (`[data-field]`). Those keys are toggles, so each carries `aria-pressed` from
+ * the moment it is drawn, false until the class says otherwise. Any other
+ * button that picks up one of those classes is treated the same way. The dial
+ * is left alone: its lit segments are a gauge, not keys.
+ */
+const TOGGLE_KEYS = '[data-choice], [data-bin], [data-choice-val], [data-field]';
+
+function syncPressed(root) {
+  root?.querySelectorAll?.('button').forEach(btn => {
+    if (btn.closest('.lq-dial')) return;
+    const on = btn.classList.contains('selected') || btn.classList.contains('lit');
+    if (!on && !btn.hasAttribute('aria-pressed') && !btn.matches(TOGGLE_KEYS)) return;
+    const value = on ? 'true' : 'false';
+    if (btn.getAttribute('aria-pressed') !== value) btn.setAttribute('aria-pressed', value);
+  });
+}
+
+/**
+ * A stepper's "Lower" and "Raise" say nothing about WHAT they lower. Each is
+ * named after the field it sits under, using that field's own visible label,
+ * so a screen reader hears "Lower crossed grains" where the eye reads a minus
+ * sign under "Crossed grains". A key a quest already named is left as it is.
+ */
+function nameSteppers(root) {
+  root?.querySelectorAll?.('.lq-number').forEach(num => {
+    const label = num.closest('.lq-answer')?.querySelector('.form-label')?.textContent.trim();
+    if (!label) return;
+    // "Crossed grains" reads as "Lower crossed grains"; a label that opens on a
+    // code or an acronym ("CAT number") keeps its capitals.
+    const field = /^[A-Z][a-z]/.test(label) ? label[0].toLowerCase() + label.slice(1) : label;
+    num.querySelectorAll('button[data-num]').forEach(btn => {
+      const verb = btn.getAttribute('aria-label');
+      if (verb === 'Lower' || verb === 'Raise') btn.setAttribute('aria-label', `${verb} ${field}`);
+    });
+  });
+}
+
+/**
  * Where each region of the frame is bolted, in the bench's own local frame.
  *
  * Read these against the station layout in `bench3d.js`: stations run along x at
@@ -192,11 +234,25 @@ export class LearnFrame {
     this.solved = false;
     this.openedAt = 0;
     this.disposed = false;
+    // The reward card of every stage, by index, as the frame learns them: from
+    // `opts.rewards` if the quest hands over the whole list, from a stage that
+    // carries its `reward`, and from every `clear()`. Findings gathers these up.
+    this.findings = Array.isArray(opts.rewards) ? opts.rewards.slice() : [];
 
     this.build();
   }
 
   build() {
+    // THE PANEL FOLDS AWAY ONLY WHERE THERE IS SOMETHING BEHIND IT. Over a bench
+    // built in the world, hiding the panel hands the player the whole glass and
+    // the instrument they are standing at. On a page-tier bench the instrument
+    // IS the page, and folding the panel folded the instrument away with it.
+    this.canHidePanel = benchesAre3D() &&
+      Boolean(this.container.closest?.('.learn-quest-overworld'));
+
+    // The way out is the host bar's "Leave Bench" link (screens/learn-quest.js),
+    // which is on screen whether the panel is folded or not. The frame carries
+    // no second exit: three ways out of one bench was two too many.
     this.container.innerHTML = `
       <section class="lq">
         <div class="lq-rail" role="group" aria-label="Stages">
@@ -206,26 +262,20 @@ export class LearnFrame {
         </div>
 
         <div class="lq-dock-bar hidden" id="lq-dock-bar">
-          <button type="button" class="btn-secondary quest-btn-sm lq-reopen-btn" data-act="open-panel" title="Open stage panel" aria-label="Open stage panel">
-            Stage Panel
-          </button>
-          <button type="button" class="btn-primary quest-btn-sm lq-dock-commit" data-act="submit" title="Commit answer">
-            Commit
-          </button>
+          <button type="button" class="btn-secondary quest-btn-sm lq-reopen-btn" data-act="open-panel">Stage Panel</button>
+          <button type="button" class="btn-primary quest-btn-sm lq-dock-commit" data-act="submit">Commit</button>
         </div>
 
         <div class="lq-body">
           <div class="lq-stage">
             <div class="lq-stage-head">
               <div class="lq-stage-id">
-                <span class="eyebrow lq-kicker"></span>
                 <h2 class="lq-stage-title"></h2>
+                <span class="eyebrow lq-stage-count"></span>
               </div>
-              <div class="lq-stage-actions">
-                <button type="button" class="btn-secondary quest-btn-sm" data-act="exit">Exit</button>
-                <button type="button" class="btn-secondary quest-btn-sm" data-act="objective">Objective</button>
-              </div>
+              <div class="lq-stage-actions"></div>
             </div>
+            <div class="lq-prompt-strip" aria-hidden="true"></div>
             <div class="lq-controls"></div>
             <div class="lq-scope"></div>
           </div>
@@ -252,8 +302,11 @@ export class LearnFrame {
     const q = sel => this.container.querySelector(sel);
     this.el = {
       rail: q('.lq-rail'),
-      kicker: q('.lq-kicker'),
+      count: q('.lq-stage-count'),
       title: q('.lq-stage-title'),
+      promptStrip: q('.lq-prompt-strip'),
+      dock: q('.lq-dock-bar'),
+      dockCommit: q('.lq-dock-commit'),
       stageActions: q('.lq-stage-actions'),
       controls: q('.lq-controls'),
       scope: q('.lq-scope'),
@@ -286,6 +339,19 @@ export class LearnFrame {
       if (lamp && this.opts.onJump) this.opts.onJump(Number(lamp.dataset.lamp));
     };
     this.container.addEventListener('click', this.onClick);
+
+    // Quests mark a chosen key with a class and nothing else, which a screen
+    // reader cannot see. The frame reads those classes back into `aria-pressed`
+    // and names the steppers, whenever the answer region or the tool plate
+    // changes, so no quest has to remember to.
+    if (typeof MutationObserver === 'function') {
+      this.a11yObserver = new MutationObserver(() => this.queueA11y());
+      for (const el of [this.el.widget, this.el.controls]) {
+        this.a11yObserver.observe(el, {
+          childList: true, subtree: true, attributes: true, attributeFilter: ['class']
+        });
+      }
+    }
 
     this.deployPanels();
 
@@ -327,9 +393,26 @@ export class LearnFrame {
       deck.style.maxHeight = '';
       return;
     }
+    // No floor. A landscape phone leaves about 346 px of glass, and a deck held
+    // to a 300 px minimum below a host bar and a rail ran Commit off the bottom
+    // of it. The deck is never taller than the glass it has; its body scrolls.
     const vh = window.visualViewport?.height || window.innerHeight;
     const top = Math.max(0, deck.getBoundingClientRect().top);
-    deck.style.maxHeight = `${Math.max(300, Math.floor(vh - top - 14))}px`;
+    deck.style.maxHeight = `${Math.max(0, Math.floor(vh - top - 14))}px`;
+  }
+
+  /** Re-read selection state and stepper names once the DOM settles. */
+  queueA11y() {
+    if (this.a11yQueued || this.disposed) return;
+    this.a11yQueued = true;
+    Promise.resolve().then(() => {
+      this.a11yQueued = false;
+      if (this.disposed) return;
+      for (const el of [this.el.widget, this.el.controls]) {
+        syncPressed(el);
+        nameSteppers(el);
+      }
+    });
   }
 
   /* ---------------- diegesis ---------------- */
@@ -348,17 +431,19 @@ export class LearnFrame {
    * been.
    */
   setPanelClosed(closed) {
+    // Only a built bench has anything behind the panel to reveal.
+    if (closed && !this.canHidePanel) return;
     const body = this.container.querySelector('.lq-body');
-    const dock = this.container.querySelector('#lq-dock-bar');
-    if (closed) {
-      body?.classList.add('hidden');
-      dock?.classList.remove('hidden');
-      soundscape.playNavRelayClick?.();
-    } else {
-      body?.classList.remove('hidden');
-      dock?.classList.add('hidden');
-      soundscape.playNavRelayClick?.();
-    }
+    const dock = this.el.dock;
+    body?.classList.toggle('hidden', closed);
+    dock?.classList.toggle('hidden', !closed);
+    soundscape.playNavRelayClick?.();
+    // The key that was pressed has just been hidden; keep focus on the one that
+    // undoes it, so a keyboard player is never left holding nothing.
+    const next = closed
+      ? dock?.querySelector('.lq-reopen-btn')
+      : this.el.stageActions?.querySelector('[data-act="close-panel"]');
+    next?.focus?.();
   }
 
   deployPanels() {
@@ -485,30 +570,45 @@ export class LearnFrame {
       this.activeBriefingTx = null;
     }
     this.stage = stage;
+    if (stage.reward) this.findings[stage.index] = stage.reward;
     this.misses = 0;
     this.rung = 0;
     this.solved = false;
     this.openedAt = Date.now();
 
-    this.el.kicker.textContent = `Stage ${stage.index + 1} of ${this.stageCount}`;
+    // The rail shows where the player is; this is the one line that says it.
+    this.el.count.textContent = `Stage ${stage.index + 1} of ${this.stageCount}`;
     this.el.title.textContent = stage.title;
     this.el.prompt.innerHTML = `<p class="lq-prompt-body">${esc(stage.prompt)}</p>`;
+    // The objective again, over the bench, for a layout that stacks the deck
+    // underneath it. Hidden from a screen reader: the deck's copy is the real one.
+    if (this.el.promptStrip) this.el.promptStrip.textContent = stage.prompt || '';
     this.el.readout.innerHTML = '';
+    this.bannerSeq = (this.bannerSeq || 0) + 1;
     this.el.banner.innerHTML = '';
     this.el.hints.innerHTML = '';
     this.el.controls.innerHTML = '';
     this.el.widget.innerHTML = '';
     if (this.el.deckBody) this.el.deckBody.scrollTop = 0;
 
+    // Everything a solve or a miss changed is put back. The main Commit key is
+    // rebuilt; the docked one is the same node for the life of the frame, so its
+    // action, label and enabled state are reset by hand. A docked key left on
+    // "next" from the stage before skipped the stage it was pressed on.
+    const commitLabel = stage.commitLabel || 'Commit';
     this.el.actions.innerHTML = `
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
-      <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(stage.commitLabel || 'Commit')}</button>
+      <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
     `;
     this.el.commit = this.el.actions.querySelector('.lq-commit');
     this.el.hintKey = this.el.actions.querySelector('.lq-hint-key');
 
-    const dockCommit = this.container.querySelector('.lq-dock-commit');
-    if (dockCommit) dockCommit.textContent = esc(stage.commitLabel || 'Commit');
+    const dockCommit = this.el.dockCommit;
+    if (dockCommit) {
+      dockCommit.dataset.act = 'submit';
+      dockCommit.textContent = commitLabel;
+      dockCommit.disabled = false;
+    }
 
     this.updateStageActions();
     this.updateRail();
@@ -521,29 +621,37 @@ export class LearnFrame {
 
   updateStageActions() {
     if (!this.el.stageActions) return;
-    const canReview = this.stage?.reward && (this.cleared > (this.stage.index ?? 0) || this.solved);
+    // Findings gathers up what has been found so far. Straight after a first
+    // solve the only card it could show is the one already on the deck, so the
+    // key waits until there is something to gather.
+    const found = this.clearedFindings().length;
+    const canReview = found > (this.solved ? 1 : 0);
     // The Objective key reopens the stage briefing, so it only exists on a
     // stage that has one. Most stages do not: the prompt on the deck is the
     // whole task, and a key that opens an empty modal is a key that lies.
     this.el.stageActions.innerHTML = `
-      <button type="button" class="btn-secondary quest-btn-sm" data-act="exit">Exit</button>
       ${this.stage?.briefing ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="objective">Objective</button>' : ''}
       ${canReview ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="reward">Findings</button>' : ''}
-      <button type="button" class="btn-secondary quest-btn-sm" data-act="close-panel" title="Close stage panel" aria-label="Close stage panel">Close</button>
+      ${this.canHidePanel ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="close-panel">Hide Panel</button>' : ''}
     `;
   }
 
-  setControls(html) { this.el.controls.innerHTML = html; }
+  setControls(html) {
+    this.el.controls.innerHTML = html;
+    syncPressed(this.el.controls);
+    nameSteppers(this.el.controls);
+  }
   setWidget(html) {
     this.el.widget.innerHTML = html;
     compactBins(this.el.widget);
+    syncPressed(this.el.widget);
+    nameSteppers(this.el.widget);
   }
   setReadout(html) { this.el.readout.innerHTML = html; }
 
   setCommitEnabled(on) {
     if (this.el.commit) this.el.commit.disabled = !on;
-    const dockCommit = this.container.querySelector('.lq-dock-commit');
-    if (dockCommit) dockCommit.disabled = !on;
+    if (this.el.dockCommit) this.el.dockCommit.disabled = !on;
   }
 
   setCleared(n) {
@@ -559,6 +667,8 @@ export class LearnFrame {
       const open = Boolean(this.opts.onJump) && i !== idx && i <= this.cleared;
       lamp.disabled = !open;
       lamp.setAttribute('aria-label', `Stage ${i + 1}${i < this.cleared ? ', cleared' : ''}`);
+      if (i === idx) lamp.setAttribute('aria-current', 'step');
+      else lamp.removeAttribute('aria-current');
     });
   }
 
@@ -568,15 +678,36 @@ export class LearnFrame {
   miss(message) {
     this.misses++;
     soundscape.playMissBuzzer?.();
-    this.el.banner.innerHTML = `
+    this.announce(`
       <div class="stage-error-banner">
         <span class="banner-mark" aria-hidden="true">!!</span>
         <span class="banner-body">${esc(message)}</span>
       </div>
-    `;
+    `);
   }
 
-  clearBanner() { this.el.banner.innerHTML = ''; }
+  /**
+   * Put a message in the live banner so that it is heard EVERY time.
+   *
+   * A polite live region announces a change, and the same wrong answer twice
+   * writes the same words twice, which is no change at all: the second miss
+   * was silent. So the banner is emptied first and filled a beat later, which
+   * a screen reader hears as new text. The sequence number drops a fill that a
+   * newer write (a solve, a stage change) has already overtaken.
+   */
+  announce(html) {
+    const seq = this.bannerSeq = (this.bannerSeq || 0) + 1;
+    this.el.banner.innerHTML = '';
+    setTimeout(() => {
+      if (this.disposed || seq !== this.bannerSeq) return;
+      this.el.banner.innerHTML = html;
+    }, 60);
+  }
+
+  clearBanner() {
+    this.bannerSeq = (this.bannerSeq || 0) + 1;
+    this.el.banner.innerHTML = '';
+  }
 
   /**
    * A message that is not a wrong answer: an instrument reading back, or a tool
@@ -584,12 +715,12 @@ export class LearnFrame {
    * would open the hint ladder the player has not earned yet.
    */
   note(message) {
-    this.el.banner.innerHTML = `
+    this.announce(`
       <div class="stage-error-banner soft">
         <span class="banner-mark" aria-hidden="true">//</span>
         <span class="banner-body">${esc(message)}</span>
       </div>
-    `;
+    `);
   }
 
   /**
@@ -599,9 +730,11 @@ export class LearnFrame {
    */
   clear(reward) {
     this.solved = true;
+    if (reward && this.stage) this.findings[this.stage.index] = reward;
     soundscape.playBondSnap?.();
     this.el.hints.innerHTML = '';
     this.updateStageActions();
+    this.bannerSeq = (this.bannerSeq || 0) + 1;
     this.el.banner.innerHTML = `
       <div class="stage-error-banner stage-success-banner">
         <span class="banner-mark" aria-hidden="true">//</span>
@@ -620,12 +753,15 @@ export class LearnFrame {
     `;
     this.el.commit = this.el.actions.querySelector('.lq-commit');
     this.reveal(this.el.widget.firstElementChild);
-    const dockCommit = this.container.querySelector('.lq-dock-commit');
+    const dockCommit = this.el.dockCommit;
     if (dockCommit) {
       dockCommit.textContent = reward.last ? 'Finish' : 'Next Stage';
       dockCommit.dataset.act = 'next';
+      dockCommit.disabled = false;
     }
-    this.el.commit.focus();
+    // Focus follows whichever of the two keys the player can actually see.
+    const dockShown = this.el.dock && !this.el.dock.classList.contains('hidden');
+    (dockShown ? dockCommit : this.el.commit)?.focus();
   }
 
   /* ---------------- hints ---------------- */
@@ -641,19 +777,38 @@ export class LearnFrame {
     if (!this.stage || this.solved) return;
     const hints = this.stage.hints || [];
     const allowed = Math.min(this.availableRung(), hints.length);
+    // One waiting line at most: a second press replaces it rather than
+    // stacking the same sentence under itself.
+    this.el.hints.querySelector('.lq-hint-wait')?.remove();
     if (this.rung >= allowed) {
-      this.el.hints.innerHTML += `
-        <p class="lq-hint lq-hint-wait">Keep looking. The next hint opens after another try, or after 45 seconds.</p>
-      `;
+      this.el.hints.insertAdjacentHTML('beforeend',
+        `<p class="lq-hint lq-hint-wait">${esc(this.waitLine(hints.length))}</p>`);
       this.reveal(this.el.hints.lastElementChild);
       return;
     }
     this.rung++;
     soundscape.playCrtTick?.();
-    this.el.hints.innerHTML += `
-      <p class="lq-hint"><span class="lq-hint-rung">${this.rung}</span>${esc(hints[this.rung - 1])}</p>
-    `;
+    this.el.hints.insertAdjacentHTML('beforeend',
+      `<p class="lq-hint"><span class="lq-hint-rung">${this.rung}</span>${esc(hints[this.rung - 1])}</p>`);
     this.reveal(this.el.hints.lastElementChild);
+  }
+
+  /**
+   * What opens the next rung, stated as the ladder in `availableRung` actually
+   * works: rung 2 after one wrong answer or 45 seconds on the stage, rung 3
+   * only after two wrong answers.
+   */
+  waitLine(total) {
+    const next = this.rung + 1;
+    if (next > total) return 'That is every hint for this stage.';
+    if (next <= 2) {
+      const secs = Math.max(1, Math.ceil((RUNG2_AFTER_MS - (Date.now() - this.openedAt)) / 1000));
+      return `The next hint opens after a wrong answer, or in ${secs} second${secs === 1 ? '' : 's'}.`;
+    }
+    const left = Math.max(1, 2 - this.misses);
+    return left === 1
+      ? 'The last hint opens after one more wrong answer.'
+      : 'The last hint opens after two wrong answers.';
   }
 
   /**
@@ -685,16 +840,15 @@ export class LearnFrame {
     }
 
     const speaker = b.speaker || this.opts.speaker || 'VESS // COMMS';
-    const stageIdx = this.stage ? this.stage.index + 1 : 1;
 
     showModal(`
-      <div class="quest-modal-head lq-modal-head" style="margin-bottom: 0.85rem;">
+      <div class="quest-modal-head lq-modal-head">
         <div>
           <div class="eyebrow lit">${esc(speaker)}</div>
           <h2 id="lq-briefing-title" class="section-title">${esc(this.stage.title)}</h2>
         </div>
       </div>
-      <div id="lq-modal-transmission" style="margin-bottom: 1.15rem;"></div>
+      <div id="lq-modal-transmission" class="lq-modal-tx"></div>
       <div class="debrief-controls-left lq-modal-keys">
         <button type="button" class="btn-primary" data-lq-close>Start</button>
       </div>
@@ -708,10 +862,11 @@ export class LearnFrame {
       }
     });
 
+    // No stage badge on the transmission: the rail and the stage line under the
+    // title already say where the player is, and a third copy says nothing new.
     this.activeBriefingTx = createTransmissionElement({
       speaker,
       text: b.body,
-      badge: `STAGE ${stageIdx} OF ${this.stageCount}`,
       variant: 'hero'
     });
     document.getElementById('lq-modal-transmission')?.appendChild(this.activeBriefingTx.element);
@@ -726,17 +881,39 @@ export class LearnFrame {
     });
   }
 
+  /** The reward cards of every stage cleared so far, in stage order. */
+  clearedFindings() {
+    const here = this.stage ? this.stage.index : -1;
+    const out = [];
+    this.findings.forEach((r, i) => {
+      if (!r || !r.title) return;
+      if (i < this.cleared || (this.solved && i === here)) out.push({ index: i, reward: r });
+    });
+    return out;
+  }
+
+  /**
+   * Findings is the gathering-up: every card the player has earned on this
+   * bench so far, in the order they earned them, so the words each stage
+   * named can be read together rather than one at a time.
+   */
   showFindings() {
-    if (!this.stage?.reward) return;
-    const r = this.stage.reward;
+    const list = this.clearedFindings();
+    if (!list.length) return;
     showModal(`
-      <div class="quest-modal-head lq-modal-head" style="margin-bottom: 0.85rem;">
+      <div class="quest-modal-head lq-modal-head">
         <div>
-          <div class="eyebrow lit">What you found</div>
-          <h2 id="lq-findings-title" class="section-title">${esc(r.title)}</h2>
+          <h2 id="lq-findings-title" class="section-title">What you found</h2>
         </div>
       </div>
-      <p style="font-size: 0.95rem; line-height: 1.6; color: var(--text-primary); margin-bottom: 1.2rem;">${esc(r.body)}</p>
+      <ol class="lq-findings">
+        ${list.map(({ index, reward }) => `
+          <li class="lq-finding">
+            <h3 class="lq-finding-head">Stage ${index + 1}. ${esc(reward.title)}</h3>
+            <p class="lq-finding-body">${esc(reward.body)}</p>
+          </li>
+        `).join('')}
+      </ol>
       <div class="debrief-controls-left lq-modal-keys">
         <button type="button" class="btn-primary" data-lq-close>Close</button>
       </div>
@@ -753,12 +930,19 @@ export class LearnFrame {
    * The debrief: an RPG dialogue stepper, the way the campaign epilogue works.
    * This is where the Learn track finally says the words out loud — the intuition
    * has already been built by then, which is the only order that works.
+   *
+   * IT CAN BE LEFT AT ANY POINT, AND LEAVING IT LOSES NOTHING. The quest records
+   * completion when the last stage is solved, before this opens, so this card
+   * carries no progress of its own. Escape, a press on the backdrop, `Close` and
+   * `Close Channel` all end it the same way, and `onDone` runs exactly once
+   * however it ends.
    * @param {{speaker: string, sections: Array<{heading: string, body: string}>}} debrief
    */
   showDebrief(debrief, onDone) {
     let i = 0;
     const total = debrief.sections.length;
     let debriefTx = null;
+    let finished = false;
 
     const cleanupTx = () => {
       if (debriefTx?.destroy) {
@@ -767,36 +951,47 @@ export class LearnFrame {
       }
     };
 
+    const finish = () => {
+      // A disposed frame must not send the player anywhere.
+      if (finished || this.disposed) { finished = true; return; }
+      finished = true;
+      cleanupTx();
+      soundscape.playNavRelayClick?.();
+      onDone?.();
+    };
+
     const render = () => {
       cleanupTx();
       const s = debrief.sections[i];
       const speaker = debrief.speaker || 'VESS // DEBRIEF';
+      const last = i >= total - 1;
 
+      // Stepping re-opens the card over itself; `showModal` drops the old
+      // card's handlers without running its onClose, so a step is never a leave.
       showModal(`
-        <div class="quest-modal-head lq-modal-head" style="margin-bottom: 0.85rem;">
+        <div class="quest-modal-head lq-modal-head">
           <div>
             <div class="eyebrow lit">${esc(speaker)}</div>
             <h2 id="lq-debrief-title" class="section-title">${esc(s.heading)}</h2>
           </div>
           <span class="tag live">${i + 1} / ${total}</span>
         </div>
-        <div id="lq-debrief-transmission" style="margin-bottom: 1.15rem;"></div>
+        <div id="lq-debrief-transmission" class="lq-modal-tx"></div>
         <div class="debrief-controls-left lq-modal-keys">
           <button type="button" class="btn-secondary" data-step="-1" ${i === 0 ? 'disabled' : ''}>Back</button>
-          ${i < total - 1
-            ? '<button type="button" class="btn-primary" data-step="1">Next</button>'
-            : '<button type="button" class="btn-primary" data-step="done">Close Channel</button>'}
+          ${last
+            ? '<button type="button" class="btn-primary" data-step="done">Close Channel</button>'
+            : `<button type="button" class="btn-secondary" data-step="done">Close</button>
+               <button type="button" class="btn-primary" data-step="1">Next</button>`}
         </div>
       `, {
-        dismissible: false,
         labelledBy: 'lq-debrief-title',
-        onClose: cleanupTx
+        onClose: finish
       });
 
       debriefTx = createTransmissionElement({
         speaker,
         text: s.body,
-        badge: `${i + 1} / ${total}`,
         variant: 'hero'
       });
       document.getElementById('lq-debrief-transmission')?.appendChild(debriefTx.element);
@@ -805,10 +1000,7 @@ export class LearnFrame {
         btn.addEventListener('click', () => {
           const v = btn.dataset.step;
           if (v === 'done') {
-            cleanupTx();
-            closeModal();
-            soundscape.playNavRelayClick?.();
-            onDone?.();
+            closeModal(finish);
             return;
           }
           i = Math.max(0, Math.min(total - 1, i + Number(v)));
@@ -816,6 +1008,9 @@ export class LearnFrame {
           render();
         });
       });
+      // The first key in the card is Back, which is disabled on the first page;
+      // start the player on the key that moves them on.
+      document.querySelector('#modal-container .lq-modal-keys .btn-primary')?.focus();
     };
 
     render();
@@ -828,6 +1023,8 @@ export class LearnFrame {
       this.activeBriefingTx = null;
     }
     this.container.removeEventListener('click', this.onClick);
+    this.a11yObserver?.disconnect();
+    this.a11yObserver = null;
     this.benchKeys?.dispose();
     this.benchKeys = null;
     window.removeEventListener('resize', this.onFit);

@@ -89,8 +89,8 @@ body.touch-primary #fullscreen-toggle { display: inline-flex; }
   top: 8px;
   transform: translateX(-50%);
   font-family: var(--font-mono);
-  font-size: 0.52rem;
-  letter-spacing: 0.22em;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
   color: var(--text-muted);
   pointer-events: none;
 }

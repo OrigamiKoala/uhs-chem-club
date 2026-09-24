@@ -42,7 +42,8 @@ export const VOCABULARY = [
   { term: /\bmelting points?\b/i, introducedAt: 1 },
   { term: /\blattices?\b/i, introducedAt: 2 },
   { term: /\bbrittle\b/i, introducedAt: 2 },
-  { term: /\bconduct\w*\b/i, introducedAt: 3 }
+  { term: /\bconduct\w*\b/i, introducedAt: 3 },
+  { term: /\bformula units?\b/i, introducedAt: 6 }
 ];
 
 const SPEAKER = 'Vess';
@@ -82,7 +83,7 @@ export function toolNoteFor(controlId, stageNumber) {
 /**
  * A block plate.
  *
- * `build` is how its pieces are arranged and it decides the whole picture;
+ * `build` is how its atoms, ions or molecules are arranged and it decides the whole picture;
  * `melt` is the one thing the bench is simply told, because a temperature is a
  * measurement and the instrument reports exactly the figure it was given.
  */
@@ -102,9 +103,9 @@ export const STAGES = [
     title: 'Heat All Three',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench tests how blocks of solid material hold together.'
+      body: 'This bench holds a block of solid material in a clamp. You can hit it, heat it until it comes apart, let it cool again, and put a current through it.'
     },
-    prompt: 'Pick the block whose pieces are being held together hardest.',
+    prompt: 'Pick the block that is held together hardest.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {
@@ -118,18 +119,16 @@ export const STAGES = [
     },
     hints: [
       'Tap a block to select it, press "Heat It", and do the same for the other two.',
-      'Each block reports the temperature it came apart at. The harder its pieces are held, the more heat it takes to pull them apart.',
-      'Compare the temperatures at which each block melted to see which required the most heat.'
+      'Each block reports the temperature it came apart at, and the harder a block is held together, the more heat that takes.',
+      'Write the three temperatures down side by side and pick the block with the highest one.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the three blocks.' };
       }
-      if (state.choice === 's2') {
-        return { ok: false, msg: 'Block B came apart at 115 degrees, the lowest of the three, so it is the one held least.' };
-      }
-      if (state.choice === 's1') {
-        return { ok: false, msg: 'Block A came apart at 801 degrees, and one of the others held out past that.' };
+      if (state.choice === 's2' || state.choice === 's1') {
+        const picked = state.choice === 's2' ? 'Block B' : 'Block A';
+        return { ok: false, msg: `${picked} is not the one. Heat all three and compare the temperatures they came apart at: the hardest hold takes the most heat.` };
       }
       return { ok: true };
     },
@@ -150,16 +149,16 @@ export const STAGES = [
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'grid', label: 'Its pieces sit in a repeating pattern of alternating charges, so a blow slides one whole layer and puts like against like', note: 'The pattern decides where it breaks.' },
+        { id: 'grid', label: 'Its ions sit in a repeating pattern of alternating charges, so a blow slides one whole layer and puts like against like', note: 'The pattern decides where it breaks.' },
         { id: 'crack', label: 'The block was already cracked along that face', note: 'A flaw was there before the blow.' },
         { id: 'soft', label: 'The material is soft, so the hammer cut straight through it', note: 'Softness decides it.' },
-        { id: 'weak', label: 'Its joins are the weakest on the bench', note: 'It is the easiest of the two to break.' }
+        { id: 'weak', label: 'Its bonds are the weakest on the bench', note: 'It is the easiest of the two to break.' }
       ]
     },
     hints: [
       'Tap a block, press "Strike It", and do the same for the other one.',
-      'Look at what the picture shows in Block A before the blow: every piece marked plus has pieces marked minus all round it, in a pattern that repeats.',
-      'Notice how alternating charges in the grid shift when a layer slides sideways.'
+      'Look at what the picture shows in Block A before the blow: every ion marked plus has ions marked minus all round it, in a pattern that repeats.',
+      'Picture one row of Block A\'s pattern slid along by one place, and check whether each plus now sits beside a plus or beside a minus.'
     ],
     check(state) {
       if (!state.choice) {
@@ -172,7 +171,7 @@ export const STAGES = [
         return { ok: false, msg: 'Block A needed 801 degrees to come apart and Block B only 115, so Block A is not the soft one.' };
       }
       if (state.choice === 'weak') {
-        return { ok: false, msg: 'Block B gave way at 115 degrees and crumbled rather than splitting, so Block A holds the stronger joins of the two.' };
+        return { ok: false, msg: 'Block B gave way at 115 degrees and crumbled rather than splitting, so Block A is the more strongly held of the two.' };
       }
       return { ok: true };
     },
@@ -193,16 +192,16 @@ export const STAGES = [
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'free', label: 'Charged pieces, and room for them to move', note: 'Both have to be true at once.' },
+        { id: 'free', label: 'Ions or electrons, and room for them to move', note: 'Both have to be true at once.' },
         { id: 'hot', label: 'The block has to be hot', note: 'Heat on its own does it.' },
         { id: 'metal', label: 'The block has to be a metal', note: 'Nothing else passes a current.' },
-        { id: 'solid', label: 'The block has to be solid, so its pieces touch', note: 'A liquid breaks the path.' }
+        { id: 'solid', label: 'The block has to be solid, so its atoms touch', note: 'A liquid breaks the path.' }
       ]
     },
     hints: [
       'Test each block cold first, then press "Heat It" on it and test the same block again.',
-      'Block A passes nothing cold and passes a current once it is molten. Block B is molten too, and just as hot, and passes nothing at all.',
-      'Consider whether charges are present in the material and whether they are able to move.'
+      'Block A passes nothing cold and a current once molten, while Block B, molten and just as hot, passes nothing at all.',
+      'Line up the three results, Block A cold, Block A molten and Block B molten, and find what is true of the one that passed a current and false of the other two.'
     ],
     check(state) {
       if (!state.choice) {
@@ -222,48 +221,48 @@ export const STAGES = [
     reward: {
       log: 'Block A cold: nothing. Block A molten: current. Block B molten: nothing.',
       title: 'What It Takes to Conduct',
-      body: 'A current is charge on the move, so a material only conducts if it holds charged pieces and those pieces can travel. In the lattice the ions are pinned in the grid and nothing flows; melt it and the very same ions are free, so it conducts. Block B was molten too and passed nothing, because what it is built of carries no charge at all.'
+      body: 'A current is charge on the move, so a material only conducts if it holds charged particles, such as ions or electrons, and those particles can travel. In the lattice the ions are pinned in the grid and nothing flows; melt it and the very same ions are free, so it conducts. Block B was molten too and passed nothing, because what it is built of carries no charge at all.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'What Survives the Blow',
-    prompt: 'Say what actually gives way when Block B comes apart.',
+    prompt: 'Say what actually gives way when Block A comes apart.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [VENT('s2', 'BLOCK A'), SALT('s1', 'BLOCK B')],
     widget: {
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'between', label: 'The pull between whole groups gives way, and the groups themselves stay in one piece', note: 'Nothing inside a group breaks.' },
-        { id: 'inside', label: 'The joins inside each group break first', note: 'The groups come apart into single atoms.' },
+        { id: 'between', label: 'The pull between whole molecules gives way, and the molecules themselves stay in one piece', note: 'Nothing inside a molecule breaks.' },
+        { id: 'inside', label: 'The bonds inside each molecule break first', note: 'The molecules come apart into single atoms.' },
         { id: 'all', label: 'Everything gives way at once', note: 'Nothing survives it.' },
         { id: 'layer', label: 'One flat layer slides off the rest', note: 'It splits the way Block B does.' }
       ]
     },
     hints: [
       'Tap Block A, press "Strike It", then press "Heat It" on the same block and look at the picture after each.',
-      'Count the pieces in one of the small groups before the blow and count them again afterwards.',
-      'Observe whether individual groups broken apart remain intact internally.'
+      'Count the atoms in one of the small molecules before the blow and count them again afterwards.',
+      'Count the atoms in one molecule before the blow, after the blow and after the melt, and compare the three counts.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === 'inside') {
-        return { ok: false, msg: 'Every group in Block A still has the same pieces in it after the blow and after the melt, so nothing inside one broke.' };
+        return { ok: false, msg: 'Count the atoms in one of Block A\'s molecules before and after each test, and see whether any molecule lost an atom.' };
       }
       if (state.choice === 'all') {
-        return { ok: false, msg: 'The groups are still drawn whole after both tests, so not everything gave way.' };
+        return { ok: false, msg: 'Look at Block A\'s picture after the blow and after the melt, and see whether anything in it is still drawn whole.' };
       }
       if (state.choice === 'layer') {
-        return { ok: false, msg: 'Block B splits along a flat face. Block A has no pattern to split along and simply comes apart into its groups.' };
+        return { ok: false, msg: 'Splitting along one flat face is what Block B does. Strike Block A and compare how it comes apart.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Block A: the groups came apart from each other, never from themselves.',
+      log: 'Block A: the molecules came apart from each other, never from themselves.',
       title: 'Molecules, and the Weak Pull Between Them',
       body: 'This block is built of separate molecules, and the covalent bonds inside each one are strong, but what holds one molecule to the next is a far weaker pull. Melting it only has to beat that weaker pull, which is why 115 degrees was enough where the lattice needed 801. The molecules themselves come through both tests unchanged.'
     }
@@ -279,29 +278,29 @@ export const STAGES = [
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'through', label: 'Every piece is joined on to the next all the way through, so there is no plane you can break without cutting joins', note: 'The whole block is one connected piece.' },
-        { id: 'groups', label: 'It is separate groups, packed much more tightly than Block B', note: 'Tighter packing, same build.' },
-        { id: 'charged', label: 'It is held by charges, the way the salt block is', note: 'The pull between charges is doing it.' },
+        { id: 'through', label: 'Every atom is bonded to the next all the way through, so there is no plane you can break without breaking bonds', note: 'The whole block is one connected piece.' },
+        { id: 'groups', label: 'It is separate molecules, packed much more tightly than Block B', note: 'Tighter packing, same build.' },
+        { id: 'charged', label: 'It is made of ions held by their charges, the way the salt block is', note: 'The pull between charges is doing it.' },
         { id: 'layers', label: 'It is stacked in flat layers that grip each other', note: 'Friction between layers holds it.' }
       ]
     },
     hints: [
       'Tap Block A and press all three keys on it, one after the other.',
-      'The hammer does nothing to Block A, it needs 1710 degrees, and it passes no current even when it is molten. Then look at how its pieces are drawn.',
-      'Inspect the diagram to see whether connections form one continuous structure across the entire block.'
+      'The hammer does nothing to Block A, it needs 1710 degrees and passes no current even molten, so look at how its atoms are drawn.',
+      'Pick any atom in Block A\'s picture and follow its bonds from atom to atom, and see whether you ever reach a gap.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === 'groups') {
-        return { ok: false, msg: 'Block B is separate groups and it crumbled into them. Block A did not come apart at all, and the picture shows no gaps anywhere in it.' };
+        return { ok: false, msg: 'Block B is separate molecules, and it crumbled into them. Strike Block A and look at its picture: does it come apart into molecules?' };
       }
       if (state.choice === 'charged') {
-        return { ok: false, msg: 'Block A passed no current even molten, and nothing in it is marked plus or minus, so there are no charges in there.' };
+        return { ok: false, msg: 'Test Block A for a current once it is molten, and look for any ion, marked plus or minus, in its picture.' };
       }
       if (state.choice === 'layers') {
-        return { ok: false, msg: 'Layers that only grip each other would slide apart under the hammer. The hammer did nothing to Block A.' };
+        return { ok: false, msg: 'Layers that only grip each other would slide apart under the hammer. Strike Block A and see whether anything slides.' };
       }
       return { ok: true };
     },
@@ -329,18 +328,18 @@ export const STAGES = [
     },
     hints: [
       'Strike each block, then look at what the picture leaves you holding.',
-      'A molecule is a group of atoms joined to each other and to nothing else. Look for a picture with gaps in it.',
-      'Look for the diagram that shows separate, distinct groups with space between them.'
+      'A molecule is a small cluster of atoms bonded to each other and to nothing else, so look for a picture with gaps in it.',
+      'In each picture, pick one atom and follow its bonds: you can lift a molecule out only where that stops at a small cluster with a gap all round it.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the three blocks.' };
       }
       if (state.choice === 's1') {
-        return { ok: false, msg: 'Block A is one repeating grid with nothing separate anywhere in it, so there is no single group to lift out.' };
+        return { ok: false, msg: 'Block A is one repeating grid of ions with nothing separate anywhere in it, so there is no single molecule to lift out.' };
       }
       if (state.choice === 's3') {
-        return { ok: false, msg: 'Block C is joined all the way through, so lifting anything out of it means cutting joins.' };
+        return { ok: false, msg: 'Block C is bonded all the way through, so lifting anything out of it means breaking bonds.' };
       }
       return { ok: true };
     },
@@ -366,28 +365,24 @@ export const STAGES = [
       rows: ['x1', 'x2', 'x3'],
       bins: [
         { id: 'ionic', label: 'Ionic lattice', note: 'Ions in a repeating grid.' },
-        { id: 'molecular', label: 'Separate molecules', note: 'Small groups, weak pull between them.' },
-        { id: 'network', label: 'Covalent network', note: 'Joined all the way through.' }
+        { id: 'molecular', label: 'Separate molecules', note: 'A weak pull between one molecule and the next.' },
+        { id: 'network', label: 'Covalent network', note: 'Bonded all the way through.' }
       ]
     },
     hints: [
       'Nothing resolves inside a cased block, so heat each one, test each one molten, and hit each one.',
       'A block that comes apart low and crumbles is one build; a block that comes apart high, splits flat and conducts once molten is another; a block that will not break at all is the third.',
-      'Use the melting point, cleavage behavior, and molten conductivity to identify each structure.'
+      'For each block write down three results, the temperature it comes apart at, what a blow does and whether it passes a current molten, and match each set to the build that behaved that way earlier.'
     ],
     check(state) {
-      for (const id of ['x1', 'x2', 'x3']) {
-      }
-      for (const id of ['x1', 'x2', 'x3']) {
-      }
       const labels = { x1: 'Block A', x2: 'Block B', x3: 'Block C' };
       for (const id of ['x1', 'x2', 'x3']) {
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       const reasons = {
-        x1: 'Block A conducted once it was molten, and only ions loose in a melt do that.',
-        x2: 'Block B came apart at 80 degrees and crumbled into whole groups, which is far too easy for anything held by bonds all the way through.',
-        x3: 'Block C would not break, needed 3550 degrees and never conducted, so it holds no ions and no separate groups.'
+        x1: 'Block A is filed wrong. Heat it, test it molten and strike it, and compare what it does with how each build behaved earlier.',
+        x2: 'Block B is filed wrong. Heat it, test it molten and strike it, and compare what it does with how each build behaved earlier.',
+        x3: 'Block C is filed wrong. Heat it, test it molten and strike it, and compare what it does with how each build behaved earlier.'
       };
       const want = { x1: 'ionic', x2: 'molecular', x3: 'network' };
       for (const id of ['x1', 'x2', 'x3']) {
@@ -398,7 +393,7 @@ export const STAGES = [
     reward: {
       log: 'One lattice, one molecular, one network.',
       title: 'The Tests Name the Build',
-      body: 'A block that melts low and crumbles into whole groups is molecular; one that melts high, cleaves flat and conducts once molten is an ionic lattice; one that melts higher still, will not cleave and never conducts is a covalent network. You never opened any of the three. How a material behaves is a direct report of how its atoms are joined.'
+      body: 'A block that melts low and crumbles into whole molecules is molecular; one that melts high, cleaves flat and conducts once molten is an ionic lattice; one that melts higher still, will not cleave and never conducts is a covalent network. You never opened any of the three. How a material behaves is a direct report of how its atoms are held together.'
     }
   },
 
@@ -451,11 +446,11 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Three blocks, three builds. Ions in a repeating grid are hard, brittle and pass a current only once they are melted; separate molecules melt easily and never conduct; a network joined all the way through barely melts at all.'
+      body: 'Three blocks, three builds. Ions in a repeating grid are hard, brittle and pass a current only once they are melted; separate molecules melt easily and never conduct; a network bonded all the way through barely melts at all.'
     },
     {
       heading: 'Why It Works',
-      body: 'Nothing you measured was a property of an atom. Every one of them was a property of the joins between atoms, which is why knowing the bond type tells you what a material will do before you have tested anything.'
+      body: 'Nothing you measured was a property of an atom. Every one of them was a property of how atoms are held together, which is why knowing the bond type tells you what a material will do before you have tested anything.'
     },
     {
       heading: 'Next',
@@ -603,6 +598,7 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const frame = new LearnFrame(container, {
     stageCount: STAGES.length,
+    rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),
     onNext: () => next(),
     onJump: i => loadStage(i),
@@ -770,7 +766,7 @@ export function mount(container, ctx) {
       return 'The block splits in one go, along a single flat face, and the two halves come away clean.';
     }
     if (out.result === 'crumbled') {
-      return 'The block gives way at once and crumbles into small groups, none of which the blow broke open.';
+      return 'The block gives way at once and crumbles into small clusters, none of which the blow broke open.';
     }
     return 'The hammer rings off it and stops. Nothing moves, and nothing comes away.';
   }

@@ -134,7 +134,7 @@ export const STAGES = [
     field: 'core',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench inspects one atom at a time.'
+      body: 'This bench shows one atom at a time: "The middle" shows its nucleus and "Outside" shows its electrons. "Read Needle" clips on a charge meter, and "Fire Stripper" knocks one electron off.'
     },
     prompt: 'Count the protons, the neutrons and the electrons on Sample A.',
     controls: ['field', 'meter'],
@@ -149,8 +149,8 @@ export const STAGES = [
     },
     hints: [
       'Press "The middle" to count the grains, then "Outside" to count the electrons.',
-      'Twelve grains are packed into the nucleus, and half of them carry a cross.',
-      'Count the crossed grains in the nucleus for protons, the blank grains for neutrons, and the rings for electrons.'
+      'In "The middle" a crossed grain is a proton and a blank grain is a neutron; in "Outside" each piece on a ring is an electron.',
+      'Tally the crossed grains, then the blank grains, then the electrons ring by ring, and check that electrons equal protons, since the needle reads zero.'
     ],
     check(state) {
       const [p, n, e] = state.numbers;
@@ -213,10 +213,10 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: 'The answer is still blank. Work the two numbers out from the label.' };
       }
       if (n === 37) {
-        return { ok: false, msg: 'That number counts the protons too. Take the 17 protons off it.' };
+        return { ok: false, msg: 'That number counts the protons too. Take the protons off it first.' };
       }
       if (n !== 20) {
-        return { ok: false, msg: 'On Sample A, 12 was its 6 protons plus its 6 neutrons. Sample B stamps 17 and 37.' };
+        return { ok: false, msg: 'Work it out on Sample A first: compare the protons and neutrons you counted with the two numbers on its label, then do the same sum with Sample B\'s label.' };
       }
       if (e !== 17) {
         return { ok: false, msg: 'A needle on zero means the electrons match the protons one for one.' };
@@ -252,8 +252,8 @@ export const STAGES = [
     },
     hints: [
       'Press "Outside" and count the electrons on the outermost shell of all four.',
-      'Only one of the three has the same outer shell as Sample A: 2, 8 and 7.',
-      'Look for the sample whose outermost shell has the exact same electron count as Sample A.'
+      'Match on the outer shell only: a sample can weigh more than Sample A and still react the same way.',
+      'Write down the outer-shell count of Sample A and of each other sample, and file only the ones whose count matches Sample A\'s as reacting the same way.'
     ],
     check(state) {
       const want = { k: 'same', l: 'other', m: 'other' };
@@ -262,13 +262,13 @@ export const STAGES = [
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       if (state.bins.k !== want.k) {
-        return { ok: false, msg: 'Sample B has the same outer shell as Sample A, so it reacts the same way. Its extra neutrons only make it heavier.' };
+        return { ok: false, msg: 'Sample B is filed wrong. Count the electrons on its outer shell and compare them with Sample A\'s; weight does not decide how an atom reacts.' };
       }
       if (state.bins.l !== want.l) {
-        return { ok: false, msg: 'Sample C carries 8 on its outer shell where Sample A carries 7, so it behaves differently.' };
+        return { ok: false, msg: 'Sample C is filed wrong. Count the electrons on its outer shell and compare them with Sample A\'s.' };
       }
       if (state.bins.m !== want.m) {
-        return { ok: false, msg: 'Sample D carries 6 on its outer shell where Sample A carries 7, so it behaves differently.' };
+        return { ok: false, msg: 'Sample D is filed wrong. Count the electrons on its outer shell and compare them with Sample A\'s.' };
       }
       return { ok: true };
     },
@@ -301,8 +301,8 @@ export const STAGES = [
     },
     hints: [
       'Press "Read Needle" on Sample A, then count its protons and its electrons.',
-      'Sample A has 3 protons, 2 electrons and a needle on plus one.',
-      'Use the CAT code for the proton count, and adjust the electron count so positive protons exceed electrons by one.'
+      'Sample A is open: check that its needle equals its protons minus its electrons, and that its proton count equals its CAT code.',
+      'Take Sample B\'s protons from its CAT code, read its needle, and take the needle reading away from the protons to get the electrons.'
     ],
     check(state) {
       const [p, e] = state.numbers;
@@ -310,16 +310,16 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: 'The answer is still blank. Set the two counts.' };
       }
       if (p !== 11) {
-        return { ok: false, msg: 'On Sample A the CAT code and the proton count came out the same. Sample B stamps CAT 11.' };
+        return { ok: false, msg: 'Compare Sample A\'s CAT code with the protons you counted on it, then read the code on Sample B\'s label.' };
       }
       if (e === 11) {
-        return { ok: false, msg: '11 electrons would cancel 11 protons and put the needle on zero. Sample B reads plus one.' };
+        return { ok: false, msg: 'That many electrons would cancel the protons exactly and put the needle on zero. Read Sample B\'s needle.' };
       }
       if (e === 12) {
-        return { ok: false, msg: 'An extra electron would push the needle to minus one. Both samples read plus.' };
+        return { ok: false, msg: 'More electrons than protons would push the needle below zero. Read Sample B\'s needle.' };
       }
       if (e !== 10) {
-        return { ok: false, msg: 'Plus one means the protons outnumber the electrons by exactly one.' };
+        return { ok: false, msg: 'Read Sample B\'s needle: it says how many more protons than electrons it has.' };
       }
       return { ok: true };
     },
@@ -343,7 +343,7 @@ export const STAGES = [
     hints: [
       'Press "Fire Stripper" to knock one electron off, then "Read Needle" to see what it did.',
       'Every electron you take off leaves one more proton with nothing to cancel it.',
-      'Knock off electrons until the charge reads plus two, then set the counter to match how many were removed.'
+      'With the needle clipped on, fire the stripper one shot at a time, read the needle after each shot, stop at plus two, and enter how many shots that took.'
     ],
     check(state) {
       const taken = state.stripped.d || 0;
@@ -357,7 +357,7 @@ export const STAGES = [
         return { ok: false, msg: `The needle reads plus ${taken}. Bring it to plus two — "Reset Sample" puts every electron back.` };
       }
       if (state.number !== 2) {
-        return { ok: false, msg: `You took 2 electrons off but logged ${state.number}. Set the counter to match the electrons removed.` };
+        return { ok: false, msg: `The sample reads plus two, but the counter says ${state.number}. Set it to how many electrons you took off.` };
       }
       return { ok: true };
     },
@@ -387,7 +387,7 @@ export const STAGES = [
     hints: [
       'Use the + keys on the shell rows to put electrons on Sample A.',
       'A shell holds 2 closest in and 8 after that, and nothing sits further out while a nearer shell has room.',
-      'Fill each inner shell to its capacity before placing electrons on the outer shell until it is completely full.'
+      'Fill the shells in order, each to its full capacity, and stop only when Shell 3 is full, even though that puts on more electrons than there are protons.'
     ],
     check(state) {
       const placed = state.rings.reduce((n, r) => n + r, 0);
@@ -407,7 +407,7 @@ export const STAGES = [
         return { ok: false, msg: '17 electrons cancels the 17 protons, but it leaves the outer shell one short of full.' };
       }
       if (placed !== 18) {
-        return { ok: false, msg: `${placed} electrons are on. A full outer shell here is 8, on top of 2 and 8 further in.` };
+        return { ok: false, msg: `${placed} electrons are on, and the outer shell still has room. Keep going until it is full, whatever the needle says.` };
       }
       return { ok: true };
     },
@@ -437,7 +437,7 @@ export const STAGES = [
     hints: [
       'Press "Read Needle" on both samples before you count anything.',
       'Sample A reads plus two and Sample B reads minus one.',
-      'Multiply each sample count by its charge so the total positive and negative charges sum to zero.'
+      'Multiply the number of Sample A atoms by A\'s charge and the number of Sample B atoms by B\'s charge, and find the smallest whole numbers that make the two cancel.'
     ],
     check(state) {
       const [s, t] = state.numbers;
@@ -449,10 +449,10 @@ export const STAGES = [
       }
       const net = s * 2 - t;
       if (net !== 0) {
-        return { ok: false, msg: `That comes to ${net > 0 ? 'plus' : 'minus'} ${Math.abs(net)}. Sample A is plus two each and Sample B is minus one each.` };
+        return { ok: false, msg: `That comes to ${net > 0 ? 'plus' : 'minus'} ${Math.abs(net)}. Read each sample\'s needle and multiply it by how many of that sample you chose.` };
       }
       if (s !== 1) {
-        return { ok: false, msg: 'That balances, but it is not the smallest set that does. Halve both numbers.' };
+        return { ok: false, msg: 'That balances, but a smaller set does too. Divide both numbers by the same whole number.' };
       }
       return { ok: true };
     },
@@ -489,7 +489,7 @@ export const STAGES = [
     hints: [
       'Count Sample A in both views and check it against its own label.',
       'The CAT code is the first test: only a sample stamped CAT 08 can match at all.',
-      'Compare the CAT code, mass number, and needle of each sample against Sample A to identify the difference.'
+      'Test each sample in order: a different CAT code is a different element; the same code with a bigger mass number is extra neutrons; the same code and mass number with the needle off zero is a charge.'
     ],
     check(state) {
       const want = { n1: 'heavy', n2: 'charged', n3: 'other', n4: 'match' };
@@ -498,16 +498,16 @@ export const STAGES = [
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       if (state.bins.n1 !== want.n1) {
-        return { ok: false, msg: 'Sample B is CAT 08 with a needle on zero, so only its mass number differs. It is two neutrons heavier.' };
+        return { ok: false, msg: 'Sample B is filed wrong. Compare its CAT code, its mass number and its needle with Sample A\'s, one at a time.' };
       }
       if (state.bins.n2 !== want.n2) {
-        return { ok: false, msg: 'Sample C has the same code and mass number as Sample A, so the minus 2 can only be electrons.' };
+        return { ok: false, msg: 'Sample C is filed wrong. Compare its CAT code, its mass number and its needle with Sample A\'s, one at a time.' };
       }
       if (state.bins.n3 !== want.n3) {
-        return { ok: false, msg: 'Sample D is stamped CAT 07, so it is a different element whatever else it says.' };
+        return { ok: false, msg: 'Sample D is filed wrong. Check its CAT code against Sample A\'s before anything else.' };
       }
       if (state.bins.n4 !== want.n4) {
-        return { ok: false, msg: 'Sample E agrees with Sample A on all three numbers: CAT 08, mass number 16, needle on zero.' };
+        return { ok: false, msg: 'Sample E is filed wrong. Compare its CAT code, its mass number and its needle with Sample A\'s, one at a time.' };
       }
       return { ok: true };
     },
@@ -665,6 +665,7 @@ const FIELD_LABELS = { whole: 'Whole piece', core: 'The middle', rings: 'Outside
 export function mount(container, ctx) {
   const frame = new LearnFrame(container, {
     stageCount: STAGES.length,
+    rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),
     onNext: () => next(),
     onJump: i => loadStage(i),

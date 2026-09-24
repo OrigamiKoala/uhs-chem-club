@@ -2,36 +2,37 @@
 name: Avalon
 description: Advanced technology, poorly maintained — a forty-year-old working starship rendered as an interface.
 colors:
-  plate-000: "#0a0908"
-  plate-100: "#100f0d"
-  plate-200: "#171614"
-  plate-300: "#1f1d1a"
-  plate-400: "#2a2724"
-  plate-500: "#393430"
-  plate-600: "#4a443d"
-  border-durasteel: "#2e2a26"
-  border-bright: "#d99423"
-  border-hazard: "#9a7419"
-  seam-light: "rgba(214, 196, 168, 0.07)"
-  seam-dark: "rgba(0, 0, 0, 0.55)"
-  accent-amber: "#d99423"
-  accent-gold: "#c39a63"
-  accent-rust: "#9c5423"
-  accent-green: "#6f8f3f"
-  accent-danger: "#a8342a"
-  accent-bronze: "#8a7148"
-  accent-cyan: "#5c7b7a"
-  lamp-amber: "#f0b246"
-  lamp-green: "#8fb055"
-  lamp-red: "#c9483a"
-  text-primary: "#c9c0b1"
-  text-secondary: "#8f8678"
-  text-muted: "#635c52"
-  text-bright: "#e8e0d0"
-  team-earth: "#8a7148"
-  team-air: "#75818a"
-  team-fire: "#9c5423"
-  team-water: "#3f7d76"
+  plate-000: "#080708"
+  plate-100: "#0f0e11"
+  plate-200: "#161519"
+  plate-300: "#1e1d22"
+  plate-400: "#29282f"
+  plate-500: "#38363f"
+  plate-600: "#4a4854"
+  border-durasteel: "rgba(214, 196, 168, 0.16)"
+  border-bright: "#e59b24"
+  border-hazard: "#b37f19"
+  seam-light: "rgba(255, 245, 230, 0.12)"
+  seam-dark: "rgba(0, 0, 0, 0.65)"
+  accent-amber: "#e59b24"
+  accent-gold: "#cca56e"
+  accent-rust: "#ab5722"
+  accent-green: "#78a142"
+  accent-green-deep: "#3f4a2a"
+  accent-danger: "#b8382c"
+  accent-bronze: "#967c50"
+  accent-cyan: "#628786"
+  lamp-amber: "#f5b742"
+  lamp-green: "#97bd58"
+  lamp-red: "#d44d3d"
+  text-primary: "#dcd6cc"
+  text-secondary: "#a49c90"
+  text-muted: "#8c8376"
+  text-bright: "#fbf9f5"
+  team-earth: "#967c50"
+  team-air: "#7d8b96"
+  team-fire: "#ab5722"
+  team-water: "#42877f"
   charge-red: "#ff1744"
   charge-blue: "#00b0ff"
   charge-red-ink: "#e05a55"
@@ -168,12 +169,12 @@ exceptions are objects that are literally lamps. The reference points are the us
 of a desert-planet space opera, never named in player-facing copy, only felt.
 
 **Key Characteristics:**
-- Warm dark neutrals with a sand/brown bias — never blue-black.
-- Zero border radius. Machined plate has **cut corners**, not rounded ones.
-- A shared sandblast grain tile on every large surface at 3–4% opacity.
+- Obsidian and titanium neutrals — near-neutral dark with the faintest cool cast, deliberately.
+  Warmth lives in the text ramp and the filament amber, not the plates. Never saturated navy.
+- Radius tokens are zero; machined plate takes a 2–4px precision corner, nothing rounder.
 - Amber as a scarce signal; bare durasteel as the default.
-- Engraved type — a dark line under the glyph — never a glowing one.
-- Four typefaces with four distinct jobs: imperial serif, display, body, telemetry mono.
+- Crisp type (`--engrave: none`) — never a glowing one.
+- One typeface, Quantico, across every role (JetBrains Mono as the telemetry fallback).
 - Charge red and blue are reserved for chemistry and appear nowhere else as surfaces.
 
 ## Colors
@@ -183,54 +184,56 @@ filthy canopy under one sodium task lamp.
 
 ### Primary
 
-- **Spice Amber** (`#d99423`): the primary live signal. A lit nav tab, a focused input's
+- **Spice Amber** (`#e59b24`): the primary live signal. A lit nav tab, a focused input's
   text, a stat value, the left edge of a toast, the rule under a link. If it is amber,
   something is live or something is yours.
-- **The Filament** (`#f0b246`): the lamp itself, not the light it throws. Reserved for
+- **The Filament** (`#f5b742`): the lamp itself, not the light it throws. Reserved for
   marks small enough to read as a bulb — the active stage lamp, a focused field's text,
   a hovered link. Never a fill larger than a few pixels across.
 
 ### Secondary
 
-- **Sunlit Sand** (`#c39a63`): horizon light. Milestone borders, soft warnings, the
+- **Sunlit Sand** (`#cca56e`): horizon light. Milestone borders, soft warnings, the
   second-tier accent when amber would over-signal.
-- **Oxidised Iron** (`#9c5423`): hydraulic stain and rust. The Thermal Smelters livery,
+- **Oxidised Iron** (`#ab5722`): hydraulic stain and rust. The Thermal Smelters livery,
   and the tint of a marked grain on the core bench.
-- **Guild Bronze** (`#8a7148`): insignia metal. The Mineral Mining livery.
+- **Guild Bronze** (`#967c50`): insignia metal. The Mineral Mining livery.
 
 ### Tertiary
 
-- **Aged Phosphor** (`#6f8f3f`): an oscilloscope screen that has been on too long.
+- **Aged Phosphor** (`#78a142`): an oscilloscope screen that has been on too long.
   Cleared stages, confirmations, live tags. The success colour, and never a bright green.
-- **Blast Hazard Red** (`#a8342a`): painted on and chipped off. Faults, miss banners,
+  **Phosphor Recess** (`#3f4a2a`, `--accent-green-deep`) is the dark border a lit green lamp
+  or meter cell sits in — a border, never text.
+- **Blast Hazard Red** (`#b8382c`): painted on and chipped off. Faults, miss banners,
   destructive confirmations.
-- **Dead Instrument Patina** (`#5c7b7a`): a desaturated teal that reads as corroded metal.
+- **Dead Instrument Patina** (`#628786`): a desaturated teal that reads as corroded metal.
   It exists specifically so that nothing in this system is ever tempted toward cyan.
 
 ### Neutral
 
-- **Plate 000 — The Void** (`#0a0908`): outside the canopy; the page ground.
-- **Plate 100 — Instrument Well** (`#100f0d`): the deepest recess. Input wells, inset
+- **Plate 000 — The Void** (`#080708`): outside the canopy; the page ground.
+- **Plate 100 — Instrument Well** (`#0f0e11`): the deepest recess. Input wells, inset
   tags, an active nav tab pressed into the bulkhead.
-- **Plate 200 — Panel Ground** (`#171614`): the default surface of a panel or toast.
-- **Plate 300 — Raised Plate** (`#1f1d1a`): a bare durasteel key cap or nav button at rest.
-- **Plate 400 — Bezel** (`#2a2724`): a button face on hover; an unlit stage lamp.
-- **Plate 500 — Scribe Line** (`#393430`): seams and scribed divisions.
-- **Plate 600 — Worn Edge** (`#4a443d`): the edge that catches the task lamp.
-- **Durasteel Seam** (`#2e2a26`): the default border. A machined edge, not a highlight.
-- **Bone White, Dust-Warmed** (`#c9c0b1`): body text. Never pure white — white is a colour
+- **Plate 200 — Panel Ground** (`#161519`): the default surface of a panel or toast.
+- **Plate 300 — Raised Plate** (`#1e1d22`): a bare durasteel key cap or nav button at rest.
+- **Plate 400 — Bezel** (`#29282f`): a button face on hover; an unlit stage lamp.
+- **Plate 500 — Scribe Line** (`#38363f`): seams and scribed divisions.
+- **Plate 600 — Worn Edge** (`#4a4854`): the edge that catches the task lamp.
+- **Durasteel Seam** (`rgba(214, 196, 168, 0.16)`): the default border. A machined edge, not a highlight.
+- **Bone White, Dust-Warmed** (`#dcd6cc`): body text. Never pure white — white is a colour
   this ship has not seen in forty years.
-- **Stencil Grey** (`#8f8678`) and **Worn Label** (`#635c52`): secondary and muted text,
+- **Stencil Grey** (`#a49c90`) and **Worn Label** (`#8c8376`): secondary and muted text,
   used for kickers, helper lines and part numbers.
-- **Fresh Paint** (`#e8e0d0`): the brightest type in the system, reserved for titles and
+- **Fresh Paint** (`#fbf9f5`): the brightest type in the system, reserved for titles and
   the text inside a focused field.
 
 ### Guild Liveries
 
 Four working houses, four service liveries, always shown as two-letter mono designators
-(MM / AH / TS / ME): **Mineral Mining** bronze (`#8a7148`), **Atmospheric Harvesters**
-storm grey (`#75818a`), **Thermal Smelters** rust (`#9c5423`), **Moisture Extraction**
-deep teal (`#3f7d76`). Each has a 16%-opacity background variant for badges and rows.
+(MM / AH / TS / ME): **Mineral Mining** bronze (`#967c50`), **Atmospheric Harvesters**
+storm grey (`#7d8b96`), **Thermal Smelters** rust (`#ab5722`), **Moisture Extraction**
+deep teal (`#42877f`). Each has a 16%-opacity background variant for badges and rows.
 
 ### Named Rules
 
@@ -366,9 +369,10 @@ fast enough to feel mechanical rather than animated.
 
 ## Shapes
 
-**Zero radius, everywhere.** `--radius-sm`, `--radius-md` and `--radius-lg` are all `0px`.
-They exist only so that stray radius variables remain disciplined. The only round thing in the system is
-`--radius-full` on genuinely circular objects.
+**Radius tokens are zero; plates carry a 2–4px machined corner.** `--radius-sm`, `--radius-md`
+and `--radius-lg` are all `0px`, so a stray radius variable stays square. Plates, panels and
+keys take a literal 2–4px corner (below); nothing is rounder than 4px except `--radius-full`
+on genuinely circular objects.
 
 Machined plates and panels feature **machined double-bezel framing** with precision corners.
 - **Double-Bezel Framing**: `.plate`, `.glass-panel`, `.holo-card`, and `.stage-prompt-card`
@@ -392,7 +396,7 @@ Switchgear, not web buttons. Precision machined switchgear with tactile spring p
 - **Shape:** subtle radius (`2px`), `min-height: 44px`, Quantico 0.78rem uppercase at
   `0.08em` tracking.
 - **Primary — the machined amber switch:** a rich amber gradient
-  (`linear-gradient(180deg, #d99423 0%, #b87814 100%)`) with a high-contrast dark legend (`#0b0a08`),
+  (`linear-gradient(180deg, #e59b24 0%, #bd7b16 100%)`) with a high-contrast dark legend (`#0d0a05`),
   inner highlight hairline (`inset 0 1px 0 rgba(255, 255, 255, 0.28)`), and ambient shadow. Padding `11px 24px`.
 - **Hover:** subtle upward spring lift (`translateY(-1px)`) with heightened luster.
 - **Active:** tactile mechanical compression (`translateY(1px) scale(0.99)`).
@@ -408,7 +412,7 @@ Switchgear, not web buttons. Precision machined switchgear with tactile spring p
   edge (light does not reach the inside of a cut), `inset 0 2px 6px rgba(0,0,0,0.75)`,
   Share Tech Mono at 0.95rem, padding `11px 14px`, `min-height: 44px`.
 - **Focus:** the border goes amber and **the text itself turns filament amber**
-  (`#f0b246`). There is no ring and no halo — the well lights up from inside, which is
+  (`#f5b742`). There is no ring and no halo — the well lights up from inside, which is
   what a real instrument does.
 - **Validation:** helper text carries the state, not the field. `.form-help.good` is aged
   phosphor, `.warn` is sunlit sand, `.bad` is lamp red.
@@ -697,8 +701,8 @@ console is not raised at all and the quest keeps the 2D stage deck, which is the
 
 - **Don't** add `box-shadow: 0 0 Npx <colour>` as a glow. The exceptions are `.gfx-dot`
   and the active/completed stage lamps, and there are no others.
-- **Don't** introduce a border radius. `--radius-sm` is `0` and that is a decision, not an
-  oversight.
+- **Don't** introduce a border radius above 4px. The 2–4px machined corner is the ceiling,
+  and `--radius-full` is only for genuinely round objects.
 - **Don't** use charge red (`#ff1744`) or charge blue (`#00b0ff`) outside the 3D chamber.
   In chrome they appear only as `--charge-red-ink` / `--charge-blue-ink` on a hairline.
 - **Don't** reach for blue-black neutrals, electric cyan (`#00e5ff`), glassmorphism, candy

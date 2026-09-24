@@ -2,23 +2,25 @@
  * q3-recipe.js — Ligar, bench three: THE SAME RECIPE.
  *
  * The sampler scope from Tallow, wheeled out onto Ligar and pointed at
- * compounds rather than at single kinds. Bench one settled why a compound has a
+ * compounds rather than at single elements. Bench one settled why a compound has a
  * ratio at all; this one settles how hard that ratio is, and what it looks like
  * when you weigh it instead of counting it.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  count a group in three samples of one stuff -> a compound has a fixed composition
- *   2  a sample with pieces nothing would take     -> extra pieces make a mixture
- *   3  two samples of the same two kinds           -> two compounds, whole numbers apart
- *   4  add up the masses in one group              -> a group weighs what its parts weigh
- *   5  which share of that weight is the heavy kind-> percent composition
- *   6  a weight ratio off the vent line            -> the empirical formula
- *   7  name three samples off their recipes        -> the recipe is the identity
- *   8  three claims against one label              -> a recipe is a test you can run
+ *   1  count a molecule in three samples of one substance -> a compound has a fixed composition
+ *   2  a sample with atoms no molecule would take         -> extra atoms make a mixture
+ *   3  two samples of the same two elements               -> two compounds, whole numbers apart
+ *   4  add up the masses in one molecule                  -> a molecule weighs what its atoms weigh
+ *   5  which share of that weight is the heavy element    -> percent composition
+ *   6  a weight ratio off the vent line                   -> the empirical formula
+ *   7  name three samples off their recipes               -> the recipe is the identity
+ *   8  three claims against one label                     -> a recipe is a test you can run
  *   -- debrief: what a formula really claims, and what the last bench does.
  *
- * WHAT THIS BENCH DOES NOT DO. Every group it asks about is one you can count.
+ * WHAT THIS BENCH DOES NOT DO. Every molecule it asks about is one you can count.
+ * Every sample on it is molecular, so "molecule" is the honest word throughout;
+ * an ionic solid has formula units, and none is put on this bench.
  * Counting a heap far too large to count is bench four, and the mole belongs
  * there, not here.
  *
@@ -129,42 +131,42 @@ export function toolNoteFor(controlId, stageNumber) {
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
-    title: 'Three Sources, One Group',
+    title: 'Three Sources, One Molecule',
     briefing: {
       speaker: SPEAKER,
-      body: 'Inspect the samples at high magnification to observe how their groups are built.'
+      body: 'This bench is the scope again: the Power dial zooms in, and tapping an atom reads its code and weight. "Run Cutter" tries to split a sample, and "Settle" shakes one and lets it sink.'
     },
-    prompt: 'Set the tray to the recipe one group in these samples is built to.',
+    prompt: 'Set the tray to the recipe one molecule in these samples is built to.',
     controls: ['power', 'probe'],
     samples: [
       { id: 'a1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 12 }] },
       { id: 'a2', label: 'SAMPLE B', note: 'drawn from the arch springs', floorPower: 4, particles: [{ ...WATER, n: 28 }] },
       { id: 'a3', label: 'SAMPLE C', note: 'traded in off a hauler', floorPower: 4, particles: [{ ...WATER, n: 20 }] }
     ],
-    widget: { type: 'build', kinds: ['k01', 'k08'], max: 5, label: 'One group holds' },
+    widget: { type: 'build', kinds: ['k01', 'k08'], max: 5, label: 'One molecule holds' },
     hints: [
-      'Turn the Power dial up to 4 or past it, then look at one group on any of the three plates.',
-      'Every group is the same shape: one larger piece with two smaller ones on it. Tap each to read its code.',
-      'Count the number of larger pieces and smaller pieces attached together in a single group.'
+      'Turn the Power dial up to 4 or past it, then look at one molecule on any of the three plates.',
+      'Every molecule on all three plates is built the same way, so study just one: tap each atom in it and read its code.',
+      'In that one molecule, count how many atoms read CAT 08 and how many read CAT 01, and set the tray to those two counts.'
     ],
     check(state) {
       const n01 = state.build.k01 || 0;
       const n08 = state.build.k08 || 0;
       if (!n01 && !n08) {
-        return { ok: false, notYet: true, msg: 'Set the tray to what you counted in one group.' };
+        return { ok: false, notYet: true, msg: 'Set the tray to what you counted in one molecule.' };
       }
       if (n01 === 1 && n08 === 2) {
-        return { ok: false, msg: 'That is the two counts the wrong way round: the larger piece is the single one.' };
+        return { ok: false, msg: 'Tap each atom in one molecule and read its code: check which element the larger atom is, and how many atoms of each element there are.' };
       }
       if (n01 !== 2 || n08 !== 1) {
-        return { ok: false, msg: `A group holds three pieces in all, and you have set ${n01 + n08}. Count one group again on any plate.` };
+        return { ok: false, msg: 'Count one molecule again, on any plate, and tap each atom in it to read its code.' };
       }
       return { ok: true };
     },
     reward: {
       log: 'All three samples: two CAT 01 to one CAT 08.',
       title: 'A Compound Has a Fixed Composition',
-      body: 'Three samples from three places at three different sizes, and every group in all of them holds the same one CAT 08 and two CAT 01. A compound is not a blend you can mix to taste: it has a fixed composition, the same ratio of kinds every time, wherever it came from. That is exactly what makes it a compound and not a mixture.'
+      body: 'Three samples from three places at three different sizes, and every molecule in all of them holds the same one CAT 08 and two CAT 01. A compound is not a blend you can mix to taste: it has a fixed composition, the same ratio of elements every time, wherever it came from. That is exactly what makes it a compound and not a mixture.'
     }
   },
 
@@ -184,16 +186,16 @@ export const STAGES = [
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'extra', label: 'Sample B, because it holds loose CAT 01 that no group took in', note: 'Some of it belongs to no group at all.' },
-        { id: 'a', label: 'Sample A, because its groups hold two of one kind and one of another', note: 'An uneven recipe.' },
-        { id: 'both', label: 'Both of them, because each holds more than one kind of piece', note: 'More than one kind means a mixture.' },
+        { id: 'extra', label: 'Sample B, because it holds loose CAT 01 atoms that no molecule took in', note: 'Some of it belongs to no molecule at all.' },
+        { id: 'a', label: 'Sample A, because its molecules hold two of one element and one of another', note: 'An uneven recipe.' },
+        { id: 'both', label: 'Both of them, because each holds more than one element', note: 'More than one element means a mixture.' },
         { id: 'neither', label: 'Neither — a compound can hold any proportions at all', note: 'Both are the same substance.' }
       ]
     },
     hints: [
       'Tap a sample to select it, press "Settle", and do the same for the other one.',
-      'Sample A settles into one even layer. Sample B settles into two, so there is more than one substance in it.',
-      'Observe whether all pieces in Sample B are bonded into groups or if unbonded pieces remain.'
+      'Count the layers each sample settles into, and look at high power for any atom that is not part of a molecule.',
+      'A sample of this compound settles into one layer with every atom inside a molecule; check each sample against both halves of that.'
     ],
     check(state) {
       if (!state.choice) {
@@ -203,23 +205,23 @@ export const STAGES = [
         return { ok: false, msg: 'One CAT 08 to two CAT 01 is the recipe you counted in three separate samples on the last stage, so there is nothing wrong with it.' };
       }
       if (state.choice === 'both') {
-        return { ok: false, msg: 'Sample A settled into a single layer and every piece in it belongs to a group, so it is one substance.' };
+        return { ok: false, msg: 'Settle Sample A and look at it at high power: is any atom in it sitting outside a molecule?' };
       }
       if (state.choice === 'neither') {
-        return { ok: false, msg: 'Sample B settled into two layers. One substance does not do that.' };
+        return { ok: false, msg: 'Settle both samples and count the layers each one makes.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Sample B: groups plus loose CAT 01. Two layers.',
-      title: 'Extra Pieces Make a Mixture',
-      body: 'Sample B holds exactly the same groups as Sample A, plus CAT 01 pieces sitting loose that no group would take in. Adding more of one kind does not shift a compound to a new recipe; it leaves the extra alongside as a mixture, which is why the shaker found two layers in it. A compound takes exactly as many of each kind as its bonds allow and not one more.'
+      log: 'Sample B: molecules plus loose CAT 01. Two layers.',
+      title: 'Extra Atoms Make a Mixture',
+      body: 'Sample B holds exactly the same molecules as Sample A, plus CAT 01 atoms sitting loose that no molecule would take in. Adding more of one element does not shift a compound to a new recipe; it leaves the extra alongside as a mixture, which is why the shaker found two layers in it. A compound takes exactly as many of each element as its bonds allow and not one more.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Two Recipes, Same Two Kinds',
+    title: 'Two Recipes, Same Two Elements',
     prompt: 'Say how much CAT 08 goes with one CAT 06 in each of the two samples.',
     controls: ['power', 'probe', 'cut'],
     samples: [
@@ -233,48 +235,48 @@ export const STAGES = [
         { id: 'one-two', label: 'One CAT 08 in Sample A, two in Sample B', note: 'Both counts are whole numbers.' },
         { id: 'one-one', label: 'One in each, so the two samples are the same substance', note: 'The same recipe twice.' },
         { id: 'two-three', label: 'Two in Sample A and three in Sample B', note: 'One more in each than it looks.' },
-        { id: 'half', label: 'One in Sample A and one and a half in Sample B', note: 'Sample B holds half a piece more.' }
+        { id: 'half', label: 'One in Sample A and one and a half in Sample B', note: 'Sample B holds half an atom more.' }
       ]
     },
     hints: [
-      'Turn the power up past 4, then count the pieces in one group on each plate and tap them to read the codes.',
-      'Sample A draws two pieces to a group and Sample B draws three, with the dark CAT 06 in the middle of each.',
-      'Count how many CAT 08 pieces surround the central CAT 06 piece in each sample.'
+      'Turn the power up past 4, then count the atoms in one molecule on each plate and tap them to read the codes.',
+      'Find the CAT 06 in one molecule on each plate, the dark one, and read each atom joined to it.',
+      'In one molecule from each sample, count the atoms reading CAT 08 that are joined to the one CAT 06, and compare the two counts.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === 'one-one') {
-        return { ok: false, msg: 'A group in Sample A draws two pieces and a group in Sample B draws three, so they are not the same.' };
+        return { ok: false, msg: 'Count the atoms in one molecule on each plate: if the two recipes were the same, the counts would match.' };
       }
       if (state.choice === 'two-three') {
-        return { ok: false, msg: 'Count again: a Sample A group is two pieces in all, one of each kind.' };
+        return { ok: false, msg: 'Count again, and count only the CAT 08 atoms in each molecule, not the CAT 06.' };
       }
       if (state.choice === 'half') {
-        return { ok: false, msg: 'Nothing on the plate is half a piece. Every group in Sample B draws two whole CAT 08.' };
+        return { ok: false, msg: 'Nothing on the plate is half an atom. Count the whole CAT 08 atoms in one Sample B molecule.' };
       }
       return { ok: true };
     },
     reward: {
       log: 'Sample A: one to one. Sample B: one to two.',
       title: 'Two Compounds, Whole Numbers Apart',
-      body: 'The same two elements can make more than one compound, but not any compound at all: for the same one CAT 06, Sample B holds exactly twice the CAT 08 that Sample A does. The ratios always come out as small whole numbers, because there is no such thing as half an atom to put into a group. Two different recipes of the same two elements are two different substances.'
+      body: 'The same two elements can make more than one compound, but not any compound at all: for the same one CAT 06, Sample B holds exactly twice the CAT 08 that Sample A does. The ratios always come out as small whole numbers, because there is no such thing as half an atom to put into a molecule. Two different recipes of the same two elements are two different substances.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    title: 'What One Group Weighs',
-    prompt: 'Set the counter to what one whole group in this sample weighs.',
+    title: 'What One Molecule Weighs',
+    prompt: 'Set the counter to what one whole molecule in this sample weighs.',
     controls: ['power', 'probe'],
     samples: [
       { id: 'd1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 20 }] }
     ],
-    widget: { type: 'number', min: 14, max: 24, step: 1, label: 'Weight of one group' },
+    widget: { type: 'number', min: 14, max: 24, step: 1, label: 'Weight of one molecule' },
     hints: [
-      'Turn the power up past 4, then tap the large piece in a group and tap one of the small ones.',
-      'The CAT 08 reads 16.0 and each CAT 01 reads 1.0, and a group holds one of the first and two of the second.',
+      'Turn the power up past 4, then tap the large atom in a molecule and tap one of the small ones.',
+      'The CAT 08 reads 16.0 and each CAT 01 reads 1.0, and a molecule holds one of the first and two of the second.',
       'Add the listed mass of the central atom to the masses of both attached atoms.'
     ],
     check(state) {
@@ -282,20 +284,20 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: 'Set the counter to the figure you worked out.' };
       }
       if (state.number === 17) {
-        return { ok: false, msg: 'That counts only one CAT 01. A group holds two of them.' };
+        return { ok: false, msg: 'That counts only one CAT 01. A molecule holds two of them.' };
       }
       if (state.number === 16) {
         return { ok: false, msg: 'That is the CAT 08 on its own, with neither CAT 01 counted.' };
       }
       if (state.number !== 18) {
-        return { ok: false, msg: 'Add the three pieces in one group: 16.0 for the CAT 08 and 1.0 for each of the two CAT 01.' };
+        return { ok: false, msg: 'Tap every atom in one molecule, read each weight, and add them all together.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'One group of Sample A weighs 18.0.',
-      title: 'A Group Weighs What Its Parts Weigh',
-      body: 'Adding up the listed mass of every atom in one group gives what that whole group weighs: 16.0 for the CAT 08 plus 1.0 for each of the two CAT 01 is 18.0. Nothing is lost when atoms bond and nothing is gained. That figure is as fixed for a compound as its recipe is, because it comes straight out of it.'
+      log: 'One molecule of Sample A weighs 18.0.',
+      title: 'A Molecule Weighs What Its Atoms Weigh',
+      body: 'Adding up the listed mass of every atom in one molecule gives what that whole molecule weighs: 16.0 for the CAT 08 plus 1.0 for each of the two CAT 01 is 18.0. Nothing is lost when atoms bond and nothing is gained. That figure is as fixed for a compound as its recipe is, because it comes straight out of it.'
     }
   },
 
@@ -311,23 +313,23 @@ export const STAGES = [
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: '89', label: 'About 89 out of 100', note: '16.0 of the 18.0 is the one heavy piece.' },
-        { id: '67', label: 'About 67 out of 100', note: 'Two of the three pieces are CAT 01.' },
+        { id: '89', label: 'About 89 out of 100', note: '16.0 of the 18.0 is the one heavy atom.' },
+        { id: '67', label: 'About 67 out of 100', note: 'Two of the three atoms are CAT 01.' },
         { id: '50', label: '50 out of 100', note: 'An even split by weight.' },
-        { id: '33', label: 'About 33 out of 100', note: 'One piece in three is CAT 08.' }
+        { id: '33', label: 'About 33 out of 100', note: 'One atom in three is CAT 08.' }
       ]
     },
     hints: [
-      'Read one group again: 16.0 for the CAT 08 and 1.0 for each CAT 01, making 18.0 in all.',
-      'The question asks for a share of the WEIGHT, not a share of the pieces. Two of the three pieces are CAT 01, but they are the light ones.',
-      'Divide the mass of the CAT 08 by the total group mass of 18.0 to find its percentage.'
+      'Read one molecule again: 16.0 for the CAT 08 and 1.0 for each CAT 01, making 18.0 in all.',
+      'The question asks for a share of the WEIGHT, not of the atoms, and the two CAT 01 are the light ones.',
+      'Divide the mass of the CAT 08 by the 18.0 the whole molecule weighs to find its percentage.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === '67' || state.choice === '33') {
-        return { ok: false, msg: 'That is a share of the PIECES, not of the weight. One CAT 08 weighs sixteen times what one CAT 01 does.' };
+        return { ok: false, msg: 'That is a share of the ATOMS, not of the weight. One CAT 08 weighs sixteen times what one CAT 01 does.' };
       }
       if (state.choice === '50') {
         return { ok: false, msg: 'An even split would need the two CAT 01 to weigh as much as the CAT 08 between them, and they weigh 2.0 against 16.0.' };
@@ -337,7 +339,7 @@ export const STAGES = [
     reward: {
       log: 'Sample A: 89 out of 100 by weight is CAT 08.',
       title: 'Percent Composition',
-      body: 'The share of a compound\'s mass that comes from each element is its percent composition, and it falls straight out of the recipe: 16.0 of every 18.0 of mass here is CAT 08, which is 89 percent. Notice how far that is from the share of the PIECES, which is one in three. Count and weight are two different questions, and a compound answers both with fixed numbers.'
+      body: 'The share of a compound\'s mass that comes from each element is its percent composition, and it falls straight out of the recipe: 16.0 of every 18.0 of mass here is CAT 08, which is 89 percent. Notice how far that is from the share of the ATOMS, which is one in three. Count and weight are two different questions, and a compound answers both with fixed numbers.'
     }
   },
 
@@ -357,26 +359,26 @@ export const STAGES = [
         { id: 'one-two', label: 'One CAT 06 to two CAT 08', note: 'The same recipe as Sample B.' },
         { id: 'one-one', label: 'One CAT 06 to one CAT 08', note: 'The same recipe as Sample A.' },
         { id: 'three-eight', label: 'Three CAT 06 to eight CAT 08', note: 'The two weights read straight off as a count.' },
-        { id: 'two-one', label: 'Two CAT 06 to one CAT 08', note: 'Twice as much of the lighter kind.' }
+        { id: 'two-one', label: 'Two CAT 06 to one CAT 08', note: 'Twice as much of the lighter element.' }
       ]
     },
     hints: [
-      'Count one group on each plate first: Sample A holds one CAT 08 to its CAT 06, and Sample B holds two.',
-      'A weight is not a count. Divide each of the drum\'s two parts by what one piece of that kind weighs, and you get how many pieces that part is.',
-      'Divide each part by its atomic mass (12.0 for CAT 06 and 16.0 for CAT 08) and compare the ratio.'
+      'Count one molecule on each plate first: Sample A holds one CAT 08 to its CAT 06, and Sample B holds two.',
+      'A weight is not a count: divide each of the drum\'s two parts by what one atom of that element weighs to get how many atoms it is.',
+      'Work out 3 divided by 12.0 and 8 divided by 16.0, then scale the two results to the smallest whole numbers.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === 'three-eight') {
-        return { ok: false, msg: '3 and 8 are weights, not counts. One CAT 06 weighs 12.0 and one CAT 08 weighs 16.0, so equal weights are not equal numbers of pieces.' };
+        return { ok: false, msg: '3 and 8 are weights, not counts. One CAT 06 weighs 12.0 and one CAT 08 weighs 16.0, so equal weights are not equal numbers of atoms.' };
       }
       if (state.choice === 'one-one') {
-        return { ok: false, msg: 'One to one would need equal numbers of pieces, which by weight would be 12 parts CAT 06 to 16 parts CAT 08 — not 3 to 8.' };
+        return { ok: false, msg: 'One to one would need equal numbers of atoms, which by weight would be 12 parts CAT 06 to 16 parts CAT 08 — not 3 to 8.' };
       }
       if (state.choice === 'two-one') {
-        return { ok: false, msg: 'The drum holds more than twice as much CAT 08 as CAT 06 by weight, so CAT 08 cannot be the kind there is less of.' };
+        return { ok: false, msg: 'The drum holds more than twice as much CAT 08 as CAT 06 by weight, so CAT 08 cannot be the element there is less of.' };
       }
       return { ok: true };
     },
@@ -401,15 +403,15 @@ export const STAGES = [
       type: 'bins',
       rows: ['g1', 'g2', 'g3'],
       bins: [
-        { id: 'm1', label: 'One CAT 08 to two CAT 01', note: 'A group of it weighs 18.0.' },
-        { id: 'm2', label: 'One CAT 07 to three CAT 01', note: 'A group of it weighs 17.0.' },
-        { id: 'm3', label: 'One CAT 06 to four CAT 01', note: 'A group of it weighs 16.0.' }
+        { id: 'm1', label: 'One CAT 08 to two CAT 01', note: 'One molecule of it weighs 18.0.' },
+        { id: 'm2', label: 'One CAT 07 to three CAT 01', note: 'One molecule of it weighs 17.0.' },
+        { id: 'm3', label: 'One CAT 06 to four CAT 01', note: 'One molecule of it weighs 16.0.' }
       ]
     },
     hints: [
-      'Turn the power up past 4, then count how many small pieces are hanging off the large one in each sample.',
-      'Tap the large piece in each group to read its code — the three are CAT 06, CAT 07 and CAT 08, and they are hard to tell apart by eye.',
-      'Read the center piece code and count the attached CAT 01 pieces for each sample.'
+      'Turn the power up past 4, then count how many small atoms are hanging off the large one in each sample.',
+      'Tap the large atom in each molecule to read its code — the three are CAT 06, CAT 07 and CAT 08, and they are hard to tell apart by eye.',
+      'For each sample, read the code of the middle atom in a molecule and count the CAT 01 joined to it, then find the bin that names that same pair.'
     ],
     check(state) {
       const labels = { g1: 'Sample A', g2: 'Sample B', g3: 'Sample C' };
@@ -417,9 +419,9 @@ export const STAGES = [
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       const reasons = {
-        g1: 'Sample A draws three pieces to a group, with a CAT 08 in the middle.',
-        g2: 'Sample B draws four pieces to a group, with a CAT 07 in the middle.',
-        g3: 'Sample C draws five pieces to a group, with a CAT 06 in the middle.'
+        g1: 'Sample A is filed wrong. Read the code of the middle atom in one of its molecules, and count the CAT 01 on it.',
+        g2: 'Sample B is filed wrong. Read the code of the middle atom in one of its molecules, and count the CAT 01 on it.',
+        g3: 'Sample C is filed wrong. Read the code of the middle atom in one of its molecules, and count the CAT 01 on it.'
       };
       const want = { g1: 'm1', g2: 'm2', g3: 'm3' };
       for (const id of ['g1', 'g2', 'g3']) {
@@ -456,9 +458,9 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Turn the power up past 4, then settle each sample and count one group on each plate.',
-      'The claim is one CAT 08 to two CAT 01. A sample fails it either by holding a different group, or by holding anything at all besides that group.',
-      'Check whether each sample contains unbonded pieces or groups with a different piece count.'
+      'Turn the power up past 4, then settle each sample and count one molecule on each plate.',
+      'The claim is one CAT 08 to two CAT 01, and a sample fails it by holding a different molecule or by holding anything besides that molecule.',
+      'Test each sample twice: two layers after settling fails it, and a molecule that is not one CAT 08 with two CAT 01 fails it; only a sample that passes both is as claimed.'
     ],
     check(state) {
       const labels = { h1: 'Sample A', h2: 'Sample B', h3: 'Sample C' };
@@ -466,9 +468,9 @@ export const STAGES = [
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       const reasons = {
-        h1: 'Sample A settles into one layer and every group in it is one CAT 08 with two CAT 01, which is the claim exactly.',
-        h2: 'Sample B settles into two layers: the right groups, with loose CAT 01 sitting alongside them.',
-        h3: 'Sample C draws four pieces to a group — two CAT 08 in a chain with one CAT 01 on each end, which is a different compound.'
+        h1: 'Sample A is filed wrong. Settle it and count one molecule at high power, and check both against the claim.',
+        h2: 'Sample B is filed wrong. Settle it and count one molecule at high power, and check both against the claim.',
+        h3: 'Sample C is filed wrong. Settle it and count one molecule at high power, and check both against the claim.'
       };
       const want = { h1: 'yes', h2: 'no', h3: 'no' };
       for (const id of ['h1', 'h2', 'h3']) {
@@ -479,7 +481,7 @@ export const STAGES = [
     reward: {
       log: 'One as claimed, one a mixture, one a different compound.',
       title: 'A Recipe Is a Test You Can Run',
-      body: 'Sample B held the right groups with loose CAT 01 alongside them, and Sample C held the same two elements in a different ratio, so neither is what its label says. Counting one group settles it either way, because a compound has exactly one recipe and no room to argue. That is the whole reason a formula is worth writing down.',
+      body: 'Sample B held the right molecules with loose CAT 01 alongside them, and Sample C held the same two elements in a different ratio, so neither is what its label says. Counting one molecule settles it either way, because a compound has exactly one recipe and no room to argue. That is the whole reason a formula is worth writing down.',
       last: true
     }
   }
@@ -493,15 +495,15 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A compound holds the same kinds in the same ratio wherever it came from and however much of it you have. Put in more of one kind and it does not become a new compound; the extra just sits there as a mixture.'
+      body: 'A compound holds the same elements in the same ratio wherever it came from and however much of it you have. Put in more of one element and it does not become a new compound; the extra just sits there as a mixture.'
     },
     {
       heading: 'By Weight',
-      body: 'That fixed recipe fixes the weights too: what one group weighs, and what share of that weight each element brings. Running it backwards, a weight ratio divided by the atoms\' own masses gives you the recipe of something you never opened.'
+      body: 'That fixed recipe fixes the weights too: what one molecule weighs, and what share of that weight each element brings. Running it backwards, a weight ratio divided by the atoms\' own masses gives you the recipe of something you never opened.'
     },
     {
       heading: 'Next',
-      body: 'You counted groups on this bench because there were few enough to count. A real crate holds more atoms than anyone could count in a lifetime, and the last bench here weighs them instead.'
+      body: 'You counted molecules on this bench because there were few enough to count. A real crate holds more atoms than anyone could count in a lifetime, and the last bench here weighs them instead.'
     }
   ]
 };
@@ -631,6 +633,7 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const frame = new LearnFrame(container, {
     stageCount: STAGES.length,
+    rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),
     onNext: () => next(),
     onJump: i => loadStage(i),
@@ -776,7 +779,7 @@ export function mount(container, ctx) {
         body: found === 'none'
           ? 'The blade closes on a single atom and finds nothing inside to split.'
           : found === 'broke'
-            ? 'The blade cuts the bonds and every group falls apart into separate atoms.'
+            ? 'The blade cuts the bonds and every molecule falls apart into separate atoms.'
             : 'The blade just scatters the heap. Nothing here was bonded to anything.'
       });
     } else if (tool === 'settle') {
@@ -835,7 +838,7 @@ export function mount(container, ctx) {
         <div class="lq-readout-card lq-readout-idle">
           <div class="lq-readout-head">Probe // standby</div>
           <p class="lq-readout-line">${anyResolved
-            ? 'Tap any piece to read it.'
+            ? 'Tap any atom to read it.'
             : 'Nothing is in focus yet. Turn the Power dial up.'}</p>
         </div>
       `);

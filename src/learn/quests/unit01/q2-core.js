@@ -96,7 +96,10 @@ const TOOL_TEXT = {
     key: 'Read Needle',
     what: 'Clips the charge meter to the atom. It sits on zero when the two sides cancel.'
   }, {
-    from: 3,
+    // Stage 3 is where the player works out WHY it sits on zero, so the
+    // legend keeps its stage-1 wording through stage 3 and only explains the
+    // needle once that has been found.
+    from: 4,
     key: 'Read Needle',
     what: 'Clips the charge meter to the atom: protons push the needle up, electrons pull it down.'
   }],
@@ -109,6 +112,10 @@ const TOOL_TEXT = {
     from: 1,
     key: 'Fire Stripper',
     what: 'Knocks one light piece off the outermost ring. The middle is not touched.'
+  }, {
+    from: 3,
+    key: 'Fire Stripper',
+    what: 'Knocks one electron off the outermost ring. The nucleus is not touched.'
   }]
 };
 
@@ -150,6 +157,18 @@ export const PARTS = {
     code: 'SPECIMEN // WHOLE', mass: null, charge: null,
     note: 'The whole atom, edge to edge. Almost all of that width is empty.'
   }
+};
+
+/**
+ * The same parts once their names have been earned. Stage 2's reward card
+ * names protons, neutrons and electrons, so from stage 3 the probe says them:
+ * a code the player has to translate back is a second vocabulary.
+ */
+const NAMED_PARTS = {
+  marked: { code: 'PROTON', note: 'Heavy, and it pushes the needle up every time.' },
+  blank: { code: 'NEUTRON', note: 'Same size and weight as a proton, but the needle does not move for it at all.' },
+  light: { code: 'ELECTRON', note: 'Almost weightless, and it pushes the needle the opposite way to a proton.' },
+  core: { code: 'NUCLEUS // WHOLE' }
 };
 
 /* ------------------------------------------------------------------
@@ -216,7 +235,7 @@ export const STAGES = [
     field: 'whole',
     briefing: {
       speaker: SPEAKER,
-      body: 'Investigate the interior of an atom to determine where its mass and substance reside.'
+      body: 'This bench looks inside one atom at a time. You can fire tiny shots through it, look at its middle or its outside, and clip on a meter that reads its charge.'
     },
     prompt: 'Say what the inside of Sample A\'s atom is like.',
     controls: ['beam'],
@@ -233,8 +252,8 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Press "Fire Beam". Forty shots go in, and the readout says what happened to each one.',
-      '37 of the 40 went straight through as if nothing were there. 2 were knocked aside and 1 bounced straight back.',
+      'Press "Fire Beam" and read what happened to each of the forty shots.',
+      '37 of the 40 went straight through as if nothing were there, 2 were knocked aside and 1 bounced straight back.',
       'Consider what arrangement of mass allows almost all particles to pass through while an occasional particle rebounds.'
     ],
     check(state) {
@@ -265,9 +284,9 @@ export const STAGES = [
     ],
     widget: { type: 'number', min: 0, max: 20, label: 'Crossed grains' },
     hints: [
-      'Press "The middle". The nucleus is drawn flat, so no grain is hiding behind another one.',
-      'Twelve grains are packed in there. Some carry a cross and some are blank — count only the crossed ones.',
-      'Distinguish between the marked particles and the blank particles to count only those with a cross.'
+      'Press "The middle": the nucleus is drawn flat, so no grain is hiding behind another one.',
+      'Twelve grains are packed in there, some with a cross and some blank, and only the crossed ones count.',
+      'Go across the picture row by row and tally only the grains with a cross, then check that your crossed and blank tallies add up to all twelve.'
     ],
     check(state) {
       if (state.number === 6) return { ok: true };
@@ -277,7 +296,7 @@ export const STAGES = [
       if (state.number === 12) {
         return { ok: false, msg: 'That is every grain, crossed and blank together. Count only the crossed ones.' };
       }
-      return { ok: false, msg: 'Count again: twelve grains in the nucleus, and six of them carry a cross.' };
+      return { ok: false, msg: 'That count is off. "The middle" draws the nucleus flat, so every grain is in view — count only the ones with a cross.' };
     },
     reward: {
       log: 'Sample A: 12 grains, 6 crossed.',
@@ -304,8 +323,8 @@ export const STAGES = [
     widget: { type: 'number', min: 0, max: 20, label: 'Electrons on Sample D' },
     hints: [
       'Press "Read Needle" on each sample, then press "Outside" and count the electrons on the three you can see.',
-      'Sample C is the useful one — its needle is the only one that is not on zero. Count its protons and its electrons and compare them.',
-      'Use the needle reading: if net charge is protons minus electrons, a neutral reading means both counts must balance.'
+      'Sample C is the useful one, the only needle off zero, so count its protons and its electrons and compare them.',
+      'On Sample C, take its electrons away from its protons and compare that with its needle; then do the same sum backwards on Sample D, whose protons and needle you can both read.'
     ],
     check(state) {
       if (state.number === 8) return { ok: true };
@@ -315,7 +334,7 @@ export const STAGES = [
       if (state.number === 16) {
         return { ok: false, msg: 'That is every grain in the nucleus. Only the protons push the needle.' };
       }
-      return { ok: false, msg: 'Work from Sample C: 6 protons, 4 electrons, needle on +2. Sample D reads 0 with 8 protons.' };
+      return { ok: false, msg: 'Find the rule on Sample C first: compare its protons, its electrons and its needle. Then read Sample D\'s protons and needle and apply the same rule.' };
     },
     reward: {
       log: 'Sample D carries 8 electrons.',
@@ -344,9 +363,9 @@ export const STAGES = [
       rings: ['Ring 1 — closest in', 'Ring 2 — middle', 'Ring 3 — furthest out']
     },
     hints: [
-      'Press "Outside" and count how many electrons Samples A, B and C keep on each ring. The + and - keys move Sample D\'s electrons.',
+      'Press "Outside" and count how many electrons Samples A, B and C keep on each ring, then use the + and - keys to place Sample D\'s.',
       'No sample here has more than 2 on ring 1 or more than 8 on ring 2, and none of them starts a new ring while a closer one still has room.',
-      'Fill each inner ring to capacity before placing any remaining electrons on outer rings.'
+      'Put electrons on Ring 1 until it holds as many as Ring 1 does on the open samples, fill Ring 2 the same way, and only then put what is left of the 11 on Ring 3.'
     ],
     check(state) {
       const placed = state.rings.reduce((n, r) => n + r, 0);
@@ -354,13 +373,13 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: `${placed} of the 11 electrons are placed. Use the + keys to place the rest.` };
       }
       if (state.rings[0] > 2) {
-        return { ok: false, msg: 'Too many on Ring 1. Every other sample here holds exactly 2 there.' };
+        return { ok: false, msg: 'Too many on Ring 1. Count what the open samples hold on their Ring 1 — none of them holds more.' };
       }
       if (state.rings[1] > 8) {
-        return { ok: false, msg: 'Too many on Ring 2. Samples B and C both hold 8 there and no more.' };
+        return { ok: false, msg: 'Too many on Ring 2. Count what Samples B and C hold on their Ring 2 — that is as full as it gets.' };
       }
       if (state.rings[0] < 2 || (state.rings[2] > 0 && state.rings[1] < 8)) {
-        return { ok: false, msg: 'Fill each ring before starting the next one: 2 on Ring 1, then 8 on Ring 2, then whatever is left.' };
+        return { ok: false, msg: 'A ring further out has electrons while a closer ring still has room. The open samples fill each ring before they start the next one.' };
       }
       return { ok: true };
     },
@@ -394,8 +413,8 @@ export const STAGES = [
     },
     hints: [
       'Press "Outside" and count the electrons on the outermost shell of all four samples.',
-      'A shell that holds 8 is full. Ask of each sample whether its outer shell has almost none, almost 8, or exactly 8.',
-      'Atoms tend to lose a few loose outer electrons, gain electrons when nearly full at eight, or remain inert when already full.'
+      'A shell that holds 8 is full, so ask of each sample whether its outer shell has almost none, almost 8, or exactly 8.',
+      'For each sample, compare its outer-shell count with a full shell of 8: one or two gives them away, one short of full takes one on, and already full will not trade.'
     ],
     check(state) {
       const want = { s1: 'gives', s2: 'gives', s3: 'takes', s4: 'inert' };
@@ -438,18 +457,18 @@ export const STAGES = [
     },
     hints: [
       'Use "The middle" to count protons and neutrons on all three, then "Outside" to count their electrons.',
-      'B and C both hold 13 grains, so the total will not separate them. Their proton counts are different, and so are their outer shells.',
-      'An atom\'s identity and chemical behavior depend on its proton count and electron arrangement, not its total mass.'
+      'B and C both hold 13 grains, so the total will not separate them, but their proton counts and outer shells differ.',
+      'Set each of B and C beside Sample A and compare two things, the proton count and the outer shell: the one that matches on both is the same kind, whatever it weighs.'
     ],
     check(state) {
       if (!state.bins.k || !state.bins.l) {
         return { ok: false, notYet: true, msg: 'Both samples need an answer.' };
       }
       if (state.bins.k !== 'match') {
-        return { ok: false, msg: 'Sample B has the same 6 protons as Sample A and the same electrons outside, so it behaves identically. Its 13th grain is a neutron, which adds weight and nothing else.' };
+        return { ok: false, msg: 'Sample B is filed wrong. Compare its protons and its outer shell with Sample A\'s — those decide how an atom behaves, and its weight does not.' };
       }
       if (state.bins.l !== 'other') {
-        return { ok: false, msg: 'Sample C has 7 protons, so it has 7 electrons arranged 2 and 5 — a different outer shell from Sample A, so it behaves differently.' };
+        return { ok: false, msg: 'Sample C is filed wrong. Count its protons and its outer-shell electrons, and compare both with Sample A\'s.' };
       }
       return { ok: true };
     },
@@ -473,7 +492,7 @@ export const STAGES = [
     hints: [
       'Press "Fire Stripper" to knock one electron off the outer shell, then "Read Needle" to see what it did.',
       'Every electron you take off leaves one proton with nothing to cancel it, so the needle climbs by 1 each time.',
-      'Remove electrons until the meter confirms a charge of +2, then record how many were stripped.'
+      'With the needle clipped on, fire the stripper one shot at a time, read the needle after each shot, stop when it reads +2, and enter how many shots that took.'
     ],
     check(state) {
       const taken = state.stripped.m || 0;
@@ -518,9 +537,9 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Count the protons of all three first. Only a sample with exactly 7 can be the same element as the standard.',
-      'Sample C has 8 protons, so it is out straight away. For A and B, count the neutrons too and read the needle on each.',
-      'Varying neutrons changes mass without charge, varying electrons changes net charge, and varying protons changes the element itself.'
+      'Press "The middle" to count each sample\'s protons and neutrons, and press "Read Needle" on each one.',
+      'Line each sample up against the standard\'s 7 protons, 7 neutrons and zero needle, and find the one of those three it does not match.',
+      'A different proton count is a different element; the same protons with a different neutron count is an extra neutron; the same protons and neutrons with the needle off zero is a missing electron.'
     ],
     check(state) {
       const want = { n1: 'heavy', n2: 'charged', n3: 'other' };
@@ -529,13 +548,13 @@ export const STAGES = [
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       if (state.bins.n1 !== want.n1) {
-        return { ok: false, msg: 'Sample A has 7 protons and its needle reads zero, but it carries 8 neutrons — the same element, one neutron heavier.' };
+        return { ok: false, msg: 'Sample A is filed wrong. Check its protons, its neutrons and its needle against the standard, one at a time, and find the one that differs.' };
       }
       if (state.bins.n2 !== want.n2) {
-        return { ok: false, msg: 'Sample B has 7 protons and 7 neutrons like the standard, but only 6 electrons, which is why the needle reads +1.' };
+        return { ok: false, msg: 'Sample B is filed wrong. Check its protons, its neutrons and its needle against the standard, one at a time, and find the one that differs.' };
       }
       if (state.bins.n3 !== want.n3) {
-        return { ok: false, msg: 'Sample C has 8 protons against the standard\'s 7, so it is a different element.' };
+        return { ok: false, msg: 'Sample C is filed wrong. Count its protons and compare them with the standard\'s.' };
       }
       return { ok: true };
     },
@@ -701,6 +720,7 @@ const FIELD_LABELS = { whole: 'Whole piece', core: 'The middle', rings: 'Outside
 export function mount(container, ctx) {
   const frame = new LearnFrame(container, {
     stageCount: STAGES.length,
+    rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),
     onNext: () => next(),
     onJump: i => loadStage(i),
@@ -939,7 +959,7 @@ export function mount(container, ctx) {
         refreshNeedles();
         renderReadout(null, {
           head: `Stripper // ${labelFor(id)}`,
-          body: `One light piece knocked clear of ring ${ring + 1}.`
+          body: `One electron knocked clear of ring ${ring + 1}.`
         });
       }
     }
@@ -1017,13 +1037,16 @@ export function mount(container, ctx) {
             ? 'The whole atom at its own size. Use the other two keys to look inside it.'
             : state.field === 'core'
               ? 'The center, magnified until the grains come apart. Click any grain to read it.'
-              : 'Pulled back to the light pieces outside, drawn on the rings they sit on. Click any one to read it.'}</p>
+              : `Pulled back to the ${index >= 2 ? 'electrons' : 'light pieces'} outside, drawn on the rings they sit on. Click any one to read it.`}</p>
         </div>
       `);
       return;
     }
 
-    const part = PARTS[hit.part];
+    // Stage 2's card names all three, so from stage 3 the probe does too.
+    const part = index >= 2 && NAMED_PARTS[hit.part]
+      ? { ...PARTS[hit.part], ...NAMED_PARTS[hit.part] }
+      : PARTS[hit.part];
     const spec = specFor(hit.specimenId);
     frame.setReadout(`
       <div class="lq-readout-card">

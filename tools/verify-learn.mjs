@@ -202,6 +202,19 @@ for (const file of learnFiles) {
 }
 if (unstyledButtons === 0) ok('all quest-btn-sm controls carry btn-secondary or btn-primary');
 
+// Read by refusalLeaks() below; declared here because the quest loop
+// runs before the function's own section is reached.
+const ANSWER_ALLOW = {
+  // "Say how many electrons the cards in column 6 keep in their outer shells."
+  // The prompt names the column; its count happens to be 6 too, so a refusal
+  // that points at "column 6" is pointing where to look. "six" stays checked.
+  'unit01/q3-catalogue': { 4: ['6'] }
+};
+
+const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
+  'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen',
+  'eighteen', 'nineteen', 'twenty'];
+
 /* ------------------------------------------------------------------
    THE QUEST MODULE CONTRACT
    ------------------------------------------------------------------ */
@@ -358,6 +371,12 @@ function checkStageTable(q, mod) {
       fail(`${label}: needs exactly three hint rungs (got ${st.hints?.length})`); bad++;
     } else if (new Set(st.hints).size !== 3) {
       fail(`${label}: two hint rungs say the same thing`); bad++;
+    } else {
+      // A hint rung is ONE sentence (CLAUDE.md): what to do, what to compare,
+      // then the method — never a paragraph between the player and the bench.
+      st.hints.forEach((h, k) => {
+        if (sentenceCount(h) !== 1) { fail(`${label}: hint rung ${k + 1} is ${sentenceCount(h)} sentences, not one`); bad++; }
+      });
     }
     if (!st.reward?.title || !st.reward?.body) { fail(`${label}: no reward card`); bad++; }
     if (typeof st.check !== 'function') { fail(`${label}: no check()`); bad++; return; }
@@ -466,6 +485,16 @@ function checkStageTable(q, mod) {
       }
     }
 
+    // A REFUSAL NAMES THE REASON, NEVER THE RESULT.
+    const leaks = refusalLeaks(q, mod, st, i, [missed?.msg, empty?.msg]);
+    const seenLeak = new Set();
+    for (const leak of leaks) {
+      if (seenLeak.has(leak.token) || seenLeak.size >= 3) continue;
+      seenLeak.add(leak.token);
+      fail(`${label}: a refusal gives away the answer (${leak.token}) in "${leak.text.slice(0, 80)}"`);
+      bad++;
+    }
+
     /* ------------------------------------------------------------------
        NOTHING IS NAMED WITHOUT BEING EXPLAINED — BUT A LABEL IS AN
        EXPLANATION, AND RESTATING IT IS NOISE.
@@ -545,6 +574,169 @@ function checkStageTable(q, mod) {
   if (!bad) ok(`${q.key}: ${stages.length} stages graded — solutions pass, misses are diagnosed`);
 
   checkBench(q, mod, stages);
+}
+
+/* ------------------------------------------------------------------
+   A REFUSAL NAMES THE REASON, NEVER THE RESULT.
+
+   The hint ladder is built to hold the answer back: rung three gives the
+   method and never the figure. A miss message fires on the FIRST wrong
+   commit, so a refusal that says "Sample D reads 0 with 8 protons" or
+   "six of them carry a cross" hands over, one press in, exactly what the
+   ladder was withholding. A refusal may say what to compare and where to
+   look; it may not say what the comparison comes out as.
+
+   What counts as the answer is read off SOLUTIONS:
+   - `number` / `decimal` / each of `numbers`: that figure as a standalone
+     token ("8", "+8", "8." but not "18" or "CAT 08"), and for a whole
+     number 0-20 the word as well ("eight");
+   - `rings`: the whole arrangement in order ("2, 8 and 1", "2 / 8 / 1");
+   - `sample`, or a `choice` whose option is a sample on the bench: that
+     sample's name ("Sample C");
+   - `bins`: a sentence naming a filed sample together with the exact label
+     of the bin it belongs in.
+
+   The refusals checked are every one the stage can produce, found three
+   ways: the MISSES / untouched-bench messages above; the stage's check run
+   against every other value its widget offers (each other number in range,
+   each other option or sample, each row moved to each other bin), with the
+   rest of the solution held so the refusal reached is the one about the
+   answer; and every sentence-shaped string literal in the check's source,
+   so a branch no sweep reaches is still read.
+
+   ANSWER_ALLOW is for a figure the PROMPT itself states, which a refusal
+   repeating it therefore gives nothing away by. Keep it small and say why.
+   ------------------------------------------------------------------ */
+function escRx(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+/** A figure as a standalone token: not part of a longer number, word or code. */
+function numberTokens(v) {
+  const out = [];
+  if (typeof v !== 'number' || !Number.isFinite(v)) return out;
+  // A SIGNED figure is a charge — "+2", "plus two", "minus one" — and every
+  // answer these stages take is an unsigned count or weight, so a charge that
+  // happens to share its digits (the +2 a stage asks the player to reach) is
+  // not the answer and is not read as one.
+  const unsigned = '(?<![\\w.+\\-\u2212])(?<!plus )(?<!minus )';
+  out.push({ token: String(v), rx: new RegExp(`${unsigned}${escRx(String(v))}(?![\\w]|\\.\\d)`, 'i') });
+  // "one" is a pronoun far more often than a figure ("one sample on its own"),
+  // and "zero" is what a neutral needle reads on every sample, so the words
+  // are checked from two up; the digits are always checked.
+  if (Number.isInteger(v) && v >= 2 && v <= 20) {
+    out.push({ token: NUMBER_WORDS[v], rx: new RegExp(`(?<!plus )(?<!minus )\\b${NUMBER_WORDS[v]}\\b`, 'i') });
+  }
+  return out;
+}
+
+/** The literal text of every sentence-shaped string in a function's source. */
+function sentenceLiterals(fn) {
+  const src = String(fn);
+  const out = [];
+  const rx = /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g;
+  let m;
+  while ((m = rx.exec(src)) !== null) {
+    let s = m[1] ?? m[2] ?? m[3] ?? '';
+    if (m[3] !== undefined) s = s.replace(/\$\{[^}]*\}/g, ' ');
+    s = s.replace(/\\(.)/g, '$1');
+    // An id or a key is one word; a refusal is a sentence.
+    if (/\s/.test(s.trim()) && /[a-z]/i.test(s)) out.push(s);
+  }
+  return out;
+}
+
+function refusalLeaks(q, mod, st, i, seed) {
+  const sol = mod.SOLUTIONS?.[i] || {};
+  const bench = st.samples || st.specimens || st.pairs || st.slabs || st.hoppers || st.cards || [];
+  const nameOf = (id) => {
+    const s = bench.find(b => b.id === id);
+    return s?.label && /^(sample|pair|block) [a-z]$/i.test(s.label.trim()) ? s.label.trim() : null;
+  };
+  const allow = new Set((ANSWER_ALLOW[q.key] || {})[i + 1] || []);
+
+  // What the answer is, as things a sentence could say.
+  const tokens = [];
+  if (typeof sol.number === 'number') tokens.push(...numberTokens(sol.number));
+  if (typeof sol.decimal === 'number') tokens.push(...numberTokens(sol.decimal));
+  for (const v of (Array.isArray(sol.numbers) ? sol.numbers : [])) tokens.push(...numberTokens(v));
+  if (Array.isArray(sol.rings) && sol.rings.filter(Boolean).length >= 2) {
+    const seq = sol.rings.filter(Boolean).map(v => `(?<![\\w.])${v}(?![\\w])`).join('[\\s,/]*(?:and\\s+|then\\s+)?');
+    tokens.push({ token: sol.rings.filter(Boolean).join('/'), rx: new RegExp(seq, 'i') });
+  }
+  for (const id of [sol.sample, sol.choice]) {
+    const name = id && nameOf(id);
+    if (name) tokens.push({ token: name, rx: new RegExp(`\\b${escRx(name)}\\b`, 'i') });
+  }
+  const binPairs = [];
+  for (const [sid, bid] of Object.entries(sol.bins || {})) {
+    const name = nameOf(sid);
+    const bin = (st.widget?.bins || []).find(b => b.id === bid);
+    if (name && bin?.label) binPairs.push({ name, bin: bin.label });
+  }
+  const live = tokens.filter(t => !allow.has(t.token));
+  if (!live.length && !binPairs.length) return [];
+
+  // Every refusal the stage can produce.
+  const msgs = new Set(seed.filter(Boolean));
+  const tryState = (over) => {
+    try {
+      const r = st.check(mod.stateFor(i, { ...sol, ...over }));
+      if (r && !r.ok && r.msg) msgs.add(r.msg);
+    } catch { /* a state this stage cannot be in */ }
+  };
+  const w = st.widget || {};
+  if (typeof sol.number === 'number') {
+    const lo = Number.isFinite(w.min) ? w.min : 0;
+    const hi = Number.isFinite(w.max) ? w.max : Math.max(20, sol.number * 2);
+    const step = w.step || 1;
+    for (let v = lo, n = 0; v <= hi && n < 400; v += step, n++) if (v !== sol.number) tryState({ number: v });
+  }
+  if (typeof sol.decimal === 'number') {
+    const step = w.step || 0.1;
+    for (let v = w.min ?? 0, n = 0; v <= (w.max ?? sol.decimal * 2) + 1e-9 && n < 400; v += step, n++) {
+      const r = Math.round(v * 100) / 100;
+      if (r !== sol.decimal) tryState({ decimal: r });
+    }
+  }
+  if (Array.isArray(sol.numbers)) {
+    sol.numbers.forEach((_, k) => {
+      const top = Math.max(40, ...sol.numbers.map(x => x * 2));
+      for (let v = 0; v <= top; v++) {
+        if (v === sol.numbers[k]) continue;
+        const next = sol.numbers.slice(); next[k] = v; tryState({ numbers: next });
+      }
+    });
+  }
+  if (sol.choice !== undefined) for (const o of (w.options || [])) if (o.id !== sol.choice) tryState({ choice: o.id });
+  if (sol.sample !== undefined) for (const s of bench) if (s.id !== sol.sample) tryState({ sample: s.id });
+  if (sol.bins) {
+    for (const row of Object.keys(sol.bins)) {
+      for (const b of (w.bins || [])) {
+        if (b.id !== sol.bins[row]) tryState({ bins: { ...sol.bins, [row]: b.id } });
+      }
+    }
+  }
+  if (sol.board) {
+    const slots = Object.keys(sol.board);
+    for (let a = 0; a < slots.length; a++) {
+      for (let b = a + 1; b < slots.length; b++) {
+        tryState({ board: { ...sol.board, [slots[a]]: sol.board[slots[b]], [slots[b]]: sol.board[slots[a]] } });
+      }
+    }
+  }
+  for (const lit of sentenceLiterals(st.check)) msgs.add(lit);
+
+  const leaks = [];
+  for (const text of msgs) {
+    for (const t of live) if (t.rx.test(text)) leaks.push({ token: t.token, text });
+    for (const sentence of String(text).split(/(?<=[.!?])\s+/)) {
+      for (const p of binPairs) {
+        if (new RegExp(`\\b${escRx(p.name)}\\b`, 'i').test(sentence) && sentence.toLowerCase().includes(p.bin.toLowerCase())) {
+          leaks.push({ token: `${p.name} -> ${p.bin}`, text });
+        }
+      }
+    }
+  }
+  return leaks;
 }
 
 /**

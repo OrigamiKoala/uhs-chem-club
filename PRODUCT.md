@@ -85,9 +85,9 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
 - **Learn track:** ten worlds, one per AP Chemistry unit, 41 quests charted and nine built —
   all of Tallow (`unit01/q1-grain` through `unit01/q5-assay`) and all of Ligar
   (`unit02/q1-joins` through `unit02/q4-weigh`). Every Learn quest is a game with its own
-  stages, scene, inputs and grading. Tallow is also walkable ground at T4; **Ligar is games
-  only** — four playable benches on every tier with no walkable world behind them, which is
-  a separate piece of work rather than a gap in the quests.
+  stages, scene, inputs and grading. Tallow and Ligar are both walkable ground at T4, with
+  every one of their nine benches a built instrument standing on it; below T4 each bench is
+  played as a page.
 - **What Ligar teaches.** Four benches: what a bond is and why ionic and covalent are the
   only two kinds (`q1-joins`); what each kind builds, and how that decides whether a block
   shatters, melts low or conducts (`q2-lattice`); why a compound always has the same recipe,
@@ -101,7 +101,7 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
   GPU), T2 (Chromebook-class), T1 (no WebGL at all). Every quest stage is 100% solvable in
   T1 through DOM-only inputs producing the same payload contract.
 - **At T4 the interface is in the world.** The Charge Gardens' stage deck is a control desk
-  in the chamber; both Unit 1 Learn instruments are built objects on a bench the player has
+  in the chamber; every Unit 1 and Unit 2 Learn instrument is a built object on a bench the player has
   walked to, with their screens bolted over them and their power control a knob you reach
   over and turn. Nothing a player reads differs between the two presentations — the DOM is
   moved onto a plane, never re-authored — and a stage that grades correct on one grades
@@ -141,9 +141,10 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
 
 ## Evidence on Hand
 
-- A playable campaign and five built Learn quests, verified by ten check scripts
+- A playable campaign and nine built Learn quests, verified by eleven check scripts
   (`verify:quest`, `verify:console`, `verify:learn`, `verify:geometry`, `verify:media`,
-  `verify:flows`, `verify:ship`, `verify:tallow`, `verify:bench`, `verify:holo`). Several
+  `verify:flows`, `verify:ship`, `verify:tallow`, `verify:ligar`, `verify:bench`,
+  `verify:holo`). Several
   of them build the real world in Node and measure it rather than trusting a table beside
   it: nothing may occupy the same space as anything else, no screen may hang off the edge
   of the glass, and the chamber console may not cover more than a quarter of the view.
@@ -188,13 +189,19 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
    player is asked to touch. "Read the needle", "load the rings", "the ring counters on
    the deck" and "set the field" are all perfectly clear sentences addressed to somebody
    who has already used the bench, and that reader is the one person this product is not
-   for. So every control a stage offers carries a plain sentence saying what it does,
-   beside it, for as long as the stage offers it — not in a tooltip, not once on first
-   use, and not inside a hint the player has to earn. A quest exports
-   `toolNoteFor(controlId, stageNumber)` and `npm run verify:learn` fails the build over
-   a control with no line. The line follows principle 1's schedule too: the needle's
-   legend says "light pieces" until the stage after electrons are named, and says
-   "electrons" from then on.
+   for. So a control whose label does NOT say what it does carries a plain sentence
+   saying what it does, beside it, for as long as the stage offers it — not in a tooltip,
+   not once on first use, and not inside a hint the player has to earn. **A control whose
+   label already says it carries nothing**: "Tip Sample" needs no legend explaining that
+   it tips the sample. A quest exports `toolNoteFor(controlId, stageNumber)`, and
+   `npm run verify:learn` fails the build over a legend that exists and is malformed or
+   leaks withheld vocabulary, never over one deliberately left out. The line follows
+   principle 1's schedule too: the needle's legend says "light pieces" until the stage
+   after electrons are named, and says "electrons" from then on — and a legend never
+   states the thing its own stage exists to discover.
+   **A refusal is held to the hint ladder's rule**: it names the reason and where to look,
+   never the value the player must enter; `verify:learn` fails a miss message that
+   contains its stage's answer.
 3. **A stage must be solvable by somebody who does not already know the answer.** This is
    the test every bench stage has to pass and the easiest one to fail, because the author
    knows the chemistry. A stage that can only be finished by a player who already knows

@@ -112,7 +112,7 @@ export const STAGES = [
     title: 'Tip It Out',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench sorts samples by particle weight into numbered bins.'
+      body: 'This bench tips a sample down a chute, and a plate sorts each piece into a bin by weight. "Read Code" reads the pieces in one bin, and "Weigh Sample" weighs a whole sample.'
     },
     prompt: 'Say why Sample A splits across two bins instead of landing in one.',
     controls: ['pour', 'code'],
@@ -132,14 +132,14 @@ export const STAGES = [
     hints: [
       'Press "Tip Sample", then tap a bin and press "Read Code", and do the same on the other bin.',
       'The bins are marked 35 and 37, so compare the two codes to see whether the pieces are different kinds.',
-      'Check whether the CAT codes in both bins match to see if they belong to the same element.'
+      'If both bins read the same CAT code, the pieces are one kind of atom in two weights; if the codes differ, they are two kinds.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
       }
       if (state.choice === 'mixed') {
-        return { ok: false, msg: 'Both bins read CAT 17, so the pieces are all the same kind.' };
+        return { ok: false, msg: 'Read the code in each bin and compare them: two kinds of atom would read two different codes.' };
       }
       if (state.choice === 'fault') {
         return { ok: false, msg: 'A broken deflector would scatter the pieces instead of sorting them into two tidy bins.' };
@@ -167,7 +167,7 @@ export const STAGES = [
     hints: [
       'Tap a sample to select it, press "Tip Sample", then do the same for the other one.',
       'Sample A drops 30 of its 40 pieces into the 35 bin, and Sample B drops 60 of its 80.',
-      'Divide the count in the lighter bin by the sample total to find the percentage.'
+      'Divide the lighter bin\'s tally by the sample\'s total and multiply by 100, then do the same on the other sample to check they agree.'
     ],
     check(state) {
       if (state.number === 0) {
@@ -180,10 +180,10 @@ export const STAGES = [
         return { ok: false, msg: 'That is the heavier bin\'s share, and the question asks about the lighter bin.' };
       }
       if (state.number === 50) {
-        return { ok: false, msg: 'The lighter bin caught three times as many pieces, not the same number.' };
+        return { ok: false, msg: 'An even split would put the same number in each bin. Compare the two tallies.' };
       }
       if (state.number !== 75) {
-        return { ok: false, msg: 'Work it out from 30 out of 40, or from 60 out of 80.' };
+        return { ok: false, msg: 'Divide the lighter bin\'s tally by the sample\'s total, then scale that to a hundred.' };
       }
       return { ok: true };
     },
@@ -216,7 +216,7 @@ export const STAGES = [
     hints: [
       'Tip it, then read the number on each bin and the tally above it.',
       'Halfway between 35 and 37 is 36, and 35.5 is not 36, so compare how many pieces landed in each bin.',
-      'Observe which bin holds the larger share of pieces to see which mass pulls the average toward it.'
+      'Check which side of 36 the listed mass falls on, then check which of the two bins holds more pieces.'
     ],
     check(state) {
       if (!state.choice) {
@@ -226,7 +226,7 @@ export const STAGES = [
         return { ok: false, msg: 'Halfway between 35 and 37 is 36, and the listed mass is 35.5.' };
       }
       if (state.choice === 'heavy') {
-        return { ok: false, msg: '35.5 is below 36, so it leans toward the light end, not the heavy one.' };
+        return { ok: false, msg: 'A heavy piece counts once, the same as a light one. Compare 35.5 with the halfway point and with where most of the pieces landed.' };
       }
       if (state.choice === 'wrong') {
         return { ok: false, msg: '35.5 is not the weight of one piece; it is the average over all of them.' };
@@ -251,9 +251,9 @@ export const STAGES = [
     reference: ['CAT 05 — listed mass missing'],
     widget: { type: 'decimal', min: 10.0, max: 11.0, step: 0.1, label: 'Average weight of one piece' },
     hints: [
-      'Tip it and read both tallies: 8 pieces at weight 10 and 32 pieces at weight 11.',
-      '8 out of 40 is one fifth of the pieces at weight 10, and 32 out of 40 is four fifths at weight 11.',
-      'Multiply each bin mass by its fractional share of the total pieces, then sum the results.'
+      'Press "Tip Sample" and read the tally over each bin.',
+      'Turn each bin\'s tally into a share of the whole sample: its tally divided by the total number of pieces.',
+      'Multiply each bin\'s weight by its share, then add the two results together.'
     ],
     check(state) {
       const v = state.decimal;
@@ -261,10 +261,10 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: 'Set the dial to the figure you worked out.' };
       }
       if (v === 10.5) {
-        return { ok: false, msg: '10.5 is the plain middle of 10 and 11, but the bins caught 8 and 32, not equal numbers.' };
+        return { ok: false, msg: '10.5 is the plain middle of 10 and 11, but the two bins did not catch equal numbers.' };
       }
       if (Math.abs(v - 10.8) > 0.001) {
-        return { ok: false, msg: `One fifth at weight 10 and four fifths at weight 11 does not come to ${v.toFixed(1)}.` };
+        return { ok: false, msg: `${v.toFixed(1)} does not fit the tallies. Multiply each bin\'s weight by its share of the pieces and add the two.` };
       }
       return { ok: true };
     },
@@ -295,15 +295,15 @@ export const STAGES = [
     },
     hints: [
       'Tip it and count how many bins caught anything at all.',
-      'All 40 pieces landed in the bin marked 19, so every piece weighs exactly the same.',
-      'Consider what happens to an average when every single piece in the sample has the identical mass.'
+      'Compare how this sample lands with how the last two did, which split across two bins.',
+      'Work out the average of a set of pieces that all weigh the same, and ask whether any decimal could come out of it.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
       }
       if (state.choice === 'round') {
-        return { ok: false, msg: 'All 40 pieces weigh 19, so the average is exactly 19 and no decimal ever turns up.' };
+        return { ok: false, msg: 'Nothing was rounded. Tip it and count how many bins caught anything, then work out what that does to the average.' };
       }
       if (state.choice === 'fault') {
         return { ok: false, msg: 'The deflector split the earlier samples into two bins, so it is working fine.' };
@@ -329,21 +329,21 @@ export const STAGES = [
     widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Weight 20, per hundred pieces' },
     hints: [
       'Press "Weigh Sample" on Sample A and divide what it reads by the number of pieces.',
-      '808 over 40 pieces is 20.2 each, and the two weights are 20 and 22, so 20.2 is one tenth of the way from 20 up to 22.',
-      'Use how close the average is to 20 compared to 22 to deduce what fraction of the pieces must be mass 20.'
+      'Compare the weight per piece with the two weights, 20 and 22: how far along from 20 to 22 does it sit?',
+      'The fraction of the way from 20 to 22 that the average sits is the fraction of heavy pieces; take that from the whole, then scale to a hundred.'
     ],
     check(state) {
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the share you worked out.' };
       }
       if (state.number === 50) {
-        return { ok: false, msg: 'An even split would weigh 21 a piece, and 808 over 40 pieces is 20.2.' };
+        return { ok: false, msg: 'An even split would weigh 21 a piece. Weigh the sample and divide by its pieces to see how far it is from 21.' };
       }
       if (state.number === 10) {
         return { ok: false, msg: 'That is the share of the heavy pieces, and the question asks about the light ones.' };
       }
       if (state.number !== 90) {
-        return { ok: false, msg: '20.2 is one tenth of the way from 20 to 22, so one tenth of the pieces are the heavy ones.' };
+        return { ok: false, msg: 'Work out how far along from 20 to 22 the weight per piece sits: that fraction of the pieces are the heavy ones.' };
       }
       return { ok: true };
     },
@@ -432,13 +432,13 @@ export const STAGES = [
         }
       }
       if (state.bins.j1 !== want.j1) {
-        return { ok: false, msg: 'Sample A holds 30 light to 10 heavy, which weighs 35.5 a piece — exactly the listed mass.' };
+        return { ok: false, msg: 'Sample A is filed wrong. Weigh it, divide by its 40 pieces, and compare the result with the listed mass.' };
       }
       if (state.bins.j2 !== want.j2) {
-        return { ok: false, msg: 'Sample B holds 20 light to 20 heavy, which weighs 36.0 a piece, not 35.5.' };
+        return { ok: false, msg: 'Sample B is filed wrong. Weigh it, divide by its 40 pieces, and compare the result with the listed mass.' };
       }
       if (state.bins.j3 !== want.j3) {
-        return { ok: false, msg: 'Sample C holds 38 light to 2 heavy, which weighs 35.1 a piece, not 35.5.' };
+        return { ok: false, msg: 'Sample C is filed wrong. Weigh it, divide by its 40 pieces, and compare the result with the listed mass.' };
       }
       return { ok: true };
     },
@@ -588,6 +588,7 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const frame = new LearnFrame(container, {
     stageCount: STAGES.length,
+    rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),
     onNext: () => next(),
     onJump: i => loadStage(i),

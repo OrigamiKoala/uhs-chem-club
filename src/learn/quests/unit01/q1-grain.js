@@ -158,7 +158,7 @@ export const STAGES = [
     title: 'Zoom In',
     briefing: {
       speaker: SPEAKER,
-      body: 'Examine the samples under the scope to observe their structure and determine what they are made of.'
+      body: 'This bench is a scope for looking at things far too small to see. The Power dial zooms in, "Run Cutter" tries to split a sample, and "Settle" shakes a sample and lets it sink.'
     },
     prompt: 'Find the lowest power at which this grey solid stops looking solid and breaks into separate grains.',
     controls: ['power'],
@@ -169,8 +169,8 @@ export const STAGES = [
     answer: 4,
     hints: [
       'Turn the Power dial up one step at a time and watch the picture change.',
-      'At low power you see solid clumps. Keep going until the clumps break into separate round grains.',
-      'Compare the lowest power where individual particles appear against higher settings that merely enlarge them.'
+      'At low power you see solid clumps; keep going until the clumps break into separate round grains.',
+      'Find the first power where you can pick out single grains, then turn down one step and check that the picture there is still clumps.'
     ],
     check(state) {
       if (!state.number) {
@@ -199,13 +199,13 @@ export const STAGES = [
     ],
     widget: { type: 'sample' },
     hints: [
-      'They look identical until the scope resolves the grains, so turn the Power dial up first.',
-      'Compare the two pictures. One sample has grains that all match; the other has two different grains mixed in together.',
-      'Look closely at grain shades: choose the sample where every grain has the exact same appearance.'
+      'They look identical until the scope resolves the atoms, so turn the Power dial up first.',
+      'Compare the two pictures: one sample has atoms that all match, and the other has two different atoms mixed together.',
+      'Tap several atoms in each sample and compare their codes: a sample of one kind reads the same code on every atom.'
     ],
     check(state) {
       if (state.sample === 'c09') return { ok: true };
-      return { ok: false, msg: 'Look again: that one has dark grains and pale grains mixed together, so it is two kinds, not one.' };
+      return { ok: false, msg: 'Look again: that one has dark atoms and pale atoms mixed together, so it is two kinds, not one.' };
     },
     reward: {
       log: 'Sample A is one kind. Sample B is two.',
@@ -232,19 +232,19 @@ export const STAGES = [
     widget: { type: 'number', min: 1, max: 6, label: 'Kinds counted' },
     answer: 3,
     hints: [
-      'Tapping one grain only tells you about that grain. Tap plenty of them, spread across the whole picture.',
-      'Two of the kinds look almost the same. Their mass readings are different: one reads 32.1, the other 35.5.',
-      'Group the grains by mass reading: note how many distinct mass values appear across all grains.'
+      'Tapping one atom only tells you about that atom, so tap plenty of them across the whole picture.',
+      'Two of the kinds look almost the same, but their mass readings differ: one reads 32.1 and the other 35.5.',
+      'Tap a dozen or more atoms across the whole picture, list every different mass reading you get, and count the list.'
     ],
     check(state) {
       if (state.number === 3) return { ok: true };
       if (state.number < 3) return { ok: false, msg: 'There is at least one more kind in there. Two of them look alike — check their mass readings.' };
-      return { ok: false, msg: 'Too many. Some of the grains you read are the same kind as each other.' };
+      return { ok: false, msg: 'Too many. Some of the atoms you read are the same kind as each other.' };
     },
     reward: {
       log: 'Three kinds of atom found.',
       title: 'Atomic Mass',
-      body: 'Every element has its own atomic mass. Weighing a grain is how you tell two look-alike atoms apart.'
+      body: 'Every element has its own atomic mass. Weighing an atom is how you tell two look-alike kinds apart.'
     }
   },
 
@@ -262,9 +262,9 @@ export const STAGES = [
     ],
     widget: { type: 'sample' },
     hints: [
-      'Tap a sample to select it, press "Run Cutter". Do that for all four.',
-      'A heap scatters. A joined group breaks into its parts. One sample does neither.',
-      'Find the sample consisting of an individual atom rather than a cluster or collection of loose pieces.'
+      'Tap a sample to select it and press "Run Cutter", then do the same for the other three.',
+      'A heap scatters and a joined group breaks into its parts, but one sample does neither.',
+      'Cut each sample in turn and compare its picture before and after: the answer is the one whose picture does not change at all.'
     ],
     check(state) {
       if (state.sample === 't4') return { ok: true };
@@ -288,8 +288,8 @@ export const STAGES = [
     widget: { type: 'build', kinds: ['k01', 'k06', 'k08'], max: 4 },
     hints: [
       'Turn the Power dial up until one cluster is clear, then tap the atom in the middle and each one attached to it.',
-      'The middle atom reads CAT 08. The two attached to it both read CAT 01.',
-      'Set the tray counts to match the exact number of each atom kind found in a single cluster.'
+      'Every cluster is the same, so read just one: the code of the atom in the middle and the code of each atom attached to it.',
+      'Add one atom to the tray for every atom in that one cluster, by its code: the middle one plus each attached one, and nothing else.'
     ],
     check(state) {
       const b = state.build;
@@ -325,14 +325,14 @@ export const STAGES = [
     },
     hints: [
       'Turn the Power dial up until single molecules are clear, then count the atoms in one from each sample.',
-      'Both use only CAT 01 and CAT 08. The difference is how many CAT 08 atoms each molecule holds.',
-      'Count whether the center contains a single heavy atom or a connected pair of them in each sample.'
+      'Both use only CAT 01 and CAT 08, and the difference is how many CAT 08 atoms each molecule holds.',
+      'Count the CAT 08 atoms in one molecule from Sample A, then in one from Sample B, and file each under the recipe with that many heavy atoms.'
     ],
     check(state) {
       const { bins } = state;
       if (!bins.vA || !bins.vB) return { ok: false, notYet: true, msg: 'File both samples before you commit.' };
       if (bins.vA === 'm9' && bins.vB === 'm22') return { ok: true };
-      return { ok: false, msg: 'Those are swapped. Count the heavy CAT 08 atoms in a molecule from each sample.' };
+      return { ok: false, msg: 'At least one sample is under the wrong recipe. Count the heavy CAT 08 atoms in one molecule from each sample.' };
     },
     reward: {
       log: 'Sample A: H2O. Sample B: H2O2.',
@@ -360,9 +360,9 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Tap a sample, press "Settle", and watch where the contents come to rest. Do all three.',
+      'Tap a sample, press "Settle" and watch where the contents come to rest, then do the same for the other two.',
       'Heavier things sink and lighter things float, so two different substances end up in two separate layers.',
-      'Any sample that separates into distinct strata contains multiple unbonded substances.'
+      'Settle all three and count the layers in each: one even layer is a single substance, two or more layers is a mixture.'
     ],
     check(state) {
       const { bins, settled } = state;
@@ -398,9 +398,9 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Zoom in on each sample to see how many kinds of atom it holds and whether they are bonded. Settle one if you are unsure.',
-      'Sample C separates into layers when you settle it. Samples B and D are bonded groups; Sample A is loose single atoms.',
-      'Remember that bonded atoms of only one kind remain an element, while different bonded atoms form a compound.'
+      'Zoom in on each sample to see how many kinds of atom it holds and whether they are bonded, and settle any you are unsure of.',
+      'For each sample, check two things: how many different codes its atoms read, and whether its atoms are joined in groups or sit loose.',
+      'One code only is an element, even when the atoms are joined in pairs; different codes joined together is a compound; different codes sitting loose, or settling into layers, is a mixture.'
     ],
     check(state) {
       const b = state.bins;
@@ -566,6 +566,7 @@ export function stateFor(i, overrides) {
 export function mount(container, ctx) {
   const frame = new LearnFrame(container, {
     stageCount: STAGES.length,
+    rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),
     onNext: () => next(),
     onJump: i => loadStage(i),
@@ -814,7 +815,7 @@ export function mount(container, ctx) {
         <div class="lq-readout-card lq-readout-idle">
           <div class="lq-readout-head">Probe // standby</div>
           <p class="lq-readout-line">${anyResolved
-            ? 'Tap any grain to read it.'
+            ? (index === 0 ? 'Tap any grain to read it.' : 'Tap any atom to read it.')
             : 'Nothing is in focus yet. Turn the Power dial up.'}</p>
         </div>
       `);

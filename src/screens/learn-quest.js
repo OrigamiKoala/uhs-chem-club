@@ -48,7 +48,7 @@ function shell({ world, quest, body, inWorld, overWorld }) {
   return `
     <div class="screen-container m-screen m-learn-quest${mod}">
       <div class="learn-host-bar plate">
-        <a href="#/learn/${esc(world.id)}" class="btn-secondary learn-host-back m-tap" style="text-decoration: none;">${esc(world.world)}</a>
+        <a href="#/learn/${esc(world.id)}" class="btn-secondary learn-host-back m-tap" style="text-decoration: none;">Leave Bench</a>
         <div class="learn-host-id">
           <span class="eyebrow">${esc(world.unit)}</span>
           <span class="learn-host-title">${esc(quest.title)}</span>
@@ -68,7 +68,6 @@ function buildPlate(world, quest) {
       <div class="learn-build-note">
         <span>Coming soon.</span>
       </div>
-      <a href="#/learn/${esc(world.id)}" class="btn-secondary" style="text-decoration: none;">Back to ${esc(world.world)}</a>
     </section>
   `;
 }
@@ -175,6 +174,19 @@ export function renderLearnQuest(container, params = {}) {
   const token = {};
   active = { world: world.id, quest: quest.id, token, mounted: null };
 
+  // A module is fetched on first visit, which on a slow connection is long
+  // enough to read as a broken page. Say what is happening until it arrives.
+  mountPoint.innerHTML = '<p class="lq-loading" role="status">Loading bench</p>';
+
+  const failed = () => `
+    <section class="glass-panel learn-build-plate">
+      <div class="stage-error-banner">
+        <span class="banner-mark" aria-hidden="true">!!</span>
+        <span class="banner-body">This site would not come online. Try again, or take another quest.</span>
+      </div>
+    </section>
+  `;
+
   loadQuestModule(quest).then(mod => {
     // The player may have navigated away while the module was in flight.
     if (!active || active.token !== token) return;
@@ -187,15 +199,13 @@ export function renderLearnQuest(container, params = {}) {
       active.mounted = mod.mount(mountPoint, ctx) || null;
     } catch (err) {
       console.error(`Learn quest "${quest.key}" failed to mount:`, err);
-      mountPoint.innerHTML = `
-        <section class="glass-panel learn-build-plate">
-          <div class="stage-error-banner">
-            <span class="banner-mark" aria-hidden="true">!!</span>
-            <span class="banner-body">This site would not come online. Try again, or take another quest.</span>
-          </div>
-          <a href="#/learn/${esc(world.id)}" class="btn-secondary" style="text-decoration: none;">Back to ${esc(world.world)}</a>
-        </section>
-      `;
+      mountPoint.innerHTML = failed();
     }
+  }).catch(err => {
+    // A module that would not load (offline, a stale chunk after a deploy) is
+    // the same fault to the player as one that would not mount.
+    if (!active || active.token !== token) return;
+    console.error(`Learn quest "${quest.key}" failed to load:`, err);
+    mountPoint.innerHTML = failed();
   });
 }
