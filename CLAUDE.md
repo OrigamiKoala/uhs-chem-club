@@ -156,6 +156,12 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   in either occupies the same space as anything else. It also flood-fills the deck against
   the real colliders and holds **every nav anchor the HUD dollies to** to standable,
   reachable deck — the check that was missing when four of the seven stood in the solid.
+  **Reaching a room's middle is not walking around it**: every standable cell inside every
+  room must be reachable (the furnace room passed the centre check with its whole starboard
+  half sealed behind a slag bin, and 0.38 m in front of the firebox door), and every ship
+  `setMode` in `stage.js` must clamp the walk to `SHIP_BOUNDS` itself — a hand-written box
+  ending at z −8.5, older than the furnace room, stopped the player half a metre inside its
+  doorway while every flood-fill passed.
 - `npm run verify:bench` — deploys ALL FIVE Unit 1 instruments onto the real Tallow benches,
   then ALL FOUR Unit 2 instruments onto the real Ligar benches (each fed the widest stage
   its quest declares, read from the quest's own `STAGES`), in Node, and measures them: every site faces the ground the player walks in from, and every

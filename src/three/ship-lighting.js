@@ -51,7 +51,7 @@ export const SHIP_LIGHT_SOURCES = [
   { id: 'airlock-staging', pos: new THREE.Vector3(3.2, 2.5, -6.6), color: new THREE.Color(0xffaa38), intensity: 3.0, distance: 11, decay: 1.2 },
 
   /* ---- THE FURNACE ROOM: the fire is the brightest thing aboard ---- */
-  { id: 'furnace-firebox', pos: new THREE.Vector3(-3.0, 1.0, -8.7), color: new THREE.Color(0xe0762a), intensity: 4.2, distance: 12, decay: 1.2 },
+  { id: 'furnace-firebox', pos: new THREE.Vector3(-3.0, 1.0, -9.1), color: new THREE.Color(0xe0762a), intensity: 4.2, distance: 12, decay: 1.2 },
   { id: 'furnace-bay', pos: new THREE.Vector3(0.4, 2.9, -9.4), color: new THREE.Color(0xffa838), intensity: 2.8, distance: 12, decay: 1.2 }
 ];
 

@@ -9,6 +9,7 @@ import { tierManager, tierAtLeast, isTouchPrimary } from "./tier.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { CameraRig } from "./camera-rig.js";
 import { ShipInterior } from "./ship.js";
+import { SHIP_BOUNDS } from "./ship-rooms.js";
 import { createStarfield } from "./materials/starfield.js";
 import { WorldScene } from "./world.js";
 import { TallowWorld } from "./tallow.js";
@@ -265,7 +266,7 @@ class Stage {
     this.fpsControls.setMode(
       "ship",
       null,
-      { minX: -7.8, maxX: 7.8, minZ: -8.5, maxZ: 3.8 },
+      SHIP_BOUNDS,
       this.shipInterior.getActiveColliders()
     );
 
@@ -848,8 +849,8 @@ class Stage {
       this.fpsControls.setMode(
         "ship",
         null,
-        { minX: -7.8, maxX: 7.8, minZ: -8.5, maxZ: 3.8 },
-        this.shipInterior ? this.shipInterior.colliders : []
+        SHIP_BOUNDS,
+        this.shipInterior ? this.shipInterior.getActiveColliders() : []
       );
     }
     if (this.cameraRig) {

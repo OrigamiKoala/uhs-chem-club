@@ -1885,48 +1885,54 @@ export class ShipInterior {
     g.add(apron);
 
     /* ---------------- THE FIREBOX, port side ---------------- */
-    const fx = -3.0, fz = -9.8;
-    const body = new THREE.Mesh(new THREE.BoxGeometry(3.0, 2.2, 1.8), this.fireboxMat);
+    /*
+     * `fd` is the half-depth, and everything on the front face hangs off it.
+     * The room is under three metres deep, so the firebox is held to 1.3 m:
+     * at 1.8 m its ash-pan pulls came to within 0.38 m of the bulkhead, and
+     * nobody could walk up to the fire door — only reach its corner.
+     */
+    const fx = -3.0, fd = 0.65, fz = -10.7 + fd;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(3.0, 2.2, fd * 2), this.fireboxMat);
     body.position.set(fx, 1.1, fz);
     body.castShadow = true;
     g.add(body);
 
     // Riveted straps: the seams a pressure vessel is actually made of.
     for (const sx of [-1.0, 0, 1.0]) {
-      const strap = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.2, 1.86), this.ironMat);
+      const strap = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.2, fd * 2 + 0.06), this.ironMat);
       strap.position.set(fx + sx, 1.1, fz);
       g.add(strap);
     }
     for (const sy of [0.4, 1.1, 1.8]) {
-      g.add(boltLine([fx - 1.4, sy, fz + 0.92], [fx + 1.4, sy, fz + 0.92], 9,
+      g.add(boltLine([fx - 1.4, sy, fz + fd + 0.02], [fx + 1.4, sy, fz + fd + 0.02], 9,
         this.brassMat, { size: 0.03, normalAxis: 'z' }));
     }
 
     // The grate door, and the fire behind it.
     const doorPlate = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 0.12), this.ironMat);
-    doorPlate.position.set(fx, 0.85, fz + 0.94);
+    doorPlate.position.set(fx, 0.85, fz + fd + 0.04);
     g.add(doorPlate);
     const ember = new THREE.Mesh(new THREE.PlaneGeometry(1.02, 0.82), this.emberMat);
-    ember.position.set(fx, 0.85, fz + 1.01);
+    ember.position.set(fx, 0.85, fz + fd + 0.11);
     g.add(ember);
     for (let i = 0; i < 6; i++) {
       const bar = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.86, 0.05), this.ironMat);
-      bar.position.set(fx - 0.45 + i * 0.18, 0.85, fz + 1.02);
+      bar.position.set(fx - 0.45 + i * 0.18, 0.85, fz + fd + 0.12);
       g.add(bar);
     }
     const doorHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 8), this.brassMat);
-    doorHandle.position.set(fx + 0.78, 0.85, fz + 1.02);
+    doorHandle.position.set(fx + 0.78, 0.85, fz + fd + 0.12);
     const doorHinge = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.9, 0.1), this.ironMat);
-    doorHinge.position.set(fx - 0.72, 0.85, fz + 1.0);
+    doorHinge.position.set(fx - 0.72, 0.85, fz + fd + 0.1);
     g.add(doorHandle, doorHinge);
 
     // Ash pans on their runners under the grate.
     for (const px of [-0.7, 0.7]) {
       const pan = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.26, 0.44), this.ironMat);
-      pan.position.set(fx + px, 0.15, fz + 1.12);
+      pan.position.set(fx + px, 0.15, fz + fd + 0.22);
       const pull = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3, 6), this.brassMat);
       pull.rotation.z = Math.PI / 2;
-      pull.position.set(fx + px, 0.22, fz + 1.35);
+      pull.position.set(fx + px, 0.22, fz + fd + 0.45);
       g.add(pan, pull);
     }
 
@@ -1943,14 +1949,14 @@ export class ShipInterior {
     for (const [gx, mat] of [[-0.75, this.dialGaugePsiMat], [0.75, this.dialGaugeBarMat]]) {
       const gauge = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.04, 20), mat);
       gauge.rotation.x = Math.PI / 2;
-      gauge.position.set(fx + gx, 1.78, fz + 0.93);
+      gauge.position.set(fx + gx, 1.78, fz + fd + 0.03);
       g.add(gauge);
     }
     const relief = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.3, 10), this.brassMat);
-    relief.position.set(fx, 2.35, fz + 0.5);
+    relief.position.set(fx, 2.35, fz + 0.3);
     g.add(relief);
 
-    this.addCollider(fx - 1.65, fx + 1.65, fz - 1.0, fz + 1.45);
+    this.addCollider(fx - 1.65, fx + 1.65, fz - fd - 0.1, fz + fd + 0.55);
 
     /* ---------------- THE HOPPER, starboard side ---------------- */
     const hx = 3.3, hz = -9.7;
@@ -1978,13 +1984,18 @@ export class ShipInterior {
     this.addCollider(hx - 1.15, hx + 1.15, hz - 0.95, hz + 0.95);
 
     // Slag bin between the hopper and the firebox, and the shovel in it.
+    // It stands AFT, against the blast wall. It used to stand forward at
+    // (1.2, -8.7), where it left 0.4 m to the hopper and 0.28 m to the
+    // bulkhead — two gaps a 0.5 m body cannot pass — and sealed the whole
+    // starboard half of the room behind it.
+    const bx = 0.9, bz = -10.3;
     const bin = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.55, 0.8), this.ironMat);
-    bin.position.set(1.2, 0.275, -8.7);
+    bin.position.set(bx, 0.275, bz);
     const shovel = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 1.2, 6), this.brassMat);
-    shovel.position.set(1.2, 0.85, -8.7);
+    shovel.position.set(bx, 0.85, bz);
     shovel.rotation.z = 0.4;
     g.add(bin, shovel);
-    this.addCollider(0.65, 1.75, -9.15, -8.25);
+    this.addCollider(bx - 0.55, bx + 0.55, bz - 0.45, bz + 0.45);
 
     /* ---------------- INSTRUMENTATION on the starboard plating ---------- */
     const board = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.1, 1.5), this.ironMat);

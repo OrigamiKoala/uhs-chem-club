@@ -292,6 +292,51 @@ for (const d of DOORS) {
 }
 
 /*
+ * A ROOM YOU CAN REACH THE MIDDLE OF IS NOT A ROOM YOU CAN WALK AROUND.
+ *
+ * The furnace room passed "you can walk to the middle of it" while a slag bin
+ * sealed the whole starboard half behind a 0.4 m gap and the firebox's ash
+ * pans left 0.38 m in front of its door. So every standable cell inside a
+ * room must be reachable: deck a body fits on but cannot get to is a pocket
+ * the layout has walled off by accident.
+ */
+{
+  const { isFree: free } = await import('./lib/reach.mjs');
+  const r = 0.25;
+  for (const [id, room] of Object.entries(ROOMS)) {
+    const sealed = [];
+    for (let x = room.minX + 0.2; x <= room.maxX - 0.2; x += 0.15) {
+      for (let z = room.minZ + 0.2; z <= room.maxZ - 0.2; z += 0.15) {
+        if (x < SHIP_BOUNDS.minX + r || x > SHIP_BOUNDS.maxX - r) continue;
+        if (z < SHIP_BOUNDS.minZ + r || z > SHIP_BOUNDS.maxZ - r) continue;
+        if (free(ship.colliders, x, z, r) && !reach.reachable(x, z)) sealed.push([x, z]);
+      }
+    }
+    assert(sealed.length === 0,
+      `${id}: every standable spot in it can be walked to${sealed.length
+        ? ` — ${sealed.length} sealed, e.g. (${sealed[0][0].toFixed(2)}, ${sealed[0][1].toFixed(2)})` : ''}`);
+  }
+}
+
+/*
+ * THE WALK IS CLAMPED TO THE SAME BOX THIS FILE FLOOD-FILLS.
+ *
+ * `stage.js` once clamped the ship walk to a hand-written box ending at
+ * z -8.5, written before the hull was lengthened aft to -11.0 for the furnace
+ * room. Every check above passed and the player hit an invisible wall half a
+ * metre inside the furnace doorway. So every ship `setMode` must pass
+ * `SHIP_BOUNDS` itself, never a literal.
+ */
+{
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../src/three/stage.js', import.meta.url), 'utf8');
+  const calls = [...src.matchAll(/setMode\(\s*"ship"\s*,\s*[^,]+,\s*([^,]+),/g)];
+  assert(calls.length > 0, 'stage.js puts the walk into ship mode somewhere');
+  assert(calls.every(m => m[1].trim() === 'SHIP_BOUNDS'),
+    `every ship setMode in stage.js clamps the walk to SHIP_BOUNDS (${calls.map(m => m[1].trim()).join(', ')})`);
+}
+
+/*
  * THE NAV BAR TELEPORTS, SO WHERE IT LANDS YOU IS A COLLIDER QUESTION.
  *
  * `CameraRig.moveTo` sets the camera position outright — pressing INVENTORY
