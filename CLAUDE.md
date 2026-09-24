@@ -1258,6 +1258,10 @@ said.
   (describing planet Erebus, Charge Gardens restoration, connecting circuit components from red giver
   to blue receiver, and pylon reactivation); the Objective button reopens it on demand. Every other
   stage starts immediately; the Objective button reopens that stage's briefing on demand.
+  When the player clicks Start, the bottom-left stage card automatically closes into the dock bar
+  (leaving `#stage-dock-grade-btn` Submit and `#stage-card-open-btn` Stage Panel) so the 3D viewer is
+  unobstructed for drawing arrows, and only reopens when the player clicks the button or solves the stage
+  and the explanation banner appears.
 - The bundled `STAGE_CONFIGS` are authoritative for everything rendered or graded
   (`moleculeId`, anchors derived from its regions, expected anchors, positions, tolerance,
   blocked sites, `reaction`, `multiArrow`, XP). Backend `scene_config` is transport only —
@@ -1374,17 +1378,16 @@ gradient buttons with white specular highlights; rounded corners (`--radius-sm` 
 `#10b981`, `#ff5252`); auto-fit grids of "feature cards" advertising what the product does.
 
 ### 3. Geometry and texture
-- Machined plate has **cut corners, not rounded ones**. `.plate`, `.glass-panel`,
-  `.holo-card` and `.stage-prompt-card` share one treatment: a `clip-path` chamfer plus a
-  matching hairline drawn as a 45° background gradient in the relieved corner.
-- Every large surface is sandblasted — a shared `--grain` noise tile at 3–4 % opacity via
-  `::before`, `mix-blend-mode: overlay`. Because a pseudo-element is not matched by
-  `> *`, the `position: relative` on direct children keeps content above the grain.
-- Seams are physical: `--seam-light` on the lamp-facing top edge, `--seam-dark` below.
-- Type is **engraved** (`--engrave`, a dark line under the glyph), never glowing.
+- Machined plate uses **precision double-bezel architecture** with subtle corner radii (2–4px). `.plate`, `.glass-panel`,
+  `.holo-card` and `.stage-prompt-card` share one treatment: clean durasteel outer borders (`1px solid var(--border-durasteel)`),
+  crisp inner highlight hairlines (`inset 0 1px 0 rgba(255, 255, 255, 0.08)`), and deep ambient drop shadows. Crude polygon `clip-path` cuts are eliminated for clean rendering.
+- Surfaces are crisp obsidian and titanium plates. Dirty SVG turbulence grain overlays and dark vignette overlays are eliminated in favor of clean optical clarity and high contrast.
+- Seams are physical and precise: `--seam-light` on the lamp-facing top edge, `--seam-dark` below.
+- Type is **crisp and sharp** (`--engrave: none`), without blurry dark drop shadows.
 
 ### 4. Colour
-- Surfaces: `--plate-*`. Seams: `--border-durasteel`, `--seam-light/dark`.
+- Surfaces: Deep obsidian and titanium neutrals (`--plate-000` through `--plate-600`). Seams: `--border-durasteel`, `--seam-light/dark`.
+- Text: High contrast typography (`--text-primary: #dcd6cc`, `--text-secondary: #a49c90`, `--text-bright: #fbf9f5`).
 - Signals: `--accent-amber` `#d99423`, `--accent-gold`, `--accent-rust`, `--accent-green`
   `#6f8f3f`, `--accent-danger` `#a8342a`, `--accent-bronze`. Filaments: `--lamp-*`.
 - Guild liveries: `--team-earth/air/fire/water`. **The HUD badge derives its livery from
@@ -1396,18 +1399,17 @@ gradient buttons with white specular highlights; rounded corners (`--radius-sm` 
   border, `.concept-pill` left border — never as a glowing block or a rainbow ramp.
 
 ### 5. Typography
-- Page titles: `Cinzel` (`--font-imperial`) via `.page-title` — uppercase, tracked wide.
-- Section and card headings: `Chakra Petch` (`--font-display`) via `.section-title`.
-- Telemetry, labels, kickers, helper text: `Share Tech Mono` (`--font-mono`) via
-  `.eyebrow` (`.lit` when live), `.stat-value`, `.tag`, `.form-label`, `.form-help`.
-- Body: `Rajdhani` (`--font-main`).
+- **Quantico across all roles**: Unified architectural geometric sans-serif for high-precision aerospace instrumentation.
+  - Page titles: `Quantico` (`--font-imperial`) via `.page-title` — bold, controlled tracking (`0.1em`–`0.12em`).
+  - Section and card headings: `Quantico` (`--font-display`) via `.section-title`, `.holo-title`.
+  - Telemetry, labels, kickers, helper text: `Quantico` with JetBrains Mono fallback (`--font-mono`) via
+    `.eyebrow` (`.lit` when live), `.stat-value`, `.tag`, `.form-label`, `.form-help`.
+  - Body & teaching copy: `Quantico` (`--font-main`) with clean line height (1.55).
 
 ### 6. Components
-- **Panels**: `.glass-panel` / `.plate`. Banner art goes in `.panel-banner` — desaturated,
-  dimmed and sepia-shifted behind a scanline, so it reads as a viewport, not a hero image.
-- **Switchgear**: `.btn-primary` is a painted key cap (matte amber plate, engraved dark
-  legend, physical bottom lip, sinks on press). `.btn-secondary` is bare durasteel.
-  `.quest-btn-sm` is compact quest chrome. Labels are 1–2 words; **no arrow glyphs.**
+- **Panels**: `.glass-panel` / `.plate`. Banner art goes in `.panel-banner` — clear, high-definition optical viewport with clean border and subtle ambient shadow (no artificial scanline overlays or muddy sepia filters).
+- **Switchgear**: `.btn-primary` is a precision machined amber switch (metallic gradient, inner highlight hairline, subtle border radius, tactile spring physics via `--ease-spring`, no chunky 90s bottom lip). `.btn-secondary` is machined durasteel.
+  `.quest-btn-sm` is compact quest switchgear. Labels are 1–2 words; **no arrow glyphs.**
 - **Stage Deck**: collapsible bottom-left tablet in `quest.js` and `demo.js` (`Close` / `Stage Panel` + docked mini `Submit` / `Next Stage`).
 - **Inputs**: `.form-input` is a recessed well; focus turns the text amber rather than
   adding a halo. Forms use explicit labels and helper text; never use placeholder example text.

@@ -14,73 +14,71 @@
 
 :root {
   /* -----------------------------------------------------------------
-     PLATE — the material scale. Low numbers are recessed and dark,
-     high numbers are raised and catch light.
+     PLATE — machined aerospace obsidian & titanium scale.
+     Refined, high-depth neutrals with subtle warm metallic undertones.
      ----------------------------------------------------------------- */
-  --plate-000: #0a0908;   /* the void outside the canopy */
-  --plate-100: #100f0d;   /* deepest recess — instrument wells */
-  --plate-200: #171614;   /* panel ground */
-  --plate-300: #1f1d1a;   /* raised plate */
-  --plate-400: #2a2724;   /* bezel, button face */
-  --plate-500: #393430;   /* seam and scribe line */
-  --plate-600: #4a443d;   /* worn edge catching the task lamp */
+  --plate-000: #080708;   /* deep obsidian void */
+  --plate-100: #0f0e11;   /* instrument wells & recessed surfaces */
+  --plate-200: #161519;   /* chassis & panel ground */
+  --plate-300: #1e1d22;   /* elevated plate & control blocks */
+  --plate-400: #29282f;   /* machined bezel & key caps */
+  --plate-500: #38363f;   /* seams and divisions */
+  --plate-600: #4a4854;   /* precision chamfered edge catching task light */
 
-  /* Legacy surface names — repointed at the plate scale so every
-     existing rule shifts with the material, not against it. */
+  /* Surface tokens with glassmorphic depth */
   --bg-deep: var(--plate-000);
-  --bg-surface: rgba(23, 22, 20, 0.95);
-  --bg-surface-elevated: rgba(31, 29, 26, 0.96);
-  --bg-card: rgba(26, 24, 22, 0.93);
-  --bg-recessed: rgba(16, 15, 13, 0.92);
-  --bg-overlay: rgba(10, 9, 8, 0.95);
+  --bg-surface: rgba(22, 21, 25, 0.94);
+  --bg-surface-elevated: rgba(30, 29, 34, 0.96);
+  --bg-card: rgba(25, 24, 28, 0.92);
+  --bg-recessed: rgba(15, 14, 17, 0.94);
+  --bg-overlay: rgba(10, 9, 12, 0.95);
 
   /* -----------------------------------------------------------------
-     SEAMS — a border is a machined edge, not a highlight.
+     SEAMS & HARDWARE ACCENTS — crisp hairline tolerances.
      ----------------------------------------------------------------- */
-  --border-durasteel: #2e2a26;
-  --border-subtle: rgba(150, 133, 110, 0.14);
-  --border-strong: rgba(217, 148, 35, 0.38);
-  --border-bright: #d99423;
-  --border-hazard: #9a7419;
-  --seam-light: rgba(214, 196, 168, 0.07);  /* top edge, lamp side */
-  --seam-dark: rgba(0, 0, 0, 0.55);         /* bottom edge, shadow side */
+  --border-durasteel: rgba(214, 196, 168, 0.16);
+  --border-subtle: rgba(214, 196, 168, 0.08);
+  --border-strong: rgba(229, 155, 36, 0.42);
+  --border-bright: #e59b24;
+  --border-hazard: #b37f19;
+  --seam-light: rgba(255, 245, 230, 0.12);  /* top edge illumination */
+  --seam-dark: rgba(0, 0, 0, 0.65);         /* underside relief shadow */
 
   /* -----------------------------------------------------------------
-     SIGNAL — indicator colours. All pulled well below full brightness:
-     a lamp behind dusty glass, not a pixel at #ff.
+     SIGNAL — precision aerospace indicator colours.
+     Luminous, controlled, high-contrast indicators.
      ----------------------------------------------------------------- */
-  --accent-amber: #d99423;   /* spice amber — the primary live signal */
-  --accent-gold: #c39a63;    /* sunlit sand, horizon light */
-  --accent-rust: #9c5423;    /* oxidised iron, hydraulic stain */
-  --accent-green: #6f8f3f;   /* oscilloscope phosphor, aged */
-  --accent-danger: #a8342a;  /* blast hazard red, painted and chipped */
-  --accent-bronze: #8a7148;  /* guild insignia */
-  --accent-cyan: #5c7b7a;    /* patina — a dead instrument, never a glow */
-  --accent-orange: #b0664a;
-  --accent-purple: #7d6a70;
+  --accent-amber: #e59b24;   /* luminous spice amber — live signal */
+  --accent-gold: #cca56e;    /* sunlit titanium, milestone light */
+  --accent-rust: #ab5722;    /* oxidized thermal alloy */
+  --accent-green: #78a142;   /* aged phosphor telemetry */
+  --accent-danger: #b8382c;  /* emergency & fault indicator */
+  --accent-bronze: #967c50;  /* guild insignia metal */
+  --accent-cyan: #628786;    /* weathered patina */
+  --accent-orange: #be6d4f;
+  --accent-purple: #877178;
 
-  --lamp-amber: #f0b246;     /* the filament itself — small marks only */
-  --lamp-green: #8fb055;
-  --lamp-red: #c9483a;
+  --lamp-amber: #f5b742;     /* active filament bulb */
+  --lamp-green: #97bd58;
+  --lamp-red: #d44d3d;
 
-  /* Glows are kept for compatibility but reduced to the tight halo a
-     real indicator throws on the plate beside it. Nothing wide. */
-  --glow-amber: 0 0 4px rgba(217, 148, 35, 0.4);
-  --glow-green: 0 0 4px rgba(111, 143, 63, 0.4);
-  --glow-red: 0 0 4px rgba(168, 52, 42, 0.45);
-  --glow-cyan: 0 0 4px rgba(92, 123, 122, 0.3);
+  /* Controlled indicator halos */
+  --glow-amber: 0 0 8px rgba(229, 155, 36, 0.45);
+  --glow-green: 0 0 8px rgba(120, 161, 66, 0.45);
+  --glow-red: 0 0 8px rgba(184, 56, 44, 0.45);
+  --glow-cyan: 0 0 8px rgba(98, 135, 134, 0.35);
 
   /* -----------------------------------------------------------------
-     GUILDS — four working houses, four service liveries.
+     GUILDS — four working houses.
      ----------------------------------------------------------------- */
-  --team-earth: #8a7148;
-  --team-earth-bg: rgba(138, 113, 72, 0.16);
-  --team-air: #75818a;
-  --team-air-bg: rgba(117, 129, 138, 0.16);
-  --team-fire: #9c5423;
-  --team-fire-bg: rgba(156, 84, 35, 0.16);
-  --team-water: #3f7d76;
-  --team-water-bg: rgba(63, 125, 118, 0.16);
+  --team-earth: #967c50;
+  --team-earth-bg: rgba(150, 124, 80, 0.16);
+  --team-air: #7d8b96;
+  --team-air-bg: rgba(125, 139, 150, 0.16);
+  --team-fire: #ab5722;
+  --team-fire-bg: rgba(171, 87, 34, 0.16);
+  --team-water: #42877f;
+  --team-water-bg: rgba(66, 135, 127, 0.16);
 
   --team-terra: var(--team-earth);
   --team-terra-bg: var(--team-earth-bg);
@@ -92,51 +90,54 @@
   --team-thalassa-bg: var(--team-water-bg);
 
   /* -----------------------------------------------------------------
-     TYPE — engraved, stencilled, or printed on a label. Never neon.
+     TYPE — QUANTICO across all roles.
+     Crisp, architectural, high-precision geometry.
      ----------------------------------------------------------------- */
-  --font-main: 'Rajdhani', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Chakra Petch', monospace;
-  --font-imperial: 'Cinzel', serif;
-  --font-mono: 'Share Tech Mono', 'JetBrains Mono', monospace;
+  --font-main: 'Quantico', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Quantico', sans-serif;
+  --font-imperial: 'Quantico', sans-serif;
+  --font-mono: 'Quantico', 'JetBrains Mono', monospace;
 
-  --text-primary: #c9c0b1;   /* bone white, dust-warmed */
-  --text-secondary: #8f8678;
-  --text-muted: #635c52;
-  --text-bright: #e8e0d0;
-  --text-amber: #d99423;
-  --text-green: #6f8f3f;
+  --text-primary: #dcd6cc;   /* crisp warm titanium */
+  --text-secondary: #a49c90; /* legible subtext */
+  --text-muted: #7d7568;     /* helper labels with clean contrast */
+  --text-bright: #fbf9f5;    /* pure illuminated bone white */
+  --text-amber: #e59b24;
+  --text-green: #78a142;
 
-  /* Engraved type sits IN the surface: a dark line under the glyph. */
-  --engrave: 0 1px 0 rgba(0, 0, 0, 0.7);
+  /* Crisp rendering without artificial drop-shadow fuzz */
+  --engrave: none;
 
   /* -----------------------------------------------------------------
-     GEOMETRY — machined plate has cut corners, not rounded ones.
+     GEOMETRY & DOUBLE-BEZEL TOKENS
      ----------------------------------------------------------------- */
   --radius-sm: 0px;
   --radius-md: 0px;
   --radius-lg: 0px;
   --radius-full: 9999px;
 
-  --chamfer: 10px;         /* corner cut on a major panel */
-  --chamfer-sm: 6px;       /* corner cut on a card or button */
+  --chamfer: 8px;
+  --chamfer-sm: 4px;
 
-  /* Fixed HUD height — layout anchors off this so nothing hides behind it */
+  /* Fixed HUD height */
   --hud-h: 64px;
 
   /* -----------------------------------------------------------------
-     GRAIN — every surface has been sandblasted. One shared noise tile,
-     applied at low opacity so it reads as tooth rather than texture.
+     TEXTURE & MOTION
      ----------------------------------------------------------------- */
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  --grain: none;
+
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --transition-fast: 0.15s var(--ease-spring);
+  --transition-base: 0.24s var(--ease-spring);
+  --transition-smooth: 0.4s var(--ease-spring);
 
   /* -----------------------------------------------------------------
-     CHEMISTRY — reserved. These two hues belong to the charge density
-     and to nothing else, so the label on a panel always means the same
-     thing as the cloud in the chamber.
+     CHEMISTRY — reserved colors
      ----------------------------------------------------------------- */
   --charge-red: #ff1744;
   --charge-blue: #00b0ff;
-  --charge-red-ink: #e05a55;   /* the same signal, printed on a label */
+  --charge-red-ink: #e05a55;
   --charge-blue-ink: #5aa9cf;
 
   --cividis-0: #00204d;

@@ -6,30 +6,20 @@
 
 /* ---- Equipment card: a smaller sibling of .plate ---- */
 .holo-card {
-  --c: var(--chamfer-sm);
   position: relative;
-  background:
-    linear-gradient(135deg, transparent calc(50% - 0.5px), var(--border-durasteel) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)) top left / var(--c) var(--c) no-repeat,
-    var(--bg-card);
+  background: var(--bg-card);
   border: 1px solid var(--border-durasteel);
-  clip-path: polygon(var(--c) 0, 100% 0, 100% 100%, 0 100%, 0 var(--c));
+  border-radius: 4px;
   padding: 1.35rem 1.4rem;
   box-shadow:
-    inset 0 1px 0 var(--seam-light),
-    inset 0 -1px 0 var(--seam-dark),
-    0 10px 26px rgba(0, 0, 0, 0.6);
-  transition: background-color 0.18s ease, border-color 0.18s ease;
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 30px rgba(0, 0, 0, 0.6);
+  transition: background-color 0.18s var(--ease-spring), border-color 0.18s var(--ease-spring), transform 0.18s var(--ease-spring);
   overflow: hidden;
 }
 
 .holo-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: var(--grain);
-  opacity: 0.03;
-  mix-blend-mode: overlay;
-  pointer-events: none;
+  display: none;
 }
 
 .holo-card > * { position: relative; }
@@ -101,30 +91,30 @@
   background: var(--plate-300);
   color: var(--text-primary);
   font-family: var(--font-display);
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 6px 11px;
+  padding: 6px 12px;
   border: 1px solid var(--border-durasteel);
+  border-radius: 2px;
   cursor: pointer;
   box-shadow:
-    inset 0 1px 0 var(--seam-light),
-    inset 0 -1px 0 var(--seam-dark),
-    0 2px 0 #0c0b0a;
-  transition: background 0.12s ease, color 0.12s ease, transform 0.08s ease;
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 5px rgba(0, 0, 0, 0.4);
+  transition: all 0.14s var(--ease-spring);
   min-height: 34px;
-  text-shadow: var(--engrave);
 }
 
 .quest-btn-sm:hover:not(:disabled) {
   background: var(--plate-400);
   color: var(--text-bright);
   border-color: var(--plate-500);
+  transform: translateY(-1px);
 }
 
 .quest-btn-sm:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.99);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
@@ -136,17 +126,18 @@
 
 .stage-counter {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
-  color: var(--text-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
   background: var(--plate-100);
   border: 1px solid var(--border-durasteel);
-  padding: 8px 11px;
+  border-radius: 2px;
+  padding: 7px 11px;
   white-space: nowrap;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-.stage-counter strong { color: var(--accent-amber); font-weight: 400; }
+.stage-counter strong { color: var(--accent-amber); font-weight: 700; }
 
 /* ---- Stage track: a row of channel lamps ---- */
 .stage-pill-track {
@@ -235,22 +226,22 @@
 }
 
 .stage-prompt-card {
-  --c: var(--chamfer);
   pointer-events: auto;
   width: 100%;
   max-width: 440px;
   max-height: 62vh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background:
-    linear-gradient(135deg, transparent calc(50% - 0.5px), var(--border-durasteel) calc(50% - 0.5px) calc(50% + 0.5px), transparent calc(50% + 0.5px)) top left / var(--c) var(--c) no-repeat,
-    var(--bg-surface);
+  background: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-durasteel);
-  clip-path: polygon(var(--c) 0, 100% 0, 100% 100%, 0 100%, 0 var(--c));
+  border-radius: 4px;
   padding: 1.15rem 1.4rem;
   box-shadow:
-    inset 0 1px 0 var(--seam-light),
-    0 16px 42px rgba(0, 0, 0, 0.8);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 20px 48px rgba(0, 0, 0, 0.75);
   position: relative;
 }
 
@@ -268,18 +259,17 @@
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 600;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-bright);
-  text-shadow: var(--engrave);
 }
 
 .stage-shape {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.28em;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin-bottom: 3px;
 }
 
@@ -334,9 +324,9 @@
 
 .stage-tip {
   font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
 }
 
 .stage-note {
@@ -601,13 +591,11 @@
 .chem-card {
   background: var(--plate-000);
   border: 1px solid var(--border-durasteel);
-  border-left: 2px solid var(--accent-amber);
-  border-top-color: var(--seam-light);
-  border-bottom-color: var(--seam-dark);
-  padding: 11px 13px;
+  border-left: 3px solid var(--accent-amber);
+  border-radius: 3px;
+  padding: 12px 14px;
   margin-bottom: 0.85rem;
-  box-shadow: inset 0 1px 0 var(--seam-light);
-  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .chem-card-header {
@@ -620,20 +608,20 @@
 
 .chem-badge {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.18em;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
   color: var(--plate-000);
   background: var(--accent-amber);
   padding: 2px 7px;
+  border-radius: 2px;
 }
 
 .chem-card-title {
   font-family: var(--font-mono);
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   color: var(--accent-gold);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  text-shadow: var(--engrave);
 }
 
 .chem-card-body {
@@ -991,15 +979,7 @@
 }
 
 .transmission-raster {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.4) 3px
-  );
-  pointer-events: none;
+  display: none;
 }
 
 .transmission-body {
@@ -1088,15 +1068,7 @@
 }
 
 .cinematic-scanlines {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 3px,
-    rgba(0, 0, 0, 0.3) 4px
-  );
-  pointer-events: none;
+  display: none;
 }
 
 .cinematic-caption-bar {
@@ -1231,32 +1203,16 @@
   background:
     linear-gradient(180deg, var(--plate-300), var(--plate-100) 46%, var(--plate-000));
   border: 1px solid var(--border-durasteel);
-  border-top-color: var(--seam-light);
-  border-bottom-color: var(--seam-dark);
+  border-top: 1px solid var(--seam-light);
+  border-radius: 6px 6px 0 0;
   box-shadow:
-    inset 0 1px 0 var(--seam-light),
-    inset 0 -1px 0 var(--seam-dark),
-    inset 0 0 40px rgba(0, 0, 0, 0.5);
-  /* A fascia is cut away at both outer corners so it reads as a panel let into
-     a desk rather than a rectangle hung in the air. */
-  clip-path: polygon(
-    16px 0, calc(100% - 16px) 0, 100% 16px,
-    100% 100%, 0 100%, 0 16px
-  );
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 40px rgba(0, 0, 0, 0.5),
+    0 -10px 30px rgba(0, 0, 0, 0.6);
 }
 
 .quest-console-panel::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0) 0 2px,
-    rgba(0, 0, 0, 0.13) 2px 3px
-  );
-  mix-blend-mode: multiply;
-  opacity: 0.5;
+  display: none;
 }
 
 .quest-console-panel > * { position: relative; z-index: 1; min-width: 0; }

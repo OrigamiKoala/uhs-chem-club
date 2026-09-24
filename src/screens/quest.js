@@ -129,11 +129,18 @@ function renderChemCard(chem) {
   `;
 }
 
-function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
+function showStageModal(cfg, currentStageIdx, isReplay, stageXp, onStart = null) {
   const isMulti = Boolean(cfg.multiArrow);
   const requiredArrows = isMulti ? (cfg.steps?.length || 2) : 1;
   const introConcept = cfg.concept && cfg.conceptTiming === 'intro' ? cfg.concept : null;
   const b = QUEST1_STORY.briefing;
+
+  let triggered = false;
+  const triggerStart = () => {
+    if (triggered) return;
+    triggered = true;
+    if (typeof onStart === 'function') onStart();
+  };
 
   if (currentStageIdx === 0 && b) {
     showModal(`
@@ -158,9 +165,13 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
           Start Stage
         </button>
       </div>
-    `, { labelledBy: 'stage-modal-title' });
+    `, {
+      labelledBy: 'stage-modal-title',
+      onClose: triggerStart
+    });
 
     document.getElementById('modal-start-stage-btn')?.addEventListener('click', () => {
+      triggerStart();
       closeModal();
       soundscape.playNavRelayClick();
     });
@@ -194,9 +205,13 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp) {
         Start Stage
       </button>
     </div>
-  `, { labelledBy: 'stage-modal-title' });
+  `, {
+    labelledBy: 'stage-modal-title',
+    onClose: triggerStart
+  });
 
   document.getElementById('modal-start-stage-btn')?.addEventListener('click', () => {
+    triggerStart();
     closeModal();
     soundscape.playNavRelayClick();
   });
@@ -237,6 +252,7 @@ export function renderQuest(container) {
   const questComplete = maxStageReached >= TOTAL_STAGES;
   if (questComplete) currentStageIdx = 0;
 
+  let questStarted = false;
   let currentPayload = null;
   let isGrading = false;
   let isAdvancing = false;
@@ -588,18 +604,52 @@ export function renderQuest(container) {
       </div>
     `;
 
-    // Briefing modal only for genuinely new mechanics — every other stage starts
-    // immediately. The Objective button above reopens it on demand.
-    if (shouldAutoShowStageModal(cfg, currentStageIdx, isReplay)) {
-      markStageIntroSeen(currentStageIdx);
-      showStageModal(cfg, currentStageIdx, isReplay, stageXp);
-    }
-
     const stageCard = q('#stage-card');
     const feedback = q('#stage-feedback');
     const hintBanner = q('#stage-hint');
     const flash = q('#quest-screen-flash');
     const arrowCountEl = q('#arrow-count');
+    const dockBar = q('#stage-dock-bar');
+    const closeBtn = q('#stage-card-close-btn');
+    const openBtn = q('#stage-card-open-btn');
+    const dockGradeBtn = q('#stage-dock-grade-btn');
+    const gradeBtn = q('#grade-btn');
+
+    function syncDockGradeBtn() {
+      if (!dockGradeBtn || !gradeBtn) return;
+      dockGradeBtn.textContent = gradeBtn.textContent;
+      dockGradeBtn.disabled = gradeBtn.disabled;
+      dockGradeBtn.title = gradeBtn.textContent;
+    }
+
+    function setCardClosed(closed, { focus = false } = {}) {
+      if (closed && (tierManager.currentTier === 'T1' || !viewer)) return;
+      if (closed) {
+        stageCard?.classList.add('hidden');
+        dockBar?.classList.remove('hidden');
+        if (focus) openBtn?.focus();
+      } else {
+        stageCard?.classList.remove('hidden');
+        dockBar?.classList.add('hidden');
+        if (focus) closeBtn?.focus();
+      }
+      syncDockGradeBtn();
+    }
+
+    closeBtn?.addEventListener('click', () => {
+      setCardClosed(true, { focus: true });
+      soundscape.playNavRelayClick();
+    });
+
+    openBtn?.addEventListener('click', () => {
+      setCardClosed(false, { focus: true });
+      soundscape.playNavRelayClick();
+    });
+
+    dockGradeBtn?.addEventListener('click', () => {
+      gradeBtn?.click();
+      syncDockGradeBtn();
+    });
 
     function clearFeedback() {
       if (stageCard) stageCard.classList.remove('error-state');
@@ -618,49 +668,23 @@ export function renderQuest(container) {
       if (!stageCompleted) clearFeedback();
     }
 
+    const onModalStart = () => {
+      questStarted = true;
+      setCardClosed(true);
+    };
+
+    // Briefing modal only for genuinely new mechanics — every other stage starts
+    // immediately. The Objective button above reopens it on demand.
+    if (shouldAutoShowStageModal(cfg, currentStageIdx, isReplay)) {
+      markStageIntroSeen(currentStageIdx);
+      showStageModal(cfg, currentStageIdx, isReplay, stageXp, onModalStart);
+    } else if (questStarted) {
+      setCardClosed(true);
+    }
+
     // Stage instructions / info modal trigger
     q('#stage-info-btn')?.addEventListener('click', () => {
-      showStageModal(cfg, currentStageIdx, isReplay, stageXp);
-    });
-
-    const dockBar = q('#stage-dock-bar');
-    const closeBtn = q('#stage-card-close-btn');
-    const openBtn = q('#stage-card-open-btn');
-    const dockGradeBtn = q('#stage-dock-grade-btn');
-
-    function syncDockGradeBtn() {
-      if (!dockGradeBtn || !gradeBtn) return;
-      dockGradeBtn.textContent = gradeBtn.textContent;
-      dockGradeBtn.disabled = gradeBtn.disabled;
-      dockGradeBtn.title = gradeBtn.textContent;
-    }
-
-    function setCardClosed(closed) {
-      if (closed) {
-        stageCard?.classList.add('hidden');
-        dockBar?.classList.remove('hidden');
-        openBtn?.focus();
-      } else {
-        stageCard?.classList.remove('hidden');
-        dockBar?.classList.add('hidden');
-        closeBtn?.focus();
-      }
-      syncDockGradeBtn();
-    }
-
-    closeBtn?.addEventListener('click', () => {
-      setCardClosed(true);
-      soundscape.playNavRelayClick();
-    });
-
-    openBtn?.addEventListener('click', () => {
-      setCardClosed(false);
-      soundscape.playNavRelayClick();
-    });
-
-    dockGradeBtn?.addEventListener('click', () => {
-      gradeBtn?.click();
-      syncDockGradeBtn();
+      showStageModal(cfg, currentStageIdx, isReplay, stageXp, onModalStart);
     });
 
     q('#quest-exit-btn')?.addEventListener('click', () => {
@@ -776,8 +800,6 @@ export function renderQuest(container) {
     });
 
     // 7. Submit
-    const gradeBtn = q('#grade-btn');
-
     if (gradeBtn) {
       gradeObserver = new MutationObserver(() => syncDockGradeBtn());
       gradeObserver.observe(gradeBtn, { attributes: true, childList: true, characterData: true, subtree: true });
@@ -843,6 +865,9 @@ export function renderQuest(container) {
             stageCompleted = true;
             isAdvancing = false;
             isGrading = false;
+
+            // Reopen the stage card to show the explanation and payoff
+            setCardClosed(false);
 
             // The explainer appears only after the 3D reaction has finished playing.
             if (feedback) {

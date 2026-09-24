@@ -38,35 +38,35 @@ colors:
   charge-blue-ink: "#5aa9cf"
 typography:
   display:
-    fontFamily: "Cinzel, serif"
+    fontFamily: "Quantico, sans-serif"
     fontSize: "1.55rem"
     fontWeight: 700
     lineHeight: 1.2
-    letterSpacing: "0.2em"
+    letterSpacing: "0.12em"
   headline:
-    fontFamily: "Chakra Petch, monospace"
+    fontFamily: "Quantico, sans-serif"
     fontSize: "1.05rem"
     fontWeight: 600
     lineHeight: 1.3
-    letterSpacing: "0.13em"
+    letterSpacing: "0.1em"
   title:
-    fontFamily: "Chakra Petch, monospace"
+    fontFamily: "Quantico, sans-serif"
     fontSize: "1rem"
     fontWeight: 600
     lineHeight: 1.3
-    letterSpacing: "0.15em"
+    letterSpacing: "0.1em"
   body:
-    fontFamily: "Rajdhani, -apple-system, BlinkMacSystemFont, sans-serif"
+    fontFamily: "Quantico, -apple-system, BlinkMacSystemFont, sans-serif"
     fontSize: "1rem"
-    fontWeight: 500
-    lineHeight: 1.5
+    fontWeight: 400
+    lineHeight: 1.55
     letterSpacing: "normal"
   label:
-    fontFamily: "Share Tech Mono, JetBrains Mono, monospace"
-    fontSize: "0.65rem"
+    fontFamily: "Quantico, JetBrains Mono, monospace"
+    fontSize: "0.68rem"
     fontWeight: 400
     lineHeight: 1.4
-    letterSpacing: "0.3em"
+    letterSpacing: "0.12em"
 rounded:
   sm: "0px"
   md: "0px"
@@ -252,42 +252,34 @@ a stale hex in a spreadsheet once leaked a bright web colour straight into the h
 
 ## Typography
 
-**Imperial Font:** Cinzel (serif) — page titles only.
-**Display Font:** Chakra Petch (monospace-flavoured sans) — section heads and switchgear legends.
-**Body Font:** Rajdhani (condensed sans) — prose, prompts, teaching copy.
-**Telemetry Font:** Share Tech Mono (with JetBrains Mono fallback) — labels, kickers, readouts, part numbers.
+**Primary Font Family:** Quantico across all interface roles.
+**Telemetry Fallback:** JetBrains Mono for monospace code/data blocks.
 
-**Character:** Four faces, four jobs, no overlap. Cinzel is the only thing on the ship
-with a Roman serif — it carries the weight of an Empire that stamped its name on the hull.
-Chakra Petch is the manufacturer's legend on a switch. Rajdhani is the one face that
-reads comfortably in paragraphs, so it carries everything a student must actually
-understand. Share Tech Mono is the machine talking: wide-tracked, uppercase, small.
+**Character:** Unified architectural geometric typography. Quantico delivers the crisp, high-precision geometry of aerospace instrumentation across all headings, telemetry, switchgear, and body text without visual clutter.
 
 ### Hierarchy
 
-- **Display** (Cinzel 700, 1.55rem, `0.2em` tracking, uppercase, line-height 1.2): the
+- **Display** (Quantico 700, 1.55rem, `0.12em` tracking, uppercase, line-height 1.2): the
   page title. One per screen, always built through `pageHeader`.
-- **Headline** (Chakra Petch 600, 1.05rem, `0.13em` tracking, uppercase): section and card
+- **Headline** (Quantico 600, 1.05rem, `0.1em` tracking, uppercase): section and card
   headings — `.section-title`, `.holo-title`.
-- **Title** (Chakra Petch 600, 1rem, `0.15em` tracking, uppercase): a stage's name, and
-  the legend on switchgear at 0.78rem with `0.2em` tracking.
-- **Body** (Rajdhani 500, 16px, line-height 1.5): prompts, concept cards, epilogue,
-  story transmissions. This is the only role a student reads at length, so it is the only
-  role that is not tracked out.
-- **Label** (Share Tech Mono 400, 0.6–0.68rem, `0.14em`–`0.3em` tracking, uppercase):
+- **Title** (Quantico 600, 1rem, `0.1em` tracking, uppercase): a stage's name, and
+  the legend on switchgear at 0.78rem with `0.08em` tracking.
+- **Body** (Quantico 400, 16px, line-height 1.55): prompts, concept cards, epilogue,
+  story transmissions. Clean, legible, architectural sans.
+- **Label** (Quantico 400/700, 0.68–0.72rem, `0.08em`–`0.14em` tracking, uppercase):
   kickers (`.eyebrow`, `.lit` when live), form labels, helper text, status tags, banner
   titles, stat values, part numbers.
 
 ### Named Rules
 
-**The Engraved Type Rule.** Type sits *in* the surface. Titles and legends carry
-`text-shadow: 0 1px 0 rgba(0, 0, 0, 0.7)` — a dark line under the glyph, cut into the
-plate. Type never glows, and a light-coloured text-shadow appears only on the painted
-amber key cap, where it reads as the raised lip of stamped paint.
+**The Crisp Rendering Rule.** Type is razor-sharp. Muddy dark text-shadows (`--engrave: none`)
+that blur letterforms are eliminated. Surfaces achieve depth through high-contrast typography
+(`--text-bright: #fbf9f5`, `--text-primary: #dcd6cc`) and precision double-bezel framing.
 
-**The Tracking Ladder Rule.** The smaller the type, the wider the tracking. A 0.65rem
-kicker runs at `0.3em`; 16px body runs at normal. Small mono type in this system is a
-stencil, and a stencil is spaced.
+**The Controlled Tracking Rule.** Letter-spacing is architectural and disciplined. Over-tracked
+type (`0.3em`+) is eliminated in favor of clean instrument legibility (`0.08em`–`0.14em` for
+stencils and titles; normal for body).
 
 **The Placeholder Ban.** Forms use explicit labels and helper text. Never use placeholder
 text to carry an example or an instruction — it disappears the moment a student starts
@@ -375,65 +367,39 @@ fast enough to feel mechanical rather than animated.
 ## Shapes
 
 **Zero radius, everywhere.** `--radius-sm`, `--radius-md` and `--radius-lg` are all `0px`.
-They exist only so that a stray `border-radius: var(--radius-md)` in new code renders
-correctly square instead of announcing itself. The only round thing in the system is
+They exist only so that stray radius variables remain disciplined. The only round thing in the system is
 `--radius-full` on genuinely circular objects.
 
-Machined plate has **cut corners**, and the system runs two grades of cut. Both are a
-`clip-path: polygon(...)` relieving the corner, plus a matching hairline drawn as a 45°
-`linear-gradient` background inside each relieved corner so the cut reads as a machined
-bevel rather than a missing corner.
-
-- **Panels are cut on both diagonal corners** — top-left and bottom-right. `.plate` and
-  `.glass-panel` at `--chamfer` (10px); `.scope-plate`, the Learn instrument, at
-  `--chamfer-sm` (6px). A plate is a piece of stock cut square at both ends.
-- **Cards are cut on one corner** — top-left only. `.holo-card` at `--chamfer-sm` (6px);
-  `.stage-prompt-card` at `--chamfer` (10px). A card is a sheet tucked under the plate,
-  so only its leading corner is clipped.
-
-The grade is chosen by *what the container is*, not by how big it is: `.stage-prompt-card`
-takes the 10px cut at one corner, and `.scope-plate` takes the 6px cut at two. Phone
-breakpoints shrink the chamfer rather than dropping it.
-
-Every large surface is sandblasted: a shared `--grain` SVG turbulence tile applied through
-`::before` at 3.5% opacity with `mix-blend-mode: overlay`. Because a pseudo-element is not
-matched by `> *`, direct children carry `position: relative` to sit above the grain. The
-painted key cap uses the same tile at 10% with `mix-blend-mode: multiply` — worn paint
-rather than blasted metal.
+Machined plates and panels feature **machined double-bezel framing** with precision corners.
+- **Double-Bezel Framing**: `.plate`, `.glass-panel`, `.holo-card`, and `.stage-prompt-card`
+  feature precision outer durasteel borders (`1px solid var(--border-durasteel)`), crisp inner highlight
+  hairlines (`inset 0 1px 0 rgba(255, 255, 255, 0.08)`), and deep ambient drop shadows (`0 20px 48px rgba(0, 0, 0, 0.75)`).
+- **Subtle Corner Radii**: Clean 2px–4px radius replaces crude polygon cuts, preventing anti-aliasing artifacts on high-DPI viewports.
+- **Pure Optical Clarity**: Grain noise overlays (`--grain`) and muddy scanline filters are eliminated. Surfaces feature smooth titanium/obsidian plate depth and pristine glassmorphism (`backdrop-filter: blur(16px)`).
 
 ### Named Rules
 
-**The Cut Corner Rule.** If a container has a border and a fill, it gets the chamfer
-treatment — clip-path plus a matching corner hairline. Decide the grade first: a **panel**
-is relieved at top-left *and* bottom-right; a **card** is relieved at top-left only. Never
-relieve bottom-right alone, and never relieve a corner without drawing its hairline — a
-clipped corner with no bevel line reads as a rendering bug.
+**The Double-Bezel Rule.** Every instrument enclosure features a machined dual boundary: an outer durasteel boundary framing an inner illuminated or ground plate face.
 
-**The Grain-Under-Content Rule.** Grain goes on `::before`, content goes on
-`position: relative`. Forget the second half and the noise renders over the text.
+**The Optical Clarity Rule.** Optical elements (viewports, banners, telemetry, cards) must never be degraded by artificial raster scanlines or muddy sepia filters. The interface reflects precision aerospace instrumentation in active service.
 
 ## Components
 
 ### Buttons
 
-Switchgear, not web buttons. The primary reads first because it is the only painted thing
-on a panel of bare metal — not because it is bigger or brighter.
+Switchgear, not web buttons. Precision machined switchgear with tactile spring physics.
 
-- **Shape:** square (`0` radius), `min-height: 44px`, Chakra Petch 0.78rem uppercase at
-  `0.2em` tracking.
-- **Primary — the painted key cap:** a matte amber plate
-  (`linear-gradient(180deg, #c08420, #a06c19)`) with an engraved dark legend (`#14110b`),
-  a `#6d4a12` border, the key-cap relief shadow stack, and the grain tile at 10%
-  multiply for worn paint. Padding `11px 24px`.
-- **Hover:** the paint lightens one step (`#d09424 → #ac761c`). Nothing else moves.
-- **Active:** `translateY(2px)` and the relief inverts to an inset press.
-- **Disabled:** paint stripped back to bare `plate-400` with muted text and the seam
-  highlight only — a key with its legend worn off.
-- **Secondary — bare durasteel:** `plate-300` face, durasteel border, engraved
-  `text-primary` legend, seam pair plus a `0 2px 0` lip. Hover raises to `plate-400` and
-  brightens the text; active presses the same 2px.
-- **Compact quest chrome (`.quest-btn-sm`)** is the same language at reduced scale for
-  the stage deck.
+- **Shape:** subtle radius (`2px`), `min-height: 44px`, Quantico 0.78rem uppercase at
+  `0.08em` tracking.
+- **Primary — the machined amber switch:** a rich amber gradient
+  (`linear-gradient(180deg, #d99423 0%, #b87814 100%)`) with a high-contrast dark legend (`#0b0a08`),
+  inner highlight hairline (`inset 0 1px 0 rgba(255, 255, 255, 0.28)`), and ambient shadow. Padding `11px 24px`.
+- **Hover:** subtle upward spring lift (`translateY(-1px)`) with heightened luster.
+- **Active:** tactile mechanical compression (`translateY(1px) scale(0.99)`).
+- **Disabled:** inactive plate with stripped luster (`opacity: 0.35`).
+- **Secondary — bare durasteel:** `plate-300` face, durasteel border, crisp
+  `text-primary` legend, inner highlight seam pair. Hover raises to `plate-400` with spring response; active compresses with tactile feedback.
+- **Compact quest switchgear (`.quest-btn-sm`)** follows the same spring physics at reduced scale for the stage deck.
 - **Labels are 1–2 words and contain no arrow glyphs.** "Next Stage", not "Continue →".
 
 ### Inputs

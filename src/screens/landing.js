@@ -35,7 +35,7 @@ export function renderLanding(container) {
         </div>
 
         <div class="landing-body" style="padding: 1.8rem 1.8rem 2rem; text-align: center;">
-          <h1 class="landing-title" style="font-family: var(--font-imperial); font-size: 2.3rem; letter-spacing: 0.32em; font-weight: 700; margin: 0.4rem 0 0 0.32em; color: var(--text-bright); text-shadow: var(--engrave);">
+          <h1 class="landing-title" style="font-family: var(--font-imperial); font-size: 2.4rem; letter-spacing: 0.12em; font-weight: 700; margin: 0.4rem 0 0; color: var(--text-bright);">
             AVALON
           </h1>
           <div style="height: 1px; background: linear-gradient(90deg, transparent, var(--border-durasteel) 25%, var(--border-durasteel) 75%, transparent); margin: 0.9rem 0 0.85rem;"></div>
