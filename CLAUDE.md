@@ -1258,10 +1258,10 @@ said.
   (describing planet Erebus, Charge Gardens restoration, connecting circuit components from red giver
   to blue receiver, and pylon reactivation); the Objective button reopens it on demand. Every other
   stage starts immediately; the Objective button reopens that stage's briefing on demand.
-  When the player clicks Start, the bottom-left stage card automatically closes into the dock bar
+  The bottom-left stage card is docked by default into the dock bar from stage 1 onwards
   (leaving `#stage-dock-grade-btn` Submit and `#stage-card-open-btn` Stage Panel) so the 3D viewer is
   unobstructed for drawing arrows, and only reopens when the player clicks the button or solves the stage
-  and the explanation banner appears.
+  and the explanation banner appears. When a briefing modal auto-shows, closing/starting it maintains the docked state.
 - The bundled `STAGE_CONFIGS` are authoritative for everything rendered or graded
   (`moleculeId`, anchors derived from its regions, expected anchors, positions, tolerance,
   blocked sites, `reaction`, `multiArrow`, XP). Backend `scene_config` is transport only —

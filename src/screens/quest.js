@@ -673,13 +673,14 @@ export function renderQuest(container) {
       setCardClosed(true);
     };
 
+    // By default, dock the stage card so the 3D viewer is unobstructed for drawing arrows
+    setCardClosed(true);
+
     // Briefing modal only for genuinely new mechanics — every other stage starts
     // immediately. The Objective button above reopens it on demand.
     if (shouldAutoShowStageModal(cfg, currentStageIdx, isReplay)) {
       markStageIntroSeen(currentStageIdx);
       showStageModal(cfg, currentStageIdx, isReplay, stageXp, onModalStart);
-    } else if (questStarted) {
-      setCardClosed(true);
     }
 
     // Stage instructions / info modal trigger
