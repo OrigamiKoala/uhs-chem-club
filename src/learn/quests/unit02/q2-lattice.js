@@ -27,7 +27,7 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { JoinBench } from '../../engine/joinbench.js';
+import { JoinBench } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';

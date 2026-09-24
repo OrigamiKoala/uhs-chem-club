@@ -30,6 +30,8 @@ import { CatalogueBoard as CatalogueBoard2D } from './catalogue.js';
 import { AssayFloor as AssayFloor2D } from './assay.js';
 import { CatalogueBoard3D } from './catalogue3d.js';
 import { AssayFloor3D } from './assay3d.js';
+import { JoinBench as JoinBench2D } from './joinbench.js';
+import { JoinBench3D } from './joinbench3d.js';
 
 /** True when this client is drawing the Learn benches in three dimensions. */
 export function benchesAre3D() {
@@ -77,11 +79,19 @@ export function benchesAre3D() {
  * engines and are the single implementation.
  */
 const BUILT_BENCHES = new Set([
+  // Unit 1 — Tallow
   'q1-grain',      // the sampler scope   — scope3d.js
   'q2-core',       // the core bench      — corebench3d.js
   'q3-catalogue',  // the catalogue board — catalogue3d.js
   'q4-ledger',     // the core bench again, at site four
-  'q5-assay'       // the assay floor     — assay3d.js
+  'q5-assay',      // the assay floor     — assay3d.js
+  // Unit 2 — Ligar. Two of the four are instruments Tallow already built; the
+  // join bench is the one new build, and it is a subclass of the drawn bench,
+  // so its tools are the canvas bench's tools and cannot grade differently.
+  'q1-joins',      // the join bench, pair plates — joinbench3d.js
+  'q2-lattice',    // the join bench, slab plates — joinbench3d.js
+  'q3-recipe',     // the sampler scope again     — scope3d.js
+  'q4-weigh'       // the assay floor again       — assay3d.js
 ]);
 
 /**
@@ -152,8 +162,20 @@ export function AssayFloor(host, opts = {}) {
     : new AssayFloor2D(host, opts);
 }
 
+/**
+ * The join bench. Signature and behaviour match `JoinBench` in joinbench.js;
+ * the built one is a subclass of it, so every tool is literally the same code.
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onSelect?: Function}} opts
+ */
+export function JoinBench(host, opts = {}) {
+  return benchesAre3D()
+    ? new JoinBench3D(host, deployed(opts))
+    : new JoinBench2D(host, opts);
+}
+
 /* Exported so a caller that wants the built instrument by name can have it. */
-export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D };
+export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D, JoinBench3D };
 
 /* Re-exported so a quest module needs exactly one import line for its bench. */
 export { detailFor, TINTS } from './scope.js';

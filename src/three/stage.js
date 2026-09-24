@@ -12,6 +12,7 @@ import { ShipInterior } from "./ship.js";
 import { createStarfield } from "./materials/starfield.js";
 import { WorldScene } from "./world.js";
 import { TallowWorld } from "./tallow.js";
+import { LigarWorld } from "./ligar.js";
 import { FpsControls } from "./fps-controls.js";
 import { TouchControls } from "./touch-controls.js";
 import { session } from "../session.js";
@@ -31,6 +32,9 @@ import { api } from "../api.js";
  */
 const SHIP_EXPOSURE = 1.28;
 const TALLOW_EXPOSURE = 0.92;
+// Ligar is black stone at dusk: almost nothing bounces off it and the sun is on
+// the horizon, so it takes MORE exposure than the salt pan rather than less.
+const LIGAR_EXPOSURE = 1.16;
 
 /**
  * The bridge directory board, as `ship.js` builds it: a 1.8 x 1.0125 m plate
@@ -56,6 +60,7 @@ class Stage {
     this.shipInterior = null;
     this.worldScene = null;
     this.tallowWorld = null;
+    this.ligarWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -265,12 +270,12 @@ class Stage {
     );
 
     this.fpsControls.onInteract = () => {
-      if (this.mode === "world" && this.activeWorld === this.tallowWorld && this.tallowWorld) {
-        const site = this.tallowWorld.nearbySite;
+      if (this.mode === "world" && this.isLearnWorld(this.activeWorld)) {
+        const site = this.activeWorld.nearbySite;
         if (site) {
-          window.dispatchEvent(new CustomEvent("tallow:interact", { detail: site }));
-        } else if (Math.hypot(this.camera.position.x - 34, this.camera.position.z - 42) < 9) {
-          // The buyer's pad is the way off Tallow, the way the lander is on Erebus.
+          window.dispatchEvent(new CustomEvent("learn-site:interact", { detail: site }));
+        } else if (this.nearExitPad(this.activeWorld)) {
+          // The pad is the way off a Learn world, the way the lander is on Erebus.
           window.location.hash = "#/bridge";
         }
       } else if (this.mode === "world" && this.worldScene) {
@@ -717,19 +722,56 @@ class Stage {
    * than at the far end of the yard.
    */
   enterTallowScene(focusSiteId = null) {
+    // Asked for FIRST, before the world is built: full screen is granted only
+    // inside a live user gesture, and building a world takes long enough for
+    // that gesture to lapse.
     if (this.isTouch) gameMode.enterWorld();
     if (!this.tallowWorld && this.renderer) {
       this.tallowWorld = new TallowWorld(this.renderer);
     }
+    this.enterLearnWorld(this.tallowWorld, TALLOW_EXPOSURE, focusSiteId);
+  }
+
+  /** Walk out onto Ligar, the basalt arch field (Learn world 02). */
+  enterLigarScene(focusSiteId = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    if (!this.ligarWorld && this.renderer) {
+      this.ligarWorld = new LigarWorld(this.renderer);
+    }
+    this.enterLearnWorld(this.ligarWorld, LIGAR_EXPOSURE, focusSiteId);
+  }
+
+  /** True when `w` is a Learn world built as a place — Tallow or Ligar. */
+  isLearnWorld(w) {
+    return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld);
+  }
+
+  /**
+   * Whether the player is standing on a Learn world's landing pad — the way
+   * off it. Read from the world's own data, so a pad that moves takes its exit
+   * with it and there is no second copy of the coordinates.
+   */
+  nearExitPad(w) {
+    const pad = w?.data?.landmarks?.find(l => l.asset === "landing-pad");
+    if (!pad) return false;
+    return Math.hypot(this.camera.position.x - pad.pos[0], this.camera.position.z - pad.pos[2]) < 9;
+  }
+
+  /**
+   * Stand the player on a Learn world — at a site's approach mark, or at the
+   * world's spawn. One implementation for every walkable Learn world, so Ligar
+   * cannot come to differ from Tallow in how a player arrives.
+   */
+  enterLearnWorld(world, exposure, focusSiteId = null) {
     this.mode = "world";
-    this.activeWorld = this.tallowWorld;
+    this.activeWorld = world;
 
-    if (!this.tallowWorld) return;
-    if (this.renderer) this.renderer.toneMappingExposure = TALLOW_EXPOSURE;
+    if (!world) return;
+    if (this.renderer) this.renderer.toneMappingExposure = exposure;
 
-    this.tallowWorld.scene.add(this.camera);
+    world.scene.add(this.camera);
 
-    const data = this.tallowWorld.data;
+    const data = world.data;
     const site = focusSiteId ? data.sites.find(s => s.id === focusSiteId) : null;
 
     let px, pz, lookX, lookZ;
@@ -745,7 +787,7 @@ class Stage {
       lookZ = data.spawn.lookAt[2];
     }
 
-    const groundY = this.tallowWorld.getTerrainHeight(px, pz);
+    const groundY = world.getTerrainHeight(px, pz);
     const eyeHeight = this.fpsControls ? this.fpsControls.eyeHeight : 1.6;
     const eyeY = groundY + eyeHeight;
 
@@ -762,9 +804,9 @@ class Stage {
       this.fpsControls.euler.z = 0;
       this.fpsControls.setMode(
         "world",
-        (x, z) => this.tallowWorld.getTerrainHeight(x, z),
+        (x, z) => world.getTerrainHeight(x, z),
         { minX: -100, maxX: 100, minZ: -100, maxZ: 100 },
-        this.tallowWorld.colliders
+        world.colliders
       );
     }
   }
@@ -787,6 +829,11 @@ class Stage {
   /** Light a Tallow site's indicator when its quest is finished. */
   setTallowSiteComplete(questId, complete) {
     if (this.tallowWorld) this.tallowWorld.setSiteComplete(questId, complete);
+  }
+
+  /** Light a Ligar site's indicator when its quest is finished. */
+  setLigarSiteComplete(questId, complete) {
+    if (this.ligarWorld) this.ligarWorld.setSiteComplete(questId, complete);
   }
 
   enterShipScene(locationKey = "bridge") {
@@ -820,13 +867,15 @@ class Stage {
    * second copy of the coordinates to fall out of step.
    */
   benchDeployment(questId) {
-    if (!this.tallowWorld || this.activeWorld !== this.tallowWorld) return null;
-    const anchor = this.tallowWorld.benchAnchor(questId);
+    const world = this.activeWorld;
+    if (!this.isLearnWorld(world)) return null;
+    const anchor = world.benchAnchor(questId);
     if (!anchor || !this.camera) return null;
     this._deployedQuestId = questId;
-    this.tallowWorld.setBenchDeployed(questId, true);
+    this._deployedWorld = world;
+    world.setBenchDeployed(questId, true);
     return {
-      scene: this.tallowWorld.scene,
+      scene: world.scene,
       camera: this.camera,
       position: anchor.position,
       rotationY: anchor.rotationY,
@@ -843,10 +892,11 @@ class Stage {
 
   /** Case the worked bench back up once the player steps away from it. */
   releaseBenchDeployment() {
-    if (this._deployedQuestId && this.tallowWorld) {
-      this.tallowWorld.setBenchDeployed(this._deployedQuestId, false);
+    if (this._deployedQuestId && this._deployedWorld) {
+      this._deployedWorld.setBenchDeployed(this._deployedQuestId, false);
     }
     this._deployedQuestId = null;
+    this._deployedWorld = null;
   }
 
   /**
@@ -949,11 +999,12 @@ class Stage {
       this.renderer.render(this.activeQuestScene, this.activeQuestViewer.camera);
       worldUI.render(this.activeQuestScene, this.activeQuestViewer.camera);
       return;
-    } else if (this.mode === "world" && this.activeWorld === this.tallowWorld && this.tallowWorld) {
+    } else if (this.mode === "world" && this.isLearnWorld(this.activeWorld)) {
+      const learnWorld = this.activeWorld;
       if (this.fpsControls) {
         this.fpsControls.enabled = true;
         this.fpsControls.update(delta);
-        const site = this.tallowWorld.nearbySite;
+        const site = learnWorld.nearbySite;
         if (site) {
           // A site that has no module yet says so when you reach it rather than
           // pretending to open. The world never invents a quest.
@@ -962,16 +1013,16 @@ class Stage {
               ? `${site.label.toUpperCase()} — SEALED`
               : `[E] WORK AT ${site.label.toUpperCase()}`
           );
-        } else if (Math.hypot(this.camera.position.x - 34, this.camera.position.z - 42) < 9) {
+        } else if (this.nearExitPad(learnWorld)) {
           this.fpsControls.showPrompt("[E] BOARD AT THE PAD (RETURN TO SHIP)");
         } else {
           this.fpsControls.hidePrompt();
         }
       }
-      this.tallowWorld.update(delta, this.camera.position);
+      learnWorld.update(delta, this.camera.position);
       this.camera.updateMatrixWorld(true);
-      this.renderer.render(this.tallowWorld.scene, this.camera);
-      worldUI.render(this.tallowWorld.scene, this.camera);
+      this.renderer.render(learnWorld.scene, this.camera);
+      worldUI.render(learnWorld.scene, this.camera);
     } else if (this.mode === "world" && this.worldScene) {
       if (this.fpsControls) {
         this.fpsControls.enabled = true;

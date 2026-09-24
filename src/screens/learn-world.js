@@ -31,7 +31,7 @@ let siteListenerInstalled = false;
 function installSiteListener() {
   if (siteListenerInstalled) return;
   siteListenerInstalled = true;
-  window.addEventListener('tallow:interact', e => {
+  window.addEventListener('learn-site:interact', e => {
     const site = e.detail;
     if (!site || !site.questId) return;
     const hash = window.location.hash.slice(1).replace(/^\/+/, '');

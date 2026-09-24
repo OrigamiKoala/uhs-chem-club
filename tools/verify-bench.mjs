@@ -28,10 +28,12 @@ installDomShim({ tier: 'T4' });
 
 const THREE = await import('three');
 const { TallowWorld } = await import('../src/three/tallow.js');
+const { LigarWorld } = await import('../src/three/ligar.js');
 const { SampleScope3D } = await import('../src/learn/engine/scope3d.js');
 const { CoreBench3D } = await import('../src/learn/engine/corebench3d.js');
 const { CatalogueBoard3D } = await import('../src/learn/engine/catalogue3d.js');
 const { AssayFloor3D } = await import('../src/learn/engine/assay3d.js');
+const { JoinBench3D } = await import('../src/learn/engine/joinbench3d.js');
 const { getWorld } = await import('../src/learn/curriculum.js');
 
 let failures = 0;
@@ -61,11 +63,15 @@ const ASPECTS = [
  */
 const TOP_CHROME = 0.17;
 
-const world = new TallowWorld(null);
+// The world being measured. Tallow first, then Ligar: every check below reads
+// this binding, so the second world is held to exactly the first one's rules.
+let world = new TallowWorld(null);
 world.scene.updateMatrixWorld(true);
 
 /* ---------------------------------------------------------------- facing */
 
+function checkFacing() {
+const before = failures;
 for (const site of world.data.sites) {
   const marker = world.siteMarkers.get(site.questId);
   if (!marker) continue;
@@ -79,7 +85,9 @@ for (const site of world.data.sites) {
       `but the player walks in from ${(want * 180 / Math.PI).toFixed(0)}°`);
   }
 }
-if (!failures) ok(`${world.data.sites.length} sites all face the ground the player walks in from`);
+if (failures === before) ok(`${world.data.name}: ${world.data.sites.length} sites all face the ground the player walks in from`);
+}
+checkFacing();
 
 /* --------------------------------------------------------------- framing */
 
@@ -104,6 +112,35 @@ const shrunk = (b, t) => new THREE.Box3(
  * two metres away. Nothing was wrong with the bench; the ruler was.
  */
 const _im = new THREE.Matrix4();
+
+/** Each instance of a field as its own box, in the frame `inv` inverts into. */
+function instanceBoxes(mesh, inv) {
+  if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+  const g = mesh.geometry.boundingBox;
+  const m = new THREE.Matrix4().multiplyMatrices(inv, mesh.matrixWorld);
+  const out = [];
+  for (let i = 0; i < mesh.count; i++) {
+    mesh.getMatrixAt(i, _im);
+    const b = g.clone().applyMatrix4(_im.premultiply(m));
+    if (!b.isEmpty() && b.getSize(new THREE.Vector3()).lengthSq() > 1e-8) out.push(b);
+  }
+  return out;
+}
+
+/** Whether any triangle of an open shell passes through `box` (bench frame). */
+function shellTouches(mesh, inv, box) {
+  const m = new THREE.Matrix4().multiplyMatrices(inv, mesh.matrixWorld);
+  const pos = mesh.geometry.attributes.position;
+  const index = mesh.geometry.index;
+  const tri = new THREE.Triangle();
+  const n = index ? index.count : pos.count;
+  const vtx = k => new THREE.Vector3().fromBufferAttribute(pos, index ? index.getX(k) : k).applyMatrix4(m);
+  for (let k = 0; k < n; k += 3) {
+    tri.set(vtx(k), vtx(k + 1), vtx(k + 2));
+    if (box.intersectsTriangle(tri)) return true;
+  }
+  return false;
+}
 
 function localBox(obj, inv) {
   const b = new THREE.Box3();
@@ -338,26 +375,44 @@ function check(questId, label, build, widest) {
         // place, so it is not a thing the player can ever be inside.
         if (!o.visible) return;
         for (let a = o.parent; a; a = a.parent) if (!a.visible) return;
-        const b = localBox(o, inv);
-        if (!b) return;
-        // At or below the plate the instrument is standing on: a stand foot is
-        // seated there on purpose, and the plate is what it is seated in.
-        if (b.max.y <= 0.905) return;
-        // Ambient bodies — the sky dome, the horizon, the celestial vista.
-        if (b.getSize(new THREE.Vector3()).length() > 50) return;
+
+        /* EACH INSTANCE IS ITS OWN BODY. `localBox` unions a field's
+           instances, which is right for a heap and wrong for a field spread
+           across a room: the union of the rubble on a quarry floor is a box
+           round the whole floor, and every bench standing in the quarry is
+           "inside" it. So a field is measured one piece at a time. */
+        const bodies = o.isInstancedMesh ? instanceBoxes(o, inv) : [localBox(o, inv)];
+        for (const b of bodies) {
+          if (!b) continue;
+          // At or below the plate the instrument is standing on: a stand foot
+          // is seated there on purpose, and the plate is what it is seated in.
+          if (b.max.y <= 0.905) continue;
+          // Ambient bodies — the sky dome, the horizon, the celestial vista.
+          if (b.getSize(new THREE.Vector3()).length() > 50) continue;
+          if (collide(o, b)) return;
+        }
+      });
+
+      /* The body a head is standing in, reported once. An OPEN SHELL — a
+         barrel roof, a tube — has no inside, so its box is only a candidate
+         and the verdict is its triangles: a head under a vault is under it,
+         not in it. A closed body is solid and its box stands as the verdict. */
+      function collide(o, b) {
         for (const h of heads) {
           if (!shrunk(h, TOUCH).intersectsBox(shrunk(b, TOUCH))) continue;
+          if (o.userData?.openShell && !shellTouches(o, inv, shrunk(h, TOUCH))) continue;
           const c = b.getCenter(new THREE.Vector3());
           const key = `${c.x.toFixed(2)}|${c.y.toFixed(2)}|${c.z.toFixed(2)}`;
-          if (seen.has(key)) return;
+          if (seen.has(key)) return true;
           seen.add(key);
           const hc = h.getCenter(new THREE.Vector3());
           fail(`${tag}: the instrument stands inside world geometry — its body at ` +
             `(${hc.x.toFixed(2)}, ${hc.y.toFixed(2)}, ${hc.z.toFixed(2)}) ` +
             `meets a fitting at (${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)})`);
-          return;
+          return true;
         }
-      });
+        return false;
+      }
     }
 
     bench.dispose?.();
@@ -619,6 +674,152 @@ function stagePasses() {
 }
 
 stagePasses();
+
+/* ================================================================ LIGAR
+
+   The four Unit 2 benches, deployed onto the built Ligar and measured by the
+   same `check` that measures Tallow's five. Each is fed the WIDEST stage its
+   quest actually declares — read out of the quest's own table, not typed here —
+   because the widest stage is the one that runs off the glass first. */
+
+world = new LigarWorld(null);
+world.scene.updateMatrixWorld(true);
+console.log('');
+checkFacing();
+
+const { STAGES: JOIN_STAGES } = await import('../src/learn/quests/unit02/q1-joins.js');
+const { STAGES: SLAB_STAGES } = await import('../src/learn/quests/unit02/q2-lattice.js');
+const { STAGES: RECIPE_STAGES, KINDS: RECIPE_KINDS } = await import('../src/learn/quests/unit02/q3-recipe.js');
+const { STAGES: WEIGH_STAGES } = await import('../src/learn/quests/unit02/q4-weigh.js');
+const { planJoin } = await import('../src/learn/engine/joinbench.js');
+
+const widest = (stages, key) => stages.reduce((a, b) => ((b[key]?.length || 0) > (a[key]?.length || 0) ? b : a));
+
+const before = failures;
+check('q1-joins', 'join bench (pairs)',
+  (camera, anchor) => new JoinBench3D(null, { world: worldFrame(camera, anchor) }),
+  bench => bench.setPlates(widest(JOIN_STAGES, 'pairs').pairs)
+);
+check('q2-lattice', 'join bench (blocks)',
+  (camera, anchor) => new JoinBench3D(null, { world: worldFrame(camera, anchor) }),
+  bench => bench.setPlates(widest(SLAB_STAGES, 'slabs').slabs)
+);
+check('q3-recipe', 'sampler scope (Ligar)',
+  (camera, anchor) => new SampleScope3D(null, {
+    kinds: RECIPE_KINDS, onPower: () => {}, world: worldFrame(camera, anchor)
+  }),
+  bench => bench.setSamples(widest(RECIPE_STAGES, 'samples').samples)
+);
+check('q4-weigh', 'assay floor (Ligar)',
+  (camera, anchor) => new AssayFloor3D(null, { world: worldFrame(camera, anchor) }),
+  bench => bench.setHoppers(widest(WEIGH_STAGES, 'hoppers').hoppers)
+);
+if (failures === before) {
+  ok(`all four Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
+}
+
+/* THE JOIN BENCH, EVERY STAGE, THROUGH THE REAL POINTER PATH.
+
+   The built join bench is a subclass of the drawn one, so its tools are the
+   drawn bench's tools — but what it DRAWS and what a press on it RESOLVES are
+   new, and those are the two things a player would notice. So every stage both
+   quests declare is put on the built bench, and on each plate:
+     - a press closes the jaws exactly when `planJoin` says the pair holds;
+     - a press on each piece IN THE PICTURE, projected from the screen the way
+       a finger arrives, reads back that plate and that piece, never its
+       neighbour and never nothing;
+     - a block struck, heated, cooled and tested shows the state it reports.
+*/
+async function joinStagePasses() {
+  // A probe starts the bench's read sweep on the animation clock. Node has no
+  // frames to give it, and none are needed: the report a probe makes is
+  // synchronous, which is the thing being measured.
+  globalThis.requestAnimationFrame ??= () => 0;
+  globalThis.cancelAnimationFrame ??= () => {};
+  const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+  const screenPoint = (station, px, py) => {
+    // Screen pixels back to a point on the screen mesh: the inverse of
+    // `screenUnderRay`, so a press lands where the picture put the piece.
+    const mesh = station.screen.mesh;
+    mesh.updateMatrixWorld(true);
+    const size = mesh.geometry.parameters;
+    const local = new THREE.Vector3(
+      (px / station.screen.w - 0.5) * size.width,
+      (0.5 - py / station.screen.h) * size.height,
+      0
+    );
+    return local.applyMatrix4(mesh.matrixWorld);
+  };
+  const pressAt = (bench, p) => {
+    const q = p.clone().project(camera);
+    bench.onPointer3D({ clientX: (q.x + 1) / 2 * 1280, clientY: (1 - q.y) / 2 * 720, preventDefault() {} });
+  };
+
+  for (const [questId, stages, key] of [['q1-joins', JOIN_STAGES, 'pairs'], ['q2-lattice', SLAB_STAGES, 'slabs']]) {
+    const anchor = world.benchAnchor(questId);
+    world.setBenchDeployed(questId, true);
+    let probed = null;
+    const bench = new JoinBench3D(null, {
+      world: worldFrame(camera, anchor),
+      onProbe: hit => { probed = hit; }
+    });
+    let plates = 0;
+    for (let i = 0; i < stages.length; i++) {
+      bench.setPlates(stages[i][key]);
+      // Aim as the deployed bench does, so the screens are where a player sees them.
+      bench.viewer.applyCamera();
+      camera.updateMatrixWorld(true);
+      for (const rec of bench.stations) {
+        plates++;
+        const item = rec.item;
+        const where = `${questId} stage ${i + 1} ${item.label}`;
+        if (!rec.hits?.length) fail(`${where}: the picture drew nothing a press could read`);
+        for (const hit of rec.hits || []) {
+          probed = null;
+          pressAt(bench, screenPoint(rec.station, hit.x, hit.y));
+          if (!probed) fail(`${where}: a press on the ${hit.side} piece read nothing`);
+          else if (probed.plateId !== item.id || probed.side !== hit.side) {
+            fail(`${where}: a press on the ${hit.side} piece read ${probed.plateId}/${probed.side}`);
+          }
+        }
+        if (rec.kind === 'pair') {
+          const type = planJoin(item).type;
+          item.t = 1; item.pressed = type !== 'none';
+          if (type === 'none') item.t = 0;
+          bench.drawAll();
+          const gap = rec.sides.right.jaw.position.x - rec.sides.left.jaw.position.x;
+          const shut = gap < 0.26;
+          if (shut !== (type !== 'none')) {
+            fail(`${where}: the jaws are ${shut ? 'shut' : 'open'} on a pair that ${type === 'none' ? 'will not hold' : 'holds'}`);
+          }
+        } else {
+          for (const state of ['struck', 'molten']) {
+            item.state = state;
+            if (state === 'struck') item.struck = true;
+            bench.drawAll();
+            const glowing = rec.stoneMat.emissiveIntensity > 0;
+            if (glowing !== (state === 'molten')) fail(`${where}: the block glows when ${state}`);
+            const whole = rec.halves.every(h => h.visible);
+            const chips = rec.chips.some(c => c.visible);
+            if (state === 'struck' && item.build === 'clusters' && (whole || !chips)) {
+              fail(`${where}: a block that crumbled is not shown crumbled`);
+            }
+            if (state === 'struck' && item.build === 'web' && !whole) {
+              fail(`${where}: a block that held is shown broken`);
+            }
+          }
+          item.current = true; bench.drawAll();
+          if (rec.lampMat.emissiveIntensity <= 0) fail(`${where}: a current passed and the lamp stayed dark`);
+          item.current = null; item.state = 'intact'; item.struck = false; bench.drawAll();
+        }
+      }
+    }
+    bench.dispose();
+    world.setBenchDeployed(questId, false);
+    ok(`${questId}: all ${stages.length} stages built, ${plates} plates pressed through the real pointer path`);
+  }
+}
+await joinStagePasses();
 
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

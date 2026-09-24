@@ -25,7 +25,7 @@
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { AssayFloor } from '../../engine/assay.js';
+import { AssayFloor } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';

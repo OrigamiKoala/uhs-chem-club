@@ -125,8 +125,10 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
 - `npm run verify` — `verify:quest` + `verify:console` + `verify:learn` + `verify:geometry`
-  + `verify:media` + `verify:flows` + `verify:ship` + `verify:tallow` + `verify:bench`
-  + `verify:holo` + `build`. Run this before shipping.
+  + `verify:media` + `verify:flows` + `verify:ship` + `verify:tallow` + `verify:ligar`
+  + `verify:bench` + `verify:holo` + `build`. Run this before shipping. **The build
+  empties `dist/`, which is gitignored** — anything placed only in `dist/` (reference art
+  has been) is deleted by it. Source images belong in `public/` or `assets-src/`.
 - `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below),
   including the per-stage chemistry card and its three-sentence ceiling.
 - `npm run verify:console` — solves the T4 chamber console's fit at fourteen viewports and
@@ -147,8 +149,9 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   in either occupies the same space as anything else. It also flood-fills the deck against
   the real colliders and holds **every nav anchor the HUD dollies to** to standable,
   reachable deck — the check that was missing when four of the seven stood in the solid.
-- `npm run verify:bench` — deploys ALL FIVE Unit 1 instruments onto the real Tallow benches
-  in Node and measures them: every site faces the ground the player walks in from, and every
+- `npm run verify:bench` — deploys ALL FIVE Unit 1 instruments onto the real Tallow benches,
+  then ALL FOUR Unit 2 instruments onto the real Ligar benches (each fed the widest stage
+  its quest declares, read from the quest's own `STAGES`), in Node, and measures them: every site faces the ground the player walks in from, and every
   body, readable face and control lands inside the glass at six aspects, clear of the HUD. It
   also drives `aimForChrome` — the camera correction a deployed bench applies — and asserts
   it converges with the readable faces under the frame and the working end still in view;
@@ -156,7 +159,8 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   standing in, in the BENCH's own frame and per mesh (a world AABB of a 4.8 m back lip on a
   rotated site says everything hits everything), with the cabinet cased open and hidden
   bodies skipped, because one object has two states. That check found every screen stand
-  seated inside a swarf chip, the assay hopper's legs inside the bench's tool rail, its bin
+  seated inside a swarf chip (and, on Ligar, a scope stand inside a stone chip on the back
+  lip at four stations), the assay hopper's legs inside the bench's tool rail, its bin
   floors inside the weld bead down the middle of the plate, and a catalogue board so tall it
   leaned back through the bench's own lip into the lean-to behind it. **An instanced body is
   measured per instance**: its geometry box is the UNIT body, so taken at face value it
@@ -167,6 +171,22 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   `planPour` says it places. On the board it **presses**, through the real pointer path —
   project the target, `setPointer`, real raycast — so a card taken, filed and lifted is
   measured as the instrument resolves it, and one card is never turned into none.
+  It puts **every stage `q1-joins` and `q2-lattice` declare** through the built join bench
+  the same way: each piece in the picture is pressed on its screen and must read back that
+  plate and that piece; the jaws must be shut exactly when `planJoin` says a pair holds; a
+  block must show crumbled, held, molten and lit exactly as reported. In the world-fittings
+  pass an **instanced field is measured one instance at a time** (the union of a quarry's
+  floor rubble is a box round the whole floor) and a mesh marked `userData.openShell` — a
+  barrel vault — by its triangles, since a vault has an underside and no inside.
+- `npm run verify:ligar` — Ligar's ground, held to every rule `verify:tallow` holds Tallow
+  to, and three a quarry needs: it **builds the real world** and measures every pair of
+  bodies (instanced fields per instance, via `userData.partBoxes`); it fails any body
+  **buried** under the ground it stands on (the ground is exempt from overlap, so a
+  buried body overlaps nothing — four conveyors once stood tail-down five metres under
+  the flat, and passed); and it **flood-fills the walk** from the spawn against the real
+  colliders and walking surface, requiring every bench to be reachable on its own floor
+  and **no reachable cell to drop off a ledge**, which is what proves the cut is sealed
+  except by its ramp. Each sign must read `Bench N - <quest title>`.
 - `npm run verify:holo` — one owner for the `X` key, and the comms board never invents a
   guild score.
 - `npm run verify:tallow` — asserts the Tallow ground: every prop footprint disjoint
@@ -225,13 +245,21 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `screens/` — one render function per route, all pure string templates.
 - `three/` — persistent WebGL stage, quality-tier probe (T4/T3/T2/T1), ship interior, camera rig.
   `stage.js` holds three modes (`ship` | `world` | `quest`) and `activeWorld`, which is
-  whichever planet the player is standing on — Erebus (`world.js`) or Tallow (`tallow.js`).
-  Tone-mapping exposure is per place: `SHIP_EXPOSURE` 1.28 for the ship and Erebus,
-  `TALLOW_EXPOSURE` 0.92 for the salt pan, because a bright overcast rendered at the dark
-  interior's exposure washes the crust out to paper. The renderer's shadow map is enabled
+  whichever planet the player is standing on — Erebus (`world.js`), Tallow (`tallow.js`)
+  or Ligar (`ligar.js`). The two Learn worlds share ONE arrival and render path
+  (`enterLearnWorld`, `isLearnWorld`, `nearExitPad`, the Learn branch of the loop), so
+  Ligar cannot come to differ from Tallow in how a player lands, walks or leaves; the
+  exit pad is read from the world's own `landing-pad` landmark. Tone-mapping exposure is
+  per place: `SHIP_EXPOSURE` 1.28 for the ship and Erebus, `TALLOW_EXPOSURE` 0.92 for the
+  salt pan, because a bright overcast rendered at the dark interior's exposure washes the
+  crust out to paper, and `LIGAR_EXPOSURE` 1.16, because black stone at dusk throws almost
+  nothing back. The renderer's shadow map is enabled
   at T4 only; every world light already asked for shadows and none were drawn before.
 - `three/tallow.js` — **Tallow**, Learn world 01 (see "Tallow" below), built from
   `three/world-data/tallow.json` with PBR surfaces from `materials/tallow-textures.js`.
+- `three/ligar.js` — **Ligar**, Learn world 02 (see "Ligar" below), built from
+  `three/world-data/ligar.json` (generated by `tools/gen-ligar-layout.py`) with PBR
+  surfaces from `materials/ligar-textures.js`.
 - `quest3d/` — reusable containment chamber, `MOLECULE_DATA` (atoms, bonds and the
   pickable `regions` that double as anchor definitions), `InstancedMesh` renderer,
   MarchingCubes charge-density isosurfaces, and `evaluator.js`.
@@ -524,8 +552,8 @@ into grinding and would punish the students it exists to help.
   `setAimShift` walk the look-at point along the bench until the stations are centred in
   the clear part of the view. Below 860 px it reverts to the centred card, because a
   docked panel beside a bench too narrow to read helps nobody.
-- **ALL FIVE Unit 1 benches are BUILT at T4.** `BUILT_BENCHES` in `engine/instruments.js`
-  holds the whole of Unit 1, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
+- **ALL FIVE Unit 1 benches and ALL FOUR Unit 2 benches are BUILT at T4.** `BUILT_BENCHES`
+  in `engine/instruments.js` holds the whole of Units 1 and 2, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
   asks to decide whether the player keeps their feet at a real object or the bench is drawn
   as a page over the flat.
   - The **sampler scope** (`scope3d.js`) used to be excluded on the argument that a
@@ -564,6 +592,19 @@ into grinding and would punish the students it exists to help.
     and every piece that lands stacks into ONE PLANE just inside it, on the grid `packBin`
     computes, so nothing is ever behind anything, every piece is at a countable size, and
     the heap and the tally stencilled over it are the same measurement.
+  - The **join bench** (`joinbench3d.js`) serves `q1-joins` (pair plates) and `q2-lattice`
+    (slab plates). It is a **subclass of the drawn `JoinBench`**, not a second
+    implementation: `press`, `strike`, `heat`, `cool`, `test`, `run` and the animation
+    clock are inherited unchanged, so the two tiers cannot grade differently. It overrides
+    only where things are drawn: the resolved picture on each station's raked screen (the
+    same `drawJoinField` / `drawSlabField`), and hardware in the well — a press whose jaws
+    close by exactly the inherited `t`, or a block in a clamp that cleaves, crumbles,
+    holds, glows molten and lights a lamp for a current. **The block shows what the bench
+    reports and nothing more** — its pose is read off `item.state`, `item.struck` and
+    `item.current` — so a SEALED block gives away exactly what the readout already says.
+    A press on a screen resolves through `hitTestJoin`; a press on the jaws or the block
+    selects its plate (`recUnderRay`); a press that read a piece never also selects.
+    It tears itself down rather than calling the base `dispose`, which assumes a DOM host.
   - **The cased-up cabinet says which bench it is.** `buildBench({ kind })` in `tallow.js`
     gives site 3 a bank of card-index drawers and site 5 a weigh-head with a big round
     scale over a shrouded chute. Five identical cabinets with a microscope's aperture in
@@ -580,6 +621,9 @@ into grinding and would punish the students it exists to help.
   cannot show different things, and a hint naming a position is true on both. Alongside
   them: `planSettle`, `planCut`, `PIECE_TO_SPREAD` and `packCore`, `planBeam`, `planStrip`,
   `RING_RADII`.
+  `JoinBench` joined the dispatcher with Ligar, so a Unit 2 quest imports its bench from
+  `instruments.js` like every other: `q1-joins`, `q2-lattice` and `q4-weigh` each changed
+  by one import line and not one character of copy (`q3-recipe` already used it).
   `engine/bench3d.js` is the shared physical bench (plated top, a station per sample with a
   recessed phosphor well and a raked screen on a stand behind it, engraved plaques, a
   constrained lean-over camera, `addGrabbable` for controls that must take a press before
@@ -740,13 +784,13 @@ that leans toward the common isotope, and the average runs both ways — a seale
 named off its number. Every hint rung three shows the actual sum. The bench never counts by
 weighing at scale: moles are Ligar's.
 
-### World 2 — Ligar (`unit02`, four benches, all live, T3 and below)
+### World 2 — Ligar (`unit02`, four benches, all live, walkable at T4)
 
 Ligar is the field of basalt arches. Tallow spent five benches on one atom at a
 time; Ligar is about what happens when two of them touch. All four quests are
-built as games and are played as a page on every tier — **Ligar is not walkable
-ground**, `worlds3d.js` still registers Tallow only, and nothing in `BUILT_BENCHES`
-changed. Everything Tallow earned (atom, element, compound, molecule, proton,
+built as games. At T3 and below each is played as a page; at T4 Ligar is walkable
+ground and all four benches are BUILT instruments standing on it (see "Ligar —
+Learn world 02 as a place you walk"). Everything Tallow earned (atom, element, compound, molecule, proton,
 neutron, electron, shell, valence, isotope, ion, cation, anion, metal, nonmetal,
 atomic number, mass number) is a plain word from here on.
 
@@ -835,9 +879,68 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
   keeps it.
 - **Tier boundary.** Walking Tallow is T4. At T3 and below the Learn road is the screens it
   has always been and every quest completes exactly as before. `learn/worlds3d.js` is the
-  registry that says which worlds are walkable and is the only file a second one needs.
+  registry that says which worlds are walkable. Ligar showed what a second one needs
+  besides: its builder (`three/<world>.js`), an `enter<World>Scene` on the stage that
+  hands it to the shared `enterLearnWorld`, and its site-complete hook.
   `minTier: "T4"` landmarks are decoration: `verify:tallow` simulates removing every one of
   them and asserts every site is still reachable.
+
+### Ligar — Learn world 02 as a place you walk (`three/ligar.js`, T4)
+
+At T4, `#/learn/unit02` is a basalt quarry at dusk the player walks in first person,
+built from the three reference paintings (`ligar1`–`ligar3`): columnar basalt
+everywhere, three natural arches striding away north, a steel deck under a gantry sign,
+and an excavation with conveyors climbing out of it.
+
+- **The look is neither Erebus nor Tallow.** Black stone under a smoke-brown sky, lit
+  along one edge by a low, dust-reddened sun (key light at 26 m elevation from the
+  west, so every column lays a long shadow — the thing that makes a colonnade read as
+  one). Weak hemisphere fill, because black stone throws almost nothing back. The sky
+  shader draws a gold horizon band, a broad sun flare with **no disc** (a disc would be
+  a lamp and would bloom), and a drift of stack smoke. The horizon is stepped
+  colonnade silhouettes, not mesas.
+- **Everything is hexagonal, because a basalt flow is.** One shared unit hexagonal prism
+  (`hexGeo`, flat-shaded) builds the cut's walls, the colonnade rafts, the arches, the
+  spoil, the rubble, the stone on the belts and the chips on the benches, almost all of
+  it as `InstancedMesh` — about 4,200 bodies in ~860 meshes, built in about 1.3 s.
+  `ligar-textures.js` adds five surfaces, each with every map off one height field:
+  `basaltColumn` (anisotropic chisel-mark banding, joints, spall, lichen, iron weep),
+  `basaltPavement` (the column tops — joints LIGHTER than the stone, because they hold
+  the dust), `scoriaGrit`, `lavaTubeWall` (ropy and glazed) and `conveyorBelt`.
+- **The arches' jointing follows the curve**: prisms stand radially round a swept core,
+  vertical in the legs and horizontal over the crown, which is what a flow cooling
+  round a void does and what carries the silhouette. Legs are founded in the ground,
+  deep enough for the lower foot, since a thirty-metre span stands on ground that is
+  not level; no jointing is built below the ground under it.
+- **Four sites, all built, each sign `Bench N - <quest title>`.** `site-1` *Bench 1 -
+  What Holds* (`q1-joins`) on a cut terrace under a stone portal west of the yard;
+  `site-2` *Bench 2 - Stone and Wire* (`q2-lattice`) at the **Tube Forge** — down the
+  ramp, across the quarry floor and in under a barrel-vaulted lava tube with a hearth
+  whose fire is the one red light and the one self-moving thing in the world, because
+  that bench heats blocks; `site-3` *Bench 3 - The Same Recipe* (`q3-recipe`) in the
+  silo-fed **Batch House**; `site-4` *Bench 4 - Counting By Weight* (`q4-weigh`) at the
+  **Weighbridge** with its scale house. Sites 3 and 4 share the east deck and the gantry
+  that carries both their signs, which is how the reference art placed them.
+- **The tube is inside the cut, not behind it.** A chamber beyond the far wall would be
+  outside the excavation rectangle, where `getTerrainHeight` answers with the flat five
+  metres overhead. So the vault is roofed over the far portion of the floor.
+- **The walking surface knows about everything stood on.** The walk clamps the camera
+  to `getTerrainHeight` with no step limit, so the terrace, the deck (with its entry
+  ramp) and the landing pad register themselves in `this.raised` as they are built, and
+  anything laid inside a prop — scree, heaps, column feet, trestle legs — is placed on
+  the ground under IT (`localGround`, and `localWalk` for the conveyors, which stand
+  half in the cut) rather than at the prop's centre height. Each of those was a real
+  bug `verify:ligar` found: a player sinking into the deck, scree buried a metre and a
+  half under an arch's higher foot, a trestle standing in mid-air over the cut.
+- **A conveyor is twenty-two metres long, not a circle.** Its declared radius covers its
+  middle; the layout generator keeps its whole run clear, the floor rubble avoids its
+  run, and it runs tail-DOWN in the cut and head-UP over the spoil (`rotY -PI/2`). The
+  tail starts eleven metres inside the wall, because at 27 degrees that is how far out a
+  belt must start to clear a five-metre lip — it once ran into the rock.
+- **Instanced bodies are measured per instance.** Each field records its instances in
+  `userData.partBoxes` (the `mergeStatic` channel), so the overlap checker sees each
+  column where it is. The quarry-floor rubble is its own body, not part of the exempt
+  cut, because filed under the cut it once lay through the forge unseen.
 
 ### Surfaces, small parts and the draw-call budget (`materials/pbr-kit.js`)
 
@@ -1165,9 +1268,9 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
   `unit02/q4-weigh`, the whole of Ligar). Scaffolding, gating, routes, backend tab,
   per-world practice sets and the verifier are in place. World 01 (Tallow) is also built as
   walkable ground at T4: sites 1–2 are benches you stand at, sites 3–5 are real places whose
-  quests draw the bench as a page over the world. **Ligar is games only** — four playable
-  benches on every tier, no walkable ground, nothing in `worlds3d.js` or `BUILT_BENCHES`;
-  that is a separate pass. The other eight worlds are charts only. The Tallow→Ligar pass
+  quests draw the bench as a page over the world. **Ligar is walkable at T4 too** — all four of its
+  benches are built instruments on its ground, and a page on every lower tier. The other
+  eight worlds are charts only. The Tallow→Ligar pass
   (`tallow-ligar-build.md`) carries the bench order and what is deliberately left out of
   each unit.
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
@@ -1450,8 +1553,10 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - Erebus world scene: `src/three/world.js` and `src/three/world-data/erebus.json` define The Charge Gardens basin with 20 instanced pylon structures along a walkable route, survey lander ("SANDSTALKER") with boarding ramp, stratified sedimentary rock outcrops, procedural terrain heightmap (`getTerrainHeight`), amber celestial sky, banded gas giant vista (with `fog: false` celestial bodies), tuned desert haze (`fogNear: 70`, `fogFar: 280`), and atmospheric dust motes.
 - T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `CLOSE` dismiss controls. Star Map holo-table integrates Sector 01 status and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates standings; Settings integrates graphics tier (T4 default) and audio sliders. Bridge displays the floating directory kiosk instead of WASD/mouse look text prompts.
 - T4 Learn deployment: In T4, `#/learn/unit01` enters the 3D Tallow world
-  (`stage.enterTallowScene(siteId)`); walking to a bench and pressing `[E]` raises a
-  `tallow:interact` event that routes to `#/learn/unit01/<questId>`, where the quest's
+  (`stage.enterTallowScene(siteId)`), and `#/learn/unit02` enters Ligar
+  (`stage.enterLigarScene(siteId)`); walking to a bench and pressing `[E]` raises a
+  `learn-site:interact` event (it was `tallow:interact` while Tallow was the only one)
+  that routes to `#/learn/<worldId>/<questId>`, where the quest's
   instrument is deployed as the 3D bench with the frame as an overlay beside it. The
   router keeps the world scene across both routes (`isWalkableLearnRoute`), so stepping
   in and out of a bench never passes through the ship, and the last site is remembered so

@@ -1,0 +1,847 @@
+{
+  "id": "ligar",
+  "name": "Ligar",
+  "place": "Basalt arches",
+  "oneLine": "Nothing here stands alone.",
+  "sky": "ligar-sky",
+  "terrain": {
+    "heightmap": "ligar-basalt",
+    "size": [
+      240,
+      240
+    ],
+    "maxHeight": 6.0,
+    "material": "basalt-pavement"
+  },
+  "ambience": {
+    "keyLight": 15253642,
+    "fillLight": 7035980,
+    "fogColor": 7034951,
+    "fogNear": 44,
+    "fogFar": 250,
+    "dustDensity": 0.26
+  },
+  "sublevel": {
+    "floorY": -5.0,
+    "room": {
+      "minX": -26.0,
+      "maxX": 10.0,
+      "minZ": -34.0,
+      "maxZ": -8.0
+    },
+    "stair": {
+      "minX": 2.2,
+      "maxX": 7.6,
+      "minZ": -8.0,
+      "maxZ": 2.4
+    },
+    "headPos": [
+      4.9,
+      0,
+      1.6
+    ],
+    "ceilingY": -1.2
+  },
+  "landmarks": [
+    {
+      "asset": "arch",
+      "pos": [
+        -63.96,
+        0,
+        -34.71
+      ],
+      "rotY": 0.28,
+      "scale": 0.86,
+      "radius": 15.0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "arch",
+      "pos": [
+        -4.08,
+        0,
+        -66.08
+      ],
+      "rotY": -0.16,
+      "scale": 1.22,
+      "radius": 20.0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "arch",
+      "pos": [
+        48,
+        0,
+        -58
+      ],
+      "rotY": 0.52,
+      "scale": 0.94,
+      "radius": 16.0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "colonnade",
+      "pos": [
+        -44.22,
+        0,
+        30.4
+      ],
+      "rotY": 0.2,
+      "scale": 1.0,
+      "radius": 9.0,
+      "minTier": "T2"
+    },
+    {
+      "asset": "colonnade",
+      "pos": [
+        -23.97,
+        0,
+        42.18
+      ],
+      "rotY": -0.35,
+      "scale": 0.88,
+      "radius": 8.0,
+      "minTier": "T2"
+    },
+    {
+      "asset": "colonnade",
+      "pos": [
+        15.3,
+        0,
+        42.68
+      ],
+      "rotY": 0.55,
+      "scale": 1.06,
+      "radius": 9.5,
+      "minTier": "T2"
+    },
+    {
+      "asset": "colonnade",
+      "pos": [
+        34,
+        0,
+        30
+      ],
+      "rotY": 0.1,
+      "scale": 0.94,
+      "radius": 8.5,
+      "minTier": "T2"
+    },
+    {
+      "asset": "colonnade",
+      "pos": [
+        50.42,
+        0,
+        9.21
+      ],
+      "rotY": -0.45,
+      "scale": 1.0,
+      "radius": 9.0,
+      "minTier": "T2"
+    },
+    {
+      "asset": "colonnade",
+      "pos": [
+        46.51,
+        0,
+        -19.49
+      ],
+      "rotY": 0.3,
+      "scale": 0.9,
+      "radius": 8.0,
+      "minTier": "T2"
+    },
+    {
+      "asset": "colonnade",
+      "pos": [
+        -48,
+        0,
+        -4
+      ],
+      "rotY": 0.62,
+      "scale": 0.96,
+      "radius": 8.5,
+      "minTier": "T2"
+    },
+    {
+      "asset": "colonnade",
+      "pos": [
+        -39.59,
+        0,
+        -46.94
+      ],
+      "rotY": -0.22,
+      "scale": 1.1,
+      "radius": 9.5,
+      "minTier": "T2"
+    },
+    {
+      "asset": "colonnade",
+      "pos": [
+        16.08,
+        0,
+        -45.92
+      ],
+      "rotY": 0.44,
+      "scale": 0.86,
+      "radius": 8.0,
+      "minTier": "T2"
+    },
+    {
+      "asset": "colonnade",
+      "pos": [
+        44,
+        0,
+        52
+      ],
+      "rotY": -0.12,
+      "scale": 0.98,
+      "radius": 9.0,
+      "minTier": "T2"
+    },
+    {
+      "asset": "spoil-heap",
+      "pos": [
+        -37.53,
+        0,
+        18.43
+      ],
+      "rotY": 0.4,
+      "scale": 1.0,
+      "radius": 4.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "spoil-heap",
+      "pos": [
+        6,
+        0,
+        24
+      ],
+      "rotY": -0.2,
+      "scale": 1.08,
+      "radius": 4.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "spoil-heap",
+      "pos": [
+        38,
+        0,
+        -4
+      ],
+      "rotY": 0.7,
+      "scale": 0.92,
+      "radius": 4.0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "spoil-heap",
+      "pos": [
+        -40,
+        0,
+        46
+      ],
+      "rotY": 0.1,
+      "scale": 1.12,
+      "radius": 4.8,
+      "minTier": "T3"
+    },
+    {
+      "asset": "spoil-heap",
+      "pos": [
+        26,
+        0,
+        54
+      ],
+      "rotY": -0.5,
+      "scale": 1.0,
+      "radius": 4.4,
+      "minTier": "T3"
+    },
+    {
+      "asset": "spoil-heap",
+      "pos": [
+        -16,
+        0,
+        54
+      ],
+      "rotY": 0.25,
+      "scale": 0.96,
+      "radius": 4.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "broken-column",
+      "pos": [
+        -14,
+        0,
+        24
+      ],
+      "rotY": 0.9,
+      "scale": 1.0,
+      "radius": 2.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "broken-column",
+      "pos": [
+        2,
+        0,
+        36
+      ],
+      "rotY": -0.4,
+      "scale": 1.1,
+      "radius": 2.6,
+      "minTier": "T4"
+    },
+    {
+      "asset": "broken-column",
+      "pos": [
+        20,
+        0,
+        14
+      ],
+      "rotY": 1.4,
+      "scale": 0.9,
+      "radius": 2.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "broken-column",
+      "pos": [
+        -31.4,
+        0,
+        22.4
+      ],
+      "rotY": 0.2,
+      "scale": 1.0,
+      "radius": 2.6,
+      "minTier": "T4"
+    },
+    {
+      "asset": "broken-column",
+      "pos": [
+        34,
+        0,
+        18
+      ],
+      "rotY": -1.1,
+      "scale": 1.05,
+      "radius": 2.6,
+      "minTier": "T4"
+    },
+    {
+      "asset": "broken-column",
+      "pos": [
+        -10,
+        0,
+        -2
+      ],
+      "rotY": 0.6,
+      "scale": 0.95,
+      "radius": 2.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "broken-column",
+      "pos": [
+        39.58,
+        0,
+        3.79
+      ],
+      "rotY": 2.0,
+      "scale": 1.0,
+      "radius": 2.6,
+      "minTier": "T4"
+    },
+    {
+      "asset": "broken-column",
+      "pos": [
+        -52,
+        0,
+        16
+      ],
+      "rotY": -0.7,
+      "scale": 1.08,
+      "radius": 2.6,
+      "minTier": "T4"
+    },
+    {
+      "asset": "broken-column",
+      "pos": [
+        9.66,
+        0,
+        54.86
+      ],
+      "rotY": 0.3,
+      "scale": 0.92,
+      "radius": 2.6,
+      "minTier": "T4"
+    },
+    {
+      "asset": "broken-column",
+      "pos": [
+        -30,
+        0,
+        52
+      ],
+      "rotY": 1.7,
+      "scale": 1.0,
+      "radius": 2.6,
+      "minTier": "T4"
+    },
+    {
+      "asset": "conveyor",
+      "pos": [
+        -24.5,
+        0,
+        -31.61
+      ],
+      "rotY": -1.571,
+      "scale": 1.0,
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "conveyor",
+      "pos": [
+        -24.5,
+        0,
+        -24.71
+      ],
+      "rotY": -1.571,
+      "scale": 1.0,
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "conveyor",
+      "pos": [
+        -24.5,
+        0,
+        -17.79
+      ],
+      "rotY": -1.571,
+      "scale": 1.0,
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "conveyor",
+      "pos": [
+        -24.5,
+        0,
+        -10.89
+      ],
+      "rotY": -1.571,
+      "scale": 1.0,
+      "radius": 3.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ore-cart",
+      "pos": [
+        -20.0,
+        0,
+        -37.0
+      ],
+      "rotY": 0.0,
+      "scale": 1.0,
+      "radius": 1.5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ore-cart",
+      "pos": [
+        -13.5,
+        0,
+        -37.0
+      ],
+      "rotY": 0.0,
+      "scale": 1.0,
+      "radius": 1.5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "ore-cart",
+      "pos": [
+        -7.0,
+        0,
+        -37.0
+      ],
+      "rotY": 0.0,
+      "scale": 1.0,
+      "radius": 1.5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "guard-hut",
+      "pos": [
+        15.0,
+        0,
+        -16.0
+      ],
+      "rotY": -0.35,
+      "scale": 1.0,
+      "radius": 2.4,
+      "minTier": "T3"
+    },
+    {
+      "asset": "hauler",
+      "pos": [
+        15.43,
+        0,
+        4.41
+      ],
+      "rotY": 0.62,
+      "scale": 1.0,
+      "radius": 4.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        13.16,
+        0,
+        -4.8
+      ],
+      "rotY": 0.2,
+      "scale": 1.0,
+      "radius": 1.8,
+      "minTier": "T3"
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        11.74,
+        0,
+        -0.95
+      ],
+      "rotY": -0.4,
+      "scale": 1.0,
+      "radius": 1.8,
+      "minTier": "T3"
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        14.0,
+        0,
+        13.0
+      ],
+      "rotY": 0.8,
+      "scale": 1.0,
+      "radius": 1.8,
+      "minTier": "T3"
+    },
+    {
+      "asset": "drum-stack",
+      "pos": [
+        34.0,
+        0,
+        -14.0
+      ],
+      "rotY": 0.1,
+      "scale": 1.0,
+      "radius": 1.8,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        -26.03,
+        0,
+        28.82
+      ],
+      "rotY": 0.4,
+      "scale": 1.0,
+      "radius": 5.0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "shed",
+      "pos": [
+        -42.85,
+        0,
+        10.77
+      ],
+      "rotY": 0.15,
+      "scale": 0.9,
+      "radius": 4.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "stack",
+      "pos": [
+        -45.18,
+        0,
+        -25.07
+      ],
+      "rotY": 0.0,
+      "scale": 1.1,
+      "radius": 5.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "stack",
+      "pos": [
+        30.0,
+        0,
+        -32.0
+      ],
+      "rotY": 0.0,
+      "scale": 0.95,
+      "radius": 5.6,
+      "minTier": "T3"
+    },
+    {
+      "asset": "water-tower",
+      "pos": [
+        -18.0,
+        0,
+        4.0
+      ],
+      "rotY": 0.3,
+      "scale": 1.0,
+      "radius": 3.0,
+      "minTier": "T3"
+    },
+    {
+      "asset": "cable-mast",
+      "pos": [
+        -4.0,
+        0,
+        16.0
+      ],
+      "rotY": 0.0,
+      "scale": 1.0,
+      "radius": 1.4,
+      "minTier": "T3"
+    },
+    {
+      "asset": "cable-mast",
+      "pos": [
+        39.49,
+        0,
+        -26.51
+      ],
+      "rotY": 0.0,
+      "scale": 1.0,
+      "radius": 1.4,
+      "minTier": "T3"
+    },
+    {
+      "asset": "landing-pad",
+      "pos": [
+        -0.96,
+        0,
+        50.46
+      ],
+      "rotY": 0.0,
+      "scale": 1.0,
+      "radius": 8.0,
+      "minTier": "T2"
+    },
+    {
+      "asset": "stake-marker",
+      "pos": [
+        0.0,
+        0,
+        32.0
+      ],
+      "rotY": 0.0,
+      "scale": 1.0,
+      "radius": 0.9,
+      "minTier": "T4"
+    },
+    {
+      "asset": "stake-marker",
+      "pos": [
+        10.0,
+        0,
+        10.0
+      ],
+      "rotY": 0.0,
+      "scale": 1.0,
+      "radius": 0.9,
+      "minTier": "T4"
+    },
+    {
+      "asset": "stake-marker",
+      "pos": [
+        -12.0,
+        0,
+        10.0
+      ],
+      "rotY": 0.0,
+      "scale": 1.0,
+      "radius": 0.9,
+      "minTier": "T4"
+    },
+    {
+      "asset": "stake-marker",
+      "pos": [
+        20.0,
+        0,
+        -24.0
+      ],
+      "rotY": 0.0,
+      "scale": 1.0,
+      "radius": 0.9,
+      "minTier": "T4"
+    }
+  ],
+  "sites": [
+    {
+      "id": "site-1",
+      "questId": "q1-joins",
+      "stage": 1,
+      "pos": [
+        -30.0,
+        0,
+        10.0
+      ],
+      "approachPos": [
+        -30.0,
+        1.6,
+        15.2
+      ],
+      "label": "Bench 1 - What Holds",
+      "structure": "arch-terrace",
+      "built": true
+    },
+    {
+      "id": "site-2",
+      "questId": "q2-lattice",
+      "stage": 2,
+      "pos": [
+        -6.0,
+        -5.0,
+        -26.0
+      ],
+      "approachPos": [
+        -6.0,
+        -3.4,
+        -21.0
+      ],
+      "label": "Bench 2 - Stone and Wire",
+      "structure": "tube-forge",
+      "built": true
+    },
+    {
+      "id": "site-3",
+      "questId": "q3-recipe",
+      "stage": 3,
+      "pos": [
+        26.0,
+        0,
+        -4.0
+      ],
+      "approachPos": [
+        21.2,
+        1.6,
+        -4.0
+      ],
+      "label": "Bench 3 - The Same Recipe",
+      "structure": "batch-house",
+      "built": true
+    },
+    {
+      "id": "site-4",
+      "questId": "q4-weigh",
+      "stage": 4,
+      "pos": [
+        26.0,
+        0,
+        8.0
+      ],
+      "approachPos": [
+        21.2,
+        1.6,
+        8.0
+      ],
+      "label": "Bench 4 - Counting By Weight",
+      "structure": "weighbridge",
+      "built": true
+    }
+  ],
+  "spawn": {
+    "pos": [
+      0,
+      1.6,
+      48.0
+    ],
+    "lookAt": [
+      0,
+      1.6,
+      22.0
+    ]
+  },
+  "t2": {
+    "stillCamera": {
+      "site-1": {
+        "pos": [
+          -30.0,
+          1.6,
+          15.2
+        ],
+        "lookAt": [
+          -30.0,
+          1.2,
+          10.0
+        ]
+      },
+      "site-2": {
+        "pos": [
+          -6.0,
+          -3.4,
+          -21.0
+        ],
+        "lookAt": [
+          -6.0,
+          -3.8,
+          -26.0
+        ]
+      },
+      "site-3": {
+        "pos": [
+          21.2,
+          1.6,
+          -4.0
+        ],
+        "lookAt": [
+          26.0,
+          1.2,
+          -4.0
+        ]
+      },
+      "site-4": {
+        "pos": [
+          21.2,
+          1.6,
+          8.0
+        ],
+        "lookAt": [
+          26.0,
+          1.2,
+          8.0
+        ]
+      }
+    }
+  },
+  "t1": {
+    "siteOrder": [
+      "site-1",
+      "site-2",
+      "site-3",
+      "site-4"
+    ],
+    "siteDescriptions": {
+      "site-1": "The first bench, on the stone terrace under the western arch, west of the yard.",
+      "site-2": "The second bench, at the forge in the tube mouth at the far end of the cut, down the ramp.",
+      "site-3": "The third bench, inside the batch house on the east deck, under the gantry sign.",
+      "site-4": "The fourth bench, on the weighbridge deck south of the batch house."
+    }
+  }
+}

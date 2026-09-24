@@ -1,5 +1,10 @@
 # Finishing Tallow, building Ligar — the T3-and-below pass
 
+> **Superseded in part (2026-09-23):** Ligar is now walkable ground at T4 and all
+> four of its benches are built instruments — see `learn-track.md` and CLAUDE.md
+> "Ligar". This file remains the record of the T3-and-below pass it describes.
+
+
 **Scope of this pass: the GAMES.** Every quest below is built as a playable module
 against `src/learn/quests/_template.js`, with its instrument drawn on canvas or
 plate cards, its eight stages graded by pure functions, its reward cards, its
