@@ -83,6 +83,11 @@
     letter-spacing: 0.08em;
     white-space: nowrap;
   }
+  .btn-chip-icon {
+    width: 36px;
+    min-width: 36px;
+    padding: 0;
+  }
   #user-btn { max-width: 88px; }
   #user-display-name {
     display: block;

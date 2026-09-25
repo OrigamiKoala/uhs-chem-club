@@ -79,6 +79,11 @@
     letter-spacing: 0.08em;
     white-space: nowrap;
   }
+  .btn-chip-icon {
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+  }
   #gfx-tier-toggle, #motion-toggle { display: none; }
   #user-btn { max-width: 88px; }
   #user-display-name {
