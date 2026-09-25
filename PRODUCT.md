@@ -63,7 +63,7 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
   `docs/runbook.md` is the showcase-night reference.
 - **Stack (existing):** Vite + Three.js client, DOM UI over one persistent WebGL canvas;
   a Vercel Node proxy that does scrypt password derivation and rate limiting; a Google
-  Apps Script web app over a 13-tab Google Sheet.
+  Apps Script web app over a 15-tab Google Sheet.
 
 ## Capabilities and Constraints
 

@@ -113,6 +113,20 @@ export function renderSettings(container) {
         </div>
       </div>
 
+      <!-- Section: Privacy & Standings -->
+      <div class="glass-panel" style="margin-bottom: 1.5rem;">
+        <h2 class="section-title" style="margin-bottom: 1.25rem;">Privacy & Standings</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+          <div>
+            <div style="font-family: var(--font-display); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-bright);">Keep Name Off Public Boards</div>
+            <div class="eyebrow" style="margin-top: 3px; font-size: 0.72rem; color: var(--text-muted);">
+              When active, your name appears as "Crew · [Guild]" to other players on public standings.
+            </div>
+          </div>
+          <input type="checkbox" id="board-optout-checkbox" ${session.player?.board_optout ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer;">
+        </div>
+      </div>
+
       <!-- Section 3: Change Password -->
       <div class="glass-panel">
         <h2 class="section-title">Change Password</h2>
@@ -189,9 +203,22 @@ export function renderSettings(container) {
 
   // Motion checkbox
   const motionCheck = container.querySelector('#reduce-motion-checkbox');
-  motionCheck.addEventListener('change', (e) => {
+  motionCheck?.addEventListener('change', (e) => {
     session.setReduceMotion(e.target.checked);
     showToast(`Reduce motion ${e.target.checked ? 'on' : 'off'}.`, 'info');
+  });
+
+  // Privacy checkbox
+  const optoutCheck = container.querySelector('#board-optout-checkbox');
+  optoutCheck?.addEventListener('change', async (e) => {
+    const checked = e.target.checked;
+    if (session.player) session.player.board_optout = checked;
+    try {
+      await api.updateSettings({ board_optout: checked });
+      showToast(checked ? 'Public board name hidden.' : 'Public board name shown.', 'info');
+    } catch (err) {
+      showToast('Setting saved locally.', 'info');
+    }
   });
 
   // Password form

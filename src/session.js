@@ -27,43 +27,23 @@ function normalizeTeamId(tid) {
   return ALIAS_MAP[lc] || lc;
 }
 
-/**
- * Single source of truth for the XP curve. Level N starts at 45*(N-1)^2 XP,
- * capped at 12 to match Scoring.computeLevel in apps-script/Scoring.gs.
- * Duplicated formulas in the HUD, the proxy and the backend used to drift apart.
- */
-export const MAX_LEVEL = 12;
+const COMMENDATIONS_KEY = 'avalon_commendations';
+const LOADOUT_KEY = 'avalon_loadout';
+const MARKS_KEY = 'avalon_clean_stages';
 
-export function levelForXp(xp) {
-  return Math.min(MAX_LEVEL, Math.max(1, Math.floor(Math.sqrt(Math.max(0, xp || 0) / 45)) + 1));
-}
+export {
+  MAX_LEVEL,
+  LEVEL_THRESHOLDS,
+  LEVEL_TITLES,
+  levelForXp,
+  levelTitle,
+  levelProgress
+} from './progression/levels.js';
+import { levelForXp, levelProgress, levelTitle } from './progression/levels.js';
+import { progressionFeed } from './progression/feed.js';
+import { evaluateCommendations } from './progression/commendations.js';
+import { nextLevelRequisition } from './progression/requisitions.js';
 
-/** Rank name for a level — mirrors LEVEL_TITLES in apps-script/Scoring.gs. */
-export function levelTitle(level) {
-  if (level <= 2) return 'Cadet';
-  if (level <= 4) return 'Scout';
-  if (level <= 6) return 'Navigator';
-  if (level <= 8) return 'Voyager';
-  if (level <= 10) return 'Pathfinder';
-  return 'Starmarshal';
-}
-
-/** Progress within the current level, for the HUD bar. */
-export function levelProgress(xp) {
-  const total = Math.max(0, xp || 0);
-  const level = levelForXp(total);
-  const base = 45 * Math.pow(level - 1, 2);
-  const next = 45 * Math.pow(level, 2);
-  const into = total - base;
-  const needed = Math.max(1, next - base);
-  return {
-    level,
-    into,
-    needed,
-    nextLevelXp: next,
-    pct: Math.min(100, Math.max(0, Math.round((into / needed) * 100)))
-  };
-}
 
 function normalizeTeamObj(t) {
   if (!t || typeof t !== 'object') return t;
@@ -134,6 +114,12 @@ class SessionManager {
       }
       const l = localStorage.getItem(LEARN_KEY);
       if (l) this.learn = JSON.parse(l) || {};
+      const comms = localStorage.getItem(COMMENDATIONS_KEY);
+      if (comms) this.commendations = JSON.parse(comms) || [];
+      const loadout = localStorage.getItem(LOADOUT_KEY);
+      if (loadout) this.loadout = { ...this.loadout, ...JSON.parse(loadout) };
+      const marks = localStorage.getItem(MARKS_KEY);
+      if (marks) this.cleanStages = JSON.parse(marks) || [];
     } catch (e) {}
 
     // Restore cached config & teams
@@ -274,6 +260,22 @@ class SessionManager {
       this.progress = data.progress;
     }
 
+    if (data.loadout_json || data.player?.loadout_json) {
+      const raw = data.loadout_json || data.player?.loadout_json;
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      if (parsed) this.loadout = { ...(this.loadout || {}), ...parsed };
+    }
+    if (Array.isArray(data.commendations) || Array.isArray(data.player?.commendations)) {
+      const arr = Array.isArray(data.commendations) ? data.commendations : data.player.commendations;
+      this.commendations = Array.from(new Set([...(this.commendations || []), ...arr]));
+    }
+    if (data.player && typeof data.player.board_optout === 'boolean') {
+      this.player.board_optout = data.player.board_optout;
+    } else if (typeof data.board_optout === 'boolean') {
+      if (!this.player) this.player = {};
+      this.player.board_optout = data.board_optout;
+    }
+
     // Auto-match team if player has team_id
     if (this.player && this.player.team_id && (!this.team || this.team.team_id !== this.player.team_id)) {
       if (this.teams && this.teams.length > 0) {
@@ -283,19 +285,105 @@ class SessionManager {
     }
 
     this.saveSession();
+    this.saveProgression();
+    this.checkCommendations();
     this.notify();
   }
 
   addXp(amount) {
     if (!amount || typeof amount !== 'number') return;
+    const oldLevel = this.level || 1;
     this.xp = (this.xp || 0) + amount;
     this.level = levelForXp(this.xp);
     if (this.player) {
       this.player.xp = this.xp;
       this.player.level = this.level;
     }
+    if (this.level > oldLevel) {
+      const req = nextLevelRequisition(oldLevel);
+      progressionFeed.enqueueLevelUp(this.level, req);
+    }
     this.saveSession();
+    this.checkCommendations();
     this.notify();
+  }
+
+  saveProgression() {
+    try {
+      localStorage.setItem(COMMENDATIONS_KEY, JSON.stringify(this.commendations || []));
+      localStorage.setItem(LOADOUT_KEY, JSON.stringify(this.loadout || {}));
+      localStorage.setItem(MARKS_KEY, JSON.stringify(this.cleanStages || []));
+    } catch (e) {}
+  }
+
+  setLoadout(updates = {}) {
+    this.loadout = { ...(this.loadout || {}), ...updates };
+    this.saveProgression();
+    this.notify();
+  }
+
+  pinPlate(plateId) {
+    if (!this.loadout) this.loadout = {};
+    if (!Array.isArray(this.loadout.pinnedPlates)) this.loadout.pinnedPlates = [];
+    if (this.loadout.pinnedPlates.includes(plateId)) return;
+    if (this.loadout.pinnedPlates.length >= 3) {
+      this.loadout.pinnedPlates.shift();
+    }
+    this.loadout.pinnedPlates.push(plateId);
+    this.saveProgression();
+    this.notify();
+  }
+
+  unpinPlate(plateId) {
+    if (!this.loadout || !Array.isArray(this.loadout.pinnedPlates)) return;
+    this.loadout.pinnedPlates = this.loadout.pinnedPlates.filter(id => id !== plateId);
+    this.saveProgression();
+    this.notify();
+  }
+
+  recordCleanStage(stageIndex) {
+    if (!this.cleanStages) this.cleanStages = [];
+    if (!this.cleanStages.includes(stageIndex)) {
+      this.cleanStages.push(stageIndex);
+      this.cleanStages.sort((a, b) => a - b);
+    }
+    this.saveProgression();
+    this.checkCommendations();
+  }
+
+  checkCommendations() {
+    const q1Prog = (this.progress || []).find(p => p.quest_id === 'q1');
+    const stageReached = q1Prog ? Number(q1Prog.stage_reached || 0) : 0;
+    const state = {
+      clearedStagesCount: stageReached,
+      stageReached,
+      cleanStreak: this.cleanStreak || 0,
+      maxCleanStreak: this.maxCleanStreak || 0,
+      cleanStages: this.cleanStages || [],
+      learn: this.learn || {},
+      flags: this.flags || {},
+      teamId: this.teamId,
+      role: this.player?.role,
+      watchCount: this.watch?.watchCount || 0,
+      contractsCompletedCount: this.contractsCompletedCount || 0
+    };
+    const earned = evaluateCommendations(state);
+    if (!this.commendations) this.commendations = [];
+    const existingSet = new Set(this.commendations);
+    let newlyEarned = false;
+
+    for (const c of earned) {
+      if (!existingSet.has(c.id)) {
+        this.commendations.push(c.id);
+        existingSet.add(c.id);
+        newlyEarned = true;
+        progressionFeed.enqueueCommendation(c);
+      }
+    }
+    if (newlyEarned) {
+      this.saveProgression();
+      this.notify();
+    }
   }
 
   recordProgress(questId, stageReached) {

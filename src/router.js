@@ -25,6 +25,7 @@ import { renderInventory } from './screens/inventory.js';
 import { renderQuarters } from './screens/quarters.js';
 import { renderSettings } from './screens/settings.js';
 import { renderAdmin } from './screens/admin.js';
+import { renderCrewProfile } from './screens/crew-profile.js';
 
 const ROUTE_ROOM = {
   '/': 'cockpit',
@@ -104,6 +105,7 @@ const ROUTES = {
  * ":" is captured into `params` and handed to the render function.
  */
 const PARAM_ROUTES = [
+  { pattern: ['crew', ':playerId'], render: renderCrewProfile, auth: false, nav: 'leaderboard', room: 'comms', backdrop: '/art/comms.jpg' },
   { pattern: ['learn', ':worldId'], render: renderLearnWorld, auth: true, nav: 'learn', room: 'starmap', backdrop: '/art/crucible.jpg' },
   { pattern: ['learn', ':worldId', ':questId'], render: renderLearnQuest, auth: true, nav: 'learn', room: 'quest', backdrop: '/art/crucible.jpg' }
 ];

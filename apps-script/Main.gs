@@ -217,7 +217,7 @@ var ROUTES = {
         var v = Auth.verifySessionToken(body.token);
         if (v) pid = v.player.player_id;
       }
-      return Scoring.getLeaderboards(pid);
+      return Scoring.getLeaderboards(pid, body.scope);
     }
   },
 

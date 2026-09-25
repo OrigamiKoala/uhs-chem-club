@@ -367,6 +367,42 @@ class Soundscape {
     chime.stop(now + 1.2);
   }
 
+  playStamp() {
+    this.initContext();
+    if (!this.ctx || session.sound?.muted) return;
+    const now = this.ctx.currentTime;
+
+    // Heavy mechanical press impact
+    const thud = this.ctx.createOscillator();
+    const thudGain = this.ctx.createGain();
+    thud.type = 'triangle';
+    thud.frequency.setValueAtTime(140, now);
+    thud.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+
+    thudGain.gain.setValueAtTime(0.5, now);
+    thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+    thud.connect(thudGain);
+    thudGain.connect(this.effectsGain);
+    thud.start(now);
+    thud.stop(now + 0.15);
+
+    // Resonant metallic plate ring
+    const ring = this.ctx.createOscillator();
+    const ringGain = this.ctx.createGain();
+    ring.type = 'sine';
+    ring.frequency.setValueAtTime(420, now + 0.02);
+    ring.frequency.exponentialRampToValueAtTime(360, now + 0.4);
+
+    ringGain.gain.setValueAtTime(0.22, now + 0.02);
+    ringGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+    ring.connect(ringGain);
+    ringGain.connect(this.effectsGain);
+    ring.start(now + 0.02);
+    ring.stop(now + 0.4);
+  }
+
   // --- Voice Murmur (Vess radio voice) ---
 
   startMurmur() {

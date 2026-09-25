@@ -1369,6 +1369,14 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
   eight worlds are charts only. The Tallow→Ligar pass
   (`tallow-ligar-build.md`) carries the bench order and what is deliberately left out of
   each unit.
+- `docs/plans/engagement-pass.md` — progression and engagement (plan only, nothing built):
+  a table-driven level curve paced to the XP that exists, a presentation queue that holds
+  level-ups until a safe moment, requisitions (derived unlocks, cosmetic or convenience
+  only), commendations (stencilled plates from either road, never XP), per-stage Clean
+  marks, the Field Manual (earned vocabulary as a collection), a weekly watch streak,
+  officer-issued meeting codes, guild contracts, and Standings scopes (Your Guild, This
+  Week, a pinned row and a neighbourhood). Six open decisions are listed in its §12,
+  including whether the Learn XP wall stays (recommended: yes).
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
 
@@ -1758,3 +1766,13 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   `stage-header-main`/`stage-header-actions`, `banner-content`, `demo-actions`,
   `quest-modal-head`, `quest-debrief-stats`, `debrief-controls-left`, and in the Tier 1
   builders `fallback-arrow-row`/`fallback-arrow-glyph`/`fallback-step` (stacked, arrow turned down).
+
+### 10. Progression, Standings, and Commendations
+- **Level Curve (`src/progression/levels.js`):** Pure table-based progression curve (`LEVEL_THRESHOLDS`). Levels 1 through 12, max level 12 (0 to 2,520 XP). Rank titles: Cadet (1-2), Scout (3-4), Navigator (5-6), Voyager (7-8), Pathfinder (9-10), Starmarshal (11-12). Quest 1 pays 715 XP total (650 stages + 40 completion + 25 on-time), reaching Level 6.
+- **Requisitions & Locker (`src/progression/requisitions.js`, `src/screens/quarters.js`):** Quartermaster unlock registry. All unlocks are strictly cosmetic and identity-based (`nameplate`, `title`, `cosmetic`, `insignia`, `specialty`). Zero XP or hint perks. Held requisitions derive purely from player level and earned badges. Players customize loadouts in the Locker.
+- **Commendations Registry (`src/progression/commendations.js`):** ~40 commendation badges across 5 roads: Campaign, Craft, Learn, Crew, and Season. Pure predicate evaluations (`earnedBy(state)`). Commendations grant prestige and cosmetics; they carry zero XP. Up to 3 plates can be pinned to active dress. No meeting code badges.
+- **Marks & Field Manual (`src/progression/marks.js`, `src/ui/field-manual.js`):** Clean marks reward solving stages on the first attempt without method rungs. 20 clean marks unlock discovery entries in the Field Manual.
+- **Standings & Dignity Rules (`src/screens/leaderboard.js`):** 4 tabs: Guilds, Crew, Your Guild, This Week. Top 25 + neighbourhood (3 above, 3 below the player) with divider. All players receive dignity protection equally. Players opting out (`board_optout`) appear as `Crew · <GUILD>` on public boards. Text movement indicator (`+3 since last visit`). Rows link to public profiles (`#/crew/:playerId`).
+- **Public Profile (`src/screens/crew-profile.js`):** Read-only dossier for `#/crew/:playerId`. Displays suit preview, level/title, nameplate finish, pinned plates, commendation counts by road, field manual count, watch streak, and guild. Omits stage failure and hint statistics.
+- **Weekly Watch & Contracts (`src/progression/watch.js`, `src/progression/contracts.js`):** Weekly watch streak tracking with 1 forgiveness per 6 stood. Shared guild contracts scale to active roster size.
+- **Verification (`tools/verify-progression.mjs`):** Enforces curve thresholds, requisition whitelist, zero-XP commendation invariants, clean marks, and forgiveness rules via `npm run verify:progression` in `npm run verify`.

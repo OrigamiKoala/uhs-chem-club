@@ -8,6 +8,7 @@ import { stage } from '../three/stage.js';
 import { tierManager } from '../three/tier.js';
 import { showToast } from '../ui/toast.js';
 import { pageHeader, emptyState, esc } from '../ui/layout.js';
+import { TRINKET_TABLE } from '../story/trinkets.js';
 
 export function renderInventory(container) {
   if (stage.cameraRig && tierManager.currentTier !== 'T4') {
@@ -17,17 +18,31 @@ export function renderInventory(container) {
   const isT4 = tierManager.currentTier === 'T4';
   let inventory = session.inventory || [];
 
-  // `usable` marks the items that actually do something today. The rest are trophies —
-  // saying so is better than a Deploy button that promises an effect and delivers nothing.
   const ITEM_CATALOG = {
-    resonance_key: { name: 'Resonance Matrix', rarity: 'epic', usable: true, effect: '+50 XP on use.' },
-    hint_chip: { name: 'Logic Core', rarity: 'common', usable: false, effect: 'Item.' },
-    spare_coolant: { name: 'Cryo-Coolant', rarity: 'common', usable: false, effect: 'Item.' },
-    overclock_module: { name: 'Overclock Unit', rarity: 'rare', usable: false, effect: 'Item.' },
-    deflector_plate: { name: 'Durasteel Shield', rarity: 'rare', usable: false, effect: 'Item.' },
-    scanner_upgrade: { name: 'Sensor Array', rarity: 'rare', usable: false, effect: 'Item.' },
-    star_chart: { name: 'Star Route Map', rarity: 'epic', usable: false, effect: 'Item.' }
+    // Salvage cosmetic items (B5)
+    salvage_pylon_insulator: { name: 'Pylon Insulator', rarity: 'rare', usable: false, effect: 'Cosmetic salvage. Unlocks painted suit finish.' },
+    salvage_brass_fitting: { name: 'Brass Valve Fitting', rarity: 'rare', usable: false, effect: 'Cosmetic salvage. Unlocks brass suit & plate finish.' },
+    salvage_etched_core: { name: 'Etched Coil Core', rarity: 'epic', usable: false, effect: 'Cosmetic salvage. Unlocks etched suit & plate finish.' },
+
+    // Retired functional items kept as trophies (B5)
+    resonance_key: { name: 'Resonance Matrix', rarity: 'epic', usable: false, effect: 'Commemorative expedition relic.' },
+    hint_chip: { name: 'Logic Core', rarity: 'common', usable: false, effect: 'Sub-routine processor core.' },
+    spare_coolant: { name: 'Cryo-Coolant', rarity: 'common', usable: false, effect: 'Thermal stabilizer canister.' },
+    overclock_module: { name: 'Overclock Unit', rarity: 'rare', usable: false, effect: 'Engineering diagnostic unit.' },
+    deflector_plate: { name: 'Durasteel Shield', rarity: 'rare', usable: false, effect: 'Deflector plating slab.' },
+    scanner_upgrade: { name: 'Sensor Array', rarity: 'rare', usable: false, effect: 'Long-range survey optics.' },
+    star_chart: { name: 'Star Route Map', rarity: 'epic', usable: false, effect: 'Cartographic celestial chart.' }
   };
+
+  // Populate all 20 starter trinkets (B4)
+  TRINKET_TABLE.forEach((t, idx) => {
+    ITEM_CATALOG[`trinket_${idx + 1}`] = {
+      name: t.name,
+      rarity: 'rare',
+      usable: false,
+      effect: `Starter keepsake (#${t.roll || idx + 1}): ${t.provenance || t.desc}`
+    };
+  });
 
   function render() {
     const trinketData = session.player?.trinket || session.trinket || null;

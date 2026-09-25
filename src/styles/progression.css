@@ -1,0 +1,329 @@
+/* ===================================================================
+   AVALON — PROGRESSION, STANDINGS & COMMENDATIONS ("SCOURED PLATE")
+   =================================================================== */
+
+/* --- Rank Plate (Level-Up & Profile) --- */
+.rank-plate {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem 2rem;
+  background: var(--plate-200);
+  border: 1px solid var(--border-durasteel);
+  box-shadow: inset 0 1px 0 var(--seam-light), inset 0 -1px 0 var(--seam-dark), 0 8px 24px rgba(0, 0, 0, 0.8);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  text-align: center;
+  user-select: none;
+}
+
+.rank-plate::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background: var(--lamp-amber);
+  box-shadow: 0 0 6px var(--lamp-amber);
+}
+
+.rank-plate .rank-plate-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.rank-plate .rank-plate-num {
+  font-family: var(--font-display);
+  font-size: 3.2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-bright);
+  text-shadow: var(--engrave);
+  letter-spacing: 0.05em;
+}
+
+.rank-plate .rank-plate-title {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-amber);
+  margin-top: 0.4rem;
+}
+
+/* --- Commendation Plate --- */
+.commendation-plate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.15rem;
+  background: var(--plate-200);
+  border: 1px solid var(--border-durasteel);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  box-shadow: inset 0 1px 0 var(--seam-light), inset 0 -1px 0 var(--seam-dark);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.commendation-plate.finish-painted {
+  border-color: var(--plate-500);
+  background: var(--plate-200);
+}
+
+.commendation-plate.finish-brass {
+  border-color: var(--accent-gold);
+  background: linear-gradient(145deg, rgba(30, 29, 34, 0.98), rgba(22, 21, 25, 0.98));
+}
+
+.commendation-plate.finish-brass::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--accent-gold);
+}
+
+.commendation-plate.finish-etched {
+  border-color: var(--text-bright);
+  box-shadow: inset 0 0 0 1px rgba(251, 249, 245, 0.2), inset 0 1px 0 var(--seam-light);
+}
+
+.commendation-plate.locked {
+  opacity: 0.45;
+  background: var(--plate-100);
+  border-style: dashed;
+}
+
+.commendation-plate.pinned {
+  border-left: 2px solid var(--accent-amber);
+}
+
+.commendation-plate .plate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.commendation-plate .plate-name {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+
+.commendation-plate .plate-tier-badge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.commendation-plate.finish-painted .plate-tier-badge { color: var(--text-muted); }
+.commendation-plate.finish-brass .plate-tier-badge { color: var(--accent-gold); }
+.commendation-plate.finish-etched .plate-tier-badge { color: var(--text-bright); }
+
+.commendation-plate .plate-line {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+  flex: 1;
+}
+
+.commendation-plate .plate-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* --- Commendation Mini Chips (Standings & Profile) --- */
+.plate-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--plate-300);
+  border: 1px solid var(--border-durasteel);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.plate-chip.finish-brass {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.plate-chip.finish-etched {
+  border-color: var(--text-bright);
+  color: var(--text-bright);
+}
+
+/* --- Nameplate Finishes --- */
+.nameplate-frame {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nameplate-brass {
+  border: 1px solid var(--accent-gold);
+  color: var(--accent-gold);
+  background: rgba(204, 165, 110, 0.06);
+}
+
+.nameplate-etched {
+  border: 1px solid var(--text-bright);
+  color: var(--text-bright);
+  text-shadow: var(--engrave);
+  background: rgba(251, 249, 245, 0.05);
+}
+
+.nameplate-riveted {
+  border: 1px dashed var(--border-durasteel);
+  color: var(--text-bright);
+}
+
+.nameplate-painted {
+  border: 1px solid var(--plate-500);
+  color: var(--text-bright);
+}
+
+/* --- Standings Row Styles --- */
+.lb-row-pinned {
+  background: var(--plate-300) !important;
+  border-left: 3px solid var(--accent-amber);
+}
+
+.lb-row-neighbourhood {
+  background: rgba(22, 21, 25, 0.7);
+}
+
+.lb-movement {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--accent-green);
+  margin-left: 0.4rem;
+}
+
+.lb-movement.down {
+  color: var(--accent-rust);
+}
+
+/* --- Field Manual Overlay --- */
+.field-manual-overlay {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field-manual-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-durasteel);
+  padding-bottom: 0.75rem;
+}
+
+.field-manual-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.field-manual-term-card {
+  padding: 0.85rem 1rem;
+  background: var(--plate-200);
+  border: 1px solid var(--border-durasteel);
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+
+.field-manual-term-card.unearned {
+  opacity: 0.45;
+  background: var(--plate-100);
+  border-style: dashed;
+}
+
+.term-blank {
+  display: inline-block;
+  height: 12px;
+  width: 90px;
+  background: var(--plate-400);
+  vertical-align: middle;
+}
+
+/* --- Debrief Tally Plate --- */
+.debrief-tally {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--plate-200);
+  border: 1px solid var(--border-durasteel);
+}
+
+.tally-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.tally-row:last-child {
+  border-bottom: none;
+  font-weight: 700;
+  color: var(--accent-amber);
+}
+
+/* --- Progression Moment Modal (Level-Up / Stamp) --- */
+.progression-moment-modal {
+  text-align: center;
+  padding: 1.5rem 1rem 1rem;
+}
+
+.progression-moment-dismiss {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* --- Responsive adjustments (375px floor) --- */
+@media (max-width: 760px) {
+  .lvl-title {
+    display: none;
+  }
+}
+
+/* --- Reduced Motion Overrides --- */
+@media (prefers-reduced-motion: reduce) {
+  .rank-plate,
+  .commendation-plate,
+  .xp-fill-mini {
+    transition: none !important;
+    animation: none !important;
+  }
+}

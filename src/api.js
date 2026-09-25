@@ -82,7 +82,11 @@ export const api = {
   getLearnProgress: () => apiCall('learn/progress'),
   learnStage: (worldId, questId, stageIndex) => apiCall('learn/stage', { worldId, questId, stageIndex }),
   learnComplete: (worldId, questId) => apiCall('learn/complete', { worldId, questId }),
-  getLeaderboards: () => apiCall('leaderboard'),
+  getLeaderboards: (scope) => apiCall('leaderboard', scope ? { scope } : {}),
+  getProgression: () => apiCall('progression/me'),
+  setLoadout: (loadout) => apiCall('loadout/set', loadout),
+  getProfile: (playerId) => apiCall('profile/get', { playerId }),
+  getGuildFeed: (teamId) => apiCall('guild/feed', { teamId }),
   useItem: (itemId, context) => apiCall('inventory/use', { itemId, context }),
   getEvents: () => apiCall('events/current'),
   

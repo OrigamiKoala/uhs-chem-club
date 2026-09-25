@@ -20,6 +20,7 @@ import { playCinematic } from '../ui/cinematic.js';
 import { renderGardensMap } from '../ui/gardens-map.js';
 import { createTransmissionElement } from '../ui/transmission.js';
 import { QUEST1_STORY } from '../story/quest1.js';
+import { renderFieldManualModal } from '../ui/field-manual.js';
 
 const QUEST_ID = 'q1';
 
@@ -854,8 +855,12 @@ export function renderQuest(container) {
 
           const isCleanSolve = misses === 0 && !usedSolutionHint;
           if (!isReplay) {
-            if (isCleanSolve) cleanStreak++;
-            else cleanStreak = 0;
+            if (isCleanSolve) {
+              cleanStreak++;
+              session.recordCleanStage(currentStageIdx);
+            } else {
+              cleanStreak = 0;
+            }
           }
 
           showToast(awarded > 0 ? `Correct · +${awarded} XP` : 'Correct · replay, XP already earned', 'success');
@@ -1042,7 +1047,6 @@ export function renderQuest(container) {
       session.setFlag('cinematic_item_award', true);
       await playCinematic(QUEST1_STORY.debrief.cinematic || 'item_award');
     }
-    // Never let a flaky network swallow the payoff: fall back to a local summary.
     let comp = null;
     try {
       comp = await api.completeQuest(QUEST_ID);
@@ -1050,7 +1054,11 @@ export function renderQuest(container) {
       comp = null;
     }
 
-    const totalXp = comp?.totalXp ?? TOTAL_QUEST_XP;
+    if (!comp || !comp.alreadyCompleted) {
+      session.addXp(65, { trustXp: false });
+    }
+
+    const totalXp = comp?.totalXp ?? (TOTAL_QUEST_XP + 65);
     const newLevel = comp?.newLevel ?? session.level ?? 1;
     const item = comp?.awardedItem;
     const debriefStory = QUEST1_STORY.debrief || {};
@@ -1060,6 +1068,8 @@ export function renderQuest(container) {
         text: debriefStory.message || 'Outstanding work restoring the grid. Thank you for completing the mission.'
       }
     ];
+
+    const cleanCount = (session.cleanStages || []).length;
 
     showModal(`
       <div class="quest-modal-head" style="text-align: center; margin-bottom: 0.85rem;">
@@ -1079,6 +1089,32 @@ export function renderQuest(container) {
         <div class="stat-tile">
           <div class="stat-label">Level</div>
           <div class="stat-value plain">${newLevel} · ${levelTitle(newLevel)}</div>
+        </div>
+      </div>
+
+      <div class="debrief-tally" style="margin: 0.75rem 0 1rem; padding: 0.75rem 1rem; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-radius: 4px;">
+        <div style="font-family: var(--font-display); font-size: 0.8rem; letter-spacing: 0.1em; color: var(--accent-gold); margin-bottom: 0.5rem; text-transform: uppercase;">
+          Expedition Debrief Tally
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+          <span>Stages Cleared (20/20)</span>
+          <span style="font-family: var(--font-mono); color: var(--text-bright);">650 XP</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+          <span>Expedition Complete</span>
+          <span style="font-family: var(--font-mono); color: var(--accent-gold);">+40 XP</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+          <span>On-Time Bonus</span>
+          <span style="font-family: var(--font-mono); color: var(--accent-gold);">+25 XP</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; border-top: 1px solid var(--border-durasteel); padding-top: 0.5rem;">
+          <span style="color: var(--text-bright);">Total Mission Yield</span>
+          <span style="font-family: var(--font-mono); color: var(--accent-amber);">${totalXp} XP</span>
+        </div>
+        <div style="margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed var(--border-durasteel); display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+          <span style="color: var(--text-muted);">Field Manual Entries: <strong>${cleanCount}/20 Discovered</strong></span>
+          <button type="button" id="debrief-open-manual-btn" class="btn-secondary" style="font-size: 0.7rem; padding: 2px 8px;">View Manual</button>
         </div>
       </div>
 
@@ -1199,6 +1235,9 @@ export function renderQuest(container) {
     };
     document.getElementById('modal-bridge-btn')?.addEventListener('click', () => go('#/bridge'));
     document.getElementById('modal-standings-btn')?.addEventListener('click', () => go('#/leaderboard'));
+    document.getElementById('debrief-open-manual-btn')?.addEventListener('click', () => {
+      renderFieldManualModal(document.body);
+    });
 
     // Pull the authoritative XP total once the run is banked.
     api.getMe().then(me => { if (me) session.setUserData(me); }).catch(() => {});

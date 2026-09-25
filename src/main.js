@@ -11,6 +11,8 @@ import { soundscape } from './audio/soundscape.js';
 import { setBenchHost } from './learn/engine/bench-host.js';
 import { gameMode } from './game-mode.js';
 import { showToast } from './ui/toast.js';
+import { nextLevelRequisition } from './progression/requisitions.js';
+import { progressionFeed } from './progression/feed.js';
 
 /** Guild liveries, keyed by team id. Legacy ids are aliased in session.js. */
 const TEAM_LIVERY = {
@@ -215,11 +217,35 @@ function setupHud() {
 
       const totalXp = s.xp || 0;
       const prog = levelProgress(totalXp);
+      const title = levelTitle(prog.level);
+      const nextReq = nextLevelRequisition(prog.level);
 
-      if (xpVal) xpVal.textContent = String(totalXp);
+      // Smooth count-up unless reduced-motion is requested
+      if (xpVal) {
+        const targetXp = totalXp;
+        const startXp = Number(xpVal.getAttribute('data-val') || xpVal.textContent || '0');
+        xpVal.setAttribute('data-val', String(targetXp));
+
+        if (s.reduceMotion || Math.abs(targetXp - startXp) <= 1) {
+          xpVal.textContent = String(targetXp);
+        } else {
+          const duration = 600;
+          const startTime = performance.now();
+          const step = (now) => {
+            const progress = Math.min(1, (now - startTime) / duration);
+            const current = Math.round(startXp + (targetXp - startXp) * progress);
+            xpVal.textContent = String(current);
+            if (progress < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+      }
+
       if (lvlBadge) {
-        lvlBadge.textContent = `LVL ${prog.level}`;
-        lvlBadge.title = `${prog.into} / ${prog.needed} XP toward level ${prog.level + 1}`;
+        lvlBadge.innerHTML = `<span class="lvl-num">LVL ${prog.level}</span><span class="lvl-title"> · ${title.toUpperCase()}</span>`;
+        lvlBadge.title = nextReq
+          ? `Level ${prog.level + 1} Requisition: ${nextReq.name} (${prog.into}/${prog.needed} XP)`
+          : `${prog.into} / ${prog.needed} XP toward level ${prog.level + 1}`;
       }
       if (xpFill) xpFill.style.width = `${prog.pct}%`;
 
@@ -245,6 +271,11 @@ function setupHud() {
   });
 
   session.notify();
+
+  window.addEventListener('hashchange', () => {
+    progressionFeed.setSafe(true);
+    progressionFeed.flush();
+  });
 }
 
 window.addEventListener('DOMContentLoaded', bootstrapApp);
