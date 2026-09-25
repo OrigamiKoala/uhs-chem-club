@@ -117,7 +117,6 @@ export class LigarWorld {
     // Learn instrument deploys onto the plate that is actually there rather
     // than onto a second bench conjured at the same coordinates.
     this.benchAnchors = new Map();
-    this.nearbySite = null;
     this.dustParticles = null;
     this.disposables = [];
     this.lamps = [];
@@ -4085,26 +4084,9 @@ export class LigarWorld {
     marker.indicator.material.needsUpdate = true;
   }
 
-  /** The site the player is close enough to work at, or null. */
-  findNearbySite(pos) {
-    let best = null;
-    let bestD = Infinity;
-    for (const site of this.data.sites) {
-      const d = Math.hypot(pos.x - site.pos[0], pos.z - site.pos[2]);
-      // Within arm's reach, and on the same floor: the forge is in the cut,
-      // five metres below the flat, and must not be worked from up there.
-      const sameLevel = Math.abs(pos.y - (site.pos[1] + 1.6)) < 2.6;
-      if (d < 3.4 && sameLevel && d < bestD) {
-        bestD = d;
-        best = site;
-      }
-    }
-    return best;
-  }
 
   update(delta, cameraPos) {
     this.elapsed += delta;
-    if (cameraPos) this.nearbySite = this.findNearbySite(cameraPos);
 
     // Dust drifts downwind and recycles at the far edge.
     for (const l of [this.dustParticles, this.groundGrit]) {

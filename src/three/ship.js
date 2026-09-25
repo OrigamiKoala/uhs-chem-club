@@ -50,6 +50,7 @@ import {
   wallSegments, doorways, roomAt
 } from "./ship-rooms.js";
 import { tierAtLeast } from "./tier.js";
+import { aimBox, aimBoxFromBounds } from "./aim-target.js";
 import { session } from "../session.js";
 
 /** Where the club board hangs, and where a player stands to read it. */
@@ -62,7 +63,7 @@ export class ShipInterior {
     this.group = new THREE.Group();
     this.colliders = []; // AABB { minX, maxX, minZ, maxZ } for physical collision
     this.animatedElements = [];
-    this.interactiveTerminals = []; // { id, name, pos, route }
+    this.interactiveTerminals = []; // { id, name, pos, route, prompt?, aim? }
     this.dustParticles = null;
 
     this.initMaterials();
@@ -1133,7 +1134,16 @@ export class ShipInterior {
     this.addCollider(-0.3, 0.3, 3.40, 4.20);
     this.group.add(cockpitGroup);
     this.interactiveTerminals.push(
-      { id: 'cockpit', name: 'FLIGHT PODS', pos: [0, 1.45, 3.05], route: '#/settings' }
+      {
+        id: 'cockpit', name: 'FLIGHT PODS', pos: [0, 1.45, 3.05], route: '#/settings',
+        prompt: 'ACCESS FLIGHT COCKPIT & SETTINGS',
+        // Each pod, and the throttle pedestal between them.
+        aim: [
+          aimBoxFromBounds(-1.95, -0.75, 0, 1.3, 2.75, 4.3),
+          aimBoxFromBounds(0.75, 1.95, 0, 1.3, 2.75, 4.3),
+          aimBoxFromBounds(-0.3, 0.3, 0, 1.0, 3.4, 4.2)
+        ]
+      }
     );
   }
 
@@ -1262,7 +1272,12 @@ export class ShipInterior {
     this.addCollider(3.5 - 0.85, 3.5 + 0.85, 2.1 - 0.85, 2.1 + 0.85);
     this.group.add(starmapGroup);
     this.interactiveTerminals.push(
-      { id: 'starmap', name: 'STAR MAP', pos: [1.9, 1.55, 1.6], route: '#/starmap' }
+      {
+        id: 'starmap', name: 'STAR MAP', pos: [1.9, 1.55, 1.6], route: '#/starmap',
+        prompt: 'ACCESS STAR MAP & NAVIGATION',
+        // The table, its rail and the projection standing over it.
+        aim: [aimBoxFromBounds(2.15, 4.85, 0, 2.3, 0.75, 3.45)]
+      }
     );
   }
 
@@ -1407,7 +1422,15 @@ export class ShipInterior {
     this.group.add(g);
     if (room.route) {
       this.interactiveTerminals.push(
-        { id: roomId, name: room.name, pos: [-3.2, 1.55, -1.2], route: room.route }
+        {
+          id: roomId, name: room.name, pos: [-3.2, 1.55, -1.2], route: room.route,
+          prompt: 'ACCESS CREW QUARTERS & LOGS',
+          // The desk with its terminal, and the bunk with the lockers under it.
+          aim: [
+            aimBoxFromBounds(-2.85, -1.55, 0, 1.4, deskZ - 0.5, room.maxZ - 0.11),
+            aimBoxFromBounds(-5.58, -3.72, 0, 2.3, bunkZ - 0.72, bunkZ + 0.8)
+          ]
+        }
       );
     }
   }
@@ -1527,7 +1550,15 @@ export class ShipInterior {
 
     this.group.add(cargoGroup);
     this.interactiveTerminals.push(
-      { id: 'cargo', name: ROOMS.cargo.name, pos: [3.3, 1.55, -1.0], route: '#/inventory' }
+      {
+        id: 'cargo', name: ROOMS.cargo.name, pos: [3.3, 1.55, -1.0], route: '#/inventory',
+        prompt: 'ACCESS CARGO & INVENTORY',
+        // The container stack, whose face carries the manifest, and the drum rack.
+        aim: [
+          aimBoxFromBounds(1.3, 4.05, 0, 2.3, -2.75, -1.3),
+          aimBoxFromBounds(4.4, 5.5, 0, 2.4, -2.15, 0.15)
+        ]
+      }
     );
   }
 
@@ -1755,7 +1786,17 @@ export class ShipInterior {
 
     this.group.add(commsGroup);
     this.interactiveTerminals.push(
-      { id: 'comms', name: ROOMS.comms.name, pos: [-3.3, 1.55, -6.3], route: '#/leaderboard' }
+      {
+        id: 'comms', name: ROOMS.comms.name, pos: [-3.3, 1.55, -6.3], route: '#/leaderboard',
+        prompt: 'ACCESS SUB-SPACE COMMS RELAY',
+        // The rack with the standings screen, the projection in front of it
+        // (beam and all), and the operator's desk.
+        aim: [
+          aimBoxFromBounds(-4.7, -2.1, 0, 2.4, -7.65, -6.9),
+          aimBoxFromBounds(-3.5, -3.2, 0, 1.9, -6.9, -5.3),
+          aimBoxFromBounds(-5.6, -4.65, 0, 1.3, -7.15, -5.25)
+        ]
+      }
     );
   }
 
@@ -1858,7 +1899,12 @@ export class ShipInterior {
 
     this.group.add(g);
     this.interactiveTerminals.push(
-      { id: 'airlock', name: ROOMS.airlock.name, pos: [3.4, 1.6, -6.6], route: '#/quest' }
+      {
+        id: 'airlock', name: ROOMS.airlock.name, pos: [3.4, 1.6, -6.6], route: '#/quest',
+        prompt: 'AIRLOCK: DISEMBARK TO EREBUS (CHARGE GARDENS)',
+        // The blast door in its frame, and the rams and gauges round it.
+        aim: [aimBoxFromBounds(4.8, 5.6, 0, 2.55, midZ - 1.2, midZ + 1.2)]
+      }
     );
   }
 
@@ -2373,18 +2419,45 @@ export class ShipInterior {
     return [...this.colliders, ...closed];
   }
 
-  getDoorNear(x, z, maxDist = 1.6) {
-    if (!this.doors || !this.doors.length) return null;
-    let closest = null;
-    let minD = maxDist;
-    for (const door of this.doors) {
-      const dist = Math.hypot(x - door.pos[0], z - door.pos[1]);
-      if (dist < minD) {
-        minD = dist;
-        closest = door;
+  /**
+   * Everything [E] can act on aboard, as `pickAimTarget` candidates: every
+   * door, filling its doorway, and every station's own furniture. What the
+   * player is LOOKING at decides between them, never which is nearest.
+   */
+  getAimTargets() {
+    if (!this._aimTargets) {
+      const doors = (this.doors || []).map(door => {
+        const w = door.doorway.clear / 2;
+        const half = door.axis === 'x' ? [0.15, DOOR_H / 2, w] : [w, DOOR_H / 2, 0.15];
+        return {
+          kind: 'door', door, reach: 2.2,
+          boxes: [aimBox([door.pos[0], DOOR_H / 2, door.pos[1]], half)]
+        };
+      });
+      const stations = this.interactiveTerminals
+        .filter(t => t.aim)
+        .map(t => ({ kind: 'terminal', terminal: t, reach: 2.6, boxes: t.aim }));
+      this._aimTargets = [...doors, ...stations];
+    }
+    return this._aimTargets;
+  }
+
+  /**
+   * The bulkheads, as boxes that stop the view ray: a terminal on the far
+   * side of a wall is not in front of you, however close it is.
+   */
+  getAimBlockers() {
+    if (!this._aimBlockers) {
+      this._aimBlockers = [];
+      for (const wall of WALLS) {
+        for (const [a, b] of wallSegments(wall)) {
+          this._aimBlockers.push(wall.axis === 'x'
+            ? aimBoxFromBounds(wall.at - WALL_T / 2, wall.at + WALL_T / 2, 0, wall.top, a, b)
+            : aimBoxFromBounds(a, b, 0, wall.top, wall.at - WALL_T / 2, wall.at + WALL_T / 2));
+        }
       }
     }
-    return closest;
+    return this._aimBlockers;
   }
 
   toggleDoor(door) {

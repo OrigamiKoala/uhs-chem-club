@@ -1673,6 +1673,19 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   instrument that has no scene of its own (`FpsControls.releaseKeys` drops anything held, so a
   key that was down when the controls were disabled cannot come back latched).
 - First-person controls: `src/three/fps-controls.js` provides unconstrained WASD + sprint (Shift) + Spacebar jump + drag-look navigation with sliding physics collision, penetration push-out resolution (`resolveBoxCollisions`), player radius of 0.25, terrain height clamping on Erebus, and contextual `[E]` interaction prompts at ship terminals and pylons. Movement is active in world exploration and gated behind active session authentication aboard ship; it suspends in quest overlays and puzzle chamber views, and clicks on `.cinematic-overlay`, `.modal-container`, and HUD elements never start a look drag.
+- **`[E]` acts on what the camera is POINTED at, never on what is nearest.** It used
+  to be proximity: on the ship that meant the ROOM you stood in (the storage bay offered
+  the manifest with your back to it), and wherever two things were close the nearer won
+  however hard you looked at the other. `three/aim-target.js` (pure, Node-importable)
+  casts the view ray against the box each target occupies and takes the first one it
+  enters within that target's reach; a ray that starts inside a box is a miss, and
+  `blockers` stop it. Targets come from the place: `ShipInterior.getAimTargets()` (every
+  door filling its doorway, and each station's own furniture via the `aim` boxes on
+  `interactiveTerminals`, which also carry the `prompt`) with the bulkheads from
+  `getAimBlockers()`; `WorldScene.getAimTargets()` (pylon masts, the lander hull);
+  `learnWorldAimTargets(world, eyeY)` for Tallow and Ligar (each bench off its
+  `benchAnchor`, same-floor only, and the landing pad, which you look down at). The
+  prompt and the key both read `stage.aimedInteraction()`, so they cannot disagree.
 - Planetary transit cinematics: Launch and atmospheric descent cinematics (`launch`, `erebus_descent`) trigger on transit to Sector 01 from the Star Map, Bridge, and Airlock without persistent one-time lockout, and are skippable via Click/Space/Esc. FPS controls are disabled during cinematic playback to prevent input leakage into the background world.
 - Hero/prop shapes: `tools/hunyuan3d-shape-t4.ipynb` batches concept PNG/JPG images via Hunyuan3D 2.1 shape-only pipeline into `/kaggle/working/raw/*.glb` on NVIDIA T4; texturing is handled in Blender.
 - Nano Banana PBR textures: procedural canvas PBR pipeline in `src/three/materials/textures.js` generating albedo, tangent-space normal maps, roughness, phosphor cathode distortion vignettes, and custom station screens (`createDurasteelTexture`, `createDurasteelNormalTexture`, `createBlastDoorTexture`, `createRackPanelTexture`, `createFootlockerTexture`, `createContainerStencilTexture`, `createKeyboardTexture`, `createDialGaugeTexture`, `createVacuumTubeTexture`, `createCrtScreenTexture`) coupled with Three.js `MeshStandardMaterial`.

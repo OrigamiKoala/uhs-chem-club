@@ -15,6 +15,7 @@ import { WorldScene } from "./world.js";
 import { TallowWorld } from "./tallow.js";
 import { LigarWorld } from "./ligar.js";
 import { FpsControls } from "./fps-controls.js";
+import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
 import { TouchControls } from "./touch-controls.js";
 import { session } from "../session.js";
 import { ShipLightPool } from "./ship-lighting.js";
@@ -270,46 +271,10 @@ class Stage {
       this.shipInterior.getActiveColliders()
     );
 
+    // [E] acts on what the player is LOOKING at, the same thing the prompt
+    // names — both read `aimedInteraction`, so they cannot disagree.
     this.fpsControls.onInteract = () => {
-      if (this.mode === "world" && this.isLearnWorld(this.activeWorld)) {
-        const site = this.activeWorld.nearbySite;
-        if (site) {
-          window.dispatchEvent(new CustomEvent("learn-site:interact", { detail: site }));
-        } else if (this.nearExitPad(this.activeWorld)) {
-          // The pad is the way off a Learn world, the way the lander is on Erebus.
-          window.location.hash = "#/bridge";
-        }
-      } else if (this.mode === "world" && this.worldScene) {
-        if (this.worldScene.nearbySite) {
-          const pylonEvent = new CustomEvent("pylon:interact", { detail: this.worldScene.nearbySite });
-          window.dispatchEvent(pylonEvent);
-        } else if (Math.hypot(this.camera.position.x, this.camera.position.z - 41) < 5.8) {
-          window.location.hash = "#/bridge";
-        }
-      } else if (this.mode === "ship") {
-        const px = this.camera.position.x;
-        const pz = this.camera.position.z;
-        const nearDoor = this.shipInterior?.getDoorNear(px, pz, 1.6);
-        if (nearDoor) {
-          this.shipInterior.toggleDoor(nearDoor);
-          this.fpsControls.setColliders(this.shipInterior.getActiveColliders());
-          soundscape.playNavRelayClick?.();
-          return;
-        }
-        if (Math.hypot(px - 3.375, pz - (-6.6)) < 2.2) {
-          window.location.hash = "#/quest";
-        } else if (Math.hypot(px - 3.2, pz - 1.8) < 2.0) {
-          window.location.hash = "#/starmap";
-        } else if (Math.hypot(px - 3.3, pz - (-1.2)) < 2.2) {
-          window.location.hash = "#/inventory";
-        } else if (Math.hypot(px - (-3.375), pz - (-6.45)) < 2.2) {
-          window.location.hash = "#/leaderboard";
-        } else if (Math.hypot(px - (-3.375), pz - (-0.9)) < 2.2) {
-          window.location.hash = "#/quarters";
-        } else if (Math.hypot(px, pz - 1.6) < 1.4) {
-          window.location.hash = "#/settings";
-        }
-      }
+      this.aimedInteraction()?.act?.();
     };
 
     // 5. Bind Events & Lifecycle
@@ -747,15 +712,88 @@ class Stage {
     return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld);
   }
 
+  /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
+  syncAimPrompt() {
+    const hit = this.aimedInteraction();
+    if (hit) this.fpsControls.showPrompt(hit.prompt);
+    else this.fpsControls.hidePrompt();
+  }
+
   /**
-   * Whether the player is standing on a Learn world's landing pad — the way
-   * off it. Read from the world's own data, so a pad that moves takes its exit
-   * with it and there is no second copy of the coordinates.
+   * What [E] would act on right now — the thing the view ray reaches first,
+   * among what this place offers, within that thing's reach — as
+   * `{ prompt, act }`, or null. Being near something is not enough; the
+   * player has to be looking at it.
    */
-  nearExitPad(w) {
-    const pad = w?.data?.landmarks?.find(l => l.asset === "landing-pad");
-    if (!pad) return false;
-    return Math.hypot(this.camera.position.x - pad.pos[0], this.camera.position.z - pad.pos[2]) < 9;
+  aimedInteraction() {
+    const cam = this.camera;
+    cam.updateMatrixWorld();
+    const origin = cam.getWorldPosition(this._aimOrigin || (this._aimOrigin = new THREE.Vector3()));
+    const dir = cam.getWorldDirection(this._aimDir || (this._aimDir = new THREE.Vector3()));
+
+    if (this.mode === "world" && this.isLearnWorld(this.activeWorld)) {
+      const hit = pickAimTarget(origin, dir, learnWorldAimTargets(this.activeWorld, origin.y));
+      if (hit?.kind === "site") {
+        const site = hit.site;
+        return {
+          // A site that has no module yet says so rather than pretending to
+          // open. The world never invents a quest.
+          prompt: site.built === false
+            ? `${site.label.toUpperCase()} — SEALED`
+            : `[E] WORK AT ${site.label.toUpperCase()}`,
+          act: () => window.dispatchEvent(new CustomEvent("learn-site:interact", { detail: site }))
+        };
+      }
+      if (hit?.kind === "pad") {
+        return {
+          prompt: "[E] BOARD AT THE PAD (RETURN TO SHIP)",
+          // The pad is the way off a Learn world, the way the lander is on Erebus.
+          act: () => { window.location.hash = "#/bridge"; }
+        };
+      }
+      return null;
+    }
+
+    if (this.mode === "world" && this.worldScene) {
+      const hit = pickAimTarget(origin, dir, this.worldScene.getAimTargets());
+      if (hit?.kind === "pylon") {
+        return {
+          prompt: `[E] DEPLOY CHAMBER AT ${hit.site.label.toUpperCase()}`,
+          act: () => window.dispatchEvent(new CustomEvent("pylon:interact", { detail: hit.site }))
+        };
+      }
+      if (hit?.kind === "lander") {
+        return {
+          prompt: "[E] BOARD SURVEY LANDER (RETURN TO SHIP)",
+          act: () => { window.location.hash = "#/bridge"; }
+        };
+      }
+      return null;
+    }
+
+    if (this.mode === "ship" && this.shipInterior) {
+      const ship = this.shipInterior;
+      const hit = pickAimTarget(origin, dir, ship.getAimTargets(), { blockers: ship.getAimBlockers() });
+      if (hit?.kind === "door") {
+        const door = hit.door;
+        return {
+          prompt: door.isOpen ? "[E] CLOSE DOOR" : "[E] OPEN DOOR",
+          act: () => {
+            ship.toggleDoor(door);
+            this.fpsControls.setColliders(ship.getActiveColliders());
+            soundscape.playNavRelayClick?.();
+          }
+        };
+      }
+      if (hit?.kind === "terminal") {
+        const t = hit.terminal;
+        return {
+          prompt: `[E] ${t.prompt}`,
+          act: () => { window.location.hash = t.route; }
+        };
+      }
+    }
+    return null;
   }
 
   /**
@@ -1005,20 +1043,7 @@ class Stage {
       if (this.fpsControls) {
         this.fpsControls.enabled = true;
         this.fpsControls.update(delta);
-        const site = learnWorld.nearbySite;
-        if (site) {
-          // A site that has no module yet says so when you reach it rather than
-          // pretending to open. The world never invents a quest.
-          this.fpsControls.showPrompt(
-            site.built === false
-              ? `${site.label.toUpperCase()} — SEALED`
-              : `[E] WORK AT ${site.label.toUpperCase()}`
-          );
-        } else if (this.nearExitPad(learnWorld)) {
-          this.fpsControls.showPrompt("[E] BOARD AT THE PAD (RETURN TO SHIP)");
-        } else {
-          this.fpsControls.hidePrompt();
-        }
+        this.syncAimPrompt();
       }
       learnWorld.update(delta, this.camera.position);
       this.camera.updateMatrixWorld(true);
@@ -1028,13 +1053,7 @@ class Stage {
       if (this.fpsControls) {
         this.fpsControls.enabled = true;
         this.fpsControls.update(delta);
-        if (this.worldScene.nearbySite) {
-          this.fpsControls.showPrompt(`[E] DEPLOY CHAMBER AT ${this.worldScene.nearbySite.label.toUpperCase()}`);
-        } else if (Math.hypot(this.camera.position.x, this.camera.position.z - 41) < 5.8) {
-          this.fpsControls.showPrompt("[E] BOARD SURVEY LANDER (RETURN TO SHIP)");
-        } else {
-          this.fpsControls.hidePrompt();
-        }
+        this.syncAimPrompt();
       }
       this.worldScene.update(delta, this.camera.position);
       this.camera.updateMatrixWorld(true);
@@ -1051,26 +1070,7 @@ class Stage {
         this.cameraRig.update(now);
       } else if (this.fpsControls && canMove) {
         this.fpsControls.update(delta);
-        const px = this.camera.position.x;
-        const pz = this.camera.position.z;
-        const nearDoor = this.shipInterior?.getDoorNear(px, pz, 1.6);
-        if (nearDoor) {
-          this.fpsControls.showPrompt(nearDoor.isOpen ? "[E] CLOSE DOOR" : "[E] OPEN DOOR");
-        } else if (Math.hypot(px - 3.375, pz - (-6.6)) < 2.2) {
-          this.fpsControls.showPrompt("[E] AIRLOCK: DISEMBARK TO EREBUS (CHARGE GARDENS)");
-        } else if (Math.hypot(px - 3.2, pz - 1.8) < 2.0) {
-          this.fpsControls.showPrompt("[E] ACCESS STAR MAP & NAVIGATION");
-        } else if (Math.hypot(px - 3.3, pz - (-1.2)) < 2.2) {
-          this.fpsControls.showPrompt("[E] ACCESS CARGO & INVENTORY");
-        } else if (Math.hypot(px - (-3.375), pz - (-6.45)) < 2.2) {
-          this.fpsControls.showPrompt("[E] ACCESS SUB-SPACE COMMS RELAY");
-        } else if (Math.hypot(px - (-3.375), pz - (-0.9)) < 2.2) {
-          this.fpsControls.showPrompt("[E] ACCESS CREW QUARTERS & LOGS");
-        } else if (Math.hypot(px, pz - 1.6) < 1.4) {
-          this.fpsControls.showPrompt("[E] ACCESS FLIGHT COCKPIT & SETTINGS");
-        } else {
-          this.fpsControls.hidePrompt();
-        }
+        this.syncAimPrompt();
       } else if (this.fpsControls) {
         this.fpsControls.hidePrompt();
       }

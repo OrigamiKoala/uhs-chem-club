@@ -414,8 +414,9 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
       `the player can walk off a drop the walk would fall down:\n         ${ledges.join('\n         ')}`);
 
     for (const site of world.sites) {
-      // Somewhere within arm's reach of the bench — `findNearbySite`'s own
-      // 3.4u — reachable from the spawn and on the bench's own floor.
+      // Somewhere within arm's reach of the bench — close enough that
+      // `learnWorldAimTargets`' 3 m reach meets it when the player looks at it —
+      // reachable from the spawn and on the bench's own floor.
       let found = false;
       for (let i = 0; i < N && !found; i++) {
         for (let j = 0; j < N && !found; j++) {

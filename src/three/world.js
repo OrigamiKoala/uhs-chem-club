@@ -17,6 +17,7 @@ import {
 } from "./materials/pbr-kit.js";
 import erebusData from "./world-data/erebus.json" with { type: "json" };
 import { tierManager, tierAtLeast } from "./tier.js";
+import { aimBox } from "./aim-target.js";
 
 export class WorldScene {
   constructor(renderer) {
@@ -28,7 +29,6 @@ export class WorldScene {
     this.pylonIndicators = [];
     this.dustParticles = null;
     this.terrainMesh = null;
-    this.nearbySite = null;
     this.colliders = []; // Radial obstacles { x, z, radius } and AABBs
 
     this.initLighting();
@@ -606,18 +606,27 @@ export class WorldScene {
       }
       pos.needsUpdate = true;
     }
+  }
 
-    this.nearbySite = null;
-    let closestDist = Infinity;
-
-    for (const p of this.pylonMeshes) {
-      const dx = cameraPosition.x - p.position.x;
-      const dz = cameraPosition.z - p.position.z;
-      const dist = Math.hypot(dx, dz);
-      if (dist < 4.5 && dist < closestDist) {
-        closestDist = dist;
-        this.nearbySite = p.userData;
+  /**
+   * What [E] can act on here, as `pickAimTarget` candidates: each pylon's
+   * mast and the lander's hull. The one the player is looking at wins.
+   */
+  getAimTargets() {
+    if (!this._aimTargets) {
+      this._aimTargets = this.pylonMeshes.map(p => ({
+        kind: 'pylon', site: p.userData, reach: 3.4,
+        boxes: [aimBox([p.position.x, p.position.y + 2.0, p.position.z], [0.9, 2.0, 0.9])]
+      }));
+      const lander = this.data.landmarks.find(l => l.asset === "lander");
+      if (lander) {
+        const gy = this.getTerrainHeight(lander.pos[0], lander.pos[2]);
+        this._aimTargets.push({
+          kind: 'lander', reach: 3.5,
+          boxes: [aimBox([lander.pos[0], gy + 2.2, lander.pos[2]], [2.4, 2.2, 4.0], lander.rotY)]
+        });
       }
     }
+    return this._aimTargets;
   }
 }
