@@ -146,6 +146,9 @@ class Stage {
 
     // Ship Interior Model
     this.shipInterior = new ShipInterior(this.shipScene);
+    if (this.shipInterior.lightSources.length) {
+      this.shipLightPool.sources = this.shipInterior.lightSources;
+    }
 
     // Sync in-world 3D displays with session state
     const syncShipDisplays = () => {
@@ -1078,7 +1081,11 @@ class Stage {
       if (this.shipLightPool) {
         this.shipLightPool.update(this.camera.position);
       }
-      if (this.shipInterior) this.shipInterior.update(delta, time);
+      // The doors answer to where the player is standing; when one opens or
+      // shuts, the walk gets the new set of colliders at once.
+      if (this.shipInterior && this.shipInterior.update(delta, time, this.camera.position)) {
+        this.fpsControls?.setColliders(this.shipInterior.getActiveColliders());
+      }
       if (this.starfield) this.starfield.rotation.y += delta * 0.002;
       this.renderer.render(this.shipScene, this.camera);
       worldUI.render(this.shipScene, this.camera);

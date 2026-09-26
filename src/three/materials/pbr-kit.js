@@ -1445,7 +1445,19 @@ export function mergeStatic(group) {
 
   for (const [material, bucket] of buckets) {
     if (!bucket.geos.length) continue;
+    // Boxes are indexed and extrusions are not, and a merge refuses a mix of
+    // the two — returning null, which used to drop the whole bucket from the
+    // scene without a word. Mixed buckets are flattened to one convention.
+    if (bucket.geos.some(g => g.index) && bucket.geos.some(g => !g.index)) {
+      bucket.geos = bucket.geos.map(g => {
+        if (!g.index) return g;
+        const flat = g.toNonIndexed();
+        g.dispose();
+        return flat;
+      });
+    }
     const merged = BufferGeometryUtils.mergeGeometries(bucket.geos, false);
+    if (!merged) console.warn(`mergeStatic: could not bake ${bucket.geos.length} parts of ${group.name || 'a group'}`);
     for (const g of bucket.geos) g.dispose();
     if (!merged) continue;
     if (merged.attributes.uv) merged.setAttribute('uv1', merged.attributes.uv);
