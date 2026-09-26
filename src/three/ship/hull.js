@@ -22,9 +22,9 @@ import * as THREE from "three";
 import { boltLine } from "../materials/pbr-kit.js";
 import {
   HULL, ROOMS, WALLS, CEIL, WALL_T, DOOR_H, BRIDGE_OUTLINE, CANOPY,
-  HULL_WINDOWS, SHOULDER_PORTS, FLOOR_HATCH, wallSegments, outlineSpan
+  HULL_WINDOWS, SHOULDER_PORTS, FLOOR_HATCH, AIRLOCK_HATCH, wallSegments, outlineSpan
 } from "../ship-rooms.js";
-import { DRESS, box, cyl, extrude, slotPath, chamferedRect } from "./kit.js";
+import { DRESS, box, cyl, extrude, slotPath, chamferedRect, chamferedHole } from "./kit.js";
 
 /** The corridor's lit service channel, recessed into the deck. */
 export const DECK_CHANNEL = { minX: -0.28, maxX: 0.28, minZ: -7.8 + WALL_T / 2, maxZ: 0.5 - WALL_T / 2 };
@@ -62,7 +62,9 @@ function plating(parent, mat, a, b, inward, height, thick, holes = []) {
   const shape = new THREE.Shape();
   shape.moveTo(0, 0); shape.lineTo(L, 0); shape.lineTo(L, height); shape.lineTo(0, height); shape.lineTo(0, 0);
   for (const h of holes) {
-    if (h.round) {
+    if (h.chamfer) {
+      shape.holes.push(chamferedHole(h.w, h.h, h.chamfer, ['tl', 'tr', 'bl', 'br'], h.u, h.y));
+    } else if (h.round) {
       const p = new THREE.Path();
       p.absarc(h.u, h.y, h.w / 2, 0, Math.PI * 2, true);
       shape.holes.push(p);
@@ -188,6 +190,12 @@ export function buildHull(ship) {
     const holes = HULL_WINDOWS.filter(w => w.side === side).map(w => ({
       u: w.z - HULL.minZ + P, y: w.y, w: w.r ? w.r * 2 : w.w, h: w.r ? w.r * 2 : w.h, round: Boolean(w.r)
     }));
+    // The airlock's outer hatch is a real hole: the leaf that closes it
+    // swings open when the ship is down, and the player walks out through it.
+    if (AIRLOCK_HATCH.side === side) {
+      const a = AIRLOCK_HATCH;
+      holes.push({ u: a.z - HULL.minZ + P, y: a.y, w: a.w, h: a.h, chamfer: a.c });
+    }
     plating(hull, M.durasteelMat, [x, HULL.minZ - P], [x, 3.2], [-side, 0], plateH, P,
       holes.map(h => ({ ...h })));
     for (const w of HULL_WINDOWS.filter(v => v.side === side)) {

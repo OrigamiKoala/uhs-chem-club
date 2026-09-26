@@ -325,9 +325,13 @@ export function renderStarMap(container) {
       return;
     }
 
-    try {
-      await playCinematic("launch");
-    } catch (e) {}
+    // At T4 the Avalon flies there itself (three/voyage.js); the launch film
+    // is for the tiers that cannot draw the flight.
+    if (!stage.canVoyage?.("erebus")) {
+      try {
+        await playCinematic("launch");
+      } catch (e) {}
+    }
     window.location.hash = "#/quest";
   }
 

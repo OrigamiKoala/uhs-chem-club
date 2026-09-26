@@ -403,6 +403,106 @@ class Soundscape {
     ring.stop(now + 0.4);
   }
 
+  // --- The Avalon under way (the voyage) ---
+
+  /**
+   * The drive: a low saw through a lowpass, and brown noise through a band
+   * that opens as it works. One held voice, shaped by `setEngine`, so a whole
+   * flight is one continuous sound rather than a string of clips.
+   */
+  startEngine() {
+    this.initContext();
+    if (!this.ctx || session.sound?.muted) return;
+    if (this.engine) return;
+    const now = this.ctx.currentTime;
+    const out = this.ctx.createGain();
+    out.gain.setValueAtTime(0.0001, now);
+    out.gain.linearRampToValueAtTime(0.12, now + 1.2);
+    out.connect(this.effectsGain);
+
+    const osc = this.ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(38, now);
+    const oscLp = this.ctx.createBiquadFilter();
+    oscLp.type = 'lowpass';
+    oscLp.frequency.setValueAtTime(140, now);
+    const oscGain = this.ctx.createGain();
+    oscGain.gain.setValueAtTime(0.55, now);
+    osc.connect(oscLp); oscLp.connect(oscGain); oscGain.connect(out);
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = this._createNoiseBuffer(3);
+    noise.loop = true;
+    const band = this.ctx.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.setValueAtTime(220, now);
+    band.Q.setValueAtTime(0.7, now);
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.5, now);
+    noise.connect(band); band.connect(noiseGain); noiseGain.connect(out);
+
+    osc.start(now);
+    noise.start(now);
+    this.engine = { out, osc, oscLp, noise, band, noiseGain };
+  }
+
+  /** `level` 0..1 is how hard the drive is working, `pitch` ~0.5..2 its note. */
+  setEngine(level = 0.5, pitch = 1) {
+    if (!this.ctx || !this.engine) return;
+    const now = this.ctx.currentTime;
+    const e = this.engine;
+    e.out.gain.setTargetAtTime(0.04 + 0.16 * level, now, 0.6);
+    e.osc.frequency.setTargetAtTime(30 + 22 * pitch, now, 0.8);
+    e.oscLp.frequency.setTargetAtTime(90 + 260 * level, now, 0.6);
+    e.band.frequency.setTargetAtTime(160 + 900 * level * pitch, now, 0.8);
+  }
+
+  stopEngine() {
+    if (!this.ctx || !this.engine) return;
+    const now = this.ctx.currentTime;
+    const e = this.engine;
+    this.engine = null;
+    e.out.gain.setTargetAtTime(0.0001, now, 0.5);
+    try { e.osc.stop(now + 2.5); e.noise.stop(now + 2.5); } catch (err) {}
+  }
+
+  /** A noise sweep through a band: the jump going in (up) or out (down). */
+  _sweep(from, to, dur, peak) {
+    this.initContext();
+    if (!this.ctx || session.sound?.muted) return;
+    const now = this.ctx.currentTime;
+    const src = this.ctx.createBufferSource();
+    src.buffer = this._createNoiseBuffer(Math.ceil(dur + 0.5));
+    const band = this.ctx.createBiquadFilter();
+    band.type = 'bandpass';
+    band.Q.setValueAtTime(1.4, now);
+    band.frequency.setValueAtTime(from, now);
+    band.frequency.exponentialRampToValueAtTime(to, now + dur);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.linearRampToValueAtTime(peak, now + dur * 0.35);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    src.connect(band); band.connect(g); g.connect(this.effectsGain);
+    src.start(now);
+    src.stop(now + dur + 0.05);
+  }
+
+  playJump() { this._sweep(180, 3200, 1.6, 0.5); }
+  playDropout() { this._sweep(2600, 140, 1.4, 0.42); }
+  playEntry() { this._sweep(300, 900, 4.2, 0.35); }
+
+  playTouchdown() {
+    this.playStamp();
+    this._sweep(900, 120, 1.1, 0.25);
+  }
+
+  /** The outer hatch unsealing: a hiss of equalising air, then the dogs. */
+  playHatch() {
+    this._sweep(4200, 1800, 1.2, 0.22);
+    setTimeout(() => this.playToggleClack(), 350);
+    setTimeout(() => this.playKeyCapThunk(), 900);
+  }
+
   // --- Voice Murmur (Vess radio voice) ---
 
   startMurmur() {

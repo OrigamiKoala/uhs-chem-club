@@ -50,6 +50,9 @@ import { buildFurnaceRoom } from "./ship/rooms/furnace.js";
 
 export { CLUB_BOARD_POS, BRIDGE_STAND };
 
+/** How far the airlock leaf swings inward, in radians, before it meets its stop. */
+const AIRLOCK_LEAF_SWING = 1.35;
+
 export class ShipInterior {
   constructor(scene) {
     this.scene = scene;
@@ -373,6 +376,23 @@ export class ShipInterior {
       }
     }
     return this._aimBlockers.filter(b => !b.door || !b.door.isOpen);
+  }
+
+  /**
+   * Swing the airlock's outer leaf: 0 is dogged shut on its seal, 1 is open
+   * against its stop inside the lock. Only the voyage opens it, and only once
+   * the ship is down on a world — there is vacuum on the other side otherwise.
+   */
+  setAirlockOpen(t) {
+    if (!this.airlockLeaf) return;
+    const k = Math.max(0, Math.min(1, t));
+    this.airlockLeaf.rotation.y = -AIRLOCK_LEAF_SWING * k;
+  }
+
+  /** Hide or show the canopy vista (the gas giant): a voyage draws its own sky. */
+  setVistaVisible(on) {
+    const v = this.group.getObjectByName('vista');
+    if (v) v.visible = Boolean(on);
   }
 
   /** Hold a door open or shut by hand; it goes back to automatic once you leave. */

@@ -209,7 +209,8 @@ export function buildAirlockRoom(ship) {
   dressRoomShell(ship, 'airlock', {
     keepClear: [
       // The hatch surround and its header, floor to deckhead.
-      { side: 'E', from: -7.69, to: -5.51, top: 3.0 },
+      // Bare: the plating behind it has the hatch opening cut through it.
+      { side: 'E', from: -7.69, to: -5.51, top: 3.0, bare: true },
       { side: 'N', from: 4.85, to: 5.6, top: 3.0 },
       { side: 'S', from: 4.85, to: 5.6, top: 3.0 },
       // Suit racks and the cycle panel; the bench and the valves.
@@ -236,8 +237,21 @@ export function buildAirlockRoom(ship) {
   const frameRing = chamferedRect(1.62, 2.26, 0.4, ALL, 0, openY);
   frameRing.holes.push(chamferedHole(1.3, 1.86, 0.3, ALL, 0, openY));
   extrude(H, M.gunmetalMat, frameRing, 0.16).position.z = 0.15;
-  // The dark of the opening, behind the leaf.
-  box(H, M.ventMat, 1.3, 1.6, 0.01, 0, openY, 0.02);
+  // THE OPENING IS REAL. The plating behind the surround has a hole in it
+  // (`AIRLOCK_HATCH`, cut in `hull.js`), and the leaf is a separate body on
+  // its hinges rather than part of the bake, so that when the Avalon is down
+  // on a world the hatch can actually swing open and the player can walk out
+  // through it. `ship.airlockLeaf` is the pivot; `setAirlockOpen` turns it.
+  const hinge = new THREE.Group();
+  hinge.name = 'airlock-leaf';
+  hinge.position.set(-0.8, 0, 0.42);
+  hinge.userData.noMerge = true;
+  H.add(hinge);
+  // Built in the hatch's own coordinates, then carried round the hinge line.
+  const L = new THREE.Group();
+  L.position.set(0.8, 0, -0.42);
+  hinge.add(L);
+  ship.airlockLeaf = hinge;
   for (const sx of [-1, 1]) {
     box(H, S, 0.1, 1.3, 0.01, sx * 0.88, openY, 0.155);
     H.add(boltLine([sx * 0.99, 0.35, 0.155], [sx * 0.99, 2.3, 0.155], 9, M.steelMat, { size: 0.013 }));
@@ -249,32 +263,33 @@ export function buildAirlockRoom(ship) {
   // The leaf: a heavy plug on a rubber seal, the blast plate on its face.
   const seal = chamferedRect(1.5, 2.06, 0.37, ALL, 0, openY);
   seal.holes.push(chamferedHole(1.36, 1.92, 0.33, ALL, 0, openY));
-  extrude(H, M.cableMat, seal, 0.02).position.z = 0.31;
-  extrude(H, M.gunmetalMat, chamferedRect(1.46, 2.02, 0.36, ALL, 0, openY), 0.16).position.z = 0.33;
-  box(H, M.blastDoorMat, 1.0, 1.2, 0.02, 0, 1.05, 0.5);
-  for (const y of [0.3, 2.16]) H.add(boltLine([-0.34, y, 0.49], [0.34, y, 0.49], 6, M.steelMat, { size: 0.013 }));
+  extrude(L, M.cableMat, seal, 0.02).position.z = 0.31;
+  extrude(L, M.gunmetalMat, chamferedRect(1.46, 2.02, 0.36, ALL, 0, openY), 0.16).position.z = 0.33;
+  box(L, M.blastDoorMat, 1.0, 1.2, 0.02, 0, 1.05, 0.5);
+  for (const y of [0.3, 2.16]) L.add(boltLine([-0.34, y, 0.49], [0.34, y, 0.49], 6, M.steelMat, { size: 0.013 }));
   // Sight port.
-  ring(H, M.trimMat, 0.13, 0.03, 0, 1.87, 0.5, 'z', 20);
-  cyl(H, M.screenGlassMat, 0.125, 0.01, 0, 1.87, 0.495, 'z', 20);
+  ring(L, M.trimMat, 0.13, 0.03, 0, 1.87, 0.5, 'z', 20);
+  cyl(L, M.screenGlassMat, 0.125, 0.01, 0, 1.87, 0.495, 'z', 20);
   const pb = boltRing(0.17, 8, M.steelMat, { size: 0.012 });
   pb.rotation.x = Math.PI / 2;
   pb.position.set(0, 1.87, 0.5);
-  H.add(pb);
-  // Dogging: the wheel, the bar it throws, the dogs at the corners.
-  handwheel(H, M, 0.26, 0, 1.1, 0.57);
-  cyl(H, M.gunmetalMat, 0.06, 0.06, 0, 1.1, 0.53, 'z', 10);
-  cyl(H, M.steelMat, 0.024, 1.44, 0, 1.1, 0.525, 'x', 8);
+  L.add(pb);
+  // Dogging: the wheel and the bar it throws ride the leaf; the dogs that
+  // take the bar stay on the frame.
+  handwheel(L, M, 0.26, 0, 1.1, 0.57);
+  cyl(L, M.gunmetalMat, 0.06, 0.06, 0, 1.1, 0.53, 'z', 10);
+  cyl(L, M.steelMat, 0.024, 1.44, 0, 1.1, 0.525, 'x', 8);
   for (const sx of [-1, 1]) {
     cbox(H, M.gunmetalMat, 0.14, 0.2, 0.12, sx * 0.76, 1.1, 0.4, 0.02);
     for (const sy of [-1, 1]) {
-      box(H, M.steelMat, 0.16, 0.05, 0.05, sx * 0.6, openY + sy * 0.86, 0.5, 0, 0, sx * sy * Math.PI / 4);
+      box(L, M.steelMat, 0.16, 0.05, 0.05, sx * 0.6, openY + sy * 0.86, 0.5, 0, 0, sx * sy * Math.PI / 4);
     }
   }
-  // Hinges on the aft jamb.
+  // Hinges on the aft jamb: the knuckles on the frame, the straps on the leaf.
   for (const y of [0.55, 1.9]) {
     cyl(H, M.gunmetalMat, 0.055, 0.28, -0.8, y, 0.42, 'y', 10);
-    box(H, M.gunmetalMat, 0.4, 0.1, 0.02, -0.6, y, 0.5);
-    H.add(boltLine([-0.74, y, 0.512], [-0.46, y, 0.512], 3, M.steelMat, { size: 0.011 }));
+    box(L, M.gunmetalMat, 0.4, 0.1, 0.02, -0.6, y, 0.5);
+    L.add(boltLine([-0.74, y, 0.512], [-0.46, y, 0.512], 3, M.steelMat, { size: 0.011 }));
   }
   // Two rams lift the leaf off its seat.
   for (const sx of [-1, 1]) {

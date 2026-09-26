@@ -92,7 +92,9 @@ export function renderLearnWorld(container, params = {}) {
     const w3d = world3dFor(world.id);
     // Coming back out of a bench puts you in front of it, not at the pad.
     const fromQuest = sessionStorage.getItem('avalon_learn_last_site');
-    w3d.enter(stage, fromQuest || null);
+    // Walked here down the Avalon's ramp: stay where the ramp left them.
+    const flewIn = Boolean(stage.consumeVoyageArrival?.());
+    w3d.enter(stage, flewIn ? null : (fromQuest || null));
     sessionStorage.removeItem('avalon_learn_last_site');
     w3d.syncProgress(stage, questId => {
       const q = world.quests.find(x => x.id === questId);

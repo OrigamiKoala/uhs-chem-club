@@ -126,7 +126,7 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
 - `npm run verify` — `verify:quest` + `verify:console` + `verify:learn` + `verify:geometry`
-  + `verify:media` + `verify:flows` + `verify:ship` + `verify:tallow` + `verify:ligar`
+  + `verify:media` + `verify:flows` + `verify:ship` + `verify:voyage` + `verify:tallow` + `verify:ligar`
   + `verify:bench` + `verify:holo` + `build`. Run this before shipping. **The build
   empties `dist/`, which is gitignored** — anything placed only in `dist/` (reference art
   has been) is deleted by it. Source images belong in `public/` or `assets-src/`.
@@ -194,6 +194,13 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   pass an **instanced field is measured one instance at a time** (the union of a quarry's
   floor rubble is a box round the whole floor) and a mesh marked `userData.openShell` — a
   barrel vault — by its triangles, since a vault has an underside and no inside.
+- `npm run verify:voyage` — the Avalon can land and a player can get off it (see "The
+  voyage" below): with the airlock's outer leaf open, a line through the hatch at head,
+  chest and knee height meets nothing aboard (a lining sheet once stood in the opening),
+  and with it shut the line stops on the leaf; on Tallow, Ligar and Erebus the landing
+  `solveLanding` picks keeps the hull and ramp clear of every collider, puts the ramp's
+  foot on open ground inside the walk and within a ramp's reach of the sill, on a quarter
+  turn so the hull's collider box is exact; and the chevron's route aboard stays on deck.
 - `npm run verify:ligar` — Ligar's ground, held to every rule `verify:tallow` holds Tallow
   to, and three a quarry needs: it **builds the real world** and measures every pair of
   bodies (instanced fields per instance, via `userData.partBoxes`); it fails any body
@@ -279,6 +286,11 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   crust out to paper, and `LIGAR_EXPOSURE` 1.16, because black stone at dusk throws almost
   nothing back. The renderer's shadow map is enabled
   at T4 only; every world light already asked for shadows and none were drawn before.
+- `three/voyage.js` — **the voyage**: flying the Avalon to a world at T4 (see "The voyage"
+  under §8). `three/ship-exterior.js` is the Avalon seen from outside plus `solveLanding`;
+  `three/guide-arrow.js` the lit chevron (and its plate on the glass) that leads to the
+  airlock aboard and to a bench or pylon on the ground; `screens/voyage.js` the helm plate
+  drawn while the ship is under way.
 - `three/tallow.js` — **Tallow**, Learn world 01 (see "Tallow" below), built from
   `three/world-data/tallow.json` with PBR surfaces from `materials/tallow-textures.js`.
 - `three/ligar.js` — **Ligar**, Learn world 02 (see "Ligar" below), built from
@@ -1714,6 +1726,45 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     since raising the HUD nav is 40 px off the top of a phone. In T3 and below, 2D full-page screens (`.screen-container`) remain active with matching dismissible/re-openable announcement cards with the same star map quest callout. Doorway frames in comms are positioned at corridor thresholds to prevent obstructing the Fleet Comms standings screen, and the Cargo Manifest terminal screen is offset (`Z = 0.370`) with polygon offsetting to eliminate coplanar Z-fighting and screen glitching.
 - Erebus world scene: `src/three/world.js` and `src/three/world-data/erebus.json` define The Charge Gardens basin with 20 instanced pylon structures along a walkable route, survey lander ("SANDSTALKER") with boarding ramp, stratified sedimentary rock outcrops, procedural terrain heightmap (`getTerrainHeight`), amber celestial sky, banded gas giant vista (with `fog: false` celestial bodies), tuned desert haze (`fogNear: 70`, `fogFar: 280`), and atmospheric dust motes.
 - T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `CLOSE` dismiss controls. Star Map holo-table integrates Sector 01 status and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates standings; Settings integrates graphics tier (T4 default) and audio sliders. Bridge displays the floating directory kiosk instead of WASD/mouse look text prompts.
+- **The voyage — at T4 a world is FLOWN to, never stepped into** (`three/voyage.js`).
+  A signed-in player aboard who asks for a world — the star map, the Learn road, the
+  bridge's quest key, the airlock terminal — is not teleported and gets no film: the router
+  (`tryVoyage`) hands the route to `stage.requestVoyage`, draws the helm plate, and holds
+  the route until the player walks off the ship (`voyage:arrived`), then draws it with the
+  player standing where the ramp left them (`stage._arrivalHold`, honoured by
+  `enterWorldScene` / `enterLearnWorld`). One unbroken shot: the player is walked to the
+  pilot's place and turned to the canopy, the drive spools, the stars stretch into
+  streaks down a lit tunnel with the field of view kicking wide, the ship drops out in
+  front of the planet (the same celestial shaders as the vista, in the world's palette,
+  nothing on its surface modelled), flies to it, enters with plasma on the glass, comes
+  down through cloud onto the REAL built world, flies to its landing pad and sets down.
+  - **Two passes, one camera.** The player never leaves the ship's scene. Each frame draws
+    the OUTSIDE (the space scene, or the destination world's own scene) through a second
+    camera posed at (ship pose) x (player camera), then clears depth and draws the
+    interior over it. The interior is opaque except its glass, so the outside is what the
+    canopy, shoulder ports and portholes show; moving the ship is moving one matrix, and
+    nothing aboard — colliders, doors, terminals, aim — is ever transformed.
+  - **The only moment the outside changes from "a planet" to "this place" is inside a
+    full cloud deck** in the world's own fog colour, which then breaks up as the ship
+    descends. `buildFarGround` rings the built square with the terrain's own material so
+    it reads as part of a planet from altitude; the world's fog is closed in and eased
+    back out. A jump flash covers the moment the ship's own starfield and vista are
+    released. No other cut exists.
+  - **Down, the player walks the ship.** A chevron (`GuideArrow`) leads to the airlock;
+    [E] at its hatch reads `OPEN THE HATCH // DISEMBARK ONTO <WORLD>`, the hinged outer leaf
+    (`ship.airlockLeaf`, `setAirlockOpen`, `AIRLOCK_HATCH` cut through the plating) swings
+    in and the player is walked out and down the ramp. Once through the hull the interior
+    stops being drawn and the exterior model (`buildShipExterior`) appears behind them. On
+    the ground the ship stands where it landed (its boxes join the walk's colliders), [E]
+    at the ramp is `BOARD THE AVALON`, and any route back to the ship boards it — in
+    through the airlock, still landed — rather than teleporting to space. Asking for
+    another world from a landed ship is a lift-off, a climb through the cloud, a pull
+    away from the world just left, and the jump.
+  - A **quest route** lands the ship on its world and leads the player to that quest's
+    bench (only if it is open); `#/quest` leads to the next pylon. `Skip` on the helm plate
+    hurries the flight (x6); it never cuts. The voyage stands down for T3 and below, a
+    reload onto a world route (the first route of a page load), a signed-out player and
+    `session.reduceMotion` — each keeps the old path, launch film included at T3.
 - T4 Learn deployment: In T4, `#/learn/unit01` enters the 3D Tallow world
   (`stage.enterTallowScene(siteId)`), and `#/learn/unit02` enters Ligar
   (`stage.enterLigarScene(siteId)`); walking to a bench and pressing `[E]` raises a

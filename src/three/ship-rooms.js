@@ -158,6 +158,15 @@ export const HULL_WINDOWS = [
 ];
 
 /**
+ * The airlock's outer hatch: the one opening in the plating a person goes
+ * through. `hull.js` cuts it out of the starboard plate and `rooms/airlock.js`
+ * hangs the leaf in it; the voyage swings that leaf open when the Avalon is
+ * down on a world and walks the player out through it. `z`/`y` are the centre
+ * of the clear opening, `c` the chamfer on its corners.
+ */
+export const AIRLOCK_HATCH = { side: 1, z: -6.6, y: 1.23, w: 1.3, h: 1.86, c: 0.3 };
+
+/**
  * The viewports in the bridge's raked shoulders: `t` is how far along the
  * shoulder (0 at the straight side, 1 at the nose), each a slot `w` × `h`
  * centred at height `y`.

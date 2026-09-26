@@ -485,7 +485,7 @@ function dressFace(parent, M, face, opts, rng) {
 
   const doorBlock = face.doors.map(([a, b]) => [a - DRESS.portalW - DRESS.doorSkip, b + DRESS.portalW + DRESS.doorSkip]);
   const winBlock = face.windows.map(w => [w.u - w.w / 2 - 0.22, w.u + w.w / 2 + 0.22]);
-  const keep = (opts.keep || []).map(([a, b, top]) => [Math.max(0, a), Math.min(L, b), top ?? cs]);
+  const keep = (opts.keep || []).map(([a, b, top, bare]) => [Math.max(0, a), Math.min(L, b), top ?? cs, bare]);
   const keepBlock = keep.map(([a, b]) => [a, b]);
   const lowBlocked = [...doorBlock, ...keepBlock];
 
@@ -543,7 +543,10 @@ function dressFace(parent, M, face, opts, rng) {
   }
 
   // --- The plain bays the room asked for ---
-  for (const [a, b, top] of keep) {
+  // A `bare` bay gets no backing sheet: the hull shows there, because the
+  // hull has an opening in it (the airlock's outer hatch).
+  for (const [a, b, top, bare] of keep) {
+    if (bare) continue;
     box(g, M.panelDarkMat, b - a, Math.min(top, cs), 0.012, (a + b) / 2, Math.min(top, cs) / 2, 0.006);
   }
 
@@ -716,7 +719,7 @@ function dressFloor(parent, M, rect, opts) {
  * @param ship    the ShipInterior (for `ship.hull`, the materials, the seed)
  * @param roomId  a key of ROOMS
  * @param opts
- *   keepClear  [{ side, from, to, top }] — `side` is a face id ('N', 'S', 'E',
+ *   keepClear  [{ side, from, to, top, bare }] — `side` is a face id ('N', 'S', 'E',
  *              'W', or on the bridge 'SHOULDER_E' / 'SHOULDER_W'); `from`/`to`
  *              are WORLD coordinates along that face (x for N/S, z for E/W,
  *              x for the shoulders); `top` defaults to the chamfer line.
@@ -744,7 +747,7 @@ export function dressRoomShell(ship, roomId, opts = {}) {
       .map(k => {
         const along = p => (face.axis === 'x' ? [face.a[0], p] : face.axis === 'z' ? [p, face.a[1]] : [p, face.a[1] + (p - face.a[0]) * ((face.b[1] - face.a[1]) / (face.b[0] - face.a[0]))]);
         const u0 = fr.toU(along(k.from)), u1 = fr.toU(along(k.to));
-        return [Math.min(u0, u1), Math.max(u0, u1), k.top];
+        return [Math.min(u0, u1), Math.max(u0, u1), k.top, Boolean(k.bare)];
       });
     out.push(dressFace(group, M, face, { ...opts, keep }, rng));
   }
