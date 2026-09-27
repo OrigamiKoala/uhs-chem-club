@@ -30,14 +30,16 @@ import { api } from "../api.js";
  *
  * The ship is a dark interior lit by filaments; Tallow is a salt pan under flat
  * overcast, which is roughly two stops brighter in the real world. Rendering both
- * at the ship's exposure washes the crust out to white paper. Erebus keeps the
- * ship's value, which is what it was tuned against.
+ * at the ship's exposure washes the crust out to white paper.
  */
 const SHIP_EXPOSURE = 1.28;
 const TALLOW_EXPOSURE = 0.92;
 // Ligar is black stone at dusk: almost nothing bounces off it and the sun is on
 // the horizon, so it takes MORE exposure than the salt pan rather than less.
 const LIGAR_EXPOSURE = 1.16;
+// Erebus is a bright desert under a low sun: its sky and sand are lit to real
+// daylight levels in erebus/atmosphere.js, so it takes less than the ship.
+const EREBUS_EXPOSURE = 0.82;
 
 /**
  * The bridge directory board, as `ship.js` builds it: a 1.8 x 1.0125 m plate
@@ -673,6 +675,7 @@ class Stage {
   exposureFor(key) {
     if (key === "tallow") return TALLOW_EXPOSURE;
     if (key === "ligar") return LIGAR_EXPOSURE;
+    if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
 
@@ -762,7 +765,7 @@ class Stage {
     }
     this.mode = "world";
     this.activeWorld = this.worldScene;
-    if (this.renderer) this.renderer.toneMappingExposure = SHIP_EXPOSURE;
+    if (this.renderer) this.renderer.toneMappingExposure = EREBUS_EXPOSURE;
 
     if (this.worldScene && this._arrivalHold === this.worldScene) {
       // Walked here down the Avalon's ramp: they are already standing on it.
@@ -1203,7 +1206,13 @@ class Stage {
       if (this.activeQuestViewer.inWorld && this.activeWorld) {
         this.activeWorld.update(delta, this.camera.position);
       }
+      // A chamber that brings its own room (the Charge Gardens) was lit for
+      // the ship's exposure, whichever world it was opened on; a bench
+      // deployed in a world takes that world's.
+      const worldExposure = this.renderer.toneMappingExposure;
+      if (!this.activeQuestViewer.inWorld) this.renderer.toneMappingExposure = SHIP_EXPOSURE;
       this.renderer.render(this.activeQuestScene, this.activeQuestViewer.camera);
+      this.renderer.toneMappingExposure = worldExposure;
       worldUI.render(this.activeQuestScene, this.activeQuestViewer.camera);
       return;
     } else if (this.mode === "world" && this.isLearnWorld(this.activeWorld)) {
