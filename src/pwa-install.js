@@ -1,10 +1,13 @@
 /**
  * pwa-install.js — Home screen installation & orientation enforcement.
  *
- * Flaunts installation to the Home Screen with a dedicated aerospace HUD button
- * and platform-specific step-by-step walkthrough modal (Safari share > add to home screen).
- * Enforces landscape mode on mobile screens via Screen Orientation API and
- * the Orientation Guard overlay.
+ * Mobile-only: On desktop / laptop, neither the install prompt nor the rotate
+ * guard are shown.
+ *
+ * On mobile screens:
+ * - Flaunts installation via HUD button and auto-popup on app open if not installed.
+ * - Shows: "Add Avalon to Home Screen for a better experience" followed by steps.
+ * - Shows rotate advisory: ONLY "Rotate your device for the best experience" with the graphic.
  */
 
 import { gameMode } from './game-mode.js';
@@ -14,12 +17,18 @@ let deferredPrompt = null;
 
 export function isMobileScreen() {
   if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isMobileUa = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
   const coarse = Boolean(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-  const touch = (navigator.maxTouchPoints || 0) > 0;
-  const narrow = Boolean(window.matchMedia && window.matchMedia('(max-width: 900px)').matches);
-  const short = Boolean(window.matchMedia && window.matchMedia('(max-height: 500px)').matches);
-  const mobileUa = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
-  return (coarse || touch || mobileUa) && (narrow || short || coarse);
+  const fine = Boolean(window.matchMedia && window.matchMedia('(pointer: fine)').matches);
+  const hoverNone = Boolean(window.matchMedia && window.matchMedia('(hover: none)').matches);
+
+  // Desktop or laptop (fine pointer/hover, no mobile UA) is never mobile
+  if (!isMobileUa && (fine || !coarse || !hoverNone)) {
+    return false;
+  }
+
+  return isMobileUa || (coarse && hoverNone);
 }
 
 export function isIosDevice() {
@@ -29,24 +38,18 @@ export function isIosDevice() {
 }
 
 /**
- * Show the flaunted Add to Home Screen popup dialog.
+ * Show the Add to Home Screen popup dialog (mobile only).
  */
 export function showInstallModal(opts = {}) {
+  if (!isMobileScreen()) return;
   const isIos = isIosDevice();
   const isStandalone = gameMode.isStandalone();
   if (isStandalone) return;
 
   const modalHtml = `
     <div class="pwa-install-dialog" role="document">
-      <div class="pwa-modal-head">
-        <div class="pwa-modal-badge">
-          <span class="install-pulse-dot" aria-hidden="true"></span>
-          <span>SHIPBOARD OS // AEROSPACE DEPLOYMENT</span>
-        </div>
-        <h2 id="pwa-modal-title" class="pwa-modal-title">ADD AVALON TO HOME SCREEN</h2>
-        <p class="pwa-modal-sub">
-          Launch Avalon in dedicated hardware mode with zero browser chrome, true full-bleed display, and calibrated landscape flight controls.
-        </p>
+      <div class="pwa-modal-head" style="margin-bottom: 1.15rem;">
+        <h2 id="pwa-modal-title" class="pwa-modal-title" style="font-size: 1.15rem; letter-spacing: 0.1em; line-height: 1.35; color: var(--text-bright); margin: 0;">Add Avalon to Home Screen for a better experience</h2>
       </div>
 
       <div class="pwa-steps-list">
@@ -139,13 +142,6 @@ export function showInstallModal(opts = {}) {
         `}
       </div>
 
-      <div class="pwa-hardware-perk">
-        <svg class="pwa-perk-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-        </svg>
-        <span>Hardware Mode removes browser address bars, enables instant loading, and provides calibrated landscape twin sticks.</span>
-      </div>
-
       <div class="pwa-modal-actions">
         ${deferredPrompt ? `
           <button type="button" id="pwa-native-install-btn" class="btn-primary" style="width: 100%; min-height: 44px; margin-bottom: 0.6rem;">
@@ -153,7 +149,7 @@ export function showInstallModal(opts = {}) {
           </button>
         ` : ''}
         <button type="button" id="pwa-dismiss-btn" class="${deferredPrompt ? 'btn-secondary' : 'btn-primary'}" style="width: 100%; min-height: 44px;">
-          ${isIos ? 'GOT IT — CONTINUE TO CONSOLE' : (deferredPrompt ? 'MAYBE LATER' : 'GOT IT — CONTINUE')}
+          ${deferredPrompt ? 'MAYBE LATER' : 'GOT IT'}
         </button>
       </div>
     </div>
@@ -191,30 +187,14 @@ export function showInstallModal(opts = {}) {
 }
 
 /**
- * Initialize Orientation Guard (rotate device guidance) and lock handlers.
+ * Initialize Orientation Guard and lock handlers (mobile only).
  */
 export function initOrientationEnforcer() {
-  const lockBtn = document.getElementById('orientation-lock-btn');
-  const bypassBtn = document.getElementById('orientation-bypass-btn');
-
-  // Check if user previously bypassed rotation lock in this session
-  try {
-    if (sessionStorage.getItem('avalon_orientation_bypassed') === '1') {
-      document.body.classList.add('orientation-bypass');
-    }
-  } catch (e) {}
-
-  lockBtn?.addEventListener('click', async () => {
-    await gameMode.enter();
-    await gameMode.lockLandscape();
-  });
-
-  bypassBtn?.addEventListener('click', () => {
-    document.body.classList.add('orientation-bypass');
-    try {
-      sessionStorage.setItem('avalon_orientation_bypassed', '1');
-    } catch (e) {}
-  });
+  if (!isMobileScreen()) {
+    const guard = document.getElementById('orientation-guard');
+    if (guard) guard.classList.add('hidden');
+    return;
+  }
 
   // Re-attempt lock whenever entering landscape on mobile
   const onOrientationChange = () => {
@@ -235,17 +215,26 @@ export function initOrientationEnforcer() {
   }
 
   // Attempt lock on boot
-  if (isMobileScreen()) {
-    gameMode.lockLandscape();
-  }
+  gameMode.lockLandscape();
 }
 
 /**
  * Main boot orchestrator for PWA installation & orientation.
+ * Explicitly guards against desktop / laptop.
  */
 export function initPwaAndOrientation() {
-  // Capture beforeinstallprompt event for Chromium browsers
+  // Never show on desktop / laptop
+  if (!isMobileScreen()) {
+    const hudBtn = document.getElementById('hud-install-btn');
+    if (hudBtn) hudBtn.classList.add('hidden');
+    const guard = document.getElementById('orientation-guard');
+    if (guard) guard.classList.add('hidden');
+    return;
+  }
+
+  // Capture beforeinstallprompt event for Chromium browsers on mobile
   window.addEventListener('beforeinstallprompt', (e) => {
+    if (!isMobileScreen()) return;
     e.preventDefault();
     deferredPrompt = e;
   });
@@ -256,7 +245,7 @@ export function initPwaAndOrientation() {
     if (hudBtn) hudBtn.classList.add('hidden');
   });
 
-  // Wire up the flaunted install button in the HUD
+  // Wire up flaunted install button in the HUD (mobile only)
   const hudBtn = document.getElementById('hud-install-btn');
   if (hudBtn) {
     if (gameMode.isStandalone()) {
@@ -273,7 +262,7 @@ export function initPwaAndOrientation() {
   // Initialize orientation enforcement
   initOrientationEnforcer();
 
-  // If user isn't accessing this as an installed app, pop up on open
+  // If user isn't accessing this as an installed app on mobile, pop up on open
   if (!gameMode.isStandalone()) {
     let dismissed = false;
     try {
@@ -282,7 +271,7 @@ export function initPwaAndOrientation() {
 
     if (!dismissed) {
       setTimeout(() => {
-        if (!gameMode.isStandalone()) {
+        if (!gameMode.isStandalone() && isMobileScreen()) {
           showInstallModal({ autoTriggered: true });
         }
       }, 450);
