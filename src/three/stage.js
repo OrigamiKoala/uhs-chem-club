@@ -1105,10 +1105,8 @@ class Stage {
    */
   syncWorldOrientation() {
     if (!this.isTouch) return;
-    const onPlanet = Boolean(
-      this.activeWorld && (this.mode === "world" || this.mode === "quest")
-    );
-    if (!onPlanet) gameMode.unlockOrientation();
+    // Maintain landscape lock on mobile touch screens
+    gameMode.lockLandscape();
   }
 
   /** Light a Tallow site's indicator when its quest is finished. */

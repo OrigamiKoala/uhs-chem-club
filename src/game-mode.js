@@ -80,6 +80,7 @@ export const gameMode = {
     this.armUsed = true;
     if (this.isStandalone() || this.isFullscreen()) {
       this.setActive(true);
+      await this.lockLandscape();
       return true;
     }
 
@@ -91,17 +92,16 @@ export const gameMode = {
         } else if (root.webkitRequestFullscreen) {
           root.webkitRequestFullscreen();
         }
-        // `fullscreenchange` flips `active`; nothing to set here.
+        await this.lockLandscape();
         return true;
       } catch (e) {
         // Denied, or this browser refuses the element — fall through.
       }
     }
 
-    // No Fullscreen API, or it was refused. The full-bleed layout is still
-    // worth having, and installing is then the one route that actually works.
+    // No Fullscreen API, or it was refused.
     this.setActive(true);
-    this.showInstallHint();
+    await this.lockLandscape();
     return false;
   },
 
@@ -141,8 +141,7 @@ export const gameMode = {
 
     // No element full screen at all — an iPhone, where Safari has it for
     // `<video>` and nothing else (an iPad does have it). Route 3 is the whole of
-    // game mode there and needs no gesture: the full-bleed layout goes on and
-    // the install hint is shown once, exactly as stepping onto a planet does it.
+    // game mode there and needs no gesture: the full-bleed layout goes on.
     if (!this.canFullscreen()) {
       this.enter();
       return false;
@@ -153,6 +152,7 @@ export const gameMode = {
     const fire = () => {
       this.disarm();
       this.enter();
+      this.lockLandscape();
     };
     this._armedFire = fire;
     // `click` and `touchend` are the events every browser counts as an
@@ -173,30 +173,41 @@ export const gameMode = {
   },
 
   /**
-   * Pin the handset sideways. A planet surface is a horizon, and a horizon in
-   * a 375px-wide portrait window is a letterbox with two sticks in it.
+   * Pin the handset sideways into landscape mode.
    *
-   * The Screen Orientation API only grants a lock to a document that is
-   * already full screen, so this must run after `enter()` has resolved.
-   * Support for the lock is narrower than support for full screen itself, so
-   * treat a refusal as ordinary: nothing is said and nothing is shown, the
-   * player turns the device or does not, and the walk works either way.
+   * The Screen Orientation API grants a lock to a document that is
+   * in fullscreen or standalone PWA. Support for the lock varies across
+   * browsers and platforms, so refusal is handled gracefully.
    */
   async lockLandscape() {
     try {
       const o = window.screen && window.screen.orientation;
-      if (!o || !o.lock) return false;
-      await o.lock('landscape');
-      return true;
+      if (o && typeof o.lock === 'function') {
+        await o.lock('landscape');
+        return true;
+      }
+      if (window.screen && typeof window.screen.lockOrientation === 'function') {
+        window.screen.lockOrientation('landscape');
+        return true;
+      }
+      if (window.screen && typeof window.screen.mozLockOrientation === 'function') {
+        window.screen.mozLockOrientation('landscape');
+        return true;
+      }
+      return false;
     } catch (e) {
       return false;
     }
   },
 
   unlockOrientation() {
+    // Keep mobile touch screens locked in landscape orientation
+    const coarse = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    if (coarse) return;
     try {
       const o = window.screen && window.screen.orientation;
       if (o && o.unlock) o.unlock();
+      else if (window.screen && window.screen.unlockOrientation) window.screen.unlockOrientation();
     } catch (e) {}
   },
 

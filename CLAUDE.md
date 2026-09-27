@@ -1858,23 +1858,15 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   (`armUsed`), so a player who takes the screen back with `FULL` is not fought for it on
   their next navigation. Where there is no element full screen at all — an iPhone, where
   Safari has it for `<video>` only and an iPad does not — arming instead runs route 3 at
-  once: no gesture is needed for a layout change. On that device the HUD key reads
-  `INSTALL` and shows the Home Screen instructions instead of toggling; a key reading
-  `WINDOW` would be claiming a state the device cannot be in, which §7 forbids.
-  The third route is where an older iPhone lands. Safari used to expose full screen for
-  `<video>` only (`HTMLVideoElement.webkitEnterFullscreen`, which is how a video site
-  takes the screen there) and not for an arbitrary element — that path is no use to a
-  WebGL canvas, since it accepts a `<video>` and nothing else, and piping the canvas
-  through `captureStream()` into one would hand back a one-way picture with no touch
-  mapping. It is deliberately not attempted.
-- **Entering a 3D world on a phone turns the handset sideways.** `enterWorldScene` and
-  `enterTallowScene` call `gameMode.enterWorld()` — full screen, then
-  `screen.orientation.lock('landscape')`, which browsers grant only to a document that
-  is already full screen. Support for the lock is narrower than support for full screen
-  itself; where it is refused, nothing is said and nothing is shown — the player turns
-  the device or does not. `stage.syncWorldOrientation` gives the lock back the moment the player is
-  no longer standing on a planet (`activeWorld` set, mode `world` or `quest`) — the ship
-  reads fine in portrait, and a chamber opened at T3 or below has no world behind it.
+  once: no gesture is needed for a layout change.
+- **Flaunted Install & Home Screen Popup (`src/pwa-install.js`)**:
+  - If not accessing as an installed app (`!gameMode.isStandalone()`), opening the app triggers an auto-popup modal detailing step-by-step installation instructions (iOS Safari: Share icon -> Add to Home Screen; Android: 1-tap install prompt / menu).
+  - The HUD flaunts installation via `#hud-install-btn` (amber border, live pulsing filament dot, download icon, bold label) instead of a tiny or hidden button. Hidden in standalone mode.
+- **Mobile Landscape Enforcement**:
+  - `public/manifest.webmanifest` sets `"orientation": "landscape"` for native PWA landscape startup.
+  - `gameMode.lockLandscape()` locks orientation via Screen Orientation API on boot, user gestures, and enter.
+  - Mobile touch screens maintain landscape throughout navigation (`syncWorldOrientation` does not revert on return from worlds).
+  - In browsers refusing orientation lock (e.g. iOS Safari) while in portrait on mobile screens, `#orientation-guard` activates with an animated rotating device graphic and "LOCK LANDSCAPE" / "Continue in portrait" options, auto-hiding immediately when rotated sideways to landscape.
 - Canvas sizing follows `visualViewport` on touch, not `window.innerHeight`: a phone
   collapsing its address bar fires only the `visualViewport` resize, and sizing to the
   window renders a buffer taller than the glass with the horizon off the bottom edge.

@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="/src/styles/mobile-quest.css">
   <link rel="stylesheet" href="/src/styles/mobile-landscape.css">
   <link rel="stylesheet" href="/src/styles/mobile-game.css">
+  <link rel="stylesheet" href="/src/styles/pwa-install.css">
 </head>
 <body class="theme-dark">
   <!-- 3D Persistent Canvas -->
@@ -69,6 +70,15 @@
       </div>
 
       <div class="hud-controls">
+        <button id="hud-install-btn" class="hud-install-btn hidden" title="Add Avalon to Home Screen" aria-label="Add Avalon to Home Screen">
+          <span class="install-pulse-dot" aria-hidden="true"></span>
+          <svg class="hud-install-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span class="install-btn-label">INSTALL APP</span>
+        </button>
         <button id="gfx-tier-toggle" class="btn-chip" title="Graphics quality">
           <span class="gfx-dot"></span>
           <span id="gfx-tier-label">T3</span>
@@ -102,6 +112,38 @@
 
   <!-- Modal / Overlay Container -->
   <div id="modal-container" class="modal-container hidden" role="dialog" aria-modal="true" aria-label="Dialog"></div>
+
+  <!-- Orientation Guard for Mobile Screens -->
+  <div id="orientation-guard" class="orientation-guard" aria-live="assertive" role="region" aria-label="Orientation Advisory">
+    <div class="glass-panel orientation-card">
+      <div class="orientation-anim-wrap" aria-hidden="true">
+        <div class="phone-rotate-glyph">
+          <svg class="phone-svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.5"></line>
+          </svg>
+        </div>
+        <div class="rotate-arrow-glyph">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </div>
+      </div>
+      <div class="orientation-content">
+        <div class="eyebrow" style="color: var(--accent-amber); letter-spacing: 0.16em;">SYSTEM CALIBRATION // TACTICAL VIEW</div>
+        <h2 class="orientation-title">ROTATE DEVICE TO LANDSCAPE</h2>
+        <p class="orientation-sub">Avalon flight deck telemetry and 3D navigation consoles require widescreen landscape orientation for full-bleed operation.</p>
+        <div class="orientation-actions">
+          <button type="button" id="orientation-lock-btn" class="btn-primary" style="width: 100%; min-height: 44px; margin-bottom: 0.5rem;">
+            LOCK LANDSCAPE
+          </button>
+          <button type="button" id="orientation-bypass-btn" class="orientation-bypass-link">
+            Continue in portrait
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="/src/main.js"></script>
 </body>

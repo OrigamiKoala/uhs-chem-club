@@ -13,6 +13,7 @@ import { gameMode } from './game-mode.js';
 import { showToast } from './ui/toast.js';
 import { nextLevelRequisition } from './progression/requisitions.js';
 import { progressionFeed } from './progression/feed.js';
+import { initPwaAndOrientation } from './pwa-install.js';
 
 /** Guild liveries, keyed by team id. Legacy ids are aliased in session.js. */
 const TEAM_LIVERY = {
@@ -32,6 +33,9 @@ async function bootstrapApp() {
   // 0. Full-screen play. Installed to a Home Screen there is no chrome to
   //    hide, so this reports game mode as already on from the first frame.
   gameMode.init();
+
+  // Initialize PWA installation prompts and mobile orientation enforcement
+  initPwaAndOrientation();
 
   // 1. Initialize 3D Engine
   stage.init();
@@ -116,27 +120,17 @@ function setupHud() {
     tierManager.cycleTier();
   });
 
-  // Full-screen key. Only shown on a touch device (CSS in mobile-game.css),
-  // and the press itself is the user gesture the Fullscreen API demands — a
-  // request made anywhere else is refused by the browser.
+  // Full-screen key. Only shown on a touch device (CSS in mobile-game.css)
+  // where element fullscreen is actually supported.
   if (fullscreenToggle) {
     const syncFullscreenBtn = (active) => {
       fullscreenToggle.textContent = active ? 'WINDOW' : 'FULL';
       fullscreenToggle.classList.toggle('active', Boolean(active));
     };
-    // An installed launch has no chrome to give back, so the key would do
-    // nothing; it is not offered there.
-    if (gameMode.isStandalone()) {
+    // If standalone or unable to element-fullscreen, full-screen key is hidden;
+    // PWA installation is handled prominently by the flaunted install button.
+    if (gameMode.isStandalone() || !gameMode.canFullscreen()) {
       fullscreenToggle.classList.add('hidden');
-    } else if (!gameMode.canFullscreen()) {
-      // An iPhone: Safari has full screen for `<video>` and nothing else, so a
-      // key reading WINDOW would be claiming a state the device cannot be in.
-      // The one route that does work is installing, so that is what it says and
-      // what it does — repeatably, unlike the once-ever hint.
-      fullscreenToggle.textContent = 'INSTALL';
-      fullscreenToggle.addEventListener('click', () => {
-        showToast('Full screen needs Avalon on your Home Screen: Share, then Add to Home Screen.', 'info', 7000);
-      });
     } else {
       syncFullscreenBtn(gameMode.active);
       gameMode.subscribe(syncFullscreenBtn);
