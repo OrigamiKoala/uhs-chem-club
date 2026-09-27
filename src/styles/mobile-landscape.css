@@ -212,16 +212,14 @@
   }
   .in-world-terminal .section-title { font-size: 1rem; }
 
-  .erebus-world-hud,
-  .learn-walk-hud {
+  .erebus-world-hud {
     top: calc(var(--hud-h) + 4px);
     left: max(6px, env(safe-area-inset-left));
     right: auto;
     flex-direction: column;
     gap: 0.35rem;
   }
-  .erebus-hud-card,
-  .learn-walk-card { padding: 0.45rem 0.7rem; font-size: 0.68rem; }
+  .erebus-hud-card { padding: 0.45rem 0.7rem; font-size: 0.68rem; }
 }
 
 /* ---- Learn bench, sideways: bench on the left, deck docked right ----

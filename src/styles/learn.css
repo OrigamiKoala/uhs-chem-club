@@ -1305,6 +1305,13 @@
 
 .learn-walk-sites { max-width: 390px; }
 
+.learn-walk-sites-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 .learn-site-list {
   list-style: none;
   margin: 0.5rem 0 0;

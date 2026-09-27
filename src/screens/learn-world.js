@@ -196,7 +196,10 @@ function renderWalkHud(container, world) {
       </div>
 
       <div class="learn-walk-card learn-walk-sites">
-        <div class="eyebrow">Sites</div>
+        <div class="learn-walk-sites-head">
+          <span class="eyebrow">Sites</span>
+          ${prog.liveTotal ? `<span class="tag ${prog.questsComplete >= prog.liveTotal ? 'live' : 'warn'}">${prog.questsComplete} / ${prog.liveTotal} Cleared</span>` : ''}
+        </div>
         <ul class="learn-site-list">
           ${world.quests.map(q => {
             const st = questStatus(world, q);
