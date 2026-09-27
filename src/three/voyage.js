@@ -641,6 +641,9 @@ export class Voyage {
     this._ensureSpace();
     this.dest = dest;
     this.leaving = from;
+    // Leaving a world, the sky outside is that world's, never the home vista.
+    this._adoptHomeSky();
+    this._releaseHomeSky();
     this._beginFlight();
     this.phases = [
       this._phaseAlign(),
@@ -1117,6 +1120,24 @@ export class Voyage {
         const w = localToWorld(L, x, 0, z);
         return world.getTerrainHeight(w.x, w.z) - L.deckY;
       });
+      // The hatch lamp joins the world's lamp pool, whose light count never
+      // changes (a world without one simply has no light off the hatch).
+      if (model.hatchLamp && world.lampPool) {
+        const lp = model.hatchLamp;
+        const w = localToWorld(L, lp.local.x, lp.local.y, lp.local.z);
+        this._hatchSource = { pool: world.lampPool, src: world.lampPool.add({
+          position: new THREE.Vector3(w.x, w.y, w.z),
+          color: lp.color, intensity: lp.intensity, distance: lp.distance, decay: lp.decay
+        }) };
+      }
+      // Compile the shell's materials against this world's lights now, off the
+      // main thread where the driver allows, so its first frame in view — the
+      // player turning round at the foot of the ramp — costs nothing.
+      const r = this.stage.renderer;
+      if (r?.compileAsync) {
+        model.group.visible = true;
+        r.compileAsync(model.group, this.stage.camera, world.scene).catch(() => {});
+      }
       // Never drawn while the player is inside it.
       model.group.visible = false;
     }
@@ -1128,6 +1149,12 @@ export class Voyage {
     if (model && model.group.parent === p.world.scene) {
       p.world.scene.remove(model.group);
       model.group.visible = false;
+    }
+    const hs = this._hatchSource;
+    if (hs && hs.pool === p.world.lampPool) {
+      const i = hs.pool.sources.indexOf(hs.src);
+      if (i >= 0) hs.pool.sources.splice(i, 1);
+      this._hatchSource = null;
     }
     if (!keepExterior) this._removeFarGround(p.world);
     if (this.parked === p) this.parked = null;
@@ -1291,6 +1318,11 @@ export class Voyage {
     this.shipPos.set(this.parked.landing.x, this.parked.landing.deckY, this.parked.landing.z);
     this.shipQuat.setFromAxisAngle(_Y, this.parked.landing.yaw);
     if (this.exteriorModel) this.exteriorModel.group.visible = false;
+    // The canopy's own sky (starfield and gas giant) went back into the ship
+    // when the player walked off. Standing on a world, the world is the sky:
+    // left in, the gas giant hung over the world and rode the whole voyage out.
+    this._adoptHomeSky();
+    this._releaseHomeSky();
     this.groundGuide.hide();
     this.guide.hide();
     this.dest = { ...this.parked, def: DESTINATIONS[this.parked.key], hash: DESTINATIONS[this.parked.key].hash, waypoint: null };

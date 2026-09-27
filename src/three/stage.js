@@ -1186,6 +1186,11 @@ class Stage {
     if (this.isPaused || !this.renderer) return;
 
     tierManager.recordFrame(now);
+    // The chest lamp is the ship's. Carried into a world with the camera it
+    // added a light to that world's scene, and a changed light count
+    // recompiles every material in it: a freeze of seconds at the foot of the
+    // Avalon's ramp. An invisible light is not counted.
+    if (this.cameraLight) this.cameraLight.visible = this.camera.parent === this.shipScene;
     const delta = this.clock.getDelta();
     const time = this.clock.getElapsedTime();
     this.syncTouchControls(now);

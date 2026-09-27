@@ -429,6 +429,45 @@ for (const [id, r] of Object.entries(ROOMS)) {
   assert(lit.length > 0, `${id}: declares at least one light (${lit.length})`);
 }
 
+/* ============================================================ DOORWAYS */
+
+/*
+ * A DOOR THAT OPENS IS A HOLE WHEN IT HAS. Each portal used to be extruded
+ * from a shape whose "hole" ran down past the frame's own bottom edge, which
+ * the triangulator does not read as a hole: every doorway was a solid plate,
+ * the leaves slid open unseen behind it, and the player walked through what
+ * looked like a shut door. So a line is drawn through every doorway at knee,
+ * chest and head height: with the leaves parted it must meet NOTHING aboard,
+ * and with them shut it must stop on a leaf.
+ */
+console.log('\nDoorways — open is a hole, shut is a door\n');
+{
+  const root = ship.group.parent || ship.group;
+  const through = (d, y) => {
+    const t = d.doorway.through;
+    const o = new THREE.Vector3(d.pos[0] - t[0] * 0.6, y, d.pos[1] - t[1] * 0.6);
+    const rc = new THREE.Raycaster(o, new THREE.Vector3(t[0], 0, t[1]).normalize(), 0, 1.2);
+    return rc.intersectObject(root, true).filter(h => h.object.isMesh && h.object.visible);
+  };
+  const leafSet = new Set();
+  for (const d of ship.doors) for (const l of d.leaves) l.carrier.traverse(o => leafSet.add(o));
+  const settle = () => { for (let i = 0; i < 40; i++) ship.update(0.05, i * 0.05, null); root.updateMatrixWorld(true); };
+  for (const d of ship.doors) { d.held = true; d.isOpen = true; }
+  settle();
+  for (const d of ship.doors) {
+    const hits = [0.6, 1.2, 1.8].flatMap(y => through(d, y));
+    assert(hits.length === 0, `${d.id}: open, the doorway is clear`);
+  }
+  for (const d of ship.doors) { d.held = false; d.isOpen = false; }
+  settle();
+  for (const d of ship.doors) {
+    const hits = through(d, 1.2);
+    assert(hits.length > 0 && leafSet.has(hits[0].object), `${d.id}: shut, the first thing in the doorway is a leaf`);
+  }
+  for (const d of ship.doors) d.held = null;
+  settle();
+}
+
 /* ================================================= HOLO PROJECTIONS */
 
 console.log('\nHolographic Projection Controls Invariant Check\n');

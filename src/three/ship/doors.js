@@ -23,7 +23,7 @@
 import * as THREE from "three";
 import { placard, mergeStatic } from "../materials/pbr-kit.js";
 import { ROOMS, WALL_T, DOOR_H, doorways, roomAt } from "../ship-rooms.js";
-import { DRESS, box, cyl, extrude, chamferedRect, chamferedHole, lamp } from "./kit.js";
+import { DRESS, box, cyl, extrude, chamferedRect, archShape, lamp } from "./kit.js";
 
 /*
  * A door has to be open BEFORE the player reaches it, not while they do. At
@@ -84,15 +84,13 @@ export function buildDoors(ship, hull) {
     const depth = WALL_T + pd * 2;
 
     // --- The portal: a thick ring, upper corners cut, proud of both faces ---
-    const outer = chamferedRect(d.clear + pw * 2, DOOR_H + pw, pc + 0.12, ['tl', 'tr'], 0, (DOOR_H + pw) / 2);
-    outer.holes.push(chamferedHole(d.clear, DOOR_H + 0.02, pc, ['tl', 'tr'], 0, (DOOR_H + 0.02) / 2 - 0.01));
+    const outer = archShape(d.clear + pw * 2, DOOR_H + pw, pc + 0.12, d.clear, DOOR_H + 0.01, pc);
     const portal = extrude(frame, M.ribMat, outer, depth);
     portal.position.z = -depth / 2;
 
     // A second, thinner collar on each face, and a hazard band at the sill.
     for (const s of [-1, 1]) {
-      const collar = chamferedRect(d.clear + pw * 2 + 0.12, DOOR_H + pw + 0.06, pc + 0.16, ['tl', 'tr'], 0, (DOOR_H + pw + 0.06) / 2);
-      collar.holes.push(chamferedHole(d.clear + pw * 2 - 0.1, DOOR_H + pw - 0.05, pc + 0.1, ['tl', 'tr'], 0, (DOOR_H + pw - 0.05) / 2));
+      const collar = archShape(d.clear + pw * 2 + 0.12, DOOR_H + pw + 0.06, pc + 0.16, d.clear + pw * 2 - 0.1, DOOR_H + pw - 0.05, pc + 0.1);
       const c = extrude(frame, M.gunmetalMat, collar, 0.03);
       c.position.z = s > 0 ? depth / 2 - 0.035 : -depth / 2 + 0.005;
 

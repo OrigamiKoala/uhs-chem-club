@@ -156,6 +156,8 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   in either occupies the same space as anything else. It also flood-fills the deck against
   the real colliders and holds **every nav anchor the HUD dollies to** to standable,
   reachable deck — the check that was missing when four of the seven stood in the solid.
+  **An open door is a hole**: a line through every doorway meets nothing with the leaves
+  parted and a leaf with them shut (every portal was once a solid plate).
   **Reaching a room's middle is not walking around it**: every standable cell inside every
   room must be reachable (the furnace room passed the centre check with its whole starboard
   half sealed behind a slag bin, and 0.38 m in front of the firebox door), and every ship
@@ -1831,6 +1833,12 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     one starts to open and returns only once nobody is near enough to be caught.
     `ShipInterior.update(delta, time, viewer)` returns true when the set changes and
     `stage.js` hands the walk the new colliders. Doors are no longer `[E]` targets.
+    **A portal is an ARCH, one outline, never a rectangle with a hole in it**
+    (`archShape` in `kit.js`). The opening runs down to the deck, and a hole whose foot
+    touches the outer edge is not a hole to the triangulator: every portal came out a
+    solid plate filling its doorway, the leaves slid open unseen behind it, and the
+    player walked through what looked like a shut door. `verify:ship` casts a line
+    through every doorway at knee, chest and head height: clear when open, a leaf when shut.
   - **Rooms** (`ship/rooms/*.js`): bridge (tactical bank to port, nav racks to
     starboard, engineering and comms stations under the shoulder ports, the club
     board's deck emitter), cockpit (a dash following all five facets, pilot seats on
@@ -1951,12 +1959,36 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     it reads as part of a planet from altitude (a world whose own ground already runs to
     the horizon sets `hasFarTerrain` and gets no ring — Erebus does); the world's fog is
     closed in and eased back out. A jump flash covers the moment the ship's own starfield and vista are
-    released. No other cut exists.
+    released. No other cut exists. **The home sky (the ship's starfield and the canopy's
+    gas giant) belongs to space, never to a world**: `_finishDisembark` hands it back to
+    the interior, so `board()` and `_startDeparture` take it out again
+    (`_adoptHomeSky` then `_releaseHomeSky`). Left in, the interior pass drew the gas
+    giant over the world outside and it rode the whole voyage out, jump and all.
   - **Down, the player walks the ship.** A chevron (`GuideArrow`) leads to the airlock;
     [E] at its hatch reads `OPEN THE HATCH // DISEMBARK ONTO <WORLD>`, the hinged outer leaf
     (`ship.airlockLeaf`, `setAirlockOpen`, `AIRLOCK_HATCH` cut through the plating) swings
     in and the player is walked out and down the ramp. Once through the hull the interior
-    stops being drawn and the exterior model (`buildShipExterior`) appears behind them. On
+    stops being drawn and the exterior model (`buildShipExterior`) appears behind them.
+    **Stepping off must not change a world's light count**, because a changed count
+    recompiles every material in that world (a freeze of seconds at the foot of the
+    ramp). So the hatch lamp is a descriptor (`hatchLamp`) the voyage adds to the
+    world's `LampPool` when it parks, never a PointLight on the model; the camera's chest
+    lamp (`stage.cameraLight`) is visible only while the camera is in the ship scene;
+    and `_park` warms the shell's materials against the world with `compileAsync`.
+    **The exterior is modelled on the reference freighter, not extruded from the deck
+    plan** (`ship-exterior.js`): a faceted loft whose mid-body flanks sit exactly on the
+    interior plating (`OUT_X`) and whose chiselled wedge nose runs on past the canopy to
+    z 16, a raised slit-windowed cockpit block, chin gun pods, a dorsal spine, a turret
+    hump with mast, two tarped crates and a canister rack on the roof, four stacked
+    engine nacelles (two a flank) past the stern, three skid-footed legs a side and a
+    grated stair with handrails. It is about 34.7 x 16.8 m (`SHIP_FOOTPRINT.body`), rides
+    `DECK_CLEARANCE` 2.6 m over the highest ground so the legs have room, and its own
+    weathered `platedMetal` sets (sand-dusted) — never the interior's materials, of which
+    it borrows `hazardMat` read-only. The static shell is `mergeStatic`-baked to one mesh
+    per material; `fitToGround` rebuilds the legs and stair for the ground under them and
+    merges them into two `noMerge` rig meshes (17 draw calls, ~17k triangles). The shell
+    shows slits, not the interior's five-pane canopy: it is never drawn with the player
+    inside. On Ligar it lands about 18 m off the pad, which is too hemmed in for its length. On
     the ground the ship stands where it landed (its boxes join the walk's colliders), [E]
     at the ramp is `BOARD THE AVALON`, and any route back to the ship boards it — in
     through the airlock, still landed — rather than teleporting to space. Asking for

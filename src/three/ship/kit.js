@@ -136,6 +136,33 @@ export function chamferedHole(w, h, c, corners = ['tl', 'tr'], cx = 0, cy = 0) {
   return p;
 }
 
+/**
+ * An arch: a frame round an opening that runs down to the deck, as ONE outline
+ * (up the outside, over, down, in along the sill line, up the inside, over,
+ * down). A hole whose foot lies on or past the outer shape's bottom edge is
+ * not a hole to the triangulator, and the door portals were built that way:
+ * each came out a solid plate filling its doorway, with the leaves sliding
+ * open unseen behind it. Both tops have their upper corners cut by `oc`/`ic`.
+ */
+export function archShape(outerW, outerH, oc, innerW, innerH, ic, cx = 0) {
+  const ox = outerW / 2, ix = innerW / 2;
+  const s = new THREE.Shape();
+  s.moveTo(cx - ox, 0);
+  s.lineTo(cx - ix, 0);
+  s.lineTo(cx - ix, innerH - ic);
+  s.lineTo(cx - ix + ic, innerH);
+  s.lineTo(cx + ix - ic, innerH);
+  s.lineTo(cx + ix, innerH - ic);
+  s.lineTo(cx + ix, 0);
+  s.lineTo(cx + ox, 0);
+  s.lineTo(cx + ox, outerH - oc);
+  s.lineTo(cx + ox - oc, outerH);
+  s.lineTo(cx - ox + oc, outerH);
+  s.lineTo(cx - ox, outerH - oc);
+  s.lineTo(cx - ox, 0);
+  return s;
+}
+
 /** A rounded-end slot (a stadium), as a Path. */
 export function slotPath(w, h, cx = 0, cy = 0) {
   const r = h / 2;
