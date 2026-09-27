@@ -199,6 +199,80 @@ function setupHud() {
     window.location.hash = '#/';
   });
 
+  // Mobile menu and sidebar
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const mobileSidebar = document.getElementById('mobile-sidebar');
+  const mobileBackdrop = document.getElementById('mobile-sidebar-backdrop');
+  const mobileSidebarClose = document.getElementById('mobile-sidebar-close');
+  const mobileSidebarBrand = document.getElementById('mobile-sidebar-brand');
+  const mobileSidebarProfile = document.getElementById('mobile-sidebar-profile');
+  const mobileSidebarName = document.getElementById('mobile-sidebar-name');
+  const mobileSidebarAvatar = document.getElementById('mobile-sidebar-avatar-glyph');
+  const mobileSidebarLevel = document.getElementById('mobile-sidebar-level');
+  const mobileSidebarTeam = document.getElementById('mobile-sidebar-team');
+  const mobileSidebarXp = document.getElementById('mobile-sidebar-xp');
+  const mobileSidebarXpFill = document.getElementById('mobile-sidebar-xp-fill');
+  const mobileSidebarAdmin = document.getElementById('mobile-sidebar-admin-link');
+  const mobileSidebarLogout = document.getElementById('mobile-sidebar-logout-btn');
+  const mobileSidebarLogin = document.getElementById('mobile-sidebar-login-btn');
+
+  const openMobileSidebar = () => {
+    mobileSidebar?.classList.add('open');
+    mobileBackdrop?.classList.add('open');
+    mobileSidebar?.setAttribute('aria-hidden', 'false');
+    mobileMenuBtn?.classList.add('is-open');
+    mobileMenuBtn?.setAttribute('aria-expanded', 'true');
+    soundscape.playToggleClack();
+  };
+
+  const closeMobileSidebar = () => {
+    mobileSidebar?.classList.remove('open');
+    mobileBackdrop?.classList.remove('open');
+    mobileSidebar?.setAttribute('aria-hidden', 'true');
+    mobileMenuBtn?.classList.remove('is-open');
+    mobileMenuBtn?.setAttribute('aria-expanded', 'false');
+  };
+
+  mobileMenuBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (mobileSidebar?.classList.contains('open')) {
+      closeMobileSidebar();
+    } else {
+      openMobileSidebar();
+    }
+  });
+
+  mobileSidebarClose?.addEventListener('click', closeMobileSidebar);
+  mobileBackdrop?.addEventListener('click', closeMobileSidebar);
+  mobileSidebarBrand?.addEventListener('click', () => {
+    closeMobileSidebar();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && mobileSidebar?.classList.contains('open')) {
+      closeMobileSidebar();
+    }
+  });
+
+  // Close sidebar on any nav button or link click inside it
+  mobileSidebar?.querySelectorAll('.nav-btn, .sidebar-link-btn, #mobile-sidebar-login-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      closeMobileSidebar();
+    });
+  });
+
+  mobileSidebarLogout?.addEventListener('click', () => {
+    session.clear();
+    closeMobileSidebar();
+    window.location.hash = '#/';
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768 && mobileSidebar?.classList.contains('open')) {
+      closeMobileSidebar();
+    }
+  });
+
   // Navigation buttons — data-target is the route name itself
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -220,6 +294,28 @@ function setupHud() {
       const prog = levelProgress(totalXp);
       const title = levelTitle(prog.level);
       const nextReq = nextLevelRequisition(prog.level);
+
+      // Sync mobile sidebar profile
+      mobileSidebarProfile?.classList.remove('hidden');
+      mobileSidebarLogout?.classList.remove('hidden');
+      mobileSidebarLogin?.classList.add('hidden');
+      const displayName = s.player.display_name || 'CREW';
+      if (mobileSidebarName) mobileSidebarName.textContent = displayName.toUpperCase();
+      if (mobileSidebarAvatar) mobileSidebarAvatar.textContent = (displayName[0] || 'C').toUpperCase();
+      if (mobileSidebarLevel) mobileSidebarLevel.textContent = `LVL ${prog.level}`;
+      if (mobileSidebarXp) mobileSidebarXp.textContent = `${totalXp} XP`;
+      if (mobileSidebarXpFill) mobileSidebarXpFill.style.width = `${prog.pct}%`;
+      if (mobileSidebarTeam && s.team) {
+        const tid = String(s.team.team_id || '').toLowerCase();
+        const livery = TEAM_LIVERY[tid] || 'var(--accent-bronze)';
+        mobileSidebarTeam.textContent = (s.team.name || s.team.team_id || '').toUpperCase();
+        mobileSidebarTeam.style.borderColor = livery;
+        mobileSidebarTeam.style.color = livery;
+      }
+      if (mobileSidebarAdmin) {
+        if (s.isAdmin) mobileSidebarAdmin.classList.remove('hidden');
+        else mobileSidebarAdmin.classList.add('hidden');
+      }
 
       // Smooth count-up unless reduced-motion is requested
       if (xpVal) {
@@ -268,12 +364,17 @@ function setupHud() {
       navEl?.classList.add('hidden');
       statsEl?.classList.add('hidden');
       userBtn?.classList.add('hidden');
+      mobileSidebarProfile?.classList.add('hidden');
+      mobileSidebarLogout?.classList.add('hidden');
+      mobileSidebarLogin?.classList.remove('hidden');
+      mobileSidebarAdmin?.classList.add('hidden');
     }
   });
 
   session.notify();
 
   window.addEventListener('hashchange', () => {
+    closeMobileSidebar();
     progressionFeed.setSafe(true);
     progressionFeed.flush();
   });

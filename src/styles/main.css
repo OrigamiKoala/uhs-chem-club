@@ -217,6 +217,19 @@ body::after {
   box-shadow: 0 0 6px var(--accent-amber);
 }
 
+/* Mobile menu trigger and sidebar — hidden on desktop */
+.mobile-menu-btn {
+  display: none;
+}
+
+.mobile-sidebar-backdrop {
+  display: none;
+}
+
+.mobile-sidebar {
+  display: none;
+}
+
 /* ---- Telemetry cluster ---- */
 .hud-stats {
   display: flex;
@@ -966,7 +979,7 @@ body::after {
   .hud-season-tag { display: none; }
 }
 
-@media (max-width: 900px) {
+@media (min-width: 769px) and (max-width: 900px) {
   :root { --hud-h: 104px; }
   .hud { height: auto; min-height: var(--hud-h); padding: 0.5rem 0.75rem; flex-wrap: wrap; gap: 0.5rem; }
   .hud-left, .hud-right { gap: 0.5rem; flex-wrap: wrap; }

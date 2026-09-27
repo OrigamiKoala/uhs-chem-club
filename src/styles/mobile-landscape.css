@@ -7,64 +7,59 @@
    =================================================================== */
 
 @media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
-  /* ---- Header: one 44px row — brand | nav strip | telemetry + controls ---- */
+  /* ---- Header: one 44px row — telemetry + controls + mobile menu button ---- */
   :root,
   :root:has(#hud-nav.hidden) { --hud-h: 44px; }
 
   .hud,
   :root:has(#hud-nav.hidden) .hud {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: 44px;
+    display: flex;
     align-items: center;
-    column-gap: 0.5rem;
+    justify-content: space-between;
     height: var(--hud-h);
-    min-height: 0;
+    min-height: 44px;
     padding: 0 max(0.75rem, env(safe-area-inset-right)) 0 max(0.75rem, env(safe-area-inset-left));
     flex-wrap: nowrap;
   }
 
-  .hud-left { display: contents; }
-  .hud-brand { grid-column: 1; grid-row: 1; min-height: 36px; gap: 0.4rem; }
-  .hud-title { font-size: 0.85rem; letter-spacing: 0.16em; }
-  .hud-season-tag { display: none; }
-
-  .hud-nav {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: center;
-    margin: 0;
-    padding: 0;
-    width: auto;
-    order: 0;
+  .hud-left {
     display: flex;
-    gap: 2px;
+    align-items: center;
+    gap: 0.4rem;
     min-width: 0;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
   }
-  .hud-nav::-webkit-scrollbar { display: none; }
-  .hud-nav.hidden { display: none !important; }
 
-  .nav-btn {
-    flex: 0 0 auto;
-    min-height: 34px;
-    padding: 3px 9px;
-    font-size: 0.6rem;
-    letter-spacing: 0.1em;
-    white-space: nowrap;
-  }
+  .hud-brand { display: none !important; }
+  .hud-nav, #hud-nav { display: none !important; }
 
   .hud-right {
-    grid-column: 3;
-    grid-row: 1;
+    display: flex;
+    align-items: center;
     justify-content: flex-end;
     gap: 0.35rem;
     flex-wrap: nowrap;
     min-width: 0;
+    margin-left: auto;
   }
+
+  .mobile-menu-btn {
+    display: inline-flex !important;
+    min-height: 32px;
+    padding: 2px 8px;
+    font-size: 0.65rem;
+    gap: 5px;
+  }
+
+  .mobile-menu-hamburger {
+    width: 12px;
+    height: 9px;
+  }
+
+  .mobile-menu-title {
+    font-size: 0.74rem;
+  }
+
+  #user-menu-wrap { display: none !important; }
 
   .hud-stats { gap: 0.3rem; flex-wrap: nowrap; }
   .xp-badge { padding: 2px 6px; min-height: 30px; }

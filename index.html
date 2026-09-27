@@ -100,9 +100,154 @@
             <button id="logout-btn" class="dropdown-item text-danger">Sign Out</button>
           </div>
         </div>
+        <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-sidebar">
+          <span class="mobile-menu-hamburger" aria-hidden="true">
+            <span class="bar bar-1"></span>
+            <span class="bar bar-2"></span>
+            <span class="bar bar-3"></span>
+          </span>
+          <svg class="hud-logo-icon mobile-menu-logo" aria-hidden="true" width="13" height="15" viewBox="0 0 15 17" fill="none">
+            <path d="M7.5 1 14 4.75v7.5L7.5 16 1 12.25v-7.5L7.5 1Z" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M7.5 5.5 11 7.5v4l-3.5 2L4 11.5v-4l3.5-2Z" fill="currentColor" opacity=".55"/>
+          </svg>
+          <span class="mobile-menu-title">AVALON</span>
+        </button>
       </div>
     </div>
   </header>
+
+  <!-- Mobile Sidebar & Backdrop -->
+  <div id="mobile-sidebar-backdrop" class="mobile-sidebar-backdrop" aria-hidden="true"></div>
+  <aside id="mobile-sidebar" class="mobile-sidebar" aria-label="Mobile Navigation" aria-hidden="true">
+    <div class="mobile-sidebar-shell">
+      <div class="mobile-sidebar-header">
+        <a href="#/" class="mobile-sidebar-brand" id="mobile-sidebar-brand" aria-label="Avalon home">
+          <svg class="hud-logo-icon" aria-hidden="true" width="16" height="18" viewBox="0 0 15 17" fill="none">
+            <path d="M7.5 1 14 4.75v7.5L7.5 16 1 12.25v-7.5L7.5 1Z" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M7.5 5.5 11 7.5v4l-3.5 2L4 11.5v-4l3.5-2Z" fill="currentColor" opacity=".55"/>
+          </svg>
+          <span class="mobile-sidebar-title">AVALON</span>
+          <span class="mobile-sidebar-tag">UHS CHEM</span>
+        </a>
+        <button type="button" id="mobile-sidebar-close" class="mobile-sidebar-close" aria-label="Close navigation menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Player card in sidebar when logged in -->
+      <div id="mobile-sidebar-profile" class="mobile-sidebar-profile hidden">
+        <div class="sidebar-profile-main">
+          <div class="sidebar-avatar-ring">
+            <span id="mobile-sidebar-avatar-glyph">C</span>
+          </div>
+          <div class="sidebar-profile-text">
+            <div class="sidebar-profile-name" id="mobile-sidebar-name">CREW</div>
+            <div class="sidebar-profile-badges">
+              <span class="sidebar-level-badge" id="mobile-sidebar-level">LVL 1</span>
+              <span class="sidebar-team-badge" id="mobile-sidebar-team">EARTH</span>
+            </div>
+          </div>
+        </div>
+        <div class="sidebar-xp-track">
+          <div class="sidebar-xp-labels">
+            <span class="sidebar-xp-title">XP PROGRESS</span>
+            <span class="sidebar-xp-value" id="mobile-sidebar-xp">0 XP</span>
+          </div>
+          <div class="sidebar-xp-bar"><div class="sidebar-xp-fill" id="mobile-sidebar-xp-fill"></div></div>
+        </div>
+      </div>
+
+      <!-- Main Navigation Menu (The Navbar) -->
+      <nav class="mobile-sidebar-nav" aria-label="Mobile Navigation Links">
+        <button type="button" class="nav-btn mobile-nav-item" data-target="bridge">
+          <svg class="mobile-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <polygon points="12 3 14 10 21 12 14 14 12 21 10 14 3 12 10 10 12 3" fill="currentColor" opacity="0.3"/>
+          </svg>
+          <span class="mobile-nav-text">
+            <span class="mobile-nav-title">BRIDGE</span>
+            <span class="mobile-nav-desc">Command deck & ship status</span>
+          </span>
+          <span class="mobile-nav-chevron" aria-hidden="true">›</span>
+        </button>
+
+        <button type="button" class="nav-btn mobile-nav-item" data-target="starmap">
+          <svg class="mobile-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="currentColor" opacity="0.3"/>
+          </svg>
+          <span class="mobile-nav-text">
+            <span class="mobile-nav-title">STAR MAP</span>
+            <span class="mobile-nav-desc">Sectors, worlds & quest stations</span>
+          </span>
+          <span class="mobile-nav-chevron" aria-hidden="true">›</span>
+        </button>
+
+        <button type="button" class="nav-btn mobile-nav-item" data-target="learn">
+          <svg class="mobile-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          <span class="mobile-nav-text">
+            <span class="mobile-nav-title">LEARN</span>
+            <span class="mobile-nav-desc">Interactive curriculum & benches</span>
+          </span>
+          <span class="mobile-nav-chevron" aria-hidden="true">›</span>
+        </button>
+
+        <button type="button" class="nav-btn mobile-nav-item" data-target="leaderboard">
+          <svg class="mobile-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 20V10"/>
+            <path d="M12 20V4"/>
+            <path d="M6 20v-6"/>
+          </svg>
+          <span class="mobile-nav-text">
+            <span class="mobile-nav-title">STANDINGS</span>
+            <span class="mobile-nav-desc">Guild standings & comms transmissions</span>
+          </span>
+          <span class="mobile-nav-chevron" aria-hidden="true">›</span>
+        </button>
+
+        <button type="button" class="nav-btn mobile-nav-item" data-target="inventory">
+          <svg class="mobile-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+          <span class="mobile-nav-text">
+            <span class="mobile-nav-title">INVENTORY</span>
+            <span class="mobile-nav-desc">Cargo hold & unlocked trinkets</span>
+          </span>
+          <span class="mobile-nav-chevron" aria-hidden="true">›</span>
+        </button>
+
+        <button type="button" class="nav-btn mobile-nav-item" data-target="quarters">
+          <svg class="mobile-nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span class="mobile-nav-text">
+            <span class="mobile-nav-title">CREW</span>
+            <span class="mobile-nav-desc">Personal quarters & callsign settings</span>
+          </span>
+          <span class="mobile-nav-chevron" aria-hidden="true">›</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Footer -->
+      <div class="mobile-sidebar-footer">
+        <div class="sidebar-secondary-links">
+          <a href="#/settings" class="sidebar-link-btn" id="mobile-sidebar-settings-link">SETTINGS</a>
+          <a href="#/admin" class="sidebar-link-btn hidden" id="mobile-sidebar-admin-link">ADMIN</a>
+        </div>
+        <div class="sidebar-auth-strip">
+          <button type="button" id="mobile-sidebar-logout-btn" class="btn-chip text-danger hidden">SIGN OUT</button>
+          <a href="#/login" id="mobile-sidebar-login-btn" class="btn-chip">SIGN IN</a>
+        </div>
+      </div>
+    </div>
+  </aside>
 
   <!-- Main View Container -->
   <main id="app" class="app-viewport"></main>
