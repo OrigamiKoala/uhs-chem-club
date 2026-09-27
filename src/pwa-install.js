@@ -59,14 +59,13 @@ export function showInstallModal(opts = {}) {
             <div class="pwa-step-body">
               <div class="pwa-step-label">Tap the Share Button</div>
               <div class="pwa-step-desc">
-                In Safari's toolbar at the bottom of the screen, tap the
+                In Safari's toolbar on the top right corner, tap the
                 <span class="pwa-inline-badge">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
                     <polyline points="16 6 12 2 8 6"></polyline>
                     <line x1="12" y1="2" x2="12" y2="15"></line>
                   </svg>
-                  Share
                 </span>
                 icon.
               </div>
@@ -95,9 +94,6 @@ export function showInstallModal(opts = {}) {
             <div class="pwa-step-num">3</div>
             <div class="pwa-step-body">
               <div class="pwa-step-label">Launch from Home Screen</div>
-              <div class="pwa-step-desc">
-                Tap <strong>Add</strong> in the top-right corner, then launch Avalon from your Home Screen icon for the full console experience.
-              </div>
             </div>
           </div>
         ` : `
@@ -160,7 +156,7 @@ export function showInstallModal(opts = {}) {
     onClose: () => {
       try {
         sessionStorage.setItem('avalon_pwa_popup_dismissed', '1');
-      } catch (e) {}
+      } catch (e) { }
     }
   });
 
@@ -168,7 +164,7 @@ export function showInstallModal(opts = {}) {
   dismissBtn?.addEventListener('click', () => {
     try {
       sessionStorage.setItem('avalon_pwa_popup_dismissed', '1');
-    } catch (e) {}
+    } catch (e) { }
     closeModal();
   });
 
@@ -182,7 +178,7 @@ export function showInstallModal(opts = {}) {
         deferredPrompt = null;
         closeModal();
       }
-    } catch (e) {}
+    } catch (e) { }
   });
 }
 
@@ -211,7 +207,7 @@ export function initOrientationEnforcer() {
   if (window.screen && window.screen.orientation) {
     try {
       window.screen.orientation.addEventListener('change', onOrientationChange);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // Attempt lock on boot
@@ -267,7 +263,7 @@ export function initPwaAndOrientation() {
     let dismissed = false;
     try {
       dismissed = sessionStorage.getItem('avalon_pwa_popup_dismissed') === '1';
-    } catch (e) {}
+    } catch (e) { }
 
     if (!dismissed) {
       setTimeout(() => {
