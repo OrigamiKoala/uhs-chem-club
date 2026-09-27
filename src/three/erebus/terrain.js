@@ -238,9 +238,7 @@ export function createTerrainMaterial({ sand, playa, macro, strata }) {
     aoMapIntensity: 0.8,
     roughness: 1.0,
     metalness: 0.0,
-    // pbr-kit's normal maps carry green inverted relative to three's
-    // tangent frame (a bump reads as a dimple), so v is flipped here.
-    normalScale: new THREE.Vector2(0.7, -0.7)
+    normalScale: new THREE.Vector2(0.7, 0.7)
   });
   mat.userData.surfaceMaps = [sand.map, sand.normalMap, sand.roughnessMap, sand.aoMap, playa.map, playa.normalMap, macro, strata].filter(Boolean);
 

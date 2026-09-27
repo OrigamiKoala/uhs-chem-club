@@ -88,8 +88,10 @@ export function heightToNormal(heightCanvas, strength = 2.2) {
       const dx = (tr + 2 * r + br) - (tl + 2 * l + bl);
       const dy = (bl + 2 * b + br) - (tl + 2 * t + tr);
 
+      // OpenGL-style, as three.js reads it: +y is +v, which flipY puts at
+      // canvas UP, while dy runs down the canvas. Hence +dy (see pbr-kit.js).
       let nx = -dx * strength;
-      let ny = -dy * strength;
+      let ny = dy * strength;
       const nz = 1.0;
       const len = Math.hypot(nx, ny, nz) || 1;
       nx /= len; ny /= len;

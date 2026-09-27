@@ -355,8 +355,7 @@ export function hullMaterial({ tint = '#ffffff', grade = 'light', dust = 0.55, s
     map: set.map, normalMap: set.normalMap, roughnessMap: set.roughnessMap,
     metalnessMap: set.metalnessMap, aoMap: set.aoMap,
     roughness: 1.0, metalness: 1.0, aoMapIntensity: 0.9,
-    // pbr-kit's normal maps carry green inverted against three's tangent frame.
-    normalScale: new THREE.Vector2(0.9, -0.9)
+    normalScale: new THREE.Vector2(0.9, 0.9)
   });
   if (side !== undefined) mat.side = side;
   return addDustCover(mat, { amount: dust, ...(sharp ? { sharp } : {}), ...(film !== undefined ? { film } : {}) });

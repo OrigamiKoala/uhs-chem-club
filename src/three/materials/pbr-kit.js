@@ -221,7 +221,12 @@ export function heightToNormal(heightCanvas, strength = 2.2) {
       const bl = at(x - 1, y + 1), b = at(x, y + 1), br = at(x + 1, y + 1);
       const dx = (tr + 2 * r + br) - (tl + 2 * l + bl);
       const dy = (bl + 2 * b + br) - (tl + 2 * t + tr);
-      let nx = -dx * strength, ny = -dy * strength;
+      // three.js reads normal maps OpenGL-style: +x is +u, +y is +v, and
+      // CanvasTexture's flipY puts canvas row 0 at v = 1, so +v is canvas UP.
+      // dx runs rightward (+u) and dy runs DOWNward (-v): a normal leans away
+      // from the uphill side, so x takes -dx and y takes +dy. The y sign was
+      // once -dy, and every rivet, pebble and bolt head read as a dimple.
+      let nx = -dx * strength, ny = dy * strength;
       const len = Math.hypot(nx, ny, 1) || 1;
       const i = (y * w + x) * 4;
       d[i] = ((nx / len) * 0.5 + 0.5) * 255;

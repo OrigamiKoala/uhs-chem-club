@@ -127,7 +127,7 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run build` — production assets into `dist/`.
 - `npm run verify` — `verify:quest` + `verify:console` + `verify:learn` + `verify:geometry`
   + `verify:media` + `verify:flows` + `verify:ship` + `verify:voyage` + `verify:tallow` + `verify:ligar`
-  + `verify:bench` + `verify:holo` + `build`. Run this before shipping. **The build
+  + `verify:bench` + `verify:holo` + `verify:normals` + `build`. Run this before shipping. **The build
   empties `dist/`, which is gitignored** — anything placed only in `dist/` (reference art
   has been) is deleted by it. Source images belong in `public/` or `assets-src/`.
 - `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below),
@@ -216,6 +216,9 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   except by its ramp. Each sign must read `Bench N - <quest title>`.
 - `npm run verify:holo` — one owner for the `X` key, and the comms board never invents a
   guild score.
+- `npm run verify:normals` — a dome put through both `heightToNormal`s must lean away from
+  its centre on every flank under three.js's tangent frame, and no material may carry a
+  negative `normalScale` or negate a sampled normal's y (see "Surfaces" below).
 - `npm run verify:tallow` — asserts the Tallow ground: every prop footprint disjoint
   (no two objects share space), sites clear of props, the sub-level excavation walkable,
   every charted Unit 1 quest sited, T4 decoration removable without stranding a site,
@@ -1072,6 +1075,13 @@ different amount of weather.
   A scratch is lighter *because* it is raised, less rough *because* it is
   scoured, unoccluded *because* it stands proud. Draw those four independently
   and the eye reads plastic no matter how many octaves went in.
+- **Normal maps are OpenGL-style, because that is how three.js reads them**: red is
+  +u, green is +v, and a CanvasTexture's flipY puts canvas row 0 at v = 1, so green
+  points canvas UP. `heightToNormal` (and its copy in `tallow-textures.js`) once wrote
+  green the other way and every rivet, pebble and stone read as a dimple; the Erebus
+  rebuild then papered over it with negative `normalScale.y` and a flipped channel in
+  its triplanar rock shader. The generator is fixed and the workarounds are gone —
+  never compensate per material; `verify:normals` fails the build if one comes back.
 - **`platedMetal` builds a plate the way the object acquired it** — rolled steel,
   a pressed panel grid, rivet lines, paint, paint worn off the high edges, rust
   blooming out of the bare metal and streaking downward. `weather` 0…1 is most

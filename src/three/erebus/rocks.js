@@ -417,8 +417,9 @@ export function createRockMaterial({ detail, sand, macro, strata }, { sandCover 
         {
           vec3 N = normalize(vRN);
           const float S = 0.33;
-          // Two scales of the same bedded grain; green flipped (pbr-kit's maps
-          // carry it inverted against three's frame).
+          // Two scales of the same bedded grain. Each projection's tangent x/y
+          // run along the two world axes it is sampled on, matching pbr-kit's
+          // OpenGL-style maps (+y is +v), so no channel is flipped.
           vec3 tx = texture2D(uRDetailN, vRW.zy * S).xyz * 2.0 - 1.0;
           vec3 ty = texture2D(uRDetailN, vRW.xz * S).xyz * 2.0 - 1.0;
           vec3 tz = texture2D(uRDetailN, vRW.xy * S).xyz * 2.0 - 1.0;
@@ -426,7 +427,6 @@ export function createRockMaterial({ detail, sand, macro, strata }, { sandCover 
           vec3 fy = texture2D(uRDetailN, vRW.xz * S * 3.7 + 0.31).xyz * 2.0 - 1.0;
           vec3 fz = texture2D(uRDetailN, vRW.xy * S * 3.7 + 0.31).xyz * 2.0 - 1.0;
           tx = vec3(tx.xy + fx.xy * 0.6, tx.z); ty = vec3(ty.xy + fy.xy * 0.6, ty.z); tz = vec3(tz.xy + fz.xy * 0.6, tz.z);
-          tx.y = -tx.y; ty.y = -ty.y; tz.y = -tz.y;
           float k = 1.5 * (1.0 - rSandAmt * 0.7);
           tx.xy *= k; ty.xy *= k; tz.xy *= k;
           // Whiteout blend (Golus): each projection's normal swizzled back into world space.
