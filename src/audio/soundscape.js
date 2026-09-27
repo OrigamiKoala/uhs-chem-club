@@ -489,7 +489,9 @@ class Soundscape {
 
   playJump() { this._sweep(180, 3200, 1.6, 0.5); }
   playDropout() { this._sweep(2600, 140, 1.4, 0.42); }
-  playEntry() { this._sweep(300, 900, 4.2, 0.35); }
+  // A low, falling roar of air on the hull. It used to rise like the jump
+  // sweep, which made the entry sound like a second jump.
+  playEntry() { this._sweep(420, 150, 4.2, 0.3); }
 
   playTouchdown() {
     this.playStamp();

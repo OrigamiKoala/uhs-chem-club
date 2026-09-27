@@ -547,7 +547,79 @@ class Stage {
     const dpr = window.devicePixelRatio || 1;
     let maxDpr = 1;
     if (tierAtLeast("T3", tier)) maxDpr = Math.min(dpr, isTouchPrimary() ? 1.5 : 2);
+    this.baseDpr = maxDpr;
+    this.worldDpr = maxDpr;
+    this.worldDprCeil = maxDpr;
+    this.resWindow = null;
     this.renderer.setPixelRatio(maxDpr);
+  }
+
+  /**
+   * RESOLUTION IS THE ONE THING A WORLD MAY GIVE BACK WHEN A MACHINE CANNOT
+   * HOLD ITS FRAME RATE. Walking a world is the heaviest thing this app draws —
+   * Ligar's basalt, its ground shader and its sun shadow above all — and a
+   * frame that misses its vsync by a millisecond is a frame shown twice, which
+   * is what makes a walk judder. So on a planet the pixel ratio is paced:
+   * a second of frames averaging slower than 45fps steps it down by a quarter,
+   * never below 1 on a high-density screen (0.8 on a 1x one), and a few
+   * seconds of frames with headroom step it back up — but not to a ratio found
+   * too slow until twenty seconds have passed without a slow second. The first
+   * three seconds on a planet are not judged: that is textures uploading, not
+   * the machine. One that holds 60fps never leaves full resolution; nothing
+   * else about the world is reduced. Aboard ship it is always full resolution.
+   */
+  paceResolution(delta, onPlanet) {
+    if (!this.renderer || !this.baseDpr) return;
+    const base = this.baseDpr;
+    if (!onPlanet) {
+      if (this.worldDpr !== base) this.setWorldDpr(base);
+      this.worldDprCeil = base;
+      this.resWindow = null;
+      return;
+    }
+    // A stall (a tab coming back, a shader compiling) is not a frame rate.
+    if (!(delta > 0) || delta > 0.25) return;
+    const w = this.resWindow ||
+      (this.resWindow = { t: 0, n: 0, cool: 0, good: 0, age: 0, sinceSlow: 0 });
+    w.age += delta;
+    if (w.age < 3) return;
+    w.t += delta;
+    w.n++;
+    w.cool = Math.max(0, w.cool - delta);
+    if (w.n < 45) return;
+    const mean = w.t / w.n;
+    w.sinceSlow += w.t;
+    w.t = 0;
+    w.n = 0;
+    if (w.cool > 0) return;
+
+    const STEP = 0.25;
+    const floor = base >= 1.5 ? 1 : Math.min(base, 0.8);
+    const cur = this.worldDpr;
+    if (w.sinceSlow > 20 && this.worldDprCeil < base) {
+      this.worldDprCeil = Math.min(base, this.worldDprCeil + STEP);
+      w.sinceSlow = 0;
+    }
+    if (mean > 1 / 45 && cur > floor) {
+      this.worldDprCeil = Math.max(floor, cur - STEP);
+      this.setWorldDpr(Math.max(floor, cur - STEP));
+      w.good = 0;
+      w.cool = 1.5;
+      w.sinceSlow = 0;
+    } else if (mean < 1 / 56 && cur < this.worldDprCeil) {
+      if (++w.good >= 4) {
+        this.setWorldDpr(Math.min(this.worldDprCeil, cur + STEP));
+        w.good = 0;
+        w.cool = 1.5;
+      }
+    } else {
+      w.good = 0;
+    }
+  }
+
+  setWorldDpr(v) {
+    this.worldDpr = v;
+    this.renderer.setPixelRatio(v);
   }
 
   onResize() {
@@ -658,18 +730,38 @@ class Stage {
   worldFor(key) {
     if (!this.renderer) return null;
     if (key === "erebus") {
-      if (!this.worldScene) this.worldScene = new WorldScene(this.renderer);
+      if (!this.worldScene) this.worldScene = this.warmWorld(new WorldScene(this.renderer));
       return this.worldScene;
     }
     if (key === "tallow") {
-      if (!this.tallowWorld) this.tallowWorld = new TallowWorld(this.renderer);
+      if (!this.tallowWorld) this.tallowWorld = this.warmWorld(new TallowWorld(this.renderer));
       return this.tallowWorld;
     }
     if (key === "ligar") {
-      if (!this.ligarWorld) this.ligarWorld = new LigarWorld(this.renderer);
+      if (!this.ligarWorld) this.ligarWorld = this.warmWorld(new LigarWorld(this.renderer));
       return this.ligarWorld;
     }
     return null;
+  }
+
+  /**
+   * COMPILE A WORLD'S SHADERS ONCE, WHEN IT IS BUILT, NOT WHEN EACH PIECE OF
+   * IT FIRST COMES INTO VIEW. three.js compiles a program on the first frame
+   * an object is drawn, and an object behind the player is not drawn, so a
+   * world used to compile itself a few materials at a time as the player
+   * walked and turned — every one a stall of tens to hundreds of milliseconds
+   * on the frame it happened, which is what walking Ligar felt like. Asked
+   * for here, the driver compiles them in parallel where it can
+   * (KHR_parallel_shader_compile), while the voyage is still in space.
+   * A world's light count never changes after it is built (lamp-pool.js), so
+   * what is compiled here is what is drawn.
+   */
+  warmWorld(world) {
+    const r = this.renderer;
+    if (world?.scene && r?.compileAsync) {
+      r.compileAsync(world.scene, this.camera).catch(() => {});
+    }
+    return world;
   }
 
   exposureFor(key) {
@@ -760,9 +852,7 @@ class Stage {
     // turn it sideways. The request rides the gesture that navigated here; a
     // refusal costs nothing but the rotate notice.
     if (this.isTouch) gameMode.enterWorld();
-    if (!this.worldScene && this.renderer) {
-      this.worldScene = new WorldScene(this.renderer);
-    }
+    this.worldFor("erebus");
     this.mode = "world";
     this.activeWorld = this.worldScene;
     if (this.renderer) this.renderer.toneMappingExposure = EREBUS_EXPOSURE;
@@ -821,18 +911,14 @@ class Stage {
     // inside a live user gesture, and building a world takes long enough for
     // that gesture to lapse.
     if (this.isTouch) gameMode.enterWorld();
-    if (!this.tallowWorld && this.renderer) {
-      this.tallowWorld = new TallowWorld(this.renderer);
-    }
+    this.worldFor("tallow");
     this.enterLearnWorld(this.tallowWorld, TALLOW_EXPOSURE, focusSiteId);
   }
 
   /** Walk out onto Ligar, the basalt arch field (Learn world 02). */
   enterLigarScene(focusSiteId = null) {
     if (this.isTouch) gameMode.enterWorld();   // before the build, as above
-    if (!this.ligarWorld && this.renderer) {
-      this.ligarWorld = new LigarWorld(this.renderer);
-    }
+    this.worldFor("ligar");
     this.enterLearnWorld(this.ligarWorld, LIGAR_EXPOSURE, focusSiteId);
   }
 
@@ -1194,6 +1280,10 @@ class Stage {
     const delta = this.clock.getDelta();
     const time = this.clock.getElapsedTime();
     this.syncTouchControls(now);
+    this.paceResolution(delta, Boolean(
+      this.activeWorld && (this.mode === "world" ||
+        (this.mode === "quest" && this.activeQuestViewer?.inWorld))
+    ));
 
     if (this.mode === "quest" && this.activeQuestViewer) {
       // Walk the player first, then let the instrument see where they ended

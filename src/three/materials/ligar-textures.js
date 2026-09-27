@@ -355,11 +355,71 @@ export function conveyorBelt(opts = {}) {
   };
 }
 
+/* ==========================================================================
+   6. COLUMN TOP — the weathered lid of one column, walked on
+
+   The ground shader draws the polygons themselves (per pixel, so the field
+   never repeats); this is what is INSIDE each polygon: vesicular stone worn
+   smooth, pitted with the gas bubbles the lava carried, faintly mottled where
+   rain has stood and dried. It tiles every 2.5 m and carries no joints.
+   ========================================================================== */
+
+export function basaltTop(opts = {}) {
+  const { size = texSize(512), seed = 16 } = opts;
+  const S = size;
+  const sd = hashStr(`top${seed}`);
+
+  const height = heightField(S, (u, v) => {
+    let h = 0.55 + (fbm(u * 6, v * 6, { octaves: 5, period: 6, seed: sd }) - 0.5) * 0.22;
+    h += (fbm(u * 48, v * 48, { octaves: 3, period: 48, seed: sd ^ 0x21 }) - 0.5) * 0.1;
+    // Vesicles: round pits, a few millimetres to a centimetre, in clusters.
+    const cl = fbm(u * 3, v * 3, { octaves: 2, period: 3, seed: sd ^ 0x63 });
+    const w = worley(u * 38, v * 38, 38, sd ^ 0x5e);
+    const r = 0.16 + cl * 0.14;
+    if (w.f1 < r) h -= (1 - w.f1 / r) * 0.32 * smoothK(cl);
+    // Hairline weathering cracks across the lid.
+    const crack = ridged(u * 5, v * 5, { octaves: 3, period: 5, seed: sd ^ 0x17 });
+    h -= Math.pow(crack, 7) * 0.22;
+    return h;
+  });
+
+  const hf = readHeight(height);
+  const rand = makeRng(sd ^ 0x42);
+  const stone = hexToRgb('#302c29');
+  const pale = hexToRgb('#5c5247');
+
+  const alb = paint(S, (u, v, i) => {
+    const t = hf.data[i];
+    let c = rgbLerp(stone, pale, Math.max(0, t - 0.45) * 1.6);
+    // Pits hold dust: lighter at the bottom than the rim, like the joints.
+    if (t < 0.36) c = rgbLerp(c, [0x6e, 0x60, 0x50], (0.36 - t) * 2.4);
+    // Tide marks where rain stood and dried.
+    const tide = fbm(u * 4, v * 4, { octaves: 3, period: 4, seed: sd ^ 0x7a });
+    if (Math.abs(tide - 0.55) < 0.012) c = rgbLerp(c, [0x6a, 0x5d, 0x4e], 0.35);
+    const grain = (rand() - 0.5) * 8;
+    return [c[0] + grain, c[1] + grain, c[2] + grain];
+  });
+
+  return {
+    albedo: alb,
+    height,
+    roughness: heightToRoughness(height, { lo: 0.62, hi: 0.96 }),
+    ao: heightToAO(height, { radius: Math.max(3, S >> 7), strength: 1.2 }),
+    normalStrength: 2.0
+  };
+}
+
+function smoothK(x) {
+  const t = Math.max(0, Math.min(1, (x - 0.35) / 0.3));
+  return t * t * (3 - 2 * t);
+}
+
 /** Every generator above, by name, so a caller can build a set in one loop. */
 export const LIGAR_SURFACES = {
   'column': basaltColumn,
   'pavement': basaltPavement,
   'scoria': scoriaGrit,
   'tube': lavaTubeWall,
-  'belt': conveyorBelt
+  'belt': conveyorBelt,
+  'top': basaltTop
 };

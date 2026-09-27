@@ -1146,15 +1146,26 @@ export function placard(text, { w = 0.42, h = 0.16, fg = '#1d1a16', bg = '#b9ab8
   return mesh;
 }
 
+/** The tallest hazard-stripe canvas drawn; a longer stripe repeats it. */
+const MAX_STRIPE_TILE = 1024;
+
 /** Diagonal hazard striping on a plane — the yellow-black edge of a drop. */
 export function hazardStripe(w, h, { pitch = 0.12, warm = '#b08a2c', dark = '#2a2520' } = {}) {
-  const W = 256, H = Math.max(16, Math.round(256 * (h / w)));
+  const W = 256;
+  const step = Math.max(6, Math.round(W * pitch));
+  // THE CANVAS IS ONE TILE, NOT THE WHOLE RUN. It used to be sized to the
+  // stripe's full length at 256 px across, so a 22 m deck edge was a
+  // 256 x 11264 canvas: 11 MB of video memory, past the 8192 limit many GPUs
+  // have (the driver resampled it), for a pattern that repeats every two
+  // steps. A long stripe now draws a whole number of periods and repeats it.
+  const full = Math.max(16, Math.round(W * (h / w)));
+  const period = step * 2;
+  const H = full > MAX_STRIPE_TILE ? Math.floor(MAX_STRIPE_TILE / period) * period : full;
   const c = canvas2d(W, H);
   const ctx = c.getContext('2d');
   ctx.fillStyle = warm;
   ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = dark;
-  const step = Math.max(6, Math.round(W * pitch));
   ctx.save();
   for (let x = -H; x < W + H; x += step * 2) {
     ctx.beginPath();
@@ -1176,6 +1187,10 @@ export function hazardStripe(w, h, { pitch = 0.12, warm = '#b08a2c', dark = '#2a
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
+  if (H < full) {
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(1, full / H);
+  }
   const mat = new THREE.MeshStandardMaterial({
     map: tex, transparent: true, roughness: 0.9, metalness: 0.05,
     polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
