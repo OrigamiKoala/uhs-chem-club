@@ -196,7 +196,9 @@ export const TALLOW_SKY_GLSL = /* glsl */ `
   vec3 tlSky(vec3 d) {
     vec3 col = tlAir(d);
     float mu = dot(d, uTSunDir);
-    if (d.y > 0.0) {
+    // Within a third of a degree of the horizon the veil's coverage is under a
+    // thousandth: the mirror flats and the mirage look there, so skip its noise.
+    if (d.y > 0.006) {
       // The veil: a milky sheet with slow structure, brighter toward the sun.
       vec2 p = d.xz / (d.y + 0.12) * 1.1;
       p = mat2(0.87, 0.49, -0.49, 0.87) * p;
@@ -299,7 +301,9 @@ export const TALLOW_FOG_APPLY = /* glsl */ `
     float tThin = exp(-max(tH - uTHazeBase, 0.0) / uTHazeScale);
     float tAmt = (1.15 * tFd + 1.25 * tFd * tFd) * mix(1.0, tThin, uTHazeHeightAmt);
     float tFog = 1.0 - exp(-tAmt);
-    gl_FragColor.rgb = mix(gl_FragColor.rgb, tlOut(tlHaze(tDir)), tFog);
+    // The first dozen metres carry under half a code value of air: skip the
+    // sky evaluation for them, which is most of the ground at the feet.
+    if (tFog > 0.002) gl_FragColor.rgb = mix(gl_FragColor.rgb, tlOut(tlHaze(tDir)), tFog);
   }
 `;
 
@@ -387,7 +391,7 @@ export function createTallowCelestials() {
 
   const dir = new THREE.Vector3(0.62, 0.3, -0.72).normalize();
   const body = new THREE.Mesh(
-    new THREE.SphereGeometry(118, 96, 64),
+    new THREE.SphereGeometry(118, 64, 48),   // a limb error under half a pixel
     veil(createPlanetMaterial('ice', {
       colors: ['#c9c1b2', '#a39a8a', '#8a8479', '#e4ddd0'],
       seed: [2.2, 9.1, 4.4], octaves: 6
@@ -438,22 +442,34 @@ export function createTallowLights({ shadows }) {
   return { sun, hemi };
 }
 
-/** Keep the sun's shadow box on the player, snapped to whole texels. */
+const _right = new THREE.Vector3(0, 1, 0).cross(TALLOW_SUN).normalize();
+const _up = TALLOW_SUN.clone().cross(_right).normalize();
+const _snapped = new THREE.Vector3();
+
+/**
+ * Keep the sun's shadow box on the player, snapped to whole texels. Returns
+ * true when the box actually moved, i.e. when the shadow map is out of date
+ * for everything that stands still.
+ */
 export function followTallowShadow(sun, focus) {
-  if (!sun.castShadow) return;
+  if (!sun.castShadow) return false;
   const cam = sun.shadow.camera;
   const texel = (cam.right - cam.left) / sun.shadow.mapSize.x;
   const L = TALLOW_SUN;
-  const right = new THREE.Vector3(0, 1, 0).cross(L).normalize();
-  const up = L.clone().cross(right).normalize();
-  const a = Math.round(focus.dot(right) / texel) * texel;
-  const b = Math.round(focus.dot(up) / texel) * texel;
-  const c = focus.dot(L);
-  const snapped = right.multiplyScalar(a).add(up.multiplyScalar(b)).add(L.clone().multiplyScalar(c));
-  sun.target.position.copy(snapped);
-  sun.position.copy(snapped).addScaledVector(L, 200);
+  const a = Math.round(focus.dot(_right) / texel) * texel;
+  const b = Math.round(focus.dot(_up) / texel) * texel;
+  // Along the light the box only needs to follow coarsely: the camera's
+  // near/far span covers metres of slack, and a re-render per centimetre of
+  // height would defeat the point of snapping at all.
+  const c = Math.round(focus.dot(L) / 0.5) * 0.5;
+  _snapped.copy(_right).multiplyScalar(a).addScaledVector(_up, b).addScaledVector(L, c);
+  if (_snapped.equals(sun.target.position)) return false;
+  sun.target.position.copy(_snapped);
+  sun.position.copy(_snapped).addScaledVector(L, 200);
   sun.target.updateMatrixWorld();
+  return true;
 }
+
 
 /**
  * An environment map of this sky over a salt floor, so metal and brine reflect

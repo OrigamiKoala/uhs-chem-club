@@ -62,17 +62,24 @@ const STREAM_FRAG = /* glsl */ `
   }
   float fb(vec2 p) { float s = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { s += a * n(p); p = p * 2.03 + 7.1; a *= 0.5; } return s; }
   void main() {
+    // Cheapest test first. The sheet is 180 m across and only its middle
+    // hundred-odd metres ever show, and a gust covers well under half of that:
+    // everything else is discarded before the twelve octaves of noise it
+    // used to pay for and then multiply by zero.
+    float d = distance(vW, cameraPosition);
+    float reach = smoothstep(1.5, 5.0, d) * (1.0 - smoothstep(35.0, 75.0, d));
+    if (reach <= 0.0) discard;
     vec2 perp = vec2(-uWind.y, uWind.x);
     vec2 q = vec2(dot(vW.xz, uWind), dot(vW.xz, perp));
-    // Ribbons: long along the wind, thin across it, racing downwind.
-    float snake = fb(vec2(q.x * 0.035 - uTime * 0.25, q.y * 0.05)) * 3.0;
-    float rib = fb(vec2(q.x * 0.09 - uTime * 2.2, q.y * 0.75 + snake));
     // Gusts: patches a few tens of metres across where the wind is up,
     // running downwind through the ribbons.
     float gust = fb(vec2(q.x * 0.035 - uTime * 0.45, q.y * 0.05 + uTime * 0.03));
-    float a = smoothstep(0.47, 0.76, rib) * smoothstep(0.33, 0.6, gust);
-    float d = distance(vW, cameraPosition);
-    a *= smoothstep(1.5, 5.0, d) * (1.0 - smoothstep(35.0, 75.0, d));
+    float gate = smoothstep(0.33, 0.6, gust);
+    if (gate <= 0.0) discard;
+    // Ribbons: long along the wind, thin across it, racing downwind.
+    float snake = fb(vec2(q.x * 0.035 - uTime * 0.25, q.y * 0.05)) * 3.0;
+    float rib = fb(vec2(q.x * 0.09 - uTime * 2.2, q.y * 0.75 + snake));
+    float a = smoothstep(0.47, 0.76, rib) * gate * reach;
     gl_FragColor = vec4(uColor, a * uStrength);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>

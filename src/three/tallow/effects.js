@@ -61,14 +61,24 @@ const STREAM_FRAG = /* glsl */ `
   }
   float fb(vec2 p) { float s = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { s += a * n(p); p = p * 2.03 + 7.1; a *= 0.5; } return s; }
   void main() {
+    // Cheapest test first. The sheet is 180 m across and only its middle
+    // hundred-odd metres ever show, and a gust covers well under half of that:
+    // everything else is discarded before the twelve octaves of noise it
+    // used to pay for and then multiply by zero.
+    float d = distance(vW, cameraPosition);
+    float reach = smoothstep(1.5, 5.0, d) * (1.0 - smoothstep(30.0, 70.0, d));
+    if (reach <= 0.0) discard;
     vec2 perp = vec2(-uWind.y, uWind.x);
     vec2 q = vec2(dot(vW.xz, uWind), dot(vW.xz, perp));
+    // Gusts: patches a few tens of metres across where the wind is up,
+    // running downwind through the ribbons.
+    float gust = fb(vec2(q.x * 0.03 - uTime * 0.35, q.y * 0.05 + uTime * 0.025));
+    float gate = smoothstep(0.38, 0.64, gust);
+    if (gate <= 0.0) discard;
+    // Ribbons: long along the wind, thin across it, racing downwind.
     float snake = fb(vec2(q.x * 0.03 - uTime * 0.2, q.y * 0.045)) * 3.0;
     float rib = fb(vec2(q.x * 0.08 - uTime * 1.9, q.y * 0.7 + snake));
-    float gust = fb(vec2(q.x * 0.03 - uTime * 0.35, q.y * 0.05 + uTime * 0.025));
-    float a = smoothstep(0.5, 0.78, rib) * smoothstep(0.38, 0.64, gust);
-    float d = distance(vW, cameraPosition);
-    a *= smoothstep(1.5, 5.0, d) * (1.0 - smoothstep(30.0, 70.0, d));
+    float a = smoothstep(0.5, 0.78, rib) * gate * reach;
     gl_FragColor = vec4(uColor, a * uStrength);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -113,7 +123,9 @@ export function createTallowEffects({ heightAt, t4, plumes = [] }) {
   disposables.push(dGeo, dMat);
 
   /* ---- grit streaming over the crust ---- */
-  const HALF = 88, STEP = t4 ? 1.5 : 3;
+  // A 3 m grid on every tier: the pan under the sheet is flat to a few
+  // centimetres over that span, and a finer one only cost triangles.
+  const HALF = 88, STEP = 3;
   const sGeo = new THREE.PlaneGeometry(HALF * 2, HALF * 2, Math.round(HALF * 2 / STEP), Math.round(HALF * 2 / STEP));
   sGeo.rotateX(-Math.PI / 2);
   const sp = sGeo.attributes.position;

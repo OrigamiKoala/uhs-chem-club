@@ -331,12 +331,16 @@ export function buildLander({ groundAt = () => 0 } = {}) {
   beacon.position.set(0, H0 + 2.62, -3.3);
   beacon.userData.noMerge = true;
   group.add(beacon);
-  const bayLight = new THREE.PointLight(0xffb070, 1.6, 4.5, 2);
-  bayLight.position.set(0, H0 + 0.6, 1.5);
-  group.add(bayLight);
+  // The bay lamp is declared, not built: the world lights it from its lamp
+  // pool, because a PointLight standing here would be shaded on every pixel
+  // of the basin whether the player was near the lander or not.
+  const bayLamp = {
+    local: new THREE.Vector3(0, H0 + 0.6, 1.5),
+    color: 0xffb070, intensity: 1.6, distance: 4.5, decay: 2
+  };
 
   group.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   mergeStatic(group);
 
-  return { group, beaconMat };
+  return { group, beaconMat, bayLamp };
 }

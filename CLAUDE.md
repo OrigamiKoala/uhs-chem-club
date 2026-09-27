@@ -185,7 +185,10 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   leaned back through the bench's own lip into the lean-to behind it. **An instanced body is
   measured per instance**: its geometry box is the UNIT body, so taken at face value it
   reported a metre-wide box round every heap and duly found the assay floor inside a vice two
-  metres away — nothing was wrong with the bench, the ruler was. Finally it puts **every
+  metres away — nothing was wrong with the bench, the ruler was. **A baked body is measured
+  per part** for the same reason: a site baked by `mergeStatic` is one mesh per material,
+  and the box round the one holding its plate and its lean-to encloses the bench standing
+  in the middle of them, so the group's `partBoxes` are measured instead. Finally it puts **every
   stage `q3-catalogue` and `q5-assay` declare** through the built instrument: the board
   offers the slots the quest is about to grade against, and a pour places every piece
   `planPour` says it places. On the board it **presses**, through the real pointer path —
@@ -1029,7 +1032,11 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
     the sheds are framed from (I-sections, corrugated sheet).
   - `verify:tallow` runs every Tallow shader patch against three's real shader source and
     fails if one no longer lands (a renamed chunk would otherwise strip the salt or the
-    air silently), and fails if `tracks` overflow the ground shader's segment arrays.
+    air silently), and fails if `tracks` overflow the ground shader's segment arrays or
+    its `MAX_TRACK_LINES` (8) polyline boxes per kind. The ground tests a pixel against
+    each polyline's box before any of its segments, so a pixel away from every track pays
+    eleven box tests, not thirty-five segments and their noise; a path is drawn along its
+    segments only (it once drew each segment's whole LINE as a grey strip across the pan).
 - **Five sites, one per quest, all live, and each sign says what its bench teaches.**
   `site-1` *Bench 1 - Atoms* (`q1-grain`) under the lean-to in the yard; `site-2` *Bench 2 -
   Inside an Atom* (`q2-core`) down the stairwell in the diagnostic lab; `site-3` *Bench 3 -
@@ -1066,7 +1073,10 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
 - **Only lamps are lit.** Sodium luminaires in the lab, the mast's obstruction lamp, the
   doorway light over the open vault, and one indicator per built site, driven from the
   Learn track's own progress through `setSiteComplete` — the world reads state, it never
-  keeps it.
+  keeps it. A luminaire's light is a `lampMark`, not a PointLight: the lab's four lamps
+  are lit as two pooled sources (one per pair, at its midpoint, right over site 2) and
+  the lean-to's work lamp is the third, all through a `LampPool` of TWO real lights (see
+  "The frame budget of the walkable worlds").
 - **Tier boundary.** Walking Tallow is T4. At T3 and below the Learn road is the screens it
   has always been and every quest completes exactly as before. `learn/worlds3d.js` is the
   registry that says which worlds are walkable. Ligar showed what a second one needs
@@ -1173,7 +1183,57 @@ different amount of weather.
   that must stay addressable — a lamp that lights, a sock that turns, a cabinet
   that cases up — sets `userData.noMerge`, which protects its whole subtree.
   `mergeStatic` records each part's box in `userData.partBoxes` so the physics
-  check stays as precise as it was on the unbaked prop.
+  check stays as precise as it was on the unbaked prop — boxed straight into the
+  group's frame (going through world space boxed a part twice on a turned group).
+
+### The frame budget of the walkable worlds (Tallow, Erebus)
+
+Both worlds were built for the look first; these rules are what keep them cheap
+without changing it. Measured in Node (`TallowWorld` / `WorldScene` behind the
+DOM shim): Tallow went from 914 meshes (325 shadow casters, 5 point lights) to
+389 (237, 2); Erebus from 254 (215, 21) to 178 (139, 3). Triangles barely moved
+(0.79M / 0.51M to 0.76M / 0.50M): they were never the cost.
+
+- **A PointLight is shaded on every lit pixel, lit or not.** A forward renderer
+  runs the full specular term per light per fragment even at intensity zero, so
+  twenty dormant pylon lamps were the most expensive thing in the sand's shader.
+  `three/lamp-pool.js` owns a FIXED number of real lights (a changing count
+  recompiles every material in view) and hands them to the lit sources nearest
+  the eye, each weighted by how much nearer it is than the first one that missed
+  out, so two sources trade places only at equal distance and nothing pops.
+  Erebus: 3 lights for 20 pylons (13.8 m apart: the one underfoot and both
+  neighbours) and the lander's bay. Tallow: 2. A new lamp in either world is a
+  pool source, never a `new PointLight`.
+- **What never moves is baked.** `TallowWorld.bakeStatics()` runs `mergeStatic`
+  over every top-level group not already baked (the sites, the lab, the crate
+  stacks) and bakes each cased-up instrument on its own INSIDE its `noMerge`
+  group, so casing it up still hides one thing. A mesh carrying `phys`,
+  `noSalt` or `openShell` is left out, because the tag lives on the mesh. The
+  Erebus pylons are baked as ONE `pylon-ring` (each pylon group keeps only its
+  lamp, number and hazard paint); their luminaires share one material set.
+- **The sun does not move, so its shadow map is re-drawn only when something
+  does** (`three/shadow-pace.js`). `followShadow` / `followTallowShadow` return
+  whether the texel-snapped box moved; `paceShadow` re-draws on a move, while a
+  Tallow bench is deployed (its jaws and pieces cast), and otherwise one frame in
+  three (Tallow) or two (Erebus, whose chamber console rides on the camera).
+  `holdShadowUntilAsked` puts `autoUpdate` back after every render of the scene,
+  so a render the world's `update()` did not precede (the voyage's outside pass)
+  always gets a fresh map.
+- **Discard before the noise.** The grit/sand stream sheets are 180 m across and
+  show only 1.5–75 m from the eye and inside a gust; their shaders test distance,
+  then the one gust fbm, and discard before the other eight octaves. Tallow's
+  sheet is a 3 m grid on every tier (the pan is flat to centimetres over that).
+- **The air is not evaluated where there is none.** The aerial-perspective patch
+  skips the sky function when the fog amount is under 0.002 (the first ~12 m,
+  most of the ground at the feet), and the sky's cirrus / veil noise is skipped
+  within a third of a degree of the horizon, where its coverage is zero (Erebus)
+  or under a thousandth (Tallow) — which is where the mirror flats and the mirage
+  look.
+- **Rejected as too visible:** a coarser terrain grid (the rectilinear tails give
+  the cardinal horizons their fine ridgelines), fewer sky-noise octaves, a smaller
+  shadow map or PCF instead of PCFSoft, and merging the vista (half of it is
+  behind the player and culled). A lower pixel-ratio cap for the worlds is the
+  one lever left untouched, and it lives in `stage.applyTierSettings`.
 
 ### Nothing occupies the same space as anything else
 
@@ -1631,9 +1691,8 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **A phone is not disqualified from T4 by being a phone.** `isT4Capable` in
   `three/tier.js` asks about WebGL2, cores and reported memory and nothing else — no
   pointer test, and Apple's mobile GPU is deliberately absent from the slow-renderer
-  regex, because a renderer string is not a frame rate. `isT4Eligible` is that plus
-  "not demoted earlier in this page session"; Settings and the HUD chip ask
-  `isT4Capable`, so a handset the monitor demoted can always be put back by hand.
+  regex, because a renderer string is not a frame rate. `isT4Eligible` is now just
+  `isT4Capable` (nothing demotes any more); Settings and the HUD chip ask it too.
   Two things are cheaper on a handset and are the only fidelity differences: DPR is
   capped at 1.5 rather than 2 (a phone commonly reports 3), and `shadowMap` stays off,
   because soft shadow maps are the one T4 feature a mobile GPU cannot hold 60fps
@@ -1645,14 +1704,13 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   and persists nothing, so a bad afternoon is never inherited by the next visit.
   `session.gfxTier` is just what is running now. They used to be one value, and every
   automatic demotion was stored as though the player had asked for it.
-- **A boot is not evidence.** `recordFrame` is one judgement window for the boot probe
-  and the runtime monitor alike (90 frames), and it is blind for `WARM_UP_MS` (6 s) after
-  boot and after every tier change, because textures uploading and shaders compiling read
-  as 10fps. A demotion is **one step**, then the window is discarded and
-  `DEMOTE_COOLDOWN_MS` (8 s) has to pass. The old monitor kept its slow samples after
-  each change, so one hitch walked a capable iPhone from T4 to T1 within a few frames —
-  and stored T1 — which is how a phone ended up looking at static backdrops. A device
-  that really cannot render still lands where it belongs, it just has to prove it.
+- **THE TIER IS DECIDED ONCE, WHEN THE PAGE OPENS, AND KEPT.** There is no runtime
+  frame monitor: `recordFrame` is a documented no-op the render loop still calls. A
+  demotion rebuilt render settings under whatever the player was doing — mid-voyage,
+  mid-bench — and the slow stretches that triggered it (a world building, shaders
+  compiling, a heavy world through the canopy) are not evidence about the device. It
+  also once walked a capable iPhone from T4 to the stills. After boot the only thing
+  that changes the tier is the player choosing one (`chooseTier`).
   `migrateStoredTier` (behind `avalon_gfx_rev`, rev 3) clears any stored sub-T4 tier once
   on a T4-capable touch device, since none of them were chosen; a desktop preference and
   a phone that is genuinely not capable are untouched.
@@ -1769,7 +1827,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   - **Doors** (`doors.js`): a chamfered gunmetal portal proud of both faces with jamb
     lights, a control box and name plates, and two leaves that part and slide into the
     bulkhead (at different depths, so neighbouring doors can share pocket). **They open
-    for you** — within 1.9 m, shut again past 2.5 m — and the collider lifts the moment
+    for you** — within 3.0 m, shut again past 3.6 m, parting in about a fifth of a second — and the collider lifts the moment
     one starts to open and returns only once nobody is near enough to be caught.
     `ShipInterior.update(delta, time, viewer)` returns true when the set changes and
     `stage.js` hands the walk the new colliders. Doors are no longer `[E]` targets.
@@ -1832,7 +1890,8 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     close it into a cloud deck. The gas giant and its moon are the `celestial.js` shaders
     with the sky ADDED and the air column dimming them (a daytime moon's night side is sky,
     not black); the rings blend additively. The sun is 17 degrees up, dust-reddened, with a
-    soft disc; its shadow box follows the player in whole texels. `createSkyEnvironment`
+    soft disc; its shadow box follows the player in whole texels and is re-drawn only
+    when it moves or every other frame (`shadow-pace.js`). `createSkyEnvironment`
     PMREMs the sky so metal reflects the air it stands in.
   - **One geology** (`erebus/rocks.js`). `STRATA` is one stack of beds indexed by
     ALTITUDE: it decides both how far a face stands proud (hard beds ledge, soft recess)
@@ -1870,6 +1929,16 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   front of the planet (the same celestial shaders as the vista, in the world's palette,
   nothing on its surface modelled), flies to it, enters with plasma on the glass, comes
   down through cloud onto the REAL built world, flies to its landing pad and sets down.
+  **Once it reaches the planet it comes DOWN, not across**: the approach brakes to a
+  stop at `HOLD_ALT` over the landing site, nose tipped down at the world
+  (`HOLD_PITCH`, since from that high the horizon is below a level canopy); the entry
+  falls straight down the local vertical until the cloud closes; and under the cloud
+  the descent drops onto the pad from ~190 m overhead, turning onto its heading, with
+  only a short slide into line. The old path skimmed the limb, drove forward through
+  the air and then glided forward over the world, which read as flying over the planet
+  twice with a jump between. The cloud veil scrolls by an accumulated `cloudScroll`
+  (negative flow = streaming UP the glass, i.e. falling), never `time x rate`, so a
+  change of rate cannot jump the deck.
   - **Two passes, one camera.** The player never leaves the ship's scene. Each frame draws
     the OUTSIDE (the space scene, or the destination world's own scene) through a second
     camera posed at (ship pose) x (player camera), then clears depth and draws the

@@ -398,6 +398,14 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
   const psegs = (world.tracks?.paths || []).reduce((n, l) => n + l.length - 1, 0);
   check(segs <= 24 && psegs <= 16, `${segs} rut and ${psegs} path segments fit the ground shader`,
     `tracks overflow the ground shader: ${segs}/24 rut, ${psegs}/16 path segments (the rest are dropped)`);
+  // Each polyline is culled by its own box in the shader, and there are only
+  // so many boxes: a line past the last one would never be drawn at all.
+  const { MAX_TRACK_LINES } = await import('../src/three/tallow/terrain.js');
+  const rl = (world.tracks?.ruts || []).length;
+  const pl = (world.tracks?.paths || []).length;
+  check(rl <= MAX_TRACK_LINES && pl <= MAX_TRACK_LINES,
+    `${rl} rut and ${pl} path lines fit the ground shader's ${MAX_TRACK_LINES} boxes each`,
+    `tracks overflow the ground shader: ${rl}/${MAX_TRACK_LINES} rut, ${pl}/${MAX_TRACK_LINES} path lines`);
 }
 
 console.log('');

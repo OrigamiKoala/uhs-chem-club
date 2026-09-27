@@ -99,7 +99,17 @@ const PLANET_R = 1000;                                   // space units
 /** Where the destination sits when the ship drops out at the origin. */
 const PLANET_C = new THREE.Vector3(0, -PLANET_R * 1.02, 9200);
 const ENTRY_TILT = THREE.MathUtils.degToRad(24);         // how far round the limb the ship enters
-const ENTRY_ALT = 62;
+/** Where the approach brakes to a stop, straight over the landing site. */
+const HOLD_ALT = 260;
+/** How low the entry falls, straight down, before the cloud deck swallows it. */
+const ENTRY_ALT = 18;
+/**
+ * Nose-down pitch while hanging over the planet. The canopy looks forward, and
+ * from high up the horizon dips well below it (37 degrees at HOLD_ALT), so a
+ * level ship would show the pilot sky while it came down onto a world.
+ */
+const HOLD_PITCH = 0.6;
+const ENTRY_PITCH = 0.28;
 const EYE = 1.55;
 /** The pilot's standing place between the flight pods, and where they look. */
 const SEAT = SHIP_GRAPH.nodes.cockpit;
@@ -153,7 +163,7 @@ function makeVeil() {
       uAlpha: { value: 0 },
       uCloud: { value: 1 },
       uTime: { value: 0 },
-      uFlow: { value: 0.4 }
+      uScroll: { value: 0 }
     },
     vertexShader: /* glsl */ `
       varying vec2 vUv;
@@ -161,12 +171,14 @@ function makeVeil() {
     `,
     fragmentShader: /* glsl */ `
       uniform vec3 uColor;
-      uniform float uAlpha, uCloud, uTime, uFlow;
+      uniform float uAlpha, uCloud, uTime, uScroll;
       varying vec2 vUv;
       ${NOISE}
       void main() {
         vec2 p = vUv * vec2(3.4, 2.1);
-        p.y += uTime * uFlow;
+        // Scrolled by the distance flown through it, not time x rate, so a
+        // change of rate never jumps the whole deck sideways.
+        p.y += uScroll;
         float c = fbm(p + vec2(fbm(p * 0.6 + uTime * 0.05), 0.0) * 0.8);
         // Coverage: at full alpha every pixel is cloud; as it falls the deck
         // breaks into holes rather than fading like a dissolve.
@@ -400,6 +412,7 @@ export class Voyage {
     this.phaseT = 0;
     this.timeScale = 1;
     this.clock = 0;
+    this.cloudScroll = 0;
 
     this.exterior = 'space';        // 'space' | 'world'
     this.extWorld = null;           // the world scene drawn outside, when exterior is 'world'
@@ -803,35 +816,53 @@ export class Voyage {
     };
   }
 
+  /*
+   * ONCE THE SHIP REACHES THE PLANET IT COMES DOWN, NOT ACROSS. The approach
+   * brakes to a stop high over the landing site with the nose tipped down at
+   * the world; the entry then falls straight down the local vertical, the
+   * surface swelling in the canopy, until the cloud deck closes; and under the
+   * cloud the descent drops onto the pad from overhead. The old path skimmed
+   * the limb, ploughed forward through the air and then flew a long forward
+   * glide over the built world, which read as flying OVER the planet twice
+   * with a jump between.
+   */
   _phaseApproach() {
     const self = this;
     let curve = null;
     const upE = new THREE.Vector3(0, Math.cos(ENTRY_TILT), -Math.sin(ENTRY_TILT));
     const tanE = new THREE.Vector3(0, Math.sin(ENTRY_TILT), Math.cos(ENTRY_TILT));
+    const tan = new THREE.Vector3(), up = new THREE.Vector3();
     return {
       name: 'approach', dur: 8.5, label: () => `Approaching ${self.dest.def.name}`,
       enter() {
-        const E = PLANET_C.clone().addScaledVector(upE, PLANET_R + ENTRY_ALT);
+        const H = PLANET_C.clone().addScaledVector(upE, PLANET_R + HOLD_ALT);
         const start = self.shipPos.clone();
+        // In from above and behind, slowing onto the hold point rather than
+        // arriving along the ground.
         curve = new THREE.CubicBezierCurve3(
           start,
           start.clone().add(new THREE.Vector3(0, 0, 3200)),
-          E.clone().addScaledVector(tanE, -2600).addScaledVector(upE, 120),
-          E
+          H.clone().addScaledVector(tanE, -1400).addScaledVector(upE, 320),
+          H
         );
-        self.entryPoint = E;
+        self.entryPoint = H;
         self.entryUp = upE;
         self.entryTan = tanE;
       },
       tick(u) {
-        const k = 1 - Math.pow(1 - u, 1.6);
+        const k = 1 - Math.pow(1 - u, 2.2);
         self.shipPos.copy(curve.getPointAt(k));
-        const tan = curve.getTangentAt(Math.min(0.999, k + 0.001));
-        const up = new THREE.Vector3(0, 1, 0).lerp(upE, smooth(0.3, 1, u)).normalize();
+        // Heading along the path, but the attitude settles level to the local
+        // ground and then tips the nose down at it as the ship brakes.
+        tan.copy(curve.getTangentAt(Math.min(0.999, k + 0.001)));
+        const settle = smooth(0.45, 1, u);
+        tan.lerp(tanE, settle).normalize();
+        up.set(0, 1, 0).lerp(upE, smooth(0.3, 1, u)).normalize();
         lookQuat(tan, up, self.shipQuat);
+        self.shipQuat.multiply(_q.setFromEuler(_e.set(HOLD_PITCH * smooth(0.55, 1, u), 0, 0)));
         self.warp = 0;
         self.flash = 0;
-        self.shake = 0.002 + 0.004 * smooth(0.7, 1, u);
+        self.shake = 0.002 + 0.002 * smooth(0.7, 1, u);
         self.fov = BASE_FOV;
       }
     };
@@ -839,14 +870,14 @@ export class Voyage {
 
   _phaseEntry() {
     const self = this;
-    let from, dir, upE;
+    let upE, tanE, base;
     return {
-      name: 'entry', dur: 4.6, label: () => 'Atmospheric entry',
+      name: 'entry', dur: 5.2, label: () => 'Atmospheric entry',
       enter() {
-        from = self.shipPos.clone();
         upE = self.entryUp;
-        // Down through the air at a shallow angle, nose a little low.
-        dir = self.entryTan.clone().applyAxisAngle(new THREE.Vector3(1, 0, 0), THREE.MathUtils.degToRad(17)).normalize();
+        tanE = self.entryTan;
+        base = new THREE.Quaternion();
+        lookQuat(tanE, upE, base);
         const world = self.dest.world;
         const fog = world.scene.fog;
         self.veilColor = new THREE.Color(fog ? fog.color : 0xb0a490);
@@ -854,12 +885,17 @@ export class Voyage {
         soundscape.setEngine?.(0.8, 0.8);
       },
       tick(u) {
-        self.shipPos.copy(from).addScaledVector(dir, 250 * (u + 0.25 * u * u));
-        lookQuat(dir, upE, self.shipQuat);
-        self.heat = Math.sin(Math.min(1, u * 1.25) * Math.PI) * 0.72 + 0.08 * u;
-        self.shake = 0.006 + 0.022 * Math.sin(u * Math.PI);
-        self.cloud = smooth(0.42, 0.96, u);
-        self.cloudFlow = 0.9;
+        // Straight down the local vertical, gathering speed.
+        const alt = THREE.MathUtils.lerp(HOLD_ALT, ENTRY_ALT, u * u * (1.6 - 0.6 * u));
+        self.shipPos.copy(PLANET_C).addScaledVector(upE, PLANET_R + alt);
+        const pitch = THREE.MathUtils.lerp(HOLD_PITCH, ENTRY_PITCH, smooth(0, 0.8, u));
+        const roll = Math.sin(self.clock * 1.9) * 0.01 * Math.sin(u * Math.PI);
+        self.shipQuat.copy(base).multiply(_q.setFromEuler(_e.set(pitch, 0, roll)));
+        self.heat = Math.sin(Math.min(1, u * 1.25) * Math.PI) * 0.6 + 0.08 * u;
+        self.shake = 0.005 + 0.02 * Math.sin(u * Math.PI);
+        self.cloud = smooth(0.5, 0.97, u);
+        // Falling through it, the cloud streams UP past the glass.
+        self.cloudFlow = -1.1;
       },
       exit() { self.heat = 0; self._swapToWorld(self.dest); }
     };
@@ -878,43 +914,44 @@ export class Voyage {
     this.cloud = 1;
   }
 
-  /** From above the cloud, down onto the ground the ship will stand on. */
+  /**
+   * Out of the bottom of the cloud and straight down onto the ground the ship
+   * will stand on. The ship falls from overhead, turning onto its landing
+   * heading as it drops and bringing its nose up from the ground to the
+   * horizon; the only sideways motion is a short slide into line with the pad.
+   */
   _phaseDescent() {
     const self = this;
-    let curve = null, yawQ = new THREE.Quaternion(), fwd = new THREE.Vector3();
-    const prev = new THREE.Vector3();
+    let yaw0 = 0, yaw1 = 0;
+    const start = new THREE.Vector3(), hover = new THREE.Vector3(), fwd = new THREE.Vector3();
     return {
-      name: 'descent', dur: 15, label: () => self.dest.def.descent,
+      name: 'descent', dur: 13, label: () => self.dest.def.descent,
       enter() {
         const L = self.dest.landing;
         fwd.set(Math.sin(L.yaw), 0, Math.cos(L.yaw));
-        yawQ.setFromAxisAngle(_Y, L.yaw);
-        const hover = new THREE.Vector3(L.x, L.deckY + 16, L.z);
-        const start = hover.clone().addScaledVector(fwd, -205).add(new THREE.Vector3(0, 140, 0));
-        curve = new THREE.CubicBezierCurve3(
-          start,
-          start.clone().addScaledVector(fwd, 100).add(new THREE.Vector3(0, -30, 0)),
-          hover.clone().addScaledVector(fwd, -70).add(new THREE.Vector3(0, 8, 0)),
-          hover
-        );
-        self.hoverPos = hover;
+        yaw1 = L.yaw;
+        yaw0 = L.yaw + 0.55;
+        hover.set(L.x, L.deckY + 16, L.z);
+        start.copy(hover).addScaledVector(fwd, -28).add(new THREE.Vector3(0, 175, 0));
+        self.hoverPos = hover.clone();
         self.shipPos.copy(start);
-        prev.copy(start);
-        self.cloudFlow = 0.45;
+        self.cloudFlow = -0.7;
         soundscape.setEngine?.(0.55, 0.75);
       },
       tick(u) {
-        const k = 1 - Math.pow(1 - u, 2.3);
-        prev.copy(self.shipPos);
-        self.shipPos.copy(curve.getPointAt(k));
-        // Nose down while dropping, level as it slows over the pad.
-        const v = self.shipPos.clone().sub(prev);
-        const horiz = Math.hypot(v.x, v.z);
-        const pitch = horiz + Math.abs(v.y) > 1e-5
-          ? THREE.MathUtils.clamp(Math.atan2(-v.y, horiz) * 0.75 + 0.05, -0.05, 0.36) * (1 - smooth(0.82, 1, u))
-          : 0;
+        // Fast out of the cloud, braking all the way onto the hover.
+        const k = 1 - Math.pow(1 - u, 2.4);
+        const side = smooth(0.1, 0.75, u);
+        self.shipPos.set(
+          THREE.MathUtils.lerp(start.x, hover.x, side),
+          THREE.MathUtils.lerp(start.y, hover.y, k),
+          THREE.MathUtils.lerp(start.z, hover.z, side)
+        );
+        const yaw = THREE.MathUtils.lerp(yaw0, yaw1, ease(smooth(0.05, 0.85, u)));
+        const pitch = 0.32 * (1 - smooth(0.1, 0.85, u));
         const roll = Math.sin(self.clock * 0.7) * 0.012 * (1 - u);
-        self.shipQuat.copy(yawQ).multiply(_q.setFromEuler(_e.set(pitch, 0, roll)));
+        _q2.setFromAxisAngle(_Y, yaw);
+        self.shipQuat.copy(_q2).multiply(_q.setFromEuler(_e.set(pitch, 0, roll)));
         // The deck breaks up and the haze draws back as the ship comes out under it.
         self.cloud = 1 - smooth(0.02, 0.26, u);
         const fs = self._fogSaved.get(self.dest.world);
@@ -1002,7 +1039,7 @@ export class Voyage {
         const fog = self.leaving.world.scene.fog;
         self.veilColor = new THREE.Color(fog ? fog.color : 0xb0a490);
         self._saveFog(self.leaving.world);
-        self.cloudFlow = -0.6;
+        self.cloudFlow = 0.6;   // climbing: the cloud streams down the glass
         soundscape.setEngine?.(0.9, 1.1);
       },
       tick(u) {
@@ -1051,7 +1088,7 @@ export class Voyage {
           new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 40, 900),
           new THREE.Vector3(0, 380, 2500), new THREE.Vector3(0, 900, 3800)
         );
-        self.cloudFlow = -0.8;
+        self.cloudFlow = 0.8;
       },
       tick(u) {
         self.shipPos.copy(curve.getPointAt(easeOut(u) * 0.8 + u * 0.2));
@@ -1378,6 +1415,7 @@ export class Voyage {
     if (!this.aboard) return;
     const dt = Math.min(delta, 0.05) * this.timeScale;
     this._dt = dt;
+    this.cloudScroll = (this.cloudScroll + dt * (this.cloudFlow ?? 0.4)) % 1000;
 
     if (this.phases.length && (this.state === 'flight' || this.state === 'disembark')) {
       const p = this.phases[this.phaseIdx];
@@ -1460,7 +1498,7 @@ export class Voyage {
         u.uColor.value.copy(this.veilColor || _grey);
         u.uAlpha.value = cloud;
         u.uCloud.value = 1;
-        u.uFlow.value = this.cloudFlow ?? 0.4;
+        u.uScroll.value = this.cloudScroll;
       }
       renderer.render(this.veil.scene, this.veil.camera);
     }
@@ -1494,6 +1532,7 @@ const _one = new THREE.Vector3(1, 1, 1);
 const _s = new THREE.Vector3();
 const _mw = new THREE.Matrix4();
 const _q = new THREE.Quaternion();
+const _q2 = new THREE.Quaternion();
 const _e = new THREE.Euler();
 const _grey = new THREE.Color(0xb0a490);
 const _fwdV = new THREE.Vector3();

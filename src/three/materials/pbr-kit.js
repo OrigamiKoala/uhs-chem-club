@@ -1437,13 +1437,15 @@ export function mergeStatic(group) {
    * list instead, so merging buys draw calls without costing precision.
    */
   const partBoxes = group.userData.partBoxes || [];
+  const toGroup = new THREE.Matrix4();
   for (const o of doomed) {
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-    const b = o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld);
-    if (!b.isEmpty() && isFinite(b.min.x)) {
-      b.applyMatrix4(inverse);
-      partBoxes.push(b);
-    }
+    // Straight into the group's frame. Going through world space first boxed
+    // every part twice on a rotated group — once in the world, once back —
+    // and a bench top on a turned site came out a metre deeper than it is.
+    toGroup.multiplyMatrices(inverse, o.matrixWorld);
+    const b = o.geometry.boundingBox.clone().applyMatrix4(toGroup);
+    if (!b.isEmpty() && isFinite(b.min.x)) partBoxes.push(b);
     o.parent?.remove(o);
   }
   group.userData.partBoxes = partBoxes;

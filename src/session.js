@@ -77,9 +77,6 @@ class SessionManager {
     // and the device never got a second look.
     this.gfxTierPref = safeRead(GFX_KEY) || null;
     this.gfxTier = this.gfxTierPref || 'T4';
-    // Set by the frame monitor when a measured tier falls below T4. Page-session
-    // only and deliberately not persisted: a reload measures the device again.
-    this.t4Downgraded = false;
     this.reduceMotion = localStorage.getItem(MOTION_KEY) === 'true';
     this.sound = { master: 60, ambience: 60, effects: 60, muted: false };
     this.flags = { sessionZeroDone: false };

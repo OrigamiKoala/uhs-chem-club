@@ -110,7 +110,8 @@ export const SKY_GLSL = /* glsl */ `
     vec3 col = erebusAir(d);
     float mu = dot(d, uSunDir);
     // High cirrus, combed out by the upper wind, lit through from the sun's side.
-    if (d.y > 0.0) {
+    // Below 0.02 its coverage is exactly zero, so the noise is not evaluated.
+    if (d.y > 0.02) {
       vec2 p = d.xz / (d.y + 0.08) * 1.4;
       p = mat2(0.91, 0.41, -0.41, 0.91) * p;
       float streak = eFbm(vec2(p.x * 0.45, p.y * 2.6) + vec2(uTime * 0.004, 0.0));
@@ -241,7 +242,10 @@ export function applyAerialPerspective(mat) {
           float eThin = exp(-max(eH - uHazeBase, 0.0) / uHazeScale);
           float eAmt = (1.3 * eFd + 1.1 * eFd * eFd) * mix(1.0, eThin, uHazeHeightAmt);
           float eFog = 1.0 - exp(-eAmt);
-          gl_FragColor.rgb = mix(gl_FragColor.rgb, erebusOut(erebusHaze(eDir)), eFog);
+          // The first few metres carry no air worth a sky evaluation (under
+          // half a code value): skip it for them, which is most of the ground
+          // at the player's feet.
+          if (eFog > 0.002) gl_FragColor.rgb = mix(gl_FragColor.rgb, erebusOut(erebusHaze(eDir)), eFog);
         #endif`);
   };
   const key = `${prevKey}|erebus-air`;
@@ -311,7 +315,8 @@ export function createCelestials() {
     colors: ['#c79a66', '#8b5e3b', '#e4c79a', '#a0492c'],
     seed: [3.1, 1.7, 5.9], octaves: 6
   }));
-  const body = new THREE.Mesh(new THREE.SphereGeometry(R, 96, 64), bodyMat);
+  // 64 x 48: at seventeen degrees across, the limb stays within half a pixel of round.
+  const body = new THREE.Mesh(new THREE.SphereGeometry(R, 64, 48), bodyMat);
   body.frustumCulled = false;
   giant.add(body);
 
@@ -370,21 +375,26 @@ export function createLights({ shadows }) {
  * is five times sharper than one stretched over the whole basin. It moves in
  * whole shadow texels, or every step would make the shadows crawl.
  */
+const _right = new THREE.Vector3(0, 1, 0).cross(EREBUS_SUN).normalize();
+const _up = EREBUS_SUN.clone().cross(_right).normalize();
+const _snapped = new THREE.Vector3();
+
 export function followShadow(sun, focus) {
-  if (!sun.castShadow) return;
+  if (!sun.castShadow) return false;
   const cam = sun.shadow.camera;
   const texel = (cam.right - cam.left) / sun.shadow.mapSize.x;
-  // Snap in the light's own frame.
+  // Snap in the light's own frame; along the light, coarsely (the camera's
+  // near/far span has metres of slack). Returns true when the box moved.
   const L = EREBUS_SUN;
-  const right = new THREE.Vector3(0, 1, 0).cross(L).normalize();
-  const up = L.clone().cross(right).normalize();
-  const a = Math.round(focus.dot(right) / texel) * texel;
-  const b = Math.round(focus.dot(up) / texel) * texel;
-  const c = focus.dot(L);
-  const snapped = right.multiplyScalar(a).add(up.multiplyScalar(b)).add(L.clone().multiplyScalar(c));
-  sun.target.position.copy(snapped);
-  sun.position.copy(snapped).addScaledVector(L, 180);
+  const a = Math.round(focus.dot(_right) / texel) * texel;
+  const b = Math.round(focus.dot(_up) / texel) * texel;
+  const c = Math.round(focus.dot(L) / 0.5) * 0.5;
+  _snapped.copy(_right).multiplyScalar(a).addScaledVector(_up, b).addScaledVector(L, c);
+  if (_snapped.equals(sun.target.position)) return false;
+  sun.target.position.copy(_snapped);
+  sun.position.copy(_snapped).addScaledVector(L, 180);
   sun.target.updateMatrixWorld();
+  return true;
 }
 
 /**

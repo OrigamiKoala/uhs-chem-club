@@ -25,8 +25,17 @@ import { placard, mergeStatic } from "../materials/pbr-kit.js";
 import { ROOMS, WALL_T, DOOR_H, doorways, roomAt } from "../ship-rooms.js";
 import { DRESS, box, cyl, extrude, chamferedRect, chamferedHole, lamp } from "./kit.js";
 
-export const OPEN_AT = 1.9;
-export const CLOSE_AT = 2.5;
+/*
+ * A door has to be open BEFORE the player reaches it, not while they do. At
+ * 1.9 m and 0.3 s of travel a sprinting player (7 m/s) met the leaves still
+ * parting at the seal and read as walking through them. From 3 m, at
+ * `OPEN_RATE`, the leaves are in their pockets with a walker still two metres
+ * off and a sprinter a metre and a half off.
+ */
+export const OPEN_AT = 3.0;
+export const CLOSE_AT = 3.6;
+const OPEN_RATE = 4.6;    // full travel per second, parting
+const CLOSE_RATE = 2.4;   // and closing, which nobody is waiting on
 const LEAF_T = 0.045;
 const LEAF_DEPTH = 0.04;   // each leaf rides this far either side of the wall's mid-plane
 
@@ -197,7 +206,7 @@ export function updateDoors(doors, delta, viewer) {
     }
     const target = d.isOpen ? 1 : 0;
     if (d.open !== target) {
-      const step = delta * (d.isOpen ? 3.2 : 2.4);
+      const step = Math.min(delta, 0.1) * (d.isOpen ? OPEN_RATE : CLOSE_RATE);
       d.open = d.isOpen ? Math.min(1, d.open + step) : Math.max(0, d.open - step);
       // Ease: fast off the seal, soft into the pocket.
       const e = d.open * d.open * (3 - 2 * d.open);

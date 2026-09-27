@@ -8,8 +8,13 @@
  * A phone is not disqualified from T4 by being a phone. A 2020-or-later handset
  * runs the walk at 60fps; what it cannot do is a mouse, so T4 on a touch device
  * is driven by the twin sticks in `touch-controls.js` instead. The capability
- * probe below asks about the GPU and the cores, and `recordFrame` remains the
- * honest backstop: a device that cannot hold 24fps is demoted on the spot.
+ * probe below asks about the GPU and the cores.
+ *
+ * THE TIER IS DECIDED ONCE, WHEN THE PAGE OPENS, AND KEPT. Nothing measures
+ * frames and demotes mid-session any more: a tier change rebuilds render
+ * settings under whatever the player is doing — a voyage, a bench, a walk —
+ * and a slow stretch (a world building, shaders compiling) is not evidence
+ * about the device. Only the player changes it after boot, by choosing.
  */
 
 import { session } from '../session.js';
@@ -17,25 +22,6 @@ import { session } from '../session.js';
 /** Bumped when a change to the probe invalidates tiers stored by older builds. */
 const TIER_REV_KEY = 'avalon_gfx_rev';
 const TIER_REV = '3';
-
-/**
- * A boot, a scene swap and the first walk into a room all cost frames: textures
- * upload, shaders compile, a world's JSON becomes geometry. Nothing is judged
- * inside this window. Judging it is what used to strand a phone on stills — the
- * slow first seconds read as 12fps, and the monitor demoted on the spot.
- */
-const WARM_UP_MS = 6000;
-
-/**
- * After a demotion the window is thrown away and this much time has to pass
- * before another. One bad stretch is worth one step down, never four: the old
- * monitor kept the same slow samples after each change, so T4 fell to T1 within
- * a handful of frames and the player was left looking at a still image.
- */
-const DEMOTE_COOLDOWN_MS = 8000;
-
-/** Frames in a judgement window. At 60fps this is a second and a half. */
-const WINDOW_FRAMES = 90;
 
 export const TIER_RANKS = {
   T1: 1,
@@ -91,28 +77,16 @@ export function isT4Capable() {
   return true;
 }
 
-/** Capable, and not demoted by the frame monitor earlier in this page session. */
+/** Kept for callers that ask; with no runtime demotion it is just capability. */
 export function isT4Eligible() {
-  return isT4Capable() && !session.t4Downgraded;
+  return isT4Capable();
 }
 
 class TierManager {
   constructor() {
     this.currentTier = 'T4';
     this.probeComplete = false;
-    this.frameTimes = [];
     this.listeners = new Set();
-    this.warmUpUntil = 0;
-    this.lastDemotion = 0;
-  }
-
-  /** Stop judging frames for a while — something expensive just happened. */
-  beginWarmUp() {
-    const now = (typeof performance !== 'undefined' && performance.now)
-      ? performance.now()
-      : Date.now();
-    this.warmUpUntil = now + WARM_UP_MS;
-    this.frameTimes.length = 0;
   }
 
   /**
@@ -154,7 +128,6 @@ class TierManager {
         this.setTier(pref);
       }
       this.probeComplete = true;
-      this.beginWarmUp();
       return;
     }
 
@@ -179,8 +152,7 @@ class TierManager {
 
       // Apple's mobile GPU is not in this list and must not be added to it: a
       // recent iPhone carries the walk, and a renderer string is not a frame
-      // rate. What cannot hold 60fps is demoted by `recordFrame`, which has
-      // measured it rather than guessed from a name.
+      // rate.
       const isMobileOrSlow = /mali|adreno|powervr|chromebook/i.test(renderer) ||
         (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2);
 
@@ -190,46 +162,16 @@ class TierManager {
         this.setTier('T3');
       }
     }
-    this.beginWarmUp();
+    this.probeComplete = true;
   }
 
   /**
-   * One judgement window, whether this is the boot probe or the runtime
-   * monitor — the two used to disagree, and the boot one measured exactly the
-   * frames a boot makes slow.
-   *
-   * A tier arrived at here is *measured*, never stored: the next visit looks at
-   * the device again instead of inheriting one bad afternoon.
+   * The render loop still reports every frame here. It is deliberately a
+   * no-op: the tier is fixed at boot (see the header), and a frame monitor that
+   * demoted mid-session once swapped a player's renderer out from under a
+   * voyage.
    */
-  recordFrame(now) {
-    if (now < this.warmUpUntil) {
-      this.frameTimes.length = 0;
-      return;
-    }
-
-    this.frameTimes.push(now);
-    if (this.frameTimes.length > WINDOW_FRAMES) this.frameTimes.shift();
-    if (this.frameTimes.length < WINDOW_FRAMES) return;
-
-    const span = this.frameTimes[this.frameTimes.length - 1] - this.frameTimes[0];
-    if (span <= 0) return;
-    const fps = (1000 * (this.frameTimes.length - 1)) / span;
-    this.probeComplete = true;
-
-    if (now - this.lastDemotion < DEMOTE_COOLDOWN_MS) return;
-
-    let next = null;
-    if (fps < 24 && this.currentTier === 'T4') next = 'T3';
-    else if (fps < 24 && this.currentTier === 'T3') next = 'T2';
-    else if (fps < 15 && this.currentTier === 'T2') next = 'T1';
-    if (!next) return;
-
-    // Only within this page session. A reload asks the question again.
-    if (this.currentTier === 'T4') session.t4Downgraded = true;
-
-    this.lastDemotion = now;
-    this.setTier(next);
-  }
+  recordFrame() {}
 
   /**
    * @param {string} tier
@@ -238,13 +180,8 @@ class TierManager {
    */
   setTier(tier, opts = {}) {
     if (tier !== 'T1' && tier !== 'T2' && tier !== 'T3' && tier !== 'T4') return;
-    const changed = this.currentTier !== tier;
     this.currentTier = tier;
     session.setGfxTier(tier, Boolean(opts.persist));
-
-    // Changing tier rebuilds render settings and re-uploads what the new one
-    // wants; the frames that costs are not evidence about the new tier.
-    if (changed) this.beginWarmUp();
 
     if (typeof document !== 'undefined' && document.body) {
       document.body.classList.toggle('tier-t4', tier === 'T4');
@@ -273,11 +210,10 @@ class TierManager {
 
   /**
    * The player picked this tier — in Settings or with the HUD chip. This is the
-   * only path that writes the preference, and it clears an earlier automatic
-   * demotion so asking for T4 by hand actually gets T4.
+   * only path that writes the preference, and the only way the tier changes
+   * after boot.
    */
   chooseTier(tier) {
-    if (tier === 'T4') session.t4Downgraded = false;
     this.setTier(tier, { persist: true });
   }
 

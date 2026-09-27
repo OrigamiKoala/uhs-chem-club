@@ -43,6 +43,8 @@ import {
 } from "./erebus/atmosphere.js";
 import { createRockMaterial, createStrataTexture } from "./erebus/rocks.js";
 import { buildLander } from "./erebus/lander.js";
+import { LampPool } from "./lamp-pool.js";
+import { paceShadow, holdShadowUntilAsked } from "./shadow-pace.js";
 import { duneSand, hullMaterial, addDustCover } from "./erebus/surfaces.js";
 import { buildLandmark } from "./erebus/landmarks.js";
 import { buildVista } from "./erebus/vista.js";
@@ -65,6 +67,10 @@ export class WorldScene {
     this.time = 0;
 
     this.field = makeHeightField(this.data);
+    // Twenty pylon lamps and the lander's bay, lit through three real lights:
+    // at 13.8 m between pylons that is the pylon underfoot and both of its
+    // neighbours, and nothing further off shows a four-metre lamp anyway.
+    this.lampPool = new LampPool(this.scene, 3);
 
     this.initSurfaces();
     this.initLighting();
@@ -122,6 +128,7 @@ export class WorldScene {
     const { sun, hemi } = createLights({ shadows: this.t4 });
     this.sunLight = sun;
     this.scene.add(sun, sun.target, hemi);
+    holdShadowUntilAsked(this.scene, sun);
 
     /*
      * The haze. The world's materials read `fogNear` / `fogFar` from this fog,
@@ -175,11 +182,13 @@ export class WorldScene {
     const c = Math.cos(lander.rotY), s = Math.sin(lander.rotY);
     // Ground under a point in the lander's own frame, relative to its origin.
     const groundAt = (lx, lz) => this.getTerrainHeight(gx + lx * c + lz * s, gz - lx * s + lz * c) - gy;
-    const { group, beaconMat } = buildLander({ groundAt });
+    const { group, beaconMat, bayLamp } = buildLander({ groundAt });
     group.position.set(gx, gy, gz);
     group.rotation.y = lander.rotY;
     this.landerBeacon = beaconMat;
     this.scene.add(group);
+    group.updateMatrixWorld(true);
+    this.lampPool.add({ ...bayLamp, position: group.localToWorld(bayLamp.local.clone()) });
 
     this.colliders.push({ x: gx, z: gz, radius: 4.5 });
   }
@@ -245,6 +254,17 @@ export class WorldScene {
     const cableMat = new THREE.MeshStandardMaterial({
       color: 0x1c1916, roughness: 0.96, metalness: 0.15
     });
+
+    /*
+     * THE TWENTY PYLONS ARE BAKED AS ONE. A pylon never moves, so all twenty
+     * masts, bases, guys and bolts are one mesh per material — three or four
+     * draws for the whole ring instead of seven per pylon, twice over with the
+     * shadow pass. The ring is thirty thousand triangles; drawing all of it
+     * when half is behind the player is cheaper than a hundred draw calls.
+     */
+    const ring = new THREE.Group();
+    ring.name = 'pylon-ring';
+    this.scene.add(ring);
 
     for (const site of this.data.sites) {
       const pylonGroup = new THREE.Group();
@@ -390,9 +410,11 @@ export class WorldScene {
       lamp.userData.noMerge = true;
       pylonGroup.add(lamp);
 
-      const pylonLight = new THREE.PointLight(0xd99423, 0, 4);
-      pylonLight.position.set(0, 1.4, 0.6);
-      pylonGroup.add(pylonLight);
+      // Its light comes from the lamp pool, dark until the pylon is cleared.
+      const pylonLight = this.lampPool.add({
+        position: new THREE.Vector3(site.pos[0], gy + 1.4, site.pos[2] + 0.6),
+        color: 0xd99423, intensity: 0.8, distance: 4, decay: 2, on: false
+      });
 
       pylonGroup.userData = {
         siteId: site.id,
@@ -402,14 +424,21 @@ export class WorldScene {
         pylonLight
       };
 
-      // Bake the mast, the base, the guys, the hatch and every bolt into one
-      // mesh per material. Forty meshes become four, twenty times over, and the
-      // pylon the player walks up to is the same pylon it was.
       pylonGroup.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-      mergeStatic(pylonGroup);
-
       this.pylonMeshes.push(pylonGroup);
       this.scene.add(pylonGroup);
+      pylonGroup.updateMatrixWorld(true);
+
+      // The mast, the base, the guys, the hatch and every bolt move into the
+      // ring below; the pylon keeps what is its own — the lamp that lights,
+      // the stencilled number, the hazard paint.
+      const baked = [];
+      pylonGroup.traverse(o => {
+        if (!o.isMesh || o.isInstancedMesh || Array.isArray(o.material) || o.material?.transparent) return;
+        for (let n = o; n && n !== pylonGroup; n = n.parent) if (n.userData.noMerge) return;
+        baked.push(o);
+      });
+      for (const o of baked) ring.attach(o);
 
       // Add radial collider for pylon mast
       this.colliders.push({
@@ -418,6 +447,7 @@ export class WorldScene {
         radius: 1.2
       });
     }
+    mergeStatic(ring);
   }
 
   initAtmosphericDust() {
@@ -433,11 +463,10 @@ export class WorldScene {
       const isCleared = clearedSet.has(p.userData.stage);
       if (isCleared) {
         p.userData.lampMat.color.setHex(0xd99423); // Lit amber
-        p.userData.pylonLight.intensity = 0.8;
       } else {
         p.userData.lampMat.color.setHex(0x35200c); // Dormant
-        p.userData.pylonLight.intensity = 0;
       }
+      p.userData.pylonLight.on = isCleared;
     }
   }
 
@@ -445,8 +474,11 @@ export class WorldScene {
     this.time += delta;
     skyUniforms.uTime.value = this.time;
     if (cameraPosition) {
-      followShadow(this.sunLight, cameraPosition);
+      // Every other frame while the player stands still: nothing on the basin
+      // moves but the operator's console, which rides on the camera.
+      paceShadow(this.sunLight, followShadow(this.sunLight, cameraPosition), { every: 2 });
       this.effects?.update(delta, this.time, cameraPosition);
+      this.lampPool.update(cameraPosition);
     }
     // The lander's tail beacon: a slow double blink, the one sign it is still powered.
     if (this.landerBeacon) {

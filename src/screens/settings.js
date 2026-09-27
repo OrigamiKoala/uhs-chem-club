@@ -9,8 +9,7 @@ import { soundscape } from '../audio/soundscape.js';
 export function renderSettings(container) {
   const soundPrefs = session.sound;
   const isT4 = tierManager.currentTier === 'T4';
-  // The device's capability, not this page session's history: a handset the
-  // frame monitor demoted must still be able to ask for the walk back.
+  // The device's capability: a player on a lower tier can always ask for T4.
   const eligibleT4 = isT4Capable();
   // On a phone the continuous walk is driven by the twin sticks, not WASD.
   const t4Note = !eligibleT4

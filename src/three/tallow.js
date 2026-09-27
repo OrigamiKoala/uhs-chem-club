@@ -77,6 +77,8 @@ import {
 import { buildHauler } from './tallow/hauler.js';
 import { buildTallowVista } from './tallow/vista.js';
 import { iBeamGeometry, corrugatedGeometry } from './tallow/kit.js';
+import { LampPool } from './lamp-pool.js';
+import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
 
 /** Sodium filament, from inside a thing. The one warm colour on the flat. */
 const SODIUM = 0xd99423;
@@ -122,6 +124,8 @@ export class TallowWorld {
     this.initHopperGantry();
     this.initVista();
     this.initEffects();
+    this.initLampPool();
+    this.bakeStatics();
     this.buildColliders();
     this.enableAmbientOcclusion();
     this.weatherTheWorld();
@@ -247,6 +251,7 @@ export class TallowWorld {
     const { sun, hemi } = createTallowLights({ shadows: this.t4 });
     this.sunLight = sun;
     this.scene.add(sun, sun.target, hemi);
+    holdShadowUntilAsked(this.scene, sun);
 
     /*
      * The haze. Every material's fog is replaced by aerial perspective toward
@@ -549,8 +554,16 @@ export class TallowWorld {
     // Sodium luminaires in the lab. These are lamps, so they are allowed to be
     // lit — and they are the reason the sub-level reads warm while the flat above
     // reads bleached.
+    //
+    // Four lamps, two lights: each pair along z is lit by one pooled light at
+    // its midpoint (a little stronger, a little further reaching), which puts
+    // the brightest floor right over the bench at site 2. Four point lights
+    // here were shaded on every pixel of the salt flat above as well.
     for (const [lx, lz] of [[-7, -23], [-7, -30], [7, -23], [7, -30]]) {
-      g.add(this.buildLuminaire(lx, this.sub.ceilingY - 0.42, lz));
+      g.add(this.buildLuminaire(lx, this.sub.ceilingY - 0.42, lz, { light: null }));
+    }
+    for (const lx of [-7, 7]) {
+      g.add(this.lampMark(lx, this.sub.ceilingY - 0.62, -26.5, { intensity: 6.5, distance: 16 }));
     }
 
     /* ================= THE SERVICES =================
@@ -685,28 +698,31 @@ export class TallowWorld {
   }
 
   /** A caged sodium fixture: cast housing, warm diffuser, one small point light. */
-  buildLuminaire(x, y, z) {
+  buildLuminaire(x, y, z, { light = { intensity: 5.2, distance: 13 } } = {}) {
     const g = new THREE.Group();
+    // One set of materials for every luminaire, so the lab's four bake into
+    // three meshes rather than twelve.
+    this.lumMats = this.lumMats || {
+      housing: this.own(new THREE.MeshStandardMaterial({ color: 0x3f3830, roughness: 0.9, metalness: 0.5 })),
+      diffuser: this.own(new THREE.MeshStandardMaterial({
+        color: 0xffe0ae, emissive: 0xffd9a0, emissiveIntensity: 1.5, roughness: 0.6
+      })),
+      cage: this.own(new THREE.MeshStandardMaterial({ color: 0x2e2923, roughness: 0.85, metalness: 0.6 }))
+    };
     const housing = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.62, 0.16, 0.34)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0x3f3830, roughness: 0.9, metalness: 0.5 }))
+      this.own(new THREE.BoxGeometry(0.62, 0.16, 0.34)), this.lumMats.housing
     );
     g.add(housing);
 
     const diffuser = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.5, 0.04, 0.24)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0xffe0ae, emissive: 0xffd9a0, emissiveIntensity: 1.5, roughness: 0.6
-      }))
+      this.own(new THREE.BoxGeometry(0.5, 0.04, 0.24)), this.lumMats.diffuser
     );
     diffuser.position.y = -0.09;
     g.add(diffuser);
 
     // The protective cage: five bars, because an unguarded lamp in a work space
     // would have been smashed decades ago.
-    const cageMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0x2e2923, roughness: 0.85, metalness: 0.6
-    }));
+    const cageMat = this.lumMats.cage;
     for (let i = 0; i < 5; i++) {
       const bar = new THREE.Mesh(
         this.own(new THREE.CylinderGeometry(0.012, 0.012, 0.3, 6)), cageMat
@@ -716,13 +732,77 @@ export class TallowWorld {
       g.add(bar);
     }
 
-    const light = new THREE.PointLight(0xffd9a0, 5.2, 13, 1.6);
-    light.position.y = -0.2;
-    g.add(light);
-    this.lamps.push(light);
+    if (light) g.add(this.lampMark(0, -0.2, 0, light));
 
     g.position.set(x, y, z);
     return g;
+  }
+
+  /**
+   * Where a sodium lamp's light comes from. Not a PointLight: an empty marker
+   * that `initLampPool` reads once everything is placed, so the world's lamps
+   * are lit through a pool of two real lights rather than one light each.
+   */
+  lampMark(x, y, z, { intensity = 5.2, distance = 13 } = {}) {
+    const mark = new THREE.Object3D();
+    mark.position.set(x, y, z);
+    mark.userData.lamp = { color: 0xffd9a0, intensity, distance, decay: 1.6 };
+    this.lamps.push(mark);
+    return mark;
+  }
+
+  /**
+   * BAKE WHAT NEVER MOVES. The refinery, the pad and the hauler were baked as
+   * they were built; the five sites, the lab and the crate stacks were not, and
+   * they were five hundred of the world's nine hundred draw calls (drawn twice,
+   * once more for the sun's shadow). Each becomes one mesh per material.
+   *
+   * What must stay addressable already says so: the cased-up instrument is
+   * `noMerge` (it hides when the bench deploys) and is baked on its own INSIDE
+   * that group, so casing it up still hides one thing; the site indicator and
+   * the windsock are `noMerge`. A mesh carrying a physics tag or `noSalt` is
+   * left alone too, because the tag lives on the mesh and a bake would drop it.
+   */
+  bakeStatics() {
+    const bake = (group) => {
+      group.traverse(o => {
+        if (o !== group && (o.userData.phys || o.userData.noSalt || o.userData.openShell)) {
+          o.userData.noMerge = true;
+        }
+      });
+      mergeStatic(group);
+    };
+    for (const anchor of this.benchAnchors.values()) {
+      const dormant = anchor.dormant;
+      if (!dormant) continue;
+      dormant.userData.noMerge = false;
+      bake(dormant);
+      dormant.userData.noMerge = true;
+    }
+    for (const node of [...this.scene.children]) {
+      if (!node.isGroup || node.userData.partBoxes || node.userData.noMerge || node.userData.phys) continue;
+      bake(node);
+    }
+    // Every baked geometry is the world's to free, including the ones the
+    // refinery, the pad and the hauler baked for themselves.
+    const owned = new Set(this.disposables);
+    this.scene.traverse(o => {
+      const g = o.userData.ownGeometry;
+      if (g && !owned.has(g)) { owned.add(g); this.own(g); }
+    });
+  }
+
+  /**
+   * THE LAMPS SHARE TWO LIGHTS. The lab's pair of pooled lamps and the work
+   * lamp under the lean-to are forty-five metres apart, so the two lights
+   * nearest the eye are always the ones that show (lamp-pool.js).
+   */
+  initLampPool() {
+    this.lampPool = new LampPool(this.scene, 2);
+    this.scene.updateMatrixWorld(true);
+    for (const mark of this.lamps) {
+      this.lampPool.add({ ...mark.userData.lamp, position: mark.getWorldPosition(new THREE.Vector3()) });
+    }
   }
 
   /* ======================================================================
@@ -2015,7 +2095,11 @@ export class TallowWorld {
   setBenchDeployed(questId, deployed) {
     const anchor = this.benchAnchors.get(questId);
     if (anchor?.dormant) anchor.dormant.visible = !deployed;
+    this.openBenches = this.openBenches || new Set();
+    if (deployed) this.openBenches.add(questId); else this.openBenches.delete(questId);
   }
+
+  get benchesOpen() { return this.openBenches?.size || 0; }
 
   /** The working surface for a quest's site, or null if it has no bench. */
   benchAnchor(questId) {
@@ -2560,12 +2644,16 @@ export class TallowWorld {
     this.elapsed += delta;
     tallowSkyUniforms.uTTime.value = this.elapsed;
     if (cameraPos) {
-      followTallowShadow(this.sunLight, cameraPos);
+      // A deployed instrument moves (jaws close, pieces fall), so its
+      // shadow is drawn every frame; otherwise only when the box moves.
+      const moved = followTallowShadow(this.sunLight, cameraPos);
+      paceShadow(this.sunLight, moved, { live: this.benchesOpen > 0 });
       if (this.renderer?.getDrawingBufferSize) {
         this._buf = this._buf || new THREE.Vector2();
         this.effects?.setViewportHeight(this.renderer.getDrawingBufferSize(this._buf).y);
       }
       this.effects?.update(delta, this.elapsed, cameraPos);
+      this.lampPool?.update(cameraPos);
     }
     this.vista?.update?.(delta, this.elapsed);
 

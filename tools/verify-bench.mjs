@@ -127,6 +127,12 @@ function instanceBoxes(mesh, inv) {
   return out;
 }
 
+/** A baked group's recorded part boxes (group frame), each carried into the bench frame. */
+function partBoxesIn(group, inv) {
+  const m = new THREE.Matrix4().multiplyMatrices(inv, group.matrixWorld);
+  return group.userData.partBoxes.map(b => b.clone().applyMatrix4(m)).filter(b => !b.isEmpty());
+}
+
 /** Whether any triangle of an open shell passes through `box` (bench frame). */
 function shellTouches(mesh, inv, box) {
   const m = new THREE.Matrix4().multiplyMatrices(inv, mesh.matrixWorld);
@@ -507,6 +513,7 @@ function check(questId, label, build, widest) {
       }
 
       const seen = new Set();
+      const bakedSeen = new Set();
       world.scene.traverse(o => {
         if (!o.isMesh || own.has(o) || !o.geometry) return;
         // A body that is not drawn is not in the way. The cased-up instrument
@@ -519,8 +526,19 @@ function check(questId, label, build, widest) {
            instances, which is right for a heap and wrong for a field spread
            across a room: the union of the rubble on a quarry floor is a box
            round the whole floor, and every bench standing in the quarry is
-           "inside" it. So a field is measured one piece at a time. */
-        const bodies = o.isInstancedMesh ? instanceBoxes(o, inv) : [localBox(o, inv)];
+           "inside" it. So a field is measured one piece at a time.
+           AND EACH BAKED PART IS ITS OWN BODY, for the same reason: a site
+           baked by `mergeStatic` is one mesh per material, and the box round
+           the one holding its plate, its lean-to and its crates encloses the
+           bench standing in the middle of them. The bake records every part's
+           box in the group's frame (`partBoxes`); those are measured, once. */
+        let bodies;
+        if (o.isInstancedMesh) bodies = instanceBoxes(o, inv);
+        else if (o.userData.ownGeometry && o.parent?.userData?.partBoxes) {
+          if (bakedSeen.has(o.parent)) return;
+          bakedSeen.add(o.parent);
+          bodies = partBoxesIn(o.parent, inv);
+        } else bodies = [localBox(o, inv)];
         for (const b of bodies) {
           if (!b) continue;
           // At or below the plate the instrument is standing on: a stand foot

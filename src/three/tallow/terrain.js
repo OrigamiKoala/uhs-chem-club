@@ -156,19 +156,38 @@ export function buildTallowTerrainGeometry(field, { step = 1.25, growth = 1.07, 
 
 const MAX_RUTS = 24;
 const MAX_PATHS = 16;
+/** Polylines per kind: each gets a bounding box the shader tests before its segments. */
+export const MAX_TRACK_LINES = 8;
 
-/** Polylines to segments: [ax, az, bx, bz] each. */
-function segments(lines, max) {
+/**
+ * Polylines to segments: [ax, az, bx, bz] each, plus one box and one segment
+ * span per polyline. The box is the line's extent grown by `reach`, the widest
+ * a mark on it is ever drawn: a pixel outside every box skips every segment,
+ * which is almost every pixel of the pan.
+ */
+function segments(lines, max, reach) {
   const out = [];
-  for (const line of lines || []) {
-    for (let i = 0; i < line.length - 1; i++) {
+  const boxes = [];
+  const spans = [];
+  for (const line of (lines || []).slice(0, MAX_TRACK_LINES)) {
+    const first = out.length;
+    let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
+    for (let i = 0; i < line.length - 1 && out.length < max; i++) {
       out.push(new THREE.Vector4(line[i][0], line[i][1], line[i + 1][0], line[i + 1][1]));
+      for (const [x, z] of [line[i], line[i + 1]]) {
+        x0 = Math.min(x0, x); z0 = Math.min(z0, z); x1 = Math.max(x1, x); z1 = Math.max(z1, z);
+      }
     }
+    if (out.length === first) continue;
+    boxes.push(new THREE.Vector4(x0 - reach, z0 - reach, x1 + reach, z1 + reach));
+    spans.push(new THREE.Vector2(first, out.length));
   }
-  if (out.length > max) out.length = max;
   const n = out.length;
+  const lineN = boxes.length;
   while (out.length < max) out.push(new THREE.Vector4(1e5, 1e5, 1e5 + 1, 1e5));
-  return { list: out, n };
+  while (boxes.length < MAX_TRACK_LINES) boxes.push(new THREE.Vector4(1e5, 1e5, -1e5, -1e5));
+  while (spans.length < MAX_TRACK_LINES) spans.push(new THREE.Vector2(0, 0));
+  return { list: out, n, boxes, spans, lineN };
 }
 
 /**
@@ -196,16 +215,22 @@ export function createTallowTerrainMaterial({ crust, grit, macro, strata, tracks
   mat.userData.tallowAir = true;
   mat.userData.surfaceMaps = [crust.map, crust.normalMap, crust.roughnessMap, crust.aoMap, grit, macro, strata].filter(Boolean);
 
-  const ruts = segments(tracks?.ruts, MAX_RUTS);
-  const paths = segments(tracks?.paths, MAX_PATHS);
+  // Reach: a rut and its thrown-up edges are drawn within 3.2 m of the line,
+  // a trodden path within 1.1 m (its half-width and its wobble).
+  const ruts = segments(tracks?.ruts, MAX_RUTS, 3.3);
+  const paths = segments(tracks?.paths, MAX_PATHS, 1.2);
   const uniforms = {
     uGrit: { value: grit },
     uMacro: { value: macro },
     uStrata: { value: strata },
     uRuts: { value: ruts.list },
-    uRutN: { value: ruts.n },
+    uRutBox: { value: ruts.boxes },
+    uRutSpan: { value: ruts.spans },
+    uRutLines: { value: ruts.lineN },
     uPaths: { value: paths.list },
-    uPathN: { value: paths.n }
+    uPathBox: { value: paths.boxes },
+    uPathSpan: { value: paths.spans },
+    uPathLines: { value: paths.lineN }
   };
 
   mat.onBeforeCompile = (shader) => {
@@ -227,9 +252,13 @@ export function createTallowTerrainMaterial({ crust, grit, macro, strata, tracks
         uniform sampler2D uMacro;
         uniform sampler2D uStrata;
         uniform vec4 uRuts[${MAX_RUTS}];
-        uniform int uRutN;
+        uniform vec4 uRutBox[${MAX_TRACK_LINES}];
+        uniform vec2 uRutSpan[${MAX_TRACK_LINES}];
+        uniform int uRutLines;
         uniform vec4 uPaths[${MAX_PATHS}];
-        uniform int uPathN;
+        uniform vec4 uPathBox[${MAX_TRACK_LINES}];
+        uniform vec2 uPathSpan[${MAX_TRACK_LINES}];
+        uniform int uPathLines;
         varying vec4 vMask;
         varying vec3 vTW;
         varying vec3 vTN;
@@ -280,11 +309,16 @@ export function createTallowTerrainMaterial({ crust, grit, macro, strata, tracks
         // Damp: greyer and darker where brine sits under the skin.
         ground = mix(ground, ground * vec3(0.78, 0.77, 0.76), gDamp * 0.7);
 
-        // Tracks and paths, near the plant only.
+        // Tracks and paths. Each polyline is tested by its box first, so a
+        // pixel away from every track (nearly all of them) pays for eleven
+        // box tests rather than thirty-five segments and their noise.
         gRut = 0.0; gRutEdge = 0.0; gPath = 0.0;
-        if (abs(vTW.x) < 330.0 && abs(vTW.z) < 330.0) {
-          for (int i = 0; i < ${MAX_RUTS}; i++) {
-            if (i >= uRutN) break;
+        for (int l = 0; l < ${MAX_TRACK_LINES}; l++) {
+          if (l >= uRutLines) break;
+          vec4 bb = uRutBox[l];
+          if (vTW.x < bb.x || vTW.z < bb.y || vTW.x > bb.z || vTW.z > bb.w) continue;
+          int s1i = int(uRutSpan[l].y);
+          for (int i = int(uRutSpan[l].x); i < s1i; i++) {
             float along, side;
             float d = gSeg(vTW.xz, uRuts[i], along, side);
             if (d > 3.2) continue;
@@ -297,10 +331,18 @@ export function createTallowTerrainMaterial({ crust, grit, macro, strata, tracks
             gRut = max(gRut, rut * (0.55 + 0.45 * brk));
             gRutEdge = max(gRutEdge, (1.0 - smoothstep(0.34, 0.6, s1)) * (1.0 - rut));
           }
-          for (int i = 0; i < ${MAX_PATHS}; i++) {
-            if (i >= uPathN) break;
+        }
+        for (int l = 0; l < ${MAX_TRACK_LINES}; l++) {
+          if (l >= uPathLines) break;
+          vec4 bb = uPathBox[l];
+          if (vTW.x < bb.x || vTW.z < bb.y || vTW.x > bb.z || vTW.z > bb.w) continue;
+          int s1i = int(uPathSpan[l].y);
+          for (int i = int(uPathSpan[l].x); i < s1i; i++) {
             float along, side;
             float d = gSeg(vTW.xz, uPaths[i], along, side);
+            // A path is its segment, not the whole line it lies on: past 1.1 m
+            // (half-width and wobble) nothing is drawn.
+            if (d > 1.1) continue;
             float wob = (gN(vec2(along * 0.11, float(i) * 1.7)) - 0.5) * 0.5;
             gPath = max(gPath, 1.0 - smoothstep(0.35, 0.8, abs(side + wob)));
           }
@@ -367,6 +409,6 @@ export function createTallowTerrainMaterial({ crust, grit, macro, strata, tracks
           ${TALLOW_FOG_APPLY}
         #endif`);
   };
-  mat.customProgramCacheKey = () => 'tallow-terrain-v1';
+  mat.customProgramCacheKey = () => 'tallow-terrain-v2';
   return mat;
 }
