@@ -126,7 +126,7 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
 - `npm run verify` — `verify:quest` + `verify:console` + `verify:learn` + `verify:geometry`
-  + `verify:media` + `verify:flows` + `verify:ship` + `verify:tallow` + `verify:ligar`
+  + `verify:media` + `verify:flows` + `verify:ship` + `verify:voyage` + `verify:tallow` + `verify:ligar`
   + `verify:bench` + `verify:holo` + `build`. Run this before shipping. **The build
   empties `dist/`, which is gitignored** — anything placed only in `dist/` (reference art
   has been) is deleted by it. Source images belong in `public/` or `assets-src/`.
@@ -161,7 +161,10 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   half sealed behind a slag bin, and 0.38 m in front of the firebox door), and every ship
   `setMode` in `stage.js` must clamp the walk to `SHIP_BOUNDS` itself — a hand-written box
   ending at z −8.5, older than the furnace room, stopped the player half a metre inside its
-  doorway while every flood-fill passed.
+  doorway while every flood-fill passed. **Every compartment declares a light** (the pool
+  has no table of its own any more), and **every door opening keeps pocket for both
+  leaves** — half the opening of solid wall each side before the end of its run, since
+  a leaf that slides off the end of a partition sticks out into the next room.
 - `npm run verify:bench` — deploys ALL FIVE Unit 1 instruments onto the real Tallow benches,
   then ALL FOUR Unit 2 instruments onto the real Ligar benches (each fed the widest stage
   its quest declares, read from the quest's own `STAGES`), in Node, and measures them: every site faces the ground the player walks in from, and every
@@ -191,6 +194,13 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   pass an **instanced field is measured one instance at a time** (the union of a quarry's
   floor rubble is a box round the whole floor) and a mesh marked `userData.openShell` — a
   barrel vault — by its triangles, since a vault has an underside and no inside.
+- `npm run verify:voyage` — the Avalon can land and a player can get off it (see "The
+  voyage" below): with the airlock's outer leaf open, a line through the hatch at head,
+  chest and knee height meets nothing aboard (a lining sheet once stood in the opening),
+  and with it shut the line stops on the leaf; on Tallow, Ligar and Erebus the landing
+  `solveLanding` picks keeps the hull and ramp clear of every collider, puts the ramp's
+  foot on open ground inside the walk and within a ramp's reach of the sill, on a quarter
+  turn so the hull's collider box is exact; and the chevron's route aboard stays on deck.
 - `npm run verify:ligar` — Ligar's ground, held to every rule `verify:tallow` holds Tallow
   to, and three a quarry needs: it **builds the real world** and measures every pair of
   bodies (instanced fields per instance, via `userData.partBoxes`); it fails any body
@@ -261,6 +271,10 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   `_template.js`, the contract).
 - `screens/` — one render function per route, all pure string templates.
 - `three/` — persistent WebGL stage, quality-tier probe (T4/T3/T2/T1), ship interior, camera rig.
+  The ship is `three/ship.js` (orchestrator and the public `ShipInterior` API) over
+  `three/ship/`: `materials.js`, `kit.js` (the shared lining and parts), `hull.js`,
+  `doors.js`, `corridor.js` and one builder per compartment in `ship/rooms/` — see
+  "The Avalon" under §8.
   `stage.js` holds three modes (`ship` | `world` | `quest`) and `activeWorld`, which is
   whichever planet the player is standing on — Erebus (`world.js`), Tallow (`tallow.js`)
   or Ligar (`ligar.js`). The two Learn worlds share ONE arrival and render path
@@ -272,6 +286,11 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   crust out to paper, and `LIGAR_EXPOSURE` 1.16, because black stone at dusk throws almost
   nothing back. The renderer's shadow map is enabled
   at T4 only; every world light already asked for shadows and none were drawn before.
+- `three/voyage.js` — **the voyage**: flying the Avalon to a world at T4 (see "The voyage"
+  under §8). `three/ship-exterior.js` is the Avalon seen from outside plus `solveLanding`;
+  `three/guide-arrow.js` the lit chevron (and its plate on the glass) that leads to the
+  airlock aboard and to a bench or pylon on the ground; `screens/voyage.js` the helm plate
+  drawn while the ship is under way.
 - `three/tallow.js` — **Tallow**, Learn world 01 (see "Tallow" below), built from
   `three/world-data/tallow.json` with PBR surfaces from `materials/tallow-textures.js`.
 - `three/ligar.js` — **Ligar**, Learn world 02 (see "Ligar" below), built from
@@ -1097,20 +1116,24 @@ Erebus.
   doorway, a crate inside a lean-to post — and a missing import that would have
   crashed Tallow outright.
 - **Every doorway says where it goes, on both faces.** A ship of identical grey
-  openings is a maze, and a player who finds the star map by opening three doors has
-  learned the deck plan by trial and error. `buildDoorwayFrames` hangs a stencilled
-  header plate on each side of every frame, naming the compartment you walk INTO on
-  that side — the room's designator read from the spine, `SPINE` read from inside the
-  room. **The names are not written down at the frame:** `roomAt()` is asked what is
-  actually half a metre through the opening in each direction, so a bulkhead that moves
-  takes its legend with it and a plate can never name a compartment that is no longer
-  behind it. `placard()` shrinks its face to fit rather than clipping, because
-  `COMMAND BRIDGE` is twice the length of `COMMS`.
-- **Doorways are drawn where the deck is free.** `buildDoorways` runs last, after
-  every room has registered its furniture, draws ONE frame per unordered graph
-  edge at the midpoint of the two compartments, and walks along that line to the
-  first clear spot. `hatchPos` is untouched: the traversal graph and its view
-  cones are a separate thing from where the plate is welded.
+  openings is a maze. `ship/doors.js` hangs a stencilled header plate on each face of
+  every portal, naming the compartment you walk INTO on that side. **The names are not
+  written down at the frame:** `roomAt()` is asked what is actually half a metre through
+  the opening in each direction, so a bulkhead that moves takes its legend with it.
+  `placard()` shrinks its face to fit rather than clipping.
+- **Doorways are architecture.** Each opening in `WALLS` gets a portal and a pair of
+  sliding leaves exactly where the wall declares it; `hatchPos` in the graph must sit
+  within 0.75 m of one. The traversal graph and its view cones are a separate thing
+  from where the plate is welded.
+- **The lining is part of the structure.** `dressRoomShell` adds every room's wall,
+  ceiling and deck lining to `ship.hull`, so it is one object with the plating and is
+  exempt from overlap with it. It is held to a budget instead (`DRESS` in `kit.js`):
+  nothing on a wall stands more than 0.1 m off its face and the upper chamfer starts
+  at 2.45 m, so a room can stand furniture 0.05 m off a wall and know it is clear. A
+  room that needs a wall span bare (a rack to the deckhead, the airlock's outer hatch)
+  asks for it with `keepClear`. Equipment bolted to the structure may be added to the
+  hull too — the bridge's dash and shoulder stations are, because the raked plating's
+  world-aligned boxes cover the whole nose.
 
 ### The interface is in the world (`three/world-ui.js`, T4)
 
@@ -1377,6 +1400,9 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
   officer-issued meeting codes, guild contracts, and Standings scopes (Your Guild, This
   Week, a pinned row and a neighbourhood). Six open decisions are listed in its §12,
   including whether the Learn XP wall stays (recommended: yes).
+- `docs/plans/ship-redesign.md` — the Avalon rebuilt from a shared kit (done): faceted nose
+  and raked canopy, one lining section in every compartment, sliding pressure doors that
+  open as you approach, every room refurnished. Contracts kept and listed there.
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
 
@@ -1634,7 +1660,49 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     invariant that code's comment always claimed. Nothing runs there unless the player is
     genuinely stuck, so a teleport nobody has thought of yet — a cinematic, a world spawn —
     cannot strand them either.
-- Starship 3D interior: `src/three/ship.js` builds hyper-realistic physical rooms and interconnecting corridor spines along `walkPath` splines with procedural PBR durasteel plating with tangent-space normal mapping (`createDurasteelNormalTexture`), floor grating, runway halogen strips, chamfered hatch bulkheads, tactical quad-CRT bridge consoles with mechanical keyboards and dial gauges, dual flight pods with yokes and center throttle quadrant in cockpit, central holo-table with 4-planet orrery and live holographic quest projector, 2-tier bunk beds with canvas bedding and stenciled metal footlockers, anglepoise desk lamp and gear hooks in quarters, overhead gantry crane and stacked shipping containers with cargo manifest screen, 19-inch equipment racks with patch bay loops and glowing vacuum tube cages in comms, and heavy airlock blast door with manual dogging wheel, hydraulic rams, and pressure dials. Non-overlapping physics bounds, rear-shifted bridge consoles (`Z = [0.2, 1.4]`), forward-shifted cockpit pods (`Z = [2.6, 3.8]`), and center pedestal colliders ensure wide-open transverse corridors at `Z = [1.4, 2.6]` across all rooms.
+- **The Avalon** (`three/ship.js` over `three/ship/`, plan in `docs/plans/ship-redesign.md`).
+  A used freighter, BUILT out of a few standard parts repeated with discipline, not
+  modelled room by room out of boxes.
+  - **Deck plan** (`ship-rooms.js`, pure data): the bow is a faceted nose —
+    `BRIDGE_OUTLINE` runs straight sides to z 3.2, raked shoulders (two slot viewports
+    each, `SHOULDER_PORTS`) and five canopy facets closing at z 6.8; everything in the
+    bridge's box outside the outline is stepped colliders. Aft of it the spine, berths A
+    and B and comms to port, the cargo hold, the ladderwell (`FLOOR_HATCH`, a shaft
+    to the lower deck) and the airlock to starboard, the engine room (id `furnace`)
+    across the stern. `HULL_WINDOWS` are portholes cut through the port plating.
+    Deckheads 3.0 / bridge 3.4 / engine room 4.0.
+  - **The canopy** (`hull.js` `canopyGeometry`) rakes 0.9 m aft from a 0.92 m sill to a
+    2.85 m head, mitred at every joint, with cheeks closing the ends against the
+    shoulders and a lowered nose deckhead forward of z 4.3.
+  - **One section everywhere** (`kit.js` `dressRoomShell`): angled kick plate, three
+    courses of pressed panel between structural ribs (bays filled with vents, conduit
+    runs, equipment boxes and light slots), a cornice and angled upper chamfer, a
+    coffered deckhead with beams and light troughs, a tiled deck (grating over a lit
+    channel down the spine). Portholes get pressure-port trim. Textures are laid at
+    world scale: a material with `userData.worldUV` is re-mapped by `applyWorldUVs`
+    before the bake, so a bracket and a bulkhead carry rivets the same size.
+  - **Doors** (`doors.js`): a chamfered gunmetal portal proud of both faces with jamb
+    lights, a control box and name plates, and two leaves that part and slide into the
+    bulkhead (at different depths, so neighbouring doors can share pocket). **They open
+    for you** — within 1.9 m, shut again past 2.5 m — and the collider lifts the moment
+    one starts to open and returns only once nobody is near enough to be caught.
+    `ShipInterior.update(delta, time, viewer)` returns true when the set changes and
+    `stage.js` hands the walk the new colliders. Doors are no longer `[E]` targets.
+  - **Rooms** (`ship/rooms/*.js`): bridge (tactical bank to port, nav racks to
+    starboard, engineering and comms stations under the shoulder ports, the club
+    board's deck emitter), cockpit (a dash following all five facets, pilot seats on
+    rails with yokes, throttle pedestal, overhead panels), star map (octagonal
+    projector table), berths (bunk alcove, fold-down desk under the porthole, lockers,
+    washbasin; A lived in, B cadet issue), comms (rack, operator console, standings
+    screen in a hutch, transmitter, valve gallery), ladderwell (railed hatch, shaft,
+    rung ladder), cargo hold (freight box, strapped crate, chain hoist, drum rack,
+    loader), airlock (octagonal outer hatch with rams and handwheel, cycle panel, two
+    pressure suits), engine room (reactor with a flickering firebox, motivator,
+    consoles). Each room bakes its furniture with `ship.bake(group)`; about 375 meshes
+    and 190k triangles for the whole ship.
+  - Every holo, screen, terminal id, route and prompt the rest of the app uses is
+    unchanged: `clubHolo*`, `starmapHolo*`, `commsHolo*`, `commsScreenMat`,
+    `cargoScreenMat`, and the seven stations.
 - In-World 3D content transfer: In T4, primary content lives diegetically in 3D: Quests in the Star Map holo-table, Standings on the Comms CRT terminal, Inventory on the Cargo Manifest, and the Bridge Welcome Hologram directly in front of the camera's original bridge position displaying "UHS Chem Club", meeting announcements ("Next meeting 9/29 in 702"), a top-right "Close [X]" badge, directional wayfinding arrows, and a bottom prompt ("Check out the star map for the latest quests!"). Any holographic projection (Bridge announcement directory screen & vertical beam via `clubHoloGroup`/`clubHoloBeam`, or Star Map holo-table planetary orrery & floating quest screen via `starmapHoloGroup`) always displays by default; dismissal flags (`clubHoloClosed`, `starmapHoloClosed`) are session-scoped (`sessionStorage`, cleared on new session/sign-in) so holograms only stay dismissed for the active session and pop back up on the next session. Projections can be closed and opened by pressing the "X" key (`stage.toggleAnyHolo()`, `stage.toggleClubHolo()`, `stage.toggleStarmapHolo()`), dispatching `club-holo:open|close` and `starmap-holo:open|close` events with debounced key handling.
   - **ONE HANDLER OWNS THE `X` KEY.** It is the window listener in `stage.js`,
     and nothing else may bind it. `FpsControls` used to bind it too, so every
@@ -1658,6 +1726,45 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     since raising the HUD nav is 40 px off the top of a phone. In T3 and below, 2D full-page screens (`.screen-container`) remain active with matching dismissible/re-openable announcement cards with the same star map quest callout. Doorway frames in comms are positioned at corridor thresholds to prevent obstructing the Fleet Comms standings screen, and the Cargo Manifest terminal screen is offset (`Z = 0.370`) with polygon offsetting to eliminate coplanar Z-fighting and screen glitching.
 - Erebus world scene: `src/three/world.js` and `src/three/world-data/erebus.json` define The Charge Gardens basin with 20 instanced pylon structures along a walkable route, survey lander ("SANDSTALKER") with boarding ramp, stratified sedimentary rock outcrops, procedural terrain heightmap (`getTerrainHeight`), amber celestial sky, banded gas giant vista (with `fog: false` celestial bodies), tuned desert haze (`fogNear: 70`, `fogFar: 280`), and atmospheric dust motes.
 - T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `CLOSE` dismiss controls. Star Map holo-table integrates Sector 01 status and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates standings; Settings integrates graphics tier (T4 default) and audio sliders. Bridge displays the floating directory kiosk instead of WASD/mouse look text prompts.
+- **The voyage — at T4 a world is FLOWN to, never stepped into** (`three/voyage.js`).
+  A signed-in player aboard who asks for a world — the star map, the Learn road, the
+  bridge's quest key, the airlock terminal — is not teleported and gets no film: the router
+  (`tryVoyage`) hands the route to `stage.requestVoyage`, draws the helm plate, and holds
+  the route until the player walks off the ship (`voyage:arrived`), then draws it with the
+  player standing where the ramp left them (`stage._arrivalHold`, honoured by
+  `enterWorldScene` / `enterLearnWorld`). One unbroken shot: the player is walked to the
+  pilot's place and turned to the canopy, the drive spools, the stars stretch into
+  streaks down a lit tunnel with the field of view kicking wide, the ship drops out in
+  front of the planet (the same celestial shaders as the vista, in the world's palette,
+  nothing on its surface modelled), flies to it, enters with plasma on the glass, comes
+  down through cloud onto the REAL built world, flies to its landing pad and sets down.
+  - **Two passes, one camera.** The player never leaves the ship's scene. Each frame draws
+    the OUTSIDE (the space scene, or the destination world's own scene) through a second
+    camera posed at (ship pose) x (player camera), then clears depth and draws the
+    interior over it. The interior is opaque except its glass, so the outside is what the
+    canopy, shoulder ports and portholes show; moving the ship is moving one matrix, and
+    nothing aboard — colliders, doors, terminals, aim — is ever transformed.
+  - **The only moment the outside changes from "a planet" to "this place" is inside a
+    full cloud deck** in the world's own fog colour, which then breaks up as the ship
+    descends. `buildFarGround` rings the built square with the terrain's own material so
+    it reads as part of a planet from altitude; the world's fog is closed in and eased
+    back out. A jump flash covers the moment the ship's own starfield and vista are
+    released. No other cut exists.
+  - **Down, the player walks the ship.** A chevron (`GuideArrow`) leads to the airlock;
+    [E] at its hatch reads `OPEN THE HATCH // DISEMBARK ONTO <WORLD>`, the hinged outer leaf
+    (`ship.airlockLeaf`, `setAirlockOpen`, `AIRLOCK_HATCH` cut through the plating) swings
+    in and the player is walked out and down the ramp. Once through the hull the interior
+    stops being drawn and the exterior model (`buildShipExterior`) appears behind them. On
+    the ground the ship stands where it landed (its boxes join the walk's colliders), [E]
+    at the ramp is `BOARD THE AVALON`, and any route back to the ship boards it — in
+    through the airlock, still landed — rather than teleporting to space. Asking for
+    another world from a landed ship is a lift-off, a climb through the cloud, a pull
+    away from the world just left, and the jump.
+  - A **quest route** lands the ship on its world and leads the player to that quest's
+    bench (only if it is open); `#/quest` leads to the next pylon. `Skip` on the helm plate
+    hurries the flight (x6); it never cuts. The voyage stands down for T3 and below, a
+    reload onto a world route (the first route of a page load), a signed-out player and
+    `session.reduceMotion` — each keeps the old path, launch film included at T3.
 - T4 Learn deployment: In T4, `#/learn/unit01` enters the 3D Tallow world
   (`stage.enterTallowScene(siteId)`), and `#/learn/unit02` enters Ligar
   (`stage.enterLigarScene(siteId)`); walking to a bench and pressing `[E]` raises a
@@ -1697,7 +1804,6 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - Planetary transit cinematics: Launch and atmospheric descent cinematics (`launch`, `erebus_descent`) trigger on transit to Sector 01 from the Star Map, Bridge, and Airlock without persistent one-time lockout, and are skippable via Click/Space/Esc. FPS controls are disabled during cinematic playback to prevent input leakage into the background world.
 - Hero/prop shapes: `tools/hunyuan3d-shape-t4.ipynb` batches concept PNG/JPG images via Hunyuan3D 2.1 shape-only pipeline into `/kaggle/working/raw/*.glb` on NVIDIA T4; texturing is handled in Blender.
 - Nano Banana PBR textures: procedural canvas PBR pipeline in `src/three/materials/textures.js` generating albedo, tangent-space normal maps, roughness, phosphor cathode distortion vignettes, and custom station screens (`createDurasteelTexture`, `createDurasteelNormalTexture`, `createBlastDoorTexture`, `createRackPanelTexture`, `createFootlockerTexture`, `createContainerStencilTexture`, `createKeyboardTexture`, `createDialGaugeTexture`, `createVacuumTubeTexture`, `createCrtScreenTexture`) coupled with Three.js `MeshStandardMaterial`.
-- Starship cockpit: faceted durasteel canopy mullions, overhead avionics rack with amber task lighting, dual analog yokes, center throttle quadrant, armored bucket seats with 5-point harness straps, twin CRT monitors per pod, rudder pedals.
 - Celestial vista: chromatic gas giant with rings, the banded desert planet Erebus, moons,
   an asteroid belt. Stars are blue-white and sand-gold, not neon.
   - `three/materials/celestial.js` draws every body with its own shader instead of image
@@ -1712,10 +1818,10 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   - `stage.js` gives the ship scene `RoomEnvironment` PMREM
     (`environmentIntensity` 0.58, tone mapping exposure 1.28) so metal surfaces show rich specular reflections.
 - Interior lighting rig:
-  - `src/three/ship-lighting.js` implements `ShipLightPool` dynamically selecting the 7 closest light sources to the camera from 21 compartment and corridor positions with soft decay (1.2) and generous distance, plus a camera-mounted suit inspection light (strictly <= 8 PointLights for locked 60fps forward rendering).
+  - `src/three/ship-lighting.js` implements `ShipLightPool`, lighting the 7 sources nearest the camera (strictly <= 8 PointLights for locked 60fps forward rendering). **The rooms declare the sources** with `ship.addLight` at the fixtures they actually built; `stage.js` hands `shipInterior.lightSources` to the pool, and the table in `ship-lighting.js` is only a fallback.
   - Ambient base fill: `HemisphereLight` (0x8faac8 / 0x2e3544, 2.2) and `AmbientLight` (0x4a5668, 1.5) preventing crushed shadow voids.
   - Forward canopy starlight: `DirectionalLight` (0xdce6f8, 2.6) aimed from (-8, 16, 26) through the front canopy into the cockpit and bridge.
-  - Physical 3D fixtures: `createCeilingLuminaire` mounts cast iron protective cages with warm sodium diffuser panels (`luminaireMat` #ffe6b0) across the central spine, transverse corridor, wing corridors, and all compartments, complemented by dual halogen runway guide strips embedded into the deck.
+  - Physical fixtures: the light troughs in every coffered deckhead, the amber line under the spine's cornice, the lit channel under the spine's grating, jamb lights on every portal, and the rooms' own lamps and screens.
 - Routes bind environment stills: `/art/cockpit.jpg`, `starmap.jpg`, `crucible.jpg`,
   `cargo.jpg`, `quarters.jpg`, `comms.jpg`, `airlock.jpg`.
 - The app mark (`public/icon.svg`, rasterized to `icon-180/192/512.png`, and

@@ -57,11 +57,17 @@ export class CameraRig {
     this.transitionDuration = 700; // ms
     this.startTime = 0;
     this.onArrival = null;
+    /** Replaced by the stage: true while something else owns the camera. */
+    this.isLocked = () => false;
   }
 
   moveTo(locationKey, onArrival) {
     const anchor = SHIP_ANCHORS[locationKey];
     if (!anchor) return;
+    // While the Avalon is flying (voyage.js) the flight holds the camera; a
+    // screen asking to be looked at does not get to pull the pilot out of
+    // their seat mid-jump.
+    if (this.isLocked()) return;
 
     this.currentLocation = locationKey;
     this.onArrival = onArrival || null;

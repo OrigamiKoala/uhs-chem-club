@@ -1,0 +1,127 @@
+/*
+ * voyage.css — The helm plate and the guide plate (three/voyage.js).
+ *
+ * Both sit over a live 3D view, so both are small, dark and out of the way:
+ * the flight is the picture, and these only say where it is going. No blur
+ * (a full-screen WebGL frame is the one thing a handset cannot afford to
+ * blur), no glow: the only lit thing on either is the amber that means "this
+ * is live".
+ */
+
+.voyage-hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.voyage-plate {
+  pointer-events: auto;
+  position: absolute;
+  top: calc(var(--hud-h) + 14px);
+  left: 16px;
+  width: min(320px, calc(100vw - 32px));
+  padding: 0.75rem 0.9rem 0.8rem;
+  background: rgba(15, 14, 17, 0.82);
+  border: 1px solid var(--border-durasteel);
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 var(--seam-light), inset 0 -1px 0 var(--seam-dark), 0 12px 30px rgba(0, 0, 0, 0.55);
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.voyage-plate-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-height: 28px;
+}
+
+.voyage-plate-head .eyebrow { font-size: 0.66rem; letter-spacing: 0.16em; }
+.voyage-skip { font-size: 0.66rem; padding: 4px 12px; min-height: 28px; }
+
+.voyage-dest {
+  margin-top: 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+
+.voyage-phase {
+  margin-top: 0.2rem;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.voyage-plate.is-down .voyage-phase { color: var(--text-amber); }
+
+.voyage-bar {
+  margin-top: 0.6rem;
+  height: 3px;
+  background: var(--plate-400);
+  overflow: hidden;
+}
+
+.voyage-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent-amber);
+  transition: width 0.25s linear;
+}
+
+.voyage-plate.is-down .voyage-bar { display: none; }
+
+/* The guide plate: the name of where the chevron leads, how far, and which
+   way — so the way is known even with the chevron behind you. */
+.voyage-guide {
+  position: fixed;
+  top: calc(var(--hud-h) + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 19;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.8rem 0.4rem 0.45rem;
+  background: rgba(15, 14, 17, 0.8);
+  border: 1px solid var(--border-durasteel);
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 var(--seam-light), 0 8px 22px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  font-family: var(--font-mono);
+  max-width: calc(100vw - 32px);
+}
+
+.voyage-guide[hidden] { display: none; }
+
+.voyage-guide-dial { width: 30px; height: 30px; flex: none; }
+.voyage-guide-ring { fill: var(--plate-100); stroke: var(--plate-600); stroke-width: 1; }
+.voyage-guide-chev { fill: var(--accent-amber); }
+
+.voyage-guide-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.voyage-guide-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: var(--text-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.voyage-guide-dist { font-size: 0.64rem; letter-spacing: 0.12em; color: var(--text-amber); }
+
+@media (max-width: 760px) {
+  .voyage-plate { top: calc(var(--hud-h) + 8px); left: 8px; width: min(280px, calc(100vw - 16px)); }
+  .voyage-guide { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 150px); }
+}
+
+/* A sideways phone keeps the left of the glass for the view. */
+@media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  .voyage-plate { left: auto; right: 12px; top: calc(var(--hud-h) + 6px); width: 250px; }
+  .voyage-guide { top: calc(var(--hud-h) + 6px); bottom: auto; }
+}

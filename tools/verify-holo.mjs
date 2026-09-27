@@ -82,7 +82,8 @@ if (!/NO GUILD TELEMETRY/.test(standings)) {
   fail('createCommsStandingsTexture says nothing when it has no rows');
 }
 
-const ship = read('../src/three/ship.js');
+// The comms room builds the screen now that each compartment has its own file.
+const ship = read('../src/three/ship/rooms/comms.js');
 if (!/createCommsStandingsTexture\(\[\], ''\)/.test(ship)) {
   fail('the comms screen is not built empty — it must start with no rows and be ' +
     'filled by updateDisplays once the real board arrives');

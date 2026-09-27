@@ -168,9 +168,13 @@ export function renderBridge(container) {
 
     container.querySelector(".bridge-quest-cta")?.addEventListener("click", async (e) => {
       e.preventDefault();
-      try {
-        await playCinematic("launch");
-      } catch (err) { }
+      // At T4 the Avalon flies there itself (three/voyage.js); the launch
+      // film is for the tiers that cannot draw the flight.
+      if (!stage.canVoyage?.("erebus")) {
+        try {
+          await playCinematic("launch");
+        } catch (err) { }
+      }
       window.location.hash = "#/quest";
     });
 

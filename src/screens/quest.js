@@ -286,10 +286,19 @@ export function renderQuest(container) {
   // Initialize 3D Quest Scene unless on Tier 1
   const isT4 = tierManager.currentTier === 'T4';
 
+  // A player who flew here and walked down the Avalon's ramp has already
+  // arrived: the descent film would be a second, different landing.
+  const arrivedByVoyage = isT4 && Boolean(stage.consumeVoyageArrival?.());
+
   if (isT4) {
     stage.enterWorldScene();
-    if (stage.fpsControls && QUEST1_STORY.arrival?.cinematic) {
+    if (stage.fpsControls && QUEST1_STORY.arrival?.cinematic && !arrivedByVoyage) {
       stage.fpsControls.enabled = false;
+    }
+    if (arrivedByVoyage && stage.worldScene) {
+      // Lead them from the ramp to the pylon that is waiting for them.
+      const site = stage.worldScene.data.sites[Math.min(maxStageReached, TOTAL_STAGES - 1)];
+      if (site) stage.setWorldWaypoint({ x: site.pos[0], z: site.pos[2], label: site.label });
     }
     if (stage.worldScene) {
       stage.worldScene.setClearedStages(new Set(Array.from({ length: maxStageReached }, (_, i) => i + 1)));
@@ -1246,7 +1255,7 @@ export function renderQuest(container) {
   // 1. Render the current stage immediately from bundled configs (0ms latency)
   // Play arrival cinematic (Erebus Descent) on entry to Sector 01
   const startQuest = async () => {
-    if (QUEST1_STORY.arrival?.cinematic) {
+    if (QUEST1_STORY.arrival?.cinematic && !arrivedByVoyage) {
       if (stage.fpsControls) stage.fpsControls.enabled = false;
       await playCinematic(QUEST1_STORY.arrival.cinematic);
     }

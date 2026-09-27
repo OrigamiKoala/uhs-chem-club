@@ -33,7 +33,7 @@
 
 import { SHIP_GRAPH } from '../src/three/ship-graph.js';
 import {
-  HULL, SHIP_BOUNDS, SHIP_SPAWN, ROOMS, WALLS, DOOR_CLEAR,
+  HULL, SHIP_BOUNDS, SHIP_SPAWN, ROOMS, WALLS, DOOR_CLEAR, WALL_T,
   wallSegments, doorways, roomAt
 } from '../src/three/ship-rooms.js';
 
@@ -231,6 +231,21 @@ for (const wall of WALLS) {
 }
 assert(DOOR_CLEAR >= 1.3, `every declared doorway is at least 1.3 m clear (${DOOR_CLEAR} m)`);
 
+/*
+ * A door's leaves slide into the bulkhead, half the opening each way. A leaf
+ * that runs off the end of its partition sticks out into the next room, so
+ * every opening keeps that much wall between it and the end of its run (the
+ * end is allowed to be buried in the perpendicular bulkhead it meets).
+ */
+for (const wall of WALLS) {
+  for (const [a, b] of wall.openings || []) {
+    const travel = (b - a) / 2 + 0.015;
+    const lo = a - travel, hi = b + travel;
+    assert(lo >= wall.from - WALL_T / 2 && hi <= wall.to + WALL_T / 2,
+      `${wall.id}: the door at ${((a + b) / 2).toFixed(2)} has pocket for both leaves (${lo.toFixed(2)}..${hi.toFixed(2)} within ${wall.from}..${wall.to})`);
+  }
+}
+
 for (const [id, r] of Object.entries(ROOMS)) {
   assert(r.maxX > r.minX && r.maxZ > r.minZ, `room ${id} has positive extent`);
   assert(
@@ -400,6 +415,19 @@ assert(hatchBad.length === 0, `every hatch marker stands on walkable deck`);
 const sight = ship.assertClearSightline(BRIDGE_STAND, CLUB_BOARD_POS);
 assert(sight.clear,
   `nothing stands between the bridge standing position and the club board${sight.clear ? '' : ` (blocked at ${sight.at?.join(', ')})`}`);
+
+/*
+ * EVERY COMPARTMENT IS LIT BY WHAT IS IN IT.
+ *
+ * The light pool no longer carries a table of its own: the rooms declare the
+ * fixtures they built. So a room whose builder forgot is a dark room, and
+ * nothing else would notice until somebody walked into it.
+ */
+for (const [id, r] of Object.entries(ROOMS)) {
+  const lit = ship.lightSources.filter(l =>
+    l.pos.x >= r.minX && l.pos.x <= r.maxX && l.pos.z >= r.minZ && l.pos.z <= r.maxZ);
+  assert(lit.length > 0, `${id}: declares at least one light (${lit.length})`);
+}
 
 /* ================================================= HOLO PROJECTIONS */
 
