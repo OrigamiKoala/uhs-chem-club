@@ -165,6 +165,10 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   has no table of its own any more), and **every door opening keeps pocket for both
   leaves** — half the opening of solid wall each side before the end of its run, since
   a leaf that slides off the end of a partition sticks out into the next room.
+  On Erebus it also **flood-fills the walk from the spawn** against the real colliders
+  (player radius included) and requires every pylon's approach mark to be reached: the
+  basin now has outcrops, an arch, a skeleton and a derelict in it, and a landmark in the
+  wrong place would wall a pylon off.
 - `npm run verify:bench` — deploys ALL FIVE Unit 1 instruments onto the real Tallow benches,
   then ALL FOUR Unit 2 instruments onto the real Ligar benches (each fed the widest stage
   its quest declares, read from the quest's own `STAGES`), in Node, and measures them: every site faces the ground the player walks in from, and every
@@ -281,10 +285,13 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   (`enterLearnWorld`, `isLearnWorld`, `nearExitPad`, the Learn branch of the loop), so
   Ligar cannot come to differ from Tallow in how a player lands, walks or leaves; the
   exit pad is read from the world's own `landing-pad` landmark. Tone-mapping exposure is
-  per place: `SHIP_EXPOSURE` 1.28 for the ship and Erebus, `TALLOW_EXPOSURE` 0.92 for the
+  per place: `SHIP_EXPOSURE` 1.28 for the ship, `EREBUS_EXPOSURE` 0.82 for the desert
+  (its sky and sand are lit to daylight levels), `TALLOW_EXPOSURE` 0.92 for the
   salt pan, because a bright overcast rendered at the dark interior's exposure washes the
   crust out to paper, and `LIGAR_EXPOSURE` 1.16, because black stone at dusk throws almost
-  nothing back. The renderer's shadow map is enabled
+  nothing back. **A chamber that brings its own room is drawn at `SHIP_EXPOSURE` whatever
+  world it was opened on** — the Charge Gardens were lit for it — while a bench deployed
+  in a world takes that world's (the quest branch of `render()`). The renderer's shadow map is enabled
   at T4 only; every world light already asked for shadows and none were drawn before.
 - `three/voyage.js` — **the voyage**: flying the Avalon to a world at T4 (see "The voyage"
   under §8). `three/ship-exterior.js` is the Avalon seen from outside plus `solveLanding`;
@@ -1724,7 +1731,54 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     at its 1.4 m standing distance, minus the HUD, which covers the top of the
     view. It never scales above 1, and it re-fits on resize and on sign-in,
     since raising the HUD nav is 40 px off the top of a phone. In T3 and below, 2D full-page screens (`.screen-container`) remain active with matching dismissible/re-openable announcement cards with the same star map quest callout. Doorway frames in comms are positioned at corridor thresholds to prevent obstructing the Fleet Comms standings screen, and the Cargo Manifest terminal screen is offset (`Z = 0.370`) with polygon offsetting to eliminate coplanar Z-fighting and screen glitching.
-- Erebus world scene: `src/three/world.js` and `src/three/world-data/erebus.json` define The Charge Gardens basin with 20 instanced pylon structures along a walkable route, survey lander ("SANDSTALKER") with boarding ramp, stratified sedimentary rock outcrops, procedural terrain heightmap (`getTerrainHeight`), amber celestial sky, banded gas giant vista (with `fog: false` celestial bodies), tuned desert haze (`fogNear: 70`, `fogFar: 280`), and atmospheric dust motes.
+- **Erebus** (`three/world.js` over `three/erebus/`, data in `world-data/erebus.json`,
+  written by `tools/generate-erebus-world.mjs`). A dry lakebed on a desert moon at low sun
+  under a ringed gas giant: the twenty pylons on the rim of the basin, a dune sea climbing
+  away outside it, buttes on the horizon and the wreck of something enormous in the haze
+  to the west. `world.js` keeps the whole public contract (`scene`, `data`, `colliders`,
+  `pylonMeshes`, `terrainMesh`, `getTerrainHeight`, `setClearedStages`, `update`,
+  `getAimTargets`); what the world is made of lives beside it:
+  - **One height function, one ground to the horizon** (`erebus/terrain.js`).
+    `makeHeightField` is analytic — bowl, rim, a flat cracked playa in the middle,
+    asymmetric transverse dunes on draa, stepped bedrock far out, sand aprons round every
+    landmark and a lee drift behind every pylon — so the walk, `solveLanding` and the
+    Node checks stand on exactly the ground that is drawn. The mesh is ONE grid, 1.25 m
+    across the walked square and growing geometrically to an 880 m disc; there is no
+    backdrop seam because there is no second mesh. Every surface that shows wind follows
+    `WIND`, which matches the ripples combed into the sand texture. A coarse copy of the
+    walk on layer 1 is the only thing the sun's shadow camera draws of the ground.
+  - **One sky function** (`erebus/atmosphere.js`). `erebusSky` / `erebusAir` draw the
+    dome (always centred on whatever camera draws it) and are ALSO the fog: every material
+    has `fog_fragment` replaced by aerial perspective toward the sky in the direction it is
+    seen, thinner with altitude, still keyed to `scene.fog.near/far` so the voyage can
+    close it into a cloud deck. The gas giant and its moon are the `celestial.js` shaders
+    with the sky ADDED and the air column dimming them (a daytime moon's night side is sky,
+    not black); the rings blend additively. The sun is 17 degrees up, dust-reddened, with a
+    soft disc; its shadow box follows the player in whole texels. `createSkyEnvironment`
+    PMREMs the sky so metal reflects the air it stands in.
+  - **One geology** (`erebus/rocks.js`). `STRATA` is one stack of beds indexed by
+    ALTITUDE: it decides both how far a face stands proud (hard beds ledge, soft recess)
+    and the colour painted there, for every rock, the far buttes and the bedrock in the
+    terrain alike — so the same bands appear at the same heights across the whole map.
+    Shapes: fracture-cut `boulderGeometry`, lathed `columnGeometry` (lobed plan, V-gullies,
+    caprock, talus, sandblasted notch) and `archGeometry`. The rock shader is triplanar in
+    world space with varnish streaks and sand on up-facing surfaces; the far buttes use
+    the `lite` variant.
+  - **Landmarks** (`erebus/landmarks.js`) are one group each (scree included, instanced,
+    with per-instance `partBoxes`), carry a footprint `radius` the landing solver avoids,
+    and push their own colliders: sandstone spire, hoodoos with balanced caprocks, butte,
+    outcrop, a boulder spill, a walk-under arch, a giant skeleton and a broken-backed
+    freighter. `vista.js` is `phys: 'ambient'`: buttes 240–760 m out and a 300 m capital
+    wreck nose-down in the dunes. `lander.js` is SANDSTALKER as a lofted craft whose legs
+    each reach the ground under them. `effects.js` is the moving air: dust motes wrapped
+    round the eye, sand streaming over the ground in gusts, and dust devils on the flats.
+  - **Plate is desert plate** (`erebus/surfaces.js`): `hullPlate` is paint bleached by sun
+    and chipped by sand down to primer and metal, not rust run down by rain — one shared
+    set per wear grade, tinted per object. `addDustCover` lays sand on whatever faces up.
+    pbr-kit's normal maps carry green inverted against three's tangent frame (a bump reads
+    as a dimple), so every Erebus material flips normal-map y.
+  - `tools/generate-erebus-world.mjs` rule 12 keeps every landmark's footprint (plus its
+    scree) off the pylon ring.
 - T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `CLOSE` dismiss controls. Star Map holo-table integrates Sector 01 status and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates standings; Settings integrates graphics tier (T4 default) and audio sliders. Bridge displays the floating directory kiosk instead of WASD/mouse look text prompts.
 - **The voyage — at T4 a world is FLOWN to, never stepped into** (`three/voyage.js`).
   A signed-in player aboard who asks for a world — the star map, the Learn road, the
@@ -1747,8 +1801,9 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   - **The only moment the outside changes from "a planet" to "this place" is inside a
     full cloud deck** in the world's own fog colour, which then breaks up as the ship
     descends. `buildFarGround` rings the built square with the terrain's own material so
-    it reads as part of a planet from altitude; the world's fog is closed in and eased
-    back out. A jump flash covers the moment the ship's own starfield and vista are
+    it reads as part of a planet from altitude (a world whose own ground already runs to
+    the horizon sets `hasFarTerrain` and gets no ring — Erebus does); the world's fog is
+    closed in and eased back out. A jump flash covers the moment the ship's own starfield and vista are
     released. No other cut exists.
   - **Down, the player walks the ship.** A chevron (`GuideArrow`) leads to the airlock;
     [E] at its hatch reads `OPEN THE HATCH // DISEMBARK ONTO <WORLD>`, the hinged outer leaf

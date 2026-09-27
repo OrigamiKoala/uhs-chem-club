@@ -1,349 +1,218 @@
 /**
- * world.js — Erebus 3D World Scene (The Charge Gardens)
- * High-fidelity PBR planetary environment matching 3d-conversion-prompts.md §3.1 & §4.4
- * and concept art hero_desert_outpost.jpg.
+ * world.js — Erebus, the Charge Gardens: the world a player walks at T4.
  *
- * Supports unconstrained WASD navigation, procedural terrain heightmap, instanced pylons,
- * survey lander ("SANDSTALKER"), wind-carved sedimentary rock formations, celestial gas giant vista,
- * and atmospheric sand particles.
+ * A dry basin on a desert moon under a ringed gas giant, at low sun. The
+ * twenty pylons stand on the rim of an old lakebed; outside the rim a dune sea
+ * climbs toward buttes on the horizon; the wreck of something enormous lies in
+ * the haze to the west.
+ *
+ * This file is the orchestrator and the public face the rest of the app knows:
+ * `scene`, `data`, `colliders`, `pylonMeshes`, `terrainMesh`,
+ * `getTerrainHeight`, `setClearedStages`, `update` and `getAimTargets` are the
+ * same contract they always were. What the world is MADE of lives beside it in
+ * `erebus/`:
+ *
+ *   terrain.js    the height function (analytic, so the walk and the Node
+ *                 checks stand on the drawn ground), one mesh to the horizon,
+ *                 and the sand / lakebed / bedrock surface
+ *   atmosphere.js the sky, the sun, aerial perspective on every material, the
+ *                 gas giant and its moon behind the air
+ *   rocks.js      one geology for every stone: strata by altitude, fractured
+ *                 boulders, buttes and spires, the arch
+ *   landmarks.js  what stands in the walk: outcrops with their scree, the arch,
+ *                 the bones, the derelict
+ *   vista.js      what stands beyond it: the buttes on the horizon and the wreck
+ *   lander.js     SANDSTALKER
+ *   effects.js    the air moving: dust at the eye, sand streaming over the
+ *                 ground, dust devils walking the far flats
  */
 
 import * as THREE from "three";
 import {
-  desertSand, sedimentaryRock, platedMetal,
-  buildMaterial, enableAO, addDetailNormal, addMacroVariation,
-  texSize, heightField, heightToNormal, asDataTexture, fbm,
+  saltHardpan, sedimentaryRock,
+  buildMaterial, texSize, heightField, asDataTexture, fbm,
   boltRing, cableRun, placard, hazardStripe, mergeStatic
 } from "./materials/pbr-kit.js";
 import erebusData from "./world-data/erebus.json" with { type: "json" };
-import { tierManager, tierAtLeast } from "./tier.js";
+import { tierAtLeast } from "./tier.js";
 import { aimBox } from "./aim-target.js";
+import { makeHeightField, buildTerrainGeometry, createTerrainMaterial, buildShadowCaster } from "./erebus/terrain.js";
+import {
+  createSkyDome, createCelestials, createLights, followShadow, createSkyEnvironment,
+  applyAtmosphereToScene, skyUniforms, SKY
+} from "./erebus/atmosphere.js";
+import { createRockMaterial, createStrataTexture } from "./erebus/rocks.js";
+import { buildLander } from "./erebus/lander.js";
+import { duneSand, hullMaterial, addDustCover } from "./erebus/surfaces.js";
+import { buildLandmark } from "./erebus/landmarks.js";
+import { buildVista } from "./erebus/vista.js";
+import { createEffects } from "./erebus/effects.js";
 
 export class WorldScene {
   constructor(renderer) {
     this.renderer = renderer;
     this.data = erebusData;
     this.scene = new THREE.Scene();
+    this.scene.name = "erebus";
 
     this.pylonMeshes = [];
     this.pylonIndicators = [];
-    this.dustParticles = null;
     this.terrainMesh = null;
     this.colliders = []; // Radial obstacles { x, z, radius } and AABBs
+    // The ground runs to the horizon; the voyage must not lay its own ring over it.
+    this.hasFarTerrain = true;
+    this.t4 = tierAtLeast("T4");
+    this.time = 0;
 
+    this.field = makeHeightField(this.data);
+
+    this.initSurfaces();
     this.initLighting();
     this.initSky();
     this.initTerrain();
     this.initSurveyLander();
     this.initRockLandmarks();
+    this.initVista();
     this.initPylons();
     this.initAtmosphericDust();
+
+    // Every surface in the world takes the air, including the ones built above.
+    applyAtmosphereToScene(this.scene);
+  }
+
+  /** The ground under (x, z). Pure and analytic: the drawn mesh is built from it. */
+  getTerrainHeight(x, z) {
+    return this.field.height(x, z);
+  }
+
+  /**
+   * The textures every surface shares, generated once. Sand, lakebed clay and
+   * the bedded-rock detail all come off pbr-kit's height-field generators, so
+   * each map set agrees with itself.
+   */
+  initSurfaces() {
+    const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
+    const withAniso = (m) => {
+      for (const t of [m.map, m.normalMap, m.roughnessMap, m.aoMap]) if (t) t.anisotropy = aniso;
+      return m;
+    };
+    this.sandSet = withAniso(buildMaterial(
+      duneSand({ size: texSize(1024), seed: 9 }),
+      { repeat: 1 }
+    ));
+    this.playaSet = withAniso(buildMaterial(
+      saltHardpan({ size: texSize(512), seed: 21, pale: '#d2b08a', deep: '#86644a', bloom: '#e6d2b4' }),
+      { repeat: 1 }
+    ));
+    const macro = heightField(texSize(256), (u, v) =>
+      fbm(u * 4, v * 4, { octaves: 5, period: 4, seed: 0x811 })
+    );
+    this.macroMap = asDataTexture(macro, 1);
+    this.strataMap = createStrataTexture();
+    this.rockDetail = withAniso(buildMaterial(
+      sedimentaryRock({ warm: '#a08a72', cool: '#6c5f50', seed: 33, size: texSize(512) }),
+      { repeat: 1 }
+    ));
+    this.rockMat = createRockMaterial({
+      detail: this.rockDetail, sand: this.sandSet.map, macro: this.macroMap, strata: this.strataMap
+    });
   }
 
   initLighting() {
+    const { sun, hemi } = createLights({ shadows: this.t4 });
+    this.sunLight = sun;
+    this.scene.add(sun, sun.target, hemi);
+
+    /*
+     * The haze. The world's materials read `fogNear` / `fogFar` from this fog,
+     * but their fog is aerial perspective toward the sky in the direction they
+     * are seen (atmosphere.js), so the colour here is only what the voyage's
+     * cloud deck is tinted with on the way down.
+     */
     const amb = this.data.ambience;
-
-    // Ambient fill
-    const ambientLight = new THREE.AmbientLight(amb.fillLight, 1.2);
-    this.scene.add(ambientLight);
-
-    // Warm sodium key light from low sun
-    this.sunLight = new THREE.DirectionalLight(amb.keyLight, 2.6);
-    this.sunLight.position.set(60, 35, 75);
-    this.sunLight.castShadow = tierAtLeast("T4");
-    this.scene.add(this.sunLight);
-
-    // Deep starlight back-fill
-    const fillLight = new THREE.DirectionalLight(amb.fillLight, 0.8);
-    fillLight.position.set(-50, 20, -60);
-    this.scene.add(fillLight);
-
-    // Distance fog matching amber desert haze
     this.scene.fog = new THREE.Fog(amb.fogColor, amb.fogNear, amb.fogFar);
-    this.scene.background = new THREE.Color(amb.fogColor);
+    this.scene.background = SKY.haze.clone();
+
+    const env = createSkyEnvironment(this.renderer);
+    if (env) {
+      this.envTarget = env;
+      this.scene.environment = env.texture;
+      this.scene.environmentIntensity = 0.55;
+    }
   }
 
   initSky() {
-    // 360 celestial hemisphere
-    const skyGeo = new THREE.SphereGeometry(300, 32, 24);
-    const skyMat = new THREE.ShaderMaterial({
-      side: THREE.BackSide,
-      uniforms: {
-        topColor: { value: new THREE.Color(0x1a0f08) },
-        bottomColor: { value: new THREE.Color(0x9a5b1f) },
-        horizonColor: { value: new THREE.Color(0xd99423) },
-        offset: { value: 15 },
-        exponent: { value: 0.7 }
-      },
-      vertexShader: `
-        varying vec3 vWorldPosition;
-        void main() {
-          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-          vWorldPosition = worldPosition.xyz;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 topColor;
-        uniform vec3 bottomColor;
-        uniform vec3 horizonColor;
-        uniform float offset;
-        uniform float exponent;
-        varying vec3 vWorldPosition;
-        void main() {
-          float h = normalize(vWorldPosition + vec3(0.0, offset, 0.0)).y;
-          vec3 col = mix(horizonColor, topColor, max(pow(max(h, 0.0), exponent), 0.0));
-          if (h < 0.0) {
-            col = mix(horizonColor, bottomColor, min(-h * 1.5, 1.0));
-          }
-          gl_FragColor = vec4(col, 1.0);
-        }
-      `
-    });
-    const skyMesh = new THREE.Mesh(skyGeo, skyMat);
-    // `phys` tells the physics check what kind of thing this is. A sky encloses
-    // the world by definition and is not an object standing in it; neither are
-    // the bodies hanging in it, which are two hundred metres out and drawn
-    // without fog so they read as distance.
-    skyMesh.userData.phys = 'ambient';
-    this.scene.add(skyMesh);
-
-    // Low-horizon banded Gas Giant with edge-on rings
-    const giantGroup = new THREE.Group();
-    giantGroup.position.set(160, 45, -220);
-    giantGroup.rotation.z = 0.25;
-
-    const giantGeo = new THREE.SphereGeometry(38, 32, 32);
-    const giantMat = new THREE.MeshStandardMaterial({
-      color: 0x9c7442,
-      roughness: 0.95,
-      metalness: 0.1,
-      fog: false
-    });
-    const giantMesh = new THREE.Mesh(giantGeo, giantMat);
-    giantGroup.add(giantMesh);
-
-    // Edge-on ring system
-    const ringGeo = new THREE.RingGeometry(48, 85, 48);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x6e5232,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.8,
-      fog: false
-    });
-    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-    ringMesh.rotation.x = Math.PI / 2;
-    giantGroup.add(ringMesh);
-
-    // Small pale moon
-    const moonGeo = new THREE.SphereGeometry(4.5, 16, 16);
-    const moonMat = new THREE.MeshStandardMaterial({ color: 0x8a847a, roughness: 0.9, fog: false });
-    const moonMesh = new THREE.Mesh(moonGeo, moonMat);
-    moonMesh.position.set(-65, 15, 20);
-    giantGroup.add(moonMesh);
-
-    giantGroup.userData.phys = 'ambient';   // a planet, not a prop on the basin
-    this.scene.add(giantGroup);
-  }
-
-  getTerrainHeight(x, z) {
-    const r = Math.hypot(x, z);
-    const basinRadius = 45.0;
-
-    // Rim ridge around basin
-    const rimDist = Math.abs(r - basinRadius);
-    const rimH = Math.max(0, 3.2 * Math.exp(-(rimDist * rimDist) / 120));
-
-    // Outer slopes and desert dunes
-    const dune1 = Math.sin(x * 0.06 + z * 0.04) * 1.4;
-    const dune2 = Math.cos(x * 0.1 - z * 0.08) * 0.8;
-
-    let base = 0;
-    if (r < basinRadius) {
-      const bowl = Math.cos((r / basinRadius) * (Math.PI / 2));
-      base = -2.5 * bowl;
-    } else {
-      base = Math.min(10.0, (r - basinRadius) * 0.12);
-    }
-
-    return base + rimH + (r > 30 ? (dune1 + dune2) : 0);
+    this.sky = createSkyDome(900);
+    this.scene.add(this.sky);
+    this.celestials = createCelestials();
+    this.scene.add(this.celestials);
   }
 
   initTerrain() {
-    const size = this.data.terrain.size[0];
-    const segs = tierAtLeast("T4") ? 140 : 80;
-    const geo = new THREE.PlaneGeometry(size, size, segs, segs);
-    geo.rotateX(-Math.PI / 2);
-
-    const pos = geo.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i);
-      const z = pos.getZ(i);
-      pos.setY(i, this.getTerrainHeight(x, z));
-    }
-    geo.computeVertexNormals();
-
-    /*
-     * THE BASIN FLOOR.
-     *
-     * This used to be forty thousand random two-pixel squares on a brown
-     * rectangle, with no normal, no roughness and no occlusion — which meant
-     * the ground had no shape at all and every light fell on it flat.
-     *
-     * It is now a real wind-worked ripple field: asymmetric crests with a long
-     * windward slope and a short slip face, coarse pale sand stranded on the
-     * crests and fines in the troughs, lag gravel the wind could not lift, and
-     * albedo, normal, roughness and ambient occlusion all taken off the one
-     * height field so a ripple's shadow belongs to that ripple.
-     *
-     * The same two anti-repeat layers Tallow uses: grit below the tile, and a
-     * drift across the whole basin above it. Sixteen repeats over 240 m is a
-     * tile every fifteen metres, which is exactly the range the eye is best at
-     * spotting, so neither layer is optional.
-     */
-    const sand = desertSand({ size: texSize(512), seed: 9 });
-    const mat = buildMaterial(sand, { repeat: 16, roughness: 1.0, metalness: 0.0 });
-    mat.normalScale.set(1.25, 1.25);
-    mat.aoMapIntensity = 0.85;
-
-    const gritHeight = heightField(texSize(256), (u, v) =>
-      0.5 + (fbm(u * 40, v * 40, { octaves: 4, period: 40, seed: 0x5c2 }) - 0.5) * 0.9
-    );
-    this.gritNormal = asDataTexture(heightToNormal(gritHeight, 1.4), 1);
-    addDetailNormal(mat, this.gritNormal, { scale: 8, strength: 0.38 });
-
-    const macroHeight = heightField(texSize(256), (u, v) =>
-      fbm(u * 3, v * 3, { octaves: 5, period: 3, seed: 0x811 })
-    );
-    this.macroMap = asDataTexture(macroHeight, 1);
-    this.macroMap.wrapS = this.macroMap.wrapT = THREE.ClampToEdgeWrapping;
-    addMacroVariation(mat, this.macroMap, { strength: 0.12, roughShift: 0.1 });
-
-    enableAO(geo);
+    const geo = buildTerrainGeometry(this.field, { step: this.t4 ? 1.25 : 2.0, growth: this.t4 ? 1.085 : 1.12, tile: 5 });
+    const mat = createTerrainMaterial({
+      sand: this.sandSet, playa: this.playaSet, macro: this.macroMap, strata: this.strataMap
+    });
     this.terrainMesh = new THREE.Mesh(geo, mat);
+    this.terrainMesh.name = "erebus-ground";
     this.terrainMesh.userData.phys = 'ground';   // everything is bedded into it
     this.terrainMesh.receiveShadow = true;
+    this.terrainMesh.castShadow = false;
     this.scene.add(this.terrainMesh);
+    // Dunes shade the troughs behind them, through a coarse copy of the ground
+    // that only the sun's shadow camera draws (layer 1).
+    if (this.t4) {
+      this.scene.add(buildShadowCaster(this.field));
+      this.sunLight.shadow.camera.layers.enable(1);
+    }
   }
 
   initSurveyLander() {
-    // Survey Lander ("SANDSTALKER") matching hero_desert_outpost.jpg
     const lander = this.data.landmarks.find(l => l.asset === "lander");
     if (!lander) return;
+    const gx = lander.pos[0], gz = lander.pos[2];
+    const gy = this.getTerrainHeight(gx, gz);
+    const c = Math.cos(lander.rotY), s = Math.sin(lander.rotY);
+    // Ground under a point in the lander's own frame, relative to its origin.
+    const groundAt = (lx, lz) => this.getTerrainHeight(gx + lx * c + lz * s, gz - lx * s + lz * c) - gy;
+    const { group, beaconMat } = buildLander({ groundAt });
+    group.position.set(gx, gy, gz);
+    group.rotation.y = lander.rotY;
+    this.landerBeacon = beaconMat;
+    this.scene.add(group);
 
-    const landerGroup = new THREE.Group();
-    const gy = this.getTerrainHeight(lander.pos[0], lander.pos[2]);
-    landerGroup.position.set(lander.pos[0], gy, lander.pos[2]);
-    landerGroup.rotation.y = lander.rotY;
-
-    // Materials
-    const hullMat = new THREE.MeshStandardMaterial({
-      color: 0x5a4d3f,
-      roughness: 0.80,
-      metalness: 0.58
-    });
-    const heatShieldMat = new THREE.MeshStandardMaterial({
-      color: 0x1f1b17,
-      roughness: 0.92,
-      metalness: 0.35
-    });
-    const strutMat = new THREE.MeshStandardMaterial({
-      color: 0x2e2924,
-      roughness: 0.86,
-      metalness: 0.65
-    });
-
-    // 1. Aerodynamic Wedge Fuselage (length 8m, width 4.2m)
-    const hull = new THREE.Mesh(new THREE.ConeGeometry(3.6, 7.5, 5), hullMat);
-    hull.rotation.x = Math.PI / 2;
-    hull.position.set(0, 2.2, 0);
-    landerGroup.add(hull);
-
-    // Scorched Heat Shield Underbelly
-    const underbelly = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.4, 6.8), heatShieldMat);
-    underbelly.position.set(0, 0.9, 0);
-    landerGroup.add(underbelly);
-
-    // 2. Dual Side Cylindrical Thruster Nacelles
-    for (let s of [-1, 1]) {
-      const nacelle = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.75, 4.2, 12), hullMat);
-      nacelle.rotation.x = Math.PI / 2;
-      nacelle.position.set(s * 2.5, 1.8, -0.6);
-
-      const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.7, 0.8, 12), heatShieldMat);
-      nozzle.rotation.x = Math.PI / 2;
-      nozzle.position.set(s * 2.5, 1.8, -3.1);
-
-      landerGroup.add(nacelle, nozzle);
-    }
-
-    // 3. Deployed Boarding Ramp leading down to the sand
-    const ramp = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.14, 3.8), hullMat);
-    ramp.position.set(0, 0.55, 4.4);
-    ramp.rotation.x = 0.28;
-    landerGroup.add(ramp);
-
-    // 4. Articulated Landing Struts with wide circular footpads
-    for (let s of [-1, 1]) {
-      for (let f of [-1, 1]) {
-        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 2.6, 6), strutMat);
-        leg.position.set(s * 2.4, 1.1, f * 2.4);
-        leg.rotation.z = s * 0.35;
-        leg.rotation.x = f * 0.25;
-
-        const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.12, 8), strutMat);
-        pad.position.set(s * 3.0, 0.06, f * 2.8);
-        landerGroup.add(leg, pad);
-      }
-    }
-
-    this.scene.add(landerGroup);
-
-    // Lander obstacle collider
-    this.colliders.push({
-      x: lander.pos[0],
-      z: lander.pos[2],
-      radius: 4.5
-    });
+    this.colliders.push({ x: gx, z: gz, radius: 4.5 });
   }
 
   initRockLandmarks() {
-    const rockMat = new THREE.MeshStandardMaterial({
-      color: 0x4e4235,
-      roughness: 0.94,
-      metalness: 0.12
-    });
-
+    const ctx = {
+      heightAt: (x, z) => this.getTerrainHeight(x, z),
+      rockMat: this.rockMat,
+      rockDetail: this.rockDetail,
+      sandMap: this.sandSet.map,
+      macro: this.macroMap,
+      t4: this.t4
+    };
     for (const lm of this.data.landmarks) {
-      if (!lm.asset.startsWith("rock")) continue;
-      if (lm.minTier === "T4" && !tierAtLeast("T4")) continue;
-
-      const rockGroup = new THREE.Group();
-      const gy = this.getTerrainHeight(lm.pos[0], lm.pos[2]);
-      rockGroup.position.set(lm.pos[0], gy, lm.pos[2]);
-      rockGroup.rotation.y = lm.rotY;
-      rockGroup.scale.setScalar(lm.scale);
-
-      // Stacked chamfered slab strata
-      const slabCount = tierAtLeast("T4") ? 5 : 3;
-      for (let i = 0; i < slabCount; i++) {
-        const slabW = 3.6 - i * 0.45 + (i % 2 === 0 ? 0.3 : -0.2);
-        const slabH = 0.85 + i * 0.2;
-        const slabD = 3.0 - i * 0.35;
-        const slab = new THREE.Mesh(new THREE.BoxGeometry(slabW, slabH, slabD), rockMat);
-        slab.position.set(Math.sin(i * 1.5) * 0.2, (i * 0.65) + 0.4, Math.cos(i * 1.1) * 0.2);
-        slab.rotation.y = i * 0.22;
-        rockGroup.add(slab);
-      }
-
-      this.scene.add(rockGroup);
-      this.colliders.push({
-        x: lm.pos[0],
-        z: lm.pos[2],
-        radius: 2.5 * lm.scale
-      });
+      if (lm.asset === "lander") continue;
+      if (lm.minTier === "T4" && !this.t4) continue;
+      const built = buildLandmark(lm, ctx);
+      if (!built) continue;
+      this.scene.add(built.group);
+      this.colliders.push(...built.colliders);
     }
+  }
+
+  initVista() {
+    this.vistaRockMat = createRockMaterial({
+      detail: this.rockDetail, sand: this.sandSet.map, macro: this.macroMap, strata: this.strataMap
+    }, { lite: true });
+    this.vista = buildVista({
+      heightAt: (x, z) => this.getTerrainHeight(x, z),
+      rockMat: this.vistaRockMat,
+      t4: this.t4
+    });
+    this.scene.add(this.vista);
   }
 
   initPylons() {
@@ -356,16 +225,9 @@ export class WorldScene {
      * stencilled number. Everything below is something the real object needs
      * in order to work.
      */
-    const mastMat = buildMaterial(
-      platedMetal({
-        paint: '#4a423a', metal: '#6a6055', rust: '#7d4726',
-        // A pylon is walked up to and studied, so this one keeps full size.
-        panels: 2, seed: 17, weather: 0.72, size: texSize(512)
-      }),
-      { repeat: [2, 3], roughness: 1.0 }
-    );
-    mastMat.normalScale.set(1.3, 1.3);
-    mastMat.aoMapIntensity = 0.85;
+    // Field-painted plate, bleached and sand-scoured; a pylon is walked up to
+    // and studied, so this one keeps full size.
+    const mastMat = hullMaterial({ tint: '#8c7864', dust: 0.6 });
 
     // The crown is fired ceramic, not metal: matte, non-conductive, crazed.
     const ceramicMat = buildMaterial(
@@ -374,11 +236,12 @@ export class WorldScene {
     );
     ceramicMat.normalScale.set(0.9, 0.9);
 
-    const ironMat = new THREE.MeshStandardMaterial({
-      color: 0x221f1c,
-      roughness: 0.92,
-      metalness: 0.4
-    });
+    // Cast iron that has stood in the sand for years: dull, dusty, brown.
+    const ironMat = addDustCover(new THREE.MeshStandardMaterial({
+      color: 0x5a4d42,
+      roughness: 0.84,
+      metalness: 0.35
+    }), { amount: 0.8, sharp: [0.35, 0.8], film: 0.18 });
     const cableMat = new THREE.MeshStandardMaterial({
       color: 0x1c1916, roughness: 0.96, metalness: 0.15
     });
@@ -542,6 +405,7 @@ export class WorldScene {
       // Bake the mast, the base, the guys, the hatch and every bolt into one
       // mesh per material. Forty meshes become four, twenty times over, and the
       // pylon the player walks up to is the same pylon it was.
+      pylonGroup.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
       mergeStatic(pylonGroup);
 
       this.pylonMeshes.push(pylonGroup);
@@ -557,27 +421,11 @@ export class WorldScene {
   }
 
   initAtmosphericDust() {
-    const count = tierAtLeast("T4") ? 1800 : 700;
-    const geo = new THREE.BufferGeometry();
-    const positions = new Float32Array(count * 3);
-
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 160;
-      positions[i * 3 + 1] = 0.5 + Math.random() * 12;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 160;
-    }
-    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-
-    const mat = new THREE.PointsMaterial({
-      color: 0xd99423,
-      size: 0.06,
-      transparent: true,
-      opacity: 0.25,
-      blending: THREE.NormalBlending
+    this.effects = createEffects({
+      heightAt: (x, z) => this.getTerrainHeight(x, z),
+      t4: this.t4
     });
-
-    this.dustParticles = new THREE.Points(geo, mat);
-    this.scene.add(this.dustParticles);
+    this.scene.add(this.effects.group);
   }
 
   setClearedStages(clearedSet) {
@@ -594,17 +442,17 @@ export class WorldScene {
   }
 
   update(delta, cameraPosition) {
-    if (this.dustParticles) {
-      const pos = this.dustParticles.geometry.attributes.position;
-      for (let i = 0; i < pos.count; i++) {
-        let x = pos.getX(i) + delta * 3.5;
-        let z = pos.getZ(i) - delta * 1.5;
-        if (x > 80) x = -80;
-        if (z < -80) z = 80;
-        pos.setX(i, x);
-        pos.setZ(i, z);
-      }
-      pos.needsUpdate = true;
+    this.time += delta;
+    skyUniforms.uTime.value = this.time;
+    if (cameraPosition) {
+      followShadow(this.sunLight, cameraPosition);
+      this.effects?.update(delta, this.time, cameraPosition);
+    }
+    // The lander's tail beacon: a slow double blink, the one sign it is still powered.
+    if (this.landerBeacon) {
+      const ph = this.time % 2.6;
+      const on = ph < 0.08 || (ph > 0.3 && ph < 0.38);
+      this.landerBeacon.color.setHex(on ? 0xff6a30 : 0x3a140a);
     }
   }
 
@@ -623,7 +471,7 @@ export class WorldScene {
         const gy = this.getTerrainHeight(lander.pos[0], lander.pos[2]);
         this._aimTargets.push({
           kind: 'lander', reach: 3.5,
-          boxes: [aimBox([lander.pos[0], gy + 2.2, lander.pos[2]], [2.4, 2.2, 4.0], lander.rotY)]
+          boxes: [aimBox([lander.pos[0], gy + 2.6, lander.pos[2]], [2.2, 1.6, 4.4], lander.rotY)]
         });
       }
     }

@@ -62,16 +62,21 @@ const spawn = {
   lookAt: [sites[0].pos[0], 1.6, sites[0].pos[2]]
 };
 
+// What stands in the walk (src/three/erebus/landmarks.js builds each kind).
+// `radius` is the footprint the Avalon's landing solver keeps clear of;
+// `apron` is [radius, height] of the sand drifted up round it (terrain.js).
 const landmarks = [
-  { asset: "lander", pos: [0, 0, 41], rotY: 0.35, scale: 1.0, minTier: "T3" },
-  { asset: "rock-a", pos: [14, 0, 34], rotY: 1.2, scale: 1.4, minTier: "T3" },
-  { asset: "rock-b", pos: [-16, 0, 30], rotY: 0.8, scale: 1.3, minTier: "T3" },
-  { asset: "rock-c", pos: [28, 0, -8], rotY: 2.1, scale: 1.6, minTier: "T3" },
-  { asset: "rock-a", pos: [-30, 0, -12], rotY: 1.7, scale: 1.5, minTier: "T3" },
-  { asset: "rock-b", pos: [0, 0, -36], rotY: 0.5, scale: 1.8, minTier: "T3" },
-  { asset: "rock-c", pos: [18, 0, -32], rotY: 2.5, scale: 1.1, minTier: "T4" },
-  { asset: "rock-a", pos: [-24, 0, 16], rotY: 0.3, scale: 1.0, minTier: "T4" },
-  { asset: "rock-b", pos: [34, 0, 16], rotY: 1.9, scale: 1.3, minTier: "T4" }
+  {asset: "lander", pos: [0, 0, 41], rotY: 0.35, scale: 1, minTier: "T3"},
+  {asset: "hoodoos", pos: [-27, 0, -5], rotY: 0.4, scale: 1, radius: 5.5, height: 7.5, count: 4, apron: [8, 0.7], seed: 11, minTier: "T3"},
+  {asset: "outcrop", pos: [18, 0, -19], rotY: 1.1, scale: 1, radius: 6, height: 3.6, apron: [9, 0.5], seed: 23, minTier: "T3"},
+  {asset: "boulders", pos: [-9, 0, -27], rotY: 0, scale: 1, radius: 4.5, count: 6, apron: [6, 0.4], seed: 31, minTier: "T3"},
+  {asset: "spire", pos: [28, 0, 13], rotY: 0.3, scale: 1, radius: 2.6, height: 9.5, apron: [6, 0.6], seed: 41, minTier: "T3"},
+  {asset: "butte", pos: [-61, 0, -41], rotY: 0.8, scale: 1, radius: 11, height: 23, apron: [17, 1.6], seed: 53, minTier: "T3"},
+  {asset: "arch", pos: [-53, 0, 43], rotY: 0.7, scale: 1, radius: 12, span: 18, height: 12, seed: 61, minTier: "T3"},
+  {asset: "hoodoos", pos: [61, 0, -45], rotY: 1.9, scale: 1, radius: 8, height: 14, count: 5, apron: [12, 1.0], seed: 71, minTier: "T3"},
+  {asset: "skeleton", pos: [46, 0, 57], rotY: -0.6, scale: 1, radius: 13, seed: 83, minTier: "T3"},
+  {asset: "wreck", pos: [-73, 0, 6], rotY: 1.25, scale: 1, radius: 15, apron: [15, 1.0], seed: 97, minTier: "T3"},
+  {asset: "butte", pos: [72, 0, 18], rotY: 2.2, scale: 1, radius: 7.5, height: 15, apron: [12, 1.2], seed: 101, minTier: "T3"}
 ];
 
 const stillCamera = {};
@@ -105,12 +110,14 @@ const erebusWorld = {
     maxHeight: 12,
     material: "desert-grit"
   },
+  // Aerial perspective runs from fogNear to fogFar (erebus/atmosphere.js);
+  // fogColor is only what the voyage's cloud deck is tinted with.
   ambience: {
-    keyLight: 0xd99423,
-    fillLight: 0x3d4454,
-    fogColor: 0x6e5238,
-    fogNear: 70,
-    fogFar: 280,
+    keyLight: 0xffd3a1,
+    fillLight: 0xb99a7c,
+    fogColor: 0xcf9f70,
+    fogNear: 6,
+    fogFar: 760,
     dustDensity: 0.35
   },
   landmarks,
@@ -175,9 +182,21 @@ for (const str of checkStrings) {
 }
 
 // Rule 10: Assets
-const allowedAssets = new Set(['pylon', 'lander', 'rock-a', 'rock-b', 'rock-c']);
+const allowedAssets = new Set(['lander', 'spire', 'hoodoos', 'butte', 'outcrop', 'boulders', 'arch', 'skeleton', 'wreck']);
 for (const lm of landmarks) {
   if (!allowedAssets.has(lm.asset)) errors.push(`Rule 10 violation: unknown asset "${lm.asset}"`);
+}
+
+// Rule 12: Landmarks keep off the pylon line. The pylons stand on the rim at
+// R; the player walks the ring just inside it. A landmark's footprint (plus
+// the scree round it, about 40% more) may not reach into that band.
+for (const lm of landmarks) {
+  if (lm.asset === 'lander' || !lm.radius) continue;
+  const r = Math.hypot(lm.pos[0], lm.pos[2]);
+  const reach = lm.radius * 1.4;
+  if (r - reach < R + 4 && r + reach > R - 7) {
+    errors.push(`Rule 12 violation: ${lm.asset} at (${lm.pos[0]}, ${lm.pos[2]}) reaches the pylon line`);
+  }
 }
 
 if (errors.length > 0) {
@@ -188,4 +207,4 @@ if (errors.length > 0) {
 
 fs.mkdirSync('src/three/world-data', { recursive: true });
 fs.writeFileSync('src/three/world-data/erebus.json', JSON.stringify(erebusWorld, null, 2));
-console.log("src/three/world-data/erebus.json written successfully. All 11 hard rules passed.");
+console.log("src/three/world-data/erebus.json written successfully. All 12 hard rules passed.");

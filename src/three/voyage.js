@@ -1338,7 +1338,8 @@ export class Voyage {
   }
 
   _addFarGround(world) {
-    if (this._farGround.has(world)) return;
+    // A world whose own ground already runs to the horizon (Erebus) needs no ring.
+    if (world.hasFarTerrain || this._farGround.has(world)) return;
     const mesh = buildFarGround(world);
     world.scene.add(mesh);
     this._farGround.set(world, mesh);
