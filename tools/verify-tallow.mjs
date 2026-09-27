@@ -349,6 +349,65 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
   }
 }
 
+/* ---------------------------------------------------------- shader patches
+ *
+ * Tallow's look is mostly shader patches on three's own materials: the ground
+ * finishes itself (ruts, mirror flats, mirage, air), and every prop is crusted
+ * with salt and faded into the sky. A patch is a string replace on a chunk
+ * include; if three renames the chunk, the replace silently does nothing and
+ * the world renders clean and unhazed with no error anywhere. So each patch is
+ * run against three's real shader source and must land every injection.
+ */
+{
+  const THREE = await import('three');
+  const { ShaderLib } = THREE;
+  const { createTallowTerrainMaterial } = await import('../src/three/tallow/terrain.js');
+  const { applySaltWeather } = await import('../src/three/tallow/surfaces.js');
+  const { applyTallowAir } = await import('../src/three/tallow/atmosphere.js');
+  const patched = mat => {
+    const shader = {
+      vertexShader: ShaderLib.physical.vertexShader,
+      fragmentShader: ShaderLib.physical.fragmentShader,
+      uniforms: {}
+    };
+    mat.onBeforeCompile(shader, null);
+    return shader.vertexShader + '\n' + shader.fragmentShader;
+  };
+  const t = new THREE.Texture();
+  const ground = patched(createTallowTerrainMaterial({
+    crust: { map: t, normalMap: t, roughnessMap: t, aoMap: t }, grit: t, macro: t, strata: t,
+    tracks: world.tracks
+  }));
+  const groundMarks = ['vTN = normalize', 'gRut = 0.0', 'roughnessFactor = mix(roughnessFactor, 0.5',
+    'float flatK', 'vFogWorld = (modelMatrix', 'tlSky(normalize(rd))', 'tlOut(tlHaze(tDir))'];
+  const lostG = groundMarks.filter(m => !ground.includes(m));
+  check(lostG.length === 0, 'the ground shader lands all its patches',
+    `the ground shader lost patches: ${lostG.join(', ')}`);
+
+  const prop = new THREE.MeshStandardMaterial({ map: t });
+  applySaltWeather(prop, { ground: t });
+  applyTallowAir(prop);
+  const src = patched(prop);
+  const propMarks = ['vSW = (modelMatrix', 'sSalt = clamp', 'roughnessFactor = mix(roughnessFactor, 0.96',
+    'metalnessFactor = mix', 'vFogWorld = (modelMatrix', 'tlOut(tlHaze(tDir))'];
+  const lostP = propMarks.filter(m => !src.includes(m));
+  check(lostP.length === 0, 'the salt and air patches land on a standard material',
+    `the prop patches lost: ${lostP.join(', ')}`);
+
+  const segs = (world.tracks?.ruts || []).reduce((n, l) => n + l.length - 1, 0);
+  const psegs = (world.tracks?.paths || []).reduce((n, l) => n + l.length - 1, 0);
+  check(segs <= 24 && psegs <= 16, `${segs} rut and ${psegs} path segments fit the ground shader`,
+    `tracks overflow the ground shader: ${segs}/24 rut, ${psegs}/16 path segments (the rest are dropped)`);
+  // Each polyline is culled by its own box in the shader, and there are only
+  // so many boxes: a line past the last one would never be drawn at all.
+  const { MAX_TRACK_LINES } = await import('../src/three/tallow/terrain.js');
+  const rl = (world.tracks?.ruts || []).length;
+  const pl = (world.tracks?.paths || []).length;
+  check(rl <= MAX_TRACK_LINES && pl <= MAX_TRACK_LINES,
+    `${rl} rut and ${pl} path lines fit the ground shader's ${MAX_TRACK_LINES} boxes each`,
+    `tracks overflow the ground shader: ${rl}/${MAX_TRACK_LINES} rut, ${pl}/${MAX_TRACK_LINES} path lines`);
+}
+
 console.log('');
 if (failures) {
   console.log(`TALLOW FAILED — ${failures} problem${failures === 1 ? '' : 's'}`);

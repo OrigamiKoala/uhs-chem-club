@@ -25,20 +25,20 @@ export const SHIP_GRAPH = {
     bridge: {
       name: 'Command Bridge',
       pos: [0, 1.55, 1.3],
-      target: [0, 1.4, 4.6],
+      target: [0, 1.4, 6.8],
       adjacent: ['cockpit', 'starmap', 'quarters', 'cargo'],
       lookLimits: { yaw: 90, pitch: 30 },
       hatchPos: {
-        cockpit: [0, 1.45, 2.4],
+        cockpit: [0, 1.45, 3.2],
         starmap: [1.4, 1.55, 1.55],
-        quarters: [-0.95, 1.5, -0.9],
-        cargo: [0.95, 1.5, -1.2]
+        quarters: [-1.15, 1.5, -1.2],
+        cargo: [1.15, 1.5, -1.2]
       },
       walkPath: {
         cockpit: [
           [0, 1.55, 1.3],
-          [0, 1.50, 2.2],
-          [0, 1.45, 3.05]
+          [0, 1.50, 3.0],
+          [0, 1.45, 4.75]
         ],
         starmap: [
           [0, 1.55, 1.3],
@@ -64,17 +64,17 @@ export const SHIP_GRAPH = {
 
     cockpit: {
       name: 'Flight Pods',
-      pos: [0, 1.45, 3.05],
+      pos: [0, 1.45, 4.75],
       target: [0, 1.4, 12],
       adjacent: ['bridge'],
       lookLimits: { yaw: 80, pitch: 25 },
       hatchPos: {
-        bridge: [0, 1.5, 2.2]
+        bridge: [0, 1.5, 3.0]
       },
       walkPath: {
         bridge: [
-          [0, 1.45, 3.05],
-          [0, 1.50, 2.2],
+          [0, 1.45, 4.75],
+          [0, 1.50, 3.0],
           [0, 1.55, 1.3]
         ]
       }
@@ -101,13 +101,13 @@ export const SHIP_GRAPH = {
     quarters: {
       name: 'Crew Berth A',
       pos: [-3.2, 1.55, -1.2],
-      target: [-4.6, 1.2, -1.6],
+      target: [-4.9, 1.0, -0.9],
       adjacent: ['bridge', 'comms', 'cargo'],
       lookLimits: { yaw: 90, pitch: 25 },
       hatchPos: {
-        bridge: [-0.95, 1.5, -0.9],
-        comms: [-0.95, 1.5, -0.9],
-        cargo: [-0.95, 1.5, -0.9]
+        bridge: [-1.15, 1.5, -1.2],
+        comms: [-1.15, 1.5, -1.2],
+        cargo: [-1.15, 1.5, -1.2]
       },
       walkPath: {
         bridge: [
@@ -119,15 +119,15 @@ export const SHIP_GRAPH = {
         ],
         comms: [
           [-3.2, 1.55, -1.2],
-          [-0.7, 1.53, -0.9],
+          [-0.7, 1.53, -1.2],
           [-0.7, 1.53, -3.6],
-          [-0.7, 1.53, -6.45],
+          [-0.7, 1.53, -6.25],
           [-3.3, 1.55, -6.3]
         ],
         cargo: [
           [-3.2, 1.55, -1.2],
-          [-0.7, 1.53, -0.9],
-          [0.7, 1.53, -1.1],
+          [-0.7, 1.53, -1.2],
+          [0.7, 1.53, -1.2],
           [1.9, 1.54, -1.1],
           [3.3, 1.55, -1.0]
         ]
@@ -141,9 +141,9 @@ export const SHIP_GRAPH = {
       adjacent: ['bridge', 'quarters', 'airlock'],
       lookLimits: { yaw: 95, pitch: 30 },
       hatchPos: {
-        bridge: [0.95, 1.5, -1.2],
-        quarters: [0.95, 1.5, -1.2],
-        airlock: [0.95, 1.5, -1.2]
+        bridge: [1.15, 1.5, -1.2],
+        quarters: [1.15, 1.5, -1.2],
+        airlock: [1.15, 1.5, -1.2]
       },
       walkPath: {
         bridge: [
@@ -156,8 +156,8 @@ export const SHIP_GRAPH = {
         quarters: [
           [3.3, 1.55, -1.0],
           [1.9, 1.54, -1.1],
-          [0.7, 1.53, -1.1],
-          [-0.7, 1.53, -0.9],
+          [0.7, 1.53, -1.2],
+          [-0.7, 1.53, -1.2],
           [-3.2, 1.55, -1.2]
         ],
         airlock: [
@@ -165,7 +165,7 @@ export const SHIP_GRAPH = {
           [1.9, 1.54, -1.1],
           [0.7, 1.53, -1.2],
           [0.7, 1.53, -4.2],
-          [0.7, 1.55, -6.6],
+          [0.7, 1.55, -6.4],
           [3.4, 1.6, -6.6]
         ]
       }
@@ -178,21 +178,21 @@ export const SHIP_GRAPH = {
       adjacent: ['quarters', 'airlock'],
       lookLimits: { yaw: 95, pitch: 30 },
       hatchPos: {
-        quarters: [-0.95, 1.5, -6.45],
-        airlock: [-0.95, 1.5, -6.45]
+        quarters: [-1.15, 1.5, -6.25],
+        airlock: [-1.15, 1.5, -6.25]
       },
       walkPath: {
         quarters: [
           [-3.3, 1.55, -6.3],
-          [-0.7, 1.53, -6.45],
+          [-0.7, 1.53, -6.25],
           [-0.7, 1.53, -3.6],
-          [-0.7, 1.53, -0.9],
+          [-0.7, 1.53, -1.2],
           [-3.2, 1.55, -1.2]
         ],
         airlock: [
           [-3.3, 1.55, -6.3],
-          [-0.7, 1.53, -6.45],
-          [0.7, 1.55, -6.6],
+          [-0.7, 1.53, -6.25],
+          [0.7, 1.55, -6.4],
           [3.4, 1.6, -6.6]
         ]
       }
@@ -205,13 +205,13 @@ export const SHIP_GRAPH = {
       adjacent: ['cargo', 'comms'],
       lookLimits: { yaw: 95, pitch: 25 },
       hatchPos: {
-        cargo: [0.95, 1.55, -6.6],
-        comms: [0.95, 1.55, -6.6]
+        cargo: [1.15, 1.55, -6.4],
+        comms: [1.15, 1.55, -6.4]
       },
       walkPath: {
         cargo: [
           [3.4, 1.6, -6.6],
-          [0.7, 1.55, -6.6],
+          [0.7, 1.55, -6.4],
           [0.7, 1.53, -4.2],
           [0.7, 1.53, -1.2],
           [1.9, 1.54, -1.1],
@@ -219,8 +219,8 @@ export const SHIP_GRAPH = {
         ],
         comms: [
           [3.4, 1.6, -6.6],
-          [0.7, 1.55, -6.6],
-          [-0.7, 1.53, -6.45],
+          [0.7, 1.55, -6.4],
+          [-0.7, 1.53, -6.25],
           [-3.3, 1.55, -6.3]
         ]
       }

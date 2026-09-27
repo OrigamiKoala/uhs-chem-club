@@ -5,7 +5,9 @@
 import { session } from './session.js';
 import { stage } from './three/stage.js';
 import { closeModal } from './ui/modal.js';
-import { canWalk } from './learn/worlds3d.js';
+import { canWalk, world3dFor } from './learn/worlds3d.js';
+import { getWorld, getQuest } from './learn/curriculum.js';
+import { isQuestOpen, isQuestComplete } from './learn/progress.js';
 import { soundscape } from './audio/soundscape.js';
 import { gameMode } from './game-mode.js';
 
@@ -25,6 +27,8 @@ import { renderInventory } from './screens/inventory.js';
 import { renderQuarters } from './screens/quarters.js';
 import { renderSettings } from './screens/settings.js';
 import { renderAdmin } from './screens/admin.js';
+import { renderCrewProfile } from './screens/crew-profile.js';
+import { renderVoyageHud } from './screens/voyage.js';
 
 const ROUTE_ROOM = {
   '/': 'cockpit',
@@ -104,6 +108,7 @@ const ROUTES = {
  * ":" is captured into `params` and handed to the render function.
  */
 const PARAM_ROUTES = [
+  { pattern: ['crew', ':playerId'], render: renderCrewProfile, auth: false, nav: 'leaderboard', room: 'comms', backdrop: '/art/comms.jpg' },
   { pattern: ['learn', ':worldId'], render: renderLearnWorld, auth: true, nav: 'learn', room: 'starmap', backdrop: '/art/crucible.jpg' },
   { pattern: ['learn', ':worldId', ':questId'], render: renderLearnQuest, auth: true, nav: 'learn', room: 'quest', backdrop: '/art/crucible.jpg' }
 ];
@@ -143,14 +148,86 @@ function isWalkableLearnRoute(raw) {
   return canWalk(m.params.worldId);
 }
 
+/**
+ * Where a route would put the player, as a voyage target, or null for a route
+ * that stays aboard. Erebus for the campaign quest; a Learn world that is
+ * built as a place for its world route and every quest route in it. A quest
+ * route lands the ship on that world and leads the player to the quest's
+ * bench — the bench is a place on the ground, and they walk to it.
+ */
+function voyageTargetFor(raw) {
+  if (raw === '/quest') return { key: 'erebus', hash: '#/quest' };
+  const m = matchParamRoute(raw);
+  if (!m || m.def.pattern[0] !== 'learn' || !m.params.worldId) return null;
+  if (!canWalk(m.params.worldId)) return null;
+  const w3d = world3dFor(m.params.worldId);
+  if (!w3d) return null;
+  const key = String(w3d.worldName).toLowerCase();
+  const hash = `#/learn/${m.params.worldId}`;
+  if (m.params.questId) {
+    // Lead to the bench only if the quest there is one the player may open;
+    // the world screen, not a chevron, is where a sealed quest says so.
+    const world = getWorld(m.params.worldId);
+    const quest = getQuest(m.params.worldId, m.params.questId);
+    const open = world && quest && (isQuestOpen(world, quest) || isQuestComplete(quest));
+    if (!open) return { key, hash };
+    const site = w3d.siteForQuest(m.params.questId);
+    const at = site && (site.approachPos || site.pos);
+    return {
+      key, hash,
+      waypoint: at ? { x: at[0], z: at[2], label: site.label } : null
+    };
+  }
+  return { key, hash };
+}
+
 export class Router {
   constructor(appContainer) {
     this.appContainer = appContainer;
+    this.booted = false;
     window.addEventListener('hashchange', () => this.handleRoute());
+    // The ship is down and the player has walked off it: draw the route they
+    // flew for, now that they are standing on its ground.
+    window.addEventListener('voyage:arrived', (e) => {
+      const hash = e.detail?.hash;
+      if (!hash || window.location.hash === hash) this.handleRoute();
+      else window.location.hash = hash;
+    });
   }
 
   init() {
     this.handleRoute();
+    this.booted = true;
+  }
+
+  /**
+   * AT T4, GOING TO A WORLD IS A FLIGHT. A player aboard the Avalon who asks
+   * for a world (the star map, a Learn road key, the bridge's quest key) is
+   * not put on the ground: the ship flies there and lands, and the route is
+   * drawn once they have walked off it (`voyage:arrived`). Never on the first
+   * route of a page load — a reload onto a world is standing on it.
+   */
+  tryVoyage(raw) {
+    if (!this.booted) return false;
+    const target = voyageTargetFor(raw);
+    if (!target) return false;
+    // Standing on a world the ship is parked on, bound for another: go
+    // aboard first, and it lifts off from here.
+    const v = stage.voyage;
+    if (stage.mode === 'world' && v?.parked && v.parked.world === stage.activeWorld && v.parked.key !== target.key) {
+      stage.enterShipScene('bridge');
+    }
+    if (!stage.canVoyage(target.key)) return false;
+    const res = stage.requestVoyage(target);
+    if (!res) return false;
+    if (`#${raw}` !== target.hash) {
+      try { history.replaceState(null, '', target.hash); } catch (e) {}
+    }
+    soundscape.setRoom('bridge');
+    this.appContainer.innerHTML = '';
+    renderVoyageHud(this.appContainer);
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    return true;
   }
 
   handleRoute() {
@@ -219,6 +296,8 @@ export class Router {
     // A mounted Learn quest owns 3D resources and listeners of its own, so it is
     // torn down on every navigation that is not back into the same quest.
     if (!isLearnQuestRoute(raw)) disposeLearnQuest();
+
+    if (this.tryVoyage(raw)) return;
 
     // If leaving quest scene or navigating to ship compartments
     if (raw !== '/quest' && raw !== '/demo' && !isLearnQuestRoute(raw) && !isWalkableLearnRoute(raw)) {

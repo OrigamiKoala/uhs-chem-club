@@ -9,16 +9,16 @@
 import * as THREE from 'three';
 
 /**
- * The 21 fixtures the pool chooses from.
+ * THE SHIP DECLARES ITS OWN LIGHTS.
  *
- * ONE PER COMPARTMENT, and one per stretch of corridor between doorways. A
- * ship of small rooms needs its light distributed the way its walls are: a
- * single bright source in the middle of the deck used to reach everywhere
- * because there was nothing in the way, and now there is. Both berths, the
- * stairwell vestibule and the furnace room are on this list because they are
- * rooms, not because anything routes to them.
+ * Every compartment builder in `ship/` registers the fixtures it actually
+ * built — a trough, a desk lamp, the reactor window — through
+ * `ShipInterior.addLight`, and `stage.js` hands that list to the pool as
+ * `sources`. A light table kept here beside the rooms drifted the first time a
+ * room was refurnished, which is why it is no longer the authority.
  *
- * The pool lights the 7 nearest, which with the camera's own inspection light
+ * This table is only the fallback for a ship that declared nothing. The pool
+ * lights the 7 nearest sources, which with the camera's own inspection light
  * keeps the forward renderer inside its 8 PointLight budget.
  */
 export const SHIP_LIGHT_SOURCES = [
@@ -60,6 +60,9 @@ export class ShipLightPool {
     this.scene = scene;
     this.maxPooled = maxPooled;
     this.pool = [];
+    // The fixtures to choose from. The ship declares its own once it is
+    // built (`ShipInterior.lightSources`); the table above is the fallback.
+    this.sources = SHIP_LIGHT_SOURCES;
 
     for (let i = 0; i < this.maxPooled; i++) {
       const light = new THREE.PointLight(0xffd68a, 0, 12, 1.2);
@@ -73,7 +76,7 @@ export class ShipLightPool {
     if (!playerPosition) return;
 
     // Sort static sources by squared distance to player/camera
-    const sorted = [...SHIP_LIGHT_SOURCES].sort((a, b) =>
+    const sorted = [...this.sources].sort((a, b) =>
       a.pos.distanceToSquared(playerPosition) - b.pos.distanceToSquared(playerPosition)
     );
 

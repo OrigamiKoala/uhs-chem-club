@@ -1,4 +1,5 @@
 import { scrypt, randomBytes } from 'node:crypto';
+import { levelForXp, levelTitle } from '../src/progression/levels.js';
 
 const PARAMS = { N: 16384, r: 8, p: 1, keylen: 64 };
 const PEPPER = process.env.PEPPER || 'avalon_dev_pepper_do_not_use_in_prod_123';
@@ -307,7 +308,7 @@ function localDevHandler(route, body) {
     const teamId = normalizeTeam(p.team_id);
     const team = localStore.teams.find(t => t.team_id === teamId) || null;
     const pXp = localTotalXp(p);
-    const pLevel = Math.max(1, Math.floor(Math.sqrt(pXp / 45)) + 1);
+    const pLevel = levelForXp(pXp);
     return {
       ok: true,
       data: {
@@ -358,7 +359,7 @@ function localDevHandler(route, body) {
           player: player,
           team: localStore.teams.find(t => t.team_id === player.team_id),
           xp: typeof player.xp === 'number' ? player.xp : 0,
-          level: Math.max(1, Math.floor(Math.sqrt((player.xp || 0) / 45)) + 1),
+          level: levelForXp(player.xp || 0),
           isAdmin: player.email_lc === 'uhschemclub@gmail.com' || player.display_name_lc === 'admin',
           progress: (localStore.progress || []).filter(x => x.player_id === player.player_id),
           learn: (localStore.learn || []).filter(x => x.player_id === player.player_id)
@@ -447,7 +448,7 @@ function localDevHandler(route, body) {
     }
     const teamId = normalizeTeam(p.team_id);
     const pXp = localTotalXp(p);
-    const pLevel = Math.max(1, Math.floor(Math.sqrt(pXp / 45)) + 1);
+    const pLevel = levelForXp(pXp);
     return {
       ok: true,
       data: {
@@ -475,7 +476,7 @@ function localDevHandler(route, body) {
       p.display_name_lc = body.displayName.toLowerCase();
     }
     const pXp = typeof p?.xp === 'number' ? p.xp : 0;
-    const pLevel = Math.max(1, Math.floor(Math.sqrt(pXp / 45)) + 1);
+    const pLevel = levelForXp(pXp);
     return {
       ok: true,
       data: {
@@ -499,7 +500,7 @@ function localDevHandler(route, body) {
       p.avatar_json = typeof body.avatar_json === 'object' ? JSON.stringify(body.avatar_json) : body.avatar_json;
     }
     const pXp = typeof p?.xp === 'number' ? p.xp : 0;
-    const pLevel = Math.max(1, Math.floor(Math.sqrt(pXp / 45)) + 1);
+    const pLevel = levelForXp(pXp);
     return {
       ok: true,
       data: {
@@ -617,32 +618,33 @@ function localDevHandler(route, body) {
   }
 
   if (route === 'quest/complete') {
-    const questXp = CANONICAL_STAGES_20.reduce((sum, st) => sum + (st.xp || 0), 0);
+    const questXp = 715; // 650 stage XP + 40 completion + 25 clean/on-time
     let playerXp = questXp;
-    // Completion is idempotent, exactly like Quests.gs: a replay of the final stage
-    // re-opens the debrief but must not mint a second item or move any total.
     let alreadyCompleted = false;
     try {
       const pid = JSON.parse(Buffer.from(body.token.split('.')[0], 'base64').toString('utf8')).pid;
       const playerObj = localStore.players.find(x => x.player_id === pid);
-      if (playerObj && typeof playerObj.xp === 'number') playerXp = playerObj.xp;
       let prog = (localStore.progress || []).find(x => x.player_id === pid && x.quest_id === 'q1');
       if (!prog) {
         prog = { player_id: pid, quest_id: 'q1', stage_reached: 0, xp_earned: 0, cleared: [] };
         localStore.progress.push(prog);
       }
       alreadyCompleted = Boolean(prog.completed_at);
-      if (!alreadyCompleted) prog.completed_at = new Date().toISOString();
+      if (!alreadyCompleted) {
+        prog.completed_at = new Date().toISOString();
+        prog.xp_earned = questXp;
+      }
       prog.stage_reached = Math.max(prog.stage_reached || 0, CANONICAL_STAGES_20.length);
-      prog.items_awarded = prog.items_awarded || 'resonance_key';
+      prog.items_awarded = prog.items_awarded || 'salvage_pylon_insulator';
+      if (playerObj) playerXp = localTotalXp(playerObj);
     } catch (e) {}
 
     return {
       ok: true,
       data: {
         totalXp: questXp,
-        awardedItem: 'resonance_key',
-        newLevel: Math.max(1, Math.floor(Math.sqrt(playerXp / 45)) + 1),
+        awardedItem: 'salvage_pylon_insulator',
+        newLevel: levelForXp(playerXp),
         alreadyCompleted,
         epilogue: QUEST1_EPILOGUE
       }
@@ -694,31 +696,138 @@ function localDevHandler(route, body) {
     return { ok: true, data: { world_id: worldId, quest_id: questId, alreadyCompleted, completed_at: row.completed_at } };
   }
 
-  if (route === 'leaderboard') {
-    // Computed from localStore, not hardcoded. A fixed board cannot show whether
-    // XP reaches the standings, which is the one thing a dev run needs to prove;
-    // the formulas below mirror Scoring.gs so dev behaviour matches production.
-    const LEVEL_TITLES = [[2, 'Cadet'], [4, 'Scout'], [6, 'Navigator'], [8, 'Voyager'], [10, 'Pathfinder'], [12, 'Starmarshal']];
-    const levelOf = xp => Math.min(12, Math.max(1, xp > 0 ? Math.floor(Math.sqrt(xp / 45)) + 1 : 1));
-    const titleOf = lvl => (LEVEL_TITLES.find(([max]) => lvl <= max) || [0, 'Starmarshal'])[1];
+  if (route === 'progression/me') {
+    let pid = null;
+    try {
+      pid = JSON.parse(Buffer.from(String(body.token || '').split('.')[0], 'base64').toString('utf8')).pid;
+    } catch (e) {}
+    const player = localStore.players.find(x => x.player_id === pid);
+    if (!player) return { ok: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated.' } };
+    const xp = localTotalXp(player);
+    const lvl = levelForXp(xp);
+    return {
+      ok: true,
+      data: {
+        xp,
+        level: lvl,
+        loadout: player.loadout || { nameplate: 'default', title: '', pinnedPlates: [] },
+        cleanStages: player.cleanStages || [],
+        commendations: player.commendations || [],
+        watch: player.watch || { streak: 1, stoodWeeks: [1], forgivenessUsed: 0 }
+      }
+    };
+  }
 
-    const individual = localStore.players
+  if (route === 'loadout/set') {
+    let pid = null;
+    try {
+      pid = JSON.parse(Buffer.from(String(body.token || '').split('.')[0], 'base64').toString('utf8')).pid;
+    } catch (e) {}
+    const player = localStore.players.find(x => x.player_id === pid);
+    if (!player) return { ok: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated.' } };
+    player.loadout = {
+      nameplate: body.nameplate || player.loadout?.nameplate || 'default',
+      title: body.title !== undefined ? body.title : (player.loadout?.title || ''),
+      pinnedPlates: Array.isArray(body.pinnedPlates) ? body.pinnedPlates.slice(0, 3) : (player.loadout?.pinnedPlates || [])
+    };
+    return { ok: true, data: { loadout: player.loadout } };
+  }
+
+  if (route === 'profile/get') {
+    const targetId = body.playerId || body.player_id;
+    let requestingPid = null;
+    try {
+      if (body.token) requestingPid = JSON.parse(Buffer.from(String(body.token).split('.')[0], 'base64').toString('utf8')).pid;
+    } catch (e) {}
+    const player = localStore.players.find(x => x.player_id === targetId);
+    if (!player) return { ok: false, error: { code: 'NOT_FOUND', message: 'Player not found.' } };
+    const xp = localTotalXp(player);
+    const lvl = levelForXp(xp);
+    const loadout = player.loadout || {};
+    const displayName = (player.board_optout && player.player_id !== requestingPid)
+      ? ('Crew · ' + String(player.team_id || 'avalon').toUpperCase())
+      : player.display_name;
+
+    return {
+      ok: true,
+      data: {
+        player_id: player.player_id,
+        display_name: displayName,
+        team_id: normalizeTeam(player.team_id),
+        xp,
+        level: lvl,
+        level_title: levelTitle(lvl),
+        nameplate: loadout.nameplate || 'default',
+        title: loadout.title || '',
+        pinned_plates: Array.isArray(loadout.pinnedPlates) ? loadout.pinnedPlates : [],
+        commendation_counts: {
+          campaign: (player.commendations || []).filter(c => c.road === 'campaign').length,
+          craft: (player.commendations || []).filter(c => c.road === 'craft').length,
+          learn: (player.commendations || []).filter(c => c.road === 'learn').length,
+          crew: (player.commendations || []).filter(c => c.road === 'crew').length,
+          season: (player.commendations || []).filter(c => c.road === 'season').length
+        },
+        field_manual_count: player.field_manual_count || (player.cleanStages ? player.cleanStages.length : 0),
+        watch: player.watch || { streak: 1, stood_count: 1 },
+        avatar_json: player.avatar_json || '{}'
+      }
+    };
+  }
+
+  if (route === 'guild/feed') {
+    const teamId = normalizeTeam(body.teamId || 'earth');
+    return {
+      ok: true,
+      data: {
+        team_id: teamId,
+        events: [
+          { id: 'f1', type: 'level_up', display_name: 'Vesper', text: 'reached Cadet (Level 2)', timestamp: new Date().toISOString() },
+          { id: 'f2', type: 'commendation', display_name: 'Orion', text: 'earned Clean Run: Stage 1', timestamp: new Date(Date.now() - 3600000).toISOString() }
+        ]
+      }
+    };
+  }
+
+  if (route === 'leaderboard') {
+    let requestingPid = null;
+    if (body && body.token) {
+      try {
+        requestingPid = JSON.parse(Buffer.from(body.token.split('.')[0], 'base64').toString('utf8')).pid;
+      } catch (e) {}
+    }
+    const requestingPlayer = requestingPid ? localStore.players.find(x => x.player_id === requestingPid) : null;
+
+    let individual = localStore.players
       .filter(p => p.status !== 'banned')
       .map(p => {
         const xp = localTotalXp(p);
-        const level = levelOf(xp);
+        const level = levelForXp(xp);
+        const loadout = p.loadout || {};
+        let displayName = p.display_name;
+        if (p.board_optout && p.player_id !== requestingPid) {
+          displayName = 'Crew · ' + String(p.team_id || 'avalon').toUpperCase();
+        }
         return {
           player_id: p.player_id,
-          display_name: p.display_name,
+          display_name: displayName,
           team_id: normalizeTeam(p.team_id),
           role: p.role || '',
           xp,
           level,
-          level_title: titleOf(level)
+          level_title: levelTitle(level),
+          nameplate: loadout.nameplate || 'default',
+          title: loadout.title || '',
+          pinned_plates: Array.isArray(loadout.pinnedPlates) ? loadout.pinnedPlates : []
         };
-      })
-      .sort((a, b) => b.xp - a.xp)
-      .map((row, i) => ({ ...row, rank: i + 1 }));
+      });
+
+    const sc = body?.scope || 'all';
+    if (sc === 'guild' && requestingPlayer && requestingPlayer.team_id) {
+      individual = individual.filter(r => r.team_id === normalizeTeam(requestingPlayer.team_id));
+    }
+
+    individual.sort((a, b) => b.xp - a.xp);
+    individual.forEach((row, i) => { row.rank = i + 1; });
 
     // §4.4 — mean of active members, not the sum, scaled by participation.
     const teams = localStore.teams.map(tm => {
@@ -742,14 +851,11 @@ function localDevHandler(route, body) {
       .sort((a, b) => b.team_score - a.team_score)
       .map((row, i) => ({ ...row, rank: i + 1 }));
 
-    const data = { individual: individual.slice(0, 50), teams };
+    const data = { individual: individual.slice(0, 50), fullIndividual: individual, teams, scope: sc };
 
-    if (body && body.token) {
-      try {
-        const pid = JSON.parse(Buffer.from(body.token.split('.')[0], 'base64').toString('utf8')).pid;
-        const me = individual.find(r => r.player_id === pid);
-        if (me) data.myRank = { rank: me.rank, display_name: me.display_name, xp: me.xp, level: me.level };
-      } catch (e) {}
+    if (requestingPid) {
+      const me = individual.find(r => r.player_id === requestingPid);
+      if (me) data.myRank = { rank: me.rank, display_name: me.display_name, xp: me.xp, level: me.level };
     }
 
     return { ok: true, data };

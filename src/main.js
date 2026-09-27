@@ -11,6 +11,8 @@ import { soundscape } from './audio/soundscape.js';
 import { setBenchHost } from './learn/engine/bench-host.js';
 import { gameMode } from './game-mode.js';
 import { showToast } from './ui/toast.js';
+import { nextLevelRequisition } from './progression/requisitions.js';
+import { progressionFeed } from './progression/feed.js';
 
 /** Guild liveries, keyed by team id. Legacy ids are aliased in session.js. */
 const TEAM_LIVERY = {
@@ -152,12 +154,18 @@ function setupHud() {
     motionToggle.textContent = 'REDUCED MOTION';
   }
 
-  // Sound toggle
+  // Sound toggle (compact icon)
+  const SOUND_ON_ICON = '<svg class="hud-sound-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>';
+  const SOUND_OFF_ICON = '<svg class="hud-sound-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon><line x1="22" y1="9" x2="16" y2="15"></line><line x1="16" y1="9" x2="22" y2="15"></line></svg>';
+
   const updateSoundBtn = () => {
     if (!soundToggle) return;
-    const isMuted = session.sound?.muted;
-    soundToggle.textContent = isMuted ? 'SOUND OFF' : 'SOUND ON';
+    const isMuted = Boolean(session.sound?.muted);
+    soundToggle.innerHTML = isMuted ? SOUND_OFF_ICON : SOUND_ON_ICON;
+    soundToggle.title = isMuted ? 'Sound: Muted (click to unmute)' : 'Sound: Enabled (click to mute)';
+    soundToggle.setAttribute('aria-label', isMuted ? 'Sound muted, click to unmute' : 'Sound active, click to mute');
     soundToggle.classList.toggle('warn', isMuted);
+    soundToggle.classList.toggle('is-muted', isMuted);
   };
   updateSoundBtn();
 
@@ -207,6 +215,7 @@ function setupHud() {
 
   // Subscribe to session changes to update HUD
   session.subscribe((s) => {
+    updateSoundBtn();
     if (s.player) {
       navEl?.classList.remove('hidden');
       statsEl?.classList.remove('hidden');
@@ -215,11 +224,35 @@ function setupHud() {
 
       const totalXp = s.xp || 0;
       const prog = levelProgress(totalXp);
+      const title = levelTitle(prog.level);
+      const nextReq = nextLevelRequisition(prog.level);
 
-      if (xpVal) xpVal.textContent = String(totalXp);
+      // Smooth count-up unless reduced-motion is requested
+      if (xpVal) {
+        const targetXp = totalXp;
+        const startXp = Number(xpVal.getAttribute('data-val') || xpVal.textContent || '0');
+        xpVal.setAttribute('data-val', String(targetXp));
+
+        if (s.reduceMotion || Math.abs(targetXp - startXp) <= 1) {
+          xpVal.textContent = String(targetXp);
+        } else {
+          const duration = 600;
+          const startTime = performance.now();
+          const step = (now) => {
+            const progress = Math.min(1, (now - startTime) / duration);
+            const current = Math.round(startXp + (targetXp - startXp) * progress);
+            xpVal.textContent = String(current);
+            if (progress < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }
+      }
+
       if (lvlBadge) {
-        lvlBadge.textContent = `LVL ${prog.level}`;
-        lvlBadge.title = `${prog.into} / ${prog.needed} XP toward level ${prog.level + 1}`;
+        lvlBadge.innerHTML = `<span class="lvl-num">LVL ${prog.level}</span><span class="lvl-title"> · ${title.toUpperCase()}</span>`;
+        lvlBadge.title = nextReq
+          ? `Level ${prog.level + 1} Requisition: ${nextReq.name} (${prog.into}/${prog.needed} XP)`
+          : `${prog.into} / ${prog.needed} XP toward level ${prog.level + 1}`;
       }
       if (xpFill) xpFill.style.width = `${prog.pct}%`;
 
@@ -245,6 +278,11 @@ function setupHud() {
   });
 
   session.notify();
+
+  window.addEventListener('hashchange', () => {
+    progressionFeed.setSafe(true);
+    progressionFeed.flush();
+  });
 }
 
 window.addEventListener('DOMContentLoaded', bootstrapApp);

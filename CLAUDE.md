@@ -126,8 +126,8 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
 - `npm run verify` — `verify:quest` + `verify:console` + `verify:learn` + `verify:geometry`
-  + `verify:media` + `verify:flows` + `verify:ship` + `verify:tallow` + `verify:ligar`
-  + `verify:bench` + `verify:holo` + `build`. Run this before shipping. **The build
+  + `verify:media` + `verify:flows` + `verify:ship` + `verify:voyage` + `verify:tallow` + `verify:ligar`
+  + `verify:bench` + `verify:holo` + `verify:normals` + `build`. Run this before shipping. **The build
   empties `dist/`, which is gitignored** — anything placed only in `dist/` (reference art
   has been) is deleted by it. Source images belong in `public/` or `assets-src/`.
 - `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below),
@@ -156,12 +156,21 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   in either occupies the same space as anything else. It also flood-fills the deck against
   the real colliders and holds **every nav anchor the HUD dollies to** to standable,
   reachable deck — the check that was missing when four of the seven stood in the solid.
+  **An open door is a hole**: a line through every doorway meets nothing with the leaves
+  parted and a leaf with them shut (every portal was once a solid plate).
   **Reaching a room's middle is not walking around it**: every standable cell inside every
   room must be reachable (the furnace room passed the centre check with its whole starboard
   half sealed behind a slag bin, and 0.38 m in front of the firebox door), and every ship
   `setMode` in `stage.js` must clamp the walk to `SHIP_BOUNDS` itself — a hand-written box
   ending at z −8.5, older than the furnace room, stopped the player half a metre inside its
-  doorway while every flood-fill passed.
+  doorway while every flood-fill passed. **Every compartment declares a light** (the pool
+  has no table of its own any more), and **every door opening keeps pocket for both
+  leaves** — half the opening of solid wall each side before the end of its run, since
+  a leaf that slides off the end of a partition sticks out into the next room.
+  On Erebus it also **flood-fills the walk from the spawn** against the real colliders
+  (player radius included) and requires every pylon's approach mark to be reached: the
+  basin now has outcrops, an arch, a skeleton and a derelict in it, and a landmark in the
+  wrong place would wall a pylon off.
 - `npm run verify:bench` — deploys ALL FIVE Unit 1 instruments onto the real Tallow benches,
   then ALL FOUR Unit 2 instruments onto the real Ligar benches (each fed the widest stage
   its quest declares, read from the quest's own `STAGES`), in Node, and measures them: every site faces the ground the player walks in from, and every
@@ -178,7 +187,12 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   leaned back through the bench's own lip into the lean-to behind it. **An instanced body is
   measured per instance**: its geometry box is the UNIT body, so taken at face value it
   reported a metre-wide box round every heap and duly found the assay floor inside a vice two
-  metres away — nothing was wrong with the bench, the ruler was. Finally it puts **every
+  metres away — nothing was wrong with the bench, the ruler was. **A baked body is measured
+  per part** for the same reason: a site baked by `mergeStatic` is one mesh per material,
+  and the box round the one holding its plate and its lean-to encloses the bench standing
+  in the middle of them, so the group's `partBoxes` are measured instead — and a **merged
+  rock** (Ligar's `basalt.js` meshes; a quarry floor's rubble is one mesh) by the boxes it
+  records on itself. Finally it puts **every
   stage `q3-catalogue` and `q5-assay` declare** through the built instrument: the board
   offers the slots the quest is about to grade against, and a pour places every piece
   `planPour` says it places. On the board it **presses**, through the real pointer path —
@@ -191,6 +205,13 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   pass an **instanced field is measured one instance at a time** (the union of a quarry's
   floor rubble is a box round the whole floor) and a mesh marked `userData.openShell` — a
   barrel vault — by its triangles, since a vault has an underside and no inside.
+- `npm run verify:voyage` — the Avalon can land and a player can get off it (see "The
+  voyage" below): with the airlock's outer leaf open, a line through the hatch at head,
+  chest and knee height meets nothing aboard (a lining sheet once stood in the opening),
+  and with it shut the line stops on the leaf; on Tallow, Ligar and Erebus the landing
+  `solveLanding` picks keeps the hull and ramp clear of every collider, puts the ramp's
+  foot on open ground inside the walk and within a ramp's reach of the sill, on a quarter
+  turn so the hull's collider box is exact; and the chevron's route aboard stays on deck.
 - `npm run verify:ligar` — Ligar's ground, held to every rule `verify:tallow` holds Tallow
   to, and three a quarry needs: it **builds the real world** and measures every pair of
   bodies (instanced fields per instance, via `userData.partBoxes`); it fails any body
@@ -199,9 +220,16 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   the flat, and passed); and it **flood-fills the walk** from the spawn against the real
   colliders and walking surface, requiring every bench to be reachable on its own floor
   and **no reachable cell to drop off a ledge**, which is what proves the cut is sealed
-  except by its ramp. Each sign must read `Bench N - <quest title>`.
+  except by its ramp. Each sign must read `Bench N - <quest title>`. It also requires
+  the rock to BE the column kit (twenty-plus merged basalt meshes, thousands of boxed
+  columns — a builder quietly falling back to a unit hexagon fails it), the ground to
+  run to the horizon, and every Ligar shader patch (ground, weather, air) to land on
+  three's real shader source.
 - `npm run verify:holo` — one owner for the `X` key, and the comms board never invents a
   guild score.
+- `npm run verify:normals` — a dome put through both `heightToNormal`s must lean away from
+  its centre on every flank under three.js's tangent frame, and no material may carry a
+  negative `normalScale` or negate a sampled normal's y (see "Surfaces" below).
 - `npm run verify:tallow` — asserts the Tallow ground: every prop footprint disjoint
   (no two objects share space), sites clear of props, the sub-level excavation walkable,
   every charted Unit 1 quest sited, T4 decoration removable without stranding a site,
@@ -261,22 +289,35 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   `_template.js`, the contract).
 - `screens/` — one render function per route, all pure string templates.
 - `three/` — persistent WebGL stage, quality-tier probe (T4/T3/T2/T1), ship interior, camera rig.
+  The ship is `three/ship.js` (orchestrator and the public `ShipInterior` API) over
+  `three/ship/`: `materials.js`, `kit.js` (the shared lining and parts), `hull.js`,
+  `doors.js`, `corridor.js` and one builder per compartment in `ship/rooms/` — see
+  "The Avalon" under §8.
   `stage.js` holds three modes (`ship` | `world` | `quest`) and `activeWorld`, which is
   whichever planet the player is standing on — Erebus (`world.js`), Tallow (`tallow.js`)
   or Ligar (`ligar.js`). The two Learn worlds share ONE arrival and render path
   (`enterLearnWorld`, `isLearnWorld`, `nearExitPad`, the Learn branch of the loop), so
   Ligar cannot come to differ from Tallow in how a player lands, walks or leaves; the
   exit pad is read from the world's own `landing-pad` landmark. Tone-mapping exposure is
-  per place: `SHIP_EXPOSURE` 1.28 for the ship and Erebus, `TALLOW_EXPOSURE` 0.92 for the
+  per place: `SHIP_EXPOSURE` 1.28 for the ship, `EREBUS_EXPOSURE` 0.82 for the desert
+  (its sky and sand are lit to daylight levels), `TALLOW_EXPOSURE` 0.92 for the
   salt pan, because a bright overcast rendered at the dark interior's exposure washes the
   crust out to paper, and `LIGAR_EXPOSURE` 1.16, because black stone at dusk throws almost
-  nothing back. The renderer's shadow map is enabled
+  nothing back. **A chamber that brings its own room is drawn at `SHIP_EXPOSURE` whatever
+  world it was opened on** — the Charge Gardens were lit for it — while a bench deployed
+  in a world takes that world's (the quest branch of `render()`). The renderer's shadow map is enabled
   at T4 only; every world light already asked for shadows and none were drawn before.
+- `three/voyage.js` — **the voyage**: flying the Avalon to a world at T4 (see "The voyage"
+  under §8). `three/ship-exterior.js` is the Avalon seen from outside plus `solveLanding`;
+  `three/guide-arrow.js` the lit chevron (and its plate on the glass) that leads to the
+  airlock aboard and to a bench or pylon on the ground; `screens/voyage.js` the helm plate
+  drawn while the ship is under way.
 - `three/tallow.js` — **Tallow**, Learn world 01 (see "Tallow" below), built from
   `three/world-data/tallow.json` with PBR surfaces from `materials/tallow-textures.js`.
 - `three/ligar.js` — **Ligar**, Learn world 02 (see "Ligar" below), built from
-  `three/world-data/ligar.json` (generated by `tools/gen-ligar-layout.py`) with PBR
-  surfaces from `materials/ligar-textures.js`.
+  `three/world-data/ligar.json` (generated by `tools/gen-ligar-layout.py`) over
+  `three/ligar/` (atmosphere, terrain, the `basalt.js` column kit, weather, plant,
+  vista, industry, effects) with PBR surfaces from `materials/ligar-textures.js`.
 - `quest3d/` — reusable containment chamber, `MOLECULE_DATA` (atoms, bonds and the
   pickable `regions` that double as anchor definitions), `InstancedMesh` renderer,
   MarchingCubes charge-density isosurfaces, and `evaluator.js`.
@@ -932,25 +973,93 @@ asserting 6.02 x 10^23 would be checking, not teaching.
 At T4, `#/learn/unit01` is not a list of quests: it is the ground they are played on.
 The player walks a salt-flat refinery in first person, finds a bench, and presses `[E]`.
 
-- **The look is not Erebus.** Erebus is an amber basin at low sun; Tallow is a bleached
-  salt pan under flat overcast — the same SCOURED PLATE world with the colour leached out.
-  Ground bounce dominates (a `HemisphereLight` off white crust), the sun is broad and
-  weak with no disc, and the palette stays warm-neutral with a brown/sand bias throughout.
-  The sub-level is the one place the sun never reached, so the colour survives there: it is
-  built from `crucible.jpg`'s register, riveted and sodium-lit.
+- **The look is not Erebus.** Erebus is an amber basin at low sun; Tallow is a high salt
+  pan under a thin veil of cirrostratus: the sun is up at 35 degrees, softened to a
+  white-hot patch with the **22-degree ice halo** a veil throws, the sky milky and bright,
+  and a pale quarter-lit world hangs low in the north-east behind the air. The crust
+  throws most of the light back up (a `HemisphereLight` whose ground term is the brighter
+  one). Palette warm-neutral; the only colour on the flat is the brine in the evaporation
+  ponds (milky, green, ochre, rose: four stages of one process) and the rust-red mud where
+  wheels have broken the crust. The sub-level is the one place the sun never reached, so
+  the colour survives there: riveted and sodium-lit.
+- **It is built the way Erebus was rebuilt, in `three/tallow/`**, behind the unchanged
+  `TallowWorld` contract (`scene`, `data`, `colliders`, `terrainMesh`, `hasFarTerrain`,
+  `getTerrainHeight`, `benchAnchor`, `setBenchDeployed`, `setSiteComplete`, `update`):
+  - `atmosphere.js` — **one sky function** (`tlSky`/`tlAir`) draws the dome, is every
+    material's fog (aerial perspective toward the sky in the direction seen, still keyed
+    to `scene.fog.near/far` for the voyage's cloud deck), and is PMREM'd into the
+    environment map. **The far ranges are drawn IN the sky** as ridgelines over azimuth,
+    lit by the same sun and buried in the same air: mountains forty kilometres off must
+    not slide against each other as a player walks, which geometry inside a 1000 m far
+    plane would.
+  - `terrain.js` — one analytic height field and **one grid to an 880 m horizon**, with
+    the excavation's outline written into the grid as extra lines so the hole is cut
+    along the pit's own walls. The pan is dead flat (a few decimetres across the walk);
+    the shore rises in some bearings and open salt runs to the sky in others. The ground
+    shader draws two scales of the salt-polygon crust, damp patches, **vehicle ruts and
+    trodden paths from the polylines in `tallow.json` `tracks`** (per pixel, so they are
+    sharp at the boots), **mirror flats** of standing brine beyond 150 m that reflect the
+    sky and ranges analytically, and a **mirage** on the far pan at grazing angles.
+  - `surfaces.js` — the crust is POLYGONS of raised crystal ridges, not cracks, because
+    a salt pan grows; and `applySaltWeather` patches every prop's material so **salt
+    crusts its foot** (reading the real ground height under each pixel from a baked
+    height texture, so the lab's floor works too), settles on up-facing faces and leaves
+    dried tide lines. A material tunes it with `userData.salt`; `userData.noSalt` on a
+    mesh or material exempts it (brine, stockpiles, rock). `weatherTheWorld()` applies
+    salt and air once, after everything is built; a Learn instrument deployed later is
+    deliberately left clean.
+  - `plant.js` — the refinery, assembled from real parts through a `Rig` builder (I,
+    angle and channel members, filleted pipe sweeps, flange pairs with studs, valves with
+    handwheels, gauges on siphons, handrails at 1.07/0.53 m with toe plates, caged
+    ladders, ring platforms, skirts with access doors, cladding in tiers) whose
+    `finish()` lays every uv in metres. Evaporators stand on concrete plinths with missing
+    and hanging cladding sheets (seeded per copy); the columns carry four landings, a
+    reboiler and a guyed davit; the pipe racks are H-section portals with a bellows, an
+    expansion loop and a torn lagged line; the conveyor's belt is torn and hanging. Its
+    kit materials (cladding, safety rail, drawn bar grating, concrete) are cached per
+    world in a `WeakMap` keyed on `ctx.M.drum`. Elevated structures collide as their
+    feet: `SUPPORT_POINTS` there is the one table of where the columns stand. An
+    octagonal plinth is turned by `thetaStart`, never by rotating the mesh, because a
+    rotated part is measured by the box round its box and grew into the pit's kerb.
+  - `hauler.js` — a tracked ore crawler lofted with Erebus's `loft()`: grousered track
+    pads round a stadium loop, sprocket, idler and bogied road wheels, a lofted cab with
+    deep viewports under a brow, a hopper bed with a ripped tarp, a knocked-over stack,
+    a skirt plate hanging off one bolt, sunk to its axles and listing onto the windward
+    flank with a salt drift against it. Its own `hullPlate()` material, never
+    `hullMaterial()`, whose cached sets are shared with Erebus.
+  - `vista.js` — everything beyond the walk, `phys: 'ambient'`, one vertex-coloured
+    `noSalt` material (grime, run-off, soot and salt painted in world space): rock islands
+    standing out of the pan; the far refinery to the north (hyperboloid cooling towers,
+    banded chimneys, sphere tanks, columns, sheds, a slewed tower crane, a flare stack) in
+    two clusters at 360–650 m, whose vents it returns as `plumes`; a stranded bucket-wheel
+    excavator ~96 m long at ~270 m east-north-east; a pipeline on 43 instanced trestles
+    marching west-north-west to the horizon with one trestle down; and a power line east.
+    A vista material must never be shared with a prop: `weatherTheWorld()` patches a
+    material once, the first time it meets it.
+  - `effects.js`, `kit.js` — the moving air (motes, grit streaming over the crust, salt
+    devils, vapour plumes whose puffs swell and thin with age) and the structural stock
+    the sheds are framed from (I-sections, corrugated sheet).
+  - `verify:tallow` runs every Tallow shader patch against three's real shader source and
+    fails if one no longer lands (a renamed chunk would otherwise strip the salt or the
+    air silently), and fails if `tracks` overflow the ground shader's segment arrays or
+    its `MAX_TRACK_LINES` (8) polyline boxes per kind. The ground tests a pixel against
+    each polyline's box before any of its segments, so a pixel away from every track pays
+    eleven box tests, not thirty-five segments and their noise; a path is drawn along its
+    segments only (it once drew each segment's whole LINE as a grey strip across the pan).
 - **Five sites, one per quest, all live, and each sign says what its bench teaches.**
   `site-1` *Bench 1 - Atoms* (`q1-grain`) under the lean-to in the yard; `site-2` *Bench 2 -
   Inside an Atom* (`q2-core`) down the stairwell in the diagnostic lab; `site-3` *Bench 3 -
   The Periodic Table* (`q3-catalogue`, the blockhouse with its door racked back); `site-4`
   *Bench 4 - Isotopes and Ions* (`q4-ledger`, painted floor and ledger board); `site-5`
   *Bench 5 - Atomic Mass* (`q5-assay`, a hopper over a chute with catch bins, south of the
-  yard). The structures are unchanged — only the signs are, because a player choosing a
-  bench should not have to enter it to find out what it is. Sites 1 and 2 carry their instruments as built objects (`BUILT_BENCHES`); sites
-  3–5 stand as real places whose quests draw the bench as a page over the world —
-  nothing sealed, nothing invented. `verify:tallow` still fails if a site's `built` flag
-  disagrees with the chart.
-- **The sub-level is a real excavation.** The terrain mesh has a rectangular hole cut in it
-  (triangles whose centre falls inside the footprint are dropped), the pit is built as
+  yard). A player choosing a bench should not have to enter it to find out what it is.
+  All five carry their instruments as built objects (`BUILT_BENCHES`). The lean-to is
+  framed as a field crew frames one (H-columns on bolted base plates, knee braces, rafters,
+  purlins, corrugated sheet, one corner lifted by a gale and one strip gone), and the vault
+  is a battered poured-concrete blockhouse with a proud portal and a hood over the door.
+  `verify:tallow` still fails if a site's `built` flag disagrees with the chart.
+- **The sub-level is a real excavation.** The ground mesh has a rectangular hole cut in it
+  along the pit's own outline (its edges are grid lines of the mesh), the pit is built as
   geometry so its edges are machined rather than stretched, and `getTerrainHeight` resolves
   the ramp — so the player walks down instead of being teleported under the ground. The pit
   rim is box colliders split around the stair mouth, which is what makes the stair the only
@@ -965,10 +1074,18 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
   back sheet and the lab's gauge board stand behind it — so the player walked in through
   the back wall, and the instrument docked its camera on the far side of the plate looking
   at the lip. `verify:bench` asserts the angle rather than trusting the number.
+- **The pad the Avalon lands on is low on purpose.** An octagon of plate with a bevelled
+  edge, a worn ring-and-chevron marking and a soot scorch (decals), flush dark perimeter
+  lamps, tie-down rings, precast blast walls and the windsock. Nothing inside the octagon
+  stands more than a hand above the plate, because the ship's legs reach the ground height
+  `solveLanding` reads and a marker post would come up through the landing gear.
 - **Only lamps are lit.** Sodium luminaires in the lab, the mast's obstruction lamp, the
   doorway light over the open vault, and one indicator per built site, driven from the
   Learn track's own progress through `setSiteComplete` — the world reads state, it never
-  keeps it.
+  keeps it. A luminaire's light is a `lampMark`, not a PointLight: the lab's four lamps
+  are lit as two pooled sources (one per pair, at its midpoint, right over site 2) and
+  the lean-to's work lamp is the third, all through a `LampPool` of TWO real lights (see
+  "The frame budget of the walkable worlds").
 - **Tier boundary.** Walking Tallow is T4. At T3 and below the Learn road is the screens it
   has always been and every quest completes exactly as before. `learn/worlds3d.js` is the
   registry that says which worlds are walkable. Ligar showed what a second one needs
@@ -984,26 +1101,81 @@ built from the three reference paintings (`ligar1`–`ligar3`): columnar basalt
 everywhere, three natural arches striding away north, a steel deck under a gantry sign,
 and an excavation with conveyors climbing out of it.
 
-- **The look is neither Erebus nor Tallow.** Black stone under a smoke-brown sky, lit
-  along one edge by a low, dust-reddened sun (key light at 26 m elevation from the
-  west, so every column lays a long shadow — the thing that makes a colonnade read as
-  one). Weak hemisphere fill, because black stone throws almost nothing back. The sky
-  shader draws a gold horizon band, a broad sun flare with **no disc** (a disc would be
-  a lamp and would bloom), and a drift of stack smoke. The horizon is stepped
-  colonnade silhouettes, not mesas.
-- **Everything is hexagonal, because a basalt flow is.** One shared unit hexagonal prism
-  (`hexGeo`, flat-shaded) builds the cut's walls, the colonnade rafts, the arches, the
-  spoil, the rubble, the stone on the belts and the chips on the benches, almost all of
-  it as `InstancedMesh` — about 4,200 bodies in ~860 meshes, built in about 1.3 s.
-  `ligar-textures.js` adds five surfaces, each with every map off one height field:
-  `basaltColumn` (anisotropic chisel-mark banding, joints, spall, lichen, iron weep),
-  `basaltPavement` (the column tops — joints LIGHTER than the stone, because they hold
-  the dust), `scoriaGrit`, `lavaTubeWall` (ropy and glazed) and `conveyorBelt`.
-- **The arches' jointing follows the curve**: prisms stand radially round a swept core,
-  vertical in the legs and horizontal over the crown, which is what a flow cooling
-  round a void does and what carries the silhouette. Legs are founded in the ground,
-  deep enough for the lower foot, since a thirty-metre span stands on ground that is
-  not level; no jointing is built below the ground under it.
+- **It is built the way Tallow and Erebus were rebuilt, in `three/ligar/`** (the
+  realism pass is recorded in `docs/plans/ligar-realism.md`), behind the unchanged
+  `LigarWorld` contract (`scene`, `data`, `colliders`, `terrainMesh`, `hasFarTerrain`,
+  `getTerrainHeight`, `benchAnchor`, `setBenchDeployed`, `setSiteComplete`, `update`,
+  `dispose`). What made the old world read as a toy was the answer to every question
+  being one unit hexagon, a three-colour sky with cardboard ridges and a 240 m plate.
+- **The look is neither Erebus nor Tallow** (`atmosphere.js`). Dusk: the sun eleven
+  degrees up in the west-south-west, amber, a broad smoulder with **no disc** (a disc
+  would be a lamp and would bloom). ONE sky function (`lgSky` / `lgAir`) draws the dome,
+  is every material's fog (aerial perspective toward the sky in the direction seen,
+  still keyed to `scene.fog.near/far` for the voyage) and is PMREM'd into the
+  environment map. The far side of the sky shows what every real dusk does: the
+  earth's shadow on the eastern horizon under the pink **belt of Venus**; an
+  altocumulus deck lit orange from BELOW; crepuscular rays; a full moon rising
+  opposite the sun. The far country is drawn IN the sky: stepped trap escarpments
+  ribbed with columns, and in the north-east a shield volcano whose plume leans
+  downwind. Black stone throws almost nothing back, so the hemisphere fill is weak.
+- **Every rock is columnar basalt from one kit (`basalt.js`), never a unit hexagon.**
+  A cooling flow cracks into an IRREGULAR tessellation: `columnCells` cuts a relaxed,
+  jittered hex lattice into Voronoi cells (mostly five and six sides, some four, seven
+  and eight), and `prism()` extrudes a cell through any `map(a, b, c)` — standing,
+  fallen, or radial round a void — with cross-fracture DRUMS, chamfered edges, domed,
+  cupped or snapped lids, and a per-column tone in vertex colour; winding is decided
+  per triangle against an outward hint. Builders: `columnRaft` (outcrops, portal
+  piers), `columnWall` (the quarry faces, ragged by whole columns and spalled at the
+  lip), `sawnSlab` (site 1's terrace), `radialRing` (the tube mouth), `lintelBeam`,
+  `basaltArch`, `rubbleField` and `fallenColumn`. Everything a landmark is made of is
+  MERGED into one mesh with two material groups (column face, weathered lid), and
+  records one box per column or piece in `userData.partBoxes`, which `verify:ligar`,
+  `verify:bench` and the overlap checker all read. `buildRubbleField` returns one.
+- **The arches FAN.** A flow cooling round a void grows its columns perpendicular to
+  the cooling surface, so every column of `basaltArch` lies along the arch's radial
+  direction — horizontal in the legs, vertical over the crown: the soffit is a
+  honeycomb of column ends, the flank a fan of column lengths. Thick-footed and
+  thin-crowned, lumpy, the legs flaring into buttresses; founded deep enough for the
+  lower foot and never built below the ground. A leg collides as three circles along
+  its breadth (`supportPoints`, from `archInfo`).
+- **The ground runs to the horizon** (`terrain.js`): one analytic height field and
+  one grid to 880 m. Inside 100 m it is exactly the old plateau (every site where it
+  stood); beyond it the country climbs in TRAP BENCHES — talus apron, cliff, flat top —
+  in embayments, then falls away behind the upper rim so the sky's far country shows
+  over it; to the north-east (`WINDOW_AZ`) the benches are gone, the window the volcano
+  and the moon are seen through. The ground shader draws the column tops per pixel
+  (non-repeating Voronoi, each stone its own tone and tilt, bevelled rims, dust packed
+  LIGHTER into the joints), rain standing in hollows, joints and rut bottoms as a
+  mirror of the sky, ash drifts, lichen, the scoria yard, the haul road from `tracks`
+  in `ligar.json`, and column-ribbed cliffs on every steep face. The quarry floor is
+  drawn with the SAME material (`buildFloorGeometry`), so its puddles are the same water.
+- **The cut's hole is wider than its floor.** The terrain's hole reaches `CUT_MARGIN`
+  (0.8 m) past the pit into the rock, because the faces are whole columns standing
+  proud of the wall line: under a pavement edge with nothing beneath it, a player in
+  the pit looked up through the ground. The rim colliders are unchanged, so the band
+  is never walked.
+- **Weather is applied once to everything built** (`surfaces.js`,
+  `weatherTheWorld()`): ash on what faces up, a dark damp foot read off a half-float
+  ground-height texture, lichen on stone only, rust weeping down steep faces; then the
+  air. `userData.noWeather` exempts a mesh (the ground, the scrub, a site indicator).
+- **Ground cover** (`initGroundCover`): loose cobbles (merged, boxed) and instanced
+  scrub tufts rooted where the field's ash and wet masks say water and dust gather,
+  swaying in the wind; both keep off the yard, the haul road, the pit, the pad and
+  every footprint. Scrub is `phys: 'ambient'` — it is walked through.
+- **The moving air** (`effects.js`): ash falling slowly round the eye (the volcano is
+  still putting it up), grit streams in gusts (never over the pit), ash devils on the
+  far plain, smoke from every stack `buildStack` reports a `ventY` for and from the
+  vista's stacks, and embers and flue smoke off the forge.
+- **Beyond the walk** (`vista.js`, `industry.js`, all `phys: 'ambient'`): the "organ
+  pipes" — spires of column thirty and forty metres tall standing off the plain — a
+  natural arch eighty metres across on the western benches, built by the same kit so
+  its scale is legible, and the works: the smelter this quarry feeds, a power line and
+  a derelict walking dragline.
+- **The frame budget**: the luminaires are `lampMarks` in a `LampPool` of three real
+  lights (the forge keeps its own shadowing light); `bakeStatics()` merges every
+  unbaked site group; the sun's shadow box follows the player in whole texels and is
+  re-drawn only when it moves, while a bench is deployed (`benchesOpen`), or one frame
+  in three (`paceShadow`).
 - **Four sites, all built, each sign `Bench N - <quest title>`.** `site-1` *Bench 1 -
   What Holds* (`q1-joins`) on a cut terrace under a stone portal west of the yard;
   `site-2` *Bench 2 - Stone and Wire* (`q2-lattice`) at the **Tube Forge** — down the
@@ -1029,10 +1201,36 @@ and an excavation with conveyors climbing out of it.
   run, and it runs tail-DOWN in the cut and head-UP over the spoil (`rotY -PI/2`). The
   tail starts eleven metres inside the wall, because at 27 degrees that is how far out a
   belt must start to clear a five-metre lip — it once ran into the rock.
-- **Instanced bodies are measured per instance.** Each field records its instances in
-  `userData.partBoxes` (the `mergeStatic` channel), so the overlap checker sees each
-  column where it is. The quarry-floor rubble is its own body, not part of the exempt
-  cut, because filed under the cut it once lay through the forge unseen.
+- **Merged and instanced bodies are measured per part.** A rock mesh records one box
+  per column in `userData.partBoxes` (the `mergeStatic` channel), and so does every
+  instanced field, so the overlap checker sees each column where it is. The
+  quarry-floor rubble is its own body, not part of the exempt cut, because filed under
+  the cut it once lay through the forge unseen.
+- **What Ligar costs per frame, and the four rules that hold it down.** Measured in a
+  real renderer (draw calls and triangles per walking frame, shadow passes included),
+  these took the spawn view from 1044 calls / 1.44M triangles to about 590 / 850k, with
+  no change to the picture:
+  - **The forge's shadow is drawn once.** A point light's shadow is six renders of the
+    scene and three.js re-draws all six every frame by default — it was ~270 calls and
+    ~480k triangles of every frame, anywhere in the world. `shadow.autoUpdate` is off;
+    `setBenchDeployed` and an open bench within reach (one frame in three) ask for it.
+  - **The sun's box follows in 2 m steps** (`followLigarShadow(sun, pos, step)`, still a
+    whole number of texels so nothing swims) and `paceShadow` runs at `every: 30`,
+    because nothing in Ligar that casts moves on its own. At one-texel steps the whole
+    caster set was re-drawn on every frame of a walk.
+  - **Walkable ground groups are baked too** (`bakeStatics`: `phys: 'ground'` is exempt
+    from the overlap check by kind, so baking costs no precision; the deck alone was 72
+    draw calls) — except a mesh whose shader reads an attribute `mergeStatic` would
+    strip: the cut's floor carries the ground's `aMask`, and merged it lost its grit.
+  - **A weathered material is one program.** `applyLigarWeather`'s amounts are uniforms,
+    so its cache key does not carry them.
+- **The plant lives in `ligar/plant.js`**: each builder takes the world (its materials,
+  `own`, `t4`, `buildRubbleField`, `lamps`, `lampMarks`) and returns a group in the
+  landmark's frame. A prop never creates a `PointLight`; it pushes a `lampMark`. Props
+  are assembled from real parts through a Tallow-style `Rig` (H, channel and angle
+  sections, handrails with toe plates, caged ladders, valves, stencil placards, UVs in
+  metres) over a per-world material kit cached on the world. Long members on a slope
+  are built bay by bay, because the overlap check measures each part by its box.
 
 ### Surfaces, small parts and the draw-call budget (`materials/pbr-kit.js`)
 
@@ -1046,6 +1244,13 @@ different amount of weather.
   A scratch is lighter *because* it is raised, less rough *because* it is
   scoured, unoccluded *because* it stands proud. Draw those four independently
   and the eye reads plastic no matter how many octaves went in.
+- **Normal maps are OpenGL-style, because that is how three.js reads them**: red is
+  +u, green is +v, and a CanvasTexture's flipY puts canvas row 0 at v = 1, so green
+  points canvas UP. `heightToNormal` (and its copy in `tallow-textures.js`) once wrote
+  green the other way and every rivet, pebble and stone read as a dimple; the Erebus
+  rebuild then papered over it with negative `normalScale.y` and a flipped channel in
+  its triplanar rock shader. The generator is fixed and the workarounds are gone —
+  never compensate per material; `verify:normals` fails the build if one comes back.
 - **`platedMetal` builds a plate the way the object acquired it** — rolled steel,
   a pressed panel grid, rivet lines, paint, paint worn off the high edges, rust
   blooming out of the bare metal and streaking downward. `weather` 0…1 is most
@@ -1068,7 +1273,57 @@ different amount of weather.
   that must stay addressable — a lamp that lights, a sock that turns, a cabinet
   that cases up — sets `userData.noMerge`, which protects its whole subtree.
   `mergeStatic` records each part's box in `userData.partBoxes` so the physics
-  check stays as precise as it was on the unbaked prop.
+  check stays as precise as it was on the unbaked prop — boxed straight into the
+  group's frame (going through world space boxed a part twice on a turned group).
+
+### The frame budget of the walkable worlds (Tallow, Erebus, Ligar)
+
+Both worlds were built for the look first; these rules are what keep them cheap
+without changing it. Measured in Node (`TallowWorld` / `WorldScene` behind the
+DOM shim): Tallow went from 914 meshes (325 shadow casters, 5 point lights) to
+389 (237, 2); Erebus from 254 (215, 21) to 178 (139, 3). Triangles barely moved
+(0.79M / 0.51M to 0.76M / 0.50M): they were never the cost.
+
+- **A PointLight is shaded on every lit pixel, lit or not.** A forward renderer
+  runs the full specular term per light per fragment even at intensity zero, so
+  twenty dormant pylon lamps were the most expensive thing in the sand's shader.
+  `three/lamp-pool.js` owns a FIXED number of real lights (a changing count
+  recompiles every material in view) and hands them to the lit sources nearest
+  the eye, each weighted by how much nearer it is than the first one that missed
+  out, so two sources trade places only at equal distance and nothing pops.
+  Erebus: 3 lights for 20 pylons (13.8 m apart: the one underfoot and both
+  neighbours) and the lander's bay. Tallow: 2. A new lamp in either world is a
+  pool source, never a `new PointLight`.
+- **What never moves is baked.** `TallowWorld.bakeStatics()` runs `mergeStatic`
+  over every top-level group not already baked (the sites, the lab, the crate
+  stacks) and bakes each cased-up instrument on its own INSIDE its `noMerge`
+  group, so casing it up still hides one thing. A mesh carrying `phys`,
+  `noSalt` or `openShell` is left out, because the tag lives on the mesh. The
+  Erebus pylons are baked as ONE `pylon-ring` (each pylon group keeps only its
+  lamp, number and hazard paint); their luminaires share one material set.
+- **The sun does not move, so its shadow map is re-drawn only when something
+  does** (`three/shadow-pace.js`). `followShadow` / `followTallowShadow` return
+  whether the texel-snapped box moved; `paceShadow` re-draws on a move, while a
+  Tallow bench is deployed (its jaws and pieces cast), and otherwise one frame in
+  three (Tallow) or two (Erebus, whose chamber console rides on the camera).
+  `holdShadowUntilAsked` puts `autoUpdate` back after every render of the scene,
+  so a render the world's `update()` did not precede (the voyage's outside pass)
+  always gets a fresh map.
+- **Discard before the noise.** The grit/sand stream sheets are 180 m across and
+  show only 1.5–75 m from the eye and inside a gust; their shaders test distance,
+  then the one gust fbm, and discard before the other eight octaves. Tallow's
+  sheet is a 3 m grid on every tier (the pan is flat to centimetres over that).
+- **The air is not evaluated where there is none.** The aerial-perspective patch
+  skips the sky function when the fog amount is under 0.002 (the first ~12 m,
+  most of the ground at the feet), and the sky's cirrus / veil noise is skipped
+  within a third of a degree of the horizon, where its coverage is zero (Erebus)
+  or under a thousandth (Tallow) — which is where the mirror flats and the mirage
+  look.
+- **Rejected as too visible:** a coarser terrain grid (the rectilinear tails give
+  the cardinal horizons their fine ridgelines), fewer sky-noise octaves, a smaller
+  shadow map or PCF instead of PCFSoft, and merging the vista (half of it is
+  behind the player and culled). A lower pixel-ratio cap for the worlds is the
+  one lever left untouched, and it lives in `stage.applyTierSettings`.
 
 ### Nothing occupies the same space as anything else
 
@@ -1097,20 +1352,24 @@ Erebus.
   doorway, a crate inside a lean-to post — and a missing import that would have
   crashed Tallow outright.
 - **Every doorway says where it goes, on both faces.** A ship of identical grey
-  openings is a maze, and a player who finds the star map by opening three doors has
-  learned the deck plan by trial and error. `buildDoorwayFrames` hangs a stencilled
-  header plate on each side of every frame, naming the compartment you walk INTO on
-  that side — the room's designator read from the spine, `SPINE` read from inside the
-  room. **The names are not written down at the frame:** `roomAt()` is asked what is
-  actually half a metre through the opening in each direction, so a bulkhead that moves
-  takes its legend with it and a plate can never name a compartment that is no longer
-  behind it. `placard()` shrinks its face to fit rather than clipping, because
-  `COMMAND BRIDGE` is twice the length of `COMMS`.
-- **Doorways are drawn where the deck is free.** `buildDoorways` runs last, after
-  every room has registered its furniture, draws ONE frame per unordered graph
-  edge at the midpoint of the two compartments, and walks along that line to the
-  first clear spot. `hatchPos` is untouched: the traversal graph and its view
-  cones are a separate thing from where the plate is welded.
+  openings is a maze. `ship/doors.js` hangs a stencilled header plate on each face of
+  every portal, naming the compartment you walk INTO on that side. **The names are not
+  written down at the frame:** `roomAt()` is asked what is actually half a metre through
+  the opening in each direction, so a bulkhead that moves takes its legend with it.
+  `placard()` shrinks its face to fit rather than clipping.
+- **Doorways are architecture.** Each opening in `WALLS` gets a portal and a pair of
+  sliding leaves exactly where the wall declares it; `hatchPos` in the graph must sit
+  within 0.75 m of one. The traversal graph and its view cones are a separate thing
+  from where the plate is welded.
+- **The lining is part of the structure.** `dressRoomShell` adds every room's wall,
+  ceiling and deck lining to `ship.hull`, so it is one object with the plating and is
+  exempt from overlap with it. It is held to a budget instead (`DRESS` in `kit.js`):
+  nothing on a wall stands more than 0.1 m off its face and the upper chamfer starts
+  at 2.45 m, so a room can stand furniture 0.05 m off a wall and know it is clear. A
+  room that needs a wall span bare (a rack to the deckhead, the airlock's outer hatch)
+  asks for it with `keepClear`. Equipment bolted to the structure may be added to the
+  hull too — the bridge's dash and shoulder stations are, because the raked plating's
+  world-aligned boxes cover the whole nose.
 
 ### The interface is in the world (`three/world-ui.js`, T4)
 
@@ -1363,12 +1622,22 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
   (`unit01/q1-grain` … `unit01/q5-assay`, the whole of Tallow, and `unit02/q1-joins` …
   `unit02/q4-weigh`, the whole of Ligar). Scaffolding, gating, routes, backend tab,
   per-world practice sets and the verifier are in place. World 01 (Tallow) is also built as
-  walkable ground at T4: sites 1–2 are benches you stand at, sites 3–5 are real places whose
-  quests draw the bench as a page over the world. **Ligar is walkable at T4 too** — all four of its
+  walkable ground at T4, all five of its benches built instruments standing on it. **Ligar is walkable at T4 too** — all four of its
   benches are built instruments on its ground, and a page on every lower tier. The other
   eight worlds are charts only. The Tallow→Ligar pass
   (`tallow-ligar-build.md`) carries the bench order and what is deliberately left out of
   each unit.
+- `docs/plans/engagement-pass.md` — progression and engagement (plan only, nothing built):
+  a table-driven level curve paced to the XP that exists, a presentation queue that holds
+  level-ups until a safe moment, requisitions (derived unlocks, cosmetic or convenience
+  only), commendations (stencilled plates from either road, never XP), per-stage Clean
+  marks, the Field Manual (earned vocabulary as a collection), a weekly watch streak,
+  officer-issued meeting codes, guild contracts, and Standings scopes (Your Guild, This
+  Week, a pinned row and a neighbourhood). Six open decisions are listed in its §12,
+  including whether the Learn XP wall stays (recommended: yes).
+- `docs/plans/ship-redesign.md` — the Avalon rebuilt from a shared kit (done): faceted nose
+  and raked canopy, one lining section in every compartment, sliding pressure doors that
+  open as you approach, every room refurnished. Contracts kept and listed there.
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
 
@@ -1512,13 +1781,22 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **A phone is not disqualified from T4 by being a phone.** `isT4Capable` in
   `three/tier.js` asks about WebGL2, cores and reported memory and nothing else — no
   pointer test, and Apple's mobile GPU is deliberately absent from the slow-renderer
-  regex, because a renderer string is not a frame rate. `isT4Eligible` is that plus
-  "not demoted earlier in this page session"; Settings and the HUD chip ask
-  `isT4Capable`, so a handset the monitor demoted can always be put back by hand.
+  regex, because a renderer string is not a frame rate. `isT4Eligible` is now just
+  `isT4Capable` (nothing demotes any more); Settings and the HUD chip ask it too.
   Two things are cheaper on a handset and are the only fidelity differences: DPR is
   capped at 1.5 rather than 2 (a phone commonly reports 3), and `shadowMap` stays off,
   because soft shadow maps are the one T4 feature a mobile GPU cannot hold 60fps
   through.
+- **On a planet, resolution is paced and nothing else is.** `stage.paceResolution` steps
+  the pixel ratio down a quarter when a second of frames averages under 45fps (never
+  below 1 on a high-density screen, 0.8 on a 1x one), and back up after a few seconds
+  with headroom, not returning to a ratio found too slow until 20 s pass without a slow
+  second. The first 3 s on a planet are not judged. Aboard ship it is always the tier's
+  full ratio. A machine that holds 60fps never sees it.
+- **A world's shaders are compiled when it is built** (`stage.warmWorld`, via
+  `compileAsync`), not a material at a time as each piece first comes into view — that
+  was a stall of tens to hundreds of milliseconds on the frame it happened, mid-walk.
+  Every world is built through `stage.worldFor`, so none can skip it.
 - **A measured tier is never written down; only a chosen one is.** This is the rule that
   keeps a phone out of the stills. `session.gfxTierPref` holds a tier the *player* picked
   — `tierManager.chooseTier`, from the Settings radios or the HUD chip, is the only path
@@ -1526,14 +1804,13 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   and persists nothing, so a bad afternoon is never inherited by the next visit.
   `session.gfxTier` is just what is running now. They used to be one value, and every
   automatic demotion was stored as though the player had asked for it.
-- **A boot is not evidence.** `recordFrame` is one judgement window for the boot probe
-  and the runtime monitor alike (90 frames), and it is blind for `WARM_UP_MS` (6 s) after
-  boot and after every tier change, because textures uploading and shaders compiling read
-  as 10fps. A demotion is **one step**, then the window is discarded and
-  `DEMOTE_COOLDOWN_MS` (8 s) has to pass. The old monitor kept its slow samples after
-  each change, so one hitch walked a capable iPhone from T4 to T1 within a few frames —
-  and stored T1 — which is how a phone ended up looking at static backdrops. A device
-  that really cannot render still lands where it belongs, it just has to prove it.
+- **THE TIER IS DECIDED ONCE, WHEN THE PAGE OPENS, AND KEPT.** There is no runtime
+  frame monitor: `recordFrame` is a documented no-op the render loop still calls. A
+  demotion rebuilt render settings under whatever the player was doing — mid-voyage,
+  mid-bench — and the slow stretches that triggered it (a world building, shaders
+  compiling, a heavy world through the canopy) are not evidence about the device. It
+  also once walked a capable iPhone from T4 to the stills. After boot the only thing
+  that changes the tier is the player choosing one (`chooseTier`).
   `migrateStoredTier` (behind `avalon_gfx_rev`, rev 3) clears any stored sub-T4 tier once
   on a T4-capable touch device, since none of them were chosen; a desktop preference and
   a phone that is genuinely not capable are untouched.
@@ -1626,7 +1903,55 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     invariant that code's comment always claimed. Nothing runs there unless the player is
     genuinely stuck, so a teleport nobody has thought of yet — a cinematic, a world spawn —
     cannot strand them either.
-- Starship 3D interior: `src/three/ship.js` builds hyper-realistic physical rooms and interconnecting corridor spines along `walkPath` splines with procedural PBR durasteel plating with tangent-space normal mapping (`createDurasteelNormalTexture`), floor grating, runway halogen strips, chamfered hatch bulkheads, tactical quad-CRT bridge consoles with mechanical keyboards and dial gauges, dual flight pods with yokes and center throttle quadrant in cockpit, central holo-table with 4-planet orrery and live holographic quest projector, 2-tier bunk beds with canvas bedding and stenciled metal footlockers, anglepoise desk lamp and gear hooks in quarters, overhead gantry crane and stacked shipping containers with cargo manifest screen, 19-inch equipment racks with patch bay loops and glowing vacuum tube cages in comms, and heavy airlock blast door with manual dogging wheel, hydraulic rams, and pressure dials. Non-overlapping physics bounds, rear-shifted bridge consoles (`Z = [0.2, 1.4]`), forward-shifted cockpit pods (`Z = [2.6, 3.8]`), and center pedestal colliders ensure wide-open transverse corridors at `Z = [1.4, 2.6]` across all rooms.
+- **The Avalon** (`three/ship.js` over `three/ship/`, plan in `docs/plans/ship-redesign.md`).
+  A used freighter, BUILT out of a few standard parts repeated with discipline, not
+  modelled room by room out of boxes.
+  - **Deck plan** (`ship-rooms.js`, pure data): the bow is a faceted nose —
+    `BRIDGE_OUTLINE` runs straight sides to z 3.2, raked shoulders (two slot viewports
+    each, `SHOULDER_PORTS`) and five canopy facets closing at z 6.8; everything in the
+    bridge's box outside the outline is stepped colliders. Aft of it the spine, berths A
+    and B and comms to port, the cargo hold, the ladderwell (`FLOOR_HATCH`, a shaft
+    to the lower deck) and the airlock to starboard, the engine room (id `furnace`)
+    across the stern. `HULL_WINDOWS` are portholes cut through the port plating.
+    Deckheads 3.0 / bridge 3.4 / engine room 4.0.
+  - **The canopy** (`hull.js` `canopyGeometry`) rakes 0.9 m aft from a 0.92 m sill to a
+    2.85 m head, mitred at every joint, with cheeks closing the ends against the
+    shoulders and a lowered nose deckhead forward of z 4.3.
+  - **One section everywhere** (`kit.js` `dressRoomShell`): angled kick plate, three
+    courses of pressed panel between structural ribs (bays filled with vents, conduit
+    runs, equipment boxes and light slots), a cornice and angled upper chamfer, a
+    coffered deckhead with beams and light troughs, a tiled deck (grating over a lit
+    channel down the spine). Portholes get pressure-port trim. Textures are laid at
+    world scale: a material with `userData.worldUV` is re-mapped by `applyWorldUVs`
+    before the bake, so a bracket and a bulkhead carry rivets the same size.
+  - **Doors** (`doors.js`): a chamfered gunmetal portal proud of both faces with jamb
+    lights, a control box and name plates, and two leaves that part and slide into the
+    bulkhead (at different depths, so neighbouring doors can share pocket). **They open
+    for you** — within 3.0 m, shut again past 3.6 m, parting in about a fifth of a second — and the collider lifts the moment
+    one starts to open and returns only once nobody is near enough to be caught.
+    `ShipInterior.update(delta, time, viewer)` returns true when the set changes and
+    `stage.js` hands the walk the new colliders. Doors are no longer `[E]` targets.
+    **A portal is an ARCH, one outline, never a rectangle with a hole in it**
+    (`archShape` in `kit.js`). The opening runs down to the deck, and a hole whose foot
+    touches the outer edge is not a hole to the triangulator: every portal came out a
+    solid plate filling its doorway, the leaves slid open unseen behind it, and the
+    player walked through what looked like a shut door. `verify:ship` casts a line
+    through every doorway at knee, chest and head height: clear when open, a leaf when shut.
+  - **Rooms** (`ship/rooms/*.js`): bridge (tactical bank to port, nav racks to
+    starboard, engineering and comms stations under the shoulder ports, the club
+    board's deck emitter), cockpit (a dash following all five facets, pilot seats on
+    rails with yokes, throttle pedestal, overhead panels), star map (octagonal
+    projector table), berths (bunk alcove, fold-down desk under the porthole, lockers,
+    washbasin; A lived in, B cadet issue), comms (rack, operator console, standings
+    screen in a hutch, transmitter, valve gallery), ladderwell (railed hatch, shaft,
+    rung ladder), cargo hold (freight box, strapped crate, chain hoist, drum rack,
+    loader), airlock (octagonal outer hatch with rams and handwheel, cycle panel, two
+    pressure suits), engine room (reactor with a flickering firebox, motivator,
+    consoles). Each room bakes its furniture with `ship.bake(group)`; about 375 meshes
+    and 190k triangles for the whole ship.
+  - Every holo, screen, terminal id, route and prompt the rest of the app uses is
+    unchanged: `clubHolo*`, `starmapHolo*`, `commsHolo*`, `commsScreenMat`,
+    `cargoScreenMat`, and the seven stations.
 - In-World 3D content transfer: In T4, primary content lives diegetically in 3D: Quests in the Star Map holo-table, Standings on the Comms CRT terminal, Inventory on the Cargo Manifest, and the Bridge Welcome Hologram directly in front of the camera's original bridge position displaying "UHS Chem Club", meeting announcements ("Next meeting 9/29 in 702"), a top-right "Close [X]" badge, directional wayfinding arrows, and a bottom prompt ("Check out the star map for the latest quests!"). Any holographic projection (Bridge announcement directory screen & vertical beam via `clubHoloGroup`/`clubHoloBeam`, or Star Map holo-table planetary orrery & floating quest screen via `starmapHoloGroup`) always displays by default; dismissal flags (`clubHoloClosed`, `starmapHoloClosed`) are session-scoped (`sessionStorage`, cleared on new session/sign-in) so holograms only stay dismissed for the active session and pop back up on the next session. Projections can be closed and opened by pressing the "X" key (`stage.toggleAnyHolo()`, `stage.toggleClubHolo()`, `stage.toggleStarmapHolo()`), dispatching `club-holo:open|close` and `starmap-holo:open|close` events with debounced key handling.
   - **ONE HANDLER OWNS THE `X` KEY.** It is the window listener in `stage.js`,
     and nothing else may bind it. `FpsControls` used to bind it too, so every
@@ -1648,8 +1973,131 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     at its 1.4 m standing distance, minus the HUD, which covers the top of the
     view. It never scales above 1, and it re-fits on resize and on sign-in,
     since raising the HUD nav is 40 px off the top of a phone. In T3 and below, 2D full-page screens (`.screen-container`) remain active with matching dismissible/re-openable announcement cards with the same star map quest callout. Doorway frames in comms are positioned at corridor thresholds to prevent obstructing the Fleet Comms standings screen, and the Cargo Manifest terminal screen is offset (`Z = 0.370`) with polygon offsetting to eliminate coplanar Z-fighting and screen glitching.
-- Erebus world scene: `src/three/world.js` and `src/three/world-data/erebus.json` define The Charge Gardens basin with 20 instanced pylon structures along a walkable route, survey lander ("SANDSTALKER") with boarding ramp, stratified sedimentary rock outcrops, procedural terrain heightmap (`getTerrainHeight`), amber celestial sky, banded gas giant vista (with `fog: false` celestial bodies), tuned desert haze (`fogNear: 70`, `fogFar: 280`), and atmospheric dust motes.
+- **Erebus** (`three/world.js` over `three/erebus/`, data in `world-data/erebus.json`,
+  written by `tools/generate-erebus-world.mjs`). A dry lakebed on a desert moon at low sun
+  under a ringed gas giant: the twenty pylons on the rim of the basin, a dune sea climbing
+  away outside it, buttes on the horizon and the wreck of something enormous in the haze
+  to the west. `world.js` keeps the whole public contract (`scene`, `data`, `colliders`,
+  `pylonMeshes`, `terrainMesh`, `getTerrainHeight`, `setClearedStages`, `update`,
+  `getAimTargets`); what the world is made of lives beside it:
+  - **One height function, one ground to the horizon** (`erebus/terrain.js`).
+    `makeHeightField` is analytic — bowl, rim, a flat cracked playa in the middle,
+    asymmetric transverse dunes on draa, stepped bedrock far out, sand aprons round every
+    landmark and a lee drift behind every pylon — so the walk, `solveLanding` and the
+    Node checks stand on exactly the ground that is drawn. The mesh is ONE grid, 1.25 m
+    across the walked square and growing geometrically to an 880 m disc; there is no
+    backdrop seam because there is no second mesh. Every surface that shows wind follows
+    `WIND`, which matches the ripples combed into the sand texture. A coarse copy of the
+    walk on layer 1 is the only thing the sun's shadow camera draws of the ground.
+  - **One sky function** (`erebus/atmosphere.js`). `erebusSky` / `erebusAir` draw the
+    dome (always centred on whatever camera draws it) and are ALSO the fog: every material
+    has `fog_fragment` replaced by aerial perspective toward the sky in the direction it is
+    seen, thinner with altitude, still keyed to `scene.fog.near/far` so the voyage can
+    close it into a cloud deck. The gas giant and its moon are the `celestial.js` shaders
+    with the sky ADDED and the air column dimming them (a daytime moon's night side is sky,
+    not black); the rings blend additively. The sun is 17 degrees up, dust-reddened, with a
+    soft disc; its shadow box follows the player in whole texels and is re-drawn only
+    when it moves or every other frame (`shadow-pace.js`). `createSkyEnvironment`
+    PMREMs the sky so metal reflects the air it stands in.
+  - **One geology** (`erebus/rocks.js`). `STRATA` is one stack of beds indexed by
+    ALTITUDE: it decides both how far a face stands proud (hard beds ledge, soft recess)
+    and the colour painted there, for every rock, the far buttes and the bedrock in the
+    terrain alike — so the same bands appear at the same heights across the whole map.
+    Shapes: fracture-cut `boulderGeometry`, lathed `columnGeometry` (lobed plan, V-gullies,
+    caprock, talus, sandblasted notch) and `archGeometry`. The rock shader is triplanar in
+    world space with varnish streaks and sand on up-facing surfaces; the far buttes use
+    the `lite` variant.
+  - **Landmarks** (`erebus/landmarks.js`) are one group each (scree included, instanced,
+    with per-instance `partBoxes`), carry a footprint `radius` the landing solver avoids,
+    and push their own colliders: sandstone spire, hoodoos with balanced caprocks, butte,
+    outcrop, a boulder spill, a walk-under arch, a giant skeleton and a broken-backed
+    freighter. `vista.js` is `phys: 'ambient'`: buttes 240–760 m out and a 300 m capital
+    wreck nose-down in the dunes. `lander.js` is SANDSTALKER as a lofted craft whose legs
+    each reach the ground under them. `effects.js` is the moving air: dust motes wrapped
+    round the eye, sand streaming over the ground in gusts, and dust devils on the flats.
+  - **Plate is desert plate** (`erebus/surfaces.js`): `hullPlate` is paint bleached by sun
+    and chipped by sand down to primer and metal, not rust run down by rain — one shared
+    set per wear grade, tinted per object. `addDustCover` lays sand on whatever faces up.
+    pbr-kit's normal maps carry green inverted against three's tangent frame (a bump reads
+    as a dimple), so every Erebus material flips normal-map y.
+  - `tools/generate-erebus-world.mjs` rule 12 keeps every landmark's footprint (plus its
+    scree) off the pylon ring.
 - T4 In-World Terminals: In T4, compartment interactions open `.in-world-terminal` tactical HUD overlays with `CLOSE` dismiss controls. Star Map holo-table integrates Sector 01 status and disembarking; Quarters integrates crew profile and avatar customizer; Cargo Hold integrates cargo manifest and trinket locker; Comms integrates standings; Settings integrates graphics tier (T4 default) and audio sliders. Bridge displays the floating directory kiosk instead of WASD/mouse look text prompts.
+- **The voyage — at T4 a world is FLOWN to, never stepped into** (`three/voyage.js`).
+  A signed-in player aboard who asks for a world — the star map, the Learn road, the
+  bridge's quest key, the airlock terminal — is not teleported and gets no film: the router
+  (`tryVoyage`) hands the route to `stage.requestVoyage`, draws the helm plate, and holds
+  the route until the player walks off the ship (`voyage:arrived`), then draws it with the
+  player standing where the ramp left them (`stage._arrivalHold`, honoured by
+  `enterWorldScene` / `enterLearnWorld`). One unbroken shot: the player is walked to the
+  pilot's place and turned to the canopy, the drive spools, the stars stretch into
+  streaks down a lit tunnel with the field of view kicking wide, the ship drops out in
+  front of the planet (the same celestial shaders as the vista, in the world's palette,
+  nothing on its surface modelled), flies to it, falls into its air (no plasma shell, no streaks: inside an atmosphere
+  those read as a second jump away from the planet just reached), comes
+  down through cloud onto the REAL built world, flies to its landing pad and sets down.
+  **Once it reaches the planet it comes DOWN, not across**: the approach brakes to a
+  stop at `HOLD_ALT` over the landing site, nose tipped down at the world
+  (`HOLD_PITCH`, since from that high the horizon is below a level canopy); the entry
+  falls straight down the local vertical until the cloud closes; and under the cloud
+  the descent drops onto the pad from ~190 m overhead, turning onto its heading, with
+  only a short slide into line. The old path skimmed the limb, drove forward through
+  the air and then glided forward over the world, which read as flying over the planet
+  twice with a jump between. The cloud veil scrolls by an accumulated `cloudScroll`
+  (negative flow = streaming UP the glass, i.e. falling), never `time x rate`, so a
+  change of rate cannot jump the deck.
+  - **Two passes, one camera.** The player never leaves the ship's scene. Each frame draws
+    the OUTSIDE (the space scene, or the destination world's own scene) through a second
+    camera posed at (ship pose) x (player camera), then clears depth and draws the
+    interior over it. The interior is opaque except its glass, so the outside is what the
+    canopy, shoulder ports and portholes show; moving the ship is moving one matrix, and
+    nothing aboard — colliders, doors, terminals, aim — is ever transformed.
+  - **The only moment the outside changes from "a planet" to "this place" is inside a
+    full cloud deck** in the world's own fog colour, which then breaks up as the ship
+    descends. `buildFarGround` rings the built square with the terrain's own material so
+    it reads as part of a planet from altitude (a world whose own ground already runs to
+    the horizon sets `hasFarTerrain` and gets no ring — Erebus does); the world's fog is
+    closed in and eased back out. A jump flash covers the moment the ship's own starfield and vista are
+    released. No other cut exists. **The home sky (the ship's starfield and the canopy's
+    gas giant) belongs to space, never to a world**: `_finishDisembark` hands it back to
+    the interior, so `board()` and `_startDeparture` take it out again
+    (`_adoptHomeSky` then `_releaseHomeSky`). Left in, the interior pass drew the gas
+    giant over the world outside and it rode the whole voyage out, jump and all.
+  - **Down, the player walks the ship.** A chevron (`GuideArrow`) leads to the airlock;
+    [E] at its hatch reads `OPEN THE HATCH // DISEMBARK ONTO <WORLD>`, the hinged outer leaf
+    (`ship.airlockLeaf`, `setAirlockOpen`, `AIRLOCK_HATCH` cut through the plating) swings
+    in and the player is walked out and down the ramp. Once through the hull the interior
+    stops being drawn and the exterior model (`buildShipExterior`) appears behind them.
+    **Stepping off must not change a world's light count**, because a changed count
+    recompiles every material in that world (a freeze of seconds at the foot of the
+    ramp). So the hatch lamp is a descriptor (`hatchLamp`) the voyage adds to the
+    world's `LampPool` when it parks, never a PointLight on the model; the camera's chest
+    lamp (`stage.cameraLight`) is visible only while the camera is in the ship scene;
+    and `_park` warms the shell's materials against the world with `compileAsync`.
+    **The exterior is modelled on the reference freighter, not extruded from the deck
+    plan** (`ship-exterior.js`): a faceted loft whose mid-body flanks sit exactly on the
+    interior plating (`OUT_X`) and whose chiselled wedge nose runs on past the canopy to
+    z 16, a raised slit-windowed cockpit block, chin gun pods, a dorsal spine, a turret
+    hump with mast, two tarped crates and a canister rack on the roof, four stacked
+    engine nacelles (two a flank) past the stern, three skid-footed legs a side and a
+    grated stair with handrails. It is about 34.7 x 16.8 m (`SHIP_FOOTPRINT.body`), rides
+    `DECK_CLEARANCE` 2.6 m over the highest ground so the legs have room, and its own
+    weathered `platedMetal` sets (sand-dusted) — never the interior's materials, of which
+    it borrows `hazardMat` read-only. The static shell is `mergeStatic`-baked to one mesh
+    per material; `fitToGround` rebuilds the legs and stair for the ground under them and
+    merges them into two `noMerge` rig meshes (17 draw calls, ~17k triangles). The shell
+    shows slits, not the interior's five-pane canopy: it is never drawn with the player
+    inside. On Ligar it lands about 18 m off the pad, which is too hemmed in for its length. On
+    the ground the ship stands where it landed (its boxes join the walk's colliders), [E]
+    at the ramp is `BOARD THE AVALON`, and any route back to the ship boards it — in
+    through the airlock, still landed — rather than teleporting to space. Asking for
+    another world from a landed ship is a lift-off, a climb through the cloud, a pull
+    away from the world just left, and the jump.
+  - A **quest route** lands the ship on its world and leads the player to that quest's
+    bench (only if it is open); `#/quest` leads to the next pylon. `Skip` on the helm plate
+    hurries the flight (x6); it never cuts. The voyage stands down for T3 and below, a
+    reload onto a world route (the first route of a page load), a signed-out player and
+    `session.reduceMotion` — each keeps the old path, launch film included at T3.
 - T4 Learn deployment: In T4, `#/learn/unit01` enters the 3D Tallow world
   (`stage.enterTallowScene(siteId)`), and `#/learn/unit02` enters Ligar
   (`stage.enterLigarScene(siteId)`); walking to a bench and pressing `[E]` raises a
@@ -1673,10 +2121,22 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   instrument that has no scene of its own (`FpsControls.releaseKeys` drops anything held, so a
   key that was down when the controls were disabled cannot come back latched).
 - First-person controls: `src/three/fps-controls.js` provides unconstrained WASD + sprint (Shift) + Spacebar jump + drag-look navigation with sliding physics collision, penetration push-out resolution (`resolveBoxCollisions`), player radius of 0.25, terrain height clamping on Erebus, and contextual `[E]` interaction prompts at ship terminals and pylons. Movement is active in world exploration and gated behind active session authentication aboard ship; it suspends in quest overlays and puzzle chamber views, and clicks on `.cinematic-overlay`, `.modal-container`, and HUD elements never start a look drag.
+- **`[E]` acts on what the camera is POINTED at, never on what is nearest.** It used
+  to be proximity: on the ship that meant the ROOM you stood in (the storage bay offered
+  the manifest with your back to it), and wherever two things were close the nearer won
+  however hard you looked at the other. `three/aim-target.js` (pure, Node-importable)
+  casts the view ray against the box each target occupies and takes the first one it
+  enters within that target's reach; a ray that starts inside a box is a miss, and
+  `blockers` stop it. Targets come from the place: `ShipInterior.getAimTargets()` (every
+  door filling its doorway, and each station's own furniture via the `aim` boxes on
+  `interactiveTerminals`, which also carry the `prompt`) with the bulkheads from
+  `getAimBlockers()`; `WorldScene.getAimTargets()` (pylon masts, the lander hull);
+  `learnWorldAimTargets(world, eyeY)` for Tallow and Ligar (each bench off its
+  `benchAnchor`, same-floor only, and the landing pad, which you look down at). The
+  prompt and the key both read `stage.aimedInteraction()`, so they cannot disagree.
 - Planetary transit cinematics: Launch and atmospheric descent cinematics (`launch`, `erebus_descent`) trigger on transit to Sector 01 from the Star Map, Bridge, and Airlock without persistent one-time lockout, and are skippable via Click/Space/Esc. FPS controls are disabled during cinematic playback to prevent input leakage into the background world.
 - Hero/prop shapes: `tools/hunyuan3d-shape-t4.ipynb` batches concept PNG/JPG images via Hunyuan3D 2.1 shape-only pipeline into `/kaggle/working/raw/*.glb` on NVIDIA T4; texturing is handled in Blender.
 - Nano Banana PBR textures: procedural canvas PBR pipeline in `src/three/materials/textures.js` generating albedo, tangent-space normal maps, roughness, phosphor cathode distortion vignettes, and custom station screens (`createDurasteelTexture`, `createDurasteelNormalTexture`, `createBlastDoorTexture`, `createRackPanelTexture`, `createFootlockerTexture`, `createContainerStencilTexture`, `createKeyboardTexture`, `createDialGaugeTexture`, `createVacuumTubeTexture`, `createCrtScreenTexture`) coupled with Three.js `MeshStandardMaterial`.
-- Starship cockpit: faceted durasteel canopy mullions, overhead avionics rack with amber task lighting, dual analog yokes, center throttle quadrant, armored bucket seats with 5-point harness straps, twin CRT monitors per pod, rudder pedals.
 - Celestial vista: chromatic gas giant with rings, the banded desert planet Erebus, moons,
   an asteroid belt. Stars are blue-white and sand-gold, not neon.
   - `three/materials/celestial.js` draws every body with its own shader instead of image
@@ -1691,10 +2151,10 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   - `stage.js` gives the ship scene `RoomEnvironment` PMREM
     (`environmentIntensity` 0.58, tone mapping exposure 1.28) so metal surfaces show rich specular reflections.
 - Interior lighting rig:
-  - `src/three/ship-lighting.js` implements `ShipLightPool` dynamically selecting the 7 closest light sources to the camera from 21 compartment and corridor positions with soft decay (1.2) and generous distance, plus a camera-mounted suit inspection light (strictly <= 8 PointLights for locked 60fps forward rendering).
+  - `src/three/ship-lighting.js` implements `ShipLightPool`, lighting the 7 sources nearest the camera (strictly <= 8 PointLights for locked 60fps forward rendering). **The rooms declare the sources** with `ship.addLight` at the fixtures they actually built; `stage.js` hands `shipInterior.lightSources` to the pool, and the table in `ship-lighting.js` is only a fallback.
   - Ambient base fill: `HemisphereLight` (0x8faac8 / 0x2e3544, 2.2) and `AmbientLight` (0x4a5668, 1.5) preventing crushed shadow voids.
   - Forward canopy starlight: `DirectionalLight` (0xdce6f8, 2.6) aimed from (-8, 16, 26) through the front canopy into the cockpit and bridge.
-  - Physical 3D fixtures: `createCeilingLuminaire` mounts cast iron protective cages with warm sodium diffuser panels (`luminaireMat` #ffe6b0) across the central spine, transverse corridor, wing corridors, and all compartments, complemented by dual halogen runway guide strips embedded into the deck.
+  - Physical fixtures: the light troughs in every coffered deckhead, the amber line under the spine's cornice, the lit channel under the spine's grating, jamb lights on every portal, and the rooms' own lamps and screens.
 - Routes bind environment stills: `/art/cockpit.jpg`, `starmap.jpg`, `crucible.jpg`,
   `cargo.jpg`, `quarters.jpg`, `comms.jpg`, `airlock.jpg`.
 - The app mark (`public/icon.svg`, rasterized to `icon-180/192/512.png`, and
@@ -1745,3 +2205,13 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   `stage-header-main`/`stage-header-actions`, `banner-content`, `demo-actions`,
   `quest-modal-head`, `quest-debrief-stats`, `debrief-controls-left`, and in the Tier 1
   builders `fallback-arrow-row`/`fallback-arrow-glyph`/`fallback-step` (stacked, arrow turned down).
+
+### 10. Progression, Standings, and Commendations
+- **Level Curve (`src/progression/levels.js`):** Pure table-based progression curve (`LEVEL_THRESHOLDS`). Levels 1 through 12, max level 12 (0 to 2,520 XP). Rank titles: Cadet (1-2), Scout (3-4), Navigator (5-6), Voyager (7-8), Pathfinder (9-10), Starmarshal (11-12). Quest 1 pays 715 XP total (650 stages + 40 completion + 25 on-time), reaching Level 6.
+- **Requisitions & Locker (`src/progression/requisitions.js`, `src/screens/quarters.js`):** Quartermaster unlock registry. All unlocks are strictly cosmetic and identity-based (`nameplate`, `title`, `cosmetic`, `insignia`, `specialty`). Zero XP or hint perks. Held requisitions derive purely from player level and earned badges. Players customize loadouts in the Locker.
+- **Commendations Registry (`src/progression/commendations.js`):** ~40 commendation badges across 5 roads: Campaign, Craft, Learn, Crew, and Season. Pure predicate evaluations (`earnedBy(state)`). Commendations grant prestige and cosmetics; they carry zero XP. Up to 3 plates can be pinned to active dress. No meeting code badges.
+- **Marks & Field Manual (`src/progression/marks.js`, `src/ui/field-manual.js`):** Clean marks reward solving stages on the first attempt without method rungs. 20 clean marks unlock discovery entries in the Field Manual.
+- **Standings & Dignity Rules (`src/screens/leaderboard.js`):** 4 tabs: Guilds, Crew, Your Guild, This Week. Top 25 + neighbourhood (3 above, 3 below the player) with divider. All players receive dignity protection equally. Players opting out (`board_optout`) appear as `Crew · <GUILD>` on public boards. Text movement indicator (`+3 since last visit`). Rows link to public profiles (`#/crew/:playerId`).
+- **Public Profile (`src/screens/crew-profile.js`):** Read-only dossier for `#/crew/:playerId`. Displays suit preview, level/title, nameplate finish, pinned plates, commendation counts by road, field manual count, watch streak, and guild. Omits stage failure and hint statistics.
+- **Weekly Watch & Contracts (`src/progression/watch.js`, `src/progression/contracts.js`):** Weekly watch streak tracking with 1 forgiveness per 6 stood. Shared guild contracts scale to active roster size.
+- **Verification (`tools/verify-progression.mjs`):** Enforces curve thresholds, requisition whitelist, zero-XP commendation invariants, clean marks, and forgiveness rules via `npm run verify:progression` in `npm run verify`.

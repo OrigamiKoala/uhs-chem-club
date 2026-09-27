@@ -4,6 +4,7 @@
  * Runs the real serverless handler with fake req/res objects.
  */
 import handler from '../api/[...route].js';
+import { levelForXp } from '../src/progression/levels.js';
 
 function call(path, body) {
   return new Promise((resolve) => {
@@ -120,7 +121,7 @@ const me = await call('player/me', { token });
 check('me returns team', me.json.data.team.team_id === 'fire');
 check('me returns progress', Array.isArray(me.json.data.progress) && me.json.data.progress.length > 0);
 check("xp banked once", me.json.data.xp === 15 + 35, `xp=${me.json.data.xp}`);
-check('level derived', me.json.data.level === Math.max(1, Math.floor(Math.sqrt(me.json.data.xp / 45)) + 1));
+check('level derived', me.json.data.level === levelForXp(me.json.data.xp));
 
 const renamed = await call('player/rename', { token, displayName: 'Nova Prime' });
 check('rename works', renamed.json.data.player.display_name === 'Nova Prime');
@@ -129,7 +130,7 @@ console.log('\ncompletion');
 const comp = await call('quest/complete', { token, questId: 'q1' });
 check('epilogue present', typeof comp.json.data.epilogue === 'string' && comp.json.data.epilogue.length > 200);
 check('epilogue has paragraphs', comp.json.data.epilogue.includes('\n'));
-check('quest xp is 650', comp.json.data.totalXp === 650, `got ${comp.json.data.totalXp}`);
+check('quest xp is 715', comp.json.data.totalXp === 715, `got ${comp.json.data.totalXp}`);
 check('level is a number', Number.isFinite(comp.json.data.newLevel));
 check('first completion is not flagged as a repeat', comp.json.data.alreadyCompleted === false);
 
@@ -224,6 +225,23 @@ check('the guild counts the player as active', myTeam && myTeam.active_members >
   JSON.stringify(myTeam));
 check('the guild score moves with member XP', myTeam && myTeam.team_score > 0,
   JSON.stringify(myTeam));
+
+console.log('\nprogression & loadout');
+const progMe = await call('progression/me', { token });
+check('progression/me returns ok', progMe.json.ok === true && Number.isFinite(progMe.json.data.level));
+
+const loadoutResp = await call('loadout/set', { token, nameplate: 'brass', title: 'Voyager', pinnedPlates: ['clean_run_01'] });
+check('loadout/set saves loadout', loadoutResp.json.ok === true && loadoutResp.json.data.loadout.nameplate === 'brass');
+
+const profileResp = await call('profile/get', { token, playerId: meFinal.json.data.player.player_id });
+check('profile/get returns public profile', profileResp.json.ok === true && profileResp.json.data.nameplate === 'brass');
+check('profile/get includes title and pinned plates', profileResp.json.data.title === 'Voyager' && profileResp.json.data.pinned_plates.includes('clean_run_01'));
+
+const guildFeedResp = await call('guild/feed', { token, teamId: 'fire' });
+check('guild/feed returns events', guildFeedResp.json.ok === true && Array.isArray(guildFeedResp.json.data.events));
+
+const lbGuild = await call('leaderboard', { token, scope: 'guild' });
+check('leaderboard scope guild filters correctly', lbGuild.json.ok === true && lbGuild.json.data.individual.every(r => r.team_id === 'fire'));
 
 console.log(`\n${failures === 0 ? 'ALL CHECKS PASSED' : failures + ' CHECK(S) FAILED'}`);
 process.exit(failures === 0 ? 0 : 1);

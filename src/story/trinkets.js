@@ -27,6 +27,8 @@ export const TRINKETS = [
   { id: 'trinket_20', roll: 20, name: 'Guildmaster Chronometer Seal', rarity: 'rare', provenance: 'Gilded mechanical seal stamped with the old Imperial seal. Natural 20 roll.' }
 ];
 
+export const TRINKET_TABLE = TRINKETS;
+
 export const BACKGROUNDS = {
   salvager: {
     id: 'salvager',

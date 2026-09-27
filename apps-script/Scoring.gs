@@ -1,6 +1,20 @@
-/**
- * Scoring.gs — XP aggregation, square-root leveling curve, and normalized team leaderboards
- */
+var MAX_LEVEL = 12;
+
+var LEVEL_THRESHOLDS = [
+  0,
+  0,
+  60,
+  150,
+  270,
+  420,
+  600,
+  820,
+  1080,
+  1380,
+  1720,
+  2100,
+  2520
+];
 
 var LEVEL_TITLES = [
   { maxLevel: 2, title: 'Cadet' },
@@ -14,13 +28,18 @@ var LEVEL_TITLES = [
 var Scoring = {
   computeLevel: function(totalXp) {
     if (!totalXp || totalXp <= 0) return 1;
-    var lvl = Math.floor(Math.sqrt(totalXp / 45)) + 1;
-    return Math.min(12, Math.max(1, lvl));
+    var lvl = 1;
+    for (var i = 1; i <= MAX_LEVEL; i++) {
+      if (totalXp >= LEVEL_THRESHOLDS[i]) lvl = i;
+      else break;
+    }
+    return Math.min(MAX_LEVEL, Math.max(1, lvl));
   },
 
   getLevelTitle: function(level) {
+    var lvl = Math.min(MAX_LEVEL, Math.max(1, level || 1));
     for (var i = 0; i < LEVEL_TITLES.length; i++) {
-      if (level <= LEVEL_TITLES[i].maxLevel) return LEVEL_TITLES[i].title;
+      if (lvl <= LEVEL_TITLES[i].maxLevel) return LEVEL_TITLES[i].title;
     }
     return 'Starmarshal';
   },
@@ -59,17 +78,44 @@ var Scoring = {
     return total;
   },
 
-  getLeaderboards: function(requestingPlayerId) {
-    var cached = Cache.get('lb:all');
+  computePlayerWeekXp: function(playerId, cutoffIso) {
+    var subs = Db.find('Submissions', function(s) {
+      return s.player_id === playerId && isTrueFlag(s.correct) && s.ts && s.ts >= cutoffIso;
+    });
+    var stageBest = {};
+    for (var i = 0; i < subs.length; i++) {
+      var key = subs[i].quest_id + ':' + subs[i].stage_index;
+      var xp = Number(subs[i].xp_awarded || 0);
+      if (!stageBest[key] || xp > stageBest[key]) {
+        stageBest[key] = xp;
+      }
+    }
+    var total = 0;
+    for (var k in stageBest) {
+      total += stageBest[k];
+    }
+    return total;
+  },
+
+  getLeaderboards: function(requestingPlayerId, scope) {
+    var sc = scope || 'all';
+    var cached = Cache.get('lb:' + sc);
     if (cached) {
       if (requestingPlayerId) {
-        cached.myRank = findMyRank_(cached.individual, requestingPlayerId);
+        cached.myRank = findMyRank_(cached.fullIndividual || cached.individual, requestingPlayerId);
       }
       return cached;
     }
 
     var players = Db.getAll('Players');
     var teams = Db.getAll('Teams');
+
+    var now = new Date();
+    var cutoff = new Date(now.getTime() - 7 * 86400000).toISOString();
+
+    var requestingPlayer = requestingPlayerId
+      ? Db.findOne('Players', function(p) { return p.player_id === requestingPlayerId; })
+      : null;
 
     // Calculate individual XP
     var individual = [];
@@ -88,17 +134,33 @@ var Scoring = {
       var player = players[p];
       if (player.status === 'banned') continue;
 
-      var xp = Scoring.computePlayerTotalXp(player.player_id);
+      var xp = sc === 'week'
+        ? Scoring.computePlayerWeekXp(player.player_id, cutoff)
+        : Scoring.computePlayerTotalXp(player.player_id);
       var lvl = Scoring.computeLevel(xp);
+
+      var loadout = {};
+      try {
+        if (player.loadout_json) loadout = JSON.parse(player.loadout_json);
+      } catch (e) {}
+
+      var isMe = requestingPlayerId && player.player_id === requestingPlayerId;
+      var displayName = player.display_name;
+      if (player.board_optout && !isMe) {
+        displayName = 'Crew · ' + String(player.team_id || 'avalon').toUpperCase();
+      }
 
       individual.push({
         player_id: player.player_id,
-        display_name: player.display_name,
+        display_name: displayName,
         team_id: player.team_id,
         role: player.role,
         xp: xp,
         level: lvl,
-        level_title: Scoring.getLevelTitle(lvl)
+        level_title: Scoring.getLevelTitle(lvl),
+        nameplate: loadout.nameplate || 'default',
+        title: loadout.title || '',
+        pinned_plates: Array.isArray(loadout.pinnedPlates) ? loadout.pinnedPlates : []
       });
 
       if (player.team_id && teamMembers.hasOwnProperty(player.team_id)) {
@@ -110,6 +172,10 @@ var Scoring = {
       }
     }
 
+    if (sc === 'guild' && requestingPlayer && requestingPlayer.team_id) {
+      individual = individual.filter(function(r) { return r.team_id === requestingPlayer.team_id; });
+    }
+
     individual.sort(function(a, b) { return b.xp - a.xp; });
 
     // Assign rank
@@ -118,8 +184,6 @@ var Scoring = {
     }
 
     // Team Leaderboard calculation (§4.4)
-    // team_score = mean(xp of members with >= 1 quest attempted) * participation_mult
-    // participation_mult = 0.75 + 0.5 * (active_members / roster_size)
     var teamScores = teams.map(function(tm) {
       var tId = tm.team_id;
       var rosterSize = teamMembers[tId] || 0;
@@ -159,26 +223,15 @@ var Scoring = {
       teamScores[tr].rank = tr + 1;
     }
 
-    // Truncate individual to top 50, sanitize player_id from public display
-    var top50 = individual.slice(0, 50).map(function(row) {
-      return {
-        rank: row.rank,
-        display_name: row.display_name,
-        team_id: row.team_id,
-        role: row.role,
-        xp: row.xp,
-        level: row.level,
-        level_title: row.level_title,
-        player_id: row.player_id
-      };
-    });
+    var top50 = individual.slice(0, 50);
 
     var result = {
       individual: top50,
+      fullIndividual: individual,
       teams: teamScores
     };
 
-    Cache.put('lb:all', result, 60);
+    Cache.put('lb:' + sc, result, 60);
 
     if (requestingPlayerId) {
       result.myRank = findMyRank_(individual, requestingPlayerId);
@@ -201,3 +254,4 @@ function findMyRank_(fullList, requestingPlayerId) {
   }
   return null;
 }
+

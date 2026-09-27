@@ -15,12 +15,14 @@ import { WorldScene } from "./world.js";
 import { TallowWorld } from "./tallow.js";
 import { LigarWorld } from "./ligar.js";
 import { FpsControls } from "./fps-controls.js";
+import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
 import { TouchControls } from "./touch-controls.js";
 import { session } from "../session.js";
 import { ShipLightPool } from "./ship-lighting.js";
 import { soundscape } from "../audio/soundscape.js";
 import { gameMode } from "../game-mode.js";
 import { worldUI } from "./world-ui.js";
+import { Voyage, DESTINATIONS } from "./voyage.js";
 import { api } from "../api.js";
 
 /**
@@ -28,14 +30,16 @@ import { api } from "../api.js";
  *
  * The ship is a dark interior lit by filaments; Tallow is a salt pan under flat
  * overcast, which is roughly two stops brighter in the real world. Rendering both
- * at the ship's exposure washes the crust out to white paper. Erebus keeps the
- * ship's value, which is what it was tuned against.
+ * at the ship's exposure washes the crust out to white paper.
  */
 const SHIP_EXPOSURE = 1.28;
 const TALLOW_EXPOSURE = 0.92;
 // Ligar is black stone at dusk: almost nothing bounces off it and the sun is on
 // the horizon, so it takes MORE exposure than the salt pan rather than less.
 const LIGAR_EXPOSURE = 1.16;
+// Erebus is a bright desert under a low sun: its sky and sand are lit to real
+// daylight levels in erebus/atmosphere.js, so it takes less than the ship.
+const EREBUS_EXPOSURE = 0.82;
 
 /**
  * The bridge directory board, as `ship.js` builds it: a 1.8 x 1.0125 m plate
@@ -145,6 +149,9 @@ class Stage {
 
     // Ship Interior Model
     this.shipInterior = new ShipInterior(this.shipScene);
+    if (this.shipInterior.lightSources.length) {
+      this.shipLightPool.sources = this.shipInterior.lightSources;
+    }
 
     // Sync in-world 3D displays with session state
     const syncShipDisplays = () => {
@@ -250,6 +257,7 @@ class Stage {
 
     // Camera Rig
     this.cameraRig = new CameraRig(this.camera);
+    this.cameraRig.isLocked = () => Boolean(this.voyage && this.voyage.holdsCamera());
 
     // 4. First-person WASD controls with collision sliding and interaction
     this.fpsControls = new FpsControls(this.camera, this.canvas);
@@ -270,46 +278,14 @@ class Stage {
       this.shipInterior.getActiveColliders()
     );
 
+    // The Avalon's flights between worlds (T4): turning to the canopy, the
+    // jump, the approach, the landing and the walk out through the airlock.
+    this.voyage = new Voyage(this);
+
+    // [E] acts on what the player is LOOKING at, the same thing the prompt
+    // names — both read `aimedInteraction`, so they cannot disagree.
     this.fpsControls.onInteract = () => {
-      if (this.mode === "world" && this.isLearnWorld(this.activeWorld)) {
-        const site = this.activeWorld.nearbySite;
-        if (site) {
-          window.dispatchEvent(new CustomEvent("learn-site:interact", { detail: site }));
-        } else if (this.nearExitPad(this.activeWorld)) {
-          // The pad is the way off a Learn world, the way the lander is on Erebus.
-          window.location.hash = "#/bridge";
-        }
-      } else if (this.mode === "world" && this.worldScene) {
-        if (this.worldScene.nearbySite) {
-          const pylonEvent = new CustomEvent("pylon:interact", { detail: this.worldScene.nearbySite });
-          window.dispatchEvent(pylonEvent);
-        } else if (Math.hypot(this.camera.position.x, this.camera.position.z - 41) < 5.8) {
-          window.location.hash = "#/bridge";
-        }
-      } else if (this.mode === "ship") {
-        const px = this.camera.position.x;
-        const pz = this.camera.position.z;
-        const nearDoor = this.shipInterior?.getDoorNear(px, pz, 1.6);
-        if (nearDoor) {
-          this.shipInterior.toggleDoor(nearDoor);
-          this.fpsControls.setColliders(this.shipInterior.getActiveColliders());
-          soundscape.playNavRelayClick?.();
-          return;
-        }
-        if (Math.hypot(px - 3.375, pz - (-6.6)) < 2.2) {
-          window.location.hash = "#/quest";
-        } else if (Math.hypot(px - 3.2, pz - 1.8) < 2.0) {
-          window.location.hash = "#/starmap";
-        } else if (Math.hypot(px - 3.3, pz - (-1.2)) < 2.2) {
-          window.location.hash = "#/inventory";
-        } else if (Math.hypot(px - (-3.375), pz - (-6.45)) < 2.2) {
-          window.location.hash = "#/leaderboard";
-        } else if (Math.hypot(px - (-3.375), pz - (-0.9)) < 2.2) {
-          window.location.hash = "#/quarters";
-        } else if (Math.hypot(px, pz - 1.6) < 1.4) {
-          window.location.hash = "#/settings";
-        }
-      }
+      this.aimedInteraction()?.act?.();
     };
 
     // 5. Bind Events & Lifecycle
@@ -571,7 +547,79 @@ class Stage {
     const dpr = window.devicePixelRatio || 1;
     let maxDpr = 1;
     if (tierAtLeast("T3", tier)) maxDpr = Math.min(dpr, isTouchPrimary() ? 1.5 : 2);
+    this.baseDpr = maxDpr;
+    this.worldDpr = maxDpr;
+    this.worldDprCeil = maxDpr;
+    this.resWindow = null;
     this.renderer.setPixelRatio(maxDpr);
+  }
+
+  /**
+   * RESOLUTION IS THE ONE THING A WORLD MAY GIVE BACK WHEN A MACHINE CANNOT
+   * HOLD ITS FRAME RATE. Walking a world is the heaviest thing this app draws —
+   * Ligar's basalt, its ground shader and its sun shadow above all — and a
+   * frame that misses its vsync by a millisecond is a frame shown twice, which
+   * is what makes a walk judder. So on a planet the pixel ratio is paced:
+   * a second of frames averaging slower than 45fps steps it down by a quarter,
+   * never below 1 on a high-density screen (0.8 on a 1x one), and a few
+   * seconds of frames with headroom step it back up — but not to a ratio found
+   * too slow until twenty seconds have passed without a slow second. The first
+   * three seconds on a planet are not judged: that is textures uploading, not
+   * the machine. One that holds 60fps never leaves full resolution; nothing
+   * else about the world is reduced. Aboard ship it is always full resolution.
+   */
+  paceResolution(delta, onPlanet) {
+    if (!this.renderer || !this.baseDpr) return;
+    const base = this.baseDpr;
+    if (!onPlanet) {
+      if (this.worldDpr !== base) this.setWorldDpr(base);
+      this.worldDprCeil = base;
+      this.resWindow = null;
+      return;
+    }
+    // A stall (a tab coming back, a shader compiling) is not a frame rate.
+    if (!(delta > 0) || delta > 0.25) return;
+    const w = this.resWindow ||
+      (this.resWindow = { t: 0, n: 0, cool: 0, good: 0, age: 0, sinceSlow: 0 });
+    w.age += delta;
+    if (w.age < 3) return;
+    w.t += delta;
+    w.n++;
+    w.cool = Math.max(0, w.cool - delta);
+    if (w.n < 45) return;
+    const mean = w.t / w.n;
+    w.sinceSlow += w.t;
+    w.t = 0;
+    w.n = 0;
+    if (w.cool > 0) return;
+
+    const STEP = 0.25;
+    const floor = base >= 1.5 ? 1 : Math.min(base, 0.8);
+    const cur = this.worldDpr;
+    if (w.sinceSlow > 20 && this.worldDprCeil < base) {
+      this.worldDprCeil = Math.min(base, this.worldDprCeil + STEP);
+      w.sinceSlow = 0;
+    }
+    if (mean > 1 / 45 && cur > floor) {
+      this.worldDprCeil = Math.max(floor, cur - STEP);
+      this.setWorldDpr(Math.max(floor, cur - STEP));
+      w.good = 0;
+      w.cool = 1.5;
+      w.sinceSlow = 0;
+    } else if (mean < 1 / 56 && cur < this.worldDprCeil) {
+      if (++w.good >= 4) {
+        this.setWorldDpr(Math.min(this.worldDprCeil, cur + STEP));
+        w.good = 0;
+        w.cool = 1.5;
+      }
+    } else {
+      w.good = 0;
+    }
+  }
+
+  setWorldDpr(v) {
+    this.worldDpr = v;
+    this.renderer.setPixelRatio(v);
   }
 
   onResize() {
@@ -674,17 +722,153 @@ class Stage {
     }
   }
 
+  /**
+   * The built world a voyage can fly to, by key — built on first use, the
+   * same instance the walk uses, so the ground the ship lands on is the
+   * ground the player then stands on.
+   */
+  worldFor(key) {
+    if (!this.renderer) return null;
+    if (key === "erebus") {
+      if (!this.worldScene) this.worldScene = this.warmWorld(new WorldScene(this.renderer));
+      return this.worldScene;
+    }
+    if (key === "tallow") {
+      if (!this.tallowWorld) this.tallowWorld = this.warmWorld(new TallowWorld(this.renderer));
+      return this.tallowWorld;
+    }
+    if (key === "ligar") {
+      if (!this.ligarWorld) this.ligarWorld = this.warmWorld(new LigarWorld(this.renderer));
+      return this.ligarWorld;
+    }
+    return null;
+  }
+
+  /**
+   * COMPILE A WORLD'S SHADERS ONCE, WHEN IT IS BUILT, NOT WHEN EACH PIECE OF
+   * IT FIRST COMES INTO VIEW. three.js compiles a program on the first frame
+   * an object is drawn, and an object behind the player is not drawn, so a
+   * world used to compile itself a few materials at a time as the player
+   * walked and turned — every one a stall of tens to hundreds of milliseconds
+   * on the frame it happened, which is what walking Ligar felt like. Asked
+   * for here, the driver compiles them in parallel where it can
+   * (KHR_parallel_shader_compile), while the voyage is still in space.
+   * A world's light count never changes after it is built (lamp-pool.js), so
+   * what is compiled here is what is drawn.
+   */
+  warmWorld(world) {
+    const r = this.renderer;
+    if (world?.scene && r?.compileAsync) {
+      r.compileAsync(world.scene, this.camera).catch(() => {});
+    }
+    return world;
+  }
+
+  exposureFor(key) {
+    if (key === "tallow") return TALLOW_EXPOSURE;
+    if (key === "ligar") return LIGAR_EXPOSURE;
+    if (key === "erebus") return EREBUS_EXPOSURE;
+    return SHIP_EXPOSURE;
+  }
+
+  /**
+   * Should travelling to `key` be flown rather than stepped into? Only at T4,
+   * only for a signed-in player who is aboard (not already on a planet), and
+   * never for a player who has asked the product to keep motion down.
+   */
+  canVoyage(key) {
+    return Boolean(
+      this.voyage && this.renderer && DESTINATIONS[key] &&
+      tierManager.currentTier === "T4" &&
+      this.mode === "ship" &&
+      session.token && session.player &&
+      !session.reduceMotion
+    );
+  }
+
+  /** Ask the Avalon to fly to `target` ({ key, hash, waypoint }). */
+  requestVoyage(target) {
+    if (!this.canVoyage(target?.key)) return null;
+    return this.voyage.request(target);
+  }
+
+  /**
+   * The player has walked down the ramp: from here they are standing on the
+   * world in ordinary world mode, at exactly the pose the walk-out ended on.
+   * The next `enterWorldScene` / `enterLearnWorld` for this world keeps them
+   * there instead of putting them at the spawn — that is what makes it one
+   * shot.
+   */
+  finishDisembark(world, key, pos, quat) {
+    this.mode = "world";
+    this.activeWorld = world;
+    this._arrivalHold = world;
+    this.arrivedByVoyage = true;
+    if (this.renderer) this.renderer.toneMappingExposure = this.exposureFor(key);
+    world.scene.add(this.camera);
+    this.camera.position.copy(pos);
+    this.camera.quaternion.copy(quat);
+    const eyeHeight = this.fpsControls ? this.fpsControls.eyeHeight : 1.6;
+    this.camera.position.y = world.getTerrainHeight(pos.x, pos.z) + eyeHeight;
+    this.camera.updateMatrixWorld(true);
+    if (this.fpsControls) {
+      this.fpsControls.enabled = true;
+      this.fpsControls.isGrounded = true;
+      this.fpsControls.verticalVelocity = 0;
+      this.fpsControls.velocity.set(0, 0, 0);
+      this.fpsControls.euler.setFromQuaternion(this.camera.quaternion, "YXZ");
+      this.fpsControls.euler.z = 0;
+      this.camera.quaternion.setFromEuler(this.fpsControls.euler);
+      const learn = this.isLearnWorld(world);
+      this.fpsControls.setMode(
+        "world",
+        (x, z) => world.getTerrainHeight(x, z),
+        learn ? { minX: -100, maxX: 100, minZ: -100, maxZ: 100 } : { minX: -85, maxX: 85, minZ: -85, maxZ: 85 },
+        this.worldColliders(world)
+      );
+    }
+  }
+
+  /** A world's colliders, plus the ship's where it stands on that world. */
+  worldColliders(world) {
+    const extra = this.voyage ? this.voyage.parkedColliders(world) : [];
+    return extra.length ? [...world.colliders, ...extra] : world.colliders;
+  }
+
+  /** True once, right after the player has walked off the ship onto a world. */
+  consumeVoyageArrival() {
+    const v = Boolean(this.arrivedByVoyage);
+    this.arrivedByVoyage = false;
+    return v;
+  }
+
+  /** Lead the player across the ground to { x, z, label }, or stop leading. */
+  setWorldWaypoint(wp) {
+    this.voyage?.setGroundWaypoint(wp);
+  }
+
   enterWorldScene() {
     // Stepping onto a planet on a phone is the moment to take the screen and
     // turn it sideways. The request rides the gesture that navigated here; a
     // refusal costs nothing but the rotate notice.
     if (this.isTouch) gameMode.enterWorld();
-    if (!this.worldScene && this.renderer) {
-      this.worldScene = new WorldScene(this.renderer);
-    }
+    this.worldFor("erebus");
     this.mode = "world";
     this.activeWorld = this.worldScene;
-    if (this.renderer) this.renderer.toneMappingExposure = SHIP_EXPOSURE;
+    if (this.renderer) this.renderer.toneMappingExposure = EREBUS_EXPOSURE;
+
+    if (this.worldScene && this._arrivalHold === this.worldScene) {
+      // Walked here down the Avalon's ramp: they are already standing on it.
+      this._arrivalHold = null;
+      this.worldScene.scene.add(this.camera);
+      this.fpsControls?.setMode(
+        "world",
+        (x, z) => this.worldScene.getTerrainHeight(x, z),
+        { minX: -85, maxX: 85, minZ: -85, maxZ: 85 },
+        this.worldColliders(this.worldScene)
+      );
+      return;
+    }
 
     if (this.worldScene) {
       this.worldScene.scene.add(this.camera);
@@ -709,7 +893,7 @@ class Stage {
           "world",
           (x, z) => this.worldScene.getTerrainHeight(x, z),
           { minX: -85, maxX: 85, minZ: -85, maxZ: 85 },
-          this.worldScene.colliders
+          this.worldColliders(this.worldScene)
         );
       }
     }
@@ -727,18 +911,14 @@ class Stage {
     // inside a live user gesture, and building a world takes long enough for
     // that gesture to lapse.
     if (this.isTouch) gameMode.enterWorld();
-    if (!this.tallowWorld && this.renderer) {
-      this.tallowWorld = new TallowWorld(this.renderer);
-    }
+    this.worldFor("tallow");
     this.enterLearnWorld(this.tallowWorld, TALLOW_EXPOSURE, focusSiteId);
   }
 
   /** Walk out onto Ligar, the basalt arch field (Learn world 02). */
   enterLigarScene(focusSiteId = null) {
     if (this.isTouch) gameMode.enterWorld();   // before the build, as above
-    if (!this.ligarWorld && this.renderer) {
-      this.ligarWorld = new LigarWorld(this.renderer);
-    }
+    this.worldFor("ligar");
     this.enterLearnWorld(this.ligarWorld, LIGAR_EXPOSURE, focusSiteId);
   }
 
@@ -747,15 +927,106 @@ class Stage {
     return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld);
   }
 
+  /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
+  syncAimPrompt() {
+    const hit = this.aimedInteraction();
+    if (hit) this.fpsControls.showPrompt(hit.prompt);
+    else this.fpsControls.hidePrompt();
+  }
+
   /**
-   * Whether the player is standing on a Learn world's landing pad — the way
-   * off it. Read from the world's own data, so a pad that moves takes its exit
-   * with it and there is no second copy of the coordinates.
+   * What [E] would act on right now — the thing the view ray reaches first,
+   * among what this place offers, within that thing's reach — as
+   * `{ prompt, act }`, or null. Being near something is not enough; the
+   * player has to be looking at it.
    */
-  nearExitPad(w) {
-    const pad = w?.data?.landmarks?.find(l => l.asset === "landing-pad");
-    if (!pad) return false;
-    return Math.hypot(this.camera.position.x - pad.pos[0], this.camera.position.z - pad.pos[2]) < 9;
+  aimedInteraction() {
+    const cam = this.camera;
+    cam.updateMatrixWorld();
+    const origin = cam.getWorldPosition(this._aimOrigin || (this._aimOrigin = new THREE.Vector3()));
+    const dir = cam.getWorldDirection(this._aimDir || (this._aimDir = new THREE.Vector3()));
+
+    const shipTarget = this.mode === "world" ? this.voyage?.parkedAimTarget(this.activeWorld) : null;
+    if (shipTarget) {
+      const hit = pickAimTarget(origin, dir, [shipTarget]);
+      if (hit?.kind === "avalon") {
+        return {
+          prompt: "[E] BOARD THE AVALON",
+          act: () => { window.location.hash = "#/bridge"; }
+        };
+      }
+    }
+
+    if (this.mode === "world" && this.isLearnWorld(this.activeWorld)) {
+      const hit = pickAimTarget(origin, dir, learnWorldAimTargets(this.activeWorld, origin.y));
+      if (hit?.kind === "site") {
+        const site = hit.site;
+        return {
+          // A site that has no module yet says so rather than pretending to
+          // open. The world never invents a quest.
+          prompt: site.built === false
+            ? `${site.label.toUpperCase()} — SEALED`
+            : `[E] WORK AT ${site.label.toUpperCase()}`,
+          act: () => window.dispatchEvent(new CustomEvent("learn-site:interact", { detail: site }))
+        };
+      }
+      if (hit?.kind === "pad") {
+        return {
+          prompt: "[E] BOARD AT THE PAD (RETURN TO SHIP)",
+          // The pad is the way off a Learn world, the way the lander is on Erebus.
+          act: () => { window.location.hash = "#/bridge"; }
+        };
+      }
+      return null;
+    }
+
+    if (this.mode === "world" && this.worldScene) {
+      const hit = pickAimTarget(origin, dir, this.worldScene.getAimTargets());
+      if (hit?.kind === "pylon") {
+        return {
+          prompt: `[E] DEPLOY CHAMBER AT ${hit.site.label.toUpperCase()}`,
+          act: () => window.dispatchEvent(new CustomEvent("pylon:interact", { detail: hit.site }))
+        };
+      }
+      if (hit?.kind === "lander") {
+        return {
+          prompt: "[E] BOARD SURVEY LANDER (RETURN TO SHIP)",
+          act: () => { window.location.hash = "#/bridge"; }
+        };
+      }
+      return null;
+    }
+
+    if (this.mode === "ship" && this.shipInterior) {
+      const ship = this.shipInterior;
+      const hit = pickAimTarget(origin, dir, ship.getAimTargets(), { blockers: ship.getAimBlockers() });
+      if (hit?.kind === "door") {
+        const door = hit.door;
+        return {
+          prompt: door.isOpen ? "[E] CLOSE DOOR" : "[E] OPEN DOOR",
+          act: () => {
+            ship.toggleDoor(door);
+            this.fpsControls.setColliders(ship.getActiveColliders());
+            soundscape.playNavRelayClick?.();
+          }
+        };
+      }
+      if (hit?.kind === "terminal" && hit.terminal.id === "airlock" && this.voyage?.canDisembark()) {
+        const name = DESTINATIONS[this.voyage.parked.key]?.name || "";
+        return {
+          prompt: `[E] OPEN THE HATCH // DISEMBARK ONTO ${name.toUpperCase()}`,
+          act: () => this.voyage.disembark()
+        };
+      }
+      if (hit?.kind === "terminal") {
+        const t = hit.terminal;
+        return {
+          prompt: `[E] ${t.prompt}`,
+          act: () => { window.location.hash = t.route; }
+        };
+      }
+    }
+    return null;
   }
 
   /**
@@ -771,6 +1042,19 @@ class Stage {
     if (this.renderer) this.renderer.toneMappingExposure = exposure;
 
     world.scene.add(this.camera);
+
+    if (this._arrivalHold === world && !focusSiteId) {
+      // Walked here down the Avalon's ramp: they are already standing on it.
+      this._arrivalHold = null;
+      this.fpsControls?.setMode(
+        "world",
+        (x, z) => world.getTerrainHeight(x, z),
+        { minX: -100, maxX: 100, minZ: -100, maxZ: 100 },
+        this.worldColliders(world)
+      );
+      return;
+    }
+    this._arrivalHold = null;
 
     const data = world.data;
     const site = focusSiteId ? data.sites.find(s => s.id === focusSiteId) : null;
@@ -807,7 +1091,7 @@ class Stage {
         "world",
         (x, z) => world.getTerrainHeight(x, z),
         { minX: -100, maxX: 100, minZ: -100, maxZ: 100 },
-        world.colliders
+        this.worldColliders(world)
       );
     }
   }
@@ -838,8 +1122,19 @@ class Stage {
   }
 
   enterShipScene(locationKey = "bridge") {
+    // Leaving a world the Avalon is standing on is going back aboard it: in
+    // through the airlock, with the world still outside the glass. Leaving
+    // any other way (a world reached without flying) is back to space.
+    const boarding = Boolean(this.voyage && this.activeWorld && this.voyage.parked?.world === this.activeWorld);
+    const leftWorld = this.activeWorld;
     this.mode = "ship";
     this.activeWorld = null;
+    this._arrivalHold = null;
+    this.arrivedByVoyage = false;
+    if (this.voyage) {
+      if (boarding) this.voyage.board(leftWorld);
+      else if (this.voyage.state === "ground") this.voyage.reset();
+    }
     if (this.renderer) this.renderer.toneMappingExposure = SHIP_EXPOSURE;
     if (this.shipScene) {
       this.shipScene.add(this.camera);
@@ -853,7 +1148,7 @@ class Stage {
         this.shipInterior ? this.shipInterior.getActiveColliders() : []
       );
     }
-    if (this.cameraRig) {
+    if (this.cameraRig && !boarding) {
       this.cameraRig.moveTo(locationKey);
     }
   }
@@ -977,9 +1272,18 @@ class Stage {
     if (this.isPaused || !this.renderer) return;
 
     tierManager.recordFrame(now);
+    // The chest lamp is the ship's. Carried into a world with the camera it
+    // added a light to that world's scene, and a changed light count
+    // recompiles every material in it: a freeze of seconds at the foot of the
+    // Avalon's ramp. An invisible light is not counted.
+    if (this.cameraLight) this.cameraLight.visible = this.camera.parent === this.shipScene;
     const delta = this.clock.getDelta();
     const time = this.clock.getElapsedTime();
     this.syncTouchControls(now);
+    this.paceResolution(delta, Boolean(
+      this.activeWorld && (this.mode === "world" ||
+        (this.mode === "quest" && this.activeQuestViewer?.inWorld))
+    ));
 
     if (this.mode === "quest" && this.activeQuestViewer) {
       // Walk the player first, then let the instrument see where they ended
@@ -997,7 +1301,13 @@ class Stage {
       if (this.activeQuestViewer.inWorld && this.activeWorld) {
         this.activeWorld.update(delta, this.camera.position);
       }
+      // A chamber that brings its own room (the Charge Gardens) was lit for
+      // the ship's exposure, whichever world it was opened on; a bench
+      // deployed in a world takes that world's.
+      const worldExposure = this.renderer.toneMappingExposure;
+      if (!this.activeQuestViewer.inWorld) this.renderer.toneMappingExposure = SHIP_EXPOSURE;
       this.renderer.render(this.activeQuestScene, this.activeQuestViewer.camera);
+      this.renderer.toneMappingExposure = worldExposure;
       worldUI.render(this.activeQuestScene, this.activeQuestViewer.camera);
       return;
     } else if (this.mode === "world" && this.isLearnWorld(this.activeWorld)) {
@@ -1005,22 +1315,10 @@ class Stage {
       if (this.fpsControls) {
         this.fpsControls.enabled = true;
         this.fpsControls.update(delta);
-        const site = learnWorld.nearbySite;
-        if (site) {
-          // A site that has no module yet says so when you reach it rather than
-          // pretending to open. The world never invents a quest.
-          this.fpsControls.showPrompt(
-            site.built === false
-              ? `${site.label.toUpperCase()} — SEALED`
-              : `[E] WORK AT ${site.label.toUpperCase()}`
-          );
-        } else if (this.nearExitPad(learnWorld)) {
-          this.fpsControls.showPrompt("[E] BOARD AT THE PAD (RETURN TO SHIP)");
-        } else {
-          this.fpsControls.hidePrompt();
-        }
+        this.syncAimPrompt();
       }
       learnWorld.update(delta, this.camera.position);
+      this.voyage?.updateGround(time);
       this.camera.updateMatrixWorld(true);
       this.renderer.render(learnWorld.scene, this.camera);
       worldUI.render(learnWorld.scene, this.camera);
@@ -1028,49 +1326,30 @@ class Stage {
       if (this.fpsControls) {
         this.fpsControls.enabled = true;
         this.fpsControls.update(delta);
-        if (this.worldScene.nearbySite) {
-          this.fpsControls.showPrompt(`[E] DEPLOY CHAMBER AT ${this.worldScene.nearbySite.label.toUpperCase()}`);
-        } else if (Math.hypot(this.camera.position.x, this.camera.position.z - 41) < 5.8) {
-          this.fpsControls.showPrompt("[E] BOARD SURVEY LANDER (RETURN TO SHIP)");
-        } else {
-          this.fpsControls.hidePrompt();
-        }
+        this.syncAimPrompt();
       }
       this.worldScene.update(delta, this.camera.position);
+      this.voyage?.updateGround(time);
       this.camera.updateMatrixWorld(true);
       this.renderer.render(this.worldScene.scene, this.camera);
       worldUI.render(this.worldScene.scene, this.camera);
     } else {
       // Ship Mode
       const canMove = Boolean(session.token && session.player);
+      const voyage = this.voyage && this.voyage.aboard ? this.voyage : null;
+      const scripted = Boolean(voyage && voyage.holdsCamera());
       if (this.fpsControls) {
-        this.fpsControls.enabled = canMove;
+        this.fpsControls.enabled = canMove && !scripted;
       }
+      if (voyage) voyage.update(delta, time);
 
-      if (this.cameraRig && this.cameraRig.isTransitioning) {
+      if (scripted) {
+        this.fpsControls?.hidePrompt();
+      } else if (this.cameraRig && this.cameraRig.isTransitioning) {
         this.cameraRig.update(now);
       } else if (this.fpsControls && canMove) {
         this.fpsControls.update(delta);
-        const px = this.camera.position.x;
-        const pz = this.camera.position.z;
-        const nearDoor = this.shipInterior?.getDoorNear(px, pz, 1.6);
-        if (nearDoor) {
-          this.fpsControls.showPrompt(nearDoor.isOpen ? "[E] CLOSE DOOR" : "[E] OPEN DOOR");
-        } else if (Math.hypot(px - 3.375, pz - (-6.6)) < 2.2) {
-          this.fpsControls.showPrompt("[E] AIRLOCK: DISEMBARK TO EREBUS (CHARGE GARDENS)");
-        } else if (Math.hypot(px - 3.2, pz - 1.8) < 2.0) {
-          this.fpsControls.showPrompt("[E] ACCESS STAR MAP & NAVIGATION");
-        } else if (Math.hypot(px - 3.3, pz - (-1.2)) < 2.2) {
-          this.fpsControls.showPrompt("[E] ACCESS CARGO & INVENTORY");
-        } else if (Math.hypot(px - (-3.375), pz - (-6.45)) < 2.2) {
-          this.fpsControls.showPrompt("[E] ACCESS SUB-SPACE COMMS RELAY");
-        } else if (Math.hypot(px - (-3.375), pz - (-0.9)) < 2.2) {
-          this.fpsControls.showPrompt("[E] ACCESS CREW QUARTERS & LOGS");
-        } else if (Math.hypot(px, pz - 1.6) < 1.4) {
-          this.fpsControls.showPrompt("[E] ACCESS FLIGHT COCKPIT & SETTINGS");
-        } else {
-          this.fpsControls.hidePrompt();
-        }
+        this.syncAimPrompt();
       } else if (this.fpsControls) {
         this.fpsControls.hidePrompt();
       }
@@ -1078,9 +1357,18 @@ class Stage {
       if (this.shipLightPool) {
         this.shipLightPool.update(this.camera.position);
       }
-      if (this.shipInterior) this.shipInterior.update(delta, time);
+      // The doors answer to where the player is standing; when one opens or
+      // shuts, the walk gets the new set of colliders at once.
+      if (this.shipInterior && this.shipInterior.update(delta, time, this.camera.position)) {
+        this.fpsControls?.setColliders(this.shipInterior.getActiveColliders());
+      }
       if (this.starfield) this.starfield.rotation.y += delta * 0.002;
-      this.renderer.render(this.shipScene, this.camera);
+      if (voyage) {
+        // The outside of the ship, then the ship: see voyage.js.
+        voyage.render(this.renderer);
+      } else {
+        this.renderer.render(this.shipScene, this.camera);
+      }
       worldUI.render(this.shipScene, this.camera);
     }
   }

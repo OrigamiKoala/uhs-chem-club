@@ -221,7 +221,12 @@ export function heightToNormal(heightCanvas, strength = 2.2) {
       const bl = at(x - 1, y + 1), b = at(x, y + 1), br = at(x + 1, y + 1);
       const dx = (tr + 2 * r + br) - (tl + 2 * l + bl);
       const dy = (bl + 2 * b + br) - (tl + 2 * t + tr);
-      let nx = -dx * strength, ny = -dy * strength;
+      // three.js reads normal maps OpenGL-style: +x is +u, +y is +v, and
+      // CanvasTexture's flipY puts canvas row 0 at v = 1, so +v is canvas UP.
+      // dx runs rightward (+u) and dy runs DOWNward (-v): a normal leans away
+      // from the uphill side, so x takes -dx and y takes +dy. The y sign was
+      // once -dy, and every rivet, pebble and bolt head read as a dimple.
+      let nx = -dx * strength, ny = dy * strength;
       const len = Math.hypot(nx, ny, 1) || 1;
       const i = (y * w + x) * 4;
       d[i] = ((nx / len) * 0.5 + 0.5) * 255;
@@ -1141,15 +1146,26 @@ export function placard(text, { w = 0.42, h = 0.16, fg = '#1d1a16', bg = '#b9ab8
   return mesh;
 }
 
+/** The tallest hazard-stripe canvas drawn; a longer stripe repeats it. */
+const MAX_STRIPE_TILE = 1024;
+
 /** Diagonal hazard striping on a plane — the yellow-black edge of a drop. */
 export function hazardStripe(w, h, { pitch = 0.12, warm = '#b08a2c', dark = '#2a2520' } = {}) {
-  const W = 256, H = Math.max(16, Math.round(256 * (h / w)));
+  const W = 256;
+  const step = Math.max(6, Math.round(W * pitch));
+  // THE CANVAS IS ONE TILE, NOT THE WHOLE RUN. It used to be sized to the
+  // stripe's full length at 256 px across, so a 22 m deck edge was a
+  // 256 x 11264 canvas: 11 MB of video memory, past the 8192 limit many GPUs
+  // have (the driver resampled it), for a pattern that repeats every two
+  // steps. A long stripe now draws a whole number of periods and repeats it.
+  const full = Math.max(16, Math.round(W * (h / w)));
+  const period = step * 2;
+  const H = full > MAX_STRIPE_TILE ? Math.floor(MAX_STRIPE_TILE / period) * period : full;
   const c = canvas2d(W, H);
   const ctx = c.getContext('2d');
   ctx.fillStyle = warm;
   ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = dark;
-  const step = Math.max(6, Math.round(W * pitch));
   ctx.save();
   for (let x = -H; x < W + H; x += step * 2) {
     ctx.beginPath();
@@ -1171,6 +1187,10 @@ export function hazardStripe(w, h, { pitch = 0.12, warm = '#b08a2c', dark = '#2a
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
+  if (H < full) {
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(1, full / H);
+  }
   const mat = new THREE.MeshStandardMaterial({
     map: tex, transparent: true, roughness: 0.9, metalness: 0.05,
     polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
@@ -1432,20 +1452,34 @@ export function mergeStatic(group) {
    * list instead, so merging buys draw calls without costing precision.
    */
   const partBoxes = group.userData.partBoxes || [];
+  const toGroup = new THREE.Matrix4();
   for (const o of doomed) {
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-    const b = o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld);
-    if (!b.isEmpty() && isFinite(b.min.x)) {
-      b.applyMatrix4(inverse);
-      partBoxes.push(b);
-    }
+    // Straight into the group's frame. Going through world space first boxed
+    // every part twice on a rotated group — once in the world, once back —
+    // and a bench top on a turned site came out a metre deeper than it is.
+    toGroup.multiplyMatrices(inverse, o.matrixWorld);
+    const b = o.geometry.boundingBox.clone().applyMatrix4(toGroup);
+    if (!b.isEmpty() && isFinite(b.min.x)) partBoxes.push(b);
     o.parent?.remove(o);
   }
   group.userData.partBoxes = partBoxes;
 
   for (const [material, bucket] of buckets) {
     if (!bucket.geos.length) continue;
+    // Boxes are indexed and extrusions are not, and a merge refuses a mix of
+    // the two — returning null, which used to drop the whole bucket from the
+    // scene without a word. Mixed buckets are flattened to one convention.
+    if (bucket.geos.some(g => g.index) && bucket.geos.some(g => !g.index)) {
+      bucket.geos = bucket.geos.map(g => {
+        if (!g.index) return g;
+        const flat = g.toNonIndexed();
+        g.dispose();
+        return flat;
+      });
+    }
     const merged = BufferGeometryUtils.mergeGeometries(bucket.geos, false);
+    if (!merged) console.warn(`mergeStatic: could not bake ${bucket.geos.length} parts of ${group.name || 'a group'}`);
     for (const g of bucket.geos) g.dispose();
     if (!merged) continue;
     if (merged.attributes.uv) merged.setAttribute('uv1', merged.attributes.uv);

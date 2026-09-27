@@ -2,70 +2,83 @@
  * tallow.js — Tallow: the abandoned salt-flat refinery. (Learn world 01)
  *
  * The companion to `world.js`. Erebus is an amber basin at low sun; Tallow is a
- * bleached salt pan under flat overcast, packed with sealed Imperial salvage and
- * an orbital buyer inbound. Same SCOURED PLATE world (CLAUDE.md §Aesthetic), a
- * different light and a different crust.
+ * high salt pan under a thin veil of cloud, the sun white and softened with a
+ * halo round it, a pale world hanging low in the north-east, and a plant that
+ * was abandoned with the vessels still standing. Same SCOURED PLATE world
+ * (CLAUDE.md §Aesthetic), a different light and a different crust.
+ *
+ * This file is the orchestrator and the public face the rest of the app knows:
+ * `scene`, `data`, `colliders`, `terrainMesh`, `hasFarTerrain`,
+ * `getTerrainHeight`, `benchAnchor`, `setBenchDeployed`, `setSiteComplete` and
+ * `update`. What the world is MADE of lives beside it in `tallow/`:
+ *
+ *   atmosphere.js the sky (veil, halo, the ranges on the horizon drawn IN the
+ *                 sky so they never slide), aerial perspective for every
+ *                 material, the lights, the environment map, the pale world
+ *   terrain.js    the height field and the one ground mesh to the horizon, cut
+ *                 round the excavation; the crust, ruts, paths, damp, mirror
+ *                 flats and mirage are drawn by its shader
+ *   surfaces.js   the salt-polygon crust, piled salt, the islands' strata, and
+ *                 the salt that creeps up everything standing on the flat
+ *   plant.js      the refinery: evaporators, columns, pipe racks, conveyor, mast
+ *   hauler.js     the derelict ore hauler
+ *   vista.js      what stands beyond the walk: rock islands, the far plant
+ *   effects.js    the air moving: motes, grit streams, salt devils, plumes
+ *   kit.js        structural stock: I-sections and corrugated sheet
  *
  * WHAT IS HERE, AND WHY IT IS HERE
  * Five Unit 1 sites stand on the flat as physical places, one per written quest:
- *   site-1  Salvage Bench   — q1-grain. Under the lean-to in the yard.
- *   site-2  Core Bench      — q2-core. Down the stairwell, in the lab.
- *   site-3  Catalogue Vault — q3-catalogue. The blockhouse in the east wall,
- *           its door racked back, with the card bench stood outside.
- *   site-4  Tally Floor     — q4-ledger. A painted floor with a ledger board,
+ *   site-1  Bench 1 — q1-grain. Under the lean-to in the yard.
+ *   site-2  Bench 2 — q2-core. Down the stairwell, in the lab.
+ *   site-3  Bench 3 — q3-catalogue. Before the blockhouse in the east wall,
+ *           its door racked back.
+ *   site-4  Bench 4 — q4-ledger. A painted floor with a ledger board,
  *           west of the yard beyond the hauler.
- *   site-5  Hopper Gantry   — q5-assay. A raised hopper over a chute with a row
+ *   site-5  Bench 5 — q5-assay. A raised hopper over a chute with a row
  *           of catch bins, south of the yard.
- * Sites 1 and 2 carry their instruments as built objects (`BUILT_BENCHES`); the
- * other three are real standing places whose quests draw the bench as a page
- * over the world — no instrument is built there, and none is pretended.
+ * All five carry their instruments as built objects (`BUILT_BENCHES`).
  *
  * PHYSICS: every prop declares a footprint in `tallow.json` and every footprint is
- * disjoint — no two objects occupy the same space, which `verify:tallow` proves by
- * computing the distances rather than trusting the layout. The sub-level is a real
- * excavation: the terrain mesh has a hole cut in it, the pit is built as geometry,
- * and `getTerrainHeight` resolves the ramp, so the player walks down instead of
+ * disjoint — no two objects occupy the same space, which `verify:tallow` proves
+ * on the world actually built. The sub-level is a real excavation: the ground
+ * mesh is cut along the pit's own outline, the pit is built as geometry, and
+ * `getTerrainHeight` resolves the ramp, so the player walks down instead of
  * being teleported under the ground.
  *
- * LIGHT: nothing here blooms. The sun is a broad overcast key with no disc; the
- * only emissive surfaces in the whole scene are sodium luminaires in the lab, the
- * mast's obstruction lamp, and one indicator per built site. That is the rule in
- * CLAUDE.md §4.2 and it is what keeps the flat looking like hardware rather than
- * like a screensaver.
+ * LIGHT: nothing here blooms. The only emissive surfaces in the whole scene are
+ * sodium luminaires, the mast's obstruction lamp, the vault's door lamp and one
+ * indicator per built site. That is the rule in CLAUDE.md §4.2.
  */
 
 import * as THREE from 'three';
 import tallowData from './world-data/tallow.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import {
-  saltHardpan, platedMetal, treadPlate, sedimentaryRock,
-  buildMaterial, enableAO, addDetailNormal, addMacroVariation,
+  platedMetal, treadPlate, sedimentaryRock,
+  buildMaterial, enableAO,
   texSize, heightField, heightToNormal, asDataTexture, fbm,
   boltRing, boltLine, weldBead, cableRun, pipeFlange, placard,
   hazardStripe, mergeStatic
 } from './materials/pbr-kit.js';
+import { createSalvageCrateTexture } from './materials/tallow-textures.js';
 import {
-  createBleachedPlateTexture,
-  createSalvageCrateTexture
-} from './materials/tallow-textures.js';
-
-/* Deterministic layout noise: the refinery is the same refinery every visit. */
-function mulberry32(seed) {
-  let a = seed >>> 0;
-  return function () {
-    a |= 0; a = (a + 0x6D2B79F5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/** A bare canvas, for the one texture this file draws itself. */
-function canvas2dLocal(w, h) {
-  const c = document.createElement('canvas');
-  c.width = w; c.height = h;
-  return c;
-}
+  createTallowSkyDome, createTallowCelestials, createTallowLights, followTallowShadow,
+  createTallowEnvironment, applyTallowAir, tallowSkyUniforms, TSKY
+} from './tallow/atmosphere.js';
+import { makeTallowField, buildTallowTerrainGeometry, createTallowTerrainMaterial } from './tallow/terrain.js';
+import {
+  saltCrust, saltGrain, createTallowStrataTexture, createGroundHeightTexture, applySaltWeather
+} from './tallow/surfaces.js';
+import { createTallowEffects } from './tallow/effects.js';
+import {
+  buildEvaporator, buildCrackingTower, buildPipeBridge, buildConveyor,
+  buildCommsMast, buildDebrisField, buildStakeMarker, mulberry32, SUPPORT_POINTS
+} from './tallow/plant.js';
+import { buildHauler } from './tallow/hauler.js';
+import { buildTallowVista } from './tallow/vista.js';
+import { iBeamGeometry, corrugatedGeometry } from './tallow/kit.js';
+import { LampPool } from './lamp-pool.js';
+import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
 
 /** Sodium filament, from inside a thing. The one warm colour on the flat. */
 const SODIUM = 0xd99423;
@@ -75,6 +88,7 @@ export class TallowWorld {
     this.renderer = renderer;
     this.data = tallowData;
     this.scene = new THREE.Scene();
+    this.scene.name = 'tallow';
 
     this.colliders = [];
     this.siteMarkers = new Map();   // questId -> { indicator, group, site }
@@ -82,14 +96,17 @@ export class TallowWorld {
     // Learn instrument can be deployed onto the plate that is actually there
     // rather than onto a second bench conjured at the same coordinates.
     this.benchAnchors = new Map();
-    this.nearbySite = null;
-    this.dustParticles = null;
     this.disposables = [];
     this.lamps = [];
     this.elapsed = 0;
+    // The pan runs to the horizon on its own; the voyage must not lay a ring over it.
+    this.hasFarTerrain = true;
+    this.t4 = tierAtLeast('T4');
 
     this.sub = this.data.sublevel;
+    this.field = makeTallowField();
 
+    this.initMetals();
     this.initLighting();
     this.initSky();
     this.initTerrain();
@@ -105,9 +122,13 @@ export class TallowWorld {
     this.initCatalogueVault();
     this.initTallyFloor();
     this.initHopperGantry();
-    this.initDust();
+    this.initVista();
+    this.initEffects();
+    this.initLampPool();
+    this.bakeStatics();
     this.buildColliders();
     this.enableAmbientOcclusion();
+    this.weatherTheWorld();
   }
 
   /**
@@ -118,9 +139,6 @@ export class TallowWorld {
    * its own UVs for it. Rather than remember that at every one of the hundred
    * call sites below, it is done once, here, for anything whose material
    * actually carries one.
-   *
-   * Cavity occlusion is the cheapest realism in the whole world: it is what
-   * makes a panel gap read as a gap rather than a dark line painted on a sheet.
    */
   enableAmbientOcclusion() {
     const done = new Set();
@@ -129,8 +147,37 @@ export class TallowWorld {
       const mats = Array.isArray(o.material) ? o.material : [o.material];
       if (!mats.some(m => m && m.aoMap)) return;
       if (done.has(o.geometry)) return;
+      if (o.geometry.attributes.uv1) { done.add(o.geometry); return; }
       done.add(o.geometry);
       enableAO(o.geometry);
+    });
+  }
+
+  /**
+   * THE WEATHER, APPLIED ONCE TO EVERYTHING THAT WAS BUILT.
+   *
+   * Every standard material in the world gets two patches: salt, which crusts
+   * the foot of whatever stands on the flat, settles on what faces up and
+   * leaves the dried tide lines of brine that once stood round it; and the
+   * air, which fades every surface into the sky behind it with distance. The
+   * ground and the sky finish themselves. A Learn instrument deployed later is
+   * NOT weathered — it is the one thing on the flat somebody is using.
+   */
+  weatherTheWorld() {
+    this.groundTex = this.own(createGroundHeightTexture((x, z) => this.getTerrainHeight(x, z)));
+    const seen = new Set();
+    this.scene.traverse(o => {
+      if (!o.isMesh && !o.isInstancedMesh && !o.isPoints) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      for (const m of mats) {
+        if (!m || seen.has(m)) continue;
+        seen.add(m);
+        if (o.isMesh && !o.userData.noSalt && m !== this.terrainMesh?.material) {
+          const lamp = m.emissive && m.emissiveIntensity > 0 && m.emissive.getHex() !== 0;
+          if (!lamp) applySaltWeather(m, { ground: this.groundTex, ...(m.userData.salt || {}) });
+        }
+        applyTallowAir(m);
+      }
     });
   }
 
@@ -140,141 +187,105 @@ export class TallowWorld {
     return objs[0];
   }
 
+  /**
+   * FOUR METALS, ONE GENERATOR, FOUR AMOUNTS OF WEATHER.
+   *
+   * Every plate here comes out of `platedMetal`, which builds a plate the way
+   * the real object acquired it: rolled steel, a pressed panel grid, rivet
+   * lines, paint, paint worn off the high edges, and rust blooming out of the
+   * bare metal and streaking downward. They differ almost entirely in the
+   * `weather` number. Built first, because the lab below ground uses them too.
+   *
+   * RESOLUTION IS SPENT WHERE THE PLAYER'S FACE GOES: `pale` is the bench top
+   * and the lean-to, read from half a metre, so it is drawn at full size; the
+   * drums, columns and pipe runs are read from ten metres and across repeats.
+   */
+  initMetals() {
+    const pale = platedMetal({
+      paint: '#9a9081', metal: '#6d6559', rust: '#7c4826',
+      panels: 2, seed: 31, weather: 0.78, size: texSize(512)
+    });
+    const drum = platedMetal({
+      paint: '#8e8371', metal: '#6a6153', rust: '#84492a',
+      panels: 1, seed: 47, weather: 0.92, grain: 1.1, size: texSize(512)
+    });
+    const dark = platedMetal({
+      paint: '#4e463c', metal: '#5c554b', rust: '#6d3f22',
+      panels: 4, seed: 59, weather: 0.62, size: texSize(256)
+    });
+    const pipe = platedMetal({
+      paint: '#7f7565', metal: '#776e61', rust: '#8a5029',
+      panels: 1, seed: 71, weather: 0.85, rivets: false, size: texSize(256)
+    });
+    this.drumMat = this.own(buildMaterial(drum, { repeat: [3, 1.6], roughness: 1.0 }));
+    this.plateMat = this.own(buildMaterial(pale, { repeat: 2, roughness: 1.0 }));
+    this.pipeMat = this.own(buildMaterial(pipe, { repeat: [4, 1], roughness: 1.0 }));
+    this.darkSteelMat = this.own(buildMaterial(dark, { repeat: 3, roughness: 1.0 }));
+    for (const m of [this.drumMat, this.plateMat, this.pipeMat, this.darkSteelMat]) {
+      m.normalScale.set(1.25, 1.25);
+      m.aoMapIntensity = 0.85;
+    }
+  }
+
+  /** What the plant builders are handed: the metals, disposal, and the tier. */
+  get plantCtx() {
+    return {
+      M: {
+        drum: this.drumMat, plate: this.plateMat, pipe: this.pipeMat,
+        dark: this.darkSteelMat, bulk: this.bulkMat
+      },
+      own: (...o) => this.own(...o),
+      t4: this.t4,
+      heightAt: (x, z) => this.surfaceHeight(x, z),
+      sky: TSKY
+    };
+  }
+
   /* ======================================================================
      LIGHT AND SKY
-     Flat overcast. A salt pan under cloud has almost no directional shadow
-     and a very bright ground bounce, which is the opposite of Erebus.
+     A high sun through a thin veil, and a white crust throwing most of it
+     back up. See tallow/atmosphere.js.
      ====================================================================== */
 
   initLighting() {
+    const { sun, hemi } = createTallowLights({ shadows: this.t4 });
+    this.sunLight = sun;
+    this.scene.add(sun, sun.target, hemi);
+    holdShadowUntilAsked(this.scene, sun);
+
+    /*
+     * The haze. Every material's fog is replaced by aerial perspective toward
+     * the sky in the direction it is seen (atmosphere.js), reading near/far
+     * from here; the colour is only what the voyage's cloud deck is tinted with.
+     */
     const amb = this.data.ambience;
-
-    // Ground bounce is the dominant light here: white crust throwing the sky
-    // back up under everything. That upward fill is what makes salt read as salt.
-    const hemi = new THREE.HemisphereLight(0xe8dcc2, 0xa89b82, 2.1);
-    this.scene.add(hemi);
-
-    const ambient = new THREE.AmbientLight(amb.fillLight, 0.9);
-    this.scene.add(ambient);
-
-    // The sun, diffused through overcast: broad, weak, barely a direction.
-    this.sunLight = new THREE.DirectionalLight(amb.keyLight, 2.0);
-    this.sunLight.position.set(-70, 58, 40);
-    this.sunLight.target.position.set(0, 0, 0);
-    this.scene.add(this.sunLight, this.sunLight.target);
-
-    if (tierAtLeast('T4')) {
-      this.sunLight.castShadow = true;
-      this.sunLight.shadow.mapSize.set(2048, 2048);
-      this.sunLight.shadow.camera.near = 1;
-      this.sunLight.shadow.camera.far = 220;
-      const s = 70;
-      this.sunLight.shadow.camera.left = -s;
-      this.sunLight.shadow.camera.right = s;
-      this.sunLight.shadow.camera.top = s;
-      this.sunLight.shadow.camera.bottom = -s;
-      this.sunLight.shadow.bias = -0.0006;
-      this.sunLight.shadow.normalBias = 0.035;
-    }
-
-    // Cold back-fill from the open sky behind, kept warm-neutral so the palette
-    // never drifts to the blue-black that CLAUDE.md §4.1 forbids.
-    const back = new THREE.DirectionalLight(0x9a917e, 0.55);
-    back.position.set(60, 26, -70);
-    this.scene.add(back);
-
     this.scene.fog = new THREE.Fog(amb.fogColor, amb.fogNear, amb.fogFar);
-    this.scene.background = new THREE.Color(amb.fogColor);
+    this.scene.background = TSKY.haze.clone();
+
+    const env = createTallowEnvironment(this.renderer);
+    if (env) {
+      this.envTarget = env;
+      this.scene.environment = env.texture;
+      this.scene.environmentIntensity = 0.5;
+    }
   }
 
   initSky() {
-    // A haze dome, not a starfield: on Tallow the sky is the weather.
-    const skyGeo = this.own(new THREE.SphereGeometry(340, 32, 24));
-    const skyMat = this.own(new THREE.ShaderMaterial({
-      side: THREE.BackSide,
-      depthWrite: false,
-      fog: false,
-      uniforms: {
-        zenith: { value: new THREE.Color(0x8c8370) },
-        horizon: { value: new THREE.Color(0xd3c8b0) },
-        glare: { value: new THREE.Color(0xe9dcc0) },
-        sunDir: { value: new THREE.Vector3(-70, 58, 40).normalize() }
-      },
-      vertexShader: `
-        varying vec3 vWorld;
-        void main() {
-          vWorld = (modelMatrix * vec4(position, 1.0)).xyz;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 zenith;
-        uniform vec3 horizon;
-        uniform vec3 glare;
-        uniform vec3 sunDir;
-        varying vec3 vWorld;
-        void main() {
-          vec3 dir = normalize(vWorld);
-          float h = clamp(dir.y * 1.25, -1.0, 1.0);
-          vec3 col = mix(horizon, zenith, pow(max(h, 0.0), 0.62));
-          // Below the horizon the dome is simply the haze the terrain sits in.
-          col = mix(col, horizon, clamp(-h * 2.4, 0.0, 1.0));
-          // A broad, soft brightening where the sun is behind the cloud. No disc,
-          // no bloom: overcast has a bright patch, not a lamp.
-          float sd = max(dot(dir, normalize(sunDir)), 0.0);
-          col = mix(col, glare, pow(sd, 3.5) * 0.55);
-          gl_FragColor = vec4(col, 1.0);
-        }
-      `
-    }));
-    const skyMesh = new THREE.Mesh(skyGeo, skyMat);
-    // `phys` tells the physics verifier what kind of thing this is. The sky is
-    // not an object in the world; it is the world's backdrop, and it encloses
-    // everything by design.
-    skyMesh.userData.phys = 'ambient';
-    this.scene.add(skyMesh);
-
-    // Distant mesa silhouettes along the horizon, flattened into the haze so they
-    // read as depth rather than as scenery you could ever walk to.
-    const rand = mulberry32(0x3e11);
-    const mesaMat = this.own(new THREE.MeshBasicMaterial({
-      color: 0xb3a892, fog: false, side: THREE.DoubleSide, transparent: true, opacity: 0.75
-    }));
-    const mesaGroup = new THREE.Group();
-    for (let i = 0; i < 26; i++) {
-      const a = (i / 26) * Math.PI * 2 + rand() * 0.12;
-      const dist = 250 + rand() * 45;
-      const w = 22 + rand() * 60;
-      const h = 4 + rand() * 11;
-      const geo = this.own(new THREE.PlaneGeometry(w, h));
-      const m = new THREE.Mesh(geo, mesaMat);
-      m.position.set(Math.cos(a) * dist, h * 0.45, Math.sin(a) * dist);
-      m.lookAt(0, h * 0.45, 0);
-      mesaGroup.add(m);
-    }
-    mesaGroup.userData.phys = 'ambient';   // horizon silhouettes, not places
-    this.scene.add(mesaGroup);
+    this.sky = createTallowSkyDome(900);
+    this.scene.add(this.sky);
+    this.celestials = createTallowCelestials();
+    this.scene.add(this.celestials);
   }
 
   /* ======================================================================
      TERRAIN
-     Cracked hardpan with a long shallow swell. The excavation footprint is
-     cut out of the mesh entirely — the pit below is built as geometry, so
-     its edges are machined and square rather than a stretched triangle.
+     The pan, from the boots to the horizon, with the excavation cut out of
+     it along the pit's own walls. See tallow/terrain.js.
      ====================================================================== */
 
   /** The open flat, before the excavation is considered. */
   surfaceHeight(x, z) {
-    const max = this.data.terrain.maxHeight;
-    // A salt pan is close to dead level; what relief there is comes from the
-    // spoil ridges around the old pans and a very long swell across the flat.
-    const swell =
-      Math.sin(x * 0.0135) * Math.cos(z * 0.0119) * 0.42 +
-      Math.sin(x * 0.031 + 1.7) * 0.2 +
-      Math.cos(z * 0.027 - 0.6) * 0.18;
-    const ridge = Math.max(0, Math.sin(x * 0.009 + z * 0.006)) * 0.34;
-    const grain = Math.sin(x * 0.42) * Math.cos(z * 0.39) * 0.035;
-    return (swell + ridge) * (max * 0.33) + grain;
+    return this.field.height(x, z);
   }
 
   inRoom(x, z) {
@@ -306,86 +317,44 @@ export class TallowWorld {
   }
 
   initTerrain() {
-    const [sx, sz] = this.data.terrain.size;
-    // T4 draws the crust at full resolution; T3 halves it. Same shape, same
-    // heights, fewer triangles — a fidelity difference, never a place difference.
-    const seg = tierAtLeast('T4') ? 200 : 100;
-
-    const geo = new THREE.PlaneGeometry(sx, sz, seg, seg);
-    geo.rotateX(-Math.PI / 2);
-
-    const pos = geo.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i);
-      const z = pos.getZ(i);
-      pos.setY(i, this.surfaceHeight(x, z));
+    const aniso = this.renderer?.capabilities?.getMaxAnisotropy?.() || 8;
+    const crust = buildMaterial(saltCrust({ size: texSize(512), seed: 4 }), { repeat: 1 });
+    for (const t of [crust.map, crust.normalMap, crust.roughnessMap, crust.aoMap]) {
+      if (!t) continue;
+      t.anisotropy = aniso;
+      this.own(t);
     }
-    pos.needsUpdate = true;
+    this.own(crust);
+    this.crustMap = crust.map;
 
-    // Cut the excavation out of the mesh. A triangle is dropped when its centre
-    // falls inside the pit, which leaves a clean rectangular hole for the pit
-    // geometry to fill instead of a funnel of stretched polygons.
-    const index = geo.index;
-    const kept = [];
-    const rimPad = 0.02;
-    const holeTest = (x, z) => {
-      const r = this.sub.room;
-      const s = this.sub.stair;
-      const inR = x > r.minX - rimPad && x < r.maxX + rimPad && z > r.minZ - rimPad && z < r.maxZ + rimPad;
-      const inS = x > s.minX - rimPad && x < s.maxX + rimPad && z > s.minZ - rimPad && z < s.maxZ + rimPad;
-      return inR || inS;
-    };
-    for (let i = 0; i < index.count; i += 3) {
-      const a = index.getX(i), b = index.getX(i + 1), c = index.getX(i + 2);
-      const cx = (pos.getX(a) + pos.getX(b) + pos.getX(c)) / 3;
-      const cz = (pos.getZ(a) + pos.getZ(b) + pos.getZ(c)) / 3;
-      if (holeTest(cx, cz)) continue;
-      kept.push(a, b, c);
-    }
-    geo.setIndex(kept);
-    geo.computeVertexNormals();
-    this.own(geo);
-
-    // THE CRUST, IN THREE LAYERS.
-    //
-    // A dry lakebed is a Worley cell field: the pan dries, shrinks, and tears
-    // along the cell walls, and each plate between the tears curls up at its
-    // rim. `saltHardpan` draws that once at 512 and every map — colour, normal,
-    // roughness, ambient occlusion — comes off the same height field, so the
-    // shadow in a crack belongs to that crack.
-    //
-    // One tile of anything repeats every eight metres across 240 m of ground,
-    // and from standing height a repeat reads as printed paper no matter how
-    // good the tile is. Two layers fix that and neither costs a draw call:
-    // a DETAIL normal sampled far below the repeat, which is the grit a player
-    // sees at their feet, and a MACRO variation sampled across the whole mesh
-    // with no repeat at all, which is the slow drift of damp and dust that
-    // makes one end of the pan a different colour from the other.
-    const crust = saltHardpan({ size: texSize(512), seed: 4 });
-    const mat = this.own(buildMaterial(crust, { repeat: 30, roughness: 1.0, metalness: 0.0 }));
-    mat.normalScale.set(1.3, 1.3);
-    mat.aoMapIntensity = 0.9;
-
+    // Grit: the crystal at the player's feet, far below the crust's repeat.
     const gritHeight = heightField(texSize(256), (u, v) =>
       0.5 + (fbm(u * 34, v * 34, { octaves: 4, period: 34, seed: 0x9f1 }) - 0.5) * 0.9
     );
-    this.gritNormal = asDataTexture(heightToNormal(gritHeight, 1.5), 1);
-    this.own(this.gritNormal);
-    addDetailNormal(mat, this.gritNormal, { scale: 7.5, strength: 0.42 });
+    const grit = this.own(asDataTexture(heightToNormal(gritHeight, 1.6), 1));
+    grit.anisotropy = aniso;
+    const macro = this.own(asDataTexture(heightField(texSize(256), (u, v) =>
+      fbm(u * 4, v * 4, { octaves: 5, period: 4, seed: 0x2ee })
+    ), 1));
+    this.macroMap = macro;
+    this.strataMap = this.own(createTallowStrataTexture());
 
-    const macro = heightField(texSize(256), (u, v) =>
-      fbm(u * 3, v * 3, { octaves: 5, period: 3, seed: 0x2ee })
-    );
-    this.macroMap = asDataTexture(macro, 1);
-    this.macroMap.wrapS = this.macroMap.wrapT = THREE.ClampToEdgeWrapping;
-    this.own(this.macroMap);
-    addMacroVariation(mat, this.macroMap, { strength: 0.13, roughShift: 0.14 });
-
-    enableAO(geo);
+    const s = this.sub;
+    const geo = this.own(buildTallowTerrainGeometry(this.field, {
+      step: this.t4 ? 1.25 : 2.0,
+      growth: this.t4 ? 1.07 : 1.11,
+      holes: [s.room, s.stair],
+      tile: 6
+    }));
+    const mat = this.own(createTallowTerrainMaterial({
+      crust, grit, macro, strata: this.strataMap, tracks: this.data.tracks
+    }));
     this.terrainMesh = new THREE.Mesh(geo, mat);
+    this.terrainMesh.name = 'tallow-ground';
     // The ground everything else stands on and is bedded into.
     this.terrainMesh.userData.phys = 'ground';
-    this.terrainMesh.receiveShadow = tierAtLeast('T4');
+    this.terrainMesh.userData.noSalt = true;
+    this.terrainMesh.receiveShadow = this.t4;
     this.scene.add(this.terrainMesh);
   }
 
@@ -585,8 +554,16 @@ export class TallowWorld {
     // Sodium luminaires in the lab. These are lamps, so they are allowed to be
     // lit — and they are the reason the sub-level reads warm while the flat above
     // reads bleached.
+    //
+    // Four lamps, two lights: each pair along z is lit by one pooled light at
+    // its midpoint (a little stronger, a little further reaching), which puts
+    // the brightest floor right over the bench at site 2. Four point lights
+    // here were shaded on every pixel of the salt flat above as well.
     for (const [lx, lz] of [[-7, -23], [-7, -30], [7, -23], [7, -30]]) {
-      g.add(this.buildLuminaire(lx, this.sub.ceilingY - 0.42, lz));
+      g.add(this.buildLuminaire(lx, this.sub.ceilingY - 0.42, lz, { light: null }));
+    }
+    for (const lx of [-7, 7]) {
+      g.add(this.lampMark(lx, this.sub.ceilingY - 0.62, -26.5, { intensity: 6.5, distance: 16 }));
     }
 
     /* ================= THE SERVICES =================
@@ -721,28 +698,31 @@ export class TallowWorld {
   }
 
   /** A caged sodium fixture: cast housing, warm diffuser, one small point light. */
-  buildLuminaire(x, y, z) {
+  buildLuminaire(x, y, z, { light = { intensity: 5.2, distance: 13 } } = {}) {
     const g = new THREE.Group();
+    // One set of materials for every luminaire, so the lab's four bake into
+    // three meshes rather than twelve.
+    this.lumMats = this.lumMats || {
+      housing: this.own(new THREE.MeshStandardMaterial({ color: 0x3f3830, roughness: 0.9, metalness: 0.5 })),
+      diffuser: this.own(new THREE.MeshStandardMaterial({
+        color: 0xffe0ae, emissive: 0xffd9a0, emissiveIntensity: 1.5, roughness: 0.6
+      })),
+      cage: this.own(new THREE.MeshStandardMaterial({ color: 0x2e2923, roughness: 0.85, metalness: 0.6 }))
+    };
     const housing = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.62, 0.16, 0.34)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0x3f3830, roughness: 0.9, metalness: 0.5 }))
+      this.own(new THREE.BoxGeometry(0.62, 0.16, 0.34)), this.lumMats.housing
     );
     g.add(housing);
 
     const diffuser = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.5, 0.04, 0.24)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0xffe0ae, emissive: 0xffd9a0, emissiveIntensity: 1.5, roughness: 0.6
-      }))
+      this.own(new THREE.BoxGeometry(0.5, 0.04, 0.24)), this.lumMats.diffuser
     );
     diffuser.position.y = -0.09;
     g.add(diffuser);
 
     // The protective cage: five bars, because an unguarded lamp in a work space
     // would have been smashed decades ago.
-    const cageMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0x2e2923, roughness: 0.85, metalness: 0.6
-    }));
+    const cageMat = this.lumMats.cage;
     for (let i = 0; i < 5; i++) {
       const bar = new THREE.Mesh(
         this.own(new THREE.CylinderGeometry(0.012, 0.012, 0.3, 6)), cageMat
@@ -752,13 +732,77 @@ export class TallowWorld {
       g.add(bar);
     }
 
-    const light = new THREE.PointLight(0xffd9a0, 5.2, 13, 1.6);
-    light.position.y = -0.2;
-    g.add(light);
-    this.lamps.push(light);
+    if (light) g.add(this.lampMark(0, -0.2, 0, light));
 
     g.position.set(x, y, z);
     return g;
+  }
+
+  /**
+   * Where a sodium lamp's light comes from. Not a PointLight: an empty marker
+   * that `initLampPool` reads once everything is placed, so the world's lamps
+   * are lit through a pool of two real lights rather than one light each.
+   */
+  lampMark(x, y, z, { intensity = 5.2, distance = 13 } = {}) {
+    const mark = new THREE.Object3D();
+    mark.position.set(x, y, z);
+    mark.userData.lamp = { color: 0xffd9a0, intensity, distance, decay: 1.6 };
+    this.lamps.push(mark);
+    return mark;
+  }
+
+  /**
+   * BAKE WHAT NEVER MOVES. The refinery, the pad and the hauler were baked as
+   * they were built; the five sites, the lab and the crate stacks were not, and
+   * they were five hundred of the world's nine hundred draw calls (drawn twice,
+   * once more for the sun's shadow). Each becomes one mesh per material.
+   *
+   * What must stay addressable already says so: the cased-up instrument is
+   * `noMerge` (it hides when the bench deploys) and is baked on its own INSIDE
+   * that group, so casing it up still hides one thing; the site indicator and
+   * the windsock are `noMerge`. A mesh carrying a physics tag or `noSalt` is
+   * left alone too, because the tag lives on the mesh and a bake would drop it.
+   */
+  bakeStatics() {
+    const bake = (group) => {
+      group.traverse(o => {
+        if (o !== group && (o.userData.phys || o.userData.noSalt || o.userData.openShell)) {
+          o.userData.noMerge = true;
+        }
+      });
+      mergeStatic(group);
+    };
+    for (const anchor of this.benchAnchors.values()) {
+      const dormant = anchor.dormant;
+      if (!dormant) continue;
+      dormant.userData.noMerge = false;
+      bake(dormant);
+      dormant.userData.noMerge = true;
+    }
+    for (const node of [...this.scene.children]) {
+      if (!node.isGroup || node.userData.partBoxes || node.userData.noMerge || node.userData.phys) continue;
+      bake(node);
+    }
+    // Every baked geometry is the world's to free, including the ones the
+    // refinery, the pad and the hauler baked for themselves.
+    const owned = new Set(this.disposables);
+    this.scene.traverse(o => {
+      const g = o.userData.ownGeometry;
+      if (g && !owned.has(g)) { owned.add(g); this.own(g); }
+    });
+  }
+
+  /**
+   * THE LAMPS SHARE TWO LIGHTS. The lab's pair of pooled lamps and the work
+   * lamp under the lean-to are forty-five metres apart, so the two lights
+   * nearest the eye are always the ones that show (lamp-pool.js).
+   */
+  initLampPool() {
+    this.lampPool = new LampPool(this.scene, 2);
+    this.scene.updateMatrixWorld(true);
+    for (const mark of this.lamps) {
+      this.lampPool.add({ ...mark.userData.lamp, position: mark.getWorldPosition(new THREE.Vector3()) });
+    }
   }
 
   /* ======================================================================
@@ -766,68 +810,23 @@ export class TallowWorld {
      ====================================================================== */
 
   initRefinery() {
-    /*
-     * FOUR METALS, ONE GENERATOR, FOUR AMOUNTS OF WEATHER.
-     *
-     * Every surface here comes out of `platedMetal`, which builds a plate the
-     * way the real object acquired it: rolled steel, a pressed panel grid,
-     * rivet lines along the seams, paint, paint worn off the high edges, and
-     * rust blooming out of the bare metal and streaking downward with gravity.
-     * The four differ almost entirely in the `weather` number — which is the
-     * difference between a drum that has stood in the wind for forty years and
-     * a handrail that people still hold.
-     *
-     * They are cached by key, so the four generators run once for the whole
-     * world no matter how many props ask for them.
-     */
-    // RESOLUTION IS SPENT WHERE THE PLAYER'S FACE GOES.
-    // `pale` is the bench top, the lean-to and the site plate — surfaces read
-    // from half a metre — so it is drawn at full size. The drums, the columns
-    // and the pipe runs are read from ten metres and across four repeats, and
-    //256 there is indistinguishable from 512 while costing a quarter as much.
-    // Generating everything at 512 is most of what a world costs to build.
-    const pale = platedMetal({
-      paint: '#9a9081', metal: '#6d6559', rust: '#7c4826',
-      panels: 2, seed: 31, weather: 0.78, size: texSize(512)
-    });
-    const drum = platedMetal({
-      paint: '#8e8371', metal: '#6a6153', rust: '#84492a',
-      panels: 1, seed: 47, weather: 0.92, grain: 1.1, size: texSize(256)
-    });
-    const dark = platedMetal({
-      paint: '#4e463c', metal: '#5c554b', rust: '#6d3f22',
-      panels: 4, seed: 59, weather: 0.62, size: texSize(256)
-    });
-    const pipe = platedMetal({
-      paint: '#7f7565', metal: '#776e61', rust: '#8a5029',
-      panels: 1, seed: 71, weather: 0.85, rivets: false, size: texSize(256)
-    });
-
-    this.drumMat = this.own(buildMaterial(drum, { repeat: [3, 1.6], roughness: 1.0 }));
-    this.plateMat = this.own(buildMaterial(pale, { repeat: 2, roughness: 1.0 }));
-    this.pipeMat = this.own(buildMaterial(pipe, { repeat: [4, 1], roughness: 1.0 }));
-    this.darkSteelMat = this.own(buildMaterial(dark, { repeat: 3, roughness: 1.0 }));
-
-    for (const m of [this.drumMat, this.plateMat, this.pipeMat, this.darkSteelMat]) {
-      m.normalScale.set(1.25, 1.25);
-      m.aoMapIntensity = 0.85;
-    }
-
+    const ctx = this.plantCtx;
     for (const lm of this.data.landmarks) {
       if (lm.minTier === 'T4' && !tierAtLeast('T4')) continue;
       const y = this.surfaceHeight(lm.pos[0], lm.pos[2]);
       let node = null;
       switch (lm.asset) {
-        case 'evaporator': node = this.buildEvaporator(lm.scale); break;
-        case 'cracking-tower': node = this.buildCrackingTower(lm.scale); break;
-        case 'pipe-bridge': node = this.buildPipeBridge(); break;
-        case 'conveyor': node = this.buildConveyor(); break;
-        case 'comms-mast': node = this.buildCommsMast(); break;
-        case 'debris-field': node = this.buildDebrisField(lm.scale, lm.pos[0], lm.pos[2]); break;
-        case 'stake-marker': node = this.buildStakeMarker(); break;
+        case 'evaporator': node = buildEvaporator(ctx, lm.scale); break;
+        case 'cracking-tower': node = buildCrackingTower(ctx, lm.scale); break;
+        case 'pipe-bridge': node = buildPipeBridge(ctx); break;
+        case 'conveyor': node = buildConveyor(ctx); break;
+        case 'comms-mast': node = buildCommsMast(ctx); break;
+        case 'debris-field': node = buildDebrisField(ctx, lm.scale, lm.pos[0], lm.pos[2]); break;
+        case 'stake-marker': node = buildStakeMarker(ctx); break;
         default: node = null;
       }
       if (!node) continue;
+      if (node.userData.lamp) this.mastLamp = node.userData.lamp;
       // Bake the prop into one mesh per material before it is placed. An
       // evaporator is about sixty meshes once it is dressed, and there are
       // four of them — this is what keeps the detail affordable.
@@ -838,523 +837,6 @@ export class TallowWorld {
       node.name = `${lm.asset}@${lm.pos[0]},${lm.pos[2]}`;
       this.scene.add(node);
     }
-  }
-
-  /** A brine evaporator: squat drum, skirt, cooling fins, service ladder. */
-  buildEvaporator(scale = 1) {
-    const g = new THREE.Group();
-    const R = 3.4 * scale;
-    const H = 7.2 * scale;
-
-    const shell = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(R, R * 1.06, H, 28, 1, true)), this.drumMat
-    );
-    shell.position.y = H / 2;
-    shell.castShadow = shell.receiveShadow = tierAtLeast('T4');
-    g.add(shell);
-
-    // Domed head, in section a proper torispherical cap rather than a ball.
-    const cap = new THREE.Mesh(
-      this.own(new THREE.SphereGeometry(R, 28, 12, 0, Math.PI * 2, 0, Math.PI * 0.38)),
-      this.drumMat
-    );
-    cap.position.y = H;
-    cap.castShadow = tierAtLeast('T4');
-    g.add(cap);
-
-    // Skirt: the drum stands on a plated base ring, not on the crust.
-    const skirt = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(R * 1.1, R * 1.16, 0.9 * scale, 28)), this.darkSteelMat
-    );
-    skirt.position.y = 0.45 * scale;
-    skirt.castShadow = skirt.receiveShadow = tierAtLeast('T4');
-    g.add(skirt);
-
-    // Stiffener hoops.
-    for (let i = 1; i <= 3; i++) {
-      const hoop = new THREE.Mesh(
-        this.own(new THREE.TorusGeometry(R * 1.01, 0.09 * scale, 6, 28)), this.darkSteelMat
-      );
-      hoop.rotation.x = Math.PI / 2;
-      hoop.position.y = (H / 4) * i;
-      g.add(hoop);
-    }
-
-    // Cooling fins around the collar at two thirds height.
-    const finGeo = this.own(new THREE.BoxGeometry(0.1 * scale, 0.7 * scale, 0.95 * scale));
-    for (let i = 0; i < 20; i++) {
-      const a = (i / 20) * Math.PI * 2;
-      const fin = new THREE.Mesh(finGeo, this.darkSteelMat);
-      fin.position.set(Math.cos(a) * R * 1.12, H * 0.66, Math.sin(a) * R * 1.12);
-      fin.rotation.y = -a;
-      fin.castShadow = tierAtLeast('T4');
-      g.add(fin);
-    }
-
-    // Service ladder with real rungs and a back hoop: small detail, but it is
-    // what gives the drum its scale when you stand at the foot of it.
-    const ladder = new THREE.Group();
-    const railGeo = this.own(new THREE.CylinderGeometry(0.045, 0.045, H * 0.92, 6));
-    for (const dx of [-0.24, 0.24]) {
-      const rail = new THREE.Mesh(railGeo, this.darkSteelMat);
-      rail.position.set(dx, H * 0.46, 0);
-      ladder.add(rail);
-    }
-    const rungGeo = this.own(new THREE.CylinderGeometry(0.028, 0.028, 0.48, 6));
-    const rungs = Math.floor(H * 2.6);
-    for (let i = 0; i < rungs; i++) {
-      const rung = new THREE.Mesh(rungGeo, this.darkSteelMat);
-      rung.rotation.z = Math.PI / 2;
-      rung.position.set(0, 0.35 + i * 0.36, 0);
-      ladder.add(rung);
-    }
-    ladder.position.set(0, 0, R * 1.04);
-    g.add(ladder);
-
-    // Nozzle stubs with bolted flanges — vessels are nothing but penetrations.
-    for (const [a, h] of [[0.6, 0.3], [2.4, 0.55], [4.1, 0.75]]) {
-      const stub = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.22 * scale, 0.22 * scale, 0.8 * scale, 12)),
-        this.pipeMat
-      );
-      stub.rotation.z = Math.PI / 2;
-      stub.position.set(Math.cos(a) * R * 1.2, H * h, Math.sin(a) * R * 1.2);
-      stub.rotation.y = -a;
-      g.add(stub);
-
-      // A flange is a bolted joint, and the bolts are the thing that says so.
-      const flange = pipeFlange(0.22 * scale, this.darkSteelMat, this.darkSteelMat);
-      flange.rotation.z = Math.PI / 2;
-      flange.position.set(Math.cos(a) * R * 1.55, H * h, Math.sin(a) * R * 1.55);
-      flange.rotation.y = -a;
-      g.add(flange);
-    }
-
-    /* ---- the small parts ---- */
-
-    // Weld beads where the shell courses meet. A pressure vessel is rolled in
-    // courses and welded round, and the bead stands proud of the plate — a
-    // circumferential seam is the clearest read of how a big drum was made.
-    for (let i = 1; i <= 2; i++) {
-      const ring = new THREE.Mesh(
-        this.own(new THREE.TorusGeometry(R * 1.004, 0.026 * scale, 5, 40)), this.pipeMat
-      );
-      ring.rotation.x = Math.PI / 2;
-      ring.position.y = (H / 3) * i + 0.1;
-      g.add(ring);
-    }
-
-    // The ring of bolts holding the cap down onto the shell flange.
-    const capRing = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(R * 1.05, R * 1.05, 0.14 * scale, 28)),
-      this.darkSteelMat
-    );
-    capRing.position.y = H - 0.02;
-    g.add(capRing);
-    const capBolts = boltRing(R * 1.02, 24, this.darkSteelMat, { size: 0.05 * scale });
-    capBolts.position.y = H + 0.06 * scale;
-    g.add(capBolts);
-
-    // Hazard striping round the skirt: the paint everyone walks into.
-    const stripe = hazardStripe(R * 1.9, 0.28 * scale);
-    stripe.position.set(0, 0.62 * scale, R * 1.172);
-    g.add(stripe);
-    this.own(stripe.geometry, stripe.material, stripe.material.map);
-
-    // The vessel's number plate, at chest height beside the ladder.
-    const tag = placard(`EV-${(Math.round(scale * 100) % 9) + 1}7`, { w: 0.46, h: 0.17 });
-    tag.position.set(0.52, 1.5, R * 1.062);
-    g.add(tag);
-    this.own(tag.geometry, tag.material, tag.material.map);
-
-    // A cable dropping from the instrument stub to a junction box on the skirt.
-    const junction = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.26, 0.34, 0.18)), this.darkSteelMat
-    );
-    junction.position.set(-1.1, 1.2, R * 1.04);
-    g.add(junction);
-    const cable = cableRun(
-      [Math.cos(2.4) * R * 1.5, H * 0.55, Math.sin(2.4) * R * 1.5],
-      [-1.1, 1.36, R * 1.04],
-      this.darkSteelMat,
-      { sag: 0.9, radius: 0.022, segments: 16 }
-    );
-    g.add(cable);
-    this.own(cable.userData.ownGeometry);
-
-    return g;
-  }
-
-  /** A fractionating column: tall, banded, guyed, with a platform near the top. */
-  buildCrackingTower(scale = 1) {
-    const g = new THREE.Group();
-    const R = 1.9 * scale;
-    const H = 21 * scale;
-
-    const col = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(R * 0.82, R, H, 20)), this.drumMat
-    );
-    col.position.y = H / 2;
-    col.castShadow = col.receiveShadow = tierAtLeast('T4');
-    g.add(col);
-
-    const cap = new THREE.Mesh(
-      this.own(new THREE.SphereGeometry(R * 0.82, 20, 10, 0, Math.PI * 2, 0, Math.PI * 0.4)),
-      this.drumMat
-    );
-    cap.position.y = H;
-    g.add(cap);
-
-    // Tray-level bands, the giveaway that it is a column and not a chimney.
-    for (let i = 1; i < 9; i++) {
-      const band = new THREE.Mesh(
-        this.own(new THREE.TorusGeometry(R * 0.93, 0.07 * scale, 6, 20)), this.darkSteelMat
-      );
-      band.rotation.x = Math.PI / 2;
-      band.position.y = (H / 9) * i;
-      g.add(band);
-    }
-
-    // Access platform with a toe board and stanchion rail.
-    const plat = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(R * 2.0, R * 2.0, 0.12, 20)), this.darkSteelMat
-    );
-    plat.position.y = H * 0.78;
-    plat.castShadow = plat.receiveShadow = tierAtLeast('T4');
-    g.add(plat);
-    for (let i = 0; i < 14; i++) {
-      const a = (i / 14) * Math.PI * 2;
-      const post = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.03, 0.03, 1.0, 6)), this.darkSteelMat
-      );
-      post.position.set(Math.cos(a) * R * 1.92, H * 0.78 + 0.5, Math.sin(a) * R * 1.92);
-      g.add(post);
-    }
-    const ring = new THREE.Mesh(
-      this.own(new THREE.TorusGeometry(R * 1.92, 0.035, 6, 20)), this.darkSteelMat
-    );
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = H * 0.78 + 1.0;
-    g.add(ring);
-
-    // Guy wires, anchored out on the crust. Thin, dark, no shine.
-    const wireMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0x3a342c, roughness: 0.95, metalness: 0.4
-    }));
-    for (let i = 0; i < 3; i++) {
-      const a = (i / 3) * Math.PI * 2 + 0.4;
-      const anchor = new THREE.Vector3(Math.cos(a) * 9 * scale, 0, Math.sin(a) * 9 * scale);
-      const top = new THREE.Vector3(Math.cos(a) * R, H * 0.86, Math.sin(a) * R);
-      const len = anchor.distanceTo(top);
-      const wire = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.022, 0.022, len, 5)), wireMat
-      );
-      wire.position.copy(anchor.clone().add(top).multiplyScalar(0.5));
-      wire.quaternion.setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0),
-        top.clone().sub(anchor).normalize()
-      );
-      g.add(wire);
-
-      // A turnbuckle two thirds of the way up each guy: the part that tells you
-      // the wire was tensioned by hand, by someone, once.
-      const buckle = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.055, 0.055, 0.34, 6)), this.darkSteelMat
-      );
-      const at = anchor.clone().lerp(top, 0.26);
-      buckle.position.copy(at);
-      buckle.quaternion.copy(wire.quaternion);
-      g.add(buckle);
-    }
-
-    /* ---- the small parts ---- */
-
-    // Every tray band is a bolted flange joint, not a painted stripe.
-    for (let i = 1; i < 9; i += 2) {
-      const bolts = boltRing(R * 0.95, 18, this.darkSteelMat, { size: 0.045 * scale });
-      bolts.position.y = (H / 9) * i;
-      g.add(bolts);
-    }
-
-    // A caged ladder the full height. The hoops are what stop a tall cylinder
-    // reading as a chimney and start it reading as something people climbed.
-    const ladder = new THREE.Group();
-    const railGeo = this.own(new THREE.CylinderGeometry(0.04, 0.04, H * 0.8, 6));
-    for (const dx of [-0.22, 0.22]) {
-      const rail = new THREE.Mesh(railGeo, this.darkSteelMat);
-      rail.position.set(dx, H * 0.4, 0);
-      ladder.add(rail);
-    }
-    const rungGeo = this.own(new THREE.CylinderGeometry(0.024, 0.024, 0.44, 5));
-    for (let i = 0; i < Math.floor(H * 2.2); i++) {
-      const rung = new THREE.Mesh(rungGeo, this.darkSteelMat);
-      rung.rotation.z = Math.PI / 2;
-      rung.position.set(0, 0.4 + i * 0.36, 0);
-      ladder.add(rung);
-    }
-    const hoopGeo = this.own(new THREE.TorusGeometry(0.38, 0.018, 5, 14, Math.PI * 1.35));
-    for (let i = 0; i < Math.floor(H / 1.1); i++) {
-      const hoop = new THREE.Mesh(hoopGeo, this.darkSteelMat);
-      hoop.rotation.y = Math.PI / 2;
-      hoop.rotation.z = -Math.PI * 0.17;
-      hoop.position.set(0, 2.4 + i * 1.1, 0.16);
-      ladder.add(hoop);
-    }
-    ladder.position.set(0, 0, R * 1.02);
-    g.add(ladder);
-
-    // The manway: a bolted oval door at working height, with a swing handle.
-    const manway = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.46, 0.46, 0.1, 18)), this.darkSteelMat
-    );
-    manway.rotation.x = Math.PI / 2;
-    manway.position.set(-R * 0.95, 1.85, 0.2);
-    manway.rotation.z = Math.PI / 2;
-    g.add(manway);
-    const manBolts = boltRing(0.4, 12, this.darkSteelMat, { size: 0.035, axis: 'x' });
-    manBolts.rotation.z = Math.PI / 2;
-    manBolts.position.set(-R * 1.0, 1.85, 0.2);
-    g.add(manBolts);
-
-    const tag = placard('FR-04', { w: 0.5, h: 0.19 });
-    tag.position.set(0.62, 2.4, R * 1.01);
-    g.add(tag);
-    this.own(tag.geometry, tag.material, tag.material.map);
-
-    return g;
-  }
-
-  /** A pipe rack on piers: four runs, cable tray, and a sagged lagging wrap. */
-  buildPipeBridge() {
-    const g = new THREE.Group();
-    const span = 26;
-    const deckY = 5.2;
-
-    for (const pz of [-span / 2 + 1, 0, span / 2 - 1]) {
-      for (const px of [-1.5, 1.5]) {
-        const pier = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(0.55, deckY, 0.55)), this.plateMat
-        );
-        pier.position.set(px, deckY / 2, pz);
-        pier.castShadow = pier.receiveShadow = tierAtLeast('T4');
-        g.add(pier);
-        // Bolted base plate.
-        const base = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(0.95, 0.12, 0.95)), this.darkSteelMat
-        );
-        base.position.set(px, 0.06, pz);
-        g.add(base);
-      }
-      const brace = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(3.6, 0.22, 0.22)), this.darkSteelMat
-      );
-      brace.position.set(0, deckY - 0.4, pz);
-      g.add(brace);
-    }
-
-    const pipeGeo = this.own(new THREE.CylinderGeometry(0.3, 0.3, span, 14));
-    const lagGeo = this.own(new THREE.CylinderGeometry(0.38, 0.38, span * 0.34, 14));
-    const offsets = [[-1.1, 0], [-0.35, 0.12], [0.4, 0], [1.15, 0.1]];
-    offsets.forEach(([ox, oy], i) => {
-      const pipe = new THREE.Mesh(pipeGeo, this.pipeMat);
-      pipe.rotation.x = Math.PI / 2;
-      pipe.position.set(ox, deckY + 0.4 + oy, 0);
-      pipe.castShadow = tierAtLeast('T4');
-      g.add(pipe);
-
-      // One run still carries its lagging; the rest have lost theirs to the wind.
-      if (i === 1) {
-        const lag = new THREE.Mesh(lagGeo, this.own(new THREE.MeshStandardMaterial({
-          color: 0xa89c86, roughness: 1.0, metalness: 0.0
-        })));
-        lag.rotation.x = Math.PI / 2;
-        lag.position.set(ox, deckY + 0.4 + oy, -span * 0.22);
-        g.add(lag);
-      }
-    });
-
-    // Cable tray slung under the rack.
-    const tray = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.7, 0.1, span)), this.darkSteelMat
-    );
-    tray.position.set(0, deckY - 0.15, 0);
-    g.add(tray);
-
-    return g;
-  }
-
-  /** A feed conveyor: trussed frame, head pulley, and a torn belt. */
-  buildConveyor() {
-    const g = new THREE.Group();
-    const len = 22;
-    const rise = 6.5;
-
-    const frame = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.5, 0.45, len)), this.plateMat
-    );
-    frame.position.set(0, rise / 2 + 1.2, 0);
-    frame.rotation.x = -Math.atan2(rise, len);
-    frame.castShadow = frame.receiveShadow = tierAtLeast('T4');
-    g.add(frame);
-
-    // Truss diagonals along the underside.
-    for (let i = 0; i < 9; i++) {
-      const t = (i + 0.5) / 9;
-      const z = -len / 2 + t * len;
-      const y = 1.2 + t * rise;
-      const d = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.1, 0.1, 1.9)), this.darkSteelMat
-      );
-      d.position.set(0.6, y - 0.42, z);
-      d.rotation.x = (i % 2 ? 0.7 : -0.7);
-      g.add(d);
-    }
-
-    // Support legs, each on its own footing.
-    for (const t of [0.12, 0.5, 0.88]) {
-      const z = -len / 2 + t * len;
-      const y = 1.2 + t * rise;
-      for (const dx of [-0.7, 0.7]) {
-        const leg = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(0.22, y, 0.22)), this.darkSteelMat
-        );
-        leg.position.set(dx, y / 2, z);
-        leg.castShadow = tierAtLeast('T4');
-        g.add(leg);
-      }
-    }
-
-    // Head pulley and its drive housing.
-    const pulley = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.62, 0.62, 1.4, 16)), this.darkSteelMat
-    );
-    pulley.rotation.z = Math.PI / 2;
-    pulley.position.set(0, 1.2 + rise, len / 2);
-    g.add(pulley);
-    const drive = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.8, 0.8, 0.7)), this.plateMat
-    );
-    drive.position.set(1.1, 1.2 + rise, len / 2);
-    g.add(drive);
-
-    return g;
-  }
-
-  /** The mast: lattice, dish, and a single obstruction lamp. */
-  buildCommsMast() {
-    const g = new THREE.Group();
-    const H = 17;
-
-    // Three-leg lattice with horizontal and diagonal bracing.
-    const legMat = this.darkSteelMat;
-    const legGeo = this.own(new THREE.CylinderGeometry(0.07, 0.09, H, 6));
-    const legs = [];
-    for (let i = 0; i < 3; i++) {
-      const a = (i / 3) * Math.PI * 2;
-      const x = Math.cos(a) * 0.62;
-      const z = Math.sin(a) * 0.62;
-      const leg = new THREE.Mesh(legGeo, legMat);
-      leg.position.set(x, H / 2, z);
-      leg.rotation.z = -x * 0.012;
-      leg.rotation.x = z * 0.012;
-      leg.castShadow = tierAtLeast('T4');
-      g.add(leg);
-      legs.push([x, z]);
-    }
-    const braceGeo = this.own(new THREE.CylinderGeometry(0.028, 0.028, 1.12, 5));
-    for (let lvl = 1; lvl < 17; lvl++) {
-      const y = lvl * (H / 17);
-      for (let i = 0; i < 3; i++) {
-        const [x1, z1] = legs[i];
-        const [x2, z2] = legs[(i + 1) % 3];
-        const b = new THREE.Mesh(braceGeo, legMat);
-        b.position.set((x1 + x2) / 2, y, (z1 + z2) / 2);
-        b.rotation.z = Math.PI / 2;
-        b.rotation.y = -Math.atan2(z2 - z1, x2 - x1);
-        g.add(b);
-      }
-    }
-
-    // Dish, canted off true — nobody has aligned it in decades.
-    const dish = new THREE.Mesh(
-      this.own(new THREE.SphereGeometry(1.5, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.32)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0x8b8171, roughness: 0.93, metalness: 0.3, side: THREE.DoubleSide
-      }))
-    );
-    dish.position.set(0, H * 0.82, 0.9);
-    dish.rotation.set(Math.PI * 0.62, 0, 0.22);
-    dish.castShadow = tierAtLeast('T4');
-    g.add(dish);
-
-    const feed = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.06, 0.06, 1.1, 8)), legMat
-    );
-    feed.position.set(0, H * 0.82 + 0.5, 1.5);
-    feed.rotation.x = Math.PI * 0.42;
-    g.add(feed);
-
-    // The obstruction lamp. It is a lamp, so it may be lit.
-    const lampBody = new THREE.Mesh(
-      this.own(new THREE.SphereGeometry(0.15, 10, 8)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0xd99423, emissive: SODIUM, emissiveIntensity: 1.6, roughness: 0.55
-      }))
-    );
-    lampBody.position.y = H + 0.2;
-    // Kept out of the static bake: the obstruction lamp flickers, and a baked
-    // one would be a painted dot.
-    lampBody.userData.noMerge = true;
-    g.add(lampBody);
-    this.mastLamp = lampBody;
-
-    return g;
-  }
-
-  /** T4 decoration: scattered plate offcuts and a tipped drum. Never blocks a route. */
-  buildDebrisField(scale = 1, sx = 0, sz = 0) {
-    const g = new THREE.Group();
-    const rand = mulberry32(((sx * 73856093) ^ (sz * 19349663)) >>> 0);
-    for (let i = 0; i < 7; i++) {
-      const w = (0.5 + rand() * 1.5) * scale;
-      const d = (0.4 + rand() * 1.2) * scale;
-      const piece = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(w, 0.07, d)), this.plateMat
-      );
-      piece.position.set((rand() - 0.5) * 3.4, 0.04 + rand() * 0.05, (rand() - 0.5) * 3.4);
-      piece.rotation.set((rand() - 0.5) * 0.3, rand() * Math.PI, (rand() - 0.5) * 0.3);
-      piece.castShadow = piece.receiveShadow = true;
-      g.add(piece);
-    }
-    const tipped = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.42 * scale, 0.42 * scale, 1.1 * scale, 14)),
-      this.drumMat
-    );
-    tipped.rotation.z = Math.PI / 2;
-    tipped.rotation.y = rand() * Math.PI;
-    tipped.position.set(0.7, 0.42 * scale, -0.5);
-    tipped.castShadow = true;
-    g.add(tipped);
-    return g;
-  }
-
-  /** T4 decoration: a survey stake with a wind-shredded flag. */
-  buildStakeMarker() {
-    const g = new THREE.Group();
-    const stake = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.035, 0.035, 1.5, 6)), this.darkSteelMat
-    );
-    stake.position.y = 0.75;
-    g.add(stake);
-    const flag = new THREE.Mesh(
-      this.own(new THREE.PlaneGeometry(0.34, 0.2)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0x9a6a2a, roughness: 1.0, side: THREE.DoubleSide
-      }))
-    );
-    flag.position.set(0.17, 1.38, 0);
-    g.add(flag);
-    return g;
   }
 
   /* ======================================================================
@@ -1415,223 +897,486 @@ export class TallowWorld {
     }
   }
 
+  /**
+   * Stockpiles of harvested salt. A real pile stands at its angle of repose,
+   * its flanks cut by rills where rain ran down it, its top wind-rounded and
+   * crusted, with a skirt of spilled salt round its foot. Built at a density
+   * the rills can actually be drawn at.
+   */
   initSaltHeaps() {
-    const heapMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0xd6cdb6, roughness: 1.0, metalness: 0.0, flatShading: true
-    }));
+    const grain = buildMaterial(saltGrain({ size: texSize(256), seed: 5 }), { repeat: 1 });
+    for (const t of grain.userData.surfaceMaps) this.own(t);
+    this.own(grain);
+    grain.roughness = 1.0;
+    grain.normalScale.set(1.2, 1.2);
+    // A pile is salt: it does not grow a salt crust, it IS one.
+    grain.userData.noSalt = true;
 
     for (const lm of this.data.landmarks) {
       if (lm.asset !== 'salt-heap') continue;
-      const s = lm.scale;
-      // A dredged heap is a cone that has slumped: irregular, not a party hat.
-      const geo = new THREE.ConeGeometry(4.6 * s, 3.1 * s, 13, 3);
+      // The widest the pile gets (skirt and lobes included) stays inside the
+      // footprint tallow.json declares for it; a pile stands at about 35°.
+      const s = lm.radius / 5.8;
+      const R = lm.radius * 0.93 / 1.53;
+      const H = R * 0.72;
+      const seg = this.t4 ? 72 : 40;
+      const rings = this.t4 ? 26 : 14;
+      const geo = new THREE.CylinderGeometry(0.01, 1, 1, seg, rings, true);
       const pos = geo.attributes.position;
+      const uv = geo.attributes.uv;
       const rand = mulberry32(((lm.pos[0] * 2654435761) ^ (lm.pos[2] * 40503)) >>> 0);
+      const ph = rand() * 10;
       for (let i = 0; i < pos.count; i++) {
-        pos.setX(i, pos.getX(i) + (rand() - 0.5) * 0.7 * s);
-        pos.setY(i, pos.getY(i) + (rand() - 0.5) * 0.28 * s);
-        pos.setZ(i, pos.getZ(i) + (rand() - 0.5) * 0.7 * s);
+        const y = pos.getY(i) + 0.5;           // 0 at the foot, 1 at the top
+        const th = Math.atan2(pos.getZ(i), pos.getX(i));
+        // The profile: a cone with a wind-rounded crown and a spill skirt.
+        const t = 1 - y;
+        let rr = R * (0.06 + 0.94 * Math.pow(t, 0.92)) + R * 0.35 * Math.pow(t, 6);
+        // Lobed plan, and rills cut down the flanks.
+        rr *= 1 + 0.08 * Math.sin(th * 3 + ph) + 0.05 * Math.sin(th * 5 - ph * 1.3);
+        const rill = Math.pow(Math.abs(Math.sin(th * 13 + ph + y * 1.5)), 6) * 0.07 * Math.sin(Math.PI * Math.min(1, y * 1.2));
+        rr *= 1 - rill;
+        rr *= 1 + (rand() - 0.5) * 0.02;
+        let hh = H * (1 - Math.pow(t, 1.0)) * (1 - 0.18 * Math.pow(1 - t, 3));
+        hh -= H * 0.12 * Math.pow(t, 5);
+        pos.setXYZ(i, Math.cos(th) * rr, hh, Math.sin(th) * rr);
+        uv.setXY(i, (th / (Math.PI * 2) + 0.5) * 6 * s, y * 2.4 * s);
       }
       geo.computeVertexNormals();
       this.own(geo);
 
-      const m = new THREE.Mesh(geo, heapMat);
-      m.position.set(lm.pos[0], this.surfaceHeight(lm.pos[0], lm.pos[2]) + 1.5 * s, lm.pos[2]);
+      const m = new THREE.Mesh(geo, grain);
+      m.position.set(lm.pos[0], this.surfaceHeight(lm.pos[0], lm.pos[2]) - 0.35 * s, lm.pos[2]);
       m.rotation.y = lm.rotY;
-      m.castShadow = m.receiveShadow = tierAtLeast('T4');
+      m.castShadow = m.receiveShadow = this.t4;
+      m.userData.noSalt = true;
+      m.name = `salt-heap@${lm.pos[0]},${lm.pos[2]}`;
       this.scene.add(m);
     }
   }
 
+  /**
+   * Evaporation ponds: a bund of scraped crust round a sheet of brine. Brine
+   * concentrating in the sun goes the colours real salt works go — milky, then
+   * green, then the rose of the algae that live in it — so the four ponds are
+   * four stages of the same process, and they are the only colour on the flat.
+   */
   initPanRims() {
-    // The old evaporation pans: a low bund wall and a floor of brighter crust.
     const bundMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0x9b917c, roughness: 1.0, metalness: 0.0
+      color: 0xb8ad98, roughness: 1.0, metalness: 0.0
     }));
-    const panMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0xdcd4bf, roughness: 1.0, metalness: 0.0
-    }));
-
+    bundMat.userData.salt = { creep: 1.4, top: 0.9, tide: 0.2 };
+    const tints = [0xb7a4a0, 0x9fae9f, 0xc9b996, 0xcfc9bd];
+    let k = 0;
     for (const lm of this.data.landmarks) {
       if (lm.asset !== 'pan-rim') continue;
       const s = lm.scale;
+      const R = 8.2 * s;
       const y = this.surfaceHeight(lm.pos[0], lm.pos[2]);
       const g = new THREE.Group();
+      const rand = mulberry32(((lm.pos[0] * 73856093) ^ (lm.pos[2] * 19349663)) >>> 0);
+      const ph = rand() * 10;
+      const plan = th => R * (1 + 0.06 * Math.sin(th * 2 + ph) + 0.04 * Math.sin(th * 5 - ph));
 
-      const bund = new THREE.Mesh(
-        this.own(new THREE.TorusGeometry(8.2 * s, 0.55 * s, 6, 26)), bundMat
-      );
-      bund.rotation.x = Math.PI / 2;
-      bund.position.y = 0.2 * s;
-      bund.receiveShadow = tierAtLeast('T4');
+      // The bund: a low trapezoid of scraped crust, swept round the plan.
+      const N = this.t4 ? 96 : 48;
+      const prof = [[-0.9, 0], [-0.35, 0.42], [0.3, 0.42], [0.85, 0]];
+      const verts = [], idx = [];
+      for (let i = 0; i <= N; i++) {
+        const th = (i / N) * Math.PI * 2;
+        const rr = plan(th);
+        const bump = 1 + (rand() - 0.5) * 0.25;
+        for (const [dr, hy] of prof) {
+          verts.push(Math.cos(th) * (rr + dr * s), hy * s * bump, Math.sin(th) * (rr + dr * s));
+        }
+      }
+      for (let i = 0; i < N; i++) {
+        for (let j = 0; j < prof.length - 1; j++) {
+          const a = i * prof.length + j, b = a + 1, c = a + prof.length, d = c + 1;
+          idx.push(a, c, b, b, c, d);
+        }
+      }
+      const bg = new THREE.BufferGeometry();
+      bg.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+      bg.setIndex(idx);
+      bg.computeVertexNormals();
+      this.own(bg);
+      const bund = new THREE.Mesh(bg, bundMat);
+      bund.position.y = -0.04;
+      bund.receiveShadow = bund.castShadow = this.t4;
       g.add(bund);
 
-      const floor = new THREE.Mesh(
-        this.own(new THREE.CircleGeometry(8.0 * s, 26)), panMat
-      );
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.y = 0.035;
-      floor.receiveShadow = tierAtLeast('T4');
-      g.add(floor);
+      // The brine: a sheet a hand below the bund's crest, with a crystal
+      // margin where it has pulled back from the edge.
+      const pts = [];
+      for (let i = 0; i < 64; i++) {
+        const th = (i / 64) * Math.PI * 2;
+        const rr = plan(th) - 0.55 * s;
+        pts.push(new THREE.Vector2(Math.cos(th) * rr, -Math.sin(th) * rr));
+      }
+      const shape = new THREE.Shape(pts);
+      const wg = this.own(new THREE.ShapeGeometry(shape, 8));
+      wg.rotateX(-Math.PI / 2);
+      const brine = this.own(new THREE.MeshStandardMaterial({
+        color: tints[k % tints.length], roughness: 0.06, metalness: 0.0,
+        envMapIntensity: 1.2
+      }));
+      const water = new THREE.Mesh(wg, brine);
+      water.position.y = 0.1 * s;
+      water.userData.noSalt = true;
+      water.receiveShadow = this.t4;
+      g.add(water);
+
+      const shoreG = this.own(new THREE.RingGeometry(0.1, 1, 64, 1));
+      const sp = shoreG.attributes.position;
+      for (let i = 0; i < sp.count; i++) {
+        const x = sp.getX(i), yy = sp.getY(i);
+        const th = Math.atan2(-yy, x);
+        const outer = Math.hypot(x, yy) > 0.5;
+        const rr = plan(th) - (outer ? 0.45 : 1.3 + rand() * 0.5) * s;
+        sp.setXY(i, Math.cos(th) * rr, -Math.sin(th) * rr);
+      }
+      shoreG.rotateX(-Math.PI / 2);
+      const shore = new THREE.Mesh(shoreG, this.own(new THREE.MeshStandardMaterial({
+        color: 0xeee8dc, roughness: 0.95, transparent: true, opacity: 0.85,
+        polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
+      })));
+      shore.position.y = 0.1 * s + 0.004;
+      g.add(shore);
 
       g.position.set(lm.pos[0], y, lm.pos[2]);
-      // An evaporation pan is a surface, not an obstacle: the crust runs under
-      // it and props stand on it, exactly as they stand on the terrain.
       g.userData.phys = 'ground';
+      g.name = `pond@${lm.pos[0]},${lm.pos[2]}`;
       this.scene.add(g);
+      k++;
     }
   }
 
-  /** The derelict ore hauler, sunk to its axles in the crust. */
+  /** The derelict ore hauler, sunk to its axles in the crust. See tallow/hauler.js. */
   initHauler() {
     const lm = this.data.landmarks.find(l => l.asset === 'hauler');
     if (!lm) return;
-    const g = new THREE.Group();
-
-    const hullPlate = createBleachedPlateTexture(512, '#8a7f6c', 'MM', 1);
-    this.own(hullPlate.map, hullPlate.normalMap, hullPlate.roughnessMap);
-    const hullMat = this.own(new THREE.MeshStandardMaterial({
-      map: hullPlate.map, normalMap: hullPlate.normalMap, roughnessMap: hullPlate.roughnessMap,
-      roughness: 0.96, metalness: 0.4
-    }));
-
-    // Wedge hull: wide flatbed forward, tapered nose, a cab set back.
-    const bed = new THREE.Mesh(this.own(new THREE.BoxGeometry(5.6, 1.5, 12.5)), hullMat);
-    bed.position.y = 1.5;
-    bed.castShadow = bed.receiveShadow = tierAtLeast('T4');
-    g.add(bed);
-
-    const nose = new THREE.Mesh(this.own(new THREE.BoxGeometry(4.2, 1.1, 3.2)), hullMat);
-    nose.position.set(0, 1.35, 7.4);
-    nose.rotation.x = -0.14;
-    nose.castShadow = tierAtLeast('T4');
-    g.add(nose);
-
-    const cab = new THREE.Mesh(this.own(new THREE.BoxGeometry(3.4, 2.1, 3.0)), hullMat);
-    cab.position.set(0, 3.2, 4.2);
-    cab.castShadow = tierAtLeast('T4');
-    g.add(cab);
-
-    // Cab glazing: dark, dusted over, no reflection worth the name.
-    const glass = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(2.9, 1.0, 0.1)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0x2b2822, roughness: 0.62, metalness: 0.2 }))
-    );
-    glass.position.set(0, 3.5, 2.72);
-    g.add(glass);
-
-    // Running gear: six wheels, the rear pair buried past the hub.
-    const wheelGeo = this.own(new THREE.CylinderGeometry(1.15, 1.15, 0.95, 16));
-    const wheelMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0x312c26, roughness: 1.0, metalness: 0.1
-    }));
-    for (const [wz, sink] of [[4.6, 0], [0.4, 0.35], [-4.2, 0.8]]) {
-      for (const wx of [-2.6, 2.6]) {
-        const w = new THREE.Mesh(wheelGeo, wheelMat);
-        w.rotation.z = Math.PI / 2;
-        w.position.set(wx, 1.0 - sink, wz);
-        w.castShadow = tierAtLeast('T4');
-        g.add(w);
-      }
-    }
-
-    // Bed cradles and a torn tarpaulin over the last load that never shipped.
-    for (const cz of [-3.4, 0, 3.4]) {
-      const cr = new THREE.Mesh(this.own(new THREE.BoxGeometry(5.0, 0.55, 0.28)), this.darkSteelMat);
-      cr.position.set(0, 2.5, cz);
-      g.add(cr);
-    }
-    const tarp = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(4.4, 0.12, 5.4)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0x6d6250, roughness: 1.0 }))
-    );
-    tarp.position.set(0.2, 2.86, -1.4);
-    tarp.rotation.z = 0.05;
-    tarp.castShadow = tierAtLeast('T4');
-    g.add(tarp);
-
-    // Salt drifted against the windward flank.
-    const drift = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(6.4, 0.9, 9.0)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0xd2c9b3, roughness: 1.0 }))
-    );
-    drift.position.set(-1.6, 0.3, -1.0);
-    drift.rotation.z = 0.07;
-    drift.receiveShadow = tierAtLeast('T4');
-    g.add(drift);
-
-    g.position.set(lm.pos[0], this.surfaceHeight(lm.pos[0], lm.pos[2]) - 0.55, lm.pos[2]);
+    const g = buildHauler(this.plantCtx, lm);
+    if (!g) return;
+    g.position.set(lm.pos[0], this.surfaceHeight(lm.pos[0], lm.pos[2]) - (g.userData.sink ?? 0.55), lm.pos[2]);
     g.rotation.y = lm.rotY;
-    g.rotation.z = 0.04;
+    g.rotation.z = g.userData.list ?? 0.04;
+    g.name = `hauler@${lm.pos[0]},${lm.pos[2]}`;
     this.scene.add(g);
   }
 
-  /** The buyer's pad: a plated apron, blast berms, markers and a windsock. */
+  /**
+   * Cast concrete, poured against board formwork forty years ago: the grain of
+   * the boards printed in it, blowholes, and the aggregate showing where the
+   * skin has weathered off. One set, shared by everything poured on the flat.
+   */
+  concreteMaterial() {
+    if (this._concrete) return this._concrete;
+    const S = texSize(512);
+    const height = heightField(S, (u, v) => {
+      const board = Math.abs(((v * 8) % 1) - 0.5) < 0.03 ? -0.12 : 0;
+      const grain = (fbm(u * 3, v * 40, { octaves: 3, period: 40, seed: 0x7c1 }) - 0.5) * 0.08;
+      const pits = Math.max(0, 0.06 - (fbm(u * 60, v * 60, { octaves: 2, period: 60, seed: 0x3b }) - 0.35)) * -1.2;
+      const agg = (fbm(u * 24, v * 24, { octaves: 4, period: 24, seed: 0x55 }) - 0.5) * 0.18;
+      return 0.6 + board + grain + agg + Math.max(-0.2, pits);
+    });
+    const alb = document.createElement('canvas');
+    alb.width = alb.height = S;
+    const actx = alb.getContext('2d');
+    const img = actx.createImageData(S, S);
+    const hd = heightField(S, (u, v) => fbm(u * 5, v * 5, { octaves: 5, period: 5, seed: 0x991 }));
+    const src = height.getContext('2d').getImageData(0, 0, S, S).data;
+    const mot = hd.getContext('2d').getImageData(0, 0, S, S).data;
+    for (let i = 0; i < S * S; i++) {
+      const h = src[i * 4] / 255, m = mot[i * 4] / 255;
+      const k = 0.78 + (h - 0.6) * 0.5 + (m - 0.5) * 0.22;
+      img.data[i * 4] = Math.min(255, 168 * k);
+      img.data[i * 4 + 1] = Math.min(255, 161 * k);
+      img.data[i * 4 + 2] = Math.min(255, 149 * k);
+      img.data[i * 4 + 3] = 255;
+    }
+    actx.putImageData(img, 0, 0);
+    const mat = buildMaterial({ albedo: alb, height, normalStrength: 1.8 }, { repeat: 1, roughness: 0.95 });
+    for (const t of mat.userData.surfaceMaps) this.own(t);
+    mat.userData.salt = { creep: 0.9, top: 0.7, tide: 0.4 };
+    this._concrete = this.own(mat);
+    return mat;
+  }
+
+  /** World-scaled box uvs, so a texture lies at one metre per 2 uv everywhere. */
+  boxUVs(geo, scale = 0.5) {
+    const p = geo.attributes.position, n = geo.attributes.normal, uv = geo.attributes.uv;
+    for (let i = 0; i < p.count; i++) {
+      const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i));
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+      if (ay > 0.7) uv.setXY(i, x * scale, z * scale);
+      else if (ax > 0.7) uv.setXY(i, z * scale, y * scale);
+      else uv.setXY(i, x * scale, y * scale);
+    }
+    return geo;
+  }
+
+  /**
+   * The pad the Avalon sets down on: an octagon of heavy plate laid on the
+   * crust, bevelled at its edge so a hauler can drive up onto it, painted with
+   * a worn ring-and-chevron marking, black at the middle where thrust has hit
+   * it a thousand times, with flush perimeter lamps (dark: the pad is cold),
+   * tie-down rings, precast blast walls on two sides and the windsock.
+   *
+   * EVERYTHING ON THE DECK IS LOW. The ship stands on its legs over this, on
+   * the ground height `solveLanding` reads; a marker post half a metre tall
+   * would come up through its landing gear. Nothing inside the octagon stands
+   * more than a hand above the plate.
+   */
   initLandingPad() {
     const lm = this.data.landmarks.find(l => l.asset === 'landing-pad');
     if (!lm) return;
     const g = new THREE.Group();
+    const t4 = this.t4;
+    const R = 7.9;
+    const TOP = 0.2;
 
-    const apron = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(8.0, 8.2, 0.3, 32)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0x6a6153, roughness: 0.96, metalness: 0.35 }))
-    );
-    apron.position.y = 0.15;
-    apron.receiveShadow = tierAtLeast('T4');
-    g.add(apron);
+    const deckSet = buildMaterial(platedMetal({
+      paint: '#5d574d', metal: '#6a655c', rust: '#6f4428',
+      panels: 3, seed: 83, weather: 0.7, size: texSize(512)
+    }), { repeat: 3, roughness: 1.0 });
+    for (const t of deckSet.userData.surfaceMaps) this.own(t);
+    this.own(deckSet);
+    deckSet.normalScale.set(1.2, 1.2);
+    // The crust creeps onto the plate's edge but not across a deck in use.
+    deckSet.userData.salt = { creep: 0.25, top: 0.25, tide: 0.0 };
 
-    // Scorching at the centre where thrust has repeatedly hit the plate.
-    const scorch = new THREE.Mesh(
-      this.own(new THREE.CircleGeometry(4.2, 32)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0x35302a, roughness: 1.0 }))
-    );
-    scorch.rotation.x = -Math.PI / 2;
-    scorch.position.y = 0.31;
-    g.add(scorch);
+    // The deck, with the bevel as one lathed profile: crust to plate in 0.6 m.
+    // Listed from the buried foot inward, so the lathe's faces point up and out.
+    const prof = [
+      new THREE.Vector2(R + 0.6, -0.3), new THREE.Vector2(R + 0.6, -0.06),
+      new THREE.Vector2(R + 0.05, TOP - 0.03), new THREE.Vector2(R - 0.02, TOP),
+      new THREE.Vector2(0, TOP)
+    ];
+    const deckGeo = this.own(new THREE.LatheGeometry(prof, 8));
+    deckGeo.rotateY(Math.PI / 8);
+    // Planar uvs, so the plate grid lies flat across the octagon.
+    const dp = deckGeo.attributes.position, duv = deckGeo.attributes.uv;
+    for (let i = 0; i < dp.count; i++) duv.setXY(i, dp.getX(i) / 6, dp.getZ(i) / 6);
+    deckGeo.computeVertexNormals();
+    const deck = new THREE.Mesh(deckGeo, deckSet);
+    deck.receiveShadow = t4;
+    g.add(deck);
 
-    // Perimeter markers. Unlit: the pad is cold until the buyer is on final.
-    for (let i = 0; i < 12; i++) {
-      const a = (i / 12) * Math.PI * 2;
-      const mk = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.26, 0.4, 0.26)), this.darkSteelMat
-      );
-      mk.position.set(Math.cos(a) * 7.4, 0.5, Math.sin(a) * 7.4);
-      mk.castShadow = tierAtLeast('T4');
-      g.add(mk);
+    // Seams between the plates: raised weld runs in a grid, clipped to the octagon.
+    const seamMat = this.darkSteelMat;
+    const apothem = R * Math.cos(Math.PI / 8);
+    for (let k = -2; k <= 2; k++) {
+      const c = k * 2.9;
+      const half = Math.sqrt(Math.max(0, apothem * apothem - c * c)) - 0.4;
+      if (half < 1) continue;
+      for (const along of ['x', 'z']) {
+        const bead = weldBead(half * 2, seamMat, { radius: 0.02, seed: k + (along === 'x' ? 11 : 29) });
+        if (along === 'x') { bead.position.set(0, TOP, c); bead.rotation.y = Math.PI / 2; }
+        else bead.position.set(c, TOP, 0);
+        g.add(bead);
+      }
     }
 
-    // Blast berms on two sides, built from the spoil.
-    for (const a of [Math.PI * 0.25, Math.PI * 1.25]) {
-      const berm = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(9.0, 1.5, 1.6)),
-        this.own(new THREE.MeshStandardMaterial({ color: 0xb3aa93, roughness: 1.0 }))
+    // The marking and the scorch are paint and soot: decals on the plate.
+    const mark = this.padMarkingTexture();
+    const decal = new THREE.Mesh(
+      this.own(new THREE.CircleGeometry(R - 0.3, 64)),
+      this.own(new THREE.MeshStandardMaterial({
+        map: mark, transparent: true, roughness: 0.9, metalness: 0.0,
+        polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
+      }))
+    );
+    decal.rotation.x = -Math.PI / 2;
+    decal.position.y = TOP + 0.004;
+    g.add(decal);
+
+    // Flush perimeter lamps: dark lenses in cast housings, let into the bevel.
+    const housingGeo = this.own(new THREE.BoxGeometry(0.34, 0.08, 0.2));
+    const lensGeo = this.own(new THREE.BoxGeometry(0.24, 0.02, 0.1));
+    const lensMat = this.own(new THREE.MeshStandardMaterial({ color: 0x3a3127, roughness: 0.35, metalness: 0.1 }));
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
+      const rr = R + 0.22;
+      const hsg = new THREE.Mesh(housingGeo, this.darkSteelMat);
+      hsg.position.set(Math.cos(a) * rr, TOP - 0.06, Math.sin(a) * rr);
+      hsg.rotation.y = -a;
+      g.add(hsg);
+      const lens = new THREE.Mesh(lensGeo, lensMat);
+      lens.position.set(Math.cos(a) * rr, TOP - 0.015, Math.sin(a) * rr);
+      lens.rotation.y = -a;
+      g.add(lens);
+    }
+
+    // Tie-down rings, set into the plate on a circle.
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
+      const ring = new THREE.Mesh(
+        this.own(new THREE.TorusGeometry(0.12, 0.025, 6, 14)), this.darkSteelMat
       );
-      berm.position.set(Math.cos(a) * 9.4, 0.75, Math.sin(a) * 9.4);
-      berm.rotation.y = -a;
-      berm.castShadow = berm.receiveShadow = tierAtLeast('T4');
-      g.add(berm);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(Math.cos(a) * 5.6, TOP + 0.02, Math.sin(a) * 5.6);
+      g.add(ring);
+    }
+
+    // Blast walls: precast segments on an arc, with gaps between them, on the
+    // two sides the old spoil berms stood.
+    const wallMat = this.own(new THREE.MeshStandardMaterial({ color: 0x9a9384, roughness: 0.97, metalness: 0.0 }));
+    wallMat.map = this.concreteMap || (this.concreteMap = this.own(asDataTexture(heightField(texSize(256), (u, v) =>
+      0.72 + (fbm(u * 12, v * 12, { octaves: 5, period: 12, seed: 0x4c1 }) - 0.5) * 0.5
+    ), 1)));
+    wallMat.map.colorSpace = THREE.NoColorSpace;
+    wallMat.userData.salt = { creep: 0.9, top: 0.7, tide: 0.35 };
+    const wProf = new THREE.Shape([
+      new THREE.Vector2(-0.8, 0), new THREE.Vector2(0.8, 0), new THREE.Vector2(0.62, 0.3),
+      new THREE.Vector2(0.28, 1.45), new THREE.Vector2(-0.28, 1.45), new THREE.Vector2(-0.62, 0.3)
+    ]);
+    const segLen = 2.1;
+    const segGeo = this.own(new THREE.ExtrudeGeometry(wProf, {
+      depth: segLen, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 1
+    }));
+    segGeo.translate(0, 0, -segLen / 2);
+    segGeo.rotateY(Math.PI / 2);
+    const sp = segGeo.attributes.position, suv = segGeo.attributes.uv;
+    for (let i = 0; i < sp.count; i++) suv.setXY(i, (sp.getX(i) + sp.getZ(i)) / 3, sp.getY(i) / 3);
+    for (const a0 of [Math.PI * 0.25, Math.PI * 1.25]) {
+      for (let k = -2; k <= 2; k++) {
+        const a = a0 + k * 0.215;
+        const seg = new THREE.Mesh(segGeo, wallMat);
+        seg.position.set(Math.cos(a) * 9.6, -0.04, Math.sin(a) * 9.6);
+        seg.rotation.y = -a;
+        seg.rotation.z = (k % 2 ? 0.015 : -0.01);
+        seg.castShadow = seg.receiveShadow = t4;
+        g.add(seg);
+        const lug = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.09, 0.018, 5, 10, Math.PI)), this.darkSteelMat);
+        lug.position.set(Math.cos(a) * 9.6, 1.45, Math.sin(a) * 9.6);
+        lug.rotation.y = -a + Math.PI / 2;
+        g.add(lug);
+      }
     }
 
     // Windsock: the one thing on Tallow that still moves on its own.
     const mast = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.06, 0.08, 4.4, 8)), this.darkSteelMat
+      this.own(new THREE.CylinderGeometry(0.05, 0.08, 4.4, 10)), this.darkSteelMat
     );
-    mast.position.set(6.6, 2.2, -5.4);
+    mast.position.set(6.9, 2.2 - 0.04, -6.1);
     g.add(mast);
+    const mastFoot = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.5, 0.12, 0.5)), this.darkSteelMat);
+    mastFoot.position.set(6.9, 0.04, -6.1);
+    g.add(mastFoot);
+    const hoop = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.3, 0.02, 6, 16)), this.darkSteelMat);
+    hoop.position.set(6.9, 4.2, -6.1);
+    hoop.rotation.y = Math.PI / 2;
+    g.add(hoop);
     const sock = new THREE.Mesh(
-      this.own(new THREE.ConeGeometry(0.28, 1.5, 10, 1, true)),
+      this.own(new THREE.CylinderGeometry(0.28, 0.12, 1.6, 12, 4, true)),
       this.own(new THREE.MeshStandardMaterial({
         color: 0x9c6a28, roughness: 1.0, side: THREE.DoubleSide
       }))
     );
-    sock.rotation.z = Math.PI / 2;
-    sock.position.set(7.4, 4.2, -5.4);
-    g.add(sock);
+    // Hinged at its mouth, so it turns about the hoop rather than its middle.
+    sock.geometry.translate(0, -0.8, 0);
+    sock.rotation.z = Math.PI / 2 - 0.12;
+    sock.position.set(6.9, 4.2, -6.1);
     sock.userData.noMerge = true;   // it turns in the wind
+    g.add(sock);
     this.windsock = sock;
 
+    // A service pedestal at the edge: the fuel and power umbilicals, capped.
+    const ped = new THREE.Group();
+    const cab = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.8, 1.1, 0.5)), this.plateMat);
+    cab.position.y = 0.55;
+    cab.castShadow = t4;
+    ped.add(cab);
+    const hood = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.9, 0.06, 0.62)), this.darkSteelMat);
+    hood.position.set(0, 1.13, 0.04);
+    hood.rotation.x = 0.1;
+    ped.add(hood);
+    for (const dx of [-0.2, 0.2]) {
+      const cap = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.08, 0.08, 0.14, 12)), this.darkSteelMat);
+      cap.rotation.x = Math.PI / 2;
+      cap.position.set(dx, 0.75, 0.3);
+      ped.add(cap);
+    }
+    const hose = cableRun([0.2, 0.75, 0.36], [0.9, 0.05, 1.3], this.darkSteelMat, { sag: 0.3, radius: 0.05, segments: 16 });
+    this.own(hose.userData.ownGeometry);
+    ped.add(hose);
+    const tag = placard('PAD 2', { w: 0.42, h: 0.16 });
+    this.own(tag.geometry, tag.material, tag.material.map);
+    tag.position.set(0, 0.95, 0.253);
+    ped.add(tag);
+    const pa = -Math.PI * 0.72;
+    ped.position.set(Math.cos(pa) * (R + 1.5), 0, Math.sin(pa) * (R + 1.5));
+    ped.rotation.y = -pa - Math.PI / 2;
+    g.add(ped);
+
+    mergeStatic(g);
     g.position.set(lm.pos[0], this.surfaceHeight(lm.pos[0], lm.pos[2]), lm.pos[2]);
+    g.name = `landing-pad@${lm.pos[0]},${lm.pos[2]}`;
     this.scene.add(g);
+  }
+
+  /** The pad's paint and soot, drawn once: a worn ring, chevrons, the scorch. */
+  padMarkingTexture() {
+    const N = texSize(1024);
+    const c = document.createElement('canvas');
+    c.width = c.height = N;
+    const ctx = c.getContext('2d');
+    const C = N / 2;
+    ctx.clearRect(0, 0, N, N);
+    // Soot: black at the heart, feathering out in streaks.
+    const soot = ctx.createRadialGradient?.(C, C, 0, C, C, N * 0.34);
+    if (soot) {
+      soot.addColorStop(0, 'rgba(20,17,14,0.92)');
+      soot.addColorStop(0.45, 'rgba(28,24,20,0.6)');
+      soot.addColorStop(1, 'rgba(40,34,28,0)');
+      ctx.fillStyle = soot;
+      ctx.fillRect(0, 0, N, N);
+    }
+    ctx.strokeStyle = 'rgba(30,26,22,0.35)';
+    for (let i = 0; i < 90; i++) {
+      const a = (i / 90) * Math.PI * 2 + Math.sin(i * 7.1) * 0.05;
+      const r0 = N * (0.12 + 0.05 * Math.abs(Math.sin(i * 3.3)));
+      const r1 = N * (0.3 + 0.1 * Math.abs(Math.sin(i * 1.7)));
+      ctx.lineWidth = N * (0.004 + 0.006 * Math.abs(Math.sin(i * 5.9)));
+      ctx.beginPath();
+      ctx.moveTo(C + Math.cos(a) * r0, C + Math.sin(a) * r0);
+      ctx.lineTo(C + Math.cos(a) * r1, C + Math.sin(a) * r1);
+      ctx.stroke();
+    }
+    // The ring and the four chevrons, in a pale worn yellow.
+    ctx.strokeStyle = 'rgba(196,168,92,0.8)';
+    ctx.lineWidth = N * 0.018;
+    ctx.beginPath();
+    ctx.arc(C, C, N * 0.43, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(196,168,92,0.8)';
+    for (let k = 0; k < 4; k++) {
+      const a = k * Math.PI / 2 + Math.PI / 4;
+      ctx.save();
+      ctx.translate(C + Math.cos(a) * N * 0.37, C + Math.sin(a) * N * 0.37);
+      ctx.rotate(a + Math.PI / 2);
+      ctx.beginPath();
+      ctx.moveTo(-N * 0.05, 0); ctx.lineTo(0, -N * 0.035); ctx.lineTo(N * 0.05, 0);
+      ctx.lineTo(N * 0.05, N * 0.02); ctx.lineTo(0, -N * 0.015); ctx.lineTo(-N * 0.05, N * 0.02);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    // Wear: the paint taken back out where boots and skids have gone.
+    ctx.globalCompositeOperation = 'destination-out';
+    const rand = mulberry32(0xa11);
+    for (let i = 0; i < 900; i++) {
+      ctx.globalAlpha = 0.08 + rand() * 0.3;
+      const x = rand() * N, y = rand() * N;
+      ctx.fillRect(x, y, 2 + rand() * N * 0.03, 1 + rand() * N * 0.006);
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 8;
+    return this.own(tex);
   }
 
   /* ======================================================================
@@ -1985,47 +1730,116 @@ export class TallowWorld {
     const baseY = this.surfaceHeight(site.pos[0], site.pos[2]);
     const g = new THREE.Group();
 
-    // The lean-to: four posts, a sagging roof plate, and a torn side sheet that
-    // takes the worst of the wind off the bench.
-    const postGeo = this.own(new THREE.BoxGeometry(0.16, 2.9, 0.16));
+    /*
+     * THE SHELTER IS BUILT THE WAY A FIELD CREW BUILDS ONE: four H-columns on
+     * bolted base plates, eave beams across their heads with knee braces,
+     * rafters, purlins, and corrugated sheet screwed down onto them, falling
+     * to the front so the weather runs off away from the bench. One sheet has
+     * lifted at its corner in some old gale and one strip is gone altogether,
+     * which is where the light comes through onto the plate.
+     */
+    const t4 = this.t4;
+    const slope = 0.07;
+    const roofY = z => 2.95 - Math.tan(slope) * z;
+    const SHEET = 0.012, PURLIN = 0.08, RAFTER = 0.16, EAVE = 0.16;
+    const beamGeo = len => this.own(iBeamGeometry(len, { h: 0.16, w: 0.11 }));
+
     for (const [px, pz] of [[-2.95, -1.85], [2.95, -1.85], [-2.95, 1.85], [2.95, 1.85]]) {
-      const p = new THREE.Mesh(postGeo, this.darkSteelMat);
-      p.position.set(px, 1.45, pz);
-      p.castShadow = tierAtLeast('T4');
-      g.add(p);
-      const foot = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.34, 0.06, 0.34)), this.darkSteelMat
-      );
-      foot.position.set(px, 0.03, pz);
-      g.add(foot);
+      const top = roofY(pz) - SHEET - PURLIN - RAFTER - EAVE;
+      const col = new THREE.Mesh(beamGeo(top - 0.03), this.darkSteelMat);
+      col.position.set(px, 0.03 + (top - 0.03) / 2, pz);
+      col.castShadow = t4;
+      g.add(col);
+      const plate = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.34, 0.03, 0.3)), this.darkSteelMat);
+      plate.position.set(px, 0.015, pz);
+      g.add(plate);
+      for (const [bx, bz] of [[-0.12, -0.1], [0.12, -0.1], [-0.12, 0.1], [0.12, 0.1]]) {
+        const nut = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.018, 0.018, 0.03, 6)), this.darkSteelMat);
+        nut.position.set(px + bx, 0.04, pz + bz);
+        g.add(nut);
+      }
+      // Knee brace from the column up to the eave beam, inboard.
+      const kx = px - Math.sign(px) * 0.55;
+      const brace = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.05, 0.78, 0.05)), this.darkSteelMat);
+      brace.position.set((px + kx) / 2, top - 0.28, pz);
+      brace.rotation.z = Math.sign(px) * Math.atan2(0.55, 0.55);
+      g.add(brace);
     }
 
-    const roof = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(6.5, 0.08, 4.1)), this.plateMat
-    );
-    roof.position.set(0, 2.95, 0);
-    roof.rotation.x = 0.07;
-    roof.castShadow = roof.receiveShadow = tierAtLeast('T4');
-    g.add(roof);
+    // Eave beams across the column heads, front and back.
+    for (const ez of [-1.85, 1.85]) {
+      const y = roofY(ez) - SHEET - PURLIN - RAFTER - EAVE / 2;
+      const eave = new THREE.Mesh(beamGeo(6.3), this.darkSteelMat);
+      eave.geometry.rotateZ(Math.PI / 2);
+      eave.position.set(0, y, ez);
+      eave.castShadow = t4;
+      g.add(eave);
+    }
+    // Rafters front to back, clear of the lamp that hangs at the middle.
+    for (const rx of [-2.95, -1.05, 1.05, 2.95]) {
+      const raf = new THREE.Mesh(beamGeo(4.3), this.darkSteelMat);
+      raf.geometry.rotateX(Math.PI / 2);
+      raf.geometry.rotateZ(Math.PI / 2);
+      raf.position.set(rx, roofY(0) - SHEET - PURLIN - RAFTER / 2, 0);
+      raf.rotation.x = slope;
+      raf.castShadow = t4;
+      g.add(raf);
+    }
+    // Purlins along the length, the sheet's fixings.
+    for (const pz of [-1.95, -0.98, 0, 0.98, 1.95]) {
+      const pur = new THREE.Mesh(this.own(new THREE.BoxGeometry(6.6, PURLIN, 0.05)), this.pipeMat);
+      pur.position.set(0, roofY(pz) - SHEET - PURLIN / 2, pz);
+      pur.rotation.x = slope;
+      g.add(pur);
+    }
+    // The drop rod the lamp hangs on.
+    const rod = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.012, 0.012, 0.14, 6)), this.darkSteelMat);
+    rod.position.set(0, 2.84, 0.2);
+    g.add(rod);
 
-    // Corrugation on the roof: ribs, so it is sheet and not a slab.
-    for (let i = 0; i < 12; i++) {
-      const rib = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.07, 0.05, 4.1)), this.darkSteelMat
-      );
-      rib.position.set(-3.03 + i * 0.55, 3.025, 0);
-      rib.rotation.x = 0.07;
-      g.add(rib);
+    // The sheets. Corrugations run down the fall.
+    const sheetW = 2.3;
+    for (const [sx, lift, short] of [[-2.15, 0, 0], [0, 0, 0], [2.15, 1, 0.9]]) {
+      const d = 4.35 - short;
+      const geo = this.own(corrugatedGeometry(sheetW, d));
+      if (lift) {
+        // The corner that went up in the wind, and stayed up.
+        const gp = geo.attributes.position;
+        for (let i = 0; i < gp.count; i++) {
+          const x = gp.getX(i), z = gp.getZ(i);
+          const k = Math.max(0, z - (d / 2 - 1.1)) * Math.max(0, x + 0.1);
+          gp.setY(i, gp.getY(i) + k * k * 0.55);
+        }
+        geo.computeVertexNormals();
+      }
+      const sheet = new THREE.Mesh(geo, this.plateMat);
+      const zc = -short / 2;
+      sheet.position.set(sx, roofY(zc), zc);
+      sheet.rotation.x = slope;
+      sheet.castShadow = sheet.receiveShadow = t4;
+      g.add(sheet);
+    }
+    // A gutter along the low edge, sagging off one bracket.
+    const gutter = new THREE.Mesh(
+      this.own(new THREE.CylinderGeometry(0.07, 0.07, 6.6, 10, 1, true, 0, Math.PI)), this.pipeMat
+    );
+    gutter.rotation.z = Math.PI / 2;
+    gutter.rotation.x = Math.PI;
+    gutter.position.set(0, roofY(2.2) - 0.08, 2.24);
+    gutter.rotation.y = 0.012;
+    g.add(gutter);
+
+    // The back wall: corrugated sheet on the rear columns, one panel sprung.
+    for (const [wx, tilt] of [[-2.15, 0], [0, 0.0], [2.15, 0.05]]) {
+      const geo = this.own(corrugatedGeometry(2.3, 2.5));
+      geo.rotateX(Math.PI / 2);
+      const wall = new THREE.Mesh(geo, this.plateMat);
+      wall.position.set(wx, 1.58, -1.99 - tilt * 0.4);
+      wall.rotation.x = tilt;
+      wall.castShadow = wall.receiveShadow = t4;
+      g.add(wall);
     }
 
-    const sheet = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(6.5, 1.9, 0.06)), this.plateMat
-    );
-    sheet.position.set(0, 1.9, -1.99);
-    sheet.castShadow = sheet.receiveShadow = tierAtLeast('T4');
-    g.add(sheet);
-
-    // Bench under the lean-to, facing the yard.
     const bench = this.buildBench({
       width: 4.8, depth: 1.3, height: 0.95, kind: 'scope', plate: 'BN-01'
     });
@@ -2281,7 +2095,11 @@ export class TallowWorld {
   setBenchDeployed(questId, deployed) {
     const anchor = this.benchAnchors.get(questId);
     if (anchor?.dormant) anchor.dormant.visible = !deployed;
+    this.openBenches = this.openBenches || new Set();
+    if (deployed) this.openBenches.add(questId); else this.openBenches.delete(questId);
   }
+
+  get benchesOpen() { return this.openBenches?.size || 0; }
 
   /** The working surface for a quest's site, or null if it has no bench. */
   benchAnchor(questId) {
@@ -2302,14 +2120,64 @@ export class TallowWorld {
     const g = new THREE.Group();
 
     // The blockhouse itself.
-    const block = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(5.2, 4.0, 3.0)), this.plateMat
-    );
-    block.position.set(0, 2.0, 0);
-    block.castShadow = block.receiveShadow = tierAtLeast('T4');
+    /*
+     * A BLOCKHOUSE IS POURED, NOT WELDED. Battered concrete walls (thicker at
+     * the foot, the way a blast-rated vault is cast), a chamfered roof slab,
+     * a portal standing proud of the face round the door, and a hood over it
+     * so nothing falls from the roof onto whoever is in the doorway. The
+     * footprint at grade is unchanged: 5.2 by 3.0.
+     */
+    const concrete = this.concreteMaterial();
+    const t4 = this.t4;
+    const bGeo = this.own(new THREE.BoxGeometry(5.2, 3.7, 3.0, 4, 3, 3));
+    {
+      const p = bGeo.attributes.position;
+      for (let i = 0; i < p.count; i++) {
+        const t = (p.getY(i) + 1.85) / 3.7;
+        p.setX(i, p.getX(i) * (1 - 0.07 * t));
+        p.setZ(i, p.getZ(i) * (1 - 0.12 * t));
+      }
+      bGeo.computeVertexNormals();
+      this.boxUVs(bGeo, 0.45);
+    }
+    const block = new THREE.Mesh(bGeo, concrete);
+    block.position.set(0, 1.85, 0);
+    block.castShadow = block.receiveShadow = t4;
     g.add(block);
+    const slab = new THREE.Mesh(this.boxUVs(this.own(new THREE.BoxGeometry(5.1, 0.32, 2.9)), 0.45), concrete);
+    slab.position.set(0, 3.86, -0.04);
+    slab.castShadow = t4;
+    g.add(slab);
+    const chamfer = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.16, 0.16, 5.1, 4)), concrete);
+    chamfer.rotation.z = Math.PI / 2;
+    chamfer.rotation.x = Math.PI / 4;
+    chamfer.position.set(0, 3.7, 1.36);
+    g.add(chamfer);
 
-    // The open mouth: a dark recess where the door used to sit.
+    // The portal: a cast surround proud of the battered face, the door let into it.
+    for (const px of [-1.18, 1.18]) {
+      const pier = new THREE.Mesh(this.boxUVs(this.own(new THREE.BoxGeometry(0.5, 3.0, 0.5)), 0.45), concrete);
+      pier.position.set(px, 1.5, 1.42);
+      pier.castShadow = t4;
+      g.add(pier);
+    }
+    const head = new THREE.Mesh(this.boxUVs(this.own(new THREE.BoxGeometry(2.86, 0.5, 0.62)), 0.45), concrete);
+    head.position.set(0, 2.95, 1.46);
+    head.castShadow = t4;
+    g.add(head);
+    // The hood: a plate canopy on two brackets.
+    const hood = new THREE.Mesh(this.own(new THREE.BoxGeometry(3.0, 0.06, 0.9)), this.darkSteelMat);
+    hood.position.set(0, 3.25, 1.95);
+    hood.rotation.x = -0.12;
+    hood.castShadow = t4;
+    g.add(hood);
+    for (const hx of [-1.3, 1.3]) {
+      const br = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.05, 0.45, 0.05)), this.darkSteelMat);
+      br.position.set(hx, 3.05, 1.95);
+      br.rotation.x = 0.9;
+      g.add(br);
+    }
+
     const mouth = new THREE.Mesh(
       this.own(new THREE.BoxGeometry(1.7, 2.5, 0.14)),
       this.own(new THREE.MeshStandardMaterial({ color: 0x0d0c0a, roughness: 1.0, metalness: 0 }))
@@ -2317,33 +2185,57 @@ export class TallowWorld {
     mouth.position.set(0, 1.3, 1.47);
     g.add(mouth);
 
-    // Dogs frame and lintel around the mouth.
     for (const jx of [-1.0, 1.0]) {
       const jamb = new THREE.Mesh(
         this.own(new THREE.BoxGeometry(0.16, 2.5, 0.16)), this.darkSteelMat
       );
-      jamb.position.set(jx, 1.25, 1.5);
+      jamb.position.set(jx, 1.25, 1.62);
       g.add(jamb);
     }
     const lintel = new THREE.Mesh(
       this.own(new THREE.BoxGeometry(2.2, 0.18, 0.16)), this.darkSteelMat
     );
-    lintel.position.set(0, 2.58, 1.5);
+    lintel.position.set(0, 2.58, 1.62);
     g.add(lintel);
 
-    // The door leaf, hauled off its hinges and stowed against the face. There is
-    // no going back to sealed; the wheel went with it.
+    // On the roof: a vent cowl, a condenser box and a whip antenna.
+    const cowl = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.22, 0.26, 0.9, 14)), this.pipeMat);
+    cowl.position.set(1.6, 4.47, -0.6);
+    g.add(cowl);
+    const cowlCap = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.34, 0.22, 0.16, 14)), this.darkSteelMat);
+    cowlCap.position.set(1.6, 4.98, -0.6);
+    g.add(cowlCap);
+    const cond = new THREE.Mesh(this.own(new THREE.BoxGeometry(1.2, 0.7, 0.8)), this.plateMat);
+    cond.position.set(-1.3, 4.37, -0.5);
+    cond.castShadow = t4;
+    g.add(cond);
+    const fan = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.3, 0.3, 0.04, 18)), this.darkSteelMat);
+    fan.position.set(-1.3, 4.73, -0.5);
+    g.add(fan);
+    const whip = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.01, 0.02, 3.2, 6)), this.darkSteelMat);
+    whip.position.set(2.2, 5.6, -1.1);
+    g.add(whip);
+    // Rungs let into the side wall up to the roof.
+    for (let i = 0; i < 9; i++) {
+      const rung = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.18, 0.018, 5, 10, Math.PI)), this.darkSteelMat);
+      const ry = 0.5 + i * 0.38;
+      const t = (ry) / 3.7;
+      rung.position.set(2.6 * (1 - 0.07 * t) + 0.02, ry, -0.4);
+      rung.rotation.set(0, Math.PI / 2, -Math.PI / 2);
+      g.add(rung);
+    }
+
     const leaf = new THREE.Mesh(
       this.own(new THREE.BoxGeometry(2.0, 2.7, 0.14)), this.darkSteelMat
     );
-    leaf.position.set(-1.58, 1.35, 1.58);
+    leaf.position.set(-2.48, 1.35, 1.72);
     leaf.rotation.x = -0.04;
     leaf.castShadow = tierAtLeast('T4');
     g.add(leaf);
     const wheel = new THREE.Mesh(
       this.own(new THREE.TorusGeometry(0.34, 0.045, 8, 22)), this.darkSteelMat
     );
-    wheel.position.set(-1.58, 1.35, 1.68);
+    wheel.position.set(-2.48, 1.35, 1.82);
     g.add(wheel);
 
     // The lamp over the doorway is lit: somebody works here now.
@@ -2353,11 +2245,11 @@ export class TallowWorld {
         color: 0x2a251c, emissive: SODIUM, emissiveIntensity: 1.4, roughness: 0.6
       }))
     );
-    lampBar.position.set(0, 2.76, 1.56);
+    lampBar.position.set(0, 2.64, 1.82);
     g.add(lampBar);
 
-    const tag = placard('VLT-03', { w: 0.5, h: 0.19 });
-    tag.position.set(1.75, 2.86, 1.52);
+    const tag = placard('VLT-03', { w: 0.44, h: 0.17 });
+    tag.position.set(1.18, 2.2, 1.68);
     g.add(tag);
     this.own(tag.geometry, tag.material, tag.material.map);
 
@@ -2462,33 +2354,73 @@ export class TallowWorld {
     const y = this.surfaceHeight(site.pos[0], site.pos[2]);
     const g = new THREE.Group();
 
-    // The hopper on four legs, its throat hanging over the chute.
-    const legGeo = this.own(new THREE.BoxGeometry(0.16, 2.3, 0.16));
+    // Four H-section legs, braced in X on each face, carrying a tapered bin.
+    // The legs run up past the neck to where the bin's wall meets them.
+    const legGeo = this.own(iBeamGeometry(3.22, { h: 0.16, w: 0.12 }));
     for (const [px, pz] of [[-0.75, -2.1], [0.75, -2.1], [-0.75, -0.9], [0.75, -0.9]]) {
       const leg = new THREE.Mesh(legGeo, this.darkSteelMat);
-      leg.position.set(px, 1.15, pz);
+      leg.position.set(px, 1.61, pz);
       leg.castShadow = tierAtLeast('T4');
       g.add(leg);
+      const foot = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.3, 0.03, 0.3)), this.darkSteelMat);
+      foot.position.set(px, 0.015, pz);
+      g.add(foot);
     }
-    const body = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.9, 1.25, 1.7)), this.plateMat
-    );
+    const xLen = Math.hypot(1.5, 1.6);
+    for (const pz of [-2.1, -0.9]) {
+      for (const sgn of [-1, 1]) {
+        const x = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.04, xLen, 0.04)), this.darkSteelMat);
+        x.position.set(0, 1.05, pz);
+        x.rotation.z = sgn * Math.atan2(1.5, 1.6);
+        g.add(x);
+      }
+    }
+    for (const px of [-0.75, 0.75]) {
+      for (const sgn of [-1, 1]) {
+        const x = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.04, Math.hypot(1.2, 1.6), 0.04)), this.darkSteelMat);
+        x.position.set(px, 1.05, -1.5);
+        x.rotation.x = sgn * Math.atan2(1.2, 1.6);
+        g.add(x);
+      }
+    }
+    // The bin: a square frustum, wide at the mouth, necking to the throat.
+    const binGeo = this.own(new THREE.CylinderGeometry(1.3, 0.36, 1.25, 4, 1, true));
+    binGeo.rotateY(Math.PI / 4);
+    const body = new THREE.Mesh(binGeo, this.plateMat);
+    body.material = this.plateMat;
     body.position.set(0, 2.95, -1.5);
     body.castShadow = body.receiveShadow = tierAtLeast('T4');
     g.add(body);
+    const inner = new THREE.Mesh(binGeo, this.darkSteelMat.clone());
+    this.own(inner.material);
+    inner.material.side = THREE.BackSide;
+    inner.position.copy(body.position);
+    g.add(inner);
+    // The ring frame the bin sits in, on the leg heads, and a stiffening band
+    // round the mouth: each four members, never a slab over the opening.
+    for (const [w, d, y] of [[1.66, 1.36, 3.2], [1.9, 1.9, 3.53]]) {
+      for (const sgn of [-1, 1]) {
+        const a = new THREE.Mesh(this.own(new THREE.BoxGeometry(w, 0.1, 0.08)), this.darkSteelMat);
+        a.position.set(0, y, -1.5 + sgn * d / 2);
+        g.add(a);
+        const b = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.08, 0.1, d)), this.darkSteelMat);
+        b.position.set(sgn * w / 2, y, -1.5);
+        g.add(b);
+      }
+    }
     const throat = new THREE.Mesh(
       this.own(new THREE.BoxGeometry(0.5, 0.5, 0.5)), this.darkSteelMat
     );
     throat.position.set(0, 2.05, -1.4);
     g.add(throat);
     const lid = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(2.0, 0.06, 1.8)), this.darkSteelMat
+      this.own(new THREE.BoxGeometry(1.0, 0.05, 1.8)), this.darkSteelMat
     );
-    lid.position.set(0.1, 3.62, -1.55);
+    // Half the grille thrown back on its hinge.
+    lid.position.set(-0.45, 3.62, -1.55);
     lid.rotation.z = 0.05;
     g.add(lid);
 
-    // The chute off the throat, sloping down to the bins, with side rails.
     const chute = new THREE.Mesh(
       this.own(new THREE.BoxGeometry(0.55, 0.06, 2.4)), this.plateMat
     );
@@ -2565,63 +2497,36 @@ export class TallowWorld {
      ====================================================================== */
 
   /**
-   * Airborne dust, in two layers.
-   *
-   * ONE layer of particles always looks like particles. A real flat under wind
-   * has motes hanging in the column, which drift slowly and are lit from every
-   * side, and grit running along the surface, which moves several times faster
-   * and stays inside the first metre. Separating the two is what makes the wind
-   * legible: the player sees the ground moving past their boots while the haze
-   * above barely shifts.
-   *
-   * The sprite is a soft round grain, not the square a default point draws.
-   * A square particle is the single most recognisable "this is a game engine"
-   * artefact there is.
+   * What stands beyond the walk: the far plant, the stranded machines, the
+   * islands of rock out on the pan. See tallow/vista.js. It hands back the
+   * vents that still breathe, and the air carries their plumes.
    */
-  initDust() {
-    if (!tierAtLeast('T4')) return;   // T3 renders the same flat without particles.
+  initVista() {
+    const vista = buildTallowVista({
+      heightAt: (x, z) => this.surfaceHeight(x, z),
+      t4: this.t4,
+      own: (...o) => this.own(...o),
+      M: this.plantCtx.M,
+      strata: this.strataMap,
+      macro: this.macroMap,
+      saltMap: this.crustMap
+    });
+    this.vista = vista;
+    if (vista?.group) this.scene.add(vista.group);
+  }
 
-    const grain = canvas2dLocal(64, 64);
-    const gctx = grain.getContext('2d', { willReadFrequently: true });
-    const grad = gctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    grad.addColorStop(0, 'rgba(255,255,255,1)');
-    grad.addColorStop(0.45, 'rgba(255,255,255,0.45)');
-    grad.addColorStop(1, 'rgba(255,255,255,0)');
-    gctx.fillStyle = grad;
-    gctx.fillRect(0, 0, 64, 64);
-    const sprite = this.own(new THREE.CanvasTexture(grain));
-    sprite.colorSpace = THREE.SRGBColorSpace;
-
-    const rand = mulberry32(0xd057);
-    const density = this.data.ambience.dustDensity / 0.2;
-
-    /** One drifting layer. `lift` is how high it hangs, `rate` how fast it runs. */
-    const layer = (count, lift, rate, size, opacity, color) => {
-      const positions = new Float32Array(count * 3);
-      const speeds = new Float32Array(count);
-      for (let i = 0; i < count; i++) {
-        positions[i * 3] = (rand() - 0.5) * 170;
-        positions[i * 3 + 1] = rand() * lift;
-        positions[i * 3 + 2] = (rand() - 0.5) * 170;
-        speeds[i] = rate * (0.5 + rand());
-      }
-      const geo = this.own(new THREE.BufferGeometry());
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      const mat = this.own(new THREE.PointsMaterial({
-        color, size, map: sprite, sizeAttenuation: true,
-        transparent: true, opacity, depthWrite: false,
-        blending: THREE.NormalBlending
-      }));
-      const pts = new THREE.Points(geo, mat);
-      this.scene.add(pts);
-      return { points: pts, speeds, lift };
-    };
-
-    // The hanging column: slow, pale, high.
-    this.dustParticles = layer(Math.round(1100 * density), 16, 1.0, 0.075, 0.34, 0xd8cfb8);
-    // The running surface: fast, warmer, and never more than a metre up.
-    this.groundGrit = layer(Math.round(900 * density), 1.1, 3.4, 0.045, 0.3, 0xc8b894);
-    this.dustSpeeds = this.dustParticles.speeds;
+  /**
+   * The air, moving: salt motes at the eye, grit streaming over the crust,
+   * salt devils on the far flats and vapour off the far stacks. The world
+   * builds on T4 only for the walk; lower tiers get the motes alone.
+   */
+  initEffects() {
+    this.effects = createTallowEffects({
+      heightAt: (x, z) => this.getTerrainHeight(x, z),
+      t4: this.t4,
+      plumes: this.vista?.plumes || []
+    });
+    this.scene.add(this.effects.group);
   }
 
   /* ======================================================================
@@ -2705,24 +2610,20 @@ export class TallowWorld {
    * The feet of an elevated structure, in world terms, or null if the landmark
    * is an ordinary solid object.
    *
-   * The local coordinates below are the same ones the builders place their
-   * piers and legs at — `buildPipeBridge` uses span 26 with piers a metre in
-   * from each end, `buildConveyor` uses length 22 with legs at 0.12, 0.5 and
-   * 0.88 of it.
+   * The local coordinates come from `SUPPORT_POINTS` in `tallow/plant.js`,
+   * the one table of where the builders there stand their columns and legs.
    */
   supportPoints(lm) {
-    const local = {
-      'pipe-bridge': [[-1.5, -12], [1.5, -12], [-1.5, 0], [1.5, 0], [-1.5, 12], [1.5, 12]],
-      'conveyor': [[-0.7, -8.36], [0.7, -8.36], [-0.7, 0], [0.7, 0], [-0.7, 8.36], [0.7, 8.36]]
-    }[lm.asset];
-    if (!local) return null;
+    const spec = SUPPORT_POINTS[lm.asset];
+    if (!spec) return null;
+    const local = spec.points;
 
     const cos = Math.cos(lm.rotY || 0);
     const sin = Math.sin(lm.rotY || 0);
     return local.map(([lx, lz]) => ({
       x: lm.pos[0] + lx * cos + lz * sin,
       z: lm.pos[2] - lx * sin + lz * cos,
-      radius: 0.55
+      radius: spec.radius ?? 0.55
     }));
   }
 
@@ -2739,58 +2640,35 @@ export class TallowWorld {
     marker.indicator.material.needsUpdate = true;
   }
 
-  /** The site the player is standing close enough to work at, or null. */
-  findNearbySite(pos) {
-    let best = null;
-    let bestD = Infinity;
-    for (const site of this.data.sites) {
-      const d = Math.hypot(pos.x - site.pos[0], pos.z - site.pos[2]);
-      // The bench has to be within arm's reach, and on the same floor: the lab
-      // bench sits directly below part of the yard and must not be reachable
-      // from up there.
-      const sameLevel = Math.abs(pos.y - (site.pos[1] + 1.6)) < 2.6;
-      if (d < 3.4 && sameLevel && d < bestD) {
-        bestD = d;
-        best = site;
-      }
-    }
-    return best;
-  }
-
   update(delta, cameraPos) {
     this.elapsed += delta;
-
-    if (cameraPos) this.nearbySite = this.findNearbySite(cameraPos);
-
-    // Dust drifts downwind and recycles at the far edge. The flat has a steady
-    // wind; this is the only thing in the scene that moves on its own besides
-    // the sock.
-    for (const l of [this.dustParticles, this.groundGrit]) {
-      if (!l) continue;
-      const p = l.points.geometry.attributes.position;
-      const arr = p.array;
-      for (let i = 0; i < l.speeds.length; i++) {
-        arr[i * 3] += l.speeds[i] * delta * 1.6;
-        // Settling is proportional to speed, so the fast grit skips along the
-        // surface and the slow motes hang; both recycle at the upwind edge.
-        arr[i * 3 + 1] -= l.speeds[i] * delta * 0.12;
-        if (arr[i * 3] > 85) arr[i * 3] = -85;
-        if (arr[i * 3 + 1] < 0.04) arr[i * 3 + 1] = l.lift;
+    tallowSkyUniforms.uTTime.value = this.elapsed;
+    if (cameraPos) {
+      // A deployed instrument moves (jaws close, pieces fall), so its
+      // shadow is drawn every frame; otherwise only when the box moves.
+      const moved = followTallowShadow(this.sunLight, cameraPos);
+      paceShadow(this.sunLight, moved, { live: this.benchesOpen > 0 });
+      if (this.renderer?.getDrawingBufferSize) {
+        this._buf = this._buf || new THREE.Vector2();
+        this.effects?.setViewportHeight(this.renderer.getDrawingBufferSize(this._buf).y);
       }
-      p.needsUpdate = true;
+      this.effects?.update(delta, this.elapsed, cameraPos);
+      this.lampPool?.update(cameraPos);
     }
+    this.vista?.update?.(delta, this.elapsed);
 
     if (this.windsock) {
       this.windsock.rotation.y = Math.sin(this.elapsed * 0.6) * 0.18;
     }
     if (this.mastLamp) {
-      // A slow filament flicker, not a strobe: the lamp is old, not alarming.
       this.mastLamp.material.emissiveIntensity =
         1.4 + Math.sin(this.elapsed * 1.7) * 0.18;
     }
   }
 
   dispose() {
+    this.effects?.dispose();
+    this.envTarget?.dispose();
     for (const d of this.disposables) {
       try { d.dispose(); } catch (e) {}
     }

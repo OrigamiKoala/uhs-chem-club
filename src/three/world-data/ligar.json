@@ -17,8 +17,8 @@
     "keyLight": 15253642,
     "fillLight": 7035980,
     "fogColor": 7034951,
-    "fogNear": 44,
-    "fogFar": 250,
+    "fogNear": 30,
+    "fogFar": 420,
     "dustDensity": 0.26
   },
   "sublevel": {
@@ -843,5 +843,93 @@
       "site-3": "The third bench, inside the batch house on the east deck, under the gantry sign.",
       "site-4": "The fourth bench, on the weighbridge deck south of the batch house."
     }
+  },
+  "tracks": {
+    "ruts": [
+      [
+        [
+          -1,
+          44
+        ],
+        [
+          2,
+          34
+        ],
+        [
+          5,
+          24
+        ],
+        [
+          6,
+          14
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          4.9,
+          2.6
+        ]
+      ],
+      [
+        [
+          6,
+          14
+        ],
+        [
+          12,
+          8
+        ],
+        [
+          18,
+          4
+        ],
+        [
+          21,
+          -2
+        ],
+        [
+          21,
+          -8
+        ]
+      ],
+      [
+        [
+          5,
+          24
+        ],
+        [
+          12,
+          20
+        ],
+        [
+          18,
+          14
+        ],
+        [
+          21,
+          10
+        ]
+      ],
+      [
+        [
+          2,
+          34
+        ],
+        [
+          -8,
+          30
+        ],
+        [
+          -18,
+          24
+        ],
+        [
+          -26,
+          17
+        ]
+      ]
+    ]
   }
 }
