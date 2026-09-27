@@ -220,3 +220,93 @@ body.touch-walking #fps-interact-prompt {
   }
 }
 
+
+/* ===================================================================
+   THE LEARN WALK HUD ON A PHONE IS AS SMALL AS EREBUS'S.
+   Walking Tallow or Ligar, the desktop HUD — the world's one-line brief at
+   body size and a site list with a title, a meta line and a key per row —
+   filled half the glass on a phone and ran down into the move stick. Here it
+   is the Erebus card: unit, name and keys, and a site list of one line per
+   bench whose cleared count rides in the header (Replay on a row says the
+   rest). The world's line goes; it is on the Learn road and the star map.
+   Both cards are bounded to the glass ABOVE the stick band (twice the stick
+   centre line, as the bench dock is), so a long list scrolls inside its card
+   instead of running under a thumb. Not width-scoped past 760 px, because a
+   sideways phone is routinely wider than that.
+   =================================================================== */
+@media (max-width: 760px), (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  .learn-walk-hud {
+    --walk-hud-room: calc(100dvh - var(--hud-h) - 8px);
+    top: calc(var(--hud-h) + 4px);
+    left: max(6px, env(safe-area-inset-left));
+    right: auto;
+    max-width: calc(100vw - 12px);
+    max-height: var(--walk-hud-room);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .learn-walk-card {
+    flex-shrink: 0;
+    max-width: min(270px, calc(100vw - 12px));
+    padding: 0.45rem 0.7rem;
+  }
+
+  .learn-walk-card .eyebrow { font-size: 0.62rem; }
+  .learn-walk-name { font-size: 0.85rem; margin-top: 0; }
+  .learn-walk-line { display: none; }
+
+  .learn-walk-keys { margin-top: 0.35rem; gap: 0.35rem; flex-wrap: nowrap; }
+
+  .learn-walk-hud .quest-btn-sm,
+  .learn-walk-hud .btn-primary.quest-btn-sm {
+    font-size: 0.64rem;
+    padding: 4px 10px;
+    min-height: 30px;
+    min-width: 0;
+  }
+
+  .learn-walk-sites {
+    flex-shrink: 1;
+    min-height: 0;
+    max-height: var(--walk-hud-room);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .learn-walk-sites-head .tag { font-size: 0.56rem; padding: 1px 6px; }
+
+  .learn-site-list { margin-top: 0.3rem; gap: 0.2rem; }
+
+  .learn-site-row {
+    gap: 0.45rem;
+    padding: 0.1rem 0.2rem 0.1rem 0.45rem;
+    min-height: 26px;
+  }
+
+  .learn-site-index { font-size: 0.7rem; }
+
+  .learn-site-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .learn-site-meta { display: none; }
+  .learn-site-row .tag { font-size: 0.56rem; }
+
+  body.touch-walking .learn-walk-hud {
+    --walk-hud-room: calc(100dvh - var(--hud-h) - 8px
+      - (var(--tc-stick-center-y, 90px) * 2 + 12px) - env(safe-area-inset-bottom));
+  }
+}
+
+/* Sideways, the glass is too short to stack two cards above the sticks, so
+   they sit side by side along the top, as a strip, and the view keeps the
+   middle and the right. */
+@media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
+  .learn-walk-hud { flex-direction: row; }
+}

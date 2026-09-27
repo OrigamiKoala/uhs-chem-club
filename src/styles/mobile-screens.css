@@ -459,13 +459,5 @@
   .map-learn-action { width: 100%; }
   .map-learn-action .btn-primary { width: 100%; text-align: center; min-height: 40px; }
 
-  .learn-walk-hud {
-    left: 0.75rem;
-    right: 0.75rem;
-    top: calc(var(--hud-h) + 0.5rem);
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .learn-walk-card { max-width: none; }
+  /* The Learn walk HUD on a phone lives in mobile-game.css, beside the sticks it clears. */
 }
