@@ -40,6 +40,19 @@
   <!-- Global HUD / Header -->
   <header id="hud" class="hud">
     <div class="hud-left">
+      <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-sidebar">
+        <span class="mobile-menu-hamburger" aria-hidden="true">
+          <span class="bar bar-1"></span>
+          <span class="bar bar-2"></span>
+          <span class="bar bar-3"></span>
+        </span>
+        <svg class="hud-logo-icon mobile-menu-logo" aria-hidden="true" width="16" height="18" viewBox="0 0 15 17" fill="none">
+          <path d="M7.5 1 14 4.75v7.5L7.5 16 1 12.25v-7.5L7.5 1Z" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M7.5 5.5 11 7.5v4l-3.5 2L4 11.5v-4l3.5-2Z" fill="currentColor" opacity=".55"/>
+        </svg>
+        <span class="mobile-menu-title">AVALON</span>
+      </button>
+
       <a href="#/" class="hud-brand" aria-label="Avalon home">
         <svg class="hud-logo-icon" aria-hidden="true" width="15" height="17" viewBox="0 0 15 17" fill="none">
           <path d="M7.5 1 14 4.75v7.5L7.5 16 1 12.25v-7.5L7.5 1Z" stroke="currentColor" stroke-width="1.2"/>
@@ -48,6 +61,17 @@
         <span class="hud-title">AVALON</span>
         <span class="hud-season-tag">UHS CHEM</span>
       </a>
+
+      <button id="hud-install-btn" class="hud-install-btn hidden" title="Add Avalon to Home Screen" aria-label="Add Avalon to Home Screen">
+        <span class="install-pulse-dot" aria-hidden="true"></span>
+        <svg class="hud-install-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span class="install-btn-label">INSTALL APP</span>
+      </button>
+
       <nav id="hud-nav" class="hud-nav hidden">
         <button type="button" class="nav-btn" data-target="bridge">BRIDGE</button>
         <button type="button" class="nav-btn" data-target="starmap">STAR MAP</button>
@@ -70,15 +94,6 @@
       </div>
 
       <div class="hud-controls">
-        <button id="hud-install-btn" class="hud-install-btn hidden" title="Add Avalon to Home Screen" aria-label="Add Avalon to Home Screen">
-          <span class="install-pulse-dot" aria-hidden="true"></span>
-          <svg class="hud-install-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          <span class="install-btn-label">INSTALL APP</span>
-        </button>
         <button id="gfx-tier-toggle" class="btn-chip" title="Graphics quality">
           <span class="gfx-dot"></span>
           <span id="gfx-tier-label">T3</span>
@@ -100,18 +115,6 @@
             <button id="logout-btn" class="dropdown-item text-danger">Sign Out</button>
           </div>
         </div>
-        <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-sidebar">
-          <span class="mobile-menu-hamburger" aria-hidden="true">
-            <span class="bar bar-1"></span>
-            <span class="bar bar-2"></span>
-            <span class="bar bar-3"></span>
-          </span>
-          <svg class="hud-logo-icon mobile-menu-logo" aria-hidden="true" width="13" height="15" viewBox="0 0 15 17" fill="none">
-            <path d="M7.5 1 14 4.75v7.5L7.5 16 1 12.25v-7.5L7.5 1Z" stroke="currentColor" stroke-width="1.2"/>
-            <path d="M7.5 5.5 11 7.5v4l-3.5 2L4 11.5v-4l3.5-2Z" fill="currentColor" opacity=".55"/>
-          </svg>
-          <span class="mobile-menu-title">AVALON</span>
-        </button>
       </div>
     </div>
   </header>

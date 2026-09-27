@@ -7,72 +7,87 @@
    =================================================================== */
 
 @media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
-  /* ---- Header: one 44px row — telemetry + controls + mobile menu button ---- */
+  /* ---- Header: transparent bar, freed up navbar space ---- */
   :root,
-  :root:has(#hud-nav.hidden) { --hud-h: 44px; }
+  :root:has(#hud-nav.hidden) { --hud-h: 40px; }
 
   .hud,
   :root:has(#hud-nav.hidden) .hud {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
     height: var(--hud-h);
-    min-height: 44px;
-    padding: 0 max(0.75rem, env(safe-area-inset-right)) 0 max(0.75rem, env(safe-area-inset-left));
+    min-height: 40px;
+    padding: 0 max(0.75rem, env(safe-area-inset-right)) 0 max(0.75rem, env(safe-area-inset-left)) !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    pointer-events: none !important;
     flex-wrap: nowrap;
+    z-index: 50;
   }
+  .hud::after { display: none !important; }
 
   .hud-left {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
     min-width: 0;
+    pointer-events: auto !important;
   }
 
   .hud-brand { display: none !important; }
   .hud-nav, #hud-nav { display: none !important; }
-
-  .hud-right {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.35rem;
-    flex-wrap: nowrap;
-    min-width: 0;
-    margin-left: auto;
-  }
+  .hud-right { display: none !important; }
 
   .mobile-menu-btn {
     display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: var(--text-bright);
     min-height: 32px;
-    padding: 2px 8px;
-    font-size: 0.65rem;
-    gap: 5px;
+    padding: 2px 0 !important;
+    cursor: pointer;
+    pointer-events: auto !important;
   }
 
   .mobile-menu-hamburger {
-    width: 12px;
-    height: 9px;
+    width: 14px;
+    height: 10px;
+  }
+
+  .mobile-menu-hamburger .bar {
+    height: 1.5px;
   }
 
   .mobile-menu-title {
-    font-size: 0.74rem;
+    font-size: 0.95rem;
   }
 
-  #user-menu-wrap { display: none !important; }
-
-  .hud-stats { gap: 0.3rem; flex-wrap: nowrap; }
-  .xp-badge { padding: 2px 6px; min-height: 30px; }
-  .xp-val { font-size: 0.75rem; }
-  .xp-bar-mini, .level-badge, .team-badge { display: none; }
-
-  .hud-controls { gap: 3px; flex-wrap: nowrap; }
-  .btn-chip {
-    min-height: 34px;
-    padding: 3px 8px;
+  .hud-install-btn:not(.hidden) {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 5px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: var(--accent-amber) !important;
+    padding: 2px 6px !important;
     font-size: 0.58rem;
-    letter-spacing: 0.08em;
-    white-space: nowrap;
+    pointer-events: auto !important;
+  }
+  .hud-install-btn:not(.hidden)::before {
+    display: none !important;
   }
   .btn-chip-icon {
     width: 34px;

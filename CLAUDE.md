@@ -2162,14 +2162,14 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   card height.
 - **Phone layout lives in its own stylesheets**, linked after `holo.css` and scoped entirely to
   `max-width: 768px` (or narrower), so desktop is never affected:
-  `mobile.css` (shell: single-row fixed HUD, `--hud-h` 52 px; header navbar strip hidden;
-  top-right `#mobile-menu-btn` with menu icon, Avalon symbol and title opens `#mobile-sidebar`
-  containing the full navbar switchgear `.mobile-nav-item`, player telemetry card, and actions;
-  modal sheet, toasts, page furniture, transmissions, cinematic captions under the frame),
-  `mobile-screens.css` (per-screen rules for landing → admin) and `mobile-quest.css` (quest,
-  demo, Tier 1 fallback, gardens map). Inline template styles are overridden there through
-  class hooks plus `!important`. Inputs are 16 px on phones so iOS does not zoom; safe-area
-  insets are honoured (`viewport-fit=cover`).
+  `mobile.css` (shell: transparent HUD with freed up navbar space; top-left `#mobile-menu-btn`
+  with menu icon, Avalon symbol and title on transparent background opens `#mobile-sidebar`
+  from the left side containing the full navbar switchgear `.mobile-nav-item`, player telemetry,
+  and actions; transparent `#hud-install-btn` sits next to AVALON; modal sheet, toasts, page furniture,
+  transmissions, cinematic captions under the frame), `mobile-screens.css` (per-screen rules for
+  landing → admin) and `mobile-quest.css` (quest, demo, Tier 1 fallback, gardens map). Inline template
+  styles are overridden there through class hooks plus `!important`. Inputs are 16 px on phones so
+  iOS does not zoom; safe-area insets are honoured (`viewport-fit=cover`).
   `mobile-game.css` (linked last) carries the twin sticks, the `100dvh` full-bleed
   canvas and the full-screen key; none of it is width-scoped, because a
   landscape-locked phone is routinely wider than 760 px. It also houses the compact
