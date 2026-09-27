@@ -5,14 +5,14 @@
    mobile-quest.css.
    =================================================================== */
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (pointer: coarse) and (max-height: 500px), (max-height: 500px) and (orientation: landscape) {
   /* ---- Header: transparent top bar, all navbar space freed up.
      Top left corner: menu icon, Avalon symbol, and AVALON on transparent background.
      Next to AVALON: install item on transparent background.
      Nothing else in header. ---- */
   :root,
   :root:has(#hud-nav.hidden) {
-    --hud-h: 48px;
+    --hud-h: 44px;
   }
 
   html { -webkit-text-size-adjust: 100%; }
@@ -27,8 +27,8 @@
     align-items: center !important;
     justify-content: flex-start !important;
     height: var(--hud-h);
-    min-height: 48px;
-    padding: 0 max(0.75rem, env(safe-area-inset-right)) 0 max(0.75rem, env(safe-area-inset-left)) !important;
+    min-height: 44px;
+    padding: 0 12px !important;
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
@@ -44,7 +44,7 @@
   .hud-left {
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
+    gap: 8px !important;
     min-width: 0;
     pointer-events: auto !important;
   }
@@ -62,13 +62,13 @@
   .mobile-menu-btn {
     display: inline-flex !important;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     color: var(--text-bright);
     padding: 4px 2px !important;
-    min-height: 38px;
+    min-height: 36px;
     cursor: pointer;
     transition: opacity 0.2s ease, transform 0.15s ease;
     user-select: none;
@@ -86,47 +86,36 @@
   }
 
   .mobile-menu-hamburger {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 16px;
-    height: 12px;
+    display: block !important;
+    width: 18px;
+    height: 18px;
     flex-shrink: 0;
+    stroke: var(--accent-amber) !important;
+    color: var(--accent-amber) !important;
+    transition: stroke 0.2s ease, transform 0.2s ease;
   }
 
-  .mobile-menu-hamburger .bar {
-    width: 100%;
-    height: 1.8px;
-    background-color: var(--accent-amber);
-    border-radius: 1px;
-    transition: transform 0.22s var(--ease-spring), opacity 0.18s ease;
-  }
-
-  .mobile-menu-btn.is-open .mobile-menu-hamburger .bar-1 {
-    transform: translateY(5.1px) rotate(45deg);
-  }
-
-  .mobile-menu-btn.is-open .mobile-menu-hamburger .bar-2 {
-    opacity: 0;
-  }
-
-  .mobile-menu-btn.is-open .mobile-menu-hamburger .bar-3 {
-    transform: translateY(-5.1px) rotate(-45deg);
+  .mobile-menu-btn:hover .mobile-menu-hamburger {
+    stroke: var(--accent-gold) !important;
   }
 
   .mobile-menu-logo {
-    color: var(--accent-amber);
+    display: block !important;
+    width: 15px;
+    height: 17px;
+    color: var(--accent-amber) !important;
     flex-shrink: 0;
   }
 
   .mobile-menu-title {
     color: var(--text-bright);
     font-family: var(--font-imperial);
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
     letter-spacing: 0.16em;
     line-height: 1;
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.85);
+    white-space: nowrap;
   }
 
   /* ---- Install button next to AVALON on transparent background ---- */
