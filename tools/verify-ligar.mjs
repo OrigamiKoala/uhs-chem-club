@@ -289,6 +289,29 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
     check(unrecorded.length === 0, 'every instanced field records a box per instance',
       `instanced fields the overlap check cannot see into: ${unrecorded.join(', ')}`);
 
+    /* THE STONE IS COLUMNAR, NOT HEXAGONAL. Every rock is a merged mesh of
+       real cells (ligar/basalt.js): irregular, vertex-toned, and recording
+       one box per column so the checks below can see each one. The world
+       used to be one unit hexagon, instanced, and the first thing to go
+       wrong in a rebuild is a builder quietly falling back to one. */
+    {
+      const rocks = [];
+      built.scene.traverse(o => {
+        if (o.isMesh && Array.isArray(o.material) && o.material.length === 2 && o.geometry.attributes.color) rocks.push(o);
+      });
+      const parts = rocks.reduce((n, o) => n + (o.userData.partBoxes?.length || 0), 0);
+      const blind = rocks.filter(o => o.name !== 'vista-rock' && !(o.userData.partBoxes?.length));
+      check(rocks.length >= 20 && parts > 2000 && blind.length === 0,
+        `${rocks.length} merged basalt meshes carry ${parts} columns and pieces, each boxed`,
+        `the basalt kit is not in use or its bodies are unboxed (${rocks.length} meshes, ${parts} parts, ${blind.length} unboxed)`);
+      let r = 0;
+      built.terrainMesh.geometry.computeBoundingBox();
+      const tb = built.terrainMesh.geometry.boundingBox;
+      r = Math.min(-tb.min.x, tb.max.x, -tb.min.z, tb.max.z);
+      check(r > 800, `the ground runs ${Math.round(r)} m to the horizon`,
+        `the ground ends ${Math.round(r)} m out: there is an edge to fall off the world`);
+    }
+
     const hits = findOverlaps(built.scene, {
       tolerance: 0.06,
       label: owner => owner.name || `${owner.type}#${owner.id}`
@@ -430,6 +453,62 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
         `${site.id}: no walkable ground within reach of the bench on its own floor`);
     }
   }
+}
+
+/* ---------------------------------------------------------- shader patches
+ *
+ * Ligar's look is mostly shader patches on three's own materials: the ground
+ * finishes itself (column tops, rain in the joints, the scoria yard, ruts,
+ * the cliffs, the air), and every prop and rock is weathered (ash, a damp
+ * foot, lichen, rust) and faded into the sky. A patch is a string replace on a
+ * chunk include; if three renames the chunk, the replace silently does
+ * nothing and the quarry renders clean and unhazed with no error anywhere. So
+ * each patch is run against three's real shader source and must land.
+ */
+{
+  const THREE = await import('three');
+  const { ShaderLib } = THREE;
+  const { createLigarTerrainMaterial, MAX_TRACK_LINES } = await import('../src/three/ligar/terrain.js');
+  const { applyLigarWeather } = await import('../src/three/ligar/surfaces.js');
+  const { applyLigarAir } = await import('../src/three/ligar/atmosphere.js');
+  const patched = mat => {
+    const shader = {
+      vertexShader: ShaderLib.physical.vertexShader,
+      fragmentShader: ShaderLib.physical.fragmentShader,
+      uniforms: {}
+    };
+    mat.onBeforeCompile(shader, null);
+    return shader.vertexShader + '\n' + shader.fragmentShader;
+  };
+  const t = new THREE.Texture();
+  const set = { map: t, normalMap: t, roughnessMap: t, aoMap: t };
+  const ground = patched(createLigarTerrainMaterial({
+    stone: set, grit: set, detail: t, macro: t, tracks: world.tracks
+  }));
+  const groundMarks = ['vGN = normalize', 'vec3 cc = gCells(', 'gRut = 0.0', 'float gCliff;',
+    'roughnessFactor = mix(roughnessFactor, 0.04, gWet)', 'mapN.xy += gRimDir',
+    'reflectedLight.indirectDiffuse *= 1.0 - gJoint', 'vFogWorld = (modelMatrix',
+    'lgSky(normalize(rd))', 'lgOut(lgHaze(lDir))'];
+  const lostG = groundMarks.filter(m => !ground.includes(m));
+  check(lostG.length === 0, 'the ground shader lands all its patches',
+    `the ground shader lost patches: ${lostG.join(', ')}`);
+
+  const prop = new THREE.MeshStandardMaterial({ map: t });
+  applyLigarWeather(prop, { ground: t, lichen: 0.5 });
+  applyLigarAir(prop);
+  const src = patched(prop);
+  const propMarks = ['vWW = (modelMatrix', 'wAsh = up', 'wDampK = 1.0', 'float lich =',
+    'roughnessFactor = mix(roughnessFactor, 0.97, wAsh)', 'metalnessFactor = mix',
+    'vFogWorld = (modelMatrix', 'lgOut(lgHaze(lDir))'];
+  const lostP = propMarks.filter(m => !src.includes(m));
+  check(lostP.length === 0, 'the weather and air patches land on a standard material',
+    `the prop patches lost: ${lostP.join(', ')}`);
+
+  const segs = (world.tracks?.ruts || []).reduce((n, l) => n + l.length - 1, 0);
+  const rl = (world.tracks?.ruts || []).length;
+  check(segs <= 24 && rl <= MAX_TRACK_LINES,
+    `${rl} haul-road lines, ${segs} segments, fit the ground shader`,
+    `tracks overflow the ground shader: ${segs}/24 segments, ${rl}/${MAX_TRACK_LINES} lines`);
 }
 
 console.log('');

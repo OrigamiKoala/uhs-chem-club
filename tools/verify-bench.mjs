@@ -127,7 +127,7 @@ function instanceBoxes(mesh, inv) {
   return out;
 }
 
-/** A baked group's recorded part boxes (group frame), each carried into the bench frame. */
+/** A baked group's (or merged mesh's) recorded part boxes, each carried into the bench frame. */
 function partBoxesIn(group, inv) {
   const m = new THREE.Matrix4().multiplyMatrices(inv, group.matrixWorld);
   return group.userData.partBoxes.map(b => b.clone().applyMatrix4(m)).filter(b => !b.isEmpty());
@@ -534,6 +534,10 @@ function check(questId, label, build, widest) {
            box in the group's frame (`partBoxes`); those are measured, once. */
         let bodies;
         if (o.isInstancedMesh) bodies = instanceBoxes(o, inv);
+        // A MERGED ROCK carries its own boxes, one per column or broken piece
+        // (ligar/basalt.js): the box round the rubble on a quarry floor is a
+        // box round the floor, and the forge bench stands in the middle of it.
+        else if (o.userData.partBoxes?.length) bodies = partBoxesIn(o, inv);
         else if (o.userData.ownGeometry && o.parent?.userData?.partBoxes) {
           if (bakedSeen.has(o.parent)) return;
           bakedSeen.add(o.parent);
