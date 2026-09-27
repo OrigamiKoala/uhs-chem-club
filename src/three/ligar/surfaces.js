@@ -155,7 +155,10 @@ export function applyLigarWeather(mat, { ground, ash = 0.5, damp = 0.35, lichen 
       .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>
         metalnessFactor = mix(metalnessFactor, 0.0, wAsh);`);
   };
-  const key = `${prevKey}|ligar-weather:${ash}:${damp}:${lichen}:${weep}`;
+  // The amounts are uniforms, so every weathered material compiles to the SAME
+  // program. Keyed on the numbers, each combination compiled its own copy —
+  // more compile stalls and more program switches for identical GLSL.
+  const key = `${prevKey}|ligar-weather`;
   mat.customProgramCacheKey = () => key;
   mat.needsUpdate = true;
 }

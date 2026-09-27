@@ -1206,6 +1206,24 @@ and an excavation with conveyors climbing out of it.
   instanced field, so the overlap checker sees each column where it is. The
   quarry-floor rubble is its own body, not part of the exempt cut, because filed under
   the cut it once lay through the forge unseen.
+- **What Ligar costs per frame, and the four rules that hold it down.** Measured in a
+  real renderer (draw calls and triangles per walking frame, shadow passes included),
+  these took the spawn view from 1044 calls / 1.44M triangles to about 590 / 850k, with
+  no change to the picture:
+  - **The forge's shadow is drawn once.** A point light's shadow is six renders of the
+    scene and three.js re-draws all six every frame by default — it was ~270 calls and
+    ~480k triangles of every frame, anywhere in the world. `shadow.autoUpdate` is off;
+    `setBenchDeployed` and an open bench within reach (one frame in three) ask for it.
+  - **The sun's box follows in 2 m steps** (`followLigarShadow(sun, pos, step)`, still a
+    whole number of texels so nothing swims) and `paceShadow` runs at `every: 30`,
+    because nothing in Ligar that casts moves on its own. At one-texel steps the whole
+    caster set was re-drawn on every frame of a walk.
+  - **Walkable ground groups are baked too** (`bakeStatics`: `phys: 'ground'` is exempt
+    from the overlap check by kind, so baking costs no precision; the deck alone was 72
+    draw calls) — except a mesh whose shader reads an attribute `mergeStatic` would
+    strip: the cut's floor carries the ground's `aMask`, and merged it lost its grit.
+  - **A weathered material is one program.** `applyLigarWeather`'s amounts are uniforms,
+    so its cache key does not carry them.
 - **The plant lives in `ligar/plant.js`**: each builder takes the world (its materials,
   `own`, `t4`, `buildRubbleField`, `lamps`, `lampMarks`) and returns a group in the
   landmark's frame. A prop never creates a `PointLight`; it pushes a `lampMark`. Props
@@ -1769,6 +1787,16 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   capped at 1.5 rather than 2 (a phone commonly reports 3), and `shadowMap` stays off,
   because soft shadow maps are the one T4 feature a mobile GPU cannot hold 60fps
   through.
+- **On a planet, resolution is paced and nothing else is.** `stage.paceResolution` steps
+  the pixel ratio down a quarter when a second of frames averages under 45fps (never
+  below 1 on a high-density screen, 0.8 on a 1x one), and back up after a few seconds
+  with headroom, not returning to a ratio found too slow until 20 s pass without a slow
+  second. The first 3 s on a planet are not judged. Aboard ship it is always the tier's
+  full ratio. A machine that holds 60fps never sees it.
+- **A world's shaders are compiled when it is built** (`stage.warmWorld`, via
+  `compileAsync`), not a material at a time as each piece first comes into view — that
+  was a stall of tens to hundreds of milliseconds on the frame it happened, mid-walk.
+  Every world is built through `stage.worldFor`, so none can skip it.
 - **A measured tier is never written down; only a chosen one is.** This is the rule that
   keeps a phone out of the stills. `session.gfxTierPref` holds a tier the *player* picked
   — `tierManager.chooseTier`, from the Settings radios or the HUD chip, is the only path
@@ -2005,7 +2033,8 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   pilot's place and turned to the canopy, the drive spools, the stars stretch into
   streaks down a lit tunnel with the field of view kicking wide, the ship drops out in
   front of the planet (the same celestial shaders as the vista, in the world's palette,
-  nothing on its surface modelled), flies to it, enters with plasma on the glass, comes
+  nothing on its surface modelled), flies to it, falls into its air (no plasma shell, no streaks: inside an atmosphere
+  those read as a second jump away from the planet just reached), comes
   down through cloud onto the REAL built world, flies to its landing pad and sets down.
   **Once it reaches the planet it comes DOWN, not across**: the approach brakes to a
   stop at `HOLD_ALT` over the landing site, nose tipped down at the world

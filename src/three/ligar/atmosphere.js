@@ -513,14 +513,21 @@ const _snapped = new THREE.Vector3();
  * Keep the sun's shadow box on the player, snapped to whole texels. Returns
  * true when the box actually moved, i.e. when the map is out of date for
  * everything that stands still.
+ *
+ * `step` is how far (metres) the player walks before the box follows. At one
+ * texel (6 cm) the box moved on every frame of a walk, and every move is a
+ * full re-draw of every caster into a 2048 map. The box is 124 m across, so
+ * re-centring it every couple of metres is invisible; the step is still a
+ * whole number of texels, so shadows never swim when it does.
  */
-export function followLigarShadow(sun, focus) {
+export function followLigarShadow(sun, focus, step = 0) {
   if (!sun.castShadow) return false;
   const cam = sun.shadow.camera;
   const texel = (cam.right - cam.left) / sun.shadow.mapSize.x;
+  const q = Math.max(1, Math.round(step / texel)) * texel;
   const L = LIGAR_SUN;
-  const a = Math.round(focus.dot(_right) / texel) * texel;
-  const b = Math.round(focus.dot(_up) / texel) * texel;
+  const a = Math.round(focus.dot(_right) / q) * q;
+  const b = Math.round(focus.dot(_up) / q) * q;
   const c = Math.round(focus.dot(L) / 0.5) * 0.5;
   _snapped.copy(_right).multiplyScalar(a).addScaledVector(_up, b).addScaledVector(L, c);
   if (_snapped.equals(sun.target.position)) return false;

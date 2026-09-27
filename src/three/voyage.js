@@ -236,43 +236,6 @@ function makeTunnel() {
   return { mesh, mat };
 }
 
-function makePlasma() {
-  const geo = new THREE.SphereGeometry(18, 40, 24);
-  const mat = new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uHeat: { value: 0 } },
-    vertexShader: /* glsl */ `
-      varying vec3 vDir;
-      void main() { vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime, uHeat;
-      varying vec3 vDir;
-      ${NOISE}
-      void main() {
-        float front = smoothstep(0.05, 0.95, vDir.z);
-        float rim = 1.0 - smoothstep(0.55, 1.0, vDir.z);
-        vec2 q = vec2(atan(vDir.y, vDir.x) * 3.0, vDir.z * 6.0 - uTime * 7.0);
-        float f = fbm(q * 1.6);
-        float streak = pow(vn(vec2(atan(vDir.y, vDir.x) * 40.0, vDir.z * 3.0 - uTime * 16.0)), 4.0);
-        vec3 hot = vec3(1.0, 0.82, 0.55), glow = vec3(0.95, 0.42, 0.12);
-        vec3 col = mix(glow, hot, f * front);
-        float a = uHeat * (front * (0.35 + 0.65 * f) + rim * front * streak * 1.2);
-        gl_FragColor = vec4(col * a, 1.0);
-      }
-    `,
-    side: THREE.BackSide,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    toneMapped: false
-  });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(0, 1.4, 7);
-  mesh.scale.set(1, 0.8, 1.25);
-  mesh.frustumCulled = false;
-  return { mesh, mat };
-}
-
 /** Star streaks around the ship's line of travel, in ship coordinates. */
 function makeStreaks(count = 1600) {
   const pos = new Float32Array(count * 6);
@@ -490,8 +453,7 @@ export class Voyage {
     scene.add(frame);
     const streaks = makeStreaks();
     const tunnel = makeTunnel();
-    const plasma = makePlasma();
-    frame.add(streaks.lines, tunnel.mesh, plasma.mesh);
+    frame.add(streaks.lines, tunnel.mesh);
     tunnel.mesh.position.z = 2500;
 
     // The sky the player was looking at aboard: the ship's own starfield and
@@ -504,7 +466,7 @@ export class Voyage {
     sunLight.position.set(0.4, 0.7, -0.6);
     scene.add(sunLight, new THREE.AmbientLight(0x2a2622, 0.4));
 
-    this.space = { scene, stars, frame, streaks, tunnel, plasma, home };
+    this.space = { scene, stars, frame, streaks, tunnel, home };
     this.veil = makeVeil();
   }
 
@@ -894,13 +856,16 @@ export class Voyage {
         const pitch = THREE.MathUtils.lerp(HOLD_PITCH, ENTRY_PITCH, smooth(0, 0.8, u));
         const roll = Math.sin(self.clock * 1.9) * 0.01 * Math.sin(u * Math.PI);
         self.shipQuat.copy(base).multiply(_q.setFromEuler(_e.set(pitch, 0, roll)));
-        self.heat = Math.sin(Math.min(1, u * 1.25) * Math.PI) * 0.6 + 0.08 * u;
-        self.shake = 0.005 + 0.02 * Math.sin(u * Math.PI);
+        // No plasma shell on the glass. It was a sphere of streaks scrolling
+        // past the canopy, and inside an atmosphere it read as a SECOND jump —
+        // the player felt teleported away from the planet they had just
+        // reached. The entry is a fall, a buffet and the cloud closing in.
+        self.shake = 0.004 + 0.009 * Math.sin(u * Math.PI);
         self.cloud = smooth(0.5, 0.97, u);
         // Falling through it, the cloud streams UP past the glass.
         self.cloudFlow = -1.1;
       },
-      exit() { self.heat = 0; self._swapToWorld(self.dest); }
+      exit() { self._swapToWorld(self.dest); }
     };
   }
 
@@ -1360,7 +1325,7 @@ export class Voyage {
     this.interiorVisible = true;
     this.exterior = 'space';
     this.extWorld = null;
-    this.cloud = 0; this.flash = 0; this.heat = 0; this.warp = 0; this.shake = 0;
+    this.cloud = 0; this.flash = 0; this.warp = 0; this.shake = 0;
     st.shipInterior?.setAirlockOpen(0);
     if (st.camera) { st.camera.fov = BASE_FOV; st.camera.updateProjectionMatrix(); }
     soundscape.stopEngine?.();
@@ -1473,9 +1438,6 @@ export class Voyage {
       const s = this.space;
       s.streaks.update(dt, this.warp || 0);
       s.tunnel.mat.uniforms.uTime.value = time;
-      s.plasma.mat.uniforms.uTime.value = time;
-      s.plasma.mat.uniforms.uHeat.value = this.heat || 0;
-      s.plasma.mesh.visible = (this.heat || 0) > 0.001;
       s.tunnel.mesh.visible = s.tunnel.mat.uniforms.uWarp.value > 0.001;
     }
     if (this.exterior === 'world' && this.extWorld) {

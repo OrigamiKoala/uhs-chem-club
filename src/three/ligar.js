@@ -105,6 +105,9 @@ const SODIUM = 0xd99423;
 /** The forge in the tube. Hotter and redder than a lamp, because it is a fire. */
 const FORGE = 0xc1521c;
 
+/** How far (m) the player walks before the sun's shadow box follows them. */
+const SHADOW_FOLLOW_STEP = 2;
+
 /**
  * How far the terrain's hole reaches past the pit's walkable floor, into the
  * rock. The cut's faces are whole columns that stand proud of the wall line;
@@ -1624,6 +1627,12 @@ export class LigarWorld {
       this.forgeLight.castShadow = true;
       this.forgeLight.shadow.mapSize.set(512, 512);
       this.forgeLight.shadow.bias = -0.004;
+      // A POINT LIGHT'S SHADOW IS SIX RENDERS OF THE SCENE, and three.js
+      // re-draws all six every frame by default — for a fire that does not
+      // move, in a stone tube where nothing else does either. Drawn once, and
+      // again only while an instrument is being worked beside it (update()).
+      this.forgeLight.shadow.autoUpdate = false;
+      this.forgeLight.shadow.needsUpdate = true;
     }
     g.add(this.forgeLight);
 
@@ -2514,9 +2523,15 @@ export class LigarWorld {
    * lives on the mesh and a bake would drop it.
    */
   bakeStatics() {
+    // A merge keeps position, normal and uv and nothing else, so a mesh whose
+    // shader reads more than that — the cut's floor carries the ground's
+    // `aMask`, which is where its grit and its puddles are — stays itself.
+    const KEPT = new Set(['position', 'normal', 'uv', 'uv1']);
+    const needsOwnAttributes = o => o.isMesh && o.geometry && Object.keys(o.geometry.attributes).some(name =>
+      !KEPT.has(name) && !(name === 'color' && !(Array.isArray(o.material) ? o.material : [o.material]).some(m => m?.vertexColors)));
     const bake = (group) => {
       group.traverse(o => {
-        if (o !== group && (o.userData.phys || o.userData.noWeather || o.userData.openShell)) {
+        if (o !== group && (o.userData.phys || o.userData.noWeather || o.userData.openShell || needsOwnAttributes(o))) {
           o.userData.noMerge = true;
         }
       });
@@ -2529,8 +2544,14 @@ export class LigarWorld {
       bake(dormant);
       dormant.userData.noMerge = true;
     }
+    // A walkable surface built as a group of parts (the deck and its gantry,
+    // the cut, the pad) is baked too: it is exempt from the overlap check by
+    // kind, so baking costs no precision, and the deck alone was seventy-two
+    // draw calls. The terrain, the sky and the air are single meshes or
+    // `noMerge` already.
     for (const node of [...this.scene.children]) {
-      if (!node.isGroup || node.userData.partBoxes || node.userData.noMerge || node.userData.phys) continue;
+      if (!node.isGroup || node.userData.partBoxes || node.userData.noMerge) continue;
+      if (node.userData.phys && node.userData.phys !== 'ground') continue;
       bake(node);
     }
     const owned = new Set(this.disposables);
@@ -2748,6 +2769,8 @@ export class LigarWorld {
       if (!deployed && anchor.open) this.benchesOpen--;
       anchor.open = deployed;
     }
+    // The case came off or went back on: the fire sees a different bench.
+    if (this.forgeLight?.castShadow) this.forgeLight.shadow.needsUpdate = true;
   }
 
   /** The working surface for a quest's site, or null if it has no bench. */
@@ -2773,14 +2796,31 @@ export class LigarWorld {
     ligarSkyUniforms.uLTime.value = this.elapsed;
     if (this.scrubTime) this.scrubTime.value = this.elapsed;
     if (cameraPos) {
-      const moved = followLigarShadow(this.sunLight, cameraPos);
-      paceShadow(this.sunLight, moved, { live: this.benchesOpen > 0 });
+      // Nothing in Ligar that casts a shadow moves on its own — the fire, the
+      // smoke and the ash cast none — so between the box following the player
+      // and an instrument being worked, the map is re-drawn twice a second as
+      // a safety net rather than every third frame.
+      const moved = followLigarShadow(this.sunLight, cameraPos, SHADOW_FOLLOW_STEP);
+      paceShadow(this.sunLight, moved, { live: this.benchesOpen > 0, every: 30 });
       if (this.renderer?.getDrawingBufferSize) {
         this._buf = this._buf || new THREE.Vector2();
         this.effects?.setViewportHeight(this.renderer.getDrawingBufferSize(this._buf).y);
       }
       this.effects?.update(delta, this.elapsed, cameraPos);
       this.lampPool?.update(cameraPos);
+      // The fire's shadow is frozen (see initTubeForge); while an instrument
+      // is open within its reach, something in it moves, so it is re-drawn
+      // one frame in three — the same pace the sun keeps for a still player.
+      if (this.benchesOpen > 0 && this.forgeLight?.castShadow) {
+        if (!this._forgePos) {
+          this.forgeLight.updateWorldMatrix(true, false);
+          this._forgePos = this.forgeLight.getWorldPosition(new THREE.Vector3());
+        }
+        this._forgeTick = ((this._forgeTick || 0) + 1) % 3;
+        if (this._forgeTick === 0 && cameraPos.distanceTo(this._forgePos) < this.forgeLight.distance + 10) {
+          this.forgeLight.shadow.needsUpdate = true;
+        }
+      }
     }
     this.vista?.update?.(delta, this.elapsed);
 
