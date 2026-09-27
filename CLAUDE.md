@@ -961,25 +961,89 @@ asserting 6.02 x 10^23 would be checking, not teaching.
 At T4, `#/learn/unit01` is not a list of quests: it is the ground they are played on.
 The player walks a salt-flat refinery in first person, finds a bench, and presses `[E]`.
 
-- **The look is not Erebus.** Erebus is an amber basin at low sun; Tallow is a bleached
-  salt pan under flat overcast — the same SCOURED PLATE world with the colour leached out.
-  Ground bounce dominates (a `HemisphereLight` off white crust), the sun is broad and
-  weak with no disc, and the palette stays warm-neutral with a brown/sand bias throughout.
-  The sub-level is the one place the sun never reached, so the colour survives there: it is
-  built from `crucible.jpg`'s register, riveted and sodium-lit.
+- **The look is not Erebus.** Erebus is an amber basin at low sun; Tallow is a high salt
+  pan under a thin veil of cirrostratus: the sun is up at 35 degrees, softened to a
+  white-hot patch with the **22-degree ice halo** a veil throws, the sky milky and bright,
+  and a pale quarter-lit world hangs low in the north-east behind the air. The crust
+  throws most of the light back up (a `HemisphereLight` whose ground term is the brighter
+  one). Palette warm-neutral; the only colour on the flat is the brine in the evaporation
+  ponds (milky, green, ochre, rose: four stages of one process) and the rust-red mud where
+  wheels have broken the crust. The sub-level is the one place the sun never reached, so
+  the colour survives there: riveted and sodium-lit.
+- **It is built the way Erebus was rebuilt, in `three/tallow/`**, behind the unchanged
+  `TallowWorld` contract (`scene`, `data`, `colliders`, `terrainMesh`, `hasFarTerrain`,
+  `getTerrainHeight`, `benchAnchor`, `setBenchDeployed`, `setSiteComplete`, `update`):
+  - `atmosphere.js` — **one sky function** (`tlSky`/`tlAir`) draws the dome, is every
+    material's fog (aerial perspective toward the sky in the direction seen, still keyed
+    to `scene.fog.near/far` for the voyage's cloud deck), and is PMREM'd into the
+    environment map. **The far ranges are drawn IN the sky** as ridgelines over azimuth,
+    lit by the same sun and buried in the same air: mountains forty kilometres off must
+    not slide against each other as a player walks, which geometry inside a 1000 m far
+    plane would.
+  - `terrain.js` — one analytic height field and **one grid to an 880 m horizon**, with
+    the excavation's outline written into the grid as extra lines so the hole is cut
+    along the pit's own walls. The pan is dead flat (a few decimetres across the walk);
+    the shore rises in some bearings and open salt runs to the sky in others. The ground
+    shader draws two scales of the salt-polygon crust, damp patches, **vehicle ruts and
+    trodden paths from the polylines in `tallow.json` `tracks`** (per pixel, so they are
+    sharp at the boots), **mirror flats** of standing brine beyond 150 m that reflect the
+    sky and ranges analytically, and a **mirage** on the far pan at grazing angles.
+  - `surfaces.js` — the crust is POLYGONS of raised crystal ridges, not cracks, because
+    a salt pan grows; and `applySaltWeather` patches every prop's material so **salt
+    crusts its foot** (reading the real ground height under each pixel from a baked
+    height texture, so the lab's floor works too), settles on up-facing faces and leaves
+    dried tide lines. A material tunes it with `userData.salt`; `userData.noSalt` on a
+    mesh or material exempts it (brine, stockpiles, rock). `weatherTheWorld()` applies
+    salt and air once, after everything is built; a Learn instrument deployed later is
+    deliberately left clean.
+  - `plant.js` — the refinery, assembled from real parts through a `Rig` builder (I,
+    angle and channel members, filleted pipe sweeps, flange pairs with studs, valves with
+    handwheels, gauges on siphons, handrails at 1.07/0.53 m with toe plates, caged
+    ladders, ring platforms, skirts with access doors, cladding in tiers) whose
+    `finish()` lays every uv in metres. Evaporators stand on concrete plinths with missing
+    and hanging cladding sheets (seeded per copy); the columns carry four landings, a
+    reboiler and a guyed davit; the pipe racks are H-section portals with a bellows, an
+    expansion loop and a torn lagged line; the conveyor's belt is torn and hanging. Its
+    kit materials (cladding, safety rail, drawn bar grating, concrete) are cached per
+    world in a `WeakMap` keyed on `ctx.M.drum`. Elevated structures collide as their
+    feet: `SUPPORT_POINTS` there is the one table of where the columns stand. An
+    octagonal plinth is turned by `thetaStart`, never by rotating the mesh, because a
+    rotated part is measured by the box round its box and grew into the pit's kerb.
+  - `hauler.js` — a tracked ore crawler lofted with Erebus's `loft()`: grousered track
+    pads round a stadium loop, sprocket, idler and bogied road wheels, a lofted cab with
+    deep viewports under a brow, a hopper bed with a ripped tarp, a knocked-over stack,
+    a skirt plate hanging off one bolt, sunk to its axles and listing onto the windward
+    flank with a salt drift against it. Its own `hullPlate()` material, never
+    `hullMaterial()`, whose cached sets are shared with Erebus.
+  - `vista.js` — everything beyond the walk, `phys: 'ambient'`, one vertex-coloured
+    `noSalt` material (grime, run-off, soot and salt painted in world space): rock islands
+    standing out of the pan; the far refinery to the north (hyperboloid cooling towers,
+    banded chimneys, sphere tanks, columns, sheds, a slewed tower crane, a flare stack) in
+    two clusters at 360–650 m, whose vents it returns as `plumes`; a stranded bucket-wheel
+    excavator ~96 m long at ~270 m east-north-east; a pipeline on 43 instanced trestles
+    marching west-north-west to the horizon with one trestle down; and a power line east.
+    A vista material must never be shared with a prop: `weatherTheWorld()` patches a
+    material once, the first time it meets it.
+  - `effects.js`, `kit.js` — the moving air (motes, grit streaming over the crust, salt
+    devils, vapour plumes whose puffs swell and thin with age) and the structural stock
+    the sheds are framed from (I-sections, corrugated sheet).
+  - `verify:tallow` runs every Tallow shader patch against three's real shader source and
+    fails if one no longer lands (a renamed chunk would otherwise strip the salt or the
+    air silently), and fails if `tracks` overflow the ground shader's segment arrays.
 - **Five sites, one per quest, all live, and each sign says what its bench teaches.**
   `site-1` *Bench 1 - Atoms* (`q1-grain`) under the lean-to in the yard; `site-2` *Bench 2 -
   Inside an Atom* (`q2-core`) down the stairwell in the diagnostic lab; `site-3` *Bench 3 -
   The Periodic Table* (`q3-catalogue`, the blockhouse with its door racked back); `site-4`
   *Bench 4 - Isotopes and Ions* (`q4-ledger`, painted floor and ledger board); `site-5`
   *Bench 5 - Atomic Mass* (`q5-assay`, a hopper over a chute with catch bins, south of the
-  yard). The structures are unchanged — only the signs are, because a player choosing a
-  bench should not have to enter it to find out what it is. Sites 1 and 2 carry their instruments as built objects (`BUILT_BENCHES`); sites
-  3–5 stand as real places whose quests draw the bench as a page over the world —
-  nothing sealed, nothing invented. `verify:tallow` still fails if a site's `built` flag
-  disagrees with the chart.
-- **The sub-level is a real excavation.** The terrain mesh has a rectangular hole cut in it
-  (triangles whose centre falls inside the footprint are dropped), the pit is built as
+  yard). A player choosing a bench should not have to enter it to find out what it is.
+  All five carry their instruments as built objects (`BUILT_BENCHES`). The lean-to is
+  framed as a field crew frames one (H-columns on bolted base plates, knee braces, rafters,
+  purlins, corrugated sheet, one corner lifted by a gale and one strip gone), and the vault
+  is a battered poured-concrete blockhouse with a proud portal and a hood over the door.
+  `verify:tallow` still fails if a site's `built` flag disagrees with the chart.
+- **The sub-level is a real excavation.** The ground mesh has a rectangular hole cut in it
+  along the pit's own outline (its edges are grid lines of the mesh), the pit is built as
   geometry so its edges are machined rather than stretched, and `getTerrainHeight` resolves
   the ramp — so the player walks down instead of being teleported under the ground. The pit
   rim is box colliders split around the stair mouth, which is what makes the stair the only
@@ -994,6 +1058,11 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
   back sheet and the lab's gauge board stand behind it — so the player walked in through
   the back wall, and the instrument docked its camera on the far side of the plate looking
   at the lip. `verify:bench` asserts the angle rather than trusting the number.
+- **The pad the Avalon lands on is low on purpose.** An octagon of plate with a bevelled
+  edge, a worn ring-and-chevron marking and a soot scorch (decals), flush dark perimeter
+  lamps, tie-down rings, precast blast walls and the windsock. Nothing inside the octagon
+  stands more than a hand above the plate, because the ship's legs reach the ground height
+  `solveLanding` reads and a marker post would come up through the landing gear.
 - **Only lamps are lit.** Sodium luminaires in the lab, the mast's obstruction lamp, the
   doorway light over the open vault, and one indicator per built site, driven from the
   Learn track's own progress through `setSiteComplete` — the world reads state, it never
@@ -1403,8 +1472,7 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
   (`unit01/q1-grain` … `unit01/q5-assay`, the whole of Tallow, and `unit02/q1-joins` …
   `unit02/q4-weigh`, the whole of Ligar). Scaffolding, gating, routes, backend tab,
   per-world practice sets and the verifier are in place. World 01 (Tallow) is also built as
-  walkable ground at T4: sites 1–2 are benches you stand at, sites 3–5 are real places whose
-  quests draw the bench as a page over the world. **Ligar is walkable at T4 too** — all four of its
+  walkable ground at T4, all five of its benches built instruments standing on it. **Ligar is walkable at T4 too** — all four of its
   benches are built instruments on its ground, and a page on every lower tier. The other
   eight worlds are charts only. The Tallow→Ligar pass
   (`tallow-ligar-build.md`) carries the bench order and what is deliberately left out of
