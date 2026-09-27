@@ -2179,7 +2179,9 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   (`viewport-fit=cover`).
   `mobile-game.css` (linked last) carries the twin sticks, the `100dvh` full-bleed
   canvas and the full-screen key; none of it is width-scoped, because a
-  landscape-locked phone is routinely wider than 760 px.
+  landscape-locked phone is routinely wider than 760 px. It also houses the compact
+  Learn walk HUD for phones (Tallow/Ligar): unit, name and keys with no brief, single-line
+  benches with cleared count in header, bounded above the stick band and scrolling internally.
   `mobile-landscape.css` targets sideways phones with
   `(pointer: coarse) and (max-height: 500px) and (orientation: landscape)` — they are often
   wider than 760 px — collapsing the HUD to one 44 px row and docking the Stage Deck to the
