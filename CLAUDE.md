@@ -1640,6 +1640,7 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
   open as you approach, every room refurnished. Contracts kept and listed there.
 - `docs/plans/immersion-pass.md` — the campaign frame (the quartermaster Vess, pylons on Erebus),
   Session Zero onboarding, soundscape, and the video pipeline (all 14 loops & cinematics baked & integrated).
+- `docs/video-prompts-t3.md` — T3 and below complete media generation guide (videos & images), parameters, and prompts.
 
 ## Player journey
 1. `#/` landing — cold open comms transmission, cockpit loop banner, and Create Account / Try a Pylon CTAs.
