@@ -1272,7 +1272,8 @@ export function renderQuest(container) {
   // 2. Sync the remote manifest & player progress in the background
   Promise.all([
     api.getQuestManifest(QUEST_ID).catch(() => null),
-    api.getMe().catch(() => null)
+    api.getMe().catch(() => null),
+    api.startQuest(QUEST_ID).catch(() => null)
   ]).then(([manifest, me]) => {
     if (manifest) questData = manifest;
     if (me) {

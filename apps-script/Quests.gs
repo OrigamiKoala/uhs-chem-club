@@ -664,13 +664,26 @@ var Quests = {
       var existingProgress = Db.findOne('Progress', function(pr) {
         return pr.player_id === playerId && pr.quest_id === questId;
       });
-      var priorReached = existingProgress ? Number(existingProgress.stage_reached || 0) : 0;
-      Db.update('Progress', function(pr) {
-        return pr.player_id === playerId && pr.quest_id === questId;
-      }, {
-        stage_reached: Math.max(priorReached, stageIndex + 1),
-        updated_at: now
-      });
+      if (existingProgress) {
+        var priorReached = Number(existingProgress.stage_reached || 0);
+        Db.update('Progress', function(pr) {
+          return pr.player_id === playerId && pr.quest_id === questId;
+        }, {
+          stage_reached: Math.max(priorReached, stageIndex + 1),
+          updated_at: now
+        });
+      } else {
+        Db.append('Progress', {
+          player_id: playerId,
+          quest_id: questId,
+          stage_reached: stageIndex + 1,
+          completed_at: '',
+          xp_earned: 0,
+          hints_used: hintUsed ? 1 : 0,
+          items_awarded: '',
+          updated_at: now
+        });
+      }
     }
 
     return {
@@ -743,14 +756,27 @@ var Quests = {
     var awardedItem = items[Math.floor(Math.random() * items.length)].trim();
 
     var now = isoNow();
-    Db.update('Progress', function(pr) {
-      return pr.player_id === playerId && pr.quest_id === questId;
-    }, {
-      completed_at: now,
-      xp_earned: questXp,
-      items_awarded: awardedItem,
-      updated_at: now
-    });
+    if (priorProgress) {
+      Db.update('Progress', function(pr) {
+        return pr.player_id === playerId && pr.quest_id === questId;
+      }, {
+        completed_at: now,
+        xp_earned: questXp,
+        items_awarded: awardedItem,
+        updated_at: now
+      });
+    } else {
+      Db.append('Progress', {
+        player_id: playerId,
+        quest_id: questId,
+        stage_reached: 20,
+        completed_at: now,
+        xp_earned: questXp,
+        hints_used: 0,
+        items_awarded: awardedItem,
+        updated_at: now
+      });
+    }
 
     // Add item to inventory
     var existingInv = Db.findOne('Inventory', function(inv) {
