@@ -111,14 +111,24 @@ function setupHud() {
   const logoutBtn = document.getElementById('logout-btn');
 
   const tierToggle = document.getElementById('gfx-tier-toggle');
-  const motionToggle = document.getElementById('motion-toggle');
   const soundToggle = document.getElementById('sound-toggle');
   const fullscreenToggle = document.getElementById('fullscreen-toggle');
 
-  // Graphics tier button
+  // 3D toggle button (3D On / 3D Off)
+  const sync3DBtn = () => {
+    const label = document.getElementById('gfx-tier-label');
+    if (label) label.textContent = tierManager.is3D() ? '3D ON' : '3D OFF';
+    const dot = tierToggle?.querySelector('.gfx-dot');
+    if (dot) dot.classList.toggle('is-off', !tierManager.is3D());
+  };
   tierToggle?.addEventListener('click', () => {
-    tierManager.cycleTier();
+    tierManager.toggle3D();
+    const is3D = tierManager.is3D();
+    showToast(is3D ? 'Graphics: 3D On' : 'Graphics: 3D Off', 'info');
+    sync3DBtn();
   });
+  tierManager.subscribe(() => sync3DBtn());
+  sync3DBtn();
 
   // Full-screen key. Only shown on a touch device (CSS in mobile-game.css)
   // where element fullscreen is actually supported.
@@ -136,16 +146,6 @@ function setupHud() {
       gameMode.subscribe(syncFullscreenBtn);
       fullscreenToggle.addEventListener('click', () => { gameMode.toggle(); });
     }
-  }
-
-  // Motion toggle
-  motionToggle?.addEventListener('click', () => {
-    const next = !session.reduceMotion;
-    session.setReduceMotion(next);
-    motionToggle.textContent = next ? 'REDUCED MOTION' : 'MOTION';
-  });
-  if (motionToggle && session.reduceMotion) {
-    motionToggle.textContent = 'REDUCED MOTION';
   }
 
   // Sound toggle (compact icon)

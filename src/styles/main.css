@@ -359,6 +359,12 @@ body::after {
   border-radius: 50%;
   background: var(--lamp-green);
   box-shadow: var(--glow-green);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gfx-dot.is-off {
+  background: var(--text-dim);
+  box-shadow: none;
 }
 
 /* ===================================================================
@@ -998,7 +1004,7 @@ body::after {
   .xp-bar-mini { display: none; }
   .team-badge { display: none; }
   .btn-chip { min-height: 34px; padding: 4px 8px; font-size: 0.64rem; }
-  #gfx-tier-toggle, #motion-toggle { display: none; }
+  #gfx-tier-toggle { display: none; }
   .panel-banner { height: 104px; }
   .page-header-body { align-items: flex-start; }
   .page-actions { width: 100%; }

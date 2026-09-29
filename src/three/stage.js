@@ -83,9 +83,16 @@ class Stage {
     if (!this.canvas) return;
 
     tierManager.init();
+    tierManager.subscribe((tier) => this.applyTierSettings(tier));
     if (tierManager.currentTier === "T1") {
-      return; // Skip WebGL initialization on T1
+      return; // Skip WebGL initialization on T1 until enabled
     }
+
+    this._setupWebGL();
+  }
+
+  _setupWebGL() {
+    if (this.renderer) return;
 
     // 1. Perspective Camera
     const width = window.innerWidth;
@@ -297,7 +304,6 @@ class Stage {
     }
     window.addEventListener("orientationchange", () => setTimeout(this._onResize, 120));
     document.addEventListener("visibilitychange", this.onVisibilityChange.bind(this));
-    tierManager.subscribe((tier) => this.applyTierSettings(tier));
     this.onResize();
 
     // Global 'X' key handler to close and open any holographic display
@@ -535,9 +541,14 @@ class Stage {
   }
 
   applyTierSettings(tier) {
-    if (!this.renderer) return;
     if (tier === "T1") {
-      this.renderer.setAnimationLoop(null);
+      if (this.renderer) {
+        this.renderer.setAnimationLoop(null);
+      }
+      return;
+    }
+    if (!this.renderer) {
+      this._setupWebGL();
       return;
     }
     this.renderer.setAnimationLoop(this.render.bind(this));

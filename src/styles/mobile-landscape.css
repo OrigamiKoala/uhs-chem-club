@@ -275,7 +275,7 @@
     min-width: 34px;
     padding: 0;
   }
-  #gfx-tier-toggle, #motion-toggle { display: none; }
+  #gfx-tier-toggle { display: none; }
   #user-btn { max-width: 88px; }
   #user-display-name {
     display: block;

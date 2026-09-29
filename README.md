@@ -16,7 +16,7 @@ Browser — Vite + Three.js, DOM UI layered over one persistent WebGL canvas
 Apps Script Web App (doPost) — routing, grading, scoring, never hashes passwords
    │
    ▼
-Google Sheet "Avalon DB" (13 tabs)
+Google Sheet "Avalon DB" (6 tabs)
 ```
 
 ---

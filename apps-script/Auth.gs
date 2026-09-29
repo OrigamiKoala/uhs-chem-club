@@ -67,11 +67,11 @@ var Auth = {
     var cached = Cache.get(cacheKey);
     if (cached) return { player: cached, jti: payload.jti };
 
-    var revoked, player;
+    var revoked = Cache.get('revoked:' + payload.jti);
+    if (revoked) return null;
+
+    var player;
     try {
-      revoked = Db.findOne('Sessions', function(s) {
-        return s.jti === payload.jti;
-      });
       player = Db.findOne('Players', function(p) {
         return p.player_id === payload.pid;
       });
@@ -82,7 +82,6 @@ var Auth = {
       };
     }
 
-    if (revoked) return null;
     if (!player || player.status === 'banned') return null;
 
     // Only the three fields the routes actually read. The password hash and
@@ -237,25 +236,12 @@ var Auth = {
       last_seen_at: isoNow()
     });
 
-    Db.append('AuditLog', {
-      ts: isoNow(),
-      actor: playerId,
-      action: 'CHANGE_PASSWORD',
-      target: playerId,
-      detail_json: JSON.stringify({ self: true })
-    });
-
     return { ok: true };
   },
 
   revokeSession: function(jti, playerId, reason) {
     Cache.drop('sess:' + jti);
-    Db.append('Sessions', {
-      jti: jti,
-      player_id: playerId,
-      revoked_at: isoNow(),
-      reason: reason || 'logout'
-    });
+    Cache.put('revoked:' + jti, '1', 864000);
   }
 };
 

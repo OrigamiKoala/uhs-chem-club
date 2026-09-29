@@ -251,14 +251,6 @@ var ROUTES = {
         pw_algo: body.newAlgo || 'scrypt-16384-8-1-64'
       });
 
-      Db.append('AuditLog', {
-        ts: isoNow(),
-        actor: ctx.player.player_id,
-        action: 'ADMIN_RESET_PASSWORD',
-        target: targetPlayer.player_id,
-        detail_json: JSON.stringify({ admin: ctx.player.display_name })
-      });
-
       return { ok: true, targetPlayerId: targetPlayer.player_id };
     }
   },
@@ -270,30 +262,12 @@ var ROUTES = {
       var targetPlayer = Db.findOne('Players', function(p) { return p.player_id === body.targetPlayerId; });
       if (!targetPlayer) throw { code: 'NOT_FOUND', message: 'Target player not found.' };
 
-      var oldName = targetPlayer.display_name;
       var newName = body.newDisplayName.trim();
 
       Db.update('Players', function(p) { return p.player_id === targetPlayer.player_id; }, {
         display_name: newName,
         display_name_lc: newName.toLowerCase(),
         name_changed_at: isoNow()
-      });
-
-      Db.append('NameHistory', {
-        ts: isoNow(),
-        player_id: targetPlayer.player_id,
-        old_name: oldName,
-        new_name: newName,
-        changed_by: 'admin:' + ctx.player.player_id,
-        reason: body.reason || 'Admin intervention'
-      });
-
-      Db.append('AuditLog', {
-        ts: isoNow(),
-        actor: ctx.player.player_id,
-        action: 'ADMIN_FORCE_RENAME',
-        target: targetPlayer.player_id,
-        detail_json: JSON.stringify({ oldName: oldName, newName: newName, reason: body.reason })
       });
 
       return { ok: true };
@@ -319,14 +293,6 @@ var ROUTES = {
         hint_used: 'FALSE',
         gfx_tier: 'T2',
         ip_hash: ''
-      });
-
-      Db.append('AuditLog', {
-        ts: isoNow(),
-        actor: ctx.player.player_id,
-        action: 'ADMIN_GRANT_XP',
-        target: body.targetPlayerId,
-        detail_json: JSON.stringify({ amount: body.amount, reason: body.reason })
       });
 
       Cache.drop('lb:all');

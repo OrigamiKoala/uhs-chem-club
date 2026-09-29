@@ -429,40 +429,18 @@ var DEFAULT_STAGES = [
 
 var Quests = {
   seedQuestsIfEmpty: function() {
-    var q = Db.getAll('Quests');
-    if (q.length === 0) {
-      Db.append('Quests', DEFAULT_QUEST);
-    } else if (Number(q[0].stage_count || 0) < 20) {
-      Db.update('Quests', function(item) { return item.quest_id === 'q1'; }, {
-        stage_count: 20,
-        base_xp: 660
-      });
-    }
-    var qs = Db.getAll('QuestStages');
-    var needsRebuild = qs.length === 0 || qs[0].kind === 'choice' || qs.length < 20;
-    if (needsRebuild) {
-      var ss = getDb_();
-      var s = ss.getSheetByName('QuestStages');
-      if (s) {
-        s.clear();
-        s.appendRow(DB_SCHEMA.QuestStages);
-      }
-      for (var i = 0; i < DEFAULT_STAGES.length; i++) {
-        Db.append('QuestStages', DEFAULT_STAGES[i]);
-      }
-    }
+    // Quests and QuestStages are static code constants in DEFAULT_QUEST and DEFAULT_STAGES.
+    // No Sheet writes needed.
   },
 
   getManifest: function(questId) {
-    Quests.seedQuestsIfEmpty();
     var cacheKey = 'quest:' + questId + ':manifest';
     var cached = Cache.get(cacheKey);
     if (cached) return cached;
 
-    var quest = Db.findOne('Quests', function(q) { return q.quest_id === questId; });
-    if (!quest) throw { code: 'NOT_FOUND', message: 'Quest not found.' };
+    if (questId !== DEFAULT_QUEST.quest_id) throw { code: 'NOT_FOUND', message: 'Quest not found.' };
 
-    var stages = Db.find('QuestStages', function(s) { return s.quest_id === questId; });
+    var stages = DEFAULT_STAGES.slice();
     stages.sort(function(a, b) { return Number(a.stage_index) - Number(b.stage_index); });
 
     // Sanitize: strip answer_json!
@@ -482,7 +460,7 @@ var Quests = {
     });
 
     var result = {
-      quest: quest,
+      quest: DEFAULT_QUEST,
       stages: sanitizedStages
     };
 

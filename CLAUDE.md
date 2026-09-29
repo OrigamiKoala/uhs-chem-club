@@ -288,7 +288,7 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   `worlds/unitNN-*.js` (one chart per AP unit), `quests/` (a game module per quest, plus
   `_template.js`, the contract).
 - `screens/` — one render function per route, all pure string templates.
-- `three/` — persistent WebGL stage, quality-tier probe (T4/T3/T2/T1), ship interior, camera rig.
+- `three/` — persistent WebGL stage, graphics mode manager (3D On / 3D Off), ship interior, camera rig.
   The ship is `three/ship.js` (orchestrator and the public `ShipInterior` API) over
   `three/ship/`: `materials.js`, `kit.js` (the shared lining and parts), `hull.js`,
   `doors.js`, `corridor.js` and one builder per compartment in `ship/rooms/` — see
@@ -406,6 +406,12 @@ with a loose 150/min per IP to blunt a spray across many accounts.
 `Db.gs` (Sheets DAO), `Auth.gs`, `Players.gs`, `Quests.gs` (manifest, grading, hints,
 completion), `Scoring.gs` (normalized leaderboards, level curve, level titles),
 `Items.gs`, `Events.gs`, `Main.gs` (router + `setup()` for one-click sheet init).
+
+The Google Sheets database ("Avalon DB") uses 6 active tabs in `DB_SCHEMA`:
+`Config`, `Players`, `Progress`, `LearnProgress`, `Submissions`, `Inventory`.
+Static tables (`Teams`, `Quests`, `QuestStages`, `Items`, `Events`) are code constants
+served in-memory to prevent heavy sheet read timeouts. Ephemeral logs (`Sessions`, `EventLog`,
+`AuditLog`, `NameHistory`) are dropped from sheet writes; token revocation is cache-backed.
 
 ## Learn track — ten worlds, one per course unit
 
@@ -1774,11 +1780,12 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     animation.
 
 ### 8. 3D and assets
-- Quality tiers:
-  - `T4`: Default ultra/enhanced tier (60fps, unconstrained WASD navigation, continuous walk splines, particle dust, full-res world). 2D page overlays are removed on the bridge (`#/bridge`); diegetic in-world terminals with `CLOSE` handle compartment interactions.
-  - `T3`: High/Desktop (60fps, procedural interior, graph traversal, eased dolly, standard 2D page overlays).
-  - `T2`: Standard/Chromebook/Mobile (30fps, DPR 1, baked stills).
-  - `T1`: Non-WebGL Fallback (DOM-only).
+- Graphics settings:
+  - Avalon uses 2 settings instead of a multi-tier system: **3D On** and **3D Off**.
+  - `3D On` (internally `T4`): Default 3D mode (60fps, unconstrained WASD navigation, continuous walk splines, particle dust, full-res worlds). 2D page overlays are removed on the bridge (`#/bridge`); diegetic in-world terminals with `CLOSE` handle compartment interactions.
+  - `3D Off` (internally `T1`): Non-WebGL Fallback (DOM-only, zero GPU load).
+  - Toggled via the HUD chip (`#gfx-tier-toggle`, shows `3D ON` / `3D OFF`) or the Settings screen. Legacy `T2`/`T3` preferences migrate automatically to `3D On`.
+  - The legacy HUD motion button has been removed; `Reduce Motion` remains an accessibility preference in Settings.
 - **A phone is not disqualified from T4 by being a phone.** `isT4Capable` in
   `three/tier.js` asks about WebGL2, cores and reported memory and nothing else — no
   pointer test, and Apple's mobile GPU is deliberately absent from the slow-renderer

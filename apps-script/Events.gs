@@ -30,17 +30,6 @@ var Events = {
     }
 
     var rollId = generateId('roll');
-    var now = isoNow();
-
-    Db.append('EventLog', {
-      roll_id: rollId,
-      quest_id: questId,
-      team_id: teamId,
-      roll_value: rollValue,
-      event_id: selectedEvent.event_id,
-      seed: hashHex.substring(0, 16),
-      rolled_at: now
-    });
 
     return {
       roll_id: rollId,
@@ -59,16 +48,8 @@ var Events = {
     var results = {};
     for (var i = 0; i < teams.length; i++) {
       var tId = teams[i].team_id;
-      var existing = Db.findOne('EventLog', function(el) {
-        return el.quest_id === questId && el.team_id === tId;
-      });
-      if (!existing) {
-        var rollResult = Events.rollEventForTeam(questId, tId);
-        results[tId] = rollResult.event;
-      } else {
-        var ev = Db.findOne('Events', function(e) { return e.event_id === existing.event_id; });
-        results[tId] = ev;
-      }
+      var rollResult = Events.rollEventForTeam(questId, tId);
+      results[tId] = rollResult.event;
     }
     return results;
   },

@@ -56,14 +56,6 @@ var Items = {
         Db.update('Inventory', function(i) { return i.inv_id === inv.inv_id; }, { qty: newQty });
       }
 
-      Db.append('AuditLog', {
-        ts: isoNow(),
-        actor: playerId,
-        action: 'USE_ITEM',
-        target: itemId,
-        detail_json: JSON.stringify({ context: context || {}, effectResult: effectResult })
-      });
-
       var updatedInv = Db.find('Inventory', function(i) {
         return i.player_id === playerId && Number(i.qty) > 0;
       });

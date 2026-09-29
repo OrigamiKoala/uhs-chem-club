@@ -6,40 +6,48 @@
 
 var DB_SCHEMA = {
   Config: ['key', 'value'],
-  Teams: ['team_id', 'name', 'corp_name', 'ship_name', 'color_hex', 'accent_hex', 'slot_cap_override', 'lore', 'emblem'],
   Players: ['player_id', 'email_lc', 'pw_hash', 'pw_salt', 'pw_algo', 'display_name', 'display_name_lc', 'name_changed_at', 'role', 'team_id', 'avatar_json', 'created_at', 'last_seen_at', 'status', 'gfx_tier_pref', 'notes'],
-  Quests: ['quest_id', 'title', 'world', 'blurb', 'scene_id', 'cover_image', 'release_at', 'close_at', 'status', 'base_xp', 'stage_count', 'item_pool'],
-  QuestStages: ['quest_id', 'stage_index', 'kind', 'xp', 'max_attempts', 'hint_text', 'hint_cost', 'answer_json', 'tolerance', 'reveal_text', 'scene_config'],
-  Submissions: ['submission_id', 'ts', 'player_id', 'quest_id', 'stage_index', 'attempt_no', 'payload_json', 'correct', 'xp_awarded', 'elapsed_ms', 'hint_used', 'gfx_tier', 'ip_hash'],
   Progress: ['player_id', 'quest_id', 'stage_reached', 'completed_at', 'xp_earned', 'hints_used', 'items_awarded', 'updated_at'],
-  // Learn track. Separate from Progress on purpose: Scoring reads Progress and
-  // Submissions to compute XP, and must never see a row from the study road.
   LearnProgress: ['player_id', 'world_id', 'quest_id', 'stages', 'completed_at', 'updated_at'],
-  Items: ['item_id', 'name', 'flavor', 'model_id', 'rarity', 'effect_code', 'consumable', 'max_stack'],
-  Inventory: ['inv_id', 'player_id', 'item_id', 'qty', 'acquired_at', 'source'],
-  Events: ['event_id', 'name', 'description', 'weight', 'effect_code', 'duration_quests', 'polarity', 'art'],
-  EventLog: ['roll_id', 'quest_id', 'team_id', 'roll_value', 'event_id', 'seed', 'rolled_at'],
-  Sessions: ['jti', 'player_id', 'revoked_at', 'reason'],
-  NameHistory: ['ts', 'player_id', 'old_name', 'new_name', 'changed_by', 'reason'],
-  AuditLog: ['ts', 'actor', 'action', 'target', 'detail_json']
+  Submissions: ['submission_id', 'ts', 'player_id', 'quest_id', 'stage_index', 'attempt_no', 'payload_json', 'correct', 'xp_awarded', 'elapsed_ms', 'hint_used', 'gfx_tier', 'ip_hash'],
+  Inventory: ['inv_id', 'player_id', 'item_id', 'qty', 'acquired_at', 'source']
 };
+
+var DEFAULT_TEAMS = [
+  { team_id: 'earth', name: 'Earth', corp_name: 'Earth', ship_name: 'Earth', color_hex: '#241f14', accent_hex: '#8a7148', slot_cap_override: '', lore: '', emblem: 'geo' },
+  { team_id: 'air', name: 'Air', corp_name: 'Air', ship_name: 'Air', color_hex: '#1a2226', accent_hex: '#75818a', slot_cap_override: '', lore: '', emblem: 'aero' },
+  { team_id: 'fire', name: 'Fire', corp_name: 'Fire', ship_name: 'Fire', color_hex: '#2a1a0f', accent_hex: '#9c5423', slot_cap_override: '', lore: '', emblem: 'pyro' },
+  { team_id: 'water', name: 'Water', corp_name: 'Water', ship_name: 'Water', color_hex: '#12231f', accent_hex: '#3f7d76', slot_cap_override: '', lore: '', emblem: 'hydro' }
+];
+
+var DEFAULT_ITEMS = [
+  { item_id: 'hint_chip', name: 'Hint Chip', flavor: 'Decompiled scanner diagnostic module.', model_id: 'chip', rarity: 'common', effect_code: 'free_hint', consumable: 'TRUE', max_stack: 10 },
+  { item_id: 'spare_coolant', name: 'Spare Coolant', flavor: 'Cryogenic reserve canister.', model_id: 'canister', rarity: 'common', effect_code: 'restore_attempt', consumable: 'TRUE', max_stack: 5 },
+  { item_id: 'overclock_module', name: 'Overclock Module', flavor: 'Bypasses standard safety thresholds.', model_id: 'cube', rarity: 'rare', effect_code: 'xp_boost_25', consumable: 'TRUE', max_stack: 3 },
+  { item_id: 'deflector_plate', name: 'Deflector Plate', flavor: 'Ablative particle shield segment.', model_id: 'shield', rarity: 'rare', effect_code: 'negate_bad_event', consumable: 'TRUE', max_stack: 2 },
+  { item_id: 'scanner_upgrade', name: 'Scanner Upgrade', flavor: 'Wideband spectrographic lens.', model_id: 'lens', rarity: 'rare', effect_code: 'reveal_legend', consumable: 'TRUE', max_stack: 1 },
+  { item_id: 'star_chart', name: 'Star Chart', flavor: 'Navigational survey of abandoned sectors.', model_id: 'scroll', rarity: 'epic', effect_code: 'skip_stage_half_xp', consumable: 'TRUE', max_stack: 1 },
+  { item_id: 'resonance_key', name: 'Resonance Key', flavor: 'Vibrating crystal matrix attuned to alien locks.', model_id: 'key', rarity: 'epic', effect_code: 'flat_50_xp', consumable: 'TRUE', max_stack: 1 }
+];
+
+var DEFAULT_EVENTS = [
+  { event_id: 'quiet_space', name: 'Quiet Space', description: 'Clear skies across the local sector. Normal operations.', weight: 30, effect_code: 'none', duration_quests: 1, polarity: 'neutral', art: 'stars' },
+  { event_id: 'slipstream', name: 'Slipstream Current', description: 'Gravitational wave accelerates telemetry (+15% XP).', weight: 12, effect_code: 'xp_plus_15', duration_quests: 1, polarity: 'good', art: 'stream' },
+  { event_id: 'derelict_cache', name: 'Derelict Cache', description: 'Scanners spot an abandoned cargo buoy (+1 random item).', weight: 10, effect_code: 'give_common_item', duration_quests: 1, polarity: 'good', art: 'box' },
+  { event_id: 'stellar_wind', name: 'Stellar Wind', description: 'Sensor interference cleared (Hints free this quest).', weight: 8, effect_code: 'hints_free', duration_quests: 1, polarity: 'good', art: 'wind' },
+  { event_id: 'salvage_rights', name: 'Salvage Rights', description: 'First 3 team finishers earn +25 bonus XP.', weight: 6, effect_code: 'speed_bonus_25', duration_quests: 1, polarity: 'good', art: 'trophy' },
+  { event_id: 'solar_flare', name: 'Solar Flare', description: 'Radiation noise degrades sensor readouts (-10% XP).', weight: 12, effect_code: 'xp_minus_10', duration_quests: 1, polarity: 'bad', art: 'flare' },
+  { event_id: 'ion_storm', name: 'Ion Storm', description: 'Static charge overloads hint relays (Hint cost doubled).', weight: 10, effect_code: 'hints_double_cost', duration_quests: 1, polarity: 'bad', art: 'lightning' },
+  { event_id: 'hull_breach', name: 'Hull Breach', description: 'Micro-meteorite punctured storage (-1 item).', weight: 7, effect_code: 'lose_item', duration_quests: 1, polarity: 'bad', art: 'hole' },
+  { event_id: 'comms_blackout', name: 'Comms Blackout', description: 'Transponder offline (No leaderboard until finished).', weight: 5, effect_code: 'hide_leaderboard', duration_quests: 1, polarity: 'bad', art: 'dish' },
+  { event_id: 'rival_signal', name: 'Rival Signal', description: 'Crossed frequencies swap an item with rival crew.', weight: 5, effect_code: 'swap_item', duration_quests: 1, polarity: 'chaotic', art: 'cross' },
+  { event_id: 'anomaly', name: 'Anomaly', description: 'Quantum flux! XP will double or halve when quest closes.', weight: 3, effect_code: 'gamble_xp', duration_quests: 1, polarity: 'chaotic', art: 'portal' },
+  { event_id: 'derelict_beacon', name: 'Derelict Beacon', description: 'Ancient signal unlocks an epic prototype cache.', weight: 2, effect_code: 'give_epic_item', duration_quests: 1, polarity: 'epic', art: 'beacon' }
+];
 
 var _sheetCache = {};
 var _headerIndexCache = {};
 
-/**
- * Rows read so far during THIS execution, keyed by tab.
- *
- * Every Db.find/findOne reads the whole tab, and a single request does that
- * many times over — verifying the session reads Sessions and Players, then
- * getMe reads Players, Teams, Progress, Submissions and Inventory again. Each
- * read is a round trip to Sheets, which is what made sign-in slow and what put
- * executions near the limits where Google starts answering with error pages.
- *
- * The memo lives for one execution only (Apps Script discards globals between
- * invocations), so it can never serve another request stale data. Writes drop
- * the tab they touched.
- */
 var _rowCache = {};
 
 function invalidateRowCache_(tabName) {
@@ -60,6 +68,7 @@ function getDb_() {
 }
 
 function getSheet_(tabName) {
+  if (!DB_SCHEMA[tabName]) return null;
   if (_sheetCache[tabName]) return _sheetCache[tabName];
   var ss = getDb_();
   var sheet = ss.getSheetByName(tabName);
@@ -77,6 +86,7 @@ function getSheet_(tabName) {
 function getHeaderMap_(tabName) {
   if (_headerIndexCache[tabName]) return _headerIndexCache[tabName];
   var sheet = getSheet_(tabName);
+  if (!sheet) return {};
   var lastCol = Math.max(sheet.getLastColumn(), 1);
   var row1 = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
   var map = {};
@@ -108,7 +118,6 @@ var Db = {
   },
 
   seedDefaultsIfEmpty: function() {
-    // Config
     var config = Db.getAll('Config');
     if (config.length === 0) {
       var defaultConfigs = [
@@ -127,19 +136,10 @@ var Db = {
         Db.append('Config', defaultConfigs[c]);
       }
     }
-
-    // Teams
     Db.ensureTeamsMigrated();
   },
 
   ensureTeamsMigrated: function() {
-    var defaultTeams = [
-      { team_id: 'earth', name: 'Earth', corp_name: 'Earth', ship_name: 'Earth', color_hex: '#241f14', accent_hex: '#8a7148', slot_cap_override: '', lore: '', emblem: 'geo' },
-      { team_id: 'air', name: 'Air', corp_name: 'Air', ship_name: 'Air', color_hex: '#1a2226', accent_hex: '#75818a', slot_cap_override: '', lore: '', emblem: 'aero' },
-      { team_id: 'fire', name: 'Fire', corp_name: 'Fire', ship_name: 'Fire', color_hex: '#2a1a0f', accent_hex: '#9c5423', slot_cap_override: '', lore: '', emblem: 'pyro' },
-      { team_id: 'water', name: 'Water', corp_name: 'Water', ship_name: 'Water', color_hex: '#12231f', accent_hex: '#3f7d76', slot_cap_override: '', lore: '', emblem: 'hydro' }
-    ];
-
     var aliasMap = {
       terra: 'earth',
       zephyr: 'air',
@@ -147,111 +147,35 @@ var Db = {
       thalassa: 'water'
     };
 
-    var properNames = {
-      earth: 'Earth',
-      air: 'Air',
-      fire: 'Fire',
-      water: 'Water'
-    };
-
-    var teams = Db.getAll('Teams');
-    if (teams.length === 0) {
-      for (var t = 0; t < defaultTeams.length; t++) {
-        Db.append('Teams', defaultTeams[t]);
-      }
-    } else {
-      var needsCacheDrop = false;
-      for (var i = 0; i < teams.length; i++) {
-        var row = teams[i];
-        var oldId = String(row.team_id || '').toLowerCase().trim();
-        var newId = aliasMap[oldId] || oldId;
-        var targetName = properNames[newId] || properNames[oldId];
-
-        if (aliasMap[oldId] || (targetName && row.name !== targetName)) {
-          Db.update('Teams', function(r) { return r.team_id === row.team_id; }, {
-            team_id: newId,
-            name: targetName || properNames[newId],
-            corp_name: targetName || properNames[newId],
-            ship_name: targetName || properNames[newId]
-          });
-          needsCacheDrop = true;
-        }
-      }
-
-      // Ensure all 4 teams exist
-      var updatedTeams = Db.getAll('Teams');
-      var existingIds = {};
-      for (var j = 0; j < updatedTeams.length; j++) {
-        existingIds[String(updatedTeams[j].team_id || '').toLowerCase()] = true;
-      }
-      for (var k = 0; k < defaultTeams.length; k++) {
-        if (!existingIds[defaultTeams[k].team_id]) {
-          Db.append('Teams', defaultTeams[k]);
-          needsCacheDrop = true;
-        }
-      }
-
-      // Migrate any legacy team IDs in Players
-      var players = Db.getAll('Players');
-      for (var p = 0; p < players.length; p++) {
-        var pTid = String(players[p].team_id || '').toLowerCase().trim();
-        if (aliasMap[pTid]) {
-          Db.update('Players', function(pl) { return pl.player_id === players[p].player_id; }, {
-            team_id: aliasMap[pTid]
-          });
-          needsCacheDrop = true;
-        }
-      }
-
-      if (needsCacheDrop) {
-        Cache.drop('teams:slots');
-        Cache.drop('bootstrap:public');
+    var players = Db.getAll('Players');
+    var needsCacheDrop = false;
+    for (var p = 0; p < players.length; p++) {
+      var pTid = String(players[p].team_id || '').toLowerCase().trim();
+      if (aliasMap[pTid]) {
+        Db.update('Players', function(pl) { return pl.player_id === players[p].player_id; }, {
+          team_id: aliasMap[pTid]
+        });
+        needsCacheDrop = true;
       }
     }
 
-    // Items
-    var items = Db.getAll('Items');
-    if (items.length === 0) {
-      var defaultItems = [
-        { item_id: 'hint_chip', name: 'Hint Chip', flavor: 'Decompiled scanner diagnostic module.', model_id: 'chip', rarity: 'common', effect_code: 'free_hint', consumable: 'TRUE', max_stack: 10 },
-        { item_id: 'spare_coolant', name: 'Spare Coolant', flavor: 'Cryogenic reserve canister.', model_id: 'canister', rarity: 'common', effect_code: 'restore_attempt', consumable: 'TRUE', max_stack: 5 },
-        { item_id: 'overclock_module', name: 'Overclock Module', flavor: 'Bypasses standard safety thresholds.', model_id: 'cube', rarity: 'rare', effect_code: 'xp_boost_25', consumable: 'TRUE', max_stack: 3 },
-        { item_id: 'deflector_plate', name: 'Deflector Plate', flavor: 'Ablative particle shield segment.', model_id: 'shield', rarity: 'rare', effect_code: 'negate_bad_event', consumable: 'TRUE', max_stack: 2 },
-        { item_id: 'scanner_upgrade', name: 'Scanner Upgrade', flavor: 'Wideband spectrographic lens.', model_id: 'lens', rarity: 'rare', effect_code: 'reveal_legend', consumable: 'TRUE', max_stack: 1 },
-        { item_id: 'star_chart', name: 'Star Chart', flavor: 'Navigational survey of abandoned sectors.', model_id: 'scroll', rarity: 'epic', effect_code: 'skip_stage_half_xp', consumable: 'TRUE', max_stack: 1 },
-        { item_id: 'resonance_key', name: 'Resonance Key', flavor: 'Vibrating crystal matrix attuned to alien locks.', model_id: 'key', rarity: 'epic', effect_code: 'flat_50_xp', consumable: 'TRUE', max_stack: 1 }
-      ];
-      for (var it = 0; it < defaultItems.length; it++) {
-        Db.append('Items', defaultItems[it]);
-      }
-    }
-
-    // Events
-    var events = Db.getAll('Events');
-    if (events.length === 0) {
-      var defaultEvents = [
-        { event_id: 'quiet_space', name: 'Quiet Space', description: 'Clear skies across the local sector. Normal operations.', weight: 30, effect_code: 'none', duration_quests: 1, polarity: 'neutral', art: 'stars' },
-        { event_id: 'slipstream', name: 'Slipstream Current', description: 'Gravitational wave accelerates telemetry (+15% XP).', weight: 12, effect_code: 'xp_plus_15', duration_quests: 1, polarity: 'good', art: 'stream' },
-        { event_id: 'derelict_cache', name: 'Derelict Cache', description: 'Scanners spot an abandoned cargo buoy (+1 random item).', weight: 10, effect_code: 'give_common_item', duration_quests: 1, polarity: 'good', art: 'box' },
-        { event_id: 'stellar_wind', name: 'Stellar Wind', description: 'Sensor interference cleared (Hints free this quest).', weight: 8, effect_code: 'hints_free', duration_quests: 1, polarity: 'good', art: 'wind' },
-        { event_id: 'salvage_rights', name: 'Salvage Rights', description: 'First 3 team finishers earn +25 bonus XP.', weight: 6, effect_code: 'speed_bonus_25', duration_quests: 1, polarity: 'good', art: 'trophy' },
-        { event_id: 'solar_flare', name: 'Solar Flare', description: 'Radiation noise degrades sensor readouts (-10% XP).', weight: 12, effect_code: 'xp_minus_10', duration_quests: 1, polarity: 'bad', art: 'flare' },
-        { event_id: 'ion_storm', name: 'Ion Storm', description: 'Static charge overloads hint relays (Hint cost doubled).', weight: 10, effect_code: 'hints_double_cost', duration_quests: 1, polarity: 'bad', art: 'lightning' },
-        { event_id: 'hull_breach', name: 'Hull Breach', description: 'Micro-meteorite punctured storage (-1 item).', weight: 7, effect_code: 'lose_item', duration_quests: 1, polarity: 'bad', art: 'hole' },
-        { event_id: 'comms_blackout', name: 'Comms Blackout', description: 'Transponder offline (No leaderboard until finished).', weight: 5, effect_code: 'hide_leaderboard', duration_quests: 1, polarity: 'bad', art: 'dish' },
-        { event_id: 'rival_signal', name: 'Rival Signal', description: 'Crossed frequencies swap an item with rival crew.', weight: 5, effect_code: 'swap_item', duration_quests: 1, polarity: 'chaotic', art: 'cross' },
-        { event_id: 'anomaly', name: 'Anomaly', description: 'Quantum flux! XP will double or halve when quest closes.', weight: 3, effect_code: 'gamble_xp', duration_quests: 1, polarity: 'chaotic', art: 'portal' },
-        { event_id: 'derelict_beacon', name: 'Derelict Beacon', description: 'Ancient signal unlocks an epic prototype cache.', weight: 2, effect_code: 'give_epic_item', duration_quests: 1, polarity: 'epic', art: 'beacon' }
-      ];
-      for (var ev = 0; ev < defaultEvents.length; ev++) {
-        Db.append('Events', defaultEvents[ev]);
-      }
+    if (needsCacheDrop) {
+      Cache.drop('teams:slots');
+      Cache.drop('bootstrap:public');
     }
   },
 
   getAll: function(tabName) {
+    if (tabName === 'Teams') return DEFAULT_TEAMS.map(function(t) { return Object.assign({}, t); });
+    if (tabName === 'Items') return DEFAULT_ITEMS.map(function(i) { return Object.assign({}, i); });
+    if (tabName === 'Events') return DEFAULT_EVENTS.map(function(e) { return Object.assign({}, e); });
+    if (tabName === 'Quests') return (typeof DEFAULT_QUEST !== 'undefined') ? [Object.assign({}, DEFAULT_QUEST)] : [];
+    if (tabName === 'QuestStages') return (typeof DEFAULT_STAGES !== 'undefined') ? DEFAULT_STAGES.map(function(s) { return Object.assign({}, s); }) : [];
+    if (!DB_SCHEMA[tabName]) return [];
+
     if (_rowCache[tabName]) return _rowCache[tabName];
     var sheet = getSheet_(tabName);
+    if (!sheet) return [];
     var lastRow = sheet.getLastRow();
     var lastCol = sheet.getLastColumn();
     if (lastRow <= 1 || lastCol === 0) return [];
@@ -284,7 +208,9 @@ var Db = {
   },
 
   append: function(tabName, rowObj) {
+    if (!DB_SCHEMA[tabName]) return rowObj;
     var sheet = getSheet_(tabName);
+    if (!sheet) return rowObj;
     var headerMap = getHeaderMap_(tabName);
     var keys = Object.keys(headerMap);
     var lastCol = Math.max(sheet.getLastColumn(), keys.length);
@@ -303,7 +229,9 @@ var Db = {
   },
 
   update: function(tabName, predicate, updateObj) {
+    if (!DB_SCHEMA[tabName]) return 0;
     var sheet = getSheet_(tabName);
+    if (!sheet) return 0;
     var lastRow = sheet.getLastRow();
     var lastCol = sheet.getLastColumn();
     if (lastRow <= 1) return 0;

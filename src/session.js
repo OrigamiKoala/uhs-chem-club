@@ -76,7 +76,7 @@ class SessionManager {
     // caused by a slow first load — was stored as though it had been chosen,
     // and the device never got a second look.
     this.gfxTierPref = safeRead(GFX_KEY) || null;
-    this.gfxTier = this.gfxTierPref || 'T4';
+    this.gfxTier = (this.gfxTierPref === 'T1' || this.gfxTierPref === 'off') ? 'T1' : 'T4';
     this.reduceMotion = localStorage.getItem(MOTION_KEY) === 'true';
     this.sound = { master: 60, ambience: 60, effects: 60, muted: false };
     this.flags = { sessionZeroDone: false };
@@ -443,6 +443,8 @@ class SessionManager {
    *   a device is re-judged on its next visit instead of being filed away.
    */
   setGfxTier(tier, persist = false) {
+    if (tier === 'on' || tier === true || tier === 'T2' || tier === 'T3') tier = 'T4';
+    if (tier === 'off' || tier === false) tier = 'T1';
     this.gfxTier = tier;
     if (persist) {
       this.gfxTierPref = tier;

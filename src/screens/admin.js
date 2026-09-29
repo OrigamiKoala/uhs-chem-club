@@ -32,7 +32,7 @@ export function renderAdmin(container) {
             <div class="admin-counter-value" id="stat-completions" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-amber);">${stats.completions}</div>
           </div>
           <div class="holo-card admin-counter" style="padding: 1rem;">
-            <div class="stat-label">Tier 1 Submissions</div>
+            <div class="stat-label">3D Off Submissions</div>
             <div class="admin-counter-value" id="stat-t1-subs" style="font-family: var(--font-mono); font-size: 1.6rem; color: var(--accent-gold);">${stats.gfxTiers?.T1 ?? 0}</div>
           </div>
         </div>

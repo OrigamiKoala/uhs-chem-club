@@ -173,15 +173,6 @@ var Players = {
       name_changed_at: now
     });
 
-    Db.append('NameHistory', {
-      ts: now,
-      player_id: playerId,
-      old_name: oldName,
-      new_name: newTrimmed,
-      changed_by: 'self',
-      reason: 'Player rename'
-    });
-
     return Players.getMe(playerId);
   },
 

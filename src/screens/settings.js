@@ -37,35 +37,19 @@ export function renderSettings(container) {
         <h2 class="section-title" style="margin-bottom: 1.25rem;">Graphics</h2>
 
         <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
-          <label class="choice-option ${tierManager.currentTier === 'T4' ? 'selected' : ''} ${!eligibleT4 ? 'disabled' : ''}">
-            <input type="radio" name="gfx-tier" value="T4" ${tierManager.currentTier === 'T4' ? 'checked' : ''} ${!eligibleT4 ? 'disabled' : ''}>
+          <label class="choice-option ${tierManager.is3D() ? 'selected' : ''} ${!eligibleT4 ? 'disabled' : ''}">
+            <input type="radio" name="gfx-3d" value="on" ${tierManager.is3D() ? 'checked' : ''} ${!eligibleT4 ? 'disabled' : ''}>
             <div>
-              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">Continuous 3D</div>
-              <div class="eyebrow" style="margin-top: 3px;">Full 3D walk${t4Note}</div>
+              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">3D On</div>
+              <div class="eyebrow" style="margin-top: 3px;">Full 3D walk & interactive worlds${t4Note}</div>
             </div>
           </label>
 
-          <label class="choice-option ${tierManager.currentTier === 'T3' ? 'selected' : ''}">
-            <input type="radio" name="gfx-tier" value="T3" ${tierManager.currentTier === 'T3' ? 'checked' : ''}>
+          <label class="choice-option ${!tierManager.is3D() ? 'selected' : ''}">
+            <input type="radio" name="gfx-3d" value="off" ${!tierManager.is3D() ? 'checked' : ''}>
             <div>
-              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">High 3D</div>
-              <div class="eyebrow" style="margin-top: 3px;">High detail</div>
-            </div>
-          </label>
-
-          <label class="choice-option ${tierManager.currentTier === 'T2' ? 'selected' : ''}">
-            <input type="radio" name="gfx-tier" value="T2" ${tierManager.currentTier === 'T2' ? 'checked' : ''}>
-            <div>
-              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">Medium 3D</div>
-              <div class="eyebrow" style="margin-top: 3px;">Medium detail</div>
-            </div>
-          </label>
-
-          <label class="choice-option ${tierManager.currentTier === 'T1' ? 'selected' : ''}">
-            <input type="radio" name="gfx-tier" value="T1" ${tierManager.currentTier === 'T1' ? 'checked' : ''}>
-            <div>
-              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">2D Only</div>
-              <div class="eyebrow" style="margin-top: 3px;">Minimal graphics</div>
+              <div style="font-family: var(--font-display); font-weight: 600; letter-spacing: 0.12em; color: var(--text-bright);">3D Off</div>
+              <div class="eyebrow" style="margin-top: 3px;">2D interfaces & minimal graphics</div>
             </div>
           </label>
         </div>
@@ -159,11 +143,12 @@ export function renderSettings(container) {
 
   bindPasswordReveal(container);
 
-  // Tier radio changes
-  container.querySelectorAll('input[name="gfx-tier"]').forEach(radio => {
+  // 3D radio changes
+  container.querySelectorAll('input[name="gfx-3d"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
-      tierManager.chooseTier(e.target.value);
-      showToast(`Graphics: ${e.target.value}`, 'info');
+      const enable = e.target.value === 'on';
+      tierManager.choose3D(enable);
+      showToast(enable ? 'Graphics: 3D On' : 'Graphics: 3D Off', 'info');
       renderSettings(container);
     });
   });
