@@ -37,13 +37,13 @@ No text, no letters, no numbers, no logos, no user interface overlays. No neon, 
 
 | ID | Media Type | Category | Source / Target | Status | Role / Trigger Screen |
 |---|---|---|---|---|---|
-| `guild_mining` | **[VIDEO]** | 8s Loop | `public/art/factions.jpg` | **MISSING** | Onboarding: Earth Guild card (`onboarding.js`) |
-| `guild_air` | **[VIDEO]** | 8s Loop | `public/art/factions_fleet.jpg` | **MISSING** | Onboarding: Air Guild card (`onboarding.js`) |
-| `guild_fire` | **[VIDEO]** | 8s Loop | `public/art/factions.jpg` | **MISSING** | Onboarding: Fire Guild card (`onboarding.js`) |
-| `guild_water` | **[VIDEO]** | 8s Loop | `public/art/hero_desert_outpost.jpg` | **MISSING** | Onboarding: Water Guild card (`onboarding.js`) |
-| `quarters_loop` | **[VIDEO]** | 8s Loop | `public/art/quarters.jpg` | **MISSING** | Crew Quarters & berths header (`quarters.js`) |
+| `guild_mining` | **[VIDEO]** | 8s Loop | `public/art/factions.jpg` | **Baked** | Onboarding: Earth Guild card (`onboarding.js`) |
+| `guild_air` | **[VIDEO]** | 8s Loop | `public/art/factions_fleet.jpg` | **Baked** | Onboarding: Air Guild card (`onboarding.js`) |
+| `guild_fire` | **[VIDEO]** | 8s Loop | `public/art/factions.jpg` | **Baked** | Onboarding: Fire Guild card (`onboarding.js`) |
+| `guild_water` | **[VIDEO]** | 8s Loop | `public/art/hero_desert_outpost.jpg` | **Baked** | Onboarding: Water Guild card (`onboarding.js`) |
+| `quarters_loop` | **[VIDEO]** | 8s Loop | `public/art/quarters.jpg` | **Baked** | Crew Quarters & berths header (`quarters.js`) |
 | `tallow_basin` | **[IMAGE]** | 16:9 Backdrop | `public/art/tallow_basin.jpg` | **MISSING** | Learn World 01 (Tallow) 2D backdrop (`learn-world.js`) |
-| `ligar_arches` | **[IMAGE]** | 16:9 Backdrop | `public/art/ligar_arches.jpg` | **MISSING** | Learn World 02 (Ligar) 2D backdrop (`learn-world.js`) |
+| `ligar_arches` | **[IMAGE]** | 16:9 Backdrop | `public/art/ligar_arches.jpg` | **Added** | Learn World 02 (Ligar) 2D backdrop (`learn-world.js`) |
 | `pyros_forge` | **[IMAGE]** | 16:9 Backdrop | `public/art/pyros_forge.jpg` | **MISSING** | Sector 02 (Pyros Prime) 2D star chart backdrop |
 | `cryo_tundra` | **[IMAGE]** | 16:9 Backdrop | `public/art/cryo_tundra.jpg` | **MISSING** | Sector 03 (Cryo-Haven) 2D star chart backdrop |
 | `aetheria_gas` | **[IMAGE]** | 16:9 Backdrop | `public/art/aetheria_gas.jpg` | **MISSING** | Sector 04 (Aetheria) 2D star chart backdrop |
@@ -72,7 +72,7 @@ No text, no letters, no numbers, no logos, no user interface overlays. No neon, 
 
 ---
 
-## 4. Prompts: Missing Videos [ACTION REQUIRED]
+## 4. Prompts: Guild & Berth Video Loops [BAKED]
 
 ### 1. `guild_mining` [VIDEO] (Earth Guild · Mineral Mining)
 - **Type:** `[VIDEO]` (8s seamless loop, muted)
