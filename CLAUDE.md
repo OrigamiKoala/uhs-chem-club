@@ -412,6 +412,8 @@ The Google Sheets database ("Avalon DB") uses 6 active tabs in `DB_SCHEMA`:
 Static tables (`Teams`, `Quests`, `QuestStages`, `Items`, `Events`) are code constants
 served in-memory to prevent heavy sheet read timeouts. Ephemeral logs (`Sessions`, `EventLog`,
 `AuditLog`, `NameHistory`) are dropped from sheet writes; token revocation is cache-backed.
+`Progress` records are initialized on `quest/start` upon entering Sector 01, and are upserted
+idempotently during `quest/grade` and `quest/complete`.
 
 ## Learn track — ten worlds, one per course unit
 
