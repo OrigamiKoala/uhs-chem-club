@@ -469,8 +469,8 @@ var Quests = {
   },
 
   startQuest: function(playerId, questId) {
-    var quest = Db.findOne('Quests', function(q) { return q.quest_id === questId; });
-    if (!quest) throw { code: 'NOT_FOUND', message: 'Quest not found.' };
+    if (questId !== DEFAULT_QUEST.quest_id) throw { code: 'NOT_FOUND', message: 'Quest not found.' };
+    var quest = DEFAULT_QUEST;
     if (quest.status !== 'live') throw { code: 'QUEST_CLOSED', message: 'Quest is not active.' };
 
     var player = Db.findOne('Players', function(p) { return p.player_id === playerId; });
@@ -495,7 +495,7 @@ var Quests = {
     }
 
     // Active event modifiers
-    var activeEvent = Events.getTeamActiveEvent(player.team_id);
+    var activeEvent = (player && player.team_id) ? Events.getTeamActiveEvent(player.team_id) : null;
 
     return {
       runId: runId,
@@ -510,11 +510,14 @@ var Quests = {
 
   gradeStage: function(playerId, questId, stageIndex, payload, elapsedMs, hintUsed, gfxTier) {
     stageIndex = Number(stageIndex);
-    Quests.seedQuestsIfEmpty();
 
-    var stage = Db.findOne('QuestStages', function(s) {
-      return s.quest_id === questId && Number(s.stage_index) === stageIndex;
-    });
+    var stage = null;
+    for (var s = 0; s < DEFAULT_STAGES.length; s++) {
+      if (DEFAULT_STAGES[s].quest_id === questId && Number(DEFAULT_STAGES[s].stage_index) === stageIndex) {
+        stage = DEFAULT_STAGES[s];
+        break;
+      }
+    }
     if (!stage) throw { code: 'STAGE_NOT_FOUND', message: 'Stage not found.' };
 
     var player = Db.findOne('Players', function(p) { return p.player_id === playerId; });
@@ -699,9 +702,13 @@ var Quests = {
 
   getHint: function(playerId, questId, stageIndex) {
     stageIndex = Number(stageIndex);
-    var stage = Db.findOne('QuestStages', function(s) {
-      return s.quest_id === questId && Number(s.stage_index) === stageIndex;
-    });
+    var stage = null;
+    for (var s = 0; s < DEFAULT_STAGES.length; s++) {
+      if (DEFAULT_STAGES[s].quest_id === questId && Number(DEFAULT_STAGES[s].stage_index) === stageIndex) {
+        stage = DEFAULT_STAGES[s];
+        break;
+      }
+    }
     if (!stage) throw { code: 'STAGE_NOT_FOUND', message: 'Stage not found.' };
 
     var player = Db.findOne('Players', function(p) { return p.player_id === playerId; });
@@ -721,8 +728,8 @@ var Quests = {
   },
 
   completeQuest: function(playerId, questId) {
-    var quest = Db.findOne('Quests', function(q) { return q.quest_id === questId; });
-    if (!quest) throw { code: 'NOT_FOUND', message: 'Quest not found.' };
+    if (questId !== DEFAULT_QUEST.quest_id) throw { code: 'NOT_FOUND', message: 'Quest not found.' };
+    var quest = DEFAULT_QUEST;
 
     // Finishing the same quest twice must not mint a second reward item.
     var priorProgress = Db.findOne('Progress', function(pr) {
