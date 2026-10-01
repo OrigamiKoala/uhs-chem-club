@@ -694,8 +694,8 @@ class Stage {
    * Throttled, because it asks the DOM a question and the answer changes at
    * the speed of navigation, not of frames.
    */
-  syncTouchControls(now) {
-    if (now - this.lastTouchSync < 200) return;
+  syncTouchControls(now = (typeof performance !== 'undefined' ? performance.now() : Date.now()), force = false) {
+    if (!force && now - this.lastTouchSync < 200) return;
     this.lastTouchSync = now;
 
     // Driven from here rather than from each entry point so no scene swap can
@@ -1033,7 +1033,17 @@ class Stage {
         const t = hit.terminal;
         return {
           prompt: `[E] ${t.prompt}`,
-          act: () => { window.location.hash = t.route; }
+          act: () => {
+            if (window.location.hash === t.route) {
+              const term = document.querySelector('.in-world-terminal');
+              if (term) {
+                term.style.display = '';
+                this.syncTouchControls(performance.now(), true);
+                return;
+              }
+            }
+            window.location.hash = t.route;
+          }
         };
       }
     }

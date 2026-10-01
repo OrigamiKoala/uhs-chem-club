@@ -1845,8 +1845,10 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   entirely, because the synthetic mouse events a browser fires after a tap would read as a
   look drag and snap the camera. `showPrompt`
   rewrites `[E]` to `[USE]` in that mode. `stage.syncTouchControls` raises and lowers
-  the layer on a 200 ms throttle; an in-world terminal, a deployed chamber, a cinematic,
-  a `.screen-container` or a live modal takes the sticks away, and a push held through
+  the layer on a 200 ms throttle (or forced immediately via `force = true` on menu toggles and terminal/modal close actions);
+  an active in-world terminal, mobile sidebar (`#mobile-sidebar.open`), user dropdown, deployed chamber, cinematic,
+  `.screen-container` or live modal takes the sticks away. `TouchControls.overlayBlocking()` evaluates visibility (ignoring
+  hidden/docked elements or elements with `display: none`), so closing terminals or menus restores the virtual joysticks, E, and X buttons immediately. A push held through
   that transition is released rather than left stuck on.
 - **Game mode** (`src/game-mode.js`, `body.game-mode`) takes the screen on a handset.
   Three routes in order: the Fullscreen API, granted only inside a user gesture

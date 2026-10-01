@@ -244,15 +244,18 @@ export function renderStarMap(container) {
       const term = container.querySelector(".in-world-terminal");
       if (term) term.style.display = "none";
       stage.closeStarmapHolo?.();
+      stage.syncTouchControls?.(performance.now(), true);
     });
 
     starmapHoloCloseListener = () => {
       const term = container.querySelector(".in-world-terminal");
       if (term) term.style.display = "none";
+      stage.syncTouchControls?.(performance.now(), true);
     };
     starmapHoloOpenListener = () => {
       const term = container.querySelector(".in-world-terminal");
       if (term) term.style.display = "";
+      stage.syncTouchControls?.(performance.now(), true);
     };
     window.addEventListener("starmap-holo:close", starmapHoloCloseListener);
     window.addEventListener("starmap-holo:open", starmapHoloOpenListener);

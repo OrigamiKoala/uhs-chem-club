@@ -141,6 +141,7 @@ export async function renderLeaderboard(container) {
     container.querySelector('#close-comms-terminal-btn')?.addEventListener('click', () => {
       const term = container.querySelector('.in-world-terminal');
       if (term) term.style.display = 'none';
+      stage.syncTouchControls?.(performance.now(), true);
     });
 
     // Make player rows clickable to view crew profile

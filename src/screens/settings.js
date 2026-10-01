@@ -1,5 +1,6 @@
 import { api } from '../api.js';
 import { session } from '../session.js';
+import { stage } from '../three/stage.js';
 import { tierManager, isT4Capable, isTouchPrimary } from '../three/tier.js';
 import { showToast } from '../ui/toast.js';
 import { pageHeader } from '../ui/layout.js';
@@ -236,6 +237,7 @@ export function renderSettings(container) {
   container.querySelector('#close-settings-terminal-btn')?.addEventListener('click', () => {
     const term = container.querySelector('.in-world-terminal');
     if (term) term.style.display = 'none';
+    stage.syncTouchControls?.(performance.now(), true);
   });
 }
 

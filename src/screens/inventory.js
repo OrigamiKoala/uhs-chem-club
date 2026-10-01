@@ -156,6 +156,7 @@ export function renderInventory(container) {
     container.querySelector('#close-inv-terminal-btn')?.addEventListener('click', () => {
       const term = container.querySelector('.in-world-terminal');
       if (term) term.style.display = 'none';
+      stage.syncTouchControls?.(performance.now(), true);
     });
   }
 

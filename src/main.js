@@ -188,10 +188,14 @@ function setupHud() {
   userBtn?.addEventListener('click', (e) => {
     e.stopPropagation();
     userMenu?.classList.toggle('hidden');
+    stage.syncTouchControls?.(performance.now(), true);
   });
 
   document.addEventListener('click', () => {
-    userMenu?.classList.add('hidden');
+    if (userMenu && !userMenu.classList.contains('hidden')) {
+      userMenu.classList.add('hidden');
+      stage.syncTouchControls?.(performance.now(), true);
+    }
   });
 
   logoutBtn?.addEventListener('click', () => {
@@ -223,6 +227,7 @@ function setupHud() {
     mobileMenuBtn?.classList.add('is-open');
     mobileMenuBtn?.setAttribute('aria-expanded', 'true');
     soundscape.playToggleClack();
+    stage.syncTouchControls?.(performance.now(), true);
   };
 
   const closeMobileSidebar = () => {
@@ -231,6 +236,7 @@ function setupHud() {
     mobileSidebar?.setAttribute('aria-hidden', 'true');
     mobileMenuBtn?.classList.remove('is-open');
     mobileMenuBtn?.setAttribute('aria-expanded', 'false');
+    stage.syncTouchControls?.(performance.now(), true);
   };
 
   mobileMenuBtn?.addEventListener('click', (e) => {

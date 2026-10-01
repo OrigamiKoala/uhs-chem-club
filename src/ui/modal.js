@@ -5,6 +5,8 @@
  * (including the Quest 1 completion payoff) landed below the fold and was never seen.
  */
 
+import { stage } from '../three/stage.js';
+
 let lastFocused = null;
 let keyHandler = null;
 let backdropHandler = null;
@@ -44,6 +46,7 @@ export function showModal(innerHtml, opts = {}) {
   `;
   if (labelledBy) modal.setAttribute('aria-labelledby', labelledBy);
   modal.classList.remove('hidden');
+  stage?.syncTouchControls?.(performance.now(), true);
 
   const close = () => closeModal(onClose);
 
@@ -76,5 +79,6 @@ export function closeModal(onClose = null) {
     lastFocused.focus();
   }
   lastFocused = null;
+  stage?.syncTouchControls?.(performance.now(), true);
   if (onClose) onClose();
 }

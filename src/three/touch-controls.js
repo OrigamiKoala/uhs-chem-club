@@ -24,13 +24,13 @@ const HOME = { x: 81, y: 82 };   // stick home centre, matching .tc-ring in mobi
 const TRAVEL = 46;               // px of knob travel at full deflection
 const DEADZONE = 0.14;           // fraction of travel ignored, so a resting thumb is still
 
-/** Overlays that own the screen; the sticks stand down while one is up. */
 const BLOCKING = [
   '.in-world-terminal',
   '.deployed-chamber-overlay',
   '.cinematic-overlay',
   '.screen-container',
-  '.lq'
+  '.lq',
+  '.quest-hud-overlay'
 ].join(',');
 
 export class TouchControls {
@@ -219,12 +219,43 @@ export class TouchControls {
     if (!on) this.neutral();
   }
 
+  static isElementVisible(el) {
+    if (!el) return false;
+    if (el.classList.contains('hidden')) return false;
+    if (el.style.display === 'none') return false;
+    if (el.hidden) return false;
+    if (typeof window !== 'undefined' && window.getComputedStyle) {
+      try {
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+      } catch (e) {}
+    }
+    return true;
+  }
+
   /** True when a full-screen overlay is up and the walk is not the foreground. */
   static overlayBlocking() {
     if (typeof document === 'undefined') return false;
     const modal = document.getElementById('modal-container');
     if (modal && !modal.classList.contains('hidden') && modal.childElementCount > 0) return true;
-    return Boolean(document.querySelector(BLOCKING));
+
+    const mobileSidebar = document.getElementById('mobile-sidebar');
+    if (mobileSidebar && mobileSidebar.classList.contains('open')) return true;
+
+    const mobileBackdrop = document.getElementById('mobile-sidebar-backdrop');
+    if (mobileBackdrop && mobileBackdrop.classList.contains('open')) return true;
+
+    const userDropdown = document.getElementById('user-dropdown');
+    if (userDropdown && !userDropdown.classList.contains('hidden')) return true;
+
+    const candidates = document.querySelectorAll(BLOCKING);
+    for (const el of candidates) {
+      if (el.matches('.lq') && el.querySelector('.lq-body')?.classList.contains('hidden')) {
+        continue;
+      }
+      if (TouchControls.isElementVisible(el)) return true;
+    }
+    return false;
   }
 
   dispose() {
