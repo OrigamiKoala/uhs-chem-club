@@ -560,7 +560,7 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
 
 /**
  * Creates 3D Holographic announcement texture for Bridge welcome screen
- * Displaying "UHS Chem Club", "Next meeting 9/29 in 702", and directional navigation arrows.
+ * Displaying "UHS Chem Club", "Next meeting 10/20 in 702", and directional navigation arrows.
  */
 export function createClubHoloTexture() {
   const canvas = document.createElement('canvas');
@@ -640,10 +640,10 @@ export function createClubHoloTexture() {
   ctx.fillText('UHS Chem Club', 512, 108);
   ctx.shadowBlur = 0;
 
-  // Subtitle: Next meeting 9/29 in 702
+  // Subtitle: Next meeting 10/20 in 702
   ctx.font = 'bold 24px monospace';
   ctx.fillStyle = '#ffb347';
-  ctx.fillText('Next meeting 9/29 in 702', 512, 154);
+  ctx.fillText('Next meeting 10/20 in 702', 512, 154);
 
   // Horizontal glowing divider
   ctx.strokeStyle = 'rgba(217, 148, 35, 0.6)';
