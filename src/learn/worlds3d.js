@@ -1,7 +1,7 @@
 /**
  * worlds3d.js — Which Learn worlds you can walk on, and how to get there.
  *
- * The Learn road charts ten worlds. Two of them — Tallow and Ligar — are built
+ * The Learn road charts thirteen worlds. Two of them — Tallow and Ligar — are built
  * as places you stand in, at T4. This file is the registry that says so, and it
  * is the only thing that needs editing when another world is built.
  *
@@ -38,8 +38,8 @@ const WORLDS_3D = {
       }
     }
   },
-  unit02: {
-    id: 'unit02',
+  unit03: {
+    id: 'unit03',
     worldName: 'Ligar',
     data: ligarData,
     enter(stage, siteId = null) {

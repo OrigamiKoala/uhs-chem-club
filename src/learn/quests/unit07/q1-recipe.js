@@ -1,5 +1,5 @@
 /**
- * q3-recipe.js — Ligar, bench three: THE SAME RECIPE.
+ * q1-recipe.js — Kettle, bench one: THE SAME RECIPE. (Built as Ligar's bench three.)
  *
  * The sampler scope from Tallow, wheeled out onto Ligar and pointed at
  * compounds rather than at single elements. Bench one settled why a compound has a

@@ -85,13 +85,14 @@ const BUILT_BENCHES = new Set([
   'q3-catalogue',  // the catalogue board — catalogue3d.js
   'q4-ledger',     // the core bench again, at site four
   'q5-assay',      // the assay floor     — assay3d.js
-  // Unit 2 — Ligar. Two of the four are instruments Tallow already built; the
-  // join bench is the one new build, and it is a subclass of the drawn bench,
-  // so its tools are the canvas bench's tools and cannot grade differently.
+  'q6-weigh',      // the assay floor again; no site yet, so it builds its own room
+  // Unit 3 — Ligar. The join bench is a subclass of the drawn bench, so its
+  // tools are the canvas bench's tools and cannot grade differently.
   'q1-joins',      // the join bench, pair plates — joinbench3d.js
   'q2-lattice',    // the join bench, slab plates — joinbench3d.js
-  'q3-recipe',     // the sampler scope again     — scope3d.js
-  'q4-weigh'       // the assay floor again       — assay3d.js
+  // Unit 7 — Kettle. Built as Ligar's bench three; Kettle is not yet walkable,
+  // so at T4 it builds its own room around itself.
+  'q1-recipe'      // the sampler scope again     — scope3d.js
 ]);
 
 /**

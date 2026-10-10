@@ -1,14 +1,14 @@
 /**
- * unit09-kinetics.js — Learn world 9: Kinetics.
+ * unit11-kinetics.js — Learn world 11: Kinetics.
  *
  * CHART ONLY. See unit01-atoms.js for how a quest is built and flipped live.
  */
 
-export const UNIT_09 = {
-  id: 'unit09',
-  order: 9,
-  code: '09',
-  unit: 'Unit 9',
+export const UNIT_11 = {
+  id: 'unit11',
+  order: 11,
+  code: '11',
+  unit: 'Unit 11',
   world: 'Quicklight',
   place: 'Storm belt',
   title: 'Kinetics',

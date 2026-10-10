@@ -1,14 +1,14 @@
 /**
- * unit06-acids-and-bases.js — Learn world 6: Acids and Bases.
+ * unit09-acids-and-bases.js — Learn world 9: Acids and Bases.
  *
  * CHART ONLY. See unit01-atoms.js for how a quest is built and flipped live.
  */
 
-export const UNIT_06 = {
-  id: 'unit06',
-  order: 6,
-  code: '06',
-  unit: 'Unit 6',
+export const UNIT_09 = {
+  id: 'unit09',
+  order: 9,
+  code: '09',
+  unit: 'Unit 9',
   world: 'Verdigris',
   place: 'Acid marsh',
   title: 'Acids and Bases',

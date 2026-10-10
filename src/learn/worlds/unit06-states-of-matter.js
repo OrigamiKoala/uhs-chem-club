@@ -1,14 +1,14 @@
 /**
- * unit03-states-of-matter.js — Learn world 3: States of Matter.
+ * unit06-states-of-matter.js — Learn world 6: States of Matter.
  *
  * CHART ONLY. See unit01-atoms.js for how a quest is built and flipped live.
  */
 
-export const UNIT_03 = {
-  id: 'unit03',
-  order: 3,
-  code: '03',
-  unit: 'Unit 3',
+export const UNIT_06 = {
+  id: 'unit06',
+  order: 6,
+  code: '06',
+  unit: 'Unit 6',
   world: 'Mirrowen',
   place: 'Tidal shelf',
   title: 'States of Matter',

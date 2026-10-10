@@ -99,7 +99,12 @@ export function renderLearnQuest(container, params = {}) {
   // world behind the frame and bolts its screens to the bench, while a bench
   // that is DRAWN — the sampler scope, which is a microscope — is worked as a
   // page, because there is nothing in the world to stand the picture against.
-  const walkable = canWalk(world.id);
+  // A quest charted on a walkable world before its site has been laid out (Tallow's
+  // `q6-weigh`) is played the way a quest on an unwalkable world is: its bench
+  // builds its own room. Entering the world with nothing to stand at would leave a
+  // built instrument with no plate to deploy onto.
+  const walkable = canWalk(world.id) && Boolean(world3dFor(world.id)?.siteForQuest(quest.id));
+  if (!walkable) setBenchSite(null);
   // Configure learn quest frame to use 2D overlay (`learn-quest-overworld`) in T4 rather than deploying into CSS3D in-world bench panels
   const inWorld = false;
   if (walkable) {

@@ -76,7 +76,7 @@ export const DESTINATIONS = {
     }
   },
   ligar: {
-    key: 'ligar', name: 'Ligar', hash: '#/learn/unit02',
+    key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',
     planet: {
       kind: 'volcanic', colors: ['#2a2622', '#4a4038', '#6b5842', '#c46a2a'],

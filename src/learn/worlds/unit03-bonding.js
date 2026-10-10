@@ -1,23 +1,29 @@
 /**
- * unit02-molecules.js — Learn world 2: Molecules.
+ * unit03-bonding.js — Learn world 3: Bonding.
  *
- * Ligar. Four benches, in the order the ideas have to arrive in: what a join IS,
- * what each kind of join builds, why a compound only ever has one recipe, and
- * how you count atoms far too small to count.
+ * Ligar. The road runs from what a join IS, through what each kind of join
+ * builds, to how far apart two bonded atoms sit, how a molecule is drawn, what
+ * shape it takes, which way its charge leans, and the orbitals that hold it
+ * together. Benches one and two are built; the rest are charted and planned in
+ * `docs/plans/learn-quests.md`.
+ *
+ * Counting by mass (the old benches three and four, `q3-recipe` and `q4-weigh`)
+ * moved to Kettle when the road was reordered: it is the start of stoichiometry,
+ * not the end of bonding.
  *
  * See unit01-atoms.js for how a quest is built and flipped live.
  */
 
-export const UNIT_02 = {
-  id: 'unit02',
-  order: 2,
-  code: '02',
-  unit: 'Unit 2',
+export const UNIT_03 = {
+  id: 'unit03',
+  order: 3,
+  code: '03',
+  unit: 'Unit 3',
   world: 'Ligar',
   place: 'Basalt arches',
-  title: 'Molecules',
-  line: 'Chemical bonding, molecular structures, and stoichiometry.',
-  brief: 'Learn how chemical bonds form, what structures they build, and how to measure chemical quantities by mass.',
+  title: 'Bonding',
+  line: 'Chemical bonding, molecular structure, and orbitals.',
+  brief: 'Learn how chemical bonds form, how molecules are drawn and shaped, and which orbitals hold them together.',
 
   quests: [
     {
@@ -27,7 +33,7 @@ export const UNIT_02 = {
       arena: 'bench',
       stageCount: 8,
       status: 'live',
-      module: () => import('../quests/unit02/q1-joins.js')
+      module: () => import('../quests/unit03/q1-joins.js')
     },
     {
       id: 'q2-lattice',
@@ -36,25 +42,70 @@ export const UNIT_02 = {
       arena: 'bench',
       stageCount: 8,
       status: 'live',
-      module: () => import('../quests/unit02/q2-lattice.js')
+      module: () => import('../quests/unit03/q2-lattice.js')
     },
     {
-      id: 'q3-recipe',
-      title: 'The Same Recipe',
-      line: 'Definite proportions and percent composition in compounds.',
+      id: 'q3-distance',
+      title: 'Bond Energy',
+      line: 'Why bonded atoms sit at one distance, and what it costs to part them.',
       arena: 'bench',
       stageCount: 8,
-      status: 'live',
-      module: () => import('../quests/unit02/q3-recipe.js')
+      status: 'draft',
+      module: null
     },
     {
-      id: 'q4-weigh',
-      title: 'Counting By Weight',
-      line: 'Using molar mass to count atoms and molecules by weighing.',
+      id: 'q4-dots',
+      title: 'Lewis Structures',
+      line: 'Drawing where every valence electron goes.',
       arena: 'bench',
       stageCount: 8,
-      status: 'live',
-      module: () => import('../quests/unit02/q4-weigh.js')
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'q5-resonance',
+      title: 'Formal Charge and Resonance',
+      line: 'Choosing between drawings, and molecules no single drawing fits.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'q6-shape',
+      title: 'Molecular Shape',
+      line: 'Electron domains push apart and fix the shape.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'q7-polarity',
+      title: 'Polarity',
+      line: 'Which way the charge leans in a bond and in a molecule.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'q8-hybrid',
+      title: 'Hybridization',
+      line: 'Mixed orbitals, sigma and pi bonds.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'draft',
+      module: null
+    },
+    {
+      id: 'q9-orbitals',
+      title: 'Molecular Orbitals',
+      line: 'Bonding and antibonding orbitals, bond order and magnetism.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'draft',
+      module: null
     }
   ]
 };

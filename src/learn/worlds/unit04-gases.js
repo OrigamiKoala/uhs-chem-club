@@ -1,14 +1,14 @@
 /**
- * unit07-gases.js — Learn world 7: Gases.
+ * unit04-gases.js — Learn world 4: Gases.
  *
  * CHART ONLY. See unit01-atoms.js for how a quest is built and flipped live.
  */
 
-export const UNIT_07 = {
-  id: 'unit07',
-  order: 7,
-  code: '07',
-  unit: 'Unit 7',
+export const UNIT_04 = {
+  id: 'unit04',
+  order: 4,
+  code: '04',
+  unit: 'Unit 4',
   world: 'Bellows',
   place: 'Cloud deck',
   title: 'Gases',

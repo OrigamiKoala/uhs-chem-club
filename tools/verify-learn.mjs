@@ -307,10 +307,10 @@ function checkStageTable(q, mod) {
     'unit01/q3-catalogue': /\b(atomic number|periodic|periods?|groups?|noble|metals?|nonmetals?|non-metals?|alkali|halogens?)\b/i,
     'unit01/q4-ledger': /\b(mass number|cations?|anions?)\b/i,
     'unit01/q5-assay': /\b(abundances?|weighted average|average atomic mass|relative atomic mass|mass spectrum|mass spectrometry)\b/i,
-    'unit02/q1-joins': /\b(bonds?|bonded|bonding|ionic|covalent|shares? a pair|lone pairs?|double bonds?|triple bonds?|formula unit)\b/i,
-    'unit02/q2-lattice': /\b(lattices?|crystals?|crystalline|conduct\w*|electrolytes?|dissociat\w*|brittle|melting points?)\b/i,
-    'unit02/q3-recipe': /\b(fixed composition|constant composition|definite proportions|multiple proportions|empirical formulas?|percent composition)\b/i,
-    'unit02/q4-weigh': /\b(moles?|molar|avogadro\w*|formula mass|gram formula mass)\b/i
+    'unit03/q1-joins': /\b(bonds?|bonded|bonding|ionic|covalent|shares? a pair|lone pairs?|double bonds?|triple bonds?|formula unit)\b/i,
+    'unit03/q2-lattice': /\b(lattices?|crystals?|crystalline|conduct\w*|electrolytes?|dissociat\w*|brittle|melting points?)\b/i,
+    'unit07/q1-recipe': /\b(fixed composition|constant composition|definite proportions|multiple proportions|empirical formulas?|percent composition)\b/i,
+    'unit01/q6-weigh': /\b(moles?|molar|avogadro\w*|formula mass|gram formula mass)\b/i
   };
   const withheldRx = WITHHELD_VOCAB[q.key];
 

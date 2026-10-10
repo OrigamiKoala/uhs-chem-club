@@ -1,5 +1,8 @@
 /**
- * q4-weigh.js — Ligar, bench four: COUNTING BY WEIGHT.
+ * q6-weigh.js — Tallow, bench six: COUNTING BY WEIGHT. (Built as Ligar's bench four;
+ * moved to Tallow on 2026-10-10, where it follows Atomic Mass as AP Unit 1 does. Its
+ * one ionic sample became a molecular one, because Tallow comes before Ligar names
+ * the formula unit.)
  *
  * The assay floor from Tallow site five, put to the job it was always going to
  * end up doing. Bench three counted molecules because there were few enough to
@@ -16,7 +19,7 @@
  *   6  a drum of 72 grams                         -> grams and moles convert both ways
  *   7  two moles of a compound, by kind           -> a recipe reads in moles
  *   8  three drums, which holds the most atoms    -> weight is not count
- *   -- debrief: why every real measurement is a mass, and what comes after Ligar.
+ *   -- debrief: why every real measurement is a mass, and what comes after it.
  *
  * `q3-recipe` earned fixed composition, percent composition and the empirical
  * formula, so those are plain words here. What this quest has to earn is on
@@ -86,15 +89,15 @@ export function totalOf(hopper) {
   return (hopper.bins || []).reduce((m, b) => m + b.mass * b.n, 0);
 }
 
-/** How many particles (atoms, molecules or formula units) a hopper holds. The floor only ever reports this for a sample it could tip. */
+/** How many particles (atoms or molecules) a hopper holds. The floor only ever reports this for a sample it could tip. */
 export function countOf(hopper) {
   return (hopper.bins || []).reduce((n, b) => n + b.n, 0);
 }
 
 /**
  * What a hopper's particles are called, counted `n`. A sample with a CAT code
- * is one element, so it holds atoms; a compound declares `particle` —
- * 'molecule', or 'formula unit' for an ionic one — because a mole is a count of
+ * is one element, so it holds atoms; a compound declares `particle`
+ * ('molecule'; Ligar's ionic samples would say 'formula unit') because a mole is a count of
  * whatever the substance is made of, and the readout has to say which.
  */
 export function particleWord(hopper, n = 2) {
@@ -182,7 +185,7 @@ export const STAGES = [
     reward: {
       log: 'Sample A caught at 18. Sample B: 16.',
       title: 'Formula Mass',
-      body: 'Sample A landed in the bin marked 18, which is exactly 16.0 + 1.0 + 1.0 — the listed masses of the atoms in one molecule of it, added up. Sample B comes to 12 + 4 = 16 the same way. Adding up the listed masses of every atom in one molecule or formula unit of a substance gives its formula mass, and there is nothing more to it than that.'
+      body: 'Sample A landed in the bin marked 18, which is exactly 16.0 + 1.0 + 1.0 — the listed masses of the atoms in one molecule of it, added up. Sample B comes to 12 + 4 = 16 the same way. Adding up the listed masses of every atom in one molecule of a substance gives its formula mass, and there is nothing more to it than that.'
     }
   },
 
@@ -276,43 +279,46 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'A Mole of a Compound',
-    prompt: 'Sample A is one CAT 11 to one CAT 17. Say how many grams of it you would weigh out to have one mole of its formula units.',
+    prompt: 'Each molecule of Sample A is one CAT 06 and two CAT 08. Say how many grams of it you would weigh out to have one mole of its molecules.',
     controls: ['balance'],
     hoppers: [
-      { id: 'h8', label: 'SAMPLE A', note: 'a full crate, one CAT 11 to one CAT 17, gate shut', particle: 'formula unit', bulk: true, bins: [{ mass: 58.5, n: 200 }] }
+      { id: 'h8', label: 'SAMPLE A', note: 'a full crate, one CAT 06 to two CAT 08, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 44, n: 200 }] }
     ],
-    reference: ['CAT 11 — 23.0', 'CAT 17 — 35.5'],
+    reference: ['CAT 06 — 12.0', 'CAT 08 — 16.0'],
     widget: {
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: '585', label: '58.5 grams', note: 'The two listed masses added together.' },
-        { id: '355', label: '35.5 grams', note: 'The heavier of the two on its own.' },
-        { id: '230', label: '23.0 grams', note: 'The lighter of the two on its own.' },
-        { id: '1170', label: '117.0 grams', note: 'Twice 23.0 plus twice 35.5.' }
+        { id: '440', label: '44.0 grams', note: 'One CAT 06 plus two CAT 08.' },
+        { id: '280', label: '28.0 grams', note: 'One CAT 06 plus one CAT 08.' },
+        { id: '120', label: '12.0 grams', note: 'The CAT 06 on its own.' },
+        { id: '880', label: '88.0 grams', note: 'Twice 12.0 plus four times 16.0.' }
       ]
     },
     hints: [
       'Work out the formula mass of Sample A first.',
-      'One mole of an element is its listed mass in grams, and a formula unit of a compound weighs the listed masses in it added up.',
-      'Add the listed masses of one CAT 11 and one CAT 17 to get the grams in one mole.'
+      'One mole of an element is its listed mass in grams, and a molecule of a compound weighs the listed masses of all its atoms added up.',
+      'Add the listed mass of one CAT 06 to the listed mass of two CAT 08 to get the grams in one mole.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
-      if (state.choice === '355' || state.choice === '230') {
-        return { ok: false, msg: 'That is one of the two elements on its own. A formula unit of Sample A holds both of them.' };
+      if (state.choice === '120') {
+        return { ok: false, msg: 'That is the CAT 06 on its own. A molecule of Sample A holds all three of its atoms.' };
       }
-      if (state.choice === '1170') {
-        return { ok: false, msg: 'That is two of each. A formula unit of Sample A holds one CAT 11 and one CAT 17.' };
+      if (state.choice === '280') {
+        return { ok: false, msg: 'That counts one CAT 08, and each molecule of Sample A holds two of them.' };
+      }
+      if (state.choice === '880') {
+        return { ok: false, msg: 'That is two molecules\' worth. One mole weighs one molecule\'s listed masses, in grams.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'One mole of Sample A weighs 58.5 grams.',
+      log: 'One mole of Sample A weighs 44.0 grams.',
       title: 'Molar Mass',
-      body: 'The rule does not stop at elements: add up the listed masses in one molecule or formula unit of a compound and that many grams of it is one mole of them. Here 23.0 + 35.5 = 58.5, so 58.5 grams holds 6.02 x 10^23 formula units of it. That figure, grams per mole, is called the molar mass, and every substance has one.'
+      body: 'The rule does not stop at elements: add up the listed masses of every atom in one molecule of a compound and that many grams of it is one mole of its molecules. Here 12.0 + 16.0 + 16.0 = 44.0, so 44.0 grams holds 6.02 x 10^23 molecules of it. That figure, grams per mole, is called the molar mass, and every substance has one.'
     }
   },
 
@@ -444,7 +450,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Nobody can count atoms, so everybody weighs them instead. One mole of a substance is its formula mass in grams, and it always holds the same number of atoms, molecules or formula units, whichever the substance is made of — 6.02 x 10^23 of them.'
+      body: 'Nobody can count atoms, so everybody weighs them instead. One mole of a substance is its formula mass in grams, and it always holds the same number of atoms or molecules, whichever the substance is made of — 6.02 x 10^23 of them.'
     },
     {
       heading: 'Why It Is Worth It',
@@ -452,7 +458,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'Everything you have handled on Ligar has been a solid you could pick up. The next world asks what is left of all this when a substance is a liquid, or a gas, or in the middle of becoming one.'
+      body: 'That is the last bench on Tallow. The next world asks why the electrons in every atom you have weighed sit only where they do.'
     }
   ]
 };
@@ -539,7 +545,7 @@ export const SOLUTIONS = [
   { poured: new Set(['h3']), number: 16 },
   { poured: new Set(['h5', 'h6', 'h7']), choice: 'ratio' },
   { poured: new Set(['h6', 'h7']), number: 16 },
-  { weighed: new Set(['h8']), choice: '585' },
+  { weighed: new Set(['h8']), choice: '440' },
   { weighed: new Set(['h9']), number: 4 },
   { weighed: new Set(['h10']), number: 4 },
   { weighed: new Set(['d1', 'd2', 'd3']), choice: 'd3' }
@@ -551,7 +557,7 @@ export const MISSES = [
   { poured: new Set(['h3']), number: 18 },
   { poured: new Set(['h5', 'h6', 'h7']), choice: 'equal' },
   { poured: new Set(['h6', 'h7']), number: 12 },
-  { weighed: new Set(['h8']), choice: '355' },
+  { weighed: new Set(['h8']), choice: '120' },
   { weighed: new Set(['h9']), number: 1 },
   { weighed: new Set(['h10']), number: 2 },
   { weighed: new Set(['d1', 'd2', 'd3']), choice: 'd2' }
@@ -720,7 +726,7 @@ export function mount(container, ctx) {
     }
   }
 
-  /** Whole numbers stay whole; 58.5 stays 58.5. */
+  /** Whole numbers stay whole; 44.5 stays 44.5. */
   function fmt(n) {
     return Number.isInteger(n) ? String(n) : n.toFixed(1);
   }

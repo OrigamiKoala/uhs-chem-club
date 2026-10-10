@@ -128,7 +128,7 @@ console.log(`Ligar — ${world.name}, ${world.place}\n`);
 
 /* -------------------------------------------------------------------- sites */
 
-const chart = readFileSync(join(root, 'src/learn/worlds/unit02-molecules.js'), 'utf8');
+const chart = readFileSync(join(root, 'src/learn/worlds/unit03-bonding.js'), 'utf8');
 const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']+)'/g)]
   .map(m => ({ id: m[1], title: m[2] }));
 
@@ -139,11 +139,14 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
       .map(m => [m[1], m[2]]).filter(([, st]) => st === 'live').map(([id]) => id)
   );
 
-  check(questIds.length > 0, `unit02 charts ${questIds.length} quests`, 'could not read the unit02 chart');
+  check(questIds.length > 0, `unit03 charts ${questIds.length} quests`, 'could not read the unit03 chart');
 
+  // Every BUILT quest needs ground to stand on. A charted quest does not yet:
+  // Ligar charts more benches than it has laid out, and a site is laid out
+  // when its bench is built.
   const siteQuests = world.sites.map(s => s.questId);
-  const missing = questIds.filter(q => !siteQuests.includes(q));
-  check(missing.length === 0, 'every charted unit02 quest has a site on the ground',
+  const missing = questIds.filter(q => live.has(q) && !siteQuests.includes(q));
+  check(missing.length === 0, 'every built unit03 quest has a site on the ground',
     `quests with no site: ${missing.join(', ')}`);
 
   const invented = siteQuests.filter(q => !questIds.includes(q));

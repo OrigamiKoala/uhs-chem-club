@@ -102,12 +102,12 @@ SITES = [
   {"id":"site-2","questId":"q2-lattice","stage":2,
    "pos":[-6.0,-5.0,-26.0],"approachPos":[-6.0,-3.4,-21.0],
    "label":"Bench 2 - Stone and Wire","structure":"tube-forge","built":True},
-  {"id":"site-3","questId":"q3-recipe","stage":3,
+  {"id":"site-3","questId":"q3-distance","stage":3,
    "pos":[26.0,0,-4.0],"approachPos":[21.2,1.6,-4.0],
-   "label":"Bench 3 - The Same Recipe","structure":"batch-house","built":True},
-  {"id":"site-4","questId":"q4-weigh","stage":4,
+   "label":"Bench 3 - Bond Energy","structure":"batch-house","built":False},
+  {"id":"site-4","questId":"q4-dots","stage":4,
    "pos":[26.0,0,8.0],"approachPos":[21.2,1.6,8.0],
-   "label":"Bench 4 - Counting By Weight","structure":"weighbridge","built":True},
+   "label":"Bench 4 - Lewis Structures","structure":"weighbridge","built":False},
 ]
 
 PIT = {"floorY": -5.0,

@@ -1,5 +1,5 @@
 /**
- * unit10-nuclear-chemistry.js — Learn world 10: Nuclear Chemistry.
+ * unit14-nuclear-chemistry.js — Learn world 14: Nuclear Chemistry.
  *
  * CHART ONLY. See unit01-atoms.js for how a quest is built and flipped live.
  *
@@ -7,11 +7,11 @@
  * would not divide in world 1 finally does.
  */
 
-export const UNIT_10 = {
-  id: 'unit10',
-  order: 10,
-  code: '10',
-  unit: 'Unit 10',
+export const UNIT_14 = {
+  id: 'unit14',
+  order: 14,
+  code: '14',
+  unit: 'Unit 14',
   world: 'Cinder Halo',
   place: 'Crater sea',
   title: 'Nuclear Chemistry',

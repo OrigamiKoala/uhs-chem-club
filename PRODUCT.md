@@ -78,17 +78,23 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
   the card is where the vocabulary lands, not the prompt.
 - **Practice problems close a Learn world.** Five per built quest, gathered and shown at
   the end of the WORLD rather than the end of a quest. They are **optional and skippable
-  at every point**, they pay nothing, they gate nothing — the next world opens on the last
-  quest's completion whether or not a question is answered — and they come back for ever
+  at every point**, they pay nothing, they gate nothing — every built world is open from the
+  start, and inside a world the next bench opens on the last one's completion whether or
+  not a question is answered — and they come back for ever
   through a **Problems** key beside a finished world on the star map and on the Learn
   road. They are a 2D overlay on every tier.
-- **Learn track:** ten worlds, one per AP Chemistry unit, 41 quests charted and nine built —
-  all of Tallow (`unit01/q1-grain` through `unit01/q5-assay`) and all of Ligar
-  (`unit02/q1-joins` through `unit02/q4-weigh`). Every Learn quest is a game with its own
-  stages, scene, inputs and grading. Tallow and Ligar are both walkable ground at T4, with
-  every one of their nine benches a built instrument standing on it; below T4 each bench is
-  played as a page.
-- **What Ligar teaches.** Four benches: what a bond is and why ionic and covalent are the
+- **Learn track:** fourteen worlds in road order — Tallow (atoms and the mole), Lanternfall (light
+  and electrons), Ligar (bonding), Bellows (gases), Ember Reach
+  (thermodynamics), Mirrowen (states of matter), Kettle (stoichiometry and reactions),
+  Teeter (equilibrium), Verdigris (acids and bases), Brinewire (electrochemistry), Quicklight (kinetics), Lodestone (transition
+  metals), Thornmere (organic), and Cinder Halo (nuclear). **Every built world is open
+  from the start**; the order is a recommendation. 71 quests charted (97 planned), nine built:
+  all of Tallow (`unit01/q1-grain` … `unit01/q6-weigh`; the mole was built on Ligar and
+  moved), Ligar's first two (`unit03/q1-joins`, `unit03/q2-lattice`) and Kettle's first
+  (`unit07/q1-recipe`, also built on Ligar). Every Learn quest is a game with its own
+  stages, scene, inputs and grading. Tallow and Ligar are walkable ground at T4; Kettle is
+  not yet and Tallow's sixth bench has no site, so those build their own room; below T4 each bench is a page.
+- **What Ligar taught as built (bench three now opens Kettle, bench four closes Tallow).** Four benches: what a bond is and why ionic and covalent are the
   only two kinds (`q1-joins`); what each kind builds, and how that decides whether a block
   shatters, melts low or conducts (`q2-lattice`); why a compound always has the same recipe,
   by count and by mass (`q3-recipe`); and how a count far too big to count is taken as a

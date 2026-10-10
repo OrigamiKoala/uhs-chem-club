@@ -1,14 +1,14 @@
 /**
- * unit05-equilibrium.js — Learn world 5: Equilibrium.
+ * unit08-equilibrium.js — Learn world 8: Equilibrium.
  *
  * CHART ONLY. See unit01-atoms.js for how a quest is built and flipped live.
  */
 
-export const UNIT_05 = {
-  id: 'unit05',
-  order: 5,
-  code: '05',
-  unit: 'Unit 5',
+export const UNIT_08 = {
+  id: 'unit08',
+  order: 8,
+  code: '08',
+  unit: 'Unit 8',
   world: 'Teeter',
   place: 'Salt pans',
   title: 'Equilibrium',

@@ -232,59 +232,59 @@ export const FIELD_MANUAL_TERMS = [
     body: 'An atom or group of atoms that has gained or lost one or more valence electrons, carrying a net electric charge.'
   },
 
-  // --- Learn Unit 2: Ligar (Bonds, Lattices, Moles) ---
+  // --- Learn Unit 3: Ligar (Bonds, Lattices) ---
   {
     id: 'u2_bond',
     term: 'Chemical Bond',
-    road: 'unit02',
-    questKey: 'unit02/q1-joins',
+    road: 'unit03',
+    questKey: 'unit03/q1-joins',
     stageLabel: 'Bench 1, Stage 1',
     stageIndex: 0,
-    route: '#/learn/unit02/q1-joins',
+    route: '#/learn/unit03/q1-joins',
     title: 'Attractive Force',
     body: 'An enduring attractive interaction between atoms, ions, or molecules enabling formation of chemical compounds.'
   },
   {
     id: 'u2_covalent',
     term: 'Covalent Bond',
-    road: 'unit02',
-    questKey: 'unit02/q1-joins',
+    road: 'unit03',
+    questKey: 'unit03/q1-joins',
     stageLabel: 'Bench 1, Stage 2',
     stageIndex: 1,
-    route: '#/learn/unit02/q1-joins',
+    route: '#/learn/unit03/q1-joins',
     title: 'Shared Electron Pair',
     body: 'A chemical linkage formed by the mutual sharing of one or more pairs of electrons between atoms.'
   },
   {
     id: 'u2_ionic',
     term: 'Ionic Bond',
-    road: 'unit02',
-    questKey: 'unit02/q1-joins',
+    road: 'unit03',
+    questKey: 'unit03/q1-joins',
     stageLabel: 'Bench 1, Stage 4',
     stageIndex: 3,
-    route: '#/learn/unit02/q1-joins',
+    route: '#/learn/unit03/q1-joins',
     title: 'Electrostatic Attraction',
     body: 'A chemical bond formed through electrostatic attraction between oppositely charged ions.'
   },
   {
     id: 'u2_lattice',
     term: 'Crystal Lattice',
-    road: 'unit02',
-    questKey: 'unit02/q2-lattice',
+    road: 'unit03',
+    questKey: 'unit03/q2-lattice',
     stageLabel: 'Bench 2, Stage 1',
     stageIndex: 0,
-    route: '#/learn/unit02/q2-lattice',
+    route: '#/learn/unit03/q2-lattice',
     title: 'Ordered 3D Framework',
     body: 'A symmetrical, repeating three-dimensional arrangement of atoms, ions, or molecules in a crystalline solid.'
   },
   {
     id: 'u2_mole',
     term: 'The Mole',
-    road: 'unit02',
-    questKey: 'unit02/q4-weigh',
-    stageLabel: 'Bench 4, Stage 1',
-    stageIndex: 0,
-    route: '#/learn/unit02/q4-weigh',
+    road: 'unit01',
+    questKey: 'unit01/q6-weigh',
+    stageLabel: 'Bench 6, Stage 4',
+    stageIndex: 3,
+    route: '#/learn/unit01/q6-weigh',
     title: 'Counting by Mass',
     body: 'The SI unit of amount of substance containing exactly 6.02214076 × 10²³ elementary entities.'
   }
@@ -316,7 +316,7 @@ export function getFieldManualStats(sessionState = {}) {
   const byRoad = {
     campaign: { total: 0, earned: 0 },
     unit01: { total: 0, earned: 0 },
-    unit02: { total: 0, earned: 0 }
+    unit03: { total: 0, earned: 0 }
   };
 
   for (const t of FIELD_MANUAL_TERMS) {
@@ -363,7 +363,7 @@ export function renderFieldManualModal(sessionState = {}, activeFilter = 'all') 
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'all' ? 'active' : ''}" data-filter="all">All (${stats.earned}/${stats.total})</button>
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'campaign' ? 'active' : ''}" data-filter="campaign">Campaign (${stats.byRoad.campaign.earned}/${stats.byRoad.campaign.total})</button>
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit01' ? 'active' : ''}" data-filter="unit01">Tallow (${stats.byRoad.unit01.earned}/${stats.byRoad.unit01.total})</button>
-        <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit02' ? 'active' : ''}" data-filter="unit02">Ligar (${stats.byRoad.unit02.earned}/${stats.byRoad.unit02.total})</button>
+        <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit03' ? 'active' : ''}" data-filter="unit03">Ligar (${stats.byRoad.unit03.earned}/${stats.byRoad.unit03.total})</button>
       </div>
 
       <div class="field-manual-grid">

@@ -9,8 +9,10 @@
  * Pure data and pure functions — imported by the browser, by the API proxy and by
  * `npm run verify:learn`, so it must never touch the DOM, three.js or localStorage.
  *
- * A world is one course unit. Worlds open in order: you cannot enter world N
- * until world N-1 is finished, which makes the track a road rather than a menu.
+ * A world is one course unit. The road has an order — it is the order the ideas
+ * build on each other — but every built world is open from the start, so a
+ * player can go straight to the unit their class is on. Inside a world the
+ * benches are still played in order.
  *
  * THE LEARN TRACK PAYS NO XP AND NEVER REACHES THE LEADERBOARD. Standings measure
  * the campaign. Nothing in here carries an `xp` field and nothing downstream may
@@ -24,19 +26,23 @@
  */
 
 import { UNIT_01 } from './worlds/unit01-atoms.js';
-import { UNIT_02 } from './worlds/unit02-molecules.js';
-import { UNIT_03 } from './worlds/unit03-states-of-matter.js';
-import { UNIT_04 } from './worlds/unit04-stoichiometry.js';
-import { UNIT_05 } from './worlds/unit05-equilibrium.js';
-import { UNIT_06 } from './worlds/unit06-acids-and-bases.js';
-import { UNIT_07 } from './worlds/unit07-gases.js';
-import { UNIT_08 } from './worlds/unit08-thermodynamics.js';
-import { UNIT_09 } from './worlds/unit09-kinetics.js';
-import { UNIT_10 } from './worlds/unit10-nuclear-chemistry.js';
+import { UNIT_02 } from './worlds/unit02-quantum.js';
+import { UNIT_03 } from './worlds/unit03-bonding.js';
+import { UNIT_04 } from './worlds/unit04-gases.js';
+import { UNIT_05 } from './worlds/unit05-thermodynamics.js';
+import { UNIT_06 } from './worlds/unit06-states-of-matter.js';
+import { UNIT_07 } from './worlds/unit07-stoichiometry.js';
+import { UNIT_08 } from './worlds/unit08-equilibrium.js';
+import { UNIT_09 } from './worlds/unit09-acids-and-bases.js';
+import { UNIT_10 } from './worlds/unit10-electrochemistry.js';
+import { UNIT_11 } from './worlds/unit11-kinetics.js';
+import { UNIT_12 } from './worlds/unit12-transition-metals.js';
+import { UNIT_13 } from './worlds/unit13-organic.js';
+import { UNIT_14 } from './worlds/unit14-nuclear-chemistry.js';
 
 const WORLD_MODULES = [
-  UNIT_01, UNIT_02, UNIT_03, UNIT_04, UNIT_05,
-  UNIT_06, UNIT_07, UNIT_08, UNIT_09, UNIT_10
+  UNIT_01, UNIT_02, UNIT_03, UNIT_04, UNIT_05, UNIT_06, UNIT_07,
+  UNIT_08, UNIT_09, UNIT_10, UNIT_11, UNIT_12, UNIT_13, UNIT_14
 ];
 
 /**

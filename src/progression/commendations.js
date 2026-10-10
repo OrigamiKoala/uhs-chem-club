@@ -3,6 +3,8 @@
  * Pure data and pure functions; importable in Node and browser.
  */
 
+import { getWorld } from '../learn/curriculum.js';
+
 export const COMMENDATION_ROADS = ['campaign', 'craft', 'learn', 'crew', 'season'];
 export const COMMENDATION_TIERS = ['painted', 'brass', 'etched'];
 
@@ -171,14 +173,14 @@ export const COMMENDATIONS = [
   {
     id: 'tallow_surveyed',
     name: 'Tallow Surveyed',
-    line: 'Completed all five benches across the salt flats of Tallow.',
+    line: 'Completed every bench across the salt flats of Tallow.',
     tier: 'etched',
     road: 'learn',
     hidden: false,
     earnedBy: (s) => {
       if (!s.learn) return false;
-      const q = ['q1-grain', 'q2-core', 'q3-catalogue', 'q4-ledger', 'q5-assay'];
-      return q.every(id => Boolean(s.learn[`unit01/${id}`]?.completedAt));
+      const q = (getWorld('unit01')?.quests || []).filter(x => x.status === 'live').map(x => x.id);
+      return q.length > 0 && q.every(id => Boolean(s.learn[`unit01/${id}`]?.completedAt));
     }
   },
   {
@@ -206,7 +208,7 @@ export const COMMENDATIONS = [
     tier: 'painted',
     road: 'learn',
     hidden: false,
-    earnedBy: (s) => Boolean(s.learn && s.learn['unit02/q1-joins']?.completedAt)
+    earnedBy: (s) => Boolean(s.learn && s.learn['unit03/q1-joins']?.completedAt)
   },
   {
     id: 'learn_q2_lattice',
@@ -215,37 +217,38 @@ export const COMMENDATIONS = [
     tier: 'painted',
     road: 'learn',
     hidden: false,
-    earnedBy: (s) => Boolean(s.learn && s.learn['unit02/q2-lattice']?.completedAt)
+    earnedBy: (s) => Boolean(s.learn && s.learn['unit03/q2-lattice']?.completedAt)
   },
   {
     id: 'learn_q3_recipe',
     name: 'Recipe Keeper',
-    line: 'Measured definite proportions in the quarry.',
+    line: 'Measured definite proportions at the soda lake of Kettle.',
     tier: 'brass',
     road: 'learn',
     hidden: false,
-    earnedBy: (s) => Boolean(s.learn && s.learn['unit02/q3-recipe']?.completedAt)
+    earnedBy: (s) => Boolean(s.learn && s.learn['unit07/q1-recipe']?.completedAt)
   },
   {
     id: 'learn_q4_weigh',
     name: 'Molar Scale',
-    line: 'Counted by weighing at the basalt quarry.',
+    line: 'Counted by weighing on the salt flats of Tallow.',
     tier: 'brass',
     road: 'learn',
     hidden: false,
-    earnedBy: (s) => Boolean(s.learn && s.learn['unit02/q4-weigh']?.completedAt)
+    earnedBy: (s) => Boolean(s.learn && s.learn['unit01/q6-weigh']?.completedAt)
   },
   {
     id: 'ligar_surveyed',
     name: 'Ligar Surveyed',
-    line: 'Completed all four benches across the basalt arches of Ligar.',
+    line: 'Completed every built bench across the basalt arches of Ligar.',
     tier: 'etched',
     road: 'learn',
     hidden: false,
     earnedBy: (s) => {
       if (!s.learn) return false;
-      const q = ['q1-joins', 'q2-lattice', 'q3-recipe', 'q4-weigh'];
-      return q.every(id => Boolean(s.learn[`unit02/${id}`]?.completedAt));
+      // Read off the chart, so the plate keeps meaning "every bench" as more are built.
+      const q = (getWorld('unit03')?.quests || []).filter(x => x.status === 'live').map(x => x.id);
+      return q.length > 0 && q.every(id => Boolean(s.learn[`unit03/${id}`]?.completedAt));
     }
   },
   {
@@ -255,16 +258,16 @@ export const COMMENDATIONS = [
     tier: 'painted',
     road: 'learn',
     hidden: false,
-    earnedBy: (s) => Boolean(s.flags && s.flags.unit02_practice_done)
+    earnedBy: (s) => Boolean(s.flags && s.flags.unit03_practice_done)
   },
   {
-    id: 'manual_unit02',
-    name: 'Unit 2 Field Log',
+    id: 'manual_unit03',
+    name: 'Unit 3 Field Log',
     line: 'Logged every vocabulary term across Ligar.',
     tier: 'etched',
     road: 'learn',
     hidden: false,
-    earnedBy: (s) => Boolean(s.flags && s.flags.unit02_manual_complete)
+    earnedBy: (s) => Boolean(s.flags && s.flags.unit03_manual_complete)
   },
 
   // ===================== CREW =====================

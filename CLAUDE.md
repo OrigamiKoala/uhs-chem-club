@@ -172,7 +172,7 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   basin now has outcrops, an arch, a skeleton and a derelict in it, and a landmark in the
   wrong place would wall a pylon off.
 - `npm run verify:bench` — deploys ALL FIVE Unit 1 instruments onto the real Tallow benches,
-  then ALL FOUR Unit 2 instruments onto the real Ligar benches (each fed the widest stage
+  then Ligar's built join bench onto its two real benches (each fed the widest stage
   its quest declares, read from the quest's own `STAGES`), in Node, and measures them: every site faces the ground the player walks in from, and every
   body, readable face and control lands inside the glass at six aspects, clear of the HUD. It
   also drives `aimForChrome` — the camera correction a deployed bench applies — and asserts
@@ -415,11 +415,20 @@ served in-memory to prevent heavy sheet read timeouts. Ephemeral logs (`Sessions
 `Progress` records are initialized on `quest/start` upon entering Sector 01, and are upserted
 idempotently during `quest/grade` and `quest/complete`.
 
-## Learn track — ten worlds, one per course unit
+## Learn track — fourteen worlds, one per topic
 
 A second road beside the campaign, reached from the LEARN nav tab (`#/learn`).
-Ten worlds in order — Atoms, Molecules, States of Matter, Stoichiometry and Reactions,
-Equilibrium, Acids and Bases, Gases, Thermodynamics, Kinetics, Nuclear Chemistry — and
+Fourteen worlds in order — Tallow (atoms, the periodic table and the mole), Lanternfall (light,
+orbitals and periodic trends), Ligar (bonding, structure and orbitals),
+Bellows (gases), Ember Reach (thermodynamics), Mirrowen (states of matter and IMFs), Kettle
+(stoichiometry and reactions), Teeter (equilibrium), Verdigris (acids and bases),
+Brinewire (electrochemistry), Quicklight (kinetics), Lodestone (transition metals), Thornmere (organic), Cinder Halo (nuclear) — and **every built world is open from the start**,
+so a student can go straight to the unit their class is on. The order is the order the
+ideas build on each other, not a lock. Every unbuilt quest on the road is planned in
+`docs/plans/learn-quests.md` (Lanternfall and Ligar stage by stage and agreed; the
+other eleven worlds as a proposal under review). Ids are `unit01`…`unit14` in
+road order (renumbered on 2026-10-10, pre-launch, so no stored progress was orphaned), and
+
 **every Learn quest is a game built the way the Charge Gardens was built** — it owns its
 stages, its 3D scene, its inputs and its grading. The plan and the authoring steps live in
 `docs/plans/learn-track.md`.
@@ -427,9 +436,8 @@ stages, its 3D scene, its inputs and its grading. The plan and the authoring ste
 **Every world ends on a set of practice problems** (`src/learn/practice.js`): five per
 built quest, gathered across the whole unit and shown once every bench in it has been
 worked. They are optional, skippable a question at a time or all at once, and they GATE
-NOTHING — the next world opens on the last quest's completion whether or not a single
-question is answered, because gating is `worldProgress`, which knows nothing about
-practice. They are offered once automatically (a `learnPracticeOffered:<worldId>` session
+NOTHING — every built world is already open, and inside a world the next bench opens on
+the last one's completion whether or not a single question is answered. They are offered once automatically (a `learnPracticeOffered:<worldId>` session
 flag) and come back for ever through a **Problems** key beside a finished world on the
 star map, on the Learn road, in the world brief and in the walk HUD. They are a **2D
 overlay on every tier**, including T4: this is the player's own revision, not a
@@ -456,10 +464,9 @@ into grinding and would punish the students it exists to help.
   localStorage, because the proxy and the verifier import it too.
 - **Charts** — one file per world in `src/learn/worlds/`. A world's `status` is **derived**,
   never declared: it is `live` exactly when one of its quests has a module.
-- **Gating** (`src/learn/progress.js`) — world 1 is always open, world N opens when N-1 is
-  complete; quest 1 is open with its world, quest N opens when N-1 is complete. Charted
-  (unbuilt) entries are transparent: an unbuilt world between two built ones must not seal
-  the road, or world 2 would wait on the whole curriculum.
+- **Gating** (`src/learn/progress.js`) — every built world is open (`isWorldOpen` is just
+  `status === 'live'`); inside a world quest 1 is open and quest N opens when N-1 is
+  complete. A charted (unbuilt) quest is transparent: it never holds the one after it shut.
 - **The quest contract** — `src/learn/quests/_template.js`. A module exports
   `mount(container, ctx)` and returns `{ dispose }`. `ctx` carries the world, the quest,
   `stagesCleared`, `isComplete`, `reportStage(i)`, `reportComplete()` and `exit()`.
@@ -678,8 +685,10 @@ into grinding and would punish the students it exists to help.
   `setAimShift` walk the look-at point along the bench until the stations are centred in
   the clear part of the view. Below 860 px it reverts to the centred card, because a
   docked panel beside a bench too narrow to read helps nobody.
-- **ALL FIVE Unit 1 benches and ALL FOUR Unit 2 benches are BUILT at T4.** `BUILT_BENCHES`
-  in `engine/instruments.js` holds the whole of Units 1 and 2, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
+- **ALL SIX Tallow benches, BOTH built Ligar benches and Kettle's one are BUILT at T4.**
+  `BUILT_BENCHES` in `engine/instruments.js` holds every built quest. Kettle is not yet
+  walkable, and Tallow's `q6-weigh` has no site yet, so those build their own room
+  around themselves: `learn-quest.js` treats a quest with no site as off-world, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
   asks to decide whether the player keeps their feet at a real object or the bench is drawn
   as a page over the flat.
   - The **sampler scope** (`scope3d.js`) used to be excluded on the argument that a
@@ -908,14 +917,27 @@ a count, and stops. A real
 sample is a mix of isotopes, the proportions are fixed, the listed mass is a weighted average
 that leans toward the common isotope, and the average runs both ways — a sealed sample gets
 named off its number. Hint rung three shows how to set up the average without revealing the calculated sum. The bench never counts by
-weighing at scale: moles are Ligar's.
+weighing at scale: the mole is the next bench's.
 
-### World 2 — Ligar (`unit02`, four benches, all live, walkable at T4)
+### World 1 quest 6 — Counting By Weight (`unit01/q6-weigh`, live, no site yet)
+Built as Ligar's bench four (described under World 3 below) and moved here on 2026-10-10,
+because Bellows, Ember Reach and Mirrowen all need the mole and AP Unit 1 teaches it beside
+atomic mass. Its one ionic sample (a mole of NaCl "formula units") became a mole of CO₂,
+44.0 g, since Tallow comes before Ligar earns the formula unit. It has no site on Tallow's
+ground yet: `verify-tallow` lists it in `SITE_PENDING`, and at T4 it builds its own room.
+
+### World 3 — Ligar (`unit03`, nine benches charted, two live, walkable at T4)
 
 Ligar is the field of basalt arches. Tallow spent five benches on one atom at a
-time; Ligar is about what happens when two of them touch. All four quests are
-built as games. At T3 and below each is played as a page; at T4 Ligar is walkable
-ground and all four benches are BUILT instruments standing on it (see "Ligar —
+time; Ligar is about what happens when two of them touch. Benches one and two are
+built as games; three to nine (bond energy, Lewis structures, formal charge and
+resonance, molecular shape, polarity, hybridization, molecular orbitals) are charted
+and planned in `docs/plans/learn-quests.md`. **The old benches three and four,
+`q3-recipe` and `q4-weigh`, moved: the first to Kettle (`unit07/q1-recipe`), the
+second to Tallow (`unit01/q6-weigh`, its NaCl stage rewritten as CO₂)** when the
+road was reordered; they are described below because they were written here.
+At T3 and below each is played as a page; at T4 Ligar is walkable
+ground and both built benches are BUILT instruments standing on it (see "Ligar —
 Learn world 02 as a place you walk"). Everything Tallow earned (atom, element, compound, molecule, proton,
 neutron, electron, shell, valence, isotope, ion, cation, anion, metal, nonmetal,
 atomic number, mass number) is a plain word from here on.
@@ -952,7 +974,7 @@ where it is plain English ("one connected piece"). The join bench's probe key is
   900 degree vessel. **The furnace is not a one-way door**: `Let It Cool` exists
   because a stage that asks for a cold reading and a molten one is unfinishable if
   heating cannot be undone.
-- **`q3-recipe` The Same Recipe** — the sampler scope, reused unchanged. Three
+- **`q3-recipe` The Same Recipe** (now Kettle `q1-recipe`) — the sampler scope, reused unchanged. Three
   samples of one compound from three places (**fixed composition**) → a sample
   with loose atoms no molecule would take → two compounds of the same two
   elements, one to one and one to two → what one molecule weighs → what share of
@@ -961,7 +983,7 @@ where it is plain English ("one connected piece"). The join bench's probe key is
   three claims. The law of definite proportions is the whole spine of this bench
   and is never named, because the name teaches nothing the counting has not
   already shown.
-- **`q4-weigh` Counting By Weight** — the assay floor, reused with one additive
+- **`q4-weigh` Counting By Weight** (now Tallow `q6-weigh`) — the assay floor, reused with one additive
   change: a hopper may declare `bulk`, meaning the gate is dogged shut, the chute
   refuses it and the balance is all you get. Count a crate too full to tip → add up
   a recipe (**formula mass**) → three samples of sixty weighed against each other →
@@ -1104,7 +1126,7 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
 
 ### Ligar — Learn world 02 as a place you walk (`three/ligar.js`, T4)
 
-At T4, `#/learn/unit02` is a basalt quarry at dusk the player walks in first person,
+At T4, `#/learn/unit03` is a basalt quarry at dusk the player walks in first person,
 built from the three reference paintings (`ligar1`–`ligar3`): columnar basalt
 everywhere, three natural arches striding away north, a steel deck under a gantry sign,
 and an excavation with conveyors climbing out of it.
@@ -1184,14 +1206,18 @@ and an excavation with conveyors climbing out of it.
   unbaked site group; the sun's shadow box follows the player in whole texels and is
   re-drawn only when it moves, while a bench is deployed (`benchesOpen`), or one frame
   in three (`paceShadow`).
-- **Four sites, all built, each sign `Bench N - <quest title>`.** `site-1` *Bench 1 -
+- **Four sites, two built, each sign `Bench N - <quest title>`.** `site-1` *Bench 1 -
   What Holds* (`q1-joins`) on a cut terrace under a stone portal west of the yard;
   `site-2` *Bench 2 - Stone and Wire* (`q2-lattice`) at the **Tube Forge** — down the
   ramp, across the quarry floor and in under a barrel-vaulted lava tube with a hearth
   whose fire is the one red light and the one self-moving thing in the world, because
-  that bench heats blocks; `site-3` *Bench 3 - The Same Recipe* (`q3-recipe`) in the
-  silo-fed **Batch House**; `site-4` *Bench 4 - Counting By Weight* (`q4-weigh`) at the
-  **Weighbridge** with its scale house. Sites 3 and 4 share the east deck and the gantry
+  that bench heats blocks; `site-3` *Bench 3 - Bond Energy* (`q3-distance`, unbuilt) in
+  the silo-fed **Batch House**; `site-4` *Bench 4 - Lewis Structures* (`q4-dots`, unbuilt)
+  at the **Weighbridge** with its scale house. Both were re-signed when their old benches
+  moved to Kettle; an unbuilt site's indicator stays dark and `[E]` there opens nothing.
+  `verify:ligar` requires a site for every BUILT Ligar quest, not every charted one, so
+  the later benches get ground laid when they are built. A sign is held to six words,
+  which is why bench three is titled `Bond Energy`. Sites 3 and 4 share the east deck and the gantry
   that carries both their signs, which is how the reference art placed them.
 - **The tube is inside the cut, not behind it.** A chamber beyond the far wall would be
   outside the excavation rectangle, where `getTerrainHeight` answers with the flat five
@@ -1626,13 +1652,18 @@ clearance, every stage has exactly three distinct hint rungs, and a giver→give
 is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 ## Plans in flight
-- `docs/plans/learn-track.md` — the Learn road: ten worlds, 41 quests charted, nine built
-  (`unit01/q1-grain` … `unit01/q5-assay`, the whole of Tallow, and `unit02/q1-joins` …
-  `unit02/q4-weigh`, the whole of Ligar). Scaffolding, gating, routes, backend tab,
+- `docs/plans/learn-track.md` — the Learn road: fourteen worlds, 71 quests charted, nine
+  built (`unit01/q1-grain` … `unit01/q6-weigh`, the whole of Tallow; `unit03/q1-joins` and
+  `unit03/q2-lattice` on Ligar; `unit07/q1-recipe` on Kettle). Scaffolding, gating, routes, backend tab,
   per-world practice sets and the verifier are in place. World 01 (Tallow) is also built as
-  walkable ground at T4, all five of its benches built instruments standing on it. **Ligar is walkable at T4 too** — all four of its
-  benches are built instruments on its ground, and a page on every lower tier. The other
-  eight worlds are charts only. The Tallow→Ligar pass
+  walkable ground at T4, five of its six benches built instruments standing on it (site 6,
+  for `q6-weigh`, is still to be laid). **Ligar is walkable at T4 too** — both its built
+  benches are built instruments on its ground, and a page on every lower tier. Kettle has
+  one built quest and no ground; the other eleven worlds are charts only.
+- `docs/plans/learn-quests.md` — every unbuilt quest: Lanternfall and Ligar benches
+  three to nine stage by stage (agreed), and the other eleven worlds as an eight-stage
+  proposal per quest with AP CED coverage (97 quests in all), plus the new instruments,
+  road-wide dependencies and twelve open decisions. The Tallow→Ligar pass
   (`tallow-ligar-build.md`) carries the bench order and what is deliberately left out of
   each unit.
 - `docs/plans/engagement-pass.md` — progression and engagement (plan only, nothing built):
@@ -1669,7 +1700,7 @@ Nav labels match page titles exactly: BRIDGE, STAR MAP, LEARN, STANDINGS, INVENT
 
 **The Star Map charts two roads.** `screens/starmap.js` carries a two-tab row in both the
 T4 holo-table and the 2D page: `Active Quests` (the four campaign sectors, unchanged) and
-`Learn Quests` (the ten Learn worlds, from `curriculum.js` with gating from
+`Learn Quests` (the fourteen Learn worlds, from `curriculum.js` with gating from
 `learn/progress.js`). A world that is built as a place reads *Enter <world>* and enters it
 in 3D; one that is not reads *Enter* and opens its quest list. The LEARN nav tab is
 untouched, so neither road is reachable only one way.
@@ -2103,7 +2134,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     reload onto a world route (the first route of a page load), a signed-out player and
     `session.reduceMotion` — each keeps the old path, launch film included at T3.
 - T4 Learn deployment: In T4, `#/learn/unit01` enters the 3D Tallow world
-  (`stage.enterTallowScene(siteId)`), and `#/learn/unit02` enters Ligar
+  (`stage.enterTallowScene(siteId)`), and `#/learn/unit03` enters Ligar
   (`stage.enterLigarScene(siteId)`); walking to a bench and pressing `[E]` raises a
   `learn-site:interact` event (it was `tallow:interact` while Tallow was the only one)
   that routes to `#/learn/<worldId>/<questId>`, where the quest's

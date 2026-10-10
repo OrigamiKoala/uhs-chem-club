@@ -6,15 +6,17 @@
  * three times is not thereby ahead of one who did it once, and a student who skips
  * it entirely is not behind. Progress here is stages cleared and quests finished.
  *
- * Gating is what makes the track a road:
- *   - World 1 is always open. World N opens when world N-1 is complete.
- *   - Inside a world, quest 1 is open and quest N opens when quest N-1 is complete.
+ * Gating:
+ *   - Every built world is open from the start. The road has an order, but a
+ *     student should be able to go straight to the unit their class is on.
+ *   - Inside a world, quest 1 is open and quest N opens when quest N-1 is complete,
+ *     because each bench builds on the one before it.
  *   - A quest with no module yet is 'charted' and never opens; a world whose
  *     quests are all charted is charted too.
  */
 
 import { session } from '../session.js';
-import { WORLDS, getWorld, previousWorld } from './curriculum.js';
+import { WORLDS, getWorld } from './curriculum.js';
 
 export function questKey(worldId, questId) {
   return `${worldId}/${questId}`;
@@ -92,24 +94,15 @@ export function worldProgress(world) {
 }
 
 export function isWorldComplete(world) {
-  // No built world before this one means nothing is holding it shut.
+  // No world at all is trivially complete.
   if (!world) return true;
   return worldProgress(world).complete;
 }
 
 export function isWorldOpen(world) {
   if (!world) return false;
-  if (world.status !== 'live') return false;
-  // Charted worlds are transparent: an unbuilt world between two built ones must
-  // not seal the road, so the gate is the last BUILT world before this one.
-  return isWorldComplete(lastBuiltBefore(world));
-}
-
-/** The nearest built world ahead of this one on the road, or null. */
-function lastBuiltBefore(world) {
-  let prev = previousWorld(world.id);
-  while (prev && prev.status !== 'live') prev = previousWorld(prev.id);
-  return prev;
+  // Every built world is open. A world with nothing built is charted, not locked.
+  return world.status === 'live';
 }
 
 /** 'complete' | 'open' | 'locked' | 'charted' — one word for the map badge. */

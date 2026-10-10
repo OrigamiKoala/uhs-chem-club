@@ -8,11 +8,12 @@
  * Quests are played in order. `stageCount` is the intended length and is what the
  * map shows before the quest exists; the module reports the real figure once built.
  *
- * FIVE BENCHES, AND THE LAST TWO ARE THE END OF THE UNIT. The road runs from
- * "what is the smallest piece" to "describe any piece with three numbers" and
- * stops there. Counting by weighing — the mole and molar mass — is Ligar's, not
- * Tallow's: a unit that has only just learned what a proton is has no business
- * being handed Avogadro's number.
+ * SIX BENCHES. The road runs from "what is the smallest piece" to "describe any
+ * piece with three numbers", then weighs it: atomic mass, then the mole. The mole
+ * was Ligar's and later Kettle's; it moved here on 2026-10-10 because Bellows,
+ * Ember Reach and Mirrowen all need it, and AP Unit 1 teaches it beside atomic
+ * mass. `q6-weigh` has no site on the ground yet, so at T4 its bench builds its
+ * own room (`learn-quest.js`) until one is laid.
  */
 
 export const UNIT_01 = {
@@ -24,7 +25,7 @@ export const UNIT_01 = {
   place: 'Salt flats',
   title: 'Atoms',
   line: 'Atomic structure, elements, and the periodic table.',
-  brief: 'Investigate the structure of atoms, subatomic particles, isotopes, and atomic mass across five benches.',
+  brief: 'Investigate the structure of atoms, subatomic particles, isotopes, atomic mass and the mole across six benches.',
 
   quests: [
     {
@@ -71,6 +72,15 @@ export const UNIT_01 = {
       stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit01/q5-assay.js')
+    },
+    {
+      id: 'q6-weigh',
+      title: 'Counting By Weight',
+      line: 'Using molar mass to count atoms and molecules by weighing.',
+      arena: 'bench',
+      stageCount: 8,
+      status: 'live',
+      module: () => import('../quests/unit01/q6-weigh.js')
     }
   ]
 };

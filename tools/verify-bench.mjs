@@ -839,8 +839,11 @@ stagePasses();
 
 /* ================================================================ LIGAR
 
-   The four Unit 2 benches, deployed onto the built Ligar and measured by the
-   same `check` that measures Tallow's five. Each is fed the WIDEST stage its
+   Ligar's built benches (the join bench, at sites one and two), deployed onto
+   the built Ligar and measured by the same `check` that measures Tallow's five.
+   Sites three and four stand ready for benches not yet built: the sampler scope
+   and assay floor that used to stand there moved to Kettle with `q1-recipe` and
+   `q2-weigh`, and are measured on Tallow. Each is fed the WIDEST stage its
    quest actually declares — read out of the quest's own table, not typed here —
    because the widest stage is the one that runs off the glass first. */
 
@@ -849,10 +852,8 @@ world.scene.updateMatrixWorld(true);
 console.log('');
 checkFacing();
 
-const { STAGES: JOIN_STAGES } = await import('../src/learn/quests/unit02/q1-joins.js');
-const { STAGES: SLAB_STAGES } = await import('../src/learn/quests/unit02/q2-lattice.js');
-const { STAGES: RECIPE_STAGES, KINDS: RECIPE_KINDS } = await import('../src/learn/quests/unit02/q3-recipe.js');
-const { STAGES: WEIGH_STAGES } = await import('../src/learn/quests/unit02/q4-weigh.js');
+const { STAGES: JOIN_STAGES } = await import('../src/learn/quests/unit03/q1-joins.js');
+const { STAGES: SLAB_STAGES } = await import('../src/learn/quests/unit03/q2-lattice.js');
 const { planJoin } = await import('../src/learn/engine/joinbench.js');
 
 const widest = (stages, key) => stages.reduce((a, b) => ((b[key]?.length || 0) > (a[key]?.length || 0) ? b : a));
@@ -866,18 +867,8 @@ check('q2-lattice', 'join bench (blocks)',
   (camera, anchor) => new JoinBench3D(null, { world: worldFrame(camera, anchor) }),
   bench => bench.setPlates(widest(SLAB_STAGES, 'slabs').slabs)
 );
-check('q3-recipe', 'sampler scope (Ligar)',
-  (camera, anchor) => new SampleScope3D(null, {
-    kinds: RECIPE_KINDS, onPower: () => {}, world: worldFrame(camera, anchor)
-  }),
-  bench => bench.setSamples(widest(RECIPE_STAGES, 'samples').samples)
-);
-check('q4-weigh', 'assay floor (Ligar)',
-  (camera, anchor) => new AssayFloor3D(null, { world: worldFrame(camera, anchor) }),
-  bench => bench.setHoppers(widest(WEIGH_STAGES, 'hoppers').hoppers)
-);
 if (failures === before) {
-  ok(`all four Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
+  ok(`both Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
 }
 
 /* THE JOIN BENCH, EVERY STAGE, THROUGH THE REAL POINTER PATH.

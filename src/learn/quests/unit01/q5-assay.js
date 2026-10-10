@@ -469,7 +469,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'Everything on Tallow was one kind of atom at a time. The next world is about what happens when two kinds join together.'
+      body: 'Every listed mass on the chart is now a number you can read. The next bench uses those numbers to count atoms far too small to count, by weighing them.'
     }
   ]
 };

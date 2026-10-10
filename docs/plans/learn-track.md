@@ -1,7 +1,10 @@
 # Learn track — worlds, quests, and how to build them
 
-**Status: ten worlds charted, nine quests built and live — all of world 1
-(Tallow) and all of world 2 (Ligar).** The road, the gating, the routes, the
+**Status (2026-10-10): fourteen worlds charted in a new order, nine quests built
+and live — all of world 1 (Tallow), Ligar's first two benches (world 3) and
+Kettle's first two (world 7, moved from Ligar).** Every built world is open from
+the start. The quantum world and Ligar's remaining benches are planned in
+`learn-quests.md`. The road, the gating, the routes, the
 progress store, the backend tab and the verifier all exist. Tallow's five benches
 and Ligar's four are playable end to end and set the pattern the other 32 quests
 follow. **Both are walkable ground at T4** (Ligar since 2026-09-23): every one of
@@ -12,7 +15,7 @@ always were, grading identically.
 ## The shape of it
 
 ```
-LEARN  (#/learn)            ten worlds, walked in order
+LEARN  (#/learn)            fourteen worlds, any built one open
   └─ WORLD (#/learn/unit01) one course unit — quests, played in order
        └─ QUEST (#/learn/unit01/q1-grain)
             a game with its own module, built like the Charge Gardens
@@ -56,7 +59,8 @@ exists to help.
 
 ## Gating
 
-- World 1 is always open; world N opens when world N-1 is complete.
+- Every built world is open from the start (changed 2026-10-10: a student should
+  be able to go straight to the unit their class is on).
 - Inside a world, quest 1 is open; quest N opens when quest N-1 is complete.
 - A world or quest with nothing built is **charted** and never opens. Charted
   entries are transparent to the road — an unbuilt world between two built ones
@@ -146,16 +150,28 @@ opens it in the right place, and the host loads it.
 
 | # | World | Place | Unit | Quests |
 | --- | --- | --- | --- | --- |
-| 01 | Tallow | Salt flats | Atoms | 5 (5 built, walkable at T4) |
-| 02 | Ligar | Basalt arches | Molecules | 4 (4 built, walkable at T4) |
-| 03 | Mirrowen | Tidal shelf | States of Matter | 4 |
-| 04 | Kettle | Soda lake | Stoichiometry and Reactions | 4 |
-| 05 | Teeter | Salt pans | Equilibrium | 4 |
-| 06 | Verdigris | Acid marsh | Acids and Bases | 4 |
-| 07 | Bellows | Cloud deck | Gases | 4 |
-| 08 | Ember Reach | Vent fields | Thermodynamics | 4 |
-| 09 | Quicklight | Storm belt | Kinetics | 4 |
-| 10 | Cinder Halo | Crater sea | Nuclear Chemistry | 4 |
+| 01 | Tallow | Salt flats | Atoms | 6 (6 built, walkable at T4; site 6 pending) |
+| 02 | Lanternfall | Aurora ice | Light and Electrons | 9 (planned) |
+| 03 | Ligar | Basalt arches | Bonding | 9 (2 built, walkable at T4; 7 planned) |
+| 04 | Bellows | Cloud deck | Gases | 4 |
+| 05 | Ember Reach | Vent fields | Thermodynamics | 4 |
+| 06 | Mirrowen | Tidal shelf | States of Matter | 4 |
+| 07 | Kettle | Soda lake | Stoichiometry and Reactions | 5 (1 built, moved from Ligar) |
+| 08 | Teeter | Salt pans | Equilibrium | 4 |
+| 09 | Verdigris | Acid marsh | Acids and Bases | 4 |
+| 10 | Brinewire | Copper marsh | Electrochemistry | 6 |
+| 11 | Quicklight | Storm belt | Kinetics | 4 |
+| 12 | Lodestone | Iron canyons | Transition Metals | 4 |
+| 13 | Thornmere | Fen forest | Organic Chemistry | 4 |
+| 14 | Cinder Halo | Crater sea | Nuclear Chemistry | 4 |
+
+Worlds 4–14 above still show their placeholder charts; `learn-quests.md` proposes
+their real quests.
+
+Ids are `unit01`…`unit14` in road order (renumbered
+2026-10-10; Ligar was `unit02`, its quests now live in `quests/unit03/`;
+`q3-recipe` became `quests/unit07/q1-recipe.js` and `q4-weigh` became
+`quests/unit01/q6-weigh.js`).
 
 ## World 1 quest 1 — The Grain of Things
 
