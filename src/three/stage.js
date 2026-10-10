@@ -7,7 +7,7 @@
 import * as THREE from "three";
 import { tierManager, tierAtLeast, isTouchPrimary } from "./tier.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { CameraRig } from "./camera-rig.js";
+import { CameraRig, SHIP_ANCHORS } from "./camera-rig.js";
 import { ShipInterior } from "./ship.js";
 import { SHIP_BOUNDS } from "./ship-rooms.js";
 import { createStarfield } from "./materials/starfield.js";
@@ -103,8 +103,9 @@ class Stage {
     const width = window.innerWidth;
     const height = window.innerHeight;
     this.camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
-    this.camera.position.set(0, 1.55, 1.8);
-    this.camera.lookAt(0, 1.55, 20);
+    this.camera.position.copy(SHIP_ANCHORS.bridge.pos);
+    this.camera.lookAt(SHIP_ANCHORS.bridge.target);
+    this.camera.updateMatrixWorld(true);
 
     // 2. WebGL Renderer with proper color management
     this.renderer = new THREE.WebGLRenderer({
@@ -1192,6 +1193,7 @@ class Stage {
     if (this.cameraRig && !boarding) {
       this.cameraRig.moveTo(locationKey);
     }
+    this.fpsControls?.syncFromCamera();
   }
 
   /**
@@ -1388,6 +1390,7 @@ class Stage {
         this.fpsControls?.hidePrompt();
       } else if (this.cameraRig && this.cameraRig.isTransitioning) {
         this.cameraRig.update(now);
+        this.fpsControls?.syncFromCamera();
       } else if (this.fpsControls && canMove) {
         this.fpsControls.update(delta);
         this.syncAimPrompt();

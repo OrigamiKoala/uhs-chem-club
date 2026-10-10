@@ -1329,12 +1329,7 @@
    world behind the page — so there is nothing for the deck to make way for,
    and dropping it under an empty column would lay it across the very bench it
    is about. It stays docked on the right down to phone widths, which is also
-   where a phone turned sideways to walk a world lands. */
-@media (min-width: 761px) and (max-width: 1000px) {
-  .learn-quest-overworld .lq-body { grid-template-columns: minmax(0, 1fr) min(48vw, 420px); }
-  .learn-quest-overworld .lq-deck { position: sticky; top: calc(var(--hud-h) + 8px); }
-  .learn-quest-overworld .lq-prompt-strip { display: none; }
-}
+
 
 /* A cleared lamp is a way back into that stage; the current one is not. */
 .lq-lamp { cursor: default; }
@@ -1568,7 +1563,23 @@
    read and a live render is the worst possible thing to read text against. No
    backdrop blur: blurring a full-screen WebGL frame is the single most
    expensive thing this app could ask a handset to do. */
-.learn-quest-overworld { position: relative; }
+/* ===================================================================
+   LEARN QUEST OVERWORLD — Erebus-style 2D overlay over the 3D world
+   =================================================================== */
+.learn-quest-overworld {
+  position: fixed !important;
+  inset: var(--hud-h) 0 0 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 1rem 1.25rem 1.25rem !important;
+  pointer-events: none !important;
+  z-index: 20 !important;
+  overflow: hidden !important;
+  background: transparent !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
 
 .learn-quest-overworld::before {
   content: '';
@@ -1579,62 +1590,247 @@
   pointer-events: none;
 }
 
-/* THE FRAME IS PLATES OVER A LIVE BENCH, NOT A PAGE OVER A PICTURE.
-   The instrument is standing BEHIND these plates and the player has to be able
-   to reach it: to click a grain on a station screen, or to lean the view by
-   dragging the glass beside one. A transparent box still takes a press, and
-   `.lq` is a full-width box whose height is the tallest column in it — so the
-   empty area beside the tool plate was quietly eating every click aimed at the
-   bench behind it, and a picture the player could see was one they could not
-   touch. Only the plates themselves take a press; everything between them
-   passes it through. */
 .learn-quest-overworld,
 .learn-quest-overworld .learn-quest-mount,
 .learn-quest-overworld .lq,
-.learn-quest-overworld .lq-body,
 .learn-quest-overworld .lq-stage {
   pointer-events: none;
 }
 
 .learn-quest-overworld .learn-host-bar,
 .learn-quest-overworld .lq-rail,
-.learn-quest-overworld .lq-stage-head,
-.learn-quest-overworld .lq-controls,
-.learn-quest-overworld .lq-scope,
-.learn-quest-overworld .lq-deck,
+.learn-quest-overworld .lq-body,
 .learn-quest-overworld .lq-dock-bar {
   pointer-events: auto;
 }
 
-/* The folded frame: Stage Panel and Commit, docked in the corner. A solid
-   plate, never a blur — it stands over the live bench, and blurring a WebGL
-   frame is the most expensive thing this app could ask a handset for. */
+/* Top HUD: Leave Bench and stage lamps rail */
+.learn-quest-overworld .learn-host-bar {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  padding: 0.45rem 0.85rem !important;
+  margin-bottom: 0.35rem !important;
+  background: var(--bg-surface) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7) !important;
+  align-self: flex-start !important;
+}
+
+.learn-quest-overworld .lq-rail {
+  display: inline-flex !important;
+  align-items: center !important;
+  max-width: 380px !important;
+  padding: 5px 8px !important;
+  background: var(--bg-surface) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7) !important;
+  align-self: flex-start !important;
+}
+
+/* Bottom-left stage card — matches Erebus stage-prompt-card format/style */
+.learn-quest-overworld .lq-body {
+  position: fixed !important;
+  bottom: max(1.5rem, env(safe-area-inset-bottom)) !important;
+  left: max(1.5rem, env(safe-area-inset-left)) !important;
+  width: calc(100% - 3rem) !important;
+  max-width: 440px !important;
+  max-height: 62vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.6rem !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  background: var(--bg-surface) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-radius: 4px !important;
+  padding: 1.15rem 1.4rem !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 20px 48px rgba(0, 0, 0, 0.75) !important;
+  z-index: 30 !important;
+  pointer-events: auto !important;
+}
+
+.learn-quest-overworld .lq-body.hidden {
+  display: none !important;
+}
+
+/* Stage header inside bottom-left card */
+.learn-quest-overworld .lq-stage {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.4rem !important;
+  min-width: 0 !important;
+}
+
+.learn-quest-overworld .lq-stage-head {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 0.75rem !important;
+  margin-bottom: 0.3rem !important;
+  padding-bottom: 0.4rem !important;
+  border-bottom: 1px solid var(--border-durasteel) !important;
+}
+
+.learn-quest-overworld .lq-stage-id {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 0.6rem !important;
+  flex-wrap: wrap !important;
+}
+
+.learn-quest-overworld .lq-stage-title {
+  font-family: var(--font-display) !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: var(--text-bright) !important;
+  margin: 0 !important;
+}
+
+.learn-quest-overworld .lq-stage-count {
+  font-family: var(--font-mono) !important;
+  font-size: 0.68rem !important;
+  color: var(--accent-amber) !important;
+  letter-spacing: 0.08em !important;
+}
+
+.learn-quest-overworld .lq-stage-actions {
+  display: flex !important;
+  gap: 0.4rem !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+.learn-quest-overworld .lq-prompt-strip,
+.learn-quest-overworld .lq-scope {
+  display: none !important;
+}
+
+.learn-quest-overworld .lq-controls {
+  background: var(--plate-100) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  padding: 6px 9px !important;
+  border-radius: 2px !important;
+}
+
+.learn-quest-overworld .lq-controls:empty {
+  display: none !important;
+}
+
+/* Deck content inside card */
+.learn-quest-overworld .lq-deck {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  max-height: none !important;
+  position: static !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+}
+
+.learn-quest-overworld .lq-prompt {
+  font-size: 0.88rem !important;
+  line-height: 1.45 !important;
+  color: var(--text-bright) !important;
+  margin-bottom: 0.3rem !important;
+  padding: 0 !important;
+}
+
+.learn-quest-overworld .lq-deck-body {
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  overflow: visible !important;
+}
+
+.learn-quest-overworld .lq-deck-foot {
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.4rem !important;
+  margin-top: 0.4rem !important;
+}
+
+.learn-quest-overworld .lq-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 0.5rem !important;
+  align-items: center !important;
+}
+
+/* Bottom-left dock bar — matches Erebus stage-dock-bar */
 .lq-dock-bar {
-  position: fixed;
-  bottom: max(1.5rem, env(safe-area-inset-bottom));
-  left: max(1.5rem, env(safe-area-inset-left));
-  display: flex;
-  gap: 0.6rem;
-  z-index: 50;
-  background: rgba(14, 12, 10, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--border-durasteel);
+  position: fixed !important;
+  bottom: max(1.5rem, env(safe-area-inset-bottom)) !important;
+  left: max(1.5rem, env(safe-area-inset-left)) !important;
+  display: inline-flex !important;
+  gap: 6px !important;
+  align-items: center !important;
+  z-index: 50 !important;
+  pointer-events: auto !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.lq-dock-bar.hidden {
+  display: none !important;
+}
+
+.lq-dock-bar .lq-reopen-btn {
+  pointer-events: auto;
   border-left: 2px solid var(--accent-amber);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
-  padding: 6px 10px;
+}
+
+.lq-dock-bar .lq-reopen-btn:hover {
+  border-left-color: var(--accent-amber);
+  color: var(--accent-amber);
+}
+
+.lq-dock-bar .lq-dock-commit {
+  pointer-events: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
 }
 
 @media (pointer: coarse) {
   .lq-dock-bar > .quest-btn-sm { min-height: 44px; }
 }
 
-/* While the twin sticks are up, the bottom corners belong to them (and the E
-   and X keys ride the line between their centres). The dock rises clear of
-   the whole stick band, on the left edge above the joystick. */
+@media (max-width: 600px) {
+  .learn-quest-overworld .lq-body {
+    left: max(0.75rem, env(safe-area-inset-left)) !important;
+    right: max(0.75rem, env(safe-area-inset-right)) !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 68vh !important;
+    padding: 0.9rem 1rem !important;
+  }
+}
+
+/* Mobile stick clearance */
+body.touch-walking .learn-quest-overworld .lq-body,
 body.touch-walking .lq-dock-bar {
-  bottom: calc(var(--tc-stick-center-y, 90px) * 2 + 12px + env(safe-area-inset-bottom));
-  left: max(0.75rem, env(safe-area-inset-left));
+  bottom: calc(var(--tc-stick-center-y, 90px) * 2 + 12px + env(safe-area-inset-bottom)) !important;
+  left: max(0.75rem, env(safe-area-inset-left)) !important;
 }
 
 /* The quest frame, deployed over the world. The instrument is the 3D bench

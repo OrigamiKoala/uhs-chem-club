@@ -69,6 +69,7 @@ export class FpsControls {
     this.isPointerLocked = false;
     this.isDragging = false;
     this.previousMousePosition = { x: 0, y: 0 };
+    this.syncFromCamera();
 
     // Drag-look handed to somebody else. A Learn bench deployed on a world the
     // player walked to reads its own pointer drags — it has to, because a press
@@ -219,8 +220,12 @@ export class FpsControls {
       e.target.closest(".erebus-world-hud") ||
       e.target.closest(".learn-walk-hud") ||
       e.target.closest(".learn-sites-popup-scrim") ||
-      e.target.closest(".screen-container") ||
-      e.target.closest(".lq") ||
+      (e.target.closest(".screen-container") && !e.target.closest(".learn-quest-overworld")) ||
+      (e.target.closest(".lq") && !e.target.closest(".learn-quest-overworld")) ||
+      e.target.closest(".learn-host-bar") ||
+      e.target.closest(".lq-rail") ||
+      e.target.closest(".lq-body") ||
+      e.target.closest(".lq-dock-bar") ||
       e.target.closest(".lq-world-panel")
     )) return;
 
@@ -395,10 +400,20 @@ export class FpsControls {
     }
   }
 
+  syncFromCamera() {
+    if (!this.camera) return;
+    this.basePosition.copy(this.camera.position);
+    this.hasBasePosition = true;
+    this.euler.setFromQuaternion(this.camera.quaternion, "YXZ");
+    this.euler.z = 0;
+    this.velocity.set(0, 0, 0);
+  }
+
   setMode(mode, terrainFn = null, bounds = null, colliders = []) {
     this.terrainHeightFn = terrainFn;
     this.boundaryBounds = bounds;
     this.setColliders(colliders);
+    this.syncFromCamera();
   }
 
   testBoxCollision(x, z) {
@@ -494,10 +509,9 @@ export class FpsControls {
     const dt = Math.min(delta, 0.1);
     this.totalTime += dt;
 
-    // Sync basePosition with camera position if teleported or initialized
+    // Sync basePosition and orientation with camera if teleported or uninitialized
     if (!this.hasBasePosition || this.camera.position.distanceTo(this.basePosition) > 1.2) {
-      this.basePosition.copy(this.camera.position);
-      this.hasBasePosition = true;
+      this.syncFromCamera();
     }
 
     // Stick look is a rate, not a delta: a held stick keeps turning.

@@ -248,8 +248,7 @@ export class LearnFrame {
     // built in the world, hiding the panel hands the player the whole glass and
     // the instrument they are standing at. On a page-tier bench the instrument
     // IS the page, and folding the panel folded the instrument away with it.
-    this.canHidePanel = benchesAre3D() &&
-      Boolean(this.container.closest?.('.learn-quest-overworld'));
+    this.canHidePanel = Boolean(this.container.closest?.('.learn-quest-overworld'));
 
     // The way out is the host bar's "Leave Bench" link (screens/learn-quest.js),
     // which is on screen whether the panel is folded or not. The frame carries
@@ -263,8 +262,8 @@ export class LearnFrame {
         </div>
 
         <div class="lq-dock-bar hidden" id="lq-dock-bar">
-          <button type="button" class="btn-secondary quest-btn-sm lq-reopen-btn" data-act="open-panel">Stage Panel</button>
-          <button type="button" class="btn-primary quest-btn-sm lq-dock-commit" data-act="submit">Commit</button>
+          <button type="button" class="btn-secondary quest-btn-sm lq-reopen-btn stage-reopen-btn" data-act="open-panel" title="Open stage panel" aria-label="Open stage panel">Stage Panel</button>
+          <button type="button" class="btn-primary quest-btn-sm lq-dock-commit" data-act="submit" title="Commit answer">Commit</button>
         </div>
 
         <div class="lq-body">
@@ -396,7 +395,7 @@ export class LearnFrame {
    */
   fitDeck() {
     const deck = this.el.deck;
-    if (this.disposed || !deck || this.diegetic) return;
+    if (this.disposed || !deck || this.diegetic || this.container.closest?.('.learn-quest-overworld')) return;
     if (getComputedStyle(deck).position !== 'sticky') {
       deck.style.maxHeight = '';
       return;
@@ -443,6 +442,10 @@ export class LearnFrame {
     if (closed && !this.canHidePanel) return;
     const body = this.container.querySelector('.lq-body');
     const dock = this.el.dock;
+    if (closed && this.el.commit && this.el.dockCommit) {
+      this.el.dockCommit.disabled = this.el.commit.disabled;
+      this.el.dockCommit.textContent = this.el.commit.textContent;
+    }
     body?.classList.toggle('hidden', closed);
     dock?.classList.toggle('hidden', !closed);
     soundscape.playNavRelayClick?.();
@@ -642,7 +645,7 @@ export class LearnFrame {
     this.el.stageActions.innerHTML = `
       ${this.stage?.briefing ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="objective">Objective</button>' : ''}
       ${canReview ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="reward">Findings</button>' : ''}
-      ${this.canHidePanel ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="close-panel">Hide Panel</button>' : ''}
+      ${this.canHidePanel ? '<button type="button" class="btn-secondary quest-btn-sm lq-close-btn" data-act="close-panel" title="Close stage panel" aria-label="Close stage panel">Close</button>' : ''}
     `;
   }
 
