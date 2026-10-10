@@ -14,6 +14,7 @@ import { createStarfield } from "./materials/starfield.js";
 import { WorldScene } from "./world.js";
 import { TallowWorld } from "./tallow.js";
 import { LigarWorld } from "./ligar.js";
+import { LanternfallWorld } from "./lanternfall.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
 import { TouchControls } from "./touch-controls.js";
@@ -37,6 +38,9 @@ const TALLOW_EXPOSURE = 0.92;
 // Ligar is black stone at dusk: almost nothing bounces off it and the sun is on
 // the horizon, so it takes MORE exposure than the salt pan rather than less.
 const LIGAR_EXPOSURE = 1.16;
+// Lanternfall is a night of ice under an aurora: pale surfaces catch what little light
+// there is, so it sits a touch above the salt pan's exposure.
+const LANTERNFALL_EXPOSURE = 1.12;
 // Erebus is a bright desert under a low sun: its sky and sand are lit to real
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
@@ -66,6 +70,7 @@ class Stage {
     this.worldScene = null;
     this.tallowWorld = null;
     this.ligarWorld = null;
+    this.lanternfallWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -752,6 +757,10 @@ class Stage {
       if (!this.ligarWorld) this.ligarWorld = this.warmWorld(new LigarWorld(this.renderer));
       return this.ligarWorld;
     }
+    if (key === "lanternfall") {
+      if (!this.lanternfallWorld) this.lanternfallWorld = this.warmWorld(new LanternfallWorld(this.renderer));
+      return this.lanternfallWorld;
+    }
     return null;
   }
 
@@ -778,6 +787,7 @@ class Stage {
   exposureFor(key) {
     if (key === "tallow") return TALLOW_EXPOSURE;
     if (key === "ligar") return LIGAR_EXPOSURE;
+    if (key === "lanternfall") return LANTERNFALL_EXPOSURE;
     if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
@@ -926,16 +936,23 @@ class Stage {
     this.enterLearnWorld(this.tallowWorld, TALLOW_EXPOSURE, focusSiteId);
   }
 
-  /** Walk out onto Ligar, the basalt arch field (Learn world 02). */
+  /** Walk out onto Ligar, the basalt arch field (Learn world 03). */
   enterLigarScene(focusSiteId = null) {
     if (this.isTouch) gameMode.enterWorld();   // before the build, as above
     this.worldFor("ligar");
     this.enterLearnWorld(this.ligarWorld, LIGAR_EXPOSURE, focusSiteId);
   }
 
-  /** True when `w` is a Learn world built as a place — Tallow or Ligar. */
+  /** Walk out onto Lanternfall, the aurora ice (Learn world 02). */
+  enterLanternfallScene(focusSiteId = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    this.worldFor("lanternfall");
+    this.enterLearnWorld(this.lanternfallWorld, LANTERNFALL_EXPOSURE, focusSiteId);
+  }
+
+  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall or Ligar. */
   isLearnWorld(w) {
-    return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld);
+    return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld);
   }
 
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
@@ -1133,6 +1150,11 @@ class Stage {
   /** Light a Tallow site's indicator when its quest is finished. */
   setTallowSiteComplete(questId, complete) {
     if (this.tallowWorld) this.tallowWorld.setSiteComplete(questId, complete);
+  }
+
+  /** Light a Lanternfall site's indicator when its quest is finished. */
+  setLanternfallSiteComplete(questId, complete) {
+    if (this.lanternfallWorld) this.lanternfallWorld.setSiteComplete(questId, complete);
   }
 
   /** Light a Ligar site's indicator when its quest is finished. */

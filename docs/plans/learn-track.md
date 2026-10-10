@@ -1,16 +1,15 @@
 # Learn track — worlds, quests, and how to build them
 
-**Status (2026-10-10): fourteen worlds charted in a new order, nine quests built
-and live — all of world 1 (Tallow), Ligar's first two benches (world 3) and
-Kettle's first two (world 7, moved from Ligar).** Every built world is open from
-the start. The quantum world and Ligar's remaining benches are planned in
-`learn-quests.md`. The road, the gating, the routes, the
-progress store, the backend tab and the verifier all exist. Tallow's five benches
-and Ligar's four are playable end to end and set the pattern the other 32 quests
-follow. **Both are walkable ground at T4** (Ligar since 2026-09-23): every one of
-their nine benches is a built instrument standing on the ground, worked with the
-quest frame as a closeable 2D overlay. At T3 and below both are the pages they
-always were, grading identically.
+**Status (2026-10-10): fourteen worlds charted in a new order, eighteen quests built
+and live — all of world 1 (Tallow), all nine of world 2 (Lanternfall), Ligar's first two
+benches (world 3) and Kettle's first (world 7, moved from Ligar).** Every built world is open
+from the start. Ligar's remaining benches are planned in `learn-quests.md`. The road, the
+gating, the routes, the progress store, the backend tab and the verifier all exist.
+**Tallow, Lanternfall and Ligar are walkable ground at T4**: every one of their built
+benches is a built instrument standing on the ground (Tallow's six sites are all laid;
+Lanternfall's nine are laid on a ring round a frozen lake), worked with the quest frame as a
+closeable 2D overlay. At T3 and below all three are the pages they always were, grading
+identically. Lanternfall's ground and instruments are described in `lanternfall-world.md`.
 
 ## The shape of it
 
@@ -46,6 +45,12 @@ exists to help.
 | `src/learn/engine/scope.js` | The **sampler scope**: a canvas bench instrument. Power dial, probe, cutter, shaker. Content-free. |
 | `src/learn/engine/corebench.js` | The **core bench**: one piece in three fields (whole, core, rings). Beam, probe, stripper. Content-free. |
 | `src/learn/engine/frame.js` | The **quest frame**: stage rail, prompt, readout, answer region, miss banner, hint ladder, reward card, debrief stepper. Grading-free. |
+| `src/learn/engine/stagerunner.js` | The **stage loop** Lanternfall's nine quests share: lifecycle, the answer widgets, dials, the key legend. |
+| `src/learn/engine/plates.js`, `plates3d.js` | The **plate bench** and its built twin: the base of the light bench, cloud plate, box rack and electron bench. |
+| `src/learn/engine/lightbench.js` (`lightdata.js`) | The **light bench** (trace, scale, prism, ladder, photocell, cuvette, plot heads) over the real constants. |
+| `src/learn/engine/cloudplate.js` (`orbitals.js`) | The **cloud plate**: shots from the real hydrogen-like |psi|^2, and a de Broglie ring. |
+| `src/learn/engine/boxrack.js` (`electrons.js`) | The **box rack**: two-tap orbital boxes on an energy ladder, with a magnet. |
+| `src/learn/engine/electronbench.js` | The **electron bench**: photoelectron spectra, and atoms with a pull meter. |
 | `src/learn/quests/_template.js` | The contract a quest game module implements. |
 | `src/learn/quests/unit01/q1-grain.js` | World 1 quest 1. Content, samples and grading only. |
 | `src/learn/quests/unit01/q2-core.js` | World 1 quest 2. Content, specimens and grading only. |
@@ -150,8 +155,8 @@ opens it in the right place, and the host loads it.
 
 | # | World | Place | Unit | Quests |
 | --- | --- | --- | --- | --- |
-| 01 | Tallow | Salt flats | Atoms | 6 (6 built, walkable at T4; site 6 pending) |
-| 02 | Lanternfall | Aurora ice | Light and Electrons | 9 (planned) |
+| 01 | Tallow | Salt flats | Atoms | 6 (6 built, walkable at T4) |
+| 02 | Lanternfall | Aurora ice | Light and Electrons | 9 (9 built, walkable at T4) |
 | 03 | Ligar | Basalt arches | Bonding | 9 (2 built, walkable at T4; 7 planned) |
 | 04 | Bellows | Cloud deck | Gases | 4 |
 | 05 | Ember Reach | Vent fields | Thermodynamics | 4 |
@@ -247,7 +252,7 @@ spending it early would waste the best moment on this world.
 - All five Tallow quests are live — `q3-catalogue`, `q4-ledger` and `q5-assay`
   were finished in the Tallow/Ligar pass (see `tallow-ligar-build.md`). The
   mole moved off Tallow entirely: it is Ligar `q4-weigh`'s subject.
-- Worlds 2, 5 and 9 want the 3D containment chamber rather than a canvas bench.
+- Worlds 5 and 9 want the 3D containment chamber rather than a canvas bench.
   Decide whether to lift a reusable runner out of `src/quest3d/` when the second
   chamber quest needs it — not on the first.
 - Consider a `field` arena instrument. Nothing has needed one yet.
@@ -330,3 +335,15 @@ Deliberately **not** done, and why:
 
 Nothing else needs editing: the router, the star map's Learn tab, the walk HUD and the
 bench dispatcher all read the registry.
+
+### Lanternfall (world 02), built the same day
+
+- [x] The nine quests, on four new instruments (`unit02/q1-wave` … `q9-absorb`).
+- [x] `three/lanternfall.js` and `three/lanternfall/`: an ice field under an aurora, nine
+      benches on a ring round a frozen lake, a lantern road, the pad.
+- [x] `learn/worlds3d.js` entry `unit02`, `stage.enterLanternfallScene`, a voyage destination.
+- [x] `tools/verify-lanternfall.mjs`, `verify:bench` extended to nine more instruments, and
+      `verify:voyage` landing on a fourth world.
+- [x] Tallow's site 6 for `q6-weigh`: the site-5 gantry laid a second time.
+- [x] A quest's `BUILDS_ON` and its linked line on the quest page.
+- [ ] Looking at it in a browser.

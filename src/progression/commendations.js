@@ -238,6 +238,38 @@ export const COMMENDATIONS = [
     earnedBy: (s) => Boolean(s.learn && s.learn['unit01/q6-weigh']?.completedAt)
   },
   {
+    id: 'lanternfall_surveyed',
+    name: 'Lanternfall Surveyed',
+    line: 'Completed every built bench round the frozen lake of Lanternfall.',
+    tier: 'etched',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => {
+      if (!s.learn) return false;
+      // Read off the chart, so the plate keeps meaning "every bench" as more are built.
+      const q = (getWorld('unit02')?.quests || []).filter(x => x.status === 'live').map(x => x.id);
+      return q.length > 0 && q.every(id => Boolean(s.learn[`unit02/${id}`]?.completedAt));
+    }
+  },
+  {
+    id: 'lanternfall_practice',
+    name: 'Lantern Drills',
+    line: 'Worked through the revision problem set on Lanternfall.',
+    tier: 'painted',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => Boolean(s.flags && s.flags.unit02_practice_done)
+  },
+  {
+    id: 'manual_unit02',
+    name: 'Unit 2 Field Log',
+    line: 'Logged every vocabulary term across Lanternfall.',
+    tier: 'etched',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => Boolean(s.flags && s.flags.unit02_manual_complete)
+  },
+  {
     id: 'ligar_surveyed',
     name: 'Ligar Surveyed',
     line: 'Completed every built bench across the basalt arches of Ligar.',

@@ -27,7 +27,7 @@
  *   kit.js        structural stock: I-sections and corrugated sheet
  *
  * WHAT IS HERE, AND WHY IT IS HERE
- * Five Unit 1 sites stand on the flat as physical places, one per written quest:
+ * Six Unit 1 sites stand on the flat as physical places, one per written quest:
  *   site-1  Bench 1 — q1-grain. Under the lean-to in the yard.
  *   site-2  Bench 2 — q2-core. Down the stairwell, in the lab.
  *   site-3  Bench 3 — q3-catalogue. Before the blockhouse in the east wall,
@@ -36,7 +36,9 @@
  *           west of the yard beyond the hauler.
  *   site-5  Bench 5 — q5-assay. A raised hopper over a chute with a row
  *           of catch bins, south of the yard.
- * All five carry their instruments as built objects (`BUILT_BENCHES`).
+ *   site-6  Bench 6 — q6-weigh. The same hopper gantry, laid again beside
+ *           the fifth (the weigh bench is the assay floor too).
+ * All six carry their instruments as built objects (`BUILT_BENCHES`).
  *
  * PHYSICS: every prop declares a footprint in `tallow.json` and every footprint is
  * disjoint — no two objects occupy the same space, which `verify:tallow` proves
@@ -121,7 +123,8 @@ export class TallowWorld {
     this.initCoreBench();
     this.initCatalogueVault();
     this.initTallyFloor();
-    this.initHopperGantry();
+    this.initHopperGantry('site-5', { tag: 'GNT-05', plate: 'BN-05' });
+    this.initHopperGantry('site-6', { tag: 'GNT-06', plate: 'BN-06' });
     this.initVista();
     this.initEffects();
     this.initLampPool();
@@ -2346,10 +2349,12 @@ export class TallowWorld {
   /**
    * Site 5 — the Hopper Gantry. Bulk salvage goes in the top, the chute runs
    * it over the deflector, and the catch bins underneath take one weight each.
-   * The bench with the assay kit stands in front of the works.
+   * The bench with the assay kit stands in front of the works. Sites 5 and 6
+   * are the same assay floor (the sorting bench and the weigh bench are one
+   * instrument), so one builder lays both.
    */
-  initHopperGantry() {
-    const site = this.data.sites.find(s => s.id === 'site-5');
+  initHopperGantry(siteId, { tag: tagText, plate }) {
+    const site = this.data.sites.find(s => s.id === siteId);
     if (!site) return;
     const y = this.surfaceHeight(site.pos[0], site.pos[2]);
     const g = new THREE.Group();
@@ -2472,14 +2477,14 @@ export class TallowWorld {
     pan.position.set(2.3, 1.3, 0.9);
     g.add(pan);
 
-    const tag = placard('GNT-05', { w: 0.5, h: 0.19 });
+    const tag = placard(tagText, { w: 0.5, h: 0.19 });
     tag.position.set(0, 3.05, -0.63);
     g.add(tag);
     this.own(tag.geometry, tag.material, tag.material.map);
 
     // The assay bench, out front where the certificates get worked.
     const bench = this.buildBench({
-      width: 4.8, depth: 1.3, height: 0.95, kind: 'assay', plate: 'BN-05'
+      width: 4.8, depth: 1.3, height: 0.95, kind: 'assay', plate
     });
     bench.group.position.set(0, 0, 2.3);
     g.add(bench.group);
@@ -2586,10 +2591,14 @@ export class TallowWorld {
     push(-26.75, -25.45, -15.4, -10.6);     // site-4 tally bench
     push(-28.15, -27.85, -14.9, -11.1);     // site-4 ledger board
     this.colliders.push({ x: -27.2, z: -15.4, radius: 0.5 });  // tally crate stack
-    push(5.25, 6.75, 27.9, 29.1);           // site-5 hopper legs
-    push(4.7, 7.3, 30.8, 31.3);             // site-5 catch bins
-    push(3.6, 8.4, 31.65, 32.95);           // site-5 bench
-    this.colliders.push({ x: 8.3, z: 30.9, radius: 0.35 });    // site-5 balance post
+    // Sites 5 and 6 are the same gantry, laid at two places.
+    for (const [gx, gz] of [[6, 30], [-4, 21]]) {
+      const ox = gx - 6, oz = gz - 30;
+      push(5.25 + ox, 6.75 + ox, 27.9 + oz, 29.1 + oz);           // hopper legs
+      push(4.7 + ox, 7.3 + ox, 30.8 + oz, 31.3 + oz);             // catch bins
+      push(3.6 + ox, 8.4 + ox, 31.65 + oz, 32.95 + oz);           // bench
+      this.colliders.push({ x: 8.3 + ox, z: 30.9 + oz, radius: 0.35 });    // balance post
+    }
 
     // The pit rim. Thin box colliders around the excavation, split so the stair
     // mouth is the only way down — which is what makes the descent a walk.

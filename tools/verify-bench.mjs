@@ -424,6 +424,14 @@ function check(questId, label, build, widest) {
       }
     });
 
+    // 5a. Lanternfall's plate benches carry up to two dials: both are in the glass.
+    for (const { dial } of bench.dials ? bench.dials.values() : []) {
+      const b = ndcBounds(dial.group, camera);
+      if (b && (b.minX < -0.98 || b.maxX > 0.98 || b.minY < -0.98 || b.maxY > 0.98)) {
+        fail(`${tag}: a dial is off the glass — x[${b.minX.toFixed(2)}, ${b.maxX.toFixed(2)}] y[${b.minY.toFixed(2)}, ${b.maxY.toFixed(2)}]`);
+      }
+    }
+
     // 5. The power dial, where the instrument carries one, is reachable in view.
     if (bench.dial) {
       const b = ndcBounds(bench.dial.group, camera);
@@ -449,6 +457,7 @@ function check(questId, label, build, widest) {
       }
       const others = bench.viewer.framedNodes().map(n => n.group);
       if (bench.dial) others.push(bench.dial.group);
+      for (const { dial } of bench.dials ? bench.dials.values() : []) others.push(dial.group);
       let hitBody = null;
       for (const node of others) {
         for (const ob of meshBoxes(node, inv)) {
@@ -666,8 +675,19 @@ check('q5-assay', 'assay floor',
   ])
 );
 
+/* THE SAME FLOOR AT SITE 6: the weigh bench, whose widest stage is three bulk
+   drums with the gate dogged shut. */
+check('q6-weigh', 'weigh floor',
+  (camera, anchor) => new AssayFloor3D(null, { world: worldFrame(camera, anchor) }),
+  bench => bench.setHoppers([
+    { id: 'd1', label: 'SAMPLE A', code: 'CAT 06', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 12, n: 5 }] },
+    { id: 'd2', label: 'SAMPLE B', code: 'CAT 08', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 16, n: 4 }] },
+    { id: 'd3', label: 'SAMPLE C', code: 'CAT 01', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 1, n: 6 }] }
+  ])
+);
+
 if (!failures) {
-  ok(`all five instruments frame every body and control at ${ASPECTS.length} aspects`);
+  ok(`all six instruments frame every body and control at ${ASPECTS.length} aspects`);
 }
 
 /* ------------------------------------------------------- every real stage
@@ -689,6 +709,7 @@ if (!failures) {
 
 const { STAGES: CAT_STAGES, CARDS } = await import('../src/learn/quests/unit01/q3-catalogue.js');
 const { STAGES: ASSAY_STAGES } = await import('../src/learn/quests/unit01/q5-assay.js');
+const { STAGES: WEIGH_STAGES } = await import('../src/learn/quests/unit01/q6-weigh.js');
 const { planPour } = await import('../src/learn/engine/assay.js');
 
 /**
@@ -833,6 +854,21 @@ function stagePasses() {
   floor.dispose();
   world.setBenchDeployed('q5-assay', false);
   ok(`q5-assay: the built floor pours all ${ASSAY_STAGES.length} stages and every piece is placed`);
+
+  /* ---- the weigh bench: the same floor at site 6 ---- */
+  const anchor6 = world.benchAnchor('q6-weigh');
+  const camera6 = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+  world.setBenchDeployed('q6-weigh', true);
+  const floor6 = new AssayFloor3D(null, { world: worldFrame(camera6, anchor6) });
+  WEIGH_STAGES.forEach((st, i) => {
+    floor6.setHoppers(st.hoppers || []);
+    if ((st.hoppers || []).length !== floor6.rigs.length) {
+      fail(`q6-weigh stage ${i + 1}: ${st.hoppers.length} samples declared, ${floor6.rigs.length} rigs built`);
+    }
+  });
+  floor6.dispose();
+  world.setBenchDeployed('q6-weigh', false);
+  ok(`q6-weigh: the built floor lays out all ${WEIGH_STAGES.length} stages`);
 }
 
 stagePasses();
@@ -973,6 +1009,166 @@ async function joinStagePasses() {
   }
 }
 await joinStagePasses();
+
+/* ================================================================ LANTERNFALL
+
+   Nine benches on aurora ice, four new built instruments (the light bench, the
+   cloud plate, the box rack and the electron bench) measured by the same
+   `check` that measures Tallow's and Ligar's. Each instrument is fed the
+   widest stage its quests declare, read from the quests' own tables, AND the
+   stage that puts the most dials on the plate, because a knob outboard of the
+   leftmost station is the thing most likely to run off the glass. Then every
+   stage every quest declares is put through the built instrument and pressed
+   through the real pointer path. */
+
+const { LanternfallWorld } = await import('../src/three/lanternfall.js');
+const { LightBench3D } = await import('../src/learn/engine/lightbench3d.js');
+const { CloudPlate3D } = await import('../src/learn/engine/cloudplate3d.js');
+const { BoxRack3D } = await import('../src/learn/engine/boxrack3d.js');
+const { ElectronBench3D } = await import('../src/learn/engine/electronbench3d.js');
+
+world = new LanternfallWorld(null);
+world.scene.updateMatrixWorld(true);
+console.log('');
+checkFacing();
+
+const LF = {};
+for (const id of ['q1-wave', 'q2-photon', 'q3-lines', 'q4-cloud', 'q5-numbers', 'q6-filling', 'q7-pes', 'q8-trends', 'q9-absorb']) {
+  LF[id] = await import(`../src/learn/quests/unit02/${id}.js`);
+}
+
+/** The items a stage lays on the bench, whichever name the quest gives them. */
+const itemsOf = st => st.rigs || st.clouds || [];
+
+/** What a stage tells its bench besides the items. */
+function benchCfg(st) {
+  return {
+    settings: st.settings || [], setting: st.start || 1, brightness: st.brightnessStart ?? st.brightness ?? 3,
+    brightnessDial: Boolean(st.brightnessDial), path: st.path ?? 1, region: st.region ?? 'uv-visible',
+    mode: st.mode || null, after: Boolean(st.after), labels: st.labels || {}, extent: st.extent ?? 12,
+    show: st.show || { n: true, l: true, ml: true, ms: true }, clouds: Boolean(st.cloudsBeside), ladderTop: st.ladderTop || ''
+  };
+}
+
+function lay(bench, st) {
+  const cfg = benchCfg(st);
+  if (bench instanceof LightBench3D) bench.setRigs(itemsOf(st), cfg);
+  else bench.setPlates(itemsOf(st), cfg);
+}
+
+const stagesOf = id => LF[id].STAGES;
+const widestStage = id => stagesOf(id).reduce((a, b) => (itemsOf(b).length > itemsOf(a).length ? b : a));
+const dialStage = id => stagesOf(id).reduce((a, b) => {
+  const dials = st => (st.settings ? 1 : 0) + (st.brightnessDial ? 1 : 0);
+  return dials(b) > dials(a) ? b : a;
+});
+
+const LF_BENCHES = [
+  ['q1-wave', 'light bench (waves)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })],
+  ['q2-photon', 'light bench (photocell)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })],
+  ['q3-lines', 'light bench (spectra)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })],
+  ['q4-cloud', 'cloud plate', (c, a) => new CloudPlate3D(null, { world: worldFrame(c, a) })],
+  ['q5-numbers', 'box rack (addresses)', (c, a) => new BoxRack3D(null, { world: worldFrame(c, a) })],
+  ['q6-filling', 'box rack (filling)', (c, a) => new BoxRack3D(null, { world: worldFrame(c, a) })],
+  ['q7-pes', 'electron bench (spectra)', (c, a) => new ElectronBench3D(null, { world: worldFrame(c, a) })],
+  ['q8-trends', 'electron bench (atoms)', (c, a) => new ElectronBench3D(null, { world: worldFrame(c, a) })],
+  ['q9-absorb', 'light bench (cuvette)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })]
+];
+
+{
+  const mark = failures;
+  for (const [id, label, build] of LF_BENCHES) {
+    check(id, label, build, bench => lay(bench, widestStage(id)));
+    if (dialStage(id) !== widestStage(id) && (dialStage(id).settings || dialStage(id).brightnessDial)) {
+      check(id, `${label}, dial stage`, build, bench => lay(bench, dialStage(id)));
+    }
+  }
+  if (failures === mark) ok(`all nine Lanternfall instruments frame every body and control at ${ASPECTS.length} aspects`);
+}
+
+/* EVERY STAGE, THROUGH THE REAL POINTER PATH. */
+async function lanternfallPasses() {
+  globalThis.requestAnimationFrame ??= () => 0;
+  globalThis.cancelAnimationFrame ??= () => {};
+  const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+  const screenPoint = (station, px, py) => {
+    const mesh = station.screen.mesh;
+    mesh.updateMatrixWorld(true);
+    const size = mesh.geometry.parameters;
+    return new THREE.Vector3(
+      (px / station.screen.w - 0.5) * size.width, (0.5 - py / station.screen.h) * size.height, 0
+    ).applyMatrix4(mesh.matrixWorld);
+  };
+  const center = h => (h.r !== undefined ? [h.x, h.y] : [(h.x0 + h.x1) / 2, (h.y0 + h.y1) / 2]);
+
+  for (const [id, label, build] of LF_BENCHES) {
+    const anchor = world.benchAnchor(id);
+    world.setBenchDeployed(id, true);
+    let probed = null;
+    const bench = build(camera, anchor);
+    bench.onProbe = hit => { probed = hit; };
+    const pressAt = p => {
+      const q = p.clone().project(camera);
+      bench.onPointer3D({ clientX: (q.x + 1) / 2 * 1280, clientY: (1 - q.y) / 2 * 720, preventDefault() {} });
+    };
+    let plates = 0, pressed = 0;
+    const stages = stagesOf(id);
+    for (let i = 0; i < stages.length; i++) {
+      const st = stages[i];
+      lay(bench, st);
+      if (bench.stations.length !== itemsOf(st).length) {
+        fail(`${id} stage ${i + 1}: ${itemsOf(st).length} plates declared, ${bench.stations.length} stations built`);
+        continue;
+      }
+      // Fill a spectrum, fire a cloud, so every picture has something on it to press.
+      if (bench instanceof ElectronBench3D) for (const item of bench.items) if (item.head === 'spectrum') item.progress = 1;
+      if (bench instanceof CloudPlate3D) bench.fire(500);
+      bench.drawAll();
+      bench.viewer.applyCamera();
+      camera.updateMatrixWorld(true);
+
+      for (const rec of bench.stations) {
+        plates++;
+        const where = `${id} stage ${i + 1} ${rec.item.label}`;
+        if (rec.station.screen.w < 8) fail(`${where}: the screen has no pixels`);
+        if (bench instanceof BoxRack3D && rec.item.head === 'rack') {
+          // Pick Up from the tray, then tap the first box: the electron must land.
+          // The first box that can take an arrow: empty (Up), or holding one up arrow (Down) when a stage hands the rack over full.
+          const free = rec.hits.find(h => h.key === 'box' && !(rec.item.rack[`${h.row}:${h.idx}`]));
+          const half = rec.hits.find(h => h.key === 'box' && rec.item.rack[`${h.row}:${h.idx}`] === 'u');
+          const boxHit = free || half;
+          const spin = free ? 'u' : 'd';
+          const chip = rec.hits.find(h => h.key === 'hand' && h.hand === spin);
+          if (!chip || !boxHit) { fail(`${where}: the rack drew no tray or no boxes to press`); continue; }
+          pressAt(screenPoint(rec.station, ...center(chip)));
+          if (bench.cfg.hand !== spin) fail(`${where}: a press on the ${spin === 'u' ? 'Up' : 'Down'} chip did not pick it up`);
+          const before = bench.readOf(rec.item.id).total;
+          pressAt(screenPoint(rec.station, ...center(boxHit)));
+          const after = bench.readOf(rec.item.id).total;
+          if (after !== before + 1) fail(`${where}: a press on a box did not place an electron`);
+          bench.clear(rec.item.id);
+          bench.setHand(null);
+          pressed++;
+          continue;
+        }
+        // Only a picture that reads something is pressed: the ladder, the photocell and the
+        // plot are read by eye, and a cloud's dots are counted, not tapped.
+        if (rec.item.head && ['ladder', 'photocell', 'plot', 'ring', 'cloud'].includes(rec.item.head)) continue;
+        const hit = rec.hits?.find(h => h.key !== 'hand');
+        if (!hit) continue;
+        probed = null;
+        pressAt(screenPoint(rec.station, ...center(hit)));
+        if (!probed) fail(`${where}: a press on the picture (${hit.key}) read nothing`);
+        else if (probed.plateId !== rec.item.id) fail(`${where}: a press read plate ${probed.plateId}`);
+        pressed++;
+      }
+    }
+    bench.dispose();
+    world.setBenchDeployed(id, false);
+    ok(`${id}: all ${stages.length} stages built, ${plates} plates drawn and ${pressed} pressed through the real pointer path`);
+  }
+}
+await lanternfallPasses();
 
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

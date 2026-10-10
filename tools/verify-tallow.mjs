@@ -149,9 +149,7 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
   // A quest whose site has not been laid yet is played in its own room
   // (`learn-quest.js`). Each one is named here, with where it is planned, so the
   // exemption cannot grow silently.
-  const SITE_PENDING = new Set([
-    'q6-weigh'   // the mole, moved from Kettle; site planned in docs/plans/learn-quests.md
-  ]);
+  const SITE_PENDING = new Set([]);   // every charted Tallow quest now has its site
   const siteQuests = world.sites.map(s => s.questId);
   const missing = questIds.filter(q => !siteQuests.includes(q) && !SITE_PENDING.has(q));
   check(missing.length === 0,

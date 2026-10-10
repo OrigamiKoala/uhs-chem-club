@@ -280,6 +280,16 @@ export const REQUISITIONS = [
     apply: (state) => { state.quarters = state.quarters || {}; state.quarters.jar_tallow = true; }
   },
   {
+    id: 'quarters_lanternfall_lantern',
+    kind: 'quarters',
+    name: 'Lanternfall Lantern',
+    line: 'A small glass lantern with an amber filament, trimmed with frost.',
+    finish: 'brass',
+    source: { commendation: 'lanternfall_surveyed' },
+    tokenColor: 'var(--accent-amber)',
+    apply: (state) => { state.quarters = state.quarters || {}; state.quarters.lantern_lanternfall = true; }
+  },
+  {
     id: 'quarters_ligar_jar',
     kind: 'quarters',
     name: 'Ligar Specimen Jar',

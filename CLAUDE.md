@@ -125,9 +125,9 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 ## Build and Run
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
-- `npm run verify` — `verify:quest` + `verify:console` + `verify:learn` + `verify:geometry`
-  + `verify:media` + `verify:flows` + `verify:ship` + `verify:voyage` + `verify:tallow` + `verify:ligar`
-  + `verify:bench` + `verify:holo` + `verify:normals` + `build`. Run this before shipping. **The build
+- `npm run verify` — `verify:quest` + `verify:console` + `verify:learn` + `verify:run` + `verify:geometry`
+  + `verify:media` + `verify:flows` + `verify:progression` + `verify:ship` + `verify:voyage` + `verify:tallow`
+  + `verify:ligar` + `verify:lanternfall` + `verify:bench` + `verify:holo` + `verify:normals` + `build`. Run this before shipping. **The build
   empties `dist/`, which is gitignored** — anything placed only in `dist/` (reference art
   has been) is deleted by it. Source images belong in `public/` or `assets-src/`.
 - `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below),
@@ -137,6 +137,15 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   height of the glass.
 - `npm run verify:learn` — integrity check of the Learn track registry, its no-XP
   invariant, and the practice sets (five per built quest, assembled at world scope).
+  **It also DRAWS every plate a Lanternfall stage declares**, in Node, onto a recording
+  canvas context (`tools/lib/ctx-stub.mjs`) at the phone's plate and the built bench's square
+  screen: a head that throws, a picture that draws almost nothing or a NaN coordinate fails
+  the build. **Every figure a Lanternfall stage grades against is recomputed from the real
+  tables** (`lightdata.js`, `orbitals.js`, `electrons.js`): the 3.00 x 10^8 product, the photon
+  energies, the line positions, the orbital densities integrating to one, the magnet's counts
+  against the ground-state configurations, PES heights summing to the atomic number, the pull
+  meter ordering atoms as electronegativity does. A quest's `BUILDS_ON` must name real,
+  built quests.
   It does **not** demand a legend under every key (see "Nothing is NAMED" above); it holds
   every legend that exists to one well-formed, vocabulary-clean sentence.
   It also **presses every join-bench pair plate in Node** and measures what comes
@@ -171,9 +180,11 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   (player radius included) and requires every pylon's approach mark to be reached: the
   basin now has outcrops, an arch, a skeleton and a derelict in it, and a landmark in the
   wrong place would wall a pylon off.
-- `npm run verify:bench` — deploys ALL FIVE Unit 1 instruments onto the real Tallow benches,
-  then Ligar's built join bench onto its two real benches (each fed the widest stage
-  its quest declares, read from the quest's own `STAGES`), in Node, and measures them: every site faces the ground the player walks in from, and every
+- `npm run verify:bench` — deploys ALL SIX Unit 1 instruments onto the real Tallow benches,
+  then Ligar's built join bench onto its two real benches, then Lanternfall's nine (four
+  new instruments) onto its nine (each fed the widest stage its quest declares, read from
+  the quest's own `STAGES`, and for Lanternfall the stage that puts the most dials on the
+  plate too), in Node, and measures them: every site faces the ground the player walks in from, and every
   body, readable face and control lands inside the glass at six aspects, clear of the HUD. It
   also drives `aimForChrome` — the camera correction a deployed bench applies — and asserts
   it converges with the readable faces under the frame and the working end still in view;
@@ -208,7 +219,7 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run verify:voyage` — the Avalon can land and a player can get off it (see "The
   voyage" below): with the airlock's outer leaf open, a line through the hatch at head,
   chest and knee height meets nothing aboard (a lining sheet once stood in the opening),
-  and with it shut the line stops on the leaf; on Tallow, Ligar and Erebus the landing
+  and with it shut the line stops on the leaf; on Tallow, Lanternfall, Ligar and Erebus the landing
   `solveLanding` picks keeps the hull and ramp clear of every collider, puts the ramp's
   foot on open ground inside the walk and within a ramp's reach of the sill, on a quarter
   turn so the hull's collider box is exact; and the chevron's route aboard stays on deck.
@@ -225,6 +236,24 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   columns — a builder quietly falling back to a unit hexagon fails it), the ground to
   run to the horizon, and every Ligar shader patch (ground, weather, air) to land on
   three's real shader source.
+- `npm run verify:run` — **every quest on the shared stage loop MOUNTS and every stage RUNS**
+  (`tools/verify-quest-run.mjs`). `verify:learn` grades tables and draws plates but never calls
+  `mount()`; this mounts each quest behind a universal stub DOM and, per stage, loads it, presses
+  every key its handler knows (and a few it does not), taps every hit on every plate through the
+  bench's own `pressAt`, and renders the answer widget. Its first run found that `createRunner`
+  loaded stage one before the quest held its runner, which would have blanked every bench with a
+  dial; the runner now loads nothing until the quest calls `runner.start()`. Test hooks
+  (`globalThis.__LQ_TEST__`) are read in `stagerunner.js` and `plates.js` and do nothing without it.
+- `npm run verify:lanternfall` — Lanternfall's ground, held to every rule `verify:ligar` holds
+  Ligar to, minus the cut and plus what an ice field needs: it **builds the real world** and
+  measures every pair of bodies; fails any body **buried** under the ground; **flood-fills the
+  walk** from the spawn against the real circle colliders and requires every bench's approach
+  mark and the pad to be reached with **no ledge to drop off**; holds every site level, facing
+  its approach and standing on a bench anchor with a cased instrument; requires **only lamps
+  to be lit** (every emissive material in the built world is the lantern's, and the thirty-five
+  lanterns share exactly three real lights); and requires the ice to run to the horizon and
+  the lake to be ground. A sign must read `Bench N - <what it teaches>`, six words at most,
+  sharing a word with its quest's title.
 - `npm run verify:holo` — one owner for the `X` key, and the comms board never invents a
   guild score.
 - `npm run verify:normals` — a dome put through both `heightToNormal`s must lean away from
@@ -294,15 +323,16 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   `doors.js`, `corridor.js` and one builder per compartment in `ship/rooms/` — see
   "The Avalon" under §8.
   `stage.js` holds three modes (`ship` | `world` | `quest`) and `activeWorld`, which is
-  whichever planet the player is standing on — Erebus (`world.js`), Tallow (`tallow.js`)
-  or Ligar (`ligar.js`). The two Learn worlds share ONE arrival and render path
+  whichever planet the player is standing on — Erebus (`world.js`), Tallow (`tallow.js`),
+  Lanternfall (`lanternfall.js`) or Ligar (`ligar.js`). The three Learn worlds share ONE arrival and render path
   (`enterLearnWorld`, `isLearnWorld`, `nearExitPad`, the Learn branch of the loop), so
   Ligar cannot come to differ from Tallow in how a player lands, walks or leaves; the
   exit pad is read from the world's own `landing-pad` landmark. Tone-mapping exposure is
   per place: `SHIP_EXPOSURE` 1.28 for the ship, `EREBUS_EXPOSURE` 0.82 for the desert
   (its sky and sand are lit to daylight levels), `TALLOW_EXPOSURE` 0.92 for the
   salt pan, because a bright overcast rendered at the dark interior's exposure washes the
-  crust out to paper, and `LIGAR_EXPOSURE` 1.16, because black stone at dusk throws almost
+  crust out to paper, `LANTERNFALL_EXPOSURE` 1.12, because ice at night holds only what the
+  aurora and the lanterns give it, and `LIGAR_EXPOSURE` 1.16, because black stone at dusk throws almost
   nothing back. **A chamber that brings its own room is drawn at `SHIP_EXPOSURE` whatever
   world it was opened on** — the Charge Gardens were lit for it — while a bench deployed
   in a world takes that world's (the quest branch of `render()`). The renderer's shadow map is enabled
@@ -314,7 +344,11 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   drawn while the ship is under way.
 - `three/tallow.js` — **Tallow**, Learn world 01 (see "Tallow" below), built from
   `three/world-data/tallow.json` with PBR surfaces from `materials/tallow-textures.js`.
-- `three/ligar.js` — **Ligar**, Learn world 02 (see "Ligar" below), built from
+- `three/lanternfall.js` — **Lanternfall**, Learn world 02 (see "Lanternfall" below), built from
+  `three/world-data/lanternfall.json` (generated by `tools/gen-lanternfall-layout.mjs`) over
+  `three/lanternfall/` (sky, terrain, props, sites, effects) with PBR surfaces from
+  `materials/lanternfall-textures.js`.
+- `three/ligar.js` — **Ligar**, Learn world 03 (see "Ligar" below), built from
   `three/world-data/ligar.json` (generated by `tools/gen-ligar-layout.py`) over
   `three/ligar/` (atmosphere, terrain, the `basalt.js` column kit, weather, plant,
   vista, industry, effects) with PBR surfaces from `materials/ligar-textures.js`.
@@ -422,11 +456,11 @@ Fourteen worlds in order — Tallow (atoms, the periodic table and the mole), La
 orbitals and periodic trends), Ligar (bonding, structure and orbitals),
 Bellows (gases), Ember Reach (thermodynamics), Mirrowen (states of matter and IMFs), Kettle
 (stoichiometry and reactions), Teeter (equilibrium), Verdigris (acids and bases),
-Brinewire (electrochemistry), Quicklight (kinetics), Lodestone (transition metals), Thornmere (organic), Cinder Halo (nuclear) — and **every built world is open from the start**,
+Brinewire (electrochemistry), Quicklight (kinetics), Lodestone (transition metals), Thornmere (organic), Cinder Halo (nuclear) — and **every built world is open from the start** (Tallow, Lanternfall, Ligar and one bench of Kettle),
 so a student can go straight to the unit their class is on. The order is the order the
 ideas build on each other, not a lock. Every unbuilt quest on the road is planned in
-`docs/plans/learn-quests.md` (Lanternfall and Ligar stage by stage and agreed; the
-other eleven worlds as a proposal under review). Ids are `unit01`…`unit14` in
+`docs/plans/learn-quests.md` (Lanternfall, now built, and Ligar's benches three to nine stage by stage and
+agreed; the other eleven worlds as a proposal under review). Ids are `unit01`…`unit14` in
 road order (renumbered on 2026-10-10, pre-launch, so no stored progress was orphaned), and
 
 **every Learn quest is a game built the way the Charge Gardens was built** — it owns its
@@ -685,10 +719,10 @@ into grinding and would punish the students it exists to help.
   `setAimShift` walk the look-at point along the bench until the stations are centred in
   the clear part of the view. Below 860 px it reverts to the centred card, because a
   docked panel beside a bench too narrow to read helps nobody.
-- **ALL SIX Tallow benches, BOTH built Ligar benches and Kettle's one are BUILT at T4.**
+- **ALL SIX Tallow benches, ALL NINE Lanternfall benches, BOTH built Ligar benches and Kettle's one are BUILT at T4.**
   `BUILT_BENCHES` in `engine/instruments.js` holds every built quest. Kettle is not yet
-  walkable, and Tallow's `q6-weigh` has no site yet, so those build their own room
-  around themselves: `learn-quest.js` treats a quest with no site as off-world, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
+  walkable, so its bench builds its own room
+  around itself: `learn-quest.js` treats a quest with no site as off-world, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
   asks to decide whether the player keeps their feet at a real object or the bench is drawn
   as a page over the flat.
   - The **sampler scope** (`scope3d.js`) used to be excluded on the argument that a
@@ -919,12 +953,92 @@ that leans toward the common isotope, and the average runs both ways — a seale
 named off its number. Hint rung three shows how to set up the average without revealing the calculated sum. The bench never counts by
 weighing at scale: the mole is the next bench's.
 
-### World 1 quest 6 — Counting By Weight (`unit01/q6-weigh`, live, no site yet)
+### World 1 quest 6 — Counting By Weight (`unit01/q6-weigh`, live, site 6 laid)
 Built as Ligar's bench four (described under World 3 below) and moved here on 2026-10-10,
 because Bellows, Ember Reach and Mirrowen all need the mole and AP Unit 1 teaches it beside
 atomic mass. Its one ionic sample (a mole of NaCl "formula units") became a mole of CO₂,
-44.0 g, since Tallow comes before Ligar earns the formula unit. It has no site on Tallow's
-ground yet: `verify-tallow` lists it in `SITE_PENDING`, and at T4 it builds its own room.
+44.0 g, since Tallow comes before Ligar earns the formula unit. Its site (`site-6`, *Bench 6 -
+Counting By Weight*) is the site-5 hopper gantry laid a second time at (-4, 21) by the same
+builder (`initHopperGantry(siteId, { tag, plate })`), so both are the assay floor; `SITE_PENDING`
+in `verify-tallow` is now empty, and `verify:bench` measures the weigh floor on it.
+
+### World 2 — Lanternfall (`unit02`, nine benches, all live, walkable at T4)
+
+Lanternfall is the aurora ice. Tallow left the player with electrons on rings at fixed
+distances and no reason why; Lanternfall is the reason, and its sky is the first emission
+spectrum the player ever sees. Nine benches of eight stages each, on **four new built
+instruments** plus the shared stage loop below. Everything Tallow earned is a plain word
+here; what each bench earns is on its `VOCABULARY`, and each quest exports `BUILDS_ON` (the
+quests whose words it uses without earning — `verify:learn` checks they exist and are built,
+and the quest page prints one linked "Builds on" line; nothing is gated by it).
+
+- **`q1-wave` Light as a Wave** (light bench, trace/prism/scale heads) — red to violet,
+  twice as far apart, spacing times count is 3.00 x 10^8 m/s, a frequency from a wavelength,
+  four lamps in order, the ends of the spectrum, radio to X-ray, and a card that says every
+  catalogue code is an element with a name and a symbol (symbols are used from here on).
+  **Labels are plain English until their word is earned**: the screen prints "Crest to crest" and
+  "Crests per second" on stage one and *Wavelength*/*Frequency* from stage two (`stage.labels`).
+- **`q2-photon` Photons** (photocell head, two real dials) — red at full brightness frees
+  nothing, the threshold, brightness changes the count and frequency the speed, E = hν **found
+  from one worked check on the plate** (a sodium threshold quoted in joules beside its
+  wavelength) and never given, work function, a plate only ultraviolet will free.
+- **`q3-lines` Line Spectra** (prism head and the **energy ladder** plate) — filament
+  against tube, name a sealed gas, absorption, which rungs make the red line (tapping a line
+  lights the pair, from `planJump`), a 486 nm line's energy, a predicted 434 nm line, the open
+  top of the ladder, helium not fitting. Every line, rung and work function is real
+  (`lightdata.js`).
+- **`q4-cloud` Orbitals** (cloud plate) — one shot is a dot, five hundred are a cloud, a wave
+  that fits a ring, the node of a 2s, two lobes, three ways to point, five clouds by shape, and
+  the bench that **never draws a path** (`track()` exists only to refuse).
+- **`q5-numbers` Quantum Numbers** (box rack, `address` layout) — **beyond the exam, and the
+  briefing and the stage-one card say so.** n, l, ml, ms and Pauli, each printed on the board as
+  its card earns it (`show` flags) and named after.
+- **`q6-filling` Electron Configuration** (box rack, `atomic` layout, with a magnet) —
+  aufbau, Hund and paramagnetic, the configuration the rack reads, 4s below 3d, noble-gas
+  notation, blocks, iron(II), and **chromium, where the rule and the magnet disagree** (the
+  last stage is beyond the exam).
+- **`q7-pes` Photoelectron Spectroscopy** (electron bench, spectrum head) — **the rows' names
+  are never on the bench**: a peak is a position and a height, and stage eight asks the player
+  to turn peaks into a configuration.
+- **`q8-trends` Periodic Trends** (electron bench, atom head, pull meter, strip and add
+  electron) — Coulomb's law, shielding and effective nuclear charge, radius, ionic radius,
+  ionization energy, successive ionization energies, electronegativity.
+- **`q9-absorb` Spectroscopy** (light bench, cuvette head) — what each light does to a
+  molecule, why copper is blue, the best wavelength, doubling the concentration and the path,
+  Beer-Lambert, a calibration line from three standards.
+
+**The shared pieces.**
+- `engine/stagerunner.js` is the stage loop every Lanternfall quest shares (frame, lifecycle,
+  the answer widgets `number`, `decimal`, `choice`, `bins`, `order`, `multi`, `pick` and `none`,
+  the key legend, dials in their own wrappers). A quest supplies its stage table, its
+  instrument and what its keys do. `blankAnswer(stage)` builds exactly the state `verify:learn`
+  hands `check()`.
+- **The plate bench** (`engine/plates.js`) is the drawn base of the light bench, the cloud
+  plate, the box rack and the electron bench: plates of canvas with a label and a note, taps
+  resolved by hit lists (`pressAt`), and a clock. A subclass supplies `prepare`, `draw`,
+  `press` and `tick`. `engine/plates3d.js` `plateBench3D(Base)` is the built twin: a SUBCLASS,
+  never a second implementation, painting the same `draw` on the raked screen behind each
+  well and standing the hardware that picture is OF in the well (`buildHardware`,
+  `poseHardware`), plus up to two real dials outboard on the left (`dialSpecs`). A bench with
+  one plate frames the camera as if it had two and a half.
+- **The light bench** (`lightbench.js` over `lightdata.js`) has seven heads (`trace`, `scale`,
+  `prism`, `ladder`, `photocell`, `cuvette`, `plot`); every reading comes from a pure planner
+  over real constants (`planTrace`, `planPrism`, `planPhotocell`, `planAbsorb`, `planJump`). The
+  **cloud plate** (`cloudplate.js` over `orbitals.js`) draws seeded draws from the real hydrogen-like
+  |psi|^2, so the first fifty of five hundred shots are the same fifty on every machine. The
+  **box rack** (`boxrack.js` over `electrons.js`) is two-tap, never drag, enforces only "a box
+  takes at most one arrow of each direction", and **the magnet measures the REAL SAMPLE**
+  (`electrons.MEASURED`), never the player's arrangement; `Test Rack` reads the arrangement by
+  the same rule. The **electron bench** (`electronbench.js`) is the plan's "core bench,
+  extended", built as a sibling on the plate base instead of a fourth field on a class that
+  already carries three; it borrows the core bench's look and none of its code.
+- **The honest picture rule holds:** what a plate draws is what the quest grades against, from
+  one planner. The 3D benches add hardware (a lamp whose lens takes the colour of its
+  wavelength, a glass block with the dots hanging in it, a tray whose key-cap in the hand sits
+  raised, a ring model that loses a real bead when an electron is stripped), never a second
+  picture.
+- `tools/lib/ctx-stub.mjs` is a canvas context that records and draws nothing, so `verify:learn`
+  can draw every plate in Node.
 
 ### World 3 — Ligar (`unit03`, nine benches charted, two live, walkable at T4)
 
@@ -1076,14 +1190,15 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
     each polyline's box before any of its segments, so a pixel away from every track pays
     eleven box tests, not thirty-five segments and their noise; a path is drawn along its
     segments only (it once drew each segment's whole LINE as a grey strip across the pan).
-- **Five sites, one per quest, all live, and each sign says what its bench teaches.**
+- **Six sites, one per quest, all live, and each sign says what its bench teaches.**
   `site-1` *Bench 1 - Atoms* (`q1-grain`) under the lean-to in the yard; `site-2` *Bench 2 -
   Inside an Atom* (`q2-core`) down the stairwell in the diagnostic lab; `site-3` *Bench 3 -
   The Periodic Table* (`q3-catalogue`, the blockhouse with its door racked back); `site-4`
   *Bench 4 - Isotopes and Ions* (`q4-ledger`, painted floor and ledger board); `site-5`
   *Bench 5 - Atomic Mass* (`q5-assay`, a hopper over a chute with catch bins, south of the
-  yard). A player choosing a bench should not have to enter it to find out what it is.
-  All five carry their instruments as built objects (`BUILT_BENCHES`). The lean-to is
+  yard); `site-6` *Bench 6 - Counting By Weight* (`q6-weigh`, the same gantry again,
+  west of the fifth). A player choosing a bench should not have to enter it to find out what it is.
+  All six carry their instruments as built objects (`BUILT_BENCHES`). The lean-to is
   framed as a field crew frames one (H-columns on bolted base plates, knee braces, rafters,
   purlins, corrugated sheet, one corner lifted by a gale and one strip gone), and the vault
   is a battered poured-concrete blockhouse with a proud portal and a hood over the door.
@@ -1118,13 +1233,13 @@ The player walks a salt-flat refinery in first person, finds a bench, and presse
   "The frame budget of the walkable worlds").
 - **Tier boundary.** Walking Tallow is T4. At T3 and below the Learn road is the screens it
   has always been and every quest completes exactly as before. `learn/worlds3d.js` is the
-  registry that says which worlds are walkable. Ligar showed what a second one needs
+  registry that says which worlds are walkable. Ligar and Lanternfall showed what a second and a third need
   besides: its builder (`three/<world>.js`), an `enter<World>Scene` on the stage that
   hands it to the shared `enterLearnWorld`, and its site-complete hook.
   `minTier: "T4"` landmarks are decoration: `verify:tallow` simulates removing every one of
   them and asserts every site is still reachable.
 
-### Ligar — Learn world 02 as a place you walk (`three/ligar.js`, T4)
+### Ligar — Learn world 03 as a place you walk (`three/ligar.js`, T4)
 
 At T4, `#/learn/unit03` is a basalt quarry at dusk the player walks in first person,
 built from the three reference paintings (`ligar1`–`ligar3`): columnar basalt
@@ -1265,6 +1380,54 @@ and an excavation with conveyors climbing out of it.
   sections, handrails with toe plates, caged ladders, valves, stencil placards, UVs in
   metres) over a per-world material kit cached on the world. Long members on a slope
   are built bay by bay, because the overlap check measures each part by its box.
+
+### Lanternfall — Learn world 02 as a place you walk (`three/lanternfall.js`, T4)
+
+At T4, `#/learn/unit02` is an ice field under a permanent aurora, walked in first person:
+the nine benches on a ring of packed ice round a frozen lake, each under a frosted shelter,
+a road of amber lanterns between them, the ice country (spires, pressure ridges, aurora
+masts, camps, a sunk crawler, a comms mast) standing off outside the ring and the Avalon's
+pad on the near side. It is built behind the unchanged world contract (`scene`, `data`,
+`colliders`, `terrainMesh`, `hasFarTerrain`, `lampPool`, `getTerrainHeight`, `benchAnchor`,
+`setBenchDeployed`, `setSiteComplete`, `update`, `dispose`), laid out by
+`tools/gen-lanternfall-layout.mjs` (seeded; it holds itself to the footprint rules) and
+verified by `verify:lanternfall`.
+
+- **The sky is the spectrum.** `lanternfall/atmosphere.js` has ONE sky function (`lfSky`)
+  drawn on the dome and rendered once into the environment cube, so the aurora is in the lake
+  and in every glossy plate: three curtains of green low and violet high, exact colours and
+  not a smear, a teal polar dusk on the horizon, stars, and no sun. Aerial perspective is
+  three's own `Fog` in the horizon's colour (`near`/`far` are what the voyage reads), not a
+  patched shader. The key light is a cool aurora-green directional light that casts the
+  shadow; the fill is a dusk-blue hemisphere over a pale ice bounce.
+- **The ground is one analytic height field and one grid to an 880 m horizon**
+  (`lanternfall/terrain.js`): a few decimetres of rolling packed ice across the walk, dead
+  flat under every bench, the pad and the lake, long ice hills past it; the pad's deck stands a
+  hand above the ice, bevelled down. `iceCrust` (sastrugi, thermal cracks, scoured crests, one
+  height field behind albedo, normal, roughness and AO) tiles every 14 m under a slow vertex
+  tint; the lake is `lakeIce`, nearly a mirror, laid a finger above the ice as ground.
+- **Every site is the same bench under a different roof** (`lanternfall/sites.js`): a 4.8 x 1.3
+  m plate at 0.95 m (the dimensions the viewer lays stations and keys out against), a cased
+  instrument whose face says which instrument it is (`light`, `cloud`, `rack`, `electron`),
+  one indicator in the apron, and a shelter with its own signature behind the bench — a sine
+  wave drawn on the wall, a lens mast, a prism on its stand, geodesic ribs (marked
+  `openShell`, since an arch has an underside and no inside), a board of boxes, a ladder of
+  shelves, a detector arc, a stepped table of tiles, a rack of vials. A site's local +z is its
+  front and the group turns to face its `approachPos`; because sites face at arbitrary angles
+  round the ring their colliders are circles (the bench as a row of five, a circle per post, a
+  row along the back wall).
+- **Only lamps are lit.** A lantern is a `lampMark` (never a PointLight); thirty-five of them
+  share a `LampPool` of three real lights, and `verify:lanternfall` fails any emissive material
+  that is not the lantern's. The aurora lights nothing: it is a sky.
+- **What never moves is baked** (`bakeStatics`, `mergeStatic`); the cased instruments and the
+  indicators stay addressable. Walking Lanternfall is T4 only, as Tallow and Ligar are.
+- **Frame budget:** about 320 meshes before bake-down, one ground grid (~21k vertices), a
+  520-point diamond-dust cloud wrapped round the eye (`effects.js`, the only thing that moves
+  besides the aurora), the key light's shadow box following the player in whole texels and
+  re-drawn only when it moves, while a bench is deployed or one frame in thirty.
+- **Not verified in a browser.** The sky shader, the materials and the lit look were built
+  against the contracts the other worlds keep and checked in Node (build, overlap, walk,
+  voyage, bench framing); how it LOOKS has not been seen.
 
 ### Surfaces, small parts and the draw-call budget (`materials/pbr-kit.js`)
 
@@ -1652,15 +1815,17 @@ clearance, every stage has exactly three distinct hint rungs, and a giver→give
 is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 ## Plans in flight
-- `docs/plans/learn-track.md` — the Learn road: fourteen worlds, 71 quests charted, nine
-  built (`unit01/q1-grain` … `unit01/q6-weigh`, the whole of Tallow; `unit03/q1-joins` and
-  `unit03/q2-lattice` on Ligar; `unit07/q1-recipe` on Kettle). Scaffolding, gating, routes, backend tab,
-  per-world practice sets and the verifier are in place. World 01 (Tallow) is also built as
-  walkable ground at T4, five of its six benches built instruments standing on it (site 6,
-  for `q6-weigh`, is still to be laid). **Ligar is walkable at T4 too** — both its built
-  benches are built instruments on its ground, and a page on every lower tier. Kettle has
-  one built quest and no ground; the other eleven worlds are charts only.
-- `docs/plans/learn-quests.md` — every unbuilt quest: Lanternfall and Ligar benches
+- `docs/plans/learn-track.md` — the Learn road: fourteen worlds, 71 quests charted, eighteen
+  built (`unit01/q1-grain` … `unit01/q6-weigh`, the whole of Tallow; `unit02/q1-wave` …
+  `unit02/q9-absorb`, the whole of Lanternfall; `unit03/q1-joins` and `unit03/q2-lattice` on Ligar;
+  `unit07/q1-recipe` on Kettle). Scaffolding, gating, routes, backend tab,
+  per-world practice sets and the verifier are in place. **Tallow, Lanternfall and Ligar are all
+  walkable ground at T4**, every built bench a built instrument standing on its own ground
+  (Tallow's six sites are all laid), and a page on every lower tier. Kettle has
+  one built quest and no ground; the other ten worlds are charts only.
+- `docs/plans/lanternfall-world.md` — Lanternfall's ground and its four new instruments,
+  as built, with what was deliberately left out.
+- `docs/plans/learn-quests.md` — every unbuilt quest: Ligar's benches
   three to nine stage by stage (agreed), and the other eleven worlds as an eight-stage
   proposal per quest with AP CED coverage (97 quests in all), plus the new instruments,
   road-wide dependencies and twelve open decisions. The Tallow→Ligar pass
@@ -2134,7 +2299,8 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     reload onto a world route (the first route of a page load), a signed-out player and
     `session.reduceMotion` — each keeps the old path, launch film included at T3.
 - T4 Learn deployment: In T4, `#/learn/unit01` enters the 3D Tallow world
-  (`stage.enterTallowScene(siteId)`), and `#/learn/unit03` enters Ligar
+  (`stage.enterTallowScene(siteId)`), `#/learn/unit02` enters Lanternfall
+  (`stage.enterLanternfallScene(siteId)`) and `#/learn/unit03` enters Ligar
   (`stage.enterLigarScene(siteId)`); walking to a bench and pressing `[E]` raises a
   `learn-site:interact` event (it was `tallow:interact` while Tallow was the only one)
   that routes to `#/learn/<worldId>/<questId>`, where the quest's
@@ -2248,6 +2414,9 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **Level Curve (`src/progression/levels.js`):** Pure table-based progression curve (`LEVEL_THRESHOLDS`). Levels 1 through 12, max level 12 (0 to 2,520 XP). Rank titles: Cadet (1-2), Scout (3-4), Navigator (5-6), Voyager (7-8), Pathfinder (9-10), Starmarshal (11-12). Quest 1 pays 715 XP total (650 stages + 40 completion + 25 on-time), reaching Level 6.
 - **Requisitions & Locker (`src/progression/requisitions.js`, `src/screens/quarters.js`):** Quartermaster unlock registry. All unlocks are strictly cosmetic and identity-based (`nameplate`, `title`, `cosmetic`, `insignia`, `specialty`). Zero XP or hint perks. Held requisitions derive purely from player level and earned badges. Players customize loadouts in the Locker.
 - **Commendations Registry (`src/progression/commendations.js`):** ~40 commendation badges across 5 roads: Campaign, Craft, Learn, Crew, and Season. Pure predicate evaluations (`earnedBy(state)`). Commendations grant prestige and cosmetics; they carry zero XP. Up to 3 plates can be pinned to active dress. No meeting code badges.
+- **Lanternfall on the road:** `lanternfall_surveyed` (reads its quest list off the chart, like
+  Ligar's), `lanternfall_practice` and `manual_unit02`, a Lanternfall Lantern requisition, and
+  twenty-two Field Manual terms on road `unit02` (each at the stage whose card earns it).
 - **Marks & Field Manual (`src/progression/marks.js`, `src/ui/field-manual.js`):** Clean marks reward solving stages on the first attempt without method rungs. 20 clean marks unlock discovery entries in the Field Manual.
 - **Standings & Dignity Rules (`src/screens/leaderboard.js`):** 4 tabs: Guilds, Crew, Your Guild, This Week. Top 25 + neighbourhood (3 above, 3 below the player) with divider. All players receive dignity protection equally. Players opting out (`board_optout`) appear as `Crew · <GUILD>` on public boards. Text movement indicator (`+3 since last visit`). Rows link to public profiles (`#/crew/:playerId`).
 - **Public Profile (`src/screens/crew-profile.js`):** Read-only dossier for `#/crew/:playerId`. Displays suit preview, level/title, nameplate finish, pinned plates, commendation counts by road, field manual count, watch streak, and guild. Omits stage failure and hint statistics.

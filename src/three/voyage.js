@@ -75,6 +75,14 @@ export const DESTINATIONS = {
       atmo: '#ddd2bf', atmoStrength: 0.55, seed: [1.7, 4.2, 0.6]
     }
   },
+  lanternfall: {
+    key: 'lanternfall', name: 'Lanternfall', hash: '#/learn/unit02',
+    descent: 'Descending to the pad',
+    planet: {
+      kind: 'ice', colors: ['#a9cfe0', '#6f9cb8', '#35618a', '#e3f2f8'],
+      atmo: '#5fe0b0', atmoStrength: 0.62, seed: [3.3, 6.1, 1.4]
+    }
+  },
   ligar: {
     key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',

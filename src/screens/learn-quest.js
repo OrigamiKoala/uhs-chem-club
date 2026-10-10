@@ -99,8 +99,8 @@ export function renderLearnQuest(container, params = {}) {
   // world behind the frame and bolts its screens to the bench, while a bench
   // that is DRAWN — the sampler scope, which is a microscope — is worked as a
   // page, because there is nothing in the world to stand the picture against.
-  // A quest charted on a walkable world before its site has been laid out (Tallow's
-  // `q6-weigh`) is played the way a quest on an unwalkable world is: its bench
+  // A quest charted on a walkable world before its site has been laid out is played
+  // the way a quest on an unwalkable world is (Kettle's `q1-recipe`): its bench
   // builds its own room. Entering the world with nothing to stand at would leave a
   // built instrument with no plate to deploy onto.
   const walkable = canWalk(world.id) && Boolean(world3dFor(world.id)?.siteForQuest(quest.id));
@@ -200,6 +200,20 @@ export function renderLearnQuest(container, params = {}) {
       return;
     }
     mountPoint.innerHTML = '';
+    // A quest may build on words another world earned. Worlds are open, so a
+    // player can arrive in any order: one line, linked, and nothing is gated by it.
+    const builds = (Array.isArray(mod.BUILDS_ON) ? mod.BUILDS_ON : [])
+      .map(key => {
+        const [wid, qid] = String(key).split('/');
+        const w = getWorld(wid);
+        const q = w && getQuest(wid, qid);
+        return q ? `<a href="#/learn/${esc(wid)}/${esc(qid)}">${esc(w.world)} &middot; ${esc(q.title)}</a>` : '';
+      })
+      .filter(Boolean);
+    if (builds.length) {
+      container.querySelector('.learn-host-id')
+        ?.insertAdjacentHTML('beforeend', `<span class="learn-host-builds">Builds on: ${builds.join(', ')}</span>`);
+    }
     try {
       active.mounted = mod.mount(mountPoint, ctx) || null;
     } catch (err) {

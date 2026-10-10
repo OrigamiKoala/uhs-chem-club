@@ -1,7 +1,7 @@
 /**
  * worlds3d.js — Which Learn worlds you can walk on, and how to get there.
  *
- * The Learn road charts thirteen worlds. Two of them — Tallow and Ligar — are built
+ * The Learn road charts fourteen worlds. Three of them — Tallow, Lanternfall and Ligar — are built
  * as places you stand in, at T4. This file is the registry that says so, and it
  * is the only thing that needs editing when another world is built.
  *
@@ -13,6 +13,7 @@
 import { tierAtLeast } from '../three/tier.js';
 import tallowData from '../three/world-data/tallow.json' with { type: 'json' };
 import ligarData from '../three/world-data/ligar.json' with { type: 'json' };
+import lanternfallData from '../three/world-data/lanternfall.json' with { type: 'json' };
 
 /**
  * A walkable Learn world.
@@ -35,6 +36,24 @@ const WORLDS_3D = {
       for (const site of tallowData.sites) {
         if (!site.built) continue;
         stage.setTallowSiteComplete(site.questId, Boolean(isComplete(site.questId)));
+      }
+    }
+  },
+  unit02: {
+    id: 'unit02',
+    worldName: 'Lanternfall',
+    data: lanternfallData,
+    enter(stage, siteId = null) {
+      stage.enterLanternfallScene(siteId);
+    },
+    siteForQuest(questId) {
+      return lanternfallData.sites.find(s => s.questId === questId) || null;
+    },
+    /** Light the site indicator for every quest the player has finished. */
+    syncProgress(stage, isComplete) {
+      for (const site of lanternfallData.sites) {
+        if (!site.built) continue;
+        stage.setLanternfallSiteComplete(site.questId, Boolean(isComplete(site.questId)));
       }
     }
   },

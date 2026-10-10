@@ -1,13 +1,15 @@
 # The Learn road: the quest plan
 
-**Status (2026-10-10): planned, nothing built.** The road was reordered the same
-day (see "Done already" below). This file plans every quest the Learn road still
+**Status (2026-10-10): Lanternfall is built; the rest is planned.** The road was
+reordered the same day (see "Done already" below), and all nine Lanternfall quests were
+built that day with the ground to walk them on (`lanternfall-world.md` says what was built
+and where it differs from this plan). This file plans every quest the Learn road still
 needs, in two levels of detail:
 
 - **Lanternfall and Ligar, stage by stage.** All nine quests of **Lanternfall**
-  (world 2, `unit02`, light and electrons) and Ligar's benches three to nine
-  (world 3, `unit03`, bonding). Agreed with the user, and charted as `draft`
-  under the ids and titles below.
+  (world 2, `unit02`, light and electrons; BUILT) and Ligar's benches three to nine
+  (world 3, `unit03`, bonding; still to build). Agreed with the user, and charted under the
+  ids and titles below.
 - **Every other world, as a proposal for the user to edit:** Bellows, Ember
   Reach, Mirrowen, Kettle, Teeter, Verdigris, Brinewire, Quicklight, Lodestone,
   Thornmere and Cinder Halo. Each quest has an eight-stage arc, the words it
@@ -87,7 +89,7 @@ Decisions already made with the user (2026-10-10):
 
 ## Decisions still open
 
-1. **Element names and symbols.** Tallow and Ligar label samples by catalogue
+1. **Element names and symbols.** (*Done as recommended: `q1-wave` stage 8's card, and symbols from there on.*) Tallow and Ligar label samples by catalogue
    code (`CAT 11`). Electron configurations, Lewis structures and molecular
    orbital diagrams cannot be written that way: "1s² 2s² 2p⁶ 3s¹" and "O=C=O"
    are the content. Neither can anything after Ligar: every later world is
@@ -99,7 +101,7 @@ Decisions already made with the user (2026-10-10):
    existing built benches are not touched. Ligar `q4-dots` stage 1's card then
    earns the **chemical formula** (subscripts as counts), and Kettle `q2-names`
    earns naming.
-2. **Arriving out of order.** Worlds are open now, so a player can start Ligar
+2. **Arriving out of order.** (*Done in part: every Lanternfall quest exports `BUILDS_ON`, `verify:learn` checks the entries are real built quests, and the quest page prints one linked line. The word-use check was not written.*) Worlds are open now, so a player can start Ligar
    `q8-hybrid` without ever having seen Lanternfall's *orbital*. The vocabulary
    checker assumes road order. **Recommendation:** each quest exports
    `BUILDS_ON: ['unit02/q4-cloud', …]`. The quest's page shows one line,
@@ -107,11 +109,11 @@ Decisions already made with the user (2026-10-10):
    `verify:learn` fails if a quest uses a word earned in another world without
    listing the quest that earns it. That makes the dependency visible and keeps
    the open road honest.
-3. **Which world to build first.** **Recommendation:** Lanternfall `q1`–`q3` and
+3. **Which world to build first.** (*Lanternfall, light bench first, as recommended.*) **Recommendation:** Lanternfall `q1`–`q3` and
    `q9` first, because one new instrument (the light bench) serves all four.
    Then Ligar `q3`–`q5`, because sites 3 and 4 are standing empty. See "Build
    order".
-4. **Lanternfall as ground.** A walkable aurora ice field is a project the size
+4. **Lanternfall as ground.** (*Built, because it was asked for outright; see `lanternfall-world.md`.*) A walkable aurora ice field is a project the size
    of Tallow or Ligar. **Recommendation:** build every quest as a page first. At
    T4 the built instruments build their own room, as Kettle's do now. Write a
    separate `lanternfall-world.md` when the quests are done.
@@ -1511,19 +1513,19 @@ Each quest also owes five practice problems, so the road carries 485 of them.
 
 ## Build order
 
-1. **Light bench** (drawn + built) → Lanternfall `q1-wave`, `q2-photon`,
-   `q3-lines`, `q9-absorb`. One instrument, four quests, and Lanternfall goes
-   live.
-2. **Cloud plate** → `q4-cloud`.
-3. **Box rack** → `q5-numbers`, `q6-filling`.
-4. **Core bench extensions** → `q7-pes`, `q8-trends`. Lanternfall complete.
+1. ~~**Light bench**~~ (drawn + built) → Lanternfall `q1-wave`, `q2-photon`,
+   `q3-lines`, `q9-absorb`. **Done.**
+2. ~~**Cloud plate**~~ → `q4-cloud`. **Done.**
+3. ~~**Box rack**~~ → `q5-numbers`, `q6-filling`. **Done.**
+4. ~~**Core bench extensions**~~ → `q7-pes`, `q8-trends`. **Done**, as a sibling
+   instrument (`electronbench.js`) and not an extension of `corebench.js`. Lanternfall complete.
 5. **Join bench crank** → Ligar `q3-distance` at the Batch House (`built: true`).
 6. **Pair board** → `q4-dots` (Weighbridge), `q5-resonance` (new site 5).
 7. **Domain rig** → `q6-shape`, `q7-polarity`, `q8-hybrid` (sites 6–8).
 8. **Box rack, molecular layout** → `q9-orbitals` (site 9). Ligar complete.
-9. Lanternfall as walkable ground (its own plan).
-10. **Tallow site 6** for `q6-weigh`: reuse the site-5 hopper-gantry builder,
-    then drop it from `SITE_PENDING`.
+9. ~~Lanternfall as walkable ground~~ (its own plan). **Done:** `lanternfall-world.md`.
+10. ~~**Tallow site 6**~~ for `q6-weigh`: the site-5 hopper-gantry builder, laid again.
+    **Done**; `SITE_PENDING` is empty.
 11. **The rest of the road, by instrument, in road order where the instruments
     allow:**
     - **Kettle:** build `pot.js` and its burette head first, since the pH bench
@@ -1545,6 +1547,8 @@ updated.
 - [x] The mole moved to Tallow (`unit01/q6-weigh`, CO₂ in place of NaCl);
   Brinewire charted as world 10; worlds 11–14 shifted (2026-10-10).
 - [x] The rest of the road drafted as a proposal (this file).
+- [x] Lanternfall: all nine quests, four instruments, the ground, the verifiers (2026-10-10).
+- [x] Tallow site 6 (2026-10-10).
 - [ ] The user's edits to the proposal; then the placeholder charts replaced.
-- [ ] Decisions 1–12 above.
-- [ ] Steps 1–11.
+- [ ] Decisions 5–12 above.
+- [ ] Steps 5–8 and 11.

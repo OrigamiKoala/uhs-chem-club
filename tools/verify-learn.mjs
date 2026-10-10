@@ -245,7 +245,21 @@ for (const q of quests.filter(q => q.status === 'live')) {
     ok(`${q.key}: module loads, exports mount(), ${declared} stages`);
   }
 
+  // BUILDS_ON names the quests whose words this one uses without earning, so the open road stays honest.
+  if (mod.BUILDS_ON !== undefined) {
+    if (!Array.isArray(mod.BUILDS_ON)) fail(`${q.key}: BUILDS_ON must be an array of quest keys`);
+    else {
+      for (const key of mod.BUILDS_ON) {
+        const [wid, qid] = String(key).split('/');
+        const target = getWorld(wid) && getQuest(wid, qid);
+        if (!target) fail(`${q.key}: BUILDS_ON names "${key}", which is not a quest on the chart`);
+        else if (key === q.key) fail(`${q.key}: BUILDS_ON names the quest itself`);
+        else if (target.status !== 'live') fail(`${q.key}: BUILDS_ON names "${key}", which is not built`);
+      }
+    }
+  }
   checkStageTable(q, mod);
+  await checkDrawn(q, mod);
   // Owed by EVERY live quest, not only a table-driven one: the world's problem
   // set is five per built quest, and a quest that grades some other way still
   // owes its five.
@@ -310,7 +324,18 @@ function checkStageTable(q, mod) {
     'unit03/q1-joins': /\b(bonds?|bonded|bonding|ionic|covalent|shares? a pair|lone pairs?|double bonds?|triple bonds?|formula unit)\b/i,
     'unit03/q2-lattice': /\b(lattices?|crystals?|crystalline|conduct\w*|electrolytes?|dissociat\w*|brittle|melting points?)\b/i,
     'unit07/q1-recipe': /\b(fixed composition|constant composition|definite proportions|multiple proportions|empirical formulas?|percent composition)\b/i,
-    'unit01/q6-weigh': /\b(moles?|molar|avogadro\w*|formula mass|gram formula mass)\b/i
+    'unit01/q6-weigh': /\b(moles?|molar|avogadro\w*|formula mass|gram formula mass)\b/i,
+    // Lanternfall. Longer phrases first, so "visible spectrum" is read as the
+    // phrase and not as a stray word.
+    'unit02/q8-trends': /\b(electron affinity|electronegativity|successive ionization energies|ionization energ(?:y|ies)|ionic radi(?:us|i)|atomic radi(?:us|i)|effective nuclear charge|shielding|coulomb.?s law)\b/i,
+    'unit02/q7-pes': /\b(photoelectron spectr(?:um|a)|binding energy|subshells?)\b/i,
+    'unit02/q6-filling': /\b(transition metal ions?|blocks?|noble.gas notation|configurations?|hund.?s? rule|paramagnetic|diamagnetic|aufbau)\b/i,
+    'unit02/q5-numbers': /\b(pauli|spins?|magnetic|angular momentum|principal)\b/i,
+    'unit02/q4-cloud': /\b(uncertainty principle|d orbitals?|p orbitals?|s orbitals?|wave.particle duality|standing waves?|nodes?|orbitals?|probabilit(?:y|ies))\b/i,
+    'unit02/q9-absorb': /\b(molecular spectroscopy|complementary colou?rs?|absorbance|beer.?lambert|calibration curves?)\b/i,
+    'unit02/q3-lines': /\b(continuous spectrum|line spectrum|emission spectrum|absorption spectrum|energy levels?|ground state|excited states?|bohr|ioniz\w*)\b/i,
+    'unit02/q2-photon': /\b(threshold frequency|photoelectric|photons?|planck.?s constant|work functions?)\b/i,
+    'unit02/q1-wave': /\b(electromagnetic spectrum|visible spectrum|speed of light|wavelengths?|frequenc(?:y|ies))\b/i
   };
   const withheldRx = WITHHELD_VOCAB[q.key];
 
@@ -446,6 +471,10 @@ function checkStageTable(q, mod) {
         ...(st.specimens || []).flatMap(s => [s.label, s.note]),
         ...(st.pairs || []).flatMap(s => [s.label, s.note]),
         ...(st.slabs || []).flatMap(s => [s.label, s.note]),
+        ...(st.rigs || []).flatMap(s => [s.label, s.note]),
+        ...(st.clouds || []).flatMap(s => [s.label, s.note]),
+        ...(st.widget?.rows || []).map(r => r.label),
+        ...(st.widget?.items || []).map(r => r.label),
         ...(st.widget?.options || []).flatMap(o => [o.label, o.note]),
         ...(st.widget?.bins || []).flatMap(b => [b.label, b.note]),
         st.widget?.label,
@@ -646,7 +675,7 @@ function sentenceLiterals(fn) {
 
 function refusalLeaks(q, mod, st, i, seed) {
   const sol = mod.SOLUTIONS?.[i] || {};
-  const bench = st.samples || st.specimens || st.pairs || st.slabs || st.hoppers || st.cards || [];
+  const bench = st.samples || st.specimens || st.pairs || st.slabs || st.hoppers || st.cards || st.rigs || st.clouds || [];
   const nameOf = (id) => {
     const s = bench.find(b => b.id === id);
     return s?.label && /^(sample|pair|block) [a-z]$/i.test(s.label.trim()) ? s.label.trim() : null;
@@ -992,6 +1021,346 @@ function checkBench(q, mod, stages) {
   });
 
   if (samples && !bad) ok(`${q.key}: ${samples} bench samples are well formed`);
+}
+
+/**
+ * PROVE EVERY DECLARATION CAN BE DRAWN. A plate bench paints its pictures with
+ * pure `draw` functions over a 2D context, so the whole of a quest's bench can
+ * be drawn here, in Node, onto a context that records what was asked of it, at
+ * the phone's plate and at the built bench's square screen. A head that throws,
+ * a picture that draws nothing, or a coordinate that is not a number is a blank
+ * plate in a student's hands, and nothing else in the build would catch it.
+ */
+async function checkDrawn(q, mod) {
+  const stages = mod.STAGES;
+  if (!Array.isArray(stages)) return;
+  const { makeCtx } = await import('./lib/ctx-stub.mjs');
+  let bad = 0;
+  let drawn = 0;
+
+  const sizes = [[360, 225], [512, 512]];
+  for (let i = 0; i < stages.length; i++) {
+    const st = stages[i];
+    const label = `${q.key} stage ${i + 1}`;
+    const cases = [];
+
+    const rackHeads = ['rack', 'strip'];
+    const electronHeads = ['spectrum', 'atom'];
+    const lightRigs = (st.rigs || []).filter(r => !rackHeads.includes(r.head) && !electronHeads.includes(r.head));
+    const electronRigs = (st.rigs || []).filter(r => electronHeads.includes(r.head));
+    if (electronRigs.length) {
+      const { ElectronBench } = await import('../src/learn/engine/electronbench.js');
+      const E = await import('../src/learn/engine/electrons.js');
+      const proto = ElectronBench.prototype;
+      const bench = Object.create(proto);
+      bench.cfg = { maxPm: st.maxPm ?? 240, labels: st.labels || {}, show: st.show || {} };
+      const ids = new Set();
+      for (const raw of electronRigs) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        if (raw.head === 'spectrum' && !E.BINDING[raw.sym]) { fail(`${label}: spectrum plate "${raw.id}" names an element with no measured spectrum "${raw.sym}"`); bad++; }
+        if (raw.head === 'atom') {
+          if (!(raw.radius > 0)) { fail(`${label}: atom plate "${raw.id}" has no radius`); bad++; }
+          const shells = raw.shells || [];
+          shells.forEach((n, i) => {
+            const room = i === 0 ? 2 : i < 3 ? 8 : 18;
+            if (n > room) { fail(`${label}: atom plate "${raw.id}" puts ${n} electrons on shell ${i + 1}, which holds ${room}`); bad++; }
+          });
+          if (raw.sym && raw.shells && raw.shells.reduce((a, b) => a + b, 0) !== E.zOf(raw.sym) - (raw.charge || 0)) {
+            fail(`${label}: atom plate "${raw.id}" has the wrong number of electrons for ${raw.sym}`); bad++;
+          }
+        }
+        const item = proto.prepare.call(bench, { ...raw, progress: raw.head === 'spectrum' ? 1 : 0 });
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+    }
+    const rackRigs = (st.rigs || []).filter(r => rackHeads.includes(r.head));
+    if (rackRigs.length) {
+      const { BoxRack } = await import('../src/learn/engine/boxrack.js');
+      const E = await import('../src/learn/engine/electrons.js');
+      const proto = BoxRack.prototype;
+      const bench = Object.create(proto);
+      bench.cfg = { hand: 'u', core: false, show: { n: true, l: true, ml: true, ms: true }, clouds: true };
+      const ids = new Set();
+      for (const raw of rackRigs) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        if (raw.head === 'rack') {
+          for (const id of (raw.rows || [])) if (!E.rowOf(id)) { fail(`${label}: plate "${raw.id}" lists an unknown row "${id}"`); bad++; }
+          if (raw.layout && !['atomic', 'address'].includes(raw.layout)) { fail(`${label}: plate "${raw.id}" has an unknown layout`); bad++; }
+          if (raw.sample && E.MEASURED[raw.sample] === undefined) { fail(`${label}: plate "${raw.id}" names a sample with no measured magnet reading`); bad++; }
+          for (const [key, v] of Object.entries(raw.prefill || {})) {
+            const [rowId, idx] = key.split(':');
+            if (!E.rowOf(rowId) || Number(idx) >= E.boxesOf(E.rowOf(rowId).l) || !/^(u|d|ud)$/.test(v)) { fail(`${label}: plate "${raw.id}" prefills a box that does not exist or holds an illegal pair`); bad++; }
+          }
+        } else if (E.zOf(raw.sym) < 1) {
+          fail(`${label}: strip plate "${raw.id}" names an unknown element "${raw.sym}"`); bad++;
+        }
+        const item = proto.prepare.call(bench, raw);
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+    }
+    if (lightRigs.length) {
+      const { LightBench } = await import('../src/learn/engine/lightbench.js');
+      const proto = LightBench.prototype;
+      const bench = Object.create(proto);
+      bench.clock = 0;
+      bench.cfg = {
+        settings: st.settings || [], setting: st.start || 1, brightness: st.brightnessStart ?? st.brightness ?? 3,
+        path: st.path ?? 1, region: st.region ?? 'uv-visible', labels: st.labels || {},
+        mode: st.mode || null, after: Boolean(st.after), ladderTop: st.ladderTop || ''
+      };
+      const data = await import('../src/learn/engine/lightdata.js');
+      const ids = new Set();
+      for (const rig of lightRigs) {
+        // The declaration, held to the real tables the planners read.
+        if (ids.has(rig.id)) { fail(`${label}: two rigs share the id "${rig.id}"`); bad++; }
+        ids.add(rig.id);
+        if (!rig.label) { fail(`${label}: rig "${rig.id}" has no label`); bad++; }
+        if (!['trace', 'scale', 'prism', 'ladder', 'photocell', 'cuvette', 'plot'].includes(rig.head)) {
+          fail(`${label}: rig "${rig.id}" has an unknown head "${rig.head}"`); bad++;
+        }
+        if (rig.tuned && !(Array.isArray(st.settings) && st.settings.length > 1)) {
+          fail(`${label}: rig "${rig.id}" is tuned but the stage declares no dial settings`); bad++;
+        }
+        if (rig.head === 'trace' && !rig.tuned && !(rig.nm > 0)) {
+          fail(`${label}: trace rig "${rig.id}" has no wavelength`); bad++;
+        }
+        if (rig.head === 'photocell' && !data.METALS[rig.metal]) {
+          fail(`${label}: photocell rig "${rig.id}" names an unknown metal "${rig.metal}"`); bad++;
+        }
+        if (rig.head === 'cuvette' && rig.solute && !data.SOLUTES[rig.solute]) {
+          fail(`${label}: cuvette rig "${rig.id}" names an unknown solute "${rig.solute}"`); bad++;
+        }
+        if (rig.head === 'cuvette' && rig.solute && !(rig.conc > 0)) {
+          fail(`${label}: cuvette rig "${rig.id}" has no concentration`); bad++;
+        }
+        if (rig.head === 'prism' && rig.source?.gas && !data.LINES[rig.source.gas]) {
+          fail(`${label}: prism rig "${rig.id}" names a gas with no real lines "${rig.source.gas}"`); bad++;
+        }
+        if (rig.head === 'prism' && rig.source?.type === 'lamp' && !(rig.source.nm > 0)) {
+          fail(`${label}: prism lamp "${rig.id}" has no wavelength`); bad++;
+        }
+      }
+      if (Array.isArray(st.settings) && st.settings.some(n => !(n >= 200 && n <= 1100))) {
+        fail(`${label}: a dial setting is not a wavelength between 200 and 1100 nm`); bad++;
+      }
+      if (st.start != null && Array.isArray(st.settings) && !(st.start >= 1 && st.start <= st.settings.length)) {
+        fail(`${label}: the dial starts at a setting it does not have`); bad++;
+      }
+      for (const rig of lightRigs) {
+        cases.push([`rig ${rig.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, rig, { sweep: 0, probe: null, bench })]);
+      }
+    }
+    if (Array.isArray(st.clouds)) {
+      const { CloudPlate } = await import('../src/learn/engine/cloudplate.js');
+      const { ORBITALS } = await import('../src/learn/engine/orbitals.js');
+      const proto = CloudPlate.prototype;
+      const bench = Object.create(proto);
+      bench.cfg = {
+        extent: st.extent ?? 12, slice: false, settings: st.settings || [], setting: st.start || 1, showPlane: false
+      };
+      const ids = new Set();
+      for (const raw of st.clouds) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        if (raw.head === 'ring') {
+          if (!(Array.isArray(st.settings) && st.settings.length > 1)) { fail(`${label}: a ring plate needs dial settings`); bad++; }
+        } else if (!ORBITALS[raw.orbital]) {
+          fail(`${label}: plate "${raw.id}" names an unknown orbital "${raw.orbital}"`); bad++;
+        }
+        const item = proto.prepare.call(bench, { ...raw, fired: raw.fired ?? 300 });
+        item.fired = Math.max(item.fired, 1);
+        if (!item.points && item.head !== 'ring') item.points = (await import('../src/learn/engine/orbitals.js')).sampleOrbital(item.orbital, 500, 1);
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+    }
+
+    for (const [name, run] of cases) {
+      for (const [w, h] of sizes) {
+        const ctx = makeCtx(w, h);
+        try {
+          run(ctx, w, h);
+        } catch (err) {
+          fail(`${label}: ${name} throws while drawing at ${w}x${h} (${err && err.message})`);
+          bad++;
+          continue;
+        }
+        drawn++;
+        if (ctx.stats.calls < 8) { fail(`${label}: ${name} drew almost nothing at ${w}x${h}`); bad++; }
+        if (ctx.stats.nan) { fail(`${label}: ${name} drew ${ctx.stats.nan} NaN coordinate(s) at ${w}x${h}`); bad++; }
+        if (ctx.stats.maxX > w * 3 || ctx.stats.maxY > h * 3) {
+          fail(`${label}: ${name} drew far off the plate at ${w}x${h}`); bad++;
+        }
+      }
+    }
+  }
+  if (drawn && !bad) ok(`${q.key}: ${drawn} plate pictures drawn at phone and bench size`);
+}
+
+/* ------------------------------------------------------------------
+   EVERY FIGURE A LANTERNFALL STAGE GRADES AGAINST IS RECOMPUTED FROM THE REAL
+   TABLES. An answer authored as a literal can drift from the instrument that
+   teaches it; one recomputed here from `lightdata.js` cannot.
+   ------------------------------------------------------------------ */
+{
+  const before = failures;
+  const D = await import('../src/learn/engine/lightdata.js');
+  const q1 = getQuest('unit02', 'q1-wave') && await getQuest('unit02', 'q1-wave').module?.();
+  const q2 = getQuest('unit02', 'q2-photon') && await getQuest('unit02', 'q2-photon').module?.();
+  const q3 = getQuest('unit02', 'q3-lines') && await getQuest('unit02', 'q3-lines').module?.();
+  const q9 = getQuest('unit02', 'q9-absorb') && await getQuest('unit02', 'q9-absorb').module?.();
+  const near = (a, b, tol, what) => { if (Math.abs(a - b) > tol) fail(`${what}: graded ${a}, the real figure is ${b.toFixed(3)}`); };
+
+  if (q1) {
+    near(q1.SOLUTIONS[2].decimal, (D.nmToHz(400) * 400e-9) / 1e8, 0.01, 'unit02/q1-wave stage 3 (speed of light, x 10^8)');
+    near(q1.SOLUTIONS[3].decimal, D.nmToHz(600) / 1e14, 0.26, 'unit02/q1-wave stage 4 (frequency of 600 nm)');
+    near(q1.SOLUTIONS[7].decimal, D.nmToHz(589) / 1e14, 0.06, 'unit02/q1-wave stage 8 (sodium)');
+    // The lamps in stage 3 must all give the one product, or the stage teaches nothing.
+    for (const rig of q1.STAGES[2].rigs) near((D.nmToHz(rig.nm) * rig.nm * 1e-9) / 1e8, 3, 0.01, `unit02/q1-wave stage 3 ${rig.id}`);
+    const order = q1.STAGES[4].rigs.slice().sort((a, b) => b.nm - a.nm).map(r => r.id).join();
+    if (order !== q1.SOLUTIONS[4].order.join()) fail('unit02/q1-wave stage 5: the graded order is not lowest frequency first');
+  }
+  if (q2) {
+    near(q2.SOLUTIONS[4].decimal, D.photonJoules(500) / 1e-19, 0.26, 'unit02/q2-photon stage 5 (photon energy at 500 nm)');
+    const worked = D.photonJoules(539) / 1e-19;
+    if (!q2.STAGES[4].reference.some(t => t.includes(worked.toFixed(2)))) fail('unit02/q2-photon stage 5: the worked check is not the real photon energy at 539 nm');
+    const wake = ['cs', 'na', 'zn'].map(m => D.thresholdNm(m[0].toUpperCase() + m[1]));
+    if (!(wake[0] > wake[1] && wake[1] > wake[2])) fail('unit02/q2-photon: the work functions do not order cesium < sodium < zinc');
+    // Stage 2's dial must have exactly one first setting that frees an electron.
+    const st = q2.STAGES[1].settings;
+    const first = st.findIndex(n => D.planPhotocell('Na', n, 3).count > 0) + 1;
+    if (first !== q2.SOLUTIONS[1].setting) fail(`unit02/q2-photon stage 2: the first freeing setting is ${first}, not the graded one`);
+  }
+  if (q3) {
+    near(q3.SOLUTIONS[4].decimal, D.photonJoules(486) / 1e-19, 0.06, 'unit02/q3-lines stage 5 (486 nm line)');
+    near(Number(q3.SOLUTIONS[5].choice), D.planJump(5, 2).nm, 1.5, 'unit02/q3-lines stage 6 (5 to 2 jump)');
+    near(D.planJump(3, 2).nm, 656, 1.5, 'the 3 to 2 jump is the red line');
+    for (const [gas, lines] of Object.entries(D.LINES)) {
+      if (gas !== 'Ne' && lines.some(n => n < 380 || n > 750)) fail(`${gas}: a listed line is outside the visible band`);
+    }
+  }
+  if (q9) {
+    const last = q9.STAGES[7].rigs[0];
+    near(D.planAbsorb('cuso4', 630, 1, 0.005) * 1, last.unknownAbs, 1e-6, 'unit02/q9-absorb stage 8 (sealed reading)');
+    near(q9.SOLUTIONS[7].decimal, 5, 1e-9, 'unit02/q9-absorb stage 8 (5 mmol/L)');
+    // The sweep's largest reading must be the graded setting.
+    const sweep = q9.STAGES[3].settings.map(n => D.planAbsorb('cuso4', n, 1, 0.01));
+    if (sweep.indexOf(Math.max(...sweep)) + 1 !== q9.SOLUTIONS[3].setting) fail('unit02/q9-absorb stage 4: the graded wavelength is not the peak of the sweep');
+  }
+  const q4 = getQuest('unit02', 'q4-cloud') && await getQuest('unit02', 'q4-cloud').module?.();
+  if (q4) {
+    const O = await import('../src/learn/engine/orbitals.js');
+    // The pictures are drawn from the real wavefunction: each radial density integrates to one.
+    for (const [n, l] of [[1, 0], [2, 0], [2, 1], [3, 0], [3, 1], [3, 2]]) {
+      let sum = 0;
+      for (let r = 0; r < 140; r += 0.002) sum += O.radialPdf(n, l, r) * 0.002;
+      near(sum, 1, 0.005, `orbitals: radial density of n=${n}, l=${l} integrates to one`);
+    }
+    const mean = id => { const p = O.sampleOrbital(id, 3000, 1); return p.reduce((a, q) => a + Math.hypot(q.x, q.y, q.z), 0) / p.length; };
+    near(mean('1s'), 1.5, 0.08, 'orbitals: the 1s cloud\'s mean distance (bohr)');
+    near(mean('2s'), 6, 0.3, 'orbitals: the 2s cloud\'s mean distance (bohr)');
+    // The 2s cloud has an empty shell at its node; the 2pz cloud has an empty plane.
+    const shell = O.sampleOrbital('2s', 3000, 1).filter(p => Math.abs(Math.hypot(p.x, p.y, p.z) - 2) < 0.1).length;
+    const near1s = O.sampleOrbital('1s', 3000, 1).filter(p => Math.abs(Math.hypot(p.x, p.y, p.z) - 2) < 0.1).length;
+    if (shell > near1s * 0.2) fail('orbitals: the 2s cloud is not empty at its node');
+    const plane = O.sampleOrbital('2pz', 3000, 1).filter(p => Math.abs(p.z) < 0.05).length;
+    if (plane > 12) fail(`orbitals: the 2pz cloud has ${plane} dots on its node plane`);
+    // The ring: only whole numbers of wavelengths fit.
+    for (const n of [1, 2, 3]) {
+      if (!O.ringFits(O.RING_CIRCUMFERENCE_PM / n, O.RING_CIRCUMFERENCE_PM).fits) fail(`orbitals: ${n} whole wavelengths should fit the ring`);
+    }
+    if (O.ringFits(O.RING_CIRCUMFERENCE_PM / 2.5, O.RING_CIRCUMFERENCE_PM).fits) fail('orbitals: two and a half wavelengths must not fit the ring');
+    const fits = q4.STAGES[2].settings.filter(n => O.ringFits(n, O.RING_CIRCUMFERENCE_PM).fits).map(String).sort().join();
+    if (fits !== q4.SOLUTIONS[2].picks.slice().sort().join()) fail('unit02/q4-cloud stage 3: the graded wavelengths are not the ones that fit the ring');
+    // Stage 7's shapes are the real ones.
+    const shapes = { a: 'two lobes', b: 'four lobes', c: 'two lobes and a ring', d: 'four lobes', e: 'four lobes' };
+    const binFor = { 'two lobes': 'two', 'four lobes': 'four', 'two lobes and a ring': 'ring' };
+    for (const c of q4.STAGES[6].clouds) {
+      if (binFor[O.shapeOf(c.orbital)] !== q4.SOLUTIONS[6].bins[c.id] || binFor[shapes[c.id]] !== q4.SOLUTIONS[6].bins[c.id]) {
+        fail(`unit02/q4-cloud stage 7: plate ${c.id} is graded against the wrong shape`);
+      }
+    }
+    // Stage 6: three distinct directions among four plates.
+    const dirs = new Set(q4.STAGES[5].clouds.map(c => c.orbital));
+    if (dirs.size !== q4.SOLUTIONS[5].number) fail('unit02/q4-cloud stage 6: the plates do not show exactly the graded number of directions');
+  }
+  const q6 = getQuest('unit02', 'q6-filling') && await getQuest('unit02', 'q6-filling').module?.();
+  const q7 = getQuest('unit02', 'q7-pes') && await getQuest('unit02', 'q7-pes').module?.();
+  const q8 = getQuest('unit02', 'q8-trends') && await getQuest('unit02', 'q8-trends').module?.();
+  const q5 = getQuest('unit02', 'q5-numbers') && await getQuest('unit02', 'q5-numbers').module?.();
+  const EL = await import('../src/learn/engine/electrons.js');
+  if (q5) {
+    // The four numbers: every set the stage calls impossible is, and every other is possible.
+    const bad = Object.entries(q5.CHECKS.SETS).filter(([, s]) => !EL.validAddress(s)).map(([k]) => k).sort().join();
+    if (bad !== q5.SOLUTIONS[7].picks.slice().sort().join()) fail('unit02/q5-numbers stage 8: the graded impossible sets are not the ones the rules rule out');
+    const dup = Object.entries(q5.CHECKS.FOUR_ELECTRONS);
+    const pair = dup.flatMap(([a, x], i) => dup.slice(i + 1).filter(([, y]) => EL.sameAddress(x, y)).map(([b]) => a + b));
+    if (pair.join() !== q5.SOLUTIONS[4].choice) fail('unit02/q5-numbers stage 5: the graded pair is not the one sharing all four numbers');
+    if (EL.shellCapacity(3) !== q5.SOLUTIONS[5].number) fail('unit02/q5-numbers stage 6: the third shell does not hold the graded number');
+    if (EL.boxesOf(2) !== q5.SOLUTIONS[2].number) fail('unit02/q5-numbers stage 3: a d row does not have the graded number of boxes');
+  }
+  if (q6) {
+    // The ground states the stages grade against, and the magnet's real counts.
+    const r6 = EL.readRack(EL.rackFor(6));
+    if (r6.config !== EL.configString(EL.groundConfig(6)) || !r6.laddered) fail('unit02/q6-filling stage 1: carbon\'s rack does not read as its ground state');
+    if (EL.unpairedOfConfig(EL.groundConfig(6)) !== EL.MEASURED.C) fail('the magnet\'s count for carbon disagrees with Hund\'s rule');
+    for (const [sym, m] of Object.entries(EL.MEASURED)) {
+      if (/[+]/.test(sym)) continue;
+      if (EL.unpairedOfConfig(EL.groundConfig(EL.zOf(sym))) !== m) fail(`the magnet's measured count for ${sym} disagrees with its ground-state configuration`);
+    }
+    // Chromium: the rule's answer and the measured one differ, and the graded arrangement is the measured one.
+    const cr = EL.readRack(q6.SOLUTIONS[7].rack);
+    if (cr.pull !== EL.MEASURED.Cr) fail('unit02/q6-filling stage 8: the graded arrangement does not match the measured pull of chromium');
+    const rule = EL.readRack(q6.MISSES[7].rack);
+    if (rule.pull === EL.MEASURED.Cr) fail('unit02/q6-filling stage 8: the rule-following arrangement already matches the magnet, so the stage teaches nothing');
+    if (EL.readRack(q6.SOLUTIONS[3].rack).counts['4s'] !== 1) fail('unit02/q6-filling stage 4: the graded nineteenth electron is not in 4s');
+    const strips = q6.STAGES[5].rigs;
+    for (const s of strips) {
+      const want = EL.blockOf(EL.zOf(s.sym));
+      if (q6.SOLUTIONS[5].bins[s.id] !== want) fail(`unit02/q6-filling stage 6: ${s.sym} is graded into the wrong block`);
+    }
+  }
+  if (q7) {
+    // Every spectrum on the bench adds up to the electrons its element has.
+    for (const st of q7.STAGES) for (const rig of st.rigs) {
+      const total = (EL.planPES(rig.sym) || []).reduce((n, p) => n + p.height, 0);
+      if (total !== EL.zOf(rig.sym)) fail(`unit02/q7-pes: ${rig.sym}'s peaks add up to ${total}, not ${EL.zOf(rig.sym)}`);
+    }
+    const heights = EL.planPES('O').map(p => p.height).join();
+    if (heights !== '2,2,4') fail('unit02/q7-pes stage 5: oxygen\'s spectrum is not 2, 2 and 4');
+    const ne = EL.BINDING.Ne['1s'], f = EL.BINDING.F['1s'];
+    if (!(ne > f)) fail('unit02/q7-pes stage 6: neon\'s 1s peak must sit further along than fluorine\'s');
+    if (!(EL.BINDING.B['2s'] > EL.BINDING.B['2p'])) fail('unit02/q7-pes stage 4: boron\'s 2s must be held tighter than its 2p');
+  }
+  if (q8) {
+    const B = await import('../src/learn/engine/electronbench.js');
+    const sizes = ['li', 'be', 'b', 'c'].map(s => EL.RADIUS[s[0].toUpperCase() + s.slice(1)]);
+    if (sizes.some((v, i) => i && v >= sizes[i - 1])) fail('unit02/q8-trends stage 3: the graded order is not largest radius first');
+    const ions = { naplus: EL.ION_RADIUS['Na+'], clminus: EL.ION_RADIUS['Cl-'], na: EL.ION_RADIUS.Na };
+    const ord = q8.SOLUTIONS[4].order.map(k => ions[k]);
+    if (ord.some((v, i) => i && v <= ord[i - 1])) fail('unit02/q8-trends stage 5: the graded order is not smallest first');
+    const ies = ['Li', 'B', 'Be'].map(s => EL.IONIZATION[s]);
+    if (ies.some((v, i) => i && v <= ies[i - 1])) fail('unit02/q8-trends stage 6: the graded order is not the order of the real ionization energies');
+    const jump = EL.MG_SUCCESSIVE;
+    if (!(jump[2] / jump[1] > 4 && jump[1] / jump[0] < 3)) fail('unit02/q8-trends stage 7: magnesium\'s successive energies do not jump after the second');
+    // Stage 8: the pull on the outermost electron orders the atoms the way electronegativity does.
+    const pulls = ['na', 'c', 'n', 'f'].map(k => {
+      const sym = k[0].toUpperCase() + k.slice(1);
+      const shells = B.shellsOf(sym);
+      return B.planPull({ z: EL.zOf(sym), shells, radius: EL.RADIUS[sym] }, shells.length - 1).pull;
+    });
+    if (pulls.some((v, i) => i && v <= pulls[i - 1])) fail('unit02/q8-trends stage 8: the pull meter does not order the atoms weakest first');
+    const en = ['Na', 'C', 'N', 'F'].map(s => EL.ELECTRONEGATIVITY[s]);
+    if (en.some((v, i) => i && v <= en[i - 1])) fail('unit02/q8-trends stage 8: the real electronegativities do not order the atoms the same way');
+    // Stage 2: sodium's outer electron feels +1 of its +11.
+    const na = B.planPull({ z: 11, shells: [2, 8, 1], radius: 186 }, 2);
+    if (na.zeff !== 1 || na.between !== 10) fail('unit02/q8-trends stage 2: sodium\'s outer electron should feel +1 with ten electrons between');
+  }
+  if (failures === before) ok('Lanternfall: every graded figure is recomputed from the real tables and agrees');
 }
 
 /* ------------------------------------------------------------------

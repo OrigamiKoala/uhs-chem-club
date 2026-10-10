@@ -590,6 +590,24 @@
       "label": "Bench 5 - Atomic Mass",
       "structure": "hopper-gantry",
       "built": true
+    },
+    {
+      "id": "site-6",
+      "questId": "q6-weigh",
+      "stage": 6,
+      "pos": [
+        -4.0,
+        0,
+        21.0
+      ],
+      "approachPos": [
+        -4.0,
+        1.6,
+        25.4
+      ],
+      "label": "Bench 6 - Counting By Weight",
+      "structure": "hopper-gantry",
+      "built": true
     }
   ],
   "spawn": {
@@ -665,6 +683,18 @@
           1.2,
           30.0
         ]
+      },
+      "site-6": {
+        "pos": [
+          -4.0,
+          1.6,
+          25.4
+        ],
+        "lookAt": [
+          -4.0,
+          1.2,
+          21.0
+        ]
       }
     }
   },
@@ -674,14 +704,16 @@
       "site-2",
       "site-3",
       "site-4",
-      "site-5"
+      "site-5",
+      "site-6"
     ],
     "siteDescriptions": {
       "site-1": "The first bench, under the lean-to awning west of the crate stacks in the middle of the yard.",
       "site-2": "The second bench, on the lower floor down the stairwell that opens north of the conveyor gantry.",
       "site-3": "The third bench, set out in front of the open vault in the east wall of the yard, opposite the awning.",
       "site-4": "The fourth bench, on the marked-out floor west of the yard, beyond the derelict hauler.",
-      "site-5": "The fifth bench, south of the yard: a raised hopper over a chute with catch bins under its mouth."
+      "site-5": "The fifth bench, south of the yard: a raised hopper over a chute with catch bins under its mouth.",
+      "site-6": "The sixth bench, west of the fifth: a second hopper over a chute, where samples are weighed by the mole."
     }
   },
   "tracks": {

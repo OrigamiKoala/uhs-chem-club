@@ -32,6 +32,14 @@ import { CatalogueBoard3D } from './catalogue3d.js';
 import { AssayFloor3D } from './assay3d.js';
 import { JoinBench as JoinBench2D } from './joinbench.js';
 import { JoinBench3D } from './joinbench3d.js';
+import { LightBench as LightBench2D } from './lightbench.js';
+import { LightBench3D } from './lightbench3d.js';
+import { CloudPlate as CloudPlate2D } from './cloudplate.js';
+import { CloudPlate3D } from './cloudplate3d.js';
+import { BoxRack as BoxRack2D } from './boxrack.js';
+import { BoxRack3D } from './boxrack3d.js';
+import { ElectronBench as ElectronBench2D } from './electronbench.js';
+import { ElectronBench3D } from './electronbench3d.js';
 
 /** True when this client is drawing the Learn benches in three dimensions. */
 export function benchesAre3D() {
@@ -85,14 +93,24 @@ const BUILT_BENCHES = new Set([
   'q3-catalogue',  // the catalogue board — catalogue3d.js
   'q4-ledger',     // the core bench again, at site four
   'q5-assay',      // the assay floor     — assay3d.js
-  'q6-weigh',      // the assay floor again; no site yet, so it builds its own room
+  'q6-weigh',      // the assay floor again, at site six
   // Unit 3 — Ligar. The join bench is a subclass of the drawn bench, so its
   // tools are the canvas bench's tools and cannot grade differently.
   'q1-joins',      // the join bench, pair plates — joinbench3d.js
   'q2-lattice',    // the join bench, slab plates — joinbench3d.js
   // Unit 7 — Kettle. Built as Ligar's bench three; Kettle is not yet walkable,
   // so at T4 it builds its own room around itself.
-  'q1-recipe'      // the sampler scope again     — scope3d.js
+  'q1-recipe',     // the sampler scope again     — scope3d.js
+  // Unit 2 — Lanternfall.
+  'q1-wave',       // the light bench, trace and prism heads — lightbench3d.js
+  'q2-photon',     // the light bench, photocell head
+  'q3-lines',      // the light bench, prism head and the energy ladder
+  'q4-cloud',      // the cloud plate — cloudplate3d.js
+  'q5-numbers',    // the box rack, address layout — boxrack3d.js
+  'q6-filling',    // the box rack, atomic layout
+  'q7-pes',        // the electron bench, spectrum head — electronbench3d.js
+  'q8-trends',     // the electron bench, atom head and pull meter
+  'q9-absorb'      // the light bench, cuvette head
 ]);
 
 /**
@@ -175,8 +193,55 @@ export function JoinBench(host, opts = {}) {
     : new JoinBench2D(host, opts);
 }
 
+/**
+ * The light bench. Signature and behaviour match `LightBench` in lightbench.js;
+ * the built one is a subclass of it through `plateBench3D`.
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onSelect?: Function, onSetting?: Function,
+ *          onBrightness?: Function}} opts
+ */
+export function LightBench(host, opts = {}) {
+  return benchesAre3D()
+    ? new LightBench3D(host, deployed(opts))
+    : new LightBench2D(host, opts);
+}
+
+/**
+ * The cloud plate. Signature and behaviour match `CloudPlate` in cloudplate.js.
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onSelect?: Function, onSetting?: Function}} opts
+ */
+export function CloudPlate(host, opts = {}) {
+  return benchesAre3D()
+    ? new CloudPlate3D(host, deployed(opts))
+    : new CloudPlate2D(host, opts);
+}
+
+/**
+ * The box rack. Signature and behaviour match `BoxRack` in boxrack.js.
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onSelect?: Function}} opts
+ */
+export function BoxRack(host, opts = {}) {
+  return benchesAre3D()
+    ? new BoxRack3D(host, deployed(opts))
+    : new BoxRack2D(host, opts);
+}
+
+/**
+ * The electron bench. Signature and behaviour match `ElectronBench` in
+ * electronbench.js.
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onSelect?: Function}} opts
+ */
+export function ElectronBench(host, opts = {}) {
+  return benchesAre3D()
+    ? new ElectronBench3D(host, deployed(opts))
+    : new ElectronBench2D(host, opts);
+}
+
 /* Exported so a caller that wants the built instrument by name can have it. */
-export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D, JoinBench3D };
+export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D, JoinBench3D, LightBench3D, CloudPlate3D, BoxRack3D, ElectronBench3D };
 
 /* Re-exported so a quest module needs exactly one import line for its bench. */
 export { detailFor, TINTS } from './scope.js';

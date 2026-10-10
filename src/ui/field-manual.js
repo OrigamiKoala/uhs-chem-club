@@ -232,6 +232,250 @@ export const FIELD_MANUAL_TERMS = [
     body: 'An atom or group of atoms that has gained or lost one or more valence electrons, carrying a net electric charge.'
   },
 
+  // --- Learn Unit 2: Lanternfall (Light and Electrons) ---
+  {
+    id: 'u2l_wavelength',
+    term: 'Wavelength',
+    road: 'unit02',
+    questKey: 'unit02/q1-wave',
+    stageLabel: 'Bench 1, Stage 1',
+    stageIndex: 0,
+    route: '#/learn/unit02/q1-wave',
+    title: 'Distance Between Crests',
+    body: 'The distance from one crest of a wave to the next, which sets its colour in visible light.'
+  },
+  {
+    id: 'u2l_frequency',
+    term: 'Frequency',
+    road: 'unit02',
+    questKey: 'unit02/q1-wave',
+    stageLabel: 'Bench 1, Stage 1',
+    stageIndex: 0,
+    route: '#/learn/unit02/q1-wave',
+    title: 'Crests Per Second',
+    body: 'The number of wave crests that pass a point each second, measured in hertz.'
+  },
+  {
+    id: 'u2l_c',
+    term: 'Speed of Light',
+    road: 'unit02',
+    questKey: 'unit02/q1-wave',
+    stageLabel: 'Bench 1, Stage 3',
+    stageIndex: 2,
+    route: '#/learn/unit02/q1-wave',
+    title: 'One Fixed Product',
+    body: 'Wavelength times frequency equals 3.00 × 10⁸ m/s for every colour of light in a vacuum.'
+  },
+  {
+    id: 'u2l_em',
+    term: 'Electromagnetic Spectrum',
+    road: 'unit02',
+    questKey: 'unit02/q1-wave',
+    stageLabel: 'Bench 1, Stage 6',
+    stageIndex: 5,
+    route: '#/learn/unit02/q1-wave',
+    title: 'Every Kind of Light',
+    body: 'The full range of wavelengths of light, from radio waves through visible light to X-rays and gamma rays.'
+  },
+  {
+    id: 'u2l_threshold',
+    term: 'Threshold Frequency',
+    road: 'unit02',
+    questKey: 'unit02/q2-photon',
+    stageLabel: 'Bench 2, Stage 2',
+    stageIndex: 1,
+    route: '#/learn/unit02/q2-photon',
+    title: 'Where the Counter Wakes',
+    body: 'The lowest frequency of light that frees any electron from a given metal.'
+  },
+  {
+    id: 'u2l_photon',
+    term: 'Photon',
+    road: 'unit02',
+    questKey: 'unit02/q2-photon',
+    stageLabel: 'Bench 2, Stage 3',
+    stageIndex: 2,
+    route: '#/learn/unit02/q2-photon',
+    title: 'A Packet of Light',
+    body: 'A single quantum of light, carrying an energy fixed by its frequency, E = hν.'
+  },
+  {
+    id: 'u2l_workfunction',
+    term: 'Work Function',
+    road: 'unit02',
+    questKey: 'unit02/q2-photon',
+    stageLabel: 'Bench 2, Stage 6',
+    stageIndex: 5,
+    route: '#/learn/unit02/q2-photon',
+    title: 'What the Metal Holds Back',
+    body: 'The least energy needed to free an electron from the surface of a metal.'
+  },
+  {
+    id: 'u2l_linespectrum',
+    term: 'Line Spectrum',
+    road: 'unit02',
+    questKey: 'unit02/q3-lines',
+    stageLabel: 'Bench 3, Stage 1',
+    stageIndex: 0,
+    route: '#/learn/unit02/q3-lines',
+    title: 'A Few Exact Colours',
+    body: 'The bright lines a glowing gas gives out, which no other gas shares.'
+  },
+  {
+    id: 'u2l_energylevel',
+    term: 'Energy Level',
+    road: 'unit02',
+    questKey: 'unit02/q3-lines',
+    stageLabel: 'Bench 3, Stage 4',
+    stageIndex: 3,
+    route: '#/learn/unit02/q3-lines',
+    title: 'The Rungs of an Atom',
+    body: 'One of the fixed energies an electron in an atom can have; light is given out or taken in as it moves between two of them.'
+  },
+  {
+    id: 'u2l_bohr',
+    term: 'Bohr Model',
+    road: 'unit02',
+    questKey: 'unit02/q3-lines',
+    stageLabel: 'Bench 3, Stage 6',
+    stageIndex: 5,
+    route: '#/learn/unit02/q3-lines',
+    title: 'Hydrogen from One Formula',
+    body: "A model putting hydrogen's electron on levels at -2.18 × 10⁻¹⁸ J divided by n squared, which predicts its visible lines."
+  },
+  {
+    id: 'u2l_orbital',
+    term: 'Orbital',
+    road: 'unit02',
+    questKey: 'unit02/q4-cloud',
+    stageLabel: 'Bench 4, Stage 2',
+    stageIndex: 1,
+    route: '#/learn/unit02/q4-cloud',
+    title: 'A Cloud of Probability',
+    body: 'A region around the nucleus where an electron is likely to be found, drawn from where many shots of it land.'
+  },
+  {
+    id: 'u2l_node',
+    term: 'Node',
+    road: 'unit02',
+    questKey: 'unit02/q4-cloud',
+    stageLabel: 'Bench 4, Stage 4',
+    stageIndex: 3,
+    route: '#/learn/unit02/q4-cloud',
+    title: 'Where It Is Never Found',
+    body: 'A shell or plane inside an orbital where the electron is never found.'
+  },
+  {
+    id: 'u2l_uncertainty',
+    term: 'Uncertainty Principle',
+    road: 'unit02',
+    questKey: 'unit02/q4-cloud',
+    stageLabel: 'Bench 4, Stage 8',
+    stageIndex: 7,
+    route: '#/learn/unit02/q4-cloud',
+    title: 'No Path to Draw',
+    body: "An electron's position and speed cannot both be known exactly at once, so it has no path."
+  },
+  {
+    id: 'u2l_pauli',
+    term: 'Pauli Exclusion Principle',
+    road: 'unit02',
+    questKey: 'unit02/q5-numbers',
+    stageLabel: 'Bench 5, Stage 5',
+    stageIndex: 4,
+    route: '#/learn/unit02/q5-numbers',
+    title: 'One Address Each',
+    body: 'No two electrons in an atom can share all four quantum numbers.'
+  },
+  {
+    id: 'u2l_hund',
+    term: "Hund's Rule",
+    road: 'unit02',
+    questKey: 'unit02/q6-filling',
+    stageLabel: 'Bench 6, Stage 2',
+    stageIndex: 1,
+    route: '#/learn/unit02/q6-filling',
+    title: 'Spread Before Pairing',
+    body: 'Electrons occupy the boxes of a row singly, all pointing the same way, before any pair up.'
+  },
+  {
+    id: 'u2l_noblegas',
+    term: 'Noble-Gas Notation',
+    road: 'unit02',
+    questKey: 'unit02/q6-filling',
+    stageLabel: 'Bench 6, Stage 5',
+    stageIndex: 4,
+    route: '#/learn/unit02/q6-filling',
+    title: 'The Core in One Symbol',
+    body: 'Writing a closed core as a noble gas symbol in brackets, followed by the rows beyond it.'
+  },
+  {
+    id: 'u2l_binding',
+    term: 'Binding Energy',
+    road: 'unit02',
+    questKey: 'unit02/q7-pes',
+    stageLabel: 'Bench 7, Stage 3',
+    stageIndex: 2,
+    route: '#/learn/unit02/q7-pes',
+    title: 'How Tightly It Is Held',
+    body: 'The energy needed to remove an electron from an atom; the closer to the nucleus, the larger.'
+  },
+  {
+    id: 'u2l_zeff',
+    term: 'Effective Nuclear Charge',
+    road: 'unit02',
+    questKey: 'unit02/q8-trends',
+    stageLabel: 'Bench 8, Stage 2',
+    stageIndex: 1,
+    route: '#/learn/unit02/q8-trends',
+    title: 'The Charge It Feels',
+    body: 'The nuclear charge an outer electron actually feels after the electrons in between have shielded it.'
+  },
+  {
+    id: 'u2l_ie',
+    term: 'Ionization Energy',
+    road: 'unit02',
+    questKey: 'unit02/q8-trends',
+    stageLabel: 'Bench 8, Stage 6',
+    stageIndex: 5,
+    route: '#/learn/unit02/q8-trends',
+    title: 'The Cost of One Electron',
+    body: 'The energy needed to strip the outermost electron from a gaseous atom.'
+  },
+  {
+    id: 'u2l_en',
+    term: 'Electronegativity',
+    road: 'unit02',
+    questKey: 'unit02/q8-trends',
+    stageLabel: 'Bench 8, Stage 8',
+    stageIndex: 7,
+    route: '#/learn/unit02/q8-trends',
+    title: 'Pull on a Shared Pair',
+    body: "An atom's pull on a pair of electrons it shares; it rises across a period and falls down a group."
+  },
+  {
+    id: 'u2l_absorbance',
+    term: 'Absorbance',
+    road: 'unit02',
+    questKey: 'unit02/q9-absorb',
+    stageLabel: 'Bench 9, Stage 4',
+    stageIndex: 3,
+    route: '#/learn/unit02/q9-absorb',
+    title: 'How Much the Cuvette Dims',
+    body: 'The logarithmic measure of how much light a sample takes out of a beam.'
+  },
+  {
+    id: 'u2l_beer',
+    term: 'Beer–Lambert Law',
+    road: 'unit02',
+    questKey: 'unit02/q9-absorb',
+    stageLabel: 'Bench 9, Stage 7',
+    stageIndex: 6,
+    route: '#/learn/unit02/q9-absorb',
+    title: 'A = εbc',
+    body: 'Absorbance is proportional to path length and to concentration.'
+  },
+
   // --- Learn Unit 3: Ligar (Bonds, Lattices) ---
   {
     id: 'u2_bond',
@@ -316,6 +560,7 @@ export function getFieldManualStats(sessionState = {}) {
   const byRoad = {
     campaign: { total: 0, earned: 0 },
     unit01: { total: 0, earned: 0 },
+    unit02: { total: 0, earned: 0 },
     unit03: { total: 0, earned: 0 }
   };
 
@@ -363,6 +608,7 @@ export function renderFieldManualModal(sessionState = {}, activeFilter = 'all') 
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'all' ? 'active' : ''}" data-filter="all">All (${stats.earned}/${stats.total})</button>
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'campaign' ? 'active' : ''}" data-filter="campaign">Campaign (${stats.byRoad.campaign.earned}/${stats.byRoad.campaign.total})</button>
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit01' ? 'active' : ''}" data-filter="unit01">Tallow (${stats.byRoad.unit01.earned}/${stats.byRoad.unit01.total})</button>
+        <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit02' ? 'active' : ''}" data-filter="unit02">Lanternfall (${stats.byRoad.unit02.earned}/${stats.byRoad.unit02.total})</button>
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit03' ? 'active' : ''}" data-filter="unit03">Ligar (${stats.byRoad.unit03.earned}/${stats.byRoad.unit03.total})</button>
       </div>
 

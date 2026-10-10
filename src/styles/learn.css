@@ -2065,3 +2065,77 @@ body.bench-deployed .modal-container .modal-card {
    stage puts a single pair up, so the shells always have room to be counted. */
 .scope-grid.join-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .scope-grid.join-grid.scope-n1 { grid-template-columns: minmax(0, 1fr); }
+
+
+/* ===================================================================
+   THE LIGHT BENCH — Lanternfall (engine/lightbench.js)
+   Waves and bands are wide and shallow; a photocell, a cuvette and a plot
+   need height for their meters. Two plates a row at most, so a gate reading
+   or an absorbance is never shrunk below what a phone can read.
+   =================================================================== */
+.scope-aperture.light-aperture { aspect-ratio: 16 / 10; }
+.scope-aperture.light-aperture.light-tall { aspect-ratio: 4 / 3; }
+.scope-grid.scope-n1 .scope-aperture.light-aperture { aspect-ratio: 16 / 9; }
+.scope-grid.scope-n1 .scope-aperture.light-aperture.light-tall { aspect-ratio: 16 / 10; }
+.scope-grid.light-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.scope-grid.light-grid.scope-n1 { grid-template-columns: minmax(0, 1fr); }
+
+/* ===================================================================
+   THE CLOUD PLATE — Lanternfall (engine/cloudplate.js)
+   A cloud is read as a whole, so it is drawn as large as the plate allows:
+   one plate to a row on a phone, two at most on a desk. The three-view
+   plates (xy, xz and yz side by side) take the full row.
+   =================================================================== */
+.scope-aperture.cloud-aperture { aspect-ratio: 1 / 1; }
+.scope-aperture.cloud-aperture.cloud-wide { aspect-ratio: 16 / 9; }
+.scope-grid.scope-n1 .scope-aperture.cloud-aperture { aspect-ratio: 4 / 3; }
+.scope-grid.scope-n1 .scope-aperture.cloud-aperture.cloud-wide { aspect-ratio: 16 / 9; }
+.scope-grid.cloud-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.scope-grid.cloud-grid.scope-n1 { grid-template-columns: minmax(0, 1fr); }
+
+/* ===================================================================
+   THE BOX RACK — Lanternfall (engine/boxrack.js)
+   A rack is a ladder of boxes read from the bottom up, so it is tall; the
+   strip plates that show one element each are wide and short. One rack to a
+   row on a phone, so a box is never smaller than a thumb.
+   =================================================================== */
+.scope-aperture.rack-aperture { aspect-ratio: 5 / 6; max-height: 78vh; }
+.scope-aperture.rack-aperture.rack-strip { aspect-ratio: 16 / 10; max-height: none; }
+.scope-grid.scope-n1 .scope-aperture.rack-aperture { aspect-ratio: 4 / 5; }
+.scope-grid.scope-n1 .scope-aperture.rack-aperture.rack-strip { aspect-ratio: 16 / 7; }
+.scope-grid.rack-grid { grid-template-columns: minmax(0, 1fr); }
+.scope-grid.rack-grid.scope-n2, .scope-grid.rack-grid.scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.scope-grid.rack-grid.scope-n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 620px) {
+  .scope-grid.rack-grid.scope-n2, .scope-grid.rack-grid.scope-n3, .scope-grid.rack-grid.scope-n4 { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ===================================================================
+   THE ELECTRON BENCH — Lanternfall (engine/electronbench.js)
+   A spectrum needs width for its energy axis; an atom with its meter panel
+   is closer to square. One plate to a row on a phone, so a peak's height and
+   a pull reading are never shrunk below what a thumb can tap and an eye can read.
+   =================================================================== */
+.scope-aperture.electron-aperture { aspect-ratio: 16 / 10; }
+.scope-aperture.electron-aperture.electron-atom { aspect-ratio: 4 / 3; }
+.scope-grid.scope-n1 .scope-aperture.electron-aperture { aspect-ratio: 16 / 8; }
+.scope-grid.scope-n1 .scope-aperture.electron-aperture.electron-atom { aspect-ratio: 16 / 10; }
+.scope-grid.electron-grid { grid-template-columns: minmax(0, 1fr); }
+.scope-grid.electron-grid.scope-n2, .scope-grid.electron-grid.scope-n3, .scope-grid.electron-grid.scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 620px) {
+  .scope-grid.electron-grid.scope-n2, .scope-grid.electron-grid.scope-n3, .scope-grid.electron-grid.scope-n4 { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* A bench with two dials (a lamp's wavelength and its brightness) draws each in its own wrapper. */
+.lq-dialwrap { display: block; }
+.lq-dialwrap + .lq-dialwrap { margin-top: 0.6rem; }
+
+/* THE ONE LINE A QUEST SAYS ABOUT WHAT IT BUILDS ON. Linked, quiet, and gating nothing. */
+.learn-host-builds {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+.learn-host-builds a { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; }
+.learn-host-builds a:hover { color: var(--text-amber); }

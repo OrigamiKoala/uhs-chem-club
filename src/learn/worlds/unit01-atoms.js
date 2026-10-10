@@ -12,8 +12,8 @@
  * piece with three numbers", then weighs it: atomic mass, then the mole. The mole
  * was Ligar's and later Kettle's; it moved here on 2026-10-10 because Bellows,
  * Ember Reach and Mirrowen all need it, and AP Unit 1 teaches it beside atomic
- * mass. `q6-weigh` has no site on the ground yet, so at T4 its bench builds its
- * own room (`learn-quest.js`) until one is laid.
+ * mass. `q6-weigh` stands at site 6 on Tallow's ground (the site-5 hopper gantry,
+ * laid a second time), so at T4 it is worked on a real bench like the rest.
  */
 
 export const UNIT_01 = {
