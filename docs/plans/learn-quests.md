@@ -33,6 +33,11 @@ Every rule in CLAUDE.md binds this plan, and these are the ones it leans on most
   an untouched bench is a wrong answer with a reason, never a gate.
 - **One briefing per quest**, on stage 1, at most two sentences, saying what the
   instrument is and what its tools do.
+- **Encounter-first architecture (Phase 8).** Every quest is structured
+  around who the player faces, what the foe holds, and why the chemical move beats
+  them. The chemistry is not an abstract math problem; operating the instrument is
+  the tactical action that resolves the field encounter. Every stage defines an
+  `encounter` block, foe intent, objective, and chemical rationale.
 - **Hints are one sentence each.** Rung 3 gives the method and never the
   number.
 - **Reward cards are one to three sentences.**

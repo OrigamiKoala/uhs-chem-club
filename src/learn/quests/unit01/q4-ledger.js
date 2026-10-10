@@ -24,6 +24,7 @@
 
 import { CoreBench } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
+import { resolveEncounter } from '../../engine/foes.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
@@ -147,6 +148,12 @@ export const STAGES = [
       min: 0, max: 20,
       fields: ['Protons', 'Neutrons', 'Electrons']
     },
+    encounter: {
+      species: 'salt husk',
+      act: 'Count Grains',
+      intent: 'A salt husk hovers over the core plate, its nucleus vibrating.',
+      hit: 'The particle counts align and the husk stabilizes.'
+    },
     hints: [
       'Press "The middle" to count the grains, then "Outside" to count the electrons.',
       'In "The middle" a crossed grain is a proton and a blank grain is a neutron; in "Outside" each piece on a ring is an electron.',
@@ -202,6 +209,12 @@ export const STAGES = [
       min: 0, max: 40,
       fields: ['Neutrons', 'Electrons']
     },
+    encounter: {
+      species: 'salt husk',
+      act: 'Read Seal',
+      intent: 'A sealed casing conceals the inner grains of the second husk.',
+      hit: 'The particle tally matches the label and breaks the seal.'
+    },
     hints: [
       'Count Sample A in both views, then compare your counts with the two numbers on its label.',
       'On Sample A the CAT code is the proton count, and the mass number is protons plus neutrons.',
@@ -249,6 +262,16 @@ export const STAGES = [
         { id: 'same', label: 'Reacts the same way', note: 'Behaves like Sample A.' },
         { id: 'other', label: 'Reacts differently', note: 'Behaves unlike Sample A.' }
       ]
+    },
+    encounter: {
+      species: 'salt husk',
+      act: 'Match Shells',
+      intent: 'Three unlabelled husks drift around the reference core.',
+      hit: 'The identical electron shells are identified and isolated.',
+      moves: {
+        same: 'Match',
+        other: 'Isolate'
+      }
     },
     hints: [
       'Press "Outside" and count the electrons on the outermost shell of all four.',
@@ -299,6 +322,12 @@ export const STAGES = [
       min: 0, max: 30,
       fields: ['Protons', 'Electrons']
     },
+    encounter: {
+      species: 'salt husk',
+      act: 'Read Charge',
+      intent: 'A charged casing deflects the needle away from zero.',
+      hit: 'The net charge resolves and the casing unlatches.'
+    },
     hints: [
       'Press "Read Needle" on Sample A, then count its protons and its electrons.',
       'Sample A is open: check that its needle equals its protons minus its electrons, and that its proton count equals its CAT code.',
@@ -340,6 +369,12 @@ export const STAGES = [
       { id: 'd', label: 'SAMPLE A', note: 'mounted, open to the instrument', core: { marked: 12, blank: 12 }, rings: [2, 8, 2] }
     ],
     widget: { type: 'number', min: 0, max: 6, label: 'Electrons taken off' },
+    encounter: {
+      species: 'salt husk',
+      act: 'Strip Shell',
+      intent: 'An unyielding salt husk resists the stripping field.',
+      hit: 'Two outer electrons shear off to leave a plus two core.'
+    },
     hints: [
       'Press "Fire Stripper" to knock one electron off, then "Read Needle" to see what it did.',
       'Every electron you take off leaves one more proton with nothing to cancel it.',
@@ -383,6 +418,12 @@ export const STAGES = [
       label: 'Sample A — where the electrons go',
       total: 18,
       rings: ['Shell 1 — closest in', 'Shell 2 — middle', 'Shell 3 — furthest out']
+    },
+    encounter: {
+      species: 'salt husk',
+      act: 'Fill Shells',
+      intent: 'An empty core husk pulls hungrily at passing charges.',
+      hit: 'The outer shell fills completely and locks into stability.'
     },
     hints: [
       'Use the + keys on the shell rows to put electrons on Sample A.',
@@ -433,6 +474,12 @@ export const STAGES = [
       label: 'How many of each',
       min: 0, max: 8,
       fields: ['Atoms of Sample A', 'Atoms of Sample B']
+    },
+    encounter: {
+      species: 'salt husk',
+      act: 'Balance Charge',
+      intent: 'Opposing charges pull the paired husks into an erratic orbit.',
+      hit: 'The whole number ratio cancels the net charge to zero.'
     },
     hints: [
       'Press "Read Needle" on both samples before you count anything.',
@@ -485,6 +532,18 @@ export const STAGES = [
         { id: 'charged', label: 'Carrying a charge', note: 'The electron count is off.' },
         { id: 'other', label: 'Different element', note: 'The CAT code does not match.' }
       ]
+    },
+    encounter: {
+      species: 'salt husk',
+      act: 'Classify Husks',
+      intent: 'Four sealed husks exhibit subtle shifts in mass and charge.',
+      hit: 'Every variant husk is logged and cleared from the bench.',
+      moves: {
+        match: 'Confirm',
+        heavy: 'Log Heavy',
+        charged: 'Log Charge',
+        other: 'Reject'
+      }
     },
     hints: [
       'Count Sample A in both views and check it against its own label.',
@@ -697,7 +756,8 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: 'Commit'
+      commitLabel: stage.encounter?.act || 'Commit',
+      encounter: resolveEncounter(stage)
     });
 
     bench.setSpecimens(stage.specimens);

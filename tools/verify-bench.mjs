@@ -1170,5 +1170,373 @@ async function lanternfallPasses() {
 }
 await lanternfallPasses();
 
+
+/* ================================================================ THE FOES
+
+   PHASE 5 OF docs/plans/storyline-and-combat.md: at T4 a stage that is a fight
+   has its foes as BUILT BODIES standing in the wells of the instrument
+   (`encounter3d.js`, `foebody.js`). They are measured like any other body, and
+   then held to the rules a foe has that nothing else on the bench has:
+
+     - one body per sample or plate, standing in the well of the station that
+       holds it, in the order the stage prints them;
+     - every pose the species can take stays inside the tray, below the screen
+       it stands in front of, and inside the glass at six aspects;
+     - NO BODY HIDES A PICTURE: a ray from the camera to a grid of points across
+       every station's screen passes every foe in every pose (the instrument is
+       still the player's rig and the flat picture is still the picture);
+     - nothing a foe does stands inside the bench's own clutter or the world;
+     - a press on a foe, through the real pointer path, is a press on its station;
+     - a foe's pose is `planFoe`'s pose and nothing else: the 2D `Encounter` is
+       driven for real and the body in the scene must read it back;
+     - a committed miss makes every body lunge, a clear disperses every body, a
+       knock-back makes every body whole, and a dispersed body is gone — not
+       dead, gone — and comes back whole on a replayed stage;
+     - the budget: a husk is a few thousand triangles, a moth a few more. */
+
+const { resolveEncounter, planFoe, newFight } = await import('../src/learn/engine/foes.js');
+const { Encounter } = await import('../src/learn/engine/encounter.js');
+const { WELL_R: FOE_WELL_R } = await import('../src/learn/engine/foebody.js');
+
+const HUSK_POSES = [
+  ['idle'], ['unmoved'], ['split'], ['scattered'], ['layered', { layers: 2 }],
+  ['layered', { layers: 4 }], ['even'], ['dispersed']
+];
+const MOTH_POSES = [
+  ['idle'], ['shedding', { dots: 1, speed: 2 }], ['shedding', { dots: 5, speed: 12 }], ['still'], ['dispersed']
+];
+
+/** Triangles a body draws, instances counted. */
+function trianglesOf(group) {
+  let n = 0;
+  group.traverse(o => {
+    if (!o.isMesh || !o.geometry || o.material?.colorWrite === false) return;
+    const g = o.geometry;
+    const per = (g.index ? g.index.count : g.attributes.position.count) / 3;
+    n += per * (o.isInstancedMesh ? o.count : 1);
+  });
+  return n;
+}
+
+/** Advance the layer `seconds` of fight time, sampling each body's extent as it goes. */
+function runLayer(layer, seconds, boxesOut, inv, dt = 1 / 20) {
+  for (let t = 0; t < seconds; t += dt) {
+    layer.update(dt);
+    layer.group.updateMatrixWorld(true);
+    for (const b of layer.bodies.values()) {
+      if (!b.group.visible) continue;
+      const bx = localBox(b.group, inv);
+      if (!bx) continue;
+      const prev = boxesOut.get(b);
+      if (prev) prev.union(bx); else boxesOut.set(b, bx);
+    }
+  }
+}
+
+function snapshotOf(enc, pose, plan) {
+  return { enc, fight: newFight(), poses: new Map(enc.foes.map(f => [f.id, { pose, ...(plan || {}) }])) };
+}
+
+/**
+ * Put one fighting stage through the built instrument.
+ * @param {{ questId, label, build, lay, items, env, select }} cfg
+ */
+function foeStage(cfg, stage, stageNo, aspects) {
+  const { questId, label } = cfg;
+  const anchor = world.benchAnchor(questId);
+  const enc = resolveEncounter(stage, cfg.env);
+  if (!enc) return null;
+  world.setBenchDeployed(questId, true);
+  const species = enc.species;
+  const table = species === 'salt husk' ? HUSK_POSES : MOTH_POSES;
+
+  for (const [aspectName, aspect] of aspects) {
+    const camera = new THREE.PerspectiveCamera(FOV, aspect, 0.05, 80);
+    const picked = [];
+    const bench = cfg.build(camera, anchor, id => picked.push(id));
+    cfg.lay(bench, stage);
+    const viewer = bench.viewer;
+    viewer.applyCamera();
+    viewer.root.updateMatrixWorld(true);
+    camera.updateMatrixWorld(true);
+    const tag = `${label} stage ${stageNo} @ ${aspectName}`;
+    const layer = viewer.foes;
+    if (!layer) { fail(`${tag}: the viewer has no foe layer`); bench.dispose?.(); continue; }
+
+    layer.sync(snapshotOf(enc, 'idle'));
+    layer.update(0.05);
+
+    // ONE BODY PER FOE, ONE STATION PER BODY, IN THE ORDER THE STAGE PRINTS THEM.
+    if (layer.bodies.size !== enc.foes.length || viewer.stations.length !== enc.foes.length) {
+      fail(`${tag}: ${enc.foes.length} foes, ${viewer.stations.length} stations, ${layer.bodies.size} bodies`);
+      bench.dispose?.();
+      continue;
+    }
+    enc.foes.forEach((foe, i) => {
+      const body = layer.bodies.get(foe.id);
+      if (!body || body.station !== viewer.stations[i]) fail(`${tag}: ${foe.label} does not stand at station ${i + 1}`);
+      // The station the foe stands at holds the sample the foe is made from.
+      const rec = bench.stations[i];
+      const held = rec?.item?.id ?? rec?.sample?.id;
+      if (held !== foe.id) fail(`${tag}: ${foe.label} stands at the station holding "${held}"`);
+    });
+
+    const inv = new THREE.Matrix4().copy(viewer.root.matrixWorld).invert();
+    const extents = new Map();
+    const stationX = i => viewer.stations[i].group.position.x;
+
+    for (const [pose, plan] of table) {
+      layer.sync(snapshotOf(enc, pose, plan));
+      runLayer(layer, pose === 'dispersed' ? 4.2 : 2.2, extents, inv);
+      if (pose === 'dispersed') {
+        for (const b of layer.bodies.values()) {
+          if (!b.gone && b.group.visible) fail(`${tag}: a dispersed ${species} is still on the plate after 4 s`);
+        }
+      } else {
+        for (const b of layer.bodies.values()) {
+          if (!b.group.visible) fail(`${tag}: a ${species} in pose "${pose}" is not drawn`);
+        }
+      }
+    }
+    // The counter: every body comes at the player once and returns.
+    layer.sync(snapshotOf(enc, 'idle'));
+    runLayer(layer, 0.5, extents, inv);
+    layer.sync({ ...snapshotOf(enc, 'idle'), fight: { ...newFight(), lost: 1 } });
+    for (const b of layer.bodies.values()) if (!(b.lunge > 0.99)) fail(`${tag}: a committed miss did not make a ${species} lunge`);
+    runLayer(layer, 0.6, extents, inv);
+    runLayer(layer, 0.6, extents, inv);
+
+    // EVERY EXTENT, ALL POSES TOGETHER.
+    let k = 0;
+    for (const [body, b] of extents) {
+      const i = body.stationIndex;
+      if (![b.min.x, b.max.x, b.min.y, b.max.y, b.min.z, b.max.z].every(Number.isFinite)) {
+        fail(`${tag}: ${body.species} ${i + 1} has a non-finite extent`);
+        continue;
+      }
+      const cx = stationX(i);
+      if (b.min.x < cx - 0.34 || b.max.x > cx + 0.34 || b.min.z < -0.34 || b.max.z > 0.36) {
+        fail(`${tag}: ${body.species} ${i + 1} leaves its tray — x[${(b.min.x - cx).toFixed(2)}, ${(b.max.x - cx).toFixed(2)}] z[${b.min.z.toFixed(2)}, ${b.max.z.toFixed(2)}]`);
+      }
+      if (b.min.y < 0.93 || b.max.y > 0.95 + 0.36) {
+        fail(`${tag}: ${body.species} ${i + 1} spans y[${b.min.y.toFixed(2)}, ${b.max.y.toFixed(2)}] — the well is at 0.95`);
+      }
+      k++;
+    }
+
+    // THE GLASS: every body, in every pose, inside the frame and under the chrome.
+    layer.sync(snapshotOf(enc, 'idle'));
+    runLayer(layer, 0.4, new Map(), inv);
+    for (const body of layer.bodies.values()) {
+      const nd = ndcBounds(body.group, camera);
+      if (!nd) { fail(`${tag}: ${body.species} has no bounds`); continue; }
+      if (nd.minX < -0.99 || nd.maxX > 0.99 || nd.minY < -0.99) {
+        fail(`${tag}: ${body.species} ${body.stationIndex + 1} hangs off the glass — x[${nd.minX.toFixed(2)}, ${nd.maxX.toFixed(2)}] y[${nd.minY.toFixed(2)}, ${nd.maxY.toFixed(2)}]`);
+      }
+      if (nd.maxY > 1 - TOP_CHROME * 2) fail(`${tag}: ${body.species} ${body.stationIndex + 1} runs under the HUD`);
+    }
+
+    // NO BODY HIDES A PICTURE. From the camera to a grid across each screen,
+    // in every pose of every foe.
+    const rc = new THREE.Raycaster();
+    const eye = camera.getWorldPosition(new THREE.Vector3());
+    const blocked = new Set();
+    for (const [pose, plan] of table) {
+      layer.sync(snapshotOf(enc, pose, plan));
+      runLayer(layer, pose === 'dispersed' ? 0.2 : 1.6, new Map(), inv);
+      layer.group.updateMatrixWorld(true);
+      for (const st of viewer.stations) {
+        const mesh = st.screen.mesh;
+        mesh.updateMatrixWorld(true);
+        const w = mesh.geometry.parameters.width, h = mesh.geometry.parameters.height;
+        for (let gx = 0; gx < 5; gx++) for (let gy = 0; gy < 5; gy++) {
+          const target = new THREE.Vector3((gx / 4 - 0.5) * w * 0.96, (gy / 4 - 0.5) * h * 0.96, 0).applyMatrix4(mesh.matrixWorld);
+          const dir = target.clone().sub(eye);
+          const dist = dir.length();
+          rc.set(eye, dir.normalize());
+          rc.far = dist - 0.005;
+          for (const body of layer.bodies.values()) {
+            if (!body.group.visible) continue;
+            const meshes = [];
+            body.group.traverse(o => { if (o.isMesh && o !== body.hit && o.material?.colorWrite !== false && o.material?.opacity !== 0) meshes.push(o); });
+            if (rc.intersectObjects(meshes, false).length) blocked.add(`${pose}@${st.index + 1}`);
+          }
+        }
+      }
+    }
+    if (blocked.size) fail(`${tag}: a ${species} hides part of a screen in pose(s) ${[...blocked].slice(0, 4).join(', ')}`);
+
+    // A PRESS ON A FOE IS A PRESS ON ITS STATION, through the real ray.
+    layer.sync(snapshotOf(enc, 'idle'));
+    runLayer(layer, 0.3, new Map(), inv);
+    layer.group.updateMatrixWorld(true);
+    for (const body of layer.bodies.values()) {
+      const p = body.hit.getWorldPosition(new THREE.Vector3()).project(camera);
+      viewer.setPointer({ clientX: (p.x + 1) / 2 * 1280, clientY: (1 - p.y) / 2 * 720 });
+      if (viewer.stationUnderRay() !== body.station) fail(`${tag}: a press on ${body.species} ${body.stationIndex + 1} did not choose its station`);
+    }
+    if (aspectName === '16:9' && cfg.select && enc.foes.length > 1) {
+      // The whole click, pointer down and up, on the SECOND foe: the stage's
+      // `onSelect` must hear that sample's id.
+      const target = layer.bodies.get(enc.foes[1].id);
+      const p = target.hit.getWorldPosition(new THREE.Vector3()).project(camera);
+      const ev = { clientX: (p.x + 1) / 2 * 1280, clientY: (1 - p.y) / 2 * 720, pointerId: 3, preventDefault() {} };
+      viewer._onPointerDown(ev);
+      viewer._onPointerUp(ev);
+      if (picked[picked.length - 1] !== enc.foes[1].id) fail(`${tag}: pressing the second foe selected ${picked.pop() ?? 'nothing'}, not ${enc.foes[1].id}`);
+    }
+
+    // THE BUDGET.
+    for (const body of layer.bodies.values()) {
+      const tris = trianglesOf(body.group);
+      const cap = species === 'salt husk' ? 14000 : 16000;
+      if (tris > cap) fail(`${tag}: a ${species} draws ${Math.round(tris)} triangles (budget ${cap})`);
+    }
+
+    // NOTHING A FOE DOES STANDS INSIDE THE BENCH'S CLUTTER OR THE WORLD.
+    if (aspectName === '16:9') {
+      const own = new Set();
+      viewer.root.traverse(o => own.add(o));
+      const seen = new Set();
+      world.scene.traverse(o => {
+        if (!o.isMesh || own.has(o) || !o.geometry || !o.visible) return;
+        for (let a = o.parent; a; a = a.parent) if (!a.visible) return;
+        let bodies;
+        if (o.isInstancedMesh) bodies = instanceBoxes(o, inv);
+        else if (o.userData.partBoxes?.length) bodies = partBoxesIn(o, inv);
+        else if (o.userData.ownGeometry && o.parent?.userData?.partBoxes) bodies = partBoxesIn(o.parent, inv);
+        else bodies = [localBox(o, inv)];
+        for (const wb of bodies) {
+          if (!wb || wb.max.y <= 0.905) continue;
+          if (wb.getSize(new THREE.Vector3()).length() > 50) continue;
+          for (const [body, fb] of extents) {
+            if (!shrunk(fb, TOUCH).intersectsBox(shrunk(wb, TOUCH))) continue;
+            if (o.userData?.openShell && !shellTouches(o, inv, shrunk(fb, TOUCH))) continue;
+            if (o.geometry?.type === 'TubeGeometry' && !tubeTouches(o, inv, shrunk(fb, TOUCH))) continue;
+            const c = wb.getCenter(new THREE.Vector3());
+            const key = `${c.x.toFixed(2)}|${c.y.toFixed(2)}|${c.z.toFixed(2)}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            fail(`${tag}: ${body.species} ${body.stationIndex + 1} stands inside a fitting at (${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)})`);
+          }
+        }
+      });
+    }
+    bench.dispose?.();
+  }
+  world.setBenchDeployed(questId, false);
+  return enc;
+}
+
+/**
+ * The 2D Encounter driven for real, with a body standing under it: the pose in
+ * the scene must be the pose `planFoe` returned, a miss must lunge, a clear must
+ * disperse, a knock-back must make the foe whole, and a replay must restore it.
+ */
+function foeChain(cfg, stage, stageNo, probes) {
+  const { questId, label } = cfg;
+  const anchor = world.benchAnchor(questId);
+  const enc = resolveEncounter(stage, cfg.env);
+  world.setBenchDeployed(questId, true);
+  const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+  const host = { hidden: true, innerHTML: '', className: '', dataset: {}, querySelectorAll: () => [] };
+  const encounter = new Encounter(host);
+  encounter.begin(enc);                       // the frame runs before the instrument
+  const bench = cfg.build(camera, anchor, () => {});
+  cfg.lay(bench, stage);
+  const layer = bench.viewer.foes;
+  const tag = `${label} stage ${stageNo}`;
+  layer.update(0.05);
+  if (layer.bodies.size !== enc.foes.length) {
+    fail(`${tag}: a viewer built after the stage began has ${layer.bodies.size} bodies for ${enc.foes.length} foes`);
+  }
+  for (const [foeId, probe] of probes) {
+    const foe = enc.foes.find(f => f.id === foeId);
+    const want = planFoe(enc, foe, probe);
+    encounter.react(foeId, probe);
+    layer.update(0.05);
+    const body = layer.bodies.get(foeId);
+    if (!want) continue;
+    if (body.pose !== want.pose) fail(`${tag}: planFoe says "${want.pose}" and the body in the scene is in "${body.pose}"`);
+  }
+  encounter.onMiss();
+  for (const b of layer.bodies.values()) if (!(b.lunge > 0.99)) fail(`${tag}: a miss through the Encounter did not make a body lunge`);
+  encounter.cancel();
+  encounter.onClear();
+  layer.update(0.05);
+  for (const b of layer.bodies.values()) if (b.pose !== 'dispersed') fail(`${tag}: a clear left a ${b.species} in "${b.pose}"`);
+  for (let t = 0; t < 5.5; t += 0.05) layer.update(0.05);
+  for (const b of layer.bodies.values()) if (b.group.visible) fail(`${tag}: a cleared foe is still standing`);
+  // Replaying the stage starts the fight again with the foes whole.
+  encounter.begin(enc);
+  layer.update(0.05);
+  for (const b of layer.bodies.values()) {
+    if (!b.group.visible || b.pose !== 'idle') fail(`${tag}: a replayed stage did not restore its foes (${b.pose}, visible ${b.group.visible})`);
+  }
+  // A knock-back makes the foe whole again.
+  for (let i = 0; i < 3; i++) encounter.onMiss();
+  encounter.cancel();
+  encounter.paint();
+  layer.update(0.05);
+  for (const b of layer.bodies.values()) if (b.pose !== 'idle') fail(`${tag}: a knock-back left a ${b.species} in "${b.pose}"`);
+  encounter.dispose();
+  layer.update(0.05);
+  if (layer.bodies.size) fail(`${tag}: the foes outlived the encounter`);
+  bench.dispose?.();
+  world.setBenchDeployed(questId, false);
+}
+
+async function foePasses(cfg, stages, probesFor) {
+  const fighting = stages.map((st, i) => [st, i + 1]).filter(([st]) => st.encounter);
+  if (!fighting.length) { fail(`${cfg.questId}: no stage declares an encounter`); return; }
+  // Every stage at the common aspect; the widest pack at all six.
+  const widest = fighting.reduce((a, b) => (cfg.items(b[0]).length > cfg.items(a[0]).length ? b : a));
+  const wide = ASPECTS.filter(([n]) => n === '16:9');
+  const mark = failures;
+  let tris = 0;
+  for (const [st, no] of fighting) {
+    const enc = foeStage(cfg, st, no, st === widest[0] ? ASPECTS : wide);
+    if (enc) tris += enc.foes.length;
+    foeChain(cfg, st, no, probesFor(st, enc));
+  }
+  if (failures === mark) {
+    ok(`${cfg.questId}: ${fighting.length} fights built — ${tris} foes stand in their wells, inside the tray and the glass, hiding no screen, read back from planFoe`);
+  }
+}
+
+console.log('');
+console.log('The foes — spoil standing in the wells\n');
+
+{
+  // LANTERNFALL: the lamp moths on the photocell. (`world` is still Lanternfall.)
+  const { STAGES: PHOTON_STAGES } = LF['q2-photon'];
+  await foePasses({
+    questId: 'q2-photon', label: 'photocell',
+    build: (camera, anchor) => new LightBench3D(null, { world: worldFrame(camera, anchor) }),
+    lay: (bench, st) => lay(bench, st),
+    items: itemsOf, env: {}, select: false
+  }, PHOTON_STAGES, (st, enc) => enc
+    ? enc.foes.flatMap(f => [[f.id, { nm: 430, brightness: 3 }], [f.id, { nm: 700, brightness: 5 }]])
+    : []);
+
+  // TALLOW: the salt husks on the sampler scope.
+  world = new TallowWorld(null);
+  world.scene.updateMatrixWorld(true);
+  const { STAGES: GRAIN_STAGES, KINDS: GRAIN_KINDS } = await import('../src/learn/quests/unit01/q1-grain.js');
+  await foePasses({
+    questId: 'q1-grain', label: 'sampler scope',
+    build: (camera, anchor, onSelect) => {
+      const scope = new SampleScope3D(null, {
+        kinds: GRAIN_KINDS, onPower: () => {}, onSelect, world: worldFrame(camera, anchor)
+      });
+      scope.setSelectable(true);
+      return scope;
+    },
+    lay: (bench, st) => bench.setSamples(st.samples),
+    items: st => st.samples || [], env: { kinds: GRAIN_KINDS }, select: true
+  }, GRAIN_STAGES, (st, enc) => enc
+    ? enc.foes.flatMap(f => [[f.id, { tool: 'cut' }], [f.id, { tool: 'settle' }]])
+    : []);
+}
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

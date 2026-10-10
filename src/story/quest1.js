@@ -1,7 +1,8 @@
 /**
  * quest1.js — Campaign fiction and narrative single source of truth for Quest 1.
  *
- * Sector 01 — Erebus · The Charge Gardens.
+ * Sector 01 — Erebus · The Charge Gardens (Contract 01).
+ * Reclaimed under contract from the Quad-Guild Reclamation Board.
  * The twenty relay pylons went dark when the old crew abandoned the refinery.
  * Every stage wakes one pylon.
  *
@@ -14,30 +15,43 @@
  */
 
 export const QUEST1_STORY = {
+  contract: {
+    id: 'contract_erebus_01',
+    title: 'The Charge Gardens Reclamation',
+    client: 'The Atmospheric Harvesters',
+    sector: 'Sector 01 · Erebus',
+    type: 'Reclamation & Grid Restoration',
+    reward: '650 Guild XP',
+    brief: 'Restore power across twenty abandoned relay pylons in the salt basin before seasonal dust storms seal the perimeter.',
+    clueAwarded: 'clue_erebus_mark'
+  },
+
   arrival: {
     cinematic: 'erebus_descent',
     lines: [
       'Atmospheric entry sealed. Hold your harness.',
-      'Charge Gardens dead ahead across the dune line.'
+      'The Charge Gardens lie dead ahead across the dune line.'
     ]
   },
 
   briefing: {
-    title: 'Mission Comms · The Charge Gardens',
+    title: 'Contract · The Charge Gardens',
     speaker: 'VESS // COMMS',
-    badge: 'PRIORITY TRANSMISSION',
-    subtitle: 'SECTOR 01 · EREBUS // CHARGE GARDENS',
-    message: 'We are down on Erebus. The twenty relay pylons across the Charge Gardens went dark decades ago. To restore the power grid, open each junction and drag a line from the red power feed to the blue receiver. When the circuit connects, the pylon will power back on.',
-    transmission: 'Down on Erebus. Drag a line from the red feed to the blue receiver in each junction to power the pylons back on.'
+    badge: 'GUILD CONTRACT · EREBUS',
+    subtitle: 'SECTOR 01 · EREBUS // THE CHARGE GARDENS',
+    contractor: 'The Quad-Guild Reclamation Board',
+    reward: '650 Guild XP',
+    message: 'The Atmospheric fleet posted this salvage run: twenty relay pylons across the Charge Gardens went dark when the old crew pulled out. To restore the grid before storm season, open each junction and bridge the red feed to the blue receiver.',
+    transmission: 'Atmospheric contract active. Bridge the red feed to the blue receiver in each junction to bring the pylon grid back online.'
   },
 
   // Stage 1 opening transmission per guild; neutral used for demo / unassigned
   guildOpeners: {
-    earth: 'Mineral Mining brought you to Erebus. Drag from red to blue in this junction to power Pylon 1 back on.',
-    air: 'Thin air on Erebus today. Drag from red to blue in this junction to power Pylon 1 back on.',
-    fire: 'Thermal crew, Erebus is ice cold. Drag from red to blue in this junction to power Pylon 1 back on.',
-    water: 'Welcome to the dunes of Erebus. Drag from red to blue in this junction to power Pylon 1 back on.',
-    neutral: 'Welcome to Erebus. Drag from red to blue in this junction to power Pylon 1 back on.'
+    earth: 'Mineral Mining flagged this sector for salvage. Bridge the red feed to the blue receiver to wake Pylon 1.',
+    air: 'Atmospheric survey contract: restore the dunes. Bridge the red feed to the blue receiver to wake Pylon 1.',
+    fire: 'Thermal Smelters need this grid alive. Bridge the red feed to the blue receiver to wake Pylon 1.',
+    water: 'Moisture Extraction funded this reclamation. Bridge the red feed to the blue receiver to wake Pylon 1.',
+    neutral: 'Reclamation contract active on Erebus. Bridge the red feed to the blue receiver to wake Pylon 1.'
   },
 
   pylons: [
@@ -158,19 +172,29 @@ export const QUEST1_STORY = {
     }
   },
 
+  clue: {
+    id: 'clue_erebus_mark',
+    name: 'Unliveried Stencil',
+    sector: 'Erebus',
+    stage: 20,
+    finder: 'Pylon 20 Breaker Housing',
+    text: 'A delta stencil stamped inside the perimeter housing with no guild mark, weathered thirty years.'
+  },
+
   debrief: {
+    clueAward: 'clue_erebus_mark',
     cinematic: 'item_award',
     speaker: 'VESS // QUARTERMASTER',
-    badge: 'MISSION COMPLETE · SECTOR 01',
+    badge: 'CONTRACT COMPLETE · SECTOR 01',
     subtitle: 'THE CHARGE GARDENS // RESTORATION CONFIRMED',
-    message: 'The entire field is singing in key — all twenty pylons are burning bright across the dunes. Outstanding work restoring the grid. The Avalon owes you for this one. Thank you for completing the mission.',
+    message: 'The entire field is singing in key — all twenty pylons are burning amber across the dunes. The contract is cleared and your mark is logged. Notice the stencil inside that last breaker box: no guild insignia on it anywhere.',
     sections: [
       {
-        title: 'Mission Complete',
+        title: 'Contract Fulfilled',
         speaker: 'VESS // QUARTERMASTER',
-        badge: 'DEBRIEF 1/5 · MISSION COMPLETE',
+        badge: 'DEBRIEF 1/5 · CONTRACT COMPLETE',
         subtitle: 'EREBUS // CHARGE GARDENS RESTORATION',
-        text: 'The entire field is singing in key — all twenty pylons are burning bright across the dunes. Outstanding work out there restoring the grid. The Avalon and the guilds owe you for this one. Thank you for completing the mission.'
+        text: 'The entire field is singing in key — all twenty pylons are burning amber across the dunes. You restored the grid with cold discipline, survey hand. The Avalon and the guilds have credited your ledger for the salvage.'
       },
       {
         title: 'The Real Science',

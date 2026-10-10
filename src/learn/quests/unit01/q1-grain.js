@@ -19,12 +19,19 @@
  *   8  classify all unknown salvage crates       -> Classifying All Matter
  *   -- debrief: Periodic Table mappings & preview of atomic core.
  *
+ * EVERY STAGE IS A FIGHT. Each stage declares an `encounter` (foes.js): the
+ * samples on the bench are salt husks, the Commit key is named for the attack it
+ * is, and the husk reacts to the cutter and the shaker from the SAME planners the
+ * scope uses. No `check()` knows any of this. Copy in an encounter obeys the
+ * VOCABULARY schedule below like every other line the player reads.
+ *
  * This quest pays no XP, writes no Submission and never reaches Standings. It
  * reports through `ctx` and nothing else.
  */
 
 import { SampleScope, detailFor } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
+import { resolveEncounter } from '../../engine/foes.js';
 import { dialMarkup, bindDial, paintDial as paintDialControl } from '../../engine/dial.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
@@ -167,6 +174,12 @@ export const STAGES = [
     ],
     widget: { type: 'choice-row', min: 1, max: 6, label: 'Lowest power' },
     answer: 4,
+    encounter: {
+      species: 'salt husk',
+      act: 'Strike',
+      intent: 'The husk holds still, braced against a hit.',
+      hit: 'The husk breaks into grains and crumbles into salt.'
+    },
     hints: [
       'Turn the Power dial up one step at a time and watch the picture change.',
       'At low power you see solid clumps; keep going until the clumps break into separate round grains.',
@@ -198,6 +211,12 @@ export const STAGES = [
       { id: 'c14', label: 'SAMPLE B', note: 'grey powder', floorPower: 4, particles: [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }] }
     ],
     widget: { type: 'sample' },
+    encounter: {
+      species: 'salt husk',
+      act: 'Target',
+      intent: 'Two husks circle each other, and you cannot tell them apart by looking.',
+      hit: 'Both husks give way and crumble into salt.'
+    },
     hints: [
       'They look identical until the scope resolves the atoms, so turn the Power dial up first.',
       'Compare the two pictures: one sample has atoms that all match, and the other has two different atoms mixed together.',
@@ -231,6 +250,12 @@ export const STAGES = [
     ],
     widget: { type: 'number', min: 1, max: 6, label: 'Kinds counted' },
     answer: 3,
+    encounter: {
+      species: 'salt husk',
+      act: 'Take Shot',
+      intent: 'The husk grinds slowly, its grains rolling against each other.',
+      hit: 'The husk splits into its kinds and crumbles into salt.'
+    },
     hints: [
       'Tapping one atom only tells you about that atom, so tap plenty of them across the whole picture.',
       'Two of the kinds look almost the same, but their mass readings differ: one reads 32.1 and the other 35.5.',
@@ -261,6 +286,12 @@ export const STAGES = [
       { id: 't4', label: 'SAMPLE D', note: 'one atom', floorPower: 1, magnify: 3.6, particles: [{ kinds: ['k08'], n: 1 }] }
     ],
     widget: { type: 'sample' },
+    encounter: {
+      species: 'salt husk',
+      act: 'Pin It',
+      intent: 'The pack spreads out and waits for you to move first.',
+      hit: 'The one the blade could not cut is pinned, and the rest give way.'
+    },
     hints: [
       'Tap a sample to select it and press "Run Cutter", then do the same for the other three.',
       'A heap scatters and a joined group breaks into its parts, but one sample does neither.',
@@ -286,6 +317,12 @@ export const STAGES = [
       { id: 'v9', label: 'SAMPLE A', note: 'clear liquid', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 20 }] }
     ],
     widget: { type: 'build', kinds: ['k01', 'k06', 'k08'], max: 4 },
+    encounter: {
+      species: 'salt husk',
+      act: 'Forge Copy',
+      intent: 'The husk grows back the same small shape every time it is struck.',
+      hit: 'Your copy jams its regrowth and the husk crumbles into salt.'
+    },
     hints: [
       'Turn the Power dial up until one cluster is clear, then tap the atom in the middle and each one attached to it.',
       'Every cluster is the same, so read just one: the code of the atom in the middle and the code of each atom attached to it.',
@@ -323,6 +360,12 @@ export const STAGES = [
         { id: 'm22', label: '2 heavy + 2 light', note: 'two CAT 08 joined in a chain' }
       ]
     },
+    encounter: {
+      species: 'salt husk',
+      act: 'Seal Both',
+      intent: 'Two husks advance, and each one moves in its own way.',
+      hit: 'Both husks are sealed and crumble into salt.'
+    },
     hints: [
       'Turn the Power dial up until single molecules are clear, then count the atoms in one from each sample.',
       'Both use only CAT 01 and CAT 08, and the difference is how many CAT 08 atoms each molecule holds.',
@@ -358,6 +401,12 @@ export const STAGES = [
         { id: 'one', label: 'Single substance', note: 'settles into one even layer' },
         { id: 'mixed', label: 'Mixture', note: 'settles into two or more layers' }
       ]
+    },
+    encounter: {
+      species: 'salt husk',
+      act: 'Clear Pack',
+      intent: 'The pack mills about, grains shifting underfoot.',
+      hit: 'The whole pack crumbles into salt.'
     },
     hints: [
       'Tap a sample, press "Settle" and watch where the contents come to rest, then do the same for the other two.',
@@ -396,6 +445,13 @@ export const STAGES = [
         { id: 'compound', label: 'Compound', note: 'different atoms bonded together' },
         { id: 'mixed', label: 'Mixture', note: 'different atoms, not bonded' }
       ]
+    },
+    encounter: {
+      species: 'salt husk',
+      act: 'Clear Pack',
+      intent: 'The last pack closes in, and every husk is different.',
+      hit: 'The last pack is cleared.',
+      moves: { element: 'Contain', compound: 'Split', mixed: 'Shake' }
     },
     hints: [
       'Zoom in on each sample to see how many kinds of atom it holds and whether they are bonded, and settle any you are unsure of.',
@@ -610,7 +666,8 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: 'Commit'
+      commitLabel: 'Commit',
+      encounter: resolveEncounter(stage, { kinds: KINDS })
     });
 
     scope.setSamples(stage.samples);
@@ -740,6 +797,7 @@ export function mount(container, ctx) {
       const found = await scope.cut(id);
       state.cut.add(id);
       soundscape.playBondSnap?.();
+      frame.foeReact(id, { tool: 'cut' });
       renderReadout(null, {
         head: `Cutter // ${labelFor(id)}`,
         body: found === 'none'
@@ -751,6 +809,7 @@ export function mount(container, ctx) {
     } else if (tool === 'settle') {
       await scope.settle(id);
       state.settled.add(id);
+      frame.foeReact(id, { tool: 'settle' });
       const bands = bandCount(id);
       renderReadout(null, {
         head: `Shaker // ${labelFor(id)}`,

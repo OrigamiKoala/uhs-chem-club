@@ -48,6 +48,11 @@ globalThis.document = globalThis.document || {
     getContext: () => null, setAttribute: noop })
 };
 
+// The foe model (engine/foes.js) is pure, but it reaches the scope's and the
+// light bench's planners, so it loads after the shims above like a quest does.
+const FOES = await import('../src/learn/engine/foes.js');
+const LIGHT = await import('../src/learn/engine/lightdata.js');
+
 /**
  * Sentence count, done in a way that survives chemistry.
  *
@@ -574,6 +579,13 @@ function checkStageTable(q, mod) {
       }
     }
 
+    // A stage in a fight: the encounter layer's own rules (see checkEncounter).
+    if (st.encounter) {
+      const bad0 = failures;
+      checkEncounter(q, mod, st, i, { label, tooEarly, emoji, solved, missed, empty });
+      if (failures !== bad0) bad += failures - bad0;
+    }
+
     // Sample notes must describe provenance only, never leaking answers or check reasoning.
     const leakWords = ['uniform', 'mixed', 'single grain', 'indivisible', 'scouring agent'];
     const bench = Array.isArray(st.samples) ? st.samples
@@ -768,6 +780,250 @@ function refusalLeaks(q, mod, st, i, seed) {
   return leaks;
 }
 
+/* ------------------------------------------------------------------
+   THE ENCOUNTER LAYER (docs/plans/storyline-and-combat.md, sections 3-4)
+
+   A stage may declare an `encounter` and play as a fight. Combat is a layer
+   over the unchanged stage loop, and what this holds it to is what keeps it
+   from becoming decoration or a gate:
+
+   - foes map one-to-one onto the stage's samples or plates, and are made
+     from the stage's own bench, never declared separately;
+   - every line a foe speaks passes the SAME withheld-vocabulary gate as a
+     prompt, is one plain sentence, and may not carry the stage's answer;
+   - a foe's behaviour comes only from planFoe(), and is checked here against
+     an independent reading of the bench's declaration -- a husk that splits
+     must be a sample the cutter really splits;
+   - move labels are real bins; the Commit key's attack verb is one or two
+     plain words.
+   The fight state itself and the frame's hooks are checked once, below, by
+   checkEncounterLayer().
+   ------------------------------------------------------------------ */
+function checkEncounter(q, mod, st, i, { label, tooEarly, emoji, solved, missed, empty }) {
+  const enc = FOES.resolveEncounter(st, { kinds: mod.KINDS });
+  if (!enc) { fail(`${label}: declares an encounter that does not resolve (unknown species "${st.encounter.species}"?)`); return; }
+  const one = (text) => sentenceCount(text) === 1;
+  const oneOrTwoWords = (text) => /^[A-Za-z]+(?: [A-Za-z]+)?$/.test(text) && text.length <= 16;
+
+  // One foe per thing on the bench, by construction -- and held to it here.
+  const items = FOES.benchItems(st);
+  const ids = enc.foes.map(f => f.id);
+  if (!items.length) fail(`${label}: an encounter needs samples or plates on the bench to be made of`);
+  if (ids.length !== items.length || new Set(ids).size !== ids.length || !items.every(it => ids.includes(it.id))) {
+    fail(`${label}: the foes do not map one-to-one onto the bench (${ids.join(', ')})`);
+  }
+
+  if (!oneOrTwoWords(enc.act)) fail(`${label}: the attack verb "${enc.act}" must be one or two plain words`);
+  if (!one(enc.intent)) fail(`${label}: the foe's intent must be one sentence ("${enc.intent}")`);
+  if (!one(enc.hit)) fail(`${label}: the foe's dispersal must be one sentence ("${enc.hit}")`);
+  if (!one(enc.counter)) fail(`${label}: the foe's counter must be one sentence ("${enc.counter}")`);
+  if (/[←-⇿⟵-⟿]|->|=>/.test(enc.act)) fail(`${label}: no arrow glyphs in a key label ("${enc.act}")`);
+
+  // Moves name real bins.
+  const binIds = new Set((st.widget?.bins || []).map(b => b.id));
+  for (const [bin, verb] of Object.entries(enc.moves || {})) {
+    if (!binIds.has(bin)) fail(`${label}: a move is declared for "${bin}", which is not a bin on this stage`);
+    if (!oneOrTwoWords(verb)) fail(`${label}: the move "${verb}" must be one or two plain words`);
+  }
+
+  // Every reaction a foe can give, from the planner, for every probe its species reads.
+  const reactions = [];
+  const wrong = [];
+  for (const foe of enc.foes) {
+    const probes = (enc.species === 'salt husk' && foe.item?.particles)
+      ? ['cut', 'settle'].filter(tool => (st.controls || []).includes(tool)).map(tool => ({ tool }))
+      : (enc.species === 'lamp moth' && foe.item?.metal)
+        ? (st.settings || [st.rigs?.find(r => r.id === foe.id)?.nm]).filter(Boolean)
+            .flatMap(nm => [1, 3, 5].map(b => ({ nm, brightness: b })))
+        : [];
+    for (const probe of probes) {
+      const plan = FOES.planFoe(enc, foe, probe);
+      if (!plan) { fail(`${label}: ${foe.id} gives no reaction to ${JSON.stringify(probe)}`); continue; }
+      reactions.push(plan.line);
+
+      // INDEPENDENT READING OF THE DECLARATION. planFoe asks the instrument's
+      // planner; this asks the bench's declaration directly. They must agree.
+      if (enc.species === 'salt husk') {
+        const groups = foe.item.particles.some(p => p.kinds.length > 1);
+        const loose = foe.item.particles.reduce((n, p) => n + p.n, 0) > 1;
+        if (probe.tool === 'cut') {
+          const want = groups ? 'split' : loose ? 'scattered' : 'unmoved';
+          if (plan.pose !== want) wrong.push(`${foe.id} cut -> ${plan.pose}, the sample says ${want}`);
+        } else {
+          const layers = new Set(foe.item.particles.map(p => p.kinds.join('+'))).size;
+          if (plan.layers !== layers || plan.pose !== (layers > 1 ? 'layered' : 'even')) {
+            wrong.push(`${foe.id} settle -> ${plan.pose}/${plan.layers}, the sample says ${layers} layers`);
+          }
+        }
+      } else {
+        const nm = probe.nm;
+        const freed = LIGHT.photonEv(nm) > LIGHT.METALS[foe.item.metal].work;
+        if ((plan.pose === 'shedding') !== freed) wrong.push(`${foe.id} at ${nm} nm -> ${plan.pose}, the metal says ${freed ? 'freed' : 'held'}`);
+        if (plan.pose === 'shedding' && plan.dots !== Math.max(1, Math.round(LIGHT.planPhotocell(foe.item.metal, nm, probe.brightness).count / 20))) {
+          wrong.push(`${foe.id} streaks do not match the counter at ${nm} nm`);
+        }
+      }
+    }
+  }
+  for (const w of wrong.slice(0, 3)) fail(`${label}: a foe lies about its bench (${w})`);
+
+  // THE SAME GATES AS EVERY OTHER LINE THE PLAYER READS.
+  const play = [enc.act, enc.intent, enc.counter, enc.knockback, ...Object.values(enc.moves || {}), ...reactions];
+  for (const text of play) {
+    if (emoji.test(text)) fail(`${label}: emoji in foe copy "${text}"`);
+    const early = tooEarly(text, i + 1, false);
+    if (early) fail(`${label}: foe copy says "${early}" before it has been taught, in "${text.slice(0, 60)}"`);
+  }
+  // The dispersal lands with the reward card, so it may use the word that card earns.
+  const earlyHit = tooEarly(enc.hit, i + 1, true);
+  if (earlyHit) fail(`${label}: the dispersal says "${earlyHit}" before it has been taught`);
+
+  // A foe's line may not carry the stage's answer. Reactions are evidence, not verdicts.
+  const seen = new Set();
+  for (const leak of refusalLeaks(q, mod, st, i, [enc.intent, enc.counter, enc.knockback, ...reactions])) {
+    if (seen.has(leak.token) || seen.size >= 3) continue;
+    seen.add(leak.token);
+    fail(`${label}: foe copy gives away the answer (${leak.token}) in "${leak.text.slice(0, 80)}"`);
+  }
+
+  // THE TURN-ONE RULE, on this stage: the intended solution is a win from a fresh fight.
+  if (!solved?.ok) fail(`${label}: an encounter must not change what wins -- the solution does not grade correct`);
+}
+
+/**
+ * The parts of the encounter layer that are the same for every stage: the
+ * fight state, and what the frame is and is not allowed to do with it.
+ */
+async function checkEncounterLayer() {
+  const before = failures;
+  const { newFight, afterMiss, afterWin, INTEGRITY, COUNTER_DELAY_MS } = FOES;
+
+  // A correct commit wins on turn one.
+  let r = afterWin(newFight());
+  if (!r.fight.won || !r.flawless) fail('encounter: a correct commit on turn one must be a flawless win');
+
+  // A miss costs one Integrity; at zero the rig is knocked back and refilled.
+  let f = newFight();
+  for (let k = 0; k < INTEGRITY - 1; k++) {
+    const m = afterMiss(f);
+    if (m.knockedBack) fail('encounter: knocked back before Integrity ran out');
+    f = m.fight;
+  }
+  if (f.integrity !== 1) fail(`encounter: ${INTEGRITY - 1} misses should leave 1 Integrity (got ${f.integrity})`);
+  const m = afterMiss(f);
+  if (!m.knockedBack || m.fight.integrity !== INTEGRITY || m.fight.knockbacks !== 1) {
+    fail('encounter: the last point of Integrity must knock the rig back and refill it');
+  }
+  // Knocked back or not, a correct commit still wins. Nothing blocks the right answer.
+  for (const state of [f, m.fight]) {
+    const w = afterWin(state);
+    if (!w.fight.won) fail('encounter: a correct commit must win at any Integrity, knocked back or not');
+    if (w.flawless) fail('encounter: a win that cost Integrity is not flawless');
+  }
+  if (afterMiss(afterWin(newFight()).fight).fight.lost !== 0) fail('encounter: a won fight must not take further hits');
+
+  // THE REASON COMES FIRST, and the encounter is an observer, not a gate.
+  const encSrc = stripComments(readFileSync(join(learnSrc, 'engine', 'encounter.js'), 'utf8'));
+  if (/banner|announce\(|\.note\(|\.miss\(|\.clear\(/.test(encSrc)) {
+    fail('encounter.js touches the banner or the frame\'s outcome calls -- it may only write to its own plate');
+  }
+  if (!(COUNTER_DELAY_MS >= 250)) fail('encounter: the counter must wait long enough for the reason to land first');
+
+  const frameSrc = stripComments(readFileSync(join(learnSrc, 'engine', 'frame.js'), 'utf8'));
+  const missBody = frameSrc.slice(frameSrc.indexOf('  miss(message) {'), frameSrc.indexOf('  announce(html) {'));
+  if (!missBody.includes('this.announce(') || missBody.indexOf('this.announce(') > missBody.indexOf('this.encounter?.onMiss()')) {
+    fail('frame.miss must put the reason on screen before the encounter answers it');
+  }
+  const gating = frameSrc.split('\n').filter(l => /this\.encounter/.test(l) &&
+    /(\bif\s*\(|\breturn\b|&&|\|\||\?[^.])\s*!?\s*\(?this\.encounter/.test(l.replace(/\?\./g, '#.')));
+  if (gating.length) fail(`frame.js lets the encounter decide something (${gating[0].trim()}) -- it may only be told things`);
+
+  // THE PLATE, DRAWN FOR REAL on a pack (q1-grain stage 7) and a lone moth
+  // (q2-photon stage 1): one portrait per bench item, Integrity pips that fall
+  // and refill, the reason's beat held back, a reaction taken from the planner,
+  // and a win that disperses everything.
+  {
+    const { Encounter } = await import('../src/learn/engine/encounter.js');
+    const grain = await import('../src/learn/quests/unit01/q1-grain.js');
+    const photon = await import('../src/learn/quests/unit02/q2-photon.js');
+    const host = { hidden: true, className: '', dataset: {}, innerHTML: '' };
+    const pips = () => (host.innerHTML.match(/<i class="on">/g) || []).length;
+
+    const pack = FOES.resolveEncounter(grain.STAGES[6], { kinds: grain.KINDS });
+    const plate = new Encounter(host);
+    plate.begin(pack);
+    if (host.hidden) fail('encounter plate: hidden on a stage that is a fight');
+    if ((host.innerHTML.match(/data-foe=/g) || []).length !== 3) fail('encounter plate: a pack of three samples must draw three foes');
+    if (pips() !== INTEGRITY) fail('encounter plate: a fresh fight must start at full Integrity');
+
+    plate.react('p3', { tool: 'settle' });
+    if (!/data-foe="p3" data-pose="layered"/.test(host.innerHTML)) fail('encounter plate: the mixed sample must settle into layers on the plate');
+    if (!/data-foe="p1" data-pose="idle"/.test(host.innerHTML)) fail('encounter plate: a foe nobody worked must stay as it was');
+
+    plate.onMiss();
+    if (pips() !== INTEGRITY - 1) fail('encounter plate: a miss must cost one Integrity at once');
+    if (host.innerHTML.includes(pack.counter)) fail('encounter plate: the counter spoke before the reason had time to land');
+    await new Promise(res => setTimeout(res, COUNTER_DELAY_MS + 60));
+    if (!host.innerHTML.includes(pack.counter)) fail('encounter plate: the counter never followed the reason');
+    plate.onMiss(); plate.onMiss();
+    await new Promise(res => setTimeout(res, COUNTER_DELAY_MS + 60));
+    if (pips() !== INTEGRITY) fail('encounter plate: a knock-back must refill Integrity');
+    if (!host.innerHTML.includes('Knocked back')) fail('encounter plate: a knock-back must say so');
+    if (/data-pose="layered"/.test(host.innerHTML)) fail('encounter plate: a knock-back must leave the foe whole again');
+
+    plate.onClear();
+    if (/data-pose="(idle|layered)"/.test(host.innerHTML) || !host.innerHTML.includes('data-pose="dispersed"')) {
+      fail('encounter plate: a win must disperse every foe');
+    }
+    if (host.innerHTML.includes('Flawless')) fail('encounter plate: a win that cost Integrity must not be called flawless');
+
+    const moth = FOES.resolveEncounter(photon.STAGES[0], {});
+    plate.begin(moth);
+    plate.react('cell', { nm: 650, brightness: 5 });
+    if (!host.innerHTML.includes('data-pose="still"')) fail('encounter plate: red on sodium must leave the moth holding on');
+    plate.react('cell', { nm: 400, brightness: 1 });
+    if (!host.innerHTML.includes('data-pose="shedding"')) fail('encounter plate: violet on sodium must make the moth shed');
+    plate.onClear();
+    if (!host.innerHTML.includes('Flawless')) fail('encounter plate: a win with full Integrity must be called flawless');
+
+    plate.begin(null);
+    if (!host.hidden) fail('encounter plate: a stage that is not a fight must show no plate');
+    plate.dispose();
+  }
+
+  // THE FOES AT T4 (encounter3d.js, foebody.js) are observers too. They stand
+  // bodies in the wells and are TOLD a pose; they never grade, never touch the
+  // banner or the frame, and nothing about them is random at runtime (the same
+  // seed gives the same husk on every machine, as every other surface does).
+  for (const file of ['encounter3d.js', 'foebody.js']) {
+    const src = stripComments(readFileSync(join(learnSrc, 'engine', file), 'utf8'));
+    if (/banner|announce\(|\.note\(|\.miss\(|\bframe\b|\.check\(|session\./.test(src)) {
+      fail(`${file} touches the banner, the frame or the session -- a foe body only observes`);
+    }
+    if (/Math\.random/.test(src)) fail(`${file} uses Math.random -- a husk must be the same husk on every machine`);
+    if (/from '\.\/frame\.js'|from '\.\.\/quests/.test(src)) fail(`${file} imports the frame or a quest -- it may only be told things`);
+  }
+  {
+    // Every species is either built at T4 or named as plate-only with a reason.
+    // An unlisted species is a NOTE, not a failure: a new species lands in
+    // foes.js first, and its 3D body (or its entry in PLATE_ONLY) follows.
+    const { SPECIES } = FOES;
+    const { BODY_SPECIES, PLATE_ONLY } = await import('../src/learn/engine/foebody.js');
+    for (const name of BODY_SPECIES) {
+      if (!SPECIES[name]) fail(`foebody.js builds a body for "${name}", which foes.js does not define`);
+    }
+    for (const name of Object.keys(PLATE_ONLY)) {
+      if (!SPECIES[name]) fail(`foebody.js lists "${name}" as plate-only, but foes.js does not define it`);
+      if (BODY_SPECIES.includes(name)) fail(`foebody.js lists "${name}" as both built and plate-only`);
+    }
+    const missing = Object.keys(SPECIES).filter(n => !BODY_SPECIES.includes(n) && !(n in PLATE_ONLY));
+    if (missing.length) console.log(`  note ${missing.map(n => `"${n}"`).join(', ')}: no 3D body and not listed in PLATE_ONLY (foebody.js)`);
+  }
+
+  if (failures === before) ok('encounter layer: a correct commit wins on any turn, a miss shows its reason before the foe answers, the frame only informs it');
+}
+await checkEncounterLayer();
+
 /**
  * THE PROBLEM SET. Five per built quest, gathered and shown at the END OF THE
  * WORLD (`src/learn/practice.js`), optional and skippable, reopenable for ever
@@ -836,6 +1092,7 @@ function checkPractice(q, mod) {
  * bench (`engine/corebench.js`).
  */
 function checkBench(q, mod, stages) {
+  if (q.arena === 'boss') return;
   const kinds = mod.KINDS;
   let bad = 0;
   let samples = 0;

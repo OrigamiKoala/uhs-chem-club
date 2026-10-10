@@ -81,6 +81,15 @@ export const UNIT_01 = {
       stageCount: 8,
       status: 'live',
       module: () => import('../quests/unit01/q6-weigh.js')
+    },
+    {
+      id: 'boss-hopper',
+      title: 'The Hopper',
+      line: 'The refinery ore hopper, risen in the salt.',
+      arena: 'boss',
+      stageCount: 5,
+      status: 'live',
+      module: () => import('../quests/unit01/boss-hopper.js')
     }
   ]
 };

@@ -106,6 +106,15 @@ export const UNIT_03 = {
       stageCount: 8,
       status: 'draft',
       module: null
+    },
+    {
+      id: 'boss-warden',
+      title: 'Basalt Warden',
+      line: 'An elite sentinel forged from basalt lattice.',
+      arena: 'boss',
+      stageCount: 2,
+      status: 'live',
+      module: () => import('../quests/unit03/boss-warden.js')
     }
   ]
 };

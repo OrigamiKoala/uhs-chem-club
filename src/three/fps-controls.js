@@ -20,6 +20,7 @@ import * as THREE from "three";
 
 /** Keys that only ever mean "move", so nothing on a panel can want them. */
 const WALK_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ShiftLeft", "ShiftRight"]);
+const _eulerTemp = new THREE.Euler(0, 0, 0, "YXZ");
 
 export class FpsControls {
   constructor(camera, domElement) {
@@ -52,6 +53,16 @@ export class FpsControls {
     this.damping = 10.0;
     this.velocity = new THREE.Vector3();
     this.playerRadius = 0.25;
+
+    // Kinematic immersion & FPS realism
+    this.basePosition = new THREE.Vector3();
+    this.hasBasePosition = false;
+    this.bobPhase = 0;
+    this.breathPhase = 0;
+    this.trauma = 0;
+    this.landingCompression = 0;
+    this.totalTime = 0;
+    this.reducedMotion = typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
 
     // Orientation
     this.euler = new THREE.Euler(0, 0, 0, "YXZ");
@@ -206,6 +217,8 @@ export class FpsControls {
       e.target.closest(".stage-prompt-card") ||
       e.target.closest(".stage-card-wrap") ||
       e.target.closest(".erebus-world-hud") ||
+      e.target.closest(".learn-walk-hud") ||
+      e.target.closest(".learn-sites-popup-scrim") ||
       e.target.closest(".screen-container") ||
       e.target.closest(".lq") ||
       e.target.closest(".lq-world-panel")
@@ -255,6 +268,14 @@ export class FpsControls {
     this.euler.z = 0;
 
     this.camera.quaternion.setFromEuler(this.euler);
+  }
+
+  /**
+   * Add camera trauma/recoil impulse (0..1) that shakes the view and decays naturally.
+   * @param {number} amount
+   */
+  addTrauma(amount = 0.4) {
+    this.trauma = Math.min(1.0, this.trauma + amount);
   }
 
   /**
@@ -471,6 +492,13 @@ export class FpsControls {
     if (!this.enabled) return;
 
     const dt = Math.min(delta, 0.1);
+    this.totalTime += dt;
+
+    // Sync basePosition with camera position if teleported or initialized
+    if (!this.hasBasePosition || this.camera.position.distanceTo(this.basePosition) > 1.2) {
+      this.basePosition.copy(this.camera.position);
+      this.hasBasePosition = true;
+    }
 
     // Stick look is a rate, not a delta: a held stick keeps turning.
     if (this.analogLook.x !== 0 || this.analogLook.y !== 0) {
@@ -509,55 +537,133 @@ export class FpsControls {
       this.velocity.z += moveDir.z * speed * throttle * 8.0 * dt;
     }
 
-    // Attempt translation with sliding collision
-    const nextX = this.camera.position.x + this.velocity.x * dt;
-    const nextZ = this.camera.position.z + this.velocity.z * dt;
+    // Attempt translation with sliding collision on basePosition
+    const nextX = this.basePosition.x + this.velocity.x * dt;
+    const nextZ = this.basePosition.z + this.velocity.z * dt;
 
     // Test X move
-    if (!this.testBoxCollision(nextX, this.camera.position.z)) {
-      this.camera.position.x = nextX;
+    if (!this.testBoxCollision(nextX, this.basePosition.z)) {
+      this.basePosition.x = nextX;
     } else {
       this.velocity.x = 0;
     }
 
     // Test Z move
-    if (!this.testBoxCollision(this.camera.position.x, nextZ)) {
-      this.camera.position.z = nextZ;
+    if (!this.testBoxCollision(this.basePosition.x, nextZ)) {
+      this.basePosition.z = nextZ;
     } else {
       this.velocity.z = 0;
     }
 
     // Penetration push-out fallback so player can never be stuck inside a collider
-    this.resolveBoxCollisions(this.camera.position);
+    this.resolveBoxCollisions(this.basePosition);
 
     // Resolve radial obstacle collisions (e.g. pylons, rocks, lander)
-    this.resolveRadialCollisions(this.camera.position);
+    this.resolveRadialCollisions(this.basePosition);
 
     // Boundary constraints
     if (this.boundaryBounds) {
       const b = this.boundaryBounds;
       const r = this.playerRadius;
-      this.camera.position.x = Math.max(b.minX + r, Math.min(b.maxX - r, this.camera.position.x));
-      this.camera.position.z = Math.max(b.minZ + r, Math.min(b.maxZ - r, this.camera.position.z));
+      this.basePosition.x = Math.max(b.minX + r, Math.min(b.maxX - r, this.basePosition.x));
+      this.basePosition.z = Math.max(b.minZ + r, Math.min(b.maxZ - r, this.basePosition.z));
     }
 
     // Vertical kinematics & jump
     const baseGroundY = this.terrainHeightFn
-      ? this.terrainHeightFn(this.camera.position.x, this.camera.position.z)
+      ? this.terrainHeightFn(this.basePosition.x, this.basePosition.z)
       : 0;
     const targetBaseEyeY = baseGroundY + this.eyeHeight;
 
     if (!this.isGrounded || this.verticalVelocity !== 0) {
+      const prevVv = this.verticalVelocity;
       this.verticalVelocity -= this.gravity * dt;
-      this.camera.position.y += this.verticalVelocity * dt;
+      this.basePosition.y += this.verticalVelocity * dt;
 
-      if (this.camera.position.y <= targetBaseEyeY) {
-        this.camera.position.y = targetBaseEyeY;
+      if (this.basePosition.y <= targetBaseEyeY) {
+        this.basePosition.y = targetBaseEyeY;
+        // Realistic landing shock compression proportional to fall velocity
+        if (prevVv < -2.0) {
+          this.landingCompression = Math.min(0.12, Math.abs(prevVv) * 0.015);
+        }
         this.verticalVelocity = 0;
         this.isGrounded = true;
       }
     } else {
-      this.camera.position.y = targetBaseEyeY;
+      this.basePosition.y = targetBaseEyeY;
     }
+
+    // Dynamic recovery of landing compression and trauma decay
+    if (this.landingCompression > 0) {
+      this.landingCompression = Math.max(0, this.landingCompression - dt * 2.2);
+    }
+    if (this.trauma > 0) {
+      this.trauma = Math.max(0, this.trauma - dt * 1.6);
+    }
+
+    // Natural kinematics: head-bob, breathing sway, and recoil/trauma jitter
+    const horizSpeed = Math.hypot(this.velocity.x, this.velocity.z);
+    const moving = horizSpeed > 0.1 && this.isGrounded;
+    const isSprinting = this.isSprinting || this.analogSprint;
+
+    if (moving && !this.reducedMotion) {
+      const strideFreq = isSprinting ? 11.2 : 8.0;
+      this.bobPhase += dt * strideFreq;
+    }
+
+    if (!this.reducedMotion) {
+      this.breathPhase += dt * 1.7;
+    }
+
+    let bobY = 0;
+    let bobX = 0;
+    let bobRoll = 0;
+
+    if (moving && !this.reducedMotion) {
+      const bobAmpY = isSprinting ? 0.035 : 0.020;
+      const bobAmpX = isSprinting ? 0.018 : 0.010;
+      const rollAmp = isSprinting ? 0.010 : 0.005;
+      bobY = Math.sin(this.bobPhase * 2) * bobAmpY;
+      bobX = Math.cos(this.bobPhase) * bobAmpX;
+      bobRoll = Math.sin(this.bobPhase) * rollAmp;
+    }
+
+    const breathY = !this.reducedMotion ? Math.sin(this.breathPhase) * 0.0035 : 0;
+    const breathPitch = !this.reducedMotion ? Math.cos(this.breathPhase) * 0.0016 : 0;
+
+    let shakeX = 0;
+    let shakeY = 0;
+    let shakePitch = 0;
+    let shakeYaw = 0;
+    let shakeRoll = 0;
+
+    if (this.trauma > 0 && !this.reducedMotion) {
+      const intensity = this.trauma * this.trauma;
+      const t = this.totalTime;
+      shakeYaw = Math.sin(t * 37) * 0.035 * intensity;
+      shakePitch = Math.cos(t * 43) * 0.035 * intensity;
+      shakeRoll = Math.sin(t * 31) * 0.030 * intensity;
+      shakeX = Math.cos(t * 29) * 0.025 * intensity;
+      shakeY = Math.sin(t * 33) * 0.025 * intensity;
+    }
+
+    // Set composite camera position
+    this.camera.position.x = this.basePosition.x;
+    this.camera.position.y = this.basePosition.y + bobY + breathY - this.landingCompression + shakeY;
+    this.camera.position.z = this.basePosition.z;
+
+    if (bobX !== 0 || shakeX !== 0) {
+      this.camera.position.x += right.x * (bobX + shakeX);
+      this.camera.position.z += right.z * (bobX + shakeX);
+    }
+
+    // Set composite camera orientation
+    _eulerTemp.set(
+      this.euler.x + breathPitch + shakePitch,
+      this.euler.y + shakeYaw,
+      this.euler.z + bobRoll + shakeRoll,
+      "YXZ"
+    );
+    this.camera.quaternion.setFromEuler(_eulerTemp);
   }
 }

@@ -33,6 +33,7 @@ export const UNIT_02 = {
     { id: 'q6-filling', title: 'Electron Configuration', line: 'The order orbitals fill, and the exceptions.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit02/q6-filling.js') },
     { id: 'q7-pes', title: 'Photoelectron Spectroscopy', line: 'Reading an atom from the electrons knocked out of it.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit02/q7-pes.js') },
     { id: 'q8-trends', title: 'Periodic Trends', line: 'Size, ionization energy, and electronegativity from the pull of the core.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit02/q8-trends.js') },
-    { id: 'q9-absorb', title: 'Spectroscopy', line: 'What each kind of light does to a molecule, and how much is absorbed.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit02/q9-absorb.js') }
+    { id: 'q9-absorb', title: 'Spectroscopy', line: 'What each kind of light does to a molecule, and how much is absorbed.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit02/q9-absorb.js') },
+    { id: 'boss-eater', title: 'The Lantern-Eater', line: 'The optical entity feeding on auroral flux.', arena: 'boss', stageCount: 5, status: 'live', module: () => import('../quests/unit02/boss-eater.js') }
   ]
 };

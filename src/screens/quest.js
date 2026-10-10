@@ -1069,8 +1069,10 @@ export function renderQuest(container) {
 
     const totalXp = comp?.totalXp ?? (TOTAL_QUEST_XP + 65);
     const newLevel = comp?.newLevel ?? session.level ?? 1;
-    const item = comp?.awardedItem;
     const debriefStory = QUEST1_STORY.debrief || {};
+    if (debriefStory.clueAward) {
+      session.recordClue(debriefStory.clueAward);
+    }
     const sections = debriefStory.sections || [
       {
         speaker: 'Vess',
@@ -1155,6 +1157,12 @@ export function renderQuest(container) {
         </div>
       ` : ''}
 
+      ${debriefStory.clueAward ? `
+        <div id="clue-award-banner" class="hidden" style="text-align: center; margin-bottom: 1.25rem;">
+          <span class="tag lit" style="border-color: var(--accent-gold); color: var(--accent-gold); letter-spacing: 0.12em;">CASE FILE ENTRY FILED // REQUISITION MARK RECORDED</span>
+        </div>
+      ` : ''}
+
       <div id="debrief-exit-actions" class="hidden" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
         <button type="button" id="modal-bridge-btn" class="btn-primary">Bridge</button>
         <button type="button" id="modal-standings-btn" class="btn-secondary">Standings</button>
@@ -1192,6 +1200,7 @@ export function renderQuest(container) {
       const counter = document.getElementById('debrief-counter');
       const exitActions = document.getElementById('debrief-exit-actions');
       const salvageBanner = document.getElementById('salvage-banner');
+      const clueBanner = document.getElementById('clue-award-banner');
 
       if (prevBtn) prevBtn.disabled = (idx === 0);
       if (counter) counter.textContent = `${idx + 1} / ${sections.length}`;
@@ -1205,6 +1214,7 @@ export function renderQuest(container) {
         if (nextBtn) nextBtn.textContent = 'Done';
         if (exitActions) exitActions.classList.remove('hidden');
         if (salvageBanner) salvageBanner.classList.remove('hidden');
+        if (clueBanner) clueBanner.classList.remove('hidden');
       } else {
         if (nextBtn) nextBtn.textContent = 'Next ▶';
       }

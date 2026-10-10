@@ -29,6 +29,7 @@
 
 import { JoinBench } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
+import { resolveEncounter } from '../../engine/foes.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
@@ -108,6 +109,11 @@ export const STAGES = [
     prompt: 'Pick the block that is held together hardest.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
+    encounter: {
+      species: 'basalt warden',
+      act: 'Heat',
+      intent: 'The warden tests the heat tolerance of its mineral blocks.'
+    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -145,6 +151,11 @@ export const STAGES = [
     prompt: 'Say why Block A comes apart along one flat face and Block B does not.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B')],
+    encounter: {
+      species: 'basalt warden',
+      act: 'Fracture',
+      intent: 'The warden braces against mechanical shock along its stone faces.'
+    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -188,6 +199,11 @@ export const STAGES = [
     prompt: 'Say what a current needs in order to pass through a block.',
     controls: ['heat', 'current', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B')],
+    encounter: {
+      species: 'basalt warden',
+      act: 'Test',
+      intent: 'The warden resists the flow of charge through its solid mass.'
+    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -231,6 +247,11 @@ export const STAGES = [
     prompt: 'Say what actually gives way when Block A comes apart.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [VENT('s2', 'BLOCK A'), SALT('s1', 'BLOCK B')],
+    encounter: {
+      species: 'basalt warden',
+      act: 'Disrupt',
+      intent: 'The warden guards the weak attraction holding its molecular units.'
+    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -274,6 +295,11 @@ export const STAGES = [
     prompt: 'Say what is different about the way Block A is built.',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [ARCH('s3', 'BLOCK A'), VENT('s2', 'BLOCK B')],
+    encounter: {
+      species: 'basalt warden',
+      act: 'Shatter',
+      intent: 'The warden protects a continuous network of covalent bonds.'
+    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -317,6 +343,11 @@ export const STAGES = [
     prompt: 'Pick the block you could lift a single whole molecule out of.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
+    encounter: {
+      species: 'basalt warden',
+      act: 'Isolate',
+      intent: 'The warden stands over its three mineral specimens.'
+    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -360,6 +391,11 @@ export const STAGES = [
       slab('x2', 'BLOCK B', 'sealed at the mine, cased shut', 'clusters', 80, 'sand', { sealed: true, cluster: 3, groups: 8 }),
       slab('x3', 'BLOCK C', 'sealed at the mine, cased shut', 'web', 3550, 'iron', { sealed: true })
     ],
+    encounter: {
+      species: 'basalt warden',
+      act: 'Classify',
+      intent: 'The warden conceals the internal architecture of three sealed monoliths.'
+    },
     widget: {
       type: 'bins',
       rows: ['x1', 'x2', 'x3'],
@@ -403,6 +439,11 @@ export const STAGES = [
     prompt: 'The yard needs a liner for a vessel that runs at 900 degrees and must never pass a current. Pick the block that will do it.',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
+    encounter: {
+      species: 'basalt warden',
+      act: 'Evaluate',
+      intent: 'The warden guards the high-temperature integrity of its core minerals.'
+    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -630,7 +671,8 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: 'Commit'
+      commitLabel: stage.encounter?.act || 'Commit',
+      encounter: resolveEncounter(stage, {})
     });
 
     bench.setPlates(stage.slabs);

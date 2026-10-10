@@ -29,6 +29,7 @@
 
 import { AssayFloor } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
+import { resolveEncounter } from '../../engine/foes.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
@@ -129,6 +130,12 @@ export const STAGES = [
         { id: 'fault', label: 'The deflector is broken', note: 'It split a sample that is really all one weight.' }
       ]
     },
+    encounter: {
+      species: 'salt husk',
+      act: 'Identify Split',
+      intent: 'A salt husk drops through the deflector into two distinct bins.',
+      hit: 'The dual bins confirm isotopes of the same element.'
+    },
     hints: [
       'Press "Tip Sample", then tap a bin and press "Read Code", and do the same on the other bin.',
       'The bins are marked 35 and 37, so compare the two codes to see whether the pieces are different kinds.',
@@ -164,6 +171,12 @@ export const STAGES = [
     ],
     reference: ['CAT 17 — listed mass 35.5'],
     widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Lighter bin, per hundred pieces' },
+    encounter: {
+      species: 'salt husk',
+      act: 'Measure Share',
+      intent: 'Two husks from the same stock shatter into identical mass ratios.',
+      hit: 'The proportional share of light pieces holds across both samples.'
+    },
     hints: [
       'Tap a sample to select it, press "Tip Sample", then do the same for the other one.',
       'Sample A drops 30 of its 40 pieces into the 35 bin, and Sample B drops 60 of its 80.',
@@ -213,6 +226,12 @@ export const STAGES = [
         { id: 'wrong', label: 'Nowhere — 35.5 is simply wrong', note: 'No piece weighs 35.5.' }
       ]
     },
+    encounter: {
+      species: 'salt husk',
+      act: 'Locate Mass',
+      intent: 'The catalogued mass leans off-center between the collector bins.',
+      hit: 'The average mass shifts toward the common pieces.'
+    },
     hints: [
       'Tip it, then read the number on each bin and the tally above it.',
       'Halfway between 35 and 37 is 36, and 35.5 is not 36, so compare how many pieces landed in each bin.',
@@ -250,6 +269,12 @@ export const STAGES = [
     ],
     reference: ['CAT 05 — listed mass missing'],
     widget: { type: 'decimal', min: 10.0, max: 11.0, step: 0.1, label: 'Average weight of one piece' },
+    encounter: {
+      species: 'salt husk',
+      act: 'Compute Mass',
+      intent: 'An unlisted husk splinters across two collection trays.',
+      hit: 'The composite mass settles to match the tallies.'
+    },
     hints: [
       'Press "Tip Sample" and read the tally over each bin.',
       'Turn each bin\'s tally into a share of the whole sample: its tally divided by the total number of pieces.',
@@ -293,6 +318,12 @@ export const STAGES = [
         { id: 'fault', label: 'The deflector failed to split them', note: 'A split is being missed.' }
       ]
     },
+    encounter: {
+      species: 'salt husk',
+      act: 'Inspect Bins',
+      intent: 'A dense husk falls through the chute into a single collector bin.',
+      hit: 'A uniform isotope distribution explains the whole number mass.'
+    },
     hints: [
       'Tip it and count how many bins caught anything at all.',
       'Compare how this sample lands with how the last two did, which split across two bins.',
@@ -327,6 +358,12 @@ export const STAGES = [
     ],
     reference: ['CAT 10 — listed mass 20.2'],
     widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Weight 20, per hundred pieces' },
+    encounter: {
+      species: 'salt husk',
+      act: 'Weigh Core',
+      intent: 'A sealed canister registers an intermediate reading on the balance.',
+      hit: 'The overall mass unmasks the underlying proportions.'
+    },
     hints: [
       'Press "Weigh Sample" on Sample A and divide what it reads by the number of pieces.',
       'Compare the weight per piece with the two weights, 20 and 22: how far along from 20 to 22 does it sit?',
@@ -374,6 +411,17 @@ export const STAGES = [
         { id: 'c17', label: 'CAT 17', note: 'Listed mass 35.5.' }
       ]
     },
+    encounter: {
+      species: 'salt husk',
+      act: 'Identify Ore',
+      intent: 'Three unlabelled ore canisters await classification by mass.',
+      hit: 'Each canister is matched to its catalogue entry.',
+      moves: {
+        c05: 'Tag Five',
+        c10: 'Tag Ten',
+        c17: 'Tag Seventeen'
+      }
+    },
     hints: [
       'Weigh each sample and divide what the balance reads by the number of pieces.',
       'A weight per piece is what a listed mass on the plate is too, so the two can be compared directly.',
@@ -417,6 +465,16 @@ export const STAGES = [
         { id: 'natural', label: 'Natural CAT 17', note: 'Its weight matches the listed mass.' },
         { id: 'altered', label: 'Not natural', note: 'Its mix of isotopes has been changed.' }
       ]
+    },
+    encounter: {
+      species: 'salt husk',
+      act: 'Audit Stock',
+      intent: 'Three suspect samples claim origin from standard ore veins.',
+      hit: 'Altered isotope ratios reveal the tampered stock.',
+      moves: {
+        natural: 'Verify',
+        altered: 'Flag'
+      }
     },
     hints: [
       'Weigh all three: every one is CAT 17, so the code will not tell them apart.',
@@ -620,7 +678,8 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: 'Commit'
+      commitLabel: stage.encounter?.act || 'Commit',
+      encounter: resolveEncounter(stage)
     });
 
     floor.setHoppers(stage.hoppers);

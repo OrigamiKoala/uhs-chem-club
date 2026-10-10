@@ -23,6 +23,12 @@
  * threshold quoted in joules beside its wavelength, and dividing the one by the
  * frequency of the other is how the constant is found.
  *
+ * EVERY STAGE IS A FIGHT, and this is the bench the fight fits best: the plate
+ * is a lamp moth's shell, and "more power" is the surprise, because turning the
+ * lamp up on a shell that will not give is exactly what fails. The moth sheds
+ * when `planPhotocell` says electrons leave, as many streaks as the counter
+ * counts, and no `check()` knows any of it (foes.js).
+ *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
@@ -78,6 +84,11 @@ export const STAGES = [
     brightnessDial: true,
     rigs: [{ id: 'cell', label: 'SODIUM PLATE', head: 'photocell', metal: 'Na', tuned: true, note: 'Na, a plate in a vacuum tube' }],
     widget: { type: 'none' },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Strike',
+      intent: 'The moth clings to the plate, wings folded.'
+    },
     hints: [
       'Turn the colour dial and watch the counter above the plate.',
       'Compare what the counter reads for red at full brightness with what it reads for violet at its dimmest.',
@@ -110,6 +121,11 @@ export const STAGES = [
     brightness: 3,
     rigs: [{ id: 'cell', label: 'SODIUM PLATE', head: 'photocell', metal: 'Na', tuned: true, note: 'Na, a plate in a vacuum tube' }],
     widget: { type: 'none' },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Strike',
+      intent: 'The moth waits, wings folded, for light to reach it.'
+    },
     hints: [
       'Turn the dial from the red end toward violet and watch for the first setting where the counter wakes.',
       'Every setting beyond it frees electrons too, so the answer is the first one that does, not any one that does.',
@@ -150,6 +166,11 @@ export const STAGES = [
         { id: 'fewer', label: 'Fewer electrons leave' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Choose Move',
+      intent: 'A violet lamp is fixed on the moth, and its wings flicker.'
+    },
     hints: [
       'Turn the brightness dial up and down and watch both meters.',
       'Compare the counter with the speed meter at two brightness settings and see which of them moves.',
@@ -188,6 +209,11 @@ export const STAGES = [
         { id: 'none', label: 'Nothing changes once electrons are leaving' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Choose Move',
+      intent: 'The moth is lit and holding its ground.'
+    },
     hints: [
       'Turn the dial toward violet and watch the counter and the speed meter.',
       'Compare the two meters at the first setting that frees electrons with the same two meters at the last.',
@@ -219,6 +245,11 @@ export const STAGES = [
     reference: ['Sodium plate: threshold 539 nm, which is 3.69 x 10^-19 J for each photon', 'Light speed: 3.00 x 10^8 m/s'],
     rigs: [{ id: 'cell', label: 'SODIUM PLATE', head: 'photocell', metal: 'Na', nm: 539, note: 'Na, lit at its threshold' }],
     widget: { type: 'decimal', label: 'Energy of one photon (x 10^-19 J)', min: 0, max: 8, step: 0.5 },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Take Shot',
+      intent: 'The moth waits for a measured shot.'
+    },
     hints: [
       'Use the sodium plate\'s worked figure: its threshold wavelength is given beside the energy of one photon at that wavelength.',
       'Turn the threshold wavelength into a frequency, then divide the photon\'s energy by that frequency to find the number that ties them together.',
@@ -255,6 +286,12 @@ export const STAGES = [
     widget: {
       type: 'order', label: 'Loosest first',
       items: [{ id: 'cs', label: 'Cesium' }, { id: 'na', label: 'Sodium' }, { id: 'zn', label: 'Zinc' }]
+    },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Line Up',
+      intent: 'Three moths hang at three plates, and each grips in its own way.',
+      hit: 'All three moths go dark and drift away.'
     },
     hints: [
       'Turn the dial from red toward violet and watch which plate\'s counter wakes first.',
@@ -298,6 +335,11 @@ export const STAGES = [
         { id: 'c', label: 'Sample C' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Choose Lamp',
+      intent: 'A zinc-shelled moth clings on with its wings tight.'
+    },
     hints: [
       'Set the dial to each lamp\'s wavelength in turn and watch the counter above the zinc plate.',
       'Compare each lamp\'s photon energy with the work function of zinc, which was the highest of the three plates.',
@@ -336,6 +378,11 @@ export const STAGES = [
         { id: 'size', label: 'Red waves are too long to fit inside a zinc atom' },
         { id: 'slow', label: 'Red light travels too slowly to reach the plate' }
       ]
+    },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Break Guard',
+      intent: 'The zinc moth shrugs off a red lamp, however bright.'
     },
     hints: [
       'Turn the red lamp up to full brightness on the zinc plate and watch the counter.',
@@ -512,11 +559,13 @@ export function mount(container, ctx) {
   }
 
   /** What the plate is doing under the present dials, in the instrument's own words. */
-  function readNow() {
+  function readNow(quiet = false) {
     const stage = runner.stage;
     const rows = stage.rigs.map(r => {
       const nm = r.tuned ? nmNow() : r.nm;
       const plan = planPhotocell(r.metal, nm, runner.state.brightness);
+      // The moth on this plate sheds exactly what the counter counts.
+      runner.frame.foeReact(r.id, { nm, brightness: runner.state.brightness }, quiet);
       return `${r.label}: ${plan.count} electrons a second, fastest ${plan.speed.toFixed(1)} x 10^5 m/s`;
     });
     runner.readout('Counter // plate', rows.join('. ') + '.');
@@ -553,7 +602,7 @@ export function mount(container, ctx) {
     r.setControls(parts, null, { dials });
     paintSetting();
     if (stage.brightnessDial) paintBrightness();
-    readNow();
+    readNow(true);
   }
 
   runner = createRunner(container, ctx, {

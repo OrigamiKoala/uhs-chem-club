@@ -208,6 +208,19 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
     check(r > 800, `the ice runs ${Math.round(r)} m to the horizon`, `the ground ends ${Math.round(r)} m out: there is an edge to fall off the world`);
     check(Boolean(built.lakeMesh) && built.lakeMesh.userData.phys === 'ground', 'the lake is laid on the ice as ground', 'the frozen lake is missing or is a body');
 
+    // A frame runs: the stage and the voyage both call update(delta, cameraPos)
+    // with a POSITION, and the sky dome once read `.position` off it and threw on
+    // the first frame of every descent.
+    {
+      const eye = new THREE.Vector3(3, 1.7, -4);
+      let threw = null;
+      try { for (let f = 0; f < 3; f++) built.update(1 / 60, eye); } catch (err) { threw = err; }
+      check(!threw, 'a frame updates with the eye handed in as a position',
+        `update(delta, cameraPos) threw: ${threw?.stack || threw?.message}`);
+      check(!threw && built.sky.position.distanceTo(eye) < 1e-6, 'the sky dome follows the eye',
+        'the sky dome did not move to the eye');
+    }
+
     const hits = findOverlaps(built.scene, {
       tolerance: 0.06,
       label: owner => owner.name || `${owner.type}#${owner.id}`

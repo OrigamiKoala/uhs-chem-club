@@ -68,8 +68,8 @@ const LEARN_STATUS_TAG = {
 function tabRow(active) {
   return `
     <div class="map-tabs" role="tablist">
-      <button type="button" class="map-tab${active === "sectors" ? " active" : ""}" data-map-tab="sectors" role="tab" aria-selected="${active === "sectors"}">Active Quests</button>
-      <button type="button" class="map-tab${active === "learn" ? " active" : ""}" data-map-tab="learn" role="tab" aria-selected="${active === "learn"}">Learn Quests</button>
+      <button type="button" class="map-tab${active === "learn" ? " active" : ""}" data-map-tab="learn" role="tab" aria-selected="${active === "learn"}">Story</button>
+      <button type="button" class="map-tab${active === "sectors" ? " active" : ""}" data-map-tab="sectors" role="tab" aria-selected="${active === "sectors"}">Contracts</button>
     </div>
   `;
 }

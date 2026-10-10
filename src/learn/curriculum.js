@@ -55,7 +55,8 @@ const WORLD_MODULES = [
 export const ARENAS = {
   chamber: { id: 'chamber', label: 'Containment chamber' },
   bench: { id: 'bench', label: 'Lab bench' },
-  field: { id: 'field', label: 'Field survey' }
+  field: { id: 'field', label: 'Field survey' },
+  boss: { id: 'boss', label: 'Boss encounter' }
 };
 
 export const QUEST_STATUSES = ['live', 'draft'];

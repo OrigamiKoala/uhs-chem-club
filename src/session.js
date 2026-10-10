@@ -89,7 +89,7 @@ class SessionManager {
     }
     // Learn-track progress, keyed "<worldId>/<questId>". Deliberately NOT part of
     // `progress`, which the server pays XP against — the Learn track pays none.
-    this.learn = {};
+    this.learn = { saga: { beatsSeen: [], clues: [] } };
     this.listeners = new Set();
 
     try {
@@ -111,6 +111,9 @@ class SessionManager {
       }
       const l = localStorage.getItem(LEARN_KEY);
       if (l) this.learn = JSON.parse(l) || {};
+      if (!this.learn.saga) this.learn.saga = { beatsSeen: [], clues: [] };
+      if (!Array.isArray(this.learn.saga.beatsSeen)) this.learn.saga.beatsSeen = [];
+      if (!Array.isArray(this.learn.saga.clues)) this.learn.saga.clues = [];
       const comms = localStorage.getItem(COMMENDATIONS_KEY);
       if (comms) this.commendations = JSON.parse(comms) || [];
       const loadout = localStorage.getItem(LOADOUT_KEY);
@@ -509,15 +512,88 @@ class SessionManager {
     this.notify();
   }
 
+  /* ---------------------------------------------------------------
+     STORY SPINE & CASE FILE (SAGA)
+     --------------------------------------------------------------- */
+  getSaga() {
+    if (!this.learn.saga) this.learn.saga = { beatsSeen: [], clues: [] };
+    if (!Array.isArray(this.learn.saga.beatsSeen)) this.learn.saga.beatsSeen = [];
+    if (!Array.isArray(this.learn.saga.clues)) this.learn.saga.clues = [];
+    return this.learn.saga;
+  }
+
+  recordClue(clueId) {
+    if (!clueId) return;
+    const saga = this.getSaga();
+    if (!saga.clues.includes(clueId)) {
+      saga.clues.push(clueId);
+      this.saveLearn();
+      this.notify();
+    }
+  }
+
+  hasClue(clueId) {
+    const saga = this.getSaga();
+    return saga.clues.includes(clueId);
+  }
+
+  recordSagaBeat(beatId) {
+    if (!beatId) return;
+    const saga = this.getSaga();
+    if (!saga.beatsSeen.includes(beatId)) {
+      saga.beatsSeen.push(beatId);
+      this.saveLearn();
+      this.notify();
+    }
+  }
+
+  hasSagaBeat(beatId) {
+    const saga = this.getSaga();
+    return saga.beatsSeen.includes(beatId);
+  }
+
   /**
    * Merge the server's copy of learn progress in. Union, never overwrite: the
    * local record may hold stages cleared while the fire-and-forget sync was
    * offline, and losing them would silently re-lock a quest the player finished.
    */
   setLearnState(rows) {
-    if (!Array.isArray(rows)) return;
+    if (!rows) return;
+    if (typeof rows === 'object' && !Array.isArray(rows)) {
+      if (rows.saga) {
+        const saga = this.getSaga();
+        if (Array.isArray(rows.saga.beatsSeen)) {
+          for (const b of rows.saga.beatsSeen) {
+            if (!saga.beatsSeen.includes(b)) saga.beatsSeen.push(b);
+          }
+        }
+        if (Array.isArray(rows.saga.clues)) {
+          for (const c of rows.saga.clues) {
+            if (!saga.clues.includes(c)) saga.clues.push(c);
+          }
+        }
+      }
+      if (Array.isArray(rows.learn)) rows = rows.learn;
+      else if (Array.isArray(rows.rows)) rows = rows.rows;
+    }
+    if (!Array.isArray(rows)) {
+      this.saveLearn();
+      this.notify();
+      return;
+    }
     for (const row of rows) {
       if (!row || !row.world_id || !row.quest_id) continue;
+      if (row.world_id === '__saga__') {
+        const saga = this.getSaga();
+        if (row.quest_id === 'clues') {
+          const list = Array.isArray(row.stages) ? row.stages : String(row.stages || '').split(',').map(s => s.trim()).filter(Boolean);
+          for (const c of list) if (!saga.clues.includes(c)) saga.clues.push(c);
+        } else if (row.quest_id === 'beats') {
+          const list = Array.isArray(row.stages) ? row.stages : String(row.stages || '').split(',').map(s => s.trim()).filter(Boolean);
+          for (const b of list) if (!saga.beatsSeen.includes(b)) saga.beatsSeen.push(b);
+        }
+        continue;
+      }
       const key = this.learnKey(row.world_id, row.quest_id);
       const rec = this.learn[key] || { stages: [], completedAt: null };
       const remote = Array.isArray(row.stages)
@@ -582,7 +658,7 @@ class SessionManager {
     localStorage.removeItem('avalon_xp');
     localStorage.removeItem('avalon_level');
     localStorage.removeItem('avalon_q1_stage_reached');
-    this.learn = {};
+    this.learn = { saga: { beatsSeen: [], clues: [] } };
     localStorage.removeItem(LEARN_KEY);
     this.notify();
   }

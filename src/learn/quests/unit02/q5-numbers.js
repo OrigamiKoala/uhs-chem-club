@@ -108,6 +108,12 @@ export const STAGES = [
         { id: 'who', label: 'Which element the box belongs to' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Map Shell',
+      intent: 'A lamp moth perches near the ascending orbital rack.',
+      hit: 'The principal quantum index identifies the radius and clears the moth.'
+    },
     hints: [
       'Compare the rows labelled with a 1, a 2 and a 3, and the cloud drawn beside each of them.',
       'Look at how the cloud beside each row changes as the first number goes up.',
@@ -144,6 +150,12 @@ export const STAGES = [
         { id: 'p', label: 'Two-lobed only (p)' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Read Shape',
+      intent: 'Subshell geometry branches into discrete shapes near the moth.',
+      hit: 'The angular momentum subshell values resolve and scatter the moth.'
+    },
     hints: [
       'Find every row whose first number is 2 and read the second number printed beside it.',
       'Compare those second numbers with the shapes from the last bench: round, two-lobed and four-lobed.',
@@ -172,6 +184,12 @@ export const STAGES = [
     rows: ['3s', '3p', '3d'],
     rigs: [rackPlate(['3s', '3p', '3d'])],
     widget: { type: 'number', label: 'Boxes in a d row', min: 1, max: 9, step: 1 },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Count Cells',
+      intent: 'Degenerate spatial orientations fan out before the moth.',
+      hit: 'The magnetic orbital count is verified and disperses the moth.'
+    },
     hints: [
       'Look at the third number printed above each box in the s, p and d rows.',
       'Compare the range of that number in each row with the number printed for the row itself.',
@@ -200,6 +218,12 @@ export const STAGES = [
     rows: ['1s', '2s', '2p'],
     rigs: [rackPlate(['1s', '2s', '2p'])],
     widget: { type: 'none' },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Pair Arrows',
+      intent: 'Opposing vectors align within the shared box.',
+      hit: 'Paired opposite spins satisfy the cell and dispel the moth.'
+    },
     hints: [
       'Pick "Up" from the hand keys, then tap a box, and look at what the board prints.',
       'Try tapping the same box again with "Up", then with "Down", and compare what the rack does each time.',
@@ -237,6 +261,12 @@ export const STAGES = [
         { id: 'bd', label: 'Electrons B and D' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Reject Match',
+      intent: 'Duplicate quantum coordinates destabilize around the moth.',
+      hit: 'The exclusion principle rejects identical addresses and disperses the moth.'
+    },
     hints: [
       'Place a pair of electrons in the rack to see which arrangements the board allows and which it refuses.',
       'Compare the four numbers of each pair of electrons and look for a pair that has none of them different.',
@@ -265,6 +295,12 @@ export const STAGES = [
     rows: ROWS_N3.slice(3),
     rigs: [rackPlate(['3s', '3p', '3d'])],
     widget: { type: 'number', label: 'Electrons in the third shell', min: 2, max: 32, step: 2 },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Fill Shell',
+      intent: 'A cascade of electron states populates the third shell.',
+      hit: 'Shell capacity calculation seals the level and scatters the moth.'
+    },
     hints: [
       'Fill every box in the rows of the third shell with as many electrons as the board will take.',
       'Count the boxes in all the rows of the third shell, and how many electrons each box can hold.',
@@ -301,6 +337,12 @@ export const STAGES = [
         { id: 'n', label: 'n = 1, l = 1, ml = 0, ms = -1/2' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Check State',
+      intent: 'Sample A projects quantum coordinates toward the moth.',
+      hit: 'Nitrogen orbital numbers are validated and disperse the moth.'
+    },
     hints: [
       'Read the numbers the board prints on the electrons in Sample A\'s 2p row.',
       'Check each candidate against the ranges the board shows for n, l, ml and ms.',
@@ -332,6 +374,12 @@ export const STAGES = [
     widget: {
       type: 'multi', label: 'Sets that cannot exist',
       options: Object.keys(SETS).map(k => ({ id: k, label: `Set ${k.toUpperCase()}` }))
+    },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Filter Sets',
+      intent: 'Forbidden quantum configurations ripple across the rack.',
+      hit: 'Forbidden quantum states are identified and dispel the moth.'
     },
     hints: [
       'Look at the boxes the board offers for each shell and each shape, and see which sets name no box at all.',

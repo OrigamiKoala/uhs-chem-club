@@ -25,6 +25,7 @@ import { angleFor } from './dial.js';
 import { boltLine } from '../../three/materials/pbr-kit.js';
 import { registerBenchViewer, unregisterBenchViewer } from './bench-host.js';
 import { soundscape } from '../../audio/soundscape.js';
+import { FoeLayer3D } from './encounter3d.js';
 
 /** Dust palette, in 3D. Mirrors TINTS in scope.js exactly. */
 export const TINT_HEX = {
@@ -790,6 +791,10 @@ export class BenchViewer3D {
     this.bindEvents();
     this.frameCamera(1);
 
+    // The foes of a stage that is a fight (encounter3d.js). An observer: it
+    // stands bodies in the wells and is told what pose to take, nothing more.
+    this.foes = new FoeLayer3D(this, { tints: TINT_HEX });
+
     // Announce the viewer, so the frame's tool keys can find the bench they
     // belong on (`bench-keys.js`). The frame is built before the instrument.
     registerBenchViewer(this);
@@ -1176,6 +1181,7 @@ export class BenchViewer3D {
     });
     this.keysDirty = true;
     this.frameCamera(n);
+    this.foes?.layout();
   }
 
   /** Stand the camera where a person working the bench would have their head. */
@@ -1505,6 +1511,9 @@ export class BenchViewer3D {
 
   /** Which station, if any, the ray passes through. */
   stationUnderRay() {
+    // A foe standing in a well is a press on that well's station.
+    const foe = this.foes?.stationUnderRay(this.raycaster);
+    if (foe) return foe;
     for (const st of this.stations) {
       const hit = this.raycaster.intersectObject(st.tray, false);
       if (hit.length) return st;
@@ -2045,6 +2054,8 @@ export class BenchViewer3D {
         st.sweep.material.opacity = 0;
       }
     }
+
+    this.foes?.update(delta);
   }
 
   onResize() {
@@ -2069,6 +2080,7 @@ export class BenchViewer3D {
   clearStations() {
     for (const st of this.stations) this.releaseGroup(st.group);
     this.stations = [];
+    this.foes?.hide();
     this.keysDirty = true;
   }
 
@@ -2117,6 +2129,8 @@ export class BenchViewer3D {
     this.grabbables = [];
     this.grabbing = null;
     this.clearStations();
+    this.foes?.dispose();
+    this.foes = null;
     for (const d of this.disposables) {
       try { d.dispose(); } catch (e) {}
     }

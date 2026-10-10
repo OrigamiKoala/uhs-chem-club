@@ -55,11 +55,15 @@ export function questProgress(quest) {
   };
 }
 
-/** Quest N is open once quest N-1 is complete. Quest 1 is open with the world. */
+/** Quest N is open once quest N-1 is complete. Quest 1 is open with the world. A boss opens once every bench is complete. */
 export function isQuestOpen(world, quest) {
   if (!world || !quest) return false;
   if (quest.status !== 'live') return false;
   if (!isWorldOpen(world)) return false;
+  if (quest.arena === 'boss') {
+    const liveBenches = world.quests.filter(q => q.status === 'live' && q.arena !== 'boss');
+    return liveBenches.length > 0 && liveBenches.every(isQuestComplete);
+  }
   if (quest.index === 0) return true;
   const prev = world.quests[quest.index - 1];
   // A charted quest cannot block the road behind it — if the one before this has
@@ -81,15 +85,15 @@ export function worldProgress(world) {
   if (!world) return { questsComplete: 0, questTotal: 0, liveTotal: 0, pct: 0, complete: false };
   const live = world.quests.filter(q => q.status === 'live');
   const questsComplete = live.filter(isQuestComplete).length;
+  const liveBenches = live.filter(q => q.arena !== 'boss');
+  const benchesComplete = liveBenches.filter(isQuestComplete).length;
   return {
     questsComplete,
     questTotal: world.questCount,
     liveTotal: live.length,
     pct: live.length ? Math.round((questsComplete / live.length) * 100) : 0,
-    // A world counts as complete when every quest that exists in it is finished.
-    // Quests still to be written do not hold the road shut, or world 2 could
-    // never open until the whole curriculum shipped.
-    complete: live.length > 0 && questsComplete >= live.length
+    // A boss gates only story; world completion & practice sets open once all benches are finished.
+    complete: liveBenches.length > 0 && benchesComplete >= liveBenches.length
   };
 }
 

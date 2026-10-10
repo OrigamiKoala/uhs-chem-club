@@ -24,6 +24,7 @@ import { createTransmissionElement } from '../../ui/transmission.js';
 import { benchDeployment } from './bench-host.js';
 import { benchesAre3D } from './instruments.js';
 import { mirrorBenchKeys } from './bench-keys.js';
+import { Encounter } from './encounter.js';
 import {
   PanelRig, createBenchAnchor, createPanelGantry, disposeGantry
 } from '../../three/world-ui.js';
@@ -282,6 +283,7 @@ export class LearnFrame {
 
           <aside class="lq-deck plate">
             <div class="lq-prompt"></div>
+            <div class="lq-foe" hidden></div>
             <div class="lq-deck-body">
               <div class="lq-readout"></div>
               <div class="lq-widget"></div>
@@ -311,6 +313,7 @@ export class LearnFrame {
       controls: q('.lq-controls'),
       scope: q('.lq-scope'),
       prompt: q('.lq-prompt'),
+      foe: q('.lq-foe'),
       deckBody: q('.lq-deck-body'),
       readout: q('.lq-readout'),
       banner: q('.lq-banner'),
@@ -352,6 +355,11 @@ export class LearnFrame {
         });
       }
     }
+
+    // The foe plate. It OBSERVES the stage (a stage began, a commit missed or
+    // cleared, the bench was worked) and returns nothing this frame reads, so it
+    // cannot refuse a correct answer. See encounter.js.
+    this.encounter = new Encounter(this.el.foe);
 
     this.deployPanels();
 
@@ -595,7 +603,9 @@ export class LearnFrame {
     // rebuilt; the docked one is the same node for the life of the frame, so its
     // action, label and enabled state are reset by hand. A docked key left on
     // "next" from the stage before skipped the stage it was pressed on.
-    const commitLabel = stage.commitLabel || 'Commit';
+    // A stage in a fight names its Commit key for the attack it is.
+    const commitLabel = stage.encounter?.act || stage.commitLabel || 'Commit';
+    this.encounter.begin(stage.encounter || null);
     this.el.actions.innerHTML = `
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
       <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
@@ -636,6 +646,9 @@ export class LearnFrame {
     `;
   }
 
+  /** The bench was worked: the foe on `id` answers, from the instrument's own planner. */
+  foeReact(id, probe, quiet = false) { this.encounter?.react(id, probe, quiet); }
+
   setControls(html) {
     this.el.controls.innerHTML = html;
     syncPressed(this.el.controls);
@@ -643,6 +656,7 @@ export class LearnFrame {
   }
   setWidget(html) {
     this.el.widget.innerHTML = html;
+    this.encounter?.decorate(this.el.widget);
     compactBins(this.el.widget);
     syncPressed(this.el.widget);
     nameSteppers(this.el.widget);
@@ -684,6 +698,8 @@ export class LearnFrame {
         <span class="banner-body">${esc(message)}</span>
       </div>
     `);
+    // The reason is on its way to the banner; the foe answers after it.
+    this.encounter?.onMiss();
   }
 
   /**
@@ -732,6 +748,7 @@ export class LearnFrame {
     this.solved = true;
     if (reward && this.stage) this.findings[this.stage.index] = reward;
     soundscape.playBondSnap?.();
+    this.encounter?.onClear();
     this.el.hints.innerHTML = '';
     this.updateStageActions();
     this.bannerSeq = (this.bannerSeq || 0) + 1;
@@ -1027,6 +1044,7 @@ export class LearnFrame {
     this.a11yObserver = null;
     this.benchKeys?.dispose();
     this.benchKeys = null;
+    this.encounter?.dispose();
     window.removeEventListener('resize', this.onFit);
     window.removeEventListener('scroll', this.onFit, { capture: true });
     closeModal();

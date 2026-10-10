@@ -29,6 +29,7 @@
 
 import { SampleScope, detailFor } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
+import { resolveEncounter } from '../../engine/foes.js';
 import { dialMarkup, bindDial, paintDial as paintDialControl } from '../../engine/dial.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
@@ -143,6 +144,11 @@ export const STAGES = [
       { id: 'a2', label: 'SAMPLE B', note: 'drawn from the arch springs', floorPower: 4, particles: [{ ...WATER, n: 28 }] },
       { id: 'a3', label: 'SAMPLE C', note: 'traded in off a hauler', floorPower: 4, particles: [{ ...WATER, n: 20 }] }
     ],
+    encounter: {
+      species: 'recipe golem',
+      act: 'Assemble',
+      intent: 'The golem locks its pressure valves to conceal the molecular blueprint.'
+    },
     widget: { type: 'build', kinds: ['k01', 'k08'], max: 5, label: 'One molecule holds' },
     hints: [
       'Turn the Power dial up to 4 or past it, then look at one molecule on any of the three plates.',
@@ -182,6 +188,11 @@ export const STAGES = [
         particles: [{ ...WATER, n: 16 }, { kinds: ['k01'], n: 14 }]
       }
     ],
+    encounter: {
+      species: 'recipe golem',
+      act: 'Isolate',
+      intent: 'The golem feeds on unbonded atoms to reinforce its shell.'
+    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -228,6 +239,11 @@ export const STAGES = [
       { id: 'c1', label: 'SAMPLE A', note: 'off the flare stack', floorPower: 4, particles: [{ ...OXIDE_1, n: 22 }] },
       { id: 'c2', label: 'SAMPLE B', note: 'off the kiln vent', floorPower: 4, particles: [{ ...OXIDE_2, n: 18 }] }
     ],
+    encounter: {
+      species: 'recipe golem',
+      act: 'Compare',
+      intent: 'The golem adjusts its internal burner between discrete chemical states.'
+    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -273,6 +289,11 @@ export const STAGES = [
     samples: [
       { id: 'd1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 20 }] }
     ],
+    encounter: {
+      species: 'recipe golem',
+      act: 'Weigh',
+      intent: 'The golem monitors its total atomic payload on the chamber scale.'
+    },
     widget: { type: 'number', min: 14, max: 24, step: 1, label: 'Weight of one molecule' },
     hints: [
       'Turn the power up past 4, then tap the large atom in a molecule and tap one of the small ones.',
@@ -309,6 +330,11 @@ export const STAGES = [
     samples: [
       { id: 'e1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 20 }] }
     ],
+    encounter: {
+      species: 'recipe golem',
+      act: 'Calculate',
+      intent: 'The golem calculates the mass distribution of its heaviest constituent.'
+    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -352,6 +378,11 @@ export const STAGES = [
       { id: 'f1', label: 'SAMPLE A', note: 'off the flare stack', floorPower: 4, particles: [{ ...OXIDE_1, n: 20 }] },
       { id: 'f2', label: 'SAMPLE B', note: 'off the kiln vent', floorPower: 4, particles: [{ ...OXIDE_2, n: 16 }] }
     ],
+    encounter: {
+      species: 'recipe golem',
+      act: 'Deduce',
+      intent: 'The golem guards the mass proportions logged in the vent manifold.'
+    },
     widget: {
       type: 'choice',
       label: 'The drum holds',
@@ -399,6 +430,11 @@ export const STAGES = [
       { id: 'g2', label: 'SAMPLE B', note: 'unlabelled, off a hauler', floorPower: 4, particles: [{ ...AIR_GROUP, n: 16 }] },
       { id: 'g3', label: 'SAMPLE C', note: 'unlabelled, off a hauler', floorPower: 4, particles: [{ ...GAS_GROUP, n: 14 }] }
     ],
+    encounter: {
+      species: 'recipe golem',
+      act: 'Catalog',
+      intent: 'The golem shuffles three unlabeled canisters across its staging deck.'
+    },
     widget: {
       type: 'bins',
       rows: ['g1', 'g2', 'g3'],
@@ -449,6 +485,11 @@ export const STAGES = [
       },
       { id: 'h3', label: 'SAMPLE C', note: 'sold as vent-stack condensate', floorPower: 4, particles: [{ ...PEROXIDE, n: 14 }] }
     ],
+    encounter: {
+      species: 'recipe golem',
+      act: 'Audit',
+      intent: 'The golem defends its adulterated feedstock against guild inspectors.'
+    },
     widget: {
       type: 'bins',
       rows: ['h1', 'h2', 'h3'],
@@ -668,7 +709,8 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: 'Commit'
+      commitLabel: stage.encounter?.act || 'Commit',
+      encounter: resolveEncounter(stage, {})
     });
 
     scope.setSamples(stage.samples);

@@ -26,6 +26,7 @@
  */
 
 import { LearnFrame, toolNotes } from './frame.js';
+import { resolveEncounter } from './foes.js';
 import { dialMarkup, bindDial, paintDial } from './dial.js';
 import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
@@ -60,7 +61,8 @@ export function roundTo(x, step) {
  *   toolNoteFor?: (id: string, stageNumber: number) => object|null,
  *   onLoad: (stage: object, i: number, runner: object) => void,
  *   onDispose?: () => void,
- *   onWidgetChange?: (runner: object) => void
+ *   onWidgetChange?: (runner: object) => void,
+ *   encounterEnv?: object   // what a stage's foe species needs from the quest (foes.js)
  * }} cfg
  */
 export function createRunner(container, ctx, cfg) {
@@ -111,7 +113,10 @@ export function createRunner(container, ctx, cfg) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: 'Commit'
+      commitLabel: 'Commit',
+      // A stage that declares an `encounter` is a fight (foes.js); one that does
+      // not plays exactly as it always has.
+      encounter: resolveEncounter(stage, cfg.encounterEnv)
     });
 
     cfg.onLoad(stage, i, runner);

@@ -82,6 +82,12 @@ export const STAGES = [
         { id: 'dark', label: 'The tube gives dark lines on an unbroken band' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Read Spectra',
+      intent: 'A lamp moth flutters across the gas discharge and hot filament.',
+      hit: 'The discrete spectral lines pierce the moth while the continuum flows past.'
+    },
     hints: [
       'Look at the two plates side by side and tap a few positions on each band.',
       'Compare whether each band is filled from one end to the other or only lit in a few places.',
@@ -120,6 +126,12 @@ export const STAGES = [
         { id: 'He', label: 'Helium' },
         { id: 'Na', label: 'Sodium' }
       ]
+    },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Identify Gas',
+      intent: 'Four glowing discharge tubes silhouette hovering moths.',
+      hit: 'The emission lines match helium and disperse the moth.'
     },
     hints: [
       'Tap the bright lines on the sealed tube\'s band and write down where each one sits.',
@@ -160,6 +172,12 @@ export const STAGES = [
         { id: 'shift', label: 'It moves every colour toward red' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Filter Light',
+      intent: 'A moth hovers within the cold gas absorption chamber.',
+      hit: 'Dark absorption gaps appear and disrupt the moth.'
+    },
     hints: [
       'Compare the band behind the cool gas with the band of the bare filament.',
       'Tap the dark places in the band behind the gas and compare their positions with the hot hydrogen tube\'s bright lines.',
@@ -199,6 +217,12 @@ export const STAGES = [
         { id: 'j23', label: 'From the second rung to the third' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Trace Jump',
+      intent: 'A moth perches upon the ladder rungs of the excited gas.',
+      hit: 'The electron cascade sheds red light and scatters the moth.'
+    },
     hints: [
       'Tap each bright line on the band and watch which two rungs light on the ladder.',
       'Find which line is the red one, then read the pair of rungs the ladder lights when you tap it.',
@@ -234,6 +258,12 @@ export const STAGES = [
       { id: 'ladder', label: 'LADDER', head: 'ladder', note: 'the rungs of hydrogen' }
     ],
     widget: { type: 'decimal', label: 'Energy of the 486 nm line (x 10^-19 J)', min: 3.5, max: 4.5, step: 0.1 },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Calculate E',
+      intent: 'Photons emitted from energy drops cast sharp shadows on the moth.',
+      hit: 'The quantum photon energy is verified and disperses the moth.'
+    },
     hints: [
       'Use the worked figure for the 656 nm line to see how a wavelength turns into an energy.',
       'Turn 486 nm into a frequency with the speed of light, then multiply by Planck\'s constant.',
@@ -274,6 +304,12 @@ export const STAGES = [
         { id: '656', label: '656 nm' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Predict Line',
+      intent: 'An unmapped spectral transition vibrates through the moth.',
+      hit: 'The predicted transition strikes true and scatters the moth.'
+    },
     hints: [
       'Work out the energy of the fifth rung and of the second, using the formula on the plate.',
       'Subtract the lower rung\'s energy from the higher one\'s to get the energy given out in the jump.',
@@ -312,6 +348,12 @@ export const STAGES = [
         { id: 'drops', label: 'It drops back to the ground state at once' },
         { id: 'stays', label: 'It stays where it is, because only exact amounts are taken' }
       ]
+    },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Exceed Bound',
+      intent: 'An energetic surge threatens to exceed the final binding threshold.',
+      hit: 'The electron escapes into free space, clearing the moth.'
     },
     hints: [
       'Look at the top of the ladder and read what the open edge says.',
@@ -353,6 +395,12 @@ export const STAGES = [
         { id: 'none', label: 'Helium\'s electrons are not on rungs at all' },
         { id: 'cold', label: 'The helium tube is not hot enough to show its true lines' }
       ]
+    },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Expose Limit',
+      intent: 'Helium multielectron repulsion confounds the single-electron ladder.',
+      hit: 'Electron shielding explains the divergence and the moth disperses.'
     },
     hints: [
       'Tap each of helium\'s lines and watch what the ladder does compared with hydrogen\'s.',

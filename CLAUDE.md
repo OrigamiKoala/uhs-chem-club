@@ -96,6 +96,34 @@ because the sample with the extra neutron has a visibly identical outside and st
 established that the outer shell decides behaviour. Hints point at that evidence; they are
 not a substitute for it.
 
+**A STAGE MAY BE A FIGHT, AND THE FOE MUST CARRY EVIDENCE.** A stage can declare an
+`encounter` (`{ species, act, intent, hit?, counter?, moves? }`): the samples or plates on
+the bench become **spoil**, the Commit key is renamed for the attack it is (`act`, one or
+two plain words — "Strike", "Clear Pack"), and a foe plate sits at the top of the deck.
+The test every encounter has to pass: **if you can delete the monster and the stage is
+unchanged, the combat is decoration.** So (1) a foe's behaviour comes only from
+`planFoe()` in `engine/foes.js`, which asks the instrument's own planner (`planCut`,
+`planSettle`, `planPhotocell`) — never authored, never magic; `verify:learn` checks each
+pose against an independent reading of the bench's declaration, so a husk that "splits" is
+a sample the cutter really splits; (2) foes map one-to-one onto the stage's samples or
+rows (they are made from the bench, not declared beside it); (3) **spoil is dispersed,
+never killed** ("crumbles into salt", "goes dark and drifts"), named in the plainest
+English (*salt husk*, *lamp moth*), never a coinage; (4) it fits SCOURED PLATE — plate
+grey, amber only for a real event, no eyes, no glow. **The rest of the doctrine does not
+bend for a fight.** The prompt still states the objective and never the route; scouting
+(every tool) is free and only a COMMITTED miss costs one point of Integrity (three per
+stage); at zero the rig is knocked back — Integrity refills and the foe is whole again,
+and every hint rung, reading, answer and miss count is kept; **a correct commit wins on
+any turn at any Integrity**; **the miss's reason is on screen before the foe answers**
+(`COUNTER_DELAY_MS`; the encounter never touches the banner); and every line a foe speaks
+(intent, counter, knock-back, dispersal, reactions, attack verbs, moves) passes the same
+withheld-vocabulary gate as a prompt, is one sentence, and may not carry the stage's
+answer. A `bins` stage may name the move that works on each category (`moves`, e.g. Contain
+/ Split / Shake on `q1-grain` stage 8); a stage with no `encounter` plays exactly as it
+always has, so conversion is gradual. Story is still a frame: a foe's nameplate and
+intent line are the whole per-stage story budget, and **no modal ever precedes a stage**.
+Premise, acts and ending: `docs/story/bible.md`.
+
 A Learn quest publishes its own schedule — `VOCABULARY` in `src/learn/quests/unit01/q1-grain.js`
 and `q2-core.js` are the worked examples, mapping each gated term to the stage whose reward
 card introduces it. `verify:learn` fails the build both ways round: a term used one stage
@@ -156,6 +184,17 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   token or word, a `rings` sequence, the sample named by a "which one" answer, a sample
   beside its correct bin. Signed figures are exempt (they are charges), and any collision
   that remains is a documented per-stage allowlist entry. **Every hint rung is one sentence.**
+  **It also holds the encounter layer** (`checkEncounter` per fighting stage,
+  `checkEncounterLayer` once): foes one-to-one with the bench, one-sentence intent / counter
+  / dispersal, attack verbs of one or two plain words with no arrow glyph, `moves` naming
+  real bins, every foe line through the vocabulary gate and the answer-leak search, every
+  reaction checked against an independent reading of the bench, the fight state (a correct
+  commit wins on turn one and at any Integrity, a knock-back refills, a won fight takes no
+  more hits), the plate drawn for real on a pack and a lone moth, and static checks that
+  `encounter.js` never touches the banner or the frame's outcome calls and that `frame.miss`
+  announces the reason before the encounter answers. The same static checks hold
+  `encounter3d.js` and `foebody.js` (observers: no banner, frame, session or `check`, no
+  `Math.random`), and every species must be built (`BODY_SPECIES`) or listed `PLATE_ONLY`.
 - `npm run verify:geometry` — runs all 20 reaction animations headlessly and checks the chemistry
   on screen (see "Chemical realism" below). `--verbose` prints atom positions at every step.
 - `npm run verify:media` — validates media manifest against assets and size budgets.
@@ -203,7 +242,16 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   and the box round the one holding its plate and its lean-to encloses the bench standing
   in the middle of them, so the group's `partBoxes` are measured instead — and a **merged
   rock** (Ligar's `basalt.js` meshes; a quarry floor's rubble is one mesh) by the boxes it
-  records on itself. Finally it puts **every
+  records on itself. It also builds **every fighting stage of `q1-grain` and `q2-photon`**
+  with its foes standing (`FoeLayer3D`) and holds the bodies, in every pose the species can
+  take plus a lunge, to: one body per bench item at the station holding it; inside the tray
+  and under 0.36 m of well; inside the glass at six aspects and clear of the HUD; **no body
+  hides any of a 5 x 5 grid across any station's screen from the camera** (the
+  honest-picture rule); no body in the bench's clutter or the world; a press on a body, through
+  the real pointer path, choosing its station (and, on a "which sample" stage, selecting that
+  sample); a triangle budget; and, driving the real 2D `Encounter`, that the pose in the scene
+  is the pose `planFoe` returned, a miss lunges, a clear disperses and removes the foes, a
+  replay restores them and a knock-back makes them whole. Finally it puts **every
   stage `q3-catalogue` and `q5-assay` declare** through the built instrument: the board
   offers the slots the quest is about to grade against, and a pour places every piece
   `planPour` says it places. On the board it **presses**, through the real pointer path —
@@ -251,8 +299,10 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   mark and the pad to be reached with **no ledge to drop off**; holds every site level, facing
   its approach and standing on a bench anchor with a cased instrument; requires **only lamps
   to be lit** (every emissive material in the built world is the lantern's, and the thirty-five
-  lanterns share exactly three real lights); and requires the ice to run to the horizon and
-  the lake to be ground. A sign must read `Bench N - <what it teaches>`, six words at most,
+  lanterns share exactly three real lights); requires the ice to run to the horizon and
+  the lake to be ground; and **runs a frame** — `update(delta, cameraPos)` with the eye
+  handed in as a position, the way the stage and the voyage call it — because the sky dome
+  once read `.position` off that vector and threw on the first frame of every descent. A sign must read `Bench N - <what it teaches>`, six words at most,
   sharing a word with its quest's title.
 - `npm run verify:holo` — one owner for the `X` key, and the comms board never invents a
   guild score.
@@ -581,6 +631,50 @@ into grinding and would punish the students it exists to help.
   end-of-quest lecture.
   In `scope.js`, single-unit samples (`total <= 1`) are centered at `[0, 0]` so high-magnification targets
   remain visible in the aperture.
+- **The encounter layer** (`engine/foes.js`, `engine/encounter.js`). `foes.js` is PURE
+  (Node-importable): `SPECIES` (salt husk, lamp moth — plain data plus one planner each),
+  `resolveEncounter(stage, env)` (null for a plain stage; `env.kinds` is what the husk's
+  planner needs from the quest), `planFoe`, the fight state (`newFight`, `afterMiss`,
+  `afterWin`, `INTEGRITY` = 3) and SVG `portraitSvg`. `encounter.js` is the `.lq-foe` plate
+  the frame mounts between the prompt and the deck body. **It OBSERVES and returns nothing
+  the frame reads**: `LearnFrame` tells it a stage began (`setStage`), a commit missed
+  (`miss`, after the reason is announced), a commit cleared (`clear`), or the bench was
+  worked (`frame.foeReact(id, probe, quiet)`), so it has no way to refuse a correct answer.
+  The shared `stagerunner.js` resolves `stage.encounter` for every quest on it
+  (`cfg.encounterEnv`); a hand-rolled loop like `q1-grain`'s passes
+  `encounter: resolveEncounter(...)` itself. A reaction in a pack is captioned under its own
+  foe; a lone foe's reaction is its line; a `quiet` reaction (the dials as the stage loaded
+  them) never talks over the intent. Reduced motion (the stored preference or the media
+  query) turns every beat into a held frame and a line of text.
+- **The foes at T4 are bodies on the bench** (`engine/foebody.js`, `engine/encounter3d.js`;
+  Phase 5 of `docs/plans/storyline-and-combat.md`). Every `BenchViewer3D` builds a
+  `FoeLayer3D` (`viewer.foes`) that stands one built body per bench item in the WELL of the
+  station holding it, in the order the stage prints them. **It only observes**, like the 2D
+  plate: `Encounter.paint()` publishes a snapshot (`{ enc, fight, poses }`) to
+  `activeBenchViewer().foes.sync()`, and a viewer built after the stage began reads it from
+  `bench-host.js` (`setEncounterSource` / `encounterSnapshot`, the same inversion the key bank
+  uses). A body's pose is therefore `planFoe`'s pose and nothing else; the body knows how to
+  MOVE into `idle / unmoved / split / scattered / layered(n) / even / dispersed` (husk) or
+  `idle / shedding / still / dispersed` (moth), never when. **Bodies are procedural and
+  seeded** (no `Math.random`, the same husk on every machine): a husk is ONE `InstancedMesh`
+  of 34 chamfered halite crystals, so a single body can split, scatter, stratify or crumble
+  (and puffs fines when it breaks); a moth is a lofted metal shell (ribbed carapace, veined
+  cambered wings, six wire legs, antennae, no eyes) perched on the photocell tube, tinted by
+  its metal, with amber streaks that are the planner's `dots` and `speed` and fly low along
+  the tube. A husk's tint is the first kind's tint, the same one the crate in the well is
+  poured in, and its shape comes from its id, so **an idle body never gives an answer
+  away**. Surfaces come off one height field (salt granules and cleavage hairlines; scoured
+  metal with veins and ribs) through `pbr-kit`, and degrade to flat colour where a host has
+  no readable canvas. A committed miss makes every body lunge (and thump), a clear disperses
+  them (husks are swept off the plate, a moth goes dark and drifts), a knock-back makes them
+  whole, a replayed stage restores them, foes turn slowly to face the player's eye, and
+  reduced motion snaps every pose. **A press on a body is a press on its station**
+  (`stationUnderRay`), so tapping a husk on a "which sample" stage is choosing it. **The
+  instrument stays the player's rig and the flat picture stays the picture:** `verify:bench`
+  fails any body that hides part of any screen from the camera, in any pose. A species with
+  no body yet is listed in `PLATE_ONLY` (`foebody.js`; the Phase 3 bosses) and fights on the
+  plate alone, as it does below T4. Adding a species costs one `foes.js` entry and one body
+  builder; converting a quest that reuses the husk or the moth costs no 3D work.
 - **The power control is a knob, and on a built bench it is a knob you can reach.** A
   magnification setting is a thing you turn, never a minus key with a number beside a plus
   key. There are two of them and they are the same control:
@@ -872,6 +966,11 @@ the layers → file four samples as **element, compound or mixture**. `VOCABULAR
 bonded pairs of one kind, so "still an element" is a real question rather than a lookup.
 The catalogue codes (CAT 01, 06, 08, 11, 16, 17) are atomic numbers, never explained here;
 the debrief points at them as the hook into `q3-catalogue`.
+**Every stage is a fight against salt husks** (pilot of the encounter layer): Strike /
+Target / Take Shot / Pin It / Forge Copy / Seal Both / Clear Pack, a husk that reacts to the
+cutter and the shaker from `planCut` / `planSettle`, and on stage 8 the three categories
+are the three moves (Element - Contain, Compound - Split, Mixture - Shake). No `check()`
+changed.
 
 ### World 1 quest 2 — Inside an Atom (`unit01/q2-core`, live)
 Eight stages on the core bench in Tallow's sub-level lab. Fire a beam through an atom and
@@ -978,7 +1077,9 @@ and the quest page prints one linked "Builds on" line; nothing is gated by it).
   catalogue code is an element with a name and a symbol (symbols are used from here on).
   **Labels are plain English until their word is earned**: the screen prints "Crest to crest" and
   "Crests per second" on stage one and *Wavelength*/*Frequency* from stage two (`stage.labels`).
-- **`q2-photon` Photons** (photocell head, two real dials) — red at full brightness frees
+- **`q2-photon` Photons** (photocell head, two real dials; **every stage is a fight against
+  lamp moths** — the plate is the moth's shell and it sheds as many streaks as the counter
+  counts, from `planPhotocell`; no `check()` changed) — red at full brightness frees
   nothing, the threshold, brightness changes the count and frequency the speed, E = hν **found
   from one worked check on the plate** (a sodium threshold quoted in joules beside its
   wavelength) and never given, work function, a plate only ultraviolet will free.
@@ -1839,6 +1940,16 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
   officer-issued meeting codes, guild contracts, and Standings scopes (Your Guild, This
   Week, a pinned row and a neighbourhood). Six open decisions are listed in its §12,
   including whether the Learn XP wall stays (recommended: yes).
+- `docs/plans/storyline-and-combat.md` — **Phases 0-2 built** (the story bible
+  `docs/story/bible.md`, the doctrine above and in PRODUCT.md principle 10, the encounter layer,
+  and the pilots `q1-grain` and `q2-photon`); **the playtest (D8) is the go / no-go gate** for
+  Phase 3 onward (bosses, the spine and Case File, T4 foes, converting the rest, contracts) and
+  none of that exists. The plan: the Learn worlds become the main storyline (four acts, the shadowy Fifth guild, a mystery the curriculum answers
+  at Cinder Halo), the campaign sectors become side contracts, and every bench stage becomes
+  a turn-based encounter layered over the unchanged `check()` (each answer widget is an
+  attack verb; the monster carries evidence; a knock-back keeps everything learned). Its
+  §9 decisions are settled except D3b (was Vess one of the abandoned crew — open, Act III
+  only) and D8 (the playtest, pending); the main story stays XP-free (D1).
 - `docs/plans/ship-redesign.md` — the Avalon rebuilt from a shared kit (done): faceted nose
   and raked canopy, one lining section in every compartment, sliding pressure doors that
   open as you approach, every room refurnished. Contracts kept and listed there.
@@ -2308,6 +2419,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   router keeps the world scene across both routes (`isWalkableLearnRoute`), so stepping
   in and out of a bench never passes through the ship, and the last site is remembered so
   leaving a bench puts the player back in front of it rather than at the pad.
+- **Learn Worlds 2D Overlays (`learn-world.js`, `learn.css`):** The 2D exploration HUD across walkable Learn worlds (Tallow, Lanternfall, Ligar) matches the Erebus HUD aesthetic and layout: anchored in the bottom-left corner (`.learn-walk-hud`) with translucent dark glass, amber border-left accent, and gold progress statistics. It is easily collapsible into a compact mini-chip (`−` to collapse, `+` to expand) to prevent scene obstruction, and provides an on-demand exploration sites popup terminal (`.learn-sites-popup-scrim`, `.learn-sites-terminal`) with full quest status, stage tracking, and direct Play/Replay shortcuts, plus popup access to world problem sets.
 - T4 World Quest Deployment: In T4, `#/quest` enters the 3D Erebus world (`stage.enterWorldScene()`). The camera is dynamically reparented to `worldScene.scene` (and returned to `shipScene` upon exit) so Three.js continuously updates `camera.matrixWorld` without freeze, spawning above ground level (`groundY + eyeHeight`) facing Pylon 1 with active FPS navigation. The chemistry chamber deploys as an in-world instrument only when the player interacts with an active pylon, suspending FPS controls so the cursor and curved-arrow interaction operate cleanly, lighting its amber indicator in 3D upon clearance and returning cleanly to 3D terrain walking. Full-screen wrappers (`.app-viewport`, `.quest-hud-overlay`, `.quest-screen-flash`) strictly maintain `pointer-events: none` so molecule clicks and right-drag rotation reach the WebGL canvas, while cards (`.stage-prompt-card`, `.stage-dock-bar`, `.quest-nav-cluster`) claim `pointer-events: auto`.
 - **The cursor is never captured.** Avalon is a teaching portal whose instruments are
   clicked — crates, bins, holo badges, a power dial — not an immersive shooter, and a pointer
@@ -2422,3 +2534,16 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **Public Profile (`src/screens/crew-profile.js`):** Read-only dossier for `#/crew/:playerId`. Displays suit preview, level/title, nameplate finish, pinned plates, commendation counts by road, field manual count, watch streak, and guild. Omits stage failure and hint statistics.
 - **Weekly Watch & Contracts (`src/progression/watch.js`, `src/progression/contracts.js`):** Weekly watch streak tracking with 1 forgiveness per 6 stood. Shared guild contracts scale to active roster size.
 - **Verification (`tools/verify-progression.mjs`):** Enforces curve thresholds, requisition whitelist, zero-XP commendation invariants, clean marks, and forgiveness rules via `npm run verify:progression` in `npm run verify`.
+
+### 11. Storyline Spine, Bosses, and Contracts
+- **Story Tone & Discipline (`docs/story/bible.md`):** Diegetic industrial Scoured Plate tone. Max 2 sentences per transmission/briefing/prompt. Strict withheld-vocabulary discipline.
+- **Boss Arenas (`arena: 'boss'`):** Checkpointed boss modules: The Hopper (`unit01/boss-hopper.js`), The Lantern-Eater (`unit02/boss-eater.js`), Basalt Warden (`unit03/boss-warden.js`), and Recipe Golem (`unit07/boss-golem.js`). Opens after world benches finish and gates only story.
+- **Road Combat Encounters (Phase 6):** Turn-based combat encounters across all built road quests: Unit 1 (`q1`–`q6`), Unit 2 (`q1`–`q9`), Unit 3 (`q1-joins`, `q2-lattice`), and Unit 7 (`q1-recipe`). Each stage wires `resolveEncounter` with dynamic intent, tactical moves, and vocabulary-gated reactions.
+- **3D FPS Kinematics & Camera Realism (`src/three/fps-controls.js`):** Stride-driven vertical and lateral head-bob with camera roll, idle respiratory drift, landing shock compression, non-linear trauma decay shake (`addTrauma()`), sliding box collisions, and reduced-motion compliance.
+- **Procedural 3D Foe Geometries (`src/learn/engine/foebody.js`):** Procedural 3D models for all encounter species in `BODY_SPECIES`: Halite salt husks, photoelectric lamp moths, jointed hexagonal columnar Basalt Wardens, and riveted reactor Recipe Golems with functioning pressure manometers and steam vents.
+- **Story Spine & Saga (`src/story/saga.js`):** 4 Acts (The Charter, Pressure, Balance, The Core) spanning all 14 worlds. Clue registry for Case File. Spine beats in road order (`getNextPendingBeat`).
+- **Case File & Dossier (`src/screens/casefile.js` at `#/casefile`):** Terminal displaying evidence clues, Vess marginalia notes, spine beat transcripts, and act charter summaries.
+- **Session Saga State (`src/session.js`):** `session.learn.saga = { beatsSeen: [], clues: [] }`. Methods `getSaga()`, `recordClue()`, `hasClue()`, `recordSagaBeat()`, `hasSagaBeat()`. Union merge in `setLearnState()`.
+- **Contracts (`src/story/quest1.js`, `src/screens/contracts.js` at `#/contracts`):** Erebus reframed as contract with posting metadata; Stage 20 awards `clue_erebus_mark`. Contract Board screen with live and sealed postings. Star Map tabs renamed to `Story` and `Contracts`.
+- **Encounter-First Design:** `src/learn/quests/_template.js` and `docs/plans/learn-quests.md` scaffolded with encounter declarations (foe, objective, chemical core).
+- **Story Verifier (`tools/verify-story.mjs`):** Enforces act sequence, clue integrity, spine beat order, sentence caps, and boss clue awards via `npm run verify:story` in `npm run verify`.

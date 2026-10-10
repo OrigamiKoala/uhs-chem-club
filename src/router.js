@@ -29,6 +29,8 @@ import { renderSettings } from './screens/settings.js';
 import { renderAdmin } from './screens/admin.js';
 import { renderCrewProfile } from './screens/crew-profile.js';
 import { renderVoyageHud } from './screens/voyage.js';
+import { renderCaseFile } from './screens/casefile.js';
+import { renderContracts } from './screens/contracts.js';
 
 const ROUTE_ROOM = {
   '/': 'cockpit',
@@ -46,6 +48,8 @@ const ROUTE_ROOM = {
   '/settings': 'quarters',
   '/leaderboard': 'comms',
   '/comms': 'comms',
+  '/casefile': 'comms',
+  '/contracts': 'starmap',
   '/admin': 'bridge'
 };
 
@@ -65,16 +69,20 @@ const ROUTE_BACKDROPS = {
   '/settings': '/art/quarters.jpg',
   '/leaderboard': '/art/comms.jpg',
   '/comms': '/art/comms.jpg',
+  '/casefile': '/art/comms.jpg',
+  '/contracts': '/art/starmap.jpg',
   '/admin': '/art/airlock.jpg'
 };
 
 const ROUTE_NAV = {
   '/bridge': 'bridge',
   '/starmap': 'starmap',
+  '/contracts': 'starmap',
   '/quest': 'starmap',
   '/learn': 'learn',
   '/leaderboard': 'leaderboard',
   '/comms': 'leaderboard',
+  '/casefile': 'bridge',
   '/inventory': 'inventory',
   '/cargo': 'inventory',
   '/quarters': 'quarters',
@@ -91,6 +99,8 @@ const ROUTES = {
   '/onboarding': { render: renderOnboarding, auth: true },
   '/bridge': { render: renderBridge, auth: true },
   '/starmap': { render: renderStarMap, auth: false },
+  '/contracts': { render: renderContracts, auth: false },
+  '/casefile': { render: renderCaseFile, auth: false },
   '/quest': { render: renderQuest, auth: true },
   '/learn': { render: renderLearn, auth: true },
   '/leaderboard': { render: renderLeaderboard, auth: false },

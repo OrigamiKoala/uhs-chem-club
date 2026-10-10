@@ -102,6 +102,12 @@ export const STAGES = [
     controls: ['hand'],
     rigs: [plate({ label: 'SAMPLE C', sample: 'C', note: 'C, six electrons' })],
     widget: { type: 'none' },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Stack Rows',
+      intent: 'A lamp moth flutters above the ascending orbital levels.',
+      hit: 'The aufbau ladder fills from lowest energy and clears the moth.'
+    },
     hints: [
       'Pick "Up" or "Down" from the hand keys and tap boxes, starting at the bottom of the ladder.',
       'Compare the rows by how high they sit on the ladder, and decide which of them still have room.',
@@ -137,6 +143,12 @@ export const STAGES = [
         { id: 'opp', label: 'In separate boxes, pointing opposite ways' },
         { id: 'same', label: 'Together in one box, both pointing the same way' }
       ]
+    },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Align Spins',
+      intent: 'The two p-orbital paths hum with magnetic tension.',
+      hit: 'Hund rule parallel spins match the magnetic pull and disperse the moth.'
     },
     hints: [
       'Press "Test Sample" to see how hard carbon is pulled, then place the two p electrons different ways and press "Test Rack" each time.',
@@ -175,6 +187,12 @@ export const STAGES = [
         { id: 's4', label: '1s² 2s⁴ 2p²' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Read Layout',
+      intent: 'Eight electrons arrange across the oxygen sublevels.',
+      hit: 'The electron configuration is logged and disperses the moth.'
+    },
     hints: [
       'Place oxygen\'s electrons on the rack the way you placed carbon\'s, and read what the rack prints along the top.',
       'Compare the figures the rack prints for each row with the options.',
@@ -201,6 +219,12 @@ export const STAGES = [
     controls: ['hand'],
     rigs: [plate({ label: 'SAMPLE K', sample: 'K', prefill: AR_CORE, locked: true, note: 'K, eighteen electrons are already in place' })],
     widget: { type: 'none' },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Place State',
+      intent: 'The nineteenth electron approaches the competing sublevels.',
+      hit: 'Preferential subshell filling settles into 4s and clears the moth.'
+    },
     hints: [
       'Pick "Up" and tap a box for the one electron still to place.',
       'Compare the rows that have room by how high each sits on the ladder.',
@@ -237,6 +261,12 @@ export const STAGES = [
         { id: 'kr', label: '[Kr] 4s² 3d⁶' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Fold Core',
+      intent: 'Eighteen closed electrons encircle the iron nucleus.',
+      hit: 'Noble gas notation compresses the core and scatters the moth.'
+    },
     hints: [
       'Place the eight electrons iron has beyond the closed core, then press "Collapse Core" and read the top of the rack.',
       'Compare the symbol in brackets with the rows it replaces: it stands for every closed row below the open ones.',
@@ -272,6 +302,12 @@ export const STAGES = [
         { id: 'f', label: 'An f row', note: '' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Sort Rows',
+      intent: 'Six elemental strips illuminate their valence subshells.',
+      hit: 'Periodic block assignments align and disperse the moth.'
+    },
     hints: [
       'Find the lit bar on each plate; it marks the row the last electron went into.',
       'Read the letter on the lit row\'s label and sort the plate by it.',
@@ -301,6 +337,12 @@ export const STAGES = [
     controls: ['hand', 'magnet'],
     rigs: [plate({ label: 'SAMPLE FE', sample: 'Fe2+', z: 26, rows: ION_ROWS, fillGround: true, note: 'Fe, the ladder as an ion draws it' })],
     widget: { type: 'none' },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Strip Outer',
+      intent: 'The iron cation strips electrons from its outermost envelope.',
+      hit: 'Outer subshell loss forms the transition metal ion and dispels the moth.'
+    },
     hints: [
       'Pick "Remove" from the hand keys and tap the boxes you want to lift an electron from.',
       'Look at the ladder: this is how a charged atom draws it, and the electrons that leave first are the highest on it.',
@@ -330,6 +372,12 @@ export const STAGES = [
     beyondExam: true,
     rigs: [plate({ label: 'SAMPLE CR', sample: 'Cr', prefill: AR_CORE, locked: true, note: 'Cr, eighteen electrons are already in place. Beyond the exam.' })],
     widget: { type: 'none' },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Tune Pull',
+      intent: 'The anomalous magnetic torque of chromium destabilizes the rig.',
+      hit: 'Half filled subshell stability resolves the exception and disperses the moth.'
+    },
     hints: [
       'Press "Test Sample" to see how hard chromium is pulled, then fill the rack the way you have been and press "Test Rack".',
       'Compare the two pulls and ask which arrangement of the last six electrons would make the rack pull harder.',

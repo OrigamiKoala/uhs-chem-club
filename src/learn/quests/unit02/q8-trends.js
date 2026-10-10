@@ -93,6 +93,12 @@ export const STAGES = [
         { id: 'charge', label: 'More charge at the middle only; the distance makes no difference' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Probe Pull',
+      intent: 'A lamp moth flits around the electric field of the core.',
+      hit: 'Coulomb inverse square attraction resolves and dispels the moth.'
+    },
     hints: [
       'Tap the innermost electron of each atom and then its outermost, and compare the readings.',
       'Compare the pull with the charge at the middle and with the distance, changing one of those at a time.',
@@ -129,6 +135,12 @@ export const STAGES = [
         { id: 'moves', label: 'The outer electron moves too fast to be pulled' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Measure Field',
+      intent: 'The inner shell screening reduces the peripheral electrostatic field.',
+      hit: 'Shielding cancels inner charges to clear the moth.'
+    },
     hints: [
       'Tap the outermost electron and read every line the meter prints.',
       'Compare the charge at the middle with the number of electrons the meter says lie between the electron and the middle.',
@@ -159,6 +171,12 @@ export const STAGES = [
     widget: {
       type: 'order', label: 'Largest first',
       items: [{ id: 'li', label: 'Li' }, { id: 'be', label: 'Be' }, { id: 'b', label: 'B' }, { id: 'c', label: 'C' }]
+    },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Gauge Size',
+      intent: 'Periodic nuclear attraction draws outer orbitals tighter toward the moth.',
+      hit: 'Decreasing atomic radius compresses the boundary and scatters the moth.'
     },
     hints: [
       'Tap the outermost electron of each atom and read how far it sits from the middle.',
@@ -200,6 +218,12 @@ export const STAGES = [
         { id: 'same', label: 'They are the same size; the bench draws them at different scales' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Compare Rings',
+      intent: 'Successive principal shells expand outward beneath the moth.',
+      hit: 'Additional quantum shells expand the boundary to clear the moth.'
+    },
     hints: [
       'Tap the outermost electron of each atom and compare the distance and the charge it feels.',
       'Count the rings of electrons on each atom and compare the two counts.',
@@ -233,6 +257,12 @@ export const STAGES = [
     widget: {
       type: 'order', label: 'Smallest first',
       items: [{ id: 'na', label: 'Na' }, { id: 'naplus', label: 'Na⁺' }, { id: 'clminus', label: 'Cl⁻' }]
+    },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Measure Ions',
+      intent: 'Cation contraction and anion expansion deform around the moth.',
+      hit: 'Ionic radius changes resolve and disperse the moth.'
     },
     hints: [
       'Press "Strip Electron" on the sodium plate and "Add Electron" on the chlorine plate, then tap each outermost electron.',
@@ -271,6 +301,12 @@ export const STAGES = [
         { id: 'bel', label: 'Be, then B, then Li: the smallest atom always holds on loosest' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Strip Valence',
+      intent: 'Subshell binding energy dips across the period before the moth.',
+      hit: 'First ionization energy trends resolve and scatter the moth.'
+    },
     hints: [
       'Press "Strip Electron" on each plate and read what it costs.',
       'Put the three costs in order, then compare the order with the order of the elements across the row.',
@@ -307,6 +343,12 @@ export const STAGES = [
         { id: 'four', label: 'Plus four' }
       ]
     },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Track Jump',
+      intent: 'Magnesium sheds valence electrons until reaching its inert core.',
+      hit: 'Successive ionization energies spike at the noble core to dispel the moth.'
+    },
     hints: [
       'Press "Strip Electron" on magnesium again and again, and read what each strip costs.',
       'Compare the cost of each strip with the one before it, and look for a cost that jumps enormously.',
@@ -337,6 +379,12 @@ export const STAGES = [
     widget: {
       type: 'order', label: 'Weakest first',
       items: [{ id: 'na', label: 'Na' }, { id: 'c', label: 'C' }, { id: 'n', label: 'N' }, { id: 'f', label: 'F' }]
+    },
+    encounter: {
+      species: 'lamp moth',
+      act: 'Rank Pull',
+      intent: 'Attractive forces on shared electron pairs vary across the period.',
+      hit: 'Electronegativity pull ranks the elements and scatters the moth.'
     },
     hints: [
       'Tap the outermost electron of each atom and read the pull on it.',

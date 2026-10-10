@@ -116,3 +116,31 @@ export function onBenchViewer(cb) {
   viewerListeners.add(cb);
   return () => viewerListeners.delete(cb);
 }
+
+/* ------------------------------------------------------------ the fight
+
+   THE 3D FOES FIND THE FIGHT THROUGH HERE, for the same reason the keys find
+   the bench: the frame (and its `Encounter` plate) is built before the
+   instrument, so a viewer coming up mid-stage has to ask what the stage already
+   began. `Encounter` registers a function that answers with its current
+   snapshot — `{ enc, fight, poses }` — and a viewer reads it once, when it
+   builds its foe layer. After that the encounter pushes to
+   `activeBenchViewer().foes.sync(...)`. Still no three.js. */
+
+let encounterSource = null;
+
+/** Called by `Encounter`: `fn()` returns its snapshot. `null` withdraws it. */
+export function setEncounterSource(fn) {
+  encounterSource = typeof fn === 'function' ? fn : null;
+}
+
+/** What the fight looks like right now, or null when no stage has one. */
+export function encounterSnapshot() {
+  if (!encounterSource) return null;
+  try {
+    return encounterSource() || null;
+  } catch (err) {
+    console.error('Encounter snapshot failed:', err);
+    return null;
+  }
+}

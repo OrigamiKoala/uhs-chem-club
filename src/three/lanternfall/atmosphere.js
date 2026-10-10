@@ -153,9 +153,14 @@ export function createLfSkyDome(radius = 900) {
   return dome;
 }
 
-/** A dome that follows whatever camera draws it, so the sky never parallaxes. */
-export function followCamera(dome, camera) {
-  if (camera) dome.position.copy(camera.position);
+/**
+ * A dome that follows whatever camera draws it, so the sky never parallaxes.
+ * Takes the eye's position (what `update(delta, cameraPos)` is handed by the
+ * stage and the voyage), or a camera.
+ */
+export function followCamera(dome, eye) {
+  const pos = eye?.isVector3 ? eye : eye?.position;
+  if (pos) dome.position.copy(pos);
 }
 
 /**

@@ -156,6 +156,8 @@ export function renderBridge(container) {
             <div style="border-top: 1px solid var(--border-durasteel); padding-top: 1.25rem; margin-top: 1.25rem;">
               <div class="bridge-decks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <a href="#/starmap" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Star Map</a>
+                <a href="#/contracts" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Contracts</a>
+                <a href="#/casefile" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Case File</a>
                 <a href="#/leaderboard" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Standings</a>
                 <a href="#/inventory" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Inventory</a>
                 <a href="#/quarters" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Crew</a>

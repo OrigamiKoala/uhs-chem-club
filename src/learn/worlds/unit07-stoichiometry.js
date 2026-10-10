@@ -65,6 +65,15 @@ export const UNIT_07 = {
       stageCount: 8,
       status: 'draft',
       module: null
+    },
+    {
+      id: 'boss-golem',
+      title: 'Recipe Golem',
+      line: 'An automaton bound by strict stoichiometry.',
+      arena: 'boss',
+      stageCount: 2,
+      status: 'live',
+      module: () => import('../quests/unit07/boss-golem.js')
     }
   ]
 };

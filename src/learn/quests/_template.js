@@ -1,14 +1,13 @@
 /**
  * _template.js — The contract every Learn quest game module implements.
  *
- * A Learn quest is a GAME, built the way `screens/quest.js` builds the Charge
- * Gardens: it owns its stages, its 3D scene, its inputs and its grading. The host
- * screen (`screens/learn-quest.js`) does not know what happens inside — it hands
- * you a container and a context object, and gets a disposer back.
+ * ENCOUNTER-FIRST DESIGN:
+ * Every quest is built around what the player faces (who you fight, what they hold,
+ * why the chemical move beats them). The chemistry is never an abstract math quiz;
+ * operating the instrument IS the combat move that resolves the field encounter.
  *
- * Copy this file to `src/learn/quests/<worldId>/<questId>.js`, build the game,
- * then point the quest's `module` at it in its world chart and set its `status`
- * to 'live'. Nothing else in the app needs editing.
+ * Copy this file to `src/learn/quests/<worldId>/<questId>.js`, build the encounter,
+ * point the quest's `module` at it in its world chart and set status to 'live'.
  *
  * Things the host guarantees before mount() is called:
  *   - the world and the quest are both open (gating already checked)
@@ -16,85 +15,173 @@
  *   - the HUD, router and soundscape are already running
  *
  * Things the quest must not do:
- *   - award XP. The Learn track pays none, in any module, ever. `session.addXp`
- *     is off limits here; if a quest calls it, Standings stop measuring the
- *     campaign and start measuring homework.
+ *   - award XP. The Learn track pays none, in any module, ever.
  *   - write to `session.progress` or call `api.gradeStage` / `api.completeQuest`.
- *     Those are campaign rails and they carry XP. Report progress through `ctx`.
  *   - leave the 3D stage in quest mode on dispose.
- *   - run its own practice problems. The set belongs to the WORLD; export it
- *     (see PRACTICE below) and `learn/practice.js` will show it at the end.
+ *   - run its own practice problems inline. Export `PRACTICE` and `learn/practice.js`
+ *     will show it after the world's benches are done.
  *
  * Things every stage owes the player:
- *   - a `reward` card of one to three sentences naming, in real chemical terms,
- *     the idea they just worked out. The chemistry lands in bits, after each
- *     stage, never saved up for the debrief — `verify:learn` caps it at three
- *     sentences and the cap is the point.
+ *   - an `encounter` declaration: foe species/name, objective, and chemical core.
+ *   - an objective stating the goal without prescribing the button path.
+ *   - a three-rung hint ladder: Nudge (guiding question), Narrow it down (half the field),
+ *     Show the move (method only, no answer numbers or leak words).
+ *   - refusal messages on check() that do not leak target numbers (2-20 or word forms).
+ *   - a `reward` card of 1-3 sentences naming the newly earned concept in real terms.
  */
 
-/**
- * Optional. The host reads `stageCount` from here when the module is loaded, so a
- * built quest reports its real length instead of the chart's estimate.
- */
+import { LearnFrame } from '../engine/frame.js';
+
 export const meta = {
-  stageCount: 0
+  stageCount: 8,
+  arena: 'bench' // 'bench' | 'boss'
 };
 
 /**
+ * Encounter declarations and stage data.
+ * Every stage defines who is engaged, what they hold, and why the move works.
+ */
+export const STAGES = [
+  {
+    encounter: {
+      foe: 'Salt Husk',
+      species: 'salt husk',
+      name: 'Rogue Crystalline Husk',
+      objective: 'Separate the unbonded ionic mixture before the lattice hardens.',
+      chemicalCore: 'Heterogeneous mixtures can be separated mechanically; pure compounds cannot.'
+    },
+    prompt: 'Sort each specimen into its matching category before sealing the chamber.',
+    hintLadder: [
+      { label: 'Nudge', text: 'Does this sample have uniform composition, or can you see distinct grains?' },
+      { label: 'Narrow it down', text: 'Look for multiple phases versus a single continuous chemical phase.' },
+      { label: 'Show the move', text: 'Classify single elements, fixed compounds, and physical mixtures into separate trays.' }
+    ],
+    reward: {
+      title: 'Lattice Dispersed',
+      body: 'The mixture separated cleanly. Physical mixtures yield to mechanical sorting without breaking chemical bonds.',
+      log: 'Specimen classified. The husk destabilized into inert salt grains.'
+    }
+  }
+];
+
+export const SOLUTIONS = [
+  // Graded solutions tested by verify:learn
+];
+
+export const MISSES = [
+  // Diagnosed incorrect states tested by verify:learn
+];
+
+/**
  * THE PRACTICE SET. Five problems, owed by every live quest.
- *
- * They are NOT shown at the end of this quest. `learn/practice.js` gathers every
- * live quest's set across the whole world and offers them once the last bench in
- * that unit has been worked — a quiz between a debrief and the next bench turns a
- * road into a gate. They are optional, skippable, pay nothing and gate nothing;
- * the next world opens on the last quest's completion either way.
- *
- * They are the ONE place in a quest module where the withheld vocabulary is used
- * freely: the set runs after the world's last debrief, which is where the real
- * words are introduced. A revision question that had to call an atom "a piece"
- * would be testing the fiction instead of the chemistry.
- *
- * `verify:learn` checks the count, that each answer is one of its own options,
- * that no two options read the same, and that every problem explains itself —
- * a question that is only marked wrong teaches nothing.
- *
- * @type {Array<{question: string, options: Array<{id: string, label: string}>,
- *               answer: string, explanation: string}>}
+ * Offered once the world is finished, XP-free and optional.
  */
 export const PRACTICE = [
-  // {
-  //   question: '...',
-  //   options: [{ id: 'a', label: '...' }, { id: 'b', label: '...' }, { id: 'c', label: '...' }],
-  //   answer: 'b',
-  //   explanation: 'Why b, and why not the one they picked.'
-  // },
+  {
+    id: 'p1',
+    question: 'Sample question statement describing a chemical phenomenon?',
+    options: [
+      { id: 'a', label: 'Correct chemical explanation' },
+      { id: 'b', label: 'Common misconception or distractor' },
+      { id: 'c', label: 'Alternative distractor' }
+    ],
+    answer: 'a',
+    explanation: 'Detailed explanation clarifying why choice A is chemically valid and why others fail.'
+  },
+  {
+    id: 'p2',
+    question: 'Sample question statement 2?',
+    options: [
+      { id: 'a', label: 'Distractor 1' },
+      { id: 'b', label: 'Correct chemical explanation' },
+      { id: 'c', label: 'Distractor 2' }
+    ],
+    answer: 'b',
+    explanation: 'Detailed explanation of why choice B is correct.'
+  },
+  {
+    id: 'p3',
+    question: 'Sample question statement 3?',
+    options: [
+      { id: 'a', label: 'Correct chemical explanation' },
+      { id: 'b', label: 'Distractor 1' },
+      { id: 'c', label: 'Distractor 2' }
+    ],
+    answer: 'a',
+    explanation: 'Detailed explanation of why choice A is correct.'
+  },
+  {
+    id: 'p4',
+    question: 'Sample question statement 4?',
+    options: [
+      { id: 'a', label: 'Distractor 1' },
+      { id: 'b', label: 'Correct chemical explanation' },
+      { id: 'c', label: 'Distractor 2' }
+    ],
+    answer: 'b',
+    explanation: 'Detailed explanation of why choice B is correct.'
+  },
+  {
+    id: 'p5',
+    question: 'Sample question statement 5?',
+    options: [
+      { id: 'a', label: 'Distractor 1' },
+      { id: 'b', label: 'Distractor 2' },
+      { id: 'c', label: 'Correct chemical explanation' }
+    ],
+    answer: 'c',
+    explanation: 'Detailed explanation of why choice C is correct.'
+  }
 ];
 
 /**
  * @param {HTMLElement} container empty element to render into
  * @param {{
- *   world: object,            // the world chart entry
- *   quest: object,            // the quest chart entry
- *   stagesCleared: number,    // how far this player has already got
- *   isComplete: boolean,      // quest already finished at least once
- *   reportStage: (stageIndex: number) => void,  // call on each stage cleared
- *   reportComplete: () => void,                 // call once, on the last stage
- *   exit: () => void          // return to the world screen
+ *   world: object,
+ *   quest: object,
+ *   stagesCleared: number,
+ *   isComplete: boolean,
+ *   reportStage: (stageIndex: number) => void,
+ *   reportComplete: () => void,
+ *   exit: () => void
  * }} ctx
  * @returns {{dispose: () => void}}
  */
 export function mount(container, ctx) {
-  container.innerHTML = '';
+  let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
+  let state = {};
 
-  // Build the game here. A chamber quest will typically:
-  //   const viewer = new QuestViewer(canvasHost);
-  //   viewer.loadStage(STAGES[i], 'arrow', onPayloadChange);
-  //   ...grade locally, then: ctx.reportStage(i)
-  //   ...on the final stage: ctx.reportComplete()
+  const frame = new LearnFrame(container, {
+    stageCount: STAGES.length,
+    rewards: STAGES.map(s => s.reward),
+    onSubmit: () => submit(),
+    onExit: () => ctx.exit()
+  });
+
+  function renderStage(i) {
+    index = i;
+    const stage = STAGES[i];
+    frame.setStage(i, {
+      prompt: stage.prompt,
+      hints: stage.hintLadder,
+      encounter: stage.encounter
+    });
+  }
+
+  function submit() {
+    // Check locally:
+    // const res = check(state);
+    // if (!res.ok) { frame.showError(res.reason); return; }
+    // ctx.reportStage(index);
+    // if (index === STAGES.length - 1) ctx.reportComplete();
+    // else renderStage(index + 1);
+  }
+
+  renderStage(index);
 
   return {
     dispose() {
-      // Tear down listeners, timers and any 3D resources this quest created.
+      frame.dispose();
     }
   };
 }

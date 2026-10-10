@@ -38,6 +38,15 @@ or *steric hindrance*; the Learn track's first quest teaches atom, element, mole
 compound and mixture and names none of them until the debrief. Success is a student who
 can predict what a reaction does before they can name it.
 
+**Direction (agreed 2026-10-10, mostly not yet built):** the Learn worlds become the main
+story and every bench stage becomes a fight in which the chemistry is how you win. The
+premise, the acts and the ending are in `docs/story/bible.md`; the plan and its phases are
+`docs/plans/storyline-and-combat.md`. What exists today is the **encounter layer** and two
+piloted quests (`unit01/q1-grain`, `unit02/q2-photon`). The story spine, bosses, the Case
+File and the contracts board do not exist yet and nothing may present them as if they do.
+Two roads, once built: the Learn worlds are the **story** (no XP); the campaign sectors
+become **contracts** (side jobs that pay XP exactly as now).
+
 ## Positioning
 
 A chemistry course names a concept and then asks the student to apply it. Avalon inverts
@@ -227,6 +236,9 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
    Standings; hints are free; a replay costs and earns nothing; the practice problems are
    optional, skippable and gate nothing. A study aid that held the road shut would be a
    test, and this is not one.
+   **This holds for the story too** (decision D1, kept): the main story pays no XP, so a
+   student whose class is further along cannot out-earn the guild on the study road.
+   Story rewards are ranks, plates and cosmetics, and none of them makes a stage easier.
 6. **The floor is the student who knows nothing and is holding a phone.** Low-end
    hardware and 375 px are the design target, not a degraded mode.
 7. **Nothing in the interface advertises the product.** Every string is a label, a rule,
@@ -243,6 +255,22 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
    hides the thing it is describing. At a bench built in the world the transmission docks
    down one side of the glass at a readable width, the scrim goes to a veil, and the
    instrument is aimed out from behind it.
+10. **The monster carries evidence, and the attack is the answer.** A stage that is a
+    fight must fail the deletion test: *if you can delete the monster and the stage is
+    unchanged, the combat is decoration.* So a foe's behaviour is what the bench
+    measures — a husk falls into layers because the sample settles into layers, a moth
+    sheds because the photocell says electrons leave — drawn from the instrument's own
+    planner and never authored (`verify:learn` checks it against the bench's declaration).
+    The attack is the committed answer itself, not a button that submits one worked out
+    elsewhere. The rest of the doctrine does not bend for it: the prompt still states the
+    objective and never the route; **nothing blocks a correct answer** (a right commit on
+    turn one wins, at any Integrity); scouting with the instrument is free and only a
+    committed miss costs anything; and **losing costs nothing that matters** — a
+    knock-back refills Integrity and makes the foe whole, and keeps every hint rung,
+    reading and answer. Foes are dispersed, never killed, and are named in the plainest
+    English (*salt husk*, *lamp moth*), never a coinage the player must memorise alongside
+    the chemistry. Real-time combat is rejected: it tests reflexes, fails at 375 px and
+    would block a player who knows the answer but is slow with their thumbs.
 
 ## Accessibility & Inclusion
 

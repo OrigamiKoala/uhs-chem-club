@@ -179,50 +179,153 @@ export function renderLearnWorld(container, params = {}) {
 
 /**
  * The HUD worn while walking a Learn world.
+ * Matches Erebus HUD look and positioning (bottom-left corner, easily collapsible,
+ * with popup modal for sites directory).
  */
 function renderWalkHud(container, world) {
   const prog = worldProgress(world);
+  const total = prog.liveTotal || world.questCount;
+  const isCollapsed = sessionStorage.getItem('avalon_learn_hud_collapsed') === '1';
 
   container.innerHTML = `
-    <div class="learn-walk-hud" data-world="${esc(world.id)}">
-      <div class="learn-walk-card">
-        <div class="eyebrow lit">${esc(world.unit)}</div>
+    <div class="learn-walk-hud${isCollapsed ? ' collapsed' : ''}" data-world="${esc(world.id)}">
+      <!-- Expanded HUD card (Erebus aesthetic) -->
+      <div class="learn-walk-card learn-walk-card-expanded">
+        <div class="learn-walk-header">
+          <a href="#/learn" class="btn-secondary quest-btn-sm learn-walk-back" style="text-decoration: none;">
+            ← All Worlds
+          </a>
+          <span class="eyebrow lit">${esc(world.unit.toUpperCase())}</span>
+          <button type="button" class="btn-secondary quest-btn-sm learn-walk-toggle" aria-label="Collapse HUD" title="Collapse HUD">
+            −
+          </button>
+        </div>
+
         <div class="learn-walk-name">${esc(world.world)}</div>
         <p class="learn-walk-line">${esc(world.line)}</p>
+
+        <div class="learn-walk-prog">
+          Quests: ${prog.questsComplete} of ${total} Cleared
+        </div>
+
+        <div class="learn-walk-hint">
+          WASD: Move · Drag: Look · E: Interact
+        </div>
+
         <div class="learn-walk-keys">
-          <a href="#/learn" class="btn-secondary quest-btn-sm learn-walk-back" style="text-decoration: none;">All Worlds</a>
+          <button type="button" class="btn-secondary quest-btn-sm learn-sites-trigger m-tap" id="learn-sites-trigger">
+            Sites (${prog.questsComplete}/${total})
+          </button>
           ${practiceKey(world)}
         </div>
       </div>
 
-      <div class="learn-walk-card learn-walk-sites">
-        <div class="learn-walk-sites-head">
-          <span class="eyebrow">Sites</span>
-          ${prog.liveTotal ? `<span class="tag ${prog.questsComplete >= prog.liveTotal ? 'live' : 'warn'}">${prog.questsComplete} / ${prog.liveTotal} Cleared</span>` : ''}
-        </div>
-        <ul class="learn-site-list">
-          ${world.quests.map(q => {
-            const st = questStatus(world, q);
-            const tag = STATUS_TAG[st] || STATUS_TAG.charted;
-            const qp = questProgress(q);
-            const enterable = st === 'open' || st === 'complete';
-            return `
-              <li class="learn-site-row learn-${st}">
-                <span class="learn-site-index">${String(q.index + 1).padStart(2, '0')}</span>
-                <span class="learn-site-body">
-                  <span class="learn-site-title">${esc(q.title)}</span>
-                  <span class="eyebrow learn-site-meta">
-                    ${q.stageCount ? `${q.stageCount} stages` : ''}${qp.complete ? ' · Cleared' : qp.cleared ? ` · ${qp.cleared}/${qp.total}` : ''}
+      <!-- Collapsed mini-chip -->
+      <div class="learn-walk-card learn-walk-card-collapsed">
+        <button type="button" class="btn-secondary quest-btn-sm learn-walk-expand m-tap" id="learn-walk-expand" aria-label="Expand HUD" title="Expand HUD">
+          + ${esc(world.world)} · ${prog.questsComplete}/${total}
+        </button>
+      </div>
+
+      <!-- Sites Popup Modal -->
+      <div class="learn-sites-popup-scrim hidden" id="learn-sites-popup-scrim">
+        <div class="in-world-terminal learn-sites-terminal" role="dialog" aria-modal="true" aria-labelledby="learn-sites-popup-title">
+          <div class="terminal-header">
+            <div>
+              <span class="eyebrow lit">${esc(world.unit.toUpperCase())}</span>
+              <h2 id="learn-sites-popup-title" class="section-title" style="font-size: 1.1rem; margin-top: 2px;">
+                ${esc(world.world.toUpperCase())} — EXPLORATION SITES
+              </h2>
+            </div>
+            <div style="display: flex; gap: 0.6rem; align-items: center;">
+              ${total ? `<span class="tag ${prog.questsComplete >= total ? 'live' : 'warn'}">${prog.questsComplete} / ${total} CLEARED</span>` : ''}
+              <button type="button" id="close-sites-popup-btn" class="terminal-close-btn" aria-label="Close sites panel">✕ CLOSE</button>
+            </div>
+          </div>
+
+          <p style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.85rem;">
+            Walk to any bench on ${esc(world.world)} and press [E], or select an exploration site below.
+          </p>
+
+          <ul class="learn-site-list">
+            ${world.quests.map(q => {
+              const st = questStatus(world, q);
+              const tag = STATUS_TAG[st] || STATUS_TAG.charted;
+              const qp = questProgress(q);
+              const enterable = st === 'open' || st === 'complete';
+              return `
+                <li class="learn-site-row learn-${st}">
+                  <span class="learn-site-index">${String(q.index + 1).padStart(2, '0')}</span>
+                  <span class="learn-site-body">
+                    <span class="learn-site-title">${esc(q.title)}</span>
+                    <span class="learn-site-line" style="font-size: 0.72rem; color: var(--text-secondary);">${esc(q.line)}</span>
+                    <span class="eyebrow learn-site-meta">
+                      ${q.stageCount ? `${q.stageCount} stages` : ''}${qp.complete ? ' · Cleared' : qp.cleared ? ` · ${qp.cleared}/${qp.total}` : ''}
+                    </span>
                   </span>
-                </span>
-                ${enterable
-                  ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" class="btn-primary quest-btn-sm learn-site-open" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Play'}</a>`
-                  : `<span class="tag ${tag.cls}">${tag.label}</span>`}
-              </li>
-            `;
-          }).join('')}
-        </ul>
+                  ${enterable
+                    ? `<a href="#/learn/${esc(world.id)}/${esc(q.id)}" class="btn-primary quest-btn-sm learn-site-open m-tap" style="text-decoration: none;">${qp.complete ? 'Replay' : 'Play'}</a>`
+                    : `<span class="tag ${tag.cls}">${tag.label}</span>`}
+                </li>
+              `;
+            }).join('')}
+          </ul>
+
+          ${worldHasPractice(world) ? `
+            <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-durasteel); display: flex; justify-content: space-between; align-items: center;">
+              <span class="eyebrow">WORLD PROBLEM SET</span>
+              ${practiceKey(world)}
+            </div>
+          ` : ''}
+        </div>
       </div>
     </div>
   `;
+
+  // Wire up collapsing
+  const hud = container.querySelector('.learn-walk-hud');
+  const toggleBtn = container.querySelector('.learn-walk-toggle');
+  const expandBtn = container.querySelector('#learn-walk-expand');
+
+  const setCollapsed = (collapsed) => {
+    hud?.classList.toggle('collapsed', collapsed);
+    sessionStorage.setItem('avalon_learn_hud_collapsed', collapsed ? '1' : '0');
+  };
+
+  toggleBtn?.addEventListener('click', () => setCollapsed(true));
+  expandBtn?.addEventListener('click', () => setCollapsed(false));
+
+  // Wire up popup
+  const scrim = container.querySelector('#learn-sites-popup-scrim');
+  const openSitesBtn = container.querySelector('#learn-sites-trigger');
+  const closeSitesBtn = container.querySelector('#close-sites-popup-btn');
+
+  const openSitesPopup = () => {
+    if (scrim) {
+      scrim.classList.remove('hidden');
+      closeSitesBtn?.focus?.();
+    }
+  };
+
+  const closeSitesPopup = () => {
+    if (scrim) {
+      scrim.classList.add('hidden');
+      openSitesBtn?.focus?.();
+    }
+  };
+
+  openSitesBtn?.addEventListener('click', openSitesPopup);
+  closeSitesBtn?.addEventListener('click', closeSitesPopup);
+
+  scrim?.addEventListener('click', (e) => {
+    if (e.target === scrim) closeSitesPopup();
+  });
+
+  const onKeydown = (e) => {
+    if (e.key === 'Escape' && scrim && !scrim.classList.contains('hidden')) {
+      closeSitesPopup();
+    }
+  };
+  window.addEventListener('keydown', onKeydown);
+  window.addEventListener('hashchange', () => window.removeEventListener('keydown', onKeydown), { once: true });
 }

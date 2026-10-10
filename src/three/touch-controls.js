@@ -30,7 +30,8 @@ const BLOCKING = [
   '.cinematic-overlay',
   '.screen-container',
   '.lq',
-  '.quest-hud-overlay'
+  '.quest-hud-overlay',
+  '.learn-sites-popup-scrim'
 ].join(',');
 
 export class TouchControls {
