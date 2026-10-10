@@ -2548,3 +2548,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **Contracts (`src/story/quest1.js`, `src/screens/contracts.js` at `#/contracts`):** Erebus reframed as contract with posting metadata; Stage 20 awards `clue_erebus_mark`. Contract Board screen with live and sealed postings. Star Map tabs renamed to `Story` and `Contracts`.
 - **Encounter-First Design:** `src/learn/quests/_template.js` and `docs/plans/learn-quests.md` scaffolded with encounter declarations (foe, objective, chemical core).
 - **Story Verifier (`tools/verify-story.mjs`):** Enforces act sequence, clue integrity, spine beat order, sentence caps, and boss clue awards via `npm run verify:story` in `npm run verify`.
+
+### 12. Learn Overworld 2D Overlay
+- **Format (`src/styles/learn.css`, `src/learn/engine/frame.js`):** Deployed overworld learn stages use Erebus-matching bottom-left card (`.learn-quest-overworld .lq-body`) and dock bar (`.lq-dock-bar`). Direct flex flow for prompt, widget (`.choice-option.lq-bin-key`, number steppers, sorting bins), readouts, and actions (`Commit` and `Hint`). Bench-mirrored controls hide when unfocused. Initial load camera alignment avoids camera flip or flash.
+

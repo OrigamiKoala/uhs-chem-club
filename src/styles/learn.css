@@ -1726,53 +1726,229 @@
   border-radius: 2px !important;
 }
 
-.learn-quest-overworld .lq-controls:empty {
+.learn-quest-overworld .lq-controls:empty,
+.learn-quest-overworld .lq-controls.lq-keys-on-bench:not(:focus-within) {
   display: none !important;
 }
 
 /* Deck content inside card */
 .learn-quest-overworld .lq-deck {
-  background: none !important;
+  background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
   margin: 0 !important;
   max-height: none !important;
+  height: auto !important;
+  min-height: auto !important;
   position: static !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.5rem !important;
-}
-
-.learn-quest-overworld .lq-prompt {
-  font-size: 0.88rem !important;
-  line-height: 1.45 !important;
-  color: var(--text-bright) !important;
-  margin-bottom: 0.3rem !important;
-  padding: 0 !important;
-}
-
-.learn-quest-overworld .lq-deck-body {
-  padding: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 0.5rem !important;
+  gap: 0.6rem !important;
+  width: 100% !important;
+  flex: none !important;
   overflow: visible !important;
 }
 
-.learn-quest-overworld .lq-deck-foot {
+.learn-quest-overworld .lq-prompt {
+  display: block !important;
+  font-size: 0.88rem !important;
+  line-height: 1.45 !important;
+  color: var(--text-bright) !important;
+  margin: 0 0 0.25rem 0 !important;
   padding: 0 !important;
+  border: none !important;
+  flex: none !important;
+}
+
+.learn-quest-overworld .lq-prompt-body {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 0.88rem !important;
+  line-height: 1.45 !important;
+  color: var(--text-bright) !important;
+}
+
+.learn-quest-overworld .lq-deck-body {
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.4rem !important;
-  margin-top: 0.4rem !important;
+  gap: 0.6rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  overflow: visible !important;
+  flex: none !important;
+  height: auto !important;
+  min-height: auto !important;
+}
+
+.learn-quest-overworld .lq-readout:empty {
+  display: none !important;
+}
+
+.learn-quest-overworld .lq-readout-card {
+  padding: 0.5rem 0.75rem !important;
+  background: var(--plate-100) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-radius: 2px !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.learn-quest-overworld .lq-readout-head {
+  font-family: var(--font-mono) !important;
+  font-size: 0.68rem !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--text-secondary) !important;
+  margin-bottom: 0.2rem !important;
+}
+
+.learn-quest-overworld .lq-readout-line {
+  margin: 0 !important;
+  font-size: 0.84rem !important;
+  line-height: 1.4 !important;
+  color: var(--text-primary) !important;
+}
+
+.learn-quest-overworld .lq-widget {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  flex: none !important;
+}
+
+.learn-quest-overworld .lq-widget:empty {
+  display: none !important;
+}
+
+.learn-quest-overworld .lq-answer {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.45rem !important;
+  width: 100% !important;
+}
+
+.learn-quest-overworld .lq-answer .form-label {
+  font-family: var(--font-mono) !important;
+  font-size: 0.72rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  color: var(--text-secondary) !important;
+  margin-bottom: 0.15rem !important;
+}
+
+.learn-quest-overworld .lq-bin-keys {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.35rem !important;
+  width: 100% !important;
+}
+
+.learn-quest-overworld .choice-option.lq-bin-key {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  width: 100% !important;
+  min-height: 44px !important;
+  padding: 8px 12px !important;
+  background: var(--plate-300) !important;
+  border: 1px solid var(--border-durasteel) !important;
+  border-left: 3px solid var(--plate-500) !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  box-shadow: inset 0 1px 0 var(--seam-light), inset 0 -1px 0 var(--seam-dark) !important;
+  transition: background 0.13s ease, border-color 0.13s ease !important;
+}
+
+.learn-quest-overworld .choice-option.lq-bin-key:hover {
+  background: var(--plate-400) !important;
+  color: var(--text-bright) !important;
+}
+
+.learn-quest-overworld .choice-option.lq-bin-key.selected {
+  background: var(--plate-100) !important;
+  border-color: rgba(217, 148, 35, 0.4) !important;
+  border-left-color: var(--accent-amber) !important;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6) !important;
+}
+
+.learn-quest-overworld .choice-option.lq-bin-key .lq-bin-label {
+  font-size: 0.88rem !important;
+  line-height: 1.4 !important;
+  color: inherit !important;
+}
+
+.learn-quest-overworld .choice-option.lq-bin-key.selected .lq-bin-label {
+  color: var(--text-amber) !important;
+}
+
+.learn-quest-overworld .lq-number {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.learn-quest-overworld .lq-number-value {
+  font-family: var(--font-mono) !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  color: var(--text-bright) !important;
+  min-width: 3rem !important;
+  text-align: center !important;
+}
+
+.learn-quest-overworld .lq-bins {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+}
+
+.learn-quest-overworld .lq-bin-row {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.35rem !important;
+}
+
+.learn-quest-overworld .lq-bin-sample {
+  font-family: var(--font-mono) !important;
+  font-size: 0.78rem !important;
+  color: var(--text-secondary) !important;
+}
+
+.learn-quest-overworld .lq-deck-foot {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.45rem !important;
+  flex: none !important;
+  padding: 0 !important;
+  margin-top: 0.45rem !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.learn-quest-overworld .lq-banner:empty {
+  display: none !important;
 }
 
 .learn-quest-overworld .lq-actions {
   display: flex !important;
-  justify-content: flex-end !important;
-  gap: 0.5rem !important;
   align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 0.6rem !important;
+  width: 100% !important;
+}
+
+.learn-quest-overworld .lq-actions .lq-commit {
+  flex: 1 !important;
+  min-height: 38px !important;
+}
+
+.learn-quest-overworld .lq-actions .lq-hint-key {
+  min-height: 38px !important;
 }
 
 /* Bottom-left dock bar — matches Erebus stage-dock-bar */

@@ -458,7 +458,7 @@ export class LearnFrame {
   }
 
   deployPanels() {
-    if (benchesAre3D()) return;
+    if (benchesAre3D() || this.container.closest?.('.learn-quest-overworld')) return;
     let deployment = null;
     try {
       deployment = benchDeployment();
