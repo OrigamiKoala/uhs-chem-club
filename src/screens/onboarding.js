@@ -14,6 +14,7 @@ import { playCinematic } from '../ui/cinematic.js';
 import { soundscape } from '../audio/soundscape.js';
 import { TRINKETS, getTrinketForRoll, getDeterministicRoll } from '../story/trinkets.js';
 import { createTransmissionElement } from '../ui/transmission.js';
+import { CAMPAIGN_STORY } from '../story/saga.js';
 
 const TEAM_INFO = {
   earth: {
@@ -602,70 +603,20 @@ export async function renderOnboarding(container) {
     }
 
     const activeMeta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
-    let currentSlide = 0;
+    let currentPara = 0;
 
-    const SLIDES = [
+    const PARAGRAPHS = [
       {
-        kicker: '01 / 04 · THE QUAD-GUILD ALLIANCE',
-        title: 'Four Monopolies on the Frontier',
-        speaker: 'VESS // QUARTERMASTER',
-        badge: `${activeMeta.mark} · CREW LOGISTICS`,
-        transmission: 'Four industrial Guilds divide the frontier. Your ship, the Avalon, operates between them under a shared peace treaty.',
-        bullets: [
-          { label: 'Mineral Mining (Earth)', desc: 'Strip-mines iron, heavy metals, and asteroid rock from barren planetary crusts.' },
-          { label: 'Atmospheric Harvesters (Air)', desc: 'Skims high-altitude storm clouds and gas giants for volatile starship fuels.' },
-          { label: 'Thermal Smelters (Fire)', desc: 'Operates orbital crucibles and blast-wells that melt raw stone into battle armor.' },
-          { label: 'Moisture Extraction (Water)', desc: 'Filters heavy water and industrial coolants from subterranean ice reserves.' }
-        ],
-        note: `Assigned Guild: You have signed on with ${activeMeta.guild} (${activeMeta.title}). Your station is aboard the salvage hauler Avalon, answering to Quartermaster Vess.`
+        speaker: `${activeMeta.guild.toUpperCase()} // CREW MANIFEST`,
+        text: `The hull plates of the Avalon groan with every orbital burn. You signed on under the ${activeMeta.guild} charter, but out here past the charted lanes, treaties are as brittle as cold glass. Four monopolies carve up the rim—and we survive on what they discard.`
       },
-      {
-        kicker: '02 / 04 · THE ENEMY: THE FIFTH GUILD',
-        title: 'Rogue Raiders & Sabotage',
-        speaker: 'VESS // QUARTERMASTER',
-        badge: 'SCENE 04 · ENEMY REPORT',
-        transmission: 'A hostile shadow faction has struck outposts across the rim. Frontier crews call them the Fifth Guild.',
-        bullets: [
-          { label: 'Coordinated Raids', desc: 'The Fifth Guild is attacking frontier outposts, raiding fuel supplies, and destroying defenses.' },
-          { label: 'Rogue War Machines', desc: 'They deploy autonomous crawling war machines made from scrap and salt to guard their sabotage.' },
-          { label: 'Impossible Ledgers', desc: 'Captured enemy logs claim they can create tons of metal out of thin air using magical alchemy.' },
-          { label: 'The Dangerous Reality', desc: 'Alchemy is a lie. The Fifth Guild is secretly restructuring atomic nuclei with stolen military hardware.' }
-        ],
-        note: 'Enemy Alert: The Fifth Guild is actively terrorizing the frontier. We must expose their operations and protect the fleet.'
-      },
-      {
-        kicker: '03 / 04 · YOUR WEAPON: SCIENCE',
-        title: 'Dismantling Enemy Machines',
-        speaker: 'VESS // QUARTERMASTER',
-        badge: 'SCENE 04 · COMBAT DOCTRINE',
-        transmission: 'You do not fight with clumsy blasters. You defeat the Fifth Guild by understanding how matter and energy actually work.',
-        bullets: [
-          { label: 'Exposing Their Frauds', desc: 'The law of conservation proves matter cannot be made from nothing. Every enemy machine has a physical flaw.' },
-          { label: 'Crushing Enemy Armor', desc: 'Understanding bond strength and crystal cleave planes lets you shatter enemy stone golems and barricades.' },
-          { label: 'Disabling Enemy Traps', desc: 'Tuning light frequencies and electrical circuits burns out their spy drones, power leeches, and light-moths.' },
-          { label: 'The Case File Dossier', desc: 'Every defeated enemy commander and reclaimed station yields physical intel stored in your terminal.' }
-        ],
-        note: 'Mission Directive: Deploy to each attacked world, dismantle the Fifth Guild\'s machines, and collect evidence.'
-      },
-      {
-        kicker: '04 / 04 · THE CAMPAIGN ROAD',
-        title: 'Stop the Fifth Guild\'s Superweapon',
-        speaker: 'VESS // QUARTERMASTER',
-        badge: 'SCENE 04 · DISPATCH',
-        transmission: 'Four acts across fourteen worlds. Trace the Fifth Guild\'s trail of sabotage to their secret command core on Cinder Halo.',
-        bullets: [
-          { label: 'Act I: Strike on the Frontier (Units 1–3)', desc: 'Defend Tallow, Lanternfall, and Ligar against sudden raids and autonomous stone war machines.' },
-          { label: 'Act II: Stolen Power (Units 4–7)', desc: 'Stop hijacked gas skimmers, recover stolen heat energy, and seize an illegal golem factory.' },
-          { label: 'Act III: Total Sabotage (Units 8–11)', desc: 'Neutralize acid weapons, fix sabotaged reactors, and unmask the enemy commander: The Catalyst.' },
-          { label: 'Act IV: The Doomsday Core (Units 12–14)', desc: 'Destroy enemy magnetic beam-cannons, breach their swamp fortress, and shut down their nuclear superweapon on Cinder Halo.' }
-        ],
-        note: 'Final Objective: Master the laws of chemistry to defeat the Fifth Guild, protect the colonies, and uncover the truth behind the war.'
-      }
+      ...CAMPAIGN_STORY.slice(1)
     ];
 
     function renderSlideHtml() {
-      const slide = SLIDES[currentSlide];
-      const isLast = currentSlide === SLIDES.length - 1;
+      const item = PARAGRAPHS[currentPara];
+      const isLast = currentPara === PARAGRAPHS.length - 1;
+      const total = PARAGRAPHS.length;
 
       return `
         <div class="screen-container m-screen m-onboarding m-storyline" style="max-width: 720px;">
@@ -678,56 +629,69 @@ export async function renderOnboarding(container) {
 
           <div class="glass-panel" style="padding: 1.25rem;">
             <!-- Header -->
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.4rem;">
-              <span class="eyebrow lit" style="color: var(--accent-gold);">${esc(slide.kicker)}</span>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.5rem;">
+              <span class="eyebrow lit" style="color: var(--accent-gold);">SCENE 04 · CREW ORIENTATION</span>
               <h2 style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; text-transform: uppercase; color: var(--text-bright); margin: 0;">
-                ${esc(slide.title)}
+                The Avalon & The Rim
               </h2>
             </div>
 
-            <!-- Transmission Slot -->
-            <div id="story-onboarding-transmission-slot" style="margin-bottom: 0.85rem;"></div>
-
-            <!-- Content Cards -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.55rem; margin-bottom: 0.85rem;">
-              ${slide.bullets.map(b => `
-                <div class="holo-card" style="padding: 0.65rem 0.8rem; background: var(--plate-200); border: 1px solid var(--border-durasteel);">
-                  <div style="font-family: var(--font-display); font-size: 0.76rem; font-weight: 700; color: var(--accent-amber); margin-bottom: 0.15rem; text-transform: uppercase;">
-                    ${esc(b.label)}
+            <!-- Novelistic Story Card (Paragraph Form) -->
+            <div class="story-novel-box" id="onboarding-story-box-interactive" role="button" tabindex="0" title="Click or press Space to advance">
+              <div>
+                <div class="story-novel-header">
+                  <div class="story-novel-speaker">
+                    <span style="display: inline-block; width: 6px; height: 6px; background: var(--accent-gold); border-radius: 50%; box-shadow: 0 0 6px var(--accent-gold);"></span>
+                    ${esc(item.speaker)}
                   </div>
-                  <div style="font-family: var(--font-sans); font-size: 0.78rem; line-height: 1.35; color: var(--text-bright);">
-                    ${esc(b.desc)}
+                  <div class="story-novel-step-badge">
+                    ${currentPara + 1} / ${total}
                   </div>
                 </div>
-              `).join('')}
-            </div>
 
-            <!-- Note Box -->
-            <div class="holo-card" style="padding: 0.6rem 0.85rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-gold); margin-bottom: 1rem;">
-              <div style="font-family: var(--font-mono); font-size: 0.74rem; line-height: 1.4; color: var(--text-bright);">
-                ⚡ ${esc(slide.note)}
+                <p class="story-novel-text">
+                  ${esc(item.text)}
+                </p>
+              </div>
+
+              <div>
+                <div class="story-novel-footer">
+                  <div class="story-novel-dots">
+                    ${Array.from({ length: total }, (_, i) => `
+                      <span class="story-novel-dot ${i === currentPara ? 'active' : ''}"></span>
+                    `).join('')}
+                  </div>
+                  <div class="story-novel-hint">
+                    ${isLast ? 'FINAL LOG · ORDERS CONFIRMED' : 'CLICK OR PRESS SPACE TO ADVANCE ▶'}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Slide Navigation Footer -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-durasteel); padding-top: 0.75rem;">
-              <!-- Slide Pips -->
-              <div style="display: flex; gap: 0.4rem; align-items: center;">
-                ${SLIDES.map((_, i) => `
-                  <span style="display: inline-block; width: ${i === currentSlide ? '22px' : '8px'}; height: 6px; background: ${i === currentSlide ? 'var(--accent-amber)' : 'var(--border-durasteel)'}; transition: all 0.2s ease;"></span>
-                `).join('')}
+            <!-- Navigation Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-durasteel); padding-top: 0.85rem; margin-top: 1.15rem;">
+              <div>
+                ${currentPara > 0 ? `
+                  <button type="button" id="story-slide-prev-btn" class="btn-secondary" style="padding: 7px 14px; font-size: 0.8rem;">
+                    ◀ Back
+                  </button>
+                ` : `
+                  <div style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);">
+                    HAULER AVALON // CREW DISPATCH
+                  </div>
+                `}
               </div>
 
               <div style="display: flex; gap: 0.5rem; align-items: center;">
-                ${currentSlide > 0 ? `
-                  <button type="button" id="story-slide-prev-btn" class="btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">
-                    ◀ Back
+                ${!isLast ? `
+                  <button type="button" id="story-slide-next-btn" class="btn-primary" style="padding: 8px 18px; font-size: 0.85rem; letter-spacing: 0.08em;">
+                    Continue ▶
                   </button>
-                ` : ''}
-
-                <button type="button" id="story-slide-next-btn" class="btn-primary" style="padding: 6px 18px; font-size: 0.8rem; letter-spacing: 0.08em;">
-                  ${isLast ? 'Acknowledge Orders & Disembark ▶' : 'Next Briefing ▶'}
-                </button>
+                ` : `
+                  <button type="button" id="story-slide-next-btn" class="btn-primary" style="padding: 8px 20px; font-size: 0.85rem; letter-spacing: 0.08em; background: var(--accent-gold); color: #000; font-weight: 700;">
+                    Acknowledge Orders & Disembark ▶
+                  </button>
+                `}
               </div>
             </div>
           </div>
@@ -735,62 +699,74 @@ export async function renderOnboarding(container) {
       `;
     }
 
-    function updateSlide() {
-      container.innerHTML = renderSlideHtml();
-      mountSlideTransmission();
-      bindSlideEvents();
+    function advance() {
+      if (currentPara < PARAGRAPHS.length - 1) {
+        currentPara++;
+        soundscape.playToggleClack();
+        updateSlide();
+      } else {
+        soundscape.playBondSnap();
+        window.removeEventListener('keydown', handleKeyDown);
+        commitLaunch();
+      }
     }
 
-    function mountSlideTransmission() {
-      const slot = container.querySelector('#story-onboarding-transmission-slot');
-      if (!slot) return;
-      if (activeTransmission?.destroy) activeTransmission.destroy();
+    function regress() {
+      if (currentPara > 0) {
+        currentPara--;
+        soundscape.playToggleClack();
+        updateSlide();
+      }
+    }
 
-      const slide = SLIDES[currentSlide];
-      activeTransmission = createTransmissionElement({
-        speaker: slide.speaker,
-        badge: slide.badge,
-        subtitle: 'STATION: SALVAGE HAULER AVALON // CREW BRIEFING',
-        text: slide.transmission,
-        accentColor: activeMeta.accent || 'var(--accent-amber)',
-        speed: 'normal'
-      });
-      slot.innerHTML = '';
-      slot.appendChild(activeTransmission.element);
+    function handleKeyDown(e) {
+      if (e.target && ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      if (e.code === 'Space' || e.code === 'ArrowRight' || e.code === 'Enter') {
+        e.preventDefault();
+        advance();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        regress();
+      }
+    }
+
+    function updateSlide() {
+      container.innerHTML = renderSlideHtml();
+      bindSlideEvents();
     }
 
     function bindSlideEvents() {
       container.querySelector('#skip-to-bridge-btn-4')?.addEventListener('click', () => {
         soundscape.playToggleClack();
+        window.removeEventListener('keydown', handleKeyDown);
         commitLaunch();
       });
 
       container.querySelector('#story-slide-prev-btn')?.addEventListener('click', () => {
-        if (currentSlide > 0) {
-          currentSlide--;
-          soundscape.playToggleClack();
-          updateSlide();
-        }
+        regress();
       });
 
       container.querySelector('#story-slide-next-btn')?.addEventListener('click', () => {
-        if (currentSlide < SLIDES.length - 1) {
-          currentSlide++;
-          soundscape.playToggleClack();
-          updateSlide();
-        } else {
-          soundscape.playBondSnap();
-          commitLaunch();
-        }
+        advance();
+      });
+
+      container.querySelector('#onboarding-story-box-interactive')?.addEventListener('click', () => {
+        advance();
       });
     }
 
+    if (scene4KeyDown) window.removeEventListener('keydown', scene4KeyDown);
+    scene4KeyDown = handleKeyDown;
+    window.addEventListener('keydown', scene4KeyDown);
     updateSlide();
   }
+
+  let scene4KeyDown = null;
 
   // Cleanup active transmission when navigating away
   const onRouteCleanup = () => {
     if (activeTransmission?.destroy) activeTransmission.destroy();
+    if (scene4KeyDown) window.removeEventListener('keydown', scene4KeyDown);
     window.removeEventListener('hashchange', onRouteCleanup);
   };
   window.addEventListener('hashchange', onRouteCleanup);

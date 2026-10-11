@@ -1151,3 +1151,116 @@ body::after {
   transform: translateY(-1px);
 }
 
+/* Video-game Novelistic Story Cards */
+.story-novel-box {
+  background: radial-gradient(circle at 50% 0%, rgba(20, 32, 48, 0.65), rgba(7, 12, 18, 0.9));
+  border: 1px solid var(--border-durasteel);
+  border-left: 3px solid var(--accent-gold);
+  border-radius: 4px;
+  padding: 1.35rem 1.45rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 0 35px rgba(0, 229, 255, 0.03);
+  position: relative;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.story-novel-box:hover {
+  border-color: rgba(217, 148, 35, 0.6);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), inset 0 0 40px rgba(217, 148, 35, 0.06);
+}
+
+.story-novel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.story-novel-speaker {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.story-novel-step-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.story-novel-text {
+  font-family: var(--font-sans);
+  font-size: 1.04rem;
+  line-height: 1.65;
+  color: var(--text-bright);
+  margin: 0 0 1rem 0;
+  animation: storyFadeIn 0.22s ease-out;
+}
+
+@keyframes storyFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.story-novel-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.07);
+}
+
+.story-novel-hint {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  opacity: 0.8;
+}
+
+.story-novel-dots {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.story-novel-dot {
+  display: inline-block;
+  height: 5px;
+  background: var(--border-durasteel);
+  border-radius: 1px;
+  transition: all 0.2s ease;
+}
+
+.story-novel-dot.active {
+  background: var(--accent-gold);
+  width: 22px;
+}
+
+.story-novel-dot:not(.active) {
+  width: 8px;
+}
+
