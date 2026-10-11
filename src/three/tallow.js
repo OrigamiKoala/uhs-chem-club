@@ -82,6 +82,9 @@ import { iBeamGeometry, corrugatedGeometry } from './tallow/kit.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
 
+/** How far (m) the player walks before the sun's shadow box follows them. */
+const SHADOW_FOLLOW_STEP = 2;
+
 /** Sodium filament, from inside a thing. The one warm colour on the flat. */
 const SODIUM = 0xd99423;
 
@@ -2655,7 +2658,7 @@ export class TallowWorld {
     if (cameraPos) {
       // A deployed instrument moves (jaws close, pieces fall), so its
       // shadow is drawn every frame; otherwise only when the box moves.
-      const moved = followTallowShadow(this.sunLight, cameraPos);
+      const moved = followTallowShadow(this.sunLight, cameraPos, SHADOW_FOLLOW_STEP);
       paceShadow(this.sunLight, moved, { live: this.benchesOpen > 0 });
       if (this.renderer?.getDrawingBufferSize) {
         this._buf = this._buf || new THREE.Vector2();

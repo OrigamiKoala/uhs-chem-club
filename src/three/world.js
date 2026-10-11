@@ -50,6 +50,9 @@ import { buildLandmark } from "./erebus/landmarks.js";
 import { buildVista } from "./erebus/vista.js";
 import { createEffects } from "./erebus/effects.js";
 
+/** How far (m) the player walks before the sun's shadow box follows them. */
+const SHADOW_FOLLOW_STEP = 2;
+
 export class WorldScene {
   constructor(renderer) {
     this.renderer = renderer;
@@ -476,7 +479,7 @@ export class WorldScene {
     if (cameraPosition) {
       // Every other frame while the player stands still: nothing on the basin
       // moves but the operator's console, which rides on the camera.
-      paceShadow(this.sunLight, followShadow(this.sunLight, cameraPosition), { every: 2 });
+      paceShadow(this.sunLight, followShadow(this.sunLight, cameraPosition, SHADOW_FOLLOW_STEP), { every: 2 });
       this.effects?.update(delta, this.time, cameraPosition);
       this.lampPool.update(cameraPosition);
     }

@@ -25,6 +25,7 @@
 
 import * as THREE from 'three';
 import { createPlanetMaterial, createRingMaterial } from '../materials/celestial.js';
+import { SKY_RENDER_ORDER } from '../sky-order.js';
 
 const EL = THREE.MathUtils.degToRad(17);
 const AZ = THREE.MathUtils.degToRad(29);
@@ -164,7 +165,7 @@ export function createSkyDome(radius = 900) {
         vDir = position;
         vec4 wp = vec4(cameraPosition + position, 1.0);
         gl_Position = projectionMatrix * viewMatrix * wp;
-        gl_Position.z = gl_Position.w * 0.99999;
+        gl_Position.z = gl_Position.w * 0.999999;
       }
     `,
     fragmentShader: /* glsl */ `
@@ -183,7 +184,13 @@ export function createSkyDome(radius = 900) {
   });
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 48, 32), mat);
   mesh.frustumCulled = false;
-  mesh.renderOrder = -10;
+  // DRAWN LAST OF THE OPAQUES, NOT FIRST. The dome sits at the far plane and
+  // depth-tests, so drawn after the ground it is shaded only on the pixels
+  // nothing else covered; drawn first (it was -10) its whole shader ran under
+  // every pixel of terrain that then painted over it. Every opaque body in the
+  // world writes depth, so the picture is unchanged. The bodies in the sky are
+  // opaque and draw before it, which rejects it on their pixels the same way.
+  mesh.renderOrder = SKY_RENDER_ORDER;
   mesh.name = 'erebus-sky';
   // A sky is the world's backdrop, not an object standing in it.
   mesh.userData.phys = 'ambient';
@@ -379,15 +386,19 @@ const _right = new THREE.Vector3(0, 1, 0).cross(EREBUS_SUN).normalize();
 const _up = EREBUS_SUN.clone().cross(_right).normalize();
 const _snapped = new THREE.Vector3();
 
-export function followShadow(sun, focus) {
+export function followShadow(sun, focus, step = 0) {
   if (!sun.castShadow) return false;
   const cam = sun.shadow.camera;
   const texel = (cam.right - cam.left) / sun.shadow.mapSize.x;
   // Snap in the light's own frame; along the light, coarsely (the camera's
   // near/far span has metres of slack). Returns true when the box moved.
   const L = EREBUS_SUN;
-  const a = Math.round(focus.dot(_right) / texel) * texel;
-  const b = Math.round(focus.dot(_up) / texel) * texel;
+  // `step` metres between moves, rounded to whole texels so nothing swims.
+  // At one texel (5 cm) the box moved on every frame of a walk, and every move
+  // is a full re-draw of every caster into the 2048 map.
+  const q = Math.max(1, Math.round(step / texel)) * texel;
+  const a = Math.round(focus.dot(_right) / q) * q;
+  const b = Math.round(focus.dot(_up) / q) * q;
   const c = Math.round(focus.dot(L) / 0.5) * 0.5;
   _snapped.copy(_right).multiplyScalar(a).addScaledVector(_up, b).addScaledVector(L, c);
   if (_snapped.equals(sun.target.position)) return false;

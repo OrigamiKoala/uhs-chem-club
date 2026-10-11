@@ -28,6 +28,7 @@
 
 import * as THREE from 'three';
 import { createPlanetMaterial } from '../materials/celestial.js';
+import { SKY_RENDER_ORDER } from '../sky-order.js';
 
 const EL = THREE.MathUtils.degToRad(11);
 const AZ = THREE.MathUtils.degToRad(149);
@@ -328,7 +329,7 @@ export function createLigarSkyDome(radius = 900) {
         vDir = position;
         vec4 wp = vec4(cameraPosition + position, 1.0);
         gl_Position = projectionMatrix * viewMatrix * wp;
-        gl_Position.z = gl_Position.w * 0.99999;
+        gl_Position.z = gl_Position.w * 0.999999;
       }
     `,
     fragmentShader: /* glsl */ `
@@ -346,7 +347,13 @@ export function createLigarSkyDome(radius = 900) {
   });
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 64, 40), mat);
   mesh.frustumCulled = false;
-  mesh.renderOrder = -10;
+  // DRAWN LAST OF THE OPAQUES, NOT FIRST. The dome sits at the far plane and
+  // depth-tests, so drawn after the ground it is shaded only on the pixels
+  // nothing else covered; drawn first (it was -10) its whole shader ran under
+  // every pixel of terrain that then painted over it. Every opaque body in the
+  // world writes depth, so the picture is unchanged. The bodies in the sky are
+  // opaque and draw before it, which rejects it on their pixels the same way.
+  mesh.renderOrder = SKY_RENDER_ORDER;
   mesh.name = 'ligar-sky';
   mesh.userData.phys = 'ambient';
   mesh.userData.noMerge = true;

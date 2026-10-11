@@ -45,6 +45,11 @@ const LANTERNFALL_EXPOSURE = 1.12;
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
 
+/** The frame budget every scene here was built to (see `skipRefresh`). */
+const FRAME_MS = 1000 / 60;
+/** A refresh this close to due is drawn: vsync timestamps jitter. */
+const FRAME_SLACK_MS = 2;
+
 /**
  * The bridge directory board, as `ship.js` builds it: a 1.8 x 1.0125 m plate
  * hung at eye level 1.4 m in front of where a player stands on the bridge.
@@ -1311,8 +1316,30 @@ class Stage {
     }
   }
 
+  /**
+   * HELD TO 60 FRAMES A SECOND, WHATEVER THE GLASS REFRESHES AT. The animation
+   * loop fires on every refresh of the display, and a ProMotion or gaming
+   * panel refreshes at 120 Hz or more: every world, shadow pace and light pool
+   * here was budgeted for 60, and drawing each one twice as often is what
+   * heated a laptop without making a walk any steadier. So a refresh that
+   * comes before the next sixtieth is skipped outright (nothing is updated,
+   * and the clock's delta simply spans the two refreshes). The cadence is
+   * kept against a due time rather than the last frame, so a 90 Hz panel
+   * still averages 60; a 60 Hz panel never skips; and a machine that cannot
+   * reach 60 is never held back further, because a frame later than due is
+   * drawn at once and the schedule restarts from it.
+   */
+  skipRefresh(now) {
+    if (!(now > 0)) return false;
+    const due = this._frameDue;
+    if (due !== undefined && now < due - FRAME_SLACK_MS) return true;
+    this._frameDue = due === undefined || now - due > FRAME_MS ? now + FRAME_MS : due + FRAME_MS;
+    return false;
+  }
+
   render(now) {
     if (this.isPaused || !this.renderer) return;
+    if (this.skipRefresh(now)) return;
 
     tierManager.recordFrame(now);
     // The chest lamp is the ship's. Carried into a world with the camera it

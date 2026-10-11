@@ -1733,8 +1733,10 @@ DOM shim): Tallow went from 914 meshes (325 shadow casters, 5 point lights) to
   Erebus pylons are baked as ONE `pylon-ring` (each pylon group keeps only its
   lamp, number and hazard paint); their luminaires share one material set.
 - **The sun does not move, so its shadow map is re-drawn only when something
-  does** (`three/shadow-pace.js`). `followShadow` / `followTallowShadow` return
-  whether the texel-snapped box moved; `paceShadow` re-draws on a move, while a
+  does** (`three/shadow-pace.js`). `followShadow` / `followTallowShadow` (like
+  Ligar's and Lanternfall's) move the box in `SHADOW_FOLLOW_STEP` (2 m) steps,
+  still whole texels, and return whether it moved — at one-texel steps a walk
+  re-drew every caster on every frame; `paceShadow` re-draws on a move, while a
   Tallow bench is deployed (its jaws and pieces cast), and otherwise one frame in
   three (Tallow) or two (Erebus, whose chamber console rides on the camera).
   `holdShadowUntilAsked` puts `autoUpdate` back after every render of the scene,
@@ -1750,6 +1752,24 @@ DOM shim): Tallow went from 914 meshes (325 shadow casters, 5 point lights) to
   within a third of a degree of the horizon, where its coverage is zero (Erebus)
   or under a thousandth (Tallow) — which is where the mirror flats and the mirage
   look.
+- **The sky is drawn LAST of the opaques, not first** (`three/sky-order.js`,
+  `SKY_RENDER_ORDER`). Every dome is pinned to the far plane (`0.999999 w`) and
+  writes no depth; at `renderOrder -10` its shader — the most expensive in each
+  world — ran under the whole screen and was then painted over below the
+  horizon. Drawn after everything that writes depth, early-z rejects it wherever
+  the ground, the plant or a moon already stands. The picture is unchanged
+  because every opaque body in a world writes depth (the one exception, Erebus's
+  shadow-only caster, is on a layer the eye never draws) and the rings and
+  atmosphere shells are transparent, so they draw after it either way. A new
+  opaque material with `depthWrite: false` in a world WOULD be painted over by
+  the sky; make it transparent. The ship's gas giant is likewise drawn after the
+  hull (`renderOrder 1`).
+- **The loop is held to 60 frames a second** (`stage.skipRefresh`). The
+  animation loop fires on every display refresh, so a 120 Hz ProMotion panel
+  drew every scene twice as often as anything here was budgeted for, heating
+  the machine for no steadier a walk. A refresh earlier than the next sixtieth
+  (against a due time, 2 ms slack) returns before anything is updated; a 60 Hz
+  panel never skips, and a frame later than due is drawn at once.
 - **Rejected as too visible:** a coarser terrain grid (the rectilinear tails give
   the cardinal horizons their fine ridgelines), fewer sky-noise octaves, a smaller
   shadow map or PCF instead of PCFSoft, and merging the vista (half of it is

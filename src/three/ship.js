@@ -215,6 +215,10 @@ export class ShipInterior {
         octaves: 4
       })
     );
+    // After the hull, so the plating that hides most of it from most of the
+    // ship rejects its noise shader at the depth test instead of being drawn
+    // over it. It is opaque and writes depth, so the order changes nothing seen.
+    giant.renderOrder = 1;
     const giantFrame = new THREE.Group();
     giantFrame.position.copy(giantCenter);
     giantFrame.rotation.set(0.32, 0, 0.3);

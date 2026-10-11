@@ -22,6 +22,7 @@
  */
 
 import * as THREE from 'three';
+import { SKY_RENDER_ORDER } from '../sky-order.js';
 
 export const LFSKY = {
   zenith: new THREE.Color('#040716'),
@@ -130,7 +131,7 @@ export function createLfSkyDome(radius = 900) {
         vDir = position;
         vec4 p = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * p;
-        gl_Position.z = gl_Position.w;
+        gl_Position.z = gl_Position.w * 0.999999;
       }
     `,
     fragmentShader: /* glsl */ `
@@ -147,7 +148,13 @@ export function createLfSkyDome(radius = 900) {
   const dome = new THREE.Mesh(new THREE.SphereGeometry(radius, 48, 32), mat);
   dome.name = 'lanternfall-sky';
   dome.frustumCulled = false;
-  dome.renderOrder = -10;
+  // DRAWN LAST OF THE OPAQUES, NOT FIRST. The dome sits at the far plane and
+  // depth-tests, so drawn after the ground it is shaded only on the pixels
+  // nothing else covered; drawn first (it was -10) its whole shader ran under
+  // every pixel of terrain that then painted over it. Every opaque body in the
+  // world writes depth, so the picture is unchanged. The bodies in the sky are
+  // opaque and draw before it, which rejects it on their pixels the same way.
+  dome.renderOrder = SKY_RENDER_ORDER;
   dome.userData.phys = 'ambient';
   dome.userData.noWeather = true;
   return dome;

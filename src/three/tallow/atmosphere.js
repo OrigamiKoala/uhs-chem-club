@@ -26,6 +26,7 @@
 
 import * as THREE from 'three';
 import { createPlanetMaterial } from '../materials/celestial.js';
+import { SKY_RENDER_ORDER } from '../sky-order.js';
 
 const EL = THREE.MathUtils.degToRad(35);
 const AZ = THREE.MathUtils.degToRad(152);
@@ -251,7 +252,7 @@ export function createTallowSkyDome(radius = 900) {
         vDir = position;
         vec4 wp = vec4(cameraPosition + position, 1.0);
         gl_Position = projectionMatrix * viewMatrix * wp;
-        gl_Position.z = gl_Position.w * 0.99999;
+        gl_Position.z = gl_Position.w * 0.999999;
       }
     `,
     fragmentShader: /* glsl */ `
@@ -269,7 +270,13 @@ export function createTallowSkyDome(radius = 900) {
   });
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 64, 40), mat);
   mesh.frustumCulled = false;
-  mesh.renderOrder = -10;
+  // DRAWN LAST OF THE OPAQUES, NOT FIRST. The dome sits at the far plane and
+  // depth-tests, so drawn after the ground it is shaded only on the pixels
+  // nothing else covered; drawn first (it was -10) its whole shader ran under
+  // every pixel of terrain that then painted over it. Every opaque body in the
+  // world writes depth, so the picture is unchanged. The bodies in the sky are
+  // opaque and draw before it, which rejects it on their pixels the same way.
+  mesh.renderOrder = SKY_RENDER_ORDER;
   mesh.name = 'tallow-sky';
   mesh.userData.phys = 'ambient';
   mesh.userData.noMerge = true;
@@ -451,13 +458,17 @@ const _snapped = new THREE.Vector3();
  * true when the box actually moved, i.e. when the shadow map is out of date
  * for everything that stands still.
  */
-export function followTallowShadow(sun, focus) {
+export function followTallowShadow(sun, focus, step = 0) {
   if (!sun.castShadow) return false;
   const cam = sun.shadow.camera;
   const texel = (cam.right - cam.left) / sun.shadow.mapSize.x;
   const L = TALLOW_SUN;
-  const a = Math.round(focus.dot(_right) / texel) * texel;
-  const b = Math.round(focus.dot(_up) / texel) * texel;
+  // `step` metres between moves, rounded to whole texels so nothing swims.
+  // At one texel (5 cm) the box moved on every frame of a walk, and every move
+  // is a full re-draw of every caster into the 2048 map.
+  const q = Math.max(1, Math.round(step / texel)) * texel;
+  const a = Math.round(focus.dot(_right) / q) * q;
+  const b = Math.round(focus.dot(_up) / q) * q;
   // Along the light the box only needs to follow coarsely: the camera's
   // near/far span covers metres of slack, and a re-render per centimetre of
   // height would defeat the point of snapping at all.
