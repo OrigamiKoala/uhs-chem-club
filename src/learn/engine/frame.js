@@ -20,11 +20,13 @@
 import { showModal, closeModal } from '../../ui/modal.js';
 import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
+import { session } from '../../session.js';
 import { createTransmissionElement } from '../../ui/transmission.js';
 import { benchDeployment, activeBenchViewer, onBenchViewer } from './bench-host.js';
 import { benchesAre3D } from './instruments.js';
 import { mirrorBenchKeys } from './bench-keys.js';
 import { Encounter } from './encounter.js';
+import { storyFor } from './stage-story.js';
 import {
   PanelRig, createBenchAnchor, createPanelGantry, disposeGantry
 } from '../../three/world-ui.js';
@@ -331,8 +333,15 @@ export class LearnFrame {
       hintKey: q('.lq-hint-key')
     };
 
-    this.viewerUnsub = onBenchViewer(() => {
+    this.viewerUnsub = onBenchViewer(viewer => {
       if (this.stage) this.updateBenchGuide(this.stage);
+      // The tour was asked for before the bench stood up; give it a moment to
+      // finish building its dial and keys, then run it.
+      if (viewer && this.tourPending !== undefined) {
+        const force = this.tourPending;
+        this.tourPending = undefined;
+        setTimeout(() => { if (!this.disposed) this.showBriefing(force); }, 700);
+      }
     });
 
     this.onClick = e => {
@@ -340,7 +349,7 @@ export class LearnFrame {
       if (act === 'submit') this.opts.onSubmit();
       else if (act === 'next') this.opts.onNext();
       else if (act === 'hint') this.takeHint();
-      else if (act === 'objective' || act === 'guide') this.showBriefing();
+      else if (act === 'objective' || act === 'guide') this.showBriefing(true);
       else if (act === 'exit') this.opts.onExit?.();
       else if (act === 'reward') this.showFindings();
       else if (act === 'close-panel') this.setPanelClosed(true);
@@ -593,6 +602,7 @@ export class LearnFrame {
       this.activeBriefingTx = null;
     }
     this.stage = stage;
+    if (stage.briefing?.body) this.benchIntro = stage.briefing.body;
     if (stage.reward) this.findings[stage.index] = stage.reward;
     this.misses = 0;
     this.rung = 0;
@@ -602,7 +612,8 @@ export class LearnFrame {
     // The rail shows where the player is; this is the one line that says it.
     this.el.count.textContent = `Stage ${stage.index + 1} of ${this.stageCount}`;
     this.el.title.textContent = stage.title;
-    this.el.prompt.innerHTML = `<p class="lq-prompt-body">${esc(stage.prompt)}</p>`;
+    const story = storyFor(this.currentQuestId(), stage.index);
+    this.el.prompt.innerHTML = `${story ? `<p class="lq-story">${esc(story)}</p>` : ''}<p class="lq-prompt-body">${esc(stage.prompt)}</p>`;
     // The objective again, over the bench, for a layout that stacks the deck
     // underneath it. Hidden from a screen reader: the deck's copy is the real one.
     if (this.el.promptStrip) this.el.promptStrip.textContent = stage.prompt || '';
@@ -644,8 +655,6 @@ export class LearnFrame {
     // the page at all.
     if (advancing) this.container.querySelector('.lq')?.scrollIntoView({ block: 'nearest' });
 
-    // Show objective intro screen automatically
-    this.showBriefing();
   }
 
   currentQuestId() {
@@ -669,7 +678,7 @@ export class LearnFrame {
   updateStageActions() {
     if (!this.el.stageActions) return;
     this.el.stageActions.innerHTML = `
-      <button type="button" class="btn-secondary quest-btn-sm" data-act="objective" title="Open stage mission and chemistry guide">Objective</button>
+      <button type="button" class="btn-secondary quest-btn-sm" data-act="objective" title="Replay the instrument tour">Tour</button>
       <button type="button" class="btn-secondary quest-btn-sm" data-act="reward" title="View discovered concepts and findings">Findings</button>
       ${this.canHidePanel ? '<button type="button" class="btn-secondary quest-btn-sm lq-close-btn" data-act="close-panel" title="Fold stage panel to view 3D bench" aria-label="Fold stage panel">Fold Panel</button>' : ''}
     `;
@@ -878,62 +887,72 @@ export class LearnFrame {
 
   /* ---------------- briefing ---------------- */
 
-  showBriefing() {
-    if (this.activeBriefingTx?.destroy) {
-      this.activeBriefingTx.destroy();
-      this.activeBriefingTx = null;
+  /**
+   * The instrument tour: one instrument per step, highlighted on the bench,
+   * Next to move on, like a how-to. Called bare it shows only what this player
+   * has not met (each kind of control once; each quest's own bench once), so a
+   * stage that introduces nothing new opens straight onto the bench. `force`
+   * replays all of it.
+   */
+  showBriefing(force = false) {
+    const viewer = activeBenchViewer();
+    if (!viewer?.getAvailableInstruments) {
+      if (benchesAre3D()) this.tourPending = force;
+      return;
     }
+    const have = new Map(viewer.getAvailableInstruments().map(i => [i.kind, i]));
+    const quest = this.currentQuestId() || 'bench';
+    const bench = have.get('stations');
+    const steps = [
+      bench && {
+        flag: `tour_bench_${quest}`, kind: 'stations', name: 'The bench',
+        desc: this.benchIntro || bench.desc
+      },
+      have.get('dial') && { flag: 'tour_dial', kind: 'dial', name: have.get('dial').name, desc: have.get('dial').desc },
+      have.get('keys') && { flag: 'tour_keys', kind: 'keys', name: have.get('keys').name, desc: have.get('keys').desc }
+    ].filter(st => st && (force || !session.hasFlag(st.flag)));
+    if (!steps.length) return;
+    if (!force) steps.forEach(st => session.setFlag(st.flag, true));
 
-    const b = this.stage?.briefing;
-    const speaker = b?.speaker || this.opts.speaker || 'Vess';
-    const bodyText = b?.body || this.stage?.prompt || 'Explore the bench samples and instruments.';
-
-    // Show halos around instruments during the introduction
-    activeBenchViewer()?.showInstrumentHalos('all');
-
-    const n = this.stage ? this.stage.index + 1 : 1;
-    const text = clampSentences(bodyText, 4);
-
-    showModal(`
-      <div class="lq-brief-card">
-        <div class="lq-brief-head">
-          <span class="eyebrow lit" id="lq-briefing-title">${esc(speaker)} · Stage ${n}</span>
-          <button type="button" class="btn-chip" data-lq-close aria-label="Close dialog">Close</button>
+    let i = 0;
+    const leave = () => {
+      activeBenchViewer()?.hideInstrumentHalos();
+      closeModal();
+      soundscape.playNavRelayClick?.();
+    };
+    const render = () => {
+      const st = steps[i];
+      const last = i === steps.length - 1;
+      activeBenchViewer()?.showInstrumentHalos(st.kind);
+      showModal(`
+        <div class="lq-brief-card">
+          <div class="lq-brief-head">
+            <span class="eyebrow lit" id="lq-briefing-title">${esc(st.name)}</span>
+            <span class="tag live">${i + 1} / ${steps.length}</span>
+          </div>
+          <p class="lq-brief-text">${esc(clampSentences(st.desc, 4))}</p>
+          <div class="debrief-controls-left lq-modal-keys">
+            <button type="button" class="btn-secondary" data-tour="back" ${i === 0 ? 'disabled' : ''}>Back</button>
+            ${last ? '' : '<button type="button" class="btn-secondary" data-tour="skip">Skip</button>'}
+            <button type="button" class="btn-primary" data-tour="${last ? 'skip' : 'next'}">${last ? 'Done' : 'Next'}</button>
+          </div>
         </div>
-        <div id="lq-modal-transmission" class="lq-modal-tx"></div>
-        <div class="debrief-controls-left lq-modal-keys">
-          <button type="button" class="btn-primary" data-lq-close>Start</button>
-        </div>
-      </div>
-    `, {
-      labelledBy: 'lq-briefing-title',
-      onClose: () => {
-        activeBenchViewer()?.hideInstrumentHalos();
-        if (this.activeBriefingTx?.destroy) {
-          this.activeBriefingTx.destroy();
-          this.activeBriefingTx = null;
-        }
-      }
-    });
-
-    this.activeBriefingTx = createTransmissionElement({
-      speaker,
-      text,
-      variant: 'hero'
-    });
-    document.getElementById('lq-modal-transmission')?.appendChild(this.activeBriefingTx.element);
-
-    document.querySelectorAll('[data-lq-close]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (this.activeBriefingTx?.destroy) {
-          this.activeBriefingTx.destroy();
-          this.activeBriefingTx = null;
-        }
-        activeBenchViewer()?.hideInstrumentHalos();
-        closeModal();
-        soundscape.playNavRelayClick?.();
+      `, {
+        labelledBy: 'lq-briefing-title',
+        onClose: () => activeBenchViewer()?.hideInstrumentHalos()
       });
-    });
+      document.querySelectorAll('[data-tour]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const act = btn.dataset.tour;
+          if (act === 'skip') { leave(); return; }
+          i = Math.max(0, Math.min(steps.length - 1, i + (act === 'next' ? 1 : -1)));
+          soundscape.playCrtTick?.();
+          render();
+        });
+      });
+      document.querySelector('#modal-container [data-tour="next"], #modal-container [data-tour="skip"]:last-of-type')?.focus();
+    };
+    render();
   }
 
   /** The reward cards of every stage cleared so far, in stage order. */

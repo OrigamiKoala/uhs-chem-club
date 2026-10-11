@@ -1091,7 +1091,7 @@ export class BenchViewer3D {
         map: labelTex, roughness: 0.9, metalness: 0.2
       }))
     );
-    labelPlate.position.set(0, 0.115, 0.004);
+    labelPlate.position.set(0, 0.115, 0.014);
     head.add(labelPlate);
 
     // Status tag under the label — blank until the quest sets one.
@@ -1102,7 +1102,7 @@ export class BenchViewer3D {
         roughness: 0.9, metalness: 0.2, transparent: true
       }))
     );
-    tagMesh.position.set(0, 0.038, 0.004);
+    tagMesh.position.set(0, 0.038, 0.014);
     head.add(tagMesh);
 
     // Note plate, lying flat on the bench in front of the tray: the provenance

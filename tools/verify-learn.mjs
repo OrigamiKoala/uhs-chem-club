@@ -18,6 +18,7 @@ import {
 } from '../src/learn/curriculum.js';
 // The join bench's pure part. Imported so a pair plate can be PRESSED here and
 // the result measured, rather than trusting the declaration beside it.
+import { storyFor } from '../src/learn/engine/stage-story.js';
 import { planJoin, shellPlan, shellsAfter } from '../src/learn/engine/joinbench.js';
 
 /*
@@ -423,6 +424,12 @@ function checkStageTable(q, mod) {
     }
     if (!st.reward?.title || !st.reward?.body) { fail(`${label}: no reward card`); bad++; }
     if (typeof st.check !== 'function') { fail(`${label}: no check()`); bad++; return; }
+
+    // Every stage carries the one line that says what problem it solves.
+    const story = storyFor(q.key, i);
+    if (!story) { fail(`${label}: no story line in stage-story.js`); bad++; }
+    else if (sentenceCount(story) !== 1) { fail(`${label}: story line is ${sentenceCount(story)} sentences, not one`); bad++; }
+    else if (emoji.test(story)) { fail(`${label}: emoji in story line`); bad++; }
 
     // Player-facing copy obeys the same house rules as the rest of the ship.
     const copy = [st.title, st.prompt, st.reward?.title, st.reward?.body, st.reward?.log,
