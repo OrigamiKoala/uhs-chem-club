@@ -22,6 +22,9 @@
  * Layouts:
  *   atomic   1s up to 4p with 4s set BELOW 3d (and 4f/5d/6p on request)
  *   address  rows grouped by n, each box carrying its m_l and each electron its m_s
+ *   molecular  two atoms' boxes in two columns and the boxes they make between them
+ *              (Ligar's bench nine); `order` picks which side-to-side / end-on pair
+ *              is lower, and `combined: false` shows the atoms before they join
  *
  * Heads: `rack` (interactive) and `strip` (a read-only ladder of bars, one
  * element per plate, for a stage that asks about many at once).
@@ -32,6 +35,9 @@
  */
 
 import { PlateBench, PLATE_COLORS, plateText, raster, aperture } from './plates.js';
+import {
+  rowsMO, placeMO, removeMO, readMO, boxKeyMO, DIATOMICS
+} from './mo.js';
 import {
   LADDER, boxesOf, capacityOf, boxKey, placeElectron, removeElectron, readRack, rackFor,
   groundConfig, symbolOf, zOf, nameOf, shortString, configString, MEASURED, mlOf, fmtMl,
@@ -170,6 +176,117 @@ function drawRack(ctx, w, h, item, cfg, o) {
   return hits;
 }
 
+
+/** The molecular layout: the atoms' boxes at the sides, the boxes they make between them. */
+function drawMolecular(ctx, w, h, item, cfg) {
+  const rows = rowsMO(item.order);
+  const rack = item.rack;
+  const read = readMO(item.order, rack);
+  const small = Math.max(9, Math.min(h * 0.04, w * 0.034));
+  const hits = [];
+  const label = item.molLabel || '';
+
+  plateText(ctx, `PLACED ${read.total}`, 8, small * 1.6, { size: small * 1.15, color: PLATE_COLORS.phosphor, weight: 700 });
+  plateText(ctx, `ALONE IN A BOX ${read.unpaired}`, w - 8, small * 1.6, { align: 'right', size: small * 1.15, color: PLATE_COLORS.phosphor, weight: 700 });
+  const show = cfg.show || {};
+  if (item.combined && show.counts) {
+    plateText(ctx, `LOWER ${read.bonding}   UPPER ${read.anti}`, w / 2, small * 3.2, { align: 'center', size: small * 1.1, color: PLATE_COLORS.dust, weight: 600 });
+  } else if (label) {
+    plateText(ctx, label, w / 2, small * 3.2, { align: 'center', size: small * 1.3, color: PLATE_COLORS.dust, weight: 700 });
+  }
+
+  const trayH = small * 3.1;
+  const top = small * 4.6;
+  const bottom = h - trayH - 6;
+  const n = rows.length;
+  const rowH = Math.min((bottom - top) / n, small * 3.9);
+  const boxS = Math.min(rowH * 0.8, (w - 120) / 12, 30);
+  const yOf = ri => bottom - ri * rowH - rowH / 2;
+  const midX = w / 2;
+
+  // Energy arrow up the left edge.
+  ctx.strokeStyle = PLATE_COLORS.dim; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(12, bottom - 2); ctx.lineTo(12, top + 4); ctx.moveTo(12, top); ctx.lineTo(8, top + 7); ctx.lineTo(16, top + 7); ctx.closePath(); ctx.stroke();
+  plateText(ctx, 'ENERGY', 12, top - 2, { align: 'center', size: small * 0.75, color: PLATE_COLORS.dim });
+
+  // The atoms' own boxes, at each side.
+  const aoRows = item.order === '1s' ? [{ y: (yOf(0) + yOf(1)) / 2, boxes: 1, name: '1s' }]
+    : [{ y: (yOf(0) + yOf(1)) / 2, boxes: 1, name: '2s' }, { y: (yOf(3) + yOf(4)) / 2, boxes: 3, name: '2p' }];
+  for (const side of [-1, 1]) {
+    const cx = midX + side * w * 0.36;
+    plateText(ctx, item.atomLabel || '', cx, bottom + small * 1.4, { align: 'center', size: small, color: PLATE_COLORS.dim });
+    for (const ao of aoRows) {
+      for (let b = 0; b < ao.boxes; b++) {
+        const x = cx + (b - (ao.boxes - 1) / 2) * (boxS * 0.9 + 3) - boxS * 0.45;
+        ctx.fillStyle = '#0a0908';
+        ctx.fillRect(x, ao.y - boxS * 0.45, boxS * 0.9, boxS * 0.9);
+        ctx.strokeStyle = PLATE_COLORS.rim; ctx.lineWidth = 1.2;
+        ctx.strokeRect(x + 0.5, ao.y - boxS * 0.45 + 0.5, boxS * 0.9 - 1, boxS * 0.9 - 1);
+      }
+      plateText(ctx, ao.name, cx - side * (boxS * 0.9 * ao.boxes / 2 + 12), ao.y + small * 0.35, { align: 'center', size: small * 0.9, color: PLATE_COLORS.dim });
+    }
+  }
+
+  if (!item.combined) return drawTray(ctx, w, h, small, trayH, cfg, hits);
+
+  // The boxes between them, lowest energy at the bottom, with the lines to the atoms they came from.
+  ctx.strokeStyle = PLATE_COLORS.rim; ctx.lineWidth = 1;
+  ctx.setLineDash?.([3, 4]);
+  rows.forEach((row, ri) => {
+    const y = yOf(ri);
+    const fromAO = aoRows.reduce((best, a) => (!best || Math.abs(a.y - y) < Math.abs(best.y - y) ? a : best), null);
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(midX + side * w * 0.36 - side * boxS * 0.9, fromAO.y);
+      ctx.lineTo(midX + side * ((row.boxes * (boxS + 4)) / 2 + 6), y);
+      ctx.stroke();
+    }
+  });
+  ctx.setLineDash?.([]);
+
+  rows.forEach((row, ri) => {
+    const cy = yOf(ri);
+    plateText(ctx, row.label, midX - (row.boxes * (boxS + 4)) / 2 - 12, cy + small * 0.35, { align: 'right', size: small * 1.05, color: row.anti ? PLATE_COLORS.dust : PLATE_COLORS.phosphor, weight: 700 });
+    for (let i = 0; i < row.boxes; i++) {
+      const bx = midX - (row.boxes * (boxS + 4)) / 2 + i * (boxS + 4);
+      const by = cy - boxS / 2;
+      const here = rack[boxKeyMO(row.id, i)] || '';
+      ctx.fillStyle = '#0a0908';
+      ctx.fillRect(bx, by, boxS, boxS);
+      ctx.strokeStyle = here ? PLATE_COLORS.steel : PLATE_COLORS.rim;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(bx + 0.5, by + 0.5, boxS - 1, boxS - 1);
+      for (const spin of ['u', 'd']) {
+        if (!here.includes(spin)) continue;
+        drawArrow(ctx, spin === 'u' ? bx + boxS * 0.3 : bx + boxS * 0.7, cy, boxS * 0.8, spin === 'u', PLATE_COLORS.phosphor);
+      }
+      hits.push({ key: 'box', row: row.id, idx: i, x0: bx, y0: by, x1: bx + boxS, y1: by + boxS });
+    }
+  });
+  return drawTray(ctx, w, h, small, trayH, cfg, hits);
+}
+
+function drawTray(ctx, w, h, small, trayH, cfg, hits) {
+  const hand = cfg.hand;
+  const cw = (w - 16 - 12) / 3;
+  ['u', 'd', 'x'].forEach((c, i) => {
+    const x = 8 + i * (cw + 6);
+    const y = h - trayH + 2;
+    const on = hand === c;
+    ctx.fillStyle = on ? '#2a2c1f' : '#16140f';
+    ctx.fillRect(x, y, cw, trayH - 6);
+    ctx.strokeStyle = on ? PLATE_COLORS.phosphor : PLATE_COLORS.rim;
+    ctx.lineWidth = on ? 2 : 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, cw - 1, trayH - 7);
+    if (c !== 'x') drawArrow(ctx, x + cw * 0.22, y + (trayH - 6) / 2, small * 2.2, c === 'u', on ? PLATE_COLORS.phosphor : PLATE_COLORS.dust);
+    plateText(ctx, HAND_LABEL[c], x + cw * (c === 'x' ? 0.5 : 0.62), y + (trayH - 6) / 2 + small * 0.35, {
+      align: 'center', size: small * 1.05, color: on ? PLATE_COLORS.phosphor : PLATE_COLORS.dust, weight: 700
+    });
+    hits.push({ key: 'hand', hand: c, x0: x, y0: y, x1: x + cw, y1: y + trayH - 6 });
+  });
+  return hits;
+}
+
 /** The strip head: one element's ladder as bars, with the row its last electron went into lit. */
 function drawStrip(ctx, w, h, item, cfg) {
   const z = zOf(item.sym);
@@ -215,11 +332,21 @@ export class BoxRack extends PlateBench {
 
   prepare(item) {
     const it = { ...item, rack: { ...(item.prefill || {}) } };
+    if (item.layout === 'molecular') it.combined = item.combined ?? true;
     if (item.fillGround && !item.prefill) it.rack = rackFor(item.z ?? zOf(item.sym || item.sample));
     return it;
   }
 
   apertureClass(item) { return item.head === 'strip' ? 'rack-aperture rack-strip' : 'rack-aperture'; }
+
+  /** Join the two atoms' boxes into the molecule's (the molecular layout). */
+  combine(id) {
+    const item = this.itemFor(id);
+    if (!item) return;
+    item.combined = true;
+    this.drawAll();
+  }
+
   gridClass() { return 'rack-grid'; }
 
   /** Lay out the plates for a stage. */
@@ -231,11 +358,16 @@ export class BoxRack extends PlateBench {
   /* ---- state ---- */
 
   rackOf(id) { return { ...(this.itemFor(id)?.rack || {}) }; }
-  readOf(id) { return readRack(this.itemFor(id)?.rack || {}); }
+  readOf(id) {
+    const item = this.itemFor(id);
+    if (item?.layout === 'molecular') return readMO(item.order, item.rack || {});
+    return readRack(item?.rack || {});
+  }
 
   /** What the magnet measures in the REAL sample on a plate. Never what was placed. */
   measured(id) {
     const item = this.itemFor(id);
+    if (item?.mol) return DIATOMICS[item.mol]?.unpaired ?? null;
     return item?.sample ? (MEASURED[item.sample] ?? null) : null;
   }
 
@@ -255,6 +387,19 @@ export class BoxRack extends PlateBench {
   act(item, rowId, idx) {
     const hand = this.cfg.hand;
     if (!hand) return { action: 'refused', reason: 'Pick Up, Down or Remove from the tray first.' };
+    if (item.layout === 'molecular') {
+      if (!item.combined) return { action: 'refused', reason: 'The atoms have not joined yet.' };
+      if (hand === 'x') {
+        const r = removeMO(item.order, item.rack, rowId, idx);
+        if (r.refused) return { action: 'refused', reason: r.refused };
+        item.rack = r.rack;
+        return { action: 'removed', rowId, idx };
+      }
+      const r = placeMO(item.order, item.rack, rowId, idx, hand);
+      if (r.refused) return { action: 'refused', reason: r.refused, rowId, idx };
+      item.rack = r.rack;
+      return { action: 'placed', rowId, idx, spin: hand };
+    }
     const key = boxKey(rowId, idx);
     if (hand === 'x') {
       const pre = item.locked ? (item.prefill?.[key] || '') : '';
@@ -280,7 +425,8 @@ export class BoxRack extends PlateBench {
     }
     if (hit.key === 'box') {
       const res = this.act(item, hit.row, hit.idx);
-      return { mark: {}, read: { kind: 'rack', plateId: item.id, ...res, rack: { ...item.rack }, reading: readRack(item.rack) } };
+      const reading = item.layout === 'molecular' ? readMO(item.order, item.rack) : readRack(item.rack);
+      return { mark: {}, read: { kind: 'rack', plateId: item.id, ...res, rack: { ...item.rack }, reading } };
     }
     return null;
   }
@@ -289,7 +435,9 @@ export class BoxRack extends PlateBench {
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = PLATE_COLORS.bg;
     ctx.fillRect(0, 0, w, h);
-    const hits = item.head === 'strip' ? drawStrip(ctx, w, h, item, this.cfg) : drawRack(ctx, w, h, item, this.cfg, o);
+    const hits = item.head === 'strip' ? drawStrip(ctx, w, h, item, this.cfg)
+      : item.layout === 'molecular' ? drawMolecular(ctx, w, h, item, this.cfg)
+        : drawRack(ctx, w, h, item, this.cfg, o);
     raster(ctx, w, h, o.sweep, 0, h);
     aperture(ctx, w, h);
     return hits;

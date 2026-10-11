@@ -50,8 +50,8 @@ export const UNIT_03 = {
       line: 'Why bonded atoms sit at one distance, and what it costs to part them.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit03/q3-distance.js')
     },
     {
       id: 'q4-dots',
@@ -59,17 +59,17 @@ export const UNIT_03 = {
       line: 'Drawing where every valence electron goes.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit03/q4-dots.js')
     },
     {
       id: 'q5-resonance',
-      title: 'Formal Charge and Resonance',
+      title: 'Charge and Resonance',
       line: 'Choosing between drawings, and molecules no single drawing fits.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit03/q5-resonance.js')
     },
     {
       id: 'q6-shape',
@@ -77,8 +77,8 @@ export const UNIT_03 = {
       line: 'Electron domains push apart and fix the shape.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit03/q6-shape.js')
     },
     {
       id: 'q7-polarity',
@@ -86,8 +86,8 @@ export const UNIT_03 = {
       line: 'Which way the charge leans in a bond and in a molecule.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit03/q7-polarity.js')
     },
     {
       id: 'q8-hybrid',
@@ -95,8 +95,8 @@ export const UNIT_03 = {
       line: 'Mixed orbitals, sigma and pi bonds.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit03/q8-hybrid.js')
     },
     {
       id: 'q9-orbitals',
@@ -104,15 +104,15 @@ export const UNIT_03 = {
       line: 'Bonding and antibonding orbitals, bond order and magnetism.',
       arena: 'bench',
       stageCount: 8,
-      status: 'draft',
-      module: null
+      status: 'live',
+      module: () => import('../quests/unit03/q9-orbitals.js')
     },
     {
       id: 'boss-warden',
       title: 'Basalt Warden',
       line: 'An elite sentinel forged from basalt lattice.',
       arena: 'boss',
-      stageCount: 2,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/boss-warden.js')
     }

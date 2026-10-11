@@ -4,9 +4,19 @@
  */
 
 import { getWorld } from '../learn/curriculum.js';
+import { getFieldManualStats } from '../ui/field-manual.js';
 
 export const COMMENDATION_ROADS = ['campaign', 'craft', 'learn', 'crew', 'season'];
 export const COMMENDATION_TIERS = ['painted', 'brass', 'etched'];
+
+/**
+ * Every term of a road's Field Manual is logged. Read off the registry rather than
+ * a stored flag, so the plate cannot drift from the terms the Manual holds.
+ */
+function manualComplete(s, road) {
+  const r = getFieldManualStats({ learn: s.learn || {}, progress: s.progress || [] }).byRoad[road];
+  return Boolean(r && r.total > 0 && r.earned === r.total);
+}
 
 export const COMMENDATIONS = [
   // ===================== CAMPAIGN =====================
@@ -199,7 +209,7 @@ export const COMMENDATIONS = [
     tier: 'etched',
     road: 'learn',
     hidden: false,
-    earnedBy: (s) => Boolean(s.flags && s.flags.unit01_manual_complete)
+    earnedBy: (s) => manualComplete(s, 'unit01')
   },
   {
     id: 'learn_q1_joins',
@@ -267,7 +277,7 @@ export const COMMENDATIONS = [
     tier: 'etched',
     road: 'learn',
     hidden: false,
-    earnedBy: (s) => Boolean(s.flags && s.flags.unit02_manual_complete)
+    earnedBy: (s) => manualComplete(s, 'unit02')
   },
   {
     id: 'ligar_surveyed',
@@ -299,7 +309,7 @@ export const COMMENDATIONS = [
     tier: 'etched',
     road: 'learn',
     hidden: false,
-    earnedBy: (s) => Boolean(s.flags && s.flags.unit03_manual_complete)
+    earnedBy: (s) => manualComplete(s, 'unit03')
   },
 
   // ===================== CREW =====================

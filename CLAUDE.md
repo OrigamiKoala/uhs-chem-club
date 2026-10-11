@@ -178,6 +178,15 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   every legend that exists to one well-formed, vocabulary-clean sentence.
   It also **presses every join-bench pair plate in Node** and measures what comes
   out: electrons conserved, and no piece left over the capacity of its outer shell.
+  **Every figure a Ligar bench grades against is recomputed from the real tables**
+  (`bonddata.js`, `lewis.js`, `vsepr.js`, `mo.js`): that every pair's bottom is a crank
+  setting and the lowest one, the lattice order against the real lattice energies, that
+  oxygen is the ONLY atom that can join hydrogen and fluorine on the pair board (every
+  placement is enumerated), every intended drawing lights every lamp, the arms' angles,
+  where SF₄'s and XeF₄'s lone pairs settle, which molecules turn in the field, the
+  sigma and pi count of HCN, and each diatomic's unpaired electrons and bond order. **Ligar's
+  foes are read against their plates** (`ligarProbes`): a crawler that stretches must be a
+  pair the crank really stretches, a warden that turns must be a molecule whose pulls add.
   **A refusal may not carry its stage's answer**: every miss message the stage can produce
   (its MISSES, the untouched bench, and its check run over every other value the widget
   offers) is searched for the answer read from `SOLUTIONS` — a number as a standalone
@@ -264,6 +273,14 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   pass an **instanced field is measured one instance at a time** (the union of a quarry's
   floor rubble is a box round the whole floor) and a mesh marked `userData.openShell` — a
   barrel vault — by its triangles, since a vault has an underside and no inside.
+  **Ligar's later benches go through it too**: the bond bench, pair board, domain rig and
+  molecular rack are deployed on sites three to nine at six aspects (the widest stage, the
+  dial stage, and one stage of each head), every stage goes through the real pointer path
+  (a press on each picture reads its own plate; a rack's Up chip and first free box place
+  an electron), and every fighting stage builds its slag crawlers and wardens in every pose
+  (one body per plate, inside the tray and the glass, hiding no screen, read back from
+  `planFoe`). A plate bench that stands only two plates and no dial asks `plateBench3D`
+  for `frameTwo` so its panels clear the HUD.
 - `npm run verify:voyage` — the Avalon can land and a player can get off it (see "The
   voyage" below): with the airlock's outer leaf open, a line through the hatch at head,
   chest and knee height meets nothing aboard (a lining sheet once stood in the opening),
@@ -509,8 +526,8 @@ Bellows (gases), Ember Reach (thermodynamics), Mirrowen (states of matter and IM
 Brinewire (electrochemistry), Quicklight (kinetics), Lodestone (transition metals), Thornmere (organic), Cinder Halo (nuclear) — and **every built world is open from the start** (Tallow, Lanternfall, Ligar and one bench of Kettle),
 so a student can go straight to the unit their class is on. The order is the order the
 ideas build on each other, not a lock. Every unbuilt quest on the road is planned in
-`docs/plans/learn-quests.md` (Lanternfall, now built, and Ligar's benches three to nine stage by stage and
-agreed; the other eleven worlds as a proposal under review). Ids are `unit01`…`unit14` in
+`docs/plans/learn-quests.md` (Lanternfall and Ligar are built and their plans stay there as the
+record; the other eleven worlds are a proposal under review). Ids are `unit01`…`unit14` in
 road order (renumbered on 2026-10-10, pre-launch, so no stored progress was orphaned), and
 
 **every Learn quest is a game built the way the Charge Gardens was built** — it owns its
@@ -632,7 +649,7 @@ into grinding and would punish the students it exists to help.
   In `scope.js`, single-unit samples (`total <= 1`) are centered at `[0, 0]` so high-magnification targets
   remain visible in the aperture.
 - **The encounter layer** (`engine/foes.js`, `engine/encounter.js`). `foes.js` is PURE
-  (Node-importable): `SPECIES` (salt husk, lamp moth — plain data plus one planner each),
+  (Node-importable): `SPECIES` (salt husk, lamp moth, slag crawler, basalt warden — plain data plus one planner each; the bosses and the golem take a pose from the quest),
   `resolveEncounter(stage, env)` (null for a plain stage; `env.kinds` is what the husk's
   planner needs from the quest), `planFoe`, the fight state (`newFight`, `afterMiss`,
   `afterWin`, `INTEGRITY` = 3) and SVG `portraitSvg`. `encounter.js` is the `.lq-foe` plate
@@ -813,7 +830,7 @@ into grinding and would punish the students it exists to help.
   `setAimShift` walk the look-at point along the bench until the stations are centred in
   the clear part of the view. Below 860 px it reverts to the centred card, because a
   docked panel beside a bench too narrow to read helps nobody.
-- **ALL SIX Tallow benches, ALL NINE Lanternfall benches, BOTH built Ligar benches and Kettle's one are BUILT at T4.**
+- **ALL SIX Tallow benches, ALL NINE Lanternfall benches, ALL NINE Ligar benches (and the warden) and Kettle's one are BUILT at T4.**
   `BUILT_BENCHES` in `engine/instruments.js` holds every built quest. Kettle is not yet
   walkable, so its bench builds its own room
   around itself: `learn-quest.js` treats a quest with no site as off-world, and `benchIsBuilt(questId)` is what `screens/learn-quest.js`
@@ -1141,19 +1158,21 @@ and the quest page prints one linked "Builds on" line; nothing is gated by it).
 - `tools/lib/ctx-stub.mjs` is a canvas context that records and draws nothing, so `verify:learn`
   can draw every plate in Node.
 
-### World 3 — Ligar (`unit03`, nine benches charted, two live, walkable at T4)
+### World 3 — Ligar (`unit03`, nine benches and a boss, all live, walkable at T4)
 
 Ligar is the field of basalt arches. Tallow spent five benches on one atom at a
-time; Ligar is about what happens when two of them touch. Benches one and two are
-built as games; three to nine (bond energy, Lewis structures, formal charge and
-resonance, molecular shape, polarity, hybridization, molecular orbitals) are charted
-and planned in `docs/plans/learn-quests.md`. **The old benches three and four,
+time; Ligar is about what happens when two of them touch. All nine benches are built
+as games (what holds, stone and wire, bond energy, Lewis structures, charge and
+resonance, molecular shape, polarity, hybridization, molecular orbitals), followed by
+the Basalt Warden (`boss-warden`), a five-phase fight on four of their instruments;
+the plan they were built from is `docs/plans/learn-quests.md`, and what was built and
+where it parted from the plan is `docs/plans/ligar-complete.md`. **The old benches three and four,
 `q3-recipe` and `q4-weigh`, moved: the first to Kettle (`unit07/q1-recipe`), the
 second to Tallow (`unit01/q6-weigh`, its NaCl stage rewritten as CO₂)** when the
 road was reordered; they are described below because they were written here.
 At T3 and below each is played as a page; at T4 Ligar is walkable
-ground and both built benches are BUILT instruments standing on it (see "Ligar —
-Learn world 02 as a place you walk"). Everything Tallow earned (atom, element, compound, molecule, proton,
+ground and every bench is a BUILT instrument standing on it (see "Ligar —
+Learn world 03 as a place you walk"). Everything Tallow earned (atom, element, compound, molecule, proton,
 neutron, electron, shell, valence, isotope, ion, cation, anion, metal, nonmetal,
 atomic number, mass number) is a plain word from here on.
 
@@ -1189,6 +1208,85 @@ where it is plain English ("one connected piece"). The join bench's probe key is
   900 degree vessel. **The furnace is not a one-way door**: `Let It Cool` exists
   because a stage that asks for a cold reading and a molten one is unfinishable if
   heating cannot be undone.
+- **`q3-distance` Bond Energy** — the **bond bench** (`engine/bondbench.js`), a sibling
+  of the join bench on the plate base: a crank winds a pair apart or together and the
+  plate keeps a trace of the energy at every separation it passes, so the curve is
+  BUILT by winding and its bottom is FOUND. Find the separation of least energy
+  (**potential energy curve**, **bond length**) → the energy to part a pair
+  (**bond energy**) → what squeezing does → why chlorine bottoms out further out →
+  order three carbon-carbon bonds by length (**bond order**) → shorter is stronger →
+  three lattices by charge and size alone (**lattice energy**) → which of NaF and NaCl
+  melts higher. Every pair is a Morse curve over a MEASURED bond length and energy
+  (`bonddata.js`); a lattice plate reads no energy, only ion charges, radii and the
+  distance between centres, and `verify:learn` checks the graded order against the real
+  lattice energies. Fights: **slag crawlers** that stretch, shorten and part as the
+  crank turns (stages 1-6).
+- **`q4-dots` Lewis Structures** — the **pair board** (`engine/pairboard.js`): a slate
+  of atoms, a tray of exactly the molecule's valence electrons, and an octet lamp on
+  every atom. Two taps, never a drag (a pair goes in the slot between two atoms or
+  onto one; several in a slot make a double or triple bond). The board has ONE rule,
+  that a hydrogen or fluorine atom shares one pair in all, and says nothing else.
+  Water, every lamp lit (**Lewis structure**, **lone pair**, octet) → lone pairs on
+  three molecules' heavy atoms → CO₂, two pairs short → which atom sits in the middle
+  of HOF (**central atom**) → the ammonium ion, where the tray must change
+  (**polyatomic ion**) → why boron stays amber (**incomplete octet**) → NO, an odd tray
+  (**free radical**) → SF₆ (**expanded octet**). **Stage four is HOF, not HCN**: HCN has
+  an isomer, HNC, that lights every lamp too, so the lamps could not settle the middle
+  atom; with H and F limited to one pair, only the oxygen can join them, and
+  `verify:learn` enumerates every placement to prove it. Key labels name what they place
+  only once the word is earned (**Between Atoms / On One Atom**, then **Bond / Lone
+  Pair**). Fights: crawlers whose plates close as the lamps light.
+- **`q5-resonance` Charge and Resonance** — the pair board with a **charge tool**
+  (stencilled formal charges) and a **gauge** that reads the MEASURED length of a bond,
+  not what the drawing implies, which is what makes ozone a discovery. Who owns one
+  electron too few (**formal charge**) → the better CO₂ drawing → the better SCN⁻
+  drawing (the minus on the stronger puller) → ozone's two bonds measure alike
+  (**resonance**) → file every arrangement of nitrate's double bond (**resonance
+  structures**) → the order of each nitrate bond (**fractional bond order**) →
+  carbonate's equal drawings (**delocalized electrons**) → why water has none. The
+  quest was retitled from *Formal Charge and Resonance*: a sign is held to six words.
+- **`q6-shape` Molecular Shape** — the **domain rig** (`engine/domainrig.js`): a hub,
+  arms clipped on from a tray (an atom, or a balloon for a lone pair) that PUSH APART
+  and settle, and a protractor that reads the angle between any two as a NUMBER.
+  Two arms (**electron domain**, **linear**) → four (**trigonal planar**,
+  **tetrahedral**, **VSEPR**) → NH₃ (**trigonal pyramidal**) → water (**bent**) → a
+  double bond is one domain → SF₄'s lone pair settles round the middle
+  (**trigonal bipyramidal**, **seesaw**) → XeF₄'s two lone pairs sit opposite
+  (**octahedral**, **square planar**) → the shape the atoms make
+  (**electron geometry**, **molecular geometry**). Ammonia's 107 and water's 104.5 are
+  the real angles; the rest are ideal. Shape names are withheld until their card, so a
+  stage that needs the shape asks for it in plain words (a "low pyramid").
+- **`q7-polarity` Polarity** — the domain rig with two **charged plates** and an
+  **arrow tool**: a molecule whose bond pulls do not cancel swings to put its negative
+  end toward the positive plate. Which end of H-Cl is negative (**partial charge**,
+  **polar bond**) → three bonds from even to handed over (**nonpolar**, **polar
+  covalent**) → CO₂ does not turn (**molecular dipole**) → bent against straight
+  (**bond dipole**) → CCl₄ against CHCl₃ → NH₃ against BF₃ → three molecules sorted →
+  which liquids a charged rod bends. Fights: basalt wardens that turn, or only shiver.
+- **`q8-hybrid` Hybridization** — the domain rig's **mixer** and **twist**. The puzzle
+  (two single electrons, four bonds) → blend an s orbital with three, two, one p orbitals to
+  match four, three, two arms (**hybrid orbital**, **sp³**, **sp²**, **sp**) → how
+  ethene's second bond is built (**sigma and pi bonds**) → count them in HCN → twist
+  ethane, then ethene (**restricted rotation**) → PCl₅ and SF₆ need d orbitals (**sp³d**,
+  **sp³d²**, beyond the exam). The mixer follows one rule the player finds: as many
+  lobes as the hub has arms.
+- **`q9-orbitals` Molecular Orbitals** (beyond the exam, and the briefing says so) — the
+  **box rack's `molecular` layout** (`mo.js`): two atoms' boxes at the sides, the boxes
+  they make between them in the middle, a lower one and a higher one for each pair that
+  combines, filled in two taps with a magnet that measures the REAL molecule. Two 1s
+  boxes become a lower and an upper (**bonding / antibonding orbital**) → H₂ → He₂ does
+  not hold → N₂'s bond order → O₂ is pulled → O₂⁺, O₂, O₂⁻ by bond length → F₂ is weak →
+  B₂ in the other order. The **order switch** (π below σ up to nitrogen) is a rack
+  declaration (`order: 'b2n2' | 'o2f2'`). Stage three has no fight: a crawler that fell
+  apart on He₂ would hand the stage over.
+- **`boss-warden` The Basalt Warden** — five phases, each on the real instrument of a
+  bench already worked and each a new molecule or set of salts: three lattices and which
+  needs the most heat (bond bench), SF₄ drawn with every lamp lit (pair board), the angle
+  between neighbours on XeF₄'s hub (domain rig), which of three molecules turns (charged
+  plates), which of three gases the magnet pulls (molecular rack). It swaps benches
+  between phases in one runner, stands the warden in the well, and files
+  `clue_ligar_scorch` when the last is cleared. The earlier two-phase version had hints
+  that handed the answer over; every rung is one sentence now.
 - **`q3-recipe` The Same Recipe** (now Kettle `q1-recipe`) — the sampler scope, reused unchanged. Three
   samples of one compound from three places (**fixed composition**) → a sample
   with loose atoms no molecule would take → two compounds of the same two
@@ -1212,6 +1310,30 @@ totals come out in the ratio of the listed masses, which they have to. Stage fou
 inverts that one sentence — take the listed masses in grams and you have taken
 equal counts — and only then does the card name it. A bench that opened by
 asserting 6.02 x 10^23 would be checking, not teaching.
+
+**The shared pieces of benches three to nine.**
+- All four are **plate benches** (`engine/plates.js`), each with a pure module behind it and a
+  built twin from `plateBench3D`: `bondbench.js` over `bonddata.js`, `pairboard.js` over
+  `lewis.js`, `domainrig.js` over `vsepr.js`, and the box rack's `molecular` layout over
+  `mo.js`. The plan called for the bond bench to be a crank and trace added to the join
+  bench; it is a sibling instead, as the electron bench was, because its pictures (a rail
+  and a graph) are not the join bench's. Every reading is derived: `planCurve`,
+  `planLewis`, `planDomains` / `planDipole` / `planMix` / `planTwist`, `readMO`.
+- **The pair board never lectures.** Its octet lamps are the whole reading; its single rule
+  (H and F share one pair in all) is a rule of the board, and the refusal says so plainly.
+  Formal charge and the bond-length gauge are asked for, never volunteered, and the gauge
+  reads the real molecule: a bond that is not drawn has no length.
+- **The domain rig puts every angle behind a protractor** so no shape is judged by eye. The
+  arms settle by `planDomains`, glide there in the drawn rig and in the well, and a
+  multiple bond is ONE arm. The rig has five heads (`hub`, `show`, `field`, `mixer`,
+  `twist`); the field swings a molecule's negative end toward the positive plate.
+- **A plate bench's key groups carry `aria-label`s**, because `bench-keys.js` builds the
+  keys on the bench from them. `engine/paircontrols.js` and `engine/rigcontrols.js` hold the
+  keys and readout text two or three quests share, as `rackcontrols.js` does for the rack.
+- **The Field Manual** carries a term for each card from bench three on (37 terms on road
+  `unit03` beyond the first three), and the "Unit N Field Log" plates are now derived from the registry
+  (`manualComplete`) instead of read from a flag nothing set. Finishing a practice set that
+  was worked rather than skipped files `<world>_practice_done`, which "Quarry Drills" reads.
 
 ### Tallow — Learn world 01 as a place you walk (`three/tallow.js`, T4)
 
@@ -1422,19 +1544,30 @@ and an excavation with conveyors climbing out of it.
   unbaked site group; the sun's shadow box follows the player in whole texels and is
   re-drawn only when it moves, while a bench is deployed (`benchesOpen`), or one frame
   in three (`paceShadow`).
-- **Four sites, two built, each sign `Bench N - <quest title>`.** `site-1` *Bench 1 -
+- **Nine sites, all built, each sign `Bench N - <quest title>`.** `site-1` *Bench 1 -
   What Holds* (`q1-joins`) on a cut terrace under a stone portal west of the yard;
   `site-2` *Bench 2 - Stone and Wire* (`q2-lattice`) at the **Tube Forge** — down the
   ramp, across the quarry floor and in under a barrel-vaulted lava tube with a hearth
   whose fire is the one red light and the one self-moving thing in the world, because
-  that bench heats blocks; `site-3` *Bench 3 - Bond Energy* (`q3-distance`, unbuilt) in
-  the silo-fed **Batch House**; `site-4` *Bench 4 - Lewis Structures* (`q4-dots`, unbuilt)
-  at the **Weighbridge** with its scale house. Both were re-signed when their old benches
-  moved to Kettle; an unbuilt site's indicator stays dark and `[E]` there opens nothing.
-  `verify:ligar` requires a site for every BUILT Ligar quest, not every charted one, so
-  the later benches get ground laid when they are built. A sign is held to six words,
-  which is why bench three is titled `Bond Energy`. Sites 3 and 4 share the east deck and the gantry
-  that carries both their signs, which is how the reference art placed them.
+  that bench heats blocks; `site-3` *Bench 3 - Bond Energy* (`q3-distance`) in the
+  silo-fed **Batch House** and `site-4` *Bench 4 - Lewis Structures* (`q4-dots`) at the
+  **Weighbridge** with its scale house, both on the east deck under the one gantry that
+  carries their signs (they were re-signed, and their cabinets re-faced, when the benches
+  that first stood there moved to Kettle). **Sites 5 to 9 stand under their own steel
+  shelters** (`three/ligar/stations.js`), in an arc south and east of the yard between
+  the landing pad and the deck: *Charge and Resonance* with three slate boards on its
+  back wall, each with the double bond in a different place; *Molecular Shape* beside a
+  six-armed hub on a mast; *Polarity* between two tall plates on insulators; *Hybridization*
+  with a torsion frame behind it; *Molecular Orbitals* with a ladder of boxes. They share
+  a plan (an apron a step proud of the pavement that registers in `raised`, four posts
+  and a mono-pitch roof, a back wall, a work lamp, the cased instrument across the back,
+  one signature piece) so nine places are not nine pieces of carpentry. The cabinet's
+  face says which bench it is (`buildBench({ kind })`: `join`, `scope`, `assay`, and now
+  `bond`, `pair`, `rig`, `rack`). A sign is held to six words, which is why bench three
+  is titled `Bond Energy` and bench five `Charge and Resonance`. A station's `pos[1]` is
+  its ground height (not 0), so the walk-reach check, which compares floors, sees the
+  apron it stands on. `gen-ligar-layout.py` keeps every prop `STATION_CLEAR` (7.2 m) from
+  a shelter's centre, and `initGroundCover` keeps the cobbles off a conveyor's whole run.
 - **The tube is inside the cut, not behind it.** A chamber beyond the far wall would be
   outside the excavation rectangle, where `getTerrainHeight` answers with the flat five
   metres overhead. So the vault is roofed over the far portion of the floor.
@@ -1916,14 +2049,16 @@ clearance, every stage has exactly three distinct hint rungs, and a giver→give
 is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 ## Plans in flight
-- `docs/plans/learn-track.md` — the Learn road: fourteen worlds, 71 quests charted, eighteen
-  built (`unit01/q1-grain` … `unit01/q6-weigh`, the whole of Tallow; `unit02/q1-wave` …
-  `unit02/q9-absorb`, the whole of Lanternfall; `unit03/q1-joins` and `unit03/q2-lattice` on Ligar;
-  `unit07/q1-recipe` on Kettle). Scaffolding, gating, routes, backend tab,
+- `docs/plans/learn-track.md` — the Learn road: fourteen worlds, 75 quests charted, twenty-five
+  benches built (`unit01/q1-grain` … `unit01/q6-weigh`, the whole of Tallow; `unit02/q1-wave` …
+  `unit02/q9-absorb`, the whole of Lanternfall; `unit03/q1-joins` … `unit03/q9-orbitals`, the
+  whole of Ligar; `unit07/q1-recipe` on Kettle) and four bosses. Scaffolding, gating, routes, backend tab,
   per-world practice sets and the verifier are in place. **Tallow, Lanternfall and Ligar are all
   walkable ground at T4**, every built bench a built instrument standing on its own ground
   (Tallow's six sites are all laid), and a page on every lower tier. Kettle has
   one built quest and no ground; the other ten worlds are charts only.
+- `docs/plans/ligar-complete.md` — Ligar finished: benches three to nine, their four instruments,
+  the warden fight, the five stations on the ground, and every place the build parted from the plan.
 - `docs/plans/lanternfall-world.md` — Lanternfall's ground and its four new instruments,
   as built, with what was deliberately left out.
 - `docs/plans/learn-quests.md` — every unbuilt quest: Ligar's benches
@@ -2538,10 +2673,10 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 
 ### 11. Storyline Spine, Bosses, and Contracts
 - **Story Tone & Discipline (`docs/story/bible.md`):** Diegetic industrial Scoured Plate tone. Max 2 sentences per transmission/briefing/prompt. Strict withheld-vocabulary discipline.
-- **Boss Arenas (`arena: 'boss'`):** Checkpointed boss modules: The Hopper (`unit01/boss-hopper.js`), The Lantern-Eater (`unit02/boss-eater.js`), Basalt Warden (`unit03/boss-warden.js`), and Recipe Golem (`unit07/boss-golem.js`). Opens after world benches finish and gates only story.
+- **Boss Arenas (`arena: 'boss'`):** Checkpointed boss modules: The Hopper (`unit01/boss-hopper.js`), The Lantern-Eater (`unit02/boss-eater.js`), Basalt Warden (`unit03/boss-warden.js`, five phases on the real instruments of benches three, four, six, seven and nine), and Recipe Golem (`unit07/boss-golem.js`). Opens after world benches finish and gates only story.
 - **Road Combat Encounters (Phase 6):** Turn-based combat encounters across all built road quests: Unit 1 (`q1`–`q6`), Unit 2 (`q1`–`q9`), Unit 3 (`q1-joins`, `q2-lattice`), and Unit 7 (`q1-recipe`). Each stage wires `resolveEncounter` with dynamic intent, tactical moves, and vocabulary-gated reactions.
 - **3D FPS Kinematics & Camera Realism (`src/three/fps-controls.js`):** Stride-driven vertical and lateral head-bob with camera roll, idle respiratory drift, landing shock compression, non-linear trauma decay shake (`addTrauma()`), sliding box collisions, and reduced-motion compliance.
-- **Procedural 3D Foe Geometries (`src/learn/engine/foebody.js`):** Procedural 3D models for all encounter species in `BODY_SPECIES`: Halite salt husks, photoelectric lamp moths, jointed hexagonal columnar Basalt Wardens, and riveted reactor Recipe Golems with functioning pressure manometers and steam vents.
+- **Procedural 3D Foe Geometries (`src/learn/engine/foebody.js`):** Procedural 3D models for all encounter species in `BODY_SPECIES`: Halite salt husks, photoelectric lamp moths, jointed hexagonal columnar Basalt Wardens (which splay to the arms a hub holds, swing round in a field, turn or lock their upper blocks, and clamp together with a lattice's grip), slag crawlers (a line of plated segments on legs that lengthen, shorten, part, and close their lids as the lamps light), and riveted reactor Recipe Golems with functioning pressure manometers and steam vents.
 - **Story Spine & Saga (`src/story/saga.js`):** 4 Acts (The Charter, Pressure, Balance, The Core) spanning all 14 worlds. Clue registry for Case File. Spine beats in road order (`getNextPendingBeat`).
 - **Case File & Dossier (`src/screens/casefile.js` at `#/casefile`):** Terminal displaying evidence clues, Vess marginalia notes, spine beat transcripts, and act charter summaries.
 - **Session Saga State (`src/session.js`):** `session.learn.saga = { beatsSeen: [], clues: [] }`. Methods `getSaga()`, `recordClue()`, `hasClue()`, `recordSagaBeat()`, `hasSagaBeat()`. Union merge in `setLearnState()`.

@@ -922,7 +922,7 @@ export function buildBasaltWarden(foe) {
 
       if (body.pose === 'dispersed') {
         const f = Math.min(1, body.since / 2.2);
-        group.position.y = body.baseY - f * 0.04;
+        group.position.y = body.baseY - f * 0.01;
         rig.scale.set(1 + f * 0.35, Math.max(0.001, 1 - f * 0.95), 1 + f * 0.35);
         if (f >= 0.99) { body.gone = true; group.visible = false; }
       }
@@ -936,12 +936,28 @@ export function buildBasaltWarden(foe) {
 
       const tremor = !body.still && body.pose === 'idle' ? Math.sin(t * 2.2 + body.phase) * 0.003 : 0;
       const cleaved = body.pose === 'cleaved' ? 0.022 : 0;
+      // The rig benches: columns spread to the arms the hub holds, the whole body
+      // swings round in a field, and the upper blocks turn or will not.
+      const splay = body.pose === 'splayed' ? 0.4 + 0.12 * Math.min(6, (body.plan && body.plan.arms) || 2) : 0;
+      const swing = body.pose === 'turned' ? Math.min(1, body.since / 0.9) * (Math.PI / 2) : 0;
+      const shiver = body.pose === 'still' && !body.still ? Math.sin(t * 38) * 0.0025 : 0;
+      group.rotation.y = body.look * 0.3 + swing;
+      group.position.x = body.baseX + shiver;
 
+      const grip = body.pose === 'gripped' ? 0.45 * Math.min(1, (body.plan && body.plan.grip) || 0) : 0;
       columns.forEach((col, i) => {
         col.colGroup.position.y = 0.01 + tremor * ((i % 2 === 0) ? 1 : -1);
+        const reach = col.dist * (1 + splay - grip);
+        col.colGroup.position.x = Math.cos(col.angle) * reach;
+        col.colGroup.position.z = Math.sin(col.angle) * reach;
         if (col.segments[1]) {
           col.segments[1].position.x = cleaved;
           col.segments[1].position.z = cleaved * 0.5;
+          if (body.pose === 'free') col.segments[1].rotation.y = body.still ? 0.6 : t * 2.2;
+          else if (body.pose === 'locked') {
+            col.segments[1].rotation.y = 0;
+            col.segments[1].position.x = body.still ? 0 : Math.sin(t * 45) * 0.002;
+          } else col.segments[1].rotation.y = 0;
         }
       });
     },
@@ -955,6 +971,156 @@ export function buildBasaltWarden(foe) {
   body.snap();
   return body;
 }
+
+/* ------------------------------------------------------------------
+   THE SLAG CRAWLER
+   A line of chamfered slag plates on short legs, with a lid over each plate.
+   It is as long as the bench says: drawn out when a pair is stretched, crushed
+   short when it is squeezed, in two when the pair is parted or the molecule has
+   no bond to hold it. Its lids close as the pair board's lamps do.
+   ------------------------------------------------------------------ */
+
+function slagMaterial() {
+  return cachedMaterial('foe:slag', () => new THREE.MeshStandardMaterial({ color: 0x25252a, roughness: 0.9, metalness: 0.15 }));
+}
+
+function slagLidMaterial() {
+  return cachedMaterial('foe:slag-lid', () => new THREE.MeshStandardMaterial({ color: 0x4a4854, roughness: 0.7, metalness: 0.3 }));
+}
+
+const CRAWLER_SEGS = 6;
+
+export function buildSlagCrawler(foe) {
+  const group = new THREE.Group();
+  group.name = `crawler:${foe.id}`;
+
+  const shadow = contactShadow(0.2);
+  group.add(shadow);
+
+  const owned = [];
+  const own = g => { owned.push(g); return g; };
+  const rig = new THREE.Group();
+  group.add(rig);
+
+  const mat = slagMaterial();
+  const lidMat = slagLidMaterial();
+  const segGeo = own(new RoundedBoxGeometry(0.05, 0.034, 0.06, 2, 0.006));
+  enableAO(segGeo);
+  const lidGeo = own(new THREE.BoxGeometry(0.044, 0.006, 0.052));
+  const legGeo = own(new THREE.CylinderGeometry(0.004, 0.004, 0.026, 6));
+
+  const segs = [];
+  for (let k = 0; k < CRAWLER_SEGS; k++) {
+    const g = new THREE.Group();
+    const plate = new THREE.Mesh(segGeo, mat);
+    plate.position.y = 0.03;
+    plate.castShadow = true;
+    g.add(plate);
+    // The lid hinges on its rear edge.
+    const hinge = new THREE.Group();
+    hinge.position.set(-0.022, 0.049, 0);
+    const lid = new THREE.Mesh(lidGeo, lidMat);
+    lid.position.x = 0.022;
+    hinge.add(lid);
+    g.add(hinge);
+    for (const sz of [-0.03, 0.03]) {
+      const leg = new THREE.Mesh(legGeo, mat);
+      leg.position.set(0, 0.013, sz);
+      g.add(leg);
+    }
+    rig.add(g);
+    segs.push({ g, hinge });
+  }
+
+  const hit = hitTarget(0.2, 0.1);
+  hit.position.y = 0.05;
+  group.add(hit);
+
+  const body = {
+    species: 'slag crawler',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    phase: (hashStr(foe.id) % 628) / 100,
+    reach: 0.2,
+    look: 0,
+    baseX: 0, baseY: 0, baseZ: 0,
+    spacing: 0.066, gap: 0, closed: 0,
+
+    setPose(pose, plan, instant = false) {
+      body.plan = plan || null;
+      if (pose === body.pose && !(plan && (plan.stretch || plan.sealed != null))) { return; }
+      body.pose = pose;
+      body.since = 0;
+      body.gone = false;
+      group.visible = true;
+      if (instant) body.snap();
+    },
+
+    goals() {
+      const p = body.pose;
+      const stretch = Math.max(0.55, Math.min(2.4, (body.plan && body.plan.stretch) || 1));
+      if (p === 'stretched') return { spacing: 0.066 * (0.8 + 0.3 * stretch), gap: 0, closed: 0 };
+      if (p === 'squeezed') return { spacing: 0.066 * (0.45 + 0.35 * stretch), gap: 0, closed: 0 };
+      if (p === 'parted' || p === 'lost') return { spacing: 0.062, gap: 0.12, closed: 0 };
+      if (p === 'plated') return { spacing: 0.066, gap: 0, closed: (body.plan.sealed || 0) / Math.max(1, body.plan.of || 1) };
+      return { spacing: 0.066, gap: 0, closed: 0 };
+    },
+
+    snap() {
+      const g = body.goals();
+      body.spacing = g.spacing; body.gap = g.gap; body.closed = g.closed;
+      body.write(0);
+    },
+
+    hitPlayer() { body.lunge = 1; },
+
+    update(dt, reduced, bearing = 0) {
+      body.t += dt;
+      body.since += dt;
+      body.still = reduced;
+      body.look += ((reduced ? 0 : Math.max(-0.5, Math.min(0.5, bearing))) - body.look) * (1 - Math.exp(-3 * dt));
+      body.lunge = Math.max(0, body.lunge - dt * 2.5);
+      const g = body.goals();
+      const k = reduced ? 1 : 1 - Math.exp(-6 * dt);
+      body.spacing += (g.spacing - body.spacing) * k;
+      body.gap += (g.gap - body.gap) * k;
+      body.closed += (g.closed - body.closed) * k;
+
+      if (body.pose === 'dispersed') {
+        const f = Math.min(1, body.since / 2.2);
+        group.position.y = body.baseY - f * 0.01;
+        rig.scale.set(1 + f * 0.3, Math.max(0.001, 1 - f * 0.95), 1 + f * 0.3);
+        if (f >= 0.99) { body.gone = true; group.visible = false; }
+      }
+      body.write(reduced ? 0 : body.t);
+    },
+
+    write(t) {
+      group.position.z = body.baseZ + body.lunge * 0.08;
+      group.rotation.y = body.look * 0.3;
+      const half = (CRAWLER_SEGS - 1) / 2;
+      const crawl = !body.still && body.pose === 'idle' ? Math.sin(t * 2 + body.phase) * 0.002 : 0;
+      segs.forEach((s, i) => {
+        const side = i < CRAWLER_SEGS / 2 ? -1 : 1;
+        s.g.position.x = (i - half) * body.spacing + side * body.gap / 2;
+        s.g.position.y = crawl * (i % 2 ? 1 : -1);
+        // A lid lies flat when closed and stands up on its hinge when open.
+        const open = body.pose === 'plated' ? (i < Math.round(body.closed * CRAWLER_SEGS) ? 0 : 1.15) : (body.pose === 'idle' || body.pose === 'unmoved' ? 1.15 : 0.55);
+        s.hinge.rotation.z = open;
+      });
+    },
+
+    dispose() {
+      for (const g of owned) g.dispose();
+      shadow.geometry.dispose(); shadow.material.dispose();
+      hit.geometry.dispose(); hit.material.dispose();
+    }
+  };
+  body.snap();
+  return body;
+}
+
 
 /* ------------------------------------------------------------------
    THE RECIPE GOLEM
@@ -1111,7 +1277,7 @@ export function buildRecipeGolem(foe) {
 }
 
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['salt husk', 'lamp moth', 'basalt warden', 'recipe golem'];
+export const BODY_SPECIES = ['salt husk', 'lamp moth', 'basalt warden', 'recipe golem', 'slag crawler'];
 
 /**
  * Species that fight on the PLATE only at T4, and why. A species with no body
@@ -1129,5 +1295,6 @@ export function buildFoeBody(species, foe, env) {
   if (species === 'lamp moth') return buildMoth(foe);
   if (species === 'basalt warden') return buildBasaltWarden(foe);
   if (species === 'recipe golem') return buildRecipeGolem(foe);
+  if (species === 'slag crawler') return buildSlagCrawler(foe);
   return null;
 }

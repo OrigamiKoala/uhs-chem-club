@@ -2709,6 +2709,35 @@ body.bench-deployed .modal-container .modal-card {
   .scope-grid.electron-grid.scope-n2, .scope-grid.electron-grid.scope-n3, .scope-grid.electron-grid.scope-n4 { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* ===================================================================
+   THE BOND BENCH, PAIR BOARD AND DOMAIN RIG — Ligar (engine/bondbench.js,
+   pairboard.js, domainrig.js)
+   A trace needs width for its separation axis; a slate and a hub are read
+   from the middle out, so they are close to square. One plate to a row on a
+   phone, two on a desk, so a lamp, a lobe or an arm is never smaller than a
+   thumb can tap.
+   =================================================================== */
+.scope-aperture.bond-aperture { aspect-ratio: 4 / 3; }
+.scope-aperture.bond-aperture.bond-lattice { aspect-ratio: 16 / 10; }
+.scope-grid.scope-n1 .scope-aperture.bond-aperture { aspect-ratio: 16 / 10; }
+.scope-grid.scope-n1 .scope-aperture.bond-aperture.bond-lattice { aspect-ratio: 16 / 9; }
+.scope-grid.bond-grid { grid-template-columns: minmax(0, 1fr); }
+.scope-grid.bond-grid.scope-n2, .scope-grid.bond-grid.scope-n3, .scope-grid.bond-grid.scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.scope-aperture.pair-aperture { aspect-ratio: 5 / 4; }
+.scope-grid.scope-n1 .scope-aperture.pair-aperture { aspect-ratio: 4 / 3; }
+.scope-grid.pair-grid { grid-template-columns: minmax(0, 1fr); }
+.scope-grid.pair-grid.scope-n2, .scope-grid.pair-grid.scope-n3, .scope-grid.pair-grid.scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.scope-aperture.rig-aperture { aspect-ratio: 1 / 1; }
+.scope-aperture.rig-aperture.rig-wide { aspect-ratio: 4 / 3; }
+.scope-grid.scope-n1 .scope-aperture.rig-aperture { aspect-ratio: 4 / 3; }
+.scope-grid.rig-grid { grid-template-columns: minmax(0, 1fr); }
+.scope-grid.rig-grid.scope-n2, .scope-grid.rig-grid.scope-n3, .scope-grid.rig-grid.scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 620px) {
+  .scope-grid.bond-grid.scope-n2, .scope-grid.bond-grid.scope-n3, .scope-grid.bond-grid.scope-n4,
+  .scope-grid.pair-grid.scope-n2, .scope-grid.pair-grid.scope-n3, .scope-grid.pair-grid.scope-n4,
+  .scope-grid.rig-grid.scope-n2, .scope-grid.rig-grid.scope-n3, .scope-grid.rig-grid.scope-n4 { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* A bench with two dials (a lamp's wavelength and its brightness) draws each in its own wrapper. */
 .lq-dialwrap { display: block; }
 .lq-dialwrap + .lq-dialwrap { margin-top: 0.6rem; }

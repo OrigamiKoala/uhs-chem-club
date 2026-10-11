@@ -1010,6 +1010,134 @@ async function joinStagePasses() {
 }
 await joinStagePasses();
 
+/* ================================================================ LIGAR, BENCHES THREE TO NINE
+
+   The bond bench, the pair board, the domain rig and the box rack in its
+   molecular layout, deployed onto the built Ligar's sites three to nine and
+   measured by the same `check` that measures every other instrument: every
+   body, readable face and control inside the glass at six aspects, clear of the
+   HUD and the world. Each is fed the widest stage its quest declares, read from
+   the quest's own table, and then EVERY stage goes through the real pointer
+   path: a press on each picture resolves to its own plate. */
+
+const { BondBench3D } = await import('../src/learn/engine/bondbench3d.js');
+const { PairBoard3D } = await import('../src/learn/engine/pairboard3d.js');
+const { DomainRig3D } = await import('../src/learn/engine/domainrig3d.js');
+const { BoxRack3D: LigarRack3D } = await import('../src/learn/engine/boxrack3d.js');
+
+const LG = {};
+for (const id of ['q3-distance', 'q4-dots', 'q5-resonance', 'q6-shape', 'q7-polarity', 'q8-hybrid', 'q9-orbitals']) {
+  LG[id] = await import(`../src/learn/quests/unit03/${id}.js`);
+}
+
+function layLigar(bench, st) {
+  if (bench instanceof BondBench3D) bench.setPlates(st.rigs, { settings: st.settings || [], setting: st.start || 1 });
+  else if (bench instanceof PairBoard3D) bench.setPlates(st.rigs, { hands: ['bond', 'lone', 'x'] });
+  else if (bench instanceof DomainRig3D) bench.setPlates(st.rigs, {});
+  else bench.setPlates(st.rigs, { show: { counts: Boolean(st.counts) }, hand: null });
+}
+
+const LG_BENCHES = [
+  ['q3-distance', 'bond bench', (c, a) => new BondBench3D(null, { world: worldFrame(c, a) })],
+  ['q4-dots', 'pair board', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })],
+  ['q5-resonance', 'pair board (resonance)', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })],
+  ['q6-shape', 'domain rig (shape)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })],
+  ['q7-polarity', 'domain rig (field)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })],
+  ['q8-hybrid', 'domain rig (mixer)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })],
+  ['q9-orbitals', 'box rack (molecular)', (c, a) => new LigarRack3D(null, { world: worldFrame(c, a) })]
+];
+
+{
+  const mark = failures;
+  for (const [id, label, build] of LG_BENCHES) {
+    const stages = LG[id].STAGES;
+    const widestSt = stages.reduce((a, b) => (b.rigs.length > a.rigs.length ? b : a));
+    check(id, label, build, bench => layLigar(bench, widestSt));
+    const dialSt = stages.find(st => st.settings && st !== widestSt);
+    if (dialSt) check(id, `${label}, dial stage`, build, bench => layLigar(bench, dialSt));
+    // A different head is a different piece of hardware in the well: measure one stage of each.
+    const seenHeads = new Set([widestSt.rigs.map(r => r.head).join()]);
+    for (const st of stages) {
+      const heads = st.rigs.map(r => r.head).join();
+      if (seenHeads.has(heads)) continue;
+      seenHeads.add(heads);
+      check(id, `${label}, ${heads} plate`, build, bench => layLigar(bench, st));
+    }
+  }
+  if (failures === mark) ok(`all seven later Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
+}
+
+async function ligarLaterPasses() {
+  globalThis.requestAnimationFrame ??= () => 0;
+  globalThis.cancelAnimationFrame ??= () => {};
+  const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+  const screenPoint = (station, px, py) => {
+    const mesh = station.screen.mesh;
+    mesh.updateMatrixWorld(true);
+    const size = mesh.geometry.parameters;
+    return new THREE.Vector3(
+      (px / station.screen.w - 0.5) * size.width, (0.5 - py / station.screen.h) * size.height, 0
+    ).applyMatrix4(mesh.matrixWorld);
+  };
+  const center = h => (h.r !== undefined ? [h.x, h.y] : [(h.x0 + h.x1) / 2, (h.y0 + h.y1) / 2]);
+
+  for (const [id, label, build] of LG_BENCHES) {
+    const anchor = world.benchAnchor(id);
+    world.setBenchDeployed(id, true);
+    let probed = null;
+    const bench = build(camera, anchor);
+    bench.onProbe = hit => { probed = hit; };
+    const pressAt = p => {
+      const q = p.clone().project(camera);
+      bench.onPointer3D({ clientX: (q.x + 1) / 2 * 1280, clientY: (1 - q.y) / 2 * 720, preventDefault() {} });
+    };
+    let plates = 0, pressed = 0;
+    const stages = LG[id].STAGES;
+    for (let i = 0; i < stages.length; i++) {
+      const st = stages[i];
+      layLigar(bench, st);
+      if (bench.stations.length !== st.rigs.length) {
+        fail(`${id} stage ${i + 1}: ${st.rigs.length} plates declared, ${bench.stations.length} stations built`);
+        continue;
+      }
+      bench.drawAll();
+      bench.viewer.applyCamera();
+      camera.updateMatrixWorld(true);
+      for (const rec of bench.stations) {
+        plates++;
+        const where = `${id} stage ${i + 1} ${rec.item.label}`;
+        if (rec.station.screen.w < 8) fail(`${where}: the screen has no pixels`);
+        if (!rec.hits?.length) { fail(`${where}: the picture drew nothing a press could read`); continue; }
+
+        if (bench instanceof LigarRack3D && rec.item.head === 'rack' && rec.item.combined) {
+          // Pick Up from the tray, then tap the first free box: the electron must land.
+          const boxHit = rec.hits.find(h => h.key === 'box' && !(rec.item.rack[`${h.row}:${h.idx}`]));
+          const chip = rec.hits.find(h => h.key === 'hand' && h.hand === 'u');
+          if (!chip || !boxHit) { fail(`${where}: the rack drew no tray or no boxes to press`); continue; }
+          pressAt(screenPoint(rec.station, ...center(chip)));
+          if (bench.cfg.hand !== 'u') fail(`${where}: a press on the Up chip did not pick it up`);
+          const before = bench.readOf(rec.item.id).total;
+          pressAt(screenPoint(rec.station, ...center(boxHit)));
+          if (bench.readOf(rec.item.id).total !== before + 1) fail(`${where}: a press on a box did not place an electron`);
+          bench.clear(rec.item.id); bench.setHand(null);
+          pressed++;
+          continue;
+        }
+        const hit = rec.hits.find(h => h.key !== 'hand') || rec.hits[0];
+        probed = null;
+        pressAt(screenPoint(rec.station, ...center(hit)));
+        if (!probed) fail(`${where}: a press on the picture (${hit.key}) read nothing`);
+        else if (probed.plateId !== undefined && probed.plateId !== rec.item.id) fail(`${where}: a press read plate ${probed.plateId}`);
+        pressed++;
+      }
+    }
+    bench.dispose();
+    world.setBenchDeployed(id, false);
+    ok(`${id}: all ${stages.length} stages built, ${plates} plates drawn and ${pressed} pressed through the real pointer path`);
+  }
+}
+await ligarLaterPasses();
+
 /* ================================================================ LANTERNFALL
 
    Nine benches on aurora ice, four new built instruments (the light bench, the
@@ -1202,6 +1330,14 @@ const HUSK_POSES = [
   ['idle'], ['unmoved'], ['split'], ['scattered'], ['layered', { layers: 2 }],
   ['layered', { layers: 4 }], ['even'], ['dispersed']
 ];
+const CRAWLER_POSES = [
+  ['idle'], ['unmoved'], ['rest', { stretch: 1 }], ['stretched', { stretch: 2.1 }], ['squeezed', { stretch: 0.55 }],
+  ['parted'], ['plated', { sealed: 1, of: 4 }], ['plated', { sealed: 4, of: 4 }], ['held'], ['lost'], ['dispersed']
+];
+const WARDEN_POSES = [
+  ['idle'], ['unmoved'], ['cleaved'], ['conductive'], ['splayed', { arms: 6 }], ['splayed', { arms: 2 }],
+  ['turned'], ['still'], ['locked'], ['free'], ['dispersed']
+];
 const MOTH_POSES = [
   ['idle'], ['shedding', { dots: 1, speed: 2 }], ['shedding', { dots: 5, speed: 12 }], ['still'], ['dispersed']
 ];
@@ -1248,7 +1384,7 @@ function foeStage(cfg, stage, stageNo, aspects) {
   if (!enc) return null;
   world.setBenchDeployed(questId, true);
   const species = enc.species;
-  const table = species === 'salt husk' ? HUSK_POSES : MOTH_POSES;
+  const table = species === 'salt husk' ? HUSK_POSES : species === 'slag crawler' ? CRAWLER_POSES : species === 'basalt warden' ? WARDEN_POSES : MOTH_POSES;
 
   for (const [aspectName, aspect] of aspects) {
     const camera = new THREE.PerspectiveCamera(FOV, aspect, 0.05, 80);
@@ -1537,6 +1673,38 @@ console.log('The foes — spoil standing in the wells\n');
   }, GRAIN_STAGES, (st, enc) => enc
     ? enc.foes.flatMap(f => [[f.id, { tool: 'cut' }], [f.id, { tool: 'settle' }]])
     : []);
+
+  // LIGAR: slag crawlers on the bond bench, the pair board and the molecular rack,
+  // and basalt wardens on the domain rig. (`world` becomes Ligar.)
+  world = new LigarWorld(null);
+  world.scene.updateMatrixWorld(true);
+  const ligarCfg = (questId, label, build) => ({
+    questId, label, build: (camera, anchor) => build(camera, anchor),
+    lay: (bench, st) => layLigar(bench, st), items: st => st.rigs || [], env: {}, select: false
+  });
+  const crawlerProbes = {
+    'q3-distance': (st, enc) => enc ? enc.foes.flatMap(f => {
+      const rig = st.rigs.find(r => r.id === f.id);
+      return [[f.id, { kind: 'curve', pair: rig.pair, r: st.settings[0] }], [f.id, { kind: 'curve', pair: rig.pair, r: st.settings[st.settings.length - 1] }]];
+    }) : [],
+    'q4-dots': (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { kind: 'lamps', lit: 1, of: 3 }], [f.id, { kind: 'lamps', lit: 3, of: 3 }]]) : [],
+    'q5-resonance': (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { kind: 'lamps', lit: 2, of: 3 }], [f.id, { kind: 'charges', zero: 1, of: 3 }]]) : [],
+    'q9-orbitals': (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { kind: 'order', order: 2, placed: 6 }], [f.id, { kind: 'order', order: 0, placed: 4 }]]) : []
+  };
+  await foePasses(ligarCfg('q3-distance', 'bond bench', (c, a) => new BondBench3D(null, { world: worldFrame(c, a) })), LG['q3-distance'].STAGES, crawlerProbes['q3-distance']);
+  await foePasses(ligarCfg('q4-dots', 'pair board', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })), LG['q4-dots'].STAGES, crawlerProbes['q4-dots']);
+  await foePasses(ligarCfg('q5-resonance', 'pair board (resonance)', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })), LG['q5-resonance'].STAGES, crawlerProbes['q5-resonance']);
+  await foePasses(ligarCfg('q9-orbitals', 'molecular rack', (c, a) => new LigarRack3D(null, { world: worldFrame(c, a) })), LG['q9-orbitals'].STAGES, crawlerProbes['q9-orbitals']);
+  for (const [id, label] of [['q6-shape', 'domain rig (shape)'], ['q7-polarity', 'domain rig (field)'], ['q8-hybrid', 'domain rig (mixer)']]) {
+    await foePasses(ligarCfg(id, label, (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })), LG[id].STAGES,
+      (st, enc) => enc ? enc.foes.flatMap(f => {
+        const rig = st.rigs.find(r => r.id === f.id);
+        if (rig.head === 'field') return [[f.id, { rig: 'field', mol: rig.mol, on: true }]];
+        if (rig.head === 'twist') return [[f.id, { rig: 'twist', bond: rig.bond }]];
+        if (rig.head === 'mixer') return [[f.id, { rig: 'mix', p: 3 }]];
+        return [[f.id, { rig: 'arms', arms: [{ kind: 'atom', sym: 'H' }, { kind: 'atom', sym: 'H' }, { kind: 'lone' }] }]];
+      }) : []);
+  }
 }
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

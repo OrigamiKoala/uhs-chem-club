@@ -518,6 +518,11 @@ radius 3, ionic radius 5, ionization energy 6, electronegativity 8.
 
 ## World 3 — Ligar, benches three to nine (`unit03`)
 
+**BUILT 2026-10-10.** What follows is the plan the benches were built from, kept as the
+record. Where the build parted from it (HOF for HCN in `q4-dots`, a separate bond bench
+instead of a join-bench crank, three polarity plates not six, `q5-resonance` retitled
+*Charge and Resonance*) is listed in `ligar-complete.md`.
+
 Benches one and two (`q1-joins`, `q2-lattice`) are built and unchanged. They
 earn bond, ionic, covalent, double/triple bond, melting point, lattice, brittle, conduct and formula unit. What follows assumes
 those words and Lanternfall's. *Lone pair* is withheld through `q1-joins` and

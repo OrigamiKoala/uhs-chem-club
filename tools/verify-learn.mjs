@@ -52,6 +52,10 @@ globalThis.document = globalThis.document || {
 // light bench's planners, so it loads after the shims above like a quest does.
 const FOES = await import('../src/learn/engine/foes.js');
 const LIGHT = await import('../src/learn/engine/lightdata.js');
+const BONDDATA = await import('../src/learn/engine/bonddata.js');
+const LEWIS = await import('../src/learn/engine/lewis.js');
+const VSEPR = await import('../src/learn/engine/vsepr.js');
+const MOD = await import('../src/learn/engine/mo.js');
 
 /**
  * Sentence count, done in a way that survives chemistry.
@@ -328,6 +332,14 @@ function checkStageTable(q, mod) {
     'unit01/q5-assay': /\b(abundances?|weighted average|average atomic mass|relative atomic mass|mass spectrum|mass spectrometry)\b/i,
     'unit03/q1-joins': /\b(bonds?|bonded|bonding|ionic|covalent|shares? a pair|lone pairs?|double bonds?|triple bonds?|formula unit)\b/i,
     'unit03/q2-lattice': /\b(lattices?|crystals?|crystalline|conduct\w*|electrolytes?|dissociat\w*|brittle|melting points?)\b/i,
+    // Ligar's later benches. Each holds out only what it has yet to earn.
+    'unit03/q4-dots': /\b(lewis structures?|lone pairs?|octets?|incomplete octets?|expanded octets?|central atoms?|polyatomic ions?|free radicals?)\b/i,
+    'unit03/q5-resonance': /\b(formal charges?|resonance structures?|resonance|fractional bond orders?|delocali[sz]ed)\b/i,
+    'unit03/q6-shape': /\b(electron domains?|domains?|linear|trigonal planar|tetrahedral|vsepr|trigonal pyramidal|bent|trigonal bipyramidal|seesaw|octahedral|square planar|electron geometry|electron geometries|molecular geometry|molecular geometries)\b/i,
+    'unit03/q7-polarity': /\b(partial charges?|polar covalent|nonpolar|polar|molecular dipoles?|bond dipoles?|dipoles?)\b/i,
+    'unit03/q8-hybrid': /\b(restricted rotation|sigma|pi bonds?|pi|hybrid(?:s|i[sz]ation|i[sz]ed)?|sp[3\u00b3]d[2\u00b2]?(?!\w)|sp[2\u00b2](?!\w)|sp[3\u00b3](?!\w)|sp(?![\w\u00b2\u00b3]))/i,
+    'unit03/q9-orbitals': /\b(antibonding|bonding orbitals?|molecular orbitals?)\b/i,
+    'unit03/q3-distance': /\b(potential energy curves?|bond lengths?|bond energ(?:y|ies)|bond orders?|lattice energ(?:y|ies))\b/i,
     'unit07/q1-recipe': /\b(fixed composition|constant composition|definite proportions|multiple proportions|empirical formulas?|percent composition)\b/i,
     'unit01/q6-weigh': /\b(moles?|molar|avogadro\w*|formula mass|gram formula mass)\b/i,
     // Lanternfall. Longer phrases first, so "visible spectrum" is read as the
@@ -780,6 +792,63 @@ function refusalLeaks(q, mod, st, i, seed) {
   return leaks;
 }
 
+
+/* ------------------------------------------------------------------
+   LIGAR'S FOES, READ AGAINST THEIR PLATES
+
+   `planFoe` asks the foe's planner (bonddata, lewis, vsepr, mo). This reads the
+   plate's declaration directly, with the arithmetic done again here, and says
+   what the pose has to be. A crawler that stretches must be a pair the crank
+   really stretches; a warden that turns must be a molecule whose pulls add.
+   ------------------------------------------------------------------ */
+function ligarProbes(species, item, st) {
+  {
+    const out = [];
+    if (species === 'slag crawler') {
+      if (item.head === 'pair') {
+        const p = BONDDATA.PAIRS[item.pair];
+        for (const r of [st.settings[0], p.r0, st.settings[st.settings.length - 1]]) {
+          const e = BONDDATA.morse(p, r);
+          const pose = Math.abs(r - p.r0) <= 3 ? 'rest' : r < p.r0 ? 'squeezed' : e > -0.04 * p.de ? 'parted' : 'stretched';
+          out.push({ probe: { kind: 'curve', pair: item.pair, r }, want: { pose } });
+        }
+      } else if (item.head === 'slate') {
+        const n = LEWIS.MOLECULES[item.mol].syms.length;
+        out.push({ probe: { kind: 'lamps', lit: 0, of: n }, want: { pose: 'unmoved' } });
+        out.push({ probe: { kind: 'lamps', lit: n, of: n }, want: { pose: 'plated', sealed: n, of: n } });
+        out.push({ probe: { kind: 'charges', zero: 1, of: n }, want: { pose: 'plated', sealed: 1, of: n } });
+      } else if (item.head === 'rack') {
+        out.push({ probe: { kind: 'order', order: 0, placed: 0 }, want: null });
+        out.push({ probe: { kind: 'order', order: 2, placed: 4 }, want: { pose: 'held' } });
+        out.push({ probe: { kind: 'order', order: 0, placed: 4 }, want: { pose: 'lost' } });
+      }
+    } else if (item.head === 'lattice') {
+      out.push({ probe: { rig: 'hold', lattice: item.lattice }, want: { pose: 'gripped', grip: Math.round(BONDDATA.LATTICES[item.lattice].energy / 3795 * 100) / 100 } });
+    } else if (item.head === 'slate') {
+      const n = LEWIS.MOLECULES[item.mol].syms.length;
+      out.push({ probe: { rig: 'lamps', lit: n, of: n }, want: { pose: 'cleaved' } });
+      out.push({ probe: { rig: 'lamps', lit: 1, of: n }, want: { pose: 'unmoved' } });
+    } else if (item.head === 'rack') {
+      const unpaired = MOD.DIATOMICS[item.mol].unpaired;
+      out.push({ probe: { rig: 'pull', unpaired }, want: { pose: unpaired > 0 ? 'turned' : 'still' } });
+    } else if (item.head === 'hub' || item.head === 'show') {
+      const arms = item.mol ? VSEPR.RIG_MOLECULES[item.mol].arms
+        : (item.stock || []).flatMap(s => Array.from({ length: s.n }, () => (s.kind === 'lone' ? { kind: 'lone' } : { kind: 'atom', sym: s.sym, mult: s.mult || 1 })));
+      out.push({ probe: { rig: 'arms', arms }, want: { pose: 'splayed', arms: arms.length } });
+      out.push({ probe: { rig: 'arms', arms: [] }, want: { pose: 'unmoved' } });
+    } else if (item.head === 'field') {
+      const polar = VSEPR.planDipole(item.mol).polar;
+      out.push({ probe: { rig: 'field', mol: item.mol, on: true }, want: { pose: polar ? 'turned' : 'still' } });
+      out.push({ probe: { rig: 'field', mol: item.mol, on: false }, want: { pose: 'unmoved' } });
+    } else if (item.head === 'twist') {
+      out.push({ probe: { rig: 'twist', bond: item.bond }, want: { pose: item.bond === 'single' ? 'free' : 'locked' } });
+    } else if (item.head === 'mixer') {
+      for (const p of [1, 2, 3]) out.push({ probe: { rig: 'mix', p }, want: { pose: 'splayed', arms: p + 1 } });
+    }
+    return out;
+  }
+}
+
 /* ------------------------------------------------------------------
    THE ENCOUNTER LAYER (docs/plans/storyline-and-combat.md, sections 3-4)
 
@@ -830,6 +899,25 @@ function checkEncounter(q, mod, st, i, { label, tooEarly, emoji, solved, missed,
   const reactions = [];
   const wrong = [];
   for (const foe of enc.foes) {
+    // Ligar's spoil: the slag crawler on the bond bench, the pair board and the molecular
+    // rack, and the basalt warden on the domain rig. Each reads its plate, and each reading
+    // is checked below against the plate's own declaration.
+    if (enc.species === 'slag crawler' || (enc.species === 'basalt warden' && ['hub', 'show', 'field', 'mixer', 'twist', 'lattice', 'slate', 'rack'].includes(foe.item?.head))) {
+      for (const { probe, want } of ligarProbes(enc.species, foe.item, st)) {
+        const plan = FOES.planFoe(enc, foe, probe);
+        if (want == null) {
+          if (plan) wrong.push(`${foe.id} reacts (${plan.pose}) to ${JSON.stringify(probe)}, which says nothing`);
+          continue;
+        }
+        if (!plan) { fail(`${label}: ${foe.id} gives no reaction to ${JSON.stringify(probe)}`); continue; }
+        reactions.push(plan.line);
+        if (plan.pose !== want.pose) wrong.push(`${foe.id} ${JSON.stringify(probe)} -> ${plan.pose}, the bench says ${want.pose}`);
+        for (const [k, v] of Object.entries(want)) {
+          if (k !== 'pose' && plan[k] !== v) wrong.push(`${foe.id} ${JSON.stringify(probe)} -> ${k} ${plan[k]}, the bench says ${v}`);
+        }
+      }
+      continue;
+    }
     const probes = (enc.species === 'salt husk' && foe.item?.particles)
       ? ['cut', 'settle'].filter(tool => (st.controls || []).includes(tool)).map(tool => ({ tool }))
       : (enc.species === 'lamp moth' && foe.item?.metal)
@@ -1303,7 +1391,83 @@ async function checkDrawn(q, mod) {
 
     const rackHeads = ['rack', 'strip'];
     const electronHeads = ['spectrum', 'atom'];
-    const lightRigs = (st.rigs || []).filter(r => !rackHeads.includes(r.head) && !electronHeads.includes(r.head));
+    const bondHeads = ['pair', 'lattice'];
+    const slateHeads = ['slate'];
+    const rigHeads = ['hub', 'show', 'field', 'mixer', 'twist'];
+    const ligarHeads = [...bondHeads, ...slateHeads, ...rigHeads];
+    const lightRigs = (st.rigs || []).filter(r => !rackHeads.includes(r.head) && !electronHeads.includes(r.head) && !ligarHeads.includes(r.head));
+
+    // Ligar's three plate benches. The declaration is held to the real tables,
+    // then every plate is drawn at phone and bench size.
+    const bondRigs = (st.rigs || []).filter(r => bondHeads.includes(r.head));
+    if (bondRigs.length) {
+      const { BondBench } = await import('../src/learn/engine/bondbench.js');
+      const BD = await import('../src/learn/engine/bonddata.js');
+      const proto = BondBench.prototype;
+      const bench = Object.create(proto);
+      bench.cfg = { settings: st.settings || [], setting: st.start || 1 };
+      const ids = new Set();
+      for (const raw of bondRigs) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        if (raw.head === 'pair') {
+          const p = BD.PAIRS[raw.pair];
+          if (!p) { fail(`${label}: plate "${raw.id}" names a pair with no measured bond "${raw.pair}"`); bad++; }
+          else if (!(st.settings || []).includes(p.r0)) { fail(`${label}: plate "${raw.id}" has no crank setting at its bond length, so its bottom cannot be found`); bad++; }
+        } else if (!BD.LATTICES[raw.lattice]) {
+          fail(`${label}: plate "${raw.id}" names a lattice with no real figures "${raw.lattice}"`); bad++;
+        }
+        const item = proto.prepare.call(bench, raw);
+        item.trail = raw.head === 'pair' ? [st.settings?.[(st.start || 1) - 1], ...(raw.head === 'pair' ? [BD.PAIRS[raw.pair]?.r0] : [])].filter(Boolean) : [];
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+      if (bondRigs.some(r => r.head === 'pair') && !(Array.isArray(st.settings) && st.settings.length > 1)) {
+        fail(`${label}: pair plates need crank settings`); bad++;
+      }
+    }
+    const slateRigs = (st.rigs || []).filter(r => slateHeads.includes(r.head));
+    if (slateRigs.length) {
+      const { PairBoard } = await import('../src/learn/engine/pairboard.js');
+      const LW = await import('../src/learn/engine/lewis.js');
+      const proto = PairBoard.prototype;
+      const bench = Object.create(proto);
+      bench.cfg = { hand: 'bond', hands: ['bond', 'lone', 'x'], charges: true };
+      const ids = new Set();
+      for (const raw of slateRigs) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        const mol = LW.MOLECULES[raw.mol];
+        if (!mol) { fail(`${label}: plate "${raw.id}" names an unknown molecule "${raw.mol}"`); bad++; continue; }
+        for (const sym of mol.syms) if (!LW.VALENCE[sym]) { fail(`${label}: plate "${raw.id}" has an atom with no valence "${sym}"`); bad++; }
+        if (raw.prefill) {
+          const r = LW.planLewis(mol, raw.prefill, raw.charge);
+          if (r.left < 0) { fail(`${label}: plate "${raw.id}" prefills more electrons than its tray holds`); bad++; }
+        }
+        const item = proto.prepare.call(bench, raw);
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+    }
+    const rigRigs = (st.rigs || []).filter(r => rigHeads.includes(r.head));
+    if (rigRigs.length) {
+      const { DomainRig } = await import('../src/learn/engine/domainrig.js');
+      const VS = await import('../src/learn/engine/vsepr.js');
+      const proto = DomainRig.prototype;
+      const bench = Object.create(proto);
+      bench.cfg = { hand: null, yaw: 0.55, pitch: 0.35, field: true, arrows: true, mix: 2, twist: 0 };
+      const ids = new Set();
+      for (const raw of rigRigs) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        if (raw.mol && !VS.RIG_MOLECULES[raw.mol]) { fail(`${label}: plate "${raw.id}" names an unknown molecule "${raw.mol}"`); bad++; }
+        if ((raw.head === 'show' || raw.head === 'field') && !raw.mol) { fail(`${label}: plate "${raw.id}" shows no molecule`); bad++; }
+        if (raw.head === 'twist' && !['single', 'double', 'triple'].includes(raw.bond)) { fail(`${label}: twist plate "${raw.id}" has no bond`); bad++; }
+        const item = proto.prepare.call(bench, raw);
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+    }
     const electronRigs = (st.rigs || []).filter(r => electronHeads.includes(r.head));
     if (electronRigs.length) {
       const { ElectronBench } = await import('../src/learn/engine/electronbench.js');
@@ -1346,7 +1510,7 @@ async function checkDrawn(q, mod) {
         if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
         if (raw.head === 'rack') {
           for (const id of (raw.rows || [])) if (!E.rowOf(id)) { fail(`${label}: plate "${raw.id}" lists an unknown row "${id}"`); bad++; }
-          if (raw.layout && !['atomic', 'address'].includes(raw.layout)) { fail(`${label}: plate "${raw.id}" has an unknown layout`); bad++; }
+          if (raw.layout && !['atomic', 'address', 'molecular'].includes(raw.layout)) { fail(`${label}: plate "${raw.id}" has an unknown layout`); bad++; }
           if (raw.sample && E.MEASURED[raw.sample] === undefined) { fail(`${label}: plate "${raw.id}" names a sample with no measured magnet reading`); bad++; }
           for (const [key, v] of Object.entries(raw.prefill || {})) {
             const [rowId, idx] = key.split(':');
@@ -1674,6 +1838,192 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   if (failures === before) {
     ok(`${WORLDS.filter(x => x.status === 'live').length} live world(s): the problem set is assembled at world scope, XP-free, and withheld until the world is done`);
   }
+}
+
+
+/* ------------------------------------------------------------------
+   EVERY FIGURE A LIGAR STAGE GRADES AGAINST IS RECOMPUTED FROM THE REAL TABLES.
+   The bond bench, the pair board, the domain rig and the molecular rack each
+   keep their numbers in one pure module (`bonddata`, `lewis`, `vsepr`, `mo`).
+   The answers are checked against those modules here, so an answer authored
+   as a literal cannot drift from the instrument that teaches it.
+   ------------------------------------------------------------------ */
+{
+  const before = failures;
+  const get = async id => { const q = getQuest('unit03', id); return q && q.status === 'live' ? q.module() : null; };
+  const [q3, q4, q5, q6, q7, q8, q9] = await Promise.all(['q3-distance', 'q4-dots', 'q5-resonance', 'q6-shape', 'q7-polarity', 'q8-hybrid', 'q9-orbitals'].map(get));
+  const same = (a, b, what) => { if (String(a) !== String(b)) fail(`${what}: graded ${a}, the real answer is ${b}`); };
+  const near = (a, b, tol, what) => { if (Math.abs(a - b) > tol) fail(`${what}: graded ${a}, the real figure is ${b}`); };
+
+  if (q3) {
+    const { PAIRS, LATTICES, morse, lowestOf, byLatticeEnergy, coulombIndex } = BONDDATA;
+    // Every pair plate's bottom is one of the crank's settings, and it IS the bottom.
+    q3.STAGES.forEach((st, i) => {
+      for (const rig of st.rigs.filter(r => r.head === 'pair')) {
+        const low = lowestOf(rig.pair, st.settings);
+        same(low.r, PAIRS[rig.pair].r0, `unit03/q3-distance stage ${i + 1} ${rig.id}: the lowest crank setting`);
+        near(morse(rig.pair, PAIRS[rig.pair].r0), -PAIRS[rig.pair].de, 0.01, `unit03/q3-distance stage ${i + 1} ${rig.id}: the well's depth`);
+      }
+    });
+    same(q3.SOLUTIONS[0].choice, PAIRS['H-H'].r0, 'unit03/q3-distance stage 1 (the bottom of H-H, pm)');
+    same(q3.SOLUTIONS[1].choice, PAIRS['H-Cl'].de, 'unit03/q3-distance stage 2 (the depth of H-Cl, kJ/mol)');
+    if (!(PAIRS['Cl-Cl'].r0 > PAIRS['H-H'].r0)) fail('unit03/q3-distance stage 4: chlorine\'s bottom does not sit further out than hydrogen\'s');
+    const s5 = q3.STAGES[4].rigs.slice().sort((a, b) => PAIRS[b.pair].r0 - PAIRS[a.pair].r0).map(r => r.id).join();
+    same(q3.SOLUTIONS[4].order.join(), s5, 'unit03/q3-distance stage 5 (longest bond first)');
+    const s6 = q3.STAGES[5].rigs.slice().sort((a, b) => PAIRS[a.pair].r0 - PAIRS[b.pair].r0).map(r => PAIRS[r.pair].de);
+    if (s6.some((v, k) => k && v >= s6[k - 1])) fail('unit03/q3-distance stage 6: the shorter bonds are not the deeper wells');
+    const real = byLatticeEnergy(q3.STAGES[6].rigs.map(r => r.lattice));
+    const graded = q3.SOLUTIONS[6].order.map(id => q3.STAGES[6].rigs.find(r => r.id === id).lattice);
+    same(graded.join(), real.join(), 'unit03/q3-distance stage 7 (lattices, strongest first)');
+    const byCoulomb = q3.STAGES[6].rigs.map(r => r.lattice).sort((a, b) => coulombIndex(b) - coulombIndex(a));
+    same(byCoulomb.join(), real.join(), 'unit03/q3-distance stage 7: charge over distance orders the lattices as the real energies do');
+    const hot = q3.STAGES[7].rigs.slice().sort((a, b) => LATTICES[b.lattice].melts - LATTICES[a.lattice].melts)[0].id;
+    same(q3.SOLUTIONS[7].choice, hot, 'unit03/q3-distance stage 8 (the higher melting point)');
+  }
+
+  if (q4 || q5) {
+    const { MOLECULES, DRAWINGS, planLewis, allLit, drawing, trayFor } = LEWIS;
+    const lit = (mol, d, q = null) => allLit(planLewis(mol, d, q));
+    if (q4) {
+      q4.STAGES.forEach((st, i) => {
+        for (const rig of st.rigs) {
+          const mol = MOLECULES[rig.mol];
+          if (!mol) continue;
+          const t = trayFor(mol);
+          if (t !== mol.syms.reduce((n, sym) => n + LEWIS.VALENCE[sym], 0) - mol.charge) fail(`unit03/q4-dots stage ${i + 1}: ${rig.mol}'s tray does not hold its valence electrons`);
+        }
+      });
+      for (const [i, key, q] of [[0, 'H2O', null], [2, 'CO2', null], [4, 'NH4', 1], [5, 'BF3', null], [7, 'SF6', null]]) {
+        const sol = q4.SOLUTIONS[i].boards?.a || DRAWINGS[key];
+        if (!lit(key, DRAWINGS[key], q)) fail(`unit03/q4-dots stage ${i + 1}: the intended ${key} drawing does not light every lamp`);
+        void sol;
+      }
+      if (lit('NH4', DRAWINGS.NH4, 0)) fail('unit03/q4-dots stage 5: the ammonium drawing completes on the neutral tray');
+      if (trayFor('NO') % 2 !== 1) fail('unit03/q4-dots stage 7: nitric oxide\'s tray is not odd');
+      // Stage 2: the lone pairs on the heaviest atom, from the valence electrons.
+      const lone = { ch4: (4 - 4) / 2, nh3: (5 - 3) / 2, hf: (7 - 1) / 2 };
+      const bin = { none: 0, one: 1, three: 3 };
+      for (const [row, bid] of Object.entries(q4.SOLUTIONS[1].bins)) same(bin[bid], lone[row], `unit03/q4-dots stage 2 (${row}'s lone pairs)`);
+      // Stage 4: on this board only the oxygen can sit between hydrogen and fluorine.
+      const hof = [];
+      for (let b01 = 0; b01 <= 1; b01++) for (let b02 = 0; b02 <= 1; b02++) for (let b12 = 0; b12 <= 3; b12++) {
+        for (let l0 = 0; l0 <= 4; l0++) for (let l1 = 0; l1 <= 4; l1++) for (let l2 = 0; l2 <= 4; l2++) {
+          if (b01 + b02 > 1 || b02 + b12 > 1) continue;
+          if (lit('HOF', drawing({ '0-1': b01, '0-2': b02, '1-2': b12 }, { 0: l0, 1: l1, 2: l2 }))) hof.push([b01, b02, b12]);
+        }
+      }
+      if (!hof.length || hof.some(([a, b, c]) => !(a === 1 && b === 0 && c === 1))) fail('unit03/q4-dots stage 4: oxygen is not the only atom that can join hydrogen and fluorine');
+      // The board refuses the other way round: a hydrogen or a fluorine cannot join two atoms.
+      let placed = drawing();
+      placed = LEWIS.addBond(MOLECULES.HOF, placed, 0, 1).placed;
+      if (!LEWIS.addBond(MOLECULES.HOF, placed, 0, 2).refused) fail('unit03/q4-dots stage 4: the board lets one hydrogen atom join two others');
+      const bf = planLewis('BF3', DRAWINGS.BF3);
+      if (bf.atoms[0].lamp !== 'amber') fail('unit03/q4-dots stage 6: boron\'s lamp is not amber in the intended BF3 drawing');
+      if (planLewis('SF6', DRAWINGS.SF6).atoms[0].lamp !== 'expanded') fail('unit03/q4-dots stage 8: sulfur\'s lamp is not expanded in SF6');
+    }
+    if (q5) {
+      const fc = (mol, d) => planLewis(mol, d).atoms.map(a => a.fc);
+      const co = fc('CO', DRAWINGS.CO);
+      if (co[1] !== 1 || co[0] !== -1) fail('unit03/q5-resonance stage 1: oxygen is not +1 and carbon -1 in the CO drawing');
+      same(q5.SOLUTIONS[0].choice, 'o', 'unit03/q5-resonance stage 1 (the atom that owns one electron too few)');
+      const sumAbs = a => a.reduce((n, v) => n + Math.abs(v), 0);
+      if (!(sumAbs(fc('CO2', DRAWINGS.CO2_double)) < sumAbs(fc('CO2', DRAWINGS.CO2_triple)))) fail('unit03/q5-resonance stage 2: the double-bonded drawing does not have charges nearer zero');
+      same(q5.STAGES[1].rigs.find(r => r.id === q5.SOLUTIONS[1].choice).prefill === DRAWINGS.CO2_double, true, 'unit03/q5-resonance stage 2 (the better drawing is the one with charges near zero)');
+      // Stage 3: the better SCN- drawing puts its minus on the stronger puller.
+      const better = q5.STAGES[2].rigs.find(r => r.id === q5.SOLUTIONS[2].choice).prefill;
+      const neg = planLewis('SCN', better).atoms.find(a => a.fc < 0);
+      if (neg.sym !== 'N' || !(VSEPR.EN.N > VSEPR.EN.S)) fail('unit03/q5-resonance stage 3: the graded drawing does not put the minus on the more electronegative atom');
+      // Stage 4: the measured lengths of ozone are equal.
+      const o3 = MOLECULES.O3.lengths;
+      if (o3['0-1'] !== o3['0-2']) fail('unit03/q5-resonance stage 4: ozone\'s two measured bonds are not the same length');
+      // Stages 5 and 6: nitrate has three drawings, and four pairs share three bonds.
+      const set = [DRAWINGS.NO3_a, DRAWINGS.NO3_b, DRAWINGS.NO3_c];
+      same(LEWIS.distinctDrawings('NO3', set).length, 3, 'unit03/q5-resonance stage 5 (nitrate\'s drawings)');
+      const pairs = Object.values(DRAWINGS.NO3_a.bonds).reduce((a, b) => a + b, 0);
+      same(`${pairs}/${Object.keys(DRAWINGS.NO3_a.bonds).length}`, q5.SOLUTIONS[5].choice, 'unit03/q5-resonance stage 6 (the order of each nitrate bond)');
+      same(LEWIS.distinctDrawings('CO3', [DRAWINGS.CO3_a, DRAWINGS.CO3_b, DRAWINGS.CO3_c]).length, 3, 'unit03/q5-resonance stage 7 (carbonate\'s drawings)');
+      if (Object.keys(DRAWINGS.H2O.bonds).some(k => DRAWINGS.H2O.bonds[k] > 1)) fail('unit03/q5-resonance stage 8: water\'s drawing has a double bond');
+    }
+  }
+
+  if (q6) {
+    const { planDomains, bondAngles, SHAPES, RIG_MOLECULES } = VSEPR;
+    const armsOf = rig => rig.stock.flatMap(s => Array.from({ length: s.n }, () => (s.kind === 'lone' ? { kind: 'lone' } : { kind: 'atom', sym: s.sym, mult: s.mult || 1 })));
+    const stagePlan = (st, id = 'a') => planDomains(armsOf(st.rigs.find(r => r.id === id)));
+    same(bondAngles(stagePlan(q6.STAGES[0])).join(), q6.SOLUTIONS[0].choice, 'unit03/q6-shape stage 1 (two arms)');
+    same(bondAngles(stagePlan(q6.STAGES[1])).join(), q6.SOLUTIONS[1].choice, 'unit03/q6-shape stage 2 (four arms)');
+    same(stagePlan(q6.STAGES[2]).shape, 'trigonal pyramidal', 'unit03/q6-shape stage 3 (NH3)');
+    same(bondAngles(stagePlan(q6.STAGES[3])).join(), q6.SOLUTIONS[3].choice, 'unit03/q6-shape stage 4 (water)');
+    same(stagePlan(q6.STAGES[4]).n, q6.SOLUTIONS[4].choice, 'unit03/q6-shape stage 5 (CO2\'s domains)');
+    // Stage 6: the lone pair on SF4's hub sits round the middle: 90 degrees to the two axial arms, 120 to the other two.
+    const sf4 = stagePlan(q6.STAGES[5], 'b');
+    const lonev = sf4.vectors.find(v => v.kind === 'lone').v;
+    const ang = v => Math.round(Math.acos(lonev[0] * v[0] + lonev[1] * v[1] + lonev[2] * v[2]) * 180 / Math.PI);
+    same(sf4.vectors.filter(v => v.kind === 'atom').map(v => ang(v.v)).sort().join(), '120,120,90,90', 'unit03/q6-shape stage 6 (the lone pair\'s angles to the atoms)');
+    // Stage 7: XeF4's two lone pairs sit opposite each other.
+    const xe = stagePlan(q6.STAGES[6], 'b');
+    const [la, lb] = xe.vectors.filter(v => v.kind === 'lone').map(v => v.v);
+    near(la[0] * lb[0] + la[1] * lb[1] + la[2] * lb[2], -1, 1e-9, 'unit03/q6-shape stage 7 (the lone pairs of XeF4 are opposite)');
+    same(xe.shape, 'square planar', 'unit03/q6-shape stage 7 (XeF4)');
+    // Stage 8: the shape the atoms make, not the shape the domains make.
+    const want = { a: 'linear', b: 'trigonal planar', c: 'square planar' };
+    const got = Object.fromEntries(['a', 'b', 'c'].map(id => [id, stagePlan(q6.STAGES[7], id).shape]));
+    same(JSON.stringify(got), JSON.stringify(want), 'unit03/q6-shape stage 8 (molecular geometry)');
+    same(SHAPES['2-3'].electron, 'trigonal bipyramidal', 'unit03/q6-shape stage 8 card (XeF2\'s electron geometry)');
+    void RIG_MOLECULES;
+  }
+
+  if (q7) {
+    const { planDipole, EN } = VSEPR;
+    const polar = m => planDipole(m).polar;
+    if (!(EN.Cl > EN.H)) fail('unit03/q7-polarity stage 1: chlorine does not pull harder than hydrogen');
+    const mags = Object.fromEntries(['NaCl', 'H2', 'HCl'].map(m => [m, planDipole(m).mag]));
+    if (!(mags.NaCl > mags.HCl && mags.HCl > mags.H2 && mags.H2 === 0)) fail('unit03/q7-polarity stage 2: the three bonds are not ordered by their pull');
+    same(polar('CO2'), false, 'unit03/q7-polarity stage 3 (CO2 turns)');
+    same(`${polar('H2O')}/${polar('CO2')}`, 'true/false', 'unit03/q7-polarity stage 4 (water against carbon dioxide)');
+    same(`${polar('CCl4')}/${polar('CHCl3')}`, 'false/true', 'unit03/q7-polarity stage 5');
+    same(`${polar('NH3')}/${polar('BF3')}`, 'true/false', 'unit03/q7-polarity stage 6');
+    for (const [id, bid] of Object.entries(q7.SOLUTIONS[6].bins)) {
+      const mol = q7.STAGES[6].rigs.find(r => r.id === id).mol;
+      same(bid, polar(mol) ? 'polar' : 'nonpolar', `unit03/q7-polarity stage 7 (${mol})`);
+    }
+    const bent = q7.SOLUTIONS[7].picks.slice().sort();
+    const real = q7.STAGES[7].rigs.filter(r => polar(r.mol)).map(r => r.id).sort();
+    same(bent.join(), real.join(), 'unit03/q7-polarity stage 8 (the liquids a charged rod bends)');
+  }
+
+  if (q8) {
+    const { planMix, planTwist, planDomains, countSigmaPi, RIG_MOLECULES } = VSEPR;
+    same(planMix(q8.SOLUTIONS[1].mix).lobes, 4, 'unit03/q8-hybrid stage 2 (sp3 makes four lobes)');
+    same(planMix(q8.SOLUTIONS[2].mix).lobes, 3, 'unit03/q8-hybrid stage 3 (sp2 makes three lobes)');
+    same(planMix(q8.SOLUTIONS[3].mix).lobes, 2, 'unit03/q8-hybrid stage 4 (sp makes two lobes)');
+    q8.STAGES.forEach((st, i) => { if (st.rigs[0].want != null) same(planMix(q8.SOLUTIONS[i].mix).lobes, st.rigs[0].want, `unit03/q8-hybrid stage ${i + 1} (lobes match the arms wanted)`); });
+    const sp = countSigmaPi('HCN');
+    same(`${sp.sigma}-${sp.pi}`, q8.SOLUTIONS[5].choice, 'unit03/q8-hybrid stage 6 (sigma and pi bonds in HCN)');
+    same(planTwist(q8.STAGES[6].rigs.find(r => r.id === q8.SOLUTIONS[6].choice).bond).free, true, 'unit03/q8-hybrid stage 7 (the bond that turns)');
+    same(planDomains(RIG_MOLECULES.PCl5.arms).n, 5, 'unit03/q8-hybrid stage 8 (PCl5\'s domains)');
+    same(planDomains(RIG_MOLECULES.SF6.arms).n, 6, 'unit03/q8-hybrid stage 8 (SF6\'s domains)');
+  }
+
+  if (q9) {
+    const { DIATOMICS, fillMO, readMO } = MOD;
+    for (const [id, d] of Object.entries(DIATOMICS)) {
+      const r = readMO(d.order, fillMO(d.order, d.e));
+      same(r.unpaired, d.unpaired, `unit03/q9-orbitals: ${id} filled in order measures ${d.unpaired} unpaired`);
+    }
+    const order = id => readMO(DIATOMICS[id].order, fillMO(DIATOMICS[id].order, DIATOMICS[id].e)).bondOrder;
+    same(order('He2'), 0, 'unit03/q9-orbitals stage 3 (He2\'s bond order)');
+    same(order('N2'), q9.SOLUTIONS[3].choice, 'unit03/q9-orbitals stage 4 (N2\'s bond order)');
+    if (!(DIATOMICS.O2.unpaired > 0)) fail('unit03/q9-orbitals stage 5: O2 measures no unpaired electrons');
+    const lengths = q9.STAGES[5].rigs.map(r => [r.id, DIATOMICS[r.mol].length, order(r.mol)]).sort((a, b) => a[1] - b[1]);
+    same(lengths.map(l => l[0]).join(), q9.SOLUTIONS[5].order.join(), 'unit03/q9-orbitals stage 6 (shortest bond first)');
+    if (lengths.some((l, k) => k && l[2] >= lengths[k - 1][2])) fail('unit03/q9-orbitals stage 6: a shorter bond does not have the higher bond order');
+    if (!(order('F2') < order('O2'))) fail('unit03/q9-orbitals stage 7: F2 does not have the lower bond order');
+    same(readMO('b2n2', fillMO('b2n2', 6)).unpaired, 2, 'unit03/q9-orbitals stage 8 (B2 filled in the other order)');
+    same(readMO('o2f2', fillMO('o2f2', 6)).unpaired, 0, 'unit03/q9-orbitals stage 8 (B2 filled in the oxygen order reads no unpaired electrons, so the order matters)');
+  }
+
+  if (failures === before) ok('Ligar: every graded bond, drawing, angle, pull and orbital count agrees with the real tables');
 }
 
 console.log(`\n${failures === 0 ? 'LEARN TRACK OK' : failures + ' PROBLEM(S) FOUND'}`);

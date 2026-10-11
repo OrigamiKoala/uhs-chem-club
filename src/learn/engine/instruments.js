@@ -40,6 +40,12 @@ import { BoxRack as BoxRack2D } from './boxrack.js';
 import { BoxRack3D } from './boxrack3d.js';
 import { ElectronBench as ElectronBench2D } from './electronbench.js';
 import { ElectronBench3D } from './electronbench3d.js';
+import { BondBench as BondBench2D } from './bondbench.js';
+import { BondBench3D } from './bondbench3d.js';
+import { PairBoard as PairBoard2D } from './pairboard.js';
+import { PairBoard3D } from './pairboard3d.js';
+import { DomainRig as DomainRig2D } from './domainrig.js';
+import { DomainRig3D } from './domainrig3d.js';
 
 /** True when this client is drawing the Learn benches in three dimensions. */
 export function benchesAre3D() {
@@ -110,7 +116,16 @@ const BUILT_BENCHES = new Set([
   'q6-filling',    // the box rack, atomic layout
   'q7-pes',        // the electron bench, spectrum head — electronbench3d.js
   'q8-trends',     // the electron bench, atom head and pull meter
-  'q9-absorb'      // the light bench, cuvette head
+  'q9-absorb',     // the light bench, cuvette head
+  // Unit 3 — Ligar, benches three to nine.
+  'q3-distance',   // the bond bench, pair and lattice plates — bondbench3d.js
+  'q4-dots',       // the pair board — pairboard3d.js
+  'q5-resonance',  // the pair board again, with the charge tool and the gauge
+  'q6-shape',      // the domain rig, hub plates — domainrig3d.js
+  'q7-polarity',   // the domain rig, field plates
+  'q8-hybrid',     // the domain rig, mixer and twist plates
+  'q9-orbitals',   // the box rack, molecular layout — boxrack3d.js
+  'boss-warden'    // the warden: bond bench, pair board, domain rig and box rack in turn, in its own room
 ]);
 
 /**
@@ -240,8 +255,42 @@ export function ElectronBench(host, opts = {}) {
     : new ElectronBench2D(host, opts);
 }
 
+/**
+ * The bond bench. Signature and behaviour match `BondBench` in bondbench.js; the
+ * built one is a subclass of it through `plateBench3D`.
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onSelect?: Function, onSetting?: Function}} opts
+ */
+export function BondBench(host, opts = {}) {
+  return benchesAre3D()
+    ? new BondBench3D(host, deployed(opts))
+    : new BondBench2D(host, opts);
+}
+
+/**
+ * The pair board. Signature and behaviour match `PairBoard` in pairboard.js.
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onSelect?: Function}} opts
+ */
+export function PairBoard(host, opts = {}) {
+  return benchesAre3D()
+    ? new PairBoard3D(host, deployed(opts))
+    : new PairBoard2D(host, opts);
+}
+
+/**
+ * The domain rig. Signature and behaviour match `DomainRig` in domainrig.js.
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onSelect?: Function}} opts
+ */
+export function DomainRig(host, opts = {}) {
+  return benchesAre3D()
+    ? new DomainRig3D(host, deployed(opts))
+    : new DomainRig2D(host, opts);
+}
+
 /* Exported so a caller that wants the built instrument by name can have it. */
-export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D, JoinBench3D, LightBench3D, CloudPlate3D, BoxRack3D, ElectronBench3D };
+export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D, JoinBench3D, LightBench3D, CloudPlate3D, BoxRack3D, ElectronBench3D, BondBench3D, PairBoard3D, DomainRig3D };
 
 /* Re-exported so a quest module needs exactly one import line for its bench. */
 export { detailFor, TINTS } from './scope.js';

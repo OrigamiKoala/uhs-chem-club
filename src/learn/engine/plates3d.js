@@ -98,6 +98,11 @@ export function plateBench3D(Base, defaults = {}) {
       // and a head that fits one is a head that is too close to hold the frame's
       // own chrome clear of it.
       if (this.stations.length < 2) this.viewer.frameCamera(2.6);
+      // Two plates and no dial to stand the camera back: a bench may ask for the
+      // distance a dial would have given it, so its panels clear the top chrome.
+      else if (this.stations.length === 2 && defaults.frameTwo && !this.dialSpecs().filter(Boolean).length) {
+        this.viewer.frameCamera(defaults.frameTwo);
+      }
       this.buildDials();
       this.drawAll();
     }

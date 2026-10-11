@@ -31,6 +31,8 @@
 
 import { buildUnits, planCut, planSettle } from './scope.js';
 import { planPhotocell } from './lightdata.js';
+import { planCurve, PAIRS, LATTICES } from './bonddata.js';
+import { planDomains, planDipole, planTwist, planMix } from './vsepr.js';
 
 /** Hits the rig can take on one stage before it is knocked back. */
 export const INTEGRITY = 3;
@@ -133,10 +135,83 @@ export const SPECIES = {
     lines: {
       unmoved: () => 'The stone framework holds rigid.',
       cleaved: () => 'The crystal cleaves along flat planes.',
-      conductive: () => 'Current flows through mobile ions.'
+      conductive: () => 'Current flows through mobile ions.',
+      // The rig benches (q6 to q8): the warden shows what the hub, the field or the bond does.
+      splayed: p => `Its columns spread to ${p.arms === 1 ? 'one arm' : `${p.arms} arms`} and stop.`,
+      turned: () => 'The warden swings round and comes to rest facing the plate.',
+      still: () => 'The warden does not turn. It only shivers.',
+      locked: () => 'The warden\'s upper blocks will not turn against its lower ones.',
+      free: () => 'The warden\'s upper blocks turn on their lower ones.',
+      gripped: p => (p.grip > 0.6 ? 'Its columns clamp together hard.' : p.grip > 0.2 ? 'Its columns draw close.' : 'Its columns hold loosely.')
     },
+    /**
+     * @param {object} probe `{ pose }` (the older benches), or `{ rig }` from the domain rig:
+     *   `{ rig: 'arms', arms }`, `{ rig: 'field', mol, on }`, `{ rig: 'twist', bond }`, `{ rig: 'mix', p }`
+     */
     plan(enc, foe, probe) {
+      if (probe?.rig === 'arms') {
+        const plan = planDomains(probe.arms || []);
+        return plan.n ? { pose: 'splayed', arms: plan.n, lone: plan.lone } : { pose: 'unmoved' };
+      }
+      if (probe?.rig === 'field') {
+        if (!probe.on) return { pose: 'unmoved' };
+        return planDipole(probe.mol).polar ? { pose: 'turned' } : { pose: 'still' };
+      }
+      if (probe?.rig === 'twist') {
+        return planTwist(probe.bond).free ? { pose: 'free' } : { pose: 'locked' };
+      }
+      // The boss: a lattice's hold, the pair board's lamps and the molecular rack's magnet.
+      if (probe?.rig === 'hold') {
+        const grip = LATTICES[probe.lattice].energy / 3795;
+        return { pose: 'gripped', grip: Math.round(grip * 100) / 100 };
+      }
+      if (probe?.rig === 'lamps') return probe.lit > 0 && probe.lit === probe.of ? { pose: 'cleaved' } : { pose: 'unmoved' };
+      if (probe?.rig === 'pull') return probe.unpaired > 0 ? { pose: 'turned' } : { pose: 'still' };
+      if (probe?.rig === 'mix') {
+        const m = planMix(probe.p);
+        return { pose: 'splayed', arms: m.lobes, lone: m.leftoverP };
+      }
       return { pose: probe?.pose || 'unmoved' };
+    }
+  },
+
+  'slag crawler': {
+    name: 'Slag crawler',
+    counter: 'The crawler lashes its plated tail and your rig takes the hit.',
+    knockback: 'Knocked back. The crawler is whole again, but everything you found is still on the bench.',
+    hit: 'The crawler breaks into slag and settles into the dust.',
+    lines: {
+      rest: () => 'The crawler lies at its natural length.',
+      stretched: () => 'The crawler is drawn out and thins.',
+      squeezed: () => 'The crawler is crushed short and bulges.',
+      parted: () => 'The crawler comes apart in two.',
+      unmoved: () => 'None of its plates have closed.',
+      plated: p => (p.sealed === p.of ? 'Every plate on its back has closed.' : 'Some of the plates on its back have closed.'),
+      held: () => 'The crawler holds together.',
+      lost: () => 'The crawler falls apart where it stands.'
+    },
+    /**
+     * @param {object} probe `{ kind: 'curve', pair, r }` from the bond bench,
+     *   `{ kind: 'lamps', lit, of }` from the pair board, `{ kind: 'order', order }` from the MO rack
+     */
+    plan(enc, foe, probe) {
+      if (probe?.kind === 'curve') {
+        const c = planCurve(probe.pair, probe.r);
+        return { pose: c.state === 'rest' ? 'rest' : c.state, r: c.r, stretch: c.r / PAIRS[probe.pair].r0 };
+      }
+      if (probe?.kind === 'lamps') {
+        return probe.lit > 0 ? { pose: 'plated', sealed: probe.lit, of: probe.of } : { pose: 'unmoved', sealed: 0, of: probe.of };
+      }
+      if (probe?.kind === 'charges') {
+        // The charge tool is on: a plate closes for every atom whose charge reads zero.
+        return probe.zero > 0 ? { pose: 'plated', sealed: probe.zero, of: probe.of } : { pose: 'unmoved', sealed: 0, of: probe.of };
+      }
+      if (probe?.kind === 'order') {
+        // Nothing placed yet says nothing: an empty rack is not a molecule that failed.
+        if (!probe.placed) return null;
+        return probe.order > 0 ? { pose: 'held' } : { pose: 'lost' };
+      }
+      return null;
     }
   },
 
@@ -363,10 +438,40 @@ function wardenArt(pose, plan = {}) {
   if (pose === 'conductive') {
     return svg(pillars + `<circle cx="34" cy="24" r="6" fill="${LIT}" opacity="0.6"/>`, 'Basalt warden, conducting current');
   }
+  if (pose === 'splayed') {
+    const lean = Math.min(10, (plan.arms || 2) * 1.6);
+    return svg(`<polygon points="${14 - lean},48 ${18 - lean},18 ${28 - lean},14 ${24 - lean},48" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>` +
+      `<polygon points="26,48 30,10 42,12 38,48" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>` +
+      `<polygon points="${40 + lean},48 ${44 + lean},22 ${52 + lean},26 ${48 + lean},48" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>`, 'Basalt warden, columns spread');
+  }
+  if (pose === 'turned') return svg(pillars + `<path d="M8 8 L56 8" stroke="${LIT}" stroke-width="2"/>`, 'Basalt warden, turned in the field');
+  if (pose === 'still') return svg(pillars + `<path d="M30 52 l4 0" stroke="${EDGE}" stroke-width="2"/>`, 'Basalt warden, unmoved by the field');
+  if (pose === 'locked') return svg(pillars + `<path d="M12 28 L52 28" stroke="${EDGE}" stroke-width="2"/>`, 'Basalt warden, joints locked');
+  if (pose === 'free') return svg(pillars + `<path d="M12 28 L52 28" stroke="${LIT}" stroke-width="2" stroke-dasharray="3 2"/>`, 'Basalt warden, joints turning');
   if (pose === 'dispersed') {
     return svg(`<g opacity="0.4">${pillars}</g>`, 'Basalt warden, settled into stone');
   }
   return svg(pillars, 'Basalt warden');
+}
+
+function crawlerArt(pose, plan = {}) {
+  const seg = (x, w, extra = '') => `<rect x="${x}" y="24" width="${w}" height="14" rx="3" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"${extra}/>`;
+  const legs = (x0, x1) => [x0 + 4, (x0 + x1) / 2, x1 - 4].map(x => `<path d="M${x} 38 L${x - 2} 46 M${x} 38 L${x + 2} 46" stroke="${EDGE}" stroke-width="1.4"/>`).join('');
+  const plates = (n, closed) => Array.from({ length: n }, (_, k) => {
+    const x = 10 + k * (44 / n);
+    return `<path d="M${x} ${closed > k ? 22 : 14} l${44 / n - 3} 0" stroke="${closed > k ? LIT : EDGE}" stroke-width="2.2" stroke-linecap="round"/>`;
+  }).join('');
+  if (pose === 'stretched') return svg(seg(4, 56) + legs(4, 60) + plates(4, 0), 'Slag crawler, drawn out');
+  if (pose === 'squeezed') return svg(seg(18, 28, ' transform="translate(0 -3)"') + `<rect x="18" y="21" width="28" height="18" rx="4" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>` + legs(18, 46), 'Slag crawler, crushed short');
+  if (pose === 'parted' || pose === 'lost') return svg(seg(4, 22) + seg(38, 22) + legs(4, 26) + legs(38, 60), 'Slag crawler, in two parts');
+  if (pose === 'plated') {
+    const n = Math.max(1, Math.min(6, plan.of || 4));
+    return svg(seg(8, 48) + legs(8, 56) + plates(n, Math.min(n, plan.sealed || 0)), 'Slag crawler, plates closing');
+  }
+  if (pose === 'dispersed') {
+    return svg(`<g opacity="0.4">${seg(8, 48) + legs(8, 56)}</g>`, 'Slag crawler, dispersed');
+  }
+  return svg(seg(8, 48) + legs(8, 56) + plates(4, 0), 'Slag crawler');
 }
 
 function golemArt(pose, plan = {}) {
@@ -401,6 +506,7 @@ export function portraitSvg(species, pose = 'idle', plan = {}) {
   if (species === 'the hopper') return hopperArt(pose, plan);
   if (species === 'basalt warden') return wardenArt(pose, plan);
   if (species === 'recipe golem') return golemArt(pose, plan);
+  if (species === 'slag crawler') return crawlerArt(pose, plan);
   if (species === 'the lantern-eater') return lanternEaterArt(pose, plan);
   return huskArt(pose, plan);
 }

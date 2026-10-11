@@ -107,6 +107,8 @@ function runSet(world, problems, onDone) {
   };
 
   const summary = () => {
+    // A set that was actually worked, not skipped end to end, files the world's drills plate.
+    if (answered) session.setFlag(`${world.id}_practice_done`, true);
     showModal(`
       <div class="quest-modal-head lq-modal-head" style="margin-bottom: 0.85rem;">
         <div>

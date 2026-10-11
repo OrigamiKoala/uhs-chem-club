@@ -85,6 +85,7 @@ import {
   buildStack, buildWaterTower, buildCableMast, buildLandingPad, buildStakeMarker
 } from './ligar/plant.js';
 import { createLigarEffects } from './ligar/effects.js';
+import { buildStation, STATION_KIND, APRON } from './ligar/stations.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
 
@@ -125,6 +126,7 @@ export class LigarWorld {
 
     this.colliders = [];
     this.siteMarkers = new Map();   // questId -> { indicator, group, site }
+    this.stationColliders = [];     // benches five to nine: posts, walls and signature pieces
     // questId -> the physical frame of that site's working surface, so the
     // Learn instrument deploys onto the plate that is actually there rather
     // than onto a second bench conjured at the same coordinates.
@@ -156,6 +158,7 @@ export class LigarWorld {
     this.initBatchDeck();
     this.initBatchHouse();
     this.initWeighbridge();
+    this.initStations();
     this.initGroundCover();
     this.initVista();
     this.initEffects();
@@ -1126,6 +1129,100 @@ export class LigarWorld {
       );
       shutter.position.set(0, height + 0.07, 0.145);
       dormant.add(shutter);
+    } else if (kind === 'bond') {
+      // THE BOND BENCH, cased up: a graph window with a Morse well scored across it,
+      // and a crank wheel on the cabinet's flank winding a carriage along a rail.
+      const win = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.62, 0.42, 0.02)),
+        this.own(new THREE.MeshStandardMaterial({ color: 0x0d0c0a, roughness: 0.4, metalness: 0.1 }))
+      );
+      win.position.set(-0.18, height + 0.56, 0.115);
+      dormant.add(win);
+      const curve = [[0, 0.17], [0.07, 0.04], [0.14, -0.1], [0.22, -0.15], [0.3, -0.12], [0.4, -0.04], [0.5, 0.0]];
+      for (let i = 0; i < curve.length - 1; i++) {
+        const [ax, ay] = curve[i]; const [bx, by] = curve[i + 1];
+        const seg = new THREE.Mesh(
+          this.own(new THREE.BoxGeometry(Math.hypot(bx - ax, by - ay), 0.012, 0.006)), this.pipeMat
+        );
+        seg.position.set(-0.43 + (ax + bx) / 2 * 0.9, height + 0.56 + (ay + by) / 2, 0.128);
+        seg.rotation.z = Math.atan2(by - ay, bx - ax);
+        dormant.add(seg);
+      }
+      const rail = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.9, 0.03, 0.06)), this.darkSteelMat);
+      rail.position.set(-0.05, height + 0.2, 0.12);
+      dormant.add(rail);
+      for (const cx of [-0.38, 0.28]) {
+        const carriage = new THREE.Mesh(this.own(new THREE.SphereGeometry(0.06, 12, 10)), this.pipeMat);
+        carriage.position.set(cx, height + 0.27, 0.12);
+        dormant.add(carriage);
+      }
+      const wheel = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.15, 0.022, 6, 18)), this.darkSteelMat);
+      wheel.position.set(0.46, height + 0.5, 0.12);
+      dormant.add(wheel);
+      for (let i = 0; i < 4; i++) {
+        const spoke = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.012, 0.3, 0.012)), this.darkSteelMat);
+        spoke.position.set(0.46, height + 0.5, 0.12);
+        spoke.rotation.z = (i / 4) * Math.PI;
+        dormant.add(spoke);
+      }
+    } else if (kind === 'pair') {
+      // THE PAIR BOARD, cased up: a slate with three discs on a triangle and a tray of capsules.
+      const slate = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.7, 0.5, 0.02)),
+        this.own(new THREE.MeshStandardMaterial({ color: 0x1a191c, roughness: 0.82, metalness: 0.05 }))
+      );
+      slate.position.set(0, height + 0.58, 0.115);
+      dormant.add(slate);
+      for (const [dx, dy] of [[0, 0.12], [-0.2, -0.1], [0.2, -0.1]]) {
+        const disc = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.06, 0.06, 0.016, 14)), this.pipeMat);
+        disc.rotation.x = Math.PI / 2;
+        disc.position.set(dx, height + 0.58 + dy, 0.13);
+        dormant.add(disc);
+      }
+      const tray = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.62, 0.04, 0.14)), this.darkSteelMat);
+      tray.position.set(0, height + 0.18, 0.14);
+      dormant.add(tray);
+      for (let i = 0; i < 8; i++) {
+        const cap = new THREE.Mesh(this.own(new THREE.CapsuleGeometry(0.017, 0.04, 3, 6)), this.pipeMat);
+        cap.rotation.z = Math.PI / 2;
+        cap.position.set(-0.25 + i * 0.07, height + 0.23, 0.14);
+        dormant.add(cap);
+      }
+    } else if (kind === 'rig') {
+      // THE DOMAIN RIG, cased up: a hub on a post with four arms along the corners of a tetrahedron.
+      const post = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.03, 0.05, 0.3, 10)), this.darkSteelMat);
+      post.position.set(0, height + 0.2, 0.12);
+      dormant.add(post);
+      const hubBall = new THREE.Mesh(this.own(new THREE.SphereGeometry(0.06, 14, 10)), this.pipeMat);
+      hubBall.position.set(0, height + 0.42, 0.12);
+      dormant.add(hubBall);
+      for (const [ax, ay, az] of [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]]) {
+        const len = 0.17;
+        const k = len / Math.sqrt(3);
+        const arm = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.009, 0.009, len, 6)), this.darkSteelMat);
+        arm.position.set(ax * k / 2, height + 0.42 + ay * k / 2, 0.12 + az * k / 2);
+        arm.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(ax, ay, az).normalize());
+        dormant.add(arm);
+        const tip = new THREE.Mesh(this.own(new THREE.SphereGeometry(0.028, 10, 8)), this.plateMat);
+        tip.position.set(ax * k, height + 0.42 + ay * k, 0.12 + az * k);
+        dormant.add(tip);
+      }
+      const proto = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.1, 0.01, 4, 20, Math.PI)), this.darkSteelMat);
+      proto.position.set(0.4, height + 0.16, 0.12);
+      dormant.add(proto);
+    } else if (kind === 'rack') {
+      // THE BOX RACK, cased up: a ladder of boxes, one box low and a row of three above it.
+      const rows = [1, 1, 3, 1, 3];
+      rows.forEach((n, ri) => {
+        for (let b = 0; b < n; b++) {
+          const box = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.1, 0.07, 0.04)), this.darkSteelMat);
+          box.position.set((b - (n - 1) / 2) * 0.12, height + 0.2 + ri * 0.11, 0.115);
+          dormant.add(box);
+        }
+      });
+      const hoof = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.07, 0.016, 6, 14, Math.PI)), this.darkSteelMat);
+      hoof.position.set(0.44, height + 0.2, 0.12);
+      dormant.add(hoof);
     } else {
       // THE SCOPE, cased up: a bezelled aperture and a power dial with detents.
       const bezel = new THREE.Mesh(
@@ -2066,7 +2163,7 @@ export class LigarWorld {
     }
 
     /* THE BENCH, across the back of the house, facing the open front. */
-    const bench = this.buildBench({ kind: 'scope', plate: 'LB-03' });
+    const bench = this.buildBench({ kind: 'bond', plate: 'LB-03' });
     bench.group.position.set(0, 0, -1.3);
     g.add(bench.group);
 
@@ -2244,7 +2341,7 @@ export class LigarWorld {
     /* THE BENCH, beside the scale house, facing the way in. The weigh deck is
        in front of it, so the player stands on the bridge to work the bench —
        which is the relationship an assay bench has to a weighbridge. */
-    const bench = this.buildBench({ kind: 'assay', plate: 'LB-04' });
+    const bench = this.buildBench({ kind: 'pair', plate: 'LB-04' });
     bench.group.position.set(0, 0, -0.5);
     g.add(bench.group);
 
@@ -2271,6 +2368,46 @@ export class LigarWorld {
 
     this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
     this.registerBenchAnchor(site, g, bench, [0, 0, -0.5]);
+  }
+
+
+  /**
+   * Sites 5 to 9 — the later benches, each under its own roof (`ligar/stations.js`).
+   *
+   * They share a plan: an apron a step proud of the pavement, a steel shelter
+   * open to the front, the cased instrument across the back and ONE piece
+   * behind or beside it that says what the bench is for. The apron registers
+   * itself in `raised`, as the terrace does, so feet stand on it and not in it.
+   */
+  initStations() {
+    for (const site of this.data.sites) {
+      if (!STATION_KIND[site.questId]) continue;
+      const st = buildStation(this, site);
+      const baseY = this.surfaceHeight(site.pos[0], site.pos[2]);
+      const rot = this.siteFacing(site);
+      st.group.position.set(site.pos[0], baseY, site.pos[2]);
+      st.group.rotation.y = rot;
+      this.scene.add(st.group);
+
+      this.raised.push({ kind: 'rect', cx: site.pos[0], cz: site.pos[2], rot, hx: APRON.hx, hz: APRON.hz, y: baseY + APRON.y });
+      const [stx, stz] = this.siteToWorld(site, 0, APRON.hz + 0.3);
+      this.raised.push({ kind: 'rect', cx: stx, cz: stz, rot, hx: 1.6, hz: 0.3, y: baseY + APRON.y / 2 });
+
+      this.siteMarkers.set(site.questId, { site, group: st.group, indicator: st.bench.indicator });
+      this.registerBenchAnchor(site, st.group, st.bench, st.local);
+
+      const quarter = Math.abs(Math.sin(rot)) > 0.5;
+      for (const c of st.colliders) {
+        const [wx, wz] = this.siteToWorld(site, c.lx, c.lz);
+        this.stationColliders.push({ x: wx, z: wz, radius: c.r });
+      }
+      for (const w of st.walls) {
+        const [wx, wz] = this.siteToWorld(site, w.lx, w.lz);
+        const ex = quarter ? w.hd : w.hw;
+        const ez = quarter ? w.hw : w.hd;
+        this.stationColliders.push({ minX: wx - ex, maxX: wx + ex, minZ: wz - ez, maxZ: wz + ez });
+      }
+    }
   }
 
 
@@ -2342,6 +2479,14 @@ export class LigarWorld {
       if (x > r.minX - 3 && x < r.maxX + 3 && z > r.minZ - 3 && z < r.maxZ + 3) return false;
       if (x > s.minX - 3 && x < s.maxX + 3 && z > s.minZ - 3 && z < s.maxZ + 3) return false;
       if (L.some(l => Math.hypot(x - l.pos[0], z - l.pos[2]) < l.radius + pad)) return false;
+      // A conveyor is twenty-two metres long, not a circle: keep off its whole run.
+      if (L.some(l => {
+        if (l.asset !== 'conveyor') return false;
+        const dx = x - l.pos[0]; const dz = z - l.pos[2];
+        const along = dx * Math.sin(l.rotY) + dz * Math.cos(l.rotY);
+        const across = dx * Math.cos(l.rotY) - dz * Math.sin(l.rotY);
+        return Math.abs(along) < 12 && Math.abs(across) < 2.4 + pad;
+      })) return false;
       if (this.data.sites.some(st => Math.hypot(x - st.pos[0], z - st.pos[2]) < 8.5)) return false;
       if (this.deck && x > this.deck.minX - 2 && x < this.deck.maxX + 2 && z > this.deck.minZ - 2 && z < this.deck.maxZ + 2) return false;
       if (this.raisedHeight(x, z) !== null) return false;
@@ -2650,6 +2795,9 @@ export class LigarWorld {
       const [wx, wz] = this.siteToWorld(s4, 0, -2.4);
       push(wx - 1.2, wx + 1.2, wz - 1.2, wz + 1.2);
     }
+
+    // Sites 5 to 9: each shelter's posts, its back wall and its signature piece.
+    for (const c of this.stationColliders) this.colliders.push(c);
 
     // The deck gantry's three columns.
     if (this.deck) {

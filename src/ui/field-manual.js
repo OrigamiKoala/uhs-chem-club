@@ -534,6 +534,65 @@ export const FIELD_MANUAL_TERMS = [
   }
 ];
 
+
+/**
+ * Ligar's later benches. Each term sits at the stage whose reward card earns it,
+ * so the Manual is a record of the same schedule the quests keep.
+ * [quest id, bench number, stage number, term, title, body]
+ */
+const LIGAR_LATER = [
+  ['q3-distance', 3, 1, 'Potential Energy Curve', 'Energy at Every Separation', 'A plot of the energy of two atoms against the distance between them. Its lowest point marks where the pair is most stable.'],
+  ['q3-distance', 3, 1, 'Bond Length', 'The Bottom of the Well', 'The separation between two bonded nuclei at which the potential energy is a minimum.'],
+  ['q3-distance', 3, 2, 'Bond Energy', 'The Depth of the Well', 'The energy needed to pull two bonded atoms completely apart, measured from the bottom of the potential energy curve to zero.'],
+  ['q3-distance', 3, 5, 'Bond Order (Length and Strength)', 'More Pairs, Shorter Bond', 'The number of shared pairs between two atoms. A higher bond order gives a shorter, stronger bond.'],
+  ['q3-distance', 3, 7, 'Lattice Energy', 'What Holds a Lattice', 'The energy needed to separate an ionic solid into its gaseous ions. It rises with ion charge and falls with ion size.'],
+  ['q4-dots', 4, 1, 'Lewis Structure', 'Every Electron Placed', 'A drawing that shows each valence electron of a molecule as a bond or as a lone pair on an atom.'],
+  ['q4-dots', 4, 1, 'Lone Pair', 'A Pair on One Atom', 'A pair of valence electrons held on a single atom and not shared in a bond.'],
+  ['q4-dots', 4, 1, 'Octet Rule', 'Eight Round an Atom', 'Atoms tend to have eight electrons round them in a bond-and-lone-pair count, two for hydrogen.'],
+  ['q4-dots', 4, 4, 'Central Atom', 'The Atom in the Middle', 'The atom that the others attach to. An atom that can share only one pair, like hydrogen or fluorine, can never be it.'],
+  ['q4-dots', 4, 5, 'Polyatomic Ion', 'A Charged Group', 'A group of atoms bonded together that carries an overall charge.'],
+  ['q4-dots', 4, 6, 'Incomplete Octet', 'Fewer Than Eight', 'An atom with fewer than eight electrons round it in a stable molecule, as boron in BF₃.'],
+  ['q4-dots', 4, 7, 'Free Radical', 'An Unpaired Electron', 'A species with an odd number of electrons, so one electron is left unpaired. Free radicals are highly reactive.'],
+  ['q4-dots', 4, 8, 'Expanded Octet', 'Past Eight', 'An atom on the third period or below holding more than eight electrons, as sulfur in SF₆.'],
+  ['q5-resonance', 5, 1, 'Formal Charge', 'Brought Minus Owned', 'The valence electrons an atom brings minus the electrons it owns in a drawing, counting each bond as one and each lone pair as two.'],
+  ['q5-resonance', 5, 4, 'Resonance', 'A Blend of Drawings', 'When no single drawing fits a measured molecule, the real molecule is a blend of equivalent drawings, as in ozone.'],
+  ['q5-resonance', 5, 5, 'Resonance Structures', 'Same Atoms, Electrons Elsewhere', 'Drawings of one molecule that differ only in where the electrons sit.'],
+  ['q5-resonance', 5, 6, 'Fractional Bond Order', 'Four Pairs over Three Bonds', 'A bond order that is not a whole number, which arises when electrons are shared among several bonds.'],
+  ['q5-resonance', 5, 7, 'Delocalized Electrons', 'Spread over Several Atoms', 'Electrons that are shared among more than two atoms rather than held in a single bond.'],
+  ['q6-shape', 6, 1, 'Electron Domain', 'A Region of Electrons', 'A bond (single, double or triple) or a lone pair on a central atom. Each domain pushes the others away.'],
+  ['q6-shape', 6, 2, 'VSEPR Theory', 'Domains Push Apart', 'Electron domains arrange themselves as far apart as possible, which fixes the shape of a molecule.'],
+  ['q6-shape', 6, 3, 'Trigonal Pyramidal', 'Three Atoms and a Lone Pair', 'The shape of a molecule with three atoms and one lone pair on the central atom, as in NH₃.'],
+  ['q6-shape', 6, 4, 'Bent', 'Two Atoms and Lone Pairs', 'The shape of a molecule with two atoms and one or two lone pairs on the central atom, as in water.'],
+  ['q6-shape', 6, 6, 'Trigonal Bipyramidal and Seesaw', 'Five Domains', 'Five domains form a trigonal bipyramid. A lone pair takes a place round the middle, giving the seesaw shape of SF₄.'],
+  ['q6-shape', 6, 7, 'Octahedral and Square Planar', 'Six Domains', 'Six domains point to the corners of an octahedron. Two opposite lone pairs leave four atoms in a square plane.'],
+  ['q6-shape', 6, 8, 'Electron and Molecular Geometry', 'Domains versus Atoms', 'The electron geometry names the arrangement of all domains; the molecular geometry names only where the atoms are.'],
+  ['q7-polarity', 7, 1, 'Polar Bond', 'An Uneven Pull', 'A bond in which the atom that pulls the shared pair harder carries a partial negative charge and the other a partial positive one.'],
+  ['q7-polarity', 7, 2, 'Nonpolar Covalent, Polar Covalent', 'From Even to Handed Over', 'Equal sharing is nonpolar covalent, unequal sharing is polar covalent, and complete transfer is ionic.'],
+  ['q7-polarity', 7, 3, 'Molecular Dipole', 'A Net Pull', 'The overall separation of charge in a molecule whose bond pulls do not cancel. Such a molecule turns in an electric field.'],
+  ['q7-polarity', 7, 4, 'Bond Dipole', 'An Arrow Along a Bond', 'The pull of one polar bond, drawn as an arrow toward the more electronegative atom. Bond dipoles add or cancel.'],
+  ['q8-hybrid', 8, 2, 'Hybrid Orbital (sp³)', 'Four Equal Lobes', 'One s and three p orbitals blend into four equivalent sp³ orbitals at 109.5 degrees.'],
+  ['q8-hybrid', 8, 3, 'sp² Hybridization', 'Three Lobes and a p Orbital', 'One s and two p orbitals blend into three sp² orbitals at 120 degrees, leaving one p orbital.'],
+  ['q8-hybrid', 8, 4, 'sp Hybridization', 'Two Lobes and Two p Orbitals', 'One s and one p orbital blend into two sp orbitals at 180 degrees, leaving two p orbitals.'],
+  ['q8-hybrid', 8, 5, 'Sigma and Pi Bonds', 'End-on and Side-on', 'A sigma bond is overlap along the bond axis; a pi bond is side-to-side overlap of p orbitals above and below it.'],
+  ['q8-hybrid', 8, 7, 'Restricted Rotation', 'Double Bonds Hold Still', 'A pi bond is broken by twisting, so groups cannot turn freely about a double bond.'],
+  ['q9-orbitals', 9, 1, 'Bonding and Antibonding Orbitals', 'Two Boxes from Two', 'Combining two atomic orbitals makes a lower bonding orbital and a higher antibonding orbital.'],
+  ['q9-orbitals', 9, 8, 'The Order Switch', 'π below σ up to Nitrogen', 'In diatomic molecules up to N₂ the π2p orbitals lie below σ2p, because the 2s and 2p orbitals mix. From O₂ up the order is reversed.']
+];
+
+for (const [questId, bench, stage, term, title, body] of LIGAR_LATER) {
+  FIELD_MANUAL_TERMS.push({
+    id: `u3_${questId.split('-')[0]}_s${stage}_${term.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`,
+    term,
+    road: 'unit03',
+    questKey: `unit03/${questId}`,
+    stageLabel: `Bench ${bench}, Stage ${stage}`,
+    stageIndex: stage - 1,
+    route: `#/learn/unit03/${questId}`,
+    title,
+    body
+  });
+}
+
 /**
  * Checks whether a term is earned based on session state.
  */

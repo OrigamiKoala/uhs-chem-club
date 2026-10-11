@@ -104,11 +104,31 @@ SITES = [
    "label":"Bench 2 - Stone and Wire","structure":"tube-forge","built":True},
   {"id":"site-3","questId":"q3-distance","stage":3,
    "pos":[26.0,0,-4.0],"approachPos":[21.2,1.6,-4.0],
-   "label":"Bench 3 - Bond Energy","structure":"batch-house","built":False},
+   "label":"Bench 3 - Bond Energy","structure":"batch-house","built":True},
   {"id":"site-4","questId":"q4-dots","stage":4,
    "pos":[26.0,0,8.0],"approachPos":[21.2,1.6,8.0],
-   "label":"Bench 4 - Lewis Structures","structure":"weighbridge","built":False},
+   "label":"Bench 4 - Lewis Structures","structure":"weighbridge","built":True},
+  # Benches five to nine stand under their own shelters (three/ligar/stations.js),
+  # in a loose arc south and east of the yard between the landing pad and the deck.
+  {"id":"site-5","questId":"q5-resonance","stage":5,
+   "pos":[-12.0,0.4,34.0],"approachPos":[-12.0,1.6,39.2],
+   "label":"Bench 5 - Charge and Resonance","structure":"gauge-shelter","built":True},
+  {"id":"site-6","questId":"q6-shape","stage":6,
+   "pos":[6.0,0.6,30.0],"approachPos":[6.0,1.6,35.2],
+   "label":"Bench 6 - Molecular Shape","structure":"gauge-shelter","built":True},
+  {"id":"site-7","questId":"q7-polarity","stage":7,
+   "pos":[22.0,0.7,36.0],"approachPos":[22.0,1.6,41.2],
+   "label":"Bench 7 - Polarity","structure":"gauge-shelter","built":True},
+  {"id":"site-8","questId":"q8-hybrid","stage":8,
+   "pos":[-32.0,0.1,34.0],"approachPos":[-32.0,1.6,39.2],
+   "label":"Bench 8 - Hybridization","structure":"gauge-shelter","built":True},
+  {"id":"site-9","questId":"q9-orbitals","stage":9,
+   "pos":[40.0,0.9,18.0],"approachPos":[34.8,1.6,18.0],
+   "label":"Bench 9 - Molecular Orbitals","structure":"gauge-shelter","built":True},
 ]
+
+# How far a prop's edge must stand from the centre of a gauge shelter (shelter 7 x 5.2 m, signature piece beside it).
+STATION_CLEAR = 7.2
 
 PIT = {"floorY": -5.0,
        "room": {"minX": -26.0, "maxX": 10.0, "minZ": -34.0, "maxZ": -8.0},
@@ -177,7 +197,8 @@ for _ in range(400):
             for key in ("pos", "approachPos"):
                 if sdef["pos"][1] < -1: continue
                 px, pz = sdef[key][0], sdef[key][2]
-                need = it["radius"] + 2.6
+                # A station's shelter and its signature piece reach further than a bench does.
+                need = it["radius"] + (STATION_CLEAR if (key == "pos" and sdef["structure"] == "gauge-shelter") else 2.6)
                 dx = it["pos"][0] - px; dz = it["pos"][2] - pz
                 got = math.hypot(dx, dz) or 1e-6
                 if got >= need: continue
@@ -210,7 +231,7 @@ for s in SITES:
     if s["pos"][1] < -1: continue
     for l in L:
         got = d(s["pos"], l["pos"])
-        if got < l["radius"] + 2.2:
+        if got < l["radius"] + (STATION_CLEAR - 0.4 if s["structure"] == "gauge-shelter" else 2.2):
             bad(f'{s["id"]} inside {l["asset"]} ({got:.2f} < {l["radius"]+2.2:.2f})')
 
 for i in range(len(SITES)):
@@ -261,7 +282,12 @@ data = {
       "site-1": "The first bench, on the stone terrace under the western arch, west of the yard.",
       "site-2": "The second bench, at the forge in the tube mouth at the far end of the cut, down the ramp.",
       "site-3": "The third bench, inside the batch house on the east deck, under the gantry sign.",
-      "site-4": "The fourth bench, on the weighbridge deck south of the batch house."}}
+      "site-4": "The fourth bench, on the weighbridge deck south of the batch house.",
+      "site-5": "The fifth bench, under a steel shelter south-west of the yard, with three slate boards on its back wall.",
+      "site-6": "The sixth bench, under a steel shelter south of the yard, with a six-armed hub on a mast beside it.",
+      "site-7": "The seventh bench, under a steel shelter south-east of the yard, between two tall charged plates.",
+      "site-8": "The eighth bench, under a steel shelter at the south-western edge of the yard, with a torsion frame behind it.",
+      "site-9": "The ninth bench, under a steel shelter east of the deck, with a ladder of boxes on its back wall."}}
 }
 with open('src/three/world-data/ligar.json', 'w') as f:
     json.dump(data, f, indent=2)

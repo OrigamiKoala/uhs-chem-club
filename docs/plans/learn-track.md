@@ -1,9 +1,9 @@
 # Learn track — worlds, quests, and how to build them
 
-**Status (2026-10-10): fourteen worlds charted in a new order, eighteen quests built
-and live — all of world 1 (Tallow), all nine of world 2 (Lanternfall), Ligar's first two
-benches (world 3) and Kettle's first (world 7, moved from Ligar).** Every built world is open
-from the start. Ligar's remaining benches are planned in `learn-quests.md`. The road, the
+**Status (2026-10-10): fourteen worlds charted in a new order, twenty-five benches and a
+boss built and live — all of world 1 (Tallow), all nine of world 2 (Lanternfall), all nine of
+world 3 (Ligar, with the Basalt Warden) and Kettle's first (world 7, moved from Ligar).** Every built world is open
+from the start. Ligar's build, and where it parted from the plan, is `ligar-complete.md`. The road, the
 gating, the routes, the progress store, the backend tab and the verifier all exist.
 **Tallow, Lanternfall and Ligar are walkable ground at T4**: every one of their built
 benches is a built instrument standing on the ground (Tallow's six sites are all laid;
@@ -157,7 +157,7 @@ opens it in the right place, and the host loads it.
 | --- | --- | --- | --- | --- |
 | 01 | Tallow | Salt flats | Atoms | 6 (6 built, walkable at T4) |
 | 02 | Lanternfall | Aurora ice | Light and Electrons | 9 (9 built, walkable at T4) |
-| 03 | Ligar | Basalt arches | Bonding | 9 (2 built, walkable at T4; 7 planned) |
+| 03 | Ligar | Basalt arches | Bonding | 9 (9 built and a boss, walkable at T4) |
 | 04 | Bellows | Cloud deck | Gases | 4 |
 | 05 | Ember Reach | Vent fields | Thermodynamics | 4 |
 | 06 | Mirrowen | Tidal shelf | States of Matter | 4 |

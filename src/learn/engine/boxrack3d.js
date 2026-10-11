@@ -27,7 +27,7 @@ import { plateBench3D, ownedMaterial, ownedGeometry } from './plates3d.js';
 
 const CHIPS = ['u', 'd', 'x'];
 
-export class BoxRack3D extends plateBench3D(BoxRack, { backdrop: 'lab' }) {
+export class BoxRack3D extends plateBench3D(BoxRack, { backdrop: 'lab', frameTwo: 2.6 }) {
   buildHardware(station, item) {
     const rec = { geos: [], mats: [] };
     const c = station.content;
