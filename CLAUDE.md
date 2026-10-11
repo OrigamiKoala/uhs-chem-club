@@ -155,7 +155,7 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 - `npm run build` — production assets into `dist/`.
 - `npm run verify` — `verify:quest` + `verify:console` + `verify:learn` + `verify:run` + `verify:geometry`
   + `verify:media` + `verify:flows` + `verify:progression` + `verify:ship` + `verify:voyage` + `verify:tallow`
-  + `verify:ligar` + `verify:lanternfall` + `verify:bench` + `verify:holo` + `verify:normals` + `build`. Run this before shipping. **The build
+  + `verify:ligar` + `verify:lanternfall` + `verify:bellows` + `verify:bench` + `verify:holo` + `verify:normals` + `build`. Run this before shipping. **The build
   empties `dist/`, which is gitignored** — anything placed only in `dist/` (reference art
   has been) is deleted by it. Source images belong in `public/` or `assets-src/`.
 - `npm run verify:quest` — static integrity check of all 20 Quest 1 stages (see below),
@@ -187,6 +187,18 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   sigma and pi count of HCN, and each diatomic's unpaired electrons and bond order. **Ligar's
   foes are read against their plates** (`ligarProbes`): a crawler that stretches must be a
   pair the crank really stretches, a warden that turns must be a molecule whose pulls add.
+  **Every figure a Bellows stage grades against is recomputed from the real tables**
+  (`gasdata.js`), and every claim a stage teaches is checked on the plate that teaches it:
+  stage 1's gauge follows the knocks while speed, count and warmth stay put; each of stage 8's
+  records is the shape its law draws; the three gases of `q4-mixtures` stage 7 rank one way by
+  their knock counters and ANOTHER by their moles (the stage is a trap, and the check asserts
+  the two orders differ); the three of `q6-real` stage 5 stray in the same order at EVERY setting of
+  the dial; and the one cylinder closest to ideal in stage 6 is the same at every temperature.
+  **A control that does nothing fails the build**: a volume dial over a cylinder that is a rigid
+  tank or sits under a free piston, or a temperature dial no cylinder follows (this found Quest
+  1's first and last stages shipping a piston that did not move). **Bellows' foes are read against
+  their plates by hand** (`bellowsProbes`): a bladder that swells must sit on a plate whose gauge
+  really climbs, or, on a free piston, whose room really grows.
   **A refusal may not carry its stage's answer**: every miss message the stage can produce
   (its MISSES, the untouched bench, and its check run over every other value the widget
   offers) is searched for the answer read from `SOLUTIONS` — a number as a standalone
@@ -281,10 +293,16 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   (one body per plate, inside the tray and the glass, hiding no screen, read back from
   `planFoe`). A plate bench that stands only two plates and no dial asks `plateBench3D`
   for `frameTwo` so its panels clear the HUD.
+  **Bellows goes through it too**: the gas rig is deployed on all six Bellows benches at six
+  aspects (the widest stage, and the stage with the most dials), every stage of every Bellows quest
+  is pressed through the real pointer path, and every fighting stage builds its gas bladders (and
+  the Compressor's five phases, on the first bench's plate) in every pose, held to the tray, the
+  glass and the honest-picture rule. It found the Compressor's lunge leaving the tray, two-plate
+  mixture benches that needed `frameTwo`, and a three-plate stage that carried one dial too many.
 - `npm run verify:voyage` — the Avalon can land and a player can get off it (see "The
   voyage" below): with the airlock's outer leaf open, a line through the hatch at head,
   chest and knee height meets nothing aboard (a lining sheet once stood in the opening),
-  and with it shut the line stops on the leaf; on Tallow, Lanternfall, Ligar and Erebus the landing
+  and with it shut the line stops on the leaf; on Tallow, Lanternfall, Ligar, Bellows and Erebus the landing
   `solveLanding` picks keeps the hull and ramp clear of every collider, puts the ramp's
   foot on open ground inside the walk and within a ramp's reach of the sill, on a quarter
   turn so the hull's collider box is exact; and the chevron's route aboard stays on deck.
@@ -321,6 +339,15 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   handed in as a position, the way the stage and the voyage call it — because the sky dome
   once read `.position` off that vector and threw on the first frame of every descent. A sign must read `Bench N - <what it teaches>`, six words at most,
   sharing a word with its quest's title.
+- `npm run verify:bellows` — Bellows' ground, held to every rule `verify:lanternfall` holds
+  Lanternfall to, and four a deck needs: **the rail is a closed ring of colliders** (no gap a
+  player could step through), **past the rail is a drop of more than 20 m** (so the only ledge in
+  the world is one nobody can reach), every landmark stands inside the rail, and the Compressor has
+  moving parts. It builds the real world in Node, measures every pair of bodies, flood-fills the
+  walk from the spawn against the real colliders (no ledge, every bench's approach and the pad
+  reached) and requires only lamps to be lit (thirty lamps, three real lights). A sign must read
+  `Bench N - <what it teaches>`, six words at most, sharing a word with its quest's title (which
+  is why bench three's sign reads `Ideal Gas Law` and not `The Ideal Gas Law`).
 - `npm run verify:holo` — one owner for the `X` key, and the comms board never invents a
   guild score.
 - `npm run verify:normals` — a dome put through both `heightToNormal`s must lean away from
@@ -391,14 +418,14 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   "The Avalon" under §8.
   `stage.js` holds three modes (`ship` | `world` | `quest`) and `activeWorld`, which is
   whichever planet the player is standing on — Erebus (`world.js`), Tallow (`tallow.js`),
-  Lanternfall (`lanternfall.js`) or Ligar (`ligar.js`). The three Learn worlds share ONE arrival and render path
+  Lanternfall (`lanternfall.js`), Ligar (`ligar.js`) or Bellows (`bellows.js`). The four Learn worlds share ONE arrival and render path
   (`enterLearnWorld`, `isLearnWorld`, `nearExitPad`, the Learn branch of the loop), so
   Ligar cannot come to differ from Tallow in how a player lands, walks or leaves; the
   exit pad is read from the world's own `landing-pad` landmark. Tone-mapping exposure is
   per place: `SHIP_EXPOSURE` 1.28 for the ship, `EREBUS_EXPOSURE` 0.82 for the desert
   (its sky and sand are lit to daylight levels), `TALLOW_EXPOSURE` 0.92 for the
   salt pan, because a bright overcast rendered at the dark interior's exposure washes the
-  crust out to paper, `LANTERNFALL_EXPOSURE` 1.12, because ice at night holds only what the
+  crust out to paper, `BELLOWS_EXPOSURE` 0.86, because a cloud sea under a high sun throws back almost everything it is given, `LANTERNFALL_EXPOSURE` 1.12, because ice at night holds only what the
   aurora and the lanterns give it, and `LIGAR_EXPOSURE` 1.16, because black stone at dusk throws almost
   nothing back. **A chamber that brings its own room is drawn at `SHIP_EXPOSURE` whatever
   world it was opened on** — the Charge Gardens were lit for it — while a bench deployed
@@ -523,11 +550,11 @@ Fourteen worlds in order — Tallow (atoms, the periodic table and the mole), La
 orbitals and periodic trends), Ligar (bonding, structure and orbitals),
 Bellows (gases), Ember Reach (thermodynamics), Mirrowen (states of matter and IMFs), Kettle
 (stoichiometry and reactions), Teeter (equilibrium), Verdigris (acids and bases),
-Brinewire (electrochemistry), Quicklight (kinetics), Lodestone (transition metals), Thornmere (organic), Cinder Halo (nuclear) — and **every built world is open from the start** (Tallow, Lanternfall, Ligar and one bench of Kettle),
+Brinewire (electrochemistry), Quicklight (kinetics), Lodestone (transition metals), Thornmere (organic), Cinder Halo (nuclear) — and **every built world is open from the start** (Tallow, Lanternfall, Ligar, Bellows and one bench of Kettle),
 so a student can go straight to the unit their class is on. The order is the order the
 ideas build on each other, not a lock. Every unbuilt quest on the road is planned in
-`docs/plans/learn-quests.md` (Lanternfall and Ligar are built and their plans stay there as the
-record; the other eleven worlds are a proposal under review). Ids are `unit01`…`unit14` in
+`docs/plans/learn-quests.md` (Lanternfall, Ligar and Bellows are built and their plans stay there as the
+record; the other ten worlds are a proposal under review). Ids are `unit01`…`unit14` in
 road order (renumbered on 2026-10-10, pre-launch, so no stored progress was orphaned), and
 
 **every Learn quest is a game built the way the Charge Gardens was built** — it owns its
@@ -649,7 +676,7 @@ into grinding and would punish the students it exists to help.
   In `scope.js`, single-unit samples (`total <= 1`) are centered at `[0, 0]` so high-magnification targets
   remain visible in the aperture.
 - **The encounter layer** (`engine/foes.js`, `engine/encounter.js`). `foes.js` is PURE
-  (Node-importable): `SPECIES` (salt husk, lamp moth, slag crawler, basalt warden — plain data plus one planner each; the bosses and the golem take a pose from the quest),
+  (Node-importable): `SPECIES` (salt husk, lamp moth, slag crawler, basalt warden, gas bladder, the compressor — plain data plus one planner each; the bosses and the golem take a pose from the quest),
   `resolveEncounter(stage, env)` (null for a plain stage; `env.kinds` is what the husk's
   planner needs from the quest), `planFoe`, the fight state (`newFight`, `afterMiss`,
   `afterWin`, `INTEGRITY` = 3) and SVG `portraitSvg`. `encounter.js` is the `.lq-foe` plate
@@ -1335,6 +1362,95 @@ asserting 6.02 x 10^23 would be checking, not teaching.
   (`manualComplete`) instead of read from a flag nothing set. Finishing a practice set that
   was worked rather than skipped files `<world>_practice_done`, which "Quarry Drills" reads.
 
+### World 4 — Bellows (`unit04`, six benches and a boss, all live, walkable at T4)
+
+Bellows is a cloud deck. Tallow counted atoms, Lanternfall explained their electrons and Ligar
+joined them; Bellows is what a crowd of them does when nothing joins them: they knock. Six benches
+of eight stages on ONE instrument, the gas rig, followed by the Compressor, a five-phase boss. The
+plan they were built from is `docs/plans/learn-quests.md`; what was built, and every place it parted
+from the plan, is `docs/plans/bellows-world.md`. Everything Unit 1 earned (atom, molecule, mole,
+mass) is a plain word here; each quest exports `VOCABULARY` and `BUILDS_ON`.
+
+- **`q1-knocks` Pressure and Temperature** — a cylinder with a piston, a gauge, a thermometer, a
+  counter that ticks for every knock on the far wall and a window onto the particles. What the gauge
+  measures (**pressure**: stage 1 moves ONLY the piston, so speed, count and warmth stay put while
+  the gauge and the knocks rise together) → twice the gas → what heating does (**kinetic energy**)
+  → how the speeds compare on the speed screen (**Maxwell–Boltzmann distribution**) → helium
+  against carbon dioxide (equal energy, unequal speed) → a reference gauge with three rings read
+  against a cylinder with one (**atm, kPa, mmHg**) → where the pressure would reach zero, on a plot
+  that runs past the coldest the dial reaches (**absolute zero, kelvin**) → which statements the
+  bench has shown (**kinetic molecular theory**).
+- **`q2-laws` The Gas Laws** — one thing changed at a time: a quarter of the room (**Boyle's
+  law**) → why, from the knocks (**inversely proportional**) → tripling the kelvin temperature
+  under a free piston (**Charles's law**) → the SAME line drawn on a kelvin axis and a Celsius one,
+  only one meeting the origin → a sealed tank heated (**Gay-Lussac's law**) → doubling the gas
+  under a weight (**Avogadro's law**) → pressure and temperature both changed, with the answer
+  between two detents of the dial so it can only be reached by scaling (**combined gas law**) →
+  four gauge records filed by what each held fixed.
+- **`q3-ideal` The Ideal Gas Law** — one mole of two gases at 0 °C and one atmosphere
+  (**molar volume**) → a log of four readings at four different states and the one number they
+  share (**gas constant, ideal gas law**) → the amount in a **sealed tank** (its window hatched,
+  its plate printing no amount and no gas) → which R goes with a gauge in atmospheres, from a log
+  in atmospheres → a gas named by its weight and its readings → three gases ordered by density → the
+  gas a pellet of limestone gives off → why every gas fills the same molar volume (helium and xenon,
+  light and heavy, at the same room).
+- **`q4-mixtures` Partial Pressures** — pour one tank into another (**partial pressure, Dalton's
+  law**) → each gas against the same gas alone → one gas's share of the particles (**mole
+  fraction**) → its share of the push → the oxygen in the air at 5500 m, on a HEIGHT dial →
+  argon added to a tank (nothing else changes) → three gases ranked by partial pressure, **where
+  the knock counters rank them wrongly** (a light gas knocks more often, a heavy one harder, and
+  the moles decide) → the moles of one gas in a sealed tank, from the drop in the gauge when a
+  trap takes it out.
+- **`q5-speed` Speed and Escape** — how the speed screen answers heat → three gases by speed →
+  how many times more of the particles clear a speed bar at 227 °C than at 27 °C (a preview of
+  what makes a collision count) → a pinhole (**effusion**) → hydrogen against oxygen
+  (**Graham's law**, beyond the exam) → an unmarked gas named by racing it against helium → why a
+  smell takes seconds to cross a room: one particle's track, with the distance it has run printed
+  beside the distance it is from where it started (**diffusion**) → ammonia against hydrogen
+  chloride down two tubes.
+- **`q6-real` Real Gases** — van der Waals gases, with `PV / nRT` printed and the particles drawn to
+  scale. Squeezed hard it reads above one → because the particles take up room → cooled toward a
+  liquid it reads below one → because of the pull (**ideal gas, real gas**; the plate shows the
+  SHARE of the push the pull takes off, which grows as the gas cools — the pull in kPa does not
+  depend on temperature at all) → three gases ordered by how far they stray, in the same order at
+  every setting of the dial → the cylinder that behaves most ideally (low pressure, high
+  temperature) → the two corrections side by side (**van der Waals equation**, beyond the exam) →
+  why a real gas can be made a liquid.
+- **`boss-compressor` The Compressor** — five phases, each on the gas rig with a new plate and the
+  Compressor standing in the well: set the piston until the gauge reads four times its first
+  reading; the volume a free piston reaches at a temperature the dial lacks; the mass of oxygen in a
+  sealed tank; the partial pressure of helium in a blend; an unmarked seal named by its leak
+  against nitrogen. It files `clue_bellows_warm` (the Warm Cylinder) and pays no XP.
+
+**The gas rig is ONE plate bench with six heads** (`engine/gasrig.js`, built twin
+`gasrig3d.js`, pure planners in `gasdata.js`, the shared stage loop `gasmount.js`):
+
+- `cylinder` — a window of particles (one dot per twelfth of a mole, moving at the speed the gas
+  really has, drawn at a size that follows the particles' own share of the room), a gauge, a
+  thermometer, a piston, counters, and an inset that is the **speed screen** or a **trace** of the
+  points the dials have been through. `mixture` — a tank holding several gases, each in its own
+  stencilled SHAPE (never in a colour alone), with a counter for each. `leak` — a chamber with a
+  pinhole. `tube` — a gas creeping down still air. `path` — one particle's track through a crowd.
+  `record` — a gauge record (a quantity plotted against another).
+- **The knock counter is the real impact rate** (a quarter of the density times the mean speed, in
+  10^21 per cm² per second), not a figure proportional to the pressure. It rises with the gauge when
+  only the room moves, and does NOT when the gas is heated or the gases differ in weight; this is
+  what makes `q4-mixtures` stage 7 a trap, and what makes `q1-knocks` stage 1 an experiment.
+- **A word is plain until its card has earned it, on the dials too.** The gauge prints a bare
+  number until `q1-knocks` stage 6; its three rings are named inner, middle and outer until that
+  card names atm, kPa and mmHg; the thermometer prints degrees C until stage 7 earns kelvin; the
+  energy row says "energy of motion" until stage 3.
+- **A plate can be SEALED** (`item.sealed`): its window is hatched, it prints no amount, no gas and
+  no knock counter, and what it does print (the gauge, the room, the temperature, sometimes the
+  mass) is all there is to work from. `bench.pour`, `feed`, `trap`, `gasTo`, `addGas`, `reset` are
+  the rig's own verbs; a quest supplies only the keys that are its own.
+- **A free piston changes the room, not the push**, so a gas bladder on one swells with the ROOM
+  (`changeOf` in `foes.js`); on anything else it swells with the push. Every stage but
+  `q2-laws` stage 8 (four plotted records) is a fight.
+- **The foes** are gas bladders (benches one to six) and the Compressor (the boss); both are in
+  `BODY_SPECIES`, so at T4 they stand in the wells. The species is named "gas bladder" and never
+  "pressure bladder", so a nameplate does not spend stage one's word.
+
 ### Tallow — Learn world 01 as a place you walk (`three/tallow.js`, T4)
 
 At T4, `#/learn/unit01` is not a list of quests: it is the ground they are played on.
@@ -1662,6 +1778,44 @@ verified by `verify:lanternfall`.
 - **Not verified in a browser.** The sky shader, the materials and the lit look were built
   against the contracts the other worlds keep and checked in Node (build, overlap, walk,
   voyage, bench framing); how it LOOKS has not been seen.
+
+### Bellows — Learn world 04 as a place you walk (`three/bellows.js`, T4)
+
+At T4, `#/learn/unit04` is a cloud deck in thin air, walked in first person: one circular steel deck
+of radius 82 m riding a sea of cloud, the Compressor standing at its middle (a plinth, a ribbed
+block, four cylinder heads, a housing and crown, a piston rod that strokes, a flywheel that turns,
+an exhaust stack with a plume), six benches on a ring of 46 m each under a gantry whose back wall
+says which it is, a road of 24 work lamps, the gas works (six gasholders, eight scoop pylons, four
+pipe racks, four vent stacks, three moored bladders, eight crate stacks) standing off outside the
+ring, and the Avalon's pad on the near side. It is built behind the unchanged world contract
+(`scene`, `data`, `colliders`, `terrainMesh`, `hasFarTerrain`, `lampPool`, `getTerrainHeight`,
+`benchAnchor`, `setBenchDeployed`, `setSiteComplete`, `update`, `dispose`), laid out by
+`tools/gen-bellows-layout.mjs` (seeded; it holds itself to the footprint rules) and verified by
+`verify:bellows`.
+
+- **There is no ground.** `bellows/terrain.js` is the simplest field in the product: the deck's
+  level inside its rim and the cloud sea's level outside it. The rail is a closed ring of
+  colliders, so the only drop in the world is one nobody can reach, and `solveLanding` refuses any
+  spot whose hull would straddle the edge. The deck's underside is a lathed hull of plating and
+  ribs under it (`phys: 'ground'`: what you see when you lean over the rail).
+- **The sky is thin air** (`bellows/atmosphere.js`): ONE sky function (`bwSky`) drawn on the dome
+  and rendered once into the environment cube, a deep blue zenith, a pale band of haze on the
+  horizon, a sun that is a halo and no disc, cirrus combed by the wind; and the **cloud sea**, a
+  shader plane of cumulus tops to the horizon, lit from the sun's side and blue in its own shadow,
+  in the same colour as the dome at the horizon, so there is no seam. Cloud heads standing out of
+  the sea give the parallax a flat plane cannot (`phys: 'ambient'`).
+- **Only lamps are lit.** A work lamp is a `lampMark` pooled into three real lights; the indicator
+  at each bench lights when its quest is finished. **What moves** is the cloud, the spindrift
+  round the eye, the plumes off the stacks, and the Compressor's rod and flywheel, which are held
+  out of the bake (`userData.mover`). Everything else is merged (`mergeStatic`).
+- **Every site is the same bench under a different gantry** (`bellows/sites.js`): the 4.8 x 1.3 m
+  plate at 0.95 m the viewer lays stations and keys out against, a cased gas rig whose face is a
+  glass barrel and a dial, one indicator, and behind it the thing that says which bench it is. A
+  site's local +z is its front and the group turns to face its `approachPos`. The boss has no site,
+  as the other three bosses have none.
+- **Not verified in a browser.** The sky shader, the cloud sea, the materials and the lit look were
+  built against the contracts the other worlds keep and checked in Node (build, overlap, walk,
+  voyage landing, bench framing and the foes standing in their wells); how it LOOKS has not been seen.
 
 ### Surfaces, small parts and the draw-call budget (`materials/pbr-kit.js`)
 
@@ -2069,14 +2223,18 @@ clearance, every stage has exactly three distinct hint rungs, and a giver→give
 is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 ## Plans in flight
-- `docs/plans/learn-track.md` — the Learn road: fourteen worlds, 75 quests charted, twenty-five
-  benches built (`unit01/q1-grain` … `unit01/q6-weigh`, the whole of Tallow; `unit02/q1-wave` …
+- `docs/plans/learn-track.md` — the Learn road: fourteen worlds, 75 quests charted, thirty-one
+  benches built (`unit01/q1-grain` … `unit01/q6-weigh`, the whole of Tallow; `unit04/q1-knocks` …
+  `unit04/q6-real`, the whole of Bellows; `unit02/q1-wave` …
   `unit02/q9-absorb`, the whole of Lanternfall; `unit03/q1-joins` … `unit03/q9-orbitals`, the
-  whole of Ligar; `unit07/q1-recipe` on Kettle) and four bosses. Scaffolding, gating, routes, backend tab,
-  per-world practice sets and the verifier are in place. **Tallow, Lanternfall and Ligar are all
+  whole of Ligar; `unit07/q1-recipe` on Kettle) and five bosses. Scaffolding, gating, routes, backend tab,
+  per-world practice sets and the verifier are in place. **Tallow, Lanternfall, Ligar and Bellows are all
   walkable ground at T4**, every built bench a built instrument standing on its own ground
   (Tallow's six sites are all laid), and a page on every lower tier. Kettle has
-  one built quest and no ground; the other ten worlds are charts only.
+  one built quest and no ground; the other nine worlds are charts only.
+- `docs/plans/bellows-world.md` — Bellows finished: the six benches, the gas rig and its six
+  heads, the gas bladders and the Compressor, the cloud deck on the ground, and every place the
+  build parted from the plan.
 - `docs/plans/ligar-complete.md` — Ligar finished: benches three to nine, their four instruments,
   the warden fight, the five stations on the ground, and every place the build parted from the plan.
 - `docs/plans/lanternfall-world.md` — Lanternfall's ground and its four new instruments,
@@ -2559,8 +2717,11 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
     through the airlock, still landed — rather than teleporting to space. Asking for
     another world from a landed ship is a lift-off, a climb through the cloud, a pull
     away from the world just left, and the jump.
-  - A **quest route** lands the ship on its world and leads the player to that quest's
-    bench (only if it is open); `#/quest` leads to the next pylon. `Skip` on the helm plate
+  - A **world or quest route** lands the ship on its world and leads the player to their next
+    destination across all worlds: on Erebus, `#/quest` leads to the next uncompleted pylon
+    (or Pylon 1 if complete); on Learn worlds (Tallow, Lanternfall, Ligar), the ground arrow
+    points to the next uncompleted quest/bench via `nextQuest` (or the first bench if complete)
+    both on voyage disembark and on initial world landing. `Skip` on the helm plate
     hurries the flight (x6); it never cuts. The voyage stands down for T3 and below, a
     reload onto a world route (the first route of a page load), a signed-out player and
     `session.reduceMotion` — each keeps the old path, launch film included at T3.
@@ -2693,20 +2854,34 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 
 ### 11. Storyline Spine, Bosses, and Contracts
 - **Story Tone & Discipline (`docs/story/bible.md`):** Diegetic industrial Scoured Plate tone. Max 2 sentences per transmission/briefing/prompt. Strict withheld-vocabulary discipline.
-- **Boss Arenas (`arena: 'boss'`):** Checkpointed boss modules: The Hopper (`unit01/boss-hopper.js`), The Lantern-Eater (`unit02/boss-eater.js`), Basalt Warden (`unit03/boss-warden.js`, five phases on the real instruments of benches three, four, six, seven and nine), and Recipe Golem (`unit07/boss-golem.js`). Opens after world benches finish and gates only story.
-- **Road Combat Encounters (Phase 6):** Turn-based combat encounters across all built road quests: Unit 1 (`q1`–`q6`), Unit 2 (`q1`–`q9`), Unit 3 (`q1-joins`, `q2-lattice`), and Unit 7 (`q1-recipe`). Each stage wires `resolveEncounter` with dynamic intent, tactical moves, and vocabulary-gated reactions.
+- **Boss Arenas (`arena: 'boss'`):** Checkpointed boss modules: The Hopper (`unit01/boss-hopper.js`), The Lantern-Eater (`unit02/boss-eater.js`), Basalt Warden (`unit03/boss-warden.js`, five phases on the real instruments of benches three, four, six, seven and nine), Recipe Golem (`unit07/boss-golem.js`), and The Compressor (`unit04/boss-compressor.js`, five phases on the gas rig: a piston, a heater, a sealed tank, a blend and a pinhole). Opens after world benches finish and gates only story.
+- **Road Combat Encounters (Phase 6):** Turn-based combat encounters across all built road quests: Unit 1 (`q1`–`q6`), Unit 2 (`q1`–`q9`), Unit 3 (`q1-joins` to `q9-orbitals`), Unit 4 (`q1-knocks` to `q6-real`) and Unit 7 (`q1-recipe`). Each stage wires `resolveEncounter` with dynamic intent, tactical moves, and vocabulary-gated reactions.
 - **3D FPS Kinematics & Camera Realism (`src/three/fps-controls.js`):** Stride-driven vertical and lateral head-bob with camera roll, idle respiratory drift, landing shock compression, non-linear trauma decay shake (`addTrauma()`), sliding box collisions, and reduced-motion compliance.
-- **Procedural 3D Foe Geometries (`src/learn/engine/foebody.js`):** Procedural 3D models for all encounter species in `BODY_SPECIES`: Halite salt husks, photoelectric lamp moths, jointed hexagonal columnar Basalt Wardens (which splay to the arms a hub holds, swing round in a field, turn or lock their upper blocks, and clamp together with a lattice's grip), slag crawlers (a line of plated segments on legs that lengthen, shorten, part, and close their lids as the lamps light), and riveted reactor Recipe Golems with functioning pressure manometers and steam vents.
-- **Story Spine & Saga (`src/story/saga.js`):** 4 Acts (The Charter, Pressure, Balance, The Core) spanning all 14 worlds. Clue registry for Case File. Spine beats in road order (`getNextPendingBeat`).
+- **Procedural 3D Foe Geometries (`src/learn/engine/foebody.js`):** Procedural 3D models for all encounter species in `BODY_SPECIES`: Halite salt husks, photoelectric lamp moths, jointed hexagonal columnar Basalt Wardens (which splay to the arms a hub holds, swing round in a field, turn or lock their upper blocks, and clamp together with a lattice's grip), slag crawlers (a line of plated segments on legs that lengthen, shorten, part, and close their lids as the lamps light), riveted reactor Recipe Golems with functioning pressure manometers and steam vents, skinned gas bladders (which sag, hold, swell and strain with the push, and strain at their seams but are never made to burst) and the Compressor (a cylinder block with a stroking rod, a flywheel and a vent).
+- **Story Spine & Saga (`src/story/saga.js`):** 4 Acts (The Charter, Pressure, Balance, The Core) spanning all 14 worlds. `EPISODES` registry with 14 sector entries containing `arrival` and `closing` lines (strictly <=2 sentences), `spoilFamily`, `incident`, `objective`, and `caseFileNote`. `getEpisode(worldId)`, `getAllEpisodes()`. Clue registry for Case File. Spine beats in road order (`getNextPendingBeat`).
+- **Story Modals (`src/story/story-modal.js`):**
+  - `openCampaignStoryModal(opts)`: 4-slide CRT briefing exploring the background lore (Truce & Guilds, Ghost Charter & Spoil, Chemistry Detective Kit, 14-World Standing Orders).
+  - `openWorldStoryModal(world, opts)`: Sector incident, forensic objective, Quartermaster Vess CRT typewriter transmission, case file link, and campaign saga link.
+- **Onboarding Lore Scene (`src/screens/onboarding.js` Scene 4):**
+  - Step 4 of 4 ("Storyline") following guild selection and starter roll, introducing lore orientation before first launch. Skip and Disembark wire to `commitLaunch()`.
+- **First-Visit Auto-Briefing & Reopen Controls:**
+  - `src/screens/learn-world.js`: `maybeOfferStory(world)` auto-pops sector briefing on first arrival (`story_world_seen_${world.id}`). Reopen button accessible via walking HUD (`#learn-story-trigger`), sites modal (`#sites-story-popup-btn`), and fallback view (`.learn-story-trigger`).
+  - `src/screens/starmap.js`: "Story Dossier" button on tab header + "Storyline" button per sector row in learn list.
+  - `src/screens/learn.js`: "Story Dossier" button + "Storyline" buttons per sector row.
+  - `src/screens/bridge.js`: "Mission Storyline Dossier" button in announcement panel.
 - **Case File & Dossier (`src/screens/casefile.js` at `#/casefile`):** Terminal displaying evidence clues, Vess marginalia notes, spine beat transcripts, and act charter summaries.
 - **Session Saga State (`src/session.js`):** `session.learn.saga = { beatsSeen: [], clues: [] }`. Methods `getSaga()`, `recordClue()`, `hasClue()`, `recordSagaBeat()`, `hasSagaBeat()`. Union merge in `setLearnState()`.
 - **Contracts (`src/story/quest1.js`, `src/screens/contracts.js` at `#/contracts`):** Erebus reframed as contract with posting metadata; Stage 20 awards `clue_erebus_mark`. Contract Board screen with live and sealed postings. Star Map tabs renamed to `Story` and `Contracts`.
 - **Encounter-First Design:** `src/learn/quests/_template.js` and `docs/plans/learn-quests.md` scaffolded with encounter declarations (foe, objective, chemical core).
-- **Story Verifier (`tools/verify-story.mjs`):** Enforces act sequence, clue integrity, spine beat order, sentence caps, and boss clue awards via `npm run verify:story` in `npm run verify`.
+- **Story Verifier (`tools/verify-story.mjs`):** Enforces act sequence, clue integrity, spine beat order, sentence caps (<=2 sentences), boss clue awards, and all 14 world episodes via `npm run verify:story` in `npm run verify`.
 
 ### 12. Learn Overworld 2D Overlay
 - **Format (`src/styles/learn.css`, `src/learn/engine/frame.js`):** Deployed overworld learn stages use Erebus-matching bottom-left card (`.learn-quest-overworld .lq-body`) and dock bar (`.lq-dock-bar`). Direct flex flow for prompt, widget (`.choice-option.lq-bin-key`, number steppers, sorting bins), readouts, and actions (`Commit` and `Hint`). Bench-mirrored controls hide when unfocused. Initial load camera alignment avoids camera flip or flash.
 
 ### 13. Bridge Hologram Announcements
 - **Bridge Welcome Hologram (`src/three/materials/textures.js`):** `createClubHoloTexture` subtitle updated to "Next meeting 10/13 in 702".
+
+### 14. Bench Instrument Introduction & 3D Halos
+- **Halo Lifecycle Rule:** 3D amber instrument halos (`showInstrumentHalos` in `src/learn/engine/bench3d.js`) are displayed ONLY during the introductory briefing modal (`showBriefing` in `src/learn/engine/frame.js`) to orient new users to dials, keys, and sample wells. Halos are strictly dismissed on modal start/close and NEVER shown during active stage solving to avoid revealing answers.
+- **Instrument Controls Guide:** Stage cards provide concise non-spoiling control explanations (`.lq-bench-guide`) explaining how to turn dials (drag/scroll) and interact with bench keys/stations, with an on-demand button to reopen the introduction with halos. Briefings feature interactive instrument summary cards that highlight corresponding 3D halos on hover/click.
 

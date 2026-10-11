@@ -371,8 +371,10 @@ of `setLearnState`. The `LearnProgress` tab gains a row kind for beats and clues
 ## 7. The remaining worlds, in one line each
 So that every future world is designed **encounter-first** (§8 Phase 7). These are seeds,
 not specs.
-- **Bellows** (gases): pressure bladders. They swell when heated and burst when squeezed
-  past their limit, and a mixed-gas swarm pushes as if each gas were alone.
+- **Bellows** (gases): **built** (`bellows-world.md`). Gas bladders. They sag, hold, swell and strain
+  with the push (or with the room, on a free piston), and are dispersed, never burst; the boss is a
+  rogue compressor. (First imagined as pressure bladders that burst when squeezed; spoil is never
+  killed, and the name would have spent stage one's word.)
 - **Ember Reach** (thermodynamics): ember beasts that steal heat from whatever they
   touch. Calorimetry measures how much they took.
 - **Mirrowen** (states, IMFs): mirror-skins that only hold together by the grip between

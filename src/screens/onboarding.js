@@ -240,15 +240,71 @@ export async function renderOnboarding(container) {
     // 3. Instant roster update
     updateRosterSection();
 
-    // 4. Background fetch if not in cache
     fetchRoster(selectedTeam);
+  }
+
+  const seed = session.player?.player_id || session.player?.display_name || 'novice_crew';
+  const roll = getDeterministicRoll(seed);
+  const awardedTrinket = getTrinketForRoll(roll);
+
+  async function commitLaunch() {
+    const leave = () => {
+      if (activeTransmission?.destroy) activeTransmission.destroy();
+      activeTransmission = null;
+      container.innerHTML = '';
+      if (window.location.hash === '#/bridge') {
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      } else {
+        window.location.hash = '#/bridge';
+      }
+    };
+
+    if (activeTransmission?.destroy) activeTransmission.destroy();
+
+    // The slot may have been claimed on another device since this screen was drawn.
+    if (session.teamId) {
+      leave();
+      return;
+    }
+
+    try {
+      const res = await api.claimTeam(selectedTeam, {
+        suitColor: selectedTeam,
+        helmet: 'mark1',
+        visor: 'gold',
+        skin: 'medium'
+      }, userBg, awardedTrinket.id);
+
+      session.setUserData(res, { trustXp: false });
+      session.setFlag('sessionZeroDone', true);
+      session.setFlag('story_onboarding_completed', true);
+
+      // Play launch cinematic
+      await playCinematic('launch');
+      leave();
+    } catch (err) {
+      if (err?.code === 'ALREADY_ASSIGNED') {
+        try {
+          const me = await api.getMe();
+          session.setUserData(me);
+        } catch (e) {}
+        session.setFlag('sessionZeroDone', true);
+        session.setFlag('story_onboarding_completed', true);
+        showToast('You are already signed on to a guild.', 'info');
+      } else {
+        showToast(err.message || 'Error saving assignment.', 'error');
+      }
+      leave();
+    }
   }
 
   function render() {
     if (step === 2) {
       renderScene2();
-    } else {
+    } else if (step === 3) {
       renderScene3();
+    } else {
+      renderScene4();
     }
   }
 
@@ -444,15 +500,16 @@ export async function renderOnboarding(container) {
             </div>
 
             <button type="button" id="launch-cta-btn" class="btn-primary hidden" style="width: 100%; padding: 12px 0;">
-              Continue to Bridge
+              Mission Briefing ▶
             </button>
           </div>
         </div>
       </div>
     `;
 
-    container.querySelector('#skip-to-bridge-link-3')?.addEventListener('click', () => {
-      if (activeTransmission?.destroy) activeTransmission.destroy();
+    container.querySelector('#skip-to-bridge-link-3')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      commitLaunch();
     });
 
     // Hold-to-commit handler
@@ -522,68 +579,213 @@ export async function renderOnboarding(container) {
               speaker: 'VESS // QUARTERMASTER',
               badge: 'AWARD CONFIRMED',
               subtitle: 'QUARTERMASTER CRATE // ISSUE DRAWN',
-              text: '"Quartermaster crate unsealed. You earned this."'
+              text: '"Quartermaster crate unsealed. Review your mission briefing before departure."'
             });
           }
         }
       }, 80);
 
-      launchBtn.addEventListener('click', async () => {
-        // The screen goes whatever the answer is. Leaving it up after a refused
-        // assignment stranded the player on a picker that could do nothing.
-        const leave = () => {
-          if (activeTransmission?.destroy) activeTransmission.destroy();
-          activeTransmission = null;
-          container.innerHTML = '';
-          if (window.location.hash === '#/bridge') {
-            window.dispatchEvent(new HashChangeEvent('hashchange'));
-          } else {
-            window.location.hash = '#/bridge';
-          }
-        };
-
+      launchBtn.addEventListener('click', () => {
         if (activeTransmission?.destroy) activeTransmission.destroy();
-        launchBtn.disabled = true;
-        launchBtn.textContent = 'Launching…';
+        activeTransmission = null;
+        soundscape.playBondSnap();
+        step = 4;
+        render();
+      });
+    }
+  }
 
-        // The slot may have been claimed on another device since this screen
-        // was drawn. Asking again would only earn an ALREADY_ASSIGNED.
-        if (session.teamId) {
-          leave();
-          return;
+  function renderScene4() {
+    if (activeTransmission?.destroy) {
+      activeTransmission.destroy();
+      activeTransmission = null;
+    }
+
+    const activeMeta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
+    let currentSlide = 0;
+
+    const SLIDES = [
+      {
+        kicker: '01 / 04 · THE QUAD-GUILD TRUCE',
+        title: 'Four Monopolies on the Frontier',
+        speaker: 'VESS // QUARTERMASTER',
+        badge: `${activeMeta.mark} · CREW LOGISTICS`,
+        transmission: 'Four Imperial Guilds divide the frontier into extractive monopolies. The Avalon flies between them under an uneasy forty-year truce.',
+        bullets: [
+          { label: 'Mineral Mining (Earth)', desc: 'Strip-mines heavy ores and dense silicates from lifeless asteroidal bedrock.' },
+          { label: 'Atmospheric Harvesters (Air)', desc: 'Skims turbulent upper envelopes of gas giants for noble gases and volatile propellants.' },
+          { label: 'Thermal Smelters (Fire)', desc: 'Operates orbital crucibles and geothermal blast-wells that crack crude rock into working alloy.' },
+          { label: 'Moisture Extraction (Water)', desc: 'Filters brine, heavy water, and industrial coolants from desiccated planetary basins.' }
+        ],
+        note: `Assigned Guild: You have signed on with ${activeMeta.guild} (${activeMeta.title}). Your station is aboard the salvage hauler Avalon, answering to Quartermaster Vess.`
+      },
+      {
+        kicker: '02 / 04 · THE GHOST CHARTER',
+        title: 'Living Spoil & Broken Ledgers',
+        speaker: 'VESS // QUARTERMASTER',
+        badge: 'SCENE 04 · ANOMALY REPORT',
+        transmission: 'Smelters are being abandoned with fireboxes burning. Slag heaps are twitching and walking under their own power across the perimeter.',
+        bullets: [
+          { label: 'The Fifth Presence', desc: 'Unregistered vessels flying no imperial guild livery are transmitting on emergency carrier frequencies dead for thirty seasons.' },
+          { label: 'Animated Spoil', desc: 'Refined tailings and discarded mineral residues are crystallizing and crawling under electromagnetic radiation.' },
+          { label: 'Impossible Inventories', desc: 'Forward refinery ledgers report output tonnage that reliably exceeds the raw ore fed into the hoppers.' },
+          { label: 'The Mess Deck Rumor', desc: 'Crews across every canteen whisper that an unchartered rogue fleet has discovered alchemy.' }
+        ],
+        note: 'The Reality: Alchemy is physically impossible. Ordinary electron chemistry cannot turn salt into heavy metals or create mass from nothing.'
+      },
+      {
+        kicker: '03 / 04 · THE DETECTIVE KIT',
+        title: 'Forensic Chemistry as Your Weapon',
+        speaker: 'VESS // QUARTERMASTER',
+        badge: 'SCENE 04 · DOCTRINE',
+        transmission: 'The chemistry is your detective kit. You do not fight with blasters; you fight by measuring what the laws of matter allow.',
+        bullets: [
+          { label: 'Definite Proportions & Conservation', desc: 'Every chemical reaction conserves mass and combines in discrete integer ratios. An over-mass ledger is not chemistry.' },
+          { label: 'Electronic & Molecular Structure', desc: 'Atomic numbers, emission spectra, bond angles, and kinetics dictate how matter behaves under load.' },
+          { label: 'Neutralizing the Spoil', desc: 'Spoil obeys the laws measured at the bench. A mixture separates; an ionic lattice cleaves; an excited shell releases charges.' },
+          { label: 'The Case File Dossier', desc: 'Every surveyed sector yields physical evidence stored in the Case File terminal aboard the Avalon.' }
+        ],
+        note: 'Your Mission: Use the lab benches across the 14 worlds to analyze anomalous specimens, dismantle spoil, and document forensic evidence.'
+      },
+      {
+        kicker: '04 / 04 · STANDING ORDERS',
+        title: 'The Road Across Fourteen Worlds',
+        speaker: 'VESS // QUARTERMASTER',
+        badge: 'SCENE 04 · DISPATCH',
+        transmission: 'Four acts across the rim. Follow the thermal plumes to Cinder Halo and uncover the truth behind the forgotten manifests.',
+        bullets: [
+          { label: 'Act I: The Charter (Units 1–3)', desc: 'Tallow, Lanternfall, and Ligar: survey mobile spoil, recover unliveried marks, and verify elemental mass.' },
+          { label: 'Act II: Pressure (Units 4–7)', desc: 'Bellows, Ember Reach, Mirrowen, and Kettle: trace recruitment of active crews and seize the impossible over-mass ledger.' },
+          { label: 'Act III: Balance (Units 8–11)', desc: 'Teeter, Verdigris, Brinewire, and Quicklight: restore equilibrium, neutralize acid floods, and uncover the title: The Catalyst.' },
+          { label: 'Act IV: The Core (Units 12–14)', desc: 'Lodestone, Thornmere, and Cinder Halo: trace subatomic plumes to the ancient transmutation works.' }
+        ],
+        note: 'The Truth: The Fifth are the abandoned crews the Guilds wrote off. By mastering chemistry, you bridge corporate abandonment and justice.'
+      }
+    ];
+
+    function renderSlideHtml() {
+      const slide = SLIDES[currentSlide];
+      const isLast = currentSlide === SLIDES.length - 1;
+
+      return `
+        <div class="screen-container m-screen m-onboarding m-storyline" style="max-width: 720px;">
+          <div class="m-topbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+            ${stepRail(4)}
+            <button type="button" id="skip-to-bridge-btn-4" class="eyebrow m-skip" style="background: none; border: none; cursor: pointer; text-decoration: underline; color: var(--text-muted);">
+              Skip to Bridge
+            </button>
+          </div>
+
+          <div class="glass-panel" style="padding: 1.25rem;">
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.6rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.4rem;">
+              <span class="eyebrow lit" style="color: var(--accent-gold);">${esc(slide.kicker)}</span>
+              <h2 style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; text-transform: uppercase; color: var(--text-bright); margin: 0;">
+                ${esc(slide.title)}
+              </h2>
+            </div>
+
+            <!-- Transmission Slot -->
+            <div id="story-onboarding-transmission-slot" style="margin-bottom: 0.85rem;"></div>
+
+            <!-- Content Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.55rem; margin-bottom: 0.85rem;">
+              ${slide.bullets.map(b => `
+                <div class="holo-card" style="padding: 0.65rem 0.8rem; background: var(--plate-200); border: 1px solid var(--border-durasteel);">
+                  <div style="font-family: var(--font-display); font-size: 0.76rem; font-weight: 700; color: var(--accent-amber); margin-bottom: 0.15rem; text-transform: uppercase;">
+                    ${esc(b.label)}
+                  </div>
+                  <div style="font-family: var(--font-sans); font-size: 0.78rem; line-height: 1.35; color: var(--text-bright);">
+                    ${esc(b.desc)}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <!-- Note Box -->
+            <div class="holo-card" style="padding: 0.6rem 0.85rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-gold); margin-bottom: 1rem;">
+              <div style="font-family: var(--font-mono); font-size: 0.74rem; line-height: 1.4; color: var(--text-bright);">
+                ⚡ ${esc(slide.note)}
+              </div>
+            </div>
+
+            <!-- Slide Navigation Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-durasteel); padding-top: 0.75rem;">
+              <!-- Slide Pips -->
+              <div style="display: flex; gap: 0.4rem; align-items: center;">
+                ${SLIDES.map((_, i) => `
+                  <span style="display: inline-block; width: ${i === currentSlide ? '22px' : '8px'}; height: 6px; background: ${i === currentSlide ? 'var(--accent-amber)' : 'var(--border-durasteel)'}; transition: all 0.2s ease;"></span>
+                `).join('')}
+              </div>
+
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                ${currentSlide > 0 ? `
+                  <button type="button" id="story-slide-prev-btn" class="btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">
+                    ◀ Back
+                  </button>
+                ` : ''}
+
+                <button type="button" id="story-slide-next-btn" class="btn-primary" style="padding: 6px 18px; font-size: 0.8rem; letter-spacing: 0.08em;">
+                  ${isLast ? 'Acknowledge Orders & Disembark ▶' : 'Next Briefing ▶'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateSlide() {
+      container.innerHTML = renderSlideHtml();
+      mountSlideTransmission();
+      bindSlideEvents();
+    }
+
+    function mountSlideTransmission() {
+      const slot = container.querySelector('#story-onboarding-transmission-slot');
+      if (!slot) return;
+      if (activeTransmission?.destroy) activeTransmission.destroy();
+
+      const slide = SLIDES[currentSlide];
+      activeTransmission = createTransmissionElement({
+        speaker: slide.speaker,
+        badge: slide.badge,
+        subtitle: 'STATION: SALVAGE HAULER AVALON // CREW BRIEFING',
+        text: slide.transmission,
+        accentColor: activeMeta.accent || 'var(--accent-amber)',
+        speed: 'normal'
+      });
+      slot.innerHTML = '';
+      slot.appendChild(activeTransmission.element);
+    }
+
+    function bindSlideEvents() {
+      container.querySelector('#skip-to-bridge-btn-4')?.addEventListener('click', () => {
+        soundscape.playToggleClack();
+        commitLaunch();
+      });
+
+      container.querySelector('#story-slide-prev-btn')?.addEventListener('click', () => {
+        if (currentSlide > 0) {
+          currentSlide--;
+          soundscape.playToggleClack();
+          updateSlide();
         }
+      });
 
-        try {
-          const res = await api.claimTeam(selectedTeam, {
-            suitColor: selectedTeam,
-            helmet: 'mark1',
-            visor: 'gold',
-            skin: 'medium'
-          }, userBg, awardedTrinket.id);
-
-          session.setUserData(res, { trustXp: false });
-          session.setFlag('sessionZeroDone', true);
-
-          // Play launch cinematic
-          await playCinematic('launch');
-          leave();
-        } catch (err) {
-          if (err?.code === 'ALREADY_ASSIGNED') {
-            // The server knows the guild this player is on and the client does
-            // not. Pull it, so the bridge opens on the right livery.
-            try {
-              const me = await api.getMe();
-              session.setUserData(me);
-            } catch (e) {}
-            session.setFlag('sessionZeroDone', true);
-            showToast('You are already signed on to a guild.', 'info');
-          } else {
-            showToast(err.message || 'Error saving assignment.', 'error');
-          }
-          leave();
+      container.querySelector('#story-slide-next-btn')?.addEventListener('click', () => {
+        if (currentSlide < SLIDES.length - 1) {
+          currentSlide++;
+          soundscape.playToggleClack();
+          updateSlide();
+        } else {
+          soundscape.playBondSnap();
+          commitLaunch();
         }
       });
     }
+
+    updateSlide();
   }
 
   // Cleanup active transmission when navigating away

@@ -593,6 +593,51 @@ for (const [questId, bench, stage, term, title, body] of LIGAR_LATER) {
   });
 }
 
+
+/**
+ * Bellows. Each term sits at the stage whose reward card earns it, so the Manual is
+ * a record of the same schedule the quests keep.
+ * [quest id, bench number, stage number, term, title, body]
+ */
+const BELLOWS = [
+  ['q1-knocks', 1, 1, 'Pressure', 'The Push of the Knocks', 'The combined force of all the particles of a gas striking a wall, divided by the area of the wall. It rises when the particles knock more often or harder.'],
+  ['q1-knocks', 1, 3, 'Kinetic Energy', 'The Energy of Motion', 'The energy a particle has because it is moving. Temperature measures the average kinetic energy of the particles of a substance.'],
+  ['q1-knocks', 1, 4, 'Maxwell–Boltzmann Distribution', 'A Spread of Speeds', 'The spread of particle speeds in a gas: a curve with a peak. Heating moves the peak to higher speeds and flattens the curve.'],
+  ['q1-knocks', 1, 6, 'Atmospheres, Kilopascals, mmHg', 'One Push, Three Scales', 'Three units of pressure: one atmosphere (atm) is 101.3 kilopascals (kPa) is 760 millimetres of mercury (mmHg).'],
+  ['q1-knocks', 1, 7, 'Absolute Zero and Kelvin', 'The Coldest Possible', 'The temperature, −273.15 °C, at which particles would have no motion left to lose. The kelvin scale counts from it, so 0 K is absolute zero.'],
+  ['q1-knocks', 1, 8, 'Kinetic Molecular Theory', 'A Crowd of Moving Particles', 'A gas is a crowd of tiny particles in constant random motion, far apart, and its pressure is their knocking on the walls.'],
+  ['q2-laws', 2, 1, "Boyle's Law", 'Pressure Against Volume', 'At a fixed temperature and amount, the pressure of a gas rises as its volume falls: pressure times volume stays the same.'],
+  ['q2-laws', 2, 2, 'Inversely Proportional', 'As One Falls, the Other Rises', 'Two quantities are inversely proportional when their product stays constant, so one rises by the factor the other falls.'],
+  ['q2-laws', 2, 3, "Charles's Law", 'Volume Against Temperature', 'At a fixed pressure and amount, the volume of a gas is proportional to its kelvin temperature.'],
+  ['q2-laws', 2, 5, "Gay-Lussac's Law", 'Pressure Against Temperature', 'At a fixed volume and amount, the pressure of a gas is proportional to its kelvin temperature.'],
+  ['q2-laws', 2, 6, "Avogadro's Law", 'Volume Against Amount', 'At a fixed temperature and pressure, the volume of a gas is proportional to the amount of gas: equal amounts fill equal volumes.'],
+  ['q2-laws', 2, 7, 'Combined Gas Law', 'Three Quantities at Once', 'For a fixed amount of gas, pressure times volume over kelvin temperature is constant, so P₁V₁/T₁ = P₂V₂/T₂.'],
+  ['q3-ideal', 3, 1, 'Molar Volume', 'What a Mole Fills', 'The volume of one mole of a gas: about 22.4 litres at 0 °C and 1 atm, whichever gas it is.'],
+  ['q3-ideal', 3, 2, 'Gas Constant and the Ideal Gas Law', 'One Number for Every Gas', 'PV = nRT. The gas constant R is 8.314 J/(mol·K), or 0.0821 L·atm/(mol·K), and its value depends on the units of pressure and volume.'],
+  ['q4-mixtures', 4, 1, 'Partial Pressure', 'A Gas\'s Share of the Push', 'The pressure a gas in a mixture would exert if it were alone in the container.'],
+  ['q4-mixtures', 4, 1, "Dalton's Law", 'Partial Pressures Add', 'The total pressure of a mixture of gases is the sum of the partial pressures of its gases.'],
+  ['q4-mixtures', 4, 3, 'Mole Fraction', 'A Share of the Moles', 'The moles of one substance in a mixture divided by the total moles. A partial pressure is the mole fraction times the total pressure.'],
+  ['q5-speed', 5, 4, 'Effusion', 'Through a Pinhole', 'The escape of a gas through a very small hole. A lighter gas effuses faster because its particles move faster.'],
+  ['q5-speed', 5, 5, "Graham's Law", 'Rate Against Molar Mass', 'The rate of effusion is inversely proportional to the square root of the molar mass. This goes beyond the exam.'],
+  ['q5-speed', 5, 7, 'Diffusion', 'A Random Walk of Collisions', 'The spreading of one substance through another by the random motion of its particles. It is slow because each collision turns the particle aside.'],
+  ['q6-real', 6, 4, 'Ideal Gas and Real Gas', 'Where the Law Stops', 'An ideal gas has particles with no size and no attractions. Every actual gas is a real gas, which departs from the gas law at high pressure and low temperature.'],
+  ['q6-real', 6, 7, 'van der Waals Equation', 'Two Corrections', 'The gas law corrected for the volume of the particles and for the attractions between them: (P + an²/V²)(V − nb) = nRT. This goes beyond the exam.']
+];
+
+for (const [questId, bench, stage, term, title, body] of BELLOWS) {
+  FIELD_MANUAL_TERMS.push({
+    id: `u4_${questId.split('-')[0]}_s${stage}_${term.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`,
+    term,
+    road: 'unit04',
+    questKey: `unit04/${questId}`,
+    stageLabel: `Bench ${bench}, Stage ${stage}`,
+    stageIndex: stage - 1,
+    route: `#/learn/unit04/${questId}`,
+    title,
+    body
+  });
+}
+
 /**
  * Checks whether a term is earned based on session state.
  */
@@ -620,7 +665,8 @@ export function getFieldManualStats(sessionState = {}) {
     campaign: { total: 0, earned: 0 },
     unit01: { total: 0, earned: 0 },
     unit02: { total: 0, earned: 0 },
-    unit03: { total: 0, earned: 0 }
+    unit03: { total: 0, earned: 0 },
+    unit04: { total: 0, earned: 0 }
   };
 
   for (const t of FIELD_MANUAL_TERMS) {
@@ -669,6 +715,7 @@ export function renderFieldManualModal(sessionState = {}, activeFilter = 'all') 
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit01' ? 'active' : ''}" data-filter="unit01">Tallow (${stats.byRoad.unit01.earned}/${stats.byRoad.unit01.total})</button>
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit02' ? 'active' : ''}" data-filter="unit02">Lanternfall (${stats.byRoad.unit02.earned}/${stats.byRoad.unit02.total})</button>
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit03' ? 'active' : ''}" data-filter="unit03">Ligar (${stats.byRoad.unit03.earned}/${stats.byRoad.unit03.total})</button>
+        <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit04' ? 'active' : ''}" data-filter="unit04">Bellows (${stats.byRoad.unit04.earned}/${stats.byRoad.unit04.total})</button>
       </div>
 
       <div class="field-manual-grid">

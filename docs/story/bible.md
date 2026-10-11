@@ -125,6 +125,7 @@ Spoil is not magic. It is refined tailings and waste residues animated by electr
 - **Tallow (Unit 1):** *Salt Husks* — crystalline aggregates of pure elements, molecular compounds, and heterogeneous grit. Weak to mechanical cutting, physical sorting, and mass verification.
 - **Lanternfall (Unit 2):** *Lamp Moths & Frost Wraiths* — photoelectric shells and quantized gas clouds. Weak to precise electromagnetic frequencies and matching emission bands.
 - **Ligar (Unit 3):** *Basalt Wardens & Slag Crawlers* — bonded mineral armor. Weak to thermal shock, shear stress, and electrical conductivity testing based on lattice geometry.
+- **Bellows (Unit 4):** *Gas Bladders* — skinned bags of gas that sag, hold, swell and strain with the push inside them, and a rogue **Compressor** at the heart of the deck. Settled by reading the gauge, never by bursting them: a bladder strains at its seams and is dispersed, never popped.
 - **Kettle (Unit 7):** *Recipe Golems* — rigidly proportioned stoichiometric monoliths. Disrupted only by starving their limiting reagents.
 
 ---
@@ -138,6 +139,7 @@ The Case File is the investigative terminal in the *Avalon*'s comms bay (and `#/
 3. **Lanternfall (Boss 2 - The Lantern-Eater):** *The Ground Optical Lens* — A focusing prism ground for deep ultraviolet wavelengths that no standard guild lamp can emit.
 4. **Ligar (Elite 1 - Basalt Warden):** *The Arc-Sheared Basalt* — A quarry slab cut cleanly through molecular and ionic matrixes by thermal energy exceeding any known refinery torch.
 5. **Kettle (Elite 2 - Recipe Golem):** *The Over-Mass Ledger* — A logistics logbook documenting reaction products whose mass reliably exceeds the total mass of the reactants.
+6. **Bellows (Boss - The Compressor):** *The Warm Cylinder* — A sealed gas cylinder logged at one pressure for twelve days while the deck froze fifty degrees around it. Gay-Lussac's law forbids a sealed gas to do that unless something inside it is giving off heat, and no chemical reaction does for twelve days. It points at Cinder Halo.
 
 ---
 

@@ -17,6 +17,7 @@ import { WORLDS } from "../learn/curriculum.js";
 import { worldStatus, worldProgress } from "../learn/progress.js";
 import { canWalk } from "../learn/worlds3d.js";
 import { practiceKey, bindPracticeKeys } from "./learn-world.js";
+import { openWorldStoryModal, openCampaignStoryModal } from "../story/story-modal.js";
 
 const SECTORS = [
   {
@@ -67,9 +68,14 @@ const LEARN_STATUS_TAG = {
  */
 function tabRow(active) {
   return `
-    <div class="map-tabs" role="tablist">
-      <button type="button" class="map-tab${active === "learn" ? " active" : ""}" data-map-tab="learn" role="tab" aria-selected="${active === "learn"}">Story</button>
-      <button type="button" class="map-tab${active === "sectors" ? " active" : ""}" data-map-tab="sectors" role="tab" aria-selected="${active === "sectors"}">Contracts</button>
+    <div class="map-tabs" role="tablist" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+      <div style="display: flex; gap: 0.25rem;">
+        <button type="button" class="map-tab${active === "learn" ? " active" : ""}" data-map-tab="learn" role="tab" aria-selected="${active === "learn"}">Story</button>
+        <button type="button" class="map-tab${active === "sectors" ? " active" : ""}" data-map-tab="sectors" role="tab" aria-selected="${active === "sectors"}">Contracts</button>
+      </div>
+      <button type="button" class="btn-secondary quest-btn-sm m-tap" id="campaign-story-briefing-btn" title="Review Campaign Storyline & Ghost Charter" style="font-size: 0.72rem;">
+        📜 Story Dossier
+      </button>
     </div>
   `;
 }
@@ -102,7 +108,10 @@ function learnPanel() {
                 ${w.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} complete` : ""}
               </div>
             </div>
-            <div class="map-learn-action">
+            <div class="map-learn-action" style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn-secondary quest-btn-sm learn-story-modal-btn m-tap" data-story-world="${esc(w.id)}" title="Sector Storyline Briefing">
+                Storyline
+              </button>
               ${enterable
                 ? `<a href="#/learn/${esc(w.id)}" class="btn-primary quest-btn-sm m-tap" style="text-decoration: none;">${walk ? `Enter ${esc(w.world)}` : "Enter"}</a>`
                 : `<span class="eyebrow map-learn-blocked">${st === "locked" ? "Locked" : "Coming soon"}</span>`}
@@ -120,6 +129,18 @@ function bindTabs(container) {
   // The Learn panel is drawn on both tiers, so its Problems keys are wired here
   // rather than twice in renderStarMap.
   bindPracticeKeys(container);
+
+  container.querySelectorAll('.learn-story-modal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const w = WORLDS.find(x => x.id === btn.dataset.storyWorld);
+      if (w) openWorldStoryModal(w);
+    });
+  });
+
+  container.querySelector('#campaign-story-briefing-btn')?.addEventListener('click', () => {
+    openCampaignStoryModal();
+  });
+
   const tabs = container.querySelectorAll("[data-map-tab]");
   const panels = container.querySelectorAll("[data-map-panel]");
   tabs.forEach(btn => {

@@ -21,7 +21,7 @@ import { showModal, closeModal } from '../../ui/modal.js';
 import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
 import { createTransmissionElement } from '../../ui/transmission.js';
-import { benchDeployment } from './bench-host.js';
+import { benchDeployment, activeBenchViewer, onBenchViewer } from './bench-host.js';
 import { benchesAre3D } from './instruments.js';
 import { mirrorBenchKeys } from './bench-keys.js';
 import { Encounter } from './encounter.js';
@@ -282,6 +282,7 @@ export class LearnFrame {
 
           <aside class="lq-deck plate">
             <div class="lq-prompt"></div>
+            <div class="lq-bench-guide"></div>
             <div class="lq-foe" hidden></div>
             <div class="lq-deck-body">
               <div class="lq-readout"></div>
@@ -312,6 +313,7 @@ export class LearnFrame {
       controls: q('.lq-controls'),
       scope: q('.lq-scope'),
       prompt: q('.lq-prompt'),
+      benchGuide: q('.lq-bench-guide'),
       foe: q('.lq-foe'),
       deckBody: q('.lq-deck-body'),
       readout: q('.lq-readout'),
@@ -323,12 +325,16 @@ export class LearnFrame {
       hintKey: q('.lq-hint-key')
     };
 
+    this.viewerUnsub = onBenchViewer(() => {
+      if (this.stage) this.updateBenchGuide(this.stage);
+    });
+
     this.onClick = e => {
       const act = e.target.closest('[data-act]')?.dataset.act;
       if (act === 'submit') this.opts.onSubmit();
       else if (act === 'next') this.opts.onNext();
       else if (act === 'hint') this.takeHint();
-      else if (act === 'objective') this.showBriefing();
+      else if (act === 'objective' || act === 'guide') this.showBriefing();
       else if (act === 'exit') this.opts.onExit?.();
       else if (act === 'reward') this.showFindings();
       else if (act === 'close-panel') this.setPanelClosed(true);
@@ -623,6 +629,8 @@ export class LearnFrame {
       dockCommit.disabled = false;
     }
 
+    activeBenchViewer()?.hideInstrumentHalos();
+    this.updateBenchGuide(stage);
     this.updateStageActions();
     this.updateRail();
     this.onFit?.();
@@ -632,6 +640,60 @@ export class LearnFrame {
     if (advancing) this.container.querySelector('.lq')?.scrollIntoView({ block: 'nearest' });
   }
 
+  updateBenchGuide(stage) {
+    if (!this.el.benchGuide) return;
+    const viewer = activeBenchViewer();
+    let items = [];
+
+    if (viewer && typeof viewer.getAvailableInstruments === 'function') {
+      items = viewer.getAvailableInstruments();
+    } else {
+      const controls = stage?.controls || [];
+      if (controls.includes('power') || stage?.dials?.length) {
+        items.push({
+          name: 'Dial',
+          shortDesc: 'Drag knob or scroll mouse wheel to adjust'
+        });
+      }
+      if (controls.some(c => c !== 'power')) {
+        items.push({
+          name: 'Keys',
+          shortDesc: 'Click engraved plates on bench rail'
+        });
+      }
+      if (stage?.samples?.length || stage?.select || stage?.specimens?.length || stage?.pairs?.length) {
+        items.push({
+          name: 'Stations',
+          shortDesc: 'Click wells or screens to select'
+        });
+      }
+    }
+
+    if (!items.length) {
+      this.el.benchGuide.innerHTML = '';
+      this.el.benchGuide.hidden = true;
+      return;
+    }
+
+    this.el.benchGuide.hidden = false;
+    this.el.benchGuide.innerHTML = `
+      <div class="lq-bench-guide-card plate">
+        <div class="lq-bench-guide-head">
+          <span class="eyebrow lit">BENCH CONTROLS</span>
+          <button type="button" class="btn-secondary quest-btn-sm lq-guide-reopen-btn" data-act="objective" title="Open instrument guide with 3D halos">How to Use</button>
+        </div>
+        <div class="lq-bench-guide-list">
+          ${items.map(it => `
+            <div class="lq-bench-guide-row">
+              <span class="lq-bench-guide-lbl">${esc(it.name)}:</span>
+              <span class="lq-bench-guide-text">${esc(it.shortDesc)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   updateStageActions() {
     if (!this.el.stageActions) return;
     // Findings gathers up what has been found so far. Straight after a first
@@ -639,11 +701,9 @@ export class LearnFrame {
     // key waits until there is something to gather.
     const found = this.clearedFindings().length;
     const canReview = found > (this.solved ? 1 : 0);
-    // The Objective key reopens the stage briefing, so it only exists on a
-    // stage that has one. Most stages do not: the prompt on the deck is the
-    // whole task, and a key that opens an empty modal is a key that lies.
+    const hasBriefingOrGuide = Boolean(this.stage?.briefing || activeBenchViewer());
     this.el.stageActions.innerHTML = `
-      ${this.stage?.briefing ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="objective">Objective</button>' : ''}
+      ${hasBriefingOrGuide ? `<button type="button" class="btn-secondary quest-btn-sm" data-act="objective">${this.stage?.briefing ? 'Objective' : 'Controls'}</button>` : ''}
       ${canReview ? '<button type="button" class="btn-secondary quest-btn-sm" data-act="reward">Findings</button>' : ''}
       ${this.canHidePanel ? '<button type="button" class="btn-secondary quest-btn-sm lq-close-btn" data-act="close-panel" title="Close stage panel" aria-label="Close stage panel">Close</button>' : ''}
     `;
@@ -852,29 +912,58 @@ export class LearnFrame {
 
   showBriefing() {
     const b = this.stage?.briefing;
-    if (!b) return;
+    if (!b && !activeBenchViewer()) return;
 
     if (this.activeBriefingTx?.destroy) {
       this.activeBriefingTx.destroy();
       this.activeBriefingTx = null;
     }
 
-    const speaker = b.speaker || this.opts.speaker || 'VESS // COMMS';
+    const speaker = b?.speaker || this.opts.speaker || 'VESS // COMMS';
+    const bodyText = b?.body || 'Review the bench instruments below. Active controls are highlighted on the bench with guidance halos.';
+
+    // Show halos around instruments during the introduction
+    activeBenchViewer()?.showInstrumentHalos('all');
+
+    const viewer = activeBenchViewer();
+    const instruments = viewer?.getAvailableInstruments?.() || [
+      { kind: 'dial', name: 'Rotary Dial', tag: 'DRAG / SCROLL', desc: 'Click and drag the knob or scroll the mouse wheel to turn.' },
+      { kind: 'keys', name: 'Bench Keys', tag: 'CLICK KEY', desc: 'Click the engraved tool plates along the bench to activate tools.' },
+      { kind: 'stations', name: 'Sample Stations', tag: 'CLICK WELL', desc: 'Click wells or screens on the bench to select and inspect samples.' }
+    ];
 
     showModal(`
       <div class="quest-modal-head lq-modal-head">
         <div>
           <div class="eyebrow lit">${esc(speaker)}</div>
-          <h2 id="lq-briefing-title" class="section-title">${esc(this.stage.title)}</h2>
+          <h2 id="lq-briefing-title" class="section-title">${esc(this.stage?.title || 'Instrument Guide')}</h2>
         </div>
       </div>
       <div id="lq-modal-transmission" class="lq-modal-tx"></div>
-      <div class="debrief-controls-left lq-modal-keys">
+      ${instruments.length ? `
+        <div class="lq-briefing-instruments">
+          <div class="form-label lit" style="margin-bottom: 0.4rem; letter-spacing: 0.08em;">INSTRUMENT CONTROLS (3D HALOS HIGHLIGHTED)</div>
+          <div class="lq-instrument-cards">
+            ${instruments.map(inst => `
+              <div class="lq-instrument-card plate" data-halo-kind="${esc(inst.kind)}" tabindex="0" role="button">
+                <div class="lq-instrument-card-head">
+                  <span class="eyebrow lit">${esc(inst.name)}</span>
+                  <span class="tag live" style="font-size: 0.58rem; padding: 1px 6px;">${esc(inst.tag || '3D HALO')}</span>
+                </div>
+                <p class="lq-instrument-card-desc">${esc(inst.desc)}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+      <div class="debrief-controls-left lq-modal-keys" style="margin-top: 1rem;">
         <button type="button" class="btn-primary" data-lq-close>Start</button>
       </div>
     `, {
       labelledBy: 'lq-briefing-title',
       onClose: () => {
+        // ALWAYS CLEAR HALOS WHEN LEAVING INTRODUCTION!
+        activeBenchViewer()?.hideInstrumentHalos();
         if (this.activeBriefingTx?.destroy) {
           this.activeBriefingTx.destroy();
           this.activeBriefingTx = null;
@@ -882,11 +971,26 @@ export class LearnFrame {
       }
     });
 
+    // Wire interactive card hovering and clicks to focus halo on specific instrument
+    document.querySelectorAll('.lq-instrument-card').forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        activeBenchViewer()?.showInstrumentHalos(card.dataset.haloKind);
+      });
+      card.addEventListener('mouseleave', () => {
+        activeBenchViewer()?.showInstrumentHalos('all');
+      });
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.lq-instrument-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        activeBenchViewer()?.showInstrumentHalos(card.dataset.haloKind);
+      });
+    });
+
     // No stage badge on the transmission: the rail and the stage line under the
     // title already say where the player is, and a third copy says nothing new.
     this.activeBriefingTx = createTransmissionElement({
       speaker,
-      text: b.body,
+      text: bodyText,
       variant: 'hero'
     });
     document.getElementById('lq-modal-transmission')?.appendChild(this.activeBriefingTx.element);
@@ -896,6 +1000,7 @@ export class LearnFrame {
         this.activeBriefingTx.destroy();
         this.activeBriefingTx = null;
       }
+      activeBenchViewer()?.hideInstrumentHalos();
       closeModal();
       soundscape.playNavRelayClick?.();
     });
@@ -1042,6 +1147,8 @@ export class LearnFrame {
       this.activeBriefingTx.destroy();
       this.activeBriefingTx = null;
     }
+    this.viewerUnsub?.();
+    activeBenchViewer()?.hideInstrumentHalos();
     this.container.removeEventListener('click', this.onClick);
     this.a11yObserver?.disconnect();
     this.a11yObserver = null;

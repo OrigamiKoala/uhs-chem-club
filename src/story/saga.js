@@ -81,6 +81,14 @@ export const CLUES = {
     name: 'Over-Mass Recipe Ledger',
     summary: 'Refinery accounts where total output mass exceeds reactant inputs by thirty percent.',
     note: 'Every recipe obeys mass balance. If mass is appearing from nowhere, this is not a reaction.'
+  },
+  clue_bellows_warm: {
+    id: 'clue_bellows_warm',
+    act: 'act2',
+    source: 'Bellows Boss · The Compressor',
+    name: 'The Warm Cylinder',
+    summary: 'A sealed gas cylinder logged at one pressure for twelve days while the deck froze fifty degrees around it.',
+    note: 'A sealed gas that cools must fall in pressure, and this one did not. Something inside was giving off heat, and no chemical reaction does that for twelve days.'
   }
 };
 
@@ -149,7 +157,10 @@ export const EPISODES = {
     closing: 'Tallow sector secured. The hopper has settled into cold slag, but its core composition does not match the basin.',
     spoilFamily: 'Salt husks',
     bossId: 'boss-hopper',
-    clueId: 'clue_tallow_slag'
+    clueId: 'clue_tallow_slag',
+    incident: 'Refinery intake operations on Tallow have frozen solid. Heavy salt tailings and unmetered slag heaps have crystallized and begun crawling across the pans under rogue electromagnetic currents.',
+    objective: 'Investigate elemental matter versus mixtures across the six benches. Prove ordinary chemical reactions cannot turn common salt into heavy bismuth, neutralize the animated salt husks, and secure the hopper slag.',
+    caseFileNote: 'Mess deck rumors claim the Fifth possesses alchemy. Forensic chemistry proves ordinary chemical reactions cannot transmute elements; the bismuth in the slag came from subatomic intervention.'
   },
   unit02: {
     worldId: 'unit02',
@@ -159,7 +170,10 @@ export const EPISODES = {
     closing: 'Lantern beacons relit across the glacier. The lens salvaged from the swarm was ground for frequencies no guild uses.',
     spoilFamily: 'Lamp moths',
     bossId: 'boss-eater',
-    clueId: 'clue_lantern_lens'
+    clueId: 'clue_lantern_lens',
+    incident: 'The glacial beacon highway across Lanternfall has dropped offline. Swarms of photoelectric lamp moths have clustered along power cables, absorbing filament radiation and grounding transit lights in sub-zero blizzards.',
+    objective: 'Calibrate frequencies, quantized energy transitions, and electron orbitals across nine optical benches. Match emission bands to disperse the moths, relight the beacons, and recover the rogue focusing optic.',
+    caseFileNote: 'The salvaged prism is ground for deep ultraviolet bands far beyond guild lamps, confirming the Fifth uses high-energy electromagnetic emissions.'
   },
   unit03: {
     worldId: 'unit03',
@@ -169,7 +183,45 @@ export const EPISODES = {
     closing: 'Basalt wardens shattered along their cleave planes. The stone was sheared with thermal output beyond any smelter charter.',
     spoilFamily: 'Basalt wardens',
     bossId: 'boss-warden',
-    clueId: 'clue_ligar_scorch'
+    clueId: 'clue_ligar_scorch',
+    incident: 'Subterranean seismic shocks cracked geothermal vents across Ligar. Towering basalt wardens and crystalline crawlers have fused into massive barricades across the transport ramps, halting all ore deliveries.',
+    objective: 'Exploit ionic, covalent, and metallic lattice structures across nine quarry benches. Test cleave planes, conductivity, and bond polarity to shatter the wardens and clear the road.',
+    caseFileNote: 'Quarry cuts show laser-smooth thermal shear through solid rock lattices, exceeding the output of any known industrial smelting torch.'
+  },
+  unit04: {
+    worldId: 'unit04',
+    worldName: 'Bellows',
+    act: 'act2',
+    arrival: 'Skimming pumps on Bellows are stalling under gauge pulses that no pump should make. Gas bladders have swollen across the walkways and are hammering the bulkheads.',
+    closing: 'The compressor stands still and the deck pressure holds. In its vault is a sealed cylinder that never cooled.',
+    spoilFamily: 'Gas bladders',
+    bossId: 'boss-compressor',
+    clueId: 'clue_bellows_warm',
+    incident: 'Floating skimmers on Bellows are losing altitude. Compressors are seizing under pulses of pressure, and gas bladders swollen tight as drums are buffeting the hull and the walkways between the decks.',
+    objective: 'Work six benches of gas laws on the gas rig: what a gauge measures, the four laws, the ideal gas law, partial pressures, speed and escape, and real gases. Settle the bladders, then read the Compressor that is driving every pump at once.',
+    caseFileNote: 'A sealed cylinder in the Compressor\'s vault held its pressure for twelve days while the deck froze around it. Gay-Lussac\'s law forbids that unless something inside was giving off heat.'
+  },
+  unit05: {
+    worldId: 'unit05',
+    worldName: 'Ember Reach',
+    act: 'act2',
+    arrival: 'Thermal crucibles on Ember Reach are bleeding heat into dormant bedrock. Slag constructs are absorbing enthalpy against the thermal gradient.',
+    closing: 'Blast-wells brought back into thermodynamic balance. Heat drain logs show millions of joules siphoned into deep underground conduits.',
+    spoilFamily: 'Slag crucibles',
+    incident: 'High-temperature crucibles on Ember Reach are freezing over while dormant perimeter bedrock superheats, defying natural thermodynamic dissipation.',
+    objective: 'Calculate enthalpy, entropy, and Gibbs free energy across the smelting benches. Rebalance directional heat transfer to disrupt rogue crucibles and stabilize the blast-wells.',
+    caseFileNote: 'Refinery power logs show gigajoules of thermal energy being drawn into deep subterranean conduits toward an unmapped planetary facility.'
+  },
+  unit06: {
+    worldId: 'unit06',
+    worldName: 'Mirrowen',
+    act: 'act2',
+    arrival: 'Cooling canals on Mirrowen have seized into anomalous crystalline lattices. Solid phase spikes are puncturing the intake barges.',
+    closing: 'Phase boundaries restored across the shallows. The crystalline residue contains synthetic compounds not found in guild manifests.',
+    spoilFamily: 'Brine crawlers',
+    incident: 'Industrial coolant canals across Mirrowen’s shallow brine seas have frozen into sharp crystalline lattices at temperatures that should keep them liquid, threatening cooling lines.',
+    objective: 'Analyze intermolecular forces, vapor pressures, and phase diagrams. Manipulate dipole interactions and boiling points to melt the crystal barricades and flush the channels.',
+    caseFileNote: 'Residue analysis reveals synthetic polar polymers and lubricants identical to equipment abandoned during historic guild pullouts.'
   },
   unit07: {
     worldId: 'unit07',
@@ -179,7 +231,87 @@ export const EPISODES = {
     closing: 'Golem intake starved of excess reagent. Their command vault yielded a recipe ledger that violates the laws of mass.',
     spoilFamily: 'Recipe golems',
     bossId: 'boss-golem',
-    clueId: 'clue_kettle_ledger'
+    clueId: 'clue_kettle_ledger',
+    incident: 'Autonomous synthesis cookers at Kettle have broken lockouts. Recipe golems have overrun the loading gantries, enforcing strict stoichiometric proportions with physical force.',
+    objective: 'Master stoichiometric balance, limiting reagents, and percent yield across the hearth benches. Starve the limiting reagents powering the golem horde to shut down their production line.',
+    caseFileNote: 'The seized logistics ledger records output masses exceeding reactant inputs by thirty percent—a physical impossibility under chemical conservation laws.'
+  },
+  unit08: {
+    worldId: 'unit08',
+    worldName: 'Teeter',
+    act: 'act3',
+    arrival: 'Buffer tanks across Teeter are violently rocking out of dynamic equilibrium. Chemical balances are swinging wildly along the gantry.',
+    closing: 'Dynamic equilibrium re-established in the synthesis vats. Shift logs show intentional reactant stress designed to mask diverted product.',
+    spoilFamily: 'Balance husks',
+    incident: 'High-capacity buffer tanks along the Teeter balance gantry are oscillating out of control. Runaway reverse reactions threaten catastrophic pressure bursts across the refinery.',
+    objective: 'Calculate equilibrium constants and apply Le Chatelier’s principle across the synthesis vats. Counter external stress to force reactions back into stable dynamic equilibrium.',
+    caseFileNote: 'System stress logs show automated bleed valves deliberately destabilized equilibrium to mask covert diversions of refined reagents.'
+  },
+  unit09: {
+    worldId: 'unit09',
+    worldName: 'Verdigris',
+    act: 'act3',
+    arrival: 'Containment dikes on Verdigris are corroding under concentrated proton floods. Acidic spoil is eating through the station pilings.',
+    closing: 'Leach basins buffered and stabilized against corrosion. The acid was weaponized using extraction formulas abandoned thirty seasons ago.',
+    spoilFamily: 'Caustic leaches',
+    incident: 'Tailings containment dikes on Verdigris have breached. Hyper-acidic proton floods are eating through station support pilings and threatening structural collapse.',
+    objective: 'Measure hydronium concentrations, pH scales, and run precision titrations. Formulate chemical buffers to neutralize the acid floods and preserve station pilings.',
+    caseFileNote: 'Chemical signatures match extraction formulas issued to guild survey crews left behind during corporate abandonment thirty seasons ago.'
+  },
+  unit10: {
+    worldId: 'unit10',
+    worldName: 'Brinewire',
+    act: 'act3',
+    arrival: 'Galvanic storage banks on Brinewire have been drained to zero potential. Parasitic electrochemical conduits are siphoning the entire grid.',
+    closing: 'Power grid repolarized across the copper marsh. The tap lines lead toward a high-voltage relay pointing out-system.',
+    spoilFamily: 'Galvanic ticks',
+    incident: 'Deep electrochemical storage banks across Brinewire have collapsed to zero potential. Parasitic redox organisms have tapped the circuits, draining navigation power across the sector.',
+    objective: 'Split and balance redox half-reactions, build galvanic cells, and compute cell potentials. Repolarize the circuit to drive electrolysis and burn out parasitic taps.',
+    caseFileNote: 'Tracing the tapped power lines reveals massive copper conduits buried beneath the silt, channeling terawatts of electricity toward the outer rim.'
+  },
+  unit11: {
+    worldId: 'unit11',
+    worldName: 'Quicklight',
+    act: 'act3',
+    arrival: 'Atmospheric cracking towers on Quicklight are detonating in uncontrolled kinetic cascades. Reaction rates have spiked a thousandfold without heat.',
+    closing: 'Reaction cascades suppressed by removing the foreign additive. The mysterious fifth presence is formally identified: The Catalyst.',
+    spoilFamily: 'Kinetic flares',
+    incident: 'Cracking towers on Quicklight are detonating in uncontrolled kinetic cascades. Stable reactions are completing in fractions of a second with no increase in thermal energy.',
+    objective: 'Determine reaction orders, rate laws, and activation energies. Isolate the foreign additive lowering the barrier to halt runaway flashovers.',
+    caseFileNote: 'The breakthrough: the substance lowering activation barriers without being consumed defines a catalyst. The Fifth’s true title is uncovered: The Catalyst.'
+  },
+  unit12: {
+    worldId: 'unit12',
+    worldName: 'Lodestone',
+    act: 'act4',
+    arrival: 'Magnetic fields across Lodestone are twisting navigation gyros into dead loops. Colored transition metal complexes are focusing orbital beams.',
+    closing: 'Magnetic lattice array neutralized and decoded. Deep-space telemetry vectors lock onto the exclusion zone at Cinder Halo.',
+    spoilFamily: 'Coordination sentinels',
+    incident: 'Ferromagnetic canyons on Lodestone are projecting electromagnetic vortexes that disable ship thrusters. Crystalline transition metal complexes are focusing high-gain communications beams.',
+    objective: 'Analyze d-orbital split geometries, coordination complexes, and magnetism across the canyon benches. Neutralize the crystal nodes to decode the transmission vector.',
+    caseFileNote: 'Decrypted coordinates reveal the target of the stolen fuel and power conduits: the uncharted exclusion zone of Cinder Halo.'
+  },
+  unit13: {
+    worldId: 'unit13',
+    worldName: 'Thornmere',
+    act: 'act4',
+    arrival: 'Synthesis vats on Thornmere are spinning dense polymer armor across the fen. Organic hydrocarbon carapaces are repelling all salvage gear.',
+    closing: 'Hydrocarbon polymers depolymerized at their functional bonds. The armor was built to shield human crews from heavy neutron flux.',
+    spoilFamily: 'Polymer carapaces',
+    incident: 'Automated synthesis vats in Thornmere’s tar pools have woven impenetrable polymer carapaces over the outposts, repelling mechanical cutters.',
+    objective: 'Identify hydrocarbon chains, functional groups, and structural isomers. Synthesize targeted depolymerization reagents to dissolve the protective carapaces.',
+    caseFileNote: 'Material analysis reveals the hydrocarbon armor contains boron doping, designed specifically to shield living crews from neutron radiation.'
+  },
+  unit14: {
+    worldId: 'unit14',
+    worldName: 'Cinder Halo',
+    act: 'act4',
+    arrival: 'Thermal plumes from Cinder Halo are radiating heat with no chemical flame. The forgotten crews have ignited the ancient subatomic core.',
+    closing: 'The transmutation core brought under stable containment. The truth of the abandoned manifests is finally exposed to the fleet.',
+    spoilFamily: 'Transmutation core',
+    incident: 'The journey ends at Cinder Halo, where ancient subatomic transmutation reactors have been reignited. Abandoned guild crews are splitting and forging raw matter to survive on the rim.',
+    objective: 'Confront the boundary where chemistry meets subatomic physics. Measure nuclear decay rates, mass defect, and binding energy to stabilize the reactor and broker peace with The Catalyst.',
+    caseFileNote: 'The resolution: The Catalyst is composed of the forgotten workers written off by the Imperial Guilds. Mastery of chemistry exposes the truth and saves the crews.'
   }
 };
 
@@ -219,3 +351,13 @@ export function getNextPendingBeat(state = {}) {
   }
   return null;
 }
+
+export function getEpisode(worldId) {
+  return EPISODES[worldId] || null;
+}
+
+export function getAllEpisodes() {
+  return Object.values(EPISODES);
+}
+
+

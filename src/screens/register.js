@@ -100,7 +100,7 @@ export function renderRegister(container) {
 
         <div class="m-foot" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; font-family: var(--font-mono); font-size: 0.72rem;">
           <a href="#/login" class="link-accent">Sign in</a>
-          <span style="color: var(--text-muted);">Step 1 of 3</span>
+          <span style="color: var(--text-muted);">Step 1 of 4</span>
         </div>
       </div>
     </div>

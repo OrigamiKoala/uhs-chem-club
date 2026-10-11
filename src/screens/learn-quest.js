@@ -108,6 +108,7 @@ export function renderLearnQuest(container, params = {}) {
   // Configure learn quest frame to use 2D overlay (`learn-quest-overworld`) in T4 rather than deploying into CSS3D in-world bench panels
   const inWorld = false;
   if (walkable) {
+    stage.setWorldWaypoint(null);
     const w3d = world3dFor(world.id);
     const site = w3d.siteForQuest(quest.id);
     if (site) {

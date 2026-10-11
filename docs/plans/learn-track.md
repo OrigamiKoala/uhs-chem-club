@@ -158,7 +158,7 @@ opens it in the right place, and the host loads it.
 | 01 | Tallow | Salt flats | Atoms | 6 (6 built, walkable at T4) |
 | 02 | Lanternfall | Aurora ice | Light and Electrons | 9 (9 built, walkable at T4) |
 | 03 | Ligar | Basalt arches | Bonding | 9 (9 built and a boss, walkable at T4) |
-| 04 | Bellows | Cloud deck | Gases | 4 |
+| 04 | Bellows | Cloud deck | Gases | 6 (6 built and a boss, walkable at T4) |
 | 05 | Ember Reach | Vent fields | Thermodynamics | 4 |
 | 06 | Mirrowen | Tidal shelf | States of Matter | 4 |
 | 07 | Kettle | Soda lake | Stoichiometry and Reactions | 5 (1 built, moved from Ligar) |

@@ -745,6 +745,10 @@ export class BenchViewer3D {
     this.disposables = [];
     this.elapsed = 0;
     this.disposed = false;
+    this.dials = [];
+    this.haloGroup = null;
+    this.haloGeos = [];
+    this.haloMaterials = [];
 
     // A constrained look-around: the player can lean over the bench and see a
     // piece from another side, but never get behind or under it.
@@ -1808,6 +1812,7 @@ export class BenchViewer3D {
     this.keyBank.group.position.set(pick.x, 0.895, pick.z);
     this.keyBank.x = pick.x;
     this.keyBank.z = pick.z;
+    if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all');
     this.updateKeyPull();
     this.applyCamera();
   }
@@ -2056,6 +2061,13 @@ export class BenchViewer3D {
     }
 
     this.foes?.update(delta);
+
+    if (this.haloMaterials && this.haloMaterials.length > 0) {
+      const pulse = 0.55 + 0.35 * Math.sin(this.elapsed * 4.5);
+      for (const m of this.haloMaterials) {
+        m.opacity = (m.userData.baseOpacity || 0.75) * pulse;
+      }
+    }
   }
 
   onResize() {
@@ -2115,8 +2127,250 @@ export class BenchViewer3D {
     this.keysDirty = true;
   }
 
+  /* ---------------- dial registry ---------------- */
+
+  registerDial(record) {
+    if (!record) return;
+    this.dials = this.dials || [];
+    if (!this.dials.some(d => d === record || d.group === record.group || d.dial === record.dial)) {
+      this.dials.push(record);
+    }
+    if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all');
+  }
+
+  unregisterDial(record) {
+    if (!record || !this.dials) return;
+    this.dials = this.dials.filter(d => d !== record && d.group !== record && d.dial !== record && (!record.group || d.group !== record.group));
+    if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all');
+  }
+
+  /* ---------------- instrument halos ---------------- */
+
+  /**
+   * Return descriptions of interactive instruments present on this bench.
+   */
+  getAvailableInstruments() {
+    const list = [];
+    if (this.dials && this.dials.length > 0) {
+      list.push({
+        kind: 'dial',
+        name: 'Rotary Dial',
+        shortDesc: 'Drag knob or scroll mouse wheel to adjust',
+        desc: 'Rotary control on the bench plate. Click and drag the knob or scroll the mouse wheel over it to turn and change settings.',
+        tag: 'DRAG OR SCROLL'
+      });
+    }
+    if (this.keyBank && this.keyBank.keys && this.keyBank.keys.length > 0) {
+      list.push({
+        kind: 'keys',
+        name: 'Bench Keys',
+        shortDesc: 'Click engraved plates on bench rail',
+        desc: 'Engraved tool plates mounted on the bench rail. Click any key to trigger its action, fire beams, or cycle views.',
+        tag: 'CLICK KEY'
+      });
+    }
+    const nodes = this.framedNodes();
+    if (nodes && nodes.length > 0) {
+      list.push({
+        kind: 'stations',
+        name: 'Sample Stations',
+        shortDesc: 'Click wells or screens to select',
+        desc: 'Sample wells, trays, and detector screens along the bench. Click any station or screen to inspect pieces and view readouts.',
+        tag: 'CLICK TO INSPECT'
+      });
+    }
+    return list;
+  }
+
+  _createHaloBadge(text, subtext) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 384;
+    canvas.height = 112;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'rgba(14, 12, 10, 0.94)';
+    ctx.fillRect(0, 0, 384, 112);
+    ctx.strokeStyle = '#d99423';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, 380, 108);
+
+    ctx.fillStyle = '#d99423';
+    ctx.font = 'bold 32px "Share Tech Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(text, 192, 16);
+
+    if (subtext) {
+      ctx.fillStyle = '#b8afa0';
+      ctx.font = '20px "Share Tech Mono", monospace';
+      ctx.fillText(subtext, 192, 62);
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const mat = new THREE.MeshBasicMaterial({
+      map: tex, transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false
+    });
+    mat.userData = { texture: tex, baseOpacity: 0.95 };
+    this.haloMaterials.push(mat);
+    const geo = new THREE.PlaneGeometry(0.25, 0.073);
+    this.haloGeos.push(geo);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -0.25;
+    return mesh;
+  }
+
+  _createHaloMat(color = 0xd99423, baseOpacity = 0.8) {
+    const mat = new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: baseOpacity,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    mat.userData = { baseOpacity };
+    this.haloMaterials.push(mat);
+    return mat;
+  }
+
+  _buildDialHalo(dialRec) {
+    if (!dialRec?.group) return;
+    const p = dialRec.group.position;
+    // 1. Base ring on plate
+    const baseGeo = new THREE.RingGeometry(0.12, 0.18, 36);
+    this.haloGeos.push(baseGeo);
+    const baseMesh = new THREE.Mesh(baseGeo, this._createHaloMat(0xd99423, 0.75));
+    baseMesh.rotation.x = -Math.PI / 2;
+    baseMesh.position.set(p.x, 0.898, p.z);
+    this.haloGroup.add(baseMesh);
+
+    // 2. Outer pulsing accent ring
+    const outerGeo = new THREE.RingGeometry(0.20, 0.22, 36);
+    this.haloGeos.push(outerGeo);
+    const outerMesh = new THREE.Mesh(outerGeo, this._createHaloMat(0xd99423, 0.5));
+    outerMesh.rotation.x = -Math.PI / 2;
+    outerMesh.position.set(p.x, 0.898, p.z);
+    this.haloGroup.add(outerMesh);
+
+    // 3. Collar ring around knob
+    const collarGeo = new THREE.RingGeometry(0.055, 0.075, 36);
+    this.haloGeos.push(collarGeo);
+    const collarMesh = new THREE.Mesh(collarGeo, this._createHaloMat(0xffb733, 0.85));
+    collarMesh.rotation.x = -Math.PI / 2 + 0.62;
+    collarMesh.position.set(p.x, 0.945, p.z + 0.012);
+    this.haloGroup.add(collarMesh);
+
+    // 4. Floating badge
+    const badge = this._createHaloBadge('TURN DIAL', 'DRAG OR SCROLL WHEEL');
+    badge.position.set(p.x, 1.08, p.z + 0.08);
+    this.haloGroup.add(badge);
+  }
+
+  _buildKeysHalo() {
+    const bank = this.keyBank;
+    if (!bank) return;
+    const w = bank.width || 0.42;
+    const d = bank.depth || 0.22;
+    const s = new THREE.Shape();
+    const hw = w / 2 + 0.03;
+    const hd = d / 2 + 0.03;
+    const iw = w / 2 + 0.005;
+    const id = d / 2 + 0.005;
+    s.moveTo(-hw, -hd);
+    s.lineTo(hw, -hd);
+    s.lineTo(hw, hd);
+    s.lineTo(-hw, hd);
+    s.closePath();
+    const hole = new THREE.Path();
+    hole.moveTo(-iw, -id);
+    hole.lineTo(-iw, id);
+    hole.lineTo(iw, id);
+    hole.lineTo(iw, -id);
+    hole.closePath();
+    s.holes.push(hole);
+
+    const frameGeo = new THREE.ShapeGeometry(s);
+    this.haloGeos.push(frameGeo);
+    const frameMesh = new THREE.Mesh(frameGeo, this._createHaloMat(0xd99423, 0.75));
+    frameMesh.rotation.x = -Math.PI / 2;
+    frameMesh.position.set(bank.x, 0.898, bank.z);
+    this.haloGroup.add(frameMesh);
+
+    const badge = this._createHaloBadge('BENCH KEYS', 'CLICK ENGRAVED PLATES');
+    badge.position.set(bank.x, 1.05, bank.z);
+    this.haloGroup.add(badge);
+  }
+
+  _buildStationsHalo() {
+    if (this.stations && this.stations.length > 0) {
+      for (const st of this.stations) {
+        const sx = st.group ? st.group.position.x : 0;
+        const wellGeo = new THREE.RingGeometry(0.22, 0.26, 40);
+        this.haloGeos.push(wellGeo);
+        const wellMesh = new THREE.Mesh(wellGeo, this._createHaloMat(0xd99423, 0.7));
+        wellMesh.rotation.x = -Math.PI / 2;
+        wellMesh.position.set(sx, 0.898, 0);
+        this.haloGroup.add(wellMesh);
+
+        const badge = this._createHaloBadge('SAMPLE WELL', 'CLICK TO SELECT');
+        badge.position.set(sx, 1.14, 0);
+        this.haloGroup.add(badge);
+      }
+    } else {
+      const nodes = this.framedNodes();
+      for (const fn of nodes) {
+        if (!fn.group) continue;
+        const nodeGeo = new THREE.RingGeometry(0.25, 0.32, 40);
+        this.haloGeos.push(nodeGeo);
+        const nodeMesh = new THREE.Mesh(nodeGeo, this._createHaloMat(0xd99423, 0.7));
+        nodeMesh.rotation.x = -Math.PI / 2;
+        nodeMesh.position.set(fn.group.position.x, 0.898, fn.group.position.z);
+        this.haloGroup.add(nodeMesh);
+
+        const badge = this._createHaloBadge('SAMPLE RIG', 'CLICK TO INTERACT');
+        badge.position.set(fn.group.position.x, 1.14, fn.group.position.z);
+        this.haloGroup.add(badge);
+      }
+    }
+  }
+
+  showInstrumentHalos(kind = 'all') {
+    this._activeHaloKind = kind;
+    this.hideInstrumentHalos();
+
+    this.haloGroup = new THREE.Group();
+    this.haloGroup.name = 'bench-instrument-halos';
+    this.root.add(this.haloGroup);
+
+    if (kind === 'all' || kind === 'dial') {
+      for (const d of this.dials || []) {
+        this._buildDialHalo(d);
+      }
+    }
+    if ((kind === 'all' || kind === 'keys') && this.keyBank) {
+      this._buildKeysHalo();
+    }
+    if (kind === 'all' || kind === 'stations') {
+      this._buildStationsHalo();
+    }
+  }
+
+  hideInstrumentHalos() {
+    this._activeHaloKind = null;
+    if (!this.haloGroup) return;
+    this.root.remove(this.haloGroup);
+    for (const g of this.haloGeos || []) g.dispose();
+    for (const m of this.haloMaterials || []) {
+      if (m.userData?.texture) m.userData.texture.dispose();
+      m.dispose();
+    }
+    this.haloGeos = [];
+    this.haloMaterials = [];
+    this.haloGroup = null;
+  }
+
   dispose() {
     this.disposed = true;
+    this.hideInstrumentHalos();
     unregisterBenchViewer(this);
     this.disposeKeyBank();
     this.keyGroups = [];

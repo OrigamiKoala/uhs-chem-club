@@ -33,6 +33,53 @@ import { buildUnits, planCut, planSettle } from './scope.js';
 import { planPhotocell } from './lightdata.js';
 import { planCurve, PAIRS, LATTICES } from './bonddata.js';
 import { planDomains, planDipole, planTwist, planMix } from './vsepr.js';
+import { planGas, planMixture, mixtureState, leftAfter, front } from './gasdata.js';
+
+/**
+ * How a bladder answers a push, as a ratio of the push now to the push the stage
+ * began with. Below `SLACK` it sags; up to `TAUT` it holds its size; past that it
+ * swells, and past `STRAIN` it strains at its seams. These are the bladder's own
+ * thresholds, and `verify:learn` reads the same figures independently.
+ */
+export const BLADDER = { SLACK: 0.8, TAUT: 1.25, STRAIN: 2.2, EMPTY: 0.4, FULL: 0.85 };
+
+/**
+ * What a gas plate reads, from the instrument's own planner: its push (kPa) and its room (L).
+ * A mixture's room is its tank's.
+ */
+function readingOf(probe) {
+  const it = probe.item;
+  if (it.head === 'mixture') {
+    const m = mixtureState(it, probe.cfg || {});
+    return { P: planMixture(it.parts, m.T, m.V).P, V: m.V };
+  }
+  const r = planGas(it, probe.cfg || {});
+  return { P: r.P, V: r.V };
+}
+
+/**
+ * How much a plate has changed since the stage began, as a ratio. A free piston holds
+ * its push steady and gives its room instead, so a bladder on one swells with the
+ * ROOM; on anything else it swells with the PUSH.
+ */
+function changeOf(probe) {
+  const now = readingOf(probe);
+  const rest = probe.rest || now;
+  const free = probe.item.hold === 'P';
+  // An empty free-piston cylinder has no room to be a ratio of: any gas in it at all is a swelling.
+  const ratio = free
+    ? (rest.V > 1e-6 ? now.V / rest.V : now.V > 1e-6 ? BLADDER.TAUT + 0.5 : 1)
+    : now.P / rest.P;
+  return { ratio: Number.isFinite(ratio) ? ratio : 1, P: now.P, V: now.V };
+}
+
+/** The pose a push ratio puts a bladder in. */
+export function bladderPose(ratio) {
+  if (ratio < BLADDER.SLACK) return 'slack';
+  if (ratio <= BLADDER.TAUT) return 'rest';
+  if (ratio <= BLADDER.STRAIN) return 'swollen';
+  return 'straining';
+}
 
 /** Hits the rig can take on one stage before it is knocked back. */
 export const INTEGRITY = 3;
@@ -227,6 +274,75 @@ export const SPECIES = {
     },
     plan(enc, foe, probe) {
       return { pose: probe?.pose || 'unmoved' };
+    }
+  },
+
+  'gas bladder': {
+    name: 'Gas bladder',
+    counter: 'The bladder heaves against the rig and your rig takes the hit.',
+    knockback: 'Knocked back. The bladder settles to its own size, but everything you found is still on the bench.',
+    hit: 'The bladder vents and lies slack.',
+    lines: {
+      rest: () => 'The bladder lies at its own size.',
+      slack: () => 'The bladder sags and wrinkles.',
+      swollen: () => 'The bladder swells and its skin draws tight.',
+      straining: () => 'The bladder strains at its seams.',
+      flat: () => 'The bladder is nearly flat.',
+      shaken: () => 'The bladder shivers with every knock it takes.'
+    },
+    /**
+     * @param {object} probe one of
+     *   `{ kind: 'gas', item, cfg, rest }`   a cylinder or a tank; `rest` is `{ P, V }` as the stage began
+     *   `{ kind: 'leak', gas, seconds }`     a chamber with its pinhole open
+     *   `{ kind: 'tube', gas, seconds, length }`  a gas creeping down a tube
+     *   `{ kind: 'path', hits }`             a particle being knocked about in a crowd
+     */
+    plan(enc, foe, probe) {
+      if (probe?.kind === 'gas') {
+        const { ratio, P } = changeOf(probe);
+        return { pose: bladderPose(ratio), ratio, P };
+      }
+      if (probe?.kind === 'leak') {
+        const left = leftAfter(probe.gas, probe.seconds);
+        return { pose: left >= BLADDER.FULL ? 'rest' : left >= BLADDER.EMPTY ? 'slack' : 'flat', left };
+      }
+      if (probe?.kind === 'tube') {
+        const frac = Math.min(1, front(probe.gas, probe.seconds) / (probe.length || 8));
+        return { pose: frac >= 1 ? 'swollen' : 'rest', frac };
+      }
+      if (probe?.kind === 'path') {
+        return probe.hits > 0 ? { pose: 'shaken', hits: probe.hits } : { pose: 'rest', hits: 0 };
+      }
+      return null;
+    }
+  },
+
+  'the compressor': {
+    name: 'The Compressor',
+    counter: 'The compressor slams a piston stroke through the rig and your rig takes the hit.',
+    knockback: 'Knocked back. The compressor cycles again, but every reading you took is still on the bench.',
+    hit: 'The compressor vents its last charge and its pistons stand still.',
+    lines: {
+      idle: () => 'Its pistons run at their old stroke.',
+      laboured: () => 'Its pistons labour against a rising push.',
+      easy: () => 'Its pistons run light.',
+      venting: () => 'A pinhole hisses in its flank and its tank sinks.',
+      steady: () => 'Its tank holds the push it was filled to.'
+    },
+    /**
+     * @param {object} probe `{ kind: 'gas', item, cfg, rest }` as the bladder reads it, or
+     *   `{ kind: 'leak', gas, seconds }`
+     */
+    plan(enc, foe, probe) {
+      if (probe?.kind === 'gas') {
+        const { ratio, P } = changeOf(probe);
+        return { pose: ratio > BLADDER.TAUT ? 'laboured' : ratio < BLADDER.SLACK ? 'easy' : 'steady', ratio, P };
+      }
+      if (probe?.kind === 'leak') {
+        const left = leftAfter(probe.gas, probe.seconds);
+        return { pose: left >= BLADDER.FULL ? 'idle' : 'venting', left };
+      }
+      return null;
     }
   },
 
@@ -500,8 +616,50 @@ function lanternEaterArt(pose, plan = {}) {
   return svg(halo + core + rays, 'The Lantern-Eater');
 }
 
+function bladderArt(pose, plan = {}) {
+  // A bag on a plate: a skin, two seams, a tied neck and a brass valve. It sags, holds,
+  // swells or strains with the push; the only amber is a seam near to giving way.
+  const bag = (rx, ry, extra = '') => `<ellipse cx="32" cy="${46 - ry}" rx="${rx}" ry="${ry}" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"${extra}/>`;
+  const seams = (rx, ry) => `<path d="M${32 - rx * 0.45} ${46 - ry * 1.8} Q${32 - rx * 0.2} ${46 - ry} ${32 - rx * 0.45} ${46 - ry * 0.2} M${32 + rx * 0.45} ${46 - ry * 1.8} Q${32 + rx * 0.2} ${46 - ry} ${32 + rx * 0.45} ${46 - ry * 0.2}" fill="none" stroke="${EDGE}" stroke-width="1" opacity="0.8"/>`;
+  const neck = `<path d="M29 ${12} L35 ${12} L34 ${17} L30 ${17} Z" fill="${EDGE}"/><circle cx="32" cy="10" r="2.4" fill="${EDGE}" stroke="${INK}" stroke-width="0.8"/>`;
+  const plate = `<rect x="8" y="46" width="48" height="3" fill="${EDGE}"/>`;
+  if (pose === 'slack') {
+    return svg(plate + bag(20, 7) + `<path d="M16 41 Q22 38 28 41 Q34 44 40 41 Q46 38 50 41" fill="none" stroke="${EDGE}" stroke-width="1"/>`, 'Gas bladder, slack');
+  }
+  if (pose === 'swollen') {
+    return svg(plate + neck + bag(22, 16) + seams(22, 16), 'Gas bladder, swollen');
+  }
+  if (pose === 'straining') {
+    return svg(plate + neck + bag(26, 20) + seams(26, 20) + `<path d="M26 31 L29 36 M38 31 L35 36" stroke="${LIT}" stroke-width="2" stroke-linecap="round"/>`, 'Gas bladder, straining at its seams');
+  }
+  if (pose === 'flat') {
+    return svg(plate + `<ellipse cx="32" cy="43" rx="22" ry="3" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>`, 'Gas bladder, nearly flat');
+  }
+  if (pose === 'shaken') {
+    return svg(plate + neck + bag(20, 13) + seams(20, 13) + `<path d="M6 30 l3 -2 l-3 -2 M58 30 l-3 -2 l3 -2" stroke="${INK}" stroke-width="1.2" fill="none"/>`, 'Gas bladder, shaken');
+  }
+  if (pose === 'dispersed') {
+    return svg(`<g opacity="0.4">${plate}<ellipse cx="32" cy="44" rx="20" ry="2.6" fill="${BODY}" stroke="${EDGE}" stroke-width="1"/></g>`, 'Gas bladder, vented');
+  }
+  return svg(plate + neck + bag(20, 13) + seams(20, 13), 'Gas bladder');
+}
+
+function compressorArt(pose, plan = {}) {
+  // A cylinder block on legs with a flywheel: a rogue compressor, plate grey.
+  const block = `<rect x="14" y="14" width="30" height="22" rx="3" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/>`;
+  const head = `<rect x="18" y="8" width="22" height="7" fill="${EDGE}" stroke="${INK}" stroke-width="0.8"/>`;
+  const wheel = `<circle cx="50" cy="28" r="8" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5"/><circle cx="50" cy="28" r="2" fill="${EDGE}"/>`;
+  const legs = `<path d="M17 36 L15 46 M41 36 L43 46 M10 46 L48 46" stroke="${EDGE}" stroke-width="2"/>`;
+  if (pose === 'laboured') return svg(block + head + wheel + legs + `<path d="M20 22 L38 22" stroke="${LIT}" stroke-width="2"/>`, 'The Compressor, labouring');
+  if (pose === 'venting') return svg(block + head + wheel + legs + `<path d="M44 18 q6 -2 9 -6 M44 21 q7 0 11 -3" stroke="${INK}" stroke-width="1.2" fill="none"/>`, 'The Compressor, venting');
+  if (pose === 'dispersed') return svg(`<g opacity="0.35">${block + head + wheel + legs}</g>`, 'The Compressor, still');
+  return svg(block + head + wheel + legs, 'The Compressor');
+}
+
 /** The portrait of a species in a pose, as an SVG string. */
 export function portraitSvg(species, pose = 'idle', plan = {}) {
+  if (species === 'gas bladder') return bladderArt(pose, plan);
+  if (species === 'the compressor') return compressorArt(pose, plan);
   if (species === 'lamp moth') return mothArt(pose, plan);
   if (species === 'the hopper') return hopperArt(pose, plan);
   if (species === 'basalt warden') return wardenArt(pose, plan);

@@ -703,6 +703,8 @@ with one API, and declarations checked by `verify:learn`.
 
 ### World 4 — Bellows (`unit04`, gases): 6 quests
 
+> **BUILT (2026-10-10).** All six benches, the gas rig and the Compressor boss are live, and Bellows is walkable ground at T4. The stages below are the plan; what was built, and every place it differs, is in `bellows-world.md`.
+
 #### `q1-knocks` · Pressure and Temperature · CED 3.5 · gas rig
 1. Say what the gauge is measuring. *The knock counter on the wall rises and falls with the needle.* → **pressure**
 2. Say what doubling the gas in the cylinder does to the reading. *Charge the valve; twice the knocks.*

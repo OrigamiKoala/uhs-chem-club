@@ -1276,8 +1276,305 @@ export function buildRecipeGolem(foe) {
   return body;
 }
 
+/* ------------------------------------------------------------------
+   THE PRESSURE BLADDER
+   A skinned bag on a brass valve. It sags, holds, swells or strains with the
+   push the plate reads, and the pose is whatever `planFoe` returned; the body
+   only knows how to MOVE into it. The only amber is a seam near to giving way.
+   ------------------------------------------------------------------ */
+
+function bladderSkin() {
+  return cachedMaterial('foe:bladder-skin', () => new THREE.MeshStandardMaterial({ color: 0x3b3b41, roughness: 0.82, metalness: 0.05 }));
+}
+function bladderSeam() {
+  return cachedMaterial('foe:bladder-seam', () => new THREE.MeshStandardMaterial({ color: 0x55525b, roughness: 0.6, metalness: 0.35 }));
+}
+function bladderBrass() {
+  return cachedMaterial('foe:bladder-brass', () => new THREE.MeshStandardMaterial({ color: 0xba944c, roughness: 0.35, metalness: 0.9 }));
+}
+
+/** The bag's size in each pose: a height scale and a width scale. */
+const BLADDER_POSE = {
+  idle: [1, 1], rest: [1, 1], slack: [0.45, 1.12], swollen: [1.3, 1.12], straining: [1.62, 1.28],
+  flat: [0.16, 1.2], shaken: [1, 1], dispersed: [0.05, 1.3]
+};
+
+export function buildPressureBladder(foe) {
+  const group = new THREE.Group();
+  group.name = `bladder:${foe.id}`;
+
+  const shadow = contactShadow(0.1);
+  group.add(shadow);
+
+  const owned = [];
+  const own = g => { owned.push(g); return g; };
+  const rig = new THREE.Group();
+  group.add(rig);
+
+  const skin = bladderSkin();
+  const seamMat = bladderSeam();
+  const brass = bladderBrass();
+  // A bag is a squashed sphere, with a slightly different lump on every one, from its id.
+  const rng = makeRng(hashStr(`bladder${foe.id}`));
+  const bagGeo = own(new THREE.SphereGeometry(0.05, 22, 16));
+  const pos = bagGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const k = 1 + (rng() - 0.5) * 0.06;
+    pos.setXYZ(i, pos.getX(i) * k, pos.getY(i) * (1 + (rng() - 0.5) * 0.04), pos.getZ(i) * k);
+  }
+  bagGeo.computeVertexNormals();
+  enableAO(bagGeo);
+  const bag = new THREE.Mesh(bagGeo, skin);
+  bag.castShadow = true;
+  rig.add(bag);
+
+  // Two seam belts round the skin.
+  const belts = [];
+  const beltGeo = own(new THREE.TorusGeometry(0.0505, 0.0028, 6, 28));
+  for (const dy of [-0.018, 0.018]) {
+    const belt = new THREE.Mesh(beltGeo, seamMat);
+    belt.rotation.x = Math.PI / 2;
+    belt.position.y = dy;
+    belt.scale.set(Math.sqrt(1 - (dy / 0.05) ** 2), Math.sqrt(1 - (dy / 0.05) ** 2), 1);
+    rig.add(belt);
+    belts.push(belt);
+  }
+  const neckGeo = own(new THREE.CylinderGeometry(0.009, 0.013, 0.02, 10));
+  const neck = new THREE.Mesh(neckGeo, brass);
+  rig.add(neck);
+  const valveGeo = own(new THREE.CylinderGeometry(0.007, 0.007, 0.016, 8));
+  const valve = new THREE.Mesh(valveGeo, brass);
+  rig.add(valve);
+  const strainMat = new THREE.MeshStandardMaterial({ color: 0x55525b, emissive: AMBER, emissiveIntensity: 0, roughness: 0.6, metalness: 0.35 });
+  const strapGeo = own(new THREE.BoxGeometry(0.0035, 0.034, 0.0035));
+  const straps = [];
+  for (const a of [0.6, 2.2, 3.9, 5.4]) {
+    const st = new THREE.Mesh(strapGeo, strainMat);
+    st.userData.angle = a;
+    rig.add(st);
+    straps.push(st);
+  }
+
+  const hit = hitTarget(0.1, 0.12);
+  hit.position.y = 0.06;
+  group.add(hit);
+
+  const body = {
+    species: 'gas bladder',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    phase: (hashStr(foe.id) % 628) / 100,
+    reach: 0.1,
+    look: 0,
+    baseX: 0, baseY: 0, baseZ: 0,
+    h: 1, wd: 1,
+
+    setPose(pose, plan, instant = false) {
+      body.plan = plan || null;
+      if (pose === body.pose) return;
+      body.pose = pose;
+      body.since = 0;
+      body.gone = false;
+      group.visible = true;
+      if (instant) body.snap();
+    },
+
+    goals() {
+      const [h, wd] = BLADDER_POSE[body.pose] || BLADDER_POSE.idle;
+      return { h, wd };
+    },
+
+    snap() {
+      const g = body.goals();
+      body.h = g.h; body.wd = g.wd;
+      body.write(0);
+    },
+
+    hitPlayer() { body.lunge = 1; },
+
+    update(dt, reduced, bearing = 0) {
+      body.t += dt;
+      body.since += dt;
+      body.still = reduced;
+      body.look += ((reduced ? 0 : Math.max(-0.5, Math.min(0.5, bearing))) - body.look) * (1 - Math.exp(-3 * dt));
+      body.lunge = Math.max(0, body.lunge - dt * 2.5);
+      const g = body.goals();
+      const k = reduced ? 1 : 1 - Math.exp(-5 * dt);
+      body.h += (g.h - body.h) * k;
+      body.wd += (g.wd - body.wd) * k;
+      if (body.pose === 'dispersed' && body.since > 2.4) { body.gone = true; group.visible = false; }
+      body.write(reduced ? 0 : body.t);
+    },
+
+    write(t) {
+      group.position.z = body.baseZ + body.lunge * 0.07;
+      group.rotation.y = body.look * 0.3;
+      // A bag at rest breathes a hair; a shaken one shivers.
+      const breathe = !body.still && body.pose !== 'dispersed' ? Math.sin(t * 2.2 + body.phase) * 0.012 : 0;
+      const shiver = !body.still && body.pose === 'shaken' ? Math.sin(t * 38) * 0.006 : 0;
+      const hs = body.h + breathe;
+      const ws = body.wd + breathe * 0.5 + shiver;
+      // The bag sits on the plate, so its centre rises with its height.
+      rig.position.y = 0.05 * hs + 0.002;
+      bag.scale.set(ws, hs, ws);
+      belts.forEach((b, i) => {
+        const dy = (i ? 0.018 : -0.018) * hs;
+        const r = Math.sqrt(Math.max(0.0001, 1 - ((i ? 0.018 : -0.018) / 0.05) ** 2));
+        b.position.y = dy;
+        b.scale.set(r * ws, r * ws, 1);
+      });
+      neck.position.y = 0.05 * hs + 0.006;
+      valve.position.y = 0.05 * hs + 0.02;
+      const strained = body.pose === 'straining';
+      strainMat.emissiveIntensity = strained ? 0.7 : 0;
+      for (const st of straps) {
+        const a = st.userData.angle;
+        const rr = 0.05 * ws * 0.97;
+        st.visible = body.pose === 'swollen' || strained;
+        st.position.set(Math.cos(a) * rr, 0.05 * hs * 0.1, Math.sin(a) * rr);
+        st.rotation.y = -a;
+        st.scale.y = Math.max(0.2, hs * 0.9);
+      }
+    },
+
+    dispose() {
+      for (const g of owned) g.dispose();
+      strainMat.dispose();
+      shadow.geometry.dispose(); shadow.material.dispose();
+      hit.geometry.dispose(); hit.material.dispose();
+    }
+  };
+  body.snap();
+  return body;
+}
+
+/* ------------------------------------------------------------------
+   THE COMPRESSOR
+   A cylinder block with a head, a piston rod and a flywheel. It is a boss, so
+   it is built only at the scale the well allows: a stroke you can count.
+   ------------------------------------------------------------------ */
+
+export function buildCompressor(foe) {
+  const group = new THREE.Group();
+  group.name = `compressor:${foe.id}`;
+
+  const shadow = contactShadow(0.15);
+  group.add(shadow);
+
+  const owned = [];
+  const own = g => { owned.push(g); return g; };
+  const rig = new THREE.Group();
+  group.add(rig);
+
+  const iron = boilerMaterial();
+  const brass = brassMaterial();
+
+  const blockGeo = own(new RoundedBoxGeometry(0.11, 0.07, 0.06, 2, 0.006));
+  enableAO(blockGeo);
+  const block = new THREE.Mesh(blockGeo, iron);
+  block.position.set(-0.02, 0.06, 0);
+  block.castShadow = true;
+  rig.add(block);
+  const finGeo = own(new THREE.BoxGeometry(0.004, 0.02, 0.064));
+  for (let i = 0; i < 6; i++) {
+    const fin = new THREE.Mesh(finGeo, iron);
+    fin.position.set(-0.06 + i * 0.014, 0.105, 0);
+    rig.add(fin);
+  }
+  const headGeo = own(new THREE.CylinderGeometry(0.018, 0.018, 0.03, 14));
+  const head = new THREE.Mesh(headGeo, brass);
+  head.position.set(-0.05, 0.12, 0);
+  rig.add(head);
+  const wheelGeo = own(new THREE.TorusGeometry(0.036, 0.007, 8, 24));
+  const wheel = new THREE.Mesh(wheelGeo, iron);
+  wheel.position.set(0.065, 0.06, 0.036);
+  rig.add(wheel);
+  const spokeGeo = own(new THREE.BoxGeometry(0.07, 0.004, 0.004));
+  const spoke = new THREE.Mesh(spokeGeo, brass);
+  wheel.add(spoke);
+  const spoke2 = new THREE.Mesh(spokeGeo, brass);
+  spoke2.rotation.z = Math.PI / 2;
+  wheel.add(spoke2);
+  const rodGeo = own(new THREE.CylinderGeometry(0.005, 0.005, 0.07, 8));
+  const rod = new THREE.Mesh(rodGeo, brass);
+  rod.rotation.z = Math.PI / 2;
+  rig.add(rod);
+  for (const lx of [-0.06, 0.03]) {
+    const leg = new THREE.Mesh(own(new THREE.BoxGeometry(0.012, 0.03, 0.05)), iron);
+    leg.position.set(lx, 0.015, 0);
+    rig.add(leg);
+  }
+  const plumeMat = new THREE.MeshBasicMaterial({ color: 0xcfcfd2, transparent: true, opacity: 0.0, depthWrite: false });
+  const plumeGeo = own(new THREE.ConeGeometry(0.014, 0.05, 10, 1, true));
+  const plume = new THREE.Mesh(plumeGeo, plumeMat);
+  plume.position.set(0.0, 0.14, 0.03);
+  rig.add(plume);
+
+  const hit = hitTarget(0.16, 0.16);
+  hit.position.y = 0.08;
+  group.add(hit);
+
+  const body = {
+    species: 'the compressor',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    phase: (hashStr(foe.id) % 628) / 100,
+    reach: 0.16,
+    look: 0, spin: 0,
+    baseX: 0, baseY: 0, baseZ: 0,
+
+    setPose(pose, plan, instant = false) {
+      body.plan = plan || null;
+      if (pose === body.pose) return;
+      body.pose = pose;
+      body.since = 0;
+      body.gone = false;
+      group.visible = true;
+      if (instant) body.snap();
+    },
+
+    snap() { body.write(0); },
+    hitPlayer() { body.lunge = 1; },
+
+    update(dt, reduced, bearing = 0) {
+      body.t += dt;
+      body.since += dt;
+      body.still = reduced;
+      body.look += ((reduced ? 0 : Math.max(-0.5, Math.min(0.5, bearing))) - body.look) * (1 - Math.exp(-3 * dt));
+      body.lunge = Math.max(0, body.lunge - dt * 2.5);
+      // The flywheel turns at the stroke the pose names: brisk, slow under load, stopped when dispersed.
+      const rate = body.still ? 0 : body.pose === 'dispersed' ? 0 : body.pose === 'laboured' ? 1.1 : body.pose === 'easy' ? 5 : 3;
+      body.spin += rate * dt;
+      if (body.pose === 'dispersed' && body.since > 2.2) { body.gone = true; group.visible = false; }
+      body.write(reduced ? 0 : body.t);
+    },
+
+    write() {
+      group.position.z = body.baseZ + body.lunge * 0.05;
+      group.rotation.y = body.look * 0.3;
+      wheel.rotation.z = body.spin;
+      // The rod follows the crank: it reaches into the head and back out.
+      const reach = Math.cos(body.spin) * 0.012;
+      rod.position.set(-0.01 + reach, 0.06, 0.0);
+      plumeMat.opacity = body.pose === 'venting' ? 0.35 : 0;
+      head.position.y = 0.12 + (body.pose === 'laboured' ? -0.002 : 0);
+    },
+
+    dispose() {
+      for (const g of owned) g.dispose();
+      plumeMat.dispose();
+      shadow.geometry.dispose(); shadow.material.dispose();
+      hit.geometry.dispose(); hit.material.dispose();
+    }
+  };
+  body.snap();
+  return body;
+}
+
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['salt husk', 'lamp moth', 'basalt warden', 'recipe golem', 'slag crawler'];
+export const BODY_SPECIES = ['salt husk', 'lamp moth', 'basalt warden', 'recipe golem', 'slag crawler', 'gas bladder', 'the compressor'];
 
 /**
  * Species that fight on the PLATE only at T4, and why. A species with no body
@@ -1296,5 +1593,7 @@ export function buildFoeBody(species, foe, env) {
   if (species === 'basalt warden') return buildBasaltWarden(foe);
   if (species === 'recipe golem') return buildRecipeGolem(foe);
   if (species === 'slag crawler') return buildSlagCrawler(foe);
+  if (species === 'gas bladder') return buildPressureBladder(foe);
+  if (species === 'the compressor') return buildCompressor(foe);
   return null;
 }

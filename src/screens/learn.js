@@ -14,6 +14,7 @@ import { pageHeader, esc } from '../ui/layout.js';
 import { WORLDS } from '../learn/curriculum.js';
 import { worldStatus, worldProgress, isQuestComplete, nextQuest, currentWorld, trackProgress } from '../learn/progress.js';
 import { practiceKey, bindPracticeKeys } from './learn-world.js';
+import { openWorldStoryModal, openCampaignStoryModal } from '../story/story-modal.js';
 
 const STATUS_TAG = {
   open: { label: 'Open', cls: 'live' },
@@ -39,9 +40,12 @@ export function renderLearn(container) {
         video: '/video/starmap_loop.webm',
         artAlt: '',
         title: 'Learn',
-        actions: resumeQuest
-          ? `<a href="#/learn/${esc(resume.id)}" class="btn-primary" style="text-decoration: none;">Continue · ${esc(resume.world)}</a>`
-          : ''
+        actions: `
+          <button type="button" class="btn-secondary quest-btn-sm m-tap" id="learn-campaign-story-btn" title="Review Campaign Storyline & Ghost Charter" style="margin-right: 0.5rem;">📜 Story Dossier</button>
+          ${resumeQuest
+            ? `<a href="#/learn/${esc(resume.id)}" class="btn-primary" style="text-decoration: none;">Continue · ${esc(resume.world)}</a>`
+            : ''}
+        `
       })}
 
       <div class="learn-road">
@@ -78,6 +82,7 @@ export function renderLearn(container) {
                   ${w.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} complete` : ''}
                 </div>
                 <div class="learn-world-keys">
+                  <button type="button" class="btn-secondary quest-btn-sm learn-story-modal-btn m-tap" data-story-world="${esc(w.id)}" title="Sector Storyline Briefing">Storyline</button>
                   ${enterable
                     ? `<a href="#/learn/${esc(w.id)}" class="btn-primary learn-enter m-tap" style="text-decoration: none;">Enter</a>`
                     : `<span class="eyebrow learn-world-blocked">${st === 'locked' ? 'Locked' : 'Coming soon'}</span>`}
@@ -92,4 +97,15 @@ export function renderLearn(container) {
   `;
 
   bindPracticeKeys(container);
+
+  container.querySelectorAll('.learn-story-modal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const w = WORLDS.find(x => x.id === btn.dataset.storyWorld);
+      if (w) openWorldStoryModal(w);
+    });
+  });
+
+  container.querySelector('#learn-campaign-story-btn')?.addEventListener('click', () => {
+    openCampaignStoryModal();
+  });
 }

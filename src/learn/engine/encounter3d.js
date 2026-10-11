@@ -33,7 +33,10 @@ import { soundscape } from '../../audio/soundscape.js';
 /** Where in the well's frame each species stands, by instrument head. */
 const PERCH = {
   // The moth clings to the vacuum tube over its metal plate.
-  'lamp moth': { x: -0.07, y: 0.11, z: 0 }
+  'lamp moth': { x: -0.07, y: 0.11, z: 0 },
+  // A bladder lies on the plate in front of the barrel, low, so the screen behind it stays whole.
+  'gas bladder': { x: 0, y: 0, z: 0.15 },
+  'the compressor': { x: 0, y: 0, z: 0.1 }
 };
 
 const _eye = new THREE.Vector3();

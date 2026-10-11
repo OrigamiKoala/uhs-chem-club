@@ -297,8 +297,12 @@ export function renderQuest(container) {
     }
     if (arrivedByVoyage && stage.worldScene) {
       // Lead them from the ramp to the pylon that is waiting for them.
-      const site = stage.worldScene.data.sites[Math.min(maxStageReached, TOTAL_STAGES - 1)];
-      if (site) stage.setWorldWaypoint({ x: site.pos[0], z: site.pos[2], label: site.label });
+      const targetIdx = (maxStageReached >= TOTAL_STAGES) ? 0 : Math.min(maxStageReached, TOTAL_STAGES - 1);
+      const site = stage.worldScene.data.sites[targetIdx];
+      if (site) {
+        const at = site.approachPos || site.pos;
+        stage.setWorldWaypoint({ x: at[0], z: at[2], label: site.label });
+      }
     }
     if (stage.worldScene) {
       stage.worldScene.setClearedStages(new Set(Array.from({ length: maxStageReached }, (_, i) => i + 1)));
@@ -350,6 +354,7 @@ export function renderQuest(container) {
   }
 
   function deployChamber(idx) {
+    stage.setWorldWaypoint(null);
     if (stage.canvas) {
       viewer = new QuestViewer(stage.canvas);
       stage.setQuestScene(viewer);
@@ -1273,6 +1278,14 @@ export function renderQuest(container) {
     if (isT4) {
       if (stage.fpsControls) stage.fpsControls.enabled = true;
       renderErebusHUD();
+      if (stage.worldScene && !arrivedByVoyage) {
+        const targetIdx = (maxStageReached >= TOTAL_STAGES) ? 0 : Math.min(maxStageReached, TOTAL_STAGES - 1);
+        const site = stage.worldScene.data.sites[targetIdx];
+        if (site) {
+          const at = site.approachPos || site.pos;
+          stage.setWorldWaypoint({ x: at[0], z: at[2], label: site.label });
+        }
+      }
     } else {
       loadStage(currentStageIdx);
     }
@@ -1295,6 +1308,12 @@ export function renderQuest(container) {
           maxStageReached = reached;
           if (isT4 && stage.worldScene) {
             stage.worldScene.setClearedStages(new Set(Array.from({ length: maxStageReached }, (_, i) => i + 1)));
+            const targetIdx = (maxStageReached >= TOTAL_STAGES) ? 0 : Math.min(maxStageReached, TOTAL_STAGES - 1);
+            const site = stage.worldScene.data.sites[targetIdx];
+            if (site) {
+              const at = site.approachPos || site.pos;
+              stage.setWorldWaypoint({ x: at[0], z: at[2], label: site.label });
+            }
           }
           // Only jump the player forward if they have not started playing yet, and
           // never on a completed quest — there, stage 1 is a deliberate replay start.

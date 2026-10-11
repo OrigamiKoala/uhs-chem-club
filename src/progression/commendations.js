@@ -312,6 +312,39 @@ export const COMMENDATIONS = [
     earnedBy: (s) => manualComplete(s, 'unit03')
   },
 
+  {
+    id: 'bellows_surveyed',
+    name: 'Bellows Surveyed',
+    line: 'Completed every built bench across the cloud deck of Bellows.',
+    tier: 'etched',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => {
+      if (!s.learn) return false;
+      // Read off the chart, so the plate keeps meaning "every bench" as more are built.
+      const q = (getWorld('unit04')?.quests || []).filter(x => x.status === 'live' && x.arena !== 'boss').map(x => x.id);
+      return q.length > 0 && q.every(id => Boolean(s.learn[`unit04/${id}`]?.completedAt));
+    }
+  },
+  {
+    id: 'bellows_practice',
+    name: 'Gauge Drills',
+    line: 'Worked through the revision problem set on Bellows.',
+    tier: 'painted',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => Boolean(s.flags && s.flags.unit04_practice_done)
+  },
+  {
+    id: 'manual_unit04',
+    name: 'Unit 4 Field Log',
+    line: 'Logged every vocabulary term across Bellows.',
+    tier: 'etched',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => manualComplete(s, 'unit04')
+  },
+
   // ===================== CREW =====================
   {
     id: 'guild_joined',

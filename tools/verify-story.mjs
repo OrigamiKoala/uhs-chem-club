@@ -43,6 +43,7 @@ const bossHopper = await import('../src/learn/quests/unit01/boss-hopper.js');
 const bossEater = await import('../src/learn/quests/unit02/boss-eater.js');
 const bossWarden = await import('../src/learn/quests/unit03/boss-warden.js');
 const bossGolem = await import('../src/learn/quests/unit07/boss-golem.js');
+const bossCompressor = await import('../src/learn/quests/unit04/boss-compressor.js');
 
 const sentenceCount = (str) => (String(str || '').match(/[.!?]+(?=\s|$)/g) || []).length;
 
@@ -117,11 +118,11 @@ SPINE_BEATS.forEach((beat, i) => {
 ok(`${SPINE_BEATS.length} spine beats verified in strict order, all <= 2 sentences`);
 
 // 4. Episodes for built worlds
-const builtWorlds = ['unit01', 'unit02', 'unit03', 'unit07'];
-for (const wid of builtWorlds) {
+// 4. Episodes for all 14 worlds
+for (const wid of Object.keys(EPISODES)) {
   const ep = EPISODES[wid];
   if (!ep) {
-    fail(`missing episode definition for built world ${wid}`);
+    fail(`missing episode definition for world ${wid}`);
     continue;
   }
   if (!ep.arrival || !ep.closing) {
@@ -136,14 +137,15 @@ for (const wid of builtWorlds) {
     fail(`episode ${wid} references unknown clue "${ep.clueId}"`);
   }
 }
-ok('episodes defined for built worlds, transmissions <= 2 sentences');
+ok(`all ${Object.keys(EPISODES).length} world episodes defined, transmissions <= 2 sentences`);
 
 // 5. Boss debrief clue wiring
 const bossModules = [
   { name: 'The Hopper (Tallow)', mod: bossHopper },
   { name: 'The Lantern-Eater (Lanternfall)', mod: bossEater },
   { name: 'Basalt Warden (Ligar)', mod: bossWarden },
-  { name: 'Recipe Golem (Kettle)', mod: bossGolem }
+  { name: 'Recipe Golem (Kettle)', mod: bossGolem },
+  { name: 'The Compressor (Bellows)', mod: bossCompressor }
 ];
 
 for (const b of bossModules) {

@@ -83,6 +83,14 @@ export const DESTINATIONS = {
       atmo: '#5fe0b0', atmoStrength: 0.62, seed: [3.3, 6.1, 1.4]
     }
   },
+  bellows: {
+    key: 'bellows', name: 'Bellows', hash: '#/learn/unit04',
+    descent: 'Descending to the deck',
+    planet: {
+      kind: 'gas', colors: ['#dbe3ef', '#a9bbd6', '#6d88b4', '#f4f1ea'],
+      atmo: '#b9cdee', atmoStrength: 0.66, seed: [4.4, 2.8, 1.9]
+    }
+  },
   ligar: {
     key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',

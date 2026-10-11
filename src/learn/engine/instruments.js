@@ -46,6 +46,8 @@ import { PairBoard as PairBoard2D } from './pairboard.js';
 import { PairBoard3D } from './pairboard3d.js';
 import { DomainRig as DomainRig2D } from './domainrig.js';
 import { DomainRig3D } from './domainrig3d.js';
+import { GasRig as GasRig2D } from './gasrig.js';
+import { GasRig3D } from './gasrig3d.js';
 
 /** True when this client is drawing the Learn benches in three dimensions. */
 export function benchesAre3D() {
@@ -125,7 +127,15 @@ const BUILT_BENCHES = new Set([
   'q7-polarity',   // the domain rig, field plates
   'q8-hybrid',     // the domain rig, mixer and twist plates
   'q9-orbitals',   // the box rack, molecular layout — boxrack3d.js
-  'boss-warden'    // the warden: bond bench, pair board, domain rig and box rack in turn, in its own room
+  'boss-warden',   // the warden: bond bench, pair board, domain rig and box rack in turn, in its own room
+  // Unit 4 — Bellows. One instrument, six heads: cylinder, mixture, leak, tube, path and record.
+  'q1-knocks',     // the gas rig, cylinder head with the speed screen — gasrig3d.js
+  'q2-laws',       // the gas rig, cylinders with traces, and the gauge records
+  'q3-ideal',      // the gas rig, cylinders with the scale and the readings
+  'q4-mixtures',   // the gas rig, mixture tanks
+  'q5-speed',      // the gas rig, speed screen, pinhole, tube and path
+  'q6-real',       // the gas rig, real-gas cylinders
+  'boss-compressor' // the compressor: cylinders, tanks and the pinhole in turn
 ]);
 
 /**
@@ -289,8 +299,21 @@ export function DomainRig(host, opts = {}) {
     : new DomainRig2D(host, opts);
 }
 
+/**
+ * The gas rig. Signature and behaviour match `GasRig` in gasrig.js; the built one
+ * is a subclass of it through `plateBench3D`.
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onSelect?: Function, onVolume?: Function,
+ *          onTemp?: Function, onTime?: Function}} opts
+ */
+export function GasRig(host, opts = {}) {
+  return benchesAre3D()
+    ? new GasRig3D(host, deployed(opts))
+    : new GasRig2D(host, opts);
+}
+
 /* Exported so a caller that wants the built instrument by name can have it. */
-export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D, JoinBench3D, LightBench3D, CloudPlate3D, BoxRack3D, ElectronBench3D, BondBench3D, PairBoard3D, DomainRig3D };
+export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D, JoinBench3D, LightBench3D, CloudPlate3D, BoxRack3D, ElectronBench3D, BondBench3D, PairBoard3D, DomainRig3D, GasRig3D };
 
 /* Re-exported so a quest module needs exactly one import line for its bench. */
 export { detailFor, TINTS } from './scope.js';

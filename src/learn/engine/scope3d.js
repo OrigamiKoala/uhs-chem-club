@@ -221,6 +221,7 @@ export class SampleScope3D {
     });
     dial.group.position.set(x, 0.895, 0.10);
     this.viewer.root.add(dial.group);
+    this.viewer.registerDial({ group: dial.group, knob: dial.knob, label: 'POWER', id: 'power', dial });
     this.dial = dial;
 
     // The camera is pulled back a touch so the dial is inside the glass at the
@@ -257,6 +258,7 @@ export class SampleScope3D {
     this.releaseDial?.();
     this.releaseDial = null;
     if (!this.dial) return;
+    this.viewer.unregisterDial(this.dial);
     this.viewer.root.remove(this.dial.group);
     for (const g of this.dial.geos || []) g.dispose();
     for (const m of this.dial.mats || []) {

@@ -71,11 +71,12 @@ export function statRow(tiles = []) {
  * The three-step signup journey rail, shared by register / onboarding.
  * @param {number} current 1 = account, 2 = team, 3 = bridge
  */
-export function stepRail(current = 1) {
-  const steps = [
+export function stepRail(current = 1, customSteps = null) {
+  const steps = customSteps || [
     { n: 1, label: 'Account' },
     { n: 2, label: 'Guild' },
-    { n: 3, label: 'Launch' }
+    { n: 3, label: 'Oath' },
+    { n: 4, label: 'Storyline' }
   ];
   return `
     <nav class="step-rail" aria-label="Sign-up progress">

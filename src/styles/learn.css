@@ -414,6 +414,125 @@
   .lq-tool-note dd { margin-bottom: 3px; }
 }
 
+/* ---- Bench Instrument Guide ---- */
+.lq-bench-guide {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.lq-bench-guide-card {
+  padding: 0.45rem 0.65rem 0.55rem;
+  background: var(--plate-100);
+  border: 1px solid var(--border-durasteel);
+  border-top-color: var(--seam-light);
+  border-bottom-color: var(--seam-dark);
+  border-radius: 2px;
+}
+
+.lq-bench-guide-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.lq-bench-guide-head .form-label,
+.lq-bench-guide-head .eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--accent-amber);
+}
+
+.lq-guide-reopen-btn {
+  padding: 2px 7px;
+  font-size: 0.62rem;
+  height: auto;
+  line-height: 1.3;
+}
+
+.lq-bench-guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.lq-bench-guide-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.lq-bench-guide-lbl {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+  flex-shrink: 0;
+}
+
+.lq-bench-guide-text {
+  color: var(--text-secondary);
+}
+
+.learn-quest-overworld .lq-bench-guide {
+  margin: 0.15rem 0 0.4rem !important;
+}
+
+.learn-quest-overworld .lq-bench-guide-card {
+  background: var(--plate-100) !important;
+  border: 1px solid var(--border-durasteel) !important;
+}
+
+/* ---- Briefing Modal Instrument Halos Guide ---- */
+.lq-briefing-instruments {
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(217, 148, 35, 0.25);
+}
+
+.lq-instrument-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.lq-instrument-card {
+  padding: 0.5rem 0.65rem;
+  background: rgba(18, 16, 13, 0.75);
+  border: 1px solid var(--border-durasteel);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.lq-instrument-card:hover,
+.lq-instrument-card:focus-visible,
+.lq-instrument-card.active {
+  border-color: var(--accent-amber);
+  background: rgba(217, 148, 35, 0.12);
+  outline: none;
+}
+
+.lq-instrument-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.lq-instrument-card-desc {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
 /* The power knob. A magnification setting is a thing you turn, so it is a
    milled cap with an engraved index and detents cut round its collar — not a
    pair of keys with a number between them. See `engine/dial.js` for the three
@@ -2732,6 +2851,17 @@ body.bench-deployed .modal-container .modal-card {
 .scope-grid.scope-n1 .scope-aperture.rig-aperture { aspect-ratio: 4 / 3; }
 .scope-grid.rig-grid { grid-template-columns: minmax(0, 1fr); }
 .scope-grid.rig-grid.scope-n2, .scope-grid.rig-grid.scope-n3, .scope-grid.rig-grid.scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* THE GAS RIG — Bellows (engine/gasrig.js). A cylinder, a gauge and a speed screen want more
+   height than width; a pinhole, a tube and a tracked particle are wide and low. */
+.scope-aperture.gas-aperture { aspect-ratio: 16 / 10; }
+.scope-aperture.gas-aperture.gas-tall { aspect-ratio: 4 / 3; }
+.scope-grid.scope-n1 .scope-aperture.gas-aperture { aspect-ratio: 16 / 9; }
+.scope-grid.scope-n1 .scope-aperture.gas-aperture.gas-tall { aspect-ratio: 16 / 10; }
+.scope-grid.gas-grid { grid-template-columns: minmax(0, 1fr); }
+.scope-grid.gas-grid.scope-n2, .scope-grid.gas-grid.scope-n3, .scope-grid.gas-grid.scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 620px) {
+  .scope-grid.gas-grid.scope-n2, .scope-grid.gas-grid.scope-n3, .scope-grid.gas-grid.scope-n4 { grid-template-columns: minmax(0, 1fr); }
+}
 @media (max-width: 620px) {
   .scope-grid.bond-grid.scope-n2, .scope-grid.bond-grid.scope-n3, .scope-grid.bond-grid.scope-n4,
   .scope-grid.pair-grid.scope-n2, .scope-grid.pair-grid.scope-n3, .scope-grid.pair-grid.scope-n4,

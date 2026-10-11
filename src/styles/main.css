@@ -1130,3 +1130,24 @@ body::after {
   }
 }
 
+/* Storyline Briefing & Campaign Onboarding Modals */
+.modal-card:has(.story-briefing-modal),
+.modal-card:has(.campaign-story-modal) {
+  max-width: 700px;
+}
+
+.story-briefing-modal,
+.campaign-story-modal {
+  width: 100%;
+}
+
+.story-briefing-modal .holo-card,
+.campaign-story-modal .holo-card {
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.story-briefing-modal .holo-card:hover,
+.campaign-story-modal .holo-card:hover {
+  transform: translateY(-1px);
+}
+

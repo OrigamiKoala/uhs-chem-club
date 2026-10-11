@@ -131,6 +131,7 @@ export function plateBench3D(Base, defaults = {}) {
         });
         dial.group.position.set(x, 0.895, 0.10);
         this.viewer.root.add(dial.group);
+        this.viewer.registerDial({ group: dial.group, knob: dial.knob, label: spec.label || 'DIAL', id: spec.id, dial });
         this.dials.set(spec.id, { dial, spec });
 
         let deg = 0;
@@ -163,6 +164,7 @@ export function plateBench3D(Base, defaults = {}) {
       for (const r of this.releases) r?.();
       this.releases = [];
       for (const { dial } of this.dials.values()) {
+        this.viewer.unregisterDial(dial);
         this.viewer.root.remove(dial.group);
         for (const g of dial.geos || []) g.dispose();
         for (const m of dial.mats || []) {

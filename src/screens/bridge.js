@@ -14,6 +14,7 @@ import { renderGardensMap } from "../ui/gardens-map.js";
 import { QUEST1_STORY } from "../story/quest1.js";
 import { tierManager } from "../three/tier.js";
 import { playCinematic } from "../ui/cinematic.js";
+import { openCampaignStoryModal } from "../story/story-modal.js";
 
 let unsubscribeBridge = null;
 let bridgeHoloListener = null;
@@ -102,8 +103,13 @@ export function renderBridge(container) {
               <button type="button" id="bridge-announcement-close" class="btn-chip" style="font-size: 0.72rem; padding: 2px 8px; color: var(--accent-amber); border-color: rgba(217, 148, 35, 0.4); cursor: pointer;" title="Close [X]">Close [X]</button>
             </div>
           </div>
-          <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-amber); margin-top: 0.6rem; border-top: 1px solid rgba(217, 148, 35, 0.2); padding-top: 0.45rem;">
-            Check out the star map for the latest quests!
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem; border-top: 1px solid rgba(217, 148, 35, 0.2); padding-top: 0.45rem; flex-wrap: wrap; gap: 0.4rem;">
+            <span style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent-amber);">
+              Standing orders: Investigate rim anomalies across the 14 worlds.
+            </span>
+            <button type="button" id="bridge-story-dossier-btn" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; padding: 3px 8px; color: var(--accent-gold); border-color: rgba(217, 148, 35, 0.4);" title="Review Campaign Storyline & Ghost Charter">
+              📜 Mission Storyline Dossier
+            </button>
           </div>
         </div>
 
@@ -186,6 +192,10 @@ export function renderBridge(container) {
       if (panel) panel.style.display = "none";
       session.setFlag("clubHoloClosed", true);
       stage.closeClubHolo?.();
+    });
+
+    container.querySelector("#bridge-story-dossier-btn")?.addEventListener("click", () => {
+      openCampaignStoryModal();
     });
 
     if (bridgeHoloListener) {

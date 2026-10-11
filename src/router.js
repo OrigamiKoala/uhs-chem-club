@@ -7,7 +7,8 @@ import { stage } from './three/stage.js';
 import { closeModal } from './ui/modal.js';
 import { canWalk, world3dFor } from './learn/worlds3d.js';
 import { getWorld, getQuest } from './learn/curriculum.js';
-import { isQuestOpen, isQuestComplete } from './learn/progress.js';
+import { isQuestOpen, isQuestComplete, nextQuest } from './learn/progress.js';
+import erebusData from './three/world-data/erebus.json' with { type: 'json' };
 import { soundscape } from './audio/soundscape.js';
 import { gameMode } from './game-mode.js';
 
@@ -166,7 +167,25 @@ function isWalkableLearnRoute(raw) {
  * bench — the bench is a place on the ground, and they walk to it.
  */
 function voyageTargetFor(raw) {
-  if (raw === '/quest') return { key: 'erebus', hash: '#/quest' };
+  if (raw === '/quest') {
+    let maxStageReached = 0;
+    try {
+      const saved = parseInt(localStorage.getItem('chem_quest_stage') || '0', 10);
+      if (!isNaN(saved) && saved >= 0) maxStageReached = Math.min(saved, 20);
+    } catch (e) {}
+    const prog = (session.progress || []).find(p => p.quest_id === 'q1');
+    if (prog && typeof prog.stage_reached === 'number') {
+      maxStageReached = Math.max(maxStageReached, Math.min(Number(prog.stage_reached), 20));
+    }
+    const erebusIdx = (maxStageReached >= 20) ? 0 : Math.min(maxStageReached, 19);
+    const site = erebusData.sites ? erebusData.sites[erebusIdx] : null;
+    const at = site && (site.approachPos || site.pos);
+    return {
+      key: 'erebus',
+      hash: '#/quest',
+      waypoint: at ? { x: at[0], z: at[2], label: site.label } : null
+    };
+  }
   const m = matchParamRoute(raw);
   if (!m || m.def.pattern[0] !== 'learn' || !m.params.worldId) return null;
   if (!canWalk(m.params.worldId)) return null;
@@ -187,6 +206,21 @@ function voyageTargetFor(raw) {
       key, hash,
       waypoint: at ? { x: at[0], z: at[2], label: site.label } : null
     };
+  }
+  // Leading to the next uncompleted stage (or first stage if world complete)
+  const world = getWorld(m.params.worldId);
+  if (world) {
+    const next = nextQuest(world) || world.quests[0];
+    if (next) {
+      const site = w3d.siteForQuest(next.id);
+      const at = site && (site.approachPos || site.pos);
+      if (at) {
+        return {
+          key, hash,
+          waypoint: { x: at[0], z: at[2], label: site.label }
+        };
+      }
+    }
   }
   return { key, hash };
 }

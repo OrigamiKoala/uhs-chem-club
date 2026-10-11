@@ -300,6 +300,16 @@ export const REQUISITIONS = [
     apply: (state) => { state.quarters = state.quarters || {}; state.quarters.jar_ligar = true; }
   },
   {
+    id: 'quarters_bellows_gauge',
+    kind: 'quarters',
+    name: 'Bellows Gauge',
+    line: 'A brass pressure gauge on a short pipe stub, its needle stopped at one atmosphere.',
+    finish: 'brass',
+    source: { commendation: 'bellows_surveyed' },
+    tokenColor: 'var(--accent-gold)',
+    apply: (state) => { state.quarters = state.quarters || {}; state.quarters.gauge_bellows = true; }
+  },
+  {
     id: 'privilege_comms_relay',
     kind: 'privilege',
     name: 'Comms Relay Feed',

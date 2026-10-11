@@ -11,6 +11,7 @@ import { getWorld, ARENAS } from '../learn/curriculum.js';
 import { worldStatus, worldProgress, questStatus, questProgress, nextQuest, isQuestComplete } from '../learn/progress.js';
 import { canWalk, world3dFor } from '../learn/worlds3d.js';
 import { openWorldPractice, worldHasPractice, practiceOfferedFlag } from '../learn/practice.js';
+import { openWorldStoryModal } from '../story/story-modal.js';
 import { session } from '../session.js';
 
 const STATUS_TAG = {
@@ -44,6 +45,24 @@ function installSiteListener() {
     if (site.built === false) return;
     window.location.hash = `#/learn/${worldId}/${site.questId}`;
   });
+}
+
+/**
+ * Offer the world's problem set the first time the player comes back here with
+ * every bench in it worked.
+ *
+ * It is an offer and not a gate: the next world has ALREADY opened by the time
+ * this runs (gating is `worldProgress`, which knows nothing about practice), the
+ * screen behind it is already drawn, and Close is the first key on the card.
+ * Once offered it never auto-opens again — the Problems key is how it comes back.
+ */
+function maybeOfferStory(world) {
+  const flag = `story_world_seen_${world.id}`;
+  if (!session.hasFlag(flag)) {
+    setTimeout(() => {
+      openWorldStoryModal(world);
+    }, 250);
+  }
 }
 
 /**
@@ -100,9 +119,18 @@ export function renderLearnWorld(container, params = {}) {
       const q = world.quests.find(x => x.id === questId);
       return q ? isQuestComplete(q) : false;
     });
+    if (flewIn || !fromQuest) {
+      const nq = nextQuest(world) || world.quests[0];
+      const targetSite = nq ? w3d.siteForQuest(nq.id) : null;
+      if (targetSite) {
+        const at = targetSite.approachPos || targetSite.pos;
+        stage.setWorldWaypoint({ x: at[0], z: at[2], label: targetSite.label });
+      }
+    }
     renderWalkHud(container, world);
     bindPracticeKeys(container);
     maybeOfferPractice(world);
+    maybeOfferStory(world);
     return;
   }
 
@@ -123,20 +151,29 @@ export function renderLearnWorld(container, params = {}) {
         eyebrow: esc(world.unit),
         title: esc(world.world),
         subtitle: esc(world.line),
-        actions: `<a href="#/learn" class="btn-secondary" style="text-decoration: none;">All Worlds</a>`
+        actions: `
+          <button type="button" class="btn-secondary quest-btn-sm learn-story-trigger m-tap" style="margin-right: 0.5rem;" title="Review Sector Storyline">Storyline</button>
+          <a href="#/learn" class="btn-secondary" style="text-decoration: none;">All Worlds</a>
+        `
       })}
 
       <section class="glass-panel learn-world-brief">
         <div class="m-head learn-brief-head">
           <span class="eyebrow lit">${esc(world.title)}</span>
-          <span class="tag ${(STATUS_TAG[wStatus] || STATUS_TAG.charted).cls}">${(STATUS_TAG[wStatus] || STATUS_TAG.charted).label}</span>
+          <div style="display: flex; gap: 0.4rem; align-items: center;">
+            <button type="button" class="btn-secondary quest-btn-sm learn-story-trigger m-tap" title="Review Sector Storyline">Storyline</button>
+            <span class="tag ${(STATUS_TAG[wStatus] || STATUS_TAG.charted).cls}">${(STATUS_TAG[wStatus] || STATUS_TAG.charted).label}</span>
+          </div>
         </div>
         <p class="learn-brief-body">${esc(world.brief)}</p>
         <div class="learn-brief-foot">
           <div class="eyebrow learn-brief-count">
             ${world.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete} of ${prog.liveTotal} complete` : ''}
           </div>
-          ${practiceKey(world)}
+          <div style="display: flex; gap: 0.4rem; align-items: center;">
+            <button type="button" class="btn-secondary quest-btn-sm learn-story-trigger m-tap" title="Review Sector Storyline">Storyline</button>
+            ${practiceKey(world)}
+          </div>
         </div>
       </section>
 
@@ -175,6 +212,12 @@ export function renderLearnWorld(container, params = {}) {
 
   bindPracticeKeys(container);
   maybeOfferPractice(world);
+  maybeOfferStory(world);
+  container.querySelectorAll('.learn-story-trigger').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openWorldStoryModal(world);
+    });
+  });
 }
 
 /**
@@ -213,6 +256,9 @@ function renderWalkHud(container, world) {
         </div>
 
         <div class="learn-walk-keys">
+          <button type="button" class="btn-secondary quest-btn-sm learn-story-trigger m-tap" id="learn-story-trigger" title="Sector Storyline Briefing">
+            Storyline
+          </button>
           <button type="button" class="btn-secondary quest-btn-sm learn-sites-trigger m-tap" id="learn-sites-trigger">
             Sites (${prog.questsComplete}/${total})
           </button>
@@ -237,7 +283,8 @@ function renderWalkHud(container, world) {
                 ${esc(world.world.toUpperCase())} — EXPLORATION SITES
               </h2>
             </div>
-            <div style="display: flex; gap: 0.6rem; align-items: center;">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <button type="button" id="sites-story-popup-btn" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; padding: 2px 8px;">Storyline</button>
               ${total ? `<span class="tag ${prog.questsComplete >= total ? 'live' : 'warn'}">${prog.questsComplete} / ${total} CLEARED</span>` : ''}
               <button type="button" id="close-sites-popup-btn" class="terminal-close-btn" aria-label="Close sites panel">✕ CLOSE</button>
             </div>
@@ -319,6 +366,13 @@ function renderWalkHud(container, world) {
 
   scrim?.addEventListener('click', (e) => {
     if (e.target === scrim) closeSitesPopup();
+  });
+
+  container.querySelector('#learn-story-trigger')?.addEventListener('click', () => {
+    openWorldStoryModal(world);
+  });
+  container.querySelector('#sites-story-popup-btn')?.addEventListener('click', () => {
+    openWorldStoryModal(world);
   });
 
   const onKeydown = (e) => {

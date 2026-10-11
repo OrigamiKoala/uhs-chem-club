@@ -15,6 +15,7 @@ import { WorldScene } from "./world.js";
 import { TallowWorld } from "./tallow.js";
 import { LigarWorld } from "./ligar.js";
 import { LanternfallWorld } from "./lanternfall.js";
+import { BellowsWorld } from "./bellows.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
 import { TouchControls } from "./touch-controls.js";
@@ -41,6 +42,9 @@ const LIGAR_EXPOSURE = 1.16;
 // Lanternfall is a night of ice under an aurora: pale surfaces catch what little light
 // there is, so it sits a touch above the salt pan's exposure.
 const LANTERNFALL_EXPOSURE = 1.12;
+// Bellows is a deck above a sea of cloud under a high white sun: the cloud throws back almost
+// everything it is given, so it takes LESS exposure than the salt pan, as a bright overcast does.
+const BELLOWS_EXPOSURE = 0.86;
 // Erebus is a bright desert under a low sun: its sky and sand are lit to real
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
@@ -76,6 +80,7 @@ class Stage {
     this.tallowWorld = null;
     this.ligarWorld = null;
     this.lanternfallWorld = null;
+    this.bellowsWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -767,6 +772,10 @@ class Stage {
       if (!this.lanternfallWorld) this.lanternfallWorld = this.warmWorld(new LanternfallWorld(this.renderer));
       return this.lanternfallWorld;
     }
+    if (key === "bellows") {
+      if (!this.bellowsWorld) this.bellowsWorld = this.warmWorld(new BellowsWorld(this.renderer));
+      return this.bellowsWorld;
+    }
     return null;
   }
 
@@ -794,6 +803,7 @@ class Stage {
     if (key === "tallow") return TALLOW_EXPOSURE;
     if (key === "ligar") return LIGAR_EXPOSURE;
     if (key === "lanternfall") return LANTERNFALL_EXPOSURE;
+    if (key === "bellows") return BELLOWS_EXPOSURE;
     if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
@@ -956,9 +966,16 @@ class Stage {
     this.enterLearnWorld(this.lanternfallWorld, LANTERNFALL_EXPOSURE, focusSiteId);
   }
 
-  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall or Ligar. */
+  /** Walk out onto Bellows, the cloud deck (Learn world 04). */
+  enterBellowsScene(focusSiteId = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    this.worldFor("bellows");
+    this.enterLearnWorld(this.bellowsWorld, BELLOWS_EXPOSURE, focusSiteId);
+  }
+
+  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar or Bellows. */
   isLearnWorld(w) {
-    return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld);
+    return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld || w === this.bellowsWorld);
   }
 
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
@@ -1163,6 +1180,11 @@ class Stage {
     if (this.lanternfallWorld) this.lanternfallWorld.setSiteComplete(questId, complete);
   }
 
+  /** Light a Bellows site's indicator when its quest is finished. */
+  setBellowsSiteComplete(questId, complete) {
+    if (this.bellowsWorld) this.bellowsWorld.setSiteComplete(questId, complete);
+  }
+
   /** Light a Ligar site's indicator when its quest is finished. */
   setLigarSiteComplete(questId, complete) {
     if (this.ligarWorld) this.ligarWorld.setSiteComplete(questId, complete);
@@ -1180,7 +1202,10 @@ class Stage {
     this.arrivedByVoyage = false;
     if (this.voyage) {
       if (boarding) this.voyage.board(leftWorld);
-      else if (this.voyage.state === "ground") this.voyage.reset();
+      else {
+        if (this.voyage.state === "ground") this.voyage.reset();
+        this.voyage.groundGuide?.hide();
+      }
     }
     if (this.renderer) this.renderer.toneMappingExposure = SHIP_EXPOSURE;
     if (this.shipScene) {

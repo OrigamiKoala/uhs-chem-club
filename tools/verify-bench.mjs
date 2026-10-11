@@ -1298,6 +1298,110 @@ async function lanternfallPasses() {
 }
 await lanternfallPasses();
 
+/* ================================================================ BELLOWS
+
+   Six benches on a cloud deck, and ONE built instrument, the gas rig, measured by
+   the same `check` that measures every other. It is fed the widest stage its
+   quests declare (read from the quests' own tables) and the stage that puts the
+   most dials on the plate. Then every stage every Bellows quest declares, the
+   boss's five included, is put through the built instrument and pressed through
+   the real pointer path. */
+
+const { BellowsWorld } = await import('../src/three/bellows.js');
+const { GasRig3D } = await import('../src/learn/engine/gasrig3d.js');
+const GASDATA = await import('../src/learn/engine/gasdata.js');
+
+world = new BellowsWorld(null);
+world.scene.updateMatrixWorld(true);
+console.log('');
+checkFacing();
+
+const BW = {};
+for (const id of ['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed', 'q6-real', 'boss-compressor']) {
+  BW[id] = await import(`../src/learn/quests/unit04/${id}.js`);
+}
+
+function layGas(bench, st) {
+  bench.setRigs(st.rigs, GASDATA.benchCfg(st, {}));
+}
+const gasStages = id => BW[id].STAGES;
+const gasWidest = id => gasStages(id).reduce((a, b) => (b.rigs.length > a.rigs.length ? b : a));
+const gasDials = st => (st.volumes?.length > 1 ? 1 : 0) + (st.temps?.length > 1 ? 1 : 0) + (st.times?.length > 1 ? 1 : 0);
+const gasDialStage = id => gasStages(id).reduce((a, b) => (gasDials(b) > gasDials(a) ? b : a));
+
+const BW_BENCHES = ['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed', 'q6-real'].map(id => [
+  id, `gas rig (${id})`, (c, a) => new GasRig3D(null, { world: worldFrame(c, a) })
+]);
+
+{
+  const mark = failures;
+  for (const [id, label, build] of BW_BENCHES) {
+    check(id, label, build, bench => layGas(bench, gasWidest(id)));
+    if (gasDialStage(id) !== gasWidest(id) && gasDials(gasDialStage(id)) > 0) {
+      check(id, `${label}, dial stage`, build, bench => layGas(bench, gasDialStage(id)));
+    }
+  }
+  if (failures === mark) ok(`the gas rig frames every body and control at ${ASPECTS.length} aspects on all six Bellows benches`);
+}
+
+/* EVERY STAGE, THROUGH THE REAL POINTER PATH. */
+async function bellowsPasses() {
+  globalThis.requestAnimationFrame ??= () => 0;
+  globalThis.cancelAnimationFrame ??= () => {};
+  const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+  const screenPoint = (station, px, py) => {
+    const mesh = station.screen.mesh;
+    mesh.updateMatrixWorld(true);
+    const size = mesh.geometry.parameters;
+    return new THREE.Vector3(
+      (px / station.screen.w - 0.5) * size.width, (0.5 - py / station.screen.h) * size.height, 0
+    ).applyMatrix4(mesh.matrixWorld);
+  };
+  const center = h => (h.r !== undefined ? [h.x, h.y] : [(h.x0 + h.x1) / 2, (h.y0 + h.y1) / 2]);
+
+  for (const id of ['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed', 'q6-real']) {
+    const anchor = world.benchAnchor(id);
+    world.setBenchDeployed(id, true);
+    let probed = null;
+    const bench = new GasRig3D(null, { world: worldFrame(camera, anchor) });
+    bench.onProbe = hit => { probed = hit; };
+    const pressAt = p => {
+      const q = p.clone().project(camera);
+      bench.onPointer3D({ clientX: (q.x + 1) / 2 * 1280, clientY: (1 - q.y) / 2 * 720, preventDefault() {} });
+    };
+    let plates = 0, pressed = 0;
+    const stages = gasStages(id);
+    for (let i = 0; i < stages.length; i++) {
+      const st = stages[i];
+      layGas(bench, st);
+      if (bench.stations.length !== st.rigs.length) {
+        fail(`${id} stage ${i + 1}: ${st.rigs.length} plates declared, ${bench.stations.length} stations built`);
+        continue;
+      }
+      bench.drawAll();
+      bench.viewer.applyCamera();
+      camera.updateMatrixWorld(true);
+      for (const rec of bench.stations) {
+        plates++;
+        const where = `${id} stage ${i + 1} ${rec.item.label}`;
+        if (rec.station.screen.w < 8) fail(`${where}: the screen has no pixels`);
+        const hit = rec.hits?.find(h => h.key !== 'hand');
+        if (!hit) continue;
+        probed = null;
+        pressAt(screenPoint(rec.station, ...center(hit)));
+        if (!probed) fail(`${where}: a press on the picture (${hit.key}) read nothing`);
+        else if (probed.plateId !== rec.item.id) fail(`${where}: a press read plate ${probed.plateId}`);
+        pressed++;
+      }
+    }
+    bench.dispose();
+    world.setBenchDeployed(id, false);
+    ok(`${id}: all ${stages.length} stages built, ${plates} plates drawn and ${pressed} pressed through the real pointer path`);
+  }
+}
+await bellowsPasses();
+
+
 
 /* ================================================================ THE FOES
 
@@ -1337,6 +1441,12 @@ const CRAWLER_POSES = [
 const WARDEN_POSES = [
   ['idle'], ['unmoved'], ['cleaved'], ['conductive'], ['splayed', { arms: 6 }], ['splayed', { arms: 2 }],
   ['turned'], ['still'], ['locked'], ['free'], ['dispersed']
+];
+const BLADDER_POSES = [
+  ['idle'], ['rest'], ['slack'], ['swollen'], ['straining'], ['flat'], ['shaken'], ['dispersed']
+];
+const COMPRESSOR_POSES = [
+  ['idle'], ['laboured'], ['easy'], ['steady'], ['venting'], ['dispersed']
 ];
 const MOTH_POSES = [
   ['idle'], ['shedding', { dots: 1, speed: 2 }], ['shedding', { dots: 5, speed: 12 }], ['still'], ['dispersed']
@@ -1384,7 +1494,8 @@ function foeStage(cfg, stage, stageNo, aspects) {
   if (!enc) return null;
   world.setBenchDeployed(questId, true);
   const species = enc.species;
-  const table = species === 'salt husk' ? HUSK_POSES : species === 'slag crawler' ? CRAWLER_POSES : species === 'basalt warden' ? WARDEN_POSES : MOTH_POSES;
+  const table = species === 'salt husk' ? HUSK_POSES : species === 'slag crawler' ? CRAWLER_POSES : species === 'basalt warden' ? WARDEN_POSES
+    : species === 'gas bladder' ? BLADDER_POSES : species === 'the compressor' ? COMPRESSOR_POSES : MOTH_POSES;
 
   for (const [aspectName, aspect] of aspects) {
     const camera = new THREE.PerspectiveCamera(FOV, aspect, 0.05, 80);
@@ -1644,7 +1755,9 @@ console.log('');
 console.log('The foes — spoil standing in the wells\n');
 
 {
-  // LANTERNFALL: the lamp moths on the photocell. (`world` is still Lanternfall.)
+  // LANTERNFALL: the lamp moths on the photocell.
+  world = new LanternfallWorld(null);
+  world.scene.updateMatrixWorld(true);
   const { STAGES: PHOTON_STAGES } = LF['q2-photon'];
   await foePasses({
     questId: 'q2-photon', label: 'photocell',
@@ -1705,6 +1818,39 @@ console.log('The foes — spoil standing in the wells\n');
         return [[f.id, { rig: 'arms', arms: [{ kind: 'atom', sym: 'H' }, { kind: 'atom', sym: 'H' }, { kind: 'lone' }] }]];
       }) : []);
   }
+
+  // BELLOWS: gas bladders on every gas rig stage that fights, and the Compressor over the boss's five.
+  // (`world` becomes Bellows.)
+  world = new BellowsWorld(null);
+  world.scene.updateMatrixWorld(true);
+  const gasProbes = (st, enc) => {
+    if (!enc) return [];
+    const cfg = GASDATA.benchCfg(st, {});
+    const out = [];
+    for (const f of enc.foes) {
+      const rig = st.rigs.find(r => r.id === f.id);
+      const rest = rig.head === 'mixture'
+        ? (() => { const m = GASDATA.mixtureState(rig, cfg); return { P: GASDATA.planMixture(rig.parts, m.T, m.V).P, V: m.V }; })()
+        : (() => { const r = GASDATA.planGas(rig, cfg); return { P: r.P, V: r.V }; })();
+      if (rig.head === 'cylinder' || rig.head === 'mixture') {
+        out.push([f.id, { kind: 'gas', item: rig, cfg, rest }]);
+        const hot = rig.head === 'cylinder' ? { ...rig, n: (rig.n || 1) * 3 } : { ...rig, parts: rig.parts.map(p => ({ ...p, n: p.n * 3 })) };
+        out.push([f.id, { kind: 'gas', item: hot, cfg, rest }]);
+      } else if (rig.head === 'leak') out.push([f.id, { kind: 'leak', gas: rig.gas, seconds: 6 }]);
+      else if (rig.head === 'tube') out.push([f.id, { kind: 'tube', gas: rig.gas, seconds: 6, length: rig.length || 8 }]);
+      else if (rig.head === 'path') out.push([f.id, { kind: 'path', hits: 6 }]);
+    }
+    return out;
+  };
+  const bellowsCfg = (questId, label) => ({
+    questId, label, build: (camera, anchor) => new GasRig3D(null, { world: worldFrame(camera, anchor) }),
+    lay: (bench, st) => layGas(bench, st), items: st => st.rigs || [], env: {}, select: false
+  });
+  for (const id of ['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed', 'q6-real']) {
+    await foePasses(bellowsCfg(id, `gas rig (${id})`), BW[id].STAGES, gasProbes);
+  }
+  // The Compressor has no site of its own; its five phases stand on the first bench's plate.
+  await foePasses(bellowsCfg('q1-knocks', 'gas rig (the Compressor)'), BW['boss-compressor'].STAGES, gasProbes);
 }
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);
