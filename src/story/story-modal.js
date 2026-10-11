@@ -2,12 +2,11 @@
  * story-modal.js — Storyline onboarding and sector briefing modals.
  *
  * Provides:
- *   - openWorldStoryModal(world, opts): Diegetic world mission briefing modal.
- *     Automatically triggered on first visit to a world, and re-opened via the
- *     "Storyline" button on the HUD or world overview.
+ *   - openWorldStoryModal(world, opts): Tactical world mission briefing modal.
+ *     Shown before takeoff/landing so the player knows the stakes against
+ *     the Fifth Guild before flight.
  *   - openCampaignStoryModal(opts): Full campaign storyline onboarding modal
- *     covering the Quad-Guild Truce, the Avalon, living spoil, and the chemistry
- *     detective kit.
+ *     covering the Quad-Guild Truce, the rogue Fifth Guild, and forensic science.
  */
 
 import { showModal, closeModal } from '../ui/modal.js';
@@ -18,9 +17,9 @@ import { session } from '../session.js';
 import { esc } from '../ui/layout.js';
 
 /**
- * Open the mission briefing modal for a specific Learn world.
+ * Open the mission briefing modal for a specific world.
  * @param {object|string} worldOrId
- * @param {{ onClose?: Function }} opts
+ * @param {{ isPreLaunch?: boolean, onLaunch?: Function, onClose?: Function }} opts
  */
 export function openWorldStoryModal(worldOrId, opts = {}) {
   const worldId = typeof worldOrId === 'string' ? worldOrId : worldOrId?.id;
@@ -28,18 +27,19 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
     worldId,
     worldName: typeof worldOrId === 'object' ? worldOrId.world : worldId,
     act: 'act1',
-    arrival: 'Sensor telemetry active across the sector. Survey benches ready for deployment.',
-    closing: 'Sector survey logged in the ledger. Telematic data filed to the Avalon.',
-    spoilFamily: 'Anomalous spoil',
-    incident: 'Extraction installations have reported erratic automated behavior and unchartered mineral movements.',
-    objective: 'Apply the chemical principles of this unit across the benches to neutralize anomalies and recover forensic evidence.',
-    caseFileNote: 'Every reading logged here adds to the ongoing investigation into the ghost charter on the rim.'
+    arrival: 'Hostile Fifth Guild units detected in sector. Research stations ready for tactical deployment.',
+    closing: 'Sector secured and Fifth Guild saboteurs repelled. Forensic evidence logged to the Avalon.',
+    spoilFamily: 'Enemy units',
+    incident: 'The Fifth Guild has launched a raid on this sector, sabotaging local equipment and threatening the outpost.',
+    objective: 'Apply the chemical principles of this unit across the stations to neutralize enemy machines and recover stolen intel.',
+    caseFileNote: 'Every clue recovered from the Fifth Guild exposes their secret plan on the rim.'
   };
 
   const act = getAct(episode.act) || ACTS[0];
   const worldName = episode.worldName || (typeof worldOrId === 'object' ? worldOrId.world : worldId);
-  const worldTitle = typeof worldOrId === 'object' ? worldOrId.title : 'Sector Survey';
-  const worldUnit = typeof worldOrId === 'object' ? worldOrId.unit : 'Unit';
+  const worldTitle = typeof worldOrId === 'object' ? worldOrId.title : 'Tactical Mission';
+  const worldUnit = typeof worldOrId === 'object' ? worldOrId.unit : 'Sector';
+  const isPreLaunch = Boolean(opts.isPreLaunch || opts.onLaunch);
 
   session.setFlag(`story_world_seen_${worldId}`, true);
 
@@ -53,7 +53,7 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.6rem;">
           <div>
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 2px;">
-              <span class="eyebrow lit" style="color: var(--accent-gold); font-size: 0.68rem; letter-spacing: 0.14em;">${esc(act.title.toUpperCase())} // ${esc(worldUnit.toUpperCase())}</span>
+              <span class="eyebrow lit" style="color: var(--accent-amber); font-size: 0.68rem; letter-spacing: 0.14em;">ENEMY // THE FIFTH GUILD</span>
               <span class="tag live" style="font-size: 0.58rem; padding: 1px 6px;">${esc(episode.spoilFamily.toUpperCase())}</span>
             </div>
             <h2 style="font-family: var(--font-imperial); font-size: 1.3rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-bright); margin: 0;">
@@ -68,10 +68,10 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
         <!-- Mode Toggle Tabs -->
         <div class="map-tabs" role="tablist" style="display: flex; gap: 0.4rem; margin-bottom: 0.9rem;">
           <button type="button" id="tab-btn-sector" class="map-tab btn-secondary ${activeTab === 'sector' ? 'active' : ''}" style="flex: 1; padding: 6px 10px; font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em;">
-            Sector Dossier · ${esc(worldName)}
+            Sector Mission · ${esc(worldName)}
           </button>
           <button type="button" id="tab-btn-campaign" class="map-tab btn-secondary ${activeTab === 'campaign' ? 'active' : ''}" style="flex: 1; padding: 6px 10px; font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em;">
-            Campaign Saga · The Ghost Charter
+            War Report · The Fifth Guild
           </button>
         </div>
 
@@ -83,10 +83,10 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
         <!-- Footer Actions -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.15rem; padding-top: 0.75rem; border-top: 1px solid var(--border-durasteel);">
           <div style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);">
-            STATION: SALVAGE HAULER AVALON // TACTICAL COMMS
+            TACTICAL COMMS // SALVAGE HAULER AVALON
           </div>
-          <button type="button" id="story-modal-dismiss-btn" class="btn-primary" style="padding: 8px 18px; font-size: 0.85rem; letter-spacing: 0.1em;">
-            Acknowledge & Deploy ▶
+          <button type="button" id="story-modal-dismiss-btn" class="btn-primary" style="padding: 8px 18px; font-size: 0.85rem; letter-spacing: 0.08em;">
+            ${isPreLaunch ? `Take Off & Deploy to ${esc(worldName)} ▶` : 'Return to Mission ▶'}
           </button>
         </div>
       </div>
@@ -103,17 +103,17 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
         <!-- Why You Are Here -->
         <div class="holo-card" style="padding: 0.75rem 0.9rem; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
           <div class="eyebrow lit" style="color: var(--accent-amber); font-size: 0.64rem; margin-bottom: 0.25rem; letter-spacing: 0.12em;">
-            [ ⚠ SECTOR INCIDENT // WHY YOU ARE HERE ]
+            [ ⚠ ENEMY INCIDENT // THE FIFTH GUILD STRIKES ]
           </div>
           <p style="font-family: var(--font-sans); font-size: 0.82rem; line-height: 1.45; color: var(--text-bright); margin: 0;">
             ${esc(episode.incident)}
           </p>
         </div>
 
-        <!-- Your Forensic Objective -->
+        <!-- Your Tactical Objective -->
         <div class="holo-card" style="padding: 0.75rem 0.9rem; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-gold);">
           <div class="eyebrow lit" style="color: var(--accent-gold); font-size: 0.64rem; margin-bottom: 0.25rem; letter-spacing: 0.12em;">
-            [ 🎯 FORENSIC MISSION // YOUR GOAL ]
+            [ 🎯 MISSION OBJECTIVE // HOW TO WIN ]
           </div>
           <p style="font-family: var(--font-sans); font-size: 0.82rem; line-height: 1.45; color: var(--text-bright); margin: 0;">
             ${esc(episode.objective)}
@@ -123,7 +123,7 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
         <!-- Case File Connection -->
         <div class="holo-card" style="padding: 0.75rem 0.9rem; background: var(--plate-100); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-bronze);">
           <div class="eyebrow" style="color: var(--accent-bronze); font-size: 0.64rem; margin-bottom: 0.25rem; letter-spacing: 0.12em;">
-            [ 📂 CASE FILE CONNECTION // THE MYSTERY ]
+            [ 📂 ENEMY INTEL // CASE FILE DOSSIER ]
           </div>
           <p style="font-family: var(--font-mono); font-size: 0.76rem; line-height: 1.45; color: var(--text-secondary); margin: 0;">
             ${esc(episode.caseFileNote)}
@@ -138,28 +138,28 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
       <div style="display: grid; grid-template-columns: 1fr; gap: 0.65rem;">
         <div class="holo-card" style="padding: 0.75rem 0.9rem; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-amber);">
           <div class="eyebrow lit" style="color: var(--accent-amber); font-size: 0.64rem; margin-bottom: 0.25rem;">
-            01 · THE QUAD-GUILD TRUCE & THE AVALON
+            01 · THE FRONTIER ALLIANCE & THE AVALON
           </div>
           <p style="font-family: var(--font-sans); font-size: 0.82rem; line-height: 1.45; color: var(--text-bright); margin: 0;">
-            Four extractive monopolies divide the rim: Mineral Mining (Earth), Atmospheric Harvesters (Air), Thermal Smelters (Fire), and Moisture Extraction (Water). You are a junior survey hand aboard the forty-year-old salvage hauler <em>Avalon</em>, answering to Quartermaster Vess.
+            Four industrial Guilds divide the frontier: Earth Mining, Air Harvesters, Fire Smelters, and Water Extraction. You serve as a survey specialist aboard the forty-year-old salvage hauler <em>Avalon</em> under Quartermaster Vess.
           </p>
         </div>
 
         <div class="holo-card" style="padding: 0.75rem 0.9rem; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-gold);">
           <div class="eyebrow lit" style="color: var(--accent-gold); font-size: 0.64rem; margin-bottom: 0.25rem;">
-            02 · THE GHOST CHARTER & LIVING SPOIL
+            02 · THE ENEMY: THE FIFTH GUILD
           </div>
           <p style="font-family: var(--font-sans); font-size: 0.82rem; line-height: 1.45; color: var(--text-bright); margin: 0;">
-            Extraction installations across the frontier are abandoning operations overnight. Slag heaps and mineral tailings are twitching and walking as <strong>living spoil</strong>, while impossible refinery ledgers record mass appearing from nowhere. Mess decks whisper of an unchartered fifth power practicing alchemy.
+            A ruthless rogue army—<strong>The Fifth Guild</strong>—is attacking frontier outposts, raiding fuel depots, and building animated war machines from scrap. They claim to possess magical alchemy, but they are secretly building a forbidden doomsday weapon.
           </p>
         </div>
 
         <div class="holo-card" style="padding: 0.75rem 0.9rem; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-bronze);">
           <div class="eyebrow lit" style="color: var(--accent-bronze); font-size: 0.64rem; margin-bottom: 0.25rem;">
-            03 · FORENSIC CHEMISTRY: YOUR DETECTIVE KIT
+            03 · YOUR WEAPON: SCIENCE
           </div>
           <p style="font-family: var(--font-sans); font-size: 0.82rem; line-height: 1.45; color: var(--text-bright); margin: 0;">
-            Alchemy is physically impossible: chemical reactions strictly conserve mass and combine in discrete integer ratios. Chemistry is your detective kit to dismantle the spoil, prove what is happening, and gather clues in the <strong>Case File</strong> to uncover The Catalyst and the transmutation core on Cinder Halo.
+            You defeat the enemy by mastering the physical laws of chemistry: mass is strictly conserved, molecules break at their weakest bonds, and energy follows exact rules. Real science is your weapon to shatter enemy armor, neutralize their traps, and stop their armada.
           </p>
         </div>
       </div>
@@ -173,9 +173,9 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
     if (transmissionEl?.destroy) transmissionEl.destroy();
 
     transmissionEl = createTransmissionElement({
-      speaker: 'VESS // SECTOR DISPATCH',
-      badge: `${worldUnit.toUpperCase()} · DISPATCH`,
-      subtitle: `${worldName.toUpperCase()} // SECTOR TELEMETRY`,
+      speaker: 'VESS // TACTICAL DISPATCH',
+      badge: `${worldUnit.toUpperCase()} · ENEMY ALERT`,
+      subtitle: `${worldName.toUpperCase()} // HOSTILE INCIDENT`,
       text: episode.arrival,
       accentColor: 'var(--accent-amber)',
       speed: 'normal'
@@ -190,12 +190,12 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
 
     modalEl.querySelector('#story-modal-close-x')?.addEventListener('click', () => {
       soundscape.playToggleClack();
-      cleanupAndClose();
+      cleanupAndClose(true);
     });
 
     modalEl.querySelector('#story-modal-dismiss-btn')?.addEventListener('click', () => {
       soundscape.playBondSnap();
-      cleanupAndClose();
+      cleanupAndClose(true);
     });
 
     modalEl.querySelector('#tab-btn-sector')?.addEventListener('click', () => {
@@ -213,10 +213,16 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
     });
   }
 
-  function cleanupAndClose() {
+  function cleanupAndClose(triggerLaunch = false) {
     if (transmissionEl?.destroy) transmissionEl.destroy();
     transmissionEl = null;
-    closeModal(opts.onClose);
+    closeModal(() => {
+      if (triggerLaunch && opts.onLaunch) {
+        opts.onLaunch();
+      } else if (opts.onClose) {
+        opts.onClose();
+      }
+    });
   }
 
   function refreshModal() {
@@ -245,7 +251,8 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
     onClose: () => {
       if (transmissionEl?.destroy) transmissionEl.destroy();
       transmissionEl = null;
-      if (opts.onClose) opts.onClose();
+      if (opts.onLaunch) opts.onLaunch();
+      else if (opts.onClose) opts.onClose();
     }
   });
 
@@ -254,8 +261,7 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
 }
 
 /**
- * Open the 4-part campaign storyline onboarding modal (The Ghost Charter & The Avalon).
- * Can be explored after guild selection or reopened anytime from the Bridge or Star Map.
+ * Open the 4-part campaign storyline onboarding modal.
  * @param {{ onComplete?: Function, onClose?: Function }} opts
  */
 export function openCampaignStoryModal(opts = {}) {
@@ -264,56 +270,56 @@ export function openCampaignStoryModal(opts = {}) {
 
   const SLIDES = [
     {
-      kicker: '01 / 04 · THE QUAD-GUILD TRUCE',
-      title: 'Four Monopolies on the Rim',
+      kicker: '01 / 04 · THE QUAD-GUILD ALLIANCE',
+      title: 'Four Monopolies on the Frontier',
       speaker: 'VESS // QUARTERMASTER',
-      transmission: 'Four Imperial Guilds divide the frontier into extractive monopolies. The Avalon flies between them under an uneasy forty-year truce.',
+      transmission: 'Four industrial Guilds divide the frontier. Your ship, the Avalon, operates between them under a shared peace treaty.',
       bullets: [
-        { label: 'Mineral Mining Guild (Earth)', desc: 'Strip-mines iron, heavy silicates, and deep ores from dead asteroids and planetary crusts.' },
-        { label: 'Atmospheric Harvesters (Air)', desc: 'Skims toxic gas giant envelopes and turbulent storm basins for noble gases and volatile propellants.' },
-        { label: 'Thermal Smelters (Fire)', desc: 'Operates orbital crucibles and geothermal blast-wells that crack crude rock into working alloy.' },
-        { label: 'Moisture Extraction (Water)', desc: 'Filters subterranean brine, heavy water, and industrial coolants from desiccated seabeds.' }
+        { label: 'Mineral Mining (Earth)', desc: 'Strip-mines iron, heavy metals, and asteroid rock from barren planetary crusts.' },
+        { label: 'Atmospheric Harvesters (Air)', desc: 'Skims high-altitude storm clouds and gas giants for volatile starship fuels.' },
+        { label: 'Thermal Smelters (Fire)', desc: 'Operates orbital crucibles and blast-wells that melt raw stone into battle armor.' },
+        { label: 'Moisture Extraction (Water)', desc: 'Filters heavy water and industrial coolants from subterranean ice reserves.' }
       ],
-      note: 'Your Station: A junior survey hand aboard the salvage hauler Avalon, maintained by cold rivets, steam lines, and Quartermaster Vess.'
+      note: 'Your Station: A junior survey specialist aboard the salvage hauler Avalon, answering to Quartermaster Vess.'
     },
     {
-      kicker: '02 / 04 · THE GHOST CHARTER',
-      title: 'Living Spoil & Broken Ledgers',
+      kicker: '02 / 04 · THE ENEMY: THE FIFTH GUILD',
+      title: 'Rogue Raiders & Sabotage',
       speaker: 'VESS // QUARTERMASTER',
-      transmission: 'Smelters are being abandoned with fireboxes burning. Slag heaps are twitching and walking under their own power across the perimeter.',
+      transmission: 'A hostile shadow faction has struck outposts across the rim. Frontier crews call them the Fifth Guild.',
       bullets: [
-        { label: 'The Fifth Presence', desc: 'Ships flying no imperial guild seal are transmitting on emergency transponder bands dead for thirty seasons.' },
-        { label: 'Animated Spoil', desc: 'Refined tailings and mineral waste are crystallizing and crawling under electromagnetic radiation.' },
-        { label: 'Impossible Inventories', desc: 'Forward refinery ledgers report output tonnage that exceeds the raw ore fed into the intake hoppers.' },
-        { label: 'The Mess Deck Rumor', desc: 'Crews across every rim canteen whisper that an unchartered ghost fleet has discovered alchemy.' }
+        { label: 'Coordinated Raids', desc: 'The Fifth Guild is attacking frontier outposts, raiding fuel supplies, and destroying defenses.' },
+        { label: 'Rogue War Machines', desc: 'They deploy autonomous crawling war machines made from scrap and salt to guard their sabotage.' },
+        { label: 'Impossible Ledgers', desc: 'Captured enemy logs claim they can create tons of metal out of thin air using magical alchemy.' },
+        { label: 'The Dangerous Reality', desc: 'Alchemy is a lie. The Fifth Guild is secretly restructuring atomic nuclei with stolen military hardware.' }
       ],
-      note: 'The Reality: Alchemy is impossible. Ordinary electron chemistry cannot turn salt into heavy metals or create mass from nothing.'
+      note: 'Enemy Alert: The Fifth Guild is actively terrorizing the frontier. We must expose their operations and protect the fleet.'
     },
     {
-      kicker: '03 / 04 · THE DETECTIVE KIT',
-      title: 'Forensic Chemistry as Your Weapon',
+      kicker: '03 / 04 · YOUR WEAPON: SCIENCE',
+      title: 'Dismantling Enemy Machines',
       speaker: 'VESS // QUARTERMASTER',
-      transmission: 'The chemistry is your detective kit. You do not fight with blasters; you fight by measuring what the laws of matter allow.',
+      transmission: 'You do not fight with clumsy blasters. You defeat the Fifth Guild by understanding how matter and energy actually work.',
       bullets: [
-        { label: 'Definite Proportions & Conservation', desc: 'Every chemical reaction conserves mass and combines in whole-number ratios. An over-mass ledger is not chemistry.' },
-        { label: 'Electronic & Molecular Structure', desc: 'Atomic numbers, emission spectra, bond angles, and kinetics explain how matter behaves under load.' },
-        { label: 'Neutralizing the Spoil', desc: 'Spoil obeys the laws measured at the bench. A mixture separates; an ionic lattice cleaves; a moth disperses under tuned light.' },
-        { label: 'The Case File Dossier', desc: 'Every world yields hard physical clues stored in the Case File terminal aboard the Avalon.' }
+        { label: 'Exposing Their Frauds', desc: 'The law of conservation proves matter cannot be made from nothing. Every enemy machine has a physical flaw.' },
+        { label: 'Crushing Enemy Armor', desc: 'Understanding bond strength and crystal cleave planes lets you shatter enemy stone golems and barricades.' },
+        { label: 'Disabling Enemy Traps', desc: 'Tuning light frequencies and electrical circuits burns out their spy drones, power leeches, and light-moths.' },
+        { label: 'The Case File Dossier', desc: 'Every defeated enemy commander and reclaimed station yields physical intel stored in your terminal.' }
       ],
-      note: 'Your Mission: Use the lab benches across the 14 worlds to analyze anomalous specimens, dismantle spoil, and document forensic evidence.'
+      note: 'Mission Directive: Deploy to each attacked world, dismantle the Fifth Guild\'s machines, and collect evidence.'
     },
     {
-      kicker: '04 / 04 · STANDING ORDERS',
-      title: 'The Road Across Fourteen Worlds',
+      kicker: '04 / 04 · THE CAMPAIGN ROAD',
+      title: 'Stop the Fifth Guild\'s Superweapon',
       speaker: 'VESS // QUARTERMASTER',
-      transmission: 'Four acts across the rim. Follow the thermal plumes to Cinder Halo and uncover the truth behind the forgotten manifests.',
+      transmission: 'Four acts across fourteen worlds. Trace the Fifth Guild\'s trail of sabotage to their secret command core on Cinder Halo.',
       bullets: [
-        { label: 'Act I: The Charter (Units 1–3)', desc: 'Tallow, Lanternfall, and Ligar: survey mobile spoil, recover unliveried marks, and verify basic elements.' },
-        { label: 'Act II: Pressure (Units 4–7)', desc: 'Bellows, Ember Reach, Mirrowen, and Kettle: trace recruitment of active crews and seize the impossible over-mass ledger.' },
-        { label: 'Act III: Balance (Units 8–11)', desc: 'Teeter, Verdigris, Brinewire, and Quicklight: restore equilibrium, neutralize acid floods, and uncover the title: The Catalyst.' },
-        { label: 'Act IV: The Core (Units 12–14)', desc: 'Lodestone, Thornmere, and Cinder Halo: trace subatomic plumes to the ancient transmutation works.' }
+        { label: 'Act I: Strike on the Frontier (Units 1–3)', desc: 'Defend Tallow, Lanternfall, and Ligar against sudden raids and autonomous stone war machines.' },
+        { label: 'Act II: Stolen Power (Units 4–7)', desc: 'Stop hijacked gas skimmers, recover stolen heat energy, and seize an illegal golem factory.' },
+        { label: 'Act III: Total Sabotage (Units 8–11)', desc: 'Neutralize acid weapons, fix sabotaged reactors, and unmask the enemy commander: The Catalyst.' },
+        { label: 'Act IV: The Doomsday Core (Units 12–14)', desc: 'Destroy enemy magnetic beam-cannons, breach their swamp fortress, and shut down their nuclear superweapon on Cinder Halo.' }
       ],
-      note: 'The Reveal: The Fifth are the abandoned crews the Guilds wrote off. By mastering chemistry, you bridge corporate abandonment and justice.'
+      note: 'Final Objective: Master the laws of chemistry to defeat the Fifth Guild, protect the colonies, and uncover the truth behind the war.'
     }
   ];
 

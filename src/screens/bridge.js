@@ -14,7 +14,7 @@ import { renderGardensMap } from "../ui/gardens-map.js";
 import { QUEST1_STORY } from "../story/quest1.js";
 import { tierManager } from "../three/tier.js";
 import { playCinematic } from "../ui/cinematic.js";
-import { openCampaignStoryModal } from "../story/story-modal.js";
+import { openCampaignStoryModal, openWorldStoryModal } from "../story/story-modal.js";
 
 let unsubscribeBridge = null;
 let bridgeHoloListener = null;
@@ -176,6 +176,21 @@ export function renderBridge(container) {
 
     container.querySelector(".bridge-quest-cta")?.addEventListener("click", async (e) => {
       e.preventDefault();
+      if (!session.hasFlag('story_world_seen_erebus')) {
+        openWorldStoryModal('erebus', {
+          isPreLaunch: true,
+          onLaunch: async () => {
+            session.setFlag('story_world_seen_erebus', true);
+            if (!stage.canVoyage?.("erebus")) {
+              try {
+                await playCinematic("launch");
+              } catch (err) {}
+            }
+            window.location.hash = "#/quest";
+          }
+        });
+        return;
+      }
       // At T4 the Avalon flies there itself (three/voyage.js); the launch
       // film is for the tiers that cannot draw the flight.
       if (!stage.canVoyage?.("erebus")) {

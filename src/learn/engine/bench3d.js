@@ -749,6 +749,8 @@ export class BenchViewer3D {
     this.haloGroup = null;
     this.haloGeos = [];
     this.haloMaterials = [];
+    this.haloBadges = [];
+    this.haloPointers = [];
 
     // A constrained look-around: the player can lean over the bench and see a
     // piece from another side, but never get behind or under it.
@@ -2063,9 +2065,23 @@ export class BenchViewer3D {
     this.foes?.update(delta);
 
     if (this.haloMaterials && this.haloMaterials.length > 0) {
-      const pulse = 0.55 + 0.35 * Math.sin(this.elapsed * 4.5);
+      const pulse = 0.78 + 0.22 * Math.sin(this.elapsed * 5.0);
       for (const m of this.haloMaterials) {
-        m.opacity = (m.userData.baseOpacity || 0.75) * pulse;
+        if (m.userData?.noPulse) continue;
+        m.opacity = (m.userData.baseOpacity || 0.85) * pulse;
+      }
+    }
+    if (this.haloPointers && this.haloPointers.length > 0) {
+      const bob = Math.sin(this.elapsed * 4.5) * 0.035;
+      const rot = this.elapsed * 2.5;
+      for (const p of this.haloPointers) {
+        p.mesh.position.y = p.baseY + bob;
+        p.mesh.rotation.y = rot;
+      }
+    }
+    if (this.camera && this.haloBadges && this.haloBadges.length > 0) {
+      for (const b of this.haloBadges) {
+        b.quaternion.copy(this.camera.quaternion);
       }
     }
   }
@@ -2183,85 +2199,158 @@ export class BenchViewer3D {
   }
 
   _createHaloBadge(text, subtext) {
+    if (typeof document === 'undefined') return new THREE.Group();
     const canvas = document.createElement('canvas');
-    canvas.width = 384;
-    canvas.height = 112;
+    canvas.width = 512;
+    canvas.height = 140;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'rgba(14, 12, 10, 0.94)';
-    ctx.fillRect(0, 0, 384, 112);
-    ctx.strokeStyle = '#d99423';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, 380, 108);
 
-    ctx.fillStyle = '#d99423';
-    ctx.font = 'bold 32px "Share Tech Mono", monospace';
+    // High-contrast dark backdrop with neon gold border glow
+    ctx.fillStyle = 'rgba(10, 8, 14, 0.96)';
+    if (ctx.roundRect) ctx.roundRect(4, 4, 504, 132, 14);
+    else ctx.rect(4, 4, 504, 132);
+    ctx.fill();
+
+    // Outer neon glow border
+    ctx.strokeStyle = '#ffb300';
+    ctx.lineWidth = 6;
+    ctx.shadowColor = '#ffaa00';
+    ctx.shadowBlur = 18;
+    ctx.stroke();
+
+    // Inner sharp accent line
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#ffe57f';
+    ctx.lineWidth = 2;
+    if (ctx.roundRect) ctx.roundRect(10, 10, 492, 120, 8);
+    else ctx.rect(10, 10, 492, 120);
+    ctx.stroke();
+
+    // Primary label text
+    ctx.fillStyle = '#ffc107';
+    ctx.font = '900 36px "Share Tech Mono", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(text, 192, 16);
+    ctx.fillText(text, 256, 20);
 
+    // Subtext instruction
     if (subtext) {
-      ctx.fillStyle = '#b8afa0';
-      ctx.font = '20px "Share Tech Mono", monospace';
-      ctx.fillText(subtext, 192, 62);
+      ctx.fillStyle = '#fff8e1';
+      ctx.font = 'bold 22px "Share Tech Mono", monospace';
+      ctx.fillText(subtext, 256, 76);
     }
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
     const mat = new THREE.MeshBasicMaterial({
-      map: tex, transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false
+      map: tex,
+      transparent: true,
+      opacity: 0.98,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      depthTest: false,
     });
-    mat.userData = { texture: tex, baseOpacity: 0.95 };
+    mat.renderOrder = 1000;
+    mat.userData = { texture: tex, baseOpacity: 0.98, noPulse: true };
     this.haloMaterials.push(mat);
-    const geo = new THREE.PlaneGeometry(0.25, 0.073);
+
+    const geo = new THREE.PlaneGeometry(0.46, 0.126);
     this.haloGeos.push(geo);
     const mesh = new THREE.Mesh(geo, mat);
-    mesh.rotation.x = -0.25;
+    mesh.renderOrder = 1000;
+    this.haloBadges = this.haloBadges || [];
+    this.haloBadges.push(mesh);
     return mesh;
   }
 
-  _createHaloMat(color = 0xd99423, baseOpacity = 0.8) {
+  _createHaloMat(color = 0xffc107, baseOpacity = 0.85, additive = true) {
     const mat = new THREE.MeshBasicMaterial({
       color,
       transparent: true,
       opacity: baseOpacity,
       side: THREE.DoubleSide,
-      depthWrite: false
+      depthWrite: false,
+      blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
     });
-    mat.userData = { baseOpacity };
+    mat.renderOrder = 400;
+    mat.userData = { baseOpacity, additive };
     this.haloMaterials.push(mat);
     return mat;
+  }
+
+  _createHaloBeam(radiusTop, radiusBottom, height, color = 0xffa000, opacity = 0.45) {
+    const geo = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, 32, 1, true);
+    this.haloGeos.push(geo);
+    const mat = this._createHaloMat(color, opacity, true);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.renderOrder = 350;
+    return mesh;
+  }
+
+  _createHaloPointer(color = 0xffd700) {
+    const group = new THREE.Group();
+    // Inverted cone pointing down at instrument
+    const coneGeo = new THREE.ConeGeometry(0.045, 0.12, 16);
+    this.haloGeos.push(coneGeo);
+    const coneMat = this._createHaloMat(color, 0.95, false);
+    const cone = new THREE.Mesh(coneGeo, coneMat);
+    cone.rotation.x = Math.PI;
+    group.add(cone);
+
+    // Glowing halo ring around base of cone
+    const ringGeo = new THREE.TorusGeometry(0.065, 0.008, 8, 24);
+    this.haloGeos.push(ringGeo);
+    const ringMat = this._createHaloMat(0xffb700, 0.90, true);
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.06;
+    group.add(ring);
+
+    return group;
   }
 
   _buildDialHalo(dialRec) {
     if (!dialRec?.group) return;
     const p = dialRec.group.position;
-    // 1. Base ring on plate
-    const baseGeo = new THREE.RingGeometry(0.12, 0.18, 36);
+    // 1. Concentric luminous floor rings around plinth (outer radius clear of plinth)
+    const baseGeo = new THREE.RingGeometry(0.20, 0.28, 48);
     this.haloGeos.push(baseGeo);
-    const baseMesh = new THREE.Mesh(baseGeo, this._createHaloMat(0xd99423, 0.75));
+    const baseMesh = new THREE.Mesh(baseGeo, this._createHaloMat(0xffc107, 0.85, true));
     baseMesh.rotation.x = -Math.PI / 2;
-    baseMesh.position.set(p.x, 0.898, p.z);
+    baseMesh.position.set(p.x, 0.906, p.z);
     this.haloGroup.add(baseMesh);
 
-    // 2. Outer pulsing accent ring
-    const outerGeo = new THREE.RingGeometry(0.20, 0.22, 36);
-    this.haloGeos.push(outerGeo);
-    const outerMesh = new THREE.Mesh(outerGeo, this._createHaloMat(0xd99423, 0.5));
-    outerMesh.rotation.x = -Math.PI / 2;
-    outerMesh.position.set(p.x, 0.898, p.z);
-    this.haloGroup.add(outerMesh);
+    // Laser accent outer ring
+    const laserGeo = new THREE.RingGeometry(0.28, 0.296, 48);
+    this.haloGeos.push(laserGeo);
+    const laserMesh = new THREE.Mesh(laserGeo, this._createHaloMat(0xff9100, 0.95, true));
+    laserMesh.rotation.x = -Math.PI / 2;
+    laserMesh.position.set(p.x, 0.907, p.z);
+    this.haloGroup.add(laserMesh);
 
-    // 3. Collar ring around knob
-    const collarGeo = new THREE.RingGeometry(0.055, 0.075, 36);
+    // 2. Volumetric vertical light pillar cylinder around dial
+    const beam = this._createHaloBeam(0.22, 0.25, 0.38, 0xffa000, 0.45);
+    beam.position.set(p.x, 1.09, p.z);
+    this.haloGroup.add(beam);
+
+    // 3. Bright glowing collar ring directly surrounding the knob
+    const collarGeo = new THREE.RingGeometry(0.065, 0.095, 36);
     this.haloGeos.push(collarGeo);
-    const collarMesh = new THREE.Mesh(collarGeo, this._createHaloMat(0xffb733, 0.85));
+    const collarMesh = new THREE.Mesh(collarGeo, this._createHaloMat(0xffea00, 0.95, true));
     collarMesh.rotation.x = -Math.PI / 2 + 0.62;
-    collarMesh.position.set(p.x, 0.945, p.z + 0.012);
+    collarMesh.position.set(p.x, 0.985, p.z + 0.012);
     this.haloGroup.add(collarMesh);
 
-    // 4. Floating badge
-    const badge = this._createHaloBadge('TURN DIAL', 'DRAG OR SCROLL WHEEL');
-    badge.position.set(p.x, 1.08, p.z + 0.08);
+    // 4. Animated bobbing pointer cone pointing right at knob
+    const ptr = this._createHaloPointer(0xffd700);
+    ptr.position.set(p.x, 1.18, p.z + 0.012);
+    this.haloGroup.add(ptr);
+    this.haloPointers = this.haloPointers || [];
+    this.haloPointers.push({ mesh: ptr, baseY: 1.18 });
+
+    // 5. Billboarded high-contrast badge
+    const badge = this._createHaloBadge('TURN DIAL', 'DRAG KNOB OR SCROLL WHEEL');
+    badge.position.set(p.x, 1.34, p.z + 0.02);
     this.haloGroup.add(badge);
   }
 
@@ -2270,11 +2359,13 @@ export class BenchViewer3D {
     if (!bank) return;
     const w = bank.width || 0.42;
     const d = bank.depth || 0.22;
+
+    // Floor frame surrounding key bank
     const s = new THREE.Shape();
-    const hw = w / 2 + 0.03;
-    const hd = d / 2 + 0.03;
-    const iw = w / 2 + 0.005;
-    const id = d / 2 + 0.005;
+    const hw = w / 2 + 0.06;
+    const hd = d / 2 + 0.06;
+    const iw = w / 2 + 0.01;
+    const id = d / 2 + 0.01;
     s.moveTo(-hw, -hd);
     s.lineTo(hw, -hd);
     s.lineTo(hw, hd);
@@ -2290,13 +2381,26 @@ export class BenchViewer3D {
 
     const frameGeo = new THREE.ShapeGeometry(s);
     this.haloGeos.push(frameGeo);
-    const frameMesh = new THREE.Mesh(frameGeo, this._createHaloMat(0xd99423, 0.75));
+    const frameMesh = new THREE.Mesh(frameGeo, this._createHaloMat(0xffc107, 0.85, true));
     frameMesh.rotation.x = -Math.PI / 2;
-    frameMesh.position.set(bank.x, 0.898, bank.z);
+    frameMesh.position.set(bank.x, 0.906, bank.z);
     this.haloGroup.add(frameMesh);
 
+    // Volumetric light beam enclosing keys
+    const beam = this._createHaloBeam(hw, hw * 1.05, 0.35, 0xffa000, 0.40);
+    beam.position.set(bank.x, 1.07, bank.z);
+    this.haloGroup.add(beam);
+
+    // Animated bobbing pointer cone pointing down at keys
+    const ptr = this._createHaloPointer(0xffd700);
+    ptr.position.set(bank.x, 1.18, bank.z);
+    this.haloGroup.add(ptr);
+    this.haloPointers = this.haloPointers || [];
+    this.haloPointers.push({ mesh: ptr, baseY: 1.18 });
+
+    // Billboarded high-contrast badge
     const badge = this._createHaloBadge('BENCH KEYS', 'CLICK ENGRAVED PLATES');
-    badge.position.set(bank.x, 1.05, bank.z);
+    badge.position.set(bank.x, 1.34, bank.z);
     this.haloGroup.add(badge);
   }
 
@@ -2304,30 +2408,66 @@ export class BenchViewer3D {
     if (this.stations && this.stations.length > 0) {
       for (const st of this.stations) {
         const sx = st.group ? st.group.position.x : 0;
-        const wellGeo = new THREE.RingGeometry(0.22, 0.26, 40);
-        this.haloGeos.push(wellGeo);
-        const wellMesh = new THREE.Mesh(wellGeo, this._createHaloMat(0xd99423, 0.7));
-        wellMesh.rotation.x = -Math.PI / 2;
-        wellMesh.position.set(sx, 0.898, 0);
-        this.haloGroup.add(wellMesh);
 
+        // 1. Glowing rim ring right on top of the sample well rim (y = 0.965)
+        const rimGeo = new THREE.RingGeometry(0.26, 0.33, 40);
+        this.haloGeos.push(rimGeo);
+        const rimMesh = new THREE.Mesh(rimGeo, this._createHaloMat(0xffc107, 0.90, true));
+        rimMesh.rotation.x = -Math.PI / 2;
+        rimMesh.position.set(sx, 0.965, 0);
+        this.haloGroup.add(rimMesh);
+
+        // Outer base ring on the bench plate
+        const baseGeo = new THREE.RingGeometry(0.36, 0.42, 40);
+        this.haloGeos.push(baseGeo);
+        const baseMesh = new THREE.Mesh(baseGeo, this._createHaloMat(0xff9100, 0.75, true));
+        baseMesh.rotation.x = -Math.PI / 2;
+        baseMesh.position.set(sx, 0.906, 0);
+        this.haloGroup.add(baseMesh);
+
+        // 2. Volumetric vertical light pillar cylinder rising out of well
+        const beam = this._createHaloBeam(0.26, 0.29, 0.42, 0xffaa00, 0.42);
+        beam.position.set(sx, 1.17, 0);
+        this.haloGroup.add(beam);
+
+        // 3. Animated bobbing pointer cone pointing into well
+        const ptr = this._createHaloPointer(0xffd700);
+        ptr.position.set(sx, 1.28, 0);
+        this.haloGroup.add(ptr);
+        this.haloPointers = this.haloPointers || [];
+        this.haloPointers.push({ mesh: ptr, baseY: 1.28 });
+
+        // 4. Billboarded high-contrast badge
         const badge = this._createHaloBadge('SAMPLE WELL', 'CLICK TO SELECT');
-        badge.position.set(sx, 1.14, 0);
+        badge.position.set(sx, 1.44, 0);
         this.haloGroup.add(badge);
       }
     } else {
       const nodes = this.framedNodes();
       for (const fn of nodes) {
         if (!fn.group) continue;
-        const nodeGeo = new THREE.RingGeometry(0.25, 0.32, 40);
-        this.haloGeos.push(nodeGeo);
-        const nodeMesh = new THREE.Mesh(nodeGeo, this._createHaloMat(0xd99423, 0.7));
-        nodeMesh.rotation.x = -Math.PI / 2;
-        nodeMesh.position.set(fn.group.position.x, 0.898, fn.group.position.z);
-        this.haloGroup.add(nodeMesh);
+        const fx = fn.group.position.x;
+        const fz = fn.group.position.z;
+
+        const baseGeo = new THREE.RingGeometry(0.28, 0.36, 40);
+        this.haloGeos.push(baseGeo);
+        const baseMesh = new THREE.Mesh(baseGeo, this._createHaloMat(0xffc107, 0.90, true));
+        baseMesh.rotation.x = -Math.PI / 2;
+        baseMesh.position.set(fx, 0.965, fz);
+        this.haloGroup.add(baseMesh);
+
+        const beam = this._createHaloBeam(0.28, 0.32, 0.42, 0xffaa00, 0.42);
+        beam.position.set(fx, 1.17, fz);
+        this.haloGroup.add(beam);
+
+        const ptr = this._createHaloPointer(0xffd700);
+        ptr.position.set(fx, 1.28, fz);
+        this.haloGroup.add(ptr);
+        this.haloPointers = this.haloPointers || [];
+        this.haloPointers.push({ mesh: ptr, baseY: 1.28 });
 
         const badge = this._createHaloBadge('SAMPLE RIG', 'CLICK TO INTERACT');
-        badge.position.set(fn.group.position.x, 1.14, fn.group.position.z);
+        badge.position.set(fx, 1.44, fz);
         this.haloGroup.add(badge);
       }
     }
@@ -2365,6 +2505,8 @@ export class BenchViewer3D {
     }
     this.haloGeos = [];
     this.haloMaterials = [];
+    this.haloBadges = [];
+    this.haloPointers = [];
     this.haloGroup = null;
   }
 

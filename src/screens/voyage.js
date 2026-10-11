@@ -25,6 +25,9 @@ export function renderVoyageHud(container) {
         <div class="voyage-dest"></div>
         <div class="voyage-phase"></div>
         <div class="voyage-bar" aria-hidden="true"><span></span></div>
+        <div class="voyage-intel" style="margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-durasteel); font-family: var(--font-mono); font-size: 0.64rem; color: var(--accent-amber); line-height: 1.3;">
+          ⚠ ALERT: The Fifth Guild has struck this sector. Maintain tactical readiness.
+        </div>
       </section>
     </div>
   `;

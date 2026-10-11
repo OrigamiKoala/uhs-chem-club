@@ -102,7 +102,7 @@ function learnPanel() {
             </div>
             <div class="map-learn-body">
               <div class="map-learn-name">${esc(w.world)}</div>
-              <div class="eyebrow map-learn-place">${esc(w.title)}</div>
+              <div class="eyebrow map-learn-place" style="color: var(--accent-amber); font-size: 0.65rem;">ENEMY // THE FIFTH GUILD</div>
               <p class="map-learn-line">${esc(w.line)}</p>
               <div class="eyebrow map-learn-count">
                 ${w.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} complete` : ""}
@@ -113,7 +113,7 @@ function learnPanel() {
                 Storyline
               </button>
               ${enterable
-                ? `<a href="#/learn/${esc(w.id)}" class="btn-primary quest-btn-sm m-tap" style="text-decoration: none;">${walk ? `Enter ${esc(w.world)}` : "Enter"}</a>`
+                ? `<a href="#/learn/${esc(w.id)}" class="btn-primary quest-btn-sm m-tap learn-enter-btn" data-world-id="${esc(w.id)}" style="text-decoration: none;">${walk ? `Enter ${esc(w.world)}` : "Enter"}</a>`
                 : `<span class="eyebrow map-learn-blocked">${st === "locked" ? "Locked" : "Coming soon"}</span>`}
               ${practiceKey(w)}
             </div>
@@ -130,10 +130,36 @@ function bindTabs(container) {
   // rather than twice in renderStarMap.
   bindPracticeKeys(container);
 
+  container.querySelectorAll('.learn-enter-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const worldId = btn.dataset.worldId;
+      if (!worldId) return;
+      if (!session.hasFlag(`story_world_seen_${worldId}`)) {
+        e.preventDefault();
+        const w = WORLDS.find(x => x.id === worldId);
+        openWorldStoryModal(w || worldId, {
+          isPreLaunch: true,
+          onLaunch: () => {
+            session.setFlag(`story_world_seen_${worldId}`, true);
+            window.location.hash = `#/learn/${worldId}`;
+          }
+        });
+      }
+    });
+  });
+
   container.querySelectorAll('.learn-story-modal-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const w = WORLDS.find(x => x.id === btn.dataset.storyWorld);
-      if (w) openWorldStoryModal(w);
+      if (w) {
+        openWorldStoryModal(w, {
+          isPreLaunch: true,
+          onLaunch: () => {
+            session.setFlag(`story_world_seen_${w.id}`, true);
+            window.location.hash = `#/learn/${w.id}`;
+          }
+        });
+      }
     });
   });
 
@@ -346,6 +372,22 @@ export function renderStarMap(container) {
   async function handleSector01Enter() {
     if (!canPlay) {
       window.location.hash = "#/demo";
+      return;
+    }
+
+    if (!session.hasFlag('story_world_seen_erebus')) {
+      openWorldStoryModal('erebus', {
+        isPreLaunch: true,
+        onLaunch: async () => {
+          session.setFlag('story_world_seen_erebus', true);
+          if (!stage.canVoyage?.("erebus")) {
+            try {
+              await playCinematic("launch");
+            } catch (e) {}
+          }
+          window.location.hash = "#/quest";
+        }
+      });
       return;
     }
 

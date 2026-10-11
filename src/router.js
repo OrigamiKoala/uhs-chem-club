@@ -11,6 +11,7 @@ import { isQuestOpen, isQuestComplete, nextQuest } from './learn/progress.js';
 import erebusData from './three/world-data/erebus.json' with { type: 'json' };
 import { soundscape } from './audio/soundscape.js';
 import { gameMode } from './game-mode.js';
+import { openWorldStoryModal } from './story/story-modal.js';
 
 import { renderLanding } from './screens/landing.js';
 import { renderRegister } from './screens/register.js';
@@ -262,6 +263,32 @@ export class Router {
       stage.enterShipScene('bridge');
     }
     if (!stage.canVoyage(target.key)) return false;
+
+    // Show storyline briefing BEFORE take off and before travel/landing animation
+    const m = matchParamRoute(raw);
+    const worldId = target.key === 'erebus' ? 'erebus' : (m?.params?.worldId || target.key);
+    const seenFlag = `story_world_seen_${worldId}`;
+    const isAlreadyOnDest = stage.mode === 'world' && v?.parked?.key === target.key;
+
+    if (!isAlreadyOnDest && !session.hasFlag(seenFlag)) {
+      openWorldStoryModal(worldId, {
+        isPreLaunch: true,
+        onLaunch: () => {
+          session.setFlag(seenFlag, true);
+          this._executeVoyage(target, raw);
+        },
+        onClose: () => {
+          session.setFlag(seenFlag, true);
+          this._executeVoyage(target, raw);
+        }
+      });
+      return true;
+    }
+
+    return this._executeVoyage(target, raw);
+  }
+
+  _executeVoyage(target, raw) {
     const res = stage.requestVoyage(target);
     if (!res) return false;
     if (`#${raw}` !== target.hash) {

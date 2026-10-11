@@ -22,7 +22,7 @@ export const QUEST1_STORY = {
     sector: 'Sector 01 · Erebus',
     type: 'Reclamation & Grid Restoration',
     reward: '650 Guild XP',
-    brief: 'Restore power across twenty abandoned relay pylons in the salt basin before seasonal dust storms seal the perimeter.',
+    brief: 'Restore power across twenty defense pylons sabotaged by the Fifth Guild before their strike fleet arrives.',
     clueAwarded: 'clue_erebus_mark'
   },
 
@@ -41,17 +41,17 @@ export const QUEST1_STORY = {
     subtitle: 'SECTOR 01 · EREBUS // THE CHARGE GARDENS',
     contractor: 'The Quad-Guild Reclamation Board',
     reward: '650 Guild XP',
-    message: 'The Atmospheric fleet posted this salvage run: twenty relay pylons across the Charge Gardens went dark when the old crew pulled out. To restore the grid before storm season, open each junction and bridge the red feed to the blue receiver.',
-    transmission: 'Atmospheric contract active. Bridge the red feed to the blue receiver in each junction to bring the pylon grid back online.'
+    message: 'The Fifth Guild raided Sector 01 and knocked down the Charge Gardens defense pylons to leave the sector defenseless. To reboot our defense shields before their strike fleet arrives, open each junction and bridge the red feed to the blue receiver.',
+    transmission: 'The Fifth Guild cut power across the defense grid. Bridge the red feed to the blue receiver in each junction to bring the pylon shields back online.'
   },
 
   // Stage 1 opening transmission per guild; neutral used for demo / unassigned
   guildOpeners: {
-    earth: 'Mineral Mining flagged this sector for salvage. Bridge the red feed to the blue receiver to wake Pylon 1.',
-    air: 'Atmospheric survey contract: restore the dunes. Bridge the red feed to the blue receiver to wake Pylon 1.',
-    fire: 'Thermal Smelters need this grid alive. Bridge the red feed to the blue receiver to wake Pylon 1.',
-    water: 'Moisture Extraction funded this reclamation. Bridge the red feed to the blue receiver to wake Pylon 1.',
-    neutral: 'Reclamation contract active on Erebus. Bridge the red feed to the blue receiver to wake Pylon 1.'
+    earth: 'The Fifth Guild struck this mining basin. Bridge the red feed to the blue receiver to wake Pylon 1.',
+    air: 'Fifth Guild raiders knocked out our air defense grid. Bridge the red feed to the blue receiver to wake Pylon 1.',
+    fire: 'The Fifth Guild cut power to the smelting perimeter. Bridge the red feed to the blue receiver to wake Pylon 1.',
+    water: 'The Fifth Guild disabled moisture defense stations. Bridge the red feed to the blue receiver to wake Pylon 1.',
+    neutral: 'The Fifth Guild sabotaged the Charge Gardens defense grid. Bridge the red feed to the blue receiver to wake Pylon 1.'
   },
 
   pylons: [

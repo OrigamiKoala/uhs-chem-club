@@ -606,60 +606,60 @@ export async function renderOnboarding(container) {
 
     const SLIDES = [
       {
-        kicker: '01 / 04 · THE QUAD-GUILD TRUCE',
+        kicker: '01 / 04 · THE QUAD-GUILD ALLIANCE',
         title: 'Four Monopolies on the Frontier',
         speaker: 'VESS // QUARTERMASTER',
         badge: `${activeMeta.mark} · CREW LOGISTICS`,
-        transmission: 'Four Imperial Guilds divide the frontier into extractive monopolies. The Avalon flies between them under an uneasy forty-year truce.',
+        transmission: 'Four industrial Guilds divide the frontier. Your ship, the Avalon, operates between them under a shared peace treaty.',
         bullets: [
-          { label: 'Mineral Mining (Earth)', desc: 'Strip-mines heavy ores and dense silicates from lifeless asteroidal bedrock.' },
-          { label: 'Atmospheric Harvesters (Air)', desc: 'Skims turbulent upper envelopes of gas giants for noble gases and volatile propellants.' },
-          { label: 'Thermal Smelters (Fire)', desc: 'Operates orbital crucibles and geothermal blast-wells that crack crude rock into working alloy.' },
-          { label: 'Moisture Extraction (Water)', desc: 'Filters brine, heavy water, and industrial coolants from desiccated planetary basins.' }
+          { label: 'Mineral Mining (Earth)', desc: 'Strip-mines iron, heavy metals, and asteroid rock from barren planetary crusts.' },
+          { label: 'Atmospheric Harvesters (Air)', desc: 'Skims high-altitude storm clouds and gas giants for volatile starship fuels.' },
+          { label: 'Thermal Smelters (Fire)', desc: 'Operates orbital crucibles and blast-wells that melt raw stone into battle armor.' },
+          { label: 'Moisture Extraction (Water)', desc: 'Filters heavy water and industrial coolants from subterranean ice reserves.' }
         ],
         note: `Assigned Guild: You have signed on with ${activeMeta.guild} (${activeMeta.title}). Your station is aboard the salvage hauler Avalon, answering to Quartermaster Vess.`
       },
       {
-        kicker: '02 / 04 · THE GHOST CHARTER',
-        title: 'Living Spoil & Broken Ledgers',
+        kicker: '02 / 04 · THE ENEMY: THE FIFTH GUILD',
+        title: 'Rogue Raiders & Sabotage',
         speaker: 'VESS // QUARTERMASTER',
-        badge: 'SCENE 04 · ANOMALY REPORT',
-        transmission: 'Smelters are being abandoned with fireboxes burning. Slag heaps are twitching and walking under their own power across the perimeter.',
+        badge: 'SCENE 04 · ENEMY REPORT',
+        transmission: 'A hostile shadow faction has struck outposts across the rim. Frontier crews call them the Fifth Guild.',
         bullets: [
-          { label: 'The Fifth Presence', desc: 'Unregistered vessels flying no imperial guild livery are transmitting on emergency carrier frequencies dead for thirty seasons.' },
-          { label: 'Animated Spoil', desc: 'Refined tailings and discarded mineral residues are crystallizing and crawling under electromagnetic radiation.' },
-          { label: 'Impossible Inventories', desc: 'Forward refinery ledgers report output tonnage that reliably exceeds the raw ore fed into the hoppers.' },
-          { label: 'The Mess Deck Rumor', desc: 'Crews across every canteen whisper that an unchartered rogue fleet has discovered alchemy.' }
+          { label: 'Coordinated Raids', desc: 'The Fifth Guild is attacking frontier outposts, raiding fuel supplies, and destroying defenses.' },
+          { label: 'Rogue War Machines', desc: 'They deploy autonomous crawling war machines made from scrap and salt to guard their sabotage.' },
+          { label: 'Impossible Ledgers', desc: 'Captured enemy logs claim they can create tons of metal out of thin air using magical alchemy.' },
+          { label: 'The Dangerous Reality', desc: 'Alchemy is a lie. The Fifth Guild is secretly restructuring atomic nuclei with stolen military hardware.' }
         ],
-        note: 'The Reality: Alchemy is physically impossible. Ordinary electron chemistry cannot turn salt into heavy metals or create mass from nothing.'
+        note: 'Enemy Alert: The Fifth Guild is actively terrorizing the frontier. We must expose their operations and protect the fleet.'
       },
       {
-        kicker: '03 / 04 · THE DETECTIVE KIT',
-        title: 'Forensic Chemistry as Your Weapon',
+        kicker: '03 / 04 · YOUR WEAPON: SCIENCE',
+        title: 'Dismantling Enemy Machines',
         speaker: 'VESS // QUARTERMASTER',
-        badge: 'SCENE 04 · DOCTRINE',
-        transmission: 'The chemistry is your detective kit. You do not fight with blasters; you fight by measuring what the laws of matter allow.',
+        badge: 'SCENE 04 · COMBAT DOCTRINE',
+        transmission: 'You do not fight with clumsy blasters. You defeat the Fifth Guild by understanding how matter and energy actually work.',
         bullets: [
-          { label: 'Definite Proportions & Conservation', desc: 'Every chemical reaction conserves mass and combines in discrete integer ratios. An over-mass ledger is not chemistry.' },
-          { label: 'Electronic & Molecular Structure', desc: 'Atomic numbers, emission spectra, bond angles, and kinetics dictate how matter behaves under load.' },
-          { label: 'Neutralizing the Spoil', desc: 'Spoil obeys the laws measured at the bench. A mixture separates; an ionic lattice cleaves; an excited shell releases charges.' },
-          { label: 'The Case File Dossier', desc: 'Every surveyed sector yields physical evidence stored in the Case File terminal aboard the Avalon.' }
+          { label: 'Exposing Their Frauds', desc: 'The law of conservation proves matter cannot be made from nothing. Every enemy machine has a physical flaw.' },
+          { label: 'Crushing Enemy Armor', desc: 'Understanding bond strength and crystal cleave planes lets you shatter enemy stone golems and barricades.' },
+          { label: 'Disabling Enemy Traps', desc: 'Tuning light frequencies and electrical circuits burns out their spy drones, power leeches, and light-moths.' },
+          { label: 'The Case File Dossier', desc: 'Every defeated enemy commander and reclaimed station yields physical intel stored in your terminal.' }
         ],
-        note: 'Your Mission: Use the lab benches across the 14 worlds to analyze anomalous specimens, dismantle spoil, and document forensic evidence.'
+        note: 'Mission Directive: Deploy to each attacked world, dismantle the Fifth Guild\'s machines, and collect evidence.'
       },
       {
-        kicker: '04 / 04 · STANDING ORDERS',
-        title: 'The Road Across Fourteen Worlds',
+        kicker: '04 / 04 · THE CAMPAIGN ROAD',
+        title: 'Stop the Fifth Guild\'s Superweapon',
         speaker: 'VESS // QUARTERMASTER',
         badge: 'SCENE 04 · DISPATCH',
-        transmission: 'Four acts across the rim. Follow the thermal plumes to Cinder Halo and uncover the truth behind the forgotten manifests.',
+        transmission: 'Four acts across fourteen worlds. Trace the Fifth Guild\'s trail of sabotage to their secret command core on Cinder Halo.',
         bullets: [
-          { label: 'Act I: The Charter (Units 1–3)', desc: 'Tallow, Lanternfall, and Ligar: survey mobile spoil, recover unliveried marks, and verify elemental mass.' },
-          { label: 'Act II: Pressure (Units 4–7)', desc: 'Bellows, Ember Reach, Mirrowen, and Kettle: trace recruitment of active crews and seize the impossible over-mass ledger.' },
-          { label: 'Act III: Balance (Units 8–11)', desc: 'Teeter, Verdigris, Brinewire, and Quicklight: restore equilibrium, neutralize acid floods, and uncover the title: The Catalyst.' },
-          { label: 'Act IV: The Core (Units 12–14)', desc: 'Lodestone, Thornmere, and Cinder Halo: trace subatomic plumes to the ancient transmutation works.' }
+          { label: 'Act I: Strike on the Frontier (Units 1–3)', desc: 'Defend Tallow, Lanternfall, and Ligar against sudden raids and autonomous stone war machines.' },
+          { label: 'Act II: Stolen Power (Units 4–7)', desc: 'Stop hijacked gas skimmers, recover stolen heat energy, and seize an illegal golem factory.' },
+          { label: 'Act III: Total Sabotage (Units 8–11)', desc: 'Neutralize acid weapons, fix sabotaged reactors, and unmask the enemy commander: The Catalyst.' },
+          { label: 'Act IV: The Doomsday Core (Units 12–14)', desc: 'Destroy enemy magnetic beam-cannons, breach their swamp fortress, and shut down their nuclear superweapon on Cinder Halo.' }
         ],
-        note: 'The Truth: The Fifth are the abandoned crews the Guilds wrote off. By mastering chemistry, you bridge corporate abandonment and justice.'
+        note: 'Final Objective: Master the laws of chemistry to defeat the Fifth Guild, protect the colonies, and uncover the truth behind the war.'
       }
     ];
 

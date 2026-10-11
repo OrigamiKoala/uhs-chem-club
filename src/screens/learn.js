@@ -66,7 +66,7 @@ export function renderLearn(container) {
                   <h2 class="learn-world-name">${esc(w.world)}</h2>
                   <span class="tag ${tag.cls}">${tag.label}</span>
                 </div>
-                <div class="learn-world-title">${esc(w.title)}</div>
+                <div class="eyebrow learn-world-title" style="color: var(--accent-amber); font-size: 0.65rem;">ENEMY // THE FIFTH GUILD</div>
                 <p class="learn-world-line">${esc(w.line)}</p>
               </div>
 
@@ -84,7 +84,7 @@ export function renderLearn(container) {
                 <div class="learn-world-keys">
                   <button type="button" class="btn-secondary quest-btn-sm learn-story-modal-btn m-tap" data-story-world="${esc(w.id)}" title="Sector Storyline Briefing">Storyline</button>
                   ${enterable
-                    ? `<a href="#/learn/${esc(w.id)}" class="btn-primary learn-enter m-tap" style="text-decoration: none;">Enter</a>`
+                    ? `<a href="#/learn/${esc(w.id)}" class="btn-primary learn-enter m-tap learn-enter-btn" data-world-id="${esc(w.id)}" style="text-decoration: none;">Enter</a>`
                     : `<span class="eyebrow learn-world-blocked">${st === 'locked' ? 'Locked' : 'Coming soon'}</span>`}
                   ${practiceKey(w)}
                 </div>
@@ -98,10 +98,36 @@ export function renderLearn(container) {
 
   bindPracticeKeys(container);
 
+  container.querySelectorAll('.learn-enter-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const worldId = btn.dataset.worldId;
+      if (!worldId) return;
+      if (!session.hasFlag(`story_world_seen_${worldId}`)) {
+        e.preventDefault();
+        const w = WORLDS.find(x => x.id === worldId);
+        openWorldStoryModal(w || worldId, {
+          isPreLaunch: true,
+          onLaunch: () => {
+            session.setFlag(`story_world_seen_${worldId}`, true);
+            window.location.hash = `#/learn/${worldId}`;
+          }
+        });
+      }
+    });
+  });
+
   container.querySelectorAll('.learn-story-modal-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const w = WORLDS.find(x => x.id === btn.dataset.storyWorld);
-      if (w) openWorldStoryModal(w);
+      if (w) {
+        openWorldStoryModal(w, {
+          isPreLaunch: true,
+          onLaunch: () => {
+            session.setFlag(`story_world_seen_${w.id}`, true);
+            window.location.hash = `#/learn/${w.id}`;
+          }
+        });
+      }
     });
   });
 

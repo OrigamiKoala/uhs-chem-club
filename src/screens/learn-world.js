@@ -12,6 +12,7 @@ import { worldStatus, worldProgress, questStatus, questProgress, nextQuest, isQu
 import { canWalk, world3dFor } from '../learn/worlds3d.js';
 import { openWorldPractice, worldHasPractice, practiceOfferedFlag } from '../learn/practice.js';
 import { openWorldStoryModal } from '../story/story-modal.js';
+import { getEpisode } from '../story/saga.js';
 import { session } from '../session.js';
 
 const STATUS_TAG = {
@@ -56,13 +57,8 @@ function installSiteListener() {
  * screen behind it is already drawn, and Close is the first key on the card.
  * Once offered it never auto-opens again — the Problems key is how it comes back.
  */
-function maybeOfferStory(world) {
-  const flag = `story_world_seen_${world.id}`;
-  if (!session.hasFlag(flag)) {
-    setTimeout(() => {
-      openWorldStoryModal(world);
-    }, 250);
-  }
+function maybeOfferStory() {
+  // Storyline is delivered before takeoff aboard the Avalon, never after landing.
 }
 
 /**
@@ -212,7 +208,6 @@ export function renderLearnWorld(container, params = {}) {
 
   bindPracticeKeys(container);
   maybeOfferPractice(world);
-  maybeOfferStory(world);
   container.querySelectorAll('.learn-story-trigger').forEach(btn => {
     btn.addEventListener('click', () => {
       openWorldStoryModal(world);
@@ -229,6 +224,7 @@ function renderWalkHud(container, world) {
   const prog = worldProgress(world);
   const total = prog.liveTotal || world.questCount;
   const isCollapsed = sessionStorage.getItem('avalon_learn_hud_collapsed') === '1';
+  const ep = getEpisode(world.id);
 
   container.innerHTML = `
     <div class="learn-walk-hud${isCollapsed ? ' collapsed' : ''}" data-world="${esc(world.id)}">
@@ -246,6 +242,13 @@ function renderWalkHud(container, world) {
 
         <div class="learn-walk-name">${esc(world.world)}</div>
         <p class="learn-walk-line">${esc(world.line)}</p>
+
+        <div class="learn-walk-threat" style="margin: 0.35rem 0 0.5rem; padding: 0.35rem 0.55rem; background: rgba(217, 148, 35, 0.12); border-left: 2px solid var(--accent-amber); border-radius: 2px;">
+          <div class="eyebrow lit" style="color: var(--accent-amber); font-size: 0.6rem; letter-spacing: 0.1em; margin-bottom: 2px;">ENEMY // THE FIFTH GUILD</div>
+          <div style="font-family: var(--font-sans); font-size: 0.72rem; color: var(--text-bright); line-height: 1.25;">
+            ${esc(ep?.incident ? ep.incident.split('.')[0] + '.' : 'Hostile saboteurs active in sector.')}
+          </div>
+        </div>
 
         <div class="learn-walk-prog">
           Quests: ${prog.questsComplete} of ${total} Cleared
@@ -288,6 +291,13 @@ function renderWalkHud(container, world) {
               ${total ? `<span class="tag ${prog.questsComplete >= total ? 'live' : 'warn'}">${prog.questsComplete} / ${total} CLEARED</span>` : ''}
               <button type="button" id="close-sites-popup-btn" class="terminal-close-btn" aria-label="Close sites panel">✕ CLOSE</button>
             </div>
+          </div>
+
+          <div style="margin-bottom: 0.85rem; padding: 0.45rem 0.65rem; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-gold);">
+            <div class="eyebrow lit" style="color: var(--accent-gold); font-size: 0.6rem; margin-bottom: 2px;">TACTICAL MISSION // RECLAIM STATIONS</div>
+            <p style="font-family: var(--font-sans); font-size: 0.73rem; line-height: 1.35; color: var(--text-bright); margin: 0;">
+              ${esc(ep?.objective || 'Dismantle the Fifth Guild\'s sabotage across all research stations in this sector.')}
+            </p>
           </div>
 
           <p style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.85rem;">
