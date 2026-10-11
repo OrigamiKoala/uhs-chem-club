@@ -9,93 +9,93 @@ export const FIELD_MANUAL_TERMS = [
   // --- Campaign (Charge Gardens of Erebus) ---
   {
     id: 'camp_0',
-    term: 'Electron',
+    term: 'Opposites Attract',
     road: 'campaign',
     stageLabel: 'Pylon 1',
     stageIndex: 0,
     route: '#/quest',
-    title: 'Electrons Move, Bonds Form',
-    body: 'The negative region carries mobile electrons that flow toward the electron-poor positive center to forge a covalent bond.'
+    title: 'Opposite Charges Pull Together',
+    body: 'Regions with extra negative charge (red) naturally pull toward hungry positive spots (blue) to link together and form a chemical bond.'
   },
   {
     id: 'camp_1',
-    term: 'Displacement',
+    term: 'Making Room',
     road: 'campaign',
     stageLabel: 'Pylon 2',
     stageIndex: 1,
     route: '#/quest',
-    title: 'Nucleophilic Displacement',
-    body: 'An incoming group with lone-pair density attacks a saturated center, displacing the attached leaving group.'
+    title: 'Pushing Out Old Connections',
+    body: 'Atoms can only hold so many bonds at once. When a new piece snaps on, it bumps an attached piece out so there is enough room.'
   },
   {
     id: 'camp_2',
-    term: 'Nucleophile & Electrophile',
+    term: 'Givers & Receivers',
     road: 'campaign',
     stageLabel: 'Pylon 3',
     stageIndex: 2,
     route: '#/quest',
-    title: 'Charges and Affinity',
-    body: 'A nucleophile seeks a positive center to share electrons; an electrophile accepts electron density to complete its shell.'
+    title: 'Charge Givers and Receivers',
+    body: 'Red spots have spare negative charge to share; blue spots are hungry positive centers looking for a partner.'
   },
   {
     id: 'camp_3',
-    term: 'Steric Hindrance',
+    term: 'Physical Crowding',
     road: 'campaign',
     stageLabel: 'Pylon 4',
     stageIndex: 3,
     route: '#/quest',
-    title: 'Spatial Crowding',
-    body: 'Bulky substituents surrounding a reactive carbon hinder incoming trajectory and dictate reaction rate.'
+    title: 'Atoms Take Up 3D Space',
+    body: 'Atoms have physical size. Big neighboring groups can crowd around a reactive spot and physically block incoming pieces from reaching it.'
   },
   {
     id: 'camp_4',
-    term: 'Regioselectivity',
+    term: 'The Open Path',
     road: 'campaign',
     stageLabel: 'Pylon 5',
     stageIndex: 4,
     route: '#/quest',
-    title: 'Steric Pathway Selection',
-    body: 'When multiple electrophilic sites are accessible, attack occurs selectively at the least sterically hindered position.'
+    title: 'Choosing the Unblocked Route',
+    body: 'When a molecule has several hungry spots, an incoming piece naturally heads for the one with a clear, uncrowded path.'
   },
   {
     id: 'camp_5',
-    term: 'Carbocation',
+    term: 'Empty Seats Pull Hard',
     road: 'campaign',
     stageLabel: 'Pylon 6',
     stageIndex: 5,
     route: '#/quest',
-    title: 'Trivalent Carbon Intermediate',
-    body: 'A positively charged carbon with six valence electrons that acts as a powerful electrophile.'
+    title: 'Vacant Spots Are Super Hungry',
+    body: 'When an attached piece breaks off and leaves an empty bond slot behind, the vacant center becomes strongly positive and eagerly pulls in a new partner.'
   },
   {
     id: 'camp_6',
-    term: 'Proton Transfer',
+    term: 'Passing Pieces Along',
     road: 'campaign',
     stageLabel: 'Pylon 7',
     stageIndex: 6,
     route: '#/quest',
-    title: 'Brønsted Acid-Base Relay',
-    body: 'A hydrogen ion moves between basic and acidic sites, establishing rapid thermodynamic equilibrium.'
+    title: 'Hopping Along a Chain',
+    body: 'Tiny, light pieces like hydrogen can easily hop between partner atoms, trading places in quick step-by-step handoffs.'
   },
   {
     id: 'camp_10',
-    term: 'SN2 Mechanism',
+    term: 'Push-and-Leave',
     road: 'campaign',
     stageLabel: 'Pylon 11',
     stageIndex: 10,
     route: '#/quest',
-    title: 'Bimolecular Substitution',
-    body: 'A concerted backside displacement where bond formation and bond cleavage occur simultaneously.'
+    title: 'Pushing In as One Leaves',
+    body: 'In single-step reactions, the incoming piece connects from the open back side at the exact moment the old piece pops free.'
   },
   {
     id: 'camp_18',
-    term: 'SN1 Mechanism',
+    term: 'Leave First, Then Fill',
     road: 'campaign',
     stageLabel: 'Pylon 19',
     stageIndex: 18,
     route: '#/quest',
-    title: 'Stepwise Dissociation',
-    body: 'Rate-determining departure of the leaving group yields a planar carbocation, followed by rapid nucleophilic capture.'
+    title: 'Leaving First to Open a Seat',
+    body: 'When a center is packed with big groups, the old piece must drift away first to clear an empty seat before a new piece can land.'
   },
 
   // --- Learn Unit 1: Tallow (Atoms, Elements, Core) ---

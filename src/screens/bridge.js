@@ -97,8 +97,8 @@ export function renderBridge(container) {
               <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); margin-top: 2px;">Next meeting Tuesday 10/13 in 702</div>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <button type="button" id="bridge-story-dossier-btn" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; padding: 3px 8px; color: var(--accent-gold); border-color: rgba(217, 148, 35, 0.4);" title="Story Dossier">
-                Story Dossier
+              <button type="button" id="bridge-story-dossier-btn" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; padding: 3px 8px; color: var(--accent-gold); border-color: rgba(217, 148, 35, 0.4);" title="Main Briefing">
+                Main Briefing
               </button>
               <button type="button" id="bridge-announcement-close" class="btn-chip" style="font-size: 0.72rem; padding: 2px 8px; color: var(--accent-amber); border-color: rgba(217, 148, 35, 0.4); cursor: pointer;" title="Close [X]">Close [X]</button>
             </div>

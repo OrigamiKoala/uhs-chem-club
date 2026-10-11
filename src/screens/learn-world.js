@@ -57,16 +57,8 @@ function installSiteListener() {
  * screen behind it is already drawn, and Close is the first key on the card.
  * Once offered it never auto-opens again — the Problems key is how it comes back.
  */
-function maybeOfferStory(world) {
-  if (!world) return;
-  const justShownKey = `story_just_shown_${world.id}`;
-  if (sessionStorage.getItem(justShownKey)) {
-    sessionStorage.removeItem(justShownKey);
-    return;
-  }
-  if (sessionStorage.getItem('avalon_learn_last_site')) return;
-
-  openWorldStoryModal(world);
+function maybeOfferStory() {
+  // Storyline is delivered on demand, never auto-popping up over world exploration.
 }
 
 /**
@@ -173,6 +165,7 @@ export function renderLearnWorld(container, params = {}) {
             ${world.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete} of ${prog.liveTotal} complete` : ''}
           </div>
           <div style="display: flex; gap: 0.4rem; align-items: center;">
+            <button type="button" class="btn-secondary quest-btn-sm learn-briefing-trigger m-tap" id="learn-world-briefing-btn">Briefing</button>
             ${practiceKey(world)}
           </div>
         </div>
@@ -212,6 +205,9 @@ export function renderLearnWorld(container, params = {}) {
   `;
 
   bindPracticeKeys(container);
+  container.querySelector('#learn-world-briefing-btn')?.addEventListener('click', () => {
+    openWorldStoryModal(world);
+  });
   maybeOfferPractice(world);
   maybeOfferStory(world);
 }

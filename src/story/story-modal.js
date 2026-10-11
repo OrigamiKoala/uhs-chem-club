@@ -44,21 +44,16 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
 
   session.setFlag(`story_world_seen_${worldId}`, true);
 
-  let activeTab = 'sector'; // 'sector' | 'campaign'
-  let sectorIndex = 0;
-  let campaignIndex = 0;
+  let currentIdx = 0;
 
   function getSpeaker() {
     return 'Vess';
   }
 
   function renderModalBody() {
-    const isCamp = activeTab === 'campaign';
-    const currentList = isCamp ? CAMPAIGN_STORY.map(s => s.text) : paragraphs;
-    const currentIdx = isCamp ? campaignIndex : sectorIndex;
-    const currentText = currentList[currentIdx] || '';
+    const currentText = paragraphs[currentIdx] || '';
     const currentSpeaker = getSpeaker();
-    const total = currentList.length;
+    const total = paragraphs.length;
     const isLast = currentIdx === total - 1;
 
     return `
@@ -67,7 +62,7 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.6rem;">
           <div>
             <div style="margin-bottom: 2px;">
-              <span class="eyebrow lit" style="color: var(--accent-amber); font-size: 0.68rem; letter-spacing: 0.14em;">Transmission</span>
+              <span class="eyebrow lit" style="color: var(--accent-amber); font-size: 0.68rem; letter-spacing: 0.14em;">Campaign Briefing</span>
             </div>
             <h2 style="font-family: var(--font-imperial); font-size: 1.25rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-bright); margin: 0;">
               ${esc(worldName)} · ${esc(worldTitle)}
@@ -81,16 +76,6 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
               ✕
             </button>
           </div>
-        </div>
-
-        <!-- Mode Toggle Tabs -->
-        <div class="map-tabs" role="tablist" style="display: flex; gap: 0.4rem; margin-bottom: 0.9rem;">
-          <button type="button" id="tab-btn-sector" class="map-tab btn-secondary ${activeTab === 'sector' ? 'active' : ''}" style="flex: 1; padding: 6px 10px; font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em;">
-            Sector Story · ${esc(worldName)}
-          </button>
-          <button type="button" id="tab-btn-campaign" class="map-tab btn-secondary ${activeTab === 'campaign' ? 'active' : ''}" style="flex: 1; padding: 6px 10px; font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em;">
-            The Campaign Saga
-          </button>
         </div>
 
         <!-- Novelistic Story Card (Paragraph Form) -->
@@ -159,13 +144,8 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
   }
 
   function advance() {
-    const isCamp = activeTab === 'campaign';
-    const total = isCamp ? CAMPAIGN_STORY.length : paragraphs.length;
-    const current = isCamp ? campaignIndex : sectorIndex;
-
-    if (current < total - 1) {
-      if (isCamp) campaignIndex++;
-      else sectorIndex++;
+    if (currentIdx < paragraphs.length - 1) {
+      currentIdx++;
       soundscape.playToggleClack();
       refreshModal();
     } else {
@@ -175,12 +155,8 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
   }
 
   function regress() {
-    const isCamp = activeTab === 'campaign';
-    const current = isCamp ? campaignIndex : sectorIndex;
-
-    if (current > 0) {
-      if (isCamp) campaignIndex--;
-      else sectorIndex--;
+    if (currentIdx > 0) {
+      currentIdx--;
       soundscape.playToggleClack();
       refreshModal();
     }
@@ -231,20 +207,6 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
     modalEl.querySelector('#story-modal-dismiss-btn')?.addEventListener('click', () => {
       soundscape.playBondSnap();
       cleanupAndClose(true);
-    });
-
-    modalEl.querySelector('#tab-btn-sector')?.addEventListener('click', () => {
-      if (activeTab === 'sector') return;
-      activeTab = 'sector';
-      soundscape.playToggleClack();
-      refreshModal();
-    });
-
-    modalEl.querySelector('#tab-btn-campaign')?.addEventListener('click', () => {
-      if (activeTab === 'campaign') return;
-      activeTab = 'campaign';
-      soundscape.playToggleClack();
-      refreshModal();
     });
   }
 

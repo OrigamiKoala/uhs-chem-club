@@ -14,7 +14,7 @@ import { pageHeader, esc } from '../ui/layout.js';
 import { WORLDS } from '../learn/curriculum.js';
 import { worldStatus, worldProgress, isQuestComplete, nextQuest, currentWorld, trackProgress } from '../learn/progress.js';
 import { practiceKey, bindPracticeKeys } from './learn-world.js';
-import { openWorldStoryModal, openCampaignStoryModal } from '../story/story-modal.js';
+import { openCampaignStoryModal } from '../story/story-modal.js';
 
 const STATUS_TAG = {
   open: { label: 'Open', cls: 'live' },
@@ -41,7 +41,7 @@ export function renderLearn(container) {
         artAlt: '',
         title: 'Learn',
         actions: `
-          <button type="button" class="btn-secondary quest-btn-sm m-tap" id="learn-campaign-story-btn" title="Story Dossier" style="margin-right: 0.5rem;">Story Dossier</button>
+          <button type="button" class="btn-secondary quest-btn-sm m-tap" id="learn-campaign-story-btn" title="Main Briefing" style="margin-right: 0.5rem;">Main Briefing</button>
           ${resumeQuest
             ? `<a href="#/learn/${esc(resume.id)}" class="btn-primary" style="text-decoration: none;">Continue · ${esc(resume.world)}</a>`
             : ''}
@@ -95,26 +95,6 @@ export function renderLearn(container) {
   `;
 
   bindPracticeKeys(container);
-
-  container.querySelectorAll('.learn-enter-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const worldId = btn.dataset.worldId;
-      if (!worldId) return;
-      if (!stage.canVoyage?.(worldId)) {
-        e.preventDefault();
-        const w = WORLDS.find(x => x.id === worldId);
-        openWorldStoryModal(w || worldId, {
-          isPreLaunch: true,
-          onLaunch: () => {
-            window.location.hash = `#/learn/${worldId}`;
-          },
-          onClose: () => {
-            window.location.hash = `#/learn/${worldId}`;
-          }
-        });
-      }
-    });
-  });
 
   container.querySelector('#learn-campaign-story-btn')?.addEventListener('click', () => {
     openCampaignStoryModal();

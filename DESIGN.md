@@ -589,7 +589,7 @@ specific thing.
 
 ### Signature: The Chemistry Card and Reward Debrief
 
-`.chem-card` and Learn track `.lq-reward` — one to three sentences of **real chemistry debrief**, drawn after a stage is solved. Bare `plate-000` with an amber left edge, a top-left chamfer, an amber stencil badge and a mono gold title. It summarizes what the player's experiment demonstrated.
+`.chem-card` and Learn track `.lq-reward` — one to three sentences of **real chemistry debrief**, drawn after a stage is solved. Bare `plate-000` with an amber left edge, a top-left chamfer, an amber stencil badge and a mono gold title. It summarizes what the player's experiment demonstrated, prioritizing concrete physical intuition (attraction, bond seats, 3D crowding, making room) over college organic chemistry jargon.
 
 ### Signature: The Stage Mission & Science Guide
 
@@ -716,12 +716,17 @@ console is not raised at all and the quest keeps the 2D stage deck, which is the
 - **Do** put the move stick bottom-LEFT and the look stick bottom-RIGHT on a phone. That
   is where every twin-stick scheme a player has already used puts them, and a walk that
   steers backwards from muscle memory reads as broken input rather than as a choice.
+- **Do** build concrete physical mechanism intuition for organic reactions (charges attracting, making room, 3D crowding, helper molecules) rather than terrifying elementary and middle schoolers with college organic chemistry jargon.
+- **Do** ensure players discover chemistry to solve practical storyline challenges, prioritizing hands-on 3D manipulation and visual instrumentation over dense text walls.
 - **Do** inset a part into the part it is carried by rather than ending it flush. Two faces
   in the same plane cannot be ordered by a depth buffer, and the surface flickers — a shelf
   as wide as the posts holding it, a box whose underside is exactly the lid below it, an
   I-beam web the same length as its flanges. A few millimetres of overlap is the fix.
 
 ### Don't:
+
+- **Don't** overwhelm elementary and middle schoolers with college organic chemistry terminology ("alkyl halide", "carbonyl", "carbocation", "nucleophile", "SN1/SN2"). Teach the physical mechanism intuition instead.
+- **Don't** make the game feel like a dense sci-fi textbook with a haphazard 3D layer. Visuals and hands-on instruments must drive the discovery.
 
 - **Don't** add `box-shadow: 0 0 Npx <colour>` as a glow. The exceptions are `.gfx-dot`
   and the active/completed stage lamps, and there are no others.

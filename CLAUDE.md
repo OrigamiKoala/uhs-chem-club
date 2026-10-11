@@ -14,19 +14,9 @@ bench provides the tools. The user must explore, test, observe, and deduce the a
 Neither the prompt, the mission briefing, the stage guide, nor the hint ladder should ever tell
 the player what to do or make the correct option obvious.
 
-**Elementary-school-friendly explanations.** Every quest and stage provides an on-screen
-STAGE MISSION & SCIENCE card and an interactive Objective & Guide dialog (powered by
-`src/learn/engine/quest-guide.js`). These explain:
-1. The real chemistry concept being taught (atoms, mass spectrometry, octet rule, etc.).
-2. The storyline context (why the research expedition is performing this test).
-3. The stage goal in plain, simple English that any elementary student can understand.
-4. How to test using the bench instruments (scientific method: test, observe, deduce).
-5. Clear vocabulary definitions for key technical terms.
+**Concise, discovery-based stage objectives.** Every quest and stage automatically opens a concise, single-paragraph MAX objective on stage load with 3D instrument halos highlighted. No textbook dumps, no AI-generated slop, and no outright explanation of answers: students discover the chemistry concepts hands-on through bench exploration.
 
-**Experiment trials, not monster combat.** The encounter layer represents scientific trials
-on mineral specimens. Incorrect submissions are missed trials with measurement discrepancies,
-not monster attacks ("takes the hit"). The player has 3 experiment trials before a safety reset,
-and progress/readings are never lost.
+**Scientific investigation, not monster combat.** The user-facing deck stays clean without weird combat jargon ("salt rocks", "braced against a hit", "STRIKE"). The encounter system runs silently in the background while the UI presents pure scientific trials. Incorrect submissions are missed trials, and progress is never lost.
 
 **Working stage controls and actions.** Stage action buttons (`[Objective]`, `[Findings]`,
 `[Fold Panel]`) and modal close buttons must always be interactive and responsive. Ensure
@@ -461,9 +451,9 @@ the three-rung `hints` ladder, the per-site `scans`, the `concept` card plus its
 **`concept` and `chem` are two different cards and the difference is the product.**
 `concept` with `conceptTiming: 'intro'` teaches the CONTROLS and appears before the stage
 — stages 1 and 11, and nothing else. `chem` teaches the CHEMISTRY, appears only after the
-solve, and is the one place in the campaign before the epilogue where the withheld
-vocabulary is used on purpose: nucleophile, electrophile, carbocation, SN1, SN2, angle
-strain, the real words for what the player has just done. Every stage has one, it is
+solve, and focuses on physical reaction intuition (charges attracting, bond seats filling,
+making room, 3D crowding, leaving seats, and helper pieces) rather than intimidating
+elementary and middle schoolers with college organic chemistry jargon. Every stage has one, it is
 capped at **three sentences**, and `verify:quest` fails the build over both rules — over a
 chem card that runs long, and over an intro card that has started explaining chemistry.
 This replaced a single end-of-quest lecture; dropping it in bits, after the work, is the
@@ -2138,12 +2128,11 @@ cards that teach the *controls* (stage 1's scan/drag, stage 11's arrow ordering)
 obey the withheld-vocabulary list like everything else.
 
 **The chemistry itself lands on `cfg.chem`, after every single solve.** One to three
-sentences naming what the player just did in the words chemists use — nucleophilic
-substitution, steric hindrance, regioselectivity, SN1 and SN2, angle strain, catalysis. It
-is the one place in the campaign before the epilogue where the withheld vocabulary is used
-deliberately, and it is drawn by `renderChemCard` only once the stage is cleared. The
-epilogue is still there; it is now a gathering-up rather than the first time any of this is
-said.
+sentences explaining what the player just did in terms of physical reaction intuition —
+opposite charges attracting, limited bond seats, making room, 3D crowding, leaving seats,
+and helper molecules — without overwhelming elementary and middle schoolers with college organic
+chemistry jargon. It is drawn by `renderChemCard` only once the stage is cleared. The
+epilogue is still there; it gathers these physical insights into a multi-part debrief.
 - Stages 1–7: one arrow. Red giver → blue receiver, then competing sites, then blocked
   paths that must be solved by rotating the view.
 - Stages 8–10: three molecules in the chamber, including a bystander.
@@ -2176,10 +2165,10 @@ said.
   blocked sites, `reaction`, `multiArrow`, XP). Backend `scene_config` is transport only —
   a stale Sheets row must never swap in another stage's molecule.
 - The epilogue (`QUEST1_EPILOGUE`, duplicated verbatim in `Quests.gs`, the proxy and
-  `quest.js` as an offline fallback) is the single place real terminology is introduced.
+  `quest.js` as an offline fallback) gathers the physical intuition into a closing debrief.
   The completion modal mounts Vess's multi-section interactive CRT debrief (with Next / Prev dialogue
-  stepper like an RPG), walking through the grid restoration thanks, charges and electrons, curved arrow
-  notation, steric hindrance, and reaction mechanisms before unlocking the final exit actions.
+  stepper like an RPG), walking through grid restoration thanks, charges and electrons, curved arrow
+  notation, physical 3D crowding, and step-by-step reactions before unlocking final exit actions.
 
 ### Chemical realism (`molecule.js` + `reaction` blocks)
 Every molecule and animation must be chemically honest, even where the copy never says so:
@@ -2860,13 +2849,12 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   - Direct transmission card sequence from Vess without bureaucratic subheadings or bullet grids.
   - Interactive video-game stepper: advances through short transmissions (click card, Spacebar, Enter, or Continue ▶). Includes back navigation and progress dots.
   - Immediate skip control (`Skip Briefing ⏭` / `Skip ⏭`) available on every modal step, launching or closing immediately.
-  - `openCampaignStoryModal(opts)`: 5-beat campaign saga stepper aboard the Avalon against the Fifth Guild.
-  - `openWorldStoryModal(world, opts)`: 3-beat sector story stepper with seamless switch to Campaign Saga. Supports `isPreLaunch` / `onLaunch` with "Take Off & Deploy ▶" action.
+  - `openCampaignStoryModal(opts)`: Campaign saga stepper aboard the Avalon against the Fifth Guild. Accessible via `Main Briefing` on Star Map, Learn, and Bridge.
+  - `openWorldStoryModal(world, opts)`: Direct single-track sector campaign briefing stepper without tabs. Supports `isPreLaunch` / `onLaunch` with "Take Off & Deploy ▶" action.
 - **Onboarding Lore Scene (`src/screens/onboarding.js` Scene 4):**
   - Direct communication sequence from Vess introducing the ship charter, the Fifth Guild raiders, and the mission to Cinder Halo.
 - **World Entry Story Delivery & Interface Integration:**
-  - Storyline is automatically shown every time the player enters a world (both pre-launch voyage takeoff in `router.tryVoyage` and direct sector entry in `learn-world.js`, `starmap.js`, `learn.js`, and `bridge.js`).
-  - Standalone "Storyline" buttons have been completely removed across all screens.
+  - Storyline is automatically shown every time the player enters a world via router interception (`router.tryVoyage`) or upon world mount (`learn-world.js`). Direct enter buttons do not intercept with duplicate modals, allowing the router to launch the voyage flight smoothly on the first skip or continue.
   - Double-prompt suppression: `tryVoyage` sets `story_just_shown_${worldId}` in `sessionStorage` upon takeoff, which `maybeOfferStory` consumes upon landing so the player is not prompted twice for the same visit. Returning from bench activities (`avalon_learn_last_site`) also avoids re-prompting.
   - In-game integration: Walk HUD features live `ENEMY // THE FIFTH GUILD` threat status banner; Sites directory modal displays tactical mission objectives; Voyage helm plate displays active Fifth Guild alert.
 - **Case File & Dossier (`src/screens/casefile.js` at `#/casefile`):** Terminal displaying evidence clues, Vess marginalia notes, spine beat transcripts, and act charter summaries.
@@ -2883,7 +2871,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 
 ### 14. Bench Instrument Introduction & 3D Halos
 - **Halo Lifecycle Rule:** 3D amber instrument halos (`showInstrumentHalos` in `src/learn/engine/bench3d.js`) are displayed ONLY during the introductory briefing modal (`showBriefing` in `src/learn/engine/frame.js`) to orient new users to dials, keys, and sample wells. Halos are strictly dismissed on modal start/close and NEVER shown during active stage solving to avoid revealing answers.
-- **Instrument Controls Guide:** Stage cards provide concise non-spoiling control explanations (`.lq-bench-guide`) explaining how to turn dials (drag/scroll) and interact with bench keys/stations, with an on-demand button to reopen the introduction with halos. Briefings feature interactive instrument summary cards that highlight corresponding 3D halos on hover/click.
+- **Instrument Controls Guide:** Stage cards provide concise non-spoiling control explanations (`.lq-bench-guide`) explaining how to turn dials (drag/scroll) and interact with bench keys/stations, with an on-demand button to reopen the introduction with halos. Briefings are a single short transmission; the halos light all instruments while it is open.
 - **Halo Visual Architecture:** Multi-layer high-visibility illumination using additive blending (`THREE.AdditiveBlending`), concentric laser boundary rings elevated above bench top/well rims, volumetric cylindrical light pillars (`_createHaloBeam`), animated bobbing & spinning downward beacon pointers (`_createHaloPointer`), and camera-billboarded high-contrast neon labels (`_createHaloBadge`).
 
 ### 15. UI Copy & Decorative Text Discipline
@@ -2897,9 +2885,8 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 ### 17. Pedagogical Chemistry-First Reframing & Visual Formula HUD
 - **Chemistry-First Discovery Doctrine:** Students explore and discover core chemistry first (hands-on with visuals, molecular models, and formulas), and apply that chemical knowledge to solve grounded sci-fi frontier problems (e.g. mass spectrometry to detect counterfeit alloy, Beer-Lambert spectrophotometry to monitor reservoir toxins, gas laws to stabilize pressure valves and airlocks).
 - **Comprehensive Reframing (`src/learn/engine/quest-guide.js`):** Completely reframed all Learn track quests across Unit 1 (Tallow: `q1-grain` to `boss-hopper`), Unit 2 (Lanternfall: `q1-wave` to `boss-eater`), Unit 3 (Ligar: `q1-joins` to `boss-warden`), Unit 4 (Bellows: `q1-knocks` to `boss-compressor`), and Unit 7 (Kettle/Ligar: `q1-recipe` to `boss-golem`). Every stage features `storyProblem` (frontier problem solved via chemistry), `science` (underlying chemical principle), `howToTest` (scientific method exploration without answer spoilers), and `visualFormula` (clean mathematical equation or structural relationship).
-- **Visual HUD Cards & Briefing Grid (`src/learn/engine/frame.js`, `src/styles/learn.css`):**
-  - Live HUD card (`updateBenchGuide`) displays a 4-row structured card: Concept badge, Storyline Problem Solved, Visual Formula rule box, and Bench Test method.
-  - Briefing modal (`showBriefing`) renders a 4-card grid (Chemistry Concept -> Storyline Application -> Visual Formula -> Scientific Method) with clickable vocabulary chips and interactive 3D halo guidance.
+- **The briefing modal is one transmission** (`showBriefing` in `src/learn/engine/frame.js`): a speaker/stage eyebrow, 1-4 sentences (`clampSentences` enforces the ceiling; text is the stage's `briefing.body`, else its prompt), and a `Start` key. No sections, no cards, no vocabulary chips. Instrument halos still show while it is open. `quest-guide.js` is not rendered by any screen.
+- **The overworld stage card (`.learn-quest-overworld .lq-body`) is flat prose, four sentences at most:** the prompt, a reading (`setReadout` clamps each line to 2 sentences; boxes and heads are dropped by CSS), the answer keys, and on a clear one run-in line (`Title. Body`, body clamped to 2 sentences). The key legend, stage count, readout heads and answer labels are not drawn there.
 - **Scope Boundary:** Erebus quests remain untouched per instruction until Learn track work is complete.
 
 

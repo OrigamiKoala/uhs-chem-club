@@ -492,7 +492,7 @@ export const STAGE_CONFIGS = [
           duration: 1400
         }
       ],
-      explanation: 'Addition-elimination complete! The piece attached, the double bond swung open, then snapped shut to expel the leaving group.'
+      explanation: 'Attach-and-drop complete! The piece attached, the double link swung open, then snapped shut to push the old piece off.'
     }
   },
   {
@@ -733,7 +733,7 @@ export const STAGE_CONFIGS = [
           duration: 1500
         }
       ],
-      explanation: 'Stepwise substitution complete! The leaving piece vacated the center first, creating an open seat for water to capture.'
+      explanation: 'Leave-first swap complete! The old piece cleared the center first, creating an open seat for the new piece to land.'
     }
   },
   {
@@ -741,7 +741,7 @@ export const STAGE_CONFIGS = [
     title: 'Stage 20 — Grand Finish',
     prompt: 'Two arrows, in order. Wake the big structure with the helper, then bring the final piece in.',
     moleculeId: 'stage20_multi',
-    hint: 'Two arrows. Wake the scaffold with the catalyst, then bring in the core piece.',
+    hint: 'Two arrows. Wake the structure with the helper first, then bring in the core piece.',
     xp: 50,
     multiArrow: true,
     maxArrows: 2,
@@ -1037,10 +1037,10 @@ const STAGE_COPY = [
   {
     shape: 'ADD, THEN DROP',
     title: 'Stage 14 — Add, Then Drop',
-    prompt: 'The center is occupied. Add the new piece first, then expel the old group. Two arrows.',
+    prompt: 'The center is occupied. Add the new piece first, then push the old piece off. Two arrows.',
     hints: [
-      'Attack the center first to attach the new group, then release the leaving group.',
-      'The newcomer connects in step 1, forcing the leaving piece to depart in step 2.',
+      'Attach to the center first, then let the old attached piece break free.',
+      'The newcomer connects in step 1, forcing the old piece to pop off in step 2.',
       'Step 1: the red site on the left into the blue center. Step 2: the red piece on the right into the blue site beyond it.'
     ],
     conceptTiming: 'reward',
@@ -1048,7 +1048,7 @@ const STAGE_COPY = [
     chem: {
       badge: 'MECHANISM',
       title: 'ATTACH, THEN DROP',
-      body: 'When a new piece attaches, the double link swings open to make room, then snaps back shut to kick out the leaving group.'
+      body: 'When a new piece attaches, the double link swings open to make room, then snaps back shut to kick the old piece off.'
     },
   },
   {
@@ -1065,15 +1065,15 @@ const STAGE_COPY = [
     chem: {
       badge: 'MECHANISM',
       title: 'HELPERS WAKE UP TARGETS',
-      body: 'A helper piece attaches first to pull electrons away. This wakes up the center so the next piece can move in!'
+      body: 'A helper piece attaches first to pull charge away. This wakes up the center so the next piece can move in!'
     },
   },
   {
     shape: 'CUT THE TAIL',
     title: 'Stage 16 — Cutting the Tail',
-    prompt: 'Attack the center first, then release the leaving tail. Two arrows.',
+    prompt: 'Attack the center first, then release the attached tail. Two arrows.',
     hints: [
-      'Identify the incoming group and the leaving group. New attachments form before old ones break.',
+      'Identify the incoming piece and the attached tail. New attachments form before old pieces break.',
       'Step 1 connects the newcomer to the center. Step 2 detaches the tail to the nearby receiver.',
       'Step 1: the red site on the left into the blue center. Step 2: the red tail to the small blue site at its upper right.'
     ],
@@ -1081,8 +1081,8 @@ const STAGE_COPY = [
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'LEAVING PIECES',
-      body: 'A good leaving piece is happy on its own once it leaves. The easier a piece can float away on its own, the easier it pops off.'
+      title: 'DEPARTING PIECES',
+      body: 'A piece that detaches easily is stable on its own once it separates. The happier a piece is on its own, the easier it pops off.'
     },
   },
   {
@@ -1122,10 +1122,10 @@ const STAGE_COPY = [
   {
     shape: 'LEAVE FIRST',
     title: 'Stage 19 — Leave, Then Fill',
-    prompt: 'The crowded center has no room for an incoming group. The leaving group must depart first. Two arrows.',
+    prompt: 'The crowded center has no room for a new piece. The old piece must leave first to open a seat. Two arrows.',
     hints: [
-      'The center is completely blocked. An incoming piece cannot attach until the existing group leaves.',
-      'Step 1 removes the leaving group to open up the center. Step 2 captures the vacant center.',
+      'The center is completely blocked. An incoming piece cannot attach until the existing piece leaves.',
+      'Step 1 removes the old piece to open up the center. Step 2 captures the vacant center.',
       'Step 1: the red piece on the right to the blue site beyond it. Step 2: the red site on the far left into the center it just emptied.'
     ],
     conceptTiming: 'reward',
@@ -1139,18 +1139,18 @@ const STAGE_COPY = [
   {
     shape: 'FINAL RUN',
     title: 'Stage 20 — Grand Finish',
-    prompt: 'Activate the scaffold with the helper first, then connect the core piece. Two arrows.',
+    prompt: 'Activate the structure with the helper first, then connect the core piece. Two arrows.',
     hints: [
-      'The central scaffold is inactive until the small helper donates charge to it.',
-      'Step 1 connects the helper to activate the scaffold. Step 2 brings the core piece into the center.',
-      'Step 1: the red site upper left to the small blue site beside it. Step 2: the red site lower left into the blue center of the scaffold.'
+      'The central structure is inactive until the small helper donates charge to it.',
+      'Step 1 connects the helper to activate the structure. Step 2 brings the core piece into the center.',
+      'Step 1: the red site upper left to the small blue site beside it. Step 2: the red site lower left into the blue center of the structure.'
     ],
     conceptTiming: 'reward',
     concept: null,
     chem: {
       badge: 'MECHANISM',
-      title: 'HELPER CATALYSTS',
-      body: 'A helper catalyst wakes up the structure so the reaction happens easily, without being used up itself. You solved all 20 stages!'
+      title: 'HELPER PIECES',
+      body: 'A helper molecule wakes up the structure so the reaction happens easily, without being used up itself. You solved all 20 stages!'
     },
   }
 ];

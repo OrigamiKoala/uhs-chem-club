@@ -17,6 +17,8 @@
 | **D6** | **Nomenclature:** Plain industrial English. | *The Fifth* (revealed as *The Catalyst* in Unit 11), *spoil*, *salt husk*, *lamp moth*, *basalt warden*, *The Hopper*, *Case File*. Real chemistry terms from stage one; no fantasy coinage or ciphers. |
 | **D7** | **Star Map Navigation:** Two tabs: `Story` (Learn worlds) and `Contracts` (Campaign sectors and side postings). | Nav remains synchronized with page headers. |
 | **D8** | **Pedagogical Alignment:** Encounters are scientific trials, not obstacle combat. | Teach chemistry clearly using real concepts from stage one; never spoon-feed answers. The specimen provides evidence; the student tests and applies concepts to deduce the answer. If you can delete the specimen and the chemistry is unchanged, the trial is decoration. |
+| **D9** | **Physical Reaction Intuition:** No organic chemistry jargon overload. | Elementary/middle schoolers explore organic reactions via tangible physical mechanics (attraction, limited bond seats, 3D crowding, leaving seats, helper pieces) rather than being scared away by college organic chemistry nomenclature ("alkyl halide", "carbonyl", "nucleophile", "SN1/SN2"). |
+| **D10** | **Visual and Hands-On Discovery:** Interactive instruments over text walls. | Students discover chemistry through direct manipulation of 3D molecules, dials, and bench instruments to solve story problems, not reading dense textbook lectures. |
 
 ---
 

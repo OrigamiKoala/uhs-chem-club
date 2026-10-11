@@ -1,68 +1,47 @@
 # Quest 1: The Charge Gardens of Erebus
 
 **Title:** The Charge Gardens of Erebus  
-**World:** Erebus  
-**Target XP:** 165 Base XP (~200 with first-try and completion bonuses)  
+**World:** Sector 01 · Erebus  
+**Target XP:** 650 XP across 20 stages  
 **Estimated Time:** 25–35 minutes  
-**Target Concept:** Curved-arrow notation and nucleophilic substitution ($S_N2$) discovered from electron density maps without upfront vocabulary.
+**Target Concept:** Physical reaction intuition (charges, bond seats, 3D crowding, step-by-step swaps) discovered from 3D electrostatic potential surfaces without college terminology overload.
 
 ---
 
 ## Pedagogical Progression
 
-1. **Stage 0 — Arrival (Story / Calibration):**
-   - *Prompt:* Align wideband scanner to localized electrostatic potentials.
-   - *Answer:* Option `a` (Engage wideband electrostatic scanner).
-   - *Concept:* Setting the diegetic frame. Scanner renders charge fog, not solid matter.
+1. **Stages 1–7 — The Single Arrow & Physical Geometry:**
+   - *Opposites Attract:* Red feeds (negative, electron-rich) seek out blue receivers (positive, electron-poor).
+   - *Competing Sites:* Distinguishing weak vs strong attraction centers.
+   - *3D Crowding (Steric Hindrance):* Bulky surrounding groups block congested paths; rotating the 3D camera reveals the open approach route.
 
-2. **Stage 1 — Calibrate the Scanner (Pick):**
-   - *Prompt:* Orbit the water ($H_2O$) charge cloud. Tap or click the brightest, highest-density lobe.
-   - *Anchor:* `lp_o` (Oxygen lone pair).
-   - *Reveal:* "Scanner calibrated! High charge density detected on the outer lobe."
-   - *Concept:* Lone pair lobes physically protrude in 3D space.
+2. **Stages 8–10 — Three-Molecule Chambers & Bystanders:**
+   - *Bystander Molecules:* Cold/inert components sit in the chamber; players learn to ignore idle spectators and route only active pairs.
 
-3. **Stage 2 — Read the Lean (Rank):**
-   - *Prompt:* Rank three beacons ($HF$, $LiH$, $H_2$) from most uneven/polarized density to most symmetric sharing.
-   - *Answer Order:* `["hf", "lih", "h2"]`
-   - *Reveal:* "Some pairs share evenly. Some don't. The lopsided ones are where things happen."
-   - *Concept:* Electronegativity differences and bond dipoles.
-
-4. **Stage 3 — Giver and Taker (Pick Multi):**
-   - *Prompt:* Locate both active centers: the crowded donor lone pair and the starved carbon electrophile.
-   - *Anchors:* `["lp_o", "c1"]`
-   - *Reveal:* "Crowded places give. Starved places take. That's the whole game."
-   - *Concept:* Nucleophile and electrophile identification.
-
-5. **Stage 4 — Route the Current (Arrow):**
-   - *Prompt:* Drag a curved energy arrow from the crowded lone pair to the starved carbon center.
-   - *Answer:* `from: "lp_o", to: "c1"`
-   - *Reveal:* "Charge flows along the potential gradient directly into the starved core."
-   - *Concept:* Nucleophilic attack via curved-arrow notation.
-
-6. **Stage 5 — The Aftermath (Choice):**
-   - *Prompt:* Which molecular state represents the consequence of routing the arrow?
-   - *Answer:* Option `b` (New C-O bond formed; chloride ion departs with the shared pair).
-   - *Reveal:* "Bond formed; leaving group displaced into solution with inverted stereochemistry."
-   - *Concept:* Octet rule preservation and leaving group departure.
-
-7. **Stage 6 — The Lock (Chain):**
-   - *Prompt:* Execute the two-step substitution cascade in order: nucleophile attack followed by leaving group departure.
-   - *Steps:*
-     1. `from: "lp_o", to: "c1"`
-     2. `from: "c_cl", to: "cl"`
-   - *Reveal:* "The derelict terraforming lattice unlocks with a resonant hum!"
-   - *Concept:* Complete $S_N2$ mechanism.
-
-8. **Stage 7 — Bonus: The Unlit Garden (Chain):**
-   - *Prompt:* Unscaffolded tertiary substrate with bromide leaving group. Route both arrows to harvest the rare artifact drop.
-   - *Steps:*
-     1. `from: "lp_nu", to: "c_sub"`
-     2. `from: "c_br", to: "br"`
-   - *Reveal:* "Mastery verified! The unlit garden blooms with coherent emerald luminescence."
-   - *Concept:* Independent problem solving without guidance scaffolds. Guaranteed item drop.
+3. **Stages 11–20 — Two-Arrow Sequences & Step-by-Step Transformations:**
+   - *Limited Bond Seats & Making Room:* When a full atom receives a bond, an existing bond must give way (push-and-leave / leave-first swap).
+   - *Spring Tension (Ring Strain):* Bent molecular rings pop open when a bond is relieved.
+   - *Helper Molecules (Catalysis):* Assistant species accept or pass pieces to enable otherwise difficult swaps.
 
 ---
 
-## Epilogue Reveal
+## Pedagogy Doctrine: Physical Intuition Over Jargon Overload
 
-> *The crowded places you've been clicking are called **lone pairs** and **π clouds**. The starved places are **electrophiles**. The arrow you drew has a name — **curved-arrow notation** — and chemists use exactly the same one. You just did nucleophilic substitution. Real one. Today.*
+Elementary and middle school students are easily intimidated by dense college organic chemistry nomenclature. Avalon avoids terminology overload:
+- **No intimidating jargon in gameplay copy:** Terms like "alkyl halide", "carbonyl", "carbocation", "nucleophile", "electrophile", "SN1", and "SN2" are withheld from student-facing prompts and gameplay text.
+- **Concrete physical models:** Students learn the universal mechanics of organic chemistry through physical intuition:
+  1. *Opposites attract:* Negative charge pushes into positive charge.
+  2. *Bond seats are limited:* Carbon holds four bonds; to add one, another must make room.
+  3. *3D crowding matters:* Molecules cannot pass through each other; bulky groups block angles of attack.
+  4. *Multi-step chains:* Reactions happen in discrete, ordered steps.
+
+---
+
+## Debrief & Story Integration
+
+The campaign contract frames each stage as reactivating a sabotaged defense pylon across the dune basin before a hostile fleet arrives. Upon clearing all twenty pylons, Vess provides an interactive five-part debrief:
+1. **Contract Fulfilled:** Commending grid restoration and crediting salvage.
+2. **The Real Science:** Connecting red/blue feeds to physical electrons and positive/negative charges.
+3. **Curved Arrows:** Explaining real-world curved arrow notation for electron flow.
+4. **Physical Crowding:** Revealing how 3D shape and bulky obstruction dictate the path of a reaction.
+5. **Step-by-Step Reactions:** Reinforcing how complex molecular reactions unfold through ordered, physical transformations.

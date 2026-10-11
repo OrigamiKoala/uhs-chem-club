@@ -59,11 +59,8 @@ function markStageIntroSeen(idx) {
   } catch (e) {}
 }
 
-function shouldAutoShowStageModal(cfg, idx, isReplay) {
-  if (isReplay) return false;
-  if (hasSeenStageIntro(idx)) return false;
-  if (cfg.conceptTiming === 'intro') return true;
-  return AUTO_MODAL_STAGES.has(idx);
+function shouldAutoShowStageModal() {
+  return true;
 }
 
 /**
@@ -133,8 +130,6 @@ function renderChemCard(chem) {
 function showStageModal(cfg, currentStageIdx, isReplay, stageXp, onStart = null) {
   const isMulti = Boolean(cfg.multiArrow);
   const requiredArrows = isMulti ? (cfg.steps?.length || 2) : 1;
-  const introConcept = cfg.concept && cfg.conceptTiming === 'intro' ? cfg.concept : null;
-  const b = QUEST1_STORY.briefing;
 
   let triggered = false;
   const triggerStart = () => {
@@ -143,67 +138,53 @@ function showStageModal(cfg, currentStageIdx, isReplay, stageXp, onStart = null)
     if (typeof onStart === 'function') onStart();
   };
 
-  if (currentStageIdx === 0 && b) {
-    showModal(`
-      <div class="quest-modal-head" style="text-align: center; margin-bottom: 1.15rem;">
-        <h2 id="stage-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.25rem;">
-          Stage 1 · ${esc(cfg.title || 'Target Lock')}
-        </h2>
-        <div style="margin-top: 0.35rem; display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
-          <span class="tag live">Stage 1 of ${TOTAL_STAGES}</span>
-          ${isReplay ? '<span class="tag">Replay</span>' : `<span class="tag live">+${stageXp} XP</span>`}
-        </div>
-      </div>
-
-      <div style="background: var(--plate-100); border: 1px solid var(--border-durasteel); padding: 1rem 1.15rem; margin-bottom: 1.15rem; font-size: 0.95rem; line-height: 1.55; color: var(--text-bright);">
-        ${cfg.prompt ? esc(cfg.prompt) : 'Connect the molecules to trigger the reaction.'}
-      </div>
-
-      ${introConcept ? renderConceptCard(introConcept) : ''}
-
-      <div style="margin-top: 1.15rem;">
-        <button type="button" id="modal-start-stage-btn" class="btn-primary" style="width: 100%; padding: 11px 0; font-size: 0.92rem; letter-spacing: 0.08em;">
-          Start Stage
-        </button>
-      </div>
-    `, {
-      labelledBy: 'stage-modal-title',
-      onClose: triggerStart
-    });
-
-    document.getElementById('modal-start-stage-btn')?.addEventListener('click', () => {
-      triggerStart();
-      closeModal();
-      soundscape.playNavRelayClick();
-    });
-    return;
-  }
-
   showModal(`
-    <div class="quest-modal-head" style="text-align: center; margin-bottom: 1.25rem;">
-      <h2 id="stage-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.3rem;">
+    <div class="quest-modal-head" style="text-align: center; margin-bottom: 1rem;">
+      <h2 id="stage-modal-title" class="page-title" style="font-size: 1.35rem; margin-top: 0.25rem;">
         Stage ${currentStageIdx + 1} · ${esc(cfg.title || ('Stage ' + (currentStageIdx + 1)))}
       </h2>
-      <div style="margin-top: 0.4rem;">
+      <div style="margin-top: 0.35rem; display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+        <span class="tag live">Stage ${currentStageIdx + 1} of ${TOTAL_STAGES}</span>
         ${isReplay ? '<span class="tag">Replay</span>' : `<span class="tag live">+${stageXp} XP</span>`}
       </div>
     </div>
 
-    <div style="background: var(--plate-100); border: 1px solid var(--border-durasteel); padding: 1rem 1.15rem; margin-bottom: 1.25rem; font-size: 0.95rem; line-height: 1.55; color: var(--text-bright);">
-      ${cfg.prompt ? esc(cfg.prompt) : 'Connect the molecules to trigger the reaction.'}
+    <div style="background: var(--plate-100); border: 1px solid var(--border-durasteel); padding: 0.85rem 1.1rem; margin-bottom: 0.85rem; font-size: 0.92rem; line-height: 1.5; color: var(--text-bright);">
+      ${esc(cfg.prompt || 'Connect the molecules to trigger the reaction.')}
     </div>
 
-    ${isMulti ? `
-      <div style="background: var(--plate-200); border-left: 2px solid var(--accent-amber); padding: 8px 12px; margin-bottom: 1.25rem; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45;">
-        <strong>Task:</strong> ${requiredArrows} arrows in sequence. Click an arrow's number to change its step order; click an arrow line to delete it.
+    <div class="lq-briefing-instruments" style="margin-bottom: 0.85rem;">
+      <div class="form-label lit" style="margin-bottom: 0.4rem; letter-spacing: 0.08em;">CONTROLS</div>
+      <div class="lq-instrument-cards" style="display: flex; flex-direction: column; gap: 0.4rem;">
+        <div class="lq-instrument-card plate" style="padding: 0.5rem 0.75rem;">
+          <div class="lq-instrument-card-head" style="display: flex; justify-content: space-between;">
+            <span class="eyebrow lit">Target Arrow</span>
+            <span class="tag live" style="font-size: 0.58rem; padding: 1px 6px;">LEFT-DRAG</span>
+          </div>
+          <p class="lq-instrument-card-desc" style="font-size: 0.78rem; margin: 0.2rem 0 0; color: var(--text-secondary);">Click and drag from the electron donor to the receiver.</p>
+        </div>
+        <div class="lq-instrument-card plate" style="padding: 0.5rem 0.75rem;">
+          <div class="lq-instrument-card-head" style="display: flex; justify-content: space-between;">
+            <span class="eyebrow lit">Chamber Camera</span>
+            <span class="tag live" style="font-size: 0.58rem; padding: 1px 6px;">RIGHT-DRAG</span>
+          </div>
+          <p class="lq-instrument-card-desc" style="font-size: 0.78rem; margin: 0.2rem 0 0; color: var(--text-secondary);">Right-drag to rotate the molecule in 3D.</p>
+        </div>
+        ${isMulti ? `
+          <div class="lq-instrument-card plate" style="padding: 0.5rem 0.75rem;">
+            <div class="lq-instrument-card-head" style="display: flex; justify-content: space-between;">
+              <span class="eyebrow lit">Sequence Order</span>
+              <span class="tag live" style="font-size: 0.58rem; padding: 1px 6px;">${requiredArrows} ARROWS</span>
+            </div>
+            <p class="lq-instrument-card-desc" style="font-size: 0.78rem; margin: 0.2rem 0 0; color: var(--text-secondary);">Click an arrow's number to change order; click the line to remove.</p>
+          </div>
+        ` : ''}
       </div>
-    ` : ''}
+    </div>
 
-    ${introConcept ? renderConceptCard(introConcept) : ''}
-
-    <div style="margin-top: 1.25rem;">
-      <button type="button" id="modal-start-stage-btn" class="btn-primary" style="width: 100%; padding: 10px 0; font-size: 0.9rem;">
-        Start Stage
+    <div style="margin-top: 1rem;">
+      <button type="button" id="modal-start-stage-btn" class="btn-primary" style="width: 100%; padding: 10px 0; font-size: 0.92rem; letter-spacing: 0.08em;">
+        Start Stage ▶
       </button>
     </div>
   `, {

@@ -211,18 +211,18 @@ export const QUEST1_STORY = {
         text: 'Those lines you drew across the contacts are called curved arrows, and real-world chemists use exactly this notation. An arrow shows a pair of electrons moving from where they are to where they are going.'
       },
       {
-        title: 'Steric Hindrance',
+        title: 'Physical Crowding',
         speaker: 'Vess',
-        badge: 'DEBRIEF 4/5 · STERIC HINDRANCE',
+        badge: 'DEBRIEF 4/5 · PHYSICAL CROWDING',
         subtitle: 'Geometry & Obstruction',
-        text: 'When two blue targets competed for the line, geometry decided the winner: bulky groups physically block incoming molecules, so reactions take the open route. Chemists call that steric hindrance.'
+        text: 'When two blue targets competed for the line, physical geometry decided the winner: bulky surrounding pieces physically block incoming molecules, so reactions always take the open route.'
       },
       {
-        title: 'Reaction Mechanisms',
+        title: 'Step-by-Step Reactions',
         speaker: 'Vess',
-        badge: 'DEBRIEF 5/5 · REACTION MECHANISMS',
-        subtitle: 'Organic Chemistry',
-        text: 'In those multi-step stages, you were writing a full reaction mechanism — the exact order in which bonds form and break. That is the core skill of organic chemistry, and you just solved twenty of them. Outstanding work, recruit.'
+        badge: 'DEBRIEF 5/5 · STEP-BY-STEP REACTIONS',
+        subtitle: 'How Molecules Transform',
+        text: 'In those multi-step stages, you solved a complete reaction step-by-step — watching bonds form, atoms make room, and pieces swap out. That physical intuition is the heart of how organic reactions work, and you just mastered twenty of them.'
       }
     ],
     lines: [

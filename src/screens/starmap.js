@@ -73,8 +73,8 @@ function tabRow(active) {
         <button type="button" class="map-tab${active === "learn" ? " active" : ""}" data-map-tab="learn" role="tab" aria-selected="${active === "learn"}">Story</button>
         <button type="button" class="map-tab${active === "sectors" ? " active" : ""}" data-map-tab="sectors" role="tab" aria-selected="${active === "sectors"}">Contracts</button>
       </div>
-      <button type="button" class="btn-secondary quest-btn-sm m-tap" id="campaign-story-briefing-btn" title="Story Dossier" style="font-size: 0.72rem;">
-        Story Dossier
+      <button type="button" class="btn-secondary quest-btn-sm m-tap" id="campaign-story-briefing-btn" title="Main Briefing" style="font-size: 0.72rem;">
+        Main Briefing
       </button>
     </div>
   `;
@@ -125,26 +125,6 @@ function bindTabs(container) {
   // The Learn panel is drawn on both tiers, so its Problems keys are wired here
   // rather than twice in renderStarMap.
   bindPracticeKeys(container);
-
-  container.querySelectorAll('.learn-enter-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const worldId = btn.dataset.worldId;
-      if (!worldId) return;
-      if (!stage.canVoyage?.(worldId)) {
-        e.preventDefault();
-        const w = WORLDS.find(x => x.id === worldId);
-        openWorldStoryModal(w || worldId, {
-          isPreLaunch: true,
-          onLaunch: () => {
-            window.location.hash = `#/learn/${worldId}`;
-          },
-          onClose: () => {
-            window.location.hash = `#/learn/${worldId}`;
-          }
-        });
-      }
-    });
-  });
 
   container.querySelector('#campaign-story-briefing-btn')?.addEventListener('click', () => {
     openCampaignStoryModal();

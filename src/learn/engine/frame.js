@@ -25,7 +25,6 @@ import { benchDeployment, activeBenchViewer, onBenchViewer } from './bench-host.
 import { benchesAre3D } from './instruments.js';
 import { mirrorBenchKeys } from './bench-keys.js';
 import { Encounter } from './encounter.js';
-import { getQuestScience } from './quest-guide.js';
 import {
   PanelRig, createBenchAnchor, createPanelGantry, disposeGantry
 } from '../../three/world-ui.js';
@@ -212,6 +211,12 @@ export const PANEL_LAYOUT = {
     designator: 'CMS-00'
   }
 };
+
+/** At most `n` sentences of `text`; a briefing is a line or two, never a manual. */
+function clampSentences(text, n) {
+  const parts = String(text || '').match(/[^.!?]+[.!?]+["')\]]*\s*|[^.!?]+$/g) || [];
+  return parts.slice(0, n).join('').trim();
+}
 
 export class LearnFrame {
   /**
@@ -613,8 +618,7 @@ export class LearnFrame {
     // rebuilt; the docked one is the same node for the life of the frame, so its
     // action, label and enabled state are reset by hand. A docked key left on
     // "next" from the stage before skipped the stage it was pressed on.
-    // A stage in a fight names its Commit key for the attack it is.
-    const commitLabel = stage.encounter?.act || stage.commitLabel || 'Commit';
+    const commitLabel = stage.commitLabel || 'Commit';
     this.encounter.begin(stage.encounter || null);
     this.el.actions.innerHTML = `
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
@@ -639,6 +643,9 @@ export class LearnFrame {
     // phone the Next key sits below it. Arriving at the quest should not move
     // the page at all.
     if (advancing) this.container.querySelector('.lq')?.scrollIntoView({ block: 'nearest' });
+
+    // Show objective intro screen automatically
+    this.showBriefing();
   }
 
   currentQuestId() {
@@ -655,84 +662,8 @@ export class LearnFrame {
 
   updateBenchGuide(stage) {
     if (!this.el.benchGuide) return;
-    const questId = this.currentQuestId();
-    const stageIndex = stage?.index ?? 0;
-    const science = getQuestScience(questId, stageIndex, stage);
-
-    const viewer = activeBenchViewer();
-    let items = [];
-
-    if (viewer && typeof viewer.getAvailableInstruments === 'function') {
-      items = viewer.getAvailableInstruments();
-    } else {
-      const controls = stage?.controls || [];
-      if (controls.includes('power') || stage?.dials?.length) {
-        items.push({
-          name: 'Dial',
-          shortDesc: 'Drag knob or scroll mouse wheel to adjust'
-        });
-      }
-      if (controls.some(c => c !== 'power')) {
-        items.push({
-          name: 'Keys',
-          shortDesc: 'Click engraved plates on bench rail'
-        });
-      }
-      if (stage?.samples?.length || stage?.select || stage?.specimens?.length || stage?.pairs?.length || stage?.hoppers?.length) {
-        items.push({
-          name: 'Stations',
-          shortDesc: 'Click wells, bins or screens to select'
-        });
-      }
-    }
-
-    this.el.benchGuide.hidden = false;
-    this.el.benchGuide.innerHTML = `
-      <div class="lq-bench-guide-card plate">
-        <div class="lq-bench-guide-head">
-          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-            <span class="eyebrow lit" style="color: var(--accent-amber); font-weight: 700; letter-spacing: 0.1em;">🔬 CHEMISTRY INVESTIGATION</span>
-            <span class="tag live" style="font-size: 0.65rem; padding: 1px 7px;">${esc(science.conceptTitle || 'Chemistry')}</span>
-          </div>
-          <button type="button" class="btn-secondary quest-btn-sm lq-guide-reopen-btn" data-act="objective" title="Open full chemistry guide">Objective &amp; Guide 📖</button>
-        </div>
-
-        <div class="lq-guide-content-stack" style="display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.35rem;">
-          <div class="lq-guide-row" style="background: rgba(56, 189, 248, 0.06); border-left: 2px solid #38bdf8; padding: 5px 8px; border-radius: 2px;">
-            <div style="font-size: 0.64rem; font-family: var(--font-mono); color: #38bdf8; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700;">🔬 Chemistry Concept:</div>
-            <div style="font-size: 0.8rem; line-height: 1.4; color: var(--text-bright); margin-top: 1px;"><strong>${esc(science.stageScience)}</strong></div>
-          </div>
-
-          <div class="lq-guide-row" style="background: rgba(217, 148, 35, 0.07); border-left: 2px solid var(--accent-gold); padding: 5px 8px; border-radius: 2px;">
-            <div style="font-size: 0.64rem; font-family: var(--font-mono); color: var(--accent-gold); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700;">🚀 Storyline Problem Solved:</div>
-            <div style="font-size: 0.78rem; line-height: 1.4; color: var(--text-secondary); margin-top: 1px;">${esc(science.stageStoryProblem || science.stageGoal)}</div>
-          </div>
-
-          ${science.visualFormula ? `
-            <div class="lq-guide-row" style="background: rgba(52, 211, 153, 0.06); border-left: 2px solid #34d399; padding: 4px 8px; border-radius: 2px;">
-              <div style="font-size: 0.64rem; font-family: var(--font-mono); color: #34d399; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700;">📐 Visual Rule:</div>
-              <div style="font-size: 0.82rem; font-family: var(--font-mono); color: #6ee7b7; font-weight: 700; margin-top: 1px;">${esc(science.visualFormula)}</div>
-            </div>
-          ` : ''}
-
-          <div class="lq-guide-row" style="background: rgba(245, 158, 11, 0.05); border-left: 2px solid #f59e0b; padding: 5px 8px; border-radius: 2px;">
-            <div style="font-size: 0.64rem; font-family: var(--font-mono); color: #f59e0b; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700;">🖐️ Bench Test:</div>
-            <div style="font-size: 0.76rem; line-height: 1.4; color: var(--text-secondary); margin-top: 1px;">${esc(science.howToExplore)}</div>
-          </div>
-        </div>
-
-        ${items.length ? `
-          <div class="lq-bench-guide-list" style="margin-top: 0.4rem; padding-top: 0.35rem; border-top: 1px solid var(--border-durasteel);">
-            ${items.map(it => `
-              <div class="lq-bench-guide-row">
-                <span class="lq-bench-guide-lbl">${esc(it.name)}:</span>
-                <span class="lq-bench-guide-text">${esc(it.shortDesc)}</span>
-              </div>
-            `).join('')}
-          </div>
-        ` : ''}
-      </div>
-    `;
+    this.el.benchGuide.hidden = true;
+    this.el.benchGuide.innerHTML = '';
   }
 
   updateStageActions() {
@@ -759,7 +690,13 @@ export class LearnFrame {
     syncPressed(this.el.widget);
     nameSteppers(this.el.widget);
   }
-  setReadout(html) { this.el.readout.innerHTML = html; }
+  setReadout(html) {
+    this.el.readout.innerHTML = html;
+    // A reading is a line or two; the card as a whole stays within four sentences.
+    this.el.readout.querySelectorAll('.lq-readout-line').forEach(p => {
+      p.textContent = clampSentences(p.textContent, 2);
+    });
+  }
 
   setCommitEnabled(on) {
     if (this.el.commit) this.el.commit.disabled = !on;
@@ -856,9 +793,7 @@ export class LearnFrame {
     `;
     this.el.widget.innerHTML = `
       <div class="lq-reward">
-        <div class="eyebrow lit">What you just found</div>
-        <h3 class="lq-reward-title">${esc(reward.title)}</h3>
-        <p class="lq-reward-body">${esc(reward.body)}</p>
+        <p class="lq-reward-body"><strong>${esc(reward.title)}.</strong> ${esc(clampSentences(reward.body, 2))}</p>
       </div>
     `;
     this.el.actions.innerHTML = `
@@ -949,122 +884,30 @@ export class LearnFrame {
       this.activeBriefingTx = null;
     }
 
-    const questId = this.currentQuestId();
-    const stageIndex = this.stage?.index ?? 0;
-    const science = getQuestScience(questId, stageIndex, this.stage);
-
     const b = this.stage?.briefing;
     const speaker = b?.speaker || this.opts.speaker || 'Vess';
-    const bodyText = b?.body || `${science.questTitle}: ${science.conceptTitle}. ${science.overview}`;
+    const bodyText = b?.body || this.stage?.prompt || 'Explore the bench samples and instruments.';
 
     // Show halos around instruments during the introduction
     activeBenchViewer()?.showInstrumentHalos('all');
 
-    const viewer = activeBenchViewer();
-    const instruments = viewer?.getAvailableInstruments?.() || [
-      { kind: 'dial', name: 'Rotary Dial', tag: 'DRAG / SCROLL', desc: 'Click and drag the knob or scroll the mouse wheel to turn.' },
-      { kind: 'keys', name: 'Bench Keys', tag: 'CLICK KEY', desc: 'Click the engraved tool plates along the bench to activate tools.' },
-      { kind: 'stations', name: 'Sample Stations', tag: 'CLICK WELL', desc: 'Click wells or screens on the bench to select and inspect samples.' }
-    ];
+    const n = this.stage ? this.stage.index + 1 : 1;
+    const text = clampSentences(bodyText, 4);
 
     showModal(`
-      <div class="quest-modal-head lq-modal-head" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
-        <div>
-          <div class="eyebrow lit" style="color: var(--accent-amber); font-weight: 700;">${esc(speaker)} · Research Expedition Comms</div>
-          <h2 id="lq-briefing-title" class="section-title" style="font-size: 1.25rem; margin: 0.2rem 0 0;">${esc(science.questTitle)} · ${esc(this.stage?.title || 'Stage Guide')}</h2>
+      <div class="lq-brief-card">
+        <div class="lq-brief-head">
+          <span class="eyebrow lit" id="lq-briefing-title">${esc(speaker)} · Stage ${n}</span>
+          <button type="button" class="btn-chip" data-lq-close aria-label="Close dialog">Close</button>
         </div>
-        <button type="button" class="btn-chip" data-lq-close aria-label="Close dialog">Close ✕</button>
-      </div>
-
-      <div id="lq-modal-transmission" class="lq-modal-tx"></div>
-
-      <div class="lq-briefing-modal-grid" style="display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.85rem;">
-        <!-- 1. Chemistry Concept -->
-        <div class="lq-briefing-science-box plate" style="padding: 0.8rem 1rem; border-left: 3px solid #38bdf8; background: rgba(56, 189, 248, 0.04);">
-          <div class="eyebrow lit" style="color: #38bdf8; font-size: 0.65rem; margin-bottom: 0.3rem;">🔬 1. CHEMISTRY CONCEPT BEING EXPLORED</div>
-          <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-bright); margin-bottom: 0.35rem;">
-            ${esc(science.stageScience)}
-          </div>
-          <p style="font-size: 0.82rem; line-height: 1.45; color: var(--text-secondary); margin: 0;">
-            ${esc(science.overview)}
-          </p>
+        <div id="lq-modal-transmission" class="lq-modal-tx"></div>
+        <div class="debrief-controls-left lq-modal-keys">
+          <button type="button" class="btn-primary" data-lq-close>Start</button>
         </div>
-
-        <!-- 2. Storyline Application -->
-        <div class="lq-briefing-science-box plate" style="padding: 0.8rem 1rem; border-left: 3px solid var(--accent-gold); background: rgba(217, 148, 35, 0.04);">
-          <div class="eyebrow lit" style="color: var(--accent-gold); font-size: 0.65rem; margin-bottom: 0.3rem;">🚀 2. STORYLINE APPLICATION (THE PRACTICAL PROBLEM SOLVED)</div>
-          <div style="font-size: 0.85rem; line-height: 1.5; color: var(--text-bright); margin-bottom: 0.35rem;">
-            ${esc(science.stageStoryProblem || science.stageGoal)}
-          </div>
-          <p style="font-size: 0.78rem; line-height: 1.4; color: var(--text-secondary); margin: 0;">
-            ${esc(science.storyline)}
-          </p>
-        </div>
-
-        <!-- 3. Visual Rule / Formula -->
-        ${science.visualFormula ? `
-          <div class="lq-briefing-science-box plate" style="padding: 0.7rem 1rem; border-left: 3px solid #34d399; background: rgba(52, 211, 153, 0.06);">
-            <div class="eyebrow lit" style="color: #34d399; font-size: 0.65rem; margin-bottom: 0.25rem;">📐 3. VISUAL FORMULA &amp; RELATIONSHIP</div>
-            <div style="font-family: var(--font-mono); font-size: 0.86rem; color: #6ee7b7; font-weight: 700; letter-spacing: 0.04em;">
-              ${esc(science.visualFormula)}
-            </div>
-          </div>
-        ` : ''}
-
-        <!-- 4. Hands-on Scientific Method -->
-        <div class="lq-briefing-science-box plate" style="padding: 0.8rem 1rem; border-left: 3px solid #f59e0b; background: rgba(245, 158, 11, 0.04);">
-          <div class="eyebrow lit" style="color: #f59e0b; font-size: 0.65rem; margin-bottom: 0.3rem;">🖐️ 4. HANDS-ON BENCH EXPERIMENT (SCIENTIFIC METHOD)</div>
-          <div style="font-size: 0.84rem; line-height: 1.45; color: var(--text-bright); margin-bottom: 0.35rem;">
-            <strong>Stage Goal:</strong> ${esc(science.stageGoal)}
-          </div>
-          <div style="font-size: 0.8rem; line-height: 1.45; color: var(--text-secondary); margin: 0;">
-            ${esc(science.howToExplore)}
-          </div>
-        </div>
-      </div>
-
-      ${science.vocab && science.vocab.length ? `
-        <div class="lq-briefing-vocab" style="margin-top: 0.75rem;">
-          <div class="form-label lit" style="font-size: 0.68rem; margin-bottom: 0.35rem; letter-spacing: 0.08em;">KEY SCIENCE &amp; BENCH TERMS</div>
-          <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-            ${science.vocab.map(v => `
-              <div style="font-size: 0.78rem; line-height: 1.35; padding: 5px 8px; background: rgba(18, 16, 13, 0.55); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 2px;">
-                <strong style="color: var(--accent-amber);">${esc(v.word)}:</strong> <span style="color: var(--text-secondary);">${esc(v.meaning)}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      ` : ''}
-
-      <div class="lq-briefing-attempts" style="margin-top: 0.75rem; padding: 6px 10px; background: rgba(217, 148, 35, 0.08); border: 1px dashed rgba(217, 148, 35, 0.3); border-radius: 2px; font-size: 0.76rem; color: var(--text-secondary);">
-        <strong style="color: var(--accent-amber);">Experiment Trials:</strong> You have 3 attempts before a safety reset. Trying and missing costs nothing—your progress and bench readings are never lost!
-      </div>
-
-      ${instruments.length ? `
-        <div class="lq-briefing-instruments">
-          <div class="form-label lit" style="margin-bottom: 0.4rem; letter-spacing: 0.08em;">INSTRUMENT CONTROLS (3D HALOS HIGHLIGHTED)</div>
-          <div class="lq-instrument-cards">
-            ${instruments.map(inst => `
-              <div class="lq-instrument-card plate" data-halo-kind="${esc(inst.kind)}" tabindex="0" role="button">
-                <div class="lq-instrument-card-head">
-                  <span class="eyebrow lit">${esc(inst.name)}</span>
-                  <span class="tag live" style="font-size: 0.58rem; padding: 1px 6px;">${esc(inst.tag || '3D HALO')}</span>
-                </div>
-                <p class="lq-instrument-card-desc">${esc(inst.desc)}</p>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      ` : ''}
-
-      <div class="debrief-controls-left lq-modal-keys" style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
-        <button type="button" class="btn-primary" data-lq-close>Start Experiment ▶</button>
-        <button type="button" class="btn-secondary" data-lq-close>Close</button>
       </div>
     `, {
       labelledBy: 'lq-briefing-title',
       onClose: () => {
-        // ALWAYS CLEAR HALOS WHEN LEAVING INTRODUCTION!
         activeBenchViewer()?.hideInstrumentHalos();
         if (this.activeBriefingTx?.destroy) {
           this.activeBriefingTx.destroy();
@@ -1073,26 +916,9 @@ export class LearnFrame {
       }
     });
 
-    // Wire interactive card hovering and clicks to focus halo on specific instrument
-    document.querySelectorAll('.lq-instrument-card').forEach(card => {
-      card.addEventListener('mouseenter', () => {
-        activeBenchViewer()?.showInstrumentHalos(card.dataset.haloKind);
-      });
-      card.addEventListener('mouseleave', () => {
-        activeBenchViewer()?.showInstrumentHalos('all');
-      });
-      card.addEventListener('click', () => {
-        document.querySelectorAll('.lq-instrument-card').forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        activeBenchViewer()?.showInstrumentHalos(card.dataset.haloKind);
-      });
-    });
-
-    // No stage badge on the transmission: the rail and the stage line under the
-    // title already say where the player is, and a third copy says nothing new.
     this.activeBriefingTx = createTransmissionElement({
       speaker,
-      text: bodyText,
+      text,
       variant: 'hero'
     });
     document.getElementById('lq-modal-transmission')?.appendChild(this.activeBriefingTx.element);
