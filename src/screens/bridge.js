@@ -97,19 +97,11 @@ export function renderBridge(container) {
               <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-bright); margin-top: 2px;">Next meeting Tuesday 10/13 in 702</div>
             </div>
             <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);">
-                ◀ Star Map / Quests & World Charts
-              </div>
+              <button type="button" id="bridge-story-dossier-btn" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; padding: 3px 8px; color: var(--accent-gold); border-color: rgba(217, 148, 35, 0.4);" title="Story Dossier">
+                Story Dossier
+              </button>
               <button type="button" id="bridge-announcement-close" class="btn-chip" style="font-size: 0.72rem; padding: 2px 8px; color: var(--accent-amber); border-color: rgba(217, 148, 35, 0.4); cursor: pointer;" title="Close [X]">Close [X]</button>
             </div>
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem; border-top: 1px solid rgba(217, 148, 35, 0.2); padding-top: 0.45rem; flex-wrap: wrap; gap: 0.4rem;">
-            <span style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent-amber);">
-              Standing orders: Investigate rim anomalies across the 14 worlds.
-            </span>
-            <button type="button" id="bridge-story-dossier-btn" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; padding: 3px 8px; color: var(--accent-gold); border-color: rgba(217, 148, 35, 0.4);" title="Review Campaign Storyline & Ghost Charter">
-              📜 Mission Storyline Dossier
-            </button>
           </div>
         </div>
 
@@ -127,9 +119,8 @@ export function renderBridge(container) {
             </div>
 
             <h2 class="section-title">The Charge Gardens</h2>
-            <p class="page-sub" style="margin-bottom: 1.1rem;">Find what pulls. Draw the line.</p>
 
-            <div style="margin-bottom: 1.25rem;">
+            <div style="margin: 0.75rem 0 1.25rem;">
               ${renderGardensMap({ clearedCount: cleared, currentStageIdx: isComplete ? null : cleared })}
             </div>
 
@@ -145,21 +136,18 @@ export function renderBridge(container) {
           </section>
 
           <section class="glass-panel">
-            <span class="eyebrow">Guild Conditions</span>
-            <h2 class="section-title" style="margin-top: 0.4rem;">
-              ${activeEv ? esc(activeEv.name) : "All Clear"}
-            </h2>
-            ${activeEv && activeEv.description ? `<p class="page-sub" style="margin-bottom: 1rem;">${esc(activeEv.description)}</p>` : '<div style="margin-bottom: 1rem;"></div>'}
-
             ${activeEv ? `
+              <span class="eyebrow">Guild Condition</span>
+              <h2 class="section-title" style="margin-top: 0.4rem;">${esc(activeEv.name)}</h2>
+              ${activeEv.description ? `<p class="page-sub" style="margin-bottom: 1rem;">${esc(activeEv.description)}</p>` : ''}
               <div style="margin-bottom: 1.25rem;">
                 <span class="tag ${activeEv.polarity === "bad" ? "danger" : activeEv.polarity === "good" ? "live" : ""}">
                   ${esc(String(activeEv.polarity || "neutral").toUpperCase())}
                 </span>
               </div>
-            ` : ""}
+            ` : ''}
 
-            <div style="border-top: 1px solid var(--border-durasteel); padding-top: 1.25rem; margin-top: 1.25rem;">
+            <div style="${activeEv ? 'border-top: 1px solid var(--border-durasteel); padding-top: 1.25rem; margin-top: 1.25rem;' : ''}">
               <div class="bridge-decks" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <a href="#/starmap" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Star Map</a>
                 <a href="#/contracts" class="btn-secondary" style="font-size: 0.72rem; text-decoration: none;">Contracts</a>
@@ -176,27 +164,23 @@ export function renderBridge(container) {
 
     container.querySelector(".bridge-quest-cta")?.addEventListener("click", async (e) => {
       e.preventDefault();
-      if (!session.hasFlag('story_world_seen_erebus')) {
+      if (!stage.canVoyage?.("erebus")) {
         openWorldStoryModal('erebus', {
           isPreLaunch: true,
           onLaunch: async () => {
-            session.setFlag('story_world_seen_erebus', true);
-            if (!stage.canVoyage?.("erebus")) {
-              try {
-                await playCinematic("launch");
-              } catch (err) {}
-            }
+            try {
+              await playCinematic("launch");
+            } catch (err) {}
+            window.location.hash = "#/quest";
+          },
+          onClose: async () => {
+            try {
+              await playCinematic("launch");
+            } catch (err) {}
             window.location.hash = "#/quest";
           }
         });
         return;
-      }
-      // At T4 the Avalon flies there itself (three/voyage.js); the launch
-      // film is for the tiers that cannot draw the flight.
-      if (!stage.canVoyage?.("erebus")) {
-        try {
-          await playCinematic("launch");
-        } catch (err) { }
       }
       window.location.hash = "#/quest";
     });

@@ -267,18 +267,17 @@ export class Router {
     // Show storyline briefing BEFORE take off and before travel/landing animation
     const m = matchParamRoute(raw);
     const worldId = target.key === 'erebus' ? 'erebus' : (m?.params?.worldId || target.key);
-    const seenFlag = `story_world_seen_${worldId}`;
     const isAlreadyOnDest = stage.mode === 'world' && v?.parked?.key === target.key;
 
-    if (!isAlreadyOnDest && !session.hasFlag(seenFlag)) {
+    if (!isAlreadyOnDest) {
       openWorldStoryModal(worldId, {
         isPreLaunch: true,
         onLaunch: () => {
-          session.setFlag(seenFlag, true);
+          sessionStorage.setItem(`story_just_shown_${worldId}`, String(Date.now()));
           this._executeVoyage(target, raw);
         },
         onClose: () => {
-          session.setFlag(seenFlag, true);
+          sessionStorage.setItem(`story_just_shown_${worldId}`, String(Date.now()));
           this._executeVoyage(target, raw);
         }
       });

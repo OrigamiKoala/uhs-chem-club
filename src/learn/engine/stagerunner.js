@@ -70,6 +70,8 @@ export function createRunner(container, ctx, cfg) {
   const frame = new LearnFrame(container, {
     stageCount: STAGES.length,
     rewards: STAGES.map(s => s.reward),
+    quest: ctx?.quest,
+    world: ctx?.world,
     onSubmit: () => submit(),
     onNext: () => next(),
     onJump: i => loadStage(i),

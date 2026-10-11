@@ -23,13 +23,13 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
     worldId,
     worldName: typeof worldOrId === 'object' ? worldOrId.world : worldId,
     act: 'act1',
-    arrival: 'Hostile Fifth Guild units detected in sector.',
-    closing: 'Sector secured and Fifth Guild saboteurs repelled.',
+    arrival: 'Hostile Fifth Guild raiders detected in this sector.',
+    closing: 'Sector secured and raiders repelled.',
     spoilFamily: 'Infiltration units',
     paragraphs: [
-      'The outer rim sirens tripped as our thrusters bit into the atmosphere. Hostile transponders are moving along the ridges, and the defense grid is flickering in the dark.',
-      'Vess checked the perimeter telemetry with a grim nod. The raiders didn\'t leave by accident; they left behind automated guardians designed to bury their trail.',
-      'We break through their blockade now and secure the sector before their vanguard armada enters high orbit.'
+      'Recruit, listen up. We have hostile signals detected across this sector and the local power grid is flickering in the dark.',
+      'The raiders did not just retreat—they left behind automated defense machines to guard their trail and keep us away from the equipment.',
+      'We need to push through their defenses, fix the sabotaged stations, and secure the sector before enemy reinforcements arrive.'
     ]
   };
 
@@ -48,16 +48,8 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
   let sectorIndex = 0;
   let campaignIndex = 0;
 
-  function getSpeaker(idx, isCamp) {
-    if (isCamp) {
-      return CAMPAIGN_STORY[idx]?.speaker || 'AVALON LOG // COMMS';
-    }
-    const speakers = [
-      `AVALON TELEMETRY // ${worldName.toUpperCase()}`,
-      'VESS // QUARTERMASTER',
-      `TACTICAL DISPATCH // ${worldUnit.toUpperCase()}`
-    ];
-    return speakers[idx % speakers.length];
+  function getSpeaker() {
+    return 'Vess';
   }
 
   function renderModalBody() {
@@ -65,7 +57,7 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
     const currentList = isCamp ? CAMPAIGN_STORY.map(s => s.text) : paragraphs;
     const currentIdx = isCamp ? campaignIndex : sectorIndex;
     const currentText = currentList[currentIdx] || '';
-    const currentSpeaker = getSpeaker(currentIdx, isCamp);
+    const currentSpeaker = getSpeaker();
     const total = currentList.length;
     const isLast = currentIdx === total - 1;
 
@@ -74,17 +66,21 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
         <!-- Header -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.6rem;">
           <div>
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 2px;">
-              <span class="eyebrow lit" style="color: var(--accent-amber); font-size: 0.68rem; letter-spacing: 0.14em;">THE FIFTH GUILD // LOG ENTRY</span>
-              <span class="tag live" style="font-size: 0.58rem; padding: 1px 6px;">${esc((episode.spoilFamily || 'RAID').toUpperCase())}</span>
+            <div style="margin-bottom: 2px;">
+              <span class="eyebrow lit" style="color: var(--accent-amber); font-size: 0.68rem; letter-spacing: 0.14em;">Transmission</span>
             </div>
             <h2 style="font-family: var(--font-imperial); font-size: 1.25rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-bright); margin: 0;">
               ${esc(worldName)} · ${esc(worldTitle)}
             </h2>
           </div>
-          <button type="button" id="story-modal-close-x" class="terminal-close-btn" aria-label="Close briefing" style="padding: 4px 10px; font-family: var(--font-mono); font-size: 0.72rem; border: 1px solid var(--border-durasteel); background: transparent; color: var(--text-muted); cursor: pointer;">
-            ✕ CLOSE
-          </button>
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <button type="button" id="story-modal-skip-btn" class="eyebrow m-tap" style="background: transparent; border: none; color: var(--accent-gold); cursor: pointer; text-decoration: underline; font-family: var(--font-mono); font-size: 0.72rem; padding: 4px;" title="Skip Briefing">
+              Skip Briefing ⏭
+            </button>
+            <button type="button" id="story-modal-close-x" class="terminal-close-btn" aria-label="Close briefing" style="padding: 4px 10px; font-family: var(--font-mono); font-size: 0.72rem; border: 1px solid var(--border-durasteel); background: transparent; color: var(--text-muted); cursor: pointer;">
+              ✕
+            </button>
+          </div>
         </div>
 
         <!-- Mode Toggle Tabs -->
@@ -123,7 +119,7 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
                 `).join('')}
               </div>
               <div class="story-novel-hint">
-                ${isLast ? 'LOG COMPLETE' : 'CLICK OR PRESS SPACE TO ADVANCE ▶'}
+                ${isLast ? 'TRANSMISSION COMPLETE' : 'CLICK OR PRESS SPACE TO ADVANCE ▶'}
               </div>
             </div>
           </div>
@@ -138,19 +134,22 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
               </button>
             ` : `
               <div style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);">
-                HAULER AVALON // LOG ARCHIVE
+                HAULER AVALON // VESS DIRECT LINK
               </div>
             `}
           </div>
 
           <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="button" id="story-footer-skip-btn" class="btn-secondary" style="padding: 7px 12px; font-size: 0.8rem; color: var(--text-muted);" title="Skip Briefing">
+              Skip ⏭
+            </button>
             ${!isLast ? `
               <button type="button" id="story-next-btn" class="btn-primary" style="padding: 8px 18px; font-size: 0.85rem; letter-spacing: 0.08em;">
                 Continue ▶
               </button>
             ` : `
               <button type="button" id="story-modal-dismiss-btn" class="btn-primary" style="padding: 8px 20px; font-size: 0.85rem; letter-spacing: 0.08em; background: var(--accent-gold); color: #000; font-weight: 700;">
-                ${isPreLaunch ? `Take Off & Deploy to ${esc(worldName)} ▶` : 'Return to Mission ▶'}
+                ${isPreLaunch ? `Take Off & Deploy to ${esc(worldName)} ▶` : 'Enter Sector ▶'}
               </button>
             `}
           </div>
@@ -204,7 +203,17 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
 
     modalEl.querySelector('#story-modal-close-x')?.addEventListener('click', () => {
       soundscape.playToggleClack();
-      cleanupAndClose(false);
+      cleanupAndClose(true);
+    });
+
+    modalEl.querySelector('#story-modal-skip-btn')?.addEventListener('click', () => {
+      soundscape.playToggleClack();
+      cleanupAndClose(true);
+    });
+
+    modalEl.querySelector('#story-footer-skip-btn')?.addEventListener('click', () => {
+      soundscape.playToggleClack();
+      cleanupAndClose(true);
     });
 
     modalEl.querySelector('#story-prev-btn')?.addEventListener('click', () => {
@@ -290,11 +299,10 @@ export function openCampaignStoryModal(opts = {}) {
         <!-- Topbar -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.5rem;">
           <div style="display: flex; align-items: baseline; gap: 0.6rem;">
-            <span class="eyebrow lit" style="color: var(--accent-gold); font-size: 0.68rem; letter-spacing: 0.12em;">CAMPAIGN STORYLINE DOSSIER</span>
-            <span style="font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; text-transform: uppercase; color: var(--text-bright);">THE FIFTH GUILD</span>
+            <span class="eyebrow lit" style="color: var(--accent-gold); font-size: 0.68rem; letter-spacing: 0.12em;">Campaign Briefing</span>
           </div>
-          <button type="button" id="campaign-modal-skip-btn" class="eyebrow" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; text-decoration: underline;">
-            Skip Briefing
+          <button type="button" id="campaign-modal-skip-btn" class="eyebrow m-tap" style="background: transparent; border: none; color: var(--accent-gold); cursor: pointer; text-decoration: underline; font-family: var(--font-mono); font-size: 0.72rem; padding: 4px;">
+            Skip Briefing ⏭
           </button>
         </div>
 
@@ -324,7 +332,7 @@ export function openCampaignStoryModal(opts = {}) {
                 `).join('')}
               </div>
               <div class="story-novel-hint">
-                ${isLast ? 'FINAL LOG · ORDERS CONFIRMED' : 'CLICK OR PRESS SPACE TO ADVANCE ▶'}
+                ${isLast ? '' : 'Press space or click to advance'}
               </div>
             </div>
           </div>
@@ -339,12 +347,15 @@ export function openCampaignStoryModal(opts = {}) {
               </button>
             ` : `
               <div style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);">
-                HAULER AVALON // CREW DISPATCH
+                HAULER AVALON // VESS DIRECT LINK
               </div>
             `}
           </div>
 
           <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="button" id="campaign-footer-skip-btn" class="btn-secondary" style="padding: 7px 12px; font-size: 0.8rem; color: var(--text-muted);" title="Skip Briefing">
+              Skip ⏭
+            </button>
             ${!isLast ? `
               <button type="button" id="campaign-slide-next" class="btn-primary" style="padding: 8px 18px; font-size: 0.85rem; letter-spacing: 0.08em;">
                 Continue ▶
@@ -395,6 +406,11 @@ export function openCampaignStoryModal(opts = {}) {
     if (!modalEl) return;
 
     modalEl.querySelector('#campaign-modal-skip-btn')?.addEventListener('click', () => {
+      soundscape.playToggleClack();
+      finish();
+    });
+
+    modalEl.querySelector('#campaign-footer-skip-btn')?.addEventListener('click', () => {
       soundscape.playToggleClack();
       finish();
     });

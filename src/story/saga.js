@@ -16,28 +16,28 @@ export const ACTS = [
     order: 1,
     title: 'Act I: Strike on the Frontier',
     worlds: ['unit01', 'unit02', 'unit03'],
-    summary: 'The rogue Fifth Guild launches surprise raids across frontier extraction worlds, deploying animated war machines.'
+    summary: 'The rogue Fifth Guild launches surprise raids across frontier worlds, using animated machines to guard their sabotage.'
   },
   {
     id: 'act2',
     order: 2,
     title: 'Act II: Stolen Power & Sabotage',
     worlds: ['unit04', 'unit05', 'unit06', 'unit07'],
-    summary: 'The Fifth Guild hijacks orbital refineries and steals fuel convoys, violating the physical laws of mass balance.'
+    summary: 'The raiders hijack fuel stations and steal power, breaking the laws of science by trying to create matter from nothing.'
   },
   {
     id: 'act3',
     order: 3,
     title: 'Act III: The Catalyst Revealed',
     worlds: ['unit08', 'unit09', 'unit10', 'unit11'],
-    summary: 'Planetary defense grids collapse under coordinated sabotage as the enemy commander emerges: The Catalyst.'
+    summary: 'Defense networks fall under coordinated attacks as the mastermind behind the raiders emerges: The Catalyst.'
   },
   {
     id: 'act4',
     order: 4,
     title: 'Act IV: The Doomsday Core',
     worlds: ['unit12', 'unit13', 'unit14'],
-    summary: 'Following enemy thermal signatures into the exclusion zone of Cinder Halo to stop their forbidden transmutation core.'
+    summary: 'We follow the enemy fleet into the radioactive core of Cinder Halo to shut down an unstable nuclear reactor before it explodes.'
   }
 ];
 
@@ -47,48 +47,48 @@ export const CLUES = {
     act: 'act1',
     source: 'Erebus Contract · Pylon 20',
     name: 'Fifth Guild Infiltration Mark',
-    summary: 'A covert delta symbol stamped behind the pylon power housing with no imperial seal.',
-    note: 'The Fifth Guild deliberately sabotaged the defense grid before our arrival. They signed the housing to taunt the garrison.'
+    summary: 'A covert triangle symbol stamped behind the power tower casing.',
+    note: 'The raiders deliberately disconnected the power circuits before we arrived. They left their mark behind to taunt us.'
   },
   clue_tallow_slag: {
     id: 'clue_tallow_slag',
     act: 'act1',
     source: 'Tallow Boss · The Hopper',
-    name: 'Transmuted Heavy Slag',
-    summary: 'Refined ore slag from a pure salt flat carrying heavy bismuth.',
-    note: 'Bismuth was never in the local bedrock. Chemical reactions cannot create heavy elements from common salt.'
+    name: 'Strange Heavy Metal Slag',
+    summary: 'Refined metal slag containing heavy bismuth found on a pure salt flat.',
+    note: 'Bismuth does not occur naturally in salt flats. Chemical reactions between salts cannot produce heavy metals out of thin air.'
   },
   clue_lantern_lens: {
     id: 'clue_lantern_lens',
     act: 'act1',
     source: 'Lanternfall Boss · The Lantern-Eater',
-    name: 'Fifth Guild Military Prism',
-    summary: 'A high-precision optical lens ground for deep ultraviolet beam frequencies.',
-    note: 'The Fifth Guild tuned this lens to blind our navigation beacons. They used it to mask an armada moving through the dark.'
+    name: 'Ultraviolet Spy Lens',
+    summary: 'A precision glass lens tuned for invisible ultraviolet light beams.',
+    note: 'The raiders used this lens to blind our navigation beacons and guide their own ships secretly through the dark.'
   },
   clue_ligar_scorch: {
     id: 'clue_ligar_scorch',
     act: 'act1',
     source: 'Ligar Elite · Basalt Warden',
-    name: 'Arc-Sheared Basalt',
-    summary: 'A quarry wall sliced cleanly through solid rock by extreme plasma heat.',
-    note: 'No industrial mining torch reaches that temperature. The Fifth Guild is field-testing experimental heavy weapons.'
+    name: 'Melted Basalt Rock',
+    summary: 'A quarry boulder sliced glass-smooth by extreme heat.',
+    note: 'Normal mining torches can never cut rock that cleanly. The raiders are testing powerful experimental heat weapons.'
   },
   clue_kettle_ledger: {
     id: 'clue_kettle_ledger',
     act: 'act2',
     source: 'Kettle Elite · Recipe Golem',
-    name: 'Forged Mass Ledger',
-    summary: 'Captured enemy accounts showing refinery output exceeding raw materials by thirty percent.',
-    note: 'Chemical reactions strictly conserve mass. The Fifth Guild is creating metal using forbidden nuclear restructuring.'
+    name: 'Forged Production Ledger',
+    summary: 'Factory logs claiming output exceeded raw metal materials by thirty percent.',
+    note: 'Real chemical reactions strictly conserve mass—you cannot get more metal out than ore put in. The raiders must be using hidden nuclear energy.'
   },
   clue_bellows_warm: {
     id: 'clue_bellows_warm',
     act: 'act2',
     source: 'Bellows Boss · The Compressor',
-    name: 'The Warm Cylinder',
-    summary: 'A sealed gas tank recovered from enemy hijackers that stayed hot for twelve days in freezing air.',
-    note: 'A normal gas drops in pressure when cooled. The Fifth Guild hid a radioactive power cell inside.'
+    name: 'The Warm Gas Tank',
+    summary: 'A sealed tank from enemy hijackers that stayed hot for nearly two weeks in sub-zero winds.',
+    note: 'Normal gases cool down in cold air. The only way this tank stayed hot is if a radioactive heat cell was hidden inside.'
   }
 };
 
@@ -99,9 +99,9 @@ export const SPINE_BEATS = [
     order: 1,
     title: 'The Enemy Sample',
     prereq: { bosses: ['unit01/boss-hopper'] },
-    speaker: 'VESS // QUARTERMASTER',
-    transmission: 'I ran the spectrometer on the slag left by the Fifth Guild raiders. There is bismuth in that salt, and no mine on Tallow ever held a trace of it.',
-    onScreen: 'Vess sets a heavy lead-lined specimen tube on the plotting table beside the star chart.'
+    speaker: 'Vess',
+    transmission: 'I ran tests on the metal slag left behind by the raiders. There is bismuth in that salt, and no mine on Tallow has ever held a trace of it.',
+    onScreen: 'Vess sets a heavy specimen tube on the table beside the star chart.'
   },
   {
     id: 'beat_guild_inquiry',
@@ -112,9 +112,9 @@ export const SPINE_BEATS = [
       bosses: ['unit01/boss-hopper', 'unit03/boss-warden'],
       contracts: ['contract_erebus_01']
     },
-    speaker: 'IMPERIAL ENVOY // COMMS',
-    transmission: 'The Four Guilds order all survey crews to ignore rumors of the Fifth Guild. Their attacks are classified as unauthorized civil unrest.',
-    onScreen: 'The high council transmission cuts to harsh static. Vess quietly locks our encrypted local logs.'
+    speaker: 'Imperial Envoy',
+    transmission: 'The high council orders all crews to ignore rumors of the Fifth Guild. They want us looking the other way.',
+    onScreen: 'The council transmission cuts to static. Vess quietly locks our encrypted local logs.'
   },
   {
     id: 'beat_impossible_ledger',
@@ -122,9 +122,9 @@ export const SPINE_BEATS = [
     order: 3,
     title: 'The Broken Balance',
     prereq: { bosses: ['unit07/boss-golem'] },
-    speaker: 'VESS // QUARTERMASTER',
-    transmission: 'Kettle’s ledger cannot lie: forty tons of reagent in, fifty-two tons of product out. The Fifth Guild is restructuring matter itself, and they have spies in our ranks.',
-    onScreen: 'The seized enemy ledger glows amber on the bridge terminal against strict conservation formulas.'
+    speaker: 'Vess',
+    transmission: 'Kettle’s factory ledger shows fifty tons of metal produced from forty tons of ore. Real chemistry never creates matter from nothing.',
+    onScreen: 'The seized enemy ledger glows amber on the bridge terminal.'
   },
   {
     id: 'beat_the_catalyst',
@@ -132,9 +132,9 @@ export const SPINE_BEATS = [
     order: 4,
     title: 'The Enemy Revealed',
     prereq: { clues: ['clue_kettle_ledger'] },
-    speaker: 'VESS // QUARTERMASTER',
-    transmission: 'The leader of the Fifth Guild calls itself The Catalyst. They are the veteran survey crews the Four Guilds abandoned thirty seasons ago on the rim.',
-    onScreen: 'A recovered personnel manifest unspools across the console, matching casualty lists to active enemy signals.'
+    speaker: 'Vess',
+    transmission: 'The raider commander calls themselves The Catalyst. They are the soldiers the old guilds abandoned thirty years ago on the rim.',
+    onScreen: 'A recovered personnel record appears on the screen, matching casualty lists to active raider signals.'
   },
   {
     id: 'beat_cinder_halo',
@@ -142,32 +142,32 @@ export const SPINE_BEATS = [
     order: 5,
     title: 'The Doomsday Reactor',
     prereq: { clues: ['clue_tallow_slag', 'clue_kettle_ledger'] },
-    speaker: 'VESS // QUARTERMASTER',
-    transmission: 'All enemy power conduits lead straight to Cinder Halo. The Fifth Guild is preparing to ignite an ancient nuclear transmutation core.',
-    onScreen: 'The star chart locks onto Cinder Halo, where dangerous atomic decay rings glow in deep space.'
+    speaker: 'Vess',
+    transmission: 'All enemy power cables lead straight to Cinder Halo. The Fifth Guild is preparing to ignite an ancient nuclear reactor.',
+    onScreen: 'The star chart locks onto Cinder Halo, where dangerous radiation warnings flash.'
   }
 ];
 
 export const CAMPAIGN_STORY = [
   {
-    speaker: 'NARRATIVE LOG // DEEP RIM',
-    text: 'The hull plates of the Avalon groan with every orbital burn. Out here past the charted lanes, four industrial monopolies carve up the rim under a brittle peace treaty—stripping barren crusts, harvesting storm gas, and smelting armor plates. We survive on what they discard.'
+    speaker: 'Vess',
+    text: 'Welcome aboard the Avalon, recruit. I am Vess, your quartermaster. Our ship travels the frontier between star systems, salvaging supplies and keeping independent colonies alive. Out here, help is very far away, so we have to look out for each other.'
   },
   {
-    speaker: 'VESS // QUARTERMASTER',
-    text: 'Then the automated distress beacons started dying. Unchartered frigates with scorched hulls have been ambushing remote depots, leaving behind crawler husks made of salt and slag that march across the sand under their own power.'
+    speaker: 'Vess',
+    text: 'Recently, our distress sensors started picking up emergency signals across the rim. A rogue fleet calling itself the Fifth Guild has attacked our remote outposts. They left behind hostile automated machines that guard the damaged stations and block our workers from repairing them.'
   },
   {
-    speaker: 'NARRATIVE LOG // OUTPOST RUMORS',
-    text: 'Frontier canteens whisper of a ghost armada: the Fifth Guild. The superstitious call it alchemy—swearing the raiders conjure legions out of empty dust and bleed heat from stone without consuming fuel.'
+    speaker: 'Vess',
+    text: 'Rumors are spreading that these raiders have supernatural powers, because their machines move on their own and survive extreme conditions. But that is superstition. There is no magic in this universe—only the laws of nature and chemistry.'
   },
   {
-    speaker: 'VESS // QUARTERMASTER',
-    text: '"Alchemy is a coward\'s fairytale," Vess muttered, slamming a scorched alloy sample onto the plotting table. "Matter does not bargain. Mass is conserved to the final microgram, and every chemical bond has a breaking point. That is where we strike."'
+    speaker: 'Vess',
+    text: 'Everything in space is made of atoms and basic chemical elements. When you understand how matter behaves—how parts fit together, how heat moves, and how reactions work—their machines stop being frightening. Science is how we fight back.'
   },
   {
-    speaker: 'TACTICAL DISPATCH // STANDING ORDERS',
-    text: 'Fourteen worlds. A trail of stolen matter leading straight into the radioactive core of Cinder Halo. We trace their sabotage, dismantle their machines, and uncover who abandoned them before their reactor tears the rim apart.'
+    speaker: 'Vess',
+    text: 'We have fourteen worlds to visit. On each world, we will stop their sabotage, restore power to the stations, and trace their trail back to their secret base. Keep your communication link open and stay alert.'
   }
 ];
 
@@ -176,253 +176,253 @@ export const EPISODES = {
     worldId: 'erebus',
     worldName: 'Erebus',
     act: 'act1',
-    arrival: 'Emergency drop on Erebus: Fifth Guild raiders disabled the Charge Gardens power pylons to collapse planetary defense shields.',
-    closing: 'All 20 pylons relit and planetary defense shields online. The Fifth Guild\'s vanguard invasion fleet has been repelled.',
+    arrival: 'Recruit, we have dropped into the atmosphere over Erebus. The raiders cut power to the Charge Gardens, and our planetary defense shields are completely dark.',
+    closing: 'All twenty power towers are back online. The defense shield has restarted, and the enemy raiders have fled into deep space.',
     spoilFamily: 'Infiltration units',
     bossId: 'pylon-20',
     clueId: 'clue_erebus_mark',
     paragraphs: [
-      'The sirens tripped the moment our landing thrusters bit into the iron sand. Out across the Charge Gardens, the perimeter shields are flickering—twenty high-voltage relay pylons cut down in the dark.',
-      'Vess threw open the junction housing with a crowbar, his breath frosting in the cabin air. The copper traces weren\'t torn by weapons; they were bridged with calculated precision, left cold to bleed our batteries into the sand.',
-      'Shadows are already cutting through the cloud ceiling above. If those twenty junctions aren\'t rewired before the vanguard fleet breaches orbit, Erebus falls without firing a single defensive shot.'
+      'Recruit, listen up. We just landed in the desert of Erebus, right outside the Charge Gardens. This facility is a power station that powers the defensive energy shield for the entire region.',
+      'The raiders broke in before we arrived and deliberately disconnected the main power circuits across twenty towers. Without power running through these circuits, the protective shield cannot turn on, leaving every nearby town open to attack.',
+      'Your job is to walk through the station, inspect each broken connection, and bridge the power line from the energy source to the receiver. Once all twenty towers are relit, our defenses will be secure.'
     ],
-    incident: 'The sirens tripped the moment our landing thrusters bit into the iron sand. Out across the Charge Gardens, the perimeter shields are flickering—twenty high-voltage relay pylons cut down in the dark.',
-    objective: 'Shadows are already cutting through the cloud ceiling above. If those twenty junctions aren\'t rewired before the vanguard fleet breaches orbit, Erebus falls without firing a single defensive shot.',
-    caseFileNote: 'Markings on the pylon housings prove the Fifth Guild\'s vanguard has been tracking our fleet since the first charter was signed.'
+    incident: 'The raiders cut the main circuits across all twenty power towers, disabling the regional defense shield.',
+    objective: 'Reconnect the power line from the energy source to the receiver in every tower to reboot the shield.',
+    caseFileNote: 'The disconnected circuits were sabotaged deliberately to test our response time. The raiders knew exactly which power lines to cut.'
   },
   unit01: {
     worldId: 'unit01',
     worldName: 'Tallow',
     act: 'act1',
-    arrival: 'Red alert on Tallow: the Fifth Guild raided the refinery and fled into the dunes. Their animated salt war-machines have surrounded the outpost.',
-    closing: 'Tallow perimeter secured. We crushed the enemy salt machines and secured the Fifth Guild\'s stolen heavy slag.',
+    arrival: 'We are over the salt flats of Tallow. The raiders attacked the mineral refinery and left behind strange walking machines made of salt and stone.',
+    closing: 'The salt machines are dismantled and the refinery is safe. We recovered a strange piece of heavy black metal that the raiders left behind.',
     spoilFamily: 'Salt husks',
     bossId: 'boss-hopper',
     clueId: 'clue_tallow_slag',
     paragraphs: [
-      'The refinery on Tallow is bleeding white dust into the gale. When our boots hit the catwalk, the guard post was empty—no bodies, only bootprints leading out toward the desert dunes.',
-      'Then the salt mounds began to twitch. Scraps of ore and jagged crystal knit together into crawling husks, hissing as static arced through their joints. The raiders left them behind to bury their retreat.',
-      'Vess scooped a palm of heavy black slag from the intake trench. "Common brine doesn\'t crystallize bismuth," he muttered, watching the sand writhe in the distance. "Whatever they raided this plant for, they left the proof behind."'
+      'This is Tallow, a desert world covered in vast salt flats. Workers here refine natural minerals and salts from the dry lake beds to send supplies to other colonies.',
+      'When the raiders struck, they scattered the sorted minerals and used electric charges to form walking machines out of salt crust. These machines are roaming the dunes, keeping workers away from the equipment.',
+      'We need to identify the basic elements in the dirt, sort the pure substances from the mixtures, and break their salt guards apart. Look for any strange metal scraps they dropped during the raid.'
     ],
-    incident: 'The refinery on Tallow is bleeding white dust into the gale. When our boots hit the catwalk, the guard post was empty—no bodies, only bootprints leading out toward the desert dunes.',
-    objective: 'Scraps of ore and jagged crystal knit together into crawling husks, hissing as static arced through their joints. We break their formations and recover the stolen sample before the storm swallows their tracks.',
-    caseFileNote: 'The Fifth Guild left heavy bismuth slag behind. They claim to possess alchemy, but real chemistry proves they are using hidden nuclear hardware.'
+    incident: 'The raiders attacked the mineral refinery and formed animated guard machines out of salt and dust.',
+    objective: 'Sort the raw elements and pure minerals across the workstations to disable the salt guards and secure the refinery.',
+    caseFileNote: 'The metal scrap we recovered contains bismuth, an element that does not belong in natural salt. Someone brought heavy metals here from another star system.'
   },
   unit02: {
     worldId: 'unit02',
     worldName: 'Lanternfall',
     act: 'act1',
-    arrival: 'The Fifth Guild knocked out Lanternfall’s optical beacon highway, blinding our orbital sensors. Swarms of energy-draining moths guard their blackout.',
-    closing: 'Glacial beacons relit across the ice. We destroyed the enemy swarm and captured the Fifth Guild\'s military spy lens.',
+    arrival: 'Lanternfall is experiencing a total blackout. The raiders disabled the giant light towers that guide our ships safely through the polar ice shelf.',
+    closing: 'The light towers are burning bright again across the ice. We cleared the insect swarms and captured an optical lens the raiders dropped.',
     spoilFamily: 'Lamp moths',
     bossId: 'boss-eater',
     clueId: 'clue_lantern_lens',
     paragraphs: [
-      'Lanternfall is blind. The glacial beacon towers that guide our convoy through the ice shelf have gone black, plunging miles of frozen rift into suffocating dark.',
-      'A low, metallic hum vibrates through the frost. Thousands of light-starved moths cling to the power lines, drinking the high-voltage discharge and scattering blinding interference across our scopes.',
-      'High in the beacon array, a stolen ultraviolet lens turns slowly in the cold, focusing unseen beams into the void. The Fifth Guild didn\'t just cause a blackout—they\'re hiding a fleet moving under our noses.'
+      'We have reached Lanternfall, a frozen world covered in thick glaciers. Because it is always dark here, ships rely on massive light towers to navigate between the mountains of ice.',
+      'The raiders knocked out the beacon frequencies, plunging the shipping lanes into total darkness. Swarms of small electronic drones that look like moths have gathered around the power cables, feeding on the stray energy.',
+      'We need to tune each lamp to the correct color of light so the beams can cut through the fog and scatter the swarms. Once the beacons are relit, our supply ships will be able to fly safely again.'
     ],
-    incident: 'Lanternfall is blind. The glacial beacon towers that guide our convoy through the ice shelf have gone black, plunging miles of frozen rift into suffocating dark.',
-    objective: 'Tune frequencies to burn through the swarm, relight the planetary beacons, and seize the enemy\'s ultraviolet spy prism.',
-    caseFileNote: 'The captured prism was tuned for deep ultraviolet frequencies, proving the Fifth Guild was coordinating secret fleet movements in the dark.'
+    incident: 'The raiders shut off the light towers across the glacier and left energy-draining drones to maintain the blackout.',
+    objective: 'Tune the light wavelengths and match the energy levels at each tower to relight the planetary beacons.',
+    caseFileNote: 'The optical lens we recovered was designed to filter invisible ultraviolet light. The raiders were using it to guide stealth ships through the dark.'
   },
   unit03: {
     worldId: 'unit03',
     worldName: 'Ligar',
     act: 'act1',
-    arrival: 'The Fifth Guild blasted the volcanic gorge on Ligar with seismic explosives. Heavy stone wardens have blocked the only evacuation pass.',
-    closing: 'Quarry pass cleared and enemy wardens shattered. Scorch marks show the Fifth Guild fired experimental plasma weapons through solid rock.',
+    arrival: 'We have arrived at the rock quarries of Ligar. The raiders blasted the canyon walls, and giant stone guardians are blocking the path to the trapped miners.',
+    closing: 'The canyon pass is cleared and the miners are safe. The cut marks on the stone show the raiders used weapons far hotter than normal mining lasers.',
     spoilFamily: 'Basalt wardens',
     bossId: 'boss-warden',
     clueId: 'clue_ligar_scorch',
     paragraphs: [
-      'The canyon walls on Ligar are still groaning from the blast. Seismic charges shattered the high ridges, choking the extraction pass under ten thousand tons of smoking basalt.',
-      'Across the rubble, heavy wardens carved from tectonic rock stand guard, their crystal seams glowing red with stored heat. The miners trapped in the lower drift are running out of clean oxygen.',
-      'Vess ran a gauntlet along the severed rock face. The cut was glass-smooth—sliced by plasma temperatures no industrial mining torch could ever reach. We break through these stone sentinels now, or the quarry becomes a tomb.'
+      'Ligar is a volcanic world known for its deep rock quarries. The miners here cut heavy stone blocks that are used to build bases and heat-resistant hulls for our ships.',
+      'The raiders detonated explosives along the canyon ridges, burying the main rescue tunnel under thousands of tons of hard volcanic rock. They also left heavy stone sentinels standing guard over the rubble.',
+      'Every rock is held together by chemical bonds between atoms. By finding the natural cleavage planes and weak spots in the mineral crystal, you can break the blocks cleanly and clear the path before the miners run out of air.'
     ],
-    incident: 'The canyon walls on Ligar are still groaning from the blast. Seismic charges shattered the high ridges, choking the extraction pass under ten thousand tons of smoking basalt.',
-    objective: 'Test mineral hardness and cleave planes across the quarry stations to shatter the barricade and reach the trapped survivors.',
-    caseFileNote: 'Laser-smooth cuts through solid rock prove the Fifth Guild is testing experimental heavy energy weapons far beyond standard mining gear.'
+    incident: 'A rockslide triggered by enemy explosives has trapped miners beneath the quarry cliffs.',
+    objective: 'Analyze the bonds holding the mineral crystals together to break the boulders and clear the rescue pass.',
+    caseFileNote: 'The boulders were sliced with glass-smooth cuts. Only extremely powerful heat weapons, far beyond ordinary mining gear, could melt stone like that.'
   },
   unit04: {
     worldId: 'unit04',
     worldName: 'Bellows',
     act: 'act2',
-    arrival: 'Fifth Guild hijackers boarded the floating skimmers of Bellows and over-pressured the gas mains. Over-inflated gas bladders are battering the hull.',
-    closing: 'Sky-skimmer pressure stabilized and the hijackers repelled. In their locked vault is a warm cylinder radiating illegal energy.',
+    arrival: 'We are docking at the floating sky station of Bellows. Raiders have jammed the gas valves, and rising air pressure threatens to crush the outer hull.',
+    closing: 'The gas tanks have returned to safe pressure levels and the station is stable. In the raiders\' cargo pod, we found a sealed tank that stays unnaturally warm.',
     spoilFamily: 'Gas bladders',
     bossId: 'boss-compressor',
     clueId: 'clue_bellows_warm',
     paragraphs: [
-      'The deck tilts forty degrees as the winds of Bellows slam the floating skimmer. Down in the pressure wells, the gauge needles are pinned against the red stops, vibrating toward blowout.',
-      'Masked hijackers stormed the compressor platforms an hour ago, jamming the relief vents to overload the gas bladders. The bulkheads groan like dying whales under the rising atmosphere.',
-      'Behind the hijackers\' locked blast hatch, telemetry detects an impossible thermal signature—a sealed cylinder that has stayed scalding hot in sub-zero winds for nearly two weeks. We vent these tanks, or the whole station plunges into the abyss.'
+      'Welcome to Bellows. This station floats high above the clouds of a giant gas planet, harvesting clean fuel from the atmosphere to keep our fleet flying.',
+      'A group of raiders boarded the platform and locked the pressure relief valves. When you trap too much gas in a tight space or heat it up, the pressure rises until the walls rupture.',
+      'The dials on the gas tanks are dangerously close to exploding. You need to adjust the volume and cool the tanks down to balance the pressure before the metal hulls buckle under the strain.'
     ],
-    incident: 'The deck tilts forty degrees as the winds of Bellows slam the floating skimmer. Down in the pressure wells, the gauge needles are pinned against the red stops, vibrating toward blowout.',
-    objective: 'Balance pressure and volume across the compressor stations to vent the over-pressured mains and keep the sky-station aloft.',
-    caseFileNote: 'The warm cylinder seized from the hijackers stayed hot for twelve days in freezing air—a direct sign of secret radioactive power cells.'
+    incident: 'Enemy saboteurs jammed the pressure vents on the floating fuel station, causing the storage tanks to over-inflate.',
+    objective: 'Balance the temperature and gas volume at each compressor to release trapped pressure and prevent a hull blowout.',
+    caseFileNote: 'We found a sealed gas cylinder in the enemy vault that stays scalding hot in freezing air. That steady heat is a clear sign of radioactive material inside.'
   },
   unit05: {
     worldId: 'unit05',
     worldName: 'Ember Reach',
     act: 'act2',
-    arrival: 'Fifth Guild siphons are draining volcanic thermal plants on Ember Reach. Rogue molten crucibles are marching on the command post.',
-    closing: 'Crucibles shattered and thermal conduits saved. Siphon logs reveal the Fifth Guild diverted gigawatts of heat to a hidden bunker.',
+    arrival: 'We have dropped over the volcanic plants of Ember Reach. The raiders are siphoning underground heat, leaving the civilian shelters without warmth.',
+    closing: 'The heat lines are restored and the shelters are warm again. Our telemetry shows the raiders pumped the stolen heat down into an underground bunker.',
     spoilFamily: 'Slag crucibles',
     paragraphs: [
-      'The geothermal crucibles of Ember Reach are choking on their own slag. River-beds of molten silicate that once powered three frontier colonies are freezing over in gray crusts.',
-      'The Fifth Guild tapped the subterranean conduits directly, bleeding gigawatts of heat away from civilian domes and routing it straight down into an unmapped fault line.',
-      'Automated molten sentinels patrol the rim of the caldera, spitting burning cinder at anything that approaches the flow controls. If we don\'t break their thermal siphons, half a million colonists will freeze before sunrise.'
+      'Ember Reach is an active volcanic world. Colonies here survive by tapping the heat from underground magma pools to generate electricity and keep their homes warm.',
+      'The raiders attached giant cooling siphons to the main heat pipes, stealing energy and routing it away from the towns. If the heat stops flowing, the power generators will shut down and the colonies will freeze.',
+      'Heat naturally moves from hotter objects to colder ones. You need to redirect the thermal flow, clear the frozen valves, and make sure every watt of heat reaches the generators where people need it.'
     ],
-    incident: 'The geothermal crucibles of Ember Reach are choking on their own slag. River-beds of molten silicate that once powered three frontier colonies are freezing over in gray crusts.',
-    objective: 'Disrupt the thermal siphons across the smelting stations to restore power before the civilian outposts freeze over.',
-    caseFileNote: 'The power drain confirms the Fifth Guild is building a subterranean staging base somewhere in the deep rim.'
+    incident: 'The raiders tapped into geothermal energy pipes, draining essential heat away from civilian outposts.',
+    objective: 'Redirect thermal energy and balance heat transfers across the geothermal stations to restore colony power.',
+    caseFileNote: 'The stolen heat was channeled deep into an unmapped cave system. The raiders are powering a hidden underground base somewhere nearby.'
   },
   unit06: {
     worldId: 'unit06',
     worldName: 'Mirrowen',
     act: 'act2',
-    arrival: 'Fifth Guild saboteurs froze the canal locks on Mirrowen into razor-sharp crystal reefs. Allied supply ships are pinned in the harbor.',
-    closing: 'Canal barriers dissolved and the fleet freed. The chemical ice left behind matches synthetic compounds from the Fifth Guild\'s fleet.',
+    arrival: 'We are approaching the waterways of Mirrowen. Raiders dumped artificial freezing chemicals into the shipping canals, trapping our supply boats in solid ice.',
+    closing: 'The chemical ice has melted and the waterways are flowing freely. Laboratory tests show the freezing chemical was military-grade synthetic fluid.',
     spoilFamily: 'Brine crawlers',
     paragraphs: [
-      'Mirrowen’s harbor was supposed to be open water. Instead, our prow ground against jagged spires of chemical ice that shot upward from the canal beds like rows of teeth.',
-      'The supply transports are wedged tight in the frozen locks, listing under the weight of creeping frost while predatory brine crawlers clamber up their mooring chains.',
-      'Vess tested a needle of the ice against our heater coil. It didn\'t melt like water—it fractured along unnatural polymer chains. The Fifth Guild froze this entire bay on purpose, and they\'re waiting for the hulls to buckle.'
+      'Mirrowen is a watery ocean world where cargo ships travel through deep canal networks to move food and clean water between island cities.',
+      'The raiders released chemical agents into the water that forced it to freeze into sharp crystal walls at normal temperatures. Our cargo ships are stuck in the ice, and the creeping frost is crushing their hulls.',
+      'Substances stay solid or melt based on the attractive forces between their molecules. You need to test the ice samples, find what disrupts the bonds between the molecules, and melt the barriers to free the fleet.'
     ],
-    incident: 'Mirrowen’s harbor was supposed to be open water. Instead, our prow ground against jagged spires of chemical ice that shot upward from the canal beds like rows of teeth.',
-    objective: 'Analyze intermolecular forces to dissolve the synthetic ice reefs and open an escape channel for the trapped transports.',
-    caseFileNote: 'The freezing agent was manufactured using military-grade polymers belonging to the Fifth Guild\'s private strike fleet.'
+    incident: 'Chemical freezing agents have locked the water canals in artificial ice, trapping transport ships in the harbor.',
+    objective: 'Break the molecular attractions in the synthetic ice to clear the shipping channels and save the trapped vessels.',
+    caseFileNote: 'The freezing chemical was made from advanced synthetic polymers. Only specialized naval warships carry compounds capable of freezing water like that.'
   },
   unit07: {
     worldId: 'unit07',
     worldName: 'Kettle',
     act: 'act2',
-    arrival: 'The Fifth Guild hacked Kettle’s automated war factories, mass-producing armed golems from raw alloy stock.',
-    closing: 'Factory assembly lines shut down. The enemy mainframe yielded an illegal logistics ledger recording stolen matter.',
+    arrival: 'We are over the automated metal factories of Kettle. The raiders reprogrammed the smelting machines to build robotic soldiers around the clock.',
+    closing: 'The rogue factory lines are turned off and the robotic overseer is stopped. We found a forged production ledger that shows an impossible amount of metal.',
     spoilFamily: 'Recipe golems',
     bossId: 'boss-golem',
     clueId: 'clue_kettle_ledger',
     paragraphs: [
-      'The foundries of Kettle never sleep, but tonight the assembly lines are stamping out nightmares. The automated presses are forging armor plates without human operators in sight.',
-      'Heavy recipe golems stalk the catwalks, feeding raw alloy ingots into the crucible maw to replicate their own mechanical ranks at breakneck speed.',
-      'On the terminal desk lies a captured production manifest that defies the universe: forty tons of raw scrap fed into the hoppers, fifty-two tons of finished warplate rolling out. The balance of matter is broken, and Kettle is ground zero.'
+      'Kettle is a manufacturing world with giant automated foundries. Raw ores go into the furnaces, and finished steel plates come out to build tools, pipes, and spacecraft.',
+      'The raiders hijacked the factory computers and set them to assemble armed combat robots using our stored metal. If these assembly lines keep running, they will produce an army before tomorrow morning.',
+      'In any chemical recipe, a reaction stops when you run out of the first ingredient. By calculating the exact amount of raw materials needed and cutting off the key ingredient, you can shut down the robot lines for good.'
     ],
-    incident: 'The foundries of Kettle never sleep, but tonight the assembly lines are stamping out nightmares. The automated presses are forging armor plates without human operators in sight.',
-    objective: 'Starve the automated assembly lines by cutting off limiting reagents across the foundry stations and take down the golem overseer.',
-    caseFileNote: 'The captured enemy ledger shows 30% more material produced than raw ore input—the Fifth Guild is transmuting matter from a forbidden nuclear core.'
+    incident: 'Automated foundries have been reprogrammed by raiders to mass-produce mechanical combat units from raw metal.',
+    objective: 'Cut off the limiting materials and balance the factory recipes to halt the robot assembly lines.',
+    caseFileNote: 'The captured factory log claims fifty tons of metal came out of forty tons of ore. Real chemistry never creates matter from nothing—the raiders must be hiding a nuclear energy source.'
   },
   unit08: {
     worldId: 'unit08',
     worldName: 'Teeter',
     act: 'act3',
-    arrival: 'Fifth Guild infiltrators rigged the chemical reactors on Teeter, swinging pressure valves to trigger a catastrophic chain reaction.',
-    closing: 'Reactor balance restored and disaster averted. Security black boxes confirm the Fifth Guild used the chaos to plunder secret vaults.',
+    arrival: 'Alarms are sounding across the chemical refinery on Teeter. Raiders pushed the balance valves out of alignment, threatening to trigger a runaway chemical explosion.',
+    closing: 'The reaction tanks are back in balance and the refinery is safe. Security logs reveal the raiders caused this panic to sneak into the high-security storage rooms.',
     spoilFamily: 'Balance husks',
     paragraphs: [
-      'The pressure bells inside Teeter’s chemical refinery are ringing a steady death knell. The equilibrium valves are swinging wildly between acid and alkali, rocking the foundation pilings.',
-      'Infiltrators cut the stabilizer feeds before slipping into the primary security vault. They didn\'t want the fuel—they wanted the distraction while they stripped the high-purity catalysts.',
-      'Vess gripped the emergency bypass wheel, coughing through the rising vapor. "Three more minutes of this imbalance and the catalytic chambers tear themselves apart. Rebalance the lines, or we all go up in smoke."'
+      'Teeter houses a massive chemical processing plant that produces clean fertilizers and medical fluids for dozens of surrounding farming worlds.',
+      'The reactions inside these tanks are two-way streets that need a delicate balance between forward and backward flow. The raiders tampered with the controls, pushing the chemicals to one side so the tanks are shaking violently.',
+      'When you push a balanced reaction by changing temperature or pressure, it pushes back in the opposite direction. You need to adjust the conditions to steer the reaction back to the center before the pipes burst.'
     ],
-    incident: 'The pressure bells inside Teeter’s chemical refinery are ringing a steady death knell. The equilibrium valves are swinging wildly between acid and alkali, rocking the foundation pilings.',
-    objective: 'Counter the chemical swings using Le Chatelier\'s principle across the balance stations before the plant tears itself apart.',
-    caseFileNote: 'Security logs show the sabotage was an inside job coordinated by Fifth Guild sleeper agents within the allied ranks.'
+    incident: 'Saboteurs altered the control valves on reversible chemical tanks, pushing the plant toward a dangerous explosion.',
+    objective: 'Counter the pressure and temperature shifts to guide the chemical reactions back into stable balance.',
+    caseFileNote: 'The raiders deliberately caused this emergency as a distraction while their agents stole high-grade purification filters from the central vault.'
   },
   unit09: {
     worldId: 'unit09',
     worldName: 'Verdigris',
     act: 'act3',
-    arrival: 'The Fifth Guild breached the chemical reservoirs on Verdigris, flooding base pilings with acid to collapse our frontier fortress.',
-    closing: 'Acid torrents neutralized and structural pilings secured. The weaponized acid matches formulas used by forgotten pioneer crews.',
+    arrival: 'Emergency call from the swamp fortress on Verdigris. Raiders ruptured industrial acid tanks, and the corrosive liquid is eating through the building foundations.',
+    closing: 'The acid spills have been safely neutralized and the fortress walls are secure. Chemical analysis shows the acid came from old government supplies abandoned decades ago.',
     spoilFamily: 'Caustic leaches',
     paragraphs: [
-      'Green mist boils off the swamp water around Verdigris. The fortress pilings are hissing as thousand-gallon tanks of industrial acid pour down through the concrete footings.',
-      'Caustic leaches swarm the submerged braces, stripping zinc plating and chewing through rebar with terrifying speed. The main communications mast is already leaning into the sludge.',
-      'Vess tested the chemical residue against the ship\'s archives. "This isn\'t raider weaponry," he said, his face hardening. "This is military-grade solvent from thirty seasons ago—the kind the High Council issued to frontier scouts before they abandoned them to starve."'
+      'Verdigris is a humid wetland world built around an old communications fortress that keeps our emergency radios connected across the sector.',
+      'The raiders blasted the storage vats, dumping thousands of gallons of strong acid into the shallow water around the support pillars. The acid is dissolving the steel beams and concrete footings beneath our feet.',
+      'Acids can be safely disarmed by adding the right amount of a basic substance to turn them into harmless water and salt. You need to measure how strong the acid is and mix the exact neutralizer needed to protect the fortress.'
     ],
-    incident: 'Green mist boils off the swamp water around Verdigris. The fortress pilings are hissing as thousand-gallon tanks of industrial acid pour down through the concrete footings.',
-    objective: 'Run precision neutralization reactions to buffer the acid torrents and save the fortress foundations from collapsing.',
-    caseFileNote: 'The acid attack used vintage formulas from thirty years ago, confirming the Fifth Guild was formed by military crews abandoned by the high council.'
+    incident: 'Industrial acid tanks were ruptured around the fortress support pillars, rapidly corroding the metal structure.',
+    objective: 'Measure the strength of the spilled acid and apply basic neutralizers to save the fortress foundations.',
+    caseFileNote: 'The acid barrels carried military markings from thirty years ago. The raiders are using gear left behind when the old government abandoned frontier garrisons to fend for themselves.'
   },
   unit10: {
     worldId: 'unit10',
     worldName: 'Brinewire',
     act: 'act3',
-    arrival: 'Fifth Guild energy parasites drained Brinewire’s power grid to zero, diverting all electricity to an off-world beam weapon.',
-    closing: 'Grid repolarized and parasitic nodes burned out. Decrypted transmission cables lead straight toward the Fifth Guild\'s secret fleet.',
+    arrival: 'The power grid across the salt flats of Brinewire is dead. Raiders attached parasitic battery drain devices to the main cables, stealing all electrical current.',
+    closing: 'The electrical grid has been repolarized and the drain devices are destroyed. Decrypted signals show the stolen power was beamed to an off-world fleet.',
     spoilFamily: 'Galvanic ticks',
     paragraphs: [
-      'The salt flats of Brinewire are completely dark. A grid that once lit an entire hemisphere has gone dead, its generator coils silent beneath inches of caustic brine.',
-      'Galvanic ticks the size of landmines have latched onto every substation conduit, humming with stolen wattage as they siphon the planet\'s pulse into the mud.',
-      'Subterranean cables hum under our feet, vibrating with pulses hot enough to boil the marsh. The Fifth Guild is channeling an ocean of power somewhere off-world—into the black emptiness beyond the rim.'
+      'Brinewire is a shallow saltwater marsh where natural chemical pools are connected to generate electricity for homes and hospital wards across the continent.',
+      'The raiders clamped heavy metal drain nodes onto the power cables under the water. These clamps act like reverse batteries, pulling every amp of electricity out of the wires and leaving the towns completely dark.',
+      'Electricity flows when electrons move between two different metals in a salty liquid. You need to assemble the correct metal electrodes to reverse the current, burn out the parasite nodes, and get the lights back on.'
     ],
-    incident: 'The salt flats of Brinewire are completely dark. A grid that once lit an entire hemisphere has gone dead, its generator coils silent beneath inches of caustic brine.',
-    objective: 'Build electrochemical cells and reverse the polarity across the substation lines to fry the parasitic drain nodes.',
-    caseFileNote: 'Heavy copper cables beneath the mud were transmitting planet-busting electrical pulses directly toward the outer exclusion zone.'
+    incident: 'Heavy electrical siphon clamps have drained the regional power grid, plunging towns into complete darkness.',
+    objective: 'Connect the right metal plates and salt solutions to build opposing electrical cells that fry the enemy siphon nodes.',
+    caseFileNote: 'The stolen power was being transmitted into deep space by a high-powered beam antenna. The raiders are charging the weapons of a hidden battle armada.'
   },
   unit11: {
     worldId: 'unit11',
     worldName: 'Quicklight',
     act: 'act3',
-    arrival: 'Fifth Guild bombers hit the cracking towers on Quicklight with instantaneous flash-explosives, wiping out the scout perimeter.',
-    closing: 'Explosive chain reactions halted. We captured the Fifth Guild\'s secret chemical trigger and learned their true title: The Catalyst.',
+    arrival: 'Explosions are rocking the fuel cracking towers on Quicklight. The raiders dropped chemical accelerators into the storage tanks, speeding up combustion to explosive levels.',
+    closing: 'The runaway reactions are halted and the fuel depot is safe. We intercepted an enemy transmission from their supreme leader, who calls themselves \'The Catalyst\'.',
     spoilFamily: 'Kinetic flares',
     paragraphs: [
-      'The horizon on Quicklight erupted in violet fire before our retros even fired. A shockwave rattled our heat shields as another cracking tower collapsed in a heap of burning steel.',
-      'The fuel vapors in the air are on a knife-edge. The Fifth Guild dropped micro-dosed kinetic flares that accelerate reaction rates tenfold, threatening to ignite the entire upper atmosphere.',
-      'In the telemetry chatter, we caught the voice directing the strikes—a ghost transponder calling itself The Catalyst. They aren\'t trying to loot Quicklight. They\'re lighting a fuse across the sector.'
+      'Quicklight is a high-altitude refinery station that purifies aviation fuel. The vapors in the air here are combustible, so workers are normally very careful to keep temperatures low.',
+      'The raiders dropped microscopic catalyst powders into the storage vents. A catalyst speeds up chemical reactions without being consumed, causing the fuel to ignite ten times faster than normal.',
+      'You need to measure how fast the heat is climbing and use cooling agents and inhibitor chemicals to slow the reaction down. If we do not stop the acceleration, the entire fuel depot will blow.'
     ],
-    incident: 'The horizon on Quicklight erupted in violet fire before our retros even fired. A shockwave rattled our heat shields as another cracking tower collapsed in a heap of burning steel.',
-    objective: 'Measure kinetics and activation barriers across the refinery towers to isolate the chemical accelerator before the atmosphere ignites.',
-    caseFileNote: 'The Fifth Guild calls itself The Catalyst. They ignite rapid rebellions across star systems without ever being caught on official records.'
+    incident: 'Enemy agents dropped chemical accelerators into fuel storage tanks, causing violent chain reactions.',
+    objective: 'Measure reaction speeds and apply chemical inhibitors to slow down combustion before the refinery explodes.',
+    caseFileNote: 'The enemy commander calls themselves \'The Catalyst.\' Just like a chemical catalyst, they ignite rapid rebellions across star systems while staying hidden in the background.'
   },
   unit12: {
     worldId: 'unit12',
     worldName: 'Lodestone',
     act: 'act4',
-    arrival: 'The Fifth Guild built a massive magnetic beam-cannon on Lodestone, pulling allied vessels out of orbit and crushing their hulls.',
-    closing: 'Magnetic array neutralized and beam targeting decoded. Radar vectors point straight to the Fifth Guild\'s dreadnought base on Cinder Halo.',
+    arrival: 'Our navigation instruments are failing as we approach Lodestone. The raiders built a giant magnetic cannon in the canyon, pulling supply ships out of the sky.',
+    closing: 'The magnetic cannon is disabled and allied ships can fly safely again. Decoded flight coordinates show the raider fleet is based at Cinder Halo.',
     spoilFamily: 'Coordination sentinels',
     paragraphs: [
-      'Our control thrusters locked the moment we crossed Lodestone\'s jagged ridgeline. A brutal magnetic field gripped the hull, dragging our ship down toward the black canyon floor.',
-      'Deep in the chasms, the Fifth Guild has linked dozens of natural lodestone veins into an unholy rail cannon, wrenching allied ships out of orbit to smash them against the cliffs.',
-      'Vess wrestled the manual steering linkage while the rivets sheared along the port bulkhead. "Dismantle their coordination array," he shouted over the howling wind, "or we join the graveyard at the bottom of the gorge!"'
+      'Lodestone is a dark, rocky world rich in natural magnetic iron ores. The deep canyons here are naturally magnetic, but usually gentle enough for ships to navigate safely.',
+      'The raiders wired the canyon\'s iron veins together into an enormous magnetic rail cannon. When our supply transports try to fly over the ridge, the cannon pulls on their steel hulls and drags them into the cliff walls.',
+      'Certain metal atoms align their electrons to produce strong magnetic forces. By rearranging the metal complexes at each substation, you can cancel out the magnetic pull and shut down the cannon.'
     ],
-    incident: 'Our control thrusters locked the moment we crossed Lodestone\'s jagged ridgeline. A brutal magnetic field gripped the hull, dragging our ship down toward the black canyon floor.',
-    objective: 'Disrupt the magnetic crystal coordination nodes across the canyon stations to shut down the gravity rail and free incoming transports.',
-    caseFileNote: 'Decoded radar vectors pinpoint the Fifth Guild\'s supreme command base inside the radioactive exclusion zone of Cinder Halo.'
+    incident: 'A giant magnetic field weapon built from natural iron veins is pulling transport ships out of the sky.',
+    objective: 'Disrupt the alignment of the metal nodes across the canyon stations to dismantle the magnetic weapon.',
+    caseFileNote: 'The computer inside the magnetic cannon was receiving orders from Cinder Halo, a dangerous radioactive star system deep in the forbidden zone.'
   },
   unit13: {
     worldId: 'unit13',
     worldName: 'Thornmere',
     act: 'act4',
-    arrival: 'The Fifth Guild constructed an impenetrable swamp fortress on Thornmere, wrapped in heavy armor plating to shield their war fleet.',
-    closing: 'Armor plating dissolved and fortress breached. The protective shell was designed to withstand extreme atomic radiation.',
+    arrival: 'We are over the tar swamps of Thornmere. The raiders built an armored fortress behind thick plastic plates that our standard tools cannot pierce.',
+    closing: 'The polymer armor is dissolved and the fortress gates are open. The armor was packed with heavy lead to protect against lethal nuclear radiation.',
     spoilFamily: 'Polymer carapaces',
     paragraphs: [
-      'The tar swamps of Thornmere smell of scorched resin and heavy ozone. Out in the black marsh stands an iron fortress, wrapped in thick plates of synthetic polymer that deflect heavy rounds like rain.',
-      'Behind that armor shell, the Fifth Guild\'s invasion armada is fueling up in silence, their engine vents glowing behind rows of barbed barricades.',
-      'Vess scraped a shard of the carapace from an unexploded torpedo. His hand trembled. "Lead-impregnated polymer. This armor isn\'t meant for stopping cannon fire. It\'s built to survive lethal, unshielded nuclear radiation."'
+      'Thornmere is a dense marsh world rich in natural hydrocarbons and organic oils, which colonies use to manufacture tough protective plastics and clothing.',
+      'The raiders built an advance staging fortress in the middle of the swamp, wrapping the walls in thick layers of interlocking plastic polymers that deflect laser fire and physical impacts.',
+      'Plastics and polymers are long chains of carbon atoms linked together like chains of paperclips. By targeting the chemical links between the chains, you can dissolve the outer armor and open the fortress doors.'
     ],
-    incident: 'The tar swamps of Thornmere smell of scorched resin and heavy ozone. Out in the black marsh stands an iron fortress, wrapped in thick plates of synthetic polymer that deflect heavy rounds like rain.',
-    objective: 'Target polymer linkages and cross-links across the swamp stations to dissolve the radiation carapace and breach the blast doors.',
-    caseFileNote: 'The armor was infused with radiation shielding, revealing the Fifth Guild is preparing their troops to operate inside a lethal radioactive core.'
+    incident: 'An enemy staging fortress has been sealed behind heavy interlocking polymer armor plates.',
+    objective: 'Target the cross-links holding the carbon chains together to dissolve the protective armor and breach the fortress.',
+    caseFileNote: 'The plastic armor was infused with heavy lead. The raiders were not preparing for a conventional gunfight—they were shielding their soldiers to survive inside a radioactive nuclear reactor.'
   },
   unit14: {
     worldId: 'unit14',
     worldName: 'Cinder Halo',
     act: 'act4',
-    arrival: 'Final battle: The Fifth Guild has activated an ancient doomsday transmutation core on Cinder Halo, threatening to reshape reality!',
-    closing: 'Transmutation core stabilized and the Fifth Guild brought to terms. Corporate abandonment is exposed and peace is restored to the stars.',
+    arrival: 'This is our final mission. We have tracked the Fifth Guild to Cinder Halo, where they have started an unstable nuclear core that threatens to destroy the entire sector.',
+    closing: 'The nuclear core is stabilized and the war is over. We have stopped the disaster and brought the forgotten crews to the negotiating table.',
     spoilFamily: 'Transmutation core',
     paragraphs: [
-      'Cinder Halo hangs in the void like a shattered eye, bathed in the sickly green halo of ancient atomic decay. Our radiation alarms have not stopped screaming since we dropped out of warp.',
-      'At the center of the derelict station spins the forbidden core. The Fifth Guild is feeding millions of tons of asteroid rock into its corona, warping nuclei and forging entire armadas from thin air.',
-      'The Catalyst stands at the console of the dying sun. Chemistry ends here, at the threshold of nuclear destruction. We shut this runaway reactor down now, or the entire frontier burns in its flash.'
+      'We have arrived at Cinder Halo, an abandoned space station built around an ancient nuclear reactor. Radiation sirens are ringing across our bridge—this is the heart of the enemy operation.',
+      'Ordinary chemistry rearranges the bonds between atoms, but inside this reactor, the raiders are splitting atomic nuclei themselves. The core is overheating, and if the chain reaction runs wild, the entire station will detonate in a nuclear blast.',
+      'The leader of the raiders—The Catalyst—is standing by the reactor controls. They are the soldiers the old guilds abandoned to starve thirty years ago. We need to calculate the atomic decay rates, lower the control rods to cool the core, and end this conflict with truth instead of destruction.'
     ],
-    incident: 'Cinder Halo hangs in the void like a shattered eye, bathed in the sickly green halo of ancient atomic decay. Our radiation alarms have not stopped screaming since we dropped out of warp.',
-    objective: 'Calculate nuclear decay rates and binding energies to breach the containment seal, shut down the core, and end the war.',
-    caseFileNote: 'The Fifth Guild was born from forgotten soldiers left to die. Through true science, we stopped their doomsday machine and gave them their rightful voice.'
+    incident: 'The raiders have started an ancient nuclear transmutation reactor that is rapidly overheating toward a catastrophic explosion.',
+    objective: 'Balance the nuclear decay rates and insert control rods to stabilize the atomic core and end the war.',
+    caseFileNote: 'The Fifth Guild was formed by forgotten soldiers abandoned thirty years ago. By understanding real science, we prevented a catastrophe and gave them a peaceful voice.'
   }
 };
 

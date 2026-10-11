@@ -217,9 +217,9 @@ export function stateFor(i, overrides) {
 }
 
 export const DEBRIEF = {
-  speaker: 'VESS // QUARTERMASTER',
+  speaker: 'Vess',
   badge: 'BOSS DISPERSED · TALLOW',
-  subtitle: 'THE HOPPER // DISPERSAL CONFIRMED',
+  subtitle: 'The Hopper',
   message: 'The Hopper has collapsed into cold slag. Inside its discharge chute we found an impossible ingot: pure bismuth, though this salt pan never held heavy metals.',
   clueAwarded: 'clue_tallow_slag'
 };
@@ -288,6 +288,8 @@ export function mount(container, ctx) {
   let busy = false;
 
   const frame = new LearnFrame(container, {
+    quest: ctx?.quest || { id: 'boss-hopper' },
+    world: ctx?.world,
     stageCount: STAGES.length,
     rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),

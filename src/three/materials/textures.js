@@ -249,7 +249,6 @@ export function createCrtScreenTexture(title = 'TELEMETRY', type = 'amber') {
     }
     ctx.font = '10px monospace';
     ctx.fillText('TRACK: 03 CONTACTS   RANGE: 120 KM', 16, 215);
-    ctx.fillText('STATUS: PASSIVE SWEEP // AZ: 044°', 16, 235);
   } else if (title.toUpperCase().includes('REACTOR')) {
     // Reactor bar meters
     const labels = ['CORE TEMP', 'MAG FLUX', 'COOLANT', 'PURGE'];
@@ -271,7 +270,6 @@ export function createCrtScreenTexture(title = 'TELEMETRY', type = 'amber') {
     ctx.font = '10px monospace';
     ctx.fillStyle = primaryColor;
     ctx.fillText('OUTPUT: 4.8 GW   EFFICIENCY: 94.2%', 16, 215);
-    ctx.fillText('CONTAINMENT: STABLE // SYS OK', 16, 235);
   } else if (title.toUpperCase().includes('SPECTRUM') || title.toUpperCase().includes('ANALYSIS')) {
     // Frequency spectrum bars
     const barCount = 18;
@@ -292,7 +290,7 @@ export function createCrtScreenTexture(title = 'TELEMETRY', type = 'amber') {
 
     ctx.font = '10px monospace';
     ctx.fillStyle = primaryColor;
-    ctx.fillText('BAND: 1420.4 MHz // CH-9 SUB-C', 16, 215);
+    ctx.fillText('BAND: 1420.4 MHz · CH-9 SUB-C', 16, 215);
     ctx.fillText('SNR: +24.6 dB    MOD: FREQ-SHIFT', 16, 235);
   } else {
     // Standard Telemetry & Oscilloscope
@@ -328,7 +326,6 @@ export function createCrtScreenTexture(title = 'TELEMETRY', type = 'amber') {
     ctx.fillStyle = primaryColor;
     ctx.fillText('SYS: AVALON-HELM   ORBIT: EREBUS', 16, 205);
     ctx.fillText('VECTOR: 044-STABLE WARP: STANDBY', 16, 224);
-    ctx.fillText('STATUS: LOCKED // CALIB OK', 16, 242);
   }
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -480,7 +477,7 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
   // Eyebrow
   ctx.font = 'bold 13px monospace';
   ctx.fillStyle = '#d99423';
-  ctx.fillText('// PRIMARY OBJECTIVE · SECTOR 01 //', 24, 36);
+  ctx.fillText('PRIMARY OBJECTIVE · SECTOR 01', 24, 36);
 
   // Top-right Close [X] badge
   ctx.font = 'bold 11px monospace';
@@ -510,20 +507,16 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
   ctx.fillStyle = '#e8e0d0';
   ctx.fillText('EREBUS · THE CHARGE GARDENS', 24, 68);
 
-  ctx.font = '13px sans-serif';
-  ctx.fillStyle = '#c39a63';
-  ctx.fillText('"Find what pulls. Draw the line."', 24, 88);
-
   // Status & Pylon progress
   ctx.strokeStyle = '#2e2a26';
   ctx.beginPath();
-  ctx.moveTo(24, 102);
-  ctx.lineTo(488, 102);
+  ctx.moveTo(24, 88);
+  ctx.lineTo(488, 88);
   ctx.stroke();
 
   ctx.font = 'bold 15px monospace';
   ctx.fillStyle = cleared >= total ? '#6f8f3f' : '#d99423';
-  ctx.fillText(`PYLON GRID STATUS: ${cleared} / ${total} RESTORED`, 24, 126);
+  ctx.fillText(`${cleared} / ${total} RESTORED`, 24, 114);
 
   // Mini pylon bar
   const barW = 464;
@@ -531,7 +524,7 @@ export function createQuestHoloTexture(cleared = 0, total = 20, transmission = '
   for (let i = 0; i < total; i++) {
     const isLit = i < cleared;
     ctx.fillStyle = isLit ? '#6f8f3f' : '#2a2724';
-    ctx.fillRect(24 + i * step + 1, 136, step - 3, 10);
+    ctx.fillRect(24 + i * step + 1, 126, step - 3, 10);
   }
 
   // Transmission excerpt
@@ -608,7 +601,7 @@ export function createClubHoloTexture() {
   ctx.font = 'bold 15px monospace';
   ctx.fillStyle = '#d99423';
   ctx.textAlign = 'center';
-  ctx.fillText('// AVALON STATION · FLIGHT DECK DIRECTORY //', 512, 50);
+  ctx.fillText('AVALON STATION · FLIGHT DECK DIRECTORY', 512, 50);
 
   // Top-right Close [X] badge
   ctx.font = 'bold 15px monospace';
@@ -674,20 +667,6 @@ export function createClubHoloTexture() {
   ctx.fillStyle = '#f6ecd9';
   ctx.fillText('Charge Gardens & Planet Exploration Charts', 512, 332);
 
-  // Bottom corridor guide banner
-  ctx.fillStyle = '#11141c';
-  ctx.fillRect(100, 420, 824, 96);
-  ctx.strokeStyle = '#d99423';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(100, 420, 824, 96);
-
-  ctx.font = 'bold 22px sans-serif';
-  ctx.fillStyle = '#ffaa38';
-  ctx.shadowColor = '#d99423';
-  ctx.shadowBlur = 10;
-  ctx.fillText('Check out the star map for the latest quests!', 512, 478);
-  ctx.shadowBlur = 0;
-
   const texture = new THREE.CanvasTexture(canvas);
   texture.userData.closeRect = closeRectUv(badgeX, badgeY, badgeW, badgeH, 1024, 576);
   return texture;
@@ -732,7 +711,7 @@ export function createCommsHoloTexture(teams = [], chatter = '') {
   ctx.font = 'bold 15px monospace';
   ctx.fillStyle = '#00f5d4';
   ctx.textAlign = 'center';
-  ctx.fillText('// FLEET COMMS · SUB-SPACE RELAY · GUILD STANDINGS //', 512, 48);
+  ctx.fillText('FLEET COMMS · GUILD STANDINGS', 512, 48);
 
   // Top-right Close [X] badge
   ctx.font = 'bold 15px monospace';
@@ -891,7 +870,7 @@ export function createCommsStandingsTexture(teams = [], chatter = '') {
 
   ctx.font = 'bold 14px monospace';
   ctx.fillStyle = '#38b000';
-  ctx.fillText('[ FLEET COMMS // GUILD STANDINGS ]', 22, 34);
+  ctx.fillText('[ FLEET COMMS · GUILD STANDINGS ]', 22, 34);
 
   // Guild leaderboard rows.
   //
@@ -976,7 +955,7 @@ export function createCargoManifestTexture(itemCount = 0, maxSlots = 8, trinketN
 
   ctx.font = 'bold 14px monospace';
   ctx.fillStyle = '#ff9f1c';
-  ctx.fillText('[ CARGO HOLD 04 // SPICE & REFINERY SALVAGE ]', 22, 34);
+  ctx.fillText('[ CARGO HOLD 04 · SALVAGE ]', 22, 34);
 
   // Stats
   ctx.font = '13px monospace';
@@ -1192,15 +1171,13 @@ export function createBlastDoorTexture(width = 512, height = 512) {
   ctx.font = 'bold 16px monospace';
   ctx.fillStyle = '#d99423';
   ctx.textAlign = 'center';
-  ctx.fillText('// AIRLOCK BAY 01 //', width / 2, 80);
+  ctx.fillText('AIRLOCK BAY 01', width / 2, 80);
 
   ctx.font = '11px monospace';
   ctx.fillStyle = '#8f8678';
   ctx.fillText('DANGER: RAPID DECOMPRESSION RISK', width / 2, 102);
-  ctx.fillText('SEAL INTEGRITY: MONITORED // AUTO-LOCK ON VACUUM', width / 2, 120);
 
   ctx.fillText('DO NOT CYCLE WITHOUT EVA GEAR', width / 2, height - 88);
-  ctx.fillText('HYDRAULIC DOGGING LOCK: ENGAGED', width / 2, height - 68);
   ctx.textAlign = 'left';
 
   // Heavy reinforcement cross seams
@@ -1259,7 +1236,7 @@ export function createRackPanelTexture(width = 512, height = 512) {
     // Stencil header
     ctx.font = 'bold 12px monospace';
     ctx.fillStyle = '#d99423';
-    const titles = ['CH-01 // COMM RECEIVER', 'CH-02 // SUB-CARRIER RX', 'CH-03 // RELAY BUS MATRIX', 'CH-04 // RF DEMODULATOR'];
+    const titles = ['CH-01 · COMM RECEIVER', 'CH-02 · SUB-CARRIER RX', 'CH-03 · RELAY BUS MATRIX', 'CH-04 · RF DEMODULATOR'];
     ctx.fillText(titles[u], 32, uy + 26);
 
     // Jack socket matrix (for patch cables)
@@ -1298,7 +1275,7 @@ export function createRackPanelTexture(width = 512, height = 512) {
 /**
  * Creates stenciled metal footlocker texture for Crew Quarters
  */
-export function createFootlockerTexture(width = 512, height = 256, label = 'CREW 12 // J. ORTEGA') {
+export function createFootlockerTexture(width = 512, height = 256, label = 'CREW 12 · J. ORTEGA') {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -1353,7 +1330,7 @@ export function createFootlockerTexture(width = 512, height = 256, label = 'CREW
 
   ctx.font = '11px monospace';
   ctx.fillStyle = '#8f8678';
-  ctx.fillText('AVALON DEEP SALVAGE // BERTH 02', 54, 72);
+  ctx.fillText('AVALON BERTH 02', 54, 72);
   ctx.fillText('PERSONAL LOCKER · AUTH ID REQUIRED', 54, height - 38);
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -1391,7 +1368,7 @@ export function createContainerStencilTexture(width = 512, height = 512, guildCo
   // Guild Header
   ctx.font = 'bold 22px sans-serif';
   ctx.fillStyle = '#d99423';
-  ctx.fillText(`GUILD FREIGHT // ${guildCode}`, 60, 180);
+  ctx.fillText(`GUILD FREIGHT · ${guildCode}`, 60, 180);
 
   ctx.font = 'bold 14px monospace';
   ctx.fillStyle = '#e8dec8';
@@ -1404,7 +1381,7 @@ export function createContainerStencilTexture(width = 512, height = 512, guildCo
   ctx.fillText('SEAL PROTOCOL: IMPERIAL-STANDARD', 60, 295);
 
   ctx.fillStyle = '#c92a2a';
-  ctx.fillText('// NON-PRESSURIZED CARGO UNIT //', 60, 335);
+  ctx.fillText('NON-PRESSURIZED CARGO UNIT', 60, 335);
 
   // Corner hazard chevrons
   for (const yOff of [10, height - 38]) {

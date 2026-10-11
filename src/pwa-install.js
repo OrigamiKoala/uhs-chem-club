@@ -49,7 +49,7 @@ export function showInstallModal(opts = {}) {
   const modalHtml = `
     <div class="pwa-install-dialog" role="document">
       <div class="pwa-modal-head" style="margin-bottom: 1.15rem;">
-        <h2 id="pwa-modal-title" class="pwa-modal-title" style="font-size: 1.15rem; letter-spacing: 0.1em; line-height: 1.35; color: var(--text-bright); margin: 0;">Add Avalon to Home Screen for a better experience</h2>
+        <h2 id="pwa-modal-title" class="pwa-modal-title" style="font-size: 1.15rem; letter-spacing: 0.1em; line-height: 1.35; color: var(--text-bright); margin: 0;">Add Avalon to Home Screen</h2>
       </div>
 
       <div class="pwa-steps-list">
@@ -129,9 +129,9 @@ export function showInstallModal(opts = {}) {
           <div class="pwa-step-card">
             <div class="pwa-step-num">3</div>
             <div class="pwa-step-body">
-              <div class="pwa-step-label">Launch Standalone Console</div>
+              <div class="pwa-step-label">Launch Avalon</div>
               <div class="pwa-step-desc">
-                Confirm installation to launch Avalon as a dedicated fullscreen landscape application.
+                Confirm installation to launch Avalon in full screen.
               </div>
             </div>
           </div>
@@ -141,11 +141,11 @@ export function showInstallModal(opts = {}) {
       <div class="pwa-modal-actions">
         ${deferredPrompt ? `
           <button type="button" id="pwa-native-install-btn" class="btn-primary" style="width: 100%; min-height: 44px; margin-bottom: 0.6rem;">
-            ⚡ INSTALL APP NOW
+            Install App
           </button>
         ` : ''}
         <button type="button" id="pwa-dismiss-btn" class="${deferredPrompt ? 'btn-secondary' : 'btn-primary'}" style="width: 100%; min-height: 44px;">
-          ${deferredPrompt ? 'MAYBE LATER' : 'GOT IT'}
+          ${deferredPrompt ? 'Dismiss' : 'Close'}
         </button>
       </div>
     </div>

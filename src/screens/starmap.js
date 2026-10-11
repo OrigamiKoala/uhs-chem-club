@@ -25,7 +25,7 @@ const SECTORS = [
     world: "Erebus",
     place: "Desert world",
     quest: "The Charge Gardens",
-    line: "Find what pulls. Draw the line.",
+    line: "",
     status: "live"
   },
   {
@@ -33,7 +33,7 @@ const SECTORS = [
     world: "Pyros Prime",
     place: "Volcanic forge",
     quest: "The Forge Line",
-    line: "No charts.",
+    line: "",
     status: "locked"
   },
   {
@@ -41,7 +41,7 @@ const SECTORS = [
     world: "Cryo-Haven",
     place: "Ice tundra",
     quest: "The Lattice",
-    line: "No charts.",
+    line: "",
     status: "locked"
   },
   {
@@ -49,7 +49,7 @@ const SECTORS = [
     world: "Aetheria",
     place: "Gas giant",
     quest: "The Swing",
-    line: "No charts.",
+    line: "",
     status: "locked"
   }
 ];
@@ -73,8 +73,8 @@ function tabRow(active) {
         <button type="button" class="map-tab${active === "learn" ? " active" : ""}" data-map-tab="learn" role="tab" aria-selected="${active === "learn"}">Story</button>
         <button type="button" class="map-tab${active === "sectors" ? " active" : ""}" data-map-tab="sectors" role="tab" aria-selected="${active === "sectors"}">Contracts</button>
       </div>
-      <button type="button" class="btn-secondary quest-btn-sm m-tap" id="campaign-story-briefing-btn" title="Review Campaign Storyline & Ghost Charter" style="font-size: 0.72rem;">
-        📜 Story Dossier
+      <button type="button" class="btn-secondary quest-btn-sm m-tap" id="campaign-story-briefing-btn" title="Story Dossier" style="font-size: 0.72rem;">
+        Story Dossier
       </button>
     </div>
   `;
@@ -102,16 +102,12 @@ function learnPanel() {
             </div>
             <div class="map-learn-body">
               <div class="map-learn-name">${esc(w.world)}</div>
-              <div class="eyebrow map-learn-place" style="color: var(--accent-amber); font-size: 0.65rem;">ENEMY // THE FIFTH GUILD</div>
               <p class="map-learn-line">${esc(w.line)}</p>
               <div class="eyebrow map-learn-count">
                 ${w.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} complete` : ""}
               </div>
             </div>
             <div class="map-learn-action" style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
-              <button type="button" class="btn-secondary quest-btn-sm learn-story-modal-btn m-tap" data-story-world="${esc(w.id)}" title="Sector Storyline Briefing">
-                Storyline
-              </button>
               ${enterable
                 ? `<a href="#/learn/${esc(w.id)}" class="btn-primary quest-btn-sm m-tap learn-enter-btn" data-world-id="${esc(w.id)}" style="text-decoration: none;">${walk ? `Enter ${esc(w.world)}` : "Enter"}</a>`
                 : `<span class="eyebrow map-learn-blocked">${st === "locked" ? "Locked" : "Coming soon"}</span>`}
@@ -134,29 +130,16 @@ function bindTabs(container) {
     btn.addEventListener('click', (e) => {
       const worldId = btn.dataset.worldId;
       if (!worldId) return;
-      if (!session.hasFlag(`story_world_seen_${worldId}`)) {
+      if (!stage.canVoyage?.(worldId)) {
         e.preventDefault();
         const w = WORLDS.find(x => x.id === worldId);
         openWorldStoryModal(w || worldId, {
           isPreLaunch: true,
           onLaunch: () => {
-            session.setFlag(`story_world_seen_${worldId}`, true);
             window.location.hash = `#/learn/${worldId}`;
-          }
-        });
-      }
-    });
-  });
-
-  container.querySelectorAll('.learn-story-modal-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const w = WORLDS.find(x => x.id === btn.dataset.storyWorld);
-      if (w) {
-        openWorldStoryModal(w, {
-          isPreLaunch: true,
-          onLaunch: () => {
-            session.setFlag(`story_world_seen_${w.id}`, true);
-            window.location.hash = `#/learn/${w.id}`;
+          },
+          onClose: () => {
+            window.location.hash = `#/learn/${worldId}`;
           }
         });
       }
@@ -243,12 +226,9 @@ export function renderStarMap(container) {
             <span class="tag ${isComplete ? "live" : "warn"}">${isComplete ? "RESOLVED" : cleared > 0 ? "UNDERWAY" : "STANDBY"}</span>
           </div>
 
-          <h3 style="font-family: var(--font-imperial); font-size: 1.2rem; color: var(--text-bright); text-transform: uppercase; margin-bottom: 0.2rem;">
+          <h3 style="font-family: var(--font-imperial); font-size: 1.2rem; color: var(--text-bright); text-transform: uppercase; margin: 0 0 0.8rem;">
             THE CHARGE GARDENS
           </h3>
-          <p style="font-size: 0.82rem; color: var(--accent-gold); margin-bottom: 0.8rem;">
-            "Find what pulls. Draw the line."
-          </p>
 
           ${renderGardensMap({ clearedCount: cleared, compact: true })}
 
@@ -339,12 +319,10 @@ export function renderStarMap(container) {
 
                 <div style="height: 1px; background: var(--border-durasteel); margin: 0.9rem 0;"></div>
 
-                <div style="font-family: var(--font-display); font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; color: ${isLive ? "var(--accent-gold)" : "var(--text-muted)"}; margin-bottom: 0.3rem;">
+                <div style="font-family: var(--font-display); font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase; color: ${isLive ? "var(--accent-gold)" : "var(--text-muted)"}; margin-bottom: ${s.line ? "0.3rem" : "1.25rem"};">
                   ${s.quest}
                 </div>
-                <p style="font-size: 0.86rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">
-                  ${s.line}
-                </p>
+                ${s.line ? `<p style="font-size: 0.86rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.5;">${s.line}</p>` : ''}
 
                 <div style="margin-top: auto;">
                   ${isLive ? `
@@ -375,29 +353,25 @@ export function renderStarMap(container) {
       return;
     }
 
-    if (!session.hasFlag('story_world_seen_erebus')) {
+    if (!stage.canVoyage?.("erebus")) {
       openWorldStoryModal('erebus', {
         isPreLaunch: true,
         onLaunch: async () => {
-          session.setFlag('story_world_seen_erebus', true);
-          if (!stage.canVoyage?.("erebus")) {
-            try {
-              await playCinematic("launch");
-            } catch (e) {}
-          }
+          try {
+            await playCinematic("launch");
+          } catch (e) {}
+          window.location.hash = "#/quest";
+        },
+        onClose: async () => {
+          try {
+            await playCinematic("launch");
+          } catch (e) {}
           window.location.hash = "#/quest";
         }
       });
       return;
     }
 
-    // At T4 the Avalon flies there itself (three/voyage.js); the launch film
-    // is for the tiers that cannot draw the flight.
-    if (!stage.canVoyage?.("erebus")) {
-      try {
-        await playCinematic("launch");
-      } catch (e) {}
-    }
     window.location.hash = "#/quest";
   }
 

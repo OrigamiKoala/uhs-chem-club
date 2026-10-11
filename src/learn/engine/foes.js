@@ -110,7 +110,7 @@ export function benchItems(stage) {
 export const SPECIES = {
   'salt husk': {
     name: 'Salt husk',
-    counter: 'The husk lunges and your rig takes the hit.',
+    counter: 'Trial missed: the sample measurement does not match that choice.',
     knockback: 'Knocked back. The husk is whole again, but everything you found is still on the bench.',
     hit: 'The husk crumbles into salt.',
     lines: {
@@ -140,7 +140,7 @@ export const SPECIES = {
 
   'lamp moth': {
     name: 'Lamp moth',
-    counter: 'The moth beats its wings and your rig takes the hit.',
+    counter: 'Trial missed: the photoelectric threshold does not match that wavelength.',
     knockback: 'Knocked back. The moth is whole again, but everything you found is still on the bench.',
     hit: 'The moth goes dark and drifts away.',
     lines: {
@@ -161,7 +161,7 @@ export const SPECIES = {
 
   'the hopper': {
     name: 'The Hopper',
-    counter: 'The hopper shudders and vents a spray of crushed slag at your rig.',
+    counter: 'Trial missed: the core charge or mass balance was not satisfied.',
     knockback: 'Knocked back. The hopper resets its plating, but your telemetry on its core holds steady.',
     hit: 'The hopper collapses under its own weight, leaving cold slag across the salt.',
     lines: {
@@ -176,7 +176,7 @@ export const SPECIES = {
 
   'basalt warden': {
     name: 'Basalt warden',
-    counter: 'The warden swings a heavy stone arm and your rig takes the shock.',
+    counter: 'Trial missed: the mineral crystal structure does not match that configuration.',
     knockback: 'Knocked back. The stone settles, but the mineral structure you measured remains charted.',
     hit: 'The warden shatters along its cleavage planes and settles into quarry stone.',
     lines: {
@@ -224,7 +224,7 @@ export const SPECIES = {
 
   'slag crawler': {
     name: 'Slag crawler',
-    counter: 'The crawler lashes its plated tail and your rig takes the hit.',
+    counter: 'Trial missed: the interatomic bond analysis does not match that choice.',
     knockback: 'Knocked back. The crawler is whole again, but everything you found is still on the bench.',
     hit: 'The crawler breaks into slag and settles into the dust.',
     lines: {
@@ -264,7 +264,7 @@ export const SPECIES = {
 
   'recipe golem': {
     name: 'Recipe golem',
-    counter: 'The golem vents high-pressure steam and drives your rig back.',
+    counter: 'Trial missed: the reactant mole ratio is unbalanced.',
     knockback: 'Knocked back. The golem draws fresh mass, but the stoichiometry you proved is still logged.',
     hit: 'The golem starves for unbonded reagents and disperses into inert powder.',
     lines: {
@@ -279,7 +279,7 @@ export const SPECIES = {
 
   'gas bladder': {
     name: 'Gas bladder',
-    counter: 'The bladder heaves against the rig and your rig takes the hit.',
+    counter: 'Trial missed: the gas pressure and volume measurements do not match.',
     knockback: 'Knocked back. The bladder settles to its own size, but everything you found is still on the bench.',
     hit: 'The bladder vents and lies slack.',
     lines: {
@@ -319,7 +319,7 @@ export const SPECIES = {
 
   'the compressor': {
     name: 'The Compressor',
-    counter: 'The compressor slams a piston stroke through the rig and your rig takes the hit.',
+    counter: 'Trial missed: the cylinder compression cycle does not match the target.',
     knockback: 'Knocked back. The compressor cycles again, but every reading you took is still on the bench.',
     hit: 'The compressor vents its last charge and its pistons stand still.',
     lines: {

@@ -895,10 +895,8 @@ export function renderQuest(container) {
               const explanation = cfg.reaction?.explanation || 'Bond created! The two regions snapped together.';
               const clearStory = pylonStory?.onClear || '';
               feedback.innerHTML = `
-                <span class="banner-mark" aria-hidden="true">//</span>
                 <div class="banner-content" style="flex: 1;">
-                  <div class="banner-title" style="color: var(--accent-green);">Pylon ${currentStageIdx + 1} Awakened</div>
-                  ${clearStory ? `<div style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent-gold); margin-bottom: 0.35rem;">"${esc(clearStory)}"</div>` : ''}
+                  <div class="banner-title" style="color: var(--accent-green);">Stage ${currentStageIdx + 1} Complete</div>
                   <div class="banner-body">${explanation}</div>
                   <div class="banner-meta">
                     ${awarded > 0 ? `+${awarded} XP` : 'REPLAY · XP ALREADY EARNED'}${isCleanSolve && !isReplay ? ' · CLEAN SOLVE' : ''}
@@ -1164,7 +1162,7 @@ export function renderQuest(container) {
 
       ${debriefStory.clueAward ? `
         <div id="clue-award-banner" class="hidden" style="text-align: center; margin-bottom: 1.25rem;">
-          <span class="tag lit" style="border-color: var(--accent-gold); color: var(--accent-gold); letter-spacing: 0.12em;">CASE FILE ENTRY FILED // REQUISITION MARK RECORDED</span>
+          <span class="tag lit" style="border-color: var(--accent-gold); color: var(--accent-gold); letter-spacing: 0.12em;">Case File Updated</span>
         </div>
       ` : ''}
 

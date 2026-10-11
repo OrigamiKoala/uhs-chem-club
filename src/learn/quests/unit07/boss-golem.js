@@ -91,9 +91,9 @@ export function stateFor(i, overrides) {
 }
 
 export const DEBRIEF = {
-  speaker: 'VESS // QUARTERMASTER',
+  speaker: 'Vess',
   badge: 'ELITE DISPERSED · KETTLE',
-  subtitle: 'RECIPE GOLEM // DISPERSAL CONFIRMED',
+  subtitle: 'Recipe Golem',
   message: 'The golem vents its boiler and freezes. In its log vault we found a ledger: pages of refinery runs where the product mass is thirty percent greater than the input ore. No chemistry can do that.',
   clueAwarded: 'clue_kettle_ledger'
 };
@@ -162,6 +162,8 @@ export function mount(container, ctx) {
   let busy = false;
 
   const frame = new LearnFrame(container, {
+    quest: ctx?.quest || { id: 'boss-golem' },
+    world: ctx?.world,
     stageCount: STAGES.length,
     rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),

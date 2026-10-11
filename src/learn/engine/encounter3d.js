@@ -1,40 +1,25 @@
 /**
- * encounter3d.js — The fight, stood on the bench.
+ * encounter3d.js — The fight, stood in front of the player.
  *
- * At T4 a stage that declares an `encounter` has its foes as BUILT BODIES
- * (`foebody.js`) in the wells of the instrument, so "four samples" really is
- * four foes in front of the player (docs/plans/storyline-and-combat.md, Phase 5).
- * This file owns where they stand and when they move; it decides nothing.
+ * At T4 a stage that declares an `encounter` stands actual 3D MONSTERS
+ * in front of the player facing them across the arena with full FPS combat:
+ * weapon discharge, plasma beam tracers, muzzle flashes, hitmarkers,
+ * damage vignettes, monster stagger reactions, and violent counter-lunges.
  *
- * WHAT IT CAN AND CANNOT DO
- *   - IT OBSERVES. The 2D `Encounter` is the one place a fight's state lives. It
- *     hands this layer a snapshot (`{ enc, fight, poses }`) every time it paints,
- *     and the layer moves each body into the pose the snapshot names. A pose is
- *     whatever `planFoe` returned — which asked the instrument's own planner —
- *     so a husk in this layer splits only when the cutter really splits it.
- *     Nothing here is read by the frame, and nothing here can refuse an answer.
- *   - THE INSTRUMENT STAYS THE PLAYER'S RIG. A foe stands IN the well, on the
- *     crate it is made of, low enough that the screen raked behind it is never
- *     hidden (`verify:bench` casts a ray from the camera to the screen's corners
- *     and fails any body in the way). The flat picture is still the picture.
- *   - A PRESS ON A FOE IS A PRESS ON ITS STATION. The body is a target the way
- *     the tray is, so on a stage that asks which sample, tapping the husk is
- *     choosing it. It goes through `stationUnderRay`, never around it.
- *   - REDUCED MOTION. Every pose snaps and the idle tremor is off.
- *   - NO FOE, NO COST. A viewer with no encounter builds nothing: the group is
- *     empty and `update` returns at once.
+ * Also maintains the well spoil bodies (`foebody.js`) for instrument wells.
  */
 
 import * as THREE from 'three';
 import { buildFoeBody } from './foebody.js';
 import { encounterSnapshot } from './bench-host.js';
 import { soundscape } from '../../audio/soundscape.js';
+import { CombatMonster3D } from './combat-monster-3d.js';
+import { CombatFpsFx } from './combat-fps-fx.js';
+import { CombatFpsHud } from './combat-fps-hud.js';
 
 /** Where in the well's frame each species stands, by instrument head. */
 const PERCH = {
-  // The moth clings to the vacuum tube over its metal plate.
   'lamp moth': { x: -0.07, y: 0.11, z: 0 },
-  // A bladder lies on the plate in front of the barrel, low, so the screen behind it stays whole.
   'gas bladder': { x: 0, y: 0, z: 0.15 },
   'the compressor': { x: 0, y: 0, z: 0.1 }
 };
@@ -50,6 +35,13 @@ function reducedMotion() {
   } catch { return false; }
 }
 
+function isRealBrowser() {
+  if (typeof process !== 'undefined' && Boolean(process.versions?.node)) return false;
+  if (typeof window === 'undefined' || typeof document === 'undefined') return false;
+  if (globalThis.__IS_SHIM__ || globalThis.document?.isShim) return false;
+  return true;
+}
+
 export class FoeLayer3D {
   /**
    * @param {object} viewer the `BenchViewer3D` this layer stands on
@@ -62,16 +54,27 @@ export class FoeLayer3D {
     this.group.name = 'foes';
     viewer.root.add(this.group);
 
-    /** @type {Map<string, object>} foe id -> body */
+    /** @type {Map<string, object>} foe id -> body in well */
     this.bodies = new Map();
+    /** @type {CombatMonster3D[]} 3D Life-sized monsters */
+    this.monsters = [];
+
     this.enc = null;
     this.lost = 0;
     this.dirty = false;
     this.poses = new Map();
     this.disposed = false;
+    this.onDocClick = null;
 
-    // The frame builds the encounter plate before the instrument exists, so a
-    // viewer arriving mid-stage asks what the stage already began.
+    if (isRealBrowser() && viewer.scene && viewer.camera) {
+      this.fpsFx = new CombatFpsFx(viewer.scene, viewer.camera);
+      this.fpsHud = new CombatFpsHud(document.body, viewer.camera);
+      this.fpsHud.onStrike = () => this.triggerPlayerAttack();
+    } else {
+      this.fpsFx = null;
+      this.fpsHud = null;
+    }
+
     const snap = encounterSnapshot();
     if (snap) this.sync(snap);
   }
@@ -81,11 +84,19 @@ export class FoeLayer3D {
   /** A stage began (or ended): `enc` is `resolveEncounter(stage)` or null. */
   begin(enc) {
     this.dropBodies();
+    this.dropMonsters();
     this.enc = enc || null;
     this.poses = new Map();
     this.lost = 0;
     this.dirty = Boolean(this.enc);
-    if (this.enc && this.viewer.stations.length) this.layout();
+
+    if (this.enc) {
+      if (this.viewer.stations.length) this.layout();
+      this.layoutCombatMonsters();
+    } else {
+      this.fpsHud?.hide();
+      this.detachCommitListener();
+    }
   }
 
   /**
@@ -99,14 +110,22 @@ export class FoeLayer3D {
     if (!enc) return;
     this.poses = snap.poses || new Map();
 
-    // A committed miss: every foe comes at the player once. (The 2D plate has
-    // already announced the reason; this is the body language that follows.)
+    // A committed miss: every foe comes at the player once.
     const lost = snap.fight?.lost ?? 0;
     if (lost > this.lost) {
       for (const b of this.bodies.values()) b.hitPlayer?.();
+      for (const m of this.monsters) m.triggerLunge?.();
+      this.fpsFx?.addTrauma(0.65);
+      this.fpsHud?.triggerDamageFlash();
       if (!reducedMotion()) soundscape.playKeyCapThunk?.();
     }
+
+    if (snap.fight?.won) {
+      for (const m of this.monsters) m.triggerDisperse?.();
+    }
+
     this.lost = lost;
+    this.fpsHud?.updateThreatPlate(this.enc, snap.fight);
     this.applyPoses();
   }
 
@@ -114,11 +133,97 @@ export class FoeLayer3D {
     const instant = reducedMotion();
     for (const foe of this.enc?.foes || []) {
       const body = this.bodies.get(foe.id);
-      if (!body) continue;
       const got = this.poses.get(foe.id);
-      if (body.lastEntry === got) continue;
-      body.lastEntry = got;
-      body.setPose(got?.pose || 'idle', got, instant);
+      if (body) {
+        if (body.lastEntry !== got) {
+          body.lastEntry = got;
+          body.setPose(got?.pose || 'idle', got, instant);
+        }
+      }
+      const monster = this.monsters.find(m => m.foe.id === foe.id);
+      if (monster) {
+        if (got?.pose === 'dispersed') {
+          monster.triggerDisperse();
+        }
+      }
+    }
+  }
+
+  /* ---------------- 3D Life-Sized Combat Monsters in Arena ---------------- */
+
+  layoutCombatMonsters() {
+    this.dropMonsters();
+    if (!this.enc || !this.enc.foes?.length) return;
+
+    const n = this.enc.foes.length;
+    const span = Math.min(2.4, (n - 1) * 0.95);
+
+    this.enc.foes.forEach((foe, i) => {
+      const x = n === 1 ? 0 : -span / 2 + (i / Math.max(1, n - 1)) * span;
+      const z = -2.2 - (i % 2) * 0.35;
+      const y = 1.15;
+      const monster = new CombatMonster3D(this.enc.species, foe, { x, y, z });
+      this.group.add(monster.group);
+      this.monsters.push(monster);
+    });
+
+    if (this.fpsHud) {
+      this.fpsHud.setMonsters(this.monsters);
+      this.fpsHud.show(this.enc, null);
+    }
+    this.attachCommitListener();
+  }
+
+  dropMonsters() {
+    for (const m of this.monsters) {
+      this.group.remove(m.group);
+      m.dispose?.();
+    }
+    this.monsters = [];
+  }
+
+  attachCommitListener() {
+    if (typeof document === 'undefined') return;
+    this.detachCommitListener();
+    this.onDocClick = (e) => {
+      if (e.target.closest?.('.lq-commit')) {
+        this.triggerPlayerAttack();
+      }
+    };
+    document.addEventListener('click', this.onDocClick);
+  }
+
+  detachCommitListener() {
+    if (this.onDocClick && typeof document !== 'undefined') {
+      document.removeEventListener('click', this.onDocClick);
+      this.onDocClick = null;
+    }
+  }
+
+  triggerPlayerAttack() {
+    if (!this.monsters.length || !this.fpsFx) {
+      // Also click the Commit button if triggered via HUD
+      const commitBtn = document.querySelector('.lq-commit');
+      if (commitBtn && !commitBtn.disabled) commitBtn.click();
+      return;
+    }
+
+    const target = this.monsters[0];
+    if (!target || !target.group.visible) return;
+
+    const targetPos = new THREE.Vector3();
+    target.group.getWorldPosition(targetPos);
+    targetPos.y += 0.85;
+
+    this.fpsFx.firePlayerAttack(targetPos, () => {
+      target.triggerHitReact();
+      this.fpsHud?.triggerHitmarker();
+    });
+
+    // Also trigger the stage commit if initiated from crosshair
+    const commitBtn = document.querySelector('.lq-commit');
+    if (commitBtn && !commitBtn.disabled && !document.activeElement?.closest?.('.lq-commit')) {
+      commitBtn.click();
     }
   }
 
@@ -147,7 +252,6 @@ export class FoeLayer3D {
       body.stationIndex = i;
       body.station = st;
       const perch = PERCH[this.enc.species] || { x: 0, y: 0, z: 0 };
-      // The station's content frame: its group's x on the bench, the well floor at 0.95.
       body.baseX = st.group.position.x + perch.x;
       body.baseY = 0.95 + perch.y;
       body.baseZ = st.group.position.z + perch.z;
@@ -162,6 +266,7 @@ export class FoeLayer3D {
   hide() {
     this.group.visible = false;
     this.dirty = Boolean(this.enc);
+    this.fpsHud?.hide();
   }
 
   dropBodies() {
@@ -179,32 +284,70 @@ export class FoeLayer3D {
     if (this.dirty && this.viewer.stations.length) this.layout();
     const reduced = reducedMotion();
     const step = Math.min(dt, 0.05);
-    // Where the player's eye is, in the bench's own frame: the foes keep it in front of them.
+
+    // FPS camera trauma screenshake
+    if (this.fpsFx) {
+      this.fpsFx.update(step);
+      const shake = this.fpsFx.getShakeOffsets();
+      if (shake && this.viewer.camera) {
+        this.viewer.camera.rotation.z = shake.roll;
+        this.viewer.camera.position.x += shake.posX;
+        this.viewer.camera.position.y += shake.posY;
+      }
+    }
+
     const eye = this.viewer.camera.getWorldPosition(_eye);
     this.viewer.root.worldToLocal(eye);
+
     for (const b of this.bodies.values()) {
       b.update(step, reduced, Math.atan2(eye.x - b.baseX, eye.z - b.baseZ));
     }
+
+    for (const m of this.monsters) {
+      m.update(step, reduced, eye);
+    }
+
+    this.fpsHud?.update(step);
   }
 
   /* ---------------- pressing a foe ---------------- */
 
   /** The station whose foe the ray passes through, or null. */
   stationUnderRay(raycaster) {
-    if (this.disposed || !this.group.visible || !this.bodies.size) return null;
+    if (this.disposed || !this.group.visible) return null;
+
+    // Check station well bodies first
     const hits = [];
     for (const b of this.bodies.values()) {
       if (!b.group.visible) continue;
       const h = raycaster.intersectObject(b.hit, false);
       if (h.length) hits.push({ d: h[0].distance, st: b.station });
     }
-    hits.sort((a, c) => a.d - c.d);
-    return hits[0]?.st || null;
+    if (hits.length) {
+      hits.sort((a, c) => a.d - c.d);
+      return hits[0].st || null;
+    }
+
+    // Check click on life-sized 3D combat monsters
+    for (const m of this.monsters) {
+      if (!m.group.visible || !m.hitBox) continue;
+      const h = raycaster.intersectObject(m.hitBox, false);
+      if (h.length) {
+        this.triggerPlayerAttack();
+        return this.viewer.stations?.[0] || null;
+      }
+    }
+
+    return null;
   }
 
   dispose() {
     this.disposed = true;
+    this.detachCommitListener();
     this.dropBodies();
+    this.dropMonsters();
+    this.fpsFx?.dispose();
+    this.fpsHud?.dispose();
     this.group.parent?.remove(this.group);
     this.enc = null;
   }

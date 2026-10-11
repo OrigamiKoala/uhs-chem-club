@@ -232,9 +232,9 @@ export function stateFor(i, overrides) {
 }
 
 export const DEBRIEF = {
-  speaker: 'VESS // QUARTERMASTER',
+  speaker: 'Vess',
   badge: 'BOSS DISPERSED · LANTERNFALL',
-  subtitle: 'THE LANTERN-EATER // DISPERSAL CONFIRMED',
+  subtitle: 'The Lantern-Eater',
   message: 'The Lantern-Eater collapsed into harmless auroral ionization. In its optical focal chamber we recovered a precision prism ground for deep ultraviolet frequencies far past guild ratings.',
   clueAwarded: 'clue_lantern_lens'
 };
@@ -303,6 +303,8 @@ export function mount(container, ctx) {
   let busy = false;
 
   const frame = new LearnFrame(container, {
+    quest: ctx?.quest || { id: 'boss-eater' },
+    world: ctx?.world,
     stageCount: STAGES.length,
     rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),

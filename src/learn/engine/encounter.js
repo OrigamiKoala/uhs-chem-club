@@ -171,7 +171,7 @@ export class Encounter {
     }).join('');
 
     const tagText = {
-      counter: 'Hit',
+      counter: 'Missed Trial',
       knockback: 'Knocked back',
       won: 'Dispersed',
       flawless: 'Flawless'
@@ -184,8 +184,8 @@ export class Encounter {
       <div class="lq-foe-top">
         <span class="lq-foe-species eyebrow">${esc(enc.speciesName)}${pack ? ` x ${enc.foes.length}` : ''}</span>
         ${tagText ? `<span class="lq-foe-tag">${esc(tagText)}</span>` : ''}
-        <span class="lq-integrity" role="img" aria-label="Integrity ${f.integrity} of ${f.max}">
-          <span class="lq-integrity-label">Integrity</span>${pips}
+        <span class="lq-integrity" role="img" aria-label="${f.integrity} of ${f.max} attempts remaining">
+          ${pips}
         </span>
       </div>
       <ul class="lq-foe-row">${foes}</ul>

@@ -8,52 +8,35 @@ web
 
 ## Users
 
-Two audiences play the same game, and neither arrives knowing chemistry:
+Audiences play the same game, and none arrives knowing chemistry:
 
-- **University High School students** — not only Chemistry Club members. Students join
-  for the competition, the story or their friends' guild, and many have taken no
-  chemistry course at all.
-- **Middle schoolers** — younger students meeting the subject for the first time, with
-  no course vocabulary to fall back on.
+- **Elementary and middle schoolers** — younger students meeting the subject for the first time, who need intuitive, plain-English explanations without condescension or confusing ciphers.
+- **High School students** — students joining for the competition, story, or guilds, many having taken no chemistry courses at all.
 
-Because both audiences overlap in a single deployment, the floor is always the student
-who knows nothing: anything a screen assumes about prior chemistry knowledge excludes a
-real player.
+The comprehension floor is an **elementary school student**: every quest stage, objective, and concept must be clearly explainable in plain terms that an elementary student understands, while remaining rigorous.
 
-**Club officers** are an operational role rather than a third audience. They run
-showcase nights, reset passwords, force renames, raise guild slot caps and correct stage
-copy live from the Sheets backend (`#/admin`, `docs/runbook.md`). Their work is
-maintenance, not play.
+**Club officers** are an operational role rather than a player audience. They run showcase nights, reset passwords, force renames, raise guild slot caps and correct stage copy live from the Sheets backend (`#/admin`, `docs/runbook.md`). Their work is maintenance, not play.
 
 ## Product Purpose
 
-Avalon is a year-long RPG competition and molecular simulator for the UHS Chemistry Club.
-Students join one of four Imperial guilds aboard a salvage starship and learn chemistry by
-doing it — drawing lines between glowing regions, running instruments over unlabelled
-crates, firing a beam through a mounted specimen — rather than by reading about it.
+Avalon is a year-long RPG competition and molecular simulator for the UHS Chemistry Club. Students join one of four Imperial guilds aboard a salvage starship and learn chemistry by doing it — running instruments over mineral specimens, firing particle beams through atoms, and calculating yields — rather than reading abstract lectures.
 
-The governing rule is **teach through play, reveal vocabulary last**. A player solves
-twenty stages of the Charge Gardens before meeting the words *electron*, *curved arrow*
-or *steric hindrance*; the Learn track's first quest teaches atom, element, molecule,
-compound and mixture and names none of them until the debrief. Success is a student who
-can predict what a reaction does before they can name it.
+The core product design invariants are:
+1. **Teach chemistry clearly from the start using real concepts.** Never use invented replacement ciphers or analogues that later reveal "in the real world this is called X" (calling electrons "light pieces" or atoms "grains"). Use real chemistry terms (atoms, electrons, isotopes, molecules, compounds) from stage one. Analogies are encouraged to build intuition; replacement codes are banned.
+2. **Never give away answers or spoil solutions.** The student must apply chemistry principles to investigate on the bench and deduce answers themselves. Neither prompts, mission cards, nor hints spoon-feed the correct answer.
+3. **Elementary-school-friendly clarity.** Every quest provides an on-screen STAGE MISSION & SCIENCE card and interactive Objective & Guide modal (`src/learn/engine/quest-guide.js`) detailing the chemistry concept, mission context, plain-English stage goal, how-to-test instructions, and vocabulary definitions.
+4. **Experiment trials, not monster combat.** The encounter layer represents scientific trials on specimens. Incorrect answers are missed trials with measurement discrepancies ("Missed Trial"), not monster attacks ("takes the hit"). Students have 3 trials before a safety reset, and progress is never lost.
+5. **Interactive controls and responsive actions.** Stage action buttons (`[Objective]`, `[Findings]`, `[Fold Panel]`) and modal close buttons must always be interactive and responsive with `pointer-events: auto`.
 
-**Direction (agreed 2026-10-10, mostly not yet built):** the Learn worlds become the main
-story and every bench stage becomes a fight in which the chemistry is how you win. The
-premise, the acts and the ending are in `docs/story/bible.md`; the plan and its phases are
-`docs/plans/storyline-and-combat.md`. What exists today is the **encounter layer** and two
-piloted quests (`unit01/q1-grain`, `unit02/q2-photon`). The story spine, bosses, the Case
-File and the contracts board do not exist yet and nothing may present them as if they do.
-Two roads, once built: the Learn worlds are the **story** (no XP); the campaign sectors
-become **contracts** (side jobs that pay XP exactly as now).
+**Direction:** the Learn worlds are the story road (no XP); the campaign sectors are contracts (side jobs that pay XP).
 
 ## Positioning
 
-A chemistry course names a concept and then asks the student to apply it. Avalon inverts
-that order: the mechanic comes first, the vocabulary comes last, and every quest is a
-playable instrument rather than an illustrated explanation. That inversion is enforced
-mechanically, not editorially — `npm run verify:quest` and `npm run verify:learn` fail
-the build if withheld vocabulary appears in any player-facing string.
+A chemistry course often lectures abstractly before students touch an instrument. Avalon
+grounds chemistry education in interactive instrumentation: students investigate real
+chemical phenomena on working bench instruments, guided from stage one by clear,
+elementary-friendly chemistry concepts and plain-English objectives. Students apply those
+scientific principles to solve problems in the storyline without being spoon-fed answers.
 
 It is also a competition with a real social frame: four rival guilds, normalized team
 leaderboards, a shared season, and a quartermaster who talks to you in character.
@@ -151,7 +134,7 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
   design authority; future visual work extends it rather than reopening it.
 - **Voice:** diegetic. Vess the quartermaster, pylon communications, guild pitches and
   mission logs are characters speaking, never a product describing itself. Story copy
-  lives in `src/story/` and obeys the same withheld-vocabulary list as teaching copy.
+  lives in `src/story/` and uses clear chemistry terms and plain English without invented ciphers.
 - **Copy discipline:** the interface does not advertise itself. No feature marketing, no
   emoji in player-facing markup, no live-connection claims.
 
@@ -177,101 +160,43 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
 
 ## Product Principles
 
-1. **The mechanic teaches; the word comes last — and then the word is used.** A player
-   arrives knowing virtually nothing, so a concept is met as something they DO before it
-   is ever named: a stage that opens by naming what it is about is designed wrong, and a
-   stage that introduces "nucleophilic aromatic substitution" to someone who has not met
-   a molecule is not a hard stage, it is a broken one.
-
-   **Withholding a word is a schedule, not a policy.** Once a reward card has named a
-   thing the player has already found, that word is the plain word for it and the game
-   uses it — the prompt, the hints, the readouts and the refusal messages all say
-   "electron" from the stage after the stage that earned it. Going on saying "light
-   piece" once the player knows better is the instrument being coy, and it reads as the
-   game hiding the ball. The rules that follow from this:
-
-   - Nothing is introduced faster than it can be absorbed: roughly one new named idea per
-     stage, and each one has to rest on something the player has already worked out.
-   - A term is introduced at a stage's reward card, and is usable in play from the NEXT
-     stage on. A quest declares that schedule in its module (`VOCABULARY` in
-     `src/learn/quests/unit01/q2-core.js` is the worked example) and `npm run verify:learn`
-     fails the build both ways round — a word said one stage early, and a word the
-     schedule promises that no card ever delivers.
-   - The intuition still comes first and it comes WITHOUT the word. Charge balance is met
-     as a needle that sits on zero when two counts happen to be equal; only afterwards is
-     it called an electron and a proton. Discover, then name, then use.
-2. **A name is never used before it is explained, including the instrument's own.**
-   Principle 1 governs the CHEMISTRY vocabulary; this one governs everything else the
-   player is asked to touch. "Read the needle", "load the rings", "the ring counters on
-   the deck" and "set the field" are all perfectly clear sentences addressed to somebody
-   who has already used the bench, and that reader is the one person this product is not
-   for. So a control whose label does NOT say what it does carries a plain sentence
-   saying what it does, beside it, for as long as the stage offers it — not in a tooltip,
-   not once on first use, and not inside a hint the player has to earn. **A control whose
-   label already says it carries nothing**: "Tip Sample" needs no legend explaining that
-   it tips the sample. A quest exports `toolNoteFor(controlId, stageNumber)`, and
-   `npm run verify:learn` fails the build over a legend that exists and is malformed or
-   leaks withheld vocabulary, never over one deliberately left out. The line follows
-   principle 1's schedule too: the needle's legend says "light pieces" until the stage
-   after electrons are named, and says "electrons" from then on — and a legend never
-   states the thing its own stage exists to discover.
-   **A refusal is held to the hint ladder's rule**: it names the reason and where to look,
-   never the value the player must enter; `verify:learn` fails a miss message that
-   contains its stage's answer.
-3. **A stage must be solvable by somebody who does not already know the answer.** This is
-   the test every bench stage has to pass and the easiest one to fail, because the author
-   knows the chemistry. A stage that can only be finished by a player who already knows
-   what protons do is not teaching, it is checking — and it is checking the one thing
-   this product's audience has not got. In practice the evidence a stage needs has to be
-   ON THE BENCH: the rule that the needle reads crosses minus light pieces is
-   discoverable because an open reference on the same bench reads plus two with six
-   crosses and four light pieces; the rule that neutrons do not change what a piece IS is
-   discoverable because the piece with the extra neutron has an identical outside, and
-   the stage before established that the outside is what decides behaviour. Asserting
-   either of those in a hint instead is the failure mode, and hint rung three is not a
-   substitute for evidence.
-4. **Looking is the verb.** One reading is never enough — every stage is solved by
+1. **Real chemistry concepts from the start.** Never invent replacement ciphers or analogues that later reveal "in the real world this is called X" (calling electrons "light pieces" or atoms "grains"). Use standard chemistry terms (atoms, protons, neutrons, electrons, isotopes, molecules, compounds) from stage one. Analogies to real-life intuition (e.g. balancing a seesaw, recipe proportions) are welcome to build intuition, but private code words are forbidden.
+2. **Never give away answers or spoil solutions.** A prompt states what to investigate, and the bench provides the tools. The user must explore, test, observe, and deduce the answer themselves. Neither the prompt, the mission briefing, the stage guide, nor the hint ladder should ever tell the player what to do or make the correct option obvious.
+3. **Elementary-school-friendly explanations.** Every quest and stage provides an on-screen STAGE MISSION & SCIENCE card and an interactive Objective & Guide dialog (powered by `src/learn/engine/quest-guide.js`). These explain:
+   - The real chemistry concept being taught (atoms, mass spectrometry, octet rule, etc.).
+   - The storyline context (why the research expedition is performing this test).
+   - The stage goal in plain, simple English that any elementary student can understand.
+   - How to test using the bench instruments (scientific method: test, observe, deduce).
+   - Clear vocabulary definitions for key technical terms.
+4. **Experiment trials, not monster combat.** The encounter layer represents scientific trials on mineral specimens. Incorrect submissions are missed trials with measurement discrepancies ("Missed Trial"), not monster attacks ("takes the hit"). The player has 3 experiment trials before a safety reset, and progress/readings are never lost.
+5. **A stage must be solvable by somebody who does not already know the answer.** The evidence needed must be ON THE BENCH: comparing two or more specimens or readings on the instruments is how the student discovers the relationship. Hints point at that evidence; they are never a substitute for it and never reveal arithmetic solutions.
+6. **Looking is the verb.** One reading is never enough — every stage is solved by
    comparing two or more, which is what makes investigation the gameplay rather than
    reading comprehension.
-5. **Learning must never become grinding.** The study road pays no XP and never touches
+7. **Learning must never become grinding.** The study road pays no XP and never touches
    Standings; hints are free; a replay costs and earns nothing; the practice problems are
    optional, skippable and gate nothing. A study aid that held the road shut would be a
    test, and this is not one.
-   **This holds for the story too** (decision D1, kept): the main story pays no XP, so a
-   student whose class is further along cannot out-earn the guild on the study road.
-   Story rewards are ranks, plates and cosmetics, and none of them makes a stage easier.
-6. **The floor is the student who knows nothing and is holding a phone.** Low-end
+8. **The floor is the student who knows nothing and is holding a phone.** Low-end
    hardware and 375 px are the design target, not a degraded mode.
-7. **Nothing in the interface advertises the product.** Every string is a label, a rule,
-   an error, something being taught, or a character speaking.
-8. **An instrument never invents a reading.** A screen that claims to be telemetry shows
+9. **Critical text only and zero decorative fluff.**
+   - Nothing in the interface advertises the product or its features.
+   - Text exists solely if it is 100% critical to direct, instruct, or teach the player (functional labels, rules, errors, direct teaching, or unadorned character speakers).
+   - Strip all decorative sci-fi noise, pseudo-technical slashes (`//`), fake status indicators (`status: clear`, `integrity: high`), tactical warnings, and ceremonial titles (`Vess // Quartermaster` -> `Vess`).
+   - Copy must make direct, plain sense and remain helpful without artificial jargon or decorative filler, while avoiding overly cryptic terseness on essential instructions.
+10. **An instrument never invents a reading.** A screen that claims to be telemetry shows
    what was measured or says it has none. This is a pre-launch product, and a plausible
    number in place of a missing one is the easiest lie to ship and the hardest to notice.
    The same honesty binds a PICTURE: what an instrument draws is what the quest grades
    against. A core holding six marked grains is drawn with six, not with one grain
    standing in for the idea of a core, or the player is being asked to reason about a
    specimen the screen is misreporting to them.
-9. **A place the player is told to look at is never blacked out to tell them.** A modal
+11. **A place the player is told to look at is never blacked out to tell them.** A modal
    over a page is a dialog; the same modal over an instrument the briefing is describing
    hides the thing it is describing. At a bench built in the world the transmission docks
    down one side of the glass at a readable width, the scrim goes to a veil, and the
    instrument is aimed out from behind it.
-10. **The monster carries evidence, and the attack is the answer.** A stage that is a
-    fight must fail the deletion test: *if you can delete the monster and the stage is
-    unchanged, the combat is decoration.* So a foe's behaviour is what the bench
-    measures — a husk falls into layers because the sample settles into layers, a moth
-    sheds because the photocell says electrons leave — drawn from the instrument's own
-    planner and never authored (`verify:learn` checks it against the bench's declaration).
-    The attack is the committed answer itself, not a button that submits one worked out
-    elsewhere. The rest of the doctrine does not bend for it: the prompt still states the
-    objective and never the route; **nothing blocks a correct answer** (a right commit on
-    turn one wins, at any Integrity); scouting with the instrument is free and only a
-    committed miss costs anything; and **losing costs nothing that matters** — a
-    knock-back refills Integrity and makes the foe whole, and keeps every hint rung,
-    reading and answer. Foes are dispersed, never killed, and are named in the plainest
-    English (*salt husk*, *lamp moth*), never a coinage the player must memorise alongside
-    the chemistry. Real-time combat is rejected: it tests reflexes, fails at 375 px and
-    would block a player who knows the answer but is slow with their thumbs.
+12. **Specimens carry evidence, and trials test the hypothesis.** An encounter on a specimen must fail the deletion test: *if you can delete the specimen and the stage is unchanged, the trial is decoration.* So a specimen's reaction is what the bench measures — a husk falls into layers because the sample settles into layers, a moth sheds because the photocell says electrons leave — drawn from the instrument's own planner and never authored. The trial submission is the committed answer itself. The rest of the doctrine does not bend for it: the prompt states the objective and never the solution; **nothing blocks a correct answer** (a right commit on trial one wins immediately); testing with bench tools is free and only a committed incorrect trial counts toward the 3-trial limit; and **safety resets cost nothing that matters** — a reset refills trials and keeps every open hint, reading and answer. Specimens are stabilized, never killed, and are named in the plainest English (*salt husk*, *lamp moth*), never a coinage the player must memorise alongside the chemistry. Real-time reflex challenges are rejected: they fail at 375 px and would block a student who understands the chemistry.
 
 ## Accessibility & Inclusion
 

@@ -36,9 +36,9 @@ export const QUEST1_STORY = {
 
   briefing: {
     title: 'Contract · The Charge Gardens',
-    speaker: 'VESS // COMMS',
+    speaker: 'Vess',
     badge: 'GUILD CONTRACT · EREBUS',
-    subtitle: 'SECTOR 01 · EREBUS // THE CHARGE GARDENS',
+    subtitle: 'Sector 01 · Erebus',
     contractor: 'The Quad-Guild Reclamation Board',
     reward: '650 Guild XP',
     message: 'The Fifth Guild raided Sector 01 and knocked down the Charge Gardens defense pylons to leave the sector defenseless. To reboot our defense shields before their strike fleet arrives, open each junction and bridge the red feed to the blue receiver.',
@@ -184,44 +184,44 @@ export const QUEST1_STORY = {
   debrief: {
     clueAward: 'clue_erebus_mark',
     cinematic: 'item_award',
-    speaker: 'VESS // QUARTERMASTER',
+    speaker: 'Vess',
     badge: 'CONTRACT COMPLETE · SECTOR 01',
-    subtitle: 'THE CHARGE GARDENS // RESTORATION CONFIRMED',
+    subtitle: 'The Charge Gardens',
     message: 'The entire field is singing in key — all twenty pylons are burning amber across the dunes. The contract is cleared and your mark is logged. Notice the stencil inside that last breaker box: no guild insignia on it anywhere.',
     sections: [
       {
         title: 'Contract Fulfilled',
-        speaker: 'VESS // QUARTERMASTER',
+        speaker: 'Vess',
         badge: 'DEBRIEF 1/5 · CONTRACT COMPLETE',
-        subtitle: 'EREBUS // CHARGE GARDENS RESTORATION',
+        subtitle: 'Charge Gardens',
         text: 'The entire field is singing in key — all twenty pylons are burning amber across the dunes. You restored the grid with cold discipline, survey hand. The Avalon and the guilds have credited your ledger for the salvage.'
       },
       {
         title: 'The Real Science',
-        speaker: 'VESS // SCIENCE DEBRIEF',
+        speaker: 'Vess',
         badge: 'DEBRIEF 2/5 · THE REAL SCIENCE',
-        subtitle: 'ANALYSIS // CHARGE & ELECTRONS',
+        subtitle: 'Charge & Electrons',
         text: 'Now let me tell you the chemistry you were actually doing in those junction boxes. Every red cloud was a spot with extra electrons — a region of negative charge. Every blue spot was electron-poor and positively charged. Opposite charges attract, so reactions start where the reddest region meets the bluest one.'
       },
       {
         title: 'Curved Arrows',
-        speaker: 'VESS // SCIENCE DEBRIEF',
+        speaker: 'Vess',
         badge: 'DEBRIEF 3/5 · CURVED ARROWS',
-        subtitle: 'NOTATION // ELECTRON TRANSFERS',
+        subtitle: 'Electron Transfers',
         text: 'Those lines you drew across the contacts are called curved arrows, and real-world chemists use exactly this notation. An arrow shows a pair of electrons moving from where they are to where they are going.'
       },
       {
         title: 'Steric Hindrance',
-        speaker: 'VESS // SCIENCE DEBRIEF',
+        speaker: 'Vess',
         badge: 'DEBRIEF 4/5 · STERIC HINDRANCE',
-        subtitle: 'GEOMETRY // OBSTRUCTION & CLEARANCE',
+        subtitle: 'Geometry & Obstruction',
         text: 'When two blue targets competed for the line, geometry decided the winner: bulky groups physically block incoming molecules, so reactions take the open route. Chemists call that steric hindrance.'
       },
       {
         title: 'Reaction Mechanisms',
-        speaker: 'VESS // SCIENCE DEBRIEF',
+        speaker: 'Vess',
         badge: 'DEBRIEF 5/5 · REACTION MECHANISMS',
-        subtitle: 'SYNTHESIS // ORGANIC CHEMISTRY',
+        subtitle: 'Organic Chemistry',
         text: 'In those multi-step stages, you were writing a full reaction mechanism — the exact order in which bonds form and break. That is the core skill of organic chemistry, and you just solved twenty of them. Outstanding work, recruit.'
       }
     ],

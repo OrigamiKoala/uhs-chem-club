@@ -9,14 +9,14 @@
 | # | Decision | Standing |
 |---|---|---|
 | **D1** | **The main story pays no XP.** Contracts (side jobs and campaign sectors) pay standard guild XP. | (a) The study road remains unpolluted by competitive grinding. Story progression earns rank titles, engraved nameplates, commendations, and forensic evidence. |
-| **D2** | **Combat stakes:** Rig Integrity, with non-punitive knock-back. | (a) A miss drains Integrity. At zero, the rig resets with the foe whole, but all scouted evidence, readings, open hint rungs, and observations remain intact. |
+| **D2** | **Trial stakes:** Rig Integrity / Trials, with non-punitive reset. | (a) An incorrect attempt is a missed trial. At zero trials, the bench safety resets with the specimen whole, but all scouted evidence, readings, open hint rungs, and observations remain intact. |
 | **D3** | **Identity of the Fifth:** Abandoned guild survey crews. Ending: **Both** — expose corporate abandonment *and* recover the stranded crews without punitive surrender. | (a) Grey-market morality over simple heroics. The Guilds created the monster they now fear; the Fifth has turned desperation into radiological ruin. |
 | **D3b** | **Vess's Past:** Deliberately unconfirmed. | Open. Vess speaks with intimate knowledge of old salvage runs and forgotten charters. The narrative neither asserts nor denies whether Vess once stood on an abandoned manifest. |
 | **D4** | **Open Worlds:** All built worlds are accessible immediately; spine beats play in road order. | (a) Students can jump directly to their classroom unit. World episodes are self-contained mysteries; spine beats queue aboard the *Avalon* as prerequisites clear. |
 | **D5** | **Roaming Spoil:** Contained strictly to bench encounters. | Ground exploration remains focused on industrial navigation and instrument discovery. No random combat encounters on walkable terrain. |
-| **D6** | **Nomenclature:** Plain industrial English. | *The Fifth* (revealed as *The Catalyst* in Unit 11), *spoil*, *salt husk*, *lamp moth*, *basalt warden*, *The Hopper*, *Case File*. No fantasy coinage. |
+| **D6** | **Nomenclature:** Plain industrial English. | *The Fifth* (revealed as *The Catalyst* in Unit 11), *spoil*, *salt husk*, *lamp moth*, *basalt warden*, *The Hopper*, *Case File*. Real chemistry terms from stage one; no fantasy coinage or ciphers. |
 | **D7** | **Star Map Navigation:** Two tabs: `Story` (Learn worlds) and `Contracts` (Campaign sectors and side postings). | Nav remains synchronized with page headers. |
-| **D8** | **Pedagogical Alignment:** Combat is an instrument, not an obstacle. | If you can delete the monster and the chemistry is unchanged, the encounter is decoration. The foe provides evidence; the answer is the attack. |
+| **D8** | **Pedagogical Alignment:** Encounters are scientific trials, not obstacle combat. | Teach chemistry clearly using real concepts from stage one; never spoon-feed answers. The specimen provides evidence; the student tests and applies concepts to deduce the answer. If you can delete the specimen and the chemistry is unchanged, the trial is decoration. |
 
 ---
 
@@ -149,3 +149,4 @@ The Case File is the investigative terminal in the *Avalon*'s comms bay (and `#/
 - **The Two-Sentence Limit:** No transmission may exceed two sentences. Long text walls destroy urgency.
 - **Strict Vocabulary Schedule:** No concept may be named in dialogue or debrief copy before the stage that introduces it. "Catalyst" belongs strictly to Unit 11; "Nucleus" belongs strictly to Unit 1 Quest 2.
 - **No Route Hints:** Dialogue sets the atmosphere and urgency; it never tells the student which dial to turn or which sample to select.
+- **Critical Text Only & Unadorned Identity:** Speakers use simple, unadorned names (`Vess`, not `VESS // QUARTERMASTER`). Banners and transmissions strip pseudo-technical `//` delimiters, fake status tags (`status: clear`, `integrity: high`), and decorative jargon. Every word must be necessary, helpful, and meaningful to the student.

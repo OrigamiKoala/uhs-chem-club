@@ -10,7 +10,7 @@ import { soundscape } from '../audio/soundscape.js';
 
 export function createTransmissionElement(opts = {}) {
   const {
-    speaker = 'Vess // Comms',
+    speaker = 'Vess',
     text = '',
     badge = '',
     subtitle = '',
@@ -49,7 +49,7 @@ export function createTransmissionElement(opts = {}) {
       </div>
       <div class="transmission-subtitle eyebrow ${currentSubtitle ? '' : 'hidden'}" style="font-size: 0.62rem; color: var(--text-muted); margin-bottom: 0.25rem;">${currentSubtitle}</div>
       <div class="transmission-text" id="typewriter-text"></div>
-      <div class="transmission-skip-hint">TAP TO SKIP</div>
+      <div class="transmission-skip-hint">Skip</div>
     </div>
   `;
 

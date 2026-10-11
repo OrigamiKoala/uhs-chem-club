@@ -5,6 +5,13 @@ Vess was one of the abandoned crew, is deliberately left open; D8, the playtest,
 pending). **Phase 2's playtest is the go / no-go gate: nothing from Phase 3 on is started.**
 The rest of the plan can be revised as we go.
 
+**Update (2026-10-11):** The encounter layer refactored under the core pedagogical invariants:
+- *Real chemistry concepts from stage one:* Standard terminology used directly; no replacement ciphers.
+- *No spoiler answers:* Never spoon-feed solutions; students investigate on the bench and deduce answers.
+- *Elementary-school clarity:* Plain-English mission context, science concepts, stage goals, testing instructions, and vocabulary definitions on every stage via `src/learn/engine/quest-guide.js`.
+- *Scientific trials, not monster combat:* Specimen experiments with measurement discrepancies ("Missed Trial"), not monster damage ("takes the hit"). 3 trials before safety reset.
+
+
 | Phase | State |
 |---|---|
 | 0. Doctrine | **Done.** `docs/story/bible.md`; PRODUCT.md (purpose, principle 5 note, principle 10); CLAUDE.md (the encounter doctrine, the engine bullet, the `verify:learn` description). |

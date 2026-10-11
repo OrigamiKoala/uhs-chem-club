@@ -158,8 +158,11 @@ The system's discipline is restraint with one signal. Amber means *live*. It is 
 painted thing on a panel of bare durasteel, which is exactly why the eye finds it without
 being shouted at. A screen that is mostly amber has said nothing. The corollary is that
 this interface never advertises itself: there are no feature cards, no hero gradients, no
-badges claiming a connection is active. Every string on screen is a label, a rule the
-player must satisfy, an error, something being taught, or a character speaking.
+badges claiming a connection is active. Every string on screen is 100% critical: a necessary label,
+a rule the player must satisfy, an error, something being taught, or a character speaking.
+Zero decorative fluff, zero pseudo-technical noise (such as `//` delimiters or fake status
+readouts like `status: clear` / `integrity: high`), and zero ceremonial titles (`Vess`, not
+`Vess // Quartermaster`). All copy must make practical sense and help the user directly.
 
 Depth is structural, not atmospheric. A plate is bolted to a bulkhead, so it catches a
 hairline of lamp light on its top edge, drops a shadow along its bottom, and casts a real
@@ -522,12 +525,11 @@ the built versions.
 what it does, drawn under the keys (`toolNotes()` in `engine/frame.js`, `.lq-tool-notes`)
 for as long as the stage offers it. Not a tooltip — a legend you have to hover for is a
 legend a student on a school trackpad never reads — and not a one-time card. A quest
-exports `toolNoteFor(controlId, stageNumber)`, so a tool's line can change as its
-vocabulary is earned; `verify:learn` fails the build over a control with no line and runs
-every line through the same withheld-vocabulary gate as a prompt. The keys themselves are
-named in English for the same reason: the core bench's three views read **Whole piece /
-The middle / Outside** under a label reading **View**, not Whole / Core / Rings under
-"Field".
+exports `toolNoteFor(controlId, stageNumber)`, so a tool's line clearly explains its
+operation in plain English; `verify:learn` fails the build over a control with no line.
+The keys themselves are named in plain terms for the same reason: the core bench's three
+views read **Whole piece / The middle / Outside** under a label reading **View**, not
+cryptic abbreviations.
 
 **The Flat Picture Rule.** A built instrument is real geometry — a plate, a well with the
 bulk matter actually in it, a milled cap you reach over and turn — but **what the
@@ -577,7 +579,7 @@ instrument that survives a colour-blind player, and it is non-negotiable.
 grid: the assay floor is 4:3 because it is a chute at one end and bins along the bottom, and
 a join bench PAIR plate is 2:1 (5:2 alone) because it is two pieces side by side with their
 shells drawn round them. A pair plate also never runs three to a row — `.join-grid` caps it
-at two columns, and one on a phone — because the light pieces on those shells are the thing
+at two columns, and one on a phone — because the valence electrons on those shells are the thing
 several stages ask the player to COUNT, and a postage stamp cannot be counted. A square
 aperture would waste half of either plate and shrink the very thing being measured.
 
@@ -585,21 +587,33 @@ aperture would waste half of either plate and shrink the very thing being measur
 An instrument that borrowed them would break the promise that those two colours mean one
 specific thing.
 
-### Signature: The Chemistry Card
+### Signature: The Chemistry Card and Reward Debrief
 
-`.chem-card` — one to three sentences of **real chemistry**, drawn after a stage is solved
-and never before it. Bare `plate-000` with an amber left edge, a top-left chamfer, an amber
-stencil badge and a mono gold title. It is the one surface in the campaign where the
-withheld vocabulary is allowed, and that permission is the reason it exists: the player has
-just done the thing, so naming it is a payoff rather than a lecture.
+`.chem-card` and Learn track `.lq-reward` — one to three sentences of **real chemistry debrief**, drawn after a stage is solved. Bare `plate-000` with an amber left edge, a top-left chamfer, an amber stencil badge and a mono gold title. It summarizes what the player's experiment demonstrated.
 
-It is deliberately NOT the `.concept-card` next to it. A concept card teaches the
-**controls** and appears before a stage (`conceptTiming: 'intro'`, bronze edge, pills). A
-chemistry card teaches the **chemistry** and appears after it. `verify:quest` holds the
-chem card to three sentences and holds the intro card to the withheld-vocabulary list.
+### Signature: The Stage Mission & Science Guide
 
-The Learn track's equivalent is `.lq-reward` — same rule, same three-sentence ceiling,
-enforced by `verify:learn`.
+`.lq-guide-card` and the interactive `Objective & Guide` modal (`src/learn/engine/quest-guide.js`) — the primary teaching and wayfinding surface present on every stage from stage one.
+
+- **Real Chemistry Concepts from Stage One:** Teaches standard scientific terms (atoms, electrons, isotopes, molecules, compounds) directly. Never uses invented replacement ciphers or analogues that later reveal "in the real world this is called X". Analogies to build intuition are encouraged; invented code words are banned.
+- **Elementary-School-Level Clarity:** Provides plain-English explanations that an elementary school student can understand, broken into five explicit sections:
+  1. *Mission Context:* Why the salvage expedition needs this test.
+  2. *Science Concept:* The underlying chemical principle explained clearly.
+  3. *Stage Goal:* A concise, plain-English question the student must answer.
+  4. *How to Test:* Practical scientific method guidance on using bench controls to observe and compare readings.
+  5. *Key Vocabulary:* Unambiguous definitions of scientific terms.
+- **No Spoiled Answers:** Never tells the player what to do, spoon-feeds the solution, or makes the correct choice obvious. The student must use the instruments, observe readings, and deduce the answer themselves.
+- **Interactive UI Actions:** Stage action buttons (`[Objective]`, `[Findings]`, `[Fold Panel]`) and modal close buttons are always interactive with `pointer-events: auto`.
+
+### Signature: Experiment Trials (Encounter Layer)
+
+The encounter layer (`src/learn/engine/encounter.js`, `foes.js`) frames specimen testing as rigorous **scientific trials** rather than monster combat:
+
+- **Specimen Trials, Not Combat:** Specimens are mineral or chemical samples (e.g. *salt husk*, *lamp moth*, *basalt warden*). Incorrect attempts are measurement discrepancies ("Missed Trial"), never monster attacks or combat injuries ("takes the hit").
+- **Non-Punitive Safety Reset:** The player has 3 trials before a safety reset. A reset refills trial attempts without losing scouted readings, open hints, or stage progress.
+- **Specimens Carry Evidence:** A specimen's reaction is what the bench measures. The committed submission is the measurement itself.
+
+
 
 ### Signature: The Practice Overlay
 
@@ -681,11 +695,21 @@ console is not raised at all and the quest keeps the 2D stage deck, which is the
   a grid or table to a screen, and verify it at 375px.
 - **Do** label state with a coloured left edge or a recoloured border, not a coloured fill.
 - **Do** keep every interactive control at `min-height: 44px`.
-- **Do** write copy that is a label, a rule, an error, teaching, or a character speaking.
-  Delete anything else.
+- **Do** write copy that is 100% critical: a functional label, an actionable rule, an error,
+  direct teaching, or an unadorned character speaker (`Vess`). Keep necessary text clear and
+  helpful without becoming cryptic, but strip all extra or decorative words. Delete anything else.
 - **Do** cap a teaching card at three sentences. Both the campaign's `.chem-card` and the
   Learn track's `.lq-reward` land after the work, in bits, and a card that runs to a
   paragraph is the end-of-quest lecture moved earlier.
+- **Do** teach real chemistry concepts directly from stage one (atoms, protons, neutrons,
+  electrons, isotopes, molecules, compounds). Analogies to familiar concepts (balancing seesaws,
+  cooking recipes) are welcome to build intuition, but never invent replacement code words.
+- **Do** write explanations that an elementary school student can understand, with clear definitions,
+  simple questions, and practical guidance on how to test using bench instruments.
+- **Do** frame specimen interactions as scientific trials. Incorrect submissions are measurement
+  discrepancies ("Missed Trial"), never monster combat ("takes the hit").
+- **Do** ensure stage actions (`[Objective]`, `[Findings]`, `[Fold Panel]`) and modal close buttons
+  are always interactive (`pointer-events: auto`).
 - **Do** make an instrument's control a thing you turn, press or slide in the world when
   the bench is built — and keep a keyboard path to the same value. A control that answers
   only to a drag is invisible to a keyboard and unusable on a trackpad.
@@ -708,8 +732,12 @@ console is not raised at all and the quest keeps the 2D stage deck, which is the
 - **Don't** reach for blue-black neutrals, electric cyan (`#00e5ff`), glassmorphism, candy
   gradients with white specular highlights, or Tailwind-default palette hexes (`#fbbf24`,
   `#10b981`, `#ff5252`).
-- **Don't** put an emoji in player-facing markup. A banner's leading mark is a stencilled
-  `!!` or `//`.
+- **Don't** put an emoji in player-facing markup.
+- **Don't** use decorative slash markers (`//`), sci-fi role tags (`// Quartermaster`, `// Helm`),
+  or fabricated status labels (`status: clear`, `integrity: high`, `tactical alert`). All text
+  must be 100% critical and mean something real to the player.
+- **Don't** advertise features or describe the interface. Strip all promotional copy, feature
+  bullet points, and decorative descriptions.
 - **Don't** put an arrow glyph in a button label, or write a label longer than two words.
 - **Don't** use placeholder text to carry an instruction or an example — use an explicit
   label and helper text.
@@ -721,19 +749,15 @@ console is not raised at all and the quest keeps the 2D stage deck, which is the
   says `NO GUILD TELEMETRY ON THIS CHANNEL`; it never falls back to a plausible season.
   Avalon is pre-launch and a screen that makes data up is lying to a student.
   `verify:holo` enforces it.
-- **Don't** name a chemical idea before the player has done it. A term enters on the card
-  that follows the stage which earned it, never in the prompt that introduces it, and
-  never more than about one new idea per stage — a player who has not met a molecule
-  cannot be handed "nucleophilic aromatic substitution" and the stage is broken, not hard.
-  `verify:quest` and `verify:learn` fail the build over it.
-- **Don't** keep saying "light piece" after the player has been told it is an electron,
-  either. **Withholding is a schedule, not a policy**: once a reward card has named the
-  thing, the plain word is the word the game uses — in prompts, hints, widget labels,
-  readouts and refusal messages alike. A quest publishes that schedule as `VOCABULARY` in
-  its module (see `unit01/q2-core.js`), `verify:learn` refuses a word used one stage early
-  AND a word the schedule promises that no card delivers, and the campaign's Charge
-  Gardens keeps the older arrangement — withheld throughout play, taught on the chemistry
-  card — because it has no schedule of its own.
+- **Don't** invent replacement ciphers or analogues for chemical concepts (e.g. calling electrons
+  "light pieces" or atoms "grains") and later reveal "in the real world this is called X". Teach
+  real chemistry directly from stage one. Analogies to build intuition are encouraged, but
+  invented replacement words are forbidden.
+- **Don't** spoon-feed answers or make the right answer obvious in prompts, stage guides, or hints.
+  The user must investigate on the bench, observe the readings, and deduce the answer themselves.
+- **Don't** frame incorrect submissions as monster attacks or say the player or specimen "takes the
+  hit". Encounters are scientific trials on mineral specimens, and mistakes produce measurement
+  discrepancies ("Missed Trial") with 3 trials before a safety reset.
 - **Don't** read a guild's colour from the backend `accent_hex`. `TEAM_LIVERY` in
   `main.js` is the only source.
 - **Don't** fix a phone bug in `main.css` or `holo.css`. Phone rules live in the

@@ -1,37 +1,36 @@
 # Avalon — Engineering Reference
 
-Avalon is the UHS Chemistry Club's competition portal. Its audience is middle- and
-high-school students who know little or no chemistry, so the product rule that outranks
-everything else is: **teach through play, reveal vocabulary last — then use it.** A player
-draws lines between glowing regions for twenty stages and only meets the words "electron",
-"curved arrow" and "steric hindrance" in the epilogue, after the intuition is already built.
+Avalon is the UHS Chemistry Club's competition portal. Its audience is elementary-, middle- and
+high-school students, so the primary design doctrine is: **teach chemistry clearly, intuitively, and hands-on, without giving away answers.**
 
-**Withholding a word is a schedule, and the schedule is SHORT.** A player must be able to
-arrive knowing virtually nothing, so nothing may be named before it has been done and
-nothing may arrive faster than about one new idea per stage: introducing "nucleophilic
-aromatic substitution" at stage one, to someone who has not met a molecule, is a broken
-stage rather than a hard one. But once a reward card has named a thing the player has
-already worked out, **that word is the word the game uses** — in the prompt, the hints, the
-widget labels, the readouts and the refusal messages, not only on the explanation card.
+**Real chemistry concepts from the start.** Never use sci-fi ciphers or analogues that later
+say "in the real world this is called X" (e.g. calling electrons "light pieces" or atoms "grains").
+Use real chemistry terms (atoms, protons, neutrons, electrons, isotopes, molecules, compounds)
+from stage one. Analogies to real-life intuition (e.g. balancing a seesaw, recipe proportions) are
+welcome, but invented code words are forbidden.
 
-**A withheld word is usually replaced by a HARDER one, and that is the failure mode to
-watch for.** Every Unit 1 bench once ran a second, invented vocabulary so it could avoid
-the real one: *light piece*, *marked grain*, *SPEC A*, *REF 03*, *CRATE 22*, *VIAL B*,
-*Manifest 09*. A twelve-year-old holds "electron" more easily than "light piece", because
-"electron" is a word they will hear again and "light piece" is a private code they must
-maintain alongside the chemistry. So a word is withheld for **one stage** — long enough for
-the player to find the thing, never long enough for the game to be talking in cipher — and
-the fallback name is the plainest English available (*grain*, *cluster*, *layer*), never a
-coinage. Discover, then name, then use, and do it inside two stages.
+**Never give away answers or spoil solutions.** A prompt states what to investigate, and the
+bench provides the tools. The user must explore, test, observe, and deduce the answer themselves.
+Neither the prompt, the mission briefing, the stage guide, nor the hint ladder should ever tell
+the player what to do or make the correct option obvious.
 
-**Story is a frame, not a puzzle.** Erebus is the model: one transmission at the start, one
-at the end, and in between a prompt that states the task and nothing else. Tallow used to
-open every stage with a typewriter modal about an inbound buyer, a prospector's claim, a
-corrosive cleaner eating its seal or a tester cell with two charges left, and the player had
-to decode the fiction to find out what they were being asked to do. A bench stage now
-carries **one briefing on stage one** — what the instrument is and what its tools do — and
-every other stage is prompt, tools, answer. `frame.js` renders the `Objective` key only when
-a stage actually has a briefing, because a key that opens an empty modal is a key that lies.
+**Elementary-school-friendly explanations.** Every quest and stage provides an on-screen
+STAGE MISSION & SCIENCE card and an interactive Objective & Guide dialog (powered by
+`src/learn/engine/quest-guide.js`). These explain:
+1. The real chemistry concept being taught (atoms, mass spectrometry, octet rule, etc.).
+2. The storyline context (why the research expedition is performing this test).
+3. The stage goal in plain, simple English that any elementary student can understand.
+4. How to test using the bench instruments (scientific method: test, observe, deduce).
+5. Clear vocabulary definitions for key technical terms.
+
+**Experiment trials, not monster combat.** The encounter layer represents scientific trials
+on mineral specimens. Incorrect submissions are missed trials with measurement discrepancies,
+not monster attacks ("takes the hit"). The player has 3 experiment trials before a safety reset,
+and progress/readings are never lost.
+
+**Working stage controls and actions.** Stage action buttons (`[Objective]`, `[Findings]`,
+`[Fold Panel]`) and modal close buttons must always be interactive and responsive. Ensure
+`.lq-stage-actions`, `.lq-controls`, and dialog buttons have `pointer-events: auto`.
 Samples are `SAMPLE A`, `SAMPLE B`, `SAMPLE C`, restarting at A on every stage: a player
 should never be tracking which of CRATE 41 and SPEC R is the one under discussion.
 
@@ -55,9 +54,7 @@ ten. A quest declines a legend by leaving the control out of its `TOOL_TEXT`, an
 therefore does NOT fail over a missing legend; it fails over a legend that exists and is
 malformed, and runs every one that exists through the same withheld-vocabulary gate as a
 prompt. **A legend is one short sentence**, under about eighteen words; it is a key legend,
-not a manual. A tool's line may change as
-words are earned: the needle's says "light pieces" until the stage after electrons are
-named and "electrons" from then on. When a prompt, hint or refusal names a control, it
+not a manual. When a prompt, hint or refusal names a control, it
 quotes it — `Press "Fire Beam"`, `Press "The middle"` — so the sentence cannot be read as
 prose. Key labels obey all of this too: the core bench's three views read **Whole piece /
 The middle / Outside** under **View**, not Whole / Core / Rings under "Field".
@@ -2858,17 +2855,19 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **Road Combat Encounters (Phase 6):** Turn-based combat encounters across all built road quests: Unit 1 (`q1`–`q6`), Unit 2 (`q1`–`q9`), Unit 3 (`q1-joins` to `q9-orbitals`), Unit 4 (`q1-knocks` to `q6-real`) and Unit 7 (`q1-recipe`). Each stage wires `resolveEncounter` with dynamic intent, tactical moves, and vocabulary-gated reactions.
 - **3D FPS Kinematics & Camera Realism (`src/three/fps-controls.js`):** Stride-driven vertical and lateral head-bob with camera roll, idle respiratory drift, landing shock compression, non-linear trauma decay shake (`addTrauma()`), sliding box collisions, and reduced-motion compliance.
 - **Procedural 3D Foe Geometries (`src/learn/engine/foebody.js`):** Procedural 3D models for all encounter species in `BODY_SPECIES`: Halite salt husks, photoelectric lamp moths, jointed hexagonal columnar Basalt Wardens (which splay to the arms a hub holds, swing round in a field, turn or lock their upper blocks, and clamp together with a lattice's grip), slag crawlers (a line of plated segments on legs that lengthen, shorten, part, and close their lids as the lamps light), riveted reactor Recipe Golems with functioning pressure manometers and steam vents, skinned gas bladders (which sag, hold, swell and strain with the push, and strain at their seams but are never made to burst) and the Compressor (a cylinder block with a stroking rod, a flywheel and a vent).
-- **Story Spine & Saga (`src/story/saga.js`):** 4 Acts (Strike on the Frontier, Stolen Convoys, Total Sabotage, The Doomsday Core) spanning all 14 worlds plus Erebus. `EPISODES` registry with 15 entries containing novelistic short paragraphs in dramatic video-game prose (`paragraphs: [...]`) where **The Fifth Guild** is the primary enemy faction actively raiding and sabotaging. `CAMPAIGN_STORY` provides a 5-beat dramatic campaign saga. Arrival/closing lines strictly <=2 sentences. Clue registry for Case File and spine beats in road order.
+- **Story Spine & Saga (`src/story/saga.js`):** 4 Acts (Strike on the Frontier, Stolen Convoys, Total Sabotage, The Doomsday Core) spanning all 14 worlds plus Erebus. All storyline copy is written as direct communications from Quartermaster Vess (`VESS // QUARTERMASTER`) in intuitive, serious, plain terms accessible to children without unexplained jargon. `EPISODES` registry with 15 entries containing 3-beat direct transmissions where **The Fifth Guild** is the primary enemy faction raiding and sabotaging supplies. `CAMPAIGN_STORY` provides a 5-beat campaign saga. Arrival/closing lines strictly <=2 sentences. Clue registry for Case File and spine beats in road order.
 - **Story Modals (`src/story/story-modal.js`):**
-  - Novelistic paragraph form without bureaucratic subheadings or bullet grids.
-  - Interactive video-game stepper: stops between short paragraphs until the player advances (click card, Spacebar, Enter, or Continue ▶). Includes back navigation and progress dots.
-  - `openCampaignStoryModal(opts)`: 5-beat novelistic campaign saga stepper aboard the Avalon against the Fifth Guild.
-  - `openWorldStoryModal(world, opts)`: 3-beat dramatic sector story stepper with seamless switch to Campaign Saga. Supports `isPreLaunch` / `onLaunch` with "Take Off & Deploy ▶" action.
+  - Direct transmission card sequence from Vess without bureaucratic subheadings or bullet grids.
+  - Interactive video-game stepper: advances through short transmissions (click card, Spacebar, Enter, or Continue ▶). Includes back navigation and progress dots.
+  - Immediate skip control (`Skip Briefing ⏭` / `Skip ⏭`) available on every modal step, launching or closing immediately.
+  - `openCampaignStoryModal(opts)`: 5-beat campaign saga stepper aboard the Avalon against the Fifth Guild.
+  - `openWorldStoryModal(world, opts)`: 3-beat sector story stepper with seamless switch to Campaign Saga. Supports `isPreLaunch` / `onLaunch` with "Take Off & Deploy ▶" action.
 - **Onboarding Lore Scene (`src/screens/onboarding.js` Scene 4):**
-  - Novelistic paragraph-by-paragraph story card sequence introducing the player's guild charter, the Fifth Guild raiders, and the journey to Cinder Halo without subheadings.
-- **Pre-Takeoff Briefing Delivery & In-Game Story Integration:**
-  - Briefings are delivered **before takeoff and before travel/landing animation, never after landing**. `router.tryVoyage(raw)` intercepts flights to unseen destinations to display `openWorldStoryModal` first; launching starts the flight. Star Map and Bridge Sector 01 / Learn enter keys similarly trigger pre-launch briefings.
-  - `maybeOfferStory` in `src/screens/learn-world.js` removed post-landing auto-pop so arrivals are uninterrupted.
+  - Direct communication sequence from Vess introducing the ship charter, the Fifth Guild raiders, and the mission to Cinder Halo.
+- **World Entry Story Delivery & Interface Integration:**
+  - Storyline is automatically shown every time the player enters a world (both pre-launch voyage takeoff in `router.tryVoyage` and direct sector entry in `learn-world.js`, `starmap.js`, `learn.js`, and `bridge.js`).
+  - Standalone "Storyline" buttons have been completely removed across all screens.
+  - Double-prompt suppression: `tryVoyage` sets `story_just_shown_${worldId}` in `sessionStorage` upon takeoff, which `maybeOfferStory` consumes upon landing so the player is not prompted twice for the same visit. Returning from bench activities (`avalon_learn_last_site`) also avoids re-prompting.
   - In-game integration: Walk HUD features live `ENEMY // THE FIFTH GUILD` threat status banner; Sites directory modal displays tactical mission objectives; Voyage helm plate displays active Fifth Guild alert.
 - **Case File & Dossier (`src/screens/casefile.js` at `#/casefile`):** Terminal displaying evidence clues, Vess marginalia notes, spine beat transcripts, and act charter summaries.
 - **Session Saga State (`src/session.js`):** `session.learn.saga = { beatsSeen: [], clues: [] }`. Methods `getSaga()`, `recordClue()`, `hasClue()`, `recordSagaBeat()`, `hasSagaBeat()`. Union merge in `setLearnState()`.
@@ -2886,4 +2885,22 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **Halo Lifecycle Rule:** 3D amber instrument halos (`showInstrumentHalos` in `src/learn/engine/bench3d.js`) are displayed ONLY during the introductory briefing modal (`showBriefing` in `src/learn/engine/frame.js`) to orient new users to dials, keys, and sample wells. Halos are strictly dismissed on modal start/close and NEVER shown during active stage solving to avoid revealing answers.
 - **Instrument Controls Guide:** Stage cards provide concise non-spoiling control explanations (`.lq-bench-guide`) explaining how to turn dials (drag/scroll) and interact with bench keys/stations, with an on-demand button to reopen the introduction with halos. Briefings feature interactive instrument summary cards that highlight corresponding 3D halos on hover/click.
 - **Halo Visual Architecture:** Multi-layer high-visibility illumination using additive blending (`THREE.AdditiveBlending`), concentric laser boundary rings elevated above bench top/well rims, volumetric cylindrical light pillars (`_createHaloBeam`), animated bobbing & spinning downward beacon pointers (`_createHaloPointer`), and camera-billboarded high-contrast neon labels (`_createHaloBadge`).
+
+### 15. UI Copy & Decorative Text Discipline
+- **Critical Text Only:** Removed all non-essential labels, feature advertisements, decorative sci-fi slash markers (`//`), and fake status readouts (`integrity: high`, `status: clear`, `Avalon // Helm`, `Vess // Quartermaster` -> `Vess`) across UI screens, procedural textures, modals, and headers. Kept strictly necessary, clear copy without fluff.
+
+### 16. 3D Arena Foes & FPS Combat Engine
+- **3D Combat Monsters (`src/learn/engine/combat-monster-3d.js`):** Procedural life-sized 3D models standing directly in front of the player across the bench/arena in all encounter stages: Salt Husk (crystalline halite titan with glowing amber geode heart), The Hopper (Tallow boss: armored mantis stalker with scythe blades), Lamp Moth (radiant phosphor winged entity hovering at eye level), The Lantern-Eater (Lanternfall boss: shadow-winged abyss dragon with vortex chest), Basalt Warden (volcanic obsidian titan with glowing magma fissures), Slag Crawler (six-legged molten slag arachnid with pincer mandibles), Gas Bladder (floating pneumatic leviathan with pulsating vapor bell), The Compressor (Bellows boss: hydraulic industrial juggernaut with crushing rams), Recipe Golem (alchemical crucible colossus), and universal fallback automaton.
+- **FPS Combat FX (`src/learn/engine/combat-fps-fx.js`):** Weapon discharge with plasma beam tracers from first-person view, dynamic muzzle flash, impact spark bursts, hit reaction flinch/stagger, monster counter lunges, and trauma-based camera screenshake.
+- **Tactical FPS Combat HUD (`src/learn/engine/combat-fps-hud.js`, `src/styles/learn.css`):** Centered tactical crosshair, 3D tracking lock-on brackets around foes, threat status and integrity pips, 'X' hitmarker on attack impact, red/amber damage vignette on foe counters, and direct click-to-strike interaction.
+
+### 17. Pedagogical Chemistry-First Reframing & Visual Formula HUD
+- **Chemistry-First Discovery Doctrine:** Students explore and discover core chemistry first (hands-on with visuals, molecular models, and formulas), and apply that chemical knowledge to solve grounded sci-fi frontier problems (e.g. mass spectrometry to detect counterfeit alloy, Beer-Lambert spectrophotometry to monitor reservoir toxins, gas laws to stabilize pressure valves and airlocks).
+- **Comprehensive Reframing (`src/learn/engine/quest-guide.js`):** Completely reframed all Learn track quests across Unit 1 (Tallow: `q1-grain` to `boss-hopper`), Unit 2 (Lanternfall: `q1-wave` to `boss-eater`), Unit 3 (Ligar: `q1-joins` to `boss-warden`), Unit 4 (Bellows: `q1-knocks` to `boss-compressor`), and Unit 7 (Kettle/Ligar: `q1-recipe` to `boss-golem`). Every stage features `storyProblem` (frontier problem solved via chemistry), `science` (underlying chemical principle), `howToTest` (scientific method exploration without answer spoilers), and `visualFormula` (clean mathematical equation or structural relationship).
+- **Visual HUD Cards & Briefing Grid (`src/learn/engine/frame.js`, `src/styles/learn.css`):**
+  - Live HUD card (`updateBenchGuide`) displays a 4-row structured card: Concept badge, Storyline Problem Solved, Visual Formula rule box, and Bench Test method.
+  - Briefing modal (`showBriefing`) renders a 4-card grid (Chemistry Concept -> Storyline Application -> Visual Formula -> Scientific Method) with clickable vocabulary chips and interactive 3D halo guidance.
+- **Scope Boundary:** Erebus quests remain untouched per instruction until Learn track work is complete.
+
+
 

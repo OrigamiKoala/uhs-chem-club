@@ -40,7 +40,7 @@ export function renderContracts(container) {
       code: 'CON-01',
       title: 'The Charge Gardens of Erebus',
       type: 'Industrial Grid Restoration',
-      issuer: 'Imperial Survey Board // Sylvan Guild',
+      issuer: 'Imperial Survey Board',
       status: isComplete ? 'complete' : cleared > 0 ? 'underway' : 'open',
       statusLabel: isComplete ? 'RESOLVED' : cleared > 0 ? `UNDERWAY (${cleared}/${TOTAL_STAGES})` : 'OPEN',
       summary: 'Deep perimeter survey in the southern hydrocarbon basins. Re-align 20 pylon resonance coils across the Charge Gardens.',
@@ -55,7 +55,7 @@ export function renderContracts(container) {
       code: 'CON-02',
       title: 'The Siphon Drift',
       type: 'Atmospheric Fleet Extraction',
-      issuer: 'Zephyr League // Survey Division',
+      issuer: 'Zephyr League',
       status: 'locked',
       statusLabel: 'SEALED',
       summary: 'Atmospheric pressure anomalies detected above the cloud shelf. Neutralize rogue pressure bladders.',
@@ -70,7 +70,7 @@ export function renderContracts(container) {
       code: 'CON-03',
       title: 'Cinder Gate Purge',
       type: 'Thermal Lattice Stabilization',
-      issuer: 'Ignis Foundry // Core Command',
+      issuer: 'Ignis Foundry',
       status: 'locked',
       statusLabel: 'SEALED',
       summary: 'Sub-surface geothermal venting along the magma shelf. Clear calcified conduit obstructions.',
@@ -85,7 +85,7 @@ export function renderContracts(container) {
       code: 'CON-04',
       title: 'The Deep Vent Rig',
       type: 'High-Pressure Solution Survey',
-      issuer: 'Thalassa Deep Rig // Hydrochem',
+      issuer: 'Thalassa Deep Rig',
       status: 'locked',
       statusLabel: 'SEALED',
       summary: 'Abyssal brine reservoirs showing fluctuating solute concentrations. Calibrate osmotic relays.',
@@ -100,15 +100,15 @@ export function renderContracts(container) {
   const headerMarkup = isT4 ? `
     <div class="terminal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.5rem;">
       <div>
-        <span class="eyebrow lit" style="color: var(--accent-gold); letter-spacing: 0.15em;">GUILD CONTRACT BOARD</span>
-        <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">REQUISITIONS & EXPEDITIONS</h2>
+        <span class="eyebrow lit" style="color: var(--accent-gold); letter-spacing: 0.15em;">CONTRACTS</span>
+        <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">EXPEDITIONS</h2>
       </div>
       <a href="#/bridge" class="terminal-close-btn" style="text-decoration: none; padding: 4px 10px; font-family: var(--font-mono); font-size: 0.75rem; border: 1px solid var(--border-durasteel); color: var(--text-muted);">CLOSE</a>
     </div>
   ` : pageHeader({
     art: '/art/starmap.jpg',
     title: 'Contract Board',
-    eyebrow: 'Guild Requisitions // Expedition Postings',
+    eyebrow: 'Contracts',
     actions: statRow([
       { label: 'Active Contracts', value: '1 Live', plain: true },
       { label: 'Pending Postings', value: '3 Sealed', plain: true },

@@ -18,16 +18,12 @@ export function renderVoyageHud(container) {
   container.innerHTML = `
     <div class="voyage-hud m-screen m-voyage">
       <section class="voyage-plate" aria-live="polite">
-        <div class="voyage-plate-head">
-          <span class="eyebrow lit">Avalon // Helm</span>
+        <div class="voyage-plate-head" style="justify-content: flex-end;">
           <button type="button" class="btn-secondary quest-btn-sm voyage-skip m-tap">Skip</button>
         </div>
         <div class="voyage-dest"></div>
         <div class="voyage-phase"></div>
         <div class="voyage-bar" aria-hidden="true"><span></span></div>
-        <div class="voyage-intel" style="margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-durasteel); font-family: var(--font-mono); font-size: 0.64rem; color: var(--accent-amber); line-height: 1.3;">
-          ⚠ ALERT: The Fifth Guild has struck this sector. Maintain tactical readiness.
-        </div>
       </section>
     </div>
   `;

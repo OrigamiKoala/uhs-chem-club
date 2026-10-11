@@ -57,8 +57,16 @@ function installSiteListener() {
  * screen behind it is already drawn, and Close is the first key on the card.
  * Once offered it never auto-opens again — the Problems key is how it comes back.
  */
-function maybeOfferStory() {
-  // Storyline is delivered before takeoff aboard the Avalon, never after landing.
+function maybeOfferStory(world) {
+  if (!world) return;
+  const justShownKey = `story_just_shown_${world.id}`;
+  if (sessionStorage.getItem(justShownKey)) {
+    sessionStorage.removeItem(justShownKey);
+    return;
+  }
+  if (sessionStorage.getItem('avalon_learn_last_site')) return;
+
+  openWorldStoryModal(world);
 }
 
 /**
@@ -148,7 +156,6 @@ export function renderLearnWorld(container, params = {}) {
         title: esc(world.world),
         subtitle: esc(world.line),
         actions: `
-          <button type="button" class="btn-secondary quest-btn-sm learn-story-trigger m-tap" style="margin-right: 0.5rem;" title="Review Sector Storyline">Storyline</button>
           <a href="#/learn" class="btn-secondary" style="text-decoration: none;">All Worlds</a>
         `
       })}
@@ -157,7 +164,6 @@ export function renderLearnWorld(container, params = {}) {
         <div class="m-head learn-brief-head">
           <span class="eyebrow lit">${esc(world.title)}</span>
           <div style="display: flex; gap: 0.4rem; align-items: center;">
-            <button type="button" class="btn-secondary quest-btn-sm learn-story-trigger m-tap" title="Review Sector Storyline">Storyline</button>
             <span class="tag ${(STATUS_TAG[wStatus] || STATUS_TAG.charted).cls}">${(STATUS_TAG[wStatus] || STATUS_TAG.charted).label}</span>
           </div>
         </div>
@@ -167,7 +173,6 @@ export function renderLearnWorld(container, params = {}) {
             ${world.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete} of ${prog.liveTotal} complete` : ''}
           </div>
           <div style="display: flex; gap: 0.4rem; align-items: center;">
-            <button type="button" class="btn-secondary quest-btn-sm learn-story-trigger m-tap" title="Review Sector Storyline">Storyline</button>
             ${practiceKey(world)}
           </div>
         </div>
@@ -208,11 +213,7 @@ export function renderLearnWorld(container, params = {}) {
 
   bindPracticeKeys(container);
   maybeOfferPractice(world);
-  container.querySelectorAll('.learn-story-trigger').forEach(btn => {
-    btn.addEventListener('click', () => {
-      openWorldStoryModal(world);
-    });
-  });
+  maybeOfferStory(world);
 }
 
 /**
@@ -243,13 +244,6 @@ function renderWalkHud(container, world) {
         <div class="learn-walk-name">${esc(world.world)}</div>
         <p class="learn-walk-line">${esc(world.line)}</p>
 
-        <div class="learn-walk-threat" style="margin: 0.35rem 0 0.5rem; padding: 0.35rem 0.55rem; background: rgba(217, 148, 35, 0.12); border-left: 2px solid var(--accent-amber); border-radius: 2px;">
-          <div class="eyebrow lit" style="color: var(--accent-amber); font-size: 0.6rem; letter-spacing: 0.1em; margin-bottom: 2px;">ENEMY // THE FIFTH GUILD</div>
-          <div style="font-family: var(--font-sans); font-size: 0.72rem; color: var(--text-bright); line-height: 1.25;">
-            ${esc(ep?.incident ? ep.incident.split('.')[0] + '.' : 'Hostile saboteurs active in sector.')}
-          </div>
-        </div>
-
         <div class="learn-walk-prog">
           Quests: ${prog.questsComplete} of ${total} Cleared
         </div>
@@ -259,9 +253,6 @@ function renderWalkHud(container, world) {
         </div>
 
         <div class="learn-walk-keys">
-          <button type="button" class="btn-secondary quest-btn-sm learn-story-trigger m-tap" id="learn-story-trigger" title="Sector Storyline Briefing">
-            Storyline
-          </button>
           <button type="button" class="btn-secondary quest-btn-sm learn-sites-trigger m-tap" id="learn-sites-trigger">
             Sites (${prog.questsComplete}/${total})
           </button>
@@ -287,22 +278,14 @@ function renderWalkHud(container, world) {
               </h2>
             </div>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
-              <button type="button" id="sites-story-popup-btn" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; padding: 2px 8px;">Storyline</button>
               ${total ? `<span class="tag ${prog.questsComplete >= total ? 'live' : 'warn'}">${prog.questsComplete} / ${total} CLEARED</span>` : ''}
               <button type="button" id="close-sites-popup-btn" class="terminal-close-btn" aria-label="Close sites panel">✕ CLOSE</button>
             </div>
           </div>
 
-          <div style="margin-bottom: 0.85rem; padding: 0.45rem 0.65rem; background: var(--plate-200); border: 1px solid var(--border-durasteel); border-left: 2px solid var(--accent-gold);">
-            <div class="eyebrow lit" style="color: var(--accent-gold); font-size: 0.6rem; margin-bottom: 2px;">TACTICAL MISSION // RECLAIM STATIONS</div>
-            <p style="font-family: var(--font-sans); font-size: 0.73rem; line-height: 1.35; color: var(--text-bright); margin: 0;">
-              ${esc(ep?.objective || 'Dismantle the Fifth Guild\'s sabotage across all research stations in this sector.')}
+            <p style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.85rem;">
+              Walk to any bench on ${esc(world.world)} and press [E], or select an exploration site below.
             </p>
-          </div>
-
-          <p style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.85rem;">
-            Walk to any bench on ${esc(world.world)} and press [E], or select an exploration site below.
-          </p>
 
           <ul class="learn-site-list">
             ${world.quests.map(q => {
@@ -376,13 +359,6 @@ function renderWalkHud(container, world) {
 
   scrim?.addEventListener('click', (e) => {
     if (e.target === scrim) closeSitesPopup();
-  });
-
-  container.querySelector('#learn-story-trigger')?.addEventListener('click', () => {
-    openWorldStoryModal(world);
-  });
-  container.querySelector('#sites-story-popup-btn')?.addEventListener('click', () => {
-    openWorldStoryModal(world);
   });
 
   const onKeydown = (e) => {

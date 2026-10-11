@@ -1573,20 +1573,194 @@ export function buildCompressor(foe) {
   return body;
 }
 
+export function buildHopper(foe) {
+  const group = new THREE.Group();
+  group.name = `hopper:${foe.id}`;
+  const owned = [];
+  const own = g => { owned.push(g); return g; };
+
+  const chitin = boilerMaterial();
+  const blade = brassMaterial();
+
+  const shadow = contactShadow(0.18);
+  group.add(shadow);
+
+  const rig = new THREE.Group();
+  group.add(rig);
+
+  const thoraxGeo = own(new THREE.ConeGeometry(0.04, 0.09, 6));
+  thoraxGeo.rotateX(0.4);
+  const thorax = new THREE.Mesh(thoraxGeo, chitin);
+  thorax.position.set(0, 0.05, 0);
+  rig.add(thorax);
+
+  const headGeo = own(new THREE.SphereGeometry(0.02, 8, 8));
+  headGeo.scale(1, 1.2, 1.4);
+  const head = new THREE.Mesh(headGeo, chitin);
+  head.position.set(0, 0.09, 0.03);
+  rig.add(head);
+
+  // Scythe blades
+  const scythes = [];
+  for (const sx of [-1, 1]) {
+    const bladeGeo = own(new THREE.ConeGeometry(0.012, 0.11, 4));
+    bladeGeo.rotateX(-0.8);
+    const bladeMesh = new THREE.Mesh(bladeGeo, blade);
+    bladeMesh.position.set(sx * 0.04, 0.07, 0.03);
+    bladeMesh.rotation.z = -sx * 0.3;
+    rig.add(bladeMesh);
+    scythes.push(bladeMesh);
+  }
+
+  const hit = hitTarget(0.16, 0.16);
+  hit.position.y = 0.08;
+  group.add(hit);
+
+  const body = {
+    species: 'the hopper',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    reach: 0.16,
+    baseX: 0, baseY: 0, baseZ: 0,
+
+    setPose(pose, plan, instant = false) {
+      body.plan = plan || null;
+      if (pose === body.pose) return;
+      body.pose = pose;
+      body.since = 0;
+      body.gone = false;
+      group.visible = true;
+      if (instant) body.snap();
+    },
+
+    snap() { body.write(0); },
+    hitPlayer() { body.lunge = 1; },
+
+    update(dt, reduced) {
+      body.t += dt;
+      body.since += dt;
+      body.still = reduced;
+      body.lunge = Math.max(0, body.lunge - dt * 2.5);
+      if (body.pose === 'dispersed' && body.since > 2.0) { body.gone = true; group.visible = false; }
+      body.write(reduced ? 0 : body.t);
+    },
+
+    write(t) {
+      group.position.z = body.baseZ + body.lunge * 0.05;
+      if (!body.still) {
+        thorax.position.y = 0.05 + Math.sin(t * 3.5) * 0.004;
+        for (let i = 0; i < scythes.length; i++) {
+          const sx = i === 0 ? -1 : 1;
+          scythes[i].rotation.z = -sx * (0.3 + Math.sin(t * 4.0) * 0.06);
+        }
+      }
+    },
+
+    dispose() {
+      for (const g of owned) g.dispose();
+      shadow.geometry.dispose(); shadow.material.dispose();
+      hit.geometry.dispose(); hit.material.dispose();
+    }
+  };
+  body.snap();
+  return body;
+}
+
+export function buildLanternEater(foe) {
+  const group = new THREE.Group();
+  group.name = `lantern-eater:${foe.id}`;
+  const owned = [];
+  const own = g => { owned.push(g); return g; };
+
+  const shadowMat = new THREE.MeshStandardMaterial({ color: 0x18181c, roughness: 0.7, metalness: 0.2 });
+  const wingMat = new THREE.MeshStandardMaterial({ color: 0x222228, roughness: 0.5, metalness: 0.4, side: THREE.DoubleSide });
+
+  const shadow = contactShadow(0.18);
+  group.add(shadow);
+
+  const rig = new THREE.Group();
+  group.add(rig);
+
+  const bodyMesh = new THREE.Mesh(own(new THREE.DodecahedronGeometry(0.04, 0)), shadowMat);
+  bodyMesh.position.set(0, 0.06, 0);
+  rig.add(bodyMesh);
+
+  const wings = [];
+  for (const sx of [-1, 1]) {
+    const wingGeo = own(new THREE.PlaneGeometry(0.09, 0.06));
+    const wing = new THREE.Mesh(wingGeo, wingMat);
+    wing.position.set(sx * 0.06, 0.07, 0);
+    wing.rotation.y = sx * 0.4;
+    rig.add(wing);
+    wings.push({ mesh: wing, side: sx });
+  }
+
+  const hit = hitTarget(0.16, 0.16);
+  hit.position.y = 0.08;
+  group.add(hit);
+
+  const body = {
+    species: 'the lantern-eater',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    reach: 0.16,
+    baseX: 0, baseY: 0, baseZ: 0,
+
+    setPose(pose, plan, instant = false) {
+      body.plan = plan || null;
+      if (pose === body.pose) return;
+      body.pose = pose;
+      body.since = 0;
+      body.gone = false;
+      group.visible = true;
+      if (instant) body.snap();
+    },
+
+    snap() { body.write(0); },
+    hitPlayer() { body.lunge = 1; },
+
+    update(dt, reduced) {
+      body.t += dt;
+      body.since += dt;
+      body.still = reduced;
+      body.lunge = Math.max(0, body.lunge - dt * 2.5);
+      if (body.pose === 'dispersed' && body.since > 2.0) { body.gone = true; group.visible = false; }
+      body.write(reduced ? 0 : body.t);
+    },
+
+    write(t) {
+      group.position.z = body.baseZ + body.lunge * 0.05;
+      if (!body.still) {
+        bodyMesh.position.y = 0.06 + Math.sin(t * 2.8) * 0.005;
+        const flap = Math.sin(t * 8.0) * 0.35;
+        for (const w of wings) {
+          w.mesh.rotation.y = w.side * (0.4 + flap);
+        }
+      }
+    },
+
+    dispose() {
+      for (const g of owned) g.dispose();
+      shadow.geometry.dispose(); shadow.material.dispose();
+      hit.geometry.dispose(); hit.material.dispose();
+      shadowMat.dispose(); wingMat.dispose();
+    }
+  };
+  body.snap();
+  return body;
+}
+
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['salt husk', 'lamp moth', 'basalt warden', 'recipe golem', 'slag crawler', 'gas bladder', 'the compressor'];
+export const BODY_SPECIES = ['salt husk', 'lamp moth', 'basalt warden', 'recipe golem', 'slag crawler', 'gas bladder', 'the compressor', 'the hopper', 'the lantern-eater'];
 
 /**
- * Species that fight on the PLATE only at T4, and why. A species with no body
- * is not an error: `buildFoeBody` answers null, the layer stands nothing in the
- * well, and the 2D foe plate is the whole fight, exactly as it is below T4.
+ * Species that fight on the PLATE only at T4, and why.
  */
-export const PLATE_ONLY = {
-  'the hopper': 'Tallow boss: a hero model, to be authored with the Hunyuan3D pipeline',
-  'the lantern-eater': 'Lanternfall boss: a hero model, to be authored with the Hunyuan3D pipeline'
-};
+export const PLATE_ONLY = {};
 
-/** The body for a species, or null for one that has none (see `PLATE_ONLY`). */
+/** The body for a species, or null for one that has none. */
 export function buildFoeBody(species, foe, env) {
   if (species === 'salt husk') return buildHusk(foe, env);
   if (species === 'lamp moth') return buildMoth(foe);
@@ -1595,5 +1769,8 @@ export function buildFoeBody(species, foe, env) {
   if (species === 'slag crawler') return buildSlagCrawler(foe);
   if (species === 'gas bladder') return buildPressureBladder(foe);
   if (species === 'the compressor') return buildCompressor(foe);
+  if (species === 'the hopper') return buildHopper(foe);
+  if (species === 'the lantern-eater') return buildLanternEater(foe);
   return null;
 }
+

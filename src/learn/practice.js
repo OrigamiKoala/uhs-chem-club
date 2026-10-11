@@ -209,7 +209,7 @@ function runSet(world, problems, onDone) {
           // only marked wrong teaches nothing.
           fb.innerHTML = `
             <div class="lq-practice-verdict ${correct ? 'correct' : 'incorrect'}">
-              <span class="lq-practice-mark" aria-hidden="true">${correct ? '//' : '!!'}</span>
+              <span class="lq-practice-mark" aria-hidden="true">${correct ? '✓' : '✗'}</span>
               <span class="lq-practice-verdict-body">
                 <strong>${correct ? 'Correct.' : 'Not this one.'}</strong> ${esc(p.explanation)}
               </span>

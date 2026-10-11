@@ -41,7 +41,7 @@ export function renderLearn(container) {
         artAlt: '',
         title: 'Learn',
         actions: `
-          <button type="button" class="btn-secondary quest-btn-sm m-tap" id="learn-campaign-story-btn" title="Review Campaign Storyline & Ghost Charter" style="margin-right: 0.5rem;">📜 Story Dossier</button>
+          <button type="button" class="btn-secondary quest-btn-sm m-tap" id="learn-campaign-story-btn" title="Story Dossier" style="margin-right: 0.5rem;">Story Dossier</button>
           ${resumeQuest
             ? `<a href="#/learn/${esc(resume.id)}" class="btn-primary" style="text-decoration: none;">Continue · ${esc(resume.world)}</a>`
             : ''}
@@ -66,7 +66,6 @@ export function renderLearn(container) {
                   <h2 class="learn-world-name">${esc(w.world)}</h2>
                   <span class="tag ${tag.cls}">${tag.label}</span>
                 </div>
-                <div class="eyebrow learn-world-title" style="color: var(--accent-amber); font-size: 0.65rem;">ENEMY // THE FIFTH GUILD</div>
                 <p class="learn-world-line">${esc(w.line)}</p>
               </div>
 
@@ -82,7 +81,6 @@ export function renderLearn(container) {
                   ${w.questCount} quests${prog.liveTotal ? ` · ${prog.questsComplete}/${prog.liveTotal} complete` : ''}
                 </div>
                 <div class="learn-world-keys">
-                  <button type="button" class="btn-secondary quest-btn-sm learn-story-modal-btn m-tap" data-story-world="${esc(w.id)}" title="Sector Storyline Briefing">Storyline</button>
                   ${enterable
                     ? `<a href="#/learn/${esc(w.id)}" class="btn-primary learn-enter m-tap learn-enter-btn" data-world-id="${esc(w.id)}" style="text-decoration: none;">Enter</a>`
                     : `<span class="eyebrow learn-world-blocked">${st === 'locked' ? 'Locked' : 'Coming soon'}</span>`}
@@ -102,29 +100,16 @@ export function renderLearn(container) {
     btn.addEventListener('click', (e) => {
       const worldId = btn.dataset.worldId;
       if (!worldId) return;
-      if (!session.hasFlag(`story_world_seen_${worldId}`)) {
+      if (!stage.canVoyage?.(worldId)) {
         e.preventDefault();
         const w = WORLDS.find(x => x.id === worldId);
         openWorldStoryModal(w || worldId, {
           isPreLaunch: true,
           onLaunch: () => {
-            session.setFlag(`story_world_seen_${worldId}`, true);
             window.location.hash = `#/learn/${worldId}`;
-          }
-        });
-      }
-    });
-  });
-
-  container.querySelectorAll('.learn-story-modal-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const w = WORLDS.find(x => x.id === btn.dataset.storyWorld);
-      if (w) {
-        openWorldStoryModal(w, {
-          isPreLaunch: true,
-          onLaunch: () => {
-            session.setFlag(`story_world_seen_${w.id}`, true);
-            window.location.hash = `#/learn/${w.id}`;
+          },
+          onClose: () => {
+            window.location.hash = `#/learn/${worldId}`;
           }
         });
       }

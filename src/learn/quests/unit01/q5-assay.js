@@ -113,9 +113,9 @@ export const STAGES = [
     title: 'Tip It Out',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench tips a sample down a chute, and a plate sorts each piece into a bin by weight. "Read Code" reads the pieces in one bin, and "Weigh Sample" weighs a whole sample.'
+      body: 'This bench sorts atoms down a chute into separate bins by weight. Use "Tip Sample" to pour pieces and "Read Code" to inspect the atoms in each bin.'
     },
-    prompt: 'Say why Sample A splits across two bins instead of landing in one.',
+    prompt: 'Sample A separates into two bins when tipped. Explain why it splits across two bins instead of landing in one.',
     controls: ['pour', 'code'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', code: 'CAT 17', note: '40 pieces, sealed at the mine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
@@ -645,6 +645,8 @@ export function stateFor(i, overrides) {
 
 export function mount(container, ctx) {
   const frame = new LearnFrame(container, {
+    quest: ctx?.quest || { id: 'q5-assay' },
+    world: ctx?.world,
     stageCount: STAGES.length,
     rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),

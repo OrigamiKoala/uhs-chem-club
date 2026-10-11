@@ -621,6 +621,8 @@ export function stateFor(i, overrides) {
 
 export function mount(container, ctx) {
   const frame = new LearnFrame(container, {
+    quest: ctx?.quest || { id: 'q1-grain' },
+    world: ctx?.world,
     stageCount: STAGES.length,
     rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),

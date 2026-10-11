@@ -229,9 +229,9 @@ export async function renderOnboarding(container) {
     // 2. Instant transmission update
     if (activeTransmission) {
       activeTransmission.update({
-        speaker: `VESS // ${activeMeta.title.toUpperCase()} BRIEFING`,
-        badge: `${activeMeta.mark} · GUILD BRIEFING`,
-        subtitle: activeMeta.guild.toUpperCase(),
+        speaker: 'Vess',
+        badge: `${activeMeta.title} Briefing`,
+        subtitle: '',
         text: activeMeta.pitch,
         accentColor: activeMeta.accent
       });
@@ -379,9 +379,9 @@ export async function renderOnboarding(container) {
 
     // Mount Vess transmission
     const initialText = currentTransmissionMode === 'intro' ? VESS_INTRO_TEXT : activeMeta.pitch;
-    const initialSpeaker = currentTransmissionMode === 'intro' ? 'VESS // QUARTERMASTER' : `VESS // ${activeMeta.title.toUpperCase()} BRIEFING`;
-    const initialBadge = currentTransmissionMode === 'intro' ? 'SCENE 02 · AVALON COMMS' : `${activeMeta.mark} · GUILD BRIEFING`;
-    const initialSubtitle = currentTransmissionMode === 'intro' ? 'STATION: SALVAGE HAULER AVALON // CREW LOGISTICS' : activeMeta.guild.toUpperCase();
+    const initialSpeaker = 'Vess';
+    const initialBadge = currentTransmissionMode === 'intro' ? 'Avalon Comms' : `${activeMeta.title} Briefing`;
+    const initialSubtitle = '';
     const initialAccent = currentTransmissionMode === 'intro' ? 'var(--accent-amber)' : activeMeta.accent;
 
     activeTransmission = createTransmissionElement({
@@ -403,9 +403,9 @@ export async function renderOnboarding(container) {
       soundscape.playToggleClack();
       if (activeTransmission) {
         activeTransmission.update({
-          speaker: 'VESS // QUARTERMASTER',
-          badge: 'SCENE 02 · AVALON COMMS',
-          subtitle: 'STATION: SALVAGE HAULER AVALON // CREW LOGISTICS',
+          speaker: 'Vess',
+          badge: 'Avalon Comms',
+          subtitle: '',
           text: VESS_INTRO_TEXT,
           accentColor: 'var(--accent-amber)'
         });
@@ -419,9 +419,9 @@ export async function renderOnboarding(container) {
       const meta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
       if (activeTransmission) {
         activeTransmission.update({
-          speaker: `VESS // ${meta.title.toUpperCase()} BRIEFING`,
-          badge: `${meta.mark} · GUILD BRIEFING`,
-          subtitle: meta.guild.toUpperCase(),
+          speaker: 'Vess',
+          badge: `${meta.title} Briefing`,
+          subtitle: '',
           text: meta.pitch,
           accentColor: meta.accent
         });
@@ -577,10 +577,10 @@ export async function renderOnboarding(container) {
 
           if (activeTransmission) {
             activeTransmission.update({
-              speaker: 'VESS // QUARTERMASTER',
-              badge: 'AWARD CONFIRMED',
-              subtitle: 'QUARTERMASTER CRATE // ISSUE DRAWN',
-              text: '"Quartermaster crate unsealed. Review your mission briefing before departure."'
+              speaker: 'Vess',
+              badge: 'Award Confirmed',
+              subtitle: '',
+              text: '"Supplies unsealed. Review your mission briefing before departure."'
             });
           }
         }
@@ -607,8 +607,8 @@ export async function renderOnboarding(container) {
 
     const PARAGRAPHS = [
       {
-        speaker: `${activeMeta.guild.toUpperCase()} // CREW MANIFEST`,
-        text: `The hull plates of the Avalon groan with every orbital burn. You signed on under the ${activeMeta.guild} charter, but out here past the charted lanes, treaties are as brittle as cold glass. Four monopolies carve up the rim—and we survive on what they discard.`
+        speaker: 'Vess',
+        text: `Welcome aboard the Avalon, recruit. You signed on under the ${activeMeta.guild} charter, and I am Vess, your quartermaster. Our ship travels the frontier between star systems, salvaging supplies and keeping independent colonies alive. Out here, we look out for each other.`
       },
       ...CAMPAIGN_STORY.slice(1)
     ];

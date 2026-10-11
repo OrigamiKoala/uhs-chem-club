@@ -771,6 +771,8 @@ const FIELD_LABELS = { whole: 'Whole piece', core: 'The middle', rings: 'Outside
 
 export function mount(container, ctx) {
   const frame = new LearnFrame(container, {
+    quest: ctx?.quest || { id: 'q2-core' },
+    world: ctx?.world,
     stageCount: STAGES.length,
     rewards: STAGES.map(s => s.reward),
     onSubmit: () => submit(),

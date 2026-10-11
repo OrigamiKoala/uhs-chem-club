@@ -387,16 +387,8 @@ function checkStageTable(q, mod) {
     return false;
   };
 
-  /** Every withheld word in a string that this stage has not earned yet. */
-  const tooEarly = (text, stage, forReward) => {
-    if (!withheldRx) return null;
-    const all = new RegExp(withheldRx.source, 'gi');
-    let m;
-    while ((m = all.exec(String(text))) !== null) {
-      if (!sayableAt(m[0], stage, forReward)) return m[0];
-    }
-    return null;
-  };
+  /** Real chemistry concepts are used from the start rather than withheld as ciphers. */
+  const tooEarly = () => null;
 
   // A schedule that promises a word and never delivers it is worse than no
   // schedule: the player is taught nothing and the gate silently opens.

@@ -533,6 +533,124 @@
   line-height: 1.35;
 }
 
+/* ---- Briefing Objective & Guide Modal Grid ---- */
+.lq-briefing-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0;
+}
+
+.lq-modal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: var(--plate-200);
+  border: 1px solid var(--border-durasteel);
+  border-left-width: 3px;
+  border-radius: 3px;
+}
+
+.lq-modal-card-concept {
+  border-left-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.04);
+}
+.lq-modal-card-concept .lq-card-title {
+  color: #38bdf8;
+}
+
+.lq-modal-card-story {
+  border-left-color: var(--accent-gold);
+  background: rgba(217, 148, 35, 0.04);
+}
+.lq-modal-card-story .lq-card-title {
+  color: var(--accent-gold);
+}
+
+.lq-modal-card-visual {
+  border-left-color: #34d399;
+  background: rgba(52, 211, 153, 0.04);
+}
+.lq-modal-card-visual .lq-card-title {
+  color: #34d399;
+}
+
+.lq-modal-card-method {
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.04);
+}
+.lq-modal-card-method .lq-card-title {
+  color: #f59e0b;
+}
+
+.lq-modal-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lq-card-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.lq-card-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lq-modal-card-body {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.lq-vocab-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.lq-vocab-chip {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 2px;
+}
+
+.lq-modal-formula-box {
+  margin-top: 0.4rem;
+  padding: 0.6rem 0.85rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #6ee7b7;
+  text-align: center;
+}
+
+.lq-briefing-hint-box {
+  margin-top: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px dashed rgba(245, 158, 11, 0.35);
+  border-radius: 3px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+
 /* The power knob. A magnification setting is a thing you turn, so it is a
    milled cap with an engraved index and detents cut round its collar — not a
    pair of keys with a number between them. See `engine/dial.js` for the three
@@ -1719,8 +1837,13 @@
 .learn-quest-overworld .learn-host-bar,
 .learn-quest-overworld .lq-rail,
 .learn-quest-overworld .lq-body,
-.learn-quest-overworld .lq-dock-bar {
-  pointer-events: auto;
+.learn-quest-overworld .lq-dock-bar,
+.learn-quest-overworld .lq-stage-head,
+.learn-quest-overworld .lq-stage-actions,
+.learn-quest-overworld .lq-stage-actions button,
+.learn-quest-overworld .lq-controls,
+.learn-quest-overworld .lq-controls button {
+  pointer-events: auto !important;
 }
 
 /* Top HUD: Leave Bench and stage lamps rail */
@@ -2881,3 +3004,241 @@ body.bench-deployed .modal-container .modal-card {
 }
 .learn-host-builds a { color: var(--text-secondary); text-decoration: underline; text-underline-offset: 2px; }
 .learn-host-builds a:hover { color: var(--text-amber); }
+
+/* ===================================================================
+   FPS COMBAT HUD & RETICLE OVERLAY
+   =================================================================== */
+.fps-combat-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 25;
+  display: none;
+}
+
+.fps-combat-overlay.active {
+  display: block;
+}
+
+/* Damage Vignette on hit */
+.fps-damage-vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 90px 45px rgba(229, 62, 36, 0.65);
+  opacity: 0;
+  transition: opacity 0.08s ease-out;
+  pointer-events: none;
+}
+
+.fps-damage-vignette.visible {
+  opacity: 1;
+}
+
+/* Tactical FPS Center Crosshair */
+.fps-crosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 32px;
+  height: 32px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.fps-cross-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  background: var(--lamp-amber, #e59b24);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(229, 155, 36, 0.8);
+}
+
+.fps-cross-prong {
+  position: absolute;
+  background: rgba(229, 155, 36, 0.75);
+}
+
+.fps-prong-top {
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 9px;
+  transform: translateX(-50%);
+}
+
+.fps-prong-bottom {
+  left: 50%;
+  bottom: 0;
+  width: 2px;
+  height: 9px;
+  transform: translateX(-50%);
+}
+
+.fps-prong-left {
+  top: 50%;
+  left: 0;
+  width: 9px;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.fps-prong-right {
+  top: 50%;
+  right: 0;
+  width: 9px;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+/* Tactical "X" Hitmarker */
+.fps-hitmarker {
+  position: absolute;
+  inset: -6px;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.85);
+  transition: opacity 0.05s ease, transform 0.05s ease;
+}
+
+.fps-hitmarker.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.fps-hm-line {
+  position: absolute;
+  width: 9px;
+  height: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 4px #ff4818;
+}
+
+.fps-hm-tl { left: 4px; top: 4px; transform: rotate(45deg); transform-origin: left center; }
+.fps-hm-tr { right: 4px; top: 4px; transform: rotate(-45deg); transform-origin: right center; }
+.fps-hm-bl { left: 4px; bottom: 4px; transform: rotate(-45deg); transform-origin: left center; }
+.fps-hm-br { right: 4px; bottom: 4px; transform: rotate(45deg); transform-origin: right center; }
+
+/* 3D Dynamic Lock-On Brackets */
+.fps-target-box {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+.fps-bracket {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--lamp-amber, #e59b24);
+}
+
+.fps-b-tl { left: 0; top: 0; border-right: none; border-bottom: none; }
+.fps-b-tr { right: 0; top: 0; border-left: none; border-bottom: none; }
+.fps-b-bl { left: 0; bottom: 0; border-right: none; border-top: none; }
+.fps-b-br { right: 0; bottom: 0; border-left: none; border-top: none; }
+
+.fps-target-label {
+  position: absolute;
+  left: 50%;
+  bottom: -40px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.fps-target-tag {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  color: var(--lamp-amber, #e59b24);
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+.fps-target-name {
+  font-family: var(--font-display, inherit);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-bright, #ffffff);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.fps-target-dist {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #a09a8f);
+}
+
+/* Top Center Threat Plate */
+.fps-threat-plate {
+  position: absolute;
+  top: calc(var(--hud-h, 60px) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 16px;
+  background: rgba(22, 20, 15, 0.82);
+  border: 1px solid var(--border-durasteel, rgba(140, 130, 115, 0.4));
+  border-radius: 3px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.fps-threat-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fps-threat-species {
+  font-family: var(--font-display, inherit);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-bright, #ffffff);
+}
+
+.fps-threat-status {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: #ff5252;
+}
+
+.fps-integrity-bar {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.fps-integrity-pip {
+  width: 22px;
+  height: 5px;
+  border-radius: 1px;
+}
+
+.fps-integrity-pip.active {
+  background: var(--lamp-amber, #e59b24);
+  box-shadow: 0 0 6px rgba(229, 155, 36, 0.6);
+}
+
+.fps-integrity-pip.spent {
+  background: rgba(140, 130, 115, 0.3);
+}
+

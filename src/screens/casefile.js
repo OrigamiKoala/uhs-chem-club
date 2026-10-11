@@ -32,7 +32,7 @@ export function renderCaseFile(container) {
     const headerMarkup = isT4 ? `
       <div class="terminal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.5rem;">
         <div>
-          <span class="eyebrow lit" style="color: var(--accent-gold); letter-spacing: 0.15em;">CONFIDENTIAL // LOG-DESK VESS</span>
+          <span class="eyebrow lit" style="color: var(--accent-gold); letter-spacing: 0.15em;">CASE LOG</span>
           <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">CASE FILE: THE CATALYST</h2>
         </div>
         <a href="#/bridge" class="terminal-close-btn" style="text-decoration: none; padding: 4px 10px; font-family: var(--font-mono); font-size: 0.75rem; border: 1px solid var(--border-durasteel); color: var(--text-muted);">CLOSE</a>
@@ -40,7 +40,7 @@ export function renderCaseFile(container) {
     ` : pageHeader({
       art: '/art/comms.jpg',
       title: 'Case File',
-      eyebrow: 'Confidential Dossier // Investigation Log',
+      eyebrow: 'Investigation Log',
       actions: statRow([
         { label: 'Clues Recovered', value: `${collectedCount} / ${totalClues}`, plain: true },
         { label: 'Spine Transcripts', value: `${seenBeatsCount} / ${SPINE_BEATS.length}`, plain: true },
@@ -106,7 +106,7 @@ export function renderCaseFile(container) {
 
                 ${unlocked ? `
                   <div class="vess-marginalia" style="background: rgba(0, 0, 0, 0.35); border-left: 2px solid var(--accent-amber); padding: 0.55rem 0.75rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-amber);">
-                    <div style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 2px;">Vess // Marginalia</div>
+                    <div style="font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 2px;">Notes</div>
                     "${esc(clue.note)}"
                   </div>
                 ` : `
@@ -140,7 +140,7 @@ export function renderCaseFile(container) {
 
                 ${seen ? `
                   <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-gold); margin-bottom: 0.4rem;">
-                    // ${esc(beat.speaker)}
+                    ${esc(beat.speaker)}
                   </div>
                   <blockquote style="margin: 0 0 0.75rem; padding: 0.65rem 0.85rem; background: rgba(0, 0, 0, 0.4); border-left: 2px solid var(--accent-gold); font-size: 0.88rem; line-height: 1.5; color: var(--text-bright);">
                     "${esc(beat.transmission)}"
