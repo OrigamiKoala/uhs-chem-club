@@ -77,12 +77,6 @@ export const STAGES = [
         { id: 'same', label: 'The two are the same, only drawn at different sizes' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Pulse Light',
-      intent: 'A lamp moth perches above the photodetector strip.',
-      hit: 'Photoelectron emission peaks resolve and disperse the moth.'
-    },
     hints: [
       'Press "Fire Light" and tap the peak on each plate.',
       'Compare the height of each peak, and where each one sits on the energy axis.',
@@ -117,12 +111,6 @@ export const STAGES = [
         { id: 'fast', label: 'How fast the electrons left' },
         { id: 'big', label: 'How big the atom is' }
       ]
-    },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Count Peaks',
-      intent: 'Ionization ejects electrons with varying signal counts.',
-      hit: 'Cumulative peak height accounts for all electrons and scatters the moth.'
     },
     hints: [
       'Press "Fire Light" and tap every peak on both plates.',
@@ -159,12 +147,6 @@ export const STAGES = [
         { id: 'weak', label: 'The lamp was too weak to knock the last electron off properly' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Read Bound',
-      intent: 'The peripheral valence shell releases under minimal photon flux.',
-      hit: 'Measured binding energy separates inner and outer states to dispel the moth.'
-    },
     hints: [
       'Press "Fire Light", tap both peaks and look at the rings drawn beside them.',
       'Compare the number of electrons on each ring with the height of each peak.',
@@ -199,12 +181,6 @@ export const STAGES = [
         { id: 'first', label: 'One of the two peaks is the first shell showing through' },
         { id: 'same', label: 'All three outer electrons are held alike, so the peaks only overlap' }
       ]
-    },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Resolve Peaks',
-      intent: 'Two adjacent emission peaks emerge from the second shell.',
-      hit: 'Distinct subshell binding energies resolve and scatter the moth.'
     },
     hints: [
       'Press "Fire Light" and tap the two peaks that come from the second shell.',
@@ -241,12 +217,6 @@ export const STAGES = [
         { id: 'O', label: 'Oxygen' },
         { id: 'F', label: 'Fluorine' }
       ]
-    },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Identify Gas',
-      intent: 'The ionization profile of an unknown element illuminates the chamber.',
-      hit: 'Summed peak heights identify the sealed element and clear the moth.'
     },
     hints: [
       'Press "Fire Light" and tap every peak on the sealed specimen\'s plate.',
@@ -285,12 +255,6 @@ export const STAGES = [
         { id: 'farther', label: 'Neon\'s inner electrons sit farther from its nucleus' },
         { id: 'noble', label: 'Noble gases hold every electron equally tightly' }
       ]
-    },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Probe Core',
-      intent: 'Ten nuclear charges pull the innermost core tighter than nine.',
-      hit: 'Enhanced nuclear charge holds the core tight and dispels the moth.'
     },
     hints: [
       'Press "Fire Light" and compare the innermost peak on each plate.',
@@ -331,12 +295,6 @@ export const STAGES = [
         { id: 'al', label: 'Aluminum', note: '' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Match Metals',
-      intent: 'Three elemental spectra exhibit successive outer valence growth.',
-      hit: 'Spectral peak progressions match each metal and clear the moth.'
-    },
     hints: [
       'Press "Fire Light" and add up the heights on each plate to count its electrons.',
       'Compare the peaks furthest to the left, which come from the outermost electrons, across the three plates.',
@@ -375,12 +333,6 @@ export const STAGES = [
         { id: 's3', label: '1s² 2s³ 2p²' },
         { id: 'p2', label: '1s² 2s² 2p²' }
       ]
-    },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Trace Orbit',
-      intent: 'A sealed spectrum displays three distinct ionization thresholds.',
-      hit: 'Peak heights translate into the orbital layout and disperse the moth.'
     },
     hints: [
       'Press "Fire Light" and tap every peak to read its height.',

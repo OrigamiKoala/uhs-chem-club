@@ -417,7 +417,7 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       hints: stage.hints,
       commitLabel: stage.encounter?.act || 'Commit',
-      encounter: resolveEncounter(stage, {})
+      encounter: resolveEncounter(stage)
     });
     frame.setControls(renderWidget(stage));
     bindControls();

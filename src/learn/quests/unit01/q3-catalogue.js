@@ -34,7 +34,6 @@
 
 import { CatalogueBoard } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
-import { resolveEncounter } from '../../engine/foes.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
@@ -165,12 +164,6 @@ export const STAGES = [
     drawer: ['c11', 'c19', 'c01', 'c18', 'c08', 'c06'],
     widget: { type: 'board', label: 'Reference strip' },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
-    encounter: {
-      species: 'salt husk',
-      act: 'Align Grid',
-      intent: 'Unsorted cards form a chaotic lattice across the rack.',
-      hit: 'The cards lock into proton order and the grid clears.'
-    },
     hints: [
       'Tap a card in the drawer to read it, then tap a slot to put it there.',
       'Read all six and note the proton count on each; how heavy a card is does not matter here.',
@@ -214,12 +207,6 @@ export const STAGES = [
     drawer: [],
     widget: { type: 'number', min: 2, max: 18, label: 'Cards before it starts over' },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
-    encounter: {
-      species: 'salt husk',
-      act: 'Count Repeat',
-      intent: 'A repeating cycle ripples through the outer shells.',
-      hit: 'The repeat interval is confirmed and the pattern holds.'
-    },
     hints: [
       'Tap the cards one by one and read the outer-shell electron count on each.',
       'After the first two cards, find the card where the count drops back to 1, then the next card where it drops to 1 again.',
@@ -262,12 +249,6 @@ export const STAGES = [
     drawer: ['c16', 'c11', 'c14', 'c18', 'c12', 'c17', 'c13', 'c15'],
     widget: { type: 'board', label: 'Bottom row' },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
-    encounter: {
-      species: 'salt husk',
-      act: 'Seat Row',
-      intent: 'Eight loose cards resist placement along the bottom row.',
-      hit: 'The row settles into harmonic alignment.'
-    },
     hints: [
       'Tap a card in the drawer to pick it up, then tap the slot you want it in.',
       'These cards still carry their codes: CAT 11 is the lowest and CAT 18 is the highest.',
@@ -306,12 +287,6 @@ export const STAGES = [
     drawer: [],
     widget: { type: 'number', min: 0, max: 8, label: 'Outer-shell electrons in column 6' },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
-    encounter: {
-      species: 'salt husk',
-      act: 'Scan Column',
-      intent: 'A vertical column of cards vibrates in unison.',
-      hit: 'The column valence count locks into registry.'
-    },
     hints: [
       'Column 6 is the sixth from the left: tap OXYGEN, then tap SULFUR.',
       'Compare the two readouts, which report the same outer-shell count.',
@@ -355,12 +330,6 @@ export const STAGES = [
       ]
     },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
-    encounter: {
-      species: 'salt husk',
-      act: 'Select Group',
-      intent: 'One unreactive column repels all incoming charges.',
-      hit: 'The unreactive group is isolated from the swarm.'
-    },
     hints: [
       'Tap one card from each of the four groups and read the last line of each readout.',
       'Three of them trade: one hands an electron over, one takes one on, one holds on to a partner.',
@@ -405,13 +374,6 @@ export const STAGES = [
       ]
     },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
-    encounter: {
-      species: 'salt husk',
-      act: 'File Cards',
-      intent: 'Six cards exhibit distinct trading postures.',
-      moves: { gives: 'Extract', takes: 'Transfer', holds: 'Bond', none: 'Contain' },
-      hit: 'All six cards are classified into correct behavioral bins.'
-    },
     hints: [
       'Tap all six cards: the last line of each readout says what that card does.',
       'Match each card\'s last line to the bin whose note says the same thing, and check it against the outer-shell count on the card.',
@@ -463,12 +425,6 @@ export const STAGES = [
       ]
     },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
-    encounter: {
-      species: 'salt husk',
-      act: 'Predict Card',
-      intent: 'A void in the chart distorts neighboring readings.',
-      hit: 'The predicted element slots into the empty station.'
-    },
     hints: [
       'Tap the card to the left of the empty slot and the card to its right.',
       'ALUMINUM is 13 and PHOSPHORUS is 15, and the other card in that column is CARBON.',
@@ -510,12 +466,6 @@ export const STAGES = [
     drawer: ['c16', 'c04', 'c13', 'c07'],
     widget: { type: 'board', label: 'Open slots' },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
-    encounter: {
-      species: 'salt husk',
-      act: 'Fill Chart',
-      intent: 'Four unmarked cards drift toward their coordinates in the matrix.',
-      hit: 'The complete chart locks together and disperses the salt haze.'
-    },
     hints: [
       'Tap each card to read it: the readout still gives a proton count with the code missing.',
       'Read the atomic numbers on the cards either side of each open slot; each slot takes the one number that fits between them.',
@@ -726,8 +676,7 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: 'Commit',
-      encounter: resolveEncounter(stage)
+      commitLabel: 'Commit'
     });
 
     board.setStage({

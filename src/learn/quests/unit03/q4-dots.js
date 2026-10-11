@@ -69,11 +69,6 @@ export const STAGES = [
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'H2O')],
     widget: { type: 'none' },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Seal Plates',
-      intent: 'A slag crawler lies with every plate on its back raised.'
-    },
     hints: [
       'Pick where the next pair goes, then tap a slot or an atom.',
       'Compare each atom\'s lamp with the number of electrons standing round it: hydrogen wants two and the others eight.',
@@ -104,11 +99,6 @@ export const STAGES = [
       rows: [{ id: 'ch4', label: 'Plate A' }, { id: 'nh3', label: 'Plate B' }, { id: 'hf', label: 'Plate C' }],
       bins: [{ id: 'none', label: 'None' }, { id: 'one', label: 'One' }, { id: 'three', label: 'Three' }]
     },
-    encounter: {
-      species: 'slag crawler',
-      act: 'File Pack',
-      intent: 'Three crawlers lie in a row, each with its plates raised.'
-    },
     hints: [
       'Draw each molecule on its own plate until every lamp is lit.',
       'Compare the pairs left on the heaviest atom of each plate once its bonds are drawn.',
@@ -136,11 +126,6 @@ export const STAGES = [
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'CO2')],
     widget: { type: 'none' },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Seal Plates',
-      intent: 'The crawler lies with its plates raised, two of them stiff.'
-    },
     hints: [
       'Place a pair in each slot first and see which lamps stay dark.',
       'Compare the lamp on carbon with the lamps on the oxygen atoms once their lone pairs are down.',
@@ -170,11 +155,6 @@ export const STAGES = [
       type: 'choice', label: 'In the middle',
       options: [{ id: 'h', label: 'Hydrogen' }, { id: 'o', label: 'Oxygen' }, { id: 'f', label: 'Fluorine' }]
     },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Name Centre',
-      intent: 'The crawler\'s plates rise and fall as the slate is tried.'
-    },
     hints: [
       'Try drawing the molecule with each atom in turn as the one the other two join.',
       'Compare how many shared pairs each atom is allowed to take on this board.',
@@ -199,11 +179,6 @@ export const STAGES = [
     controls: ['hand', 'clear', 'charge'],
     rigs: [slate('a', 'PLATE A', 'NH4')],
     widget: { type: 'none' },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Seal Plates',
-      intent: 'The crawler\'s plates will not settle on the tray it was handed.'
-    },
     hints: [
       'Try the drawing with the tray as it is and see what is left over.',
       'Compare the number of electrons in the tray with the number the lamps need.',
@@ -240,11 +215,6 @@ export const STAGES = [
         { id: 'n', label: 'Boron cannot share any pair at all' }
       ]
     },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Name Cause',
-      intent: 'One plate on the crawler\'s back will not close all the way.'
-    },
     hints: [
       'Draw boron trifluoride using every electron in the tray.',
       'Compare how many shared pairs boron can have with how many each fluorine atom is willing to share.',
@@ -272,11 +242,6 @@ export const STAGES = [
     handDot: true,
     rigs: [slate('a', 'PLATE A', 'NO')],
     widget: { type: 'none' },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Seal Plates',
-      intent: 'The crawler\'s last plate rocks and will not lie flat.'
-    },
     hints: [
       'Place pairs until the tray will not give another, then see what is left in it.',
       'Compare the electrons in the tray with how many a whole number of pairs can use.',
@@ -306,11 +271,6 @@ export const STAGES = [
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'SF6')],
     widget: { type: 'none' },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Seal Plates',
-      intent: 'The crawler has more plates than any before it, and the central one is stencilled.'
-    },
     hints: [
       'Place a shared pair in every slot, then see what the tray still holds.',
       'Compare the fluorine lamps with the lamp on sulfur as the tray runs out.',

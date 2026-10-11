@@ -88,12 +88,6 @@ export const STAGES = [
         { id: 'same', label: 'Only the colour changes; the wave and the count stay put' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Observe Wave',
-      intent: 'A lamp moth perches silently on the trace screen.',
-      hit: 'The optical wave compresses and disperses the moth.'
-    },
     hints: [
       'Turn the dial from its first position to its last and watch the wave and the "Crests per second" box.',
       'Compare how far apart two crests sit at the red end with how far apart they sit at the violet end.',
@@ -129,12 +123,6 @@ export const STAGES = [
       { id: 'lamp', label: 'LAMP', head: 'trace', tuned: true, note: 'a lamp you can tune' }
     ],
     widget: { type: 'none' },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Tune Wave',
-      intent: 'Two moths flutter between the fixed and tunable lamp beams.',
-      hit: 'The tuned wavelength doubles and the moths scatter.'
-    },
     hints: [
       'Tap Sample A\'s wave to read its crest-to-crest spacing, then turn the dial and tap the lamp\'s wave the same way.',
       'Compare the wavelength at each dial setting with twice the wavelength of Sample A.',
@@ -168,12 +156,6 @@ export const STAGES = [
       { id: 'c', label: 'SAMPLE C', head: 'trace', nm: 750, note: 'a fixed lamp' }
     ],
     widget: { type: 'decimal', label: 'Speed of the light (x 10^8 m/s)', min: 0, max: 6, step: 0.5 },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Calculate C',
-      intent: 'A cluster of moths feeds around the emission traces at varied wavelengths.',
-      hit: 'The constant speed of light dissolves the moths into radiance.'
-    },
     hints: [
       'Tap each lamp\'s wave to read its wavelength, and read its frequency from the box above the wave.',
       'Multiply each lamp\'s wavelength, in metres, by its frequency and compare the three products.',
@@ -204,12 +186,6 @@ export const STAGES = [
       { id: 'r2', label: 'REFERENCE 2', head: 'trace', nm: 500, note: 'a fixed lamp' }
     ],
     widget: { type: 'decimal', label: 'Frequency (x 10^14 per second)', min: 0, max: 12, step: 0.5 },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Compute Hertz',
-      intent: 'A pair of moths feed on the twin reference traces.',
-      hit: 'The calculated frequency strikes true and clears the bench.'
-    },
     hints: [
       'Tap each reference lamp to read its wavelength and note the frequency printed above its wave.',
       'Work out what wavelength times frequency comes to for each reference lamp and check that it is the same for both.',
@@ -247,12 +223,6 @@ export const STAGES = [
         { id: 'a', label: 'Sample A' }, { id: 'b', label: 'Sample B' },
         { id: 'c', label: 'Sample C' }, { id: 'd', label: 'Sample D' }
       ]
-    },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Order Spectra',
-      intent: 'Four moths beat their wings at differing optical frequencies.',
-      hit: 'The ordered spectrum locks into alignment and the moths disperse.'
     },
     hints: [
       'Read the frequency printed above each lamp\'s wave, or watch where each colour sits from red to violet.',
@@ -295,12 +265,6 @@ export const STAGES = [
         { id: 'both', label: 'Both strips' },
         { id: 'none', label: 'Neither strip' }
       ]
-    },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Detect Beam',
-      intent: 'An elusive moth feeds beyond the boundary of visible perception.',
-      hit: 'The infrared sensor registers and burns away the shroud.'
     },
     hints: [
       'Look at Sample B\'s plate and see which strip beside the band lights up.',
@@ -348,17 +312,6 @@ export const STAGES = [
         { id: 'f18', label: '3 x 10^18 per second', note: '' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Sort Waves',
-      intent: 'Three electromagnetic masts draw moths across disparate wavelengths.',
-      hit: 'Each source is mapped to its frequency band.',
-      moves: {
-        f8: 'Tag Radio',
-        f9: 'Tag Micro',
-        f18: 'Tag Xray'
-      }
-    },
     hints: [
       'Tap each source on its ruler to read the wavelength it works at.',
       'Divide the speed of light by each wavelength, written in metres, to get that source\'s frequency.',
@@ -393,12 +346,6 @@ export const STAGES = [
       { id: 'b', label: 'LAMP B', head: 'trace', nm: 656, note: 'CAT 01, hydrogen (H)' }
     ],
     widget: { type: 'decimal', label: 'Frequency (x 10^14 per second)', min: 4.5, max: 6, step: 0.1 },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Read Sodium',
-      intent: 'Two elemental lamps illuminate the moth with distinctive emission yellow.',
-      hit: 'The sodium frequency is verified and the moth goes dark.'
-    },
     hints: [
       'Find the lamp whose label names sodium, then tap its wave.',
       'Read the sodium lamp\'s frequency from the box above its wave, or work it out from its wavelength.',

@@ -91,11 +91,6 @@ export const STAGES = [
         choice('same', 'The pressure stays the same')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Change',
-      intent: 'A gas bladder hangs by the cylinder and watches the piston.'
-    },
     hints: [
       'Turn the volume dial and read the pressure at each setting.',
       'Compare the reading at the largest room with the reading when the room is a quarter as large.',
@@ -133,11 +128,6 @@ export const STAGES = [
         choice('more', 'There are twice as many particles'),
         choice('heavier', 'The particles get heavier')
       ]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Cause',
-      intent: 'The bladder swells and sags while the particles in the window stay just as they were.'
     },
     hints: [
       'Turn the volume dial and watch the knock counter, the average speed and the particles in the window together.',
@@ -178,11 +168,6 @@ export const STAGES = [
         choice('third', 'The volume falls to a third'),
         choice('same', 'The volume stays the same')
       ]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Change',
-      intent: 'The bladder swells as the free piston is pushed out.'
     },
     hints: [
       'Turn the temperature dial up from the lowest setting and read the volume at each.',
@@ -227,11 +212,6 @@ export const STAGES = [
         choice('liquid', 'The gas turns into a liquid at 0 °C')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Scale',
-      intent: 'The bladder swells with every step of the heater, whichever scale it is read on.'
-    },
     hints: [
       'Step the temperature dial through every setting and look at both plots.',
       'Compare where the line meets the volume axis on the kelvin plot with where it meets it on the Celsius plot.',
@@ -261,11 +241,6 @@ export const STAGES = [
     vmax: 10, gaugeMax: 700,
     rigs: [cyl('a', 'TANK A', 'N2', { V: 10, hold: 'V', note: 'a sealed rigid tank of nitrogen' })],
     widget: { type: 'decimal', label: 'The pressure is multiplied by', min: 0.5, max: 3, step: 0.1 },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Give Factor',
-      intent: 'The bladder tightens as the tank is heated and the room does not change.'
-    },
     hints: [
       'Set the temperature dial to 300 K and read the pressure, then set it to 450 K and read it again.',
       'Compare the two pressures as a ratio, and the two kelvin temperatures as a ratio.',
@@ -305,11 +280,6 @@ export const STAGES = [
         choice('triples', 'The volume becomes three times as large')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Change',
-      intent: 'The bladder swells as gas is fed in under the weight.'
-    },
     hints: [
       'Add gas one step at a time and read the volume before and after each.',
       'Compare the volume with one mole in the cylinder against the volume with two.',
@@ -343,11 +313,6 @@ export const STAGES = [
       cyl('b', 'CYLINDER B', 'N2', { n: 0.802, hold: 'P', P0: 50, note: 'the same gas under half the weight' })
     ],
     widget: { type: 'number', label: 'Volume of A, in litres', min: 20, max: 100, step: 5 },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Give Volume',
-      intent: 'Two bladders hang side by side, one on each cylinder.'
-    },
     hints: [
       'Turn the temperature dial and read the volume of Cylinder B at each of its settings.',
       'Compare Cylinder A with Cylinder B at the same temperature to see what halving the pressure does, then see what the temperature does to B.',

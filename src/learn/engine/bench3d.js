@@ -799,7 +799,7 @@ export class BenchViewer3D {
 
     // The foes of a stage that is a fight (encounter3d.js). An observer: it
     // stands bodies in the wells and is told what pose to take, nothing more.
-    this.foes = new FoeLayer3D(this, { tints: TINT_HEX });
+    this.foes = new FoeLayer3D(this);
 
     // Announce the viewer, so the frame's tool keys can find the bench they
     // belong on (`bench-keys.js`). The frame is built before the instrument.
@@ -1814,7 +1814,7 @@ export class BenchViewer3D {
     this.keyBank.group.position.set(pick.x, 0.895, pick.z);
     this.keyBank.x = pick.x;
     this.keyBank.z = pick.z;
-    if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all');
+    if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all', this._activeHaloId);
     this.updateKeyPull();
     this.applyCamera();
   }
@@ -2151,13 +2151,13 @@ export class BenchViewer3D {
     if (!this.dials.some(d => d === record || d.group === record.group || d.dial === record.dial)) {
       this.dials.push(record);
     }
-    if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all');
+    if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all', this._activeHaloId);
   }
 
   unregisterDial(record) {
     if (!record || !this.dials) return;
     this.dials = this.dials.filter(d => d !== record && d.group !== record && d.dial !== record && (!record.group || d.group !== record.group));
-    if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all');
+    if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all', this._activeHaloId);
   }
 
   /* ---------------- instrument halos ---------------- */
@@ -2196,6 +2196,50 @@ export class BenchViewer3D {
       });
     }
     return list;
+  }
+
+  /** The keys standing on the bench, in the order they are laid out: [{ id, label }]. */
+  getKeyList() {
+    const out = [];
+    for (const gr of this.keyGroups || []) {
+      for (const k of gr?.keys || []) out.push({ id: String(k.id), label: String(k.label) });
+    }
+    return out;
+  }
+
+  /** A halo round ONE key cap, labelled with the key's own legend. */
+  _buildKeyHalo(id) {
+    const key = this.keyBank?.keys?.find(k => String(k.id) === String(id));
+    if (!key?.hit) return;
+    const label = this.getKeyList().find(k => k.id === String(id))?.label || '';
+    this.root.updateMatrixWorld(true);
+    const p = this.root.worldToLocal(key.hit.getWorldPosition(new THREE.Vector3()));
+
+    const hw = KEY_CAP_W / 2 + 0.05;
+    const hd = KEY_CAP_H / 2 + 0.05;
+    const s = new THREE.Shape();
+    s.moveTo(-hw, -hd); s.lineTo(hw, -hd); s.lineTo(hw, hd); s.lineTo(-hw, hd); s.closePath();
+    const hole = new THREE.Path();
+    const iw = KEY_CAP_W / 2 + 0.006;
+    const id2 = KEY_CAP_H / 2 + 0.006;
+    hole.moveTo(-iw, -id2); hole.lineTo(-iw, id2); hole.lineTo(iw, id2); hole.lineTo(iw, -id2); hole.closePath();
+    s.holes.push(hole);
+    const frameGeo = new THREE.ShapeGeometry(s);
+    this.haloGeos.push(frameGeo);
+    const frame = new THREE.Mesh(frameGeo, this._createHaloMat(0xffc107, 0.9, true));
+    frame.rotation.x = -Math.PI / 2;
+    frame.position.set(p.x, this.keyBank.group.position.y + 0.011, p.z);
+    this.haloGroup.add(frame);
+
+    const ptr = this._createHaloPointer(0xffd700);
+    ptr.position.set(p.x, p.y + 0.2, p.z);
+    this.haloGroup.add(ptr);
+    this.haloPointers = this.haloPointers || [];
+    this.haloPointers.push({ mesh: ptr, baseY: p.y + 0.2 });
+
+    const badge = this._createHaloBadge(label.toUpperCase(), 'PRESS THIS KEY');
+    badge.position.set(p.x, p.y + 0.36, p.z);
+    this.haloGroup.add(badge);
   }
 
   _createHaloBadge(text, subtext) {
@@ -2473,9 +2517,10 @@ export class BenchViewer3D {
     }
   }
 
-  showInstrumentHalos(kind = 'all') {
-    this._activeHaloKind = kind;
+  showInstrumentHalos(kind = 'all', id = null) {
     this.hideInstrumentHalos();
+    this._activeHaloKind = kind;
+    this._activeHaloId = id;
 
     this.haloGroup = new THREE.Group();
     this.haloGroup.name = 'bench-instrument-halos';
@@ -2489,6 +2534,10 @@ export class BenchViewer3D {
     if ((kind === 'all' || kind === 'keys') && this.keyBank) {
       this._buildKeysHalo();
     }
+    // One key on its own: the tour lights a single cap at a time.
+    if (kind === 'key' && this.keyBank) {
+      this._buildKeyHalo(id);
+    }
     if (kind === 'all' || kind === 'stations') {
       this._buildStationsHalo();
     }
@@ -2496,6 +2545,7 @@ export class BenchViewer3D {
 
   hideInstrumentHalos() {
     this._activeHaloKind = null;
+    this._activeHaloId = null;
     if (!this.haloGroup) return;
     this.root.remove(this.haloGroup);
     for (const g of this.haloGeos || []) g.dispose();

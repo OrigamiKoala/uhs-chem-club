@@ -104,11 +104,6 @@ export const STAGES = [
       type: 'choice', label: 'One mole fills',
       options: [choice('22.4', '22.4 L'), choice('11.2', '11.2 L'), choice('24.8', '24.8 L'), choice('44.8', '44.8 L')]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Meter One',
-      intent: 'A bladder hangs on each cylinder and swells as gas goes in under the weight.'
-    },
     hints: [
       'Add gas to both cylinders and read the amount on each plate.',
       'Compare the volume each cylinder fills when it holds exactly one mole.',
@@ -143,11 +138,6 @@ export const STAGES = [
       type: 'choice', label: 'The same number',
       options: [choice('8.31', '8.31'), choice('0.0831', '0.0831'), choice('83.1', '83.1'), choice('101.3', '101.3')]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Find Number',
-      intent: 'The bladder swells and sags with whatever the dials do to the cylinder.'
-    },
     hints: [
       'Read the four logged readings and then take readings of your own on the cylinder.',
       'Compare how pressure, volume, amount and temperature change together from one reading to the next.',
@@ -177,11 +167,6 @@ export const STAGES = [
     vmax: 20, gaugeMax: 900,
     rigs: [cyl('a', 'TANK A', 'Ar', { n: 4, T: 300, V: 20, hold: 'V', sealed: true, note: 'a sealed tank of argon' })],
     widget: { type: 'number', label: 'Moles in the tank', min: 1, max: 10, step: 1 },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Count Moles',
-      intent: 'The bladder holds still and shows nothing of what is inside the tank.'
-    },
     hints: [
       'Read the gauge, the volume and the thermometer, and heat the tank to take more readings.',
       'Compare readings at two temperatures to check that the amount you work out does not change.',
@@ -215,11 +200,6 @@ export const STAGES = [
       type: 'choice', label: 'The value of R',
       options: [choice('8.31', '8.31'), choice('0.0821', '0.0821'), choice('62.4', '62.4'), choice('101.3', '101.3')]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Pick R',
-      intent: 'The bladder swells at one setting and sags at another, on a different gauge.'
-    },
     hints: [
       'Read the three logged readings, which are in atmospheres this time.',
       'Work out the same number from them that you found on the bench before, using these figures.',
@@ -252,11 +232,6 @@ export const STAGES = [
     widget: {
       type: 'choice', label: 'The gas is',
       options: [choice('CH4', 'CH₄'), choice('N2', 'N₂'), choice('O2', 'O₂'), choice('CO2', 'CO₂')]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Gas',
-      intent: 'The bladder gives nothing away about what it holds.'
     },
     hints: [
       'Read the gauge, the volume, the thermometer and the scale for the tank.',
@@ -292,11 +267,6 @@ export const STAGES = [
     widget: {
       type: 'order', label: 'Densest first',
       items: [{ id: 'a', label: 'Cylinder A' }, { id: 'b', label: 'Cylinder B' }, { id: 'c', label: 'Cylinder C' }]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Rank Gases',
-      intent: 'Three bladders hang side by side, each as big as the gas under it.'
     },
     hints: [
       'Read the volume and the mass on all three plates, and turn the temperature dial to see how they change.',
@@ -335,11 +305,6 @@ export const STAGES = [
     widget: {
       type: 'choice', label: 'The gas fills',
       options: [choice('1.22', '1.22 L'), choice('0.0500', '0.0500 L'), choice('2.44', '2.44 L'), choice('12.2', '12.2 L')]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Give Volume',
-      intent: 'The bladder lies flat until something is dropped into the cylinder.'
     },
     hints: [
       'Work out how many moles of solid the pellet is, and press "Drop Pellet" to watch what the cylinder does.',
@@ -380,11 +345,6 @@ export const STAGES = [
         choice('bigger', 'Bigger particles push each other apart and fill more room'),
         choice('chance', 'It happens only for these two gases')
       ]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Reason',
-      intent: 'Two bladders of very different weight swell to the same size.'
     },
     hints: [
       'Read the volume and the mass of both cylinders, then turn the temperature dial.',

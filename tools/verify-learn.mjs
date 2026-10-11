@@ -806,31 +806,12 @@ function refusalLeaks(q, mod, st, i, seed) {
 
    `planFoe` asks the foe's planner (bonddata, lewis, vsepr, mo). This reads the
    plate's declaration directly, with the arithmetic done again here, and says
-   what the pose has to be. A crawler that stretches must be a pair the crank
-   really stretches; a warden that turns must be a molecule whose pulls add.
+   what the pose has to be. A warden that turns must be a molecule whose pulls add.
    ------------------------------------------------------------------ */
 function ligarProbes(species, item, st) {
   {
     const out = [];
-    if (species === 'slag crawler') {
-      if (item.head === 'pair') {
-        const p = BONDDATA.PAIRS[item.pair];
-        for (const r of [st.settings[0], p.r0, st.settings[st.settings.length - 1]]) {
-          const e = BONDDATA.morse(p, r);
-          const pose = Math.abs(r - p.r0) <= 3 ? 'rest' : r < p.r0 ? 'squeezed' : e > -0.04 * p.de ? 'parted' : 'stretched';
-          out.push({ probe: { kind: 'curve', pair: item.pair, r }, want: { pose } });
-        }
-      } else if (item.head === 'slate') {
-        const n = LEWIS.MOLECULES[item.mol].syms.length;
-        out.push({ probe: { kind: 'lamps', lit: 0, of: n }, want: { pose: 'unmoved' } });
-        out.push({ probe: { kind: 'lamps', lit: n, of: n }, want: { pose: 'plated', sealed: n, of: n } });
-        out.push({ probe: { kind: 'charges', zero: 1, of: n }, want: { pose: 'plated', sealed: 1, of: n } });
-      } else if (item.head === 'rack') {
-        out.push({ probe: { kind: 'order', order: 0, placed: 0 }, want: null });
-        out.push({ probe: { kind: 'order', order: 2, placed: 4 }, want: { pose: 'held' } });
-        out.push({ probe: { kind: 'order', order: 0, placed: 4 }, want: { pose: 'lost' } });
-      }
-    } else if (item.head === 'lattice') {
+    if (item.head === 'lattice') {
       out.push({ probe: { rig: 'hold', lattice: item.lattice }, want: { pose: 'gripped', grip: Math.round(BONDDATA.LATTICES[item.lattice].energy / 3795 * 100) / 100 } });
     } else if (item.head === 'slate') {
       const n = LEWIS.MOLECULES[item.mol].syms.length;
@@ -863,13 +844,12 @@ function ligarProbes(species, item, st) {
 
    `planFoe` asks the foe's planner (gasdata). This reads the plate's declaration
    directly, with the arithmetic done again here by hand, and says what the pose
-   has to be. A bladder that swells must sit on a plate whose gauge really climbs.
+   has to be. The Compressor must labour on a plate whose gauge really climbs.
    ------------------------------------------------------------------ */
-function bellowsProbes(species, item, st) {
+function bellowsProbes(item, st) {
   // Local on purpose: this runs while the module is still loading its quests.
   const R_HAND = 8.314;
   const BLADDER_HAND = { SLACK: 0.8, TAUT: 1.25, STRAIN: 2.2, EMPTY: 0.4, FULL: 0.85 };
-  const bladderPoseByHand = ratio => (ratio < BLADDER_HAND.SLACK ? 'slack' : ratio <= BLADDER_HAND.TAUT ? 'rest' : ratio <= BLADDER_HAND.STRAIN ? 'swollen' : 'straining');
   const out = [];
   const rows = (st.volumes?.length && item.hold !== 'V' && item.follow !== false) ? st.volumes.map((_, k) => k + 1) : [null];
   const cols = (st.temps?.length && item.follow !== false) ? st.temps.map((_, k) => k + 1) : [null];
@@ -912,24 +892,14 @@ function bellowsProbes(species, item, st) {
           cfg: GAS.benchCfg(st, { volume: sx.vi ?? vStart, temp: sx.ti ?? tStart }),
           rest: { P: base, V: baseRoom }
         },
-        want: { pose: species === 'the compressor' ? (ratio > BLADDER_HAND.TAUT ? 'laboured' : ratio < BLADDER_HAND.SLACK ? 'easy' : 'steady') : bladderPoseByHand(ratio) }
+        want: { pose: ratio > BLADDER_HAND.TAUT ? 'laboured' : ratio < BLADDER_HAND.SLACK ? 'easy' : 'steady' }
       });
     }
   } else if (item.head === 'leak') {
     for (const t of st.times || [0]) {
       const left = Math.exp(-Math.LN2 * t * Math.sqrt(2.016 / gasOf(item.gas).M));
-      const pose = species === 'the compressor' ? (left >= BLADDER_HAND.FULL ? 'idle' : 'venting') : (left >= BLADDER_HAND.FULL ? 'rest' : left >= BLADDER_HAND.EMPTY ? 'slack' : 'flat');
+      const pose = left >= BLADDER_HAND.FULL ? 'idle' : 'venting';
       out.push({ probe: { kind: 'leak', gas: item.gas, seconds: t }, want: { pose } });
-    }
-  } else if (item.head === 'tube') {
-    for (const t of st.times || [0]) {
-      const frac = Math.min(1, (Math.sqrt(17.03 / gasOf(item.gas).M) * t) / (item.length || 8));
-      out.push({ probe: { kind: 'tube', gas: item.gas, seconds: t, length: item.length || 8 }, want: { pose: frac >= 1 ? 'swollen' : 'rest' } });
-    }
-  } else if (item.head === 'path') {
-    for (const t of st.times || [0]) {
-      const hits = Math.round(t * (item.stepsPerSecond || 6));
-      out.push({ probe: { kind: 'path', hits }, want: { pose: hits > 0 ? 'shaken' : 'rest' } });
     }
   }
   return out;
@@ -947,15 +917,15 @@ function bellowsProbes(species, item, st) {
    - every line a foe speaks passes the SAME withheld-vocabulary gate as a
      prompt, is one plain sentence, and may not carry the stage's answer;
    - a foe's behaviour comes only from planFoe(), and is checked here against
-     an independent reading of the bench's declaration -- a husk that splits
-     must be a sample the cutter really splits;
+     an independent reading of the bench's declaration -- a warden that turns
+     must be a molecule whose pulls really add;
    - move labels are real bins; the Commit key's attack verb is one or two
      plain words.
    The fight state itself and the frame's hooks are checked once, below, by
    checkEncounterLayer().
    ------------------------------------------------------------------ */
 function checkEncounter(q, mod, st, i, { label, tooEarly, emoji, solved, missed, empty }) {
-  const enc = FOES.resolveEncounter(st, { kinds: mod.KINDS });
+  const enc = FOES.resolveEncounter(st);
   if (!enc) { fail(`${label}: declares an encounter that does not resolve (unknown species "${st.encounter.species}"?)`); return; }
   const one = (text) => sentenceCount(text) === 1;
   const oneOrTwoWords = (text) => /^[A-Za-z]+(?: [A-Za-z]+)?$/.test(text) && text.length <= 16;
@@ -987,8 +957,8 @@ function checkEncounter(q, mod, st, i, { label, tooEarly, emoji, solved, missed,
   for (const foe of enc.foes) {
     // Bellows' spoil: gas bladders and the Compressor, each reading its plate. Every reading is
     // checked against the plate's own declaration, re-worked by hand (bellowsProbes).
-    if (enc.species === 'gas bladder' || enc.species === 'the compressor') {
-      for (const { probe, want } of bellowsProbes(enc.species, foe.item, st)) {
+    if (enc.species === 'the compressor') {
+      for (const { probe, want } of bellowsProbes(foe.item, st)) {
         const plan = FOES.planFoe(enc, foe, probe);
         if (!plan) { fail(`${label}: ${foe.id} gives no reaction to a ${probe.kind} reading`); continue; }
         reactions.push(plan.line);
@@ -996,10 +966,9 @@ function checkEncounter(q, mod, st, i, { label, tooEarly, emoji, solved, missed,
       }
       continue;
     }
-    // Ligar's spoil: the slag crawler on the bond bench, the pair board and the molecular
-    // rack, and the basalt warden on the domain rig. Each reads its plate, and each reading
+    // Ligar's spoil: the basalt warden on the domain rig, the lattice, the slate and the molecular rack. Each reads its plate, and each reading
     // is checked below against the plate's own declaration.
-    if (enc.species === 'slag crawler' || (enc.species === 'basalt warden' && ['hub', 'show', 'field', 'mixer', 'twist', 'lattice', 'slate', 'rack'].includes(foe.item?.head))) {
+    if ((enc.species === 'basalt warden' && ['hub', 'show', 'field', 'mixer', 'twist', 'lattice', 'slate', 'rack'].includes(foe.item?.head))) {
       for (const { probe, want } of ligarProbes(enc.species, foe.item, st)) {
         const plan = FOES.planFoe(enc, foe, probe);
         if (want == null) {
@@ -1014,40 +983,6 @@ function checkEncounter(q, mod, st, i, { label, tooEarly, emoji, solved, missed,
         }
       }
       continue;
-    }
-    const probes = (enc.species === 'salt husk' && foe.item?.particles)
-      ? ['cut', 'settle'].filter(tool => (st.controls || []).includes(tool)).map(tool => ({ tool }))
-      : (enc.species === 'lamp moth' && foe.item?.metal)
-        ? (st.settings || [st.rigs?.find(r => r.id === foe.id)?.nm]).filter(Boolean)
-            .flatMap(nm => [1, 3, 5].map(b => ({ nm, brightness: b })))
-        : [];
-    for (const probe of probes) {
-      const plan = FOES.planFoe(enc, foe, probe);
-      if (!plan) { fail(`${label}: ${foe.id} gives no reaction to ${JSON.stringify(probe)}`); continue; }
-      reactions.push(plan.line);
-
-      // INDEPENDENT READING OF THE DECLARATION. planFoe asks the instrument's
-      // planner; this asks the bench's declaration directly. They must agree.
-      if (enc.species === 'salt husk') {
-        const groups = foe.item.particles.some(p => p.kinds.length > 1);
-        const loose = foe.item.particles.reduce((n, p) => n + p.n, 0) > 1;
-        if (probe.tool === 'cut') {
-          const want = groups ? 'split' : loose ? 'scattered' : 'unmoved';
-          if (plan.pose !== want) wrong.push(`${foe.id} cut -> ${plan.pose}, the sample says ${want}`);
-        } else {
-          const layers = new Set(foe.item.particles.map(p => p.kinds.join('+'))).size;
-          if (plan.layers !== layers || plan.pose !== (layers > 1 ? 'layered' : 'even')) {
-            wrong.push(`${foe.id} settle -> ${plan.pose}/${plan.layers}, the sample says ${layers} layers`);
-          }
-        }
-      } else {
-        const nm = probe.nm;
-        const freed = LIGHT.photonEv(nm) > LIGHT.METALS[foe.item.metal].work;
-        if ((plan.pose === 'shedding') !== freed) wrong.push(`${foe.id} at ${nm} nm -> ${plan.pose}, the metal says ${freed ? 'freed' : 'held'}`);
-        if (plan.pose === 'shedding' && plan.dots !== Math.max(1, Math.round(LIGHT.planPhotocell(foe.item.metal, nm, probe.brightness).count / 20))) {
-          wrong.push(`${foe.id} streaks do not match the counter at ${nm} nm`);
-        }
-      }
     }
   }
   for (const w of wrong.slice(0, 3)) fail(`${label}: a foe lies about its bench (${w})`);
@@ -1123,27 +1058,26 @@ async function checkEncounterLayer() {
     /(\bif\s*\(|\breturn\b|&&|\|\||\?[^.])\s*!?\s*\(?this\.encounter/.test(l.replace(/\?\./g, '#.')));
   if (gating.length) fail(`frame.js lets the encounter decide something (${gating[0].trim()}) -- it may only be told things`);
 
-  // THE PLATE, DRAWN FOR REAL on a pack (q1-grain stage 7) and a lone moth
-  // (q2-photon stage 1): one portrait per bench item, Integrity pips that fall
+  // THE PLATE, DRAWN FOR REAL on a pack (boss-warden phase 1) and a lone warden
+  // (boss-warden phase 2): one portrait per bench item, Integrity pips that fall
   // and refill, the reason's beat held back, a reaction taken from the planner,
   // and a win that disperses everything.
   {
     const { Encounter } = await import('../src/learn/engine/encounter.js');
-    const grain = await import('../src/learn/quests/unit01/q1-grain.js');
-    const photon = await import('../src/learn/quests/unit02/q2-photon.js');
+    const warden = await import('../src/learn/quests/unit03/boss-warden.js');
     const host = { hidden: true, className: '', dataset: {}, innerHTML: '' };
     const pips = () => (host.innerHTML.match(/<i class="on">/g) || []).length;
 
-    const pack = FOES.resolveEncounter(grain.STAGES[6], { kinds: grain.KINDS });
+    const pack = FOES.resolveEncounter(warden.STAGES[0]);
     const plate = new Encounter(host);
     plate.begin(pack);
     if (host.hidden) fail('encounter plate: hidden on a stage that is a fight');
     if ((host.innerHTML.match(/data-foe=/g) || []).length !== 3) fail('encounter plate: a pack of three samples must draw three foes');
     if (pips() !== INTEGRITY) fail('encounter plate: a fresh fight must start at full Integrity');
 
-    plate.react('p3', { tool: 'settle' });
-    if (!/data-foe="p3" data-pose="layered"/.test(host.innerHTML)) fail('encounter plate: the mixed sample must settle into layers on the plate');
-    if (!/data-foe="p1" data-pose="idle"/.test(host.innerHTML)) fail('encounter plate: a foe nobody worked must stay as it was');
+    plate.react('b', { rig: 'hold', lattice: 'MgO' });
+    if (!/data-foe="b" data-pose="gripped"/.test(host.innerHTML)) fail('encounter plate: a held lattice must show the warden gripping on the plate');
+    if (!/data-foe="a" data-pose="idle"/.test(host.innerHTML)) fail('encounter plate: a foe nobody worked must stay as it was');
 
     plate.onMiss();
     if (pips() !== INTEGRITY - 1) fail('encounter plate: a miss must cost one Integrity at once');
@@ -1154,20 +1088,20 @@ async function checkEncounterLayer() {
     await new Promise(res => setTimeout(res, COUNTER_DELAY_MS + 60));
     if (pips() !== INTEGRITY) fail('encounter plate: a knock-back must refill Integrity');
     if (!host.innerHTML.includes('Knocked back')) fail('encounter plate: a knock-back must say so');
-    if (/data-pose="layered"/.test(host.innerHTML)) fail('encounter plate: a knock-back must leave the foe whole again');
+    if (/data-pose="gripped"/.test(host.innerHTML)) fail('encounter plate: a knock-back must leave the foe whole again');
 
     plate.onClear();
-    if (/data-pose="(idle|layered)"/.test(host.innerHTML) || !host.innerHTML.includes('data-pose="dispersed"')) {
+    if (/data-pose="(idle|gripped)"/.test(host.innerHTML) || !host.innerHTML.includes('data-pose="dispersed"')) {
       fail('encounter plate: a win must disperse every foe');
     }
     if (host.innerHTML.includes('Flawless')) fail('encounter plate: a win that cost Integrity must not be called flawless');
 
-    const moth = FOES.resolveEncounter(photon.STAGES[0], {});
-    plate.begin(moth);
-    plate.react('cell', { nm: 650, brightness: 5 });
-    if (!host.innerHTML.includes('data-pose="still"')) fail('encounter plate: red on sodium must leave the moth holding on');
-    plate.react('cell', { nm: 400, brightness: 1 });
-    if (!host.innerHTML.includes('data-pose="shedding"')) fail('encounter plate: violet on sodium must make the moth shed');
+    const lone = FOES.resolveEncounter(warden.STAGES[1]);
+    plate.begin(lone);
+    plate.react('a', { rig: 'lamps', lit: 1, of: 5 });
+    if (!host.innerHTML.includes('data-pose="unmoved"')) fail('encounter plate: one lamp lit must leave the warden unmoved');
+    plate.react('a', { rig: 'lamps', lit: 5, of: 5 });
+    if (!host.innerHTML.includes('data-pose="cleaved"')) fail('encounter plate: every lamp lit must cleave the warden');
     plate.onClear();
     if (!host.innerHTML.includes('Flawless')) fail('encounter plate: a win with full Integrity must be called flawless');
 
@@ -1179,13 +1113,13 @@ async function checkEncounterLayer() {
   // THE FOES AT T4 (encounter3d.js, foebody.js) are observers too. They stand
   // bodies in the wells and are TOLD a pose; they never grade, never touch the
   // banner or the frame, and nothing about them is random at runtime (the same
-  // seed gives the same husk on every machine, as every other surface does).
+  // seed gives the same body on every machine, as every other surface does).
   for (const file of ['encounter3d.js', 'foebody.js']) {
     const src = stripComments(readFileSync(join(learnSrc, 'engine', file), 'utf8'));
     if (/banner|announce\(|\.note\(|\.miss\(|\bframe\b|\.check\(|session\./.test(src)) {
       fail(`${file} touches the banner, the frame or the session -- a foe body only observes`);
     }
-    if (/Math\.random/.test(src)) fail(`${file} uses Math.random -- a husk must be the same husk on every machine`);
+    if (/Math\.random/.test(src)) fail(`${file} uses Math.random -- a body must be the same body on every machine`);
     if (/from '\.\/frame\.js'|from '\.\.\/quests/.test(src)) fail(`${file} imports the frame or a quest -- it may only be told things`);
   }
   {

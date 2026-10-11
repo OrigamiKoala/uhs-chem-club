@@ -63,11 +63,6 @@ export const STAGES = [
     controls: ['field', 'arrows'],
     rigs: [field('a', 'PLATE A', 'HCl', 'hydrogen 2.20 and chlorine 3.16 on the electronegativity scale')],
     widget: { type: 'choice', label: 'The more negative end', options: [{ id: 'h', label: 'The hydrogen end' }, { id: 'cl', label: 'The chlorine end' }] },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Name End',
-      intent: 'A basalt warden stands between two dark plates.'
-    },
     hints: [
       'Switch the field on and watch which way the molecule turns.',
       'Compare the electronegativities in the plate\'s note with the end that swings toward the positive plate.',
@@ -100,11 +95,6 @@ export const STAGES = [
       rows: [{ id: 'a', label: 'Plate A' }, { id: 'b', label: 'Plate B' }, { id: 'c', label: 'Plate C' }],
       bins: [{ id: 'even', label: 'Evenly' }, { id: 'uneven', label: 'Unevenly' }, { id: 'given', label: 'Handed over' }]
     },
-    encounter: {
-      species: 'basalt warden',
-      act: 'File Bonds',
-      intent: 'Three wardens stand between three pairs of plates.'
-    },
     hints: [
       'Switch the field on for each plate and show the arrows.',
       'Compare the size of the pull on each plate using the net figure the arrows give.',
@@ -131,11 +121,6 @@ export const STAGES = [
     controls: ['field', 'arrows'],
     rigs: [field('a', 'PLATE A', 'CO2', 'carbon 2.55 and oxygen 3.44 on the electronegativity scale')],
     widget: { type: 'choice', label: 'In the field', options: [{ id: 'turns', label: 'It turns' }, { id: 'still', label: 'It does not turn' }] },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Call Turn',
-      intent: 'The warden stands between the plates with two columns drawn out on either side.'
-    },
     hints: [
       'Switch the field on and watch the molecule.',
       'Show the arrows and compare the pull of one bond with the pull of the other.',
@@ -171,11 +156,6 @@ export const STAGES = [
         { id: 'size', label: 'Carbon dioxide is the bigger molecule' }
       ]
     },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Name Cause',
-      intent: 'Two wardens stand between two pairs of plates, one bowed and one upright.'
-    },
     hints: [
       'Switch the field on for both plates and show the arrows.',
       'Compare the directions of the two bond arrows on each plate with the arrow they add up to.',
@@ -205,11 +185,6 @@ export const STAGES = [
       field('b', 'PLATE B', 'CHCl3', 'carbon 2.55, hydrogen 2.20 and chlorine 3.16 on the electronegativity scale')
     ],
     widget: { type: 'choice', label: 'The one that turns', options: [{ id: 'a', label: 'CCl₄' }, { id: 'b', label: 'CHCl₃' }, { id: 'both', label: 'Both' }, { id: 'neither', label: 'Neither' }] },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Pick Plate',
-      intent: 'Two wardens stand side by side, and only one of them is quite even.'
-    },
     hints: [
       'Switch the field on for both plates.',
       'Compare the four bonds on one plate with the four on the other, one atom at a time.',
@@ -240,11 +215,6 @@ export const STAGES = [
     widget: {
       type: 'choice', label: 'The one that turns',
       options: [{ id: 'a', label: 'NH₃ only' }, { id: 'b', label: 'BF₃ only' }, { id: 'both', label: 'Both' }, { id: 'neither', label: 'Neither' }]
-    },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Pick Plate',
-      intent: 'Two wardens stand between two pairs of plates, one flat and one raised on a peak.'
     },
     hints: [
       'Switch the field on for both plates and show the arrows.',
@@ -279,11 +249,6 @@ export const STAGES = [
       rows: [{ id: 'a', label: 'Plate A' }, { id: 'b', label: 'Plate B' }, { id: 'c', label: 'Plate C' }],
       bins: [{ id: 'polar', label: 'Polar' }, { id: 'nonpolar', label: 'Nonpolar' }]
     },
-    encounter: {
-      species: 'basalt warden',
-      act: 'File Pack',
-      intent: 'Three wardens stand in a row, each between its own pair of plates.'
-    },
     hints: [
       'Switch the field on for each plate and show the arrows.',
       'Compare the net arrow on each plate, if there is one, after the bond arrows are added.',
@@ -316,11 +281,6 @@ export const STAGES = [
     widget: {
       type: 'multi', label: 'Bent by the rod',
       options: [{ id: 'ccl4', label: 'CCl₄' }, { id: 'chcl3', label: 'CHCl₃' }, { id: 'h2o', label: 'H₂O' }]
-    },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Pick Liquids',
-      intent: 'Three wardens stand, each in front of its own thin stream.'
     },
     hints: [
       'Switch the field on for each liquid\'s molecules.',

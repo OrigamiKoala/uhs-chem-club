@@ -81,7 +81,7 @@ export class Encounter {
 
   /**
    * The bench was worked and the foe answers. `probe` is whatever the species'
-   * planner reads (`{ tool }` for the husk, `{ nm, brightness }` for the moth);
+   * planner reads;
    * the pose comes from `planFoe`, which asks the instrument's own planner.
    */
   react(foeId, probe, quiet = false) {

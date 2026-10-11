@@ -88,11 +88,6 @@ export const STAGES = [
         choice('zero', 'It falls to zero')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Read Ratio',
-      intent: 'A gas bladder hangs by the cylinder and strains more with every step of the piston.'
-    },
     hints: [
       'Turn the volume dial from the largest room to the smallest and read PV over nRT at each setting.',
       'Compare the reading at the largest room with the readings at the smallest few.',
@@ -131,11 +126,6 @@ export const STAGES = [
         choice('slow', 'The particles slow down when they are squeezed'),
         choice('pull', 'The particles pull on each other, and the reading rises')
       ]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Cause',
-      intent: 'The bladder strains as the window fills with particles.'
     },
     hints: [
       'Turn the volume dial and watch the particles in the window and the line for size on the plate.',
@@ -176,11 +166,6 @@ export const STAGES = [
         choice('jump', 'It jumps up and down')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Read Ratio',
-      intent: 'The bladder loosens as the cold comes down.'
-    },
     hints: [
       'Turn the temperature dial from the warmest setting to the coldest and read PV over nRT at each.',
       'Compare the reading at the warmest setting with the readings at the coldest.',
@@ -220,11 +205,6 @@ export const STAGES = [
         choice('stick', 'The particles stick to the wall and stop')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Effect',
-      intent: 'The bladder softens as the cold comes down and the pull on the plate takes more of its push.'
-    },
     hints: [
       'Turn the temperature dial down and read the share of the push that the pull takes off.',
       'Compare that share at the warmest setting with the share at the coldest, and the reading of PV over nRT beside it.',
@@ -263,11 +243,6 @@ export const STAGES = [
       type: 'order', label: 'Furthest from one first',
       items: [{ id: 'a', label: 'Cylinder A' }, { id: 'b', label: 'Cylinder B' }, { id: 'c', label: 'Cylinder C' }]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Rank Strays',
-      intent: 'Three bladders hang side by side, and they do not strain alike.'
-    },
     hints: [
       'Read PV over nRT on all three plates and turn the temperature dial.',
       'Compare how far each reading sits from one, whichever side of one it is on.',
@@ -304,11 +279,6 @@ export const STAGES = [
       cyl('d', 'CYLINDER D', 'CO2', { V: 50, hold: 'V', note: 'a very large cylinder of carbon dioxide' })
     ],
     widget: { type: 'pick', label: 'The most ideal', help: 'Tap a cylinder on the bench to pick it.' },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Pick Cylinder',
-      intent: 'Four bladders hang in a row, strained and slack by turns.'
-    },
     hints: [
       'Read PV over nRT on all four plates, then turn the temperature dial.',
       'Compare each plate with one at every setting of the dial, and compare what the plates have in common that sits close to it.',
@@ -349,11 +319,6 @@ export const STAGES = [
         choice('neither', 'Neither does anything to the reading')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Larger',
-      intent: 'The bladder slackens or strains with whichever correction is winning.'
-    },
     hints: [
       'Read the two lines on the plate at the coldest and roomiest setting.',
       'Compare the line for the pull with the line for the size, and then turn the dials toward hot and crushed.',
@@ -392,11 +357,6 @@ export const STAGES = [
         choice('slow', 'Real particles move more slowly than ideal ones'),
         choice('heavy', 'Real particles are heavier than ideal ones')
       ]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Reason',
-      intent: 'The bladder sags as the cold comes down, as if something were holding it together.'
     },
     hints: [
       'Turn the temperature dial down and watch the share of the push that the pull takes off.',

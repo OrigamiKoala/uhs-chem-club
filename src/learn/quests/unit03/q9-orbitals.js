@@ -78,11 +78,6 @@ export const STAGES = [
         { id: 'higher', label: 'Both sit higher' }
       ]
     },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Name Boxes',
-      intent: 'A slag crawler lies in two parts on the plate.'
-    },
     hints: [
       'Press Join Atoms and read the ladder.',
       'Compare the heights of the new boxes with the heights of the boxes they came from.',
@@ -107,11 +102,6 @@ export const STAGES = [
     controls: ['hand'],
     rigs: [rack('a', 'PLATE A', 'H2', { note: 'two hydrogen atoms, joined' })],
     widget: { type: 'none' },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Fill Boxes',
-      intent: 'The crawler lies whole, but its two halves are not yet joined.'
-    },
     hints: [
       'Pick Up or Down from the hand keys and tap a box.',
       'Compare the two boxes by how high they sit on the ladder.',
@@ -170,11 +160,6 @@ export const STAGES = [
       type: 'choice', label: 'Bond order',
       options: [{ id: '1', label: '1' }, { id: '2', label: '2' }, { id: '2.5', label: '2.5' }, { id: '3', label: '3' }]
     },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Name Order',
-      intent: 'The crawler lies whole and long, with every plate flat.'
-    },
     hints: [
       'Place the ten electrons from the bottom of the ladder up, one to each box in a row before pairing.',
       'Compare the electrons in the lower boxes with those in the upper ones.',
@@ -202,11 +187,6 @@ export const STAGES = [
     widget: {
       type: 'choice', label: 'In the magnet',
       options: [{ id: 'pulled', label: 'It is pulled toward it' }, { id: 'pushed', label: 'It is pushed slightly away' }]
-    },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Call Magnet',
-      intent: 'The crawler lies whole, with one plate lifted a little off its back.'
     },
     hints: [
       'Place the twelve electrons from the bottom of the ladder up, and test the sample with the magnet.',
@@ -239,11 +219,6 @@ export const STAGES = [
     widget: {
       type: 'order', label: 'Shortest first',
       items: [{ id: 'a', label: 'Plate A' }, { id: 'b', label: 'Plate B' }, { id: 'c', label: 'Plate C' }]
-    },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Line Up',
-      intent: 'Three crawlers lie in a row, and no two of them are quite the same length.'
     },
     hints: [
       'Place each plate\'s electrons from the bottom of the ladder up.',
@@ -281,11 +256,6 @@ export const STAGES = [
         { id: 'same', label: 'F₂ has the same bond order as O₂' }
       ]
     },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Name Cause',
-      intent: 'Two crawlers lie side by side, one holding tight and one lying slack.'
-    },
     hints: [
       'Place the electrons for both plates from the bottom of the ladder up.',
       'Compare the electrons in the upper boxes on the two plates.',
@@ -319,11 +289,6 @@ export const STAGES = [
         { id: 'sigma', label: 'Its last two electrons pair up in the end-on box' },
         { id: 'atoms', label: 'Boron atoms are magnetic on their own' }
       ]
-    },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Name Cause',
-      intent: 'The crawler lies whole, but two of its plates stand upright and apart.'
     },
     hints: [
       'Place the six electrons from the bottom of the ladder up, and test the sample.',

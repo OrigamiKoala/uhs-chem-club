@@ -101,11 +101,6 @@ export const STAGES = [
         choice('left', 'The peak moves to lower speeds')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Read Screen',
-      intent: 'A gas bladder hangs on the cylinder and tightens with the heat.'
-    },
     hints: [
       'Turn the temperature dial from its lowest setting to its highest and watch the speed screen.',
       'Compare where the tallest bar stands and how high it reaches at the lowest setting and at the highest.',
@@ -144,11 +139,6 @@ export const STAGES = [
       type: 'order', label: 'Fastest first',
       items: [{ id: 'a', label: 'Cylinder A' }, { id: 'b', label: 'Cylinder B' }, { id: 'c', label: 'Cylinder C' }]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Rank Speeds',
-      intent: 'Three bladders hang side by side, and they do not tighten alike.'
-    },
     hints: [
       'Read the average speed and the speed screen on all three plates and turn the temperature dial.',
       'Compare where each speed screen has its peak with what each cylinder holds.',
@@ -182,11 +172,6 @@ export const STAGES = [
     widget: {
       type: 'choice', label: 'More of them clear the bar, by about',
       options: [choice('2', '2 times'), choice('4', '4 times'), choice('8', '8 times'), choice('40', '40 times')]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Read Tail',
-      intent: 'The bladder tightens with every step of the heater.'
     },
     hints: [
       'Set the temperature dial to 27 °C and read the share above the bar, then do the same at 227 °C.',
@@ -229,11 +214,6 @@ export const STAGES = [
         choice('none', 'Neither: nothing leaves through a hole this small')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Leaker',
-      intent: 'Two bladders hang on two chambers, and they sag as the pinholes let go of their gas.'
-    },
     hints: [
       'Turn the time dial and read how much is left in each chamber at each setting.',
       'Compare the share left in the two chambers at the same time.',
@@ -266,11 +246,6 @@ export const STAGES = [
       leak('b', 'CHAMBER B', 'O2', { note: 'a chamber of oxygen with a pinhole' })
     ],
     widget: { type: 'number', label: 'Hydrogen leaks this many times faster', min: 1, max: 10, step: 1 },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Give Ratio',
-      intent: 'One bladder is nearly flat before the other has begun to sag.'
-    },
     hints: [
       'Read the time each chamber takes to be half empty.',
       'Compare the two times as a ratio.',
@@ -306,11 +281,6 @@ export const STAGES = [
       type: 'choice', label: 'The unmarked gas is',
       options: [choice('Ne', 'Ne'), choice('Ar', 'Ar'), choice('Kr', 'Kr'), choice('Xe', 'Xe')]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Gas',
-      intent: 'The bladder on the unmarked chamber gives nothing away but the time it takes to sag.'
-    },
     hints: [
       'Read the time each chamber takes to be half empty.',
       'Compare the two times as a ratio, and square it.',
@@ -345,11 +315,6 @@ export const STAGES = [
         choice('made', 'The smell has to be made before it can spread')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Cause',
-      intent: 'The bladder shivers with every knock the tracked particle takes.'
-    },
     hints: [
       'Turn the time dial up and watch the track the particle makes.',
       'Compare the distance the particle has run with how far it is from where it started.',
@@ -383,11 +348,6 @@ export const STAGES = [
     widget: {
       type: 'choice', label: 'First to the far end',
       options: [choice('HCl', 'HCl'), choice('NH3', 'NH₃')]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Winner',
-      intent: 'A bladder waits at the far end of each tube.'
     },
     hints: [
       'Turn the time dial up and watch how far each gas has crept.',

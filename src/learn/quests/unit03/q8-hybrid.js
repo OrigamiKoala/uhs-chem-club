@@ -74,11 +74,6 @@ export const STAGES = [
         { id: 'rev', label: 'Its orbitals allow four bonds, but methane has two' }
       ]
     },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Name Gap',
-      intent: 'A basalt warden stands with two columns raised and four marked.'
-    },
     hints: [
       'Read the plate: it shows what carbon has to bond with and how many bonds methane has.',
       'Compare the number of electrons standing alone in a box with the number of bonds methane needs.',
@@ -103,11 +98,6 @@ export const STAGES = [
     controls: ['mix'],
     rigs: [mixer('a', 'CARBON', { want: 4, note: 'the carbon of CH₄, with four hydrogen atoms to bond' })],
     widget: { type: 'none' },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Blend Lobes',
-      intent: 'The warden stands with all its columns apart and none of them alike.'
-    },
     hints: [
       'Try each blend key and read how many lobes the plate shows.',
       'Compare the number of lobes with the number of arms the plate says it needs.',
@@ -132,11 +122,6 @@ export const STAGES = [
     controls: ['mix'],
     rigs: [mixer('a', 'CARBON', { want: 3, note: 'a carbon of C₂H₄, bonded to two hydrogen atoms and one carbon' })],
     widget: { type: 'none' },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Blend Lobes',
-      intent: 'The warden stands with its columns in a flat fan and one held upright.'
-    },
     hints: [
       'Try each blend key and read how many lobes the plate shows and how many orbitals are left.',
       'Compare the number of lobes with the arms the plate needs.',
@@ -161,11 +146,6 @@ export const STAGES = [
     controls: ['mix'],
     rigs: [mixer('a', 'CARBON', { want: 2, note: 'the carbon of HCN, bonded to one hydrogen atom and one nitrogen atom' })],
     widget: { type: 'none' },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Blend Lobes',
-      intent: 'The warden stands with two columns drawn out on opposite sides.'
-    },
     hints: [
       'Try each blend key and read how many lobes and how many orbitals are left.',
       'Compare the number of lobes with the arms the plate needs.',
@@ -231,11 +211,6 @@ export const STAGES = [
         { id: '1-3', label: '1 sigma and 3 pi' }
       ]
     },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Count Bonds',
-      intent: 'The warden stands with two columns lifted and a third tied beside one of them.'
-    },
     hints: [
       'Read the arms the plate shows, and the bond joining each to carbon.',
       'Compare the number of arms with the number of bonds each arm is made of.',
@@ -263,11 +238,6 @@ export const STAGES = [
       twist('b', 'C₂H₄', 'double', 'two carbon atoms joined by a double bond')
     ],
     widget: { type: 'choice', label: 'Turns freely', options: [{ id: 'a', label: 'C₂H₆' }, { id: 'b', label: 'C₂H₄' }, { id: 'both', label: 'Both' }] },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Pick Bond',
-      intent: 'Two wardens stand, one with its upper blocks loose and one with them held.'
-    },
     hints: [
       'Press Twist and watch what each plate does.',
       'Compare which end moves on each plate when it is twisted.',
@@ -302,11 +272,6 @@ export const STAGES = [
         { id: 'swap', label: 'Six for PCl₅ and five for SF₆' },
         { id: 'three', label: 'Three for PCl₅ and four for SF₆' }
       ]
-    },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Count Orbitals',
-      intent: 'Two wardens stand with more columns than any before them.'
     },
     hints: [
       'Count the arms on each hub.',

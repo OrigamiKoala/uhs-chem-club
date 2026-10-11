@@ -1424,32 +1424,18 @@ await bellowsPasses();
      - a committed miss makes every body lunge, a clear disperses every body, a
        knock-back makes every body whole, and a dispersed body is gone — not
        dead, gone — and comes back whole on a replayed stage;
-     - the budget: a husk is a few thousand triangles, a moth a few more. */
+     - the budget: a body is a few thousand triangles. */
 
 const { resolveEncounter, planFoe, newFight } = await import('../src/learn/engine/foes.js');
 const { Encounter } = await import('../src/learn/engine/encounter.js');
 const { WELL_R: FOE_WELL_R } = await import('../src/learn/engine/foebody.js');
 
-const HUSK_POSES = [
-  ['idle'], ['unmoved'], ['split'], ['scattered'], ['layered', { layers: 2 }],
-  ['layered', { layers: 4 }], ['even'], ['dispersed']
-];
-const CRAWLER_POSES = [
-  ['idle'], ['unmoved'], ['rest', { stretch: 1 }], ['stretched', { stretch: 2.1 }], ['squeezed', { stretch: 0.55 }],
-  ['parted'], ['plated', { sealed: 1, of: 4 }], ['plated', { sealed: 4, of: 4 }], ['held'], ['lost'], ['dispersed']
-];
 const WARDEN_POSES = [
   ['idle'], ['unmoved'], ['cleaved'], ['conductive'], ['splayed', { arms: 6 }], ['splayed', { arms: 2 }],
   ['turned'], ['still'], ['locked'], ['free'], ['dispersed']
 ];
-const BLADDER_POSES = [
-  ['idle'], ['rest'], ['slack'], ['swollen'], ['straining'], ['flat'], ['shaken'], ['dispersed']
-];
 const COMPRESSOR_POSES = [
   ['idle'], ['laboured'], ['easy'], ['steady'], ['venting'], ['dispersed']
-];
-const MOTH_POSES = [
-  ['idle'], ['shedding', { dots: 1, speed: 2 }], ['shedding', { dots: 5, speed: 12 }], ['still'], ['dispersed']
 ];
 
 /** Triangles a body draws, instances counted. */
@@ -1485,17 +1471,16 @@ function snapshotOf(enc, pose, plan) {
 
 /**
  * Put one fighting stage through the built instrument.
- * @param {{ questId, label, build, lay, items, env, select }} cfg
+ * @param {{ questId, label, build, lay, items, select }} cfg
  */
 function foeStage(cfg, stage, stageNo, aspects) {
   const { questId, label } = cfg;
   const anchor = world.benchAnchor(questId);
-  const enc = resolveEncounter(stage, cfg.env);
+  const enc = resolveEncounter(stage);
   if (!enc) return null;
   world.setBenchDeployed(questId, true);
   const species = enc.species;
-  const table = species === 'salt husk' ? HUSK_POSES : species === 'slag crawler' ? CRAWLER_POSES : species === 'basalt warden' ? WARDEN_POSES
-    : species === 'gas bladder' ? BLADDER_POSES : species === 'the compressor' ? COMPRESSOR_POSES : MOTH_POSES;
+  const table = species === 'basalt warden' ? WARDEN_POSES : COMPRESSOR_POSES;
 
   for (const [aspectName, aspect] of aspects) {
     const camera = new THREE.PerspectiveCamera(FOV, aspect, 0.05, 80);
@@ -1636,7 +1621,7 @@ function foeStage(cfg, stage, stageNo, aspects) {
     // THE BUDGET.
     for (const body of layer.bodies.values()) {
       const tris = trianglesOf(body.group);
-      const cap = species === 'salt husk' ? 14000 : 16000;
+      const cap = 16000;
       if (tris > cap) fail(`${tag}: a ${species} draws ${Math.round(tris)} triangles (budget ${cap})`);
     }
 
@@ -1683,7 +1668,7 @@ function foeStage(cfg, stage, stageNo, aspects) {
 function foeChain(cfg, stage, stageNo, probes) {
   const { questId, label } = cfg;
   const anchor = world.benchAnchor(questId);
-  const enc = resolveEncounter(stage, cfg.env);
+  const enc = resolveEncounter(stage);
   world.setBenchDeployed(questId, true);
   const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
   const host = { hidden: true, innerHTML: '', className: '', dataset: {}, querySelectorAll: () => [] };
@@ -1755,71 +1740,30 @@ console.log('');
 console.log('The foes — spoil standing in the wells\n');
 
 {
-  // LANTERNFALL: the lamp moths on the photocell.
-  world = new LanternfallWorld(null);
-  world.scene.updateMatrixWorld(true);
-  const { STAGES: PHOTON_STAGES } = LF['q2-photon'];
-  await foePasses({
-    questId: 'q2-photon', label: 'photocell',
-    build: (camera, anchor) => new LightBench3D(null, { world: worldFrame(camera, anchor) }),
-    lay: (bench, st) => lay(bench, st),
-    items: itemsOf, env: {}, select: false
-  }, PHOTON_STAGES, (st, enc) => enc
-    ? enc.foes.flatMap(f => [[f.id, { nm: 430, brightness: 3 }], [f.id, { nm: 700, brightness: 5 }]])
-    : []);
-
-  // TALLOW: the salt husks on the sampler scope.
-  world = new TallowWorld(null);
-  world.scene.updateMatrixWorld(true);
-  const { STAGES: GRAIN_STAGES, KINDS: GRAIN_KINDS } = await import('../src/learn/quests/unit01/q1-grain.js');
-  await foePasses({
-    questId: 'q1-grain', label: 'sampler scope',
-    build: (camera, anchor, onSelect) => {
-      const scope = new SampleScope3D(null, {
-        kinds: GRAIN_KINDS, onPower: () => {}, onSelect, world: worldFrame(camera, anchor)
-      });
-      scope.setSelectable(true);
-      return scope;
-    },
-    lay: (bench, st) => bench.setSamples(st.samples),
-    items: st => st.samples || [], env: { kinds: GRAIN_KINDS }, select: true
-  }, GRAIN_STAGES, (st, enc) => enc
-    ? enc.foes.flatMap(f => [[f.id, { tool: 'cut' }], [f.id, { tool: 'settle' }]])
-    : []);
-
-  // LIGAR: slag crawlers on the bond bench, the pair board and the molecular rack,
-  // and basalt wardens on the domain rig. (`world` becomes Ligar.)
+  // LIGAR: the basalt warden, one phase to a bench. (`world` becomes Ligar.)
   world = new LigarWorld(null);
   world.scene.updateMatrixWorld(true);
+  const warden = (await import('../src/learn/quests/unit03/boss-warden.js')).STAGES;
   const ligarCfg = (questId, label, build) => ({
     questId, label, build: (camera, anchor) => build(camera, anchor),
-    lay: (bench, st) => layLigar(bench, st), items: st => st.rigs || [], env: {}, select: false
+    lay: (bench, st) => layLigar(bench, st), items: st => st.rigs || [], select: false
   });
-  const crawlerProbes = {
-    'q3-distance': (st, enc) => enc ? enc.foes.flatMap(f => {
+  const wardenProbes = {
+    bond: (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { rig: 'hold', lattice: st.rigs.find(r => r.id === f.id).lattice }]]) : [],
+    pair: (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { rig: 'lamps', lit: 1, of: 5 }], [f.id, { rig: 'lamps', lit: 5, of: 5 }]]) : [],
+    rig: (st, enc) => enc ? enc.foes.flatMap(f => {
       const rig = st.rigs.find(r => r.id === f.id);
-      return [[f.id, { kind: 'curve', pair: rig.pair, r: st.settings[0] }], [f.id, { kind: 'curve', pair: rig.pair, r: st.settings[st.settings.length - 1] }]];
+      if (rig.head === 'field') return [[f.id, { rig: 'field', mol: rig.mol, on: true }]];
+      return [[f.id, { rig: 'arms', arms: [{ kind: 'atom', sym: 'H' }, { kind: 'atom', sym: 'H' }, { kind: 'lone' }] }]];
     }) : [],
-    'q4-dots': (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { kind: 'lamps', lit: 1, of: 3 }], [f.id, { kind: 'lamps', lit: 3, of: 3 }]]) : [],
-    'q5-resonance': (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { kind: 'lamps', lit: 2, of: 3 }], [f.id, { kind: 'charges', zero: 1, of: 3 }]]) : [],
-    'q9-orbitals': (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { kind: 'order', order: 2, placed: 6 }], [f.id, { kind: 'order', order: 0, placed: 4 }]]) : []
+    rack: (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { rig: 'pull', unpaired: 2 }]]) : []
   };
-  await foePasses(ligarCfg('q3-distance', 'bond bench', (c, a) => new BondBench3D(null, { world: worldFrame(c, a) })), LG['q3-distance'].STAGES, crawlerProbes['q3-distance']);
-  await foePasses(ligarCfg('q4-dots', 'pair board', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })), LG['q4-dots'].STAGES, crawlerProbes['q4-dots']);
-  await foePasses(ligarCfg('q5-resonance', 'pair board (resonance)', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })), LG['q5-resonance'].STAGES, crawlerProbes['q5-resonance']);
-  await foePasses(ligarCfg('q9-orbitals', 'molecular rack', (c, a) => new LigarRack3D(null, { world: worldFrame(c, a) })), LG['q9-orbitals'].STAGES, crawlerProbes['q9-orbitals']);
-  for (const [id, label] of [['q6-shape', 'domain rig (shape)'], ['q7-polarity', 'domain rig (field)'], ['q8-hybrid', 'domain rig (mixer)']]) {
-    await foePasses(ligarCfg(id, label, (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })), LG[id].STAGES,
-      (st, enc) => enc ? enc.foes.flatMap(f => {
-        const rig = st.rigs.find(r => r.id === f.id);
-        if (rig.head === 'field') return [[f.id, { rig: 'field', mol: rig.mol, on: true }]];
-        if (rig.head === 'twist') return [[f.id, { rig: 'twist', bond: rig.bond }]];
-        if (rig.head === 'mixer') return [[f.id, { rig: 'mix', p: 3 }]];
-        return [[f.id, { rig: 'arms', arms: [{ kind: 'atom', sym: 'H' }, { kind: 'atom', sym: 'H' }, { kind: 'lone' }] }]];
-      }) : []);
-  }
+  await foePasses(ligarCfg('q3-distance', 'bond bench (the warden)', (c, a) => new BondBench3D(null, { world: worldFrame(c, a) })), [warden[0]], wardenProbes.bond);
+  await foePasses(ligarCfg('q4-dots', 'pair board (the warden)', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })), [warden[1]], wardenProbes.pair);
+  await foePasses(ligarCfg('q6-shape', 'domain rig (the warden)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })), [warden[2], warden[3]], wardenProbes.rig);
+  await foePasses(ligarCfg('q9-orbitals', 'molecular rack (the warden)', (c, a) => new LigarRack3D(null, { world: worldFrame(c, a) })), [warden[4]], wardenProbes.rack);
 
-  // BELLOWS: gas bladders on every gas rig stage that fights, and the Compressor over the boss's five.
+  // BELLOWS: the Compressor over the boss's five phases.
   // (`world` becomes Bellows.)
   world = new BellowsWorld(null);
   world.scene.updateMatrixWorld(true);
@@ -1844,11 +1788,8 @@ console.log('The foes — spoil standing in the wells\n');
   };
   const bellowsCfg = (questId, label) => ({
     questId, label, build: (camera, anchor) => new GasRig3D(null, { world: worldFrame(camera, anchor) }),
-    lay: (bench, st) => layGas(bench, st), items: st => st.rigs || [], env: {}, select: false
+    lay: (bench, st) => layGas(bench, st), items: st => st.rigs || [], select: false
   });
-  for (const id of ['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed', 'q6-real']) {
-    await foePasses(bellowsCfg(id, `gas rig (${id})`), BW[id].STAGES, gasProbes);
-  }
   // The Compressor has no site of its own; its five phases stand on the first bench's plate.
   await foePasses(bellowsCfg('q1-knocks', 'gas rig (the Compressor)'), BW['boss-compressor'].STAGES, gasProbes);
 }

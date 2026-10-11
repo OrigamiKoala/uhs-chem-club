@@ -62,7 +62,6 @@ export function roundTo(x, step) {
  *   onLoad: (stage: object, i: number, runner: object) => void,
  *   onDispose?: () => void,
  *   onWidgetChange?: (runner: object) => void,
- *   encounterEnv?: object   // what a stage's foe species needs from the quest (foes.js)
  * }} cfg
  */
 export function createRunner(container, ctx, cfg) {
@@ -118,7 +117,7 @@ export function createRunner(container, ctx, cfg) {
       commitLabel: 'Commit',
       // A stage that declares an `encounter` is a fight (foes.js); one that does
       // not plays exactly as it always has.
-      encounter: resolveEncounter(stage, cfg.encounterEnv)
+      encounter: resolveEncounter(stage)
     });
 
     cfg.onLoad(stage, i, runner);

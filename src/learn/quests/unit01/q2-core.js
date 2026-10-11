@@ -39,7 +39,6 @@
 
 import { CoreBench } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
-import { resolveEncounter } from '../../engine/foes.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
@@ -252,12 +251,6 @@ export const STAGES = [
         { id: 'core', label: 'Mostly empty, with one tiny heavy lump in the middle', note: 'Almost all nothing, plus a dense center.' }
       ]
     },
-    encounter: {
-      species: 'salt husk',
-      act: 'Probe',
-      intent: 'The husk braces its dense center as your beam prepares to fire.',
-      hit: 'The husk shatters, revealing its hollow interior.'
-    },
     hints: [
       'Press "Fire Beam" and read what happened to each of the forty shots.',
       '37 of the 40 went straight through as if nothing were there, 2 were knocked aside and 1 bounced straight back.',
@@ -290,12 +283,6 @@ export const STAGES = [
       { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
     ],
     widget: { type: 'number', min: 0, max: 20, label: 'Crossed grains' },
-    encounter: {
-      species: 'salt husk',
-      act: 'Count',
-      intent: 'The core glows with crossed grains packed under high pressure.',
-      hit: 'The husk core breaks apart and scatters into salt.'
-    },
     hints: [
       'Press "The middle": the nucleus is drawn flat, so no grain is hiding behind another one.',
       'Twelve grains are packed in there, some with a cross and some blank, and only the crossed ones count.',
@@ -334,12 +321,6 @@ export const STAGES = [
       }
     ],
     widget: { type: 'number', min: 0, max: 20, label: 'Electrons on Sample D' },
-    encounter: {
-      species: 'salt husk',
-      act: 'Deduce',
-      intent: 'Four husks hold their charge needle steady on the bench.',
-      hit: 'The four husks lose their charge hold and crumble.'
-    },
     hints: [
       'Press "Read Needle" on each sample, then press "Outside" and count the electrons on the three you can see.',
       'Sample C is the useful one, the only needle off zero, so count its protons and its electrons and compare them.',
@@ -380,12 +361,6 @@ export const STAGES = [
       label: 'Sample D — where the electrons go',
       total: 11,
       rings: ['Ring 1 — closest in', 'Ring 2 — middle', 'Ring 3 — furthest out']
-    },
-    encounter: {
-      species: 'salt husk',
-      act: 'Load Rings',
-      intent: 'Electrons drift in concentric rings around the core.',
-      hit: 'The balanced rings collapse into quiet salt.'
     },
     hints: [
       'Press "Outside" and count how many electrons Samples A, B and C keep on each ring, then use the + and - keys to place Sample D\'s.',
@@ -436,13 +411,6 @@ export const STAGES = [
         { id: 'inert', label: 'Will not trade', note: 'Does nothing either way.' }
       ]
     },
-    encounter: {
-      species: 'salt husk',
-      act: 'Test Pack',
-      intent: 'Four husks face the tester contact with differing affinity.',
-      moves: { gives: 'Extract', takes: 'Transfer', inert: 'Contain' },
-      hit: 'All four husks disperse into loose salt.'
-    },
     hints: [
       'Press "Outside" and count the electrons on the outermost shell of all four samples.',
       'A shell that holds 8 is full, so ask of each sample whether its outer shell has almost none, almost 8, or exactly 8.',
@@ -487,13 +455,6 @@ export const STAGES = [
         { id: 'other', label: 'A different kind', note: 'It behaves differently.' }
       ]
     },
-    encounter: {
-      species: 'salt husk',
-      act: 'Compare',
-      intent: 'Three husks resonate together despite equal mass readings.',
-      moves: { match: 'Match', other: 'Isolate' },
-      hit: 'The matched husks dissolve into separate salt dust.'
-    },
     hints: [
       'Use "The middle" to count protons and neutrons on all three, then "Outside" to count their electrons.',
       'B and C both hold 13 grains, so the total will not separate them, but their proton counts and outer shells differ.',
@@ -528,12 +489,6 @@ export const STAGES = [
       { id: 'm', label: 'SAMPLE A', note: 'mounted, open to the instrument', core: { marked: 11, blank: 12 }, rings: [2, 8, 1] }
     ],
     widget: { type: 'number', min: 0, max: 6, label: 'Electrons taken off' },
-    encounter: {
-      species: 'salt husk',
-      act: 'Strip',
-      intent: 'The husk clings to its outer electrons under electrostatic pull.',
-      hit: 'The charged husk vents electrons and collapses into salt.'
-    },
     hints: [
       'Press "Fire Stripper" to knock one electron off the outer shell, then "Read Needle" to see what it did.',
       'Every electron you take off leaves one proton with nothing to cancel it, so the needle climbs by 1 each time.',
@@ -580,13 +535,6 @@ export const STAGES = [
         { id: 'charged', label: 'Same element, missing an electron', note: 'An ion of the standard.' },
         { id: 'other', label: 'A different element', note: 'The proton count does not match.' }
       ]
-    },
-    encounter: {
-      species: 'salt husk',
-      act: 'Classify',
-      intent: 'Three altered husks vibrate with modified particle counts.',
-      moves: { heavy: 'Isolate', charged: 'Ground', other: 'Separate' },
-      hit: 'The classified husks settle into inert mineral grains.'
     },
     hints: [
       'Press "The middle" to count each sample\'s protons and neutrons, and press "Read Needle" on each one.',
@@ -811,8 +759,7 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: 'Commit',
-      encounter: resolveEncounter(stage)
+      commitLabel: 'Commit'
     });
 
     bench.setSpecimens(stage.specimens);

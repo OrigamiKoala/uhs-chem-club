@@ -30,7 +30,6 @@
 import { planJoin, shellPlan, shellsAfter } from '../../engine/joinbench.js';
 import { JoinBench } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
-import { resolveEncounter } from '../../engine/foes.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
@@ -125,11 +124,6 @@ export const STAGES = [
       pair('p2', 'PAIR B', 'off the vent lamps', PIECES.ne, PIECES.ne),
       pair('p3', 'PAIR C', 'off the gas line', PIECES.h, PIECES.h)
     ],
-    encounter: {
-      species: 'basalt warden',
-      act: 'Clamp',
-      intent: 'The warden tests the joint strength of its stone flanks.'
-    },
     widget: {
       type: 'bins',
       rows: ['p1', 'p2', 'p3'],
@@ -176,11 +170,6 @@ export const STAGES = [
       pair('p2', 'PAIR B', 'off the vent lamps', PIECES.ne, PIECES.ne),
       pair('p3', 'PAIR C', 'off the gas line', PIECES.h, PIECES.h)
     ],
-    encounter: {
-      species: 'basalt warden',
-      act: 'Examine',
-      intent: 'The warden guards its outer electrons against the clamps.'
-    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -227,11 +216,6 @@ export const STAGES = [
       pair('j1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
       pair('j2', 'PAIR B', 'off the gas line', PIECES.h, PIECES.h)
     ],
-    encounter: {
-      species: 'basalt warden',
-      act: 'Probe',
-      intent: 'The warden watches for charge transfer between its atoms.'
-    },
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -280,11 +264,6 @@ export const STAGES = [
       pair('r3', 'PAIR C', 'off the salt pan', PIECES.k, PIECES.f),
       pair('r4', 'PAIR D', 'off the gas line', PIECES.c, PIECES.h)
     ],
-    encounter: {
-      species: 'basalt warden',
-      act: 'Classify',
-      intent: 'The warden shifts as electrons move across the plates.'
-    },
     widget: {
       type: 'bins',
       rows: ['r1', 'r2', 'r3', 'r4'],
@@ -333,11 +312,6 @@ export const STAGES = [
       pair('t1', 'PAIR A', 'off the arch quarry', PIECES.mg, PIECES.cl),
       pair('t2', 'PAIR B', 'off the salt pan', PIECES.na, PIECES.cl)
     ],
-    encounter: {
-      species: 'basalt warden',
-      act: 'Balance',
-      intent: 'The warden braces for an electron exchange at the seam.'
-    },
     widget: { type: 'number', min: 0, max: 5, step: 1, label: 'CAT 17 atoms per CAT 12 atom' },
     hints: [
       'Press both pairs, then tap the left-hand atom on each plate and press "Read Atom".',
@@ -373,11 +347,6 @@ export const STAGES = [
       pair('u2', 'PAIR B', 'off the vent field', PIECES.o, PIECES.o),
       pair('u3', 'PAIR C', 'off the air plant', PIECES.n, PIECES.n)
     ],
-    encounter: {
-      species: 'basalt warden',
-      act: 'Inspect',
-      intent: 'The warden locks its crystalline bridges in place.'
-    },
     widget: {
       type: 'bins',
       rows: ['u1', 'u2', 'u3'],
@@ -423,11 +392,6 @@ export const STAGES = [
       pair('v3', 'PAIR C', 'off the weld hoods', PIECES.ar, PIECES.h),
       pair('v4', 'PAIR D', 'off the hull racks', PIECES.al, PIECES.cl)
     ],
-    encounter: {
-      species: 'basalt warden',
-      act: 'Appraise',
-      intent: 'The warden braces against your survey beam.'
-    },
     widget: {
       type: 'bins',
       rows: ['v1', 'v2', 'v3', 'v4'],
@@ -475,11 +439,6 @@ export const STAGES = [
       pair('w1', 'PAIR A', 'off the gas line', PIECES.c, PIECES.h),
       pair('w2', 'PAIR B', 'off the air plant', PIECES.n, PIECES.h)
     ],
-    encounter: {
-      species: 'basalt warden',
-      act: 'Synthesize',
-      intent: 'The warden demands a complete atomic ratio before yielding.'
-    },
     widget: { type: 'number', min: 0, max: 6, step: 1, label: 'CAT 01 atoms per CAT 06 atom' },
     hints: [
       'Press both pairs, then tap the left-hand atom on each plate and press "Read Atom".',
@@ -746,8 +705,7 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: stage.encounter?.act || 'Commit',
-      encounter: resolveEncounter(stage, {})
+      commitLabel: stage.encounter?.act || 'Commit'
     });
 
     bench.setPlates(stage.pairs);

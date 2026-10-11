@@ -30,7 +30,6 @@
 
 import { AssayFloor } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
-import { resolveEncounter } from '../../engine/foes.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
@@ -125,12 +124,6 @@ export const STAGES = [
     ],
     reference: ['CAT 06 — listed mass 12.0'],
     widget: { type: 'number', min: 0, max: 400, step: 50, label: 'Atoms in Sample B' },
-    encounter: {
-      species: 'salt husk',
-      act: 'Count Swarm',
-      intent: 'A dense crate of salt husks rests on the weighing pan.',
-      hit: 'The total mass divides cleanly into the population count.'
-    },
     hints: [
       'Tap Sample A, press "Tip Sample", then press "Weigh Sample" on it, and weigh Sample B as well.',
       'Sample A is 40 atoms weighing 480 in all, and Sample B holds the same kind of atom, so each of its atoms weighs the same.',
@@ -166,12 +159,6 @@ export const STAGES = [
     ],
     reference: ['CAT 01 — 1.0', 'CAT 06 — 12.0', 'CAT 08 — 16.0'],
     widget: { type: 'number', min: 10, max: 24, step: 1, label: 'Weight of one molecule of Sample B' },
-    encounter: {
-      species: 'salt husk',
-      act: 'Weigh Cluster',
-      intent: 'Compound husks lock together in multi-element clusters.',
-      hit: 'The composite mass tallies the constituent atoms.'
-    },
     hints: [
       'Tap Sample A, press "Tip Sample", and read the weight stencilled under the bin that caught everything.',
       'Sample A\'s bin caught at 18, and its recipe is one CAT 08 at 16.0 with two CAT 01 at 1.0 each — so a molecule weighs what its atoms weigh added up.',
@@ -223,12 +210,6 @@ export const STAGES = [
         { id: 'sum', label: 'They add up to a round number', note: 'The three totals taken together.' }
       ]
     },
-    encounter: {
-      species: 'salt husk',
-      act: 'Compare Batches',
-      intent: 'Three distinct swarms of sixty husks each occupy the sorting floor.',
-      hit: 'The total weights mirror the ratios of their individual units.'
-    },
     hints: [
       'Tap a sample, press "Tip Sample", and do the same for the other two.',
       'The three totals came to 60, 720 and 960, so divide each one by the 60 atoms it holds.',
@@ -268,12 +249,6 @@ export const STAGES = [
     ],
     reference: ['CAT 01 — 1.0', 'CAT 06 — 12.0', 'CAT 08 — 16.0'],
     widget: { type: 'number', min: 8, max: 26, step: 1, label: 'Grams of CAT 08' },
-    encounter: {
-      species: 'salt husk',
-      act: 'Match Masses',
-      intent: 'Varying grain weights require scaled masses to reach equal counts.',
-      hit: 'The balanced mass yields an identical quantity of matter.'
-    },
     hints: [
       'Tip at least two of the samples and put each total next to the sixty atoms it came from.',
       'Equal counts weigh in the ratio of the listed masses, so to get equal counts you weigh out the listed masses themselves.',
@@ -320,12 +295,6 @@ export const STAGES = [
         { id: '880', label: '88.0 grams', note: 'Twice 12.0 plus four times 16.0.' }
       ]
     },
-    encounter: {
-      species: 'salt husk',
-      act: 'Weigh Mole',
-      intent: 'A massive crate of compound molecules sits sealed on the balance.',
-      hit: 'The molecular mass scales directly into gram units.'
-    },
     hints: [
       'Work out the formula mass of Sample A first.',
       'One mole of an element is its listed mass in grams, and a molecule of a compound weighs the listed masses of all its atoms added up.',
@@ -363,12 +332,6 @@ export const STAGES = [
     ],
     reference: ['CAT 01 — 1.0', 'CAT 08 — 16.0'],
     widget: { type: 'number', min: 0, max: 8, step: 1, label: 'Moles in the drum' },
-    encounter: {
-      species: 'salt husk',
-      act: 'Convert Grams',
-      intent: 'A heavy canister of hydrate compound strains the balance pan.',
-      hit: 'The mass reading converts precisely into mole units.'
-    },
     hints: [
       'Tap Sample A and press "Weigh Sample" to read what the drum holds.',
       'Work out what one mole of this compound weighs first, the way you did on the last stage.',
@@ -406,12 +369,6 @@ export const STAGES = [
     ],
     reference: ['CAT 01 — 1.0', 'CAT 08 — 16.0'],
     widget: { type: 'number', min: 0, max: 8, step: 1, label: 'Moles of CAT 01' },
-    encounter: {
-      species: 'salt husk',
-      act: 'Tally Elements',
-      intent: 'Two moles of assembled compound hold constituent elements in fixed ratio.',
-      hit: 'The mole count of the constituent element resolves cleanly.'
-    },
     hints: [
       'Write down the recipe of one molecule first: one CAT 08 and two CAT 01.',
       'A ratio does not care what you count in, so two CAT 01 per molecule is also two moles of CAT 01 for every mole of molecules.',
@@ -458,12 +415,6 @@ export const STAGES = [
         { id: 'd2', label: 'Sample B', note: 'Sixty-four grams of CAT 08.' },
         { id: 'd3', label: 'Sample C', note: 'Six grams of CAT 01.' }
       ]
-    },
-    encounter: {
-      species: 'salt husk',
-      act: 'Target Swarm',
-      intent: 'Three pressurized canisters conceal unequal quantities of atoms.',
-      hit: 'The lightest atoms deliver the greatest particle count.'
     },
     hints: [
       'Tap each drum and press "Weigh Sample" to read what it holds.',
@@ -658,8 +609,7 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: stage.encounter?.act || 'Commit',
-      encounter: resolveEncounter(stage)
+      commitLabel: stage.encounter?.act || 'Commit'
     });
 
     floor.setHoppers(stage.hoppers);

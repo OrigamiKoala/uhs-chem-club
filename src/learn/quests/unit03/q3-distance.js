@@ -76,11 +76,6 @@ export const STAGES = [
     start: 14,
     rigs: [pair('a', 'PAIR A', 'H-H', { note: 'two hydrogen atoms' })],
     widget: { type: 'choice', label: 'Lowest at', options: [pm(60), pm(74), pm(90), pm(120)] },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Mark Bottom',
-      intent: 'A slag crawler lies along the rail, as long as the crank makes it.'
-    },
     hints: [
       'Wind the crank through its whole range and let the trace fill in.',
       'Compare the points on either side of the lowest one the trace has drawn.',
@@ -110,11 +105,6 @@ export const STAGES = [
     start: 10,
     rigs: [pair('a', 'PAIR A', 'H-Cl', { note: 'a hydrogen atom and a chlorine atom' })],
     widget: { type: 'choice', label: 'To part them', options: [kJ(127), kJ(216), kJ(431), kJ(862)] },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Mark Depth',
-      intent: 'The crawler is stretched along the rail and pulls back as the crank turns.'
-    },
     hints: [
       'Wind the crank until the atoms are far enough apart that the trace stops rising.',
       'Measure from the zero line down to the lowest point the trace has reached.',
@@ -152,11 +142,6 @@ export const STAGES = [
         { id: 'drops', label: 'It drops lower still' },
         { id: 'zero', label: 'It falls to zero' }
       ]
-    },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Mark Climb',
-      intent: 'The crawler is crushed shorter every time the crank closes the gap.'
     },
     hints: [
       'Wind the crank toward the smallest separations and watch where the new points land.',
@@ -197,11 +182,6 @@ export const STAGES = [
         { id: 'charge', label: 'Chlorine atoms carry a charge' }
       ]
     },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Mark Cause',
-      intent: 'Two crawlers lie on two rails, one far longer than the other.'
-    },
     hints: [
       'Wind the crank until both traces have a bottom, then compare where the two sit.',
       'Compare the atoms themselves: how many shells each carries and how big each disc is.',
@@ -236,11 +216,6 @@ export const STAGES = [
     widget: {
       type: 'order', label: 'Longest first',
       items: [{ id: 'a', label: 'Pair A' }, { id: 'b', label: 'Pair B' }, { id: 'c', label: 'Pair C' }]
-    },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Mark Order',
-      intent: 'Three crawlers lie side by side, each stopped at a different length.'
     },
     hints: [
       'Wind the crank until all three traces have a bottom.',
@@ -279,11 +254,6 @@ export const STAGES = [
         { id: 'weaker', label: 'The less energy it takes to break it' },
         { id: 'same', label: 'The energy stays about the same' }
       ]
-    },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Mark Link',
-      intent: 'The crawlers stand in a row, the shortest set deepest into the plate.'
     },
     hints: [
       'Wind the crank until all three traces have a bottom.',

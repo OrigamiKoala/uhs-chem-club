@@ -74,11 +74,6 @@ export const STAGES = [
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'X', [atoms('a', 'A', 2, 'Arm')], { note: 'a hub with room for six arms' })],
     widget: { type: 'choice', label: 'Angle', options: [deg(60), deg(90), deg(120), deg(180)] },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Read Angle',
-      intent: 'A basalt warden stands with its columns together.'
-    },
     hints: [
       'Clip both arms onto the hub, then use the protractor on the pair.',
       'Compare the angle you read with how far apart two arms could possibly get.',
@@ -103,11 +98,6 @@ export const STAGES = [
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'X', [atoms('a', 'A', 4, 'Arm')], { note: 'a hub with room for six arms' })],
     widget: { type: 'choice', label: 'Angle', options: [deg(90), { id: '109.5', label: '109.5°' }, deg(120), deg(180)] },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Read Angle',
-      intent: 'The warden\'s columns spread each time another arm is added.'
-    },
     hints: [
       'Clip on a third arm and then a fourth, reading the angle each time.',
       'Compare the angle with three arms to the angle with four, and turn the view to see which arm leaves the plane.',
@@ -141,11 +131,6 @@ export const STAGES = [
         { id: 'line', label: 'In a straight line' }
       ]
     },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Name Shape',
-      intent: 'The warden holds one column back from the rest.'
-    },
     hints: [
       'Clip the three hydrogen atoms and the lone pair onto the hub, then turn the view.',
       'Compare where the atoms sit with where the lone pair sits.',
@@ -171,11 +156,6 @@ export const STAGES = [
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'O', [atoms('h', 'H', 2, 'Hydrogen'), lone(2)], { note: 'oxygen with two hydrogen atoms and two lone pairs' })],
     widget: { type: 'choice', label: 'Angle', options: [deg(90), { id: '104.5', label: '104.5°' }, { id: '109.5', label: '109.5°' }, deg(120)] },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Read Angle',
-      intent: 'The warden stands with two columns held back and its arms pinched.'
-    },
     hints: [
       'Clip the two hydrogen atoms and both lone pairs onto the hub, then use the protractor on the atoms.',
       'Compare the angle with those you read for the hubs holding three atoms and four.',
@@ -201,11 +181,6 @@ export const STAGES = [
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'C', [atoms('o', 'O', 2, 'Double-Bonded Oxygen', 2)], { note: 'carbon with two oxygen atoms, each joined by a double bond' })],
     widget: { type: 'choice', label: 'Domains', options: [{ id: '2', label: '2' }, { id: '3', label: '3' }, { id: '4', label: '4' }, { id: '6', label: '6' }] },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Count Arms',
-      intent: 'The warden stands tall with its columns drawn into two lines.'
-    },
     hints: [
       'Clip both oxygen atoms onto the hub and read the arms the plate counts.',
       'Compare the number of arms on the hub with the number of pairs each oxygen atom shares.',
@@ -238,11 +213,6 @@ export const STAGES = [
         { id: 'middle', label: 'Round the middle, between the other arms' },
         { id: 'end', label: 'At one end, in line with another arm' }
       ]
-    },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Place Pair',
-      intent: 'Two wardens stand, one with five columns spread and one with a column held back.'
     },
     hints: [
       'Build both hubs, then read the angle between the lone pair and each atom on the second.',
@@ -277,11 +247,6 @@ export const STAGES = [
         { id: 'together', label: 'Side by side, on the same side of the hub' },
         { id: 'plane', label: 'Next to each other, round the middle' }
       ]
-    },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Place Pairs',
-      intent: 'Two wardens stand, one with six columns all spread and one with two pulled out of line.'
     },
     hints: [
       'Build both hubs and read the angle between the two lone pairs on the second.',
@@ -319,11 +284,6 @@ export const STAGES = [
         { id: 'square', label: 'Square planar' },
         { id: 'octa', label: 'Octahedral' }
       ]
-    },
-    encounter: {
-      species: 'basalt warden',
-      act: 'Name Shapes',
-      intent: 'Three wardens stand in a row, none of them quite the shape its columns suggest.'
     },
     hints: [
       'Build each hub from the note beside it and look at the atoms alone.',

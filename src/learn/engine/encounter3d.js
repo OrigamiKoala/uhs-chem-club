@@ -12,8 +12,6 @@ import { soundscape } from '../../audio/soundscape.js';
 
 /** Where in the well's frame each species stands, by instrument head. */
 const PERCH = {
-  'lamp moth': { x: -0.07, y: 0.11, z: 0 },
-  'gas bladder': { x: 0, y: 0, z: 0.15 },
   'the compressor': { x: 0, y: 0, z: 0.1 }
 };
 
@@ -31,11 +29,9 @@ function reducedMotion() {
 export class FoeLayer3D {
   /**
    * @param {object} viewer the `BenchViewer3D` this layer stands on
-   * @param {{ tints?: object }} [opts] the dust palette the crates are poured in
    */
-  constructor(viewer, opts = {}) {
+  constructor(viewer) {
     this.viewer = viewer;
-    this.tints = opts.tints || null;
     this.group = new THREE.Group();
     this.group.name = 'foes';
     viewer.root.add(this.group);
@@ -118,7 +114,7 @@ export class FoeLayer3D {
       if (!st) return;
       let body = this.bodies.get(foe.id);
       if (!body) {
-        body = buildFoeBody(this.enc.species, foe, { kinds: this.enc.env?.kinds, tints: this.tints });
+        body = buildFoeBody(this.enc.species, foe);
         if (!body) return;
         body.stationIndex = i;
         body.hit.userData.foeBody = body;

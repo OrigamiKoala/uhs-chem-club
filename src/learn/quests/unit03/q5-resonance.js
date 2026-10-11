@@ -66,11 +66,6 @@ export const STAGES = [
       type: 'choice', label: 'The atom',
       options: [{ id: 'c', label: 'Carbon' }, { id: 'o', label: 'Oxygen' }]
     },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Name Owner',
-      intent: 'A slag crawler lies with its plates raised, two of them mismatched.'
-    },
     hints: [
       'Switch on the charges and read the number beside each atom.',
       'Compare the electrons each atom brings with the electrons it owns, counting a bond as one and a lone pair as two.',
@@ -98,11 +93,6 @@ export const STAGES = [
       fixed('b', 'DRAWING B', 'CO2', DRAWINGS.CO2_double)
     ],
     widget: { type: 'choice', label: 'The better drawing', options: [{ id: 'a', label: 'Drawing A' }, { id: 'b', label: 'Drawing B' }] },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Pick Drawing',
-      intent: 'Two crawlers lie side by side, each with its plates raised.'
-    },
     hints: [
       'Switch on the charges and read both drawings.',
       'Compare the charges on the atoms of each drawing.',
@@ -130,11 +120,6 @@ export const STAGES = [
       fixed('b', 'DRAWING B', 'SCN', DRAWINGS.SCN_n)
     ],
     widget: { type: 'choice', label: 'The better drawing', options: [{ id: 'a', label: 'Drawing A' }, { id: 'b', label: 'Drawing B' }] },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Pick Drawing',
-      intent: 'Two crawlers lie side by side, and neither has a plate that is quite flat.'
-    },
     hints: [
       'Switch on the charges and read both drawings.',
       'Compare which atom carries the negative charge in each drawing, and how hard that atom pulls on electrons.',
@@ -165,11 +150,6 @@ export const STAGES = [
         { id: 'long', label: 'One is longer than the other' }
       ]
     },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Name Lengths',
-      intent: 'The crawler\'s plates close one at a time as the slate fills.'
-    },
     hints: [
       'Draw ozone so every lamp is lit, then read each bond with the gauge.',
       'Compare the two lengths the gauge gives with what your drawing says about the two bonds.',
@@ -194,11 +174,6 @@ export const STAGES = [
     controls: ['hand', 'record', 'clear'],
     rigs: [slate('a', 'PLATE A', 'NO3')],
     widget: { type: 'none' },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Seal Set',
-      intent: 'The crawler\'s plates close as the slate fills and open again when it is cleared.'
-    },
     hints: [
       'Draw nitrate so every lamp is lit, then file the drawing.',
       'Compare each filed drawing with the next and see which oxygen atom carries the double bond in each.',
@@ -235,11 +210,6 @@ export const STAGES = [
         { id: '3/2', label: '1½' },
         { id: '2', label: '2' }
       ]
-    },
-    encounter: {
-      species: 'slag crawler',
-      act: 'Name Order',
-      intent: 'The crawler\'s plates are drawn tight across its back.'
     },
     hints: [
       'Read the gauge on all three bonds of the drawing.',

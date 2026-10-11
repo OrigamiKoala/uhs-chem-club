@@ -96,12 +96,6 @@ export const STAGES = [
         { id: 'jumps', label: 'Moves an electron up a level', note: '' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Read Modes',
-      intent: 'A lamp moth perches above the molecular transmission chamber.',
-      hit: 'Molecular spectroscopy quantifies quantum transitions to clear the moth.'
-    },
     hints: [
       'Press each of the three light keys in turn and watch what the molecule does in the cuvette.',
       'Compare how the molecule moves under each kind of light, and note which movement belongs to which key.',
@@ -149,12 +143,6 @@ export const STAGES = [
         { id: 'uv', label: 'Ultraviolet', note: '' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Scale Energy',
-      intent: 'Wavelength readings illuminate the absorption spectrum.',
-      hit: 'Transition energies match photon wavelengths to disperse the moth.'
-    },
     hints: [
       'Tap each reading on its ruler to read the wavelength it was taken at.',
       'Compare each wavelength with the visible band shaded on the ruler, and with the order of the spectrum from the first bench.',
@@ -195,12 +183,6 @@ export const STAGES = [
         { id: 'mirror', label: 'It reflects only blue light and passes the rest' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Trace Color',
-      intent: 'A blue solution filters the incident white light before the moth.',
-      hit: 'Complementary color absorption leaves blue light and scatters the moth.'
-    },
     hints: [
       'Look at the strip under the cuvette, which shows the light that gets through it.',
       'Compare the colours missing from that strip with the colour the solution looks.',
@@ -230,12 +212,6 @@ export const STAGES = [
     start: 1,
     rigs: [CU('a', 0.01, { label: 'COPPER SOLUTION', tuned: true })],
     widget: { type: 'none' },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Find Peak',
-      intent: 'Variable wavelengths sweep across the absorbing solute.',
-      hit: 'Absorbance maximum resolves the peak and clears the moth.'
-    },
     hints: [
       'Turn the dial and watch the dimming reading as the wavelength changes.',
       'Compare the reading at every setting, including the ones either side of the largest.',
@@ -277,12 +253,6 @@ export const STAGES = [
         { id: 'squares', label: 'It is multiplied by itself' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Grow Solute',
-      intent: 'Concentration increases intensify photon scattering density before the moth.',
-      hit: 'Linear attenuation scales with density and dispels the moth.'
-    },
     hints: [
       'Read the absorbance on each of the three cuvettes.',
       'Compare each reading with the one before it, alongside how the concentrations compare.',
@@ -318,12 +288,6 @@ export const STAGES = [
         { id: 'same', label: 'It stays the same' },
         { id: 'squares', label: 'It is multiplied by itself' }
       ]
-    },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Extend Cell',
-      intent: 'Optical path expansion extends the absorption depth before the moth.',
-      hit: 'Proportional attenuation scales with path length to clear the moth.'
     },
     hints: [
       'Press each path key and watch the cuvette and the reading.',
@@ -364,12 +328,6 @@ export const STAGES = [
         { id: 'ratio', label: 'A = ε × b ÷ c' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Unify Law',
-      intent: 'Combined optical parameters align across the sample cell.',
-      hit: 'The Beer-Lambert relation unifies the factors and clears the moth.'
-    },
     hints: [
       'Use the path keys and the two cuvettes to collect readings with different paths and concentrations.',
       'Check each candidate rule against the readings from the last two stages, and discard any that moves the wrong way.',
@@ -402,12 +360,6 @@ export const STAGES = [
       }
     ],
     widget: { type: 'decimal', label: 'Concentration (mmol/L)', min: 0, max: 8, step: 0.5 },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Interpolate C',
-      intent: 'A sealed cuvette transmits attenuated light across the sensor.',
-      hit: 'The calibration curve extracts the unknown concentration and clears the moth.'
-    },
     hints: [
       'Read the three standards\' points and the sealed sample\'s absorbance off the plot.',
       'Find where the sealed sample\'s absorbance falls along the line drawn through the standards.',

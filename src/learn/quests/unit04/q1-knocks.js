@@ -95,11 +95,6 @@ export const STAGES = [
         choice('warmth', 'How warm the gas is')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Reading',
-      intent: 'A gas bladder hangs by the cylinder, swelling and sagging as the piston moves.'
-    },
     hints: [
       'Turn the volume dial through its whole range and watch the gauge, the knock counter and the window together.',
       'Compare what the gauge and the counter do with what the number of particles and their speed do as the piston moves.',
@@ -136,11 +131,6 @@ export const STAGES = [
         choice('same', 'The pressure stays the same'),
         choice('little', 'The pressure rises only a little')
       ]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Effect',
-      intent: 'The bladder fills as the cylinder does.'
     },
     hints: [
       'Add gas one step at a time and read the gauge before and after.',
@@ -180,11 +170,6 @@ export const STAGES = [
         choice('more', 'More particles appear')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Change',
-      intent: 'The bladder tightens as the heater comes up.'
-    },
     hints: [
       'Turn the temperature dial up and watch the particles in the window.',
       'Compare the average speed and the number of particles at the coldest setting and at the hottest.',
@@ -223,11 +208,6 @@ export const STAGES = [
         choice('halves', 'Half stand still and half move fast'),
         choice('sorted', 'The fastest are all at one end of the window')
       ]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Read Screen',
-      intent: 'The bladder shivers unevenly, as if many things were knocking on it at once.'
     },
     hints: [
       'Read the speed screen and then turn the temperature dial.',
@@ -270,11 +250,6 @@ export const STAGES = [
         choice('light-more', 'The lighter particles move faster and carry more kinetic energy')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Compare Pair',
-      intent: 'Two bladders hang side by side, one on each cylinder.'
-    },
     hints: [
       'Read the average speed and the kinetic energy on both plates, then turn the temperature dial.',
       'Compare each plate with the other at the same setting of the dial.',
@@ -311,11 +286,6 @@ export const STAGES = [
       type: 'choice', label: 'On the middle ring',
       options: [choice('114', '114'), choice('15.2', '15.2'), choice('152', '152'), choice('1140', '1140')]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Convert Scale',
-      intent: 'One bladder sits on a gauge with one ring, and one on a gauge with three.'
-    },
     hints: [
       'Turn the volume dial on the reference cylinder and read all three of its rings at once.',
       'Compare what the inner ring and the middle ring read together on the reference cylinder.',
@@ -350,11 +320,6 @@ export const STAGES = [
     widget: {
       type: 'choice', label: 'The pressure reaches zero at',
       options: [choice('-100', '−100 °C'), choice('-200', '−200 °C'), choice('-273', '−273 °C'), choice('-373', '−373 °C')]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Mark Floor',
-      intent: 'The bladder loosens as the gas cools and the line on the plate falls.'
     },
     hints: [
       'Step the temperature dial through every setting so the trace has points to join.',
@@ -399,11 +364,6 @@ export const STAGES = [
         { id: 'heavy', label: 'Heavier particles carry more kinetic energy at the same temperature' },
         { id: 'equal', label: 'Every particle in a gas moves at the same speed' }
       ]
-    },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Pick Truths',
-      intent: 'The bladder shivers and swells, and nothing about it is still.'
     },
     hints: [
       'Move the piston and the heater and test each statement against what the plate does.',

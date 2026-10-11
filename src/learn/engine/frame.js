@@ -903,13 +903,29 @@ export class LearnFrame {
     const have = new Map(viewer.getAvailableInstruments().map(i => [i.kind, i]));
     const quest = this.currentQuestId() || 'bench';
     const bench = have.get('stations');
+    const body = this.benchIntro || '';
+    // The briefing body names the whole bench in a sentence or two. The bench
+    // step keeps only its opening sentence; each key then gets its own step
+    // with only the clause that names it, so no step explains two tools.
+    const opening = (body.match(/^.*?[.!?](?=\s|$)/) || [bench?.desc || ''])[0];
+    const clauseFor = label => {
+      const quoted = `"${label}"`;
+      const clause = body.split(/(?:,\s*(?:and\s+)?|\s+and\s+(?=")|;\s*)/).find(c => c.includes(quoted));
+      if (!clause) return `Press "${label}" to use it on the sample you have selected.`;
+      const own = clause.split(/(?<=[.!?])\s+/).find(c => c.includes(quoted)) || clause;
+      const text = own.trim().replace(/[.!?]+$/, '');
+      return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
+    };
+    const keySteps = have.get('keys') && typeof viewer.getKeyList === 'function'
+      ? viewer.getKeyList().map(k => ({
+          flag: `tour_key_${quest}_${k.id}`, kind: 'key', id: k.id,
+          name: k.label, desc: clauseFor(k.label)
+        }))
+      : [];
     const steps = [
-      bench && {
-        flag: `tour_bench_${quest}`, kind: 'stations', name: 'The bench',
-        desc: this.benchIntro || bench.desc
-      },
+      bench && { flag: `tour_bench_${quest}`, kind: 'stations', name: 'The bench', desc: opening },
       have.get('dial') && { flag: 'tour_dial', kind: 'dial', name: have.get('dial').name, desc: have.get('dial').desc },
-      have.get('keys') && { flag: 'tour_keys', kind: 'keys', name: have.get('keys').name, desc: have.get('keys').desc }
+      ...keySteps
     ].filter(st => st && (force || !session.hasFlag(st.flag)));
     if (!steps.length) return;
     if (!force) steps.forEach(st => session.setFlag(st.flag, true));
@@ -923,7 +939,7 @@ export class LearnFrame {
     const render = () => {
       const st = steps[i];
       const last = i === steps.length - 1;
-      activeBenchViewer()?.showInstrumentHalos(st.kind);
+      activeBenchViewer()?.showInstrumentHalos(st.kind, st.id);
       showModal(`
         <div class="lq-brief-card">
           <div class="lq-brief-head">

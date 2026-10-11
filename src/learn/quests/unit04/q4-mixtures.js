@@ -92,11 +92,6 @@ export const STAGES = [
         choice('product', 'It is the two readings multiplied together')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Compare Readings',
-      intent: 'A bladder hangs on each tank, and one of them is about to be poured into the other.'
-    },
     hints: [
       'Read the gauge on each tank, press "Pour B Into A", and read the gauge on Tank A again.',
       'Compare the new reading on Tank A with the two readings you took before the pour.',
@@ -137,11 +132,6 @@ export const STAGES = [
         choice('half', 'Half as hard, because the two share the push')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Compare Gas',
-      intent: 'The two bladders swell and sag together as the heater comes up.'
-    },
     hints: [
       'Compare the counter for neon in Tank A with the counter for neon in Tank B, and then turn the temperature dial.',
       'Check whether the neon counter in the mixture is lower, higher or equal to the neon counter alone at every setting.',
@@ -171,11 +161,6 @@ export const STAGES = [
     gaugeMax: 900,
     rigs: [tank('a', 'TANK A', [{ gas: 'He', n: 2.0 }, { gas: 'Ne', n: 3.0 }], { V: 25, note: 'a tank of two gases' })],
     widget: { type: 'decimal', label: 'Fraction of the particles that are helium', min: 0, max: 1, step: 0.05 },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Give Fraction',
-      intent: 'The bladder swells with the whole tank and says nothing of how it is divided.'
-    },
     hints: [
       'Read the amount of each gas in the table on the plate.',
       'Compare the amount of helium with the amount of all the gas in the tank.',
@@ -207,11 +192,6 @@ export const STAGES = [
     gaugeMax: 300,
     rigs: [tank('a', 'TANK A', [{ gas: 'N2', n: 3.0 }, { gas: 'O2', n: 1.0 }], { V: 49.88, note: 'a tank of two gases' })],
     widget: { type: 'number', label: 'Oxygen pushes with, in kPa', min: 0, max: 200, step: 10 },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Give Share',
-      intent: 'The bladder holds still, swollen to whatever the whole tank reads.'
-    },
     hints: [
       'Read the gauge for the whole tank and the mole fraction of each gas.',
       'Compare the share of the moles that oxygen makes up with the share of the push it should make up.',
@@ -247,11 +227,6 @@ export const STAGES = [
     gaugeMax: 120,
     rigs: [tank('a', 'AIR', AIR_PARTS, { T: AIR_T, V: AIR_ROOMS[0], note: 'a sample of air' })],
     widget: { type: 'number', label: 'Oxygen pushes with, in kPa', min: 0, max: 30, step: 1 },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Give Push',
-      intent: 'The bladder swells at the foot of the mountain and sags the higher the dial climbs.'
-    },
     hints: [
       'Turn the height dial to 5500 m and read the gauge and the mole fraction of oxygen.',
       'Compare the mole fraction of oxygen at sea level with its mole fraction at 5500 m.',
@@ -289,11 +264,6 @@ export const STAGES = [
         choice('shared', 'Less, because its push is shared out with the argon')
       ]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Name Effect',
-      intent: 'The bladder swells with every mole of argon that goes in.'
-    },
     hints: [
       'Read the counter for oxygen, press "Add Argon", and read it again.',
       'Compare the oxygen counter with the total on the gauge before and after each press.',
@@ -327,11 +297,6 @@ export const STAGES = [
       type: 'order', label: 'Largest partial pressure first',
       items: [{ id: 'He', label: 'He' }, { id: 'N2', label: 'N₂' }, { id: 'CO2', label: 'CO₂' }]
     },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Rank Gases',
-      intent: 'The bladder swells with all three gases at once.'
-    },
     hints: [
       'Read the amount, the mole fraction and the knock counter for each gas in the table.',
       'Compare the order the knock counters give with the order the amounts give, and the order each gives for the share of the total.',
@@ -362,11 +327,6 @@ export const STAGES = [
     gaugeMax: 250,
     rigs: [tank('a', 'TANK A', [{ gas: 'N2', n: 0.4 }, { gas: 'CO2', n: 0.2 }], { sealed: true, note: 'a sealed tank of two gases' })],
     widget: { type: 'decimal', label: 'Moles of carbon dioxide', min: 0, max: 1, step: 0.05 },
-    encounter: {
-      species: 'gas bladder',
-      act: 'Count Moles',
-      intent: 'The bladder gives nothing away, but it sags the moment the trap takes a gas.'
-    },
     hints: [
       'Read the gauge, press "Trap Carbon Dioxide", and read the gauge again.',
       'Compare the two readings: the difference is the push the trapped gas was making on its own.',

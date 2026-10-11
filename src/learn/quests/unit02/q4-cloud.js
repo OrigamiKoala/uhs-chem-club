@@ -84,12 +84,6 @@ export const STAGES = [
         { id: 'even', label: 'Spread evenly over the whole plate' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Plot Density',
-      intent: 'A lamp moth flits around the fluctuating position detector.',
-      hit: 'Repeated sampling resolves the pattern and disperses the moth.'
-    },
     hints: [
       'Press "Fire One Shot" a few times, then "Fire 50 Shots", and watch where the dots land.',
       'Compare where each new shot lands with where the one before it landed, and where most of them gather.',
@@ -125,12 +119,6 @@ export const STAGES = [
         { id: 'disc', label: 'A flat disc of even density' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Shape Cloud',
-      intent: 'A moth flutters across the converging cloud of five hundred samples.',
-      hit: 'The spherically symmetric boundary clears the moth.'
-    },
     hints: [
       'Press "Fire 500 Shots" and look at the whole plate.',
       'Compare how thickly the dots lie at the middle with how thickly they lie farther out.',
@@ -159,12 +147,6 @@ export const STAGES = [
     start: 2,
     clouds: [{ id: 'ring', label: 'THE RING', head: 'ring', tuned: true, note: 'a wave on a circular track' }],
     widget: { type: 'multi', label: 'Wavelengths that fit', options: RING_WIDGET },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Fit Ring',
-      intent: 'Wave cycles wrap around the ring track in front of the moth.',
-      hit: 'Constructive resonance forms a standing wave and scatters the moth.'
-    },
     hints: [
       'Turn the wavelength dial through every setting and watch what the wave does on the track.',
       'Compare a setting where the wave draws one clean ring with a setting where the laps smear into a band.',
@@ -204,12 +186,6 @@ export const STAGES = [
         { id: 'even', label: 'B is bigger, and its dots fill every distance evenly' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Probe Shell',
-      intent: 'A larger cloud reveals a radial gap where the moth lingers.',
-      hit: 'The nodal boundary isolates and repels the moth.'
-    },
     hints: [
       'Press "Fire 500 Shots" and then "Slice", and compare the two plates.',
       'Compare how far out each cloud reaches, and look in the larger one for a distance at which no dots fall.',
@@ -245,12 +221,6 @@ export const STAGES = [
         { id: 'four', label: 'Four lobes, with no dots along the axes' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Split Lobes',
-      intent: 'The electron cloud separates into opposite lobes around the moth.',
-      hit: 'The planar node bisects the field and banishes the moth.'
-    },
     hints: [
       'Press "Fire 500 Shots" and look at all three views of the plate.',
       'Compare the views, noting the direction in which the dots gather and the flat plane they never cross.',
@@ -283,12 +253,6 @@ export const STAGES = [
       { id: 'f', label: 'SAMPLE F', head: 'cloud', orbital: '2pz', plane: 'all', fired: 500, seed: 3, note: 'one electron in an atom with more energy' }
     ],
     widget: { type: 'number', label: 'Ways the two-lobed shape can point', min: 1, max: 6, step: 1 },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Count Axes',
-      intent: 'Orthogonal lobes project along Cartesian axes toward the moth.',
-      hit: 'All spatial axes align and disperse the moth.'
-    },
     hints: [
       'Look at each sample\'s three views and find the direction its two lobes lie along.',
       'Compare the four samples and note which of them point the same way as another.',
@@ -330,12 +294,6 @@ export const STAGES = [
         { id: 'ring', label: 'Two lobes and a ring', note: '' }
       ]
     },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Sort Shapes',
-      intent: 'Complex orbital shapes swirl in the chamber before the moth.',
-      hit: 'Each lobe geometry is categorized and disperses the moth.'
-    },
     hints: [
       'Look at all three views of each plate and find the view in which its shape shows most clearly.',
       'Compare each plate with the two-lobed shape you already know, and look for extra lobes or a ring.',
@@ -374,12 +332,6 @@ export const STAGES = [
         { id: 'rest', label: 'The electron has no path because it is at rest' },
         { id: 'dots', label: 'A path would need more dots than the bench can show' }
       ]
-    },
-    encounter: {
-      species: 'lamp moth',
-      act: 'Bound State',
-      intent: 'The moth flutters along an unresolvable quantum trajectory.',
-      hit: 'The conjugate uncertainty principle holds and scatters the moth.'
     },
     hints: [
       'Fire a few shots, press "Track Electron", and read what the bench says.',
