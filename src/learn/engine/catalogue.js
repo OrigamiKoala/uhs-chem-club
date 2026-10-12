@@ -138,9 +138,9 @@ export class CatalogueBoard {
   /* ---------------- input ---------------- */
 
   handleClick(e) {
-    const cell = e.target.closest('[data-cat]');
+    const cell = e.target.closest('[data-cat], [data-slot]');
     if (!cell) return;
-    const role = cell.dataset.cat;
+    const role = cell.dataset.cat || (cell.dataset.slot ? 'slot' : null);
 
     if (role === 'fixed') {
       this.onProbe?.(cell.dataset.card);

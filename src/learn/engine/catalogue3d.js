@@ -416,14 +416,20 @@ export class CatalogueBoard3D {
           // The pick target: generous, and invisible. A card-sized slot at a
           // glancing angle is a small thing to hit with a fingertip.
           const hit = new THREE.Mesh(
-            new THREE.BoxGeometry(SLOT_W, SLOT_H, 0.045),
+            new THREE.BoxGeometry(SLOT_W, SLOT_H, 0.06),
             new THREE.MeshBasicMaterial({ visible: false })
           );
-          hit.position.set(x, y, 0.028);
+          hit.position.set(x, y, 0.030);
           hit.userData.slotId = e.id;
           g.add(hit);
 
-          this.slots.set(e.id, { group: g, x, y, mark, hit });
+          // Every mesh belonging to this slot resolves to the slotId so that clicking
+          // anywhere on the slot (plus sign, lip, recess, or pick target) slots the card.
+          mark.userData.slotId = e.id;
+          recess.userData.slotId = e.id;
+          lip.userData.slotId = e.id;
+
+          this.slots.set(e.id, { group: g, x, y, mark, hit, recess, lip });
         } else {
           // A card that is already filed: pinned, readable, not movable.
           const body = this.makeCard(e.id, { fixed: true });
@@ -724,6 +730,21 @@ export class CatalogueBoard3D {
     const ray = this.viewer.raycaster;
     ray.setFromCamera(this.viewer.pointer, this.viewer.camera);
     const hits = ray.intersectObject(this.rig, true);
+
+    // If holding a card, any hit on a slot takes priority over the held card.
+    // The held card lifts off the tray and hovers in front of the board from
+    // the camera's eye; clicking on a slot behind it must file into that slot,
+    // rather than hitting the held card and putting it down.
+    if (this.held) {
+      for (const h of hits) {
+        let node = h.object;
+        while (node && node !== this.rig) {
+          if (node.userData?.slotId) return { kind: 'slot', slotId: node.userData.slotId };
+          node = node.parent;
+        }
+      }
+    }
+
     for (const h of hits) {
       let node = h.object;
       while (node && node !== this.rig) {

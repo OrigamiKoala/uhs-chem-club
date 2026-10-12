@@ -103,14 +103,14 @@ export function renderLearnQuest(container, params = {}) {
   // the way a quest on an unwalkable world is (Kettle's `q1-recipe`): its bench
   // builds its own room. Entering the world with nothing to stand at would leave a
   // built instrument with no plate to deploy onto.
-  const walkable = canWalk(world.id) && Boolean(world3dFor(world.id)?.siteForQuest(quest.id));
+  const walkable = canWalk(world.id);
   if (!walkable) setBenchSite(null);
   // Configure learn quest frame to use 2D overlay (`learn-quest-overworld`) in T4 rather than deploying into CSS3D in-world bench panels
   const inWorld = false;
   if (walkable) {
     stage.setWorldWaypoint(null);
     const w3d = world3dFor(world.id);
-    const site = w3d.siteForQuest(quest.id);
+    const site = w3d?.siteForQuest(quest.id);
     if (site) {
       w3d.enter(stage, site.id);
       setBenchSite(quest.id);
@@ -118,7 +118,8 @@ export function renderLearnQuest(container, params = {}) {
       // the site rather than to the pad they landed on.
       try { sessionStorage.setItem('avalon_learn_last_site', site.id); } catch (e) {}
     } else {
-      w3d.enter(stage, null);
+      const defaultSiteId = (world.id === 'unit01' && quest.id === 'boss-hopper') ? 'site-5' : null;
+      w3d?.enter(stage, defaultSiteId);
       setBenchSite(null);
     }
     w3d.syncProgress(stage, qid => {
@@ -156,6 +157,7 @@ export function renderLearnQuest(container, params = {}) {
   const ctx = {
     world,
     quest,
+    stage: walkable ? stage : null,
     stagesCleared: prog.cleared,
     isComplete: prog.complete,
 

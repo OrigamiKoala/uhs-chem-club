@@ -15,6 +15,7 @@
 
 import { LearnFrame } from '../../engine/frame.js';
 import { resolveEncounter } from '../../engine/foes.js';
+import { buildHopper } from '../../engine/foebody.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 import { session } from '../../../session.js';
@@ -25,6 +26,10 @@ export const STAGES = [
   {
     id: 'phase1',
     title: 'Phase 1 · Hull Plates',
+    briefing: {
+      speaker: 'Vess',
+      body: 'The rogue Hopper has risen in the salt flat, testing every bench from Tallow across five synthesis phases. Strike with the correct chemistry when your telemetry is set; three misses knock the rig back.'
+    },
     prompt: 'The rogue Hopper is shielding itself with three armor plates. Classify each plate as an element, compound, or mixture to crack its outer hull.',
     samples: [
       { id: 'plate1', label: 'Pure Iron' },
@@ -34,9 +39,9 @@ export const STAGES = [
     widget: {
       type: 'bins',
       bins: [
-        { id: 'element', label: 'Element' },
-        { id: 'compound', label: 'Compound' },
-        { id: 'mixture', label: 'Mixture' }
+        { id: 'element', label: 'Element', note: 'One type of atom' },
+        { id: 'compound', label: 'Compound', note: 'Atoms chemically bonded' },
+        { id: 'mixture', label: 'Mixture', note: 'Physically blended' }
       ],
       items: [
         { id: 'plate1', label: 'Pure Iron' },
@@ -242,6 +247,18 @@ const REFERENCES = {
     <div class="lq-readout-card">
       <div class="lq-readout-head">Reference strip — group 18</div>
       <p class="lq-readout-line">Top to bottom: helium 2 in the first row, neon 10 in the second row, argon 18 in the third row.</p>
+    </div>`,
+  phase4: `
+    <div class="lq-readout-card">
+      <div class="lq-readout-head">Core telemetry — charge balance</div>
+      <p class="lq-readout-line">Sodium ion: 11 protons (+11), 10 electrons (-10), net charge +1.</p>
+      <p class="lq-readout-line">Neutral atoms have equal proton and electron counts.</p>
+    </div>`,
+  phase5: `
+    <div class="lq-readout-card">
+      <div class="lq-readout-head">Exhaust telemetry — molar mass</div>
+      <p class="lq-readout-line">Carbon molar mass: 12.0 g/mol.</p>
+      <p class="lq-readout-line">Total mass = moles multiplied by molar mass.</p>
     </div>`
 };
 
@@ -328,6 +345,32 @@ export function mount(container, ctx) {
   let state = { bins: {}, number: null };
   let busy = false;
 
+  // 3D Hopper Boss entity in the overworld scene
+  let foe3d = null;
+  let animId = null;
+  const worldScene = ctx?.stage?.activeWorld?.scene;
+  if (worldScene) {
+    foe3d = buildHopper({ id: 'boss-hopper-entity', label: 'The Hopper' });
+    if (foe3d) {
+      foe3d.group.scale.set(10, 10, 10);
+      const groundY = ctx.stage.activeWorld.getTerrainHeight?.(6.0, 31.0) || 0;
+      foe3d.baseX = 6.0;
+      foe3d.baseY = groundY + 0.05;
+      foe3d.baseZ = 31.0;
+      foe3d.group.position.set(foe3d.baseX, foe3d.baseY, foe3d.baseZ);
+      worldScene.add(foe3d.group);
+
+      let lastT = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const tick = now => {
+        const dt = Math.min((now - lastT) / 1000, 0.1);
+        lastT = now;
+        foe3d.update(dt, false);
+        animId = requestAnimationFrame(tick);
+      };
+      animId = requestAnimationFrame(tick);
+    }
+  }
+
   const frame = new LearnFrame(container, {
     quest: ctx?.quest || { id: 'boss-hopper' },
     world: ctx?.world,
@@ -345,27 +388,30 @@ export function mount(container, ctx) {
       const val = state.number ?? w.min;
       state.number = val;
       return `
-        <div class="lq-widget-number" style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 1rem 0;">
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <button type="button" class="btn-secondary quest-btn-sm" id="btn-num-dec" style="width: 44px; height: 44px; font-size: 1.25rem;">-</button>
-            <span id="num-display" style="font-family: var(--font-mono); font-size: 1.6rem; min-width: 60px; text-align: center; color: var(--accent-amber);">${val}</span>
-            <button type="button" class="btn-secondary quest-btn-sm" id="btn-num-inc" style="width: 44px; height: 44px; font-size: 1.25rem;">+</button>
+        <div class="lq-answer">
+          <span class="form-label">${esc(w.label || w.unit || 'Dial')}</span>
+          <div class="lq-number">
+            <button type="button" class="btn-secondary quest-btn-sm" data-num="-1" aria-label="Lower">&minus;</button>
+            <span class="lq-number-value" id="num-display" aria-live="polite">${val}</span>
+            <button type="button" class="btn-secondary quest-btn-sm" data-num="1" aria-label="Raise">+</button>
           </div>
-          <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">${esc(w.unit || '')}</span>
+          ${w.unit ? `<span class="lq-unit eyebrow" style="display: block; margin-top: 0.35rem; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;">${esc(w.unit)}</span>` : ''}
         </div>
       `;
     }
     if (w.type === 'bins') {
       return `
-        <div class="lq-widget-bins" style="display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0;">
-          <div class="bins-items" style="display: flex; flex-direction: column; gap: 0.5rem;">
-            ${w.items.map(it => `
-              <div class="bin-item-row" style="display: flex; justify-content: space-between; align-items: center; background: var(--plate-200); padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid var(--border-durasteel);">
-                <span style="font-size: 0.85rem; color: var(--text-bright);">${esc(it.label)}</span>
-                <div class="bin-keys" style="display: flex; gap: 0.4rem;">
+        <div class="lq-answer">
+          <span class="form-label">Classification Strike</span>
+          <div class="lq-bins">
+            ${stage.samples.map(s => `
+              <div class="lq-bin-row" data-sample="${esc(s.id)}">
+                <span class="lq-bin-sample">${esc(s.label)}</span>
+                <div class="lq-bin-keys">
                   ${w.bins.map(b => `
-                    <button type="button" class="quest-btn-sm btn-secondary bin-choice${state.bins[it.id] === b.id ? ' btn-primary' : ''}" data-item="${esc(it.id)}" data-bin="${esc(b.id)}">
-                      ${esc(b.label)}
+                    <button type="button" class="choice-option lq-bin-key${state.bins[s.id] === b.id ? ' selected' : ''}" data-item="${esc(s.id)}" data-bin="${esc(b.id)}">
+                      <span class="lq-bin-label">${esc(b.label)}</span>
+                      ${b.note ? `<span class="lq-bin-note">${esc(b.note)}</span>` : ''}
                     </button>
                   `).join('')}
                 </div>
@@ -383,34 +429,27 @@ export function mount(container, ctx) {
     if (!widget) return;
     const stage = STAGES[index];
 
-    widget.querySelectorAll('#btn-num-dec').forEach(btn => {
+    widget.querySelectorAll('button[data-num]').forEach(btn => {
       btn.addEventListener('click', () => {
         const cur = state.number ?? stage.widget.min;
-        state.number = Math.max(stage.widget.min, cur - (stage.widget.step || 1));
-        const disp = widget.querySelector('#num-display');
+        const delta = Number(btn.dataset.num) * (stage.widget.step || 1);
+        state.number = Math.max(stage.widget.min, Math.min(stage.widget.max, cur + delta));
+        const disp = widget.querySelector('.lq-number-value');
         if (disp) disp.textContent = String(state.number);
+        soundscape.playToggleClack?.();
       });
     });
 
-    widget.querySelectorAll('#btn-num-inc').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const cur = state.number ?? stage.widget.min;
-        state.number = Math.min(stage.widget.max, cur + (stage.widget.step || 1));
-        const disp = widget.querySelector('#num-display');
-        if (disp) disp.textContent = String(state.number);
-      });
-    });
-
-    widget.querySelectorAll('.bin-choice').forEach(btn => {
+    widget.querySelectorAll('.lq-bin-key').forEach(btn => {
       btn.addEventListener('click', () => {
         const itemId = btn.dataset.item;
         const binId = btn.dataset.bin;
         state.bins[itemId] = binId;
-        const row = btn.closest('.bin-item-row');
-        row?.querySelectorAll('.bin-choice').forEach(b => {
-          b.classList.toggle('btn-primary', b.dataset.bin === binId);
-          b.classList.toggle('btn-secondary', b.dataset.bin !== binId);
+        const row = btn.closest('.lq-bin-row');
+        row?.querySelectorAll('.lq-bin-key').forEach(b => {
+          b.classList.toggle('selected', b.dataset.bin === binId);
         });
+        soundscape.playToggleClack?.();
       });
     });
   }
@@ -425,6 +464,7 @@ export function mount(container, ctx) {
       index,
       title: stage.title,
       prompt: stage.prompt,
+      briefing: stage.briefing,
       hints: stage.hints,
       commitLabel: stage.encounter?.act || 'Commit',
       encounter: resolveEncounter(stage)
@@ -442,6 +482,10 @@ export function mount(container, ctx) {
     if (!res.ok) {
       frame.miss(res.msg);
       soundscape.playMiss?.();
+      if (foe3d) {
+        foe3d.hitPlayer?.();
+        foe3d.setPose('counter');
+      }
       return;
     }
 
@@ -454,6 +498,10 @@ export function mount(container, ctx) {
     frame.setCleared(cleared);
 
     const isLast = index >= STAGES.length - 1;
+    if (foe3d) {
+      if (isLast) foe3d.setPose('dispersed');
+      else foe3d.setPose('stagger');
+    }
     frame.clear({
       title: stage.reward.title,
       body: stage.reward.body,
@@ -477,6 +525,12 @@ export function mount(container, ctx) {
 
   return {
     dispose() {
+      if (animId) cancelAnimationFrame(animId);
+      if (foe3d) {
+        worldScene?.remove(foe3d.group);
+        foe3d.dispose?.();
+        foe3d = null;
+      }
       frame.dispose?.();
     }
   };
