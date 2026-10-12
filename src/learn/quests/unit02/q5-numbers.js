@@ -93,7 +93,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This rack holds orbital boxes in rows, with the lowest energy at the bottom. This bench goes beyond the exam, so nothing here is marked on it.'
     },
-    prompt: 'Say what the first number on every box tracks.',
+    prompt: 'Find what the first number on every box tracks.',
     controls: [],
     show: 0,
     cloudsBeside: true,
@@ -130,7 +130,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'The Second Number',
-    prompt: 'Say which shapes the second shell offers.',
+    prompt: 'Find which shapes the second shell offers.',
     controls: [],
     show: 1,
     rows: ['1s', '2s', '2p', '3s', '3p', '3d'],
@@ -166,7 +166,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'The Third Number',
-    prompt: 'Say how many boxes a d row has.',
+    prompt: 'Count the boxes in a d row.',
     controls: [],
     show: 2,
     rows: ['3s', '3p', '3d'],
@@ -222,7 +222,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Impossible Pair',
-    prompt: 'Say which two of these four electrons cannot be in the same atom.',
+    prompt: 'Find which two electrons cannot share one atom.',
     controls: ['hand'],
     show: 3,
     rows: ['1s', '2s', '2p'],
@@ -259,7 +259,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Full Shell',
-    prompt: 'Say how many electrons the third shell holds.',
+    prompt: 'Count the electrons the third shell holds.',
     controls: ['hand'],
     show: 3,
     rows: ROWS_N3.slice(3),

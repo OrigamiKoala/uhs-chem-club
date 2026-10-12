@@ -28,7 +28,7 @@ export const UNIT_04 = {
     {
       id: 'q1-knocks',
       title: 'Pressure and Temperature',
-      line: 'A gauge counts the knocks of a crowd of moving particles.',
+      line: 'Learn what the pressure gauge is really counting.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -37,7 +37,7 @@ export const UNIT_04 = {
     {
       id: 'q2-laws',
       title: 'The Gas Laws',
-      line: 'Change one thing and the others answer in step.',
+      line: 'Squeeze, heat, and feed gas to find its laws.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -46,7 +46,7 @@ export const UNIT_04 = {
     {
       id: 'q3-ideal',
       title: 'The Ideal Gas Law',
-      line: 'Four dials that turn out to be one relationship.',
+      line: 'Count sealed tanks with one equation.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -55,7 +55,7 @@ export const UNIT_04 = {
     {
       id: 'q4-mixtures',
       title: 'Partial Pressures',
-      line: 'Each gas pushes as if the others were not there.',
+      line: "Split a tank's push gas by gas.",
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -64,7 +64,7 @@ export const UNIT_04 = {
     {
       id: 'q5-speed',
       title: 'Speed and Escape',
-      line: 'The lighter the particle, the faster it goes and the sooner it leaks.',
+      line: 'Race gases through holes and tubes.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -73,7 +73,7 @@ export const UNIT_04 = {
     {
       id: 'q6-real',
       title: 'Real Gases',
-      line: 'Where the ideal gas stops being true.',
+      line: 'Find where the gas law stops holding.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -82,7 +82,7 @@ export const UNIT_04 = {
     {
       id: 'boss-compressor',
       title: 'The Compressor',
-      line: 'A rogue compressor that every bench has taught you to read.',
+      line: 'Read the rogue machine bench by bench.',
       arena: 'boss',
       stageCount: 5,
       status: 'live',

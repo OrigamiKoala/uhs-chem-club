@@ -57,9 +57,9 @@ export const STAGES = [
     title: 'Who Owns What',
     briefing: {
       speaker: SPEAKER,
-      body: 'The same slate, with two new tools: one stencils the charge each atom carries, and one reads how long a bond measures in the real molecule. A drawing can be fixed on the slate so it can only be read.'
+      body: 'The same slate, with two new tools: one prints the charge each atom carries, and one reads how long a bond measures in the real molecule. A drawing can be fixed on the slate so it can only be read.'
     },
-    prompt: 'Find the atom in this drawing that owns one electron too few.',
+    prompt: 'Find the atom in this drawing that owns one electron too few, to mark where the plating is weakest.',
     controls: ['charges'],
     rigs: [fixed('a', 'DRAWING A', 'CO', DRAWINGS.CO)],
     widget: {
@@ -86,7 +86,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Two Drawings',
-    prompt: 'Pick the better drawing of carbon dioxide.',
+    prompt: 'Pick the better drawing of carbon dioxide, to choose the plan the cutters trust.',
     controls: ['charges'],
     rigs: [
       fixed('a', 'DRAWING A', 'CO2', DRAWINGS.CO2_triple),
@@ -113,7 +113,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where the Minus Goes',
-    prompt: 'Pick the better drawing of the SCN⁻ ion.',
+    prompt: 'Pick the better drawing of the SCN⁻ ion, to put its charge on the atom that holds it best.',
     controls: ['charges'],
     rigs: [
       fixed('a', 'DRAWING A', 'SCN', DRAWINGS.SCN_s),
@@ -140,7 +140,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Same Length',
-    prompt: 'Say how the two bonds in ozone compare in length.',
+    prompt: 'Say how the two bonds in ozone compare in length, to test the drawing against the measured rock.',
     controls: ['hand', 'gauge', 'clear'],
     rigs: [slate('a', 'PLATE A', 'O3')],
     widget: {
@@ -170,7 +170,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Three Places',
-    prompt: 'File every arrangement of nitrate\'s double bond.',
+    prompt: 'File every arrangement of nitrate\'s double bond, to list each face the warden stone can show.',
     controls: ['hand', 'record', 'clear'],
     rigs: [slate('a', 'PLATE A', 'NO3')],
     widget: { type: 'none' },
@@ -198,7 +198,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Four Over Three',
-    prompt: 'Give the bond order of each bond in nitrate.',
+    prompt: 'Give the bond order of each bond in nitrate, to grade the seam the drill follows.',
     controls: ['gauge'],
     rigs: [fixed('a', 'DRAWING A', 'NO3', DRAWINGS.NO3_a)],
     handGauge: true,
@@ -232,7 +232,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Which Counts Most',
-    prompt: 'Say which of carbonate\'s drawings counts most.',
+    prompt: 'Say which of carbonate\'s drawings counts most, to weigh each face of the tunnel wall.',
     controls: [],
     rigs: [
       fixed('a', 'DRAWING A', 'CO3', DRAWINGS.CO3_a),
@@ -266,7 +266,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Nothing to Move',
-    prompt: 'Say why water has no resonance.',
+    prompt: 'Say why water has no resonance, to close the last gap in the tunnel map.',
     controls: [],
     rigs: [fixed('a', 'DRAWING A', 'H2O', DRAWINGS.H2O)],
     widget: {

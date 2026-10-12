@@ -68,9 +68,9 @@ export const STAGES = [
     title: 'The Bottom',
     briefing: {
       speaker: SPEAKER,
-      body: 'The crank winds two atoms apart or together, and the trace on the plate keeps every point it passes through. Clear Trace wipes it and starts the trace again.'
+      body: 'The crank winds two atoms apart or together, and the trace on the plate — energy against separation — keeps every point it passes through. Clear Trace wipes it and starts the trace again.'
     },
-    prompt: 'Find the separation at which the two atoms hold the least energy.',
+    prompt: 'Find the separation — how far apart — where the two atoms hold the least energy, to mark where the bond sits before the breakers move in.',
     controls: ['crank', 'clear'],
     settings: SET_H,
     start: 14,
@@ -99,7 +99,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Pulling Apart',
-    prompt: 'Give the energy it takes to pull this pair completely apart.',
+    prompt: 'Give the energy it takes to pull this pair completely apart, to size the breaker charge.',
     controls: ['crank', 'clear'],
     settings: SET_HCL,
     start: 10,
@@ -129,7 +129,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Squeezed',
-    prompt: 'Say what happens to the energy when the atoms are pushed closer than the lowest point.',
+    prompt: 'Say what the energy does when the atoms are squeezed closer than their bond length — their easiest distance.',
     controls: ['crank', 'clear'],
     settings: SET_H,
     start: 6,
@@ -158,14 +158,14 @@ export const STAGES = [
     reward: {
       log: 'Closer in, the trace climbs.',
       title: 'Nuclei Repel',
-      body: 'Pushed closer than the bond length, the positive nuclei repel each other and the energy climbs steeply. That repulsion is what holds the bottom of the well where it is.'
+      body: 'Pushed closer than the bond length, the positive nuclei — the centres — repel each other and the energy climbs steeply. That repulsion is what holds the bottom of the well where it is.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Two Sizes',
-    prompt: 'Say why the chlorine pair bottoms out further out than the hydrogen pair.',
+    prompt: 'Say why the chlorine pair bottoms out further out than the hydrogen pair, to explain the wider break in big-atom rock.',
     controls: ['crank', 'clear'],
     settings: SET_TWO,
     start: 12,
@@ -204,7 +204,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Three Wells',
-    prompt: 'Put the three carbon–carbon bonds in order, longest first.',
+    prompt: 'Put the three carbon–carbon bonds in order, longest first, to sort the seam the cutters will follow.',
     controls: ['crank', 'clear'],
     settings: SET_CC,
     start: 13,
@@ -238,7 +238,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Deeper Too',
-    prompt: 'Say how bond length goes with bond energy across those three bonds.',
+    prompt: 'Say how bond length goes with bond energy across those three bonds, to pick which seam breaks first.',
     controls: ['crank', 'clear'],
     settings: SET_CC,
     start: 13,
@@ -276,7 +276,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Salt Strength',
-    prompt: 'Put the three salts in order of how strongly their ions are held, strongest first.',
+    prompt: 'Put the three salts in order of how strongly their ions grip, strongest first, to rank the pass walls.',
     controls: [],
     rigs: [lattice('a', 'NaCl'), lattice('b', 'KCl'), lattice('c', 'MgO')],
     widget: {
@@ -305,7 +305,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Melting Higher',
-    prompt: 'Say which of the two salts melts at the higher temperature.',
+    prompt: 'Say which of the two salts melts higher, to choose the wall the tunnel avoids.',
     controls: [],
     rigs: [lattice('a', 'NaF'), lattice('b', 'NaCl')],
     widget: {

@@ -24,7 +24,7 @@ export const UNIT_07 = {
     {
       id: 'q1-recipe',
       title: 'The Same Recipe',
-      line: 'Definite proportions and percent composition in compounds.',
+      line: "Read each molecule's fixed recipe by weight.",
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -69,7 +69,7 @@ export const UNIT_07 = {
     {
       id: 'boss-golem',
       title: 'Recipe Golem',
-      line: 'An automaton bound by strict stoichiometry.',
+      line: 'Starve the foundry golem and weigh its recipe.',
       arena: 'boss',
       stageCount: 2,
       status: 'live',

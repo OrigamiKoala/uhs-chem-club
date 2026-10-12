@@ -91,7 +91,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Phase 2 · The Heater',
-    prompt: 'Give the volume the helium fills at 750 K, to the nearest five litres.',
+    prompt: 'Its free piston holds the pressure steady. Give the volume the helium fills at 750 K, to the nearest five litres.',
     controls: ['temp'],
     temps: [300, 450, 600, 900], tempStart: 1, tempList: 'K',
     ...BASE,
@@ -200,7 +200,7 @@ export const STAGES = [
     times: [0, 1, 2, 3, 4, 5, 6, 7, 8], timeStart: 1,
     ...BASE,
     show: { half: true },
-    reference: ['Molar masses in g/mol: Ne 20.2, Ar 39.9, Kr 83.8, Xe 131'],
+    reference: ['Molar masses — what one mole weighs — in g/mol: N₂ 28.0, Ne 20.2, Ar 39.9, Kr 83.8, Xe 131'],
     rigs: [
       leak('a', 'SEAL A', 'N2', { note: 'a seal known to hold nitrogen' }),
       leak('b', 'SEAL B', 'Kr', { sealed: true, note: 'an unmarked seal' })

@@ -105,7 +105,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench holds a block of solid material in a clamp. You can hit it, heat it until it comes apart, let it cool again, and put a current through it.'
     },
-    prompt: 'Pick the block that is held together hardest.',
+    prompt: 'Pick the block held together hardest, to know which boulder breaks last.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {
@@ -142,7 +142,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Hit the Salt',
-    prompt: 'Say why Block A comes apart along one flat face and Block B does not.',
+    prompt: 'Say why Block A splits along one flat face while Block B crumbles apart.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B')],
     widget: {
@@ -185,7 +185,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Put a Current Through It',
-    prompt: 'Say what a current needs in order to pass through a block.',
+    prompt: 'Say what a current — charge moving through — needs to pass through a block before the miners wire the tunnel.',
     controls: ['heat', 'current', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B')],
     widget: {
@@ -228,7 +228,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'What Survives the Blow',
-    prompt: 'Say what actually gives way when Block A comes apart.',
+    prompt: 'Say what actually gives way when Block A comes apart under the hammer.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [VENT('s2', 'BLOCK A'), SALT('s1', 'BLOCK B')],
     widget: {
@@ -271,7 +271,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Block the Blade Will Not Cut',
-    prompt: 'Say what is different about the way Block A is built.',
+    prompt: 'Say what is different about how the arch block is built, since the blade will not cut it.',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [ARCH('s3', 'BLOCK A'), VENT('s2', 'BLOCK B')],
     widget: {
@@ -314,7 +314,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Lift One Out',
-    prompt: 'Pick the block you could lift a single whole molecule out of.',
+    prompt: 'Pick the block a single whole molecule could be lifted out of, to sort the rubble for the crushers.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {
@@ -353,7 +353,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Three Sealed Blocks',
-    prompt: 'File each of the three sealed blocks by how it is built.',
+    prompt: 'File each sealed block by how it is built, to clear it for the rescue path.',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [
       slab('x1', 'BLOCK A', 'sealed at the mine, cased shut', 'grid', 1074, 'bone', { sealed: true }),
@@ -400,7 +400,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Pick the Liner',
-    prompt: 'The yard needs a liner for a vessel that runs at 900 degrees and must never pass a current. Pick the block that will do it.',
+    prompt: 'Pick the block that lines — coats the inside of — a 900-degree vessel without ever passing a current.',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {

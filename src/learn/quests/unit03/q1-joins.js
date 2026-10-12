@@ -117,7 +117,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench clamps two atoms face to face and presses them together to see whether they hold. "Read Atom" shows what is on an atom\'s outer shell, and "Read Charge" clips a needle to it.'
     },
-    prompt: 'File each of the three pairs by whether its two atoms hold together.',
+    prompt: 'File each pair by whether its atoms hold, to find what still grips the blasted rubble.',
     controls: ['press', 'read'],
     pairs: [
       pair('p1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -163,7 +163,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Why B Would Not Hold',
-    prompt: 'Say why Pair B will not hold when the other two do.',
+    prompt: 'Say why the atoms of Pair B refuse to hold together while the tunnel walls must.',
     controls: ['press', 'read'],
     pairs: [
       pair('p1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -210,7 +210,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where the Electron Went',
-    prompt: 'Say how the two joins differ.',
+    prompt: 'Say how the two bonds differ in where their electrons end up.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('j1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -222,7 +222,7 @@ export const STAGES = [
       options: [
         { id: 'moved', label: 'In Pair A an electron crossed over to the other atom; in Pair B the two atoms hold a pair between them', note: 'Handed over on one plate, held between on the other.' },
         { id: 'swap', label: 'The two atoms traded places in the clamps', note: 'The atoms moved, not the electrons.' },
-        { id: 'noise', label: 'The joins are the same and the charge reading is instrument noise', note: 'Nothing real is different.' },
+        { id: 'noise', label: 'The bonds are the same and the charge reading is instrument noise', note: 'Nothing real is different.' },
         { id: 'both', label: 'In both pairs each atom gave an electron away', note: 'Everything was handed over.' }
       ]
     },
@@ -249,14 +249,14 @@ export const STAGES = [
     reward: {
       log: 'Pair A: plus one and minus one. Pair B: zero and zero.',
       title: 'Two Ways to Fill a Shell',
-      body: 'In Pair A one atom handed an electron over, which left a cation reading plus one and an anion reading minus one, and the pull between those opposite charges is what holds them together. In Pair B neither atom would give one up, so the two hold a pair of electrons between them and each of them counts that pair as its own. Every join you will ever meet is one of those two.'
+      body: 'In Pair A one atom handed an electron over, which left a cation — an atom missing an electron — reading plus one and an anion — an atom holding an extra electron — reading minus one, and the pull between those opposite charges is what holds them together. In Pair B neither atom would give one up, so the two hold a pair of electrons between them and each of them counts that pair as its own. Every bond you will ever meet is one of those two.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Which Way It Goes',
-    prompt: 'File every pair by what happens to its electrons.',
+    prompt: 'File every pair by what its electrons do, to predict which quarry rock hands over and which shares.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('r1', 'PAIR A', 'off the arch quarry', PIECES.mg, PIECES.o),
@@ -299,14 +299,14 @@ export const STAGES = [
     reward: {
       log: 'Two plates handed over, two held between.',
       title: 'Ionic and Covalent',
-      body: 'A metal and a nonmetal hand electrons over and are then held by the pull between the ions that makes, which is an ionic bond. Two nonmetals both refuse to give one up, so they hold pairs between them instead, which is a covalent bond. Which one you get is decided by the two kinds, and the catalogue already says which kinds are metals.'
+      body: 'A metal and a nonmetal hand electrons over and are then held by the pull between the ions that makes, which is an ionic bond. Two nonmetals both refuse to give one up, so they hold pairs between them instead, which is a covalent bond. Which one you get is decided by the two elements, and the catalogue already says which elements are metals.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'How Many It Takes',
-    prompt: 'Say how many CAT 17 atoms one CAT 12 atom needs in order to give away everything it has.',
+    prompt: 'Say how many CAT 17 atoms one CAT 12 atom needs to empty its outer shell — give away all it holds — for the salt in the pass.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('t1', 'PAIR A', 'off the arch quarry', PIECES.mg, PIECES.cl),
@@ -340,7 +340,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'More Than One Pair',
-    prompt: 'File each of the three pairs by how many pairs of electrons it holds between its two atoms.',
+    prompt: 'File each pair by how many electron pairs its atoms hold between them, to rank the warden stone.',
     controls: ['press', 'read'],
     pairs: [
       pair('u1', 'PAIR A', 'off the gas line', PIECES.h, PIECES.h),
@@ -384,7 +384,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Read It Off the Catalogue',
-    prompt: 'File every pair by what it will do, from the two atoms alone.',
+    prompt: 'To save a shift at the rock face, file every pair by what it will do from the two atoms alone.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('v1', 'PAIR A', 'off the arch quarry', PIECES.ca, PIECES.s),
@@ -426,14 +426,14 @@ export const STAGES = [
     reward: {
       log: 'Two ionic, one covalent, one that will not join.',
       title: 'The Catalogue Decides It',
-      body: 'A metal with a nonmetal gives an ionic bond, two nonmetals give a covalent bond, and an atom whose outer shell is already full gives no bond at all. You did not have to press anything to know which was which. Where two kinds sit in the catalogue is enough to say what they will do.'
+      body: 'A metal with a nonmetal gives an ionic bond, two nonmetals give a covalent bond, and an atom whose outer shell is already full gives no bond at all. You did not have to press anything to know which was which. Where two elements sit in the catalogue is enough to say what they will do.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Build the Recipe',
-    prompt: 'Say how many CAT 01 atoms one CAT 06 atom can hold.',
+    prompt: 'Say how many CAT 01 atoms one CAT 06 atom can hold, to fix the recipe — how many of each atom the compound holds — choking the tunnel air.',
     controls: ['press', 'read'],
     pairs: [
       pair('w1', 'PAIR A', 'off the gas line', PIECES.c, PIECES.h),
@@ -481,11 +481,11 @@ export const DEBRIEF = {
     },
     {
       heading: 'Why the Recipe Is Fixed',
-      body: 'How many electrons each outer shell has to move is a count, not a preference. That count decides how many of each kind end up in a compound, which is why one compound only ever has one recipe.'
+      body: 'How many electrons each outer shell has to move is a count, not a preference. That count decides how many of each element end up in a compound, which is why one compound only ever has one recipe.'
     },
     {
       heading: 'Next',
-      body: 'The arches outside are standing on joins like these. The next bench takes a whole block of each kind and asks what it does when you hit it, heat it and put a current through it.'
+      body: 'The arches outside are standing on joins like these. The next bench takes a whole block of each element and asks what it does when you hit it, heat it and put a current through it.'
     }
   ]
 };

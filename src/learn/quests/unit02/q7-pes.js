@@ -62,9 +62,9 @@ export const STAGES = [
     title: 'Two Spectra',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench fires light at a specimen and knocks its electrons loose, then plots how many came out at each energy. Tap a peak to read its position and its height.'
+      body: 'This bench knocks electrons off a specimen and plots how many come out at each energy. Tap each tall line — a peak — to read its position and height.'
     },
-    prompt: 'Say how Sample B\'s spectrum differs from Sample A\'s, and what that says about them.',
+    prompt: 'Find what Sample B\'s spectrum says beside Sample A\'s.',
     labels: PLAIN,
     controls: ['fire'],
     rigs: [spec('a', 'H', { note: 'an atom with one electron' }), spec('b', 'He', { note: 'an atom with two electrons' })],
@@ -99,7 +99,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'What Height Counts',
-    prompt: 'Say what the height of a peak counts.',
+    prompt: 'Find what the height of a peak counts.',
     labels: PLAIN,
     controls: ['fire'],
     rigs: [spec('a', 'He', { note: 'two electrons' }), spec('b', 'Li', { note: 'three electrons' })],
@@ -134,8 +134,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Lithium\'s Short Peak',
-    prompt: 'Say why lithium has a short peak far to the left of its tall one.',
-    labels: PLAIN,
+    prompt: 'Explain lithium\'s short peak beside its tall one.',
+    labels: EARNED,
     controls: ['fire'],
     rigs: [spec('a', 'Li', { label: 'LITHIUM', showRings: true, note: 'Li, its rings beside the spectrum' })],
     widget: {
@@ -169,7 +169,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Boron\'s Second Shell',
-    prompt: 'Say why boron\'s second shell shows two peaks.',
+    prompt: 'Explain why boron\'s second shell shows two peaks.',
     labels: EARNED,
     controls: ['fire'],
     rigs: [spec('a', 'B', { label: 'BORON', showRings: true, note: 'B, its rings beside the spectrum' })],
@@ -240,7 +240,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Neon and Fluorine',
-    prompt: 'Say why neon\'s innermost peak sits further along than fluorine\'s.',
+    prompt: 'Explain why neon\'s innermost peak sits further along than fluorine\'s.',
     labels: EARNED,
     controls: ['fire'],
     rigs: [

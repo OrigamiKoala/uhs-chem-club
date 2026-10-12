@@ -51,11 +51,11 @@ const SPEAKER = 'Vess';
    Nothing on this bench may change one.
    ------------------------------------------------------------------ */
 export const CARD_MASS = {
-  'CAT 01': 1.0,
-  'CAT 06': 12.0,
-  'CAT 08': 16.0,
-  'CAT 11': 23.0,
-  'CAT 17': 35.5
+  'hydrogen': 1.0,
+  'carbon': 12.0,
+  'oxygen': 16.0,
+  'sodium': 23.0,
+  'chlorine': 35.5
 };
 
 /* ------------------------------------------------------------------
@@ -95,10 +95,10 @@ export function countOf(hopper) {
 }
 
 /**
- * What a hopper's particles are called, counted `n`. A sample with a CAT code
- * is one element, so it holds atoms; a compound declares `particle`
- * ('molecule'; Ligar's ionic samples would say 'formula unit') because a mole is a count of
- * whatever the substance is made of, and the readout has to say which.
+ * What a hopper's particles are called, counted `n`. A sample of one element
+ * holds atoms; a compound declares `particle` ('molecule'; Ligar's ionic samples
+ * would say 'formula unit') because a mole is a count of whatever the substance
+ * is made of, and the readout has to say which.
  */
 export function particleWord(hopper, n = 2) {
   const one = hopper?.particle || 'atom';
@@ -116,18 +116,18 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench tips a sample down a chute into bins by weight and counts what lands in each. "Weigh Sample" puts a whole sample on a balance, even one too full to tip.'
     },
-    prompt: 'Sample B is too full to tip. Say how many atoms it holds.',
+    prompt: 'One crate here is too full to tip. Say how many atoms it holds.',
     controls: ['pour', 'balance'],
     hoppers: [
-      { id: 'h1', label: 'SAMPLE A', code: 'CAT 06', note: '40 atoms, kept as the counting standard', bins: [{ mass: 12, n: 40 }] },
-      { id: 'h2', label: 'SAMPLE B', code: 'CAT 06', note: 'a full crate, gate shut', bulk: true, bins: [{ mass: 12, n: 300 }] }
+      { id: 'h1', label: 'SAMPLE A', code: 'carbon', note: '40 atoms, kept as the counting standard', bins: [{ mass: 12, n: 40 }] },
+      { id: 'h2', label: 'SAMPLE B', code: 'carbon', note: 'a full crate, gate shut', bulk: true, bins: [{ mass: 12, n: 300 }] }
     ],
-    reference: ['CAT 06 — listed mass 12.0'],
-    widget: { type: 'number', min: 0, max: 400, step: 50, label: 'Atoms in Sample B' },
+    reference: ['carbon — listed mass 12.0'],
+    widget: { type: 'number', min: 0, max: 400, step: 50, label: 'Atoms in the full crate' },
     hints: [
-      'Tap Sample A, press "Tip Sample", then press "Weigh Sample" on it, and weigh Sample B as well.',
-      'Sample A is 40 atoms weighing 480 in all, and Sample B holds the same kind of atom, so each of its atoms weighs the same.',
-      'Divide the total weight of Sample B by the weight of a single atom from Sample A.'
+      'Tap the open sample, press "Tip Sample", then press "Weigh Sample" on it, and weigh the full crate as well.',
+      'The open sample is 40 atoms weighing 480 in all, and the full crate holds the same element, so each of its atoms weighs the same.',
+      'Divide the total weight of the full crate by the weight of a single atom from the open sample.'
     ],
     check(state) {
       if (state.number === 0) {
@@ -144,48 +144,48 @@ export const STAGES = [
     reward: {
       log: 'Sample B: 3600 on the pan, 300 atoms.',
       title: 'Counting By Weighing',
-      body: 'Nobody counted Sample B and nobody has to: once you know what one atom weighs, a total weight divides straight into a count. A small sample you CAN count hands you the weight of one atom, and from there the biggest crate in the yard is countable. This is the only way anybody has ever counted atoms.'
+      body: 'Nobody counted Sample B and nobody has to: once you know what one atom weighs, a total weight divides straight into a count. A small sample you CAN count hands you the weight of one atom, and from there the biggest crate in the yard is countable. This is how chemists count things far too small to count one by one.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'What One Molecule Weighs',
-    prompt: 'Say what one molecule of Sample B weighs.',
+    prompt: 'Say what one molecule of the second sample weighs.',
     controls: ['pour', 'balance'],
     hoppers: [
-      { id: 'h3', label: 'SAMPLE A', note: '40 molecules, one CAT 08 to two CAT 01', particle: 'molecule', bins: [{ mass: 18, n: 40 }] },
-      { id: 'h4', label: 'SAMPLE B', note: 'a full crate, one CAT 06 to four CAT 01, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 16, n: 250 }] }
+      { id: 'h3', label: 'SAMPLE A', note: '40 molecules, one oxygen to two hydrogen', particle: 'molecule', bins: [{ mass: 18, n: 40 }] },
+      { id: 'h4', label: 'SAMPLE B', note: 'a full crate, one carbon to four hydrogen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 16, n: 250 }] }
     ],
-    reference: ['CAT 01 — 1.0', 'CAT 06 — 12.0', 'CAT 08 — 16.0'],
-    widget: { type: 'number', min: 10, max: 24, step: 1, label: 'Weight of one molecule of Sample B' },
+    reference: ['hydrogen — 1.0', 'carbon — 12.0', 'oxygen — 16.0'],
+    widget: { type: 'number', min: 10, max: 24, step: 1, label: 'Weight of one molecule of the second sample' },
     hints: [
-      'Tap Sample A, press "Tip Sample", and read the weight stencilled under the bin that caught everything.',
-      'Sample A\'s bin caught at 18, and its recipe is one CAT 08 at 16.0 with two CAT 01 at 1.0 each — so a molecule weighs what its atoms weigh added up.',
-      'Read Sample B\'s recipe off its label, then add one listed mass from the plate for every atom in it.'
+      'Tap the first sample, press "Tip Sample", and read the weight stencilled under the bin that caught everything.',
+      'The first sample\'s bin caught at 18, and its recipe is one oxygen at 16.0 with two hydrogen at 1.0 each, so a molecule weighs what its atoms weigh added up.',
+      'Read the second sample\'s recipe off its label, then add one listed mass from the plate for every atom in it.'
     ],
     check(state) {
       if (state.number === 10) {
         return { ok: false, notYet: true, msg: 'Set the counter to the figure you worked out.' };
       }
       if (state.number === 12) {
-        return { ok: false, msg: 'That is the CAT 06 on its own, with none of the four CAT 01 counted.' };
+        return { ok: false, msg: 'That is the carbon on its own, with none of the four hydrogen counted.' };
       }
       if (state.number === 13) {
-        return { ok: false, msg: 'That counts one CAT 01. A molecule of Sample B holds four of them.' };
+        return { ok: false, msg: 'That counts one hydrogen. A molecule of the second sample holds four of them.' };
       }
       if (state.number === 18) {
-        return { ok: false, msg: 'That is Sample A. Sample B holds a different recipe, so work its own out.' };
+        return { ok: false, msg: 'That is the first sample. The second sample holds a different recipe, so work its own out.' };
       }
       if (state.number !== 16) {
-        return { ok: false, msg: 'Add up one molecule of Sample B: one listed mass for every atom in its recipe.' };
+        return { ok: false, msg: 'Add up one molecule of the second sample: one listed mass for every atom in its recipe.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Sample A caught at 18. Sample B: 16.',
+      log: 'First sample caught at 18. Second sample: 16.',
       title: 'Formula Mass',
-      body: 'Sample A landed in the bin marked 18, which is exactly 16.0 + 1.0 + 1.0 — the listed masses of the atoms in one molecule of it, added up. Sample B comes to 12 + 4 = 16 the same way. Adding up the listed masses of every atom in one molecule of a substance gives its formula mass, and there is nothing more to it than that.'
+      body: 'The first sample landed in the bin marked 18, which is exactly 16.0 + 1.0 + 1.0: the listed masses of the atoms in one molecule of it, added up. The second sample comes to 12 + 4 = 16 the same way. Adding up the listed masses of every atom in one molecule of a substance gives its formula mass, and there is nothing more to it than that.'
     }
   },
 
@@ -195,11 +195,11 @@ export const STAGES = [
     prompt: 'Every one of these three samples holds sixty atoms. Say what their weights have in common.',
     controls: ['pour', 'balance'],
     hoppers: [
-      { id: 'h5', label: 'SAMPLE A', code: 'CAT 01', note: '60 atoms, counted in', bins: [{ mass: 1, n: 60 }] },
-      { id: 'h6', label: 'SAMPLE B', code: 'CAT 06', note: '60 atoms, counted in', bins: [{ mass: 12, n: 60 }] },
-      { id: 'h7', label: 'SAMPLE C', code: 'CAT 08', note: '60 atoms, counted in', bins: [{ mass: 16, n: 60 }] }
+      { id: 'h5', label: 'SAMPLE A', code: 'hydrogen', note: '60 atoms, counted in', bins: [{ mass: 1, n: 60 }] },
+      { id: 'h6', label: 'SAMPLE B', code: 'carbon', note: '60 atoms, counted in', bins: [{ mass: 12, n: 60 }] },
+      { id: 'h7', label: 'SAMPLE C', code: 'oxygen', note: '60 atoms, counted in', bins: [{ mass: 16, n: 60 }] }
     ],
-    reference: ['CAT 01 — 1.0', 'CAT 06 — 12.0', 'CAT 08 — 16.0'],
+    reference: ['hydrogen — 1.0', 'carbon — 12.0', 'oxygen — 16.0'],
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -233,82 +233,82 @@ export const STAGES = [
     reward: {
       log: 'Three samples of 60: 60, 720 and 960 on the pan.',
       title: 'Equal Counts Weigh In the Same Ratio',
-      body: 'Three samples holding exactly the same number of atoms weighed 60, 720 and 960 — one, twelve and sixteen times each other, which is the ratio of their listed masses. It has to come out that way: if one CAT 06 atom weighs twelve times one CAT 01 atom, any equal counts of the two weigh in that same twelve to one ratio. Run that backwards and you have a way of measuring out equal counts without counting anything.'
+      body: 'Three samples holding exactly the same number of atoms weighed 60, 720 and 960 — one, twelve and sixteen times each other, which is the ratio of their listed masses. It has to come out that way: if one carbon atom weighs twelve times one hydrogen atom, any equal counts of the two weigh in that same twelve to one ratio. Run that backwards and you have a way of measuring out equal counts without counting anything.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Measure Out a Matching Count',
-    prompt: 'You have weighed out 12.0 grams of CAT 06. Say how many grams of CAT 08 hold exactly the same number of atoms.',
+    prompt: 'You have weighed out 12.0 grams of carbon. Say how many grams of oxygen hold exactly the same number of atoms.',
     controls: ['pour', 'balance'],
     hoppers: [
-      { id: 'h5', label: 'SAMPLE A', code: 'CAT 01', note: '60 atoms, counted in', bins: [{ mass: 1, n: 60 }] },
-      { id: 'h6', label: 'SAMPLE B', code: 'CAT 06', note: '60 atoms, counted in', bins: [{ mass: 12, n: 60 }] },
-      { id: 'h7', label: 'SAMPLE C', code: 'CAT 08', note: '60 atoms, counted in', bins: [{ mass: 16, n: 60 }] }
+      { id: 'h5', label: 'SAMPLE A', code: 'hydrogen', note: '60 atoms, counted in', bins: [{ mass: 1, n: 60 }] },
+      { id: 'h6', label: 'SAMPLE B', code: 'carbon', note: '60 atoms, counted in', bins: [{ mass: 12, n: 60 }] },
+      { id: 'h7', label: 'SAMPLE C', code: 'oxygen', note: '60 atoms, counted in', bins: [{ mass: 16, n: 60 }] }
     ],
-    reference: ['CAT 01 — 1.0', 'CAT 06 — 12.0', 'CAT 08 — 16.0'],
-    widget: { type: 'number', min: 8, max: 26, step: 1, label: 'Grams of CAT 08' },
+    reference: ['hydrogen — 1.0', 'carbon — 12.0', 'oxygen — 16.0'],
+    widget: { type: 'number', min: 8, max: 26, step: 1, label: 'Grams of oxygen' },
     hints: [
       'Tip at least two of the samples and put each total next to the sixty atoms it came from.',
       'Equal counts weigh in the ratio of the listed masses, so to get equal counts you weigh out the listed masses themselves.',
-      'Set grams of CAT 08 over 12.0 grams of CAT 06 equal to CAT 08\'s listed mass over CAT 06\'s listed mass, and solve for the grams.'
+      'Set grams of oxygen over 12.0 grams of carbon equal to oxygen\'s listed mass over carbon\'s listed mass, and solve for the grams.'
     ],
     check(state) {
       if (state.number === 8) {
         return { ok: false, notYet: true, msg: 'Set the counter to the figure you worked out.' };
       }
       if (state.number === 12) {
-        return { ok: false, msg: 'Equal weights are not equal counts: a CAT 08 atom is heavier, so 12.0 grams of it holds fewer atoms than 12.0 grams of CAT 06.' };
+        return { ok: false, msg: 'Equal weights are not equal counts: an oxygen atom is heavier, so 12.0 grams of it holds fewer atoms than 12.0 grams of carbon.' };
       }
       if (state.number === 24) {
         return { ok: false, msg: 'Doubling works for more of the same element. These are two different elements, so go by their listed masses.' };
       }
       if (state.number !== 16) {
-        return { ok: false, msg: 'Equal counts weigh in the ratio of the listed masses. Compare CAT 08\'s listed mass with CAT 06\'s.' };
+        return { ok: false, msg: 'Equal counts weigh in the ratio of the listed masses. Compare oxygen\'s listed mass with carbon\'s.' };
       }
       return { ok: true };
     },
     reward: {
-      log: '12.0 g of CAT 06 matches 16.0 g of CAT 08.',
+      log: '12.0 g of carbon matches 16.0 g of oxygen.',
       title: 'The Mole',
-      body: 'Take the listed mass of any element in grams and you have taken the same number of atoms every time, and that amount is called one mole of it. Nobody picked the number: it falls out of the listed masses already being ratios of one another. It works out to 6.02 x 10^23 atoms, a figure called Avogadro\'s number, and that count being far too big to say any other way is the whole reason the word mole exists.'
+      body: "Take the listed mass of any element in grams and you have taken the same number of atoms every time, and that amount is called one mole of it. Nobody picked the number: it falls out of the listed masses already being ratios of one another. It works out to 6.02 x 10^23 atoms — a 6 followed by 23 zeros — a figure called Avogadro's number, and that count being far too big to say any other way is the whole reason the word mole exists."
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'A Mole of a Compound',
-    prompt: 'Each molecule of Sample A is one CAT 06 and two CAT 08. Say how many grams of it you would weigh out to have one mole of its molecules.',
+    prompt: 'Each molecule of this sample is one carbon and two oxygen. Say how many grams of it you would weigh out to have one mole of its molecules.',
     controls: ['balance'],
     hoppers: [
-      { id: 'h8', label: 'SAMPLE A', note: 'a full crate, one CAT 06 to two CAT 08, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 44, n: 200 }] }
+      { id: 'h8', label: 'SAMPLE A', note: 'a full crate, one carbon to two oxygen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 44, n: 200 }] }
     ],
-    reference: ['CAT 06 — 12.0', 'CAT 08 — 16.0'],
+    reference: ['carbon — 12.0', 'oxygen — 16.0'],
     widget: {
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: '440', label: '44.0 grams', note: 'One CAT 06 plus two CAT 08.' },
-        { id: '280', label: '28.0 grams', note: 'One CAT 06 plus one CAT 08.' },
-        { id: '120', label: '12.0 grams', note: 'The CAT 06 on its own.' },
+        { id: '440', label: '44.0 grams', note: 'One carbon plus two oxygen.' },
+        { id: '280', label: '28.0 grams', note: 'One carbon plus one oxygen.' },
+        { id: '120', label: '12.0 grams', note: 'The carbon on its own.' },
         { id: '880', label: '88.0 grams', note: 'Twice 12.0 plus four times 16.0.' }
       ]
     },
     hints: [
-      'Work out the formula mass of Sample A first.',
+      'Work out the formula mass of this sample first.',
       'One mole of an element is its listed mass in grams, and a molecule of a compound weighs the listed masses of all its atoms added up.',
-      'Add the listed mass of one CAT 06 to the listed mass of two CAT 08 to get the grams in one mole.'
+      'Add the listed mass of one carbon to the listed mass of two oxygen to get the grams in one mole.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === '120') {
-        return { ok: false, msg: 'That is the CAT 06 on its own. A molecule of Sample A holds all three of its atoms.' };
+        return { ok: false, msg: 'That is the carbon on its own. A molecule of this sample holds all three of its atoms.' };
       }
       if (state.choice === '280') {
-        return { ok: false, msg: 'That counts one CAT 08, and each molecule of Sample A holds two of them.' };
+        return { ok: false, msg: 'That counts one oxygen, and each molecule of this sample holds two of them.' };
       }
       if (state.choice === '880') {
         return { ok: false, msg: 'That is two molecules\' worth. One mole weighs one molecule\'s listed masses, in grams.' };
@@ -325,12 +325,12 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Drum of Seventy-Two',
-    prompt: 'Say how many moles of Sample A the drum holds.',
+    prompt: 'Say how many moles of this sample the drum holds.',
     controls: ['balance'],
     hoppers: [
-      { id: 'h9', label: 'SAMPLE A', note: 'one drum, one CAT 08 to two CAT 01, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 18, n: 4 }] }
+      { id: 'h9', label: 'SAMPLE A', note: 'one drum, one oxygen to two hydrogen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 18, n: 4 }] }
     ],
-    reference: ['CAT 01 — 1.0', 'CAT 08 — 16.0'],
+    reference: ['hydrogen — 1.0', 'oxygen — 16.0'],
     widget: { type: 'number', min: 0, max: 8, step: 1, label: 'Moles in the drum' },
     hints: [
       'Tap Sample A and press "Weigh Sample" to read what the drum holds.',
@@ -362,37 +362,37 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Moles of Each Element',
-    prompt: 'You have two moles of Sample A. Say how many moles of CAT 01 that holds.',
+    prompt: 'You have two moles of this sample. Say how many moles of hydrogen that holds.',
     controls: ['balance'],
     hoppers: [
-      { id: 'h10', label: 'SAMPLE A', note: 'two drums, one CAT 08 to two CAT 01, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 18, n: 2 }] }
+      { id: 'h10', label: 'SAMPLE A', note: 'two drums, one oxygen to two hydrogen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 18, n: 2 }] }
     ],
-    reference: ['CAT 01 — 1.0', 'CAT 08 — 16.0'],
-    widget: { type: 'number', min: 0, max: 8, step: 1, label: 'Moles of CAT 01' },
+    reference: ['hydrogen — 1.0', 'oxygen — 16.0'],
+    widget: { type: 'number', min: 0, max: 8, step: 1, label: 'Moles of hydrogen' },
     hints: [
-      'Write down the recipe of one molecule first: one CAT 08 and two CAT 01.',
-      'A ratio does not care what you count in, so two CAT 01 per molecule is also two moles of CAT 01 for every mole of molecules.',
-      'Multiply the number of moles of the compound by the count of CAT 01 atoms in each molecule.'
+      'Write down the recipe of one molecule first: one oxygen and two hydrogen.',
+      'A ratio does not care what you count in, so two hydrogen per molecule is also two moles of hydrogen for every mole of molecules.',
+      'Multiply the number of moles of the compound by the count of hydrogen atoms in each molecule.'
     ],
     check(state) {
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
       }
       if (state.number === 2) {
-        return { ok: false, msg: 'Two is the number of moles of molecules, and of the CAT 08 in them. Each molecule holds two CAT 01, not one.' };
+        return { ok: false, msg: 'Two is the number of moles of molecules, and of the oxygen in them. Each molecule holds two hydrogen, not one.' };
       }
       if (state.number === 1) {
-        return { ok: false, msg: 'One molecule already holds two CAT 01, so one mole of molecules holds two moles of them.' };
+        return { ok: false, msg: 'One molecule already holds two hydrogen, so one mole of molecules holds two moles of them.' };
       }
       if (state.number !== 4) {
-        return { ok: false, msg: 'Each molecule holds two CAT 01, and you have two moles of molecules.' };
+        return { ok: false, msg: 'Each molecule holds two hydrogen, and you have two moles of molecules.' };
       }
       return { ok: true };
     },
     reward: {
-      log: '2 moles of Sample A hold 4 moles of CAT 01.',
+      log: '2 moles of water hold 4 moles of hydrogen.',
       title: 'A Recipe Reads in Moles',
-      body: 'The numbers in a formula are a ratio of atoms, and a ratio does not care what unit you count in: two CAT 01 per molecule is also two moles of CAT 01 per mole of molecules. So two moles of this compound hold four moles of CAT 01 and two moles of CAT 08. That is why the formula written for a single molecule is the same formula a yard uses to weigh out a shipment.'
+      body: 'The numbers in a formula are a ratio of atoms, and a ratio does not care what unit you count in: two hydrogen per molecule is also two moles of hydrogen per mole of molecules. So two moles of this compound hold four moles of hydrogen and two moles of oxygen. That is why the formula written for a single molecule is the same formula a yard uses to weigh out a shipment.'
     }
   },
 
@@ -402,18 +402,18 @@ export const STAGES = [
     prompt: 'Say which of the three drums holds the most atoms.',
     controls: ['balance'],
     hoppers: [
-      { id: 'd1', label: 'SAMPLE A', code: 'CAT 06', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 12, n: 5 }] },
-      { id: 'd2', label: 'SAMPLE B', code: 'CAT 08', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 16, n: 4 }] },
-      { id: 'd3', label: 'SAMPLE C', code: 'CAT 01', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 1, n: 6 }] }
+      { id: 'd1', label: 'SAMPLE A', code: 'carbon', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 12, n: 5 }] },
+      { id: 'd2', label: 'SAMPLE B', code: 'oxygen', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 16, n: 4 }] },
+      { id: 'd3', label: 'SAMPLE C', code: 'hydrogen', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 1, n: 6 }] }
     ],
-    reference: ['CAT 01 — 1.0', 'CAT 06 — 12.0', 'CAT 08 — 16.0'],
+    reference: ['hydrogen — 1.0', 'carbon — 12.0', 'oxygen — 16.0'],
     widget: {
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'd1', label: 'Sample A', note: 'Sixty grams of CAT 06.' },
-        { id: 'd2', label: 'Sample B', note: 'Sixty-four grams of CAT 08.' },
-        { id: 'd3', label: 'Sample C', note: 'Six grams of CAT 01.' }
+        { id: 'd1', label: 'Sample A', note: 'Sixty grams of carbon.' },
+        { id: 'd2', label: 'Sample B', note: 'Sixty-four grams of oxygen.' },
+        { id: 'd3', label: 'Sample C', note: 'Six grams of hydrogen.' }
       ]
     },
     hints: [
@@ -436,7 +436,7 @@ export const STAGES = [
     reward: {
       log: 'Sample C: 6 grams, 6 moles, the most atoms on the floor.',
       title: 'Weight Is Not Count',
-      body: 'The lightest drum on the floor holds the most atoms, because a CAT 01 atom weighs a sixteenth of what a CAT 08 atom does. A balance only ever reports mass, so a count is always a mass divided by a molar mass. Every real piece of chemistry begins with that division and ends with the reverse of it.',
+      body: 'The lightest drum on the floor holds the most atoms, because a hydrogen atom weighs a sixteenth of what an oxygen atom does. A balance only ever reports mass, so a count is always a mass divided by a molar mass. Every real measurement in chemistry begins with that division and ends with the reverse of it.',
       last: true
     }
   }
@@ -458,7 +458,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'That is the last bench on Tallow. The next world asks why the electrons in every atom you have weighed sit only where they do.'
+      body: 'That is the last bench on Tallow. One machine still stands on the flat: the refinery hopper, built from everything you have measured here.'
     }
   ]
 };

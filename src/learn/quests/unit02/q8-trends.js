@@ -77,9 +77,9 @@ export const STAGES = [
     title: 'What Makes the Pull',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench draws an atom to scale, and a tap on an electron reads the pull on it, how far it is from the middle and the charge at the middle. Strip takes the outermost electron off and says what it cost.'
+      body: 'This bench draws an atom to scale, and a tap on an electron reads its pull, its distance in pm — trillionths of a metre — and the charge it feels. "Strip Electron" takes the outermost electron off and says what it cost.'
     },
-    prompt: 'Say what makes the pull on an electron stronger.',
+    prompt: 'Find what makes the pull on an electron stronger.',
     labels: L1,
     show: { core: true },
     controls: [],
@@ -115,8 +115,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Plus One, Not Plus Eleven',
-    prompt: 'Say why sodium\'s outer electron feels a pull of about +1, not +11.',
-    labels: L1,
+    prompt: 'Explain why sodium\'s outer electron feels about +1, not +11.',
+    labels: L2,
     show: { core: true, between: true, feel: true },
     controls: [],
     rigs: [atom('Na', { id: 'a' })],
@@ -186,7 +186,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Down a Group',
-    prompt: 'Say why potassium is bigger than sodium.',
+    prompt: 'Explain why potassium is bigger than sodium.',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: [],
@@ -257,7 +257,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Three Costs',
-    prompt: 'Order lithium, beryllium and boron by what it costs to strip the outer electron, and say what the order shows.',
+    prompt: 'Order lithium, beryllium and boron by stripping cost, then find what breaks the climb. Costs are in kJ/mol, the energy to strip a mole of atoms.',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: ['strip', 'reset'],
@@ -293,7 +293,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Magnesium\'s Three',
-    prompt: 'Say which charge magnesium takes when it forms an ion.',
+    prompt: 'Find which charge magnesium takes as an ion.',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: ['strip', 'reset'],

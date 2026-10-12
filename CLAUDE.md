@@ -81,7 +81,14 @@ reading plus two with six protons and four electrons, which is what makes "the n
 protons minus electrons" a discovery rather than an assertion, and stage 6 is answerable
 because the sample with the extra neutron has a visibly identical outside and stage 5
 established that the outer shell decides behaviour. Hints point at that evidence; they are
-not a substitute for it.
+not a substitute for it. **Words are free, but no word arrives unexplained.** Play copy uses
+real chemistry terms from stage one, and every term is defined where the player first meets
+it — in the briefing, an earlier reward card, or an inline gloss ("an element — a substance
+made of only one kind of atom"). A constant, conversion or formula a stage needs is a given
+on a plate, readout or rung 3, never assumed knowledge. Boss phases that ask the player to
+look something up carry the reference on the bench (`REFERENCES` in `boss-hopper.js`,
+rendered through `frame.setReadout`: plate compositions, an atomic-number strip, the group-18
+column), because a synthesis fight with no table on it is a recall quiz, not chemistry.
 
 **ONLY BOSSES FIGHT, AND THE FOE MUST CARRY EVIDENCE.** Combat was removed from the
 ordinary bench stages (it felt out of place beside the teaching); a boss phase still
@@ -112,11 +119,11 @@ intent line are the whole per-stage story budget, and **no modal ever precedes a
 Premise, acts and ending: `docs/story/bible.md`.
 
 A Learn quest publishes its own schedule — `VOCABULARY` in `src/learn/quests/unit01/q1-grain.js`
-and `q2-core.js` are the worked examples, mapping each gated term to the stage whose reward
-card introduces it. `verify:learn` fails the build both ways round: a term used one stage
-early, and a term the schedule promises that no card ever delivers. Every built quest in Units 1 and 2
-now publishes one; `WITHHELD_VOCAB` in `tools/verify-learn.mjs` holds only what a quest has
-yet to earn, so words an earlier bench taught (atom, element, compound, mixture, proton,
+and `q2-core.js` are the worked examples, mapping each term to the stage whose reward
+card DEFINES it. Play copy uses real terms freely from stage one (the play-copy gate in
+`verify:learn` is intentionally a no-op); what the verifier enforces is the card promise —
+a term the schedule names must appear in that stage's reward title, body or log.
+`WITHHELD_VOCAB` in `tools/verify-learn.mjs` holds only what a quest has yet to earn, so words an earlier bench taught (atom, element, compound, mixture, proton,
 neutron, electron, shell, valence, isotope, ion) are plain words downstream and using them
 is the rule rather than a leak. `PRODUCT.md` §Product Principles 1 is the product-level
 statement of all of this.
@@ -976,23 +983,27 @@ it shows needs a solution line.
 Eight stages on a bench with three tools: a scope on a power dial, a cutter and a shaker.
 One briefing, on stage one, naming those three tools; every other stage is prompt, tools,
 answer. Zoom up until the picture stops getting finer (there is a floor) → which of two
-identical-looking samples is one kind of atom → how many kinds hide in one sample → run the
-cutter over four samples, one of which will not divide → copy the cluster that repeats →
-file two samples by how many heavy atoms each molecule holds → settle three samples and read
+identical-looking powders is one element → how many elements hide in one sample → run the
+cutter over four samples, one of which will not divide → copy the molecule that repeats →
+file two samples by how many oxygen atoms each molecule holds → settle three samples and read
 the layers → file four samples as **element, compound or mixture**. `VOCABULARY` introduces
-*atom* on stage 1's card, *element* and *mixture* on stage 2's, *molecule* on 5 and
-*compound* on 6, and each word is used plainly from the next stage on. The last sample is
-bonded pairs of one kind, so "still an element" is a real question rather than a lookup.
-The catalogue codes (CAT 01, 06, 08, 11, 16, 17) are atomic numbers, never explained here;
-the debrief points at them as the hook into `q3-catalogue`.
+*atom* on stage 1's card, *element* and *mixture* on stage 2's, *molecule* on 4 and
+*compound* on 6; every other term is used plainly from stage one with a gloss where it first
+appears (the prompt for stage 2 defines *element* inline, stage 6 defines *recipe* inline).
+The last sample is bonded pairs of one kind, so "still an element" is a real question rather
+than a lookup. Every atom is called by its real element name from stage one (hydrogen,
+carbon, oxygen, sodium, sulfur, chlorine); the numbers beside the names are each element's
+atomic number, and the debrief explains what they count as the hook into `q3-catalogue`.
 
 ### World 1 quest 2 — Inside an Atom (`unit01/q2-core`, live)
 Eight stages on the core bench in Tallow's sub-level lab. Fire a beam through an atom and
-say what is inside it → count the crossed grains in the nucleus → work out a sealed sample's
-electrons from the charge needle → place eleven electrons on rings by copying three open
-samples → predict trading from the outer shell → tell two 13-grain samples apart by what is
+say what is inside it → count the crossed particles in the middle → work out a sealed sample's
+electrons from the charge needle → place eleven electrons on shells by copying three open
+samples → predict trading from the outer shell → tell two 13-particle middles apart by what is
 outside them → strip electrons to reach plus two → say how three samples differ from a
-standard.
+standard. The probe reads neutral appearance codes (`CROSSED SPECK`, `BLANK SPECK`,
+`OUTER SPECK`) until stage 2's card names protons, neutrons and electrons, then switches to
+the real names; key legends and briefings never use a code word for a named thing.
 
 **The vocabulary schedule is short on purpose.** Stage 2's reward card names protons,
 neutrons **and** electrons together — all three are on screen by then, in "The middle" and
@@ -1039,8 +1050,9 @@ Eight stages on the catalogue board (`engine/catalogue.js`, the one Learn instru
 NOT drawn into an aperture: a card index is a card index, so it is built out of real plate
 elements — a drawer of cards and a board of slots, two-tap place, no drag — which is the only
 version of it that reflows at 375 px and can be read out loud). The payoff both earlier
-benches pointed at: the CAT number the scope has filed by since bench one is the proton
-count, and ordering by it makes the periodic pattern. Periods, groups, noble gases, metals
+benches pointed at: cards filed `No. 1` … `No. 19` beside their element names, and the bench
+is about ORDER — laying every element out by proton count and discovering the repeating
+pattern, Mendeleev-style. Periods, groups, noble gases, metals
 and nonmetals land as earned vocabulary; stage 7 has the player predict a card that is not
 there, the way Mendeleev did. The question it leaves lying — why a listed mass is never a
 whole number — is `q5-assay`'s.
@@ -2858,9 +2870,9 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 
 ### 17. Pedagogical Chemistry-First Reframing & Visual Formula HUD
 - **Chemistry-First Discovery Doctrine:** Students explore and discover core chemistry first (hands-on with visuals, molecular models, and formulas), and apply that chemical knowledge to solve grounded sci-fi frontier problems (e.g. mass spectrometry to detect counterfeit alloy, Beer-Lambert spectrophotometry to monitor reservoir toxins, gas laws to stabilize pressure valves and airlocks).
-- **Comprehensive Reframing (`src/learn/engine/quest-guide.js`):** Completely reframed all Learn track quests across Unit 1 (Tallow: `q1-grain` to `boss-hopper`), Unit 2 (Lanternfall: `q1-wave` to `boss-eater`), Unit 3 (Ligar: `q1-joins` to `boss-warden`), Unit 4 (Bellows: `q1-knocks` to `boss-compressor`), and Unit 7 (Kettle/Ligar: `q1-recipe` to `boss-golem`). Every stage features `storyProblem` (frontier problem solved via chemistry), `science` (underlying chemical principle), `howToTest` (scientific method exploration without answer spoilers), and `visualFormula` (clean mathematical equation or structural relationship).
+- **Comprehensive Reframing (`src/learn/engine/quest-guide.js`):** Completely reframed all Learn track quests across Unit 1 (Tallow: `q1-grain` to `boss-hopper`), Unit 2 (Lanternfall: `q1-wave` to `boss-eater`), Unit 3 (Ligar: `q1-joins` to `boss-warden`), Unit 4 (Bellows: `q1-knocks` to `boss-compressor`), and Unit 7 (Kettle/Ligar: `q1-recipe` to `boss-golem`). Every stage features `storyProblem` (frontier problem solved via chemistry), `science` (underlying chemical principle), `howToTest` (scientific method exploration without answer spoilers), and `visualFormula` (clean mathematical equation or structural relationship). (`getQuestScience` currently has no callers: the guide card/modal is documented but not rendered anywhere, so the visible per-stage story is the `.lq-story` line plus the prompt. Wire it up or keep it as reference — do not duplicate its copy into prompts.)
 - **No Vess modal opens on a stage. A new instrument gets a TOUR instead** (`showBriefing` in `src/learn/engine/frame.js`): one tool per step, highlighted alone on the bench (`showInstrumentHalos(kind, id)`), Back / Skip / Next, like a website how-to. The bench step uses only the opening sentence of the quest's stage-1 `briefing.body`; the dial is toured once per player (`tour_dial`); **every key gets its own step**, lighting just that cap (`kind: 'key'`, `BenchViewer3D.getKeyList()` / `_buildKeyHalo`), with only the clause of the briefing that quotes its label (fallback `Press "Label" to use it...`), once per quest and key (`tour_key_<quest>_<id>`). Never put two tools in one step. The `Tour` key on the stage head replays all of it. Quests still call `showBriefing()` on stage 1; with nothing new it does nothing, and if the viewer is not up yet it waits for `onBenchViewer`.
-- **Every stage card opens with a one-sentence story line** (`src/learn/engine/stage-story.js`, `STAGE_STORY[questId][stageIndex]`, rendered as `.lq-story` above the prompt): it names the world's mission (Tallow: the salt guards and the refinery; Lanternfall: relight the beacons; Ligar: clear the rescue pass; Bellows: let the pressure out; Kettle: halt the foundry) and says what this stage's finding does for it. It invents no fact about the world the chemistry does not support, and never gives the route or answer. `verify:learn` fails any stage without exactly one.
+- **Every stage card opens with a one-sentence story line** (`src/learn/engine/stage-story.js`, `STAGE_STORY[questId][stageIndex]`, rendered as `.lq-story` above the prompt): it names the world's mission (Tallow: the salt guards and the refinery; Lanternfall: relight the beacons; Ligar: clear the rescue pass; Bellows: let the pressure out; Kettle: halt the foundry) and says what this stage's finding does for it. It invents no fact about the world the chemistry does not support, and never gives the route or answer. `verify:learn` fails any stage without exactly one. The lines form one arc per quest — incident, investigation, payoff toward the world's Case File clue — under the Fifth Guild saga (`src/story/saga.js` episodes), with the subject varied line to line (`the crew has to` at most once per quest). Quest `line` descriptors in `src/learn/worlds/` are story-flavoured the same way, naming the mission rather than the topic.
 - **The overworld stage card (`.learn-quest-overworld .lq-body`) is flat prose, four sentences at most:** the prompt, a reading (`setReadout` clamps each line to 2 sentences; boxes and heads are dropped by CSS), the answer keys, and on a clear one run-in line (`Title. Body`, body clamped to 2 sentences). The key legend, stage count, readout heads and answer labels are not drawn there.
 - **Scope Boundary:** Erebus quests remain untouched per instruction until Learn track work is complete.
 

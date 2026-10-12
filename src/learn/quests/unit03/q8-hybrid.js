@@ -43,7 +43,9 @@ export const BUILDS_ON = ['unit03/q6-shape', 'unit03/q4-dots', 'unit02/q6-fillin
 const SPEAKER = 'Vess';
 
 const TOOL_TEXT = {
-  mix: { key: 'Blend', what: 'Blends the s orbital with the number of p orbitals that the key names.' }
+  mix: { key: 'Blend', what: 'Blends the s orbital with the number of p orbitals that the key names.' },
+  twist: { key: 'Twist', what: 'Turns one end of the bond to see whether it turns.' },
+  protractor: { key: 'Protractor', what: 'Tap two arms to read the angle between them.' }
 };
 export function toolNoteFor(controlId) { return TOOL_TEXT[controlId] || null; }
 
@@ -60,9 +62,9 @@ export const STAGES = [
     title: 'The Puzzle',
     briefing: {
       speaker: SPEAKER,
-      body: 'The mixer blends a hub\'s s orbital with some of its p orbitals and shows the lobes that come out. Twist turns one end of a bond to see whether it will.'
+      body: 'The mixer blends a hub\'s s orbital with some of its p orbitals and shows the lobes — the rounded ends — that come out. Twist turns one end of a bond to see whether it turns.'
     },
-    prompt: 'Say what carbon\'s orbitals, as they stand, would allow, and what methane actually has.',
+    prompt: 'Say what carbon\'s orbitals allow as they stand, and what methane actually has, to name the puzzle blocking the tunnel map.',
     controls: [],
     rigs: [mixer('a', 'CARBON', { unpaired: 2, bonds: 4, noMix: true, note: 'a carbon atom as it stands, beside the bonds in CH₄' })],
     widget: {
@@ -94,7 +96,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Four Lobes',
-    prompt: 'Blend carbon\'s orbitals until the lobes match the four arms of methane.',
+    prompt: 'Blend carbon\'s orbitals until the lobes match the four arms of methane, to rebuild the roof rock.',
     controls: ['mix'],
     rigs: [mixer('a', 'CARBON', { want: 4, note: 'the carbon of CH₄, with four hydrogen atoms to bond' })],
     widget: { type: 'none' },
@@ -118,7 +120,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Three Lobes',
-    prompt: 'Blend carbon\'s orbitals until the lobes match the three arms on each carbon of ethene.',
+    prompt: 'Blend carbon\'s orbitals until the lobes match the three arms on each carbon of ethene, to frame the cut edge.',
     controls: ['mix'],
     rigs: [mixer('a', 'CARBON', { want: 3, note: 'a carbon of C₂H₄, bonded to two hydrogen atoms and one carbon' })],
     widget: { type: 'none' },
@@ -142,7 +144,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Two Lobes',
-    prompt: 'Blend carbon\'s orbitals until the lobes match the two arms on the carbon of HCN.',
+    prompt: 'Blend carbon\'s orbitals until the lobes match the two arms on the carbon of HCN, to map the tunnel gas.',
     controls: ['mix'],
     rigs: [mixer('a', 'CARBON', { want: 2, note: 'the carbon of HCN, bonded to one hydrogen atom and one nitrogen atom' })],
     widget: { type: 'none' },
@@ -166,7 +168,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Second Bond',
-    prompt: 'Say how the second bond of ethene is built.',
+    prompt: 'Say how the second bond of ethene is built, to tell the rigid seam from the free one.',
     controls: [],
     rigs: [twist('a', 'C₂H₄', 'double', 'two carbon atoms joined by a double bond')],
     widget: {
@@ -199,7 +201,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Counting Bonds',
-    prompt: 'Count the sigma bonds and the pi bonds in HCN.',
+    prompt: 'Count the sigma bonds and the pi bonds in HCN, to finish the map of the tunnel gas.',
     controls: ['protractor'],
     rigs: [show('a', 'HCN', 'HCN', 'carbon with a hydrogen atom and a nitrogen atom joined by a triple bond')],
     widget: {
@@ -231,7 +233,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Twisting',
-    prompt: 'Say which of the two molecules has a bond that turns freely.',
+    prompt: 'Say which of the two molecules has a bond that turns freely, to find the joint that still flexes.',
     controls: ['twist'],
     rigs: [
       twist('a', 'C₂H₆', 'single', 'two carbon atoms joined by a single bond'),
@@ -251,14 +253,14 @@ export const STAGES = [
     reward: {
       log: 'A single bond turns; a double bond holds.',
       title: 'Restricted Rotation',
-      body: 'A single bond is one sigma bond, which looks the same from every angle, so the groups at its ends turn freely. A double bond\'s pi overlap would be broken by any turn, so its rotation is restricted.'
+      body: 'A single bond is one sigma bond, which looks the same from every angle, so the atoms at its ends turn freely. A double bond\'s pi overlap would be broken by any turn, so its rotation is restricted.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Past Four',
-    prompt: 'Say how many orbitals the hub of PCl₅ and the hub of SF₆ each need to blend.',
+    prompt: 'Say how many orbitals the hub of PCl₅ and the hub of SF₆ each need to blend, to brace the deep wardens.',
     controls: ['protractor'],
     rigs: [
       show('a', 'PCl₅', 'PCl5', 'phosphorus with five chlorine atoms'),
@@ -351,7 +353,7 @@ export const PRACTICE = [
     explanation: 'The H–C single bond is one sigma. The C≡N triple bond is one sigma and two pi.'
   },
   {
-    question: 'Why can groups rotate about a C–C single bond but not about a C=C double bond?',
+    question: 'Why do the ends turn about a C–C single bond but not about a C=C double bond?',
     options: [
       { id: 'a', label: 'Rotating about the double bond would break its pi overlap' },
       { id: 'b', label: 'A single bond has no electrons' },

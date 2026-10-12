@@ -1,8 +1,8 @@
 /**
  * q5-assay.js — Tallow, site five: THE WEIGHT ON THE CARD.
  *
- * The last bench on Tallow. A sample is tipped down a chute, a deflector sorts
- * its pieces by weight into bins, and a balance weighs a whole sample without
+ * The fifth bench on Tallow. A sample is tipped down a chute, a deflector sorts
+ * its atoms by weight into bins, and a balance weighs a whole sample without
  * opening it. It answers the question the catalogue left lying there: a single
  * atom always has a whole-number mass, and almost none of the listed masses are
  * whole numbers.
@@ -20,7 +20,7 @@
  *   -- debrief: what a listed mass really is, and what comes after Tallow.
  *
  * WHAT THIS BENCH DOES NOT DO. It never counts a heap too large to count, and
- * it never converts a weight into a number of pieces. Counting by weighing —
+ * it never converts a weight into a number of atoms. Counting by weighing —
  * the mole, molar mass and Avogadro's number — belongs to Ligar, and a unit
  * that has only just met the weighted average has no business being handed it.
  *
@@ -53,10 +53,10 @@ const SPEAKER = 'Vess';
    own reference sheet. Nothing on this bench may change one.
    ------------------------------------------------------------------ */
 export const CARD_MASS = {
-  'CAT 05': 10.8,
-  'CAT 09': 19.0,
-  'CAT 10': 20.2,
-  'CAT 17': 35.5
+  'boron': 10.8,
+  'fluorine': 19.0,
+  'neon': 20.2,
+  'chlorine': 35.5
 };
 
 /* ------------------------------------------------------------------
@@ -112,61 +112,61 @@ export const STAGES = [
     title: 'Tip It Out',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench sorts atoms down a chute into separate bins by weight. Use "Tip Sample" to pour pieces and "Read Code" to inspect the atoms in each bin.'
+      body: 'This bench sorts atoms down a chute into separate bins by weight. Use "Tip Sample" to pour atoms and "Read Code" to inspect the atoms in each bin.'
     },
-    prompt: 'Sample A separates into two bins when tipped. Explain why it splits across two bins instead of landing in one.',
+    prompt: 'Say why this chlorine sample splits across two bins instead of landing in one.',
     controls: ['pour', 'code'],
     hoppers: [
-      { id: 'h1', label: 'SAMPLE A', code: 'CAT 17', note: '40 pieces, sealed at the mine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
+      { id: 'h1', label: 'SAMPLE A', code: 'chlorine', note: '40 atoms, sealed at the mine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
     ],
-    reference: ['CAT 17 — listed mass 35.5'],
+    reference: ['chlorine — listed mass 35.5'],
     widget: {
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'mixed', label: 'Two different kinds of atom got mixed together', note: 'Two kinds in one sample.' },
-        { id: 'weights', label: 'One kind of atom, with pieces of two different weights', note: 'Same kind, two weights.' },
+        { id: 'mixed', label: 'Two different elements got mixed together', note: 'Two elements in one sample.' },
+        { id: 'weights', label: 'One element, with atoms of two different weights', note: 'Same element, two weights.' },
         { id: 'fault', label: 'The deflector is broken', note: 'It split a sample that is really all one weight.' }
       ]
     },
     hints: [
       'Press "Tip Sample", then tap a bin and press "Read Code", and do the same on the other bin.',
-      'The bins are marked 35 and 37, so compare the two codes to see whether the pieces are different kinds.',
-      'If both bins read the same CAT code, the pieces are one kind of atom in two weights; if the codes differ, they are two kinds.'
+      'The bins are marked 35 and 37, so compare the two names to see whether the atoms are different elements.',
+      'If both bins read the same name the atoms are one element in two weights, and if the names differ they are two elements.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
       }
       if (state.choice === 'mixed') {
-        return { ok: false, msg: 'Read the code in each bin and compare them: two kinds of atom would read two different codes.' };
+        return { ok: false, msg: 'Read the name in each bin and compare them: two elements would read two different names.' };
       }
       if (state.choice === 'fault') {
-        return { ok: false, msg: 'A broken deflector would scatter the pieces instead of sorting them into two tidy bins.' };
+        return { ok: false, msg: 'A broken deflector would scatter the atoms instead of sorting them into two tidy bins.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Sample A: 30 pieces at 35, 10 at 37, all CAT 17.',
+      log: 'Sample A: 30 atoms at 35, 10 at 37, all chlorine.',
       title: 'A Sample Is a Mix of Isotopes',
-      body: 'Both bins read CAT 17, so every piece has 17 protons and every piece is the same element. The 35s and the 37s differ only in neutrons, which makes them isotopes of each other. A natural sample of an element is a mixture of its isotopes, and this is what that looks like.'
+      body: 'Both bins read chlorine, so every atom holds 17 protons and every atom is the same element. The 35s and the 37s differ only in neutrons, which makes them isotopes of each other. A natural sample of an element is a mixture of its isotopes, and this is what that looks like.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Run It Twice',
-    prompt: 'Work out how many pieces in every hundred are the lighter weight.',
+    prompt: 'Work out how many atoms in every hundred are the lighter weight.',
     controls: ['pour'],
     hoppers: [
-      { id: 'h1', label: 'SAMPLE A', note: '40 pieces', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
-      { id: 'h2', label: 'SAMPLE B', note: '80 pieces', bins: [{ mass: 35, n: 60 }, { mass: 37, n: 20 }] }
+      { id: 'h1', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
+      { id: 'h2', label: 'SAMPLE B', note: '80 atoms', bins: [{ mass: 35, n: 60 }, { mass: 37, n: 20 }] }
     ],
-    reference: ['CAT 17 — listed mass 35.5'],
-    widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Lighter bin, per hundred pieces' },
+    reference: ['chlorine — listed mass 35.5'],
+    widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Lighter bin, per hundred atoms' },
     hints: [
       'Tap a sample to select it, press "Tip Sample", then do the same for the other one.',
-      'Sample A drops 30 of its 40 pieces into the 35 bin, and Sample B drops 60 of its 80.',
+      'Sample A drops 30 of its 40 atoms into the 35 bin, and Sample B drops 60 of its 80.',
       'Divide the lighter bin\'s tally by the sample\'s total and multiply by 100, then do the same on the other sample to check they agree.'
     ],
     check(state) {
@@ -174,7 +174,7 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: 'Set the counter to the share you measured.' };
       }
       if (state.number === 30) {
-        return { ok: false, msg: 'That is a count, not a share: 30 pieces out of 40.' };
+        return { ok: false, msg: 'That is a count, not a share: 30 atoms out of 40.' };
       }
       if (state.number === 25) {
         return { ok: false, msg: 'That is the heavier bin\'s share, and the question asks about the lighter bin.' };
@@ -197,26 +197,26 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where 35.5 Sits',
-    prompt: 'Sample A is listed at mass 35.5. Say where that figure sits between its two weights.',
+    prompt: 'This chlorine sample is listed at mass 35.5. Say where that figure sits between its two weights.',
     controls: ['pour'],
     hoppers: [
-      { id: 'h1', label: 'SAMPLE A', note: '40 pieces', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
+      { id: 'h1', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
     ],
-    reference: ['CAT 17 — listed mass 35.5'],
+    reference: ['chlorine — listed mass 35.5'],
     widget: {
       type: 'choice',
       label: 'Your answer',
       options: [
         { id: 'half', label: 'Halfway between them', note: 'Halfway from 35 to 37 is 36.' },
-        { id: 'light', label: 'Near 35, because most of the pieces weigh 35', note: 'The common weight pulls it down.' },
-        { id: 'heavy', label: 'Near 37, because heavy pieces count for more', note: 'Weight decides, not how many.' },
-        { id: 'wrong', label: 'Nowhere — 35.5 is simply wrong', note: 'No piece weighs 35.5.' }
+        { id: 'light', label: 'Near 35, because most of the atoms weigh 35', note: 'The common weight pulls it down.' },
+        { id: 'heavy', label: 'Near 37, because heavy atoms count for more', note: 'Weight decides, not how many.' },
+        { id: 'wrong', label: 'Nowhere — 35.5 is simply wrong', note: 'No atom weighs 35.5.' }
       ]
     },
     hints: [
       'Tip it, then read the number on each bin and the tally above it.',
-      'Halfway between 35 and 37 is 36, and 35.5 is not 36, so compare how many pieces landed in each bin.',
-      'Check which side of 36 the listed mass falls on, then check which of the two bins holds more pieces.'
+      'Halfway between 35 and 37 is 36, and 35.5 is not 36, so compare how many atoms landed in each bin.',
+      'Check which side of 36 the listed mass falls on, then check which of the two bins holds more atoms.'
     ],
     check(state) {
       if (!state.choice) {
@@ -226,10 +226,10 @@ export const STAGES = [
         return { ok: false, msg: 'Halfway between 35 and 37 is 36, and the listed mass is 35.5.' };
       }
       if (state.choice === 'heavy') {
-        return { ok: false, msg: 'A heavy piece counts once, the same as a light one. Compare 35.5 with the halfway point and with where most of the pieces landed.' };
+        return { ok: false, msg: 'A heavy atom counts once, the same as a light one. Compare 35.5 with the halfway point and with where most of the atoms landed.' };
       }
       if (state.choice === 'wrong') {
-        return { ok: false, msg: '35.5 is not the weight of one piece; it is the average over all of them.' };
+        return { ok: false, msg: '35.5 is not the weight of one atom; it is the average over all of them.' };
       }
       return { ok: true };
     },
@@ -243,16 +243,16 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Work Out the Average',
-    prompt: 'Work out what one piece of Sample A weighs on average.',
+    prompt: 'Work out what one atom of this boron sample weighs on average.',
     controls: ['pour'],
     hoppers: [
-      { id: 'h3', label: 'SAMPLE A', note: '40 pieces, nothing listed for it', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
+      { id: 'h3', label: 'SAMPLE A', note: '40 atoms, nothing listed for it', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
     ],
-    reference: ['CAT 05 — listed mass missing'],
-    widget: { type: 'decimal', min: 10.0, max: 11.0, step: 0.1, label: 'Average weight of one piece' },
+    reference: ['boron — listed mass missing'],
+    widget: { type: 'decimal', min: 10.0, max: 11.0, step: 0.1, label: 'Average weight of one atom' },
     hints: [
       'Press "Tip Sample" and read the tally over each bin.',
-      'Turn each bin\'s tally into a share of the whole sample: its tally divided by the total number of pieces.',
+      'Turn each bin\'s tally into a share of the whole sample: its tally divided by the total number of atoms.',
       'Multiply each bin\'s weight by its share, then add the two results together.'
     ],
     check(state) {
@@ -264,12 +264,12 @@ export const STAGES = [
         return { ok: false, msg: '10.5 is the plain middle of 10 and 11, but the two bins did not catch equal numbers.' };
       }
       if (Math.abs(v - 10.8) > 0.001) {
-        return { ok: false, msg: `${v.toFixed(1)} does not fit the tallies. Multiply each bin\'s weight by its share of the pieces and add the two.` };
+        return { ok: false, msg: `${v.toFixed(1)} does not fit the tallies. Multiply each bin\'s weight by its share of the atoms and add the two.` };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Sample A averages 10.8 per piece.',
+      log: 'Sample A averages 10.8 per atom.',
       title: 'Average Atomic Mass',
       body: 'You just worked out the average atomic mass: each isotope\'s mass counted in proportion to how much of it there is. Because the two amounts are not equal, that is called a weighted average rather than a plain one. It is the mass listed for every element, and it is why those numbers are almost never whole.'
     }
@@ -278,17 +278,17 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Only One Bin',
-    prompt: 'Say why Sample A\'s listed mass of 19.0 is a whole number when the last two were not.',
+    prompt: 'Say why this fluorine sample lists at 19.0, a whole number, when the last two did not.',
     controls: ['pour'],
     hoppers: [
-      { id: 'h4', label: 'SAMPLE A', note: '40 pieces', bins: [{ mass: 19, n: 40 }] }
+      { id: 'h4', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 19, n: 40 }] }
     ],
-    reference: ['CAT 09 — listed mass 19.0'],
+    reference: ['fluorine — listed mass 19.0'],
     widget: {
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'one', label: 'Every piece weighs the same, so there is nothing to average', note: 'One weight in, one weight out.' },
+        { id: 'one', label: 'Every atom weighs the same, so there is nothing to average', note: 'One weight in, one weight out.' },
         { id: 'round', label: 'Somebody rounded the number off', note: 'The real figure has decimals.' },
         { id: 'fault', label: 'The deflector failed to split them', note: 'A split is being missed.' }
       ]
@@ -296,7 +296,7 @@ export const STAGES = [
     hints: [
       'Tip it and count how many bins caught anything at all.',
       'Compare how this sample lands with how the last two did, which split across two bins.',
-      'Work out the average of a set of pieces that all weigh the same, and ask whether any decimal could come out of it.'
+      'Work out the average of a set of atoms that all weigh the same, and ask whether any decimal could come out of it.'
     ],
     check(state) {
       if (!state.choice) {
@@ -320,35 +320,35 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Weighed Without Opening It',
-    prompt: 'Sample A is sealed. Work out how many of its pieces in every hundred weigh 20 rather than 22.',
+    prompt: 'This sealed neon sample is never opened. Work out how many of its atoms in every hundred weigh 20 rather than 22.',
     controls: ['balance'],
     hoppers: [
-      { id: 'h5', label: 'SAMPLE A', note: 'sealed, 40 pieces, bins cut for weights 20 and 22', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] }
+      { id: 'h5', label: 'SAMPLE A', note: 'sealed, 40 atoms, bins cut for weights 20 and 22', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] }
     ],
-    reference: ['CAT 10 — listed mass 20.2'],
-    widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Weight 20, per hundred pieces' },
+    reference: ['neon — listed mass 20.2'],
+    widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Weight 20, per hundred atoms' },
     hints: [
-      'Press "Weigh Sample" on Sample A and divide what it reads by the number of pieces.',
-      'Compare the weight per piece with the two weights, 20 and 22: how far along from 20 to 22 does it sit?',
-      'The fraction of the way from 20 to 22 that the average sits is the fraction of heavy pieces; take that from the whole, then scale to a hundred.'
+      'Press "Weigh Sample" on the sample and divide what it reads by the number of atoms.',
+      'Compare the weight per atom with the two weights, 20 and 22: how far along from 20 to 22 does it sit?',
+      'The fraction of the way from 20 to 22 that the average sits is the fraction of heavy atoms; take that from the whole, then scale to a hundred.'
     ],
     check(state) {
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the share you worked out.' };
       }
       if (state.number === 50) {
-        return { ok: false, msg: 'An even split would weigh 21 a piece. Weigh the sample and divide by its pieces to see how far it is from 21.' };
+        return { ok: false, msg: 'An even split would weigh 21 an atom. Weigh the sample and divide by its atoms to see how far it is from 21.' };
       }
       if (state.number === 10) {
-        return { ok: false, msg: 'That is the share of the heavy pieces, and the question asks about the light ones.' };
+        return { ok: false, msg: 'That is the share of the heavy atoms, and the question asks about the light ones.' };
       }
       if (state.number !== 90) {
-        return { ok: false, msg: 'Work out how far along from 20 to 22 the weight per piece sits: that fraction of the pieces are the heavy ones.' };
+        return { ok: false, msg: 'Work out how far along from 20 to 22 the weight per atom sits: that fraction of the atoms are the heavy ones.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Sample A averages 20.2: 90 pieces light, 10 heavy.',
+      log: 'Sample A averages 20.2: 90 atoms light, 10 heavy.',
       title: 'The Average Pins the Mix',
       body: 'The weighting runs both ways: the abundances give you the average, and the average plus the two weights gives you the abundances. That is how a sealed sample is identified without being opened. It is also how the isotope proportions of the elements were first measured.'
     }
@@ -360,23 +360,23 @@ export const STAGES = [
     prompt: 'Match each sample to the element whose listed mass it fits.',
     controls: ['pour', 'balance'],
     hoppers: [
-      { id: 'ha', label: 'SAMPLE A', note: 'unlabelled, 40 pieces', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] },
-      { id: 'hb', label: 'SAMPLE B', note: 'unlabelled, 40 pieces', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
-      { id: 'hc', label: 'SAMPLE C', note: 'unlabelled, 40 pieces', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
+      { id: 'ha', label: 'SAMPLE A', note: 'unlabelled, 40 atoms', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] },
+      { id: 'hb', label: 'SAMPLE B', note: 'unlabelled, 40 atoms', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
+      { id: 'hc', label: 'SAMPLE C', note: 'unlabelled, 40 atoms', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
     ],
-    reference: ['CAT 05 — listed mass 10.8', 'CAT 10 — listed mass 20.2', 'CAT 17 — listed mass 35.5'],
+    reference: ['boron — listed mass 10.8', 'neon — listed mass 20.2', 'chlorine — listed mass 35.5'],
     widget: {
       type: 'bins',
       rows: ['ha', 'hb', 'hc'],
       bins: [
-        { id: 'c05', label: 'CAT 05', note: 'Listed mass 10.8.' },
-        { id: 'c10', label: 'CAT 10', note: 'Listed mass 20.2.' },
-        { id: 'c17', label: 'CAT 17', note: 'Listed mass 35.5.' }
+        { id: 'c05', label: 'boron', note: 'Listed mass 10.8.' },
+        { id: 'c10', label: 'neon', note: 'Listed mass 20.2.' },
+        { id: 'c17', label: 'chlorine', note: 'Listed mass 35.5.' }
       ]
     },
     hints: [
-      'Weigh each sample and divide what the balance reads by the number of pieces.',
-      'A weight per piece is what a listed mass on the plate is too, so the two can be compared directly.',
+      'Weigh each sample and divide what the balance reads by the number of atoms.',
+      'A weight per atom is what a listed mass on the plate is too, so the two can be compared directly.',
       'Calculate total mass divided by 40 for each sample, then match each result to a plate.'
     ],
     check(state) {
@@ -387,7 +387,7 @@ export const STAGES = [
       }
       for (const id of ['ha', 'hb', 'hc']) {
         if (state.bins[id] !== want[id]) {
-          return { ok: false, msg: `${labels[id]} is filed wrong — divide its total weight by its piece count and match the result.` };
+          return { ok: false, msg: `${labels[id]} is filed wrong — divide its total weight by its atom count and match the result.` };
         }
       }
       return { ok: true };
@@ -395,33 +395,33 @@ export const STAGES = [
     reward: {
       log: 'All three samples named off their weights.',
       title: 'The Mass Names the Element',
-      body: 'Every element has its own isotopes in its own proportions, so its average weight is as good as a name. No two listed masses are the same. Weighing a heap and dividing by the number of pieces named all three samples without opening any of them.'
+      body: 'Every element has its own isotopes in its own proportions, so its average weight is as good as a name. No two listed masses are the same. Weighing a heap and dividing by the number of atoms named all three samples without opening any of them.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Claims',
-    prompt: 'Say which of the three samples really are natural CAT 17.',
+    prompt: 'Say which of the three samples really are natural chlorine.',
     controls: ['pour', 'balance'],
     hoppers: [
-      { id: 'j1', label: 'SAMPLE A', note: 'sold as natural CAT 17', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
-      { id: 'j2', label: 'SAMPLE B', note: 'sold as natural CAT 17', bins: [{ mass: 35, n: 20 }, { mass: 37, n: 20 }] },
-      { id: 'j3', label: 'SAMPLE C', note: 'sold as natural CAT 17', bins: [{ mass: 35, n: 38 }, { mass: 37, n: 2 }] }
+      { id: 'j1', label: 'SAMPLE A', note: 'sold as natural chlorine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
+      { id: 'j2', label: 'SAMPLE B', note: 'sold as natural chlorine', bins: [{ mass: 35, n: 20 }, { mass: 37, n: 20 }] },
+      { id: 'j3', label: 'SAMPLE C', note: 'sold as natural chlorine', bins: [{ mass: 35, n: 38 }, { mass: 37, n: 2 }] }
     ],
-    reference: ['CAT 17 — listed mass 35.5'],
+    reference: ['chlorine — listed mass 35.5'],
     widget: {
       type: 'bins',
       rows: ['j1', 'j2', 'j3'],
       bins: [
-        { id: 'natural', label: 'Natural CAT 17', note: 'Its weight matches the listed mass.' },
+        { id: 'natural', label: 'Natural chlorine', note: 'Its weight matches the listed mass.' },
         { id: 'altered', label: 'Not natural', note: 'Its mix of isotopes has been changed.' }
       ]
     },
     hints: [
-      'Weigh all three: every one is CAT 17, so the code will not tell them apart.',
-      'Natural CAT 17 is 75 pieces at weight 35 for every 25 at weight 37, which averages 35.5.',
-      'Divide each sample mass by 40 pieces to see which one equals the listed mass of 35.5.'
+      'Weigh all three: every one is chlorine, so the name will not tell them apart.',
+      'Natural chlorine is 75 atoms at weight 35 for every 25 at weight 37, which averages 35.5.',
+      'Divide each sample mass by 40 atoms to see which one equals the listed mass of 35.5.'
     ],
     check(state) {
       const want = { j1: 'natural', j2: 'altered', j3: 'altered' };
@@ -432,20 +432,20 @@ export const STAGES = [
         }
       }
       if (state.bins.j1 !== want.j1) {
-        return { ok: false, msg: 'Sample A is filed wrong. Weigh it, divide by its 40 pieces, and compare the result with the listed mass.' };
+        return { ok: false, msg: 'Sample A is filed wrong. Weigh it, divide by its 40 atoms, and compare the result with the listed mass.' };
       }
       if (state.bins.j2 !== want.j2) {
-        return { ok: false, msg: 'Sample B is filed wrong. Weigh it, divide by its 40 pieces, and compare the result with the listed mass.' };
+        return { ok: false, msg: 'Sample B is filed wrong. Weigh it, divide by its 40 atoms, and compare the result with the listed mass.' };
       }
       if (state.bins.j3 !== want.j3) {
-        return { ok: false, msg: 'Sample C is filed wrong. Weigh it, divide by its 40 pieces, and compare the result with the listed mass.' };
+        return { ok: false, msg: 'Sample C is filed wrong. Weigh it, divide by its 40 atoms, and compare the result with the listed mass.' };
       }
       return { ok: true };
     },
     reward: {
       log: 'One sample natural, two altered.',
       title: 'The Mass Is a Fingerprint of the Mix',
-      body: 'All three samples were CAT 17, and only one of them had the natural mix. A listed mass says more than which element you have: it says what proportions that element\'s isotopes turn up in. Change the mix and the weight moves off the listed figure.',
+      body: 'All three samples were chlorine, and only one of them had the natural mix. A listed mass says more than which element you have: it says what proportions that element\'s isotopes turn up in. Change the mix and the weight moves off the listed figure.',
       last: true
     }
   }
@@ -727,7 +727,7 @@ export function mount(container, ctx) {
       state.coded.add(`${id}:${state.bin}`);
       renderReadout(null, {
         head: `Code // ${hopper.label}, bin ${state.bin + 1}`,
-        body: `Every piece in that bin reads ${hopper.code}, and each one weighs ${hopper.bins[state.bin].mass}.`
+        body: `Every atom in that bin is ${hopper.code}, and each one weighs ${hopper.bins[state.bin].mass}.`
       });
       return;
     }
@@ -747,7 +747,7 @@ export function mount(container, ctx) {
       soundscape.playScanSweep?.();
       renderReadout(null, {
         head: `Balance // ${hopper.label}`,
-        body: `${mass} in total, over ${count} pieces.`
+        body: `${mass} in total, over ${count} atoms.`
       });
       return;
     }
@@ -765,7 +765,7 @@ export function mount(container, ctx) {
       soundscape.playPylonWake?.();
       renderReadout(null, {
         head: `Chute // ${hopper.label}`,
-        body: `${shot.total} pieces landed: ${shot.totals.map((n, i) => `${n} at weight ${hopper.bins[i].mass}`).join(', ')}.`
+        body: `${shot.total} atoms landed: ${shot.totals.map((n, i) => `${n} at weight ${hopper.bins[i].mass}`).join(', ')}.`
       });
       busy = false;
       frame.setCommitEnabled(true);
@@ -818,9 +818,9 @@ export function mount(container, ctx) {
         <div class="lq-readout-head">Bin // ${esc(hit.hopperLabel)}, bin ${hit.bin + 1}</div>
         <div class="lq-readout-code">CATCHES WEIGHT ${esc(String(hit.mass))}</div>
         <div class="lq-readout-hold">${hit.poured
-          ? `${hit.count} piece${hit.count === 1 ? '' : 's'} landed in it.`
+          ? `${hit.count} atom${hit.count === 1 ? '' : 's'} landed in it.`
           : 'Empty. Nothing has been tipped yet.'}</div>
-        <p class="lq-readout-line">A bin only catches pieces of the weight marked under it.</p>
+        <p class="lq-readout-line">A bin only catches atoms of the weight marked under it.</p>
       </div>
     `);
   }

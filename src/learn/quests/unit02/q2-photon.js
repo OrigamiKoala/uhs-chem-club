@@ -73,7 +73,7 @@ export const STAGES = [
     title: 'A Plate That Will Not Give',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench shines a lamp on a metal plate in a vacuum tube, and counts the electrons that come off it. A second meter reads how fast the fastest one leaves.'
+      body: 'This bench shines a lamp on a metal plate in a vacuum tube — a tube with the air taken out — and counts the electrons that come off it. A second meter reads how fast the fastest one leaves.'
     },
     prompt: 'Get electrons off the plate.',
     labels: LABELS,
@@ -141,7 +141,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Turn Up the Lamp',
-    prompt: 'Say what turning up the brightness does, with the lamp set above the threshold.',
+    prompt: 'Find what turning up the brightness does above the threshold.',
     labels: LABELS,
     controls: ['brightness'],
     brightnessStart: 2,
@@ -178,7 +178,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Turn Up the Frequency',
-    prompt: 'Say what raising the frequency does, with the brightness held where it is.',
+    prompt: 'Find what raising the frequency does at fixed brightness.',
     labels: LABELS,
     controls: ['tune'],
     settings: [550, 500, 450, 400, 350, 300],
@@ -227,8 +227,8 @@ export const STAGES = [
     widget: { type: 'decimal', label: 'Energy of one photon (x 10^-19 J)', min: 0, max: 8, step: 0.5 },
     hints: [
       'Use the sodium plate\'s worked figure: its threshold wavelength is given beside the energy of one photon at that wavelength.',
-      'Turn the threshold wavelength into a frequency, then divide the photon\'s energy by that frequency to find the number that ties them together.',
-      'Convert 500 nm to a frequency, then multiply by the number you just found to get the energy of one of its photons.'
+      'Turn the threshold wavelength, written in metres with 10^-9, into a frequency with the speed of light, then divide the photon\'s energy by that frequency to find the number that ties them together.',
+      'Convert 500 nm, written in metres with 10^-9, to a frequency with the speed of light, then multiply by the number you just found to get the energy of one of its photons.'
     ],
     check(state) {
       if (state.decimal === 0) return { ok: false, notYet: true, msg: 'Set the energy you worked out.' };
@@ -326,7 +326,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Why Brighter Fails',
-    prompt: 'Say why a brighter red lamp will never work on zinc.',
+    prompt: 'Explain why a brighter red lamp never frees electrons from zinc.',
     labels: LABELS,
     controls: ['tune', 'brightness'],
     settings: [650, 400, 300, 250],

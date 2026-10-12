@@ -2,21 +2,21 @@
  * q3-catalogue.js — Tallow, site three: THE CATALOGUE NUMBERS.
  *
  * The third game on the Learn road, and the one the last two benches have been
- * setting up. The sampler scope has filed every kind it meets under a CAT number
- * since site one and never said what the number counts. The core bench spent
- * eight stages counting protons. This bench puts the two together, and the
- * answer is the periodic table.
+ * setting up. The player already knows the element names and has counted
+ * protons on the core bench, so this bench is about ORDER: laying every element
+ * out by its proton count and discovering the repeating pattern — the periodic
+ * table, Mendeleev-style.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  order six unmarked cards by proton count -> Atomic Number
- *   2  measure how long the pattern runs        -> Periods · the rows
- *   3  lay the third row into the board         -> The Periodic Table
- *   4  read a column instead of a row           -> Groups · the columns
- *   5  find the column that never trades        -> Noble Gases
- *   6  file six cards by what they do           -> Metals and Nonmetals
- *   7  price a card that is not in the drawer   -> The chart predicts
- *   8  file four unmarked cards into the chart  -> One number orders everything
+ *   1  order six cards by proton count        -> Atomic Number
+ *   2  measure how long the pattern runs      -> Periods · the rows
+ *   3  lay the third row into the board       -> The Periodic Table
+ *   4  read a column instead of a row         -> Groups · the columns
+ *   5  find the column that never trades      -> Noble Gases
+ *   6  file six cards by what they do         -> Metals and Nonmetals
+ *   7  price a card that is not in the drawer -> The chart predicts
+ *   8  file four unmarked cards into the chart -> One number orders everything
  *
  * VOCABULARY IS EARNED, THEN USED. Everything the first two benches taught —
  * proton, neutron, electron, shell, valence, element, isotope, ion — is a plain
@@ -86,34 +86,31 @@ export function toolNoteFor(controlId, stageNumber) {
 
 /* ------------------------------------------------------------------
    THE CARDS
-   One card per kind the scope has logged. Every reading on a card is one
+   One card per element the player has met. Every reading on a card is one
    the player has already taken with their own hands on an earlier bench:
    the proton count came off the core bench, the outer-shell count off the
-   ring field, the mass off the sampler scope.
-
-   That the CAT codes are also the proton counts is the thing this bench
-   exists to reveal, so nothing below says so.
+   shell field, the mass off the sampler scope.
    ------------------------------------------------------------------ */
 export const CARDS = {
-  c01: { code: 'CAT 01', name: 'HYDROGEN', z: 1, outer: 1, mass: 1.0, does: 'shares' },
-  c02: { code: 'CAT 02', name: 'HELIUM', z: 2, outer: 2, mass: 4.0, does: 'inert' },
-  c03: { code: 'CAT 03', name: 'LITHIUM', z: 3, outer: 1, mass: 6.9, does: 'gives' },
-  c04: { code: 'CAT 04', name: 'BERYLLIUM', z: 4, outer: 2, mass: 9.0, does: 'gives' },
-  c05: { code: 'CAT 05', name: 'BORON', z: 5, outer: 3, mass: 10.8, does: 'gives' },
-  c06: { code: 'CAT 06', name: 'CARBON', z: 6, outer: 4, mass: 12.0, does: 'shares' },
-  c07: { code: 'CAT 07', name: 'NITROGEN', z: 7, outer: 5, mass: 14.0, does: 'takes' },
-  c08: { code: 'CAT 08', name: 'OXYGEN', z: 8, outer: 6, mass: 16.0, does: 'takes' },
-  c09: { code: 'CAT 09', name: 'FLUORINE', z: 9, outer: 7, mass: 19.0, does: 'takes' },
-  c10: { code: 'CAT 10', name: 'NEON', z: 10, outer: 8, mass: 20.2, does: 'inert' },
-  c11: { code: 'CAT 11', name: 'SODIUM', z: 11, outer: 1, mass: 23.0, does: 'gives' },
-  c12: { code: 'CAT 12', name: 'MAGNESIUM', z: 12, outer: 2, mass: 24.3, does: 'gives' },
-  c13: { code: 'CAT 13', name: 'ALUMINUM', z: 13, outer: 3, mass: 27.0, does: 'gives' },
-  c14: { code: 'CAT 14', name: 'SILICON', z: 14, outer: 4, mass: 28.1, does: 'shares' },
-  c15: { code: 'CAT 15', name: 'PHOSPHORUS', z: 15, outer: 5, mass: 31.0, does: 'takes' },
-  c16: { code: 'CAT 16', name: 'SULFUR', z: 16, outer: 6, mass: 32.1, does: 'takes' },
-  c17: { code: 'CAT 17', name: 'CHLORINE', z: 17, outer: 7, mass: 35.5, does: 'takes' },
-  c18: { code: 'CAT 18', name: 'ARGON', z: 18, outer: 8, mass: 39.9, does: 'inert' },
-  c19: { code: 'CAT 19', name: 'POTASSIUM', z: 19, outer: 1, mass: 39.1, does: 'gives' }
+  c01: { code: 'No. 1', name: 'HYDROGEN', z: 1, outer: 1, mass: 1.0, does: 'shares' },
+  c02: { code: 'No. 2', name: 'HELIUM', z: 2, outer: 2, mass: 4.0, does: 'inert' },
+  c03: { code: 'No. 3', name: 'LITHIUM', z: 3, outer: 1, mass: 6.9, does: 'gives' },
+  c04: { code: 'No. 4', name: 'BERYLLIUM', z: 4, outer: 2, mass: 9.0, does: 'gives' },
+  c05: { code: 'No. 5', name: 'BORON', z: 5, outer: 3, mass: 10.8, does: 'gives' },
+  c06: { code: 'No. 6', name: 'CARBON', z: 6, outer: 4, mass: 12.0, does: 'shares' },
+  c07: { code: 'No. 7', name: 'NITROGEN', z: 7, outer: 5, mass: 14.0, does: 'takes' },
+  c08: { code: 'No. 8', name: 'OXYGEN', z: 8, outer: 6, mass: 16.0, does: 'takes' },
+  c09: { code: 'No. 9', name: 'FLUORINE', z: 9, outer: 7, mass: 19.0, does: 'takes' },
+  c10: { code: 'No. 10', name: 'NEON', z: 10, outer: 8, mass: 20.2, does: 'inert' },
+  c11: { code: 'No. 11', name: 'SODIUM', z: 11, outer: 1, mass: 23.0, does: 'gives' },
+  c12: { code: 'No. 12', name: 'MAGNESIUM', z: 12, outer: 2, mass: 24.3, does: 'gives' },
+  c13: { code: 'No. 13', name: 'ALUMINUM', z: 13, outer: 3, mass: 27.0, does: 'gives' },
+  c14: { code: 'No. 14', name: 'SILICON', z: 14, outer: 4, mass: 28.1, does: 'shares' },
+  c15: { code: 'No. 15', name: 'PHOSPHORUS', z: 15, outer: 5, mass: 31.0, does: 'takes' },
+  c16: { code: 'No. 16', name: 'SULFUR', z: 16, outer: 6, mass: 32.1, does: 'takes' },
+  c17: { code: 'No. 17', name: 'CHLORINE', z: 17, outer: 7, mass: 35.5, does: 'takes' },
+  c18: { code: 'No. 18', name: 'ARGON', z: 18, outer: 8, mass: 39.9, does: 'inert' },
+  c19: { code: 'No. 19', name: 'POTASSIUM', z: 19, outer: 1, mass: 39.1, does: 'gives' }
 };
 
 /** What each card does when another atom is pushed at it. */
@@ -155,7 +152,7 @@ export const STAGES = [
     title: 'Put Them In Order',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench holds a card for each kind of atom, and tapping a card reads it. To file a card, tap it, then tap the slot on the board you want it in.'
+      body: 'This bench holds a card for each element, and tapping a card reads it. To file a card, tap it, then tap the slot on the board you want it in.'
     },
     prompt: 'File the six cards in the slots, fewest protons on the left.',
     controls: ['reader', 'file', 'clear'],
@@ -194,7 +191,7 @@ export const STAGES = [
     reward: {
       log: 'Six cards laid in count order.',
       title: 'Atomic Number',
-      body: 'Put the codes back on those cards and they read CAT 01, 06, 08, 11, 18, 19 — the order you just laid them in. The scope has been filing every kind by its proton count all along. That count is called the atomic number.'
+      body: 'You laid the cards from fewest protons to most, and the scope files every atom the same way. That count has a name: the atomic number.'
     }
   },
 
@@ -251,8 +248,8 @@ export const STAGES = [
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
     hints: [
       'Tap a card in the drawer to pick it up, then tap the slot you want it in.',
-      'These cards still carry their codes: CAT 11 is the lowest and CAT 18 is the highest.',
-      'Put the lowest code in the first slot, then for each next slot find the card whose code is one higher than the card before it.'
+      'SODIUM reads the fewest protons of the eight and ARGON reads the most.',
+      'Put the fewest-proton card in the first slot, then for each next slot find the card with one proton more than the card before it.'
     ],
     check(state) {
       const want = ['c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18'];
@@ -269,7 +266,7 @@ export const STAGES = [
           return { ok: false, msg: `Slot ${i + 1} holds ${here.name} with ${here.z} protons, which is out of order with its neighbors.` };
         }
       }
-      return { ok: false, msg: 'The row is out of order — read the codes and lay them lowest on the left.' };
+      return { ok: false, msg: 'The row is out of order — read the cards and lay them lowest on the left.' };
     },
     reward: {
       log: 'Chart complete: 18 cards, three rows.',

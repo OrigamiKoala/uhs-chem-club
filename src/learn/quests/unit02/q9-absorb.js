@@ -73,9 +73,9 @@ export const STAGES = [
     title: 'What Each Light Does',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench passes a beam through a cuvette of solution and reads how much of it gets through. The keys choose the kind of light, and the cuvette shows what it does to the molecules inside.'
+      body: 'This bench passes a beam through a cuvette — a small container of solution — and reads its dimming, how much light the solution takes in. The keys choose the kind of light, and the cuvette shows what each kind does to the molecules inside.'
     },
-    prompt: 'Say what each kind of light does to the molecule in the cuvette.',
+    prompt: 'Find what each kind of light does to the molecule.',
     labels: PLAIN,
     controls: ['region'],
     mode: 'region',
@@ -169,7 +169,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Why Copper Looks Blue',
-    prompt: 'Say why the copper solution looks blue.',
+    prompt: 'Explain why the copper solution looks blue.',
     labels: PLAIN,
     controls: [],
     after: true,
@@ -206,7 +206,7 @@ export const STAGES = [
   {
     title: 'The Best Wavelength',
     prompt: 'Pick the best wavelength to measure this solution at.',
-    labels: PLAIN,
+    labels: EARNED,
     controls: ['tune'],
     settings: COPPER_SWEEP,
     start: 1,
@@ -236,7 +236,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Doubling the Concentration',
-    prompt: 'Say what doubling the concentration does to the absorbance.',
+    prompt: 'Find what doubling the concentration does to the absorbance. Concentration in mol/L is how many moles are dissolved in each litre.',
     labels: EARNED,
     controls: [],
     rigs: [
@@ -275,7 +275,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Doubling the Path',
-    prompt: 'Say what doubling the path does to the absorbance.',
+    prompt: 'Find what doubling the path does to the absorbance. Path is how many centimetres the beam travels through the solution.',
     labels: EARNED,
     controls: ['path'],
     path: 1,
@@ -397,7 +397,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'That is the last bench on Lanternfall. The next world asks what happens when two of these atoms come close enough to share the electrons you have just learned to place.'
+      body: 'That is the last bench on Lanternfall. One feeder still haunts the ice: the Lantern-Eater, made of everything you have measured here.'
     }
   ]
 };

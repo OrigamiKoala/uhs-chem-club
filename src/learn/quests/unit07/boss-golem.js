@@ -20,7 +20,11 @@ export const STAGES = [
   {
     id: 'phase1',
     title: 'Phase 1 · Limiting Feed',
-    prompt: 'Enter the maximum number of iron sulfide units the golem can synthesize before starving its limiting reagent.',
+    briefing: {
+      speaker: 'Vess',
+      body: 'This golem builds units from two ingredients, one of each per unit. Its hoppers hold a set count of each.'
+    },
+    prompt: 'Find how many units the golem can build from 8 pieces of iron and 12 pieces of sulfur at one of each per unit before an ingredient runs out.',
     samples: [{ id: 'golem', label: 'Recipe Golem' }],
     widget: { type: 'number', min: 1, max: 20, step: 1, unit: 'units' },
     encounter: {
@@ -30,26 +34,26 @@ export const STAGES = [
     },
     check(state) {
       const n = state?.number;
-      if (n === null || n === undefined) return { ok: false, msg: 'Set the product count on the dial.' };
-      if (n === 12) return { ok: false, msg: 'Iron runs out first, leaving unreacted sulfur atoms in excess.' };
-      if (n !== 8) return { ok: false, msg: 'Calculate how many units can form before the limiting reagent runs dry.' };
+      if (n === null || n === undefined) return { ok: false, notYet: true, msg: 'Set a count on the stepper.' };
+      if (n === 12) return { ok: false, msg: 'Iron runs out first, leaving sulfur left over.' };
+      if (n !== 8) return { ok: false, msg: 'The smaller ingredient stops the recipe; work out how many units it can build.' };
       return { ok: true };
     },
     hints: [
-      'The reaction requires equal numbers of iron and sulfur atoms.',
-      'The reactant present in the smaller stoichiometric amount limits the total yield.',
-      'Enter eight units since iron is the limiting reagent.'
+      'Count what each ingredient can build on its own at one of each per unit.',
+      'Compare how many units the iron can build against how many the sulfur can build.',
+      'Take the smaller of the two counts, since the first ingredient to run out stops the recipe.'
     ],
     reward: {
-      title: 'Intake Starved',
-      body: 'The limiting reagent dictates the maximum possible yield. Iron is exhausted after eight units, stalling the golem synthesis feed.',
+      title: 'First Ingredient Runs Out',
+      body: 'The recipe stops when its first ingredient runs out, and that ingredient is the limiting reactant. Iron runs out after 8 units, so the golem stalls with sulfur left over.',
       log: 'Intake metered to eight units of iron sulfide.'
     }
   },
   {
     id: 'phase2',
     title: 'Phase 2 · Mass Conservation',
-    prompt: 'Calculate the total mass of water vapor produced in grams when four grams of hydrogen reacts with thirty-two grams of oxygen.',
+    prompt: 'Find how many grams of water 4 grams of hydrogen and 32 grams of oxygen make together.',
     samples: [{ id: 'golem', label: 'Recipe Golem' }],
     widget: { type: 'number', min: 10, max: 60, step: 1, unit: 'grams' },
     encounter: {
@@ -59,18 +63,18 @@ export const STAGES = [
     },
     check(state) {
       const n = state?.number;
-      if (n === null || n === undefined) return { ok: false, msg: 'Enter the predicted mass on the scale.' };
-      if (n !== 36) return { ok: false, msg: 'The law of conservation of mass states that total product mass must equal total reactant mass.' };
+      if (n === null || n === undefined) return { ok: false, notYet: true, msg: 'Set a mass on the stepper.' };
+      if (n !== 36) return { ok: false, msg: 'Nothing is lost in the reaction; compare what goes in with what must come out.' };
       return { ok: true };
     },
     hints: [
-      'In any chemical reaction, matter cannot be created or destroyed.',
-      'Add the mass of hydrogen to the mass of oxygen.',
-      'Enter thirty-six grams for the combined mass of water vapor.'
+      'Read the grams of each ingredient the prompt names before setting anything.',
+      'Compare what goes in against what must come out if nothing is lost.',
+      'Add the hydrogen grams to the oxygen grams to get the water grams.'
     ],
     reward: {
-      title: 'Golem Dispersed',
-      body: 'Mass is strictly conserved: four grams of hydrogen plus thirty-two grams of oxygen yields exactly thirty-six grams of water. The pressure valve pops and the golem shuts down.',
+      title: 'Mass Is Conserved',
+      body: 'Nothing is lost in a reaction, which is the conservation of mass. Four grams of hydrogen plus 32 grams of oxygen make 36 grams of water.',
       log: 'Stoichiometric balance confirmed. Recipe golem dispersed.'
     }
   }
@@ -92,10 +96,21 @@ export function stateFor(i, overrides) {
 
 export const DEBRIEF = {
   speaker: 'Vess',
-  badge: 'ELITE DISPERSED · KETTLE',
-  subtitle: 'Recipe Golem',
-  message: 'The golem vents its boiler and freezes. In its log vault we found a ledger: pages of refinery runs where the product mass is thirty percent greater than the input ore. No chemistry can do that.',
-  clueAwarded: 'clue_kettle_ledger'
+  clueAwarded: 'clue_kettle_ledger',
+  sections: [
+    {
+      heading: 'What You Found',
+      body: 'The golem vents its boiler and freezes. In its log vault we found a ledger: fifty tons of metal logged out against forty tons of ore logged in. No chemistry can do that.'
+    },
+    {
+      heading: 'Why It Is Worth It',
+      body: 'Both phases were the one bench you had already worked: the limiting feed sets the yield, and the mass in always equals the mass out. That is all of Kettle so far, and it was enough to freeze the golem.'
+    },
+    {
+      heading: 'Next',
+      body: 'The ledger goes into the Case File. Something in the foundry is making mass from nothing, and no balance allows that.'
+    }
+  ]
 };
 
 export const PRACTICE = [
@@ -158,6 +173,7 @@ export const PRACTICE = [
 
 export function mount(container, ctx) {
   let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
+  let cleared = ctx.isComplete ? STAGES.length : ctx.stagesCleared;
   let state = { number: null };
   let busy = false;
 
@@ -189,24 +205,24 @@ export function mount(container, ctx) {
   }
 
   function bindControls() {
-    const controls = frame.el.controls;
-    if (!controls) return;
+    const widget = frame.el.widget;
+    if (!widget) return;
     const stage = STAGES[index];
 
-    controls.querySelectorAll('#btn-num-dec').forEach(btn => {
+    widget.querySelectorAll('#btn-num-dec').forEach(btn => {
       btn.addEventListener('click', () => {
         const cur = state.number ?? stage.widget.min;
         state.number = Math.max(stage.widget.min, cur - (stage.widget.step || 1));
-        const disp = controls.querySelector('#num-display');
+        const disp = widget.querySelector('#num-display');
         if (disp) disp.textContent = String(state.number);
       });
     });
 
-    controls.querySelectorAll('#btn-num-inc').forEach(btn => {
+    widget.querySelectorAll('#btn-num-inc').forEach(btn => {
       btn.addEventListener('click', () => {
         const cur = state.number ?? stage.widget.min;
         state.number = Math.min(stage.widget.max, cur + (stage.widget.step || 1));
-        const disp = controls.querySelector('#num-display');
+        const disp = widget.querySelector('#num-display');
         if (disp) disp.textContent = String(state.number);
       });
     });
@@ -217,14 +233,17 @@ export function mount(container, ctx) {
     const stage = STAGES[index];
     state = { number: stage.widget?.min ?? null };
 
-    frame.setStage(index, {
+    frame.setCleared(cleared);
+    frame.setStage({
+      index,
       title: stage.title,
       prompt: stage.prompt,
       hints: stage.hints,
+      commitLabel: stage.encounter?.act || 'Commit',
       encounter: resolveEncounter(stage)
     });
 
-    frame.setControls(renderWidget(stage));
+    frame.setWidget(renderWidget(stage));
     bindControls();
   }
 
@@ -240,13 +259,18 @@ export function mount(container, ctx) {
 
     busy = true;
     soundscape.playSuccess?.();
-    ctx.reportStage(index);
+    if (index + 1 > cleared) {
+      cleared = index + 1;
+      ctx.reportStage(index);
+    }
+    frame.setCleared(cleared);
 
     const isLast = index >= STAGES.length - 1;
     frame.clear({
       title: stage.reward.title,
       body: stage.reward.body,
-      isLast
+      log: stage.reward.log,
+      last: isLast
     });
     busy = false;
   }
@@ -257,11 +281,7 @@ export function mount(container, ctx) {
     } else {
       ctx.reportComplete();
       session.recordClue?.(DEBRIEF.clueAwarded);
-      frame.showDebrief({
-        title: DEBRIEF.title || 'Elite Dispersed',
-        body: DEBRIEF.message,
-        onDone: () => ctx.exit()
-      });
+      frame.showDebrief(DEBRIEF, () => ctx.exit());
     }
   }
 

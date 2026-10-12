@@ -136,7 +136,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench is the scope again: the Power dial zooms in, and tapping an atom reads its code and weight. "Run Cutter" tries to split a sample, and "Settle" shakes one and lets it sink.'
     },
-    prompt: 'Set the tray to the recipe one molecule in these samples is built to.',
+    prompt: 'A recipe is the count of each element in one molecule. Count one molecule and build its recipe in the tray.',
     controls: ['power', 'probe'],
     samples: [
       { id: 'a1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 12 }] },
@@ -346,7 +346,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Backwards From the Weight',
-    prompt: 'A sealed drum off the vent line runs 3 parts CAT 06 to 8 parts CAT 08 by weight. Pick the recipe it must hold.',
+    prompt: 'Pick the recipe a sealed drum with 3 parts CAT 06 to 8 parts CAT 08 by weight must hold.',
     controls: ['power', 'probe'],
     samples: [
       { id: 'f1', label: 'SAMPLE A', note: 'off the flare stack', floorPower: 4, particles: [{ ...OXIDE_1, n: 20 }] },
@@ -363,9 +363,9 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Count one molecule on each plate first: Sample A holds one CAT 08 to its CAT 06, and Sample B holds two.',
-      'A weight is not a count: divide each of the drum\'s two parts by what one atom of that element weighs to get how many atoms it is.',
-      'Work out 3 divided by 12.0 and 8 divided by 16.0, then scale the two results to the smallest whole numbers.'
+      'Turn the Power dial past 4 and tap the atoms in one molecule on each plate to read their codes.',
+      'Compare the count of CAT 08 joined to one CAT 06 in each sample with the weight ratio of the drum.',
+      'Divide each part of the weight by what one atom of that element weighs, then scale the two counts to the smallest whole numbers.'
     ],
     check(state) {
       if (!state.choice) {
@@ -439,7 +439,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Claims',
-    prompt: 'All three samples are sold as the same compound. Say which of them really are what the label says.',
+    prompt: 'Say which of the three samples sold as one compound really are what the label says.',
     controls: ['power', 'probe', 'settle', 'cut'],
     samples: [
       { id: 'h1', label: 'SAMPLE A', note: 'sold as vent-stack condensate', floorPower: 4, particles: [{ ...WATER, n: 20 }] },
@@ -503,7 +503,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'You counted molecules on this bench because there were few enough to count. A real crate holds more atoms than anyone could count in a lifetime, and the last bench here weighs them instead.'
+      body: 'You counted molecules on this bench because there were few enough to count. One automaton still walks the yard: the Recipe Golem, bound by the very recipes you have balanced.'
     }
   ]
 };

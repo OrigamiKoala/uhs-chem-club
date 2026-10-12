@@ -16,6 +16,7 @@ import { LearnFrame } from '../../engine/frame.js';
 import { resolveEncounter } from '../../engine/foes.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
+import { session } from '../../../session.js';
 
 export const meta = { stageCount: 5 };
 
@@ -24,7 +25,7 @@ export const STAGES = [
   {
     id: 'phase1',
     title: 'Phase 1 · Spectral Transition',
-    prompt: 'Identify the electron drop that produces the red 656 nm line emitted by the entity.',
+    prompt: 'Name the electron drop behind the moth\'s red glow.',
     samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
     widget: {
       type: 'choice',
@@ -43,9 +44,9 @@ export const STAGES = [
       hit: 'The Balmer series transition resonates and punctures the optical veil.'
     },
     hints: [
-      'Emission lines occur when an electron drops from a higher level to a lower level.',
-      'In hydrogen, visible transitions fall to the second energy level.',
-      'The red line has the smallest visible transition energy, dropping from the third level to the second.'
+      'Recall that light leaves only when an electron drops to a lower rung.',
+      'Compare the red line with the other hydrogen lines to find the smallest drop.',
+      'Match the smallest visible drop to the pair of rungs that makes it.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, msg: 'Select the electron transition.' };
@@ -53,13 +54,13 @@ export const STAGES = [
         return { ok: false, msg: 'Emission releases photons when falling, not climbing.' };
       }
       if (state.choice !== 'j32') {
-        return { ok: false, msg: 'The 656 nm photon corresponds to the smallest energy drop in the visible Balmer ladder.' };
+        return { ok: false, msg: 'That drop does not match the red line. Look for the smallest visible drop.' };
       }
       return { ok: true };
     },
     reward: {
       title: 'Emission Disrupted',
-      body: 'Pinpointing the n = 3 to n = 2 transition destabilizes the entity\'s optical shroud.',
+      body: 'Pinpointing the drop behind the red glow tears a hole in the moth\'s light.',
       log: 'Red emission transition mapped to 656 nm.'
     }
   },
@@ -68,15 +69,15 @@ export const STAGES = [
   {
     id: 'phase2',
     title: 'Phase 2 · Threshold Barrier',
-    prompt: 'Select which incident photon beam frees electrons when the photocathode threshold lies in the green band.',
+    prompt: 'Pick the beam that frees electrons from the green-threshold plate.',
     samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
     widget: {
       type: 'choice',
       label: 'Incident beam',
       options: [
-        { id: 'violet', label: 'Violet light, whose frequency exceeds the threshold' },
-        { id: 'red', label: 'Red light, whose wavelength is longer' },
-        { id: 'infrared', label: 'Infrared light, which carries lower frequency' }
+        { id: 'violet', label: 'Violet light' },
+        { id: 'red', label: 'Red light' },
+        { id: 'infrared', label: 'Infrared light' }
       ]
     },
     encounter: {
@@ -86,14 +87,14 @@ export const STAGES = [
       hit: 'High-frequency photons overcome the barrier and strip outer charge.'
     },
     hints: [
-      'The photoelectric effect requires photon energy to equal or exceed the work function.',
-      'Higher frequency means higher photon energy according to Planck\'s law.',
-      'Violet light has a higher frequency and higher photon energy than green light.'
+      'Recall that only light above the threshold frequency frees any electron.',
+      'Compare each beam\'s frequency with the green threshold.',
+      'Keep the beam whose photons each carry more than the threshold energy.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, msg: 'Select the incident light.' };
       if (state.choice !== 'violet') {
-        return { ok: false, msg: 'Only light with frequency above the threshold frequency can eject electrons.' };
+        return { ok: false, msg: 'Only light above the threshold frequency frees electrons. Compare each beam with it.' };
       }
       return { ok: true };
     },
@@ -108,7 +109,7 @@ export const STAGES = [
   {
     id: 'phase3',
     title: 'Phase 3 · Unpaired Magnetism',
-    prompt: 'Enter the number of unpaired electrons in a neutral carbon atom in its ground state.',
+    prompt: 'Count the unpaired electrons in a neutral carbon atom.',
     samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
     widget: { type: 'number', min: 0, max: 6, step: 1, unit: 'unpaired electrons' },
     encounter: {
@@ -118,9 +119,9 @@ export const STAGES = [
       hit: 'Hund rule orbital spins neutralize the paramagnetic field.'
     },
     hints: [
-      'Carbon has six electrons: two in 1s, two in 2s, and two in 2p.',
-      'According to Hund\'s rule, electrons occupy degenerate 2p orbitals singly before pairing.',
-      'The two 2p electrons sit in separate orbitals with parallel spins.'
+      'Write carbon\'s electrons into rows from the lowest up.',
+      'Compare how the last row\'s electrons sit under Hund\'s rule.',
+      'Count the electrons left standing alone in separate boxes.'
     ],
     check(state) {
       const n = state?.number;
@@ -140,7 +141,7 @@ export const STAGES = [
   {
     id: 'phase4',
     title: 'Phase 4 · Deep Core Anchor',
-    prompt: 'A photoelectron peak reveals ten protons binding the innermost electrons. Identify the anchor element.',
+    prompt: 'Name the element whose nucleus holds ten protons.',
     samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
     widget: {
       type: 'choice',
@@ -159,9 +160,9 @@ export const STAGES = [
       hit: 'Ten core protons are identified, dissolving the noble core anchor.'
     },
     hints: [
-      'The atomic number of an element equals the number of protons in its nucleus.',
-      'Check the periodic table for the element with atomic number ten.',
-      'Neon has ten protons, pulling its innermost shell with a ten-fold nuclear charge.'
+      'Recall that the proton count is the atomic number.',
+      'Compare each option\'s atomic number with the measured count.',
+      'Keep the element whose number matches the peak\'s count.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, msg: 'Select the element.' };
@@ -181,7 +182,7 @@ export const STAGES = [
   {
     id: 'phase5',
     title: 'Phase 5 · Optical Absorbance',
-    prompt: 'Calculate the absorbance of a 0.010 mol/L solution with path length 1.0 cm and molar absorptivity 40 L/(mol cm).',
+    prompt: 'Work out the absorbance of a 0.010 mol/L solution through 1.0 cm with a constant of 40.',
     samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
     widget: { type: 'decimal', min: 0.1, max: 2.0, step: 0.1, label: 'Absorbance' },
     encounter: {
@@ -191,9 +192,9 @@ export const STAGES = [
       hit: 'The exact Beer-Lambert absorbance matches and extinguishes the entity.'
     },
     hints: [
-      'The Beer-Lambert law states that absorbance equals molar absorptivity times path length times concentration.',
-      'Multiply forty by one point zero, then multiply by zero point zero one zero.',
-      'The resulting absorbance is zero point four.'
+      'Recall that absorbance is the constant times the path times the concentration.',
+      'Compare the units so the path and the concentration multiply cleanly.',
+      'Multiply the three figures in order and read the product.'
     ],
     check(state) {
       const d = state?.decimal;
@@ -233,10 +234,21 @@ export function stateFor(i, overrides) {
 
 export const DEBRIEF = {
   speaker: 'Vess',
-  badge: 'BOSS DISPERSED · LANTERNFALL',
-  subtitle: 'The Lantern-Eater',
-  message: 'The Lantern-Eater collapsed into harmless auroral ionization. In its optical focal chamber we recovered a precision prism ground for deep ultraviolet frequencies far past guild ratings.',
-  clueAwarded: 'clue_lantern_lens'
+  clueAwarded: 'clue_lantern_lens',
+  sections: [
+    {
+      heading: 'What You Found',
+      body: 'The Lantern-Eater collapsed into harmless auroral ionization. In its optical focal chamber we recovered a precision prism ground for deep ultraviolet frequencies far past guild ratings.'
+    },
+    {
+      heading: 'Why It Is Worth It',
+      body: 'Every phase was a bench you had already worked: lines, light, boxes, peaks and solutions. That is all of Lanternfall, and it was enough to starve the eater.'
+    },
+    {
+      heading: 'Next',
+      body: 'The prism goes into the Case File. The next world asks what happens when two of these atoms come close enough to share the electrons you have just learned to place.'
+    }
+  ]
 };
 
 export const PRACTICE = [
@@ -299,6 +311,7 @@ export const PRACTICE = [
 
 export function mount(container, ctx) {
   let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
+  let cleared = ctx.isComplete ? STAGES.length : ctx.stagesCleared;
   let state = { choice: null, number: null, decimal: 0.1 };
   let busy = false;
 
@@ -358,50 +371,50 @@ export function mount(container, ctx) {
   }
 
   function bindControls() {
-    const controls = frame.el.controls;
-    if (!controls) return;
+    const widget = frame.el.widget;
+    if (!widget) return;
     const stage = STAGES[index];
 
-    controls.querySelectorAll('.choice-btn').forEach(btn => {
+    widget.querySelectorAll('.choice-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         state.choice = btn.dataset.choice;
-        controls.querySelectorAll('.choice-btn').forEach(b => b.classList.toggle('btn-primary', b === btn));
+        widget.querySelectorAll('.choice-btn').forEach(b => b.classList.toggle('btn-primary', b === btn));
         soundscape.playToggleClack?.();
       });
     });
 
-    controls.querySelectorAll('#btn-num-dec').forEach(btn => {
+    widget.querySelectorAll('#btn-num-dec').forEach(btn => {
       btn.addEventListener('click', () => {
         const cur = state.number ?? stage.widget.min;
         state.number = Math.max(stage.widget.min, cur - (stage.widget.step || 1));
-        const disp = controls.querySelector('#num-display');
+        const disp = widget.querySelector('#num-display');
         if (disp) disp.textContent = String(state.number);
       });
     });
 
-    controls.querySelectorAll('#btn-num-inc').forEach(btn => {
+    widget.querySelectorAll('#btn-num-inc').forEach(btn => {
       btn.addEventListener('click', () => {
         const cur = state.number ?? stage.widget.min;
         state.number = Math.min(stage.widget.max, cur + (stage.widget.step || 1));
-        const disp = controls.querySelector('#num-display');
+        const disp = widget.querySelector('#num-display');
         if (disp) disp.textContent = String(state.number);
       });
     });
 
-    controls.querySelectorAll('#btn-dec-down').forEach(btn => {
+    widget.querySelectorAll('#btn-dec-down').forEach(btn => {
       btn.addEventListener('click', () => {
         const cur = state.decimal ?? stage.widget.min;
         state.decimal = Math.max(stage.widget.min, Math.round((cur - stage.widget.step) * 10) / 10);
-        const disp = controls.querySelector('#dec-display');
+        const disp = widget.querySelector('#dec-display');
         if (disp) disp.textContent = state.decimal.toFixed(1);
       });
     });
 
-    controls.querySelectorAll('#btn-dec-up').forEach(btn => {
+    widget.querySelectorAll('#btn-dec-up').forEach(btn => {
       btn.addEventListener('click', () => {
         const cur = state.decimal ?? stage.widget.min;
         state.decimal = Math.min(stage.widget.max, Math.round((cur + stage.widget.step) * 10) / 10);
-        const disp = controls.querySelector('#dec-display');
+        const disp = widget.querySelector('#dec-display');
         if (disp) disp.textContent = state.decimal.toFixed(1);
       });
     });
@@ -411,6 +424,7 @@ export function mount(container, ctx) {
     index = i;
     const stage = STAGES[i];
     state = stateFor(i);
+    frame.setCleared(cleared);
     frame.setStage({
       index: i,
       title: stage.title,
@@ -419,7 +433,7 @@ export function mount(container, ctx) {
       commitLabel: stage.encounter?.act || 'Commit',
       encounter: resolveEncounter(stage)
     });
-    frame.setControls(renderWidget(stage));
+    frame.setWidget(renderWidget(stage));
     bindControls();
   }
 
@@ -434,12 +448,17 @@ export function mount(container, ctx) {
     }
     busy = true;
     soundscape.playReactionComplete?.();
-    ctx.reportStage(index);
+    if (index + 1 > cleared) {
+      cleared = index + 1;
+      ctx.reportStage(index);
+    }
+    frame.setCleared(cleared);
     const isLast = index >= STAGES.length - 1;
     frame.clear({
       title: stage.reward.title,
       body: stage.reward.body,
-      isLast
+      log: stage.reward.log,
+      last: isLast
     });
     if (isLast) ctx.reportComplete();
     busy = false;
@@ -449,6 +468,8 @@ export function mount(container, ctx) {
     if (index < STAGES.length - 1) {
       loadStage(index + 1);
     } else {
+      ctx.reportComplete();
+      session.recordClue?.(DEBRIEF.clueAwarded);
       frame.showDebrief(DEBRIEF, () => ctx.exit());
     }
   }

@@ -73,7 +73,7 @@ export const STAGES = [
       body: 'This is the warden Ligar guards itself with, and each phase puts one of the benches in front of it again. A miss costs the rig a point of Integrity; three knock it back, and nothing you have read is lost.'
     },
     bench: 'bond',
-    prompt: 'Pick the plate whose ions need the most heat before they can move.',
+    prompt: 'Pick the plating block whose ions need the most heat before they give.',
     controls: [],
     rigs: [lattice('a', 'PLATE A', 'NaCl'), lattice('b', 'PLATE B', 'MgO'), lattice('c', 'PLATE C', 'KCl')],
     widget: { type: 'choice', label: 'The plate', options: [{ id: 'a', label: 'Plate A' }, { id: 'b', label: 'Plate B' }, { id: 'c', label: 'Plate C' }] },
@@ -105,7 +105,7 @@ export const STAGES = [
   {
     title: 'Phase 2 · The Vent',
     bench: 'pair',
-    prompt: 'Use up every electron in the tray for SF₄ so that every lamp is lit.',
+    prompt: 'Use up every electron in the tray for SF₄ so every lamp lights, to seal the warden vent.',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'SF4')],
     widget: { type: 'none' },
@@ -138,7 +138,7 @@ export const STAGES = [
   {
     title: 'Phase 3 · The Joints',
     bench: 'rig',
-    prompt: 'Say the angle between neighbouring fluorine atoms on the XeF₄ hub.',
+    prompt: 'Say the angle between neighbouring fluorine atoms on the XeF₄ hub, to lock the warden joints.',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'Xe', [atoms('f', 'F', 4, 'Fluorine'), lone(2)], 'xenon with four fluorine atoms and two lone pairs')],
     widget: {
@@ -171,7 +171,7 @@ export const STAGES = [
   {
     title: 'Phase 4 · The Coolant',
     bench: 'rig',
-    prompt: 'Pick every molecule that turns between the plates.',
+    prompt: 'Pick every molecule that turns between the plates, to ground the warden coolant.',
     controls: ['field', 'arrows'],
     rigs: [
       field('a', 'PLATE A', 'CO2', 'carbon dioxide'),
@@ -210,7 +210,7 @@ export const STAGES = [
   {
     title: 'Phase 5 · The Core',
     bench: 'rack',
-    prompt: 'Pick the gas that the magnet pulls toward it.',
+    prompt: 'Pick the gas that the magnet pulls toward it, to expose the warden core.',
     controls: ['rackhand', 'magnet'],
     counts: true,
     rigs: [rack('a', 'PLATE A', 'N2'), rack('b', 'PLATE B', 'O2'), rack('c', 'PLATE C', 'F2')],

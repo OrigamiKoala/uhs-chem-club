@@ -88,7 +88,7 @@ export const STAGES = [
     title: 'One Mole',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench meters gas into a cylinder by the mole and reads what it does under any weight, heat or room. A sealed tank keeps its amount to itself, and everything else on its plate is for you to work from.'
+      body: 'This bench meters gas into a cylinder by the mole — a chemist\u2019s count of particles — and reads what it does under any weight, heat or room. A sealed tank keeps its amount to itself, and everything else on its plate is for you to work from.'
     },
     prompt: 'Say what volume one mole of gas fills at 0 °C and a pressure of one atmosphere.',
     controls: ['add', 'remove', 'reset'],
@@ -141,7 +141,7 @@ export const STAGES = [
     hints: [
       'Read the four logged readings and then take readings of your own on the cylinder.',
       'Compare how pressure, volume, amount and temperature change together from one reading to the next.',
-      'Combine the four figures of one reading so that the result is the same for every reading in the log.'
+      'Multiply the pressure by the volume, then divide by the amount times the kelvin temperature, and check every reading gives the same number.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a number.' };
@@ -226,7 +226,7 @@ export const STAGES = [
     temps: [300, 400], tempStart: 1, tempList: 'K',
     ...BASE,
     show: { mass: true },
-    reference: ['R = 8.31 kPa·L per mol·K', 'Molar masses in g/mol: CH₄ 16.0, N₂ 28.0, O₂ 32.0, CO₂ 44.0'],
+    reference: ['R = 8.31 kPa·L per mol·K', 'Molar masses — what one mole weighs — in g/mol: CH₄ 16.0, N₂ 28.0, O₂ 32.0, CO₂ 44.0'],
     vmax: 10, gaugeMax: 400,
     rigs: [cyl('a', 'TANK A', 'CO2', { n: 0.5, T: 300, V: 10, hold: 'V', sealed: true, note: 'a sealed tank of an unnamed gas' })],
     widget: {
@@ -253,7 +253,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Same Conditions',
-    prompt: 'Put the three gases in order of density, densest first.',
+    prompt: 'Density is mass over volume. Put the three gases in order of density, densest first.',
     controls: ['temp'],
     temps: [0, 100, 200], tempStart: 1, tempList: 'C',
     ...BASE,

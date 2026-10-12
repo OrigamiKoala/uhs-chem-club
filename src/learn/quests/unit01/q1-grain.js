@@ -1,23 +1,30 @@
 /**
  * q1-grain.js — Tallow, site one: THE GRAIN OF THINGS.
  *
- * The first game on the Learn road. Eight stages on a salvage bench, introducing
- * atoms, elements, atomic mass, chemical bonds, molecules, compounds, and mixtures
- * immediately after each stage as the reward card payoff.
+ * The first game on the Learn road. Eight stages on a salvage bench, naming
+ * real elements from the start and discovering pure elements, mixtures,
+ * molecules and compounds immediately after each stage as the reward card
+ * payoff.
  *
- * THE ORDER IS THE WHOLE DESIGN. Every stage is a thing the player does with an
- * instrument, and the concept arrives immediately afterwards as a reward card,
- * connecting the player's hands-on observation to the real chemistry:
+ * WORDS ARE FREE, PHENOMENA ARE DISCOVERED. Every atom on this bench is
+ * called by its real element name from stage one (hydrogen, carbon, oxygen,
+ * sodium, sulfur, chlorine). What the player discovers is never the word —
+ * it is the observation: one powder holds a single element, bonded groups
+ * survive the cutter, shaking sorts some samples into layers and not others.
  *
- *   1  determine where grit stops dividing       -> Atoms · The Discrete Floor of Matter
- *   2  find the crate that is one material       -> Elements vs. Mixtures
- *   3  determine kinds present in unverified ore -> Atomic Mass · Identifying Elements
- *   4  test samples against the bench cutter     -> Atoms Cannot Be Divided Chemically
- *   5  assemble cluster to replicate coolant     -> Molecules & Chemical Formulas
- *   6  match vials to cargo manifests            -> Chemical Compounds · Structure Dictates Function
+ * THE ORDER IS THE WHOLE DESIGN. Every stage is a thing the player does with
+ * an instrument, and the concept arrives immediately afterwards as a reward
+ * card, connecting the player's hands-on observation to the real chemistry:
+ *
+ *   1  determine where matter stops looking smooth -> Atoms · The Discrete Floor of Matter
+ *   2  find the powder that is one element        -> Elements vs. Mixtures
+ *   3  count the elements in an unsorted ore      -> Atomic Mass · Weighing Tells Them Apart
+ *   4  test samples against the bench cutter      -> Molecules · What the Blade Cannot Cut
+ *   5  assemble a molecule to match the sample    -> Water, H2O
+ *   6  match vials to recipes                    -> Chemical Compounds · Structure Dictates Function
  *   7  settle crates to find mixtures            -> Separating Mixtures vs. Chemical Bonds
  *   8  classify all unknown salvage crates       -> Classifying All Matter
- *   -- debrief: Periodic Table mappings & preview of atomic core.
+ *   -- debrief: what the element numbers mean & preview of the atomic core.
  *
  * EVERY STAGE IS A FIGHT. Each stage declares an `encounter` (foes.js): the
  * samples on the bench are salt husks, the Commit key is named for the attack it
@@ -58,7 +65,7 @@ const TOOL_TEXT = {
   settle: [{
     from: 1,
     key: 'Settle',
-    what: 'Shakes the sample and lets it sink. Heavier pieces end up lower.'
+    what: 'Shakes the sample so heavier atoms sink below lighter ones.'
   }]
   // Run Cutter runs the cutter.
 };
@@ -76,35 +83,36 @@ export function toolNoteFor(controlId, stageNumber) {
 }
 
 /* ------------------------------------------------------------------
-   THE CATALOGUE
-   What the scope has met before, in the order it met it. The numbers are
-   the scope's own filing and they are not arbitrary — site three on Tallow
-   is where the player finds out what they count. Until then they are just
-   how the instrument refers to a kind of piece.
+   THE ELEMENTS
+   What the scope has met before, in the order it met it. Every atom is
+   called by its real element name from the start — hydrogen, carbon,
+   oxygen, sodium, sulfur, chlorine — with the mass the scope weighed for
+   it. The numbers beside the names are each element's place in the order
+   site three is about; until then they are just part of the name.
    ------------------------------------------------------------------ */
 export const KINDS = {
   k01: {
-    code: 'CAT 01', mass: 1.0, size: 0.30, tint: 'bone',
-    note: 'The lightest thing the scope has ever weighed.'
+    code: 'hydrogen (H)', mass: 1.0, size: 0.30, tint: 'bone',
+    note: 'The lightest atom the scope has ever weighed.'
   },
   k06: {
-    code: 'CAT 06', mass: 12.0, size: 0.56, tint: 'iron',
+    code: 'carbon (C)', mass: 12.0, size: 0.56, tint: 'iron',
     note: 'Dark and dry. Leaves a mark on anything it touches.'
   },
   k08: {
-    code: 'CAT 08', mass: 16.0, size: 0.52, tint: 'rust',
+    code: 'oxygen (O)', mass: 16.0, size: 0.52, tint: 'rust',
     note: 'Small but heavy. Turns up in almost every sample here.'
   },
   k11: {
-    code: 'CAT 11', mass: 23.0, size: 0.74, tint: 'pale',
-    note: 'Large, soft and dull. Reacts with almost anything.'
+    code: 'sodium (Na)', mass: 23.0, size: 0.74, tint: 'pale',
+    note: 'Large, soft and dull. Joins with almost anything.'
   },
   k16: {
-    code: 'CAT 16', mass: 32.1, size: 0.64, tint: 'sand',
-    note: 'Yellow. Slightly lighter than the one it looks like.'
+    code: 'sulfur (S)', mass: 32.1, size: 0.64, tint: 'sand',
+    note: 'Yellow. Slightly lighter than the chlorine it looks like.'
   },
   k17: {
-    code: 'CAT 17', mass: 35.5, size: 0.66, tint: 'sand',
+    code: 'chlorine (Cl)', mass: 35.5, size: 0.66, tint: 'sand',
     note: 'Yellow and heavy. Sharp smell.'
   }
 };
@@ -145,7 +153,7 @@ export const VOCABULARY = [
   { term: /\b(atoms?|atomic)\b/i, introducedAt: 1 },
   { term: /\belements?\b/i, introducedAt: 2 },
   { term: /\bmixtures?\b/i, introducedAt: 2 },
-  { term: /\b(molecules?|molecular)\b/i, introducedAt: 5 },
+  { term: /\b(molecules?|molecular)\b/i, introducedAt: 4 },
   { term: /\bcompounds?\b/i, introducedAt: 6 }
 ];
 
@@ -164,19 +172,19 @@ export const STAGES = [
     title: 'Zoom In',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench is a scope for looking at things far too small to see. The Power dial zooms in, "Run Cutter" tries to split a sample, and "Settle" shakes a sample and lets it sink.'
+      body: 'Everything around you — rock, water, air — is built from tiny pieces called atoms, far too small to see. This scope magnifies them until you can: the Power dial zooms in, "Run Cutter" tries to split a sample, and "Settle" shakes a sample and lets it sink.'
     },
-    prompt: 'Find the lowest power at which this grey solid stops looking solid and breaks into separate grains.',
+    prompt: 'Find the lowest power where this grey powder stops looking smooth and breaks into separate atoms.',
     controls: ['power'],
     samples: [
-      { id: 'c7', label: 'SAMPLE A', note: 'grey powder', floorPower: 4, particles: [{ kinds: ['k06'], n: 46 }] }
+      { id: 'c7', label: 'SAMPLE A', note: 'grey powder from the refinery yard', floorPower: 4, particles: [{ kinds: ['k06'], n: 46 }] }
     ],
     widget: { type: 'choice-row', min: 1, max: 6, label: 'Lowest power' },
     answer: 4,
     hints: [
       'Turn the Power dial up one step at a time and watch the picture change.',
-      'At low power you see solid clumps; keep going until the clumps break into separate round grains.',
-      'Find the first power where you can pick out single grains, then turn down one step and check that the picture there is still clumps.'
+      'At low power you see solid clumps, and at high power you see separate round atoms.',
+      'Find the first power where you can pick out single atoms, then turn down one step and check that the picture there is still clumps.'
     ],
     check(state) {
       if (!state.number) {
@@ -184,10 +192,10 @@ export const STAGES = [
       }
       if (state.number === 4) return { ok: true };
       if (state.number < 4) return { ok: false, msg: 'Too low. At that power the sample still looks like solid clumps.' };
-      return { ok: false, msg: 'Too high. That power shows the same grains, just bigger — go back to the first power where they appear.' };
+      return { ok: false, msg: 'Too high. That power shows the same atoms, just bigger — go back to the first power where they appear.' };
     },
     reward: {
-      log: 'Grains resolved at power 4.',
+      log: 'Atoms resolved at power 4.',
       title: 'Atoms',
       body: 'Zoom in far enough and matter stops being smooth: it is made of separate tiny particles called atoms. Everything around you is built out of them.'
     }
@@ -196,38 +204,38 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'One Kind or Two?',
-    prompt: 'Both samples look like the same grey powder. Pick the one built from only one kind of atom.',
+    prompt: 'Both samples look like the same grey powder. Find which one is a pure element: a powder made of only one kind of atom.',
     controls: ['power'],
     select: true,
     samples: [
-      { id: 'c09', label: 'SAMPLE A', note: 'grey powder', floorPower: 4, particles: [{ kinds: ['k06'], n: 44 }] },
-      { id: 'c14', label: 'SAMPLE B', note: 'grey powder', floorPower: 4, particles: [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }] }
+      { id: 'c09', label: 'SAMPLE A', note: 'grey powder from the refinery yard', floorPower: 4, particles: [{ kinds: ['k06'], n: 44 }] },
+      { id: 'c14', label: 'SAMPLE B', note: 'grey powder from the refinery yard', floorPower: 4, particles: [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }] }
     ],
     widget: { type: 'sample' },
     hints: [
-      'They look identical until the scope resolves the atoms, so turn the Power dial up first.',
-      'Compare the two pictures: one sample has atoms that all match, and the other has two different atoms mixed together.',
-      'Tap several atoms in each sample and compare their codes: a sample of one kind reads the same code on every atom.'
+      'They look identical until the scope shows the atoms, so turn the Power dial up first.',
+      'Compare the two pictures atom by atom: every atom in one sample matches, and the other sample holds two different atoms.',
+      'Tap several atoms in each sample and compare their names: a pure element reads one name on every atom.'
     ],
     check(state) {
       if (state.sample === 'c09') return { ok: true };
-      return { ok: false, msg: 'Look again: that one has dark atoms and pale atoms mixed together, so it is two kinds, not one.' };
+      return { ok: false, msg: 'Look again: that one holds dark carbon atoms and pale sodium atoms together, so it is no pure element.' };
     },
     reward: {
-      log: 'Sample A is one kind. Sample B is two.',
+      log: 'Sample A is carbon only. Sample B mixes carbon and sodium.',
       title: 'Elements and Mixtures',
-      body: 'A substance built from only one kind of atom is an element. Different atoms sitting together without joining are a mixture.'
+      body: 'A substance made of only one kind of atom is an element — carbon powder is the element carbon. Different atoms sitting together without joining are a mixture.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Count the Kinds',
-    prompt: 'Count how many different kinds of atom are in this sample.',
+    title: 'Count the Elements',
+    prompt: 'Count how many different elements this raw rock from the yard holds.',
     controls: ['power'],
     samples: [
       {
-        id: 'ore', label: 'SAMPLE A', note: 'unsorted ore', floorPower: 4,
+        id: 'ore', label: 'SAMPLE A', note: 'unsorted rock from the refinery yard', floorPower: 4,
         particles: [
           { kinds: ['k17'], n: 26 },
           { kinds: ['k08'], n: 20 },
@@ -235,22 +243,22 @@ export const STAGES = [
         ]
       }
     ],
-    widget: { type: 'number', min: 1, max: 6, label: 'Kinds counted' },
+    widget: { type: 'number', min: 1, max: 6, label: 'Elements counted' },
     answer: 3,
     hints: [
       'Tapping one atom only tells you about that atom, so tap plenty of them across the whole picture.',
-      'Two of the kinds look almost the same, but their mass readings differ: one reads 32.1 and the other 35.5.',
+      'Two of the elements look almost the same, but their masses differ: one reads 32.1 and the other 35.5.',
       'Tap a dozen or more atoms across the whole picture, list every different mass reading you get, and count the list.'
     ],
     check(state) {
       if (state.number === 3) return { ok: true };
-      if (state.number < 3) return { ok: false, msg: 'There is at least one more kind in there. Two of them look alike — check their mass readings.' };
-      return { ok: false, msg: 'Too many. Some of the atoms you read are the same kind as each other.' };
+      if (state.number < 3) return { ok: false, msg: 'There is at least one more element in there. Two of them look alike, so check their mass readings.' };
+      return { ok: false, msg: 'Too many. Some of the atoms you read are the same element as each other.' };
     },
     reward: {
-      log: 'Three kinds of atom found.',
+      log: 'Three elements found: chlorine, oxygen and sulfur.',
       title: 'Atomic Mass',
-      body: 'Every element has its own atomic mass. Weighing an atom is how you tell two look-alike kinds apart.'
+      body: 'Every element has its own atomic mass. Weighing an atom tells two look-alike elements apart.'
     }
   },
 
@@ -261,15 +269,15 @@ export const STAGES = [
     controls: ['cut'],
     select: true,
     samples: [
-      { id: 't1', label: 'SAMPLE A', note: 'loose grains', floorPower: 1, magnify: 1.5, particles: [{ kinds: ['k08'], n: 20 }] },
-      { id: 't2', label: 'SAMPLE B', note: 'one cluster', floorPower: 1, magnify: 3.6, particles: [{ ...CLUSTER_A, n: 1 }] },
-      { id: 't3', label: 'SAMPLE C', note: 'one joined pair', floorPower: 1, magnify: 3.6, particles: [{ ...PAIR_LIGHT, n: 1 }] },
-      { id: 't4', label: 'SAMPLE D', note: 'one atom', floorPower: 1, magnify: 3.6, particles: [{ kinds: ['k08'], n: 1 }] }
+      { id: 't1', label: 'SAMPLE A', note: 'loose grey grit', floorPower: 1, magnify: 1.5, particles: [{ kinds: ['k08'], n: 20 }] },
+      { id: 't2', label: 'SAMPLE B', note: 'a clear droplet', floorPower: 1, magnify: 3.6, particles: [{ ...CLUSTER_A, n: 1 }] },
+      { id: 't3', label: 'SAMPLE C', note: 'a puff of light gas', floorPower: 1, magnify: 3.6, particles: [{ ...PAIR_LIGHT, n: 1 }] },
+      { id: 't4', label: 'SAMPLE D', note: 'a speck of reddish gas', floorPower: 1, magnify: 3.6, particles: [{ kinds: ['k08'], n: 1 }] }
     ],
     widget: { type: 'sample' },
     hints: [
       'Tap a sample to select it and press "Run Cutter", then do the same for the other three.',
-      'A heap scatters and a joined group breaks into its parts, but one sample does neither.',
+      'A loose heap scatters and a joined group breaks into separate atoms, but one sample does neither.',
       'Cut each sample in turn and compare its picture before and after: the answer is the one whose picture does not change at all.'
     ],
     check(state) {
@@ -277,68 +285,68 @@ export const STAGES = [
       return { ok: false, msg: 'That one came apart under the blade. Pick the sample the cutter left exactly as it was.' };
     },
     reward: {
-      log: 'A single atom will not divide.',
-      title: 'Atoms Do Not Split',
-      body: 'Chemistry can break atoms apart from each other, but not break an atom itself. In any chemical change the atoms are rearranged and every one of them survives.'
+      log: 'A single oxygen atom will not divide.',
+      title: 'Molecules',
+      body: 'The cutter broke some samples into separate atoms but could not break a single atom itself. Atoms joined together in a fixed recipe make a molecule, and in any chemical change the atoms are rearranged while every one of them survives.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
-    title: 'Copy the Cluster',
-    prompt: 'This sample is the same small cluster of atoms over and over. Build one exact copy in the tray.',
+    title: 'Copy the Molecule',
+    prompt: 'This sample holds the same small molecule over and over. Build one exact copy in the tray.',
     controls: ['power'],
     samples: [
-      { id: 'v9', label: 'SAMPLE A', note: 'clear liquid', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 20 }] }
+      { id: 'v9', label: 'SAMPLE A', note: 'clear liquid from the refinery', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 20 }] }
     ],
     widget: { type: 'build', kinds: ['k01', 'k06', 'k08'], max: 4 },
     hints: [
-      'Turn the Power dial up until one cluster is clear, then tap the atom in the middle and each one attached to it.',
-      'Every cluster is the same, so read just one: the code of the atom in the middle and the code of each atom attached to it.',
-      'Add one atom to the tray for every atom in that one cluster, by its code: the middle one plus each attached one, and nothing else.'
+      'Turn the Power dial up until one molecule is clear, then tap the atom in the middle and each one joined to it.',
+      'Every molecule here is the same, so read just one: the name of the atom in the middle and the name of each atom joined to it.',
+      'Add one atom to the tray for every atom in that one molecule, by name: the middle one plus each joined one, and nothing else.'
     ],
     check(state) {
       const b = state.build;
       const total = Object.values(b).reduce((n, v) => n + v, 0);
       if (total === 0) return { ok: false, notYet: true, msg: 'The tray is empty. Use the + keys to add atoms.' };
-      if (b.k06) return { ok: false, msg: 'There is no CAT 06 in this sample. Tap the atoms in a cluster and check what they read.' };
+      if (b.k06) return { ok: false, msg: 'There is no carbon in this sample. Tap the atoms in a molecule and check what they read.' };
       if (b.k01 === 2 && b.k08 === 1) return { ok: true };
-      if (b.k01 > 0 && b.k08 > 0) return { ok: false, msg: 'Right kinds, wrong numbers. Count the middle atom and the ones attached to it.' };
-      return { ok: false, msg: 'One of the two kinds is missing. Tap the middle atom and the attached ones separately.' };
+      if (b.k01 > 0 && b.k08 > 0) return { ok: false, msg: 'Right elements, wrong numbers. Count the middle atom and the ones joined to it.' };
+      return { ok: false, msg: 'One of the two elements is missing. Tap the middle atom and the joined ones separately.' };
     },
     reward: {
-      log: 'Copy built: 1 x CAT 08, 2 x CAT 01.',
-      title: 'Molecules',
-      body: 'Atoms bonded together in a fixed recipe make a molecule — one oxygen with two hydrogens is a molecule of water, H2O. Two atoms of the same kind can bond too, and that is still just one element.'
+      log: 'Copy built: 1 x oxygen, 2 x hydrogen.',
+      title: 'Water, H2O',
+      body: 'One oxygen atom joined to two hydrogen atoms is a molecule of water, H2O. Two hydrogen atoms joined together count as a molecule too, and a sample of those is still the pure element hydrogen.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Same Atoms, Different Recipe',
-    prompt: 'Both samples are built from the same two kinds of atom. File each one under the recipe that matches its molecules.',
+    prompt: 'Both samples are built from hydrogen and oxygen. File each one under the recipe that matches its molecules: the count of each atom in one molecule.',
     controls: ['power'],
     samples: [
-      { id: 'vA', label: 'SAMPLE A', note: 'clear liquid', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 16 }] },
-      { id: 'vB', label: 'SAMPLE B', note: 'clear liquid', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_B, n: 14 }] }
+      { id: 'vA', label: 'SAMPLE A', note: 'clear liquid from the refinery', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 16 }] },
+      { id: 'vB', label: 'SAMPLE B', note: 'clear liquid from the refinery', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_B, n: 14 }] }
     ],
     widget: {
       type: 'bins',
       bins: [
-        { id: 'm9', label: '1 heavy + 2 light', note: 'one CAT 08 in the middle' },
-        { id: 'm22', label: '2 heavy + 2 light', note: 'two CAT 08 joined in a chain' }
+        { id: 'm9', label: '1 oxygen + 2 hydrogen', note: 'one oxygen atom in the middle' },
+        { id: 'm22', label: '2 oxygen + 2 hydrogen', note: 'two oxygen atoms joined in a chain' }
       ]
     },
     hints: [
       'Turn the Power dial up until single molecules are clear, then count the atoms in one from each sample.',
-      'Both use only CAT 01 and CAT 08, and the difference is how many CAT 08 atoms each molecule holds.',
-      'Count the CAT 08 atoms in one molecule from Sample A, then in one from Sample B, and file each under the recipe with that many heavy atoms.'
+      'Both samples use only hydrogen and oxygen, and the difference is how many oxygen atoms each molecule holds.',
+      'Count the oxygen atoms in one molecule from each sample, then file each under the recipe with that many oxygen atoms.'
     ],
     check(state) {
       const { bins } = state;
       if (!bins.vA || !bins.vB) return { ok: false, notYet: true, msg: 'File both samples before you commit.' };
       if (bins.vA === 'm9' && bins.vB === 'm22') return { ok: true };
-      return { ok: false, msg: 'At least one sample is under the wrong recipe. Count the heavy CAT 08 atoms in one molecule from each sample.' };
+      return { ok: false, msg: 'At least one sample is under the wrong recipe. Count the oxygen atoms in one molecule from each sample.' };
     },
     reward: {
       log: 'Sample A: H2O. Sample B: H2O2.',
@@ -350,13 +358,13 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Shake It Out',
-    prompt: 'File each of the three samples as a single substance or a mixture.',
+    prompt: 'File each of the three samples as a single substance — one thing all the way through — or a mixture.',
     controls: ['settle'],
     select: true,
     samples: [
-      { id: 'p1', label: 'SAMPLE A', note: 'yellow powder', floorPower: 1, particles: [{ kinds: ['k17'], n: 30 }] },
-      { id: 'p2', label: 'SAMPLE B', note: 'clear liquid', floorPower: 1, particles: [{ ...CLUSTER_A, n: 26 }] },
-      { id: 'p3', label: 'SAMPLE C', note: 'pale powder', floorPower: 1, particles: [{ kinds: ['k11'], n: 16 }, { kinds: ['k06'], n: 16 }] }
+      { id: 'p1', label: 'SAMPLE A', note: 'yellow powder from the mine', floorPower: 1, particles: [{ kinds: ['k17'], n: 30 }] },
+      { id: 'p2', label: 'SAMPLE B', note: 'clear liquid from the refinery', floorPower: 1, particles: [{ ...CLUSTER_A, n: 26 }] },
+      { id: 'p3', label: 'SAMPLE C', note: 'pale powder from the yard', floorPower: 1, particles: [{ kinds: ['k11'], n: 16 }, { kinds: ['k06'], n: 16 }] }
     ],
     widget: {
       type: 'bins',
@@ -366,8 +374,8 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Tap a sample, press "Settle" and watch where the contents come to rest, then do the same for the other two.',
-      'Heavier things sink and lighter things float, so two different substances end up in two separate layers.',
+      'Tap a sample, press "Settle" and watch where its atoms come to rest, then do the same for the other two.',
+      'Heavier atoms sink and lighter atoms float, so two different substances end up in two separate layers.',
       'Settle all three and count the layers in each: one even layer is a single substance, two or more layers is a mixture.'
     ],
     check(state) {
@@ -377,9 +385,9 @@ export const STAGES = [
       return { ok: false, msg: 'At least one is filed wrong. One layer means one substance; two layers mean a mixture.' };
     },
     reward: {
-      log: 'Sample C separated into two layers.',
+      log: 'Sample C separated into chlorine and sodium layers.',
       title: 'Why Mixtures Separate',
-      body: 'Shaking sorts a mixture because nothing is holding the different pieces together. It cannot separate a compound, because the bonds inside a molecule are far too strong to shake apart.'
+      body: 'Shaking sorts a mixture because nothing is holding the different atoms together. It cannot separate a compound, because the bonds inside a molecule are far too strong to shake apart.'
     }
   },
 
@@ -390,23 +398,23 @@ export const STAGES = [
     controls: ['power', 'cut', 'settle'],
     select: true,
     samples: [
-      { id: 'm1', label: 'SAMPLE A', note: 'dark powder', floorPower: 4, particles: [{ kinds: ['k06'], n: 40 }] },
-      { id: 'm2', label: 'SAMPLE B', note: 'clear liquid', floorPower: 4, particles: [{ ...CLUSTER_A, n: 30 }] },
-      { id: 'm3', label: 'SAMPLE C', note: 'pale powder', floorPower: 4, particles: [{ kinds: ['k11'], n: 18 }, { kinds: ['k17'], n: 18 }] },
-      { id: 'm4', label: 'SAMPLE D', note: 'colorless gas', floorPower: 4, particles: [{ ...PAIR_LIGHT, n: 34 }] }
+      { id: 'm1', label: 'SAMPLE A', note: 'dark powder from the yard', floorPower: 4, particles: [{ kinds: ['k06'], n: 40 }] },
+      { id: 'm2', label: 'SAMPLE B', note: 'clear liquid from the refinery', floorPower: 4, particles: [{ ...CLUSTER_A, n: 30 }] },
+      { id: 'm3', label: 'SAMPLE C', note: 'pale powder from the yard', floorPower: 4, particles: [{ kinds: ['k11'], n: 18 }, { kinds: ['k17'], n: 18 }] },
+      { id: 'm4', label: 'SAMPLE D', note: 'colorless gas from a sealed tank', floorPower: 4, particles: [{ ...PAIR_LIGHT, n: 34 }] }
     ],
     widget: {
       type: 'bins',
       bins: [
-        { id: 'element', label: 'Element', note: 'only one kind of atom' },
-        { id: 'compound', label: 'Compound', note: 'different atoms bonded together' },
-        { id: 'mixed', label: 'Mixture', note: 'different atoms, not bonded' }
+        { id: 'element', label: 'Element', note: 'atoms of a single element' },
+        { id: 'compound', label: 'Compound', note: 'different elements bonded together' },
+        { id: 'mixed', label: 'Mixture', note: 'different elements, not bonded' }
       ]
     },
     hints: [
-      'Zoom in on each sample to see how many kinds of atom it holds and whether they are bonded, and settle any you are unsure of.',
-      'For each sample, check two things: how many different codes its atoms read, and whether its atoms are joined in groups or sit loose.',
-      'One code only is an element, even when the atoms are joined in pairs; different codes joined together is a compound; different codes sitting loose, or settling into layers, is a mixture.'
+      'Zoom in on each sample to see how many elements it holds and whether its atoms are bonded, then settle any you are unsure of.',
+      'For each sample, check two things: how many different names its atoms read, and whether its atoms are joined in groups or sit loose.',
+      'One element only is an element even in joined pairs, while different elements joined together make a compound and sitting loose make a mixture.'
     ],
     check(state) {
       const b = state.bins;
@@ -415,37 +423,37 @@ export const STAGES = [
       const wrong = Object.keys(want).filter(k => b[k] !== want[k]);
       if (!wrong.length) return { ok: true };
       if (wrong.length === 1) {
-        return { ok: false, msg: 'One is filed wrong. Check whether it holds one kind of atom or several, and whether they are bonded.' };
+        return { ok: false, msg: 'One is filed wrong. Check whether it holds one element or several, and whether they are bonded.' };
       }
-      return { ok: false, msg: 'More than one is filed wrong. One kind of atom is an element even when the atoms are bonded in pairs.' };
+      return { ok: false, msg: 'More than one is filed wrong. One element is an element even when its atoms are bonded in pairs.' };
     },
     reward: {
       log: 'All four filed correctly.',
       title: 'Every Substance Is One of Three',
       last: true,
-      body: 'Elements hold one kind of atom, compounds hold different atoms bonded together, and mixtures hold different atoms that are not bonded at all. That covers every substance there is.'
+      body: 'An element holds atoms of one element only, a compound holds different elements bonded together, and a mixture holds different elements that are not bonded at all. That covers every substance there is.'
     }
   }
 ];
 /* ------------------------------------------------------------------
    THE DEBRIEF
-   Three short cards: what the player learned, the real names behind the
-   catalogue codes, and what the next bench is about.
+   Three short cards: what the player learned, what the element numbers
+   mean, and what the next bench is about.
    ------------------------------------------------------------------ */
 const DEBRIEF = {
   speaker: 'Vess',
   sections: [
     {
       heading: 'What You Found',
-      body: 'Matter is made of atoms. One kind of atom on its own is an element, different atoms bonded together make a compound, and atoms just sitting together unbonded make a mixture.'
+      body: 'Matter is made of atoms. One element on its own is an element, different elements bonded together make a compound, and elements just sitting together unbonded make a mixture.'
     },
     {
-      heading: 'The Real Names',
-      body: 'Your scope files atoms by a code. CAT 01 is hydrogen (H), CAT 06 is carbon (C), CAT 08 is oxygen (O), CAT 11 is sodium (Na), CAT 16 is sulfur (S) and CAT 17 is chlorine (Cl). The cluster you copied was water, H2O, and the one next to it was hydrogen peroxide, H2O2.'
+      heading: 'What the numbers mean',
+      body: 'Each element has its own number: hydrogen is 1, carbon is 6, oxygen is 8, sodium is 11, sulfur is 16 and chlorine is 17. The next bench opens an atom up and shows what those numbers count.'
     },
     {
       heading: 'Next',
-      body: 'Those codes are not random. The next bench opens an atom up and shows you what they count.'
+      body: 'You can already name every atom on this bench. The next bench looks inside one and finds what makes each element different.'
     }
   ]
 };
@@ -457,7 +465,7 @@ const DEBRIEF = {
    ------------------------------------------------------------------ */
 export const PRACTICE = [
   {
-    question: 'You zoom in until matter stops looking smooth and breaks into separate particles. What are those particles called?',
+    question: 'You zoom in until matter stops looking smooth and breaks into separate tiny pieces. What are those pieces called?',
     options: [
       { id: 'a', label: 'Molecules' },
       { id: 'b', label: 'Atoms' },
@@ -465,7 +473,7 @@ export const PRACTICE = [
       { id: 'd', label: 'Compounds' }
     ],
     answer: 'b',
-    explanation: 'Atoms are the smallest pieces of matter. Zooming in further just shows the same atoms bigger.'
+    explanation: 'Atoms are the tiny particles everything is made of. Zooming in further just shows the same atoms bigger.'
   },
   {
     question: 'A sample contains only carbon (C) atoms and nothing else. What kind of substance is it?',
@@ -487,10 +495,10 @@ export const PRACTICE = [
       { id: 'd', label: 'An atom' }
     ],
     answer: 'c',
-    explanation: 'Atoms bonded together make a molecule. This one is water, H₂O — the cluster you copied.'
+    explanation: 'Atoms bonded together make a molecule. This one is water, H₂O — the molecule you copied.'
   },
   {
-    question: 'Carbon (C) and sodium (Na) grains sit in the same jar, not bonded to each other. What is in the jar?',
+    question: 'Carbon (C) atoms and sodium (Na) atoms sit in the same jar, not bonded to each other. What is in the jar?',
     options: [
       { id: 'a', label: 'A compound' },
       { id: 'b', label: 'A mixture' },
@@ -754,7 +762,7 @@ export function mount(container, ctx) {
         body: found === 'none'
           ? 'The blade closes on a single atom and finds nothing inside to split.'
           : found === 'broke'
-            ? 'The blade cuts the bonds and the group falls apart into separate atoms.'
+            ? 'The blade cuts the joins and the group falls apart into separate atoms.'
             : 'The blade just scatters the heap. Nothing here was bonded to anything.'
       });
     } else if (tool === 'settle') {
@@ -792,7 +800,7 @@ export function mount(container, ctx) {
     renderReadout(hit);
     if (index === 2) {
       const tally = frame.el.widget.querySelector('.lq-tally');
-      if (tally) tally.textContent = `Different kinds read so far: ${state.probed.size}`;
+      if (tally) tally.textContent = `Different elements read so far: ${state.probed.size}`;
     }
   }
 
@@ -805,9 +813,9 @@ export function mount(container, ctx) {
 
   /**
    * The instrument card. It reports what it measured and nothing more: how many
-   * other pieces are holding this one, never which kinds they are. Counting the
-   * arms is the player's job, and it is the whole of stage five.
-   */
+   * other atoms are holding this one, never which elements they are. Counting the
+    * arms is the player's job, and it is the whole of stage five.
+    */
   function renderReadout(hit, message) {
     if (message) {
       frame.setReadout(`
@@ -825,7 +833,7 @@ export function mount(container, ctx) {
         <div class="lq-readout-card lq-readout-idle">
           <div class="lq-readout-head">Probe // standby</div>
           <p class="lq-readout-line">${anyResolved
-            ? (index === 0 ? 'Tap any grain to read it.' : 'Tap any atom to read it.')
+            ? 'Tap any atom to read it.'
             : 'Nothing is in focus yet. Turn the Power dial up.'}</p>
         </div>
       `);
@@ -901,7 +909,7 @@ export function mount(container, ctx) {
             <span class="lq-number-value" aria-live="polite">${state.number}</span>
             <button type="button" class="btn-secondary quest-btn-sm" data-num="1" aria-label="Raise">+</button>
           </div>
-          ${index === 2 ? `<div class="lq-tally eyebrow lit">Different kinds read so far: ${state.probed.size}</div>` : ''}
+          ${index === 2 ? `<div class="lq-tally eyebrow lit">Different elements read so far: ${state.probed.size}</div>` : ''}
         </div>
       `);
       frame.el.widget.querySelectorAll('[data-num]').forEach(btn => {

@@ -71,7 +71,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench finds an electron\'s position once for every shot and leaves a dot where it was. Fire one shot, then keep firing, and see what the dots become.'
     },
-    prompt: 'Say where Sample A\'s electron is.',
+    prompt: 'Find where Sample A\'s electron is.',
     controls: ['fire'],
     extent: 5,
     clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],
@@ -106,7 +106,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Five Hundred Shots',
-    prompt: 'Describe the shape after 500 shots.',
+    prompt: 'Find the shape the dots make after 500 shots.',
     controls: ['fire'],
     extent: 5,
     clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],
@@ -141,7 +141,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Waves That Fit',
-    prompt: 'Pick the wavelengths that fit on the ring.',
+    prompt: 'Pick the wavelengths that fit on the ring. Wavelengths here are in pm, trillionths of a metre.',
     controls: ['tune'],
     settings: RING_SETTINGS,
     start: 2,
@@ -170,7 +170,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Bigger and Emptier',
-    prompt: 'Compare Sample A\'s cloud with Sample B\'s.',
+    prompt: 'Find how Sample B\'s cloud differs from Sample A\'s.',
     controls: ['fire', 'slice'],
     extent: 14,
     clouds: [
@@ -208,7 +208,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Two Lobes',
-    prompt: 'Describe Sample C\'s shape and where it has no dots.',
+    prompt: 'Find the shape of Sample C and where it holds no dots. A lobe is one rounded cloud where the dots gather.',
     controls: ['fire', 'slice'],
     extent: 12,
     clouds: [{ id: 'c', label: 'SAMPLE C', head: 'cloud', orbital: '2pz', plane: 'all', note: 'one electron in an atom with more energy' }],
@@ -243,7 +243,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Ways to Point',
-    prompt: 'Say how many different ways the two-lobed shape can point.',
+    prompt: 'Count how many ways the two-lobed shape points.',
     controls: [],
     extent: 12,
     clouds: [
@@ -320,7 +320,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'No Path',
-    prompt: 'Say why the bench never draws a path for the electron.',
+    prompt: 'Find why the bench never draws a path for the electron.',
     controls: ['fire', 'track'],
     extent: 5,
     clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],

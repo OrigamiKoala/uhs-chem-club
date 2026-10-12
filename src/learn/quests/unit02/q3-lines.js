@@ -66,7 +66,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench spreads a light into its colours on a scale in nm. Tap a position on a band to read it.'
     },
-    prompt: 'Say how the hot filament\'s light differs from the gas tube\'s.',
+    prompt: 'Find how the hot filament\'s light differs from the gas tube\'s.',
     labels: LABELS,
     controls: [],
     rigs: [
@@ -143,7 +143,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Light Through Cool Gas',
-    prompt: 'Say what the cool gas in front of the filament does to its light.',
+    prompt: 'Find what the cool gas does to the filament\'s light.',
     labels: LABELS,
     controls: [],
     rigs: [
@@ -182,7 +182,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Which Jump',
-    prompt: 'Say which jump on the ladder gives the red line.',
+    prompt: 'Find which jump on the ladder gives the red line. The ladder is the plate of rungs beside the tube.',
     labels: LABELS,
     controls: [],
     ladder: 'ladder',
@@ -237,7 +237,7 @@ export const STAGES = [
     hints: [
       'Use the worked figure for the 656 nm line to see how a wavelength turns into an energy.',
       'Turn 486 nm into a frequency with the speed of light, then multiply by Planck\'s constant.',
-      'Convert 486 nm to metres, divide the speed of light by it, and multiply the result by 6.626 x 10^-34 J s.'
+      'Convert 486 nm to metres with 10^-9, divide the speed of light by it, and multiply the result by 6.626 x 10^-34 J s.'
     ],
     check(state) {
       if (state.decimal === 3.5) return { ok: false, notYet: true, msg: 'Set the energy you worked out.' };
@@ -256,7 +256,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Line Not Yet Seen',
-    prompt: 'Using the ladder formula, say which line the jump from the fifth rung to the second makes.',
+    prompt: 'Predict which line the jump from the fifth rung to the second makes.',
     labels: LABELS,
     controls: [],
     ladder: 'ladder',
@@ -277,7 +277,7 @@ export const STAGES = [
     hints: [
       'Work out the energy of the fifth rung and of the second, using the formula on the plate.',
       'Subtract the lower rung\'s energy from the higher one\'s to get the energy given out in the jump.',
-      'Turn that energy into a wavelength by dividing Planck\'s constant times the speed of light by it, then find that wavelength on the band.'
+      'Turn that energy into a wavelength by dividing Planck\'s constant times the speed of light by it, turning metres into nm with 10^9, then find that wavelength on the band.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, notYet: true, msg: 'Pick a line.' };
@@ -296,7 +296,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Past the Top',
-    prompt: 'Say what happens to an electron given more than 2.18 x 10^-18 J while it sits in the ground state.',
+    prompt: 'Find what happens to an electron given more than the whole ladder holds.',
     labels: LABELS,
     controls: [],
     ladderTop: 'gone',
@@ -335,7 +335,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Helium Does Not Fit',
-    prompt: 'Say why the ladder works for hydrogen but not for helium.',
+    prompt: 'Explain why the ladder fits hydrogen but not helium.',
     labels: LABELS,
     controls: [],
     ladder: 'ladder',

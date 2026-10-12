@@ -20,8 +20,8 @@
  *   -- debrief: a lamp can be told by its light, and a bright red one will not do what a faint violet one does.
  *
  * `VOCABULARY` publishes the schedule. Wavelength and frequency are earned on
- * the first card and plain from the second stage on; before it the bench prints
- * "Crest to crest" and "Crests per second" and says nothing harder.
+ * the first card and plain from the second stage on; the bench prints the real
+ * words from the start, with the stage-one briefing glossing each one.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
@@ -69,10 +69,10 @@ export const STAGES = [
     title: 'Red to Violet',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench has a lamp you can tune, a screen that draws its light as a wave, and a prism that spreads it into colours. Tap a wave on the screen to measure how far apart its crests are.'
+      body: 'This bench tunes a lamp, draws its light as a wave, and spreads it into colours. Wavelength is the distance from one crest to the next, in nm — billionths of a metre — and frequency is how many crests pass each second.'
     },
-    prompt: 'Say what changes on the screen as the dial turns from red to violet.',
-    labels: PLAIN_LABELS,
+    prompt: 'Find how the wave changes as the lamp tunes from red to violet.',
+    labels: EARNED_LABELS,
     controls: ['tune'],
     settings: RED_TO_VIOLET,
     start: MID,
@@ -89,9 +89,9 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Turn the dial from its first position to its last and watch the wave and the "Crests per second" box.',
-      'Compare how far apart two crests sit at the red end with how far apart they sit at the violet end.',
-      'Tap the wave at each end of the dial, read the crest-to-crest spacing each time, and set it beside the count.'
+      'Turn the dial from its first position to its last and watch the wave and the frequency box.',
+      'Compare the crest spacing and the count at the red end with the spacing and the count at the violet end.',
+      'Tap the wave at each end of the dial and set each spacing beside its count.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, notYet: true, msg: 'Pick what changes.' };
@@ -113,7 +113,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Twice as Far Apart',
-    prompt: 'Find the lamp setting whose wavelength is twice Sample A\'s.',
+    prompt: 'Find the lamp setting with twice the wavelength of Sample A.',
     labels: EARNED_LABELS,
     controls: ['tune'],
     settings: [700, 650, 600, 550, 500, 450, 400, 350],
@@ -124,9 +124,9 @@ export const STAGES = [
     ],
     widget: { type: 'none' },
     hints: [
-      'Tap Sample A\'s wave to read its crest-to-crest spacing, then turn the dial and tap the lamp\'s wave the same way.',
+      'Tap Sample A\'s wave to read its wavelength, then turn the dial and tap the lamp\'s wave the same way.',
       'Compare the wavelength at each dial setting with twice the wavelength of Sample A.',
-      'Double the wavelength you measured for Sample A, then turn the dial until the lamp\'s measured wavelength matches that figure.'
+      'Double the wavelength you measured for Sample A, then turn the dial until the lamp\'s reading matches that figure.'
     ],
     check(state) {
       if (state.setting === MID) {
@@ -147,7 +147,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Spacing Times Count',
-    prompt: 'Say how fast the light from each of these three lamps travels.',
+    prompt: 'Find how fast the light from these lamps travels.',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -158,8 +158,8 @@ export const STAGES = [
     widget: { type: 'decimal', label: 'Speed of the light (x 10^8 m/s)', min: 0, max: 6, step: 0.5 },
     hints: [
       'Tap each lamp\'s wave to read its wavelength, and read its frequency from the box above the wave.',
-      'Multiply each lamp\'s wavelength, in metres, by its frequency and compare the three products.',
-      'Convert nanometres to metres by multiplying by 10^-9, then multiply by the frequency in crests per second.'
+      'Multiply each lamp\'s wavelength, written in metres, by its frequency and compare the three products.',
+      'Turn nanometres into metres with 10^-9, then multiply by the frequency in waves per second.'
     ],
     check(state) {
       if (state.decimal === 0) return { ok: false, notYet: true, msg: 'Set the speed you worked out.' };
@@ -188,8 +188,8 @@ export const STAGES = [
     widget: { type: 'decimal', label: 'Frequency (x 10^14 per second)', min: 0, max: 12, step: 0.5 },
     hints: [
       'Tap each reference lamp to read its wavelength and note the frequency printed above its wave.',
-      'Work out what wavelength times frequency comes to for each reference lamp and check that it is the same for both.',
-      'Divide that fixed product by 600 nm, written in metres, to get the frequency in crests per second.'
+      'Turn each reference wavelength into metres with 10^-9 and multiply by its frequency, then check that both products agree.',
+      'Divide that fixed product by 600 nm, written in metres with 10^-9, to get the frequency in waves per second.'
     ],
     check(state) {
       if (state.decimal === 0) return { ok: false, notYet: true, msg: 'Set the frequency you worked out.' };
@@ -208,7 +208,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Lowest to Highest',
-    prompt: 'Order the four lamps from the lowest frequency to the highest.',
+    prompt: 'Order the four lamps from lowest frequency to highest.',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -250,7 +250,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Past the Ends',
-    prompt: 'Say which detector responds to Sample B, which the eye cannot see.',
+    prompt: 'Find which detector answers Sample B, which the eye cannot see.',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -314,7 +314,7 @@ export const STAGES = [
     },
     hints: [
       'Tap each source on its ruler to read the wavelength it works at.',
-      'Divide the speed of light by each wavelength, written in metres, to get that source\'s frequency.',
+      'Divide the speed of light by each wavelength, written in metres with 10^-9, to get that source\'s frequency.',
       'The longest wavelength has the lowest frequency and the shortest wavelength has the highest, so only the sizes of the three figures are left to match.'
     ],
     check(state) {
@@ -349,7 +349,7 @@ export const STAGES = [
     hints: [
       'Find the lamp whose label names sodium, then tap its wave.',
       'Read the sodium lamp\'s frequency from the box above its wave, or work it out from its wavelength.',
-      'Divide the speed of light by 589 nm, written in metres, and round the result to one decimal place.'
+      'Divide the speed of light by 589 nm, written in metres with 10^-9, and round the result to one decimal place.'
     ],
     check(state) {
       if (state.decimal === 4.5) return { ok: false, notYet: true, msg: 'Set the frequency you read or worked out.' };

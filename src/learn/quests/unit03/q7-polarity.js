@@ -59,13 +59,13 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'A molecule stands between two charged plates, the left one positive and the right one negative. Switch Field charges them, and Show Arrows draws the pull across each bond.'
     },
-    prompt: 'Say which end of the H–Cl bond is more negative.',
+    prompt: 'Say which end of the H–Cl bond runs more negative, to mark the end that drags on the rescue gear.',
     controls: ['field', 'arrows'],
     rigs: [field('a', 'PLATE A', 'HCl', 'hydrogen 2.20 and chlorine 3.16 on the electronegativity scale')],
     widget: { type: 'choice', label: 'The more negative end', options: [{ id: 'h', label: 'The hydrogen end' }, { id: 'cl', label: 'The chlorine end' }] },
     hints: [
       'Switch the field on and watch which way the molecule turns.',
-      'Compare the electronegativities in the plate\'s note with the end that swings toward the positive plate.',
+      'Compare the pull numbers — electronegativities — in the plate\'s note with the end that swings toward the positive plate.',
       'The end that pulls the shared pair harder is the end drawn toward the positive plate.'
     ],
     check(state) {
@@ -83,7 +83,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Three Bonds',
-    prompt: 'File each bond by how unevenly its atoms share the pair.',
+    prompt: 'File each bond by how unevenly its atoms share the pair, to rank what the Fifth left behind.',
     controls: ['field', 'arrows'],
     rigs: [
       field('a', 'PLATE A', 'NaCl', 'sodium 0.93 and chlorine 3.16 on the electronegativity scale'),
@@ -117,7 +117,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Two Pulls, No Turn',
-    prompt: 'Say whether carbon dioxide turns between the plates.',
+    prompt: 'Say whether carbon dioxide turns between the plates, to test the straight tunnel air.',
     controls: ['field', 'arrows'],
     rigs: [field('a', 'PLATE A', 'CO2', 'carbon 2.55 and oxygen 3.44 on the electronegativity scale')],
     widget: { type: 'choice', label: 'In the field', options: [{ id: 'turns', label: 'It turns' }, { id: 'still', label: 'It does not turn' }] },
@@ -141,7 +141,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Bent and Straight',
-    prompt: 'Say why H₂O turns between the plates and CO₂ does not.',
+    prompt: 'Say why H₂O turns between the plates and CO₂ does not, to separate the wet seam from the dry one.',
     controls: ['field', 'arrows'],
     rigs: [
       field('a', 'PLATE A', 'H2O', 'hydrogen 2.20 and oxygen 3.44 on the electronegativity scale'),
@@ -178,7 +178,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'One Hydrogen',
-    prompt: 'Say which of CCl₄ and CHCl₃ turns between the plates.',
+    prompt: 'Say which of CCl₄ and CHCl₃ turns between the plates, to find the one unbalanced drum.',
     controls: ['field', 'arrows'],
     rigs: [
       field('a', 'PLATE A', 'CCl4', 'carbon 2.55 and chlorine 3.16 on the electronegativity scale'),
@@ -206,7 +206,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Flat and Pyramid',
-    prompt: 'Say which of NH₃ and BF₃ turns between the plates.',
+    prompt: 'Say which of NH₃ and BF₃ turns between the plates, to read the pyramid against the flat sheet.',
     controls: ['field', 'arrows'],
     rigs: [
       field('a', 'PLATE A', 'NH3', 'nitrogen 3.04 and hydrogen 2.20 on the electronegativity scale'),
@@ -237,7 +237,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Three Molecules',
-    prompt: 'File each molecule as polar or nonpolar.',
+    prompt: 'File each molecule as polar or nonpolar, to sort the dust the vents must filter.',
     controls: ['field', 'arrows'],
     rigs: [
       field('a', 'PLATE A', 'XeF4', 'xenon 2.60 and fluorine 3.98 on the electronegativity scale'),
@@ -271,7 +271,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'The Charged Rod',
-    prompt: 'Pick every liquid whose stream a charged rod will bend.',
+    prompt: 'Pick every liquid whose stream a charged rod will bend, to choose the wash that carries the dust out.',
     controls: ['field', 'arrows'],
     rigs: [
       field('ccl4', 'PLATE A', 'CCl4', 'a liquid of CCl₄ molecules'),

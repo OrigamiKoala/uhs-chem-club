@@ -70,7 +70,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'Arms clip onto the hub and push each other as far apart as they can get. The protractor reads the angle between any two arms.'
     },
-    prompt: 'Say the angle between two arms on the hub.',
+    prompt: 'Say the angle between two arms on the hub, to set the first shape the breakers will meet.',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'X', [atoms('a', 'A', 2, 'Arm')], { note: 'a hub with room for six arms' })],
     widget: { type: 'choice', label: 'Angle', options: [deg(60), deg(90), deg(120), deg(180)] },
@@ -94,7 +94,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Four Arms',
-    prompt: 'Say the angle between any two arms when the hub holds four.',
+    prompt: 'Say the angle between any two arms when the hub holds four, to predict the most common rock shape.',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'X', [atoms('a', 'A', 4, 'Arm')], { note: 'a hub with room for six arms' })],
     widget: { type: 'choice', label: 'Angle', options: [deg(90), { id: '109.5', label: '109.5°' }, deg(120), deg(180)] },
@@ -112,14 +112,14 @@ export const STAGES = [
     reward: {
       log: 'Four arms leave the plane.',
       title: 'Trigonal Planar, Tetrahedral, VSEPR',
-      body: 'Three domains lie flat at 120 degrees, trigonal planar; four reach the corners of a tetrahedron at 109.5 degrees, tetrahedral. Domains arranging themselves as far apart as they can get is the idea behind VSEPR.'
+      body: 'Three domains lie flat at 120 degrees, trigonal planar; four reach the corners of a tetrahedron — a pyramid with a triangle base — at 109.5 degrees, tetrahedral. Domains arranging themselves as far apart as they can get is the idea behind VSEPR.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'The Unseen Arm',
-    prompt: 'Say how the atoms of NH₃ are arranged.',
+    prompt: 'Say how the atoms of NH₃ are arranged, to place the pyramid blocking the side tunnel.',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'N', [atoms('h', 'H', 3, 'Hydrogen'), lone(1)], { note: 'nitrogen with three hydrogen atoms and one lone pair' })],
     widget: {
@@ -145,14 +145,14 @@ export const STAGES = [
     reward: {
       log: 'A lone pair is a domain you cannot see in the shape.',
       title: 'Trigonal Pyramidal',
-      body: 'A lone pair takes a domain but no atom, so three atoms and a lone pair make a molecule with its atoms in a pyramid, trigonal pyramidal. The lone pair points away from the atoms, out of the shape.'
+      body: 'A lone pair takes a domain but no atom, so three atoms and a lone pair make a molecule with its atoms in a pyramid with a triangle base, trigonal pyramidal. The lone pair points away from the atoms, out of the shape.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Two Unseen Arms',
-    prompt: 'Say the angle between the two hydrogen atoms of water.',
+    prompt: 'Say the angle between the two hydrogen atoms of water, to measure the seam.',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'O', [atoms('h', 'H', 2, 'Hydrogen'), lone(2)], { note: 'oxygen with two hydrogen atoms and two lone pairs' })],
     widget: { type: 'choice', label: 'Angle', options: [deg(90), { id: '104.5', label: '104.5°' }, { id: '109.5', label: '109.5°' }, deg(120)] },
@@ -170,14 +170,14 @@ export const STAGES = [
     reward: {
       log: 'Lone pairs push harder.',
       title: 'Bent',
-      body: 'Two atoms and two lone pairs make a bent molecule. Lone pairs push harder than bonding pairs, so the angle closes below 109.5 degrees: to 107 in ammonia and 104.5 in water.'
+      body: 'Two atoms and two lone pairs make a bent — V-shaped — molecule. Lone pairs push harder than bonding pairs, so the angle closes below 109.5 degrees: to 107 in ammonia and 104.5 in water.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Double Arms',
-    prompt: 'Say how many domains the carbon in CO₂ has.',
+    prompt: 'Say how many domains the carbon in CO₂ has, to name the straight strut in the arch.',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'C', [atoms('o', 'O', 2, 'Double-Bonded Oxygen', 2)], { note: 'carbon with two oxygen atoms, each joined by a double bond' })],
     widget: { type: 'choice', label: 'Domains', options: [{ id: '2', label: '2' }, { id: '3', label: '3' }, { id: '4', label: '4' }, { id: '6', label: '6' }] },
@@ -201,7 +201,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Five Arms',
-    prompt: 'Say where the lone pair settles on the SF₄ hub.',
+    prompt: 'Say where the lone pair settles on the SF₄ hub, to find the wobble in the warden joint.',
     controls: ['arms', 'protractor'],
     rigs: [
       hub('a', 'HUB A', 'P', [atoms('c', 'Cl', 5, 'Chlorine')], { note: 'phosphorus with five chlorine atoms' }),
@@ -234,7 +234,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Six Arms',
-    prompt: 'Say where the two lone pairs settle on the XeF₄ hub.',
+    prompt: 'Say where the two lone pairs settle on the XeF₄ hub, to square the plate for the breakthrough.',
     controls: ['arms', 'protractor'],
     rigs: [
       hub('a', 'HUB A', 'S', [atoms('f', 'F', 6, 'Fluorine')], { note: 'sulfur with six fluorine atoms' }),
@@ -261,14 +261,14 @@ export const STAGES = [
     reward: {
       log: 'The lone pairs sit opposite.',
       title: 'Octahedral, Square Planar',
-      body: 'Six domains point to the corners of an octahedron, octahedral. When two of them are lone pairs they sit opposite each other, leaving the four atoms in a flat square, square planar.'
+      body: 'Six domains point to the corners of an octahedron — two pyramids joined at their square bases —, octahedral. When two of them are lone pairs they sit opposite each other, leaving the four atoms in a flat square, square planar.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Shapes',
-    prompt: 'Name the shape the atoms make in each molecule.',
+    prompt: 'Name the shape the atoms make in each molecule, to file the last three seams.',
     controls: ['arms', 'protractor'],
     rigs: [
       hub('a', 'HUB A', 'Xe', [atoms('f', 'F', 2, 'Fluorine'), lone(3)], { note: 'xenon with two fluorine atoms and three lone pairs' }),

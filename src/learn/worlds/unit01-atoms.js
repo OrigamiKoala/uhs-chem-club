@@ -31,7 +31,7 @@ export const UNIT_01 = {
     {
       id: 'q1-grain',
       title: 'Atoms, Elements and Mixtures',
-      line: 'Distinguish atoms, elements, compounds, and mixtures.',
+      line: 'Sort the scattered minerals and break the salt guards.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -40,7 +40,7 @@ export const UNIT_01 = {
     {
       id: 'q2-core',
       title: 'Inside an Atom',
-      line: 'Protons, neutrons, and electron shells.',
+      line: 'Look inside the atom to read what the raiders left.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -49,7 +49,7 @@ export const UNIT_01 = {
     {
       id: 'q3-catalogue',
       title: 'The Periodic Table',
-      line: 'Periodic patterns, periods, and groups.',
+      line: 'Lay every element in order and read the repeating pattern.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -58,7 +58,7 @@ export const UNIT_01 = {
     {
       id: 'q4-ledger',
       title: 'Isotopes and Ions',
-      line: 'Atomic number, mass number, and ions.',
+      line: 'Describe every atom with three numbers for the ledger.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -67,7 +67,7 @@ export const UNIT_01 = {
     {
       id: 'q5-assay',
       title: 'Atomic Mass',
-      line: 'Isotopes and average atomic mass.',
+      line: 'Weigh the isotopes hiding inside every listed mass.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -76,7 +76,7 @@ export const UNIT_01 = {
     {
       id: 'q6-weigh',
       title: 'Counting By Weight',
-      line: 'Using molar mass to count atoms and molecules by weighing.',
+      line: 'Count atoms by weighing them for the refinery stores.',
       arena: 'bench',
       stageCount: 8,
       status: 'live',
@@ -85,7 +85,7 @@ export const UNIT_01 = {
     {
       id: 'boss-hopper',
       title: 'The Hopper',
-      line: 'The refinery ore hopper, risen in the salt.',
+      line: 'Bring down the walking hopper and claim its slag.',
       arena: 'boss',
       stageCount: 5,
       status: 'live',

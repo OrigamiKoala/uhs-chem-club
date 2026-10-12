@@ -76,7 +76,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench changes one thing at a time and keeps the rest fixed, so what you read is how the others answer. The dials turn the piston and the heater, and the keys add gas.'
     },
-    prompt: 'Say what happens to the pressure when the gas is given a quarter of the room at the same temperature.',
+    prompt: 'Say what happens to the pressure when the gas is squeezed into a quarter of its room — its volume — at one steady temperature.',
     controls: ['volume'],
     volumes: [5, 10, 20, 40], volumeStart: 3,
     ...BASE,
@@ -151,7 +151,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Under a Weight',
-    prompt: 'Say what happens to the volume when the temperature in kelvin is tripled and the pressure is kept steady.',
+    prompt: 'A free piston slides so the pressure stays steady. Say what happens to the volume when the temperature in kelvin is tripled.',
     controls: ['temp'],
     temps: [200, 300, 400, 600], tempStart: 1, tempList: 'K',
     ...BASE,
@@ -234,7 +234,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'A Sealed Tank',
-    prompt: 'Give the factor by which the pressure rises when this sealed tank is heated from 300 K to 450 K.',
+    prompt: 'This sealed tank is shut, so its room stays fixed. Give the factor by which the pressure rises when it is heated from 300 K to 450 K.',
     controls: ['temp'],
     temps: [300, 375, 450, 600], tempStart: 1, tempList: 'K',
     ...BASE,
@@ -265,7 +265,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Feeding the Piston',
-    prompt: 'Say what happens to the volume when the amount of gas is doubled at the same temperature and under the same weight.',
+    prompt: 'The piston carries the same weight, so the pressure stays steady. Say what happens to the volume when the amount of gas is doubled at the same temperature.',
     controls: ['add', 'remove', 'reset'],
     step: 1, nMin: 1, nMax: 4,
     ...BASE,

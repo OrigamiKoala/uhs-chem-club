@@ -79,7 +79,7 @@ export const CLUES = {
     act: 'act2',
     source: 'Kettle Elite · Recipe Golem',
     name: 'Forged Production Ledger',
-    summary: 'Factory logs claiming output exceeded raw metal materials by thirty percent.',
+    summary: 'Factory logs claiming fifty tons of metal from forty tons of ore.',
     note: 'Real chemical reactions strictly conserve mass—you cannot get more metal out than ore put in. The raiders must be using hidden nuclear energy.'
   },
   clue_bellows_warm: {

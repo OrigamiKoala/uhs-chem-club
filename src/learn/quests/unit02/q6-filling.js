@@ -126,7 +126,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Two in the p Row',
-    prompt: 'Say how carbon\'s two p electrons sit.',
+    prompt: 'Find how carbon\'s two p electrons sit.',
     controls: ['hand', 'magnet'],
     rigs: [plate({ label: 'SAMPLE C', sample: 'C', prefill: rackFor(4), locked: true, note: 'C, the p electrons are still to place' })],
     widget: {
@@ -163,7 +163,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Eight for Oxygen',
-    prompt: 'Say what the rack reads for oxygen.',
+    prompt: 'Find what the rack reads for oxygen.',
     controls: ['hand'],
     rigs: [plate({ label: 'SAMPLE O', sample: 'O', note: 'O, eight electrons' })],
     widget: {

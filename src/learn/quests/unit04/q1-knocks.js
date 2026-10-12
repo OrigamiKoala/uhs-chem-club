@@ -79,15 +79,15 @@ export const STAGES = [
     title: 'Rising and Falling',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench holds a gas in a cylinder with a piston you can move, a gauge on its wall and a counter that ticks for every knock on the far wall. The window shows the particles themselves.'
+      body: 'This bench holds helium in a cylinder with a piston, a pressure gauge — how hard the gas pushes — and a knock counter. The window shows the particles themselves.'
     },
-    prompt: 'Say what the gauge is measuring.',
+    prompt: 'The piston is the sliding wall that sets how much room the gas has. Say what the pressure gauge follows as the room changes.',
     controls: ['volume'],
     volumes: PISTON, volumeStart: 4,
     vmax: 32, gaugeMax: 400,
     rigs: [cyl('a', 'CYLINDER A', 'He', { hold: 'dial', note: 'a cylinder of helium' })],
     widget: {
-      type: 'choice', label: 'The gauge measures',
+      type: 'choice', label: 'The pressure gauge follows',
       options: [
         choice('knocks', 'How often the particles hit the wall'),
         choice('speed', 'How fast the particles move'),
@@ -101,7 +101,7 @@ export const STAGES = [
       'Look for the one reading that rises and falls exactly as the gauge does while everything else stays put.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose what the gauge measures.' };
+      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose what the pressure gauge follows.' };
       if (state.choice === 'knocks') return { ok: true };
       if (state.choice === 'speed') return { ok: false, msg: 'The particles move at the same speed at every setting of the piston, so speed is not what the gauge follows.' };
       if (state.choice === 'amount') return { ok: false, msg: 'The window holds the same number of particles at every setting, so the amount of gas is not what changes.' };

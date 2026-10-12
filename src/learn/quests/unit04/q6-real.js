@@ -69,7 +69,7 @@ export const STAGES = [
     title: 'Squeezed Hard',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench squeezes and cools a gas past where the gas law holds, and prints the reading PV over nRT, which is one while the law is true. The window draws the particles to scale, so you can see when they begin to crowd.'
+      body: 'This bench squeezes and cools a gas past where the gas law holds, and prints PV over nRT — pressure times room over amount times R times temperature — which reads one while the law is true. The window draws the particles to scale, so you can see when they begin to crowd.'
     },
     prompt: 'Say what the reading PV over nRT does as the helium is squeezed into less and less room.',
     controls: ['volume'],
@@ -149,7 +149,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Cooled Toward a Liquid',
-    prompt: 'Say what PV over nRT does as the carbon dioxide is cooled toward the point where it would condense.',
+    prompt: 'Say what PV over nRT does as the carbon dioxide is cooled.',
     controls: ['temp'],
     temps: [300, 280, 260, 240, 230], tempStart: 1, tempList: 'K',
     scale: 'kpa',
@@ -301,7 +301,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Two Corrections',
-    prompt: 'Say which correction does more to the reading when the gas is cold and only a little squeezed.',
+    prompt: 'The plate prints two corrections: the pull taking pressure off and the size putting it on. Say which does more to the reading when the gas is cold and only a little squeezed.',
     controls: ['volume', 'temp'],
     volumes: [1, 0.5, 0.25], volumeStart: 1,
     temps: [250, 500, 1000], tempStart: 1, tempList: 'K',

@@ -66,7 +66,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench goes beyond the exam. Two atoms\' boxes join into the boxes of a molecule, and the magnet tests how the real molecule is pulled.'
     },
-    prompt: 'Say what becomes of the two 1s boxes when the atoms join.',
+    prompt: 'Say what becomes of the two 1s boxes when the atoms join, to open the last map of the bond.',
     controls: ['join'],
     rigs: [rack('a', 'PLATE A', 'H2', { combined: false, note: 'two hydrogen atoms, apart' })],
     widget: {
@@ -98,7 +98,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Two Electrons',
-    prompt: 'Place the two electrons of H₂ where they have the least energy.',
+    prompt: 'Place the two electrons of H₂ where they have the least energy, to seat the first bond.',
     controls: ['hand'],
     rigs: [rack('a', 'PLATE A', 'H2', { note: 'two hydrogen atoms, joined' })],
     widget: { type: 'none' },
@@ -124,7 +124,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Four Electrons',
-    prompt: 'Place all four electrons of He₂ and say whether the molecule would hold together.',
+    prompt: 'Place all four electrons of He₂ and say whether the molecule would hold together, to test the seam that fails.',
     controls: ['hand'],
     counts: true,
     rigs: [rack('a', 'PLATE A', 'He2', { note: 'two helium atoms, joined' })],
@@ -152,7 +152,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Ten Electrons',
-    prompt: 'Give the bond order of N₂.',
+    prompt: 'Give the bond order of N₂, to grade the strongest seam in the pass.',
     controls: ['hand'],
     counts: true,
     rigs: [rack('a', 'PLATE A', 'N2', { note: 'two nitrogen atoms, joined' })],
@@ -180,7 +180,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Oxygen and the Magnet',
-    prompt: 'Say whether O₂ is pulled toward the magnet.',
+    prompt: 'Say whether O₂ is pulled toward the magnet, to test the tunnel air the miners breathe.',
     controls: ['hand', 'magnet'],
     counts: true,
     rigs: [rack('a', 'PLATE A', 'O2', { note: 'two oxygen atoms, joined' })],
@@ -201,14 +201,14 @@ export const STAGES = [
     reward: {
       log: 'Two electrons stand alone.',
       title: 'Oxygen Is Paramagnetic',
-      body: 'The last two electrons of O₂ go one each into two separate antibonding boxes, so oxygen is pulled by a magnet. A Lewis structure with every electron paired could not have said so.'
+      body: 'The last two electrons of O₂ go one each into two separate antibonding boxes, so oxygen is paramagnetic — pulled by a magnet. A Lewis structure with every electron paired could not have said so.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Three Oxygens',
-    prompt: 'Put O₂⁺, O₂ and O₂⁻ in order of bond length, shortest first.',
+    prompt: 'Put O₂⁺, O₂ and O₂⁻ in order of bond length, shortest first, to rank the breathing air.',
     controls: ['hand'],
     counts: true,
     rigs: [
@@ -240,7 +240,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'A Weak Link',
-    prompt: 'Say why F₂ is a weaker bond than O₂.',
+    prompt: 'Say why F₂ is a weaker bond than O₂, to explain the pale gas that will not hold.',
     controls: ['hand'],
     counts: true,
     rigs: [
@@ -277,7 +277,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'The Other Order',
-    prompt: 'Fill B₂ on this rack and say why it is magnetic.',
+    prompt: 'Fill B₂ on this rack and say why it is magnetic, to read the last warden plate.',
     controls: ['hand', 'magnet'],
     counts: true,
     rigs: [rack('a', 'PLATE A', 'B2', { note: 'two boron atoms, joined' })],
@@ -304,7 +304,7 @@ export const STAGES = [
     reward: {
       log: 'The boxes swap order below oxygen.',
       title: 'The Order Switch',
-      body: 'In molecules up to nitrogen the side-to-side π boxes sit below the end-on one, because the 2s and 2p boxes mix. B₂\'s last two electrons then go into separate π boxes, so B₂ is paramagnetic. This is beyond the exam.'
+      body: 'In molecules up to nitrogen the side-to-side π boxes sit below the end-on one, because the 2s and 2p boxes mix. B₂\'s last two electrons then go into separate π boxes, so B₂ is paramagnetic — pulled by a magnet. This is beyond the exam.'
     }
   }
 ];
@@ -317,7 +317,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Atomic boxes combine into molecular ones, half of them bonding and half antibonding, and electrons fill them from the bottom up. Half the difference between the electrons in the two kinds is the bond order, and it sets length, strength and whether the molecule exists at all.'
+      body: 'Atomic boxes combine into molecular ones, half of them bonding and half antibonding, and electrons fill them from the bottom up. Half the difference between the bonding electrons and the antibonding ones is the bond order, and it sets length, strength and whether the molecule exists at all.'
     },
     {
       heading: 'Why It Is Worth It',

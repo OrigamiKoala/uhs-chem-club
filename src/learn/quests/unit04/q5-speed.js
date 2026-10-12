@@ -154,14 +154,14 @@ export const STAGES = [
     reward: {
       log: 'The lighter the particle, the faster it goes.',
       title: 'Lighter, Faster',
-      body: 'At one temperature every gas has the same average kinetic energy, so the lighter the particles the faster they move. Speed goes as one over the square root of the molar mass.'
+      body: 'At one temperature every gas has the same average kinetic energy, so the lighter the particles the faster they move. Speed goes as one over the square root of the molar mass — what one mole weighs.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'The Fast Tail',
-    prompt: 'Say roughly how many times more of the particles clear the bar at 227 °C than at 27 °C.',
+    prompt: 'A bar on the speed screen marks one speed. Say roughly how many times more of the particles clear it at 227 °C than at 27 °C.',
     controls: ['temp'],
     temps: COMPARE_C, tempStart: 1, tempList: 'C',
     ...BASE,
@@ -197,7 +197,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'A Hole in the Wall',
-    prompt: 'Say which gas runs out of its chamber first, and why.',
+    prompt: 'Say which gas escapes through the pinhole first, and why.',
     controls: ['time'],
     times: TIMES, timeStart: 1,
     ...BASE,
@@ -272,7 +272,7 @@ export const STAGES = [
     times: TIMES, timeStart: 1,
     ...BASE,
     show: { half: true },
-    reference: ['Molar masses in g/mol: Ne 20.2, Ar 39.9, Kr 83.8, Xe 131'],
+    reference: ['Molar masses — what one mole weighs — in g/mol: He 4.0, Ne 20.2, Ar 39.9, Kr 83.8, Xe 131'],
     rigs: [
       leak('a', 'CHAMBER A', 'He', { note: 'a chamber of helium with a pinhole' }),
       leak('b', 'CHAMBER B', 'Ar', { sealed: true, note: 'an unmarked chamber with a pinhole' })
@@ -352,7 +352,7 @@ export const STAGES = [
     hints: [
       'Turn the time dial up and watch how far each gas has crept.',
       'Compare how far the two gases have got at the same time.',
-      'Compare each gas with the molar mass printed in its note, and ask which of the two is the lighter.'
+      'Pick the gas that has crept further down its tube at the same setting of the time dial.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a gas.' };

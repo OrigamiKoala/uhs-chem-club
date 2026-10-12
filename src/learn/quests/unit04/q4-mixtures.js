@@ -72,7 +72,7 @@ export const STAGES = [
     title: 'Pouring Together',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench holds tanks of mixed gas, each gas drawn in its own stencilled shape with a counter of its own. A key pours one tank into another, and the gauge reads the whole tank.'
+      body: 'This bench holds tanks of mixed gas, each gas drawn in its own stencilled shape with a counter of its own. A key pours one tank into another, and the gauge reads the whole tank at once.'
     },
     prompt: 'Say how the reading on Tank A after the pour compares with the two readings before it.',
     controls: ['pour', 'reset'],

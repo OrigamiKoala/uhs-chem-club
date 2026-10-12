@@ -9,7 +9,8 @@
  *   Phase 4: Neutralize core charge (ions & electrons · q4)
  *   Phase 5: Weigh carbon swarm (moles & molar mass · q5/q6)
  *
- * Awards Case File clue: clue_tallow_slag.
+ * Awards Case File clue: clue_tallow_slag — a slag with bismuth that cannot
+ * occur naturally in salt, proof the raiders brought foreign heavy metal.
  */
 
 import { LearnFrame } from '../../engine/frame.js';
@@ -55,7 +56,7 @@ export const STAGES = [
         return { ok: false, msg: 'File all three plates before committing your strike.' };
       }
       if (b.plate1 !== 'element') {
-        return { ok: false, msg: 'Pure iron contains only one kind of atom and cannot be broken down.' };
+        return { ok: false, msg: 'Pure iron holds a single element and cannot be broken down further.' };
       }
       if (b.plate2 !== 'compound') {
         return { ok: false, msg: 'Rock salt joins sodium and chlorine in a fixed recipe and splits under strike.' };
@@ -66,13 +67,13 @@ export const STAGES = [
       return { ok: true };
     },
     hints: [
-      'Recall how each class of matter responds to mechanical and chemical separation.',
-      'Pure iron contains one kind of atom, while rock salt joins elements in a fixed ratio.',
-      'File iron as an element, rock salt as a compound, and the aggregate as a mixture.'
+      'Read what each plate is made of, then match it to the bin that says the same thing.',
+      'Pure iron holds one element, while rock salt joins elements in a fixed ratio.',
+      'File each plate by what holds its atoms together: one element alone, a fixed joining recipe, or nothing joining them at all.'
     ],
     reward: {
       title: 'Hull Shattered',
-      body: 'The composite hull shatters along chemical classifications. Pure elements resist division while compounds split under precision strike.',
+      body: 'The outer plating breaks along its chemistry. Pure iron resists division while rock salt splits under a precise strike.',
       log: 'Outer armour plates dispersed by classification strike.'
     }
   },
@@ -96,20 +97,20 @@ export const STAGES = [
       return { ok: true };
     },
     hints: [
-      'Carbon sits in period two with atomic number six on the periodic table.',
-      'The atomic number is exactly equal to the number of protons in the nucleus.',
-      'Enter six protons to lock the diagnostic probe on carbon.'
+      'Find carbon on the reference plate and read the number beside it.',
+      'The atomic number counts exactly the protons in the nucleus.',
+      'Read the atomic number printed beside carbon and enter that count.'
     ],
     reward: {
       title: 'Core Locked',
-      body: 'The atomic number dictates the elemental identity of the core. Six protons identify the central emitter as carbon.',
+      body: 'The atomic number sets the identity of every element. Six protons make an atom carbon.',
       log: 'Core tuned to six protons.'
     }
   },
   {
     id: 'phase3',
     title: 'Phase 3 · Cooling Manifold',
-    prompt: 'Enter the atomic number of the inert noble gas in period two needed to quench the hopper heat.',
+    prompt: 'Enter the atomic number of the period-two noble gas that will quench the hopper heat.',
     samples: [{ id: 'hopper', label: 'The Hopper' }],
     widget: { type: 'number', min: 1, max: 36, step: 1, unit: 'atomic number' },
     encounter: {
@@ -120,26 +121,26 @@ export const STAGES = [
     check(state) {
       const n = state?.number;
       if (n === null || n === undefined) return { ok: false, msg: 'Set the atomic number on the dial.' };
-      if (n === 2) return { ok: false, msg: 'Helium sits in period one, not period two.' };
-      if (n === 18) return { ok: false, msg: 'Argon sits in period three, not period two.' };
-      if (n !== 10) return { ok: false, msg: 'Check the periodic table for the period two noble gas following fluorine.' };
+      if (n === 2) return { ok: false, msg: 'Helium sits in the first row, not the second.' };
+      if (n === 18) return { ok: false, msg: 'Argon sits in the third row, not the second.' };
+      if (n !== 10) return { ok: false, msg: 'Read the second row of group 18 on the reference plate.' };
       return { ok: true };
     },
     hints: [
-      'Noble gases occupy group eighteen on the far right of the periodic table.',
-      'The period two noble gas follows fluorine and carries ten protons.',
-      'Enter atomic number ten for neon to flood the cooling lines.'
+      'The reference plate lists group 18 from top to bottom: read which gas sits in the second row.',
+      'Run down group 18 to the second row and read which gas sits there.',
+      'Read the atomic number beside that gas and enter it.'
     ],
     reward: {
       title: 'Manifolds Quenched',
-      body: 'Group eighteen noble gases possess full valence shells and remain completely unreactive. Neon floods the jacket and chills the chassis.',
+      body: 'Group 18 gases hold full outer shells and react with almost nothing. Neon floods the jacket and chills the chassis.',
       log: 'Cooling manifolds flooded with neon gas.'
     }
   },
   {
     id: 'phase4',
     title: 'Phase 4 · Neutralize Charge',
-    prompt: 'Enter the number of electrons required to neutralize a sodium cation with eleven protons and ten electrons.',
+    prompt: 'Enter the number of electrons that neutralizes a sodium ion holding eleven protons and ten electrons.',
     samples: [{ id: 'hopper', label: 'The Hopper' }],
     widget: { type: 'number', min: 0, max: 10, step: 1, unit: 'electrons' },
     encounter: {
@@ -155,14 +156,14 @@ export const STAGES = [
       return { ok: true };
     },
     hints: [
-      'A neutral atom requires an equal count of positive protons and negative electrons.',
-      'With eleven protons and ten electrons, the ion carries a plus one charge.',
-      'Supply exactly one electron to restore electrical neutrality.'
+      'A neutral atom holds protons and electrons in equal numbers.',
+      'Eleven protons against ten electrons leave a charge of plus one.',
+      'Add electrons one at a time in your head until the two counts match, then enter how many that took.'
     ],
     reward: {
       title: 'Voltage Grounded',
-      body: 'Equal numbers of protons and electrons cancel out to zero net charge. The residual voltage drops to zero.',
-      log: 'Core cation neutralized with one electron.'
+      body: 'Equal numbers of protons and electrons cancel to zero charge. The residual voltage drops to zero.',
+      log: 'Core ion neutralized with one electron.'
     }
   },
   {
@@ -184,14 +185,14 @@ export const STAGES = [
       return { ok: true };
     },
     hints: [
-      'One mole of carbon has a molar mass of twelve grams per mole.',
+      'One mole of carbon weighs twelve grams.',
       'Multiply twelve grams per mole by two moles to find the total mass.',
-      'Enter twenty-four grams to calibrate the intake scale.'
+      'Do that multiplication and enter the total on the scale.'
     ],
     reward: {
       title: 'The Hopper Falls',
-      body: 'Two moles of carbon mass exactly twenty-four grams. The structural frame buckles and the hopper collapses into cold salt.',
-      log: 'The Hopper dispersed. Transmuted slag recovered from the chute.'
+      body: 'Two moles of carbon weigh 24 grams. The frame buckles and the hopper collapses into cold salt.',
+      log: 'The Hopper dispersed. Foreign slag recovered from the chute.'
     }
   }
 ];
@@ -216,12 +217,51 @@ export function stateFor(i, overrides) {
   return { bins: {}, number: null, ...overrides };
 }
 
+/* ------------------------------------------------------------------
+   REFERENCE PLATES
+   The boss reuses past benches, so whatever a phase asks the player to
+   look up is bolted to the bench in plain sight: plate compositions for
+   phase 1, a strip of elements with atomic numbers for phase 2, and the
+   group-18 column with its rows for phase 3. Nothing here is the answer
+   by itself — the player still has to find the right entry and use it.
+   ------------------------------------------------------------------ */
+const REFERENCES = {
+  phase1: `
+    <div class="lq-readout-card">
+      <div class="lq-readout-head">Hopper plates</div>
+      <p class="lq-readout-line">Pure iron: one element and nothing else.</p>
+      <p class="lq-readout-line">Rock salt: sodium and chlorine joined in a fixed recipe.</p>
+      <p class="lq-readout-line">Salt aggregate: salt grains and rock grit stirred together, nothing joined.</p>
+    </div>`,
+  phase2: `
+    <div class="lq-readout-card">
+      <div class="lq-readout-head">Reference strip — atomic numbers</div>
+      <p class="lq-readout-line">Hydrogen 1 · helium 2 · carbon 6 · nitrogen 7 · oxygen 8 · neon 10.</p>
+    </div>`,
+  phase3: `
+    <div class="lq-readout-card">
+      <div class="lq-readout-head">Reference strip — group 18</div>
+      <p class="lq-readout-line">Top to bottom: helium 2 in the first row, neon 10 in the second row, argon 18 in the third row.</p>
+    </div>`
+};
+
 export const DEBRIEF = {
   speaker: 'Vess',
-  badge: 'BOSS DISPERSED · TALLOW',
-  subtitle: 'The Hopper',
-  message: 'The Hopper has collapsed into cold slag. Inside its discharge chute we found an impossible ingot: pure bismuth, though this salt pan never held heavy metals.',
-  clueAwarded: 'clue_tallow_slag'
+  clueAwarded: 'clue_tallow_slag',
+  sections: [
+    {
+      heading: 'What You Found',
+      body: 'The Hopper has collapsed into cold slag. Its chute holds a lump of bismuth, and no salt flat makes bismuth on its own.'
+    },
+    {
+      heading: 'Why It Is Worth It',
+      body: 'Every phase was a bench you had already worked: matter, atoms, the table, charge and weight. That is all of Tallow, and it was enough to read the machine.'
+    },
+    {
+      heading: 'Next',
+      body: 'The ingot goes into the Case File. The next world asks why the electrons in every atom you have weighed sit only where they do.'
+    }
+  ]
 };
 
 export const PRACTICE = [
@@ -284,6 +324,7 @@ export const PRACTICE = [
 
 export function mount(container, ctx) {
   let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
+  let cleared = ctx.isComplete ? STAGES.length : ctx.stagesCleared;
   let state = { bins: {}, number: null };
   let busy = false;
 
@@ -338,29 +379,29 @@ export function mount(container, ctx) {
   }
 
   function bindControls() {
-    const controls = frame.el.controls;
-    if (!controls) return;
+    const widget = frame.el.widget;
+    if (!widget) return;
     const stage = STAGES[index];
 
-    controls.querySelectorAll('#btn-num-dec').forEach(btn => {
+    widget.querySelectorAll('#btn-num-dec').forEach(btn => {
       btn.addEventListener('click', () => {
         const cur = state.number ?? stage.widget.min;
         state.number = Math.max(stage.widget.min, cur - (stage.widget.step || 1));
-        const disp = controls.querySelector('#num-display');
+        const disp = widget.querySelector('#num-display');
         if (disp) disp.textContent = String(state.number);
       });
     });
 
-    controls.querySelectorAll('#btn-num-inc').forEach(btn => {
+    widget.querySelectorAll('#btn-num-inc').forEach(btn => {
       btn.addEventListener('click', () => {
         const cur = state.number ?? stage.widget.min;
         state.number = Math.min(stage.widget.max, cur + (stage.widget.step || 1));
-        const disp = controls.querySelector('#num-display');
+        const disp = widget.querySelector('#num-display');
         if (disp) disp.textContent = String(state.number);
       });
     });
 
-    controls.querySelectorAll('.bin-choice').forEach(btn => {
+    widget.querySelectorAll('.bin-choice').forEach(btn => {
       btn.addEventListener('click', () => {
         const itemId = btn.dataset.item;
         const binId = btn.dataset.bin;
@@ -379,14 +420,18 @@ export function mount(container, ctx) {
     const stage = STAGES[index];
     state = { bins: {}, number: stage.widget?.min ?? null };
 
-    frame.setStage(index, {
+    frame.setCleared(cleared);
+    frame.setStage({
+      index,
       title: stage.title,
       prompt: stage.prompt,
       hints: stage.hints,
+      commitLabel: stage.encounter?.act || 'Commit',
       encounter: resolveEncounter(stage)
     });
 
-    frame.setControls(renderWidget(stage));
+    frame.setWidget(renderWidget(stage));
+    frame.setReadout(REFERENCES[stage.id] || '');
     bindControls();
   }
 
@@ -402,13 +447,18 @@ export function mount(container, ctx) {
 
     busy = true;
     soundscape.playSuccess?.();
-    ctx.reportStage(index);
+    if (index + 1 > cleared) {
+      cleared = index + 1;
+      ctx.reportStage(index);
+    }
+    frame.setCleared(cleared);
 
     const isLast = index >= STAGES.length - 1;
     frame.clear({
       title: stage.reward.title,
       body: stage.reward.body,
-      isLast
+      log: stage.reward.log,
+      last: isLast
     });
     busy = false;
   }
@@ -419,11 +469,7 @@ export function mount(container, ctx) {
     } else {
       ctx.reportComplete();
       session.recordClue?.(DEBRIEF.clueAwarded);
-      frame.showDebrief({
-        title: DEBRIEF.title || 'Boss Dispersed',
-        body: DEBRIEF.message,
-        onDone: () => ctx.exit()
-      });
+      frame.showDebrief(DEBRIEF, () => ctx.exit());
     }
   }
 

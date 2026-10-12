@@ -8,23 +8,22 @@
  * connecting the player's hands-on observation to the real chemistry:
  *
  *   1  fire a beam through matter                -> The Nucleus · Mostly Empty Space
- *   2  count the marked grains in the core       -> Protons & Neutrons
+ *   2  count the crossed particles in the middle -> Protons & Neutrons
  *   3  find the balance rule, apply it to a seal -> Electrons & Electrical Neutrality
- *   4  load electrons onto rings                 -> Electron Shells & The Bohr Model
- *   5  predict trading from the outer ring       -> Valence Electrons & Reactivity
+ *   4  load electrons onto shells                -> Electron Shells & The Bohr Model
+ *   5  predict trading from the outer shell      -> Valence Electrons & Reactivity
  *   6  tell apart two specimens of equal mass    -> Atomic Number & Isotopes
  *   7  strip electrons to reach plus two         -> Ions & Net Charge
  *   8  classify unknown canisters                -> The Subatomic Architecture of Matter
  *   -- debrief: subatomic model summary & preview of the periodic table.
  *
- * VOCABULARY IS EARNED, THEN USED. A word is withheld until the player has
- * found the thing it names, and from the stage AFTER its reward card it is used
- * in play like any other word — the prompt for stage four asks about electrons,
- * because stage three is where the player worked out that they are there. The
- * schedule is `VOCABULARY` below, and `verify:learn` enforces it per stage:
- * naming a term one stage early fails the build, and so does never naming it.
- * Saying "light piece" for eight stages after the player has met the electron is
- * the instrument being coy, and it is what made stage three unreadable.
+ * WORDS ARE FREE, PHENOMENA ARE DISCOVERED. Real words (proton, neutron,
+ * electron, nucleus, shell) are used in play from the moment they help, and
+ * stage 2's card names all three particles at once. The one exception is the
+ * probe readout on stages 1 and 2, which keeps neutral labels (crossed and
+ * blank particles) because telling those two behaviors apart IS the discovery
+ * there — from stage 3 the probe says proton, neutron and electron outright
+ * (`NAMED_PARTS`). Key legends always say the plain thing.
  *
  * WHAT THIS QUEST DOES NOT SAY. The core bench does not talk to the sampler
  * scope's catalogue, and Vess says so out loud in stage one. The player will
@@ -80,11 +79,11 @@ const TOOL_TEXT = {
   field: [{
     from: 1,
     key: 'Whole piece / The middle / Outside',
-    what: 'Three views of the same atom: all of it, the heavy center close up, or the light pieces around it.'
+    what: 'Three views of the same atom: all of it, the heavy center close up, or the outside.'
   }, {
     from: 3,
     key: 'Whole piece / The middle / Outside',
-    what: 'Three views of the same atom: all of it, the nucleus close up, or the electrons on their rings.'
+    what: 'Three views of the same atom: all of it, the nucleus close up, or the electrons on their shells.'
   }],
   beam: [{
     from: 1,
@@ -94,28 +93,24 @@ const TOOL_TEXT = {
   meter: [{
     from: 1,
     key: 'Read Needle',
-    what: 'Clips the charge meter to the atom. It sits on zero when the two sides cancel.'
+    what: 'Clips the charge meter onto the atom to read which way it leans.'
   }, {
     // Stage 3 is where the player works out WHY it sits on zero, so the
     // legend keeps its stage-1 wording through stage 3 and only explains the
     // needle once that has been found.
     from: 4,
     key: 'Read Needle',
-    what: 'Clips the charge meter to the atom: protons push the needle up, electrons pull it down.'
+    what: 'Clips the charge meter onto the atom: protons push the needle up and electrons pull it down.'
   }],
   tester: [{
     from: 1,
     key: 'Run Tester',
-    what: 'Pushes another atom at this one and reports what happens. One test per sample.'
+    what: 'Pushes another atom at this one and reports what happens.'
   }],
   strip: [{
     from: 1,
     key: 'Fire Stripper',
-    what: 'Knocks one light piece off the outermost ring. The middle is not touched.'
-  }, {
-    from: 3,
-    key: 'Fire Stripper',
-    what: 'Knocks one electron off the outermost ring. The nucleus is not touched.'
+    what: 'Knocks one electron off the outer shell without touching the middle.'
   }]
 };
 
@@ -138,23 +133,23 @@ export function toolNoteFor(controlId, stageNumber) {
    ------------------------------------------------------------------ */
 export const PARTS = {
   marked: {
-    code: 'GRAIN // CROSSED', mass: 1.0, charge: 1,
+    code: 'CROSSED SPECK', mass: 1.0, charge: 1,
     note: 'Heavy, and it pushes the needle up every time.'
   },
   blank: {
-    code: 'GRAIN // BLANK', mass: 1.0, charge: 0,
-    note: 'Same size and weight as a crossed grain, but the needle does not move for it at all.'
+    code: 'BLANK SPECK', mass: 1.0, charge: 0,
+    note: 'Same size and weight as a crossed particle, but the needle does not move for it at all.'
   },
   light: {
-    code: 'OUTER // LIGHT', mass: 0.0005, charge: -1,
-    note: 'Almost weightless, and it pushes the needle the opposite way to a crossed grain.'
+    code: 'OUTER SPECK', mass: 0.0005, charge: -1,
+    note: 'Almost weightless, and it pushes the needle the opposite way to a crossed particle.'
   },
   core: {
-    code: 'CORE // WHOLE', mass: null, charge: null,
+    code: 'MIDDLE // WHOLE', mass: null, charge: null,
     note: 'The whole center at once, packed too tight to separate from here.'
   },
   whole: {
-    code: 'SPECIMEN // WHOLE', mass: null, charge: null,
+    code: 'WHOLE ATOM', mass: null, charge: null,
     note: 'The whole atom, edge to edge. Almost all of that width is empty.'
   }
 };
@@ -173,23 +168,23 @@ const NAMED_PARTS = {
 
 /* ------------------------------------------------------------------
    SPECIMENS
-   A specimen is a single piece off the salvage, declared as what is in its
-   middle and how many light pieces it keeps on each ring outward. Every
+   A specimen is a single atom off the salvage, declared as what is in its
+   middle and how many electrons it keeps on each shell outward. Every
    specimen on this bench is internally honest: unless a stage has taken
-   something off it, its light pieces balance its marked grains exactly.
+   something off it, its electrons balance its protons exactly.
    ------------------------------------------------------------------ */
 
-/** How many light pieces a specimen is carrying, over all its rings. */
+/** How many electrons a specimen is carrying, over all its shells. */
 export function lightCount(spec) {
   return (spec.rings || []).reduce((n, r) => n + r, 0);
 }
 
-/** What the needle reads for a whole specimen: marked grains against light pieces. */
+/** What the needle reads for a whole specimen: protons against electrons. */
 export function netCharge(spec) {
   return (spec.core.marked || 0) - lightCount(spec);
 }
 
-/** How many pieces are packed into a core, both sorts together. */
+/** How many particles are packed into a center, both sorts together. */
 export function coreTotal(spec) {
   return (spec.core.marked || 0) + (spec.core.blank || 0);
 }
@@ -235,9 +230,9 @@ export const STAGES = [
     field: 'whole',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench looks inside one atom at a time. You can fire tiny shots through it, look at its middle or its outside, and clip on a meter that reads its charge.'
+      body: 'This bench looks inside one atom at a time: fire tiny shots through it, or look at its middle or its outside. A clip-on meter reads its charge — which way it leans, toward plus or toward minus.'
     },
-    prompt: 'Say what the inside of Sample A\'s atom is like.',
+    prompt: 'Say what the inside of this atom is like.',
     controls: ['beam'],
     specimens: [
       { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
@@ -253,7 +248,7 @@ export const STAGES = [
     },
     hints: [
       'Press "Fire Beam" and read what happened to each of the forty shots.',
-      '37 of the 40 went straight through as if nothing were there, 2 were knocked aside and 1 bounced straight back.',
+      'Most shots went straight through as if nothing were there, while two were knocked aside and one bounced straight back.',
       'Consider what arrangement of mass allows almost all particles to pass through while an occasional particle rebounds.'
     ],
     check(state) {
@@ -275,18 +270,18 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   {
-    title: 'What Is In the Middle',
+    title: 'What Is in the Middle',
     field: 'core',
-    prompt: 'Count how many grains in Sample A\'s nucleus are stamped with a cross.',
+    prompt: 'Count how many particles in the middle of this atom carry a cross.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
     ],
-    widget: { type: 'number', min: 0, max: 20, label: 'Crossed grains' },
+    widget: { type: 'number', min: 0, max: 20, label: 'Particles with a cross' },
     hints: [
-      'Press "The middle": the nucleus is drawn flat, so no grain is hiding behind another one.',
-      'Twelve grains are packed in there, some with a cross and some blank, and only the crossed ones count.',
-      'Go across the picture row by row and tally only the grains with a cross, then check that your crossed and blank tallies add up to all twelve.'
+      'Press "The middle" to see the center drawn flat, with no particle hiding behind another one.',
+      'Twelve particles are packed in there, some with a cross and some blank, and only the crossed ones count.',
+      'Go across the picture row by row and tally only the particles with a cross, then check that your crossed and blank tallies add up to all twelve.'
     ],
     check(state) {
       if (state.number === 6) return { ok: true };
@@ -294,14 +289,14 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: 'The counter is still on zero. Count the crosses and set it.' };
       }
       if (state.number === 12) {
-        return { ok: false, msg: 'That is every grain, crossed and blank together. Count only the crossed ones.' };
+        return { ok: false, msg: 'That is every particle, crossed and blank together. Count only the crossed ones.' };
       }
-      return { ok: false, msg: 'That count is off. "The middle" draws the nucleus flat, so every grain is in view — count only the ones with a cross.' };
+      return { ok: false, msg: 'That count is off. "The middle" draws the center flat, so every particle is in view — count only the ones with a cross.' };
     },
     reward: {
-      log: 'Sample A: 12 grains, 6 crossed.',
+      log: 'Center holds 12 particles, 6 crossed.',
       title: 'Protons, Neutrons and Electrons',
-      body: 'The crossed grains are protons, each with a charge of +1, and the blank ones are neutrons, with no charge at all. Much further out, so light they barely weigh anything, sit the electrons, each with a charge of -1.'
+      body: 'The crossed particles are protons, each with a charge of +1, and the blank ones are neutrons, with no charge at all. Much further out, so light they barely weigh anything, sit the electrons, each with a charge of -1.'
     }
   },
 
@@ -309,7 +304,7 @@ export const STAGES = [
   {
     title: 'The Charge Balance',
     field: 'rings',
-    prompt: 'Sample D is sealed, so you cannot see its electrons. Work out how many it has.',
+    prompt: 'One sample here is sealed shut. Work out how many electrons it hides.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'r1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 3, blank: 4 }, rings: [2, 1] },
@@ -323,16 +318,16 @@ export const STAGES = [
     widget: { type: 'number', min: 0, max: 20, label: 'Electrons on Sample D' },
     hints: [
       'Press "Read Needle" on each sample, then press "Outside" and count the electrons on the three you can see.',
-      'Sample C is the useful one, the only needle off zero, so count its protons and its electrons and compare them.',
+      'Sample C is the useful one: it is the only needle off zero, so compare its protons and electrons with its reading.',
       'On Sample C, take its electrons away from its protons and compare that with its needle; then do the same sum backwards on Sample D, whose protons and needle you can both read.'
     ],
     check(state) {
       if (state.number === 8) return { ok: true };
       if (state.number === 0) {
-        return { ok: false, msg: 'Zero is what the needle reads, not how many electrons are there. Samples A and B read zero too, and they have 3 and 6.' };
+        return { ok: false, msg: 'Zero is what the needle reads, not how many electrons are there. Two open samples read zero too, holding 3 and 6 electrons.' };
       }
       if (state.number === 16) {
-        return { ok: false, msg: 'That is every grain in the nucleus. Only the protons push the needle.' };
+        return { ok: false, msg: 'That counts every particle in the middle. Only the protons push the needle.' };
       }
       return { ok: false, msg: 'Find the rule on Sample C first: compare its protons, its electrons and its needle. Then read Sample D\'s protons and needle and apply the same rule.' };
     },
@@ -347,7 +342,7 @@ export const STAGES = [
   {
     title: 'Where the Electrons Sit',
     field: 'rings',
-    prompt: 'Sample D has 11 protons and reads zero, so it has 11 electrons. Put all 11 on its rings.',
+    prompt: 'Put all 11 electrons of this neutral sample onto its shells.',
     controls: ['field'],
     specimens: [
       { id: 'r1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 2, blank: 2 }, rings: [2] },
@@ -360,12 +355,12 @@ export const STAGES = [
       type: 'rings',
       label: 'Sample D — where the electrons go',
       total: 11,
-      rings: ['Ring 1 — closest in', 'Ring 2 — middle', 'Ring 3 — furthest out']
+      rings: ['Shell 1 — closest in', 'Shell 2 — middle', 'Shell 3 — furthest out']
     },
     hints: [
-      'Press "Outside" and count how many electrons Samples A, B and C keep on each ring, then use the + and - keys to place Sample D\'s.',
-      'No sample here has more than 2 on ring 1 or more than 8 on ring 2, and none of them starts a new ring while a closer one still has room.',
-      'Put electrons on Ring 1 until it holds as many as Ring 1 does on the open samples, fill Ring 2 the same way, and only then put what is left of the 11 on Ring 3.'
+      'Press "Outside" and count how many electrons the open samples keep on each shell, then use the + and - keys to place this sample\'s.',
+      'No sample here holds more than 2 on the first shell or more than 8 on the second, and none of them starts a new shell while a closer one still has room.',
+      'Put electrons on the first shell until it holds as many as the first shell does on the open samples, fill the second shell the same way, and only then put what is left of the 11 on the third shell.'
     ],
     check(state) {
       const placed = state.rings.reduce((n, r) => n + r, 0);
@@ -373,13 +368,13 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: `${placed} of the 11 electrons are placed. Use the + keys to place the rest.` };
       }
       if (state.rings[0] > 2) {
-        return { ok: false, msg: 'Too many on Ring 1. Count what the open samples hold on their Ring 1 — none of them holds more.' };
+        return { ok: false, msg: 'Too many on the first shell. Count what the open samples hold on their first shell, since none of them holds more.' };
       }
       if (state.rings[1] > 8) {
-        return { ok: false, msg: 'Too many on Ring 2. Count what Samples B and C hold on their Ring 2 — that is as full as it gets.' };
+        return { ok: false, msg: 'Too many on the second shell. Count what the open samples hold on their second shell, since that is as full as it gets.' };
       }
       if (state.rings[0] < 2 || (state.rings[2] > 0 && state.rings[1] < 8)) {
-        return { ok: false, msg: 'A ring further out has electrons while a closer ring still has room. The open samples fill each ring before they start the next one.' };
+        return { ok: false, msg: 'A shell further out has electrons while a closer shell still has room. The open samples fill each shell before they start the next one.' };
       }
       return { ok: true };
     },
@@ -413,8 +408,8 @@ export const STAGES = [
     },
     hints: [
       'Press "Outside" and count the electrons on the outermost shell of all four samples.',
-      'A shell that holds 8 is full, so ask of each sample whether its outer shell has almost none, almost 8, or exactly 8.',
-      'For each sample, compare its outer-shell count with a full shell of 8: one or two gives them away, one short of full takes one on, and already full will not trade.'
+      'A full shell holds 8, so ask of each sample whether its outer shell holds almost none, almost 8, or exactly 8.',
+      'For each sample, compare its outer-shell count with a full shell of 8: one or two spare are given away, one short of full takes one on, and already full will not trade.'
     ],
     check(state) {
       const want = { s1: 'gives', s2: 'gives', s3: 'takes', s4: 'inert' };
@@ -440,25 +435,25 @@ export const STAGES = [
   {
     title: 'Same Weight, Different Atom',
     field: 'core',
-    prompt: 'Samples B and C weigh the same as each other. Decide which of them is the same kind of atom as Sample A.',
+    prompt: 'Two samples here weigh the same as each other. Decide which one is the same element as the reference sample.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'h', label: 'SAMPLE A', note: 'the one to match', core: { marked: 6, blank: 6 }, rings: [2, 4] },
-      { id: 'k', label: 'SAMPLE B', note: '13 grains in the nucleus', core: { marked: 6, blank: 7 }, rings: [2, 4] },
-      { id: 'l', label: 'SAMPLE C', note: '13 grains in the nucleus', core: { marked: 7, blank: 6 }, rings: [2, 5] }
+      { id: 'k', label: 'SAMPLE B', note: '13 particles in the middle', core: { marked: 6, blank: 7 }, rings: [2, 4] },
+      { id: 'l', label: 'SAMPLE C', note: '13 particles in the middle', core: { marked: 7, blank: 6 }, rings: [2, 5] }
     ],
     widget: {
       type: 'bins',
       rows: ['k', 'l'],
       bins: [
-        { id: 'match', label: 'Same kind as Sample A', note: 'It behaves the same way.' },
-        { id: 'other', label: 'A different kind', note: 'It behaves differently.' }
+        { id: 'match', label: 'Same element as Sample A', note: 'It behaves the same way.' },
+        { id: 'other', label: 'A different element', note: 'It behaves differently.' }
       ]
     },
     hints: [
       'Use "The middle" to count protons and neutrons on all three, then "Outside" to count their electrons.',
-      'B and C both hold 13 grains, so the total will not separate them, but their proton counts and outer shells differ.',
-      'Set each of B and C beside Sample A and compare two things, the proton count and the outer shell: the one that matches on both is the same kind, whatever it weighs.'
+      'Both suspects hold 13 particles, so the total will not separate them, but their proton counts and outer shells differ.',
+      'Set each suspect beside the reference sample and compare two things, the proton count and the outer shell: the one that matches on both is the same element, whatever it weighs.'
     ],
     check(state) {
       if (!state.bins.k || !state.bins.l) {
@@ -670,7 +665,7 @@ function blankState(stage) {
     fired: new Set(),     // specimens the beam has been through
     metered: new Set(),   // specimens the needle has been on
     tested: new Set(),    // specimens the tester has been run against
-    stripped: {}          // specimenId -> light pieces taken off
+    stripped: {}          // specimenId -> electrons taken off
   };
 }
 
@@ -992,7 +987,7 @@ export function mount(container, ctx) {
   }
 
   /**
-   * The needle reads the specimen as it is right now, stripped pieces included —
+   * The needle reads the specimen as it is right now, stripped electrons included —
    * the bench owns the live ring counts, so ask it rather than the stage table.
    */
   function liveCharge(id) {
@@ -1017,8 +1012,8 @@ export function mount(container, ctx) {
 
   /**
    * The instrument card. It reports what it measured and no more: the number of
-   * grains packed into a core, never how that number splits between the two
-   * sorts. Counting the marks is the player's job, and it is the whole of
+   * particles packed into a center, never how that number splits between the two
+   * sorts. Counting the crossed ones is the player's job, and it is the whole of
    * stages two, six and eight.
    */
   function renderReadout(hit, message) {
@@ -1038,8 +1033,8 @@ export function mount(container, ctx) {
           <p class="lq-readout-line">${state.field === 'whole'
             ? 'The whole atom at its own size. Use the other two keys to look inside it.'
             : state.field === 'core'
-              ? 'The center, magnified until the grains come apart. Click any grain to read it.'
-              : `Pulled back to the ${index >= 2 ? 'electrons' : 'light pieces'} outside, drawn on the rings they sit on. Click any one to read it.`}</p>
+              ? 'The center, magnified until the particles come apart. Click any particle to read it.'
+              : `Pulled back to the ${index >= 2 ? 'electrons' : 'particles'} outside, drawn on the shells they sit on. Click any one to read it.`}</p>
         </div>
       `);
       return;
@@ -1057,10 +1052,10 @@ export function mount(container, ctx) {
         ${part.mass === null ? '' : meter('Mass', massBar(hit.part), massText(hit.part))}
         ${part.charge === null ? '' : chargeChip(part.charge)}
         ${hit.part === 'core' && spec
-          ? `<div class="lq-readout-hold">Packed with ${coreTotal(spec)} grains in all.</div>`
+          ? `<div class="lq-readout-hold">Packed with ${coreTotal(spec)} particles in all.</div>`
           : ''}
         ${hit.part === 'marked' || hit.part === 'blank'
-          ? `<div class="lq-readout-hold">This center holds ${coreTotal(spec)} grains in all.</div>`
+          ? `<div class="lq-readout-hold">This center holds ${coreTotal(spec)} particles in all.</div>`
           : ''}
         ${hit.part === 'light'
           ? `<div class="lq-readout-hold">On ring ${hit.ring + 1}, counting outward.</div>`
@@ -1070,7 +1065,7 @@ export function mount(container, ctx) {
     `);
   }
 
-  /** Mass on a 0–10 scale against a marked grain, which is the bench's unit. */
+  /** Mass on a 0–10 scale against a proton, which is the bench's unit. */
   function massBar(partId) {
     return partId === 'light' ? 1 : 10;
   }
