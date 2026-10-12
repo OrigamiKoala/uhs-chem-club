@@ -2896,3 +2896,19 @@ body.bench-deployed .modal-container .modal-card {
 
 .lq-brief-text { margin: 0 0 0.9rem; font-size: 0.95rem; line-height: 1.5; color: var(--text-bright); }
 .lq-story { display: none !important; margin: 0 0 0.35rem !important; font-size: 0.82rem; line-height: 1.45; color: var(--text-secondary); border-left: 2px solid var(--accent-amber); padding-left: 0.6rem; }
+
+/* Damage vignette flash on wrong answer */
+.fps-damage-vignette {
+  position: fixed;
+  inset: 0;
+  box-shadow: inset 0 0 90px 45px rgba(229, 62, 36, 0.75);
+  opacity: 0;
+  transition: opacity 0.08s ease-out;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.fps-damage-vignette.visible {
+  opacity: 1;
+}
+

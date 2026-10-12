@@ -22,6 +22,7 @@ import {
 import { canWalk, world3dFor } from '../learn/worlds3d.js';
 import { setBenchSite } from '../learn/engine/bench-host.js';
 import { benchIsBuilt } from '../learn/engine/instruments.js';
+import { BossArena, BOSS_ARENA_SPOTS } from '../learn/engine/boss-arena.js';
 
 /** The mounted game, so a navigation can tear it down. */
 let active = null;
@@ -29,6 +30,11 @@ let active = null;
 /** Called by the router whenever it leaves a learn quest route. */
 export function disposeLearnQuest() {
   if (!active) return;
+  try {
+    active.bossArena?.dispose?.();
+  } catch (err) {
+    console.error('Boss arena dispose failed:', err);
+  }
   try {
     active.mounted?.dispose?.();
   } catch (err) {
@@ -107,20 +113,28 @@ export function renderLearnQuest(container, params = {}) {
   if (!walkable) setBenchSite(null);
   // Configure learn quest frame to use 2D overlay (`learn-quest-overworld`) in T4 rather than deploying into CSS3D in-world bench panels
   const inWorld = false;
+  const isBoss = quest.arena === 'boss';
+  const bossSpot = isBoss ? BOSS_ARENA_SPOTS[quest.id] : null;
+  let bossArena = null;
   if (walkable) {
     stage.setWorldWaypoint(null);
     const w3d = world3dFor(world.id);
-    const site = w3d?.siteForQuest(quest.id);
-    if (site) {
-      w3d.enter(stage, site.id);
-      setBenchSite(quest.id);
-      // Remembered so that stepping back out of the bench returns the player to
-      // the site rather than to the pad they landed on.
-      try { sessionStorage.setItem('avalon_learn_last_site', site.id); } catch (e) {}
-    } else {
-      const defaultSiteId = (world.id === 'unit01' && quest.id === 'boss-hopper') ? 'site-5' : null;
-      w3d?.enter(stage, defaultSiteId);
+    if (bossSpot) {
+      w3d?.enter(stage, null, bossSpot.playerPos, bossSpot.lookAtPos);
       setBenchSite(null);
+      bossArena = new BossArena(stage, bossSpot);
+    } else {
+      const site = w3d?.siteForQuest(quest.id);
+      if (site) {
+        w3d.enter(stage, site.id);
+        setBenchSite(quest.id);
+        // Remembered so that stepping back out of the bench returns the player to
+        // the site rather than to the pad they landed on.
+        try { sessionStorage.setItem('avalon_learn_last_site', site.id); } catch (e) {}
+      } else {
+        w3d?.enter(stage, null);
+        setBenchSite(null);
+      }
     }
     w3d.syncProgress(stage, qid => {
       const q = world.quests.find(x => x.id === qid);
@@ -131,7 +145,7 @@ export function renderLearnQuest(container, params = {}) {
     // bench is a real object on real ground, and the player keeps their feet —
     // W/A/S/D repositions them at it, which is how they get a different angle
     // on a well instead of waiting for the camera to be adjusted for them.
-    stage.setWalkSuspended?.(!benchIsBuilt(quest.id));
+    stage.setWalkSuspended?.(!benchIsBuilt(quest.id) || isBoss);
 
     /* THE BRIEFING MUST NOT BLACK OUT THE BENCH.
        A modal on this product paints a near-opaque scrim over the whole glass,
@@ -140,7 +154,7 @@ export function renderLearnQuest(container, params = {}) {
        needle on all four" was itself hiding all four. With a bench standing in
        the world, the transmission docks down one side and lets the light
        through, and `fitDeployedAim` slides the bench out from behind it. */
-    if (benchIsBuilt(quest.id)) document.body.classList.add('bench-deployed');
+    if (benchIsBuilt(quest.id) && !isBoss) document.body.classList.add('bench-deployed');
     else document.body.classList.remove('bench-deployed');
   }
 
@@ -158,6 +172,7 @@ export function renderLearnQuest(container, params = {}) {
     world,
     quest,
     stage: walkable ? stage : null,
+    bossArena,
     stagesCleared: prog.cleared,
     isComplete: prog.complete,
 
@@ -180,7 +195,7 @@ export function renderLearnQuest(container, params = {}) {
   };
 
   const token = {};
-  active = { world: world.id, quest: quest.id, token, mounted: null };
+  active = { world: world.id, quest: quest.id, token, mounted: null, bossArena };
 
   // A module is fetched on first visit, which on a slow connection is long
   // enough to read as a broken page. Say what is happening until it arrives.

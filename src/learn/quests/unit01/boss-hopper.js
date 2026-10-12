@@ -15,7 +15,6 @@
 
 import { LearnFrame } from '../../engine/frame.js';
 import { resolveEncounter } from '../../engine/foes.js';
-import { buildHopper } from '../../engine/foebody.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 import { session } from '../../../session.js';
@@ -345,32 +344,6 @@ export function mount(container, ctx) {
   let state = { bins: {}, number: null };
   let busy = false;
 
-  // 3D Hopper Boss entity in the overworld scene
-  let foe3d = null;
-  let animId = null;
-  const worldScene = ctx?.stage?.activeWorld?.scene;
-  if (worldScene) {
-    foe3d = buildHopper({ id: 'boss-hopper-entity', label: 'The Hopper' });
-    if (foe3d) {
-      foe3d.group.scale.set(10, 10, 10);
-      const groundY = ctx.stage.activeWorld.getTerrainHeight?.(6.0, 31.0) || 0;
-      foe3d.baseX = 6.0;
-      foe3d.baseY = groundY + 0.05;
-      foe3d.baseZ = 31.0;
-      foe3d.group.position.set(foe3d.baseX, foe3d.baseY, foe3d.baseZ);
-      worldScene.add(foe3d.group);
-
-      let lastT = typeof performance !== 'undefined' ? performance.now() : Date.now();
-      const tick = now => {
-        const dt = Math.min((now - lastT) / 1000, 0.1);
-        lastT = now;
-        foe3d.update(dt, false);
-        animId = requestAnimationFrame(tick);
-      };
-      animId = requestAnimationFrame(tick);
-    }
-  }
-
   const frame = new LearnFrame(container, {
     quest: ctx?.quest || { id: 'boss-hopper' },
     world: ctx?.world,
@@ -482,10 +455,6 @@ export function mount(container, ctx) {
     if (!res.ok) {
       frame.miss(res.msg);
       soundscape.playMiss?.();
-      if (foe3d) {
-        foe3d.hitPlayer?.();
-        foe3d.setPose('counter');
-      }
       return;
     }
 
@@ -498,10 +467,6 @@ export function mount(container, ctx) {
     frame.setCleared(cleared);
 
     const isLast = index >= STAGES.length - 1;
-    if (foe3d) {
-      if (isLast) foe3d.setPose('dispersed');
-      else foe3d.setPose('stagger');
-    }
     frame.clear({
       title: stage.reward.title,
       body: stage.reward.body,
@@ -525,12 +490,6 @@ export function mount(container, ctx) {
 
   return {
     dispose() {
-      if (animId) cancelAnimationFrame(animId);
-      if (foe3d) {
-        worldScene?.remove(foe3d.group);
-        foe3d.dispose?.();
-        foe3d = null;
-      }
       frame.dispose?.();
     }
   };

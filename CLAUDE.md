@@ -2881,9 +2881,14 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **The overworld stage card (`.learn-quest-overworld .lq-body`) is flat prose, four sentences at most:** the prompt, a reading (`setReadout` clamps each line to 2 sentences; boxes and heads are dropped by CSS), the answer keys, and on a clear one run-in line (`Title. Body`, body clamped to 2 sentences). The key legend, stage count, readout heads and answer labels are not drawn there.
 - **Scope Boundary:** Erebus quests remain untouched per instruction until Learn track work is complete.
 
-### 18. Unit 1 Boss Encounter (`boss-hopper`) Overworld Integration
-- **3D Overworld Grounding (`src/screens/learn-quest.js`):** `walkable` evaluates via `canWalk(world.id)` without requiring a charted quest site in `world3d.siteForQuest`. Boss quests default to the boss arena site (`site-5` hopper gantry for `boss-hopper`), rendering the standard bottom-left corner card (`.learn-quest-overworld .lq-body`) over the 3D world.
-- **Foe Visualization & Moves (`src/styles/learn.css`):** Unblocked `.lq-foe` and `.lq-move` from `display: none !important`. Renders foe plate with integrity pips, species banner, SVG portrait, and move badges (`Move: Contain`, `Move: Split`, `Move: Shake`).
-- **Interactive Controls & Audio (`src/learn/quests/unit01/boss-hopper.js`):** Standardized bins widget using `.choice-option.lq-bin-key` with `.selected` and number widgets using `.lq-number` with `data-num` steppers and `soundscape.playToggleClack()` audio feedback.
-- **Rules Briefing & References:** Stage 1 briefing introduces multi-phase mechanics; reference cards provide plain telemetry strips for all 5 phases (plate compositions, atomic numbers, group 18 cooling gases, charge balance, molar mass).
-- **3D Boss Entity:** `buildHopper` spawned directly in `activeWorld.scene` at `site-5`, updating per frame with miss counter lunges and clear dispersion.
+### 18. Boss Battles 3D Arena & Combat Animations
+- **Open Arena Grounding (`src/learn/engine/boss-arena.js`, `BOSS_ARENA_SPOTS`):** Boss battles relocate the player and boss to open ground clear of benches and obstacles (`stage.enterXScene(null, playerPos, lookAtPos)`):
+  - Tallow (`boss-hopper`): Player `[0, 1.6, 42.0]`, look `[0, 1.6, 30.0]`, boss `[0, 0, 30.0]`.
+  - Lanternfall (`boss-eater`): Player `[0, 1.6, 68.0]`, look `[0, 1.6, 54.0]`, boss `[0, 1.4, 54.0]`.
+  - Ligar (`boss-warden`): Player `[0, 1.6, 14.0]`, look `[0, 1.6, 2.0]`, boss `[0, 0, 2.0]`.
+  - Bellows (`boss-compressor`): Player `[0, 1.6, 34.0]`, look `[0, 1.6, 20.0]`, boss `[0, 0, 20.0]`.
+- **Procedural 3D Boss Models (`src/learn/engine/combat-monster-3d.js`):** High-detail procedural Three.js models for all 5 bosses (`the hopper`, `the lantern-eater`, `basalt warden`, `the compressor`, `recipe golem`). Faces player and animates breathing, hover, flairs, wings, flywheels, and hydraulic rams.
+- **Combat Animations (`src/learn/engine/combat-fps-fx.js`, `src/learn/engine/encounter.js`):**
+  - Right answer: Fires energy projectile towards boss, explodes into sparks, triggers boss hit stagger recoil, damage flash, and final stage dispersal collapse.
+  - Wrong answer: Boss lunges directly toward player, camera trauma screenshake, red/amber damage vignette flash (`.fps-damage-vignette` in `src/styles/learn.css`).
+  - Player walk suspended during boss encounters (`stage.setWalkSuspended(true)`). Clean teardown on quest dispose (`disposeLearnQuest`).

@@ -26,8 +26,8 @@ const WORLDS_3D = {
     id: 'unit01',
     worldName: 'Tallow',
     data: tallowData,
-    enter(stage, siteId = null) {
-      stage.enterTallowScene(siteId);
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterTallowScene(siteId, playerPos, lookAtPos);
     },
     siteForQuest(questId) {
       return tallowData.sites.find(s => s.questId === questId) || null;
@@ -44,8 +44,8 @@ const WORLDS_3D = {
     id: 'unit02',
     worldName: 'Lanternfall',
     data: lanternfallData,
-    enter(stage, siteId = null) {
-      stage.enterLanternfallScene(siteId);
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterLanternfallScene(siteId, playerPos, lookAtPos);
     },
     siteForQuest(questId) {
       return lanternfallData.sites.find(s => s.questId === questId) || null;
@@ -62,8 +62,8 @@ const WORLDS_3D = {
     id: 'unit04',
     worldName: 'Bellows',
     data: bellowsData,
-    enter(stage, siteId = null) {
-      stage.enterBellowsScene(siteId);
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterBellowsScene(siteId, playerPos, lookAtPos);
     },
     siteForQuest(questId) {
       return bellowsData.sites.find(s => s.questId === questId) || null;
@@ -80,8 +80,8 @@ const WORLDS_3D = {
     id: 'unit03',
     worldName: 'Ligar',
     data: ligarData,
-    enter(stage, siteId = null) {
-      stage.enterLigarScene(siteId);
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterLigarScene(siteId, playerPos, lookAtPos);
     },
     siteForQuest(questId) {
       return ligarData.sites.find(s => s.questId === questId) || null;

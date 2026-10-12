@@ -25,6 +25,7 @@ import { activeBenchViewer, setEncounterSource } from './bench-host.js';
 import {
   COUNTER_DELAY_MS, planFoe, portraitSvg, newFight, afterMiss, afterWin
 } from './foes.js';
+import { getActiveBossArena } from './boss-arena.js';
 
 function reducedMotion() {
   try {
@@ -106,6 +107,7 @@ export class Encounter {
   /** A committed miss. The frame has already put the reason on screen. */
   onMiss() {
     if (!this.enc || !this.fight) return;
+    try { getActiveBossArena()?.onWrong(); } catch (e) {}
     const { fight, knockedBack } = afterMiss(this.fight);
     this.fight = fight;
     this.cancel();
@@ -136,6 +138,7 @@ export class Encounter {
     this.tag = flawless ? 'flawless' : 'won';
     this.line = this.enc.hit;
     this.paint();
+    try { getActiveBossArena()?.onCorrect(fight.won); } catch (e) {}
   }
 
   cancel() {

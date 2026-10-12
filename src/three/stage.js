@@ -943,34 +943,34 @@ class Stage {
    * shuttle pad, so stepping out of a bench puts them back in front of it rather
    * than at the far end of the yard.
    */
-  enterTallowScene(focusSiteId = null) {
+  enterTallowScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
     // Asked for FIRST, before the world is built: full screen is granted only
     // inside a live user gesture, and building a world takes long enough for
     // that gesture to lapse.
     if (this.isTouch) gameMode.enterWorld();
     this.worldFor("tallow");
-    this.enterLearnWorld(this.tallowWorld, TALLOW_EXPOSURE, focusSiteId);
+    this.enterLearnWorld(this.tallowWorld, TALLOW_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
   /** Walk out onto Ligar, the basalt arch field (Learn world 03). */
-  enterLigarScene(focusSiteId = null) {
+  enterLigarScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
     if (this.isTouch) gameMode.enterWorld();   // before the build, as above
     this.worldFor("ligar");
-    this.enterLearnWorld(this.ligarWorld, LIGAR_EXPOSURE, focusSiteId);
+    this.enterLearnWorld(this.ligarWorld, LIGAR_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
   /** Walk out onto Lanternfall, the aurora ice (Learn world 02). */
-  enterLanternfallScene(focusSiteId = null) {
+  enterLanternfallScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
     if (this.isTouch) gameMode.enterWorld();   // before the build, as above
     this.worldFor("lanternfall");
-    this.enterLearnWorld(this.lanternfallWorld, LANTERNFALL_EXPOSURE, focusSiteId);
+    this.enterLearnWorld(this.lanternfallWorld, LANTERNFALL_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
   /** Walk out onto Bellows, the cloud deck (Learn world 04). */
-  enterBellowsScene(focusSiteId = null) {
+  enterBellowsScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
     if (this.isTouch) gameMode.enterWorld();   // before the build, as above
     this.worldFor("bellows");
-    this.enterLearnWorld(this.bellowsWorld, BELLOWS_EXPOSURE, focusSiteId);
+    this.enterLearnWorld(this.bellowsWorld, BELLOWS_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
   /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar or Bellows. */
@@ -1095,7 +1095,7 @@ class Stage {
    * world's spawn. One implementation for every walkable Learn world, so Ligar
    * cannot come to differ from Tallow in how a player arrives.
    */
-  enterLearnWorld(world, exposure, focusSiteId = null) {
+  enterLearnWorld(world, exposure, focusSiteId = null, playerPos = null, lookAtPos = null) {
     this.mode = "world";
     this.activeWorld = world;
 
@@ -1104,7 +1104,7 @@ class Stage {
 
     world.scene.add(this.camera);
 
-    if (this._arrivalHold === world && !focusSiteId) {
+    if (this._arrivalHold === world && !focusSiteId && !playerPos) {
       // Walked here down the Avalon's ramp: they are already standing on it.
       this._arrivalHold = null;
       this.fpsControls?.setMode(
@@ -1121,7 +1121,12 @@ class Stage {
     const site = focusSiteId ? data.sites.find(s => s.id === focusSiteId) : null;
 
     let px, pz, lookX, lookZ;
-    if (site) {
+    if (playerPos && lookAtPos) {
+      px = playerPos[0];
+      pz = playerPos[2];
+      lookX = lookAtPos[0];
+      lookZ = lookAtPos[2];
+    } else if (site) {
       px = site.approachPos[0];
       pz = site.approachPos[2];
       lookX = site.pos[0];
@@ -1136,9 +1141,11 @@ class Stage {
     const groundY = world.getTerrainHeight(px, pz);
     const eyeHeight = this.fpsControls ? this.fpsControls.eyeHeight : 1.6;
     const eyeY = groundY + eyeHeight;
+    const lookGroundY = world.getTerrainHeight(lookX, lookZ);
+    const lookY = lookGroundY + eyeHeight;
 
     this.camera.position.set(px, eyeY, pz);
-    this.camera.lookAt(lookX, eyeY, lookZ);
+    this.camera.lookAt(lookX, lookY, lookZ);
     this.camera.updateMatrixWorld(true);
 
     if (this.fpsControls) {
