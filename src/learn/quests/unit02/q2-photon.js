@@ -73,9 +73,9 @@ export const STAGES = [
     title: 'A Plate That Will Not Give',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench shines a lamp on a metal plate in a vacuum tube — a tube with the air taken out — and counts the electrons that come off it. A second meter reads how fast the fastest one leaves.'
+      body: 'Welcome to the photocell bench! We shine a surveyor lamp on metal plates inside a vacuum tube to see when electrons break loose, and track how fast the fastest ones fly.'
     },
-    prompt: 'Get electrons off the plate.',
+    prompt: 'A frozen surveyor rig needs power! Shine the lamp on the sodium plate and adjust the controls until electrons start breaking free.',
     labels: LABELS,
     controls: ['tune', 'brightness'],
     settings: SWEEP,
@@ -108,7 +108,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Where It Wakes',
-    prompt: 'Find the lowest frequency that frees any electron from this plate.',
+    prompt: 'Let\'s see where the plate first awakens! Turn the dial to find the lowest frequency that knocks any electrons loose.',
     labels: LABELS,
     controls: ['tune'],
     settings: NEAR_SODIUM,
@@ -141,7 +141,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Turn Up the Lamp',
-    prompt: 'Find what turning up the brightness does above the threshold.',
+    prompt: 'Crank up the surveyor lamp\'s brightness! What happens to the freed electrons above the threshold?',
     labels: LABELS,
     controls: ['brightness'],
     brightnessStart: 2,
@@ -178,7 +178,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Turn Up the Frequency',
-    prompt: 'Find what raising the frequency does at fixed brightness.',
+    prompt: 'Now keep the brightness steady and shift toward higher frequencies (shorter wavelengths). What happens to the freed electrons?',
     labels: LABELS,
     controls: ['tune'],
     settings: [550, 500, 450, 400, 350, 300],
@@ -219,7 +219,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'One Photon\'s Energy',
-    prompt: 'Give the energy of one photon from a 500 nm lamp.',
+    prompt: 'Surveyor lanterns need exact tuning! Using the plate\'s worked sodium threshold as a guide, what is the energy of a single photon at 500 nm?',
     labels: LABELS,
     controls: [],
     reference: ['Sodium plate: threshold 539 nm, which is 3.69 x 10^-19 J for each photon', 'Light speed: 3.00 x 10^8 m/s'],
@@ -247,7 +247,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Three Plates',
-    prompt: 'Order the three plates by how tightly each holds its electrons, loosest first.',
+    prompt: 'We found three different metal plates salvaged from the ice. Test them on the bench and arrange them from loosest grip to tightest grip on their electrons.',
     labels: LABELS,
     controls: ['tune'],
     settings: THREE_PLATES,
@@ -288,7 +288,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Freeing Zinc',
-    prompt: 'Pick the lamp that frees electrons from the zinc plate.',
+    prompt: 'Zinc holds onto its electrons stubbornly. Test the surveyor lamp samples: which one has enough energy to free electrons from the zinc plate?',
     labels: LABELS,
     controls: ['tune'],
     settings: FOR_ZINC,
@@ -326,7 +326,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Why Brighter Fails',
-    prompt: 'Explain why a brighter red lamp never frees electrons from zinc.',
+    prompt: 'A surveyor suggests blasting the zinc plate with a blindingly bright red spotlight. Why will that never knock a single electron free?',
     labels: LABELS,
     controls: ['tune', 'brightness'],
     settings: [650, 400, 300, 250],

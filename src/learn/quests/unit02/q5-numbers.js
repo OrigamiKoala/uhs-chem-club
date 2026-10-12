@@ -91,9 +91,9 @@ export const STAGES = [
     title: 'The First Number',
     briefing: {
       speaker: SPEAKER,
-      body: 'This rack holds orbital boxes in rows, with the lowest energy at the bottom. This bench goes beyond the exam, so nothing here is marked on it.'
+      body: 'Welcome to the quantum registry rack, where orbital boxes stack from lowest energy at the bottom to highest up top. Let\'s decode the quantum numbers that register each electron.'
     },
-    prompt: 'Find what the first number on every box tracks.',
+    prompt: 'Notice how the rows are numbered from bottom to top. What physical property of the electron cloud does that first number track?',
     controls: [],
     show: 0,
     cloudsBeside: true,
@@ -130,7 +130,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'The Second Number',
-    prompt: 'Find which shapes the second shell offers.',
+    prompt: 'Inspect the second shell (n = 2) on the rack. Which orbital cloud shapes can electrons adopt at this level?',
     controls: [],
     show: 1,
     rows: ['1s', '2s', '2p', '3s', '3p', '3d'],
@@ -166,7 +166,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'The Third Number',
-    prompt: 'Count the boxes in a d row.',
+    prompt: 'Take a close look at the third number (ml) across the d row. How many individual orbital boxes does a d subshell contain?',
     controls: [],
     show: 2,
     rows: ['3s', '3p', '3d'],
@@ -194,7 +194,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Two in One Box',
-    prompt: 'Put two electrons in one box.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You now have hand controls to place electrons into boxes. Select "Up" or "Down" and tap a box to place an arrow.'
+    },
+    prompt: 'Let\'s test electron occupancy! Use the arrow controls to pack two electrons into a single orbital box.',
     controls: ['hand'],
     show: 3,
     rows: ['1s', '2s', '2p'],
@@ -222,7 +226,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Impossible Pair',
-    prompt: 'Find which two electrons cannot share one atom.',
+    prompt: 'Compare the quantum addresses of these four candidate electrons. Which two can never coexist within the same atom?',
     controls: ['hand'],
     show: 3,
     rows: ['1s', '2s', '2p'],
@@ -259,7 +263,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Full Shell',
-    prompt: 'Count the electrons the third shell holds.',
+    prompt: 'How many total electrons can the entire third shell (n = 3) hold when all its subshells are completely filled?',
     controls: ['hand'],
     show: 3,
     rows: ROWS_N3.slice(3),
@@ -287,7 +291,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'An Address for Nitrogen',
-    prompt: 'Pick the four numbers that name one of the 2p electrons of Sample A.',
+    prompt: 'Sample A is a nitrogen atom with seven electrons. Which valid set of four quantum numbers correctly identifies one of its 2p electrons?',
     controls: [],
     show: 3,
     rows: ['1s', '2s', '2p'],
@@ -323,7 +327,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Sets That Cannot Exist',
-    prompt: 'Pick every set of numbers that cannot name an electron.',
+    prompt: 'Quantum rules strictly limit which numbers are allowed. Which of these listed sets violate the quantum address rules?',
     controls: [],
     show: 3,
     rows: ROWS_N3,

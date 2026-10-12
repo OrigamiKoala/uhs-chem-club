@@ -25,7 +25,7 @@ export const STAGES = [
   {
     id: 'phase1',
     title: 'Phase 1 · Spectral Transition',
-    prompt: 'Name the electron drop behind the moth\'s red glow.',
+    prompt: 'The giant lamp-moth radiates a blinding red aurora! Which electron drop between hydrogen energy levels powers its crimson glow?',
     samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
     widget: {
       type: 'choice',
@@ -69,7 +69,7 @@ export const STAGES = [
   {
     id: 'phase2',
     title: 'Phase 2 · Threshold Barrier',
-    prompt: 'Pick the beam that frees electrons from the green-threshold plate.',
+    prompt: 'The beast projects a shimmering photoelectric barrier tuned to a green threshold! Which surveyor beam packs enough energy to blast electrons through?',
     samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
     widget: {
       type: 'choice',
@@ -109,7 +109,7 @@ export const STAGES = [
   {
     id: 'phase3',
     title: 'Phase 3 · Unpaired Magnetism',
-    prompt: 'Count the unpaired electrons in a neutral carbon atom.',
+    prompt: 'A fluctuating paramagnetic shell deflects our sensors! According to Hund\'s rule, how many unpaired electrons exist in a neutral carbon atom?',
     samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
     widget: { type: 'number', min: 0, max: 6, step: 1, unit: 'unpaired electrons' },
     encounter: {
@@ -141,7 +141,7 @@ export const STAGES = [
   {
     id: 'phase4',
     title: 'Phase 4 · Deep Core Anchor',
-    prompt: 'Name the element whose nucleus holds ten protons.',
+    prompt: 'A deep PES binding signature stabilizes the moth\'s core! Which noble element anchors it with a charge of ten protons?',
     samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
     widget: {
       type: 'choice',
@@ -182,7 +182,7 @@ export const STAGES = [
   {
     id: 'phase5',
     title: 'Phase 5 · Optical Absorbance',
-    prompt: 'Work out the absorbance of a 0.010 mol/L solution through 1.0 cm with a constant of 40.',
+    prompt: 'Target the cuvette chamber to quench the beast\'s light! Using A = εbc, calculate the absorbance for a 0.010 mol/L solution across 1.0 cm with ε = 40 L/(mol·cm).',
     samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
     widget: { type: 'decimal', min: 0.1, max: 2.0, step: 0.1, label: 'Absorbance' },
     encounter: {

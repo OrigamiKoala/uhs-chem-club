@@ -55,7 +55,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This is the compressor that runs every pump on the deck, and each phase puts one of the benches in front of it again. A miss costs the rig a point of Integrity; three knock it back, and nothing you have read is lost.'
     },
-    prompt: 'Bring the gauge to four times what it read when the phase began.',
+    prompt: 'The rogue compressor\'s intake cylinder is roaring on the cloud deck! Adjust the volume dial to compress the gas until the pressure gauge reads four times its starting value.',
     controls: ['volume'],
     volumes: [5, 10, 20, 40], volumeStart: 3,
     ...BASE,
@@ -91,7 +91,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Phase 2 · The Heater',
-    prompt: 'Its free piston holds the pressure steady. Give the volume the helium fills at 750 K, to the nearest five litres.',
+    prompt: 'The compressor fires up its thermal jacket while its free-floating piston keeps pressure constant! What volume will this helium sample expand to at 750 K (to the nearest 5 L)?',
     controls: ['temp'],
     temps: [300, 450, 600, 900], tempStart: 1, tempList: 'K',
     ...BASE,
@@ -125,7 +125,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Phase 3 · The Tank',
-    prompt: 'Give the mass of oxygen in the sealed tank, in grams.',
+    prompt: 'The compressor seals off an emergency oxygen reservoir and arms its pressure gauge! Calculate the total mass of oxygen inside the sealed tank in grams.',
     controls: ['temp'],
     temps: [300, 350, 400], tempStart: 1, tempList: 'K',
     ...BASE,
@@ -160,7 +160,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Phase 4 · The Blend',
-    prompt: 'Give the partial pressure of helium in the blend, in kilopascals.',
+    prompt: 'A pressurized helium-neon blend is stabilizing the machine\'s central manifold! What partial pressure does the helium contribute to the total tank gauge, in kilopascals?',
     controls: [],
     ...BASE,
     labels: { gauge: 'PRESSURE', share: 'MOLE FRACTION' },
@@ -195,7 +195,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Phase 5 · The Seals',
-    prompt: 'Name the gas escaping from the unmarked seal.',
+    prompt: 'The compressor\'s flank cracks, venting an unknown gas alongside known nitrogen! Race their leak times through the pinhole to identify the mystery escaping gas.',
     controls: ['time'],
     times: [0, 1, 2, 3, 4, 5, 6, 7, 8], timeStart: 1,
     ...BASE,

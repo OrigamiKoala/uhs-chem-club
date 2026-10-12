@@ -65,7 +65,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'The tray holds every electron the molecule has, two to a pair. Each atom has a lamp that lights when enough electrons stand round it.'
     },
-    prompt: 'Place all of water\'s electrons so every lamp lights, to draw the first true molecule of the rescue rock.',
+    prompt: 'The quarry surveyors need clean water before we drill deeper into the basalt vents! Place all of water\'s electrons onto the slate so every atom\'s lamp lights up.',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'H2O')],
     widget: { type: 'none' },
@@ -91,7 +91,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'What Is Left Over',
-    prompt: 'File each molecule by the lone pairs on its heaviest atom, to map where each molecule can break.',
+    prompt: 'Our quarry drillers need to know how these seam gases hold their electrons. Sort each molecule by the lone pairs sitting on its heaviest atom!',
     controls: ['hand', 'clear'],
     rigs: [slate('ch4', 'PLATE A', 'CH4'), slate('nh3', 'PLATE B', 'NH3'), slate('hf', 'PLATE C', 'HF')],
     widget: {
@@ -122,7 +122,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Two Pairs Short',
-    prompt: 'Place all of carbon dioxide\'s electrons so every lamp lights, to finish the drawing the breakers need.',
+    prompt: 'Choke-damp carbon dioxide is venting from the lower quarry trench! Place all of carbon dioxide\'s electrons so every lamp lights up and gives our crew a safe reading.',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'CO2')],
     widget: { type: 'none' },
@@ -148,7 +148,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Middle',
-    prompt: 'Say which atom sits in the middle of HOF, to set the keystone the cutters will split.',
+    prompt: 'The stonecutters found strange HOF traces trapped in a basalt fracture. Which atom sits in the middle to anchor the molecule together?',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'HOF')],
     widget: {
@@ -175,7 +175,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'One Electron Fewer',
-    prompt: 'Draw the NH₄ ion so every lamp lights, to read the charged dust in the tunnel air.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now change the total charge of the electron tray. Use "Take Electron" or "Add Electron" to adjust the electrons available.'
+    },
+    prompt: 'Charged dust is drifting off the quarry blast floor! Adjust the tray charge and place the electrons for the ammonium ion (NH₄⁺) until every lamp glows.',
     controls: ['hand', 'clear', 'charge'],
     rigs: [slate('a', 'PLATE A', 'NH4')],
     widget: { type: 'none' },
@@ -203,7 +207,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'The Amber Lamp',
-    prompt: 'Say why the lamp on boron stays amber in BF₃, to explain the pale seam the miners keep hitting.',
+    prompt: 'The mining crew hit a pale mineral vein of BF₃, but boron\'s indicator lamp won\'t turn green! Why does boron\'s lamp stay amber?',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'BF3')],
     widget: {
@@ -237,7 +241,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'An Odd One',
-    prompt: 'Use up every electron in the tray for NO — an odd count, so one is left without a partner — to draw the gas the blast released.',
+    prompt: 'A rock blast just released a puff of pungent nitric oxide (NO) into our drift! Place every electron in the tray — including the odd unpaired one — to map this reactive gas.',
     controls: ['hand', 'clear'],
     handDot: true,
     rigs: [slate('a', 'PLATE A', 'NO')],
@@ -267,7 +271,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Past Eight',
-    prompt: 'Use up every electron in the tray for SF₆, to draw the heavy gas pooled at the tunnel floor.',
+    prompt: 'Heavy sulfur hexafluoride (SF₆) is pooling down along the quarry floor! Distribute all the tray\'s electrons so sulfur can comfortably expand past eight.',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'SF6')],
     widget: { type: 'none' },

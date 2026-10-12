@@ -103,9 +103,9 @@ export const STAGES = [
     title: 'Heat All Three',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench holds a block of solid material in a clamp. You can hit it, heat it until it comes apart, let it cool again, and put a current through it.'
+      body: 'This bench holds a block of solid material in a clamp. You can hit it with the hammer, heat it until it comes apart, or let it cool again.'
     },
-    prompt: 'Pick the block held together hardest, to know which boulder breaks last.',
+    prompt: 'A rockslide threatens the miners\' tunnel! Heat each salvaged mineral slab in the crucible clamp to determine which block is held together strongest.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {
@@ -142,7 +142,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Hit the Salt',
-    prompt: 'Say why Block A splits along one flat face while Block B crumbles apart.',
+    prompt: 'Strike both blocks with the pneumatic hammer! Why does the salt block (A) cleave along a crisp, flat plane while the sulfur block (B) crumbles into fragments?',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B')],
     widget: {
@@ -185,7 +185,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Put a Current Through It',
-    prompt: 'Say what a current — charge moving through — needs to pass through a block before the miners wire the tunnel.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You now have electrical leads connected to the clamp. Use "Run Current" to test whether charge can move through the block.'
+    },
+    prompt: 'Before wiring the quarry\'s lighting grid, test both blocks for electrical current cold and molten. What does an electric current fundamentally require to flow through a substance?',
     controls: ['heat', 'current', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B')],
     widget: {
@@ -228,7 +232,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'What Survives the Blow',
-    prompt: 'Say what actually gives way when Block A comes apart under the hammer.',
+    prompt: 'Strike and heat molecular Block A! What actually breaks apart when this molecular solid crumbles and melts?',
     controls: ['strike', 'heat', 'cool'],
     slabs: [VENT('s2', 'BLOCK A'), SALT('s1', 'BLOCK B')],
     widget: {
@@ -271,7 +275,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Block the Blade Will Not Cut',
-    prompt: 'Say what is different about how the arch block is built, since the blade will not cut it.',
+    prompt: 'The ancient basalt arch stone (Block A) resists the cutting blade and requires searing heat to melt! How is its internal structure built differently from separate molecules?',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [ARCH('s3', 'BLOCK A'), VENT('s2', 'BLOCK B')],
     widget: {
@@ -314,7 +318,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Lift One Out',
-    prompt: 'Pick the block a single whole molecule could be lifted out of, to sort the rubble for the crushers.',
+    prompt: 'Quarry sorting sensors need to distinguish discrete molecular clusters from continuous solids. In which of these three blocks could you isolate and lift out an individual molecule?',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {
@@ -353,7 +357,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Three Sealed Blocks',
-    prompt: 'File each sealed block by how it is built, to clear it for the rescue path.',
+    prompt: 'Three unlabelled rock core canisters need classification to clear the rescue route! Run our thermal, impact, and current tests to identify the internal build of each sealed block.',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [
       slab('x1', 'BLOCK A', 'sealed at the mine, cased shut', 'grid', 1074, 'bone', { sealed: true }),
@@ -400,7 +404,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Pick the Liner',
-    prompt: 'Pick the block that lines — coats the inside of — a 900-degree vessel without ever passing a current.',
+    prompt: 'The smelter needs a crucible lining that withstands 900°C without conducting any electric current. Which material slab meets both requirements?',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {

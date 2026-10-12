@@ -14,7 +14,7 @@ bench provides the tools. The user must explore, test, observe, and deduce the a
 Neither the prompt, the mission briefing, the stage guide, nor the hint ladder should ever tell
 the player what to do or make the correct option obvious.
 
-**Concise, discovery-based stage objectives.** Every quest and stage automatically opens a concise, single-paragraph MAX objective on stage load with 3D instrument halos highlighted. No textbook dumps, no AI-generated slop, and no outright explanation of answers: students discover the chemistry concepts hands-on through bench exploration.
+**Concise, discovery-based stage objectives with approachable, story-woven voice.** Every quest and stage automatically opens a concise, single-paragraph MAX objective on stage load with 3D instrument halos highlighted. Prompts, briefings, and debriefs use a warm, conversational, and friendly voice suited for elementary- and middle-school students. Avoid cold, overly clinical academic directives in favor of engaging phrasing that weaves the story and local setting (refinery yard, ice moon surveys, basalt quarry, cloud-deck gas rig, reaction foundry) into the stage prompt so that investigations carry genuine narrative stakes while keeping the chemistry challenge clear and discoverable. No textbook dumps, no AI-generated slop, and no outright explanation of answers: students discover the chemistry concepts hands-on through bench exploration.
 
 **Scientific investigation, not monster combat.** The user-facing deck stays clean without weird combat jargon ("salt rocks", "braced against a hit", "STRIKE"). The encounter system runs silently in the background while the UI presents pure scientific trials. Incorrect submissions are missed trials, and progress is never lost.
 
@@ -48,6 +48,8 @@ not a manual. When a prompt, hint or refusal names a control, it
 quotes it — `Press "Fire Beam"`, `Press "The middle"` — so the sentence cannot be read as
 prose. Key labels obey all of this too: the core bench's three views read **Whole piece /
 The middle / Outside** under **View**, not Whole / Core / Rings under "Field".
+
+**Tools are introduced right before the stage that requires them, not all at once at the start of the quest.** A bench control must not be described in Stage 1's briefing if that control is only used on later stages. Instead, Stage 1 introduces only the initial tools, and each subsequent tool receives its dedicated briefing (at most 2 sentences, introducing the new control and its purpose) on the exact stage that first enables/requires it. Similarly, `TOOL_TEXT` entries set their `from:` stage to the exact stage where the tool is first introduced, rather than defaulting to `from: 1`.
 
 **A PROMPT STATES THE OBJECTIVE AND NEVER THE ROUTE.** "Tip Sample A down the chute, read
 the code on each bin that caught pieces, and say what the split means" is not a task, it is

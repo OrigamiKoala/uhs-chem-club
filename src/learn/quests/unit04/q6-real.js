@@ -71,7 +71,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench squeezes and cools a gas past where the gas law holds, and prints PV over nRT — pressure times room over amount times R times temperature — which reads one while the law is true. The window draws the particles to scale, so you can see when they begin to crowd.'
     },
-    prompt: 'Say what the reading PV over nRT does as the helium is squeezed into less and less room.',
+    prompt: 'We\'re testing severe compression on helium in the high-pressure rig. What happens to the ratio PV / (nRT) as helium is squeezed into tighter and tighter volumes?',
     controls: ['volume'],
     volumes: [24.6, 2.5, 0.5, 0.2, 0.1, 0.06], volumeStart: 1,
     scale: 'atm',
@@ -110,7 +110,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Particles Take Room',
-    prompt: 'Say what the size of the particles does to the pressure when the gas is squeezed hard.',
+    prompt: 'Under extreme compression, the measured pressure climbs noticeably higher than expected. Why does the physical volume of the gas particles cause the pressure to spike?',
     controls: ['volume'],
     volumes: [24.6, 2.5, 0.5, 0.2, 0.1, 0.06], volumeStart: 1,
     scale: 'atm',
@@ -149,7 +149,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Cooled Toward a Liquid',
-    prompt: 'Say what PV over nRT does as the carbon dioxide is cooled.',
+    prompt: 'Our cooling coils drop the temperature of carbon dioxide toward condensation. What happens to the ratio PV / (nRT) as the CO₂ chills down?',
     controls: ['temp'],
     temps: [300, 280, 260, 240, 230], tempStart: 1, tempList: 'K',
     scale: 'kpa',
@@ -188,7 +188,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Pull',
-    prompt: 'Say what the pull between the particles does to a cold gas.',
+    prompt: 'Watch the intermolecular forces in the chilling cylinder. What effect do attractive pulls between slow-moving particles have on the pressure?',
     controls: ['temp'],
     temps: [300, 280, 260, 240, 230], tempStart: 1, tempList: 'K',
     scale: 'kpa',
@@ -227,7 +227,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Who Strays Furthest',
-    prompt: 'Put the three gases in order of how far their reading strays from one, furthest first.',
+    prompt: 'We have nitrogen, ammonia, and helium at low temperature and high density. Rank these three gases from greatest deviation from ideal behavior (PV / nRT = 1) to least!',
     controls: ['temp'],
     temps: [200, 220, 240], tempStart: 1, tempList: 'K',
     scale: 'kpa',
@@ -265,7 +265,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'When a Gas Behaves',
-    prompt: 'Pick the cylinder whose gas behaves most like an ideal gas.',
+    prompt: 'Four cylinders hold carbon dioxide under differing conditions. Which cylinder\'s gas behaves most closely like an ideal gas?',
     controls: ['temp'],
     temps: [250, 350, 450, 550], tempStart: 1, tempList: 'K',
     scale: 'kpa',
@@ -301,7 +301,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Two Corrections',
-    prompt: 'The plate prints two corrections: the pull taking pressure off and the size putting it on. Say which does more to the reading when the gas is cold and only a little squeezed.',
+    prompt: 'The display tracks two van der Waals corrections: particle attraction and particle volume. When the gas is cold and only lightly compressed, which correction dominates?',
     controls: ['volume', 'temp'],
     volumes: [1, 0.5, 0.25], volumeStart: 1,
     temps: [250, 500, 1000], tempStart: 1, tempList: 'K',
@@ -341,7 +341,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Why It Condenses',
-    prompt: 'Say why a real gas can be made into a liquid and an ideal gas never could.',
+    prompt: 'Our refrigeration unit can condense real gases into liquid fuel, but an ideal gas could never condense. Why is that?',
     controls: ['temp'],
     temps: [300, 260, 240, 230], tempStart: 1, tempList: 'K',
     scale: 'kpa',

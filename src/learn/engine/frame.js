@@ -613,7 +613,7 @@ export class LearnFrame {
     this.el.count.textContent = `Stage ${stage.index + 1} of ${this.stageCount}`;
     this.el.title.textContent = stage.title;
     const story = storyFor(this.currentQuestId(), stage.index);
-    this.el.prompt.innerHTML = `${story ? `<p class="lq-story">${esc(story)}</p>` : ''}<p class="lq-prompt-body">${esc(stage.prompt)}</p>`;
+    this.el.prompt.innerHTML = `${story ? `<p class="lq-story" style="display: none;">${esc(story)}</p>` : ''}<p class="lq-prompt-body">${esc(stage.prompt)}</p>`;
     // The objective again, over the bench, for a layout that stacks the deck
     // underneath it. Hidden from a screen reader: the deck's copy is the real one.
     if (this.el.promptStrip) this.el.promptStrip.textContent = stage.prompt || '';

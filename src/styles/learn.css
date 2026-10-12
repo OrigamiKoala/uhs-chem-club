@@ -2878,4 +2878,4 @@ body.bench-deployed .modal-container .modal-card {
 .learn-quest-overworld .lq-hint { margin: 0 !important; font-size: 0.82rem !important; line-height: 1.4 !important; }
 
 .lq-brief-text { margin: 0 0 0.9rem; font-size: 0.95rem; line-height: 1.5; color: var(--text-bright); }
-.lq-story { margin: 0 0 0.35rem !important; font-size: 0.82rem; line-height: 1.45; color: var(--text-secondary); border-left: 2px solid var(--accent-amber); padding-left: 0.6rem; }
+.lq-story { display: none !important; margin: 0 0 0.35rem !important; font-size: 0.82rem; line-height: 1.45; color: var(--text-secondary); border-left: 2px solid var(--accent-amber); padding-left: 0.6rem; }

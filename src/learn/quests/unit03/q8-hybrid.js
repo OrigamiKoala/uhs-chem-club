@@ -62,9 +62,9 @@ export const STAGES = [
     title: 'The Puzzle',
     briefing: {
       speaker: SPEAKER,
-      body: 'The mixer blends a hub\'s s orbital with some of its p orbitals and shows the lobes — the rounded ends — that come out. Twist turns one end of a bond to see whether it turns.'
+      body: 'Welcome to the orbital blending bench. Compare the electron orbitals carbon has available with the four identical bonds found in methane.'
     },
-    prompt: 'Say what carbon\'s orbitals allow as they stand, and what methane actually has, to name the puzzle blocking the tunnel map.',
+    prompt: 'The quarry drilling crew hit a theoretical snag while analyzing methane in the coal seam. Compare carbon\'s unhybridized valence electrons with the four identical bonds in CH₄!',
     controls: [],
     rigs: [mixer('a', 'CARBON', { unpaired: 2, bonds: 4, noMix: true, note: 'a carbon atom as it stands, beside the bonds in CH₄' })],
     widget: {
@@ -96,7 +96,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Four Lobes',
-    prompt: 'Blend carbon\'s orbitals until the lobes match the four arms of methane, to rebuild the roof rock.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You now have orbital blending controls. Select an orbital combination to see how many equal lobes form.'
+    },
+    prompt: 'Methane has four tetrahedral bonds supporting this vault seam. Blend carbon\'s s and p orbitals until you have four identical hybrid lobes to fit CH₄!',
     controls: ['mix'],
     rigs: [mixer('a', 'CARBON', { want: 4, note: 'the carbon of CH₄, with four hydrogen atoms to bond' })],
     widget: { type: 'none' },
@@ -120,7 +124,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Three Lobes',
-    prompt: 'Blend carbon\'s orbitals until the lobes match the three arms on each carbon of ethene, to frame the cut edge.',
+    prompt: 'Ethene (C₂H₄) frames the edge of the fuel reservoir. Blend carbon\'s orbitals to produce exactly three hybrid lobes in a plane!',
     controls: ['mix'],
     rigs: [mixer('a', 'CARBON', { want: 3, note: 'a carbon of C₂H₄, bonded to two hydrogen atoms and one carbon' })],
     widget: { type: 'none' },
@@ -144,7 +148,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Two Lobes',
-    prompt: 'Blend carbon\'s orbitals until the lobes match the two arms on the carbon of HCN, to map the tunnel gas.',
+    prompt: 'Faint traces of hydrogen cyanide (HCN) drift past the drill head. Blend carbon\'s orbitals to make two linear hybrid lobes for the central carbon!',
     controls: ['mix'],
     rigs: [mixer('a', 'CARBON', { want: 2, note: 'the carbon of HCN, bonded to one hydrogen atom and one nitrogen atom' })],
     widget: { type: 'none' },
@@ -168,7 +172,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Second Bond',
-    prompt: 'Say how the second bond of ethene is built, to tell the rigid seam from the free one.',
+    prompt: 'We\'re inspecting the double bond in ethene under our orbital scanner! How does the second bond form between the two carbon atoms?',
     controls: [],
     rigs: [twist('a', 'C₂H₄', 'double', 'two carbon atoms joined by a double bond')],
     widget: {
@@ -201,7 +205,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Counting Bonds',
-    prompt: 'Count the sigma bonds and the pi bonds in HCN, to finish the map of the tunnel gas.',
+    prompt: 'Our safety monitors need an accurate bond inventory for toxic HCN. How many sigma (σ) bonds and pi (π) bonds does hydrogen cyanide contain?',
     controls: ['protractor'],
     rigs: [show('a', 'HCN', 'HCN', 'carbon with a hydrogen atom and a nitrogen atom joined by a triple bond')],
     widget: {
@@ -233,7 +237,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Twisting',
-    prompt: 'Say which of the two molecules has a bond that turns freely, to find the joint that still flexes.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A bond torsion tool is now online. Press "Twist" to test whether atoms can spin freely around each type of bond.'
+    },
+    prompt: 'The mechanical shop needs a flexible molecular joint. Use the Twist control to test ethane (C₂H₆) against ethene (C₂H₄) — which one allows free rotation?',
     controls: ['twist'],
     rigs: [
       twist('a', 'C₂H₆', 'single', 'two carbon atoms joined by a single bond'),
@@ -260,7 +268,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Past Four',
-    prompt: 'Say how many orbitals the hub of PCl₅ and the hub of SF₆ each need to blend, to brace the deep wardens.',
+    prompt: 'Deep basalt wardens are reinforced by expanded octets like PCl₅ and SF₆. How many atomic orbitals must each central atom blend to hold its domains?',
     controls: ['protractor'],
     rigs: [
       show('a', 'PCl₅', 'PCl5', 'phosphorus with five chlorine atoms'),

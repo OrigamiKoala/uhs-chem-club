@@ -81,7 +81,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench holds helium in a cylinder with a piston, a pressure gauge — how hard the gas pushes — and a knock counter. The window shows the particles themselves.'
     },
-    prompt: 'The piston is the sliding wall that sets how much room the gas has. Say what the pressure gauge follows as the room changes.',
+    prompt: 'Welcome up to the Bellows cloud deck gas rig! Adjust the cylinder piston to see what the wall-mounted pressure gauge is actually measuring.',
     controls: ['volume'],
     volumes: PISTON, volumeStart: 4,
     vmax: 32, gaugeMax: 400,
@@ -117,7 +117,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Twice the Gas',
-    prompt: 'Say what doubling the amount of gas does to the pressure.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now change the quantity of gas. Use "Add Gas" or "Remove Gas" to adjust how many moles of nitrogen are in the cylinder.'
+    },
+    prompt: 'We\'re pumping fresh nitrogen into this sealed cylinder. What happens to the wall pressure when you double the amount of gas inside?',
     controls: ['add', 'remove', 'reset'],
     step: 1, nMin: 1, nMax: 4,
     labels: { gauge: 'PRESSURE' },
@@ -154,7 +158,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Warming Up',
-    prompt: 'Say what heating does to the particles.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A heater coil is now attached to the cylinder. Turn the temperature dial to heat or cool the gas and watch how the particles respond.'
+    },
+    prompt: 'The rig\'s thermal coil is warming up our helium sample. Watch the particle window — what does heating do to the gas particles?',
     controls: ['temp'],
     temps: WARM, tempStart: 2, tempList: 'C', tempUnit: 'C',
     labels: { gauge: 'PRESSURE' },
@@ -192,7 +200,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'A Crowd, Not a Line',
-    prompt: 'Say how the speeds of the particles in one cylinder compare with one another.',
+    prompt: 'Look closely at the particle speed monitor for this nitrogen sample. How do the speeds of the individual gas particles compare with each other?',
     controls: ['temp'],
     temps: SPREAD, tempStart: 1, tempList: 'C', tempUnit: 'C',
     labels: { gauge: 'PRESSURE', energy: 'KINETIC ENERGY' },
@@ -231,7 +239,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Light and Heavy',
-    prompt: 'Say how helium and carbon dioxide compare at one temperature.',
+    prompt: 'We\'ve loaded light helium into Cylinder A and heavy carbon dioxide into Cylinder B. At the same temperature, how do their average kinetic energies and speeds compare?',
     controls: ['temp'],
     temps: [25, 200], tempStart: 1, tempList: 'C', tempUnit: 'C',
     labels: { gauge: 'PRESSURE', energy: 'KINETIC ENERGY' },
@@ -272,7 +280,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Three Scales',
-    prompt: 'Give the reading Cylinder A would show on the middle ring.',
+    prompt: 'Our pressure gauges carry three concentric measurement rings! Use the reference cylinder to convert Cylinder A\'s reading onto the middle ring.',
     controls: ['volume'],
     volumes: [11.2, 15, 22.41, 30, 44.8], volumeStart: 4,
     labels: { gauge: 'PRESSURE' },
@@ -306,7 +314,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Where It Stops',
-    prompt: 'Find the temperature at which the pressure would fall to zero.',
+    prompt: 'The cooling coil drops the temperature down toward extreme cold. Follow the pressure trace to find the temperature where all particle knocking would cease completely!',
     controls: ['temp', 'clear'],
     temps: COLD, tempStart: 3, tempList: 'C', tempUnit: 'C',
     labels: { gauge: 'PRESSURE' },
@@ -344,7 +352,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'What the Bench Showed',
-    prompt: 'Pick every statement the bench has shown to be true.',
+    prompt: 'Let\'s summarize our findings for the cloud deck flight log! Select every statement about gas behavior that our bench tests have confirmed.',
     controls: ['volume', 'temp'],
     volumes: PISTON, volumeStart: 4,
     temps: [25, 200, 500], tempStart: 1, tempList: 'C', tempUnit: 'both',

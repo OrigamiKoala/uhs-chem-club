@@ -63,7 +63,7 @@ const TOOL_TEXT = {
     what: 'Zooms the scope in.'
   }],
   settle: [{
-    from: 1,
+    from: 7,
     key: 'Settle',
     what: 'Shakes the sample so heavier atoms sink below lighter ones.'
   }]
@@ -171,10 +171,10 @@ export const STAGES = [
   {
     title: 'Zoom In',
     briefing: {
-      speaker: SPEAKER,
-      body: 'Everything around you — rock, water, air — is built from tiny pieces called atoms, far too small to see. This scope magnifies them until you can: the Power dial zooms in, "Run Cutter" tries to split a sample, and "Settle" shakes a sample and lets it sink.'
+      speaker: 'Vess',
+      body: 'Welcome to the molecular scope. Turn the Power dial to zoom in until individual particles resolve, and tap any particle to inspect it.'
     },
-    prompt: 'Find the lowest power where this grey powder stops looking smooth and breaks into separate atoms.',
+    prompt: 'During the attack, the raiders scattered mysterious samples of grey powder, and now it\'s your job to figure out what this powder is, by examining it under a microscope. What\'s the lowest power where you can see the individual particles?',
     controls: ['power'],
     samples: [
       { id: 'c7', label: 'SAMPLE A', note: 'grey powder from the refinery yard', floorPower: 4, particles: [{ kinds: ['k06'], n: 46 }] }
@@ -204,7 +204,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'One Kind or Two?',
-    prompt: 'Both samples look like the same grey powder. Find which one is a pure element: a powder made of only one kind of atom.',
+    prompt: 'Your crewmate suspects there are multiple types of powder, so you examine two samples, which look the same...but they\'re not. Which one is a pure element, made of only one kind of atom? Click on it.',
     controls: ['power'],
     select: true,
     samples: [
@@ -231,7 +231,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Count the Elements',
-    prompt: 'Count how many different elements this raw rock from the yard holds.',
+    prompt: 'One of the guild smelters wants to know how many elements are in this chunk of unprocessed ore, so you take a close look. How many elements are there?',
     controls: ['power'],
     samples: [
       {
@@ -258,14 +258,18 @@ export const STAGES = [
     reward: {
       log: 'Three elements found: chlorine, oxygen and sulfur.',
       title: 'Atomic Mass',
-      body: 'Every element has its own atomic mass. Weighing an atom tells two look-alike elements apart.'
+      body: 'Every element has its own unique atomic mass. When two elements look identical under the scope, weighing an atom tells them apart!'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'What the Blade Cannot Cut',
-    prompt: 'Pick the one of these four samples that cannot be split.',
+    briefing: {
+      speaker: 'Vess',
+      body: 'The mechanical slicer is now active. Select a sample and press "Run Cutter" to see if its parts can be divided into smaller pieces.'
+    },
+    prompt: 'Vess heard a report that the salt husks terrorizing this planet can\'t be split by our cutter. Which of the four samples can\'t be split?',
     controls: ['cut'],
     select: true,
     samples: [
@@ -287,14 +291,14 @@ export const STAGES = [
     reward: {
       log: 'A single oxygen atom will not divide.',
       title: 'Molecules',
-      body: 'The cutter broke some samples into separate atoms but could not break a single atom itself. Atoms joined together in a fixed recipe make a molecule, and in any chemical change the atoms are rearranged while every one of them survives.'
+      body: 'Samples B and C can be split, because they are made of multiple atoms combined together. These are called molecules. Sample A is a loose mixture of atoms, but it isn\'t a compound, since the atoms aren\'t connected.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Copy the Molecule',
-    prompt: 'This sample holds the same small molecule over and over. Build one exact copy in the tray.',
+    prompt: 'Vess wants to figure out how to construct Sample A out of atoms. How many atoms of each element do you need to build one molecule of Sample A?',
     controls: ['power'],
     samples: [
       { id: 'v9', label: 'SAMPLE A', note: 'clear liquid from the refinery', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 20 }] }
@@ -317,14 +321,14 @@ export const STAGES = [
     reward: {
       log: 'Copy built: 1 x oxygen, 2 x hydrogen.',
       title: 'Water, H2O',
-      body: 'One oxygen atom joined to two hydrogen atoms is a molecule of water, H2O. Two hydrogen atoms joined together count as a molecule too, and a sample of those is still the pure element hydrogen.'
+      body: 'Each water molecule is ALWAYS formed by one oxygen atom joined to two hydrogen atoms. You\'ll never find a water molecule with 3 hydrogens and 2 oxygens - that would be a different molecule with a different name!'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Same Atoms, Different Recipe',
-    prompt: 'Both samples are built from hydrogen and oxygen. File each one under the recipe that matches its molecules: the count of each atom in one molecule.',
+    prompt: 'Both samples are built from hydrogen and oxygen - so Vess thinks they are the same molecule. However, they aren\'t. File each one under the recipe that matches its molecules: the count of each atom in one molecule.',
     controls: ['power'],
     samples: [
       { id: 'vA', label: 'SAMPLE A', note: 'clear liquid from the refinery', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 16 }] },
@@ -351,14 +355,18 @@ export const STAGES = [
     reward: {
       log: 'Sample A: H2O. Sample B: H2O2.',
       title: 'Compounds',
-      body: 'Two or more different elements bonded together make a compound. One extra oxygen turns water, H2O, into hydrogen peroxide, H2O2 — a bleach strong enough to eat through a seal.'
+      body: 'Two or more different elements bonded together make a compound. However, elements can combine in different amounts, forming different compounds. One extra oxygen turns water, H2O, into hydrogen peroxide, H2O2 — a bleach strong enough to eat through a seal.'
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Shake It Out',
-    prompt: 'File each of the three samples as a single substance — one thing all the way through — or a mixture.',
+    briefing: {
+      speaker: 'Vess',
+      body: 'The shaker table is now online. Press "Settle" to agitate a sample so heavier atoms sink below lighter ones into separate layers.'
+    },
+    prompt: 'Classify each of the three samples as a single substance (all the same element/compound) or a mixture (different elements/compounds mixed together).',
     controls: ['settle'],
     select: true,
     samples: [
@@ -387,14 +395,14 @@ export const STAGES = [
     reward: {
       log: 'Sample C separated into chlorine and sodium layers.',
       title: 'Why Mixtures Separate',
-      body: 'Shaking sorts a mixture because nothing is holding the different atoms together. It cannot separate a compound, because the bonds inside a molecule are far too strong to shake apart.'
+      body: 'Shaking sorts a mixture because nothing is holding the different molecules together. It cannot separate a compound, because the bonds inside a molecule are far too strong to shake apart.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Sort Them All',
-    prompt: 'File each of the four samples as an element, a compound or a mixture.',
+    prompt: 'Classify each of the four samples as an element, a compound or a mixture.',
     controls: ['power', 'cut', 'settle'],
     select: true,
     samples: [
@@ -429,9 +437,9 @@ export const STAGES = [
     },
     reward: {
       log: 'All four filed correctly.',
-      title: 'Every Substance Is One of Three',
+      title: 'Elements, Compounds, and Mixtures',
       last: true,
-      body: 'An element holds atoms of one element only, a compound holds different elements bonded together, and a mixture holds different elements that are not bonded at all. That covers every substance there is.'
+      body: 'An element has only one kind of atom, a compound bonds different elements together, and a mixture keeps them unbonded. That covers every substance you will encounter!'
     }
   }
 ];
@@ -449,11 +457,7 @@ const DEBRIEF = {
     },
     {
       heading: 'What the numbers mean',
-      body: 'Each element has its own number: hydrogen is 1, carbon is 6, oxygen is 8, sodium is 11, sulfur is 16 and chlorine is 17. The next bench opens an atom up and shows what those numbers count.'
-    },
-    {
-      heading: 'Next',
-      body: 'You can already name every atom on this bench. The next bench looks inside one and finds what makes each element different.'
+      body: 'Nice job! Now let\'s go explore what an atom is made of.'
     }
   ]
 };
@@ -833,8 +837,8 @@ export function mount(container, ctx) {
         <div class="lq-readout-card lq-readout-idle">
           <div class="lq-readout-head">Probe // standby</div>
           <p class="lq-readout-line">${anyResolved
-            ? 'Tap any atom to read it.'
-            : 'Nothing is in focus yet. Turn the Power dial up.'}</p>
+          ? 'Tap any atom to read it.'
+          : 'Nothing is in focus yet. Turn the Power dial up.'}</p>
         </div>
       `);
       return;
@@ -848,8 +852,8 @@ export function mount(container, ctx) {
         ${meter('Mass', massBar(hit.kindId), k.mass.toFixed(1))}
         ${meter('Size', sizeBar(hit.kindId), k.size.toFixed(2))}
         <div class="lq-readout-hold">${hit.neighbours === 0
-          ? 'Not joined to anything.'
-          : `Joined to ${hit.neighbours} other ${hit.neighbours === 1 ? 'atom' : 'atoms'}.`}</div>
+        ? 'Not joined to anything.'
+        : `Joined to ${hit.neighbours} other ${hit.neighbours === 1 ? 'atom' : 'atoms'}.`}</div>
         <p class="lq-readout-line">${esc(k.note)}</p>
       </div>
     `);
@@ -859,9 +863,8 @@ export function mount(container, ctx) {
     return `
       <div class="lq-meter">
         <span class="lq-meter-label">${label}</span>
-        <span class="lq-meter-bar" aria-hidden="true">${
-          Array.from({ length: 10 }, (_, i) => `<i class="${i < filled ? 'on' : ''}"></i>`).join('')
-        }</span>
+        <span class="lq-meter-bar" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i < filled ? 'on' : ''}"></i>`).join('')
+      }</span>
         <span class="lq-meter-value">${value}</span>
       </div>
     `;
@@ -881,10 +884,10 @@ export function mount(container, ctx) {
           <span class="form-label">${esc(w.label)}</span>
           <div class="lq-choice-row">
             ${Array.from({ length: max - min + 1 }, (_, i) => {
-              const val = min + i;
-              const sel = state.number === val;
-              return `<button type="button" class="btn-secondary quest-btn-sm lq-choice-btn ${sel ? 'selected' : ''}" data-choice-val="${val}">${val}</button>`;
-            }).join('')}
+        const val = min + i;
+        const sel = state.number === val;
+        return `<button type="button" class="btn-secondary quest-btn-sm lq-choice-btn ${sel ? 'selected' : ''}" data-choice-val="${val}">${val}</button>`;
+      }).join('')}
           </div>
         </div>
       `);

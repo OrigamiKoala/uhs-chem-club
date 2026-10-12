@@ -96,9 +96,9 @@ export const STAGES = [
     title: 'Six for Carbon',
     briefing: {
       speaker: SPEAKER,
-      body: 'This rack holds orbital boxes with the lowest energy at the bottom: pick Up, Down or Remove, then tap a box. A magnet tests how hard a sample is pulled, and the rack tests its own arrangement the same way.'
+      body: 'Welcome to the orbital filing bench, where we arrange electrons into boxes by energy, lowest first. Use Up, Down, or Remove to place electrons into open boxes.'
     },
-    prompt: 'Place carbon\'s six electrons.',
+    prompt: 'Let\'s build a ground-state carbon atom! Place carbon\'s six electrons into the lowest available boxes on the rack.',
     controls: ['hand'],
     rigs: [plate({ label: 'SAMPLE C', sample: 'C', note: 'C, six electrons' })],
     widget: { type: 'none' },
@@ -126,7 +126,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Two in the p Row',
-    prompt: 'Find how carbon\'s two p electrons sit.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A magnetic probe is now available. Use "Test Sample" or "Test Rack" to measure the magnetic pull of unpaired electrons.'
+    },
+    prompt: 'Test carbon with the magnet! How do its two 2p electrons arrange themselves across the three 2p boxes?',
     controls: ['hand', 'magnet'],
     rigs: [plate({ label: 'SAMPLE C', sample: 'C', prefill: rackFor(4), locked: true, note: 'C, the p electrons are still to place' })],
     widget: {
@@ -163,7 +167,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Eight for Oxygen',
-    prompt: 'Find what the rack reads for oxygen.',
+    prompt: 'Oxygen has eight electrons. Load them all into the rack and read out its electron layout across the top.',
     controls: ['hand'],
     rigs: [plate({ label: 'SAMPLE O', sample: 'O', note: 'O, eight electrons' })],
     widget: {
@@ -197,7 +201,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Potassium\'s Last',
-    prompt: 'Place potassium\'s nineteenth electron.',
+    prompt: 'Potassium has 19 electrons, with 18 already locked in the argon core. Where does its nineteenth electron settle on this energy ladder?',
     controls: ['hand'],
     rigs: [plate({ label: 'SAMPLE K', sample: 'K', prefill: AR_CORE, locked: true, note: 'K, eighteen electrons are already in place' })],
     widget: { type: 'none' },
@@ -225,7 +229,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Iron in Short Form',
-    prompt: 'Write iron\'s arrangement in short form.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now abbreviate filled inner shells. Use "Collapse Core" to compress completed inner rows into a shorthand symbol.'
+    },
+    prompt: 'Add iron\'s remaining eight valence electrons and tap Collapse Core. What does iron\'s shorthand notation look like?',
     controls: ['hand', 'core'],
     rigs: [plate({ label: 'SAMPLE FE', sample: 'Fe', prefill: AR_CORE, locked: true, note: 'Fe, eighteen electrons are already in place' })],
     widget: {
@@ -259,7 +267,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Where the Last Electron Went',
-    prompt: 'Sort the six elements by the row their last electron went into.',
+    prompt: 'Elements group naturally by their outermost electrons! Sort these six element strips by the type of subshell (s, p, d, or f) where their last electron lands.',
     controls: [],
     rigs: STRIPS,
     widget: {
@@ -297,7 +305,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Iron Loses Two',
-    prompt: 'Remove two electrons from iron.',
+    prompt: 'When an iron atom forms an Fe²⁺ ion, which two electrons are stripped away first?',
     controls: ['hand', 'magnet'],
     rigs: [plate({ label: 'SAMPLE FE', sample: 'Fe2+', z: 26, rows: ION_ROWS, fillGround: true, note: 'Fe, the ladder as an ion draws it' })],
     widget: { type: 'none' },
@@ -325,7 +333,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Chromium Disagrees',
-    prompt: 'Place chromium\'s electrons so the rack\'s pull matches the sample\'s.',
+    prompt: 'Chromium has an intriguing magnetic surprise! Place its last six electrons so the rack\'s magnetic pull matches the real sample.',
     controls: ['hand', 'magnet'],
     beyondExam: true,
     rigs: [plate({ label: 'SAMPLE CR', sample: 'Cr', prefill: AR_CORE, locked: true, note: 'Cr, eighteen electrons are already in place. Beyond the exam.' })],

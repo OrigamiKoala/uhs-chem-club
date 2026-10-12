@@ -73,9 +73,9 @@ export const STAGES = [
     title: 'What Each Light Does',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench passes a beam through a cuvette — a small container of solution — and reads its dimming, how much light the solution takes in. The keys choose the kind of light, and the cuvette shows what each kind does to the molecules inside.'
+      body: 'Welcome to the spectrophotometry bench! We shine beams of radiation through cuvettes containing solutions to measure how much light gets absorbed, and observe how different wavelengths agitate the molecules.'
     },
-    prompt: 'Find what each kind of light does to the molecule.',
+    prompt: 'Test microwaves, infrared, and UV-visible light on the HCl molecule. What distinct physical motion does each region trigger?',
     labels: PLAIN,
     controls: ['region'],
     mode: 'region',
@@ -122,7 +122,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Three Readings',
-    prompt: 'Match each reading to the light that caused it.',
+    prompt: 'Three distinct absorption wavelengths were detected! Match each recorded wavelength to the region of light that caused it.',
     labels: PLAIN,
     controls: [],
     rigs: [
@@ -169,7 +169,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Why Copper Looks Blue',
-    prompt: 'Explain why the copper solution looks blue.',
+    prompt: 'White light shines through the copper(II) sulfate solution, yet it appears strikingly blue. Why does the solution take on this colour?',
     labels: PLAIN,
     controls: [],
     after: true,
@@ -205,7 +205,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Best Wavelength',
-    prompt: 'Pick the best wavelength to measure this solution at.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now adjust the incident wavelength. Turn the dial to find the wavelength where the solution absorbs light most strongly.'
+    },
+    prompt: 'Tune the wavelength dial to find the peak absorption setting for measuring this copper(II) sulfate solution with maximum sensitivity.',
     labels: EARNED,
     controls: ['tune'],
     settings: COPPER_SWEEP,
@@ -236,7 +240,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Doubling the Concentration',
-    prompt: 'Find what doubling the concentration does to the absorbance. Concentration in mol/L is how many moles are dissolved in each litre.',
+    prompt: 'Examine the three cuvettes with different copper concentrations. What happens to the absorbance reading when concentration doubles?',
     labels: EARNED,
     controls: [],
     rigs: [
@@ -275,7 +279,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Doubling the Path',
-    prompt: 'Find what doubling the path does to the absorbance. Path is how many centimetres the beam travels through the solution.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now change the cuvette path length. Select different path keys to see how beam distance affects absorption.'
+    },
+    prompt: 'Switch the cuvette path length selector! What happens to the absorbance when the light travels twice as far through the solution?',
     labels: EARNED,
     controls: ['path'],
     path: 1,
@@ -311,7 +319,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'The Rule',
-    prompt: 'Write the rule that connects absorbance, path and concentration.',
+    prompt: 'Combine your discoveries! Which mathematical equation correctly expresses how absorbance depends on path length and concentration?',
     labels: EARNED,
     controls: ['path'],
     path: 1,
@@ -350,7 +358,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'The Sealed Sample',
-    prompt: 'Find the concentration of the sealed sample.',
+    prompt: 'We found a sealed copper solution vial in the surveyor depot. Using the line of known reference standards, determine its concentration!',
     labels: EARNED,
     controls: [],
     rigs: [

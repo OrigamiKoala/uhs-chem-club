@@ -77,7 +77,7 @@ const SPEAKER = 'Vess';
    ------------------------------------------------------------------ */
 const TOOL_TEXT = {
   field: [{
-    from: 1,
+    from: 2,
     key: 'Whole piece / The middle / Outside',
     what: 'Three views of the same atom: all of it, the heavy center close up, or the outside.'
   }, {
@@ -91,7 +91,7 @@ const TOOL_TEXT = {
     what: 'Fires 40 tiny shots at the atom and counts what happened to each one.'
   }],
   meter: [{
-    from: 1,
+    from: 3,
     key: 'Read Needle',
     what: 'Clips the charge meter onto the atom to read which way it leans.'
   }, {
@@ -103,12 +103,12 @@ const TOOL_TEXT = {
     what: 'Clips the charge meter onto the atom: protons push the needle up and electrons pull it down.'
   }],
   tester: [{
-    from: 1,
+    from: 5,
     key: 'Run Tester',
     what: 'Pushes another atom at this one and reports what happens.'
   }],
   strip: [{
-    from: 1,
+    from: 7,
     key: 'Fire Stripper',
     what: 'Knocks one electron off the outer shell without touching the middle.'
   }]
@@ -230,9 +230,9 @@ export const STAGES = [
     field: 'whole',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench looks inside one atom at a time: fire tiny shots through it, or look at its middle or its outside. A clip-on meter reads its charge — which way it leans, toward plus or toward minus.'
+      body: 'This bench probes inside a single atom. Press "Fire Beam" to fire tiny energetic particles at the atom and observe how they scatter.'
     },
-    prompt: 'Say what the inside of this atom is like.',
+    prompt: 'The screen shows a single atom. What\'s this atom made of? We can figure it out using a beam. Try firing it through the atom, and see how it acts.',
     controls: ['beam'],
     specimens: [
       { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
@@ -272,8 +272,12 @@ export const STAGES = [
   {
     title: 'What Is in the Middle',
     field: 'core',
-    prompt: 'Count how many particles in the middle of this atom carry a cross.',
-    controls: ['field', 'meter'],
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now switch your perspective on the atom. Switch between "The middle" to inspect the center and "Outside" to inspect surrounding rings.'
+    },
+    prompt: 'Now you can see the nucleus of an atom. How many particles have a positive (+) charge?',
+    controls: ['field'],
     specimens: [
       { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
     ],
@@ -304,7 +308,11 @@ export const STAGES = [
   {
     title: 'The Charge Balance',
     field: 'rings',
-    prompt: 'One sample here is sealed shut. Work out how many electrons it hides.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A charge detector is now clipped to the atom. Use "Read Needle" to measure which way the atom leans, toward plus or toward minus.'
+    },
+    prompt: 'Sample D\'s electrons are hidden - how many does it have? (Remember, the needle shows the overall charge of the atom. Protons donate a +1 charge, and electrons donate a -1 charge.)',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'r1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 3, blank: 4 }, rings: [2, 1] },
@@ -334,7 +342,7 @@ export const STAGES = [
     reward: {
       log: 'Sample D carries 8 electrons.',
       title: 'Neutral Atoms Balance',
-      body: 'The needle reads protons minus electrons. An atom sits on zero exactly when it has one electron for every proton, so on a neutral atom counting one side tells you the other.'
+      body: 'The needle reads the total charge on the atom - a neutral atom has a charge of 0, so it has the same number of protons as electrons.'
     }
   },
 
@@ -342,7 +350,7 @@ export const STAGES = [
   {
     title: 'Where the Electrons Sit',
     field: 'rings',
-    prompt: 'Put all 11 electrons of this neutral sample onto its shells.',
+    prompt: 'Electrons live in different shells (orbits) around the nucleus. Different shells have different capacities. Put all 11 electrons of Sample D into the correct shells.',
     controls: ['field'],
     specimens: [
       { id: 'r1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 2, blank: 2 }, rings: [2] },
@@ -381,7 +389,7 @@ export const STAGES = [
     reward: {
       log: 'Sample D loaded 2 / 8 / 1.',
       title: 'Electron Shells',
-      body: 'Electrons sit in rings called shells, and each shell holds a fixed number: 2 in the first, 8 in the second. A shell fills up before the next one starts, which is why 11 electrons come out as 2, 8 and 1.'
+      body: 'Each shell holds a fixed number: 2 in the first, 8 in the second and third. A shell fills up before the next one starts, which is why 11 electrons come out as 2, 8 and 1.'
     }
   },
 
@@ -389,7 +397,11 @@ export const STAGES = [
   {
     title: 'The Outer Shell Decides',
     field: 'rings',
-    prompt: 'The tester has only 2 charges left. Say whether each of the four samples gives an electron away, takes one on, or will not trade.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The bench is now equipped with a reaction tester. Use "Run Tester" to push another atom at your sample and see if it trades electrons.'
+    },
+    prompt: 'Determine whether each of the four samples gives an electron away, takes one on, or will not trade. Try your best to figure out the rule using the tester - but you only have two chances to test!',
     controls: ['field', 'tester'],
     specimens: [
       { id: 's1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 3, blank: 4 }, rings: [2, 1] },
@@ -427,7 +439,7 @@ export const STAGES = [
     reward: {
       log: 'All four predictions correct.',
       title: 'Valence Electrons',
-      body: 'The electrons in the outermost shell are the valence electrons, and they decide how an atom reacts. One valence electron is given away, seven pulls one in to make eight, and a full shell of eight trades nothing at all.'
+      body: 'Atoms are happiest when their outer shells are full! The electrons in the outermost shell are the valence electrons, and they decide how an atom reacts: one valence electron gets given away, seven takes one to make eight, and a full shell of eight trades nothing at all.'
     }
   },
 
@@ -435,7 +447,7 @@ export const STAGES = [
   {
     title: 'Same Weight, Different Atom',
     field: 'core',
-    prompt: 'Two samples here weigh the same as each other. Decide which one is the same element as the reference sample.',
+    prompt: 'Which sample (B or C) is the same element as sample A? Which is different?',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'h', label: 'SAMPLE A', note: 'the one to match', core: { marked: 6, blank: 6 }, rings: [2, 4] },
@@ -470,7 +482,7 @@ export const STAGES = [
     reward: {
       log: 'Sample B matches Sample A. Sample C does not.',
       title: 'Elements and Isotopes',
-      body: 'What kind of atom you have depends only on the proton count, and that count is called the atomic number. Samples A and B are both carbon, 6 protons, but B carries an extra neutron, which makes it an isotope; Sample C has 7 protons, so it is nitrogen, a different element.'
+      body: 'What kind of atom you have depends only on the number of protons, which is called the atomic number. Samples A and B both have 6 protons (carbon), while Sample C has 7 protons (nitrogen, a different element). Samples A and B have the same number of protons but different numbers of neutrons, which makes them isotopes.'
     }
   },
 
@@ -478,6 +490,10 @@ export const STAGES = [
   {
     title: 'Take Electrons Off',
     field: 'rings',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Use "Fire Stripper" to knock outer electrons off the atom, or "Reset Sample" to put them back.'
+    },
     prompt: 'Bring Sample A to a charge of +2, and log how many electrons that took.',
     controls: ['field', 'meter', 'strip', 'reset'],
     specimens: [
@@ -516,7 +532,7 @@ export const STAGES = [
   {
     title: 'Tell Them Apart',
     field: 'core',
-    prompt: 'The standard is 7 protons, 7 neutrons and a needle on zero. Say how each of the three samples differs from it.',
+    prompt: 'Sample D has 7 protons, 7 neutrons and a needle on zero. How do Samples A, B, and C compare?',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'n1', label: 'SAMPLE A', note: 'unlabelled', core: { marked: 7, blank: 8 }, rings: [2, 5] },
@@ -526,9 +542,9 @@ export const STAGES = [
     widget: {
       type: 'bins',
       bins: [
-        { id: 'heavy', label: 'Same element, extra neutron', note: 'An isotope of the standard.' },
-        { id: 'charged', label: 'Same element, missing an electron', note: 'An ion of the standard.' },
-        { id: 'other', label: 'A different element', note: 'The proton count does not match.' }
+        { id: 'heavy', label: 'Isotope', note: 'Same element, extra neutron.' },
+        { id: 'charged', label: 'Ion', note: 'Same element, missing an electron.' },
+        { id: 'other', label: 'Different element', note: 'The proton count does not match.' }
       ]
     },
     hints: [
@@ -580,7 +596,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'You have now counted protons for a dozen atoms. The next bench shows you what happens when you line every element up by that number.'
+      body: 'You have now counted protons for a dozen atoms. Next, we\'ll look at how to sort atoms!'
     }
   ]
 };
@@ -1031,10 +1047,10 @@ export function mount(container, ctx) {
         <div class="lq-readout-card lq-readout-idle">
           <div class="lq-readout-head">Probe // standby</div>
           <p class="lq-readout-line">${state.field === 'whole'
-            ? 'The whole atom at its own size. Use the other two keys to look inside it.'
-            : state.field === 'core'
-              ? 'The center, magnified until the particles come apart. Click any particle to read it.'
-              : `Pulled back to the ${index >= 2 ? 'electrons' : 'particles'} outside, drawn on the shells they sit on. Click any one to read it.`}</p>
+          ? 'The whole atom at its own size. Use the other two keys to look inside it.'
+          : state.field === 'core'
+            ? 'The center, magnified until the particles come apart. Click any particle to read it.'
+            : `Pulled back to the ${index >= 2 ? 'electrons' : 'particles'} outside, drawn on the shells they sit on. Click any one to read it.`}</p>
         </div>
       `);
       return;
@@ -1052,14 +1068,14 @@ export function mount(container, ctx) {
         ${part.mass === null ? '' : meter('Mass', massBar(hit.part), massText(hit.part))}
         ${part.charge === null ? '' : chargeChip(part.charge)}
         ${hit.part === 'core' && spec
-          ? `<div class="lq-readout-hold">Packed with ${coreTotal(spec)} particles in all.</div>`
-          : ''}
+        ? `<div class="lq-readout-hold">Packed with ${coreTotal(spec)} particles in all.</div>`
+        : ''}
         ${hit.part === 'marked' || hit.part === 'blank'
-          ? `<div class="lq-readout-hold">This center holds ${coreTotal(spec)} particles in all.</div>`
-          : ''}
+        ? `<div class="lq-readout-hold">This center holds ${coreTotal(spec)} particles in all.</div>`
+        : ''}
         ${hit.part === 'light'
-          ? `<div class="lq-readout-hold">On ring ${hit.ring + 1}, counting outward.</div>`
-          : ''}
+        ? `<div class="lq-readout-hold">On ring ${hit.ring + 1}, counting outward.</div>`
+        : ''}
         <p class="lq-readout-line">${esc(part.note)}</p>
       </div>
     `);
@@ -1078,9 +1094,8 @@ export function mount(container, ctx) {
     return `
       <div class="lq-meter">
         <span class="lq-meter-label">${label}</span>
-        <span class="lq-meter-bar" aria-hidden="true">${
-          Array.from({ length: 10 }, (_, i) => `<i class="${i < filled ? 'on' : ''}"></i>`).join('')
-        }</span>
+        <span class="lq-meter-bar" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i < filled ? 'on' : ''}"></i>`).join('')
+      }</span>
         <span class="lq-meter-value">${value}</span>
       </div>
     `;

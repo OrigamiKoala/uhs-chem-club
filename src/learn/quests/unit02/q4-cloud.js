@@ -69,9 +69,9 @@ export const STAGES = [
     title: 'One Shot, Fifty Shots',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench finds an electron\'s position once for every shot and leaves a dot where it was. Fire one shot, then keep firing, and see what the dots become.'
+      body: 'Welcome to the electron cloud detector, where each sensor pulse detects an electron\'s location and leaves a glowing phosphor dot. Fire shots to see what overall pattern emerges.'
     },
-    prompt: 'Find where Sample A\'s electron is.',
+    prompt: 'Take aim with the sensor beam! Where does Sample A\'s electron appear when we ping it repeatedly?',
     controls: ['fire'],
     extent: 5,
     clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],
@@ -106,7 +106,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Five Hundred Shots',
-    prompt: 'Find the shape the dots make after 500 shots.',
+    prompt: 'Fire 500 sensor bursts into the sample chamber! What overall shape emerges from the glowing swarm of dots?',
     controls: ['fire'],
     extent: 5,
     clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],
@@ -141,7 +141,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Waves That Fit',
-    prompt: 'Pick the wavelengths that fit on the ring. Wavelengths here are in pm, trillionths of a metre.',
+    prompt: 'An electron wave circles the atomic track! Which wavelengths loop smoothly around the ring without canceling themselves out?',
     controls: ['tune'],
     settings: RING_SETTINGS,
     start: 2,
@@ -170,7 +170,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Bigger and Emptier',
-    prompt: 'Find how Sample B\'s cloud differs from Sample A\'s.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now view interior cross-sections. Press "Slice" to inspect only the dots within a thin slice through the middle.'
+    },
+    prompt: 'Sample B holds an electron pumped with higher energy. Fire shots and use Slice to compare: how does Sample B\'s cloud differ from Sample A\'s?',
     controls: ['fire', 'slice'],
     extent: 14,
     clouds: [
@@ -208,7 +212,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Two Lobes',
-    prompt: 'Find the shape of Sample C and where it holds no dots. A lobe is one rounded cloud where the dots gather.',
+    prompt: 'Sample C displays a fascinating new distribution! Fire 500 shots and rotate the view: what shape does this cloud form, and where are dots never found?',
     controls: ['fire', 'slice'],
     extent: 12,
     clouds: [{ id: 'c', label: 'SAMPLE C', head: 'cloud', orbital: '2pz', plane: 'all', note: 'one electron in an atom with more energy' }],
@@ -243,7 +247,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Ways to Point',
-    prompt: 'Count how many ways the two-lobed shape points.',
+    prompt: 'Survey these energetic sub-chambers! How many distinct spatial directions can this two-lobed cloud point along?',
     controls: [],
     extent: 12,
     clouds: [
@@ -275,7 +279,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Five Clouds',
-    prompt: 'Sort the five clouds by shape.',
+    prompt: 'At even higher energy, exotic shapes appear! Inspect all three view angles and classify each of these five clouds by its shape.',
     controls: [],
     extent: 24,
     clouds: [
@@ -320,7 +324,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'No Path',
-    prompt: 'Find why the bench never draws a path for the electron.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Try using the trajectory tracker. Press "Track Electron" to attempt tracing a continuous path.'
+    },
+    prompt: 'Try the \'Track Electron\' button on our surveyor scope. Why is it impossible for the bench to trace a neat, definite path?',
     controls: ['fire', 'track'],
     extent: 5,
     clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],

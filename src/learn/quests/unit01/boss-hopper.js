@@ -25,7 +25,7 @@ export const STAGES = [
   {
     id: 'phase1',
     title: 'Phase 1 · Hull Plates',
-    prompt: 'File each armour plate into its correct classification to shatter the outer plating.',
+    prompt: 'The rogue Hopper is shielding itself with three armor plates. Classify each plate as an element, compound, or mixture to crack its outer hull.',
     samples: [
       { id: 'plate1', label: 'Pure Iron' },
       { id: 'plate2', label: 'Rock Salt' },
@@ -80,7 +80,7 @@ export const STAGES = [
   {
     id: 'phase2',
     title: 'Phase 2 · Core Readout',
-    prompt: 'Enter the proton count for a carbon atom to lock the diagnostic probe.',
+    prompt: 'The Hopper\'s power core is cycling through elemental carbon frequencies. Enter the proton count of a carbon atom to lock the diagnostic probe.',
     samples: [{ id: 'hopper', label: 'The Hopper' }],
     widget: { type: 'number', min: 1, max: 20, step: 1, unit: 'protons' },
     encounter: {
@@ -110,7 +110,7 @@ export const STAGES = [
   {
     id: 'phase3',
     title: 'Phase 3 · Cooling Manifold',
-    prompt: 'Enter the atomic number of the period-two noble gas that will quench the hopper heat.',
+    prompt: 'The Hopper\'s drive coils are overheating. Enter the atomic number of the period-two noble gas that will safely quench the manifold heat.',
     samples: [{ id: 'hopper', label: 'The Hopper' }],
     widget: { type: 'number', min: 1, max: 36, step: 1, unit: 'atomic number' },
     encounter: {
@@ -140,7 +140,7 @@ export const STAGES = [
   {
     id: 'phase4',
     title: 'Phase 4 · Neutralize Charge',
-    prompt: 'Enter the number of electrons that neutralizes a sodium ion holding eleven protons and ten electrons.',
+    prompt: 'Static electricity is surging across the chassis from a sodium ion with 11 protons and 10 electrons. How many electrons does it need to neutralize the charge?',
     samples: [{ id: 'hopper', label: 'The Hopper' }],
     widget: { type: 'number', min: 0, max: 10, step: 1, unit: 'electrons' },
     encounter: {
@@ -169,7 +169,7 @@ export const STAGES = [
   {
     id: 'phase5',
     title: 'Phase 5 · Swarm Weight',
-    prompt: 'Calculate the total mass in grams of two moles of carbon atoms released from the chute.',
+    prompt: 'The Hopper exhausts a massive cloud of two moles of carbon atoms. How many grams of carbon soot were ejected from the chute?',
     samples: [{ id: 'hopper', label: 'The Hopper' }],
     widget: { type: 'number', min: 1, max: 100, step: 1, unit: 'grams' },
     encounter: {

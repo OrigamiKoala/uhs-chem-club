@@ -62,9 +62,9 @@ export const STAGES = [
     title: 'Two Spectra',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench knocks electrons off a specimen and plots how many come out at each energy. Tap each tall line — a peak — to read its position and height.'
+      body: 'Welcome to the photoelectron spectroscopy bench, where intense light knocks electrons clean off atoms to plot how many fly out at each energy level. Tap any peak to inspect its height and binding energy.'
     },
-    prompt: 'Find what Sample B\'s spectrum says beside Sample A\'s.',
+    prompt: 'Fire light at hydrogen (A) and helium (B)! How do the resulting peaks compare in height and energy?',
     labels: PLAIN,
     controls: ['fire'],
     rigs: [spec('a', 'H', { note: 'an atom with one electron' }), spec('b', 'He', { note: 'an atom with two electrons' })],
@@ -99,7 +99,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'What Height Counts',
-    prompt: 'Find what the height of a peak counts.',
+    prompt: 'Compare the peaks of helium and lithium. What does the relative height of each peak tell us about the electrons?',
     labels: PLAIN,
     controls: ['fire'],
     rigs: [spec('a', 'He', { note: 'two electrons' }), spec('b', 'Li', { note: 'three electrons' })],
@@ -134,7 +134,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Lithium\'s Short Peak',
-    prompt: 'Explain lithium\'s short peak beside its tall one.',
+    prompt: 'Look at lithium\'s spectrum: it shows one tall peak and one short peak. Why is that outer peak so much shorter and easier to remove?',
     labels: EARNED,
     controls: ['fire'],
     rigs: [spec('a', 'Li', { label: 'LITHIUM', showRings: true, note: 'Li, its rings beside the spectrum' })],
@@ -169,7 +169,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Boron\'s Second Shell',
-    prompt: 'Explain why boron\'s second shell shows two peaks.',
+    prompt: 'Fire light at boron! Its outer shell splits into two distinct peaks instead of one. Why does that happen?',
     labels: EARNED,
     controls: ['fire'],
     rigs: [spec('a', 'B', { label: 'BORON', showRings: true, note: 'B, its rings beside the spectrum' })],
@@ -204,7 +204,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Name the Specimen',
-    prompt: 'Identify the sealed specimen from its spectrum.',
+    prompt: 'We retrieved an unlabelled core sample from the ice! Fire the beam, count its electron peaks, and identify which element it is.',
     labels: EARNED,
     controls: ['fire'],
     reference: ['CAT 06: carbon', 'CAT 07: nitrogen', 'CAT 08: oxygen', 'CAT 09: fluorine'],
@@ -240,7 +240,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Neon and Fluorine',
-    prompt: 'Explain why neon\'s innermost peak sits further along than fluorine\'s.',
+    prompt: 'Both neon and fluorine hold two electrons in their 1s shell, yet neon\'s peak sits at noticeably higher energy. What causes that extra pull?',
     labels: EARNED,
     controls: ['fire'],
     rigs: [
@@ -278,7 +278,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Three Neighbours',
-    prompt: 'Match each spectrum to sodium, magnesium or aluminum.',
+    prompt: 'Three neighbouring elements from the third row are on the bench! Fire light at each sample and match each spectrum to sodium, magnesium, or aluminum.',
     labels: EARNED,
     controls: ['fire'],
     rigs: [
@@ -306,7 +306,7 @@ export const STAGES = [
       const want = { x: 'mg', y: 'al', z: 'na' };
       for (const r of rows) {
         if (state.bins[r] !== want[r]) {
-          return { ok: false, msg: 'Count the electrons in each spectrum and look at how the outermost peak changes from one element to the next.' };
+          return { ok: false, msg: 'Count the electrons in each spectrum and look at how the outermost peak changes from one element to one next.' };
         }
       }
       return { ok: true };
@@ -321,7 +321,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'The Sealed Specimen\'s Rows',
-    prompt: 'Write the configuration that the sealed specimen\'s spectrum shows.',
+    prompt: 'Read the peaks of this sealed specimen directly into its electron configuration! What is its complete ground-state arrangement?',
     labels: EARNED,
     controls: ['fire'],
     rigs: [spec('c', 'N', { label: 'SEALED SPECIMEN', note: 'an atom whose element is not named' })],

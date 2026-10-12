@@ -90,7 +90,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench meters gas into a cylinder by the mole — a chemist\u2019s count of particles — and reads what it does under any weight, heat or room. A sealed tank keeps its amount to itself, and everything else on its plate is for you to work from.'
     },
-    prompt: 'Say what volume one mole of gas fills at 0 °C and a pressure of one atmosphere.',
+    prompt: 'We\'re calibrating gas canisters at standard temperature and pressure (0 °C and 1 atm). What volume does exactly one mole of gas occupy under these conditions?',
     controls: ['add', 'remove', 'reset'],
     step: 0.5, nMin: 0.5, nMax: 3,
     ...BASE,
@@ -124,7 +124,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'The Same Number',
-    prompt: 'Find the number that every reading in the log gives.',
+    prompt: 'Our diagnostic logs recorded pressure, volume, temperature, and moles across several runs. Compute (P · V) / (n · T) to find the universal constant tying them together!',
     controls: ['volume', 'temp', 'add', 'remove', 'reset'],
     volumes: [11.2, 22.4, 44.8], volumeStart: 2,
     temps: [0, 27, 127], tempStart: 1, tempList: 'C',
@@ -159,7 +159,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'A Sealed Tank',
-    prompt: 'Give the amount of gas in the sealed tank, in moles.',
+    prompt: 'A sealed emergency reserve tank is pressurized with argon. Use the gas law and tank sensor telemetry to calculate how many moles of argon are stored inside!',
     controls: ['temp'],
     temps: [300, 350, 400, 450], tempStart: 1, tempList: 'K',
     ...BASE,
@@ -188,7 +188,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Which R',
-    prompt: 'Say which value of R goes with a gauge that reads in atmospheres.',
+    prompt: 'The rig\'s secondary flight gauge measures in atmospheres rather than kilopascals. Which numeric value of the gas constant R matches these atmospheric units?',
     controls: ['volume'],
     volumes: [11.2, 22.4, 44.8], volumeStart: 2,
     labels: { gauge: 'PRESSURE' }, scale: 'atm', units: true, tempUnit: 'both',
@@ -221,7 +221,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Name the Gas',
-    prompt: 'Name the gas in the sealed tank.',
+    prompt: 'We salvaged an unmarked fuel cylinder from the lower catwalk. From the tank volume, temperature, pressure, and total mass, identify which gas is inside!',
     controls: ['temp'],
     temps: [300, 400], tempStart: 1, tempList: 'K',
     ...BASE,
@@ -253,7 +253,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Same Conditions',
-    prompt: 'Density is mass over volume. Put the three gases in order of density, densest first.',
+    prompt: 'Three cylinders hold different gases at the exact same temperature and pressure. Rank helium, nitrogen, and carbon dioxide in order from densest to least dense!',
     controls: ['temp'],
     temps: [0, 100, 200], tempStart: 1, tempList: 'C',
     ...BASE,
@@ -290,7 +290,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'A Gas From a Solid',
-    prompt: 'Give the volume of gas this pellet gives off at 25 °C and one atmosphere.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now release reaction reactants. Press "Drop Pellet" to decompose solid calcium carbonate into gaseous carbon dioxide.'
+    },
+    prompt: 'The crew needs to generate carbon dioxide from a solid calcium carbonate pellet. How many liters of gas will this 5.00 g pellet generate at 25 °C and 1 atm?',
     controls: ['drop', 'reset'],
     keys: { drop: 'Drop Pellet' },
     ...BASE,
@@ -327,7 +331,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Why the Same',
-    prompt: 'Say why one mole of any gas fills the same volume at one temperature and pressure.',
+    prompt: 'Helium and xenon atoms have vastly different masses and sizes, yet one mole of each occupies the exact same volume at STP. Why is that?',
     controls: ['temp'],
     temps: [0, 100], tempStart: 1, tempList: 'C',
     ...BASE,

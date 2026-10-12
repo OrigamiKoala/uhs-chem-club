@@ -24,7 +24,7 @@ export const STAGES = [
       speaker: 'Vess',
       body: 'This golem builds units from two ingredients, one of each per unit. Its hoppers hold a set count of each.'
     },
-    prompt: 'Find how many units the golem can build from 8 pieces of iron and 12 pieces of sulfur at one of each per unit before an ingredient runs out.',
+    prompt: 'The recipe golem charges its dual feed hoppers! How many units of iron sulfide can it assemble from 8 pieces of iron and 12 pieces of sulfur (at 1:1) before its supply runs dry?',
     samples: [{ id: 'golem', label: 'Recipe Golem' }],
     widget: { type: 'number', min: 1, max: 20, step: 1, unit: 'units' },
     encounter: {
@@ -53,7 +53,7 @@ export const STAGES = [
   {
     id: 'phase2',
     title: 'Phase 2 · Mass Conservation',
-    prompt: 'Find how many grams of water 4 grams of hydrogen and 32 grams of oxygen make together.',
+    prompt: 'The golem seals its combustion chamber to synthesize water! How many grams of water will 4 grams of hydrogen and 32 grams of oxygen yield when completely reacted?',
     samples: [{ id: 'golem', label: 'Recipe Golem' }],
     widget: { type: 'number', min: 10, max: 60, step: 1, unit: 'grams' },
     encounter: {

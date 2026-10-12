@@ -115,9 +115,9 @@ export const STAGES = [
     title: 'Press Them Together',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench clamps two atoms face to face and presses them together to see whether they hold. "Read Atom" shows what is on an atom\'s outer shell, and "Read Charge" clips a needle to it.'
+      body: 'This bench clamps two atoms face to face and presses them together to see whether they hold. "Read Atom" shows what is on an atom\'s outer shell.'
     },
-    prompt: 'File each pair by whether its atoms hold, to find what still grips the blasted rubble.',
+    prompt: 'We\'re down in the Ligar basalt quarry testing rubble fragments! Clamp each atom pair together in the bonding press to see which ones stick together and which spring apart.',
     controls: ['press', 'read'],
     pairs: [
       pair('p1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -163,7 +163,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Why B Would Not Hold',
-    prompt: 'Say why the atoms of Pair B refuse to hold together while the tunnel walls must.',
+    prompt: 'Pair B\'s atoms sprang right back apart when we pressed them! Why do the two neon atoms refuse to hold together?',
     controls: ['press', 'read'],
     pairs: [
       pair('p1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -210,7 +210,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where the Electron Went',
-    prompt: 'Say how the two bonds differ in where their electrons end up.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now measure net charges after bonding. Tap an atom and press "Read Charge" to see if electrons were transferred or shared.'
+    },
+    prompt: 'Press both pairs and clip on the charge meter! How do the two pairs differ in where their electrons end up?',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('j1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -256,7 +260,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Which Way It Goes',
-    prompt: 'File every pair by what its electrons do, to predict which quarry rock hands over and which shares.',
+    prompt: 'Quarry rocks hold together through different kinds of joins! Test each pair and sort them by whether electrons are handed over or shared between them.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('r1', 'PAIR A', 'off the arch quarry', PIECES.mg, PIECES.o),
@@ -306,7 +310,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'How Many It Takes',
-    prompt: 'Say how many CAT 17 atoms one CAT 12 atom needs to empty its outer shell — give away all it holds — for the salt in the pass.',
+    prompt: 'Magnesium (CAT 12) needs to empty its outer valence shell to stabilize. How many chlorine atoms (CAT 17) does it take to accept all its outer electrons?',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('t1', 'PAIR A', 'off the arch quarry', PIECES.mg, PIECES.cl),
@@ -340,7 +344,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'More Than One Pair',
-    prompt: 'File each pair by how many electron pairs its atoms hold between them, to rank the warden stone.',
+    prompt: 'Examine these covalent molecules from the basalt arches! Count how many electron pairs are held between the two atoms in each pair.',
     controls: ['press', 'read'],
     pairs: [
       pair('u1', 'PAIR A', 'off the gas line', PIECES.h, PIECES.h),
@@ -384,7 +388,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Read It Off the Catalogue',
-    prompt: 'To save a shift at the rock face, file every pair by what it will do from the two atoms alone.',
+    prompt: 'Predict their bonding before even firing the press! Based on whether each atom is a metal, nonmetal, or noble gas, classify what each pair will do.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('v1', 'PAIR A', 'off the arch quarry', PIECES.ca, PIECES.s),
@@ -433,7 +437,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Build the Recipe',
-    prompt: 'Say how many CAT 01 atoms one CAT 06 atom can hold, to fix the recipe — how many of each atom the compound holds — choking the tunnel air.',
+    prompt: 'Carbon (CAT 06) and hydrogen (CAT 01) form the gas seeping through the quarry tunnels. How many hydrogen atoms can a single carbon atom hold to fill its shell?',
     controls: ['press', 'read'],
     pairs: [
       pair('w1', 'PAIR A', 'off the gas line', PIECES.c, PIECES.h),

@@ -111,7 +111,7 @@ const TOOL_TEXT = {
     what: 'Zooms the scope in.'
   }],
   settle: [{
-    from: 1,
+    from: 2,
     key: 'Settle',
     what: 'Shakes the sample and lets it sink into layers.'
   }]
@@ -134,9 +134,9 @@ export const STAGES = [
     title: 'Three Sources, One Molecule',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench is the scope again: the Power dial zooms in, and tapping an atom reads its code and weight. "Run Cutter" tries to split a sample, and "Settle" shakes one and lets it sink.'
+      body: 'This bench is the molecular scope: the Power dial zooms in, and tapping an atom reads its code and weight.'
     },
-    prompt: 'A recipe is the count of each element in one molecule. Count one molecule and build its recipe in the tray.',
+    prompt: 'Every sample here came from a different corner of the foundry, but look closely at their molecules under the scope! Zoom in, count the atoms that make up a single molecule, and dial its recipe into the tray.',
     controls: ['power', 'probe'],
     samples: [
       { id: 'a1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 12 }] },
@@ -173,7 +173,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'The Wrong Proportions',
-    prompt: 'Say which of the two samples is not a compound.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You now have a settling shaker. Press "Settle" to shake the sample and see if it separates into layers.'
+    },
+    prompt: 'One tank holds pure water molecules, while the other was contaminated when a seam split! Shake both samples with the Settle tool to see which one fails to behave as a true compound.',
     controls: ['power', 'probe', 'settle'],
     samples: [
       { id: 'b1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 20 }] },
@@ -222,7 +226,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Two Recipes, Same Two Elements',
-    prompt: 'Say how much CAT 08 goes with one CAT 06 in each of the two samples.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now test mechanical cutting. Press "Run Cutter" to attempt splitting a sample along its seams.'
+    },
+    prompt: 'Both flues are venting exhaust gases made of carbon and oxygen, but their formulas are completely different! Inspect a single molecule from each vent: how many CAT 08 atoms bind to one CAT 06 in Sample A compared to Sample B?',
     controls: ['power', 'probe', 'cut'],
     samples: [
       { id: 'c1', label: 'SAMPLE A', note: 'off the flare stack', floorPower: 4, particles: [{ ...OXIDE_1, n: 22 }] },
@@ -268,7 +276,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'What One Molecule Weighs',
-    prompt: 'Set the counter to what one whole molecule in this sample weighs.',
+    prompt: 'A molecule has no mystery weight beyond the atoms bonded inside it! Probe the atomic weights of both elements in this water sample, then add them up to find what one whole molecule weighs.',
     controls: ['power', 'probe'],
     samples: [
       { id: 'd1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 20 }] }
@@ -304,7 +312,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Which Share Is Which',
-    prompt: 'Work out how much of this sample\'s weight is CAT 08, out of every hundred.',
+    prompt: 'Even though two out of three atoms in water are hydrogen, oxygen is far heavier! What fraction of the molecule\'s total mass comes from CAT 08, out of every hundred parts by weight?',
     controls: ['power', 'probe'],
     samples: [
       { id: 'e1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 20 }] }
@@ -346,7 +354,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Backwards From the Weight',
-    prompt: 'Pick the recipe a sealed drum with 3 parts CAT 06 to 8 parts CAT 08 by weight must hold.',
+    prompt: 'A smelter courier left a sealed drum logged at 3 parts CAT 06 to 8 parts CAT 08 by weight! Convert that mass ratio back into an atom count to figure out which molecule\'s recipe fills the drum.',
     controls: ['power', 'probe'],
     samples: [
       { id: 'f1', label: 'SAMPLE A', note: 'off the flare stack', floorPower: 4, particles: [{ ...OXIDE_1, n: 20 }] },
@@ -392,7 +400,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Name Three Samples',
-    prompt: 'File each of the three samples under the recipe it matches.',
+    prompt: 'Three hauler crates arrived at the loading dock without manifests! Zoom in on each sample, read the central atom and its attached bonds, and sort each crate into its matching recipe bin.',
     controls: ['power', 'probe', 'cut'],
     samples: [
       { id: 'g1', label: 'SAMPLE A', note: 'unlabelled, off a hauler', floorPower: 4, particles: [{ ...WATER, n: 18 }] },
@@ -439,7 +447,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Claims',
-    prompt: 'Say which of the three samples sold as one compound really are what the label says.',
+    prompt: 'A salvage trader is selling three drums claimed to be pure vent-stack condensate (H₂O)! Test each drum with the scope and the shaker to verify which shipments are genuine and which are fraudulent.',
     controls: ['power', 'probe', 'settle', 'cut'],
     samples: [
       { id: 'h1', label: 'SAMPLE A', note: 'sold as vent-stack condensate', floorPower: 4, particles: [{ ...WATER, n: 20 }] },

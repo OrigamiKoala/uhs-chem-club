@@ -77,9 +77,9 @@ export const STAGES = [
     title: 'What Makes the Pull',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench draws an atom to scale, and a tap on an electron reads its pull, its distance in pm — trillionths of a metre — and the charge it feels. "Strip Electron" takes the outermost electron off and says what it cost.'
+      body: 'Welcome to the periodic trends bench, where we model atoms to scale to probe pull, distance, and effective charge on each electron. Let\'s discover what controls the electrostatic pull on electrons.'
     },
-    prompt: 'Find what makes the pull on an electron stronger.',
+    prompt: 'Tap different electrons across our four sample atoms. What physical factors make the electrostatic pull on an electron stronger?',
     labels: L1,
     show: { core: true },
     controls: [],
@@ -115,7 +115,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Plus One, Not Plus Eleven',
-    prompt: 'Explain why sodium\'s outer electron feels about +1, not +11.',
+    prompt: 'Sodium\'s nucleus contains 11 positive protons, but its outermost electron only feels roughly +1 of pull. What accounts for the missing charge?',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: [],
@@ -151,7 +151,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Four in a Row',
-    prompt: 'Order lithium, beryllium, boron and carbon by size, largest first.',
+    prompt: 'Track the outermost electron distance across Period 2 elements. Arrange lithium, beryllium, boron, and carbon from largest atomic size to smallest.',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: [],
@@ -186,7 +186,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Down a Group',
-    prompt: 'Explain why potassium is bigger than sodium.',
+    prompt: 'Sodium and potassium sit right above and below each other in Group 1. Why does potassium have a distinctly larger radius than sodium?',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: [],
@@ -222,7 +222,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Plus, Minus and Neutral',
-    prompt: 'Order Na⁺, Na and Cl⁻ by size, smallest first.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now modify electron counts. Use "Strip Electron" to remove an electron or "Add Electron" to place one onto the sample.'
+    },
+    prompt: 'Use \'Strip Electron\' on sodium and \'Add Electron\' on chlorine to build their ions. Rank Na⁺, Na, and Cl⁻ from smallest size to largest!',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: ['strip', 'add', 'reset'],
@@ -257,7 +261,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Three Costs',
-    prompt: 'Order lithium, beryllium and boron by stripping cost, then find what breaks the climb. Costs are in kJ/mol, the energy to strip a mole of atoms.',
+    prompt: 'Strip an electron from lithium, beryllium, and boron! Which order reflects the energy cost to remove that electron, and what causes the dip?',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: ['strip', 'reset'],
@@ -293,7 +297,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Magnesium\'s Three',
-    prompt: 'Find which charge magnesium takes as an ion.',
+    prompt: 'Keep stripping electrons from magnesium one after another! Based on the dramatic energy jump, which stable ionic charge does magnesium form?',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: ['strip', 'reset'],
@@ -329,7 +333,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'The Pull From Outside',
-    prompt: 'Order sodium, carbon, nitrogen and fluorine by how hard each pulls on a pair of electrons it shares, weakest first.',
+    prompt: 'When atoms share electrons in a bond, smaller atoms with stronger core pulls tug harder! Rank Na, C, N, and F by their pulling strength, weakest first.',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: [],

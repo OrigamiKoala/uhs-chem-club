@@ -114,7 +114,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench sorts atoms down a chute into separate bins by weight. Use "Tip Sample" to pour atoms and "Read Code" to inspect the atoms in each bin.'
     },
-    prompt: 'Say why this chlorine sample splits across two bins instead of landing in one.',
+    prompt: 'We ran this chlorine sample from the salt flat through the deflector chute. Why did it split across two bins instead of landing in one?',
     controls: ['pour', 'code'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', code: 'chlorine', note: '40 atoms, sealed at the mine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
@@ -156,7 +156,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Run It Twice',
-    prompt: 'Work out how many atoms in every hundred are the lighter weight.',
+    prompt: 'Let\'s test whether the isotope ratio stays constant across scoops. For every 100 atoms, how many atoms fall into the lighter weight bin?',
     controls: ['pour'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
@@ -197,7 +197,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where 35.5 Sits',
-    prompt: 'This chlorine sample is listed at mass 35.5. Say where that figure sits between its two weights.',
+    prompt: 'The refinery reference sheet lists chlorine\'s mass at 35.5. Where does 35.5 fall relative to the two isotope weights?',
     controls: ['pour'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
@@ -243,7 +243,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Work Out the Average',
-    prompt: 'Work out what one atom of this boron sample weighs on average.',
+    prompt: 'Vess needs to catalog this boron sample from the depot. What does one atom of this boron sample weigh on average?',
     controls: ['pour'],
     hoppers: [
       { id: 'h3', label: 'SAMPLE A', note: '40 atoms, nothing listed for it', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
@@ -278,7 +278,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Only One Bin',
-    prompt: 'Say why this fluorine sample lists at 19.0, a whole number, when the last two did not.',
+    prompt: 'Surprise result on this fluorine sample — all 40 atoms landed in bin 19! Why does fluorine have a neat whole-number mass of 19.0?',
     controls: ['pour'],
     hoppers: [
       { id: 'h4', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 19, n: 40 }] }
@@ -320,7 +320,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Weighed Without Opening It',
-    prompt: 'This sealed neon sample is never opened. Work out how many of its atoms in every hundred weigh 20 rather than 22.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You now have access to the bench balance. Press "Weigh Sample" to measure the total mass of the sealed canister without opening it.'
+    },
+    prompt: 'We can analyze this sealed neon cylinder without breaking the seal! Weighing the canister, how many of its atoms in every 100 weigh 20 rather than 22?',
     controls: ['balance'],
     hoppers: [
       { id: 'h5', label: 'SAMPLE A', note: 'sealed, 40 atoms, bins cut for weights 20 and 22', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] }
@@ -357,7 +361,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Name Three Samples',
-    prompt: 'Match each sample to the element whose listed mass it fits.',
+    prompt: 'Three unlabeled crates were recovered from the raider depot. Match each sample to the element whose listed mass it fits.',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'ha', label: 'SAMPLE A', note: 'unlabelled, 40 atoms', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] },
@@ -402,7 +406,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Claims',
-    prompt: 'Say which of the three samples really are natural chlorine.',
+    prompt: 'Suspect mineral shipments arrived at the depot. Which samples match the natural isotope mix of genuine chlorine, and which have been altered?',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'j1', label: 'SAMPLE A', note: 'sold as natural chlorine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
@@ -469,7 +473,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'Every listed mass on the chart is now a number you can read. The next bench uses those numbers to count atoms far too small to count, by weighing them.'
+      body: 'Excellent assaying! Now that you know how average atomic mass works, let\'s see how chemists count trillions of atoms just by weighing them.'
     }
   ]
 };

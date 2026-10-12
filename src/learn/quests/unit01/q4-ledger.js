@@ -60,7 +60,7 @@ const TOOL_TEXT = {
     what: 'Clips the charge meter to the atom: protons push the needle up, electrons pull it down.'
   }],
   strip: [{
-    from: 1,
+    from: 5,
     key: 'Fire Stripper',
     what: 'Knocks one electron off the outermost shell. The nucleus is not touched.'
   }]
@@ -134,9 +134,9 @@ export const STAGES = [
     field: 'core',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench shows one atom at a time: "The middle" shows its nucleus and "Outside" shows its electrons. "Read Needle" clips on a charge meter, and "Fire Stripper" knocks one electron off.'
+      body: 'This bench shows one atom at a time: "The middle" shows its nucleus and "Outside" shows its electrons. "Read Needle" clips on a charge meter to measure charge.'
     },
-    prompt: 'Count the protons, the neutrons and the electrons in the atom on this bench.',
+    prompt: 'Our survey scanner picked up a neutral atom from the salt flats. Count its protons, neutrons, and electrons to log its profile.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
@@ -182,7 +182,7 @@ export const STAGES = [
   {
     title: 'Read the Label',
     field: 'core',
-    prompt: 'Work out how many neutrons and electrons the sealed chlorine sample holds.',
+    prompt: 'The refinery label gives clues for this sealed chlorine canister! How many neutrons and electrons does Sample B hold?',
     controls: ['field', 'meter'],
     specimens: [
       {
@@ -234,7 +234,7 @@ export const STAGES = [
   {
     title: 'Which Ones Behave Alike',
     field: 'rings',
-    prompt: 'Say which of the three samples will react the same way as Sample A.',
+    prompt: 'We have three unknown mineral fragments. Which ones will react the exact same way as Sample A?',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'ref', label: 'SAMPLE A', note: 'the one to match', core: { marked: 17, blank: 18 }, rings: [2, 8, 7] },
@@ -283,7 +283,7 @@ export const STAGES = [
   {
     title: 'The Needle Is Not on Zero',
     field: 'rings',
-    prompt: 'Work out how many protons and electrons the sealed sodium sample holds.',
+    prompt: 'Look at the charge meter — the needle isn\'t on zero! Using the label and the meter, how many protons and electrons does this sealed sodium ion hold?',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'r2', label: 'SAMPLE A', note: 'Label: lithium (Li), atomic number 3, mass number 7. Open.', core: { marked: 3, blank: 4 }, rings: [2] },
@@ -334,7 +334,11 @@ export const STAGES = [
   {
     title: 'Drive It Positive',
     field: 'rings',
-    prompt: 'Drive Sample A to a charge of plus two, and log how many electrons that took.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You now have an electron stripper on the bench. Use "Fire Stripper" to remove outer electrons, or "Reset Sample" to put them back.'
+    },
+    prompt: 'Try using the stripper tool to turn Sample A into a +2 ion! Strip away electrons until the charge reads plus two, and record how many electrons you removed.',
     controls: ['field', 'meter', 'strip', 'reset'],
     specimens: [
       { id: 'd', label: 'SAMPLE A', note: 'mounted, open to the instrument', core: { marked: 12, blank: 12 }, rings: [2, 8, 2] }
@@ -372,7 +376,7 @@ export const STAGES = [
   {
     title: 'Fill It Past Neutral',
     field: 'rings',
-    prompt: 'Load Sample A with enough electrons to fill its outer shell completely.',
+    prompt: 'Atoms love full outer shells! Load Sample A with enough electrons to completely fill its valence shell, even if it goes past neutral.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'e', label: 'SAMPLE A', note: 'mounted, all its electrons removed', core: { marked: 17, blank: 18 }, rings: [] }
@@ -422,7 +426,7 @@ export const STAGES = [
   {
     title: 'Cancel The Charges',
     field: 'rings',
-    prompt: 'Work out the fewest atoms of each sample that add up to zero charge.',
+    prompt: 'To form a stable compound, positive and negative charges must cancel. What is the smallest ratio of Sample A and Sample B atoms that balances to zero charge?',
     controls: ['field', 'meter'],
     specimens: [
       { id: 's', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 12, blank: 12 }, rings: [2, 8] },
@@ -467,7 +471,7 @@ export const STAGES = [
   {
     title: 'File Them All',
     field: 'core',
-    prompt: 'Say how each of the four sealed samples differs from the oxygen reference.',
+    prompt: 'Four sealed canisters were recovered from the abandoned depot. Compare each sample to our standard oxygen reference to see how it differs.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'std', label: 'SAMPLE A', note: 'Label: oxygen (O), atomic number 8, mass number 16, needle 0. Open.', core: { marked: 8, blank: 8 }, rings: [2, 6] },
@@ -537,7 +541,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'Look at the catalogue cards again. Almost none of the masses are whole numbers, but a mass number always is, and the next bench shows you why.'
+      body: 'Great work balancing the ledger! Next up, we\'ll discover why atomic masses on the periodic table aren\'t neat whole numbers.'
     }
   ]
 };

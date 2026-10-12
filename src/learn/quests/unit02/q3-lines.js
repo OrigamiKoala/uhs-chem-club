@@ -64,9 +64,9 @@ export const STAGES = [
     title: 'Filament and Tube',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench spreads a light into its colours on a scale in nm. Tap a position on a band to read it.'
+      body: 'Welcome to the optical spectrograph! Let\'s pass light from lamps and glowing aurora gases through our prisms to reveal the patterns they cast.'
     },
-    prompt: 'Find how the hot filament\'s light differs from the gas tube\'s.',
+    prompt: 'Compare the lantern\'s glowing hot filament with the tube of excited gas. How does their light differ when spread across our scale?',
     labels: LABELS,
     controls: [],
     rigs: [
@@ -104,7 +104,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Name the Gas',
-    prompt: 'Identify the gas in the sealed tube.',
+    prompt: 'We recovered an unlabelled surveyor canister from the snowfields! Match its emission lines against our reference gases to identify what\'s inside.',
     labels: LABELS,
     controls: [],
     rigs: [
@@ -143,7 +143,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Light Through Cool Gas',
-    prompt: 'Find what the cool gas does to the filament\'s light.',
+    prompt: 'Now let\'s shine the continuous filament lamp through a cloud of cold hydrogen gas. What happens to the light on the bench?',
     labels: LABELS,
     controls: [],
     rigs: [
@@ -182,7 +182,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Which Jump',
-    prompt: 'Find which jump on the ladder gives the red line. The ladder is the plate of rungs beside the tube.',
+    prompt: 'Watch the atomic ladder beside the tube! Which electron drop between rungs produces the bright red emission line?',
     labels: LABELS,
     controls: [],
     ladder: 'ladder',
@@ -224,7 +224,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Energy of a Line',
-    prompt: 'Give the energy of the 486 nm line.',
+    prompt: 'Let\'s measure the energy of that brilliant cyan 486 nm emission line! Use the worked 656 nm line on the bench to guide your calculation.',
     labels: LABELS,
     controls: [],
     ladder: 'ladder',
@@ -256,7 +256,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Line Not Yet Seen',
-    prompt: 'Predict which line the jump from the fifth rung to the second makes.',
+    prompt: 'The Bohr ladder predicts lines before we even measure them! Which wavelength matches an electron dropping from the 5th rung to the 2nd?',
     labels: LABELS,
     controls: [],
     ladder: 'ladder',
@@ -296,7 +296,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Past the Top',
-    prompt: 'Find what happens to an electron given more than the whole ladder holds.',
+    prompt: 'What happens if an electron absorbs an intense burst of energy that exceeds the very top of the ladder?',
     labels: LABELS,
     controls: [],
     ladderTop: 'gone',
@@ -335,7 +335,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Helium Does Not Fit',
-    prompt: 'Explain why the ladder fits hydrogen but not helium.',
+    prompt: 'The Bohr model works wonders for hydrogen, but fails to predict helium\'s spectrum. Why doesn\'t the simple ladder fit helium?',
     labels: LABELS,
     controls: [],
     ladder: 'ladder',

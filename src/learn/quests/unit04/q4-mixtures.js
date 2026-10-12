@@ -74,7 +74,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench holds tanks of mixed gas, each gas drawn in its own stencilled shape with a counter of its own. A key pours one tank into another, and the gauge reads the whole tank at once.'
     },
-    prompt: 'Say how the reading on Tank A after the pour compares with the two readings before it.',
+    prompt: 'We\'re transferring neon into a helium tank on the harvest deck! Compare the combined pressure on Tank A after the pour with the two individual tank pressures before.',
     controls: ['pour', 'reset'],
     keys: { pour: 'Pour B Into A' },
     ...BASE,
@@ -114,7 +114,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Each Alone',
-    prompt: 'Say how a gas in the mixture pushes compared with the same amount of that gas alone in an identical tank.',
+    prompt: 'Our sensors track each gas species independently. In a mixed tank, how hard does a gas push against the walls compared to the same amount of that gas completely alone?',
     controls: ['temp'],
     temps: [27, 127, 227], tempStart: 1, tempList: 'C',
     ...BASE,
@@ -154,7 +154,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'A Share of the Particles',
-    prompt: 'Give the fraction of the particles in the tank that are helium.',
+    prompt: 'A gas blend contains 2.0 moles of helium and 3.0 moles of neon. Calculate the fractional share of all particles in the tank that are helium!',
     controls: ['temp'],
     temps: [27, 127], tempStart: 1, tempList: 'C',
     ...BASE,
@@ -184,7 +184,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'A Share of the Push',
-    prompt: 'Give the partial pressure of oxygen in the tank, in kilopascals.',
+    prompt: 'Oxygen makes up 1.0 mole out of 4.0 total moles in this life-support tank. What is the partial pressure exerted by oxygen in kPa?',
     controls: [],
     ...BASE,
     labels: { gauge: 'PRESSURE', share: 'MOLE FRACTION' },
@@ -215,7 +215,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Up the Mountain',
-    prompt: 'Give the partial pressure of oxygen in the air 5500 m up, in kilopascals.',
+    prompt: 'Our aerostat glider climbs up through the cloud deck to 5,500 meters altitude. What is the partial pressure of oxygen in this thinner air, in kilopascals?',
     controls: ['volume'],
     volumes: AIR_ROOMS, volumeStart: 1,
     volumeNames: ['sea level', '3000 m', '5500 m', '8850 m'],
@@ -249,7 +249,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Gas That Reacts With Nothing',
-    prompt: 'Say what adding argon does to the push of the oxygen already in the tank.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now introduce a third unreactive gas to the mixture. Press "Add Argon" to inject argon into the tank alongside nitrogen and oxygen.'
+    },
+    prompt: 'We\'re injecting inert argon gas into a breathing tank containing nitrogen and oxygen. What happens to the wall push from oxygen when argon is added?',
     controls: ['feed', 'reset'],
     keys: { feed: 'Add Argon' },
     ...BASE,
@@ -285,7 +289,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Rank by Push',
-    prompt: 'Put the three gases in the tank in order of partial pressure, largest first.',
+    prompt: 'This manifold holds a mix of helium, nitrogen, and carbon dioxide. Rank the three gases from highest partial pressure to lowest!',
     controls: ['temp'],
     temps: [27, 127, 227], tempStart: 1, tempList: 'C',
     ...BASE,
@@ -319,7 +323,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Pulling One Out',
-    prompt: 'Give the moles of carbon dioxide in the sealed tank.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A chemical scrubber is now installed on the tank line. Press "Trap Carbon Dioxide" to selectively absorb all CO₂ and watch the total pressure drop.'
+    },
+    prompt: 'We just engaged an active chemical scrubber to selectively trap carbon dioxide! From the resulting pressure drop, determine how many moles of CO₂ were trapped.',
     controls: ['trap', 'reset'],
     keys: { trap: 'Trap Carbon Dioxide' },
     ...BASE,

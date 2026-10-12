@@ -71,7 +71,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench tunes a lamp, draws its light as a wave, and spreads it into colours. Wavelength is the distance from one crest to the next, in nm — billionths of a metre — and frequency is how many crests pass each second.'
     },
-    prompt: 'Find how the wave changes as the lamp tunes from red to violet.',
+    prompt: 'We are out on the frozen flats of Lanternfall tuning a surveyor lamp. How does the wave shape change as the lamp dials from red to violet?',
     labels: EARNED_LABELS,
     controls: ['tune'],
     settings: RED_TO_VIOLET,
@@ -113,7 +113,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Twice as Far Apart',
-    prompt: 'Find the lamp setting with twice the wavelength of Sample A.',
+    prompt: 'Lanternfall lanterns trade crest distance for pulse rate! Find the lamp setting with twice the wavelength of Sample A.',
     labels: EARNED_LABELS,
     controls: ['tune'],
     settings: [700, 650, 600, 550, 500, 450, 400, 350],
@@ -147,7 +147,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Spacing Times Count',
-    prompt: 'Find how fast the light from these lamps travels.',
+    prompt: 'Every beam here cuts across the ice at the same rate. Find how fast the light from these lamps travels.',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -178,7 +178,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'A Lamp Not on the Bench',
-    prompt: 'Give the frequency of a 600 nm lamp.',
+    prompt: 'A surveyor lantern in the distance shines at 600 nm. Calculate the frequency of this 600 nm lamp.',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -208,7 +208,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Lowest to Highest',
-    prompt: 'Order the four lamps from lowest frequency to highest.',
+    prompt: 'Four signal lamps line the frozen runway. Order the four lamps from lowest frequency to highest.',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -250,7 +250,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Past the Ends',
-    prompt: 'Find which detector answers Sample B, which the eye cannot see.',
+    prompt: 'Sample B glows outside human sight. Which detector strip picks up the invisible emission from Sample B?',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -291,7 +291,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Radio to X-ray',
-    prompt: 'Match each source to its frequency.',
+    prompt: 'Different equipment across the colony transmits at wildly different wavelengths. Match each source to its frequency.',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -338,7 +338,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Names on the Lamps',
-    prompt: 'Give the frequency of the sodium lamp.',
+    prompt: 'The yellow glow across the ice comes from a mining lamp. Calculate the frequency of this sodium lamp.',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -383,7 +383,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'The next bench asks something a wave cannot answer: why does a bright red lamp fail to free a single electron from a plate that a faint violet one frees at once?'
+      body: 'Great job measuring light on the ice! Next, we\'ll investigate why a bright red lamp can\'t knock an electron loose, but faint violet light can.'
     }
   ]
 };

@@ -116,7 +116,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench tips a sample down a chute into bins by weight and counts what lands in each. "Weigh Sample" puts a whole sample on a balance, even one too full to tip.'
     },
-    prompt: 'One crate here is too full to tip. Say how many atoms it holds.',
+    prompt: 'We have an uncounted bulk crate of carbon from the mining depot. We can\'t count atoms by hand — how many atoms are in the crate based on its weight?',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', code: 'carbon', note: '40 atoms, kept as the counting standard', bins: [{ mass: 12, n: 40 }] },
@@ -151,7 +151,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'What One Molecule Weighs',
-    prompt: 'Say what one molecule of the second sample weighs.',
+    prompt: 'The refinery crew needs formula weights for molecular fuel canisters. What does one molecule of Sample B (methane, CH4) weigh?',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'h3', label: 'SAMPLE A', note: '40 molecules, one oxygen to two hydrogen', particle: 'molecule', bins: [{ mass: 18, n: 40 }] },
@@ -192,7 +192,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Three Samples of Sixty',
-    prompt: 'Every one of these three samples holds sixty atoms. Say what their weights have in common.',
+    prompt: 'We counted out sixty atoms of three different elements. Compare their weights on the scale — what pattern do the three totals reveal?',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'h5', label: 'SAMPLE A', code: 'hydrogen', note: '60 atoms, counted in', bins: [{ mass: 1, n: 60 }] },
@@ -240,7 +240,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Measure Out a Matching Count',
-    prompt: 'You have weighed out 12.0 grams of carbon. Say how many grams of oxygen hold exactly the same number of atoms.',
+    prompt: 'You\'ve weighed out 12.0 grams of carbon. How many grams of oxygen would you need to balance out the exact same number of atoms?',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'h5', label: 'SAMPLE A', code: 'hydrogen', note: '60 atoms, counted in', bins: [{ mass: 1, n: 60 }] },
@@ -279,7 +279,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'A Mole of a Compound',
-    prompt: 'Each molecule of this sample is one carbon and two oxygen. Say how many grams of it you would weigh out to have one mole of its molecules.',
+    prompt: 'Each molecule of Sample A has one carbon and two oxygens (CO2). How many grams do you need on the balance to have one mole of these molecules?',
     controls: ['balance'],
     hoppers: [
       { id: 'h8', label: 'SAMPLE A', note: 'a full crate, one carbon to two oxygen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 44, n: 200 }] }
@@ -325,7 +325,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Drum of Seventy-Two',
-    prompt: 'Say how many moles of this sample the drum holds.',
+    prompt: 'A sealed drum of pure water sits on the scale, reading 72 grams. How many moles of water does the drum hold?',
     controls: ['balance'],
     hoppers: [
       { id: 'h9', label: 'SAMPLE A', note: 'one drum, one oxygen to two hydrogen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 18, n: 4 }] }
@@ -362,7 +362,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Moles of Each Element',
-    prompt: 'You have two moles of this sample. Say how many moles of hydrogen that holds.',
+    prompt: 'You have two moles of water molecules (H2O). Since each molecule contains two hydrogens, how many moles of hydrogen atoms are in the drum?',
     controls: ['balance'],
     hoppers: [
       { id: 'h10', label: 'SAMPLE A', note: 'two drums, one oxygen to two hydrogen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 18, n: 2 }] }
@@ -399,7 +399,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Which Drum Holds the Most',
-    prompt: 'Say which of the three drums holds the most atoms.',
+    prompt: 'Three different element drums sit on the loading dock. Which of the three drums contains the highest total count of individual atoms?',
     controls: ['balance'],
     hoppers: [
       { id: 'd1', label: 'SAMPLE A', code: 'carbon', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 12, n: 5 }] },
@@ -458,7 +458,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'That is the last bench on Tallow. One machine still stands on the flat: the refinery hopper, built from everything you have measured here.'
+      body: 'You\'ve mastered weighing and counting on Tallow! Now, one colossal rogue machine stands on the salt flats: the refinery Hopper. Let\'s put everything together!'
     }
   ]
 };

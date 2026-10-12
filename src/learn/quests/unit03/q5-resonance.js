@@ -57,9 +57,9 @@ export const STAGES = [
     title: 'Who Owns What',
     briefing: {
       speaker: SPEAKER,
-      body: 'The same slate, with two new tools: one prints the charge each atom carries, and one reads how long a bond measures in the real molecule. A drawing can be fixed on the slate so it can only be read.'
+      body: 'Use "Show Charges" to inspect the electrical charge each atom carries in a drawing. Drawings can also be fixed on the slate so they can only be read.'
     },
-    prompt: 'Find the atom in this drawing that owns one electron too few, to mark where the plating is weakest.',
+    prompt: 'The quarry welding torch is sputtering over this carbon monoxide plate! Check the charges and find which atom owns one electron too few.',
     controls: ['charges'],
     rigs: [fixed('a', 'DRAWING A', 'CO', DRAWINGS.CO)],
     widget: {
@@ -86,7 +86,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Two Drawings',
-    prompt: 'Pick the better drawing of carbon dioxide, to choose the plan the cutters trust.',
+    prompt: 'Our rockcutters have two competing structural plans for carbon dioxide. Compare their charges and pick the more stable drawing!',
     controls: ['charges'],
     rigs: [
       fixed('a', 'DRAWING A', 'CO2', DRAWINGS.CO2_triple),
@@ -113,7 +113,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where the Minus Goes',
-    prompt: 'Pick the better drawing of the SCN⁻ ion, to put its charge on the atom that holds it best.',
+    prompt: 'The crucible assay spotted thiocyanate (SCN⁻) in the slag! Compare the two drawings and pick the one that places the negative charge on the atom that pulls hardest.',
     controls: ['charges'],
     rigs: [
       fixed('a', 'DRAWING A', 'SCN', DRAWINGS.SCN_s),
@@ -140,7 +140,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Same Length',
-    prompt: 'Say how the two bonds in ozone compare in length, to test the drawing against the measured rock.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You now have a bond length gauge. Use "Read Length" to measure the actual distance between atoms in the real molecule.'
+    },
+    prompt: 'Our atmospheric sniffers detected ozone (O₃) near the basalt arch. Gauge both bonds in ozone to see how their measured lengths compare!',
     controls: ['hand', 'gauge', 'clear'],
     rigs: [slate('a', 'PLATE A', 'O3')],
     widget: {
@@ -170,7 +174,11 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Three Places',
-    prompt: 'File every arrangement of nitrate\'s double bond, to list each face the warden stone can show.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'You can now save valid arrangements to a catalogue. Tap "File Drawing" whenever all lamps light up to record that candidate structure.'
+    },
+    prompt: 'The blast crew found nitrate crystals embedded in the warden stone! File every equivalent drawing of nitrate showing where its double bond can sit.',
     controls: ['hand', 'record', 'clear'],
     rigs: [slate('a', 'PLATE A', 'NO3')],
     widget: { type: 'none' },
@@ -198,7 +206,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Four Over Three',
-    prompt: 'Give the bond order of each bond in nitrate, to grade the seam the drill follows.',
+    prompt: 'Our pneumatic drill needs to know how sturdy each bond in nitrate really is. What is the effective bond order of each bond in the nitrate blend?',
     controls: ['gauge'],
     rigs: [fixed('a', 'DRAWING A', 'NO3', DRAWINGS.NO3_a)],
     handGauge: true,
@@ -232,7 +240,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Which Counts Most',
-    prompt: 'Say which of carbonate\'s drawings counts most, to weigh each face of the tunnel wall.',
+    prompt: 'Limestone carbonate reinforces this tunnel wall! Looking at carbonate\'s three drawings, which one contributes most to the real structure?',
     controls: [],
     rigs: [
       fixed('a', 'DRAWING A', 'CO3', DRAWINGS.CO3_a),
@@ -266,7 +274,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Nothing to Move',
-    prompt: 'Say why water has no resonance, to close the last gap in the tunnel map.',
+    prompt: 'Our team is checking the coolant lines before descending into the deeper quarry drifts. Why does water have no resonance structures?',
     controls: [],
     rigs: [fixed('a', 'DRAWING A', 'H2O', DRAWINGS.H2O)],
     widget: {

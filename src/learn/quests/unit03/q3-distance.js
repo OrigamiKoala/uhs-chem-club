@@ -70,7 +70,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'The crank winds two atoms apart or together, and the trace on the plate — energy against separation — keeps every point it passes through. Clear Trace wipes it and starts the trace again.'
     },
-    prompt: 'Find the separation — how far apart — where the two atoms hold the least energy, to mark where the bond sits before the breakers move in.',
+    prompt: 'Wind the separation crank to chart the energy between two hydrogen atoms! At what distance does the potential energy reach its lowest, most stable point?',
     controls: ['crank', 'clear'],
     settings: SET_H,
     start: 14,
@@ -99,7 +99,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Pulling Apart',
-    prompt: 'Give the energy it takes to pull this pair completely apart, to size the breaker charge.',
+    prompt: 'Now let\'s test a hydrogen-chlorine pair. Measure the depth of the energy well from zero: how much energy does it take to pull the two atoms completely apart?',
     controls: ['crank', 'clear'],
     settings: SET_HCL,
     start: 10,
@@ -129,7 +129,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Squeezed',
-    prompt: 'Say what the energy does when the atoms are squeezed closer than their bond length — their easiest distance.',
+    prompt: 'Crank the atoms inward past their ideal distance! What happens to the system\'s potential energy when the atoms are squeezed too close together?',
     controls: ['crank', 'clear'],
     settings: SET_H,
     start: 6,
@@ -165,7 +165,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Two Sizes',
-    prompt: 'Say why the chlorine pair bottoms out further out than the hydrogen pair, to explain the wider break in big-atom rock.',
+    prompt: 'Compare the energy curves for H–H and Cl–Cl. Why does the chlorine pair\'s energy minimum sit significantly farther out than hydrogen\'s?',
     controls: ['crank', 'clear'],
     settings: SET_TWO,
     start: 12,
@@ -204,7 +204,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Three Wells',
-    prompt: 'Put the three carbon–carbon bonds in order, longest first, to sort the seam the cutters will follow.',
+    prompt: 'Trace the curves for single, double, and triple carbon-carbon bonds! Arrange these three bonds in order from longest bond distance to shortest.',
     controls: ['crank', 'clear'],
     settings: SET_CC,
     start: 13,
@@ -238,7 +238,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Deeper Too',
-    prompt: 'Say how bond length goes with bond energy across those three bonds, to pick which seam breaks first.',
+    prompt: 'Compare the well depths and bond distances of the three carbon-carbon bonds. How does bond distance relate to the energy required to break the bond?',
     controls: ['crank', 'clear'],
     settings: SET_CC,
     start: 13,
@@ -276,7 +276,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Salt Strength',
-    prompt: 'Put the three salts in order of how strongly their ions grip, strongest first, to rank the pass walls.',
+    prompt: 'Survey the ionic lattice strengths of NaCl, KCl, and MgO! Rank these three salts from strongest ionic hold to weakest.',
     controls: [],
     rigs: [lattice('a', 'NaCl'), lattice('b', 'KCl'), lattice('c', 'MgO')],
     widget: {
@@ -305,7 +305,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Melting Higher',
-    prompt: 'Say which of the two salts melts higher, to choose the wall the tunnel avoids.',
+    prompt: 'Between NaF and NaCl, the ionic charges match (+1 and -1). Which salt requires more thermal energy to melt?',
     controls: [],
     rigs: [lattice('a', 'NaF'), lattice('b', 'NaCl')],
     widget: {

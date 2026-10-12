@@ -154,7 +154,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench holds a card for each element, and tapping a card reads it. To file a card, tap it, then tap the slot on the board you want it in.'
     },
-    prompt: 'File the six cards in the slots, fewest protons on the left.',
+    prompt: 'We need to catalog the elements we found across the refinery flats. File the six cards into the reference strip, from fewest protons on the left to most on the right.',
     controls: ['reader', 'file', 'clear'],
     masked: true,
     board: { label: 'Reference strip', rows: [['#p1', '#p2', '#p3', '#p4', '#p5', '#p6']] },
@@ -198,7 +198,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Find The Repeat',
-    prompt: 'Ignoring the first two cards, count how many go by before the outer-shell count starts over at 1.',
+    prompt: 'Notice how the electron pattern repeats! Skipping the first two cards, how many go by before the outer-shell count starts over at 1?',
     controls: ['reader'],
     board: { label: 'All 18 cards, in atomic number order', rows: [RUN_18] },
     drawer: [],
@@ -232,7 +232,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Lay The Last Row',
-    prompt: 'File the eight loose cards into the empty bottom row, in atomic number order, left to right.',
+    prompt: 'Help finish assembling the refinery\'s reference chart. File the eight loose cards from the drawer into the empty bottom row, ordered left to right by atomic number.',
     controls: ['reader', 'file', 'clear'],
     board: {
       label: 'Reference chart',
@@ -278,7 +278,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Read Down, Not Along',
-    prompt: 'Say how many electrons the cards in column 6 keep in their outer shells.',
+    prompt: 'Columns reveal chemical families! Look at column 6 (oxygen and sulfur) — how many electrons do cards in this column keep in their outer shells?',
     controls: ['reader'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
@@ -312,7 +312,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Ones That Will Not Trade',
-    prompt: 'Pick the group whose cards never trade an electron.',
+    prompt: 'Vess wants to know which elements won\'t react or corrode equipment. Which group on the chart never trades an electron?',
     controls: ['reader'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
@@ -355,7 +355,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Sort Them By What They Do',
-    prompt: 'File each of the six cards by what it does when another atom is pushed at it.',
+    prompt: 'Let\'s categorize how these elements react when pushed together. Classify each of the six cards by what it does with its valence electrons.',
     controls: ['reader'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
@@ -400,7 +400,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'The Card That Is Not There',
-    prompt: 'One slot in the chart is empty. Work out the missing card\'s atomic number and what it will do.',
+    prompt: 'A survey card is missing from the board! Use the surrounding patterns to figure out the missing card\'s atomic number and what it will do.',
     controls: ['reader'],
     board: {
       label: 'Reference chart — one slot empty',
@@ -452,7 +452,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Fill The Chart',
-    prompt: 'File each of the four unmarked cards into the slot its proton count gives it.',
+    prompt: 'Four mystery cards from the refinery yard need filing. Determine where each unmarked card belongs on the chart based on its proton count.',
     controls: ['reader', 'file', 'clear'],
     masked: true,
     board: {
@@ -509,7 +509,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'Each card also carries a mass. The next bench describes every atom by its protons, its neutrons and its electrons, and the one after that asks why that mass is never a whole number.'
+      body: 'Nice detective work assembling the chart! Next, we\'ll track how protons, neutrons, and electrons balance inside each atom.'
     }
   ]
 };
