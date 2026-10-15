@@ -222,6 +222,8 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   `autoEnter()` is called synchronously before awaits. Landscape enforced via manifest + orientation lock
   + `#orientation-guard`. Phone CSS lives in `mobile*.css` (≤768 px; `mobile-game.css` not width-scoped);
   hooks `m-screen m-<name>`, `m-grid-1`, `m-head`, `m-tap`, etc. Canvas sizes from `visualViewport`.
+  In-world terminals (Star Map, Standings, Inventory, …) take the glass edge to edge below the HUD on a
+  phone in both portrait and landscape; they are never docked to one side.
 
 ## Quest 1 — Charge Gardens of Erebus (20 stages, 650 XP; 715 with bonuses)
 
@@ -236,7 +238,8 @@ Epilogue (`QUEST1_EPILOGUE`) is duplicated in `Quests.gs`, the proxy and `quest.
 never sees the picker) → `#/bridge` → `#/quest`, `#/leaderboard`, `#/inventory`, `#/quarters`,
 `#/settings`, `#/admin`, `#/learn…`, `#/drills`, `#/casefile`, `#/contracts`, `#/crew/:id`. Nav labels
 match page titles: BRIDGE, STAR MAP, LEARN, STANDINGS, INVENTORY, CREW. Star Map has Story (galaxy chart,
-`ui/galaxy-map.js`, draws only what it's handed) and Contracts tabs.
+`ui/galaxy-map.js`, draws only what it's handed) and Contracts tabs. A world's plate and list row carry
+one key, `Enter` (no world name, Briefing, Drills, Zoom To or Whole Map; those live inside the world).
 
 ## Progression and story
 

@@ -864,7 +864,6 @@ export function mountGalaxyMap(root, opts) {
         <div class="galaxy-keys" role="group" aria-label="Chart view">
           <button type="button" class="btn-secondary quest-btn-sm m-tap" data-gx="in" aria-label="Zoom in">+</button>
           <button type="button" class="btn-secondary quest-btn-sm m-tap" data-gx="out" aria-label="Zoom out">−</button>
-          <button type="button" class="btn-secondary quest-btn-sm m-tap" data-gx="fit">Whole Map</button>
         </div>
       </div>
       <aside class="galaxy-plate plate" aria-live="polite"></aside>
@@ -963,12 +962,10 @@ export function mountGalaxyMap(root, opts) {
         ${(n.actions || []).map(a => a.href
           ? `<a href="${escHtml(a.href)}" class="${a.primary ? 'btn-primary' : 'btn-secondary'} quest-btn-sm m-tap${a.cls ? ' ' + escHtml(a.cls) : ''}"${a.worldId ? ` data-world-id="${escHtml(a.worldId)}"` : ''} style="text-decoration: none;">${escHtml(a.label)}</a>`
           : `<button type="button" class="${a.primary ? 'btn-primary' : 'btn-secondary'} quest-btn-sm m-tap" data-gx-action="${escHtml(a.id)}">${escHtml(a.label)}</button>`).join('')}
-        <button type="button" class="btn-secondary quest-btn-sm m-tap" data-gx="focus">Zoom To</button>
       </div>
     `;
     plate.querySelectorAll('[data-gx-action]').forEach(btn =>
       btn.addEventListener('click', () => onAction?.(btn.dataset.gxAction, n)));
-    plate.querySelector('[data-gx="focus"]')?.addEventListener('click', () => focusNode(selectedId));
   }
 
   function select(id, { focus = false } = {}) {
@@ -1117,7 +1114,6 @@ export function mountGalaxyMap(root, opts) {
 
   root.querySelectorAll('[data-gx="in"]').forEach(b => b.addEventListener('click', () => zoomAt(w / 2, h / 2, 1.5)));
   root.querySelectorAll('[data-gx="out"]').forEach(b => b.addEventListener('click', () => zoomAt(w / 2, h / 2, 1 / 1.5)));
-  root.querySelectorAll('.galaxy-keys [data-gx="fit"]').forEach(b => b.addEventListener('click', () => flyTo(wholeMap())));
 
   let ro = null;
   if (typeof ResizeObserver === 'function') {

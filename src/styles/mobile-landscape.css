@@ -388,12 +388,12 @@
   .stage-dock-bar > .quest-btn-sm { min-height: 40px; }
 }
 
-/* ---- T4 terminals: docked right, so the walk keeps the left of the glass ---- */
+/* ---- T4 terminals: most of the glass, not a strip down one side ---- */
 @media (pointer: coarse) and (max-height: 500px) and (orientation: landscape) {
   .in-world-terminal {
-    left: auto;
+    left: max(6px, env(safe-area-inset-left));
     right: max(6px, env(safe-area-inset-right));
-    width: min(58vw, 460px);
+    width: auto;
     top: calc(var(--hud-h) + 4px);
     bottom: max(6px, env(safe-area-inset-bottom));
     padding: 0.7rem 0.8rem;

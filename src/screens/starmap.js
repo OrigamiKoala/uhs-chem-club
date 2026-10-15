@@ -15,8 +15,6 @@ import { QUEST1_STORY } from "../story/quest1.js";
 import { tierManager } from "../three/tier.js";
 import { WORLDS } from "../learn/curriculum.js";
 import { worldStatus, worldProgress, isQuestComplete } from "../learn/progress.js";
-import { canWalk } from "../learn/worlds3d.js";
-import { practiceKey, bindPracticeKeys } from "./learn-world.js";
 import { openWorldStoryModal, openCampaignStoryModal } from "../story/story-modal.js";
 import { mountGalaxyMap } from "../ui/galaxy-map.js";
 import { ACTS, getEpisode } from "../story/saga.js";
@@ -99,7 +97,6 @@ function learnPanel() {
         const tag = LEARN_STATUS_TAG[st] || LEARN_STATUS_TAG.charted;
         const prog = worldProgress(w);
         const enterable = st === "open" || st === "complete";
-        const walk = enterable && canWalk(w.id);
         return `
           <article class="holo-card map-learn-row learn-${st}">
             <div class="map-learn-code">
@@ -115,9 +112,8 @@ function learnPanel() {
             </div>
             <div class="map-learn-action" style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
               ${enterable
-                ? `<a href="#/learn/${esc(w.id)}" class="btn-primary quest-btn-sm m-tap learn-enter-btn" data-world-id="${esc(w.id)}" style="text-decoration: none;">${walk ? `Enter ${esc(w.world)}` : "Enter"}</a>`
+                ? `<a href="#/learn/${esc(w.id)}" class="btn-primary quest-btn-sm m-tap learn-enter-btn" data-world-id="${esc(w.id)}" style="text-decoration: none;">Enter</a>`
                 : `<span class="eyebrow map-learn-blocked">${st === "locked" ? "Locked" : "Coming soon"}</span>`}
-              ${practiceKey(w)}
             </div>
           </article>
         `;
@@ -153,24 +149,20 @@ function galaxyNodes(cleared, isComplete) {
     quests: [{ done: isComplete, live: true, title: "The Charge Gardens" }],
     progressText: `${cleared} / ${TOTAL_STAGES} pylons lit`,
     actions: [
-      { id: "erebus-enter", label: isComplete ? "Replay" : cleared > 0 ? "Continue" : "Launch", primary: true },
-      { id: "briefing", label: "Briefing" }
+      { id: "erebus-enter", label: "Enter", primary: true }
     ]
   };
   const learn = WORLDS.map(w => {
     const st = worldStatus(w);
     const prog = worldProgress(w);
     const enterable = st === "open" || st === "complete";
-    const live = w.quests.some(q => q.status === "live");
     const actions = [];
     if (enterable) {
       actions.push({
-        label: canWalk(w.id) ? `Enter ${w.world}` : "Enter",
+        label: "Enter",
         href: `#/learn/${w.id}`, primary: true, cls: "learn-enter-btn", worldId: w.id
       });
     }
-    actions.push({ id: "briefing", label: "Briefing" });
-    if (live) actions.push({ label: "Drills", href: `#/drills/${w.id}` });
     return {
       id: w.id,
       code: w.code,
@@ -199,7 +191,6 @@ let activeGalaxy = null;
 function bindTabs(container) {
   // The Learn panel is drawn on both tiers, so its Problems keys are wired here
   // rather than twice in renderStarMap.
-  bindPracticeKeys(container);
 
   container.querySelector('#campaign-story-briefing-btn')?.addEventListener('click', () => {
     openCampaignStoryModal();
@@ -410,8 +401,7 @@ export function renderStarMap(container) {
       acts: ACTS.map(a => ({ id: a.id, label: a.title.split(":")[0] })),
       reducedMotion: Boolean(session.reduceMotion),
       onAction: (id, node) => {
-        if (id === "briefing") openWorldStoryModal(node.id);
-        else if (id === "erebus-enter") handleSector01Enter();
+        if (id === "erebus-enter") handleSector01Enter();
       }
     });
   }
