@@ -74,7 +74,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench holds tanks of mixed gas, each gas drawn in its own stencilled shape with a counter of its own. A key pours one tank into another, and the gauge reads the whole tank at once.'
     },
-    prompt: 'We\'re transferring neon into a helium tank on the harvest deck! Compare the combined pressure on Tank A after the pour with the two individual tank pressures before.',
+    prompt: 'How does the combined pressure on Tank A compare with the individual pressures before the pour?',
     controls: ['pour', 'reset'],
     keys: { pour: 'Pour B Into A' },
     ...BASE,
@@ -114,7 +114,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Each Alone',
-    prompt: 'Our sensors track each gas species independently. In a mixed tank, how hard does a gas push against the walls compared to the same amount of that gas completely alone?',
+    prompt: 'How does the pressure of a gas in a mixture compare with the same gas alone in the tank?',
     controls: ['temp'],
     temps: [27, 127, 227], tempStart: 1, tempList: 'C',
     ...BASE,
@@ -153,49 +153,61 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'A Share of the Particles',
-    prompt: 'A gas blend contains 2.0 moles of helium and 3.0 moles of neon. Calculate the fractional share of all particles in the tank that are helium!',
+    title: 'A Share of the Push',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'This tank now draws two bars: each gas\'s share of the particles, and each gas\'s share of the push on the walls.'
+    },
+    prompt: 'How does each gas\'s share of the push compare with its share of the particles?',
     controls: ['temp'],
-    temps: [27, 127], tempStart: 1, tempList: 'C',
+    temps: [27, 127, 227], tempStart: 1, tempList: 'C',
     ...BASE,
+    labels: { gauge: 'PRESSURE', share: 'SHARE' },
+    show: { share: true },
     gaugeMax: 900,
-    rigs: [tank('a', 'TANK A', [{ gas: 'He', n: 2.0 }, { gas: 'Ne', n: 3.0 }], { V: 25, note: 'a tank of two gases' })],
-    widget: { type: 'decimal', label: 'Fraction of the particles that are helium', min: 0, max: 1, step: 0.05 },
+    rigs: [tank('a', 'TANK A', [{ gas: 'He', n: 1.0 }, { gas: 'N2', n: 2.0 }, { gas: 'CO2', n: 1.0 }], { V: 25, inset: 'share', note: 'a tank of three gases' })],
+    widget: {
+      type: 'choice', label: 'Share of the push, against share of the particles',
+      options: [
+        choice('equal', 'The two shares are equal for every gas'),
+        choice('light', 'Light gases take a bigger share of the push than of the particles'),
+        choice('heavy', 'Heavy gases take a bigger share of the push than of the particles'),
+        choice('none', 'The two shares have nothing to do with each other')
+      ]
+    },
     hints: [
-      'Read the amount of each gas in the table on the plate.',
-      'Compare the amount of helium with the amount of all the gas in the tank.',
-      'Divide the moles of helium by the moles of helium and neon together.'
+      'Read the two bars for each gas in the tank.',
+      'Compare each gas\'s share of the particles with its share of the push, then turn the temperature dial and look again.',
+      'Check whether the two shares differ for any gas, light or heavy, at any setting.'
     ],
     check(state) {
-      if (state.decimal === null || state.decimal === undefined) return { ok: false, notYet: true, msg: 'Set the fraction.' };
-      const m = readOf(STAGES[2], 'a', {});
-      const want = m.rows.find(r => r.gas === 'He').x;
-      if (Math.abs(state.decimal - want) < 0.025) return { ok: true };
-      if (state.decimal > 1 || state.decimal < 0) return { ok: false, msg: 'A share of the particles cannot be below nothing or above all of them.' };
-      return { ok: false, msg: 'Compare the helium with the helium and the neon together, and not with the neon alone.' };
+      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose how the shares compare.' };
+      if (state.choice === 'equal') return { ok: true };
+      if (state.choice === 'none') return { ok: false, msg: 'Read both bars for one gas and then for another: the two bars are not independent.' };
+      return { ok: false, msg: 'Compare the two bars for the lightest gas and for the heaviest one before you decide which takes more.' };
     },
     reward: {
-      log: 'The helium is a fixed share of the moles.',
+      log: 'A gas\'s share of the particles is its share of the push.',
       title: 'Mole Fraction',
-      body: 'The fraction of the moles in a mixture that belong to one gas is its mole fraction: the moles of the gas over the total moles. The mole fractions in a mixture always add up to one.'
+      body: 'The share of the moles that belong to one gas is its mole fraction: the moles of the gas over the total moles. A gas pushes with the same share of the total pressure, and the mole fractions in a mixture add up to one.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    title: 'A Share of the Push',
-    prompt: 'Oxygen makes up 1.0 mole out of 4.0 total moles in this life-support tank. What is the partial pressure exerted by oxygen in kPa?',
+    title: 'A Gas\'s Own Push',
+    prompt: 'How hard does the oxygen in this tank push on its own, in kilopascals?',
     controls: [],
     ...BASE,
     labels: { gauge: 'PRESSURE', share: 'MOLE FRACTION' },
     show: { share: true },
     gaugeMax: 300,
-    rigs: [tank('a', 'TANK A', [{ gas: 'N2', n: 3.0 }, { gas: 'O2', n: 1.0 }], { V: 49.88, note: 'a tank of two gases' })],
+    rigs: [tank('a', 'TANK A', [{ gas: 'N2', n: 3.0 }, { gas: 'O2', n: 1.0 }], { V: 49.88, inset: 'share', note: 'a tank of two gases' })],
     widget: { type: 'number', label: 'Oxygen pushes with, in kPa', min: 0, max: 200, step: 10 },
     hints: [
       'Read the gauge for the whole tank and the mole fraction of each gas.',
       'Compare the share of the moles that oxygen makes up with the share of the push it should make up.',
-      'Multiply the oxygen\'s mole fraction by the total pressure on the gauge.'
+      'Combine oxygen\'s mole fraction with the total pressure on the gauge.'
     ],
     check(state) {
       if (state.number === null || state.number === undefined) return { ok: false, notYet: true, msg: 'Set the pressure.' };
@@ -215,7 +227,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Up the Mountain',
-    prompt: 'Our aerostat glider climbs up through the cloud deck to 5,500 meters altitude. What is the partial pressure of oxygen in this thinner air, in kilopascals?',
+    prompt: 'What is the partial pressure of oxygen at 5,500 meters altitude, in kilopascals?',
     controls: ['volume'],
     volumes: AIR_ROOMS, volumeStart: 1,
     volumeNames: ['sea level', '3000 m', '5500 m', '8850 m'],
@@ -253,7 +265,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now introduce a third unreactive gas to the mixture. Press "Add Argon" to inject argon into the tank alongside nitrogen and oxygen.'
     },
-    prompt: 'We\'re injecting inert argon gas into a breathing tank containing nitrogen and oxygen. What happens to the wall push from oxygen when argon is added?',
+    prompt: 'What happens to the partial pressure of oxygen when unreactive argon gas is added to the tank?',
     controls: ['feed', 'reset'],
     keys: { feed: 'Add Argon' },
     ...BASE,
@@ -289,7 +301,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Rank by Push',
-    prompt: 'This manifold holds a mix of helium, nitrogen, and carbon dioxide. Rank the three gases from highest partial pressure to lowest!',
+    prompt: 'Rank the three gases from highest partial pressure to lowest.',
     controls: ['temp'],
     temps: [27, 127, 227], tempStart: 1, tempList: 'C',
     ...BASE,
@@ -327,11 +339,24 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'A chemical scrubber is now installed on the tank line. Press "Trap Carbon Dioxide" to selectively absorb all CO₂ and watch the total pressure drop.'
     },
-    prompt: 'We just engaged an active chemical scrubber to selectively trap carbon dioxide! From the resulting pressure drop, determine how many moles of CO₂ were trapped.',
+    prompt: 'Determine how many moles of carbon dioxide were trapped from the measured pressure drop.',
     controls: ['trap', 'reset'],
     keys: { trap: 'Trap Carbon Dioxide' },
     ...BASE,
     reference: ['R = 8.31 kPa·L per mol·K'],
+    slate: {
+      template: 'n = (ΔP · V) / (R · T)',
+      target: 'n',
+      targetUnit: 'mol',
+      slots: [
+        { id: 'dP', label: 'ΔP', unit: 'kPa' },
+        { id: 'V', label: 'V', unit: 'L' },
+        { id: 'R', label: 'R', unit: 'kPa·L/(mol·K)', constant: true, value: 8.31 },
+        { id: 'T', label: 'T', unit: 'K' }
+      ],
+      constants: [{ id: 'R', label: 'R', value: 8.31, unit: 'kPa·L/(mol·K)' }],
+      evaluate: ({ dP, V, R, T }) => (dP * V) / (R * T)
+    },
     gaugeMax: 250,
     rigs: [tank('a', 'TANK A', [{ gas: 'N2', n: 0.4 }, { gas: 'CO2', n: 0.2 }], { sealed: true, note: 'a sealed tank of two gases' })],
     widget: { type: 'decimal', label: 'Moles of carbon dioxide', min: 0, max: 1, step: 0.05 },
@@ -445,7 +470,7 @@ function blankState() { return {}; }
 export const SOLUTIONS = [
   { choice: 'sum' },
   { choice: 'alone' },
-  { decimal: 0.4 },
+  { choice: 'equal' },
   { number: 50 },
   { number: 11 },
   { choice: 'same' },
@@ -456,7 +481,7 @@ export const SOLUTIONS = [
 export const MISSES = [
   { choice: 'average' },
   { choice: 'less' },
-  { decimal: 0.6 },
+  { choice: 'light' },
   { number: 200 },
   { number: 21 },
   { choice: 'more' },

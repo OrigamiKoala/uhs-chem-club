@@ -115,11 +115,11 @@ export const LINES = {
 
 /** What a symbol stands for. */
 export const GASES = {
-  H: { name: 'hydrogen', symbol: 'H', code: 'CAT 01' },
-  He: { name: 'helium', symbol: 'He', code: 'CAT 02' },
-  Ne: { name: 'neon', symbol: 'Ne', code: 'CAT 10' },
-  Na: { name: 'sodium', symbol: 'Na', code: 'CAT 11' },
-  Hg: { name: 'mercury', symbol: 'Hg', code: 'CAT 80' }
+  H: { name: 'hydrogen', symbol: 'H' },
+  He: { name: 'helium', symbol: 'He' },
+  Ne: { name: 'neon', symbol: 'Ne' },
+  Na: { name: 'sodium', symbol: 'Na' },
+  Hg: { name: 'mercury', symbol: 'Hg' }
 };
 
 /** The scale the prism lays its band on. */

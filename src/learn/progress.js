@@ -55,21 +55,32 @@ export function questProgress(quest) {
   };
 }
 
-/** Quest N is open once quest N-1 is complete. Quest 1 is open with the world. A boss opens once every bench is complete. */
+/** Quest N is open once quest N-1 is complete. Quest 1 is open with the world. A boss opens once every required bench is complete. */
 export function isQuestOpen(world, quest) {
   if (!world || !quest) return false;
   if (quest.status !== 'live') return false;
   if (!isWorldOpen(world)) return false;
   if (quest.arena === 'boss') {
-    const liveBenches = world.quests.filter(q => q.status === 'live' && q.arena !== 'boss');
-    return liveBenches.length > 0 && liveBenches.every(isQuestComplete);
+    const requiredBenches = world.quests.filter(q => q.status === 'live' && q.arena !== 'boss' && !q.optional);
+    return requiredBenches.length > 0 && requiredBenches.every(isQuestComplete);
   }
   if (quest.index === 0) return true;
-  const prev = world.quests[quest.index - 1];
-  // A charted quest cannot block the road behind it — if the one before this has
-  // not been built yet, this one opens as soon as the world does.
-  if (prev.status !== 'live') return true;
-  return isQuestComplete(prev);
+  // An optional quest never holds the one after it shut.
+  let prevIdx = quest.index - 1;
+  while (prevIdx >= 0) {
+    const prev = world.quests[prevIdx];
+    if (prev.status !== 'live') {
+      prevIdx--;
+      continue;
+    }
+    if (isQuestComplete(prev)) return true;
+    if (prev.optional) {
+      prevIdx--;
+      continue;
+    }
+    return false;
+  }
+  return true;
 }
 
 /** 'complete' | 'open' | 'locked' | 'charted' — one word for the map badge. */
@@ -85,15 +96,15 @@ export function worldProgress(world) {
   if (!world) return { questsComplete: 0, questTotal: 0, liveTotal: 0, pct: 0, complete: false };
   const live = world.quests.filter(q => q.status === 'live');
   const questsComplete = live.filter(isQuestComplete).length;
-  const liveBenches = live.filter(q => q.arena !== 'boss');
-  const benchesComplete = liveBenches.filter(isQuestComplete).length;
+  const requiredBenches = live.filter(q => q.arena !== 'boss' && !q.optional);
+  const benchesComplete = requiredBenches.filter(isQuestComplete).length;
   return {
     questsComplete,
     questTotal: world.questCount,
     liveTotal: live.length,
     pct: live.length ? Math.round((questsComplete / live.length) * 100) : 0,
-    // A boss gates only story; world completion & practice sets open once all benches are finished.
-    complete: liveBenches.length > 0 && benchesComplete >= liveBenches.length
+    // A boss gates only story; world completion & practice sets open once all required benches are finished.
+    complete: requiredBenches.length > 0 && benchesComplete >= requiredBenches.length
   };
 }
 
@@ -121,7 +132,10 @@ export function worldStatus(world) {
 /** The quest the player should walk into next, or null if the world is done. */
 export function nextQuest(world) {
   if (!world) return null;
-  return world.quests.find(q => q.status === 'live' && !isQuestComplete(q)) || null;
+  const uncompleted = world.quests.filter(q => q.status === 'live' && !isQuestComplete(q));
+  const openRequired = uncompleted.find(q => !q.optional && isQuestOpen(world, q));
+  if (openRequired) return openRequired;
+  return uncompleted.find(q => isQuestOpen(world, q)) || null;
 }
 
 /** The world the "Continue" key points at. */

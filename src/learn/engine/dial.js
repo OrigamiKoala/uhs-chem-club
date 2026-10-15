@@ -65,6 +65,9 @@ export function dialMarkup(opts) {
       `<i class="lq-knob-detent" data-detent="${v}" style="transform: rotate(${angleFor(v, min, max)}deg)"></i>`
     );
   }
+  const displayVal = (opts.scaleLabels && opts.scaleLabels[value])
+    ? opts.scaleLabels[value]
+    : (opts.format ? opts.format(value) : value);
   return `
     <div class="lq-dial" data-dial="${escText(id)}">
       <span class="form-label" id="${escText(id)}-label">${escText(opts.label)}</span>
@@ -88,7 +91,7 @@ export function dialMarkup(opts) {
       <span class="lq-dial-segs" aria-hidden="true">
         ${Array.from({ length: max - min + 1 }, (_, i) => `<i data-seg="${min + i}"></i>`).join('')}
       </span>
-      <span class="lq-dial-value" aria-hidden="true">${value}</span>
+      <span class="lq-dial-value" aria-hidden="true">${displayVal}</span>
     </div>
   `;
 }
@@ -115,7 +118,15 @@ export function paintDial(host, value, opts = {}) {
     d.classList.toggle('lit', Number(d.dataset.detent) <= value);
   });
   const readout = root.querySelector('.lq-dial-value');
-  if (readout) readout.textContent = String(value);
+  if (readout) {
+    if (opts.scaleLabels && opts.scaleLabels[value]) {
+      readout.textContent = opts.scaleLabels[value];
+    } else if (opts.format) {
+      readout.textContent = opts.format(value);
+    } else {
+      readout.textContent = String(value);
+    }
+  }
 }
 
 /**

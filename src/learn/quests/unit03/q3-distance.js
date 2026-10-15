@@ -70,8 +70,8 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'The crank winds two atoms apart or together, and the trace on the plate — energy against separation — keeps every point it passes through. Clear Trace wipes it and starts the trace again.'
     },
-    prompt: 'Wind the separation crank to chart the energy between two hydrogen atoms! At what distance does the potential energy reach its lowest, most stable point?',
-    controls: ['crank', 'clear'],
+    prompt: 'At what separation distance does the potential energy of the hydrogen pair reach its minimum?',
+    controls: ['crank', 'clear', 'letgo'],
     settings: SET_H,
     start: 14,
     rigs: [pair('a', 'PAIR A', 'H-H', { note: 'two hydrogen atoms' })],
@@ -99,8 +99,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Pulling Apart',
-    prompt: 'Now let\'s test a hydrogen-chlorine pair. Measure the depth of the energy well from zero: how much energy does it take to pull the two atoms completely apart?',
-    controls: ['crank', 'clear'],
+    prompt: 'How much energy does it take to pull the hydrogen-chlorine pair completely apart from its minimum?',
+    controls: ['crank', 'clear', 'letgo'],
     settings: SET_HCL,
     start: 10,
     rigs: [pair('a', 'PAIR A', 'H-Cl', { note: 'a hydrogen atom and a chlorine atom' })],
@@ -129,8 +129,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Squeezed',
-    prompt: 'Crank the atoms inward past their ideal distance! What happens to the system\'s potential energy when the atoms are squeezed too close together?',
-    controls: ['crank', 'clear'],
+    prompt: 'What happens to the potential energy when the two atoms are squeezed closer than their bond length?',
+    controls: ['crank', 'clear', 'letgo'],
     settings: SET_H,
     start: 6,
     rigs: [pair('a', 'PAIR A', 'H-H', { note: 'two hydrogen atoms' })],
@@ -165,8 +165,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Two Sizes',
-    prompt: 'Compare the energy curves for H–H and Cl–Cl. Why does the chlorine pair\'s energy minimum sit significantly farther out than hydrogen\'s?',
-    controls: ['crank', 'clear'],
+    prompt: 'Why does the chlorine pair energy minimum sit farther out than the hydrogen pair minimum?',
+    controls: ['crank', 'clear', 'letgo'],
     settings: SET_TWO,
     start: 12,
     rigs: [
@@ -204,8 +204,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Three Wells',
-    prompt: 'Trace the curves for single, double, and triple carbon-carbon bonds! Arrange these three bonds in order from longest bond distance to shortest.',
-    controls: ['crank', 'clear'],
+    prompt: 'Order the three carbon-carbon bonds from longest bond distance to shortest.',
+    controls: ['crank', 'clear', 'letgo'],
     settings: SET_CC,
     start: 13,
     rigs: [
@@ -238,8 +238,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Deeper Too',
-    prompt: 'Compare the well depths and bond distances of the three carbon-carbon bonds. How does bond distance relate to the energy required to break the bond?',
-    controls: ['crank', 'clear'],
+    prompt: 'How does bond distance relate to the energy required to break the bond?',
+    controls: ['crank', 'clear', 'letgo'],
     settings: SET_CC,
     start: 13,
     rigs: [
@@ -276,7 +276,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Salt Strength',
-    prompt: 'Survey the ionic lattice strengths of NaCl, KCl, and MgO! Rank these three salts from strongest ionic hold to weakest.',
+    prompt: 'Rank the three salts from strongest lattice energy to weakest.',
     controls: [],
     rigs: [lattice('a', 'NaCl'), lattice('b', 'KCl'), lattice('c', 'MgO')],
     widget: {
@@ -305,7 +305,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Melting Higher',
-    prompt: 'Between NaF and NaCl, the ionic charges match (+1 and -1). Which salt requires more thermal energy to melt?',
+    prompt: 'Which salt requires more thermal energy to melt, NaF or NaCl?',
     controls: [],
     rigs: [lattice('a', 'NaF'), lattice('b', 'NaCl')],
     widget: {
@@ -486,18 +486,49 @@ export function mount(container, ctx) {
     } else if (hit.kind === 'lattice') {
       const c = hit.cation; const a = hit.anion;
       const q = n => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
-      runner.readout(`Plate // ${hit.lattice}`, `${c.sym} ${q(c.charge)}, ${c.radius} pm. ${a.sym} ${q(a.charge)}, ${a.radius} pm. Centres ${hit.centres} pm apart.`);
+      runner.readout(`Plate // ${hit.lattice}`, `${c.sym} ${q(c.charge)}, ${c.radius} pm. ${a.sym} ${q(a.charge)}, ${a.radius} pm. Centres ${hit.centres} pm apart. Pull ${hit.pull}.`);
     }
   }
 
+  let rollTimer = null;
+  function rollToBottom() {
+    if (rollTimer) clearInterval(rollTimer);
+    const stage = runner.stage;
+    const rig = stage.rigs.find(r => r.head === 'pair');
+    if (!rig) return;
+    const r0 = PAIRS[rig.pair]?.r0;
+    if (r0 == null || !stage.settings) return;
+    let bestIdx = 1, bestDiff = Infinity;
+    stage.settings.forEach((s, idx) => {
+      const diff = Math.abs(s - r0);
+      if (diff < bestDiff) { bestDiff = diff; bestIdx = idx + 1; }
+    });
+    const cur = runner.state.setting;
+    if (cur === bestIdx) return;
+    const dir = bestIdx > cur ? 1 : -1;
+    let nowSetting = cur;
+    rollTimer = setInterval(() => {
+      if (nowSetting === bestIdx) {
+        clearInterval(rollTimer);
+        rollTimer = null;
+        return;
+      }
+      nowSetting += dir;
+      setSetting(nowSetting);
+    }, 50);
+  }
+
   function onTool(tool) {
-    if (tool === 'clear') {
+    if (tool === 'letgo') {
+      rollToBottom();
+    } else if (tool === 'clear') {
       bench.clearTrace();
       readNow(true);
     }
   }
 
   function onLoad(stage, i, r) {
+    if (rollTimer) { clearInterval(rollTimer); rollTimer = null; }
     bench.setPlates(stage.rigs, { settings: stage.settings || [], setting: r.state.setting });
     bench.setSelectable(false);
 
@@ -508,6 +539,7 @@ export function mount(container, ctx) {
       dials.setting = { min: 1, max: stage.settings.length, onChange: v => setSetting(v) };
       parts.push(`
         <div class="cb-field" role="group" aria-label="Trace">
+          <button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="letgo">Let Go</button>
           <button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="clear">Clear Trace</button>
         </div>
       `);
@@ -525,7 +557,10 @@ export function mount(container, ctx) {
     STAGES, DEBRIEF, blankState, toolNoteFor,
     setup: r => { bench = BondBench(r.frame.instrumentHost, { onProbe, onSetting: v => setSetting(v) }); },
     onLoad,
-    onDispose: () => bench?.dispose()
+    onDispose: () => {
+      if (rollTimer) { clearInterval(rollTimer); rollTimer = null; }
+      bench?.dispose();
+    }
   });
 
   runner.start();

@@ -105,6 +105,7 @@ export const UNIT_03 = {
       arena: 'bench',
       stageCount: 8,
       status: 'live',
+      optional: true,
       module: () => import('../quests/unit03/q9-orbitals.js')
     },
     {

@@ -59,7 +59,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'Use "Show Charges" to inspect the electrical charge each atom carries in a drawing. Drawings can also be fixed on the slate so they can only be read.'
     },
-    prompt: 'The quarry welding torch is sputtering over this carbon monoxide plate! Check the charges and find which atom owns one electron too few.',
+    prompt: 'Which atom in carbon monoxide carries a positive formal charge?',
     controls: ['charges'],
     rigs: [fixed('a', 'DRAWING A', 'CO', DRAWINGS.CO)],
     widget: {
@@ -86,7 +86,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Two Drawings',
-    prompt: 'Our rockcutters have two competing structural plans for carbon dioxide. Compare their charges and pick the more stable drawing!',
+    prompt: 'Which drawing of carbon dioxide is more stable based on formal charges?',
     controls: ['charges'],
     rigs: [
       fixed('a', 'DRAWING A', 'CO2', DRAWINGS.CO2_triple),
@@ -113,7 +113,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where the Minus Goes',
-    prompt: 'The crucible assay spotted thiocyanate (SCN⁻) in the slag! Compare the two drawings and pick the one that places the negative charge on the atom that pulls hardest.',
+    prompt: 'Which drawing of thiocyanate places the negative formal charge on the more electronegative atom?',
     controls: ['charges'],
     rigs: [
       fixed('a', 'DRAWING A', 'SCN', DRAWINGS.SCN_s),
@@ -144,7 +144,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You now have a bond length gauge. Use "Read Length" to measure the actual distance between atoms in the real molecule.'
     },
-    prompt: 'Our atmospheric sniffers detected ozone (O₃) near the basalt arch. Gauge both bonds in ozone to see how their measured lengths compare!',
+    prompt: 'How do the measured bond lengths of the two oxygen-oxygen bonds in ozone compare?',
     controls: ['hand', 'gauge', 'clear'],
     rigs: [slate('a', 'PLATE A', 'O3')],
     widget: {
@@ -178,7 +178,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now save valid arrangements to a catalogue. Tap "File Drawing" whenever all lamps light up to record that candidate structure.'
     },
-    prompt: 'The blast crew found nitrate crystals embedded in the warden stone! File every equivalent drawing of nitrate showing where its double bond can sit.',
+    prompt: 'File every equivalent resonance structure of the nitrate ion.',
     controls: ['hand', 'record', 'clear'],
     rigs: [slate('a', 'PLATE A', 'NO3')],
     widget: { type: 'none' },
@@ -206,7 +206,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Four Over Three',
-    prompt: 'Our pneumatic drill needs to know how sturdy each bond in nitrate really is. What is the effective bond order of each bond in the nitrate blend?',
+    prompt: 'What is the effective bond order of each nitrogen-oxygen bond in the nitrate resonance hybrid?',
     controls: ['gauge'],
     rigs: [fixed('a', 'DRAWING A', 'NO3', DRAWINGS.NO3_a)],
     handGauge: true,
@@ -240,7 +240,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Which Counts Most',
-    prompt: 'Limestone carbonate reinforces this tunnel wall! Looking at carbonate\'s three drawings, which one contributes most to the real structure?',
+    prompt: 'Which of carbonate\'s three resonance drawings contributes most to its actual structure?',
     controls: [],
     rigs: [
       fixed('a', 'DRAWING A', 'CO3', DRAWINGS.CO3_a),
@@ -274,7 +274,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Nothing to Move',
-    prompt: 'Our team is checking the coolant lines before descending into the deeper quarry drifts. Why does water have no resonance structures?',
+    prompt: 'Why does water have no resonance structures?',
     controls: [],
     rigs: [fixed('a', 'DRAWING A', 'H2O', DRAWINGS.H2O)],
     widget: {

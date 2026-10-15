@@ -73,9 +73,9 @@ export const STAGES = [
     title: 'A Plate That Will Not Give',
     briefing: {
       speaker: SPEAKER,
-      body: 'Welcome to the photocell bench! We shine a surveyor lamp on metal plates inside a vacuum tube to see when electrons break loose, and track how fast the fastest ones fly.'
+      body: 'This bench shines a lamp on metal plates inside a vacuum tube to see when electrons break loose. Meters show how many electrons leave each second and how fast the fastest ones fly.'
     },
-    prompt: 'A frozen surveyor rig needs power! Shine the lamp on the sodium plate and adjust the controls until electrons start breaking free.',
+    prompt: 'Get electrons to break free from the sodium plate.',
     labels: LABELS,
     controls: ['tune', 'brightness'],
     settings: SWEEP,
@@ -108,7 +108,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Where It Wakes',
-    prompt: 'Let\'s see where the plate first awakens! Turn the dial to find the lowest frequency that knocks any electrons loose.',
+    prompt: 'Find the lowest frequency that knocks electrons loose from the sodium plate.',
     labels: LABELS,
     controls: ['tune'],
     settings: NEAR_SODIUM,
@@ -141,7 +141,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Turn Up the Lamp',
-    prompt: 'Crank up the surveyor lamp\'s brightness! What happens to the freed electrons above the threshold?',
+    prompt: 'What happens to the freed electrons when the lamp grows brighter?',
     labels: LABELS,
     controls: ['brightness'],
     brightnessStart: 2,
@@ -178,7 +178,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Turn Up the Frequency',
-    prompt: 'Now keep the brightness steady and shift toward higher frequencies (shorter wavelengths). What happens to the freed electrons?',
+    prompt: 'What happens to the freed electrons as the light shifts toward higher frequencies?',
     labels: LABELS,
     controls: ['tune'],
     settings: [550, 500, 450, 400, 350, 300],
@@ -219,10 +219,23 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'One Photon\'s Energy',
-    prompt: 'Surveyor lanterns need exact tuning! Using the plate\'s worked sodium threshold as a guide, what is the energy of a single photon at 500 nm?',
+    prompt: 'What is the energy of a single photon at 500 nm?',
     labels: LABELS,
     controls: [],
-    reference: ['Sodium plate: threshold 539 nm, which is 3.69 x 10^-19 J for each photon', 'Light speed: 3.00 x 10^8 m/s'],
+    reference: ['Sodium plate: threshold 539 nm, which is 3.69 x 10^-19 J for each photon', 'Planck constant h: 6.626 x 10^-34 J s', 'Light speed c: 3.00 x 10^8 m/s', 'Frequency at 500 nm: 6.00 x 10^14 / s'],
+    slate: {
+      template: 'E = h x f',
+      constants: [
+        { label: 'h', value: 6.626, unit: 'x 10^-34 J s' },
+        { label: 'f', value: 6.0, unit: 'x 10^14 / s' }
+      ],
+      slots: [
+        { id: 'h', label: 'Planck constant (h)', defaultUnit: 'x 10^-34 J s' },
+        { id: 'f', label: 'Frequency (f)', defaultUnit: 'x 10^14 / s' }
+      ],
+      evaluate: ({ h, f }) => Math.round((h * f) / 10),
+      targetUnit: 'x 10^-19 J'
+    },
     rigs: [{ id: 'cell', label: 'SODIUM PLATE', head: 'photocell', metal: 'Na', nm: 539, note: 'Na, lit at its threshold' }],
     widget: { type: 'decimal', label: 'Energy of one photon (x 10^-19 J)', min: 0, max: 8, step: 0.5 },
     hints: [
@@ -247,12 +260,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Three Plates',
-    prompt: 'We found three different metal plates salvaged from the ice. Test them on the bench and arrange them from loosest grip to tightest grip on their electrons.',
+    prompt: 'Order the three metal plates from loosest electron grip to tightest.',
     labels: LABELS,
     controls: ['tune'],
     settings: THREE_PLATES,
     start: 1,
     brightness: 3,
+    trendPlot: {
+      xLabel: 'Frequency', xUnit: 'x 10^14 / s',
+      yLabel: 'Speed', yUnit: 'x 10^5 m/s',
+      xMin: 4, xMax: 11,
+      yMin: 0, yMax: 10
+    },
     rigs: [
       { id: 'zn', label: 'ZINC PLATE', head: 'photocell', metal: 'Zn', tuned: true, note: 'Zn' },
       { id: 'cs', label: 'CESIUM PLATE', head: 'photocell', metal: 'Cs', tuned: true, note: 'Cs' },
@@ -288,7 +307,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Freeing Zinc',
-    prompt: 'Zinc holds onto its electrons stubbornly. Test the surveyor lamp samples: which one has enough energy to free electrons from the zinc plate?',
+    prompt: 'Which lamp sample has enough energy to free electrons from the zinc plate?',
     labels: LABELS,
     controls: ['tune'],
     settings: FOR_ZINC,
@@ -326,7 +345,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Why Brighter Fails',
-    prompt: 'A surveyor suggests blasting the zinc plate with a blindingly bright red spotlight. Why will that never knock a single electron free?',
+    prompt: 'Why does an intense red light fail to free electrons from the zinc plate?',
     labels: LABELS,
     controls: ['tune', 'brightness'],
     settings: [650, 400, 300, 250],
@@ -346,7 +365,7 @@ export const STAGES = [
     hints: [
       'Turn the red lamp up to full brightness on the zinc plate and watch the counter.',
       'Compare what brightness changes with what frequency changes, using stages three and four.',
-      'Ask whether more photons of too little energy can add up to one photon of enough energy.'
+      'Like a machine taking only dollar coins, a sack of pennies never buys a dollar item.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the reason.' };
@@ -358,7 +377,7 @@ export const STAGES = [
     reward: {
       log: 'More photons of too little energy never add up.',
       title: 'Both Wave and Particle',
-      body: 'Light spreads out and interferes like a wave, yet it arrives in photons that each carry energy h x frequency and free electrons one at a time. Neither picture alone explains the bench, so light is described as both a wave and a particle.',
+      body: 'Light acts as a wave, yet arrives in photons that free electrons one by one. Like a machine taking only dollar coins, a sack of pennies never buys a dollar item. This is called *wave-particle duality*.',
       last: true
     }
   }
@@ -520,23 +539,33 @@ export function mount(container, ctx) {
   /** What the plate is doing under the present dials, in the instrument's own words. */
   function readNow(quiet = false) {
     const stage = runner.stage;
+    const nm = nmNow();
     const rows = stage.rigs.map(r => {
-      const nm = r.tuned ? nmNow() : r.nm;
-      const plan = planPhotocell(r.metal, nm, runner.state.brightness);
+      const actualNm = r.tuned ? nm : r.nm;
+      const plan = planPhotocell(r.metal, actualNm, runner.state.brightness);
       // The moth on this plate sheds exactly what the counter counts.
-      runner.frame.foeReact(r.id, { nm, brightness: runner.state.brightness }, quiet);
+      runner.frame.foeReact(r.id, { nm: actualNm, brightness: runner.state.brightness }, quiet);
+      if (stage.trendPlot && actualNm != null) {
+        const f = 3000 / actualNm;
+        runner.plotPoint(f, plan.speed);
+      }
       return `${r.label}: ${plan.count} electrons a second, fastest ${plan.speed.toFixed(1)} x 10^5 m/s`;
     });
     runner.readout('Counter // plate', rows.join('. ') + '.');
   }
 
   function onLoad(stage, i, r) {
+    const packetView = i >= 2;
     bench.setRigs(stage.rigs, {
       settings: stage.settings || [],
       setting: r.state.setting || 1,
       brightness: r.state.brightness,
       brightnessDial: Boolean(stage.brightnessDial),
-      labels: stage.labels
+      labels: stage.labels,
+      packetView,
+      namedWorkFunction: i >= 5,
+      showPhotonEnergy: i >= 4,
+      stageIndex: i
     });
     bench.setSelectable(false);
 

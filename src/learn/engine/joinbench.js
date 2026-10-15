@@ -382,6 +382,18 @@ export function drawJoinField(ctx, o) {
       }
     });
 
+    // The full-shell lamp: lit when the outermost shell holds all it can (two on the first, eight after).
+    if (shells.length) {
+      const outer = shells[shells.length - 1];
+      const full = outer === (shells.length === 1 ? 2 : 8);
+      const lr = Math.max(3, g.dotR * 1.1);
+      ctx.fillStyle = full ? PHOSPHOR : '#16140f';
+      ctx.beginPath(); ctx.arc(s.x + s.R * 0.9, s.y - s.R * 0.9, lr, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(184, 175, 160, 0.55)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(s.x + s.R * 0.9, s.y - s.R * 0.9, lr, 0, Math.PI * 2); ctx.stroke();
+    }
+
     hits.push({ key: side, side, x: s.x, y: s.y, r: Math.max(s.R, g.nucleusR * 2) });
 
     // The code plate, stencilled under the piece. A bench that made you guess
@@ -521,6 +533,36 @@ export function planSlab(slab, state = 'intact') {
     return { cells, links, cols, rows };
   }
 
+  if (build === 'metallic') {
+    const across = slab.cols || 7;
+    const down = slab.rows || 5;
+    for (let y = 0; y < down; y++) {
+      for (let x = 0; x < across; x++) {
+        let px = (x + 0.5) / across;
+        let py = (y + 0.5) / down;
+        if (state === 'struck') {
+          // Bends under the hammer: rows shift smoothly along a shear angle
+          px += (y / down) * 0.07;
+        }
+        if (state === 'molten') {
+          px = 0.08 + rand() * 0.84;
+          py = 0.10 + rand() * 0.80;
+        }
+        cells.push({ x: px, y: py, sign: 1, group: 0 });
+      }
+    }
+    if (state !== 'molten') {
+      const at = (x, y) => y * across + x;
+      for (let y = 0; y < down; y++) {
+        for (let x = 0; x < across; x++) {
+          if (x + 1 < across) links.push([at(x, y), at(x + 1, y)]);
+          if (y + 1 < down) links.push([at(x, y), at(x, y + 1)]);
+        }
+      }
+    }
+    return { cells, links, cols: across, rows: down };
+  }
+
   // 'web': one connected piece, all the way through.
   const across = slab.cols || 7;
   const down = slab.rows || 5;
@@ -549,9 +591,10 @@ export function planSlab(slab, state = 'intact') {
  * Whether a current passes through a block in the state it is in now.
  *
  * Derived, never declared: a current needs charged pieces that are free to
- * move, so only a block built of charges conducts, and only once it is molten.
+ * move. Metals conduct solid and molten; ionic lattices conduct only once molten.
  */
 export function conductionOf(slab, molten) {
+  if (slab.build === 'metallic') return true;
   return slab.build === 'grid' && Boolean(molten);
 }
 
@@ -914,7 +957,25 @@ export class JoinBench {
       // A web does not break: there is no plane through it that does not cut
       // joins, so the blade stops. Nothing moves, and that is the reading.
       if (item.build !== 'web') item.state = 'struck';
-      return { result: item.build === 'web' ? 'held' : item.build === 'grid' ? 'cleaved' : 'crumbled', build: item.build };
+      const result = item.build === 'web' ? 'held'
+        : item.build === 'metallic' ? 'bent'
+        : item.build === 'grid' ? 'cleaved' : 'crumbled';
+      return { result, build: item.build };
+    });
+  }
+
+  /** Slide one layer of the block sideways to test charge alignment. */
+  shift(id) {
+    const item = this.itemFor(id);
+    if (!item || item.type !== 'slab') return Promise.resolve(null);
+    if (item.state === 'molten') {
+      return Promise.resolve({ result: 'molten', build: item.build });
+    }
+    return this.run(item, 480, () => {
+      item.struck = true;
+      if (item.build !== 'web') item.state = 'struck';
+      const result = item.build === 'grid' ? 'cleaved' : 'shifted';
+      return { result, build: item.build };
     });
   }
 

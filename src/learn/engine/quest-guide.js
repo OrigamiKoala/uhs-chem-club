@@ -1481,8 +1481,8 @@ export const QUEST_GUIDES = {
         "visualFormula": "Metal + Nonmetal ➔ Ionic Bond · Nonmetal + Nonmetal ➔ Covalent Bond"
       },
       "4": {
-        "goal": "Say how many CAT 17 atoms one CAT 12 atom needs in order to give away everything it has.",
-        "science": "Ionic Charge Neutrality: Magnesium (CAT 12, Group 2) loses 2 electrons to form Mg²⁺. Chlorine (CAT 17, Group 17) accepts 1 electron (Cl⁻). Therefore, 1 Mg requires 2 Cl atoms: MgCl₂.",
+        "goal": "Say how many chlorine atoms one magnesium atom needs in order to give away everything it has.",
+        "science": "Ionic Charge Neutrality: Magnesium (Group 2) loses 2 electrons to form Mg²⁺. Chlorine (Group 17) accepts 1 electron (Cl⁻). Therefore, 1 Mg requires 2 Cl atoms: MgCl₂.",
         "storyProblem": "Calculate the stoichiometric atom ratio needed to synthesize neutral magnesium chloride de-icing salt.",
         "howToTest": "Balance valence charges: Mg gives up 2 electrons; each Cl accepts 1 electron. Ratio = 1 Mg : 2 Cl.",
         "visualFormula": "Mg²⁺ (+2) + 2 Cl⁻ (−1 each) ➔ MgCl₂ (Net Charge = 0)"
@@ -1502,8 +1502,8 @@ export const QUEST_GUIDES = {
         "visualFormula": "Periodic Prediction: Noble Gas = None · Metal + Nonmetal = Ionic · Nonmetals = Covalent"
       },
       "7": {
-        "goal": "Say how many CAT 01 atoms one CAT 06 atom can hold.",
-        "science": "Valence Capacity in Covalent Compounds: Carbon (CAT 06) has 4 valence electrons and needs 4 more to complete its octet. Hydrogen (CAT 01) shares 1 electron, so Carbon bonds with exactly 4 Hydrogens: CH₄.",
+        "goal": "Say how many hydrogen atoms one carbon atom can hold.",
+        "science": "Valence Capacity in Covalent Compounds: Carbon has 4 valence electrons and needs 4 more to complete its octet. Hydrogen shares 1 electron, so Carbon bonds with exactly 4 Hydrogens: CH₄.",
         "storyProblem": "Determine the maximum hydrogen holding capacity of a single carbon atom to synthesize synthetic methane fuel.",
         "howToTest": "Calculate needed electrons for octet: Carbon needs 4 electrons, bonding with 4 individual hydrogen atoms.",
         "visualFormula": "Carbon (Needs 4 e⁻ for Octet) + 4 H (Share 1 e⁻ each) ➔ CH₄ (Methane)"
@@ -2878,56 +2878,56 @@ export const QUEST_GUIDES = {
     "stages": {
       "0": {
         "goal": "Set the tray to the recipe one molecule in these samples is built to.",
-        "science": "A Compound Has a Fixed Composition: Three samples from three places at three different sizes, and every molecule in all of them holds the same one CAT 08 and two CAT 01. A compound is not a blend you can mix to taste: it has a fixed composition, the same ratio of elements every time, wherever it came from. That is exactly what makes it a compound and not a mixture.",
+        "science": "A Compound Has a Fixed Composition: Three samples from three places at three different sizes, and every molecule in all of them holds the same one oxygen and two hydrogen. A compound is not a blend you can mix to taste: it has a fixed composition, the same ratio of elements every time, wherever it came from. That is exactly what makes it a compound and not a mixture.",
         "storyProblem": "Analyze three mineral samples from different mining sites to verify if they share an identical molecular recipe.",
-        "howToTest": "Examine molecules across all three samples in the scope: count the exact number of CAT 08 and CAT 01 atoms in each bonded unit.",
-        "visualFormula": "Law of Definite Proportions: Every Molecule Shares Exactly 1 CAT 08 : 2 CAT 01 (Fixed Ratio)"
+        "howToTest": "Examine molecules across all three samples in the scope: count the exact number of oxygen and hydrogen atoms in each bonded unit.",
+        "visualFormula": "Law of Definite Proportions: Every Molecule Shares Exactly 1 O : 2 H (Fixed Ratio)"
       },
       "1": {
         "goal": "Say which of the two samples is not a compound.",
-        "science": "Extra Atoms Make a Mixture: Sample B holds exactly the same molecules as Sample A, plus CAT 01 atoms sitting loose that no molecule would take in. Adding more of one element does not shift a compound to a new recipe; it leaves the extra alongside as a mixture, which is why the shaker found two layers in it. A compound takes exactly as many of each element as its bonds allow and not one more.",
+        "science": "Extra Atoms Make a Mixture: Sample B holds exactly the same molecules as Sample A, plus hydrogen atoms sitting loose that no molecule would take in. Adding more of one element does not shift a compound to a new recipe; it leaves the extra alongside as a mixture, which is why the shaker found two layers in it. A compound takes exactly as many of each element as its bonds allow and not one more.",
         "storyProblem": "A supplier claims Sample B is an enriched compound. Test both samples in the shaker to see if the extra atoms are bonded or loose filler.",
         "howToTest": "Run the shaker test on both samples: notice Sample B separates into two layers because excess unbonded atoms form a physical mixture.",
         "visualFormula": "Compound vs Mixture: Bonded Molecules Only = Pure Compound; Molecules + Loose Unbonded Atoms = Physical Mixture"
       },
       "2": {
-        "goal": "Say how much CAT 08 goes with one CAT 06 in each of the two samples.",
-        "science": "Two Compounds, Whole Numbers Apart: The same two elements can make more than one compound, but not any compound at all: for the same one CAT 06, Sample B holds exactly twice the CAT 08 that Sample A does. The ratios always come out as small whole numbers, because there is no such thing as half an atom to put into a molecule. Two different recipes of the same two elements are two different substances.",
-        "storyProblem": "Two distinct black oxides are synthesized from CAT 06 and CAT 08. Determine the relative ratio of CAT 08 bonded to CAT 06 in each sample.",
-        "howToTest": "Count atoms in both samples: Sample A has 1 CAT 08 per CAT 06, while Sample B has 2 CAT 08 per CAT 06 (small whole-number ratio: 1:2).",
-        "visualFormula": "Law of Multiple Proportions: Sample A (1:1 Ratio) vs Sample B (1:2 Ratio) ➔ Ratio of CAT 08 = 2 : 1"
+        "goal": "Say how much oxygen goes with one carbon in each of the two samples.",
+        "science": "Two Compounds, Whole Numbers Apart: The same two elements can make more than one compound, but not any compound at all: for the same one carbon, Sample B holds exactly twice the oxygen that Sample A does. The ratios always come out as small whole numbers, because there is no such thing as half an atom to put into a molecule. Two different recipes of the same two elements are two different substances.",
+        "storyProblem": "Two distinct black oxides are synthesized from carbon and oxygen. Determine the relative ratio of oxygen bonded to carbon in each sample.",
+        "howToTest": "Count atoms in both samples: Sample A has 1 oxygen per carbon, while Sample B has 2 oxygen per carbon (small whole-number ratio: 1:2).",
+        "visualFormula": "Law of Multiple Proportions: Sample A (1:1 Ratio) vs Sample B (1:2 Ratio) ➔ Ratio of O = 2 : 1"
       },
       "3": {
         "goal": "Set the counter to what one whole molecule in this sample weighs.",
-        "science": "A Molecule Weighs What Its Atoms Weigh: Adding up the listed mass of every atom in one molecule gives what that whole molecule weighs: 16.0 for the CAT 08 plus 1.0 for each of the two CAT 01 is 18.0. Nothing is lost when atoms bond and nothing is gained. That figure is as fixed for a compound as its recipe is, because it comes straight out of it.",
+        "science": "A Molecule Weighs What Its Atoms Weigh: Adding up the listed mass of every atom in one molecule gives what that whole molecule weighs: 16.0 for the oxygen plus 1.0 for each of the two hydrogen is 18.0. Nothing is lost when atoms bond and nothing is gained. That figure is as fixed for a compound as its recipe is, because it comes straight out of it.",
         "storyProblem": "Calculate the exact molecular mass of a single molecule of the solvent compound to calibrate the electronic balance.",
-        "howToTest": "Sum the atomic masses from the catalog: add the mass of one CAT 08 (16.0) and two CAT 01 atoms (1.0 each).",
+        "howToTest": "Sum the atomic masses from the catalog: add the mass of one oxygen (16.0) and two hydrogen atoms (1.0 each).",
         "visualFormula": "Molecular Mass = Sum of Atomic Masses: 1 × (16.0) + 2 × (1.0) = 18.0 u"
       },
       "4": {
-        "goal": "Work out how much of this sample's weight is CAT 08, out of every hundred.",
-        "science": "Percent Composition: The share of a compound's mass that comes from each element is its percent composition, and it falls straight out of the recipe: 16.0 of every 18.0 of mass here is CAT 08, which is 89 percent. Notice how far that is from the share of the ATOMS, which is one in three. Count and weight are two different questions, and a compound answers both with fixed numbers.",
-        "storyProblem": "Determine the mass percentage of CAT 08 in the solvent compound for the cargo manifest.",
-        "howToTest": "Divide the mass contributed by CAT 08 (16.0) by total molecular mass (18.0) and multiply by 100%.",
-        "visualFormula": "Percent Composition: % CAT 08 = (16.0 / 18.0) × 100% = 88.9% (≈ 89%)"
+        "goal": "Work out how much of this sample's weight is oxygen, out of every hundred.",
+        "science": "Percent Composition: The share of a compound's mass that comes from each element is its percent composition, and it falls straight out of the recipe: 16.0 of every 18.0 of mass here is oxygen, which is 89 percent. Notice how far that is from the share of the ATOMS, which is one in three. Count and weight are two different questions, and a compound answers both with fixed numbers.",
+        "storyProblem": "Determine the mass percentage of oxygen in the solvent compound for the cargo manifest.",
+        "howToTest": "Divide the mass contributed by oxygen (16.0) by total molecular mass (18.0) and multiply by 100%.",
+        "visualFormula": "Percent Composition: % O = (16.0 / 18.0) × 100% = 88.9% (≈ 89%)"
       },
       "5": {
-        "goal": "A sealed drum off the vent line runs 3 parts CAT 06 to 8 parts CAT 08 by weight. Pick the recipe it must hold.",
-        "science": "The Empirical Formula: Dividing each element's share of the mass by what one of its atoms weighs turns a weight ratio into a count ratio, and reducing that to the smallest whole numbers gives the empirical formula. Three parts CAT 06 to eight parts CAT 08 comes to 0.25 against 0.5, which is one to two. This is how a compound is identified out of a drum nobody can see inside.",
-        "storyProblem": "A waste reclamation drum contains 3 parts CAT 06 (mass 12) to 8 parts CAT 08 (mass 16) by mass. Derive its empirical formula.",
-        "howToTest": "Convert mass parts to moles: 3 / 12 = 0.25 mol CAT 06; 8 / 16 = 0.50 mol CAT 08. Divide by smallest (0.25) to find mole ratio: 1 : 2.",
-        "visualFormula": "Empirical Formula: (3 / 12.0) : (8 / 16.0) = 0.25 : 0.50 = 1 CAT 06 : 2 CAT 08"
+        "goal": "A sealed drum off the vent line runs 3 parts carbon to 8 parts oxygen by weight. Pick the recipe it must hold.",
+        "science": "The Empirical Formula: Dividing each element's share of the mass by what one of its atoms weighs turns a weight ratio into a count ratio, and reducing that to the smallest whole numbers gives the empirical formula. Three parts carbon to eight parts oxygen comes to 0.25 against 0.5, which is one to two. This is how a compound is identified out of a drum nobody can see inside.",
+        "storyProblem": "A waste reclamation drum contains 3 parts carbon (mass 12) to 8 parts oxygen (mass 16) by mass. Derive its empirical formula.",
+        "howToTest": "Convert mass parts to moles: 3 / 12 = 0.25 mol C; 8 / 16 = 0.50 mol O. Divide by smallest (0.25) to find mole ratio: 1 : 2.",
+        "visualFormula": "Empirical Formula: (3 / 12.0) : (8 / 16.0) = 0.25 : 0.50 = 1 C : 2 O"
       },
       "6": {
         "goal": "File each of the three samples under the recipe it matches.",
-        "science": "The Recipe Is the Identity: All three of those samples are mostly CAT 01 and all three look identical at low power, but their recipes are different and so is everything else about them. A compound is named by what it holds and in what ratio, not by what the crate looks like. Two substances with different recipes are never the same substance.",
+        "science": "The Recipe Is the Identity: All three of those samples are mostly hydrogen and all three look identical at low power, but their recipes are different and so is everything else about them. A compound is named by what it holds and in what ratio, not by what the crate looks like. Two substances with different recipes are never the same substance.",
         "storyProblem": "Three white powder samples look identical under visual inspection. Classify each by its bonded formula.",
         "howToTest": "Analyze the atomic ratios under high power: sort each sample by its exact bonded formula rather than superficial physical appearance.",
         "visualFormula": "Chemical Identity: Unique Element Ratio = Unique Chemical Substance with Distinct Properties"
       },
       "7": {
         "goal": "All three samples are sold as the same compound. Say which of them really are what the label says.",
-        "science": "A Recipe Is a Test You Can Run: Sample B held the right molecules with loose CAT 01 alongside them, and Sample C held the same two elements in a different ratio, so neither is what its label says. Counting one molecule settles it either way, because a compound has exactly one recipe and no room to argue. That is the whole reason a formula is worth writing down.",
+        "science": "A Recipe Is a Test You Can Run: Sample B held the right molecules with loose hydrogen alongside them, and Sample C held the same two elements in a different ratio, so neither is what its label says. Counting one molecule settles it either way, because a compound has exactly one recipe and no room to argue. That is the whole reason a formula is worth writing down.",
         "storyProblem": "Audit a merchant's three shipment crates sold under the same compound certificate to identify fraudulent adulterations.",
         "howToTest": "Inspect molecular compositions: reject samples with loose unbonded atoms (mixtures) or wrong stoichiometry (different compounds).",
         "visualFormula": "Purity Audit: Authentic Compound Must Have 100% Matching Molecules with Zero Loose Unbonded Filler"

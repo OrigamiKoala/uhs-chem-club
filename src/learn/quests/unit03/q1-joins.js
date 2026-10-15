@@ -61,20 +61,20 @@ const SPEAKER = 'Vess';
    holds eight, which the core bench already established.
    ------------------------------------------------------------------ */
 export const PIECES = {
-  h:  { code: 'CAT 01', kind: 'nonmetal', shells: [1], tint: 'bone', note: 'The lightest thing the yard handles.' },
-  c:  { code: 'CAT 06', kind: 'nonmetal', shells: [2, 4], tint: 'iron', note: 'Dark and dry. Marks anything it touches.' },
-  n:  { code: 'CAT 07', kind: 'nonmetal', shells: [2, 5], tint: 'pale', note: 'Most of the air on this planet is this.' },
-  o:  { code: 'CAT 08', kind: 'nonmetal', shells: [2, 6], tint: 'rust', note: 'Turns up in almost every sample here.' },
-  f:  { code: 'CAT 09', kind: 'nonmetal', shells: [2, 7], tint: 'sand', note: 'Eats through most containers.' },
-  ne: { code: 'CAT 10', kind: 'nonmetal', shells: [2, 8], tint: 'pale', note: 'Sits in the vent lamps and does nothing else.' },
-  na: { code: 'CAT 11', kind: 'metal', shells: [2, 8, 1], tint: 'pale', note: 'Large, soft and dull.' },
-  mg: { code: 'CAT 12', kind: 'metal', shells: [2, 8, 2], tint: 'bone', note: 'Light, and burns very white.' },
-  al: { code: 'CAT 13', kind: 'metal', shells: [2, 8, 3], tint: 'iron', note: 'Most of the hull plate in the yard.' },
-  s:  { code: 'CAT 16', kind: 'nonmetal', shells: [2, 8, 6], tint: 'sand', note: 'Yellow. The vents are crusted with it.' },
-  cl: { code: 'CAT 17', kind: 'nonmetal', shells: [2, 8, 7], tint: 'sand', note: 'Yellow and heavy. Sharp smell.' },
-  ar: { code: 'CAT 18', kind: 'nonmetal', shells: [2, 8, 8], tint: 'pale', note: 'Pumped into the weld hoods.' },
-  k:  { code: 'CAT 19', kind: 'metal', shells: [2, 8, 8, 1], tint: 'pale', note: 'Soft enough to cut with a blade.' },
-  ca: { code: 'CAT 20', kind: 'metal', shells: [2, 8, 8, 2], tint: 'bone', note: 'The arches are half built out of it.' }
+  h:  { code: 'hydrogen (H)', kind: 'nonmetal', shells: [1], tint: 'bone', note: 'The lightest thing the yard handles.' },
+  c:  { code: 'carbon (C)', kind: 'nonmetal', shells: [2, 4], tint: 'iron', note: 'Dark and dry. Marks anything it touches.' },
+  n:  { code: 'nitrogen (N)', kind: 'nonmetal', shells: [2, 5], tint: 'pale', note: 'Most of the air on this planet is this.' },
+  o:  { code: 'oxygen (O)', kind: 'nonmetal', shells: [2, 6], tint: 'rust', note: 'Turns up in almost every sample here.' },
+  f:  { code: 'fluorine (F)', kind: 'nonmetal', shells: [2, 7], tint: 'sand', note: 'Eats through most containers.' },
+  ne: { code: 'neon (Ne)', kind: 'nonmetal', shells: [2, 8], tint: 'pale', note: 'Sits in the vent lamps and does nothing else.' },
+  na: { code: 'sodium (Na)', kind: 'metal', shells: [2, 8, 1], tint: 'pale', note: 'Large, soft and dull.' },
+  mg: { code: 'magnesium (Mg)', kind: 'metal', shells: [2, 8, 2], tint: 'bone', note: 'Light, and burns very white.' },
+  al: { code: 'aluminum (Al)', kind: 'metal', shells: [2, 8, 3], tint: 'iron', note: 'Most of the hull plate in the yard.' },
+  s:  { code: 'sulfur (S)', kind: 'nonmetal', shells: [2, 8, 6], tint: 'sand', note: 'Yellow. The vents are crusted with it.' },
+  cl: { code: 'chlorine (Cl)', kind: 'nonmetal', shells: [2, 8, 7], tint: 'sand', note: 'Yellow and heavy. Sharp smell.' },
+  ar: { code: 'argon (Ar)', kind: 'nonmetal', shells: [2, 8, 8], tint: 'pale', note: 'Pumped into the weld hoods.' },
+  k:  { code: 'potassium (K)', kind: 'metal', shells: [2, 8, 8, 1], tint: 'pale', note: 'Soft enough to cut with a blade.' },
+  ca: { code: 'calcium (Ca)', kind: 'metal', shells: [2, 8, 8, 2], tint: 'bone', note: 'The arches are half built out of it.' }
 };
 
 /* ------------------------------------------------------------------
@@ -117,7 +117,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench clamps two atoms face to face and presses them together to see whether they hold. "Read Atom" shows what is on an atom\'s outer shell.'
     },
-    prompt: 'We\'re down in the Ligar basalt quarry testing rubble fragments! Clamp each atom pair together in the bonding press to see which ones stick together and which spring apart.',
+    prompt: 'Which of these atom pairs hold together when pressed, and which spring apart?',
     controls: ['press', 'read'],
     pairs: [
       pair('p1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -163,7 +163,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Why B Would Not Hold',
-    prompt: 'Pair B\'s atoms sprang right back apart when we pressed them! Why do the two neon atoms refuse to hold together?',
+    prompt: 'Why do the two neon atoms refuse to hold together?',
     controls: ['press', 'read'],
     pairs: [
       pair('p1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -203,7 +203,7 @@ export const STAGES = [
     reward: {
       log: 'Pair B: eight on each outer shell, no room on either.',
       title: 'A Bond Fills the Outer Shell',
-      body: 'Both atoms of every pair that joined here came out of the press with a full outer shell, and a full outer shell is eight electrons — two, on the innermost one. Pair B started full on both sides, so a bond had nothing left to do for it. Atoms bond in order to fill the outer shell, and one that is already full has no reason to bond at all.'
+      body: 'Both atoms of every pair that joined came out of the press with a full outer shell. For most atoms a full outer shell holds eight electrons, or two for the innermost shell. Pair B began with both outer shells full, so neither atom needed a bond.'
     }
   },
 
@@ -214,7 +214,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now measure net charges after bonding. Tap an atom and press "Read Charge" to see if electrons were transferred or shared.'
     },
-    prompt: 'Press both pairs and clip on the charge meter! How do the two pairs differ in where their electrons end up?',
+    prompt: 'How do the two pairs differ in where their electrons end up?',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('j1', 'PAIR A', 'off the salt pan', PIECES.na, PIECES.cl),
@@ -260,7 +260,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Which Way It Goes',
-    prompt: 'Quarry rocks hold together through different kinds of joins! Test each pair and sort them by whether electrons are handed over or shared between them.',
+    prompt: 'Sort the pairs by whether electrons are handed over or shared between them.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('r1', 'PAIR A', 'off the arch quarry', PIECES.mg, PIECES.o),
@@ -310,41 +310,41 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'How Many It Takes',
-    prompt: 'Magnesium (CAT 12) needs to empty its outer valence shell to stabilize. How many chlorine atoms (CAT 17) does it take to accept all its outer electrons?',
+    prompt: 'How many chlorine atoms does one magnesium atom need to take all its outer electrons?',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('t1', 'PAIR A', 'off the arch quarry', PIECES.mg, PIECES.cl),
       pair('t2', 'PAIR B', 'off the salt pan', PIECES.na, PIECES.cl)
     ],
-    widget: { type: 'number', min: 0, max: 5, step: 1, label: 'CAT 17 atoms per CAT 12 atom' },
+    widget: { type: 'number', min: 0, max: 5, step: 1, label: 'Chlorine atoms per magnesium atom' },
     hints: [
       'Press both pairs, then tap the left-hand atom on each plate and press "Read Atom".',
-      'The CAT 11 ion on Pair B has nothing left on its outer shell afterwards, but the CAT 12 ion on Pair A still has something sitting on its outer shell.',
-      'Divide the electrons CAT 12 needs to give away by how many electrons each CAT 17 can accept.'
+      'The sodium ion has an empty outer shell, but the magnesium ion still has one electron left.',
+      'Divide the electrons magnesium needs to give away by how many electrons each chlorine can accept.'
     ],
     check(state) {
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
       }
       if (state.number === 1) {
-        return { ok: false, msg: 'After one CAT 17, read the CAT 12 ion again: has it given away everything it had?' };
+        return { ok: false, msg: 'After one chlorine, read the magnesium ion again: has it given away everything it had?' };
       }
       if (state.number !== 2) {
-        return { ok: false, msg: 'Read how many electrons a CAT 12 atom has on its outer shell before the press, and how many one CAT 17 takes from it.' };
+        return { ok: false, msg: 'Read how many electrons a magnesium atom has on its outer shell before the press, and how many one chlorine takes from it.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'CAT 12 needs two CAT 17. CAT 11 needs one.',
+      log: 'Magnesium needs two chlorines. Sodium needs one.',
       title: 'The Counts Fix the Ratio',
-      body: 'A CAT 12 atom has two electrons to hand over and a CAT 17 atom takes exactly one each, so it takes two CAT 17 to clear one CAT 12 and the charges cancel to zero. A CAT 11 atom only has one to give, so it needs only one partner. The ratio in an ionic compound is not a choice — it falls straight out of the counts on the two outer shells.'
+      body: 'A magnesium atom has two electrons to hand over and a chlorine atom takes exactly one each, so it takes two chlorines to clear one magnesium and cancel the charges to zero. A sodium atom has only one to give, so it needs only one partner. The ratio in an ionic compound falls straight out of the counts on the outer shells.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'More Than One Pair',
-    prompt: 'Examine these covalent molecules from the basalt arches! Count how many electron pairs are held between the two atoms in each pair.',
+    prompt: 'Count how many electron pairs are held between the two atoms in each pair.',
     controls: ['press', 'read'],
     pairs: [
       pair('u1', 'PAIR A', 'off the gas line', PIECES.h, PIECES.h),
@@ -388,7 +388,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Read It Off the Catalogue',
-    prompt: 'Predict their bonding before even firing the press! Based on whether each atom is a metal, nonmetal, or noble gas, classify what each pair will do.',
+    prompt: 'Classify what kind of bond each pair will form.',
     controls: ['press', 'read', 'needle'],
     pairs: [
       pair('v1', 'PAIR A', 'off the arch quarry', PIECES.ca, PIECES.s),
@@ -437,37 +437,37 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Build the Recipe',
-    prompt: 'Carbon (CAT 06) and hydrogen (CAT 01) form the gas seeping through the quarry tunnels. How many hydrogen atoms can a single carbon atom hold to fill its shell?',
+    prompt: 'How many hydrogen atoms can a single carbon atom hold to fill its shell?',
     controls: ['press', 'read'],
     pairs: [
       pair('w1', 'PAIR A', 'off the gas line', PIECES.c, PIECES.h),
       pair('w2', 'PAIR B', 'off the air plant', PIECES.n, PIECES.h)
     ],
-    widget: { type: 'number', min: 0, max: 6, step: 1, label: 'CAT 01 atoms per CAT 06 atom' },
+    widget: { type: 'number', min: 0, max: 6, step: 1, label: 'Hydrogen atoms per carbon atom' },
     hints: [
       'Press both pairs, then tap the left-hand atom on each plate and press "Read Atom".',
-      'Compare the two left-hand atoms after the press: each has taken one CAT 01, and each shows how much room its outer shell still has.',
-      'Add the one CAT 01 the CAT 06 atom already holds to the number of places it still has open.'
+      'Compare the two left-hand atoms after the press: each has taken one hydrogen, and each shows its remaining room.',
+      'Add the one hydrogen the carbon atom already holds to the open spaces still available on its outer shell.'
     ],
     check(state) {
       if (state.number === 0) {
         return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
       }
       if (state.number === 3) {
-        return { ok: false, msg: 'That is what the CAT 07 atom holds. Read the CAT 06 atom after its press, and count the room it still has on top of the one it already holds.' };
+        return { ok: false, msg: 'That is what the nitrogen atom holds. Read the carbon atom after its press, and count the room it still has on top of the one it already holds.' };
       }
       if (state.number === 1) {
-        return { ok: false, msg: 'Read the CAT 06 atom after the press: one CAT 01 did not fill its outer shell.' };
+        return { ok: false, msg: 'Read the carbon atom after the press: one hydrogen did not fill its outer shell.' };
       }
       if (state.number !== 4) {
-        return { ok: false, msg: 'Check how many open spots CAT 06 needs filled on its outer shell.' };
+        return { ok: false, msg: 'Check how many open spots carbon needs filled on its outer shell.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'CAT 06 holds four CAT 01. CAT 07 holds three.',
+      log: 'Carbon holds four hydrogens. Nitrogen holds three.',
       title: 'The Counts Fix the Recipe',
-      body: 'A CAT 06 atom has four places to fill and each CAT 01 fills one, so one CAT 06 holds exactly four of them — never three and never five. The same counting fixes an ionic compound, except that there it is the charges that have to cancel. A compound has one recipe because the outer shells leave it no choice.',
+      body: 'A carbon atom has four open spots and each hydrogen fills one, so one carbon holds exactly four of them. A compound has one fixed recipe because the outer shells leave it no choice.',
       last: true
     }
   }

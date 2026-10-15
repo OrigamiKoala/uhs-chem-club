@@ -71,7 +71,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench squeezes and cools a gas past where the gas law holds, and prints PV over nRT — pressure times room over amount times R times temperature — which reads one while the law is true. The window draws the particles to scale, so you can see when they begin to crowd.'
     },
-    prompt: 'We\'re testing severe compression on helium in the high-pressure rig. What happens to the ratio PV / (nRT) as helium is squeezed into tighter and tighter volumes?',
+    prompt: 'What happens to the ratio PV / (nRT) as helium is squeezed into smaller volumes?',
     controls: ['volume'],
     volumes: [24.6, 2.5, 0.5, 0.2, 0.1, 0.06], volumeStart: 1,
     scale: 'atm',
@@ -110,7 +110,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Particles Take Room',
-    prompt: 'Under extreme compression, the measured pressure climbs noticeably higher than expected. Why does the physical volume of the gas particles cause the pressure to spike?',
+    prompt: 'Why does the finite volume of gas particles cause measured pressure to rise above ideal predictions?',
     controls: ['volume'],
     volumes: [24.6, 2.5, 0.5, 0.2, 0.1, 0.06], volumeStart: 1,
     scale: 'atm',
@@ -142,14 +142,14 @@ export const STAGES = [
     reward: {
       log: 'The particles fill some of the room.',
       title: 'Particles Take Room',
-      body: 'At high pressure the size of the particles is no longer small next to the space between them. They take room themselves, so the room left to move in is less than the volume, and the pressure comes out higher than the gas law says.'
+      body: 'At high pressure, particle size is no longer negligible. Particles take up space themselves, leaving less room to move and driving pressure above ideal predictions.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Cooled Toward a Liquid',
-    prompt: 'Our cooling coils drop the temperature of carbon dioxide toward condensation. What happens to the ratio PV / (nRT) as the CO₂ chills down?',
+    prompt: 'What happens to the ratio PV / (nRT) as carbon dioxide cools toward condensation?',
     controls: ['temp'],
     temps: [300, 280, 260, 240, 230], tempStart: 1, tempList: 'K',
     scale: 'kpa',
@@ -188,7 +188,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Pull',
-    prompt: 'Watch the intermolecular forces in the chilling cylinder. What effect do attractive pulls between slow-moving particles have on the pressure?',
+    prompt: 'How do attractive forces between slow-moving particles affect the measured pressure?',
     controls: ['temp'],
     temps: [300, 280, 260, 240, 230], tempStart: 1, tempList: 'K',
     scale: 'kpa',
@@ -220,14 +220,14 @@ export const STAGES = [
     reward: {
       log: 'A cold gas is held back by a pull.',
       title: 'Ideal Gas, Real Gas',
-      body: 'A gas of particles with no size and no pull, which the gas law describes exactly, is an ideal gas. Every actual gas is a real gas: it drifts from the law where its particles are crowded, and where they are cold enough to cling a little.'
+      body: 'An ideal gas has zero particle volume and zero attraction. Real gases drift from ideal behavior when crowded or cold enough for attractions to matter.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Who Strays Furthest',
-    prompt: 'We have nitrogen, ammonia, and helium at low temperature and high density. Rank these three gases from greatest deviation from ideal behavior (PV / nRT = 1) to least!',
+    prompt: 'Rank these three cold gases from greatest departure from ideal behavior to least.',
     controls: ['temp'],
     temps: [200, 220, 240], tempStart: 1, tempList: 'K',
     scale: 'kpa',
@@ -265,7 +265,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'When a Gas Behaves',
-    prompt: 'Four cylinders hold carbon dioxide under differing conditions. Which cylinder\'s gas behaves most closely like an ideal gas?',
+    prompt: 'Which cylinder contains gas that behaves most closely like an ideal gas?',
     controls: ['temp'],
     temps: [250, 350, 450, 550], tempStart: 1, tempList: 'K',
     scale: 'kpa',
@@ -301,7 +301,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Two Corrections',
-    prompt: 'The display tracks two van der Waals corrections: particle attraction and particle volume. When the gas is cold and only lightly compressed, which correction dominates?',
+    prompt: 'When the gas is cold and only lightly compressed, which van der Waals correction dominates?',
     controls: ['volume', 'temp'],
     volumes: [1, 0.5, 0.25], volumeStart: 1,
     temps: [250, 500, 1000], tempStart: 1, tempList: 'K',
@@ -334,14 +334,14 @@ export const STAGES = [
     reward: {
       log: 'A pull and a size, one to a side.',
       title: 'The van der Waals Equation',
-      body: 'Two corrections turn the gas law into the van der Waals equation: the pull between particles takes pressure off, and the room the particles take puts pressure on. In a cold, roomy gas the pull matters more, and in a hot, crushed one the size does, which goes beyond the exam.'
+      body: 'Particle attractions reduce measured pressure, while particle volume increases it. In cold, roomy gases attraction dominates; under intense compression, particle size dominates.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Why It Condenses',
-    prompt: 'Our refrigeration unit can condense real gases into liquid fuel, but an ideal gas could never condense. Why is that?',
+    prompt: 'Why can a real gas condense into a liquid while an ideal gas never can?',
     controls: ['temp'],
     temps: [300, 260, 240, 230], tempStart: 1, tempList: 'K',
     scale: 'kpa',

@@ -28,9 +28,10 @@
 import { BoxRack } from '../../engine/instruments.js';
 import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
 import { handKeys, paintHand, describeAct } from '../../engine/rackcontrols.js';
+import { drawPeriodicStrip } from '../../engine/visual-devices.js';
 import { pullWords } from '../../engine/magnetnotes.js';
 import {
-  rackFor, groundConfig, readRack, zOf, blockOf, boxKey, isLaddered
+  rackFor, groundConfig, readRack, zOf, blockOf, boxKey, isLaddered, symbolOf
 } from '../../engine/electrons.js';
 
 export const meta = { stageCount: 8 };
@@ -96,9 +97,10 @@ export const STAGES = [
     title: 'Six for Carbon',
     briefing: {
       speaker: SPEAKER,
-      body: 'Welcome to the orbital filing bench, where we arrange electrons into boxes by energy, lowest first. Use Up, Down, or Remove to place electrons into open boxes.'
+      body: 'This bench files electrons into orbital boxes by energy, lowest first. Controls let you place arrows into open boxes to build ground-state atoms.'
     },
-    prompt: 'Let\'s build a ground-state carbon atom! Place carbon\'s six electrons into the lowest available boxes on the rack.',
+    prompt: 'Build a ground-state carbon atom by placing its six electrons on the rack.',
+    table: true,
     controls: ['hand'],
     rigs: [plate({ label: 'SAMPLE C', sample: 'C', note: 'C, six electrons' })],
     widget: { type: 'none' },
@@ -130,7 +132,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'A magnetic probe is now available. Use "Test Sample" or "Test Rack" to measure the magnetic pull of unpaired electrons.'
     },
-    prompt: 'Test carbon with the magnet! How do its two 2p electrons arrange themselves across the three 2p boxes?',
+    prompt: 'How do carbon\'s two 2p electrons arrange themselves across the three 2p boxes?',
     controls: ['hand', 'magnet'],
     rigs: [plate({ label: 'SAMPLE C', sample: 'C', prefill: rackFor(4), locked: true, note: 'C, the p electrons are still to place' })],
     widget: {
@@ -167,7 +169,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Eight for Oxygen',
-    prompt: 'Oxygen has eight electrons. Load them all into the rack and read out its electron layout across the top.',
+    prompt: 'What is the ground-state electron configuration of oxygen?',
+    table: true,
     controls: ['hand'],
     rigs: [plate({ label: 'SAMPLE O', sample: 'O', note: 'O, eight electrons' })],
     widget: {
@@ -201,7 +204,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Potassium\'s Last',
-    prompt: 'Potassium has 19 electrons, with 18 already locked in the argon core. Where does its nineteenth electron settle on this energy ladder?',
+    prompt: 'Where does potassium\'s nineteenth electron settle on the energy ladder?',
+    table: true,
     controls: ['hand'],
     rigs: [plate({ label: 'SAMPLE K', sample: 'K', prefill: AR_CORE, locked: true, note: 'K, eighteen electrons are already in place' })],
     widget: { type: 'none' },
@@ -233,7 +237,8 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now abbreviate filled inner shells. Use "Collapse Core" to compress completed inner rows into a shorthand symbol.'
     },
-    prompt: 'Add iron\'s remaining eight valence electrons and tap Collapse Core. What does iron\'s shorthand notation look like?',
+    prompt: 'What is the noble-gas shorthand configuration of iron?',
+    table: true,
     controls: ['hand', 'core'],
     rigs: [plate({ label: 'SAMPLE FE', sample: 'Fe', prefill: AR_CORE, locked: true, note: 'Fe, eighteen electrons are already in place' })],
     widget: {
@@ -267,7 +272,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Where the Last Electron Went',
-    prompt: 'Elements group naturally by their outermost electrons! Sort these six element strips by the type of subshell (s, p, d, or f) where their last electron lands.',
+    prompt: 'Sort these six element strips by which subshell holds their last electron.',
     controls: [],
     rigs: STRIPS,
     widget: {
@@ -333,7 +338,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Chromium Disagrees',
-    prompt: 'Chromium has an intriguing magnetic surprise! Place its last six electrons so the rack\'s magnetic pull matches the real sample.',
+    prompt: 'Place chromium\'s electrons so the rack\'s magnetic pull matches the sample.',
+    table: true,
     controls: ['hand', 'magnet'],
     beyondExam: true,
     rigs: [plate({ label: 'SAMPLE CR', sample: 'Cr', prefill: AR_CORE, locked: true, note: 'Cr, eighteen electrons are already in place. Beyond the exam.' })],
@@ -489,6 +495,23 @@ export function mount(container, ctx) {
     paintHand(runner.frame.el.controls, rack.cfg.hand, runner.state.core);
   }
 
+  /** Electrons on the rack, counted off the boxes. */
+  function electronsOn(r) {
+    return Object.values(r || {}).reduce((n, v) => n + (v === 'ud' ? 2 : v ? 1 : 0), 0);
+  }
+
+  /**
+   * THE TABLE STRIP. Each electron added to the rack lights the element with that many, so
+   * building an atom walks a lit cell across the table. It is not drawn for an ion, whose
+   * electron count is not its element's.
+   */
+  function paintTable() {
+    const stage = runner.stage;
+    if (!stage.table) { runner.frame.setDevice(null); return; }
+    const z = electronsOn(runner.state.rack);
+    runner.frame.setDevice((ctx, w, h) => drawPeriodicStrip(ctx, 6, 6, w - 12, h - 12, z, symbolOf));
+  }
+
   function onProbe(hit) {
     if (hit.kind === 'hand') { paintAll(); return; }
     if (hit.kind === 'rack') {
@@ -497,6 +520,7 @@ export function mount(container, ctx) {
       const d = describeAct(hit, item);
       runner.readout(d.head, d.body);
       paintAll();
+      paintTable();
     }
   }
 
@@ -509,6 +533,7 @@ export function mount(container, ctx) {
       rack.clear();
       runner.state.rack = rack.rackOf('rack');
       runner.readout('Rack // cleared', 'The rack is back to how the stage handed it over.');
+      paintTable();
     } else if (tool === 'core') {
       runner.state.core = !runner.state.core;
       rack.setCore(runner.state.core);
@@ -543,6 +568,7 @@ export function mount(container, ctx) {
     }
     r.setControls(parts, onTool);
     paintHand(r.frame.el.controls, null, false);
+    paintTable();
     r.readout(null, null, {
       idleHead: 'Rack // standby',
       idle: stage.controls.includes('hand') ? 'Pick a hand, then tap a box.' : 'Read each ladder.'

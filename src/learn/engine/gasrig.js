@@ -42,6 +42,7 @@ import {
   planMixture, mixtureState, dotsFor, sig, litres, kPaToAtm, kPaToMmHg, ATM_KPA, toCelsius,
   pressureIdeal, volumeIdeal, speeds, R
 } from './gasdata.js';
+import { drawShareBars } from './visual-devices.js';
 
 /** The words on the plate. A word is plain until its card has earned the real one. */
 export function words(cfg = {}) {
@@ -423,7 +424,8 @@ function drawCylinder(ctx, w, h, item, cfg, t) {
 
   // ---- the header ----
   plateText(ctx, item.label, pad, small * 1.5, { size: small * 1.5, color: DUST, weight: 700 });
-  if (!item.sealed) plateText(ctx, gas.sym, w - pad, small * 1.5, { align: 'right', size: small * 1.4, color: DUST, weight: 700 });
+  if (item.equation) plateText(ctx, item.equation, w - pad, small * 1.5, { align: 'right', size: small * 0.9, color: PHOS, weight: 700 });
+  else if (!item.sealed) plateText(ctx, gas.sym, w - pad, small * 1.5, { align: 'right', size: small * 1.4, color: DUST, weight: 700 });
 
   // ---- the window and the gauge ----
   const topY = small * 2.3;
@@ -524,7 +526,7 @@ function drawCylinder(ctx, w, h, item, cfg, t) {
   if (show.speed) rows.push([L.speed, `${Math.round(s.mean)} m/s`]);
   if (show.mass) rows.push(['MASS', `${sig(s.mass, 3)} g`]);
   if (show.molar) rows.push(['MOLAR MASS', `${gas.M.toFixed(2)} g/mol`]);
-  if (show.z) rows.push(['PV / nRT', s.Z.toFixed(3)]);
+  if (show.z) rows.push(['LAW CHECK  PV / nRT', s.Z.toFixed(3)]);
   if (show.pull) rows.push(['PULL TAKES OFF', `${sig(s.pull, 3)} kPa`]);
   if (show.pullShare) rows.push(['THE PULL TAKES OFF', `${(s.pullShare * 100).toFixed(0)} % OF THE PUSH`]);
   if (show.room) rows.push(['SIZE PUTS ON', `${sig(Math.max(0, s.room), 3)} kPa`]);
@@ -614,7 +616,7 @@ export function valueOf(q, p) {
   return 0;
 }
 
-const AXIS_NAME = { P: 'PRESSURE', V: 'VOLUME', T: 'KELVIN', TC: '°C', n: 'AMOUNT', Z: 'PV/nRT' };
+const AXIS_NAME = { P: 'PRESSURE', V: 'VOLUME', T: 'KELVIN', TC: '°C', n: 'AMOUNT', Z: 'LAW CHECK' };
 
 function plotAxes(ctx, x, y, w, h, spec, small) {
   ctx.fillStyle = '#100f0c';
@@ -705,7 +707,8 @@ function drawMixture(ctx, w, h, item, cfg, t) {
   // One row for each gas: its shape, its formula, how much of it, how often it knocks.
   if (sealed) return;
   const top = winY + zoneH + small * 2;
-  const lineH = Math.max(small * 1.35, Math.min(small * 2.1, (h - pad - top) / Math.max(1, parts.length + 1)));
+  const shareH = item.inset === 'share' ? Math.max(54, h * 0.3) : 0;
+  const lineH = Math.max(small * 1.35, Math.min(small * 2.1, (h - pad - top - shareH) / Math.max(1, parts.length + 1)));
   plateText(ctx, 'GAS', pad + small * 2.2, top, { size: small * 0.72, color: DIM });
   plateText(ctx, 'AMOUNT', w * 0.58, top, { align: 'right', size: small * 0.72, color: DIM });
   plateText(ctx, L.knocks, w - pad, top, { align: 'right', size: small * 0.72, color: DIM });
@@ -720,6 +723,12 @@ function drawMixture(ctx, w, h, item, cfg, t) {
     plateText(ctx, `${Math.round(row.knocks)}`, w - pad, y, { align: 'right', size: small, color: PHOS, weight: 700 });
   });
   if (!parts.length) plateText(ctx, 'EMPTY', w / 2, top + lineH, { align: 'center', size: small * 1.2, color: DIM });
+  if (shareH && parts.length) {
+    // The two bars are read off the same planner as the gauge: each gas's share of the
+    // moles, and its share of the push the gauge reports.
+    const comps = m.rows.map(r => ({ label: GASES[r.gas].sym, molFraction: r.x, pressureShare: m.P > 0 ? r.P / m.P : 0 }));
+    drawShareBars(ctx, pad, h - pad - shareH, w - pad * 2, shareH, comps);
+  }
 }
 
 /* ------------------------------------------------------------------

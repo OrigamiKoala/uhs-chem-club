@@ -28,7 +28,7 @@
 
 import { PlateBench, PLATE_COLORS, plateText, raster, aperture } from './plates.js';
 import {
-  PAIRS, DISC_RADIUS, IONS, LATTICES, planCurve, energySpan, centresOf
+  PAIRS, DISC_RADIUS, IONS, LATTICES, planCurve, energySpan, centresOf, coulombIndex
 } from './bonddata.js';
 
 export const X_MAX = 330;
@@ -102,11 +102,13 @@ export class BondBench extends PlateBench {
     if (!hit) return null;
     if (item.head === 'lattice') {
       const lat = LATTICES[item.lattice];
+      const pull = (coulombIndex(lat) * 100).toFixed(2);
       return {
         mark: {},
         read: {
           kind: 'lattice', lattice: item.lattice,
-          cation: IONS[lat.cation], anion: IONS[lat.anion], centres: centresOf(lat)
+          cation: IONS[lat.cation], anion: IONS[lat.anion], centres: centresOf(lat),
+          pull
         }
       };
     }
@@ -216,9 +218,16 @@ function drawPair(ctx, w, h, item, r, cfg) {
   }
   if (now) {
     const x = gx(now.r); const y = Math.max(gy0, Math.min(gy1, gy(now.energy)));
-    ctx.strokeStyle = PLATE_COLORS.amber;
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.stroke();
+    // The marble rides the trace at the current separation: amber because it is the live reading.
+    ctx.save();
+    ctx.fillStyle = PLATE_COLORS.amber;
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = PLATE_COLORS.bg;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
   }
 }
 
@@ -231,6 +240,11 @@ function drawLattice(ctx, w, h, item) {
   plateText(ctx, lat.label, pad, small * 1.7, { size: small * 1.7, color: PLATE_COLORS.dust, weight: 700 });
   plateText(ctx, `CENTRES ${centresOf(lat)} pm`, w - pad, small * 1.5, {
     align: 'right', size: small * 1.1, color: PLATE_COLORS.phosphor, weight: 700
+  });
+
+  const pullVal = (coulombIndex(lat) * 100).toFixed(2);
+  plateText(ctx, `PULL ${pullVal}`, w - pad, small * 2.9, {
+    align: 'right', size: small * 1.05, color: PLATE_COLORS.amber, weight: 700
   });
 
   // The two ions touching, to one scale on every plate: 1 pm is the same length
@@ -255,6 +269,9 @@ function drawLattice(ctx, w, h, item) {
   ctx.strokeStyle = PLATE_COLORS.amber;
   ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(x1, cy + Math.max(rc, ra) + small * 3); ctx.lineTo(x2, cy + Math.max(rc, ra) + small * 3); ctx.stroke();
+  plateText(ctx, `PULL ${pullVal}`, (x1 + x2) / 2, cy + Math.max(rc, ra) + small * 4.4, {
+    align: 'center', size: small * 0.9, color: PLATE_COLORS.amber, weight: 700
+  });
 
   // A patch of the lattice itself, alternating, so the picture is of a solid.
   const gx = w * 0.70; const gy = h * 0.34; const cell = Math.min(w * 0.07, h * 0.1);

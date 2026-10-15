@@ -30,6 +30,8 @@
 
 import { AssayFloor } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
+import { dialMarkup, bindDial, paintDial } from '../../engine/dial.js';
+import { drawMoleMap } from '../../engine/visual-devices.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
@@ -44,6 +46,22 @@ export const VOCABULARY = [
 ];
 
 const SPEAKER = 'Vess';
+
+/**
+ * THE COUNT DIAL on stage 4's balance: how many atoms of the selected sample the pan
+ * is weighing, from sixty up to the count the stage is about. The balance reports the
+ * weight of that many atoms and nothing more; at the last detent the same figure
+ * is in grams instead of atomic mass units, and that is the whole discovery.
+ */
+export const COUNTS = [60, 6000, 6000000, 6.02e23];
+const COUNT_NAMES = { 1: 'x 60', 2: 'x 6,000', 3: 'x 6 million', 4: 'x 6.02 x 10^23' };
+
+function sci(x) {
+  if (x < 1e6) return x.toLocaleString('en-US', { maximumFractionDigits: 1 });
+  const e = Math.floor(Math.log10(x));
+  const m = x / Math.pow(10, e);
+  return `${Number(m.toFixed(2))} x 10^${e}`;
+}
 
 /* ------------------------------------------------------------------
    THE LISTED MASSES
@@ -116,7 +134,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench tips a sample down a chute into bins by weight and counts what lands in each. "Weigh Sample" puts a whole sample on a balance, even one too full to tip.'
     },
-    prompt: 'We have an uncounted bulk crate of carbon from the mining depot. We can\'t count atoms by hand — how many atoms are in the crate based on its weight?',
+    prompt: 'How many atoms are in the carbon crate based on its measured weight?',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', code: 'carbon', note: '40 atoms, kept as the counting standard', bins: [{ mass: 12, n: 40 }] },
@@ -151,7 +169,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'What One Molecule Weighs',
-    prompt: 'The refinery crew needs formula weights for molecular fuel canisters. What does one molecule of Sample B (methane, CH4) weigh?',
+    prompt: 'What is the formula weight of one molecule of methane (CH4)?',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'h3', label: 'SAMPLE A', note: '40 molecules, one oxygen to two hydrogen', particle: 'molecule', bins: [{ mass: 18, n: 40 }] },
@@ -192,7 +210,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Three Samples of Sixty',
-    prompt: 'We counted out sixty atoms of three different elements. Compare their weights on the scale — what pattern do the three totals reveal?',
+    prompt: 'What pattern do the weighed totals of sixty atoms of each element reveal?',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'h5', label: 'SAMPLE A', code: 'hydrogen', note: '60 atoms, counted in', bins: [{ mass: 1, n: 60 }] },
@@ -240,8 +258,12 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Measure Out a Matching Count',
-    prompt: 'You\'ve weighed out 12.0 grams of carbon. How many grams of oxygen would you need to balance out the exact same number of atoms?',
-    controls: ['pour', 'balance'],
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A dozen eggs and a dozen bowling balls weigh differently but count the same. Use the count dial on the balance to see how atomic mass units scale up to grams.'
+    },
+    prompt: 'How many grams of oxygen contain the same number of atoms as 12.0 grams of carbon?',
+    controls: ['pour', 'balance', 'count'],
     hoppers: [
       { id: 'h5', label: 'SAMPLE A', code: 'hydrogen', note: '60 atoms, counted in', bins: [{ mass: 1, n: 60 }] },
       { id: 'h6', label: 'SAMPLE B', code: 'carbon', note: '60 atoms, counted in', bins: [{ mass: 12, n: 60 }] },
@@ -279,39 +301,33 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'A Mole of a Compound',
-    prompt: 'Each molecule of Sample A has one carbon and two oxygens (CO2). How many grams do you need on the balance to have one mole of these molecules?',
+    prompt: 'How many grams of carbon dioxide (CO2) make up one mole of molecules?',
     controls: ['balance'],
     hoppers: [
       { id: 'h8', label: 'SAMPLE A', note: 'a full crate, one carbon to two oxygen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 44, n: 200 }] }
     ],
     reference: ['carbon — 12.0', 'oxygen — 16.0'],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: '440', label: '44.0 grams', note: 'One carbon plus two oxygen.' },
-        { id: '280', label: '28.0 grams', note: 'One carbon plus one oxygen.' },
-        { id: '120', label: '12.0 grams', note: 'The carbon on its own.' },
-        { id: '880', label: '88.0 grams', note: 'Twice 12.0 plus four times 16.0.' }
-      ]
-    },
+    widget: { type: 'number', min: 0, max: 100, step: 1, label: 'Grams in one mole of CO₂' },
     hints: [
-      'Work out the formula mass of this sample first.',
-      'One mole of an element is its listed mass in grams, and a molecule of a compound weighs the listed masses of all its atoms added up.',
-      'Add the listed mass of one carbon to the listed mass of two oxygen to get the grams in one mole.'
+      'Work out the formula mass of carbon dioxide first: one carbon and two oxygen.',
+      'One mole of an element is its listed mass in grams, and a molecule weighs the listed masses of all its atoms added up.',
+      'Add the listed mass of one carbon (12) to the listed mass of two oxygen (16 + 16) to get the grams in one mole.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
+      if (state.number === 0) {
+        return { ok: false, notYet: true, msg: 'Set the counter to the molar mass of carbon dioxide.' };
       }
-      if (state.choice === '120') {
-        return { ok: false, msg: 'That is the carbon on its own. A molecule of this sample holds all three of its atoms.' };
+      if (state.number === 12) {
+        return { ok: false, msg: '12 grams is carbon alone. Add the mass of both oxygen atoms.' };
       }
-      if (state.choice === '280') {
-        return { ok: false, msg: 'That counts one oxygen, and each molecule of this sample holds two of them.' };
+      if (state.number === 28) {
+        return { ok: false, msg: '28 grams counts only one oxygen atom. Each molecule holds two.' };
       }
-      if (state.choice === '880') {
-        return { ok: false, msg: 'That is two molecules\' worth. One mole weighs one molecule\'s listed masses, in grams.' };
+      if (state.number === 88) {
+        return { ok: false, msg: '88 grams is two moles of carbon dioxide. Calculate for one mole.' };
+      }
+      if (state.number !== 44) {
+        return { ok: false, msg: 'Add the listed mass of carbon (12) and two oxygen atoms (16 + 16).' };
       }
       return { ok: true };
     },
@@ -325,7 +341,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Drum of Seventy-Two',
-    prompt: 'A sealed drum of pure water sits on the scale, reading 72 grams. How many moles of water does the drum hold?',
+    prompt: 'How many moles of water does the 72-gram drum hold?',
     controls: ['balance'],
     hoppers: [
       { id: 'h9', label: 'SAMPLE A', note: 'one drum, one oxygen to two hydrogen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 18, n: 4 }] }
@@ -362,7 +378,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Moles of Each Element',
-    prompt: 'You have two moles of water molecules (H2O). Since each molecule contains two hydrogens, how many moles of hydrogen atoms are in the drum?',
+    prompt: 'How many moles of hydrogen atoms are present in two moles of water (H2O)?',
     controls: ['balance'],
     hoppers: [
       { id: 'h10', label: 'SAMPLE A', note: 'two drums, one oxygen to two hydrogen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 18, n: 2 }] }
@@ -399,7 +415,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Which Drum Holds the Most',
-    prompt: 'Three different element drums sit on the loading dock. Which of the three drums contains the highest total count of individual atoms?',
+    prompt: 'Which of the three element drums contains the greatest total count of atoms?',
     controls: ['balance'],
     hoppers: [
       { id: 'd1', label: 'SAMPLE A', code: 'carbon', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 12, n: 5 }] },
@@ -534,6 +550,7 @@ function blankState(stage) {
     bins: {},
     sample: null,
     bin: null,
+    count: 1,
     poured: new Set(),
     weighed: new Set()
   };
@@ -545,7 +562,7 @@ export const SOLUTIONS = [
   { poured: new Set(['h3']), number: 16 },
   { poured: new Set(['h5', 'h6', 'h7']), choice: 'ratio' },
   { poured: new Set(['h6', 'h7']), number: 16 },
-  { weighed: new Set(['h8']), choice: '440' },
+  { weighed: new Set(['h8']), number: 44 },
   { weighed: new Set(['h9']), number: 4 },
   { weighed: new Set(['h10']), number: 4 },
   { weighed: new Set(['d1', 'd2', 'd3']), choice: 'd3' }
@@ -557,7 +574,7 @@ export const MISSES = [
   { poured: new Set(['h3']), number: 18 },
   { poured: new Set(['h5', 'h6', 'h7']), choice: 'equal' },
   { poured: new Set(['h6', 'h7']), number: 12 },
-  { weighed: new Set(['h8']), choice: '120' },
+  { weighed: new Set(['h8']), number: 12 },
   { weighed: new Set(['h9']), number: 1 },
   { weighed: new Set(['h10']), number: 2 },
   { weighed: new Set(['d1', 'd2', 'd3']), choice: 'd2' }
@@ -594,6 +611,7 @@ export function mount(container, ctx) {
   let state = null;
   let busy = false;
   let disposed = false;
+  let unbindCount = null;
 
   /* ---------------- stage lifecycle ---------------- */
 
@@ -662,6 +680,9 @@ export function mount(container, ctx) {
     if (stage.controls.includes('balance')) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="balance">Weigh Sample</button>');
     }
+    if (stage.controls.includes('count')) {
+      parts.push(dialMarkup({ label: 'Count', min: 1, max: COUNTS.length, value: state.count, id: 'count-dial', scaleLabels: COUNT_NAMES }));
+    }
     if (stage.reference?.length) {
       parts.push(`
         <div class="assay-extract">
@@ -678,6 +699,21 @@ export function mount(container, ctx) {
     frame.el.controls.querySelectorAll('[data-tool]').forEach(btn => {
       btn.addEventListener('click', () => runTool(btn.dataset.tool));
     });
+    unbindCount?.();
+    unbindCount = stage.controls.includes('count')
+      ? bindDial(frame.el.controls, { min: 1, max: COUNTS.length, onChange: v => setCount(v) })
+      : null;
+    if (stage.controls.includes('count')) paintDial(frame.el.controls, state.count, { min: 1, max: COUNTS.length, scaleLabels: COUNT_NAMES });
+    // Once the word molar has been earned (stage 5), the road between grams, moles and
+    // particles stands on the card. It names the two conversions and prints no molar mass.
+    frame.setDevice(index >= 5 ? (ctx, w, h) => drawMoleMap(ctx, 6, 6, w - 12, h - 12, null, {}) : null);
+  }
+
+  function setCount(v) {
+    state.count = Math.max(1, Math.min(COUNTS.length, v));
+    paintDial(frame.el.controls, state.count, { min: 1, max: COUNTS.length, scaleLabels: COUNT_NAMES });
+    soundscape.playToggleClack?.();
+    if (state.sample) runTool('balance');
   }
 
   async function runTool(tool) {
@@ -692,6 +728,17 @@ export function mount(container, ctx) {
     if (tool === 'balance') {
       state.weighed.add(id);
       soundscape.playScanSweep?.();
+      if (STAGES[index].controls.includes('count') && !hopper.bulk) {
+        // The balance weighs this many atoms of the sample, and only says what they weigh.
+        const c = COUNTS[state.count - 1];
+        const per = hopper.bins[0].mass;
+        const atMole = state.count === COUNTS.length;
+        renderReadout(null, {
+          head: `Balance // ${hopper.label}`,
+          body: `${sci(c)} atoms weigh ${sci(per * c / (atMole ? 6.02e23 : 1))} ${atMole ? 'grams' : 'atomic mass units'}.`
+        });
+        return;
+      }
       // A CRATE TOO FULL TO TIP CANNOT BE COUNTED, SO THE PAN DOES NOT SAY IT
       // WAS. The balance reports the mass it measured and stops there; working
       // the count out of that mass is the whole job of this bench.

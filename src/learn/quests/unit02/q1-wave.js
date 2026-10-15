@@ -28,7 +28,7 @@
 
 import { LightBench } from '../../engine/instruments.js';
 import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
-import { fmtLength } from '../../engine/lightbench.js';
+import { fmtLength, planTrace } from '../../engine/lightbench.js';
 
 export const meta = { stageCount: 8 };
 
@@ -69,13 +69,14 @@ export const STAGES = [
     title: 'Red to Violet',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench tunes a lamp, draws its light as a wave, and spreads it into colours. Wavelength is the distance from one crest to the next, in nm — billionths of a metre — and frequency is how many crests pass each second.'
+      body: 'This bench tunes a lamp, draws its light as a wave, and counts crests passing each second. Wavelength and frequency trade off, where 10^14 means 1 followed by 14 zeros.'
     },
-    prompt: 'We are out on the frozen flats of Lanternfall tuning a surveyor lamp. How does the wave shape change as the lamp dials from red to violet?',
+    prompt: 'How does the wave shape change as the lamp dials from red to violet?',
     labels: EARNED_LABELS,
     controls: ['tune'],
     settings: RED_TO_VIOLET,
     start: MID,
+    trendPlot: { xLabel: 'Wavelength', xUnit: 'nm', yLabel: 'Frequency', yUnit: '× 10¹⁴ /s', xMin: 350, xMax: 750, yMin: 3, yMax: 9 },
     rigs: [
       { id: 'lamp', label: 'LAMP', head: 'trace', tuned: true, note: 'a lamp you can tune' }
     ],
@@ -113,11 +114,12 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Twice as Far Apart',
-    prompt: 'Lanternfall lanterns trade crest distance for pulse rate! Find the lamp setting with twice the wavelength of Sample A.',
+    prompt: 'Find the lamp setting with twice the wavelength of Sample A.',
     labels: EARNED_LABELS,
     controls: ['tune'],
     settings: [700, 650, 600, 550, 500, 450, 400, 350],
     start: MID,
+    trendPlot: { xLabel: 'Wavelength', xUnit: 'nm', yLabel: 'Frequency', yUnit: '× 10¹⁴ /s', xMin: 300, xMax: 750, yMin: 3, yMax: 10 },
     rigs: [
       { id: 'a', label: 'SAMPLE A', head: 'trace', nm: 350, note: 'a fixed lamp' },
       { id: 'lamp', label: 'LAMP', head: 'trace', tuned: true, note: 'a lamp you can tune' }
@@ -147,9 +149,10 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Spacing Times Count',
-    prompt: 'Every beam here cuts across the ice at the same rate. Find how fast the light from these lamps travels.',
+    prompt: 'Find the speed at which light travels from these lamps.',
     labels: EARNED_LABELS,
     controls: [],
+    log: { columns: ['Sample', 'Wavelength (nm)', 'Frequency (×10¹⁴/s)'], compute: ['x', '÷'] },
     rigs: [
       { id: 'a', label: 'SAMPLE A', head: 'trace', nm: 400, note: 'a fixed lamp' },
       { id: 'b', label: 'SAMPLE B', head: 'trace', nm: 500, note: 'a fixed lamp' },
@@ -178,7 +181,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'A Lamp Not on the Bench',
-    prompt: 'A surveyor lantern in the distance shines at 600 nm. Calculate the frequency of this 600 nm lamp.',
+    prompt: 'What is the frequency of light with a wavelength of 600 nm?',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -208,7 +211,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Lowest to Highest',
-    prompt: 'Four signal lamps line the frozen runway. Order the four lamps from lowest frequency to highest.',
+    prompt: 'Order the four lamps from lowest frequency to highest.',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -250,7 +253,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Past the Ends',
-    prompt: 'Sample B glows outside human sight. Which detector strip picks up the invisible emission from Sample B?',
+    prompt: 'Which detector strip picks up the emission from Sample B?',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -291,7 +294,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Radio to X-ray',
-    prompt: 'Different equipment across the colony transmits at wildly different wavelengths. Match each source to its frequency.',
+    prompt: 'Match each source to its frequency.',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
@@ -338,23 +341,29 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Names on the Lamps',
-    prompt: 'The yellow glow across the ice comes from a mining lamp. Calculate the frequency of this sodium lamp.',
+    prompt: 'Which lamp emits light at a frequency of 5.1 x 10^14 per second?',
     labels: EARNED_LABELS,
     controls: [],
     rigs: [
       { id: 'a', label: 'LAMP A', head: 'trace', nm: 589, note: 'CAT 11, sodium (Na)' },
       { id: 'b', label: 'LAMP B', head: 'trace', nm: 656, note: 'CAT 01, hydrogen (H)' }
     ],
-    widget: { type: 'decimal', label: 'Frequency (x 10^14 per second)', min: 4.5, max: 6, step: 0.1 },
+    widget: {
+      type: 'choice', label: 'Matching lamp',
+      options: [
+        { id: 'a', label: 'Lamp A (589 nm)' },
+        { id: 'b', label: 'Lamp B (656 nm)' }
+      ]
+    },
     hints: [
-      'Find the lamp whose label names sodium, then tap its wave.',
-      'Read the sodium lamp\'s frequency from the box above its wave, or work it out from its wavelength.',
-      'Divide the speed of light by 589 nm, written in metres with 10^-9, and round the result to one decimal place.'
+      'Divide the speed of light by 5.1 x 10^14 to calculate the wavelength.',
+      '3.00 x 10^8 divided by 5.1 x 10^14 gives about 589 nm.',
+      'Divide the speed of light by the frequency to get a wavelength, then find the lamp marked with it.'
     ],
     check(state) {
-      if (state.decimal === 4.5) return { ok: false, notYet: true, msg: 'Set the frequency you read or worked out.' };
-      if (state.decimal !== 5.1) {
-        return { ok: false, msg: 'Check you are reading the sodium lamp, not the other one, and that the figure is in the unit shown.' };
+      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick a lamp.' };
+      if (state.choice !== 'a') {
+        return { ok: false, msg: 'Divide the speed of light by 5.1 x 10^14 to match the wavelength.' };
       }
       return { ok: true };
     },
@@ -465,7 +474,7 @@ export const SOLUTIONS = [
   { order: ['b', 'd', 'a', 'c'] },
   { choice: 'ir' },
   { bins: { radio: 'f8', micro: 'f9', xray: 'f18' } },
-  { decimal: 5.1 }
+  { choice: 'a' }
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -477,7 +486,7 @@ export const MISSES = [
   { order: ['c', 'a', 'd', 'b'] },
   { choice: 'uv' },
   { bins: { radio: 'f9', micro: 'f8', xray: 'f18' } },
-  { decimal: 5.6 }
+  { choice: 'b' }
 ];
 
 /** Build a full state for stage `i` from one of the sets above. */
@@ -498,7 +507,17 @@ export function mount(container, ctx) {
   function onProbe(hit) {
     const L = labelsOf(runner.stage);
     if (hit.kind === 'trace') {
+      const plan = planTrace(hit.nm);
       runner.readout(`Screen // ${hit.plateLabel}`, `${L.spacing}: ${hit.nm} nm.`);
+      runner.setPairedReadout(
+        { label: 'Wavelength', value: `${hit.nm}`, unit: 'nm' },
+        { label: 'Frequency', value: `${plan.e14.toFixed(2)} × 10¹⁴`, unit: '/s' }
+      );
+      runner.logReading({
+        'Sample': hit.plateLabel,
+        'Wavelength (nm)': hit.nm,
+        'Frequency (×10¹⁴/s)': Number(plan.e14.toFixed(2))
+      });
     } else if (hit.kind === 'scale') {
       runner.readout(`Ruler // ${hit.plateLabel}`, `${L.spacing}: ${fmtLength(hit.nm)}.`);
     } else if (hit.kind === 'prism') {
@@ -517,6 +536,16 @@ export function mount(container, ctx) {
     runner.state.setting = v;
     bench.setSetting(v);
     paintSetting();
+    const st = runner.stage.settings;
+    if (st) {
+      const nm = st[v - 1];
+      const plan = planTrace(nm);
+      runner.plotPoint(nm, plan.e14);
+      runner.setPairedReadout(
+        { label: 'Wavelength', value: `${nm}`, unit: 'nm' },
+        { label: 'Frequency', value: `${plan.e14.toFixed(2)} × 10¹⁴`, unit: '/s' }
+      );
+    }
   }
 
   function onLoad(stage, i, r) {
@@ -537,7 +566,34 @@ export function mount(container, ctx) {
     r.setControls(parts, null, stage.settings ? {
       dials: { setting: { min: 1, max: stage.settings.length, onChange: v => setSetting(v) } }
     } : {});
-    if (stage.settings) paintSetting();
+
+    if (stage.settings) {
+      paintSetting();
+      const nm = stage.settings[(r.state.setting || 1) - 1];
+      const plan = planTrace(nm);
+      r.plotPoint(nm, plan.e14);
+      if (stage.trendPlot && i === 1) {
+        r.plotPoint(350, planTrace(350).e14);
+      }
+      r.setPairedReadout(
+        { label: 'Wavelength', value: `${nm}`, unit: 'nm' },
+        { label: 'Frequency', value: `${plan.e14.toFixed(2)} × 10¹⁴`, unit: '/s' }
+      );
+    }
+
+    if (stage.log && stage.rigs) {
+      stage.rigs.forEach(rg => {
+        if (rg.nm) {
+          const plan = planTrace(rg.nm);
+          r.logReading({
+            'Sample': rg.label,
+            'Wavelength (nm)': rg.nm,
+            'Frequency (×10¹⁴/s)': Number(plan.e14.toFixed(2))
+          });
+        }
+      });
+    }
+
     r.readout(null, null, { idleHead: 'Screen // standby', idle: 'Tap a wave to measure it.' });
   }
 

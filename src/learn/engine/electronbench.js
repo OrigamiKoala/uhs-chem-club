@@ -35,6 +35,7 @@
 
 import { PlateBench, PLATE_COLORS, plateText, raster, aperture } from './plates.js';
 import { planPES, groundConfig, LADDER, zOf, symbolOf } from './electrons.js';
+import { drawTrendMap } from './visual-devices.js';
 
 /* ------------------------------------------------------------------
    PURE PLANNERS
@@ -124,10 +125,15 @@ function drawSpectrum(ctx, w, h, item, cfg, o) {
   const x1 = w - 12;
   const baseY = h * 0.8;
   const topY = h * 0.14;
-  const xOf = e => x0 + ((Math.log10(e) - LOG_LO) / (LOG_HI - LOG_LO)) * (x1 - x0);
+  // The course draws a spectrum with the highest binding energy at the left; the plate does too until it is flipped.
+  const flip = cfg.flip !== false;
+  const xOf = e => {
+    const f = (Math.log10(e) - LOG_LO) / (LOG_HI - LOG_LO);
+    return x0 + (flip ? 1 - f : f) * (x1 - x0);
+  };
   const unit = (baseY - topY) / 6.5;
 
-  // Axis: decades, labelled. Energy rises to the right.
+  // Axis: decades, labelled.
   ctx.strokeStyle = PLATE_COLORS.steel;
   ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(x0, baseY); ctx.lineTo(x1, baseY); ctx.stroke();
@@ -136,7 +142,7 @@ function drawSpectrum(ctx, w, h, item, cfg, o) {
     ctx.beginPath(); ctx.moveTo(x, baseY); ctx.lineTo(x, baseY + 5); ctx.stroke();
     plateText(ctx, String(e), x, baseY + 5 + small, { align: 'center', size: small * 0.85, color: PLATE_COLORS.dim });
   }
-  plateText(ctx, `${cfg.labels?.energy || 'ENERGY TO REMOVE'} (MJ/mol, EACH TICK ABOUT TEN TIMES THE LAST)`.toUpperCase(), x1, h - 4, {
+  plateText(ctx, `${cfg.labels?.energy || 'ENERGY TO REMOVE'} (MJ/mol, EACH TICK ABOUT TEN TIMES THE LAST, HIGHEST ${flip ? 'AT THE LEFT' : 'AT THE RIGHT'})`.toUpperCase(), x1, h - 4, {
     align: 'right', size: small * 0.72, color: PLATE_COLORS.dim
   });
   plateText(ctx, 'ELECTRONS', x0, topY - 6, { size: small * 0.85, color: PLATE_COLORS.dim });
@@ -281,10 +287,14 @@ export class ElectronBench extends PlateBench {
 
   setPlates(items, cfg = {}) {
     this.cfg = { maxPm: 240, labels: {}, show: {}, ...cfg };
+    this.measured = { ...(cfg.measured || {}) };
     super.setPlates(items);
   }
 
   /* ---- tools ---- */
+
+  /** Turn the energy axis round: highest at the left (the course's way) or at the right. */
+  setFlip(on) { this.cfg.flip = Boolean(on); this.drawAll(); }
 
   /** Fire high-energy light at every spectrum plate: the peaks fill in, lowest energy first. */
   fire() {
@@ -358,6 +368,15 @@ export class ElectronBench extends PlateBench {
     }
     if (hit.key === 'electron') {
       const p = planPull(item, hit.shell);
+      if (this.cfg.trendMap) {
+        // Radius is the atom's, whichever electron is tapped; a pull is only the outermost electron's.
+        const outer = hit.shell === item.shells.length - 1;
+        const val = this.cfg.trendMetric === 'radius' ? item.radius : (outer ? p.pull : null);
+        if (Number.isFinite(val)) {
+          this.measured[item.sym] = { val };
+          this.drawAll();
+        }
+      }
       return { mark: { shell: hit.shell }, read: { kind: 'electron', rig: item, shell: hit.shell, ...p } };
     }
     return null;
@@ -368,6 +387,15 @@ export class ElectronBench extends PlateBench {
     ctx.fillStyle = PLATE_COLORS.bg;
     ctx.fillRect(0, 0, w, h);
     const hits = item.head === 'atom' ? drawAtom(ctx, w, h, item, this.cfg, o) : drawSpectrum(ctx, w, h, item, this.cfg, o);
+    // One map for the whole bench, drawn on the last plate, scaled to what has been measured.
+    if (this.cfg.trendMap && item === this.items[this.items.length - 1]) {
+      const vals = Object.values(this.measured || {}).map(m => m.val).filter(Number.isFinite);
+      drawTrendMap(ctx, 8, h - 55, w - 16, 50, this.measured || {}, {
+        title: this.cfg.trendTitle || 'Trend Map',
+        minVal: vals.length > 1 ? Math.min(...vals) * 0.9 : 0,
+        maxVal: vals.length ? Math.max(...vals) : 1
+      });
+    }
     raster(ctx, w, h, o.sweep, 0, h);
     aperture(ctx, w, h);
     return hits;

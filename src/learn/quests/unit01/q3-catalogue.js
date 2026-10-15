@@ -70,7 +70,10 @@ const SPEAKER = 'Vess';
    first is slower than trying it. The lines are gone and nothing was
    lost with them.
    ------------------------------------------------------------------ */
-const TOOL_TEXT = {};
+const TOOL_TEXT = {
+  clear: [{ from: 1, key: 'Clear Board', what: 'Puts all placed cards back in the drawer.' }],
+  tester: [{ from: 5, key: 'Test Card', what: 'Tests how the active card trades electrons with a partner.' }]
+};
 
 /**
  * The legend line for one control on one stage, or null if there is none.
@@ -125,14 +128,14 @@ export const DOES_TEXT = {
 const RUN_18 = ['c01', 'c02', 'c03', 'c04', 'c05', 'c06', 'c07', 'c08', 'c09',
   'c10', 'c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18'];
 
-/** The chart as it stands once the rows are laid: eight across, a gap is a gap. */
+/** The chart as it stands once the rows are laid: columns 1, 2, gap, 13-18. */
 const CHART_ROWS = [
-  ['c01', null, null, null, null, null, null, 'c02'],
-  ['c03', 'c04', 'c05', 'c06', 'c07', 'c08', 'c09', 'c10'],
-  ['c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18']
+  ['c01', null, null, null, null, null, null, null, 'c02'],
+  ['c03', 'c04', null, 'c05', 'c06', 'c07', 'c08', 'c09', 'c10'],
+  ['c11', 'c12', null, 'c13', 'c14', 'c15', 'c16', 'c17', 'c18']
 ];
 
-const COLUMN_HEADS = ['1', '2', '3', '4', '5', '6', '7', '8'];
+const COLUMN_HEADS = ['1', '2', '· · ·', '13', '14', '15', '16', '17', '18'];
 
 /** The chart with one entry swapped for a slot the player has to fill. */
 function chartWithSlots(swaps) {
@@ -154,7 +157,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench holds a card for each element, and tapping a card reads it. To file a card, tap it, then tap the slot on the board you want it in.'
     },
-    prompt: 'We need to catalog the elements we found across the refinery flats. File the six cards into the reference strip, from fewest protons on the left to most on the right.',
+    prompt: 'File the six cards into the reference strip, from fewest protons on the left to most on the right.',
     controls: ['reader', 'file', 'clear'],
     masked: true,
     board: { label: 'Reference strip', rows: [['#p1', '#p2', '#p3', '#p4', '#p5', '#p6']] },
@@ -198,41 +201,49 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Find The Repeat',
-    prompt: 'Notice how the electron pattern repeats! Skipping the first two cards, how many go by before the outer-shell count starts over at 1?',
+    prompt: 'Tap every card where the pattern starts over.',
     controls: ['reader'],
     board: { label: 'All 18 cards, in atomic number order', rows: [RUN_18] },
     drawer: [],
-    widget: { type: 'number', min: 2, max: 18, label: 'Cards before it starts over' },
-    foes: [{ id: 'grid', label: 'Periodic Grid' }],
+    widget: {
+      type: 'pick',
+      label: 'Cards where the pattern starts over',
+      help: 'Tap a card on the board to toggle its selection.'
+    },
     hints: [
-      'Tap the cards one by one and read the outer-shell electron count on each.',
-      'After the first two cards, find the card where the count drops back to 1, then the next card where it drops to 1 again.',
-      'Count LITHIUM as card one and keep counting along the row, stopping at the card just before SODIUM.'
+      'Each card carries one mark for every electron in its outer shell.',
+      'Follow the marks along the row and watch how the count changes from card to card.',
+      'Compare each card with the one before it, and tap every card whose marks fall back to a single mark after a longer run.'
     ],
     check(state) {
-      if (state.number === 8) return { ok: true };
-      if (state.number === 2) {
-        return { ok: false, notYet: true, msg: 'The counter has not moved yet — read the cards and set it.' };
+      if (!state.picked || state.picked.size === 0) {
+        return { ok: false, notYet: true, msg: 'Tap every card where the outer electron count drops back to 1.' };
       }
-      if (state.number === 18) {
-        return { ok: false, msg: 'That is every card in the row, not how far it gets before the count starts over.' };
+      if (state.picked.has('c01')) {
+        return { ok: false, msg: 'Hydrogen is where the pattern begins, not where it starts over.' };
       }
-      if (state.number === 10) {
-        return { ok: false, msg: 'That includes the first two cards — start counting at LITHIUM, where the count drops back to 1.' };
+      if (state.picked.size === 1 && (state.picked.has('c03') || state.picked.has('c11'))) {
+        return { ok: false, msg: 'You found one card where the count restarts, but there is another further along.' };
       }
-      return { ok: false, msg: 'Count again from LITHIUM, which reads 1, up to the card before SODIUM, which reads 1 again.' };
+      if ([...state.picked].some(id => id !== 'c03' && id !== 'c11')) {
+        return { ok: false, msg: 'A selected card does not restart at 1 outer electron. Look for where the mark count drops back to 1.' };
+      }
+      if (state.picked.size === 2 && state.picked.has('c03') && state.picked.has('c11')) {
+        return { ok: true };
+      }
+      return { ok: false, msg: 'Tap only the cards where the outer shell count drops back to 1.' };
     },
     reward: {
       log: 'Repeat measured at 8.',
       title: 'Periods',
-      body: 'The outer-shell count climbs and starts over, again and again, because one shell fills up and a new one opens. Break the row wherever it starts over and you get shorter rows: 2, then 8, then 8. Each of those rows is called a period.'
+      body: 'The outer-shell count climbs and starts over, again and again, because one shell fills up and a new one opens. Breaking the row wherever it starts over yields periods of 2, 8, and 8 cards. The ten middle columns appear later, leaving the gap between group 2 and 13.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Lay The Last Row',
-    prompt: 'Help finish assembling the refinery\'s reference chart. File the eight loose cards from the drawer into the empty bottom row, ordered left to right by atomic number.',
+    prompt: 'File the eight loose cards from the drawer into the empty bottom row, ordered left to right by atomic number.',
     controls: ['reader', 'file', 'clear'],
     board: {
       label: 'Reference chart',
@@ -240,7 +251,7 @@ export const STAGES = [
       rows: [
         CHART_ROWS[0],
         CHART_ROWS[1],
-        ['#r1', '#r2', '#r3', '#r4', '#r5', '#r6', '#r7', '#r8']
+        ['#r1', '#r2', null, '#r3', '#r4', '#r5', '#r6', '#r7', '#r8']
       ]
     },
     drawer: ['c16', 'c11', 'c14', 'c18', 'c12', 'c17', 'c13', 'c15'],
@@ -271,39 +282,48 @@ export const STAGES = [
     reward: {
       log: 'Chart complete: 18 cards, three rows.',
       title: 'The Periodic Table',
-      body: 'That chart is the periodic table. You built it from two things you measured yourself: one number to put the cards in order, and one pattern to say where a row ends. Chemists have drawn it this way since Dmitri Mendeleev laid his own cards out in 1869.'
+      body: 'That chart is the periodic table. You built it from two things you measured yourself: one number to put the cards in order, and one pattern to say where a row ends. Chemists have drawn it this way since Dmitri Mendeleev laid his own cards out in 1869, and the dotted gap marks ten more columns the full table fits between groups 2 and 13.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Read Down, Not Along',
-    prompt: 'Columns reveal chemical families! Look at column 6 (oxygen and sulfur) — how many electrons do cards in this column keep in their outer shells?',
+    prompt: 'What do the cards in one column have in common?',
     controls: ['reader'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
-    widget: { type: 'number', min: 0, max: 8, label: 'Outer-shell electrons in column 6' },
+    widget: {
+      type: 'choice',
+      label: 'What elements in the same column share',
+      options: [
+        { id: 'outer', label: 'Outer-shell electrons', note: 'Every card in the column has the same outer count.' },
+        { id: 'protons', label: 'Proton count', note: 'Their atomic numbers are identical.' },
+        { id: 'mass', label: 'Mass of one atom', note: 'They weigh the same.' },
+        { id: 'shells', label: 'Number of shells', note: 'They have the same number of electron shells.' }
+      ]
+    },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
     hints: [
-      'Column 6 is the sixth from the left: tap OXYGEN, then tap SULFUR.',
-      'Compare the two readouts, which report the same outer-shell count.',
-      'Read the outer-shell line on OXYGEN\'s card and enter that number; SULFUR\'s card is there to confirm it.'
+      'Compare cards in the same column, such as Oxygen and Sulfur in group 16.',
+      'Check their proton counts, their masses, their shells, and their outer-shell electrons.',
+      'Read one property on every card in a column and see which stays the same down all three columns.'
     ],
     check(state) {
-      if (state.number === 6) return { ok: true };
-      if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'The counter is still on zero — set it to what the cards report.' };
+      if (!state.choice) {
+        return { ok: false, notYet: true, msg: 'Pick what cards in a column share.' };
       }
-      if (state.number === 8) {
-        return { ok: false, msg: 'That is the count in column 8, on the far right. Column 6 is two columns to the left.' };
+      if (state.choice === 'outer') return { ok: true };
+      if (state.choice === 'protons') {
+        return { ok: false, msg: 'Proton counts increase down each column — compare oxygen and sulfur.' };
       }
-      if (state.number === 16) {
-        return { ok: false, msg: 'That is how many protons SULFUR has, not how many electrons it keeps outside.' };
+      if (state.choice === 'mass') {
+        return { ok: false, msg: 'Atoms get heavier down each column — compare lithium and sodium.' };
       }
-      return { ok: false, msg: 'Read OXYGEN and SULFUR again and use the outer-shell number they both report.' };
+      return { ok: false, msg: 'Each row down adds another electron shell — elements in the same row share shell count, not columns.' };
     },
     reward: {
-      log: 'Column 6 logged at 6 outer electrons.',
+      log: 'Columns share outer-shell electrons.',
       title: 'Groups',
       body: 'A column of the periodic table is called a group, and every card in a group has the same number of outer-shell electrons. Those outer electrons decide how an atom behaves, so a group is a list of atoms that behave alike.'
     }
@@ -312,8 +332,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Ones That Will Not Trade',
-    prompt: 'Vess wants to know which elements won\'t react or corrode equipment. Which group on the chart never trades an electron?',
-    controls: ['reader'],
+    prompt: 'Which group on the chart never trades an electron?',
+    controls: ['reader', 'tester'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
     widget: {
@@ -321,42 +341,42 @@ export const STAGES = [
       label: 'The group that never trades',
       options: [
         { id: 'g1', label: 'Group 1', note: 'HYDROGEN, LITHIUM, SODIUM.' },
-        { id: 'g4', label: 'Group 4', note: 'CARBON, SILICON.' },
-        { id: 'g7', label: 'Group 7', note: 'FLUORINE, CHLORINE.' },
-        { id: 'g8', label: 'Group 8', note: 'HELIUM, NEON, ARGON.' }
+        { id: 'g14', label: 'Group 14', note: 'CARBON, SILICON.' },
+        { id: 'g17', label: 'Group 17', note: 'FLUORINE, CHLORINE.' },
+        { id: 'g18', label: 'Group 18', note: 'HELIUM, NEON, ARGON.' }
       ]
     },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
     hints: [
-      'Tap one card from each of the four groups and read the last line of each readout.',
-      'Three of them trade: one hands an electron over, one takes one on, one holds on to a partner.',
-      'Read the last line on one card from each group and pick the group whose card says it does nothing either way.'
+      'Select a card from each group and press "Test Card" to see how it trades.',
+      'Group 1 hands electrons over, group 17 takes them on, and group 14 shares.',
+      'Find the group where "Test Card" reports that it does nothing at all.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four groups.' };
       }
-      if (state.choice === 'g8') return { ok: true };
+      if (state.choice === 'g18') return { ok: true };
       if (state.choice === 'g1') {
-        return { ok: false, msg: 'Group 1 does trade — LITHIUM and SODIUM both hand an electron over.' };
+        return { ok: false, msg: 'Group 1 does trade — test lithium or sodium to see them give an electron.' };
       }
-      if (state.choice === 'g7') {
-        return { ok: false, msg: 'Group 7 does trade — FLUORINE and CHLORINE both pull an electron off a partner.' };
+      if (state.choice === 'g17') {
+        return { ok: false, msg: 'Group 17 does trade — test fluorine or chlorine to see them take an electron.' };
       }
-      return { ok: false, msg: 'CARBON and SILICON do not give or take, but they still hold on to a partner, so look for the group that does nothing at all.' };
+      return { ok: false, msg: 'Carbon shares electrons with a partner; look for the group whose test reports it will not trade.' };
     },
     reward: {
-      log: 'Group 8 never trades.',
+      log: 'Group 18 never trades.',
       title: 'Noble Gases',
-      body: 'Group 8 are the noble gases, and they almost never react. Eight outer-shell electrons is a full shell, so there is nothing to gain by trading. Every other atom on the chart is reaching for that full shell, which is why it trades at all.'
+      body: 'Group 18 are the noble gases, and they almost never react. Eight outer-shell electrons is a full shell, so there is nothing to gain by trading. Every other atom on the chart is reaching for that full shell, which is why it trades at all.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Sort Them By What They Do',
-    prompt: 'Let\'s categorize how these elements react when pushed together. Classify each of the six cards by what it does with its valence electrons.',
-    controls: ['reader'],
+    prompt: 'Classify each of the six cards by what it does with its valence electrons.',
+    controls: ['reader', 'tester'],
     board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
     drawer: [],
     rows: ['c03', 'c12', 'c08', 'c17', 'c06', 'c10'],
@@ -372,9 +392,9 @@ export const STAGES = [
     },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
     hints: [
-      'Tap all six cards: the last line of each readout says what that card does.',
-      'Match each card\'s last line to the bin whose note says the same thing, and check it against the outer-shell count on the card.',
-      'A card with 1, 2 or 3 outer electrons hands them over, 5, 6 or 7 takes one on, 4 holds on to a partner, and a full shell does nothing.'
+      'Use "Test Card" on the cards to see which ones give, take, share, or do nothing.',
+      'Cards in the same group behave alike, so you can predict unmeasured cards from their column.',
+      'Metals on the left give electrons, nonmetals on the right take them, group 14 shares, and group 18 does nothing.'
     ],
     check(state) {
       const want = { c03: 'gives', c12: 'gives', c08: 'takes', c17: 'takes', c06: 'holds', c10: 'none' };
@@ -385,7 +405,7 @@ export const STAGES = [
       }
       for (const [id, expect] of Object.entries(want)) {
         if (state.bins[id] !== expect) {
-          return { ok: false, msg: `${CARDS[id].name} is filed wrong. Read what its card says it does, and check that against its outer-shell count.` };
+          return { ok: false, msg: `${CARDS[id].name} is filed wrong. Test it or compare its column position.` };
         }
       }
       return { ok: true };
@@ -393,14 +413,14 @@ export const STAGES = [
     reward: {
       log: 'All six filed by what they do.',
       title: 'Metals and Nonmetals',
-      body: 'Atoms on the left of the chart hand electrons over, and those are the metals. Atoms on the right take electrons on, and those are the nonmetals. The keenest of each get their own name: group 1 are the alkali metals and group 7 are the halogens.'
+      body: 'Atoms on the left of the chart hand electrons over, and those are the metals. Atoms on the right take electrons on, and those are the nonmetals. The keenest of each get their own name: group 1 are the alkali metals and group 17 are the halogens.'
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'The Card That Is Not There',
-    prompt: 'A survey card is missing from the board! Use the surrounding patterns to figure out the missing card\'s atomic number and what it will do.',
+    prompt: 'Determine the atomic number and chemical behavior of the missing survey card.',
     controls: ['reader'],
     board: {
       label: 'Reference chart — one slot empty',
@@ -452,7 +472,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Fill The Chart',
-    prompt: 'Four mystery cards from the refinery yard need filing. Determine where each unmarked card belongs on the chart based on its proton count.',
+    prompt: 'File each unmarked mystery card into its correct slot on the chart.',
     controls: ['reader', 'file', 'clear'],
     masked: true,
     board: {
@@ -542,7 +562,7 @@ export const PRACTICE = [
     explanation: 'A column is a group, and everything in it has the same outer-shell count. That is why they react in similar ways.'
   },
   {
-    question: 'Why do the noble gases in group 8 hardly react with anything?',
+    question: 'Why do the noble gases in group 18 hardly react with anything?',
     options: [
       { id: 'a', label: 'They have no electrons at all' },
       { id: 'b', label: 'They are too heavy to move' },
@@ -585,18 +605,21 @@ function blankState(stage) {
     number: stage.widget.type === 'number' || stage.widget.type === 'numchoice' ? stage.widget.min : null,
     choice: null,
     bins: {},
-    read: new Set()
+    read: new Set(),
+    picked: new Set(),
+    tested: new Set(),
+    activeCard: null
   };
 }
 
 /** The board state that solves each stage, in order. Checked by verify:learn. */
 export const SOLUTIONS = [
   { board: { p1: 'c01', p2: 'c06', p3: 'c08', p4: 'c11', p5: 'c18', p6: 'c19' } },
-  { number: 8 },
+  { picked: new Set(['c03', 'c11']) },
   { board: { r1: 'c11', r2: 'c12', r3: 'c13', r4: 'c14', r5: 'c15', r6: 'c16', r7: 'c17', r8: 'c18' } },
-  { number: 6, read: new Set(['c08', 'c16']) },
-  { choice: 'g8', read: new Set(['c10', 'c17']) },
-  { bins: { c03: 'gives', c12: 'gives', c08: 'takes', c17: 'takes', c06: 'holds', c10: 'none' } },
+  { choice: 'outer', read: new Set(['c08', 'c16']) },
+  { choice: 'g18', tested: new Set(['c10', 'c18']), read: new Set(['c10', 'c17']) },
+  { bins: { c03: 'gives', c12: 'gives', c08: 'takes', c17: 'takes', c06: 'holds', c10: 'none' }, tested: new Set(['c03', 'c08']) },
   { number: 14, choice: 'holds', read: new Set(['c13']) },
   { board: { s1: 'c04', s2: 'c07', s3: 'c13', s4: 'c16' } }
 ];
@@ -604,11 +627,11 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   { board: { p1: 'c01', p2: 'c06', p3: 'c08', p4: 'c11', p5: 'c19', p6: 'c18' } },
-  { number: 10 },
+  { picked: new Set(['c01', 'c03']) },
   { board: { r1: 'c11', r2: 'c12', r3: 'c13', r4: 'c15', r5: 'c14', r6: 'c16', r7: 'c17', r8: 'c18' } },
-  { number: 16, read: new Set(['c08', 'c16']) },
-  { choice: 'g7', read: new Set(['c10', 'c17']) },
-  { bins: { c03: 'gives', c12: 'takes', c08: 'takes', c17: 'takes', c06: 'holds', c10: 'none' } },
+  { choice: 'protons', read: new Set(['c08', 'c16']) },
+  { choice: 'g17', tested: new Set(['c10']), read: new Set(['c10', 'c17']) },
+  { bins: { c03: 'gives', c12: 'takes', c08: 'takes', c17: 'takes', c06: 'holds', c10: 'none' }, tested: new Set(['c03']) },
   { number: 14, choice: 'gives', read: new Set(['c13']) },
   { board: { s1: 'c07', s2: 'c04', s3: 'c13', s4: 'c16' } }
 ];
@@ -724,6 +747,9 @@ export function mount(container, ctx) {
     if (stage.controls.includes('clear')) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="clear">Clear Board</button>');
     }
+    if (stage.controls.includes('tester')) {
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="tester">Test Card</button>');
+    }
     // `reader` and `file` are affordances rather than keys: there is no button
     // for tapping a card. They still carry a legend, because the rule is about
     // what the player has to be told, not about what has a button.
@@ -733,19 +759,57 @@ export function mount(container, ctx) {
     frame.setControls(parts.join(''));
     frame.el.controls.querySelectorAll('[data-tool]').forEach(btn => {
       btn.addEventListener('click', () => {
-        board.clearBoard();
-        syncBoard();
-        soundscape.playToggleClack?.();
-        renderReadout(null);
+        const tool = btn.dataset.tool;
+        if (tool === 'clear') {
+          board.clearBoard();
+          syncBoard();
+          soundscape.playToggleClack?.();
+          renderReadout(null);
+        } else if (tool === 'tester') {
+          runTester();
+        }
       });
     });
+  }
+
+  function runTester() {
+    const cardId = state.activeCard;
+    if (!cardId) {
+      frame.note('Tap a card on the board first.');
+      return;
+    }
+    const c = CARDS[cardId];
+    if (!c) return;
+    state.tested.add(cardId);
+    board.setTag(cardId, c.does.toUpperCase());
+    soundscape.playBondSnap?.();
+    frame.setReadout(`
+      <div class="lq-readout-card">
+        <div class="lq-readout-head">Tester // ${esc(c.name)}</div>
+        <div class="lq-readout-code">${esc(c.code)}</div>
+        <p class="lq-readout-line">${esc(DOES_TEXT[c.does])}</p>
+      </div>
+    `);
   }
 
   /* ---------------- instrument callbacks ---------------- */
 
   function onProbe(cardId) {
+    state.activeCard = cardId;
     state.read.add(cardId);
     soundscape.playScanSweep?.();
+    const stage = STAGES[index];
+    if (stage.widget.type === 'pick') {
+      if (!state.picked) state.picked = new Set();
+      if (state.picked.has(cardId)) {
+        state.picked.delete(cardId);
+        board.setTag(cardId, '');
+      } else {
+        state.picked.add(cardId);
+        board.setTag(cardId, 'PICKED');
+      }
+      renderWidget();
+    }
     renderReadout(cardId);
   }
 
@@ -783,7 +847,6 @@ export function mount(container, ctx) {
         ${line('Protons', String(c.z))}
         ${line('Electrons in the outer shell', String(c.outer))}
         ${line('Mass of one atom', c.mass.toFixed(1))}
-        <p class="lq-readout-line">${esc(DOES_TEXT[c.does])}</p>
       </div>
     `);
   }
@@ -802,6 +865,20 @@ export function mount(container, ctx) {
   function renderWidget() {
     const stage = STAGES[index];
     const w = stage.widget;
+
+    if (w.type === 'pick') {
+      const pickedNames = [...(state.picked || [])].map(id => CARDS[id]?.name).filter(Boolean);
+      frame.setWidget(`
+        <div class="lq-answer">
+          <span class="form-label">${esc(w.label)}</span>
+          <p class="form-help">${esc(w.help || 'Tap a card on the board to toggle its selection.')}</p>
+          <div class="lq-bin-keys">
+            ${pickedNames.length ? pickedNames.map(name => `<span class="choice-option selected lq-bin-key"><span class="lq-bin-label">${esc(name)}</span></span>`).join('') : '<span class="form-help">No cards selected yet.</span>'}
+          </div>
+        </div>
+      `);
+      return;
+    }
 
     if (w.type === 'board') {
       frame.setWidget(`

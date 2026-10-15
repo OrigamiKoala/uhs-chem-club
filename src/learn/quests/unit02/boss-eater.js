@@ -1,235 +1,295 @@
 /**
  * boss-eater.js — Learn world 2 Boss Encounter: The Lantern-Eater.
  *
- * An auroral entity feeding on optical flux across the Lanternfall ice field.
- * Multi-phase synthesis boss testing every bench in Lanternfall:
- *   Phase 1: Line Spectra (excited hydrogen jump · q3)
- *   Phase 2: Threshold Frequency (photoelectric emission · q2)
- *   Phase 3: Hund's Rule & Paramagnetism (unpaired electrons · q6)
- *   Phase 4: PES Core Identification (nuclear charge · q7)
- *   Phase 5: Spectrophotometric Absorbance (Beer-Lambert law · q9)
+ * An auroral entity feeding on the lamps of the Lanternfall ice field. Five phases,
+ * each on the REAL instrument of a bench already worked and each a fresh specimen,
+ * the way boss-warden is built:
+ *   1  the prism and the energy ladder  (q3-lines)   which drop makes a given line
+ *   2  the photocell                    (q2-photon)  which lamp frees electrons slowest
+ *   3  the box rack and its magnet      (q6-filling) how many electrons stand alone
+ *   4  the photoelectron bench          (q7-pes)     name a sealed atom from its peaks
+ *   5  the calibration plot             (q9-absorb)  the strength of a sealed solution
+ *
+ * No prompt carries a figure the bench has to give: the answer in every phase is
+ * read, compared or measured on the plate, and no readout here names it.
+ * The eater only observes: its pose is read from the instrument's own planner
+ * (`planPhotocell`, the absorbance on the plot) and never touches `check()`.
  *
  * Awards Case File clue: clue_lantern_lens.
  */
 
-import { LearnFrame } from '../../engine/frame.js';
-import { resolveEncounter } from '../../engine/foes.js';
+import { LightBench, BoxRack, ElectronBench } from '../../engine/instruments.js';
+import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
+import { planPhotocell, planAbsorb, jumpForLine } from '../../engine/lightdata.js';
+import { handKeys, paintHand, describeAct } from '../../engine/rackcontrols.js';
+import { pullWords } from '../../engine/magnetnotes.js';
+import { readRack } from '../../engine/electrons.js';
 import { esc } from '../../../ui/layout.js';
-import { soundscape } from '../../../audio/soundscape.js';
 import { session } from '../../../session.js';
 
 export const meta = { stageCount: 5 };
+
+export const BUILDS_ON = [
+  'unit02/q1-wave', 'unit02/q2-photon', 'unit02/q3-lines',
+  'unit02/q6-filling', 'unit02/q7-pes', 'unit02/q9-absorb'
+];
+
+export function toolNoteFor() { return null; }
+
+const LABELS = { band: 'Band', spacing: 'Wavelength', rate: 'Frequency', count: 'Electrons freed per second', speed: 'Fastest electron', dial: 'Wavelength' };
+const TUBE = (id, gas, label, note) => ({ id, label, head: 'prism', source: { type: 'tube', gas }, note });
+const RACK_ROWS = ['1s', '2s', '2p'];
+
+/** Three standards read through 1 cm at 630 nm, and the sealed sample's reading. */
+const STANDARDS = [0.003, 0.006, 0.009].map(conc => ({ conc, abs: planAbsorb('cuso4', 630, 1, conc) }));
+const SEALED_CONC = 0.0075;
+const SEALED_ABS = planAbsorb('cuso4', 630, 1, SEALED_CONC);
+
+/* ------------------------------------------------------------------
+   THE FIVE PHASES
+   ------------------------------------------------------------------ */
 
 export const STAGES = [
   /* ---------------------------------------------------------------- Phase 1 */
   {
     id: 'phase1',
-    title: 'Phase 1 · Spectral Transition',
-    prompt: 'The giant lamp-moth radiates a blinding red aurora! Which electron drop between hydrogen energy levels powers its crimson glow?',
-    samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
+    title: 'The Eater\'s Lamp',
+    bench: 'light',
+    prompt: 'Which drop between rungs makes the eater lamp\'s 486 nm line?',
+    labels: LABELS,
+    controls: [],
+    ladder: 'ladder',
+    rigs: [
+      TUBE('tube', 'H', 'EATER LAMP', 'H, glowing'),
+      { id: 'ladder', label: 'LADDER', head: 'ladder', note: 'the rungs of hydrogen' }
+    ],
     widget: {
-      type: 'choice',
-      label: 'The transition',
+      type: 'choice', label: 'The drop',
       options: [
-        { id: 'j32', label: 'Drop from the third rung to the second' },
-        { id: 'j42', label: 'Drop from the fourth rung to the second' },
-        { id: 'j21', label: 'Drop from the second rung to the first' },
-        { id: 'j23', label: 'Jump from the second rung to the third' }
+        { id: 'j42', label: 'From the fourth rung to the second' },
+        { id: 'j52', label: 'From the fifth rung to the second' },
+        { id: 'j32', label: 'From the third rung to the second' },
+        { id: 'j24', label: 'From the second rung to the fourth' }
       ]
     },
     encounter: {
       species: 'the lantern-eater',
       act: 'Trace Line',
-      intent: 'A coherent red spectral glow radiates through the auroral fog.',
-      hit: 'The Balmer series transition resonates and punctures the optical veil.'
+      intent: 'The eater drinks the lamp\'s glow, one coloured line at a time.',
+      hit: 'The eater loses the line it was feeding on and scatters into cold aurora.'
     },
     hints: [
-      'Recall that light leaves only when an electron drops to a lower rung.',
-      'Compare the red line with the other hydrogen lines to find the smallest drop.',
-      'Match the smallest visible drop to the pair of rungs that makes it.'
+      'Tap a bright line on the band and watch which rungs light on the ladder.',
+      'Find the line at 486 nm among the bright ones and read the pair of rungs it lights.',
+      'Remember that light leaves as an electron falls, so the start sits above the landing.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, msg: 'Select the electron transition.' };
-      if (state.choice === 'j23') {
-        return { ok: false, msg: 'Emission releases photons when falling, not climbing.' };
+      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the drop.' };
+      if (state.choice === 'j24') {
+        return { ok: false, msg: 'Light is given out when an electron drops, so the move must run from a higher rung to a lower one.' };
       }
-      if (state.choice !== 'j32') {
-        return { ok: false, msg: 'That drop does not match the red line. Look for the smallest visible drop.' };
+      if (state.choice !== 'j42') {
+        return { ok: false, msg: 'Tap the 486 nm line itself and read which rungs the ladder lights; two lines can look alike.' };
       }
       return { ok: true };
     },
     reward: {
-      title: 'Emission Disrupted',
-      body: 'Pinpointing the drop behind the red glow tears a hole in the moth\'s light.',
-      log: 'Red emission transition mapped to 656 nm.'
+      title: 'One Line, One Drop',
+      body: 'Every line in a spectrum is one drop between two energy levels, and the bigger the drop, the shorter the wavelength of the light. The same drop always makes the same line.',
+      log: 'The 486 nm line is one particular drop between two levels.'
     }
   },
 
   /* ---------------------------------------------------------------- Phase 2 */
   {
     id: 'phase2',
-    title: 'Phase 2 · Threshold Barrier',
-    prompt: 'The beast projects a shimmering photoelectric barrier tuned to a green threshold! Which surveyor beam packs enough energy to blast electrons through?',
-    samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
+    title: 'The Cesium Shell',
+    bench: 'light',
+    prompt: 'Which lamp frees electrons from the eater\'s cesium plate at the lowest speed?',
+    labels: LABELS,
+    controls: ['tune'],
+    settings: [650, 540, 450, 350],
+    start: 1,
+    brightness: 5,
+    reference: ['Sample A: 540 nm', 'Sample B: 450 nm', 'Sample C: 350 nm'],
+    rigs: [{ id: 'cell', label: 'CESIUM PLATE', head: 'photocell', metal: 'Cs', tuned: true, note: 'Cs, at full brightness' }],
     widget: {
-      type: 'choice',
-      label: 'Incident beam',
+      type: 'choice', label: 'The lamp',
       options: [
-        { id: 'violet', label: 'Violet light' },
-        { id: 'red', label: 'Red light' },
-        { id: 'infrared', label: 'Infrared light' }
+        { id: 'a', label: 'Sample A' },
+        { id: 'b', label: 'Sample B' },
+        { id: 'c', label: 'Sample C' }
       ]
     },
     encounter: {
       species: 'the lantern-eater',
-      act: 'Exceed Work',
-      intent: 'A glowing photocathode barrier repels incoming optical flux.',
-      hit: 'High-frequency photons overcome the barrier and strip outer charge.'
+      act: 'Match Light',
+      intent: 'The eater\'s shell clings to its electrons and gives them up only to the right light.',
+      hit: 'The shell gives way and the eater\'s glow drains into the ice.'
     },
     hints: [
-      'Recall that only light above the threshold frequency frees any electron.',
-      'Compare each beam\'s frequency with the green threshold.',
-      'Keep the beam whose photons each carry more than the threshold energy.'
+      'Set the dial to each lamp\'s wavelength in turn and read the speed meter.',
+      'Compare the speed readings across the three lamps rather than the counter.',
+      'Look for the lamp whose speed reading is the smallest one above zero.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, msg: 'Select the incident light.' };
-      if (state.choice !== 'violet') {
-        return { ok: false, msg: 'Only light above the threshold frequency frees electrons. Compare each beam with it.' };
+      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick a lamp.' };
+      if (state.choice !== 'a') {
+        return { ok: false, msg: 'Set the dial to that lamp and compare its speed reading with the other two.' };
       }
       return { ok: true };
     },
     reward: {
-      title: 'Barrier Stripped',
-      body: 'High frequency photons exceed the threshold energy, stripping the surface electrons.',
-      log: 'Photoelectric barrier pierced by high-frequency beam.'
+      title: 'Spare Energy Becomes Speed',
+      body: 'A photon pays the plate\'s work function to free an electron, and whatever energy is left over becomes the electron\'s speed. Light only just above the threshold frees electrons slowly.',
+      log: 'Photons close to the threshold free the slowest electrons.'
     }
   },
 
   /* ---------------------------------------------------------------- Phase 3 */
   {
     id: 'phase3',
-    title: 'Phase 3 · Unpaired Magnetism',
-    prompt: 'A fluctuating paramagnetic shell deflects our sensors! According to Hund\'s rule, how many unpaired electrons exist in a neutral carbon atom?',
-    samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
-    widget: { type: 'number', min: 0, max: 6, step: 1, unit: 'unpaired electrons' },
+    title: 'The Magnet Shield',
+    bench: 'rack',
+    prompt: 'How many electrons in an oxygen atom stand alone in a box?',
+    controls: ['hand', 'magnet'],
+    rigs: [{ id: 'rack', label: 'SAMPLE O', head: 'rack', layout: 'atomic', rows: RACK_ROWS, sample: 'O', note: 'O, eight electrons' }],
+    widget: { type: 'number', min: 0, max: 8, step: 1, label: 'Electrons standing alone' },
     encounter: {
       species: 'the lantern-eater',
-      act: 'Align Spins',
-      intent: 'Magnetic shielding fluctuates around the unpaired valence envelope.',
-      hit: 'Hund rule orbital spins neutralize the paramagnetic field.'
+      act: 'Test Pull',
+      intent: 'The eater hides behind a field that tugs at lone electrons.',
+      hit: 'The field fails and the eater is left bare in the dark.'
     },
     hints: [
-      'Write carbon\'s electrons into rows from the lowest up.',
-      'Compare how the last row\'s electrons sit under Hund\'s rule.',
-      'Count the electrons left standing alone in separate boxes.'
+      'Press "Test Sample" to see how hard oxygen is pulled, then fill a rack and press "Test Rack".',
+      'Build oxygen\'s eight electrons from the lowest row up and compare the rack\'s pull with the sample\'s.',
+      'Count the electrons standing alone in their boxes on the rack that pulls exactly as hard as the sample.'
     ],
     check(state) {
       const n = state?.number;
-      if (n === null || n === undefined) return { ok: false, msg: 'Set the number of unpaired electrons.' };
-      if (n === 0) return { ok: false, msg: 'Hund\'s rule keeps electrons unpaired across separate p orbitals.' };
-      if (n !== 2) return { ok: false, msg: 'Hund\'s rule requires separate p orbitals to be populated in parallel.' };
+      if (n === null || n === undefined) return { ok: false, notYet: true, msg: 'Set how many electrons stand alone.' };
+      if (n !== 2) {
+        return { ok: false, msg: 'Match the rack\'s pull to the sample\'s pull, then count the electrons that stand alone on that rack.' };
+      }
       return { ok: true };
     },
     reward: {
-      title: 'Field Neutralized',
-      body: 'The two unpaired 2p electrons explain the magnetic pull and collapse the field.',
-      log: 'Paramagnetic shielding countered with parallel spin counts.'
+      title: 'Lone Electrons Feel the Magnet',
+      body: 'Electrons that stand alone in a box are pulled by a magnet, and paired electrons cancel each other out. Electrons spread across a row before they pair up, which is Hund\'s rule.',
+      log: 'The sample\'s pull matches a rack with the right number of lone electrons.'
     }
   },
 
   /* ---------------------------------------------------------------- Phase 4 */
   {
     id: 'phase4',
-    title: 'Phase 4 · Deep Core Anchor',
-    prompt: 'A deep PES binding signature stabilizes the moth\'s core! Which noble element anchors it with a charge of ten protons?',
-    samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
+    title: 'The Sealed Core',
+    bench: 'pes',
+    prompt: 'Which element is the atom in the eater\'s sealed spectrum?',
+    labels: { energy: 'BINDING ENERGY' },
+    controls: ['fire'],
+    reference: ['Oxygen: Z = 8', 'Fluorine: Z = 9', 'Neon: Z = 10', 'Sodium: Z = 11'],
+    rigs: [{ id: 'core', label: 'SEALED CORE', head: 'spectrum', sym: 'Ne', note: 'an atom whose element is not named' }],
     widget: {
-      type: 'choice',
-      label: 'The element',
+      type: 'choice', label: 'The element',
       options: [
-        { id: 'Ne', label: 'Neon' },
-        { id: 'F', label: 'Fluorine' },
         { id: 'O', label: 'Oxygen' },
+        { id: 'F', label: 'Fluorine' },
+        { id: 'Ne', label: 'Neon' },
         { id: 'Na', label: 'Sodium' }
       ]
     },
     encounter: {
       species: 'the lantern-eater',
-      act: 'Strip Core',
-      intent: 'A dense inner-shell ionization signal anchors the entity.',
-      hit: 'Ten core protons are identified, dissolving the noble core anchor.'
+      act: 'Read Peaks',
+      intent: 'The eater keeps its core sealed so nobody can say what it is made of.',
+      hit: 'The core is named, and the eater has nothing left to hide behind.'
     },
     hints: [
-      'Recall that the proton count is the atomic number.',
-      'Compare each option\'s atomic number with the measured count.',
-      'Keep the element whose number matches the peak\'s count.'
+      'Press "Fire Light" and tap every peak on the sealed core\'s plate.',
+      'Add up the heights of all the peaks to count the electrons in the atom.',
+      'A neutral atom has as many electrons as its atomic number, so match your total to the catalogue.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, msg: 'Select the element.' };
+      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the element.' };
       if (state.choice !== 'Ne') {
-        return { ok: false, msg: 'Match the proton count directly to the atomic number on the periodic table.' };
+        return { ok: false, msg: 'Add up every peak\'s height and compare the total with the atomic number of each candidate.' };
       }
       return { ok: true };
     },
     reward: {
-      title: 'Core Dissolved',
-      body: 'Ten nuclear protons identify neon, collapsing the dense central binding shell.',
-      log: 'Core anchor identified as neon and cleared.'
+      title: 'Peaks Add Up to the Atom',
+      body: 'The heights of all the peaks add up to the number of electrons, and in a neutral atom that is the atomic number. A spectrum can therefore name an atom nobody has labelled.',
+      log: 'The peak heights summed to one atomic number.'
     }
   },
 
   /* ---------------------------------------------------------------- Phase 5 */
   {
     id: 'phase5',
-    title: 'Phase 5 · Optical Absorbance',
-    prompt: 'Target the cuvette chamber to quench the beast\'s light! Using A = εbc, calculate the absorbance for a 0.010 mol/L solution across 1.0 cm with ε = 40 L/(mol·cm).',
-    samples: [{ id: 'eater', label: 'The Lantern-Eater' }],
-    widget: { type: 'decimal', min: 0.1, max: 2.0, step: 0.1, label: 'Absorbance' },
+    title: 'The Dimmed Cell',
+    bench: 'light',
+    prompt: 'What concentration does the eater\'s sealed copper solution hold, in mmol/L?',
+    labels: { absorb: 'Absorbance' },
+    controls: [],
+    rigs: [{
+      id: 'cal', label: 'STANDARDS AND SEALED SAMPLE', head: 'plot', points: STANDARDS, unknownAbs: SEALED_ABS,
+      maxConc: 0.012, maxAbs: 0.3, note: 'three standards at 1 cm, and one sealed reading'
+    }],
+    widget: { type: 'decimal', label: 'Concentration (mmol/L)', min: 0, max: 12, step: 0.5 },
     encounter: {
       species: 'the lantern-eater',
-      act: 'Quench Flux',
-      intent: 'The entity feeds on 630 nm flux within the cuvette chamber.',
-      hit: 'The exact Beer-Lambert absorbance matches and extinguishes the entity.'
+      act: 'Measure Dim',
+      intent: 'The eater dims the light that passes through the cell.',
+      hit: 'The dimming is measured, and the eater has no shadow left to hide in.'
     },
     hints: [
-      'Recall that absorbance is the constant times the path times the concentration.',
-      'Compare the units so the path and the concentration multiply cleanly.',
-      'Multiply the three figures in order and read the product.'
+      'Read the points of the three standards and the sealed sample\'s absorbance off the plot.',
+      'See where the sealed absorbance sits against the line the standards make.',
+      'Carry the sealed absorbance across to the line and read the concentration beneath that point.'
     ],
     check(state) {
-      const d = state?.decimal;
-      if (d === null || d === undefined || d === 0.1) return { ok: false, msg: 'Set the calculated absorbance.' };
-      if (Math.abs(d - 0.4) > 0.05) {
-        return { ok: false, msg: 'Apply A = ε b c: multiply forty by one by zero point zero one.' };
+      if (state.decimal === 0) return { ok: false, notYet: true, msg: 'Set the concentration you read off the plot.' };
+      if (state.decimal !== 7.5) {
+        return { ok: false, msg: 'Follow the sealed level across to the line through the standards, then down to the concentration scale.' };
       }
       return { ok: true };
     },
     reward: {
-      title: 'The Eater Falls',
-      body: 'The Beer-Lambert calculation tunes the quenching laser to 0.40 absorbance, dispersing the entity into auroral trails.',
-      log: 'The Lantern-Eater extinguished. Precision lens recovered.'
+      title: 'Dimming Measures Amount',
+      body: 'Standards of known concentration make a line of absorbance against concentration, and an unknown solution is read back off that line. More dissolved copper dims the light more.',
+      log: 'The sealed solution\'s absorbance sat on the standards\' line.'
     }
   }
 ];
 
 export const SOLUTIONS = [
-  { choice: 'j32' },
-  { choice: 'violet' },
+  { choice: 'j42' },
+  { choice: 'a' },
   { number: 2 },
   { choice: 'Ne' },
-  { decimal: 0.4 }
+  { decimal: 7.5 }
 ];
 
 export const MISSES = [
-  { choice: 'j21' },
-  { choice: 'red' },
-  { number: 0 },
+  { choice: 'j32' },
+  { choice: 'c' },
+  { number: 4 },
   { choice: 'F' },
-  { decimal: 0.8 }
+  { decimal: 6 }
 ];
 
+function blankState(stage) {
+  return {
+    setting: stage.start ?? null,
+    brightness: stage.brightness ?? 3,
+    rack: null
+  };
+}
+
 export function stateFor(i, overrides) {
-  return { choice: null, number: null, decimal: 0.1, ...overrides };
+  return { ...blankAnswer(STAGES[i]), ...blankState(STAGES[i]), ...overrides };
 }
 
 export const DEBRIEF = {
@@ -238,15 +298,15 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'The Lantern-Eater collapsed into harmless auroral ionization. In its optical focal chamber we recovered a precision prism ground for deep ultraviolet frequencies far past guild ratings.'
+      body: 'The Lantern-Eater has collapsed into shimmering ice. Among its remnants lies a precision lens ground from fluorite, proof that high-energy optics were deliberately deployed here.'
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Every phase was a bench you had already worked: lines, light, boxes, peaks and solutions. That is all of Lanternfall, and it was enough to starve the eater.'
+      body: 'Every phase tested a core quantum phenomenon: quantized spectral lines, photoelectric work functions, Hund\'s rule paramagnetism, core PES energies, and Beer-Lambert absorbance.'
     },
     {
       heading: 'Next',
-      body: 'The prism goes into the Case File. The next world asks what happens when two of these atoms come close enough to share the electrons you have just learned to place.'
+      body: 'The lens is catalogued in your Case File. Across the fog, the crystal lattices of Ligar rise, held together by the very electron pairs you have mapped.'
     }
   ]
 };
@@ -254,231 +314,255 @@ export const DEBRIEF = {
 export const PRACTICE = [
   {
     id: 'p1',
-    question: 'In the Bohr model of hydrogen, which jump produces a photon of visible light?',
+    question: 'Which electronic transition in a hydrogen atom emits a photon in the visible Balmer series?',
     options: [
-      { id: 'a', label: 'From n = 3 down to n = 2' },
-      { id: 'b', label: 'From n = 2 down to n = 1' },
-      { id: 'c', label: 'From n = 4 down to n = 1' }
+      { id: 'a', label: 'n = 3 to n = 2' },
+      { id: 'b', label: 'n = 1 to n = 2' },
+      { id: 'c', label: 'n = 4 to n = 1' }
     ],
     answer: 'a',
-    explanation: 'Transitions falling to n = 2 form the Balmer series, which fall in the visible region of the spectrum.'
+    explanation: 'The Balmer series consists of transitions ending at n = 2, producing visible light such as the red 656 nm line from n = 3 to n = 2.'
   },
   {
     id: 'p2',
-    question: 'What happens in the photoelectric effect when light frequency is below the threshold frequency?',
+    question: 'In a photoelectric effect experiment, what determines whether electrons are ejected from a metal surface?',
     options: [
-      { id: 'a', label: 'No electrons are emitted, regardless of light intensity' },
-      { id: 'b', label: 'Electrons are emitted with very low kinetic energy' },
-      { id: 'c', label: 'Electrons are emitted only after a long delay' }
+      { id: 'a', label: 'The frequency of the incident light must exceed the threshold frequency' },
+      { id: 'b', label: 'The intensity of the light must exceed a threshold brightness' },
+      { id: 'c', label: 'The light beam must be polarized parallel to the surface' }
     ],
     answer: 'a',
-    explanation: 'Below the threshold frequency, individual photons lack sufficient energy to overcome the metal\'s work function, so zero electrons are ejected.'
+    explanation: 'Each photon must carry energy E = hf greater than the metal\'s work function; intensity only increases the number of ejected electrons, not their individual energy.'
   },
   {
     id: 'p3',
-    question: 'How many unpaired electrons are found in a neutral nitrogen atom in its ground state?',
+    question: 'How many unpaired electrons are present in an isolated neutral nitrogen atom (Z = 7)?',
     options: [
       { id: 'a', label: '3' },
       { id: 'b', label: '1' },
       { id: 'c', label: '0' }
     ],
     answer: 'a',
-    explanation: 'Nitrogen has configuration 1s² 2s² 2p³. By Hund\'s rule, the three 2p electrons occupy separate orbitals with parallel spins, giving 3 unpaired electrons.'
+    explanation: 'Nitrogen has the configuration 1s² 2s² 2p³. By Hund\'s rule, the three 2p electrons each occupy separate degenerate orbitals with parallel spins.'
   },
   {
     id: 'p4',
-    question: 'Why does neon have a higher first ionization energy than fluorine?',
+    question: 'In photoelectron spectroscopy (PES), why does the 1s peak of neon appear at a much higher binding energy than that of oxygen?',
     options: [
-      { id: 'a', label: 'Neon has a greater effective nuclear charge pulling on the same shell' },
-      { id: 'b', label: 'Neon has more electron shells than fluorine' },
-      { id: 'c', label: 'Fluorine has more shielding electrons than neon' }
+      { id: 'a', label: 'Neon has a higher nuclear charge (10 protons vs. 8 protons)' },
+      { id: 'b', label: 'Neon has more valence electrons shielding the core' },
+      { id: 'c', label: 'Neon atoms are smaller and lighter than oxygen atoms' }
     ],
     answer: 'a',
-    explanation: 'Across period 2, neon has 10 protons compared to fluorine\'s 9, giving a larger effective nuclear charge that holds the valence shell tighter.'
+    explanation: 'A greater nuclear charge exerts a stronger Coulombic attraction on core electrons, requiring more energy to eject them.'
   },
   {
     id: 'p5',
-    question: 'According to Beer-Lambert law, if concentration doubles while path length stays constant, absorbance:',
+    question: 'A solution in a 1.0 cm cuvette has an absorbance of 0.60. If the path length is doubled to 2.0 cm with concentration unchanged, what is the new absorbance?',
     options: [
-      { id: 'a', label: 'Doubles' },
-      { id: 'b', label: 'Halves' },
-      { id: 'c', label: 'Stays the same' }
+      { id: 'a', label: '1.20' },
+      { id: 'b', label: '0.30' },
+      { id: 'c', label: '0.60' }
     ],
     answer: 'a',
-    explanation: 'Absorbance is directly proportional to concentration: A = ε b c. Doubling c doubles A.'
+    explanation: 'By the Beer-Lambert law (A = εbc), absorbance is directly proportional to path length b; doubling b doubles A from 0.60 to 1.20.'
   }
 ];
 
+/* ------------------------------------------------------------------
+   MOUNT
+   ------------------------------------------------------------------ */
+
 export function mount(container, ctx) {
-  let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
-  let cleared = ctx.isComplete ? STAGES.length : ctx.stagesCleared;
-  let state = { choice: null, number: null, decimal: 0.1 };
-  let busy = false;
+  let bench = null;
+  let benchKind = null;
+  let runner = null;
 
-  const frame = new LearnFrame(container, {
-    quest: ctx?.quest || { id: 'boss-eater' },
-    world: ctx?.world,
-    stageCount: STAGES.length,
-    rewards: STAGES.map(s => s.reward),
-    onSubmit: () => submit(),
-    onNext: () => next(),
-    onJump: i => loadStage(i),
-    onExit: () => ctx.exit()
-  });
+  const nmNow = () => {
+    const st = runner.stage.settings;
+    return st ? st[runner.state.setting - 1] : null;
+  };
 
-  function renderWidget(stage) {
-    const w = stage.widget;
-    if (w.type === 'choice') {
-      return `
-        <div class="lq-widget-choice" style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.5rem 0;">
-          ${w.options.map(opt => `
-            <button type="button" class="btn-secondary quest-btn-sm choice-btn${state.choice === opt.id ? ' btn-primary' : ''}" data-choice="${esc(opt.id)}" style="text-align: left; padding: 0.6rem 0.8rem;">
-              ${esc(opt.label)}
-            </button>
-          `).join('')}
-        </div>
-      `;
-    }
-    if (w.type === 'number') {
-      const val = state.number ?? w.min;
-      state.number = val;
-      return `
-        <div class="lq-widget-number" style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 1rem 0;">
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <button type="button" class="btn-secondary quest-btn-sm" id="btn-num-dec" style="width: 44px; height: 44px; font-size: 1.25rem;">-</button>
-            <span id="num-display" style="font-family: var(--font-mono); font-size: 1.6rem; min-width: 60px; text-align: center; color: var(--accent-amber);">${val}</span>
-            <button type="button" class="btn-secondary quest-btn-sm" id="btn-num-inc" style="width: 44px; height: 44px; font-size: 1.25rem;">+</button>
-          </div>
-          <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">${esc(w.unit || '')}</span>
-        </div>
-      `;
-    }
-    if (w.type === 'decimal') {
-      const val = state.decimal ?? w.min;
-      state.decimal = val;
-      return `
-        <div class="lq-widget-decimal" style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 1rem 0;">
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <button type="button" class="btn-secondary quest-btn-sm" id="btn-dec-down" style="width: 44px; height: 44px; font-size: 1.25rem;">-</button>
-            <span id="dec-display" style="font-family: var(--font-mono); font-size: 1.6rem; min-width: 60px; text-align: center; color: var(--accent-amber);">${val.toFixed(1)}</span>
-            <button type="button" class="btn-secondary quest-btn-sm" id="btn-dec-up" style="width: 44px; height: 44px; font-size: 1.25rem;">+</button>
-          </div>
-          <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">${esc(w.label || '')}</span>
-        </div>
-      `;
-    }
-    return '';
+  /** The eater reads its pose off the instrument's own figures and nothing else. */
+  function react(rigId, pose, quiet = false) {
+    runner.frame.foeReact(rigId, { pose }, quiet);
   }
 
-  function bindControls() {
-    const widget = frame.el.widget;
-    if (!widget) return;
-    const stage = STAGES[index];
-
-    widget.querySelectorAll('.choice-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        state.choice = btn.dataset.choice;
-        widget.querySelectorAll('.choice-btn').forEach(b => b.classList.toggle('btn-primary', b === btn));
-        soundscape.playToggleClack?.();
-      });
-    });
-
-    widget.querySelectorAll('#btn-num-dec').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const cur = state.number ?? stage.widget.min;
-        state.number = Math.max(stage.widget.min, cur - (stage.widget.step || 1));
-        const disp = widget.querySelector('#num-display');
-        if (disp) disp.textContent = String(state.number);
-      });
-    });
-
-    widget.querySelectorAll('#btn-num-inc').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const cur = state.number ?? stage.widget.min;
-        state.number = Math.min(stage.widget.max, cur + (stage.widget.step || 1));
-        const disp = widget.querySelector('#num-display');
-        if (disp) disp.textContent = String(state.number);
-      });
-    });
-
-    widget.querySelectorAll('#btn-dec-down').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const cur = state.decimal ?? stage.widget.min;
-        state.decimal = Math.max(stage.widget.min, Math.round((cur - stage.widget.step) * 10) / 10);
-        const disp = widget.querySelector('#dec-display');
-        if (disp) disp.textContent = state.decimal.toFixed(1);
-      });
-    });
-
-    widget.querySelectorAll('#btn-dec-up').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const cur = state.decimal ?? stage.widget.min;
-        state.decimal = Math.min(stage.widget.max, Math.round((cur + stage.widget.step) * 10) / 10);
-        const disp = widget.querySelector('#dec-display');
-        if (disp) disp.textContent = state.decimal.toFixed(1);
-      });
-    });
+  function paintSetting() {
+    const st = runner.stage.settings;
+    if (!st) return;
+    runner.paintDial('setting', runner.state.setting, { min: 1, max: st.length, text: `${st[runner.state.setting - 1]} nm` });
   }
 
-  function loadStage(i) {
-    index = i;
-    const stage = STAGES[i];
-    state = stateFor(i);
-    frame.setCleared(cleared);
-    frame.setStage({
-      index: i,
-      title: stage.title,
-      prompt: stage.prompt,
-      hints: stage.hints,
-      commitLabel: stage.encounter?.act || 'Commit',
-      encounter: resolveEncounter(stage)
+  function readPhotocell(quiet = false) {
+    const stage = runner.stage;
+    const nm = nmNow();
+    const rows = stage.rigs.map(r => {
+      const plan = planPhotocell(r.metal, nm, runner.state.brightness);
+      react(r.id, plan.freed ? 'ionized' : 'unmoved', quiet);
+      return `${r.label}: ${plan.count} electrons a second, fastest ${plan.speed.toFixed(1)} x 10^5 m/s`;
     });
-    frame.setWidget(renderWidget(stage));
-    bindControls();
+    runner.readout('Counter // plate', rows.join('. ') + '.');
   }
 
-  function submit() {
-    if (busy) return;
-    const stage = STAGES[index];
-    const res = stage.check(state);
-    if (!res.ok) {
-      soundscape.playMissileWhistle?.();
-      frame.miss(res.msg || 'The attempt faltered.');
-      return;
+  function setSetting(v) {
+    runner.state.setting = v;
+    bench.setSetting?.(v);
+    paintSetting();
+    readPhotocell();
+  }
+
+  function paintAll() {
+    if (benchKind === 'rack') paintHand(runner.frame.el.controls, bench.cfg?.hand, false);
+  }
+
+  function onProbe(hit) {
+    if (!hit) return;
+    const stage = runner.stage;
+    if (benchKind === 'light' && hit.kind === 'prism') {
+      const where = `Under the cursor: ${hit.nm} nm${hit.onLine ? ', on a line' : ''}.`;
+      if (stage.ladder && hit.onLine) {
+        const jump = jumpForLine(hit.nm);
+        if (jump) {
+          bench.showJump(stage.ladder, jump.hi, jump.lo);
+          runner.readout(`Band // ${hit.plateLabel}`, `${where} The ladder lights the jump from rung ${jump.hi} to rung ${jump.lo}.`);
+          react('tube', 'absorbed');
+        } else {
+          bench.clearJump();
+          runner.readout(`Band // ${hit.plateLabel}`, `${where} No pair of rungs on this ladder gives that line.`);
+        }
+      } else {
+        runner.readout(`Band // ${hit.plateLabel}`, where);
+      }
+    } else if (benchKind === 'rack') {
+      if (hit.kind === 'hand') { paintAll(); return; }
+      if (hit.kind === 'rack') {
+        runner.state.rack = hit.rack;
+        const d = describeAct(hit, bench.itemFor(hit.plateId));
+        runner.readout(d.head, d.body);
+        paintAll();
+      }
+    } else if (benchKind === 'pes' && hit.kind === 'peak') {
+      runner.readout(`Peak // ${hit.rig.label}`, `${hit.energy} MJ/mol, ${hit.height} ${hit.height === 1 ? 'electron' : 'electrons'}.`);
+      react('core', 'ionized');
+    } else if (benchKind === 'light' && stage.id === 'phase5') {
+      react('cal', 'absorbed');
     }
-    busy = true;
-    soundscape.playReactionComplete?.();
-    if (index + 1 > cleared) {
-      cleared = index + 1;
-      ctx.reportStage(index);
-    }
-    frame.setCleared(cleared);
-    const isLast = index >= STAGES.length - 1;
-    frame.clear({
-      title: stage.reward.title,
-      body: stage.reward.body,
-      log: stage.reward.log,
-      last: isLast
-    });
-    if (isLast) ctx.reportComplete();
-    busy = false;
   }
 
-  function next() {
-    if (index < STAGES.length - 1) {
-      loadStage(index + 1);
+  function onTool(tool) {
+    if (benchKind !== 'rack' && (tool.startsWith('hand:') || tool.startsWith('magnet') || tool === 'clear')) return;
+    if (benchKind !== 'pes' && tool === 'fire') return;
+    if (tool.startsWith('hand:')) {
+      bench.setHand(tool.split(':')[1]);
+      paintAll();
+    } else if (tool === 'clear') {
+      bench.clear();
+      runner.state.rack = bench.rackOf('rack');
+      runner.readout('Rack // cleared', 'The rack is back to how the stage handed it over.');
+    } else if (tool === 'magnet-sample') {
+      const m = bench.measured('rack');
+      if (m == null) return;
+      bench.pull?.('rack', m);
+      runner.readout('Magnet // sample', `${runner.stage.rigs[0].label}: ${pullWords(m)}`);
+    } else if (tool === 'magnet-rack') {
+      const reading = readRack(runner.state.rack || {});
+      bench.pull?.('rack', reading.pull);
+      runner.readout('Magnet // rack', `The arrangement on the rack: ${pullWords(reading.pull)}`);
+    } else if (tool === 'fire') {
+      bench.fire();
+      runner.readout('Light // fired', 'The plate is filling in. Tap a peak to read it.');
+    }
+  }
+
+  function ensureBench(kind, r) {
+    if (benchKind === kind) return;
+    bench?.dispose();
+    const host = r.frame.instrumentHost;
+    if (kind === 'light') bench = LightBench(host, { onProbe, onSetting: v => setSetting(v), onBrightness: () => {} });
+    else if (kind === 'rack') bench = BoxRack(host, { onProbe, onSelect: () => {} });
+    else bench = ElectronBench(host, { onProbe });
+    benchKind = kind;
+  }
+
+  function onLoad(stage, i, r) {
+    ensureBench(stage.bench, r);
+    const parts = [];
+    const dials = {};
+    if (stage.bench === 'light') {
+      bench.setRigs(stage.rigs, {
+        settings: stage.settings || [],
+        setting: r.state.setting || 1,
+        brightness: r.state.brightness,
+        brightnessDial: false,
+        labels: stage.labels,
+        ladderTop: ''
+      });
+      bench.setSelectable(false);
+      if (stage.settings) {
+        parts.push(r.dialHtml('setting', { label: 'Wavelength', min: 1, max: stage.settings.length, value: r.state.setting }));
+        dials.setting = { min: 1, max: stage.settings.length, onChange: v => setSetting(v) };
+      }
+      if (stage.reference?.length) {
+        parts.push(`
+          <div class="assay-extract">
+            <span class="form-label">On the plate</span>
+            <ul>${stage.reference.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+          </div>`);
+      }
+    } else if (stage.bench === 'rack') {
+      bench.setPlates(stage.rigs, { show: { n: true, l: true, ml: true, ms: true }, hand: null, core: false });
+      bench.setSelectable(false);
+      r.state.rack = bench.rackOf('rack');
+      parts.push(handKeys({ clear: true, core: false }));
+      parts.push(`
+        <div class="cb-field" role="group" aria-label="Magnet">
+          <span class="form-label">Magnet</span>
+          <button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="magnet-sample">Test Sample</button>
+          <button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="magnet-rack">Test Rack</button>
+        </div>`);
     } else {
+      bench.setPlates(stage.rigs, { labels: stage.labels });
+      bench.setSelectable(false);
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="fire">Fire Light</button>');
+      if (stage.reference?.length) {
+        parts.push(`
+          <div class="assay-extract">
+            <span class="form-label">Catalogue</span>
+            <ul>${stage.reference.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+          </div>`);
+      }
+    }
+    r.setControls(parts, onTool, { dials });
+
+    if (stage.bench === 'light' && stage.settings) { paintSetting(); readPhotocell(true); }
+    else {
+      const idle = {
+        phase1: ['Band // standby', 'Tap a position on a band to read it.'],
+        phase3: ['Rack // standby', 'Pick a hand, then tap a box.'],
+        phase4: ['Bench // standby', 'Fire the light, then tap a peak.'],
+        phase5: ['Plot // standby', 'Tap a point to read it.']
+      }[stage.id];
+      r.readout(null, null, { idleHead: idle[0], idle: idle[1] });
+      paintAll();
+    }
+  }
+
+  const bossCtx = {
+    ...ctx,
+    reportComplete() {
       ctx.reportComplete();
       session.recordClue?.(DEBRIEF.clueAwarded);
-      frame.showDebrief(DEBRIEF, () => ctx.exit());
-    }
-  }
-
-  loadStage(index);
-
-  return {
-    dispose() {
-      frame.dispose();
     }
   };
+
+  runner = createRunner(container, bossCtx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    setup: () => {},
+    onLoad,
+    onDispose: () => bench?.dispose()
+  });
+
+  runner.start();
+  return { dispose: () => runner.dispose() };
 }

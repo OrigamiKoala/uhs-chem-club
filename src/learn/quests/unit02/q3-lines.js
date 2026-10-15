@@ -64,9 +64,9 @@ export const STAGES = [
     title: 'Filament and Tube',
     briefing: {
       speaker: SPEAKER,
-      body: 'Welcome to the optical spectrograph! Let\'s pass light from lamps and glowing aurora gases through our prisms to reveal the patterns they cast.'
+      body: 'This spectrograph passes light from lamps and glowing gases through prisms. The prism spreads the light across a scale to reveal its pattern of colours.'
     },
-    prompt: 'Compare the lantern\'s glowing hot filament with the tube of excited gas. How does their light differ when spread across our scale?',
+    prompt: 'How does light from the hot filament differ from light from the gas tube?',
     labels: LABELS,
     controls: [],
     rigs: [
@@ -104,14 +104,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Name the Gas',
-    prompt: 'We recovered an unlabelled surveyor canister from the snowfields! Match its emission lines against our reference gases to identify what\'s inside.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A reference strip now slides over the sealed tube\'s band to match spectral lines like barcodes.'
+    },
+    prompt: 'Which reference gas matches the emission lines of the sealed tube?',
     labels: LABELS,
     controls: [],
     rigs: [
       TUBE('h', 'H', 'HYDROGEN', 'H, a reference tube'),
       TUBE('he', 'He', 'HELIUM', 'He, a reference tube'),
       TUBE('na', 'Na', 'SODIUM', 'Na, a reference tube'),
-      TUBE('x', 'He', 'SEALED TUBE', 'a tube whose gas is not named')
+      { ...TUBE('x', 'He', 'SEALED TUBE', 'a tube whose gas is not named'), overlay: [588, 502, 447, 668] }
     ],
     widget: {
       type: 'choice', label: 'The sealed gas',
@@ -143,7 +147,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Light Through Cool Gas',
-    prompt: 'Now let\'s shine the continuous filament lamp through a cloud of cold hydrogen gas. What happens to the light on the bench?',
+    prompt: 'What happens when the filament light passes through cool hydrogen gas?',
     labels: LABELS,
     controls: [],
     rigs: [
@@ -182,7 +186,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Which Jump',
-    prompt: 'Watch the atomic ladder beside the tube! Which electron drop between rungs produces the bright red emission line?',
+    prompt: 'Which electron drop between rungs produces the red emission line?',
     labels: LABELS,
     controls: [],
     ladder: 'ladder',
@@ -224,11 +228,29 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Energy of a Line',
-    prompt: 'Let\'s measure the energy of that brilliant cyan 486 nm emission line! Use the worked 656 nm line on the bench to guide your calculation.',
+    prompt: 'What is the energy of the 486 nm emission line?',
     labels: LABELS,
     controls: [],
     ladder: 'ladder',
     reference: ['Worked line: 656 nm is 3.03 x 10^-19 J', 'Planck\'s constant 6.626 x 10^-34 J s, light speed 3.00 x 10^8 m/s'],
+    slate: {
+      template: 'E = (h · c) / λ',
+      target: 'E',
+      targetUnit: 'x 10^-19 J',
+      slots: [
+        { id: 'h', label: 'h', unit: 'J·s', constant: true, value: 6.626e-34 },
+        { id: 'c', label: 'c', unit: 'm/s', constant: true, value: 3.00e8 },
+        { id: 'wl', label: 'λ', unit: 'nm', value: 486 }
+      ],
+      constants: [
+        { id: 'h', label: 'h', value: 6.626e-34, unit: 'J·s' },
+        { id: 'c', label: 'c', value: 3.00e8, unit: 'm/s' }
+      ],
+      evaluate: ({ h, c, wl }) => {
+        const joules = (h * c) / (wl * 1e-9);
+        return Math.round((joules / 1e-19) * 10) / 10;
+      }
+    },
     rigs: [
       TUBE('tube', 'H', 'HYDROGEN', 'H, glowing'),
       { id: 'ladder', label: 'LADDER', head: 'ladder', note: 'the rungs of hydrogen' }
@@ -256,11 +278,26 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Line Not Yet Seen',
-    prompt: 'The Bohr ladder predicts lines before we even measure them! Which wavelength matches an electron dropping from the 5th rung to the 2nd?',
+    prompt: 'Which wavelength matches an electron dropping from the fifth rung to the second?',
     labels: LABELS,
     controls: [],
     ladder: 'ladder',
     reference: ['Rung n sits at -2.18 x 10^-18 J / n^2', 'Planck\'s constant 6.626 x 10^-34 J s, light speed 3.00 x 10^8 m/s'],
+    slate: {
+      template: 'λ = (h · c) / ΔE',
+      target: 'λ',
+      targetUnit: 'nm',
+      slots: [
+        { id: 'h', label: 'h', unit: 'J·s', constant: true, value: 6.626e-34 },
+        { id: 'c', label: 'c', unit: 'm/s', constant: true, value: 3.00e8 },
+        { id: 'dE', label: 'ΔE', unit: 'J', value: 4.58e-19 }
+      ],
+      constants: [
+        { id: 'h', label: 'h', value: 6.626e-34, unit: 'J·s' },
+        { id: 'c', label: 'c', value: 3.00e8, unit: 'm/s' }
+      ],
+      evaluate: ({ h, c, dE }) => Math.round(((h * c) / dE) * 1e9)
+    },
     rigs: [
       TUBE('tube', 'H', 'HYDROGEN', 'H, glowing'),
       { id: 'ladder', label: 'LADDER', head: 'ladder', note: 'the rungs of hydrogen' }
@@ -296,7 +333,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Past the Top',
-    prompt: 'What happens if an electron absorbs an intense burst of energy that exceeds the very top of the ladder?',
+    prompt: 'What happens if an electron absorbs an energy burst that exceeds the top of the ladder?',
     labels: LABELS,
     controls: [],
     ladderTop: 'gone',
@@ -335,7 +372,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Helium Does Not Fit',
-    prompt: 'The Bohr model works wonders for hydrogen, but fails to predict helium\'s spectrum. Why doesn\'t the simple ladder fit helium?',
+    prompt: 'Why does the hydrogen ladder fail to predict helium\'s spectrum?',
     labels: LABELS,
     controls: [],
     ladder: 'ladder',

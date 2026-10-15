@@ -91,6 +91,12 @@ function drawTrace(ctx, w, h, rig, cfg, o) {
   const rgb = plan.rgb;
   const wave = rgb ? rgbCss(rgb) : PLATE_COLORS.dust;
   const pxPerNm = plotW / plan.span;
+  const wavelengthPx = nm * pxPerNm;
+
+  // Shared time base and constant on-screen wave speed (px/sec)
+  const t = (o.bench?.clock || 0);
+  const waveSpeed = 130;
+  const phase = (t * waveSpeed) / wavelengthPx;
 
   // The ruler: ticks every 100 nm, numbered every 400.
   ctx.strokeStyle = PLATE_COLORS.steel;
@@ -111,14 +117,14 @@ function drawTrace(ctx, w, h, rig, cfg, o) {
   }
   plateText(ctx, 'nm', padX + plotW, rulerY + h * 0.035 + small, { align: 'right', size: small * 0.9, color: PLATE_COLORS.dim });
 
-  // The wave, crest at the left edge. Drawn at the real ratio of wavelength to ruler.
+  // The wave, traveling left-to-right at constant on-screen speed.
   ctx.strokeStyle = wave;
   ctx.lineWidth = Math.max(2, h * 0.012);
   ctx.beginPath();
   const steps = Math.min(1600, Math.round(plotW * 2));
   for (let i = 0; i <= steps; i++) {
     const x = padX + (i / steps) * plotW;
-    const y = midY - amp * Math.cos((2 * Math.PI * (x - padX)) / (nm * pxPerNm));
+    const y = midY - amp * Math.cos(2 * Math.PI * (((x - padX) / wavelengthPx) - phase));
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   }
   ctx.stroke();
@@ -129,30 +135,65 @@ function drawTrace(ctx, w, h, rig, cfg, o) {
   ctx.beginPath(); ctx.moveTo(padX, midY); ctx.lineTo(padX + plotW, midY); ctx.stroke();
   ctx.globalAlpha = 1;
 
-  // The timing gate: how many crests go by each second.
-  const gw = Math.min(plotW * 0.52, w * 0.5);
-  const gx = w - padX - gw;
+  // The timing gate on the right: flashes on each crest
+  const gateX = padX + plotW;
+  const gatePhase = (plotW / wavelengthPx) - phase;
+  const gateLit = Math.cos(2 * Math.PI * gatePhase) > 0.8;
+  ctx.strokeStyle = gateLit ? PLATE_COLORS.amber : PLATE_COLORS.steel;
+  ctx.lineWidth = gateLit ? 3 : 1.5;
+  ctx.beginPath();
+  ctx.moveTo(gateX, midY - amp * 1.15);
+  ctx.lineTo(gateX, midY + amp * 1.15);
+  ctx.stroke();
+  if (gateLit) {
+    ctx.fillStyle = PLATE_COLORS.amber;
+    ctx.beginPath();
+    ctx.arc(gateX, midY, Math.max(3, h * 0.02), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Top header: colour chip, wavelength box, frequency box side by side
   const gy = h * 0.04;
-  const gh = h * 0.13;
-  ctx.fillStyle = '#16140f';
-  ctx.fillRect(gx, gy, gw, gh);
+  const gh = h * 0.14;
+  const chipW = Math.max(16, h * 0.12);
+
+  // Colour chip
+  ctx.fillStyle = rgb ? rgbCss(rgb) : '#2a2723';
+  ctx.fillRect(padX, gy, chipW, gh);
   ctx.strokeStyle = PLATE_COLORS.rim;
-  ctx.strokeRect(gx + 0.5, gy + 0.5, gw - 1, gh - 1);
-  plateText(ctx, L.rate.toUpperCase(), gx + 6, gy + gh * 0.38, { size: Math.max(8, gh * 0.28), color: PLATE_COLORS.dim });
-  plateText(ctx, `${plan.e14.toFixed(2)} x 10^14`, gx + gw - 6, gy + gh * 0.84, {
-    align: 'right', size: Math.max(11, gh * 0.46), color: PLATE_COLORS.phosphor, weight: 700
+  ctx.strokeRect(padX + 0.5, gy + 0.5, chipW - 1, gh - 1);
+  if (!rgb) plateText(ctx, '--', padX + chipW / 2, gy + gh * 0.66, { align: 'center', size: gh * 0.4, color: PLATE_COLORS.dim });
+
+  const readoutsX = padX + chipW + 8;
+  const totalW = w - padX - readoutsX;
+  const boxW = (totalW - 6) / 2;
+
+  // Box 1: Wavelength
+  ctx.fillStyle = '#16140f';
+  ctx.fillRect(readoutsX, gy, boxW, gh);
+  ctx.strokeStyle = PLATE_COLORS.rim;
+  ctx.strokeRect(readoutsX + 0.5, gy + 0.5, boxW - 1, gh - 1);
+  plateText(ctx, L.spacing.toUpperCase(), readoutsX + 6, gy + gh * 0.38, { size: Math.max(7, gh * 0.28), color: PLATE_COLORS.dim });
+  plateText(ctx, `${fmtSig(nm)} nm`, readoutsX + boxW - 6, gy + gh * 0.84, {
+    align: 'right', size: Math.max(10, gh * 0.46), color: PLATE_COLORS.phosphor, weight: 700
   });
 
-  // Colour chip, so a lamp is a lamp and not an abstract curve.
-  ctx.fillStyle = rgb ? rgbCss(rgb) : '#2a2723';
-  ctx.fillRect(padX, gy, Math.max(14, h * 0.1), gh);
-  if (!rgb) plateText(ctx, '--', padX + Math.max(14, h * 0.1) / 2, gy + gh * 0.66, { align: 'center', size: gh * 0.4, color: PLATE_COLORS.dim });
+  // Box 2: Frequency
+  const fBoxX = readoutsX + boxW + 6;
+  ctx.fillStyle = '#16140f';
+  ctx.fillRect(fBoxX, gy, boxW, gh);
+  ctx.strokeStyle = gateLit ? PLATE_COLORS.amber : PLATE_COLORS.rim;
+  ctx.strokeRect(fBoxX + 0.5, gy + 0.5, boxW - 1, gh - 1);
+  plateText(ctx, L.rate.toUpperCase(), fBoxX + 6, gy + gh * 0.38, { size: Math.max(7, gh * 0.28), color: PLATE_COLORS.dim });
+  plateText(ctx, `${plan.e14.toFixed(2)} x 10^14 / s`, fBoxX + boxW - 6, gy + gh * 0.84, {
+    align: 'right', size: Math.max(10, gh * 0.46), color: gateLit ? PLATE_COLORS.amber : PLATE_COLORS.phosphor, weight: 700
+  });
 
-  // A tap leaves a bracket across one crest-to-crest span and prints it.
+  // A tap leaves a bracket across one crest-to-crest span and prints it as a ruler.
   const probed = o.probe && o.probe.plateId === rig.id && o.probe.nm === nm ? o.probe : null;
   if (probed) {
     const x0 = padX;
-    const x1 = padX + nm * pxPerNm;
+    const x1 = padX + wavelengthPx;
     const by = midY - amp - h * 0.05;
     ctx.strokeStyle = PLATE_COLORS.amber;
     ctx.lineWidth = 2;
@@ -196,9 +237,26 @@ function drawScale(ctx, w, h, rig, cfg, o) {
   for (let d = LOG_LO; d <= LOG_HI; d++) {
     const x = xOf(d);
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + h * 0.04); ctx.stroke();
-    const label = d === 0 ? '1 nm' : d === 3 ? '1 um' : d === 6 ? '1 mm' : d === 9 ? '1 m' : null;
+    const label = d === -1 ? '0.1 nm' : d === 0 ? '1 nm' : d === 3 ? '1 um' : d === 6 ? '1 mm' : d === 8 ? '10 cm' : d === 9 ? '1 m' : d === 10 ? '10 m' : null;
     if (label) plateText(ctx, label, x, y + h * 0.04 + small, { align: 'center', size: small, color: PLATE_COLORS.dim });
   }
+
+  // Everyday-sized objects beside the ruler ticks
+  const OBJECTS = {
+    '-1': 'atom',
+    '3': 'cell',
+    '6': 'pinhead',
+    '8': 'coin',
+    '9': 'person',
+    '10': 'building'
+  };
+  for (const [dStr, name] of Object.entries(OBJECTS)) {
+    const dVal = Number(dStr);
+    const ox = xOf(dVal);
+    ctx.beginPath(); ctx.moveTo(ox, y - h * 0.035); ctx.lineTo(ox, y); ctx.stroke();
+    plateText(ctx, name, ox, y - h * 0.035 - small * 0.25, { align: 'center', size: small * 0.85, color: PLATE_COLORS.amber });
+  }
+
   plateText(ctx, 'WAVELENGTH, EACH TICK TEN TIMES THE LAST', w / 2, h * 0.9, { align: 'center', size: small * 0.9, color: PLATE_COLORS.dim });
 
   // The visible band, for a sense of where the eye sits on the ruler.
@@ -226,6 +284,7 @@ function drawPrism(ctx, w, h, rig, cfg, o) {
   const bandH = h * 0.34;
   const xOf = nm => padX + ((nm - PRISM_RANGE.lo) / (PRISM_RANGE.hi - PRISM_RANGE.lo)) * plotW;
   const L = words(cfg);
+  const small = Math.max(9, h * 0.055);
 
   // The band: dark, or an unbroken spread of the spectrum.
   ctx.fillStyle = '#080706';
@@ -250,8 +309,22 @@ function drawPrism(ctx, w, h, rig, cfg, o) {
   ctx.strokeStyle = PLATE_COLORS.rim;
   ctx.strokeRect(padX + 0.5, bandY + 0.5, plotW - 1, bandH - 1);
 
+  if (rig.overlay && Array.isArray(rig.overlay)) {
+    const oy = bandY + bandH * 0.45;
+    ctx.fillStyle = 'rgba(235, 175, 45, 0.15)';
+    ctx.fillRect(padX, oy, plotW, bandH * 0.55);
+    ctx.strokeStyle = PLATE_COLORS.amber;
+    ctx.strokeRect(padX + 0.5, oy + 0.5, plotW - 1, bandH * 0.55 - 1);
+    for (const nm of rig.overlay) {
+      const x = xOf(nm);
+      ctx.strokeStyle = PLATE_COLORS.amber;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, oy); ctx.lineTo(x, oy + bandH * 0.55); ctx.stroke();
+    }
+    plateText(ctx, 'REF STRIP', padX + 4, oy + small * 0.9, { size: small * 0.8, color: PLATE_COLORS.amber, weight: 700 });
+  }
+
   // The scale.
-  const small = Math.max(9, h * 0.055);
   ctx.strokeStyle = PLATE_COLORS.steel;
   ctx.fillStyle = PLATE_COLORS.steel;
   for (let nm = 400; nm <= 700; nm += 50) {
@@ -375,16 +448,70 @@ function drawPhotocell(ctx, w, h, rig, cfg, o) {
   const rgb = wavelengthRgb(nm);
   const bright = cfg.brightness || 3;
   const plan = planPhotocell(rig.metal, nm, bright);
-
-  // The beam, from the lamp to the plate: thickness follows brightness.
   const beamY = tubeY + tubeH / 2;
-  ctx.fillStyle = rgb ? rgbCss(rgb, 0.5 + bright * 0.1) : 'rgba(184, 175, 160, 0.3)';
-  const bt = 2 + bright * 2.2;
-  ctx.fillRect(padX, beamY - bt / 2, tubeX - padX + 4, bt);
-  plateText(ctx, `${fmtSig(nm)} nm`, padX, beamY - bt / 2 - 6, { size: small, color: rgb ? rgbCss(rgb) : PLATE_COLORS.dust });
+  const t = (o.bench?.clock || 0);
+  const ev = photonEv(nm);
+  const workEv = metal.workEv;
+  const clearsGrip = ev >= workEv;
+
+  const plateBottom = tubeY + tubeH - 8;
+  const maxBarH = tubeH - 24;
+  const gripBarH = Math.min(maxBarH, (workEv / 6.0) * maxBarH);
+  const gripY = plateBottom - gripBarH;
+
+  if (cfg.packetView) {
+    // Discrete photon packets with energy bars
+    const startX = padX;
+    const endX = tubeX + 4;
+    const beamW = endX - startX;
+    const count = Math.max(1, bright);
+    const spacing = Math.max(22, beamW / (count * 1.5));
+    const speed = 75;
+    const offset = (t * speed) % spacing;
+
+    for (let px = startX + offset; px < endX; px += spacing) {
+      // Wave packet
+      const packetRgb = rgb ? rgbCss(rgb, 0.95) : PLATE_COLORS.dust;
+      ctx.strokeStyle = packetRgb;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      for (let s = -7; s <= 7; s++) {
+        const sy = beamY + Math.sin(s * 0.9) * 4 * Math.cos((s / 7) * (Math.PI / 2));
+        if (s === -7) ctx.moveTo(px + s, sy); else ctx.lineTo(px + s, sy);
+      }
+      ctx.stroke();
+
+      // Energy bar above the packet
+      const packetBarH = Math.min(maxBarH, (ev / 6.0) * maxBarH);
+      const barY = beamY - 6 - packetBarH;
+      ctx.fillStyle = clearsGrip ? PLATE_COLORS.phosphor : PLATE_COLORS.steel;
+      ctx.fillRect(px - 1.5, barY, 3, packetBarH);
+    }
+
+    // Grip indicator on the metal plate
+    ctx.strokeStyle = PLATE_COLORS.amber;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(tubeX + 4, gripY);
+    ctx.lineTo(tubeX + 4 + w * 0.04, gripY);
+    ctx.stroke();
+    plateText(ctx, cfg.namedWorkFunction ? 'WORK FUNCTION' : 'GRIP', tubeX + 4 + w * 0.02, gripY - 3, {
+      align: 'center', size: Math.max(7, small * 0.72), color: PLATE_COLORS.amber, weight: 700
+    });
+
+    if (cfg.showPhotonEnergy || cfg.stageIndex >= 4) {
+      const zJ = (198.8 / nm).toFixed(2);
+      plateText(ctx, `${zJ} zJ`, padX, beamY - 18, { size: small * 0.85, color: PLATE_COLORS.phosphor, weight: 700 });
+    }
+  } else {
+    // The continuous wave beam (stages 1-2)
+    ctx.fillStyle = rgb ? rgbCss(rgb, 0.5 + bright * 0.1) : 'rgba(184, 175, 160, 0.3)';
+    const bt = 2 + bright * 2.2;
+    ctx.fillRect(padX, beamY - bt / 2, tubeX - padX + 4, bt);
+    plateText(ctx, `${fmtSig(nm)} nm`, padX, beamY - bt / 2 - 6, { size: small, color: rgb ? rgbCss(rgb) : PLATE_COLORS.dust });
+  }
 
   // Electrons leaving the plate: a dot per twenty freed, each fast as the meter says.
-  const t = (o.bench?.clock || 0);
   if (plan.freed) {
     const n = plan.count / 20 * 2;
     const rnd = mulberry32(hashId(rig.id + rig.metal));
@@ -636,7 +763,7 @@ export class LightBench extends PlateBench {
     if (this.items.some(r => this.animated(r))) this.startAnim();
   }
 
-  animated(rig) { return rig.head === 'photocell' || this.cfg.mode === 'region'; }
+  animated(rig) { return rig.head === 'trace' || rig.head === 'photocell' || this.cfg.mode === 'region'; }
 
   setSetting(i) { this.cfg.setting = i; this.probe = null; this.setDialValue?.('setting', i); this.drawAll(); }
   setBrightness(n) { this.cfg.brightness = n; this.setDialValue?.('brightness', n); this.drawAll(); }

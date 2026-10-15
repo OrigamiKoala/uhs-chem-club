@@ -7,8 +7,8 @@
  *
  *   1  why carbon's orbitals cannot explain methane          -> (the puzzle)
  *   2  blend carbon's orbitals to match four arms              -> hybrid orbital, sp3
- *   3  blend them to match three                             -> sp2
- *   4  blend them to match two                               -> sp
+ *   3  sort NH3, H2O and C2H4 by the lobes they need      -> sp2 (a lone pair is an arm)
+ *   4  sort CO2, BF3 and HCN the same way                -> sp (a multiple bond is one arm)
  *   5  how ethene's second bond is built                     -> sigma bond, pi bond
  *   6  count the sigma and pi bonds in HCN                   -> (each arm is one sigma)
  *   7  twist ethane, then ethene                             -> restricted rotation
@@ -62,9 +62,9 @@ export const STAGES = [
     title: 'The Puzzle',
     briefing: {
       speaker: SPEAKER,
-      body: 'Welcome to the orbital blending bench. Compare the electron orbitals carbon has available with the four identical bonds found in methane.'
+      body: 'Compare the electron orbitals carbon has available with the four identical bonds found in methane.'
     },
-    prompt: 'The quarry drilling crew hit a theoretical snag while analyzing methane in the coal seam. Compare carbon\'s unhybridized valence electrons with the four identical bonds in CH₄!',
+    prompt: 'How do carbon’s unhybridized valence electrons compare with the four equivalent bonds in methane?',
     controls: [],
     rigs: [mixer('a', 'CARBON', { unpaired: 2, bonds: 4, noMix: true, note: 'a carbon atom as it stands, beside the bonds in CH₄' })],
     widget: {
@@ -98,11 +98,14 @@ export const STAGES = [
     title: 'Four Lobes',
     briefing: {
       speaker: SPEAKER,
-      body: 'You now have orbital blending controls. Select an orbital combination to see how many equal lobes form.'
+      body: 'The mixer blends carbon\'s s orbital with some of its p orbitals and shows the lobes that come out.'
     },
-    prompt: 'Methane has four tetrahedral bonds supporting this vault seam. Blend carbon\'s s and p orbitals until you have four identical hybrid lobes to fit CH₄!',
+    prompt: 'Which blend gives carbon one lobe for each of methane\'s bonds?',
     controls: ['mix'],
-    rigs: [mixer('a', 'CARBON', { want: 4, note: 'the carbon of CH₄, with four hydrogen atoms to bond' })],
+    rigs: [
+      mixer('a', 'CARBON', { want: 4, note: 'the carbon of CH₄, with four hydrogen atoms to bond' }),
+      show('m1', 'CH₄', 'CH4', 'methane: four single bonds = four domains')
+    ],
     widget: { type: 'none' },
     hints: [
       'Try each blend key and read how many lobes the plate shows.',
@@ -117,62 +120,100 @@ export const STAGES = [
     reward: {
       log: 'An s orbital and three p orbitals make four.',
       title: 'Hybrid Orbital, sp³',
-      body: 'Blending one s orbital with three p orbitals gives four identical hybrid orbitals, called sp³, pointing at 109.5 degrees. That is how carbon makes four equal bonds.'
+      body: 'Blending one s orbital with three p orbitals gives four identical sp3 hybrid orbitals pointing at 109.5 degrees. Lone pairs occupy hybrid orbitals just as bonding pairs do.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Three Lobes',
-    prompt: 'Ethene (C₂H₄) frames the edge of the fuel reservoir. Blend carbon\'s orbitals to produce exactly three hybrid lobes in a plane!',
-    controls: ['mix'],
-    rigs: [mixer('a', 'CARBON', { want: 3, note: 'a carbon of C₂H₄, bonded to two hydrogen atoms and one carbon' })],
-    widget: { type: 'none' },
+    title: 'Count the Lobes',
+    prompt: 'Sort each molecule by how many hybrid lobes its central atom needs.',
+    controls: [],
+    rigs: [
+      show('m1', 'NH₃', 'NH3', 'ammonia'),
+      show('m2', 'H₂O', 'H2O', 'water'),
+      show('m3', 'C₂H₄', 'C2H4', 'ethene: look at one carbon')
+    ],
+    widget: {
+      type: 'bins',
+      bins: [
+        { id: 'two', label: 'Two lobes', note: '' },
+        { id: 'three', label: 'Three lobes', note: '' },
+        { id: 'four', label: 'Four lobes', note: '' }
+      ],
+      rows: [
+        { id: 'm1', label: 'NH₃' },
+        { id: 'm2', label: 'H₂O' },
+        { id: 'm3', label: 'C₂H₄' }
+      ]
+    },
     hints: [
-      'Try each blend key and read how many lobes the plate shows and how many orbitals are left.',
-      'Compare the number of lobes with the arms the plate needs.',
-      'Blend the s orbital with one fewer p orbital than for four lobes.'
+      'Look at the arms on each plate and recall how many lobes the mixer made for each number of arms.',
+      'Compare the plates with lone pairs against the plates with only bonds.',
+      'Count every arm on the central atom, whatever the arm is made of.'
     ],
     check(state) {
-      if (!state.mix) return { ok: false, notYet: true, msg: 'Blend some orbitals.' };
-      if (state.mix === 2) return { ok: true };
-      return { ok: false, msg: 'The lobes do not match the arms the plate needs.' };
+      const want = { m1: 'four', m2: 'four', m3: 'three' };
+      const b = state.bins || {};
+      if (Object.keys(want).some(k => !b[k])) return { ok: false, notYet: true, msg: 'File all three molecules.' };
+      const wrong = Object.keys(want).find(k => b[k] !== want[k]);
+      if (wrong) return { ok: false, msg: `${{ m1: 'NH₃', m2: 'H₂O', m3: 'C₂H₄' }[wrong]} is filed wrongly: count the arms on its central atom, including any that are not bonds.` };
+      return { ok: true };
     },
     reward: {
-      log: 'A p orbital is left standing.',
+      log: 'The lobes follow the arms.',
       title: 'sp²',
-      body: 'Blending one s orbital with two p orbitals gives three hybrid orbitals, called sp², 120 degrees apart in a plane. One p orbital is left over, standing at right angles to them.'
+      body: 'A central atom with three arms blends one s and two p orbitals into three sp2 lobes, 120 degrees apart. A lone pair is an arm too, so ammonia and water need four lobes, like methane.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    title: 'Two Lobes',
-    prompt: 'Faint traces of hydrogen cyanide (HCN) drift past the drill head. Blend carbon\'s orbitals to make two linear hybrid lobes for the central carbon!',
-    controls: ['mix'],
-    rigs: [mixer('a', 'CARBON', { want: 2, note: 'the carbon of HCN, bonded to one hydrogen atom and one nitrogen atom' })],
-    widget: { type: 'none' },
+    title: 'Fewer Lobes',
+    prompt: 'Sort each molecule by how many hybrid lobes its central atom needs.',
+    controls: [],
+    rigs: [
+      show('m1', 'CO₂', 'CO2', 'carbon dioxide'),
+      show('m2', 'BF₃', 'BF3', 'boron trifluoride'),
+      show('m3', 'HCN', 'HCN', 'hydrogen cyanide')
+    ],
+    widget: {
+      type: 'bins',
+      bins: [
+        { id: 'two', label: 'Two lobes', note: '' },
+        { id: 'three', label: 'Three lobes', note: '' },
+        { id: 'four', label: 'Four lobes', note: '' }
+      ],
+      rows: [
+        { id: 'm1', label: 'CO₂' },
+        { id: 'm2', label: 'BF₃' },
+        { id: 'm3', label: 'HCN' }
+      ]
+    },
     hints: [
-      'Try each blend key and read how many lobes and how many orbitals are left.',
-      'Compare the number of lobes with the arms the plate needs.',
-      'Blend the s orbital with a single p orbital.'
+      'Look at the arms on each plate and recall how many lobes the mixer made for each number of arms.',
+      'Compare how a double or triple bond is drawn with how single bonds are drawn.',
+      'A double or triple bond is a single arm, however many pairs it holds.'
     ],
     check(state) {
-      if (!state.mix) return { ok: false, notYet: true, msg: 'Blend some orbitals.' };
-      if (state.mix === 1) return { ok: true };
-      return { ok: false, msg: 'The lobes do not match the arms the plate needs.' };
+      const want = { m1: 'two', m2: 'three', m3: 'two' };
+      const b = state.bins || {};
+      if (Object.keys(want).some(k => !b[k])) return { ok: false, notYet: true, msg: 'File all three molecules.' };
+      const wrong = Object.keys(want).find(k => b[k] !== want[k]);
+      if (wrong) return { ok: false, msg: `${{ m1: 'CO₂', m2: 'BF₃', m3: 'HCN' }[wrong]} is filed wrongly: count the arms on its central atom, and remember what a multiple bond counts as.` };
+      return { ok: true };
     },
     reward: {
-      log: 'Two p orbitals are left standing.',
+      log: 'Two arms, two lobes.',
       title: 'sp',
-      body: 'Blending one s orbital with one p orbital gives two hybrid orbitals, called sp, 180 degrees apart. Two p orbitals are left over, both at right angles to the line.'
+      body: 'A central atom with two arms blends one s and one p orbital into two sp lobes, 180 degrees apart. Two p orbitals are left over, and they make the extra bonds of a double or triple bond.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Second Bond',
-    prompt: 'We\'re inspecting the double bond in ethene under our orbital scanner! How does the second bond form between the two carbon atoms?',
+    prompt: 'How does the second bond form between the two carbon atoms in ethene?',
     controls: [],
     rigs: [twist('a', 'C₂H₄', 'double', 'two carbon atoms joined by a double bond')],
     widget: {
@@ -205,7 +246,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Counting Bonds',
-    prompt: 'Our safety monitors need an accurate bond inventory for toxic HCN. How many sigma (σ) bonds and pi (π) bonds does hydrogen cyanide contain?',
+    prompt: 'How many sigma bonds and pi bonds are present in hydrogen cyanide?',
     controls: ['protractor'],
     rigs: [show('a', 'HCN', 'HCN', 'carbon with a hydrogen atom and a nitrogen atom joined by a triple bond')],
     widget: {
@@ -241,7 +282,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'A bond torsion tool is now online. Press "Twist" to test whether atoms can spin freely around each type of bond.'
     },
-    prompt: 'The mechanical shop needs a flexible molecular joint. Use the Twist control to test ethane (C₂H₆) against ethene (C₂H₄) — which one allows free rotation?',
+    prompt: 'Which molecule allows free rotation around the carbon-carbon bond, ethane or ethene?',
     controls: ['twist'],
     rigs: [
       twist('a', 'C₂H₆', 'single', 'two carbon atoms joined by a single bond'),
@@ -268,7 +309,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Past Four',
-    prompt: 'Deep basalt wardens are reinforced by expanded octets like PCl₅ and SF₆. How many atomic orbitals must each central atom blend to hold its domains?',
+    prompt: 'How many atomic orbitals must each central atom blend to accommodate five and six domains?',
     controls: ['protractor'],
     rigs: [
       show('a', 'PCl₅', 'PCl5', 'phosphorus with five chlorine atoms'),
@@ -392,8 +433,8 @@ function blankState() { return { mix: null }; }
 export const SOLUTIONS = [
   { choice: 'puzzle' },
   { mix: 3 },
-  { mix: 2 },
-  { mix: 1 },
+  { bins: { m1: 'four', m2: 'four', m3: 'three' } },
+  { bins: { m1: 'two', m2: 'three', m3: 'two' } },
   { choice: 'side' },
   { choice: '2-2' },
   { choice: 'a' },
@@ -403,8 +444,8 @@ export const SOLUTIONS = [
 export const MISSES = [
   { choice: 'two' },
   { mix: 2 },
-  { mix: 3 },
-  { mix: 2 },
+  { bins: { m1: 'four', m2: 'three', m3: 'three' } },
+  { bins: { m1: 'two', m2: 'two', m3: 'two' } },
   { choice: 'end' },
   { choice: '3-1' },
   { choice: 'b' },

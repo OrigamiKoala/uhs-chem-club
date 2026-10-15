@@ -19,6 +19,14 @@
  * been placed. That is what makes chromium a discovery: the arrangement the
  * ladder suggests reads four unpaired, and the magnet says six.
  *
+ * THE ADDRESS FINDER. An `address` plate may carry a `finder`: a strip of
+ * tappable cells (floor n, suite type l, room ml, bunk ms) that the player sets,
+ * and the box the address names lights on the rack, or nothing lights and the
+ * strip says no room has that address. Nothing on the rack is labelled with a
+ * number when it is there: the numbers are FOUND by setting them and watching
+ * where the light goes, and an address is WRITTEN by setting the cells until the
+ * lit box is the one marked. `findRoom` (electrons.js) is the one rule.
+ *
  * Layouts:
  *   atomic   1s up to 4p with 4s set BELOW 3d (and 4f/5d/6p on request)
  *   address  rows grouped by n, each box carrying its m_l and each electron its m_s
@@ -41,10 +49,10 @@ import {
 import {
   LADDER, boxesOf, capacityOf, boxKey, placeElectron, removeElectron, readRack, rackFor,
   groundConfig, symbolOf, zOf, nameOf, shortString, configString, MEASURED, mlOf, fmtMl,
-  rowOf, sup
+  rowOf, sup, findRoom, fmtMs
 } from './electrons.js';
 
-export { readRack, rackFor, MEASURED };
+export { readRack, rackFor, MEASURED, findRoom };
 
 /** The rows a layout shows, bottom (lowest energy) first. */
 export function rowsFor(item) {
@@ -72,6 +80,88 @@ function drawArrow(ctx, cx, cy, size, up, color) {
 
 const HAND_LABEL = { u: 'UP', d: 'DOWN', x: 'REMOVE' };
 
+const FINDER_LABEL = { n: 'FLOOR n', l: 'TYPE l', ml: 'ROOM ml', ms: 'BUNK ms' };
+const FINDER_RANGE = { n: [1, 3], l: [0, 3], ml: [-3, 3] };
+
+/** The address a finder starts from. */
+export function finderStart(finder) {
+  return { n: 1, l: 0, ml: 0, ms: 0.5, ...(finder.start || {}) };
+}
+
+/** One tap on one cell: the next value in its range, wrapping round. */
+export function stepAddr(item, field, dir) {
+  const a = { ...item.addr };
+  if (field === 'ms') { a.ms = a.ms > 0 ? -0.5 : 0.5; return a; }
+  const [lo, hi] = item.finder.range?.[field] || FINDER_RANGE[field];
+  const next = a[field] + (dir < 0 ? -1 : 1);
+  a[field] = next > hi ? lo : next < lo ? hi : next;
+  return a;
+}
+
+/** What the finder's address lights: a whole floor, a suite's row, or one box. */
+function finderLight(item) {
+  const f = item.finder;
+  const shows = f.show || ['n'];
+  const found = findRoom(item.addr);
+  const lit = { floor: null, row: null, box: null, none: false };
+  if (!shows.includes('l')) lit.floor = item.addr.n;
+  else if (!shows.includes('ml')) { if (found.exists) lit.row = found.row; else lit.none = true; }
+  else if (found.exists) lit.box = { row: found.row, idx: found.idx };
+  else lit.none = true;
+  return lit;
+}
+
+/** The cloud a suite type makes, as a small drawing: one lobe, two lobes, four. */
+function drawShapeGlyph(ctx, cx, cy, r, l) {
+  ctx.strokeStyle = PLATE_COLORS.dust;
+  ctx.lineWidth = 1.2;
+  const lobe = (x, y, rr) => { ctx.beginPath(); ctx.arc(x, y, rr, 0, Math.PI * 2); ctx.stroke(); };
+  if (l === 0) lobe(cx, cy, r * 0.8);
+  else if (l === 1) { lobe(cx - r * 0.55, cy, r * 0.5); lobe(cx + r * 0.55, cy, r * 0.5); }
+  else if (l === 2) { for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) lobe(cx + dx * r * 0.5, cy + dy * r * 0.5, r * 0.42); }
+  else { for (let k = 0; k < 8; k++) lobe(cx + Math.cos(k * Math.PI / 4) * r * 0.62, cy + Math.sin(k * Math.PI / 4) * r * 0.62, r * 0.26); }
+}
+
+/** The finder strip across the top of the plate. Returns its height. */
+function drawFinder(ctx, w, item, small, hits) {
+  const f = item.finder;
+  const shows = f.show || ['n'];
+  const a = item.addr;
+  const cellW = (w - 16) / shows.length;
+  const cellH = small * 3.4;
+  shows.forEach((field, i) => {
+    const x = 8 + i * cellW;
+    const y = 4;
+    const editable = (f.fields || shows).includes(field);
+    ctx.fillStyle = '#0a0908';
+    ctx.fillRect(x + 2, y, cellW - 4, cellH);
+    ctx.strokeStyle = editable ? PLATE_COLORS.steel : PLATE_COLORS.rim;
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(x + 2.5, y + 0.5, cellW - 5, cellH - 1);
+    plateText(ctx, FINDER_LABEL[field], x + cellW / 2, y + small * 1.05, { align: 'center', size: small * 0.8, color: PLATE_COLORS.dim });
+    const text = field === 'ms' ? fmtMs(a.ms).replace('1/2', '½') : field === 'ml' && a.ml > 0 ? `+${a.ml}` : String(a[field]);
+    plateText(ctx, text, x + cellW / 2, y + small * 2.75, { align: 'center', size: small * 1.6, color: PLATE_COLORS.phosphor, weight: 700 });
+    if (field === 'l') drawShapeGlyph(ctx, x + cellW * 0.82, y + small * 2.1, small * 0.85, a.l);
+    if (editable) {
+      const arrowY = y + small * 2.45;
+      ctx.fillStyle = PLATE_COLORS.dust;
+      for (const dir of [-1, 1]) {
+        const ax = dir < 0 ? x + 9 : x + cellW - 9;
+        ctx.beginPath();
+        ctx.moveTo(ax + dir * 4, arrowY - 6); ctx.lineTo(ax - dir * 4, arrowY); ctx.lineTo(ax + dir * 4, arrowY + 6);
+        ctx.closePath(); ctx.fill();
+        hits.push({ key: 'addr', field, dir, x0: dir < 0 ? x + 2 : x + cellW / 2, y0: y, x1: dir < 0 ? x + cellW / 2 : x + cellW - 2, y1: y + cellH });
+      }
+    }
+  });
+  const lit = finderLight(item);
+  if (lit.none) {
+    plateText(ctx, 'NO ROOM HAS THIS ADDRESS', w / 2, 4 + cellH + small * 1.3, { align: 'center', size: small * 1.05, color: PLATE_COLORS.amber, weight: 700 });
+  }
+  return 4 + cellH + small * 1.8;
+}
+
+
 function drawRack(ctx, w, h, item, cfg, o) {
   const rows = rowsFor(item);
   const rack = item.rack;
@@ -80,18 +170,25 @@ function drawRack(ctx, w, h, item, cfg, o) {
   const hits = [];
   const address = item.layout === 'address';
 
-  // ---- the reading, always on the plate ----
-  const top = small * 1.6;
-  plateText(ctx, `PLACED ${read.total}`, 8, top, { size: small * 1.15, color: PLATE_COLORS.phosphor, weight: 700 });
-  plateText(ctx, `ALONE IN A BOX ${read.unpaired}`, w - 8, top, { align: 'right', size: small * 1.15, color: PLATE_COLORS.phosphor, weight: 700 });
-  const written = cfg.core ? read.short : read.config;
-  plateText(ctx, written || 'NOTHING PLACED', w / 2, top + small * 1.6, {
-    align: 'center', size: small * 1.25, color: written ? PLATE_COLORS.dust : PLATE_COLORS.dim, weight: 600
-  });
+  // ---- the reading, always on the plate; or, with a finder, the finder ----
+  const finder = address && item.finder ? item : null;
+  const lit = finder ? finderLight(item) : null;
+  let ladderTop;
+  if (finder) {
+    ladderTop = drawFinder(ctx, w, item, small, hits) + small * 0.6;
+  } else {
+    const top = small * 1.6;
+    plateText(ctx, `PLACED ${read.total}`, 8, top, { size: small * 1.15, color: PLATE_COLORS.phosphor, weight: 700 });
+    plateText(ctx, `ALONE IN A BOX ${read.unpaired}`, w - 8, top, { align: 'right', size: small * 1.15, color: PLATE_COLORS.phosphor, weight: 700 });
+    const written = cfg.core ? read.short : read.config;
+    plateText(ctx, written || 'NOTHING PLACED', w / 2, top + small * 1.6, {
+      align: 'center', size: small * 1.25, color: written ? PLATE_COLORS.dust : PLATE_COLORS.dim, weight: 600
+    });
+    ladderTop = top + small * 3.0;
+  }
 
   // ---- the ladder ----
   const trayH = small * 3.1;
-  const ladderTop = top + small * 3.0;
   const ladderBottom = h - trayH - 6;
   const n = rows.length;
   const rowH = Math.min((ladderBottom - ladderTop) / n, small * 3.6);
@@ -111,9 +208,10 @@ function drawRack(ctx, w, h, item, cfg, o) {
   rows.forEach((row, ri) => {
     const cy = lastRowY - ri * rowH - rowH / 2;
     const show = cfg.show || { n: true, l: true, ml: true, ms: true };
-    const label = address
-      ? [show.n ? `n=${row.n}` : '', show.l ? `l=${row.l}` : ''].filter(Boolean).join(' ')
-      : row.id;
+    const label = finder ? ''
+      : address
+        ? [show.n ? `n=${row.n}` : '', show.l ? `l=${row.l}` : ''].filter(Boolean).join(' ')
+        : row.id;
     plateText(ctx, label, address ? 20 : 24, cy + small * 0.35, { size: small, color: PLATE_COLORS.dim });
     const boxes = boxesOf(row.l);
     for (let i = 0; i < boxes; i++) {
@@ -122,11 +220,20 @@ function drawRack(ctx, w, h, item, cfg, o) {
       const key = boxKey(row.id, i);
       const here = rack[key] || '';
       const pre = item.prefill && item.locked ? (item.prefill[key] || '') : '';
-      ctx.fillStyle = '#0a0908';
+      const boxLit = lit && ((lit.box && lit.box.row === row.id && lit.box.idx === i) || lit.row === row.id);
+      ctx.fillStyle = boxLit ? '#2a2c1f' : '#0a0908';
       ctx.fillRect(bx, by, boxS, boxS);
-      ctx.strokeStyle = here ? PLATE_COLORS.steel : PLATE_COLORS.rim;
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = boxLit ? PLATE_COLORS.amber : here ? PLATE_COLORS.steel : PLATE_COLORS.rim;
+      ctx.lineWidth = boxLit ? 2.5 : 1.5;
       ctx.strokeRect(bx + 0.5, by + 0.5, boxS - 1, boxS - 1);
+      if (item.target && item.target.row === row.id && item.target.idx === i) {
+        // The box a stage asks for the address of, ringed.
+        ctx.strokeStyle = PLATE_COLORS.amber;
+        ctx.lineWidth = 1;
+        ctx.setLineDash?.([3, 3]);
+        ctx.strokeRect(bx - 3.5, by - 3.5, boxS + 7, boxS + 7);
+        ctx.setLineDash?.([]);
+      }
       // Up arrow on the left of the box, down on the right: the spin is the direction.
       for (const spin of ['u', 'd']) {
         if (!here.includes(spin)) continue;
@@ -140,10 +247,15 @@ function drawRack(ctx, w, h, item, cfg, o) {
       }
       hits.push({ key: 'box', row: row.id, idx: i, x0: bx, y0: by, x1: bx + boxS, y1: by + boxS });
     }
+    const floorLit = lit && lit.floor === row.n;
+    if (floorLit) {
+      ctx.fillStyle = PLATE_COLORS.amber;
+      ctx.fillRect(2, cy - rowH * 0.4, 4, rowH * 0.8);
+    }
     // The cloud this row's electrons make, drawn to scale beside it: the larger
     // the first number, the farther out it reaches.
     if (address && cfg.clouds) {
-      ctx.strokeStyle = PLATE_COLORS.dim;
+      ctx.strokeStyle = floorLit ? PLATE_COLORS.amber : PLATE_COLORS.dim;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.arc(w - 22, cy, Math.min(rowH * 0.42, 3 + row.n * 5 + (row.l === 1 ? 2 : 0)), 0, Math.PI * 2);
@@ -332,6 +444,7 @@ export class BoxRack extends PlateBench {
 
   prepare(item) {
     const it = { ...item, rack: { ...(item.prefill || {}) } };
+    if (item.finder) it.addr = finderStart(item.finder);
     if (item.layout === 'molecular') it.combined = item.combined ?? true;
     if (item.fillGround && !item.prefill) it.rack = rackFor(item.z ?? zOf(item.sym || item.sample));
     return it;
@@ -370,6 +483,10 @@ export class BoxRack extends PlateBench {
     if (item?.mol) return DIATOMICS[item.mol]?.unpaired ?? null;
     return item?.sample ? (MEASURED[item.sample] ?? null) : null;
   }
+
+  /** The address the finder on a plate is set to, and the box it names. */
+  addrOf(id) { const a = this.itemFor(id)?.addr; return a ? { ...a } : null; }
+  roomOf(id) { const a = this.itemFor(id)?.addr; return a ? findRoom(a) : null; }
 
   setHand(hand) { this.cfg.hand = hand; this.drawAll(); }
   setCore(on) { this.cfg.core = Boolean(on); this.drawAll(); }
@@ -423,7 +540,14 @@ export class BoxRack extends PlateBench {
       this.cfg.hand = hit.hand;
       return { mark: {}, read: { kind: 'hand', hand: hit.hand } };
     }
+    if (hit.key === 'addr') {
+      item.addr = stepAddr(item, hit.field, hit.dir);
+      return { mark: {}, read: { kind: 'addr', plateId: item.id, addr: { ...item.addr }, found: findRoom(item.addr) } };
+    }
     if (hit.key === 'box') {
+      if (item.finder && !this.cfg.hand) {
+        return { mark: {}, read: { kind: 'rack', plateId: item.id, action: 'refused', reason: 'The boxes take no electrons on this stage.', rack: { ...item.rack }, reading: readRack(item.rack) } };
+      }
       const res = this.act(item, hit.row, hit.idx);
       const reading = item.layout === 'molecular' ? readMO(item.order, item.rack) : readRack(item.rack);
       return { mark: {}, read: { kind: 'rack', plateId: item.id, ...res, rack: { ...item.rack }, reading } };

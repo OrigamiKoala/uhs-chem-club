@@ -13,9 +13,13 @@
  *   2  five hundred shots                          -> orbital
  *   3  a wave that has to fit a ring               -> standing wave, wave-particle duality
  *   4  a second cloud, bigger and hollower         -> node
- *   5  a cloud with two lobes                      -> p orbital, beside s orbital
+ *   5  a cloud with two lobes, turned in the hand  -> p orbital, beside s orbital
  *   6  the ways a p cloud can point                -> three p orbitals
  *   7  five clouds sorted by shape                 -> d orbitals
+ *
+ * From stage five a cloud is a SOLID the player turns (`plane: 'turn'`): the
+ * three flat views it replaced asked for a spatial skill this audience has not
+ * got yet, and the turn keys let them find the side a shape shows itself from.
  *   8  asking the bench to draw a path             -> the uncertainty principle
  *
  * THE BENCH NEVER DRAWS A PATH. `track()` exists only to refuse, with the
@@ -25,6 +29,7 @@
  */
 
 import { CloudPlate } from '../../engine/instruments.js';
+import { TURN_STEP } from '../../engine/cloudplate.js';
 import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
 import { ringFits, RING_CIRCUMFERENCE_PM } from '../../engine/orbitals.js';
 
@@ -69,9 +74,9 @@ export const STAGES = [
     title: 'One Shot, Fifty Shots',
     briefing: {
       speaker: SPEAKER,
-      body: 'Welcome to the electron cloud detector, where each sensor pulse detects an electron\'s location and leaves a glowing phosphor dot. Fire shots to see what overall pattern emerges.'
+      body: 'This detector fires pulses to find an electron\'s location and leaves a glowing dot. Repeated shots reveal the pattern where the electron spends its time.'
     },
-    prompt: 'Take aim with the sensor beam! Where does Sample A\'s electron appear when we ping it repeatedly?',
+    prompt: 'Where does Sample A\'s electron appear when probed repeatedly?',
     controls: ['fire'],
     extent: 5,
     clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],
@@ -106,7 +111,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Five Hundred Shots',
-    prompt: 'Fire 500 sensor bursts into the sample chamber! What overall shape emerges from the glowing swarm of dots?',
+    prompt: 'What overall shape emerges from the glowing swarm of dots?',
     controls: ['fire'],
     extent: 5,
     clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],
@@ -141,7 +146,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Waves That Fit',
-    prompt: 'An electron wave circles the atomic track! Which wavelengths loop smoothly around the ring without canceling themselves out?',
+    prompt: 'Which wavelengths loop smoothly around the ring without cancelling themselves out?',
     controls: ['tune'],
     settings: RING_SETTINGS,
     start: 2,
@@ -174,7 +179,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now view interior cross-sections. Press "Slice" to inspect only the dots within a thin slice through the middle.'
     },
-    prompt: 'Sample B holds an electron pumped with higher energy. Fire shots and use Slice to compare: how does Sample B\'s cloud differ from Sample A\'s?',
+    prompt: 'How does Sample B\'s cloud differ from Sample A\'s?',
     controls: ['fire', 'slice'],
     extent: 14,
     clouds: [
@@ -212,10 +217,14 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Two Lobes',
-    prompt: 'Sample C displays a fascinating new distribution! Fire 500 shots and rotate the view: what shape does this cloud form, and where are dots never found?',
-    controls: ['fire', 'slice'],
+    briefing: {
+      speaker: SPEAKER,
+      body: 'From here the plate shows the whole cloud in three dimensions. Press "Turn Left", "Turn Right", "Tilt Up" and "Tilt Down" to look at it from other sides, or drag across the plate.'
+    },
+    prompt: 'What shape does this cloud form, and where are dots never found?',
+    controls: ['fire', 'slice', 'turn'],
     extent: 12,
-    clouds: [{ id: 'c', label: 'SAMPLE C', head: 'cloud', orbital: '2pz', plane: 'all', note: 'one electron in an atom with more energy' }],
+    clouds: [{ id: 'c', label: 'SAMPLE C', head: 'cloud', orbital: '2pz', plane: 'turn', note: 'one electron in an atom with more energy' }],
     widget: {
       type: 'choice', label: 'The shape',
       options: [
@@ -226,14 +235,14 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Press "Fire 500 Shots" and look at all three views of the plate.',
-      'Compare the views, noting the direction in which the dots gather and the flat plane they never cross.',
-      'Press "Slice" and see which of the three views goes empty through its middle.'
+      'Press "Fire 500 Shots", then turn the cloud to look at it from several sides.',
+      'Compare the sides, noting the direction in which the dots gather and the flat plane they never cross.',
+      'Turn the cloud until you look along the gap, then press "Slice" and see whether the middle goes empty.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the shape.' };
       if (state.choice !== 'lobes') {
-        return { ok: false, msg: 'Fire all 500 shots and compare the three views: look at where the dots gather and at what is missing.' };
+        return { ok: false, msg: 'Fire all 500 shots and turn the cloud: look at where the dots gather and at what is missing from each side.' };
       }
       return { ok: true };
     },
@@ -247,18 +256,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Ways to Point',
-    prompt: 'Survey these energetic sub-chambers! How many distinct spatial directions can this two-lobed cloud point along?',
-    controls: [],
+    prompt: 'How many distinct directions can this two-lobed cloud point along?',
+    controls: ['turn'],
     extent: 12,
     clouds: [
-      { id: 'c', label: 'SAMPLE C', head: 'cloud', orbital: '2px', plane: 'all', fired: 500, note: 'one electron in an atom with more energy' },
-      { id: 'd', label: 'SAMPLE D', head: 'cloud', orbital: '2pz', plane: 'all', fired: 500, note: 'one electron in an atom with more energy' },
-      { id: 'e', label: 'SAMPLE E', head: 'cloud', orbital: '2py', plane: 'all', fired: 500, note: 'one electron in an atom with more energy' },
-      { id: 'f', label: 'SAMPLE F', head: 'cloud', orbital: '2pz', plane: 'all', fired: 500, seed: 3, note: 'one electron in an atom with more energy' }
+      { id: 'c', label: 'SAMPLE C', head: 'cloud', orbital: '2px', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy' },
+      { id: 'd', label: 'SAMPLE D', head: 'cloud', orbital: '2pz', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy' },
+      { id: 'e', label: 'SAMPLE E', head: 'cloud', orbital: '2py', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy' },
+      { id: 'f', label: 'SAMPLE F', head: 'cloud', orbital: '2pz', plane: 'turn', fired: 500, seed: 3, note: 'one electron in an atom with more energy' }
     ],
     widget: { type: 'number', label: 'Ways the two-lobed shape can point', min: 1, max: 6, step: 1 },
     hints: [
-      'Look at each sample\'s three views and find the direction its two lobes lie along.',
+      'Turn the samples and find the line each one\'s two lobes lie along.',
       'Compare the four samples and note which of them point the same way as another.',
       'Count the different directions the lobes point along, not the number of samples on the bench.'
     ],
@@ -279,15 +288,15 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Five Clouds',
-    prompt: 'At even higher energy, exotic shapes appear! Inspect all three view angles and classify each of these five clouds by its shape.',
-    controls: [],
+    prompt: 'Classify each of these five clouds by its shape.',
+    controls: ['turn'],
     extent: 24,
     clouds: [
-      { id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '3pz', plane: 'all', fired: 500, note: 'one electron in an atom with more energy still' },
-      { id: 'b', label: 'SAMPLE B', head: 'cloud', orbital: '3dxy', plane: 'all', fired: 500, note: 'one electron in an atom with more energy still' },
-      { id: 'c', label: 'SAMPLE C', head: 'cloud', orbital: '3dz2', plane: 'all', fired: 500, note: 'one electron in an atom with more energy still' },
-      { id: 'd', label: 'SAMPLE D', head: 'cloud', orbital: '3dx2y2', plane: 'all', fired: 500, note: 'one electron in an atom with more energy still' },
-      { id: 'e', label: 'SAMPLE E', head: 'cloud', orbital: '3dyz', plane: 'all', fired: 500, note: 'one electron in an atom with more energy still' }
+      { id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '3pz', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy still' },
+      { id: 'b', label: 'SAMPLE B', head: 'cloud', orbital: '3dxy', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy still' },
+      { id: 'c', label: 'SAMPLE C', head: 'cloud', orbital: '3dz2', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy still' },
+      { id: 'd', label: 'SAMPLE D', head: 'cloud', orbital: '3dx2y2', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy still' },
+      { id: 'e', label: 'SAMPLE E', head: 'cloud', orbital: '3dyz', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy still' }
     ],
     widget: {
       type: 'bins', label: 'Shape of each cloud',
@@ -299,9 +308,9 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Look at all three views of each plate and find the view in which its shape shows most clearly.',
+      'Turn the clouds together and find the side from which each shape shows most clearly.',
       'Compare each plate with the two-lobed shape you already know, and look for extra lobes or a ring.',
-      'Count the lobes in the clearest view of each plate, and look for a ring round the middle of the two-lobed one.'
+      'Count the lobes from the clearest side of each plate, and look for a ring round the middle of the two-lobed one.'
     ],
     check(state) {
       const rows = ['a', 'b', 'c', 'd', 'e'];
@@ -309,7 +318,7 @@ export const STAGES = [
       const want = { a: 'two', b: 'four', c: 'ring', d: 'four', e: 'four' };
       for (const r of rows) {
         if (state.bins[r] !== want[r]) {
-          return { ok: false, msg: 'Look at all three views of the plate and count the lobes in the clearest one before you sort it.' };
+          return { ok: false, msg: 'Turn the clouds and count the lobes from the clearest side before you sort it.' };
         }
       }
       return { ok: true };
@@ -326,10 +335,11 @@ export const STAGES = [
     title: 'No Path',
     briefing: {
       speaker: SPEAKER,
-      body: 'Try using the trajectory tracker. Press "Track Electron" to attempt tracing a continuous path.'
+      body: 'Like a long-exposure photograph of moths round a lantern, an orbital shows where an electron spends time, not a path. Adjust the precision dial to balance position blur and speed blur.'
     },
-    prompt: 'Try the \'Track Electron\' button on our surveyor scope. Why is it impossible for the bench to trace a neat, definite path?',
-    controls: ['fire', 'track'],
+    prompt: 'Why is it impossible for the bench to trace a neat, definite electron path?',
+    controls: ['precision', 'fire', 'track'],
+    precision: [1, 2, 3, 4, 5],
     extent: 5,
     clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],
     widget: {
@@ -448,7 +458,7 @@ export const PRACTICE = [
    BENCH STATE
    ------------------------------------------------------------------ */
 function blankState(stage) {
-  return { setting: stage.start ?? null, slice: false };
+  return { setting: stage?.start ?? null, slice: false, precision: stage?.precision ? 3 : null };
 }
 
 export const SOLUTIONS = [
@@ -523,6 +533,13 @@ export function mount(container, ctx) {
         ? 'Showing only the dots within a thin slab through the middle.'
         : 'Showing every dot, from front to back.');
       paintKeys();
+    } else if (tool.startsWith('turn:')) {
+      const way = tool.split(':')[1];
+      if (way === 'reset') plate.resetView();
+      else if (way === 'left') plate.turn(-TURN_STEP, 0);
+      else if (way === 'right') plate.turn(TURN_STEP, 0);
+      else if (way === 'up') plate.turn(0, -TURN_STEP);
+      else if (way === 'down') plate.turn(0, TURN_STEP);
     } else if (tool === 'track') {
       const r = plate.track();
       runner.readout('Track // refused', r.reason);
@@ -533,7 +550,8 @@ export function mount(container, ctx) {
     plate.setPlates(stage.clouds, {
       extent: stage.extent ?? 12,
       settings: stage.settings || [],
-      setting: r.state.setting || 1
+      setting: r.state.setting || 1,
+      precision: r.state.precision ?? (stage.precision ? 3 : null)
     });
     plate.setSelectable(false);
 
@@ -542,6 +560,20 @@ export function mount(container, ctx) {
     if (stage.settings) {
       parts.push(r.dialHtml('setting', { label: 'Wavelength', min: 1, max: stage.settings.length, value: r.state.setting }));
       dials.setting = { min: 1, max: stage.settings.length, onChange: v => setSetting(v) };
+    }
+    if (stage.precision) {
+      parts.push(r.dialHtml('precision', { label: 'Precision', min: 1, max: stage.precision.length, value: r.state.precision || 3 }));
+      dials.precision = {
+        min: 1, max: stage.precision.length,
+        onChange: v => {
+          r.state.precision = v;
+          plate.setPrecision(v);
+          r.paintDial('precision', v, { min: 1, max: stage.precision.length, text: `Level ${v}` });
+          const dx = Math.round(150 / v);
+          const dv = Math.round(v * 770);
+          r.readout('Precision // trade-off', `Position blur ±${dx} pm, speed blur ±${dv} km/s. Floor cannot be breached.`);
+        }
+      };
     }
     const keys = [];
     if (stage.controls.includes('fire')) {
@@ -555,6 +587,15 @@ export function mount(container, ctx) {
     if (stage.controls.includes('slice')) {
       keys.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="slice" aria-pressed="false">Slice</button>');
     }
+    if (stage.controls.includes('turn')) {
+      keys.push(
+        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="turn:left">Turn Left</button>',
+        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="turn:right">Turn Right</button>',
+        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="turn:up">Tilt Up</button>',
+        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="turn:down">Tilt Down</button>',
+        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="turn:reset">Reset View</button>'
+      );
+    }
     if (stage.controls.includes('track')) {
       keys.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="track">Track Electron</button>');
     }
@@ -562,6 +603,9 @@ export function mount(container, ctx) {
 
     r.setControls(parts, onTool, { dials });
     paintSetting();
+    if (stage.precision) {
+      r.paintDial('precision', r.state.precision || 3, { min: 1, max: stage.precision.length, text: `Level ${r.state.precision || 3}` });
+    }
     paintKeys();
     r.readout(null, null, { idleHead: 'Plate // standby', idle: stage.controls.includes('fire') ? 'Fire some shots.' : 'Look at the plate.' });
   }

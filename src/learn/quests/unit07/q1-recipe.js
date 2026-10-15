@@ -10,8 +10,8 @@
  *
  *   1  count a molecule in three samples of one substance -> a compound has a fixed composition
  *   2  a sample with atoms no molecule would take         -> extra atoms make a mixture
- *   3  two samples of the same two elements               -> two compounds, whole numbers apart
- *   4  add up the masses in one molecule                  -> a molecule weighs what its atoms weigh
+ *   3  weigh the bench before and after a joining         -> conservation of mass; a molecule weighs what its atoms weigh
+ *   4  two heaps feeding a joiner until one runs out      -> the limiting reactant
  *   5  which share of that weight is the heavy element    -> percent composition
  *   6  a weight ratio off the vent line                   -> the empirical formula
  *   7  name three samples off their recipes               -> the recipe is the identity
@@ -37,6 +37,8 @@ export const meta = { stageCount: 8 };
 
 /** When each withheld word is earned. Specific terms first. */
 export const VOCABULARY = [
+  { term: /\blimiting reactants?\b/i, introducedAt: 4 },
+  { term: /\bconservation of mass\b/i, introducedAt: 3 },
   { term: /\bfixed composition\b/i, introducedAt: 1 },
   { term: /\bpercent composition\b/i, introducedAt: 5 },
   { term: /\bempirical formulas?\b/i, introducedAt: 6 }
@@ -50,12 +52,12 @@ const SPEAKER = 'Vess';
    masses are the ones charted at Tallow site five.
    ------------------------------------------------------------------ */
 export const KINDS = {
-  k01: { code: 'CAT 01', mass: 1.0, size: 0.30, tint: 'bone', note: 'The lightest thing the yard handles.' },
-  k06: { code: 'CAT 06', mass: 12.0, size: 0.56, tint: 'iron', note: 'Dark and dry. Marks anything it touches.' },
-  k07: { code: 'CAT 07', mass: 14.0, size: 0.54, tint: 'pale', note: 'Most of the air on this planet is this.' },
-  k08: { code: 'CAT 08', mass: 16.0, size: 0.52, tint: 'rust', note: 'Turns up in almost every sample here.' },
-  k11: { code: 'CAT 11', mass: 23.0, size: 0.74, tint: 'pale', note: 'Large, soft and dull.' },
-  k17: { code: 'CAT 17', mass: 35.5, size: 0.66, tint: 'sand', note: 'Yellow and heavy. Sharp smell.' }
+  k01: { code: 'hydrogen (H)', mass: 1.0, size: 0.30, tint: 'bone', note: 'The lightest thing the yard handles.' },
+  k06: { code: 'carbon (C)', mass: 12.0, size: 0.56, tint: 'iron', note: 'Dark and dry. Marks anything it touches.' },
+  k07: { code: 'nitrogen (N)', mass: 14.0, size: 0.54, tint: 'pale', note: 'Most of the air on this planet is this.' },
+  k08: { code: 'oxygen (O)', mass: 16.0, size: 0.52, tint: 'rust', note: 'Turns up in almost every sample here.' },
+  k11: { code: 'sodium (Na)', mass: 23.0, size: 0.74, tint: 'pale', note: 'Large, soft and dull.' },
+  k17: { code: 'chlorine (Cl)', mass: 35.5, size: 0.66, tint: 'sand', note: 'Yellow and heavy. Sharp smell.' }
 };
 
 const massBar = k => Math.max(1, Math.min(10, Math.round((KINDS[k].mass / 40) * 10)));
@@ -68,26 +70,26 @@ const sizeBar = k => Math.max(1, Math.min(10, Math.round((KINDS[k].size / 0.8) *
    itself: the scope does not lie about the salvage.
    ------------------------------------------------------------------ */
 
-/** One CAT 08 with two CAT 01 on it, bent. */
+/** One oxygen with two hydrogens on it, bent. */
 const WATER = { kinds: ['k08', 'k01', 'k01'] };
 
-/** One CAT 06 with one CAT 08 on it. */
+/** One carbon with one oxygen on it. */
 const OXIDE_1 = { kinds: ['k06', 'k08'] };
 
-/** One CAT 06 with a CAT 08 on each side, in a straight line rather than bent. */
+/** One carbon with an oxygen on each side, in a straight line rather than bent. */
 const OXIDE_2 = {
   kinds: ['k06', 'k08', 'k08'],
   geom: [[0, 0], [-0.99, 0], [0.99, 0]],
   bonds: [[0, 1], [0, 2]]
 };
 
-/** One CAT 07 with three CAT 01 on it. */
+/** One nitrogen with three hydrogens on it. */
 const AIR_GROUP = { kinds: ['k07', 'k01', 'k01', 'k01'] };
 
-/** One CAT 06 with four CAT 01 on it. */
+/** One carbon with four hydrogens on it. */
 const GAS_GROUP = { kinds: ['k06', 'k01', 'k01', 'k01', 'k01'] };
 
-/** Two CAT 08 in a chain with one CAT 01 on each end — not a star. */
+/** Two oxygens in a chain with one hydrogen on each end — not a star. */
 const PEROXIDE = {
   kinds: ['k08', 'k08', 'k01', 'k01'],
   geom: [[-0.52, 0], [0.52, 0], [-1.0, -0.78], [1.0, 0.78]],
@@ -134,9 +136,9 @@ export const STAGES = [
     title: 'Three Sources, One Molecule',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench is the molecular scope: the Power dial zooms in, and tapping an atom reads its code and weight.'
+      body: 'The molecular scope inspects materials at atomic scale. The Power dial zooms in, and tapping an atom reads its name and weight.'
     },
-    prompt: 'Every sample here came from a different corner of the foundry, but look closely at their molecules under the scope! Zoom in, count the atoms that make up a single molecule, and dial its recipe into the tray.',
+    prompt: 'Set the tray to the recipe of one molecule of this substance.',
     controls: ['power', 'probe'],
     samples: [
       { id: 'a1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 12 }] },
@@ -146,8 +148,8 @@ export const STAGES = [
     widget: { type: 'build', kinds: ['k01', 'k08'], max: 5, label: 'One molecule holds' },
     hints: [
       'Turn the Power dial up to 4 or past it, then look at one molecule on any of the three plates.',
-      'Every molecule on all three plates is built the same way, so study just one: tap each atom in it and read its code.',
-      'In that one molecule, count how many atoms read CAT 08 and how many read CAT 01, and set the tray to those two counts.'
+      'Every molecule on all three plates is built the same way: inspect one molecule and tap each atom in it.',
+      'In that one molecule, count how many atoms read oxygen and how many read hydrogen, and set the tray to those two counts.'
     ],
     check(state) {
       const n01 = state.build.k01 || 0;
@@ -156,17 +158,17 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: 'Set the tray to what you counted in one molecule.' };
       }
       if (n01 === 1 && n08 === 2) {
-        return { ok: false, msg: 'Tap each atom in one molecule and read its code: check which element the larger atom is, and how many atoms of each element there are.' };
+        return { ok: false, msg: 'Tap each atom in one molecule: check which element the larger atom is, and how many atoms of each element there are.' };
       }
       if (n01 !== 2 || n08 !== 1) {
-        return { ok: false, msg: 'Count one molecule again, on any plate, and tap each atom in it to read its code.' };
+        return { ok: false, msg: 'Count one molecule again, on any plate, and tap each atom in it to inspect it.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'All three samples: two CAT 01 to one CAT 08.',
+      log: 'All three samples: two hydrogen to one oxygen.',
       title: 'A Compound Has a Fixed Composition',
-      body: 'Three samples from three places at three different sizes, and every molecule in all of them holds the same one CAT 08 and two CAT 01. A compound is not a blend you can mix to taste: it has a fixed composition, the same ratio of elements every time, wherever it came from. That is exactly what makes it a compound and not a mixture.'
+      body: 'Every sample contains the same ratio: two hydrogens to one oxygen. A compound has a fixed composition, maintaining the exact same ratio of elements regardless of source.'
     }
   },
 
@@ -175,9 +177,9 @@ export const STAGES = [
     title: 'The Wrong Proportions',
     briefing: {
       speaker: SPEAKER,
-      body: 'You now have a settling shaker. Press "Settle" to shake the sample and see if it separates into layers.'
+      body: 'The settling shaker sorts unbonded atoms by weight. Press "Settle" to shake the sample and see if it separates into layers.'
     },
-    prompt: 'One tank holds pure water molecules, while the other was contaminated when a seam split! Shake both samples with the Settle tool to see which one fails to behave as a true compound.',
+    prompt: 'Which of the two samples fails to behave as a true compound?',
     controls: ['power', 'probe', 'settle'],
     samples: [
       { id: 'b1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 20 }] },
@@ -190,10 +192,10 @@ export const STAGES = [
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'extra', label: 'Sample B, because it holds loose CAT 01 atoms that no molecule took in', note: 'Some of it belongs to no molecule at all.' },
-        { id: 'a', label: 'Sample A, because its molecules hold two of one element and one of another', note: 'An uneven recipe.' },
-        { id: 'both', label: 'Both of them, because each holds more than one element', note: 'More than one element means a mixture.' },
-        { id: 'neither', label: 'Neither — a compound can hold any proportions at all', note: 'Both are the same substance.' }
+        { id: 'extra', label: 'Sample B, because it holds loose hydrogen atoms that no molecule took in' },
+        { id: 'a', label: 'Sample A, because its molecules hold two of one element and one of another' },
+        { id: 'both', label: 'Both of them, because each holds more than one element' },
+        { id: 'neither', label: 'Neither — a compound can hold any proportions at all' }
       ]
     },
     hints: [
@@ -206,7 +208,7 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === 'a') {
-        return { ok: false, msg: 'One CAT 08 to two CAT 01 is the recipe you counted in three separate samples on the last stage, so there is nothing wrong with it.' };
+        return { ok: false, msg: 'One oxygen to two hydrogens is the recipe you counted in three separate samples on the last stage, so there is nothing wrong with it.' };
       }
       if (state.choice === 'both') {
         return { ok: false, msg: 'Settle Sample A and look at it at high power: is any atom in it sitting outside a molecule?' };
@@ -217,102 +219,105 @@ export const STAGES = [
       return { ok: true };
     },
     reward: {
-      log: 'Sample B: molecules plus loose CAT 01. Two layers.',
+      log: 'Sample B: molecules plus loose hydrogen. Two layers.',
       title: 'Extra Atoms Make a Mixture',
-      body: 'Sample B holds exactly the same molecules as Sample A, plus CAT 01 atoms sitting loose that no molecule would take in. Adding more of one element does not shift a compound to a new recipe; it leaves the extra alongside as a mixture, which is why the shaker found two layers in it. A compound takes exactly as many of each element as its bonds allow and not one more.'
+      body: 'Sample B contains pure molecules alongside unbonded hydrogen atoms. Adding extra atoms cannot change a compound\'s formula; the excess remains separated as a mixture.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
-    title: 'Two Recipes, Same Two Elements',
+    title: 'Weigh Before and After',
     briefing: {
       speaker: SPEAKER,
-      body: 'You can now test mechanical cutting. Press "Run Cutter" to attempt splitting a sample along its seams.'
+      body: 'The joiner bonds loose hydrogen and oxygen atoms into water, one molecule at a time. The balance weighs everything on the bench at once and writes the total in the log.'
     },
-    prompt: 'Both flues are venting exhaust gases made of carbon and oxygen, but their formulas are completely different! Inspect a single molecule from each vent: how many CAT 08 atoms bind to one CAT 06 in Sample A compared to Sample B?',
-    controls: ['power', 'probe', 'cut'],
+    prompt: 'What happens to the bench\'s total weight when loose atoms join into molecules?',
+    controls: ['power', 'probe', 'weigh', 'join'],
+    log: { columns: [{ key: 'made', label: 'Molecules made' }, { key: 'total', label: 'Total weight' }] },
     samples: [
-      { id: 'c1', label: 'SAMPLE A', note: 'off the flare stack', floorPower: 4, particles: [{ ...OXIDE_1, n: 22 }] },
-      { id: 'c2', label: 'SAMPLE B', note: 'off the kiln vent', floorPower: 4, particles: [{ ...OXIDE_2, n: 18 }] }
+      { id: 'j1', label: 'SAMPLE A', note: 'loose atoms off the vent stacks', floorPower: 4, particles: [{ kinds: ['k01'], n: 6 }] },
+      { id: 'j2', label: 'SAMPLE B', note: 'loose atoms off the vent stacks', floorPower: 4, particles: [{ kinds: ['k08'], n: 3 }] },
+      { id: 'j3', label: 'JOINER TRAY', note: 'what the joiner has made', floorPower: 4, particles: [{ ...WATER, n: 0 }] }
     ],
+    join: { take: { j1: 2, j2: 1 }, into: 'j3' },
     widget: {
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: 'one-two', label: 'One CAT 08 in Sample A, two in Sample B', note: 'Both counts are whole numbers.' },
-        { id: 'one-one', label: 'One in each, so the two samples are the same substance', note: 'The same recipe twice.' },
-        { id: 'two-three', label: 'Two in Sample A and three in Sample B', note: 'One more in each than it looks.' },
-        { id: 'half', label: 'One in Sample A and one and a half in Sample B', note: 'Sample B holds half an atom more.' }
+        { id: 'same', label: 'It stays exactly the same' },
+        { id: 'up', label: 'It goes up, because the bonds add weight' },
+        { id: 'down', label: 'It goes down, because the atoms pack closer together' },
+        { id: 'varies', label: 'It changes by a different amount at every join' }
       ]
     },
     hints: [
-      'Turn the power up past 4, then count the atoms in one molecule on each plate and tap them to read the codes.',
-      'Find the CAT 06 in one molecule on each plate, the dark one, and read each atom joined to it.',
-      'In one molecule from each sample, count the atoms reading CAT 08 that are joined to the one CAT 06, and compare the two counts.'
+      'Press "Weigh Bench", then "Join One Molecule" until the heaps are used up, then weigh again.',
+      'Compare the first row in the log with the last, and look at every row between them.',
+      'Weigh after each single join too, so every number of molecules made has a row in the log.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
-      if (state.choice === 'one-one') {
-        return { ok: false, msg: 'Count the atoms in one molecule on each plate: if the two recipes were the same, the counts would match.' };
-      }
-      if (state.choice === 'two-three') {
-        return { ok: false, msg: 'Count again, and count only the CAT 08 atoms in each molecule, not the CAT 06.' };
-      }
-      if (state.choice === 'half') {
-        return { ok: false, msg: 'Nothing on the plate is half an atom. Count the whole CAT 08 atoms in one Sample B molecule.' };
+      if (state.choice !== 'same') {
+        return { ok: false, msg: 'Weigh the bench before anything is joined and again after, then compare the two figures in the log.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Sample A: one to one. Sample B: one to two.',
-      title: 'Two Compounds, Whole Numbers Apart',
-      body: 'The same two elements can make more than one compound, but not any compound at all: for the same one CAT 06, Sample B holds exactly twice the CAT 08 that Sample A does. The ratios always come out as small whole numbers, because there is no such thing as half an atom to put into a molecule. Two different recipes of the same two elements are two different substances.'
+      log: 'The bench weighs the same before and after.',
+      title: 'Conservation of Mass',
+      body: 'Joining only rearranges atoms, so the bench weighs the same afterwards: this is the conservation of mass. It is why one molecule weighs what its atoms weigh, 16.0 for the oxygen plus 1.0 for each hydrogen.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
-    title: 'What One Molecule Weighs',
-    prompt: 'A molecule has no mystery weight beyond the atoms bonded inside it! Probe the atomic weights of both elements in this water sample, then add them up to find what one whole molecule weighs.',
-    controls: ['power', 'probe'],
+    title: 'One Heap Runs Out',
+    prompt: 'Which heap runs out first, and how many molecules can these two heaps make?',
+    controls: ['power', 'probe', 'join'],
     samples: [
-      { id: 'd1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 20 }] }
+      { id: 'l1', label: 'SAMPLE A', note: 'loose atoms off the vent stacks', floorPower: 4, particles: [{ kinds: ['k01'], n: 8 }] },
+      { id: 'l2', label: 'SAMPLE B', note: 'loose atoms off the vent stacks', floorPower: 4, particles: [{ kinds: ['k08'], n: 5 }] },
+      { id: 'l3', label: 'JOINER TRAY', note: 'what the joiner has made', floorPower: 4, particles: [{ ...WATER, n: 0 }] }
     ],
-    widget: { type: 'number', min: 14, max: 24, step: 1, label: 'Weight of one molecule' },
+    join: { take: { l1: 2, l2: 1 }, into: 'l3' },
+    widget: {
+      type: 'choice',
+      label: 'Your answer',
+      options: [
+        { id: 'h4', label: 'Hydrogen runs out first, after four molecules' },
+        { id: 'o5', label: 'Oxygen runs out first, after five molecules' },
+        { id: 'both', label: 'Both run out together, after four molecules' },
+        { id: 'h8', label: 'Hydrogen runs out first, after eight molecules' }
+      ]
+    },
     hints: [
-      'Turn the power up past 4, then tap the large atom in a molecule and tap one of the small ones.',
-      'The CAT 08 reads 16.0 and each CAT 01 reads 1.0, and a molecule holds one of the first and two of the second.',
-      'Add the listed mass of the central atom to the masses of both attached atoms.'
+      'Press "Join One Molecule" until the joiner refuses, then look at what is left on each plate.',
+      'Compare how many atoms each heap holds with how many of them one molecule takes.',
+      'Divide each heap by the number of its atoms that one molecule takes, and see which gives out first.'
     ],
     check(state) {
-      if (state.number === 14) {
-        return { ok: false, notYet: true, msg: 'Set the counter to the figure you worked out.' };
+      if (!state.choice) {
+        return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
-      if (state.number === 17) {
-        return { ok: false, msg: 'That counts only one CAT 01. A molecule holds two of them.' };
-      }
-      if (state.number === 16) {
-        return { ok: false, msg: 'That is the CAT 08 on its own, with neither CAT 01 counted.' };
-      }
-      if (state.number !== 18) {
-        return { ok: false, msg: 'Tap every atom in one molecule, read each weight, and add them all together.' };
+      if (state.choice !== 'h4') {
+        return { ok: false, msg: 'Join molecules one at a time until the joiner refuses, then check what was made and what is left on each plate.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'One molecule of Sample A weighs 18.0.',
-      title: 'A Molecule Weighs What Its Atoms Weigh',
-      body: 'Adding up the listed mass of every atom in one molecule gives what that whole molecule weighs: 16.0 for the CAT 08 plus 1.0 for each of the two CAT 01 is 18.0. Nothing is lost when atoms bond and nothing is gained. That figure is as fixed for a compound as its recipe is, because it comes straight out of it.'
+      log: 'One heap ran out with atoms left in the other.',
+      title: 'The Limiting Reactant',
+      body: 'A recipe takes atoms in a fixed ratio, so the heap that gives out first decides how many molecules can be made. It is called the limiting reactant, and whatever is left of the other heap is left over.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Which Share Is Which',
-    prompt: 'Even though two out of three atoms in water are hydrogen, oxygen is far heavier! What fraction of the molecule\'s total mass comes from CAT 08, out of every hundred parts by weight?',
+    prompt: 'What fraction of water\'s total mass comes from oxygen, out of every hundred parts by weight?',
     controls: ['power', 'probe'],
     samples: [
       { id: 'e1', label: 'SAMPLE A', note: 'condensed off the vent stacks', floorPower: 4, particles: [{ ...WATER, n: 20 }] }
@@ -321,41 +326,53 @@ export const STAGES = [
       type: 'choice',
       label: 'Your answer',
       options: [
-        { id: '89', label: 'About 89 out of 100', note: '16.0 of the 18.0 is the one heavy atom.' },
-        { id: '67', label: 'About 67 out of 100', note: 'Two of the three atoms are CAT 01.' },
-        { id: '50', label: '50 out of 100', note: 'An even split by weight.' },
-        { id: '33', label: 'About 33 out of 100', note: 'One atom in three is CAT 08.' }
+        { id: '89', label: 'About 89 out of 100' },
+        { id: '67', label: 'About 67 out of 100' },
+        { id: '50', label: '50 out of 100' },
+        { id: '33', label: 'About 33 out of 100' }
       ]
     },
     hints: [
-      'Read one molecule again: 16.0 for the CAT 08 and 1.0 for each CAT 01, making 18.0 in all.',
-      'The question asks for a share of the WEIGHT, not of the atoms, and the two CAT 01 are the light ones.',
-      'Divide the mass of the CAT 08 by the 18.0 the whole molecule weighs to find its percentage.'
+      'Read one molecule again: 16.0 for the oxygen and 1.0 for each hydrogen, making 18.0 in all.',
+      'The question asks for a share of the weight, not of the atoms, and the two hydrogens are the light ones.',
+      'Divide the mass of the oxygen by the 18.0 the whole molecule weighs to find its percentage.'
     ],
     check(state) {
       if (!state.choice) {
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === '67' || state.choice === '33') {
-        return { ok: false, msg: 'That is a share of the ATOMS, not of the weight. One CAT 08 weighs sixteen times what one CAT 01 does.' };
+        return { ok: false, msg: 'That is a share of the atoms, not of the weight. One oxygen weighs sixteen times what one hydrogen does.' };
       }
       if (state.choice === '50') {
-        return { ok: false, msg: 'An even split would need the two CAT 01 to weigh as much as the CAT 08 between them, and they weigh 2.0 against 16.0.' };
+        return { ok: false, msg: 'An even split would need the two hydrogens to weigh as much as the oxygen between them, and they weigh 2.0 against 16.0.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Sample A: 89 out of 100 by weight is CAT 08.',
+      log: 'Sample A: 89 out of 100 by weight is oxygen.',
       title: 'Percent Composition',
-      body: 'The share of a compound\'s mass that comes from each element is its percent composition, and it falls straight out of the recipe: 16.0 of every 18.0 of mass here is CAT 08, which is 89 percent. Notice how far that is from the share of the ATOMS, which is one in three. Count and weight are two different questions, and a compound answers both with fixed numbers.'
+      body: 'Percent composition is the fraction of total mass contributed by each element. In water, oxygen accounts for 16.0 of the 18.0 total mass, or 89 percent.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Backwards From the Weight',
-    prompt: 'A smelter courier left a sealed drum logged at 3 parts CAT 06 to 8 parts CAT 08 by weight! Convert that mass ratio back into an atom count to figure out which molecule\'s recipe fills the drum.',
+    prompt: 'Which molecule has 3 parts carbon to 8 parts oxygen by weight?',
     controls: ['power', 'probe'],
+    slate: {
+      template: 'n(C) = 3 g ÷ 12 g/mol = 0.25 mol, n(O) = 8 g ÷ 16 g/mol = 0.50 mol → 1:2',
+      target: 'ratio',
+      targetUnit: 'C:O',
+      slots: [
+        { id: 'mC', label: 'm(C)', unit: 'g', constant: true, value: 3 },
+        { id: 'MC', label: 'M(C)', unit: 'g/mol', constant: true, value: 12 },
+        { id: 'mO', label: 'm(O)', unit: 'g', constant: true, value: 8 },
+        { id: 'MO', label: 'M(O)', unit: 'g/mol', constant: true, value: 16 }
+      ],
+      evaluate: ({ mC, MC, mO, MO }) => (mO / MO) / (mC / MC)
+    },
     samples: [
       { id: 'f1', label: 'SAMPLE A', note: 'off the flare stack', floorPower: 4, particles: [{ ...OXIDE_1, n: 20 }] },
       { id: 'f2', label: 'SAMPLE B', note: 'off the kiln vent', floorPower: 4, particles: [{ ...OXIDE_2, n: 16 }] }
@@ -364,15 +381,15 @@ export const STAGES = [
       type: 'choice',
       label: 'The drum holds',
       options: [
-        { id: 'one-two', label: 'One CAT 06 to two CAT 08', note: 'The same recipe as Sample B.' },
-        { id: 'one-one', label: 'One CAT 06 to one CAT 08', note: 'The same recipe as Sample A.' },
-        { id: 'three-eight', label: 'Three CAT 06 to eight CAT 08', note: 'The two weights read straight off as a count.' },
-        { id: 'two-one', label: 'Two CAT 06 to one CAT 08', note: 'Twice as much of the lighter element.' }
+        { id: 'one-two', label: 'One carbon to two oxygens' },
+        { id: 'one-one', label: 'One carbon to one oxygen' },
+        { id: 'three-eight', label: 'Three carbons to eight oxygens' },
+        { id: 'two-one', label: 'Two carbons to one oxygen' }
       ]
     },
     hints: [
-      'Turn the Power dial past 4 and tap the atoms in one molecule on each plate to read their codes.',
-      'Compare the count of CAT 08 joined to one CAT 06 in each sample with the weight ratio of the drum.',
+      'Turn the Power dial past 4 and tap the atoms in one molecule on each plate to read their masses.',
+      'Compare the count of oxygen joined to one carbon in each sample with the weight ratio of the drum.',
       'Divide each part of the weight by what one atom of that element weighs, then scale the two counts to the smallest whole numbers.'
     ],
     check(state) {
@@ -380,27 +397,31 @@ export const STAGES = [
         return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
       }
       if (state.choice === 'three-eight') {
-        return { ok: false, msg: '3 and 8 are weights, not counts. One CAT 06 weighs 12.0 and one CAT 08 weighs 16.0, so equal weights are not equal numbers of atoms.' };
+        return { ok: false, msg: '3 and 8 are weights, not counts. One carbon weighs 12.0 and one oxygen weighs 16.0, so equal weights are not equal numbers of atoms.' };
       }
       if (state.choice === 'one-one') {
-        return { ok: false, msg: 'One to one would need equal numbers of atoms, which by weight would be 12 parts CAT 06 to 16 parts CAT 08 — not 3 to 8.' };
+        return { ok: false, msg: 'One to one would need equal numbers of atoms, which by weight would be 12 parts carbon to 16 parts oxygen — not 3 to 8.' };
       }
       if (state.choice === 'two-one') {
-        return { ok: false, msg: 'The drum holds more than twice as much CAT 08 as CAT 06 by weight, so CAT 08 cannot be the element there is less of.' };
+        return { ok: false, msg: 'The drum holds more than twice as much oxygen as carbon by weight, so oxygen cannot be the element there is less of.' };
       }
       return { ok: true };
     },
     reward: {
       log: 'Drum: 3 to 8 by weight is 1 to 2 by count.',
       title: 'The Empirical Formula',
-      body: 'Dividing each element\'s share of the mass by what one of its atoms weighs turns a weight ratio into a count ratio, and reducing that to the smallest whole numbers gives the empirical formula. Three parts CAT 06 to eight parts CAT 08 comes to 0.25 against 0.5, which is one to two. This is how a compound is identified out of a drum nobody can see inside.'
+      body: 'Dividing each mass share by atomic weight yields the mole ratio. Reducing 3 parts carbon and 8 parts oxygen gives a 1:2 ratio, matching carbon dioxide.'
     }
   },
 
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Name Three Samples',
-    prompt: 'Three hauler crates arrived at the loading dock without manifests! Zoom in on each sample, read the central atom and its attached bonds, and sort each crate into its matching recipe bin.',
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The mechanical slicer divides joined matter. Press "Run Cutter" to attempt splitting a sample along its seams.'
+    },
+    prompt: 'Sort each crate into its matching recipe bin.',
     controls: ['power', 'probe', 'cut'],
     samples: [
       { id: 'g1', label: 'SAMPLE A', note: 'unlabelled, off a hauler', floorPower: 4, particles: [{ ...WATER, n: 18 }] },
@@ -411,15 +432,15 @@ export const STAGES = [
       type: 'bins',
       rows: ['g1', 'g2', 'g3'],
       bins: [
-        { id: 'm1', label: 'One CAT 08 to two CAT 01', note: 'One molecule of it weighs 18.0.' },
-        { id: 'm2', label: 'One CAT 07 to three CAT 01', note: 'One molecule of it weighs 17.0.' },
-        { id: 'm3', label: 'One CAT 06 to four CAT 01', note: 'One molecule of it weighs 16.0.' }
+        { id: 'm1', label: 'One oxygen to two hydrogens' },
+        { id: 'm2', label: 'One nitrogen to three hydrogens' },
+        { id: 'm3', label: 'One carbon to four hydrogens' }
       ]
     },
     hints: [
       'Turn the power up past 4, then count how many small atoms are hanging off the large one in each sample.',
-      'Tap the large atom in each molecule to read its code — the three are CAT 06, CAT 07 and CAT 08, and they are hard to tell apart by eye.',
-      'For each sample, read the code of the middle atom in a molecule and count the CAT 01 joined to it, then find the bin that names that same pair.'
+      'Tap the large atom in each molecule to read its name — carbon, nitrogen and oxygen look similar by eye.',
+      'For each sample, read the middle atom in a molecule and count the hydrogens joined to it, then find the bin that names that same pair.'
     ],
     check(state) {
       const labels = { g1: 'Sample A', g2: 'Sample B', g3: 'Sample C' };
@@ -427,9 +448,9 @@ export const STAGES = [
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       const reasons = {
-        g1: 'Sample A is filed wrong. Read the code of the middle atom in one of its molecules, and count the CAT 01 on it.',
-        g2: 'Sample B is filed wrong. Read the code of the middle atom in one of its molecules, and count the CAT 01 on it.',
-        g3: 'Sample C is filed wrong. Read the code of the middle atom in one of its molecules, and count the CAT 01 on it.'
+        g1: 'Sample A is filed wrong. Read the middle atom in one of its molecules, and count the hydrogens on it.',
+        g2: 'Sample B is filed wrong. Read the middle atom in one of its molecules, and count the hydrogens on it.',
+        g3: 'Sample C is filed wrong. Read the middle atom in one of its molecules, and count the hydrogens on it.'
       };
       const want = { g1: 'm1', g2: 'm2', g3: 'm3' };
       for (const id of ['g1', 'g2', 'g3']) {
@@ -440,14 +461,14 @@ export const STAGES = [
     reward: {
       log: 'Three samples, three recipes, three weights.',
       title: 'The Recipe Is the Identity',
-      body: 'All three of those samples are mostly CAT 01 and all three look identical at low power, but their recipes are different and so is everything else about them. A compound is named by what it holds and in what ratio, not by what the crate looks like. Two substances with different recipes are never the same substance.'
+      body: 'A compound\'s identity depends strictly on which elements it contains and their numerical ratio. Different ratios define entirely different chemical substances.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Claims',
-    prompt: 'A salvage trader is selling three drums claimed to be pure vent-stack condensate (H₂O)! Test each drum with the scope and the shaker to verify which shipments are genuine and which are fraudulent.',
+    prompt: 'Which shipments match their label, and which do not?',
     controls: ['power', 'probe', 'settle', 'cut'],
     samples: [
       { id: 'h1', label: 'SAMPLE A', note: 'sold as vent-stack condensate', floorPower: 4, particles: [{ ...WATER, n: 20 }] },
@@ -461,14 +482,14 @@ export const STAGES = [
       type: 'bins',
       rows: ['h1', 'h2', 'h3'],
       bins: [
-        { id: 'yes', label: 'As claimed', note: 'One CAT 08 to two CAT 01, and nothing else in it.' },
+        { id: 'yes', label: 'As claimed', note: 'One oxygen to two hydrogens, and nothing else in it.' },
         { id: 'no', label: 'Not as claimed', note: 'Either the recipe is wrong or there is something else in there.' }
       ]
     },
     hints: [
       'Turn the power up past 4, then settle each sample and count one molecule on each plate.',
-      'The claim is one CAT 08 to two CAT 01, and a sample fails it by holding a different molecule or by holding anything besides that molecule.',
-      'Test each sample twice: two layers after settling fails it, and a molecule that is not one CAT 08 with two CAT 01 fails it; only a sample that passes both is as claimed.'
+      'The claim is one oxygen to two hydrogens, and a sample fails it by holding a different molecule or by holding anything besides that molecule.',
+      'Test each sample twice: two layers after settling fails it, and a molecule that is not one oxygen with two hydrogens fails it; only a sample that passes both is as claimed.'
     ],
     check(state) {
       const labels = { h1: 'Sample A', h2: 'Sample B', h3: 'Sample C' };
@@ -489,7 +510,7 @@ export const STAGES = [
     reward: {
       log: 'One as claimed, one a mixture, one a different compound.',
       title: 'A Recipe Is a Test You Can Run',
-      body: 'Sample B held the right molecules with loose CAT 01 alongside them, and Sample C held the same two elements in a different ratio, so neither is what its label says. Counting one molecule settles it either way, because a compound has exactly one recipe and no room to argue. That is the whole reason a formula is worth writing down.',
+      body: 'A pure compound has an exact, unvarying chemical formula. Any shift in atom ratio or unbonded excess indicates a mixture or an entirely different substance.',
       last: true
     }
   }
@@ -532,15 +553,15 @@ export const PRACTICE = [
     explanation: 'A compound is defined by its ratio of atoms, and that ratio comes from how many bonds each atom can make. Water is H2O wherever it is found, which is why a formula is worth writing at all.'
   },
   {
-    question: 'Carbon monoxide is CO and carbon dioxide is CO2. What does that tell you about compounds of the same two elements?',
+    question: 'A joiner bonds 2 hydrogen atoms and 1 oxygen atom into each water molecule. How many molecules can 6 hydrogen atoms and 5 oxygen atoms make?',
     options: [
-      { id: 'a', label: 'There can only ever be one compound of two elements' },
-      { id: 'b', label: 'The amounts of one element combining with a fixed amount of the other are in small whole-number ratios' },
-      { id: 'c', label: 'The two compounds behave the same way' },
-      { id: 'd', label: 'Carbon dioxide is a mixture of carbon monoxide and oxygen' }
+      { id: 'a', label: '3 molecules, and the hydrogen is the limiting reactant' },
+      { id: 'b', label: '5 molecules, and the oxygen is the limiting reactant' },
+      { id: 'c', label: '6 molecules, because the hydrogen sets the count' },
+      { id: 'd', label: '11 molecules, because every atom is used' }
     ],
-    answer: 'b',
-    explanation: 'For the same one carbon atom, CO2 holds exactly twice the oxygen that CO does — 2 to 1, not 1.7 to 1. Atoms combine as whole units, so the ratios between compounds come out as small whole numbers.'
+    answer: 'a',
+    explanation: 'Six hydrogens make three molecules at two apiece, and three molecules need only 3 of the 5 oxygens. The hydrogen gives out first, so it limits the count and 2 oxygens are left over.'
   },
   {
     question: 'Water is H2O. Hydrogen weighs 1.0 and oxygen 16.0. What percent of water\'s mass is oxygen?',
@@ -591,7 +612,10 @@ function blankState(stage) {
     sample: null,
     probed: new Set(),
     settled: new Set(),
-    cut: new Set()
+    cut: new Set(),
+    weighed: 0,
+    made: 0,
+    counts: stage.join ? Object.fromEntries(stage.samples.map(sm => [sm.id, sm.particles.map(p => p.n)])) : null
   };
 }
 
@@ -599,8 +623,8 @@ function blankState(stage) {
 export const SOLUTIONS = [
   { maxPower: 4, probed: new Set(['k01', 'k08']), build: { k01: 2, k08: 1 } },
   { maxPower: 4, probed: new Set(['k01', 'k08']), settled: new Set(['b1', 'b2']), choice: 'extra' },
-  { maxPower: 4, probed: new Set(['k06', 'k08']), choice: 'one-two' },
-  { maxPower: 4, probed: new Set(['k01', 'k08']), number: 18 },
+  { maxPower: 4, probed: new Set(['k01', 'k08']), weighed: 2, made: 3, choice: 'same' },
+  { maxPower: 4, probed: new Set(['k01', 'k08']), made: 4, choice: 'h4' },
   { maxPower: 4, probed: new Set(['k01', 'k08']), choice: '89' },
   { maxPower: 4, probed: new Set(['k06', 'k08']), choice: 'one-two' },
   { maxPower: 4, probed: new Set(['k06', 'k08']), bins: { g1: 'm1', g2: 'm2', g3: 'm3' } },
@@ -616,8 +640,8 @@ export const SOLUTIONS = [
 export const MISSES = [
   { maxPower: 4, probed: new Set(['k01', 'k08']), build: { k01: 1, k08: 2 } },
   { maxPower: 4, probed: new Set(['k01', 'k08']), settled: new Set(['b1', 'b2']), choice: 'both' },
-  { maxPower: 4, probed: new Set(['k06', 'k08']), choice: 'one-one' },
-  { maxPower: 4, probed: new Set(['k01', 'k08']), number: 17 },
+  { maxPower: 4, probed: new Set(['k01', 'k08']), weighed: 2, made: 3, choice: 'up' },
+  { maxPower: 4, probed: new Set(['k01', 'k08']), made: 4, choice: 'both' },
   { maxPower: 4, probed: new Set(['k01', 'k08']), choice: '67' },
   { maxPower: 4, probed: new Set(['k06', 'k08']), choice: 'three-eight' },
   { maxPower: 4, probed: new Set(['k06', 'k08']), bins: { g1: 'm1', g2: 'm3', g3: 'm2' } },
@@ -678,6 +702,7 @@ export function mount(container, ctx) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
+      log: stage.log,
       commitLabel: stage.encounter?.act || 'Commit'
     });
 
@@ -732,6 +757,12 @@ export function mount(container, ctx) {
     if (stage.controls.includes('cut')) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="cut">Run Cutter</button>');
     }
+    if (stage.controls.includes('join')) {
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="join">Join One Molecule</button>');
+    }
+    if (stage.controls.includes('weigh')) {
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="weigh">Weigh Bench</button>');
+    }
     if (stage.controls.includes('settle')) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="settle">Settle</button>');
     }
@@ -769,8 +800,49 @@ export function mount(container, ctx) {
     paintDialControl(frame.el.controls, state.power, { min: 1, max: 6 });
   }
 
+  /** The samples as they stand now: the joiner changes the counts, never the declaration. */
+  function liveSamples() {
+    const stage = STAGES[index];
+    return stage.samples.map(sm => ({
+      ...sm,
+      particles: sm.particles.map((p, pi) => ({ ...p, n: state.counts?.[sm.id]?.[pi] ?? p.n }))
+    }));
+  }
+
+  /** What the balance reports: every atom on every plate, by its listed mass. */
+  function benchWeight() {
+    return liveSamples().reduce((sum, sm) => sum + sm.particles.reduce(
+      (t, p) => t + p.n * p.kinds.reduce((m, k) => m + KINDS[k].mass, 0), 0), 0);
+  }
+
+  function joinOne() {
+    const stage = STAGES[index];
+    const { take, into } = stage.join;
+    if (!Object.entries(take).every(([id, k]) => state.counts[id][0] >= k)) {
+      renderReadout(null, { head: 'Joiner // refused', body: 'There are not enough atoms left in one of the heaps to bond another molecule.' });
+      return;
+    }
+    for (const [id, k] of Object.entries(take)) state.counts[id][0] -= k;
+    state.counts[into][0] += 1;
+    state.made += 1;
+    scope.setSamples(liveSamples());
+    scope.setPower(state.power);
+    if (state.sample) scope.setSelected(state.sample);
+    soundscape.playBondSnap?.();
+    renderReadout(null, { head: 'Joiner // made', body: `One molecule bonded. ${state.made} made so far.` });
+  }
+
+  function weighBench() {
+    state.weighed += 1;
+    const total = benchWeight();
+    frame.logReading({ made: state.made, total: total.toFixed(1) });
+    renderReadout(null, { head: 'Balance // whole bench', body: `Everything on the bench weighs ${total.toFixed(1)}.` });
+  }
+
   async function runTool(tool) {
     if (busy) return;
+    if (tool === 'join') { joinOne(); return; }
+    if (tool === 'weigh') { weighBench(); return; }
     if (!state.sample) {
       frame.note('Tap a sample on the bench first.');
       return;

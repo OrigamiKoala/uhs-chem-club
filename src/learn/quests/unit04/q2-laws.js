@@ -76,7 +76,9 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench changes one thing at a time and keeps the rest fixed, so what you read is how the others answer. The dials turn the piston and the heater, and the keys add gas.'
     },
-    prompt: 'We\'re testing compression on this pneumatic cylinder while keeping temperature steady. What happens to the gas pressure when you compress the volume down to one quarter?',
+    prompt: 'What happens to gas pressure when the volume is compressed to one quarter at constant temperature?',
+    pair: ['V', 'P'],
+    trendPlot: { xLabel: 'Room', xUnit: 'L', yLabel: 'Pressure', yUnit: 'kPa', xMin: 0, xMax: 45, yMin: 0, yMax: 550 },
     controls: ['volume'],
     volumes: [5, 10, 20, 40], volumeStart: 3,
     ...BASE,
@@ -113,7 +115,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'The Same Particles',
-    prompt: 'Halving the cylinder volume causes the pressure reading to jump by a factor of two. Why does compressing the gas into half the room double the pressure?',
+    prompt: 'Why does compressing gas into half its volume double the pressure at constant temperature?',
     controls: ['volume'],
     volumes: [5, 10, 20, 40], volumeStart: 3,
     ...BASE,
@@ -151,7 +153,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Under a Weight',
-    prompt: 'Under a free-floating piston with constant counterweight pressure, what happens to the gas volume when you triple the kelvin temperature?',
+    prompt: 'What happens to gas volume when you triple the kelvin temperature at constant pressure?',
     controls: ['temp'],
     temps: [200, 300, 400, 600], tempStart: 1, tempList: 'K',
     ...BASE,
@@ -191,7 +193,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Which Scale',
-    prompt: 'Look at our dual temperature plots: the volume trendline intercepts the origin at 0 K, but not at 0 °C. Why does the volume line meet zero at 0 K rather than 0 °C?',
+    prompt: 'Why does the volume trendline meet zero at 0 K rather than 0 °C?',
     controls: ['temp', 'clear'],
     temps: [100, 200, 300, 400, 500, 600], tempStart: 3, tempList: 'K',
     ...BASE,
@@ -234,7 +236,9 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'A Sealed Tank',
-    prompt: 'This rigid storage tank has a fixed internal volume. By what factor does the internal pressure rise when we heat the tank from 300 K to 450 K?',
+    prompt: 'By what factor does the pressure rise when a sealed tank is heated from 300 K to 450 K?',
+    pair: ['T', 'P'],
+    trendPlot: { xLabel: 'Temperature', xUnit: 'K', yLabel: 'Pressure', yUnit: 'kPa', xMin: 250, xMax: 650, yMin: 0, yMax: 550 },
     controls: ['temp'],
     temps: [300, 375, 450, 600], tempStart: 1, tempList: 'K',
     ...BASE,
@@ -265,7 +269,9 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Feeding the Piston',
-    prompt: 'At constant temperature and weight, our injector feeds extra gas into the cylinder. What happens to the volume when you double the moles of gas inside?',
+    prompt: 'What happens to gas volume when you double the amount of gas at constant temperature and pressure?',
+    pair: ['n', 'V'],
+    trendPlot: { xLabel: 'Amount', xUnit: 'mol', yLabel: 'Room', yUnit: 'L', xMin: 0, xMax: 5, yMin: 0, yMax: 150 },
     controls: ['add', 'remove', 'reset'],
     step: 1, nMin: 1, nMax: 4,
     ...BASE,
@@ -302,7 +308,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Everything at Once',
-    prompt: 'Both pressure and temperature are shifting at once! Calculate what volume Cylinder A would expand to if the pressure is halved while the temperature climbs to 450 K.',
+    prompt: 'What volume does Cylinder A reach if its pressure is halved while temperature rises to 450 K?',
     controls: ['temp'],
     temps: [300, 400, 500, 600], tempStart: 1, tempList: 'K',
     ...BASE,
@@ -335,7 +341,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Four Records',
-    prompt: 'The flight recorder captured four distinct gas response curves. Sort each record by the variable that was held constant while measurements were taken!',
+    prompt: 'Sort each plotted record by the variable that was held constant during measurement.',
     controls: [],
     rigs: [
       rec('a', 'RECORD A', { x: 'V', y: 'P', fixed: { n: 1, T: 300 }, xmin: 2, xmax: 40, ymin: 0, ymax: 1300, xticks: [2, 10, 20, 30, 40] }),

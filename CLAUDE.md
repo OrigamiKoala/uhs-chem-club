@@ -14,7 +14,7 @@ bench provides the tools. The user must explore, test, observe, and deduce the a
 Neither the prompt, the mission briefing, the stage guide, nor the hint ladder should ever tell
 the player what to do or make the correct option obvious.
 
-**Concise, discovery-based stage objectives with approachable, story-woven voice.** Every quest and stage automatically opens a concise, single-paragraph MAX objective on stage load with 3D instrument halos highlighted. Prompts, briefings, and debriefs use a warm, conversational, and friendly voice suited for elementary- and middle-school students. Avoid cold, overly clinical academic directives in favor of engaging phrasing that weaves the story and local setting (refinery yard, ice moon surveys, basalt quarry, cloud-deck gas rig, reaction foundry) into the stage prompt so that investigations carry genuine narrative stakes while keeping the chemistry challenge clear and discoverable. No textbook dumps, no AI-generated slop, and no outright explanation of answers: students discover the chemistry concepts hands-on through bench exploration.
+**Concise, discovery-based stage objectives with approachable, story-woven voice.** Every quest and stage automatically opens a concise, single-paragraph MAX objective on stage load with 3D instrument halos highlighted. Prompts, briefings, and debriefs use a warm, conversational, and friendly voice suited for elementary- and middle-school students. Avoid cold, overly clinical academic directives. The story and local setting (refinery yard, ice moon surveys, basalt quarry, cloud-deck gas rig, reaction foundry) live in the saga, the world briefings and the Case File, with at most a quiet one-sentence `.lq-story` lead above the prompt on the stages where something is at stake; the prompt itself is one plain question or imperative of at most 25 words, with no setting clause and no exclamation mark, so the chemistry challenge stays clear and discoverable (settled 2026-10-14, `docs/plans/bench-clarity-pass.md` D4). No textbook dumps, no AI-generated slop, and no outright explanation of answers: students discover the chemistry concepts hands-on through bench exploration.
 
 **Scientific investigation, not monster combat.** The user-facing deck stays clean without weird combat jargon ("salt rocks", "braced against a hit", "STRIKE"). The encounter system runs silently in the background while the UI presents pure scientific trials. Incorrect submissions are missed trials, and progress is never lost.
 
@@ -750,6 +750,17 @@ into grinding and would punish the students it exists to help.
   the front edge. `verify:bench` makes every instrument carry four keys and six at its
   widest stage and holds the bank to the glass, the bench ends, clear of the instrument,
   clear of the world, and pressed through the real pointer path.
+- **The readings board: the log, the plot and the device stand on the bench too**
+  (`engine/bench-readings.js`, `BenchViewer3D.setReadings`, `buildReadingsBoard`). The bench log
+  (`benchlog.js`), the trend plot and the stage's device are cards in the frame at every tier; with the
+  bench built, `mirrorBenchReadings(frame)` polls `LearnFrame.readingsSnapshot()` four times a second and
+  repaints them (`paintReadings`, a pure function over a 2D context) onto one raked slate on the plate,
+  standing in the key bank's band on the side the keys left free, so folding the plates away to look at
+  the instrument does not take the readings with it. **It is a read-only mirror and keeps no state**, so
+  it can never show a reading the instrument did not report; pinning two log rows stays on the card. When
+  there is no free plate beside the keys (the sampler scope and the ledger bench at their widest stages)
+  the board is simply not shown and the cards still hold the readings. `verify:bench` holds it to the
+  plate, the glass, the instrument and the key bank; `verify:learn` draws it in Node.
 - **A BUILT INSTRUMENT SHOWS A FLAT PICTURE.** The bench, the wells, the crate of bulk
   matter in them and the power dial are real geometry the player leans over — and what the
   instrument RESOLVES is drawn in two dimensions on a **raked screen standing behind each
@@ -1119,10 +1130,23 @@ and the quest page prints one linked "Builds on" line; nothing is gated by it).
   (`lightdata.js`).
 - **`q4-cloud` Orbitals** (cloud plate) — one shot is a dot, five hundred are a cloud, a wave
   that fits a ring, the node of a 2s, two lobes, three ways to point, five clouds by shape, and
-  the bench that **never draws a path** (`track()` exists only to refuse).
+  the bench that **never draws a path** (`track()` exists only to refuse; stage 8 also has a
+  precision dial whose position blur and speed blur never multiply below a floor marked on the plate).
+  **From stage 5 a cloud is a solid the player turns** (`plane: 'turn'`, `projectDots` /
+  `turnPoint` in `cloudplate.js`): one square plate per sample, every plate turning together,
+  by `Turn Left / Turn Right / Tilt Up / Tilt Down / Reset View` (30 degree steps, so every
+  axis-on view is reachable) or by a drag on the drawn plate, with depth shown by dot size and
+  brightness, an x / y / z triad, and `Slice` cutting the slab across the line of sight. At T4 the
+  glass block holds the same view. The three flat views it replaced asked for a spatial skill this
+  audience has not got yet.
 - **`q5-numbers` Quantum Numbers** (box rack, `address` layout) — **beyond the exam, and the
-  briefing and the stage-one card say so.** n, l, ml, ms and Pauli, each printed on the board as
-  its card earns it (`show` flags) and named after.
+  briefing and the stage-one card say so.** n, l, ml, ms and Pauli. Stages 1-3, 7 and 8 carry the
+  rack's **address finder** (`finder` on the plate, `findRoom` in `electrons.js`): four tappable
+  cells (floor, suite type with a drawn shape, room, bunk) and the box the address names lights,
+  or the strip says no room has that address. Nothing beside a row is labelled with a number on
+  those stages: an address is FOUND (set it, watch where the light goes) and WRITTEN (set the cells
+  until the lit box is the ringed one, stage 7). Stages 4-5 (spin, Pauli) keep the labelled board
+  (`show` flags), because two arrows in one box are something to see.
 - **`q6-filling` Electron Configuration** (box rack, `atomic` layout, with a magnet) —
   aufbau, Hund and paramagnetic, the configuration the rack reads, 4s below 3d, noble-gas
   notation, blocks, iron(II), and **chromium, where the rule and the magnet disagree** (the
@@ -1298,10 +1322,12 @@ where it is plain English ("one connected piece"). The join bench's probe key is
   between phases in one runner, stands the warden in the well, and files
   `clue_ligar_scorch` when the last is cleared. The earlier two-phase version had hints
   that handed the answer over; every rung is one sentence now.
-- **`q3-recipe` The Same Recipe** (now Kettle `q1-recipe`) — the sampler scope, reused unchanged. Three
+- **`q3-recipe` The Same Recipe** (now Kettle `q1-recipe`) — the sampler scope. Three
   samples of one compound from three places (**fixed composition**) → a sample
-  with loose atoms no molecule would take → two compounds of the same two
-  elements, one to one and one to two → what one molecule weighs → what share of
+  with loose atoms no molecule would take → the bench weighed before and after a
+  joiner bonds loose hydrogen and oxygen into water (**conservation of mass**; a molecule
+  weighs what its atoms weigh) → two heaps feeding the joiner until one runs out (the
+  **limiting reactant**) → what share of
   that weight is the heavy element (**percent composition**) → a weight ratio
   turned back into a count (**empirical formula**) → name three samples → check
   three claims. The law of definite proportions is the whole spine of this bench
@@ -2211,6 +2237,21 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
   walkable ground at T4**, every built bench a built instrument standing on its own ground
   (Tallow's six sites are all laid), and a page on every lower tier. Kettle has
   one built quest and no ground; the other nine worlds are charts only.
+- `docs/plans/bench-clarity-pass.md` — **Built in part; §7 of the plan is the build record.** A stage-by-stage
+  clarity overhaul of all 36 built Learn quests. Built: the copy pass and its `verify:learn` rules (prompt length,
+  one sentence, no "!", no setting clause, reading level, no `CAT nn` after Tallow, a right option's note may not
+  repeat its label, **hint rung 3 may not carry the answer**); the shared engine (`benchlog.js`, `trendplot.js` with
+  paired readouts, `slate.js`, `visual-devices.js`, and `LearnFrame.setDevice(paint)`, a canvas on the stage card that
+  paints a device on every tier); the devices (seesaw with a mix dial, mole map, share bars, trend map, periodic
+  strip, tug of war, marble, full-shell lamp); the Lanternfall wave and photon rigs; the stage reworks listed in §7;
+  Hopper, Lantern-Eater and Golem rebuilt on real instruments; Deep Dive tags on `q5-numbers` and `q9-orbitals`.
+  The second pass built what the audit left open (§7): the turnable cloud in `q4-cloud`, the address finder in `q5-numbers`,
+  the joiner and balance in `q1-recipe`, the readings board at T4 and the visible story line. Nothing from the original list
+  remains open; tap-a-peak on `q7-pes` was decided against because it would do stage 8's job.
+  A device never prints the figure the stage asks for (the seesaw is not labelled with its average, the mole map prints no
+  molar mass), and a device drawn on a bench must also be reachable at T4, so it goes through `setDevice` and not into a plate.
+  A boss module wires its instruments through the stage runner exactly as the bench's own quest does (dial, view keys,
+  probes); a boss readout reports the instrument's figure and never names the answer.
 - `docs/plans/bellows-world.md` — Bellows finished: the six benches, the gas rig and its six
   heads, the Compressor, the cloud deck on the ground, and every place the
   build parted from the plan.
@@ -2877,8 +2918,8 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **Chemistry-First Discovery Doctrine:** Students explore and discover core chemistry first (hands-on with visuals, molecular models, and formulas), and apply that chemical knowledge to solve grounded sci-fi frontier problems (e.g. mass spectrometry to detect counterfeit alloy, Beer-Lambert spectrophotometry to monitor reservoir toxins, gas laws to stabilize pressure valves and airlocks).
 - **Comprehensive Reframing (`src/learn/engine/quest-guide.js`):** Completely reframed all Learn track quests across Unit 1 (Tallow: `q1-grain` to `boss-hopper`), Unit 2 (Lanternfall: `q1-wave` to `boss-eater`), Unit 3 (Ligar: `q1-joins` to `boss-warden`), Unit 4 (Bellows: `q1-knocks` to `boss-compressor`), and Unit 7 (Kettle/Ligar: `q1-recipe` to `boss-golem`). Every stage features `storyProblem` (frontier problem solved via chemistry), `science` (underlying chemical principle), `howToTest` (scientific method exploration without answer spoilers), and `visualFormula` (clean mathematical equation or structural relationship). (`getQuestScience` currently has no callers: the guide card/modal is documented but not rendered anywhere, so the visible per-stage story is the `.lq-story` line plus the prompt. Wire it up or keep it as reference — do not duplicate its copy into prompts.)
 - **No Vess modal opens on a stage. A new instrument gets a TOUR instead** (`showBriefing` in `src/learn/engine/frame.js`): one tool per step, highlighted alone on the bench (`showInstrumentHalos(kind, id)`), Back / Skip / Next, like a website how-to. The bench step uses only the opening sentence of the quest's stage-1 `briefing.body`; the dial is toured once per player (`tour_dial`); **every key gets its own step**, lighting just that cap (`kind: 'key'`, `BenchViewer3D.getKeyList()` / `_buildKeyHalo`), with only the clause of the briefing that quotes its label (fallback `Press "Label" to use it...`), once per quest and key (`tour_key_<quest>_<id>`). Never put two tools in one step. The `Tour` key on the stage head replays all of it. Quests still call `showBriefing()` on stage 1; with nothing new it does nothing, and if the viewer is not up yet it waits for `onBenchViewer`.
-- **Every stage card opens with a one-sentence story line** (`src/learn/engine/stage-story.js`, `STAGE_STORY[questId][stageIndex]`, rendered as `.lq-story` above the prompt): it names the world's mission (Tallow: the salt guards and the refinery; Lanternfall: relight the beacons; Ligar: clear the rescue pass; Bellows: let the pressure out; Kettle: halt the foundry) and says what this stage's finding does for it. It invents no fact about the world the chemistry does not support, and never gives the route or answer. `verify:learn` fails any stage without exactly one. The lines form one arc per quest — incident, investigation, payoff toward the world's Case File clue — under the Fifth Guild saga (`src/story/saga.js` episodes), with the subject varied line to line (`the crew has to` at most once per quest). Quest `line` descriptors in `src/learn/worlds/` are story-flavoured the same way, naming the mission rather than the topic.
-- **The overworld stage card (`.learn-quest-overworld .lq-body`) is flat prose, four sentences at most:** the prompt, a reading (`setReadout` clamps each line to 2 sentences; boxes and heads are dropped by CSS), the answer keys, and on a clear one run-in line (`Title. Body`, body clamped to 2 sentences). The key legend, stage count, readout heads and answer labels are not drawn there.
+- **A stage card may open with a quiet one-sentence lead, and only where it earns its place** (`src/learn/engine/stage-story.js`, `STAGE_STORY[questId][stageNumber]`, 1-based and sparse, rendered as an italic muted `.lq-story` above the prompt on every card, the overworld one included). It says what is at stake at the bench (who did what, who is waiting on the answer), so a line that restates the task or names what the stage is about to find is not written. It was one line for every stage (270) until 2026-10-15, and most restated the prompt or gave away the finding, so it was cut to about 40. `verify:learn` holds each line to one sentence of at most 20 words with no figure, requires every built bench except the ones listed in its `NO_LEAD` set to have an opening stake, and **fails any line on a boss**: a boss's nameplate and intent line are its whole per-stage story budget. Quest `line` descriptors in `src/learn/worlds/` are story-flavoured the same way, naming the mission rather than the topic.
+- **The overworld stage card (`.learn-quest-overworld .lq-body`) is flat prose, four sentences at most:** the prompt, a reading (`setReadout` clamps each line to 2 sentences; boxes and heads are dropped by CSS), the answer keys, and on a clear one run-in line (`Title. Body`, body clamped to 2 sentences). The key legend, stage count, readout heads and answer labels are not drawn there. **The `.lq-story` lead, where a stage has one, is drawn above the prompt on this card too** (italic and small; it was hidden by CSS and inline style until 2026-10-15).
 - **Scope Boundary:** Erebus quests remain untouched per instruction until Learn track work is complete.
 
 ### 18. Boss Battles 3D Arena & Combat Animations

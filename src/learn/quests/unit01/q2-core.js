@@ -133,16 +133,16 @@ export function toolNoteFor(controlId, stageNumber) {
    ------------------------------------------------------------------ */
 export const PARTS = {
   marked: {
-    code: 'CROSSED SPECK', mass: 1.0, charge: 1,
+    code: '+ SPECK', mass: 1.0, charge: 1,
     note: 'Heavy, and it pushes the needle up every time.'
   },
   blank: {
     code: 'BLANK SPECK', mass: 1.0, charge: 0,
-    note: 'Same size and weight as a crossed particle, but the needle does not move for it at all.'
+    note: 'Same size and weight as a + particle, but the needle does not move for it at all.'
   },
   light: {
     code: 'OUTER SPECK', mass: 0.0005, charge: -1,
-    note: 'Almost weightless, and it pushes the needle the opposite way to a crossed particle.'
+    note: 'Almost weightless, and it pushes the needle the opposite way to a + particle.'
   },
   core: {
     code: 'MIDDLE // WHOLE', mass: null, charge: null,
@@ -232,7 +232,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench probes inside a single atom. Press "Fire Beam" to fire tiny energetic particles at the atom and observe how they scatter.'
     },
-    prompt: 'The screen shows a single atom. What\'s this atom made of? We can figure it out using a beam. Try firing it through the atom, and see how it acts.',
+    prompt: 'Which model describes what the atom is made of?',
     controls: ['beam'],
     specimens: [
       { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
@@ -276,31 +276,31 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now switch your perspective on the atom. Switch between "The middle" to inspect the center and "Outside" to inspect surrounding rings.'
     },
-    prompt: 'Now you can see the nucleus of an atom. How many particles have a positive (+) charge?',
+    prompt: 'How many particles in the nucleus have a positive charge?',
     controls: ['field'],
     specimens: [
       { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
     ],
-    widget: { type: 'number', min: 0, max: 20, label: 'Particles with a cross' },
+    widget: { type: 'number', min: 0, max: 20, label: 'Particles with a + charge' },
     hints: [
       'Press "The middle" to see the center drawn flat, with no particle hiding behind another one.',
-      'Twelve particles are packed in there, some with a cross and some blank, and only the crossed ones count.',
-      'Go across the picture row by row and tally only the particles with a cross, then check that your crossed and blank tallies add up to all twelve.'
+      'Twelve particles are packed in there, some with a + and some blank, and only the + ones count.',
+      'Go across the picture row by row and tally only the particles with a +, then check that your + and blank tallies add up to all twelve.'
     ],
     check(state) {
       if (state.number === 6) return { ok: true };
       if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'The counter is still on zero. Count the crosses and set it.' };
+        return { ok: false, notYet: true, msg: 'The counter is still on zero. Count the + particles and set it.' };
       }
       if (state.number === 12) {
-        return { ok: false, msg: 'That is every particle, crossed and blank together. Count only the crossed ones.' };
+        return { ok: false, msg: 'That is every particle, + and blank together. Count only the + ones.' };
       }
-      return { ok: false, msg: 'That count is off. "The middle" draws the center flat, so every particle is in view — count only the ones with a cross.' };
+      return { ok: false, msg: 'That count is off. "The middle" draws the center flat, so every particle is in view — count only the ones with a +.' };
     },
     reward: {
-      log: 'Center holds 12 particles, 6 crossed.',
+      log: 'Center holds 12 particles, 6 with a + charge.',
       title: 'Protons, Neutrons and Electrons',
-      body: 'The crossed particles are protons, each with a charge of +1, and the blank ones are neutrons, with no charge at all. Much further out, so light they barely weigh anything, sit the electrons, each with a charge of -1.'
+      body: 'The particles with a + are protons, each with a charge of +1, and the blank ones are neutrons, with no charge at all. Much further out, so light they barely weigh anything, sit the electrons, each with a charge of -1.'
     }
   },
 
@@ -312,7 +312,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'A charge detector is now clipped to the atom. Use "Read Needle" to measure which way the atom leans, toward plus or toward minus.'
     },
-    prompt: 'Sample D\'s electrons are hidden - how many does it have? (Remember, the needle shows the overall charge of the atom. Protons donate a +1 charge, and electrons donate a -1 charge.)',
+    prompt: 'How many electrons does neutral Sample D hold?',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'r1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 3, blank: 4 }, rings: [2, 1] },
@@ -350,7 +350,7 @@ export const STAGES = [
   {
     title: 'Where the Electrons Sit',
     field: 'rings',
-    prompt: 'Electrons live in different shells (orbits) around the nucleus. Different shells have different capacities. Put all 11 electrons of Sample D into the correct shells.',
+    prompt: 'Place all 11 electrons of Sample D into their shells.',
     controls: ['field'],
     specimens: [
       { id: 'r1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 2, blank: 2 }, rings: [2] },
@@ -401,17 +401,18 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'The bench is now equipped with a reaction tester. Use "Run Tester" to push another atom at your sample and see if it trades electrons.'
     },
-    prompt: 'Determine whether each of the four samples gives an electron away, takes one on, or will not trade. Try your best to figure out the rule using the tester - but you only have two chances to test!',
+    prompt: 'Classify the two cased samples by whether they give, take, or keep electrons.',
     controls: ['field', 'tester'],
     specimens: [
-      { id: 's1', label: 'SAMPLE A', note: 'open to the instrument', core: { marked: 3, blank: 4 }, rings: [2, 1] },
-      { id: 's2', label: 'SAMPLE B', note: 'open to the instrument', core: { marked: 11, blank: 12 }, rings: [2, 8, 1] },
-      { id: 's3', label: 'SAMPLE C', note: 'open to the instrument', core: { marked: 17, blank: 18 }, rings: [2, 8, 7] },
-      { id: 's4', label: 'SAMPLE D', note: 'open to the instrument', core: { marked: 10, blank: 10 }, rings: [2, 8] }
+      { id: 's1', label: 'SAMPLE A', note: 'open sample — 1 valence electron', core: { marked: 3, blank: 4 }, rings: [2, 1] },
+      { id: 's2', label: 'SAMPLE B', note: 'open sample — 7 valence electrons', core: { marked: 17, blank: 18 }, rings: [2, 8, 7] },
+      { id: 's3', label: 'SAMPLE C', note: 'open sample — 8 valence electrons', core: { marked: 10, blank: 10 }, rings: [2, 8] },
+      { id: 's4', label: 'SAMPLE D', note: 'cased sample — sealed outer shell', casing: true, core: { marked: 19, blank: 20 }, rings: [2, 8, 8, 1] },
+      { id: 's5', label: 'SAMPLE E', note: 'cased sample — sealed outer shell', casing: true, core: { marked: 9, blank: 10 }, rings: [2, 7] }
     ],
-    testerCharges: 2,
     widget: {
       type: 'bins',
+      rows: ['s4', 's5'],
       bins: [
         { id: 'gives', label: 'Gives one away', note: 'Hands an electron over.' },
         { id: 'takes', label: 'Takes one on', note: 'Pulls an electron off the other atom.' },
@@ -419,27 +420,32 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Press "Outside" and count the electrons on the outermost shell of all four samples.',
-      'A full shell holds 8, so ask of each sample whether its outer shell holds almost none, almost 8, or exactly 8.',
-      'For each sample, compare its outer-shell count with a full shell of 8: one or two spare are given away, one short of full takes one on, and already full will not trade.'
+      'Use the tester on the open samples to see how 1, 7, and 8 outer electrons behave.',
+      'Now run the tester against the two cased samples.',
+      'Compare what each cased sample does with the open samples to determine how its outer shell behaves.'
     ],
     check(state) {
-      const want = { s1: 'gives', s2: 'gives', s3: 'takes', s4: 'inert' };
-      const labels = { s1: 'Sample A', s2: 'Sample B', s3: 'Sample C', s4: 'Sample D' };
-      for (const id of ['s1', 's2', 's3', 's4']) {
-        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
+      if (!state.bins.s4 || !state.bins.s5) {
+        return { ok: false, notYet: true, msg: 'Both cased samples need an answer.' };
       }
-      for (const id of ['s1', 's2', 's3', 's4']) {
-        if (state.bins[id] !== want[id]) {
-          return { ok: false, msg: `${labels[id]} is wrong. Count the electrons on its outer shell, then work out how much room that shell has left.` };
-        }
+      if (!state.tested.has('s4') || !state.tested.has('s5')) {
+        return { ok: false, msg: 'Only tested one cased sample. Run the tester against both cased samples first.' };
+      }
+      if (state.bins.s4 === 'inert' || state.bins.s5 === 'inert') {
+        return { ok: false, msg: 'Chose the full shell instead of the one away from full. Compare how each sample traded with the open samples.' };
+      }
+      if (state.bins.s4 !== 'gives') {
+        return { ok: false, msg: 'Sample D is wrong. It gives an electron away to empty its outer shell.' };
+      }
+      if (state.bins.s5 !== 'takes') {
+        return { ok: false, msg: 'Sample E is wrong. It takes an electron on to fill its outer shell.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'All four predictions correct.',
+      log: 'All predictions correct.',
       title: 'Valence Electrons',
-      body: 'Atoms are happiest when their outer shells are full! The electrons in the outermost shell are the valence electrons, and they decide how an atom reacts: one valence electron gets given away, seven takes one to make eight, and a full shell of eight trades nothing at all.'
+      body: 'Atoms achieve stability when their outer shells are full. The electrons in the outermost shell are the valence electrons, and they decide how an atom reacts: one valence electron gets given away, seven takes one to make eight, and a full shell of eight trades nothing at all.'
     }
   },
 
@@ -447,7 +453,7 @@ export const STAGES = [
   {
     title: 'Same Weight, Different Atom',
     field: 'core',
-    prompt: 'Which sample (B or C) is the same element as sample A? Which is different?',
+    prompt: 'Classify Samples B and C as the same element as Sample A or a different element.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'h', label: 'SAMPLE A', note: 'the one to match', core: { marked: 6, blank: 6 }, rings: [2, 4] },
@@ -532,7 +538,7 @@ export const STAGES = [
   {
     title: 'Tell Them Apart',
     field: 'core',
-    prompt: 'Sample D has 7 protons, 7 neutrons and a needle on zero. How do Samples A, B, and C compare?',
+    prompt: 'Classify Samples A, B, and C against reference Sample D as an isotope, an ion, or a different element.',
     controls: ['field', 'meter'],
     specimens: [
       { id: 'n1', label: 'SAMPLE A', note: 'unlabelled', core: { marked: 7, blank: 8 }, rings: [2, 5] },
@@ -691,7 +697,7 @@ export const SOLUTIONS = [
   { number: 6 },
   { number: 8, metered: new Set(['r3', 'b']) },
   { rings: [2, 8, 1] },
-  { tested: new Set(['s1', 's3']), bins: { s1: 'gives', s2: 'gives', s3: 'takes', s4: 'inert' } },
+  { tested: new Set(['s4', 's5']), bins: { s4: 'gives', s5: 'takes' } },
   { bins: { k: 'match', l: 'other' } },
   { number: 2, stripped: { m: 2 } },
   { bins: { n1: 'heavy', n2: 'charged', n3: 'other' } }
@@ -703,7 +709,7 @@ export const MISSES = [
   { number: 12 },
   { number: 0, metered: new Set(['r3', 'b']) },
   { rings: [2, 8, 0] },
-  { tested: new Set(['s1', 's3']), bins: { s1: 'gives', s2: 'takes', s3: 'takes', s4: 'inert' } },
+  { tested: new Set(['s4', 's5']), bins: { s4: 'inert', s5: 'takes' } },
   { bins: { k: 'other', l: 'other' } },
   { number: 1, stripped: { m: 1 } },
   { bins: { n1: 'heavy', n2: 'other', n3: 'other' } }
@@ -761,7 +767,7 @@ export function mount(container, ctx) {
     const stage = STAGES[i];
 
     state = blankState(stage);
-    charges = stage.testerCharges || 0;
+    charges = stage.testerCharges != null ? stage.testerCharges : Infinity;
 
     frame.setCleared(cleared);
     frame.setStage({
@@ -842,7 +848,8 @@ export function mount(container, ctx) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="meter">Read Needle</button>');
     }
     if (stage.controls.includes('tester')) {
-      parts.push(`<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="tester">Run Tester <span class="cb-charges">${charges}</span></button>`);
+      const chargeText = charges !== Infinity ? ` <span class="cb-charges">${charges}</span>` : '';
+      parts.push(`<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="tester">Run Tester${chargeText}</button>`);
     }
     if (stage.controls.includes('strip')) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="strip">Fire Stripper</button>');
@@ -874,7 +881,7 @@ export function mount(container, ctx) {
       btn.classList.toggle('lit', btn.dataset.field === state.field);
     });
     const cell = host.querySelector('.cb-charges');
-    if (cell) cell.textContent = String(charges);
+    if (cell) cell.textContent = charges === Infinity ? '' : String(charges);
   }
 
   function setField(field) {
@@ -927,7 +934,7 @@ export function mount(container, ctx) {
     }
 
     if (tool === 'tester') {
-      if (charges <= 0) {
+      if (charges !== Infinity && charges <= 0) {
         frame.note('The tester is out of charges. Work the rest out from what you can see.');
         return;
       }
@@ -935,7 +942,7 @@ export function mount(container, ctx) {
         frame.note('That sample has already been tested. Try one you have not tested yet.');
         return;
       }
-      charges--;
+      if (charges !== Infinity) charges--;
       state.tested.add(id);
       soundscape.playBondSnap?.();
       bench.setPlateTag(id, 'TESTED');

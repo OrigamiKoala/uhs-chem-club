@@ -65,7 +65,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'The tray holds every electron the molecule has, two to a pair. Each atom has a lamp that lights when enough electrons stand round it.'
     },
-    prompt: 'The quarry surveyors need clean water before we drill deeper into the basalt vents! Place all of water\'s electrons onto the slate so every atom\'s lamp lights up.',
+    prompt: 'Place all valence electrons on the slate so that every atom satisfies the octet rule.',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'H2O')],
     widget: { type: 'none' },
@@ -91,7 +91,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'What Is Left Over',
-    prompt: 'Our quarry drillers need to know how these seam gases hold their electrons. Sort each molecule by the lone pairs sitting on its heaviest atom!',
+    prompt: 'Sort each molecule by the number of lone pairs on its central atom.',
     controls: ['hand', 'clear'],
     rigs: [slate('ch4', 'PLATE A', 'CH4'), slate('nh3', 'PLATE B', 'NH3'), slate('hf', 'PLATE C', 'HF')],
     widget: {
@@ -122,7 +122,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Two Pairs Short',
-    prompt: 'Choke-damp carbon dioxide is venting from the lower quarry trench! Place all of carbon dioxide\'s electrons so every lamp lights up and gives our crew a safe reading.',
+    prompt: 'Place all valence electrons for carbon dioxide so that every atom satisfies the octet rule.',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'CO2')],
     widget: { type: 'none' },
@@ -148,7 +148,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Middle',
-    prompt: 'The stonecutters found strange HOF traces trapped in a basalt fracture. Which atom sits in the middle to anchor the molecule together?',
+    prompt: 'Which atom sits in the middle of hypofluorous acid, HOF?',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'HOF')],
     widget: {
@@ -179,7 +179,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now change the total charge of the electron tray. Use "Take Electron" or "Add Electron" to adjust the electrons available.'
     },
-    prompt: 'Charged dust is drifting off the quarry blast floor! Adjust the tray charge and place the electrons for the ammonium ion (NH₄⁺) until every lamp glows.',
+    prompt: 'Adjust the tray charge and place all valence electrons for the ammonium ion until every lamp lights.',
     controls: ['hand', 'clear', 'charge'],
     rigs: [slate('a', 'PLATE A', 'NH4')],
     widget: { type: 'none' },
@@ -207,7 +207,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'The Amber Lamp',
-    prompt: 'The mining crew hit a pale mineral vein of BF₃, but boron\'s indicator lamp won\'t turn green! Why does boron\'s lamp stay amber?',
+    prompt: 'Why does boron have an incomplete octet in boron trifluoride?',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'BF3')],
     widget: {
@@ -241,7 +241,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'An Odd One',
-    prompt: 'A rock blast just released a puff of pungent nitric oxide (NO) into our drift! Place every electron in the tray — including the odd unpaired one — to map this reactive gas.',
+    prompt: 'Place every electron in the tray to complete the Lewis structure for nitric oxide.',
     controls: ['hand', 'clear'],
     handDot: true,
     rigs: [slate('a', 'PLATE A', 'NO')],
@@ -271,7 +271,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Past Eight',
-    prompt: 'Heavy sulfur hexafluoride (SF₆) is pooling down along the quarry floor! Distribute all the tray\'s electrons so sulfur can comfortably expand past eight.',
+    prompt: 'Distribute all valence electrons so that sulfur forms an expanded octet in SF6.',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'SF6')],
     widget: { type: 'none' },

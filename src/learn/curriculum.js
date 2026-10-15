@@ -82,7 +82,8 @@ export const WORLDS = WORLD_MODULES
       worldId: w.id,
       key: `${w.id}/${q.id}`,
       stageCount: q.stageCount || 0,
-      status: q.status || 'draft'
+      status: q.status || 'draft',
+      optional: Boolean(q.optional)
     }));
     const liveQuestCount = quests.filter(q => q.status === 'live').length;
     return {

@@ -98,6 +98,10 @@ const box = new THREE.Box3();
     loose fit around a rotated body, the same reasoning as `verify:tallow`. */
 const TOUCH = 0.006;
 
+/** Instruments and key sets with no free plate for the readings board. The cards still hold the readings; this is a count, not a failure, unless it is every one. */
+const boardsMissing = new Set();
+let boardsTried = 0;
+
 const shrunk = (b, t) => new THREE.Box3(
   b.min.clone().addScalar(t), b.max.clone().subScalar(t));
 
@@ -270,6 +274,19 @@ const KEY_SETS = [
 ];
 
 /**
+ * THE READINGS BOARD. The bench log, the trend plot and the stage's device stand
+ * on the plate as one raked slate beside the key bank (`bench-readings.js`,
+ * `BenchViewer3D.setReadings`). Every instrument is made to carry it with a log of
+ * rows and one picture, and it is held to the plate, the glass, the instrument and
+ * the key bank.
+ */
+const READINGS_SAMPLE = {
+  columns: [{ key: 'made', label: 'Molecules made' }, { key: 'total', label: 'Total weight' }],
+  rows: [{ made: 0, total: '54.0' }, { made: 1, total: '54.0' }, { made: 3, total: '54.0' }],
+  pictures: [{ id: 'device', canvas: { width: 360, height: 120 } }]
+};
+
+/**
  * Per-mesh boxes of a subtree in the frame `inv` inverts into; hidden bodies
  * skipped. A plain mesh is boxed by its own points, not by its geometry's box
  * turned with it: the station trays are octagons set a sixteenth of a turn
@@ -324,6 +341,9 @@ function check(questId, label, build, widest) {
     bench.viewer.placeKeys();
     const bank = bench.viewer.keyBank;
     if (!bank) fail(`${label}: setKeys stood no key bank on the bench`);
+    bench.viewer.setReadings(READINGS_SAMPLE);
+    const board = bench.viewer.readingsBoard;
+    boardsTried++;
     camera.updateMatrixWorld(true);
 
     const tag = `${label} @ ${aspectName}, ${keySetName}`;
@@ -488,6 +508,36 @@ function check(questId, label, build, widest) {
       }
     }
 
+    // 5c. THE READINGS BOARD is in the glass, on the plate, clear of the
+    // instrument and of the key bank, and it is a mirror: it carries no grabbable.
+    if (board) {
+      const b = ndcBounds(board.group, camera);
+      if (b && (b.minX < -0.98 || b.maxX > 0.98 || b.minY < -0.98 || b.maxY > 0.98)) {
+        fail(`${tag}: the readings board is off the glass — x[${b.minX.toFixed(2)}, ${b.maxX.toFixed(2)}] y[${b.minY.toFixed(2)}, ${b.maxY.toFixed(2)}]`);
+      }
+      const inv = new THREE.Matrix4().copy(bench.viewer.root.matrixWorld).invert();
+      const rb = localBox(board.group, inv);
+      if (rb && (rb.min.x < -2.3 || rb.max.x > 2.3)) {
+        fail(`${tag}: the readings board runs off the end of the bench — x[${rb.min.x.toFixed(2)}, ${rb.max.x.toFixed(2)}]`);
+      }
+      if (rb && rb.max.y - 0.895 > 0.52) fail(`${tag}: the readings board stands ${(rb.max.y - 0.895).toFixed(2)} m over the plate`);
+      const others = bench.viewer.framedNodes().map(n => n.group);
+      if (bench.dial) others.push(bench.dial.group);
+      for (const { dial } of bench.dials ? bench.dials.values() : []) others.push(dial.group);
+      if (bank) others.push(bank.group);
+      for (const node of others) {
+        for (const ob of meshBoxes(node, inv)) {
+          if (rb && shrunk(rb, TOUCH).intersectsBox(shrunk(ob, TOUCH))) {
+            const c = ob.getCenter(new THREE.Vector3());
+            fail(`${tag}: the readings board at x[${rb.min.x.toFixed(2)}, ${rb.max.x.toFixed(2)}] stands in a body at (${c.x.toFixed(2)}, ${c.y.toFixed(2)}, ${c.z.toFixed(2)})`);
+            break;
+          }
+        }
+      }
+    } else {
+      boardsMissing.add(`${label} / ${keySetName}`);
+    }
+
     // 6. NOTHING THE INSTRUMENT BRINGS STANDS INSIDE SOMETHING ALREADY THERE.
     //
     // A deployed instrument is laid on a bench that is a prop with its own
@@ -513,6 +563,7 @@ function check(questId, label, build, widest) {
         : bench.viewer.framedNodes().map(n => n.group);
       // The key bank stands on the plate too, and is held to the same rule.
       if (bank) standing.push(bank.group);
+      if (board) standing.push(board.group);
       for (const node of standing) {
         node.traverse(o => {
           if (!o.isMesh || o.material?.visible === false) return;
@@ -688,6 +739,8 @@ check('q6-weigh', 'weigh floor',
 
 if (!failures) {
   ok(`all six instruments frame every body and control at ${ASPECTS.length} aspects`);
+  if (boardsMissing.size) console.log(`  note ${boardsMissing.size} of ${boardsTried} placements left the readings board off (no free plate beside the keys): ${[...boardsMissing].slice(0, 8).join('; ')}`);
+  if (boardsTried && boardsMissing.size === boardsTried) fail('the readings board found room on no instrument at all');
 }
 
 /* ------------------------------------------------------- every real stage

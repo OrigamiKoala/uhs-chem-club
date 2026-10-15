@@ -2,21 +2,24 @@
  * q5-numbers.js — Lanternfall, bench five: QUANTUM NUMBERS.
  *
  * **BEYOND THE EXAM.** The AP exam does not assess quantum-number assignment, and
- * the stage-one card says so. The box rack in its `address` layout labels every
- * row with the numbers that name its boxes, and every electron with the one that
- * names its direction, so the four numbers arrive by being READ OFF the board
- * and then named.
+ * the stage-one card says so. The box rack in its `address` layout carries an
+ * ADDRESS FINDER: four cells the player sets (floor, suite type, room, bunk),
+ * and the box the address names lights on the rack, or nothing lights and the
+ * strip says no room has that address. So an address is FOUND (set it, see where
+ * the light goes) and WRITTEN (set the cells until the lit box is the ringed one)
+ * and never read off a label. Stages four and five keep the labelled board: spin
+ * and the exclusion rule are things to see on a box with two arrows in it.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  what the first number on every box tracks      -> principal quantum number
+ *   1  what the floor number does to the lit cloud    -> principal quantum number
  *   2  which shapes the second shell offers           -> angular momentum quantum number
- *   3  how many boxes a d row has                     -> magnetic quantum number
+ *   3  finding the box an address names               -> magnetic quantum number
  *   4  two electrons in one box                       -> spin
  *   5  four sets, two of which cannot both be there   -> the Pauli exclusion principle
  *   6  how many electrons the third shell holds       -> 2n squared
- *   7  the numbers that name one of nitrogen's        -> every electron has an address
- *   8  which sets of numbers cannot exist             -> the allowed values
+ *   7  writing the address of a ringed electron       -> every electron has an address
+ *   8  which sets of numbers light no box             -> the allowed values
  *
  * The rack never says an arrangement is wrong. It refuses exactly one thing, a
  * second electron of the same direction in one box, and the player is left to
@@ -26,9 +29,10 @@
  */
 
 import { BoxRack } from '../../engine/instruments.js';
+import { finderStart } from '../../engine/boxrack.js';
 import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
 import { handKeys, paintHand, describeAct } from '../../engine/rackcontrols.js';
-import { validAddress, sameAddress } from '../../engine/electrons.js';
+import { validAddress, sameAddress, findRoom } from '../../engine/electrons.js';
 import { esc } from '../../../ui/layout.js';
 
 export const meta = { stageCount: 8 };
@@ -79,8 +83,11 @@ const SETS = {
   a: { n: 2, l: 1, ml: -1, ms: 0.5 },
   b: { n: 3, l: 3, ml: 0, ms: -0.5 },
   c: { n: 2, l: 1, ml: 2, ms: 0.5 },
-  d: { n: 4, l: 2, ml: -2, ms: 0.5 }
+  d: { n: 3, l: 2, ml: -2, ms: 0.5 }
 };
+
+/** The electron stage seven rings: nitrogen's up arrow in the right-hand 2p box. */
+const RINGED = { n: 2, l: 1, ml: 1, ms: 0.5 };
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -91,14 +98,14 @@ export const STAGES = [
     title: 'The First Number',
     briefing: {
       speaker: SPEAKER,
-      body: 'Welcome to the quantum registry rack, where orbital boxes stack from lowest energy at the bottom to highest up top. Let\'s decode the quantum numbers that register each electron.'
+      body: 'Think of an electron\'s state as an apartment address: floor (n), suite type (l), room (ml), and bunk (ms). Tap the arrows on a cell of the address strip to change it, and the rack lights what that address names.'
     },
-    prompt: 'Notice how the rows are numbered from bottom to top. What physical property of the electron cloud does that first number track?',
+    prompt: 'What property of the electron cloud does the floor number (n) set?',
     controls: [],
     show: 0,
     cloudsBeside: true,
     rows: ['1s', '2s', '2p', '3s'],
-    rigs: [rackPlate(['1s', '2s', '2p', '3s'])],
+    rigs: [rackPlate(['1s', '2s', '2p', '3s'], { finder: { show: ['n'], fields: ['n'] } })],
     widget: {
       type: 'choice', label: 'What it tracks',
       options: [
@@ -109,85 +116,95 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Compare the rows labelled with a 1, a 2 and a 3, and the cloud drawn beside each of them.',
-      'Look at how the cloud beside each row changes as the first number goes up.',
-      'Note which property of the cloud grows steadily from the first row to the last.'
+      'Tap the arrows on the floor cell and watch which rows light and the cloud drawn beside them.',
+      'Compare the cloud beside the rows lit for floor 1 with the one lit for floor 3.',
+      'Line the floors up in order and describe what happens to the lit cloud from one floor to the next.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, notYet: true, msg: 'Pick what it tracks.' };
       if (state.choice !== 'size') {
-        return { ok: false, msg: 'Compare the rows with each other and with the cloud beside them: which of their properties changes as the first number does?' };
+        return { ok: false, msg: 'Step the floor cell through every floor and watch what changes about the lit cloud, then test your answer against it.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'The first number counts shells outward.',
-      title: 'Principal Quantum Number',
-      body: 'The first number on every box, n, is the principal quantum number: it sets how far out the cloud reaches and roughly how much energy its electron has. Every row in one shell shares the same n, which counts up from 1. The exam does not assess this bench.'
+      log: 'The floor number counts shells outward.',
+      title: 'Principal Quantum Number (Floor)',
+      body: 'The first number on every box, n, is the floor (principal quantum number): it sets how far out the cloud reaches and roughly how much energy its electron has. Every room on one floor shares the same n, which counts up from 1. This bench is an optional Deep Dive.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'The Second Number',
-    prompt: 'Inspect the second shell (n = 2) on the rack. Which orbital cloud shapes can electrons adopt at this level?',
+    prompt: 'Which room types (orbital shapes) does the second floor offer?',
     controls: [],
     show: 1,
     rows: ['1s', '2s', '2p', '3s', '3p', '3d'],
-    rigs: [rackPlate(['1s', '2s', '2p', '3s', '3p', '3d'])],
+    rigs: [rackPlate(['1s', '2s', '2p', '3s', '3p', '3d'], { finder: { show: ['n', 'l'], fields: ['n', 'l'] } })],
     widget: {
       type: 'choice', label: 'The shapes on offer',
       options: [
         { id: 'sp', label: 'Round and two-lobed (s and p)' },
-        { id: 's', label: 'Round only (s)' },
-        { id: 'spd', label: 'Round, two-lobed and four-lobed (s, p and d)' },
-        { id: 'p', label: 'Two-lobed only (p)' }
+        { id: 'sd', label: 'Round and four-lobed (s and d)' },
+        { id: 'pd', label: 'Two-lobed and four-lobed (p and d)' },
+        { id: 'spd', label: 'Round, two-lobed and four-lobed (s, p and d)' }
       ]
     },
     hints: [
-      'Find every row whose first number is 2 and read the second number printed beside it.',
-      'Compare those second numbers with the shapes from the last bench: round, two-lobed and four-lobed.',
-      'Match each second number you found to the shape that has that number: 0 is round, 1 is two-lobed.'
+      'Set the floor cell to the second floor, then tap through the suite cell and see which settings light a row.',
+      'Match the shape drawn beside the suite cell to the cloud shapes from the cloud plate.',
+      'Keep only the suite types that light a row on that floor, and leave out the ones that light nothing.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the shapes.' };
       if (state.choice !== 'sp') {
-        return { ok: false, msg: 'Read the second number beside every row of the second shell, and set each one against the shapes from the cloud plate.' };
+        return { ok: false, msg: 'Hold the floor cell on the second floor, step the suite cell through every setting, and keep only the shapes that light a row.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'The second number picks the shape.',
-      title: 'Angular Momentum Number',
-      body: 'The second number, l, is the angular momentum quantum number: it sets the shape, with l = 0 for s, 1 for p and 2 for d. For a given n, l can be any whole number from 0 up to n - 1, which is why the second shell has an s row and a p row and no more.'
+      log: 'The second number sets the room type.',
+      title: 'Angular Momentum Number (Room Type)',
+      body: 'The second number, l, is the suite type (angular momentum number): it sets the shape, with l = 0 for round (s) and 1 for two-lobed (p). On floor n, l runs from 0 up to n - 1, so floor 2 offers s and p suites.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'The Third Number',
-    prompt: 'Take a close look at the third number (ml) across the d row. How many individual orbital boxes does a d subshell contain?',
+    prompt: 'Which box does the address n = 3, l = 2, ml = +1 name?',
     controls: [],
     show: 2,
     rows: ['3s', '3p', '3d'],
-    rigs: [rackPlate(['3s', '3p', '3d'])],
-    widget: { type: 'number', label: 'Boxes in a d row', min: 1, max: 9, step: 1 },
+    rigs: [rackPlate(['3s', '3p', '3d'], {
+      finder: { show: ['n', 'l', 'ml'], fields: ['l', 'ml'], range: { n: [3, 3], l: [0, 2], ml: [-2, 2] }, start: { n: 3, l: 0, ml: 0 } }
+    })],
+    widget: {
+      type: 'choice', label: 'The box it names',
+      options: [
+        { id: 'first', label: 'The first box from the left of its row' },
+        { id: 'second', label: 'The second box from the left of its row' },
+        { id: 'third', label: 'The third box from the left of its row' },
+        { id: 'fourth', label: 'The fourth box from the left of its row' }
+      ]
+    },
     hints: [
-      'Look at the third number printed above each box in the s, p and d rows.',
-      'Compare the range of that number in each row with the number printed for the row itself.',
-      'The third number runs from minus the row\'s second number up to plus it, so count every value in between, zero included.'
+      'Set the suite cell, then the room cell, and see which box lights.',
+      'Try room numbers either side of zero and notice which way along the row they run.',
+      'Compare where room number zero lights with where each number either side of it lights.'
     ],
     check(state) {
-      if (state.number === 1) return { ok: false, notYet: true, msg: 'Set the number of boxes you counted.' };
-      if (state.number !== 5) {
-        return { ok: false, msg: 'Count every box in the d row on the board, and check your count against the range the third number covers.' };
+      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the box.' };
+      if (state.choice !== 'fourth') {
+        return { ok: false, msg: 'Set the address on the strip and see which box lights, then compare its place along the row with your answer.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'The third number picks the orientation.',
-      title: 'Magnetic Quantum Number',
-      body: 'The third number, ml, is the magnetic quantum number: it picks the orientation of the shape, running from -l to +l, so a row has 2l + 1 boxes. A d row has five boxes, a p row three and an s row one.'
+      log: 'The third number numbers the rooms.',
+      title: 'Magnetic Quantum Number (Room)',
+      body: 'The third number, ml, is the room number (magnetic quantum number): it picks the orientation, running from -l to +l, giving 2l + 1 rooms per suite. A d suite has five rooms, p has three, and s has one.'
     }
   },
 
@@ -196,9 +213,9 @@ export const STAGES = [
     title: 'Two in One Box',
     briefing: {
       speaker: SPEAKER,
-      body: 'You now have hand controls to place electrons into boxes. Select "Up" or "Down" and tap a box to place an arrow.'
+      body: 'Each room has a bunk bed holding two electrons: top bunk (+1/2, up arrow) and bottom bunk (-1/2, down arrow).'
     },
-    prompt: 'Let\'s test electron occupancy! Use the arrow controls to pack two electrons into a single orbital box.',
+    prompt: 'Pack two electrons into a single orbital box.',
     controls: ['hand'],
     show: 3,
     rows: ['1s', '2s', '2p'],
@@ -218,15 +235,15 @@ export const STAGES = [
     },
     reward: {
       log: 'A second arrow the same way is refused. Opposite is fine.',
-      title: 'Spin',
-      body: 'The fourth number, ms, is the spin quantum number, and it takes only two values: +1/2 for an up arrow and -1/2 for a down arrow. That is why a box holds two electrons at most, and only when their spins are opposite.'
+      title: 'Spin (The Bunk)',
+      body: 'The fourth number, ms, is the spin (the bunk): +1/2 for an up arrow and -1/2 for a down arrow. A room holds two electrons at most, and only when their spins are opposite.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Impossible Pair',
-    prompt: 'Compare the quantum addresses of these four candidate electrons. Which two can never coexist within the same atom?',
+    prompt: 'Which two candidate electrons can never coexist in the same atom?',
     controls: ['hand'],
     show: 3,
     rows: ['1s', '2s', '2p'],
@@ -254,16 +271,16 @@ export const STAGES = [
       return { ok: true };
     },
     reward: {
-      log: 'Two electrons cannot share all four numbers.',
+      log: 'Two electrons cannot share the same address.',
       title: 'The Pauli Exclusion Principle',
-      body: 'No two electrons in one atom can share all four quantum numbers: this is the Pauli exclusion principle. It is the whole reason a box holds two electrons and no more.'
+      body: 'No two electrons in one atom can share all four quantum numbers: this is the Pauli exclusion principle. The next bench, electron configuration, builds entirely on this rule.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Full Shell',
-    prompt: 'How many total electrons can the entire third shell (n = 3) hold when all its subshells are completely filled?',
+    prompt: 'How many electrons can the third shell hold when completely filled?',
     controls: ['hand'],
     show: 3,
     rows: ROWS_N3.slice(3),
@@ -291,69 +308,69 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'An Address for Nitrogen',
-    prompt: 'Sample A is a nitrogen atom with seven electrons. Which valid set of four quantum numbers correctly identifies one of its 2p electrons?',
+    prompt: 'Write the address of the electron in the ringed box of nitrogen.',
     controls: [],
     show: 3,
     rows: ['1s', '2s', '2p'],
-    rigs: [rackPlate(['1s', '2s', '2p'], { label: 'SAMPLE A', sample: 'N', fillGround: true, note: 'N, seven electrons' })],
-    widget: {
-      type: 'choice', label: 'The four numbers',
-      options: [
-        { id: 'ok', label: 'n = 2, l = 1, ml = 0, ms = +1/2' },
-        { id: 'ml', label: 'n = 2, l = 1, ml = 2, ms = +1/2' },
-        { id: 'l', label: 'n = 2, l = 2, ml = 0, ms = +1/2' },
-        { id: 'n', label: 'n = 1, l = 1, ml = 0, ms = -1/2' }
-      ]
-    },
+    rigs: [rackPlate(['1s', '2s', '2p'], {
+      label: 'SAMPLE A', sample: 'N', fillGround: true, note: 'N, seven electrons',
+      target: { row: '2p', idx: 2 },
+      finder: { show: ['n', 'l', 'ml', 'ms'], fields: ['n', 'l', 'ml', 'ms'] }
+    })],
+    widget: { type: 'none' },
     hints: [
-      'Read the numbers the board prints on the electrons in Sample A\'s 2p row.',
-      'Check each candidate against the ranges the board shows for n, l, ml and ms.',
-      'Discard any set whose l is not smaller than n, or whose ml lies outside the range from minus l to plus l.'
+      'Set the cells of the address strip until the box that lights is the ringed one.',
+      'The lit box gives the floor, suite and room, and the arrow inside the ringed box gives the bunk.',
+      'The room number counts from the middle box of the row, and the bunk follows the direction the arrow points.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick a set of numbers.' };
-      if (state.choice !== 'ok') {
-        return { ok: false, msg: 'Check the set against the board: each number must lie within the range the board allows for the one before it.' };
+      const a = state.addr || {};
+      if (sameAddress(a, finderStart(this.rigs[0].finder))) return { ok: false, notYet: true, msg: 'Set the address first.' };
+      if (!findRoom(a).exists) return { ok: false, msg: 'No room has the address you set. Set one the strip lights, then compare it with the ringed box.' };
+      if (!sameAddress(a, RINGED)) {
+        return { ok: false, msg: 'That address does not name the ringed electron. Set it, see where the light goes, and check which way the arrow in the box points.' };
       }
       return { ok: true };
     },
     reward: {
       log: 'Every electron has four numbers, and no two match.',
       title: 'Every Electron Has an Address',
-      body: 'Four numbers name any electron in any atom, from its shell down to its direction. Nitrogen\'s three 2p electrons sit in three different boxes, so each of them has an address of its own.'
+      body: 'Four numbers give every electron its unique address: floor (n), room type (l), room (ml), and bunk (ms). Nitrogen\'s three 2p electrons sit in three separate rooms, so each has an address of its own.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Sets That Cannot Exist',
-    prompt: 'Quantum rules strictly limit which numbers are allowed. Which of these listed sets violate the quantum address rules?',
+    prompt: 'Which listed addresses violate the quantum rules?',
     controls: [],
     show: 3,
     rows: ROWS_N3,
     reference: Object.entries(SETS).map(([k, s]) => `Set ${k.toUpperCase()}: ${fmtSet(s)}`),
-    rigs: [rackPlate(ROWS_N3)],
+    rigs: [rackPlate(ROWS_N3, {
+      finder: { show: ['n', 'l', 'ml', 'ms'], fields: ['n', 'l', 'ml', 'ms'] }
+    })],
     widget: {
       type: 'multi', label: 'Sets that cannot exist',
       options: Object.keys(SETS).map(k => ({ id: k, label: `Set ${k.toUpperCase()}` }))
     },
     hints: [
-      'Look at the boxes the board offers for each shell and each shape, and see which sets name no box at all.',
-      'Test each set\'s second number against its first, and its third number against its second.',
-      'A set fails if l is as large as n, or if ml is more than l away from zero.'
+      'Set each listed address on the strip and see whether a box lights.',
+      'Compare the addresses that light a box with the ones that light nothing, number against number.',
+      'Find the largest suite type each floor lights, and the largest room number each suite type lights.'
     ],
     check(state) {
       if (!state.picks.length) return { ok: false, notYet: true, msg: 'Pick the sets that cannot exist.' };
       const bad = Object.entries(SETS).filter(([, s]) => !validAddress(s)).map(([k]) => k).sort().join();
       if (state.picks.slice().sort().join() !== bad) {
-        return { ok: false, msg: 'Test every set against the board\'s ranges, not just the first one that looks odd, and keep the ones that pass.' };
+        return { ok: false, msg: 'Set every listed address on the strip, not just the first one that looks odd, and keep only the ones that light nothing.' };
       }
       return { ok: true };
     },
     reward: {
       log: 'l below n, and ml no further than l from zero.',
       title: 'The Allowed Values',
-      body: 'For each n, l runs from 0 to n - 1, and for each l, ml runs from -l to +l. A set outside those ranges, such as l equal to n, or ml beyond l, does not name a box on the rack at all.',
+      body: 'For each floor n, room types l run from 0 to n - 1, and for each suite l, room numbers ml run from -l to +l. An address outside those ranges does not name a room in the building.',
       last: true
     }
   }
@@ -444,27 +461,30 @@ export const PRACTICE = [
 /* ------------------------------------------------------------------
    BENCH STATE
    ------------------------------------------------------------------ */
-function blankState() { return { rack: {} }; }
+function blankState(stage) {
+  const finder = stage?.rigs?.[0]?.finder;
+  return { rack: {}, addr: finder ? finderStart(finder) : null };
+}
 
 export const SOLUTIONS = [
   { choice: 'size' },
   { choice: 'sp' },
-  { number: 5 },
+  { choice: 'fourth' },
   { rack: { '1s:0': 'ud' } },
   { choice: 'ac' },
   { number: 18 },
-  { choice: 'ok' },
+  { addr: RINGED },
   { picks: ['b', 'c'] }
 ];
 
 export const MISSES = [
   { choice: 'count' },
-  { choice: 's' },
-  { number: 3 },
+  { choice: 'sd' },
+  { choice: 'third' },
   { rack: { '1s:0': 'u' } },
   { choice: 'ab' },
   { number: 8 },
-  { choice: 'ml' },
+  { addr: { n: 2, l: 1, ml: -1, ms: 0.5 } },
   { picks: ['a', 'b'] }
 ];
 
@@ -473,7 +493,7 @@ export function stateFor(i, overrides) {
 }
 
 /** Held to the board's own arithmetic by the verifier. */
-export const CHECKS = { FOUR_ELECTRONS, SETS, sameAddress };
+export const CHECKS = { FOUR_ELECTRONS, SETS, RINGED, sameAddress, findRoom };
 
 /* ==================================================================
    THE GAME
@@ -487,6 +507,15 @@ export function mount(container, ctx) {
     const stage = runner.stage;
     if (hit.kind === 'hand') {
       paintHand(runner.frame.el.controls, hit.hand);
+      return;
+    }
+    if (hit.kind === 'addr') {
+      runner.state.addr = hit.addr;
+      if (hit.found.exists) {
+        runner.readout('Strip // address', 'A box is lit for this address.');
+      } else {
+        runner.readout('Strip // address', 'No room has this address.');
+      }
       return;
     }
     if (hit.kind === 'rack') {
@@ -514,6 +543,7 @@ export function mount(container, ctx) {
     rack.setPlates(stage.rigs, { show: SHOW[stage.show], clouds: Boolean(stage.cloudsBeside), hand: null });
     rack.setSelectable(false);
     r.state.rack = rack.rackOf('rack');
+    r.state.addr = rack.addrOf('rack');
 
     const parts = [];
     if (stage.controls.includes('hand')) parts.push(handKeys({ clear: true }));
@@ -529,7 +559,7 @@ export function mount(container, ctx) {
     paintHand(r.frame.el.controls, null);
     r.readout(null, null, {
       idleHead: 'Rack // standby',
-      idle: stage.controls.includes('hand') ? 'Pick a hand, then tap a box.' : 'Read the numbers printed on the board.'
+      idle: stage.controls.includes('hand') ? 'Pick a hand, then tap a box.' : stage.rigs[0].finder ? 'Tap the arrows on the address strip.' : 'Read the numbers printed on the board.'
     });
   }
 

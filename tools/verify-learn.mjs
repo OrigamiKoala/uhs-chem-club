@@ -71,9 +71,13 @@ const sentenceCount = (str) => (String(str || '').match(/[.!?]+(?=\s|$)/g) || []
 
 let failures = 0;
 const fail = (msg) => { console.log(`  FAIL ${msg}`); failures++; };
+const warn = (msg) => { warnings++; };
+let warnings = 0;
 const ok = (msg) => console.log(`  ok   ${msg}`);
 
 const quests = allQuests();
+/** Built benches whose stages carry no lead line on purpose: nothing at the bench is at stake beyond the chemistry. */
+const NO_LEAD = new Set(['q4-cloud', 'q5-numbers', 'q6-filling', 'q8-trends', 'q8-hybrid']);
 console.log(`Learn track — ${TOTAL_WORLDS} worlds, ${quests.length} quests charted\n`);
 
 /* ------------------------------------------------------------------
@@ -343,7 +347,7 @@ function checkStageTable(q, mod) {
     'unit03/q8-hybrid': /\b(restricted rotation|sigma|pi bonds?|pi|hybrid(?:s|i[sz]ation|i[sz]ed)?|sp[3\u00b3]d[2\u00b2]?(?!\w)|sp[2\u00b2](?!\w)|sp[3\u00b3](?!\w)|sp(?![\w\u00b2\u00b3]))/i,
     'unit03/q9-orbitals': /\b(antibonding|bonding orbitals?|molecular orbitals?)\b/i,
     'unit03/q3-distance': /\b(potential energy curves?|bond lengths?|bond energ(?:y|ies)|bond orders?|lattice energ(?:y|ies))\b/i,
-    'unit07/q1-recipe': /\b(fixed composition|constant composition|definite proportions|multiple proportions|empirical formulas?|percent composition)\b/i,
+    'unit07/q1-recipe': /\b(limiting reactants?|conservation of mass|fixed composition|constant composition|definite proportions|multiple proportions|empirical formulas?|percent composition)\b/i,
     'unit01/q6-weigh': /\b(moles?|molar|avogadro\w*|formula mass|gram formula mass)\b/i,
     // Bellows. Each holds out only what it has yet to earn.
     'unit04/q6-real': /\b(ideal gas(?! law)|ideal gases|real gases?|van der waals)\b/i,
@@ -411,6 +415,73 @@ function checkStageTable(q, mod) {
     for (const field of ['title', 'prompt']) {
       if (!st[field] || typeof st[field] !== 'string') { fail(`${label}: missing ${field}`); bad++; }
     }
+
+    // W5: Prompt <= 25 words, exactly 1 sentence, no "!", ends in ? or .
+    const pWords = st.prompt.trim().split(/\s+/).filter(Boolean);
+    if (pWords.length > 25) {
+      fail(`${label}: prompt exceeds 25 words (${pWords.length}) — "${st.prompt}"`);
+      bad++;
+    }
+    if (sentenceCount(st.prompt) !== 1) {
+      fail(`${label}: prompt must be exactly 1 sentence (${sentenceCount(st.prompt)}) — "${st.prompt}"`);
+      bad++;
+    }
+    if (st.prompt.includes('!')) {
+      fail(`${label}: prompt must not contain "!" — "${st.prompt}"`);
+      bad++;
+    }
+    if (!/[.?]$/.test(st.prompt.trim())) {
+      fail(`${label}: prompt must end in "?" or plain imperative — "${st.prompt}"`);
+      bad++;
+    }
+
+    // W5.2: the story lives in the .lq-story line, so a prompt carries no setting clause.
+    if (/\b(we're|we are|our crew|the crew|down in|out on|out here|in the (?:quarry|refinery|foundry|rig)|at the (?:quarry|refinery|foundry|rig))\b/i.test(st.prompt)) {
+      fail(`${label}: prompt carries a setting clause — "${st.prompt}"`);
+      bad++;
+    }
+
+    // W5.7: a reward card is the plain idea first, in 45 words or fewer.
+    if (st.reward?.body && st.reward.body.trim().split(/\s+/).length > 45) {
+      warn(`${label}: reward body runs past 45 words (target 35)`);
+    }
+
+    // W5.4 and rung 3: option notes and the third hint rung may not carry the answer.
+    {
+      const sol = mod.SOLUTIONS?.[i] || {};
+      const needles = [];
+      if (typeof sol.number === 'number') needles.push(String(sol.number));
+      if (typeof sol.decimal === 'number') needles.push(String(sol.decimal));
+      const opts = st.widget?.options || [];
+      const right = typeof sol.choice === 'string' ? opts.find(o => o.id === sol.choice) : null;
+      if (right) needles.push(right.label.replace(/\(.*\)/, '').trim());
+      const esc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const standalone = t => new RegExp(`(^|[^0-9A-Za-z.])${esc(t)}($|[^0-9A-Za-z])`, 'i');
+      const rung3 = (st.hints || [])[2] || '';
+      for (const n of needles) {
+        if (n.length > 1 && standalone(n).test(rung3) && !(rung3.includes('=') && /^\d+$/.test(n))) {
+          fail(`${label}: hint rung 3 carries the answer "${n}"`);
+          bad++;
+        }
+      }
+      if (right) {
+        const note = right.note || '';
+        const w = right.label.replace(/\(.*\)/, '').trim();
+        if (note && w.length > 8 && note.toLowerCase().includes(w.toLowerCase())) {
+          fail(`${label}: the right option's note repeats its own label`);
+          bad++;
+        }
+      }
+    }
+
+    // W5: Reading level forbidden words in prompt and briefing
+    const forbidden = /\b(fundamentally|exerts?|exerted|exerting|net torque|torque|intercepts?|intercepted|intercepting|deviations?|agitate|isolates?|isolated|isolating|theoretically?)\b/i;
+    const promptForbidden = forbidden.exec(st.prompt);
+    if (promptForbidden) {
+      fail(`${label}: prompt contains forbidden word "${promptForbidden[0]}"`);
+      bad++;
+    }
+
     if (!Array.isArray(st.hints) || st.hints.length !== 3) {
       fail(`${label}: needs exactly three hint rungs (got ${st.hints?.length})`); bad++;
     } else if (new Set(st.hints).size !== 3) {
@@ -425,11 +496,14 @@ function checkStageTable(q, mod) {
     if (!st.reward?.title || !st.reward?.body) { fail(`${label}: no reward card`); bad++; }
     if (typeof st.check !== 'function') { fail(`${label}: no check()`); bad++; return; }
 
-    // Every stage carries the one line that says what problem it solves.
+    // A stage MAY carry a quiet lead line (stage-story.js); when it does, it is one short plain sentence.
     const story = storyFor(q.key, i);
-    if (!story) { fail(`${label}: no story line in stage-story.js`); bad++; }
-    else if (sentenceCount(story) !== 1) { fail(`${label}: story line is ${sentenceCount(story)} sentences, not one`); bad++; }
-    else if (emoji.test(story)) { fail(`${label}: emoji in story line`); bad++; }
+    if (story) {
+      if (sentenceCount(story) !== 1) { fail(`${label}: story line is ${sentenceCount(story)} sentences, not one`); bad++; }
+      else if (story.split(/\s+/).length > 20) { fail(`${label}: story line runs past twenty words`); bad++; }
+      else if (emoji.test(story)) { fail(`${label}: emoji in story line`); bad++; }
+      else if (/\d\.\d|\b(?:the answer|the route)\b/i.test(story)) { fail(`${label}: story line carries a figure or names the answer`); bad++; }
+    }
 
     // Player-facing copy obeys the same house rules as the rest of the ship.
     const copy = [st.title, st.prompt, st.reward?.title, st.reward?.body, st.reward?.log,
@@ -438,12 +512,32 @@ function checkStageTable(q, mod) {
       if (emoji.test(str)) { fail(`${label}: emoji in player-facing copy`); bad++; }
     }
 
-    // Stage briefings must not exceed 2 sentences (CLAUDE.md §7).
+    // Stage briefings must not exceed 2 sentences (CLAUDE.md §7) and must not say "Welcome to" (W5).
     if (st.briefing?.body) {
       const n = sentenceCount(st.briefing.body);
       if (n > 2) {
         fail(`${label}: briefing exceeds 2 sentences (${n})`);
         bad++;
+      }
+      if (/\bwelcome\s+(to|up\s+to)\b/i.test(st.briefing.body)) {
+        fail(`${label}: briefing contains "Welcome to"`);
+        bad++;
+      }
+      const bForbidden = forbidden.exec(st.briefing.body);
+      if (bForbidden) {
+        fail(`${label}: briefing contains forbidden word "${bForbidden[0]}"`);
+        bad++;
+      }
+    }
+
+    // W5: No CAT nn code anywhere after unit01 (except q1-wave stage 8 card)
+    if (!q.key.startsWith('unit01/')) {
+      const copyToCheck = [st.prompt, st.briefing?.body, ...(st.hints || [])].filter(Boolean);
+      for (const str of copyToCheck) {
+        if (/CAT[- ]?[0-9]+/i.test(str)) {
+          fail(`${label}: copy contains CAT code "${str.slice(0, 50)}"`);
+          bad++;
+        }
       }
     }
 
@@ -1295,7 +1389,7 @@ function checkBench(q, mod, stages) {
 
       // ---- join bench: a block of finished material ----
       if (sample.build) {
-        if (!['grid', 'clusters', 'web'].includes(sample.build)) {
+        if (!['grid', 'clusters', 'web', 'metallic'].includes(sample.build)) {
           fail(`${label}: slab "${sample.id}" has an unknown build "${sample.build}"`); bad++;
         }
         if (!Number.isInteger(sample.melt) || sample.melt < 0) {
@@ -1347,7 +1441,9 @@ function checkBench(q, mod, stages) {
         if (!Array.isArray(entry.kinds) || !entry.kinds.length) {
           fail(`${label}/${sample.id}: a particle entry declares no kinds`); bad++; return;
         }
-        if (!Number.isInteger(entry.n) || entry.n < 1) {
+        // A joiner's tray starts empty and fills as molecules are made; nothing else may.
+        const emptyOk = entry.n === 0 && st.join?.into === sample.id;
+        if (!emptyOk && (!Number.isInteger(entry.n) || entry.n < 1)) {
           fail(`${label}/${sample.id}: particle count must be a positive integer`); bad++;
         }
         if (kinds) {
@@ -1791,6 +1887,106 @@ async function checkDrawn(q, mod) {
     // Stage 6: three distinct directions among four plates.
     const dirs = new Set(q4.STAGES[5].clouds.map(c => c.orbital));
     if (dirs.size !== q4.SOLUTIONS[5].number) fail('unit02/q4-cloud stage 6: the plates do not show exactly the graded number of directions');
+
+    // The turned cloud is the same cloud: a turn changes nothing but the side it is seen from.
+    const CP = await import('../src/learn/engine/cloudplate.js');
+    const pts = O.sampleOrbital('2pz', 400, 1);
+    const flat = CP.projectDots(pts, 400, 'xy', false);
+    const home = CP.projectDots(pts, 400, 'turn', false, { yaw: 0, pitch: 0 });
+    if (!flat.every((q, i) => Math.abs(q.a - home[i].a) < 1e-9 && Math.abs(q.b - home[i].b) < 1e-9 && Math.abs(q.c - home[i].c) < 1e-9)) {
+      fail('unit02/q4-cloud: a plate turned to zero does not show the xy view');
+    }
+    const turned = CP.projectDots(pts, 400, 'turn', false, CP.DEFAULT_VIEW);
+    const r2 = q => q.a * q.a + q.b * q.b + q.c * q.c;
+    if (!turned.every((q, i) => Math.abs(r2(q) - (pts[i].x ** 2 + pts[i].y ** 2 + pts[i].z ** 2)) < 1e-9)) {
+      fail('unit02/q4-cloud: turning a cloud changed a dot\'s distance from the nucleus');
+    }
+    // A quarter turn about the vertical lays the x axis along the line of sight.
+    const quarter = CP.turnPoint({ x: 1, y: 0, z: 0 }, { yaw: Math.PI / 2, pitch: 0 });
+    if (Math.abs(quarter.a) > 1e-9 || Math.abs(Math.abs(quarter.c) - 1) > 1e-9) fail('unit02/q4-cloud: a quarter turn does not bring the x axis end-on');
+    // Slicing a turned cloud keeps the slab across the line of sight.
+    const sliced = CP.projectDots(pts, 400, 'turn', true, CP.DEFAULT_VIEW);
+    if (!sliced.length || sliced.some(q => Math.abs(q.c) > CP.SLICE_HALF + 1e-9)) fail('unit02/q4-cloud: the slice of a turned cloud is not a slab across the view');
+    // Stages 5 to 7 are turning plates with turn keys; the earlier ones stay flat.
+    for (const i of [4, 5, 6]) {
+      const st = q4.STAGES[i];
+      if (!st.controls.includes('turn') || st.clouds.some(c => c.plane !== 'turn')) fail(`unit02/q4-cloud stage ${i + 1}: should be turning plates with turn keys`);
+    }
+  }
+  {
+    // The lead lines: sparse by design. Every built bench has an opening stake, no boss has any, and none points at a stage that is not there.
+    const { STAGE_STORY } = await import('../src/learn/engine/stage-story.js');
+    for (const [id, lines] of Object.entries(STAGE_STORY)) {
+      const q = quests.find(x => x.key.endsWith(`/${id}`));
+      if (!q) { fail(`stage-story.js: "${id}" is not a quest on the road`); continue; }
+      if (id.startsWith('boss-')) fail(`stage-story.js: ${id} is a boss, and a boss's nameplate and intent line are its whole story budget`);
+      for (const n of Object.keys(lines)) {
+        if (!(Number(n) >= 1 && Number(n) <= q.stageCount)) fail(`stage-story.js: ${id} has a line for stage ${n}, which does not exist`);
+      }
+    }
+    for (const q of quests) {
+      if (!q.module || q.key.includes('/boss-')) continue;
+      const id = q.key.replace(/^.*\//, '');
+      if (!STAGE_STORY[id] || !Object.keys(STAGE_STORY[id]).length) {
+        // Not every bench needs a stake; the ones with none say so by name, so a new bench cannot slip through unread.
+        if (!NO_LEAD.has(id)) fail(`stage-story.js: ${id} has no lead line and is not listed as a bench that deliberately has none`);
+      }
+    }
+  }
+  const k1 = getQuest('unit07', 'q1-recipe') && await getQuest('unit07', 'q1-recipe').module?.();
+  if (k1) {
+    // Run each joiner to the end the way the bench does, and hold the graded answer to what comes out.
+    const run = st => {
+      const counts = Object.fromEntries(st.samples.map(sm => [sm.id, sm.particles[0].n]));
+      let made = 0;
+      while (Object.entries(st.join.take).every(([id, k]) => counts[id] >= k)) {
+        for (const [id, k] of Object.entries(st.join.take)) counts[id] -= k;
+        counts[st.join.into] += 1;
+        made += 1;
+      }
+      return { counts, made };
+    };
+    const weight = (st, counts) => st.samples.reduce((t, sm) => t + counts[sm.id] * sm.particles[0].kinds.reduce((m, kd) => m + k1.KINDS[kd].mass, 0), 0);
+    const s3 = k1.STAGES[2];
+    const r3 = run(s3);
+    const start3 = Object.fromEntries(s3.samples.map(sm => [sm.id, sm.particles[0].n]));
+    if (Math.abs(weight(s3, start3) - weight(s3, r3.counts)) > 1e-9) fail('unit07/q1-recipe stage 3: the bench does not weigh the same after the joining as before');
+    if (r3.counts.j1 !== 0 || r3.counts.j2 !== 0) fail('unit07/q1-recipe stage 3: the heaps should be used up exactly, or the stage shows leftovers it does not ask about');
+    if (k1.SOLUTIONS[2].choice !== 'same') fail('unit07/q1-recipe stage 3: the graded answer is not that the total stays the same');
+    const s4 = k1.STAGES[3];
+    const r4 = run(s4);
+    const limiting = Object.entries(s4.join.take).map(([id, k]) => [id, Math.floor(s4.samples.find(sm => sm.id === id).particles[0].n / k)]).sort((a, b) => a[1] - b[1]);
+    if (limiting[0][1] === limiting[1][1]) fail('unit07/q1-recipe stage 4: both heaps give out together, so there is no limiting reactant to find');
+    const heap = s4.samples.find(sm => sm.id === limiting[0][0]).particles[0].kinds[0];
+    const label = s4.widget.options.find(o => o.id === k1.SOLUTIONS[3].choice)?.label || '';
+    const word = { k01: 'hydrogen', k08: 'oxygen' }[heap];
+    const nums = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+    if (!label.toLowerCase().startsWith(word) || !label.includes(nums[r4.made])) fail(`unit07/q1-recipe stage 4: the graded answer ("${label}") is not ${word} after ${r4.made} molecules`);
+    const wrong = s4.widget.options.filter(o => o.id !== k1.SOLUTIONS[3].choice && o.label.toLowerCase().startsWith(word) && o.label.includes(nums[r4.made]));
+    if (wrong.length) fail('unit07/q1-recipe stage 4: more than one option states the true answer');
+  }
+  {
+    // The readings board painted on the 3D bench is drawn off the frame's own log and canvases.
+    const { paintReadings, readingsSignature, hasReadings, BOARD } = await import('../src/learn/engine/bench-readings.js');
+    const { makeCtx } = await import('./lib/ctx-stub.mjs');
+    const snap = {
+      columns: [{ key: 'a', label: 'Molecules made' }, { key: 'b', label: 'Total weight' }],
+      rows: Array.from({ length: 14 }, (_, i) => ({ a: i, b: `${(54 + i * 0).toFixed(1)}` })),
+      pictures: [{ id: 'device', canvas: { width: 360, height: 120 } }, { id: 'trend', canvas: { width: 280, height: 140 } }]
+    };
+    for (const [name, sn] of [['log and pictures', snap], ['log only', { ...snap, pictures: [] }], ['pictures only', { ...snap, rows: [] }]]) {
+      const ctx = makeCtx(BOARD.px, BOARD.py);
+      try { paintReadings(ctx, BOARD.px, BOARD.py, sn); } catch (err) { fail(`readings board (${name}) throws while drawing: ${err && err.message}`); continue; }
+      if (ctx.stats.calls < 4) fail(`readings board (${name}) drew almost nothing`);
+      if (ctx.stats.nan) fail(`readings board (${name}) drew ${ctx.stats.nan} NaN coordinate(s)`);
+      if (ctx.stats.maxX > BOARD.px * 1.5 || ctx.stats.maxY > BOARD.py * 1.5) fail(`readings board (${name}) drew off the board`);
+    }
+    // The newest row is always on the board, and nothing is invented: every figure drawn came from the log.
+    const ctx = makeCtx(BOARD.px, BOARD.py);
+    paintReadings(ctx, BOARD.px, BOARD.py, snap);
+    if (!ctx.stats.text.includes('13')) fail('readings board: the newest log row is not on the board');
+    if (hasReadings({ columns: [], rows: [], pictures: [] }) || readingsSignature({ rows: [] }) !== '') fail('readings board: an empty log should show nothing');
+    ok('the readings board is drawn from the log and the cards\' canvases, and shows the newest row');
   }
   const q6 = getQuest('unit02', 'q6-filling') && await getQuest('unit02', 'q6-filling').module?.();
   const q7 = getQuest('unit02', 'q7-pes') && await getQuest('unit02', 'q7-pes').module?.();
@@ -1805,7 +2001,20 @@ async function checkDrawn(q, mod) {
     const pair = dup.flatMap(([a, x], i) => dup.slice(i + 1).filter(([, y]) => EL.sameAddress(x, y)).map(([b]) => a + b));
     if (pair.join() !== q5.SOLUTIONS[4].choice) fail('unit02/q5-numbers stage 5: the graded pair is not the one sharing all four numbers');
     if (EL.shellCapacity(3) !== q5.SOLUTIONS[5].number) fail('unit02/q5-numbers stage 6: the third shell does not hold the graded number');
-    if (EL.boxesOf(2) !== q5.SOLUTIONS[2].number) fail('unit02/q5-numbers stage 3: a d row does not have the graded number of boxes');
+    // Stage 3: the address in the prompt lights the box at the graded place along its row.
+    const room3 = EL.findRoom({ n: 3, l: 2, ml: 1 });
+    if (!room3.exists || room3.row !== '3d' || ['first', 'second', 'third', 'fourth'][room3.idx] !== q5.SOLUTIONS[2].choice) fail('unit02/q5-numbers stage 3: the address in the prompt does not light the graded box');
+    if (EL.boxesOf(2) !== 5) fail('unit02/q5-numbers: a d row does not have five boxes');
+    // Stage 7: the ringed box is where the graded address points, and its arrow is the graded bunk.
+    const ring = q5.STAGES[6].rigs[0];
+    const room7 = EL.findRoom(q5.SOLUTIONS[6].addr);
+    if (room7.row !== ring.target.row || room7.idx !== ring.target.idx) fail('unit02/q5-numbers stage 7: the graded address does not light the ringed box');
+    const arrow = EL.rackFor(7)[`${ring.target.row}:${ring.target.idx}`];
+    if ((arrow === 'u' ? 0.5 : -0.5) !== q5.SOLUTIONS[6].addr.ms || arrow.length !== 1) fail('unit02/q5-numbers stage 7: the ringed box does not hold the one arrow the graded bunk names');
+    // Every finder stage: the finder never lights a box for an address the rules rule out.
+    for (const [k, set] of Object.entries(q5.CHECKS.SETS)) {
+      if (EL.findRoom(set).exists !== EL.validAddress(set)) fail(`unit02/q5-numbers: the finder and the rules disagree about set ${k}`);
+    }
   }
   if (q6) {
     // The ground states the stages grade against, and the magnet's real counts.
@@ -2078,9 +2287,15 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   if (q8) {
     const { planMix, planTwist, planDomains, countSigmaPi, RIG_MOLECULES } = VSEPR;
     same(planMix(q8.SOLUTIONS[1].mix).lobes, 4, 'unit03/q8-hybrid stage 2 (sp3 makes four lobes)');
-    same(planMix(q8.SOLUTIONS[2].mix).lobes, 3, 'unit03/q8-hybrid stage 3 (sp2 makes three lobes)');
-    same(planMix(q8.SOLUTIONS[3].mix).lobes, 2, 'unit03/q8-hybrid stage 4 (sp makes two lobes)');
-    q8.STAGES.forEach((st, i) => { if (st.rigs[0].want != null) same(planMix(q8.SOLUTIONS[i].mix).lobes, st.rigs[0].want, `unit03/q8-hybrid stage ${i + 1} (lobes match the arms wanted)`); });
+    // Stages 3 and 4 sort molecules by the lobes the central atom needs: one lobe per arm of the hub on the plate.
+    for (const i of [2, 3]) {
+      const names = { two: 2, three: 3, four: 4 };
+      for (const row of q8.STAGES[i].widget.rows) {
+        const plate = q8.STAGES[i].rigs.find(r => r.id === row.id);
+        same(names[q8.SOLUTIONS[i].bins[row.id]], planDomains(RIG_MOLECULES[plate.mol].arms).n, `unit03/q8-hybrid stage ${i + 1} (${plate.mol} needs the graded number of lobes)`);
+      }
+    }
+    q8.STAGES.forEach((st, i) => { if (st.rigs[0].want != null && q8.SOLUTIONS[i].mix) same(planMix(q8.SOLUTIONS[i].mix).lobes, st.rigs[0].want, `unit03/q8-hybrid stage ${i + 1} (lobes match the arms wanted)`); });
     const sp = countSigmaPi('HCN');
     same(`${sp.sigma}-${sp.pi}`, q8.SOLUTIONS[5].choice, 'unit03/q8-hybrid stage 6 (sigma and pi bonds in HCN)');
     same(planTwist(q8.STAGES[6].rigs.find(r => r.id === q8.SOLUTIONS[6].choice).bond).free, true, 'unit03/q8-hybrid stage 7 (the bond that turns)');
@@ -2268,7 +2483,11 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       }
       void mix; void alone;
     }
-    near(at(S[2], 'a').rows.find(r => r.gas === 'He').x, b4.SOLUTIONS[2].decimal, 0.01, 'unit04/q4-mixtures stage 3 (the mole fraction of helium)');
+    for (const k of [1, 2, 3]) {
+      const m = at(S[2], 'a', { temp: k });
+      for (const r of m.rows) near(r.P / m.P, r.x, 1e-9, `unit04/q4-mixtures stage 3: a gas's share of the push is not its share of the particles at heater setting ${k}`);
+    }
+    holds(b4.SOLUTIONS[2].choice === 'equal', 'unit04/q4-mixtures stage 3: the graded answer is not the equal shares');
     {
       const m = at(S[3], 'a');
       near(m.P, 200, 0.1, 'unit04/q4-mixtures stage 4: the tank does not read 200 kPa');
@@ -2402,5 +2621,6 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   if (failures === before) ok('Bellows: every graded pressure, volume, amount, share, speed and leak agrees with the real tables, and every claim a stage teaches is true of its plate');
 }
 
+if (warnings) console.log(`\n${warnings} copy warning(s): reward cards over 45 words.`);
 console.log(`\n${failures === 0 ? 'LEARN TRACK OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

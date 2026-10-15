@@ -29,8 +29,9 @@
 
 import { PlateBench, PLATE_COLORS, plateText, raster, aperture } from './plates.js';
 import {
-  RIG_MOLECULES, planDomains, angleBetween, planDipole, planMix, planTwist
+  RIG_MOLECULES, planDomains, angleBetween, planDipole, planMix, planTwist, EN
 } from './vsepr.js';
+import { drawTugOfWar } from './visual-devices.js';
 
 const RAD = Math.PI / 180;
 const BIG = new Set(['Cl', 'S', 'P', 'Xe', 'Br']);
@@ -486,6 +487,12 @@ function drawField(ctx, w, h, item, cfg) {
       arrow(ctx, hubP.x, hubP.y + S * 0.62, hubP.x + (e.x - hubP.x) * 0.9, hubP.y + S * 0.62 + (e.y - hubP.y) * 0.1, 3, PLATE_COLORS.amber);
     }
   }
+
+  if (mol.arms.length === 1 && mol.arms[0].kind === 'atom') {
+    const outerSym = mol.arms[0].sym;
+    drawTugOfWar(ctx, cx - S * 1.1, bottom - S * 0.72, S * 2.2, S * 0.68, { symbol: mol.hub, en: EN[mol.hub] }, { symbol: outerSym, en: EN[outerSym] });
+  }
+
   return hits;
 }
 

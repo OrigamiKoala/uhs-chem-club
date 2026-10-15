@@ -14,9 +14,12 @@
  *                 shell with nothing in it is visible instead of hidden behind
  *                 the dots in front of it
  *   setRing(i)    the ring head's wavelength dial
+ *   turn(dy, dp)  turn every `turn` plate together, a step at a time or by a drag
+ *   resetView()   put the turning plates back where they started
  *
  * Two heads. A `cloud` plate shows its dots in the plane it is looking along
- * (xy, or all three of xy / xz / yz side by side). A `ring` plate draws a
+ * (xy, or all three of xy / xz / yz side by side), or, with `plane: 'turn'`, as
+ * the whole cloud in three dimensions that the player turns in their hands. A `ring` plate draws a
  * de Broglie wave round a circular track and lets the player turn its
  * wavelength: a wave that fits closes into one clean ring, and one that does not
  * meets itself out of step on every lap and smears.
@@ -48,20 +51,85 @@ const PLANES = {
   yz: { a: 'y', b: 'z', c: 'x', name: 'along x' }
 };
 
-/** Which dots a plate shows, given the slice setting. */
-export function visibleDots(points, fired, plane, slice) {
+/** One step of the turn keys, in radians. A multiple of it reaches every axis-on view. */
+export const TURN_STEP = Math.PI / 6;
+
+/** Where a turning plate starts: oblique, so no two of x, y and z foreshorten alike. */
+export const DEFAULT_VIEW = Object.freeze({ yaw: Math.PI / 6, pitch: Math.PI / 6 });
+
+/** Yaw wraps; pitch stops at straight up and straight down. */
+export function clampView(v) {
+  const TAU = Math.PI * 2;
+  const yaw = ((v.yaw % TAU) + TAU) % TAU;
+  const pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, v.pitch));
+  return { yaw, pitch };
+}
+
+/**
+ * A dot as the turned cloud shows it: `a` right, `b` up and `c` toward the eye.
+ * At yaw and pitch zero this is exactly the xy plate, looking along z.
+ */
+export function turnPoint(p, view) {
+  const cy = Math.cos(view.yaw), sy = Math.sin(view.yaw);
+  const cp = Math.cos(view.pitch), sp = Math.sin(view.pitch);
+  const x1 = p.x * cy + p.z * sy;
+  const z1 = -p.x * sy + p.z * cy;
+  return { a: x1, b: p.y * cp - z1 * sp, c: p.y * sp + z1 * cp };
+}
+
+/**
+ * Every dot a plate shows, projected: `{ a, b, c }` with `c` the depth the slice
+ * is cut across. A fixed plane reads the cloud's own axes; `turn` reads them
+ * through the view. One function, so the drawn plate and the glass block agree.
+ */
+export function projectDots(points, fired, plane, slice, view = DEFAULT_VIEW) {
   const out = [];
-  const c = PLANES[plane].c;
   for (let i = 0; i < fired && i < points.length; i++) {
     const p = points[i];
-    if (slice && Math.abs(p[c]) > SLICE_HALF) continue;
+    let q;
+    if (plane === 'turn') q = turnPoint(p, view);
+    else { const P = PLANES[plane]; q = { a: p[P.a], b: p[P.b], c: p[P.c] }; }
+    if (slice && Math.abs(q.c) > SLICE_HALF) continue;
+    out.push(q);
+  }
+  return out;
+}
+
+/** Which dots a plate shows, given the slice setting. */
+export function visibleDots(points, fired, plane, slice, view) {
+  const out = [];
+  const flat = plane !== 'turn';
+  const c = flat ? PLANES[plane].c : null;
+  for (let i = 0; i < fired && i < points.length; i++) {
+    const p = points[i];
+    if (slice && Math.abs(flat ? p[c] : turnPoint(p, view || DEFAULT_VIEW).c) > SLICE_HALF) continue;
     out.push(p);
   }
   return out;
 }
 
+function drawAxes(ctx, x0, y0, size, view) {
+  // The cloud's own x, y and z, so a lobe's direction can be named from any side.
+  const len = size * 0.13;
+  const ox = x0 + size * 0.17;
+  const oy = y0 + size * 0.83;
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = PLATE_COLORS.steel;
+  for (const [name, p] of [['x', { x: 1, y: 0, z: 0 }], ['y', { x: 0, y: 1, z: 0 }], ['z', { x: 0, y: 0, z: 1 }]]) {
+    const q = turnPoint(p, view);
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(ox + q.a * len, oy - q.b * len);
+    ctx.stroke();
+    plateText(ctx, name, ox + q.a * (len + 7) - 3, oy - q.b * (len + 7) + 3, { size: Math.max(8, size * 0.055), color: PLATE_COLORS.dim });
+  }
+  ctx.restore();
+}
+
 function drawPanel(ctx, x0, y0, size, item, plane, cfg, o) {
-  const P = PLANES[plane];
+  const turning = plane === 'turn';
+  const view = cfg.view || DEFAULT_VIEW;
   const half = cfg.extent;
   const k = size / (2 * half);
   const cx = x0 + size / 2;
@@ -87,24 +155,34 @@ function drawPanel(ctx, x0, y0, size, item, plane, cfg, o) {
   }
   ctx.globalAlpha = 1;
 
-  // The dots.
-  const dots = visibleDots(item.points || [], item.fired, plane, cfg.slice);
+  // The dots. On a turning plate the near ones are bigger and brighter, the
+  // far ones small and dim: depth is the only thing a flat picture of a solid has.
+  const dots = projectDots(item.points || [], item.fired, plane, cfg.slice, view);
   const dot = Math.max(1.6, size * 0.011);
   ctx.fillStyle = PLATE_COLORS.phosphor;
   for (const p of dots) {
-    ctx.fillRect(cx + p[P.a] * k - dot / 2, cy - p[P.b] * k - dot / 2, dot, dot);
+    if (turning) {
+      const near = Math.max(0, Math.min(1, (p.c / half + 1) / 2));
+      ctx.globalAlpha = 0.3 + 0.7 * near;
+      const d = dot * (0.75 + 0.6 * near);
+      ctx.fillRect(cx + p.a * k - d / 2, cy - p.b * k - d / 2, d, d);
+    } else {
+      ctx.fillRect(cx + p.a * k - dot / 2, cy - p.b * k - dot / 2, dot, dot);
+    }
   }
+  ctx.globalAlpha = 1;
   // A single shot is circled, because one dot on a dark plate is easy to lose.
   if (item.fired === 1 && dots.length === 1) {
     const p = dots[0];
     ctx.strokeStyle = PLATE_COLORS.amber;
     ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(cx + p[P.a] * k, cy - p[P.b] * k, dot * 3.2, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + p.a * k, cy - p.b * k, dot * 3.2, 0, Math.PI * 2); ctx.stroke();
   }
   ctx.restore();
 
-  if (item.plane === 'all' || cfg.showPlane) {
-    plateText(ctx, P.name.toUpperCase(), x0 + 4, y0 + size - 5, { size: Math.max(8, size * 0.055), color: PLATE_COLORS.dim });
+  if (turning) drawAxes(ctx, x0, y0, size, view);
+  else if (item.plane === 'all' || cfg.showPlane) {
+    plateText(ctx, PLANES[plane].name.toUpperCase(), x0 + 4, y0 + size - 5, { size: Math.max(8, size * 0.055), color: PLATE_COLORS.dim });
   }
 }
 
@@ -124,6 +202,14 @@ function drawCloud(ctx, w, h, item, cfg, o) {
   } else {
     const size = Math.min(avail, w - 8);
     drawPanel(ctx, (w - size) / 2, top + (avail - size) / 2, size, item, item.plane || 'xy', cfg, o);
+  }
+  if (cfg.precision != null) {
+    const prec = cfg.precision || 3;
+    const dx = Math.round(150 / prec);
+    const dv = Math.round(prec * 770);
+    plateText(ctx, `POSITION BLUR Δx: ±${dx} pm`, 8, h - 22, { size: small * 0.85, color: PLATE_COLORS.amber, weight: 700 });
+    plateText(ctx, `SPEED BLUR Δv: ±${dv} km/s`, 8, h - 8, { size: small * 0.85, color: PLATE_COLORS.amber, weight: 700 });
+    plateText(ctx, 'FLOOR: Δx · Δp ≥ ℏ/2', w - 8, h - 8, { align: 'right', size: small * 0.85, color: PLATE_COLORS.dim, weight: 700 });
   }
   return [{ key: 'cloud', x0: 0, y0: top, x1: w, y1: h }];
 }
@@ -182,7 +268,8 @@ export class CloudPlate extends PlateBench {
   constructor(host, opts = {}) {
     super(host, opts);
     this.onSetting = opts.onSetting || null;
-    this.cfg = { extent: 12, slice: false, settings: [], setting: 1, showPlane: false };
+    this.onTurn = opts.onTurn || null;
+    this.cfg = { extent: 12, slice: false, settings: [], setting: 1, showPlane: false, view: { ...DEFAULT_VIEW } };
     this.flash = 0;
   }
 
@@ -198,6 +285,25 @@ export class CloudPlate extends PlateBench {
     return item.head === 'ring' || item.plane === 'all' ? 'cloud-aperture cloud-wide' : 'cloud-aperture';
   }
 
+  /**
+   * A drag on a turning plate turns every turning plate. Taps are for the keys:
+   * a drag is optional here, and the built bench, which resolves a press and not
+   * a stroke, turns by the keys alone.
+   */
+  onPointer(plate, e) {
+    if (plate.item.plane !== 'turn' || e.button > 0) return super.onPointer(plate, e);
+    let lx = e.clientX;
+    let ly = e.clientY;
+    const move = ev => {
+      this.turn((ev.clientX - lx) * 0.012, (ev.clientY - ly) * 0.012);
+      lx = ev.clientX; ly = ev.clientY;
+    };
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    return undefined;
+  }
+
   gridClass() { return 'cloud-grid'; }
 
   /**
@@ -205,7 +311,7 @@ export class CloudPlate extends PlateBench {
    * @param {{extent?: number, settings?: number[], setting?: number}} cfg
    */
   setPlates(items, cfg = {}) {
-    this.cfg = { extent: 12, slice: false, settings: [], setting: 1, showPlane: false, ...cfg };
+    this.cfg = { extent: 12, slice: false, settings: [], setting: 1, showPlane: false, ...cfg, view: { ...DEFAULT_VIEW, ...(cfg.view || {}) } };
     for (const it of items || []) if (it.head !== 'ring' && !ORBITALS[it.orbital]) {
       throw new Error(`cloud plate: unknown orbital "${it.orbital}"`);
     }
@@ -240,6 +346,17 @@ export class CloudPlate extends PlateBench {
 
   setSlice(on) { this.cfg.slice = Boolean(on); this.drawAll(); }
   setRing(i) { this.cfg.setting = i; this.setDialValue?.('setting', i); this.drawAll(); }
+  setPrecision(v) { this.cfg.precision = v; this.drawAll(); }
+
+  /** The view every turning plate shares, so two clouds are always compared from the same side. */
+  getView() { return { ...(this.cfg.view || DEFAULT_VIEW) }; }
+  setView(v) { this.cfg.view = clampView({ ...this.getView(), ...v }); this.onTurn?.(this.cfg.view); this.drawAll(); }
+  /** Turn by `dYaw` about the vertical and `dPitch` about the horizontal, in radians. */
+  turn(dYaw, dPitch = 0) {
+    const v = this.getView();
+    this.setView({ yaw: v.yaw + dYaw, pitch: v.pitch + dPitch });
+  }
+  resetView() { this.setView({ ...DEFAULT_VIEW }); }
 
   /**
    * The bench never draws a path, and says why when asked to. There is no

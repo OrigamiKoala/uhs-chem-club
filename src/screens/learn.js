@@ -74,7 +74,7 @@ export function renderLearn(container) {
                   ${w.quests.map(q => {
                     const built = q.status === 'live';
                     const done = built && isQuestComplete(q);
-                    return `<span class="learn-pip ${done ? 'done' : built ? 'built' : ''}"></span>`;
+                    return `<span class="learn-pip ${done ? 'done' : built ? 'built' : ''}" title="${esc(q.title)}${q.optional ? ' (Deep Dive)' : ''}"></span>`;
                   }).join('')}
                 </div>
                 <div class="eyebrow learn-world-count">

@@ -84,7 +84,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench displays the Maxwell–Boltzmann distribution screen for gas speeds. Use the temperature dial to heat or cool the gas.'
     },
-    prompt: 'We\'re analyzing nitrogen particles on the Maxwell–Boltzmann distribution screen. What happens to the shape of the speed distribution curve as the gas is heated?',
+    prompt: 'What happens to the shape of the speed distribution curve as the gas is heated?',
     controls: ['temp'],
     temps: [27, 127, 327, 627], tempStart: 1, tempList: 'C',
     ...BASE,
@@ -123,7 +123,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Three Gases',
-    prompt: 'Three cylinders hold nitrogen, helium, and carbon dioxide at the same temperature. Rank the three gases from fastest average particle speed to slowest!',
+    prompt: 'Rank the three gases from fastest average particle speed to slowest.',
     controls: ['temp'],
     temps: [27, 127, 327], tempStart: 1, tempList: 'C',
     ...BASE,
@@ -161,7 +161,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'The Fast Tail',
-    prompt: 'A threshold line at 1000 m/s marks high-energy particles. Approximately how many times more particles clear this speed barrier at 227 °C compared to 27 °C?',
+    prompt: 'How many times more particles exceed 1000 m/s at 227 °C compared to 27 °C?',
     controls: ['temp'],
     temps: COMPARE_C, tempStart: 1, tempList: 'C',
     ...BASE,
@@ -201,7 +201,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'Both chambers now open to microscopic pinholes. Turn the time dial to watch gas particles leak out over time.'
     },
-    prompt: 'A microscopic puncture opened between Chamber A (N₂) and Chamber B (He). Which gas escapes through its pinhole first, and why?',
+    prompt: 'Which gas effuses through its pinhole faster, helium or nitrogen, and why?',
     controls: ['time'],
     times: TIMES, timeStart: 1,
     ...BASE,
@@ -240,7 +240,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'How Much Faster',
-    prompt: 'We\'re timing hydrogen and oxygen escaping through identical pinholes into vacuum. How many times faster does hydrogen escape compared to oxygen?',
+    prompt: 'How many times faster does hydrogen effuse through a pinhole compared to oxygen?',
     controls: ['time'],
     times: TIMES, timeStart: 1,
     ...BASE,
@@ -271,7 +271,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Name the Gas',
-    prompt: 'An unlabeled chamber is leaking gas through a pinhole beside a helium standard. Using the measured leak time ratio, identify the unknown gas!',
+    prompt: 'Identify the unknown gas from its effusion time ratio relative to helium.',
     controls: ['time'],
     times: TIMES, timeStart: 1,
     ...BASE,
@@ -305,7 +305,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'A Smell Crosses a Room',
-    prompt: 'Individual gas particles travel at hundreds of meters per second, yet an odor takes several seconds to drift across the room. Why does it take so long?',
+    prompt: 'Why does an odor take several seconds to diffuse across a room despite high particle speeds?',
     controls: ['time'],
     times: [1, 2, 4, 8, 16], timeStart: 1,
     ...BASE,
@@ -341,7 +341,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'The Race Down the Tube',
-    prompt: 'We simultaneously release vapors of HCl and NH₃ into opposite ends of an air-filled glass tube. Which gas diffuses to the far end first?',
+    prompt: 'Which gas diffuses to the far end of the tube first, HCl or NH3?',
     controls: ['time'],
     times: [0, 2, 4, 6, 8, 10, 12], timeStart: 1,
     ...BASE,

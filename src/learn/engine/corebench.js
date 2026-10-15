@@ -421,6 +421,29 @@ function fieldRings(ctx, g, specimen, hits) {
     disc(ctx, g.cx + Math.cos(p.a) * r, g.cy + Math.sin(p.a) * r, dotR, CORE_TINTS.light);
     ctx.globalAlpha = 1;
   });
+
+  // Full-shell lamp: lit when the outermost occupied shell is full (ring 0: 2, ring 1+: 8)
+  const rings = specimen.rings || [];
+  let lastOccupied = -1;
+  for (let ri = rings.length - 1; ri >= 0; ri--) {
+    if (rings[ri] > 0) { lastOccupied = ri; break; }
+  }
+  if (lastOccupied >= 0) {
+    const cap = lastOccupied === 0 ? 2 : 8;
+    const isFull = rings[lastOccupied] === cap;
+    const lampX = g.cx + g.aperture * 0.76;
+    const lampY = g.cy - g.aperture * 0.76;
+    const lampR = Math.max(5, g.aperture * 0.065);
+    ctx.save();
+    ctx.fillStyle = isFull ? PHOSPHOR : '#2a2620';
+    ctx.beginPath();
+    ctx.arc(lampX, lampY, lampR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = isFull ? '#d5e8b0' : '#454039';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 
 function fieldBeam(ctx, g, beam) {

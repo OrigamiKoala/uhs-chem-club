@@ -68,9 +68,9 @@ export const STAGES = [
     title: 'Two Arms',
     briefing: {
       speaker: SPEAKER,
-      body: 'Arms clip onto the hub and push each other as far apart as they can get. The protractor reads the angle between any two arms.'
+      body: 'Arms clip onto the hub like balloons tied to one knot, and they push each other as far apart as they can get. The protractor reads the angle between any two arms.'
     },
-    prompt: 'We\'re assembling structural models for the quarry stonebreakers! Attach two arms to the hub and measure the angle between them when they push as far apart as possible.',
+    prompt: 'What angle do two arms make when they push as far apart as they can?',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'X', [atoms('a', 'A', 2, 'Arm')], { note: 'a hub with room for six arms' })],
     widget: { type: 'choice', label: 'Angle', options: [deg(60), deg(90), deg(120), deg(180)] },
@@ -94,7 +94,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Four Arms',
-    prompt: 'Silicates throughout the quarry rock form four-arm clusters. Add four arms to the hub and find the angle between any pair once they spread out in 3D space!',
+    prompt: 'What angle do any two of four arms make in three dimensions?',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'X', [atoms('a', 'A', 4, 'Arm')], { note: 'a hub with room for six arms' })],
     widget: { type: 'choice', label: 'Angle', options: [deg(90), { id: '109.5', label: '109.5°' }, deg(120), deg(180)] },
@@ -119,7 +119,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'The Unseen Arm',
-    prompt: 'Ammonia gas (NH₃) is venting from an intake vent! Build the model with three hydrogen atoms and one lone pair, then identify the shape formed by the atoms alone.',
+    prompt: 'What shape is formed by the atoms in ammonia when three bonding pairs and one lone pair arrange around nitrogen?',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'N', [atoms('h', 'H', 3, 'Hydrogen'), lone(1)], { note: 'nitrogen with three hydrogen atoms and one lone pair' })],
     widget: {
@@ -152,7 +152,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Two Unseen Arms',
-    prompt: 'Water lines cool our pneumatic quarry drills! Build the water hub with two hydrogen atoms and two lone pairs, then measure the compressed bond angle.',
+    prompt: 'What is the measured bond angle between the two hydrogen atoms in water?',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'O', [atoms('h', 'H', 2, 'Hydrogen'), lone(2)], { note: 'oxygen with two hydrogen atoms and two lone pairs' })],
     widget: { type: 'choice', label: 'Angle', options: [deg(90), { id: '104.5', label: '104.5°' }, { id: '109.5', label: '109.5°' }, deg(120)] },
@@ -177,7 +177,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Double Arms',
-    prompt: 'A heavy archway beam is reinforced by carbon dioxide struts. How many electron domains surround the central carbon in CO₂?',
+    prompt: 'How many electron domains surround the central carbon atom in carbon dioxide?',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'C', [atoms('o', 'O', 2, 'Double-Bonded Oxygen', 2)], { note: 'carbon with two oxygen atoms, each joined by a double bond' })],
     widget: { type: 'choice', label: 'Domains', options: [{ id: '2', label: '2' }, { id: '3', label: '3' }, { id: '4', label: '4' }, { id: '6', label: '6' }] },
@@ -201,7 +201,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Five Arms',
-    prompt: 'The warden joint assembly uses sulfur tetrafluoride (SF₄). Where does the bulky lone pair settle on the 5-domain hub to minimize repulsion?',
+    prompt: 'Where does the lone pair settle on a five-domain hub to minimize repulsion?',
     controls: ['arms', 'protractor'],
     rigs: [
       hub('a', 'HUB A', 'P', [atoms('c', 'Cl', 5, 'Chlorine')], { note: 'phosphorus with five chlorine atoms' }),
@@ -234,7 +234,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Six Arms',
-    prompt: 'Our excavation team uncovered xenon tetrafluoride (XeF₄) crystals! On this 6-domain octahedral hub, where do the two lone pairs position themselves?',
+    prompt: 'Where do the two lone pairs position themselves on a six-domain octahedral hub?',
     controls: ['arms', 'protractor'],
     rigs: [
       hub('a', 'HUB A', 'S', [atoms('f', 'F', 6, 'Fluorine')], { note: 'sulfur with six fluorine atoms' }),
@@ -268,7 +268,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Shapes',
-    prompt: 'Let\'s help the quarry surveyors catalog these three mineral seams! Build each hub and classify the molecular geometry of the visible atoms.',
+    prompt: 'Classify the molecular geometry of the visible atoms on each hub.',
     controls: ['arms', 'protractor'],
     rigs: [
       hub('a', 'HUB A', 'Xe', [atoms('f', 'F', 2, 'Fluorine'), lone(3)], { note: 'xenon with two fluorine atoms and three lone pairs' }),

@@ -184,7 +184,10 @@ export function renderLearnWorld(container, params = {}) {
               <div class="learn-quest-body">
                 <div class="m-head learn-quest-head">
                   <h2 class="learn-quest-title">${esc(q.title)}</h2>
-                  <span class="tag ${tag.cls}">${tag.label}</span>
+                  <div style="display: flex; gap: 0.35rem; align-items: center;">
+                    ${q.optional ? '<span class="tag tag-dim">Deep Dive</span>' : ''}
+                    <span class="tag ${tag.cls}">${tag.label}</span>
+                  </div>
                 </div>
                 <p class="learn-quest-line">${esc(q.line)}</p>
                 <div class="eyebrow learn-quest-meta">
@@ -293,7 +296,10 @@ function renderWalkHud(container, world) {
                 <li class="learn-site-row learn-${st}">
                   <span class="learn-site-index">${String(q.index + 1).padStart(2, '0')}</span>
                   <span class="learn-site-body">
-                    <span class="learn-site-title">${esc(q.title)}</span>
+                    <span class="learn-site-title" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                      ${esc(q.title)}
+                      ${q.optional ? '<span class="tag tag-dim" style="font-size: 0.58rem; padding: 1px 5px;">Deep Dive</span>' : ''}
+                    </span>
                     <span class="learn-site-line" style="font-size: 0.72rem; color: var(--text-secondary);">${esc(q.line)}</span>
                     <span class="eyebrow learn-site-meta">
                       ${q.stageCount ? `${q.stageCount} stages` : ''}${qp.complete ? ' · Cleared' : qp.cleared ? ` · ${qp.cleared}/${qp.total}` : ''}

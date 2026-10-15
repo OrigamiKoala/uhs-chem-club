@@ -205,13 +205,13 @@ export const SPECIES = {
 
   'the lantern-eater': {
     name: 'The Lantern-Eater',
-    counter: 'The auroral cloud pulses and drains telemetry from your optical rig.',
-    knockback: 'Knocked back. The cloud recondenses, but the spectral lines you logged remain charted.',
-    hit: 'The optical cloud collapses and scatters into cold aurora trails.',
+    counter: 'The aurora pulses and drains the glow from your lamp.',
+    knockback: 'Knocked back. The cloud closes up again, but the readings you took are still on the bench.',
+    hit: 'The cloud thins and scatters into cold aurora.',
     lines: {
-      unmoved: () => 'The energy barrier reflects your probe beam.',
-      absorbed: () => 'Absorption confirmed at resonant frequency.',
-      ionized: () => 'Outer electron envelope stripped by targeted photons.'
+      unmoved: () => 'The eater does not flinch.',
+      absorbed: () => 'The eater dims where the light is taken in.',
+      ionized: () => 'The eater flickers as electrons are knocked loose.'
     },
     plan(enc, foe, probe) {
       return { pose: probe?.pose || 'unmoved' };

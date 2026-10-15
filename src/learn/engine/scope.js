@@ -386,6 +386,16 @@ function fieldPieces(ctx, g, sample, kinds, probe) {
       ctx.arc(x, y, r * 0.92, 0.5, 3.1);
       ctx.stroke();
 
+      const kind = kinds[m.kindId];
+      const stencil = kind?.stencil || (kind?.code ? (kind.code.match(/\(([A-Za-z]+)\)/)?.[1] || '') : '');
+      if (stencil && r >= 6) {
+        ctx.fillStyle = tint.rim;
+        ctx.font = `600 ${Math.max(8, Math.round(r * 0.9))}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(stencil, x, y + 0.5);
+      }
+
       if (probe && probe.unitIndex === ui && probe.memberIndex === mi) {
         ctx.strokeStyle = AMBER;
         ctx.lineWidth = 2;

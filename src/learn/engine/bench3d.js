@@ -26,6 +26,7 @@ import { boltLine } from '../../three/materials/pbr-kit.js';
 import { registerBenchViewer, unregisterBenchViewer } from './bench-host.js';
 import { soundscape } from '../../audio/soundscape.js';
 import { FoeLayer3D } from './encounter3d.js';
+import { BOARD, paintReadings, hasReadings } from './bench-readings.js';
 
 /** Dust palette, in 3D. Mirrors TINTS in scope.js exactly. */
 export const TINT_HEX = {
@@ -442,6 +443,100 @@ export function planKeyBank(groups, layout = 1, limits = {}) {
   return { layout, cells, length, width, depth, height, rake, lip };
 }
 
+/** The readings board stands a little less steeply than the keys: it is read, not pressed. */
+const READINGS_RAKE = 1.0;
+
+/**
+ * Where the readings board goes, without building it. Pure, like `planKeyBank`.
+ * Width and depth are the footprint on the plate; the face is `BOARD.w` by
+ * `BOARD.l`, raked toward the operator.
+ */
+export function planReadingsBoard() {
+  const rake = READINGS_RAKE;
+  const depth = BOARD.l * Math.cos(rake) + KEY_FACE_T * Math.sin(rake) + 0.03;
+  const lip = 0.05;
+  const height = lip + BOARD.l * Math.sin(rake) + KEY_FACE_T * Math.cos(rake);
+  return { width: BOARD.w + KEY_BASE_OVER, depth, height, rake, lip };
+}
+
+/**
+ * THE READINGS BOARD. The bench log, the trend plot and the stage's device,
+ * painted by `paintReadings` onto the face of a raked slate that stands on the
+ * plate beside the key bank. A mirror of the frame's cards (`bench-readings.js`):
+ * it holds no state of its own, and a press on it does nothing.
+ */
+export function buildReadingsBoard(opts = {}) {
+  const plan = planReadingsBoard();
+  const g = new THREE.Group();
+  const geos = [];
+  const mats = [];
+  const own = x => { geos.push(x); return x; };
+  const ownMat = m => { mats.push(m); return m; };
+  const steel = opts.materials?.steel || ownMat(new THREE.MeshStandardMaterial({ color: 0x6f6657, roughness: 0.72, metalness: 0.62 }));
+  const dark = opts.materials?.dark || ownMat(new THREE.MeshStandardMaterial({ color: 0x24211c, roughness: 0.9, metalness: 0.4 }));
+
+  const W = BOARD.w;
+  const L = BOARD.l;
+  const T = KEY_FACE_T;
+  const { rake, lip, depth } = plan;
+  const sin = Math.sin(rake);
+  const cos = Math.cos(rake);
+
+  const base = new THREE.Mesh(own(new THREE.BoxGeometry(W + KEY_BASE_OVER, KEY_BASE_H, depth)), dark);
+  base.position.y = KEY_BASE_H / 2;
+  base.castShadow = base.receiveShadow = true;
+  g.add(base);
+
+  const face = new THREE.Group();
+  face.position.set(0, lip + (L / 2) * sin + (T / 2) * cos, 0);
+  face.rotation.x = rake;
+  g.add(face);
+  const panel = new THREE.Mesh(own(new THREE.BoxGeometry(W, T, L)), steel);
+  panel.castShadow = panel.receiveShadow = true;
+  face.add(panel);
+
+  // The housing under the face, as the key bank's: a wedge from the base to the
+  // face's underside, so the slate stands on something.
+  const nearZ = (-T / 2) * sin + (L / 2) * cos;
+  const farZ = (-T / 2) * sin - (L / 2) * cos;
+  const inset = 0.006;
+  const shape = new THREE.Shape();
+  shape.moveTo(-(nearZ - inset), KEY_BASE_H);
+  shape.lineTo(-(nearZ - inset), Math.max(KEY_BASE_H + 0.004, lip));
+  shape.lineTo(-(farZ + inset), lip + L * sin - 0.004);
+  shape.lineTo(-(farZ + inset), KEY_BASE_H);
+  shape.closePath();
+  const housingGeo = own(new THREE.ExtrudeGeometry(shape, { depth: W - 0.02, bevelEnabled: false }));
+  housingGeo.rotateY(Math.PI / 2);
+  housingGeo.translate(-(W - 0.02) / 2, 0, 0);
+  const housing = new THREE.Mesh(housingGeo, dark);
+  housing.castShadow = housing.receiveShadow = true;
+  g.add(housing);
+
+  // The screen: a canvas the mirror repaints.
+  const canvas = document.createElement('canvas');
+  canvas.width = BOARD.px;
+  canvas.height = BOARD.py;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const mat = ownMat(new THREE.MeshBasicMaterial({ map: tex }));
+  mat.userData = { ownTexture: tex };
+  const screen = new THREE.Mesh(own(new THREE.PlaneGeometry(W - 0.03, L - 0.03)), mat);
+  screen.rotation.x = -Math.PI / 2;
+  screen.position.set(0, T / 2 + 0.0008, 0);
+  face.add(screen);
+
+  return {
+    group: g, geos, mats, face, canvas, ctx, tex,
+    width: W + KEY_BASE_OVER, depth, height: plan.height,
+    repaint(snap) {
+      paintReadings(ctx, canvas.width, canvas.height, snap);
+      tex.needsUpdate = true;
+    }
+  };
+}
+
 /**
  * A BANK OF KEYS YOU CAN ACTUALLY PRESS.
  *
@@ -791,6 +886,9 @@ export class BenchViewer3D {
     this.keysDirty = false;
     // How much further back the camera stands so the key bank is in the glass.
     this.keyPull = 0;
+    // The readings board, mirrored from the frame's log, plot and device. See `setReadings`.
+    this.readingsBoard = null;
+    this.readingsSnap = null;
 
     this.buildLighting();
     this.buildBench();
@@ -1615,6 +1713,7 @@ export class BenchViewer3D {
       this.keySig = '';
       this.disposeKeyBank();
       this.keyPull = 0;
+      this.placeReadings();
       return;
     }
 
@@ -1665,6 +1764,7 @@ export class BenchViewer3D {
     let hi = -Infinity;
     const keyObjs = new Set();
     if (this.keyBank) this.keyBank.group.traverse(o => keyObjs.add(o));
+    if (this.readingsBoard) this.readingsBoard.group.traverse(o => keyObjs.add(o));
 
     const measure = (node, includeHidden) => {
       node.traverse(o => {
@@ -1815,8 +1915,82 @@ export class BenchViewer3D {
     this.keyBank.x = pick.x;
     this.keyBank.z = pick.z;
     if (this.haloGroup) this.showInstrumentHalos(this._activeHaloKind || 'all', this._activeHaloId);
+    this.placeReadings();
     this.updateKeyPull();
     this.applyCamera();
+  }
+
+  /**
+   * Show the readings the frame holds, or take the board away (null, or nothing
+   * to show). `snap` is `{ columns, rows, pictures }` from `LearnFrame.readingsSnapshot`.
+   * The board is a read-only mirror: it repaints on every call and keeps nothing.
+   */
+  setReadings(snap) {
+    if (this.disposed) return;
+    this.readingsSnap = hasReadings(snap) ? snap : null;
+    if (!this.readingsSnap) { this.disposeReadings(); this.updateKeyPull(); return; }
+    this.placeReadings();
+    this.readingsBoard?.repaint(this.readingsSnap);
+    this.updateKeyPull();
+  }
+
+  disposeReadings() {
+    const board = this.readingsBoard;
+    if (!board) return;
+    this.readingsBoard = null;
+    board.group.parent?.remove(board.group);
+    for (const g of board.geos || []) g.dispose();
+    for (const m of board.mats || []) {
+      if (m.userData?.ownTexture) m.userData.ownTexture.dispose();
+      m.dispose();
+    }
+  }
+
+  /**
+   * Stand the readings board on the same free band of plate the keys use
+   * (just behind the weld bead, in front of the swarf), on the side the keys
+   * did not take, or beyond them if there is room. When neither side has room
+   * the board is simply not shown: the frame's cards still hold the readings.
+   */
+  placeReadings() {
+    if (this.disposed) return;
+    if (!this.readingsSnap) { this.disposeReadings(); return; }
+    const EDGE = 2.25;
+    const GAP = 0.05;
+    const BAND_FRONT = -0.04;
+    const BAND_BACK = -0.47;
+    const plan = planReadingsBoard();
+    if (plan.depth > BAND_FRONT - BAND_BACK) { this.disposeReadings(); return; }
+    const z = BAND_FRONT - plan.depth / 2;
+    const half = plan.width / 2;
+
+    const ext = this.occupiedExtentX(z - plan.depth / 2, z + plan.depth / 2) || { lo: 0, hi: 0 };
+    let lo = ext.lo;
+    let hi = ext.hi;
+    const bank = this.keyBank;
+    if (bank && bank.layout !== 'row') {
+      lo = Math.min(lo, bank.x - bank.width / 2 - GAP);
+      hi = Math.max(hi, bank.x + bank.width / 2 + GAP);
+    }
+    let x = null;
+    // The side the keys left free comes first.
+    const keysRight = bank && bank.layout !== 'row' && bank.x > 0;
+    const right = hi + GAP + half;
+    const left = lo - GAP - half;
+    const options = keysRight ? [left, right] : [right, left];
+    for (const cand of options) {
+      if (cand + half <= EDGE && cand - half >= -EDGE) { x = cand; break; }
+    }
+    if (x == null) { this.disposeReadings(); return; }
+
+    if (!this.readingsBoard) {
+      this.readingsBoard = buildReadingsBoard({ materials: { steel: this.steelMat, dark: this.darkMat } });
+      this.root.add(this.readingsBoard.group);
+    }
+    const board = this.readingsBoard;
+    board.group.position.set(x, 0.895, z);
+    board.x = x;
+    board.z = z;
   }
 
   /**
@@ -1825,13 +1999,14 @@ export class BenchViewer3D {
    * downward pitch, with a margin for it.
    */
   updateKeyPull() {
-    const bank = this.keyBank;
-    if (!bank) { this.keyPull = 0; return; }
+    // The key bank and the readings board are both on the plate and both have to be in the glass.
+    const stood = [this.keyBank, this.readingsBoard].filter(Boolean);
+    if (!stood.length) { this.keyPull = 0; return; }
     const cam = this.camera;
     const fov = (cam.fov || 55) * Math.PI / 180;
     const tanH = Math.tan(fov / 2) * (cam.aspect || 1.6) / (cam.zoom || 1);
-    const edge = Math.abs(bank.x) + bank.width / 2;
-    const nearZ = bank.z + bank.depth / 2;
+    const edge = Math.max(...stood.map(b => Math.abs(b.x) + b.width / 2));
+    const nearZ = Math.max(...stood.map(b => b.z + b.depth / 2));
     const t = this.camTarget || { z: -0.02 };
     const need = edge / (tanH * 0.86) + nearZ - 0.55 - t.z;
     const pull = Math.max(0, Math.min(1.4, need - this.camDist));
@@ -2565,6 +2740,8 @@ export class BenchViewer3D {
     this.hideInstrumentHalos();
     unregisterBenchViewer(this);
     this.disposeKeyBank();
+    this.disposeReadings();
+    this.readingsSnap = null;
     this.keyGroups = [];
     this.onKeyPress = null;
     this.domElement.removeEventListener('pointerdown', this._onPointerDown);

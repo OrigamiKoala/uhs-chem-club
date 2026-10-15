@@ -35,6 +35,7 @@ const PHOSPHOR = '#6f8f3f';
 const AMBER = '#d99423';
 const HAZE = '#8f8678';
 
+
 function escText(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]

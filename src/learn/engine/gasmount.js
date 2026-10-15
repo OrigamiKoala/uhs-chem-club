@@ -151,10 +151,55 @@ export function mountGas(container, ctx, cfg) {
     if (stage.times?.length) runner.paintDial('time', st.time, { min: 1, max: stage.times.length, text: `${sig(stage.times[st.time - 1], 3)} s` });
   }
 
+  /**
+   * PAIRED READOUTS. A stage that is about two quantities moving against each other
+   * (`pair: ['V', 'P']`) prints both, large and side by side, and drops a dot on the
+   * stage's trend plot at every setting the player visits. It names no product, no
+   * ratio and no shape: the dots make the shape.
+   */
+  const QUANTITIES = {
+    P: { label: 'Pressure', unit: 'kPa', of: r => sig(r.P, 4), num: r => r.P },
+    V: { label: 'Room', unit: 'L', of: r => litres(r.V), num: r => r.V },
+    T: { label: 'Temperature', unit: 'K', of: r => String(Math.round(r.T)), num: r => r.T },
+    n: { label: 'Amount', unit: 'mol', of: r => sig(r.n, 3), num: r => r.n },
+    knocks: { label: 'Knocks', unit: 'per s', of: r => String(Math.round(r.knocks)), num: r => r.knocks }
+  };
+
+  /**
+   * THE BENCH LOG. A stage that compares readings across settings (`log: ['V', 'P']`)
+   * keeps one row for every distinct state the player has set, so the comparison is
+   * on the table instead of in their head. A row is what the plate already reported.
+   */
+  let lastLogged = '';
+  function logRow() {
+    const stage = runner.stage;
+    const it = bench.items.find(i => i.head === 'cylinder');
+    if (!it || !Array.isArray(stage.log)) return;
+    const r = readPlate(it, bench.cfg);
+    const row = {};
+    for (const k of stage.log) row[`${QUANTITIES[k].label} (${QUANTITIES[k].unit})`] = QUANTITIES[k].of(r);
+    const key = JSON.stringify(row);
+    if (key === lastLogged) return;
+    lastLogged = key;
+    runner.logReading(row);
+  }
+
+  function readPair() {
+    const stage = runner.stage;
+    const it = bench.items.find(i => i.head === 'cylinder');
+    if (!it) return false;
+    const r = readPlate(it, bench.cfg);
+    const [a, b] = stage.pair.map(k => QUANTITIES[k]);
+    runner.setPairedReadout({ label: a.label, value: a.of(r), unit: a.unit }, { label: b.label, value: b.of(r), unit: b.unit });
+    if (stage.trendPlot) runner.plotPoint(QUANTITIES[stage.pair[0]].num(r), QUANTITIES[stage.pair[1]].num(r));
+    return true;
+  }
+
   function refresh(quiet = false) {
     sync();
     paintDials();
-    readNow();
+    if (!(runner.stage.pair && readPair())) readNow();
+    logRow();
     reactAll(quiet);
   }
 
@@ -212,6 +257,7 @@ export function mountGas(container, ctx, cfg) {
   }
 
   function onLoad(stage, i, r) {
+    lastLogged = '';
     bench.setRigs(stage.rigs, {
       volumes: stage.volumes || [], volume: r.state.volume,
       temps: stage.temps || [], temp: r.state.temp,

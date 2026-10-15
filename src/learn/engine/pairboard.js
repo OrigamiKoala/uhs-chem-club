@@ -27,7 +27,7 @@
 import { PlateBench, PLATE_COLORS, plateText, raster, aperture } from './plates.js';
 import {
   MOLECULES, linkKey, planLewis, trayFor, blankDrawing, addBond, addLone, addDot, removeOne,
-  drawingKey, gaugeLength
+  drawingKey, gaugeLength, VALENCE
 } from './lewis.js';
 
 const LAMP = { off: '#2a2620', full: PLATE_COLORS.phosphor, amber: PLATE_COLORS.amber, danger: '#b8382c' };
@@ -204,6 +204,9 @@ function drawSlate(ctx, w, h, item, cfg) {
   plateText(ctx, `TRAY ${read.left} OF ${read.total}`, w - pad, small * 1.5, {
     align: 'right', size: small * 1.1, color: read.left === 0 ? PLATE_COLORS.dim : PLATE_COLORS.phosphor, weight: 700
   });
+  // Where the tray came from: what each atom brings, less a positive charge or plus a negative one.
+  const sources = mol.syms.map(sym => `${sym} ${VALENCE[sym]}`).join(' + ') + (q ? ` ${q > 0 ? '−' : '+'} ${Math.abs(q)}` : '');
+  plateText(ctx, sources, w - pad, small * 2.9, { align: 'right', size: small * 0.82, color: PLATE_COLORS.dim });
 
   // ---- the slate ----
   const trayH = small * 3.4;
@@ -233,6 +236,14 @@ function drawSlate(ctx, w, h, item, cfg) {
       ctx.stroke();
     }
     ctx.setLineDash?.([]);
+    if (cfg.charges && n > 0) {
+      ctx.strokeStyle = PLATE_COLORS.amber;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(mx - nx * (lines * 4 + 4), my - ny * (lines * 4 + 4));
+      ctx.lineTo(mx + nx * (lines * 4 + 4), my + ny * (lines * 4 + 4));
+      ctx.stroke();
+    }
     const hr = Math.max(R * 0.7, 12);
     hits.push({ key: 'link', a, b, x: mx, y: my, r: hr });
   }
@@ -247,6 +258,13 @@ function drawSlate(ctx, w, h, item, cfg) {
     ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.stroke();
     plateText(ctx, sym, x, y + R * 0.34, { align: 'center', size: R * 1.05, color: PLATE_COLORS.dust, weight: 700 });
     lamp(ctx, x + R * 0.82, y - R * 0.82, Math.max(4, R * 0.26), at.lamp === 'short' ? 'off' : at.lamp);
+    // A dark lamp says how far it is from lit.
+    if (at.lamp === 'short') {
+      const need = (sym === 'H' ? 2 : 8) - at.around;
+      plateText(ctx, `needs ${need}`, x + R * 0.82, y - R * 0.82 + Math.max(4, R * 0.26) + small * 0.9, {
+        align: 'center', size: Math.max(7, small * 0.7), color: PLATE_COLORS.dim
+      });
+    }
 
     // Lone pairs and single electrons sit round the atom, away from its bonds.
     let bx = 0; let by = 0;
@@ -272,8 +290,21 @@ function drawSlate(ctx, w, h, item, cfg) {
     }
     if (cfg.charges) {
       const fc = at.fc;
+      const brought = VALENCE[sym] || 0;
+      const owns = 2 * at.lone + at.dots + at.shared;
+      ctx.strokeStyle = fc !== 0 ? PLATE_COLORS.amber : PLATE_COLORS.phosphor;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash?.([3, 2]);
+      ctx.beginPath();
+      ctx.arc(x, y, R + 7, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash?.([]);
+
       plateText(ctx, fc === 0 ? '0' : `${fc > 0 ? '+' : '−'}${Math.abs(fc)}`, x - R * 0.9, y - R * 0.9, {
         align: 'center', size: small * 1.15, color: fc === 0 ? PLATE_COLORS.dim : PLATE_COLORS.amber, weight: 700
+      });
+      plateText(ctx, `B:${brought} O:${owns}`, x, y + R + small * 1.3, {
+        align: 'center', size: Math.max(7, small * 0.75), color: PLATE_COLORS.dim, weight: 700
       });
     }
     hits.push({ key: 'atom', i, x, y, r: R });

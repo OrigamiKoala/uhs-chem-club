@@ -58,6 +58,7 @@ function shell({ world, quest, body, inWorld, overWorld }) {
         <div class="learn-host-id">
           <span class="eyebrow">${esc(world.unit)}</span>
           <span class="learn-host-title">${esc(quest.title)}</span>
+          ${quest.optional ? '<span class="tag tag-dim" style="font-size: 0.58rem; padding: 1px 5px; margin-left: 0.5rem;">Deep Dive</span>' : ''}
         </div>
       </div>
       <div id="learn-quest-mount" class="learn-quest-mount">${body || ''}</div>

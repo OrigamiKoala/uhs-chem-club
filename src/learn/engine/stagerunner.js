@@ -96,6 +96,9 @@ export function createRunner(container, ctx, cfg) {
     renderWidget,
     setControls,
     readout,
+    setPairedReadout: (l, r) => frame.setPairedReadout(l, r),
+    plotPoint: (x, y) => frame.plotPoint(x, y),
+    logReading: d => frame.logReading(d),
     clack: () => soundscape.playToggleClack?.(),
     dispose
   };
@@ -109,6 +112,7 @@ export function createRunner(container, ctx, cfg) {
 
     frame.setCleared(cleared);
     frame.setStage({
+      ...stage,
       index: i,
       title: stage.title,
       prompt: stage.prompt,
@@ -291,15 +295,16 @@ export function createRunner(container, ctx, cfg) {
     }
 
     if (w.type === 'bins') {
+      const rows = w.rows || w.items || stage.samples || [];
       frame.setWidget(`
         <div class="lq-answer">
           <span class="form-label">${esc(w.label || 'Your answer')}</span>
           <div class="lq-bins">
-            ${w.rows.map(r => `
+            ${rows.map(r => `
               <div class="lq-bin-row" data-row="${esc(r.id)}">
                 <span class="lq-bin-sample">${esc(r.label)}</span>
                 <div class="lq-bin-keys">
-                  ${w.bins.map(b => `
+                  ${(w.bins || []).map(b => `
                     <button type="button" class="choice-option lq-bin-key" data-bin="${esc(b.id)}">
                       <span class="lq-bin-label">${esc(b.label)}</span>
                       ${b.note ? `<span class="lq-bin-note">${esc(b.note)}</span>` : ''}

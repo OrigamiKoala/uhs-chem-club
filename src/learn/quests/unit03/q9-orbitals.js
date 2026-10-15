@@ -66,7 +66,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench models how atoms bond together. Press "Join Atoms" to see how atomic energy levels combine when a molecule forms.'
     },
-    prompt: 'The quarry research lab is testing molecular orbital theory on hydrogen. What happens to the two atomic 1s orbitals when the atoms join together into H₂?',
+    prompt: 'What happens to the two atomic 1s orbitals when two hydrogen atoms combine into H2?',
     controls: ['join'],
     rigs: [rack('a', 'PLATE A', 'H2', { combined: false, note: 'two hydrogen atoms, apart' })],
     widget: {
@@ -102,7 +102,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You now have hand controls to place electrons. Select "Up" or "Down" and tap a molecular orbital box to place an electron.'
     },
-    prompt: 'Let\'s help the survey team build the ground-state electron configuration of H₂! Place both electrons into the lowest available orbital on the rack.',
+    prompt: 'Place both valence electrons into the lowest available molecular orbital for H2.',
     controls: ['hand'],
     rigs: [rack('a', 'PLATE A', 'H2', { note: 'two hydrogen atoms, joined' })],
     widget: { type: 'none' },
@@ -128,7 +128,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Four Electrons',
-    prompt: 'A helium canister leaked near the furnace vents! Place all four electrons for He₂ on the rack — does this diatomic molecule actually hold together?',
+    prompt: 'Does the diatomic helium molecule He2 hold together based on its molecular orbital bond order?',
     controls: ['hand'],
     counts: true,
     rigs: [rack('a', 'PLATE A', 'He2', { note: 'two helium atoms, joined' })],
@@ -156,7 +156,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Ten Electrons',
-    prompt: 'Atmospheric nitrogen (N₂) blankets the quarry tunnels with inert gas. Fill the 10 valence electrons onto the N₂ rack and determine its bond order!',
+    prompt: 'Determine the bond order of diatomic nitrogen from its filled molecular orbital diagram.',
     controls: ['hand'],
     counts: true,
     rigs: [rack('a', 'PLATE A', 'N2', { note: 'two nitrogen atoms, joined' })],
@@ -188,7 +188,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now test magnetism. Press "Test Sample" or "Test Rack" to see how the magnetic field pulls on unpaired electrons.'
     },
-    prompt: 'Liquid oxygen cools the quarry\'s heavy pneumatic drills. Fill O₂\'s electrons on the rack and test with the magnet — is oxygen pulled toward the magnetic poles?',
+    prompt: 'Is molecular oxygen attracted into a magnetic field based on its unpaired electrons?',
     controls: ['hand', 'magnet'],
     counts: true,
     rigs: [rack('a', 'PLATE A', 'O2', { note: 'two oxygen atoms, joined' })],
@@ -216,7 +216,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Three Oxygens',
-    prompt: 'The air scrubber detected three oxygen species: O₂⁺, O₂, and O₂⁻. Determine their bond orders from their electron racks and rank them from shortest bond to longest!',
+    prompt: 'Rank the three oxygen species from shortest bond length to longest based on their bond orders.',
     controls: ['hand'],
     counts: true,
     rigs: [
@@ -248,7 +248,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'A Weak Link',
-    prompt: 'Fluorine gas (F₂) reacts violently compared to stable O₂. Compare their molecular orbital diagrams: why is the F–F bond so much weaker?',
+    prompt: 'Why is the fluorine-fluorine bond weaker than the oxygen-oxygen bond based on their molecular orbital diagrams?',
     controls: ['hand'],
     counts: true,
     rigs: [
@@ -285,7 +285,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'The Other Order',
-    prompt: 'The warden gate displays a mysterious B₂ orbital plate. Fill the six valence electrons on the rack and explain why diboron is paramagnetic!',
+    prompt: 'Why is diboron paramagnetic according to its molecular orbital electron configuration?',
     controls: ['hand', 'magnet'],
     counts: true,
     rigs: [rack('a', 'PLATE A', 'B2', { note: 'two boron atoms, joined' })],

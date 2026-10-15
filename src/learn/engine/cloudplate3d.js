@@ -20,7 +20,7 @@
  */
 
 import * as THREE from 'three';
-import { CloudPlate, MAX_SHOTS, SLICE_HALF } from './cloudplate.js';
+import { CloudPlate, MAX_SHOTS, SLICE_HALF, DEFAULT_VIEW, turnPoint } from './cloudplate.js';
 import { plateBench3D, ownedMaterial, ownedGeometry } from './plates3d.js';
 
 const BLOCK = 0.2;   // half the glass block's side, in metres
@@ -110,7 +110,10 @@ export class CloudPlate3D extends plateBench3D(CloudPlate, { backdrop: 'lab' }) 
     }
     if (!rec.dots) return;
 
-    const key = `${item.fired}|${this.cfg.slice}|${this.cfg.extent}`;
+    // A turning plate keeps the cloud's own axes in the glass and turns the whole
+    // block by the plate's view, so the glass and the picture show one orientation.
+    const turning = item.plane === 'turn';
+    const key = `${item.fired}|${this.cfg.slice}|${this.cfg.extent}${turning ? `|${this.cfg.view?.yaw}|${this.cfg.view?.pitch}` : ''}`;
     if (rec.drawnKey === key) return;
     rec.drawnKey = key;
 
@@ -119,9 +122,10 @@ export class CloudPlate3D extends plateBench3D(CloudPlate, { backdrop: 'lab' }) 
     const pts = item.points || [];
     for (let i = 0; i < item.fired && i < pts.length; i++) {
       const p = pts[i];
-      if (this.cfg.slice && Math.abs(p.z) > SLICE_HALF) continue;
+      if (this.cfg.slice && Math.abs(turning ? turnPoint(p, this.cfg.view || DEFAULT_VIEW).c : p.z) > SLICE_HALF) continue;
       if (Math.abs(p.x * k) > BLOCK || Math.abs(p.y * k) > BLOCK || Math.abs(p.z * k) > BLOCK) continue;
-      dummy.position.set(p.x * k, p.z * k, -p.y * k);
+      if (turning) dummy.position.set(p.x * k, p.y * k, p.z * k);
+      else dummy.position.set(p.x * k, p.z * k, -p.y * k);
       dummy.updateMatrix();
       rec.dots.setMatrixAt(n++, dummy.matrix);
     }
@@ -130,8 +134,14 @@ export class CloudPlate3D extends plateBench3D(CloudPlate, { backdrop: 'lab' }) 
   }
 
   tick(dt) {
-    // The block turns slowly, so a shape can be seen from every side.
-    for (const rec of this.stations || []) if (rec.turn && rec.dots) rec.turn.rotation.y += dt * 0.35;
+    // A plain block turns slowly, so a shape can be seen from every side; one on
+    // a turning plate is held at the view the player chose.
+    const v = this.cfg.view || DEFAULT_VIEW;
+    for (const rec of this.stations || []) {
+      if (!rec.turn || !rec.dots) continue;
+      if (rec.item?.plane === 'turn') rec.turn.rotation.set(v.pitch, v.yaw, 0, 'XYZ');
+      else rec.turn.rotation.y += dt * 0.35;
+    }
     return this.stations?.some(r => r.dots) || false;
   }
 

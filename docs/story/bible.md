@@ -149,7 +149,7 @@ The Case File is the investigative terminal in the *Avalon*'s comms bay (and `#/
 
 - **Diegetic Imperative:** Every transmission comes from a character, a ship intercom, or a field telemetry terminal. Terms like "user," "button," "level," "menu," or "game" are banned from narrative strings.
 - **Approachable & Friendly Tone:** Prompts, briefings, and debriefs use a warm, accessible, and encouraging voice suited for students. Avoid dry, bureaucratic, or overly clinical textbook directives.
-- **Story-Woven Objectives:** Where appropriate, weave the local setting (refinery yard, ice moon surveys, basalt quarry, cloud-deck rig, reaction foundry) into the stage prompt so the chemical inquiry has immediate narrative purpose and stakes.
+- **Story-Woven Objectives:** The local setting (refinery yard, ice moon surveys, basalt quarry, cloud-deck rig, reaction foundry) goes in the stage's one-sentence story line (`stage-story.js`), which gives the inquiry its narrative purpose and stakes. The prompt under it stays one plain question with no setting clause (`docs/plans/bench-clarity-pass.md` D4).
 - **The Two-Sentence Limit:** No transmission may exceed two sentences. Long text walls destroy urgency.
 - **Strict Vocabulary Schedule:** No concept may be named in dialogue or debrief copy before the stage that introduces it. "Catalyst" belongs strictly to Unit 11; "Nucleus" belongs strictly to Unit 1 Quest 2.
 - **No Route Hints:** Dialogue sets the atmosphere and urgency; it never tells the student which dial to turn or which sample to select.

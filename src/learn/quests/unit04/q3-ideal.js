@@ -90,7 +90,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench meters gas into a cylinder by the mole — a chemist\u2019s count of particles — and reads what it does under any weight, heat or room. A sealed tank keeps its amount to itself, and everything else on its plate is for you to work from.'
     },
-    prompt: 'We\'re calibrating gas canisters at standard temperature and pressure (0 °C and 1 atm). What volume does exactly one mole of gas occupy under these conditions?',
+    prompt: 'What volume does one mole of an ideal gas occupy at standard temperature and pressure?',
     controls: ['add', 'remove', 'reset'],
     step: 0.5, nMin: 0.5, nMax: 3,
     ...BASE,
@@ -124,7 +124,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'The Same Number',
-    prompt: 'Our diagnostic logs recorded pressure, volume, temperature, and moles across several runs. Compute (P · V) / (n · T) to find the universal constant tying them together!',
+    prompt: 'Compute PV / nT from the logged data to find the gas constant R.',
     controls: ['volume', 'temp', 'add', 'remove', 'reset'],
     volumes: [11.2, 22.4, 44.8], volumeStart: 2,
     temps: [0, 27, 127], tempStart: 1, tempList: 'C',
@@ -132,6 +132,18 @@ export const STAGES = [
     ...BASE,
     show: { knocks: false },
     reference: LOG_KPA,
+    slate: {
+      template: 'R = (P · V) / (n · T)',
+      target: 'R',
+      targetUnit: 'kPa·L/(mol·K)',
+      slots: [
+        { id: 'P', label: 'P', unit: 'kPa' },
+        { id: 'V', label: 'V', unit: 'L' },
+        { id: 'n', label: 'n', unit: 'mol' },
+        { id: 'T', label: 'T', unit: 'K' }
+      ],
+      evaluate: ({ P, V, n, T }) => (P * V) / (n * T)
+    },
     vmax: 44.8, gaugeMax: 700,
     rigs: [cyl('a', 'CYLINDER A', 'N2', { T: ZERO_C, V: 22.4, hold: 'dial', note: 'a cylinder of nitrogen' })],
     widget: {
@@ -159,11 +171,24 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'A Sealed Tank',
-    prompt: 'A sealed emergency reserve tank is pressurized with argon. Use the gas law and tank sensor telemetry to calculate how many moles of argon are stored inside!',
+    prompt: 'Calculate how many moles of argon are stored in the sealed tank.',
     controls: ['temp'],
     temps: [300, 350, 400, 450], tempStart: 1, tempList: 'K',
     ...BASE,
     reference: ['R = 8.31 kPa·L per mol·K'],
+    slate: {
+      template: 'n = (P · V) / (R · T)',
+      target: 'n',
+      targetUnit: 'mol',
+      slots: [
+        { id: 'P', label: 'P', unit: 'kPa' },
+        { id: 'V', label: 'V', unit: 'L' },
+        { id: 'R', label: 'R', unit: 'kPa·L/(mol·K)', constant: true, value: 8.31 },
+        { id: 'T', label: 'T', unit: 'K' }
+      ],
+      constants: [{ id: 'R', label: 'R', value: 8.31, unit: 'kPa·L/(mol·K)' }],
+      evaluate: ({ P, V, R, T }) => (P * V) / (R * T)
+    },
     vmax: 20, gaugeMax: 900,
     rigs: [cyl('a', 'TANK A', 'Ar', { n: 4, T: 300, V: 20, hold: 'V', sealed: true, note: 'a sealed tank of argon' })],
     widget: { type: 'number', label: 'Moles in the tank', min: 1, max: 10, step: 1 },
@@ -188,11 +213,23 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Which R',
-    prompt: 'The rig\'s secondary flight gauge measures in atmospheres rather than kilopascals. Which numeric value of the gas constant R matches these atmospheric units?',
+    prompt: 'Which numerical value of the gas constant R matches pressure measured in atmospheres?',
     controls: ['volume'],
     volumes: [11.2, 22.4, 44.8], volumeStart: 2,
     labels: { gauge: 'PRESSURE' }, scale: 'atm', units: true, tempUnit: 'both',
     reference: LOG_ATM,
+    slate: {
+      template: 'R = (P · V) / (n · T)',
+      target: 'R',
+      targetUnit: 'atm·L/(mol·K)',
+      slots: [
+        { id: 'P', label: 'P', unit: 'atm' },
+        { id: 'V', label: 'V', unit: 'L' },
+        { id: 'n', label: 'n', unit: 'mol' },
+        { id: 'T', label: 'T', unit: 'K' }
+      ],
+      evaluate: ({ P, V, n, T }) => (P * V) / (n * T)
+    },
     show: { knocks: false },
     vmax: 44.8, gaugeMax: 250,
     rigs: [cyl('a', 'CYLINDER A', 'N2', { T: ZERO_C, V: 22.4, hold: 'dial', note: 'a cylinder of nitrogen with a gauge in atmospheres' })],
@@ -221,12 +258,26 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Name the Gas',
-    prompt: 'We salvaged an unmarked fuel cylinder from the lower catwalk. From the tank volume, temperature, pressure, and total mass, identify which gas is inside!',
+    prompt: 'Identify which gas is inside the tank from its volume, temperature, pressure, and mass.',
     controls: ['temp'],
     temps: [300, 400], tempStart: 1, tempList: 'K',
     ...BASE,
     show: { mass: true },
     reference: ['R = 8.31 kPa·L per mol·K', 'Molar masses — what one mole weighs — in g/mol: CH₄ 16.0, N₂ 28.0, O₂ 32.0, CO₂ 44.0'],
+    slate: {
+      template: 'M = (m · R · T) / (P · V)',
+      target: 'M',
+      targetUnit: 'g/mol',
+      slots: [
+        { id: 'm', label: 'm', unit: 'g' },
+        { id: 'R', label: 'R', unit: 'kPa·L/(mol·K)', constant: true, value: 8.31 },
+        { id: 'T', label: 'T', unit: 'K' },
+        { id: 'P', label: 'P', unit: 'kPa' },
+        { id: 'V', label: 'V', unit: 'L' }
+      ],
+      constants: [{ id: 'R', label: 'R', value: 8.31, unit: 'kPa·L/(mol·K)' }],
+      evaluate: ({ m, R, T, P, V }) => (m * R * T) / (P * V)
+    },
     vmax: 10, gaugeMax: 400,
     rigs: [cyl('a', 'TANK A', 'CO2', { n: 0.5, T: 300, V: 10, hold: 'V', sealed: true, note: 'a sealed tank of an unnamed gas' })],
     widget: {
@@ -253,11 +304,21 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Same Conditions',
-    prompt: 'Three cylinders hold different gases at the exact same temperature and pressure. Rank helium, nitrogen, and carbon dioxide in order from densest to least dense!',
+    prompt: 'Rank helium, nitrogen, and carbon dioxide from densest to least dense at equal conditions.',
     controls: ['temp'],
     temps: [0, 100, 200], tempStart: 1, tempList: 'C',
     ...BASE,
     show: { mass: true, knocks: false },
+    slate: {
+      template: 'd = m / V',
+      target: 'd',
+      targetUnit: 'g/L',
+      slots: [
+        { id: 'm', label: 'm', unit: 'g' },
+        { id: 'V', label: 'V', unit: 'L' }
+      ],
+      evaluate: ({ m, V }) => m / V
+    },
     vmax: 40, gaugeMax: 200,
     rigs: [
       cyl('a', 'CYLINDER A', 'He', { n: 1, T: ZERO_C, hold: 'P', P0: ATM_KPA, note: 'a cylinder of helium under a free piston' }),
@@ -294,7 +355,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now release reaction reactants. Press "Drop Pellet" to decompose solid calcium carbonate into gaseous carbon dioxide.'
     },
-    prompt: 'The crew needs to generate carbon dioxide from a solid calcium carbonate pellet. How many liters of gas will this 5.00 g pellet generate at 25 °C and 1 atm?',
+    prompt: 'How many liters of CO2 gas will a 5.00 g CaCO3 pellet generate at 25 °C and 1 atm?',
     controls: ['drop', 'reset'],
     keys: { drop: 'Drop Pellet' },
     ...BASE,
@@ -304,8 +365,21 @@ export const STAGES = [
       'CaCO₃ → CaO + CO₂, one mole of gas for each mole of solid',
       'R = 8.31 kPa·L per mol·K'
     ],
+    slate: {
+      template: 'V = (n · R · T) / P',
+      target: 'V',
+      targetUnit: 'L',
+      slots: [
+        { id: 'n', label: 'n', unit: 'mol' },
+        { id: 'R', label: 'R', unit: 'kPa·L/(mol·K)', constant: true, value: 8.31 },
+        { id: 'T', label: 'T', unit: 'K' },
+        { id: 'P', label: 'P', unit: 'kPa' }
+      ],
+      constants: [{ id: 'R', label: 'R', value: 8.31, unit: 'kPa·L/(mol·K)' }],
+      evaluate: ({ n, R, T, P }) => (n * R * T) / P
+    },
     vmax: 3, gaugeMax: 200,
-    rigs: [cyl('a', 'CYLINDER A', 'CO2', { n: 0, T: 298.15, hold: 'P', P0: ATM_KPA, charge: false, note: 'an empty cylinder under a free piston, with a pellet port' })],
+    rigs: [cyl('a', 'CYLINDER A', 'CO2', { n: 0, T: 298.15, hold: 'P', P0: ATM_KPA, charge: false, equation: 'CaCO₃ → CaO + CO₂', note: 'an empty cylinder under a free piston, with a pellet port' })],
     widget: {
       type: 'choice', label: 'The gas fills',
       options: [choice('1.22', '1.22 L'), choice('0.0500', '0.0500 L'), choice('2.44', '2.44 L'), choice('12.2', '12.2 L')]
@@ -331,7 +405,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Why the Same',
-    prompt: 'Helium and xenon atoms have vastly different masses and sizes, yet one mole of each occupies the exact same volume at STP. Why is that?',
+    prompt: 'Why does one mole of helium occupy the same volume as one mole of xenon at STP?',
     controls: ['temp'],
     temps: [0, 100], tempStart: 1, tempList: 'C',
     ...BASE,

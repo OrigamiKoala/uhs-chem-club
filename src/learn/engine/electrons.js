@@ -336,6 +336,19 @@ export function validAddress({ n, l, ml, ms }) {
   return ms === 0.5 || ms === -0.5;
 }
 
+/**
+ * The box a floor, a suite type and a room name, or none. Only `n`, `l` and
+ * `ml` matter: the bunk (`ms`) says which arrow in the box, never which box.
+ * `idx` is the box's place along its row from the left, the way the rack lays
+ * boxes out: ml runs from -l at the left to +l at the right.
+ */
+export function findRoom({ n, l, ml }) {
+  const row = LADDER.find(r => r.n === n && r.l === l) || null;
+  const exists = Number.isInteger(n) && n >= 1 && Number.isInteger(l) && l >= 0 && l < n
+    && Number.isInteger(ml) && Math.abs(ml) <= l;
+  return { exists, row: exists && row ? row.id : null, idx: exists ? ml + l : null };
+}
+
 /** Two electrons in one atom may not share all four numbers. */
 export function sameAddress(a, b) {
   return a.n === b.n && a.l === b.l && a.ml === b.ml && a.ms === b.ms;

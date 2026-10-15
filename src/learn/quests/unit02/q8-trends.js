@@ -77,9 +77,9 @@ export const STAGES = [
     title: 'What Makes the Pull',
     briefing: {
       speaker: SPEAKER,
-      body: 'Welcome to the periodic trends bench, where we model atoms to scale to probe pull, distance, and effective charge on each electron. Let\'s discover what controls the electrostatic pull on electrons.'
+      body: 'This bench models atoms to scale to measure distance and pull on each electron. Tapping an electron shows the charge at the center, the distance, and the pull felt.'
     },
-    prompt: 'Tap different electrons across our four sample atoms. What physical factors make the electrostatic pull on an electron stronger?',
+    prompt: 'What physical factors make the electrostatic pull on an electron stronger?',
     labels: L1,
     show: { core: true },
     controls: [],
@@ -115,7 +115,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Plus One, Not Plus Eleven',
-    prompt: 'Sodium\'s nucleus contains 11 positive protons, but its outermost electron only feels roughly +1 of pull. What accounts for the missing charge?',
+    prompt: 'What accounts for the missing charge on sodium\'s outermost electron?',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: [],
@@ -151,9 +151,10 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Four in a Row',
-    prompt: 'Track the outermost electron distance across Period 2 elements. Arrange lithium, beryllium, boron, and carbon from largest atomic size to smallest.',
+    prompt: 'Order lithium, beryllium, boron, and carbon from largest atomic size to smallest.',
     labels: L2,
     show: { core: true, between: true, feel: true },
+    trendMap: { metric: 'radius', title: 'Atomic radius, pm' },
     controls: [],
     rigs: [atom('C', { id: 'c' }), atom('Li', { id: 'li' }), atom('B', { id: 'b' }), atom('Be', { id: 'be' })],
     widget: {
@@ -186,9 +187,10 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Down a Group',
-    prompt: 'Sodium and potassium sit right above and below each other in Group 1. Why does potassium have a distinctly larger radius than sodium?',
+    prompt: 'Why does potassium have a larger atomic radius than sodium?',
     labels: L2,
     show: { core: true, between: true, feel: true },
+    trendMap: { metric: 'radius', title: 'Atomic radius, pm' },
     controls: [],
     rigs: [atom('Na', { id: 'a' }), atom('K', { id: 'b' })],
     widget: {
@@ -226,7 +228,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now modify electron counts. Use "Strip Electron" to remove an electron or "Add Electron" to place one onto the sample.'
     },
-    prompt: 'Use \'Strip Electron\' on sodium and \'Add Electron\' on chlorine to build their ions. Rank Na⁺, Na, and Cl⁻ from smallest size to largest!',
+    prompt: 'Order Na⁺, Na, and Cl⁻ from smallest size to largest.',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: ['strip', 'add', 'reset'],
@@ -261,7 +263,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Three Costs',
-    prompt: 'Strip an electron from lithium, beryllium, and boron! Which order reflects the energy cost to remove that electron, and what causes the dip?',
+    prompt: 'Which order reflects the energy cost to strip an electron, and why does boron dip?',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: ['strip', 'reset'],
@@ -297,7 +299,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Magnesium\'s Three',
-    prompt: 'Keep stripping electrons from magnesium one after another! Based on the dramatic energy jump, which stable ionic charge does magnesium form?',
+    prompt: 'Which stable ionic charge does magnesium form after its energy jump?',
     labels: L2,
     show: { core: true, between: true, feel: true },
     controls: ['strip', 'reset'],
@@ -333,9 +335,10 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'The Pull From Outside',
-    prompt: 'When atoms share electrons in a bond, smaller atoms with stronger core pulls tug harder! Rank Na, C, N, and F by their pulling strength, weakest first.',
+    prompt: 'Order Na, C, N, and F by their pulling strength on electrons, weakest first.',
     labels: L2,
     show: { core: true, between: true, feel: true },
+    trendMap: { metric: 'pull', title: 'Pull on the outer electron' },
     controls: [],
     rigs: [atom('F', { id: 'f' }), atom('Na', { id: 'na' }), atom('N', { id: 'n' }), atom('C', { id: 'c' })],
     widget: {
@@ -543,7 +546,10 @@ export function mount(container, ctx) {
   }
 
   function onLoad(stage, i, r) {
-    bench.setPlates(stage.rigs, { labels: stage.labels, show: stage.show, maxPm: 240 });
+    bench.setPlates(stage.rigs, {
+      labels: stage.labels, show: stage.show, maxPm: 240,
+      trendMap: Boolean(stage.trendMap), trendMetric: stage.trendMap?.metric, trendTitle: stage.trendMap?.title
+    });
     bench.setSelectable(stage.rigs.length > 1 && stage.controls.includes('add'));
     r.state.sample = null;
 

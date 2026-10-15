@@ -62,9 +62,9 @@ export const STAGES = [
     title: 'Two Spectra',
     briefing: {
       speaker: SPEAKER,
-      body: 'Welcome to the photoelectron spectroscopy bench, where intense light knocks electrons clean off atoms to plot how many fly out at each energy level. Tap any peak to inspect its height and binding energy.'
+      body: 'This bench shines intense light to knock electrons clean off atoms and plot how many fly out at each energy. Tapping a peak inspects its height and binding energy.'
     },
-    prompt: 'Fire light at hydrogen (A) and helium (B)! How do the resulting peaks compare in height and energy?',
+    prompt: 'How do the photoelectron peaks of hydrogen and helium compare?',
     labels: PLAIN,
     controls: ['fire'],
     rigs: [spec('a', 'H', { note: 'an atom with one electron' }), spec('b', 'He', { note: 'an atom with two electrons' })],
@@ -92,14 +92,14 @@ export const STAGES = [
     reward: {
       log: 'A taller peak, further along the axis.',
       title: 'Photoelectron Spectrum',
-      body: 'Counting how many electrons come out at each energy gives a photoelectron spectrum. The position of a peak says how much energy it takes to remove those electrons, and its height says how many of them there are.'
+      body: 'Counting how many electrons come out at each energy gives a photoelectron spectrum. The position of a peak says how much energy it takes to remove those electrons, and its height says how many of them there are. Spectra are drawn with the highest energy at the left, and Flip Axis turns the plate round.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'What Height Counts',
-    prompt: 'Compare the peaks of helium and lithium. What does the relative height of each peak tell us about the electrons?',
+    prompt: 'What does the relative height of each peak tell us about the electrons?',
     labels: PLAIN,
     controls: ['fire'],
     rigs: [spec('a', 'He', { note: 'two electrons' }), spec('b', 'Li', { note: 'three electrons' })],
@@ -134,7 +134,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Lithium\'s Short Peak',
-    prompt: 'Look at lithium\'s spectrum: it shows one tall peak and one short peak. Why is that outer peak so much shorter and easier to remove?',
+    prompt: 'Why is lithium\'s outer peak shorter and easier to remove than its inner peak?',
     labels: EARNED,
     controls: ['fire'],
     rigs: [spec('a', 'Li', { label: 'LITHIUM', showRings: true, note: 'Li, its rings beside the spectrum' })],
@@ -162,14 +162,14 @@ export const STAGES = [
     reward: {
       log: 'The outer electron is the loosely held one.',
       title: 'Binding Energy',
-      body: 'The energy needed to remove an electron is its binding energy, and the closer an electron sits to the nucleus the more tightly it is bound. Spectra are often drawn with the energy running the other way, high at the left, but the peaks mean the same.'
+      body: 'The energy needed to remove an electron is its binding energy, and the closer an electron sits to the nucleus the more tightly it is bound. The closer an electron sits to the nucleus, the further its peak sits toward the high-energy end.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Boron\'s Second Shell',
-    prompt: 'Fire light at boron! Its outer shell splits into two distinct peaks instead of one. Why does that happen?',
+    prompt: 'Why does boron\'s second shell split into two distinct peaks?',
     labels: EARNED,
     controls: ['fire'],
     rigs: [spec('a', 'B', { label: 'BORON', showRings: true, note: 'B, its rings beside the spectrum' })],
@@ -204,10 +204,10 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Name the Specimen',
-    prompt: 'We retrieved an unlabelled core sample from the ice! Fire the beam, count its electron peaks, and identify which element it is.',
+    prompt: 'Identify the element shown in the sealed spectrum.',
     labels: EARNED,
     controls: ['fire'],
-    reference: ['CAT 06: carbon', 'CAT 07: nitrogen', 'CAT 08: oxygen', 'CAT 09: fluorine'],
+    reference: ['Carbon: Z = 6', 'Nitrogen: Z = 7', 'Oxygen: Z = 8', 'Fluorine: Z = 9'],
     rigs: [spec('b', 'O', { label: 'SEALED SPECIMEN', note: 'an atom whose element is not named' })],
     widget: {
       type: 'choice', label: 'The element',
@@ -221,7 +221,7 @@ export const STAGES = [
     hints: [
       'Press "Fire Light" and tap every peak on the sealed specimen\'s plate.',
       'Add up the heights of all the peaks to count the electrons in the atom.',
-      'A neutral atom has as many electrons as its atomic number, so find the element whose code matches your total.'
+      'A neutral atom has as many electrons as its atomic number, so find the element whose atomic number matches your total.'
     ],
     check(state) {
       if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the element.' };
@@ -240,7 +240,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Neon and Fluorine',
-    prompt: 'Both neon and fluorine hold two electrons in their 1s shell, yet neon\'s peak sits at noticeably higher energy. What causes that extra pull?',
+    prompt: 'What causes neon\'s 1s electrons to be pulled more strongly than fluorine\'s?',
     labels: EARNED,
     controls: ['fire'],
     rigs: [
@@ -278,7 +278,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Three Neighbours',
-    prompt: 'Three neighbouring elements from the third row are on the bench! Fire light at each sample and match each spectrum to sodium, magnesium, or aluminum.',
+    prompt: 'Match each spectrum to sodium, magnesium, or aluminum.',
     labels: EARNED,
     controls: ['fire'],
     rigs: [
@@ -297,7 +297,7 @@ export const STAGES = [
     },
     hints: [
       'Press "Fire Light" and add up the heights on each plate to count its electrons.',
-      'Compare the peaks furthest to the left, which come from the outermost electrons, across the three plates.',
+      'Compare the peaks with the lowest binding energy, which come from the outermost electrons, across the three plates.',
       'The element with the fewest electrons has the single outer peak, and the one with the most has an extra peak beside it.'
     ],
     check(state) {
@@ -321,7 +321,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'The Sealed Specimen\'s Rows',
-    prompt: 'Read the peaks of this sealed specimen directly into its electron configuration! What is its complete ground-state arrangement?',
+    prompt: 'What is the ground-state electron configuration of this sealed specimen?',
     labels: EARNED,
     controls: ['fire'],
     rigs: [spec('c', 'N', { label: 'SEALED SPECIMEN', note: 'an atom whose element is not named' })],
@@ -485,6 +485,12 @@ export function mount(container, ctx) {
   }
 
   function onTool(tool) {
+    if (tool === 'flip') {
+      runner.state.flip = !runner.state.flip;
+      bench.setFlip(runner.state.flip);
+      runner.readout('Axis // flipped', `The highest binding energy is now at the ${runner.state.flip ? 'left' : 'right'}.`);
+      return;
+    }
     if (tool === 'fire') {
       bench.fire();
       runner.readout('Light // fired', 'Every plate is filling in. Tap a peak to read it.');
@@ -494,8 +500,10 @@ export function mount(container, ctx) {
   function onLoad(stage, i, r) {
     bench.setPlates(stage.rigs, { labels: stage.labels });
     bench.setSelectable(false);
+    r.state.flip = true;
     const parts = [
-      '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="fire">Fire Light</button>'
+      '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="fire">Fire Light</button>',
+      '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="flip">Flip Axis</button>'
     ];
     if (stage.reference?.length) {
       parts.push(`

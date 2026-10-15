@@ -73,9 +73,9 @@ export const STAGES = [
     title: 'What Each Light Does',
     briefing: {
       speaker: SPEAKER,
-      body: 'Welcome to the spectrophotometry bench! We shine beams of radiation through cuvettes containing solutions to measure how much light gets absorbed, and observe how different wavelengths agitate the molecules.'
+      body: 'This bench shines radiation through cuvettes to measure how much light gets absorbed. Different wavelengths make the molecules spin, vibrate, or jump.'
     },
-    prompt: 'Test microwaves, infrared, and UV-visible light on the HCl molecule. What distinct physical motion does each region trigger?',
+    prompt: 'What physical motion does each region of light trigger in the molecule?',
     labels: PLAIN,
     controls: ['region'],
     mode: 'region',
@@ -122,7 +122,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Three Readings',
-    prompt: 'Three distinct absorption wavelengths were detected! Match each recorded wavelength to the region of light that caused it.',
+    prompt: 'Match each recorded absorption wavelength to the region of light that caused it.',
     labels: PLAIN,
     controls: [],
     rigs: [
@@ -169,7 +169,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Why Copper Looks Blue',
-    prompt: 'White light shines through the copper(II) sulfate solution, yet it appears strikingly blue. Why does the solution take on this colour?',
+    prompt: 'Why does the copper(II) sulfate solution look blue in white light?',
     labels: PLAIN,
     controls: [],
     after: true,
@@ -209,7 +209,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now adjust the incident wavelength. Turn the dial to find the wavelength where the solution absorbs light most strongly.'
     },
-    prompt: 'Tune the wavelength dial to find the peak absorption setting for measuring this copper(II) sulfate solution with maximum sensitivity.',
+    prompt: 'Find the wavelength setting that gives the maximum absorbance for the solution.',
     labels: EARNED,
     controls: ['tune'],
     settings: COPPER_SWEEP,
@@ -240,7 +240,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Doubling the Concentration',
-    prompt: 'Examine the three cuvettes with different copper concentrations. What happens to the absorbance reading when concentration doubles?',
+    prompt: 'What happens to the absorbance reading when concentration doubles?',
+    trendPlot: { xLabel: 'Concentration', xUnit: 'mmol/L', yLabel: 'Absorbance', yUnit: '', xMin: 0, xMax: 18, yMin: 0, yMax: 0.5 },
     labels: EARNED,
     controls: [],
     rigs: [
@@ -283,7 +284,8 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You can now change the cuvette path length. Select different path keys to see how beam distance affects absorption.'
     },
-    prompt: 'Switch the cuvette path length selector! What happens to the absorbance when the light travels twice as far through the solution?',
+    prompt: 'What happens to the absorbance when light travels twice as far through the solution?',
+    trendPlot: { xLabel: 'Path', xUnit: 'cm', yLabel: 'Absorbance', yUnit: '', xMin: 0, xMax: 5, yMin: 0, yMax: 1 },
     labels: EARNED,
     controls: ['path'],
     path: 1,
@@ -319,7 +321,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'The Rule',
-    prompt: 'Combine your discoveries! Which mathematical equation correctly expresses how absorbance depends on path length and concentration?',
+    prompt: 'Which equation expresses how absorbance depends on path length and concentration?',
     labels: EARNED,
     controls: ['path'],
     path: 1,
@@ -358,7 +360,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'The Sealed Sample',
-    prompt: 'We found a sealed copper solution vial in the surveyor depot. Using the line of known reference standards, determine its concentration!',
+    prompt: 'Determine the concentration of the sealed copper solution using the calibration line.',
     labels: EARNED,
     controls: [],
     rigs: [
@@ -551,7 +553,11 @@ export function mount(container, ctx) {
     const word = stage.labels.absorb;
     const rows = rigs.map(r => {
       const nm = r.tuned ? nmNow() : r.nm;
-      return `${r.label}: ${word} ${planAbsorb(r.solute, nm, runner.state.path, r.conc).toFixed(3)} at ${nm} nm, ${runner.state.path} cm`;
+      const a = planAbsorb(r.solute, nm, runner.state.path, r.conc);
+      // The plot gets one dot for every reading the bench reports: the cuvettes it
+      // holds on stage 5 (against concentration), the paths it is set to on stage 6.
+      if (stage.trendPlot) runner.plotPoint(stage.trendPlot.xLabel === 'Path' ? runner.state.path : r.conc * 1000, a);
+      return `${r.label}: ${word} ${a.toFixed(3)} at ${nm} nm, ${runner.state.path} cm`;
     });
     runner.readout('Cuvette // reading', rows.join('. ') + '.');
   }

@@ -25,8 +25,12 @@ import { createTransmissionElement } from '../../ui/transmission.js';
 import { benchDeployment, activeBenchViewer, onBenchViewer } from './bench-host.js';
 import { benchesAre3D } from './instruments.js';
 import { mirrorBenchKeys } from './bench-keys.js';
+import { mirrorBenchReadings } from './bench-readings.js';
 import { Encounter } from './encounter.js';
 import { storyFor } from './stage-story.js';
+import { BenchLog } from './benchlog.js';
+import { FormulaSlate } from './slate.js';
+import { TrendPlot, pairedReadoutMarkup } from './trendplot.js';
 import {
   PanelRig, createBenchAnchor, createPanelGantry, disposeGantry
 } from '../../three/world-ui.js';
@@ -294,6 +298,10 @@ export class LearnFrame {
             <div class="lq-foe" hidden></div>
             <div class="lq-deck-body">
               <div class="lq-readout"></div>
+              <div class="lq-trendplot-slot" hidden></div>
+              <div class="lq-device-slot" hidden><div class="lq-trendplot-panel"><canvas class="lq-device-canvas" width="360" height="120"></canvas></div></div>
+              <div class="lq-benchlog-slot"></div>
+              <div class="lq-slate-slot"></div>
               <div class="lq-widget"></div>
               <div class="lq-hints"></div>
             </div>
@@ -325,6 +333,10 @@ export class LearnFrame {
       foe: q('.lq-foe'),
       deckBody: q('.lq-deck-body'),
       readout: q('.lq-readout'),
+      trendplot: q('.lq-trendplot-slot'),
+      device: q('.lq-device-slot'),
+      benchlog: q('.lq-benchlog-slot'),
+      slate: q('.lq-slate-slot'),
       banner: q('.lq-banner'),
       widget: q('.lq-widget'),
       actions: q('.lq-actions'),
@@ -332,6 +344,39 @@ export class LearnFrame {
       commit: q('.lq-commit'),
       hintKey: q('.lq-hint-key')
     };
+
+    if (this.el.benchlog) {
+      this.benchLog = new BenchLog(this.el.benchlog, {
+        onSelect: entry => {
+          if (this.slate?.activeSlotId && entry?.data) {
+            for (const [k, v] of Object.entries(entry.data)) {
+              if (typeof v === 'number') {
+                this.slate.fillActiveSlot(v, '', k);
+                break;
+              }
+            }
+          }
+        }
+      });
+    }
+
+    if (this.el.slate) {
+      this.slate = new FormulaSlate(this.el.slate, {
+        onError: msg => this.note(msg),
+        onApply: (val, unit) => {
+          const numInput = this.el.widget?.querySelector('input[type="number"], .lq-number input');
+          if (numInput) {
+            numInput.value = val;
+            numInput.dispatchEvent(new Event('input', { bubbles: true }));
+            numInput.dispatchEvent(new Event('change', { bubbles: true }));
+          } else {
+            const disp = this.el.widget?.querySelector('#num-display, [data-num-display]');
+            if (disp) disp.textContent = String(val);
+          }
+          this.opts.onSlateApply?.(val, unit);
+        }
+      });
+    }
 
     this.viewerUnsub = onBenchViewer(viewer => {
       if (this.stage) this.updateBenchGuide(this.stage);
@@ -387,7 +432,12 @@ export class LearnFrame {
     // the tool plate is mirrored onto the bench as an engraved cap, and a press
     // there presses the key here — so the quest's handlers, and its grading,
     // are the ones it always had. The plate keeps only the legend.
-    if (benchesAre3D()) this.benchKeys = mirrorBenchKeys(this.el.controls);
+    if (benchesAre3D()) {
+      this.benchKeys = mirrorBenchKeys(this.el.controls);
+      // The log, the plot and the device stand on the bench too, so folding the
+      // plates away to look at the instrument does not take the readings with it.
+      this.benchReadings = mirrorBenchReadings(this);
+    }
 
     // Held to the glass: see `fitDeck`. Scroll is listened for in the capture
     // phase because the page that scrolls is a container, not the window.
@@ -613,7 +663,7 @@ export class LearnFrame {
     this.el.count.textContent = `Stage ${stage.index + 1} of ${this.stageCount}`;
     this.el.title.textContent = stage.title;
     const story = storyFor(this.currentQuestId(), stage.index);
-    this.el.prompt.innerHTML = `${story ? `<p class="lq-story" style="display: none;">${esc(story)}</p>` : ''}<p class="lq-prompt-body">${esc(stage.prompt)}</p>`;
+    this.el.prompt.innerHTML = `${story ? `<p class="lq-story">${esc(story)}</p>` : ''}<p class="lq-prompt-body">${esc(stage.prompt)}</p>`;
     // The objective again, over the bench, for a layout that stacks the deck
     // underneath it. Hidden from a screen reader: the deck's copy is the real one.
     if (this.el.promptStrip) this.el.promptStrip.textContent = stage.prompt || '';
@@ -647,6 +697,23 @@ export class LearnFrame {
 
     activeBenchViewer()?.hideInstrumentHalos();
     this.updateBenchGuide(stage);
+    this.benchLog?.setStage(stage);
+    this.slate?.setStage(stage);
+    this.setDevice(null);
+
+    if (stage.trendPlot && this.el.trendplot) {
+      this.el.trendplot.innerHTML = '<div class="lq-trendplot-panel"><canvas class="lq-trendplot-canvas" width="280" height="140"></canvas></div>';
+      this.el.trendplot.hidden = false;
+      const canvas = this.el.trendplot.querySelector('canvas');
+      this.trendPlot = new TrendPlot(canvas, stage.trendPlot);
+    } else {
+      if (this.el.trendplot) {
+        this.el.trendplot.innerHTML = '';
+        this.el.trendplot.hidden = true;
+      }
+      this.trendPlot = null;
+    }
+
     this.updateStageActions();
     this.updateRail();
     this.onFit?.();
@@ -655,6 +722,52 @@ export class LearnFrame {
     // the page at all.
     if (advancing) this.container.querySelector('.lq')?.scrollIntoView({ block: 'nearest' });
 
+  }
+
+  /**
+   * A DEVICE is a small picture drawn off the stage's own figures (the seesaw, the mole map),
+   * painted onto the card so it is there on every tier, built bench or drawn one.
+   * `paint(ctx, w, h)` draws the whole picture; call again to redraw. Cleared with the stage.
+   */
+  setDevice(paint) {
+    const slot = this.el.device;
+    const canvas = slot?.querySelector('canvas');
+    const ctx = canvas?.getContext?.('2d');
+    if (!slot || !ctx) return;
+    slot.hidden = !paint;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!paint) return;
+    ctx.fillStyle = '#0d0c0a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    paint(ctx, canvas.width, canvas.height);
+  }
+
+  /**
+   * Everything the stage's readings cards hold, as data, for the 3D bench's
+   * board: the log's rows and columns, and whichever of the plot and the device
+   * canvases are showing. The cards stay the source of truth.
+   */
+  readingsSnapshot() {
+    const snap = this.benchLog ? this.benchLog.snapshot() : { columns: [], rows: [] };
+    const pictures = [];
+    for (const [id, slot] of [['device', this.el.device], ['trend', this.el.trendplot]]) {
+      if (!slot || slot.hidden) continue;
+      const canvas = slot.querySelector?.('canvas');
+      if (canvas) pictures.push({ id, canvas });
+    }
+    return { ...snap, pictures };
+  }
+
+  logReading(data) {
+    return this.benchLog?.addEntry(data);
+  }
+
+  setPairedReadout(left, right) {
+    this.el.readout.innerHTML = pairedReadoutMarkup(left, right);
+  }
+
+  plotPoint(x, y) {
+    this.trendPlot?.addPoint(x, y);
   }
 
   currentQuestId() {
@@ -1144,6 +1257,8 @@ export class LearnFrame {
     this.a11yObserver = null;
     this.benchKeys?.dispose();
     this.benchKeys = null;
+    this.benchReadings?.dispose();
+    this.benchReadings = null;
     this.encounter?.dispose();
     window.removeEventListener('resize', this.onFit);
     window.removeEventListener('scroll', this.onFit, { capture: true });

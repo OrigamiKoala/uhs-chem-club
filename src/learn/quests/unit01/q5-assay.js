@@ -29,6 +29,8 @@
 
 import { AssayFloor } from '../../engine/instruments.js';
 import { LearnFrame, toolNotes } from '../../engine/frame.js';
+import { dialMarkup, bindDial, paintDial } from '../../engine/dial.js';
+import { drawSeesaw } from '../../engine/visual-devices.js';
 import { esc } from '../../../ui/layout.js';
 import { soundscape } from '../../../audio/soundscape.js';
 
@@ -46,6 +48,8 @@ export const VOCABULARY = [
 ];
 
 const SPEAKER = 'Vess';
+
+const MIX_NAMES = Object.fromEntries(Array.from({ length: 11 }, (_, i) => [i + 1, `${i * 10} heavy in 100`]));
 
 /* ------------------------------------------------------------------
    THE LISTED MASSES
@@ -114,7 +118,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench sorts atoms down a chute into separate bins by weight. Use "Tip Sample" to pour atoms and "Read Code" to inspect the atoms in each bin.'
     },
-    prompt: 'We ran this chlorine sample from the salt flat through the deflector chute. Why did it split across two bins instead of landing in one?',
+    prompt: 'Why does the chlorine sample split across two bins instead of landing in one?',
     controls: ['pour', 'code'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', code: 'chlorine', note: '40 atoms, sealed at the mine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
@@ -156,7 +160,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Run It Twice',
-    prompt: 'Let\'s test whether the isotope ratio stays constant across scoops. For every 100 atoms, how many atoms fall into the lighter weight bin?',
+    prompt: 'How many atoms out of every 100 fall into the lighter weight bin?',
     controls: ['pour'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
@@ -197,7 +201,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where 35.5 Sits',
-    prompt: 'The refinery reference sheet lists chlorine\'s mass at 35.5. Where does 35.5 fall relative to the two isotope weights?',
+    prompt: 'Where does the listed mass of 35.5 fall relative to the two isotope masses?',
     controls: ['pour'],
     hoppers: [
       { id: 'h1', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
@@ -243,7 +247,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Work Out the Average',
-    prompt: 'Vess needs to catalog this boron sample from the depot. What does one atom of this boron sample weigh on average?',
+    prompt: 'What is the average atomic mass of this boron sample?',
     controls: ['pour'],
     hoppers: [
       { id: 'h3', label: 'SAMPLE A', note: '40 atoms, nothing listed for it', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
@@ -278,7 +282,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Only One Bin',
-    prompt: 'Surprise result on this fluorine sample — all 40 atoms landed in bin 19! Why does fluorine have a neat whole-number mass of 19.0?',
+    prompt: 'Why does fluorine have a whole-number atomic mass of 19.0?',
     controls: ['pour'],
     hoppers: [
       { id: 'h4', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 19, n: 40 }] }
@@ -324,17 +328,17 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You now have access to the bench balance. Press "Weigh Sample" to measure the total mass of the sealed canister without opening it.'
     },
-    prompt: 'We can analyze this sealed neon cylinder without breaking the seal! Weighing the canister, how many of its atoms in every 100 weigh 20 rather than 22?',
-    controls: ['balance'],
+    prompt: 'How many atoms out of 100 in this neon sample have a mass of 20 rather than 22?',
+    controls: ['balance', 'mix'],
     hoppers: [
       { id: 'h5', label: 'SAMPLE A', note: 'sealed, 40 atoms, bins cut for weights 20 and 22', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] }
     ],
     reference: ['neon — listed mass 20.2'],
     widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Weight 20, per hundred atoms' },
     hints: [
-      'Press "Weigh Sample" on the sample and divide what it reads by the number of atoms.',
-      'Compare the weight per atom with the two weights, 20 and 22: how far along from 20 to 22 does it sit?',
-      'The fraction of the way from 20 to 22 that the average sits is the fraction of heavy atoms; take that from the whole, then scale to a hundred.'
+      'Press "Weigh Sample", then try mixes of light and heavy atoms on the seesaw.',
+      'Slide the mix until the seesaw\'s balance point lines up with the weighed mark.',
+      'Read how many of every hundred atoms are heavy in the mix that lines up, and take that from the hundred.'
     ],
     check(state) {
       if (state.number === 0) {
@@ -361,7 +365,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Name Three Samples',
-    prompt: 'Three unlabeled crates were recovered from the raider depot. Match each sample to the element whose listed mass it fits.',
+    prompt: 'Match each unknown sample to the element whose listed atomic mass fits.',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'ha', label: 'SAMPLE A', note: 'unlabelled, 40 atoms', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] },
@@ -406,7 +410,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Claims',
-    prompt: 'Suspect mineral shipments arrived at the depot. Which samples match the natural isotope mix of genuine chlorine, and which have been altered?',
+    prompt: 'Classify each sample as matching natural chlorine or having an altered isotope mix.',
     controls: ['pour', 'balance'],
     hoppers: [
       { id: 'j1', label: 'SAMPLE A', note: 'sold as natural chlorine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
@@ -552,7 +556,8 @@ function blankState(stage) {
     bin: null,
     poured: new Set(),
     weighed: new Set(),
-    coded: new Set()
+    coded: new Set(),
+    mix: 1
   };
 }
 
@@ -611,6 +616,7 @@ export function mount(container, ctx) {
   let state = null;
   let busy = false;
   let disposed = false;
+  let unbindMix = null;
 
   /* ---------------- stage lifecycle ---------------- */
 
@@ -694,10 +700,51 @@ export function mount(container, ctx) {
       stage.controls.map(id => toolNoteFor(id, index + 1)).filter(Boolean)
     ));
 
+    if (stage.controls.includes('mix')) {
+      parts.push(dialMarkup({ label: 'Try a mix', min: 1, max: 11, value: state.mix, id: 'mix-dial', scaleLabels: MIX_NAMES }));
+    }
     frame.setControls(parts.join(''));
     frame.el.controls.querySelectorAll('[data-tool]').forEach(btn => {
       btn.addEventListener('click', () => runTool(btn.dataset.tool));
     });
+    unbindMix?.();
+    unbindMix = stage.controls.includes('mix')
+      ? bindDial(frame.el.controls, { min: 1, max: 11, onChange: v => setMix(v) })
+      : null;
+    if (stage.controls.includes('mix')) paintDial(frame.el.controls, state.mix, { min: 1, max: 11, scaleLabels: MIX_NAMES });
+    paintDevice();
+  }
+
+  function setMix(v) {
+    state.mix = Math.max(1, Math.min(11, v));
+    paintDial(frame.el.controls, state.mix, { min: 1, max: 11, scaleLabels: MIX_NAMES });
+    soundscape.playToggleClack?.();
+    paintDevice();
+  }
+
+  /**
+   * THE SEESAW. The masses along a ruler, the atoms stacked at each, and a balance point
+   * where the average falls. On a tipped sample it is drawn from what landed; on stage 6
+   * it is drawn from the mix the player tries, and the sample leaves its own weighed mark.
+   * Neither is labelled with a figure.
+   */
+  function paintDevice() {
+    const stage = STAGES[index];
+    const hopper = hopperFor(state.sample) || stage.hoppers[0];
+    if (!hopper || hopper.bins.length < 2) { frame.setDevice(null); return; }
+    const mixing = stage.controls.includes('mix');
+    const live = floor.hoppers?.find(h => h.id === hopper.id);
+    const landed = live ? live.landed : [];
+    const poured = landed.some(n => n > 0);
+    if (!mixing && !poured) { frame.setDevice(null); return; }
+    const heavy = (state.mix - 1) * 10;
+    const counts = mixing ? [100 - heavy, heavy] : hopper.bins.map((b, i) => landed[i] || 0);
+    const total = counts.reduce((a, c) => a + c, 0);
+    const avg = total ? hopper.bins.reduce((m, b, i) => m + b.mass * (counts[i] || 0), 0) / total : null;
+    const declared = hopper.bins.reduce((n, b) => n + b.n, 0);
+    const mark = mixing && state.weighed.has(hopper.id)
+      ? hopper.bins.reduce((m, b) => m + b.mass * b.n, 0) / declared : null;
+    frame.setDevice((ctx, w, h) => drawSeesaw(ctx, 6, 6, w - 12, h - 12, hopper.bins.map((b, i) => ({ mass: b.mass, n: counts[i] || 0 })), avg, { mark }));
   }
 
   async function runTool(tool) {
@@ -749,6 +796,7 @@ export function mount(container, ctx) {
       const mass = hopper.bins.reduce((m, b) => m + b.mass * b.n, 0);
       state.weighed.add(id);
       soundscape.playScanSweep?.();
+      paintDevice();
       renderReadout(null, {
         head: `Balance // ${hopper.label}`,
         body: `${mass} in total, over ${count} atoms.`
@@ -766,6 +814,7 @@ export function mount(container, ctx) {
       frame.setCommitEnabled(false);
       const shot = await floor.pour(id);
       state.poured.add(id);
+      paintDevice();
       soundscape.playPylonWake?.();
       renderReadout(null, {
         head: `Chute // ${hopper.label}`,

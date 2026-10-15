@@ -73,7 +73,7 @@ export const STAGES = [
       body: 'This is the warden Ligar guards itself with, and each phase puts one of the benches in front of it again. A miss costs the rig a point of Integrity; three knock it back, and nothing you have read is lost.'
     },
     bench: 'bond',
-    prompt: 'The colossal basalt warden blocks the quarry gate! Which plating block has the highest lattice energy and requires the most intense heat to melt?',
+    prompt: 'Which plating block has the highest lattice energy and requires the most heat to melt?',
     controls: [],
     rigs: [lattice('a', 'PLATE A', 'NaCl'), lattice('b', 'PLATE B', 'MgO'), lattice('c', 'PLATE C', 'KCl')],
     widget: { type: 'choice', label: 'The plate', options: [{ id: 'a', label: 'Plate A' }, { id: 'b', label: 'Plate B' }, { id: 'c', label: 'Plate C' }] },
@@ -105,7 +105,7 @@ export const STAGES = [
   {
     title: 'Phase 2 · The Vent',
     bench: 'pair',
-    prompt: 'The warden vents pressurized SF₄ gas from its armored mantle! Place all of sulfur tetrafluoride\'s valence electrons until every lamp glows to seal the vent.',
+    prompt: 'Place all valence electrons for sulfur tetrafluoride until every lamp lights.',
     controls: ['hand', 'clear'],
     rigs: [slate('a', 'PLATE A', 'SF4')],
     widget: { type: 'none' },
@@ -138,7 +138,7 @@ export const STAGES = [
   {
     title: 'Phase 3 · The Joints',
     bench: 'rig',
-    prompt: 'The warden\'s limb joints are geared with square planar XeF₄ crystals. What is the bond angle between adjacent fluorine atoms on this hub?',
+    prompt: 'What is the bond angle between adjacent fluorine atoms on this XeF4 hub?',
     controls: ['arms', 'protractor'],
     rigs: [hub('a', 'HUB A', 'Xe', [atoms('f', 'F', 4, 'Fluorine'), lone(2)], 'xenon with four fluorine atoms and two lone pairs')],
     widget: {
@@ -171,7 +171,7 @@ export const STAGES = [
   {
     title: 'Phase 4 · The Coolant',
     bench: 'rig',
-    prompt: 'The warden draws coolant from three gas feeds! Select every polar molecule that rotates in the electric field so we can short-circuit the coolant line.',
+    prompt: 'Select every polar molecule that rotates to align with the electric field.',
     controls: ['field', 'arrows'],
     rigs: [
       field('a', 'PLATE A', 'CO2', 'carbon dioxide'),
@@ -210,7 +210,7 @@ export const STAGES = [
   {
     title: 'Phase 5 · The Core',
     bench: 'rack',
-    prompt: 'The warden\'s inner core is shielded behind mystery gas canisters! Which gas is paramagnetic and drawn toward the magnetic field?',
+    prompt: 'Which gas is paramagnetic and drawn toward the magnetic field?',
     controls: ['rackhand', 'magnet'],
     counts: true,
     rigs: [rack('a', 'PLATE A', 'N2'), rack('b', 'PLATE B', 'O2'), rack('c', 'PLATE C', 'F2')],

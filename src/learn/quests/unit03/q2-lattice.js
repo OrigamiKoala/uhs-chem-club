@@ -59,6 +59,11 @@ const SPEAKER = 'Vess';
    is left to say what it says.
    ------------------------------------------------------------------ */
 const TOOL_TEXT = {
+  shift: [{
+    from: 2,
+    key: 'Shift a Layer',
+    what: 'Slides one layer of ions by one place to test what happens when like charges meet.'
+  }],
   heat: [{
     from: 1,
     key: 'Heat It',
@@ -93,6 +98,7 @@ const slab = (id, label, note, build, melt, tint, extra = {}) =>
 const SALT = (id, label) => slab(id, label, 'cut from the salt pan', 'grid', 801, 'bone');
 const VENT = (id, label) => slab(id, label, 'scraped off the vent crust', 'clusters', 115, 'sand', { cluster: 3, groups: 8 });
 const ARCH = (id, label) => slab(id, label, 'cut from a fallen arch', 'web', 1710, 'iron');
+const COPPER = (id, label) => slab(id, label, 'cut from a salvage cable', 'metallic', 1085, 'rust');
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -105,7 +111,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench holds a block of solid material in a clamp. You can hit it with the hammer, heat it until it comes apart, or let it cool again.'
     },
-    prompt: 'A rockslide threatens the miners\' tunnel! Heat each salvaged mineral slab in the crucible clamp to determine which block is held together strongest.',
+    prompt: 'Determine which mineral block is held together the strongest.',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {
@@ -142,8 +148,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Hit the Salt',
-    prompt: 'Strike both blocks with the pneumatic hammer! Why does the salt block (A) cleave along a crisp, flat plane while the sulfur block (B) crumbles into fragments?',
-    controls: ['strike', 'heat', 'cool'],
+    prompt: 'Why does the salt block cleave along a flat plane when struck or shifted, while the sulfur block crumbles?',
+    controls: ['strike', 'shift', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B')],
     widget: {
       type: 'choice',
@@ -156,9 +162,9 @@ export const STAGES = [
       ]
     },
     hints: [
-      'Tap a block, press "Strike It", and do the same for the other one.',
+      'Tap Block A and press "Shift a Layer" to see what happens when ions of like charge align.',
       'Look at what the picture shows in Block A before the blow: every ion marked plus has ions marked minus all round it, in a pattern that repeats.',
-      'Picture one row of Block A\'s pattern slid along by one place, and check whether each plus now sits beside a plus or beside a minus.'
+      'Shift a layer of Block A\'s pattern by one place, and see how like charges align and push apart.'
     ],
     check(state) {
       if (!state.choice) {
@@ -189,9 +195,9 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'You now have electrical leads connected to the clamp. Use "Run Current" to test whether charge can move through the block.'
     },
-    prompt: 'Before wiring the quarry\'s lighting grid, test both blocks for electrical current cold and molten. What does an electric current fundamentally require to flow through a substance?',
+    prompt: 'What does an electric current require to flow through a substance?',
     controls: ['heat', 'current', 'cool'],
-    slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B')],
+    slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), COPPER('s3', 'BLOCK C')],
     widget: {
       type: 'choice',
       label: 'Your answer',
@@ -204,8 +210,8 @@ export const STAGES = [
     },
     hints: [
       'Test each block cold first, then press "Heat It" on it and test the same block again.',
-      'Block A passes nothing cold and a current once molten, while Block B, molten and just as hot, passes nothing at all.',
-      'Line up the three results, Block A cold, Block A molten and Block B molten, and find what is true of the one that passed a current and false of the other two.'
+      'Block A conducts only molten, Block B never conducts, and metallic Block C conducts both cold and molten.',
+      'Line up the results and find what is true of every block that passed a current.'
     ],
     check(state) {
       if (!state.choice) {
@@ -215,7 +221,7 @@ export const STAGES = [
         return { ok: false, msg: 'Block B was molten at 115 degrees and passed nothing, so heat on its own is not enough.' };
       }
       if (state.choice === 'metal') {
-        return { ok: false, msg: 'Neither block is a metal, and one of them passed a current, so that is not the rule.' };
+        return { ok: false, msg: 'Molten salt conducts without being a metal, so being a metal is not required to pass a current.' };
       }
       if (state.choice === 'solid') {
         return { ok: false, msg: 'Block A passed nothing while it was solid and passed a current once it was melted, which is the wrong way round for that.' };
@@ -223,16 +229,16 @@ export const STAGES = [
       return { ok: true };
     },
     reward: {
-      log: 'Block A cold: nothing. Block A molten: current. Block B molten: nothing.',
+      log: 'Salt conducts molten. Sulfur never conducts. Copper conducts cold and molten.',
       title: 'What It Takes to Conduct',
-      body: 'A current is charge on the move, so a material only conducts if it holds charged particles, such as ions or electrons, and those particles can travel. In the lattice the ions are pinned in the grid and nothing flows; melt it and the very same ions are free, so it conducts. Block B was molten too and passed nothing, because what it is built of carries no charge at all.'
+      body: 'A current is charge on the move, so a material only conducts if it holds charged particles, such as ions or electrons, and those particles can travel. In a metal like copper, valence electrons form a shared sea that flows freely even when cold. In the salt lattice the ions are pinned until melted, while sulfur holds no loose charges at all.'
     }
   },
 
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'What Survives the Blow',
-    prompt: 'Strike and heat molecular Block A! What actually breaks apart when this molecular solid crumbles and melts?',
+    prompt: 'What breaks apart when a molecular solid crumbles and melts?',
     controls: ['strike', 'heat', 'cool'],
     slabs: [VENT('s2', 'BLOCK A'), SALT('s1', 'BLOCK B')],
     widget: {
@@ -275,7 +281,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Block the Blade Will Not Cut',
-    prompt: 'The ancient basalt arch stone (Block A) resists the cutting blade and requires searing heat to melt! How is its internal structure built differently from separate molecules?',
+    prompt: 'How is Block A\'s internal structure built differently from separate molecules?',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [ARCH('s3', 'BLOCK A'), VENT('s2', 'BLOCK B')],
     widget: {
@@ -318,7 +324,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Lift One Out',
-    prompt: 'Quarry sorting sensors need to distinguish discrete molecular clusters from continuous solids. In which of these three blocks could you isolate and lift out an individual molecule?',
+    prompt: 'From which of these three blocks could you lift out an individual molecule?',
     controls: ['strike', 'heat', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {
@@ -356,55 +362,58 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 7 */
   {
-    title: 'Three Sealed Blocks',
-    prompt: 'Three unlabelled rock core canisters need classification to clear the rescue route! Run our thermal, impact, and current tests to identify the internal build of each sealed block.',
+    title: 'Four Sealed Blocks',
+    prompt: 'Identify the internal build of each sealed block.',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [
       slab('x1', 'BLOCK A', 'sealed at the mine, cased shut', 'grid', 1074, 'bone', { sealed: true }),
       slab('x2', 'BLOCK B', 'sealed at the mine, cased shut', 'clusters', 80, 'sand', { sealed: true, cluster: 3, groups: 8 }),
-      slab('x3', 'BLOCK C', 'sealed at the mine, cased shut', 'web', 3550, 'iron', { sealed: true })
+      slab('x3', 'BLOCK C', 'sealed at the mine, cased shut', 'web', 3550, 'iron', { sealed: true }),
+      slab('x4', 'BLOCK D', 'sealed at the mine, cased shut', 'metallic', 1085, 'rust', { sealed: true })
     ],
     widget: {
       type: 'bins',
-      rows: ['x1', 'x2', 'x3'],
+      rows: ['x1', 'x2', 'x3', 'x4'],
       bins: [
         { id: 'ionic', label: 'Ionic lattice', note: 'Ions in a repeating grid.' },
         { id: 'molecular', label: 'Separate molecules', note: 'A weak pull between one molecule and the next.' },
-        { id: 'network', label: 'Covalent network', note: 'Bonded all the way through.' }
+        { id: 'network', label: 'Covalent network', note: 'Bonded all the way through.' },
+        { id: 'metallic', label: 'Metallic solid', note: 'Sea of delocalized electrons.' }
       ]
     },
     hints: [
       'Nothing resolves inside a cased block, so heat each one, test each one molten, and hit each one.',
-      'A block that comes apart low and crumbles is one build; a block that comes apart high, splits flat and conducts once molten is another; a block that will not break at all is the third.',
-      'For each block write down three results, the temperature it comes apart at, what a blow does and whether it passes a current molten, and match each set to the build that behaved that way earlier.'
+      'A molecular solid melts low and crumbles; an ionic lattice melts high and conducts molten; a metal conducts cold and molten; a network resists heat and never conducts.',
+      'For each block write down three results: melting point, hammer blow, and conductivity.'
     ],
     check(state) {
-      const labels = { x1: 'Block A', x2: 'Block B', x3: 'Block C' };
-      for (const id of ['x1', 'x2', 'x3']) {
+      const labels = { x1: 'Block A', x2: 'Block B', x3: 'Block C', x4: 'Block D' };
+      for (const id of ['x1', 'x2', 'x3', 'x4']) {
         if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
       }
       const reasons = {
         x1: 'Block A is filed wrong. Heat it, test it molten and strike it, and compare what it does with how each build behaved earlier.',
         x2: 'Block B is filed wrong. Heat it, test it molten and strike it, and compare what it does with how each build behaved earlier.',
-        x3: 'Block C is filed wrong. Heat it, test it molten and strike it, and compare what it does with how each build behaved earlier.'
+        x3: 'Block C is filed wrong. Heat it, test it molten and strike it, and compare what it does with how each build behaved earlier.',
+        x4: 'Block D is filed wrong. Test it cold and molten, and strike it to see how its electrons flow.'
       };
-      const want = { x1: 'ionic', x2: 'molecular', x3: 'network' };
-      for (const id of ['x1', 'x2', 'x3']) {
+      const want = { x1: 'ionic', x2: 'molecular', x3: 'network', x4: 'metallic' };
+      for (const id of ['x1', 'x2', 'x3', 'x4']) {
         if (state.bins[id] !== want[id]) return { ok: false, msg: reasons[id] };
       }
       return { ok: true };
     },
     reward: {
-      log: 'One lattice, one molecular, one network.',
+      log: 'One lattice, one molecular, one network, one metal.',
       title: 'The Tests Name the Build',
-      body: 'A block that melts low and crumbles into whole molecules is molecular; one that melts high, cleaves flat and conducts once molten is an ionic lattice; one that melts higher still, will not cleave and never conducts is a covalent network. You never opened any of the three. How a material behaves is a direct report of how its atoms are held together.'
+      body: 'A block that melts low and crumbles into whole molecules is molecular; one that melts high, cleaves flat and conducts once molten is an ionic lattice; one that melts high, never cleaves and conducts cold is a metallic solid; one that resists heat and never conducts is a covalent network. How a material behaves is a direct report of how its atoms are held together.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Pick the Liner',
-    prompt: 'The smelter needs a crucible lining that withstands 900°C without conducting any electric current. Which material slab meets both requirements?',
+    prompt: 'Which material slab withstands 900°C without conducting any electric current?',
     controls: ['strike', 'heat', 'current', 'cool'],
     slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
     widget: {
@@ -557,10 +566,10 @@ export const SOLUTIONS = [
   },
   { struck: new Set(['s1', 's2', 's3']), choice: 's2' },
   {
-    struck: new Set(['x1', 'x2', 'x3']),
-    heated: new Set(['x1', 'x2', 'x3']),
-    tested: new Set(['x1:molten', 'x2:molten', 'x3:molten']),
-    bins: { x1: 'ionic', x2: 'molecular', x3: 'network' }
+    struck: new Set(['x1', 'x2', 'x3', 'x4']),
+    heated: new Set(['x1', 'x2', 'x3', 'x4']),
+    tested: new Set(['x1:molten', 'x2:molten', 'x3:molten', 'x4:solid']),
+    bins: { x1: 'ionic', x2: 'molecular', x3: 'network', x4: 'metallic' }
   },
   { heated: new Set(['s1', 's2', 's3']), choice: 's3' }
 ];
@@ -583,9 +592,9 @@ export const MISSES = [
   },
   { struck: new Set(['s1', 's2', 's3']), choice: 's1' },
   {
-    heated: new Set(['x1', 'x2', 'x3']),
-    tested: new Set(['x1:molten', 'x2:molten', 'x3:molten']),
-    bins: { x1: 'network', x2: 'molecular', x3: 'ionic' }
+    heated: new Set(['x1', 'x2', 'x3', 'x4']),
+    tested: new Set(['x1:molten', 'x2:molten', 'x3:molten', 'x4:solid']),
+    bins: { x1: 'network', x2: 'molecular', x3: 'ionic', x4: 'metallic' }
   },
   { heated: new Set(['s1', 's2', 's3']), choice: 's1' }
 ];
@@ -686,6 +695,9 @@ export function mount(container, ctx) {
     if (stage.controls.includes('strike')) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="strike">Strike It</button>');
     }
+    if (stage.controls.includes('shift')) {
+      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="shift">Shift a Layer</button>');
+    }
     if (stage.controls.includes('heat')) {
       parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="heat">Heat It</button>');
     }
@@ -727,6 +739,11 @@ export function mount(container, ctx) {
       state.struck.add(id);
       soundscape.playBondSnap?.();
       renderReadout(null, { head: `Hammer // ${item.label}`, body: strikeLine(out, item) });
+    } else if (tool === 'shift') {
+      const out = await bench.shift(id);
+      state.struck.add(id);
+      soundscape.playBondSnap?.();
+      renderReadout(null, { head: `Shift // ${item.label}`, body: shiftLine(out, item) });
     } else if (tool === 'heat') {
       const already = bench.molten(id);
       const out = await bench.heat(id);
@@ -768,6 +785,9 @@ export function mount(container, ctx) {
     if (out.result === 'molten') {
       return `${item.label} is already molten, so there is nothing solid left to hit.`;
     }
+    if (out.result === 'bent') {
+      return 'The hammer dents the block, but the metallic bonds bend and hold together instead of shattering.';
+    }
     if (out.result === 'cleaved') {
       return 'The block splits in one go, along a single flat face, and the two halves come away clean.';
     }
@@ -775,6 +795,16 @@ export function mount(container, ctx) {
       return 'The block gives way at once and crumbles into small clusters, none of which the blow broke open.';
     }
     return 'The hammer rings off it and stops. Nothing moves, and nothing comes away.';
+  }
+
+  function shiftLine(out, item) {
+    if (out.result === 'molten') {
+      return `${item.label} is already molten.`;
+    }
+    if (item.build === 'grid') {
+      return 'Sliding one layer brings like charges face to face: repulsions surge and the block springs apart along that plane!';
+    }
+    return 'The layer slides smoothly without repelling its neighbors.';
   }
 
   /* ---------------- readout ---------------- */
