@@ -1,5 +1,6 @@
 import { scrypt, randomBytes } from 'node:crypto';
 import { levelForXp, levelTitle } from '../src/progression/levels.js';
+import { mergeDocs, emptyDoc, STATE_MAX_CHARS } from '../src/shared/statemerge.js';
 
 const PARAMS = { N: 16384, r: 8, p: 1, keylen: 64 };
 const PEPPER = process.env.PEPPER || 'avalon_dev_pepper_do_not_use_in_prod_123';
@@ -247,6 +248,9 @@ const localStore = {
   // `submissions`, because those two are what XP and the leaderboard are
   // computed from. The Learn track must stay invisible to both.
   learn: [],
+  // Synced player state (flags, notebook, practice...), one merged document per
+  // player id. Mirrors the PlayerState tab the real backend keeps.
+  state: {},
   teams: [
     { team_id: 'earth', name: 'Earth', corp_name: 'Earth', ship_name: 'Earth', color_hex: '#241f14', accent_hex: '#8a7148', cap: 12, lore: '', emblem: 'geo' },
     { team_id: 'air', name: 'Air', corp_name: 'Air', ship_name: 'Air', color_hex: '#1a2226', accent_hex: '#75818a', cap: 12, lore: '', emblem: 'aero' },
@@ -362,7 +366,8 @@ function localDevHandler(route, body) {
           level: levelForXp(player.xp || 0),
           isAdmin: player.email_lc === 'uhschemclub@gmail.com' || player.display_name_lc === 'admin',
           progress: (localStore.progress || []).filter(x => x.player_id === player.player_id),
-          learn: (localStore.learn || []).filter(x => x.player_id === player.player_id)
+          learn: (localStore.learn || []).filter(x => x.player_id === player.player_id),
+          state: localStore.state[player.player_id] || emptyDoc()
         } : null,
         events: {
           earth: { event_id: 'slipstream', name: 'Slipstream Current', polarity: 'good' },
@@ -458,7 +463,8 @@ function localDevHandler(route, body) {
         level: pLevel,
         isAdmin: p.email_lc === 'uhschemclub@gmail.com' || p.display_name_lc === 'admin',
         progress: (localStore.progress || []).filter(x => x.player_id === p.player_id),
-        learn: (localStore.learn || []).filter(x => x.player_id === p.player_id)
+        learn: (localStore.learn || []).filter(x => x.player_id === p.player_id),
+        state: localStore.state[p.player_id] || emptyDoc()
       }
     };
   }
@@ -694,6 +700,25 @@ function localDevHandler(route, body) {
     if (!alreadyCompleted) row.completed_at = now;
     row.updated_at = now;
     return { ok: true, data: { world_id: worldId, quest_id: questId, alreadyCompleted, completed_at: row.completed_at } };
+  }
+
+  if (route === 'state/get' || route === 'state/save') {
+    let pid = null;
+    try {
+      pid = JSON.parse(Buffer.from(String(body.token || '').split('.')[0], 'base64').toString('utf8')).pid;
+    } catch (e) {}
+    if (!pid) return { ok: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated.' } };
+    if (route === 'state/save') {
+      if (!body.state || typeof body.state.sections !== 'object') {
+        return { ok: false, error: { code: 'BAD_REQUEST', message: 'A state document is required.' } };
+      }
+      const merged = mergeDocs(localStore.state[pid] || emptyDoc(), body.state);
+      if (JSON.stringify(merged).length > STATE_MAX_CHARS) {
+        return { ok: false, error: { code: 'BAD_REQUEST', message: 'Saved state is too large.' } };
+      }
+      localStore.state[pid] = merged;
+    }
+    return { ok: true, data: { state: localStore.state[pid] || emptyDoc() } };
   }
 
   if (route === 'progression/me') {

@@ -5,6 +5,7 @@
 
 import { getWorld } from '../learn/curriculum.js';
 import { getFieldManualStats } from '../ui/field-manual.js';
+import { practiceFacts } from '../learn/drills.js';
 
 export const COMMENDATION_ROADS = ['campaign', 'craft', 'learn', 'crew', 'season'];
 export const COMMENDATION_TIERS = ['painted', 'brass', 'etched'];
@@ -343,6 +344,54 @@ export const COMMENDATIONS = [
     road: 'learn',
     hidden: false,
     earnedBy: (s) => manualComplete(s, 'unit04')
+  },
+
+  // ===================== DRILL DECK =====================
+  // Cosmetic only, like every plate here: a drill pays no XP and never reaches Standings.
+  {
+    id: 'first_drill',
+    name: 'Warm-Up',
+    line: 'Finished a round in the Drill Deck.',
+    tier: 'painted',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => practiceFacts(s.practice).runs >= 1
+  },
+  {
+    id: 'drill_perfect',
+    name: 'Clean Sheet',
+    line: 'Earned three stars on a ten-question run.',
+    tier: 'brass',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => practiceFacts(s.practice).perfectRun
+  },
+  {
+    id: 'drill_streak_7',
+    name: 'Daily Discipline',
+    line: 'Finished a drill on seven days in a row.',
+    tier: 'brass',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => practiceFacts(s.practice).streak >= 7
+  },
+  {
+    id: 'drill_sprint_15',
+    name: 'Quick Hands',
+    line: 'Answered fifteen questions correctly in one timed round.',
+    tier: 'brass',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => practiceFacts(s.practice).bestSprint >= 15
+  },
+  {
+    id: 'drill_gold_world',
+    name: 'Gold Standard',
+    line: 'Mastered nine in ten of the questions from a single world.',
+    tier: 'etched',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => practiceFacts(s.practice).goldWorld
   },
 
   // ===================== CREW =====================

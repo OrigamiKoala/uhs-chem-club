@@ -15,6 +15,7 @@ import { soundscape } from '../audio/soundscape.js';
 import { TRINKETS, getTrinketForRoll, getDeterministicRoll } from '../story/trinkets.js';
 import { createTransmissionElement } from '../ui/transmission.js';
 import { CAMPAIGN_STORY } from '../story/saga.js';
+import { campaignBriefingIds } from '../story/lore.js';
 
 const TEAM_INFO = {
   earth: {
@@ -605,6 +606,7 @@ export async function renderOnboarding(container) {
     const activeMeta = TEAM_INFO[selectedTeam] || TEAM_INFO.fire;
     let currentPara = 0;
 
+    session.recordNotebookMany(campaignBriefingIds());
     const PARAGRAPHS = [
       {
         speaker: 'Vess',

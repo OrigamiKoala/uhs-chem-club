@@ -484,6 +484,8 @@ export function renderQuest(container) {
     const stageXp = localCfg.xp || stageMeta.xp || 20;
 
     const pylonStory = QUEST1_STORY.pylons[currentStageIdx];
+    // File what Vess is about to say in the lore notebook.
+    session.recordNotebook(currentStageIdx === 0 ? 'erebus:contract' : `erebus:pylon:${currentStageIdx + 1}`);
     const initialText = currentStageIdx === 0
       ? (QUEST1_STORY.briefing?.message || QUEST1_STORY.guildOpeners[session.guild] || QUEST1_STORY.guildOpeners.neutral)
       : (pylonStory?.transmission || 'Calibrate your sensors.');
@@ -1002,6 +1004,7 @@ export function renderQuest(container) {
         const milestone = QUEST1_STORY.milestones[milestoneStageNum];
         if (milestone && !session.hasFlag(`milestone_${milestoneStageNum}`)) {
           session.setFlag(`milestone_${milestoneStageNum}`, true);
+          session.recordNotebook(`erebus:milestone:${milestoneStageNum}`);
           gradeBtn.disabled = true;
           await playCinematic(milestone.cinematic);
           gradeBtn.disabled = false;
@@ -1057,6 +1060,7 @@ export function renderQuest(container) {
     if (debriefStory.clueAward) {
       session.recordClue(debriefStory.clueAward);
     }
+    (debriefStory.sections || []).forEach((_, i) => session.recordNotebook(`erebus:debrief:${i}`));
     const sections = debriefStory.sections || [
       {
         speaker: 'Vess',

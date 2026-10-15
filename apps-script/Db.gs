@@ -9,6 +9,7 @@ var DB_SCHEMA = {
   Players: ['player_id', 'email_lc', 'pw_hash', 'pw_salt', 'pw_algo', 'display_name', 'display_name_lc', 'name_changed_at', 'role', 'team_id', 'avatar_json', 'created_at', 'last_seen_at', 'status', 'gfx_tier_pref', 'notes'],
   Progress: ['player_id', 'quest_id', 'stage_reached', 'completed_at', 'xp_earned', 'hints_used', 'items_awarded', 'updated_at'],
   LearnProgress: ['player_id', 'world_id', 'quest_id', 'stages', 'completed_at', 'updated_at'],
+  PlayerState: ['player_id', 'data', 'updated_at'],
   Submissions: ['submission_id', 'ts', 'player_id', 'quest_id', 'stage_index', 'attempt_no', 'payload_json', 'correct', 'xp_awarded', 'elapsed_ms', 'hint_used', 'gfx_tier', 'ip_hash'],
   Inventory: ['inv_id', 'player_id', 'item_id', 'qty', 'acquired_at', 'source']
 };

@@ -1,15 +1,38 @@
 /**
- * casefile.js — Case File terminal & dossier: clues, spine beats, and acts.
+ * casefile.js — Case File & lore notebook: everything the player has been told.
  *
  * Diegetic investigation log kept by Quartermaster Vess aboard the Avalon.
  * Traces the Fifth / The Catalyst across the four acts.
+ *
+ * The NOTEBOOK tab is the whole storyline in one place. Nothing is added by
+ * hand: briefings, transmissions and evidence are filed in `session.notebook`
+ * by the screens that show them (see `story/lore.js` for the id grammar), the
+ * list is synced to the Sheet, and this screen only reads it.
  */
 
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
 import { tierManager } from '../three/tier.js';
 import { pageHeader, statRow, esc } from '../ui/layout.js';
-import { ACTS, CLUES, SPINE_BEATS, getAct } from '../story/saga.js';
+import { ACTS, CLUES, SPINE_BEATS, getAct, isBeatUnlocked } from '../story/saga.js';
+import { LORE_KINDS, loreActs, loreEntries, allLoreIds } from '../story/lore.js';
+
+/**
+ * The Case File is where the spine's transmissions are delivered: opening it
+ * files every one whose prerequisites the player has met. (Nothing else in the
+ * game shows them, so without this the Transmissions tab could never open.)
+ */
+function fileUnlockedTransmissions(saga) {
+  const bosses = Object.entries(session.learn || {})
+    .filter(([k, v]) => k !== 'saga' && v && v.completedAt)
+    .map(([k]) => k);
+  const contracts = (session.progress || []).some(p => p.quest_id === 'q1' && p.completed_at)
+    ? ['contract_erebus_01'] : [];
+  const state = { bosses, contracts, clues: saga.clues || [] };
+  for (const beat of SPINE_BEATS) {
+    if (isBeatUnlocked(beat, state)) session.recordSagaBeat(beat.id);
+  }
+}
 
 export function renderCaseFile(container) {
   if (stage.cameraRig && tierManager.currentTier !== 'T4') {
@@ -18,6 +41,9 @@ export function renderCaseFile(container) {
 
   const isT4 = tierManager.currentTier === 'T4';
   const saga = session.getSaga ? session.getSaga() : { beatsSeen: [], clues: [] };
+  fileUnlockedTransmissions(saga);
+  // How much of the notebook had been read before this visit: anything past it is NEW.
+  const viewedAtOpen = Number(session.getFlag('notebook_viewed')) || 0;
   const collectedClueIds = new Set(saga.clues || []);
   const seenBeatIds = new Set(saga.beatsSeen || []);
 
@@ -26,22 +52,27 @@ export function renderCaseFile(container) {
   const collectedCount = allClues.filter(c => collectedClueIds.has(c.id)).length;
   const seenBeatsCount = SPINE_BEATS.filter(b => seenBeatIds.has(b.id)).length;
 
-  let activeTab = 'clues'; // 'clues' | 'spine' | 'acts'
+  const totalLore = allLoreIds().length;
+  let activeTab = 'notebook'; // 'notebook' | 'clues' | 'spine' | 'acts'
+  let noteAct = 'all';
+  let noteKind = 'all';
+  let noteSort = 'story'; // 'story' | 'found'
 
   function render() {
     const headerMarkup = isT4 ? `
       <div class="terminal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-durasteel); padding-bottom: 0.5rem;">
         <div>
           <span class="eyebrow lit" style="color: var(--accent-gold); letter-spacing: 0.15em;">CASE LOG</span>
-          <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">CASE FILE: THE CATALYST</h2>
+          <h2 class="section-title" style="font-size: 1.15rem; margin-top: 2px;">CASE FILE &amp; NOTEBOOK</h2>
         </div>
         <a href="#/bridge" class="terminal-close-btn" style="text-decoration: none; padding: 4px 10px; font-family: var(--font-mono); font-size: 0.75rem; border: 1px solid var(--border-durasteel); color: var(--text-muted);">CLOSE</a>
       </div>
     ` : pageHeader({
       art: '/art/comms.jpg',
-      title: 'Case File',
+      title: 'Case File & Notebook',
       eyebrow: 'Investigation Log',
       actions: statRow([
+        { label: 'Notebook', value: `${session.getNotebook().length} / ${totalLore}`, plain: true },
         { label: 'Clues Recovered', value: `${collectedCount} / ${totalClues}`, plain: true },
         { label: 'Spine Transcripts', value: `${seenBeatsCount} / ${SPINE_BEATS.length}`, plain: true },
         { label: 'Active Dossier', value: 'Act I', plain: true }
@@ -53,6 +84,9 @@ export function renderCaseFile(container) {
         ${headerMarkup}
 
         <div class="casefile-tabs map-tabs" role="tablist" style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem;">
+          <button type="button" class="map-tab btn-secondary ${activeTab === 'notebook' ? 'active' : ''}" data-case-tab="notebook" style="flex: 1; padding: 8px 12px; font-family: var(--font-mono); font-size: 0.8rem; text-transform: uppercase;">
+            Notebook (${session.getNotebook().length})
+          </button>
           <button type="button" class="map-tab btn-secondary ${activeTab === 'clues' ? 'active' : ''}" data-case-tab="clues" style="flex: 1; padding: 8px 12px; font-family: var(--font-mono); font-size: 0.8rem; text-transform: uppercase;">
             Evidence & Clues (${collectedCount}/${totalClues})
           </button>
@@ -78,7 +112,81 @@ export function renderCaseFile(container) {
     bindEvents();
   }
 
+  function chip(group, value, label, current) {
+    return `<button type="button" class="map-tab btn-secondary quest-btn-sm m-tap ${current === value ? 'active' : ''}" data-note-${group}="${esc(value)}" aria-pressed="${current === value}" style="font-family: var(--font-mono); font-size: 0.7rem; padding: 4px 9px;">${esc(label)}</button>`;
+  }
+
+  function renderNotebook() {
+    const found = session.getNotebook();
+    if (!found.length) {
+      return `
+        <div class="holo-card" style="padding: 1.25rem; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.82rem;">
+          Nothing filed yet. Briefings, transmissions and evidence are written here as you meet them.
+        </div>
+      `;
+    }
+    let entries = loreEntries(found);
+    if (noteSort === 'found') {
+      entries = found.map(id => entries.find(e => e.id === id)).filter(Boolean);
+    }
+    const shown = entries.filter(e =>
+      (noteAct === 'all' || e.act === noteAct) && (noteKind === 'all' || e.kind === noteKind)
+    );
+    const acts = loreActs().filter(a => entries.some(e => e.act === a.id));
+    const kinds = Object.keys(LORE_KINDS).filter(k => entries.some(e => e.kind === k));
+    const newCount = found.filter((id, i) => i >= viewedAtOpen).length;
+
+    let lastGroup = null;
+    const cards = shown.map(e => {
+      const isNew = found.indexOf(e.id) >= viewedAtOpen;
+      const group = noteSort === 'story' ? e.act : null;
+      const heading = group && group !== lastGroup
+        ? `<h3 class="eyebrow lit" style="color: var(--accent-gold); letter-spacing: 0.14em; margin: 1.1rem 0 0.4rem; font-size: 0.72rem;">${esc(actTitleOf(group))}</h3>`
+        : '';
+      lastGroup = group;
+      return `${heading}
+        <article class="holo-card notebook-entry" data-lore-id="${esc(e.id)}" style="padding: 0.9rem 1rem; border: 1px solid ${isNew ? 'var(--accent-gold)' : 'var(--border-durasteel)'}; background: var(--plate-200); margin-bottom: 0.6rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+            <span class="eyebrow" style="font-size: 0.66rem; color: var(--accent-bronze);">${esc(LORE_KINDS[e.kind] || e.kind)} · ${esc(e.source)}</span>
+            ${isNew ? '<span class="tag live" style="font-size: 0.62rem;">NEW</span>' : ''}
+          </div>
+          <h4 style="font-family: var(--font-display); font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-bright); margin: 0 0 0.35rem;">${esc(e.title)}</h4>
+          ${e.speaker ? `<div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-gold); margin-bottom: 0.25rem;">${esc(e.speaker)}</div>` : ''}
+          <p style="font-size: 0.86rem; line-height: 1.55; color: var(--text-primary); margin: 0;">${esc(e.text)}</p>
+          ${e.note ? `<div style="margin-top: 0.55rem; padding: 0.45rem 0.7rem; border-left: 2px solid var(--accent-amber); background: rgba(0,0,0,0.3); font-family: var(--font-mono); font-size: 0.74rem; color: var(--accent-amber);">${esc(e.note)}</div>` : ''}
+        </article>`;
+    }).join('');
+
+    return `
+      <div class="notebook-controls" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
+        <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;">
+          ${chip('act', 'all', 'All Acts', noteAct)}
+          ${acts.map(a => chip('act', a.id, a.id === 'prologue' ? 'Prologue' : a.title.split(':')[0], noteAct)).join('')}
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center; justify-content: space-between;">
+          <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+            ${chip('kind', 'all', 'Everything', noteKind)}
+            ${kinds.map(k => chip('kind', k, LORE_KINDS[k], noteKind)).join('')}
+          </div>
+          <div style="display: flex; gap: 0.35rem; align-items: center;">
+            ${chip('sort', 'story', 'Story order', noteSort)}
+            ${chip('sort', 'found', 'Order found', noteSort)}
+          </div>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);">
+          ${found.length} of ${totalLore} entries filed${newCount ? ` · ${newCount} new` : ''}
+        </div>
+      </div>
+      <div class="notebook-list">${cards || '<p style="color: var(--text-muted); font-family: var(--font-mono); font-size: 0.8rem;">No entries match.</p>'}</div>
+    `;
+  }
+
+  function actTitleOf(id) {
+    return (loreActs().find(a => a.id === id) || {}).title || id;
+  }
+
   function renderTabContent() {
+    if (activeTab === 'notebook') return renderNotebook();
     if (activeTab === 'clues') {
       return `
         <div class="clues-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
@@ -201,7 +309,15 @@ export function renderCaseFile(container) {
         render();
       });
     });
+    const rebind = (attr, set) => container.querySelectorAll(`[data-note-${attr}]`).forEach(btn => {
+      btn.addEventListener('click', () => { set(btn.dataset[`note${attr[0].toUpperCase()}${attr.slice(1)}`]); render(); });
+    });
+    rebind('act', v => { noteAct = v; });
+    rebind('kind', v => { noteKind = v; });
+    rebind('sort', v => { noteSort = v; });
   }
 
   render();
+  // Everything filed so far counts as read once the notebook has been shown.
+  session.setFlag('notebook_viewed', session.getNotebook().length);
 }

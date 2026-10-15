@@ -32,6 +32,7 @@ import { renderAdmin } from './screens/admin.js';
 import { renderCrewProfile } from './screens/crew-profile.js';
 import { renderVoyageHud } from './screens/voyage.js';
 import { renderCaseFile } from './screens/casefile.js';
+import { renderDrills } from './screens/drills.js';
 import { renderContracts } from './screens/contracts.js';
 
 const ROUTE_ROOM = {
@@ -44,6 +45,7 @@ const ROUTE_ROOM = {
   '/quest': 'quest',
   '/demo': 'quest',
   '/learn': 'starmap',
+  '/drills': 'starmap',
   '/inventory': 'cargo',
   '/cargo': 'cargo',
   '/quarters': 'quarters',
@@ -65,6 +67,7 @@ const ROUTE_BACKDROPS = {
   '/quest': '/art/crucible.jpg',
   '/demo': '/art/crucible.jpg',
   '/learn': '/art/starmap.jpg',
+  '/drills': '/art/starmap.jpg',
   '/cargo': '/art/cargo.jpg',
   '/inventory': '/art/cargo.jpg',
   '/quarters': '/art/quarters.jpg',
@@ -82,6 +85,7 @@ const ROUTE_NAV = {
   '/contracts': 'starmap',
   '/quest': 'starmap',
   '/learn': 'learn',
+  '/drills': 'learn',
   '/leaderboard': 'leaderboard',
   '/comms': 'leaderboard',
   '/casefile': 'bridge',
@@ -105,6 +109,7 @@ const ROUTES = {
   '/casefile': { render: renderCaseFile, auth: false },
   '/quest': { render: renderQuest, auth: true },
   '/learn': { render: renderLearn, auth: true },
+  '/drills': { render: renderDrills, auth: true },
   '/leaderboard': { render: renderLeaderboard, auth: false },
   '/comms': { render: renderLeaderboard, auth: false },
   '/cargo': { render: renderInventory, auth: true },
@@ -121,6 +126,7 @@ const ROUTES = {
  */
 const PARAM_ROUTES = [
   { pattern: ['crew', ':playerId'], render: renderCrewProfile, auth: false, nav: 'leaderboard', room: 'comms', backdrop: '/art/comms.jpg' },
+  { pattern: ['drills', ':worldId'], render: renderDrills, auth: true, nav: 'learn', room: 'starmap', backdrop: '/art/starmap.jpg' },
   { pattern: ['learn', ':worldId'], render: renderLearnWorld, auth: true, nav: 'learn', room: 'starmap', backdrop: '/art/crucible.jpg' },
   { pattern: ['learn', ':worldId', ':questId'], render: renderLearnQuest, auth: true, nav: 'learn', room: 'quest', backdrop: '/art/crucible.jpg' }
 ];

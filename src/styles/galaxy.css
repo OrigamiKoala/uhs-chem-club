@@ -1,0 +1,102 @@
+/* ==========================================================================
+   Star map chart — a survey plate. One canvas, one detail plate, a key.
+   Amber marks what is live; there is no glow anywhere in this file.
+   ========================================================================== */
+
+/* A tab that is not showing must really be gone, whatever display the panel carries inline. */
+[data-map-panel][hidden] { display: none !important; }
+
+.galaxy { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.galaxy-stage {
+  position: relative;
+  border: 1px solid var(--border-durasteel);
+  background: var(--plate-000);
+}
+
+.galaxy-canvas {
+  display: block;
+  width: 100%;
+  min-height: 300px;
+  touch-action: none; /* a drag pans the chart; the page scrolls around it */
+  cursor: grab;
+}
+.galaxy-canvas:active { cursor: grabbing; }
+.galaxy-canvas:focus-visible { outline: 1px solid var(--accent-amber); outline-offset: -3px; }
+
+.galaxy-keys {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
+}
+.galaxy-keys .btn-secondary { background: var(--plate-100); min-width: 38px; }
+
+.galaxy-plate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "head head"
+    "name actions"
+    "line actions"
+    "moons actions"
+    "count actions";
+  column-gap: 1rem;
+  row-gap: 0.25rem;
+  padding: 0.9rem 1.1rem;
+}
+.galaxy-plate-head { grid-area: head; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.galaxy-plate-name {
+  grid-area: name;
+  margin: 0;
+  font-family: var(--font-imperial);
+  font-size: 1.25rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+.galaxy-plate-line { grid-area: line; margin: 0; font-size: 0.95rem; line-height: 1.45; color: var(--text-secondary); }
+.galaxy-plate-moons { grid-area: moons; display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.galaxy-plate-count { grid-area: count; font-size: 0.7rem; }
+.galaxy-plate-actions { grid-area: actions; display: flex; flex-direction: column; gap: 0.4rem; align-self: end; min-width: 150px; }
+.galaxy-plate-actions > * { text-align: center; }
+
+/* One small square per quest, as the moons are drawn. */
+.gx-moon { width: 10px; height: 10px; border: 1px dashed var(--text-muted); display: inline-block; }
+.gx-moon.live { border: 1px solid var(--accent-amber); }
+.gx-moon.done { border: 1px solid var(--accent-gold); background: var(--accent-gold); }
+
+.galaxy-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.galaxy-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.gx-key { display: inline-block; width: 10px; height: 10px; border: 1px solid var(--text-muted); border-radius: 50%; }
+.gx-key.open { border-color: var(--accent-amber); }
+.gx-key.done { border-color: var(--accent-gold); background: var(--accent-gold); }
+.gx-key.sealed { opacity: 0.55; }
+.gx-key.lane { width: 18px; height: 0; border: 0; border-top: 1.5px solid var(--accent-amber); border-radius: 0; }
+.gx-key.lane.dashed { border-top: 1px dashed var(--accent-gold); opacity: 0.7; }
+
+.galaxy-list { margin-top: 1rem; }
+.galaxy-list > summary { cursor: pointer; padding: 6px 0; min-height: 34px; }
+.galaxy-list > summary:focus-visible { outline: 1px solid var(--accent-amber); outline-offset: 2px; }
+
+@media (max-width: 620px) {
+  .galaxy-plate {
+    grid-template-columns: 1fr;
+    grid-template-areas: "head" "name" "line" "moons" "count" "actions";
+  }
+  .galaxy-plate-actions { flex-direction: row; flex-wrap: wrap; min-width: 0; }
+  .galaxy-plate-actions > * { flex: 1 1 40%; }
+  .galaxy-canvas { min-height: 280px; }
+}

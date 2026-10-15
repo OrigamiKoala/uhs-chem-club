@@ -14,10 +14,12 @@ import { renderGardensMap } from "../ui/gardens-map.js";
 import { QUEST1_STORY } from "../story/quest1.js";
 import { tierManager } from "../three/tier.js";
 import { WORLDS } from "../learn/curriculum.js";
-import { worldStatus, worldProgress } from "../learn/progress.js";
+import { worldStatus, worldProgress, isQuestComplete } from "../learn/progress.js";
 import { canWalk } from "../learn/worlds3d.js";
 import { practiceKey, bindPracticeKeys } from "./learn-world.js";
 import { openWorldStoryModal, openCampaignStoryModal } from "../story/story-modal.js";
+import { mountGalaxyMap } from "../ui/galaxy-map.js";
+import { ACTS, getEpisode } from "../story/saga.js";
 
 const SECTORS = [
   {
@@ -73,9 +75,13 @@ function tabRow(active) {
         <button type="button" class="map-tab${active === "learn" ? " active" : ""}" data-map-tab="learn" role="tab" aria-selected="${active === "learn"}">Story</button>
         <button type="button" class="map-tab${active === "sectors" ? " active" : ""}" data-map-tab="sectors" role="tab" aria-selected="${active === "sectors"}">Contracts</button>
       </div>
-      <button type="button" class="btn-secondary quest-btn-sm m-tap" id="campaign-story-briefing-btn" title="Main Briefing" style="font-size: 0.72rem;">
-        Main Briefing
-      </button>
+      <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+        <a href="#/drills" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; text-decoration: none;">Drill Deck</a>
+        <a href="#/casefile" class="btn-secondary quest-btn-sm m-tap" style="font-size: 0.72rem; text-decoration: none;">Notebook</a>
+        <button type="button" class="btn-secondary quest-btn-sm m-tap" id="campaign-story-briefing-btn" title="Main Briefing" style="font-size: 0.72rem;">
+          Main Briefing
+        </button>
+      </div>
     </div>
   `;
 }
@@ -120,6 +126,75 @@ function learnPanel() {
   `;
 }
 
+/**
+ * The Story tab: a chart of every world, with the plain list kept underneath it
+ * for anyone who would rather read than aim (and for a screen reader).
+ */
+function galaxyPanel() {
+  return `
+    <div data-galaxy-root></div>
+    <details class="galaxy-list">
+      <summary class="eyebrow">World list</summary>
+      ${learnPanel()}
+    </details>
+  `;
+}
+
+/** What the chart is told about each system. Everything is read, nothing is made up. */
+function galaxyNodes(cleared, isComplete) {
+  const erebus = {
+    id: "erebus",
+    code: "SEC 01",
+    name: "Erebus",
+    place: "Desert world",
+    line: "Find what pulls. Draw the line.",
+    state: isComplete ? "complete" : "open",
+    act: "act1",
+    quests: [{ done: isComplete, live: true, title: "The Charge Gardens" }],
+    progressText: `${cleared} / ${TOTAL_STAGES} pylons lit`,
+    actions: [
+      { id: "erebus-enter", label: isComplete ? "Replay" : cleared > 0 ? "Continue" : "Launch", primary: true },
+      { id: "briefing", label: "Briefing" }
+    ]
+  };
+  const learn = WORLDS.map(w => {
+    const st = worldStatus(w);
+    const prog = worldProgress(w);
+    const enterable = st === "open" || st === "complete";
+    const live = w.quests.some(q => q.status === "live");
+    const actions = [];
+    if (enterable) {
+      actions.push({
+        label: canWalk(w.id) ? `Enter ${w.world}` : "Enter",
+        href: `#/learn/${w.id}`, primary: true, cls: "learn-enter-btn", worldId: w.id
+      });
+    }
+    actions.push({ id: "briefing", label: "Briefing" });
+    if (live) actions.push({ label: "Drills", href: `#/drills/${w.id}` });
+    return {
+      id: w.id,
+      code: w.code,
+      name: w.world,
+      place: w.place,
+      line: w.line,
+      state: st,
+      act: getEpisode(w.id)?.act || "act1",
+      quests: w.quests.map(q => ({
+        done: q.status === "live" && isQuestComplete(q),
+        live: q.status === "live",
+        title: q.title
+      })),
+      progressText: prog.liveTotal
+        ? `${prog.questsComplete} / ${prog.liveTotal} benches complete`
+        : `${w.questCount} quests charted`,
+      actions
+    };
+  });
+  return [erebus, ...learn];
+}
+
+let activeGalaxy = null;
+
 /** Wire the two tabs. Switching panels changes nothing about either road. */
 function bindTabs(container) {
   // The Learn panel is drawn on both tiers, so its Problems keys are wired here
@@ -151,6 +226,7 @@ let starmapHoloCloseListener = null;
 let starmapHoloOpenListener = null;
 
 export function renderStarMap(container) {
+  if (activeGalaxy) { activeGalaxy.dispose(); activeGalaxy = null; }
   if (starmapHoloCloseListener) {
     window.removeEventListener("starmap-holo:close", starmapHoloCloseListener);
     starmapHoloCloseListener = null;
@@ -196,9 +272,9 @@ export function renderStarMap(container) {
           <button type="button" id="close-terminal-btn" class="terminal-close-btn">CLOSE</button>
         </div>
 
-        ${tabRow("sectors")}
+        ${tabRow("learn")}
 
-        <div data-map-panel="sectors">
+        <div data-map-panel="sectors" hidden>
 
         <!-- Integrated Active Quest: Sector 01 (The Charge Gardens) -->
         <section class="glass-panel" style="margin-bottom: 1.2rem; padding: 1.1rem;">
@@ -239,8 +315,8 @@ export function renderStarMap(container) {
 
         </div><!-- /sectors -->
 
-        <div data-map-panel="learn" hidden>
-          ${learnPanel()}
+        <div data-map-panel="learn">
+          ${galaxyPanel()}
         </div>
       </div>
     `;
@@ -280,9 +356,9 @@ export function renderStarMap(container) {
             : `<a href="#/register" class="btn-primary" style="text-decoration: none;">Create Account</a>`
         })}
 
-        ${tabRow("sectors")}
+        ${tabRow("learn")}
 
-        <div class="m-grid-1 sector-grid" data-map-panel="sectors" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div class="m-grid-1 sector-grid" data-map-panel="sectors" hidden style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
           ${SECTORS.map(s => {
             const isLive = s.status === "live";
             return `
@@ -318,13 +394,26 @@ export function renderStarMap(container) {
           }).join("")}
         </div>
 
-        <div data-map-panel="learn" hidden>
-          ${learnPanel()}
+        <div data-map-panel="learn">
+          ${galaxyPanel()}
         </div>
       </div>
     `;
 
     bindTabs(container);
+  }
+
+  const galaxyRoot = container.querySelector("[data-galaxy-root]");
+  if (galaxyRoot) {
+    activeGalaxy = mountGalaxyMap(galaxyRoot, {
+      nodes: galaxyNodes(cleared, isComplete),
+      acts: ACTS.map(a => ({ id: a.id, label: a.title.split(":")[0] })),
+      reducedMotion: Boolean(session.reduceMotion),
+      onAction: (id, node) => {
+        if (id === "briefing") openWorldStoryModal(node.id);
+        else if (id === "erebus-enter") handleSector01Enter();
+      }
+    });
   }
 
   async function handleSector01Enter() {

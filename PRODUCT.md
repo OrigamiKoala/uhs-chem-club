@@ -71,13 +71,19 @@ leaderboards, a shared season, and a quartermaster who talks to you in character
   the idea the player just worked out. Capped at three sentences and checked by
   `verify:quest` / `verify:learn`. The gameplay copy around it stays in plain language:
   the card is where the vocabulary lands, not the prompt.
-- **Practice problems close a Learn world.** Five per built quest, gathered and shown at
-  the end of the WORLD rather than the end of a quest. They are **optional and skippable
-  at every point**, they pay nothing, they gate nothing — every built world is open from the
-  start, and inside a world the next bench opens on the last one's completion whether or
-  not a question is answered — and they come back for ever
-  through a **Problems** key beside a finished world on the star map and on the Learn
-  road. They are a 2D overlay on every tier.
+- **Practice problems live in one place, the Drill Deck.** Five per built quest, pooled
+  across every built world and asked in rounds: a Daily Set, a Quick Run, a Timed Round and
+  Weak Spots, with stars, a day streak, per-world mastery tiers and a few cosmetic
+  commendations. They are **optional and skippable at every point**, they **pay no XP and
+  never reach Standings**, they gate nothing — every built world is open from the start, and
+  its questions are open in the deck from the start too — and a finished world's **Problems**
+  key leads there. They are a 2D screen on every tier.
+- **The story is kept in one place, the Case File's Notebook.** Every briefing,
+  transmission and piece of evidence the player has met files itself there as it is seen;
+  nothing is written by hand, and skipping a briefing does not lose it.
+- **A player's record follows them.** Everything a player has done that is not XP is held in
+  the Google Sheet as the master copy and mirrored in localStorage, which the game plays
+  from so nothing waits on the network; signing in on another device restores it.
 - **Learn track:** fourteen worlds in road order — Tallow (atoms and the mole), Lanternfall (light
   and electrons), Ligar (bonding), Bellows (gases), Ember Reach
   (thermodynamics), Mirrowen (states of matter), Kettle (stoichiometry and reactions),

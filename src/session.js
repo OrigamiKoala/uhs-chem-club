@@ -30,6 +30,11 @@ function normalizeTeamId(tid) {
 const COMMENDATIONS_KEY = 'avalon_commendations';
 const LOADOUT_KEY = 'avalon_loadout';
 const MARKS_KEY = 'avalon_clean_stages';
+const NOTEBOOK_KEY = 'avalon_notebook';
+const PRACTICE_KEY = 'avalon_practice';
+const STATE_META_KEY = 'avalon_state_meta';
+/** Per-device UI toggles: never synced, or closing a hologram here would close it everywhere. */
+const DEVICE_FLAG = /HoloClosed$/;
 
 export {
   MAX_LEVEL,
@@ -43,6 +48,8 @@ import { levelForXp, levelProgress, levelTitle } from './progression/levels.js';
 import { progressionFeed } from './progression/feed.js';
 import { evaluateCommendations } from './progression/commendations.js';
 import { nextLevelRequisition } from './progression/requisitions.js';
+import { mergeDocs, docsEqual, STATE_VERSION } from './shared/statemerge.js';
+import { loreIdsForClue } from './story/lore.js';
 
 
 function normalizeTeamObj(t) {
@@ -90,6 +97,14 @@ class SessionManager {
     // Learn-track progress, keyed "<worldId>/<questId>". Deliberately NOT part of
     // `progress`, which the server pays XP against — the Learn track pays none.
     this.learn = { saga: { beatsSeen: [], clues: [] } };
+    // Lore the player has seen (ids into the story registry, in the order they
+    // were met) and drill results. Both are synced; see applyRemoteState.
+    this.notebook = [];
+    this.practice = {};
+    // When a 'latest'-mode section (loadout, settings) was last changed here.
+    this.stateMeta = { loadoutAt: 0, settingsAt: 0 };
+    // sync.js sets this; the session never imports the network layer.
+    this.stateDirtyHook = null;
     this.listeners = new Set();
 
     try {
@@ -120,7 +135,15 @@ class SessionManager {
       if (loadout) this.loadout = { ...this.loadout, ...JSON.parse(loadout) };
       const marks = localStorage.getItem(MARKS_KEY);
       if (marks) this.cleanStages = JSON.parse(marks) || [];
+      const nb = localStorage.getItem(NOTEBOOK_KEY);
+      if (nb) this.notebook = JSON.parse(nb) || [];
+      const pr = localStorage.getItem(PRACTICE_KEY);
+      if (pr) this.practice = JSON.parse(pr) || {};
+      const meta = localStorage.getItem(STATE_META_KEY);
+      if (meta) this.stateMeta = { ...this.stateMeta, ...JSON.parse(meta) };
     } catch (e) {}
+    if (!Array.isArray(this.notebook)) this.notebook = [];
+    if (!this.practice || typeof this.practice !== 'object') this.practice = {};
 
     // Restore cached config & teams
     try {
@@ -284,6 +307,12 @@ class SessionManager {
       }
     }
 
+    // Learn rows and the synced-state document ride on the same payloads
+    // (bootstrap, player/me, login's follow-up read). Both are UNIONED in, never
+    // laid over what this device already holds.
+    if (Array.isArray(data.learn)) this.setLearnState(data.learn);
+    if (data.state) this.applyRemoteState(data.state);
+
     this.saveSession();
     this.saveProgression();
     this.checkCommendations();
@@ -314,15 +343,24 @@ class SessionManager {
       localStorage.setItem(LOADOUT_KEY, JSON.stringify(this.loadout || {}));
       localStorage.setItem(MARKS_KEY, JSON.stringify(this.cleanStages || []));
     } catch (e) {}
+    this.markStateDirty();
+  }
+
+  /** Stamp a deliberate loadout change, so the newest choice wins across devices. */
+  touchLoadout() {
+    this.stateMeta.loadoutAt = Date.now();
+    this.saveStateMeta();
   }
 
   setLoadout(updates = {}) {
+    this.touchLoadout();
     this.loadout = { ...(this.loadout || {}), ...updates };
     this.saveProgression();
     this.notify();
   }
 
   pinPlate(plateId) {
+    this.touchLoadout();
     if (!this.loadout) this.loadout = {};
     if (!Array.isArray(this.loadout.pinnedPlates)) this.loadout.pinnedPlates = [];
     if (this.loadout.pinnedPlates.includes(plateId)) return;
@@ -335,6 +373,7 @@ class SessionManager {
   }
 
   unpinPlate(plateId) {
+    this.touchLoadout();
     if (!this.loadout || !Array.isArray(this.loadout.pinnedPlates)) return;
     this.loadout.pinnedPlates = this.loadout.pinnedPlates.filter(id => id !== plateId);
     this.saveProgression();
@@ -361,6 +400,7 @@ class SessionManager {
       maxCleanStreak: this.maxCleanStreak || 0,
       cleanStages: this.cleanStages || [],
       learn: this.learn || {},
+      practice: this.practice || {},
       flags: this.flags || {},
       teamId: this.teamId,
       role: this.player?.role,
@@ -465,12 +505,18 @@ class SessionManager {
   setReduceMotion(pref) {
     this.reduceMotion = Boolean(pref);
     localStorage.setItem(MOTION_KEY, String(this.reduceMotion));
+    this.stateMeta.settingsAt = Date.now();
+    this.saveStateMeta();
+    this.markStateDirty();
     this.notify();
   }
 
   setSound(updates = {}) {
     this.sound = { ...this.sound, ...updates };
     try { localStorage.setItem(SOUND_KEY, JSON.stringify(this.sound)); } catch (e) {}
+    this.stateMeta.settingsAt = Date.now();
+    this.saveStateMeta();
+    this.markStateDirty();
     this.notify();
   }
 
@@ -491,6 +537,7 @@ class SessionManager {
 
   saveLearn() {
     try { localStorage.setItem(LEARN_KEY, JSON.stringify(this.learn)); } catch (e) {}
+    this.markStateDirty();
   }
 
   recordLearnStage(worldId, questId, stageIndex) {
@@ -528,6 +575,7 @@ class SessionManager {
     if (!saga.clues.includes(clueId)) {
       saga.clues.push(clueId);
       this.saveLearn();
+      this.recordNotebookMany(loreIdsForClue(clueId));
       this.notify();
     }
   }
@@ -543,6 +591,7 @@ class SessionManager {
     if (!saga.beatsSeen.includes(beatId)) {
       saga.beatsSeen.push(beatId);
       this.saveLearn();
+      this.recordNotebook(`spine:${beatId}`);
       this.notify();
     }
   }
@@ -610,6 +659,195 @@ class SessionManager {
     this.notify();
   }
 
+  /* ---------------------------------------------------------------
+     NOTEBOOK & PRACTICE
+     --------------------------------------------------------------- */
+  /** Ids of the lore entries the player has met, in the order they met them. */
+  getNotebook() {
+    return this.notebook;
+  }
+
+  hasNotebookEntry(id) {
+    return this.notebook.includes(id);
+  }
+
+  /** File a lore entry. Idempotent; returns true only the first time. */
+  recordNotebook(id) {
+    if (!id || this.notebook.includes(id)) return false;
+    this.notebook.push(id);
+    try { localStorage.setItem(NOTEBOOK_KEY, JSON.stringify(this.notebook)); } catch (e) {}
+    this.markStateDirty();
+    this.notifyNotebook(1);
+    this.notify();
+    return true;
+  }
+
+  /** File several entries at once; returns how many were new. */
+  recordNotebookMany(ids) {
+    let added = 0;
+    for (const id of ids || []) {
+      if (id && !this.notebook.includes(id)) { this.notebook.push(id); added++; }
+    }
+    if (added) {
+      try { localStorage.setItem(NOTEBOOK_KEY, JSON.stringify(this.notebook)); } catch (e) {}
+      this.markStateDirty();
+      this.notifyNotebook(added);
+      this.notify();
+    }
+    return added;
+  }
+
+  /** The notebook grew. main.js listens and says so, once, however many entries. */
+  notifyNotebook(count) {
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+      try { window.dispatchEvent(new CustomEvent('notebook:added', { detail: { count } })); } catch (e) {}
+    }
+  }
+
+  savePractice() {
+    try { localStorage.setItem(PRACTICE_KEY, JSON.stringify(this.practice)); } catch (e) {}
+    this.markStateDirty();
+    this.notify();
+  }
+
+  /* ---------------------------------------------------------------
+     SYNCED STATE
+     The Google Sheet is the master copy of everything below; localStorage is
+     the cache the game actually plays from. `sync.js` pushes this document
+     after a change and hands the server's copy back to applyRemoteState.
+     --------------------------------------------------------------- */
+  saveStateMeta() {
+    try { localStorage.setItem(STATE_META_KEY, JSON.stringify(this.stateMeta)); } catch (e) {}
+  }
+
+  markStateDirty() {
+    if (typeof this.stateDirtyHook === 'function') {
+      try { this.stateDirtyHook(); } catch (e) {}
+    }
+  }
+
+  /** This device's state as one mergeable document. */
+  buildStateDoc() {
+    const flags = {};
+    for (const [k, v] of Object.entries(this.flags || {})) {
+      if (!SESSION_FLAGS.has(k) && !DEVICE_FLAG.test(k)) flags[k] = v;
+    }
+    const learn = {};
+    for (const [k, v] of Object.entries(this.learn || {})) {
+      if (k === 'saga' || !v || typeof v !== 'object') continue;
+      learn[k] = { stages: (v.stages || []).filter(n => typeof n === 'number'), completedAt: v.completedAt || '' };
+    }
+    const saga = this.getSaga();
+    const at = Date.now();
+    return {
+      v: STATE_VERSION,
+      sections: {
+        flags: { at, mode: 'union', v: flags },
+        learn: { at, mode: 'union', v: learn },
+        saga: { at, mode: 'union', v: { beatsSeen: saga.beatsSeen.slice(), clues: saga.clues.slice() } },
+        notebook: { at, mode: 'union', v: this.notebook.slice() },
+        practice: { at, mode: 'union', v: this.practice },
+        progression: { at, mode: 'union', v: { commendations: (this.commendations || []).slice(), cleanStages: (this.cleanStages || []).slice() } },
+        loadout: { at: this.stateMeta.loadoutAt || 0, mode: 'latest', v: this.loadout || {} },
+        settings: { at: this.stateMeta.settingsAt || 0, mode: 'latest', v: { sound: this.sound, reduceMotion: this.reduceMotion } }
+      }
+    };
+  }
+
+  /** Lay a merged document over this device's state and write it to localStorage. */
+  applyStateDoc(doc) {
+    const sec = (doc && doc.sections) || {};
+    const val = n => (sec[n] ? sec[n].v : undefined);
+
+    const flags = val('flags');
+    if (flags && typeof flags === 'object') {
+      const synced = {};
+      for (const [k, v] of Object.entries(flags)) {
+        if (!SESSION_FLAGS.has(k) && !DEVICE_FLAG.test(k)) synced[k] = v;
+      }
+      this.flags = { ...this.flags, ...synced };
+      try { localStorage.setItem(FLAGS_KEY, JSON.stringify(this.flags)); } catch (e) {}
+    }
+
+    const learn = val('learn');
+    if (learn && typeof learn === 'object') {
+      for (const [k, rec] of Object.entries(learn)) {
+        if (!rec || typeof rec !== 'object') continue;
+        const mine = this.learn[k] || { stages: [], completedAt: null };
+        for (const n of rec.stages || []) if (!mine.stages.includes(n)) mine.stages.push(n);
+        if (rec.completedAt && !mine.completedAt) mine.completedAt = rec.completedAt;
+        this.learn[k] = mine;
+      }
+    }
+    const saga = val('saga');
+    if (saga && typeof saga === 'object') {
+      const mine = this.getSaga();
+      for (const b of saga.beatsSeen || []) if (!mine.beatsSeen.includes(b)) mine.beatsSeen.push(b);
+      for (const c of saga.clues || []) if (!mine.clues.includes(c)) mine.clues.push(c);
+    }
+    try { localStorage.setItem(LEARN_KEY, JSON.stringify(this.learn)); } catch (e) {}
+
+    const nb = val('notebook');
+    if (Array.isArray(nb)) {
+      for (const id of nb) if (!this.notebook.includes(id)) this.notebook.push(id);
+      try { localStorage.setItem(NOTEBOOK_KEY, JSON.stringify(this.notebook)); } catch (e) {}
+    }
+
+    const pr = val('practice');
+    if (pr && typeof pr === 'object') {
+      this.practice = pr;
+      try { localStorage.setItem(PRACTICE_KEY, JSON.stringify(this.practice)); } catch (e) {}
+    }
+
+    const prog = val('progression');
+    if (prog && typeof prog === 'object') {
+      this.commendations = Array.from(new Set([...(this.commendations || []), ...(prog.commendations || [])]));
+      const marks = new Set([...(this.cleanStages || []), ...(prog.cleanStages || [])]);
+      this.cleanStages = Array.from(marks).sort((a, b) => a - b);
+    }
+
+    if (sec.loadout && (sec.loadout.at || 0) >= (this.stateMeta.loadoutAt || 0) && sec.loadout.v && typeof sec.loadout.v === 'object') {
+      this.loadout = { ...sec.loadout.v };
+      this.stateMeta.loadoutAt = sec.loadout.at;
+    }
+    if (sec.settings && (sec.settings.at || 0) >= (this.stateMeta.settingsAt || 0) && sec.settings.v) {
+      const st = sec.settings.v;
+      if (st.sound && typeof st.sound === 'object') {
+        this.sound = { ...this.sound, ...st.sound };
+        try { localStorage.setItem(SOUND_KEY, JSON.stringify(this.sound)); } catch (e) {}
+      }
+      if (typeof st.reduceMotion === 'boolean') {
+        this.reduceMotion = st.reduceMotion;
+        try { localStorage.setItem(MOTION_KEY, String(this.reduceMotion)); } catch (e) {}
+      }
+      this.stateMeta.settingsAt = sec.settings.at;
+    }
+    this.saveStateMeta();
+    try {
+      localStorage.setItem(COMMENDATIONS_KEY, JSON.stringify(this.commendations || []));
+      localStorage.setItem(LOADOUT_KEY, JSON.stringify(this.loadout || {}));
+      localStorage.setItem(MARKS_KEY, JSON.stringify(this.cleanStages || []));
+    } catch (e) {}
+  }
+
+  /**
+   * The server's copy arrived. Merge it with ours, adopt the result, and if we
+   * hold anything the server lacked, ask for a push. Returns the merged doc.
+   */
+  applyRemoteState(remote) {
+    if (!remote || typeof remote !== 'object' || !remote.sections) return null;
+    // Work on copies. The merge hands back parts of its inputs as they are, so without
+    // this a later edit to the notebook or practice record would also edit
+    // `lastRemoteState`, and the push that edit needs would be skipped as "unchanged".
+    const copy = JSON.parse(JSON.stringify(remote));
+    const merged = mergeDocs(this.buildStateDoc(), copy);
+    this.applyStateDoc(merged);
+    this.lastRemoteState = JSON.parse(JSON.stringify(remote));
+    if (!docsEqual(merged, remote)) this.markStateDirty();
+    this.notify();
+    return merged;
+  }
+
   setFlag(key, val) {
     if (SESSION_FLAGS.has(key)) {
       this.sessionFlags[key] = val;
@@ -623,6 +861,7 @@ class SessionManager {
     }
     this.flags[key] = val;
     try { localStorage.setItem(FLAGS_KEY, JSON.stringify(this.flags)); } catch (e) {}
+    if (!DEVICE_FLAG.test(key)) this.markStateDirty();
     this.notify();
   }
 
@@ -660,6 +899,21 @@ class SessionManager {
     localStorage.removeItem('avalon_q1_stage_reached');
     this.learn = { saga: { beatsSeen: [], clues: [] } };
     localStorage.removeItem(LEARN_KEY);
+    // Everything else that belongs to the signed-in player goes too: a shared
+    // school computer must not hand one student's flags, notebook or practice
+    // record to the next. The server holds the master copy and restores it at
+    // the next sign-in.
+    this.flags = { sessionZeroDone: false };
+    this.notebook = [];
+    this.practice = {};
+    this.commendations = [];
+    this.cleanStages = [];
+    this.loadout = {};
+    this.stateMeta = { loadoutAt: 0, settingsAt: 0 };
+    this.lastRemoteState = null;
+    for (const k of [FLAGS_KEY, NOTEBOOK_KEY, PRACTICE_KEY, STATE_META_KEY, COMMENDATIONS_KEY, LOADOUT_KEY, MARKS_KEY]) {
+      try { localStorage.removeItem(k); } catch (e) {}
+    }
     this.notify();
   }
 }

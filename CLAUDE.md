@@ -149,7 +149,7 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
 ## Build and Run
 - `npm run dev` — Vite dev server on port 3000 with the API handler mounted as middleware.
 - `npm run build` — production assets into `dist/`.
-- `npm run verify` — `verify:quest` + `verify:console` + `verify:learn` + `verify:run` + `verify:geometry`
+- `npm run verify` — `verify:quest` + `verify:console` + `verify:learn` + `verify:story` + `verify:sync` + `verify:drills` + `verify:galaxy` + `verify:run` + `verify:geometry`
   + `verify:media` + `verify:flows` + `verify:progression` + `verify:ship` + `verify:voyage` + `verify:tallow`
   + `verify:ligar` + `verify:lanternfall` + `verify:bellows` + `verify:bench` + `verify:holo` + `verify:normals` + `build`. Run this before shipping. **The build
   empties `dist/`, which is gitignored** — anything placed only in `dist/` (reference art
@@ -343,6 +343,19 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   reached) and requires only lamps to be lit (thirty lamps, three real lights). A sign must read
   `Bench N - <what it teaches>`, six words at most, sharing a word with its quest's title (which
   is why bench three's sign reads `Ideal Gas Law` and not `The Ideal Gas Law`).
+- `npm run verify:sync` — the Sheet-is-master, localStorage-is-cache contract: the merge
+  (`src/shared/statemerge.js`) is commutative, associative and idempotent and loses nothing;
+  `apps-script/PlayerState.gs` is EVALUATED in a sandbox and must merge exactly as the client
+  does; the dev proxy serves and merges `state/get` / `state/save`; a session round-trips across
+  two "devices" with nothing dropped and no push loop; sign-out wipes per-player state; nothing
+  in the sync path touches the XP rails.
+- `npm run verify:drills` — the Drill Deck's pure half: 180 questions pool with unique stable
+  ids that match what the mastery map counts, rounds never repeat and lean toward weak spots,
+  the Daily Set is the same for everyone on a day, streak/mastery/star rules, the five drill
+  commendations, and no XP rails.
+- `npm run verify:galaxy` — the star map's chart is laid out (no two worlds under 60 units apart,
+  none off the edge or inside the core, rim to core in road order), hit-tested at the phone and
+  wide sizes, DRAWN against a recording context at three zooms with no NaN, and draws no glow.
 - `npm run verify:holo` — one owner for the `X` key, and the comms board never invents a
   guild score.
 - `npm run verify:normals` — a dome put through both `heightToNormal`s must lean away from
@@ -373,6 +386,10 @@ only (`.holo-card`, `.stage-prompt-card`) — and `--radius-full` is the one non
   routes (`/learn/:worldId`, `/learn/:worldId/:questId`), matched only after an exact hit
   fails and handed to the render function as `params`; leaving a Learn quest route calls
   `disposeLearnQuest()`.
+- `sync.js`, `shared/statemerge.js` — **the Sheet is the master copy of everything a player has
+  done that is not XP, and localStorage is the cache the game plays from** (see "Synced player
+  state" below). `story/lore.js` — the registry behind the lore notebook. `learn/drills.js` +
+  `screens/drills.js` — the Drill Deck. `ui/galaxy-map.js` — the star map's chart.
 - `session.js` — token, player, team, XP, inventory, progress, flags (`hasFlag`, `setFlag`) and
   Learn-track progress (`learn`, `recordLearnStage`, `markLearnQuestComplete`, `setLearnState`
   — kept apart from `progress` because that is what the server pays XP against), persisted in
@@ -530,13 +547,62 @@ with a loose 150/min per IP to blunt a spray across many accounts.
 completion), `Scoring.gs` (normalized leaderboards, level curve, level titles),
 `Items.gs`, `Events.gs`, `Main.gs` (router + `setup()` for one-click sheet init).
 
-The Google Sheets database ("Avalon DB") uses 6 active tabs in `DB_SCHEMA`:
-`Config`, `Players`, `Progress`, `LearnProgress`, `Submissions`, `Inventory`.
+The Google Sheets database ("Avalon DB") uses 7 active tabs in `DB_SCHEMA`:
+`Config`, `Players`, `Progress`, `LearnProgress`, `PlayerState`, `Submissions`, `Inventory`.
+(`PlayerState` is created on first use by `getSheet_`, so an existing deployment needs only a
+redeploy of the Apps Script, not a manual sheet edit.)
 Static tables (`Teams`, `Quests`, `QuestStages`, `Items`, `Events`) are code constants
 served in-memory to prevent heavy sheet read timeouts. Ephemeral logs (`Sessions`, `EventLog`,
 `AuditLog`, `NameHistory`) are dropped from sheet writes; token revocation is cache-backed.
 `Progress` records are initialized on `quest/start` upon entering Sector 01, and are upserted
 idempotently during `quest/grade` and `quest/complete`.
+
+### Synced player state — the Sheet is the master, localStorage is the cache
+
+Anything a player has done that is not XP (story flags, the lore notebook, practice results,
+loadout, clean marks, commendations, settings, and a copy of Learn progress and the saga)
+lives in ONE document per player: `{ v: 1, sections: { <name>: { at, mode, v } } }`, held in
+the Sheet's `PlayerState` tab (`apps-script/PlayerState.gs`, one row, one JSON cell, 42,000
+characters at most) and mirrored in localStorage. **The game plays from localStorage and
+never waits for the Sheet**: `session.js` restores everything synchronously at boot, and
+`sync.js` reconciles in the background.
+
+- **Pull.** The server's copy rides on `Players.getMe`, so it arrives on `bootstrap`,
+  `player/me` and login's follow-up read in the same round trip that restores XP.
+  `session.setUserData` hands it to `applyRemoteState`, which MERGES it with the device and
+  adopts the result. Returning to a hidden tab pulls again (throttled to a minute), so a
+  second device's progress shows up. `state/get` exists for that.
+- **Push.** Every mutator (`setFlag`, `saveLearn`, `saveProgression`, `recordNotebook`,
+  `savePractice`, `setSound`, `setReduceMotion`, loadout changes) calls `markStateDirty`;
+  2.5 s later `sync.js` posts the whole document to `state/save` and adopts the server's
+  merged answer. It skips the push when the device already equals the server's last copy,
+  retries with backoff on a failure, flushes on `pagehide` with `keepalive`, and **never
+  surfaces an error or touches the session**: an unreachable backend says nothing about the
+  token (see "Staying signed in").
+- **The merge is the contract** (`src/shared/statemerge.js`, with a line-for-line copy in
+  `PlayerState.gs` that `verify:sync` evaluates and compares). `union` sections (what a player
+  DID) never lose anything: arrays union, booleans OR, numbers take the larger, strings the
+  larger. `latest` sections (what a player CHOSE: loadout, settings) take the newer whole by
+  `at`, because a union of two loadouts is a loadout nobody picked. It is commutative,
+  associative and idempotent, so devices can push in any order and converge. The server
+  merges too, so two devices saving at once cannot overwrite each other. Consequence: counters
+  such as a question's right/missed tally merge by MAX, so two devices that both answer offline
+  can undercount by the overlap; practice stats are a game, not a ledger.
+- **Per-device UI toggles never travel** (`/HoloClosed$/` flags). Arrays compare as sets
+  (`docsEqual`), because order is display, not data; without that two devices disagreeing on
+  the order of a list push to each other for ever.
+- **Sign-out wipes per-player state from the device** (`session.clear()`): flags, notebook,
+  practice, commendations, loadout, marks and learn, so a shared school computer never hands one
+  student's record to the next. The server restores it at the next sign-in. The cost: two
+  consecutive `UNAUTHORIZED` replies sign the player out and drop anything not yet pushed (a
+  window of a few seconds).
+- **XP, quest progress, inventory and the roster are NOT in the document**: the server stays
+  authoritative on them through their own routes and tabs. The state document carries no XP and
+  `verify:sync` fails the build if the sync path touches the XP rails.
+- **Deploying:** push `apps-script/` (`npm run deploy:backend`) and redeploy a new Web-app
+  version. `PlayerState` is created on first use; nothing else to do in the Sheet. Until the
+  backend is redeployed, `state/get` / `state/save` answer `NO_ROUTE` and the game simply keeps
+  playing from localStorage.
 
 ## Learn track — fourteen worlds, one per topic
 
@@ -556,22 +622,33 @@ road order (renumbered on 2026-10-10, pre-launch, so no stored progress was orph
 stages, its 3D scene, its inputs and its grading. The plan and the authoring steps live in
 `docs/plans/learn-track.md`.
 
-**Every world ends on a set of practice problems** (`src/learn/practice.js`): five per
-built quest, gathered across the whole unit and shown once every bench in it has been
-worked. They are optional, skippable a question at a time or all at once, and they GATE
-NOTHING — every built world is already open, and inside a world the next bench opens on
-the last one's completion whether or not a single question is answered. They are offered once automatically (a `learnPracticeOffered:<worldId>` session
-flag) and come back for ever through a **Problems** key beside a finished world on the
-star map, on the Learn road, in the world brief and in the walk HUD. They are a **2D
-overlay on every tier**, including T4: this is the player's own revision, not a
-transmission, and no instrument in the fiction asks multiple-choice questions.
-`verify:learn` asserts five well-formed problems per built quest, that each names an
-answer that is one of its own options, that each carries an explanation, and that nothing
-is offered on an unfinished world. **Leaving the whole set is one press, in the corner.**
-The card carries a `Close` key in its top-right beside the `n / total` tag and a `Skip
-All` key in the row; both call the same `finish()`, and `Skip This One` is the only key
-that advances a single question. A player who wants none of it must never have to press
-Skip five times to escape something that gates nothing.
+**Every built quest ends on five practice problems, and they are all asked in ONE place: the
+Drill Deck** (`#/drills`, `#/drills/:worldId`; `screens/drills.js` over the pure
+`learn/drills.js`). The problems still live in each quest module (`export const PRACTICE`);
+`practice.js` is now only the world-level bookkeeping (`worldHasPractice`,
+`practiceOfferedFlag`, `openWorldPractice`, which is a door to the deck with that world
+chosen). The old modal per world is gone. They are optional and they GATE NOTHING: every built
+world's questions are open in the deck from the start, finished or not, and the world's
+"Problems" key, the Learn road and the star map all lead there. When a world is first
+finished a single toast says its questions are open (`learnPracticeOffered:<worldId>`, said
+once). The deck is a 2D screen on every tier, including T4: this is the player's own revision,
+not a transmission, and no instrument in the fiction asks multiple-choice questions.
+
+The deck is **gamified without XP**: a **Daily Set** (five questions, the same for everyone
+that day, seeded by the date), a **Quick Run** (ten, from every world or one, drawn
+without repeats and weighted toward weak spots, earning up to three stars), a **Timed Round**
+(90 seconds on an answer clock that pauses while you read the explanation, three misses ends
+it), **Weak Spots** (what you have missed at least as often as got right), a per-world
+**mastery map** (a question is mastered when right twice and right more often than wrong;
+Bronze/Silver/Gold at 25/60/90 per cent), a **day streak**, and five cosmetic commendations
+(Warm-Up, Clean Sheet, Daily Discipline, Quick Hands, Gold Standard). Question ids are
+`<questId>#<n>`, so **reordering a quest's `PRACTICE` array re-points every stored result**:
+append, never reorder. **Rewards are cosmetic only: a drill pays no XP, never reaches
+Standings, and `verify:learn` and `verify:drills` fail the build if `src/learn` or the deck
+call the XP rails.** Leaving a round is one press (`Leave`, or `End Round` in a timed round),
+and answers already given still count toward mastery. `verify:learn` asserts five
+well-formed problems per built quest, that each names an answer that is one of its own
+options, and that each carries an explanation; `verify:drills` holds the rest.
 
 **The rule that outranks the rest: the Learn track pays no XP and never reaches the
 leaderboard.** Nothing in `src/learn/` or the three learn screens may call `session.addXp`,
@@ -2307,15 +2384,29 @@ is diagnosed as `TWO GIVERS` rather than falling through to a generic miss.
 
 Nav labels match page titles exactly: BRIDGE, STAR MAP, LEARN, STANDINGS, INVENTORY, CREW.
 
-**The Star Map charts two roads.** `screens/starmap.js` carries a two-tab row in both the
-T4 holo-table and the 2D page: `Active Quests` (the four campaign sectors, unchanged) and
-`Learn Quests` (the fourteen Learn worlds, from `curriculum.js` with gating from
-`learn/progress.js`). A world that is built as a place reads *Enter <world>* and enters it
-in 3D; one that is not reads *Enter* and opens its quest list. The LEARN nav tab is
-untouched, so neither road is reachable only one way.
+**The Star Map is a chart, and it charts two roads.** `screens/starmap.js` carries a two-tab
+row in both the T4 holo-table terminal and the 2D page: `Story` (opens first) and
+`Contracts` (the four campaign sectors, unchanged). **Story is a galaxy chart**
+(`ui/galaxy-map.js`), not a list: Erebus, the Avalon's home sector, sits on the outer rim and
+the Learn road spirals inward world by world to Cinder Halo, the reactor at the galaxy's core;
+jump lanes join each world to the next (solid amber where the player has flown, dashed where
+only charted), dust is tinted by act, and each world is a planet with its own surface (salt
+white, ice with an aurora arc, black basalt with ember veins, a banded cloud deck...) orbiting
+its star, ringed by one small square per quest that is lit when finished. Drag pans, wheel or
+pinch zooms, a double-click or `Zoom To` flies to a system, and the detail plate under the
+chart carries Enter / Briefing / Drills for the picked world. It is keyboard-operable
+(arrows, +/-, Tab between worlds, Enter) and the plain **world list stays underneath it** in a
+`<details>` for anyone who would rather read than aim. **The chart draws only what it is
+handed**: state, quest count and finished moons come from `worldStatus` / `isQuestComplete`,
+it reads no game state itself, pays no XP and draws no glow (`verify:galaxy` checks all three).
+It is one canvas, 30 fps, and stops itself when its node leaves the DOM; reduced motion draws
+it only when something changes. A world that is built as a place reads *Enter <world>* and
+enters it in 3D; one that is not reads *Enter* and opens its quest list. The LEARN nav tab is
+untouched, so neither road is reachable only one way. Drill Deck and Notebook keys sit in the
+tab row beside Main Briefing.
 
-A **finished** world also carries a **Problems** key, which reopens that world's practice
-set. `practiceKey()` and `bindPracticeKeys()` live in `screens/learn-world.js` and are
+A **finished** world also carries a **Problems** key, which opens that world in the Drill
+Deck. `practiceKey()` and `bindPracticeKeys()` live in `screens/learn-world.js` and are
 imported by the star map and the Learn road, so the key is authored once and appears in
 every list that shows a world.
 
@@ -2882,7 +2973,8 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
 - **Story Modals (`src/story/story-modal.js`):**
   - Direct transmission card sequence from Vess without bureaucratic subheadings or bullet grids.
   - Interactive video-game stepper: advances through short transmissions (click card, Spacebar, Enter, or Continue ▶). Includes back navigation and progress dots.
-  - Immediate skip control (`Skip Briefing ⏭` / `Skip ⏭`) available on every modal step, launching or closing immediately.
+  - ONE skip control, `Skip ⏭`, in the footer's bottom right on every modal step, launching or closing immediately. (The header once carried a second `Skip Briefing ⏭`; it was removed as a duplicate. The world modal keeps its `✕` close in the header.)
+  - Opening either modal files its whole briefing in the lore notebook at once (`recordNotebookMany`), so skipping never costs the player the lore.
   - `openCampaignStoryModal(opts)`: Campaign saga stepper aboard the Avalon against the Fifth Guild. Accessible via `Main Briefing` on Star Map, Learn, and Bridge.
   - `openWorldStoryModal(world, opts)`: Direct single-track sector campaign briefing stepper without tabs. Supports `isPreLaunch` / `onLaunch` with "Take Off & Deploy ▶" action.
 - **Onboarding Lore Scene (`src/screens/onboarding.js` Scene 4):**
@@ -2891,7 +2983,7 @@ The interface does not advertise itself. Delete any string that is not (a) a lab
   - Storyline is automatically shown every time the player enters a world via router interception (`router.tryVoyage`) or upon world mount (`learn-world.js`). Direct enter buttons do not intercept with duplicate modals, allowing the router to launch the voyage flight smoothly on the first skip or continue.
   - Double-prompt suppression: `tryVoyage` sets `story_just_shown_${worldId}` in `sessionStorage` upon takeoff, which `maybeOfferStory` consumes upon landing so the player is not prompted twice for the same visit. Returning from bench activities (`avalon_learn_last_site`) also avoids re-prompting.
   - In-game integration: Walk HUD features live `ENEMY // THE FIFTH GUILD` threat status banner; Sites directory modal displays tactical mission objectives; Voyage helm plate displays active Fifth Guild alert.
-- **Case File & Dossier (`src/screens/casefile.js` at `#/casefile`):** Terminal displaying evidence clues, Vess marginalia notes, spine beat transcripts, and act charter summaries.
+- **Case File & Notebook (`src/screens/casefile.js` at `#/casefile`):** The whole storyline in one place. The **Notebook** tab (opens first) lists every briefing, transmission, piece of evidence and outcome the player has met, with act / type filters, `Story order` or `Order found`, and a `NEW` mark on anything filed since the last visit (`notebook_viewed` flag). Evidence & Clues, Spine Transcripts and Acts & Charter remain beside it. **Nothing is added by hand**: the screens that show story file it (`session.recordNotebook` / `recordNotebookMany`): the main briefing (onboarding scene 4 and `openCampaignStoryModal`), a world's briefing when it opens, the Erebus contract / each pylon transmission / milestone / debrief section (`quest.js`), and a clue with its world's aftermath when recovered (`recordClue`). **Opening the Case File files every spine transmission whose prerequisites are met** — nothing else in the game shows them. The notebook stores only IDS (`story/lore.js` documents the grammar and resolves an id back to the words), so it can never show a line the story files do not hold, and a corrected line is corrected everywhere. Filing says so once, in a toast, per burst (`notebook:added`), and never while the Case File is open. The bridge key reads `Notebook`. `verify:story` proves every id the game can file resolves.
 - **Session Saga State (`src/session.js`):** `session.learn.saga = { beatsSeen: [], clues: [] }`. Methods `getSaga()`, `recordClue()`, `hasClue()`, `recordSagaBeat()`, `hasSagaBeat()`. Union merge in `setLearnState()`.
 - **Contracts (`src/story/quest1.js`, `src/screens/contracts.js` at `#/contracts`):** Erebus reframed as contract with posting metadata; Stage 20 awards `clue_erebus_mark`. Contract Board screen with live and sealed postings. Star Map tabs renamed to `Story` and `Contracts`.
 - **Encounter-First Design:** `src/learn/quests/_template.js` and `docs/plans/learn-quests.md` scaffolded with encounter declarations (foe, objective, chemical core).

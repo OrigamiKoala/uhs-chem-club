@@ -14,6 +14,7 @@ import { showToast } from './ui/toast.js';
 import { nextLevelRequisition } from './progression/requisitions.js';
 import { progressionFeed } from './progression/feed.js';
 import { initPwaAndOrientation } from './pwa-install.js';
+import { sync } from './sync.js';
 
 /** Guild liveries, keyed by team id. Legacy ids are aliased in session.js. */
 const TEAM_LIVERY = {
@@ -50,6 +51,21 @@ async function bootstrapApp() {
     },
     // Where that quest's bench physically stands, when the player walked to it.
     deployment: questId => stage.benchDeployment(questId)
+  });
+
+  // Background reconciliation of localStorage with the Sheet. The game plays
+  // from localStorage; this never blocks a screen.
+  sync.init();
+
+  // The lore notebook fills itself; say so once per burst of entries, and not
+  // while the player is already reading it.
+  let notebookToastTimer = null;
+  window.addEventListener('notebook:added', () => {
+    clearTimeout(notebookToastTimer);
+    notebookToastTimer = setTimeout(() => {
+      if (!session.token || window.location.hash.startsWith('#/casefile')) return;
+      showToast('Notebook updated. New entries are in the Case File.', 'info');
+    }, 1200);
   });
 
   // 2. Setup HUD & Navigation immediately
