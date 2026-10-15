@@ -34,6 +34,9 @@ const BLOCKING = [
   '.learn-sites-popup-scrim'
 ].join(',');
 
+/** The quest frame's own containers, which do not block the walk at a built bench. */
+const BENCH_FRAME = '.screen-container, .lq';
+
 export class TouchControls {
   constructor(fpsControls) {
     this.fps = fpsControls;
@@ -225,6 +228,10 @@ export class TouchControls {
     if (el.classList.contains('hidden')) return false;
     if (el.style.display === 'none') return false;
     if (el.hidden) return false;
+    // A child's computed display ignores a hidden ancestor, so ask whether it
+    // is laid out at all: the sites terminal sits inside a `.hidden` scrim and
+    // used to read as an open terminal, taking the sticks off every Learn world.
+    if (typeof el.getClientRects === 'function' && el.getClientRects().length === 0) return false;
     if (typeof window !== 'undefined' && window.getComputedStyle) {
       try {
         const style = window.getComputedStyle(el);
@@ -249,8 +256,13 @@ export class TouchControls {
     const userDropdown = document.getElementById('user-dropdown');
     if (userDropdown && !userDropdown.classList.contains('hidden')) return true;
 
+    // At a built bench the quest frame is a card over the live world, not a
+    // page that replaces it: the player keeps their feet and the sticks stay up
+    // (the card lifts clear of them, see "Mobile stick clearance" in learn.css).
+    const atBench = document.body.classList.contains('bench-deployed');
     const candidates = document.querySelectorAll(BLOCKING);
     for (const el of candidates) {
+      if (atBench && el.matches(BENCH_FRAME)) continue;
       if (el.matches('.lq') && el.querySelector('.lq-body')?.classList.contains('hidden')) {
         continue;
       }
