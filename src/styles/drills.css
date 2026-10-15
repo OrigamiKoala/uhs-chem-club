@@ -1,0 +1,137 @@
+/* ==========================================================================
+   Drill Deck — the one place every Learn practice question is asked.
+   Plates and printed ink only: amber is a signal (a lit star, a hot streak,
+   the live clock), never a surface. No glow, no gradient candy.
+   ========================================================================== */
+
+.m-drills { display: flex; flex-direction: column; gap: 1rem; }
+
+.drill-notice {
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border-left: 2px solid var(--accent-amber);
+  background: var(--plate-100);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.drill-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.85rem;
+}
+
+.drill-card { display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem 1.1rem; }
+.drill-card-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-bright);
+}
+.drill-card-line { margin: 0; flex: 1; font-size: 0.86rem; line-height: 1.5; color: var(--text-secondary); }
+.drill-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.drill-scope { display: flex; flex-direction: column; gap: 4px; }
+.drill-scope select { width: 100%; }
+
+.drill-stars, .drill-result-stars { display: inline-flex; gap: 2px; }
+.drill-star { font-size: 1.15rem; color: var(--text-muted); line-height: 1; }
+.drill-star.lit { color: var(--accent-amber); }
+.drill-result-stars .drill-star { font-size: 2.4rem; }
+.drill-result-stars { margin: 0.4rem 0; }
+
+/* Mastery map */
+.drill-mastery { padding: 1rem 1.1rem; }
+.drill-mastery-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; }
+.drill-mastery-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.drill-world-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 1.1fr) minmax(120px, 2fr) auto 5.5rem auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0;
+  border-top: 1px solid var(--border-durasteel);
+}
+.drill-world-name { display: flex; flex-direction: column; }
+.drill-world-name strong { font-family: var(--font-display); letter-spacing: 0.06em; color: var(--text-bright); font-weight: 600; }
+.drill-world-count { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary); }
+.drill-tier { justify-self: start; text-align: center; }
+.drill-meter {
+  position: relative;
+  height: 8px;
+  background: var(--plate-000);
+  border: 1px solid var(--border-durasteel);
+}
+.drill-meter-fill { position: absolute; inset: 0 auto 0 0; background: var(--accent-bronze); }
+.drill-meter-tick { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--text-muted); opacity: 0.6; }
+.drill-fine { margin: 0.75rem 0 0; font-size: 0.74rem; color: var(--text-muted); font-family: var(--font-mono); }
+.drill-foot { display: flex; justify-content: flex-start; }
+
+/* A round */
+.drill-run, .drill-result { padding: 1.1rem 1.25rem; max-width: 760px; width: 100%; margin: 0 auto; }
+.drill-run-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem; }
+.drill-run-keys { display: flex; align-items: center; gap: 0.5rem; }
+.drill-source { font-family: var(--font-mono); font-size: 0.74rem; color: var(--accent-bronze); margin-top: 2px; }
+.drill-combo { transition: color 0.15s var(--ease-spring, ease); }
+.drill-combo.hot { color: var(--accent-amber); border-color: var(--accent-amber); }
+
+.drill-pips { display: flex; gap: 5px; list-style: none; margin: 0 0 0.9rem; padding: 0; }
+.drill-pip { flex: 1; height: 6px; background: var(--plate-000); border: 1px solid var(--border-durasteel); }
+.drill-pip.now { border-color: var(--accent-amber); }
+.drill-pip.right { background: var(--accent-green); border-color: var(--accent-green-deep); }
+.drill-pip.wrong { background: var(--accent-danger); border-color: var(--accent-danger); }
+
+.drill-clock { height: 8px; background: var(--plate-000); border: 1px solid var(--border-durasteel); margin-bottom: 0.5rem; }
+.drill-clock > span { display: block; height: 100%; background: var(--accent-amber); }
+.drill-sprint-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; }
+.drill-lives { display: inline-flex; gap: 5px; }
+.drill-life { width: 12px; height: 12px; border: 1px solid var(--border-durasteel); background: var(--plate-000); display: inline-block; }
+.drill-life.on { background: var(--accent-amber); border-color: var(--accent-amber); }
+
+.drill-question {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-main);
+  font-size: 1.12rem;
+  line-height: 1.5;
+  color: var(--text-bright);
+  font-weight: 600;
+}
+.drill-options { display: flex; flex-direction: column; gap: 0.5rem; }
+.drill-opt { display: flex; align-items: center; gap: 0.7rem; text-align: left; min-height: 44px; pointer-events: auto; }
+.drill-opt-key {
+  flex: 0 0 auto;
+  width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border-durasteel);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.drill-opt.correct { border-left-color: var(--accent-green); }
+.drill-opt.incorrect { border-left-color: var(--accent-danger); }
+.drill-feedback { margin-top: 0.75rem; min-height: 1px; }
+.drill-run-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border-durasteel); }
+
+.drill-result { text-align: center; }
+.drill-result-title { margin: 0.25rem 0; font-family: var(--font-imperial); font-size: 1.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-bright); }
+.drill-result-line { margin: 0 0 0.9rem; color: var(--text-secondary); font-size: 0.92rem; }
+.drill-result-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 1rem; }
+.drill-result-keys { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; }
+
+/* Phones: stack the mastery row, keep every key a touch target. */
+@media (max-width: 620px) {
+  .drill-world-row { grid-template-columns: 1fr auto; row-gap: 0.4rem; }
+  .drill-world-row .drill-meter { grid-column: 1 / -1; order: 3; }
+  .drill-run, .drill-result { padding: 0.9rem; }
+  .drill-question { font-size: 1.02rem; }
+  .drill-run-foot { flex-direction: column; align-items: stretch; }
+}
+
+.drill-opt:focus-visible,
+.drill-card button:focus-visible,
+.drill-result-keys button:focus-visible {
+  outline: 1px solid var(--accent-amber);
+  outline-offset: 2px;
+}

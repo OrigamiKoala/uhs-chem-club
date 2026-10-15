@@ -159,6 +159,23 @@ var ROUTES = {
     }
   },
 
+  /* -----------------------------------------------------------------
+     PLAYER STATE — the master copy of what localStorage caches.
+     ----------------------------------------------------------------- */
+  'state/get': {
+    auth: true,
+    fn: function(body, ctx) {
+      return { state: PlayerState.get(ctx.player.player_id) };
+    }
+  },
+
+  'state/save': {
+    auth: true,
+    fn: function(body, ctx) {
+      return { state: PlayerState.save(ctx.player.player_id, body.state) };
+    }
+  },
+
   'quest/manifest': {
     auth: true,
     fn: function(body) {

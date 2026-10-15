@@ -184,6 +184,39 @@ if (!isBeatUnlocked(SPINE_BEATS[1], testState)) fail('beat 2 failed to unlock wi
 if (isBeatUnlocked(SPINE_BEATS[2], testState)) fail('beat 3 unlocked prematurely without Kettle boss');
 ok('spine beat prerequisite unlock logic validated');
 
+// 8. The lore notebook: every id the game can file resolves to words the story files hold
+{
+  const lore = await import('../src/story/lore.js');
+  const ids = lore.allLoreIds();
+  if (new Set(ids).size !== ids.length) fail('duplicate lore ids');
+  const unresolved = ids.filter(id => !lore.getLore(id));
+  if (unresolved.length) fail(`lore ids that resolve to nothing: ${unresolved.join(', ')}`);
+
+  // Every world with an episode files all of its paragraphs, and its ending and clue.
+  for (const ep of Object.values(EPISODES)) {
+    const filed = lore.worldBriefingIds(ep.worldId).map(lore.getLore);
+    if (!filed.length || filed.some(e => !e || !e.text)) fail(`world ${ep.worldId}: briefing does not resolve to text`);
+    if (ep.clueId) {
+      const ids2 = lore.loreIdsForClue(ep.clueId);
+      if (!ids2.every(i => lore.getLore(i))) fail(`clue ${ep.clueId}: filed ids do not resolve`);
+    }
+  }
+  // Every spine beat and clue is filed by something.
+  for (const b of SPINE_BEATS) if (!lore.getLore(`spine:${b.id}`)) fail(`spine beat ${b.id} cannot be filed`);
+  for (const c of Object.keys(CLUES)) if (!lore.getLore(`clue:${c}`)) fail(`clue ${c} cannot be filed`);
+
+  // The notebook shows the story's own words and adds none of its own.
+  const entries = lore.loreEntries(ids);
+  if (entries.length !== ids.length) fail('loreEntries dropped an entry');
+  for (let i = 1; i < entries.length; i++) {
+    const a = entries[i - 1].sort; const b = entries[i].sort;
+    let cmp = 0;
+    for (let k = 0; k < 3 && !cmp; k++) cmp = (a[k] || 0) - (b[k] || 0);
+    if (cmp > 0) { fail('loreEntries is not in story order'); break; }
+  }
+  ok(`${ids.length} lore ids all resolve, in story order, with nothing authored outside the story files`);
+}
+
 if (failures > 0) {
   console.log(`\nSTORY INTEGRITY FAILED (${failures} errors)`);
   process.exit(1);

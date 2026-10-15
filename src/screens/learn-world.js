@@ -14,6 +14,7 @@ import { openWorldPractice, worldHasPractice, practiceOfferedFlag } from '../lea
 import { openWorldStoryModal } from '../story/story-modal.js';
 import { getEpisode } from '../story/saga.js';
 import { session } from '../session.js';
+import { showToast } from '../ui/toast.js';
 
 const STATUS_TAG = {
   open: { label: 'Open', cls: 'live' },
@@ -73,7 +74,9 @@ function maybeOfferStory() {
 function maybeOfferPractice(world) {
   if (!worldHasPractice(world)) return;
   if (session.hasFlag(practiceOfferedFlag(world.id))) return;
-  openWorldPractice(world);
+  // An offer, said once, in the corner. The questions are in the Drill Deck.
+  session.setFlag(practiceOfferedFlag(world.id), true);
+  showToast(`${world.world} is worked. Its practice questions are open in the Drill Deck.`, 'info');
 }
 
 /** The key that reopens a finished world's problem set, or nothing. */

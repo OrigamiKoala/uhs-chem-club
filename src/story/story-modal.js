@@ -9,6 +9,7 @@
 import { showModal, closeModal } from '../ui/modal.js';
 import { soundscape } from '../audio/soundscape.js';
 import { getEpisode, CAMPAIGN_STORY } from './saga.js';
+import { worldBriefingIds, campaignBriefingIds } from './lore.js';
 import { session } from '../session.js';
 import { esc } from '../ui/layout.js';
 
@@ -43,6 +44,9 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
   const isPreLaunch = Boolean(opts.isPreLaunch || opts.onLaunch);
 
   session.setFlag(`story_world_seen_${worldId}`, true);
+  // The whole briefing is filed the moment it opens, so skipping it never costs
+  // the player the lore: the notebook is where they catch up.
+  session.recordNotebookMany(worldBriefingIds(worldId));
 
   let currentIdx = 0;
 
@@ -69,9 +73,6 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
             </h2>
           </div>
           <div style="display: flex; align-items: center; gap: 0.6rem;">
-            <button type="button" id="story-modal-skip-btn" class="eyebrow m-tap" style="background: transparent; border: none; color: var(--accent-gold); cursor: pointer; text-decoration: underline; font-family: var(--font-mono); font-size: 0.72rem; padding: 4px;" title="Skip Briefing">
-              Skip Briefing ⏭
-            </button>
             <button type="button" id="story-modal-close-x" class="terminal-close-btn" aria-label="Close briefing" style="padding: 4px 10px; font-family: var(--font-mono); font-size: 0.72rem; border: 1px solid var(--border-durasteel); background: transparent; color: var(--text-muted); cursor: pointer;">
               ✕
             </button>
@@ -182,11 +183,6 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
       cleanupAndClose(true);
     });
 
-    modalEl.querySelector('#story-modal-skip-btn')?.addEventListener('click', () => {
-      soundscape.playToggleClack();
-      cleanupAndClose(true);
-    });
-
     modalEl.querySelector('#story-footer-skip-btn')?.addEventListener('click', () => {
       soundscape.playToggleClack();
       cleanupAndClose(true);
@@ -249,6 +245,7 @@ export function openWorldStoryModal(worldOrId, opts = {}) {
  * @param {{ onComplete?: Function, onClose?: Function }} opts
  */
 export function openCampaignStoryModal(opts = {}) {
+  session.recordNotebookMany(campaignBriefingIds());
   let currentIdx = 0;
   const total = CAMPAIGN_STORY.length;
 
@@ -263,9 +260,6 @@ export function openCampaignStoryModal(opts = {}) {
           <div style="display: flex; align-items: baseline; gap: 0.6rem;">
             <span class="eyebrow lit" style="color: var(--accent-gold); font-size: 0.68rem; letter-spacing: 0.12em;">Campaign Briefing</span>
           </div>
-          <button type="button" id="campaign-modal-skip-btn" class="eyebrow m-tap" style="background: transparent; border: none; color: var(--accent-gold); cursor: pointer; text-decoration: underline; font-family: var(--font-mono); font-size: 0.72rem; padding: 4px;">
-            Skip Briefing ⏭
-          </button>
         </div>
 
         <!-- Novelistic Story Card (Paragraph Form) -->
@@ -366,11 +360,6 @@ export function openCampaignStoryModal(opts = {}) {
   function bindEvents() {
     const modalEl = document.getElementById('modal-container');
     if (!modalEl) return;
-
-    modalEl.querySelector('#campaign-modal-skip-btn')?.addEventListener('click', () => {
-      soundscape.playToggleClack();
-      finish();
-    });
 
     modalEl.querySelector('#campaign-footer-skip-btn')?.addEventListener('click', () => {
       soundscape.playToggleClack();

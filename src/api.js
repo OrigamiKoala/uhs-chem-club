@@ -82,6 +82,13 @@ export const api = {
   getLearnProgress: () => apiCall('learn/progress'),
   learnStage: (worldId, questId, stageIndex) => apiCall('learn/stage', { worldId, questId, stageIndex }),
   learnComplete: (worldId, questId) => apiCall('learn/complete', { worldId, questId }),
+  /**
+   * Per-player synced state (flags, notebook, practice, loadout...). The Sheet
+   * is the master copy; localStorage is the cache the game plays from. Neither
+   * route carries XP.
+   */
+  getState: () => apiCall('state/get'),
+  saveState: (state) => apiCall('state/save', { state }),
   getLeaderboards: (scope) => apiCall('leaderboard', scope ? { scope } : {}),
   getProgression: () => apiCall('progression/me'),
   setLoadout: (loadout) => apiCall('loadout/set', loadout),

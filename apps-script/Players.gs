@@ -25,6 +25,11 @@ var Players = {
     var learn = [];
     try { learn = Learn.getProgress(playerId).learn; } catch (e) {}
 
+    // The player's synced state rides along too, so the client reconciles its
+    // localStorage cache in the same round trip that restores everything else.
+    var state = null;
+    try { state = PlayerState.get(playerId); } catch (e) {}
+
     return {
       player: sanitizePlayer_(player),
       team: team,
@@ -32,7 +37,8 @@ var Players = {
       level: level,
       progress: progress,
       inventory: inventory,
-      learn: learn
+      learn: learn,
+      state: state
     };
   },
 
