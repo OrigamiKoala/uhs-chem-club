@@ -719,10 +719,14 @@ class Stage {
     this.syncWorldOrientation();
     if (!this.touchControls) return;
 
+    // A bench DEPLOYED on a world the player walked to leaves them on their
+    // feet (see `setQuestScene`), so the sticks stay up there too. A chamber
+    // that brings its own room has no ground to walk and still takes them away.
+    const onFeet = this.mode !== "quest" || Boolean(this.activeQuestViewer?.inWorld);
     const walking = Boolean(
       this.fpsControls &&
       this.fpsControls.enabled &&
-      this.mode !== "quest" &&
+      onFeet &&
       tierAtLeast("T3")
     );
     const show = walking && !TouchControls.overlayBlocking();
