@@ -60,12 +60,17 @@ export class Encounter {
     activeBenchViewer()?.foes?.sync(this.snapshot());
   }
 
-  /** A stage began. `enc` is `resolveEncounter(stage)`, or null for a plain stage. */
-  begin(enc) {
+  /**
+   * A stage began. `enc` is `resolveEncounter(stage)`, or null for a plain stage.
+   * `phase` is `{ index, count }`: which stage of how many, so a boss arena can
+   * wear down over the whole fight and not fall over after the first answer.
+   */
+  begin(enc, phase = null) {
     this.cancel();
     this.enc = enc || null;
     this.poses = new Map();
     this.tag = '';
+    this.phase = phase || null;
     if (!this.enc) {
       this.fight = null;
       this.line = '';
@@ -78,6 +83,14 @@ export class Encounter {
     this.line = this.enc.intent;
     this.host.hidden = false;
     this.paint();
+    if (this.phase) {
+      try { getActiveBossArena()?.setPhase(this.phase.index, this.phase.count, this.rig()); } catch (e) { /* the arena is scenery */ }
+    }
+  }
+
+  /** The rig's Integrity as the boss plate draws it. */
+  rig() {
+    return this.fight ? { integrity: this.fight.integrity, max: this.fight.max } : null;
   }
 
   /**
@@ -107,9 +120,11 @@ export class Encounter {
   /** A committed miss. The frame has already put the reason on screen. */
   onMiss() {
     if (!this.enc || !this.fight) return;
-    try { getActiveBossArena()?.onWrong(); } catch (e) {}
     const { fight, knockedBack } = afterMiss(this.fight);
     this.fight = fight;
+    try {
+      getActiveBossArena()?.onWrong({ ...this.rig(), knockedBack });
+    } catch (e) { /* the arena is scenery */ }
     this.cancel();
     this.tag = 'counter';
     this.paint();   // Integrity drops now; the words wait for the reason.
@@ -138,7 +153,13 @@ export class Encounter {
     this.tag = flawless ? 'flawless' : 'won';
     this.line = this.enc.hit;
     this.paint();
-    try { getActiveBossArena()?.onCorrect(fight.won); } catch (e) {}
+    // A boss has several phases. Every one is won, but only the LAST takes the
+    // boss down: the arena is told which phase this was.
+    const index = this.phase?.index ?? 0;
+    const count = this.phase?.count ?? 1;
+    try {
+      getActiveBossArena()?.onCorrect({ index, total: count, last: index >= count - 1 });
+    } catch (e) { /* the arena is scenery */ }
   }
 
   cancel() {

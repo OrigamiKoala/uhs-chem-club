@@ -12,6 +12,7 @@ const AMBER = 0xe59b24;
 const PHOSPHOR = 0x6f8f3f;
 const MAGMA = 0xff4818;
 const CYAN = 0x38bdf8;
+const CHAR = new THREE.Color(0x1a1613);
 
 function makeRng(seed = 1) {
   let s = seed >>> 0;
@@ -53,6 +54,13 @@ export class CombatMonster3D {
     this.staggerT = 0;
     this.damageFlash = 0;
     this.disperseT = 0;
+    this.damage = 0;
+    this.damageTarget = 0;
+    this.advance = 0;
+    this.seed = 1.7;
+    this.lights = [];
+    this.heightOffset = 0;
+    this.onEvent = null;     // the arena listens: 'landed', 'strike', 'slam', 'roar', 'shattered'
 
     // Base position in front of player
     this.baseX = opts.x || 0;
@@ -64,6 +72,7 @@ export class CombatMonster3D {
     this.group.scale.setScalar(this.scale);
 
     this.buildMesh();
+    this.finalize();
     this.buildHitTarget();
   }
 
@@ -894,13 +903,85 @@ export class CombatMonster3D {
   }
 
   /* -------------------------------------------------------------
+     STANDING IN THE WORLD
+     ------------------------------------------------------------- */
+
+  /** Measured once the body is built: its height, reach and middle. */
+  finalize() {
+    this.group.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(this.group);
+    const size = box.getSize(new THREE.Vector3());
+    const mid = box.getCenter(new THREE.Vector3());
+    this.height = size.y;
+    this.radius = Math.max(size.x, size.z) * 0.5;
+    this.centerLocal = this.group.worldToLocal(mid.clone());
+    this.group.traverse(o => {
+      if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+      if (o.isLight) this.lights.push({ light: o, intensity: o.intensity });
+    });
+  }
+
+  /** The middle of the body in world space — where a shot is aimed. */
+  getCenterWorld(out = new THREE.Vector3()) {
+    this.group.updateMatrixWorld(true);
+    return this.group.localToWorld(out.copy(this.centerLocal));
+  }
+
+  /** A point on the side facing `from`, where a bolt actually strikes. */
+  getSurfacePoint(from, out = new THREE.Vector3()) {
+    this.getCenterWorld(out);
+    const toward = from.clone().sub(out).setY(0);
+    if (toward.lengthSq() < 1e-6) toward.set(0, 0, 1);
+    return out.addScaledVector(toward.normalize(), this.radius * 0.55);
+  }
+
+  /** A world-space box round the body, for the smoke that rises off it. */
+  getWorldBox(out = new THREE.Box3()) {
+    const c = this.getCenterWorld(new THREE.Vector3());
+    const r = this.radius * 0.7;
+    return out.set(
+      new THREE.Vector3(c.x - r, this.group.position.y, c.z - r),
+      new THREE.Vector3(c.x + r, this.group.position.y + this.height, c.z + r)
+    );
+  }
+
+  /** Follow the ground under it, keeping the height it was placed at. */
+  setGround(fn) {
+    this.groundFn = fn;
+    const g = fn?.(this.baseX, this.baseZ);
+    this.heightOffset = typeof g === 'number' && !isNaN(g) ? this.baseY - g : 0;
+  }
+
+  groundAt(x, z) {
+    const g = this.groundFn?.(x, z);
+    return typeof g === 'number' && !isNaN(g) ? g : (this.baseY - this.heightOffset);
+  }
+
+  /* -------------------------------------------------------------
      ANIMATION & COMBAT ACTIONS
      ------------------------------------------------------------- */
 
+  /** It arrives: rises out of the ground, or drops in if it flies. */
+  startEntrance(kind = 'rise', dur = 2.0) {
+    this.entrance = { kind, t: 0, dur, landed: false };
+  }
+
   /** Player landed a hit: monster recoils back, flashes damage */
-  triggerHitReact() {
+  triggerHitReact(strength = 1) {
     this.staggerT = 1.0;
+    this.staggerPower = strength;
     this.damageFlash = 1.0;
+  }
+
+  /** How hurt it is, 0..1. It darkens, glows at the wounds, and moves faster. */
+  setDamage(level, snap = false) {
+    this.damageTarget = THREE.MathUtils.clamp(level, 0, 1);
+    if (snap) this.damage = this.damageTarget;
+  }
+
+  /** It winds up for an attack. `strike` fires on the event hook when it ends. */
+  triggerTelegraph(dur = 0.45) {
+    this.windup = { t: 0, dur };
   }
 
   /** Foe lunges forward to attack the player */
@@ -908,98 +989,244 @@ export class CombatMonster3D {
     this.lungeT = 1.0;
   }
 
-  /** Foe is defeated: disintegrates / disperses */
-  triggerDisperse() {
+  /** A roar: it rears and the ground shakes. Nothing is damaged. */
+  triggerRoar() {
+    this.roarT = 1.0;
+    this.onEvent?.('roar');
+  }
+
+  /** Mortal wound: it convulses, then comes apart (see `shatter`). */
+  triggerDeathThroes() {
+    this.throes = true;
+    this.throesT = 0;
     this.alive = false;
-    this.disperseT = 0.001;
+  }
+
+  /** Come apart into pieces that fall, bounce and crumble to nothing. */
+  shatter() {
+    if (this.debris) return;
+    this.throes = false;
+    this.group.updateMatrixWorld(true);
+    const scene = this.group.parent;
+    if (!scene) { this.gone = true; return; }
+    const centre = this.getCenterWorld(new THREE.Vector3());
+    const parts = [];
+    this.group.traverse(o => { if (o.isMesh && o !== this.hitBox) parts.push(o); });
+    this.debris = [];
+    const rng = makeRng(77);
+    for (const mesh of parts) {
+      scene.attach(mesh);
+      mesh.updateMatrixWorld(true);
+      const p = mesh.getWorldPosition(new THREE.Vector3());
+      const dir = p.clone().sub(centre);
+      dir.y = Math.max(dir.y, 0.2);
+      dir.normalize();
+      const sp = 2.5 + rng() * 5.5;
+      this.debris.push({
+        mesh,
+        vel: dir.multiplyScalar(sp).add(new THREE.Vector3((rng() - 0.5) * 2, 3 + rng() * 5, (rng() - 0.5) * 2)),
+        spin: new THREE.Vector3((rng() - 0.5) * 7, (rng() - 0.5) * 7, (rng() - 0.5) * 7),
+        scale0: mesh.scale.clone(),
+        delay: 1.0 + rng() * 1.3,
+        life: 0,
+        shrink: 0.7 + rng() * 0.5,
+        bounces: 0
+      });
+    }
+    this.debrisT = 0;
+    this.onEvent?.('shattered');
+  }
+
+  /** Kept for callers that only want it gone. */
+  triggerDisperse() {
+    this.triggerDeathThroes();
+  }
+
+  get isGone() { return Boolean(this.gone); }
+
+  /** Write every emissive channel once: the body's own glow, the wounds, the hit flash, the wind-up. */
+  applyTint(wound, flash, tele) {
+    const pulse = 0.65 + 0.35 * Math.sin(this.elapsed * 6);
+    const ember = wound * 0.55 * pulse;
+    for (const m of this.materials) {
+      if (!m.emissive) continue;
+      const ud = m.userData;
+      if (!ud.baseEm) ud.baseEm = { c: m.emissive.clone(), i: m.emissiveIntensity };
+      if (!ud.baseColor && m.color) ud.baseColor = m.color.clone();
+      const b = ud.baseEm;
+      m.emissive.setRGB(
+        b.c.r * b.i + ember * 1.0 + flash * 1.4 + tele * 0.9,
+        b.c.g * b.i + ember * 0.34 + flash * 1.4 + tele * 0.12,
+        b.c.b * b.i + ember * 0.08 + flash * 1.4 + tele * 0.08
+      );
+      m.emissiveIntensity = 1;
+      if (ud.baseColor) m.color.copy(ud.baseColor).lerp(CHAR, wound * 0.5);
+    }
   }
 
   update(dt, reduced = false, eyePos = null) {
-    if (!this.group.visible) return;
+    if (this.gone) return;
     this.elapsed += dt;
 
-    // Face player
-    if (eyePos) {
-      const dx = eyePos.x - this.group.position.x;
-      const dz = eyePos.z - this.group.position.z;
-      this.group.rotation.y = Math.atan2(dx, dz);
-    }
-
-    // Damage Flash Decay
-    if (this.damageFlash > 0) {
-      this.damageFlash = Math.max(0, this.damageFlash - dt * 3.5);
-      const intensity = this.damageFlash;
-      for (const m of this.materials) {
-        if (m.emissive) {
-          m.emissive.setHex(0xffffff);
-          m.emissiveIntensity = intensity * 1.5;
+    // Come apart: pieces fall, bounce, crumble. Nothing else about it runs.
+    if (this.debris) {
+      this.debrisT += dt;
+      let live = 0;
+      for (const d of this.debris) {
+        const m = d.mesh;
+        if (!m.visible) continue;
+        d.life += dt;
+        d.vel.y -= 15 * dt;
+        m.position.addScaledVector(d.vel, dt);
+        m.rotation.x += d.spin.x * dt;
+        m.rotation.y += d.spin.y * dt;
+        m.rotation.z += d.spin.z * dt;
+        const floor = this.groundAt(m.position.x, m.position.z) + 0.15;
+        if (m.position.y < floor) {
+          m.position.y = floor;
+          if (d.vel.y < 0 && d.bounces < 3) {
+            d.vel.y *= -0.32;
+            d.vel.x *= 0.6; d.vel.z *= 0.6;
+            d.spin.multiplyScalar(0.5);
+            d.bounces++;
+          } else { d.vel.set(0, 0, 0); d.spin.set(0, 0, 0); }
         }
-      }
-      if (this.damageFlash === 0) {
-        for (const m of this.materials) {
-          if (m.emissive) {
-            m.emissive.setHex(0x000000);
-            m.emissiveIntensity = 0;
-          }
+        if (d.life > d.delay) {
+          const k = 1 - (d.life - d.delay) / d.shrink;
+          if (k <= 0) { m.visible = false; continue; }
+          m.scale.copy(d.scale0).multiplyScalar(k);
         }
+        live++;
       }
-    }
-
-    // Stagger Recoil (Player Strike Impact)
-    let recoil = 0;
-    if (this.staggerT > 0) {
-      this.staggerT = Math.max(0, this.staggerT - dt * 2.5);
-      recoil = -0.85 * Math.sin(this.staggerT * Math.PI);
-    }
-
-    // Lunge Forward Attack (Foe counter)
-    let lunge = 0;
-    if (this.lungeT > 0) {
-      this.lungeT = Math.max(0, this.lungeT - dt * 1.8);
-      // Surges forward towards the player
-      lunge = 2.0 * Math.sin(this.lungeT * Math.PI);
-    }
-
-    // Dispersal Collapse / Fade
-    if (this.disperseT > 0) {
-      this.disperseT += dt * 1.5;
-      const s = Math.max(0.01, 1.0 - this.disperseT * 0.7);
-      this.group.scale.setScalar(this.scale * s);
-      this.group.position.y = this.baseY - this.disperseT * 0.35;
-      for (const m of this.materials) {
-        m.transparent = true;
-        m.opacity = Math.max(0, 1.0 - this.disperseT);
-      }
-      if (this.disperseT >= 1.5) {
-        this.group.visible = false;
-      }
+      for (const l of this.lights) l.light.intensity = Math.max(0, l.light.intensity - dt * 4);
+      if (!live) this.gone = true;
       return;
     }
 
-    // Position combine along facing direction towards player
-    const dirX = Math.sin(this.group.rotation.y);
-    const dirZ = Math.cos(this.group.rotation.y);
-    this.group.position.x = this.baseX + (lunge + recoil) * dirX;
-    this.group.position.z = this.baseZ + (lunge + recoil) * dirZ;
+    // Arrival
+    let entranceY = 0;
+    let entranceScale = 1;
+    if (this.entrance && !this.entrance.landed) {
+      const e = this.entrance;
+      e.t += dt;
+      const k = Math.min(1, e.t / e.dur);
+      const ease = 1 - Math.pow(1 - k, 3);
+      entranceY = e.kind === 'rise'
+        ? -(this.height + 0.5) * (1 - ease)
+        : 14 * (1 - k * k);
+      entranceScale = e.kind === 'rise' ? 1 : 0.9 + 0.1 * ease;
+      if (k >= 1) { e.landed = true; this.onEvent?.('landed'); }
+    }
+
+    const fx = eyePos ? eyePos.x - this.baseX : 0;
+    const fz = eyePos ? eyePos.z - this.baseZ : 1;
+    const fl = Math.hypot(fx, fz) || 1;
+    const fwdX = fx / fl, fwdZ = fz / fl;       // towards the player
+    const sideX = fwdZ, sideZ = -fwdX;
+
+    // Damage creeps in and drives the rest.
+    const dmgRate = (this.damageTarget - this.damage);
+    this.damage += Math.abs(dmgRate) < 0.001 ? dmgRate : dmgRate * Math.min(1, dt * 3);
+    const wound = this.damage;
+    const pace = 1 + wound * 0.55;
+
+    // Hit flash
+    if (this.damageFlash > 0) this.damageFlash = Math.max(0, this.damageFlash - dt * 3.2);
+
+    // Wind-up for an attack: crouch back, glow, then it fires.
+    let windBack = 0;
+    let crouch = 0;
+    let tele = 0;
+    if (this.windup) {
+      const w = this.windup;
+      w.t += dt;
+      const k = Math.min(1, w.t / w.dur);
+      tele = k * k;
+      windBack = -0.9 * k;
+      crouch = 0.1 * k;
+      if (k >= 1) {
+        this.windup = null;
+        this.lungeT = 1.0;
+        this.onEvent?.('strike');
+      }
+    }
+
+    // Stagger recoil
+    let recoil = 0;
+    if (this.staggerT > 0) {
+      this.staggerT = Math.max(0, this.staggerT - dt * 2.2);
+      recoil = -1.1 * (this.staggerPower || 1) * Math.sin(this.staggerT * Math.PI);
+    }
+
+    // Lunge
+    let lunge = 0;
+    if (this.lungeT > 0) {
+      const before = this.lungeT;
+      this.lungeT = Math.max(0, this.lungeT - dt * 1.7);
+      lunge = 3.0 * Math.sin(this.lungeT * Math.PI);
+      if (before > 0.5 && this.lungeT <= 0.5) this.onEvent?.('slam');
+    }
+
+    // Roar: rears up
+    let roarScale = 1;
+    if (this.roarT > 0) {
+      this.roarT = Math.max(0, this.roarT - dt * 0.9);
+      roarScale = 1 + 0.12 * Math.sin((1 - this.roarT) * Math.PI);
+    }
+
+    // Idle: it paces across the arena and closes in as it is hurt.
+    const idle = !this.entrance || this.entrance.landed;
+    const strafe = idle ? Math.sin(this.elapsed * 0.45 * pace + this.seed) * (1.8 + wound * 1.6) : 0;
+    this.advance += (wound * 3.2 - this.advance) * Math.min(1, dt * 1.2);
+
+    // Death throes: it convulses and sinks before it comes apart.
+    let shakeX = 0, shakeZ = 0, sink = 0;
+    if (this.throes) {
+      this.throesT += dt;
+      const amp = Math.min(1, this.throesT * 1.5) * 0.35;
+      shakeX = (Math.sin(this.elapsed * 63) + Math.sin(this.elapsed * 41)) * amp;
+      shakeZ = (Math.cos(this.elapsed * 57) + Math.sin(this.elapsed * 37)) * amp;
+      sink = Math.min(0.9, this.throesT * 0.4);
+    }
+
+    const along = this.advance + lunge + recoil + windBack;
+    const x = this.baseX + fwdX * along + sideX * (strafe + shakeX) + fwdX * shakeZ;
+    const z = this.baseZ + fwdZ * along + sideZ * (strafe + shakeX) + fwdZ * shakeZ;
+    const flying = this.heightOffset > 0.5;
+    const bob = flying ? Math.sin(this.elapsed * 1.6) * 0.35 : 0;
+    this.group.position.set(x, this.groundAt(x, z) + this.heightOffset + entranceY + bob - sink, z);
+
+    if (eyePos) {
+      this.group.rotation.y = Math.atan2(eyePos.x - x, eyePos.z - z);
+    }
+    const s = this.scale * entranceScale * roarScale;
+    this.group.scale.set(s * (1 + crouch * 0.6), s * (1 - crouch), s * (1 + crouch * 0.6));
+
+    // Light and colour
+    this.applyTint(wound, this.damageFlash, tele);
+
+    if (this.throes) {
+      for (const l of this.lights) l.light.intensity = l.intensity * (0.6 + 0.4 * Math.sin(this.elapsed * 40));
+    }
 
     if (reduced) return;
 
     // Orbiting crystal shards (salt husk)
     if (this.orbitShards) {
-      for (const s of this.orbitShards) {
-        const a = s.angle + this.elapsed * 1.4;
-        s.mesh.position.set(
-          Math.cos(a) * s.radius,
-          s.y + Math.sin(this.elapsed * 2.5) * 0.08,
-          Math.sin(a) * s.radius
+      for (const sh of this.orbitShards) {
+        const a = sh.angle + this.elapsed * 1.4 * pace;
+        sh.mesh.position.set(
+          Math.cos(a) * sh.radius,
+          sh.y + Math.sin(this.elapsed * 2.5) * 0.08,
+          Math.sin(a) * sh.radius
         );
-        s.mesh.rotation.y += dt * 2.0;
+        sh.mesh.rotation.y += dt * 2.0;
       }
     }
 
     // Wing flapping (lamp moth, lantern-eater)
     if (this.wings) {
-      const flap = Math.sin(this.elapsed * 12.0) * (this.isBoss ? 0.35 : 0.65);
+      const flap = Math.sin(this.elapsed * 12.0 * pace) * (this.isBoss ? 0.35 : 0.65);
       for (const w of this.wings) {
         if (w.fore) w.fore.rotation.y = w.side * flap;
         if (w.hind) w.hind.rotation.y = w.side * flap * 0.75;
@@ -1007,21 +1234,19 @@ export class CombatMonster3D {
     }
 
     // Standard part animations (breathing, hover, sway)
-    const t = this.elapsed;
+    const t = this.elapsed * pace;
     for (const p of this.animatedParts) {
-      if (p.type === 'breathe') {
-        p.obj.position.y = (p.obj.userData.baseY || p.obj.position.y) + Math.sin(t * p.speed) * p.amp;
-        if (!p.obj.userData.baseY) p.obj.userData.baseY = p.obj.position.y;
-      } else if (p.type === 'hover') {
-        p.obj.position.y = (p.obj.userData.baseY || p.obj.position.y) + Math.sin(t * p.speed) * p.amp;
-        p.obj.rotation.z = Math.sin(t * p.speed * 0.5) * 0.05;
-        if (!p.obj.userData.baseY) p.obj.userData.baseY = p.obj.position.y;
+      if (p.type === 'breathe' || p.type === 'hover') {
+        if (p.obj.userData.baseY === undefined) p.obj.userData.baseY = p.obj.position.y;
+        p.obj.position.y = p.obj.userData.baseY + Math.sin(t * p.speed) * p.amp;
+        if (p.type === 'hover') p.obj.rotation.z = Math.sin(t * p.speed * 0.5) * 0.05;
       } else if (p.type === 'sway') {
         p.obj.rotation.z = p.side * (0.15 + Math.sin(t * p.speed) * p.amp);
       } else if (p.type === 'spinZ') {
-        p.obj.rotation.z += dt * p.speed;
+        p.obj.rotation.z += dt * p.speed * pace;
       } else if (p.type === 'scytheTwitch') {
-        p.obj.rotation.z = -p.side * (0.35 + Math.sin(t * p.speed) * 0.12);
+        // A wound-up foe holds its blades high.
+        p.obj.rotation.z = -p.side * (0.35 + Math.sin(t * p.speed) * 0.12 + tele * 0.5);
       } else if (p.type === 'legStep') {
         p.obj.rotation.x = Math.sin(t * p.speed + p.index * 1.2) * 0.22;
       }
@@ -1030,11 +1255,16 @@ export class CombatMonster3D {
 
   dispose() {
     this.group.parent?.remove(this.group);
+    if (this.debris) {
+      for (const d of this.debris) d.mesh.parent?.remove(d.mesh);
+      this.debris = null;
+    }
     for (const d of this.disposables) {
       d.dispose?.();
     }
     this.disposables = [];
     this.materials = [];
     this.animatedParts = [];
+    this.lights = [];
   }
 }

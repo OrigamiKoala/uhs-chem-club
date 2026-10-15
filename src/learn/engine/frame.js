@@ -630,7 +630,7 @@ export class LearnFrame {
     // action, label and enabled state are reset by hand. A docked key left on
     // "next" from the stage before skipped the stage it was pressed on.
     const commitLabel = stage.commitLabel || 'Commit';
-    this.encounter.begin(stage.encounter || null);
+    this.encounter.begin(stage.encounter || null, { index: stage.index, count: this.stageCount });
     this.el.actions.innerHTML = `
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
       <button type="button" class="btn-primary lq-commit" data-act="submit">${esc(commitLabel)}</button>
