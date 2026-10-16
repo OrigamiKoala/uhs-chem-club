@@ -21,7 +21,6 @@
  */
 
 import * as THREE from 'three';
-import { placard } from '../materials/pbr-kit.js';
 
 function rng(seed) {
   let a = seed >>> 0;
@@ -393,11 +392,4 @@ export function buildCloudHeads(ctx, seaLevel, count = 22) {
     }
   }
   return g;
-}
-
-/** A small stencilled sign, for a bench or a post: the name a player walks toward. */
-export function buildSign(ctx, text, { w = 2.4, h = 0.46 } = {}) {
-  const sign = placard(text, { w, h, fg: '#14223a', bg: '#d6e0ee' });
-  ctx.own(sign.geometry, sign.material, sign.material.map);
-  return sign;
 }

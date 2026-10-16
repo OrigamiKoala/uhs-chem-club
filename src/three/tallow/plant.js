@@ -78,8 +78,42 @@ export const SUPPORT_POINTS = {
       [-0.7, -8.36], [0.7, -8.36], [-0.7, 0], [0.7, 0], [-0.7, 8.36], [0.7, 8.36],
       [-0.6, -10.35], [0.6, -10.35]
     ]
+  },
+  // The scale is driven over, not round: only its indicator post is in the way.
+  'loadout-scale': {
+    radius: 0.4,
+    points: [[3.0, 2.5]]
   }
 };
+
+/**
+ * WHERE THE CONVEYOR'S ENDS ARE, in its own frame (origin on the ground at its
+ * middle, +z up the belt toward the head). The builder reads these, and so does
+ * everything that stands at an end of it: the sample point at the tail and the
+ * weigh hopper under the head's discharge chute. The chute's mouth is where the
+ * stream leaves the belt, so `outlet` is the one number a hopper is hung from.
+ *
+ *   tail    the tail pulley's centre line: z and height
+ *   head    the head pulley's
+ *   outlet  the bottom of the discharge chute: its z, its height, and half its
+ *           width at the mouth (a four-sided frustum turned 45 degrees)
+ *   reach   how far past the pulleys the structure runs (hood, drive, tail stand)
+ */
+const CV_ZT = -10.6, CV_ZH = 10.6, CV_YTL = 1.95, CV_YHD = 7.6;
+export const CONVEYOR = (() => {
+  const Lr = Math.hypot(CV_YHD - CV_YTL, CV_ZH - CV_ZT);
+  const th = Math.atan2(CV_YHD - CV_YTL, CV_ZH - CV_ZT);
+  const s = Lr + 0.5;
+  const cy = CV_YTL + s * Math.sin(th) - 0.4 * Math.cos(th);
+  const cz = CV_ZT + s * Math.cos(th) + 0.4 * Math.sin(th);
+  return Object.freeze({
+    zT: CV_ZT, zH: CV_ZH, yTl: CV_YTL, yHd: CV_YHD,
+    tail: { z: CV_ZT, y: CV_YTL },
+    head: { z: CV_ZH, y: CV_YHD },
+    outlet: { z: cz, y: cy - 0.95 - 0.75, half: 0.36 * Math.SQRT1_2 },
+    reach: { tail: -10.95, head: 11.2 }
+  });
+})();
 
 /* Deterministic layout noise. */
 export function mulberry32(seed) {
@@ -1742,10 +1776,7 @@ export function buildPipeBridge(ctx) {
 export function buildConveyor(ctx) {
   const rig = new Rig(ctx, 'conveyor', 22);
   const { g, M, K, rand } = rig;
-  const zT = -10.6, zH = 10.6;
-  // The tail stands clear of the lab's rim wall, which runs under it at
-  // z −18 and stands 0.6 m out of the crust.
-  const yTl = 1.95, yHd = 7.6;
+  const { zT, zH, yTl, yHd } = CONVEYOR;
   const th = Math.atan2(yHd - yTl, zH - zT);
   const Lr = Math.hypot(yHd - yTl, zH - zT);
   const cosT = Math.cos(th), sinT = Math.sin(th);
@@ -1987,6 +2018,51 @@ export function buildConveyor(ctx) {
   }
 
 
+  return rig.finish();
+}
+
+/* ==========================================================================
+   THE LOADOUT SCALE
+   ========================================================================== */
+
+/**
+ * A truck scale: a steel deck 9 m by 3.2 on a concrete frame, drive-on ramps at
+ * both ends, an indicator post beside it. It lies along the builder's x, flush enough
+ * to drive over (and to walk over: only the post is collided, `SUPPORT_POINTS`).
+ * This is where the bagged salt leaves the plant, so it stands beside the hauler.
+ */
+export function buildLoadoutScale(ctx) {
+  const rig = new Rig(ctx, 'loadout', 41);
+  const { g, M, K } = rig;
+  const L = 9.0, W = 3.2, top = 0.24;
+
+  // The concrete frame the deck sits in: two long members and two ends.
+  for (const sz of [-1, 1]) rig.box(g, L + 0.8, 0.16, 0.4, K.concrete, [0, 0.06, sz * (W / 2 + 0.2)]);
+  for (const sx of [-1, 1]) rig.box(g, 0.4, 0.16, W, K.concrete, [sx * (L / 2 + 0.2), 0.06, 0]);
+  // The deck: plate on cross girders, its edge angles round it.
+  rig.box(g, L, 0.1, W, M.plate, [0, top - 0.05, 0]);
+  for (let x = -L / 2 + 0.6; x < L / 2; x += 1.5) rig.box(g, 0.14, 0.1, W - 0.1, M.dark, [x, top - 0.15, 0]);
+  for (const sz of [-1, 1]) rig.angle(g, [-L / 2, top + 0.03, sz * (W / 2 - 0.03)], [L / 2, top + 0.03, sz * (W / 2 - 0.03)], 0.08, M.dark, UP);
+  // Load-cell housings at the four corners, bolted to the frame.
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    rig.box(g, 0.26, 0.1, 0.26, M.dark, [sx * (L / 2 - 0.4), top - 0.15, sz * (W / 2 - 0.3)]);
+  }
+  // The drive-on ramps, each rising from the crust to the deck's lip.
+  const rise = Math.atan2(top - 0.02, 1.6);
+  for (const sx of [-1, 1]) {
+    const ramp = rig.box(g, 1.62, 0.06, W, M.plate, [sx * (L / 2 + 0.4 + 0.8), (top - 0.02) / 2 + 0.0, 0], [0, 0, -sx * rise]);
+    ramp.userData.uvs = [1.6, W];
+  }
+  // The indicator post, with its head tilted to the driver's window.
+  rig.box(g, 0.16, 1.5, 0.16, M.dark, [3.0, 0.75, 2.5]);
+  rig.box(g, 0.52, 0.4, 0.22, M.plate, [3.0, 1.6, 2.5], [-0.2, 0, 0]);
+  rig.cyl(g, 0.12, 0.12, 0.04, 16, K.rubber, [3.0, 1.62, 2.38], [Math.PI / 2 - 0.2, 0, 0]);
+  rig.decal(placard('LS-01', { w: 0.34, h: 0.13 }), g, [3.0, 1.25, 2.5 + 0.09], 0);
+  // Wheel stops at the ramp feet, and a bollard at each corner.
+  for (const sx of [-1, 1]) {
+    rig.box(g, 0.2, 0.14, 2.4, K.concrete, [sx * (L / 2 + 2.3), 0.05, 0]);
+    for (const sz of [-1, 1]) rig.cyl(g, 0.07, 0.07, 0.9, 10, M.dark, [sx * (L / 2 + 2.9), 0.45, sz * (W / 2 + 0.5)]);
+  }
   return rig.finish();
 }
 

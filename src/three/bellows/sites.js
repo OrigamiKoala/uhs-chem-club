@@ -21,11 +21,10 @@
  */
 
 import * as THREE from 'three';
-import { placard } from '../materials/pbr-kit.js';
+import { BENCH_BAY, buildBayBench, ctxMats } from '../bench-bay.js';
 
-export const BENCH = { width: 4.8, depth: 1.3, height: 0.95 };
 /** Where the bench stands in the site frame (local z), leaving room behind it for the gantry. */
-export const BENCH_Z = 1.5;
+export const BENCH_Z = BENCH_BAY.benchZ;
 
 const lampColor = 0xd99423;
 
@@ -42,68 +41,25 @@ function put(group, m, rot = null) {
   return m;
 }
 
-/** The bench: plated top, braced legs, the cased gas rig and its one indicator. */
+/** The bench: the shared bay bench in the sampling-shelf skin, its dormant slot dressed as the cased gas rig. */
 export function buildBwBench(ctx, { plate = 'BN-01' } = {}) {
-  const { width, depth, height } = BENCH;
-  const g = new THREE.Group();
-
-  const top = mesh(ctx, new THREE.BoxGeometry(width, 0.09, depth), ctx.M.steel, 0, height, 0);
-  top.castShadow = top.receiveShadow = ctx.t4;
-  g.add(top);
-  g.add(mesh(ctx, new THREE.BoxGeometry(width, 0.12, 0.06), ctx.M.darkSteel, 0, height + 0.1, -depth / 2 + 0.03));
-
-  const legGeo = ctx.own(new THREE.BoxGeometry(0.1, height, 0.1));
-  for (const [lx, lz] of [
-    [-width / 2 + 0.12, -depth / 2 + 0.1], [width / 2 - 0.12, -depth / 2 + 0.1],
-    [-width / 2 + 0.12, depth / 2 - 0.1], [width / 2 - 0.12, depth / 2 - 0.1]
-  ]) {
-    const leg = new THREE.Mesh(legGeo, ctx.M.darkSteel);
-    leg.position.set(lx, height / 2, lz);
-    leg.castShadow = ctx.t4;
-    g.add(leg);
-    g.add(mesh(ctx, new THREE.BoxGeometry(0.2, 0.03, 0.2), ctx.M.darkSteel, lx, 0.015, lz));
-  }
-  g.add(mesh(ctx, new THREE.BoxGeometry(width - 0.3, 0.06, 0.06), ctx.M.darkSteel, 0, height * 0.32, 0));
-  g.add(mesh(ctx, new THREE.BoxGeometry(width - 0.35, 0.05, depth - 0.3), ctx.M.darkSteel, 0, height * 0.42, 0));
-
-  // THE DORMANT INSTRUMENT, cased up. Held out of any bake: the whole subtree is
-  // hidden while the instrument is deployed.
-  const dormant = new THREE.Group();
-  dormant.userData.noMerge = true;
-  g.add(dormant);
-
-  const housing = mesh(ctx, new THREE.BoxGeometry(1.2, 0.74, 0.5), ctx.M.steel, 0, height + 0.41, -0.16);
-  housing.castShadow = housing.receiveShadow = ctx.t4;
-  dormant.add(housing);
-  // A glass barrel with its piston, and a gauge face: a bench for gas has a cylinder and a dial.
-  put(dormant, mesh(ctx, new THREE.CylinderGeometry(0.15, 0.15, 0.82, 20, 1, true), ctx.M.glass, -0.05, height + 0.62, 0.17), [0, 0, Math.PI / 2]);
-  put(dormant, mesh(ctx, new THREE.CylinderGeometry(0.14, 0.14, 0.05, 18), ctx.M.darkSteel, 0.1, height + 0.62, 0.17), [0, 0, Math.PI / 2]);
-  put(dormant, mesh(ctx, new THREE.CylinderGeometry(0.02, 0.02, 0.4, 8), ctx.M.darkSteel, 0.34, height + 0.62, 0.17), [0, 0, Math.PI / 2]);
-  put(dormant, mesh(ctx, new THREE.CylinderGeometry(0.17, 0.17, 0.04, 22), ctx.M.brass, -0.4, height + 0.44, 0.1), [Math.PI / 2, 0, 0]);
-  dormant.add(mesh(ctx, new THREE.CircleGeometry(0.14, 22), ctx.M.glassDark, -0.4, height + 0.44, 0.125));
-  // The key rail every instrument carries on its housing.
-  const rail = mesh(ctx, new THREE.CylinderGeometry(0.016, 0.016, 0.9, 8), ctx.M.darkSteel, -0.58, height + 0.34, -0.3);
-  rail.rotation.z = Math.PI / 2;
-  g.add(rail);
-
-  // The one indicator, set into the apron: dead until the site's quest is finished.
-  const indicator = new THREE.Mesh(
-    ctx.own(new THREE.SphereGeometry(0.035, 10, 8)),
-    ctx.own(new THREE.MeshStandardMaterial({ color: 0x4a4038, emissive: lampColor, emissiveIntensity: 0, roughness: 0.6 }))
-  );
-  indicator.position.set(width / 2 - 0.42, height - 0.12, depth / 2 + 0.035);
-  indicator.userData.noMerge = true;
-  g.add(indicator);
-  const well = mesh(ctx, new THREE.CylinderGeometry(0.055, 0.055, 0.02, 12), ctx.M.darkSteel, width / 2 - 0.42, height - 0.12, depth / 2 + 0.018);
-  well.rotation.x = Math.PI / 2;
-  g.add(well);
-
-  const tag = placard(plate, { w: 0.28, h: 0.11, fg: '#14223a', bg: '#d6e0ee' });
-  tag.position.set(-width / 2 + 0.42, height - 0.12, depth / 2 + 0.005);
-  g.add(tag);
-  ctx.own(tag.geometry, tag.material, tag.material.map);
-
-  return { group: g, indicator, dormant, topY: height + 0.045 };
+  return buildBayBench(ctx, {
+    skin: 'shelf',
+    plate,
+    mats: ctxMats(ctx),
+    tagStyle: { fg: '#14223a', bg: '#d6e0ee' },
+    dormant(dormant, { height }) {
+      const housing = mesh(ctx, new THREE.BoxGeometry(1.2, 0.74, 0.5), ctx.M.steel, 0, height + 0.41, -0.16);
+      housing.castShadow = housing.receiveShadow = ctx.t4;
+      dormant.add(housing);
+      // A glass barrel with its piston, and a gauge face: a bench for gas has a cylinder and a dial.
+      put(dormant, mesh(ctx, new THREE.CylinderGeometry(0.15, 0.15, 0.82, 20, 1, true), ctx.M.glass, -0.05, height + 0.62, 0.17), [0, 0, Math.PI / 2]);
+      put(dormant, mesh(ctx, new THREE.CylinderGeometry(0.14, 0.14, 0.05, 18), ctx.M.darkSteel, 0.1, height + 0.62, 0.17), [0, 0, Math.PI / 2]);
+      put(dormant, mesh(ctx, new THREE.CylinderGeometry(0.02, 0.02, 0.4, 8), ctx.M.darkSteel, 0.34, height + 0.62, 0.17), [0, 0, Math.PI / 2]);
+      put(dormant, mesh(ctx, new THREE.CylinderGeometry(0.17, 0.17, 0.04, 22), ctx.M.brass, -0.4, height + 0.44, 0.1), [Math.PI / 2, 0, 0]);
+      dormant.add(mesh(ctx, new THREE.CircleGeometry(0.14, 22), ctx.M.glassDark, -0.4, height + 0.44, 0.125));
+    }
+  });
 }
 
 /* ------------------------------------------------------------------ gantry */
@@ -253,7 +209,7 @@ function between(ctx, a, b, radius, mat) {
 }
 
 /**
- * Build one site: the gantry, the bench under it and the sign over it.
+ * Build one site: the gantry and the bench under it.
  * @returns {{ group: THREE.Group, bench: object, benchLocal: number[], colliders: Array<{x:number,z:number,radius:number}> }}
  *   colliders are circles in the SITE frame (the world turns them to world axes).
  */
@@ -267,12 +223,6 @@ export function buildSite(ctx, site) {
   const bench = buildBwBench(ctx, { plate: `GR-0${site.stage}` });
   bench.group.position.set(0, 0, BENCH_Z);
   g.add(bench.group);
-
-  // The sign: the bench's name, stencilled over the front beam where a player walking in reads it.
-  const sign = placard(site.label, { w: 3.4, h: 0.5, fg: '#14223a', bg: '#d6e0ee' });
-  sign.position.set(0, 3.16, 3.0);
-  g.add(sign);
-  ctx.own(sign.geometry, sign.material, sign.material.map);
 
   // The work lamp over the bench: the one real light here (pooled by the world).
   const lamp = new THREE.Object3D();

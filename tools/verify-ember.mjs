@@ -21,7 +21,7 @@
  *    lamp or a bench indicator, or the lava lake under the rim; the lamps share
  *    a fixed handful of real lights.
  *  - T4-only landmarks are decoration: removing them strands nothing.
- *  - No player-facing string carries withheld vocabulary, emoji, or a long sign.
+ *  - No player-facing string carries withheld vocabulary, emoji, or a long label.
  *
  * And what this world adds:
  *  - THE RIM IS A WALL: the rail's colliders are a closed chain from one edge
@@ -170,7 +170,7 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*["']([
     const title = new Set((q?.title || '').split(/\s+/).map(stem));
     if (!words.some(w => title.has(w))) off.push(`${s.id} reads "${s.label}", which shares no word with "${q?.title}"`);
   }
-  check(off.length === 0, 'every sign names its bench by what it teaches', `signs that do not name their bench:\n         ${off.join('\n         ')}`);
+  check(off.length === 0, 'every site label names its bench by what it teaches', `site labels that do not name their bench:\n         ${off.join('\n         ')}`);
 }
 
 {

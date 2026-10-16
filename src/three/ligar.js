@@ -57,11 +57,12 @@
 import * as THREE from 'three';
 import ligarData from './world-data/ligar.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
+import { buildBayBench } from './bench-bay.js';
 import {
   platedMetal, treadPlate,
   buildMaterial, enableAO,
   texSize, heightField, heightToNormal, asDataTexture, fbm,
-  boltRing, boltLine, weldBead, cableRun, placard,
+  boltRing, boltLine, weldBead, cableRun,
   hazardStripe, mergeStatic
 } from './materials/pbr-kit.js';
 import {
@@ -930,6 +931,8 @@ export class LigarWorld {
    * 0.72 m across its tray. A shorter bench would hang its end trays off the
    * plate, and an instrument cannot stand on something that is not there.
    *
+   * The frame is the shared bay bench (`bench-bay.js`) in its `ledge` skin.
+   *
    * `kind` is which instrument is cased up here. It changes the face of the
    * dormant cabinet and nothing else: four identical cabinets would mean a
    * player walking the quarry could not tell the press from the weigh-head
@@ -939,500 +942,348 @@ export class LigarWorld {
    *            dormant: THREE.Group, topY: number}}
    */
   buildBench(opts = {}) {
-    const {
-      width = 4.8, depth = 1.3, height = 0.95, kind = 'join', plate = 'LB-01'
-    } = opts;
-    const g = new THREE.Group();
-    const rand = mulberry32(0x2a71 + Math.round(width * 100) + kind.length);
-
-    /* THE PLINTH. A bench in a quarry stands on stone, because stone is what
-       there is — two cut blocks with the steel frame bolted down onto them. */
-    for (const px of [-width / 2 + 0.55, width / 2 - 0.55]) {
-      const block = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.72, 0.34, depth + 0.16)), this.basaltMat
-      );
-      block.position.set(px, 0.17, 0);
-      block.receiveShadow = block.castShadow = tierAtLeast('T4');
-      g.add(block);
-    }
-
-    const top = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(width, 0.09, depth)), this.plateMat
-    );
-    top.position.y = height;
-    top.castShadow = top.receiveShadow = tierAtLeast('T4');
-    g.add(top);
-
-    // A raised lip along the back, so nothing rolls off into the grit.
-    const lip = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(width, 0.14, 0.06)), this.darkSteelMat
-    );
-    lip.position.set(0, height + 0.11, -depth / 2 + 0.03);
-    g.add(lip);
-
-    // The frame: channel legs with gussets at the knee, footplates bolted to
-    // the plinth. Heavier than Tallow's, because heavier is what this is for.
-    const legGeo = this.own(new THREE.BoxGeometry(0.14, height - 0.34, 0.14));
-    for (const [lx, lz] of [
-      [-width / 2 + 0.16, -depth / 2 + 0.12], [width / 2 - 0.16, -depth / 2 + 0.12],
-      [-width / 2 + 0.16, depth / 2 - 0.12], [width / 2 - 0.16, depth / 2 - 0.12]
-    ]) {
-      const leg = new THREE.Mesh(legGeo, this.darkSteelMat);
-      leg.position.set(lx, 0.34 + (height - 0.34) / 2, lz);
-      leg.castShadow = tierAtLeast('T4');
-      g.add(leg);
-      const foot = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.26, 0.04, 0.26)), this.plateMat
-      );
-      foot.position.set(lx, 0.36, lz);
-      g.add(foot);
-      // The gusset where the leg meets the top — a triangle, so it is bracing
-      // rather than decoration.
-      const gusset = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.02, 0.2, 0.2)), this.darkSteelMat
-      );
-      gusset.position.set(lx, height - 0.14, lz);
-      gusset.rotation.x = Math.sign(lz) * 0.78;
-      g.add(gusset);
-    }
-    const brace = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(width - 0.36, 0.08, 0.08)), this.darkSteelMat
-    );
-    brace.position.set(0, height * 0.42, 0);
-    g.add(brace);
-
-    // Under-bench shelf, holding two crates of sample stone.
-    const shelf = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(width - 0.4, 0.05, depth - 0.3)), this.darkSteelMat
-    );
-    shelf.position.set(0, height * 0.52, 0);
-    g.add(shelf);
-    for (const sx of [-width * 0.28, width * 0.22]) {
-      const c = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.44, 0.3, 0.44)), this.timberMat
-      );
-      c.position.set(sx, height * 0.52 + 0.18, 0);
-      g.add(c);
-      const band = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.46, 0.05, 0.46)), this.darkSteelMat
-      );
-      band.position.set(sx, height * 0.52 + 0.3, 0);
-      g.add(band);
-    }
-
-    /* THE DORMANT INSTRUMENT.
-       What stands on the bench when nobody is working at it is the instrument,
-       cased up. When the player presses [E] the case is hidden and the stations
-       deploy on this same plate — so the two are never drawn at once, and no
-       two objects ever share that square of bench. */
-    const dormant = new THREE.Group();
-    // Held out of any static bake: this whole subtree is hidden while the
-    // instrument is deployed, and a baked cabinet could never be cased up.
-    dormant.userData.noMerge = true;
-    g.add(dormant);
-
-    const housing = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.2, 0.8, 0.54)),
-      kind === 'join' ? this.darkSteelMat : this.plateMat
-    );
-    housing.position.set(0, height + 0.44, -0.16);
-    housing.castShadow = housing.receiveShadow = tierAtLeast('T4');
-    dormant.add(housing);
-
-    /* WHAT IS ON THE CABINET'S FACE IS WHAT THE BENCH IS FOR. */
-    if (kind === 'join') {
-      // THE PRESS, cased up: two jaws on a square-thread screw with a capstan
-      // on the end of it, and a furnace door beside them with its damper shut.
-      const bedplate = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.86, 0.08, 0.3)), this.pipeMat
-      );
-      bedplate.position.set(-0.12, height + 0.16, 0.12);
-      dormant.add(bedplate);
-      for (const [jx, jw] of [[-0.42, 0.1], [0.12, 0.1]]) {
-        const jaw = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(jw, 0.26, 0.26)), this.darkSteelMat
+    const { kind = 'join', plate = 'LB-01' } = opts;
+    const ctx = { own: (...o) => this.own(...o), t4: tierAtLeast('T4') };
+    return buildBayBench(ctx, {
+      skin: 'ledge',
+      plate,
+      mats: { top: this.plateMat, dark: this.darkSteelMat, stone: this.basaltMat, timber: this.timberMat },
+      // Tool rail along the back, with three tools racked where a hand reaches.
+      rail: { len: 0.94, x: -0.6, y: 0.36, r: 0.018, tools: [[-0.86, 0.24], [-0.6, 0.32], [-0.34, 0.19]] },
+      apron: { inset: 0.44, drop: 0.14 },
+      noWeather: true,
+      dormant: (dormant, { height }) => {
+        const housing = new THREE.Mesh(
+          this.own(new THREE.BoxGeometry(1.2, 0.8, 0.54)),
+          kind === 'join' ? this.darkSteelMat : this.plateMat
         );
-        jaw.position.set(jx, height + 0.32, 0.12);
-        dormant.add(jaw);
-      }
-      const screw = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.028, 0.028, 0.72, 10)), this.pipeMat
-      );
-      screw.rotation.z = Math.PI / 2;
-      screw.position.set(0.1, height + 0.32, 0.12);
-      dormant.add(screw);
-      const capstan = new THREE.Mesh(
-        this.own(new THREE.TorusGeometry(0.1, 0.018, 6, 14)), this.darkSteelMat
-      );
-      capstan.rotation.y = Math.PI / 2;
-      capstan.position.set(0.46, height + 0.32, 0.12);
-      dormant.add(capstan);
-      for (let i = 0; i < 4; i++) {
-        const spoke = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(0.014, 0.2, 0.014)), this.darkSteelMat
-        );
-        spoke.position.set(0.46, height + 0.32, 0.12);
-        spoke.rotation.x = (i / 4) * Math.PI;
-        dormant.add(spoke);
-      }
-      // The furnace door in the cabinet face, dogged shut.
-      const door = new THREE.Mesh(
-        this.own(new THREE.CircleGeometry(0.2, 22)),
-        this.own(new THREE.MeshStandardMaterial({
-          color: 0x2b241e, roughness: 0.82, metalness: 0.12
-        }))
-      );
-      door.position.set(0.36, height + 0.56, 0.115);
-      dormant.add(door);
-      const dogs = boltRing(0.23, 6, this.darkSteelMat, { size: 0.026, axis: 'y' });
-      dogs.rotation.x = Math.PI / 2;
-      dogs.position.set(0.36, height + 0.56, 0.112);
-      dormant.add(dogs);
-    } else if (kind === 'assay') {
-      // THE WEIGH-HEAD, cased up: a big round scale over a shrouded chute, its
-      // needle resting on the bottom stop.
-      const scaleRim = new THREE.Mesh(
-        this.own(new THREE.TorusGeometry(0.235, 0.032, 8, 26)), this.darkSteelMat
-      );
-      scaleRim.position.set(0, height + 0.54, 0.12);
-      dormant.add(scaleRim);
-      const dialFace = new THREE.Mesh(
-        this.own(new THREE.CircleGeometry(0.225, 28)),
-        this.own(new THREE.MeshStandardMaterial({
-          color: 0x2a251d, roughness: 0.74, metalness: 0.08
-        }))
-      );
-      dialFace.position.set(0, height + 0.54, 0.117);
-      dormant.add(dialFace);
-      const tickGeo = this.own(new THREE.BoxGeometry(0.008, 0.034, 0.004));
-      for (let i = 0; i < 12; i++) {
-        const a = -Math.PI * 0.78 + (i / 11) * Math.PI * 1.56;
-        const tick = new THREE.Mesh(tickGeo, this.pipeMat);
-        tick.position.set(Math.sin(a) * 0.185, height + 0.54 + Math.cos(a) * 0.185, 0.123);
-        tick.rotation.z = -a;
-        dormant.add(tick);
-      }
-      const needle = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.010, 0.185, 0.008)),
-        this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
-      );
-      needle.position.set(-0.062, height + 0.455, 0.128);
-      needle.rotation.z = 0.78;
-      dormant.add(needle);
-      const shroud = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.32, 0.2, 0.22)), this.plateMat
-      );
-      shroud.position.set(0, height + 0.14, 0.03);
-      dormant.add(shroud);
-      const shutter = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.36, 0.05, 0.02)), this.darkSteelMat
-      );
-      shutter.position.set(0, height + 0.07, 0.145);
-      dormant.add(shutter);
-    } else if (kind === 'bond') {
-      // THE BOND BENCH, cased up: a graph window with a Morse well scored across it,
-      // and a crank wheel on the cabinet's flank winding a carriage along a rail.
-      const win = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.62, 0.42, 0.02)),
-        this.own(new THREE.MeshStandardMaterial({ color: 0x0d0c0a, roughness: 0.4, metalness: 0.1 }))
-      );
-      win.position.set(-0.18, height + 0.56, 0.115);
-      dormant.add(win);
-      const curve = [[0, 0.17], [0.07, 0.04], [0.14, -0.1], [0.22, -0.15], [0.3, -0.12], [0.4, -0.04], [0.5, 0.0]];
-      for (let i = 0; i < curve.length - 1; i++) {
-        const [ax, ay] = curve[i]; const [bx, by] = curve[i + 1];
-        const seg = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(Math.hypot(bx - ax, by - ay), 0.012, 0.006)), this.pipeMat
-        );
-        seg.position.set(-0.43 + (ax + bx) / 2 * 0.9, height + 0.56 + (ay + by) / 2, 0.128);
-        seg.rotation.z = Math.atan2(by - ay, bx - ax);
-        dormant.add(seg);
-      }
-      const rail = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.9, 0.03, 0.06)), this.darkSteelMat);
-      rail.position.set(-0.05, height + 0.2, 0.12);
-      dormant.add(rail);
-      for (const cx of [-0.38, 0.28]) {
-        const carriage = new THREE.Mesh(this.own(new THREE.SphereGeometry(0.06, 12, 10)), this.pipeMat);
-        carriage.position.set(cx, height + 0.27, 0.12);
-        dormant.add(carriage);
-      }
-      const wheel = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.15, 0.022, 6, 18)), this.darkSteelMat);
-      wheel.position.set(0.46, height + 0.5, 0.12);
-      dormant.add(wheel);
-      for (let i = 0; i < 4; i++) {
-        const spoke = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.012, 0.3, 0.012)), this.darkSteelMat);
-        spoke.position.set(0.46, height + 0.5, 0.12);
-        spoke.rotation.z = (i / 4) * Math.PI;
-        dormant.add(spoke);
-      }
-    } else if (kind === 'pair') {
-      // THE PAIR BOARD, cased up: a slate with three discs on a triangle and a tray of capsules.
-      const slate = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.7, 0.5, 0.02)),
-        this.own(new THREE.MeshStandardMaterial({ color: 0x1a191c, roughness: 0.82, metalness: 0.05 }))
-      );
-      slate.position.set(0, height + 0.58, 0.115);
-      dormant.add(slate);
-      for (const [dx, dy] of [[0, 0.12], [-0.2, -0.1], [0.2, -0.1]]) {
-        const disc = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.06, 0.06, 0.016, 14)), this.pipeMat);
-        disc.rotation.x = Math.PI / 2;
-        disc.position.set(dx, height + 0.58 + dy, 0.13);
-        dormant.add(disc);
-      }
-      const tray = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.62, 0.04, 0.14)), this.darkSteelMat);
-      tray.position.set(0, height + 0.18, 0.14);
-      dormant.add(tray);
-      for (let i = 0; i < 8; i++) {
-        const cap = new THREE.Mesh(this.own(new THREE.CapsuleGeometry(0.017, 0.04, 3, 6)), this.pipeMat);
-        cap.rotation.z = Math.PI / 2;
-        cap.position.set(-0.25 + i * 0.07, height + 0.23, 0.14);
-        dormant.add(cap);
-      }
-    } else if (kind === 'rig') {
-      // THE DOMAIN RIG, cased up: a hub on a post with four arms along the corners of a tetrahedron.
-      const post = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.03, 0.05, 0.3, 10)), this.darkSteelMat);
-      post.position.set(0, height + 0.2, 0.12);
-      dormant.add(post);
-      const hubBall = new THREE.Mesh(this.own(new THREE.SphereGeometry(0.06, 14, 10)), this.pipeMat);
-      hubBall.position.set(0, height + 0.42, 0.12);
-      dormant.add(hubBall);
-      for (const [ax, ay, az] of [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]]) {
-        const len = 0.17;
-        const k = len / Math.sqrt(3);
-        const arm = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.009, 0.009, len, 6)), this.darkSteelMat);
-        arm.position.set(ax * k / 2, height + 0.42 + ay * k / 2, 0.12 + az * k / 2);
-        arm.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(ax, ay, az).normalize());
-        dormant.add(arm);
-        const tip = new THREE.Mesh(this.own(new THREE.SphereGeometry(0.028, 10, 8)), this.plateMat);
-        tip.position.set(ax * k, height + 0.42 + ay * k, 0.12 + az * k);
-        dormant.add(tip);
-      }
-      const proto = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.1, 0.01, 4, 20, Math.PI)), this.darkSteelMat);
-      proto.position.set(0.4, height + 0.16, 0.12);
-      dormant.add(proto);
-    } else if (kind === 'rack') {
-      // THE BOX RACK, cased up: a ladder of boxes, one box low and a row of three above it.
-      const rows = [1, 1, 3, 1, 3];
-      rows.forEach((n, ri) => {
-        for (let b = 0; b < n; b++) {
-          const box = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.1, 0.07, 0.04)), this.darkSteelMat);
-          box.position.set((b - (n - 1) / 2) * 0.12, height + 0.2 + ri * 0.11, 0.115);
-          dormant.add(box);
+        housing.position.set(0, height + 0.44, -0.16);
+        housing.castShadow = housing.receiveShadow = tierAtLeast('T4');
+        dormant.add(housing);
+
+        /* WHAT IS ON THE CABINET'S FACE IS WHAT THE BENCH IS FOR. */
+        if (kind === 'join') {
+          // THE PRESS, cased up: two jaws on a square-thread screw with a capstan
+          // on the end of it, and a furnace door beside them with its damper shut.
+          const bedplate = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.86, 0.08, 0.3)), this.pipeMat
+          );
+          bedplate.position.set(-0.12, height + 0.16, 0.12);
+          dormant.add(bedplate);
+          for (const [jx, jw] of [[-0.42, 0.1], [0.12, 0.1]]) {
+            const jaw = new THREE.Mesh(
+              this.own(new THREE.BoxGeometry(jw, 0.26, 0.26)), this.darkSteelMat
+            );
+            jaw.position.set(jx, height + 0.32, 0.12);
+            dormant.add(jaw);
+          }
+          const screw = new THREE.Mesh(
+            this.own(new THREE.CylinderGeometry(0.028, 0.028, 0.72, 10)), this.pipeMat
+          );
+          screw.rotation.z = Math.PI / 2;
+          screw.position.set(0.1, height + 0.32, 0.12);
+          dormant.add(screw);
+          const capstan = new THREE.Mesh(
+            this.own(new THREE.TorusGeometry(0.1, 0.018, 6, 14)), this.darkSteelMat
+          );
+          capstan.rotation.y = Math.PI / 2;
+          capstan.position.set(0.46, height + 0.32, 0.12);
+          dormant.add(capstan);
+          for (let i = 0; i < 4; i++) {
+            const spoke = new THREE.Mesh(
+              this.own(new THREE.BoxGeometry(0.014, 0.2, 0.014)), this.darkSteelMat
+            );
+            spoke.position.set(0.46, height + 0.32, 0.12);
+            spoke.rotation.x = (i / 4) * Math.PI;
+            dormant.add(spoke);
+          }
+          // The furnace door in the cabinet face, dogged shut.
+          const door = new THREE.Mesh(
+            this.own(new THREE.CircleGeometry(0.2, 22)),
+            this.own(new THREE.MeshStandardMaterial({
+              color: 0x2b241e, roughness: 0.82, metalness: 0.12
+            }))
+          );
+          door.position.set(0.36, height + 0.56, 0.115);
+          dormant.add(door);
+          const dogs = boltRing(0.23, 6, this.darkSteelMat, { size: 0.026, axis: 'y' });
+          dogs.rotation.x = Math.PI / 2;
+          dogs.position.set(0.36, height + 0.56, 0.112);
+          dormant.add(dogs);
+        } else if (kind === 'assay') {
+          // THE WEIGH-HEAD, cased up: a big round scale over a shrouded chute, its
+          // needle resting on the bottom stop.
+          const scaleRim = new THREE.Mesh(
+            this.own(new THREE.TorusGeometry(0.235, 0.032, 8, 26)), this.darkSteelMat
+          );
+          scaleRim.position.set(0, height + 0.54, 0.12);
+          dormant.add(scaleRim);
+          const dialFace = new THREE.Mesh(
+            this.own(new THREE.CircleGeometry(0.225, 28)),
+            this.own(new THREE.MeshStandardMaterial({
+              color: 0x2a251d, roughness: 0.74, metalness: 0.08
+            }))
+          );
+          dialFace.position.set(0, height + 0.54, 0.117);
+          dormant.add(dialFace);
+          const tickGeo = this.own(new THREE.BoxGeometry(0.008, 0.034, 0.004));
+          for (let i = 0; i < 12; i++) {
+            const a = -Math.PI * 0.78 + (i / 11) * Math.PI * 1.56;
+            const tick = new THREE.Mesh(tickGeo, this.pipeMat);
+            tick.position.set(Math.sin(a) * 0.185, height + 0.54 + Math.cos(a) * 0.185, 0.123);
+            tick.rotation.z = -a;
+            dormant.add(tick);
+          }
+          const needle = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.010, 0.185, 0.008)),
+            this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
+          );
+          needle.position.set(-0.062, height + 0.455, 0.128);
+          needle.rotation.z = 0.78;
+          dormant.add(needle);
+          const shroud = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.32, 0.2, 0.22)), this.plateMat
+          );
+          shroud.position.set(0, height + 0.14, 0.03);
+          dormant.add(shroud);
+          const shutter = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.36, 0.05, 0.02)), this.darkSteelMat
+          );
+          shutter.position.set(0, height + 0.07, 0.145);
+          dormant.add(shutter);
+        } else if (kind === 'bond') {
+          // THE BOND BENCH, cased up: a graph window with a Morse well scored across it,
+          // and a crank wheel on the cabinet's flank winding a carriage along a rail.
+          const win = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.62, 0.42, 0.02)),
+            this.own(new THREE.MeshStandardMaterial({ color: 0x0d0c0a, roughness: 0.4, metalness: 0.1 }))
+          );
+          win.position.set(-0.18, height + 0.56, 0.115);
+          dormant.add(win);
+          const curve = [[0, 0.17], [0.07, 0.04], [0.14, -0.1], [0.22, -0.15], [0.3, -0.12], [0.4, -0.04], [0.5, 0.0]];
+          for (let i = 0; i < curve.length - 1; i++) {
+            const [ax, ay] = curve[i]; const [bx, by] = curve[i + 1];
+            const seg = new THREE.Mesh(
+              this.own(new THREE.BoxGeometry(Math.hypot(bx - ax, by - ay), 0.012, 0.006)), this.pipeMat
+            );
+            seg.position.set(-0.43 + (ax + bx) / 2 * 0.9, height + 0.56 + (ay + by) / 2, 0.128);
+            seg.rotation.z = Math.atan2(by - ay, bx - ax);
+            dormant.add(seg);
+          }
+          const rail = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.9, 0.03, 0.06)), this.darkSteelMat);
+          rail.position.set(-0.05, height + 0.2, 0.12);
+          dormant.add(rail);
+          for (const cx of [-0.38, 0.28]) {
+            const carriage = new THREE.Mesh(this.own(new THREE.SphereGeometry(0.06, 12, 10)), this.pipeMat);
+            carriage.position.set(cx, height + 0.27, 0.12);
+            dormant.add(carriage);
+          }
+          const wheel = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.15, 0.022, 6, 18)), this.darkSteelMat);
+          wheel.position.set(0.46, height + 0.5, 0.12);
+          dormant.add(wheel);
+          for (let i = 0; i < 4; i++) {
+            const spoke = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.012, 0.3, 0.012)), this.darkSteelMat);
+            spoke.position.set(0.46, height + 0.5, 0.12);
+            spoke.rotation.z = (i / 4) * Math.PI;
+            dormant.add(spoke);
+          }
+        } else if (kind === 'pair') {
+          // THE PAIR BOARD, cased up: a slate with three discs on a triangle and a tray of capsules.
+          const slate = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.7, 0.5, 0.02)),
+            this.own(new THREE.MeshStandardMaterial({ color: 0x1a191c, roughness: 0.82, metalness: 0.05 }))
+          );
+          slate.position.set(0, height + 0.58, 0.115);
+          dormant.add(slate);
+          for (const [dx, dy] of [[0, 0.12], [-0.2, -0.1], [0.2, -0.1]]) {
+            const disc = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.06, 0.06, 0.016, 14)), this.pipeMat);
+            disc.rotation.x = Math.PI / 2;
+            disc.position.set(dx, height + 0.58 + dy, 0.13);
+            dormant.add(disc);
+          }
+          const tray = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.62, 0.04, 0.14)), this.darkSteelMat);
+          tray.position.set(0, height + 0.18, 0.14);
+          dormant.add(tray);
+          for (let i = 0; i < 8; i++) {
+            const cap = new THREE.Mesh(this.own(new THREE.CapsuleGeometry(0.017, 0.04, 3, 6)), this.pipeMat);
+            cap.rotation.z = Math.PI / 2;
+            cap.position.set(-0.25 + i * 0.07, height + 0.23, 0.14);
+            dormant.add(cap);
+          }
+        } else if (kind === 'rig') {
+          // THE DOMAIN RIG, cased up: a hub on a post with four arms along the corners of a tetrahedron.
+          const post = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.03, 0.05, 0.3, 10)), this.darkSteelMat);
+          post.position.set(0, height + 0.2, 0.12);
+          dormant.add(post);
+          const hubBall = new THREE.Mesh(this.own(new THREE.SphereGeometry(0.06, 14, 10)), this.pipeMat);
+          hubBall.position.set(0, height + 0.42, 0.12);
+          dormant.add(hubBall);
+          for (const [ax, ay, az] of [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]]) {
+            const len = 0.17;
+            const k = len / Math.sqrt(3);
+            const arm = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.009, 0.009, len, 6)), this.darkSteelMat);
+            arm.position.set(ax * k / 2, height + 0.42 + ay * k / 2, 0.12 + az * k / 2);
+            arm.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(ax, ay, az).normalize());
+            dormant.add(arm);
+            const tip = new THREE.Mesh(this.own(new THREE.SphereGeometry(0.028, 10, 8)), this.plateMat);
+            tip.position.set(ax * k, height + 0.42 + ay * k, 0.12 + az * k);
+            dormant.add(tip);
+          }
+          const proto = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.1, 0.01, 4, 20, Math.PI)), this.darkSteelMat);
+          proto.position.set(0.4, height + 0.16, 0.12);
+          dormant.add(proto);
+        } else if (kind === 'rack') {
+          // THE BOX RACK, cased up: a ladder of boxes, one box low and a row of three above it.
+          const rows = [1, 1, 3, 1, 3];
+          rows.forEach((n, ri) => {
+            for (let b = 0; b < n; b++) {
+              const box = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.1, 0.07, 0.04)), this.darkSteelMat);
+              box.position.set((b - (n - 1) / 2) * 0.12, height + 0.2 + ri * 0.11, 0.115);
+              dormant.add(box);
+            }
+          });
+          const hoof = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.07, 0.016, 6, 14, Math.PI)), this.darkSteelMat);
+          hoof.position.set(0.44, height + 0.2, 0.12);
+          dormant.add(hoof);
+        } else {
+          // THE SCOPE, cased up: a bezelled aperture and a power dial with detents.
+          const bezel = new THREE.Mesh(
+            this.own(new THREE.TorusGeometry(0.26, 0.035, 8, 26)), this.darkSteelMat
+          );
+          bezel.position.set(0, height + 0.52, 0.12);
+          dormant.add(bezel);
+          const aperture = new THREE.Mesh(
+            this.own(new THREE.CircleGeometry(0.245, 26)),
+            this.own(new THREE.MeshStandardMaterial({
+              color: 0x0d0c0a, roughness: 0.42, metalness: 0.1
+            }))
+          );
+          aperture.position.set(0, height + 0.52, 0.118);
+          dormant.add(aperture);
+          const dialBody = new THREE.Mesh(
+            this.own(new THREE.CylinderGeometry(0.075, 0.085, 0.05, 18)), this.darkSteelMat
+          );
+          dialBody.rotation.x = Math.PI / 2;
+          dialBody.position.set(0.44, height + 0.28, 0.11);
+          dormant.add(dialBody);
+          const pointer = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.012, 0.07, 0.012)),
+            this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
+          );
+          pointer.position.set(0.44, height + 0.32, 0.14);
+          dormant.add(pointer);
+          for (let i = 0; i < 6; i++) {
+            const a = -Math.PI * 0.7 + (i / 5) * Math.PI * 1.4;
+            const detent = new THREE.Mesh(
+              this.own(new THREE.BoxGeometry(0.008, 0.022, 0.006)), this.darkSteelMat
+            );
+            detent.position.set(0.44 + Math.sin(a) * 0.11, height + 0.28 + Math.cos(a) * 0.11, 0.125);
+            detent.rotation.z = -a;
+            dormant.add(detent);
+          }
         }
-      });
-      const hoof = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.07, 0.016, 6, 14, Math.PI)), this.darkSteelMat);
-      hoof.position.set(0.44, height + 0.2, 0.12);
-      dormant.add(hoof);
-    } else {
-      // THE SCOPE, cased up: a bezelled aperture and a power dial with detents.
-      const bezel = new THREE.Mesh(
-        this.own(new THREE.TorusGeometry(0.26, 0.035, 8, 26)), this.darkSteelMat
-      );
-      bezel.position.set(0, height + 0.52, 0.12);
-      dormant.add(bezel);
-      const aperture = new THREE.Mesh(
-        this.own(new THREE.CircleGeometry(0.245, 26)),
-        this.own(new THREE.MeshStandardMaterial({
-          color: 0x0d0c0a, roughness: 0.42, metalness: 0.1
-        }))
-      );
-      aperture.position.set(0, height + 0.52, 0.118);
-      dormant.add(aperture);
-      const dialBody = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.075, 0.085, 0.05, 18)), this.darkSteelMat
-      );
-      dialBody.rotation.x = Math.PI / 2;
-      dialBody.position.set(0.44, height + 0.28, 0.11);
-      dormant.add(dialBody);
-      const pointer = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.012, 0.07, 0.012)),
-        this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
-      );
-      pointer.position.set(0.44, height + 0.32, 0.14);
-      dormant.add(pointer);
-      for (let i = 0; i < 6; i++) {
-        const a = -Math.PI * 0.7 + (i / 5) * Math.PI * 1.4;
-        const detent = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(0.008, 0.022, 0.006)), this.darkSteelMat
+
+      },
+      extras: (g, { width, depth, height }) => {
+        const rand = mulberry32(0x2a71 + Math.round(width * 100) + kind.length);
+        /* ================= THE SMALL PARTS =================
+           Everything below is a thing a working bench in a quarry actually has.
+           ================================================== */
+
+        // Bolt lines down both ends of the top, through into the frame.
+        for (const bx of [-width / 2 + 0.16, width / 2 - 0.16]) {
+          g.add(boltLine(
+            [bx, height + 0.047, -depth / 2 + 0.16],
+            [bx, height + 0.047, depth / 2 - 0.16],
+            4, this.darkSteelMat, { size: 0.016, normalAxis: 'y' }
+          ));
+        }
+
+        // The seam down the middle: the top is two plates, welded.
+        const seam = weldBead(width - 0.1, this.pipeMat, { radius: 0.013, seed: 0x77 });
+        seam.rotation.z = Math.PI / 2;
+        seam.position.set(0, height + 0.047, 0);
+        g.add(seam);
+        this.own(seam.userData.ownGeometry);
+
+        // A stone-cutter's cramp screwed to the near left corner, jaws open.
+        const cramp = new THREE.Group();
+        const crampBody = new THREE.Mesh(
+          this.own(new THREE.BoxGeometry(0.24, 0.14, 0.12)), this.darkSteelMat
         );
-        detent.position.set(0.44 + Math.sin(a) * 0.11, height + 0.28 + Math.cos(a) * 0.11, 0.125);
-        detent.rotation.z = -a;
-        dormant.add(detent);
+        crampBody.position.y = 0.07;
+        cramp.add(crampBody);
+        for (const [jx, jw] of [[-0.1, 0.05], [0.09, 0.05]]) {
+          const jaw = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(jw, 0.11, 0.18)), this.pipeMat
+          );
+          jaw.position.set(jx, 0.13, 0);
+          cramp.add(jaw);
+        }
+        const crampScrew = new THREE.Mesh(
+          this.own(new THREE.CylinderGeometry(0.018, 0.018, 0.32, 8)), this.pipeMat
+        );
+        crampScrew.rotation.z = Math.PI / 2;
+        crampScrew.position.set(0.08, 0.09, 0);
+        cramp.add(crampScrew);
+        const crampHandle = new THREE.Mesh(
+          this.own(new THREE.CylinderGeometry(0.012, 0.012, 0.2, 6)), this.darkSteelMat
+        );
+        crampHandle.position.set(0.23, 0.09, 0);
+        cramp.add(crampHandle);
+        cramp.position.set(-width / 2 + 0.36, height + 0.045, depth / 2 - 0.27);
+        cramp.rotation.y = 0.2;
+        g.add(cramp);
+
+        // A rag, left where it was dropped. One folded quad, and it is the thing
+        // that stops a bench top being a rendered rectangle.
+        const rag = new THREE.Mesh(
+          this.own(new THREE.BoxGeometry(0.22, 0.012, 0.16)),
+          this.own(new THREE.MeshStandardMaterial({ color: 0x4f463a, roughness: 1.0 }))
+        );
+        rag.position.set(width / 2 - 0.52, height + 0.051, depth / 2 - 0.3);
+        rag.rotation.set(0.04, 0.6, 0.02);
+        g.add(rag);
+        const ragFold = new THREE.Mesh(
+          this.own(new THREE.BoxGeometry(0.13, 0.02, 0.1)), rag.material
+        );
+        ragFold.position.set(width / 2 - 0.46, height + 0.063, depth / 2 - 0.26);
+        ragFold.rotation.set(0.1, 0.9, -0.06);
+        g.add(ragFold);
+
+        /* STONE CHIPS along the back lip, where everything not in use ends up. The
+           band is narrow on purpose — an instrument deployed on this bench stands
+           its screens on the plate just in front of it, and a chip under a stand
+           foot is two objects in one place. */
+        // Chips, not rocks: a fragment lying on its side reaches as far as it is
+        // long, and at the size the floor rubble is drawn one of these reached
+        // twenty centimetres into the plate — into the screen stand of whichever
+        // station a four-sample stage put there. `verify:bench` found it.
+        const chips = this.buildRubbleField({
+          count: 16,
+          minX: -width / 2 + 0.34, maxX: width / 2 - 0.34,
+          minZ: -depth / 2 + 0.085, maxZ: -depth / 2 + 0.105,
+          y: height + 0.046, seed: 0x5c1a + Math.round(width * 10), scale: 0.045
+        });
+        chips.userData.noMerge = true;
+        g.add(chips);
+
+        // Dust the bench has stood in, banked against its windward legs.
+        for (const dx of [-width / 2 + 0.16, width / 2 - 0.16]) {
+          const drift = new THREE.Mesh(
+            this.own(new THREE.SphereGeometry(0.3, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.5)),
+            this.own(new THREE.MeshStandardMaterial({
+              color: 0x574c3e, roughness: 1.0, metalness: 0.0
+            }))
+          );
+          drift.scale.set(1.0, 0.3, 1.5);
+          drift.position.set(dx, 0.0, depth / 2 + 0.24 + rand() * 0.08);
+          drift.receiveShadow = tierAtLeast('T4');
+          g.add(drift);
+        }
+
       }
-    }
-
-    // Tool rail along the back, with three tools racked where a hand reaches.
-    const rail = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.018, 0.018, 0.94, 8)), this.darkSteelMat
-    );
-    rail.rotation.z = Math.PI / 2;
-    rail.position.set(-0.6, height + 0.36, -0.3);
-    g.add(rail);
-    for (const [tx, tl] of [[-0.86, 0.24], [-0.6, 0.32], [-0.34, 0.19]]) {
-      const tool = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.05, tl, 0.035)), this.darkSteelMat
-      );
-      tool.position.set(tx, height + 0.36 - tl / 2 - 0.02, -0.3);
-      g.add(tool);
-    }
-
-    /* THE ONE INDICATOR. Dead until this site's quest is finished.
-       Set into the APRON, not into the cabinet face: the cabinet is cased up
-       while the instrument is deployed, and a status lamp that vanished the
-       moment you started working would be a lamp attached to nothing. */
-    const indicator = new THREE.Mesh(
-      this.own(new THREE.SphereGeometry(0.035, 10, 8)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0x4a4038, emissive: SODIUM, emissiveIntensity: 0, roughness: 0.6
-      }))
-    );
-    indicator.position.set(width / 2 - 0.44, height - 0.14, depth / 2 + 0.036);
-    indicator.userData.noMerge = true;   // its emissive changes on completion
-    indicator.userData.noWeather = true;
-    g.add(indicator);
-    const well = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.055, 0.055, 0.02, 12)), this.darkSteelMat
-    );
-    well.rotation.x = Math.PI / 2;
-    well.position.set(width / 2 - 0.44, height - 0.14, depth / 2 + 0.018);
-    g.add(well);
-
-    /* ================= THE SMALL PARTS =================
-       Everything below is a thing a working bench in a quarry actually has.
-       ================================================== */
-
-    // Bolt lines down both ends of the top, through into the frame.
-    for (const bx of [-width / 2 + 0.16, width / 2 - 0.16]) {
-      g.add(boltLine(
-        [bx, height + 0.047, -depth / 2 + 0.16],
-        [bx, height + 0.047, depth / 2 - 0.16],
-        4, this.darkSteelMat, { size: 0.016, normalAxis: 'y' }
-      ));
-    }
-
-    // The seam down the middle: the top is two plates, welded.
-    const seam = weldBead(width - 0.1, this.pipeMat, { radius: 0.013, seed: 0x77 });
-    seam.rotation.z = Math.PI / 2;
-    seam.position.set(0, height + 0.047, 0);
-    g.add(seam);
-    this.own(seam.userData.ownGeometry);
-
-    // A stone-cutter's cramp screwed to the near left corner, jaws open.
-    const cramp = new THREE.Group();
-    const crampBody = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.24, 0.14, 0.12)), this.darkSteelMat
-    );
-    crampBody.position.y = 0.07;
-    cramp.add(crampBody);
-    for (const [jx, jw] of [[-0.1, 0.05], [0.09, 0.05]]) {
-      const jaw = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(jw, 0.11, 0.18)), this.pipeMat
-      );
-      jaw.position.set(jx, 0.13, 0);
-      cramp.add(jaw);
-    }
-    const crampScrew = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.018, 0.018, 0.32, 8)), this.pipeMat
-    );
-    crampScrew.rotation.z = Math.PI / 2;
-    crampScrew.position.set(0.08, 0.09, 0);
-    cramp.add(crampScrew);
-    const crampHandle = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.012, 0.012, 0.2, 6)), this.darkSteelMat
-    );
-    crampHandle.position.set(0.23, 0.09, 0);
-    cramp.add(crampHandle);
-    cramp.position.set(-width / 2 + 0.36, height + 0.045, depth / 2 - 0.27);
-    cramp.rotation.y = 0.2;
-    g.add(cramp);
-
-    // A rag, left where it was dropped. One folded quad, and it is the thing
-    // that stops a bench top being a rendered rectangle.
-    const rag = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.22, 0.012, 0.16)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0x4f463a, roughness: 1.0 }))
-    );
-    rag.position.set(width / 2 - 0.52, height + 0.051, depth / 2 - 0.3);
-    rag.rotation.set(0.04, 0.6, 0.02);
-    g.add(rag);
-    const ragFold = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.13, 0.02, 0.1)), rag.material
-    );
-    ragFold.position.set(width / 2 - 0.46, height + 0.063, depth / 2 - 0.26);
-    ragFold.rotation.set(0.1, 0.9, -0.06);
-    g.add(ragFold);
-
-    /* STONE CHIPS along the back lip, where everything not in use ends up. The
-       band is narrow on purpose — an instrument deployed on this bench stands
-       its screens on the plate just in front of it, and a chip under a stand
-       foot is two objects in one place. */
-    // Chips, not rocks: a fragment lying on its side reaches as far as it is
-    // long, and at the size the floor rubble is drawn one of these reached
-    // twenty centimetres into the plate — into the screen stand of whichever
-    // station a four-sample stage put there. `verify:bench` found it.
-    const chips = this.buildRubbleField({
-      count: 16,
-      minX: -width / 2 + 0.34, maxX: width / 2 - 0.34,
-      minZ: -depth / 2 + 0.085, maxZ: -depth / 2 + 0.105,
-      y: height + 0.046, seed: 0x5c1a + Math.round(width * 10), scale: 0.045
     });
-    chips.userData.noMerge = true;
-    g.add(chips);
-
-    // Dust the bench has stood in, banked against its windward legs.
-    for (const dx of [-width / 2 + 0.16, width / 2 - 0.16]) {
-      const drift = new THREE.Mesh(
-        this.own(new THREE.SphereGeometry(0.3, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.5)),
-        this.own(new THREE.MeshStandardMaterial({
-          color: 0x574c3e, roughness: 1.0, metalness: 0.0
-        }))
-      );
-      drift.scale.set(1.0, 0.3, 1.5);
-      drift.position.set(dx, 0.0, depth / 2 + 0.24 + rand() * 0.08);
-      drift.receiveShadow = tierAtLeast('T4');
-      g.add(drift);
-    }
-
-    // The bench's own plate number, riveted to the apron.
-    const tag = placard(plate, { w: 0.28, h: 0.11 });
-    tag.position.set(-width / 2 + 0.44, height - 0.14, depth / 2 + 0.006);
-    g.add(tag);
-    this.own(tag.geometry, tag.material, tag.material.map);
-
-    return { group: g, indicator, dormant, topY: height + 0.045 };
-  }
-
-  /**
-   * A site's signpost.
-   *
-   * A SITE LABEL IS A SIGNPOST (CLAUDE.md §Tallow): it names what the bench
-   * teaches, so a player choosing where to go does not have to walk into a
-   * building to find out what is in it. The text is the site's own `label`
-   * from the world data and is written in exactly one place.
-   */
-  buildSiteSign(site, { w = 2.4, h = 0.46 } = {}) {
-    const g = new THREE.Group();
-    const board = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(w, h, 0.05)), this.plateMat
-    );
-    board.castShadow = tierAtLeast('T4');
-    g.add(board);
-    // An angle frame round it, and a bolt at each corner.
-    for (const [bx, by, bw, bh] of [
-      [0, h / 2 + 0.03, w + 0.06, 0.06], [0, -h / 2 - 0.03, w + 0.06, 0.06],
-      [-w / 2 - 0.03, 0, 0.06, h + 0.12], [w / 2 + 0.03, 0, 0.06, h + 0.12]
-    ]) {
-      const bar = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(bw, bh, 0.06)), this.darkSteelMat
-      );
-      bar.position.set(bx, by, 0);
-      g.add(bar);
-    }
-    const text = placard(site.label, { w: w - 0.18, h: h - 0.14 });
-    text.position.z = 0.032;
-    g.add(text);
-    this.own(text.geometry, text.material, text.material.map);
-    return g;
   }
 
   /* ======================================================================
@@ -1567,12 +1418,6 @@ export class LigarWorld {
     );
     hook.position.set(-1.2, 0.3 + 1.0, -1.9);
     g.add(hook);
-
-    // THE SIGN, on the approach face of the west pier, at reading height.
-    const sign = this.buildSiteSign(site);
-    sign.position.set(-PIER_X + 0.05, 2.5, 1.0);
-    sign.rotation.y = 0.28;
-    g.add(sign);
 
     // Grit banked in the lee of the piers, and the wear where feet have gone
     // round the end of the bench for forty years.
@@ -1841,13 +1686,6 @@ export class LigarWorld {
     coal.userData.noMerge = true;
     g.add(coal);
 
-    // THE SIGN, on the rock beside the mouth, read from the floor of the cut
-    // before you duck in.
-    const sign = this.buildSiteSign(site, { w: 2.6, h: 0.5 });
-    sign.position.set(ox + R - 1.4, 2.6, MOUTH_Z + 0.1);
-    sign.rotation.y = -0.22;
-    g.add(sign);
-
     g.position.set(site.pos[0], site.pos[1], site.pos[2]);
     g.rotation.y = this.siteFacing(site);
     this.scene.add(g);
@@ -1921,9 +1759,7 @@ export class LigarWorld {
       this.own(seam.userData.ownGeometry);
     }
 
-    /* THE GANTRY. The portal you walk under to get onto the deck, carrying a
-       header plate over each bench. The sign is the site's own label, so the
-       gantry names what is under it and cannot drift from what is there. */
+    /* THE GANTRY. The portal you walk under to get onto the deck. */
     const GX = D.minX + 0.4;
     const gantry = new THREE.Group();
     for (const gz of [D.minZ + 1.0, cz, D.maxZ - 1.0]) {
@@ -1974,16 +1810,6 @@ export class LigarWorld {
     ));
     gantry.name = 'deck-gantry';
     g.add(gantry);
-
-    /* THE HEADER PLATES. One per bench, hung on the gantry over the site it
-       names, facing the way in. */
-    for (const site of this.data.sites) {
-      if (site.id !== 'site-3' && site.id !== 'site-4') continue;
-      const board = this.buildSiteSign(site, { w: 4.2, h: 0.66 });
-      board.position.set(GX - 0.28, y + 6.35, site.pos[2]);
-      board.rotation.y = -Math.PI / 2;
-      g.add(board);
-    }
 
     /* THE HANDRAIL along the open west edge of the deck, split for the way on.
        A deck with a drop off its edge and no rail is a deck nobody built. */

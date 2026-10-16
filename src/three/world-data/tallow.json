@@ -22,81 +22,83 @@
     "dustDensity": 0.2
   },
   "sublevel": {
-    "floorY": -4.2,
+    "floorY": -5,
     "room": {
-      "minX": -14.0,
-      "maxX": 15.0,
-      "minZ": -34.0,
-      "maxZ": -18.0
+      "minX": -22,
+      "maxX": 14,
+      "minZ": -46,
+      "maxZ": -31
     },
     "stair": {
-      "minX": 4.4,
-      "maxX": 9.6,
-      "minZ": -18.0,
-      "maxZ": -10.0
+      "minX": -6.6,
+      "maxX": -1.4,
+      "minZ": -31,
+      "maxZ": -22
     },
     "headPos": [
-      7.0,
+      -4,
       0,
-      -11.0
+      -23
     ],
-    "ceilingY": -0.6
+    "ceilingY": -0.85
   },
   "landmarks": [
     {
       "asset": "evaporator",
       "pos": [
-        -34,
+        -40,
         0,
-        -40
+        -36
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
-      "radius": 6.0,
+      "rotY": 0,
+      "scale": 1,
+      "radius": 6,
       "minTier": "T3"
     },
     {
       "asset": "evaporator",
       "pos": [
-        -18,
+        -16,
         0,
-        -40
+        -36
       ],
       "rotY": 0.12,
       "scale": 1.06,
-      "radius": 6.0,
-      "minTier": "T3"
+      "radius": 6,
+      "minTier": "T3",
+      "on": "roof"
     },
     {
       "asset": "evaporator",
       "pos": [
-        2,
+        8,
         0,
-        -40
+        -36
       ],
       "rotY": 0.24,
-      "scale": 1.0,
-      "radius": 6.0,
-      "minTier": "T3"
+      "scale": 1,
+      "radius": 6,
+      "minTier": "T3",
+      "on": "roof"
     },
     {
       "asset": "evaporator",
       "pos": [
-        18,
+        32,
         0,
-        -40
+        -36
       ],
       "rotY": 0.36,
       "scale": 1.06,
-      "radius": 6.0,
+      "radius": 6,
       "minTier": "T3"
     },
     {
       "asset": "cracking-tower",
       "pos": [
-        -26,
+        -28,
         0,
-        -54
+        -66
       ],
       "rotY": 0.4,
       "scale": 1.12,
@@ -104,195 +106,152 @@
       "minTier": "T3"
     },
     {
-      "asset": "cracking-tower",
-      "pos": [
-        10,
-        0,
-        -56
-      ],
-      "rotY": -0.25,
-      "scale": 1.0,
-      "radius": 4.4,
-      "minTier": "T3"
-    },
-    {
-      "asset": "pipe-bridge",
-      "pos": [
-        -8,
-        0,
-        -31
-      ],
-      "rotY": 0.0,
-      "scale": 1.0,
-      "radius": 1.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "pipe-bridge",
-      "pos": [
-        26.5,
-        0,
-        -31
-      ],
-      "rotY": 0.0,
-      "scale": 1.0,
-      "radius": 1.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        -6,
-        0,
-        10
-      ],
-      "rotY": 0.0,
-      "scale": 1.0,
-      "radius": 1.75,
-      "minTier": "T3"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        -2.4,
-        0,
-        13.2
-      ],
-      "rotY": 0.5,
-      "scale": 1.0,
-      "radius": 1.75,
-      "minTier": "T3"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        4.6,
-        0,
-        9.4
-      ],
-      "rotY": -0.3,
-      "scale": 1.0,
-      "radius": 1.75,
-      "minTier": "T3"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        9.2,
-        0,
-        14.6
-      ],
-      "rotY": 0.8,
-      "scale": 1.0,
-      "radius": 1.75,
-      "minTier": "T3"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        -9.8,
-        0,
-        2.2
-      ],
-      "rotY": 0.2,
-      "scale": 1.0,
-      "radius": 1.75,
-      "minTier": "T3"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        13.4,
-        0,
-        -2.6
-      ],
-      "rotY": -0.6,
-      "scale": 1.0,
-      "radius": 1.75,
-      "minTier": "T3"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        -19.6,
-        0,
-        6.2
-      ],
-      "rotY": 0.35,
-      "scale": 1.0,
-      "radius": 1.75,
-      "minTier": "T3"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        16.8,
-        0,
-        8.8
-      ],
-      "rotY": 0.15,
-      "scale": 1.0,
-      "radius": 1.75,
-      "minTier": "T3"
-    },
-    {
-      "asset": "salt-heap",
+      "asset": "tower-deck",
       "pos": [
         31,
         0,
-        24
+        -60.5
       ],
-      "rotY": 0.0,
-      "scale": 1.3,
-      "radius": 6.5,
+      "rotY": 0.65,
+      "scale": 1,
+      "radius": 4.4,
+      "minTier": "T3",
+      "host": "site-4"
+    },
+    {
+      "asset": "pipe-bridge",
+      "pos": [
+        -28,
+        0,
+        -44.6
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 1.6,
       "minTier": "T3"
     },
     {
-      "asset": "salt-heap",
+      "asset": "pipe-bridge",
       "pos": [
-        -36,
+        18.5,
         0,
-        20
+        -44.6
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
-      "radius": 5.0,
+      "rotY": 0,
+      "scale": 1,
+      "radius": 1.6,
       "minTier": "T3"
     },
     {
-      "asset": "salt-heap",
+      "asset": "conveyor",
       "pos": [
-        -30,
+        2.5,
         0,
-        34
+        4
       ],
-      "rotY": 0.0,
-      "scale": 1.15,
-      "radius": 5.75,
+      "rotY": -1.57,
+      "scale": 1,
+      "radius": 1.5,
       "minTier": "T3"
     },
     {
-      "asset": "salt-heap",
+      "asset": "sample-point",
       "pos": [
-        38,
+        14,
         0,
-        -8
+        4
       ],
-      "rotY": 0.0,
-      "scale": 0.95,
-      "radius": 4.75,
+      "rotY": 0,
+      "scale": 1,
+      "radius": 4.6,
+      "minTier": "T3",
+      "host": "site-1"
+    },
+    {
+      "asset": "control-house",
+      "pos": [
+        36,
+        0,
+        -23
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 5.4,
+      "minTier": "T3",
+      "host": "site-3"
+    },
+    {
+      "asset": "weigh-hopper",
+      "pos": [
+        -8.69,
+        0,
+        5.4
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 3.4,
+      "minTier": "T3",
+      "host": "site-5"
+    },
+    {
+      "asset": "bagging-line",
+      "pos": [
+        -20.09,
+        0,
+        5.4
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 5.2,
+      "minTier": "T3",
+      "host": "site-6"
+    },
+    {
+      "asset": "loadout-scale",
+      "pos": [
+        -33,
+        0,
+        14
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 4.8,
       "minTier": "T3"
     },
     {
-      "asset": "pan-rim",
+      "asset": "hauler",
       "pos": [
-        62.0,
+        -46,
         0,
-        36.0
+        4
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
-      "radius": 9.0,
+      "rotY": 0.62,
+      "scale": 1,
+      "radius": 6.2,
+      "minTier": "T3"
+    },
+    {
+      "asset": "landing-pad",
+      "pos": [
+        34,
+        0,
+        42
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 8.5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "comms-mast",
+      "pos": [
+        43,
+        0,
+        33
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 1.2,
       "minTier": "T3"
     },
     {
@@ -302,19 +261,31 @@
         0,
         -20
       ],
-      "rotY": 0.0,
+      "rotY": 0,
       "scale": 1.2,
-      "radius": 10.799999999999999,
+      "radius": 10.8,
       "minTier": "T3"
     },
     {
       "asset": "pan-rim",
       "pos": [
-        46,
+        62,
         0,
-        -46
+        36
       ],
-      "rotY": 0.0,
+      "rotY": 0,
+      "scale": 1,
+      "radius": 9,
+      "minTier": "T3"
+    },
+    {
+      "asset": "pan-rim",
+      "pos": [
+        47.11,
+        0,
+        -42.4
+      ],
+      "rotY": 0,
       "scale": 1.1,
       "radius": 9.9,
       "minTier": "T3"
@@ -326,57 +297,165 @@
         0,
         44
       ],
-      "rotY": 0.0,
+      "rotY": 0,
       "scale": 0.9,
       "radius": 8.1,
       "minTier": "T3"
     },
     {
-      "asset": "hauler",
+      "asset": "pan-rim",
       "pos": [
-        -38,
+        66,
+        0,
+        4
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 9,
+      "minTier": "T3"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        22,
+        0,
+        -8
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 1.75,
+      "minTier": "T3"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        24.34,
+        0,
+        12.87
+      ],
+      "rotY": 0.5,
+      "scale": 1,
+      "radius": 1.75,
+      "minTier": "T3"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        -24,
+        0,
+        24
+      ],
+      "rotY": -0.3,
+      "scale": 1,
+      "radius": 1.75,
+      "minTier": "T3"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        -3,
+        0,
+        18
+      ],
+      "rotY": 0.2,
+      "scale": 1,
+      "radius": 1.75,
+      "minTier": "T3"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        10,
+        0,
+        16
+      ],
+      "rotY": -0.6,
+      "scale": 1,
+      "radius": 1.75,
+      "minTier": "T3"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        -14,
         0,
         -6
       ],
-      "rotY": 0.62,
-      "scale": 1.0,
-      "radius": 6.2,
+      "rotY": 0.35,
+      "scale": 1,
+      "radius": 1.75,
       "minTier": "T3"
     },
     {
-      "asset": "landing-pad",
+      "asset": "crate-stack",
       "pos": [
-        34,
+        -30,
         0,
-        42
+        -2
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
-      "radius": 8.5,
+      "rotY": 0.15,
+      "scale": 1,
+      "radius": 1.75,
       "minTier": "T3"
     },
     {
-      "asset": "comms-mast",
+      "asset": "crate-stack",
       "pos": [
-        43,
+        28,
         0,
-        33
+        20
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
-      "radius": 1.2,
+      "rotY": 0.8,
+      "scale": 1,
+      "radius": 1.75,
       "minTier": "T3"
     },
     {
-      "asset": "conveyor",
+      "asset": "salt-heap",
       "pos": [
-        11.0,
+        30.99,
         0,
-        -18
+        5.39
       ],
-      "rotY": 1.571,
-      "scale": 1.0,
-      "radius": 1.5,
+      "rotY": 0,
+      "scale": 1.3,
+      "radius": 6.5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "salt-heap",
+      "pos": [
+        -36,
+        0,
+        24
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 5,
+      "minTier": "T3"
+    },
+    {
+      "asset": "salt-heap",
+      "pos": [
+        -30,
+        0,
+        38
+      ],
+      "rotY": 0,
+      "scale": 1.15,
+      "radius": 5.75,
+      "minTier": "T3"
+    },
+    {
+      "asset": "salt-heap",
+      "pos": [
+        46,
+        0,
+        -14
+      ],
+      "rotY": 0,
+      "scale": 0.95,
+      "radius": 4.75,
       "minTier": "T3"
     },
     {
@@ -386,8 +465,8 @@
         0,
         30
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 2.2,
       "minTier": "T4"
     },
@@ -396,7 +475,7 @@
       "pos": [
         22,
         0,
-        20
+        24
       ],
       "rotY": 0.7,
       "scale": 0.85,
@@ -408,7 +487,7 @@
       "pos": [
         -30,
         0,
-        -30
+        -28.18
       ],
       "rotY": 0.3,
       "scale": 1.1,
@@ -420,7 +499,7 @@
       "pos": [
         40,
         0,
-        10
+        8
       ],
       "rotY": 1.1,
       "scale": 0.9,
@@ -432,19 +511,19 @@
       "pos": [
         -44,
         0,
-        12
+        14
       ],
       "rotY": 0.5,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 2.2,
       "minTier": "T4"
     },
     {
       "asset": "debris-field",
       "pos": [
-        28,
+        2.42,
         0,
-        -38
+        -26
       ],
       "rotY": 0.2,
       "scale": 0.95,
@@ -458,8 +537,8 @@
         0,
         40
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 0.35,
       "minTier": "T4"
     },
@@ -470,8 +549,8 @@
         0,
         36
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 0.35,
       "minTier": "T4"
     },
@@ -482,8 +561,8 @@
         0,
         -44
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 0.35,
       "minTier": "T4"
     },
@@ -494,8 +573,8 @@
         0,
         6
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 0.35,
       "minTier": "T4"
     }
@@ -506,17 +585,17 @@
       "questId": "q1-grain",
       "stage": 1,
       "pos": [
-        -15.0,
+        17,
         0,
-        17.0
+        4
       ],
       "approachPos": [
-        -15.0,
+        22,
         1.6,
-        21.4
+        4
       ],
       "label": "Bench 1 - Atoms",
-      "structure": "bench-awning",
+      "structure": "sample-point",
       "built": true
     },
     {
@@ -524,17 +603,17 @@
       "questId": "q2-core",
       "stage": 2,
       "pos": [
-        7.0,
-        -4.2,
-        -27.0
+        -4,
+        -5,
+        -43
       ],
       "approachPos": [
-        7.0,
-        -2.6,
-        -22.4
+        -4,
+        -3.4,
+        -38
       ],
       "label": "Bench 2 - Inside an Atom",
-      "structure": "sublevel-lab",
+      "structure": "instrument-room",
       "built": true
     },
     {
@@ -542,17 +621,17 @@
       "questId": "q3-catalogue",
       "stage": 3,
       "pos": [
-        25.0,
+        36,
         0,
-        3.0
+        -18
       ],
       "approachPos": [
-        20.6,
+        36,
         1.6,
-        3.0
+        -13
       ],
       "label": "Bench 3 - The Periodic Table",
-      "structure": "vault",
+      "structure": "control-house",
       "built": true
     },
     {
@@ -560,17 +639,17 @@
       "questId": "q4-ledger",
       "stage": 4,
       "pos": [
-        -27.0,
+        31,
         0,
-        -13.0
+        -52
       ],
       "approachPos": [
-        -22.6,
+        31,
         1.6,
-        -13.0
+        -47
       ],
       "label": "Bench 4 - Isotopes and Ions",
-      "structure": "tally-floor",
+      "structure": "tower-deck",
       "built": true
     },
     {
@@ -578,17 +657,17 @@
       "questId": "q5-assay",
       "stage": 5,
       "pos": [
-        6.0,
+        -8.69,
         0,
-        30.0
+        9
       ],
       "approachPos": [
-        6.0,
+        -8.69,
         1.6,
-        34.4
+        14
       ],
       "label": "Bench 5 - Atomic Mass",
-      "structure": "hopper-gantry",
+      "structure": "weigh-hopper",
       "built": true
     },
     {
@@ -596,17 +675,17 @@
       "questId": "q6-weigh",
       "stage": 6,
       "pos": [
-        -4.0,
+        -20.09,
         0,
-        21.0
+        9
       ],
       "approachPos": [
-        -4.0,
+        -20.09,
         1.6,
-        25.4
+        14
       ],
       "label": "Bench 6 - Counting By Weight",
-      "structure": "hopper-gantry",
+      "structure": "bagging-line",
       "built": true
     }
   ],
@@ -614,86 +693,86 @@
     "pos": [
       0,
       1.6,
-      44.0
+      44
     ],
     "lookAt": [
       0,
       1.6,
-      20.0
+      20
     ]
   },
   "t2": {
     "stillCamera": {
       "site-1": {
         "pos": [
-          -15.0,
+          22,
           1.6,
-          21.4
+          4
         ],
         "lookAt": [
-          -15.0,
+          17,
           1.2,
-          17.0
+          4
         ]
       },
       "site-2": {
         "pos": [
-          7.0,
-          -2.6,
-          -22.4
+          -4,
+          -3.4,
+          -38
         ],
         "lookAt": [
-          7.0,
-          -3.0,
-          -27.0
+          -4,
+          -3.8,
+          -43
         ]
       },
       "site-3": {
         "pos": [
-          20.6,
+          36,
           1.6,
-          3.0
+          -13
         ],
         "lookAt": [
-          25.0,
+          36,
           1.2,
-          3.0
+          -18
         ]
       },
       "site-4": {
         "pos": [
-          -22.6,
+          31,
           1.6,
-          -13.0
+          -47
         ],
         "lookAt": [
-          -27.0,
+          31,
           1.2,
-          -13.0
+          -52
         ]
       },
       "site-5": {
         "pos": [
-          6.0,
+          -8.69,
           1.6,
-          34.4
+          14
         ],
         "lookAt": [
-          6.0,
+          -8.69,
           1.2,
-          30.0
+          9
         ]
       },
       "site-6": {
         "pos": [
-          -4.0,
+          -20.09,
           1.6,
-          25.4
+          14
         ],
         "lookAt": [
-          -4.0,
+          -20.09,
           1.2,
-          21.0
+          9
         ]
       }
     }
@@ -706,15 +785,7 @@
       "site-4",
       "site-5",
       "site-6"
-    ],
-    "siteDescriptions": {
-      "site-1": "The first bench, under the lean-to awning west of the crate stacks in the middle of the yard.",
-      "site-2": "The second bench, on the lower floor down the stairwell that opens north of the conveyor gantry.",
-      "site-3": "The third bench, set out in front of the open vault in the east wall of the yard, opposite the awning.",
-      "site-4": "The fourth bench, on the marked-out floor west of the yard, beyond the derelict hauler.",
-      "site-5": "The fifth bench, south of the yard: a raised hopper over a chute with catch bins under its mouth.",
-      "site-6": "The sixth bench, west of the fifth: a second hopper over a chute, where samples are weighed by the mole."
-    }
+    ]
   },
   "tracks": {
     "_note": "Polylines [x, z] drawn into the ground shader. ruts: vehicle tracks through the crust to the mud beneath. paths: trodden footways between the benches.",
@@ -747,36 +818,28 @@
           35
         ],
         [
-          21,
+          10,
+          27
+        ],
+        [
+          -10,
           22
         ],
         [
-          19.5,
-          10
+          -30,
+          18
         ],
         [
-          19.5,
-          -6
+          -60,
+          14
         ],
         [
-          23,
-          -20
+          -110,
+          6
         ],
         [
-          34,
-          -28
-        ],
-        [
-          70,
-          -36
-        ],
-        [
-          150,
-          -58
-        ],
-        [
-          330,
-          -112
+          -200,
+          -10
         ]
       ],
       [
@@ -793,48 +856,48 @@
           4
         ],
         [
-          -44,
-          -3
+          -46,
+          2
         ]
       ],
       [
         [
           -110,
-          -47
+          -72
         ],
         [
           -60,
-          -48
+          -74
         ],
         [
           -20,
-          -48.5
+          -75
         ],
         [
           20,
-          -48
+          -75
         ],
         [
           50,
-          -45
+          -72
         ],
         [
           90,
-          -40
+          -66
         ]
       ],
       [
         [
           -60,
-          -48
+          -74
         ],
         [
           -80,
-          -70
+          -90
         ],
         [
           -140,
-          -120
+          -130
         ],
         [
           -260,
@@ -849,82 +912,86 @@
           44
         ],
         [
-          -8,
-          32
+          10,
+          24
         ],
         [
-          -15,
-          21.4
+          22,
+          4
         ]
       ],
       [
         [
-          0,
-          44
-        ],
-        [
-          6,
-          34.4
-        ]
-      ],
-      [
-        [
-          -15,
-          21.4
-        ],
-        [
-          -15,
+          22,
           4
         ],
         [
-          -22.6,
-          -13
+          14,
+          10
+        ],
+        [
+          -8.69,
+          14
         ]
       ],
       [
         [
-          -22.6,
-          -13
+          -8.69,
+          14
         ],
         [
-          -8,
-          -9
-        ],
-        [
-          7,
-          -9.6
+          -20.09,
+          14
         ]
       ],
       [
         [
-          7,
-          -9.6
+          22,
+          4
         ],
         [
-          17,
+          27,
           -4
         ],
         [
-          20.6,
-          3
+          36,
+          -13
         ]
       ],
       [
         [
-          20.6,
-          3
+          36,
+          -13
         ],
         [
-          26,
-          16
+          20,
+          -16
         ],
         [
-          18,
-          36
+          -4,
+          -23
+        ]
+      ],
+      [
+        [
+          -4,
+          -23
         ],
         [
-          6,
-          35.5
+          10,
+          -26
+        ],
+        [
+          24.5,
+          -30
+        ],
+        [
+          24.5,
+          -44
+        ],
+        [
+          31,
+          -47
         ]
       ]
     ]

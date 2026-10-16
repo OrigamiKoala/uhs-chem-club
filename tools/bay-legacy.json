@@ -1,0 +1,33 @@
+{
+  "ember/q2-calorimetry": [
+    "behind"
+  ],
+  "ember/q4-bonds": [
+    "behind"
+  ],
+  "lanternfall/q4-cloud": [
+    "approach",
+    "behind",
+    "work"
+  ],
+  "lanternfall/q7-pes": [
+    "behind"
+  ],
+  "ligar/q1-joins": [
+    "behind",
+    "work"
+  ],
+  "ligar/q2-lattice": [
+    "approach"
+  ],
+  "ligar/q4-dots": [
+    "behind",
+    "work"
+  ],
+  "ligar/q8-hybrid": [
+    "behind"
+  ],
+  "ligar/q9-orbitals": [
+    "behind"
+  ]
+}

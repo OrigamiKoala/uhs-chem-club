@@ -94,7 +94,7 @@ tokens and primitives; the SCOURED PLATE prose below stays the authority), `docs
   (all 20 reaction animations), `:media`, `:flows`, `:progression`, `:ship`, `:voyage`, `:tallow`,
   `:ligar`, `:lanternfall`, `:bellows`, `:ember` (each builds its real world in Node and checks overlap,
   buried bodies, walkability flood-fill, lamps-only-lit, shader patches), `:bench` (every built instrument
-  on its real bench at six aspects, real pointer paths, foe bodies), `:holo`, `:normals`, then `build`.
+  on its real bench at six aspects, real pointer paths, foe bodies, and the bench bay in all five worlds), `:holo`, `:normals`, then `build`.
 - Other: `deploy:backend` (clasp), `bake:stills`, `bake:video`, `seed`, `test:load`.
 - Test hooks: `globalThis.__LQ_TEST__` is read in `stagerunner.js`/`plates.js` and inert without it.
 
@@ -138,6 +138,9 @@ Lanternfall (9 + `boss-eater`), Ligar (9 + `boss-warden`), Bellows (6 + `boss-co
 own room). Tallow, Lanternfall, Ligar, Bellows and Ember Reach are walkable at T4 (`learn/worlds3d.js`). **Every built world is open from the start**; inside a world quest N opens
 when N−1 is complete; charted (unbuilt) quests don't hold anything shut. World `status` is derived (`live`
 iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`, and per-world records.
+`docs/plans/bench-integration.md` (benches fold into each world's equipment, Ligar gets a mine): P0, the
+shared groundwork (bay contract, one bench builder, signs gone), and P1 (Tallow re-laid, six hosts) are done;
+P2 (Ligar surface) onward is not started.
 
 - **Registry** `learn/curriculum.js` (pure data/functions, no DOM), `progress.js`, `worlds/unitNN-*.js`,
   `quests/<world>/<quest>.js`. **Quest contract** (`quests/_template.js`): export `mount(container, ctx)`
@@ -177,7 +180,18 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   `showBriefing()` on stage 1.
 - **Per-world notes:** Tallow `q1-grain` … `q6-weigh` (atoms/elements/mixtures; inside an atom — the
   clip-on charge needle stays on; periodic table; isotopes/ions; atomic mass — a balance weighs, it
-  never divides; counting by weight — the mole is *discovered*). Lanternfall `q1-wave` … `q9-absorb`
+  never divides; counting by weight — the mole is *discovered*). Tallow is one process line walked from the
+  pad inward (`tools/gen-tallow-layout.mjs`: brine pans, evaporator row, cracking towers, pipe bridges,
+  the 22 m conveyor tail-east/head-west, weigh hopper and bagging line, loadout scale beside the hauler)
+  and each bench stands at its quest's step: 1 sample point at the conveyor tail, 2 instrument room under
+  the row (the sub-level: floor -5, roof -0.3, two evaporators stand on its roof on girders and columns
+  inside; stair between them, z -31…-22), 3 control house (veranda desk, record wall), 4 a cracking tower
+  with its sample-cooler skid (the tower is part of the host), 5 weigh hopper hung under the belt's
+  discharge (`CONVEYOR.outlet` in `plant.js`), 6 sack scale + bucket elevator. Hosts are `tallow/stations.js`
+  builders; `site.pos` is the bench centre, every facing is cardinal, a host's landmark carries `host:
+  <siteId>` (a bench is inside its host's footprint; the data check exempts only that pair); the cased
+  instrument is the one unsalted, less rough thing on the machine. `t1.siteDescriptions` is gone (nothing
+  read it). Lanternfall `q1-wave` … `q9-absorb`
   (plain labels until the word is earned; honest plates; box rack magnet measures the REAL sample;
   `q5-numbers`/`q9-orbitals` are beyond the exam and say so). Ligar `q1-joins` … `q9-orbitals` (Lewis
   board has one rule: H and F share one pair; domain rig puts every angle behind a protractor; formula
@@ -210,8 +224,16 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   its PMREM environment map, a PBR kit (`materials/pbr-kit.js`: maps agree; OpenGL-style normals —
   never compensate per material, `verify:normals`; `aoMap` uses uv2; `mergeStatic` bakes props, keep
   `noMerge` for anything addressable). The five Learn worlds share one arrival/render path
-  (`enterLearnWorld`, `isLearnWorld`; a `worlds3d.js` entry's `key` is its voyage/`worldFor` name); a site faces its `approachPos`; a site sign is `Bench N - <topic>`,
-  ≤6 words, sharing a word with its quest title. **Only lamps are lit**; a lamp is a `lampMark` in a
+  (`enterLearnWorld`, `isLearnWorld`; a `worlds3d.js` entry's `key` is its voyage/`worldFor` name); a site faces its `approachPos`; a site's data `label` is `Bench N - <topic>`,
+  ≤6 words, sharing a word with its quest title (Star Map, guide and `[E]` prompt read it; **no sign stands
+  in any world**). **Every bench is built by `buildBayBench`** (`three/bench-bay.js`): the 4.8 × 1.3 m plate at
+  0.95 m, a frame `skin` (`shelf`, `desk`, `deck`, `ledge`; dress only, never size or anchor), the cased
+  instrument slot each world dresses itself, the key rail and one indicator. `BENCH_BAY`/`bayBoxes()` are the
+  clearance volumes (plate, work = measured instrument reach, panels, behind, approach) in the bench frame;
+  `verify:bench` fails any world body inside one except what `tools/bay-legacy.json` still waives (a
+  ratchet: a rebuilt bench's line must be deleted, and new hosts get none; Tallow's is empty, the rest are
+  Ligar, Lanternfall and Ember's old shelters). A host leaves the bay empty by standing machinery to the
+  sides (|x| > 2.8), behind the plate (z < -2) or above 2.4 m. **Only lamps are lit**; a lamp is a `lampMark` in a
   `LampPool` (fixed light count — a changed count recompiles every material), never a `PointLight`.
   Shadows are re-drawn only when something moves (`shadow-pace.js`); sky is drawn last of the opaques
   (`SKY_RENDER_ORDER`; a world's opaque material must not set `depthWrite:false`).

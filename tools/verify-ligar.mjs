@@ -22,7 +22,7 @@
  *    drop more than a step to its neighbour: the walk clamps the camera to the
  *    ground, so an unguarded ledge is somewhere a player falls five metres.
  *  - T4-only landmarks are decoration: removing them strands nothing.
- *  - No player-facing string carries withheld vocabulary, emoji, or a long sign.
+ *  - No player-facing string carries withheld vocabulary, emoji, or a long label.
  */
 
 import { readFileSync } from 'node:fs';
@@ -157,16 +157,16 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
   check(wrong.length === 0, 'built sites are exactly the quests with a module',
     `sites whose built flag disagrees with the chart: ${wrong.map(s => s.id).join(', ')}`);
 
-  // A SITE LABEL IS A SIGNPOST. It is the quest's own title, numbered, so the
-  // sign cannot drift from what the bench under it teaches.
+  // A SITE LABEL NAMES ITS BENCH in the Star Map, the guide and the [E] prompt (no sign stands
+  // in the world). It is the quest's own title, numbered, so it cannot drift from what the bench teaches.
   const off = [];
   for (const s of world.sites) {
     const q = chartQuests.find(x => x.id === s.questId);
     const want = q ? `Bench ${s.stage} - ${q.title}` : null;
     if (s.label !== want) off.push(`${s.id} reads "${s.label}", want "${want}"`);
   }
-  check(off.length === 0, 'every sign names its bench by the quest it teaches',
-    `signs that do not name their bench:\n         ${off.join('\n         ')}`);
+  check(off.length === 0, 'every site label names its bench by the quest it teaches',
+    `site labels that do not name their bench:\n         ${off.join('\n         ')}`);
 }
 
 {

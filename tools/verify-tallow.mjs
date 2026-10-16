@@ -7,7 +7,8 @@
  *  - NO TWO THINGS OCCUPY THE SAME SPACE. Every landmark declares a footprint and
  *    every pair of footprints is disjoint, computed rather than eyeballed. A world
  *    where two objects interpenetrate is a world the player stops believing.
- *  - Every site a quest is played at exists, is reachable, and is clear of props.
+ *  - Every site a quest is played at exists, is reachable, and is clear of props
+ *    that are not its own host (a bench is built INTO a piece of the plant).
  *  - The sub-level is a real excavation: the stair joins the surface to the room,
  *    the room is below the surface, and the ramp is walkable rather than a cliff.
  *  - Every quest in the Unit 1 chart has a site, and every site names a real quest.
@@ -61,13 +62,51 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
   const clashes = [];
   for (const s of surface) {
     for (const l of world.landmarks) {
+      if (l.host === s.id) continue;       // the machine this bench is part of
       const d = dist(s.pos, l.pos);
       if (d < l.radius + 2.2) clashes.push(`${s.id} is inside ${l.asset} (${d.toFixed(2)}u)`);
     }
   }
   check(clashes.length === 0,
-    `${surface.length} surface sites stand clear of every prop`,
+    `${surface.length} surface sites stand clear of every prop that is not their host`,
     `sites clash with props:\n         ${clashes.join('\n         ')}`);
+}
+
+{
+  // A host is declared where its machinery stands, and its bench is close enough to be part of it.
+  const siteIds = new Set(world.sites.map(s => s.id));
+  const hosts = world.landmarks.filter(l => l.host);
+  const strays = hosts.filter(h => !siteIds.has(h.host));
+  const far = hosts.filter(h => {
+    const s = world.sites.find(x => x.id === h.host);
+    return s && dist(s.pos, h.pos) > 12;
+  });
+  const twice = hosts.filter((h, i) => hosts.findIndex(o => o.host === h.host) !== i);
+  check(strays.length === 0 && far.length === 0 && twice.length === 0,
+    `${hosts.length} hosts, each beside the one bench it holds`,
+    `hosts out of step with their sites: ${[...strays, ...far, ...twice].map(h => `${h.asset}@[${h.pos}]`).join(', ')}`);
+
+  // The vessels that stand on the instrument room's roof are over the room, and nothing else is.
+  const room = world.sublevel.room;
+  const onRoof = world.landmarks.filter(l => l.on === 'roof');
+  const wrong = onRoof.filter(l => !(l.pos[0] - 4 > room.minX && l.pos[0] + 4 < room.maxX && l.pos[2] - 4 > room.minZ && l.pos[2] + 4 < room.maxZ));
+  check(onRoof.length >= 1 && wrong.length === 0,
+    `${onRoof.length} evaporators stand on the instrument room's roof`,
+    `vessels declared on the roof but not over the room: ${wrong.map(l => `[${l.pos}]`).join(', ') || 'none declared'}`);
+}
+
+{
+  // The Hopper is fought on open ground in front of the spawn (boss-arena.js keeps the coordinates).
+  const src = readFileSync(join(root, 'src/learn/engine/boss-arena.js'), 'utf8');
+  const entry = src.match(/'boss-hopper':\s*\{[^}]*\}/)?.[0] || '';
+  const num = re => (entry.match(re)?.[1] || '').split(',').map(Number);
+  const boss = num(/bossPos:\s*\[([^\]]+)\]/), player = num(/playerPos:\s*\[([^\]]+)\]/);
+  const blocking = world.landmarks.filter(l =>
+    l.asset !== 'pan-rim' && l.asset !== 'stake-marker' && l.asset !== 'debris-field' &&
+    (dist([boss[0], 0, boss[2]], l.pos) < l.radius + 6 || dist([player[0], 0, player[2]], l.pos) < l.radius + 1.5));
+  check(boss.length === 3 && player.length === 3 && blocking.length === 0,
+    `the Hopper's ground at [${boss[0]}, ${boss[2]}] is open for 6u round the boss and under the player`,
+    `the boss arena is not clear: ${blocking.map(l => `${l.asset}@[${l.pos}]`).join(', ') || 'could not read boss-hopper'}`);
 }
 
 {
@@ -204,10 +243,11 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
     'every site is reachable with all T4 decoration removed',
     `approach marks blocked at T3:\n         ${blocked.join('\n         ')}`);
 
-  const t1 = world.t1.siteDescriptions;
-  const described = world.sites.every(s => typeof t1[s.id] === 'string' && t1[s.id].length > 20);
-  check(described, 'every site has a description a player with no 3D view can use',
-    'a site has no T1 description');
+  // The DOM-only tier walks the sites in `t1.siteOrder`; nothing reads a description of where each
+  // one stands (they described a world that no longer exists), so none is kept.
+  const ordered = world.t1.siteOrder.length === world.sites.length &&
+    world.sites.every(s => world.t1.siteOrder.includes(s.id));
+  check(ordered, 'the DOM-only tier lists every site', 'the T1 site order is out of step with the sites');
 
   const framed = world.sites.every(s => world.t2.stillCamera[s.id]);
   check(framed, 'every site has a still framing for the baked tier',
@@ -235,8 +275,7 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
 
   const strings = [
     world.name, world.place, world.oneLine,
-    ...world.sites.map(s => s.label),
-    ...Object.values(world.t1.siteDescriptions)
+    ...world.sites.map(s => s.label)
   ];
 
   const bad = [];
@@ -254,7 +293,7 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
   const emoji = strings.filter(s => /\p{Extended_Pictographic}/u.test(s));
   check(emoji.length === 0, 'the world is emoji-free', `emoji in: ${emoji.join(', ')}`);
 
-  // A site label is a signpost, so it is short and it is readable at a glance.
+  // A site label is read in the Star Map and the guide, so it is short and readable at a glance.
   const tooLong = world.sites.filter(s => s.label.split(/\s+/).length > 6).map(s => s.label);
   check(tooLong.length === 0,
     'every site label is short enough to read at a glance',

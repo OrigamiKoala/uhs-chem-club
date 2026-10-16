@@ -9,14 +9,14 @@
  *   - a low apron of treadplate the bench stands on, so feet are level with the
  *     plate and the walk knows about it (`world.raised`),
  *   - an open-fronted steel shelter: four posts, a pitched sheet roof, a back
- *     wall, a work lamp and the sign,
+ *     wall and a work lamp,
  *   - the cased instrument on a bench across the back, facing the way in,
  *   - and ONE signature piece behind or beside it that says which bench this
- *     is before the player reads the sign: three slate boards with a double
+ *     is without a word on it: three slate boards with a double
  *     bond in a different place on each, a hub with six arms on a mast, two
  *     charged plates on insulators, a torsion frame, a ladder of boxes.
  *
- * Every builder takes the world (its materials, `own`, `buildBench`, the sign
+ * Every builder takes the world (its materials, `own`, `buildBench`
  * and the luminaire) and returns what the world needs to register the site:
  * the group, the bench, and the colliders in site-local terms.
  */
@@ -302,16 +302,8 @@ export function buildStation(world, site) {
 
   const sig = (SIGNATURES[STATION_SIGN[site.questId]] || signatureShape)(world, g);
 
-  // The work lamp under the roof, and the sign on the front-left post's approach face.
+  // The work lamp under the roof, and the rail it hangs the front of the roof from.
   g.add(world.buildLuminaire(0, APRON.y + H - 0.35, 0.6));
-  const sign = world.buildSiteSign(site);
-  sign.position.set(-W / 2 + 1.35, APRON.y + 2.7, D / 2 + 0.2);
-  g.add(sign);
-  for (const sx of [-0.9, 0.9]) {
-    const hang = new THREE.Mesh(world.own(new THREE.BoxGeometry(0.04, 0.5, 0.04)), world.darkSteelMat);
-    hang.position.set(-W / 2 + 1.35 + sx, APRON.y + 3.0, D / 2 + 0.15);
-    g.add(hang);
-  }
   const rail = new THREE.Mesh(world.own(new THREE.BoxGeometry(W - 0.6, 0.06, 0.06)), world.darkSteelMat);
   rail.position.set(0, APRON.y + 3.2, D / 2 + 0.15);
   g.add(rail);

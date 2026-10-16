@@ -20,25 +20,32 @@
  *                 flats and mirage are drawn by its shader
  *   surfaces.js   the salt-polygon crust, piled salt, the islands' strata, and
  *                 the salt that creeps up everything standing on the flat
- *   plant.js      the refinery: evaporators, columns, pipe racks, conveyor, mast
+ *   plant.js      the refinery: evaporators, columns, pipe racks, conveyor, loadout scale, mast
+ *   stations.js   the six hosts: the machine each bench is built into
  *   hauler.js     the derelict ore hauler
  *   vista.js      what stands beyond the walk: rock islands, the far plant
  *   effects.js    the air moving: motes, grit streams, salt devils, plumes
  *   kit.js        structural stock: I-sections and corrugated sheet
  *
  * WHAT IS HERE, AND WHY IT IS HERE
- * Six Unit 1 sites stand on the flat as physical places, one per written quest:
- *   site-1  Bench 1 — q1-grain. Under the lean-to in the yard.
- *   site-2  Bench 2 — q2-core. Down the stairwell, in the lab.
- *   site-3  Bench 3 — q3-catalogue. Before the blockhouse in the east wall,
- *           its door racked back.
- *   site-4  Bench 4 — q4-ledger. A painted floor with a ledger board,
- *           west of the yard beyond the hauler.
- *   site-5  Bench 5 — q5-assay. A raised hopper over a chute with a row
- *           of catch bins, south of the yard.
- *   site-6  Bench 6 — q6-weigh. The same hopper gantry, laid again beside
- *           the fifth (the weigh bench is the assay floor too).
- * All six carry their instruments as built objects (`BUILT_BENCHES`).
+ * The refinery is one process line, walked from the landing pad inward: brine pans,
+ * the evaporator row, cracking towers, pipe bridges, the conveyor, the weigh hopper
+ * and the bagging line, and the loadout scale beside the hauler. Six Unit 1 benches
+ * are built INTO that line, one per written quest, each at the step of the process
+ * its quest is about (`tallow/stations.js`; laid out by `tools/gen-tallow-layout.mjs`):
+ *   site-1  Bench 1 — q1-grain. The raw-salt sample point at the conveyor's tail.
+ *   site-2  Bench 2 — q2-core. The instrument room under the evaporator row, down
+ *           the stair that rises between the two vessels over it.
+ *   site-3  Bench 3 — q3-catalogue. The process control house south of the row; its
+ *           veranda holds the desk, its record wall the card index.
+ *   site-4  Bench 4 — q4-ledger. A cracking tower's sampling deck: the column stands
+ *           behind the bench, a draw-off line comes down to a sample-cooler skid.
+ *   site-5  Bench 5 — q5-assay. The weigh hopper hung under the conveyor head's
+ *           discharge, catch bins and a floor balance under its chute.
+ *   site-6  Bench 6 — q6-weigh. The sack-filling scale on the bagging line, fed from
+ *           the hopper's bins by a belt and a bucket elevator.
+ * All six carry their instruments as built objects (`BUILT_BENCHES`). A bench is part of
+ * its host (one object), and the host keeps the bay (`bench-bay.js`) empty.
  *
  * PHYSICS: every prop declares a footprint in `tallow.json` and every footprint is
  * disjoint — no two objects occupy the same space, which `verify:tallow` proves
@@ -48,18 +55,18 @@
  * being teleported under the ground.
  *
  * LIGHT: nothing here blooms. The only emissive surfaces in the whole scene are
- * sodium luminaires, the mast's obstruction lamp, the vault's door lamp and one
- * indicator per built site. That is the rule in CLAUDE.md §4.2.
+ * sodium luminaires, the mast's obstruction lamp and one indicator per built site. That is the rule in CLAUDE.md §4.2.
  */
 
 import * as THREE from 'three';
 import tallowData from './world-data/tallow.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
+import { buildBayBench } from './bench-bay.js';
 import {
   platedMetal, treadPlate, sedimentaryRock,
   buildMaterial, enableAO,
   texSize, heightField, heightToNormal, asDataTexture, fbm,
-  boltRing, boltLine, weldBead, cableRun, pipeFlange, placard,
+  boltLine, weldBead, cableRun, pipeFlange, placard,
   hazardStripe, mergeStatic
 } from './materials/pbr-kit.js';
 import { createSalvageCrateTexture } from './materials/tallow-textures.js';
@@ -73,12 +80,13 @@ import {
 } from './tallow/surfaces.js';
 import { createTallowEffects } from './tallow/effects.js';
 import {
-  buildEvaporator, buildCrackingTower, buildPipeBridge, buildConveyor,
+  buildEvaporator, buildCrackingTower, buildPipeBridge, buildConveyor, buildLoadoutScale,
   buildCommsMast, buildDebrisField, buildStakeMarker, mulberry32, SUPPORT_POINTS
 } from './tallow/plant.js';
+import { HOST_BUILDERS, HOPPER } from './tallow/stations.js';
 import { buildHauler } from './tallow/hauler.js';
 import { buildTallowVista } from './tallow/vista.js';
-import { iBeamGeometry, corrugatedGeometry } from './tallow/kit.js';
+import { iBeamGeometry } from './tallow/kit.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
 
@@ -122,12 +130,7 @@ export class TallowWorld {
     this.initPanRims();
     this.initHauler();
     this.initLandingPad();
-    this.initSalvageBench();
-    this.initCoreBench();
-    this.initCatalogueVault();
-    this.initTallyFloor();
-    this.initHopperGantry('site-5', { tag: 'GNT-05', plate: 'BN-05' });
-    this.initHopperGantry('site-6', { tag: 'GNT-06', plate: 'BN-06' });
+    this.initHosts();
     this.initVista();
     this.initEffects();
     this.initLampPool();
@@ -203,7 +206,7 @@ export class TallowWorld {
    * `weather` number. Built first, because the lab below ground uses them too.
    *
    * RESOLUTION IS SPENT WHERE THE PLAYER'S FACE GOES: `pale` is the bench top
-   * and the lean-to, read from half a metre, so it is drawn at full size; the
+   * and the host's sheet, read from half a metre, so it is drawn at full size; the
    * drums, columns and pipe runs are read from ten metres and across repeats.
    */
   initMetals() {
@@ -446,11 +449,12 @@ export class TallowWorld {
     }
 
     // --- Roof slab over the lab, leaving the stair cut open to the sky ---
+    this.roofThick = 0.55;
     const roof = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(r.maxX - r.minX + 1.2, 0.55, r.maxZ - r.minZ + 0.6)),
+      this.own(new THREE.BoxGeometry(r.maxX - r.minX + 1.2, this.roofThick, r.maxZ - r.minZ + 0.6)),
       this.own(new THREE.MeshStandardMaterial({ color: 0x554d42, roughness: 0.95, metalness: 0.3 }))
     );
-    roof.position.set((r.minX + r.maxX) / 2, this.sub.ceilingY + 0.275, (r.minZ + r.maxZ) / 2 - 0.3);
+    roof.position.set((r.minX + r.maxX) / 2, this.sub.ceilingY + this.roofThick / 2, (r.minZ + r.maxZ) / 2 - 0.3);
     roof.castShadow = roof.receiveShadow = tierAtLeast('T4');
     g.add(roof);
 
@@ -561,15 +565,49 @@ export class TallowWorld {
     // lit — and they are the reason the sub-level reads warm while the flat above
     // reads bleached.
     //
-    // Four lamps, two lights: each pair along z is lit by one pooled light at
-    // its midpoint (a little stronger, a little further reaching), which puts
-    // the brightest floor right over the bench at site 2. Four point lights
-    // here were shaded on every pixel of the salt flat above as well.
-    for (const [lx, lz] of [[-7, -23], [-7, -30], [7, -23], [7, -30]]) {
-      g.add(this.buildLuminaire(lx, this.sub.ceilingY - 0.42, lz, { light: null }));
+    // Fixtures are many and lights are few: each group of fixtures is lit by ONE
+    // pooled light at its middle (a little stronger, a little further reaching),
+    // which puts the brightest floor right over the bench at site 2. A point light
+    // per fixture would be shaded on every pixel of the salt flat above as well.
+    const bench = this.data.sites.find(x => x.id === 'site-2');
+    const bx = bench ? bench.pos[0] : (r.minX + r.maxX) / 2;
+    const lampGroups = [
+      // over the bench: four fixtures, two lights
+      ...[-4.5, 4.5].map(dx => ({ fixtures: [-44.2, -41.2].map(lz => [bx + dx, lz]), mark: [bx + dx, -42.7] })),
+      // under the vessels, and at the stair foot
+      ...this.data.landmarks.filter(l => l.on === 'roof').map(l => ({ fixtures: [[l.pos[0], l.pos[2] - 3.0]], mark: [l.pos[0], l.pos[2] - 3.0] })),
+      { fixtures: [[bx, s.minZ - 0.8]], mark: [bx, s.minZ - 0.8] }
+    ];
+    for (const grp of lampGroups) {
+      for (const [lx, lz] of grp.fixtures) g.add(this.buildLuminaire(lx, this.sub.ceilingY - 0.42, lz, { light: null }));
+      g.add(this.lampMark(grp.mark[0], this.sub.ceilingY - 0.62, grp.mark[1], { intensity: 6.5, distance: 16 }));
     }
-    for (const lx of [-7, 7]) {
-      g.add(this.lampMark(lx, this.sub.ceilingY - 0.62, -26.5, { intensity: 6.5, distance: 16 }));
+
+    /* ================= THE VESSELS' STEEL =================
+       The two evaporators over the room stand on its roof, and their load comes
+       down through the room: a girder under each vessel on either side of its
+       centre line, and four columns to the deck. ================== */
+    this.labColliders = [];
+    const girderY = this.sub.ceilingY - 0.33 - 0.14;
+    for (const l of this.data.landmarks) {
+      if (l.on !== 'roof') continue;
+      for (const dz of [-2.2, 2.2]) {
+        const gd = new THREE.Mesh(this.own(iBeamGeometry(6.4, { h: 0.28, w: 0.2 })), this.darkSteelMat);
+        gd.geometry.rotateZ(Math.PI / 2);
+        gd.position.set(l.pos[0], girderY, l.pos[2] + dz);
+        g.add(gd);
+        for (const dx of [-2.9, 2.9]) {
+          const hCol = girderY - 0.14 - fy;
+          const col = new THREE.Mesh(this.own(iBeamGeometry(hCol, { h: 0.3, w: 0.26 })), this.darkSteelMat);
+          col.position.set(l.pos[0] + dx, fy + hCol / 2, l.pos[2] + dz);
+          col.castShadow = tierAtLeast('T4');
+          g.add(col);
+          const foot = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.6, 0.05, 0.6)), this.darkSteelMat);
+          foot.position.set(l.pos[0] + dx, fy + 0.025, l.pos[2] + dz);
+          g.add(foot);
+          this.labColliders.push({ x: l.pos[0] + dx, z: l.pos[2] + dz, radius: 0.34 });
+        }
+      }
     }
 
     /* ================= THE SERVICES =================
@@ -662,7 +700,7 @@ export class TallowWorld {
     const drain = new THREE.Mesh(
       this.own(new THREE.CylinderGeometry(0.17, 0.17, 0.04, 14)), this.darkSteelMat
     );
-    drain.position.set(-3.5, fy + 0.005, -24.0);
+    drain.position.set(bx - 3.5, fy + 0.005, -39.5);
     g.add(drain);
     const stain = new THREE.Mesh(
       this.own(new THREE.CircleGeometry(0.72, 20)),
@@ -672,7 +710,7 @@ export class TallowWorld {
       }))
     );
     stain.rotation.x = -Math.PI / 2;
-    stain.position.set(-3.5, fy + 0.002, -24.0);
+    stain.position.set(bx - 3.5, fy + 0.002, -39.5);
     g.add(stain);
 
     // Hazard striping across the stair head, where the floor stops being floor.
@@ -688,14 +726,12 @@ export class TallowWorld {
 
     // Wall placards: the room's own designations, stencilled on plate.
     for (const [tx, tz, code] of [
-      [r.minX + 0.18, -26.0, 'LAB-02'],
-      [r.maxX - 0.18, -29.0, 'VENT-7'],
-      [-2.0, r.minZ + 0.18, 'DIAG BAY']
+      [r.minX + 0.18, -40.0, 'LAB-02'],
+      [r.maxX - 0.18, -38.0, 'VENT-7']
     ]) {
       const tag = placard(code, { w: 0.62, h: 0.2 });
       tag.position.set(tx, fy + 1.85, tz);
-      if (tz === r.minZ + 0.18) tag.rotation.y = 0;
-      else tag.rotation.y = tx < 0 ? Math.PI / 2 : -Math.PI / 2;
+      tag.rotation.y = tx < 0 ? Math.PI / 2 : -Math.PI / 2;
       g.add(tag);
       this.own(tag.geometry, tag.material, tag.material.map);
     }
@@ -799,9 +835,9 @@ export class TallowWorld {
   }
 
   /**
-   * THE LAMPS SHARE TWO LIGHTS. The lab's pair of pooled lamps and the work
-   * lamp under the lean-to are forty-five metres apart, so the two lights
-   * nearest the eye are always the ones that show (lamp-pool.js).
+   * THE LAMPS SHARE TWO LIGHTS. The lab's pooled lamps and the work lamps on the
+   * hosts stand tens of metres apart, so the two lights nearest the eye are
+   * always the ones that show (lamp-pool.js).
    */
   initLampPool() {
     this.lampPool = new LampPool(this.scene, 2);
@@ -819,13 +855,15 @@ export class TallowWorld {
     const ctx = this.plantCtx;
     for (const lm of this.data.landmarks) {
       if (lm.minTier === 'T4' && !tierAtLeast('T4')) continue;
-      const y = this.surfaceHeight(lm.pos[0], lm.pos[2]);
+      // A vessel over the instrument room stands on its roof, whose top is the foundation's foot.
+      const y = lm.on === 'roof' ? this.sub.ceilingY + this.roofThick + 0.3 : this.surfaceHeight(lm.pos[0], lm.pos[2]);
       let node = null;
       switch (lm.asset) {
         case 'evaporator': node = buildEvaporator(ctx, lm.scale); break;
         case 'cracking-tower': node = buildCrackingTower(ctx, lm.scale); break;
         case 'pipe-bridge': node = buildPipeBridge(ctx); break;
         case 'conveyor': node = buildConveyor(ctx); break;
+        case 'loadout-scale': node = buildLoadoutScale(ctx); break;
         case 'comms-mast': node = buildCommsMast(ctx); break;
         case 'debris-field': node = buildDebrisField(ctx, lm.scale, lm.pos[0], lm.pos[2]); break;
         case 'stake-marker': node = buildStakeMarker(ctx); break;
@@ -1390,664 +1428,310 @@ export class TallowWorld {
      ====================================================================== */
 
   /**
-   * A work bench: chamfered plated top, braced legs, an instrument housing with
-   * a dark aperture, a power dial, and one indicator that lights when the site's
-   * quest is complete. Built twice — once under the awning, once in the lab.
+   * A work bench: the shared bay bench (`bench-bay.js`) in the sampling-shelf
+   * skin, dressed the way a salvage bench is. `kind` is which instrument is cased
+   * up on this bench. It changes the face of the dormant cabinet and nothing else:
+   * five sites used to stand five identical cabinets with a microscope's round
+   * aperture in them, so a player walking the flat could not tell the card index
+   * from the assay works until they were standing at it.
    */
   buildBench(opts = {}) {
-    // A salvage bench is long. It has to be: the instrument that deploys on it
-    // lays out up to four stations at 0.92 m centres, and a station is 0.72 m
-    // across its tray. Anything shorter and the end trays would hang off the
-    // plate — the bench has to be able to hold what is put on it.
-    // `kind` is which instrument is cased up on this bench. It changes the
-    // face of the dormant cabinet and nothing else: five sites used to stand
-    // five identical cabinets with a microscope's round aperture in them, so a
-    // player walking the flat could not tell the card index from the assay
-    // works until they were standing at it. The bench under them is the same
-    // bench — one builder, one plate, one set of colliders.
-    const { width = 4.8, depth = 1.3, height = 0.95, kind = 'scope' } = opts;
-    const g = new THREE.Group();
-
-    const top = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(width, 0.09, depth)),
-      this.plateMat
-    );
-    top.position.y = height;
-    top.castShadow = top.receiveShadow = tierAtLeast('T4');
-    g.add(top);
-
-    // A raised lip along the back, so nothing rolls off into the crust.
-    const lip = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(width, 0.12, 0.06)), this.darkSteelMat
-    );
-    lip.position.set(0, height + 0.1, -depth / 2 + 0.03);
-    g.add(lip);
-
-    // Legs with cross-bracing and footplates.
-    const legGeo = this.own(new THREE.BoxGeometry(0.1, height, 0.1));
-    for (const [lx, lz] of [
-      [-width / 2 + 0.12, -depth / 2 + 0.1], [width / 2 - 0.12, -depth / 2 + 0.1],
-      [-width / 2 + 0.12, depth / 2 - 0.1], [width / 2 - 0.12, depth / 2 - 0.1]
-    ]) {
-      const leg = new THREE.Mesh(legGeo, this.darkSteelMat);
-      leg.position.set(lx, height / 2, lz);
-      leg.castShadow = tierAtLeast('T4');
-      g.add(leg);
-      const foot = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.2, 0.03, 0.2)), this.darkSteelMat
-      );
-      foot.position.set(lx, 0.015, lz);
-      g.add(foot);
-    }
-    const brace = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(width - 0.3, 0.06, 0.06)), this.darkSteelMat
-    );
-    brace.position.set(0, height * 0.32, 0);
-    g.add(brace);
-
-    // Under-bench shelf holding two spare crates.
-    const shelf = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(width - 0.35, 0.05, depth - 0.3)), this.darkSteelMat
-    );
-    shelf.position.set(0, height * 0.42, 0);
-    g.add(shelf);
-    for (const sx of [-width * 0.28, width * 0.22]) {
-      const c = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.42, 0.32, 0.42)),
-        this.crateMats ? this.crateMats[0] : this.plateMat
-      );
-      c.position.set(sx, height * 0.42 + 0.19, 0);
-      g.add(c);
-    }
-
-    // THE DORMANT INSTRUMENT.
-    // What stands on the bench when nobody is working at it is the instrument,
-    // cased up: cabinet, aperture, dial, tool rail. When the player presses [E]
-    // the case opens and the stations deploy on this same plate — so the two are
-    // never drawn at once, and no two objects ever share that square of bench.
-    const dormant = new THREE.Group();
-    // Held out of any static bake: this whole subtree is hidden while the
-    // instrument is deployed, and a baked cabinet could never be cased up.
-    dormant.userData.noMerge = true;
-    g.add(dormant);
-
-    // The instrument housing: a cabinet standing on the bench, chamfered at the
-    // top-left the way a plate is, with a recessed dark aperture in its face.
-    const housing = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.15, 0.78, 0.52)),
-      kind === 'cards' ? this.darkSteelMat : this.plateMat
-    );
-    housing.position.set(0, height + 0.43, -0.16);
-    housing.castShadow = housing.receiveShadow = tierAtLeast('T4');
-    dormant.add(housing);
-
-    /* WHAT IS ON THE CABINET'S FACE IS WHAT THE BENCH IS FOR. */
-    if (kind === 'cards') {
-      // A CARD INDEX, cased up: a bank of shallow drawers, each with a pull and
-      // a brass index-card holder, and the drawer that is half out.
-      for (let r = 0; r < 3; r++) {
-        for (let c = 0; c < 3; c++) {
-          const out = (r === 1 && c === 1) ? 0.06 : 0;
-          const drawer = new THREE.Mesh(
-            this.own(new THREE.BoxGeometry(0.33, 0.20, 0.44)), this.plateMat
-          );
-          drawer.position.set(-0.35 + c * 0.35, height + 0.16 + r * 0.22, -0.16 + out);
-          dormant.add(drawer);
-
-          const holder = new THREE.Mesh(
-            this.own(new THREE.BoxGeometry(0.16, 0.055, 0.012)), this.darkSteelMat
-          );
-          holder.position.set(-0.35 + c * 0.35, height + 0.16 + r * 0.22, 0.065 + out);
-          dormant.add(holder);
-
-          const pull = new THREE.Mesh(
-            this.own(new THREE.CylinderGeometry(0.009, 0.009, 0.10, 8)), this.darkSteelMat
-          );
-          pull.rotation.z = Math.PI / 2;
-          pull.position.set(-0.35 + c * 0.35, height + 0.095 + r * 0.22, 0.068 + out);
-          dormant.add(pull);
-        }
-      }
-    } else if (kind === 'assay') {
-      // THE ASSAY WORKS, cased up: a weigh-head with a big round scale on the
-      // front of it, its needle dead, over a shrouded chute.
-      const scaleRim = new THREE.Mesh(
-        this.own(new THREE.TorusGeometry(0.235, 0.032, 8, 26)), this.darkSteelMat
-      );
-      scaleRim.position.set(0, height + 0.52, 0.11);
-      dormant.add(scaleRim);
-
-      const dialFace = new THREE.Mesh(
-        this.own(new THREE.CircleGeometry(0.225, 28)),
-        this.own(new THREE.MeshStandardMaterial({
-          color: 0x2a251d, roughness: 0.74, metalness: 0.08
-        }))
-      );
-      dialFace.position.set(0, height + 0.52, 0.107);
-      dormant.add(dialFace);
-
-      // Graduations round the face, and a needle resting on the bottom stop.
-      const tickGeo = this.own(new THREE.BoxGeometry(0.008, 0.034, 0.004));
-      for (let i = 0; i < 12; i++) {
-        const a = -Math.PI * 0.78 + (i / 11) * Math.PI * 1.56;
-        const tick = new THREE.Mesh(tickGeo, this.pipeMat);
-        tick.position.set(Math.sin(a) * 0.185, height + 0.52 + Math.cos(a) * 0.185, 0.113);
-        tick.rotation.z = -a;
-        dormant.add(tick);
-      }
-      const needle = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.010, 0.185, 0.008)),
-        this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
-      );
-      needle.position.set(-0.062, height + 0.435, 0.118);
-      needle.rotation.z = 0.78;
-      dormant.add(needle);
-
-      // The shrouded chute under it, and the shutter dogged across its mouth.
-      const shroud = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.30, 0.20, 0.22)), this.plateMat
-      );
-      shroud.position.set(0, height + 0.13, 0.02);
-      dormant.add(shroud);
-      const shutter = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.34, 0.05, 0.02)), this.darkSteelMat
-      );
-      shutter.position.set(0, height + 0.06, 0.135);
-      dormant.add(shutter);
-    } else {
-      const bezel = new THREE.Mesh(
-        this.own(new THREE.TorusGeometry(0.26, 0.035, 8, 26)), this.darkSteelMat
-      );
-      bezel.position.set(0, height + 0.5, 0.11);
-      dormant.add(bezel);
-
-      // The aperture face. Dark phosphor glass, not a screen: what it shows is
-      // the instrument, and the instrument lives in its own scene.
-      const aperture = new THREE.Mesh(
-        this.own(new THREE.CircleGeometry(0.245, 26)),
-        this.own(new THREE.MeshStandardMaterial({
-          color: 0x0d0c0a, roughness: 0.42, metalness: 0.1
-        }))
-      );
-      aperture.position.set(0, height + 0.5, 0.108);
-      dormant.add(aperture);
-
-      // The power dial: a knurled knob with a pointer and a ring of detents.
-      const dialBody = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.075, 0.085, 0.05, 18)), this.darkSteelMat
-      );
-      dialBody.rotation.x = Math.PI / 2;
-      dialBody.position.set(0.42, height + 0.28, 0.1);
-      dormant.add(dialBody);
-      const pointer = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.012, 0.07, 0.012)),
-        this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
-      );
-      pointer.position.set(0.42, height + 0.32, 0.13);
-      dormant.add(pointer);
-      for (let i = 0; i < 6; i++) {
-        const a = -Math.PI * 0.7 + (i / 5) * Math.PI * 1.4;
-        const detent = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(0.008, 0.022, 0.006)), this.darkSteelMat
+    const { kind = 'scope' } = opts;
+    const ctx = { own: (...o) => this.own(...o), t4: tierAtLeast('T4') };
+    return buildBayBench(ctx, {
+      skin: opts.skin || 'shelf',
+      plate: opts.plate || 'BN-01',
+      mats: { top: this.plateMat, dark: this.darkSteelMat },
+      // Tool rail: the cutter and the shaker, racked where a hand would reach.
+      rail: { len: 0.9, x: -0.58, y: 0.34, r: 0.018, tools: [[-0.82, 0.22], [-0.58, 0.3], [-0.34, 0.18]] },
+      dormant: (dormant, { height }) => {
+        // The instrument housing: a cabinet standing on the bench, chamfered at the
+        // top-left the way a plate is, with a recessed dark aperture in its face.
+        // THE ONE CLEAN THING ON THE MACHINE. The plant is forty years weathered and the salt has
+        // crept up all of it; the cabinet is the instrument somebody uses, so it keeps its own
+        // metal, a little less rough, and the salt does not reach it.
+        this.caseMats = this.caseMats || {
+          plate: this.own(Object.assign(this.plateMat.clone(), { roughness: 0.66 })),
+          dark: this.own(Object.assign(this.darkSteelMat.clone(), { roughness: 0.66 }))
+        };
+        const housing = new THREE.Mesh(
+          this.own(new THREE.BoxGeometry(1.15, 0.78, 0.52)),
+          kind === 'cards' ? this.caseMats.dark : this.caseMats.plate
         );
-        detent.position.set(0.42 + Math.sin(a) * 0.11, height + 0.28 + Math.cos(a) * 0.11, 0.115);
-        detent.rotation.z = -a;
-        dormant.add(detent);
-      }
-    }
+        housing.position.set(0, height + 0.43, -0.16);
+        housing.castShadow = housing.receiveShadow = tierAtLeast('T4');
+        housing.userData.noSalt = true;
+        dormant.add(housing);
 
-    // Tool rail: the cutter and the shaker, racked where a hand would reach.
-    const rail = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.018, 0.018, 0.9, 8)), this.darkSteelMat
-    );
-    rail.rotation.z = Math.PI / 2;
-    rail.position.set(-0.58, height + 0.34, -0.3);
-    g.add(rail);
-    for (const [tx, tl] of [[-0.82, 0.22], [-0.58, 0.3], [-0.34, 0.18]]) {
-      const tool = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.05, tl, 0.035)), this.darkSteelMat
-      );
-      tool.position.set(tx, height + 0.34 - tl / 2 - 0.02, -0.3);
-      g.add(tool);
-    }
+        /* WHAT IS ON THE CABINET'S FACE IS WHAT THE BENCH IS FOR. */
+        if (kind === 'cards') {
+          // A CARD INDEX, cased up: a bank of shallow drawers, each with a pull and
+          // a brass index-card holder, and the drawer that is half out.
+          for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+              const out = (r === 1 && c === 1) ? 0.06 : 0;
+              const drawer = new THREE.Mesh(
+                this.own(new THREE.BoxGeometry(0.33, 0.20, 0.44)), this.plateMat
+              );
+              drawer.position.set(-0.35 + c * 0.35, height + 0.16 + r * 0.22, -0.16 + out);
+              dormant.add(drawer);
 
-    // The one indicator. Dead until the site's quest is finished.
-    //
-    // Set into the APRON, not into the cabinet face: the cabinet is cased up
-    // while the instrument is deployed, and a status lamp that disappeared the
-    // moment you started working would be a lamp attached to nothing.
-    const indicator = new THREE.Mesh(
-      this.own(new THREE.SphereGeometry(0.035, 10, 8)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0x4a4038, emissive: SODIUM, emissiveIntensity: 0, roughness: 0.6
-      }))
-    );
-    indicator.position.set(width / 2 - 0.42, height - 0.12, depth / 2 + 0.035);
-    indicator.userData.noMerge = true;   // its emissive changes on completion
-    g.add(indicator);
+              const holder = new THREE.Mesh(
+                this.own(new THREE.BoxGeometry(0.16, 0.055, 0.012)), this.darkSteelMat
+              );
+              holder.position.set(-0.35 + c * 0.35, height + 0.16 + r * 0.22, 0.065 + out);
+              dormant.add(holder);
 
-    // A recessed well for the indicator, so it reads as set into the plate.
-    const well = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.055, 0.055, 0.02, 12)), this.darkSteelMat
-    );
-    well.rotation.x = Math.PI / 2;
-    well.position.set(width / 2 - 0.42, height - 0.12, depth / 2 + 0.018);
-    g.add(well);
+              const pull = new THREE.Mesh(
+                this.own(new THREE.CylinderGeometry(0.009, 0.009, 0.10, 8)), this.darkSteelMat
+              );
+              pull.rotation.z = Math.PI / 2;
+              pull.position.set(-0.35 + c * 0.35, height + 0.095 + r * 0.22, 0.068 + out);
+              dormant.add(pull);
+            }
+          }
+        } else if (kind === 'assay') {
+          // THE ASSAY WORKS, cased up: a weigh-head with a big round scale on the
+          // front of it, its needle dead, over a shrouded chute.
+          const scaleRim = new THREE.Mesh(
+            this.own(new THREE.TorusGeometry(0.235, 0.032, 8, 26)), this.darkSteelMat
+          );
+          scaleRim.position.set(0, height + 0.52, 0.11);
+          dormant.add(scaleRim);
 
-    /* ================= THE SMALL PARTS =================
-       This is the one object in the world the player stands at with their face
-       half a metre from it, so it is the one that has to survive being looked
-       at closely. Everything below is a thing a working bench actually has.
-       ================================================== */
+          const dialFace = new THREE.Mesh(
+            this.own(new THREE.CircleGeometry(0.225, 28)),
+            this.own(new THREE.MeshStandardMaterial({
+              color: 0x2a251d, roughness: 0.74, metalness: 0.08
+            }))
+          );
+          dialFace.position.set(0, height + 0.52, 0.107);
+          dormant.add(dialFace);
 
-    // Bolt lines down both ends of the top, through into the leg frames.
-    for (const bx of [-width / 2 + 0.12, width / 2 - 0.12]) {
-      g.add(boltLine(
-        [bx, height + 0.047, -depth / 2 + 0.14],
-        [bx, height + 0.047, depth / 2 - 0.14],
-        4, this.darkSteelMat, { size: 0.016, normalAxis: 'y' }
-      ));
-    }
+          // Graduations round the face, and a needle resting on the bottom stop.
+          const tickGeo = this.own(new THREE.BoxGeometry(0.008, 0.034, 0.004));
+          for (let i = 0; i < 12; i++) {
+            const a = -Math.PI * 0.78 + (i / 11) * Math.PI * 1.56;
+            const tick = new THREE.Mesh(tickGeo, this.pipeMat);
+            tick.position.set(Math.sin(a) * 0.185, height + 0.52 + Math.cos(a) * 0.185, 0.113);
+            tick.rotation.z = -a;
+            dormant.add(tick);
+          }
+          const needle = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.010, 0.185, 0.008)),
+            this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
+          );
+          needle.position.set(-0.062, height + 0.435, 0.118);
+          needle.rotation.z = 0.78;
+          dormant.add(needle);
 
-    // The seam down the middle: the top is two plates, welded.
-    const seam = weldBead(width - 0.08, this.pipeMat, { radius: 0.013, seed: 0x5e });
-    seam.rotation.z = Math.PI / 2;
-    seam.position.set(0, height + 0.047, 0);
-    g.add(seam);
-    this.own(seam.userData.ownGeometry);
+          // The shrouded chute under it, and the shutter dogged across its mouth.
+          const shroud = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.30, 0.20, 0.22)), this.plateMat
+          );
+          shroud.position.set(0, height + 0.13, 0.02);
+          dormant.add(shroud);
+          const shutter = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.34, 0.05, 0.02)), this.darkSteelMat
+          );
+          shutter.position.set(0, height + 0.06, 0.135);
+          dormant.add(shutter);
+        } else {
+          const bezel = new THREE.Mesh(
+            this.own(new THREE.TorusGeometry(0.26, 0.035, 8, 26)), this.darkSteelMat
+          );
+          bezel.position.set(0, height + 0.5, 0.11);
+          dormant.add(bezel);
 
-    // A bench vice, bolted to the near left corner with its jaws open. Nothing
-    // says workshop faster, and nothing is more obviously missing without it.
-    const vice = new THREE.Group();
-    const viceBody = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.2, 0.15, 0.13)), this.darkSteelMat
-    );
-    viceBody.position.y = 0.075;
-    vice.add(viceBody);
-    for (const [jx, jw] of [[-0.08, 0.05], [0.07, 0.05]]) {
-      const jaw = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(jw, 0.1, 0.17)), this.pipeMat
-      );
-      jaw.position.set(jx, 0.13, 0);
-      vice.add(jaw);
-    }
-    const screw = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.018, 0.018, 0.3, 8)), this.pipeMat
-    );
-    screw.rotation.z = Math.PI / 2;
-    screw.position.set(0.06, 0.085, 0);
-    vice.add(screw);
-    const handle = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.012, 0.012, 0.19, 6)), this.darkSteelMat
-    );
-    handle.position.set(0.21, 0.085, 0);
-    vice.add(handle);
-    vice.position.set(-width / 2 + 0.34, height + 0.045, depth / 2 - 0.26);
-    vice.rotation.y = 0.22;
-    g.add(vice);
+          // The aperture face. Dark phosphor glass, not a screen: what it shows is
+          // the instrument, and the instrument lives in its own scene.
+          const aperture = new THREE.Mesh(
+            this.own(new THREE.CircleGeometry(0.245, 26)),
+            this.own(new THREE.MeshStandardMaterial({
+              color: 0x0d0c0a, roughness: 0.42, metalness: 0.1
+            }))
+          );
+          aperture.position.set(0, height + 0.5, 0.108);
+          dormant.add(aperture);
 
-    // A rag, left where it was dropped. One quad, folded, and it is the thing
-    // that stops a bench top being a rendered rectangle.
-    const rag = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.22, 0.012, 0.16)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0x6f6553, roughness: 1.0 }))
-    );
-    rag.position.set(width / 2 - 0.5, height + 0.051, depth / 2 - 0.3);
-    rag.rotation.set(0.04, 0.6, 0.02);
-    g.add(rag);
-    const ragFold = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.13, 0.02, 0.1)), rag.material
-    );
-    ragFold.position.set(width / 2 - 0.44, height + 0.063, depth / 2 - 0.26);
-    ragFold.rotation.set(0.1, 0.9, -0.06);
-    g.add(ragFold);
-
-    // Swarf and offcuts: a scatter of small salvage tight against the back lip,
-    // where everything that is not in use ends up. The band is narrow on
-    // purpose — a Learn instrument deployed on this bench stands its screens on
-    // the plate just in front of it, and a chip under a stand foot is two
-    // objects in one place.
-    const rand = mulberry32(0x71a3 + Math.round(width * 100));
-    const chipGeo = this.own(new THREE.BoxGeometry(0.05, 0.02, 0.04));
-    for (let i = 0; i < 14; i++) {
-      const chip = new THREE.Mesh(chipGeo, this.darkSteelMat);
-      chip.position.set(
-        (rand() - 0.5) * (width - 0.6),
-        height + 0.056,
-        -depth / 2 + 0.085 + rand() * 0.05
-      );
-      chip.rotation.set(rand() * 0.4, rand() * Math.PI, rand() * 0.3);
-      chip.scale.setScalar(0.6 + rand() * 0.9);
-      g.add(chip);
-    }
-
-    // The bench's own plate number, riveted to the apron.
-    const tag = placard(opts.plate || 'BN-01', { w: 0.28, h: 0.11 });
-    tag.position.set(-width / 2 + 0.42, height - 0.12, depth / 2 + 0.005);
-    g.add(tag);
-    this.own(tag.geometry, tag.material, tag.material.map);
-
-    return { group: g, indicator, dormant, topY: height + 0.045 };
-  }
-
-  initSalvageBench() {
-    const site = this.data.sites.find(s => s.id === 'site-1');
-    if (!site) return;
-    const baseY = this.surfaceHeight(site.pos[0], site.pos[2]);
-    const g = new THREE.Group();
-
-    /*
-     * THE SHELTER IS BUILT THE WAY A FIELD CREW BUILDS ONE: four H-columns on
-     * bolted base plates, eave beams across their heads with knee braces,
-     * rafters, purlins, and corrugated sheet screwed down onto them, falling
-     * to the front so the weather runs off away from the bench. One sheet has
-     * lifted at its corner in some old gale and one strip is gone altogether,
-     * which is where the light comes through onto the plate.
-     */
-    const t4 = this.t4;
-    const slope = 0.07;
-    const roofY = z => 2.95 - Math.tan(slope) * z;
-    const SHEET = 0.012, PURLIN = 0.08, RAFTER = 0.16, EAVE = 0.16;
-    const beamGeo = len => this.own(iBeamGeometry(len, { h: 0.16, w: 0.11 }));
-
-    for (const [px, pz] of [[-2.95, -1.85], [2.95, -1.85], [-2.95, 1.85], [2.95, 1.85]]) {
-      const top = roofY(pz) - SHEET - PURLIN - RAFTER - EAVE;
-      const col = new THREE.Mesh(beamGeo(top - 0.03), this.darkSteelMat);
-      col.position.set(px, 0.03 + (top - 0.03) / 2, pz);
-      col.castShadow = t4;
-      g.add(col);
-      const plate = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.34, 0.03, 0.3)), this.darkSteelMat);
-      plate.position.set(px, 0.015, pz);
-      g.add(plate);
-      for (const [bx, bz] of [[-0.12, -0.1], [0.12, -0.1], [-0.12, 0.1], [0.12, 0.1]]) {
-        const nut = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.018, 0.018, 0.03, 6)), this.darkSteelMat);
-        nut.position.set(px + bx, 0.04, pz + bz);
-        g.add(nut);
-      }
-      // Knee brace from the column up to the eave beam, inboard.
-      const kx = px - Math.sign(px) * 0.55;
-      const brace = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.05, 0.78, 0.05)), this.darkSteelMat);
-      brace.position.set((px + kx) / 2, top - 0.28, pz);
-      brace.rotation.z = Math.sign(px) * Math.atan2(0.55, 0.55);
-      g.add(brace);
-    }
-
-    // Eave beams across the column heads, front and back.
-    for (const ez of [-1.85, 1.85]) {
-      const y = roofY(ez) - SHEET - PURLIN - RAFTER - EAVE / 2;
-      const eave = new THREE.Mesh(beamGeo(6.3), this.darkSteelMat);
-      eave.geometry.rotateZ(Math.PI / 2);
-      eave.position.set(0, y, ez);
-      eave.castShadow = t4;
-      g.add(eave);
-    }
-    // Rafters front to back, clear of the lamp that hangs at the middle.
-    for (const rx of [-2.95, -1.05, 1.05, 2.95]) {
-      const raf = new THREE.Mesh(beamGeo(4.3), this.darkSteelMat);
-      raf.geometry.rotateX(Math.PI / 2);
-      raf.geometry.rotateZ(Math.PI / 2);
-      raf.position.set(rx, roofY(0) - SHEET - PURLIN - RAFTER / 2, 0);
-      raf.rotation.x = slope;
-      raf.castShadow = t4;
-      g.add(raf);
-    }
-    // Purlins along the length, the sheet's fixings.
-    for (const pz of [-1.95, -0.98, 0, 0.98, 1.95]) {
-      const pur = new THREE.Mesh(this.own(new THREE.BoxGeometry(6.6, PURLIN, 0.05)), this.pipeMat);
-      pur.position.set(0, roofY(pz) - SHEET - PURLIN / 2, pz);
-      pur.rotation.x = slope;
-      g.add(pur);
-    }
-    // The drop rod the lamp hangs on.
-    const rod = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.012, 0.012, 0.14, 6)), this.darkSteelMat);
-    rod.position.set(0, 2.84, 0.2);
-    g.add(rod);
-
-    // The sheets. Corrugations run down the fall.
-    const sheetW = 2.3;
-    for (const [sx, lift, short] of [[-2.15, 0, 0], [0, 0, 0], [2.15, 1, 0.9]]) {
-      const d = 4.35 - short;
-      const geo = this.own(corrugatedGeometry(sheetW, d));
-      if (lift) {
-        // The corner that went up in the wind, and stayed up.
-        const gp = geo.attributes.position;
-        for (let i = 0; i < gp.count; i++) {
-          const x = gp.getX(i), z = gp.getZ(i);
-          const k = Math.max(0, z - (d / 2 - 1.1)) * Math.max(0, x + 0.1);
-          gp.setY(i, gp.getY(i) + k * k * 0.55);
+          // The power dial: a knurled knob with a pointer and a ring of detents.
+          const dialBody = new THREE.Mesh(
+            this.own(new THREE.CylinderGeometry(0.075, 0.085, 0.05, 18)), this.darkSteelMat
+          );
+          dialBody.rotation.x = Math.PI / 2;
+          dialBody.position.set(0.42, height + 0.28, 0.1);
+          dormant.add(dialBody);
+          const pointer = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.012, 0.07, 0.012)),
+            this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.7 }))
+          );
+          pointer.position.set(0.42, height + 0.32, 0.13);
+          dormant.add(pointer);
+          for (let i = 0; i < 6; i++) {
+            const a = -Math.PI * 0.7 + (i / 5) * Math.PI * 1.4;
+            const detent = new THREE.Mesh(
+              this.own(new THREE.BoxGeometry(0.008, 0.022, 0.006)), this.darkSteelMat
+            );
+            detent.position.set(0.42 + Math.sin(a) * 0.11, height + 0.28 + Math.cos(a) * 0.11, 0.115);
+            detent.rotation.z = -a;
+            dormant.add(detent);
+          }
         }
-        geo.computeVertexNormals();
-      }
-      const sheet = new THREE.Mesh(geo, this.plateMat);
-      const zc = -short / 2;
-      sheet.position.set(sx, roofY(zc), zc);
-      sheet.rotation.x = slope;
-      sheet.castShadow = sheet.receiveShadow = t4;
-      g.add(sheet);
-    }
-    // A gutter along the low edge, sagging off one bracket.
-    const gutter = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.07, 0.07, 6.6, 10, 1, true, 0, Math.PI)), this.pipeMat
-    );
-    gutter.rotation.z = Math.PI / 2;
-    gutter.rotation.x = Math.PI;
-    gutter.position.set(0, roofY(2.2) - 0.08, 2.24);
-    gutter.rotation.y = 0.012;
-    g.add(gutter);
 
-    // The back wall: corrugated sheet on the rear columns, one panel sprung.
-    for (const [wx, tilt] of [[-2.15, 0], [0, 0.0], [2.15, 0.05]]) {
-      const geo = this.own(corrugatedGeometry(2.3, 2.5));
-      geo.rotateX(Math.PI / 2);
-      const wall = new THREE.Mesh(geo, this.plateMat);
-      wall.position.set(wx, 1.58, -1.99 - tilt * 0.4);
-      wall.rotation.x = tilt;
-      wall.castShadow = wall.receiveShadow = t4;
-      g.add(wall);
-    }
+      },
+      extras: (g, { width, depth, height }) => {
+        // Under-bench shelf holding two spare crates.
+        for (const sx of [-width * 0.28, width * 0.22]) {
+          const c = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(0.42, 0.32, 0.42)),
+            this.crateMats ? this.crateMats[0] : this.plateMat
+          );
+          c.position.set(sx, height * 0.42 + 0.19, 0);
+          g.add(c);
+        }
 
-    const bench = this.buildBench({
-      width: 4.8, depth: 1.3, height: 0.95, kind: 'scope', plate: 'BN-01'
-    });
-    bench.group.position.set(0, 0, -0.5);
-    g.add(bench.group);
 
-    // A caged work lamp clipped to the roof frame. A lamp, so it is lit.
-    const workLamp = this.buildLuminaire(0, 2.7, 0.2);
-    g.add(workLamp);
+        /* ================= THE SMALL PARTS =================
+           This is the one object in the world the player stands at with their face
+           half a metre from it, so it is the one that has to survive being looked
+           at closely. Everything below is a thing a working bench actually has.
+           ================================================== */
 
-    // Its feed, dropping from the roof and looped round the nearest post. A
-    // lamp with no cable is a lamp that runs on nothing.
-    const feed = cableRun([0, 2.68, 0.2], [-2.86, 2.4, 0.2], this.darkSteelMat,
-      { sag: 0.5, radius: 0.016, segments: 14 });
-    g.add(feed);
-    this.own(feed.userData.ownGeometry);
-    const drop = cableRun([-2.86, 2.4, 0.2], [-2.9, 1.1, -0.1], this.darkSteelMat,
-      { sag: 0.14, radius: 0.016, segments: 10 });
-    g.add(drop);
-    this.own(drop.userData.ownGeometry);
+        // Bolt lines down both ends of the top, through into the leg frames.
+        for (const bx of [-width / 2 + 0.12, width / 2 - 0.12]) {
+          g.add(boltLine(
+            [bx, height + 0.047, -depth / 2 + 0.14],
+            [bx, height + 0.047, depth / 2 - 0.14],
+            4, this.darkSteelMat, { size: 0.016, normalAxis: 'y' }
+          ));
+        }
 
-    // Wind drift: the flat blows one way, so sand banks against the windward
-    // posts and the windward side of the crates and nowhere else. Directional
-    // drift is the cheapest way to say a place has weather.
-    const driftMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0xbcb096, roughness: 1.0, metalness: 0.0
-    }));
-    // Each drift tails DOWNWIND of the post that made it, clear of the post
-    // itself: a lee deposit, not a heap dropped on top of the thing. It also
-    // keeps the rule the whole world is held to — nothing is drawn inside
-    // anything else.
-    for (const [dx, dz, dr] of [[-2.95, -1.85, 0.62], [2.95, -1.85, 0.5], [-2.95, 1.85, 0.36]]) {
-      const drift = new THREE.Mesh(
-        this.own(new THREE.SphereGeometry(dr, 12, 7, 0, Math.PI * 2, 0, Math.PI * 0.5)),
-        driftMat
-      );
-      drift.scale.set(0.55, 0.22, 1.5);
-      // The wind runs +z across the yard, so the tail lies on the far side of
-      // the post from it, starting just clear of the post's 0.08 half-width.
-      drift.position.set(dx, 0.0, dz + 0.12 + dr * 1.5);
-      drift.receiveShadow = tierAtLeast('T4');
-      g.add(drift);
-    }
+        // The seam down the middle: the top is two plates, welded.
+        const seam = weldBead(width - 0.08, this.pipeMat, { radius: 0.013, seed: 0x5e });
+        seam.rotation.z = Math.PI / 2;
+        seam.position.set(0, height + 0.047, 0);
+        g.add(seam);
+        this.own(seam.userData.ownGeometry);
 
-    // The roof leaks where a sheet has torn away, so one strip of crust under
-    // it is a shade darker and a shade smoother than the rest.
-    const damp = new THREE.Mesh(
-      this.own(new THREE.PlaneGeometry(1.5, 0.75)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0x948871, transparent: true, opacity: 0.4, roughness: 0.62,
-        polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3
-      }))
-    );
-    damp.rotation.x = -Math.PI / 2;
-    damp.position.set(1.4, 0.012, 1.0);
-    g.add(damp);
-
-    // A torn corner out of the side sheet, and the flap still hanging off it.
-    const flap = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.9, 0.7, 0.04)), this.plateMat
-    );
-    flap.position.set(2.2, 1.62, -2.09);
-    flap.rotation.set(0.0, 0.0, -0.34);
-    flap.castShadow = tierAtLeast('T4');
-    g.add(flap);
-
-    // A stack of empty pans against the back sheet, and a coil of hose.
-    for (let i = 0; i < 4; i++) {
-      const pan = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.34, 0.31, 0.09, 14)), this.darkSteelMat
-      );
-      pan.position.set(-2.35, 0.05 + i * 0.085, -1.62);
-      pan.rotation.y = i * 0.4;
-      pan.castShadow = tierAtLeast('T4');
-      g.add(pan);
-    }
-    const hose = new THREE.Mesh(
-      this.own(new THREE.TorusGeometry(0.34, 0.045, 6, 22)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0x3b332b, roughness: 0.95 }))
-    );
-    hose.rotation.x = Math.PI / 2;
-    hose.position.set(2.3, 0.05, -1.66);
-    g.add(hose);
-
-    // Crates staged beside the bench, awaiting certification.
-    for (const [cx, cz, cr] of [[-2.0, 1.0, 0.2], [2.0, 1.05, -0.35]]) {
-      const c = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(1.0, 0.8, 1.0)),
-        this.crateMats[Math.abs(Math.round(cx)) % this.crateMats.length]
-      );
-      c.position.set(cx, 0.4, cz);
-      c.rotation.y = cr;
-      c.castShadow = c.receiveShadow = tierAtLeast('T4');
-      g.add(c);
-    }
-
-    g.position.set(site.pos[0], baseY, site.pos[2]);
-    g.rotation.y = this.siteFacing(site);
-    this.scene.add(g);
-
-    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
-    // The lean-to is turned to face the yard, so the bench inside it sits half a
-    // metre the other side of the site marker. Recorded rather than recomputed:
-    // move the bench and the instrument follows it.
-    this.registerBenchAnchor(site, g, bench, [0, 0, -0.5]);
-  }
-
-  initCoreBench() {
-    const site = this.data.sites.find(s => s.id === 'site-2');
-    if (!site) return;
-    const g = new THREE.Group();
-
-    const bench = this.buildBench({
-      width: 4.8, depth: 1.3, height: 0.95, kind: 'core', plate: 'BN-02'
-    });
-    g.add(bench.group);
-
-    // The lab's own apparatus around the bench: a beam column on one side, an
-    // equipment rack on the other, and a gauge board on the wall behind.
-    const column = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.34, 0.4, 2.3, 18)), this.plateMat
-    );
-    column.position.set(-3.35, 1.15, 0);
-    column.castShadow = column.receiveShadow = tierAtLeast('T4');
-    g.add(column);
-    const emitter = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.12, 0.2, 0.7, 14)), this.darkSteelMat
-    );
-    emitter.rotation.z = -Math.PI / 2;
-    emitter.position.set(-2.87, 1.45, 0);
-    g.add(emitter);
-
-    const rack = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.7, 1.95, 0.85)), this.bulkMat
-    );
-    rack.position.set(3.45, 0.98, -0.1);
-    rack.castShadow = rack.receiveShadow = tierAtLeast('T4');
-    g.add(rack);
-    // Rack units: nineteen-inch modules with handles.
-    for (let i = 0; i < 7; i++) {
-      const unit = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.62, 0.2, 0.04)), this.darkSteelMat
-      );
-      unit.position.set(3.45, 0.34 + i * 0.24, 0.34);
-      g.add(unit);
-      for (const hx of [-0.22, 0.22]) {
+        // A bench vice, bolted to the near left corner with its jaws open. Nothing
+        // says workshop faster, and nothing is more obviously missing without it.
+        const vice = new THREE.Group();
+        const viceBody = new THREE.Mesh(
+          this.own(new THREE.BoxGeometry(0.2, 0.15, 0.13)), this.darkSteelMat
+        );
+        viceBody.position.y = 0.075;
+        vice.add(viceBody);
+        for (const [jx, jw] of [[-0.08, 0.05], [0.07, 0.05]]) {
+          const jaw = new THREE.Mesh(
+            this.own(new THREE.BoxGeometry(jw, 0.1, 0.17)), this.pipeMat
+          );
+          jaw.position.set(jx, 0.13, 0);
+          vice.add(jaw);
+        }
+        const screw = new THREE.Mesh(
+          this.own(new THREE.CylinderGeometry(0.018, 0.018, 0.3, 8)), this.pipeMat
+        );
+        screw.rotation.z = Math.PI / 2;
+        screw.position.set(0.06, 0.085, 0);
+        vice.add(screw);
         const handle = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(0.05, 0.1, 0.03)), this.plateMat
+          this.own(new THREE.CylinderGeometry(0.012, 0.012, 0.19, 6)), this.darkSteelMat
         );
-        handle.position.set(3.45 + hx, 0.34 + i * 0.24, 0.37);
-        g.add(handle);
+        handle.position.set(0.21, 0.085, 0);
+        vice.add(handle);
+        vice.position.set(-width / 2 + 0.34, height + 0.045, depth / 2 - 0.26);
+        vice.rotation.y = 0.22;
+        g.add(vice);
+
+        // A rag, left where it was dropped. One quad, folded, and it is the thing
+        // that stops a bench top being a rendered rectangle.
+        const rag = new THREE.Mesh(
+          this.own(new THREE.BoxGeometry(0.22, 0.012, 0.16)),
+          this.own(new THREE.MeshStandardMaterial({ color: 0x6f6553, roughness: 1.0 }))
+        );
+        rag.position.set(width / 2 - 0.5, height + 0.051, depth / 2 - 0.3);
+        rag.rotation.set(0.04, 0.6, 0.02);
+        g.add(rag);
+        const ragFold = new THREE.Mesh(
+          this.own(new THREE.BoxGeometry(0.13, 0.02, 0.1)), rag.material
+        );
+        ragFold.position.set(width / 2 - 0.44, height + 0.063, depth / 2 - 0.26);
+        ragFold.rotation.set(0.1, 0.9, -0.06);
+        g.add(ragFold);
+
+        // Swarf and offcuts: a scatter of small salvage tight against the back lip,
+        // where everything that is not in use ends up. The band is narrow on
+        // purpose — a Learn instrument deployed on this bench stands its screens on
+        // the plate just in front of it, and a chip under a stand foot is two
+        // objects in one place.
+        const rand = mulberry32(0x71a3 + Math.round(width * 100));
+        const chipGeo = this.own(new THREE.BoxGeometry(0.05, 0.02, 0.04));
+        for (let i = 0; i < 14; i++) {
+          const chip = new THREE.Mesh(chipGeo, this.darkSteelMat);
+          chip.position.set(
+            (rand() - 0.5) * (width - 0.6),
+            height + 0.056,
+            -depth / 2 + 0.085 + rand() * 0.05
+          );
+          chip.rotation.set(rand() * 0.4, rand() * Math.PI, rand() * 0.3);
+          chip.scale.setScalar(0.6 + rand() * 0.9);
+          g.add(chip);
+        }
+
       }
-    }
-
-    // Gauge board: dial faces with needles, the lab's own instrumentation.
-    const board = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.9, 0.75, 0.08)), this.plateMat
-    );
-    board.position.set(0, 1.85, -1.35);
-    g.add(board);
-    for (let i = 0; i < 4; i++) {
-      const face = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.14, 0.14, 0.03, 18)),
-        this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 0.75 }))
-      );
-      face.rotation.x = Math.PI / 2;
-      face.position.set(-0.69 + i * 0.46, 1.9, -1.30);
-      g.add(face);
-      const needle = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.012, 0.1, 0.008)),
-        this.own(new THREE.MeshStandardMaterial({ color: 0x3a332b, roughness: 0.8 }))
-      );
-      needle.position.set(-0.69 + i * 0.46, 1.94, -1.28);
-      needle.rotation.z = -0.9 + i * 0.4;
-      g.add(needle);
-    }
-
-    // Cable runs from the rack to the column, draped rather than routed.
-    const cableMat = this.own(new THREE.MeshStandardMaterial({
-      color: 0x2a251f, roughness: 0.95, metalness: 0.2
-    }));
-    for (let i = 0; i < 3; i++) {
-      const curve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(3.2, 1.4 - i * 0.1, 0.3),
-        new THREE.Vector3(1.4, 0.44 - i * 0.07, 0.86),
-        new THREE.Vector3(-1.4, 0.4 - i * 0.05, 0.86),
-        new THREE.Vector3(-3.1, 1.1 - i * 0.1, 0.2)
-      ]);
-      const tube = new THREE.Mesh(
-        this.own(new THREE.TubeGeometry(curve, 26, 0.022, 6, false)), cableMat
-      );
-      g.add(tube);
-    }
-
-    g.position.set(site.pos[0], this.sub.floorY, site.pos[2]);
-    g.rotation.y = this.siteFacing(site);
-    this.scene.add(g);
-
-    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
-    this.registerBenchAnchor(site, g, bench, [0, 0, 0]);
+    });
   }
 
+  /* ======================================================================
+     THE HOSTS
+     Each bench is built into the piece of the plant it belongs to (see
+     tallow/stations.js): the group a builder returns is the machine and its
+     bench as one object, set down at the site's mark and turned to face the
+     ground the player walks in from.
+     ====================================================================== */
+
+  initHosts() {
+    this.hostColliders = [];
+    for (const site of this.data.sites) {
+      const build = HOST_BUILDERS[site.id];
+      if (!build || !site.built) continue;
+
+      // What a host needs to know about its neighbours comes from the layout, not from a table here.
+      const lm = this.data.landmarks.find(l => l.host === site.id);
+      const opts = {};
+      if (site.id === 'site-4' && lm) {
+        opts.towerRot = lm.rotY;
+        opts.towerScale = lm.scale;
+        opts.towerBack = Math.hypot(lm.pos[0] - site.pos[0], lm.pos[2] - site.pos[2]);
+      }
+      if (site.id === 'site-6') {
+        const hopper = this.data.sites.find(x => x.id === 'site-5');
+        // The hopper's catch bins end 1.3 m west of its bench, and the belt stops short of them.
+        if (hopper) opts.feedX = (hopper.pos[0] - site.pos[0]) - HOPPER.shift - 1.3 - 0.4;
+      }
+
+      const host = build(this, site, opts);
+      const g = host.group;
+      const y = site.pos[1] < -1 ? this.sub.floorY : this.surfaceHeight(site.pos[0], site.pos[2]);
+      g.position.set(site.pos[0], y, site.pos[2]);
+      g.rotation.y = this.siteFacing(site);
+      this.scene.add(g);
+
+      this.siteMarkers.set(site.questId, { site, group: g, indicator: host.bench.indicator });
+      this.registerBenchAnchor(site, g, host.bench, host.benchLocal);
+
+      // The host's colliders are in its own frame; the walk wants them in the world's.
+      const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);
+      for (const c of host.colliders) {
+        const x = g.position.x + c.lx * cos + c.lz * sin;
+        const z = g.position.z - c.lx * sin + c.lz * cos;
+        if (c.r !== undefined) { this.hostColliders.push({ x, z, radius: c.r }); continue; }
+        const ex = Math.abs(c.hw * cos) + Math.abs(c.hd * sin);
+        const ez = Math.abs(c.hw * sin) + Math.abs(c.hd * cos);
+        this.hostColliders.push({ minX: x - ex, maxX: x + ex, minZ: z - ez, maxZ: z + ez });
+      }
+    }
+  }
   /**
    * Record where a bench's working surface is, in world terms.
    *
@@ -2061,8 +1745,8 @@ export class TallowWorld {
    *
    * THIS USED TO BE A HARDCODED `Math.PI` ON BOTH BUILT SITES, AND IT WAS
    * BACKWARDS. A site group's local +z is its front — the bench's back lip sits
-   * at local -z, the lean-to's back sheet and the lab's gauge board are behind
-   * it — so a site turned 180° away from its approach put its back wall between
+   * at local -z, and the machinery (the control house's wall, the lab's gauge
+   * board) is behind it — so a site turned 180° away from its approach put its back wall between
    * the player and the bench, and docked the instrument's camera on the far
    * side of the plate looking at the lip. That is what "I can't adjust my
    * viewport to see the entire thing" was.
@@ -2110,394 +1794,6 @@ export class TallowWorld {
   /** The working surface for a quest's site, or null if it has no bench. */
   benchAnchor(questId) {
     return this.benchAnchors.get(questId) || null;
-  }
-
-  /**
-   * Site 3 — the Catalogue Vault. The blockhouse in the yard's east wall, and
-   * it STOOD SEALED until this quest was written. Now the blast door is racked
-   * back flat against the face, the mouth stands open, and the work bench the
-   * card catalogue is laid out on sits in front of the doorway. The instrument
-   * itself still plays as a page — what stands here is the place.
-   */
-  initCatalogueVault() {
-    const site = this.data.sites.find(s => s.id === 'site-3');
-    if (!site) return;
-    const y = this.surfaceHeight(site.pos[0], site.pos[2]);
-    const g = new THREE.Group();
-
-    // The blockhouse itself.
-    /*
-     * A BLOCKHOUSE IS POURED, NOT WELDED. Battered concrete walls (thicker at
-     * the foot, the way a blast-rated vault is cast), a chamfered roof slab,
-     * a portal standing proud of the face round the door, and a hood over it
-     * so nothing falls from the roof onto whoever is in the doorway. The
-     * footprint at grade is unchanged: 5.2 by 3.0.
-     */
-    const concrete = this.concreteMaterial();
-    const t4 = this.t4;
-    const bGeo = this.own(new THREE.BoxGeometry(5.2, 3.7, 3.0, 4, 3, 3));
-    {
-      const p = bGeo.attributes.position;
-      for (let i = 0; i < p.count; i++) {
-        const t = (p.getY(i) + 1.85) / 3.7;
-        p.setX(i, p.getX(i) * (1 - 0.07 * t));
-        p.setZ(i, p.getZ(i) * (1 - 0.12 * t));
-      }
-      bGeo.computeVertexNormals();
-      this.boxUVs(bGeo, 0.45);
-    }
-    const block = new THREE.Mesh(bGeo, concrete);
-    block.position.set(0, 1.85, 0);
-    block.castShadow = block.receiveShadow = t4;
-    g.add(block);
-    const slab = new THREE.Mesh(this.boxUVs(this.own(new THREE.BoxGeometry(5.1, 0.32, 2.9)), 0.45), concrete);
-    slab.position.set(0, 3.86, -0.04);
-    slab.castShadow = t4;
-    g.add(slab);
-    const chamfer = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.16, 0.16, 5.1, 4)), concrete);
-    chamfer.rotation.z = Math.PI / 2;
-    chamfer.rotation.x = Math.PI / 4;
-    chamfer.position.set(0, 3.7, 1.36);
-    g.add(chamfer);
-
-    // The portal: a cast surround proud of the battered face, the door let into it.
-    for (const px of [-1.18, 1.18]) {
-      const pier = new THREE.Mesh(this.boxUVs(this.own(new THREE.BoxGeometry(0.5, 3.0, 0.5)), 0.45), concrete);
-      pier.position.set(px, 1.5, 1.42);
-      pier.castShadow = t4;
-      g.add(pier);
-    }
-    const head = new THREE.Mesh(this.boxUVs(this.own(new THREE.BoxGeometry(2.86, 0.5, 0.62)), 0.45), concrete);
-    head.position.set(0, 2.95, 1.46);
-    head.castShadow = t4;
-    g.add(head);
-    // The hood: a plate canopy on two brackets.
-    const hood = new THREE.Mesh(this.own(new THREE.BoxGeometry(3.0, 0.06, 0.9)), this.darkSteelMat);
-    hood.position.set(0, 3.25, 1.95);
-    hood.rotation.x = -0.12;
-    hood.castShadow = t4;
-    g.add(hood);
-    for (const hx of [-1.3, 1.3]) {
-      const br = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.05, 0.45, 0.05)), this.darkSteelMat);
-      br.position.set(hx, 3.05, 1.95);
-      br.rotation.x = 0.9;
-      g.add(br);
-    }
-
-    const mouth = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.7, 2.5, 0.14)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0x0d0c0a, roughness: 1.0, metalness: 0 }))
-    );
-    mouth.position.set(0, 1.3, 1.47);
-    g.add(mouth);
-
-    for (const jx of [-1.0, 1.0]) {
-      const jamb = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.16, 2.5, 0.16)), this.darkSteelMat
-      );
-      jamb.position.set(jx, 1.25, 1.62);
-      g.add(jamb);
-    }
-    const lintel = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(2.2, 0.18, 0.16)), this.darkSteelMat
-    );
-    lintel.position.set(0, 2.58, 1.62);
-    g.add(lintel);
-
-    // On the roof: a vent cowl, a condenser box and a whip antenna.
-    const cowl = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.22, 0.26, 0.9, 14)), this.pipeMat);
-    cowl.position.set(1.6, 4.47, -0.6);
-    g.add(cowl);
-    const cowlCap = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.34, 0.22, 0.16, 14)), this.darkSteelMat);
-    cowlCap.position.set(1.6, 4.98, -0.6);
-    g.add(cowlCap);
-    const cond = new THREE.Mesh(this.own(new THREE.BoxGeometry(1.2, 0.7, 0.8)), this.plateMat);
-    cond.position.set(-1.3, 4.37, -0.5);
-    cond.castShadow = t4;
-    g.add(cond);
-    const fan = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.3, 0.3, 0.04, 18)), this.darkSteelMat);
-    fan.position.set(-1.3, 4.73, -0.5);
-    g.add(fan);
-    const whip = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.01, 0.02, 3.2, 6)), this.darkSteelMat);
-    whip.position.set(2.2, 5.6, -1.1);
-    g.add(whip);
-    // Rungs let into the side wall up to the roof.
-    for (let i = 0; i < 9; i++) {
-      const rung = new THREE.Mesh(this.own(new THREE.TorusGeometry(0.18, 0.018, 5, 10, Math.PI)), this.darkSteelMat);
-      const ry = 0.5 + i * 0.38;
-      const t = (ry) / 3.7;
-      rung.position.set(2.6 * (1 - 0.07 * t) + 0.02, ry, -0.4);
-      rung.rotation.set(0, Math.PI / 2, -Math.PI / 2);
-      g.add(rung);
-    }
-
-    const leaf = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(2.0, 2.7, 0.14)), this.darkSteelMat
-    );
-    leaf.position.set(-2.48, 1.35, 1.72);
-    leaf.rotation.x = -0.04;
-    leaf.castShadow = tierAtLeast('T4');
-    g.add(leaf);
-    const wheel = new THREE.Mesh(
-      this.own(new THREE.TorusGeometry(0.34, 0.045, 8, 22)), this.darkSteelMat
-    );
-    wheel.position.set(-2.48, 1.35, 1.82);
-    g.add(wheel);
-
-    // The lamp over the doorway is lit: somebody works here now.
-    const lampBar = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.5, 0.05, 0.05)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0x2a251c, emissive: SODIUM, emissiveIntensity: 1.4, roughness: 0.6
-      }))
-    );
-    lampBar.position.set(0, 2.64, 1.82);
-    g.add(lampBar);
-
-    const tag = placard('VLT-03', { w: 0.44, h: 0.17 });
-    tag.position.set(1.18, 2.2, 1.68);
-    g.add(tag);
-    this.own(tag.geometry, tag.material, tag.material.map);
-
-    // The bench the catalogue cards are worked on, stood out in the yard air.
-    const bench = this.buildBench({
-      width: 4.8, depth: 1.3, height: 0.95, kind: 'cards', plate: 'BN-03'
-    });
-    bench.group.position.set(0, 0, 2.2);
-    g.add(bench.group);
-
-    g.position.set(site.pos[0], y, site.pos[2]);
-    g.rotation.y = this.siteFacing(site);
-    this.scene.add(g);
-
-    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
-    this.registerBenchAnchor(site, g, bench, [0, 0, 2.2]);
-  }
-
-  /**
-   * Site 4 — the Tally Floor. Sealed gantry once; now the floor itself is the
-   * place: painted margin lines on the crust, a ledger board on posts behind
-   * the bench, and canister crates stacked at the board's end.
-   */
-  initTallyFloor() {
-    const site = this.data.sites.find(s => s.id === 'site-4');
-    if (!site) return;
-    const y = this.surfaceHeight(site.pos[0], site.pos[2]);
-    const g = new THREE.Group();
-
-    // The floor is marked, not built: paint lines on the crust, 5.6 x 3.6.
-    const lineMat = this.own(new THREE.MeshStandardMaterial({ color: 0xb9ab8c, roughness: 0.95, metalness: 0 }));
-    for (const [lx, lz, w, d] of [
-      [0, -1.4, 5.6, 0.08], [0, 2.2, 5.6, 0.08],
-      [-2.8, 0.4, 0.08, 3.6], [2.8, 0.4, 0.08, 3.6]
-    ]) {
-      const strip = new THREE.Mesh(this.own(new THREE.BoxGeometry(w, 0.02, d)), lineMat);
-      strip.position.set(lx, 0.011, lz);
-      g.add(strip);
-    }
-
-    // The ledger board: two posts, a plate, and the tally columns chalked on it.
-    for (const px of [-1.6, 1.6]) {
-      const post = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.1, 1.9, 0.1)), this.darkSteelMat
-      );
-      post.position.set(px, 0.95, -1.0);
-      post.castShadow = tierAtLeast('T4');
-      g.add(post);
-    }
-    const board = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(3.6, 1.05, 0.07)), this.plateMat
-    );
-    board.position.set(0, 1.42, -1.0);
-    board.castShadow = tierAtLeast('T4');
-    g.add(board);
-    const chalkMat = this.own(new THREE.MeshStandardMaterial({ color: 0xcfc5ae, roughness: 1.0, metalness: 0 }));
-    for (let c = 0; c < 7; c++) {
-      const mark = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.035, 0.3, 0.012)), chalkMat);
-      mark.position.set(-1.24 + c * 0.24, 1.42 + (c % 3) * 0.09, -0.955);
-      mark.rotation.z = c % 2 ? 0.06 : -0.05;
-      g.add(mark);
-    }
-    const tag = placard('TALLY-04', { w: 0.62, h: 0.2 });
-    tag.position.set(0, 2.14, -0.955);
-    g.add(tag);
-    this.own(tag.geometry, tag.material, tag.material.map);
-
-    // Canister crates waiting at the board's end.
-    for (let i = 0; i < 2; i++) {
-      const c = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.8, 0.6, 0.8)), this.crateMats[i % this.crateMats.length]
-      );
-      c.position.set(2.4, 0.3 + i * 0.62, -0.4);
-      c.rotation.y = 0.0 + i * 0.28;
-      c.castShadow = c.receiveShadow = tierAtLeast('T4');
-      g.add(c);
-    }
-
-    // The bench, on the crust toward the yard.
-    const bench = this.buildBench({
-      width: 4.8, depth: 1.3, height: 0.95, kind: 'core', plate: 'BN-04'
-    });
-    bench.group.position.set(0, 0, 0.9);
-    g.add(bench.group);
-
-    g.position.set(site.pos[0], y, site.pos[2]);
-    g.rotation.y = this.siteFacing(site);
-    this.scene.add(g);
-
-    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
-    this.registerBenchAnchor(site, g, bench, [0, 0, 0.9]);
-  }
-
-  /**
-   * Site 5 — the Hopper Gantry. Bulk salvage goes in the top, the chute runs
-   * it over the deflector, and the catch bins underneath take one weight each.
-   * The bench with the assay kit stands in front of the works. Sites 5 and 6
-   * are the same assay floor (the sorting bench and the weigh bench are one
-   * instrument), so one builder lays both.
-   */
-  initHopperGantry(siteId, { tag: tagText, plate }) {
-    const site = this.data.sites.find(s => s.id === siteId);
-    if (!site) return;
-    const y = this.surfaceHeight(site.pos[0], site.pos[2]);
-    const g = new THREE.Group();
-
-    // Four H-section legs, braced in X on each face, carrying a tapered bin.
-    // The legs run up past the neck to where the bin's wall meets them.
-    const legGeo = this.own(iBeamGeometry(3.22, { h: 0.16, w: 0.12 }));
-    for (const [px, pz] of [[-0.75, -2.1], [0.75, -2.1], [-0.75, -0.9], [0.75, -0.9]]) {
-      const leg = new THREE.Mesh(legGeo, this.darkSteelMat);
-      leg.position.set(px, 1.61, pz);
-      leg.castShadow = tierAtLeast('T4');
-      g.add(leg);
-      const foot = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.3, 0.03, 0.3)), this.darkSteelMat);
-      foot.position.set(px, 0.015, pz);
-      g.add(foot);
-    }
-    const xLen = Math.hypot(1.5, 1.6);
-    for (const pz of [-2.1, -0.9]) {
-      for (const sgn of [-1, 1]) {
-        const x = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.04, xLen, 0.04)), this.darkSteelMat);
-        x.position.set(0, 1.05, pz);
-        x.rotation.z = sgn * Math.atan2(1.5, 1.6);
-        g.add(x);
-      }
-    }
-    for (const px of [-0.75, 0.75]) {
-      for (const sgn of [-1, 1]) {
-        const x = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.04, Math.hypot(1.2, 1.6), 0.04)), this.darkSteelMat);
-        x.position.set(px, 1.05, -1.5);
-        x.rotation.x = sgn * Math.atan2(1.2, 1.6);
-        g.add(x);
-      }
-    }
-    // The bin: a square frustum, wide at the mouth, necking to the throat.
-    const binGeo = this.own(new THREE.CylinderGeometry(1.3, 0.36, 1.25, 4, 1, true));
-    binGeo.rotateY(Math.PI / 4);
-    const body = new THREE.Mesh(binGeo, this.plateMat);
-    body.material = this.plateMat;
-    body.position.set(0, 2.95, -1.5);
-    body.castShadow = body.receiveShadow = tierAtLeast('T4');
-    g.add(body);
-    const inner = new THREE.Mesh(binGeo, this.darkSteelMat.clone());
-    this.own(inner.material);
-    inner.material.side = THREE.BackSide;
-    inner.position.copy(body.position);
-    g.add(inner);
-    // The ring frame the bin sits in, on the leg heads, and a stiffening band
-    // round the mouth: each four members, never a slab over the opening.
-    for (const [w, d, y] of [[1.66, 1.36, 3.2], [1.9, 1.9, 3.53]]) {
-      for (const sgn of [-1, 1]) {
-        const a = new THREE.Mesh(this.own(new THREE.BoxGeometry(w, 0.1, 0.08)), this.darkSteelMat);
-        a.position.set(0, y, -1.5 + sgn * d / 2);
-        g.add(a);
-        const b = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.08, 0.1, d)), this.darkSteelMat);
-        b.position.set(sgn * w / 2, y, -1.5);
-        g.add(b);
-      }
-    }
-    const throat = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.5, 0.5, 0.5)), this.darkSteelMat
-    );
-    throat.position.set(0, 2.05, -1.4);
-    g.add(throat);
-    const lid = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.0, 0.05, 1.8)), this.darkSteelMat
-    );
-    // Half the grille thrown back on its hinge.
-    lid.position.set(-0.45, 3.62, -1.55);
-    lid.rotation.z = 0.05;
-    g.add(lid);
-
-    const chute = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.55, 0.06, 2.4)), this.plateMat
-    );
-    chute.position.set(0, 1.42, -0.3);
-    chute.rotation.x = 0.42;
-    chute.castShadow = tierAtLeast('T4');
-    g.add(chute);
-    for (const rx of [-0.25, 0.25]) {
-      const railChute = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.04, 0.09, 2.4)), this.darkSteelMat
-      );
-      railChute.position.set(rx, 1.47, -0.3);
-      railChute.rotation.x = 0.42;
-      g.add(railChute);
-    }
-    // The deflector comb across the middle of the run.
-    const deflector = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.4, 0.3, 0.03)), this.darkSteelMat
-    );
-    deflector.position.set(0, 1.72, -0.55);
-    deflector.rotation.x = 0.42;
-    g.add(deflector);
-
-    // Four catch bins in a row under the chute's mouth.
-    for (let i = 0; i < 4; i++) {
-      const bin = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.5, 0.42, 0.5)), this.bulkMat
-      );
-      bin.position.set(-1.05 + i * 0.7, 0.21, 1.05);
-      bin.castShadow = bin.receiveShadow = tierAtLeast('T4');
-      g.add(bin);
-    }
-
-    // The floor balance: post, dial drum, and pan.
-    const post = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.12, 1.05, 0.12)), this.darkSteelMat
-    );
-    post.position.set(2.3, 0.53, 0.9);
-    g.add(post);
-    const dialDrum = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.16, 0.16, 0.1, 18)), this.plateMat
-    );
-    dialDrum.rotation.z = Math.PI / 2;
-    dialDrum.position.set(2.3, 1.18, 0.9);
-    g.add(dialDrum);
-    const pan = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.24, 0.2, 0.035, 18)), this.darkSteelMat
-    );
-    pan.position.set(2.3, 1.3, 0.9);
-    g.add(pan);
-
-    const tag = placard(tagText, { w: 0.5, h: 0.19 });
-    tag.position.set(0, 3.05, -0.63);
-    g.add(tag);
-    this.own(tag.geometry, tag.material, tag.material.map);
-
-    // The assay bench, out front where the certificates get worked.
-    const bench = this.buildBench({
-      width: 4.8, depth: 1.3, height: 0.95, kind: 'assay', plate
-    });
-    bench.group.position.set(0, 0, 2.3);
-    g.add(bench.group);
-
-    g.position.set(site.pos[0], y, site.pos[2]);
-    g.rotation.y = this.siteFacing(site);
-    this.scene.add(g);
-
-    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
-    this.registerBenchAnchor(site, g, bench, [0, 0, 2.3]);
   }
 
   /* ======================================================================
@@ -2554,6 +1850,8 @@ export class TallowWorld {
       if (lm.asset === 'stake-marker' || lm.asset === 'debris-field') continue;
       // Pan rims and the landing pad are walked on, not walked into.
       if (lm.asset === 'pan-rim' || lm.asset === 'landing-pad') continue;
+      // A host collides as its builder says (`initHosts`); a vessel on the room's roof is out of reach.
+      if (lm.host || lm.on === 'roof') continue;
 
       /*
        * ELEVATED STRUCTURES ARE THEIR SUPPORTS.
@@ -2575,33 +1873,11 @@ export class TallowWorld {
       this.colliders.push({ x: lm.pos[0], z: lm.pos[2], radius: lm.radius });
     }
 
-    // Bench furniture: you stand at a bench, you do not walk through it. A bench
-    // is 4.8 m long and 1.3 m deep, so a single radius either leaves both ends
-    // walk-through or seals the aisle beside it. Box colliders match the plate.
-    push(-17.4, -12.6, 16.85, 18.15);   // site-1 bench (lean-to faces the yard)
-    push(4.6, 9.4, -27.65, -26.35);     // site-2 bench (sub-level lab)
-    // The lean-to's four posts. Thin, but a post you can walk through is worse
-    // than no post at all, and they stand just clear of the bench at both ends.
-    for (const px of [-17.95, -12.05]) {
-      for (const pz of [15.15, 18.85]) {
-        this.colliders.push({ x: px, z: pz, radius: 0.24 });
-      }
-    }
-    this.colliders.push({ x: 3.55, z: -26.9, radius: 0.55 });  // lab equipment rack
-    this.colliders.push({ x: 10.35, z: -27.0, radius: 0.48 }); // beam column
-    this.colliders.push({ x: 25.0, z: 3.0, radius: 2.6 });     // vault blockhouse
-    push(22.15, 23.45, 0.6, 5.4);           // site-3 bench, before the open vault
-    push(-26.75, -25.45, -15.4, -10.6);     // site-4 tally bench
-    push(-28.15, -27.85, -14.9, -11.1);     // site-4 ledger board
-    this.colliders.push({ x: -27.2, z: -15.4, radius: 0.5 });  // tally crate stack
-    // Sites 5 and 6 are the same gantry, laid at two places.
-    for (const [gx, gz] of [[6, 30], [-4, 21]]) {
-      const ox = gx - 6, oz = gz - 30;
-      push(5.25 + ox, 6.75 + ox, 27.9 + oz, 29.1 + oz);           // hopper legs
-      push(4.7 + ox, 7.3 + ox, 30.8 + oz, 31.3 + oz);             // catch bins
-      push(3.6 + ox, 8.4 + ox, 31.65 + oz, 32.95 + oz);           // bench
-      this.colliders.push({ x: 8.3 + ox, z: 30.9 + oz, radius: 0.35 });    // balance post
-    }
+    // The hosts: you stand at a bench, you do not walk through it or the machine it is built
+    // into. Each builder hands back its own footprints in its own frame (`initHosts` turned
+    // them to the world's), the room its columns (`initSublevel`).
+    for (const c of this.hostColliders || []) this.colliders.push(c);
+    for (const c of this.labColliders || []) this.colliders.push(c);
 
     // The pit rim. Thin box colliders around the excavation, split so the stair
     // mouth is the only way down — which is what makes the descent a walk.

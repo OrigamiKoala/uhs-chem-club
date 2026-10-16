@@ -313,6 +313,13 @@ function meshBoxes(node, inv) {
   return out;
 }
 
+/**
+ * Everything any deployed instrument, key bank or readings board puts above the
+ * plate, in the viewer's root frame (0.09 m above the floor under the bench), unioned
+ * over every bench in every world. The bay's work volume must contain it.
+ */
+const instrumentReach = new THREE.Box3();
+
 /** Deploy one quest's instrument and measure everything it puts on the plate. */
 function check(questId, label, build, widest) {
   const anchor = world.benchAnchor(questId);
@@ -568,7 +575,7 @@ function check(questId, label, build, widest) {
         node.traverse(o => {
           if (!o.isMesh || o.material?.visible === false) return;
           const b = localBox(o, inv);
-          if (b && b.max.y > 0.905) heads.push(b);
+          if (b && b.max.y > 0.905) { heads.push(b); instrumentReach.union(b); }
         });
       }
 
@@ -1972,5 +1979,149 @@ console.log('The foes — spoil standing in the wells\n');
   };
   await foePasses(emberCfg, EM['boss-crucible'].STAGES, thermoProbes);
 }
+/* ------------------------------------------------------------------ the bay */
+
+/**
+ * THE BAY CONTRACT (`three/bench-bay.js`). Whatever a world builds round a bench,
+ * nothing of it may stand in the bay: not the plate and the air over it, not the
+ * volume the frame's screens hang in, not the 1.95 m behind the plate, not the
+ * ground the camera stands on in front. The shelters that used to stand here
+ * guaranteed this by accident; this measures it, in all five worlds, so a host
+ * that wraps machinery round a bench cannot grow into it.
+ *
+ * Each world is built UNBAKED (`bakeStatics` off) so the bench's own parts are still
+ * identifiable and exempt: baking flattens the whole site into one mesh per
+ * material. The bench's own bodies (`anchor.dormant.parent`) are skipped; every
+ * other body in the world is measured in the bay's frame.
+ */
+{
+  const BAY = await import('../src/three/bench-bay.js');
+  const { findBayIntrusions } = await import('./lib/overlap.mjs');
+  const { BellowsWorld } = await import('../src/three/bellows.js');
+  const { EmberReachWorld } = await import('../src/three/ember.js');
+  console.log('\nthe bench bay, in every world');
+
+  // The screens' envelope contains every panel the frame hangs (PANEL_LAYOUT), tilt and yaw included.
+  {
+    const volumes = BAY.bayBoxes();
+    const env = new THREE.Box3(new THREE.Vector3(...volumes.panels.min), new THREE.Vector3(...volumes.panels.max));
+    const out = [];
+    for (const [id, spec] of Object.entries(PANEL_LAYOUT)) {
+      const frameY = new THREE.Vector3(0, BAY.PANEL_FRAME_Y, 0);
+      for (const c of panelCorners(spec)) {
+        c.add(frameY);
+        if (!env.containsPoint(c)) out.push(`${id} corner (${c.toArray().map(n => n.toFixed(2)).join(', ')})`);
+      }
+    }
+    if (out.length) fail(`PANEL_LAYOUT leaves the bay's panel volume: ${out.join('; ')}`);
+    else ok('every screen of PANEL_LAYOUT hangs inside the bay\'s panel volume');
+  }
+
+  /** The plate the instrument lays out on, as the viewer builds it, matches the bay's. */
+  {
+    const b = BAY.BENCH_BAY;
+    if (b.width !== 4.8 || b.depth !== 1.3 || b.height !== 0.95) fail(`BENCH_BAY is ${b.width} x ${b.depth} at ${b.height}, not 4.8 x 1.3 at 0.95`);
+    else ok('BENCH_BAY is the 4.8 x 1.3 m plate at 0.95 m');
+  }
+
+  // The bay's work volume contains everything any instrument raises over the plate.
+  {
+    const reach = instrumentReach.clone();
+    reach.min.y += BAY.PLATE_TOP - 0.905; reach.max.y += BAY.PLATE_TOP - 0.905;   // the viewer's root sits 0.905 under the plate top
+    const work = BAY.bayBoxes().work;
+    const inside = reach.min.x >= work.min[0] && reach.max.x <= work.max[0] && reach.min.y >= BAY.PLATE_TOP - 0.1 &&
+      reach.max.y <= work.max[1] && reach.min.z >= work.min[2] && reach.max.z <= work.max[2];
+    const span = `x[${reach.min.x.toFixed(2)}, ${reach.max.x.toFixed(2)}] y[${reach.min.y.toFixed(2)}, ${reach.max.y.toFixed(2)}] z[${reach.min.z.toFixed(2)}, ${reach.max.z.toFixed(2)}]`;
+    if (!instrumentReach.isEmpty() && inside) ok(`every instrument stays inside the bay's work volume (reach ${span})`);
+    else fail(`the instruments reach ${span}, outside the bay's work volume`);
+  }
+
+  // Every skin: the same plate, the same anchor, the same footprint, whatever the dress.
+  {
+    const mat = new THREE.MeshStandardMaterial();
+    const ctx = { own: (...o) => o[0], t4: false };
+    const mats = { top: mat, dark: mat, stone: mat, timber: mat };
+    const before = failures;
+    for (const skin of BAY.BENCH_SKINS) {
+      const bench = BAY.buildBayBench(ctx, { skin, mats, rail: null, plate: 'TEST' });
+      bench.group.updateMatrixWorld(true);
+      if (bench.topY !== BAY.PLATE_TOP) fail(`skin ${skin}: topY is ${bench.topY}, not ${BAY.PLATE_TOP}`);
+      if (!bench.indicator || !bench.dormant || bench.dormant.userData.noMerge !== true) fail(`skin ${skin}: missing its indicator or its dormant slot`);
+      const body = new THREE.Box3();
+      bench.group.traverse(o => {
+        if (!o.isMesh || o === bench.indicator) return;
+        for (let a = o; a; a = a.parent) if (a === bench.dormant) return;
+        body.union(new THREE.Box3().setFromObject(o));
+      });
+      const hw = BAY.BENCH_BAY.width / 2 + 0.1;
+      const hd = BAY.BENCH_BAY.depth / 2 + 0.1;
+      if (body.min.x < -hw || body.max.x > hw || body.min.z < -hd || body.max.z > hd || body.max.y > BAY.PLATE_TOP + 0.2 || body.min.y < -0.001) {
+        fail(`skin ${skin}: its dress leaves the plate's footprint (${body.min.toArray().map(n => n.toFixed(2))} .. ${body.max.toArray().map(n => n.toFixed(2))})`);
+      }
+    }
+    try { BAY.buildBayBench(ctx, { skin: 'nope', mats }); fail('an unknown skin was accepted'); } catch { /* refused, as it should be */ }
+    if (failures === before) ok(`all ${BAY.BENCH_SKINS.length} skins keep the plate, the anchor and the footprint`);
+  }
+
+  /*
+   * THE RATCHET. The shelters, gantries and lean-tos that stand round the benches today
+   * were built to a looser envelope than the bay's, and `tools/bay-legacy.json` lists, per
+   * bench, the volumes they still intrude on. A listed (bench, volume) is allowed; anything
+   * else is a failure, and so is a listed entry that no longer occurs, so the file can only
+   * shrink: the phase that rebuilds a bench's host deletes its line. New hosts get no entry.
+   */
+  const fs = await import('node:fs');
+  const legacyPath = new URL('./bay-legacy.json', import.meta.url);
+  const legacy = fs.existsSync(legacyPath) ? JSON.parse(fs.readFileSync(legacyPath, 'utf8')) : {};
+  const found = {};
+  let waived = 0;
+
+  for (const [label, key, World] of [
+    ['Tallow', 'tallow', TallowWorld], ['Ligar', 'ligar', LigarWorld], ['Lanternfall', 'lanternfall', LanternfallWorld],
+    ['Bellows', 'bellows', BellowsWorld], ['Ember Reach', 'ember', EmberReachWorld]
+  ]) {
+    const proto = World.prototype;
+    const baked = proto.bakeStatics;
+    proto.bakeStatics = function () { /* bodies stay identifiable for this check */ };
+    let w;
+    try { w = new World(null); } finally { proto.bakeStatics = baked; }
+    w.scene.updateMatrixWorld(true);
+    const volumes = BAY.bayBoxes();
+    const before = failures;
+    let n = 0;
+    for (const [questId, anchor] of w.benchAnchors) {
+      n++;
+      const node = new THREE.Group();
+      node.position.set(anchor.position[0], anchor.topY - BAY.PLATE_TOP, anchor.position[2]);
+      node.rotation.y = anchor.rotationY;
+      node.updateMatrixWorld(true);
+      const frame = new THREE.Matrix4().copy(node.matrixWorld).invert();
+      const own = anchor.dormant?.parent;
+      if (!own) { fail(`${label} ${questId}: the anchor has no bench to exempt`); continue; }
+      const hits = findBayIntrusions(w.scene, frame, volumes, { skip: o => o === own });
+      const byVolume = new Map();
+      for (const h of hits) byVolume.set(h.volume, [...(byVolume.get(h.volume) || []), h]);
+      const id = `${key}/${questId}`;
+      const allowed = new Set(legacy[id] || []);
+      if (byVolume.size) found[id] = [...byVolume.keys()].sort();
+      for (const [volume, list] of byVolume) {
+        if (allowed.has(volume)) { waived++; continue; }
+        const h = list[0];
+        fail(`${label} ${questId}: ${h.body} stands ${h.depth.toFixed(2)} m inside the bay's ${volume} volume at (${h.at.join(', ')})` +
+          (list.length > 1 ? `, and ${list.length - 1} more` : ''));
+      }
+      for (const volume of allowed) {
+        if (!byVolume.has(volume)) fail(`${label} ${questId}: the ${volume} volume is clear now; delete "${volume}" from tools/bay-legacy.json`);
+      }
+    }
+    if (failures === before) ok(`${label}: ${n} benches, nothing new stands in any bay`);
+  }
+  if (process.env.BAY_WRITE_BASELINE) {
+    fs.writeFileSync(legacyPath, JSON.stringify(Object.fromEntries(Object.entries(found).sort()), null, 2) + '\n');
+    console.log('       wrote tools/bay-legacy.json');
+  }
+  console.log(`       ${waived} legacy bench volumes still waived (tools/bay-legacy.json)`);
+}
+
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

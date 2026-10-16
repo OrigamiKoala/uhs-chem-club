@@ -48,18 +48,34 @@ function ownerOf(obj, root) {
 }
 
 /**
+ * Every drawn body in the scene as a box, with the top-level object that owns it.
+ * Baked props contribute their recorded part boxes, instanced fields one box per
+ * instance, everything else its own mesh. `frame` (a Matrix4, default identity)
+ * is applied after each body's world matrix, so a caller can ask for the boxes in
+ * another frame (the bench bay's): a body turned with its frame then boxes tight.
+ *
  * @param {THREE.Object3D} root the scene
- * @param {{tolerance?: number, minVolume?: number, label?: Function}} opts
- * @returns {Array<{a: string, b: string, depth: number, at: number[]}>}
+ * @param {{tolerance?: number, minVolume?: number, label?: Function, frame?: THREE.Matrix4,
+ *          skip?: (obj: THREE.Object3D) => boolean}} opts `skip` drops a body (and, for a
+ *          baked group, all its parts) by object
+ * @returns {Array<{box: THREE.Box3, owner: THREE.Object3D, name: string, mesh?: THREE.Mesh}>}
+ *   `mesh` is the source of an unbaked body (a baked part has none)
  */
-export function findOverlaps(root, {
+export function collectBoxes(root, {
   tolerance = 0.06,
   minVolume = 1e-5,
-  label = null
+  label = null,
+  frame = null,
+  skip = null
 } = {}) {
   root.updateMatrixWorld(true);
 
   const boxes = [];
+  const toFrame = obj => (frame ? new THREE.Matrix4().multiplyMatrices(frame, obj.matrixWorld) : obj.matrixWorld);
+  const under = (obj, test) => {
+    for (let n = obj; n && n !== root; n = n.parent) if (test(n)) return true;
+    return false;
+  };
 
   /*
    * A prop that has been baked into one mesh per material carries the boxes
@@ -73,11 +89,13 @@ export function findOverlaps(root, {
     const parts = obj.userData?.partBoxes;
     if (!parts || !parts.length) return;
     if (EXEMPT.has(physTag(obj, root))) return;
+    if (skip && under(obj, skip)) return;
     const owner = ownerOf(obj, root);
     bakedOwners.add(obj);
     obj.updateMatrixWorld(true);
+    const m = toFrame(obj);
     for (const local of parts) {
-      const box = local.clone().applyMatrix4(obj.matrixWorld);
+      const box = local.clone().applyMatrix4(m);
       const size = box.getSize(new THREE.Vector3());
       if (size.x * size.y * size.z < minVolume) continue;
       box.expandByScalar(-tolerance);
@@ -91,19 +109,13 @@ export function findOverlaps(root, {
   });
 
   /** True when this mesh's shape is already covered by a recorded part list. */
-  const isBaked = obj => {
-    let n = obj;
-    while (n && n !== root) {
-      if (bakedOwners.has(n)) return true;
-      n = n.parent;
-    }
-    return false;
-  };
+  const isBaked = obj => under(obj, n => bakedOwners.has(n));
 
   root.traverse(obj => {
     if (!obj.isMesh || !obj.geometry) return;
     if (isBaked(obj)) return;
     if (EXEMPT.has(physTag(obj, root))) return;
+    if (skip && under(obj, skip)) return;
     const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
     if (mats.some(m => m && m.transparent)) return;
 
@@ -112,22 +124,102 @@ export function findOverlaps(root, {
     // three-metre block and would report collisions with everything near the
     // pedestal. Every part is measured as the part it is.
     if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
-    const box = obj.geometry.boundingBox.clone().applyMatrix4(obj.matrixWorld);
-    if (!isFinite(box.min.x) || box.isEmpty()) return;
-    const size = box.getSize(new THREE.Vector3());
-    if (size.x * size.y * size.z < minVolume) return;
-
-    // Shrink by the tolerance so touching is not reported as overlapping.
-    box.expandByScalar(-tolerance);
-    if (box.isEmpty()) return;
-
+    const m = toFrame(obj);
     const owner = ownerOf(obj, root);
-    boxes.push({
-      box,
-      owner,
-      name: label ? label(owner, obj) : (owner.name || owner.uuid.slice(0, 6))
-    });
+    const push = box => {
+      if (!isFinite(box.min.x) || box.isEmpty()) return;
+      const size = box.getSize(new THREE.Vector3());
+      if (size.x * size.y * size.z < minVolume) return;
+      // Shrink by the tolerance so touching is not reported as overlapping.
+      box.expandByScalar(-tolerance);
+      if (box.isEmpty()) return;
+      boxes.push({
+        box,
+        owner,
+        mesh: obj,
+        name: label ? label(owner, obj) : (owner.name || owner.uuid.slice(0, 6))
+      });
+    };
+    if (frame && obj.isInstancedMesh) {
+      // A field of instances is measured per instance, not as one block round them all.
+      const im = new THREE.Matrix4();
+      for (let i = 0; i < obj.count; i++) {
+        obj.getMatrixAt(i, im);
+        push(obj.geometry.boundingBox.clone().applyMatrix4(im.premultiply(m)));
+      }
+      return;
+    }
+    push(obj.geometry.boundingBox.clone().applyMatrix4(m));
   });
+
+  return boxes;
+}
+
+/** Whether any triangle of `mesh` (carried into `frame`) passes through `box`. */
+function surfaceTouches(mesh, frame, box) {
+  mesh.updateMatrixWorld(true);
+  const m = new THREE.Matrix4().multiplyMatrices(frame, mesh.matrixWorld);
+  const pos = mesh.geometry.attributes.position;
+  const index = mesh.geometry.index;
+  const tri = new THREE.Triangle();
+  const n = index ? index.count : pos.count;
+  const vtx = k => new THREE.Vector3().fromBufferAttribute(pos, index ? index.getX(k) : k).applyMatrix4(m);
+  for (let k = 0; k < n; k += 3) {
+    tri.set(vtx(k), vtx(k + 1), vtx(k + 2));
+    if (box.intersectsTriangle(tri)) return true;
+  }
+  return false;
+}
+
+/**
+ * Which bodies stand inside a clearance volume. Bodies are measured in the
+ * volume's own frame (`frame` takes world to that frame), so a bay that is turned
+ * to face its approach is tested against bodies turned with it, not against the
+ * loose world box round a turned body.
+ *
+ * @param {THREE.Object3D} root the scene
+ * @param {THREE.Matrix4} frame world -> bay frame
+ * @param {Record<string, {min: number[], max: number[]}>} volumes by name
+ * @param {{skip?: Function, tolerance?: number}} opts `skip` exempts the bench's own bodies
+ * @returns {Array<{volume: string, body: string, depth: number, at: number[]}>}
+ */
+export function findBayIntrusions(root, frame, volumes, { skip = null, tolerance = 0.06 } = {}) {
+  const bodies = collectBoxes(root, { frame, skip, tolerance });
+  const hits = [];
+  for (const [volume, v] of Object.entries(volumes)) {
+    const vb = new THREE.Box3(new THREE.Vector3(...v.min), new THREE.Vector3(...v.max));
+    for (const { box, name, mesh } of bodies) {
+      if (!box.intersectsBox(vb)) continue;
+      // An OPEN SHELL (a vault, a rib, a tube) has no inside: its box is only a candidate and the
+      // verdict is its surface. A closed body is solid and its box stands.
+      if (mesh && (mesh.userData?.openShell || mesh.geometry?.type === 'TubeGeometry') &&
+          !surfaceTouches(mesh, frame, vb)) continue;
+      const overlap = box.clone().intersect(vb);
+      const size = overlap.getSize(new THREE.Vector3());
+      const c = overlap.getCenter(new THREE.Vector3());
+      hits.push({
+        volume,
+        body: name,
+        depth: Math.min(size.x, size.y, size.z),
+        at: [+c.x.toFixed(2), +c.y.toFixed(2), +c.z.toFixed(2)]
+      });
+    }
+  }
+  hits.sort((x, y) => y.depth - x.depth);
+  return hits;
+}
+
+/**
+ * @param {THREE.Object3D} root the scene
+ * @param {{tolerance?: number, minVolume?: number, label?: Function}} opts
+ * @returns {Array<{a: string, b: string, depth: number, at: number[]}>}
+ */
+export function findOverlaps(root, {
+  tolerance = 0.06,
+  minVolume = 1e-5,
+  label = null
+} = {}) {
+  const boxes = collectBoxes(root, { tolerance, minVolume, label });
 
   // Uniform grid broad phase: at ~500 boxes over a 240 m world a quadratic
   // sweep is affordable, but this file is also aimed at the ship and at

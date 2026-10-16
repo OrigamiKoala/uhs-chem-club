@@ -11,7 +11,7 @@
  *  - Every Unit 2 quest has a site, every site names a real quest, and a site's
  *    `built` flag agrees with the chart.
  *  - A SITE LABEL IS A SIGNPOST: `Bench N - <what it teaches>`, six words at
- *    most, and sharing a word with the quest it names, so the sign cannot drift
+ *    most, and sharing a word with the quest it names, so the label cannot drift
  *    from the bench under it.
  *  - Every site FACES ITS APPROACH, so the player walks up to the front of a
  *    bench and never round the back of its shelter.
@@ -22,7 +22,7 @@
  *    or a bench indicator, and the lanterns share a fixed handful of real lights.
  *  - The ice runs to the horizon, and the lake is a thing laid on it.
  *  - T4-only landmarks are decoration: removing them strands nothing.
- *  - No player-facing string carries withheld vocabulary, emoji, or a long sign.
+ *  - No player-facing string carries withheld vocabulary, emoji, or a long label.
  */
 
 import { readFileSync } from 'node:fs';
@@ -109,7 +109,7 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
   const wrong = world.sites.filter(s => s.built !== live.has(s.questId));
   check(wrong.length === 0, 'built sites are exactly the quests with a module', `sites whose built flag disagrees with the chart: ${wrong.map(s => s.id).join(', ')}`);
 
-  // A SITE LABEL IS A SIGNPOST: numbered, short, and sharing a word with the quest it names.
+  // A SITE LABEL NAMES ITS BENCH in the Star Map, the guide and the [E] prompt (no sign stands in the world): numbered, short, and sharing a word with the quest it names.
   const stem = w => w.toLowerCase().replace(/[^a-z]/g, '').slice(0, 4);
   const off = [];
   for (const s of world.sites) {
@@ -120,7 +120,7 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
     const title = new Set((q?.title || '').split(/\s+/).map(stem));
     if (!words.some(w => title.has(w))) off.push(`${s.id} reads "${s.label}", which shares no word with "${q?.title}"`);
   }
-  check(off.length === 0, 'every sign names its bench by what it teaches', `signs that do not name their bench:\n         ${off.join('\n         ')}`);
+  check(off.length === 0, 'every site label names its bench by what it teaches', `site labels that do not name their bench:\n         ${off.join('\n         ')}`);
 }
 
 {
