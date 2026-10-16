@@ -3,7 +3,8 @@
  * verify-lanternfall.mjs — Integrity check of Lanternfall, Learn world 02's ground.
  *
  * Every rule `verify:tallow` and `verify:ligar` hold their worlds to, held to
- * this one:
+ * this one. The nine benches are not in huts: each is built INTO a piece of the
+ * aurora expedition's camp (`lanternfall/stations.js`), and the world is held to that:
  *
  *  - NO TWO THINGS OCCUPY THE SAME SPACE, from the declaration (every footprint
  *    disjoint) AND from the world as built: the real `LanternfallWorld` is
@@ -14,7 +15,11 @@
  *    most, and sharing a word with the quest it names, so the label cannot drift
  *    from the bench under it.
  *  - Every site FACES ITS APPROACH, so the player walks up to the front of a
- *    bench and never round the back of its shelter.
+ *    bench and never round the back of the machine it is built into.
+ *  - EVERY BENCH IS PART OF A HOST: each site has one host landmark beside it, and
+ *    no host stands outside the extent `host-plan.js` declares for it (the layout
+ *    generator keeps everything else out of that rectangle).
+ *  - The boss's ground is open, and the water hole is cut through the lake.
  *  - THE PLAYER CAN WALK TO EVERY BENCH. The ground is flood-filled from the
  *    spawn against the real colliders and walking surface, and every site must
  *    be reached within arm's length, on its own floor, with no ledge to fall off.
@@ -28,6 +33,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { HOST_PLAN, WATER_HOLE, TENT_SPAN } from '../src/three/lanternfall/host-plan.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const world = JSON.parse(readFileSync(join(root, 'src/three/world-data/lanternfall.json'), 'utf8'));
@@ -63,15 +69,35 @@ console.log(`Lanternfall — ${world.name}, ${world.place}\n`);
 
 {
   const clashes = [];
+  const tent = ['site-5', 'site-6'];       // one tent, two benches
   for (const s of world.sites) {
     for (const l of world.landmarks) {
+      if (l.host === s.id) continue;       // the machine this bench is part of
+      if (tent.includes(s.id) && tent.includes(l.host)) continue;
       const d = dist(s.pos, l.pos);
       if (d < l.radius + 4.2) clashes.push(`${s.id} is inside ${l.asset} (${d.toFixed(2)}u)`);
     }
   }
   check(clashes.length === 0,
-    `${world.sites.length} sites stand clear of every prop`,
+    `${world.sites.length} sites stand clear of every prop that is not their host`,
     `sites clash with props:\n         ${clashes.join('\n         ')}`);
+
+  // A host is declared where its machinery stands, and its bench is close enough to be part of it.
+  const siteIds = new Set(world.sites.map(s => s.id));
+  const hosts = world.landmarks.filter(l => l.host);
+  const strays = hosts.filter(h => !siteIds.has(h.host));
+  const far = hosts.filter(h => {
+    const s = world.sites.find(x => x.id === h.host);
+    return s && dist(s.pos, h.pos) > 12;
+  });
+  const twice = hosts.filter((h, i) => hosts.findIndex(o => o.host === h.host) !== i);
+  const missing = world.sites.filter(s => !hosts.some(h => h.host === s.id));
+  check(strays.length + far.length + twice.length + missing.length === 0,
+    `${hosts.length} hosts, each beside the one bench it holds`,
+    `hosts out of step with their sites: ${[...strays, ...far, ...twice].map(h => `${h.asset}@[${h.pos}]`).join(', ')} ${missing.map(s => `${s.id} has no host`).join(', ')}`);
+  const noPlan = world.sites.filter(s => !HOST_PLAN[s.id] || HOST_PLAN[s.id].structure !== s.structure);
+  check(noPlan.length === 0, 'every site names the structure host-plan.js builds for it',
+    `sites whose structure is not their host's: ${noPlan.map(s => s.id).join(', ')}`);
 }
 
 {
@@ -79,10 +105,11 @@ console.log(`Lanternfall — ${world.name}, ${world.place}\n`);
   for (let i = 0; i < world.sites.length; i++) {
     for (let j = i + 1; j < world.sites.length; j++) {
       const d = dist(world.sites[i].pos, world.sites[j].pos);
+      if (world.sites[i].structure === 'records-tent' && world.sites[j].structure === 'records-tent') continue;   // one tent, two benches
       if (d < 8) clashes.push(`${world.sites[i].id} and ${world.sites[j].id} are ${d.toFixed(1)}u apart`);
     }
   }
-  check(clashes.length === 0, 'no two sites are within 8u of each other', `sites crowd each other:\n         ${clashes.join('\n         ')}`);
+  check(clashes.length === 0, 'no two sites are within 8u of each other (the records tent\'s halves are one tent)', `sites crowd each other:\n         ${clashes.join('\n         ')}`);
 }
 
 /* -------------------------------------------------------------------- sites */
@@ -128,6 +155,16 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
   check(new Set(stages).size === stages.length, 'site stage numbers are unique', 'two sites claim the same stage number');
   const bad = world.sites.filter(s => { const d = dist(s.pos, s.approachPos); return d < 1.5 || d > 8; });
   check(bad.length === 0, 'every site has a usable approach mark', `approach marks out of range: ${bad.map(s => s.id).join(', ')}`);
+  // The host colliders are axis-aligned boxes, so a bench faces along an axis.
+  const askew = world.sites.filter(s => Math.min(Math.abs(s.approachPos[0] - s.pos[0]), Math.abs(s.approachPos[2] - s.pos[2])) > 1e-6);
+  check(askew.length === 0, 'every bench faces along an axis', `benches that do not face along an axis: ${askew.map(s => s.id).join(', ')}`);
+  // The two halves of the records tent are one tent: back to back, meeting at the ridge.
+  const a = world.sites[4], b = world.sites[5];
+  check(a.pos[0] === b.pos[0] && Math.abs((a.pos[2] - b.pos[2]) - TENT_SPAN) < 1e-6 && a.approachPos[2] > a.pos[2] && b.approachPos[2] < b.pos[2],
+    'the records tent halves stand back to back, their ridges meeting', 'the records tent halves do not meet');
+  // Level ground under every host: the generator's `flat` disc holds the plan's extent and the lane.
+  const lacking = world.sites.filter(s => !s.flat || !(s.flat.r > 5));
+  check(lacking.length === 0, 'every site declares the disc of ice that is levelled for its host', `sites with no flat disc: ${lacking.map(s => s.id).join(', ')}`);
 }
 
 /* -------------------------------------------------------------- tier parity */
@@ -143,9 +180,8 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
     }
   }
   check(blocked.length === 0, 'every site is reachable with all T4 decoration removed', `approach marks blocked at T3:\n         ${blocked.join('\n         ')}`);
-  const t1 = world.t1.siteDescriptions;
-  check(world.sites.every(s => typeof t1[s.id] === 'string' && t1[s.id].length > 20),
-    'every site has a description a player with no 3D view can use', 'a site has no T1 description');
+  check(JSON.stringify(world.t1.siteOrder) === JSON.stringify(world.sites.map(s => s.id)),
+    'the order the benches are walked in is declared once for a player with no 3D view', 'the T1 site order is not the sites\' order');
   check(world.sites.every(s => world.t2.stillCamera[s.id]), 'every site has a still framing for the baked tier', 'a site has no T2 still camera');
 }
 
@@ -153,7 +189,7 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
 
 {
   const WITHHELD = ['nucleophile', 'electrophile', 'carbonyl', 'carbocation', 'alkyl', 'ester', 'epoxide', 'isopropyl'];
-  const strings = [world.name, world.place, world.oneLine, ...world.sites.map(s => s.label), ...Object.values(world.t1.siteDescriptions)];
+  const strings = [world.name, world.place, world.oneLine, ...world.sites.map(s => s.label)];
   const bad = [];
   for (const str of strings) {
     for (const word of WITHHELD) if (new RegExp(`\\b${word}s?\\b`, 'i').test(str)) bad.push(`"${str}" contains "${word}"`);
@@ -295,6 +331,65 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
       // The sites stand on level ice, so the instrument frames the same plate at every one.
       const flat = [[0, 0], [2.4, 0], [-2.4, 0], [0, 3]].map(([dx, dz]) => built.getTerrainHeight(site.pos[0] + dx, site.pos[2] + dz));
       check(Math.max(...flat) - Math.min(...flat) < 0.02, `${site.id}: the ice under the shelter is level`, `${site.id}: the ground under the bench varies by ${(Math.max(...flat) - Math.min(...flat)).toFixed(2)}u`);
+    }
+
+    /* A HOST STANDS INSIDE THE EXTENT IT DECLARES. `host-plan.js` is what the layout generator keeps
+       everything else out of, so a body that stands outside it would be stood in by the scatter. And
+       the declaration is not slack: no side is more than 2.5 m wider than what is built. */
+    {
+      const off = [];
+      for (const site of world.sites) {
+        const marker = built.siteMarkers.get(site.questId);
+        const plan = HOST_PLAN[site.id];
+        if (!marker || !plan) { off.push(`${site.id}: no host group`); continue; }
+        const g = marker.group;
+        g.updateMatrixWorld(true);
+        const inv = new THREE.Matrix4().copy(g.matrixWorld).invert();
+        const total = new THREE.Box3();
+        g.traverse(o => {
+          if (!o.isMesh || !o.geometry) return;
+          if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+          total.union(o.geometry.boundingBox.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)));
+        });
+        const [x0, x1, z0, z1] = plan.extent;
+        const slack = 0.25;
+        const sides = [['left', total.min.x, x0, -1], ['right', total.max.x, x1, 1], ['back', total.min.z, z0, -1], ['front', total.max.z, z1, 1]];
+        for (const [name, got, want, dir] of sides) {
+          if (dir * (got - want) > slack) off.push(`${site.id} (${plan.structure}) stands ${(dir * (got - want)).toFixed(2)} m outside its declared extent on the ${name}`);
+          else if (dir * (want - got) > 2.5) off.push(`${site.id} (${plan.structure}) declares ${(dir * (want - got)).toFixed(2)} m more than it builds on the ${name}`);
+        }
+      }
+      check(off.length === 0, 'every host stands inside the extent host-plan.js declares, and the declaration is tight',
+        `hosts out of step with host-plan.js:\n         ${off.join('\n         ')}`);
+    }
+
+    /* THE BOSS'S GROUND IS OPEN. The lantern-eater is fought on the way in from the spawn. */
+    {
+      const { BOSS_ARENA_SPOTS } = await import('../src/learn/engine/boss-arena.js');
+      const spot = BOSS_ARENA_SPOTS['boss-eater'];
+      const R = 6.5;
+      const hit = built.colliders.filter(c => {
+        const cx = c.radius != null ? c.x : (c.minX + c.maxX) / 2, cz = c.radius != null ? c.z : (c.minZ + c.maxZ) / 2;
+        const ext = c.radius != null ? c.radius : Math.hypot(c.maxX - c.minX, c.maxZ - c.minZ) / 2;
+        // The arena disc round the boss and the corridor the player walks in along.
+        return Math.hypot(cx - spot.bossPos[0], cz - spot.bossPos[2]) < ext + R ||
+          (Math.abs(cx - spot.playerPos[0]) < ext + 3 && cz > spot.bossPos[2] && cz < spot.playerPos[2] + 4);
+      });
+      check(hit.length === 0, 'the lantern-eater\'s ground is open: nothing stands in the arena or the way in',
+        `${hit.length} colliders stand on the boss's ground, e.g. ${JSON.stringify(hit[0])}`);
+    }
+
+    /* THE WATER HOLE IS CUT THROUGH THE LAKE, and the bench that reads from it stands on the shore. */
+    {
+      const d = world.sites[8];
+      const a = Math.atan2(d.approachPos[0] - d.pos[0], d.approachPos[2] - d.pos[2]);
+      const fx = Math.sin(a), fz = Math.cos(a);
+      const hx = d.pos[0] + WATER_HOLE.lx * fz + WATER_HOLE.lz * fx;
+      const hz = d.pos[2] - WATER_HOLE.lx * fx + WATER_HOLE.lz * fz;
+      const r = Math.hypot(hx - world.lake.x, hz - world.lake.z);
+      check(r + 1.9 < world.lake.radius, `the water hole is ${r.toFixed(1)} m from the lake's middle, its ring inside the ${world.lake.radius} m lake`,
+        `the water hole is ${r.toFixed(1)} m from the lake's middle: it is not cut through the lake`);
+      check(Math.hypot(d.pos[0] - world.lake.x, d.pos[2] - world.lake.z) > world.lake.radius + 1, 'bench 9 stands on the shore, not on the lake', 'bench 9 stands on the lake');
     }
 
     /* THE WALK. Flood-fill the ground from the spawn against the real colliders,

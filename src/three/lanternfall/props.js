@@ -2,8 +2,8 @@
  * lanternfall/props.js — Everything that stands on the ice but is not a bench.
  *
  * Ice spires, pressure ridges, the aurora masts, the camps somebody left, the
- * crawler that did not make it out, the comms mast, the lantern road and the
- * pad the Avalon lands on. Each builder takes the world's `ctx` (its materials,
+ * comms mast, the lantern road and the pad the Avalon lands on. (The hosts the
+ * benches are built into, with the crawler, are `stations.js`.) Each builder takes the world's `ctx` (its materials,
  * its `own()` and its lamp list) and returns ONE group in the landmark's own
  * frame, so the overlap check can measure it as the single object it is and
  * `mergeStatic` can bake it into a draw call or two.
@@ -268,43 +268,6 @@ export function buildStake(ctx) {
   const tag = new THREE.Mesh(ctx.own(new THREE.BoxGeometry(0.16, 0.1, 0.01)), ctx.M.lantern);
   tag.position.set(0.09, 1.2, 0);
   g.add(tag);
-  return g;
-}
-
-/* ------------------------------------------------------------- the crawler */
-
-/** A tracked ice crawler, sunk to its axles and drifted over: somebody's attempt to leave. */
-export function buildIceCrawler(ctx, rotY = 0) {
-  const g = new THREE.Group();
-  const hull = new THREE.Mesh(ctx.own(new THREE.BoxGeometry(5.0, 1.3, 2.3)), ctx.M.steel);
-  hull.position.set(0, 1.05, 0);
-  hull.rotation.z = 0.06;
-  hull.castShadow = hull.receiveShadow = ctx.t4;
-  g.add(hull);
-  for (const z of [-1.45, 1.45]) {
-    const track = new THREE.Mesh(ctx.own(new THREE.BoxGeometry(5.2, 0.95, 0.75)), ctx.M.darkSteel);
-    track.position.set(0, 0.5, z);
-    track.castShadow = ctx.t4;
-    g.add(track);
-    for (let i = 0; i < 5; i++) {
-      const wheel = new THREE.Mesh(ctx.own(new THREE.CylinderGeometry(0.34, 0.34, 0.8, 10)), ctx.M.steel);
-      wheel.rotation.x = Math.PI / 2;
-      wheel.position.set(-2.0 + i, 0.5, z);
-      g.add(wheel);
-    }
-  }
-  const cab = new THREE.Mesh(ctx.own(new THREE.BoxGeometry(1.8, 1.25, 2.0)), ctx.M.steel);
-  cab.position.set(1.35, 2.0, 0);
-  cab.castShadow = ctx.t4;
-  g.add(cab);
-  const bed = new THREE.Mesh(ctx.own(new THREE.BoxGeometry(2.4, 0.55, 2.1)), ctx.M.darkSteel);
-  bed.position.set(-1.2, 1.95, 0);
-  g.add(bed);
-  const drift = new THREE.Mesh(ctx.own(new THREE.SphereGeometry(3.2, 10, 6)), ctx.M.snow);
-  drift.scale.set(1.0, 0.3, 0.7);
-  drift.position.set(-0.4, 0.0, 0.5);
-  g.add(drift);
-  g.rotation.y = rotY;
   return g;
 }
 

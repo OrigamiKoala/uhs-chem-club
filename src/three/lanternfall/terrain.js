@@ -4,7 +4,7 @@
  * The walk, the landing solver and every Node check stand on EXACTLY the ground
  * that is drawn, because the mesh is sampled from the same `height(x, z)` the
  * game calls. The field is gentle where the player lives (a few decimetres of
- * rolling packed ice, dead flat under each bench, the pad and the frozen lake)
+ * rolling packed ice, dead flat under each host, the pad and the frozen lake)
  * and rises into long ice hills past the walk, so the horizon is a country and
  * not a plate.
  *
@@ -46,8 +46,11 @@ const smooth = (a, b, t) => {
  * @param {{sites: object[], landmarks: object[], lake: {x:number,z:number,radius:number}}} data
  */
 export function makeLanternfallField(data) {
-  // Places that must be level: every bench, the pad and the lake.
-  const flat = data.sites.map(s => ({ x: s.pos[0], z: s.pos[2], r: 7.5, blend: 7 }));
+  // Places that must be level: every host (the layout generator writes each site's `flat`: a disc
+  // that holds the host's machinery and the ground in front of its plate), the pad and the lake.
+  const flat = data.sites.map(s => (s.flat
+    ? { x: s.flat.x, z: s.flat.z, r: s.flat.r, blend: 7 }
+    : { x: s.pos[0], z: s.pos[2], r: 7.5, blend: 7 }));
   const pad = data.landmarks.find(l => l.asset === 'landing-pad');
   if (pad) flat.push({ x: pad.pos[0], z: pad.pos[2], r: 11.5, blend: 9 });
   flat.push({ x: data.lake.x, z: data.lake.z, r: data.lake.radius + 4, blend: 14 });
