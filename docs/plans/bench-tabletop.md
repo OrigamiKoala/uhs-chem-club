@@ -1,6 +1,6 @@
 # Bench Tabletop — benches you work with your hands, not machines you answer
 
-**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); T1 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
+**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); T1b (Ligar `q1-joins` + `q4-dots`) and T2 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
 **This plan now carries the rest of `bench-integration.md`.** That plan's P0–P4 are done (bay contract,
 Tallow, Ligar, Lanternfall); its P5 (Bellows), P6 (Ember Reach) and P7 (records, stills, site copy) are
 folded in here as phases T5–T7, so each remaining world is re-laid and re-benched once, not twice.
@@ -585,3 +585,92 @@ Tallow's, Ligar's and Lanternfall's are described.
     moving it; Leave Bench still works; (5) the strip prints the readings and the straightedge lies on it; (6) nothing glows,
     nothing is rounded. Per bench: the lean-in frame should show the host's machinery at the plate's edges and the world beyond
     it; the waived benches above will show a roof or a gantry over the camera until their phase.
+- 2026-10-16: **T1a built** (first half of T1: the atom kit, Tallow's field point, Tallow `q1-grain` and `q2-core`, their hosts).
+  Nothing here is browser-tested. Shipped, and the API T1b builds on:
+  - **`table/kits/atoms.js`** (registered by `kits/index.js`; id `atoms`). One kit, two scales, one set of rules. **Every join is
+    `joinbench.js` `planJoin` asked against the atoms' CURRENT shells** (the links already standing are applied in order, so a split
+    undoes a join), a drawing is `lewis.js` `planLewis`, the lens picture is `scope.js` `drawScopeField`, the cut and the shake are
+    `planCut` / `planSettle`, the beam is `corebench.js` `planBeam`. No stage declares an outcome and `verify:table` replays every
+    join against the planner. A pair that does not hold drifts apart and `state.last.reason` says why; the runner shows that reason
+    (`frame.note`) unless the stage sets `table.opts.explain: false`.
+  - **THE BOND-SCALE HALF (what T1b converts Ligar onto).** Piece kind `atom`, `props {el: 'Na'}` (optional `shells` prefill, `mask`
+    withholds the symbol, `tint`, `lone`, `dots`, `scratch`). A link is `{type: 'transfer'|'share', giver, moved, pairs, a, b}`: a
+    hand-over (`giver` hands `moved` electrons over; both end charged) or `pairs` shared pairs (1 single, 2 double, 3 triple). Exports:
+    `atomView`, `readPiece(id, state) -> {shells, outer, cap, room, full, lamp ('room'|'full'|'over'), charge}`, `chargeOf(ids, state)`
+    (the needle on a cluster), `closureOf(ids, state) -> {closed, open}` (MgCl is open, MgCl₂ closed: "build until nothing is left open"),
+    `formulaOf` / `countsOf` / `moleculesOf(state)`, `lewisOf(ids, state) -> {mol, placed, read}` (the cluster as drawn, bonds from the
+    links, lone pairs and dots from the atoms' props, so T1b's slate drops only have to set `props.lone` / `props.dots` or add pair pieces
+    that join to an atom), `elementOf`, `shellsFor`. Stage wording: `table.opts.words` is `'plain'` (default: no shell talk in a reason) or
+    `'shells'`; `table.opts.shells` draws each atom's outer electrons on its face. Ne-Ne drifts apart, Na-Cl hands over, two oxygens share
+    two pairs, two nitrogens three, four hydrogens close a carbon and a fifth is refused, MgCl₂ closes: all in `verify:table` "Atom kit".
+  - **THE PARTICLE-SCALE HALF.** Kinds `proton`, `neutron`, `electron` (never joined: `nojoin`), `nucleus` (a fixed lump drawn as the
+    to-scale huddle), `specimen` (rings, counts, a casing, a needle reading, a tested stamp), `detector`, `card`. A shell is a tray with a
+    `cap` (the picture prints `n/cap` and a stencilled `!` lamp, `plates.js` `lampMark`, when it holds more); the charge needle is a
+    `needle` fixture (`needleReading(state, id)`: protons on the nucleus lump or in its zones against electrons in them); the beam is a
+    `beam` fixture with a Run key (`runLabel: 'Fire Beam'`) that reads where the detector sits; the tester is a `tester` fixture that stamps
+    what the sample in its slot does (`stamp` on a run); the reader is a `reader` fixture that prints the name and mass of the atom in its slot.
+  - **THE SAMPLER'S TOOLS ON A TABLE.** `dish` (a sample in `props.sample`, the scope's own declaration; `props.view` makes it open at that
+    power), `lens`, `cutter`, `shaker`. New reducer rules, all in `model.js` and all kit-driven: `kinds.x.tool` (a tool lies ON another piece
+    and comes off when picked up, a piece carried into a zone leaves its tools behind), `planJoin -> {once, set, rest}` (a pass: the cutter
+    writes `cut` on the dish and hangs back where it was), `run -> {stamp}`, `kinds.x.nojoin`, `kinds.x.split` (the held piece offers
+    "Pull Out"), `kit.joinGap` (joined pieces stand a little apart so the join shows), a join stands the joiner beside the target on the first
+    free side (`standBeside`), a tray may declare `cell` (the pitch for big pieces) and `cap`, a fixture `noRun` / `runLabel` / `props`, a
+    dial `labels`, `table.opts`, a fetch entry `at` (below). Painting is the kit's (`paintPiece`, `paintFixture`, `paintLink`, `faceKey`,
+    `printed`, `linkRods`): `table2d.js` `drawTable` and `table3d.js` call the SAME functions, so a face is one picture; the built puck's
+    top is a canvas painted by `paintPiece`.
+  - **The scratch corner** (`scratchCorner`, `atomTable(spec)`): bottom left of every atom-kit table, a bin and four loose atoms (H, O, Na,
+    Cl), never graded (`props.scratch`; `piecesIn`, `moleculesOf` skip it), a fresh one every stage. `verify:table` fails an atom table
+    without it and proves that playing in it changes no stage's answer.
+  - **Field point and carry slot.** `three/tallow/stations.js` `buildSamplePoint` returns `fieldPoints: [{id: 'tail', label: 'Belt Scoop', ...}]`:
+    the scoop across the cross-cut sampler's drum, a real piece of host `site-1`, registered by `tallow.js` through `registerFieldPoint`
+    (host-local to world, with the place to stand). `[E]` on it (aim-target, never the nearest) puts "Belt scoop" in the carry chip; leaning
+    in at the bench puts the dish on the table. The guide chevron leads to the stand (`bench-host.js` `guideTo`, wired in `main.js` to
+    `stage.setWorldWaypoint`; `Table3D.syncGuide` shows it while the world has the point and the item is neither fetched nor carried).
+    **Evidence, never a lock:** the scoop is a second dish for stage 1; the stage is answered with the bench's own dish. **At T1 to T3** the
+    same fetch is a drawn **site plate** on the table (`table.fetch[].at`; a tap on it, `TableGestures.siteAt`); where the world has the
+    point the built table draws no plate and a tap there does nothing (`showsSite`). `verify:tallow` holds each point to: belongs to a site
+    (host), labelled, within 12 m of its bench, the place to stand clear of every collider and level with the ground under the point, the point
+    itself solid (the clearance test can fail), inside `[E]` reach, and walkable from the bench's approach mark (a flood fill over the real colliders).
+  - **`q1-grain` and `q2-core` are table quests** (all 16 stages, no `choice`; their lines are gone from `tools/table-legacy.json`; `PRACTICE`, `VOCABULARY`,
+    the reward cards and every export other benches import (`KINDS`, `POWER_SCALES`, `PARTS`, `behaviourOf`) are unchanged). `q1-grain`: 1 lens over a dish and
+    the power dial (graded on the dial), 2 tray the samples by kinds of atom, 3 read atoms in the reader and tray the ore by element (sodium and
+    magnesium are dressed alike), 4 draw the cutter across four samples and tray the one it cannot split, 5 build one molecule of Sample A from loose
+    atoms (the planner refuses a third hydrogen on an oxygen), 6 build one molecule of each sample (the planner makes H-O-O-H only if the hydrogens
+    go on first, which is its honest answer), 7 pass the shaker under three samples and tray them, 8 tray four samples (lens, cutter and shaker all
+    on the table). `q2-core`: 1 detector round the foil, "Fire Beam", the strip records, a model card in the slot; 2 pick out the particles that carry
+    a +; 3 load electrons until the needle rests on zero; 4 load shells (cap lamp) against three open samples; 5 the tester and three trays; 6 and 8
+    trays against a reference (specimen faces print protons, neutrons and a needle); 7 pull electrons off until the needle reads +2. `SOLUTIONS` and
+    `MISSES` are action scripts; every miss carries a reason and no answer.
+    **Deviation from §4:** `q2-core` s6 and s8 tray prebuilt specimens (they do not build each variant from Sample D); building three atoms in one
+    stage wants the cluster model with shell rings, which is T2/T3's to design with the card table. Stage 1's model cards are a slot, not a `choice`.
+  - **Integration (§2.6).** Sample 1 (conveyor tail): the table is the host's own surface (host materials), a field point on the drum, the lean-in view
+    shows the sampler frame and the yard (the host was already clear of every lean check). Sample 2 (instrument room): the roof slab was inside the lean
+    air, so the room is **0.6 m deeper** (`gen-tallow-layout.mjs` `FLOOR_Y` -5.6, ramp grade 0.62, headroom 4.8), the one roof beam that crossed the air over the
+    bench is left out, and a luminaire and lamp hang over the back of the plate (`lampMark`, no new light in the pool). **Both Tallow waivers are deleted**
+    (`tallow/q2-core` and, since the veranda's front edge now stands at the plate's, `tallow/q3-catalogue`): `tools/bay-legacy.json` has no Tallow line.
+    `bench-bay.js` `lean` now starts at the top of the `approach` air (2.2 m, was 2.4) so the two together hold every camera height: a small table leans in
+    lower and nearer than the whole plate. Tables are 120 x 64 units (`TABLE_BOUNDS`), pieces 5 units or more, which is 28 px at 340 px and at 667 x 375.
+  - **Checks.** `verify:table`: the atom kit section, site-plate gesture, `printed` text, run readable along the solution, `noRun` fixtures, the
+    scratch corner; `verify:bench`: every real table stage on the built table at 7 viewports (whole table in the free glass, pieces 28 px or more, host
+    materials, camera in the lean/approach air) and its whole solution through the real pointer path by drag and by two taps, the field point (chevron,
+    no plate, carry, table); `verify:tallow`: the field points; `verify:run` mounts all 16 stages (and the throwaway); `verify:learn`: a Tallow section holds every declared dish, atom, specimen and nucleus to the real tables and recomputes every graded answer (the lowest resolving power, kinds of atom, elements, the cutter's result, the molecule, the shaker's layers, the beam, protons, shells, the tester, isotopes) from the scope's and the kit's own planners.
+  - **Deferred.** Ligar `q1-joins` and `q4-dots` (T1b: the atom kit's bond half is ready for them); the Lewis slate's pair pieces (T1b); a tray that is a
+    real pan or tray in 3D (still a flat picture with a low rim); `catalogue3d` drag; the card kit (T2); `bake:stills` for the deeper instrument room (T7);
+    the sound of the host while the player works; building each variant atom in `q2-core` s6/s8.
+  - **For the user to look at in a browser (nothing here is browser-tested), per bench.** Tallow, 3D On. **Bench 1** (`Bench 1 - Atoms`, the sample point at the
+    conveyor's tail): stand at the plate and read the briefing (it names the lens and the scoop). Press `[E]` at the plate, or let the table
+    lean in on its own: the camera should fly over the plate with the table filling the glass between the prompt strip and the dock, the host's sampler
+    frame and the yard behind it, no sky and no back of a prop. Stage 1: drag the lens onto SAMPLE A (it rests a little right of the dish, the picture in
+    the lens), drag the power dial's knob (or tap the track) to 4. Press W to stand up: the amber chevron should lead about 4.6 m along the bench's left to **the
+    sampler's drum** (the field point: the scoop across the drum), `[E] TAKE BELT SCOOP` appears when you point at it, the chip reads "Carrying Belt
+    scoop"; back at the plate, lean in again and a second dish (BELT SCOOP) is on the table. Stages 4 and 7: drag the cutter or shaker across a dish: it
+    returns to its hook and the dish's picture changes (the helium puff stays unchanged). Stages 5 and 6: drag an H onto an O, an H onto the same O, then
+    a third H (it should drift away with "Oxygen has no room left."); tap an atom to pick it up and press "Pull Out" in the dock to take it out of its
+    molecule. The scratch corner (bottom left, four loose atoms and a bin) should always be there. Phone, landscape: pieces should be easy to hit, and a
+    drag on bare table should only swing the view. **Bench 2** (`Bench 2 - Inside an Atom`, down the stair between the two evaporators; it is deeper than
+    before): the camera leans in under a roof high enough to clear it, with the bulkhead, the gauge board and the equipment rack at the plate's edges and a
+    lamp over the back of the plate. Stage 1: put the detector in the three places in turn and press "Fire Beam" (a dot per run on the strip, counts printed on
+    the detector); stages 3, 4 and 7: electrons are dragged between trays and the needle moves live (it should read +8 until you add electrons in stage 3), a
+    shell tray that holds too many prints `n/cap` and a `!` lamp; stage 5: drop a sample in the tester's slot and press "Run Tester" (the sample's face
+    prints what it did). At T3 and below (3D Off, or a phone below T4) the same stages draw on the deck as a flat top-down table, with a drawn site plate
+    ("Belt scoop") in the corner of stage 1 that a tap takes. Check nothing glows, nothing is rounded, the keys under the table take presses.
