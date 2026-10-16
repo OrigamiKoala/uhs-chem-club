@@ -32,7 +32,9 @@ export const SIZES = {
   slot: { w: 11, h: 11 },
   container: { w: 20, h: 24 },
   rail: { w: 84, h: 12 },
-  fixture: { w: 26, h: 16 }
+  fixture: { w: 26, h: 16 },
+  /** The drawn site plate of a field point (T1 to T3), where a tap takes the item. */
+  site: { w: 24, h: 13 }
 };
 
 /** Pitch of the grid a tray or container lays its pieces on. */
@@ -127,7 +129,8 @@ export function zoneAt(state, p) {
 /** Where a tray's or container's n-th item sits (a grid from its top-left). */
 export function layoutIn(zone, fallback, n) {
   const r = rectOf(zone, fallback);
-  const cell = CELL;
+  // A zone for big pieces (a dish) declares its own pitch (`cell`); the default is for the small ones.
+  const cell = zone.cell || CELL;
   const cols = Math.max(1, Math.floor(r.w / cell));
   const col = n % cols;
   const row = Math.floor(n / cols);
@@ -178,6 +181,11 @@ export function joinCandidates(state, kit, id, at) {
     // a slot or on the rail is where the player put it, and a drop onto that
     // zone is a drop into the zone, never an accidental join with its tenant.
     if (mine.has(o.id) || o.hidden || o.token || o.zone) continue;
+    // A kind can opt out of being joined at all (`kinds.x.nojoin`): a particle set down beside
+    // another is just set down.
+    if (kit.kinds?.[me.kind]?.nojoin || kit.kinds?.[o.kind]?.nojoin) continue;
+    // A tool (a lens, a cutter) is laid ON things; nothing is ever laid on a tool.
+    if (kit.kinds?.[o.kind]?.tool) continue;
     const reach = (radiusOf(kit, me) + radiusOf(kit, o)) * JOIN_REACH;
     const dist = Math.hypot(o.at.x - at.x, o.at.y - at.y);
     if (dist <= reach) out.push({ id: o.id, dist, plan: kit.planJoin(me, o, state) });

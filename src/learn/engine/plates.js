@@ -71,6 +71,22 @@ export function plateText(ctx, text, x, y, o = {}) {
   ctx.fillText(text, x, y);
 }
 
+/**
+ * The stencilled `!` lamp: a small amber-edged square with a bar and a dot, printed on a
+ * tray or a piece that holds more than it should. A mark, never a glow.
+ */
+export function lampMark(ctx, x, y, size) {
+  const h = size / 2;
+  ctx.fillStyle = PLATE_COLORS.bg;
+  ctx.fillRect(x - h, y - h, size, size);
+  ctx.strokeStyle = PLATE_COLORS.amber;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(Math.round(x - h) + 0.5, Math.round(y - h) + 0.5, size - 1, size - 1);
+  ctx.fillStyle = PLATE_COLORS.amber;
+  ctx.fillRect(x - size * 0.07, y - size * 0.32, size * 0.14, size * 0.4);
+  ctx.fillRect(x - size * 0.07, y + size * 0.16, size * 0.14, size * 0.14);
+}
+
 /** Raster lines and a read sweep: this is a cathode instrument, not a window. */
 export function raster(ctx, w, h, sweep = 0, top = 0, bottom = h) {
   ctx.globalAlpha = 0.14;

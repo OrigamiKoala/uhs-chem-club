@@ -65,15 +65,18 @@ export const PANEL_FRAME_Y = PLATE_TOP - 0.895;
  *   approach  open ground in front of the plate where the camera stands and the
  *             player walks in, from the plate's front edge out ~4.4 m.
  *   lean      the air a LEANED-IN camera stands in (`BenchViewer3D.leanIn`, plan
- *             `bench-tabletop.md` §2.6): over the front of the plate, above the
- *             `approach` air. Measured, not guessed: the lean pose for the whole
- *             plate at the six supported aspects, and for a half-size table, sits
- *             within it (`verify:bench` asserts every position is inside). The
+ *             `bench-tabletop.md` §2.6): over the front of the plate, from the top
+ *             of the `approach` air up. Measured, not guessed: the lean pose for the
+ *             whole plate at the six supported aspects, and for every table a stage
+ *             lays out (a smaller table leans in lower and nearer), sits within the
+ *             two (`verify:bench` asserts every position is inside). The
  *             camera's SIGHTLINE to the plate is held by rays, not by this box:
  *             `verify:bench` casts a grid from each pose to the plate and fails any
  *             world body in the way.
  */
 export const WORK_TOP = 2.4;
+/** The top of the approach air; the lean air starts here, so the two together hold every camera height from 0.3 to 4.6 m. */
+export const APPROACH_TOP = 2.2;
 /** The highest a leaned-in camera stands over the floor, and how far in front of the plate it gets. */
 export const LEAN_TOP = 4.6;
 export const LEAN_OUT = 2.1;
@@ -90,8 +93,8 @@ export function bayBoxes() {
     work: { min: [-WORK_HALF, PLATE_TOP, -hd], max: [WORK_HALF, WORK_TOP, hd] },
     panels: { min: [-1.4, PANEL_FRAME_Y + 0.85, -0.9], max: [1.4, PANEL_FRAME_Y + 1.8, -0.38] },
     behind: { min: [-WORK_HALF, 0.3, -1.95], max: [WORK_HALF, WORK_TOP, -hd] },
-    approach: { min: [-hw, 0.3, hd], max: [hw, 2.2, hd + 4.4] },
-    lean: { min: [-LEAN_HALF, WORK_TOP, hd], max: [LEAN_HALF, LEAN_TOP, hd + LEAN_OUT] }
+    approach: { min: [-hw, 0.3, hd], max: [hw, APPROACH_TOP, hd + 4.4] },
+    lean: { min: [-LEAN_HALF, APPROACH_TOP, hd], max: [LEAN_HALF, LEAN_TOP, hd + LEAN_OUT] }
   };
 }
 

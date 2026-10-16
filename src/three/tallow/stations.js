@@ -230,7 +230,14 @@ export function buildSamplePoint(w, site) {
     { lx: 3.3, lz: 1.3, r: 0.2 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
-  return { group: g, bench, benchLocal: [0, 0, 0], colliders };
+  // THE FIELD POINT: the scoop across the sampler's drum, the way the belt's own cut is taken. It is a
+  // real piece of this host (the drum and its scoop), the player stands in front of it (`stand`, host
+  // frame), and `[E]` on it puts a scoop of the belt in the carry slot for the bench.
+  const fieldPoints = [{
+    id: 'tail', label: 'Belt Scoop', lx: -4.5, ly: 0.95, lz: 0.85, half: [0.55, 0.45, 0.55],
+    stand: { lx: -4.5, lz: 2.4 }
+  }];
+  return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
 /* ======================================================================
@@ -357,19 +364,22 @@ export function buildControlHouse(w, site) {
     }
   }
 
-  // THE VERANDA: a header and rafters on two columns, sheet over them, a lamp under.
+  // THE VERANDA: a header and rafters on two columns, sheet over them, a lamp under. Its front edge stands
+  // at the plate's own, so the air in front (where a leaned-in camera stands) is open to the sky.
   const yR = 3.18;
-  for (const sx of [-1, 1]) k.column(g, sx * 4.6, 1.65, yR - 0.1, { h: 0.22, w: 0.18 });
-  k.beam(g, 10.2, w.darkSteelMat, [0, yR, 1.65], 'x', { h: 0.26, w: 0.14 }, true);
-  for (const rx of [-4.6, -1.5, 1.5, 4.6]) k.beam(g, 4.3, w.darkSteelMat, [rx, yR, (1.65 + zF) / 2], 'z', { h: 0.22, w: 0.12 });
+  const zV = 0.45;
+  const lenV = zV - zF;
+  for (const sx of [-1, 1]) k.column(g, sx * 4.6, zV, yR - 0.1, { h: 0.22, w: 0.18 });
+  k.beam(g, 10.2, w.darkSteelMat, [0, yR, zV], 'x', { h: 0.26, w: 0.14 }, true);
+  for (const rx of [-4.6, -1.5, 1.5, 4.6]) k.beam(g, lenV, w.darkSteelMat, [rx, yR, (zV + zF) / 2], 'z', { h: 0.22, w: 0.12 });
   for (const sx of [-3.9, -1.3, 1.3, 3.9]) {
-    const sheet = new THREE.Mesh(w.own(corrugatedGeometry(2.6, 4.3)), w.plateMat);
-    sheet.position.set(sx, yR + 0.14, (1.65 + zF) / 2);
+    const sheet = new THREE.Mesh(w.own(corrugatedGeometry(2.6, lenV)), w.plateMat);
+    sheet.position.set(sx, yR + 0.14, (zV + zF) / 2);
     sheet.castShadow = sheet.receiveShadow = w.t4;
     g.add(sheet);
   }
-  g.add(w.buildLuminaire(0, 3.0, 0.9));
-  k.strut(g, [0, yR - 0.06, 0.9], [0, 3.1, 0.9], 0.012, w.darkSteelMat, 6);
+  g.add(w.buildLuminaire(0, 3.0, -0.5));
+  k.strut(g, [0, yR - 0.06, -0.5], [0, 3.1, -0.5], 0.012, w.darkSteelMat, 6);
 
   // ON THE ROOF: a condenser box and its fan, a vent cowl, a whip, and the way up.
   k.box(g, [1.2, 0.7, 0.8], w.plateMat, [-1.5, H + 0.3 + 0.35, -6.5], null, true);
@@ -394,8 +404,8 @@ export function buildControlHouse(w, site) {
 
   const colliders = [
     { lx: 0, lz: (zF + zB) / 2, hw: 5.1, hd: 3.0 },
-    { lx: -4.6, lz: 1.65, r: 0.3 },
-    { lx: 4.6, lz: 1.65, r: 0.3 },
+    { lx: -4.6, lz: 0.45, r: 0.3 },
+    { lx: 4.6, lz: 0.45, r: 0.3 },
     { lx: 5.3, lz: -4.2, hw: 0.3, hd: 0.25 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];

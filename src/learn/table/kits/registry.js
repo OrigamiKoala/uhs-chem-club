@@ -43,8 +43,26 @@
  *               builds a fixture for the built table (reuse the `*3d.js` builders here);
  *               without it a fixture is a rim, a knob per dial and a Run key
  *
- * T1 adds `kits/atoms.js` (over `joinbench.js` / `lewis.js`) and registers it
- * here; the reducer does not change.
+ * T1 (the atom kit, `atoms.js`) adds the hooks a kit uses to say what its pieces LOOK like and
+ * to extend what a join and a run can do. Each is optional, and each is called by BOTH views
+ * with the same arguments, so the drawn and the built table cannot show different things:
+ *   kinds.x.tool     true for a piece that is LAID ON another (a lens on a sample) and comes off it
+ *                    again when it is picked up; a `planJoin` that answers `once: true` makes a PASS
+ *                    instead (a cutter drawn across a sample) and the tool returns to where it hangs
+ *   kinds.x.nojoin   true for a kind that is never a join target or a joiner (a particle, a detector)
+ *   kinds.x.split    true when a held, joined piece offers the "Pull Out" key
+ *   planJoin(...)    may also answer `set: {a?: props, b?: props}` (what the join leaves written on
+ *                    the pieces, e.g. a sample that has been cut) and `once`
+ *   run(...)         may also answer `stamp: {pieceId: props}` (the reading written on the thing read)
+ *                    with no `x`/`y` when the reading is not for the recorder
+ *   paintPiece(ctx, piece, state, {x, y, r, lit, sc, flat}) -> boolean   paints a piece's whole face
+ *                    (label included); false leaves it to the generic puck
+ *   faceKey(piece, state) -> string   what the face depends on, so the built table repaints it
+ *   paintFixture(ctx, fixture, state, {x0, y0, x1, y1, sc, X, Y, lay})   paints the content of a
+ *                    fixture's box flat (a needle, a beam's path, a reading)
+ *   paintLink(ctx, link, {a, b, ax, ay, bx, by, sc}) -> boolean   paints a join; false = a plain line
+ *   linkRods(link, state) -> number   how many rods the built table lays for a join (default 1)
+ *   table.opts       plain data a stage hands its kit (`state.opts`)
  */
 
 export const DEFAULT_R = 4.5;

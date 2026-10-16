@@ -368,6 +368,70 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
         .map(([k, h]) => `         ${h.depth.toFixed(2)}m  ${k}  at ${h.at.join(', ')}`)
         .join('\n')}`);
 
+    /*
+     * THE FIELD POINTS (plan §2.5). A field stage sends the player to a spot on the plant, so each spot
+     * is held to what a place the player is sent to owes them: it belongs to a host (a site) and is
+     * a real piece of it, the spot to stand at is on walkable ground and outside every collider, the
+     * ground there is level with the ground under the point, and the player can walk from the bench's
+     * approach mark to it (a flood fill over the real colliders, the way the walk tests them).
+     */
+    {
+      const { fieldPointsOf } = await import('../src/three/field-points.js');
+      const points = fieldPointsOf(built);
+      check(points.length >= 1, `${points.length} field point(s) registered by the hosts`, 'no field point is registered: q1-grain sends the player to the conveyor tail');
+      const R = 0.35;
+      const free = (x, z) => !built.colliders.some(c => (c.radius !== undefined
+        ? Math.hypot(x - c.x, z - c.z) < c.radius + R
+        : x > c.minX - R && x < c.maxX + R && z > c.minZ - R && z < c.maxZ + R));
+      for (const p of points) {
+        const site = built.data.sites.find(s => s.id === p.host);
+        check(Boolean(site), `field point "${p.id}" belongs to host ${p.host}`, `field point "${p.id}" names a host (${p.host}) that is not a site: a point is a piece of a host, never a free marker`);
+        if (!site) continue;
+        check(p.siteId === site.id && Boolean(p.label), `field point "${p.id}" feeds ${site.id} and is labelled "${p.label}"`, `field point "${p.id}" has no label or the wrong bench`);
+        const near = Math.hypot(p.pos[0] - site.pos[0], p.pos[2] - site.pos[2]);
+        check(near <= 12, `field point "${p.id}" stands ${near.toFixed(1)} m from its bench`, `field point "${p.id}" is ${near.toFixed(1)} m from its bench: too far to be this host's own`);
+        const [sx, , sz] = p.stand;
+        const groundAt = built.getTerrainHeight(sx, sz);
+        const groundUnder = built.getTerrainHeight(p.pos[0], p.pos[2]);
+        check(free(sx, sz), `field point "${p.id}": the place to stand (${sx.toFixed(1)}, ${sz.toFixed(1)}) is clear of every collider`, `field point "${p.id}": the place to stand is inside a collider`);
+        // The test has teeth: the thing the point is a piece of is solid, so a stand placed on it would fail.
+        check(!free(p.pos[0], p.pos[2]), `field point "${p.id}": the host's own piece it stands on is solid (the clearance test can fail)`, `field point "${p.id}": nothing solid stands at the point, so it is not a piece of its host`);
+        check(Math.abs(groundAt - groundUnder) < 0.3 && p.pos[1] - groundUnder > 0.2 && p.pos[1] - groundUnder < 2.4,
+          `field point "${p.id}": level ground to stand on, the point ${(p.pos[1] - groundUnder).toFixed(2)} m above it`,
+          `field point "${p.id}": the ground to stand on is not level with the point (${groundAt.toFixed(2)} vs ${groundUnder.toFixed(2)}), or the point floats`);
+        const d = Math.hypot(sx - p.pos[0], sz - p.pos[2]);
+        check(d <= p.reach - 0.5, `field point "${p.id}": the stand is ${d.toFixed(1)} m from the point, inside the ${p.reach} m [E] reach`, `field point "${p.id}": the place to stand is ${d.toFixed(1)} m from the point, outside its reach`);
+
+        // The walk from the bench's approach mark to the stand: a flood fill, 0.25 m cells.
+        const step = 0.25;
+        const from = site.approachPos;
+        const half = 30;
+        const n = Math.round((half * 2) / step);
+        const x0 = from[0] - half;
+        const z0 = from[2] - half;
+        const key = (i, j) => j * n + i;
+        const seen = new Uint8Array(n * n);
+        const cell = (x, z) => [Math.round((x - x0) / step), Math.round((z - z0) / step)];
+        const [si, sj] = cell(from[0], from[2]);
+        const [ti, tj] = cell(sx, sz);
+        const queue = [[si, sj]];
+        seen[key(si, sj)] = 1;
+        let reached = false;
+        while (queue.length && !reached) {
+          const [i, j] = queue.pop();
+          if (Math.abs(i - ti) <= 1 && Math.abs(j - tj) <= 1) { reached = true; break; }
+          for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const a = i + di, b = j + dj;
+            if (a < 0 || b < 0 || a >= n || b >= n || seen[key(a, b)]) continue;
+            if (!free(x0 + a * step, z0 + b * step)) continue;
+            seen[key(a, b)] = 1;
+            queue.push([a, b]);
+          }
+        }
+        check(reached, `field point "${p.id}": walkable from the bench's approach mark to the place to stand`, `field point "${p.id}": the place to stand cannot be reached on foot from the bench`);
+      }
+    }
+
     // The instrument has to have somewhere to deploy, and it has to be a real
     // surface at a real height — a bench anchor that drifted would put four
     // stations in mid-air or sink them into the plate.

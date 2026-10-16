@@ -13,6 +13,11 @@
 
 import { SIZES, rectOf, railPositions } from './snap.js';
 
+/** A field entry's drawn site plate, in table units, or null when the stage draws none. */
+export function sitePlate(entry) {
+  return entry?.at ? rectOf(entry, SIZES.site) : null;
+}
+
 /**
  * The controls of a fixture, in table units: its box, one track per dial, and
  * its Run key. Shared by the picture and the hit test so they cannot disagree.
@@ -24,7 +29,9 @@ export function fixtureLayout(f) {
     name, x0: r.x0 + 3, x1: r.x1 - 3, y: r.y0 + 8 + i * 5
   }));
   const bottom = r.y0 + 8 + Math.max(0, names.length - 1) * 5;
-  const run = { x0: r.x1 - 11, x1: r.x1 - 2, y0: Math.max(bottom + 2, r.y1 - 6), y1: Math.max(bottom + 2, r.y1 - 6) + 4.5 };
+  // A gauge, or a dial that only sets, has no Run key (`fixture.noRun`).
+  const wide = f.runLabel ? Math.max(9, f.runLabel.length * 1.9 + 3) : 9;
+  const run = f.noRun ? null : { x0: r.x1 - 2 - wide, x1: r.x1 - 2, y0: Math.max(bottom + 2, r.y1 - 6), y1: Math.max(bottom + 2, r.y1 - 6) + 4.5 };
   return { box: r, dials, run };
 }
 

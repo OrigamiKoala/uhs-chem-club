@@ -30,7 +30,8 @@ let activeQuestId = null;
  * @param {{
  *   mount: (viewer: object) => void,
  *   unmount: (viewer: object) => void,
- *   deployment?: (questId: string) => object | null
+ *   deployment?: (questId: string) => object | null,
+ *   guide?: (waypoint: {x: number, z: number, label: string} | null) => void
  * }} h
  */
 export function setBenchHost(h) {
@@ -40,6 +41,15 @@ export function setBenchHost(h) {
 /** The registered host, or a pair of no-ops when there is none. */
 export function benchHost() {
   return host || { mount() {}, unmount() {} };
+}
+
+/**
+ * Lead the player across the ground to `{x, z, label}`, or stop leading (null). A field stage
+ * uses it to point at the spot it sends the player to (plan §2.5); a host with no ground to cross
+ * simply has no `guide`.
+ */
+export function guideTo(waypoint) {
+  try { host?.guide?.(waypoint || null); } catch (err) { console.error('Guide failed:', err); }
 }
 
 /**

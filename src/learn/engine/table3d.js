@@ -36,7 +36,7 @@
 
 import * as THREE from 'three';
 import { BenchViewer3D, engravedPlaque, AMBER, PHOSPHOR } from './bench3d.js';
-import { benchHost } from './bench-host.js';
+import { benchHost, guideTo } from './bench-host.js';
 import { getKit, radiusOf } from '../table/kits/index.js';
 import { SIZES, rectOf } from '../table/snap.js';
 import { plateMap, fixtureLayout, pieceTargets } from '../table/layout.js';
@@ -136,6 +136,8 @@ export class Table3D extends BenchViewer3D {
   dragAt() { return this.drag?.at || null; }
   setDrag(drag, gap) { this.drag = drag; this.railGap = gap; this.repaintGround(); }
   changed() { this.repaintGround(); }
+  /** Where the world has a field point the player walks to it, so no plate is drawn or tapped. */
+  showsSite(id) { return !fieldPointById(this.worldObject, id); }
 
   /** Screen pixels to table units at the table's scale, where the camera is now. */
   pxToUnits(px) {
@@ -190,6 +192,9 @@ export class Table3D extends BenchViewer3D {
       this.boardKey = key;
       this.map = plateMap(state.bounds);
       this.buildBoard();
+      // A different table is different pieces, whatever ids they share with the last one: build them afresh.
+      for (const e of this.entries.values()) { this.pieceRoot.remove(e.group); this.freeGroup(e.group); }
+      this.entries.clear();
     }
     for (const id of Object.keys(this.shown)) if (!state.pieces[id]) delete this.shown[id];
     for (const p of Object.values(state.pieces)) {
@@ -208,6 +213,8 @@ export class Table3D extends BenchViewer3D {
     this.keys.render(state, this.toolIds);
     this.settleToTargets(this.reduced || first || rebuilt);
 
+    this.syncGuide();
+
     // The stage's table is the part of the plate in use: frame that.
     const zones = [this.map.zone];
     if (first) {
@@ -224,11 +231,12 @@ export class Table3D extends BenchViewer3D {
     const geom = o => [o.at.x, o.at.y, o.size?.w, o.size?.h];
     return JSON.stringify([
       state.kit, state.bounds,
-      Object.values(z.trays).map(t => [t.id, t.label, ...geom(t)]),
+      Object.values(z.trays).map(t => [t.id, t.label, t.cap ?? null, ...geom(t)]),
       Object.values(z.slots).map(t => [t.id, t.label, ...geom(t)]),
       Object.values(z.containers).map(t => [t.id, t.label, ...geom(t)]),
       z.rail ? [z.rail.first, z.rail.last, ...geom(z.rail)] : null,
-      Object.values(state.fixtures).map(f => [f.id, f.kind, f.label, ...geom(f), Object.keys(f.dials)]),
+      Object.values(state.fixtures).map(f => [f.id, f.kind, f.label, f.noRun ? 1 : 0, f.runLabel || '', ...geom(f), Object.keys(f.dials)]),
+      Object.values(state.fetch).map(f => [f.id, f.label, f.at ? [f.at.x, f.at.y] : null]),
       geom(state.recorder.box)
     ]);
   }
@@ -313,6 +321,7 @@ export class Table3D extends BenchViewer3D {
         this.fixtureRoot.add(knob);
         knobs[d.name] = { knob, a, b };
       }
+      if (!lay.run) { this.fixtures.set(f.id, { knobs }); continue; }
       const rp = this.map.toPlate({ x: (lay.run.x0 + lay.run.x1) / 2, y: (lay.run.y0 + lay.run.y1) / 2 });
       const cap = new THREE.Mesh(new THREE.BoxGeometry((lay.run.x1 - lay.run.x0) * s, 0.016, (lay.run.y1 - lay.run.y0) * s), mats.top);
       cap.position.set(rp.x, GROUND_Y + 0.008, rp.z);
@@ -320,7 +329,7 @@ export class Table3D extends BenchViewer3D {
       this.fixtureRoot.add(cap);
       const label = new THREE.Mesh(
         new THREE.PlaneGeometry((lay.run.x1 - lay.run.x0) * s * 0.9, (lay.run.y1 - lay.run.y0) * s * 0.8),
-        this.mine(new THREE.MeshStandardMaterial({ map: this.plaque('Run', 128, 64, {}), roughness: 0.85, metalness: 0.2 }))
+        this.mine(new THREE.MeshStandardMaterial({ map: this.plaque(f.runLabel || 'Run', Math.max(128, Math.round((lay.run.x1 - lay.run.x0) * 14)), 64, {}), roughness: 0.85, metalness: 0.2 }))
       );
       label.rotation.x = -Math.PI / 2;
       label.position.set(rp.x, GROUND_Y + 0.0165, rp.z);
@@ -370,7 +379,12 @@ export class Table3D extends BenchViewer3D {
     group.traverse(o => {
       o.geometry?.dispose?.();
       const mats = Array.isArray(o.material) ? o.material : (o.material ? [o.material] : []);
-      for (const m of mats) if (m.userData?.tableOwned) m.dispose();
+      for (const m of mats) {
+        if (!m.userData?.tableOwned) continue;
+        // A face the kit painted is this table's own canvas: free it with the piece.
+        if (m.userData.ownMap) m.map?.dispose?.();
+        m.dispose();
+      }
     });
   }
 
@@ -415,7 +429,9 @@ export class Table3D extends BenchViewer3D {
     const g = this.ground;
     if (!g || !this.state) return;
     drawTable(g.ctx, g.W, g.H, this.state, {
-      pieces: false, controls: false, sheet: false, crt: false, pourFrom: this.gestures.pourFrom
+      pieces: false, controls: false, sheet: false, crt: false, pourFrom: this.gestures.pourFrom,
+      // Where the world has the field point, the player walks to it; a plate would only be a shortcut past it.
+      sites: id => this.showsSite(id)
     });
     g.tex.needsUpdate = true;
   }
@@ -548,7 +564,31 @@ export class Table3D extends BenchViewer3D {
   /** What makes a piece look the way it does; a change rebuilds only that piece. */
   pieceSignature(kit, p) {
     const f = faceOf(kit, p, this.state);
-    return `${p.kind}|${radiusOf(kit, p)}|${f.text}|${f.badge}|${f.flipped ? 1 : 0}|${p.token ? 1 : 0}`;
+    return `${p.kind}|${radiusOf(kit, p)}|${f.text}|${f.badge}|${f.flipped ? 1 : 0}|${p.token ? 1 : 0}|${kit.faceKey ? kit.faceKey(p, this.state) : ''}`;
+  }
+
+  /**
+   * A kit-painted face: the SAME `kit.paintPiece` the drawn table calls, onto a canvas that
+   * becomes the puck's top. What is drawn on a piece is what the drawn table draws on it.
+   */
+  paintedFace(kit, p, r, thick) {
+    const N = 192;
+    const canvas = document.createElement('canvas');
+    canvas.width = N;
+    canvas.height = N;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#16140f';
+    ctx.fillRect(0, 0, N, N);
+    kit.paintPiece(ctx, p, this.state, { x: N / 2, y: N / 2, r: N * 0.47, lit: false, sc: (N * 0.47) / radiusOf(kit, p), flat: true });
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    const mat = this.mine(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, metalness: 0.15 }));
+    mat.userData.ownMap = true;
+    const face = new THREE.Mesh(new THREE.CircleGeometry(r * 0.96, 36), mat);
+    face.rotation.x = -Math.PI / 2;
+    face.position.y = thick + 0.0008;
+    return face;
   }
 
   buildPiece(kit, p) {
@@ -559,6 +599,20 @@ export class Table3D extends BenchViewer3D {
     const square = p.kind === 'card' || Boolean(p.token);
     const g = new THREE.Group();
     g.name = `piece-${p.id}`;
+    if (!square && kit.paintPiece) {
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.05, PUCK_T, 28), this.mats.top);
+      body.position.y = PUCK_T / 2;
+      body.castShadow = body.receiveShadow = true;
+      g.add(body);
+      g.add(this.paintedFace(kit, p, r, PUCK_T));
+      const ring = new THREE.Mesh(new THREE.RingGeometry(r * 1.16, r * 1.3, 28), this.mine(new THREE.MeshBasicMaterial({ color: AMBER })));
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.0006;
+      ring.visible = false;
+      g.add(ring);
+      g.userData.ring = ring;
+      return g;
+    }
     const text = f.badge ? `${f.text} ${f.badge}` : f.text;
     let labelW;
     let labelH;
@@ -675,6 +729,7 @@ export class Table3D extends BenchViewer3D {
 
   /** Rods between joined pieces, rebuilt from the links and re-laid each frame. */
   syncJoins() {
+    const kit = getKit(this.state.kit);
     this.freeGroup(this.joinRoot);
     this.joinRoot = new THREE.Group();
     this.joinRoot.name = 'tabletop-joins';
@@ -686,16 +741,20 @@ export class Table3D extends BenchViewer3D {
       const pa = this.state.pieces[a];
       const pb = this.state.pieces[b];
       if (!pa || !pb || pa.hidden || pb.hidden) continue;
-      const rod = new THREE.Mesh(geo, this.mats.dark);
-      rod.castShadow = true;
-      this.joinRoot.add(rod);
-      this.joinRods.push({ rod, a, b });
+      // A kit may draw a join as several rods (a double bond is two) or as none (a lens resting on a sample).
+      const n = kit.linkRods ? kit.linkRods(this.state.links[key], this.state) : 1;
+      for (let i = 0; i < n; i++) {
+        const rod = new THREE.Mesh(geo, this.mats.dark);
+        rod.castShadow = true;
+        this.joinRoot.add(rod);
+        this.joinRods.push({ rod, a, b, off: (i - (n - 1) / 2) * 0.026 });
+      }
     }
     this.layJoins();
   }
 
   layJoins() {
-    for (const { rod, a, b } of this.joinRods || []) {
+    for (const { rod, a, b, off } of this.joinRods || []) {
       const ea = this.entries.get(a)?.group;
       const eb = this.entries.get(b)?.group;
       if (!ea || !eb) { rod.visible = false; continue; }
@@ -704,7 +763,10 @@ export class Table3D extends BenchViewer3D {
       const B = eb.position;
       const len = Math.hypot(B.x - A.x, B.z - A.z);
       rod.scale.set(1, Math.max(0.001, len), 1);
-      rod.position.set((A.x + B.x) / 2, Math.max(A.y, B.y) + 0.012, (A.z + B.z) / 2);
+      // Parallel rods sit either side of the line between the two centres.
+      const nx = len > 1e-6 ? -(B.z - A.z) / len : 0;
+      const nz = len > 1e-6 ? (B.x - A.x) / len : 0;
+      rod.position.set((A.x + B.x) / 2 + nx * (off || 0), Math.max(A.y, B.y) + 0.012, (A.z + B.z) / 2 + nz * (off || 0));
       rod.rotation.set(0, 0, 0);
       rod.rotation.z = Math.PI / 2;
       rod.rotation.y = -Math.atan2(B.z - A.z, B.x - A.x);
@@ -788,7 +850,26 @@ export class Table3D extends BenchViewer3D {
     if (!this.state || !this.state.fetch[point.id] || !pendingFetch(this.state, point.id)) return false;
     this.carry = { id: point.id, label: this.state.fetch[point.id].label || point.label };
     this.onCarry?.(this.carry.label);
+    this.syncGuide();
     return true;
+  }
+
+  /**
+   * The chevron leads to the field point this table still sends the player to (the world has it, it
+   * is not yet fetched or carried), and stops when there is none.
+   */
+  syncGuide() {
+    if (!this.worldObject || !this.state) return;
+    let want = null;
+    for (const id of Object.keys(this.state.fetch)) {
+      if (!pendingFetch(this.state, id) || this.carry?.id === id) continue;
+      const pt = fieldPointById(this.worldObject, id);
+      if (pt) { want = pt; break; }
+    }
+    const key = want ? want.id : null;
+    if (key === this.guided) return;
+    this.guided = key;
+    guideTo(want ? { x: want.stand?.[0] ?? want.pos[0], z: want.stand?.[2] ?? want.pos[2], label: want.label } : null);
   }
 
   /** Back at the bench: what was carried goes on the table (the reducer's `fetch`). */
@@ -857,6 +938,8 @@ export class Table3D extends BenchViewer3D {
 
   dispose() {
     if (this.disposed) return;
+    if (this.guided) guideTo(null);
+    this.guided = null;
     this.unGrab?.();
     this.keys?.dispose();
     this.ground?.tex.dispose();

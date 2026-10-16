@@ -20,7 +20,7 @@
  *     recorder { rows [{x, y, label}], tool, box {at, size} },
  *     carry    { held, field },              the piece in the hand; the field item carried
  *     prediction { slot, tokens [ids], token, tested } | null,
- *     tools, fetch, last
+ *     tools, fetch, opts, last
  *   }
  *
  * ACTIONS are one-key objects, `{ verb: argument }`, so a solution reads as a
@@ -51,6 +51,12 @@
  * does not hold drifts apart and stays free, and the reason is on `state.last`.
  * `run` asks `kit.run`. The reducer authors none of it (§2.3), and no stage
  * declares an outcome.
+ *
+ * TOOLS (`kit.kinds.x.tool`). A lens lies ON a sample: dropped on one, the planner may
+ * answer that it holds, and it rides on the sample until it is picked up again. A cutter is
+ * drawn ACROSS one: the planner answers `once`, the pass writes what it did on the sample
+ * (`plan.set`) and the tool returns to where it hangs. Carrying a sample into a zone leaves
+ * any tool on it behind.
  *
  * Deterministic (no clock, no random) and serialisable (plain JSON).
  */
@@ -91,7 +97,7 @@ export function labelsOf(spec) {
     ...(z.slots || []).map(t => t.label),
     ...(z.containers || []).map(t => t.label),
     z.rail?.first, z.rail?.last, z.rail?.label,
-    ...(spec.fixtures || []).flatMap(f => [f.label, ...Object.values(f.dials || {}).map(d => d.label)]),
+    ...(spec.fixtures || []).flatMap(f => [f.label, f.runLabel, ...Object.values(f.dials || {}).map(d => d.label)]),
     spec.prediction?.slot?.label,
     ...(spec.prediction?.tokens || []).map(t => t.label),
     ...(spec.fetch || []).map(f => f.label)
@@ -128,6 +134,8 @@ export function createTable(spec, seedKey = '') {
     prediction: null,
     tools: [...(spec.tools || [])],
     fetch: {},
+    // Plain data the kit may read (`state.opts`): a stage's wording mode, say.
+    opts: { ...(spec.opts || {}) },
     last: null
   };
 
@@ -147,7 +155,14 @@ export function createTable(spec, seedKey = '') {
   };
 
   const z = spec.zones || {};
-  for (const t of z.trays || []) s.zones.trays[t.id] = { id: t.id, label: t.label || t.id, at: { ...t.at }, size: { ...SIZES.tray, ...(t.size || {}) } };
+  // A tray may declare `cap`, how many pieces it is meant to hold; the picture prints a stencilled `!` over it.
+  for (const t of z.trays || []) {
+    s.zones.trays[t.id] = {
+      id: t.id, label: t.label || t.id, at: { ...t.at }, size: { ...SIZES.tray, ...(t.size || {}) },
+      ...(t.cap != null ? { cap: t.cap } : {}),
+      ...(t.cell ? { cell: t.cell } : {})
+    };
+  }
   for (const t of z.slots || []) s.zones.slots[t.id] = { id: t.id, label: t.label || '', at: { ...t.at }, size: { ...SIZES.slot, ...(t.size || {}) } };
   for (const c of z.containers || []) {
     s.zones.containers[c.id] = {
@@ -169,10 +184,19 @@ export function createTable(spec, seedKey = '') {
     if (s.fixtures[f.id]) throw new Error(`table: fixture id "${f.id}" is repeated`);
     const dials = {};
     for (const [name, d] of Object.entries(f.dials || {})) dials[name] = { step: 1, ...d, value: d.value ?? d.min };
-    s.fixtures[f.id] = { id: f.id, kind: f.kind, label: f.label || f.id, at: { ...f.at }, size: { ...SIZES.fixture, ...(f.size || {}) }, dials };
+    s.fixtures[f.id] = {
+      id: f.id, kind: f.kind, label: f.label || f.id, at: { ...f.at }, size: { ...SIZES.fixture, ...(f.size || {}) }, dials,
+      // `noRun` leaves the Run key off (a gauge or a dial that only sets); `runLabel` renames it ("Fire Beam").
+      ...(f.noRun ? { noRun: true } : {}),
+      ...(f.runLabel ? { runLabel: f.runLabel } : {}),
+      props: { ...(f.props || {}) }
+    };
   }
 
-  for (const f of spec.fetch || []) s.fetch[f.id] = { id: f.id, label: f.label || f.id };
+  // A field entry may carry `at`: where the DRAWN site plate stands, the spot a player taps at T1 to T3.
+  for (const f of spec.fetch || []) {
+    s.fetch[f.id] = { id: f.id, label: f.label || f.id, ...(f.at ? { at: { ...f.at }, size: { ...SIZES.site, ...(f.size || {}) } } : {}) };
+  }
 
   if (spec.prediction) {
     const slot = spec.prediction.slot;
@@ -379,6 +403,11 @@ const HANDLERS = {
     const row = kit.run(s, id);
     if (s.prediction?.token) s.prediction.tested = true;
     if (!row) return fail('it read nothing');
+    // A reading can also be written on the thing that was read (`stamp: {pieceId: props}`):
+    // a tag on a sample that has been tested. The kit says; the reducer only writes.
+    for (const [pid, props] of Object.entries(row.stamp || {})) {
+      if (s.pieces[pid]) Object.assign(s.pieces[pid].props, props);
+    }
     s.recorder = append(s.recorder, row);
     return { row };
   },
@@ -441,6 +470,11 @@ function drop(s, kit, id, t) {
 
   if (t.kind === 'piece') return joinPieces(s, kit, id, t.id);
 
+  // A TOOL (a lens, laid on a sample) comes off what it lay on when it is picked up and put anywhere
+  // else; and a piece going into a zone leaves any tool lying on it behind.
+  if (isTool(kit, p)) unlinkAll(s, id);
+  else if (t.kind !== 'free') liftTools(s, kit, id);
+
   if (t.kind === 'free') {
     const group = clusterOf(s, id);
     moveGroup(s, group, id, clampTo(s, t.at, radiusOf(kit, p)));
@@ -493,10 +527,33 @@ function joinPieces(s, kit, aId, bId) {
   }
   if (clusterOf(s, aId).includes(bId) && a.joinedTo.includes(bId)) return { joined: true, a: aId, b: bId, already: true };
 
-  const group = clusterOf(s, aId);
-  const reach = radiusOf(kit, a) + radiusOf(kit, b);
+  // A tool lifts off whatever it lay on before it is laid on something else.
+  const tool = isTool(kit, a);
+  if (tool) unlinkAll(s, aId);
+  const group = tool ? [aId] : clusterOf(s, aId);
+  // Joined pieces stand a little apart (`kit.joinGap`, 1 = touching) so the join between them can be seen.
+  const reach = (radiusOf(kit, a) + radiusOf(kit, b)) * (kit.joinGap || 1);
   const dir = unit(b.at, a.at);
   const plan = kit.planJoin(a, b, s);
+
+  if (plan.holds && (tool || plan.once)) {
+    // Laid ON the target, not beside it. A tool that `once` makes a pass (a cutter across a sample)
+    // does its work and goes back where it hangs; one that stays (a lens) rides with its sample.
+    if (plan.set?.a) Object.assign(a.props, plan.set.a);
+    if (plan.set?.b) Object.assign(b.props, plan.set.b);
+    group.forEach(g => leaveZone(s, g));
+    if (plan.once) {
+      a.at = { ...a.home };
+      return { joined: true, a: aId, b: bId, once: true, reason: plan.reason };
+    }
+    s.links[linkKey(aId, bId)] = plan.link ? clone(plan.link) : {};
+    a.joinedTo = [...a.joinedTo, bId].sort();
+    b.joinedTo = [...b.joinedTo, aId].sort();
+    // It rests on the target, a little off its middle (`plan.rest`) so a press at the target's own
+    // middle still takes the target and a press on the tool takes the tool.
+    a.at = clampTo(s, { x: b.at.x + (plan.rest?.x || 0), y: b.at.y + (plan.rest?.y || 0) }, radiusOf(kit, a));
+    return { joined: true, a: aId, b: bId, reason: plan.reason };
+  }
 
   if (!plan.holds) {
     // Released, it drifts apart: the pair is not joined and the planner says why.
@@ -509,15 +566,57 @@ function joinPieces(s, kit, aId, bId) {
   s.links[key] = plan.link ? clone(plan.link) : {};
   a.joinedTo = [...a.joinedTo, bId].sort();
   b.joinedTo = [...b.joinedTo, aId].sort();
+  if (plan.set?.a) Object.assign(a.props, plan.set.a);
+  if (plan.set?.b) Object.assign(b.props, plan.set.b);
   const zone = b.zone;
   group.forEach(g => { if (s.pieces[g].zone !== zone) leaveZone(s, g); });
   if (zone && zone !== 'rail') {
     for (const g of clusterOf(s, aId)) s.pieces[g].zone = zone;
     relayout(s, zone);
   } else {
-    moveGroup(s, group, aId, clampTo(s, { x: b.at.x + dir.x * reach, y: b.at.y + dir.y * reach }, radiusOf(kit, a)));
+    moveGroup(s, group, aId, standBeside(s, kit, group, a, b, reach, dir));
   }
   return { joined: true, a: aId, b: bId, reason: plan.reason };
+}
+
+/**
+ * Where `a` (and the pieces joined to it, `group`) stands beside `b` so the join can be seen: on the
+ * side it came from if that is clear, otherwise the nearest side round `b` where nothing of the group
+ * would stand on anything else. Deterministic, so a drag and two taps end in the same table.
+ */
+function standBeside(s, kit, group, a, b, reach, dir) {
+  const free = Object.values(s.pieces).filter(p => !group.includes(p.id) && !p.hidden && !p.zone);
+  const base = Math.atan2(dir.y, dir.x);
+  const clear = at => {
+    const dx = at.x - a.at.x;
+    const dy = at.y - a.at.y;
+    return group.every(g => {
+      const q = s.pieces[g];
+      const x = q.at.x + dx;
+      const y = q.at.y + dy;
+      const r = radiusOf(kit, q);
+      if (x - r < 0 || y - r < 0 || x + r > s.bounds.w || y + r > s.bounds.h) return false;
+      return free.every(o => Math.hypot(o.at.x - x, o.at.y - y) >= (r + radiusOf(kit, o)) * 0.9);
+    });
+  };
+  for (let k = 0; k <= 12; k++) {
+    for (const sign of k === 0 ? [1] : [1, -1]) {
+      const th = base + sign * k * (Math.PI / 12);
+      const at = { x: b.at.x + Math.cos(th) * reach, y: b.at.y + Math.sin(th) * reach };
+      if (clear(at)) return at;
+    }
+  }
+  return clampTo(s, { x: b.at.x + dir.x * reach, y: b.at.y + dir.y * reach }, radiusOf(kit, a));
+}
+
+/** Is this piece a tool, one that lies ON another piece and comes off it again (`kinds.x.tool`)? */
+function isTool(kit, p) { return Boolean(kit.kinds?.[p?.kind]?.tool); }
+
+/** Take every tool off the pieces joined to `id`: they stay where they were put, the work goes into the zone. */
+function liftTools(s, kit, id) {
+  for (const m of clusterOf(s, id)) {
+    for (const n of s.pieces[m].joinedTo.slice()) if (isTool(kit, s.pieces[n])) unlinkPair(s, m, n);
+  }
 }
 
 function unlinkPair(s, a, b) {

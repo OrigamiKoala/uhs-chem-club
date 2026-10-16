@@ -30,15 +30,15 @@
  * not LED, amber only for the piece in the hand and the key that is laid.
  */
 
-import { PlateBench, PLATE_COLORS, plateText, raster, aperture } from './plates.js';
+import { PlateBench, PLATE_COLORS, plateText, raster, aperture, lampMark } from './plates.js';
 import { getKit, radiusOf } from '../table/kits/index.js';
 import { SIZES, rectOf, railPositions } from '../table/snap.js';
 import { lineOf, readY, plotUnits } from '../table/recorder.js';
-import { fixtureLayout, pieceTargets } from '../table/layout.js';
+import { fixtureLayout, pieceTargets, sitePlate } from '../table/layout.js';
 import { TableGestures } from '../table/gestures.js';
 import { TableKeys } from './table-keys.js';
 
-export { fixtureLayout };
+export { fixtureLayout, lampMark };
 
 const AMBER = PLATE_COLORS.amber;
 
@@ -101,6 +101,11 @@ export function drawTable(ctx, w, h, state, view = {}) {
     const r = rectOf(t, SIZES.tray);
     outline(r, Boolean(holding));
     text(t.label, r.x0 + 1.2, r.y0 - 1, { color: PLATE_COLORS.dim });
+    if (t.cap != null) {
+      const n = Object.values(state.pieces).filter(p => p.zone === `tray:${t.id}` && !p.hidden).length;
+      text(`${n}/${t.cap}`, r.x1 - 1.2, r.y0 - 1, { align: 'right', color: n > t.cap ? AMBER : PLATE_COLORS.dim });
+      if (n > t.cap) lampMark(ctx, X(r.x1) - 7, Y(r.y0) + 7, Math.max(10, 2.6 * sc));
+    }
   }
   for (const c of Object.values(state.zones.containers)) {
     const r = rectOf(c, SIZES.container);
@@ -141,28 +146,59 @@ export function drawTable(ctx, w, h, state, view = {}) {
     }
   }
 
+  /* the drawn site plates of the field points (T1 to T3) */
+  if (view.sites !== false) {
+    for (const f of Object.values(state.fetch)) {
+      const r = sitePlate(f);
+      if (!r || (typeof view.sites === 'function' && !view.sites(f.id))) continue;
+      const waiting = Object.values(state.pieces).some(p => p.fetchFrom === f.id && p.hidden);
+      outline(r, false, false);
+      ctx.strokeStyle = waiting ? PLATE_COLORS.steel : PLATE_COLORS.rim;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(X(r.x0 + 2), Y(r.y0 + 4 + i * 2.2) + 0.5);
+        ctx.lineTo(X(r.x1 - 9), Y(r.y0 + 4 + i * 2.2) + 0.5);
+        ctx.stroke();
+      }
+      ctx.fillStyle = waiting ? AMBER : PLATE_COLORS.dim;
+      ctx.beginPath();
+      ctx.arc(X(r.x1 - 5.5), Y(r.y0 + 6.2), Math.max(3, 1.3 * sc), 0, Math.PI * 2);
+      ctx.fill();
+      text(f.label, r.x0 + 1.2, r.y1 - 1.6, { color: waiting ? PLATE_COLORS.dust : PLATE_COLORS.dim });
+    }
+  }
+
   /* fixtures */
   for (const f of Object.values(state.fixtures)) {
     const lay = fixtureLayout(f);
     outline(lay.box, false, false);
     text(f.label, lay.box.x0 + 1.5, lay.box.y0 + 3.6, { color: PLATE_COLORS.dust });
-    if (view.controls === false) continue;
+    // A kit paints what a fixture shows (a needle, a beam's path, a reading) in the box, flat:
+    // the built table paints it into the plate's own picture, so the two cannot differ.
+    kit.paintFixture?.(ctx, f, state, { x0: X(lay.box.x0), y0: Y(lay.box.y0), x1: X(lay.box.x1), y1: Y(lay.box.y1), sc, X, Y, lay });
+    // A dial's name and where it stands are printed on the plate in both views; only its track and
+    // knob are the drawn table's own (the built table stands a real knob on it).
     for (const d of lay.dials) {
       const dial = f.dials[d.name];
       const frac = dial.max === dial.min ? 0 : (dial.value - dial.min) / (dial.max - dial.min);
-      ctx.strokeStyle = PLATE_COLORS.steel;
-      ctx.beginPath();
-      ctx.moveTo(X(d.x0), Y(d.y));
-      ctx.lineTo(X(d.x1), Y(d.y));
-      ctx.stroke();
-      ctx.fillStyle = PLATE_COLORS.dust;
-      const kx = X(d.x0 + frac * (d.x1 - d.x0));
-      ctx.fillRect(kx - 3, Y(d.y) - 5, 6, 10);
-      text(`${dial.label || d.name} ${dial.value}`, d.x0, d.y - 1.2, { color: PLATE_COLORS.dust, size: Math.max(9, 2.3 * sc) });
+      if (view.controls !== false) {
+        ctx.strokeStyle = PLATE_COLORS.steel;
+        ctx.beginPath();
+        ctx.moveTo(X(d.x0), Y(d.y));
+        ctx.lineTo(X(d.x1), Y(d.y));
+        ctx.stroke();
+        ctx.fillStyle = PLATE_COLORS.dust;
+        const kx = X(d.x0 + frac * (d.x1 - d.x0));
+        ctx.fillRect(kx - 3, Y(d.y) - 5, 6, 10);
+      }
+      const shown = dial.labels ? dial.labels[Math.round((dial.value - dial.min) / (dial.step || 1))] ?? dial.value : dial.value;
+      text(`${dial.label || d.name} ${shown}`, d.x0, d.y - 1.2, { color: PLATE_COLORS.dust, size: Math.max(9, 2.3 * sc) });
     }
+    if (view.controls === false) continue;
+    if (!lay.run) continue;
     ctx.strokeStyle = PLATE_COLORS.steel;
     ctx.strokeRect(Math.round(X(lay.run.x0)) + 0.5, Math.round(Y(lay.run.y0)) + 0.5, Math.round((lay.run.x1 - lay.run.x0) * sc), Math.round((lay.run.y1 - lay.run.y0) * sc));
-    text('Run', (lay.run.x0 + lay.run.x1) / 2, (lay.run.y0 + lay.run.y1) / 2, { align: 'center', base: 'middle', color: PLATE_COLORS.text });
+    text(f.runLabel || 'Run', (lay.run.x0 + lay.run.x1) / 2, (lay.run.y0 + lay.run.y1) / 2, { align: 'center', base: 'middle', color: PLATE_COLORS.text });
   }
 
   /* the recorder's strip */
@@ -180,6 +216,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
     if (!pa || !pb || pa.hidden || pb.hidden) continue;
     const A = at(pa);
     const B = at(pb);
+    if (kit.paintLink?.(ctx, state.links[key], { a: pa, b: pb, ax: X(A.x), ay: Y(A.y), bx: X(B.x), by: Y(B.y), sc })) continue;
     ctx.beginPath();
     ctx.moveTo(X(A.x), Y(A.y));
     ctx.lineTo(X(B.x), Y(B.y));
@@ -192,6 +229,9 @@ export function drawTable(ctx, w, h, state, view = {}) {
     const c = at(p);
     const r = radiusOf(kit, p) * sc;
     const lit = holding === p.id;
+    // A kit paints its own pieces (an atom, a dish with the scope's picture on it) through the SAME
+    // function the built table paints a piece's face with, so the two views cannot show different things.
+    if (kit.paintPiece?.(ctx, p, state, { x: X(c.x), y: Y(c.y), r, lit, sc })) continue;
     const square = p.kind === 'card' || p.token;
     const face = faceOf(kit, p, state);
     const label = face.badge ? `${face.text} ${face.badge}` : face.text;

@@ -19,6 +19,8 @@
  *   dispatch(action)     send one action to the runner
  *   changed()            something the picture shows has changed (a drag, a gap, a pour source)
  *   sheetRows()          optional: every recorded row's position on the sheet, table units
+ *   showsSite(id)        optional: false when the view draws no site plate for field point `id`
+ *                        (the built table, where the world has the point and the player walks to it)
  */
 
 import { getKit, radiusOf } from './kits/registry.js';
@@ -26,7 +28,7 @@ import {
   SIZES, GRAB_REACH, rectOf, zoneAt, railIndexAt, resolveDrop, targetString
 } from './snap.js';
 import { snapDial } from './model.js';
-import { fixtureLayout } from './layout.js';
+import { fixtureLayout, sitePlate } from './layout.js';
 
 /** Pixels a press must move before it is a drag and not a tap. */
 export const SLOP_PX = 5;
@@ -69,7 +71,12 @@ export function contextKeys(state, kit) {
     keys.push({ id: 'smaller', label: 'Smaller', action: { scale: { piece: held.id, factor: cur - 1 } }, enabled: cur > 1 });
     keys.push({ id: 'larger', label: 'Larger', action: { scale: { piece: held.id, factor: cur + 1 } }, enabled: cur < (kit.maxScale || 1) });
   }
+  // A held piece that is joined to others can be pulled out of its group (`kinds.x.split`).
+  if (held && kit.kinds?.[held.kind]?.split && held.joinedTo.length) {
+    keys.push({ id: 'split', label: 'Pull Out', action: { split: held.id }, enabled: true });
+  }
   for (const f of Object.values(state.fetch)) {
+    if (f.at) continue;   // a drawn site plate is the way to take it
     if (pendingFetch(state, f.id)) keys.push({ id: `fetch:${f.id}`, label: f.label, action: { fetch: f.id }, enabled: true });
   }
   return keys;
@@ -125,7 +132,7 @@ export class TableGestures {
         if (u.x >= d.x0 - pad && u.x <= d.x1 + pad && Math.abs(u.y - d.y) <= pad) return { kind: 'dial', fixture: f.id, dial: d.name, track: d };
       }
       const r = lay.run;
-      if (u.x >= r.x0 - pad / 2 && u.x <= r.x1 + pad / 2 && u.y >= r.y0 - pad / 2 && u.y <= r.y1 + pad / 2) return { kind: 'run', fixture: f.id };
+      if (r && u.x >= r.x0 - pad / 2 && u.x <= r.x1 + pad / 2 && u.y >= r.y0 - pad / 2 && u.y <= r.y1 + pad / 2) return { kind: 'run', fixture: f.id };
     }
     return null;
   }
@@ -133,6 +140,17 @@ export class TableGestures {
   containerAt(u) {
     for (const c of Object.values(this.state.zones.containers)) {
       if (inRect(rectOf(c, SIZES.container), u)) return c.id;
+    }
+    return null;
+  }
+
+  /** The drawn site plate under a point, when something there is still to be taken. */
+  siteAt(u) {
+    for (const f of Object.values(this.state.fetch)) {
+      const r = sitePlate(f);
+      // A view that has no plate to show for a point (the world has it: the player walks there) says so.
+      if (this.view.showsSite && !this.view.showsSite(f.id)) continue;
+      if (r && inRect(r, u) && pendingFetch(this.state, f.id)) return f.id;
     }
     return null;
   }
@@ -148,6 +166,7 @@ export class TableGestures {
     const id = this.pieceAt(u);
     if (id && !this.state.pieces[id].fixed) return true;
     if (this.onSheet(u)) return true;
+    if (this.siteAt(u)) return true;
     return this.containerAt(u) !== null && !this.state.carry.held;
   }
 
@@ -165,6 +184,8 @@ export class TableGestures {
       return;
     }
     if (this.onSheet(u)) { this.gesture = { kind: 'sheet', start: u }; return; }
+    const site = this.siteAt(u);
+    if (site) { this.gesture = { kind: 'site', id: site }; return; }
     const jar = this.containerAt(u);
     if (jar && !this.state.carry.held) { this.gesture = { kind: 'jar', id: jar, start: u, moved: false }; return; }
     this.gesture = { kind: 'table' };
@@ -208,6 +229,7 @@ export class TableGestures {
       return;
     }
     if (g.kind === 'piece') { this.tapPiece(g.id); return; }
+    if (g.kind === 'site') { if (this.siteAt(u) === g.id) this.view.dispatch({ fetch: g.id }); return; }
     if (g.kind === 'jar') { this.jarUp(g, u); return; }
     if (g.kind === 'sheet') { this.sheetUp(g, u); return; }
     if (g.kind === 'table') {

@@ -50,7 +50,9 @@ async function bootstrapApp() {
       if (stage.activeQuestViewer === viewer) stage.exitQuestScene();
     },
     // Where that quest's bench physically stands, when the player walked to it.
-    deployment: questId => stage.benchDeployment(questId)
+    deployment: questId => stage.benchDeployment(questId),
+    // A field stage points the way to where it sends the player (the chevron the voyage already draws).
+    guide: wp => stage.setWorldWaypoint(wp)
   });
 
   // Background reconciliation of localStorage with the Sheet. The game plays
