@@ -1,5 +1,10 @@
 # Ligar, finished
 
+> **Superseded in part, 2026-10-16.** The five shelters described below (and the arch terrace, tube forge, batch house
+> and weighbridge) are gone: every bench is now built into a working of the quarry or into the mine under two new hills.
+> The instruments, quests and foes here are unchanged. The layout, the hosts, the mine and the light are recorded in
+> `bench-integration.md` (P2/P3 progress note); the generator is `tools/gen-ligar-layout.mjs`, not the `.py` named below.
+
 **Status: built, 2026-10-10.** Benches three to nine, the Basalt Warden, the four
 instruments they stand on and the five stations that hold them on the ground. This is the
 record of what was built and every place it parted from the plan in

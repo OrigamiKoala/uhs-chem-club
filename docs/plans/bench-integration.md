@@ -1,6 +1,6 @@
 # Bench integration — benches become part of each world
 
-**Status:** P0 (shared groundwork) and P1 (Tallow) done 2026-10-16; P2 onward not started. Drafted 2026-10-16.
+**Status:** P0 (shared groundwork), P1 (Tallow) and P2/P3 (Ligar) done 2026-10-16; P4 onward not started. Drafted 2026-10-16.
 
 ## The brief
 
@@ -182,9 +182,9 @@ Each phase ends with `npm run verify` green and a progress note in this file.
       Progress note below.
 - [x] P1 — Tallow (§2): layout generator, process line, six hosts, sublevel moved.
       Progress note below.
-- [ ] P2 — Ligar surface (§3, benches 1, 3, 4, 5).
-- [ ] P3 — Ligar mine (§3a–3d): layered walk, hills, adits, cover mask, guide waypoints, benches
-      2, 6–9. The largest phase; may need splitting once the walk change is in.
+- [x] P2 — Ligar surface (§3, benches 1, 3, 4, 5). Progress note below (done with P3).
+- [x] P3 — Ligar mine (§3a–3d): hills, adits, cover mask, guide waypoints, benches 2, 6–9. The layered
+      walk was not needed (see the note: the hills are not climbed).
 - [ ] P4 — Lanternfall (§5). P5 — Bellows (§6). P6 — Ember Reach (§7). One phase each,
       independent of one another once P0 lands.
 - [ ] P7 — CLAUDE.md (retire the sign rule, describe the bay contract and the layered walk), per-world
@@ -267,6 +267,73 @@ Differences from §2 as drafted:
 
 For the user to look at in the browser (not tested here): the sleeve under the conveyor head, the control house door and
 glass, the lab's columns and girders under the two vessels, the tower deck's draw-off line and the tower's guys.
+
+### P2/P3 progress note — Ligar (2026-10-16)
+
+Done:
+- `tools/gen-ligar-layout.mjs` replaces `gen-ligar-layout.py` (the floors of the workings are laid from the real height
+  field, which only the JS can evaluate). Hand-placed hills, workings and hosts; the scatter is settled; it REFUSES to
+  write if anything fixed collides, a doorway does not meet its neighbour at one height, a grade is over 6 degrees, a
+  working has less than 1.4 m of rock over its roof or reaches its hill's edge, a bay leaves its chamber, a cutting
+  does not meet the ground at its foot, a ring box closes a cutting or cuts into a working, a host's real extents touch
+  another's, or the warden's ground is not open. The three arches are pinned where they have always stood (an arch's
+  talus is seeded from its position). `tallow`-style keep-outs: belts, hosts, the deck, the pit, the hills, each
+  cutting's lane.
+- `ligar/mine-plan.js` (pure, no THREE): the hills (`hillHeight`, a rounded block rising in two steps, 16 and 15 m), the
+  workings as axis-aligned volumes (`cutting`, `drift`, `chamber`) with graded or flat floors and openings that meet on
+  one plane, and everything derived from them: `floorAt`, wall segments, wall and ring colliders, the terrain holes, the
+  light mask's boxes, and `routeTo` (the guide's way in). Generator, world, guide and verifiers stand on this one file.
+- `ligar/mine.js`: the rock (floors in scoria, walls in section as the quarry's faces are but cut flat at the face so the
+  colliders are exactly where the rock is, roofs, the headwall over each portal; `phys: 'ground'`) and the furniture
+  (steel and timber sets every 2.4 m, rock bolts, vent duct, cable on hangers, the rail down the main adit and the
+  decline, each portal's frame, a lamp every 6 m).
+- `ligar/stations.js`: nine hosts, each returning `{ group, bench, benchLocal, colliders }`: 1 slab-dressing yard (shelf,
+  bridge saw over a clamped slab, racks), 3 crusher house (deck, jaw crusher with flywheels, feed belt, housing,
+  catwalk above the bay), 4 scale house (desk, cabin with the dial, weigh deck on its cells), 5 substation (deck, the
+  two charged plates as bus bars, transformer, switchgear), 2 ore drift (ledge, forge, anvil, trough, the vein and the
+  wire), 6 drill chamber (pattern board, jumbo, control stand), 7 sump and pump station, 8 survey station, 9 hoist
+  chamber (desk, winder, winze collar and headgear, the rope). `ligar.js` loses `initArchTerrace`, `initTubeForge`,
+  `initBatchHouse`, `initWeighbridge`, `initStations` and the shelters (`buildShelter`, `APRON`, the five signature
+  pieces); `initHosts` places them like Tallow's. The lava tube is an empty quarry feature (barrel, mouth, a few props).
+- Light: `setLigarCover` + the `applyLigarAir` patch take the sun, the hemisphere and the environment out of every
+  fragment inside a working's box (8 volumes per hill, 2 hills, 1.3 m falloff), lamps untouched. Underground lamps are
+  12 cd / 14 m (the only light there). Ash and grit fade indoors; no grit streak runs over a hill.
+- Guide: the waypoint carries `siteId`; `LigarWorld.routeTo(siteId, from)` leads surface, portal axis, doorway by
+  doorway; every other world answers with the straight line.
+- Verifiers: `tools/bay-legacy.json` has no Ligar line left (13 -> 6 pairs: Lanternfall q4/q7, Ember q2/q4).
+  `verify:ligar` gained the workings (doorways, grades, widths, rock over every roof, foot on the ground, bays inside
+  chambers, cover-mask capacity, routes), the hills (no reachable cell stands on one, the route walkable from the first
+  doorway on, every wall segment holds the walk out of the rock and leaves the room open), the light (a lamp in
+  every working, the pool still three, only lamps, the forge and indicators are lit, the cover mask evaluated on the CPU
+  as the shader does, the patch lands), furniture clear of the chamber walls (rock is ground and exempt from the overlap
+  rule, so this is its own check), host footprints and the warden's ground. All `verify:*` pass and `npm run build` is green.
+
+Differences from §3 as drafted:
+- **No layered walk.** The plan's `getTerrainHeight(x, z, fromY)` is for a hill with a walkable top over a drift. Here a hill
+  is not climbed: a ring of colliders closes it round except at the cuttings (`RING`), so inside its footprint the only
+  floor there is is a working's, and `getTerrainHeight` answers it (`mine.floorAt`) with its two arguments. Every call
+  site (`stage.js`, `aim-target.js`, `voyage.js`, `ship-exterior.js`, `world.js`, each world's own), `fpsControls` and the
+  voyage keep their contract; the flood fill stays 2D (it is held to "no reachable cell stands on a hill"). If a hill is ever to be walked on, the layered walk is back on the table.
+- **A portal is a cutting.** The terrain is cut away over a trench dug back into the hill's face (as the quarry's pit is),
+  its walls are the hill in section following the slope, and the headwall stands over the adit's mouth. The plan's
+  `mine: { portals, drifts, chambers }` is `mine.volumes` (`kind` says which; a doorway is a pair of `openings`). Drifts are
+  straight segments, not polylines; roofs are rock slabs, not `lintelBeam`.
+- **Chambers are 11.2 x 11 m, not 7.5 x 9.** The back wall stands 3.1 m behind the plate so that the columns' faces (up to
+  0.3 m proud) clear the bay's behind volume, and 11.2 m across leaves 2.5 m a side for each host's machinery. Roof 4.4 m.
+- **The hoist is the deepest, the sump is not the lowest.** Hill B's decline falls 0.1 per metre: the sump chamber is 1.2 m
+  below the portal, the hoist chamber 2.4 m (and its winze goes on down). The sump is where the drainage of the decline
+  gathers; the hoist is where the mine goes on from.
+- **The east deck grew** to z 16.5 (the weigh deck lies beside the scale house's desk, not in front of it, so the player is
+  never asked to stand on the bridge); the gantry's rail leaves the two lanes open; the batch house and its silos are gone.
+- **`t1.siteDescriptions` is deleted** (read by nothing but `verify:ligar`), as on Tallow. `t2.stillCamera` regenerated.
+- Hosts' declared circles are smaller than their real extents (a circle cannot both hold a 15 m yard and stay behind the
+  approach); the generator's keep-out rectangles are the real extents, and the overlap and bay checks measure the bodies.
+
+For the user to look at in the browser (not tested here): the portals' cuttings and headwalls from the yard (the terrain
+hole's seam at the foot, the hill's two steps), the first lamp-lit view down the main adit, the forge's glow in the ore
+drift, whether a drift is too dark between lamps (underground lamps are the one number to turn: `UNDERGROUND_LAMP` in
+`ligar/mine.js`), the sump and hoist chambers on a phone (cover mask on a device with no shadow map), the guide arrow
+leading in through hill A's portal, the crusher's catwalk over the bench, the substation's two plates beside the bench.
 
 ## 5. Lanternfall — an observatory camp on the ice (proposal for review)
 

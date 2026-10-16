@@ -1282,7 +1282,10 @@ export class Voyage {
     const world = st.activeWorld;
     if (!wp || !world) { this.groundGuide.hide(); return; }
     const from = st.camera.position;
-    this.groundGuide.show(world.scene, [[from.x, from.z], [wp.x, wp.z]], {
+    // A world with workings answers with the way on foot (surface, portal, doorway by doorway);
+    // every other world, and a waypoint with no site, is the straight line it always was.
+    const way = (wp.siteId && world.routeTo?.(wp.siteId, { x: from.x, z: from.z })) || [[from.x, from.z], [wp.x, wp.z]];
+    this.groundGuide.show(world.scene, way, {
       label: (wp.label || '').toUpperCase(),
       heightFn: (x, z) => world.getTerrainHeight(x, z),
       hover: 1.25,

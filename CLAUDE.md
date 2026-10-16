@@ -93,7 +93,9 @@ tokens and primitives; the SCOURED PLATE prose below stays the authority), `docs
   `:story`, `:sync`, `:drills`, `:galaxy`, `:run` (every quest mounts and every stage runs), `:geometry`
   (all 20 reaction animations), `:media`, `:flows`, `:progression`, `:ship`, `:voyage`, `:tallow`,
   `:ligar`, `:lanternfall`, `:bellows`, `:ember` (each builds its real world in Node and checks overlap,
-  buried bodies, walkability flood-fill, lamps-only-lit, shader patches), `:bench` (every built instrument
+  buried bodies, walkability flood-fill, lamps-only-lit, shader patches; `:ligar` also holds the mine:
+  doorways, grades, rock over every roof, bays inside chambers, hills unclimbed, the guide's route, walls
+  that hold, lamps in every working, the cover mask), `:bench` (every built instrument
   on its real bench at six aspects, real pointer paths, foe bodies, and the bench bay in all five worlds), `:holo`, `:normals`, then `build`.
 - Other: `deploy:backend` (clasp), `bake:stills`, `bake:video`, `seed`, `test:load`.
 - Test hooks: `globalThis.__LQ_TEST__` is read in `stagerunner.js`/`plates.js` and inert without it.
@@ -139,8 +141,8 @@ own room). Tallow, Lanternfall, Ligar, Bellows and Ember Reach are walkable at T
 when N−1 is complete; charted (unbuilt) quests don't hold anything shut. World `status` is derived (`live`
 iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`, and per-world records.
 `docs/plans/bench-integration.md` (benches fold into each world's equipment, Ligar gets a mine): P0, the
-shared groundwork (bay contract, one bench builder, signs gone), and P1 (Tallow re-laid, six hosts) are done;
-P2 (Ligar surface) onward is not started.
+shared groundwork (bay contract, one bench builder, signs gone), P1 (Tallow re-laid, six hosts) and P2/P3
+(Ligar: four surface hosts, two hills, a mine of five chambers) are done; P4 (Lanternfall) onward is not started.
 
 - **Registry** `learn/curriculum.js` (pure data/functions, no DOM), `progress.js`, `worlds/unitNN-*.js`,
   `quests/<world>/<quest>.js`. **Quest contract** (`quests/_template.js`): export `mount(container, ctx)`
@@ -195,7 +197,23 @@ P2 (Ligar surface) onward is not started.
   (plain labels until the word is earned; honest plates; box rack magnet measures the REAL sample;
   `q5-numbers`/`q9-orbitals` are beyond the exam and say so). Ligar `q1-joins` … `q9-orbitals` (Lewis
   board has one rule: H and F share one pair; domain rig puts every angle behind a protractor; formula
-  unit earned in `q2-lattice`). Bellows `q1-knocks` … `q6-real` on one gas rig with six heads; knock
+  unit earned in `q2-lattice`). Ligar's benches are built INTO its workings (`ligar/stations.js`, nine hosts
+  returning `{group, bench, benchLocal, colliders}`): 1 slab-dressing yard at the quarry's west face, 3 crusher
+  inspection deck and 4 scale-house desk on the east deck, 5 mine substation at hill A's main portal, and
+  underground 2 ore drift (the forge is here; the lava tube is an empty quarry feature), 6 drill chamber,
+  8 survey station at the junction of three drifts (all hill A), 7 sump and 9 hoist chamber down hill B's
+  decline. **Hills are not climbed** (`ligar/mine-plan.js`, pure data shared by generator, world, guide and
+  verifiers): a hill is a rounded block added to the height field in two steps, closed by a ring of colliders
+  except at its cuttings (terrain holes dug back to a portal); a working is an axis-aligned volume with a floor
+  (flat or graded ≤ 6°), roof 4.4 m, openings that meet their neighbour on one plane at one height; so
+  `getTerrainHeight` stays single-layer (`mine.floorAt`) and no call site takes a height. Chambers are 11.2 × 11 m
+  (back wall 3.1 m behind the plate, front 7.9 m before it; wall faces stand ≤ 0.3 m proud, columns cut flat).
+  Walls/floors/roofs are `phys: 'ground'` (`ligar/mine.js`); sets, rail, duct, cable and lamps are bodies. **Under a
+  hill only lamps light**: `setLigarCover` + `applyLigarAir` take the sun and the sky's fill out of every fragment
+  in a working's box (8 roofed volumes per hill, 2 hills; falloff at portals), so a phone with no shadow map is as
+  dark as a desktop with one. `LigarWorld.routeTo(siteId, from)` is the guide's way in (portal, doorways); the
+  waypoint carries `siteId`. Generator: `tools/gen-ligar-layout.mjs` (JS: floors are laid from the real height
+  field). Bellows `q1-knocks` … `q6-real` on one gas rig with six heads; knock
   counter is the real impact rate; sealed plates print no amount/gas; words plain until earned on the
   dials too. Ember Reach `q1-flow` … `q7-gibbs` on one calorimeter with seven heads (contact, cup, diagram,
   bonds, hess, box, gibbs): a plate prints what the instrument reads, so a rig carries `hideVerdict`,
@@ -231,8 +249,8 @@ P2 (Ligar surface) onward is not started.
   instrument slot each world dresses itself, the key rail and one indicator. `BENCH_BAY`/`bayBoxes()` are the
   clearance volumes (plate, work = measured instrument reach, panels, behind, approach) in the bench frame;
   `verify:bench` fails any world body inside one except what `tools/bay-legacy.json` still waives (a
-  ratchet: a rebuilt bench's line must be deleted, and new hosts get none; Tallow's is empty, the rest are
-  Ligar, Lanternfall and Ember's old shelters). A host leaves the bay empty by standing machinery to the
+  ratchet: a rebuilt bench's line must be deleted, and new hosts get none; Tallow's and Ligar's are empty, the
+  rest are Lanternfall and Ember's old shelters). A host leaves the bay empty by standing machinery to the
   sides (|x| > 2.8), behind the plate (z < -2) or above 2.4 m. **Only lamps are lit**; a lamp is a `lampMark` in a
   `LampPool` (fixed light count — a changed count recompiles every material), never a `PointLight`.
   Shadows are re-drawn only when something moves (`shadow-pace.js`); sky is drawn last of the opaques

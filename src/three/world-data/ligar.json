@@ -10,7 +10,7 @@
       240,
       240
     ],
-    "maxHeight": 6.0,
+    "maxHeight": 6,
     "material": "basalt-pavement"
   },
   "ambience": {
@@ -22,17 +22,17 @@
     "dustDensity": 0.26
   },
   "sublevel": {
-    "floorY": -5.0,
+    "floorY": -5,
     "room": {
-      "minX": -26.0,
-      "maxX": 10.0,
-      "minZ": -34.0,
-      "maxZ": -8.0
+      "minX": -26,
+      "maxX": 10,
+      "minZ": -34,
+      "maxZ": -8
     },
     "stair": {
       "minX": 2.2,
       "maxX": 7.6,
-      "minZ": -8.0,
+      "minZ": -8,
       "maxZ": 2.4
     },
     "headPos": [
@@ -41,6 +41,439 @@
       1.6
     ],
     "ceilingY": -1.2
+  },
+  "deck": {
+    "minX": 20.5,
+    "maxX": 33,
+    "minZ": -11,
+    "maxZ": 16.5
+  },
+  "hills": [
+    {
+      "id": "hill-a",
+      "rect": {
+        "minX": 60.5,
+        "maxX": 105,
+        "minZ": -31,
+        "maxZ": 12
+      },
+      "H": 16,
+      "corner": 7
+    },
+    {
+      "id": "hill-b",
+      "rect": {
+        "minX": -92,
+        "maxX": -60.5,
+        "minZ": 12,
+        "maxZ": 59
+      },
+      "H": 15,
+      "corner": 7
+    }
+  ],
+  "mine": {
+    "roof": 4.4,
+    "volumes": [
+      {
+        "id": "cut-a1",
+        "hill": "hill-a",
+        "kind": "cutting",
+        "rect": {
+          "minX": 55.5,
+          "maxX": 62,
+          "minZ": -2.1,
+          "maxZ": 2.1
+        },
+        "floor": {
+          "y0": 0.82
+        },
+        "openings": [
+          {
+            "side": "minX",
+            "lo": -2.1,
+            "hi": 2.1,
+            "to": null
+          },
+          {
+            "side": "maxX",
+            "lo": -2.1,
+            "hi": 2.1,
+            "to": "adit-a1"
+          }
+        ]
+      },
+      {
+        "id": "adit-a1",
+        "hill": "hill-a",
+        "kind": "drift",
+        "rect": {
+          "minX": 62,
+          "maxX": 72,
+          "minZ": -2.1,
+          "maxZ": 2.1
+        },
+        "floor": {
+          "y0": 0.82
+        },
+        "openings": [
+          {
+            "side": "minX",
+            "lo": -2.1,
+            "hi": 2.1,
+            "to": "cut-a1"
+          },
+          {
+            "side": "maxX",
+            "lo": -2.1,
+            "hi": 2.1,
+            "to": "ch-r2"
+          }
+        ]
+      },
+      {
+        "id": "ch-r2",
+        "hill": "hill-a",
+        "kind": "chamber",
+        "rect": {
+          "minX": 72,
+          "maxX": 83,
+          "minZ": -5.6,
+          "maxZ": 5.6
+        },
+        "floor": {
+          "y0": 0.82
+        },
+        "openings": [
+          {
+            "side": "minX",
+            "lo": -2.1,
+            "hi": 2.1,
+            "to": "adit-a1"
+          },
+          {
+            "side": "minZ",
+            "lo": 73.3,
+            "hi": 77.5,
+            "to": "dr-a3"
+          }
+        ]
+      },
+      {
+        "id": "dr-a3",
+        "hill": "hill-a",
+        "kind": "drift",
+        "rect": {
+          "minX": 73.3,
+          "maxX": 77.5,
+          "minZ": -13.6,
+          "maxZ": -5.6
+        },
+        "floor": {
+          "y0": 0.82
+        },
+        "openings": [
+          {
+            "side": "maxZ",
+            "lo": 73.3,
+            "hi": 77.5,
+            "to": "ch-r2"
+          },
+          {
+            "side": "minZ",
+            "lo": 73.3,
+            "hi": 77.5,
+            "to": "ch-r8"
+          }
+        ]
+      },
+      {
+        "id": "ch-r8",
+        "hill": "hill-a",
+        "kind": "chamber",
+        "rect": {
+          "minX": 69.8,
+          "maxX": 81,
+          "minZ": -24.6,
+          "maxZ": -13.6
+        },
+        "floor": {
+          "y0": 0.82
+        },
+        "openings": [
+          {
+            "side": "maxZ",
+            "lo": 73.3,
+            "hi": 77.5,
+            "to": "dr-a3"
+          },
+          {
+            "side": "minX",
+            "lo": -18.6,
+            "hi": -14.4,
+            "to": "dr-a4"
+          },
+          {
+            "side": "maxX",
+            "lo": -18.6,
+            "hi": -14.4,
+            "to": "dr-a5"
+          }
+        ]
+      },
+      {
+        "id": "dr-a4",
+        "hill": "hill-a",
+        "kind": "drift",
+        "rect": {
+          "minX": 62,
+          "maxX": 69.8,
+          "minZ": -18.6,
+          "maxZ": -14.4
+        },
+        "floor": {
+          "y0": 0.82
+        },
+        "openings": [
+          {
+            "side": "maxX",
+            "lo": -18.6,
+            "hi": -14.4,
+            "to": "ch-r8"
+          },
+          {
+            "side": "minX",
+            "lo": -18.6,
+            "hi": -14.4,
+            "to": "cut-a2"
+          }
+        ]
+      },
+      {
+        "id": "cut-a2",
+        "hill": "hill-a",
+        "kind": "cutting",
+        "rect": {
+          "minX": 55.5,
+          "maxX": 62,
+          "minZ": -18.6,
+          "maxZ": -14.4
+        },
+        "floor": {
+          "axis": "x",
+          "from": 55.5,
+          "y0": 0.78,
+          "to": 62,
+          "y1": 0.82
+        },
+        "openings": [
+          {
+            "side": "maxX",
+            "lo": -18.6,
+            "hi": -14.4,
+            "to": "dr-a4"
+          },
+          {
+            "side": "minX",
+            "lo": -18.6,
+            "hi": -14.4,
+            "to": null
+          }
+        ]
+      },
+      {
+        "id": "dr-a5",
+        "hill": "hill-a",
+        "kind": "drift",
+        "rect": {
+          "minX": 81,
+          "maxX": 87,
+          "minZ": -18.6,
+          "maxZ": -14.4
+        },
+        "floor": {
+          "y0": 0.82
+        },
+        "openings": [
+          {
+            "side": "minX",
+            "lo": -18.6,
+            "hi": -14.4,
+            "to": "ch-r8"
+          },
+          {
+            "side": "maxX",
+            "lo": -18.6,
+            "hi": -14.4,
+            "to": "ch-r6"
+          }
+        ]
+      },
+      {
+        "id": "ch-r6",
+        "hill": "hill-a",
+        "kind": "chamber",
+        "rect": {
+          "minX": 87,
+          "maxX": 98,
+          "minZ": -22.1,
+          "maxZ": -10.9
+        },
+        "floor": {
+          "y0": 0.82
+        },
+        "openings": [
+          {
+            "side": "minX",
+            "lo": -18.6,
+            "hi": -14.4,
+            "to": "dr-a5"
+          }
+        ]
+      },
+      {
+        "id": "cut-b1",
+        "hill": "hill-b",
+        "kind": "cutting",
+        "rect": {
+          "minX": -62,
+          "maxX": -55.5,
+          "minZ": 21.9,
+          "maxZ": 26.1
+        },
+        "floor": {
+          "y0": -0.2
+        },
+        "openings": [
+          {
+            "side": "maxX",
+            "lo": 21.9,
+            "hi": 26.1,
+            "to": null
+          },
+          {
+            "side": "minX",
+            "lo": 21.9,
+            "hi": 26.1,
+            "to": "dr-b1"
+          }
+        ]
+      },
+      {
+        "id": "dr-b1",
+        "hill": "hill-b",
+        "kind": "drift",
+        "rect": {
+          "minX": -74,
+          "maxX": -62,
+          "minZ": 21.9,
+          "maxZ": 26.1
+        },
+        "floor": {
+          "axis": "x",
+          "from": -62,
+          "y0": -0.2,
+          "to": -74,
+          "y1": -1.4
+        },
+        "openings": [
+          {
+            "side": "maxX",
+            "lo": 21.9,
+            "hi": 26.1,
+            "to": "cut-b1"
+          },
+          {
+            "side": "minX",
+            "lo": 21.9,
+            "hi": 26.1,
+            "to": "ch-r7"
+          }
+        ]
+      },
+      {
+        "id": "ch-r7",
+        "hill": "hill-b",
+        "kind": "chamber",
+        "rect": {
+          "minX": -85,
+          "maxX": -74,
+          "minZ": 18.4,
+          "maxZ": 29.6
+        },
+        "floor": {
+          "y0": -1.4
+        },
+        "openings": [
+          {
+            "side": "maxX",
+            "lo": 21.9,
+            "hi": 26.1,
+            "to": "dr-b1"
+          },
+          {
+            "side": "maxZ",
+            "lo": -78.9,
+            "hi": -74.7,
+            "to": "dr-b2"
+          }
+        ]
+      },
+      {
+        "id": "dr-b2",
+        "hill": "hill-b",
+        "kind": "drift",
+        "rect": {
+          "minX": -78.9,
+          "maxX": -74.7,
+          "minZ": 29.6,
+          "maxZ": 41.6
+        },
+        "floor": {
+          "axis": "z",
+          "from": 29.6,
+          "y0": -1.4,
+          "to": 41.6,
+          "y1": -2.6
+        },
+        "openings": [
+          {
+            "side": "minZ",
+            "lo": -78.9,
+            "hi": -74.7,
+            "to": "ch-r7"
+          },
+          {
+            "side": "maxZ",
+            "lo": -78.9,
+            "hi": -74.7,
+            "to": "ch-r9"
+          }
+        ]
+      },
+      {
+        "id": "ch-r9",
+        "hill": "hill-b",
+        "kind": "chamber",
+        "rect": {
+          "minX": -82.4,
+          "maxX": -71.2,
+          "minZ": 41.6,
+          "maxZ": 52.6
+        },
+        "floor": {
+          "y0": -2.6
+        },
+        "openings": [
+          {
+            "side": "minZ",
+            "lo": -78.9,
+            "hi": -74.7,
+            "to": "dr-b2"
+          }
+        ]
+      }
+    ]
   },
   "landmarks": [
     {
@@ -52,7 +485,7 @@
       ],
       "rotY": 0.28,
       "scale": 0.86,
-      "radius": 15.0,
+      "radius": 15,
       "minTier": "T3"
     },
     {
@@ -64,7 +497,7 @@
       ],
       "rotY": -0.16,
       "scale": 1.22,
-      "radius": 20.0,
+      "radius": 20,
       "minTier": "T3"
     },
     {
@@ -76,39 +509,39 @@
       ],
       "rotY": 0.52,
       "scale": 0.94,
-      "radius": 16.0,
+      "radius": 16,
       "minTier": "T3"
     },
     {
       "asset": "colonnade",
       "pos": [
-        -47.43,
+        -45.49,
         0,
-        29.06
+        36.7
       ],
       "rotY": 0.2,
-      "scale": 1.0,
-      "radius": 9.0,
+      "scale": 1,
+      "radius": 9,
       "minTier": "T2"
     },
     {
       "asset": "colonnade",
       "pos": [
-        -22.0,
+        -23.97,
         0,
-        45.45
+        42.18
       ],
       "rotY": -0.35,
       "scale": 0.88,
-      "radius": 8.0,
+      "radius": 8,
       "minTier": "T2"
     },
     {
       "asset": "colonnade",
       "pos": [
-        12.5,
+        15.3,
         0,
-        49.74
+        42.68
       ],
       "rotY": 0.55,
       "scale": 1.06,
@@ -118,9 +551,9 @@
     {
       "asset": "colonnade",
       "pos": [
-        37.5,
+        31.34,
         0,
-        33.5
+        32.69
       ],
       "rotY": 0.1,
       "scale": 0.94,
@@ -130,31 +563,31 @@
     {
       "asset": "colonnade",
       "pos": [
-        52.38,
+        49.92,
         0,
-        7.55
+        27.73
       ],
       "rotY": -0.45,
-      "scale": 1.0,
-      "radius": 9.0,
+      "scale": 1,
+      "radius": 9,
       "minTier": "T2"
     },
     {
       "asset": "colonnade",
       "pos": [
-        46.51,
+        46.69,
         0,
-        -19.49
+        -29.13
       ],
       "rotY": 0.3,
       "scale": 0.9,
-      "radius": 8.0,
+      "radius": 8,
       "minTier": "T2"
     },
     {
       "asset": "colonnade",
       "pos": [
-        -48,
+        -53.12,
         0,
         -4
       ],
@@ -166,9 +599,9 @@
     {
       "asset": "colonnade",
       "pos": [
-        -39.59,
+        -39.93,
         0,
-        -46.94
+        -45.9
       ],
       "rotY": -0.22,
       "scale": 1.1,
@@ -178,13 +611,13 @@
     {
       "asset": "colonnade",
       "pos": [
-        16.08,
+        17.14,
         0,
-        -45.92
+        -44.86
       ],
       "rotY": 0.44,
       "scale": 0.86,
-      "radius": 8.0,
+      "radius": 8,
       "minTier": "T2"
     },
     {
@@ -196,27 +629,27 @@
       ],
       "rotY": -0.12,
       "scale": 0.98,
-      "radius": 9.0,
+      "radius": 9,
       "minTier": "T2"
     },
     {
       "asset": "spoil-heap",
       "pos": [
-        -37.73,
+        -37.84,
         0,
-        18.66
+        18.79
       ],
       "rotY": 0.4,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 4.2,
       "minTier": "T3"
     },
     {
       "asset": "spoil-heap",
       "pos": [
-        6.0,
+        6,
         0,
-        18.2
+        24
       ],
       "rotY": -0.2,
       "scale": 1.08,
@@ -226,21 +659,21 @@
     {
       "asset": "spoil-heap",
       "pos": [
-        38,
+        39.08,
         0,
-        -4
+        -16
       ],
       "rotY": 0.7,
       "scale": 0.92,
-      "radius": 4.0,
+      "radius": 4,
       "minTier": "T3"
     },
     {
       "asset": "spoil-heap",
       "pos": [
-        -40,
+        -38.51,
         0,
-        46
+        49.2
       ],
       "rotY": 0.1,
       "scale": 1.12,
@@ -250,21 +683,21 @@
     {
       "asset": "spoil-heap",
       "pos": [
-        26.24,
+        26,
         0,
-        54.08
+        54
       ],
       "rotY": -0.5,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 4.4,
       "minTier": "T3"
     },
     {
       "asset": "spoil-heap",
       "pos": [
-        -16.72,
+        -16,
         0,
-        57.01
+        54
       ],
       "rotY": 0.25,
       "scale": 0.96,
@@ -279,16 +712,16 @@
         24
       ],
       "rotY": 0.9,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 2.6,
       "minTier": "T3"
     },
     {
       "asset": "broken-column",
       "pos": [
-        0.56,
+        2,
         0,
-        38.15
+        36
       ],
       "rotY": -0.4,
       "scale": 1.1,
@@ -300,7 +733,7 @@
       "pos": [
         20,
         0,
-        14
+        19.72
       ],
       "rotY": 1.4,
       "scale": 0.9,
@@ -310,21 +743,21 @@
     {
       "asset": "broken-column",
       "pos": [
-        -31.42,
+        -31.43,
         0,
-        22.36
+        22.33
       ],
       "rotY": 0.2,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 2.6,
       "minTier": "T4"
     },
     {
       "asset": "broken-column",
       "pos": [
-        29.6,
+        34.74,
         0,
-        18.0
+        21.58
       ],
       "rotY": -1.1,
       "scale": 1.05,
@@ -346,12 +779,12 @@
     {
       "asset": "broken-column",
       "pos": [
-        39.58,
+        39.43,
         0,
-        3.79
+        5.21
       ],
-      "rotY": 2.0,
-      "scale": 1.0,
+      "rotY": 2,
+      "scale": 1,
       "radius": 2.6,
       "minTier": "T4"
     },
@@ -370,9 +803,9 @@
     {
       "asset": "broken-column",
       "pos": [
-        7.71,
+        9.66,
         0,
-        61.39
+        54.86
       ],
       "rotY": 0.3,
       "scale": 0.92,
@@ -382,12 +815,12 @@
     {
       "asset": "broken-column",
       "pos": [
-        -30.56,
+        -30,
         0,
-        52.53
+        52
       ],
       "rotY": 1.7,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 2.6,
       "minTier": "T4"
     },
@@ -396,10 +829,10 @@
       "pos": [
         -24.5,
         0,
-        -31.61
+        -31
       ],
-      "rotY": -1.571,
-      "scale": 1.0,
+      "rotY": -1.57,
+      "scale": 1,
       "radius": 3.2,
       "minTier": "T3"
     },
@@ -408,10 +841,10 @@
       "pos": [
         -24.5,
         0,
-        -24.71
+        -24.5
       ],
-      "rotY": -1.571,
-      "scale": 1.0,
+      "rotY": -1.57,
+      "scale": 1,
       "radius": 3.2,
       "minTier": "T3"
     },
@@ -420,10 +853,10 @@
       "pos": [
         -24.5,
         0,
-        -17.79
+        -18
       ],
-      "rotY": -1.571,
-      "scale": 1.0,
+      "rotY": -1.57,
+      "scale": 1,
       "radius": 3.2,
       "minTier": "T3"
     },
@@ -432,22 +865,22 @@
       "pos": [
         -24.5,
         0,
-        -10.89
+        -11.5
       ],
-      "rotY": -1.571,
-      "scale": 1.0,
+      "rotY": -1.57,
+      "scale": 1,
       "radius": 3.2,
       "minTier": "T3"
     },
     {
       "asset": "ore-cart",
       "pos": [
-        -20.0,
+        -20,
         0,
-        -37.0
+        -37
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 1.5,
       "minTier": "T3"
     },
@@ -456,115 +889,115 @@
       "pos": [
         -13.5,
         0,
-        -37.0
+        -37
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 1.5,
       "minTier": "T3"
     },
     {
       "asset": "ore-cart",
       "pos": [
-        -7.0,
+        -7,
         0,
-        -37.0
+        -37
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 1.5,
       "minTier": "T3"
     },
     {
       "asset": "guard-hut",
       "pos": [
-        15.0,
+        15,
         0,
-        -16.0
+        -16
       ],
       "rotY": -0.35,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 2.4,
       "minTier": "T3"
     },
     {
       "asset": "hauler",
       "pos": [
-        15.43,
+        15.1,
         0,
-        4.41
+        4.62
       ],
       "rotY": 0.62,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 4.2,
       "minTier": "T3"
     },
     {
       "asset": "drum-stack",
       "pos": [
-        13.16,
+        13.17,
         0,
-        -4.8
+        -4.87
       ],
       "rotY": 0.2,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 1.8,
       "minTier": "T3"
     },
     {
       "asset": "drum-stack",
       "pos": [
-        11.74,
+        11.79,
         0,
-        -0.95
+        -0.98
       ],
       "rotY": -0.4,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 1.8,
       "minTier": "T3"
     },
     {
       "asset": "drum-stack",
       "pos": [
-        14.0,
+        14,
         0,
-        13.0
+        13
       ],
       "rotY": 0.8,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 1.8,
       "minTier": "T3"
     },
     {
       "asset": "drum-stack",
       "pos": [
-        34.0,
+        34,
         0,
-        -14.0
+        -22
       ],
       "rotY": 0.1,
-      "scale": 1.0,
+      "scale": 1,
       "radius": 1.8,
       "minTier": "T3"
     },
     {
       "asset": "shed",
       "pos": [
-        -22.78,
+        -26.03,
         0,
-        26.0
+        28.82
       ],
       "rotY": 0.4,
-      "scale": 1.0,
-      "radius": 5.0,
+      "scale": 1,
+      "radius": 5,
       "minTier": "T3"
     },
     {
       "asset": "shed",
       "pos": [
-        -42.79,
+        -42.73,
         0,
-        10.85
+        10.88
       ],
       "rotY": 0.15,
       "scale": 0.9,
@@ -574,11 +1007,11 @@
     {
       "asset": "stack",
       "pos": [
-        -45.18,
+        -44.94,
         0,
-        -25.07
+        -22.5
       ],
-      "rotY": 0.0,
+      "rotY": 0,
       "scale": 1.1,
       "radius": 5.6,
       "minTier": "T3"
@@ -586,11 +1019,11 @@
     {
       "asset": "stack",
       "pos": [
-        30.0,
+        30,
         0,
-        -32.0
+        -32
       ],
-      "rotY": 0.0,
+      "rotY": 0,
       "scale": 0.95,
       "radius": 5.6,
       "minTier": "T3"
@@ -598,98 +1031,150 @@
     {
       "asset": "water-tower",
       "pos": [
-        -18.0,
+        -18,
         0,
-        4.0
+        4
       ],
       "rotY": 0.3,
-      "scale": 1.0,
-      "radius": 3.0,
+      "scale": 1,
+      "radius": 3,
       "minTier": "T3"
     },
     {
       "asset": "cable-mast",
       "pos": [
-        -4.0,
+        -4,
         0,
-        16.0
+        16
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 1.4,
       "minTier": "T3"
     },
     {
       "asset": "cable-mast",
       "pos": [
-        39.49,
+        37.64,
         0,
-        -26.51
+        -25.09
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 1.4,
       "minTier": "T3"
     },
     {
       "asset": "landing-pad",
       "pos": [
-        -5.46,
+        -0.96,
         0,
-        51.12
+        50.46
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
-      "radius": 8.0,
+      "rotY": 0,
+      "scale": 1,
+      "radius": 8,
       "minTier": "T2"
     },
     {
       "asset": "stake-marker",
       "pos": [
-        -1.68,
         0,
-        32.56
+        0,
+        32
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 0.9,
       "minTier": "T4"
     },
     {
       "asset": "stake-marker",
       "pos": [
-        10.0,
+        10,
         0,
-        10.0
+        10
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 0.9,
       "minTier": "T4"
     },
     {
       "asset": "stake-marker",
       "pos": [
-        -12.0,
+        -12,
         0,
-        10.0
+        10
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 0.9,
       "minTier": "T4"
     },
     {
       "asset": "stake-marker",
       "pos": [
-        20.0,
+        20,
         0,
-        -24.0
+        -24
       ],
-      "rotY": 0.0,
-      "scale": 1.0,
+      "rotY": 0,
+      "scale": 1,
       "radius": 0.9,
       "minTier": "T4"
+    },
+    {
+      "asset": "slab-yard",
+      "pos": [
+        -36,
+        0,
+        -2
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 6.8,
+      "minTier": "T3",
+      "host": "site-1"
+    },
+    {
+      "asset": "crusher-house",
+      "pos": [
+        31.6,
+        0,
+        -4
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 8.2,
+      "minTier": "T3",
+      "host": "site-3"
+    },
+    {
+      "asset": "scale-house",
+      "pos": [
+        27.5,
+        0,
+        9.8
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 5.8,
+      "minTier": "T3",
+      "host": "site-4"
+    },
+    {
+      "asset": "substation",
+      "pos": [
+        47.5,
+        0,
+        11.3
+      ],
+      "rotY": 0,
+      "scale": 1,
+      "radius": 7,
+      "minTier": "T3",
+      "host": "site-5"
     }
   ],
   "sites": [
@@ -698,17 +1183,17 @@
       "questId": "q1-joins",
       "stage": 1,
       "pos": [
-        -30.0,
-        0,
-        10.0
+        -36,
+        0.02,
+        1
       ],
       "approachPos": [
-        -30.0,
-        1.6,
-        15.2
+        -36,
+        1.62,
+        6
       ],
       "label": "Bench 1 - What Holds",
-      "structure": "arch-terrace",
+      "structure": "slab-yard",
       "built": true
     },
     {
@@ -716,17 +1201,17 @@
       "questId": "q2-lattice",
       "stage": 2,
       "pos": [
-        -6.0,
-        -5.0,
-        -26.0
+        79.9,
+        0.82,
+        0
       ],
       "approachPos": [
-        -6.0,
-        -3.4,
-        -21.0
+        74.9,
+        2.42,
+        0
       ],
       "label": "Bench 2 - Stone and Wire",
-      "structure": "tube-forge",
+      "structure": "ore-drift",
       "built": true
     },
     {
@@ -734,17 +1219,17 @@
       "questId": "q3-distance",
       "stage": 3,
       "pos": [
-        26.0,
-        0,
-        -4.0
+        26,
+        0.84,
+        -4
       ],
       "approachPos": [
-        21.2,
-        1.6,
-        -4.0
+        21,
+        2.44,
+        -4
       ],
       "label": "Bench 3 - Bond Energy",
-      "structure": "batch-house",
+      "structure": "crusher-house",
       "built": true
     },
     {
@@ -752,17 +1237,17 @@
       "questId": "q4-dots",
       "stage": 4,
       "pos": [
-        26.0,
-        0,
-        8.0
+        26,
+        0.89,
+        8
       ],
       "approachPos": [
-        21.2,
-        1.6,
-        8.0
+        21,
+        2.49,
+        8
       ],
       "label": "Bench 4 - Lewis Structures",
-      "structure": "weighbridge",
+      "structure": "scale-house",
       "built": true
     },
     {
@@ -770,17 +1255,17 @@
       "questId": "q5-resonance",
       "stage": 5,
       "pos": [
-        -12.0,
-        0.4,
-        34.0
+        47.5,
+        0.85,
+        8.5
       ],
       "approachPos": [
-        -12.0,
-        1.6,
-        39.2
+        47.5,
+        2.45,
+        3.5
       ],
       "label": "Bench 5 - Charge and Resonance",
-      "structure": "gauge-shelter",
+      "structure": "substation",
       "built": true
     },
     {
@@ -788,17 +1273,17 @@
       "questId": "q6-shape",
       "stage": 6,
       "pos": [
-        6.0,
-        0.6,
-        30.0
+        94.9,
+        0.82,
+        -16.5
       ],
       "approachPos": [
-        6.0,
-        1.6,
-        35.2
+        89.9,
+        2.42,
+        -16.5
       ],
       "label": "Bench 6 - Molecular Shape",
-      "structure": "gauge-shelter",
+      "structure": "drill-chamber",
       "built": true
     },
     {
@@ -806,17 +1291,17 @@
       "questId": "q7-polarity",
       "stage": 7,
       "pos": [
-        22.0,
-        0.7,
-        36.0
+        -81.9,
+        -1.4,
+        24
       ],
       "approachPos": [
-        22.0,
-        1.6,
-        41.2
+        -76.9,
+        0.2,
+        24
       ],
       "label": "Bench 7 - Polarity",
-      "structure": "gauge-shelter",
+      "structure": "sump-station",
       "built": true
     },
     {
@@ -824,17 +1309,17 @@
       "questId": "q8-hybrid",
       "stage": 8,
       "pos": [
-        -32.0,
-        0.1,
-        34.0
+        75.4,
+        0.82,
+        -21.5
       ],
       "approachPos": [
-        -32.0,
-        1.6,
-        39.2
+        75.4,
+        2.42,
+        -16.5
       ],
       "label": "Bench 8 - Hybridization",
-      "structure": "gauge-shelter",
+      "structure": "survey-station",
       "built": true
     },
     {
@@ -842,17 +1327,17 @@
       "questId": "q9-orbitals",
       "stage": 9,
       "pos": [
-        40.0,
-        0.9,
-        18.0
+        -76.8,
+        -2.6,
+        49.5
       ],
       "approachPos": [
-        34.8,
-        1.6,
-        18.0
+        -76.8,
+        -1,
+        44.5
       ],
       "label": "Bench 9 - Molecular Orbitals",
-      "structure": "gauge-shelter",
+      "structure": "hoist-chamber",
       "built": true
     }
   ],
@@ -860,122 +1345,122 @@
     "pos": [
       0,
       1.6,
-      48.0
+      48
     ],
     "lookAt": [
       0,
       1.6,
-      22.0
+      22
     ]
   },
   "t2": {
     "stillCamera": {
       "site-1": {
         "pos": [
-          -30.0,
-          1.6,
-          15.2
+          -36,
+          1.62,
+          6
         ],
         "lookAt": [
-          -30.0,
-          1.2,
-          10.0
+          -36,
+          1.22,
+          1
         ]
       },
       "site-2": {
         "pos": [
-          -6.0,
-          -3.4,
-          -21.0
+          74.9,
+          2.42,
+          0
         ],
         "lookAt": [
-          -6.0,
-          -3.8,
-          -26.0
+          79.9,
+          2.02,
+          0
         ]
       },
       "site-3": {
         "pos": [
-          21.2,
-          1.6,
-          -4.0
+          21,
+          2.44,
+          -4
         ],
         "lookAt": [
-          26.0,
-          1.2,
-          -4.0
+          26,
+          2.04,
+          -4
         ]
       },
       "site-4": {
         "pos": [
-          21.2,
-          1.6,
-          8.0
+          21,
+          2.49,
+          8
         ],
         "lookAt": [
-          26.0,
-          1.2,
-          8.0
+          26,
+          2.09,
+          8
         ]
       },
       "site-5": {
         "pos": [
-          -12.0,
-          1.6,
-          39.2
+          47.5,
+          2.45,
+          3.5
         ],
         "lookAt": [
-          -12.0,
-          1.6,
-          34.0
+          47.5,
+          2.05,
+          8.5
         ]
       },
       "site-6": {
         "pos": [
-          6.0,
-          1.6,
-          35.2
+          89.9,
+          2.42,
+          -16.5
         ],
         "lookAt": [
-          6.0,
-          1.7999999999999998,
-          30.0
+          94.9,
+          2.02,
+          -16.5
         ]
       },
       "site-7": {
         "pos": [
-          22.0,
-          1.6,
-          41.2
+          -76.9,
+          0.2,
+          24
         ],
         "lookAt": [
-          22.0,
-          1.9,
-          36.0
+          -81.9,
+          -0.2,
+          24
         ]
       },
       "site-8": {
         "pos": [
-          -32.0,
-          1.6,
-          39.2
+          75.4,
+          2.42,
+          -16.5
         ],
         "lookAt": [
-          -32.0,
-          1.3,
-          34.0
+          75.4,
+          2.02,
+          -21.5
         ]
       },
       "site-9": {
         "pos": [
-          34.8,
-          1.6,
-          18.0
+          -76.8,
+          -1,
+          44.5
         ],
         "lookAt": [
-          40.0,
-          2.1,
-          18.0
+          -76.8,
+          -1.4,
+          49.5
         ]
       }
     }
@@ -991,17 +1476,6 @@
       "site-7",
       "site-8",
       "site-9"
-    ],
-    "siteDescriptions": {
-      "site-1": "The first bench, on the stone terrace under the western arch, west of the yard.",
-      "site-2": "The second bench, at the forge in the tube mouth at the far end of the cut, down the ramp.",
-      "site-3": "The third bench, inside the batch house on the east deck, under the gantry sign.",
-      "site-4": "The fourth bench, on the weighbridge deck south of the batch house.",
-      "site-5": "The fifth bench, under a steel shelter south-west of the yard, with three slate boards on its back wall.",
-      "site-6": "The sixth bench, under a steel shelter south of the yard, with a six-armed hub on a mast beside it.",
-      "site-7": "The seventh bench, under a steel shelter south-east of the yard, between two tall charged plates.",
-      "site-8": "The eighth bench, under a steel shelter at the south-western edge of the yard, with a torsion frame behind it.",
-      "site-9": "The ninth bench, under a steel shelter east of the deck, with a ladder of boxes on its back wall."
-    }
+    ]
   }
 }

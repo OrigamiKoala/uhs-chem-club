@@ -35,6 +35,7 @@ import { noise2, fbm2, smoothstep, clamp } from '../erebus/noise.js';
 import {
   ligarSkyUniforms, ligarHazeUniforms, LIGAR_FOG_PARS, LIGAR_FOG_APPLY, patchFogVertex
 } from './atmosphere.js';
+import { hillsHeight } from './mine-plan.js';
 
 export const HORIZON_R = 880;
 
@@ -49,9 +50,12 @@ const YARD = { cx: 10, cz: 2, hx: 33, hz: 35 };
  * the world's business, not the field's); `sample` also reports paint masks.
  *
  * @param {number} maxHeight the old plateau's relief scale (ligar.json terrain.maxHeight)
+ * @param {object[]} hills the trap-bench hills the workings are driven into (ligar.json `hills`),
+ *   added to the plateau (`ligar/mine-plan.js`). `plain` is the ground without them: the datum
+ *   the portals' floors are laid from.
  */
-export function makeLigarField(maxHeight = 6) {
-  const tmp = { height: 0, yard: 0, ash: 0, wet: 0, tone: 0 };
+export function makeLigarField(maxHeight = 6, hills = []) {
+  const tmp = { height: 0, plain: 0, yard: 0, ash: 0, wet: 0, tone: 0 };
 
   // The plateau, exactly as the world has always stood on it.
   function plateau(x, z, r) {
@@ -118,6 +122,8 @@ export function makeLigarField(maxHeight = 6) {
     const lowN = fbm2(x / 13 - 2.2, z / 13 + 6.1, 3);
     const wet = smoothstep(0.16, 0.26, lowN) * (1 - smoothstep(90, 115, r));
 
+    s.plain = h;
+    if (hills.length) h += hillsHeight(hills, x, z);
     s.height = h;
     s.yard = yard;
     s.ash = ash;
@@ -126,7 +132,12 @@ export function makeLigarField(maxHeight = 6) {
     return s;
   }
 
-  return { sample, height: (x, z) => sample(x, z, tmp).height };
+  return {
+    sample,
+    height: (x, z) => sample(x, z, tmp).height,
+    /** The ground before any hill is raised on it. */
+    plain: (x, z) => { sample(x, z, tmp); return tmp.plain; }
+  };
 }
 
 /** A grid axis: uniform across the walk, growing to the horizon, with `extra` lines forced in. */

@@ -405,6 +405,97 @@ export function patchFogVertex(vs) {
       #endif`);
 }
 
+/* ======================================================================
+   UNDER A HILL
+   On a phone there is no shadow map, so the sun and the sky's fill would light the
+   inside of a drift as if it were open to the sky. The COVER MASK is a small table of
+   the workings' boxes: a fragment inside one has the sun, the sky's hemisphere and the
+   environment taken away, with a short falloff outside each so a portal's mouth is dim
+   rather than cut. What is left underground is lamps (the pool's three lights) and
+   nothing else. It is baked once: the boxes are uniforms, never recomputed per frame.
+   ====================================================================== */
+
+/** Roofed volumes per hill the mask holds, and how many hills. */
+export const COVER_PER_HILL = 8;
+export const COVER_HILLS = 2;
+const COVER_N = COVER_PER_HILL * COVER_HILLS;
+const far = v => new THREE.Vector3(v, v, v);
+
+export const ligarCoverUniforms = {
+  uCoverLo: { value: Array.from({ length: COVER_N }, () => far(1e6)) },
+  uCoverHi: { value: Array.from({ length: COVER_N }, () => far(-1e6)) },
+  uCoverHillLo: { value: Array.from({ length: COVER_HILLS }, () => far(1e6)) },
+  uCoverHillHi: { value: Array.from({ length: COVER_HILLS }, () => far(-1e6)) },
+  uCoverFall: { value: 1.3 }
+};
+
+/**
+ * Give the mask the workings' boxes, one list per hill: `[{ min: [x, y, z], max: [x, y, z] }, ...]`.
+ * A hill's bounds are the union of its boxes, which is what a fragment is tested against first.
+ */
+export function setLigarCover(perHill) {
+  const U = ligarCoverUniforms;
+  U.uCoverLo.value.forEach(v => v.setScalar(1e6));
+  U.uCoverHi.value.forEach(v => v.setScalar(-1e6));
+  U.uCoverHillLo.value.forEach(v => v.setScalar(1e6));
+  U.uCoverHillHi.value.forEach(v => v.setScalar(-1e6));
+  perHill.slice(0, COVER_HILLS).forEach((boxes, h) => {
+    if (boxes.length > COVER_PER_HILL) throw new Error(`a hill has ${boxes.length} roofed workings; the cover mask holds ${COVER_PER_HILL}`);
+    boxes.forEach((b, i) => {
+      U.uCoverLo.value[h * COVER_PER_HILL + i].set(...b.min);
+      U.uCoverHi.value[h * COVER_PER_HILL + i].set(...b.max);
+      U.uCoverHillLo.value[h].min(U.uCoverLo.value[h * COVER_PER_HILL + i]);
+      U.uCoverHillHi.value[h].max(U.uCoverHi.value[h * COVER_PER_HILL + i]);
+    });
+    if (boxes.length) {
+      U.uCoverHillLo.value[h].subScalar(U.uCoverFall.value);
+      U.uCoverHillHi.value[h].addScalar(U.uCoverFall.value);
+    }
+  });
+}
+
+const LIGAR_COVER_PARS = /* glsl */ `
+  uniform vec3 uCoverLo[${COVER_N}];
+  uniform vec3 uCoverHi[${COVER_N}];
+  uniform vec3 uCoverHillLo[${COVER_HILLS}];
+  uniform vec3 uCoverHillHi[${COVER_HILLS}];
+  uniform float uCoverFall;
+  // 1 under a hill, 0 in the open, with a short falloff outside each working's box.
+  float ligarCover(vec3 p) {
+    float c = 0.0;
+    for (int h = 0; h < ${COVER_HILLS}; h++) {
+      if (any(lessThan(p, uCoverHillLo[h])) || any(greaterThan(p, uCoverHillHi[h]))) continue;
+      for (int i = 0; i < ${COVER_PER_HILL}; i++) {
+        int k = h * ${COVER_PER_HILL} + i;
+        vec3 d = max(max(uCoverLo[k] - p, p - uCoverHi[k]), 0.0);
+        c = max(c, 1.0 - smoothstep(0.0, uCoverFall, length(d)));
+      }
+    }
+    return c;
+  }
+`;
+
+/**
+ * The lighting chunks, with the sun taken out of a covered fragment and the sky's fill (hemisphere and
+ * environment) scaled away after them. Lamps are point lights and are left alone. Returned as strings to
+ * replace `#include <lights_fragment_begin>` and `#include <lights_fragment_end>`.
+ */
+export function coverLightChunks() {
+  const begin = THREE.ShaderChunk.lights_fragment_begin
+    .replace('IncidentLight directLight;', `IncidentLight directLight;
+      #ifdef USE_FOG
+        float lgCoverK = ligarCover(vFogWorld);
+      #else
+        float lgCoverK = 0.0;
+      #endif`)
+    .replace('getDirectionalLightInfo( directionalLight, directLight );', `getDirectionalLightInfo( directionalLight, directLight );
+        directLight.color *= 1.0 - lgCoverK;`);
+  const end = THREE.ShaderChunk.lights_fragment_end + `
+    reflectedLight.indirectDiffuse *= 1.0 - lgCoverK;
+    reflectedLight.indirectSpecular *= 1.0 - lgCoverK;`;
+  return { begin, end };
+}
+
 /** Replace a material's fog with Ligar's air. Chains an existing onBeforeCompile. */
 export function applyLigarAir(mat) {
   if (!mat || mat.userData.ligarAir || mat.isShaderMaterial || mat.fog === false) return;
@@ -413,9 +504,14 @@ export function applyLigarAir(mat) {
   const prevKey = mat.customProgramCacheKey ? mat.customProgramCacheKey() : '';
   mat.onBeforeCompile = (shader, renderer) => {
     prev?.call(mat, shader, renderer);
-    Object.assign(shader.uniforms, ligarSkyUniforms, ligarHazeUniforms);
+    Object.assign(shader.uniforms, ligarSkyUniforms, ligarHazeUniforms, ligarCoverUniforms);
     shader.vertexShader = patchFogVertex(shader.vertexShader);
+    const lit = coverLightChunks();
     shader.fragmentShader = shader.fragmentShader
+      .replace('#include <lights_pars_begin>', `#include <lights_pars_begin>
+        ${LIGAR_COVER_PARS}`)
+      .replace('#include <lights_fragment_begin>', lit.begin)
+      .replace('#include <lights_fragment_end>', lit.end)
       .replace('#include <fog_pars_fragment>', `
         #ifdef USE_FOG
           ${LIGAR_FOG_PARS}

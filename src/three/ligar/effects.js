@@ -90,8 +90,9 @@ const STREAM_FRAG = /* glsl */ `
  *   hearth          world position of the forge's coals, or null
  *   forge           world position of the forge flue's mouth, or null
  *   pit             { minX, maxX, minZ, maxZ } where no ground streams run
+ *   hidden(x, z)    true where the ground is a hill or its workings: no ground streams over them
  */
-export function createLigarEffects({ heightAt, t4, vents = [], hearth = null, forge = null, pit = null }) {
+export function createLigarEffects({ heightAt, t4, vents = [], hearth = null, forge = null, pit = null, hidden = null }) {
   const group = new THREE.Group();
   group.name = 'ligar-air';
   group.userData.phys = 'ambient';
@@ -133,7 +134,8 @@ export function createLigarEffects({ heightAt, t4, vents = [], hearth = null, fo
   for (let i = 0; i < sp.count; i++) {
     const x = sp.getX(i), z = sp.getZ(i);
     const inPit = pit && x > pit.minX - 2 && x < pit.maxX + 2 && z > pit.minZ - 2 && z < pit.maxZ + 12;
-    sp.setY(i, (inPit ? heightAt(x, pit.maxZ + 14) : heightAt(x, z)) + 0.08);
+    // A hill is not pavement: its sheet of streaks goes under it, out of sight.
+    sp.setY(i, hidden && hidden(x, z) ? -60 : (inPit ? heightAt(x, pit.maxZ + 14) : heightAt(x, z)) + 0.08);
   }
   sGeo.computeBoundingSphere();
   const streamU = {
@@ -362,6 +364,12 @@ export function createLigarEffects({ heightAt, t4, vents = [], hearth = null, fo
     }
   }
 
+  /** 1 under a hill, 0 in the open: the ash that hangs in the open air is not in a drift. */
+  function setIndoors(k) {
+    aMat.opacity = 0.5 * (1 - k);
+    streamU.uStrength.value = 0.3 * (1 - k);
+  }
+
   /** The drawing buffer's height, so a puff's size is in the same units everywhere. */
   function setViewportHeight(h) {
     if (h > 0) plumeU.uViewH.value = h;
@@ -371,5 +379,5 @@ export function createLigarEffects({ heightAt, t4, vents = [], hearth = null, fo
     for (const d of disposables) d.dispose?.();
   }
 
-  return { group, update, dispose, setViewportHeight };
+  return { group, update, dispose, setViewportHeight, setIndoors };
 }

@@ -478,23 +478,35 @@ export function columnRaft(rb, {
  *   lipAt(x, z)  the pavement height at a point (world)
  *   floorY       the quarry floor
  */
-export function columnWall(rb, { ax, az, bx, bz, dirX, dirZ, floorY, floorAt = null, lipAt, seed = 1, pitch = 0.9, t4 = true, depth = 1.6 }) {
+export function columnWall(rb, { ax, az, bx, bz, dirX, dirZ, floorY, floorAt = null, lipAt, seed = 1, pitch = 0.9, t4 = true, depth = 1.6, proud = null }) {
   const rand = rng(seed);
   const run = Math.hypot(bx - ax, bz - az);
   const ux = (bx - ax) / run, uz = (bz - az) / run;
   // Local frame: u along the wall, v back INTO the rock (away from the pit).
   const toWorld = (u, v) => [ax + ux * u - dirX * v, az + uz * u - dirZ * v];
-  const faceAt = u => -0.25 - 0.45 * (0.5 + noise2(u * 0.35 + seed * 0.1, 3.3));
+  // How far the front rank stands proud of the wall's plane. The quarry's faces are rough (0.25-0.7 m);
+  // a tunnel's are drilled and blasted and stand proud by a hand's breadth (`proud`).
+  const faceAt = u => -(proud?.base ?? 0.25) - (proud?.spread ?? 0.45) * (0.5 + noise2(u * 0.35 + seed * 0.1, 3.3));
   const cells = columnCells({
     minX: -0.6, maxX: run + 0.6, minZ: -1.2, maxZ: depth, pitch, seed: seed ^ 0x3c3c,
     keep: (u, v) => v > faceAt(u)
   });
+  // `keep` tests a column's CENTRE, and a column is a metre across: a face that stands "0.3 m proud" was
+  // standing 0.8 m proud at the cell's corners. With `proud` given, each cell is cut off at the face, so
+  // the walk's colliders (`ligar/mine-plan.js`) are exactly where the rock is.
+  const flat = Boolean(proud);
   const map = (a, b, c) => {
     const [x, z] = toWorld(a, b);
     return [x, c, z];
   };
   let count = 0;
-  for (const cell of cells) {
+  for (const cell0 of cells) {
+    let cell = cell0;
+    if (flat) {
+      const poly = clipHalf(cell0.poly, 0, -1, -faceAt(cell0.cx));
+      if (poly.length < 3 || polyCentroid(poly).area < pitch * pitch * 0.12) continue;
+      cell = { ...cell0, poly };
+    }
     const [wx, wz] = toWorld(cell.cx, cell.cz);
     const lip = lipAt(wx, wz);
     const fy = floorAt ? floorAt(wx, wz) : floorY;
