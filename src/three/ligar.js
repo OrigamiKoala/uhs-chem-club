@@ -23,21 +23,29 @@
  *   ligar/surfaces.js    ash, damp, lichen and rust, applied once to all
  *   ligar/vista.js       what stands beyond the walk
  *   ligar/effects.js     the moving air: ash, grit, smoke, sparks
- *   this file            the plant, the four sites, physics and state
+ *   ligar/mine-plan.js   the hills and the workings driven into them, as plain data and functions
+ *   ligar/mine.js        the rock, the sets, the rail and the lamps of those workings
+ *   ligar/stations.js    the nine hosts: the piece of the quarry or the mine each bench is built into
+ *   this file            the plant, physics and state
  *
  * WHAT IS HERE, AND WHY IT IS HERE
- * Four Unit 2 sites stand on the ground as physical places, one per bench:
- *   site-1  Arch Terrace  — q1-joins.   A sawn stone terrace under a stone
- *           portal, west of the yard, where two pieces are clamped together.
- *   site-2  Tube Forge    — q2-lattice. Down the ramp into the cut and in
- *           through the lava tube: a hearth, an anvil, a quench trough. Heat,
- *           because heating a block is what that bench is for.
- *   site-3  Batch House   — q3-recipe.  On the east deck under the gantry, fed
- *           by the silos: where a batch is sampled.
- *   site-4  Weighbridge   — q4-weigh.   The weigh deck south of the batch
- *           house, with its load cells and its scale house.
- * ALL FOUR carry their instruments as built objects (`BUILT_BENCHES`), so a
- * player who walks up and presses [E] keeps their feet and works a real bench.
+ * Nine Unit 3 benches, each built INTO the working it belongs to rather than set down in a hut
+ * (`docs/plans/bench-integration.md` §3). Four stand at surface workings, five underground:
+ *   site-1  slab-dressing yard    the saw bed at the quarry's west face, where cut slabs are clamped
+ *   site-3  crusher house         the jaw crusher's inspection deck, on the east deck
+ *   site-4  scale house           the weighbridge's desk, beside it on the same deck
+ *   site-5  mine substation       at hill A's main portal: two charged plates as its bus bars
+ *   site-2  ore drift             just inside the main adit, a vein crossing the basalt; the forge is here
+ *   site-6  drill chamber         a rock-bolt board and the drill jumbo's stand
+ *   site-8  survey station        the junction of three drifts
+ *   site-7  sump and pump station down hill B's decline
+ *   site-9  hoist chamber         the deepest point, a winze to a lower level
+ * ALL NINE carry their instruments as built objects, so a player who walks up and presses [E] keeps
+ * their feet and works a real bench.
+ *
+ * THE HILLS ARE NOT CLIMBED. Each is a rounded block that rises in two steps and is closed round by a
+ * ring of colliders, open only at the cuttings dug back into its face. So inside a hill's footprint the
+ * only floor there is is a working's, and `getTerrainHeight` answers it without layers.
  *
  * PHYSICS: every prop declares a footprint in `ligar.json` and every footprint
  * is disjoint — no two objects occupy the same space, which `verify:ligar`
@@ -48,7 +56,7 @@
  * is built as geometry, and `getTerrainHeight` resolves the ramp.
  *
  * LIGHT: nothing here blooms. The sun is low, red with dust and about to go;
- * the only emissive surfaces in the whole world are the forge in the tube, the
+ * the only emissive surfaces in the whole world are the forge in the ore drift, the
  * luminaires, the mast lamps and one indicator per bench — and the luminaires
  * share a pool of three real lights (lamp-pool.js), because a PointLight is
  * shaded on every pixel of the quarry whether it reaches it or not.
@@ -70,7 +78,7 @@ import {
 } from './materials/ligar-textures.js';
 import {
   createLigarSkyDome, createLigarCelestials, createLigarLights, followLigarShadow,
-  createLigarEnvironment, applyLigarAir, ligarSkyUniforms, LSKY
+  createLigarEnvironment, applyLigarAir, ligarSkyUniforms, LSKY, setLigarCover
 } from './ligar/atmosphere.js';
 import {
   makeLigarField, buildLigarTerrainGeometry, buildFloorGeometry, createLigarTerrainMaterial
@@ -86,7 +94,9 @@ import {
   buildStack, buildWaterTower, buildCableMast, buildLandingPad, buildStakeMarker
 } from './ligar/plant.js';
 import { createLigarEffects } from './ligar/effects.js';
-import { buildStation, STATION_KIND, APRON } from './ligar/stations.js';
+import { HOST_BUILDERS } from './ligar/stations.js';
+import { makeMinePlan, hillDistance } from './ligar/mine-plan.js';
+import { buildMine } from './ligar/mine.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
 
@@ -103,9 +113,6 @@ function mulberry32(seed) {
 
 /** Sodium filament, the same one Tallow's lamps burn. A lamp is a lamp. */
 const SODIUM = 0xd99423;
-
-/** The forge in the tube. Hotter and redder than a lamp, because it is a fire. */
-const FORGE = 0xc1521c;
 
 /** How far (m) the player walks before the sun's shadow box follows them. */
 const SHADOW_FOLLOW_STEP = 2;
@@ -127,7 +134,7 @@ export class LigarWorld {
 
     this.colliders = [];
     this.siteMarkers = new Map();   // questId -> { indicator, group, site }
-    this.stationColliders = [];     // benches five to nine: posts, walls and signature pieces
+    this.hostColliders = [];        // what each bench's host stands on the ground with (initHosts)
     // questId -> the physical frame of that site's working surface, so the
     // Learn instrument deploys onto the plate that is actually there rather
     // than onto a second bench conjured at the same coordinates.
@@ -142,7 +149,11 @@ export class LigarWorld {
     this.t4 = tierAtLeast('T4');
 
     this.sub = this.data.sublevel;
-    this.field = makeLigarField(this.data.terrain.maxHeight);
+    // The hills the workings are driven into, and the workings themselves (ligar/mine-plan.js): the
+    // height field, the walk, the colliders, the light mask and the guide all stand on this one plan.
+    this.mine = makeMinePlan(this.data);
+    this.field = makeLigarField(this.data.terrain.maxHeight, this.data.hills);
+    setLigarCover(this.data.hills.map(h => this.mine.coverBoxes().filter(b => this.mine.byId.get(b.id).hill === h.id)));
     // Surfaces standing proud of the pavement that a player walks ON — the
     // terrace, the deck, the pad. Registered by the builders as they build, and
     // read by `getTerrainHeight`, so feet stand on the plate rather than in it.
@@ -154,12 +165,10 @@ export class LigarWorld {
     this.initTerrain();
     this.initCut();
     this.initLandmarks();
-    this.initArchTerrace();
-    this.initTubeForge();
+    this.initMine();
+    this.initTube();
     this.initBatchDeck();
-    this.initBatchHouse();
-    this.initWeighbridge();
-    this.initStations();
+    this.initHosts();
     this.initGroundCover();
     this.initVista();
     this.initEffects();
@@ -225,6 +234,27 @@ export class LigarWorld {
             });
           }
         }
+        applyLigarAir(m);
+      }
+    });
+    // Everything built so far has had its air; what is added later (a deployed instrument) has not.
+    this._aired = new WeakSet(seen);
+  }
+
+  /**
+   * A deployed instrument is built AFTER the world, with materials of its own, so the weather and the air
+   * (fog, and the cover mask that takes the sun and the sky out of a working) never reached them. Out in the
+   * yard that is the point: it is the one thing somebody is using, and it is not weathered. Under a hill it
+   * would be a bench lit by a sun that cannot reach it, in a room that is dark. So its materials get the
+   * air, and with it the mask. (Only the air: it is still not weathered.)
+   */
+  coverNewMaterials() {
+    this._aired = this._aired || new WeakSet();
+    this.scene.traverse(o => {
+      if (!o.isMesh && !o.isPoints && !o.isLine) return;
+      for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+        if (!m || this._aired.has(m)) continue;
+        this._aired.add(m);
         applyLigarAir(m);
       }
     });
@@ -391,6 +421,10 @@ export class LigarWorld {
    * quarry floor, so the excavation is entered on foot and never by teleport.
    */
   getTerrainHeight(x, z) {
+    // Inside the workings: their floor. A hill cannot be climbed (ringColliders), so there is never a
+    // second floor over one, and the walk needs no layers.
+    const mined = this.mine.floorAt(x, z);
+    if (mined !== null) return mined;
     if (this.inRoom(x, z)) return this.sub.floorY;
     const up = this.raisedHeight(x, z);
     if (up !== null) return up;
@@ -450,7 +484,9 @@ export class LigarWorld {
     const M = CUT_MARGIN;
     return [
       { minX: r.minX - M, maxX: r.maxX + M, minZ: r.minZ - M, maxZ: r.maxZ + M },
-      { minX: s.minX - M, maxX: s.maxX + M, minZ: r.maxZ, maxZ: s.maxZ }
+      { minX: s.minX - M, maxX: s.maxX + M, minZ: r.maxZ, maxZ: s.maxZ },
+      // Each portal's cutting, dug back into the face of its hill.
+      ...this.mine.terrainHoles()
     ];
   }
 
@@ -734,6 +770,8 @@ export class LigarWorld {
   initLandmarks() {
     for (const lm of this.data.landmarks) {
       if (lm.minTier === 'T4' && !this.t4) continue;
+      // A host is built with its bench (initHosts); its landmark only declares the footprint.
+      if (lm.host) continue;
       const y = this.surfaceHeight(lm.pos[0], lm.pos[2]);
       let node = null;
       const ground = this.localGround(lm);
@@ -931,7 +969,8 @@ export class LigarWorld {
    * 0.72 m across its tray. A shorter bench would hang its end trays off the
    * plate, and an instrument cannot stand on something that is not there.
    *
-   * The frame is the shared bay bench (`bench-bay.js`) in its `ledge` skin.
+   * The frame is the shared bay bench (`bench-bay.js`): the rock-bolted `ledge` underground, and
+   * whatever skin the host asks for on the surface (`shelf`, `desk`, `deck`).
    *
    * `kind` is which instrument is cased up here. It changes the face of the
    * dormant cabinet and nothing else: four identical cabinets would mean a
@@ -942,10 +981,10 @@ export class LigarWorld {
    *            dormant: THREE.Group, topY: number}}
    */
   buildBench(opts = {}) {
-    const { kind = 'join', plate = 'LB-01' } = opts;
+    const { kind = 'join', plate = 'LB-01', skin = 'ledge' } = opts;
     const ctx = { own: (...o) => this.own(...o), t4: tierAtLeast('T4') };
     return buildBayBench(ctx, {
-      skin: 'ledge',
+      skin,
       plate,
       mats: { top: this.plateMat, dark: this.darkSteelMat, stone: this.basaltMat, timber: this.timberMat },
       // Tool rail along the back, with three tools racked where a hand reaches.
@@ -1286,412 +1325,103 @@ export class LigarWorld {
     });
   }
 
+
   /* ======================================================================
-     THE SITES
-     Four places, one per bench. Each is a real structure standing on the
-     ground, turned to face the way the player walks in.
+     THE MINE
+     Two hills, and the workings driven into them (ligar/mine.js).
      ====================================================================== */
 
-  /**
-   * Site 1 — the Arch Terrace. `q1-joins`.
-   *
-   * A cut platform west of the yard with a stone portal standing over it: two
-   * columns of basalt carrying a lintel, which is the arch the whole world is
-   * named for, brought down to the size of a doorway. The press bench stands
-   * under it, out of the wind, with the stone it works on stacked beside it.
-   */
-  initArchTerrace() {
-    const site = this.data.sites.find(s => s.id === 'site-1');
-    if (!site) return;
-    const baseY = this.surfaceHeight(site.pos[0], site.pos[2]);
-    const g = new THREE.Group();
-    g.name = 'site-1';
-    const rand = mulberry32(0x1a01);
-
-    /* THE TERRACE. Column tops sawn level, a step proud of the ground, so the
-       bench is not working in the dust: the honeycomb IS the paving, and its
-       edge is ragged by whole columns, because it was quarried out of the
-       flow it stands on. */
-    this.raised.push({
-      kind: 'rect', cx: site.pos[0], cz: site.pos[2], rot: this.siteFacing(site),
-      hx: 4.5, hz: 3.2, y: baseY + 0.3
-    });
-    const rb = new RockBuilder();
-    sawnSlab(rb, { hx: 4.55, hz: 3.25, top: 0.3, bottom: -0.45, pitch: 0.62, seed: 0x7e11 });
-    // The step up onto it, on the approach side only.
-    sawnSlab(rb, { hx: 1.6, hz: 0.3, x0: 0, z0: 3.5, top: 0.15, bottom: -0.3, pitch: 0.4, seed: 0x7e12 });
-    /* THE PORTAL. Two piers of standing column carrying a lintel of columns
-       laid on their sides, five metres clear — quarried out of the colonnade
-       rather than imported from a temple. */
-    const PIER_X = 3.5;
-    const CLEAR = 4.6;
-    for (const px of [-PIER_X, PIER_X]) {
-      columnRaft(rb, {
-        radius: 0.95, x0: px, z0: 0, pitch: 0.46, exactH: CLEAR,
-        seed: 0x9e00 + (px > 0 ? 1 : 0), gappy: 0, t4: this.t4,
-        ground: () => 0.3
-      });
-    }
-    lintelBeam(rb, { half: PIER_X + 0.9, y0: 0.3 + CLEAR + 0.02, y1: 0.3 + CLEAR + 0.74, hz: 0.78, seed: 0x9e02 });
-    g.add(this.rockMesh(rb, 'site-1-portal'));
-
-    /* THE CANOPY. A sheet slung under the lintel on four rods, because the
-       portal keeps the sun off and nothing keeps the grit off. */
-    const canopy = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(6.4, 0.06, 3.0)), this.plateMat
-    );
-    canopy.position.set(0, 0.3 + CLEAR - 0.35, -0.4);
-    canopy.rotation.x = 0.05;
-    canopy.castShadow = canopy.receiveShadow = tierAtLeast('T4');
-    g.add(canopy);
-    for (let i = 0; i < 12; i++) {
-      const rib = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.06, 0.04, 3.0)), this.darkSteelMat
-      );
-      rib.position.set(-2.95 + i * 0.54, 0.3 + CLEAR - 0.31, -0.4);
-      rib.rotation.x = 0.05;
-      g.add(rib);
-    }
-    for (const [hx, hz] of [[-2.9, -1.7], [2.9, -1.7], [-2.9, 0.9], [2.9, 0.9]]) {
-      const rod = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.02, 0.02, 0.36, 6)), this.pipeMat
-      );
-      rod.position.set(hx, 0.3 + CLEAR - 0.15, hz);
-      g.add(rod);
-    }
-
-    /* THE BENCH, under the portal, facing the way in. */
-    const bench = this.buildBench({ kind: 'join', plate: 'LB-01' });
-    bench.group.position.set(0, 0.3, -0.7);
-    g.add(bench.group);
-
-    // A caged work lamp hung off the canopy, with its feed looped to the pier.
-    const lamp = this.buildLuminaire(0, 0.3 + CLEAR - 0.5, 0.35);
-    g.add(lamp);
-    const feed = cableRun(
-      [0, 0.3 + CLEAR - 0.48, 0.35], [-3.3, 0.3 + CLEAR - 1.2, 0.3],
-      this.darkSteelMat, { sag: 0.45, radius: 0.016, segments: 14 }
-    );
-    g.add(feed);
-    this.own(feed.userData.ownGeometry);
-    const drop = cableRun(
-      [-3.3, 0.3 + CLEAR - 1.2, 0.3], [-3.5, 1.1, 0.0],
-      this.darkSteelMat, { sag: 0.16, radius: 0.016, segments: 10 }
-    );
-    g.add(drop);
-    this.own(drop.userData.ownGeometry);
-
-    /* THE STOCK. Cut blocks of the two kinds this bench presses together,
-       stacked on the terrace with a tally slate leaning on them. */
-    for (const [bx, bz, n] of [[-3.1, 2.0, 4], [3.1, 2.0, 3]]) {
-      for (let i = 0; i < n; i++) {
-        const block = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(0.62, 0.3, 0.5)), this.basaltMat
-        );
-        block.position.set(bx + (rand() - 0.5) * 0.1, 0.45 + i * 0.32, bz);
-        block.rotation.y = (rand() - 0.5) * 0.2;
-        block.castShadow = block.receiveShadow = tierAtLeast('T4');
-        g.add(block);
-      }
-    }
-
-    // A hand winch on a post, for getting a block onto the plate.
-    const post = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.1, 0.12, 2.6, 10)), this.pipeMat
-    );
-    post.position.set(-2.6, 0.3 + 1.3, -1.9);
-    post.castShadow = tierAtLeast('T4');
-    g.add(post);
-    const jib = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.6, 0.1, 0.1)), this.darkSteelMat
-    );
-    jib.position.set(-1.9, 0.3 + 2.5, -1.9);
-    g.add(jib);
-    const chain = cableRun(
-      [-1.2, 0.3 + 2.45, -1.9], [-1.2, 0.3 + 1.1, -1.9],
-      this.darkSteelMat, { sag: 0.02, radius: 0.02, segments: 6 }
-    );
-    g.add(chain);
-    this.own(chain.userData.ownGeometry);
-    const hook = new THREE.Mesh(
-      this.own(new THREE.TorusGeometry(0.09, 0.02, 5, 10, Math.PI * 1.4)), this.pipeMat
-    );
-    hook.position.set(-1.2, 0.3 + 1.0, -1.9);
-    g.add(hook);
-
-    // Grit banked in the lee of the piers, and the wear where feet have gone
-    // round the end of the bench for forty years.
-    const wear = new THREE.Mesh(
-      this.own(new THREE.PlaneGeometry(2.4, 1.6)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0x3a342c, transparent: true, opacity: 0.42, roughness: 0.7,
-        polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3
-      }))
-    );
-    wear.rotation.x = -Math.PI / 2;
-    wear.position.set(0, 0.302, 1.3);
-    g.add(wear);
-
-    g.position.set(site.pos[0], baseY, site.pos[2]);
-    g.rotation.y = this.siteFacing(site);
-    this.scene.add(g);
-
-    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
-    // The bench sits three quarters of a metre back from the site marker, on
-    // the terrace. Recorded rather than recomputed: move the bench and the
-    // instrument follows it.
-    this.registerBenchAnchor(site, g, bench, [0, 0.3, -0.7]);
+  initMine() {
+    const { rock, sets } = buildMine(this);
+    this.scene.add(rock, sets);
   }
 
-  /**
-   * Site 2 — the Tube Forge. `q2-lattice`.
-   *
-   * Down the ramp, along the quarry floor, and in under the arch at the far
-   * end: a lava tube the cut has opened, with a hearth in it. This is the one
-   * warm place on Ligar, and it is warm because the bench that stands here
-   * heats blocks until they come apart — the fire is the instrument's reason
-   * for being in a cave rather than on the flat.
-   */
-  initTubeForge() {
-    const site = this.data.sites.find(s => s.id === 'site-2');
-    if (!site) return;
+  /* ======================================================================
+     THE LAVA TUBE
+     The quarry opened a lava tube at the pit's far end. It used to house the
+     forge and a bench; both have moved into the ore drift (bench 2) and the
+     tube is what it always was, an empty barrel the quarry broke into, with
+     the props the crew left in it.
+     ====================================================================== */
+
+  initTube() {
     const t = this.tube;
     const fy = this.sub.floorY;
     const g = new THREE.Group();
-    g.name = 'site-2';
+    g.name = 'lava-tube';
     const rand = mulberry32(0x2b02);
 
-    const W = t.maxX - t.minX;          // 10 m across
-    const D = t.maxZ - t.minZ;          // 12.5 m deep
+    const W = t.maxX - t.minX;
+    const D = t.maxZ - t.minZ;
     const R = W / 2;                    // the barrel's radius
     const SPRING = 0.4;                 // how high the barrel springs off the floor
-    // Local origin is the site's position, and the site's derived facing comes
-    // out as zero here, so everything below is a plain translation of the
-    // world rectangle into the group's frame.
-    const ox = (t.minX + t.maxX) / 2 - site.pos[0];
-    const oz = (t.minZ + t.maxZ) / 2 - site.pos[2];
-    const MOUTH_Z = t.maxZ - site.pos[2];
-    const BACK_Z = t.minZ - site.pos[2];
+    const cx = (t.minX + t.maxX) / 2, cz = (t.minZ + t.maxZ) / 2;
+    const MOUTH_Z = t.maxZ - cz;
+    const BACK_Z = t.minZ - cz;
 
     /* THE BARREL. A lava tube is a pipe the flow drained out of, so the roof
        is the one curved surface in a world made entirely of flat faces — which
        is exactly why the player knows they have gone inside. Drawn as the top
-       half of a cylinder lying along the tube: `thetaStart` at a quarter turn
-       is what picks the top half once the cylinder has been laid down. */
+       half of a cylinder lying along the tube. */
     const roof = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(
-        R, R, D, 24, 1, true, Math.PI / 2, Math.PI
-      )),
+      this.own(new THREE.CylinderGeometry(R, R, D, 24, 1, true, Math.PI / 2, Math.PI)),
       this.tubeMat
     );
     roof.rotation.x = Math.PI / 2;
-    roof.position.set(ox, SPRING, oz);
+    roof.position.set(0, SPRING, 0);
     roof.material.side = THREE.DoubleSide;
     roof.receiveShadow = tierAtLeast('T4');
-    // An open shell: a vault has an underside you stand beneath, not an inside
-    // you stand in. Tells the bench check to measure its surface, not its box.
+    // An open shell: a vault has an underside you stand beneath, not an inside you stand in.
     roof.userData.openShell = true;
     g.add(roof);
 
-    // The low kerb walls the barrel springs off, so the tube meets the floor
-    // in a fillet rather than in a knife edge.
-    for (const sx of [ox - R, ox + R]) {
-      const kerbWall = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.5, SPRING + 0.5, D)), this.tubeMat
-      );
-      kerbWall.position.set(sx, (SPRING + 0.5) / 2 - 0.2, oz);
+    // The low kerb walls the barrel springs off, so the tube meets the floor in a fillet.
+    for (const sx of [-R, R]) {
+      const kerbWall = new THREE.Mesh(this.own(new THREE.BoxGeometry(0.5, SPRING + 0.5, D)), this.tubeMat);
+      kerbWall.position.set(sx, (SPRING + 0.5) / 2 - 0.2, 0);
       kerbWall.receiveShadow = tierAtLeast('T4');
       g.add(kerbWall);
     }
 
     // The back of the tube, where it narrows and goes dark.
-    const back = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(W + 0.6, R + 1.2, 0.6)), this.tubeMat
-    );
-    back.position.set(ox, (R + 1.2) / 2 - 0.2, BACK_Z - 0.2);
+    const back = new THREE.Mesh(this.own(new THREE.BoxGeometry(W + 0.6, R + 1.2, 0.6)), this.tubeMat);
+    back.position.set(0, (R + 1.2) / 2 - 0.2, BACK_Z - 0.2);
     back.receiveShadow = tierAtLeast('T4');
     g.add(back);
 
     /* THE MOUTH. The columns round the tube's mouth stand RADIAL to it — the
        flow cooled round the void the tube drained — so walking in is walking
-       under a fan of column ends, the smaller cousin of the great arches. The
-       middle is left clear: a doorway you cannot use is worse than none. */
+       under a fan of column ends. The middle is left clear. */
     {
       const rb = new RockBuilder();
       radialRing(rb, {
-        cx: ox, cy: SPRING, z0: MOUTH_Z - 0.3, rIn: R + 0.05, rOut: R + 1.1,
+        cx: 0, cy: SPRING, z0: MOUTH_Z - 0.3, rIn: R + 0.05, rOut: R + 1.1,
         depth: 1.1, a0: 0, a1: Math.PI, seed: 0x2b0e, pitch: 0.5,
-        skip: (px, py) => py < 2.5 && Math.abs(px - ox) < 2.4
+        skip: (px, py) => py < 2.5 && Math.abs(px) < 2.4
       });
       g.add(this.rockMesh(rb, 'tube-mouth'));
     }
 
-    /* THE HEARTH, against the west wall. A stone box with a steel grate, a
-       fire in it, and a hood over it drawing up a flue through the roof. The
-       fire is the only thing on Ligar that moves by itself and the only red
-       light in the world. */
-    const HX = ox - R + 1.4;
-    const hearth = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.9, 0.86, 1.3)), this.basaltMat
-    );
-    hearth.position.set(HX, 0.43, 0.6);
-    hearth.castShadow = hearth.receiveShadow = tierAtLeast('T4');
-    g.add(hearth);
-    const grate = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.5, 0.06, 1.0)), this.darkSteelMat
-    );
-    grate.position.set(HX, 0.88, 0.6);
-    g.add(grate);
-    for (let i = 0; i < 7; i++) {
-      const bar = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.05, 0.08, 1.0)), this.pipeMat
-      );
-      bar.position.set(HX - 0.64 + i * 0.21, 0.92, 0.6);
-      g.add(bar);
+    // Sodium luminaires under the barrel.
+    for (const lz of [-4.6, 1.4]) g.add(this.buildLuminaire(0, R - 0.6, lz));
+
+    // What the crew left: shoring timber stacked against the east wall, drums at the back, a spoil bucket.
+    for (let i = 0; i < 5; i++) {
+      const prop = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.1, 0.1, 2.6, 8)), this.timberMat);
+      prop.rotation.z = Math.PI / 2;
+      prop.position.set(R - 1.2, 0.12 + (i % 3) * 0.2, -1.2 + Math.floor(i / 3) * 0.1 + (i % 3) * 0.12);
+      prop.rotation.y = (rand() - 0.5) * 0.2;
+      g.add(prop);
+    }
+    for (const [dx, dz] of [[-R + 1.1, BACK_Z + 1.2], [-R + 2.1, BACK_Z + 1.0]]) {
+      const drum = new THREE.Mesh(this.own(new THREE.CylinderGeometry(0.34, 0.34, 0.86, 16)), this.drumMat);
+      drum.position.set(dx, 0.43, dz);
+      drum.castShadow = tierAtLeast('T4');
+      g.add(drum);
     }
 
-    // THE FIRE. Emissive coals and a point light on them. A fire is a lamp in
-    // the sense CLAUDE.md §4.2 allows: it is literally a source, and it is the
-    // reason this chamber is visible at all.
-    this.forgeCoals = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.3, 0.14, 0.8)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0x2a1006, emissive: FORGE, emissiveIntensity: 2.3, roughness: 0.9
-      }))
-    );
-    this.forgeCoals.position.set(HX, 0.99, 0.6);
-    this.forgeCoals.userData.noMerge = true;
-    g.add(this.forgeCoals);
-
-    this.forgeLight = new THREE.PointLight(FORGE, 16, 15, 1.7);
-    this.forgeLight.position.set(HX, 1.5, 0.6);
-    if (tierAtLeast('T4')) {
-      this.forgeLight.castShadow = true;
-      this.forgeLight.shadow.mapSize.set(512, 512);
-      this.forgeLight.shadow.bias = -0.004;
-      // A POINT LIGHT'S SHADOW IS SIX RENDERS OF THE SCENE, and three.js
-      // re-draws all six every frame by default — for a fire that does not
-      // move, in a stone tube where nothing else does either. Drawn once, and
-      // again only while an instrument is being worked beside it (update()).
-      this.forgeLight.shadow.autoUpdate = false;
-      this.forgeLight.shadow.needsUpdate = true;
-    }
-    g.add(this.forgeLight);
-
-    // The hood and the flue, venting up through the barrel.
-    const hood = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.26, 1.2, 1.0, 4)), this.drumMat
-    );
-    hood.rotation.y = Math.PI / 4;
-    hood.position.set(HX, 2.0, 0.6);
-    hood.castShadow = tierAtLeast('T4');
-    g.add(hood);
-    const flue = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.26, 0.26, 2.6, 12)), this.pipeMat
-    );
-    flue.position.set(HX, 3.7, 0.6);
-    g.add(flue);
-
-    // Bellows on a timber frame beside the hearth, handle down.
-    const bellows = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.52, 0.36, 1.0)), this.timberMat
-    );
-    bellows.position.set(HX - 0.6, 1.05, 2.3);
-    g.add(bellows);
-    const bhandle = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.03, 0.03, 1.0, 6)), this.timberMat
-    );
-    bhandle.rotation.z = 0.5;
-    bhandle.position.set(HX - 0.6, 0.9, 2.95);
-    g.add(bhandle);
-
-    /* THE ANVIL and THE QUENCH TROUGH. What a forge has, and what the bench
-       standing here is for: heat a block, hit it, put it in the water. */
-    const stump = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.34, 0.4, 0.6, 12)), this.timberMat
-    );
-    stump.position.set(-1.6, 0.3, 2.2);
-    stump.castShadow = tierAtLeast('T4');
-    g.add(stump);
-    const anvilBody = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.9, 0.2, 0.28)), this.pipeMat
-    );
-    anvilBody.position.set(-1.6, 0.7, 2.2);
-    anvilBody.castShadow = tierAtLeast('T4');
-    g.add(anvilBody);
-    const anvilWaist = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.34, 0.22, 0.24)), this.pipeMat
-    );
-    anvilWaist.position.set(-1.6, 0.49, 2.2);
-    g.add(anvilWaist);
-    const horn = new THREE.Mesh(
-      this.own(new THREE.ConeGeometry(0.11, 0.42, 10)), this.pipeMat
-    );
-    horn.rotation.z = -Math.PI / 2;
-    horn.position.set(-0.95, 0.7, 2.2);
-    g.add(horn);
-
-    const trough = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.4, 0.46, 0.66)), this.drumMat
-    );
-    trough.position.set(1.0, 0.23, 2.6);
-    trough.castShadow = trough.receiveShadow = tierAtLeast('T4');
-    g.add(trough);
-    const water = new THREE.Mesh(
-      this.own(new THREE.PlaneGeometry(1.26, 0.54)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0x15171a, roughness: 0.14, metalness: 0.3
-      }))
-    );
-    water.rotation.x = -Math.PI / 2;
-    water.position.set(1.0, 0.4, 2.6);
-    g.add(water);
-
-    /* THE BENCH, across the back of the chamber, facing the mouth. */
-    const bench = this.buildBench({ kind: 'join', plate: 'LB-02' });
-    bench.group.position.set(ox, 0, -3.2);
-    g.add(bench.group);
-
-    // Sodium luminaires under the barrel: a fire lights a hearth, not a room.
-    for (const lz of [-4.6, 1.4]) {
-      const lum = this.buildLuminaire(ox, R - 0.6, oz + lz);
-      g.add(lum);
-    }
-
-    // A rack of tongs on the east wall, and a bin of fuel beside it.
-    const rack = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.1, 1.4, 1.2)), this.darkSteelMat
-    );
-    rack.position.set(ox + R - 0.6, 0.7, -0.6);
-    g.add(rack);
-    for (let i = 0; i < 4; i++) {
-      const tong = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.04, 0.8, 0.04)), this.pipeMat
-      );
-      tong.position.set(ox + R - 0.72, 0.9, -1.05 + i * 0.3);
-      tong.rotation.z = (rand() - 0.5) * 0.16;
-      g.add(tong);
-    }
-    const bin = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.1, 0.7, 0.9)), this.darkSteelMat
-    );
-    bin.position.set(ox + R - 1.1, 0.35, 2.6);
-    g.add(bin);
-    const coal = this.buildRubbleField({
-      count: tierAtLeast('T4') ? 22 : 10,
-      minX: ox + R - 1.5, maxX: ox + R - 0.7,
-      minZ: 2.25, maxZ: 2.95,
-      y: 0.6, seed: 0x9e17, scale: 0.26, mound: 0.12
-    });
-    coal.userData.noMerge = true;
-    g.add(coal);
-
-    g.position.set(site.pos[0], site.pos[1], site.pos[2]);
-    g.rotation.y = this.siteFacing(site);
+    g.position.set(cx, fy, cz);
     this.scene.add(g);
-
-    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
-    this.registerBenchAnchor(site, g, bench, [ox, 0, -3.2]);
   }
 
   /**
@@ -1708,7 +1438,7 @@ export class LigarWorld {
     g.name = 'east-deck';
     g.userData.phys = 'ground';
 
-    const D = { minX: 20.5, maxX: 33.0, minZ: -11.0, maxZ: 11.0 };
+    const D = { ...this.data.deck };
     this.deck = D;
     const w = D.maxX - D.minX;
     const d = D.maxZ - D.minZ;
@@ -1813,7 +1543,8 @@ export class LigarWorld {
 
     /* THE HANDRAIL along the open west edge of the deck, split for the way on.
        A deck with a drop off its edge and no rail is a deck nobody built. */
-    const railZ = [[D.minZ, -6.0], [-2.0, 3.0], [7.0, D.maxZ]];
+    // The rail stands off the two ways on, the lanes in front of the crusher's bench and the scale house's.
+    const railZ = [[D.minZ, -6.6], [-1.4, 5.4], [10.6, D.maxZ]];
     for (const [z0, z1] of railZ) {
       const len = z1 - z0;
       if (len <= 0.4) continue;
@@ -1851,390 +1582,63 @@ export class LigarWorld {
     this.scene.add(g);
   }
 
-  /**
-   * Site 3 — the Batch House. `q3-recipe`.
-   *
-   * A steel-framed shed on the east deck, open to the way in, fed from two
-   * silos overhead. Every batch that comes out of the quarry is sampled here,
-   * which is what the bench inside is doing.
-   */
-  initBatchHouse() {
-    const site = this.data.sites.find(s => s.id === 'site-3');
-    if (!site) return;
-    const g = new THREE.Group();
-    g.name = 'site-3';
-    const rand = mulberry32(0x3c03);
+  /* ======================================================================
+     THE HOSTS
+     Each bench is built into the piece of the quarry or the mine it belongs to
+     (`ligar/stations.js`): the saw bed at the quarry face, the crusher's
+     inspection deck, the scale house's desk, the mine's substation, and five
+     chambers underground. The group a builder returns is the machine and its
+     bench as ONE object, set down at the site's mark and turned to face the
+     ground the player walks in from.
+     ====================================================================== */
 
-    const W = 7.4, D = 5.8, H = 4.0;
-
-    /* THE PORTAL FRAME. Four stanchions and two rafters to a ridge, which is
-       how a shed this size is actually built, and what makes the roof read as
-       carried rather than floating. */
-    for (const [px, pz] of [[-W / 2, -D / 2], [W / 2, -D / 2], [-W / 2, D / 2], [W / 2, D / 2]]) {
-      const stanchion = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.24, H, 0.24)), this.darkSteelMat
-      );
-      stanchion.position.set(px, H / 2, pz);
-      stanchion.castShadow = tierAtLeast('T4');
-      g.add(stanchion);
-      const base = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.5, 0.1, 0.5)), this.plateMat
-      );
-      base.position.set(px, 0.05, pz);
-      g.add(base);
-    }
-    const ridgeH = H + 1.1;
-    const ridge = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.22, 0.3, D + 0.6)), this.darkSteelMat
-    );
-    ridge.position.set(0, ridgeH, 0);
-    g.add(ridge);
-    const slope = Math.atan2(1.1, W / 2);
-    for (const side of [-1, 1]) {
-      const rafterLen = Math.hypot(W / 2, 1.1);
-      for (const rz of [-D / 2, D / 2]) {
-        const rafter = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(rafterLen, 0.18, 0.18)), this.darkSteelMat
-        );
-        rafter.position.set(side * W / 4, H + 0.55, rz);
-        rafter.rotation.z = -side * slope;
-        g.add(rafter);
-      }
-      // The sheeted roof plane and its ribs.
-      const plane = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(rafterLen + 0.4, 0.07, D + 0.7)), this.plateMat
-      );
-      plane.position.set(side * W / 4, H + 0.68, 0);
-      plane.rotation.z = -side * slope;
-      plane.castShadow = plane.receiveShadow = tierAtLeast('T4');
-      g.add(plane);
-      const ribs = Math.round(rafterLen / 0.36);
-      for (let i = 0; i < ribs; i++) {
-        const along = (-0.5 + (i + 0.5) / ribs) * (rafterLen + 0.4);
-        const rib = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(0.05, 0.05, D + 0.7)), this.darkSteelMat
-        );
-        rib.position.set(
-          side * W / 4 + along * Math.cos(slope),
-          H + 0.73 + along * Math.sin(slope) * -side,
-          0
-        );
-        rib.rotation.z = -side * slope;
-        g.add(rib);
-      }
-    }
-
-    // Sheeting: back and both ends, open to the approach.
-    const sheet = (w, h, x, yy, z, ry) => {
-      const s = new THREE.Mesh(this.own(new THREE.BoxGeometry(w, h, 0.08)), this.plateMat);
-      s.position.set(x, yy, z);
-      s.rotation.y = ry;
-      s.castShadow = s.receiveShadow = tierAtLeast('T4');
-      g.add(s);
-      const n = Math.round(w / 0.45);
-      for (let i = 0; i < n; i++) {
-        const off = -w / 2 + (i + 0.5) * (w / n);
-        const rib = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(0.05, h, 0.05)), this.darkSteelMat
-        );
-        rib.position.set(x + Math.cos(ry) * off, yy, z - Math.sin(ry) * off);
-        rib.rotation.y = ry;
-        g.add(rib);
-      }
-    };
-    sheet(W, H, 0, H / 2, -D / 2, 0);
-    sheet(D, H, -W / 2, H / 2, 0, Math.PI / 2);
-    sheet(D, H, W / 2, H / 2, 0, Math.PI / 2);
-    // A header over the open front, so the opening is a doorway.
-    sheet(W, 1.1, 0, H - 0.55, D / 2, 0);
-
-    /* THE SILOS. Two hoppers on legs behind the house, with a chute apiece
-       dropping through the roof onto the bench's feed. A sampling house with
-       nothing feeding it is a shed. */
-    for (const sx of [-2.0, 2.0]) {
-      const silo = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(1.1, 1.1, 2.6, 16)), this.drumMat
-      );
-      silo.position.set(sx, H + 2.6, -D / 2 - 1.5);
-      silo.castShadow = silo.receiveShadow = tierAtLeast('T4');
-      g.add(silo);
-      const cone = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(1.1, 0.26, 1.2, 16)), this.drumMat
-      );
-      cone.position.set(sx, H + 0.7, -D / 2 - 1.5);
-      g.add(cone);
-      const ring = boltRing(1.12, 14, this.darkSteelMat, { size: 0.026, axis: 'y' });
-      ring.position.set(sx, H + 1.32, -D / 2 - 1.5);
-      g.add(ring);
-      for (const [lx, lz] of [[-0.8, -0.8], [0.8, -0.8], [-0.8, 0.8], [0.8, 0.8]]) {
-        const leg = new THREE.Mesh(
-          this.own(new THREE.BoxGeometry(0.14, H + 0.2, 0.14)), this.darkSteelMat
-        );
-        leg.position.set(sx + lx, (H + 0.2) / 2, -D / 2 - 1.5 + lz);
-        leg.castShadow = tierAtLeast('T4');
-        g.add(leg);
-      }
-      // The chute from the cone, in through the back wall to the bench.
-      const chute = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.2, 0.2, 2.6, 10)), this.pipeMat
-      );
-      chute.rotation.x = -0.72;
-      chute.position.set(sx, H - 0.5, -D / 2 - 0.6);
-      g.add(chute);
-      const gate = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.42, 0.42, 0.06)), this.darkSteelMat
-      );
-      gate.position.set(sx, H - 1.35, -D / 2 + 0.22);
-      g.add(gate);
-    }
-
-    /* THE BENCH, across the back of the house, facing the open front. */
-    const bench = this.buildBench({ kind: 'bond', plate: 'LB-03' });
-    bench.group.position.set(0, 0, -1.3);
-    g.add(bench.group);
-
-    // Two luminaires on the rafters, over the plate.
-    for (const lz of [-1.6, 1.4]) {
-      const lum = this.buildLuminaire(0, H - 0.25, lz);
-      g.add(lum);
-    }
-
-    // Sample trays stacked against one end, and a tally board on the other.
-    for (let i = 0; i < 6; i++) {
-      const tray = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.6, 0.08, 0.44)), this.darkSteelMat
-      );
-      tray.position.set(-W / 2 + 0.6, 0.06 + i * 0.1, 1.9);
-      tray.rotation.y = (rand() - 0.5) * 0.08;
-      g.add(tray);
-    }
-    const board = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(1.6, 1.1, 0.06)), this.plateMat
-    );
-    board.position.set(W / 2 - 0.16, 1.9, 0.8);
-    board.rotation.y = -Math.PI / 2;
-    g.add(board);
-    for (let i = 0; i < 6; i++) {
-      const line = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(1.3, 0.02, 0.01)), this.darkSteelMat
-      );
-      line.position.set(W / 2 - 0.2, 2.35 - i * 0.16, 0.8);
-      line.rotation.y = -Math.PI / 2;
-      g.add(line);
-    }
-
-    const baseY = this.deckY;
-    g.position.set(site.pos[0], baseY, site.pos[2]);
-    g.rotation.y = this.siteFacing(site);
-    this.scene.add(g);
-
-    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
-    this.registerBenchAnchor(site, g, bench, [0, 0, -1.3]);
-  }
-
-  /**
-   * Site 4 — the Weighbridge. `q4-weigh`.
-   *
-   * A weigh deck let into the east deck on four load cells, with a scale house
-   * beside it carrying the dial everything is read off. What is weighed here is
-   * what came up the conveyors, which is why it is on this side of the yard.
-   */
-  initWeighbridge() {
-    const site = this.data.sites.find(s => s.id === 'site-4');
-    if (!site) return;
-    const g = new THREE.Group();
-    g.name = 'site-4';
-
-    /* THE WEIGH DECK. A plate on four cells, standing a hand's breadth proud of
-       the deck it is let into, with a gap all round it — a weighbridge that
-       touched its surround would weigh the surround. */
-    const bridge = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(6.4, 0.24, 3.4)), this.treadMat
-    );
-    bridge.position.set(0, 0.16, 1.9);
-    bridge.receiveShadow = tierAtLeast('T4');
-    g.add(bridge);
-    for (const [cx, cz] of [[-2.7, 0.6], [2.7, 0.6], [-2.7, 3.2], [2.7, 3.2]]) {
-      const cell = new THREE.Mesh(
-        this.own(new THREE.CylinderGeometry(0.2, 0.24, 0.16, 12)), this.pipeMat
-      );
-      cell.position.set(cx, 0.06, cz);
-      g.add(cell);
-      const cable = cableRun(
-        [cx, 0.06, cz], [-3.3, 0.1, 0.2], this.darkSteelMat,
-        { sag: 0.06, radius: 0.012, segments: 8 }
-      );
-      g.add(cable);
-      this.own(cable.userData.ownGeometry);
-    }
-    // Kerb rails along the drive-on edges, and hazard striping at the ends.
-    for (const rz of [0.14, 3.66]) {
-      const kerbRail = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(6.4, 0.18, 0.1)), this.darkSteelMat
-      );
-      kerbRail.position.set(0, 0.34, rz);
-      g.add(kerbRail);
-    }
-    for (const sx of [-3.3, 3.3]) {
-      const stripe = hazardStripe(0.42, 3.4, { pitch: 0.18 });
-      stripe.rotation.set(-Math.PI / 2, 0, Math.PI / 2);
-      stripe.position.set(sx, 0.29, 1.9);
-      g.add(stripe);
-      this.own(stripe.geometry, stripe.material, stripe.material.map);
-    }
-
-    /* THE SCALE HOUSE. A small riveted cabin with the dial on its face, big
-       enough to read from the weigh deck, which is the whole point of it. */
-    const cabin = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(2.3, 2.5, 2.0)), this.drumMat
-    );
-    cabin.position.set(0, 1.25, -2.4);
-    cabin.castShadow = cabin.receiveShadow = tierAtLeast('T4');
-    g.add(cabin);
-    const capRoof = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(2.7, 0.12, 2.4)), this.plateMat
-    );
-    capRoof.position.set(0, 2.56, -2.4);
-    capRoof.castShadow = tierAtLeast('T4');
-    g.add(capRoof);
-    for (const [px, pz] of [[-1.12, -3.36], [1.12, -3.36], [-1.12, -1.44], [1.12, -1.44]]) {
-      const angle = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.12, 2.5, 0.12)), this.darkSteelMat
-      );
-      angle.position.set(px, 1.25, pz);
-      g.add(angle);
-    }
-
-
-    // THE DIAL. A big round scale on the cabin face, graduated, with a needle
-    // resting on its bottom stop. It reads nothing because nothing is on the
-    // bridge, which is what an honest instrument does (PRODUCT.md §8).
-    const DIAL_Y = 1.55;
-    const DIAL_Z = -1.39;
-    const face = new THREE.Mesh(
-      this.own(new THREE.CircleGeometry(0.62, 36)),
-      this.own(new THREE.MeshStandardMaterial({
-        color: 0xb8ad96, roughness: 0.78, metalness: 0.0
-      }))
-    );
-    face.position.set(0, DIAL_Y, DIAL_Z);
-    g.add(face);
-    const bezel = new THREE.Mesh(
-      this.own(new THREE.TorusGeometry(0.64, 0.05, 8, 36)), this.darkSteelMat
-    );
-    bezel.position.set(0, DIAL_Y, DIAL_Z + 0.01);
-    g.add(bezel);
-    const tickGeo = this.own(new THREE.BoxGeometry(0.014, 0.08, 0.006));
-    const tickMat = this.own(new THREE.MeshStandardMaterial({ color: 0x2a251f, roughness: 0.8 }));
-    for (let i = 0; i < 21; i++) {
-      const a = -Math.PI * 0.78 + (i / 20) * Math.PI * 1.56;
-      const major = i % 5 === 0;
-      const tick = new THREE.Mesh(tickGeo, tickMat);
-      tick.scale.y = major ? 1.4 : 0.8;
-      tick.position.set(
-        Math.sin(a) * (major ? 0.5 : 0.53), DIAL_Y + Math.cos(a) * (major ? 0.5 : 0.53),
-        DIAL_Z + 0.006
-      );
-      tick.rotation.z = -a;
-      g.add(tick);
-    }
-    const needle = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.02, 0.5, 0.01)), tickMat
-    );
-    needle.position.set(-0.17, DIAL_Y - 0.15, DIAL_Z + 0.02);
-    needle.rotation.z = 0.78;
-    g.add(needle);
-    const hub = new THREE.Mesh(
-      this.own(new THREE.CylinderGeometry(0.045, 0.045, 0.03, 12)), this.darkSteelMat
-    );
-    hub.rotation.x = Math.PI / 2;
-    hub.position.set(0, DIAL_Y, DIAL_Z + 0.025);
-    g.add(hub);
-
-    // A window in the cabin's side and the door at its back.
-    const pane = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.05, 0.6, 0.9)),
-      this.own(new THREE.MeshStandardMaterial({ color: 0x14120f, roughness: 0.3, metalness: 0.15 }))
-    );
-    pane.position.set(1.17, 1.7, -2.4);
-    g.add(pane);
-    const door = new THREE.Mesh(
-      this.own(new THREE.BoxGeometry(0.8, 1.9, 0.06)), this.plateMat
-    );
-    door.position.set(-0.5, 0.98, -3.43);
-    g.add(door);
-
-    /* THE BENCH, beside the scale house, facing the way in. The weigh deck is
-       in front of it, so the player stands on the bridge to work the bench —
-       which is the relationship an assay bench has to a weighbridge. */
-    const bench = this.buildBench({ kind: 'pair', plate: 'LB-04' });
-    bench.group.position.set(0, 0, -0.5);
-    g.add(bench.group);
-
-    // Test weights racked against the cabin: cast blocks with lifting eyes.
-    for (let i = 0; i < 4; i++) {
-      const wt = new THREE.Mesh(
-        this.own(new THREE.BoxGeometry(0.36, 0.28, 0.24)), this.pipeMat
-      );
-      wt.position.set(-1.9, 0.14 + i * 0.29, -2.9);
-      g.add(wt);
-      const eye = new THREE.Mesh(
-        this.own(new THREE.TorusGeometry(0.05, 0.014, 5, 10)), this.darkSteelMat
-      );
-      eye.position.set(-1.9, 0.33 + i * 0.29, -2.9);
-      g.add(eye);
-    }
-
-    const lum = this.buildLuminaire(0, 2.4, -1.2);
-    g.add(lum);
-
-    g.position.set(site.pos[0], this.deckY, site.pos[2]);
-    g.rotation.y = this.siteFacing(site);
-    this.scene.add(g);
-
-    this.siteMarkers.set(site.questId, { site, group: g, indicator: bench.indicator });
-    this.registerBenchAnchor(site, g, bench, [0, 0, -0.5]);
-  }
-
-
-  /**
-   * Sites 5 to 9 — the later benches, each under its own roof (`ligar/stations.js`).
-   *
-   * They share a plan: an apron a step proud of the pavement, a steel shelter
-   * open to the front, the cased instrument across the back and ONE piece
-   * behind or beside it that says what the bench is for. The apron registers
-   * itself in `raised`, as the terrace does, so feet stand on it and not in it.
-   */
-  initStations() {
+  initHosts() {
+    this.hostColliders = [];
     for (const site of this.data.sites) {
-      if (!STATION_KIND[site.questId]) continue;
-      const st = buildStation(this, site);
-      const baseY = this.surfaceHeight(site.pos[0], site.pos[2]);
-      const rot = this.siteFacing(site);
-      st.group.position.set(site.pos[0], baseY, site.pos[2]);
-      st.group.rotation.y = rot;
-      this.scene.add(st.group);
+      const build = HOST_BUILDERS[site.id];
+      if (!build || !site.built) continue;
+      const host = build(this, site);
+      const g = host.group;
+      g.position.set(site.pos[0], this.siteFloor(site), site.pos[2]);
+      g.rotation.y = this.siteFacing(site);
+      this.scene.add(g);
 
-      this.raised.push({ kind: 'rect', cx: site.pos[0], cz: site.pos[2], rot, hx: APRON.hx, hz: APRON.hz, y: baseY + APRON.y });
-      const [stx, stz] = this.siteToWorld(site, 0, APRON.hz + 0.3);
-      this.raised.push({ kind: 'rect', cx: stx, cz: stz, rot, hx: 1.6, hz: 0.3, y: baseY + APRON.y / 2 });
+      this.siteMarkers.set(site.questId, { site, group: g, indicator: host.bench.indicator });
+      this.registerBenchAnchor(site, g, host.bench, host.benchLocal);
 
-      this.siteMarkers.set(site.questId, { site, group: st.group, indicator: st.bench.indicator });
-      this.registerBenchAnchor(site, st.group, st.bench, st.local);
-
-      const quarter = Math.abs(Math.sin(rot)) > 0.5;
-      for (const c of st.colliders) {
-        const [wx, wz] = this.siteToWorld(site, c.lx, c.lz);
-        this.stationColliders.push({ x: wx, z: wz, radius: c.r });
-      }
-      for (const w of st.walls) {
-        const [wx, wz] = this.siteToWorld(site, w.lx, w.lz);
-        const ex = quarter ? w.hd : w.hw;
-        const ez = quarter ? w.hw : w.hd;
-        this.stationColliders.push({ minX: wx - ex, maxX: wx + ex, minZ: wz - ez, maxZ: wz + ez });
+      // The host's colliders are in its own frame; the walk wants them in the world's.
+      const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);
+      for (const c of host.colliders) {
+        const x = g.position.x + c.lx * cos + c.lz * sin;
+        const z = g.position.z - c.lx * sin + c.lz * cos;
+        if (c.r !== undefined) { this.hostColliders.push({ x, z, radius: c.r }); continue; }
+        const ex = Math.abs(c.hw * cos) + Math.abs(c.hd * sin);
+        const ez = Math.abs(c.hw * sin) + Math.abs(c.hd * cos);
+        this.hostColliders.push({ minX: x - ex, maxX: x + ex, minZ: z - ez, maxZ: z + ez });
       }
     }
   }
+
+  /** The floor a site's bench stands on: the working's, the deck's, or the pavement's. */
+  siteFloor(site) {
+    const m = this.mine.floorAt(site.pos[0], site.pos[2]);
+    if (m !== null) return m;
+    return this.raisedHeight(site.pos[0], site.pos[2]) ?? this.surfaceHeight(site.pos[0], site.pos[2]);
+  }
+
+  /**
+   * The way on foot from where the player stands to a site's approach mark, as a list of [x, z]:
+   * straight on the open ground, through a portal and doorway by doorway underground. The guide
+   * arrow follows it (`three/guide-arrow.js`); a world with no workings answers with the straight line.
+   */
+  routeTo(siteId, fromPos) {
+    const site = this.data.sites.find(s => s.id === siteId);
+    if (!site) return null;
+    const from = Array.isArray(fromPos) ? fromPos : [fromPos.x, fromPos.z];
+    const to = site.approachPos;
+    return this.mine.routeTo(from[0], from[1], to[0], to[2]);
+  }
+
 
 
   /**
@@ -2245,7 +1649,7 @@ export class LigarWorld {
    * a group with `noMerge`, because the diffuser breathes and a baked lamp
    * could not.
    */
-  buildLuminaire(x, y, z) {
+  buildLuminaire(x, y, z, { intensity = 6.5, distance = 11 } = {}) {
     const g = new THREE.Group();
     g.userData.noMerge = true;
     const housing = new THREE.Mesh(
@@ -2271,7 +1675,7 @@ export class LigarWorld {
     }
     const mark = new THREE.Object3D();
     mark.position.y = -0.3;
-    mark.userData.lamp = { color: 0xffc98a, intensity: 6.5, distance: 11, decay: 1.4 };
+    mark.userData.lamp = { color: 0xffc98a, intensity, distance, decay: 1.4 };
     g.add(mark);
     this.lampMarks.push(mark);
     g.position.set(x, y, z);
@@ -2302,9 +1706,13 @@ export class LigarWorld {
     });
     const clear = (x, z, pad) => {
       if (Math.abs(x) > 96 || Math.abs(z) > 96) return false;
+      // Nothing is scattered on a hill, its cliffs or the cuttings dug into them (a cobble there would hang in
+      // the air over a cutting's floor): the hills are bare rock.
+      if (this.data.hills.some(h => hillDistance(h, x, z) < 6 + pad)) return false;
       if (x > r.minX - 3 && x < r.maxX + 3 && z > r.minZ - 3 && z < r.maxZ + 3) return false;
       if (x > s.minX - 3 && x < s.maxX + 3 && z > s.minZ - 3 && z < s.maxZ + 3) return false;
-      if (L.some(l => Math.hypot(x - l.pos[0], z - l.pos[2]) < l.radius + pad)) return false;
+      // An arch's feet flare into talus past its declared radius.
+      if (L.some(l => Math.hypot(x - l.pos[0], z - l.pos[2]) < l.radius + pad + (l.asset === 'arch' ? 4 : 0))) return false;
       // A conveyor is twenty-two metres long, not a circle: keep off its whole run.
       if (L.some(l => {
         if (l.asset !== 'conveyor') return false;
@@ -2458,14 +1866,15 @@ export class LigarWorld {
     const hearth = this.forgeCoals
       ? this.forgeCoals.getWorldPosition(new THREE.Vector3())
       : null;
-    // The tube's flue pokes out through the roof of the cut, over the hearth.
-    const forge = hearth ? { x: hearth.x, y: hearth.y + 3.6, z: hearth.z } : null;
+    // The forge's flue is driven up through the hill, and its smoke leaves the top of it.
+    const forge = hearth ? { x: hearth.x, y: this.surfaceHeight(hearth.x, hearth.z) + 0.6, z: hearth.z } : null;
     this.effects = createLigarEffects({
       heightAt: (x, z) => this.getTerrainHeight(x, z),
       t4: this.t4,
       vents: [...(this.vents || []), ...(this.vista?.vents || [])],
       hearth, forge,
-      pit: r
+      pit: r,
+      hidden: (x, z) => this.data.hills.some(h => hillDistance(h, x, z) < 6)
     });
     this.scene.add(this.effects.group);
   }
@@ -2552,6 +1961,8 @@ export class LigarWorld {
 
     for (const lm of this.data.landmarks) {
       if (lm.minTier === 'T4' && !tierAtLeast('T4')) continue;
+      // A host collides as its builder says (`initHosts`); its landmark only declares the footprint.
+      if (lm.host) continue;
       // Ankle height, or walked on: the stakes, the pad, the loose fallen
       // sections and the spoil (you scramble up a heap, you do not bounce off).
       if (lm.asset === 'stake-marker' || lm.asset === 'landing-pad') continue;
@@ -2581,54 +1992,26 @@ export class LigarWorld {
       push(bx - hx, bx + hx, bz - hz, bz + hz);
     }
 
-    // Site 1: the two portal piers.
-    const s1 = this.data.sites.find(x => x.id === 'site-1');
-    if (s1) {
-      for (const px of [-3.5, 3.5]) {
-        const [wx, wz] = this.siteToWorld(s1, px, 0);
-        this.colliders.push({ x: wx, z: wz, radius: 1.05 });
-      }
-    }
-
-    // Site 2: the tube walls and back, the hearth, the trough.
+    // The lava tube's two walls (the barrel springs off them).
     if (this.tube) {
       const t = this.tube;
       push(t.minX - 0.3, t.minX + 0.3, t.minZ, t.maxZ);
       push(t.maxX - 0.3, t.maxX + 0.3, t.minZ, t.maxZ);
-      const s2 = this.data.sites.find(x => x.id === 'site-2');
-      if (s2) {
-        const HX = (t.minX + t.maxX) / 2 - s2.pos[0] - (t.maxX - t.minX) / 2 + 1.4;
-        const [hx, hz] = this.siteToWorld(s2, HX, 0.6);
-        push(hx - 1.0, hx + 1.0, hz - 0.7, hz + 0.7);
-        const [tx, tz] = this.siteToWorld(s2, 1.0, 2.6);
-        push(tx - 0.72, tx + 0.72, tz - 0.36, tz + 0.36);
-      }
     }
 
-    // Sites 3 and 4: the batch house's three sheeted walls, and the scale house.
-    const s3 = this.data.sites.find(x => x.id === 'site-3');
-    if (s3) {
-      for (const [lx, lz, hw, hd] of [[0, -2.9, 3.8, 0.12], [-3.7, 0, 0.12, 2.95], [3.7, 0, 0.12, 2.95]]) {
-        const [wx, wz] = this.siteToWorld(s3, lx, lz);
-        const rot = Math.abs(Math.sin(this.siteFacing(s3))) > 0.5;
-        const ex = rot ? hd : hw;
-        const ez = rot ? hw : hd;
-        push(wx - ex, wx + ex, wz - ez, wz + ez);
-      }
-    }
-    const s4 = this.data.sites.find(x => x.id === 'site-4');
-    if (s4) {
-      const [wx, wz] = this.siteToWorld(s4, 0, -2.4);
-      push(wx - 1.2, wx + 1.2, wz - 1.2, wz + 1.2);
-    }
+    // The hosts: you stand at a bench, you do not walk through it or the machine it is built into.
+    // Each builder hands back its own footprints in its own frame (`initHosts` turned them to the world's).
+    for (const c of this.hostColliders) this.colliders.push(c);
 
-    // Sites 5 to 9: each shelter's posts, its back wall and its signature piece.
-    for (const c of this.stationColliders) this.colliders.push(c);
+    // THE HILLS. They are not climbed: a ring of colliders round each, open only at the cuttings, and a
+    // wall along every side of every working that is not a doorway.
+    for (const c of this.mine.ringColliders()) this.colliders.push(c);
+    for (const c of this.mine.wallColliders()) this.colliders.push(c);
 
     // The deck gantry's three columns.
     if (this.deck) {
       const GX = this.deck.minX + 0.4;
-      for (const gz of [this.deck.minZ + 1.0, 0, this.deck.maxZ - 1.0]) {
+      for (const gz of [this.deck.minZ + 1.0, (this.deck.minZ + this.deck.maxZ) / 2, this.deck.maxZ - 1.0]) {
         this.colliders.push({ x: GX, z: gz, radius: 0.34 });
       }
     }
@@ -2642,14 +2025,6 @@ export class LigarWorld {
     push(s.maxX, r.maxX + W, r.maxZ, r.maxZ + W);               // near wall, east of ramp
     push(s.minX - W, s.minX, s.minZ, s.maxZ);                   // ramp cut, west
     push(s.maxX, s.maxX + W, s.minZ, s.maxZ);                   // ramp cut, east
-  }
-
-  /** A site-local (x, z) in world terms, through the site's facing. */
-  siteToWorld(site, lx, lz) {
-    const a = this.siteFacing(site);
-    const c = Math.cos(a);
-    const s = Math.sin(a);
-    return [site.pos[0] + lx * c + lz * s, site.pos[2] - lx * s + lz * c];
   }
 
   /**
@@ -2739,7 +2114,7 @@ export class LigarWorld {
     // A deployed instrument moves (jaws close, pieces fall), so while one is
     // open the sun's shadow is re-drawn every frame.
     if (anchor) {
-      if (deployed && !anchor.open) this.benchesOpen++;
+      if (deployed && !anchor.open) { this.benchesOpen++; this._airWatch = 40; }
       if (!deployed && anchor.open) this.benchesOpen--;
       anchor.open = deployed;
     }
@@ -2768,6 +2143,13 @@ export class LigarWorld {
   update(delta, cameraPos) {
     this.elapsed += delta;
     ligarSkyUniforms.uLTime.value = this.elapsed;
+    // While an instrument is open, whatever it has built since the last look gets the air: every frame at
+    // first (its stations appear a few frames after the bench is announced), then now and again.
+    if (this.benchesOpen > 0) {
+      const eager = (this._airWatch ?? 0) > 0;
+      if (eager) this._airWatch--;
+      if (eager || (this._airTick = ((this._airTick ?? 0) + 1) % 10) === 0) this.coverNewMaterials();
+    }
     if (this.scrubTime) this.scrubTime.value = this.elapsed;
     if (cameraPos) {
       // Nothing in Ligar that casts a shadow moves on its own — the fire, the
@@ -2780,6 +2162,10 @@ export class LigarWorld {
         this._buf = this._buf || new THREE.Vector2();
         this.effects?.setViewportHeight(this.renderer.getDrawingBufferSize(this._buf).y);
       }
+      // Under a hill the ash that hangs in the open air is gone.
+      const v = this.mine.volumeAt(cameraPos.x, cameraPos.z);
+      this._indoors = (this._indoors ?? 0) + ((v && v.kind !== 'cutting' ? 1 : 0) - (this._indoors ?? 0)) * Math.min(1, delta * 4);
+      this.effects?.setIndoors?.(this._indoors);
       this.effects?.update(delta, this.elapsed, cameraPos);
       this.lampPool?.update(cameraPos);
       // The fire's shadow is frozen (see initTubeForge); while an instrument
@@ -2825,6 +2211,7 @@ export class LigarWorld {
     this.siteMarkers.clear();
     this.benchAnchors.clear();
     this.colliders = [];
+    this.hostColliders = [];
     this.lamps = [];
     this.lampMarks = [];
   }

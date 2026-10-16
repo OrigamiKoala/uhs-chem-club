@@ -211,7 +211,7 @@ function voyageTargetFor(raw) {
     const at = site && (site.approachPos || site.pos);
     return {
       key, hash,
-      waypoint: at ? { x: at[0], z: at[2], label: site.label } : null
+      waypoint: at ? { x: at[0], z: at[2], label: site.label, siteId: site.id } : null
     };
   }
   // Leading to the next uncompleted stage (or first stage if world complete)
@@ -224,7 +224,7 @@ function voyageTargetFor(raw) {
       if (at) {
         return {
           key, hash,
-          waypoint: { x: at[0], z: at[2], label: site.label }
+          waypoint: { x: at[0], z: at[2], label: site.label, siteId: site.id }
         };
       }
     }
