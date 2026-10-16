@@ -31,6 +31,7 @@ export class TrendPlot {
       ...spec
     };
     this.points = [];
+    this.overlay = null;
     this.draw();
   }
 
@@ -52,6 +53,20 @@ export class TrendPlot {
   clear() {
     this.points = [];
     this.draw();
+  }
+
+  /** Where data (x, y) lands on the canvas, in canvas px (for a line laid over the dots). */
+  pxOf(x, y) {
+    const w = this.canvas?.width || 0;
+    const h = this.canvas?.height || 0;
+    const padL = 36, padB = 26, padR = 12, padT = 16;
+    const pw = w - padL - padR;
+    const ph = h - padT - padB;
+    const { xMin, xMax, yMin, yMax } = this.spec;
+    return {
+      x: padL + ((x - xMin) / Math.max(1e-9, xMax - xMin)) * pw,
+      y: padT + ph - ((y - yMin) / Math.max(1e-9, yMax - yMin)) * ph
+    };
   }
 
   draw() {
@@ -138,6 +153,8 @@ export class TrendPlot {
         ctx.stroke();
       }
     }
+    // Whatever the owner lays over the dots (the tabletop's straightedge).
+    if (typeof this.overlay === 'function') this.overlay(ctx, this);
   }
 }
 

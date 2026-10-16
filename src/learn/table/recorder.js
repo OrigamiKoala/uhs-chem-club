@@ -21,7 +21,9 @@ export const RECORDER_BOX = { at: { x: 84, y: 10 }, size: { w: 30, h: 18 } };
 export const emptyRecorder = (box = null) => ({
   rows: [],
   tool: null,
-  box: { at: { ...(box?.at || RECORDER_BOX.at) }, size: { ...(box?.size || RECORDER_BOX.size) } }
+  box: { at: { ...(box?.at || RECORDER_BOX.at) }, size: { ...(box?.size || RECORDER_BOX.size) } },
+  // What the two axes are called, when a stage says (the paper strip prints them).
+  axes: { xLabel: box?.xLabel || '', yLabel: box?.yLabel || '', xUnit: box?.xUnit || '', yUnit: box?.yUnit || '' }
 });
 
 const finite = v => typeof v === 'number' && Number.isFinite(v);
@@ -79,3 +81,25 @@ export const readY = (line, x) => (line ? line.slope * x + line.intercept : null
 
 /** The `x` at which the line reads `y`; null for a flat line. */
 export const readX = (line, y) => (line && line.slope !== 0 ? (y - line.intercept) / line.slope : null);
+
+/**
+ * Where each recorded row sits on the strip, in table units, for the drawn view's
+ * plot (which fills the strip with the rows' own range) and for hit tests.
+ */
+export function plotUnits(rec) {
+  const r = { x0: rec.box.at.x - rec.box.size.w / 2, y0: rec.box.at.y - rec.box.size.h / 2 };
+  r.x1 = r.x0 + rec.box.size.w;
+  r.y1 = r.y0 + rec.box.size.h;
+  r.w = rec.box.size.w;
+  r.h = rec.box.size.h;
+  const xs = rec.rows.map(p => p.x);
+  const ys = rec.rows.map(p => p.y);
+  const lo = a => Math.min(...a);
+  const span = a => (Math.max(...a) - Math.min(...a)) || 1;
+  return {
+    r,
+    ux: x => r.x0 + 2 + ((x - lo(xs)) / span(xs)) * (r.w - 4),
+    uy: y => r.y1 - 2 - ((y - lo(ys)) / span(ys)) * (r.h - 4),
+    xlo: lo(xs), xhi: Math.max(...xs)
+  };
+}

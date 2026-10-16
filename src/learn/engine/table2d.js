@@ -30,19 +30,15 @@
  * not LED, amber only for the piece in the hand and the key that is laid.
  */
 
-import { PlateBench, PLATE_COLORS, plateText, raster, aperture, escText } from './plates.js';
+import { PlateBench, PLATE_COLORS, plateText, raster, aperture } from './plates.js';
 import { getKit, radiusOf } from '../table/kits/index.js';
-import {
-  SIZES, GRAB_REACH, rectOf, zoneAt, railPositions, railIndexAt, resolveDrop, targetString
-} from '../table/snap.js';
-import { snapDial } from '../table/model.js';
-import { toolDef } from '../table/tools.js';
-import { lineOf, readY } from '../table/recorder.js';
+import { SIZES, rectOf, railPositions } from '../table/snap.js';
+import { lineOf, readY, plotUnits } from '../table/recorder.js';
+import { fixtureLayout, pieceTargets } from '../table/layout.js';
+import { TableGestures } from '../table/gestures.js';
+import { TableKeys } from './table-keys.js';
 
-/** Pixels a press must move before it is a drag and not a tap. */
-const SLOP_PX = 5;
-/** Smallest grab radius, in pixels, however small the piece is drawn. */
-const GRAB_MIN_PX = 16;
+export { fixtureLayout };
 
 const AMBER = PLATE_COLORS.amber;
 
@@ -57,24 +53,29 @@ export function fit(w, h, bounds) {
 }
 
 /**
- * The controls of a fixture, in table units: its box, one track per dial, and
- * its Run key. Shared by the picture and the hit test so they cannot disagree.
+ * What a piece shows on its face right now: its label, a `x2` badge when scaled,
+ * and whether it lies face down. A kit may say more (`kit.faceOf(piece, state)`);
+ * the drawn and the built table both read this, so they cannot disagree.
  */
-export function fixtureLayout(f) {
-  const r = rectOf(f, SIZES.fixture);
-  const names = Object.keys(f.dials);
-  const dials = names.map((name, i) => ({
-    name, x0: r.x0 + 3, x1: r.x1 - 3, y: r.y0 + 8 + i * 5
-  }));
-  const bottom = r.y0 + 8 + Math.max(0, names.length - 1) * 5;
-  const run = { x0: r.x1 - 11, x1: r.x1 - 2, y0: Math.max(bottom + 2, r.y1 - 6), y1: Math.max(bottom + 2, r.y1 - 6) + 4.5 };
-  return { box: r, dials, run };
+export function faceOf(kit, piece, state) {
+  const own = kit.faceOf ? kit.faceOf(piece, state) : null;
+  const scale = piece.props?.scale || 1;
+  return {
+    text: String(own?.text ?? piece.label ?? piece.id),
+    badge: own?.badge ?? (scale > 1 ? `x${scale}` : ''),
+    flipped: Boolean(own?.flipped ?? piece.props?.flipped)
+  };
 }
 
 /**
  * Paint a table. `view` carries what is not the table's own state: the pieces'
  * eased positions (`shown`), the piece on the pointer (`drag`), the gap the
- * rail is holding open (`railGap`) and the kit's pieces.
+ * rail is holding open (`railGap`), the jar a pour starts from (`pourFrom`).
+ *
+ * The built table paints this same picture as the flat part of the plate and
+ * builds the rest: `view.pieces === false` leaves the pieces to it,
+ * `view.controls === false` the dials and Run keys, `view.sheet === false` the
+ * paper strip. Zones, labels and jar levels are drawn once, here, for both.
  */
 export function drawTable(ctx, w, h, state, view = {}) {
   ctx.fillStyle = PLATE_COLORS.bg;
@@ -85,6 +86,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
   const X = x => ox + x * sc;
   const Y = y => oy + y * sc;
   const holding = state.carry.held;
+  const showPieces = view.pieces !== false;
   const text = (t, x, y, o = {}) => plateText(ctx, t, X(x), Y(y), { size: Math.max(9, 2.6 * sc), ...o });
 
   /* zones */
@@ -102,7 +104,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
   }
   for (const c of Object.values(state.zones.containers)) {
     const r = rectOf(c, SIZES.container);
-    outline(r, Boolean(holding), false);
+    outline(r, Boolean(holding) || view.pourFrom === c.id, false);
     const total = Object.values(c.contents).reduce((a, b) => a + b, 0);
     const cap = c.capacity || Math.max(total, 1);
     const level = Math.min(1, total / cap);
@@ -144,6 +146,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
     const lay = fixtureLayout(f);
     outline(lay.box, false, false);
     text(f.label, lay.box.x0 + 1.5, lay.box.y0 + 3.6, { color: PLATE_COLORS.dust });
+    if (view.controls === false) continue;
     for (const d of lay.dials) {
       const dial = f.dials[d.name];
       const frac = dial.max === dial.min ? 0 : (dial.value - dial.min) / (dial.max - dial.min);
@@ -163,7 +166,8 @@ export function drawTable(ctx, w, h, state, view = {}) {
   }
 
   /* the recorder's strip */
-  drawRecorder(ctx, state, X, Y, sc);
+  if (view.sheet !== false) drawRecorder(ctx, state, X, Y, sc);
+  if (!showPieces) { if (view.crt !== false) { raster(ctx, w, h); aperture(ctx, w, h); } return []; }
 
   /* joins, then pieces (the one on the pointer last) */
   const at = p => (view.drag?.id === p.id ? view.drag.at : (view.shown?.[p.id] || p.at));
@@ -189,8 +193,9 @@ export function drawTable(ctx, w, h, state, view = {}) {
     const r = radiusOf(kit, p) * sc;
     const lit = holding === p.id;
     const square = p.kind === 'card' || p.token;
-    const label = String(p.label ?? p.id);
-    ctx.fillStyle = p.token ? PLATE_COLORS.bg : PLATE_COLORS.steel;
+    const face = faceOf(kit, p, state);
+    const label = face.badge ? `${face.text} ${face.badge}` : face.text;
+    ctx.fillStyle = p.token || face.flipped ? PLATE_COLORS.bg : PLATE_COLORS.steel;
     ctx.strokeStyle = lit ? AMBER : PLATE_COLORS.dust;
     ctx.lineWidth = lit ? 2 : 1;
     if (square) {
@@ -215,21 +220,18 @@ export function drawTable(ctx, w, h, state, view = {}) {
 function drawRecorder(ctx, state, X, Y, sc) {
   const rec = state.recorder;
   if (!rec.rows.length) return;
-  const r = rectOf(rec.box, { w: 30, h: 18 });
+  const pu = plotUnits(rec);
+  const r = pu.r;
   ctx.strokeStyle = PLATE_COLORS.rim;
   ctx.strokeRect(Math.round(X(r.x0)) + 0.5, Math.round(Y(r.y0)) + 0.5, Math.round(r.w * sc), Math.round(r.h * sc));
-  const xs = rec.rows.map(p => p.x);
-  const ys = rec.rows.map(p => p.y);
-  const lo = (a) => Math.min(...a);
-  const span = (a) => (Math.max(...a) - Math.min(...a)) || 1;
-  const px = x => X(r.x0 + 2 + ((x - lo(xs)) / span(xs)) * (r.w - 4));
-  const py = y => Y(r.y1 - 2 - ((y - lo(ys)) / span(ys)) * (r.h - 4));
+  const px = x => X(pu.ux(x));
+  const py = y => Y(pu.uy(y));
   const line = lineOf(rec);
   if (line) {
     ctx.strokeStyle = AMBER;
     ctx.beginPath();
-    ctx.moveTo(px(lo(xs)), py(readY(line, lo(xs))));
-    ctx.lineTo(px(Math.max(...xs)), py(readY(line, Math.max(...xs))));
+    ctx.moveTo(px(pu.xlo), py(readY(line, pu.xlo)));
+    ctx.lineTo(px(pu.xhi), py(readY(line, pu.xhi)));
     ctx.stroke();
   }
   ctx.fillStyle = PLATE_COLORS.dust;
@@ -253,12 +255,30 @@ export class Table2D extends PlateBench {
     this.shown = {};        // eased on-screen positions, id -> {x, y}
     this.drag = null;       // { id, at } while a piece is on the pointer
     this.railGap = null;    // the gap the rail is holding open during a drag
-    this.gesture = null;
+    this.gestures = new TableGestures(this);
+    this.keys = new TableKeys(this.host, a => this.onAction?.(a));
     this.setPlates([{ id: 'table', label: '', note: '' }]);
   }
 
   apertureClass() { return 'table-aperture'; }
   gridClass() { return 'table-grid'; }
+
+  /* The view contract `TableGestures` reads. */
+  posOf(id) { return this.shown[id]; }
+  dispatch(action) { this.onAction?.(action); }
+  dragAt() { return this.drag?.at || null; }
+  setDrag(drag, gap) {
+    this.drag = drag;
+    this.railGap = gap;
+    if (drag) this.startAnim(); else this.drawAll();
+  }
+  changed() { this.drawAll(); this.startAnim(); }
+  sheetRows() {
+    const rec = this.state.recorder;
+    if (!rec.rows.length) return [];
+    const pu = plotUnits(rec);
+    return rec.rows.map((row, i) => ({ i, u: { x: pu.ux(row.x), y: pu.uy(row.y) } }));
+  }
 
   /** Take a new state; pieces ease to wherever it puts them. */
   setState(state) {
@@ -268,18 +288,18 @@ export class Table2D extends PlateBench {
     for (const p of Object.values(state.pieces)) {
       if (first || !this.shown[p.id]) this.shown[p.id] = { ...p.at };
     }
-    this.gesture = null;
+    this.gestures.gesture = null;
     this.drag = null;
     this.railGap = null;
     const box = this.plates[0]?.canvas?.parentElement;
     if (box?.style) box.style.aspectRatio = `${state.bounds.w} / ${state.bounds.h}`;
-    this.renderTools();
+    this.keys.render(state, this.toolIds);
     if (first) this.layoutAll(); else this.drawAll();
     this.startAnim();
   }
 
   draw(ctx, w, h) {
-    return drawTable(ctx, w, h, this.state, { shown: this.shown, drag: this.drag, railGap: this.railGap });
+    return drawTable(ctx, w, h, this.state, { shown: this.shown, drag: this.drag, railGap: this.railGap, pourFrom: this.gestures.pourFrom });
   }
 
   /** Pieces ease toward their places, and the rail's others slide from a held-open gap. */
@@ -308,43 +328,7 @@ export class Table2D extends PlateBench {
 
   /** Where every piece is heading: its place in the state, or the slid-apart rail. */
   targets() {
-    const out = {};
-    const s = this.state;
-    for (const p of Object.values(s.pieces)) out[p.id] = p.at;
-    if (this.drag && this.railGap !== null && s.zones.rail?.order.includes(this.drag.id)) {
-      const others = s.zones.rail.order.filter(o => o !== this.drag.id);
-      const pos = railPositions(s.zones.rail, others.length, this.railGap);
-      others.forEach((id, i) => { out[id] = pos[i]; });
-    }
-    return out;
-  }
-
-  /* ---------------- tools ---------------- */
-
-  renderTools() {
-    if (!this.host || !this.state) return;
-    let bar = this.toolBar;
-    if (!bar || bar.parentElement !== this.host) {
-      bar = document.createElement('div');
-      bar.className = 'table-tools lq-tool-row';
-      this.host.appendChild(bar);
-      this.toolBar = bar;
-      bar.addEventListener('click', e => {
-        const btn = e.target.closest?.('[data-table-tool]');
-        if (!btn || btn.disabled) return;
-        const def = toolDef(getKit(this.state.kit), btn.dataset.tableTool);
-        const action = def?.press(this.state);
-        if (action) this.onAction?.(action);
-      });
-    }
-    const kit = getKit(this.state.kit);
-    bar.innerHTML = this.toolIds.map(id => {
-      const def = toolDef(kit, id);
-      if (!def) return '';
-      const on = Boolean(def.active?.(this.state));
-      const enabled = def.enabled ? def.enabled(this.state) : true;
-      return `<button type="button" class="btn-secondary quest-btn-sm lq-tool${on ? ' selected' : ''}" data-table-tool="${escText(id)}" aria-pressed="${on}"${enabled ? '' : ' disabled'}>${escText(def.label)}</button>`;
-    }).join('');
+    return pieceTargets(this.state, this.drag, this.railGap);
   }
 
   /* ---------------- input: the DOM adapter ---------------- */
@@ -373,117 +357,19 @@ export class Table2D extends PlateBench {
     return { x: ((e.clientX - rect.left) / k - ox) / sc, y: ((e.clientY - rect.top) / k - oy) / sc };
   }
 
-  /* ---------------- input: the gestures, in table units ---------------- */
+  /* ---------------- input: the gestures, in table units (table/gestures.js) ---------------- */
 
   pxToUnits(px) { return px / (this.scale || 3.4); }
-
-  pieceAt(u) {
-    const s = this.state;
-    const kit = getKit(s.kit);
-    let best = null;
-    for (const p of Object.values(s.pieces)) {
-      if (p.hidden) continue;
-      const c = this.shown[p.id] || p.at;
-      const reach = Math.max(radiusOf(kit, p) * GRAB_REACH, this.pxToUnits(GRAB_MIN_PX));
-      const d = Math.hypot(c.x - u.x, c.y - u.y);
-      if (d <= reach && (!best || d <= best.d)) best = { id: p.id, d };
-    }
-    return best ? best.id : null;
-  }
-
-  fixtureHit(u) {
-    for (const f of Object.values(this.state.fixtures)) {
-      const lay = fixtureLayout(f);
-      const pad = this.pxToUnits(10);
-      for (const d of lay.dials) {
-        if (u.x >= d.x0 - pad && u.x <= d.x1 + pad && Math.abs(u.y - d.y) <= pad) return { kind: 'dial', fixture: f.id, dial: d.name, track: d };
-      }
-      const r = lay.run;
-      if (u.x >= r.x0 - pad / 2 && u.x <= r.x1 + pad / 2 && u.y >= r.y0 - pad / 2 && u.y <= r.y1 + pad / 2) return { kind: 'run', fixture: f.id };
-    }
-    return null;
-  }
-
-  pointerDown(u) {
-    if (!this.state) return;
-    const fh = this.fixtureHit(u);
-    if (fh?.kind === 'dial') { this.gesture = { kind: 'dial', ...fh }; this.dialTo(fh, u); return; }
-    if (fh?.kind === 'run') { this.gesture = { kind: 'run', fixture: fh.fixture }; return; }
-    const id = this.pieceAt(u);
-    if (id && !this.state.pieces[id].fixed) {
-      const c = this.shown[id] || this.state.pieces[id].at;
-      this.gesture = { kind: 'piece', id, start: u, off: { x: c.x - u.x, y: c.y - u.y }, moved: false };
-      return;
-    }
-    this.gesture = { kind: 'table' };
-  }
-
-  pointerMove(u) {
-    const g = this.gesture;
-    if (!g || !this.state) return;
-    if (g.kind === 'dial') { this.dialTo(g, u); return; }
-    if (g.kind !== 'piece') return;
-    if (!g.moved) {
-      if (Math.hypot(u.x - g.start.x, u.y - g.start.y) < this.pxToUnits(SLOP_PX)) return;
-      g.moved = true;
-    }
-    const at = { x: u.x + g.off.x, y: u.y + g.off.y };
-    this.drag = { id: g.id, at };
-    const rail = this.state.zones.rail;
-    this.railGap = rail && rail.order.includes(g.id) && zoneAt(this.state, at)?.kind === 'rail'
-      ? railIndexAt(this.state, at.x, g.id)
-      : null;
-    this.startAnim();
-  }
-
-  pointerUp(u) {
-    const g = this.gesture;
-    this.gesture = null;
-    if (!g || !this.state) return;
-    if (g.kind === 'run') {
-      const hit = this.fixtureHit(u);
-      if (hit?.kind === 'run' && hit.fixture === g.fixture) this.onAction?.({ run: g.fixture });
-      return;
-    }
-    if (g.kind === 'piece' && g.moved) {
-      const at = this.drag?.at || { x: u.x + g.off.x, y: u.y + g.off.y };
-      this.drag = null;
-      this.railGap = null;
-      this.onAction?.({ place: { piece: g.id, at } });
-      this.drawAll();
-      return;
-    }
-    if (g.kind === 'piece') { this.tapPiece(g.id); return; }
-    if (g.kind === 'table') this.tapTarget(u);
-  }
-
-  /** Tap on a piece: pick it up, put it down, or (holding another) the piece is the target. */
-  tapPiece(id) {
-    const held = this.state.carry.held;
-    if (!held) { this.onAction?.({ pick: id }); return; }
-    if (held === id) { this.onAction?.({ pick: null }); return; }
-    this.tapTarget(this.state.pieces[id].at);
-  }
-
-  /** Tap where the held piece should go: resolved exactly as a drop there would be. */
-  tapTarget(u) {
-    const held = this.state.carry.held;
-    if (!held) return;
-    const target = resolveDrop(this.state, getKit(this.state.kit), held, u);
-    this.onAction?.({ place: { to: targetString(target) } });
-  }
-
-  dialTo(h, u) {
-    const f = this.state.fixtures[h.fixture];
-    const d = f.dials[h.dial];
-    const t = h.track || fixtureLayout(f).dials.find(x => x.name === h.dial);
-    const frac = Math.max(0, Math.min(1, (u.x - t.x0) / (t.x1 - t.x0)));
-    const value = snapDial(d, d.min + frac * (d.max - d.min));
-    if (value !== d.value) this.onAction?.({ setDial: { fixture: h.fixture, dial: h.dial, value } });
-  }
+  pieceAt(u) { return this.gestures.pieceAt(u); }
+  fixtureHit(u) { return this.gestures.fixtureHit(u); }
+  pointerDown(u) { this.gestures.pointerDown(u); }
+  pointerMove(u) { this.gestures.pointerMove(u); }
+  pointerUp(u) { this.gestures.pointerUp(u); }
+  tapPiece(id) { this.gestures.tapPiece(id); }
+  tapTarget(u) { this.gestures.tapTarget(u); }
 
   dispose() {
-    this.toolBar = null;
+    this.keys?.dispose();
     super.dispose();
   }
 }

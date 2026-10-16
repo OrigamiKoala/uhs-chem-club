@@ -33,6 +33,16 @@
  *               state or the picture".
  *   maxScale    number, the largest `scale` a card may take (default 1).
  *
+ * VIEW HOOKS (T0b; optional, read only by the views and the shared gestures):
+ *   kinds.x.flip / .scale   true when a piece of kind x can be turned over / scaled;
+ *               a held piece then offers the Flip, Smaller and Larger keys
+ *   faceOf(piece, state) -> {text?, badge?, flipped?}   what a piece shows on its face
+ *   pourStep(state, from, to, what) -> number   one pour gesture's amount (default 1)
+ *   kinds.x.instanced   true for many small unlabelled pieces: one draw call per kind
+ *   fixture3d(fixture, {THREE, scale, mats, toPlate, plaque}) -> {group, update?(fixture, state)}
+ *               builds a fixture for the built table (reuse the `*3d.js` builders here);
+ *               without it a fixture is a rim, a knob per dial and a Run key
+ *
  * T1 adds `kits/atoms.js` (over `joinbench.js` / `lewis.js`) and registers it
  * here; the reducer does not change.
  */
