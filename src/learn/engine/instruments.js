@@ -50,6 +50,7 @@ import { GasRig as GasRig2D } from './gasrig.js';
 import { GasRig3D } from './gasrig3d.js';
 import { Calorimeter as Calorimeter2D } from './calorimeter.js';
 import { Calorimeter3D } from './calorimeter3d.js';
+import { Table2D } from './table2d.js';
 
 /** True when this client is drawing the Learn benches in three dimensions. */
 export function benchesAre3D() {
@@ -334,7 +335,23 @@ export function Calorimeter(host, opts = {}) {
     : new Calorimeter2D(host, opts);
 }
 
+/**
+ * The tabletop: pieces, trays, a rail, slots, containers and fixtures on the
+ * bench, graded on what is on the table (`table/`, plan `bench-tabletop.md`).
+ * It is the one instrument that has no sample plates, so there is no separate
+ * 3D bench to choose by tier YET: the drawn tabletop is returned at every tier
+ * until the built twin (a `BenchViewer3D` subclass over the same reducer, T0b)
+ * is registered here. A stage grades identically either way, because both draw
+ * the same `TableState` and send the same actions.
+ * @param {HTMLElement} host
+ * @param {{onAction?: (action: object) => void, tools?: string[]}} opts
+ */
+export function Tabletop(host, opts = {}) {
+  return new Table2D(host, opts);
+}
+
 /* Exported so a caller that wants the built instrument by name can have it. */
+export { Table2D };
 export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D, JoinBench3D, LightBench3D, CloudPlate3D, BoxRack3D, ElectronBench3D, BondBench3D, PairBoard3D, DomainRig3D, GasRig3D, Calorimeter3D };
 
 /* Re-exported so a quest module needs exactly one import line for its bench. */

@@ -379,6 +379,7 @@ export const STAGES = [
     widget: {
       type: 'order',
       label: 'Order from lowest to highest heat per gram',
+      rail: { first: 'Lowest heat per gram', last: 'Highest heat per gram' },
       items: [
         choice('methanol', 'Methanol'),
         choice('methane', 'Methane'),
@@ -388,10 +389,10 @@ export const STAGES = [
     hints: [
       'Tap each plate and read its heat per mole and its molar mass.',
       'Compare the fuels by the heat in one gram, not in one mole.',
-      'Divide each fuel’s heat per mole by its molar mass, then tap the three in rising order.'
+      'Divide each fuel’s heat per mole by its molar mass, then put the three in rising order.'
     ],
     check(state) {
-      if (state.order.length < 3) return { ok: false, notYet: true, msg: 'Tap all three fuels.' };
+      if (state.order.length < 3) return { ok: false, notYet: true, msg: 'Put all three fuels in order.' };
       if (state.order.join(',') === 'methanol,methane,hydrogen') return { ok: true };
       return { ok: false, msg: 'Heat per mole is not heat per gram; divide each fuel’s heat by its own molar mass before ranking.' };
     },

@@ -279,6 +279,7 @@ export const STAGES = [
     ],
     widget: {
       type: 'order', label: 'Loosest first',
+      rail: { first: 'Loosest grip', last: 'Tightest grip' },
       items: [{ id: 'cs', label: 'Cesium' }, { id: 'na', label: 'Sodium' }, { id: 'zn', label: 'Zinc' }]
     },
     hints: [
@@ -287,10 +288,10 @@ export const STAGES = [
       'Note the setting where each plate\'s counter first leaves zero, then place the plate that woke earliest first.'
     ],
     check(state) {
-      if (state.order.length < 3) return { ok: false, notYet: true, msg: 'Tap all three plates in order.' };
+      if (state.order.length < 3) return { ok: false, notYet: true, msg: 'Put all three plates in order.' };
       const want = ['cs', 'na', 'zn'];
       if (state.order.join() === want.slice().reverse().join()) {
-        return { ok: false, msg: 'That order runs the wrong way: the first plate you tap must be the one that lets go most easily.' };
+        return { ok: false, msg: 'That order runs the wrong way: the plate at the left end of the rail must be the one that lets go most easily.' };
       }
       if (state.order.join() !== want.join()) {
         return { ok: false, msg: 'Sweep the dial and note where each plate\'s counter first wakes before you place it.' };

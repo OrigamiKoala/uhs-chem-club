@@ -159,6 +159,7 @@ export const STAGES = [
     rigs: [atom('C', { id: 'c' }), atom('Li', { id: 'li' }), atom('B', { id: 'b' }), atom('Be', { id: 'be' })],
     widget: {
       type: 'order', label: 'Largest first',
+      rail: { first: 'Largest atom', last: 'Smallest atom' },
       items: [{ id: 'li', label: 'Li' }, { id: 'be', label: 'Be' }, { id: 'b', label: 'B' }, { id: 'c', label: 'C' }]
     },
     hints: [
@@ -167,10 +168,10 @@ export const STAGES = [
       'Place the atom whose outermost electron is farthest from the middle first, and the one whose electron is closest last.'
     ],
     check(state) {
-      if (state.order.length < 4) return { ok: false, notYet: true, msg: 'Tap all four atoms in order.' };
+      if (state.order.length < 4) return { ok: false, notYet: true, msg: 'Put all four atoms in order.' };
       const want = ['li', 'be', 'b', 'c'];
       if (state.order.join() === want.slice().reverse().join()) {
-        return { ok: false, msg: 'That order runs the wrong way: the first atom you tap must be the biggest.' };
+        return { ok: false, msg: 'That order runs the wrong way: the atom at the left end of the rail must be the biggest.' };
       }
       if (state.order.join() !== want.join()) {
         return { ok: false, msg: 'Read the distance for each atom\'s outermost electron before you place it.' };
@@ -238,6 +239,8 @@ export const STAGES = [
     ],
     widget: {
       type: 'order', label: 'Smallest first',
+      rail: { first: 'Smallest size', last: 'Largest size' },
+      start: ['clminus', 'na', 'naplus'],
       items: [{ id: 'na', label: 'Na' }, { id: 'naplus', label: 'Na⁺' }, { id: 'clminus', label: 'Cl⁻' }]
     },
     hints: [
@@ -246,7 +249,7 @@ export const STAGES = [
       'Place the smallest of Na⁺, Na and Cl⁻ first, using the distance read for each.'
     ],
     check(state) {
-      if (state.order.length < 3) return { ok: false, notYet: true, msg: 'Tap all three in order.' };
+      if (state.order.length < 3) return { ok: false, notYet: true, msg: 'Put all three in order.' };
       const want = ['naplus', 'clminus', 'na'];
       if (state.order.join() !== want.join()) {
         return { ok: false, msg: 'Make each ion on its plate, read the distance to its outermost electron, and order the three by those readings.' };
@@ -343,6 +346,7 @@ export const STAGES = [
     rigs: [atom('F', { id: 'f' }), atom('Na', { id: 'na' }), atom('N', { id: 'n' }), atom('C', { id: 'c' })],
     widget: {
       type: 'order', label: 'Weakest first',
+      rail: { first: 'Weakest pull', last: 'Strongest pull' },
       items: [{ id: 'na', label: 'Na' }, { id: 'c', label: 'C' }, { id: 'n', label: 'N' }, { id: 'f', label: 'F' }]
     },
     hints: [
@@ -351,10 +355,10 @@ export const STAGES = [
       'Place the atom with the weakest outermost-electron pull first and the one with the strongest last.'
     ],
     check(state) {
-      if (state.order.length < 4) return { ok: false, notYet: true, msg: 'Tap all four atoms in order.' };
+      if (state.order.length < 4) return { ok: false, notYet: true, msg: 'Put all four atoms in order.' };
       const want = ['na', 'c', 'n', 'f'];
       if (state.order.join() === want.slice().reverse().join()) {
-        return { ok: false, msg: 'That order runs the wrong way: the first atom you tap must pull weakest.' };
+        return { ok: false, msg: 'That order runs the wrong way: the atom at the left end of the rail must pull weakest.' };
       }
       if (state.order.join() !== want.join()) {
         return { ok: false, msg: 'Read the pull on each atom\'s outermost electron before you place it.' };

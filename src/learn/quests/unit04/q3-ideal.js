@@ -327,6 +327,7 @@ export const STAGES = [
     ],
     widget: {
       type: 'order', label: 'Densest first',
+      rail: { first: 'Densest', last: 'Least dense' },
       items: [{ id: 'a', label: 'Cylinder A' }, { id: 'b', label: 'Cylinder B' }, { id: 'c', label: 'Cylinder C' }]
     },
     hints: [

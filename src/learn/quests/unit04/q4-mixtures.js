@@ -311,6 +311,7 @@ export const STAGES = [
     rigs: [tank('a', 'TANK A', [{ gas: 'He', n: 0.5 }, { gas: 'N2', n: 1.0 }, { gas: 'CO2', n: 1.5 }], { V: 20, note: 'a tank of three gases' })],
     widget: {
       type: 'order', label: 'Largest partial pressure first',
+      rail: { first: 'Highest partial pressure', last: 'Lowest partial pressure' },
       items: [{ id: 'He', label: 'He' }, { id: 'N2', label: 'N₂' }, { id: 'CO2', label: 'CO₂' }]
     },
     hints: [

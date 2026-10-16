@@ -222,6 +222,7 @@ export const STAGES = [
     ],
     widget: {
       type: 'order', label: 'Lowest first',
+      rail: { first: 'Lowest frequency', last: 'Highest frequency' },
       items: [
         { id: 'a', label: 'Sample A' }, { id: 'b', label: 'Sample B' },
         { id: 'c', label: 'Sample C' }, { id: 'd', label: 'Sample D' }
@@ -233,10 +234,10 @@ export const STAGES = [
       'Place the lamp with the widest crests first and the one with the closest crests last.'
     ],
     check(state) {
-      if (state.order.length < 4) return { ok: false, notYet: true, msg: 'Tap all four lamps in order.' };
+      if (state.order.length < 4) return { ok: false, notYet: true, msg: 'Put all four lamps in order.' };
       const want = ['b', 'd', 'a', 'c'];
       if (state.order.join() === want.slice().reverse().join()) {
-        return { ok: false, msg: 'That order runs the wrong way: the first lamp you tap must have the lowest frequency.' };
+        return { ok: false, msg: 'That order runs the wrong way: the lamp at the left end of the rail must have the lowest frequency.' };
       }
       if (state.order.join() !== want.join()) {
         return { ok: false, msg: 'Compare each lamp\'s frequency before you place it.' };

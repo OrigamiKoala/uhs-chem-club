@@ -3412,3 +3412,118 @@ body.bench-deployed .modal-container .modal-card {
 }
 
 
+
+/* ===================================================================
+   THE RAIL AND THE TABLETOP (engine/railview.js, engine/table2d.js)
+
+   An `order` answer is a row of pieces on a rail that the player drags into
+   place; the arrangement as it stands is the answer. The rail's two ends
+   carry the plain labels the prompt uses. A held piece (the two-tap twin)
+   lights amber; nothing blooms. Pieces take `touch-action: none` so a finger
+   drags rather than scrolls, and everything here keeps pointer-events: auto.
+   =================================================================== */
+.lq-rail { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+
+.lq-rail-ends {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.lq-rail-end { flex: none; max-width: 40%; line-height: 1.2; }
+.lq-rail-end-last { text-align: right; }
+.lq-rail-line { flex: 1 1 auto; height: 0; border-top: 1px solid var(--border-durasteel); }
+
+.lq-rail-track {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 6px;
+  min-height: 60px;
+  background: var(--plate-000);
+  border: 1px solid var(--border-durasteel);
+  border-top-color: var(--seam-dark);
+  border-bottom-color: var(--seam-light);
+}
+
+.lq-rail-piece {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 46px;
+  padding: 6px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--plate-300);
+  border: 1px solid var(--border-durasteel);
+  border-top-color: var(--seam-light);
+  border-bottom-color: var(--seam-dark);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  pointer-events: auto;
+}
+
+.lq-rail-piece:hover { border-color: var(--accent-bronze); }
+
+.lq-rail-label {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.lq-rail-piece.held {
+  background: var(--plate-100);
+  border-color: var(--accent-amber);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+.lq-rail-piece.held .lq-rail-label { color: var(--text-amber); }
+
+/* The piece on the pointer: lifted off the rail, a plain offset shadow. */
+.lq-rail-piece.lifted {
+  cursor: grabbing;
+  background: var(--plate-400);
+  border-color: var(--border-bright);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.55);
+}
+
+/* The hole the others have slid apart to leave, and the gaps a held piece can be tapped into. */
+.lq-rail-hole {
+  min-width: 0;
+  border: 1px dashed var(--border-bright);
+  background: transparent;
+}
+
+.lq-rail-gap {
+  flex: 0 0 22px;
+  min-height: 46px;
+  padding: 0;
+  background: transparent;
+  border: 1px dashed var(--accent-amber);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  pointer-events: auto;
+}
+.lq-rail-gap:hover { background: var(--plate-200); }
+
+/* The drawn tabletop: one plate, no heading, keys under it. */
+.table-grid .scope-plate-head,
+.table-grid .scope-plate-note { display: none; }
+.table-grid .scope-plate { padding: 4px; }
+.scope-aperture.table-aperture { width: 100%; background: var(--plate-000); }
+.scope-aperture.table-aperture canvas { touch-action: none; cursor: grab; }
+
+.table-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.table-tools:empty { display: none; }
+.table-tools .lq-tool { pointer-events: auto; min-height: 40px; }

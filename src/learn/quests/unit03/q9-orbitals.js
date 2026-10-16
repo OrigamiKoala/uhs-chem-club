@@ -226,6 +226,7 @@ export const STAGES = [
     ],
     widget: {
       type: 'order', label: 'Shortest first',
+      rail: { first: 'Shortest bond', last: 'Longest bond' },
       items: [{ id: 'a', label: 'Plate A' }, { id: 'b', label: 'Plate B' }, { id: 'c', label: 'Plate C' }]
     },
     hints: [

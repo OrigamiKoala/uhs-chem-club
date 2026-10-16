@@ -215,6 +215,8 @@ export const STAGES = [
     ],
     widget: {
       type: 'order', label: 'Longest first',
+      rail: { first: 'Longest bond', last: 'Shortest bond' },
+      start: ['c', 'a', 'b'],
       items: [{ id: 'a', label: 'Pair A' }, { id: 'b', label: 'Pair B' }, { id: 'c', label: 'Pair C' }]
     },
     hints: [
@@ -281,6 +283,7 @@ export const STAGES = [
     rigs: [lattice('a', 'NaCl'), lattice('b', 'KCl'), lattice('c', 'MgO')],
     widget: {
       type: 'order', label: 'Strongest first',
+      rail: { first: 'Strongest lattice energy', last: 'Weakest lattice energy' },
       items: [{ id: 'a', label: 'NaCl' }, { id: 'b', label: 'KCl' }, { id: 'c', label: 'MgO' }]
     },
     hints: [
