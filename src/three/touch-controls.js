@@ -260,6 +260,10 @@ export class TouchControls {
     // page that replaces it: the player keeps their feet and the sticks stay up
     // (the card lifts clear of them, see "Mobile stick clearance" in learn.css).
     const atBench = document.body.classList.contains('bench-deployed');
+    // Leaned in over a tabletop the glass belongs to the table: a drag in a
+    // stick's corner is a piece being moved. The strip's Stand key brings the
+    // sticks back.
+    if (document.body.classList.contains('bench-leaning')) return true;
     const candidates = document.querySelectorAll(BLOCKING);
     for (const el of candidates) {
       if (atBench && el.matches(BENCH_FRAME)) continue;

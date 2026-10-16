@@ -27,6 +27,7 @@ import { registerBenchViewer, unregisterBenchViewer } from './bench-host.js';
 import { soundscape } from '../../audio/soundscape.js';
 import { FoeLayer3D } from './encounter3d.js';
 import { BOARD, paintReadings, hasReadings } from './bench-readings.js';
+import { planLeanIn, chromeReserve, PLATE_ZONE, LEAN } from './lean.js';
 
 /** Dust palette, in 3D. Mirrors TINTS in scope.js exactly. */
 export const TINT_HEX = {
@@ -889,6 +890,12 @@ export class BenchViewer3D {
     // The readings board, mirrored from the frame's log, plot and device. See `setReadings`.
     this.readingsBoard = null;
     this.readingsSnap = null;
+    // LEANING IN (`leanIn`): a tabletop is worked from above. While `lean` is set
+    // the lean pose owns the camera; the standing aim is not applied.
+    this.lean = null;
+    this.leaning = false;
+    this.leanZones = null;
+    this.onLeanChange = null;
 
     this.buildLighting();
     this.buildBench();
@@ -1478,6 +1485,14 @@ export class BenchViewer3D {
       this.lastPointer = { x: e.clientX, y: e.clientY };
       this.movedWhileDown += Math.abs(dx) + Math.abs(dy);
 
+      if (this.leaning) {
+        // Leaned in, a drag on empty table is still a look: the view swings a
+        // little and settles back to its framing when the hand lets go. It never
+        // hands the camera to the player (that is what a step does).
+        if (this.movedWhileDown >= 6) this.leanLook(dx, dy);
+        return;
+      }
+
       if (this.inWorld) {
         // Deployed, a drag on the view is the player turning their head, not
         // the instrument swinging on a short arc — same sign and the same
@@ -1515,6 +1530,7 @@ export class BenchViewer3D {
       if (e.pointerId !== this.dragPointerId) return;
       this.dragging = false;
       this.dragPointerId = null;
+      if (this.lean) this.lean.look.release = true;
       // A click is a press that did not become a drag. Anything else is the
       // player looking around, and must not be read as picking a sample.
       if (this.movedWhileDown < 6) this.handleClick(e);
@@ -1539,6 +1555,15 @@ export class BenchViewer3D {
       g.onWheel(e.deltaY, e);
     };
 
+    // Escape stands a leaned-in player back up, unless something else wants it.
+    this._onLeanKey = e => {
+      if (!this.leaning || e.code !== 'Escape') return;
+      const modal = typeof document !== 'undefined' && document.getElementById?.('modal-container');
+      if (modal && !modal.classList.contains('hidden')) return;
+      this.leaveLean();
+    };
+    window.addEventListener('keydown', this._onLeanKey);
+
     this.domElement.addEventListener('pointerdown', this._onPointerDown);
     window.addEventListener('pointermove', this._onPointerMove);
     window.addEventListener('pointerup', this._onPointerUp);
@@ -1554,7 +1579,10 @@ export class BenchViewer3D {
    *   onStart?: Function,
    *   onMove?: (dx: number, dy: number, e: PointerEvent) => void,
    *   onEnd?: Function,
-   *   onWheel?: (deltaY: number, e: WheelEvent) => void
+   *   onWheel?: (deltaY: number, e: WheelEvent) => void,
+   *   accepts?: (raycaster: THREE.Raycaster) => boolean   a hit volume that is only a
+   *     grab where this says so (the tabletop is one wide plane; an empty spot on it
+   *     is a look, not a grab)
    * }} spec
    * @returns {Function} call it to unregister
    */
@@ -1575,6 +1603,7 @@ export class BenchViewer3D {
     for (const g of this.grabbables || []) {
       if (!g.object.visible) continue;
       const hit = this.raycaster.intersectObject(g.object, true);
+      if (hit.length && g.accepts && !g.accepts(this.raycaster)) continue;
       if (hit.length && hit[0].distance < bestDist) {
         bestDist = hit[0].distance;
         best = g;
@@ -2027,6 +2056,10 @@ export class BenchViewer3D {
    * deck on a phone, applied to the bench and its deck panel.
    */
   fitToOpenArea() {
+    // Leaned in, the pose was solved against the chrome it reserves; neither the
+    // standing aim nor a view offset has any business with the camera.
+    if (this.leaning) return;
+
     // Deployed, the interface is not a panel over the view — it is bolted to the
     // bench inside it. There is nothing to dodge, and applying a view offset to
     // the world camera would skew the whole of Tallow to make room for a card
@@ -2196,6 +2229,242 @@ export class BenchViewer3D {
     return excess;
   }
 
+
+  /* ---------------- leaning in ---------------- */
+
+  /** The glass, in CSS px: the visual viewport, as the stage sizes the canvas by. */
+  leanViewport() {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    return {
+      w: Math.max(1, Math.round((vv && vv.width) || window.innerWidth || 1280)),
+      h: Math.max(1, Math.round((vv && vv.height) || window.innerHeight || 720))
+    };
+  }
+
+  /**
+   * What the chrome takes off the glass while leaned in, in px: the HUD and the
+   * prompt strip over the top, the foot dock under it, and a briefing docked down
+   * one side. Measured when the elements are there; the modelled chrome
+   * (`chromeReserve`) when they are not (Node, or before layout).
+   */
+  measureLeanReserve(vp = this.leanViewport()) {
+    const base = chromeReserve(vp.w, vp.h);
+    const out = { top: base.top, bottom: base.bottom, left: base.left, right: base.right };
+    if (typeof document === 'undefined' || typeof document.querySelector !== 'function') return out;
+    const rect = el => {
+      const b = el?.getBoundingClientRect?.();
+      return b && b.width > 1 && b.height > 1 ? b : null;
+    };
+    const strip = rect(document.querySelector('.lq-tstrip'));
+    if (strip) out.top = Math.max(base.hud, Math.ceil(strip.bottom) + 6);
+    const dock = rect(document.querySelector('.lq-tdock'));
+    if (dock) out.bottom = Math.max(0, Math.ceil(vp.h - dock.top) + 6);
+    // The briefing docks down one edge on stage 1 (and only there, plan §2): the
+    // table belongs in the rest of the width.
+    const modal = document.getElementById?.('modal-container');
+    const card = modal && !modal.classList.contains('hidden') ? modal.querySelector('.modal-card') : null;
+    const box = rect(card);
+    if (box && box.width < vp.w * 0.7) {
+      if (box.left < vp.w * 0.3) out.left = Math.max(out.left, Math.ceil(box.right) + 10);
+      else if (box.right > vp.w * 0.7) out.right = Math.max(out.right, Math.ceil(vp.w - box.left) + 10);
+    }
+    return out;
+  }
+
+  /**
+   * Solve the leaned-in pose for the current glass and chrome (bench frame).
+   * @param {{zones?: object[], viewport?: {w: number, h: number}, reserve?: object, pitchDeg?: number}} [opts]
+   */
+  solveLean(opts = {}) {
+    const viewport = opts.viewport || this.leanViewport();
+    const reserve = opts.reserve || this.measureLeanReserve(viewport);
+    const zones = opts.zones || this.leanZones || [PLATE_ZONE];
+    const pose = planLeanIn({ zones, viewport, reserve, fov: this.camera.fov || 55, pitchDeg: opts.pitchDeg });
+    pose.key = JSON.stringify([viewport, reserve, zones]);
+    return pose;
+  }
+
+  /**
+   * LEAN IN. From the standing aim to a pitched view (about 55 degrees down)
+   * framed so the stage's used zones fit the free glass at every aspect. Only a
+   * tabletop calls this; every other bench keeps the standing aim exactly.
+   *
+   * Taking a step stands the player back up (`playerWalked` hands the camera to
+   * the walk, as it always has); `leaveLean()` and Escape do the same on demand,
+   * and `[E]` at the bench leans in again.
+   *
+   * @param {{zones?: {x0: number, x1: number, z0: number, z1: number}[],
+   *          viewport?: {w: number, h: number},
+   *          reserve?: {top: number, bottom: number, left: number, right: number},
+   *          pitchDeg?: number, instant?: boolean}} [opts]
+   *        `zones`: the used parts of the plate, bench frame, metres (default the whole plate).
+   * @returns {object} the pose, `{position, target, pitch, dist, fov, aspect, fits, safe, ndc, key}`
+   */
+  leanIn(opts = {}) {
+    if (this.disposed) return null;
+    if (opts.zones) this.leanZones = opts.zones;
+    const cam = this.camera;
+    const pose = this.solveLean(opts);
+    if (opts.viewport) {
+      cam.aspect = opts.viewport.w / opts.viewport.h;
+      cam.updateProjectionMatrix();
+    }
+    const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    const tween = opts.instant || reduced ? 0 : LEAN.tweenS;
+    const first = !this.leaning;
+    if (first) {
+      this._standY = cam.position.y;
+      this.lean = {
+        pose, t: 0, tween, sinceFit: 0, key: pose.key,
+        fromPos: cam.position.clone(), fromQuat: cam.quaternion.clone(),
+        look: { yaw: 0, pitch: 0, release: false }, ref: null, wrote: null
+      };
+      this.leaning = true;
+      this.playerControlled = false;
+      if (!this.inWorld) {
+        cam.clearViewOffset?.();
+        cam.zoom = 1;
+        cam.updateProjectionMatrix();
+      }
+      if (typeof document !== 'undefined') document.body?.classList?.add?.('bench-leaning');
+    } else {
+      // A re-solve (the chrome moved): fly on from wherever the camera is.
+      Object.assign(this.lean, {
+        pose, t: 0, tween: opts.instant ? 0 : Math.min(tween, 0.25), key: pose.key,
+        fromPos: cam.position.clone(), fromQuat: cam.quaternion.clone()
+      });
+    }
+    if (this.lean.tween === 0) this.settleLean();
+    if (first) this.onLeanChange?.(true);
+    return pose;
+  }
+
+  /** Finish the flight at once (reduced motion, and the verifier). */
+  settleLean() {
+    if (!this.lean) return;
+    this.lean.t = 1;
+    this.writeLean(0);
+  }
+
+  /** Is the camera, right now, the leaned-in pose (flight done)? */
+  isLeanSettled() {
+    return Boolean(this.lean && this.lean.t >= 1);
+  }
+
+  /**
+   * Stand back up: the standing aim returns. `walked` is the player's own step,
+   * which hands the camera straight to the walk (nothing is written to it).
+   */
+  leaveLean({ walked = false } = {}) {
+    if (!this.leaning) return;
+    this.lean = null;
+    this.leaning = false;
+    if (typeof document !== 'undefined') document.body?.classList?.remove?.('bench-leaning');
+    if (walked && this.inWorld) {
+      this.playerControlled = true;
+    } else {
+      this.playerControlled = false;
+      this._fitKey = null;
+      // The walk owns how high the head is; give back the height they stood at.
+      if (this.inWorld && this.walkOwnsHeight && this._standY != null) this.camera.position.y = this._standY;
+      this.applyCamera();
+    }
+    this.onLeanChange?.(false);
+  }
+
+  /** A drag on empty table while leaned in: swing a little, settle back on release. */
+  leanLook(dx, dy) {
+    const L = this.lean;
+    if (!L) return;
+    L.look.release = false;
+    L.look.yaw = THREE.MathUtils.clamp(L.look.yaw - dx * 0.0022, -0.3, 0.3);
+    L.look.pitch = THREE.MathUtils.clamp(L.look.pitch - dy * 0.0022, -0.2, 0.2);
+  }
+
+  /** The lean pose carried out into the world: a camera position and orientation. */
+  leanWorldPose(pose, outPos, outQuat) {
+    this.root.updateMatrixWorld(true);
+    const target = this._leanTgt || (this._leanTgt = new THREE.Vector3());
+    outPos.set(...pose.position);
+    target.set(...pose.target);
+    this.root.localToWorld(outPos);
+    this.root.localToWorld(target);
+    const m = this._leanMat || (this._leanMat = new THREE.Matrix4());
+    m.lookAt(outPos, target, new THREE.Vector3(0, 1, 0));
+    outQuat.setFromRotationMatrix(m);
+  }
+
+  /** Put the camera `e` of the way from where it was to the lean pose (and add the look). */
+  writeLean(delta) {
+    const L = this.lean;
+    const cam = this.camera;
+    if (!L) return;
+    const toPos = this._leanP || (this._leanP = new THREE.Vector3());
+    const toQuat = this._leanQ || (this._leanQ = new THREE.Quaternion());
+    this.leanWorldPose(L.pose, toPos, toQuat);
+    const t = L.tween > 0 ? Math.min(1, L.t + delta / L.tween) : 1;
+    L.t = t;
+    const e = t * t * (3 - 2 * t);
+    cam.position.lerpVectors(L.fromPos, toPos, e);
+    cam.quaternion.slerpQuaternions(L.fromQuat, toQuat, e);
+    if (L.look.release) {
+      const k = Math.min(1, delta * 6);
+      L.look.yaw -= L.look.yaw * k;
+      L.look.pitch -= L.look.pitch * k;
+      if (Math.abs(L.look.yaw) < 1e-4 && Math.abs(L.look.pitch) < 1e-4) { L.look.yaw = L.look.pitch = 0; L.look.release = false; }
+    }
+    if (L.look.yaw || L.look.pitch) {
+      const eul = this._leanEuler || (this._leanEuler = new THREE.Euler(0, 0, 0, 'YXZ'));
+      eul.set(L.look.pitch, L.look.yaw, 0);
+      const lq = this._leanLookQ || (this._leanLookQ = new THREE.Quaternion());
+      lq.setFromEuler(eul);
+      cam.quaternion.multiply(lq);
+    }
+    cam.updateMatrixWorld(true);
+    L.wrote = { x: cam.position.x, z: cam.position.z };
+  }
+
+  /**
+   * Has the player stepped off the spot they leaned in from? The walk (which
+   * runs before the viewer each frame) writes the camera from where the player
+   * is; the lean writes it from its pose. A position that is neither what the
+   * lean wrote nor where the walk first put it has moved because the player did.
+   */
+  leanWalkIntent() {
+    const L = this.lean;
+    const cam = this.camera;
+    if (!L) return false;
+    const x = cam.position.x;
+    const z = cam.position.z;
+    if (L.wrote && Math.abs(x - L.wrote.x) < 1e-7 && Math.abs(z - L.wrote.z) < 1e-7) return false;
+    if (!L.ref) { L.ref = { x, z }; return false; }
+    const dx = x - L.ref.x;
+    const dz = z - L.ref.z;
+    return dx * dx + dz * dz > 0.004 * 0.004;
+  }
+
+  /** Re-solve when the glass, the chrome or the used zones have changed. */
+  refitLean() {
+    const L = this.lean;
+    if (!L) return;
+    const pose = this.solveLean();
+    if (pose.key === L.key) return;
+    this.leanIn({});
+  }
+
+  /** One frame of leaning: the lean pose is the camera. */
+  updateLean(delta) {
+    const L = this.lean;
+    if (!L) return;
+    if (this.inWorld && this.leanWalkIntent()) { this.leaveLean({ walked: true }); return; }
+    L.sinceFit += delta;
+    if (L.sinceFit > 0.2) {
+      L.sinceFit = 0;
+      this.refitLean();
+    }
+    if (this.lean) this.writeLean(delta);
+  }
+
   update(delta) {
     if (this.disposed) return;
     this.elapsed += delta;
@@ -2203,13 +2472,15 @@ export class BenchViewer3D {
     // The handover, checked before anything else reads the camera: the moment
     // the player takes a step, the bench stops standing them anywhere and stops
     // aiming for them.
-    if (this.inWorld && !this.playerControlled && this.playerWalked()) {
+    if (this.inWorld && !this.playerControlled && !this.leaning && this.playerWalked()) {
       this.playerControlled = true;
     }
 
     if (this.keysDirty) this.placeKeys();
 
-    if (!(this.inWorld && this.playerControlled)) {
+    if (this.leaning) {
+      this.updateLean(delta);
+    } else if (!(this.inWorld && this.playerControlled)) {
       this.updateKeyPull();
       // Re-measure a few times a second: the frame's deck changes height as
       // hints open and a reward card appears, and the bench should stay clear
@@ -2263,6 +2534,7 @@ export class BenchViewer3D {
 
   onResize() {
     this._fitKey = null;
+    if (this.lean) this.lean.sinceFit = 1;
     // The world camera belongs to the stage, which sizes it against the glass
     // and the visual viewport. Taking it over here would fight that every time
     // a phone collapsed its address bar.
@@ -2737,6 +3009,10 @@ export class BenchViewer3D {
 
   dispose() {
     this.disposed = true;
+    if (this.leaning && typeof document !== 'undefined') document.body?.classList?.remove?.('bench-leaning');
+    this.lean = null;
+    this.leaning = false;
+    window.removeEventListener('keydown', this._onLeanKey);
     this.hideInstrumentHalos();
     unregisterBenchViewer(this);
     this.disposeKeyBank();
