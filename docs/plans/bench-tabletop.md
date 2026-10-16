@@ -1,6 +1,6 @@
 # Bench Tabletop — benches you work with your hands, not machines you answer
 
-**Status:** plan only, nothing built. Drafted 2026-10-16. Phases T0–T7 (§6).
+**Status:** T0a built (pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`); T0b onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
 **This plan now carries the rest of `bench-integration.md`.** That plan's P0–P4 are done (bay contract,
 Tallow, Ligar, Lanternfall); its P5 (Bellows), P6 (Ember Reach) and P7 (records, stills, site copy) are
 folded in here as phases T5–T7, so each remaining world is re-laid and re-benched once, not twice.
@@ -448,3 +448,57 @@ Tallow's, Ligar's and Lanternfall's are described.
   `order` widget and the catalogue strip change in T0, ahead of the quest conversions.
 - 2026-10-16: added (user): `bench-integration.md`'s remaining phases (P5 Bellows, P6 Ember, P7 records)
   folded in as T5–T7; §2.6 makes integrating each bench into its world part of every phase's done.
+- 2026-10-16: **T0a built** (everything in T0 that is not 3D, camera or frame). T0b still owes `table3d.js`,
+  `leanIn()`, the frame's table mode and the `verify:bench` lean-in pose. Shipped, and the API later phases build on:
+  - **`src/learn/table/`** (pure, no DOM, no THREE). `model.js` `createTable(spec, seedKey)` builds a `TableState`
+    from a stage's `table: {kit, bounds?, pieces, zones {trays, slots, containers, rail}, fixtures, tools, prediction?,
+    fetch?, recorder?}` (an unsound declaration throws, so it fails `verify:table`); `apply(state, action)` is the only
+    reducer (returns a new state, never throws, `state.last = {verb, ok, reason?, ...}`); `applyAll`, `runScript(state,
+    script, {mode: 'direct'|'drag'|'tap', strict})`, `expandStep`, `signature(state)` (the table without raw
+    coordinates: two tables are the same when their signatures are), `checkInvariants`, `clusters`, `clusterFormula`,
+    `labelsOf(spec)`, `snapDial`. Units are table units (default `bounds` 100 x 60; the 3D view maps the plate onto them).
+  - **Actions** are one-key objects: `{pick: id|null}`, `{place: {piece?, at | to}}` (`at` = a drag, resolved by
+    `snap.resolveDrop`; `to` = a two-tap target: `tray:ID` `slot:ID` `container:ID` `rail:INDEX` `piece:ID` `free:X,Y`),
+    `{join: [a, b]}` (= place on a piece), `{split: id | [a, b]}`, `{pour: {from, to, what, amount}}`, `{setDial:
+    {fixture, dial, value}}`, `{run: fixtureId}`, `{flip: id}`, `{scale: {piece, factor}}`, `{predict: tokenId|null}`,
+    `{fetch: pointId}`, `{lay: tool|null}`. A drag and a two-tap that mean the same end in the same signature.
+  - **Kit interface** (`kits/registry.js`: `registerKit`, `getKit`, `radiusOf`; `kits/index.js` is where T1 imports
+    `./atoms.js`): `id`, `kinds {kind: {r}}`, `planJoin(a, b, state) -> {holds, reason?, link?}` (never a gatekeeper; a
+    pair that does not hold drifts apart and `last.reason` says why), `canJoin` (derived), `readPiece(id, state)` (DERIVED
+    from structure, so a split undoes a join), `formulaOf(ids, state)`, `chargeOf`, `run(state, fixtureId) -> {x, y,
+    label}|null` (the recorder appends it; nothing else invents a row), `tools {id: {label, press, active?, enabled?,
+    probe}}`, `maxScale`. Joins live in `state.links` (kit `link` data) with `piece.joinedTo` as the index. The throwaway
+    kit and stage that prove all of it are `tools/lib/table-fixture.mjs` (not imported by `src/`).
+  - `snap.js` (zone hit-test with slots before containers before trays before the rail; `joinCandidates` with the
+    planner's answer attached; `resolveDrop`/`pointFor` as inverses; only pieces on open table are join targets, a drop
+    on a zone is a drop into it), `rail.js` (`RailController`, `reorder`, `insertionIndex`, `gapsFor`,
+    `startArrangement`), `recorder.js` (`append`, `lay`, `lineOf`, `readY`, `readX`; a straightedge is two rows or two
+    points), `tools.js` (`BUILTIN_TOOLS.straightedge`, `toolDef`).
+  - **Widget `type: 'table'`** (`stagerunner.js`): `blankAnswer(stage).table` is the `TableState`; `runner.act(action)` is
+    the only way a view changes it and mirrors `state.choice` = the prediction token; `check(state)` reads `state.table`.
+    `SOLUTIONS[i]` / `MISSES[i]` are action scripts (arrays); a quest's `stateFor` calls `stateFromScript(stage, entry)`
+    (non-array entries pass through, so old shapes are untouched). The tabletop is `Tabletop(host, {onAction, tools})` in
+    `instruments.js` (= `Table2D` at every tier until T0b registers the built twin); `cfg.tableHost()` may name another
+    host element. `engine/table2d.js` extends `PlateBench`: press-move-release drags, tap-then-tap-target twin, rail pieces
+    slide apart, dials dragged, Run tapped, tool keys under the canvas; `drawTable`, `fixtureLayout` and the gesture
+    methods (`pointerDown/Move/Up`, in table units) are what `verify:table` drives. Not yet in the view: flip/scale/pour/
+    fetch gestures (T1/T2 bring them with their kits).
+  - **Order rails** (`engine/railview.js`, over `RailController`): all 14 `order` stages in 11 quests are drag-to-reorder
+    with the tap-piece-then-tap-gap twin; "Clear Order" is gone. They still write `state.order`, so every `check()`,
+    `SOLUTIONS` and `MISSES` entry is unchanged. New per-stage fields: `widget.rail: {first, last}` (the plain labels at
+    the left/right end; direction is fixed by them, and `verify:learn` holds them to the vocabulary gate) and optional
+    `widget.start` (used on `q8-trends` s5 and `q3-distance` s5, where the fixed shuffle landed on the answer). The start is
+    a fixed shuffle, never the declared order and never the answer (`verify:table`). Copy that said "tap" for placing
+    (miss messages, two hints) now says "put".
+  - **Catalogue** (`catalogue.js`): drag a card to a slot (ghost follows the pointer; the click that ends a drag is
+    swallowed); `board.strip: true` (declared on `q3-catalogue` s1 and s3) makes a drop on a filled slot push the row
+    along to the nearest gap (right first, then left; a full row returns the displaced card to the drawer); other boards
+    swap or return the card. `fileCard` is pure and shared. **For T0b:** `catalogue3d.js` already files by tap through
+    `fileCard` (twin rule kept, including pushing); dragging a BUILT card is the T0b half.
+  - **`npm run verify:table`** (in `verify`, after `verify:learn`): the throwaway stage is replayed by script, drag, two
+    taps and the drawn tabletop's own gestures; the stage runner is driven; misses, authored outcomes, label leaks, dead
+    tools/dials, layout and drawing are checked; every real `type: 'table'` stage gets the same treatment; the 14 rails
+    (including the DOM widget on a hand-made DOM), the catalogue strip, and the ratchet. **`tools/table-legacy.json`**
+    lists all 44 built quests (38 benches + 6 bosses): listed = unconverted; unlisted = converted, held to at most a
+    quarter of its stages as `choice` (so 2 of 8), each declared `widget.keep: 'reading'` (a prediction is a table token,
+    not a choice); a listed quest whose stages are all tables must have its line deleted; new quests get none.

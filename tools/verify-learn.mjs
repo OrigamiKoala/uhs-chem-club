@@ -59,6 +59,7 @@ const VSEPR = await import('../src/learn/engine/vsepr.js');
 const MOD = await import('../src/learn/engine/mo.js');
 const GAS = await import('../src/learn/engine/gasdata.js');
 const { recordCurve } = await import('../src/learn/engine/gasrig.js');
+const TABLE = await import('../src/learn/table/model.js');
 
 /**
  * Sentence count, done in a way that survives chemistry.
@@ -597,6 +598,10 @@ function checkStageTable(q, mod) {
         ...(st.widget?.options || []).flatMap(o => [o.label, o.note]),
         ...(st.widget?.bins || []).flatMap(b => [b.label, b.note]),
         st.widget?.label,
+        // A rail's ends and a table's pieces, trays and tokens are play copy too.
+        st.widget?.rail?.first,
+        st.widget?.rail?.last,
+        ...TABLE.labelsOf(st.table),
         solved?.msg,
         missed?.msg,
         empty?.msg
