@@ -16,6 +16,7 @@ import { TallowWorld } from "./tallow.js";
 import { LigarWorld } from "./ligar.js";
 import { LanternfallWorld } from "./lanternfall.js";
 import { BellowsWorld } from "./bellows.js";
+import { EmberReachWorld } from "./ember.js";
 import { FpsControls } from "./fps-controls.js";
 import { pickAimTarget, learnWorldAimTargets } from "./aim-target.js";
 import { TouchControls } from "./touch-controls.js";
@@ -45,6 +46,9 @@ const LANTERNFALL_EXPOSURE = 1.12;
 // Bellows is a deck above a sea of cloud under a high white sun: the cloud throws back almost
 // everything it is given, so it takes LESS exposure than the salt pan, as a bright overcast does.
 const BELLOWS_EXPOSURE = 0.86;
+// Ember Reach is pale sinter under a sulphur haze in the afternoon: brighter ground than
+// Ligar's basalt and a dimmer sky than the salt pan's, so it sits between the two.
+const EMBER_EXPOSURE = 0.98;
 // Erebus is a bright desert under a low sun: its sky and sand are lit to real
 // daylight levels in erebus/atmosphere.js, so it takes less than the ship.
 const EREBUS_EXPOSURE = 0.82;
@@ -81,6 +85,7 @@ class Stage {
     this.ligarWorld = null;
     this.lanternfallWorld = null;
     this.bellowsWorld = null;
+    this.emberWorld = null;
     // Whichever world the player is standing on. `mode === "world"` renders this
     // one; there is never more than one live at a time.
     this.activeWorld = null;
@@ -780,6 +785,10 @@ class Stage {
       if (!this.bellowsWorld) this.bellowsWorld = this.warmWorld(new BellowsWorld(this.renderer));
       return this.bellowsWorld;
     }
+    if (key === "ember") {
+      if (!this.emberWorld) this.emberWorld = this.warmWorld(new EmberReachWorld(this.renderer));
+      return this.emberWorld;
+    }
     return null;
   }
 
@@ -808,6 +817,7 @@ class Stage {
     if (key === "ligar") return LIGAR_EXPOSURE;
     if (key === "lanternfall") return LANTERNFALL_EXPOSURE;
     if (key === "bellows") return BELLOWS_EXPOSURE;
+    if (key === "ember") return EMBER_EXPOSURE;
     if (key === "erebus") return EREBUS_EXPOSURE;
     return SHIP_EXPOSURE;
   }
@@ -977,9 +987,17 @@ class Stage {
     this.enterLearnWorld(this.bellowsWorld, BELLOWS_EXPOSURE, focusSiteId, playerPos, lookAtPos);
   }
 
-  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar or Bellows. */
+  /** Walk out onto Ember Reach, the hydrothermal shelf (Learn world 05). */
+  enterEmberScene(focusSiteId = null, playerPos = null, lookAtPos = null) {
+    if (this.isTouch) gameMode.enterWorld();   // before the build, as above
+    this.worldFor("ember");
+    this.enterLearnWorld(this.emberWorld, EMBER_EXPOSURE, focusSiteId, playerPos, lookAtPos);
+  }
+
+  /** True when `w` is a Learn world built as a place — Tallow, Lanternfall, Ligar, Bellows or Ember Reach. */
   isLearnWorld(w) {
-    return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld || w === this.bellowsWorld);
+    return Boolean(w) && (w === this.tallowWorld || w === this.ligarWorld || w === this.lanternfallWorld ||
+      w === this.bellowsWorld || w === this.emberWorld);
   }
 
   /** Name what [E] would act on, or clear the prompt when it would act on nothing. */
@@ -1194,6 +1212,11 @@ class Stage {
   /** Light a Bellows site's indicator when its quest is finished. */
   setBellowsSiteComplete(questId, complete) {
     if (this.bellowsWorld) this.bellowsWorld.setSiteComplete(questId, complete);
+  }
+
+  /** Light an Ember Reach site's indicator when its quest is finished. */
+  setEmberSiteComplete(questId, complete) {
+    if (this.emberWorld) this.emberWorld.setSiteComplete(questId, complete);
   }
 
   /** Light a Ligar site's indicator when its quest is finished. */

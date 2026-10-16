@@ -769,6 +769,8 @@ with one API, and declarations checked by `verify:learn`.
 
 ### World 5 — Ember Reach (`unit05`, thermodynamics): 7 quests
 
+**Built (2026-10-15).** See `ember-reach-world.md` for what was built and where it parted from the stage lists below.
+
 #### `q1-flow` · Heat and Temperature · CED 6.1–6.3 · calorimeter
 1. Touch a hot block to a cold one and say where both end. → **thermal equilibrium**
 2. Say which way the energy went. → **heat**

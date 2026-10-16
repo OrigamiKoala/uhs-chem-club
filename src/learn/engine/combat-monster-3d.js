@@ -36,6 +36,7 @@ export class CombatMonster3D {
       this.species === 'the hopper' ||
       this.species === 'the lantern-eater' ||
       this.species === 'the compressor' ||
+      this.species === 'the crucible' ||
       this.species === 'basalt warden' && foe.id?.includes('warden')
     );
 
@@ -123,6 +124,9 @@ export class CombatMonster3D {
         break;
       case 'the compressor':
         this.buildTheCompressor();
+        break;
+      case 'the crucible':
+        this.buildTheCrucible();
         break;
       case 'recipe golem':
         this.buildRecipeGolem();
@@ -833,6 +837,76 @@ export class CombatMonster3D {
       ram.position.set(side * 0.95, 0.1, 0.4);
       body.add(ram);
       this.rams.push({ mesh: ram, side });
+    }
+  }
+
+  /* -------------------------------------------------------------
+     8b. THE CRUCIBLE — Geothermal Smelting Vessel Boss
+     ------------------------------------------------------------- */
+  buildTheCrucible() {
+    const shellMat = this.mat(new THREE.MeshStandardMaterial({
+      color: 0x35312e,
+      roughness: 0.72,
+      metalness: 0.58,
+      flatShading: true
+    }));
+    const brassMat = this.mat(new THREE.MeshStandardMaterial({
+      color: 0xb88a3d,
+      roughness: 0.35,
+      metalness: 0.85
+    }));
+    const magmaMat = this.mat(new THREE.MeshBasicMaterial({ color: MAGMA }));
+
+    const body = new THREE.Group();
+    body.position.y = 1.05;
+    this.group.add(body);
+    this.animatedParts.push({ obj: body, type: 'breathe', amp: 0.04, speed: 2.0 });
+
+    const pot = new THREE.Mesh(
+      this.own(new THREE.CylinderGeometry(0.78, 0.54, 1.35, 10)),
+      shellMat
+    );
+    body.add(pot);
+
+    const hoop = new THREE.Mesh(
+      this.own(new THREE.TorusGeometry(0.74, 0.06, 8, 18)),
+      brassMat
+    );
+    hoop.rotation.x = Math.PI / 2;
+    hoop.position.y = 0.25;
+    body.add(hoop);
+
+    const core = new THREE.Mesh(
+      this.own(new THREE.BoxGeometry(0.48, 0.38, 0.12)),
+      magmaMat
+    );
+    core.position.set(0, 0.05, 0.66);
+    body.add(core);
+
+    const light = this.own(new THREE.PointLight(MAGMA, 1.8, 3.6));
+    light.position.set(0, 0.15, 0.85);
+    body.add(light);
+    this.coreLight = light;
+
+    for (const side of [-1, 1]) {
+      const trunnion = new THREE.Group();
+      trunnion.position.set(side * 0.9, 0.25, 0);
+      body.add(trunnion);
+
+      const arm = new THREE.Mesh(
+        this.own(new THREE.CylinderGeometry(0.18, 0.22, 0.85, 8)),
+        brassMat
+      );
+      arm.position.y = -0.35;
+      trunnion.add(arm);
+
+      const clamp = new THREE.Mesh(
+        this.own(new THREE.BoxGeometry(0.38, 0.45, 0.55)),
+        shellMat
+      );
+      clamp.position.set(side * 0.05, -0.75, 0.25);
+      trunnion.add(clamp);
+      this.animatedParts.push({ obj: trunnion, type: 'sway', side, speed: 1.8, amp: 0.09 });
     }
   }
 

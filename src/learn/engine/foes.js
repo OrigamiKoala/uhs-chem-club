@@ -30,6 +30,7 @@
 import { LATTICES } from './bonddata.js';
 import { planDomains, planDipole, planTwist, planMix } from './vsepr.js';
 import { planGas, planMixture, mixtureState, leftAfter } from './gasdata.js';
+import { gibbsFreeEnergy, hessStackEnthalpy, bondEnthalpySum } from './thermodata.js';
 
 /**
  * How the Compressor answers a push, as a ratio of the push now to the push the stage
@@ -214,6 +215,51 @@ export const SPECIES = {
       ionized: () => 'The eater flickers as electrons are knocked loose.'
     },
     plan(enc, foe, probe) {
+      return { pose: probe?.pose || 'unmoved' };
+    }
+  },
+
+  'the crucible': {
+    name: 'The Crucible',
+    counter: 'Trial missed: the furnace heat or free-energy balance does not match that setting.',
+    knockback: 'Knocked back. The furnace vessel seals again, but every enthalpy and entropy reading on your bench remains.',
+    hit: 'The crucible splits along its firebrick seams and cools into dark slag.',
+    lines: {
+      idle: () => 'The firebrick shell holds its heat.',
+      unmoved: () => 'The crucible shell holds steady.',
+      heated: () => 'Heat surges across the vessel wall.',
+      cracked: () => 'A hairline seam opens across the firebrick.',
+      vented: () => 'Steam and flue gas pour from the top vent.'
+    },
+    plan(enc, foe, probe) {
+      if (probe?.kind === 'thermo') {
+        const it = probe.item || {};
+        const cfg = probe.cfg || {};
+        if (it.head === 'gibbs') {
+          const T = (cfg.dialKey === 'temp' && cfg.dialValue != null) ? cfg.dialValue : (it.T ?? 298);
+          const coupledOn = it.coupled && (it.coupled.active || cfg.toggled);
+          const dG = gibbsFreeEnergy(it.dH ?? 6.01, it.dS ?? 22.0, T) + (coupledOn ? (it.coupled.dG2 ?? 0) : 0);
+          return { pose: dG < 0 ? 'vented' : 'heated', dG, T };
+        }
+        if (it.head === 'hess') {
+          const cardState = cfg.cardState || {};
+          const steps = (it.cards || []).map(c => ({
+            dH: c.dH,
+            flip: cardState[c.id]?.flip ?? Boolean(c.flip),
+            mult: cardState[c.id]?.mult ?? (c.mult ?? 1)
+          }));
+          const dH = hessStackEnthalpy(steps);
+          return { pose: dH < 0 ? 'heated' : 'cracked', dH };
+        }
+        if (it.head === 'bonds') {
+          const sums = bondEnthalpySum(it.broken || [], it.formed || []);
+          return { pose: sums.net < 0 ? 'heated' : 'cracked', dH: sums.net };
+        }
+        if (it.head === 'cup' || it.head === 'contact' || it.head === 'diagram') {
+          return { pose: cfg.toggled ? 'vented' : 'heated' };
+        }
+        return { pose: 'unmoved' };
+      }
       return { pose: probe?.pose || 'unmoved' };
     }
   }
@@ -402,8 +448,21 @@ function compressorArt(pose, plan = {}) {
   return svg(block + head + wheel + legs, 'The Compressor');
 }
 
+function crucibleArt(pose, plan = {}) {
+  const bowl = `<polygon points="16,14 48,14 42,42 22,42" fill="${BODY}" stroke="${EDGE}" stroke-width="1.5" stroke-linejoin="round"/>`;
+  const rim = `<rect x="14" y="10" width="36" height="5" rx="1" fill="${EDGE}" stroke="${INK}" stroke-width="0.9"/>`;
+  const trunnions = `<rect x="10" y="22" width="6" height="6" fill="${EDGE}"/><rect x="48" y="22" width="6" height="6" fill="${EDGE}"/>`;
+  const legs = `<path d="M24 42 L20 48 M40 42 L44 48" stroke="${EDGE}" stroke-width="2"/>`;
+  if (pose === 'heated') return svg(bowl + rim + trunnions + legs + `<circle cx="32" cy="28" r="7" fill="${LIT}" opacity="0.7"/>`, 'The Crucible, heated');
+  if (pose === 'cracked') return svg(bowl + rim + trunnions + legs + `<path d="M26 16 L33 28 L29 40" stroke="${LIT}" stroke-width="1.8" fill="none"/>`, 'The Crucible, cracked');
+  if (pose === 'vented') return svg(bowl + rim + trunnions + legs + `<path d="M26 10 q2 -5 6 -6 M36 10 q3 -4 6 -5" stroke="${LIT}" stroke-width="1.5" fill="none"/>`, 'The Crucible, venting');
+  if (pose === 'dispersed') return svg(`<g opacity="0.35">${bowl + rim + trunnions + legs}</g>`, 'The Crucible, cooled');
+  return svg(bowl + rim + trunnions + legs, 'The Crucible');
+}
+
 /** The portrait of a species in a pose, as an SVG string. */
 export function portraitSvg(species, pose = 'idle', plan = {}) {
+  if (species === 'the crucible') return crucibleArt(pose, plan);
   if (species === 'the compressor') return compressorArt(pose, plan);
   if (species === 'the hopper') return hopperArt(pose, plan);
   if (species === 'basalt warden') return wardenArt(pose, plan);

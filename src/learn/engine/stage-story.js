@@ -118,6 +118,36 @@ export const STAGE_STORY = {
     1: 'The Fifth packed the station tanks tighter than any gas law was meant for.'
   },
 
+  /* ---- Ember Reach: trace the Fifth Guild's geothermal siphon ---- */
+  'q1-flow': {
+    1: 'Two basalt manifold blocks glow beside the caldera rim, waiting for Vess to bridge them.',
+    8: 'Four unmarked vent lines hiss into the station.'
+  },
+  'q2-calorimetry': {
+    1: 'The geothermal cooling jackets need a calibrated water bath before the main valves open.',
+    8: 'A technician left the cover off the reserve bath.'
+  },
+  'q3-enthalpy': {
+    1: 'The Fifth left fuel canisters along the ridge, and Vess needs to know what each charge delivers.',
+    8: 'Three fuel tanks stand ready for the ascent skiff.'
+  },
+  'q4-bonds': {
+    1: 'The siphon’s cracking coil pulls gas molecules apart over the vent.',
+    6: 'A scorched ledger beside the burner asks where the flame’s energy truly originates.'
+  },
+  'q5-hess': {
+    1: 'The direct vent shaft is sealed, so Vess must chart a multi-step route to the same depth.',
+    8: 'One last sealed flue pipe hides its formation mark.'
+  },
+  'q6-entropy': {
+    2: 'A burst bypass valve scatters vent gas into an evacuated chamber.',
+    7: 'The caldera’s limestone rim cracks into escaping gas.'
+  },
+  'q7-gibbs': {
+    1: 'Some vent pipes run without pumps while others stall the moment the current drops.',
+    8: 'The Crucible’s outer lock waits for the right furnace setting.'
+  },
+
   /* ---- Kettle: halt the robot foundry ---- */
   'q1-recipe': {
     1: 'Vess holds three scoops from three foundry floors.'

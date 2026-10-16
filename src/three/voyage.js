@@ -91,6 +91,14 @@ export const DESTINATIONS = {
       atmo: '#b9cdee', atmoStrength: 0.66, seed: [4.4, 2.8, 1.9]
     }
   },
+  ember: {
+    key: 'ember', name: 'Ember Reach', hash: '#/learn/unit05',
+    descent: 'Descending to the pad',
+    planet: {
+      kind: 'volcanic', colors: ['#3b2c24', '#8c6a4a', '#c9b48a', '#e0662a'],
+      atmo: '#c79a62', atmoStrength: 0.58, seed: [6.3, 1.7, 4.1]
+    }
+  },
   ligar: {
     key: 'ligar', name: 'Ligar', hash: '#/learn/unit03',
     descent: 'Descending to the pad',

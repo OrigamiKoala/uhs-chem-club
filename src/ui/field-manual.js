@@ -638,6 +638,50 @@ for (const [questId, bench, stage, term, title, body] of BELLOWS) {
   });
 }
 
+const EMBER_REACH = [
+  ['q1-flow', 1, 1, 'Thermal Equilibrium', 'One Shared Temperature', 'When two bodies in contact reach the same temperature, net heat flow between them stops because random collisions trade equal energy both ways.'],
+  ['q1-flow', 1, 2, 'Heat', 'Energy in Transit', 'Energy moving from a hotter body to a colder one because of their temperature difference, written q and measured in joules.'],
+  ['q1-flow', 1, 4, 'Temperature', 'Average Kinetic Energy', 'A measure of the average kinetic energy per particle, whereas total thermal energy also depends on how many particles are present.'],
+  ['q1-flow', 1, 6, 'Specific Heat Capacity', 'Joules per Gram per Degree', 'The heat needed to raise one gram of a substance by one degree Celsius, written c and measured in J/(g·°C).'],
+  ['q1-flow', 1, 7, 'Heat Transfer Equation', 'q = mcΔT', 'The heat gained or lost by a sample equals its mass times its specific heat capacity times its change in temperature.'],
+  ['q2-calorimetry', 2, 1, 'System and Surroundings', 'What Reacts vs. What Catches', 'The system is the reaction or sample under study; the surroundings are the water bath and apparatus that exchange heat with it.'],
+  ['q2-calorimetry', 2, 2, 'First Law of Thermodynamics', 'Energy Is Conserved', 'Energy is neither created nor destroyed; inside an insulated calorimeter, q_system + q_surroundings = 0.'],
+  ['q2-calorimetry', 2, 3, 'Calorimeter', 'Weighing Heat in Water', 'An insulated vessel that traps heat in a known mass of water so a thermometer can measure the energy transferred.'],
+  ['q2-calorimetry', 2, 6, 'Molar Enthalpy of Reaction', 'Heat per Mole Reacted', 'The heat change at constant pressure divided by the moles of reaction, ΔH = q_rxn / n, in kJ/mol.'],
+  ['q3-enthalpy', 3, 1, 'Exothermic', 'Heat Leaves the System', 'A process that releases heat to the surroundings so the surroundings warm up and ΔH is negative (ΔH < 0).'],
+  ['q3-enthalpy', 3, 2, 'Endothermic', 'Heat Enters the System', 'A process that absorbs heat from the surroundings so the surroundings cool down and ΔH is positive (ΔH > 0).'],
+  ['q3-enthalpy', 3, 3, 'Enthalpy (H)', 'The Heat Ledger at Constant Pressure', 'A state function whose change ΔH equals the heat absorbed or released at constant pressure.'],
+  ['q3-enthalpy', 3, 4, 'Enthalpy Diagram', 'Ledges of Chemical Potential', 'A vertical chart comparing the enthalpy of reactants and products; dropping down releases heat and climbing up absorbs it.'],
+  ['q3-enthalpy', 3, 5, 'Thermochemical Equation', 'Stoichiometry of Heat', 'A balanced chemical equation accompanied by its ΔH, where reversing flips the sign and scaling multiplies ΔH.'],
+  ['q4-bonds', 4, 1, 'Bond Dissociation Energy', 'Pulling Two Atoms Apart', 'The energy required to break one mole of a given covalent bond in the gas phase, always positive.'],
+  ['q4-bonds', 4, 5, 'Bond Enthalpy', 'Average Cost Across Molecules', 'The average enthalpy change for breaking one mole of a given bond type across gaseous molecules.'],
+  ['q5-hess', 5, 1, 'State Function', 'Altitude, Not Trail Length', 'A property whose change depends only on the initial and final states, never on the path taken between them.'],
+  ['q5-hess', 5, 2, "Hess's Law", 'Steps Add to the Same Climb', 'If a reaction is the sum of several steps, its overall ΔH is the sum of the ΔH values of those steps.'],
+  ['q5-hess', 5, 5, 'Standard Enthalpy of Formation (ΔH°f)', 'Measured from the Elements', 'The enthalpy change when one mole of a compound forms from its elements in their standard states (where elements sit at 0 kJ/mol).'],
+  ['q6-entropy', 6, 1, 'Spontaneous Process', 'Runs Without Outside Push', 'A process that proceeds on its own under a given set of conditions without continuous outside work.'],
+  ['q6-entropy', 6, 3, 'Microstate (W)', 'One Specific Arrangement', 'A single microscopic arrangement of particles and their energies that produces a given macroscopic state.'],
+  ['q6-entropy', 6, 4, 'Entropy (S)', 'Counting the Ways', 'A measure of how dispersed the energy and matter of a system are across available microstates, S = k_B ln W.'],
+  ['q6-entropy', 6, 5, 'Positional Entropy', 'Solid to Liquid to Gas', 'Entropy rises sharply from solid to liquid to gas and when a gas expands or has more moles of gas products.'],
+  ['q7-gibbs', 7, 1, 'Second Law of Thermodynamics', 'Total Entropy Rises', 'Every spontaneous process increases the total entropy of the universe, ΔS_univ = ΔS_sys + ΔS_surr > 0.'],
+  ['q7-gibbs', 7, 2, 'Gibbs Free Energy (G)', 'Universe Entropy in System Terms', 'G = H − TS; at constant temperature and pressure, ΔG = ΔH − TΔS = −TΔS_univ, so ΔG < 0 means spontaneous.'],
+  ['q7-gibbs', 7, 6, 'Crossover Temperature', 'Where ΔH and TΔS Balance', 'The temperature T = ΔH / ΔS at which ΔG = 0 and a reaction switches between non-spontaneous and spontaneous.'],
+  ['q7-gibbs', 7, 8, 'Coupled Reactions', 'Spending Free Energy', 'Driving a non-spontaneous reaction (ΔG > 0) by pairing it with a shared-intermediate reaction whose negative ΔG makes the sum negative.']
+];
+
+for (const [questId, bench, stage, term, title, body] of EMBER_REACH) {
+  FIELD_MANUAL_TERMS.push({
+    id: `u5_${questId.split('-')[0]}_s${stage}_${term.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`,
+    term,
+    road: 'unit05',
+    questKey: `unit05/${questId}`,
+    stageLabel: `Bench ${bench}, Stage ${stage}`,
+    stageIndex: stage - 1,
+    route: `#/learn/unit05/${questId}`,
+    title,
+    body
+  });
+}
+
 /**
  * Checks whether a term is earned based on session state.
  */
@@ -666,7 +710,8 @@ export function getFieldManualStats(sessionState = {}) {
     unit01: { total: 0, earned: 0 },
     unit02: { total: 0, earned: 0 },
     unit03: { total: 0, earned: 0 },
-    unit04: { total: 0, earned: 0 }
+    unit04: { total: 0, earned: 0 },
+    unit05: { total: 0, earned: 0 }
   };
 
   for (const t of FIELD_MANUAL_TERMS) {
@@ -716,6 +761,7 @@ export function renderFieldManualModal(sessionState = {}, activeFilter = 'all') 
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit02' ? 'active' : ''}" data-filter="unit02">Lanternfall (${stats.byRoad.unit02.earned}/${stats.byRoad.unit02.total})</button>
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit03' ? 'active' : ''}" data-filter="unit03">Ligar (${stats.byRoad.unit03.earned}/${stats.byRoad.unit03.total})</button>
         <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit04' ? 'active' : ''}" data-filter="unit04">Bellows (${stats.byRoad.unit04.earned}/${stats.byRoad.unit04.total})</button>
+        <button type="button" class="btn-chip fm-filter-btn ${activeFilter === 'unit05' ? 'active' : ''}" data-filter="unit05">Ember Reach (${stats.byRoad.unit05.earned}/${stats.byRoad.unit05.total})</button>
       </div>
 
       <div class="field-manual-grid">

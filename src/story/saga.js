@@ -89,6 +89,14 @@ export const CLUES = {
     name: 'The Warm Gas Tank',
     summary: 'A sealed tank from enemy hijackers that stayed hot for nearly two weeks in sub-zero winds.',
     note: 'Normal gases cool down in cold air. The only way this tank stayed hot is if a radioactive heat cell was hidden inside.'
+  },
+  clue_ember_siphon: {
+    id: 'clue_ember_siphon',
+    act: 'act2',
+    source: 'Ember Reach Boss · The Crucible',
+    name: 'The Siphon Manifold',
+    summary: 'A high-capacity geothermal heat exchanger tapped into the caldera main.',
+    note: 'The siphon routed megawatts of thermal energy away from the shelters without venting any steam to the sky. The raiders were feeding a hidden endothermic process below the crust.'
   }
 };
 
@@ -269,6 +277,8 @@ export const EPISODES = {
     arrival: 'We have dropped over the volcanic plants of Ember Reach. The raiders are siphoning underground heat, leaving the civilian shelters without warmth.',
     closing: 'The heat lines are restored and the shelters are warm again. Our telemetry shows the raiders pumped the stolen heat down into an underground bunker.',
     spoilFamily: 'Slag crucibles',
+    bossId: 'boss-crucible',
+    clueId: 'clue_ember_siphon',
     paragraphs: [
       'Ember Reach is an active volcanic world. Colonies here survive by tapping the heat from underground magma pools to generate electricity and keep their homes warm.',
       'The raiders attached giant cooling siphons to the main heat pipes, stealing energy and routing it away from the towns. If the heat stops flowing, the power generators will shut down and the colonies will freeze.',

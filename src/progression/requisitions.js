@@ -310,6 +310,16 @@ export const REQUISITIONS = [
     apply: (state) => { state.quarters = state.quarters || {}; state.quarters.gauge_bellows = true; }
   },
   {
+    id: 'quarters_ember_calorimeter',
+    kind: 'quarters',
+    name: 'Ember Reach Calorimeter',
+    line: 'A double-walled copper calorimeter cup with a glass thermometer sealed in its lid.',
+    finish: 'brass',
+    source: { commendation: 'ember_surveyed' },
+    tokenColor: 'var(--accent-amber)',
+    apply: (state) => { state.quarters = state.quarters || {}; state.quarters.calorimeter_ember = true; }
+  },
+  {
     id: 'privilege_comms_relay',
     kind: 'privilege',
     name: 'Comms Relay Feed',

@@ -2853,8 +2853,14 @@ body.bench-deployed .modal-container .modal-card {
 .scope-grid.scope-n1 .scope-aperture.gas-aperture.gas-tall { aspect-ratio: 16 / 10; }
 .scope-grid.gas-grid { grid-template-columns: minmax(0, 1fr); }
 .scope-grid.gas-grid.scope-n2, .scope-grid.gas-grid.scope-n3, .scope-grid.gas-grid.scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* THE CALORIMETER — Ember Reach (engine/calorimeter.js). */
+.scope-aperture.calorimeter-aperture { aspect-ratio: 16 / 10; }
+.scope-grid.scope-n1 .scope-aperture.calorimeter-aperture { aspect-ratio: 16 / 9; }
+.scope-grid.calorimeter-grid { grid-template-columns: minmax(0, 1fr); }
+.scope-grid.calorimeter-grid.scope-n2, .scope-grid.calorimeter-grid.scope-n3, .scope-grid.calorimeter-grid.scope-n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 620px) {
-  .scope-grid.gas-grid.scope-n2, .scope-grid.gas-grid.scope-n3, .scope-grid.gas-grid.scope-n4 { grid-template-columns: minmax(0, 1fr); }
+  .scope-grid.gas-grid.scope-n2, .scope-grid.gas-grid.scope-n3, .scope-grid.gas-grid.scope-n4,
+  .scope-grid.calorimeter-grid.scope-n2, .scope-grid.calorimeter-grid.scope-n3, .scope-grid.calorimeter-grid.scope-n4 { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 620px) {
   .scope-grid.bond-grid.scope-n2, .scope-grid.bond-grid.scope-n3, .scope-grid.bond-grid.scope-n4,

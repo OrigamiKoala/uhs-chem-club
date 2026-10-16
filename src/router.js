@@ -198,7 +198,7 @@ function voyageTargetFor(raw) {
   if (!canWalk(m.params.worldId)) return null;
   const w3d = world3dFor(m.params.worldId);
   if (!w3d) return null;
-  const key = String(w3d.worldName).toLowerCase();
+  const key = w3d.key || String(w3d.worldName).toLowerCase();
   const hash = `#/learn/${m.params.worldId}`;
   if (m.params.questId) {
     // Lead to the bench only if the quest there is one the player may open;

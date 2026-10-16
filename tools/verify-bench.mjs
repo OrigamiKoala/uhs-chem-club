@@ -1456,6 +1456,110 @@ await bellowsPasses();
 
 
 
+/* ================================================================ EMBER REACH
+
+   Seven benches round a hot spring, and ONE built instrument, the calorimeter,
+   with seven heads: contact, cup, diagram, bonds, hess, box and gibbs. Each quest
+   is measured on its OWN site's plate, in its own shelter, at the same six
+   aspects. It is fed the widest stage each quest declares and the stage with the
+   most dials, and then every stage every Ember Reach quest declares, the boss's
+   five included, is put through the built instrument and pressed through the real
+   pointer path. The Crucible has no site of its own (it is fought at the rim, as
+   every boss is fought on open ground); its phases stand on the first bench's plate. */
+
+const { EmberReachWorld } = await import('../src/three/ember.js');
+const { Calorimeter3D } = await import('../src/learn/engine/calorimeter3d.js');
+const THERMO = await import('../src/learn/engine/thermodata.js');
+
+const EMBER_IDS = ['q1-flow', 'q2-calorimetry', 'q3-enthalpy', 'q4-bonds', 'q5-hess', 'q6-entropy', 'q7-gibbs', 'boss-crucible'];
+const EM = {};
+for (const id of EMBER_IDS) EM[id] = await import(`../src/learn/quests/unit05/${id}.js`);
+
+world = new EmberReachWorld(null);
+world.scene.updateMatrixWorld(true);
+console.log('');
+checkFacing();
+
+/** The plate a quest is worked on: its own site, or the first bench's for the boss. */
+const emberSite = id => (world.benchAnchor(id) ? id : 'q1-flow');
+function layThermo(bench, st) {
+  bench.setRigs(st.rigs, THERMO.benchCfg(st, {}));
+}
+const emberWidest = id => EM[id].STAGES.reduce((a, b) => (b.rigs.length > a.rigs.length ? b : a));
+const emberDial = id => EM[id].STAGES.find(st => st.dial?.values?.length > 1);
+
+{
+  const mark = failures;
+  for (const id of EMBER_IDS) {
+    const build = (c, a) => new Calorimeter3D(null, { world: worldFrame(c, a) });
+    check(emberSite(id), `calorimeter (${id})`, build, bench => layThermo(bench, emberWidest(id)));
+    const dialed = emberDial(id);
+    if (dialed && dialed !== emberWidest(id)) {
+      check(emberSite(id), `calorimeter (${id}), dial stage`, build, bench => layThermo(bench, dialed));
+    }
+  }
+  if (failures === mark) ok(`the calorimeter frames every body and control at ${ASPECTS.length} aspects on all eight Ember Reach benches`);
+}
+
+/* EVERY STAGE, THROUGH THE REAL POINTER PATH. */
+async function emberPasses() {
+  globalThis.requestAnimationFrame ??= () => 0;
+  globalThis.cancelAnimationFrame ??= () => {};
+  const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+  const screenPoint = (station, px, py) => {
+    const mesh = station.screen.mesh;
+    mesh.updateMatrixWorld(true);
+    const size = mesh.geometry.parameters;
+    return new THREE.Vector3(
+      (px / station.screen.w - 0.5) * size.width, (0.5 - py / station.screen.h) * size.height, 0
+    ).applyMatrix4(mesh.matrixWorld);
+  };
+  const center = h => (h.r !== undefined ? [h.x, h.y] : [(h.x0 + h.x1) / 2, (h.y0 + h.y1) / 2]);
+
+  for (const id of EMBER_IDS) {
+    const anchor = world.benchAnchor(emberSite(id));
+    world.setBenchDeployed(emberSite(id), true);
+    let probed = null;
+    const bench = new Calorimeter3D(null, { world: worldFrame(camera, anchor) });
+    bench.onProbe = hit => { probed = hit; };
+    const pressAt = p => {
+      const q = p.clone().project(camera);
+      bench.onPointer3D({ clientX: (q.x + 1) / 2 * 1280, clientY: (1 - q.y) / 2 * 720, preventDefault() {} });
+    };
+    let plates = 0, pressed = 0;
+    const stages = EM[id].STAGES;
+    for (let i = 0; i < stages.length; i++) {
+      const st = stages[i];
+      layThermo(bench, st);
+      if (bench.stations.length !== st.rigs.length) {
+        fail(`${id} stage ${i + 1}: ${st.rigs.length} plates declared, ${bench.stations.length} stations built`);
+        continue;
+      }
+      bench.drawAll();
+      bench.viewer.applyCamera();
+      camera.updateMatrixWorld(true);
+      for (const rec of bench.stations) {
+        plates++;
+        const where = `${id} stage ${i + 1} ${rec.item.label}`;
+        if (rec.station.screen.w < 8) fail(`${where}: the screen has no pixels`);
+        const hit = rec.hits?.find(h => h.key !== 'hand');
+        if (!hit) continue;
+        probed = null;
+        pressAt(screenPoint(rec.station, ...center(hit)));
+        if (!probed) fail(`${where}: a press on the picture (${hit.key}) read nothing`);
+        else if (probed.plateId !== rec.item.id) fail(`${where}: a press read plate ${probed.plateId}`);
+        pressed++;
+      }
+    }
+    bench.dispose();
+    world.setBenchDeployed(emberSite(id), false);
+    ok(`${id}: all ${stages.length} stages built, ${plates} plates drawn and ${pressed} pressed through the real pointer path`);
+  }
+}
+await emberPasses();
+
+
+
 /* ================================================================ THE FOES
 
    PHASE 5 OF docs/plans/storyline-and-combat.md: at T4 a stage that is a fight
@@ -1845,6 +1949,28 @@ console.log('The foes — spoil standing in the wells\n');
   });
   // The Compressor has no site of its own; its five phases stand on the first bench's plate.
   await foePasses(bellowsCfg('q1-knocks', 'gas rig (the Compressor)'), BW['boss-compressor'].STAGES, gasProbes);
+
+  // EMBER REACH: the Crucible over the boss's five phases, on the first bench's plate.
+  // (`world` becomes Ember Reach.)
+  world = new EmberReachWorld(null);
+  world.scene.updateMatrixWorld(true);
+  const thermoProbes = (st, enc) => {
+    if (!enc) return [];
+    const cfg = THERMO.benchCfg(st, {});
+    return enc.foes.flatMap(f => {
+      const item = st.rigs.find(r => r.id === f.id);
+      return [
+        [f.id, { kind: 'thermo', item, cfg }],
+        [f.id, { kind: 'thermo', item, cfg: { ...cfg, toggled: true } }]
+      ];
+    });
+  };
+  const emberCfg = {
+    questId: 'q1-flow', label: 'calorimeter (the Crucible)',
+    build: (camera, anchor) => new Calorimeter3D(null, { world: worldFrame(camera, anchor) }),
+    lay: (bench, st) => layThermo(bench, st), items: st => st.rigs || [], select: false
+  };
+  await foePasses(emberCfg, EM['boss-crucible'].STAGES, thermoProbes);
 }
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

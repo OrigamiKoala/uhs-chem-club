@@ -1523,7 +1523,8 @@ async function checkDrawn(q, mod) {
     const rigHeads = ['hub', 'show', 'field', 'mixer', 'twist'];
     const ligarHeads = [...bondHeads, ...slateHeads, ...rigHeads];
     const gasHeads = ['cylinder', 'mixture', 'leak', 'tube', 'path', 'record'];
-    const lightRigs = (st.rigs || []).filter(r => !rackHeads.includes(r.head) && !electronHeads.includes(r.head) && !ligarHeads.includes(r.head) && !gasHeads.includes(r.head));
+    const thermoHeads = ['contact', 'cup', 'diagram', 'bonds', 'hess', 'box', 'gibbs'];
+    const lightRigs = (st.rigs || []).filter(r => !rackHeads.includes(r.head) && !electronHeads.includes(r.head) && !ligarHeads.includes(r.head) && !gasHeads.includes(r.head) && !thermoHeads.includes(r.head));
 
     // Ligar's three plate benches. The declaration is held to the real tables,
     // then every plate is drawn at phone and bench size.
@@ -1672,6 +1673,23 @@ async function checkDrawn(q, mod) {
         if ((raw.head === 'leak' || raw.head === 'tube') && !(st.times?.length > 1)) { fail(`${label}: plate "${raw.id}" needs a time dial`); bad++; }
         const item = proto.prepare.call(bench, raw);
         item.trail = [{ n: raw.n || 1, T: raw.T || 300, V: raw.V || 10, P: 100, Z: 1, key: 'a' }];
+        cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
+      }
+    }
+    const thermoRigs = (st.rigs || []).filter(r => thermoHeads.includes(r.head));
+    if (thermoRigs.length) {
+      const { Calorimeter } = await import('../src/learn/engine/calorimeter.js');
+      const TD = await import('../src/learn/engine/thermodata.js');
+      const proto = Calorimeter.prototype;
+      const bench = Object.create(proto);
+      bench.clock = 0.6;
+      bench.cfg = { ...Calorimeter.blankCfg(), ...TD.benchCfg(st, {}) };
+      const ids = new Set();
+      for (const raw of thermoRigs) {
+        if (ids.has(raw.id)) { fail(`${label}: two plates share the id "${raw.id}"`); bad++; }
+        ids.add(raw.id);
+        if (!raw.label) { fail(`${label}: plate "${raw.id}" has no label`); bad++; }
+        const item = proto.prepare.call(bench, raw);
         cases.push([`plate ${raw.id}`, (ctx, w, h) => proto.draw.call(bench, ctx, w, h, item, { sweep: 0, probe: null, bench })]);
       }
     }

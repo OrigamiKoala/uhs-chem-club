@@ -1,7 +1,7 @@
 /**
  * worlds3d.js — Which Learn worlds you can walk on, and how to get there.
  *
- * The Learn road charts fourteen worlds. Four of them — Tallow, Lanternfall, Ligar and Bellows — are built
+ * The Learn road charts fourteen worlds. Five of them — Tallow, Lanternfall, Ligar, Bellows and Ember Reach — are built
  * as places you stand in, at T4. This file is the registry that says so, and it
  * is the only thing that needs editing when another world is built.
  *
@@ -15,9 +15,11 @@ import tallowData from '../three/world-data/tallow.json' with { type: 'json' };
 import ligarData from '../three/world-data/ligar.json' with { type: 'json' };
 import lanternfallData from '../three/world-data/lanternfall.json' with { type: 'json' };
 import bellowsData from '../three/world-data/bellows.json' with { type: 'json' };
+import emberData from '../three/world-data/ember.json' with { type: 'json' };
 
 /**
  * A walkable Learn world.
+ *   key                   — the voyage's name for it (`DESTINATIONS`, `stage.worldFor`)
  *   enter(stage, siteId)  — put the player on the ground, optionally at a site
  *   siteForQuest(questId) — the site a quest is played at, or null
  */
@@ -73,6 +75,25 @@ const WORLDS_3D = {
       for (const site of bellowsData.sites) {
         if (!site.built) continue;
         stage.setBellowsSiteComplete(site.questId, Boolean(isComplete(site.questId)));
+      }
+    }
+  },
+  unit05: {
+    id: 'unit05',
+    key: 'ember',
+    worldName: 'Ember Reach',
+    data: emberData,
+    enter(stage, siteId = null, playerPos = null, lookAtPos = null) {
+      stage.enterEmberScene(siteId, playerPos, lookAtPos);
+    },
+    siteForQuest(questId) {
+      return emberData.sites.find(s => s.questId === questId) || null;
+    },
+    /** Light the site indicator for every quest the player has finished. */
+    syncProgress(stage, isComplete) {
+      for (const site of emberData.sites) {
+        if (!site.built) continue;
+        stage.setEmberSiteComplete(site.questId, Boolean(isComplete(site.questId)));
       }
     }
   },

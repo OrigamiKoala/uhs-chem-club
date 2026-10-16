@@ -693,8 +693,128 @@ export function buildLanternEater(foe) {
   return body;
 }
 
+/* ------------------------------------------------------------------
+   THE CRUCIBLE
+   A trunnion-mounted refractory furnace pot with a clamping lid and flue vent.
+   ------------------------------------------------------------------ */
+
+export function buildCrucible(foe) {
+  const group = new THREE.Group();
+  group.name = `crucible:${foe.id}`;
+
+  const shadow = contactShadow(0.15);
+  group.add(shadow);
+
+  const owned = [];
+  const own = g => { owned.push(g); return g; };
+  const rig = new THREE.Group();
+  group.add(rig);
+
+  const iron = boilerMaterial();
+  const brass = brassMaterial();
+
+  const potGeo = own(new THREE.CylinderGeometry(0.052, 0.038, 0.085, 14));
+  enableAO(potGeo);
+  const pot = new THREE.Mesh(potGeo, iron);
+  pot.position.set(0, 0.062, 0);
+  pot.castShadow = true;
+  rig.add(pot);
+
+  const ringGeo = own(new THREE.TorusGeometry(0.054, 0.005, 8, 20));
+  const ring = new THREE.Mesh(ringGeo, brass);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.set(0, 0.072, 0);
+  rig.add(ring);
+
+  const trunnionGeo = own(new THREE.BoxGeometry(0.13, 0.012, 0.012));
+  const trunnion = new THREE.Mesh(trunnionGeo, iron);
+  trunnion.position.set(0, 0.072, 0);
+  rig.add(trunnion);
+
+  const lidGeo = own(new THREE.CylinderGeometry(0.048, 0.052, 0.014, 14));
+  enableAO(lidGeo);
+  const lid = new THREE.Mesh(lidGeo, brass);
+  lid.position.set(0, 0.11, 0);
+  rig.add(lid);
+
+  for (const lx of [-0.038, 0.038]) {
+    const leg = new THREE.Mesh(own(new THREE.BoxGeometry(0.012, 0.024, 0.045)), iron);
+    leg.position.set(lx, 0.012, 0);
+    rig.add(leg);
+  }
+
+  const plumeMat = new THREE.MeshBasicMaterial({ color: 0xcfcfd2, transparent: true, opacity: 0.0, depthWrite: false });
+  const plumeGeo = own(new THREE.ConeGeometry(0.014, 0.04, 10, 1, true));
+  const plume = new THREE.Mesh(plumeGeo, plumeMat);
+  plume.position.set(0, 0.135, 0);
+  rig.add(plume);
+
+  const hit = hitTarget(0.16, 0.16);
+  hit.position.y = 0.08;
+  group.add(hit);
+
+  const body = {
+    species: 'the crucible',
+    group, hit,
+    pose: 'idle', since: 0, gone: false,
+    plan: null, lunge: 0, still: false, t: 0,
+    phase: (hashStr(foe.id) % 628) / 100,
+    reach: 0.16,
+    look: 0,
+    baseX: 0, baseY: 0, baseZ: 0,
+
+    setPose(pose, plan, instant = false) {
+      body.plan = plan || null;
+      if (pose === body.pose) return;
+      body.pose = pose;
+      body.since = 0;
+      body.gone = false;
+      group.visible = true;
+      if (instant) body.snap();
+    },
+
+    snap() { body.write(0); },
+    hitPlayer() { body.lunge = 1; },
+
+    update(dt, reduced, bearing = 0) {
+      body.t += dt;
+      body.since += dt;
+      body.still = reduced;
+      body.look += ((reduced ? 0 : Math.max(-0.5, Math.min(0.5, bearing))) - body.look) * (1 - Math.exp(-3 * dt));
+      body.lunge = Math.max(0, body.lunge - dt * 2.5);
+      if (body.pose === 'dispersed') {
+        const f = Math.min(1, body.since / 2.2);
+        rig.scale.set(1 + f * 0.25, Math.max(0.001, 1 - f * 0.95), 1 + f * 0.25);
+        if (f >= 0.99) { body.gone = true; group.visible = false; }
+      } else {
+        rig.scale.set(1, 1, 1);
+      }
+      body.write(reduced ? 0 : body.t);
+    },
+
+    write(t) {
+      group.position.z = body.baseZ + body.lunge * 0.05;
+      group.rotation.y = body.look * 0.3;
+      const tremor = !body.still && body.pose === 'heated' ? Math.sin(t * 14 + body.phase) * 0.0025 : 0;
+      pot.position.x = tremor;
+      lid.position.y = 0.11 + (body.pose === 'vented' ? 0.008 : 0);
+      lid.rotation.z = body.pose === 'cracked' ? 0.08 : 0;
+      plumeMat.opacity = body.pose === 'vented' ? 0.35 : 0;
+    },
+
+    dispose() {
+      for (const g of owned) g.dispose();
+      plumeMat.dispose();
+      shadow.geometry.dispose(); shadow.material.dispose();
+      hit.geometry.dispose(); hit.material.dispose();
+    }
+  };
+  body.snap();
+  return body;
+}
+
 /** The species this kit builds a body for. */
-export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater'];
+export const BODY_SPECIES = ['basalt warden', 'recipe golem', 'the compressor', 'the hopper', 'the lantern-eater', 'the crucible'];
 
 /**
  * Species that fight on the PLATE only at T4, and why.
@@ -708,6 +828,7 @@ export function buildFoeBody(species, foe) {
   if (species === 'the compressor') return buildCompressor(foe);
   if (species === 'the hopper') return buildHopper(foe);
   if (species === 'the lantern-eater') return buildLanternEater(foe);
+  if (species === 'the crucible') return buildCrucible(foe);
   return null;
 }
 

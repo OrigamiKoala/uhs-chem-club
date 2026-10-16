@@ -159,7 +159,7 @@ opens it in the right place, and the host loads it.
 | 02 | Lanternfall | Aurora ice | Light and Electrons | 9 (9 built, walkable at T4) |
 | 03 | Ligar | Basalt arches | Bonding | 9 (9 built and a boss, walkable at T4) |
 | 04 | Bellows | Cloud deck | Gases | 6 (6 built and a boss, walkable at T4) |
-| 05 | Ember Reach | Vent fields | Thermodynamics | 4 |
+| 05 | Ember Reach | Vent fields | Thermodynamics | 7 (7 built and a boss, walkable at T4; see `ember-reach-world.md`) |
 | 06 | Mirrowen | Tidal shelf | States of Matter | 4 |
 | 07 | Kettle | Soda lake | Stoichiometry and Reactions | 5 (1 built, moved from Ligar) |
 | 08 | Teeter | Salt pans | Equilibrium | 4 |
@@ -170,7 +170,7 @@ opens it in the right place, and the host loads it.
 | 13 | Thornmere | Fen forest | Organic Chemistry | 4 |
 | 14 | Cinder Halo | Crater sea | Nuclear Chemistry | 4 |
 
-Worlds 4–14 above still show their placeholder charts; `learn-quests.md` proposes
+Worlds 6–14 above still show their placeholder charts; `learn-quests.md` proposes
 their real quests.
 
 Ids are `unit01`…`unit14` in road order (renumbered

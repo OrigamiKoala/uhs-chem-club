@@ -17,6 +17,7 @@ const BOSS_LOOK = {
   'the lantern-eater': { name: 'The Lantern-Eater', attack: 0x7fd36a, ember: 0xb6ff5a },
   'basalt warden':     { name: 'The Basalt Warden', attack: 0xff4818, ember: 0xff5a1a },
   'the compressor':    { name: 'The Compressor',    attack: 0x38bdf8, ember: 0xffa53a },
+  'the crucible':      { name: 'The Crucible',      attack: 0xff6b2b, ember: 0xff9d3b },
   'recipe golem':      { name: 'The Recipe Golem',  attack: 0xe8e1d0, ember: 0xff8a2a }
 };
 
@@ -76,6 +77,16 @@ export const BOSS_ARENA_SPOTS = {
     bossPos: [0, 0, 20.0],
     scale: 2.2,
     species: 'the compressor'
+  },
+  // In front of the caldera main's expansion loop, with the rim and the cone behind it
+  // (`world-data/ember.json` keeps this ground open; `verify:ember` holds the two together).
+  'boss-crucible': {
+    worldId: 'unit05',
+    playerPos: [0, 1.6, -47],
+    lookAtPos: [0, 1.6, -63],
+    bossPos: [0, 0, -63],
+    scale: 2.2,
+    species: 'the crucible'
   },
   'boss-golem': {
     worldId: 'unit07',

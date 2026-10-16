@@ -48,6 +48,8 @@ import { DomainRig as DomainRig2D } from './domainrig.js';
 import { DomainRig3D } from './domainrig3d.js';
 import { GasRig as GasRig2D } from './gasrig.js';
 import { GasRig3D } from './gasrig3d.js';
+import { Calorimeter as Calorimeter2D } from './calorimeter.js';
+import { Calorimeter3D } from './calorimeter3d.js';
 
 /** True when this client is drawing the Learn benches in three dimensions. */
 export function benchesAre3D() {
@@ -135,7 +137,16 @@ const BUILT_BENCHES = new Set([
   'q4-mixtures',   // the gas rig, mixture tanks
   'q5-speed',      // the gas rig, speed screen, pinhole, tube and path
   'q6-real',       // the gas rig, real-gas cylinders
-  'boss-compressor' // the compressor: cylinders, tanks and the pinhole in turn
+  'boss-compressor', // the compressor: cylinders, tanks and the pinhole in turn
+  // Unit 5 — Ember Reach. One instrument, seven heads: contact, cup, diagram, bonds, hess, box and gibbs.
+  'q1-flow',       // the calorimeter, contact and cup heads — calorimeter3d.js
+  'q2-calorimetry',// the calorimeter, cup head
+  'q3-enthalpy',   // the calorimeter, cup and diagram heads
+  'q4-bonds',      // the calorimeter, bond crank and ledger heads
+  'q5-hess',       // the calorimeter, Hess stack and formation heads
+  'q6-entropy',    // the calorimeter, microstate box and phase heads
+  'q7-gibbs',      // the calorimeter, Gibbs plotter head
+  'boss-crucible'  // the crucible: cup, diagram, Hess stack, box and Gibbs plotter in turn
 ]);
 
 /**
@@ -312,8 +323,19 @@ export function GasRig(host, opts = {}) {
     : new GasRig2D(host, opts);
 }
 
+/**
+ * The calorimeter and thermodynamic bench (Ember Reach).
+ * @param {HTMLElement} host
+ * @param {{onProbe?: Function, onSelect?: Function, onDial?: Function, onCardAct?: Function}} opts
+ */
+export function Calorimeter(host, opts = {}) {
+  return benchesAre3D()
+    ? new Calorimeter3D(host, deployed(opts))
+    : new Calorimeter2D(host, opts);
+}
+
 /* Exported so a caller that wants the built instrument by name can have it. */
-export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D, JoinBench3D, LightBench3D, CloudPlate3D, BoxRack3D, ElectronBench3D, BondBench3D, PairBoard3D, DomainRig3D, GasRig3D };
+export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D, JoinBench3D, LightBench3D, CloudPlate3D, BoxRack3D, ElectronBench3D, BondBench3D, PairBoard3D, DomainRig3D, GasRig3D, Calorimeter3D };
 
 /* Re-exported so a quest module needs exactly one import line for its bench. */
 export { detailFor, TINTS } from './scope.js';

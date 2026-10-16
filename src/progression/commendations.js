@@ -345,6 +345,37 @@ export const COMMENDATIONS = [
     hidden: false,
     earnedBy: (s) => manualComplete(s, 'unit04')
   },
+  {
+    id: 'ember_surveyed',
+    name: 'Ember Reach Surveyed',
+    line: 'Completed every built bench across the volcanic caldera of Ember Reach.',
+    tier: 'etched',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => {
+      if (!s.learn) return false;
+      const q = (getWorld('unit05')?.quests || []).filter(x => x.status === 'live' && x.arena !== 'boss').map(x => x.id);
+      return q.length > 0 && q.every(id => Boolean(s.learn[`unit05/${id}`]?.completedAt));
+    }
+  },
+  {
+    id: 'ember_practice',
+    name: 'Calorimeter Drills',
+    line: 'Worked through the revision problem set on Ember Reach.',
+    tier: 'painted',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => Boolean(s.flags && s.flags.unit05_practice_done)
+  },
+  {
+    id: 'manual_unit05',
+    name: 'Unit 5 Field Log',
+    line: 'Logged every vocabulary term across Ember Reach.',
+    tier: 'etched',
+    road: 'learn',
+    hidden: false,
+    earnedBy: (s) => manualComplete(s, 'unit05')
+  },
 
   // ===================== DRILL DECK =====================
   // Cosmetic only, like every plate here: a drill pays no XP and never reaches Standings.

@@ -38,7 +38,7 @@ tokens and primitives; the SCOURED PLATE prose below stays the authority), `docs
 - **Scientific investigation, not monster combat.** Misses are "missed trials"; progress is never lost.
   Samples are SAMPLE A/B/C, restarting every stage. Stage controls (`.lq-stage-actions`, `.lq-controls`,
   dialog buttons) must always have `pointer-events: auto`.
-- **Only bosses fight** (`boss-hopper`, `boss-eater`, `boss-warden`, `boss-golem`, `boss-compressor`).
+- **Only bosses fight** (`boss-hopper`, `boss-eater`, `boss-warden`, `boss-golem`, `boss-compressor`, `boss-crucible`).
   A boss phase declares `encounter {species, act, intent, hit?, counter?, moves?}`; ordinary stages have
   none. Foes come only from `planFoe()` in `engine/foes.js` (asks the instrument's own planner), map
   one-to-one onto the stage's samples/rows, are "dispersed, never killed", fit SCOURED PLATE. A foe
@@ -92,9 +92,9 @@ tokens and primitives; the SCOURED PLATE prose below stays the authority), `docs
   tables recomputed from real data, plates drawn in Node, hint/prompt/legend/leak rules, encounter layer),
   `:story`, `:sync`, `:drills`, `:galaxy`, `:run` (every quest mounts and every stage runs), `:geometry`
   (all 20 reaction animations), `:media`, `:flows`, `:progression`, `:ship`, `:voyage`, `:tallow`,
-  `:ligar`, `:lanternfall`, `:bellows` (each builds its real world in Node and checks overlap, buried
-  bodies, walkability flood-fill, lamps-only-lit, shader patches), `:bench` (every built instrument on
-  its real bench at six aspects, real pointer paths, foe bodies), `:holo`, `:normals`, then `build`.
+  `:ligar`, `:lanternfall`, `:bellows`, `:ember` (each builds its real world in Node and checks overlap,
+  buried bodies, walkability flood-fill, lamps-only-lit, shader patches), `:bench` (every built instrument
+  on its real bench at six aspects, real pointer paths, foe bodies), `:holo`, `:normals`, then `build`.
 - Other: `deploy:backend` (clasp), `bake:stills`, `bake:video`, `seed`, `test:load`.
 - Test hooks: `globalThis.__LQ_TEST__` is read in `stagerunner.js`/`plates.js` and inert without it.
 
@@ -133,8 +133,9 @@ Submissions, Inventory`; the rest are code constants. `Db.getAll` memoizes per e
 Fourteen worlds in road order (`unit01`…`unit14`): Tallow (atoms, table, mole), Lanternfall (light,
 orbitals, trends), Ligar (bonding), Bellows (gases), Ember Reach, Mirrowen, Kettle, Teeter, Verdigris,
 Brinewire, Quicklight, Lodestone, Thornmere, Cinder Halo. Built: Tallow (6 benches + `boss-hopper`),
-Lanternfall (9 + `boss-eater`), Ligar (9 + `boss-warden`), Bellows (6 + `boss-compressor`), Kettle
-(`q1-recipe` + `boss-golem`). **Every built world is open from the start**; inside a world quest N opens
+Lanternfall (9 + `boss-eater`), Ligar (9 + `boss-warden`), Bellows (6 + `boss-compressor`), Ember Reach
+(7 + `boss-crucible`), Kettle (`q1-recipe` + `boss-golem`; no walkable world, so at T4 its bench builds its
+own room). Tallow, Lanternfall, Ligar, Bellows and Ember Reach are walkable at T4 (`learn/worlds3d.js`). **Every built world is open from the start**; inside a world quest N opens
 when N−1 is complete; charted (unbuilt) quests don't hold anything shut. World `status` is derived (`live`
 iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`, and per-world records.
 
@@ -150,7 +151,8 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   `PRACTICE`, never reorder.**
 - **Engine** (`learn/engine/`): `scope.js` (sampler scope; power dial 1–6), `corebench.js`,
   `catalogue.js`, `assay.js`, `joinbench.js`, `plates.js` (drawn plate bench base for light bench, cloud
-  plate, box rack, electron bench, bond bench, pair board, domain rig), `gasrig.js`, `stagerunner.js`
+  plate, box rack, electron bench, bond bench, pair board, domain rig), `gasrig.js`, `calorimeter.js`
+  (+ `thermodata.js` tables and planners, `thermomount.js` stage loop), `stagerunner.js`
   (shared stage loop and answer widgets `number decimal choice bins order multi pick none`),
   `frame.js` (rail, Findings, Tour, prompt, readout, answer, Commit, hints, rewards; one exit = host bar
   `Leave Bench`; `setStage` resets all stage leftovers), `foes.js`/`encounter.js`, `benchlog.js`,
@@ -181,7 +183,18 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   board has one rule: H and F share one pair; domain rig puts every angle behind a protractor; formula
   unit earned in `q2-lattice`). Bellows `q1-knocks` … `q6-real` on one gas rig with six heads; knock
   counter is the real impact rate; sealed plates print no amount/gas; words plain until earned on the
-  dials too. A control that does nothing fails `verify:learn`.
+  dials too. Ember Reach `q1-flow` … `q7-gibbs` on one calorimeter with seven heads (contact, cup, diagram,
+  bonds, hess, box, gibbs): a plate prints what the instrument reads, so a rig carries `hideVerdict`,
+  `hideHeat`, `hideCost`, `hideNet`, `hideSum`, `hideWays`, `hideLaw`, `hideTug` or `hideCrossing` whenever
+  the stage asks for that reading; non-round answers are a `choice` of four numbers whose wrong ones are real
+  slips; formulas are `reference` lines (no Formula Slate). `boss-crucible` is five phases on the same
+  instrument; record in `docs/plans/ember-reach-world.md`. A control that does nothing fails `verify:learn`.
+  Its world is a hydrothermal shelf in a caldera under sulphur haze: a banded hot spring at the middle, the
+  seven benches on a 54 m ring (each a built calorimeter in a heat-shield shelter), a vent field (fumaroles,
+  a geyser, mud pots, sinter terraces), the geothermal plant, and the caldera main (an elevated pipe walked
+  under, lifted into an expansion loop over the lane north) to a railed rim over a lava lake. The Crucible is
+  fought in front of the loop (`BOSS_ARENA_SPOTS` = the JSON's `arena`). Round props are never turned as a
+  group (`SELF_TURNED`); the lava lake (`M.magma`) is the one emissive surface that is not a lamp.
 - **Gating of copy:** `QUEST_GUIDE`/`getQuestScience` (`quest-guide.js`) has no callers; don't duplicate
   its copy into prompts. Erebus quests are out of scope until Learn work is finished.
 
@@ -191,12 +204,13 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   (`isT4Capable`); DPR capped 1.5 and no shadow map on handsets. **A measured tier is never written down,
   only a chosen one** (`gfxTierPref`); the tier is decided once at page open. Resolution is paced on
   planets only (`paceResolution`). Shaders compile when a world is built (`warmWorld`). Loop capped at 60 fps.
-- **Worlds** (Erebus `world.js`+`erebus/`, Tallow `tallow.js`+`tallow/`, Lanternfall, Ligar, Bellows):
+- **Worlds** (Erebus `world.js`+`erebus/`, Tallow `tallow.js`+`tallow/`, Lanternfall, Ligar, Bellows,
+  Ember Reach `ember.js`+`ember/`, each laid out by `tools/gen-<world>-layout.*` into `world-data/*.json`):
   each is one analytic height field + one grid to the horizon, ONE sky function that is also its fog and
   its PMREM environment map, a PBR kit (`materials/pbr-kit.js`: maps agree; OpenGL-style normals —
   never compensate per material, `verify:normals`; `aoMap` uses uv2; `mergeStatic` bakes props, keep
-  `noMerge` for anything addressable). The four Learn worlds share one arrival/render path
-  (`enterLearnWorld`, `isLearnWorld`); a site faces its `approachPos`; a site sign is `Bench N - <topic>`,
+  `noMerge` for anything addressable). The five Learn worlds share one arrival/render path
+  (`enterLearnWorld`, `isLearnWorld`; a `worlds3d.js` entry's `key` is its voyage/`worldFor` name); a site faces its `approachPos`; a site sign is `Bench N - <topic>`,
   ≤6 words, sharing a word with its quest title. **Only lamps are lit**; a lamp is a `lampMark` in a
   `LampPool` (fixed light count — a changed count recompiles every material), never a `PointLight`.
   Shadows are re-drawn only when something moves (`shadow-pace.js`); sky is drawn last of the opaques

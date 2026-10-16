@@ -33,6 +33,7 @@ const { TallowWorld } = await import('../src/three/tallow.js');
 const { LigarWorld } = await import('../src/three/ligar.js');
 const { LanternfallWorld } = await import('../src/three/lanternfall.js');
 const { BellowsWorld } = await import('../src/three/bellows.js');
+const { EmberReachWorld } = await import('../src/three/ember.js');
 const { WorldScene } = await import('../src/three/world.js');
 
 let failed = false;
@@ -74,7 +75,7 @@ const boxMeets = (a, c) => {
   }
   return c.minX !== undefined && a.minX < c.maxX && a.maxX > c.minX && a.minZ < c.maxZ && a.maxZ > c.minZ;
 };
-for (const [name, W, bound] of [['Tallow', TallowWorld, 100], ['Lanternfall', LanternfallWorld, 100], ['Ligar', LigarWorld, 100], ['Bellows', BellowsWorld, 100], ['Erebus', WorldScene, 85]]) {
+for (const [name, W, bound] of [['Tallow', TallowWorld, 100], ['Lanternfall', LanternfallWorld, 100], ['Ligar', LigarWorld, 100], ['Bellows', BellowsWorld, 100], ['Ember Reach', EmberReachWorld, 100], ['Erebus', WorldScene, 85]]) {
   const world = new W(null);
   const L = X.solveLanding(world, X.landingPrefsFor(world));
   const boxes = X.shipWorldColliders(L);
