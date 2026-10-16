@@ -1,129 +1,68 @@
 /**
  * q1-grain.js — Tallow, site one: THE GRAIN OF THINGS.
  *
- * The first game on the Learn road. Eight stages on a salvage bench, naming
- * real elements from the start and discovering pure elements, mixtures,
- * molecules and compounds immediately after each stage as the reward card
- * payoff.
+ * The first game on the Learn road, and the first on a TABLETOP (plan
+ * `bench-tabletop.md`, phase T1). Eight stages on the sample point at the
+ * conveyor's tail: samples in dishes, a lens that lies over a dish and shows what
+ * it is made of, a cutter drawn across one, a shaker passed under one, loose
+ * atoms that join when they are put together, and trays to sort into. A stage is
+ * graded on what is on the table when Commit is pressed.
  *
- * WORDS ARE FREE, PHENOMENA ARE DISCOVERED. Every atom on this bench is
- * called by its real element name from stage one (hydrogen, carbon, oxygen,
- * sodium, sulfur, chlorine). What the player discovers is never the word —
- * it is the observation: one powder holds a single element, bonded groups
- * survive the cutter, shaking sorts some samples into layers and not others.
+ * WORDS ARE FREE, PHENOMENA ARE DISCOVERED. Every atom on this bench is called by
+ * its real element name from stage one. What the player discovers is never the
+ * word; it is the observation: one powder holds a single element, bonded groups
+ * survive the cutter, shaking sorts some samples into layers and not others, and
+ * two atoms put together hold or do not hold, which the planner decides and no
+ * stage declares.
  *
- * THE ORDER IS THE WHOLE DESIGN. Every stage is a thing the player does with
- * an instrument, and the concept arrives immediately afterwards as a reward
- * card, connecting the player's hands-on observation to the real chemistry:
- *
- *   1  determine where matter stops looking smooth -> Atoms · The Discrete Floor of Matter
- *   2  find the powder that is one element        -> Elements vs. Mixtures
- *   3  count the elements in an unsorted ore      -> Atomic Mass · Weighing Tells Them Apart
- *   4  test samples against the bench cutter      -> Molecules · What the Blade Cannot Cut
- *   5  assemble a molecule to match the sample    -> Water, H2O
- *   6  match vials to recipes                    -> Chemical Compounds · Structure Dictates Function
- *   7  settle crates to find mixtures            -> Separating Mixtures vs. Chemical Bonds
- *   8  classify all unknown salvage crates       -> Classifying All Matter
+ *   1  find the lowest power where the grain resolves   -> Atoms
+ *   2  tray the samples by how many kinds of atom       -> Elements and Mixtures
+ *   3  read the ore's atoms and tray them by element    -> Every Element Has Its Own Atom
+ *   4  draw the cutter across four samples              -> Atoms Do Not Split
+ *   5  build one molecule of Sample A                   -> Water, H2O
+ *   6  build one molecule of each sample                -> Compounds
+ *   7  pass the shaker under three samples              -> Why Mixtures Separate
+ *   8  tray four samples as element, compound, mixture  -> Elements, Compounds, and Mixtures
  *   -- debrief: what the element numbers mean & preview of the atomic core.
  *
- * EVERY STAGE IS A FIGHT. Each stage declares an `encounter` (foes.js): the
- * samples on the bench are salt husks, the Commit key is named for the attack it
- * is, and the husk reacts to the cutter and the shaker from the SAME planners the
- * scope uses. No `check()` knows any of this. Copy in an encounter obeys the
- * VOCABULARY schedule below like every other line the player reads.
+ * THE TABLE (`table/`, `kits/atoms.js`). Everything that happens is the kit asking a
+ * pure planner: the lens draws `scope.js` `drawScopeField`, the cutter is `planCut`,
+ * the shaker is `planSettle`, and a join is `joinbench.js` `planJoin`. No stage here
+ * declares an outcome; `SOLUTIONS` and `MISSES` are scripts of the player's own
+ * actions, replayed by `verify:table` by drag and by two taps.
+ *
+ * FIELD (T4). Stage 1 sends the player to the conveyor tail for a scoop: a field
+ * point on the sample point's cross-cut sampler. It is evidence and never a lock; the
+ * stage is answered at the bench either way. At T1 to T3 the same stage draws a site
+ * plate on the table, and a tap on it is the same `fetch`.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings. It
  * reports through `ctx` and nothing else.
  */
 
-import { SampleScope, detailFor } from '../../engine/instruments.js';
-import { LearnFrame, toolNotes } from '../../engine/frame.js';
-import { dialMarkup, bindDial, paintDial as paintDialControl } from '../../engine/dial.js';
-import { esc } from '../../../ui/layout.js';
-import { soundscape } from '../../../audio/soundscape.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import {
+  atomTable, piecesIn, moleculesOf, dishUnder, SCOPE_KINDS
+} from '../../table/kits/atoms.js';
 
 export const meta = { stageCount: 8 };
 
 const SPEAKER = 'Vess';
 
-/* ------------------------------------------------------------------
-   THE KEY LEGEND
-
-   A KEY WHOSE LABEL SAYS WHAT IT DOES OWES NOTHING.
-
-   Only the keys below carry a line, and each one carries it because
-   its label leaves something out. Everything else on this bench — the
-   keys that were once explained back to the player in their own words —
-   is left to say what it says.
-   ------------------------------------------------------------------ */
-const TOOL_TEXT = {
-  power: [{
-    from: 1,
-    key: 'Power',
-    what: 'Zooms the scope in.'
-  }],
-  settle: [{
-    from: 7,
-    key: 'Settle',
-    what: 'Shakes the sample so heavier atoms sink below lighter ones.'
-  }]
-  // Run Cutter runs the cutter.
-};
-
 /**
- * The legend line for one control on one stage, or null if there is none.
- * `stageNumber` is one-based, the way a player counts stages.
+ * The legend lines. A key whose label says what it does owes nothing, and the pieces of this
+ * table are dragged, not pressed, so there is nothing to explain here. Kept so the quest
+ * contract (`toolNoteFor`) holds.
  */
-export function toolNoteFor(controlId, stageNumber) {
-  const rows = TOOL_TEXT[controlId];
-  if (!rows) return null;
-  let out = null;
-  for (const r of rows) if (stageNumber >= r.from) out = r;
-  return out ? { key: out.key, what: out.what } : null;
-}
+export function toolNoteFor() { return null; }
 
 /* ------------------------------------------------------------------
    THE ELEMENTS
-   What the scope has met before, in the order it met it. Every atom is
-   called by its real element name from the start — hydrogen, carbon,
-   oxygen, sodium, sulfur, chlorine — with the mass the scope weighed for
-   it. The numbers beside the names are each element's place in the order
-   site three is about; until then they are just part of the name.
+   What the scope has met before. Every atom is called by its real element name from the
+   start; the table is the kit's (`kits/atoms.js` `SCOPE_KINDS`), re-exported because the
+   other Unit 1 and Kettle benches read the same masses and sizes.
    ------------------------------------------------------------------ */
-export const KINDS = {
-  k01: {
-    code: 'hydrogen (H)', mass: 1.0, size: 0.30, tint: 'bone',
-    note: 'The lightest atom the scope has ever weighed.'
-  },
-  k02: {
-    code: 'helium (He)', mass: 4.0, size: 0.38, tint: 'pale',
-    note: 'Light and unreactive. Floats free as lone atoms.'
-  },
-  k06: {
-    code: 'carbon (C)', mass: 12.0, size: 0.56, tint: 'iron',
-    note: 'Dark and dry. Leaves a mark on anything it touches.'
-  },
-  k08: {
-    code: 'oxygen (O)', mass: 16.0, size: 0.52, tint: 'rust',
-    note: 'Small but heavy. Turns up in almost every sample here.'
-  },
-  k11: {
-    code: 'sodium (Na)', mass: 23.0, size: 0.74, tint: 'pale',
-    note: 'Large, soft and dull. Joins with almost anything.'
-  },
-  k12: {
-    code: 'magnesium (Mg)', mass: 24.3, size: 0.72, tint: 'pale',
-    note: 'Lightweight, pale metal.'
-  },
-  k16: {
-    code: 'sulfur (S)', mass: 32.1, size: 0.64, tint: 'sand',
-    note: 'Yellow. Slightly lighter than the chlorine it looks like.'
-  },
-  k17: {
-    code: 'chlorine (Cl)', mass: 35.5, size: 0.66, tint: 'sand',
-    note: 'Yellow and heavy. Sharp smell.'
-  }
-};
+export const KINDS = SCOPE_KINDS;
 
 export const POWER_SCALES = {
   1: '1 mm',
@@ -133,10 +72,6 @@ export const POWER_SCALES = {
   5: '100 nm',
   6: '1 nm'
 };
-
-/** 0–10 segment meters. The bars are derived from the readings, never authored. */
-const massBar = k => Math.max(1, Math.min(10, Math.round((KINDS[k].mass / 40) * 10)));
-const sizeBar = k => Math.max(1, Math.min(10, Math.round((KINDS[k].size / 0.8) * 10)));
 
 /* ------------------------------------------------------------------
    SHAPES
@@ -160,11 +95,8 @@ const PAIR_LIGHT = { kinds: ['k01', 'k01'] };
 /* ------------------------------------------------------------------
    WHEN EACH WORD IS EARNED
 
-   `introducedAt` is the stage whose REWARD CARD first uses the word. From the
-   NEXT stage on the game just says it — prompts, hints, labels and all. A word
-   is withheld for exactly one stage: long enough for the player to find the
-   thing, not so long that the game is talking in code. `verify:learn` reads
-   this table; nothing in it is player-facing.
+   `introducedAt` is the stage whose REWARD CARD first uses the word. `verify:learn`
+   reads this table to hold each card to its promise; nothing in it is player-facing.
    ------------------------------------------------------------------ */
 export const VOCABULARY = [
   { term: /\b(atoms?|atomic)\b/i, introducedAt: 1 },
@@ -175,40 +107,75 @@ export const VOCABULARY = [
 ];
 
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE TABLES
+   One layout, so the furniture is always where the hand expects it (120 x 64 units):
+   the dishes and the lens dial along the top, the work and the trays in the middle, the
+   scratch corner bottom left, and the tools hung bottom right.
+   ------------------------------------------------------------------ */
 
-   One idea per stage, one thing to do, one thing to answer. Every `check` is a
-   pure function of the bench state, which is what makes them checkable without
-   a browser: `npm run verify:learn` runs SOLUTIONS and MISSES below through
-   them, so a stage whose grading has drifted fails the build instead of
-   stranding a student.
+const sample = (id, floorPower, particles, magnify) => ({ id, floorPower, ...(magnify ? { magnify } : {}), particles });
+
+const dishAt = (id, label, s, x, y, open = false) => ({
+  id, kind: 'dish', label, at: { x, y }, props: { sample: s, ...(open ? { view: 1 } : {}) }
+});
+
+const TOOL_HOME = { lens: { x: 60, y: 54 }, cutter: { x: 80, y: 55 }, shaker: { x: 98, y: 55 } };
+const tool = (kind, label) => ({ id: kind, kind, label, at: { ...TOOL_HOME[kind] } });
+
+/** A loose atom. `mask` withholds the symbol, `tint` overrides the element's own. */
+const atomAt = (id, el, x, y, props = {}) => ({ id, kind: 'atom', label: props.mask ? 'Atom' : el, at: { x, y }, props: { el, ...props } });
+
+/** The lens's power dial: a fixture with no Run key, printing the scale beside its number. */
+const POWER_LABELS = Object.entries(POWER_SCALES).map(([n, s]) => `${n} · ${s}`);
+const scopeFixture = {
+  id: 'scope', kind: 'scope', label: 'Lens', at: { x: 101, y: 16 }, size: { w: 34, h: 16 }, noRun: true,
+  dials: { power: { min: 1, max: 6, step: 1, value: 1, label: 'Power', labels: POWER_LABELS } }
+};
+
+const trayAt = (id, label, x, y, w = 44, h = 14) => ({ id, label, at: { x, y }, size: { w, h } });
+/** A tray for dishes: wide pieces, so a wider pitch and a deeper tray. */
+const dishTray = (id, label, x, y, w = 44) => ({ id, label, at: { x, y }, size: { w, h: 22 }, cell: 19 });
+
+/** Lay `ids` of atoms in a row at y: `row('H', 'H', 'O')` -> positions along the middle. */
+const heap = (y, list, x0 = 14, pitch = 12) => list.map(([id, el], i) => atomAt(id, el, x0 + i * pitch, y));
+
+const power = (t) => t.fixtures.scope?.dials.power.value;
+const lensOver = (t) => dishUnder('lens', t);
+const dishIn = (t, tray) => piecesIn(t, `tray:${tray}`, 'dish').map(p => p.id).sort();
+
+/* ------------------------------------------------------------------
+   THE EIGHT STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Zoom In',
     briefing: {
-      speaker: 'Vess',
-      body: 'The molecular scope zooms down through matter to the smallest pieces. Turn the Power dial to bring individual particles into view.'
+      speaker: SPEAKER,
+      body: 'Drag the lens over a dish and turn the power dial to bring the particles in the sample into view. A scoop from the belt is waiting at the conveyor tail.'
     },
     prompt: 'What is the lowest power where individual particles resolve?',
-    controls: ['power'],
-    samples: [
-      { id: 'c7', label: 'SAMPLE A', note: 'grey powder from the refinery yard', floorPower: 4, particles: [{ kinds: ['k06'], n: 46 }] }
-    ],
-    widget: { type: 'choice-row', min: 1, max: 6, label: 'Lowest power' },
-    answer: 4,
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        dishAt('dishA', 'SAMPLE A', sample('c7', 4, [{ kinds: ['k06'], n: 46 }]), 22, 14),
+        { ...dishAt('scoop', 'BELT SCOOP', sample('c7s', 4, [{ kinds: ['k06'], n: 46 }]), 46, 14), hidden: true, fetchFrom: 'tail' },
+        tool('lens', 'Lens')
+      ],
+      fixtures: [scopeFixture],
+      fetch: [{ id: 'tail', label: 'Belt scoop', at: { x: 100, y: 56 } }]
+    }),
     hints: [
-      'Turn the Power dial up one step at a time and watch the picture change.',
+      'Drag the lens onto a dish, then turn the power dial up one step at a time and watch the picture change.',
       'At low power you see solid clumps, and at high power you see separate round atoms.',
       'Find the first power where you can pick out single atoms, then turn down one step and check that the picture there is still clumps.'
     ],
     check(state) {
-      if (!state.number) {
-        return { ok: false, notYet: true, msg: 'Pick a power from 1 to 6 first.' };
-      }
-      if (state.number === 4) return { ok: true };
-      if (state.number < 4) return { ok: false, msg: 'Too low. At that power the sample still looks like solid clumps.' };
+      const t = state.table;
+      const p = power(t);
+      if (p === 4) return { ok: true };
+      if (!lensOver(t)) return { ok: false, notYet: true, msg: 'Drag the lens over a dish to look through it.' };
+      if (p < 4) return { ok: false, msg: 'Too low. At that power the sample still looks like solid clumps.' };
       return { ok: false, msg: 'Too high. That power shows the same atoms, just bigger — go back to the first power where they appear.' };
     },
     reward: {
@@ -221,22 +188,35 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'One Kind or Two?',
-    prompt: 'Which sample is a pure element, made of only one kind of atom?',
-    controls: ['power'],
-    select: true,
-    samples: [
-      { id: 'c09', label: 'SAMPLE A', note: 'grey powder from the refinery yard', floorPower: 4, particles: [{ kinds: ['k06'], n: 44 }] },
-      { id: 'c14', label: 'SAMPLE B', note: 'grey powder from the refinery yard', floorPower: 4, particles: [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }] }
-    ],
-    widget: { type: 'sample' },
+    prompt: 'Tray the samples by how many kinds of atom each one holds.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        dishAt('dishA', 'SAMPLE A', sample('c09', 4, [{ kinds: ['k06'], n: 44 }]), 22, 14),
+        dishAt('dishB', 'SAMPLE B', sample('c14', 4, [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }]), 46, 14),
+        tool('lens', 'Lens')
+      ],
+      zones: {
+        trays: [
+          dishTray('one', 'One kind of atom', 30, 36),
+          dishTray('more', 'More than one kind', 82, 36)
+        ]
+      },
+      fixtures: [scopeFixture]
+    }),
     hints: [
-      'They look identical until the scope shows the atoms, so turn the Power dial up first.',
+      'Drag the lens onto a sample and turn the power up until single atoms show.',
       'Compare the two pictures atom by atom: every atom in one sample matches, and the other sample holds two different atoms.',
-      'Tap several atoms in each sample and compare their names: a pure element reads one name on every atom.'
+      'Look across a whole picture and note the tint and size of each atom, then tray the sample whose atoms all match.'
     ],
     check(state) {
-      if (state.sample === 'c09') return { ok: true };
-      return { ok: false, msg: 'Look again: that one holds dark carbon atoms and pale sodium atoms together, so it is no pure element.' };
+      const t = state.table;
+      const one = dishIn(t, 'one');
+      const more = dishIn(t, 'more');
+      if (!one.length && !more.length) return { ok: false, notYet: true, msg: 'Tray both samples before you commit.' };
+      if (one.length + more.length < 2) return { ok: false, notYet: true, msg: 'Tray both samples before you commit.' };
+      if (one.join() === 'dishA' && more.join() === 'dishB') return { ok: true };
+      return { ok: false, msg: 'Look again: one of them holds dark carbon atoms and pale sodium atoms together, so it is in the wrong tray.' };
     },
     reward: {
       log: 'Sample A is carbon only. Sample B mixes carbon and sodium.',
@@ -248,29 +228,50 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Count the Elements',
-    prompt: 'How many different elements are present in this ore sample?',
-    controls: ['power'],
-    samples: [
-      {
-        id: 'ore', label: 'SAMPLE A', note: 'unsorted rock from the refinery yard', floorPower: 4,
-        particles: [
-          { kinds: ['k11'], n: 26 },
-          { kinds: ['k12'], n: 20 },
-          { kinds: ['k06'], n: 9 }
+    prompt: 'Sort the ore into trays so that each tray holds one element only.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        // Sodium and magnesium are dressed alike on purpose: only the reader tells them apart.
+        atomAt('a1', 'Na', 12, 12, { mask: true, tint: 'pale' }),
+        atomAt('a2', 'C', 24, 12, { mask: true }),
+        atomAt('a3', 'Mg', 36, 12, { mask: true, tint: 'pale' }),
+        atomAt('a4', 'Mg', 12, 24, { mask: true, tint: 'pale' }),
+        atomAt('a5', 'Na', 24, 24, { mask: true, tint: 'pale' }),
+        atomAt('a6', 'C', 36, 24, { mask: true })
+      ],
+      zones: {
+        slots: [{ id: 'rd', label: 'Reader', at: { x: 60, y: 17 } }],
+        trays: [
+          trayAt('t1', 'Tray 1', 17, 38, 26, 14),
+          trayAt('t2', 'Tray 2', 45, 38, 26, 14),
+          trayAt('t3', 'Tray 3', 73, 38, 26, 14),
+          trayAt('t4', 'Tray 4', 101, 38, 26, 14)
         ]
-      }
-    ],
-    widget: { type: 'number', min: 1, max: 6, label: 'Elements counted' },
-    answer: 3,
+      },
+      fixtures: [{ id: 'reader', kind: 'reader', label: 'Reader', at: { x: 92, y: 17 }, size: { w: 34, h: 16 }, noRun: true, props: { slot: 'rd' } }]
+    }),
     hints: [
-      'Tap atoms across the sample to inspect each one.',
+      'Drop an atom in the reader slot to see its name and its mass.',
       'Two of the elements look alike, but their masses differ: one reads 23.0 and the other 24.3.',
-      'Count how many distinct element names appear across all your readings.'
+      'Read every pale atom, then give each element a tray of its own and put every atom in the tray for its name.'
     ],
     check(state) {
-      if (state.number === 3) return { ok: true };
-      if (state.number < 3) return { ok: false, msg: 'There is at least one more element in there. Two of them look alike, so check their mass readings.' };
-      return { ok: false, msg: 'Too many. Some of the atoms you read are the same element as each other.' };
+      const t = state.table;
+      const atoms = Object.values(t.pieces).filter(p => p.kind === 'atom' && !p.props.scratch);
+      const filed = atoms.filter(p => p.zone && p.zone.startsWith('tray:'));
+      if (filed.length < atoms.length) return { ok: false, notYet: true, msg: 'Every atom needs a tray before you commit.' };
+      const byTray = {};
+      for (const p of filed) (byTray[p.zone] ||= new Set()).add(p.props.el);
+      if (Object.values(byTray).some(s => s.size > 1)) {
+        return { ok: false, msg: 'A tray holds atoms of more than one element. The pale ones look alike, so read their masses.' };
+      }
+      const homes = {};
+      for (const [zone, set] of Object.entries(byTray)) for (const el of set) (homes[el] ||= []).push(zone);
+      if (Object.values(homes).some(z => z.length > 1)) {
+        return { ok: false, msg: 'Atoms of one element are split across two trays. Each element belongs in one tray only.' };
+      }
+      return { ok: true };
     },
     reward: {
       log: 'Three elements found: sodium, magnesium and carbon.',
@@ -283,26 +284,30 @@ export const STAGES = [
   {
     title: 'What the Blade Cannot Cut',
     briefing: {
-      speaker: 'Vess',
-      body: 'The mechanical slicer cuts samples into smaller pieces. Press "Run Cutter" to test what the blade can divide.'
+      speaker: SPEAKER,
+      body: 'The cutter slices a sample into smaller pieces when you draw it across a dish. Try it on each one to see what the blade can divide.'
     },
-    prompt: 'Which of the four samples cannot be split by the cutter?',
-    controls: ['cut'],
-    select: true,
-    samples: [
-      { id: 't1', label: 'SAMPLE A', note: 'loose grey grit', floorPower: 1, magnify: 1.5, particles: [{ kinds: ['k06'], n: 20 }] },
-      { id: 't2', label: 'SAMPLE B', note: 'a clear droplet', floorPower: 1, magnify: 3.6, particles: [{ ...CLUSTER_A, n: 1 }] },
-      { id: 't3', label: 'SAMPLE C', note: 'a puff of light gas', floorPower: 1, magnify: 3.6, particles: [{ ...PAIR_LIGHT, n: 1 }] },
-      { id: 't4', label: 'SAMPLE D', note: 'a puff of gas from the vent lamp', floorPower: 1, magnify: 3.6, particles: [{ kinds: ['k02'], n: 1 }] }
-    ],
-    widget: { type: 'sample' },
+    prompt: 'Tray the one sample that the cutter cannot split.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        dishAt('t1', 'SAMPLE A', sample('t1', 1, [{ kinds: ['k06'], n: 20 }], 1.5), 14, 14, true),
+        dishAt('t2', 'SAMPLE B', sample('t2', 1, [{ ...CLUSTER_A, n: 1 }], 3.6), 36, 14, true),
+        dishAt('t3', 'SAMPLE C', sample('t3', 1, [{ ...PAIR_LIGHT, n: 1 }], 3.6), 58, 14, true),
+        dishAt('t4', 'SAMPLE D', sample('t4', 1, [{ kinds: ['k02'], n: 1 }], 3.6), 80, 14, true),
+        tool('cutter', 'Cutter')
+      ],
+      zones: { trays: [dishTray('safe', 'Will not split', 60, 36)] }
+    }),
     hints: [
-      'Select each sample in turn and press "Run Cutter".',
+      'Drag the cutter across each dish in turn and watch the picture.',
       'Joined groups break into separate pieces, but one sample does not change at all.',
       'Pick the sample whose picture remains completely unchanged after cutting.'
     ],
     check(state) {
-      if (state.sample === 't4') return { ok: true };
+      const safe = dishIn(state.table, 'safe');
+      if (!safe.length) return { ok: false, notYet: true, msg: 'Put a sample in the tray first.' };
+      if (safe.join() === 't4') return { ok: true };
       return { ok: false, msg: 'That one came apart under the blade. Pick the sample the cutter left exactly as it was.' };
     },
     reward: {
@@ -315,25 +320,28 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Copy the Molecule',
-    prompt: 'How many atoms of each element build one molecule of Sample A?',
-    controls: ['power'],
-    samples: [
-      { id: 'v9', label: 'SAMPLE A', note: 'clear liquid from the refinery', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 20 }] }
-    ],
-    widget: { type: 'build', kinds: ['k01', 'k06', 'k08'], max: 4 },
+    prompt: 'Build one molecule of Sample A from the loose atoms.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        dishAt('dishA', 'SAMPLE A', sample('v9', 4, [{ ...CLUSTER_A, n: 20 }], 1.5), 22, 14),
+        ...heap(36, [['c1', 'C'], ['h1', 'H'], ['o1', 'O'], ['h2', 'H'], ['o2', 'O'], ['h3', 'H'], ['h4', 'H']]),
+        tool('lens', 'Lens')
+      ],
+      fixtures: [scopeFixture]
+    }),
     hints: [
-      'Turn the Power dial up until one molecule is clear, then tap the atom in the middle and each one joined to it.',
-      'Every molecule here is the same, so read just one: the name of the atom in the middle and the name of each atom joined to it.',
-      'Add one atom to the tray for every atom in that one molecule, by name: the middle one plus each joined one, and nothing else.'
+      'Drag the lens over Sample A and raise the power until one molecule is clear, then drag one loose atom onto another to join them.',
+      'Every molecule here is the same, so read just one: the atom in the middle and each atom joined to it.',
+      'Join one atom for every atom in that one molecule, by name: the middle one plus each joined one, and nothing else.'
     ],
     check(state) {
-      const b = state.build;
-      const total = Object.values(b).reduce((n, v) => n + v, 0);
-      if (total === 0) return { ok: false, notYet: true, msg: 'The tray is empty. Use the + keys to add atoms.' };
-      if (b.k06) return { ok: false, msg: 'There is no carbon in this sample. Tap the atoms in a molecule and check what they read.' };
-      if (b.k01 === 2 && b.k08 === 1) return { ok: true };
-      if (b.k01 > 0 && b.k08 > 0) return { ok: false, msg: 'Right elements, wrong numbers. Count the middle atom and the ones joined to it.' };
-      return { ok: false, msg: 'One of the two elements is missing. Tap the middle atom and the joined ones separately.' };
+      const mols = moleculesOf(state.table);
+      if (!mols.length) return { ok: false, notYet: true, msg: 'Join some atoms together first.' };
+      if (mols.some(m => m.counts.H === 2 && m.counts.O === 1 && Object.keys(m.counts).length === 2)) return { ok: true };
+      if (mols.some(m => m.counts.C)) return { ok: false, msg: 'There is no carbon in this sample. Read the atoms in one molecule through the lens.' };
+      if (mols.some(m => m.counts.H && m.counts.O)) return { ok: false, msg: 'Right elements, wrong numbers. Count the middle atom and the ones joined to it.' };
+      return { ok: false, msg: 'One of the two elements is missing. Read the middle atom and the joined ones separately.' };
     },
     reward: {
       log: 'Copy built: 1 x oxygen, 2 x hydrogen.',
@@ -345,29 +353,29 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Same Atoms, Different Recipe',
-    prompt: 'File each sample under the recipe that matches its molecules.',
-    controls: ['power'],
-    samples: [
-      { id: 'vA', label: 'SAMPLE A', note: 'clear liquid from the refinery', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_A, n: 16 }] },
-      { id: 'vB', label: 'SAMPLE B', note: 'clear liquid from the refinery', floorPower: 4, magnify: 1.5, particles: [{ ...CLUSTER_B, n: 14 }] }
-    ],
-    widget: {
-      type: 'bins',
-      bins: [
-        { id: 'm9', label: '1 oxygen + 2 hydrogen', note: 'one oxygen atom in the middle' },
-        { id: 'm22', label: '2 oxygen + 2 hydrogen', note: 'two oxygen atoms joined in a chain' }
-      ]
-    },
+    prompt: 'Build one molecule of each sample from the loose atoms.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        dishAt('dishA', 'SAMPLE A', sample('vA', 4, [{ ...CLUSTER_A, n: 16 }], 1.5), 22, 14),
+        dishAt('dishB', 'SAMPLE B', sample('vB', 4, [{ ...CLUSTER_B, n: 14 }], 1.5), 46, 14),
+        ...heap(36, [['h1', 'H'], ['o1', 'O'], ['h2', 'H'], ['o2', 'O'], ['h3', 'H'], ['o3', 'O'], ['h4', 'H']]),
+        tool('lens', 'Lens')
+      ],
+      fixtures: [scopeFixture]
+    }),
     hints: [
-      'Turn the Power dial up until single molecules are clear, then count the atoms in one from each sample.',
+      'Drag the lens over each sample and raise the power until a single molecule is clear.',
       'Both samples use only hydrogen and oxygen, and the difference is how many oxygen atoms each molecule holds.',
-      'Count the oxygen atoms in one molecule from each sample, then file each under the recipe with that many oxygen atoms.'
+      'Copy one molecule from each sample, joining the atoms the way the lens shows them, and join the hydrogen atoms before the oxygen atoms.'
     ],
     check(state) {
-      const { bins } = state;
-      if (!bins.vA || !bins.vB) return { ok: false, notYet: true, msg: 'File both samples before you commit.' };
-      if (bins.vA === 'm9' && bins.vB === 'm22') return { ok: true };
-      return { ok: false, msg: 'At least one sample is under the wrong recipe. Count the oxygen atoms in one molecule from each sample.' };
+      const mols = moleculesOf(state.table);
+      const has = (h, o) => mols.some(m => m.counts.H === h && m.counts.O === o && Object.keys(m.counts).length === 2);
+      if (!mols.length) return { ok: false, notYet: true, msg: 'Build a molecule of each sample before you commit.' };
+      if (has(2, 1) && has(2, 2)) return { ok: true };
+      if (!has(2, 1)) return { ok: false, msg: 'No molecule on the table matches Sample A yet. Count the oxygen atoms in one of its molecules.' };
+      return { ok: false, msg: 'No molecule on the table matches Sample B yet. Count the oxygen atoms in one of its molecules.' };
     },
     reward: {
       log: 'Sample A: H2O. Sample B: H2O2.',
@@ -380,34 +388,37 @@ export const STAGES = [
   {
     title: 'Shake It Out',
     briefing: {
-      speaker: 'Vess',
-      body: 'The shaker table sorts unbonded atoms by weight. Press "Settle" to see if a sample separates into layers.'
+      speaker: SPEAKER,
+      body: 'The shaker table sorts loose atoms by weight. Draw it under a dish to see if a sample separates into layers.'
     },
-    prompt: 'Classify each sample as a single substance or a mixture.',
-    controls: ['settle'],
-    select: true,
-    samples: [
-      { id: 'p1', label: 'SAMPLE A', note: 'yellow powder from the mine', floorPower: 1, particles: [{ kinds: ['k16'], n: 30 }] },
-      { id: 'p2', label: 'SAMPLE B', note: 'clear liquid from the refinery', floorPower: 1, particles: [{ ...CLUSTER_A, n: 26 }] },
-      { id: 'p3', label: 'SAMPLE C', note: 'pale powder from the yard', floorPower: 1, particles: [{ kinds: ['k11'], n: 16 }, { kinds: ['k06'], n: 16 }] }
-    ],
-    widget: {
-      type: 'bins',
-      bins: [
-        { id: 'one', label: 'Single substance', note: 'settles into one even layer' },
-        { id: 'mixed', label: 'Mixture', note: 'settles into two or more layers' }
-      ]
-    },
+    prompt: 'Tray each sample as a single substance or a mixture.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        dishAt('p1', 'SAMPLE A', sample('p1', 1, [{ kinds: ['k16'], n: 16 }]), 22, 14, true),
+        dishAt('p2', 'SAMPLE B', sample('p2', 1, [{ ...CLUSTER_A, n: 14 }]), 46, 14, true),
+        dishAt('p3', 'SAMPLE C', sample('p3', 1, [{ kinds: ['k11'], n: 9 }, { kinds: ['k06'], n: 9 }]), 70, 14, true),
+        tool('shaker', 'Shaker')
+      ],
+      zones: {
+        trays: [
+          dishTray('one', 'Single substance', 30, 36),
+          dishTray('mixed', 'Mixture', 82, 36)
+        ]
+      }
+    }),
     hints: [
-      'Select each sample and press "Settle" to watch how its particles land.',
-      'Heavier atoms sink and lighter atoms float, separating unbonded mixtures into layers.',
-      'Count the layers in each sample: one layer is a single substance, while multiple layers indicate a mixture.'
+      'Drag the shaker under each dish and watch how its particles land.',
+      'Heavier atoms sink and lighter atoms float, separating loose mixtures into layers.',
+      'Count the layers in each sample: one layer is a single substance, while several layers indicate a mixture.'
     ],
     check(state) {
-      const { bins, settled } = state;
-      if (!bins.p1 || !bins.p2 || !bins.p3) return { ok: false, notYet: true, msg: 'File all three samples before you commit.' };
-      if (bins.p1 === 'one' && bins.p2 === 'one' && bins.p3 === 'mixed') return { ok: true };
-      return { ok: false, msg: 'At least one is filed wrong. One layer means one substance; two layers mean a mixture.' };
+      const t = state.table;
+      const one = dishIn(t, 'one');
+      const mixed = dishIn(t, 'mixed');
+      if (one.length + mixed.length < 3) return { ok: false, notYet: true, msg: 'Tray all three samples before you commit.' };
+      if (one.join() === 'p1,p2' && mixed.join() === 'p3') return { ok: true };
+      return { ok: false, msg: 'At least one is in the wrong tray. One layer means one substance; two layers mean a mixture.' };
     },
     reward: {
       log: 'Sample C separated into sodium and carbon layers.',
@@ -419,38 +430,44 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Sort Them All',
-    prompt: 'Classify each sample as an element, a compound, or a mixture.',
-    controls: ['power', 'cut', 'settle'],
-    select: true,
-    samples: [
-      { id: 'm1', label: 'SAMPLE A', note: 'dark powder from the yard', floorPower: 4, particles: [{ kinds: ['k06'], n: 40 }] },
-      { id: 'm2', label: 'SAMPLE B', note: 'clear liquid from the refinery', floorPower: 4, particles: [{ ...CLUSTER_A, n: 30 }] },
-      { id: 'm3', label: 'SAMPLE C', note: 'dark and yellow powder from the yard', floorPower: 4, particles: [{ kinds: ['k06'], n: 18 }, { kinds: ['k16'], n: 18 }] },
-      { id: 'm4', label: 'SAMPLE D', note: 'colorless gas from a sealed tank', floorPower: 4, particles: [{ ...PAIR_LIGHT, n: 34 }] }
-    ],
-    widget: {
-      type: 'bins',
-      bins: [
-        { id: 'element', label: 'Element', note: 'atoms of a single element' },
-        { id: 'compound', label: 'Compound', note: 'different elements bonded together' },
-        { id: 'mixed', label: 'Mixture', note: 'different elements, not bonded' }
-      ]
-    },
+    prompt: 'Tray each sample as an element, a compound or a mixture.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        dishAt('m1', 'SAMPLE A', sample('m1', 4, [{ kinds: ['k06'], n: 24 }]), 12, 14),
+        dishAt('m2', 'SAMPLE B', sample('m2', 4, [{ ...CLUSTER_A, n: 18 }]), 32, 14),
+        dishAt('m3', 'SAMPLE C', sample('m3', 4, [{ kinds: ['k06'], n: 12 }, { kinds: ['k16'], n: 12 }]), 52, 14),
+        dishAt('m4', 'SAMPLE D', sample('m4', 4, [{ ...PAIR_LIGHT, n: 18 }]), 72, 14),
+        tool('lens', 'Lens'),
+        tool('cutter', 'Cutter'),
+        tool('shaker', 'Shaker')
+      ],
+      zones: {
+        trays: [
+          dishTray('element', 'Element', 21, 36, 38),
+          dishTray('compound', 'Compound', 60, 36, 38),
+          dishTray('mixed', 'Mixture', 99, 36, 38)
+        ]
+      },
+      fixtures: [scopeFixture]
+    }),
     hints: [
-      'Zoom in on each sample to see how many elements it holds and whether its atoms are bonded, then settle any you are unsure of.',
+      'Drag the lens over each sample, and draw the cutter and the shaker across any you are unsure of.',
       'For each sample, check two things: how many different names its atoms read, and whether its atoms are joined in groups or sit loose.',
       'One element only is an element even in joined pairs, while different elements joined together make a compound and sitting loose make a mixture.'
     ],
     check(state) {
-      const b = state.bins;
-      if (!b.m1 || !b.m2 || !b.m3 || !b.m4) return { ok: false, notYet: true, msg: 'File all four samples before you commit.' };
+      const t = state.table;
+      const where = {};
+      for (const tray of ['element', 'compound', 'mixed']) for (const id of dishIn(t, tray)) where[id] = tray;
+      if (['m1', 'm2', 'm3', 'm4'].some(id => !where[id])) return { ok: false, notYet: true, msg: 'Tray all four samples before you commit.' };
       const want = { m1: 'element', m2: 'compound', m3: 'mixed', m4: 'element' };
-      const wrong = Object.keys(want).filter(k => b[k] !== want[k]);
+      const wrong = Object.keys(want).filter(k => where[k] !== want[k]);
       if (!wrong.length) return { ok: true };
       if (wrong.length === 1) {
-        return { ok: false, msg: 'One is filed wrong. Check whether it holds one element or several, and whether they are bonded.' };
+        return { ok: false, msg: 'One is in the wrong tray. Check whether it holds one element or several, and whether they are bonded.' };
       }
-      return { ok: false, msg: 'More than one is filed wrong. One element is an element even when its atoms are bonded in pairs.' };
+      return { ok: false, msg: 'More than one is in the wrong tray. One element is an element even when its atoms are bonded in pairs.' };
     },
     reward: {
       log: 'All four filed correctly.',
@@ -460,6 +477,7 @@ export const STAGES = [
     }
   }
 ];
+
 /* ------------------------------------------------------------------
    THE DEBRIEF
    Three short cards: what the player learned, what the element numbers
@@ -543,55 +561,61 @@ export const PRACTICE = [
 ];
 
 /* ------------------------------------------------------------------
-   BENCH STATE
-   Everything a stage's `check` is allowed to look at. One shape for all
-   eight stages, so the widgets stay interchangeable.
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays
+   each one through the reducer by direct actions, by drag and by two taps, and every
+   join in it is the kit's planner saying it holds.
    ------------------------------------------------------------------ */
-function blankState(stage) {
-  const initialNum = (stage.widget.type === 'number' || stage.widget.type === 'choice-row')
-    ? (stage.widget.min ?? null)
-    : null;
-  return {
-    power: 1,
-    maxPower: 1,
-    resolved: new Set(),
-    number: initialNum,
-    sample: null,
-    build: {},
-    bins: {},
-    probed: new Set(),   // distinct kinds read on this stage
-    cut: new Set(),      // samples the blade has been run over
-    settled: new Set()   // samples that have been shaken down
-  };
-}
 
-/** The bench state that solves each stage, in order. Checked by verify:learn. */
+const lay = (toolId, dish) => ({ place: { piece: toolId, to: `piece:${dish}` } });
+const tray = (piece, id) => ({ place: { piece, to: `tray:${id}` } });
+const dial = value => ({ setDial: { fixture: 'scope', dial: 'power', value } });
+
+/** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  { number: 4, maxPower: 4 },
-  { sample: 'c09', resolved: new Set(['c09', 'c14']) },
-  { number: 3, probed: new Set(['k08', 'k17', 'k16']) },
-  { sample: 't4', cut: new Set(['t1', 't2', 't3', 't4']) },
-  { build: { k08: 1, k01: 2 } },
-  { bins: { vA: 'm9', vB: 'm22' } },
-  { bins: { p1: 'one', p2: 'one', p3: 'mixed' }, settled: new Set(['p1', 'p2', 'p3']) },
-  { bins: { m1: 'element', m2: 'compound', m3: 'mixed', m4: 'element' } }
+  [{ fetch: 'tail' }, lay('lens', 'dishA'), dial(4)],
+  [lay('lens', 'dishA'), dial(4), tray('dishA', 'one'), lay('lens', 'dishB'), tray('dishB', 'more')],
+  [
+    { place: { piece: 'a1', to: 'slot:rd' } }, tray('a1', 't1'),
+    { place: { piece: 'a3', to: 'slot:rd' } }, tray('a3', 't2'),
+    { place: { piece: 'a4', to: 'slot:rd' } }, tray('a4', 't2'),
+    { place: { piece: 'a5', to: 'slot:rd' } }, tray('a5', 't1'),
+    tray('a2', 't3'), tray('a6', 't3')
+  ],
+  [
+    { place: { piece: 'cutter', to: 'piece:t1' } }, { place: { piece: 'cutter', to: 'piece:t2' } },
+    { place: { piece: 'cutter', to: 'piece:t3' } }, { place: { piece: 'cutter', to: 'piece:t4' } },
+    tray('t4', 'safe')
+  ],
+  [lay('lens', 'dishA'), dial(4), { join: ['h1', 'o1'] }, { join: ['h2', 'o1'] }],
+  [lay('lens', 'dishA'), dial(4), { join: ['h1', 'o1'] }, { join: ['h2', 'o1'] }, { join: ['h3', 'o2'] }, { join: ['h4', 'o3'] }, { join: ['o2', 'o3'] }],
+  [
+    { place: { piece: 'shaker', to: 'piece:p1' } }, { place: { piece: 'shaker', to: 'piece:p2' } }, { place: { piece: 'shaker', to: 'piece:p3' } },
+    tray('p1', 'one'), tray('p2', 'one'), tray('p3', 'mixed')
+  ],
+  [
+    lay('lens', 'm1'), dial(4), { place: { piece: 'cutter', to: 'piece:m2' } }, { place: { piece: 'shaker', to: 'piece:m3' } },
+    tray('m1', 'element'), tray('m2', 'compound'), tray('m3', 'mixed'), tray('m4', 'element')
+  ]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { number: 6, maxPower: 4 },
-  { sample: 'c14', resolved: new Set(['c09', 'c14']) },
-  { number: 2, probed: new Set(['k08', 'k17', 'k16']) },
-  { sample: 't2', cut: new Set(['t1', 't2', 't3', 't4']) },
-  { build: { k08: 1, k01: 1 } },
-  { bins: { vA: 'm22', vB: 'm9' } },
-  { bins: { p1: 'one', p2: 'mixed', p3: 'mixed' }, settled: new Set(['p1', 'p2', 'p3']) },
-  { bins: { m1: 'element', m2: 'compound', m3: 'mixed', m4: 'compound' } }
+  [lay('lens', 'dishA'), dial(6)],
+  [lay('lens', 'dishA'), tray('dishA', 'more'), tray('dishB', 'one')],
+  [{ place: { piece: 'a1', to: 'slot:rd' } }, tray('a1', 't1'), tray('a3', 't1'), tray('a4', 't2'), tray('a5', 't2'), tray('a2', 't3'), tray('a6', 't3')],
+  [{ place: { piece: 'cutter', to: 'piece:t2' } }, tray('t2', 'safe')],
+  [{ join: ['h1', 'o1'] }],
+  [{ join: ['h1', 'o1'] }, { join: ['h2', 'o1'] }],
+  [{ place: { piece: 'shaker', to: 'piece:p2' } }, tray('p1', 'one'), tray('p2', 'mixed'), tray('p3', 'mixed')],
+  [tray('m1', 'element'), tray('m2', 'compound'), tray('m3', 'mixed'), tray('m4', 'compound')]
 ];
+
+function blankState() { return {}; }
 
 /** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  return { ...blankState(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -599,442 +623,10 @@ export function stateFor(i, overrides) {
    ================================================================== */
 
 export function mount(container, ctx) {
-  const frame = new LearnFrame(container, {
-    quest: ctx?.quest || { id: 'q1-grain' },
-    world: ctx?.world,
-    stageCount: STAGES.length,
-    rewards: STAGES.map(s => s.reward),
-    onSubmit: () => submit(),
-    onNext: () => next(),
-    onJump: i => loadStage(i),
-    onExit: () => ctx.exit()
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
-  const scope = new SampleScope(frame.instrumentHost, {
-    kinds: KINDS,
-    onProbe: hit => onProbe(hit),
-    onSelect: id => onSelect(id),
-    // THE DIAL ON THE BENCH. Where the bench is built (T4 on Tallow) the power
-    // control is a real knob standing on the plate, and turning it arrives
-    // here. Where the bench is drawn the option is ignored and the panel dial
-    // is the only one there is. Either way the quest calls the same `setPower`,
-    // which is the rule that keeps the two instruments one instrument.
-    onPower: v => setPower(v),
-    powerRange: { min: 1, max: 6 }
-  });
-
-  // A finished quest replays from the top and costs nothing, the way a cleared
-  // campaign quest does. Otherwise pick up where the bench was left.
-  let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
-  let cleared = ctx.isComplete ? STAGES.length : ctx.stagesCleared;
-  let state = null;
-  let busy = false;
-  let disposed = false;
-  let unbindDial = null;
-
-  /* ---------------- stage lifecycle ---------------- */
-
-  function loadStage(i) {
-    index = i;
-    const stage = STAGES[i];
-
-    state = blankState(stage);
-
-    frame.setCleared(cleared);
-    frame.setStage({
-      index: i,
-      title: stage.title,
-      prompt: stage.prompt,
-      briefing: stage.briefing,
-      hints: stage.hints,
-      commitLabel: 'Commit'
-    });
-
-    scope.setSamples(stage.samples);
-    scope.setPower(state.power);
-    scope.setSelectable(Boolean(stage.select) || stage.controls.some(c => c === 'cut' || c === 'settle'));
-
-    renderControls();
-    renderWidget();
-    renderReadout(null);
-
-    if (stage.briefing && !ctx.isComplete && cleared <= i) frame.showBriefing();
-  }
-
-  function next() {
-    if (index >= STAGES.length - 1) {
-      frame.showDebrief(DEBRIEF, () => ctx.exit());
-      return;
-    }
-    loadStage(index + 1);
-  }
-
-  function submit() {
-    if (busy) return;
-    const stage = STAGES[index];
-    const result = stage.check(state);
-    if (!result.ok) {
-      if (result.notYet) {
-        frame.note(result.msg);
-      } else {
-        frame.miss(result.msg);
-      }
-      return;
-    }
-    frame.clearBanner();
-    if (index + 1 > cleared) {
-      cleared = index + 1;
-      ctx.reportStage(index);
-    }
-    frame.setCleared(cleared);
-    frame.clear(stage.reward);
-    if (index === STAGES.length - 1) ctx.reportComplete();
-  }
-
-  /* ---------------- bench controls ---------------- */
-
-  function renderControls() {
-    const stage = STAGES[index];
-    const parts = [];
-
-    if (stage.controls.includes('power')) {
-      // A magnification setting is a thing you turn, so it is a knob. See
-      // `engine/dial.js`: drag it round, arrow-key it, or roll the wheel on it.
-      parts.push(dialMarkup({ label: 'Power', min: 1, max: 6, value: state.power, id: 'scope-power', scaleLabels: POWER_SCALES }));
-    }
-    if (stage.controls.includes('cut')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="cut">Run Cutter</button>');
-    }
-    if (stage.controls.includes('settle')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="settle">Settle</button>');
-    }
-
-    // The legend, under the keys: what each one of them actually does.
-    parts.push(toolNotes(
-      stage.controls.map(id => toolNoteFor(id, index + 1)).filter(Boolean)
-    ));
-
-    frame.setControls(parts.join(''));
-    const host = frame.el.controls;
-
-    unbindDial?.();
-    unbindDial = stage.controls.includes('power')
-      ? bindDial(host, { min: 1, max: 6, onChange: v => setPower(v) })
-      : null;
-
-    host.querySelectorAll('[data-tool]').forEach(btn => {
-      btn.addEventListener('click', () => runTool(btn.dataset.tool));
-    });
-    paintDial();
-  }
-
-  /**
-   * Which plates are resolved at the power the dial is on.
-   *
-   * ONE DIAL DRIVES EVERY PLATE. The scope magnifies the whole bench at once,
-   * so a power that resolves one crate has resolved the crate beside it — the
-   * player can see both without touching either. This used to record only the
-   * *selected* plate, which meant stage two's "inspect both crates" could not be
-   * satisfied by looking: the only way through was to tap the wrong crate first,
-   * and a player who raised the dial and then tapped the right one was told to
-   * go and do the thing they had just done.
-   */
-  function checkResolved() {
-    const samples = STAGES[index].samples || [];
-    samples.forEach(s => {
-      if (state.power >= (s.floorPower || 1)) state.resolved.add(s.id);
-    });
-  }
-
-  function setPower(p) {
-    const next = Math.max(1, Math.min(6, p));
-    if (next === state.power) return;
-    state.power = next;
-    state.maxPower = Math.max(state.maxPower || 1, next);
-    scope.setPower(next);
-    soundscape.playToggleClack?.();
-    paintDial();
-    renderReadout(null);
-    checkResolved();
-  }
-
-  function paintDial() {
-    paintDialControl(frame.el.controls, state.power, { min: 1, max: 6, scaleLabels: POWER_SCALES });
-  }
-
-  async function runTool(tool) {
-    if (busy) return;
-    if (!state.sample) {
-      frame.note('Tap a sample on the bench first.');
-      return;
-    }
-    busy = true;
-    frame.clearBanner();
-    frame.setCommitEnabled(false);
-
-    const id = state.sample;
-    if (tool === 'cut') {
-      const found = await scope.cut(id);
-      state.cut.add(id);
-      soundscape.playBondSnap?.();
-      frame.foeReact(id, { tool: 'cut' });
-      renderReadout(null, {
-        head: `Cutter // ${labelFor(id)}`,
-        body: found === 'none'
-          ? 'The blade closes on a single atom and finds nothing inside to split.'
-          : found === 'broke'
-            ? 'The blade cuts the joins and the group falls apart into separate atoms.'
-            : 'The blade just scatters the heap. Nothing here was bonded to anything.'
-      });
-    } else if (tool === 'settle') {
-      await scope.settle(id);
-      state.settled.add(id);
-      frame.foeReact(id, { tool: 'settle' });
-      const bands = bandCount(id);
-      renderReadout(null, {
-        head: `Shaker // ${labelFor(id)}`,
-        body: bands > 1
-          ? `It settles into ${bands} separate layers, so more than one substance is in there.`
-          : 'It settles into one even layer, so it is all one substance.'
-      });
-    }
-
-    busy = false;
-    frame.setCommitEnabled(true);
-  }
-
-  function labelFor(id) {
-    return STAGES[index].samples.find(s => s.id === id)?.label || id;
-  }
-
-  /** How many distinct materials are in a crate — what the shaker reveals. */
-  function bandCount(id) {
-    const sample = STAGES[index].samples.find(s => s.id === id);
-    return new Set(sample.particles.map(p => p.kinds.join('+'))).size;
-  }
-
-  /* ---------------- probe readout ---------------- */
-
-  function onProbe(hit) {
-    // Stage 3 counts distinct elements, so each new one read is one row on the bench log.
-    if (index === 2 && !state.probed.has(hit.kindId)) {
-      frame.logReading({ 'Atom': KINDS[hit.kindId].code, 'Mass': KINDS[hit.kindId].mass.toFixed(1) });
-    }
-    state.probed.add(hit.kindId);
-    soundscape.playScanSweep?.();
-    renderReadout(hit);
-    if (index === 2) {
-      const tally = frame.el.widget.querySelector('.lq-tally');
-      if (tally) tally.textContent = `Different elements read so far: ${state.probed.size}`;
-    }
-  }
-
-  function onSelect(id) {
-    state.sample = id;
-    scope.setSelected(id);
-    checkResolved();
-    if (STAGES[index].widget.type === 'sample') renderWidget();
-  }
-
-  /**
-   * The instrument card. It reports what it measured and nothing more: how many
-   * other atoms are holding this one, never which elements they are. Counting the
-    * arms is the player's job, and it is the whole of stage five.
-    */
-  function renderReadout(hit, message) {
-    if (message) {
-      frame.setReadout(`
-        <div class="lq-readout-card">
-          <div class="lq-readout-head">${esc(message.head)}</div>
-          <p class="lq-readout-line">${esc(message.body)}</p>
-        </div>
-      `);
-      return;
-    }
-    if (!hit) {
-      const stage = STAGES[index];
-      const anyResolved = stage.samples.some(s => detailFor(state.power, s.floorPower) >= 3);
-      frame.setReadout(`
-        <div class="lq-readout-card lq-readout-idle">
-          <div class="lq-readout-head">Probe // standby</div>
-          <p class="lq-readout-line">${anyResolved
-          ? 'Tap any atom to read it.'
-          : 'Nothing is in focus yet. Turn the Power dial up.'}</p>
-        </div>
-      `);
-      return;
-    }
-
-    const k = KINDS[hit.kindId];
-    frame.setReadout(`
-      <div class="lq-readout-card">
-        <div class="lq-readout-head">Probe // ${esc(hit.sampleLabel)}</div>
-        <div class="lq-readout-code">${esc(k.code)}</div>
-        ${meter('Mass', massBar(hit.kindId), k.mass.toFixed(1))}
-        ${meter('Size', sizeBar(hit.kindId), k.size.toFixed(2))}
-        <div class="lq-readout-hold">${hit.neighbours === 0
-        ? 'Not joined to anything.'
-        : `Joined to ${hit.neighbours} other ${hit.neighbours === 1 ? 'atom' : 'atoms'}.`}</div>
-        <p class="lq-readout-line">${esc(k.note)}</p>
-      </div>
-    `);
-  }
-
-  function meter(label, filled, value) {
-    return `
-      <div class="lq-meter">
-        <span class="lq-meter-label">${label}</span>
-        <span class="lq-meter-bar" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i < filled ? 'on' : ''}"></i>`).join('')
-      }</span>
-        <span class="lq-meter-value">${value}</span>
-      </div>
-    `;
-  }
-
-  /* ---------------- answer widgets ---------------- */
-
-  function renderWidget() {
-    const stage = STAGES[index];
-    const w = stage.widget;
-
-    if (w.type === 'choice-row') {
-      const min = w.min || 1;
-      const max = w.max || 6;
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-choice-row">
-            ${Array.from({ length: max - min + 1 }, (_, i) => {
-        const val = min + i;
-        const sel = state.number === val;
-        return `<button type="button" class="btn-secondary quest-btn-sm lq-choice-btn ${sel ? 'selected' : ''}" data-choice-val="${val}">${val}</button>`;
-      }).join('')}
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-choice-val]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.number = Number(btn.dataset.choiceVal);
-          frame.el.widget.querySelectorAll('.lq-choice-btn').forEach(b => {
-            b.classList.toggle('selected', Number(b.dataset.choiceVal) === state.number);
-          });
-          soundscape.playToggleClack?.();
-        });
-      });
-      return;
-    }
-
-    if (w.type === 'number') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-number">
-            <button type="button" class="btn-secondary quest-btn-sm" data-num="-1" aria-label="Lower">&minus;</button>
-            <span class="lq-number-value" aria-live="polite">${state.number}</span>
-            <button type="button" class="btn-secondary quest-btn-sm" data-num="1" aria-label="Raise">+</button>
-          </div>
-          ${index === 2 ? `<div class="lq-tally eyebrow lit">Different elements read so far: ${state.probed.size}</div>` : ''}
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-num]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.number = Math.max(w.min, Math.min(w.max, state.number + Number(btn.dataset.num)));
-          frame.el.widget.querySelector('.lq-number-value').textContent = String(state.number);
-          soundscape.playToggleClack?.();
-        });
-      });
-      return;
-    }
-
-    if (w.type === 'sample') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">Logged</span>
-          <div class="lq-answer-value">${state.sample ? esc(labelFor(state.sample)) : '—'}</div>
-          <p class="form-help">Tap a sample on the bench to pick it.</p>
-        </div>
-      `);
-      return;
-    }
-
-    if (w.type === 'build') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">Build tray</span>
-          <div class="lq-build">
-            ${w.kinds.map(kid => `
-              <div class="lq-build-row" data-kind="${kid}">
-                <span class="lq-build-dot" data-tint="${KINDS[kid].tint}"></span>
-                <span class="lq-build-code">${KINDS[kid].code}</span>
-                <button type="button" class="btn-secondary quest-btn-sm" data-build="-1" aria-label="One fewer ${KINDS[kid].code}">&minus;</button>
-                <span class="lq-build-count">0</span>
-                <button type="button" class="btn-secondary quest-btn-sm" data-build="1" aria-label="One more ${KINDS[kid].code}">+</button>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-build]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const row = btn.closest('[data-kind]');
-          const kid = row.dataset.kind;
-          const n = Math.max(0, Math.min(w.max, (state.build[kid] || 0) + Number(btn.dataset.build)));
-          if (n === 0) delete state.build[kid]; else state.build[kid] = n;
-          row.querySelector('.lq-build-count').textContent = String(n);
-          row.classList.toggle('filled', n > 0);
-          soundscape.playToggleClack?.();
-        });
-      });
-      return;
-    }
-
-    if (w.type === 'bins') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">Your answer</span>
-          <div class="lq-bins">
-            ${stage.samples.map(s => `
-              <div class="lq-bin-row" data-sample="${s.id}">
-                <span class="lq-bin-sample">${esc(s.label)}</span>
-                <div class="lq-bin-keys">
-                  ${w.bins.map(b => `
-                    <button type="button" class="choice-option lq-bin-key" data-bin="${b.id}">
-                      <span class="lq-bin-label">${esc(b.label)}</span>
-                      <span class="lq-bin-note">${esc(b.note)}</span>
-                    </button>
-                  `).join('')}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-bin]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const row = btn.closest('[data-sample]');
-          const sid = row.dataset.sample;
-          state.bins[sid] = btn.dataset.bin;
-          row.querySelectorAll('[data-bin]').forEach(o => o.classList.toggle('selected', o === btn));
-          const bin = w.bins.find(b => b.id === btn.dataset.bin);
-          scope.setPlateTag(sid, bin ? bin.label : '');
-          soundscape.playToggleClack?.();
-        });
-      });
-    }
-  }
-
-  /* ---------------- go ---------------- */
-
-  loadStage(index);
-
-  return {
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      unbindDial?.();
-      unbindDial = null;
-      scope.dispose();
-      frame.dispose();
-    }
-  };
+  runner.start();
+  return { dispose: () => runner.dispose() };
 }

@@ -2644,6 +2644,182 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   if (failures === before) ok('Bellows: every graded pressure, volume, amount, share, speed and leak agrees with the real tables, and every claim a stage teaches is true of its plate');
 }
 
+/* ------------------------------------------------------------------
+   TALLOW'S TABLES ARE REAL (plan `bench-tabletop.md`, T1). A table stage declares pieces, and a
+   declaration can say a thing the instruments never would: a ring of nine electrons, a particle
+   kind the scope has never weighed. Everything declared is held to the real tables (`atoms.js`,
+   `scope.js`, `corebench.js`), and every graded answer is recomputed from them, so a literal in a
+   solution script cannot drift from the planner that teaches it.
+   ------------------------------------------------------------------ */
+{
+  const before = failures;
+  const A = await import('../src/learn/table/kits/atoms.js');
+  const SC = await import('../src/learn/engine/scope.js');
+  const get = async id => { const q = getQuest('unit01', id); return q && q.status === 'live' ? q.module() : null; };
+  const [g1, g2] = await Promise.all([get('q1-grain'), get('q2-core')]);
+  const same = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+  const holds = (c, what) => { if (!c) fail(what); };
+  const end = (mod, i) => TABLE.runScript(TABLE.createTable(mod.STAGES[i].table, mod.STAGES[i].title), mod.SOLUTIONS[i], { strict: true });
+  const piecesOf = (t, zone, kind) => Object.values(t.pieces).filter(p => p.zone === zone && !p.hidden && (!kind || p.kind === kind));
+  const idsIn = (t, zone) => piecesOf(t, zone).map(p => p.id).sort();
+
+  /* ---- what is declared is real ---- */
+  for (const [qid, mod] of [['q1-grain', g1], ['q2-core', g2]]) {
+    if (!mod) continue;
+    mod.STAGES.forEach((st, i) => {
+      const label = `unit01/${qid} stage ${i + 1}`;
+      for (const p of st.table.pieces) {
+        if (p.kind === 'dish') {
+          const s = p.props.sample;
+          holds(Number.isInteger(s.floorPower) && s.floorPower >= 1 && s.floorPower <= 6, `${label}: dish ${p.id} floors at power ${s.floorPower}, which the scope's dial does not have`);
+          for (const e of s.particles) {
+            holds(Number.isInteger(e.n) && e.n >= 1, `${label}: dish ${p.id} holds ${e.n} of something`);
+            for (const k of e.kinds) holds(Boolean(A.SCOPE_KINDS[k]), `${label}: dish ${p.id} holds "${k}", which the scope has never weighed`);
+          }
+        }
+        if (p.kind === 'atom') { try { A.elementOf(p.props.el); } catch { fail(`${label}: atom ${p.id} is "${p.props.el}", not an element`); } }
+        if (p.kind === 'specimen') {
+          const { rings = [], p: pr, n: ne } = p.props;
+          holds(Number.isInteger(pr) && pr >= 1 && Number.isInteger(ne) && ne >= 0, `${label}: specimen ${p.id} has no real middle`);
+          rings.forEach((n, si) => {
+            const room = si === 0 ? 2 : 8;
+            holds(n >= 0 && n <= room, `${label}: specimen ${p.id} puts ${n} electrons on shell ${si + 1}, which holds ${room}`);
+            holds(si === 0 || rings[si - 1] === (si === 1 ? 2 : 8) || n === 0, `${label}: specimen ${p.id} fills shell ${si + 1} while shell ${si} still has room`);
+          });
+        }
+        if (p.kind === 'nucleus') holds(Number.isInteger(p.props.p) && p.props.p >= 1 && Number.isInteger(p.props.n), `${label}: nucleus ${p.id} is not a real middle`);
+      }
+      const ids = new Set(st.table.pieces.map(p => p.id));
+      for (const f of st.table.fixtures || []) {
+        if (f.kind === 'needle') {
+          holds(ids.has(f.props.nucleus), `${label}: the needle reads a nucleus (${f.props.nucleus}) that is not on the table`);
+          for (const z of f.props.zones) holds((st.table.zones.trays || []).some(t => `tray:${t.id}` === z), `${label}: the needle reads a zone (${z}) that is not a tray`);
+        }
+      }
+    });
+  }
+
+  /* ---- q1-grain: every graded answer from the scope's own planners ---- */
+  if (g1) {
+    const kindsOf = s => new Set(s.particles.flatMap(e => e.kinds));
+    const sampleOf = (t, id) => t.pieces[id].props.sample;
+    // 1. the lowest power where the scope resolves single atoms
+    {
+      const t = end(g1, 0);
+      const floor = sampleOf(t, 'dishA').floorPower;
+      const lowest = [1, 2, 3, 4, 5, 6].find(p => SC.detailFor(p, floor) >= 3);
+      same(t.fixtures.scope.dials.power.value, lowest, 'unit01/q1-grain stage 1 (the lowest power that resolves atoms)');
+    }
+    // 2. one kind of atom, or more
+    {
+      const t = end(g1, 1);
+      for (const [tray, one] of [['tray:one', true], ['tray:more', false]]) {
+        for (const p of piecesOf(t, tray, 'dish')) holds((kindsOf(p.props.sample).size === 1) === one, `unit01/q1-grain stage 2: ${p.label} holds ${kindsOf(p.props.sample).size} kind(s) of atom and is in the wrong tray`);
+      }
+    }
+    // 3. each tray holds one element, and an element is in one tray
+    {
+      const t = end(g1, 2);
+      const byTray = {};
+      for (const p of Object.values(t.pieces)) if (p.kind === 'atom' && p.zone && !p.props.scratch) (byTray[p.zone] ||= new Set()).add(p.props.el);
+      holds(Object.values(byTray).every(s => s.size === 1), 'unit01/q1-grain stage 3: a tray holds two elements');
+      const els = Object.values(byTray).map(s => [...s][0]);
+      same(els.length, new Set(els).size, 'unit01/q1-grain stage 3 (an element is split across trays)');
+      const masses = ['Na', 'Mg'].map(sym => A.SCOPE_KINDS[Object.keys(A.SCOPE_KINDS).find(k => A.symOfKind(k) === sym)].mass);
+      holds(masses[0] !== masses[1], 'unit01/q1-grain stage 3: sodium and magnesium weigh the same, so the reader cannot tell them apart');
+    }
+    // 4. the cutter's own planner says which sample does not split
+    {
+      const t = end(g1, 3);
+      const un = Object.values(t.pieces).filter(p => p.kind === 'dish' && A.cutResult(p.props.sample) === 'none').map(p => p.id);
+      same(idsIn(t, 'tray:safe'), un.sort(), 'unit01/q1-grain stage 4 (the sample the cutter cannot split)');
+    }
+    // 5 and 6. the molecule built is the molecule the sample holds
+    for (const [i, dishes] of [[4, ['dishA']], [5, ['dishA', 'dishB']]]) {
+      const t = end(g1, i);
+      const mols = A.moleculesOf(t);
+      for (const d of dishes) {
+        const entry = sampleOf(t, d).particles[0];
+        const counts = {};
+        for (const k of entry.kinds) counts[A.symOfKind(k)] = (counts[A.symOfKind(k)] || 0) + 1;
+        holds(mols.some(m => JSON.stringify(Object.entries(m.counts).sort()) === JSON.stringify(Object.entries(counts).sort())), `unit01/q1-grain stage ${i + 1}: no molecule on the table is what ${t.pieces[d].label} holds`);
+      }
+    }
+    // 7. layers after the shake
+    {
+      const t = end(g1, 6);
+      for (const p of Object.values(t.pieces).filter(x => x.kind === 'dish')) {
+        const tray = `tray:${A.layersOf(p.props.sample) > 1 ? 'mixed' : 'one'}`;
+        holds(p.zone === tray, `unit01/q1-grain stage 7: ${p.label} settles into ${A.layersOf(p.props.sample)} layer(s) and is not in ${tray}`);
+      }
+    }
+    // 8. element, compound or mixture, from what the sample holds
+    {
+      const t = end(g1, 7);
+      const classify = s => {
+        const grouped = s.particles.some(e => e.kinds.length > 1);
+        if (grouped) return new Set(s.particles.flatMap(e => e.kinds)).size > 1 ? 'compound' : 'element';
+        return new Set(s.particles.flatMap(e => e.kinds)).size > 1 ? 'mixed' : 'element';
+      };
+      for (const p of Object.values(t.pieces).filter(x => x.kind === 'dish')) same(p.zone, `tray:${classify(p.props.sample)}`, `unit01/q1-grain stage 8 (${p.label})`);
+    }
+  }
+
+  /* ---- q2-core: every graded answer from the counts ---- */
+  if (g2) {
+    const sp = (t, id) => t.pieces[id].props;
+    // 1. the beam: nearly everything through, a few turned aside, one straight back
+    {
+      const c = A.beamCounts(g2.STAGES[0].table.fixtures.find(f => f.kind === 'beam').props.specimen);
+      holds(c.through / c.shots > 0.9 && c.back >= 1 && c.wide >= 1, 'unit01/q2-core stage 1: the beam does not show mostly-empty with one hard lump');
+      same(end(g2, 0).pieces.core.zone, 'slot:model', 'unit01/q2-core stage 1 (the model laid)');
+    }
+    // 2. the protons are the + ones
+    {
+      const t = end(g2, 1);
+      const tray = piecesOf(t, 'tray:plus');
+      holds(tray.every(p => p.kind === 'proton') && tray.length === Object.values(t.pieces).filter(p => p.kind === 'proton').length, 'unit01/q2-core stage 2: the tray is not every proton and only protons');
+    }
+    // 3 and 7. the needle is protons against electrons, and neutral means equal
+    {
+      const t = end(g2, 2);
+      const lump = t.pieces.nuc.props;
+      same(piecesOf(t, 'tray:out', 'electron').length, lump.p, 'unit01/q2-core stage 3 (a neutral atom has as many electrons as protons)');
+      const u = end(g2, 6);
+      same(A.needleReading(u, 'needle'), 2, 'unit01/q2-core stage 7 (the needle after the electrons come off)');
+      same(['tray:sh1', 'tray:sh2', 'tray:sh3'].map(z => piecesOf(TABLE.createTable(g2.STAGES[6].table, 'x'), z, 'electron').length), A.shellsFor(g2.STAGES[6].table.pieces.find(p => p.id === 'nuc').props.p), 'unit01/q2-core stage 7 (the start is the real shell pattern)');
+    }
+    // 4. shells fill in order: the graded loading is the real pattern, and so are the open samples
+    {
+      const t = end(g2, 3);
+      same(['tray:sh1', 'tray:sh2', 'tray:sh3'].map(z => piecesOf(t, z, 'electron').length), A.shellsFor(t.pieces.nuc.props.p), 'unit01/q2-core stage 4 (the shells of Sample D)');
+      for (const id of ['r1', 'r2', 'r3']) same(sp(t, id).rings, A.shellsFor(sp(t, id).p), `unit01/q2-core stage 4 (open sample ${id} is neutral and filled in order)`);
+    }
+    // 5. what the tester finds
+    {
+      const t = end(g2, 4);
+      for (const id of ['s4', 's5']) same(t.pieces[id].zone, `tray:${A.behaviourOf(sp(t, id).rings)}`, `unit01/q2-core stage 5 (${t.pieces[id].label})`);
+      same(['s1', 's2', 's3'].map(id => A.behaviourOf(sp(t, id).rings)), ['gives', 'takes', 'inert'], 'unit01/q2-core stage 5 (the open samples show all three behaviours)');
+    }
+    // 6. same element: same proton count
+    {
+      const t = end(g2, 5);
+      for (const [id, tray] of [['sb', 'same'], ['sc', 'other']]) same(t.pieces[id].zone, `tray:${sp(t, id).p === sp(t, 'sa').p ? 'same' : 'other'}`, `unit01/q2-core stage 6 (${t.pieces[id].label})`);
+      holds(sp(t, 'sb').p + sp(t, 'sb').n === sp(t, 'sc').p + sp(t, 'sc').n, 'unit01/q2-core stage 6: the two suspects do not weigh the same');
+      for (const id of ['sa', 'sb', 'sc']) same(sp(t, id).rings.reduce((a, b) => a + b, 0), sp(t, id).p, `unit01/q2-core stage 6 (${id} is neutral)`);
+    }
+    // 8. isotope, ion or another element, against the reference
+    {
+      const t = end(g2, 7);
+      const ref = sp(t, 'sd');
+      const e = id => sp(t, id).rings.reduce((a, b) => a + b, 0);
+      const kind = id => (sp(t, id).p !== ref.p ? 'other' : sp(t, id).n !== ref.n && e(id) === e('sd') ? 'heavy' : e(id) !== e('sd') && sp(t, id).n === ref.n ? 'charged' : '?');
+      for (const id of ['n1', 'n2', 'n3']) same(t.pieces[id].zone, `tray:${kind(id)}`, `unit01/q2-core stage 8 (${t.pieces[id].label})`);
+    }
+  }
+  if (failures === before) ok('Tallow: every declared dish, atom, specimen and nucleus is real, and every graded answer (power, kinds, elements, cut, molecules, layers, beam, protons, shells, tester, isotopes) agrees with the scope\'s and the kit\'s own planners');
+}
+
 if (warnings) console.log(`\n${warnings} copy warning(s): reward cards over 45 words.`);
 console.log(`\n${failures === 0 ? 'LEARN TRACK OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

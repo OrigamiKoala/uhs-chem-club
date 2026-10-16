@@ -2467,5 +2467,244 @@ console.log('The foes — spoil standing in the wells\n');
   }
 }
 
+/* ------------------------------------------------------------ the real table stages */
+
+/**
+ * EVERY REAL TABLE STAGE, LEANED IN, in the world its quest is played in (plan §3.5). The throwaway
+ * table above proves the pipeline; this holds what shipped to the same rules:
+ *   - at every supported viewport the stage's whole table is inside the free glass, below the HUD and
+ *     the prompt strip and above the foot dock, and its smallest piece is 28 px or more across;
+ *   - the camera stands in the bay's `approach` or `lean` air;
+ *   - every piece's face is painted (the kit's `paintPiece` runs on a real canvas) and the table is
+ *     dressed from the host's own materials, never the bench kit's;
+ *   - the stage's whole SOLUTION is played through the viewer's own pointer handlers, by drag and by
+ *     two taps, and lands on the table the reducer reaches (a field step goes through the world's
+ *     registered point, the carry slot and the lean-in);
+ *   - a stage that fetches names a point this world registered, and the plate is not drawn there.
+ */
+{
+  console.log('\nthe real table stages, leaned in');
+  const MODEL = await import('../src/learn/table/model.js');
+  const SNAP = await import('../src/learn/table/snap.js');
+  const LAYOUT = await import('../src/learn/table/layout.js');
+  const REG = await import('../src/learn/table/kits/registry.js');
+  const BAY = await import('../src/three/bench-bay.js');
+  const FP = await import('../src/three/field-points.js');
+  const { Table3D } = await import('../src/learn/engine/table3d.js');
+  const { chromeReserve } = await import('../src/learn/engine/lean.js');
+  const { setBenchHost } = await import('../src/learn/engine/bench-host.js');
+  const { allQuests } = await import('../src/learn/curriculum.js');
+  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld };
+  const worlds = new Map();
+  const worldFor = unit => {
+    if (!worlds.has(unit)) { const w = new WORLD_OF[unit](null); w.scene.updateMatrixWorld(true); worlds.set(unit, w); }
+    return worlds.get(unit);
+  };
+  const setGlass = (w, h) => { window.innerWidth = w; window.innerHeight = h; };
+  const lean = BAY.bayBoxes().lean;
+  const approach = BAY.bayBoxes().approach;
+  const inBox = (p, b) => p.every((v, i) => v >= b.min[i] - 1e-6 && v <= b.max[i] + 1e-6);
+  const sigOf = s => JSON.stringify(MODEL.signature(s));
+  let stages = 0;
+  let presses = 0;
+
+  for (const q of allQuests().filter(x => x.status === 'live')) {
+    const mod = await q.module();
+    const tableStages = (mod.STAGES || []).map((s, i) => [s, i]).filter(([s]) => s.widget?.type === 'table');
+    if (!tableStages.length) continue;
+    const [unit, questId] = q.key.split('/');
+    const w = worldFor(unit);
+    const anchor = w.benchAnchor(questId);
+    if (!anchor) { fail(`${q.key}: plays table stages but its world has no bench anchor`); continue; }
+    const mats = anchor.dormant?.userData?.benchMats || null;
+    w.setBenchDeployed(questId, true);
+    const frameOf = camera => ({ scene: w.scene, camera, position: anchor.position, rotationY: anchor.rotationY, topY: anchor.topY, materials: mats, object: w, walkOwnsHeight: true });
+
+    for (const [stage, i] of tableStages) {
+      stages++;
+      const label = `${q.key} stage ${i + 1}`;
+      const before = failures;
+      const spec = stage.table;
+      const kit = REG.getKit(spec.kit);
+
+      // A stage that sends the player out: where this world registered the point, the player walks to it (the
+      // chevron leads there, no plate is drawn or tapped, `[E]` takes it); everywhere else the drawn plate stands in.
+      for (const f of spec.fetch || []) {
+        const pt = FP.fieldPointById(w, f.id);
+        const guides = [];
+        setBenchHost({ mount() {}, unmount() {}, guide: wp => guides.push(wp) });
+        setGlass(1920, 1080);
+        const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+        let st = MODEL.createTable(spec, stage.title);
+        const b = new Table3D(null, { world: frameOf(camera), onAction: a => { st = MODEL.apply(st, a); b.setState(st); b.settle(); } });
+        b.setState(st);
+        b.settleLean();
+        camera.updateMatrixWorld(true);
+        if (pt) {
+          if (b.showsSite(f.id)) fail(`${label}: the world has the point "${f.id}" but the built table still shows its site plate`);
+          const lead = guides.filter(Boolean).pop();
+          if (!lead || Math.hypot(lead.x - pt.stand[0], lead.z - pt.stand[2]) > 0.01) fail(`${label}: the chevron does not lead to the field point "${f.id}"`);
+          // A tap where the plate would be does nothing: the walk is the way.
+          const plate = f.at;
+          const pl = b.map.toPlate(plate);
+          const pr = new THREE.Vector3(pl.x, 0.895, pl.z);
+          b.root.localToWorld(pr);
+          pr.project(camera);
+          const e = { clientX: (pr.x + 1) / 2 * 1920, clientY: (1 - pr.y) / 2 * 1080, pointerId: 99, preventDefault() {} };
+          b._onPointerDown(e); b._onPointerUp(e);
+          if (Object.values(st.pieces).some(p => p.fetchFrom === f.id && !p.hidden)) fail(`${label}: a tap where the plate would be took the item without the walk`);
+          b.takeField(pt);
+          if (guides[guides.length - 1] !== null) fail(`${label}: the chevron is still leading once the item is carried`);
+          b.flushCarry();
+          if (Object.values(st.pieces).some(p => p.fetchFrom === f.id && p.hidden)) fail(`${label}: the carried item did not reach the table`);
+        } else if (!b.showsSite(f.id)) {
+          fail(`${label}: no field point in this world, yet the built table draws no site plate`);
+        }
+        b.dispose();
+        setBenchHost(null);
+      }
+
+      for (const [vpName, vw, vh] of LEAN_VIEWPORTS) {
+        setGlass(vw, vh);
+        const camera = new THREE.PerspectiveCamera(FOV, vw / vh, 0.05, 80);
+        const bench = new Table3D(null, { world: frameOf(camera), onAction: () => {} });
+        const state = MODEL.createTable(spec, stage.title);
+        try { bench.setState(state); } catch (e) { fail(`${label} @ ${vpName}: building the built table faulted — ${e.stack?.split('\n').slice(0, 3).join(' ')}`); bench.dispose(); continue; }
+        bench.settleLean();
+        const tag = `${label} leaned in @ ${vpName} (${vw}x${vh})`;
+        if (!bench.leaning || !bench.lean?.pose) { fail(`${tag}: the table did not lean in`); bench.dispose(); continue; }
+        if (!bench.lean.pose.fits) fail(`${tag}: the used zone does not fit the free glass`);
+        const res = chromeReserve(vw, vh);
+        const free = { l: -1 + 2 * res.left / vw, r: 1 - 2 * res.right / vw, b: -1 + 2 * res.bottom / vh, t: 1 - 2 * res.top / vh };
+        camera.updateMatrixWorld(true);
+        const zone = bench.map.zone;
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (const [x, z] of [[zone.x0, zone.z0], [zone.x1, zone.z0], [zone.x0, zone.z1], [zone.x1, zone.z1]]) {
+          const p = new THREE.Vector3(x, 0.895, z);
+          bench.root.localToWorld(p);
+          p.project(camera);
+          minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+        }
+        const eps = 0.012;
+        if (minX < free.l - eps || maxX > free.r + eps) fail(`${tag}: the table runs out of the free width`);
+        if (maxY > free.t + eps) fail(`${tag}: the table runs under the HUD and the prompt strip`);
+        if (minY < free.b - eps) fail(`${tag}: the table runs under the foot dock`);
+
+        // The smallest piece, in screen pixels.
+        let smallest = Infinity;
+        for (const p of Object.values(state.pieces)) {
+          if (p.hidden) continue;
+          const r = REG.radiusOf(kit, p);
+          const a = bench.map.toPlate(p.at);
+          const b = bench.map.toPlate({ x: p.at.x + r, y: p.at.y });
+          const pa = new THREE.Vector3(a.x, 0.895, a.z);
+          const pb = new THREE.Vector3(b.x, 0.895, b.z);
+          bench.root.localToWorld(pa); bench.root.localToWorld(pb);
+          pa.project(camera); pb.project(camera);
+          smallest = Math.min(smallest, 2 * Math.hypot((pb.x - pa.x) * vw / 2, (pb.y - pa.y) * vh / 2));
+        }
+        if (smallest < 28) fail(`${tag}: the smallest piece is ${smallest.toFixed(1)} px across, under 28`);
+
+        const local = bench.root.worldToLocal(camera.position.clone());
+        const inBay = [local.x, local.y + (BAY.PLATE_TOP - 0.895), local.z];
+        if (!inBox(inBay, lean) && !inBox(inBay, approach)) fail(`${tag}: the camera is outside the approach and lean air`);
+
+        // Every kit-painted piece has a face, and every table is dressed from the host's own materials.
+        if (vpName === '16:9') {
+          const painted = bench.pieceRoot.children.filter(c => c.userData.ring).length;
+          const expect = Object.values(state.pieces).filter(p => !p.hidden && !(p.kind === 'card' || p.token)).length;
+          if (painted < expect) fail(`${tag}: ${painted} of ${expect} pieces were built`);
+          const offenders = new Set();
+          for (const root of [bench.fixtureRoot, bench.pieceRoot, bench.joinRoot]) {
+            root.traverse(o => {
+              if (!o.isMesh) return;
+              const m = o.material;
+              if (mats && (m === mats.top || m === mats.dark || m.userData?.tableOwned)) return;
+              offenders.add(m === bench.steelMat || m === bench.darkMat ? 'the bench kit' : (m.type || 'a material'));
+            });
+          }
+          if (offenders.size) fail(`${tag}: dressed from ${[...offenders].join(', ')}, not the host's own materials`);
+        }
+        bench.dispose();
+      }
+
+      // The solution through the real pointer path, by drag and by two taps.
+      const script = mod.SOLUTIONS[i];
+      setGlass(1920, 1080);
+      for (const mode of ['drag', 'tap']) {
+        const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+        let st = MODEL.createTable(spec, stage.title);
+        const b2 = new Table3D(null, { world: frameOf(camera), onAction: a => { st = MODEL.apply(st, a); b2.setState(st); b2.settle(); } });
+        b2.setState(st);
+        b2.settleLean();
+        camera.updateMatrixWorld(true);
+        let id = 40;
+        const px = u => {
+          const pl = b2.map.toPlate(u);
+          const p = new THREE.Vector3(pl.x, 0.895, pl.z);
+          b2.root.localToWorld(p);
+          p.project(camera);
+          return { clientX: (p.x + 1) / 2 * 1920, clientY: (1 - p.y) / 2 * 1080 };
+        };
+        const ev = u => ({ ...px(u), pointerId: id, preventDefault() {} });
+        const down = u => { id++; b2._onPointerDown(ev(u)); if (b2.grabbing) presses++; };
+        const move = u => b2._onPointerMove(ev(u));
+        const up = u => b2._onPointerUp(ev(u));
+        const tap = u => { down(u); up(u); };
+        try {
+          for (const step of script) {
+            const verb = Object.keys(step)[0];
+            const arg = step[verb];
+            let piece = null, to = null;
+            if (verb === 'place' && arg.to !== undefined) { piece = arg.piece ?? st.carry.held; to = arg.to; }
+            else if (verb === 'join') { piece = arg[0]; to = `piece:${arg[1]}`; }
+            else if (verb === 'predict' && arg) { piece = arg; to = `slot:${st.prediction.slot}`; }
+            if (piece) {
+              const c = { ...st.pieces[piece].at };
+              const p = SNAP.pointFor(st, kit, to, piece);
+              if (mode === 'drag') { down(c); move({ x: (c.x + p.x) / 2, y: (c.y + p.y) / 2 }); move(p); up(p); }
+              else { tap(c); tap(to.startsWith('piece:') ? { ...st.pieces[to.slice(6)].at } : p); }
+            } else if (verb === 'setDial') {
+              const lay = LAYOUT.fixtureLayout(st.fixtures[arg.fixture]);
+              const t = lay.dials.find(x => x.name === arg.dial);
+              const d = st.fixtures[arg.fixture].dials[arg.dial];
+              tap({ x: t.x0 + (arg.value - d.min) / (d.max - d.min) * (t.x1 - t.x0), y: t.y });
+            } else if (verb === 'run') {
+              const r = LAYOUT.fixtureLayout(st.fixtures[typeof arg === 'string' ? arg : arg.fixture]).run;
+              tap({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
+            } else if (verb === 'fetch') {
+              // Where the world has the point, the player walks to it and presses [E]; here that is the point itself.
+              const pt = FP.fieldPointById(w, arg);
+              if (pt) { if (!b2.takeField(pt)) fail(`${label}: the world's point "${arg}" took nothing`); b2.flushCarry(); }
+              else tap({ ...st.fetch[arg].at });
+            } else {
+              b2.onAction(step);
+            }
+          }
+        } catch (e) {
+          fail(`${label}: playing the solution by ${mode} through the pointer path faulted — ${e.stack?.split('\n').slice(0, 3).join(' ')}`);
+          b2.dispose();
+          continue;
+        }
+        const direct = MODEL.runScript(MODEL.createTable(spec, stage.title), script, { mode: 'direct', strict: true });
+        if (sigOf(st) !== sigOf(direct)) {
+          const a = JSON.parse(sigOf(st));
+          const d = JSON.parse(sigOf(direct));
+          fail(`${label}: the pointer path by ${mode} does not reach the table the script names (differs in ${Object.keys(d).filter(k => JSON.stringify(a[k]) !== JSON.stringify(d[k])).join(', ')})`);
+        }
+        const solved = stage.check({ ...mod.stateFor(i, {}), table: st });
+        if (!solved.ok) fail(`${label}: after the pointer path by ${mode} the stage does not pass (${solved.msg})`);
+        const bad = MODEL.checkInvariants(st);
+        if (bad.length) fail(`${label}: the table is unsound after the pointer path by ${mode} — ${bad[0]}`);
+        b2.dispose();
+      }
+      if (failures === before) ok(`${label}: leans in at ${LEAN_VIEWPORTS.length} viewports (whole table in the free glass, pieces 28 px or more, host materials), solved through the real pointer path by drag and by two taps`);
+    }
+    w.setBenchDeployed(questId, false);
+  }
+  if (!stages) fail('no real table stage was found to check');
+  else ok(`${stages} real table stage(s) checked on the built table (${presses} presses took hold)`);
+}
+
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);
 process.exit(failures === 0 ? 0 : 1);

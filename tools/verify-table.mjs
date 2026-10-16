@@ -73,6 +73,9 @@ function authoredKeys(node, path = 'table') {
   if (Array.isArray(node)) node.forEach((x, i) => out.push(...authoredKeys(x, `${path}[${i}]`)));
   else if (node && typeof node === 'object') {
     for (const [k, v] of Object.entries(node)) {
+      // `props.sample` is the scope's own declaration of what a dish holds (the picture's bonds are
+      // its drawing, not a join the table made); nothing the table decides lives under it.
+      if (k === 'sample') continue;
       if (AUTHORED_OUTCOME.test(k)) out.push(`${path}.${k}`);
       out.push(...authoredKeys(v, `${path}.${k}`));
     }
@@ -163,7 +166,8 @@ function checkTableStage(label, stage, solution, misses) {
     ...Object.values(t0.zones.containers).map(z => [`container ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.container)]),
     ...(t0.zones.rail ? [['the rail', SNAP.rectOf(t0.zones.rail, SNAP.SIZES.rail)]] : []),
     ['the recorder strip', SNAP.rectOf(t0.recorder.box, { w: 30, h: 18 })],
-    ...Object.values(t0.fixtures).map(z => [`fixture ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.fixture)])
+    ...Object.values(t0.fixtures).map(z => [`fixture ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.fixture)]),
+    ...Object.values(t0.fetch).filter(z => z.at).map(z => [`site plate ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.site)])
   ];
   // A piece that starts loose starts on open table: clear of every zone and of its neighbours.
   const loose = Object.values(t0.pieces).filter(p => !p.zone);
@@ -289,9 +293,19 @@ function checkTableStage(label, stage, solution, misses) {
       fail(`${label}: tool "${id}" — ${e.message}`);
     }
   }
+  // Walk the solution once, keeping every table it passes through: a fixture that reads a detector
+  // or a sample can only read once something is placed, so "reads something" is asked along the way.
+  const trail = [t0];
+  {
+    let cur = t0;
+    for (const step of solution) {
+      for (const a of MODEL.expandStep(cur, step, 'direct')) cur = MODEL.apply(cur, a);
+      trail.push(cur);
+    }
+  }
   for (const f of Object.values(t0.fixtures)) {
-    const row = kit.run(t0, f.id);
-    if (!row) fail(`${label}: fixture ${f.id} reads nothing when run`);
+    if (!f.noRun && !trail.some(st => kit.run(st, f.id))) fail(`${label}: fixture ${f.id} reads nothing when run, at any point of the solution`);
+    if (f.noRun && kit.run(t0, f.id)) fail(`${label}: fixture ${f.id} has no Run key but reads when run`);
     for (const [name, d] of Object.entries(f.dials)) {
       if (!(d.max > d.min)) { fail(`${label}: dial ${f.id}.${name} has no range`); continue; }
       const moved = MODEL.apply(t0, { setDial: { fixture: f.id, dial: name, value: d.value === d.max ? d.min : d.max } });
@@ -316,7 +330,9 @@ function checkTableStage(label, stage, solution, misses) {
       if (ctx.stats.nan) fail(`${label}: the ${name} table draws NaN at ${w2}x${h2}`);
       if (ctx.stats.maxX > w2 + 2 || ctx.stats.maxY > h2 + 2) fail(`${label}: the ${name} table draws off the plate at ${w2}x${h2}`);
       for (const p of Object.values(st.pieces).filter(q => !q.hidden)) {
-        if (!ctx.stats.text.includes(String(p.label))) fail(`${label}: piece "${p.label}" is not drawn at ${w2}x${h2}`);
+        // A kit that paints its own faces says what each prints (an atom with its symbol withheld prints none).
+        const printed = kit.printed ? kit.printed(p, st) : String(p.label);
+        if (printed && !ctx.stats.text.includes(printed)) fail(`${label}: piece "${p.label}" is not drawn at ${w2}x${h2}`);
       }
     }
   }
@@ -358,9 +374,13 @@ function driveView(table, script, mode) {
         view.pointerMove(p);
         view.pointerUp(p);
       } else {
+        // A person taps the middle of what they mean: the piece itself, not a point beside it.
         tap(c);
-        tap(p);
+        tap(to.startsWith('piece:') ? { ...state.pieces[to.slice(6)].at } : p);
       }
+    } else if (verb === 'fetch' && state.fetch[arg]?.at) {
+      // At T1 to T3 the field point is a site plate on the table: a tap on it takes the item.
+      tap({ ...state.fetch[arg].at });
     } else if (verb === 'setDial') {
       const lay = Object.values(state.fixtures).find(f => f.id === arg.fixture);
       const d = dialTrack(lay, arg.dial);
@@ -812,6 +832,141 @@ console.log('\nCatalogue board — drag filing, a strip pushes along\n');
     if (Object.keys(a.placements()).length !== 2) fail(`unit01/q3-catalogue stage ${si + 1}: pushing the row lost a card`);
   }
   if (failures === before) ok('the strip pushes along, never loses a card, and a tap and a drag file alike');
+}
+
+
+/* ------------------------------------------------------------------
+   3b. THE ATOM KIT (`table/kits/atoms.js`)
+
+   The bond-scale half is what Ligar's `q1-joins` and `q4-dots` build on (T1b), so it is
+   held to the physics here, on a bare table of atoms: every outcome is the join bench's own
+   planner (`planJoin`) against the shells as they stand, a pair that does not hold drifts
+   apart and says why, and everything read (charge, formula, lamps) is derived from the links,
+   so splitting a join undoes it.
+   ------------------------------------------------------------------ */
+
+console.log('\nAtom kit — one set of rules, two scales\n');
+{
+  const before = failures;
+  const A = await import('../src/learn/table/kits/atoms.js');
+  const JB = await import('../src/learn/engine/joinbench.js');
+  const LW = await import('../src/learn/engine/lewis.js');
+  const el = (id, sym, x, y, props = {}) => ({ id, kind: 'atom', label: sym, at: { x, y }, props: { el: sym, ...props } });
+  const spec = A.atomTable({
+    pieces: [
+      el('o1', 'O', 10, 8), el('o2', 'O', 30, 8), el('o3', 'O', 50, 8),
+      el('h1', 'H', 10, 22), el('h2', 'H', 22, 22), el('h3', 'H', 34, 22), el('h4', 'H', 46, 22), el('h5', 'H', 58, 22), el('h6', 'H', 10, 50), el('h7', 'H', 22, 50),
+      el('c1', 'C', 10, 36), el('ne1', 'Ne', 30, 36), el('ne2', 'Ne', 42, 36),
+      el('na1', 'Na', 70, 8), el('cl1', 'Cl', 86, 8), el('mg1', 'Mg', 70, 22), el('cl2', 'Cl', 86, 22), el('cl3', 'Cl', 100, 22),
+      el('n1', 'N', 70, 36), el('n2', 'N', 86, 36),
+      { id: 'pr1', kind: 'proton', label: 'Proton', at: { x: 100, y: 8 } }, { id: 'el1', kind: 'electron', label: 'Electron', at: { x: 106, y: 8 } }
+    ]
+  });
+  let t = MODEL.createTable(spec, 'atoms-kit');
+  const join = (a, b) => { t = MODEL.apply(t, { join: [a, b] }); return t.last; };
+  const shells = id => A.atomView(t.pieces[id], t).shells.join(',');
+  const eq = (got, want, msg) => { if (JSON.stringify(got) !== JSON.stringify(want)) fail(`atom kit: ${msg} (got ${JSON.stringify(got)}, wanted ${JSON.stringify(want)})`); };
+
+  // Every outcome is the planner's: the same pair, asked of joinbench directly, gives the same answer.
+  const ask = (a, b) => JB.planJoin({ left: A.atomView(t.pieces[a], t), right: A.atomView(t.pieces[b], t) });
+  for (const [a, b] of [['o1', 'h1'], ['ne1', 'ne2'], ['na1', 'cl1'], ['n1', 'n2'], ['mg1', 'cl2'], ['o2', 'o3'], ['h4', 'h5'], ['na1', 'mg1']]) {
+    const plan = ask(a, b);
+    const was = MODEL.apply(t, { join: [a, b] }).last;
+    if (Boolean(was.joined) !== (plan.type !== 'none')) fail(`atom kit: ${a}+${b} ${was.joined ? 'held' : 'drifted'} but joinbench's planJoin says ${plan.type}`);
+  }
+
+  // Water: two hydrogens hold, a third does not, and says why.
+  join('h1', 'o1'); join('h2', 'o1');
+  eq(A.formulaOf(['o1', 'h1', 'h2'], t), 'H₂O', 'two hydrogens on an oxygen are water');
+  eq(shells('o1'), '2,8', 'oxygen ends with a full outer shell');
+  const third = join('h3', 'o1');
+  if (third.joined !== false || !/no room/i.test(third.reason || '')) fail(`atom kit: a third hydrogen on a full oxygen should drift apart saying so (got ${JSON.stringify(third)})`);
+  if (t.pieces.h3.joinedTo.length) fail('atom kit: a pair that does not hold must not stay joined');
+
+  // Neon and neon: nothing to give or take.
+  const nn = join('ne1', 'ne2');
+  if (nn.joined !== false || !nn.reason) fail('atom kit: neon with neon holds, or gives no reason');
+
+  // A hand-over: the charges are the planner's moved electrons, the formula is a salt, and the cluster is neutral.
+  join('cl1', 'na1');
+  eq([t.links[SNAP.linkKey('cl1', 'na1')].type, t.links[SNAP.linkKey('cl1', 'na1')].giver], ['transfer', 'na1'], 'sodium gives, chlorine takes');
+  eq([A.chargeOf(['na1'], t), A.chargeOf(['cl1'], t), A.chargeOf(['na1', 'cl1'], t)], [1, -1, 0], 'sodium chloride is +1, -1, and neutral together');
+
+  // MgCl: the second chlorine holds, the third has nothing left to take from.
+  join('cl2', 'mg1');
+  eq([A.readPiece('mg1', t).charge, A.closureOf(['mg1', 'cl2'], t).closed], [1, false], 'magnesium with one chlorine is a +1 ion and the pair is still open');
+  join('cl3', 'mg1');
+  eq([A.formulaOf(['mg1', 'cl2', 'cl3'], t), A.chargeOf(['mg1', 'cl2', 'cl3'], t), shells('mg1'), A.closureOf(['mg1', 'cl2', 'cl3'], t).closed], ['MgCl₂', 0, '2,8', true], 'two chlorines clear one magnesium: a neutral compound with nothing left open');
+  const fourth = join('cl3', 'mg1');
+  eq(fourth.already ?? true, true, 'joining a pair that already stands is not a second join');
+
+  // Doubles and triples are one planner answer, not a second join.
+  join('o2', 'o3');
+  eq(t.links[SNAP.linkKey('o2', 'o3')]?.pairs, 2, 'two oxygens share two pairs');
+  join('n1', 'n2');
+  eq(t.links[SNAP.linkKey('n1', 'n2')]?.pairs, 3, 'two nitrogens share three pairs');
+
+  // Methane: four hydrogens on a carbon, and the fifth is refused.
+  for (const h of ['h3', 'h4', 'h5', 'h6']) join(h, 'c1');
+  eq([A.formulaOf(['c1', 'h3', 'h4', 'h5', 'h6'], t), A.closureOf(['c1', 'h3', 'h4', 'h5', 'h6'], t).closed], ['CH₄', true], 'four hydrogens on a carbon are methane, and nothing is left open');
+  const fifth = join('h7', 'c1');
+  if (fifth.joined !== false) fail('atom kit: a fifth hydrogen on a full carbon held');
+
+  // A split undoes a join, charges and shells included.
+  t = MODEL.apply(t, { split: ['cl1', 'na1'] });
+  eq([A.chargeOf(['na1'], t), shells('na1'), shells('cl1')], [0, '2,8,1', '2,8,7'], 'splitting a hand-over gives both atoms back');
+
+  // Lewis: the cluster as drawn is `planLewis`, read from the links and from what is on each atom.
+  const bare = A.lewisOf(['o1', 'h1', 'h2'], t);
+  if (bare.read.complete) fail('atom kit: a water with no lone pairs drawn reads complete');
+  t.pieces.o1.props.lone = 2;
+  const full = A.lewisOf(['o1', 'h1', 'h2'], t);
+  if (!(full.read.complete && LW.allLit(full.read))) fail('atom kit: water with its two lone pairs drawn does not read complete and lit');
+
+  // Particles are never joined: set down beside another piece, they are just set down.
+  t = MODEL.apply(t, { place: { piece: 'el1', at: { x: 101, y: 8 } } });
+  if (t.last.verb !== 'place' || t.pieces.el1.joinedTo.length || t.last.joined === false) fail('atom kit: an electron set down beside a proton tried to join it');
+
+  // The scratch corner: on every atom-kit table, ignored by every grader.
+  for (const q of live) {
+    const mod = mods.get(q.key);
+    (mod.STAGES || []).forEach((st, i) => {
+      if (st.table?.kit !== 'atoms') return;
+      const label = `${q.key} stage ${i + 1}`;
+      const scratch = st.table.pieces.filter(p => p.props?.scratch);
+      const bin = (st.table.zones?.trays || []).find(x => x.id === 'scr-bin');
+      if (scratch.length < 3 || !bin) fail(`${label}: no scratch corner (a few loose atoms and a bin)`);
+      // Playing in the corner must not change what the stage says: build and tray scratch things on top of the solution.
+      const stage0 = MODEL.runScript(MODEL.createTable(st.table, st.title), mod.SOLUTIONS[i], { strict: true });
+      let played = stage0;
+      for (const step of [{ join: ['scr-1', 'scr-2'] }, { join: ['scr-3', 'scr-4'] }, { place: { piece: 'scr-1', to: 'tray:scr-bin' } }]) played = MODEL.apply(played, step);
+      const a = st.check(RUNNER.stateFromScript(st, mod.SOLUTIONS[i]));
+      const b = st.check({ ...RUNNER.stateFromScript(st, mod.SOLUTIONS[i]), table: played });
+      if (a.ok !== b.ok) fail(`${label}: playing in the scratch corner changes the stage's answer`);
+    });
+  }
+
+  // The drawn site plate (T1 to T3): a tap on it takes the item, the same fetch the world's [E] does.
+  {
+    const q1 = mods.get('unit01/q1-grain');
+    const st = q1.STAGES[0];
+    let state = MODEL.createTable(st.table, st.title);
+    const view = new Table2D(stub(), { tools: [], onAction: a => { state = MODEL.apply(state, a); view.setState(state); view.settle(); } });
+    view.setState(state);
+    view.settle();
+    const plate = Object.values(state.fetch)[0];
+    if (!plate?.at) fail('q1-grain stage 1 draws no site plate for its field point');
+    else {
+      if (state.pieces.scoop.hidden !== true) fail('the scoop is on the table before the point was visited');
+      view.pointerDown({ ...plate.at });
+      view.pointerUp({ ...plate.at });
+      if (state.pieces.scoop.hidden) fail('a tap on the drawn site plate took nothing');
+      const keys = (await import('../src/learn/table/gestures.js')).contextKeys(MODEL.createTable(st.table, st.title), REG.getKit('atoms'));
+      if (keys.some(k => k.id.startsWith('fetch:'))) fail('a stage with a drawn site plate also offers a fetch key');
+    }
+  }
+
+  if (failures === before) ok('every join is joinbench\'s planner against the shells as they stand; a pair that does not hold drifts apart with a reason; charge, formula and the Lewis reading are derived (a split undoes them); particles never join; every atom table has its scratch corner and ignores it; the site plate takes the item');
 }
 
 /* ------------------------------------------------------------------

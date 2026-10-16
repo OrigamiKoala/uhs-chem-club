@@ -100,8 +100,8 @@ export function benchesAre3D() {
  */
 const BUILT_BENCHES = new Set([
   // Unit 1 — Tallow
-  'q1-grain',      // the sampler scope   — scope3d.js
-  'q2-core',       // the core bench      — corebench3d.js
+  'q1-grain',      // the tabletop, atom kit — table3d.js (T1; the sampler scope still serves Kettle)
+  'q2-core',       // the tabletop, atom kit — table3d.js (T1; the core bench still serves q4-ledger)
   'q3-catalogue',  // the catalogue board — catalogue3d.js
   'q4-ledger',     // the core bench again, at site four
   'q5-assay',      // the assay floor     — assay3d.js

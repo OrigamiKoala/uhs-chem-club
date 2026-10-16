@@ -2,8 +2,6 @@
   "note": "Quests not yet converted to a tabletop (plan docs/plans/bench-tabletop.md). Converting a quest deletes its line; a new quest gets none. A quest not listed here is held to the converted rules by verify:table: at most a quarter of its stages may stay choice, each an unbuildable reading (widget.keep: reading).",
   "quests": [
     "unit01/boss-hopper",
-    "unit01/q1-grain",
-    "unit01/q2-core",
     "unit01/q3-catalogue",
     "unit01/q4-ledger",
     "unit01/q5-assay",
