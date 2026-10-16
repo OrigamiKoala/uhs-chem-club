@@ -144,6 +144,8 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
 shared groundwork (bay contract, one bench builder, signs gone), P1 (Tallow re-laid, six hosts) and P2/P3
 (Ligar: four surface hosts, two hills, a mine of five chambers) and P4 (Lanternfall: nine hosts in an aurora expedition's
 camp) are done; P5 (Bellows) onward is not started.
+`docs/plans/bench-tabletop.md` (plan only): benches become open tabletops (drag, snap, pour, arrange,
+predict-then-test, T4 field fetches) graded on what is on the table; atom kit piloted first.
 
 - **Registry** `learn/curriculum.js` (pure data/functions, no DOM), `progress.js`, `worlds/unitNN-*.js`,
   `quests/<world>/<quest>.js`. **Quest contract** (`quests/_template.js`): export `mount(container, ctx)`
