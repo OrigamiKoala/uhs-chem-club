@@ -4,13 +4,5 @@
   ],
   "ember/q4-bonds": [
     "behind"
-  ],
-  "lanternfall/q4-cloud": [
-    "approach",
-    "behind",
-    "work"
-  ],
-  "lanternfall/q7-pes": [
-    "behind"
   ]
 }

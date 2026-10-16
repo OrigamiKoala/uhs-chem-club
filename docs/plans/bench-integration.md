@@ -1,6 +1,6 @@
 # Bench integration — benches become part of each world
 
-**Status:** P0 (shared groundwork), P1 (Tallow) and P2/P3 (Ligar) done 2026-10-16; P4 onward not started. Drafted 2026-10-16.
+**Status:** P0 (shared groundwork), P1 (Tallow), P2/P3 (Ligar) and P4 (Lanternfall) done 2026-10-16; P5 onward not started. Drafted 2026-10-16.
 
 ## The brief
 
@@ -185,8 +185,8 @@ Each phase ends with `npm run verify` green and a progress note in this file.
 - [x] P2 — Ligar surface (§3, benches 1, 3, 4, 5). Progress note below (done with P3).
 - [x] P3 — Ligar mine (§3a–3d): hills, adits, cover mask, guide waypoints, benches 2, 6–9. The layered
       walk was not needed (see the note: the hills are not climbed).
-- [ ] P4 — Lanternfall (§5). P5 — Bellows (§6). P6 — Ember Reach (§7). One phase each,
-      independent of one another once P0 lands.
+- [x] P4 — Lanternfall (§5): generator re-lay, nine hosts, ground levelled per host. Progress note below.
+- [ ] P5 — Bellows (§6). P6 — Ember Reach (§7). One phase each, independent of one another once P0 lands.
 - [ ] P7 — CLAUDE.md (retire the sign rule, describe the bay contract and the layered walk), per-world
       plan records, stills.
 
@@ -335,7 +335,58 @@ drift, whether a drift is too dark between lamps (underground lamps are the one 
 `ligar/mine.js`), the sump and hoist chambers on a phone (cover mask on a device with no shadow map), the guide arrow
 leading in through hill A's portal, the crusher's catwalk over the bench, the substation's two plates beside the bench.
 
-## 5. Lanternfall — an observatory camp on the ice (proposal for review)
+### P4 progress note — Lanternfall (2026-10-16)
+
+Done:
+- `lanternfall/stations.js` (was `sites.js`): nine host builders keyed by site id, each returning `{ group, bench, benchLocal,
+  colliders }` like Tallow's and Ligar's. The shared shelter (four posts, roof, back wall) and the per-bench decor panels are
+  gone. `lanternfall.js initSites()` became `initHosts()` (host colliders turned to the world, boxes and discs as in Tallow);
+  `initLandmarks` and `buildColliders` skip any landmark with `host`.
+- `lanternfall/host-plan.js` (pure data): each host's structure, bench `kind`, `skin`, plate and declared `extent` in its own
+  frame, plus `LANE`, `WATER_HOLE` and `TENT_SPAN`. The generator keeps the scatter out of these rectangles, and
+  `verify:lanternfall` builds the real world and fails a host that stands outside its declaration (or declares more than 2.5 m
+  more than it builds), so the table cannot drift from the geometry.
+- `tools/gen-lanternfall-layout.mjs` rewritten: hand-placed sites (all facings cardinal, the benches go round the lake in
+  quest order from the south: flume, mast, sled, crawler, tent, mast, store, hole), rejection-sampled scatter from a fixed seed,
+  and a REFUSAL to write if a footprint or extent collides, an approach lane is crossed, the lantern-eater's ground
+  (`boss-eater`, x ±7, z 46…74) is built on, the water hole's ring is not inside the lake, the flume's intake does not reach the
+  lake, or the two tent halves are not back to back. The lantern road is now laid along the walk (spawn, then each approach in
+  bench order, round the tent) rather than on a ring: 29 posts.
+- Hosts: 1 flume (shelf; trough on trestles with a glass front, paddle and motor, beach, strobe gantry, pump and intake pipe into
+  the lake); 2 photocell housing (desk; an aurora mast, the housing at its foot with a tilted lens tube and hood, battery cabinet,
+  photometer tripod); 3 spectrograph sled (shelf; runners, bed, tailgate dropped on the ice, collimator, prism, bellows camera with a
+  seven-band spectrum card, camp 1 beside it); 4 crawler's lab module (desk; tracks, hull, a module whose floor is level with the plate,
+  its doors lying flat against its sides, bench, shelves, stove and stack, interior lamp, cab and a drift); 5/6 records tent (desk, two
+  builders, one canopy: the roof rises from each eave to a shared ridge, side walls, the board with a ladder of boxes on one face and a
+  ladder of shelves on the other, filing cabinets and a stove on one side, a plan table and chart rack on the other, the work lamp
+  hung on a chain); 7 detector mast (deck; grated platform, a half-ring of detectors round a sample chamber, source and beam tube, a
+  watch mast beside it, lamp post); 8 tile store (shelf; racking with tiles in the periodic table's stepped shape, spares in crates,
+  a raked tarpaulin on poles, camp 3); 9 cuvette sled (shelf; sled with the vial rack and boxed spectrometer, a ring of cut ice blocks round
+  black water, a tripod with a pulley and bucket, the lamp hung from its head on a wire).
+- Ground: terrain flats are per site (`site.flat`, written by the generator) instead of a 7.5 m disc, so every host and lane stands on
+  dead-level ice; the flat is a disc round the host's extent and lane.
+- 1e for Lanternfall: new materials `M.case`/`M.caseDark` (bright paint, bare metal) for the cased instrument, against frosted,
+  weathered steel; `M.tarp`, `M.footing`, `M.rubber`, `M.paper` dress the hosts. No new emissive material: only the lantern is lit.
+- Verifiers: `tools/bay-legacy.json` has no Lanternfall line left (6 -> 2 pairs: Ember q2/q4). `verify:lanternfall`: sites clear of every
+  prop that is not their host, one host per site, host extents honest, tent halves back to back, every bench faces along an axis, level
+  ice under each host, the boss's ground open, the water hole cut through the lake. `t1.siteDescriptions` was read by nothing but this
+  verifier; deleted (replaced by a check on `t1.siteOrder`). `t2.stillCamera` regenerated from the approach marks.
+
+Differences from §5 as drafted:
+- **Bench 2 and bench 7 each get their own mast**, not the same one: bench 2's housing is at a mast's foot, bench 7's detector arc stands on a
+  platform at another's (the plan's "platform" is at grade, as Tallow's decks are: the walk is one layer).
+- **The records tent is two builders, not one**: bench 6 is the same tent turned round, so the two halves meet at the ridge and the board's
+  spine with 0.1 m between, and neither owns the other's bodies (the overlap rule counts a group as one object).
+- **Camps 1 and 3 are part of their hosts**, built from the same `buildCamp` the scattered camps use; three scattered camps remain.
+- **The old ice crawler landmark and its builder are deleted**: bench 4's host is the crawler.
+- **Bench 4's host is the widest chain of machinery** (tracks, hull, cab, drift: 11 m deep), because the crawler stands tail-on; its
+  doors are shown lying flat against the module rather than open at right angles, which would stand in the work volume.
+
+For the user to look at in the browser (not tested here): the crawler's module from the bench (its floor and the plate should read
+as one surface), the tent's ridge from outside (two halves meeting), the lamp wire over bench 9, the flume's reflection of the strobe on
+the lake side, the detector arc against the aurora, and the lantern road leading from the spawn to bench 1.
+
+## 5. Lanternfall — an observatory camp on the ice (built in P4; see its progress note)
 
 Today: nine huts on a ring round the lake, between lantern posts, six camps, sleds, an ice crawler,
 four aurora masts. Proposal: the benches are the working parts of an **aurora observatory**

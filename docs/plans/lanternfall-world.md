@@ -10,6 +10,11 @@ This closes the two items `learn-quests.md` left open for this world: decision 3
 first: the light bench, as recommended) and decision 4 (Lanternfall as ground; it was asked for
 outright, so the "page first, ground later" recommendation was not followed).
 
+> **Superseded (2026-10-16):** the ring of shelters described below was replaced by P4 of
+> `bench-integration.md`. The nine benches are now built into an observatory camp's equipment
+> (`three/lanternfall/stations.js`), laid out by the rewritten generator. The instruments
+> and the rest of this record stand.
+
 ## What stands where
 
 Nine benches on a ring of radius 52 m round a frozen lake of radius 24 m, spaced 37° apart,

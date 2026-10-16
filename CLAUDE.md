@@ -142,7 +142,8 @@ when N−1 is complete; charted (unbuilt) quests don't hold anything shut. World
 iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`, and per-world records.
 `docs/plans/bench-integration.md` (benches fold into each world's equipment, Ligar gets a mine): P0, the
 shared groundwork (bay contract, one bench builder, signs gone), P1 (Tallow re-laid, six hosts) and P2/P3
-(Ligar: four surface hosts, two hills, a mine of five chambers) are done; P4 (Lanternfall) onward is not started.
+(Ligar: four surface hosts, two hills, a mine of five chambers) and P4 (Lanternfall: nine hosts in an aurora expedition's
+camp) are done; P5 (Bellows) onward is not started.
 
 - **Registry** `learn/curriculum.js` (pure data/functions, no DOM), `progress.js`, `worlds/unitNN-*.js`,
   `quests/<world>/<quest>.js`. **Quest contract** (`quests/_template.js`): export `mount(container, ctx)`
@@ -195,7 +196,18 @@ shared groundwork (bay contract, one bench builder, signs gone), P1 (Tallow re-l
   instrument is the one unsalted, less rough thing on the machine. `t1.siteDescriptions` is gone (nothing
   read it). Lanternfall `q1-wave` … `q9-absorb`
   (plain labels until the word is earned; honest plates; box rack magnet measures the REAL sample;
-  `q5-numbers`/`q9-orbitals` are beyond the exam and say so). Ligar `q1-joins` … `q9-orbitals` (Lewis
+  `q5-numbers`/`q9-orbitals` are beyond the exam and say so). Lanternfall's benches are the working points of an
+  aurora expedition camped round the frozen lake (`lanternfall/stations.js`, nine hosts keyed by site id; their
+  footprints are the pure data in `lanternfall/host-plan.js`, which the generator, the world and `verify:lanternfall`
+  share): 1 wave flume on the south shore (fed from the lake), 2 photocell housing at an aurora mast's foot, 3
+  spectrograph sled in camp 1 (tailgate down), 4 the ice crawler's lab module (doors open, floor level with the plate),
+  5 and 6 the two halves of ONE records tent, back to back (`TENT_SPAN` 7 m, ridges meeting; the board has a face for each),
+  7 detector arc on a mast platform, 8 sample-tile racks in camp 3's store, 9 cuvette sled beside a hole cut through the
+  lake ice (`WATER_HOLE`; the generator refuses unless the ring is inside the lake). Every facing is cardinal; each site
+  carries a `flat` disc (written by `tools/gen-lanternfall-layout.mjs`, read by `lanternfall/terrain.js`) that levels the
+  ice under its host and lane; a host's landmark carries `host: <siteId>`; the cased instrument is `M.case`, the one clean
+  thing in a weathered camp; the road of lantern posts follows the walk from the spawn to each approach in bench order.
+  The lantern-eater's ground (`BOSS_ARENA_SPOTS['boss-eater']`) is kept open by the generator and `verify:lanternfall`. Ligar `q1-joins` … `q9-orbitals` (Lewis
   board has one rule: H and F share one pair; domain rig puts every angle behind a protractor; formula
   unit earned in `q2-lattice`). Ligar's benches are built INTO its workings (`ligar/stations.js`, nine hosts
   returning `{group, bench, benchLocal, colliders}`): 1 slab-dressing yard at the quarry's west face, 3 crusher
@@ -249,8 +261,8 @@ shared groundwork (bay contract, one bench builder, signs gone), P1 (Tallow re-l
   instrument slot each world dresses itself, the key rail and one indicator. `BENCH_BAY`/`bayBoxes()` are the
   clearance volumes (plate, work = measured instrument reach, panels, behind, approach) in the bench frame;
   `verify:bench` fails any world body inside one except what `tools/bay-legacy.json` still waives (a
-  ratchet: a rebuilt bench's line must be deleted, and new hosts get none; Tallow's and Ligar's are empty, the
-  rest are Lanternfall and Ember's old shelters). A host leaves the bay empty by standing machinery to the
+  ratchet: a rebuilt bench's line must be deleted, and new hosts get none; Tallow's, Ligar's and Lanternfall's are
+  empty, the rest are Ember's old shelters). A host leaves the bay empty by standing machinery to the
   sides (|x| > 2.8), behind the plate (z < -2) or above 2.4 m. **Only lamps are lit**; a lamp is a `lampMark` in a
   `LampPool` (fixed light count — a changed count recompiles every material), never a `PointLight`.
   Shadows are re-drawn only when something moves (`shadow-pace.js`); sky is drawn last of the opaques

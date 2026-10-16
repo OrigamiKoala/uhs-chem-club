@@ -2,9 +2,12 @@
  * lanternfall.js — Lanternfall, Learn world 02, as a place you walk (T4).
  *
  * An ice field under a permanent aurora. The nine benches of "Light and
- * Electrons" stand on a ring of packed ice round a frozen lake, each under its
- * own frosted shelter, with a road of amber lanterns between them, the ice
- * country standing off outside the ring and the Avalon's pad on the near side.
+ * Electrons" are the working points of an observatory expedition camped round
+ * a frozen lake: a wave flume on the shore, a photocell at the foot of a watch
+ * mast, a spectrograph on its sled, the crawler's lab module, a records tent
+ * with a board of two faces, a detector arc on a mast platform, the tile store
+ * and a hole cut through the lake ice. A road of amber lanterns links them, the
+ * ice country stands off outside, and the Avalon's pad is on the near side.
  * The sky is the first emission spectrum the player ever sees: a few exact
  * colours, hung in curtains, and the lanterns are the only warm light in a world
  * of cold colour.
@@ -17,8 +20,8 @@
  *   getTerrainHeight(x, z), benchAnchor(questId), setBenchDeployed(questId, on),
  *   setSiteComplete(questId, complete), update(delta, cameraPos), dispose()
  *
- * The pieces live beside it in `three/lanternfall/` (sky, terrain, props, sites,
- * effects) with PBR surfaces from `materials/lanternfall-textures.js`, laid out
+ * The pieces live beside it in `three/lanternfall/` (sky, terrain, props, the
+ * nine hosts in stations.js, effects) with PBR surfaces from `materials/lanternfall-textures.js`, laid out
  * by `tools/gen-lanternfall-layout.mjs`.
  *
  * THE RULES IT KEEPS, as Tallow and Ligar do:
@@ -46,9 +49,9 @@ import {
 import { makeLanternfallField, buildLanternfallTerrainGeometry, buildLakeGeometry } from './lanternfall/terrain.js';
 import {
   buildIceSpire, buildPressureRidge, buildAuroraMast, buildCommsMast, buildLanternPost,
-  buildCamp, buildSled, buildStake, buildIceCrawler, buildLandingPad
+  buildCamp, buildSled, buildStake, buildLandingPad
 } from './lanternfall/props.js';
-import { buildSite } from './lanternfall/sites.js';
+import { HOST_BUILDERS } from './lanternfall/stations.js';
 import { createLanternfallEffects } from './lanternfall/effects.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
@@ -68,6 +71,7 @@ export class LanternfallWorld {
 
     this.colliders = [];
     this.siteMarkers = new Map();    // questId -> { site, group, indicator }
+    this.siteColliders = [];         // what each bench's host stands on the ice with (initHosts)
     this.benchAnchors = new Map();   // questId -> the physical frame of that site's working surface
     this.disposables = [];
     this.lamps = [];                 // lampMarks: where the lanterns' pooled light comes from
@@ -84,7 +88,7 @@ export class LanternfallWorld {
     this.initSky();
     this.initTerrain();
     this.initLandmarks();
-    this.initSites();
+    this.initHosts();
     this.initEffects();
     this.initLampPool();
     this.bakeStatics();
@@ -161,6 +165,16 @@ export class LanternfallWorld {
     });
     M.timber = new THREE.MeshStandardMaterial({ color: 0x5a4a38, roughness: 0.96, metalness: 0 });
     M.canvas = new THREE.MeshStandardMaterial({ color: 0x8f9ea6, roughness: 0.95, metalness: 0 });
+
+    // What the hosts are dressed in: a tarpaulin gone stiff with frost, poured footings heaved by the
+    // cold, black rubber, paper cards, and the cased instrument's own paint and bare metal, the one
+    // clean thing on the camp (the camp is weathered, the instrument is what somebody uses).
+    M.tarp = new THREE.MeshStandardMaterial({ color: 0x6d7d87, roughness: 0.96, metalness: 0 });
+    M.footing = new THREE.MeshStandardMaterial({ color: 0x6b7780, roughness: 1.0, metalness: 0 });
+    M.rubber = new THREE.MeshStandardMaterial({ color: 0x1c2127, roughness: 0.95, metalness: 0.1 });
+    M.paper = new THREE.MeshStandardMaterial({ color: 0xcfd3cc, roughness: 0.95, metalness: 0 });
+    M.case = new THREE.MeshStandardMaterial({ color: 0xc4d3da, roughness: 0.48, metalness: 0.55 });
+    M.caseDark = new THREE.MeshStandardMaterial({ color: 0x2d3a44, roughness: 0.5, metalness: 0.5 });
 
     for (const m of Object.values(M)) {
       this.own(m);
@@ -251,6 +265,8 @@ export class LanternfallWorld {
     let posts = 0;
     for (const lm of this.data.landmarks) {
       if (lm.minTier === 'T4' && !tierAtLeast('T4')) continue;
+      // A host is built with its bench (initHosts); its landmark only declares the footprint.
+      if (lm.host) continue;
       const y = this.getTerrainHeight(lm.pos[0], lm.pos[2]);
       let node = null;
       switch (lm.asset) {
@@ -262,7 +278,6 @@ export class LanternfallWorld {
         case 'camp': node = buildCamp(ctx, lm.rotY || 0, seed++); break;
         case 'sled': node = buildSled(ctx, lm.rotY || 0); break;
         case 'stake-marker': node = buildStake(ctx); break;
-        case 'ice-crawler': node = buildIceCrawler(ctx, lm.rotY || 0); break;
         case 'landing-pad': node = buildLandingPad(ctx, this.field); break;
         default: node = null;
       }
@@ -290,28 +305,34 @@ export class LanternfallWorld {
     return Math.atan2(ax, az);
   }
 
-  /** A point in a site's own frame, in world terms. */
-  siteToWorld(site, lx, lz) {
-    const a = this.siteFacing(site);
-    const c = Math.cos(a);
-    const s = Math.sin(a);
-    return [site.pos[0] + lx * c + lz * s, site.pos[2] - lx * s + lz * c];
-  }
-
-  initSites() {
+  /**
+   * Build every host: the piece of the camp a bench belongs to (stations.js), placed at its site and
+   * turned to face its approach. The bench is a part of its host, one object, so a bench is never
+   * bolted to anything but the machine it is for.
+   */
+  initHosts() {
     this.siteColliders = [];
     for (const site of this.data.sites) {
-      const built = buildSite(this.ctx, site);
-      const y = this.getTerrainHeight(site.pos[0], site.pos[2]);
-      built.group.position.set(site.pos[0], y, site.pos[2]);
-      built.group.rotation.y = this.siteFacing(site);
-      this.scene.add(built.group);
+      const build = HOST_BUILDERS[site.id];
+      if (!build || !site.built) continue;
+      const host = build(this, site);
+      const g = host.group;
+      g.position.set(site.pos[0], this.getTerrainHeight(site.pos[0], site.pos[2]), site.pos[2]);
+      g.rotation.y = this.siteFacing(site);
+      this.scene.add(g);
 
-      this.siteMarkers.set(site.questId, { site, group: built.group, indicator: built.bench.indicator });
-      this.registerBenchAnchor(site, built.group, built.bench, built.benchLocal);
-      for (const c of built.colliders) {
-        const [x, z] = this.siteToWorld(site, c.x, c.z);
-        this.siteColliders.push({ x, z, radius: c.radius });
+      this.siteMarkers.set(site.questId, { site, group: g, indicator: host.bench.indicator });
+      this.registerBenchAnchor(site, g, host.bench, host.benchLocal);
+
+      // The host's colliders are in its own frame; the walk wants them in the world's.
+      const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);
+      for (const c of host.colliders) {
+        const x = g.position.x + c.lx * cos + c.lz * sin;
+        const z = g.position.z - c.lx * sin + c.lz * cos;
+        if (c.r !== undefined) { this.siteColliders.push({ x, z, radius: c.r }); continue; }
+        const ex = Math.abs(c.hw * cos) + Math.abs(c.hd * sin);
+        const ez = Math.abs(c.hw * sin) + Math.abs(c.hd * cos);
+        this.siteColliders.push({ minX: x - ex, maxX: x + ex, minZ: z - ez, maxZ: z + ez });
       }
     }
   }
@@ -436,6 +457,7 @@ export class LanternfallWorld {
 
     for (const lm of this.data.landmarks) {
       if (lm.minTier === 'T4' && !tierAtLeast('T4')) continue;
+      if (lm.host) continue;       // a host collides as its builder says (initHosts)
       const sc = lm.scale || 1;
       switch (lm.asset) {
         case 'lantern-post': push(lm.pos[0], lm.pos[2], 0.3); break;
@@ -458,13 +480,6 @@ export class LanternfallWorld {
           }
           break;
         case 'sled': push(lm.pos[0], lm.pos[2], 0.95); break;
-        case 'ice-crawler':
-          for (const lx of [-2.0, -0.7, 0.7, 2.0]) {
-            const [x, z] = rot(lm, lx, 0);
-            push(x, z, 1.7);
-          }
-          { const [x, z] = rot(lm, 1.35, 0); push(x, z, 1.4); }
-          break;
         default: break;   // stakes and the pad are walked over
       }
     }
