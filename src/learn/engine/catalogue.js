@@ -19,9 +19,15 @@
  * elements it is legible on a phone, it survives a text-size preference, and it
  * inherits the plate treatment the rest of the bench already has.
  *
- * NO DRAG. Filing is two taps — take a card, then tap the slot. A drag on a
- * grid of 40 px cells is the one gesture a student on a phone cannot make
- * reliably, and the floor for this product is a phone (PRODUCT.md §4).
+ * FILING IS DRAG, AND TWO TAPS ALWAYS WORKS. Drag a card to a slot, or take it
+ * with a tap and tap the slot. The two end in the same `fileCard`, so a stage
+ * grades the same by either hand (plan §2.2). A board declared as a STRIP
+ * (`board.strip`) is a row cards are laid along: a card dropped on a slot that
+ * is already filled PUSHES the row along to the nearest gap instead of swapping
+ * places with what was there, so putting a card "between" two others is one
+ * move. This used to be taps only, on the argument that a drag on a grid of
+ * 40 px cells is a gesture a phone cannot make reliably; the tap twin is what
+ * keeps that true, and a drag now starts only after the pointer has moved.
  *
  * Aesthetic contract (CLAUDE.md §3, §4): machined plate with a cut corner,
  * engraved mono type, seams light above and dark below. Amber is a signal —
@@ -48,6 +54,71 @@ export function readEntry(entry) {
     : { kind: 'fixed', id: str };
 }
 
+/**
+ * The slots of the board row that holds `slotId`, left to right. Gaps in the
+ * layout are structure and not places, so a strip pushes straight across one.
+ */
+export function rowSlots(board, slotId) {
+  for (const row of board?.rows || []) {
+    const ids = [];
+    for (const entry of row) {
+      const e = readEntry(entry);
+      if (e.kind === 'slot') ids.push(e.id);
+    }
+    if (ids.includes(slotId)) return ids;
+  }
+  return [slotId];
+}
+
+/**
+ * File `cardId` into `slotId`. Pure: it takes the board's `placed` map and the
+ * drawer and returns new ones, and the drawn and the built board both use it,
+ * so a drag and two taps (and the two benches) cannot disagree.
+ *
+ *   - an empty slot takes the card;
+ *   - on a STRIP (`board.strip`) a filled slot makes room: the cards from there
+ *     along shift one place toward the nearest empty slot on the right, else on
+ *     the left, and the card goes in. A full row sends the displaced card back
+ *     to the drawer;
+ *   - on any other board a filled slot hands its card to the place the dragged
+ *     card came from, or back to the drawer when that was the drawer.
+ * A card that was filed elsewhere leaves that slot first. Nothing is ever lost:
+ * every card ends in a slot or in the drawer.
+ *
+ * @param {{rows: Array, strip?: boolean}|null} board
+ * @param {Object<string,string>} placed slotId -> cardId
+ * @param {string[]} drawer
+ */
+export function fileCard(board, placed, drawer, slotId, cardId) {
+  const next = { ...placed };
+  const loose = drawer.filter(c => c !== cardId);
+  const from = Object.keys(next).find(k => next[k] === cardId) ?? null;
+  if (from) delete next[from];
+
+  const sitting = next[slotId];
+  if (!sitting) { next[slotId] = cardId; return { placed: next, drawer: loose }; }
+
+  if (!board?.strip) {
+    if (from) next[from] = sitting; else loose.push(sitting);
+    next[slotId] = cardId;
+    return { placed: next, drawer: loose };
+  }
+
+  const row = rowSlots(board, slotId);
+  const k = row.indexOf(slotId);
+  const right = row.findIndex((id, i) => i > k && !next[id]);
+  const left = row.reduce((at, id, i) => (i < k && !next[id] ? i : at), -1);
+  if (right >= 0) {
+    for (let i = right; i > k; i--) next[row[i]] = next[row[i - 1]];
+  } else if (left >= 0) {
+    for (let i = left; i < k; i++) next[row[i]] = next[row[i + 1]];
+  } else {
+    loose.push(sitting);
+  }
+  next[slotId] = cardId;
+  return { placed: next, drawer: loose };
+}
+
 export class CatalogueBoard {
   /**
    * @param {HTMLElement} host element the board is rendered into
@@ -71,8 +142,18 @@ export class CatalogueBoard {
     this.tags = {};       // cardId | slotId -> short status text
     this.disposed = false;
 
-    this.onClick = e => this.handleClick(e);
+    this.drag = null;     // { cardId, from, el, ghost, startX, startY, moved }
+    this.skipClick = false;
+
+    this.onClick = e => {
+      if (this.skipClick) { this.skipClick = false; return; }
+      this.handleClick(e);
+    };
+    this.onDown = e => this.dragDown(e);
+    this.onMove = e => this.dragMove(e);
+    this.onUp = e => this.dragUp(e);
     this.host.addEventListener('click', this.onClick);
+    this.host.addEventListener('pointerdown', this.onDown);
   }
 
   /* ---------------- contents ---------------- */
@@ -161,6 +242,12 @@ export class CatalogueBoard {
       const slotId = cell.dataset.slot;
       const sitting = this.placed[slotId];
 
+      // A card in the hand and a filled slot: file it there, as a drop would.
+      if (sitting && this.held && this.held !== sitting) {
+        this.fileInto(slotId, this.held);
+        return;
+      }
+
       if (sitting) {
         // A filed card lifts back into the drawer, and reads itself on the way.
         delete this.placed[slotId];
@@ -176,12 +263,97 @@ export class CatalogueBoard {
         this.onPlace?.(slotId, null);
         return;
       }
-      const cardId = this.held;
-      this.placed[slotId] = cardId;
-      this.drawer = this.drawer.filter(x => x !== cardId);
+      this.fileInto(slotId, this.held);
+    }
+  }
+
+  /** The one way a card reaches a slot, by tap or by drag. */
+  fileInto(slotId, cardId) {
+    const r = fileCard(this.board, this.placed, this.drawer, slotId, cardId);
+    this.placed = r.placed;
+    this.drawer = r.drawer;
+    this.held = null;
+    this.render();
+    this.onPlace?.(slotId, cardId);
+  }
+
+  /* ---------------- drag ----------------
+
+     A press on a loose card or a filed one arms a drag. It becomes one only
+     after the pointer has moved, so a tap is still a tap. The card follows the
+     pointer as a ghost; released over a slot it is filed there, released over
+     the drawer a filed card is taken back, released anywhere else nothing
+     changes. The click that ends the press is swallowed. */
+
+  dragDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    const el = e.target.closest?.('.cat-cell[data-card]');
+    if (!el) return;
+    const role = el.dataset.cat;
+    if (role !== 'drawer' && role !== 'slot') return;
+    this.drag = {
+      cardId: el.dataset.card, from: role === 'slot' ? el.dataset.slot : null, el,
+      startX: e.clientX, startY: e.clientY, ghost: null, moved: false
+    };
+    window.addEventListener('pointermove', this.onMove);
+    window.addEventListener('pointerup', this.onUp);
+    window.addEventListener('pointercancel', this.onUp);
+  }
+
+  dragMove(e) {
+    const d = this.drag;
+    if (!d) return;
+    if (!d.moved) {
+      if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) < 6) return;
+      d.moved = true;
+      const box = d.el.getBoundingClientRect();
+      d.dx = d.startX - box.left;
+      d.dy = d.startY - box.top;
+      d.ghost = d.el.cloneNode(true);
+      d.ghost.classList.add('cat-ghost');
+      d.ghost.style.width = `${box.width}px`;
+      d.ghost.style.height = `${box.height}px`;
+      document.body.appendChild(d.ghost);
+      d.el.classList.add('dragging');
+    }
+    d.ghost.style.left = `${e.clientX - d.dx}px`;
+    d.ghost.style.top = `${e.clientY - d.dy}px`;
+    this.host.querySelectorAll('.drop').forEach(n => n.classList.remove('drop'));
+    this.dropCell(e)?.classList.add('drop');
+  }
+
+  /** The slot cell under the pointer, if any. */
+  dropCell(e) {
+    const under = document.elementFromPoint?.(e.clientX, e.clientY);
+    return under?.closest?.('[data-slot]') || null;
+  }
+
+  dragUp(e) {
+    const d = this.drag;
+    window.removeEventListener('pointermove', this.onMove);
+    window.removeEventListener('pointerup', this.onUp);
+    window.removeEventListener('pointercancel', this.onUp);
+    this.drag = null;
+    if (!d || !d.moved) return;
+    this.skipClick = true;
+    setTimeout(() => { this.skipClick = false; }, 0);
+    const cell = e.type === 'pointercancel' ? null : this.dropCell(e);
+    d.ghost?.remove();
+    d.el.classList.remove('dragging');
+    this.host.querySelectorAll('.drop').forEach(n => n.classList.remove('drop'));
+    if (cell) {
+      const slotId = cell.dataset.slot;
+      if (slotId !== d.from) this.fileInto(slotId, d.cardId);
+      return;
+    }
+    // Dropped back on the drawer: a filed card is taken out of its slot.
+    const back = document.elementFromPoint?.(e.clientX, e.clientY)?.closest?.('.cat-drawer-wrap');
+    if (back && d.from) {
+      delete this.placed[d.from];
+      if (!this.drawer.includes(d.cardId)) this.drawer.push(d.cardId);
       this.held = null;
       this.render();
-      this.onPlace?.(slotId, cardId);
+      this.onLift?.(d.from, d.cardId);
     }
   }
 
@@ -259,7 +431,7 @@ export class CatalogueBoard {
       : '';
 
     const attrs = role === 'slot'
-      ? `data-cat="slot" data-slot="${escText(slotId)}"`
+      ? `data-cat="slot" data-slot="${escText(slotId)}" data-card="${escText(cardId)}"`
       : `data-cat="${role}" data-card="${escText(cardId)}"`;
 
     return `
@@ -276,6 +448,12 @@ export class CatalogueBoard {
   dispose() {
     this.disposed = true;
     this.host.removeEventListener('click', this.onClick);
+    this.host.removeEventListener('pointerdown', this.onDown);
+    window.removeEventListener('pointermove', this.onMove);
+    window.removeEventListener('pointerup', this.onUp);
+    window.removeEventListener('pointercancel', this.onUp);
+    this.drag?.ghost?.remove();
+    this.drag = null;
     this.host.innerHTML = '';
   }
 }

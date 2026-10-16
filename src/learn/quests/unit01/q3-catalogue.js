@@ -155,17 +155,17 @@ export const STAGES = [
     title: 'Put Them In Order',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench holds a card for each element, and tapping a card reads it. To file a card, tap it, then tap the slot on the board you want it in.'
+      body: 'This bench holds a card for each element, and tapping a card reads it. To file a card, drag it to the slot you want, or tap it and then tap the slot.'
     },
     prompt: 'File the six cards into the reference strip, from fewest protons on the left to most on the right.',
     controls: ['reader', 'file', 'clear'],
     masked: true,
-    board: { label: 'Reference strip', rows: [['#p1', '#p2', '#p3', '#p4', '#p5', '#p6']] },
+    board: { label: 'Reference strip', strip: true, rows: [['#p1', '#p2', '#p3', '#p4', '#p5', '#p6']] },
     drawer: ['c11', 'c19', 'c01', 'c18', 'c08', 'c06'],
     widget: { type: 'board', label: 'Reference strip' },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
     hints: [
-      'Tap a card in the drawer to read it, then tap a slot to put it there.',
+      'Tap a card in the drawer to read it, then drag it to a slot, or tap the slot, to put it there.',
       'Read all six and note the proton count on each; how heavy a card is does not matter here.',
       'Write the six proton counts down, sort them smallest to largest, and file the cards in that order from the leftmost slot to the rightmost.'
     ],
@@ -247,6 +247,7 @@ export const STAGES = [
     controls: ['reader', 'file', 'clear'],
     board: {
       label: 'Reference chart',
+      strip: true,
       columns: COLUMN_HEADS,
       rows: [
         CHART_ROWS[0],
@@ -258,7 +259,7 @@ export const STAGES = [
     widget: { type: 'board', label: 'Bottom row' },
     foes: [{ id: 'grid', label: 'Periodic Grid' }],
     hints: [
-      'Tap a card in the drawer to pick it up, then tap the slot you want it in.',
+      'Drag a card from the drawer to the slot you want, or tap the card and then tap the slot.',
       'SODIUM reads the fewest protons of the eight and ARGON reads the most.',
       'Put the fewest-proton card in the first slot, then for each next slot find the card with one proton more than the card before it.'
     ],

@@ -3527,3 +3527,20 @@ body.bench-deployed .modal-container .modal-card {
 .table-tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .table-tools:empty { display: none; }
 .table-tools .lq-tool { pointer-events: auto; min-height: 40px; }
+
+/* ---- Catalogue board: dragging a card ---- */
+/* Fixed cards are read, not moved, so a swipe across them still scrolls the board. */
+.cat-cell.cat-drawer,
+.cat-cell.cat-slot[data-card] { touch-action: none; user-select: none; }
+.cat-cell.dragging { opacity: 0.4; }
+.cat-cell.drop,
+.cat-slot.drop { border-color: var(--accent-amber); }
+.cat-ghost {
+  position: fixed;
+  z-index: 60;
+  margin: 0;
+  pointer-events: none;
+  background: var(--plate-400);
+  border-color: var(--border-bright);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.55);
+}

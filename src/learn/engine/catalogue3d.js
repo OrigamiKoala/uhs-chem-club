@@ -35,7 +35,7 @@
  */
 
 import * as THREE from 'three';
-import { readEntry } from './catalogue.js';
+import { readEntry, fileCard } from './catalogue.js';
 import { BenchViewer3D, engravedPlaque, AMBER, PLATE_RIM } from './bench3d.js';
 import { benchHost } from './bench-host.js';
 
@@ -671,8 +671,10 @@ export class CatalogueBoard3D {
 
       if (body.userData.fixed) { this.onProbe?.(cardId); return; }
 
-      // A card sitting in a slot: lift it out.
+      // A card sitting in a slot: file the card in the hand there, if there is
+      // one (a strip pushes the row along), else lift it out.
       const slotId = this.slotHolding(cardId);
+      if (slotId && this.held && this.held !== cardId) { this.fileHeld(slotId); return; }
       if (slotId) { this.liftFrom(slotId, cardId); return; }
 
       // A loose card: into the hand, or back down if it was already there.
@@ -687,12 +689,24 @@ export class CatalogueBoard3D {
     // does — the one place the built board could disagree with the drawn one.
     const slotId = hit.slotId;
     const sitting = this.placed[slotId];
+    if (sitting && this.held && this.held !== sitting) { this.fileHeld(slotId); return; }
     if (sitting) { this.liftFrom(slotId, sitting); return; }
 
     if (!this.held) { this.onPlace?.(slotId, null); return; }
+    this.fileHeld(slotId);
+  }
+
+  /**
+   * File the card in the hand into `slotId` with the drawn board's own rule
+   * (`fileCard`), so a strip pushes its row along here exactly as it does on
+   * the canvas. Dragging a built card is the T0b half of the strip's drag; the
+   * tap twin it must always keep is this.
+   */
+  fileHeld(slotId) {
     const cardId = this.held;
-    this.placed[slotId] = cardId;
-    this.drawer = this.drawer.filter(x => x !== cardId);
+    const r = fileCard(this.board, this.placed, this.drawer, slotId, cardId);
+    this.placed = r.placed;
+    this.drawer = r.drawer;
     this.held = null;
     this.layout();
     this.onPlace?.(slotId, cardId);
