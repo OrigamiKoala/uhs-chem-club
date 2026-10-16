@@ -40,7 +40,7 @@ import { dialMarkup, bindDial, paintDial } from './dial.js';
 import { railMarkup, bindRail } from './railview.js';
 import { startArrangement } from '../table/rail.js';
 import { createTable, apply as applyTable } from '../table/model.js';
-import { Tabletop } from './instruments.js';
+import { Tabletop, benchesAre3D } from './instruments.js';
 import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
 
@@ -454,13 +454,27 @@ export function createRunner(container, ctx, cfg) {
     if (stage.widget?.type !== 'table') {
       tabletop?.dispose();
       tabletop = null;
+      frame.setTableMode(false);
       return;
     }
     if (!tabletop) {
+      // BUILT (T4): the card gives way to a prompt strip and a foot dock while the
+      // player is leaned in over the plate (frame.js table mode). Drawn: the
+      // tabletop is part of the deck, as every other widget is.
+      const built = benchesAre3D();
+      if (built) {
+        frame.setTableMode(true, {
+          onStand: () => tabletop?.leaveLean?.(),
+          onLean: () => tabletop?.leanIn?.()
+        });
+      }
       tabletop = Tabletop(cfg.tableHost ? cfg.tableHost() : frame.instrumentHost, {
         onAction: action => { runner.clack(); act(action); },
         // Tools the stage names are keys on the table; the legend is the quest's.
-        tools: stage.table.tools || []
+        tools: stage.table.tools || [],
+        toolHost: built ? frame.el.tableKeys : undefined,
+        onLeanChange: leaning => frame.setLeaning(leaning),
+        onCarry: label => frame.setCarry(label)
       });
     }
     tabletop.setState(state.table);
@@ -475,6 +489,7 @@ export function createRunner(container, ctx, cfg) {
     railTeardown?.();
     tabletop?.dispose();
     tabletop = null;
+    frame.setTableMode(false);
     cfg.onDispose?.();
     frame.dispose();
   }

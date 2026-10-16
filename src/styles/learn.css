@@ -3544,3 +3544,151 @@ body.bench-deployed .modal-container .modal-card {
   border-color: var(--border-bright);
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.55);
 }
+
+/* ===================================================================
+   TABLE MODE — leaned in over a built tabletop (frame.js setTableMode)
+   Two bars in screen space replace the card: a prompt strip under the HUD and a
+   foot dock. Neither changes height while it is read; hints, the miss banner and
+   a reward card float on a message plate over the dock. The glass between them
+   belongs to the table, so the bars take presses and the gap does not.
+   =================================================================== */
+.learn-quest-overworld .lq.lq-table-mode .lq-body,
+.learn-quest-overworld .lq.lq-table-mode .lq-dock-bar { display: none !important; }
+
+.lq-tstrip,
+.lq-tdock {
+  position: fixed;
+  left: max(8px, env(safe-area-inset-left));
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-sizing: border-box;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-durasteel);
+  box-shadow: inset 0 1px 0 var(--seam-light), inset 0 -1px 0 var(--seam-dark), 0 6px 14px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+
+.lq-tstrip {
+  top: calc(var(--hud-h) + 4px);
+  min-height: 46px;
+  padding: 4px 8px;
+}
+
+/* The host bar, brought into the strip: just the exit. */
+.lq-tstrip .learn-host-bar {
+  flex: none;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.lq-tstrip .learn-host-id { display: none !important; }
+
+.lq-tstrip .lq-prompt {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 !important;
+  font-size: 0.8rem !important;
+  line-height: 1.3 !important;
+}
+.lq-tstrip .lq-prompt-body {
+  font-size: 0.8rem !important;
+  line-height: 1.3 !important;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.lq-tstrip .lq-story { display: none; }
+
+/* Stage dots: small, so a strip of eight does not crowd the objective out. */
+.lq-tstrip .lq-rail {
+  flex: none;
+  gap: 4px;
+  padding: 0 !important;
+  max-width: none !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.lq-tstrip .lq-lamp { width: 12px; min-width: 12px; height: 12px; min-height: 12px; padding: 0; }
+.lq-tstrip .lq-lamp em { display: none; }
+
+.lq-tdock {
+  bottom: max(8px, env(safe-area-inset-bottom));
+  min-height: 50px;
+  padding: 4px 8px;
+}
+.lq-tdock-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  flex-wrap: wrap;
+}
+.lq-tdock-left { display: flex; align-items: center; gap: 0.4rem; flex: none; }
+.lq-tdock-left .lq-stage-actions { display: flex !important; gap: 0.4rem; }
+.lq-tkeys { flex: 1 1 auto; min-width: 0; }
+.lq-tkeys .table-tools { margin-top: 0; justify-content: center; }
+.lq-tdock-right { flex: none; margin-left: auto; }
+.lq-tdock-right .lq-actions { display: flex; gap: 0.5rem; align-items: center; }
+.lq-tdock .lq-stand,
+.lq-tdock .lq-stage-actions button,
+.lq-tdock .lq-actions button { pointer-events: auto !important; min-height: 38px; }
+@media (pointer: coarse) {
+  .lq-tdock .lq-stand,
+  .lq-tdock .lq-stage-actions button,
+  .lq-tdock .lq-actions button,
+  .lq-tkeys .lq-tool { min-height: 44px; }
+}
+
+/* What is being carried in from the field. */
+.lq-carry {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--text-amber);
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--plate-100);
+  white-space: nowrap;
+}
+.lq-carry[hidden] { display: none; }
+
+/* The message plate: hints, the miss banner, a reward card. It floats over the
+   table's foot, never inside the dock, and is absent while it has nothing to say. */
+.lq-tmsg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 34vh;
+  overflow-y: auto;
+  padding: 6px 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-durasteel);
+  box-shadow: inset 0 1px 0 var(--seam-light), 0 6px 14px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+.lq-tmsg:not(:has(.lq-banner:not(:empty), .lq-widget:not(:empty), .lq-hints:not(:empty))) { display: none; }
+.lq-tmsg .lq-banner:empty,
+.lq-tmsg .lq-widget:empty,
+.lq-tmsg .lq-hints:empty { display: none; }
+.lq-tmsg .lq-hint { margin: 0 !important; font-size: 0.8rem !important; line-height: 1.35 !important; }
+.lq-tmsg .lq-reward-body { margin: 0 !important; font-size: 0.82rem; line-height: 1.4; }
+
+@media (max-width: 768px) {
+  .lq-tstrip { min-height: 46px; }
+  .lq-tdock { min-height: 50px; }
+}

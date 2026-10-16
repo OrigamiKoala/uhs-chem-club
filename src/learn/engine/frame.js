@@ -399,6 +399,8 @@ export class LearnFrame {
       else if (act === 'reward') this.showFindings();
       else if (act === 'close-panel') this.setPanelClosed(true);
       else if (act === 'open-panel') this.setPanelClosed(false);
+      else if (act === 'stand') this.tableCbs?.onStand?.();
+      else if (act === 'lean') this.tableCbs?.onLean?.();
 
       // Any stage already cleared can be walked back into. This is a study road
       // and re-reading is the point of it; there is no XP here for a replay to
@@ -631,6 +633,116 @@ export class LearnFrame {
     this.diegetic = false;
   }
 
+
+  /* ---------------- table mode ---------------- */
+
+  /**
+   * TABLE MODE: the frame while the player is leaned in over a built tabletop.
+   *
+   * The card at the bottom-left, the stage rail and the tool plate give way to
+   * two bars in screen space, the layout `.lq-prompt` and `.lq-deck-foot` already
+   * use at T1 to T3: a PROMPT STRIP under the HUD (Leave Bench, the objective,
+   * the stage dots) and a FOOT DOCK (Stand, Tour, Findings, the table's keys,
+   * Hint and Commit). The miss banner, the hints and a reward card float in a
+   * message plate over the dock, so no bar ever changes height while the player
+   * reads it (a screen bolted to a bench never moves). The readings live on the
+   * paper strip on the table (`table3d.js`); the briefing stays docked left on
+   * stage 1 only, as `showBriefing` already does.
+   *
+   * NOTHING IS REBUILT. The finished nodes are moved, with their handlers, and
+   * moved back when the mode ends; `PANEL_LAYOUT` and the card are untouched for
+   * every bench that is not a table.
+   *
+   * @param {boolean} on
+   * @param {{onStand?: () => void, onLean?: () => void}} [cbs]
+   */
+  setTableMode(on, cbs = {}) {
+    if (this.disposed && on) return;
+    if (on === Boolean(this.tableMode)) { if (on) this.tableCbs = cbs; return; }
+    const root = this.container.querySelector('.lq');
+    if (!root) return;
+
+    if (!on) {
+      for (const m of (this.tableMoved || []).reverse()) {
+        if (m.parent) m.parent.insertBefore(m.node, m.next && m.next.parentNode === m.parent ? m.next : null);
+      }
+      this.tableMoved = [];
+      this.el.tableStrip?.remove();
+      this.el.tableDock?.remove();
+      this.el.tableStrip = this.el.tableDock = this.el.tableKeys = this.el.tableMsg = this.el.stand = this.el.carry = null;
+      root.classList.remove('lq-table-mode');
+      this.tableMode = false;
+      this.tableCbs = null;
+      this.updateStageActions();
+      return;
+    }
+
+    this.tableMode = true;
+    this.tableCbs = cbs;
+    this.tableMoved = [];
+    const move = (node, to) => {
+      if (!node || !to) return;
+      this.tableMoved.push({ node, parent: node.parentNode, next: node.nextSibling });
+      to.appendChild(node);
+    };
+
+    const strip = document.createElement('div');
+    strip.className = 'lq-tstrip';
+    strip.setAttribute('role', 'region');
+    strip.setAttribute('aria-label', 'Stage');
+    const dock = document.createElement('div');
+    dock.className = 'lq-tdock';
+    dock.innerHTML = `
+      <div class="lq-tmsg"></div>
+      <div class="lq-tdock-row">
+        <div class="lq-tdock-left">
+          <button type="button" class="btn-secondary quest-btn-sm lq-stand" data-act="stand">Stand</button>
+          <span class="lq-carry" hidden></span>
+        </div>
+        <div class="lq-tkeys"></div>
+        <div class="lq-tdock-right"></div>
+      </div>`;
+    const q = sel => dock.querySelector(sel);
+    this.el.tableStrip = strip;
+    this.el.tableDock = dock;
+    this.el.tableMsg = q('.lq-tmsg');
+    this.el.tableKeys = q('.lq-tkeys');
+    this.el.stand = q('.lq-stand');
+    this.el.carry = q('.lq-carry');
+
+    // The one exit stays where it always was in spirit: the host bar's Leave Bench.
+    move(this.container.closest?.('.screen-container')?.querySelector('.learn-host-bar'), strip);
+    move(this.el.prompt, strip);
+    move(this.el.rail, strip);
+    move(this.el.stageActions, q('.lq-tdock-left'));
+    move(this.el.actions, q('.lq-tdock-right'));
+    move(this.el.banner, this.el.tableMsg);
+    move(this.el.hints, this.el.tableMsg);
+    move(this.el.widget, this.el.tableMsg);
+
+    root.appendChild(strip);
+    root.appendChild(dock);
+    root.classList.add('lq-table-mode');
+    this.updateStageActions();
+    this.setLeaning(true);
+  }
+
+  /** The Stand / Lean In key follows whether the player is leaned over the table. */
+  setLeaning(leaning) {
+    const b = this.el.stand;
+    if (!b) return;
+    b.dataset.act = leaning ? 'stand' : 'lean';
+    b.textContent = leaning ? 'Stand' : 'Lean In';
+  }
+
+  /** The carry slot: a field item on the player, not yet on the table. `null` empties it. */
+  setCarry(label) {
+    const c = this.el.carry;
+    if (!c) return;
+    c.hidden = !label;
+    c.textContent = label ? `Carrying ${label}` : '';
+  }
+
   /** The element the quest's instrument renders into. */
   get instrumentHost() {
     return this.el.scope;
@@ -793,7 +905,7 @@ export class LearnFrame {
     this.el.stageActions.innerHTML = `
       <button type="button" class="btn-secondary quest-btn-sm" data-act="objective" title="Replay the instrument tour">Tour</button>
       <button type="button" class="btn-secondary quest-btn-sm" data-act="reward" title="View discovered concepts and findings">Findings</button>
-      ${this.canHidePanel ? '<button type="button" class="btn-secondary quest-btn-sm lq-close-btn" data-act="close-panel" title="Fold stage panel to view 3D bench" aria-label="Fold stage panel">Fold Panel</button>' : ''}
+      ${this.canHidePanel && !this.tableMode ? '<button type="button" class="btn-secondary quest-btn-sm lq-close-btn" data-act="close-panel" title="Fold stage panel to view 3D bench" aria-label="Fold stage panel">Fold Panel</button>' : ''}
     `;
   }
 
@@ -1252,6 +1364,7 @@ export class LearnFrame {
     }
     this.viewerUnsub?.();
     activeBenchViewer()?.hideInstrumentHalos();
+    this.setTableMode(false);
     this.container.removeEventListener('click', this.onClick);
     this.a11yObserver?.disconnect();
     this.a11yObserver = null;
