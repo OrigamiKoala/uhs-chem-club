@@ -1,6 +1,6 @@
 # Bench Tabletop — benches you work with your hands, not machines you answer
 
-**Status:** T0a built (pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`); T0b onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
+**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); T1 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
 **This plan now carries the rest of `bench-integration.md`.** That plan's P0–P4 are done (bay contract,
 Tallow, Ligar, Lanternfall); its P5 (Bellows), P6 (Ember Reach) and P7 (records, stills, site copy) are
 folded in here as phases T5–T7, so each remaining world is re-laid and re-benched once, not twice.
@@ -502,3 +502,86 @@ Tallow's, Ligar's and Lanternfall's are described.
     lists all 44 built quests (38 benches + 6 bosses): listed = unconverted; unlisted = converted, held to at most a
     quarter of its stages as `choice` (so 2 of 8), each declared `widget.keep: 'reading'` (a prediction is a table token,
     not a choice); a listed quest whose stages are all tables must have its line deleted; new quests get none.
+- 2026-10-16: **T0b built** (the built side: everything in T0 that is 3D, camera or frame). Nothing is browser-tested; the
+  throwaway table still reaches no quest. Shipped, and the API T1 builds on:
+  - **`BenchViewer3D.leanIn(opts)`** (`bench3d.js`, solver in `engine/lean.js`). `opts {zones?, viewport?, reserve?,
+    pitchDeg?, instant?}`; `zones` are used rectangles in the bench frame in metres (`{x0,x1,z0,z1}`, default `PLATE_ZONE` =
+    the whole 4.8 x 1.3 m plate). Returns the pose `{position, target, pitch, dist, fov, aspect, fits, safe, ndc, key}`.
+    `planLeanIn({zones, viewport, reserve, fov, pitchDeg})` is the pure solver (55 degrees down, the used zones inside the
+    free glass); `chromeReserve(w, h)` models the HUD, strip and dock in px when nothing can be measured (a phone is
+    `w <= 768 || h <= 500`); live, `measureLeanReserve()` reads `.lq-tstrip`, `.lq-tdock` and a docked briefing card and the
+    pose is re-solved at 5 Hz when any of it moves. The camera flies there in 0.45 s (instantly under reduced motion).
+    `leaveLean({walked})`, `settleLean()`, `isLeanSettled()`, `leaning`, `onLeanChange`. A step is seen as a change in the
+    camera's x/z that the lean did not write (`leanWalkIntent`; the walk runs first each frame), hands the camera to the walk
+    and stands the player up; Escape and the dock's Stand key stand up without walking; `[E]` and the Lean In key lean in
+    again. A drag on empty table is a small look that settles back (`leanLook`). While leaning `fitToOpenArea` /
+    `fitDeployedAim` do nothing, `body.bench-leaning` hides the touch sticks (Stand brings them back), and the stage sets
+    `fpsControls.holdBase` so the walk does not read the lean camera as a teleport. Unconverted benches never call any of it.
+    `addGrabbable` takes an optional `accepts(raycaster)`, so one wide hit volume only takes a press where something is there.
+  - **`engine/table3d.js` `Table3D extends BenchViewer3D`**; `Tabletop(host, opts)` returns it at T4 and `Table2D` below
+    (`opts {onAction, tools, toolHost?, onLeanChange?, onCarry?}`; the runner passes the last three at T4). Same contract as
+    `Table2D`: `setState(state)`, `dispose()`, `built = true`. It leans in on its first state with `[map.zone]` and re-frames
+    when a stage changes the table's furniture (`boardSignature`). The table's units land on the plate by `table/layout.js`
+    `plateMap(bounds)` (uniform scale, centred, 6 cm margin), so **declare `bounds` plate-shaped (about 150 x 46) for a table
+    that must hold 28 px pieces on a 667 x 375 phone**; a 100 x 80 table gives about 25 px at its far edge
+    (`TEST_TABLE_WIDE` is the built twin's throwaway). The flat part of the plate is `drawTable(..., {pieces:false,
+    controls:false, sheet:false, crt:false})`, the canvas table's own picture; pieces are puck/card meshes with an engraved
+    legend, lifted 3 cm while held and eased to their place; kinds flagged `instanced` are one InstancedMesh each; joins are
+    rods; jars have walls and a rising fill; a fixture is a rim, a knob per dial and a Run key unless the kit supplies
+    `fixture3d`. Fixtures are dressed from `opts.world.materials` (the host's own, recorded by `buildBayBench` on
+    `dormant.userData.benchMats`, handed over by `stage.benchDeployment().materials`), never the bench kit's.
+  - **`table/gestures.js` `TableGestures`**: what a pointer does on a table, written once for both views (press, slop, drag,
+    rail gap, tap-then-tap twin, dials, Run, pour, the paper strip). `contextKeys(state, kit)` are the keys a held piece or a
+    pending field item offers: **Flip**, **Smaller**, **Larger** (kit kinds flagged `flip` / `scale`) and a fetch key per
+    pending `table.fetch` entry (left out where a world has the point). **Pour** is a drag from one jar to another, or a tap on
+    each, one `kit.pourStep` (default 1). **Straightedge**: drag between two readings on the strip lays it through them, a tap
+    on the strip lifts it. A second quick tap on a held card puts it down (there is no double-tap flip). `table/layout.js`
+    holds `fixtureLayout`, `plateMap`, `pieceTargets`; `engine/table-keys.js` `TableKeys` renders the tool and context keys.
+  - **Recorder sheet**: a paper plane at `recorder.box`, painted by `trendplot.js` (new `pxOf`, `overlay`), the straightedge
+    a bar laid on it; rows come from the kit only. `recorder` accepts `{at, size, xLabel, yLabel, xUnit, yUnit}`. The 2D strip
+    uses `recorder.plotUnits`. `setKeys` / `setReadings` are no-ops on a table: tools are in the dock, readings on the sheet.
+  - **Frame table mode** (`frame.js`): `setTableMode(on, {onStand, onLean})`, `setLeaning(bool)`, `setCarry(label|null)`,
+    `el.tableKeys`. Entering moves the finished nodes (no copy is retyped): a **prompt strip** under the HUD (Leave Bench from
+    the host bar, the objective, the stage dots) and a **foot dock** (Stand / Lean In, Tour, Findings, the table's keys, Hint,
+    Commit), with the miss banner, hints and a reward card on a message plate floating over the dock, so neither bar changes
+    height. The card, fold dock and tool plate are hidden in table mode; `PANEL_LAYOUT` and everything else are as before.
+    The runner turns it on when `benchesAre3D()` and a table stage loads, and off when the stage is not a table.
+    **A quest that plays table stages at T4 must be in `BUILT_BENCHES`** (`instruments.js`) so the host keeps the player on
+    their feet. CSS: `learn.css`, "TABLE MODE".
+  - **Field points (world side only)**: `three/field-points.js` `registerFieldPoint(world, {id, siteId, label, host, pos,
+    half?, rotY?, reach?})` (refuses a point with no `host`), `fieldPointsOf`, `fieldPointById`, `fieldAimTargets(world,
+    {ids})`, `clearFieldPoints`. `[E]` goes through `stage.aimedInteraction` to `viewer.aimedInteraction(origin, dir, world)`
+    (the bench stage now offers `[E] TAKE <item>` for the point the camera is POINTED at, never the nearest, and `[E] LEAN
+    IN` at the plate). **Carry slot**: `takeField(point)` sets `carry` and `onCarry(label)`; the frame's chip reads "Carrying
+    <label>"; `flushCarry()` runs on `leanIn()` and dispatches the reducer's `fetch`, so the piece appears on the table back at
+    the bench. No world registers a point yet (T1 brings Tallow's conveyor tail); `verify:<world>` is to hold each one to
+    "walkable ground, a clear approach, a host or named landmark".
+  - **Checks.** `verify:bench`: the lean-in pose on the throwaway table at seven viewports (2560x1080, 1920x1080, 1680x1050,
+    1440x960, 1280x960, 812x375, 667x375): the whole used zone inside the free glass, below the HUD and strip, above the dock,
+    smallest piece >= 28 px, camera inside the bay's `approach` or `lean` air; the whole solution replayed through the real
+    pointer handlers by drag and by two taps (84 presses), a look, a step, `[E]`, a field point and the carry slot. In the five
+    worlds, per bench: the new **`lean`** box (`bayBoxes().lean`: x +-1.2, y 2.4..4.6, z from the plate's front edge out 2.1 m,
+    the camera's air), **`sight`** (a 9 x 5 grid of segments from each whole-plate pose to the plate must pass through no
+    body), **`view`** (rays through the free glass that land past the plate's far edge must reach a body or the terrain), and a
+    tabletop deployed on the world's first bench must use that bench's own materials (with a negative control).
+    `tools/bay-legacy.json` now also waives, by name, the benches the new camera exposes: `lean` and `sight` for Tallow
+    `q2-core` (the sub-level's roof is at the camera's height) and `q3-catalogue` (the control house roof), Ligar `q9-orbitals`
+    (hoist chamber roof), Lanternfall `q5-numbers` and `q6-filling` (the records tent's ridge), all of Bellows (the six ring
+    gantries, deleted in T5) and Ember (the seven shelters, T6); **T1 clears Tallow, T3 Ligar, T4 Lanternfall**, and the file
+    can only shrink. `verify:table` also drives the shared gestures (pour, flip, scale, fetch, the straightedge) and the frame's
+    table mode and CSS; `verify:run` mounts the throwaway stage through the runner and plays its script (and will do the same
+    for every real `type: 'table'` stage).
+  - **Deferred.** The tray/rail/slot pieces of the built plate are flat pictures with low rims (no tray geometry yet); the field
+    chip and the keys are screen-space; `kit.fixture3d` is a hook with no kit using it yet; `catalogue3d.js` still has no drag;
+    no world has a field point; the pose assumes the stage's table is centred on the plate; pour is one step per gesture.
+  - **For the user to look at in a browser (nothing here is browser-tested)**. There is no quest to open: `Tabletop` is only
+    reached by `type: 'table'` stages, and no quest has one. To see it, temporarily add the throwaway stage (`tools/lib/
+    table-fixture.mjs` `TEST_STAGE` with `TEST_TABLE_WIDE`, and `registerTestKit()`) to a Tallow quest that is in
+    `BUILT_BENCHES`, at 3D On. Then check: (1) on entering, the camera flies over the plate and the table fills the glass between
+    the prompt strip and the dock; on a phone held sideways (667 x 375, 812 x 375) the pieces are big enough to hit; (2) a piece
+    follows the pointer, lifts and settles, the rail's pieces slide apart under a dragged card, tap-then-tap does the same,
+    a drag on bare table swings the view and lets it go; (3) W / the move stick stands you up, the sticks vanish while leaned
+    in and return after Stand, `[E]` at the plate says LEAN IN; (4) the hint, miss banner and reward float over the dock without
+    moving it; Leave Bench still works; (5) the strip prints the readings and the straightedge lies on it; (6) nothing glows,
+    nothing is rounded. Per bench: the lean-in frame should show the host's machinery at the plate's edges and the world beyond
+    it; the waived benches above will show a roof or a gantry over the camera until their phase.

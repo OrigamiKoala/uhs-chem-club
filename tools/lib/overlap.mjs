@@ -180,11 +180,12 @@ function surfaceTouches(mesh, frame, box) {
  * @param {THREE.Object3D} root the scene
  * @param {THREE.Matrix4} frame world -> bay frame
  * @param {Record<string, {min: number[], max: number[]}>} volumes by name
- * @param {{skip?: Function, tolerance?: number}} opts `skip` exempts the bench's own bodies
+ * @param {{skip?: Function, tolerance?: number, bodies?: object[]}} opts `skip` exempts the bench's own
+ *        bodies; `bodies` are `collectBoxes(root, {frame, ...})` already taken, to share between checks
  * @returns {Array<{volume: string, body: string, depth: number, at: number[]}>}
  */
-export function findBayIntrusions(root, frame, volumes, { skip = null, tolerance = 0.06 } = {}) {
-  const bodies = collectBoxes(root, { frame, skip, tolerance });
+export function findBayIntrusions(root, frame, volumes, { skip = null, tolerance = 0.06, bodies: given = null } = {}) {
+  const bodies = given || collectBoxes(root, { frame, skip, tolerance });
   const hits = [];
   for (const [volume, v] of Object.entries(volumes)) {
     const vb = new THREE.Box3(new THREE.Vector3(...v.min), new THREE.Vector3(...v.max));

@@ -59,8 +59,32 @@ const hooks = { tools: [], runners: [], benches: [] };
 globalThis.__LQ_TEST__ = { tool: f => { hooks.tools.length = 0; hooks.tools.push(f); }, runner: r => hooks.runners.push(r), bench: b => hooks.benches.push(b) };
 
 const { allQuests } = await import('../src/learn/curriculum.js');
+const MODEL = await import('../src/learn/table/model.js');
+const RUNNER = await import('../src/learn/engine/stagerunner.js');
+const FIX = await import('./lib/table-fixture.mjs');
+FIX.registerTestKit();
 let failed = 0;
 let ran = 0;
+let tablesRun = 0;
+
+/**
+ * A table stage, mounted by the runner: it has a table and a tabletop, an untouched
+ * table does not pass, and the stage's script, played as a player's two taps, does.
+ */
+function runTableStage(label, runner, stage, script) {
+  if (!runner.state.table) throw new Error(`${label}: the runner built no table`);
+  if (!runner.tabletop) throw new Error(`${label}: the runner built no tabletop`);
+  if (stage.check(runner.state).ok) throw new Error(`${label}: the table is solved before anyone touches it`);
+  if (!script) return;
+  for (const step of script) {
+    for (const action of MODEL.expandStep(runner.state.table, step, 'tap')) {
+      runner.act(action);
+      if (!runner.state.table.last.ok) throw new Error(`${label}: script step ${JSON.stringify(step)} did not take (${runner.state.table.last.reason})`);
+    }
+  }
+  const r = stage.check(runner.state);
+  if (!r.ok) throw new Error(`${label}: the script does not solve the stage (${r.msg})`);
+}
 for (const q of allQuests().filter(x => x.status === 'live')) {
   const id = q.key;
   const mod = await q.module();
@@ -96,6 +120,12 @@ for (const q of allQuests().filter(x => x.status === 'live')) {
       }
       // The answer widget, as a player would set it.
       runner.renderWidget();
+      // A TABLE stage mounts as a table, and its solution script plays through the runner.
+      if (stage.widget?.type === 'table') {
+        const script = mod.SOLUTIONS?.[i];
+        runTableStage(`${id} stage ${i + 1}`, runner, stage, Array.isArray(script) ? script : null);
+        tablesRun++;
+      }
     }
     m.dispose();
     console.log(`  ok   ${id}: mounted, ${mod.STAGES.length} stages loaded, tools and probes pressed`);
@@ -104,5 +134,18 @@ for (const q of allQuests().filter(x => x.status === 'live')) {
     console.log(`  FAIL ${id}: ${e.stack?.split('\n').slice(0, 6).join('\n       ') || e}`);
   }
 }
-console.log(`\n${failed ? failed + ' QUEST(S) FAILED TO RUN' : `QUESTS RUN OK (${ran} quests on the shared stage loop)`}`);
+// The throwaway table stage, mounted and played by the same runner every quest uses.
+try {
+  const ctx = { world: {}, quest: {}, stagesCleared: 0, isComplete: false, reportStage: noop, reportComplete: noop, exit: noop };
+  const runner = RUNNER.createRunner(stub(), ctx, { STAGES: [FIX.TEST_STAGE], DEBRIEF: {}, blankState: () => ({}), onLoad() {} });
+  runner.start();
+  runTableStage('throwaway table stage', runner, FIX.TEST_STAGE, FIX.TEST_SOLUTION);
+  runner.dispose();
+  tablesRun++;
+  console.log('  ok   the throwaway table stage mounts as a table and its script runs');
+} catch (e) {
+  failed++;
+  console.log(`  FAIL the throwaway table stage: ${e.stack?.split('\n').slice(0, 4).join('\n       ') || e}`);
+}
+console.log(`\n${failed ? failed + ' QUEST(S) FAILED TO RUN' : `QUESTS RUN OK (${ran} quests on the shared stage loop, ${tablesRun} table stage(s) mounted as a table)`}`);
 process.exit(failed ? 1 : 0);

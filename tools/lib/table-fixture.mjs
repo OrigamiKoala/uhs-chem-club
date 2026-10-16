@@ -21,7 +21,7 @@ import { registerKit } from '../../src/learn/table/kits/registry.js';
 
 export const TEST_KIT = {
   id: 'bars',
-  kinds: { bar: {}, card: {}, seal: {} },
+  kinds: { bar: {}, card: { flip: true, scale: true }, seal: { instanced: true } },
   maxScale: 3,
 
   planJoin(a, b, state) {
@@ -78,6 +78,46 @@ export const TEST_TABLE = {
   prediction: {
     slot: { id: 'predict', label: 'Prediction', at: { x: 90, y: 28 } },
     tokens: [{ id: 't-up', label: 'Rises', at: { x: 30, y: 59 } }, { id: 't-down', label: 'Falls', at: { x: 62, y: 59 } }]
+  }
+};
+
+/**
+ * The same table laid out for the BUILT view: plate-shaped (150 x 46 units, the
+ * plate is 3.7 : 1), the same ids and zones, so `TEST_SOLUTION` and `TEST_MISSES`
+ * play unchanged. `verify:bench` leans it in at every viewport; the drawn
+ * tabletop holds the 100 x 80 one above to the 28 px rule at 340 px.
+ */
+export const TEST_TABLE_WIDE = {
+  kit: 'bars',
+  bounds: { w: 150, h: 46 },
+  tools: ['straightedge'],
+  recorder: { at: { x: 132, y: 12 }, xLabel: 'Turns', yLabel: 'Reading' },
+  pieces: [
+    { id: 'b1', kind: 'bar', label: 'Bar 1', at: { x: 8, y: 8 }, props: { pole: 'N' } },
+    { id: 'b2', kind: 'bar', label: 'Bar 2', at: { x: 22, y: 8 }, props: { pole: 'S' } },
+    { id: 'b3', kind: 'bar', label: 'Bar 3', at: { x: 8, y: 22 }, props: { pole: 'N' } },
+    { id: 'b4', kind: 'bar', label: 'Bar 4', at: { x: 22, y: 22 }, props: { pole: 'S' } },
+    { id: 'c1', kind: 'card', label: 'Card 1', at: { x: 50, y: 37 } },
+    { id: 'c2', kind: 'card', label: 'Card 2', at: { x: 60, y: 37 } },
+    { id: 'c3', kind: 'card', label: 'Card 3', at: { x: 70, y: 37 } },
+    { id: 'w1', kind: 'seal', label: 'Seal', at: { x: 120, y: 40 }, hidden: true, fetchFrom: 'shelf' }
+  ],
+  zones: {
+    trays: [{ id: 'pairs', label: 'Pairs', at: { x: 46, y: 13 } }],
+    slots: [{ id: 'lid', label: 'Lid', at: { x: 140, y: 39 } }],
+    containers: [
+      { id: 'A', label: 'Jar A', at: { x: 74, y: 14 }, capacity: 10, contents: { water: 6 } },
+      { id: 'B', label: 'Jar B', at: { x: 98, y: 14 }, capacity: 10, contents: {} }
+    ],
+    rail: { at: { x: 88, y: 37 }, first: 'Smallest', last: 'Biggest', items: ['c1', 'c2', 'c3'] }
+  },
+  fixtures: [
+    { id: 'meter', kind: 'meter', label: 'Meter', at: { x: 20, y: 37 }, dials: { turns: { min: 0, max: 10, step: 1, value: 0 } } }
+  ],
+  fetch: [{ id: 'shelf', label: 'Shelf' }],
+  prediction: {
+    slot: { id: 'predict', label: 'Prediction', at: { x: 140, y: 27 } },
+    tokens: [{ id: 't-up', label: 'Rises', at: { x: 114, y: 28 } }, { id: 't-down', label: 'Falls', at: { x: 126, y: 27 } }]
   }
 };
 

@@ -1,8 +1,76 @@
 {
+  "bellows/q1-knocks": [
+    "lean",
+    "sight"
+  ],
+  "bellows/q2-laws": [
+    "lean",
+    "sight"
+  ],
+  "bellows/q3-ideal": [
+    "lean",
+    "sight"
+  ],
+  "bellows/q4-mixtures": [
+    "lean",
+    "sight"
+  ],
+  "bellows/q5-speed": [
+    "lean",
+    "sight"
+  ],
+  "bellows/q6-real": [
+    "lean",
+    "sight"
+  ],
+  "ember/q1-flow": [
+    "lean",
+    "sight"
+  ],
   "ember/q2-calorimetry": [
-    "behind"
+    "behind",
+    "lean",
+    "sight"
+  ],
+  "ember/q3-enthalpy": [
+    "lean",
+    "sight"
   ],
   "ember/q4-bonds": [
-    "behind"
+    "behind",
+    "lean",
+    "sight"
+  ],
+  "ember/q5-hess": [
+    "lean",
+    "sight"
+  ],
+  "ember/q6-entropy": [
+    "lean",
+    "sight"
+  ],
+  "ember/q7-gibbs": [
+    "lean",
+    "sight"
+  ],
+  "lanternfall/q5-numbers": [
+    "lean",
+    "sight"
+  ],
+  "lanternfall/q6-filling": [
+    "lean",
+    "sight"
+  ],
+  "ligar/q9-orbitals": [
+    "lean",
+    "sight"
+  ],
+  "tallow/q2-core": [
+    "lean",
+    "sight"
+  ],
+  "tallow/q3-catalogue": [
+    "lean",
+    "sight"
   ]
 }

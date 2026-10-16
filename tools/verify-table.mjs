@@ -211,7 +211,12 @@ function checkTableStage(label, stage, solution, misses) {
   try {
     const viaView = { drag: driveView(t0, solution, 'drag'), tap: driveView(t0, solution, 'tap') };
     for (const m of ['drag', 'tap']) {
-      if (JSON.stringify(MODEL.signature(viaView[m])) !== sig('direct')) fail(`${label}: the drawn tabletop, by ${m} gestures, does not reach the solution`);
+      if (JSON.stringify(MODEL.signature(viaView[m])) !== sig('direct')) {
+        const a = MODEL.signature(viaView[m]);
+        const d = JSON.parse(sig('direct'));
+        const keys = Object.keys(d).filter(k => JSON.stringify(a[k]) !== JSON.stringify(d[k]));
+        fail(`${label}: the drawn tabletop, by ${m} gestures, does not reach the solution (differs in ${keys.map(k => `${k}: ${JSON.stringify(a[k])} vs ${JSON.stringify(d[k])}`).join("; ")})`);
+      }
     }
   } catch (e) {
     fail(`${label}: the drawn tabletop faulted — ${e.stack?.split('\n').slice(0, 2).join(' ')}`);
@@ -491,6 +496,120 @@ function driveRailWidget(w, start, want, hand) {
   }
   bound.dispose();
   return { order, moves };
+}
+
+// The gestures T0a deferred, in the shared gesture layer both views use: pour, flip, scale, fetch, and a straightedge laid by hand.
+{
+  const before = failures;
+  const GEST = await import('../src/learn/table/gestures.js');
+  const kit = REG.getKit('bars');
+  const make = () => {
+    let state = MODEL.createTable(FIX.TEST_TABLE, 'gest');
+    const view = new Table2D(stub(), { tools: state.tools, onAction: a => { state = MODEL.apply(state, a); view.setState(state); view.settle(); } });
+    view.setState(state);
+    view.settle();
+    return { view, get state() { return state; } };
+  };
+  try {
+    // POUR: a drag from one jar to the other, and a tap on one then the other, each pour one step.
+    for (const how of ['drag', 'tap']) {
+      const t = make();
+      const A = t.state.zones.containers.A.at;
+      const B = t.state.zones.containers.B.at;
+      if (how === 'drag') { t.view.pointerDown(A); t.view.pointerMove({ x: (A.x + B.x) / 2, y: A.y }); t.view.pointerMove(B); t.view.pointerUp(B); }
+      else { for (const p of [A, B]) { t.view.pointerDown(p); t.view.pointerUp(p); } }
+      const a = t.state.zones.containers.A.contents.water;
+      const b = t.state.zones.containers.B.contents.water;
+      if (a !== 5 || b !== 1) fail(`pour by ${how}: jars hold ${a} and ${b}, not 5 and 1`);
+    }
+    const none = GEST.pourAction(make().state, kit, 'B', 'A');
+    if (none) fail('a pour from an empty jar made an action');
+
+    // FLIP and SCALE: a card in the hand offers the keys, and two quick taps turn it over.
+    const f = make();
+    f.view.dispatch({ place: { piece: 'c1', at: { x: 30, y: 52 } } });
+    f.view.dispatch({ pick: 'c1' });
+    const keys = GEST.contextKeys(f.state, kit);
+    const names = keys.map(k => k.label).join();
+    if (names !== 'Flip,Smaller,Larger,Shelf') fail(`a held card offers the keys "${names}", not "Flip,Smaller,Larger,Shelf"`);
+    if (keys.find(k => k.id === 'smaller').enabled) fail('a card at its smallest offers Smaller');
+    f.view.dispatch(keys.find(k => k.id === 'larger').action);
+    if (f.state.pieces.c1.props.scale !== 2) fail('the Larger key did not double a card');
+    f.view.dispatch(keys.find(k => k.id === 'flip').action);
+    if (!f.state.pieces.c1.props.flipped) fail('the Flip key did not turn the card over');
+    // Tapping the held card again puts it down (it is not a flip).
+    const g = make();
+    const at = g.state.pieces.c2.at;
+    g.view.pointerDown(at); g.view.pointerUp(at);
+    g.view.pointerDown(at); g.view.pointerUp(at);
+    if (g.state.carry.held || g.state.pieces.c2.props.flipped) fail('tapping a held card again did not simply put it down');
+    const face = (await import('../src/learn/engine/table2d.js')).faceOf(kit, f.state.pieces.c1, f.state);
+    if (!face.flipped || face.badge !== 'x2') fail('a flipped, doubled card does not show it on its face');
+
+    // FETCH: the stage's field item is a key where no world has the point, and the table gains the piece.
+    const h = make();
+    const fk = GEST.contextKeys(h.state, kit).find(k => k.id === 'fetch:shelf');
+    if (!fk) fail('a pending fetch offers no key');
+    else {
+      if (!h.state.pieces.w1.hidden) fail('the fetched piece is on the table before it is fetched');
+      h.view.dispatch(fk.action);
+      if (h.state.pieces.w1.hidden) fail('fetching put nothing on the table');
+      if (GEST.contextKeys(h.state, kit).some(k => k.id === 'fetch:shelf')) fail('a fetched item still offers its key');
+    }
+
+    // THE STRAIGHTEDGE, laid by hand on the strip: drag from one reading to another; tap the strip to lift it.
+    const r = make();
+    for (const v of [2, 6]) { r.view.dispatch({ setDial: { fixture: 'meter', dial: 'turns', value: v } }); r.view.dispatch({ run: 'meter' }); }
+    const rows = r.view.sheetRows();
+    if (rows.length !== 2) fail('the strip does not locate its readings');
+    else {
+      r.view.pointerDown(rows[0].u); r.view.pointerMove({ x: (rows[0].u.x + rows[1].u.x) / 2, y: (rows[0].u.y + rows[1].u.y) / 2 }); r.view.pointerMove(rows[1].u); r.view.pointerUp(rows[1].u);
+      if (!r.state.recorder.tool || r.state.recorder.tool.through.join() !== '0,1') fail('dragging across two readings did not lay the straightedge through them');
+      const empty = { x: r.state.recorder.box.at.x - 13, y: r.state.recorder.box.at.y - 7 };
+      r.view.pointerDown(empty); r.view.pointerUp(empty);
+      if (r.state.recorder.tool) fail('tapping the strip did not lift the straightedge');
+    }
+  } catch (e) {
+    fail(`the view gestures faulted — ${e.stack?.split('\n').slice(0, 3).join(' ')}`);
+  }
+  if (failures === before) ok('pour (drag and two taps), flip (key), scale, fetch and a hand-laid straightedge reach the reducer through the shared gestures');
+}
+
+// The frame's table mode, the carry chip and the table's CSS.
+{
+  const before = failures;
+  try {
+    const ctx = { world: {}, quest: {}, stagesCleared: 0, isComplete: false, reportStage() {}, reportComplete() {}, exit() {} };
+    const runner = RUNNER.createRunner(stub(), ctx, { STAGES: [FIX.TEST_STAGE], DEBRIEF: {}, blankState: () => ({}), onLoad() {} });
+    runner.start();
+    const fr = runner.frame;
+    fr.setTableMode(true, { onStand() {}, onLean() {} });
+    if (!fr.tableMode) fail('setTableMode(true) did not enter table mode');
+    fr.setLeaning(false);
+    fr.setCarry('Sample Shelf');
+    fr.setCarry(null);
+    fr.setTableMode(false);
+    if (fr.tableMode) fail('setTableMode(false) did not leave table mode');
+    runner.dispose();
+  } catch (e) {
+    fail(`the frame's table mode faulted — ${e.stack?.split('\n').slice(0, 3).join(' ')}`);
+  }
+  const css = readFileSync(new URL('../src/styles/learn.css', import.meta.url), 'utf8');
+  const sect = css.slice(css.indexOf('TABLE MODE')).replace(/\/\*[\s\S]*?\*\//g, '');
+  const rules = [...sect.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim(), body: m[2] }));
+  const mine = rules.filter(r => /lq-t(strip|dock|msg|keys)|lq-carry|lq-stand/.test(r.sel));
+  if (mine.length < 8) fail('the table-mode rules are missing from learn.css');
+  for (const r of mine) {
+    if (/border-radius\s*:\s*(?!0|var\(--radius-sm\))/.test(r.body)) fail(`table-mode rule "${r.sel}" rounds a corner`);
+    if (/box-shadow\s*:[^;]*0 0 \d+px/.test(r.body)) fail(`table-mode rule "${r.sel}" glows`);
+    if (/backdrop-filter\s*:\s*blur/.test(r.body)) fail(`table-mode rule "${r.sel}" blurs the glass`);
+  }
+  for (const sel of ['.lq-tstrip', '.lq-tdock', '.lq-tmsg']) {
+    const hit = mine.find(r => r.sel.split(',').map(x => x.trim()).includes(sel) || r.sel.split(',').some(x => x.trim() === sel));
+    const joined = mine.filter(r => r.sel.split(',').map(x => x.trim()).includes(sel)).map(r => r.body).join(' ');
+    if (!hit || !/pointer-events\s*:\s*auto/.test(joined) && !/pointer-events\s*:\s*auto/.test(mine.filter(r => /\.lq-tstrip,\s*\.lq-tdock/.test(r.sel)).map(r => r.body).join(' '))) fail(`${sel} must take presses (pointer-events: auto)`);
+  }
+  if (failures === before) ok('the frame enters and leaves table mode (prompt strip, foot dock, carry chip); its CSS has no radius, glow or blur, and the bars take presses');
 }
 
 /* ------------------------------------------------------------------
