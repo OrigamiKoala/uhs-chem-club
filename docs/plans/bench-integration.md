@@ -1,6 +1,6 @@
 # Bench integration — benches become part of each world
 
-**Status:** P0 (shared groundwork), P1 (Tallow), P2/P3 (Ligar) and P4 (Lanternfall) done 2026-10-16; P5 onward not started. Drafted 2026-10-16.
+**Status:** P0 (shared groundwork), P1 (Tallow), P2/P3 (Ligar) and P4 (Lanternfall) done 2026-10-16; P5–P7 are folded into `bench-tabletop.md` as its T5–T7 (2026-10-16); this file stays the record of P0–P4 and of the §6–§7 host proposals. Drafted 2026-10-16.
 
 ## The brief
 
@@ -186,8 +186,9 @@ Each phase ends with `npm run verify` green and a progress note in this file.
 - [x] P3 — Ligar mine (§3a–3d): hills, adits, cover mask, guide waypoints, benches 2, 6–9. The layered
       walk was not needed (see the note: the hills are not climbed).
 - [x] P4 — Lanternfall (§5): generator re-lay, nine hosts, ground levelled per host. Progress note below.
-- [ ] P5 — Bellows (§6). P6 — Ember Reach (§7). One phase each, independent of one another once P0 lands.
-- [ ] P7 — CLAUDE.md (retire the sign rule, describe the bay contract and the layered walk), per-world
+- [ ] P5 — Bellows (§6). P6 — Ember Reach (§7). **Moved to `bench-tabletop.md` T5 / T6**, built together
+      with each world's tabletop conversion.
+- [ ] P7 (**moved to `bench-tabletop.md` T7**) — CLAUDE.md (retire the sign rule, describe the bay contract and the layered walk), per-world
       plan records, stills.
 
 ### P0 progress note (2026-10-16)

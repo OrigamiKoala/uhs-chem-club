@@ -1,6 +1,11 @@
 # Bench Tabletop — benches you work with your hands, not machines you answer
 
-**Status:** plan only, nothing built. Drafted 2026-10-16.
+**Status:** plan only, nothing built. Drafted 2026-10-16. Phases T0–T7 (§6).
+**This plan now carries the rest of `bench-integration.md`.** That plan's P0–P4 are done (bay contract,
+Tallow, Ligar, Lanternfall); its P5 (Bellows), P6 (Ember Reach) and P7 (records, stills, site copy) are
+folded in here as phases T5–T7, so each remaining world is re-laid and re-benched once, not twice.
+`bench-integration.md` stays the record of P0–P4 and of the host proposals for Bellows and Ember.
+
 **Companions:** `bench-integration.md` (where each bench stands; the bay contract this keeps),
 `bench-clarity-pass.md` (the "relationship is never drawn" diagnosis, which the recorder in §3.4 closes),
 `learn-quests.md` (per-quest science), `CLAUDE.md` teaching doctrine (unchanged unless §8 says so).
@@ -143,6 +148,44 @@ shown before any foe answers.
 - Field stages only at worlds that are walkable (Tallow, Lanternfall, Ligar now; Bellows and Ember when
   their bench-integration phases land). Kettle has none.
 
+### 2.6 Every bench belongs to its place (applies to every phase)
+
+**This is a requirement of every phase, not a finishing touch. An agent reworking a bench also makes
+sure it is well integrated into its world, and does not count a bench as done until it is.** The
+tabletop puts the player's eyes on the plate for most of a quest, so the plate and everything around it
+is now the most-looked-at part of each world. `bench-integration.md` made each bench a working part of
+the plant, camp or mine; the tabletop must keep that true from the new camera and go further:
+
+1. **The table is the host's own work surface.** Pieces, trays, containers, tools and fixtures are
+   dressed as that host's equipment, from the world's material kit (`pbr-kit`, the world's `M`): sample
+   pans and scoops off Tallow's brine line; rock-bolted steel ledges, ore tubs and miner's tools in
+   Ligar; sled gear, cased optics and frosted fittings in Lanternfall; gas-plant valves and gauges in
+   Bellows; heat-shield tongs and spring water in Ember. A generic grey bench-kit object on every world is
+   the failure this rule exists to prevent. Only the cased instrument stays "the one clean thing".
+2. **The lean-in view shows the host, not a void.** From the lean-in pose at all six aspects the frame
+   is the plate with the host's machinery at its edges and the world beyond it (the belt, the drift
+   walls, the lake ice, the gasholder walkway). No bare sky, no back of a prop, no unfinished face, no
+   body the camera sits inside. A new `lean` clearance box joins `bayBoxes()` (the camera's volume and
+   its sightline to the plate) and `verify:bench` fails any world body inside it.
+3. **The world does what the table says.** A pour comes from the host's own pipework or hopper, a
+   field point is a real piece of the host or its neighbour (the conveyor tail, the sump, the flume,
+   the ice hole), the indicator lamp and any new lamp are `lampMark`s in the world's `LampPool` (light
+   count fixed), and the host's soundscape carries on while the player works. Under a Ligar hill only
+   lamps light, so every mine table gets a lamp over its plate.
+4. **Dormant to working reads as one machine.** The case opening, the table's fixtures rising and the
+   field point are all on the host; nothing appears from nowhere.
+5. **Each phase re-checks integration for the benches it touches**, including the worlds already
+   integrated (Tallow, Ligar, Lanternfall), because the camera, the fixtures and the field points are new.
+   Hosts may be adjusted to suit the table (bench-integration's invariants 3–7 still hold: bay
+   clearance, no overlap, walkable, lamps only lit, facing from `approachPos`, open approach, boss arenas
+   on open ground).
+6. **Every phase ends with a per-bench look list for the user**, like P4's ("for the user to look at in
+   the browser"): what to stand at, what the lean-in view should show, where the field point is, since the
+   agent does not test in the browser.
+
+Bench-integration invariants 1 ("nothing about a quest changes") and 2 (`PANEL_LAYOUT`,
+`fitDeployedAim` and every `*3d.js` untouched) are lifted: changing those is this plan's job.
+
 ---
 
 ## 3. Engineering
@@ -203,7 +246,13 @@ calibration line (`q9-absorb` s8) become things done by hand.
 - **`verify:bench`**: the lean-in pose at the six aspects (the whole plate inside the glass, below the
   HUD and above the dock; smallest piece ≥ 28 px at 667 × 375).
 - **`verify:run`**: every stage mounts as a table and its script runs. **`verify:<world>`**: every
-  `fieldPoint` stands on walkable ground with a clear approach.
+  `fieldPoint` stands on walkable ground with a clear approach and belongs to a host or a named
+  landmark (`host:` / landmark id), never a free-standing marker.
+- **`verify:bench`, integration (§2.6)**: the `lean` box is clear in all five worlds; the lean-in frame at
+  each aspect has host or world geometry behind the plate (a ray grid from the camera hits world bodies or
+  terrain, not only sky, past the plate's far edge); table fixtures use the world's material kit (no
+  bench-kit default material on a deployed world bench). `tools/bay-legacy.json` must be empty when T6
+  ends.
 
 ---
 
@@ -255,7 +304,7 @@ One line per quest: the kit, what the player now does, and a field stage if any.
 | `q9-orbitals` | MO box rack by drag; magnet test; rank O₂ species by laying them on the length rail. |
 | `boss-warden` | Phases on hotplate, pair slate, hub, field plates and magnet. |
 
-### Bellows (`unit04`) — gas kit (built with `bench-integration` P5)
+### Bellows (`unit04`) — gas kit (built with its integration in T5)
 
 | Quest | Becomes |
 |---|---|
@@ -267,7 +316,7 @@ One line per quest: the kit, what the player now does, and a field stage if any.
 | `q6-real` | Squeeze a gas in the cold bath; recorder plots PV/nRT; arrange cylinders by departure. |
 | `boss-compressor` | Phases on piston, bath, balance, valves and pinhole. |
 
-### Ember Reach (`unit05`) — heat kit, card stack (built with its integration phase)
+### Ember Reach (`unit05`) — heat kit, card stack (built with its integration in T6)
 
 | Quest | Becomes |
 |---|---|
@@ -307,8 +356,11 @@ The doctrine in `CLAUDE.md` is unchanged; these say how it reads at a tabletop.
 
 ## 6. Order of work
 
-Each phase ends with `npm run verify` green, its quests' lines deleted from `tools/table-legacy.json`, this
-file's progress note updated, and the user testing in the browser.
+Each phase ends with `npm run verify` green, its quests' lines deleted from `tools/table-legacy.json`, every
+bench it touched meeting §2.6 (integrated into its world from the lean-in view, with a look list for the
+user), this file's progress note updated, and the user testing in the browser. T1–T4 re-check the hosts
+already built in Tallow, Ligar and Lanternfall under the new camera and adjust them where the table needs
+it; T5 and T6 build Bellows' and Ember's hosts for the first time.
 
 - **T0 — Groundwork.** `table/` model + reducer + `snap.js`; `table2d.js`; `table3d.js` on
   `BenchViewer3D`; `leanIn()`; table mode in `frame.js`; widget `table` in `stagerunner.js`; recorder;
@@ -331,10 +383,31 @@ file's progress note updated, and the user testing in the browser.
   `q3`, `q5`–`q9`, `boss-warden`; mine field points (ore drift, sump).
 - **T4 — Lanternfall.** Optics rail, photocell, probe, PES piles, cuvettes; all nine + `boss-eater`;
   flume and ice-hole field points.
-- **T5 — Bellows**, together with `bench-integration` P5 (its hosts and field points are designed once).
-- **T6 — Ember Reach**, together with its integration phase. The card stack from T2 serves `q5-hess`.
-- **Then** retire what nothing uses: the station-row layout in `bench3d.js`, the deck/rail/controls
-  panels in `PANEL_LAYOUT`, and the per-instrument key banks, once `table-legacy.json` is empty.
+- **T5 — Bellows: integration (old P5) and tabletop together.** Confirm the host proposals with the
+  user before starting (`bench-integration.md` §6: gauge gallery on a gasholder walkway, compressor
+  tower piston deck, metering skid, blending manifold on a pipe rack, leak-test station at a vent stack,
+  the liquefier's cold box). Then: `bellows/sites.js` → `bellows/stations.js` with one host builder per
+  bench returning `{group, bench, local, colliders, partBoxes}` through `buildBayBench`; re-lay
+  `tools/gen-bellows-layout.mjs` so each host stands on the plant; delete the six ring gantries; keep the
+  compressor's arena on open ground; field points on the plant (a gasholder's gauge, the vent stack's
+  leak point, the cold box's draw-off); convert `q1`–`q6` + `boss-compressor` on the gas kit; check
+  whether `t1.siteDescriptions` in `bellows.json` is read before rewriting or deleting it; update
+  `verify:bellows` and `docs/plans/bellows-world.md`.
+- **T6 — Ember Reach: integration (old P6) and tabletop together.** Confirm the host proposals first
+  (`bench-integration.md` §7: wellhead heat-exchanger plates, sampling shelf at the hot spring's edge,
+  the habitat's boiler room, a fumarole sampling coil, the separator and siphon manifold, the silencer
+  pair, the turbine hall control room). Then: `ember/sites.js` → `ember/stations.js`, hosts replacing the
+  seven heat-shield shelters on the 54 m ring; re-lay `tools/gen-ember-layout.mjs`; the Crucible arena in
+  front of the expansion loop stays; empty `tools/bay-legacy.json` (its two `behind` waivers are Ember's
+  old shelters); field points in the vent field and plant (a fumarole, the spring's edge, a wellhead);
+  convert `q1`–`q7` + `boss-crucible` on the heat kit and card stack (from T2); check
+  `t1.siteDescriptions` in `ember.json`; update `verify:ember` and `docs/plans/ember-reach-world.md`.
+- **T7 — Records and retirement (old P7 plus this plan's cleanup).** Retire what nothing uses: the
+  station-row layout in `bench3d.js`, the deck/rail/controls panels in `PANEL_LAYOUT`, the
+  per-instrument key banks and `fitDeployedAim`'s standing aim where `leanIn()` replaced it, once
+  `table-legacy.json` is empty. Re-bake stills (`bake:stills`) for every re-laid world. Bring each
+  per-world plan record up to date (`bellows-world.md`, `ember-reach-world.md`, the Tallow, Ligar and
+  Lanternfall records). Mark `bench-integration.md` complete. CLAUDE.md per §8.
 
 ---
 
@@ -351,6 +424,11 @@ file's progress note updated, and the user testing in the browser.
   call per kind; shadows re-drawn only on a move (`shadow-pace.js`) as today.
 - **Field stages and bosses.** Walk is suspended in a boss encounter, so boss phases never declare
   `field`.
+- **Host proposals for Bellows and Ember are unconfirmed** (`bench-integration.md` §6–§7). Each is
+  confirmed with the user at the start of T5 / T6, and may change once the table's needs are known (a
+  piston deck has to hold a syringe rig; a boiler room has to hold a cup calorimeter and baths).
+- **Re-laying a world while rewriting its quests** makes T5 and T6 the largest phases. If one runs long,
+  split it: hosts and the re-lay first (benches still on the old station row), then the table conversion.
 - **Drill Deck** stays text practice for now; a table form of practice problems is out of scope.
 
 ## 8. CLAUDE.md changes when built (not before)
@@ -358,10 +436,15 @@ file's progress note updated, and the user testing in the browser.
 Add to the teaching doctrine: *the answer is the table where it can be built*; *every drag has a two-tap
 twin*; *ordering is dragging into place on a rail, never clicking in sequence*; *snaps are physics, never a gatekeeper*; *a prediction is only asked on a new case of an idea
 already worked out*; *a field stage is evidence, never a lock, at most one per quest, never on a boss*.
-Replace the "deck layout" and `PANEL_LAYOUT` notes once the station-row benches are retired.
+Add to the worlds section: *every bench is part of its host and is checked from the lean-in view
+(§2.6)*. Replace the "deck layout" and `PANEL_LAYOUT` notes once the station-row benches are retired,
+replace the `bench-integration.md` pointer with "complete", and describe Bellows' and Ember's hosts the way
+Tallow's, Ligar's and Lanternfall's are described.
 
 ## Progress
 
 - 2026-10-16: plan drafted; decisions 1–3 answered. Nothing built.
 - 2026-10-16: added (user): every ordering task is dragged into place, never clicked in sequence (§2.2); the
   `order` widget and the catalogue strip change in T0, ahead of the quest conversions.
+- 2026-10-16: added (user): `bench-integration.md`'s remaining phases (P5 Bellows, P6 Ember, P7 records)
+  folded in as T5–T7; §2.6 makes integrating each bench into its world part of every phase's done.
