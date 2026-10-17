@@ -122,7 +122,7 @@ export class TableGestures {
       const generous = s.carry.held === p.id ? 1 : GRAB_REACH;
       const reach = Math.max(radiusOf(kit, p) * generous, this.view.pxToUnits(GRAB_MIN_PX));
       const d = Math.hypot(c.x - u.x, c.y - u.y);
-      if (d <= reach && (!best || d <= best.d)) best = { id: p.id, d };
+      if (d <= reach && (!best || d < best.d)) best = { id: p.id, d };
     }
     return best ? best.id : null;
   }

@@ -177,10 +177,11 @@ table, atom kit piloted first, and every reworked bench must also be integrated 
   (`playerWalked`, `walkOwnsHeight`, `mouseLookLocked`, `walkKeysAtBench`), and the briefing docks left
   (`body.bench-deployed`). A **drawn** bench calls `stage.setWalkSuspended(true)`; a built one doesn't.
   On tabletops (`table3d.js`), players interact with `[E]` to lean in with free look and movement;
-  dormant bench extras (weld bead, swarf, vice in `bench-bay.js`) are parented to `dormant` so they hide cleanly on deployment;
+  dormant bench tool rail and extras (tool rail, weld bead, swarf, vice in `bench-bay.js`) are parented to `dormant` so they hide cleanly on deployment;
   scratch corners (H, O, Na+, Cl-) display only when required (`spec.scratch === true`) with staggered bins (`scr-bin` at y:55, atoms at y:50/58.5) clear of trays;
   sample trays use height 20 and cell 19 at y:33 with scope fixtures and initial sample dishes elevated (y:11-16) to prevent any label or dish overlaps;
-  lens rendering uses elevated base over dishes, polygon offset, and 384px canvas textures to eliminate z-fighting.
+  lens rendering uses elevated base over dishes, polygon offset, and 384px canvas textures to eliminate z-fighting, with rest:{x:0,y:0} for concentric centered snapping;
+  table gestures use strict closer distance (`d < best.d`) so sample dishes and centered resting tools resolve properly on drag/tap.
 - **Deck layout:** `.lq-prompt` pinned top, `.lq-deck-body` scrolls, `.lq-deck-foot` (banner, Hint,
   Submit) pinned bottom; `fitDeck()` bounds it; sorting answers render as a matrix (`compactBins`).
   Overworld card (`.learn-quest-overworld .lq-body`) is flat prose: prompt, reading, keys, run-in reward;

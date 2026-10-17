@@ -265,10 +265,10 @@ export function buildBayBench(ctx, opts) {
   if (rail) {
     const bar = new THREE.Mesh(k.own(new THREE.CylinderGeometry(rail.r, rail.r, rail.len, 8)), mats.dark);
     bar.rotation.z = Math.PI / 2;
-    bar.position.set(rail.x, height + rail.y, -0.3);
-    g.add(bar);
+    bar.position.set(rail.x, height + rail.y, -0.58);
+    dormant.add(bar);
     for (const [tx, tl] of rail.tools || []) {
-      g.add(box(k, 0.05, tl, 0.035, mats.dark, tx, height + rail.y - tl / 2 - 0.02, -0.3));
+      dormant.add(box(k, 0.05, tl, 0.035, mats.dark, tx, height + rail.y - tl / 2 - 0.02, -0.58));
     }
   }
 

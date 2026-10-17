@@ -1283,7 +1283,7 @@ function planJoin(a, b, state) {
   // A tool laid on a dish.
   if (a.kind === 'lens' || a.kind === 'cutter' || a.kind === 'shaker') {
     if (b.kind !== 'dish') return { holds: false, reason: 'That goes on a sample dish.' };
-    if (a.kind === 'lens') return { holds: true, link: { tool: 'lens' }, rest: { x: 5, y: 0 }, reason: 'The lens lies over the dish.' };
+    if (a.kind === 'lens') return { holds: true, link: { tool: 'lens' }, rest: { x: 0, y: 0 }, reason: 'The lens lies over the dish.' };
     const s = b.props.sample;
     if (a.kind === 'cutter') {
       if (b.props.cut) return { holds: true, once: true, reason: 'The dish has been cut already.' };

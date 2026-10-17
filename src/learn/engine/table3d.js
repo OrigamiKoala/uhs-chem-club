@@ -118,6 +118,7 @@ export class Table3D extends BenchViewer3D {
     this.gestures = new TableGestures(this);
     // The world the bench stands in, for its field points (`three/field-points.js`).
     this.worldObject = opts.world?.object || null;
+    if (opts.world?.dormant) opts.world.dormant.visible = false;
     this.keys = new TableKeys(opts.toolHost || this.host || document.body, a => this.onAction?.(a), {
       // Where the world has the point, the player walks to it; a key would only be a shortcut past it.
       skipFetch: id => Boolean(fieldPointById(this.worldObject, id))

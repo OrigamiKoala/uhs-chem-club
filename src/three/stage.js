@@ -1291,6 +1291,7 @@ class Stage {
       topY: anchor.topY,
       // The world's materials for this bench, when its host recorded them.
       materials: anchor.dormant?.userData?.benchMats || null,
+      dormant: anchor.dormant || null,
       // The world itself, for what it registered at the bench (its field points).
       object: world,
       fpsControls: this.fpsControls,
