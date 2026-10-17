@@ -2025,11 +2025,84 @@ async function checkDrawn(q, mod) {
     }
   }
   if (q3) {
-    near(q3.SOLUTIONS[4].decimal, D.photonJoules(486) / 1e-19, 0.06, 'unit02/q3-lines stage 5 (486 nm line)');
-    near(Number(q3.SOLUTIONS[5].choice), D.planJump(5, 2).nm, 1.5, 'unit02/q3-lines stage 6 (5 to 2 jump)');
+    // THE THIRD LANTERNFALL TABLE (`q3-lines`, the optics kit): bands, strips and rungs are `planPrism`, `planJump` and `jumpsForLine`.
+    const OPT = await import('../src/learn/table/kits/optics.js');
+    const same = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+    const holds = (c, what) => { if (!c) fail(what); };
+    const start = i => TABLE.createTable(q3.STAGES[i].table, q3.STAGES[i].title);
+    const end = i => TABLE.runScript(start(i), q3.SOLUTIONS[i], { strict: true });
     near(D.planJump(3, 2).nm, 656, 1.5, 'the 3 to 2 jump is the red line');
     for (const [gas, lines] of Object.entries(D.LINES)) {
       if (gas !== 'Ne' && lines.some(n => n < 380 || n > 750)) fail(`${gas}: a listed line is outside the visible band`);
+    }
+    // 1. a filament lights the band end to end, a gas tube in a few places
+    {
+      const t = start(0);
+      const shapeOf = id => OPT.bandRead(TABLE.runScript(t, [{ place: { piece: id, to: 'slot:sp.src' } }], { strict: true }), 'sp').shape;
+      same([shapeOf('fil'), shapeOf('tube')], ['band', 'lines'], 'unit02/q3-lines stage 1 (what each source makes)');
+      same([end(0).pieces.fil.zone, end(0).pieces.tube.zone], ['tray:band', 'tray:lines'], 'unit02/q3-lines stage 1 (the trays)');
+    }
+    // 2. the sealed tube is helium, and exactly the helium strip falls whole on its band
+    {
+      const t = start(1);
+      const whole = id => OPT.bandRead(TABLE.runScript(t, [{ place: { piece: 'x', to: 'slot:sp.src' } }, { place: { piece: id, to: 'slot:sp.ref' } }], { strict: true }), 'sp');
+      const full = ['h', 'he', 'na'].filter(id => { const r = whole(id); return r.whole && r.refLines.length === r.seen.length; });
+      same(full, ['he'], 'unit02/q3-lines stage 2 (the one strip that matches the sealed tube)');
+      same(t.pieces.x.props.gas, 'He', 'unit02/q3-lines stage 2 (the sealed tube is helium)');
+      holds(OPT.bandRead(end(1), 'sp').ref.props.gas === 'He', 'unit02/q3-lines stage 2: the solution does not leave the helium strip alongside');
+    }
+    // 3. cool hydrogen cuts out of the filament's light exactly the lines hot hydrogen gives, and no other strip fits
+    {
+      const t = start(2);
+      const tryStrip = id => OPT.bandRead(TABLE.runScript(t, [{ place: { piece: 'fil', to: 'slot:sp.src' } }, { place: { piece: 'cell', to: 'slot:sp.cell' } }, { place: { piece: id, to: 'slot:sp.ref' } }], { strict: true }), 'sp');
+      const full = ['h', 'he', 'na'].filter(id => { const r = tryStrip(id); return r.whole && r.refLines.length === r.seen.length; });
+      same(full, ['h'], 'unit02/q3-lines stage 3 (the one strip that matches the dark lines)');
+      holds(tryStrip('h').plan.continuous && tryStrip('h').seen.length === D.LINES.H.length, 'unit02/q3-lines stage 3: the band behind the cell is not the filament with hydrogen\'s lines cut out');
+    }
+    // 4. the red line is the 3 to 2 drop, and it is the only one of the ladder's drops that is red
+    {
+      const reds = [];
+      for (let hi = 2; hi <= 6; hi++) for (let lo = 1; lo < hi; lo++) { const nm = D.planJump(hi, lo).nm; if (nm >= 620 && nm <= 750) reds.push(`${hi}-${lo}`); }
+      same(reds, ['3-2'], 'unit02/q3-lines stage 4 (the drops that give a red line)');
+      const r = OPT.ladderRead(end(3), 'lad');
+      same([r.last.hi, r.last.lo], [3, 2], 'unit02/q3-lines stage 4 (the last drop)');
+      near(r.last.nm, D.planJump(3, 2).nm, 0.01, 'unit02/q3-lines stage 4 (the line the strip kept)');
+      same(OPT.ladderRead(start(3), 'lad').rung, 1, 'unit02/q3-lines stage 4 (the electron starts on the ground rung)');
+    }
+    // 5. the line's energy is hc over its wavelength, and the marker is set to it
+    {
+      const v = end(4).fixtures.energy.dials.n.value;
+      near(v, D.photonJoules(486) / 1e-19, 0.06, 'unit02/q3-lines stage 5 (486 nm line)');
+      near(D.planJump(4, 2).nm, 486, 1.5, 'unit02/q3-lines stage 5 (the 4 to 2 drop makes the 486 nm line)');
+      near(D.photonJoules(656) / 1e-19, 3.03, 0.01, 'unit02/q3-lines stage 5 (the worked line)');
+      holds(start(4).fixtures.energy.dials.n.value !== v, 'unit02/q3-lines stage 5: the reading starts on the answer');
+    }
+    // 6. five to two makes 434 nm, and the solution made the drop it predicted
+    {
+      const e = end(5);
+      near(Number(e.prediction.token), D.planJump(5, 2).nm, 1.5, 'unit02/q3-lines stage 6 (5 to 2 jump)');
+      holds(OPT.ladderRead(e, 'lad').lines.some(n => Math.abs(n - D.planJump(5, 2).nm) < 1), 'unit02/q3-lines stage 6: the strip did not keep the drop the stage asks about');
+      holds(q3.STAGES[5].table.prediction ? true : false, 'unit02/q3-lines stage 6: no prediction slot');
+      const distinct = new Set(['410', '434', '486', '656'].map(Number).map(n => Math.round(D.planJump(n === 410 ? 6 : n === 434 ? 5 : n === 486 ? 4 : 3, 2).nm)));
+      same(distinct.size, 4, 'unit02/q3-lines stage 6 (four tokens, four different drops)');
+    }
+    // 7. one electron on the top of the ladder has left: the top is above every rung
+    {
+      same(OPT.ladderRead(end(6), 'lad').out, true, 'unit02/q3-lines stage 7 (the electron is off the ladder)');
+      near(-D.bohrJoules(1) / 1e-18, 2.18, 0.001, 'unit02/q3-lines stage 7 (the whole climb)');
+    }
+    // 8. a line goes in the first tray exactly when some pair of rungs makes it
+    {
+      const t = start(7);
+      const e = end(7);
+      for (const id of ['c486', 'c588', 'c447']) {
+        const nm = t.pieces[id].props.nm;
+        const makes = D.jumpsForLine(nm).length > 0;
+        same(e.pieces[id].zone, makes ? 'tray:yes' : 'tray:no', `unit02/q3-lines stage 8 (the ${nm} nm line)`);
+      }
+      holds(['c486', 'c588', 'c447'].some(id => D.jumpsForLine(t.pieces[id].props.nm).length) && ['c486', 'c588', 'c447'].some(id => !D.jumpsForLine(t.pieces[id].props.nm).length), 'unit02/q3-lines stage 8: every line goes in one tray');
+      for (const nm of D.LINES.He) holds(D.jumpsForLine(nm).length === 0, `unit02/q3-lines stage 8: a drop on hydrogen's ladder makes helium's ${nm} nm line`);
+      holds(D.jumpsForLine(486).some(j => j.hi === 4 && j.lo === 2), 'unit02/q3-lines stage 8: the 4 to 2 drop does not make 486 nm');
     }
   }
   if (q9) {

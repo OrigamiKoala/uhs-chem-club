@@ -69,7 +69,7 @@ export const RECTS = Object.freeze({
   lamp: { hw: 10.5, hh: 6.5 },
   plate: { hw: 8, hh: 8 },
   tube: { hw: 12, hh: 6.5 },
-  strip: { hw: 17, hh: 6.5 },
+  strip: { hw: 14, hh: 6.5 },
   chip: { hw: 9, hh: 5.5 },
   detector: { hw: 11, hh: 6.5 },
   cell: { hw: 11, hh: 6.5 },
@@ -620,7 +620,7 @@ function paintLadder(ctx, f, state, b) {
     say(ctx, (bohrJoules(n) / 1e-18).toFixed(3), F.x(sx + half + 1.5), F.y(y), F.size(2.3, 6), { align: 'left', color: on ? AMBER : DIM });
   }
   // The open top: where the ladder ends.
-  const ty = centre(TOP) ?? 6;
+  const ty = centre(TOP) ?? 9;
   ctx.setLineDash?.([4, 3]);
   ctx.strokeStyle = DIM;
   ctx.beginPath();
@@ -630,7 +630,7 @@ function paintLadder(ctx, f, state, b) {
   ctx.setLineDash?.([]);
   say(ctx, f.props.topLabel || 'top', F.x(sx - half - 1.5), F.y(ty), F.size(2.5, 6.5), { align: 'right', color: DIM });
   say(ctx, '0', F.x(sx + half + 1.5), F.y(ty), F.size(2.3, 6), { align: 'left', color: DIM });
-  say(ctx, '10^-18 J, NOT TO SCALE', F.x(w / 2), F.y(f.size.h - 1.6), F.size(2.1, 6), { align: 'center', color: DIM });
+  say(ctx, '10^-18 J, NOT TO SCALE', F.x(w - 1.5), F.y(3.6), F.size(2.1, 6), { align: 'right', color: DIM });
   // The move the electron last made, as an arrow between its two rungs.
   const arrow = (hi, lo, up) => {
     const ya = centre(hi);
@@ -656,7 +656,6 @@ function paintLadder(ctx, f, state, b) {
   };
   if (last && last.hi && last.lo) arrow(last.hi, last.lo, last.up);
   else if (probeJump) arrow(probeJump.hi, probeJump.lo, false);
-  if (read.out) say(ctx, 'OFF THE LADDER', F.x(w / 2), F.y(ty + 5.6), F.size(2.4, 6.5), { align: 'center', color: AMBER, weight: 700 });
 }
 
 /** The lines the ladder has made, laid on the band's scale and written out in nm; and the answer to a line put in the probe. */
@@ -687,7 +686,7 @@ function paintLines(ctx, f, state, b) {
   }
   ctx.stroke();
   for (let nm = 400; nm <= 700; nm += 100) say(ctx, String(nm), F.x(xOf(nm)), F.y(by + bh + 3.8), F.size(2.1, 6), { align: 'center', color: DIM });
-  let line = 'NO LINE MADE YET';
+  let line = lad.props.probe ? 'PUT A LINE IN THE PROBE SLOT' : 'NO LINE MADE YET';
   let color = DIM;
   const probe = read.probe;
   if (probe) {

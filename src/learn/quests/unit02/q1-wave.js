@@ -72,7 +72,7 @@ const widget = { type: 'table', label: 'The bench' };
 const seatedLamp = (id, label, screen, nm) => lamp(id, label, screen.slots[0].at, nm, { fixed: true, zone: `slot:${screen.slots[0].id}` });
 
 /** The trays of a sort: a row of three wide ones across the foot of the table. */
-const tray = (id, label, x, y = 54) => ({ id, label, at: { x, y }, size: { w: 44, h: 20 }, cell: 22 });
+const tray = (id, label, x, y = 55) => ({ id, label, at: { x, y }, size: { w: 44, h: 18 }, cell: 22 });
 const TRAY_X = [28, 75, 122];
 
 /** Rate of a wave screen, as a number the check compares. */
@@ -278,7 +278,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 6 */
   (() => {
-    const band = spectrograph('band', 'Band', { x: 56, y: 22 }, { detectors: true });
+    const band = spectrograph('band', 'Band', { x: 56, y: 21 }, { detectors: true });
     return {
       title: 'Past the Ends',
       prompt: 'Put each lamp under the detector that picks up its light.',

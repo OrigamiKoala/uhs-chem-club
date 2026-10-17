@@ -69,7 +69,7 @@ export const OPTICS_KIT = {
     tube: rect(9, 'tube'),
     filament: rect(8.5, 'filament'),
     cell: rect(8.5, 'cell'),
-    strip: rect(11, 'strip'),
+    strip: rect(10.5, 'strip'),
     chip: rect(7, 'chip'),
     detector: rect(8.5, 'detector'),
     electron: { r: 6.3, nojoin: true }
@@ -176,15 +176,15 @@ export function pulseRail(id, label, at, { marks, size = { w: 132, h: 36 }, runL
  */
 export function spectrograph(id, label, at, { cell = false, ref = false, detectors = false, size = null } = {}) {
   const full = cell || ref;
-  const sz = size || { w: 100, h: full ? 52 : 42 };
+  const sz = size || { w: 100, h: full ? 52 : 40 };
   const x0 = at.x - sz.w / 2;
   const y0 = at.y - sz.h / 2;
-  const dy = full ? 40 : 30.5;
+  const dy = full ? 40 : 29;
   const slotY = y0 + dy;
   const slots = [slot(`${id}.src`, { x: x0 + 12, y: slotY }, { w: 14, h: 13 })];
   const captions = [{ dx: 12, dy: dy + 9.8, text: 'SOCKET' }];
-  if (cell) { slots.push(slot(`${id}.cell`, { x: x0 + 32, y: slotY }, { w: 14, h: 13 })); captions.push({ dx: 32, dy: dy + 9.8, text: 'CELL' }); }
-  if (ref) { slots.push(slot(`${id}.ref`, { x: x0 + 66, y: slotY }, { w: 38, h: 13 })); captions.push({ dx: 66, dy: dy + 9.8, text: 'ALONGSIDE' }); }
+  if (cell) { slots.push(slot(`${id}.cell`, { x: x0 + 35, y: slotY }, { w: 14, h: 13 })); captions.push({ dx: 35, dy: dy + 9.8, text: 'CELL' }); }
+  if (ref) { slots.push(slot(`${id}.ref`, { x: x0 + sz.w - 23, y: slotY }, { w: 32, h: 13 })); captions.push({ dx: sz.w - 23, dy: dy + 9.8, text: 'ALONGSIDE' }); }
   return {
     fixture: {
       id, kind: 'band', label, at: { ...at }, size: sz, noRun: true, dials: {},
@@ -233,20 +233,20 @@ export function photocell(id, label, at, { settings = null, start = 1, lamp: lam
  * SCALE, and one electron stands on rung 1. Dragging it to another rung is the move: the kit writes down the line a drop gives
  * out. A `probe` slot, put where `probeAt` says, takes a line chip and asks the ladder which pair of rungs makes it.
  */
-export function energyLadder(id, label, at, { top = false, probeAt = null, size = { w: 56, h: 62 } } = {}) {
+export function energyLadder(id, label, at, { top = false, probeAt = null, size = { w: 56, h: 64 } } = {}) {
   const x0 = at.x - size.w / 2;
   const y0 = at.y - size.h / 2;
   const rungs = {};
   const slots = [];
   const order = top ? [TOP, 6, 5, 4, 3, 2, 1] : [6, 5, 4, 3, 2, 1];
-  order.forEach((n, i) => {
+  order.forEach(n => {
     const sid = `${id}.r${n === TOP ? 'top' : n}`;
     rungs[n] = sid;
-    const y = y0 + (top ? 6 + i * 8 : 14 + i * 8);
+    const y = y0 + (n === TOP ? 9 : 17 + (6 - n) * 8);
     slots.push(slot(sid, { x: at.x, y }, { w: 28, h: 6.4 }));
   });
   const probeId = probeAt ? `${id}.probe` : null;
-  if (probeAt) slots.push(slot(probeId, probeAt, { w: 20, h: 12 }, 'Line to match'));
+  if (probeAt) slots.push(slot(probeId, probeAt, { w: 20, h: 12 }));
   const electronId = `${id}.e`;
   return {
     fixture: {

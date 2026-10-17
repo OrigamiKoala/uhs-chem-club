@@ -258,13 +258,13 @@ export function settleLadder(s, f) {
   if (n === TOP) { e.props.last = { from: prev, to: 'top', up: true }; return; }
   if (prev === TOP) { e.props.last = { from: 'top', to: n, up: false, nm: null }; return; }
   if (n < prev) {
-    const nm = Number(planJump(prev, n).nm.toFixed(1));
+    const nm = Number(planJump(prev, n).nm.toFixed(2));
     e.props.last = { hi: prev, lo: n, nm, up: false };
     const lines = (e.props.lines || []).slice();
     if (!lines.includes(nm)) lines.push(nm);
     e.props.lines = lines;
   } else {
-    e.props.last = { hi: n, lo: prev, nm: Number(planJump(n, prev).nm.toFixed(1)), up: true };
+    e.props.last = { hi: n, lo: prev, nm: Number(planJump(n, prev).nm.toFixed(2)), up: true };
   }
 }
 

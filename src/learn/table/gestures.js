@@ -117,7 +117,10 @@ export class TableGestures {
     for (const p of Object.values(s.pieces)) {
       if (p.hidden) continue;
       const c = this.view.posOf(p.id) || p.at;
-      const reach = Math.max(radiusOf(kit, p) * GRAB_REACH, this.view.pxToUnits(GRAB_MIN_PX));
+      // A piece in the hand is taken again only on the piece itself: a target beside it (the next rung of a ladder, a slot a
+      // hair's breadth away) must be tappable, and the generous reach that makes a piece easy to grab would swallow it.
+      const generous = s.carry.held === p.id ? 1 : GRAB_REACH;
+      const reach = Math.max(radiusOf(kit, p) * generous, this.view.pxToUnits(GRAB_MIN_PX));
       const d = Math.hypot(c.x - u.x, c.y - u.y);
       if (d <= reach && (!best || d <= best.d)) best = { id: p.id, d };
     }
