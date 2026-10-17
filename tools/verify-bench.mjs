@@ -954,23 +954,20 @@ world.scene.updateMatrixWorld(true);
 console.log('');
 checkFacing();
 
-const { STAGES: JOIN_STAGES } = await import('../src/learn/quests/unit03/q1-joins.js');
 const { STAGES: SLAB_STAGES } = await import('../src/learn/quests/unit03/q2-lattice.js');
 const { planJoin } = await import('../src/learn/engine/joinbench.js');
 
 const widest = (stages, key) => stages.reduce((a, b) => ((b[key]?.length || 0) > (a[key]?.length || 0) ? b : a));
 
 const before = failures;
-check('q1-joins', 'join bench (pairs)',
-  (camera, anchor) => new JoinBench3D(null, { world: worldFrame(camera, anchor) }),
-  bench => bench.setPlates(widest(JOIN_STAGES, 'pairs').pairs)
-);
+// Bench one (q1-joins) is a TABLETOP since T1b: it is measured below with every real table stage. The join
+// bench still stands at bench two, and in the warden's room.
 check('q2-lattice', 'join bench (blocks)',
   (camera, anchor) => new JoinBench3D(null, { world: worldFrame(camera, anchor) }),
   bench => bench.setPlates(widest(SLAB_STAGES, 'slabs').slabs)
 );
 if (failures === before) {
-  ok(`both Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
+  ok(`the Ligar join bench frames every body and control at ${ASPECTS.length} aspects`);
 }
 
 /* THE JOIN BENCH, EVERY STAGE, THROUGH THE REAL POINTER PATH.
@@ -1010,7 +1007,7 @@ async function joinStagePasses() {
     bench.onPointer3D({ clientX: (q.x + 1) / 2 * 1280, clientY: (1 - q.y) / 2 * 720, preventDefault() {} });
   };
 
-  for (const [questId, stages, key] of [['q1-joins', JOIN_STAGES, 'pairs'], ['q2-lattice', SLAB_STAGES, 'slabs']]) {
+  for (const [questId, stages, key] of [['q2-lattice', SLAB_STAGES, 'slabs']]) {
     const anchor = world.benchAnchor(questId);
     world.setBenchDeployed(questId, true);
     let probed = null;
@@ -1092,7 +1089,8 @@ const { DomainRig3D } = await import('../src/learn/engine/domainrig3d.js');
 const { BoxRack3D: LigarRack3D } = await import('../src/learn/engine/boxrack3d.js');
 
 const LG = {};
-for (const id of ['q3-distance', 'q4-dots', 'q5-resonance', 'q6-shape', 'q7-polarity', 'q8-hybrid', 'q9-orbitals']) {
+// (`q4-dots` is a tabletop since T1b; the pair board stands at bench five and in the warden's room.)
+for (const id of ['q3-distance', 'q5-resonance', 'q6-shape', 'q7-polarity', 'q8-hybrid', 'q9-orbitals']) {
   LG[id] = await import(`../src/learn/quests/unit03/${id}.js`);
 }
 
@@ -1105,7 +1103,6 @@ function layLigar(bench, st) {
 
 const LG_BENCHES = [
   ['q3-distance', 'bond bench', (c, a) => new BondBench3D(null, { world: worldFrame(c, a) })],
-  ['q4-dots', 'pair board', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })],
   ['q5-resonance', 'pair board (resonance)', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })],
   ['q6-shape', 'domain rig (shape)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })],
   ['q7-polarity', 'domain rig (field)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })],
@@ -1130,7 +1127,7 @@ const LG_BENCHES = [
       check(id, `${label}, ${heads} plate`, build, bench => layLigar(bench, st));
     }
   }
-  if (failures === mark) ok(`all seven later Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
+  if (failures === mark) ok(`the later Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
 }
 
 async function ligarLaterPasses() {
@@ -2178,7 +2175,7 @@ console.log('The foes — spoil standing in the wells\n');
             root.traverse(o => {
               if (!o.isMesh) return;
               const m = o.material;
-              if (m === hostMats.top || m === hostMats.dark || m.userData?.tableOwned) return;
+              if (Object.values(hostMats).includes(m) || m.userData?.tableOwned) return;
               offenders.add(m === t.steelMat || m === t.darkMat ? 'the bench kit' : (m.type || 'a material'));
             });
           }
@@ -2593,7 +2590,9 @@ console.log('The foes — spoil standing in the wells\n');
         // The smallest piece, in screen pixels.
         let smallest = Infinity;
         for (const p of Object.values(state.pieces)) {
-          if (p.hidden) continue;
+          // A fixed piece (an atom on a Lewis slate, a joint) is never grabbed: it is a target, found by the reach
+          // of the piece dropped on it, so it owes no hit size.
+          if (p.hidden || p.fixed) continue;
           const r = REG.radiusOf(kit, p);
           const a = bench.map.toPlate(p.at);
           const b = bench.map.toPlate({ x: p.at.x + r, y: p.at.y });
@@ -2619,7 +2618,7 @@ console.log('The foes — spoil standing in the wells\n');
             root.traverse(o => {
               if (!o.isMesh) return;
               const m = o.material;
-              if (mats && (m === mats.top || m === mats.dark || m.userData?.tableOwned)) return;
+              if (mats && (Object.values(mats).includes(m) || m.userData?.tableOwned)) return;
               offenders.add(m === bench.steelMat || m === bench.darkMat ? 'the bench kit' : (m.type || 'a material'));
             });
           }

@@ -2200,25 +2200,53 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     const { MOLECULES, DRAWINGS, planLewis, allLit, drawing, trayFor } = LEWIS;
     const lit = (mol, d, q = null) => allLit(planLewis(mol, d, q));
     if (q4) {
+      // The slates are Lewis's own molecules: the atoms on the table are the molecule's atoms, the joints are
+      // its links and nothing else, and the tray holds exactly its valence electrons (less the charge).
+      const ATOMS = await import('../src/learn/table/kits/atoms.js');
+      const tableOf = i => TABLE.createTable(q4.STAGES[i].table, q4.STAGES[i].title);
+      const endOf = i => TABLE.runScript(tableOf(i), q4.SOLUTIONS[i], { strict: true });
       q4.STAGES.forEach((st, i) => {
-        for (const rig of st.rigs) {
-          const mol = MOLECULES[rig.mol];
-          if (!mol) continue;
-          const t = trayFor(mol);
-          if (t !== mol.syms.reduce((n, sym) => n + LEWIS.VALENCE[sym], 0) - mol.charge) fail(`unit03/q4-dots stage ${i + 1}: ${rig.mol}'s tray does not hold its valence electrons`);
+        const t = tableOf(i);
+        for (const f of Object.values(t.fixtures).filter(x => x.kind === 'slate')) {
+          const mol = MOLECULES[f.props.mol];
+          if (!mol) { fail(`unit03/q4-dots stage ${i + 1}: slate ${f.id} is "${f.props.mol}", which lewis.js does not hold`); continue; }
+          const els = f.props.atoms.map(id => t.pieces[id].props.el);
+          if (JSON.stringify(els) !== JSON.stringify(mol.syms)) fail(`unit03/q4-dots stage ${i + 1}: slate ${f.id}'s atoms (${els.join('')}) are not ${f.props.mol}'s (${mol.syms.join('')})`);
+          const links = f.props.joints.map(([, a, b]) => `${a}-${b}`).sort().join();
+          if (links !== mol.links.map(([a, b]) => `${a}-${b}`).sort().join()) fail(`unit03/q4-dots stage ${i + 1}: slate ${f.id}'s joints are not ${f.props.mol}'s links`);
+          const sl = ATOMS.slateOf(t, f.id);
+          if (sl.total !== mol.syms.reduce((n, sym) => n + LEWIS.VALENCE[sym], 0) - sl.charge) fail(`unit03/q4-dots stage ${i + 1}: ${f.props.mol}'s tray does not hold its valence electrons`);
+          for (const [jid] of f.props.joints) {
+            const pa = t.pieces[jid];
+            const gap = Math.min(...f.props.atoms.map(id => Math.hypot(t.pieces[id].at.x - pa.at.x, t.pieces[id].at.y - pa.at.y) - t.pieces[id].r - pa.r));
+            if (gap < 0) fail(`unit03/q4-dots stage ${i + 1}: joint ${jid} sits on an atom`);
+          }
+        }
+        // Nothing on a slate overlaps anything else on it.
+        const fixed = Object.values(t.pieces).filter(p => p.fixed);
+        for (let a = 0; a < fixed.length; a++) for (let b = a + 1; b < fixed.length; b++) {
+          if (Math.hypot(fixed[a].at.x - fixed[b].at.x, fixed[a].at.y - fixed[b].at.y) < fixed[a].r + fixed[b].r) fail(`unit03/q4-dots stage ${i + 1}: ${fixed[a].id} and ${fixed[b].id} overlap`);
         }
       });
-      for (const [i, key, q] of [[0, 'H2O', null], [2, 'CO2', null], [4, 'NH4', 1], [5, 'BF3', null], [7, 'SF6', null]]) {
-        const sol = q4.SOLUTIONS[i].boards?.a || DRAWINGS[key];
-        if (!lit(key, DRAWINGS[key], q)) fail(`unit03/q4-dots stage ${i + 1}: the intended ${key} drawing does not light every lamp`);
-        void sol;
+      // The drawing a solution leaves is the intended drawing, read off the table: bonds, lone pairs, singles.
+      const drawn = (t, id) => { const sl = ATOMS.slateOf(t, id); return { bonds: sl.placed.bonds, lone: sl.placed.lone, dots: sl.placed.dots, sl }; };
+      const nz = o => Object.entries(o).filter(([, v]) => v).sort();
+      const norm = d => JSON.stringify([nz(d.bonds), nz(d.lone), nz(d.dots)]);
+      for (const [i, key, q] of [[0, 'H2O', null], [2, 'CO2', null], [4, 'NH4', 1], [5, 'BF3', null], [6, 'NO', null], [7, 'SF6', null]]) {
+        const d = drawn(endOf(i), 'a');
+        if (norm(d) !== norm(DRAWINGS[key])) fail(`unit03/q4-dots stage ${i + 1}: the solution leaves a ${key} drawing that is not the intended one`);
+        // Nitric oxide is the radical: one lamp stays dark by design (the stage grades the single electron).
+        if (key !== 'NO' && !lit(key, DRAWINGS[key], q)) fail(`unit03/q4-dots stage ${i + 1}: the intended ${key} drawing does not light every lamp`);
+        same(d.sl.charge, q ?? MOLECULES[key].charge, `unit03/q4-dots stage ${i + 1} (the tray charge)`);
       }
       if (lit('NH4', DRAWINGS.NH4, 0)) fail('unit03/q4-dots stage 5: the ammonium drawing completes on the neutral tray');
       if (trayFor('NO') % 2 !== 1) fail('unit03/q4-dots stage 7: nitric oxide\'s tray is not odd');
-      // Stage 2: the lone pairs on the heaviest atom, from the valence electrons.
-      const lone = { ch4: (4 - 4) / 2, nh3: (5 - 3) / 2, hf: (7 - 1) / 2 };
-      const bin = { none: 0, one: 1, three: 3 };
-      for (const [row, bid] of Object.entries(q4.SOLUTIONS[1].bins)) same(bin[bid], lone[row], `unit03/q4-dots stage 2 (${row}'s lone pairs)`);
+      // Stage 2: the lone pairs on the heavy atom of each molecule, from the valence electrons.
+      {
+        const t = endOf(1);
+        const lone = { a: (5 - 3) / 2, b: (4 - 4) / 2, c: (7 - 1) / 2 };
+        for (const [id, want] of Object.entries(lone)) same(drawn(t, id).lone[id === 'c' ? 1 : 0] || 0, want, `unit03/q4-dots stage 2 (${id}'s lone pairs on the heavy atom)`);
+      }
       // Stage 4: on this board only the oxygen can sit between hydrogen and fluorine.
       const hof = [];
       for (let b01 = 0; b01 <= 1; b01++) for (let b02 = 0; b02 <= 1; b02++) for (let b12 = 0; b12 <= 3; b12++) {
@@ -2228,10 +2256,16 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
         }
       }
       if (!hof.length || hof.some(([a, b, c]) => !(a === 1 && b === 0 && c === 1))) fail('unit03/q4-dots stage 4: oxygen is not the only atom that can join hydrogen and fluorine');
-      // The board refuses the other way round: a hydrogen or a fluorine cannot join two atoms.
+      // The board refuses the other way round: a hydrogen or a fluorine cannot join two atoms, on the table as in lewis.js.
       let placed = drawing();
       placed = LEWIS.addBond(MOLECULES.HOF, placed, 0, 1).placed;
       if (!LEWIS.addBond(MOLECULES.HOF, placed, 0, 2).refused) fail('unit03/q4-dots stage 4: the board lets one hydrogen atom join two others');
+      {
+        const t4 = tableOf(3);
+        const a = TABLE.applyAll(t4, [{ join: ['pairs', 'aj01'] }, { join: ['pairs', 'aj02'] }]);
+        if (a.last.joined !== false || !a.last.home || !/hydrogen/.test(a.last.reason || '')) fail('unit03/q4-dots stage 4: a second joint on the hydrogen atom is not refused with the board\'s rule');
+        if (a.pieces.pairs.at.x !== t4.pieces.pairs.at.x) fail('unit03/q4-dots stage 4: a refused pair does not go back to the tray');
+      }
       const bf = planLewis('BF3', DRAWINGS.BF3);
       if (bf.atoms[0].lamp !== 'amber') fail('unit03/q4-dots stage 6: boron\'s lamp is not amber in the intended BF3 drawing');
       if (planLewis('SF6', DRAWINGS.SF6).atoms[0].lamp !== 'expanded') fail('unit03/q4-dots stage 8: sulfur\'s lamp is not expanded in SF6');
@@ -2818,6 +2852,118 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     }
   }
   if (failures === before) ok('Tallow: every declared dish, atom, specimen and nucleus is real, and every graded answer (power, kinds, elements, cut, molecules, layers, beam, protons, shells, tester, isotopes) agrees with the scope\'s and the kit\'s own planners');
+}
+
+/* ------------------------------------------------------------------
+   LIGAR'S FIRST BENCH ON A TABLE (plan `bench-tabletop.md`, T1b). `q1-joins` declares atoms, and a
+   declaration can say a thing the bench never would. Every atom is a real element, and every answer
+   a stage grades is recomputed here from `joinbench.js` `planJoin` run on the elements' own shells,
+   so a literal in a check cannot drift from the planner the table asks.
+   ------------------------------------------------------------------ */
+{
+  const before = failures;
+  const A = await import('../src/learn/table/kits/atoms.js');
+  const JB = await import('../src/learn/engine/joinbench.js');
+  const SNAPM = await import('../src/learn/table/snap.js');
+  const q = getQuest('unit03', 'q1-joins');
+  const mod = q && q.status === 'live' ? await q.module() : null;
+  const same = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+  if (mod) {
+    const end = i => TABLE.runScript(TABLE.createTable(mod.STAGES[i].table, mod.STAGES[i].title), mod.SOLUTIONS[i], { strict: true });
+    const start = i => TABLE.createTable(mod.STAGES[i].table, mod.STAGES[i].title);
+    const view = sym => { const e = A.elementOf(sym); return { kind: e.kind, shells: e.shells }; };
+    const plan = (x, y) => JB.planJoin({ left: view(x), right: view(y) });
+    const el = (t, id) => t.pieces[id].props.el;
+    mod.STAGES.forEach((st, i) => {
+      for (const p of st.table.pieces) {
+        if (p.kind === 'atom') { try { A.elementOf(p.props.el); } catch { fail(`unit03/q1-joins stage ${i + 1}: atom ${p.id} is "${p.props.el}", not an element`); } }
+      }
+      if (st.table.opts?.words && !['plain', 'shells'].includes(st.table.opts.words)) fail(`unit03/q1-joins stage ${i + 1}: unknown wording mode`);
+    });
+    // The wording and the faces arrive in order: no charge before stage 3, no shell before stage 2.
+    mod.STAGES.forEach((st, i) => {
+      const o = st.table.opts || {};
+      if (i < 1 && o.shells) fail(`unit03/q1-joins stage ${i + 1}: shows shells before stage 2 introduces them`);
+      if (i < 2 && o.charges !== false) fail(`unit03/q1-joins stage ${i + 1}: shows a charge before stage 3 introduces it`);
+    });
+    const kindTray = { none: null, transfer: 'handed', share: 'shared' };
+    const pairsOf = (t, ids) => ids.map(([a, b]) => [a, b, plan(el(t, a), el(t, b))]);
+    // 1. a pair that holds is in Held and joined; one that does not is two loose atoms in Sprang apart
+    {
+      const t = end(0);
+      for (const [a, b, pl] of pairsOf(t, [['a1', 'a2'], ['b1', 'b2'], ['c1', 'c2']])) {
+        const held = pl.type !== 'none';
+        same([t.pieces[a].zone, t.pieces[b].zone], held ? ['tray:held', 'tray:held'] : ['tray:apart', 'tray:apart'], `unit03/q1-joins stage 1 (${el(t, a)} and ${el(t, b)})`);
+        same(A.pairRead(t, a, b).joined, held, `unit03/q1-joins stage 1 (${el(t, a)} and ${el(t, b)} joined)`);
+      }
+    }
+    // 2. who starts with a full shell is what the planner says has no room; the solution fills every other shell
+    {
+      const t0 = start(1);
+      const t1 = end(1);
+      for (const p of Object.values(t0.pieces).filter(x => x.kind === 'atom' && !x.props.scratch)) {
+        same(A.readPiece(p.id, t0).full, JB.shellPlan(view(p.props.el)).full, `unit03/q1-joins stage 2 (${p.props.el} starts full)`);
+        same(A.readPiece(p.id, t1).full, true, `unit03/q1-joins stage 2 (${p.props.el} ends full)`);
+      }
+    }
+    // 3. the charged pair is the planner's transfer, the neutral pair its share
+    {
+      const t = end(2);
+      const ch = (a, b) => [A.readPiece(a, t).charge, A.readPiece(b, t).charge];
+      const p1 = plan('Na', 'Cl');
+      same(ch('na', 'cl'), [p1.charge.left, p1.charge.right], 'unit03/q1-joins stage 3 (sodium and chlorine charges)');
+      same(ch('h1', 'h2'), [0, 0], 'unit03/q1-joins stage 3 (the hydrogen pair is neutral)');
+    }
+    // 4. handed over or held between, from the planner's own type
+    {
+      const t = end(3);
+      for (const [a, b, pl] of pairsOf(t, [['m1', 'm2'], ['n1', 'n2'], ['k1', 'k2'], ['d1', 'd2']])) {
+        same(t.pieces[a].zone, `tray:${kindTray[pl.type]}`, `unit03/q1-joins stage 4 (${el(t, a)} and ${el(t, b)})`);
+        same(A.pairRead(t, a, b).type, pl.type, `unit03/q1-joins stage 4 (${el(t, a)} and ${el(t, b)} join)`);
+      }
+    }
+    // 5. chlorines it takes to empty magnesium's outer shell: add them one by one until the planner says it is spent
+    {
+      let mg = view('Mg').shells.slice();
+      let n = 0;
+      while (mg[mg.length - 1] > 0 && n < 6) {
+        const pl = JB.planJoin({ left: { kind: 'metal', shells: mg }, right: view('Cl') });
+        if (pl.type !== 'transfer') break;
+        mg[mg.length - 1] -= pl.moved;
+        n++;
+      }
+      const t = end(4);
+      same(SNAPM.clusterOf(t, 'mg').length - 1, n, 'unit03/q1-joins stage 5 (chlorines for one magnesium)');
+      same(A.closureOf(SNAPM.clusterOf(t, 'mg'), t).closed, true, 'unit03/q1-joins stage 5 (the unit is closed)');
+      same(A.chargeOf(SNAPM.clusterOf(t, 'mg'), t), 0, 'unit03/q1-joins stage 5 (the unit reads zero)');
+      if (start(4).pieces.mg.joinedTo.length || Object.values(start(4).pieces).filter(p => p.props.el === 'Cl').length <= n) fail('unit03/q1-joins stage 5: the table does not hold more chlorines than the answer needs');
+    }
+    // 6. pairs between, from the planner
+    {
+      const t = end(5);
+      const names = { 1: 'one', 2: 'two', 3: 'three' };
+      for (const [a, b, pl] of pairsOf(t, [['u1', 'u2'], ['v1', 'v2'], ['w1', 'w2']])) {
+        same(t.pieces[a].zone, `tray:${names[pl.pairs]}`, `unit03/q1-joins stage 6 (${el(t, a)} and ${el(t, b)})`);
+        same(A.pairRead(t, a, b).pairs, pl.pairs, `unit03/q1-joins stage 6 (${el(t, a)} and ${el(t, b)} pairs)`);
+      }
+    }
+    // 7. ionic, covalent or none, from the planner
+    {
+      const t = end(6);
+      const tray = { none: 'none', transfer: 'ionic', share: 'covalent' };
+      for (const [a, b, pl] of pairsOf(t, [['x1', 'x2'], ['y1', 'y2'], ['z1', 'z2'], ['q1', 'q2']])) {
+        same([t.pieces[a].zone, t.pieces[b].zone], [`tray:${tray[pl.type]}`, `tray:${tray[pl.type]}`], `unit03/q1-joins stage 7 (${el(t, a)} and ${el(t, b)})`);
+      }
+    }
+    // 8. hydrogens one carbon holds: its room, over what one hydrogen takes
+    {
+      const t = end(7);
+      const room = JB.shellPlan(view('C')).room / JB.shellPlan(view('H')).room;
+      same(SNAPM.clusterOf(t, 'c').length - 1, room, 'unit03/q1-joins stage 8 (hydrogens per carbon)');
+      if (Object.values(start(7).pieces).filter(p => p.props.el === 'H').length <= room) fail('unit03/q1-joins stage 8: the table does not hold more hydrogens than the answer needs');
+    }
+  }
+  if (failures === before) ok('Ligar bench one: every declared atom is a real element, and every graded pair, charge, count and tray agrees with joinbench\'s planJoin on the elements\' own shells');
 }
 
 if (warnings) console.log(`\n${warnings} copy warning(s): reward cards over 45 words.`);
