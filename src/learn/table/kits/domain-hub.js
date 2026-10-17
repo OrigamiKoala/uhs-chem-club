@@ -28,7 +28,7 @@ export const HUB_R = 7;
 export const ARM_R = 6.3;
 /** An arm's length on the table, in table units. */
 export const POSE = 21.5;
-export const SOCKET_POSE = 22;
+export const SOCKET_POSE = 23;
 const RAD = Math.PI / 180;
 const round3 = v => Math.round(v * 1000) / 1000;
 
@@ -59,7 +59,7 @@ export function turnOf(state, hub) {
  * apart on the plate (and off the hub), so no arm hides another. A fixed scan, so a drag and two taps agree. The plate's
  * dial turns the hub from there.
  */
-export function openingView(vectors) {
+export function openingView(vectors, pose = POSE, box = 0) {
   if (vectors.length < 2) return { yaw: YAW0, pitch: PITCH };
   let best = null;
   for (let y = 0; y < 360; y += 5) {
@@ -68,8 +68,12 @@ export function openingView(vectors) {
       let least = Infinity;
       for (let i = 0; i < pts.length; i++) {
         // An arm must stand a hub and an arm's radius from the hub, and two arms two radii apart: measured against what each needs.
-        least = Math.min(least, Math.hypot(pts[i].x, pts[i].y) * POSE / (HUB_R + ARM_R));
-        for (let j = i + 1; j < pts.length; j++) least = Math.min(least, Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) * POSE / (2 * ARM_R));
+        least = Math.min(least, Math.hypot(pts[i].x, pts[i].y) * pose / (HUB_R + ARM_R));
+        for (let j = i + 1; j < pts.length; j++) {
+          least = Math.min(least, Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) * pose / (2 * ARM_R));
+          // Sockets are boxes (slots): two must clear each other along one axis, not only in a straight line.
+          if (box) least = Math.min(least, Math.max(Math.abs(pts[i].x - pts[j].x), Math.abs(pts[i].y - pts[j].y)) * pose / box);
+        }
       }
       if (!best || least > best.least + 1e-9) best = { yaw: y * RAD, pitch, least };
     }
@@ -140,7 +144,7 @@ export const socketLabel = (n, k) => (k < 2 ? 'End' : n === 5 ? 'Middle' : 'Side
 /** Where the sockets of an n-domain polyhedron stand on the table round `at`. */
 export function socketPoints(n, at, S = SOCKET_POSE) {
   const vs = (IDEAL[n] || IDEAL[6]).map(v => ({ v }));
-  const view = openingView(vs);
+  const view = openingView(vs, S, 11.6);
   return vs.map(({ v }) => {
     const p = project(v, view.yaw, view.pitch);
     return { x: Math.round((at.x + p.x * S) * 100) / 100, y: Math.round((at.y + p.y * S) * 100) / 100, z: p.z };
