@@ -107,7 +107,7 @@ export function benchesAre3D() {
  */
 const BUILT_BENCHES = new Set([
   // Unit 1 — Tallow
-  'q1-grain',      // the tabletop, atom kit — table3d.js (T1; the sampler scope still serves Kettle)
+  'q1-grain',      // the tabletop, atom kit — table3d.js (T1; the sampler scope serves no quest now and is retired with T7)
   'q2-core',       // the tabletop, atom kit — table3d.js (T1; the core bench still serves q4-ledger)
   'q3-catalogue',  // the tabletop, card kit — table3d.js (T2; the catalogue board is retired with T7)
   'q4-ledger',     // the tabletop, atom kit — table3d.js (T2; the core bench is retired with T7)

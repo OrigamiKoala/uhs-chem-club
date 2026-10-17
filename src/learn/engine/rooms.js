@@ -81,6 +81,25 @@ function buildFoundry(viewer) {
   box(bench, 4.2, 0.03, 0.9, M.plating, 0, 0.3, 0);
   for (let i = 0; i < 5; i++) box(bench, 0.5, 0.14, 0.3, M.slag, -1.6 + i * 0.8, 0.385, 0);
 
+  // The splash plate along the back of the bench: the one part of the room the lean-in camera always sees beyond the
+  // table. A rail of hung tongs, three brass gauges and a rack of mould boards stand on it, behind the plate's far
+  // edge (nothing between the camera and the table), part of the bench and so never in the bay's way.
+  box(bench, 4.8, 0.36, 0.03, M.plating, 0, PLATE_Y + 0.18, -0.69, 'splash-plate');
+  box(bench, 4.8, 0.03, 0.05, M.darkIron, 0, PLATE_Y + 0.37, -0.69, 'splash-cap');
+  cyl(bench, 0.012, 0.012, 4.4, 6, M.darkIron, 0, PLATE_Y + 0.29, -0.64, [0, 0, Math.PI / 2]).name = 'tong-rail';
+  for (let i = 0; i < 7; i++) {
+    const x = -1.9 + i * 0.32;
+    for (const sx of [-1, 1]) {
+      const tong = box(bench, 0.014, 0.25, 0.012, M.darkIron, x + sx * 0.012, PLATE_Y + 0.165, -0.64);
+      tong.rotation.z = sx * 0.07;
+    }
+  }
+  for (const x of [-1.15, 0.9, 2.0]) {
+    cyl(bench, 0.065, 0.065, 0.025, 14, M.brass, x, PLATE_Y + 0.17, -0.665, [Math.PI / 2, 0, 0]).name = 'gauge';
+    box(bench, 0.004, 0.05, 0.004, M.slag, x, PLATE_Y + 0.17, -0.655).rotation.z = 0.5;
+  }
+  for (let i = 0; i < 4; i++) box(bench, 0.34, 0.2, 0.02, M.slag, 1.7 + i * 0.1, PLATE_Y + 0.12 + i * 0.02, -0.64).rotation.y = -0.18;
+
   /* ---------------- the bay: floor, wall, furnace, hoppers, crane ---------------- */
   const set = new THREE.Group();
   set.name = 'foundry-set';
@@ -89,6 +108,12 @@ function buildFoundry(viewer) {
   const floor = box(set, 34, 0.2, 18, M.plating, 0, -0.1, -5, 'foundry-floor');
   floor.userData.phys = 'ground';
   floor.receiveShadow = true;
+  // A rail track along the floor between the bench and the wall, with a slag cart on it, all lower than the bay's air.
+  for (const z of [-1.45, -1.95]) box(set, 34, 0.04, 0.07, M.darkIron, 0, 0.02, z, 'floor-rail');
+  for (let x = -14; x <= 14; x += 0.8) box(set, 0.12, 0.025, 0.7, M.slag, x, 0.0125, -1.7, 'sleeper');
+  box(set, 1.0, 0.16, 0.62, M.plating, 1.7, 0.16, -1.7, 'slag-cart');
+  cyl(set, 0.0, 0.4, 0.06, 7, M.slag, 1.7, 0.27, -1.7).name = 'cart-load';
+  for (const wx of [-0.35, 0.35]) for (const wz of [-1.45, -1.95]) cyl(set, 0.07, 0.07, 0.04, 12, M.darkIron, 1.7 + wx, 0.07, wz, [Math.PI / 2, 0, 0]);
   // The firebrick wall behind the bench, 2.35 m behind the plate's middle, with a pilaster of rolled section
   // every 3.5 m and a plinth course: it is the backdrop at every aspect.
   const wallZ = -2.6;
