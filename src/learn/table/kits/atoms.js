@@ -114,6 +114,7 @@ export const SCOPE_KINDS = {
   k01: { code: 'hydrogen (H)', mass: 1.0, size: 0.30, tint: 'bone', note: 'The lightest atom the scope has ever weighed.' },
   k02: { code: 'helium (He)', mass: 4.0, size: 0.38, tint: 'pale', note: 'Light and unreactive. Floats free as lone atoms.' },
   k06: { code: 'carbon (C)', mass: 12.0, size: 0.56, tint: 'iron', note: 'Dark and dry. Leaves a mark on anything it touches.' },
+  k07: { code: 'nitrogen (N)', mass: 14.0, size: 0.54, tint: 'pale', note: 'Most of the air on this planet is this.' },
   k08: { code: 'oxygen (O)', mass: 16.0, size: 0.52, tint: 'rust', note: 'Small but heavy. Turns up in almost every sample here.' },
   k11: { code: 'sodium (Na)', mass: 23.0, size: 0.74, tint: 'pale', note: 'Large, soft and dull. Joins with almost anything.' },
   k12: { code: 'magnesium (Mg)', mass: 24.3, size: 0.72, tint: 'pale', note: 'Lightweight, pale metal.' },

@@ -90,6 +90,7 @@ export function roundTo(x, step) {
  *   blankState: (stage: object) => object,
  *   setup?: (runner: object) => void,   // builds the instrument, once, before stage one
  *   tableHost?: () => HTMLElement,       // where a table stage draws (default: the instrument host)
+ *   room?: string,                       // the named room (`rooms.js`) a table stands in where no world is under it
  *   toolNoteFor?: (id: string, stageNumber: number) => object|null,
  *   onLoad: (stage: object, i: number, runner: object) => void,
  *   onDispose?: () => void,
@@ -480,7 +481,9 @@ export function createRunner(container, ctx, cfg) {
         tools: stage.table.tools || [],
         toolHost: built ? frame.el.tableKeys : undefined,
         onLeanChange: leaning => frame.setLeaning(leaning),
-        onCarry: label => frame.setCarry(label)
+        onCarry: label => frame.setCarry(label),
+        // A quest with no world under it stands its table in a room of its own (`rooms.js`).
+        room: cfg.room
       });
     }
     tabletop.setState(state.table);

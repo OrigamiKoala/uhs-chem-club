@@ -119,8 +119,9 @@ const BUILT_BENCHES = new Set([
   'q1-joins',      // the join bench, pair plates — joinbench3d.js
   'q2-lattice',    // the join bench, slab plates — joinbench3d.js
   // Unit 7 — Kettle. Built as Ligar's bench three; Kettle is not yet walkable,
-  // so at T4 it builds its own room around itself.
-  'q1-recipe',     // the sampler scope again     — scope3d.js
+  // so at T4 it builds its own room around itself (`rooms.js`, the foundry).
+  'q1-recipe',     // the tabletop, heap kit — table3d.js (T2c; the sampler scope still serves nothing else here)
+  'boss-golem',    // the golem: two phases on the heap kit and the mass kit, its foe in the table's corner
   // Unit 2 — Lanternfall.
   'q1-wave',       // the light bench, trace and prism heads — lightbench3d.js
   'q2-photon',     // the light bench, photocell head
@@ -356,7 +357,8 @@ export function Calorimeter(host, opts = {}) {
  * the host screen keeps the player on their feet at the bench.
  * @param {HTMLElement} host
  * @param {{onAction?: (action: object) => void, tools?: string[], toolHost?: HTMLElement,
- *          onLeanChange?: (leaning: boolean) => void, onCarry?: (label: string|null) => void}} opts
+ *          onLeanChange?: (leaning: boolean) => void, onCarry?: (label: string|null) => void,
+ *          room?: string}} opts `room` names the room (`rooms.js`) a quest with no world under it stands its table in
  */
 export function Tabletop(host, opts = {}) {
   return benchesAre3D()

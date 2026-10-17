@@ -63,7 +63,7 @@ export function listedMass(sym) {
 
 /** What a particle of each species is made of. The mass of one is the listed masses added up. */
 const FORMULA = {
-  carbon: { C: 1 }, oxygen: { O: 1 }, hydrogen: { H: 1 }, neon: { Ne: 1 }, chlorine: { Cl: 1 }, fluorine: { F: 1 },
+  carbon: { C: 1 }, oxygen: { O: 1 }, hydrogen: { H: 1 }, neon: { Ne: 1 }, chlorine: { Cl: 1 }, fluorine: { F: 1 }, sodium: { Na: 1 },
   water: { H: 2, O: 1 }, methane: { C: 1, H: 4 }, 'carbon dioxide': { C: 1, O: 2 }
 };
 export function formulaOfSpecies(name) {

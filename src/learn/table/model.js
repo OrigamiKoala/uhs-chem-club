@@ -177,7 +177,9 @@ export function createTable(spec, seedKey = '') {
       id: c.id, label: c.label || c.id, at: { ...c.at }, size: { ...SIZES.container, ...(c.size || {}) },
       capacity: c.capacity ?? null, contents: { ...(c.contents || {}) },
       // A container for big pieces (a crate in a pan) declares its own pitch, as a tray does.
-      ...(c.cell ? { cell: c.cell } : {})
+      ...(c.cell ? { cell: c.cell } : {}),
+      // Plain data the kit may read to draw it (a heap's tint): `kit.paintContainer` and the built table's piles.
+      ...(c.props ? { props: { ...c.props } } : {})
     };
   }
   if (z.rail) {
@@ -419,6 +421,16 @@ const HANDLERS = {
     // a tag on a sample that has been tested. The kit says; the reducer only writes.
     for (const [pid, props] of Object.entries(row.stamp || {})) {
       if (s.pieces[pid]) Object.assign(s.pieces[pid].props, props);
+    }
+    // A reading can also MOVE what a container holds (`contents: {containerId: {what: delta}}`): a maker that
+    // takes atoms out of two heaps and puts a molecule in a tray. The kit says how much; the reducer only moves it.
+    for (const [cid, deltas] of Object.entries(row.contents || {})) {
+      const c = s.zones.containers[cid];
+      if (!c) continue;
+      for (const [what, d] of Object.entries(deltas)) {
+        const now = round((c.contents[what] || 0) + d);
+        if (now > 0) c.contents[what] = now; else delete c.contents[what];
+      }
     }
     s.recorder = append(s.recorder, row);
     return { row };

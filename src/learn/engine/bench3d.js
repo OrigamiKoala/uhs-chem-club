@@ -28,6 +28,7 @@ import { soundscape } from '../../audio/soundscape.js';
 import { FoeLayer3D } from './encounter3d.js';
 import { BOARD, paintReadings, hasReadings } from './bench-readings.js';
 import { planLeanIn, chromeReserve, PLATE_ZONE, LEAN } from './lean.js';
+import { getRoom } from './rooms.js';
 
 /** Dust palette, in 3D. Mirrors TINTS in scope.js exactly. */
 export const TINT_HEX = {
@@ -773,6 +774,8 @@ export class BenchViewer3D {
    * @param {HTMLElement} domElement the element pointer events are read from
    * @param {{
    *   backdrop?: 'awning'|'lab',
+   *   room?: string,           a named room (`rooms.js`) to build instead of the generic one: its own work
+   *                            surface, walls, lamp and materials, for a bench with no world under it
    *   world?: {
    *     scene: THREE.Scene,      the world the player is standing in
    *     camera: THREE.Camera,    the world camera, docked at the bench
@@ -924,6 +927,15 @@ export class BenchViewer3D {
     // shadow and give the bench a light with no fixture attached to it.
     if (this.inWorld) return;
 
+    // A named room (`rooms.js`) brings its own lamp and fill.
+    const room = getRoom(this.opts.room);
+    if (room) {
+      this.room = this.room || room(this);
+      for (const l of this.room.lights) this.scene.add(l);
+      this.keyLight = this.room.key;
+      return;
+    }
+
     // A work light over the bench and a broad fill. Warm sodium, local and dim:
     // the light comes from inside the room, not from an unexplained sky.
     const key = new THREE.SpotLight(0xffdfae, 26, 7.5, Math.PI * 0.32, 0.55, 1.4);
@@ -964,6 +976,15 @@ export class BenchViewer3D {
     if (this.inWorld) {
       this.benchGroup = g;
       this.root.add(g);
+      return;
+    }
+
+    // A NAMED ROOM builds the work surface and everything round it from its own materials.
+    const roomBuilder = getRoom(this.opts.room);
+    if (roomBuilder) {
+      this.room = this.room || roomBuilder(this);
+      this.benchGroup = this.room.bench;
+      this.root.add(this.room.bench, this.room.set);
       return;
     }
 

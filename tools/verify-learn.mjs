@@ -1956,38 +1956,6 @@ async function checkDrawn(q, mod) {
       }
     }
   }
-  const k1 = getQuest('unit07', 'q1-recipe') && await getQuest('unit07', 'q1-recipe').module?.();
-  if (k1) {
-    // Run each joiner to the end the way the bench does, and hold the graded answer to what comes out.
-    const run = st => {
-      const counts = Object.fromEntries(st.samples.map(sm => [sm.id, sm.particles[0].n]));
-      let made = 0;
-      while (Object.entries(st.join.take).every(([id, k]) => counts[id] >= k)) {
-        for (const [id, k] of Object.entries(st.join.take)) counts[id] -= k;
-        counts[st.join.into] += 1;
-        made += 1;
-      }
-      return { counts, made };
-    };
-    const weight = (st, counts) => st.samples.reduce((t, sm) => t + counts[sm.id] * sm.particles[0].kinds.reduce((m, kd) => m + k1.KINDS[kd].mass, 0), 0);
-    const s3 = k1.STAGES[2];
-    const r3 = run(s3);
-    const start3 = Object.fromEntries(s3.samples.map(sm => [sm.id, sm.particles[0].n]));
-    if (Math.abs(weight(s3, start3) - weight(s3, r3.counts)) > 1e-9) fail('unit07/q1-recipe stage 3: the bench does not weigh the same after the joining as before');
-    if (r3.counts.j1 !== 0 || r3.counts.j2 !== 0) fail('unit07/q1-recipe stage 3: the heaps should be used up exactly, or the stage shows leftovers it does not ask about');
-    if (k1.SOLUTIONS[2].choice !== 'same') fail('unit07/q1-recipe stage 3: the graded answer is not that the total stays the same');
-    const s4 = k1.STAGES[3];
-    const r4 = run(s4);
-    const limiting = Object.entries(s4.join.take).map(([id, k]) => [id, Math.floor(s4.samples.find(sm => sm.id === id).particles[0].n / k)]).sort((a, b) => a[1] - b[1]);
-    if (limiting[0][1] === limiting[1][1]) fail('unit07/q1-recipe stage 4: both heaps give out together, so there is no limiting reactant to find');
-    const heap = s4.samples.find(sm => sm.id === limiting[0][0]).particles[0].kinds[0];
-    const label = s4.widget.options.find(o => o.id === k1.SOLUTIONS[3].choice)?.label || '';
-    const word = { k01: 'hydrogen', k08: 'oxygen' }[heap];
-    const nums = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
-    if (!label.toLowerCase().startsWith(word) || !label.includes(nums[r4.made])) fail(`unit07/q1-recipe stage 4: the graded answer ("${label}") is not ${word} after ${r4.made} molecules`);
-    const wrong = s4.widget.options.filter(o => o.id !== k1.SOLUTIONS[3].choice && o.label.toLowerCase().startsWith(word) && o.label.includes(nums[r4.made]));
-    if (wrong.length) fail('unit07/q1-recipe stage 4: more than one option states the true answer');
-  }
   {
     // The readings board painted on the 3D bench is drawn off the frame's own log and canvases.
     const { paintReadings, readingsSignature, hasReadings, BOARD } = await import('../src/learn/engine/bench-readings.js');
@@ -3312,6 +3280,192 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     }
   }
   if (failures === before) ok('Ligar bench one: every declared atom is a real element, and every graded pair, charge, count and tray agrees with joinbench\'s planJoin on the elements\' own shells');
+}
+
+
+/* ------------------------------------------------------------------
+   KETTLE'S TABLES (plan `bench-tabletop.md`, T2c): `q1-recipe` and `boss-golem` on the heap kit. A table can declare
+   heaps and drums no bench ever held, so every graded answer is recomputed here from the planners and the listed masses
+   (`joinbench.js` through the atom kit, `assay`'s piles, the scope's `planSettle`, `mass.js`), not from the numbers a
+   stage's check carries: the molecule the samples hold, the layers a shake leaves, what a pan weighs before and after a
+   joining, the molecules two heaps make and which gives out, the oxygen's share of a hundred parts, the molecule whose
+   weights run three to eight, each sample's recipe, and the golem's heaps and drums.
+   ------------------------------------------------------------------ */
+{
+  const before = failures;
+  const A = await import('../src/learn/table/kits/atoms.js');
+  const M = await import('../src/learn/table/kits/mass.js');
+  const H = await import('../src/learn/table/kits/heap.js');
+  const get = async id => { const q = getQuest('unit07', id); return q && q.status === 'live' ? q.module() : null; };
+  const [k, g] = await Promise.all([get('q1-recipe'), get('boss-golem')]);
+  const same = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+  const near = (a, b, what) => { if (!(Math.abs(a - b) < 1e-9 * Math.max(1, Math.abs(b)))) fail(`${what}: graded ${a}, the real answer is ${b}`); };
+  const holds = (c, what) => { if (!c) fail(what); };
+  const start = (mod, i) => TABLE.createTable(mod.STAGES[i].table, mod.STAGES[i].title);
+  const end = (mod, i) => TABLE.runScript(start(mod, i), mod.SOLUTIONS[i], { strict: true });
+  const declared = (mod, i, id) => mod.STAGES[i].table.pieces.find(p => p.id === id);
+  const SC = await import('../src/learn/engine/scope.js');
+
+  /** What one molecule of a declared dish is: its atoms by element, from the scope's own kinds. */
+  const moleculeOfDish = piece => {
+    const entry = piece.props.sample.particles[0];
+    const counts = {};
+    for (const kd of entry.kinds) { const sym = A.symOfKind(kd); counts[sym] = (counts[sym] || 0) + 1; }
+    return counts;
+  };
+  const pureOf = piece => piece.props.sample.particles.length === 1 && A.layersOf(piece.props.sample) === 1;
+
+  if (k) {
+    // Every dish is a real sample of real kinds, and every atom is a real element.
+    k.STAGES.forEach((st, i) => {
+      for (const p of st.table.pieces) {
+        if (p.kind === 'dish') for (const e of p.props.sample.particles) for (const kd of e.kinds) holds(SC.TINTS && A.symOfKind(kd), `unit07/q1-recipe stage ${i + 1}: dish ${p.id} holds "${kd}", which the scope has never weighed`);
+        if (p.kind === 'atom') { try { A.elementOf(p.props.el); } catch { fail(`unit07/q1-recipe stage ${i + 1}: atom ${p.id} is "${p.props.el}", not an element`); } }
+      }
+    });
+    // 1. the three samples are one substance, and the molecule built is that substance's
+    {
+      const mols = ['a1', 'a2', 'a3'].map(id => moleculeOfDish(declared(k, 0, id)));
+      same(A.formulaFrom(mols[1]), A.formulaFrom(mols[0]), 'unit07/q1-recipe stage 1 (samples B and A are one substance)');
+      same(A.formulaFrom(mols[2]), A.formulaFrom(mols[0]), 'unit07/q1-recipe stage 1 (samples C and A are one substance)');
+      const built = A.moleculesOf(end(k, 0))[0];
+      same(built.formula, A.formulaFrom(mols[0]), 'unit07/q1-recipe stage 1 (the molecule built is the samples\')');
+      holds(Object.values(start(k, 0).pieces).filter(p => p.props.el === 'H' && !p.props.scratch).length >= 3, 'unit07/q1-recipe stage 1: the table holds too few hydrogens to build a wrong molecule');
+    }
+    // 2. the shaker's layers: the true compound settles into one layer, the other into two
+    {
+      const t = end(k, 1);
+      for (const id of ['b1', 'b2']) {
+        const layers = A.layersOf(declared(k, 1, id).props.sample);
+        same(t.pieces[id].zone, layers === 1 ? 'tray:true' : 'tray:false', `unit07/q1-recipe stage 2 (${id}: ${layers} layer(s))`);
+      }
+      holds(A.layersOf(declared(k, 1, 'b1').props.sample) === 1 && A.layersOf(declared(k, 1, 'b2').props.sample) === 2, 'unit07/q1-recipe stage 2: the samples do not settle into one layer and two');
+    }
+    // 3. the same atoms weigh the same loose and joined, by the listed masses
+    {
+      const t = end(k, 2);
+      const rows = t.recorder.rows;
+      holds(rows.length >= 2 && new Set(rows.map(r => r.x)).size >= 2, 'unit07/q1-recipe stage 3: the solution weighs once, or twice in one state');
+      const atoms = H.panRead(t, 'container:pan');
+      const byMass = Object.entries(atoms.counts).reduce((m, [el, n]) => m + n * M.listedMass(el), 0);
+      for (const r of rows) near(r.y, byMass, 'unit07/q1-recipe stage 3 (a weighing is the listed masses added up)');
+      same([rows[0].x, rows[rows.length - 1].x], [0, 1], 'unit07/q1-recipe stage 3 (loose, then one molecule made)');
+      near(M.scaleRead(t, 'scale').weight, byMass, 'unit07/q1-recipe stage 3 (the scale reads what is on the pan)');
+    }
+    // 4. two heaps, one molecule: the maker draws what the molecule in its dock holds; the heap that cannot supply another is the one marked
+    {
+      const t0 = start(k, 3);
+      const t = end(k, 3);
+      const dockRead = H.dockRead(t, 'container:dock');
+      same([dockRead.counts.H, dockRead.counts.O, Object.keys(dockRead.counts).length], [2, 1, 2], 'unit07/q1-recipe stage 4 (the molecule the maker copies)');
+      const have = { H: t0.zones.containers['heap-h'].capacity, O: t0.zones.containers['heap-o'].capacity };
+      const want = H.limitOf(have, dockRead.counts);
+      holds(want.limiting.length === 1, 'unit07/q1-recipe stage 4: both heaps give out together, so there is no limiting reactant to find');
+      holds(want.made >= 4 && want.made <= 12, `unit07/q1-recipe stage 4: ${want.made} molecules is outside what the tally and the hand can do`);
+      same([H.madeOf(t, 'made', dockRead.formula), H.tallyOf(t, 'tally'), H.heapLeft(t, 'heap-h', 'H'), H.heapLeft(t, 'heap-o', 'O')],
+        [want.made, want.made, want.left.H, want.left.O], 'unit07/q1-recipe stage 4 (made, tally and what is left)');
+      same(t.pieces.tag.zone, want.limiting[0] === 'H' ? 'container:heap-h' : 'container:heap-o', 'unit07/q1-recipe stage 4 (the heap marked)');
+      holds(want.left[want.limiting[0] === 'H' ? 'O' : 'H'] > 0, 'unit07/q1-recipe stage 4: nothing is left of the other heap');
+      // The maker refuses once a heap cannot supply another, and says which.
+      const again = TABLE.apply(t, { run: 'maker' });
+      holds(!again.last.ok && /heap/.test(again.last.reason || ''), 'unit07/q1-recipe stage 4: the maker did not refuse an empty heap with a reason');
+      // And a molecule that is not a molecule is refused, not copied.
+      const empty = TABLE.apply(t0, { run: 'maker' });
+      holds(!empty.last.ok && empty.last.reason, 'unit07/q1-recipe stage 4: the maker copied an empty dock');
+    }
+    // 5. what share of water's weight is oxygen's, from the listed masses; the distractors are the atoms' shares
+    {
+      const t = end(k, 4);
+      const w = M.scaleRead(t, 'scale').weight;
+      near(w, 2 * M.listedMass('H') + M.listedMass('O'), 'unit07/q1-recipe stage 5 (the molecule on the pan weighs its atoms)');
+      const share = 100 * M.listedMass('O') / w;
+      holds(Math.abs(H.shareOf(t, 'share') - share) <= 1.5, `unit07/q1-recipe stage 5: the marker stands at ${H.shareOf(t, 'share')}, the share is ${share.toFixed(1)}`);
+      holds(Math.abs(share - 100 / 3) > 5 && Math.abs(share - 200 / 3) > 5 && Math.abs(share - 50) > 5, 'unit07/q1-recipe stage 5: a share of the atoms (a third, a half, two thirds) is within reach of the true share');
+      const d = k.STAGES[4].table.fixtures.find(f => f.kind === 'share').dials.share;
+      holds(d.value !== Math.round(share), 'unit07/q1-recipe stage 5: the marker starts at the answer');
+    }
+    // 6. the molecule whose carbon and oxygen weigh three to eight, from the planner's own joins
+    {
+      const t = end(k, 5);
+      const read = H.panRead(t, 'container:pan');
+      same(A.formulaOf(read.ids, t), 'CO₂', 'unit07/q1-recipe stage 6 (the molecule on the pan)');
+      const rows = H.ledgerOf(t, 'container:pan');
+      const c = rows.find(r => r.sym === 'C').weight;
+      const o = rows.find(r => r.sym === 'O').weight;
+      same([c / o, 3 / 8], [3 / 8, 3 / 8], 'unit07/q1-recipe stage 6 (the ledger reads three to eight)');
+      near(c, M.listedMass('C') * (read.counts.C), 'unit07/q1-recipe stage 6 (the ledger weighs carbon by its listed mass)');
+      near(o, M.listedMass('O') * (read.counts.O), 'unit07/q1-recipe stage 6 (the ledger weighs oxygen by its listed mass)');
+      // The other molecule the table can make is not three to eight.
+      let co = start(k, 5);
+      co = TABLE.applyAll(co, [{ join: ['c1', 'o1'] }, { place: { piece: 'c1', to: 'container:pan' } }]);
+      const cw = H.ledgerOf(co, 'container:pan');
+      holds(cw.find(r => r.sym === 'C').weight * 8 !== cw.find(r => r.sym === 'O').weight * 3, 'unit07/q1-recipe stage 6: carbon monoxide is three to eight too');
+      holds(Object.values(start(k, 5).pieces).filter(p => p.props.el === 'O').length >= 3, 'unit07/q1-recipe stage 6: the table holds too few oxygens to build the wrong molecule too');
+    }
+    // 7. each sample's recipe, read off its own molecule: a middle atom and its hydrogens
+    {
+      const t = end(k, 6);
+      const words = ['', 'one', 'two', 'three', 'four'];
+      for (const id of ['g1', 'g2', 'g3']) {
+        const counts = moleculeOfDish(declared(k, 6, id));
+        const centre = Object.keys(counts).find(el => el !== 'H');
+        const label = `${words[counts[centre]]} ${A.elementOf(centre).name} to ${words[counts.H]} hydrogens`.replace(/^one /, 'One ');
+        const tray = k.STAGES[6].table.zones.trays.find(z => `tray:${z.id}` === t.pieces[id].zone);
+        same(tray.label.toLowerCase(), label.toLowerCase(), `unit07/q1-recipe stage 7 (${id}'s recipe)`);
+        holds(pureOf(declared(k, 6, id)), `unit07/q1-recipe stage 7: ${id} is not one substance`);
+      }
+      same(new Set(['g1', 'g2', 'g3'].map(id => t.pieces[id].zone)).size, 3, 'unit07/q1-recipe stage 7 (three samples, three trays)');
+    }
+    // 8. a shipment matches its label when it is one substance and its molecule is the label's
+    {
+      const t = end(k, 7);
+      for (const id of ['h1', 'h2', 'h3']) {
+        const p = declared(k, 7, id);
+        const counts = moleculeOfDish(p);
+        const matches = pureOf(p) && counts.O === 1 && counts.H === 2 && Object.keys(counts).length === 2;
+        same(t.pieces[id].zone, matches ? 'tray:yes' : 'tray:no', `unit07/q1-recipe stage 8 (${id})`);
+      }
+      const verdicts = ['h1', 'h2', 'h3'].map(id => t.pieces[id].zone);
+      holds(new Set(verdicts).size === 2 && verdicts.filter(z => z === 'tray:yes').length === 1, 'unit07/q1-recipe stage 8: the shipments are not one that matches and two that do not');
+      // Each way to fail is a different one: a mixture (two layers) and a different molecule (one layer, other formula).
+      holds(A.layersOf(declared(k, 7, 'h2').props.sample) === 2 && A.layersOf(declared(k, 7, 'h3').props.sample) === 1, 'unit07/q1-recipe stage 8: the two that fail do not fail in two different ways');
+    }
+  }
+
+  if (g) {
+    // 1. the golem's two heaps: units of sodium chloride built one to one, the smaller heap sets the count
+    {
+      const t0 = start(g, 0);
+      const t = end(g, 0);
+      const d = H.dockRead(t, 'container:dock');
+      same([d.counts.Na, d.counts.Cl, Object.keys(d.counts).length, d.formula], [1, 1, 2, 'NaCl'], 'unit07/boss-golem phase 1 (the unit the maker copies)');
+      const have = { Na: t0.zones.containers['heap-na'].capacity, Cl: t0.zones.containers['heap-cl'].capacity };
+      const want = H.limitOf(have, d.counts);
+      same(want.limiting, ['Na'], 'unit07/boss-golem phase 1 (the heap that gives out)');
+      holds(want.left.Cl > 0 && have.Na !== have.Cl, 'unit07/boss-golem phase 1: the heaps are equal, so there is no limiting reactant to find');
+      same([H.tallyOf(t, 'tally'), H.madeOf(t, 'made', 'NaCl'), H.heapLeft(t, 'heap-na', 'Na'), H.heapLeft(t, 'heap-cl', 'Cl')], [want.made, want.made, 0, want.left.Cl], 'unit07/boss-golem phase 1 (tally, made, what is left)');
+      holds(want.made <= g.STAGES[0].table.fixtures.find(f => f.kind === 'tally').dials.n.max, 'unit07/boss-golem phase 1: the tally cannot reach the answer');
+    }
+    // 2. the same limit by weight: grams over molar mass, the smaller count of moles
+    {
+      const t = end(g, 1);
+      const drum = id => declared(g, 1, id).props;
+      const moles = { Na: drum('dna').grams / M.speciesMass('sodium'), Cl: drum('dcl').grams / M.speciesMass('chlorine') };
+      same([moles.Na, moles.Cl], [3, 2], 'unit07/boss-golem phase 2 (the moles in each drum)');
+      same(H.tallyOf(t, 'tally'), Math.min(moles.Na, moles.Cl), 'unit07/boss-golem phase 2 (the smaller mole count)');
+      holds(moles.Na !== moles.Cl && Number.isInteger(moles.Na) && Number.isInteger(moles.Cl), 'unit07/boss-golem phase 2: the drums hold equal or fractional moles');
+      near(M.scaleRead(t, 'scale').weight, drum('dcl').grams, 'unit07/boss-golem phase 2 (the scale reads the drum on it)');
+      // The plate prints the molar masses the table itself uses.
+      const lines = g.STAGES[1].table.fixtures.find(f => f.id === 'listed').props.lines.join(' ');
+      holds(lines.includes(M.listedMass('Na').toFixed(1)) && lines.includes(M.listedMass('Cl').toFixed(1)), 'unit07/boss-golem phase 2: the plate lists a molar mass that is not the listed one');
+    }
+    // A boss phase on a table is a fight on a table: two phases, each names its foe, none sends the player into a world.
+    for (const [i, st] of g.STAGES.entries()) {
+      holds(Array.isArray(st.foes) && st.foes.length === 1 && st.encounter?.species === 'recipe golem', `unit07/boss-golem phase ${i + 1}: a fight names its foe and its species`);
+      holds(!st.field && !(st.table.fetch || []).length, `unit07/boss-golem phase ${i + 1}: a boss never sends the player into the world`);
+    }
+  }
+  if (failures === before) ok('Kettle: every declared dish is a real sample and every graded answer (the molecule three samples share, the layers a shake leaves, what a pan weighs loose and joined, the molecules two heaps make and the heap that gives out, the oxygen\'s share of a hundred parts, the molecule that weighs three to eight, each sample\'s recipe, the shipments against their label, the golem\'s heaps and drums) agrees with the planners and the listed masses');
 }
 
 if (warnings) console.log(`\n${warnings} copy warning(s): reward cards over 45 words.`);

@@ -110,6 +110,12 @@ export function drawTable(ctx, w, h, state, view = {}) {
   for (const c of Object.values(state.zones.containers)) {
     const r = rectOf(c, SIZES.container);
     outline(r, Boolean(holding) || view.pourFrom === c.id, false);
+    // A kit may draw a container's contents itself (a heap is a pile of dots, not a level and a number):
+    // `view.piles === false` leaves the dots to the built table, which stands them up.
+    if (kit.paintContainer?.(ctx, c, state, { X, Y, sc, bodies: view.piles === false })) {
+      text(c.label, r.x0 + 1.2, r.y0 - 1, { color: PLATE_COLORS.dim });
+      continue;
+    }
     const total = Object.values(c.contents).reduce((a, b) => a + b, 0);
     const cap = c.capacity || Math.max(total, 1);
     const level = Math.min(1, total / cap);

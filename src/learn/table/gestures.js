@@ -139,6 +139,8 @@ export class TableGestures {
 
   containerAt(u) {
     for (const c of Object.values(this.state.zones.containers)) {
+      // A container that is `still` (a heap, a dock, a pan) holds things but is never poured from or into.
+      if (c.props?.still) continue;
       if (inRect(rectOf(c, SIZES.container), u)) return c.id;
     }
     return null;

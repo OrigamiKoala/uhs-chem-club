@@ -71,11 +71,12 @@ export class Table3D extends BenchViewer3D {
    *   toolHost?: HTMLElement,                   where the keys go (the foot dock)
    *   onLeanChange?: (leaning: boolean) => void,
    *   onCarry?: (label: string|null) => void,
-   *   world?: object, mountScene?: Function, unmountScene?: Function, backdrop?: string
+   *   world?: object, mountScene?: Function, unmountScene?: Function, backdrop?: string,
+   *   room?: string                              a named room to stand the table in (`rooms.js`) where there is no host
    * }} opts
    */
   constructor(host, opts = {}) {
-    super(document.body, { backdrop: opts.backdrop || 'lab', world: opts.world || null });
+    super(document.body, { backdrop: opts.backdrop || 'lab', world: opts.world || null, room: opts.room || null });
     this.built = true;
     this.host = host || null;
     if (this.host) this.host.innerHTML = '';
@@ -99,7 +100,9 @@ export class Table3D extends BenchViewer3D {
 
     // The materials a world dresses its bench in; the bench kit's own otherwise.
     this.worldKit = Boolean(opts.world?.materials);
-    this.mats = opts.world?.materials || { top: this.steelMat, dark: this.darkMat };
+    // ...or a named room's (Kettle's foundry: its cast-iron plate, its blackened rims, its firebrick ore tubs);
+    // the bench kit's own only where there is neither a host nor a room.
+    this.mats = opts.world?.materials || this.room?.mats || { top: this.steelMat, dark: this.darkMat };
 
     this.table = new THREE.Group();
     this.table.name = 'tabletop';
@@ -206,6 +209,7 @@ export class Table3D extends BenchViewer3D {
 
     this.repaintGround();
     this.syncJars();
+    this.syncPiles();
     this.syncFixtures();
     this.syncSheet();
     this.syncPieces();
@@ -242,7 +246,7 @@ export class Table3D extends BenchViewer3D {
       state.kit, state.bounds,
       Object.values(z.trays).map(t => [t.id, t.label, t.cap ?? null, ...geom(t)]),
       Object.values(z.slots).map(t => [t.id, t.label, ...geom(t)]),
-      Object.values(z.containers).map(t => [t.id, t.label, ...geom(t)]),
+      Object.values(z.containers).map(t => [t.id, t.label, ...geom(t), t.capacity ?? null, t.props?.pile ? 1 : 0]),
       z.rail ? [z.rail.first, z.rail.last, ...geom(z.rail)] : null,
       Object.values(state.fixtures).map(f => [f.id, f.kind, f.label, f.noRun ? 1 : 0, f.runLabel || '', ...geom(f), Object.keys(f.dials)]),
       Object.values(state.fetch).map(f => [f.id, f.label, f.at ? [f.at.x, f.at.y] : null]),
@@ -297,6 +301,8 @@ export class Table3D extends BenchViewer3D {
     for (const c of Object.values(state.zones.containers)) {
       const r = rectOf(c, SIZES.container);
       this.rim(r, 0.04, 0.007, mats.top);
+      // A pile's contents are its atoms (below), not a level: no slab of fill over them.
+      if (kit.pileOf?.(c)) continue;
       const fill = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.mine(new THREE.MeshStandardMaterial({ color: PHOSPHOR, roughness: 0.55, metalness: 0.1 })));
       const p = this.map.toPlate({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
       fill.position.set(p.x, GROUND_Y, p.z);
@@ -304,6 +310,37 @@ export class Table3D extends BenchViewer3D {
       fill.userData.rect = r;
       this.fixtureRoot.add(fill);
       this.jars.set(c.id, { fill, rect: r });
+    }
+
+    // Piles: a heap is hundreds of atoms and ONE draw call. A kit says which containers are piles and where each
+    // atom lies (`kit.pileOf`); the instanced body is laid once on those slots and `syncPiles` shows the first
+    // `n` of them, so a heap drawn down loses its outermost atoms and the rest stay where they were.
+    this.piles = new Map();
+    for (const c of Object.values(state.zones.containers)) {
+      const pile = kit.pileOf?.(c);
+      if (!pile) continue;
+      const rM = pile.r * s;
+      const geo = new THREE.IcosahedronGeometry(1, 0);
+      const mat = this.mine(new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.15 }));
+      const mesh = new THREE.InstancedMesh(geo, mat, pile.cap);
+      mesh.name = `pile-${c.id}`;
+      mesh.castShadow = true;
+      const m = new THREE.Matrix4();
+      const q = new THREE.Quaternion();
+      const col = new THREE.Color(pile.colour);
+      pile.slots.forEach((slot, i) => {
+        const p = this.map.toPlate({ x: c.at.x + slot.x, y: c.at.y + slot.y });
+        // The mound: the middle stands higher than the edge, and every atom rests on the bed or on the ones under it.
+        const lift = rM * 0.8 + slot.h * rM * 2.2;
+        m.compose(new THREE.Vector3(p.x, GROUND_Y + lift, p.z), q, new THREE.Vector3(rM, rM * 0.82, rM));
+        mesh.setMatrixAt(i, m);
+        mesh.setColorAt(i, col);
+      });
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      mesh.count = pile.n;
+      this.fixtureRoot.add(mesh);
+      this.piles.set(c.id, mesh);
     }
 
     // Fixtures: a kit may build its own (`kit.fixture3d`); otherwise a rim, a track and knob per dial, and a Run key.
@@ -439,7 +476,7 @@ export class Table3D extends BenchViewer3D {
     const g = this.ground;
     if (!g || !this.state) return;
     drawTable(g.ctx, g.W, g.H, this.state, {
-      pieces: false, controls: false, sheet: false, crt: false, pourFrom: this.gestures.pourFrom,
+      pieces: false, controls: false, sheet: false, crt: false, piles: false, pourFrom: this.gestures.pourFrom,
       // Where the world has the field point, the player walks to it; a plate would only be a shortcut past it.
       sites: id => this.showsSite(id)
     });
@@ -462,6 +499,17 @@ export class Table3D extends BenchViewer3D {
       const h = Math.max(0.001, level * 0.034);
       jar.fill.scale.set((r.x1 - r.x0) * s - 0.016, h, (r.y1 - r.y0) * s - 0.016);
       jar.fill.position.y = GROUND_Y + h / 2;
+    }
+  }
+
+  /** Show as many atoms of each pile as its container holds. */
+  syncPiles() {
+    if (!this.piles?.size) return;
+    const kit = getKit(this.state.kit);
+    for (const [id, mesh] of this.piles) {
+      const c = this.state.zones.containers[id];
+      const pile = c && kit.pileOf?.(c);
+      if (pile) mesh.count = Math.min(pile.n, mesh.instanceMatrix.count);
     }
   }
 
