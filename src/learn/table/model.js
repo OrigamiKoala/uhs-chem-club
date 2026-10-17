@@ -556,6 +556,13 @@ function joinPieces(s, kit, aId, bId) {
   }
 
   if (!plan.holds) {
+    // A kit may send a refused piece home (`plan.home`): a dispenser that was dropped on something it
+    // cannot serve goes back where it hangs, as a cutter does after its pass, and the reason is the same.
+    if (plan.home) {
+      group.forEach(g => leaveZone(s, g));
+      a.at = { ...a.home };
+      return { joined: false, a: aId, b: bId, reason: plan.reason || 'it does not hold', home: true };
+    }
     // Released, it drifts apart: the pair is not joined and the planner says why.
     group.forEach(g => leaveZone(s, g));
     moveGroup(s, group, aId, clampTo(s, { x: b.at.x + dir.x * reach * 1.9, y: b.at.y + dir.y * reach * 1.9 }, radiusOf(kit, a)));

@@ -83,7 +83,10 @@ function authoredKeys(node, path = 'table') {
   return out;
 }
 
-const wordsOf = t => String(t).toLowerCase().match(/[a-z0-9]+(?:[.'-][a-z0-9]+)*/g) || [];
+// A subscript is part of the word it is written on: "H₂" is "h2", not "h" (a label "H" does not carry the formula H₂).
+const SUBS = '₀₁₂₃₄₅₆₇₈₉';
+const plainDigits = t => String(t).replace(/[₀-₉]/g, c => String(SUBS.indexOf(c)));
+const wordsOf = t => plainDigits(t).toLowerCase().match(/[a-z0-9]+(?:[.'-][a-z0-9]+)*/g) || [];
 /** Does `text` carry `needle` as whole words (a label holding "Pairs" holds "pairs")? */
 function carries(text, needle) {
   const n = wordsOf(needle);
@@ -173,6 +176,8 @@ function checkTableStage(label, stage, solution, misses) {
   const loose = Object.values(t0.pieces).filter(p => !p.zone);
   for (const p of loose) {
     for (const [name, r] of rects) {
+      // A fixed piece stands ON a fixture by design (the atoms of a slate stand on its board).
+      if (p.fixed && name.startsWith('fixture ')) continue;
       if (p.at.x > r.x0 && p.at.x < r.x1 && p.at.y > r.y0 && p.at.y < r.y1) fail(`${label}: loose piece ${p.id} starts inside ${name}`);
     }
   }
@@ -336,8 +341,11 @@ function checkTableStage(label, stage, solution, misses) {
       }
     }
   }
-  // A piece must be big enough to hit with a finger at the smallest plate.
+  // A piece must be big enough to hit with a finger at the smallest plate. A FIXED piece (an atom on a
+  // Lewis slate, a joint) is never grabbed: it is a target, found by the reach of the piece dropped on it, so it
+  // owes no hit size (it still may not overlap anything, below).
   for (const p of Object.values(t0.pieces)) {
+    if (p.fixed) continue;
     const px = REG.radiusOf(kit, p) * 2 * (340 / w);
     if (px < 28) fail(`${label}: piece ${p.id} is ${px.toFixed(0)} px across at 340 px, under 28`);
   }
@@ -926,6 +934,113 @@ console.log('\nAtom kit — one set of rules, two scales\n');
   // Particles are never joined: set down beside another piece, they are just set down.
   t = MODEL.apply(t, { place: { piece: 'el1', at: { x: 101, y: 8 } } });
   if (t.last.verb !== 'place' || t.pieces.el1.joinedTo.length || t.last.joined === false) fail('atom kit: an electron set down beside a proton tried to join it');
+
+  // A needle clipped on a piece reads the net charge of everything joined to it (Ligar's unit needle).
+  {
+    const nspec = A.atomTable({
+      pieces: [el('mg', 'Mg', 10, 8), el('ca', 'Cl', 30, 8), el('cb', 'Cl', 50, 8), el('na', 'Na', 70, 8), el('cc', 'Cl', 90, 8)],
+      fixtures: [{ id: 'needle', kind: 'needle', label: 'Unit charge', at: { x: 100, y: 38 }, size: { w: 34, h: 16 }, noRun: true, props: { cluster: 'mg' } }]
+    });
+    let u = MODEL.createTable(nspec, 'needle');
+    eq(A.needleReading(u, 'needle'), 0, 'a lone atom reads zero');
+    u = MODEL.applyAll(u, [{ join: ['ca', 'mg'] }, { join: ['na', 'cc'] }]);
+    eq([A.needleReading(u, 'needle'), A.readPiece('mg', u).charge], [0, 1], 'the needle clipped on magnesium reads the whole unit: MgCl is net zero though magnesium is +1');
+    u = MODEL.apply(u, { join: ['cb', 'mg'] });
+    eq([A.needleReading(u, 'needle'), A.readPiece('mg', u).charge, A.closureOf(MODEL.clusterOf?.(u, 'mg') || SNAP.clusterOf(u, 'mg'), u).closed], [0, 2, true], 'MgCl2 is net zero, +2 on magnesium and closed');
+    const pr = A.pairRead(u, 'na', 'cc');
+    eq([pr.joined, pr.type, pr.stray, pr.charges], [true, 'transfer', false, [1, -1]], 'pairRead names a hand-over and the charges');
+    eq(A.pairRead(u, 'mg', 'na').joined, false, 'two atoms that never met are not a pair');
+  }
+
+  // THE LEWIS SLATE (Ligar `q4-dots`): the tray's pieces deal with lewis.js's own functions, the rest is planLewis.
+  {
+    const part = A.slateParts('s', 'HOF', A.slateLayout('HOF', 84, 30, 56, [[0.5, 0.22], [0.2, 0.78], [0.8, 0.78]]));
+    const sspec = A.atomTable({
+      opts: { slate: true },
+      pieces: [
+        { id: 'pairs', kind: 'pairs', label: 'Pair', at: { x: 10, y: 10 } }, { id: 'lift', kind: 'lift', label: 'Lift Out', at: { x: 26, y: 10 } },
+        { id: 'single', kind: 'single', label: 'Single', at: { x: 42, y: 10 } }, ...part.pieces
+      ],
+      fixtures: [part.fixture]
+    });
+    const mol = LW.MOLECULES.HOF;
+    let u = MODEL.createTable(sspec, 'slate');
+    const home = id => u.pieces[id].at.x === sspec.pieces.find(p => p.id === id).at.x && u.pieces[id].at.y === sspec.pieces.find(p => p.id === id).at.y;
+    // A parallel drawing kept with lewis.js's own functions; the table must agree with it after every deal.
+    let placed = LW.blankDrawing();
+    const jointOf = (i, j) => `sj${i}${j}`;
+    const sameDrawing = (msg) => {
+      const sl = A.slateOf(u, 's');
+      const nz = o => JSON.stringify(Object.entries(o).filter(([, v]) => v).sort());
+      if (nz(sl.placed.bonds) !== nz(placed.bonds) || nz(sl.placed.lone) !== nz(placed.lone) || nz(sl.placed.dots) !== nz(placed.dots)) fail(`slate: ${msg}: the table holds ${JSON.stringify(sl.placed)} but lewis.js holds ${JSON.stringify(placed)}`);
+      if (JSON.stringify(sl.read) !== JSON.stringify(LW.planLewis(mol, placed, mol.charge))) fail(`slate: ${msg}: the reading is not planLewis of the drawing`);
+    };
+    eq([A.slateOf(u, 's').total, LW.trayFor(mol)], [14, 14], 'HOF holds fourteen electrons');
+    const act = (tool, target, lewisStep) => {
+      u = MODEL.apply(u, { join: [tool, target] });
+      if (lewisStep) { const r = lewisStep(); if (r.refused) { if (u.last.joined !== false || u.last.reason !== r.refused) fail(`slate: ${tool} on ${target} should be refused with "${r.refused}" (got ${JSON.stringify(u.last)})`); } else placed = r.placed; }
+      if (!home(tool)) fail(`slate: ${tool} did not go back to the tray after ${target}`);
+    };
+    act('pairs', jointOf(0, 1), () => LW.addBond(mol, placed, 0, 1)); sameDrawing('a pair in the H-O joint');
+    // The board's one rule: a hydrogen shares one pair and no more, in whichever joint it is asked.
+    act('pairs', jointOf(0, 2), () => LW.addBond(mol, placed, 0, 2));
+    if (!/hydrogen/.test(u.last.reason || '') || u.last.home !== true) fail('slate: a second joint on hydrogen is not refused with the board\'s rule');
+    act('pairs', jointOf(1, 2), () => LW.addBond(mol, placed, 1, 2)); sameDrawing('a pair in the O-F joint');
+    act('pairs', 's1', () => LW.addLone(placed, 1)); act('pairs', 's1', () => LW.addLone(placed, 1)); sameDrawing('two lone pairs on oxygen');
+    for (let k = 0; k < 3; k++) act('pairs', 's2', () => LW.addLone(placed, 2));
+    sameDrawing('three lone pairs on fluorine');
+    eq([A.slateOf(u, 's').left, LW.allLit(A.slateOf(u, 's').read)], [0, true], 'the right drawing empties the tray and lights every lamp');
+    // The tray runs out: a pair is refused with a reason and goes home.
+    u = MODEL.apply(u, { join: ['pairs', 's0'] });
+    if (u.last.joined !== false || !/no pair left/i.test(u.last.reason || '') || !home('pairs')) fail('slate: dealing from an empty tray is not refused');
+    // A single electron goes on an atom, never a joint; Lift Out takes a dot first, then a pair.
+    u = MODEL.apply(u, { join: ['single', jointOf(0, 1)] });
+    if (u.last.joined !== false || !home('single')) fail('slate: a single electron was put in a joint');
+    act('lift', 's2', () => LW.removeOne(mol, placed, { kind: 'atom', i: 2 })); sameDrawing('a pair lifted off fluorine');
+    act('single', 's2', () => LW.addDot(placed, 2)); sameDrawing('a single electron on fluorine');
+    act('lift', 's2', () => LW.removeOne(mol, placed, { kind: 'atom', i: 2 })); sameDrawing('Lift Out takes the single electron first');
+    act('lift', jointOf(1, 2), () => LW.removeOne(mol, placed, { kind: 'link', a: 1, b: 2 })); sameDrawing('a pair lifted out of the O-F joint');
+    act('lift', 's0', () => LW.removeOne(mol, placed, { kind: 'atom', i: 0 }));
+    if (u.last.joined !== false) fail('slate: Lift Out on an empty atom should say there is nothing there');
+    // A walk of deals and lifts, joint and atom: the table and lewis.js never part.
+    let seed = 7;
+    const rnd = n => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed % n; };
+    const tools = ['pairs', 'pairs', 'pairs', 'single', 'lift'];
+    const targets = ['s0', 's1', 's2', jointOf(0, 1), jointOf(0, 2), jointOf(1, 2)];
+    for (let k = 0; k < 160; k++) {
+      const tool = tools[rnd(tools.length)];
+      const target = targets[rnd(targets.length)];
+      const isJoint = target.startsWith('sj');
+      const i = isJoint ? [Number(target[2]), Number(target[3])] : Number(target[1]);
+      const left = LW.planLewis(mol, placed, mol.charge).left;
+      let r;
+      if (tool === 'lift') r = LW.removeOne(mol, placed, isJoint ? { kind: 'link', a: i[0], b: i[1] } : { kind: 'atom', i });
+      else if (tool === 'single') r = !isJoint ? (left < 1 ? { refused: 'The tray has no electron left.' } : LW.addDot(placed, i)) : { refused: 'A single electron goes on one atom.' };
+      else r = left < 2 ? { refused: 'The tray has no pair left.' } : (isJoint ? LW.addBond(mol, placed, i[0], i[1]) : LW.addLone(placed, i));
+      act(tool, target, () => r);
+    }
+    sameDrawing('after a walk of 160 deals and lifts');
+    // Nothing joins an atom on a slate, and nothing a slate holds can be carried off.
+    {
+      const loose = A.atomTable({ opts: { slate: true }, pieces: [...part.pieces, el('x1', 'H', 10, 10)], fixtures: [part.fixture] });
+      const v = MODEL.apply(MODEL.createTable(loose, 'loose'), { join: ['x1', 's1'] });
+      if (v.last.joined !== false || v.pieces.x1.joinedTo.length) fail('slate: a loose atom joined an atom that is fixed on the slate');
+      const w = MODEL.apply(MODEL.createTable(loose, 'loose'), { place: { piece: 's1', at: { x: 5, y: 5 } } });
+      if (w.last.ok !== false) fail('slate: an atom on the slate could be picked up');
+    }
+    // The charge chip sets the tray: a positive charge takes an electron out.
+    {
+      const nh4 = A.slateParts('s', 'NH4', A.slateLayout('NH4', 84, 32, 56), { chip: 'chip' });
+      const chipSpec = A.atomTable({
+        opts: { slate: true }, pieces: nh4.pieces,
+        fixtures: [nh4.fixture, { id: 'chip', kind: 'chip', label: 'Tray charge', at: { x: 27, y: 32 }, size: { w: 34, h: 16 }, noRun: true, dials: { charge: { min: -2, max: 2, step: 1, value: 0, label: 'Charge' } } }]
+      });
+      let c = MODEL.createTable(chipSpec, 'chip');
+      eq([A.slateOf(c, 's').total, A.slateOf(c, 's').charge], [LW.trayFor('NH4', 0), 0], 'the neutral NH4 tray');
+      c = MODEL.apply(c, { setDial: { fixture: 'chip', dial: 'charge', value: 1 } });
+      eq([A.slateOf(c, 's').total, A.slateOf(c, 's').charge], [LW.trayFor('NH4', 1), 1], 'a +1 charge chip takes one electron out of the tray');
+    }
+  }
 
   // The scratch corner: on every atom-kit table, ignored by every grader.
   for (const q of live) {

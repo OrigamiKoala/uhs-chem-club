@@ -986,7 +986,7 @@ export class LigarWorld {
     return buildBayBench(ctx, {
       skin,
       plate,
-      mats: { top: this.plateMat, dark: this.darkSteelMat, stone: this.basaltMat, timber: this.timberMat },
+      mats: { top: this.plateMat, dark: this.darkSteelMat, stone: this.basaltMat, timber: this.timberMat, tray: this.basaltMat },
       // Tool rail along the back, with three tools racked where a hand reaches.
       rail: { len: 0.94, x: -0.6, y: 0.36, r: 0.018, tools: [[-0.86, 0.24], [-0.6, 0.32], [-0.34, 0.19]] },
       apron: { inset: 0.44, drop: 0.14 },

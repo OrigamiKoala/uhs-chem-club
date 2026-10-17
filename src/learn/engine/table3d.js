@@ -279,7 +279,8 @@ export class Table3D extends BenchViewer3D {
     this.fixtureRoot.add(plane);
 
     // Low rims round trays and slots: they are things on the host's work surface.
-    for (const t of Object.values(state.zones.trays)) this.rim(rectOf(t, SIZES.tray), 0.012, 0.006, mats.dark);
+    // A host may dress its trays in a material of its own (`mats.tray`: Ligar's are basalt, ore tubs on the ledge).
+    for (const t of Object.values(state.zones.trays)) this.rim(rectOf(t, SIZES.tray), 0.012, 0.006, mats.tray || mats.dark);
     for (const t of Object.values(state.zones.slots)) this.rim(rectOf(t, SIZES.slot), 0.006, 0.004, mats.dark);
 
     // Jars: low walls and a fill that rises with what they hold.

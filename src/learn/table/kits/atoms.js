@@ -33,6 +33,19 @@
  *     moleculesOf(state)        every cluster of two or more atoms off the scratch corner
  *   `SCRATCH` and `scratchCorner()` give every atom-kit table its play corner.
  *
+ * THE LEWIS SLATE (Ligar `q4-dots`, T1b): a molecule's atoms and joints stand FIXED on a board (the `slate`
+ * fixture); the tray's pieces (`pairs`, `single`, `lift`) are dealt onto a joint (a shared pair) or an atom (a lone
+ * pair, a single electron) and go back to the tray. The dealing is `lewis.js` `addBond` / `addLone` / `addDot` /
+ * `removeOne` (so the board's one rule, a hydrogen or fluorine shares one pair, is lewis.js's), the reading is
+ * `planLewis` (`slateOf`), and what stands on a slate lives on its pieces' props (`pairs` on a joint, `lone` and
+ * `dots` on an atom). `slateParts` / `slateLayout` build one; a charge chip (a fixture whose dial is `charge`)
+ * sets the tray. A refused deal sends the tray piece home with the board's reason (`plan.home`).
+ *
+ * THE UNIT NEEDLE AND THE PAIR READING (Ligar `q1-joins`): a `needle` fixture with `props.cluster` reads the
+ * net charge of everything joined to that piece; `pairRead(state, a, b)` is what a stage grades a pair it handed
+ * over on (joined or not, by what, stray, filed where, the charge each carries). `table.opts.charges: false`
+ * hides the plus and minus on a face until a stage introduces them.
+ *
  * THE OTHER PIECES (the Tallow benches): dish, lens, cutter, shaker (the sampler scope's
  * three tools, laid on a dish by dragging), nucleus, specimen, detector, card, and the
  * fixtures `scope` (a power dial), `needle`, `beam`, `tester` and `reader`.
@@ -43,7 +56,10 @@
 
 import { registerKit } from './registry.js';
 import { planJoin as planPair, shellPlan } from '../../engine/joinbench.js';
-import { VALENCE, planLewis, linkKey as lewisKey } from '../../engine/lewis.js';
+import {
+  VALENCE, MOLECULES, planLewis, linkKey as lewisKey, addBond, addLone, addDot, removeOne
+} from '../../engine/lewis.js';
+import { clusterOf, linkKey as pairKey } from '../snap.js';
 import { buildUnits, drawScopeField, planSettle, planCut, TINTS } from '../../engine/scope.js';
 import { planBeam, packCore, CORE_TINTS } from '../../engine/corebench.js';
 import { zOf, nameOf } from '../../engine/electrons.js';
@@ -308,6 +324,29 @@ export function moleculesOf(state) {
   return out;
 }
 
+/**
+ * What happened between two atoms a stage handed over as a PAIR (each partner has the other's id): are they
+ * joined to each other, by what (`transfer` or `share`, with the counts the planner gave), is either joined to
+ * anything else (`stray`), where each stands, and the charge each carries. Derived from the links, so a split
+ * undoes it. A stage grades on this; it never declares what a pair does.
+ */
+export function pairRead(state, aId, bId) {
+  const pa = state.pieces[aId];
+  const pb = state.pieces[bId];
+  const link = state.links[pairKey(aId, bId)] || null;
+  const joined = Boolean(pa.joinedTo.includes(bId) && link);
+  const other = (p, mate) => p.joinedTo.some(n => n !== mate && isAtom(state.pieces[n]));
+  return {
+    joined,
+    stray: other(pa, bId) || other(pb, aId),
+    type: joined ? link.type : null,
+    pairs: joined && link.type === 'share' ? link.pairs : 0,
+    moved: joined && link.type === 'transfer' ? link.moved : 0,
+    zones: [pa.zone, pb.zone],
+    charges: [atomCharge(pa, state), atomCharge(pb, state)]
+  };
+}
+
 /* ------------------------------------------------------------------
    THE PARTICLE SCALE: READINGS
    ------------------------------------------------------------------ */
@@ -319,6 +358,8 @@ export function moleculesOf(state) {
 export function needleReading(state, fixtureId) {
   const f = state.fixtures[fixtureId];
   if (!f) return 0;
+  // A needle clipped on a piece (Ligar's unit needle) reads the net charge of everything joined to it.
+  if (f.props.cluster) return state.pieces[f.props.cluster] ? chargeOf(clusterOf(state, f.props.cluster), state) : 0;
   const zones = new Set(f.props.zones || []);
   let q = 0;
   const lump = f.props.nucleus && state.pieces[f.props.nucleus];
@@ -355,6 +396,138 @@ export function beamCounts(specimenId) {
   const plan = planBeam(specimenId);
   return { shots: plan.shots, wide: plan.wide, back: plan.back, through: plan.shots - plan.wide - plan.back };
 }
+
+/* ------------------------------------------------------------------
+   THE LEWIS SLATE (Ligar `q4-dots`)
+
+   A slate is a molecule's atoms laid out FIXED on the table, a joint at every place a pair could go
+   between two of them, and a tray of exactly the electrons the molecule has. The player deals pairs
+   from the tray with a piece (`pairs`, or `single` for a lone electron): dropped on a joint it makes
+   a shared pair, dropped on an atom a lone pair; `lift` takes one back. Nothing arranges anything:
+   the dealing is `lewis.js` `addBond` / `addLone` / `addDot` / `removeOne`, the reading is
+   `planLewis`, and the board's one rule (a hydrogen or fluorine atom shares one pair) is `addBond`'s.
+   What a slate holds lives on its pieces' `props` (`pairs` on a joint, `lone` and `dots` on an atom),
+   so a script that deals it and a drag that deals it are the same table.
+   ------------------------------------------------------------------ */
+
+const DISPENSERS = new Set(['pairs', 'single', 'lift']);
+
+/**
+ * Everything a stage grades a slate on, read off its pieces: `{mol, placed, charge, read, left, total,
+ * used, atoms: [ids], joints: [ids]}`. `read` is `planLewis`'s own reading. The tray's size follows the
+ * charge: a slate with a charge chip (`fixture.props.chip`) takes the chip's dial.
+ */
+export function slateOf(state, slateId) {
+  const f = state.fixtures[slateId];
+  if (!f || f.kind !== 'slate') return null;
+  const mol = MOLECULES[f.props.mol];
+  const placed = { bonds: {}, lone: {}, dots: {} };
+  f.props.atoms.forEach((id, i) => {
+    const p = state.pieces[id];
+    if (p.props.lone) placed.lone[i] = p.props.lone;
+    if (p.props.dots) placed.dots[i] = p.props.dots;
+  });
+  for (const [jid, i, j] of f.props.joints) {
+    const n = state.pieces[jid].props.pairs || 0;
+    if (n) placed.bonds[lewisKey(i, j)] = n;
+  }
+  const chip = f.props.chip && state.fixtures[f.props.chip];
+  const charge = chip ? chip.dials.charge.value : mol.charge;
+  const read = planLewis(mol, placed, charge);
+  return {
+    fixture: f, mol, placed, charge, read, left: read.left, total: read.total, used: read.total - read.left,
+    atoms: f.props.atoms.slice(), joints: f.props.joints.map(j => j[0])
+  };
+}
+
+/** The slate a piece stands on, or null. */
+const slateIdOf = p => (p && p.props && p.props.slate) || null;
+
+/** One atom of a slate as the lamp reads it: `{i, sym, around, lamp, lone, dots, shared, fc, goal}`. */
+function slateAtom(p, state) {
+  const sl = slateOf(state, slateIdOf(p));
+  const i = sl.atoms.indexOf(p.id);
+  const a = sl.read.atoms[i];
+  return { ...a, goal: a.sym === 'H' ? 2 : 8 };
+}
+
+/**
+ * What dropping a dispenser on a piece does: the lewis planner's answer, written back as props.
+ * A refusal sends the dispenser home with the board's own reason; a deal `once` and returns too.
+ */
+function planDeal(a, b, state) {
+  const refuse = reason => ({ holds: false, home: true, reason });
+  const slateId = slateIdOf(b);
+  const sl = slateId && (b.kind === 'atom' || b.kind === 'joint') ? slateOf(state, slateId) : null;
+  if (!sl) return refuse('That goes on the slate.');
+  const done = (placed, reason) => {
+    if (b.kind === 'joint') {
+      return { holds: true, once: true, set: { b: { pairs: placed.bonds[lewisKey(b.props.i, b.props.j)] || 0 } }, reason };
+    }
+    const i = sl.atoms.indexOf(b.id);
+    return { holds: true, once: true, set: { b: { lone: placed.lone[i] || 0, dots: placed.dots[i] || 0 } }, reason };
+  };
+  const target = b.kind === 'joint' ? { kind: 'link', a: b.props.i, b: b.props.j } : { kind: 'atom', i: sl.atoms.indexOf(b.id) };
+
+  if (a.kind === 'lift') {
+    const r = removeOne(sl.mol, sl.placed, target);
+    return r.refused ? refuse(r.refused) : done(r.placed, 'Something went back to the tray.');
+  }
+  if (a.kind === 'single') {
+    if (b.kind !== 'atom') return refuse('A single electron goes on one atom.');
+    if (sl.left < 1) return refuse('The tray has no electron left.');
+    return done(addDot(sl.placed, target.i).placed, 'A single electron went onto the atom.');
+  }
+  // a pair
+  if (sl.left < 2) return refuse('The tray has no pair left.');
+  if (b.kind === 'joint') {
+    const r = addBond(sl.mol, sl.placed, target.a, target.b);
+    return r.refused ? refuse(r.refused) : done(r.placed, 'A pair went into the joint between two atoms.');
+  }
+  return done(addLone(sl.placed, target.i).placed, 'A pair went onto the atom.');
+}
+
+/**
+ * Where a molecule's atoms stand on the table: `lewis.js`'s own layout (the unit square), or the stage's
+ * `pos` (the same unit points, in the molecule's atom order), centred on (cx, cy) and `size` units across.
+ */
+export function slateLayout(molKey, cx, cy, size, pos = null) {
+  const P = pos || MOLECULES[molKey].pos;
+  const r1 = v => Math.round(v * 10) / 10;
+  return P.map(([px, py]) => ({ x: r1(cx + (px - 0.5) * size), y: r1(cy + (py - 0.5) * size) }));
+}
+
+/**
+ * The pieces and the fixture of one slate, for a stage to spread into its table. `points` are where the
+ * atoms stand (`slateLayout`); a joint stands midway between the two atoms it joins. The fixture is the
+ * board round them, sized to the atoms with room above for the tray's count. A stage that adjusts the
+ * charge names its chip (a fixture whose dial is `charge`).
+ */
+export function slateParts(id, molKey, points, { chip = null } = {}) {
+  const mol = MOLECULES[molKey];
+  const r1 = v => Math.round(v * 10) / 10;
+  const atoms = mol.syms.map((el, i) => ({
+    id: `${id}${i}`, kind: 'atom', label: el, r: SLATE_R, fixed: true, at: { ...points[i] }, props: { el, slate: id }
+  }));
+  const joints = mol.links.map(([i, j]) => ({
+    id: `${id}j${i}${j}`, kind: 'joint', label: 'Joint', r: JOINT_R, fixed: true,
+    at: { x: r1((points[i].x + points[j].x) / 2), y: r1((points[i].y + points[j].y) / 2) },
+    props: { slate: id, a: `${id}${i}`, b: `${id}${j}`, i, j }
+  }));
+  const xs = points.map(p => p.x);
+  const ys = points.map(p => p.y);
+  const b = { x0: Math.min(...xs) - SLATE_R - 3, x1: Math.max(...xs) + SLATE_R + 3, y0: Math.min(...ys) - SLATE_R - 6.5, y1: Math.max(...ys) + SLATE_R + 3 };
+  const fixture = {
+    id, kind: 'slate', label: mol.label, noRun: true,
+    at: { x: r1((b.x0 + b.x1) / 2), y: r1((b.y0 + b.y1) / 2) }, size: { w: r1(b.x1 - b.x0), h: r1(b.y1 - b.y0) },
+    props: { mol: molKey, atoms: atoms.map(a => a.id), joints: joints.map((j, k) => [j.id, mol.links[k][0], mol.links[k][1]]), ...(chip ? { chip } : {}) }
+  };
+  return { pieces: [...atoms, ...joints], fixture };
+}
+
+/** The radius of a slate's atoms and joints: targets, never grabbed (a slate's pieces are fixed). */
+export const SLATE_R = 4.4;
+export const JOINT_R = 3;
 
 /* ------------------------------------------------------------------
    THE SCOPE'S PICTURE OF A DISH
@@ -468,6 +641,7 @@ function footLabel(ctx, x, y, r, text, size) {
 }
 
 function paintAtom(ctx, p, state, o) {
+  if (p.props.slate) { paintSlateAtom(ctx, p, state, o); return; }
   const el = elementOf(p.props.el);
   const tintName = p.props.tint || el.tint;
   const tint = TINTS[tintName];
@@ -486,8 +660,16 @@ function paintAtom(ctx, p, state, o) {
       ctx.arc(o.x + Math.cos(a) * o.r * 0.78, o.y + Math.sin(a) * o.r * 0.78, Math.max(1.1, o.r * 0.09), 0, Math.PI * 2);
       ctx.fill();
     }
+    // The lamp: a ring inside the rim, lit when the outer shell is full. A mark, not a glow.
+    if (rd.full) {
+      ctx.strokeStyle = PLATE_COLORS.phosphor;
+      ctx.lineWidth = Math.max(1.6, o.r * 0.14);
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.r * 0.9, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
-  if (rd.charge) {
+  if (rd.charge && state.opts?.charges !== false) {
     const t = `${Math.abs(rd.charge) > 1 ? Math.abs(rd.charge) : ''}${rd.charge > 0 ? '+' : '−'}`;
     plateText(ctx, t, o.x + o.r * 0.62, o.y - o.r * 0.62, { size: Math.max(8, Math.round(o.r * 0.6)), weight: 700, align: 'center', base: 'middle', color: AMBER });
   }
@@ -658,10 +840,116 @@ function paintDetector(ctx, p, state, o) {
   plateText(ctx, p.label, o.x, o.y + o.r * 0.72, { size: Math.max(7, Math.round(o.r * 0.34)), align: 'center', base: 'middle', color: PLATE_COLORS.text });
 }
 
+/**
+ * An atom on a Lewis slate: its symbol, the pairs and single electrons standing round it (away from its
+ * joints), what stands round it against what it wants, and its lamp as a ring inside the rim.
+ */
+function paintSlateAtom(ctx, p, state, o) {
+  const a = slateAtom(p, state);
+  const sl = slateOf(state, p.props.slate);
+  disc(ctx, o.x, o.y, o.r, '#16140f', o.lit ? AMBER : PLATE_COLORS.steel, o.lit ? 2 : 1.4);
+  // The lamp ring.
+  if (a.lamp === 'full' || a.lamp === 'expanded' || a.lamp === 'amber') {
+    ctx.strokeStyle = a.lamp === 'full' ? PLATE_COLORS.phosphor : AMBER;
+    ctx.lineWidth = Math.max(1.6, o.r * 0.13);
+    if (a.lamp === 'amber') ctx.setLineDash?.([Math.max(3, o.r * 0.3), Math.max(2, o.r * 0.2)]);
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, o.r * 0.9, 0, Math.PI * 2);
+    ctx.stroke();
+    if (a.lamp === 'expanded') {
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.r * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.setLineDash?.([]);
+  }
+  plateText(ctx, p.props.el, o.x, o.y - o.r * 0.12, { size: Math.max(9, Math.round(o.r * (p.props.el.length > 1 ? 0.8 : 1.0))), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
+  plateText(ctx, `${a.around}/${a.goal}`, o.x, o.y + o.r * 0.5, { size: Math.max(7, Math.round(o.r * 0.34)), align: 'center', base: 'middle', color: a.lamp === 'short' ? PLATE_COLORS.dim : PLATE_COLORS.text });
+  if (a.lamp === 'over') lampMark(ctx, o.x + o.r * 0.7, o.y - o.r * 0.7, Math.max(9, o.r * 0.7));
+  // Pairs and singles round the rim, on the side away from its joints.
+  let bx = 0;
+  let by = 0;
+  for (const [jid, i, j] of sl.fixture.props.joints) {
+    if (i !== a.i && j !== a.i) continue;
+    const jp = state.pieces[jid];
+    bx += jp.at.x - p.at.x;
+    by += jp.at.y - p.at.y;
+  }
+  const base = bx || by ? Math.atan2(-by, -bx) : -Math.PI / 2;
+  const n = a.lone + a.dots;
+  const gap = n > 3 ? 0.95 : 1.2;
+  ctx.fillStyle = PLATE_COLORS.phosphor;
+  const dotR = Math.max(1.1, o.r * 0.1);
+  for (let k = 0; k < n; k++) {
+    const ang = base + (k - (n - 1) / 2) * gap;
+    const cx = o.x + Math.cos(ang) * o.r * 0.7;
+    const cy = o.y + Math.sin(ang) * o.r * 0.7;
+    if (k >= a.lone) {
+      ctx.beginPath(); ctx.arc(cx, cy, dotR, 0, Math.PI * 2); ctx.fill();
+    } else {
+      const tx = -Math.sin(ang) * o.r * 0.16;
+      const ty = Math.cos(ang) * o.r * 0.16;
+      ctx.beginPath(); ctx.arc(cx + tx, cy + ty, dotR, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx - tx, cy - ty, dotR, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+}
+
+/** A joint: the place a pair could go between two atoms; a shared pair stands in it as a bar. */
+function paintJoint(ctx, p, state, o) {
+  const A = state.pieces[p.props.a].at;
+  const B = state.pieces[p.props.b].at;
+  const ang = Math.atan2(B.y - A.y, B.x - A.x);
+  const n = p.props.pairs || 0;
+  disc(ctx, o.x, o.y, o.r, '#1d1b17', o.lit ? AMBER : (n ? PLATE_COLORS.phosphor : PLATE_COLORS.rim), o.lit ? 2 : 1.2);
+  if (!n) {
+    ctx.strokeStyle = PLATE_COLORS.dim;
+    ctx.lineWidth = 1;
+    ctx.setLineDash?.([2, 2]);
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, o.r * 0.5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash?.([]);
+    return;
+  }
+  ctx.strokeStyle = PLATE_COLORS.phosphor;
+  ctx.lineWidth = Math.max(1.4, o.r * 0.2);
+  const nx = -Math.sin(ang);
+  const ny = Math.cos(ang);
+  for (let k = 0; k < n; k++) {
+    const off = (k - (n - 1) / 2) * o.r * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(o.x + nx * off - Math.cos(ang) * o.r * 0.62, o.y + ny * off - Math.sin(ang) * o.r * 0.62);
+    ctx.lineTo(o.x + nx * off + Math.cos(ang) * o.r * 0.62, o.y + ny * off + Math.sin(ang) * o.r * 0.62);
+    ctx.stroke();
+  }
+}
+
+/** The tray's pieces: a pair (two electrons), a single electron, and the one that lifts one back. */
+function paintDispenser(ctx, p, state, o) {
+  disc(ctx, o.x, o.y, o.r, PLATE_COLORS.steel, o.lit ? AMBER : PLATE_COLORS.dust, o.lit ? 2 : 1);
+  ctx.fillStyle = '#16140f';
+  const d = Math.max(1.6, o.r * 0.15);
+  if (p.kind === 'pairs') {
+    for (const dx of [-0.26, 0.26]) { ctx.beginPath(); ctx.arc(o.x + dx * o.r, o.y - o.r * 0.22, d, 0, Math.PI * 2); ctx.fill(); }
+  } else if (p.kind === 'single') {
+    ctx.beginPath(); ctx.arc(o.x, o.y - o.r * 0.22, d, 0, Math.PI * 2); ctx.fill();
+  } else {
+    ctx.strokeStyle = '#16140f';
+    ctx.lineWidth = Math.max(1.5, o.r * 0.13);
+    ctx.beginPath();
+    ctx.moveTo(o.x - o.r * 0.28, o.y - o.r * 0.5); ctx.lineTo(o.x + o.r * 0.28, o.y + o.r * 0.06);
+    ctx.moveTo(o.x + o.r * 0.28, o.y - o.r * 0.5); ctx.lineTo(o.x - o.r * 0.28, o.y + o.r * 0.06);
+    ctx.stroke();
+  }
+  plateText(ctx, p.label, o.x, o.y + o.r * 0.56, { size: Math.max(7, Math.round(o.r * (p.label.length > 5 ? 0.3 : 0.36))), weight: 700, align: 'center', base: 'middle', color: '#16140f' });
+}
+
 const PAINTERS = {
   atom: paintAtom, proton: paintParticle, neutron: paintParticle, electron: paintParticle,
   nucleus: paintNucleus, specimen: paintSpecimen, dish: paintDish, lens: paintLens,
-  cutter: paintTool, shaker: paintTool, detector: paintDetector
+  cutter: paintTool, shaker: paintTool, detector: paintDetector,
+  joint: paintJoint, pairs: paintDispenser, single: paintDispenser, lift: paintDispenser
 };
 
 function paintPiece(ctx, p, state, o) {
@@ -676,6 +964,7 @@ function printed(p, state) {
   switch (p.kind) {
     case 'lens': return dishUnder(p.id, state) ? '' : p.label;
     case 'atom': return p.props.mask ? '' : p.props.el;
+    case 'joint': return '';
     case 'proton': return '';
     case 'neutron': return '';
     case 'electron': return '';
@@ -686,14 +975,16 @@ function printed(p, state) {
 function faceKey(p, state) {
   switch (p.kind) {
     case 'atom': {
+      if (p.props.slate) { const a = slateAtom(p, state); return `slate|${p.props.el}|${a.lone}|${a.dots}|${a.around}|${a.lamp}`; }
       const r = readAtom(p, state);
-      return `${p.props.el}|${p.props.tint || ''}|${r.charge}|${r.lamp}|${r.outer}|${p.props.mask ? 1 : 0}|${state.opts?.shells ? 1 : 0}`;
+      return `${p.props.el}|${p.props.tint || ''}|${r.charge}|${r.lamp}|${r.outer}|${p.props.mask ? 1 : 0}|${state.opts?.shells ? 1 : 0}|${state.opts?.charges === false ? 0 : 1}`;
     }
     case 'dish': return `${p.props.sample.id}|${p.props.cut || ''}|${p.props.settled ? 1 : 0}|${p.props.view ?? ''}`;
     case 'lens': {
       const d = dishUnder(p.id, state);
       return d ? `${d.id}|${d.props.sample.id}|${scopePower(state)}|${d.props.cut || ''}|${d.props.settled ? 1 : 0}` : '';
     }
+    case 'joint': return `${p.props.pairs || 0}`;
     case 'specimen': return JSON.stringify(p.props);
     case 'nucleus': return `${p.props.p}|${p.props.n}`;
     case 'detector': return `${p.props.count ?? ''}`;
@@ -773,8 +1064,35 @@ function paintReader(ctx, f, state, b) {
   plateText(ctx, mass != null ? `mass ${mass.toFixed(1)}` : '', b.x0 + 4, b.y1 - 5, { size, color: PLATE_COLORS.dust });
 }
 
+/**
+ * A slate's board: a line from every joint to its two atoms (dashed while nothing stands in the joint, solid
+ * when a pair does), and the tray's count. It reads the pieces and nothing else.
+ */
+function paintSlate(ctx, f, state, b) {
+  const sl = slateOf(state, f.id);
+  ctx.lineWidth = 1;
+  for (const [jid, i, j] of f.props.joints) {
+    const jp = state.pieces[jid];
+    const n = jp.props.pairs || 0;
+    ctx.strokeStyle = n ? PLATE_COLORS.phosphor : PLATE_COLORS.rim;
+    ctx.setLineDash?.(n ? [] : [3, 4]);
+    for (const id of [f.props.atoms[i], f.props.atoms[j]]) {
+      const ap = state.pieces[id];
+      ctx.beginPath();
+      ctx.moveTo(b.X(ap.at.x), b.Y(ap.at.y));
+      ctx.lineTo(b.X(jp.at.x), b.Y(jp.at.y));
+      ctx.stroke();
+    }
+  }
+  ctx.setLineDash?.([]);
+  const size = Math.max(8, Math.round(2.3 * b.sc));
+  plateText(ctx, `TRAY ${sl.left} OF ${sl.total}`, b.x1 - 4, b.y0 + size * 1.1, { size, weight: 700, align: 'right', color: sl.left === 0 ? PLATE_COLORS.dim : PLATE_COLORS.phosphor });
+  if (sl.charge) plateText(ctx, `CHARGE ${sl.charge > 0 ? '+' : '−'}${Math.abs(sl.charge)}`, b.x1 - 4, b.y0 + size * 2.4, { size: Math.max(7, size - 1), weight: 700, align: 'right', color: AMBER });
+}
+
 function paintFixture(ctx, f, state, b) {
-  if (f.kind === 'needle') paintNeedle(ctx, f, state, b);
+  if (f.kind === 'slate') paintSlate(ctx, f, state, b);
+  else if (f.kind === 'needle') paintNeedle(ctx, f, state, b);
   else if (f.kind === 'beam') paintBeam(ctx, f, state, b);
   else if (f.kind === 'reader') paintReader(ctx, f, state, b);
 }
@@ -831,6 +1149,8 @@ function linkRods(link) {
 const R = 5;
 
 function planJoin(a, b, state) {
+  // The slate's tray: a pair, a single electron, or the piece that lifts one back.
+  if (DISPENSERS.has(a.kind)) return planDeal(a, b, state);
   // A tool laid on a dish.
   if (a.kind === 'lens' || a.kind === 'cutter' || a.kind === 'shaker') {
     if (b.kind !== 'dish') return { holds: false, reason: 'That goes on a sample dish.' };
@@ -844,7 +1164,11 @@ function planJoin(a, b, state) {
     if (b.props.settled) return { holds: true, once: true, reason: 'The dish has settled already.' };
     return { holds: true, once: true, set: { b: { settled: true } }, reason: 'The shaker passes under the dish.' };
   }
-  if (isAtom(a) && isAtom(b)) return planBond(a, b, state);
+  if (isAtom(a) && isAtom(b)) {
+    // An atom on a slate stands where the molecule puts it: nothing joins it, nothing is joined to it.
+    if (a.props.slate || b.props.slate) return { holds: false, reason: 'That atom is fixed on the slate.' };
+    return planBond(a, b, state);
+  }
   return { holds: false, reason: 'Those two do not join.' };
 }
 
@@ -881,6 +1205,10 @@ export const ATOMS_KIT = {
     specimen: { r: 9, nojoin: true },
     detector: { r: R, nojoin: true },
     card: { r: R, nojoin: true },
+    joint: { r: JOINT_R },
+    pairs: { r: R, tool: true },
+    single: { r: R, tool: true },
+    lift: { r: R, tool: true },
     dish: { r: 9 },
     lens: { r: 9, tool: true },
     cutter: { r: 6.5, tool: true },

@@ -51,6 +51,8 @@
  *                    instead (a cutter drawn across a sample) and the tool returns to where it hangs
  *   kinds.x.nojoin   true for a kind that is never a join target or a joiner (a particle, a detector)
  *   kinds.x.split    true when a held, joined piece offers the "Pull Out" key
+ *   planJoin(...)    may answer `home: true` with `holds: false`: the refused piece goes back where it hangs
+ *                    (a tray piece dropped on something it cannot serve) instead of drifting beside its target
  *   planJoin(...)    may also answer `set: {a?: props, b?: props}` (what the join leaves written on
  *                    the pieces, e.g. a sample that has been cut) and `once`
  *   run(...)         may also answer `stamp: {pieceId: props}` (the reading written on the thing read)
