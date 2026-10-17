@@ -1,6 +1,6 @@
 # Bench Tabletop — benches you work with your hands, not machines you answer
 
-**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); **T1b built** (Ligar `q1-joins` + `q4-dots`, the Lewis slate; **T1 is complete and waits on the user's review**, which the user has asked us to proceed past); **T2a built** (the card kit, Tallow `q3-catalogue` + `q4-ledger`, the cooler's field point); **T2b built** (the mass kit, Tallow `q5-assay` + `q6-weigh` + `boss-hopper`, the hopper's and the sack's field points, the foe's corner of the table); T2c (Kettle) next; T3 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
+**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); **T1b built** (Ligar `q1-joins` + `q4-dots`, the Lewis slate; **T1 is complete and waits on the user's review**, which the user has asked us to proceed past); **T2a built** (the card kit, Tallow `q3-catalogue` + `q4-ledger`, the cooler's field point); **T2b built** (the mass kit, Tallow `q5-assay` + `q6-weigh` + `boss-hopper`, the hopper's and the sack's field points, the foe's corner of the table); **T2c built** (the heap kit, a named room, Kettle `q1-recipe` + `boss-golem`: **T2 is complete, and every Tallow and Kettle quest is a table**); T3 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
 **This plan now carries the rest of `bench-integration.md`.** That plan's P0–P4 are done (bay contract,
 Tallow, Ligar, Lanternfall); its P5 (Bellows), P6 (Ember Reach) and P7 (records, stills, site copy) are
 folded in here as phases T5–T7, so each remaining world is re-laid and re-benched once, not twice.
@@ -872,3 +872,90 @@ Tallow's, Ligar's and Lanternfall's are described.
     scale and elevator): the balance with two pans, drum and counters; `[E]` at the counted sack on the bagging line; stage 4 pour oxygen scoops until the counters
     match. **Boss arena** (The Hopper): the hopper's body sits in the table's top-left corner pad, clear of the pieces; check it re-seats at each of the five
     phases, tilts on a miss and disperses on a win. Check all three at 375 px landscape and a desktop.
+- 2026-10-17: **T2c built** (last third of T2: the heap kit, Kettle `q1-recipe` and `boss-golem`, the foundry room). **After this every Tallow quest (seven) and
+  both Kettle quests are converted** (`tools/table-legacy.json` lists no `unit01` or `unit07` line). Nothing here is browser-tested; the drawn tables were
+  rendered to pictures in Node and read, the built twin and the room are held by `verify:bench`. Shipped, and the API T3 onward builds on:
+  - **Heap kit** (`table/kits/heap.js`, id `heap`, extends the mass kit, which extends the atom kit: an `atom` still joins exactly as `atoms.js` says).
+    **A heap is a container whose contents are a count** (`heap(id, label, sym, amount, at, size)`: `contents {hydrogen: 18}`, `capacity` = what it started
+    with, `props {still, pile: {el}}`), drawn as a pile of that many dots and never printed as a number; nothing pours from it (`props.still`:
+    `gestures.js` `containerAt` skips still containers, so a press on a heap is a look). `product(...)` is the same for finished molecules, `dock(...)` holds
+    the one molecule a maker copies, `pan(...)` holds what a scale weighs. **The maker** (fixture `maker`, `props {dock, heaps {sym: containerId}, product}`,
+    Run "Make Molecule" / "Make Unit"): the player builds ONE molecule by hand (every join the planner's) and drops it in the dock; a press takes from each
+    heap as many atoms of that kind as the molecule in the dock holds (`countsOf` the cluster, so the recipe is whatever was built, never a number a stage
+    declares) and adds one to the product; a heap that cannot supply another refuses with `"The hydrogen heap holds too few for another."`, an empty or
+    two-piece dock with its own reason. **Share bar** (fixture `share`, dial `share` 0 to 100, props `left`/`right` captions): a hundred equal parts and a
+    marker. **Ledger** (fixture `ledger`, `props.pan`): the weight of each element on a pan, atom by atom from the listed masses. **Tag** (kind `tag`, a small
+    rect plate, `TAG_RECT`): "Runs out first", dropped on a heap. A `scale` with `props.atoms` records a row `{x: molecules made on the pan, y: weight}` on Run, so
+    a weighing before and after a joining is two points on the strip. Pure readers a stage's `check` and `verify:learn` use: `dockRead`, `heldIn`, `heapLeft`,
+    `madeOf`, `tallyOf`, `shareOf`, `panRead`, `ledgerOf`, `atomsIn`, **`limitOf(have, need) -> {made, limiting, left}`** (the arithmetic of a recipe against heaps),
+    `pileSlots`, `pileOf`; furniture `heapTable(spec)`, `HEAP_BOUNDS` (120 x 64, the atom tables'). `atoms.js` `SCOPE_KINDS` gained `k07` (nitrogen, the
+    scope's old Kettle entry) and `mass.js` knows `sodium`.
+  - **Core and view changes.** `model.js`: a container may carry `props` (plain data the kit reads), and a kit's `run` may answer `contents: {containerId: {what: delta}}`,
+    which the reducer applies (the only way a run moves what a container holds; `verify:table` still holds every Run key to "changes the table"). `table2d.js`
+    `drawTable`: a kit may paint a container's contents itself (`kit.paintContainer(ctx, c, state, {X, Y, sc, bodies})`; `view.piles === false` leaves the dots to the
+    built table). `table3d.js`: **one InstancedMesh per pile** (`kit.pileOf(container) -> {n, cap, slots, r, colour}`), laid once on the capacity's slots and shown
+    `n` at a time, so a heap drawn down loses its outermost atoms and the rest stay put (`viewer.piles`; `boardSignature` includes capacity and pile). `pileSlots`
+    is stable in the capacity alone, nearest the middle first, with a mound height for the built pile; `verify:bench` builds piles of 300, 200 and 150 and holds them to
+    three draw calls, every atom inside its container, above the plate and clear of its neighbours, and fewer atoms after a draw.
+  - **Rooms** (`engine/rooms.js`): a quest with no world under it names a room (`export const ROOM = 'foundry'` in the quest module; `createRunner` takes `cfg.room`;
+    `Tabletop` and `BenchViewer3D` take `opts.room`) and the viewer builds that instead of the generic lab bench: `build(viewer) -> {bench, set, mats, lights, key,
+    lamp}`. The viewer's `room.mats` dress the table (`top`, `dark`, `tray`) exactly as a host's `benchMats` do; `buildBench` / `buildLighting` use the room's own
+    bench, set and lamp; a deployed world still wins (`opts.world` first). **The foundry** (Kettle): a cast-iron assay plate 4.8 x 1.3 m on rolled-section legs with an
+    apron and a shelf of ingot moulds, a splash plate along its back (a rail of hung tongs, three brass gauges, a rack of mould boards: the part of the room the lean-in
+    camera always sees beyond the table), a rail track across the floor with a slag cart, a firebrick wall 2.35 m behind the plate with pilasters, plate pipework and a
+    furnace mouth, ore hoppers and ingot stacks out beyond the bench's ends, a crane rail with a hanging ladle, and **one pendant lamp over the plate** (a lens, the one
+    emissive mesh in the room, with the spot that lights the plate), about 3300 triangles in 169 plain meshes (the budget `verify:bench` holds is 6000).
+  - **Quests.** `q1-recipe` (8 stages, no `choice`; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, rewards and stage count unchanged): 1 build one molecule from loose atoms to match three
+    dishes of one substance (the dishes' pictures against the loose atoms by tint and size); 2 draw the shaker under two dishes and tray the one that is not a true compound; 3 weigh
+    atoms loose on the scale's pan, lift them off, join them on the table, put them back and weigh again (the strip keeps molecules made against total weight: the two points
+    sit at one weight); 4 build water in the dock, copy it from two heaps until one cannot supply another, put the "Runs out first" tag on that heap and set the tally to
+    the molecules made (graded on the heaps' own capacities through `limitOf`: **a player who has the answer is never blocked for want of a key press**); 5 weigh the atoms of one
+    molecule one by one and set a bar of a hundred parts at the oxygen's share (88, 89 and 90 pass, the true share being 88.9; the atoms' shares 33, 50 and 67 each get their reason);
+    6 build the molecule whose ledger of weights runs three to eight (carbon dioxide; carbon monoxide has a reason); 7 tray three dishes under the recipe their molecules follow
+    (reference atoms along the side); 8 shake three shipments and tray them against a label. `boss-golem` (2 phases, `encounter` per phase kept, foes only from `planFoe()`, the
+    golem in the table's corner pad, no field stage): 1 the maker again, with sodium chloride and heaps of 9 and 14 (graded on the tally alone); 2 two crates of sodium and chlorine
+    weighed on a scale in grams against the listed molar masses, the tally set to the moles (2). Both lines are gone from `tools/table-legacy.json`.
+  - **Foe body.** The recipe golem's boiler was trimmed (0.09 m tall rather than 0.12, a squatter body) and its lunge and its sink on dispersal match the other table foes (0.05 and
+    0.01 m), so it stays inside the table's foe pad and the free glass at every aspect.
+  - **Checks.** `verify:learn` ("Kettle's tables are real", replacing the old scope-joiner block): the molecule three dishes share and the molecule built, the shaker's layers
+    (`layersOf`), what the pan weighs before and after (the listed masses), the maker's copy against `limitOf` and the heap it empties, the share against 16.0 of 18.0, the ledger's
+    three to eight, each sample's recipe from its own molecule, each shipment against its label, the golem's heaps and drums. `verify:bench`: the real-stage loop now plays a quest
+    with no world (a named room, dressed from the room's own materials, never the bench kit's, no field stage) and the Hopper's fight check runs for the golem (two phases, every
+    pose inside the pad and the glass), plus **"Kettle's room, from the lean-in view"**: the bay's six volumes clear, `sight` and `view` rays at seven viewports (a ray grid that
+    reaches a wall, a prop or the floor beyond the plate), one lit lamp over the plate with its spot, a table in the room's materials with a negative control, a triangle budget,
+    negative controls for the volume, the sightline and a room with no walls, and the instanced piles above.
+  - **Deviations from §4.** (1) **A maker copies the molecule, rather than the player joining every atom of every molecule** (nine molecules of three atoms by hand is 27 drags a
+    stage): the one molecule is still built by hand and every join is the planner's, and the count is what the heaps hold. The heaps are 18 and 11 atoms (the golem's 9 and 14), small
+    enough to count and for a tally dial to reach; the instanced pile is proved at hundreds in `verify:bench`, but no stage asks for a heap of hundreds yet. (2) `q1-recipe` s2 uses
+    trays and the shaker (the old Settle key), as Tallow `q1-grain` s7 does. (3) s3 asks the player to lift the atoms off the pan before joining them (a drop into a container is a
+    drop into the zone, never a join: `snap.js`), so the same atoms are weighed loose and joined. (4) s5 is a share bar, not a typed percent; (5) s7's "crates" are the same dishes as
+    Tallow's samples. (6) `boss-golem` phase 2 weighs and tallies (grams to moles is the calculation the phase is about); it builds nothing. (7) The heap-kit stages 3 to 7 carry no
+    scratch corner (the table has no room for it beside the strip and the heaps); stages 1, 2 and 8 are atom-kit tables and keep it. (8) Kettle has no field stage (§2.5).
+  - **Integration (§2.6).** There is no world to integrate with, so the room is held to what a host is (above): the table is the foundry's own cast-iron plate with firebrick ore
+    tubs for trays; from the lean-in pose at every aspect the frame is the plate with the splash plate (tongs, gauges, mould boards) at its far edge and the floor, the rail track
+    and the wall's base beyond it (at ultrawide the ingot stacks, hoppers and the cart's side too); the `lean` and `sight` boxes are clear; the lamp is over the plate and out of the
+    camera's air. Nothing is in `tools/bay-legacy.json` for Kettle (it has no bay).
+  - **Deferred.** The assay beam, the balance and the scale are still painted on the plate rather than standing (`fixture3d`, as T2b); pans and trays are flat pictures with low rims
+    (a tray of firebrick is a rim colour); no sound for the foundry; the room's lamp is a scene light in the viewer's own scene, not a `lampMark` (the viewer's scene has no
+    `LampPool`); only the one room exists, and a second unwalkable world would add its own to `ROOMS`; `bake:stills` for Kettle; the old scope instrument (`SampleScope3D`) now serves no
+    quest and is retired with T7.
+  - **For the user to look at in a browser, per bench.** Kettle, 3D On (`#/learn/unit07/q1-recipe`; there is no world to walk, the quest opens in its room). **Bench 1**: the camera should
+    fly over a cast-iron plate with the table filling the glass between the prompt strip and the dock, the splash plate with its tongs and gauges along the top, the rail track and a slag
+    cart beyond it, a brick wall's base at the very top at a wide aspect; a pendant lamp should light the plate warm and nothing else should glow. Stage 1: join H onto O twice, the
+    third H should drift away. Stage 3: put three atoms on the pan, press "Weigh", lift them off and join them, put the molecule back and press "Weigh": two points on the strip at the
+    same height. Stage 4 (the one to try first): build water, drop it in the dock, press "Make Molecule" and watch the hydrogen heap lose two dots a press; the press after the hydrogen heap
+    is spent should say why; put the tag on that heap and set the tally. On the built table the heaps are real mounds (one body each); check they read as heaps at 375 px and that a
+    press that misses a piece still only swings the view. Stage 5: the marker is a hundred steps along a 100-unit track, so check it can be set to 89 with a thumb on a phone. Stage 6: the
+    ledger should list carbon and oxygen weights for whatever is on the pan. **Boss** (`#/learn/unit07/boss-golem`): the boiler golem stands in the table's top-right corner pad, clear of
+    every piece, at both phases; a miss should tilt it, a clear should disperse it.
+- 2026-10-17: **T2 closing note (for the user, before T3).** T2 is complete: the card kit, the mass kit and the heap kit; Tallow's seven quests and Kettle's two are tables (nine quests,
+  63 stages, no `choice` left in them). These are the things a check cannot judge and the plan wants looked at: (1) **the three kits' honesty**: every join is
+  `joinbench.js`, every weight a listed mass, every count what a heap or a pan holds, and `verify:learn` recomputes each graded answer from the planners; but the maker (heap kit) is
+  the one place a machine does repeated work, so ask whether "build one, then copy it from the heaps" reads as chemistry (it is meant to read as a recipe) or as a vending machine, and
+  whether stage 4 teaches why one heap runs out. (2) **Standing geometry**: the balance, the assay beam and the scale are pictures on the plate (the same as T2b), so a pour or a weigh
+  has no mass moving in 3D; heaps are real instanced mounds. If the lean-in view looks flat, `kit.fixture3d` is the hook. (3) **Phones**: the share bar asks for a hundred steps along one
+  track, stage 3 of Kettle asks the player to lift atoms off the pan, and the card tables ask for a lot of drags on a 3.7 : 1 plate; these are where a thumb will tell us the model needs
+  a gesture. (4) **The foundry**: the first room built for a bench with no world; if it reads as a good place, the next unwalkable world (Kettle's other quests, then any chart that
+  has no site) gets a room in `rooms.js`, not a bench kit. (5) **Tallow as a whole** is now one process line worked entirely by hand, from the conveyor tail to the sack scale and the
+  Hopper; it is the right place to judge whether the tabletop makes Unit 1 less confusing. T3 (Ligar's remaining nine, bond crank, domain hub, mixer, MO rack) starts from the atom kit and
+  the slate; nothing in T2 changes `PANEL_LAYOUT` or any station-row bench.
