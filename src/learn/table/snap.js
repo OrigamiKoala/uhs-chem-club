@@ -186,6 +186,9 @@ export function joinCandidates(state, kit, id, at) {
     if (kit.kinds?.[me.kind]?.nojoin || kit.kinds?.[o.kind]?.nojoin) continue;
     // A tool (a lens, a cutter) is laid ON things; nothing is ever laid on a tool.
     if (kit.kinds?.[o.kind]?.tool) continue;
+    // A kit may say that two pieces have nothing to do with each other (`kit.pairable`): a block set down
+    // beside a block is just set down, where a hammer set on it is a blow.
+    if (kit.pairable && !kit.pairable(me, o, state)) continue;
     const reach = (radiusOf(kit, me) + radiusOf(kit, o)) * JOIN_REACH;
     const dist = Math.hypot(o.at.x - at.x, o.at.y - at.y);
     if (dist <= reach) out.push({ id: o.id, dist, plan: kit.planJoin(me, o, state) });

@@ -990,7 +990,8 @@ export class Table3D extends BenchViewer3D {
     const key = want ? want.id : null;
     if (key === this.guided) return;
     this.guided = key;
-    guideTo(want ? { x: want.stand?.[0] ?? want.pos[0], z: want.stand?.[2] ?? want.pos[2], label: want.label } : null);
+    // `siteId` and `to` let a world with workings route the way (doorway by doorway) to the place to stand, not to the bench.
+    guideTo(want ? { x: want.stand?.[0] ?? want.pos[0], z: want.stand?.[2] ?? want.pos[2], label: want.label, siteId: want.siteId, to: true } : null);
   }
 
   /** Back at the bench: what was carried goes on the table (the reducer's `fetch`). */

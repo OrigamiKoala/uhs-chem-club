@@ -129,7 +129,7 @@ export class TableGestures {
       const lay = fixtureLayout(f);
       const pad = this.view.pxToUnits(10);
       for (const d of lay.dials) {
-        if (u.x >= d.x0 - pad && u.x <= d.x1 + pad && Math.abs(u.y - d.y) <= pad) return { kind: 'dial', fixture: f.id, dial: d.name, track: d };
+        if (u.x >= d.x0 - pad && u.x <= d.x1 + pad && Math.abs(u.y - d.y) <= Math.max(pad, d.grab || 0)) return { kind: 'dial', fixture: f.id, dial: d.name, track: d };
       }
       const r = lay.run;
       if (r && u.x >= r.x0 - pad / 2 && u.x <= r.x1 + pad / 2 && u.y >= r.y0 - pad / 2 && u.y <= r.y1 + pad / 2) return { kind: 'run', fixture: f.id };

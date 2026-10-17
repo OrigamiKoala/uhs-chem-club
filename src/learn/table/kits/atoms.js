@@ -61,7 +61,7 @@
 import { registerKit } from './registry.js';
 import { planJoin as planPair, shellPlan } from '../../engine/joinbench.js';
 import {
-  VALENCE, MOLECULES, planLewis, linkKey as lewisKey, addBond, addLone, addDot, removeOne
+  VALENCE, MOLECULES, planLewis, linkKey as lewisKey, addBond, addLone, addDot, removeOne, gaugeLength
 } from '../../engine/lewis.js';
 import { clusterOf, linkKey as pairKey } from '../snap.js';
 import { buildUnits, drawScopeField, planSettle, planCut, TINTS } from '../../engine/scope.js';
@@ -417,7 +417,7 @@ export function beamCounts(specimenId) {
    so a script that deals it and a drag that deals it are the same table.
    ------------------------------------------------------------------ */
 
-const DISPENSERS = new Set(['pairs', 'single', 'lift']);
+const DISPENSERS = new Set(['pairs', 'single', 'lift', 'three', 'fcstamp', 'mark', 'gauge']);
 
 /**
  * Everything a stage grades a slate on, read off its pieces: `{mol, placed, charge, read, left, total,
@@ -476,6 +476,35 @@ function planDeal(a, b, state) {
   };
   const target = b.kind === 'joint' ? { kind: 'link', a: b.props.i, b: b.props.j } : { kind: 'atom', i: sl.atoms.indexOf(b.id) };
 
+  // THE SLATE'S READERS (Ligar `q5-resonance`). They deal nothing: each shows a reading the planner already holds.
+  //   fcstamp  on an atom: its formal charge is printed on it (live, so a change of drawing changes it)
+  //   mark     on an atom: a plus mark stays on it, or comes off if it was there
+  //   gauge    on a joint with a pair in it: the length the molecule measures there (lewis.js `gaugeLength`), which is
+  //            the real molecule's and not the drawing's
+  if (a.kind === 'fcstamp') {
+    if (b.kind !== 'atom') return refuse('The stamp goes on an atom.');
+    return { holds: true, once: true, set: { b: { stamped: true } }, reason: 'The atom shows the charge it carries.' };
+  }
+  if (a.kind === 'mark') {
+    if (b.kind !== 'atom') return refuse('The mark goes on an atom.');
+    return { holds: true, once: true, set: { b: { marked: !b.props.marked } }, reason: b.props.marked ? 'The mark came off.' : 'The mark is on the atom.' };
+  }
+  if (a.kind === 'gauge') {
+    if (b.kind !== 'joint') return refuse('The gauge goes across a bond.');
+    if (!(b.props.pairs > 0)) return refuse('There is no bond there to measure.');
+    const len = gaugeLength(sl.mol, sl.placed, lewisKey(b.props.i, b.props.j));
+    if (len == null) return refuse('The gauge reads nothing there.');
+    return { holds: true, once: true, set: { b: { measured: true } }, reason: 'The gauge reads the bond.' };
+  }
+  if (a.kind === 'three') {
+    if (b.kind !== 'atom') return refuse('Lone pairs go on an atom.');
+    const n = Math.min(3, Math.floor(sl.left / 2));
+    if (n < 1) return refuse('The tray has no pair left.');
+    let placed = sl.placed;
+    for (let k = 0; k < n; k++) placed = addLone(placed, target.i).placed;
+    return done(placed, `${n === 1 ? 'A pair' : `${n} pairs`} went onto the atom.`);
+  }
+
   if (a.kind === 'lift') {
     const r = removeOne(sl.mol, sl.placed, target);
     return r.refused ? refuse(r.refused) : done(r.placed, 'Something went back to the tray.');
@@ -510,16 +539,21 @@ export function slateLayout(molKey, cx, cy, size, pos = null) {
  * board round them, sized to the atoms with room above for the tray's count. A stage that adjusts the
  * charge names its chip (a fixture whose dial is `charge`).
  */
-export function slateParts(id, molKey, points, { chip = null } = {}) {
+export function slateParts(id, molKey, points, { chip = null, prefill = null } = {}) {
   const mol = MOLECULES[molKey];
   const r1 = v => Math.round(v * 10) / 10;
+  // `prefill` is a drawing (`lewis.js` `drawing(bonds, lone, dots)`) already standing on the slate when the stage
+  // begins: a skeleton to put electrons round, or a finished drawing to read. It is written onto the pieces' props
+  // exactly as a deal would write it, so the tray is counted against it by `slateOf`.
+  const pre = prefill || { bonds: {}, lone: {}, dots: {} };
   const atoms = mol.syms.map((el, i) => ({
-    id: `${id}${i}`, kind: 'atom', label: el, r: SLATE_R, fixed: true, at: { ...points[i] }, props: { el, slate: id }
+    id: `${id}${i}`, kind: 'atom', label: el, r: SLATE_R, fixed: true, at: { ...points[i] },
+    props: { el, slate: id, ...(pre.lone[i] ? { lone: pre.lone[i] } : {}), ...(pre.dots[i] ? { dots: pre.dots[i] } : {}) }
   }));
   const joints = mol.links.map(([i, j]) => ({
     id: `${id}j${i}${j}`, kind: 'joint', label: 'Joint', r: JOINT_R, fixed: true,
     at: { x: r1((points[i].x + points[j].x) / 2), y: r1((points[i].y + points[j].y) / 2) },
-    props: { slate: id, a: `${id}${i}`, b: `${id}${j}`, i, j }
+    props: { slate: id, a: `${id}${i}`, b: `${id}${j}`, i, j, ...(pre.bonds[lewisKey(i, j)] ? { pairs: pre.bonds[lewisKey(i, j)] } : {}) }
   }));
   const xs = points.map(p => p.x);
   const ys = points.map(p => p.y);
@@ -884,6 +918,20 @@ function paintSlateAtom(ctx, p, state, o) {
   plateText(ctx, p.props.el, o.x, o.y - o.r * 0.12, { size: Math.max(9, Math.round(o.r * (p.props.el.length > 1 ? 0.8 : 1.0))), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
   plateText(ctx, `${a.around}/${a.goal}`, o.x, o.y + o.r * 0.5, { size: Math.max(7, Math.round(o.r * 0.34)), align: 'center', base: 'middle', color: a.lamp === 'short' ? PLATE_COLORS.dim : PLATE_COLORS.text });
   if (a.lamp === 'over') lampMark(ctx, o.x + o.r * 0.7, o.y - o.r * 0.7, Math.max(9, o.r * 0.7));
+  // The charge stamp: what this atom carries, printed on its shoulder (live, so it follows the drawing). A mark, never a colour alone.
+  if (p.props.stamped) {
+    const q = a.fc;
+    plateText(ctx, q === 0 ? '0' : `${Math.abs(q) > 1 ? Math.abs(q) : ''}${q > 0 ? '+' : '−'}`, o.x - o.r * 0.78, o.y - o.r * 0.78, { size: Math.max(8, Math.round(o.r * 0.62)), weight: 700, align: 'center', base: 'middle', color: AMBER });
+  }
+  if (p.props.marked) {
+    ctx.strokeStyle = AMBER;
+    ctx.lineWidth = Math.max(1.4, o.r * 0.12);
+    ctx.setLineDash?.([Math.max(3, o.r * 0.28), Math.max(2, o.r * 0.18)]);
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, o.r * 1.18, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash?.([]);
+  }
   // Pairs and singles round the rim, on the side away from its joints.
   let bx = 0;
   let by = 0;
@@ -920,6 +968,15 @@ function paintJoint(ctx, p, state, o) {
   const ang = Math.atan2(B.y - A.y, B.x - A.x);
   const n = p.props.pairs || 0;
   disc(ctx, o.x, o.y, o.r, '#1d1b17', o.lit ? AMBER : (n ? PLATE_COLORS.phosphor : PLATE_COLORS.rim), o.lit ? 2 : 1.2);
+  // The bond gauge's reading, printed beside the joint: the length the real molecule measures here.
+  if (p.props.measured && n) {
+    const sl = slateOf(state, p.props.slate);
+    const len = sl ? gaugeLength(sl.mol, sl.placed, lewisKey(p.props.i, p.props.j)) : null;
+    if (len != null) {
+      const side = ang > -Math.PI / 2 && ang <= Math.PI / 2 ? -1 : 1;
+      plateText(ctx, `${len} pm`, o.x - Math.sin(ang) * o.r * 2.9 * side, o.y + Math.cos(ang) * o.r * 2.9 * side, { size: Math.max(7, Math.round(o.r * 1.35)), weight: 700, align: 'center', base: 'middle', color: AMBER });
+    }
+  }
   if (!n) {
     ctx.strokeStyle = PLATE_COLORS.dim;
     ctx.lineWidth = 1;
@@ -950,8 +1007,40 @@ function paintDispenser(ctx, p, state, o) {
   const d = Math.max(1.6, o.r * 0.15);
   if (p.kind === 'pairs') {
     for (const dx of [-0.26, 0.26]) { ctx.beginPath(); ctx.arc(o.x + dx * o.r, o.y - o.r * 0.22, d, 0, Math.PI * 2); ctx.fill(); }
+  } else if (p.kind === 'three') {
+    for (const dx of [-0.36, 0, 0.36]) {
+      for (const dy of [-0.12, -0.34]) { ctx.beginPath(); ctx.arc(o.x + dx * o.r, o.y + dy * o.r, d * 0.85, 0, Math.PI * 2); ctx.fill(); }
+    }
   } else if (p.kind === 'single') {
     ctx.beginPath(); ctx.arc(o.x, o.y - o.r * 0.22, d, 0, Math.PI * 2); ctx.fill();
+  } else if (p.kind === 'fcstamp') {
+    // A rubber stamp: a handle over a face that prints a plus and a minus.
+    ctx.fillRect(o.x - o.r * 0.1, o.y - o.r * 0.62, o.r * 0.2, o.r * 0.3);
+    ctx.fillRect(o.x - o.r * 0.42, o.y - o.r * 0.34, o.r * 0.84, o.r * 0.14);
+    ctx.strokeStyle = '#16140f';
+    ctx.lineWidth = Math.max(1.2, o.r * 0.1);
+    ctx.beginPath();
+    ctx.moveTo(o.x - o.r * 0.34, o.y - o.r * 0.06); ctx.lineTo(o.x - o.r * 0.1, o.y - o.r * 0.06);
+    ctx.moveTo(o.x - o.r * 0.22, o.y - o.r * 0.18); ctx.lineTo(o.x - o.r * 0.22, o.y + o.r * 0.06);
+    ctx.moveTo(o.x + o.r * 0.1, o.y - o.r * 0.06); ctx.lineTo(o.x + o.r * 0.34, o.y - o.r * 0.06);
+    ctx.stroke();
+  } else if (p.kind === 'mark') {
+    ctx.strokeStyle = '#16140f';
+    ctx.lineWidth = Math.max(1.4, o.r * 0.13);
+    ctx.setLineDash?.([Math.max(2, o.r * 0.2), Math.max(1.5, o.r * 0.14)]);
+    ctx.beginPath();
+    ctx.arc(o.x, o.y - o.r * 0.2, o.r * 0.34, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash?.([]);
+  } else if (p.kind === 'gauge') {
+    // A pair of callipers across a bond: two jaws and the rule between them.
+    ctx.strokeStyle = '#16140f';
+    ctx.lineWidth = Math.max(1.3, o.r * 0.11);
+    ctx.beginPath();
+    ctx.moveTo(o.x - o.r * 0.46, o.y - o.r * 0.56); ctx.lineTo(o.x - o.r * 0.46, o.y - o.r * 0.04);
+    ctx.moveTo(o.x + o.r * 0.46, o.y - o.r * 0.56); ctx.lineTo(o.x + o.r * 0.46, o.y - o.r * 0.04);
+    ctx.moveTo(o.x - o.r * 0.46, o.y - o.r * 0.3); ctx.lineTo(o.x + o.r * 0.46, o.y - o.r * 0.3);
+    ctx.stroke();
   } else {
     ctx.strokeStyle = '#16140f';
     ctx.lineWidth = Math.max(1.5, o.r * 0.13);
@@ -967,7 +1056,8 @@ const PAINTERS = {
   atom: paintAtom, ion: paintIon, proton: paintParticle, neutron: paintParticle, electron: paintParticle,
   nucleus: paintNucleus, specimen: paintSpecimen, dish: paintDish, lens: paintLens,
   cutter: paintTool, shaker: paintTool, detector: paintDetector,
-  joint: paintJoint, pairs: paintDispenser, single: paintDispenser, lift: paintDispenser
+  joint: paintJoint, pairs: paintDispenser, single: paintDispenser, lift: paintDispenser,
+  three: paintDispenser, fcstamp: paintDispenser, mark: paintDispenser, gauge: paintDispenser
 };
 
 function paintPiece(ctx, p, state, o) {
@@ -994,7 +1084,7 @@ function printed(p, state) {
 function faceKey(p, state) {
   switch (p.kind) {
     case 'atom': {
-      if (p.props.slate) { const a = slateAtom(p, state); return `slate|${p.props.el}|${a.lone}|${a.dots}|${a.around}|${a.lamp}`; }
+      if (p.props.slate) { const a = slateAtom(p, state); return `slate|${p.props.el}|${a.lone}|${a.dots}|${a.around}|${a.lamp}|${p.props.stamped ? a.fc : ''}|${p.props.marked ? 1 : 0}`; }
       const r = readAtom(p, state);
       return `${p.props.el}|${p.props.tint || ''}|${r.charge}|${r.lamp}|${r.outer}|${p.props.mask ? 1 : 0}|${state.opts?.shells ? 1 : 0}|${state.opts?.charges === false ? 0 : 1}`;
     }
@@ -1003,7 +1093,7 @@ function faceKey(p, state) {
       const d = dishUnder(p.id, state);
       return d ? `${d.id}|${d.props.sample.id}|${scopePower(state)}|${d.props.cut || ''}|${d.props.settled ? 1 : 0}` : '';
     }
-    case 'joint': return `${p.props.pairs || 0}`;
+    case 'joint': return `${p.props.pairs || 0}|${p.props.measured ? 1 : 0}`;
     case 'ion': return `${p.props.el}|${p.props.charge || 0}|${p.props.tint || ''}`;
     case 'specimen': return JSON.stringify(p.props);
     case 'nucleus': return `${p.props.p}|${p.props.n}`;
@@ -1241,6 +1331,10 @@ export const ATOMS_KIT = {
     pairs: { r: R, tool: true },
     single: { r: R, tool: true },
     lift: { r: R, tool: true },
+    three: { r: R, tool: true },
+    fcstamp: { r: R, tool: true },
+    mark: { r: R, tool: true },
+    gauge: { r: R, tool: true },
     dish: { r: 9 },
     lens: { r: 9, tool: true },
     cutter: { r: 6.5, tool: true },

@@ -406,6 +406,10 @@ const HANDLERS = {
     const d = s.fixtures[arg?.fixture]?.dials[arg?.dial];
     if (!d) return fail('no such dial');
     d.value = snapDial(d, arg.value);
+    // A kit may keep what the hand passed through (`kit.dialed`): the trace a pulled pair draws behind the hand.
+    // It answers the fixture's new `props` (plain data) and nothing else; the reducer writes them.
+    const kept = kit.dialed ? kit.dialed(s, s.fixtures[arg.fixture], arg.dial) : null;
+    if (kept?.props) Object.assign(s.fixtures[arg.fixture].props, kept.props);
     return { value: d.value };
   },
 
@@ -431,6 +435,16 @@ const HANDLERS = {
         const now = round((c.contents[what] || 0) + d);
         if (now > 0) c.contents[what] = now; else delete c.contents[what];
       }
+    }
+    // ...and it can SET dials (`dials: {fixtureId: {dial: value}}`): a pair let go settles at the bottom of its well.
+    for (const [fid, set] of Object.entries(row.dials || {})) {
+      const f = s.fixtures[fid];
+      if (!f) continue;
+      for (const [name, v] of Object.entries(set)) {
+        if (f.dials[name]) f.dials[name].value = snapDial(f.dials[name], v);
+      }
+      const kept = kit.dialed ? kit.dialed(s, f, Object.keys(set)[0]) : null;
+      if (kept?.props) Object.assign(f.props, kept.props);
     }
     s.recorder = append(s.recorder, row);
     return { row };

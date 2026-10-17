@@ -25,10 +25,17 @@ export function sitePlate(entry) {
 export function fixtureLayout(f) {
   const r = rectOf(f, SIZES.fixture);
   const names = Object.keys(f.dials);
+  // A fixture may set its own margin and the pitch between its dials' tracks (a well whose atoms are drawn
+  // on the track needs room for them); the defaults are every other fixture's.
+  const m = f.props?.margin ?? 3;
+  const pitch = f.props?.rowPitch ?? 5;
+  const top = r.y0 + (f.props?.top ?? 8);
+  // `grab` (per dial, in units) widens the band round a track in which a press takes the dial: a row of atoms
+  // drawn on the track is its handle.
   const dials = names.map((name, i) => ({
-    name, x0: r.x0 + 3, x1: r.x1 - 3, y: r.y0 + 8 + i * 5
+    name, x0: r.x0 + m, x1: r.x1 - m, y: top + i * pitch, grab: f.props?.grab?.[name] ?? 0
   }));
-  const bottom = r.y0 + 8 + Math.max(0, names.length - 1) * 5;
+  const bottom = top + Math.max(0, names.length - 1) * pitch;
   // A gauge, or a dial that only sets, has no Run key (`fixture.noRun`).
   const wide = f.runLabel ? Math.max(9, f.runLabel.length * 1.9 + 3) : 9;
   const run = f.noRun ? null : { x0: r.x1 - 2 - wide, x1: r.x1 - 2, y0: Math.max(bottom + 2, r.y1 - 6), y1: Math.max(bottom + 2, r.y1 - 6) + 4.5 };
