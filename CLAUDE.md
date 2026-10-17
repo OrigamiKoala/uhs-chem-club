@@ -175,11 +175,14 @@ table, atom kit piloted first, and every reworked bench must also be integrated 
   is a read-only mirror; foes are `FoeLayer3D` bodies (`foebody.js`, `encounter3d.js`) that only observe.
   Deployed benches are aimed into the glass (`fitDeployedAim`), stop aiming when the player walks
   (`playerWalked`, `walkOwnsHeight`, `mouseLookLocked`, `walkKeysAtBench`), and the briefing docks left
-  (`body.bench-deployed`). A **drawn** bench calls `stage.setWalkSuspended(true)`; a built one doesn't.
+  (`body.bench-deployed`). In-world bench viewports listen on `#webgl-canvas` directly when instrument hosts are hidden; camera setups sync FPS pose (`fpsControls.syncFromCamera()`). Built tabletops enter standing (`startStanding: built`) with normal WASD/mouse look; pressing `[E]` leans in, while WASD or `Escape` returns to standing walk (`leaveLean({ walked: true })`). A **drawn** bench calls `stage.setWalkSuspended(true)`; a built one doesn't.
   On tabletops (`table3d.js`), players interact with `[E]` to lean in with free look and movement;
   dormant bench tool rail and extras (tool rail, weld bead, swarf, vice in `bench-bay.js`) are parented to `dormant` so they hide cleanly on deployment;
   scratch corners (H, O, Na+, Cl-) display only when required (`spec.scratch === true`) with staggered bins (`scr-bin` at y:55, atoms at y:50/58.5) clear of trays;
   sample trays use height 20 and cell 19 at y:33 with scope fixtures and initial sample dishes elevated (y:11-16) to prevent any label or dish overlaps;
+  sorting trays on Tallow (`q1-grain` stage 3) stand at y:48 (h:16) clear of 2-row ore tokens (y:10/21) and reader slot (y:16);
+  reader fixture (`atoms.js` `paintReader`) uses scaled offsets (`b.sc`) and centered empty text to prevent clipping against the bottom 3D rim;
+  tabletop prompt strip (`.lq-tstrip`) enforces `flex: 1 1 auto !important` on `.lq-prompt`, and `margin-left: auto !important; align-self: center !important;` on `.lq-rail` so stage squares stay right-aligned and vertically centered;
   lens rendering uses elevated base over dishes, polygon offset, and 384px canvas textures to eliminate z-fighting, with rest:{x:0,y:0} for concentric centered snapping;
   table gestures use strict closer distance (`d < best.d`) so sample dishes and centered resting tools resolve properly on drag/tap.
 - **Deck layout:** `.lq-prompt` pinned top, `.lq-deck-body` scrolls, `.lq-deck-foot` (banner, Hint,

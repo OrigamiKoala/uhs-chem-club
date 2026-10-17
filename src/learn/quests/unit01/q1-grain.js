@@ -244,10 +244,10 @@ export const STAGES = [
       zones: {
         slots: [{ id: 'rd', label: 'Reader', at: { x: 60, y: 16 } }],
         trays: [
-          trayAt('t1', 'Tray 1', 17, 34, 26, 14),
-          trayAt('t2', 'Tray 2', 45, 34, 26, 14),
-          trayAt('t3', 'Tray 3', 73, 34, 26, 14),
-          trayAt('t4', 'Tray 4', 101, 34, 26, 14)
+          trayAt('t1', 'Tray 1', 17, 48, 26, 16),
+          trayAt('t2', 'Tray 2', 45, 48, 26, 16),
+          trayAt('t3', 'Tray 3', 73, 48, 26, 16),
+          trayAt('t4', 'Tray 4', 101, 48, 26, 16)
         ]
       },
       fixtures: [{ id: 'reader', kind: 'reader', label: 'Reader', at: { x: 92, y: 16 }, size: { w: 34, h: 14 }, noRun: true, props: { slot: 'rd' } }]

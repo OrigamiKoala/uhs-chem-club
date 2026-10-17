@@ -1172,14 +1172,15 @@ function paintReader(ctx, f, state, b) {
   const slot = f.props.slot && state.zones.slots[f.props.slot];
   const held = slot && Object.values(state.pieces).find(p => p.zone === `slot:${slot.id}` && !p.hidden);
   const size = Math.max(9, Math.round((b.y1 - b.y0) * 0.22));
+  const padX = b.x0 + 1.5 * b.sc;
   if (!held || !isAtom(held)) {
-    plateText(ctx, 'empty', b.x0 + 4, b.y1 - 5, { size, color: PLATE_COLORS.dim });
+    plateText(ctx, 'empty', padX, b.y0 + (b.y1 - b.y0) * 0.62, { size, color: PLATE_COLORS.dim });
     return;
   }
   const el = elementOf(held.props.el);
   const mass = SCOPE_KINDS[Object.keys(SCOPE_KINDS).find(k => symOfKind(k) === el.sym)]?.mass;
-  plateText(ctx, `${el.name} (${el.sym})`, b.x0 + 4, b.y0 + (b.y1 - b.y0) * 0.55, { size, weight: 700, color: PLATE_COLORS.text });
-  plateText(ctx, mass != null ? `mass ${mass.toFixed(1)}` : '', b.x0 + 4, b.y1 - 5, { size, color: PLATE_COLORS.dust });
+  plateText(ctx, `${el.name} (${el.sym})`, padX, b.y0 + (b.y1 - b.y0) * 0.55, { size, weight: 700, color: PLATE_COLORS.text });
+  plateText(ctx, mass != null ? `mass ${mass.toFixed(1)}` : '', padX, b.y1 - 2.2 * b.sc, { size, color: PLATE_COLORS.dust });
 }
 
 /**

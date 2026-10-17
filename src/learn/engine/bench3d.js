@@ -1409,6 +1409,9 @@ export class BenchViewer3D {
       this._standX = this.camera.position.x;
       this._standZ = this.camera.position.z;
       this._stood = true;
+      if (this.fpsControls) {
+        this.fpsControls.syncFromCamera();
+      }
       return;
     }
 
@@ -1576,9 +1579,8 @@ export class BenchViewer3D {
       g.onWheel(e.deltaY, e);
     };
 
-    // Escape stands a leaned-in player back up on standalone bench, unless something else wants it.
+    // Escape stands a leaned-in player back up, unless something else wants it.
     this._onLeanKey = e => {
-      if (this.inWorld) return;
       if (!this.leaning || e.code !== 'Escape') return;
       const modal = typeof document !== 'undefined' && document.getElementById?.('modal-container');
       if (modal && !modal.classList.contains('hidden')) return;
@@ -1586,11 +1588,19 @@ export class BenchViewer3D {
     };
     window.addEventListener('keydown', this._onLeanKey);
 
-    this.domElement.addEventListener('pointerdown', this._onPointerDown);
+    const canvas = (typeof document !== 'undefined') ? document.getElementById('webgl-canvas') : null;
+    this._pointerTarget = (this.inWorld && canvas) ? canvas : this.domElement;
+    if (this._pointerTarget) {
+      this._pointerTarget.addEventListener('pointerdown', this._onPointerDown);
+      this._pointerTarget.addEventListener('wheel', this._onWheel, { passive: false });
+    }
+    if (this.domElement && this.domElement !== this._pointerTarget) {
+      this.domElement.addEventListener('pointerdown', this._onPointerDown);
+      this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
+    }
     window.addEventListener('pointermove', this._onPointerMove);
     window.addEventListener('pointerup', this._onPointerUp);
     window.addEventListener('pointercancel', this._onPointerCancel);
-    this.domElement.addEventListener('wheel', this._onWheel, { passive: false });
   }
 
   /**
@@ -1645,7 +1655,7 @@ export class BenchViewer3D {
    * accounted for, which is the same rule `stage.onResize` sizes the canvas by.
    */
   setPointer(e) {
-    const el = this.domElement;
+    const el = this._pointerTarget || this.domElement;
     const isBody = !el || el === document.body || el === document.documentElement;
     const vv = window.visualViewport;
     const vw = (vv && vv.width) || window.innerWidth;
@@ -2391,6 +2401,11 @@ export class BenchViewer3D {
     if (typeof document !== 'undefined') document.body?.classList?.remove?.('bench-leaning');
     if (walked && this.inWorld) {
       this.playerControlled = true;
+      if (this.fpsControls) {
+        this.fpsControls.syncFromCamera();
+        this.fpsControls.isGrounded = true;
+        this.fpsControls.verticalVelocity = 0;
+      }
     } else {
       this.playerControlled = false;
       this._fitKey = null;
@@ -2517,8 +2532,26 @@ export class BenchViewer3D {
     // The handover, checked before anything else reads the camera: the moment
     // the player takes a step, the bench stops standing them anywhere and stops
     // aiming for them.
-    if (this.inWorld && !this.playerControlled && !this.leaning && this.playerWalked()) {
-      this.playerControlled = true;
+    if (this.inWorld && !this.playerControlled && !this.leaning) {
+      const walking = this.playerWalked() || Boolean(this.fpsControls && (
+        this.fpsControls.moveForward || this.fpsControls.moveBackward ||
+        this.fpsControls.moveLeft || this.fpsControls.moveRight
+      ));
+      if (walking) {
+        this.playerControlled = true;
+      }
+    }
+
+    if (this.inWorld && this.leaning) {
+      const walking = this.leanWalkIntent() || Boolean(this.fpsControls && (
+        this.fpsControls.moveForward || this.fpsControls.moveBackward ||
+        this.fpsControls.moveLeft || this.fpsControls.moveRight ||
+        this.fpsControls.velocity.lengthSq() > 0.001
+      ));
+      if (walking) {
+        this.leaveLean({ walked: true });
+        this.playerControlled = true;
+      }
     }
 
     if (this.keysDirty) this.placeKeys();
@@ -3065,11 +3098,18 @@ export class BenchViewer3D {
     this.readingsSnap = null;
     this.keyGroups = [];
     this.onKeyPress = null;
-    this.domElement.removeEventListener('pointerdown', this._onPointerDown);
+    if (this._pointerTarget) {
+      this._pointerTarget.removeEventListener('pointerdown', this._onPointerDown);
+      this._pointerTarget.removeEventListener('wheel', this._onWheel);
+      this._pointerTarget = null;
+    }
+    if (this.domElement && this.domElement !== this._pointerTarget) {
+      this.domElement.removeEventListener('pointerdown', this._onPointerDown);
+      this.domElement.removeEventListener('wheel', this._onWheel);
+    }
     window.removeEventListener('pointermove', this._onPointerMove);
     window.removeEventListener('pointerup', this._onPointerUp);
     window.removeEventListener('pointercancel', this._onPointerCancel);
-    this.domElement.removeEventListener('wheel', this._onWheel);
     this.grabbables = [];
     this.grabbing = null;
     this.clearStations();

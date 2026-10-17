@@ -483,7 +483,8 @@ export function createRunner(container, ctx, cfg) {
         onLeanChange: leaning => frame.setLeaning(leaning),
         onCarry: label => frame.setCarry(label),
         // A quest with no world under it stands its table in a room of its own (`rooms.js`).
-        room: cfg.room
+        room: cfg.room,
+        startStanding: built
       });
     }
     tabletop.setState(state.table);

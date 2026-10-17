@@ -232,10 +232,12 @@ export class Table3D extends BenchViewer3D {
       const pad = this.map.metres(foePadOf(state.bounds).r * 2);
       zones.push({ x0: z.x1 - pad, x1: z.x1, z0: z.z0 - FOE_HEADROOM_M, z1: z.z0 });
     }
+    this.leanZones = zones;
     if (first) {
-      this.leanIn({ zones });
+      if (!this.opts.startStanding) {
+        this.leanIn({ zones });
+      }
     } else if (rebuilt) {
-      this.leanZones = zones;
       if (this.leaning) this.leanIn({});
     }
   }
