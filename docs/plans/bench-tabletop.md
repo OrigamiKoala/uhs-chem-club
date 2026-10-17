@@ -1,6 +1,6 @@
 # Bench Tabletop — benches you work with your hands, not machines you answer
 
-**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); **T1b built** (Ligar `q1-joins` + `q4-dots`, the Lewis slate; **T1 is complete and waits on the user's review**, which the user has asked us to proceed past); **T2a built** (the card kit, Tallow `q3-catalogue` + `q4-ledger`, the cooler's field point); T2b (`q5-assay`, `q6-weigh`, `boss-hopper`) and T2c (Kettle) next; T3 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
+**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); **T1b built** (Ligar `q1-joins` + `q4-dots`, the Lewis slate; **T1 is complete and waits on the user's review**, which the user has asked us to proceed past); **T2a built** (the card kit, Tallow `q3-catalogue` + `q4-ledger`, the cooler's field point); **T2b built** (the mass kit, Tallow `q5-assay` + `q6-weigh` + `boss-hopper`, the hopper's and the sack's field points, the foe's corner of the table); T2c (Kettle) next; T3 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
 **This plan now carries the rest of `bench-integration.md`.** That plan's P0–P4 are done (bay contract,
 Tallow, Ligar, Lanternfall); its P5 (Bellows), P6 (Ember Reach) and P7 (records, stills, site copy) are
 folded in here as phases T5–T7, so each remaining world is re-laid and re-benched once, not twice.
@@ -831,4 +831,44 @@ Tallow's, Ligar's and Lanternfall's are described.
     TAKE COOLER DRAW` appears when you point at it; lean in again and a second reference sample is on the table. Stage 1: drag protons and neutrons into "The
     middle", electrons into "Outside" and watch the needle; stage 5: electrons off the third shell into "Taken off" (the shell trays print `n/8`); stage 7: the
     ions' charges are printed on their shoulders and the pad's needle sums them. At T3 and below the same stages draw flat on the deck.
-
+- 2026-10-17: **T2b built** (second third of T2: the mass kit, Tallow `q5-assay`, `q6-weigh` and `boss-hopper`, field points on hosts 5 and 6, the foe on the table).
+  Nothing here is browser-tested. T2c owes Kettle `q1-recipe` and `boss-golem`, then T2 is complete.
+  - **Mass kit** (`table/kits/mass.js`, id `mass`, extends the atom kit; registered in `kits/index.js`). Honest by construction: a balance weighs, never divides, and
+    every number comes from the pure planners (`assay.js` `planPour` for tallies, `packBin` for piles) and the listed masses (`listedMass`, `speciesMass`).
+    Pieces: `sample` (props `bins [{mass, n}]`, `note`, `code`, `sealed`; its face prints tallies per bin) and `crate` (props `species`, `n` | `grams`, `sealed`).
+    Fixtures: `assay` (props `slot`, dial `pivot`, Run "Tip Sample"; beam moment is Σ n(m − pivot), level when |net| ≤ 1e-6 of the total), `coder` (Run "Read
+    Code", dial `bin`), `balance` (two pans as containers or a `mix`, atom counters per pan, LEVEL lamp, unit `u` = particles or `g` = grams, counter = grams / M x
+    6.02e23), `scale` (one pan, Run "Weigh", feeds the recorder), `mixer` (dial `heavy` of a fixed total) and `tally` (a dial). Builders: `balanceTable({unit,
+    counters, refCrate, drum, steps, capacity, ...})`, `crate()`, `pourSteps()`. Read-outs for the checks: `assayRead`, `mixRead`, `panLoad`, `balanceRead`,
+    `scaleRead`, `counterOf`, `massOfSample`, `countOfSample`. A pour moves one step of a species from a drum (`table.opts.steps`).
+  - **Core changes.** A kit `run` may return `{noop: reason}`; the reducer fails the action with that reason and the runner shows it. Containers take a `cell`
+    (a scoop's size). `state.tools` (not the kit's list) names the keys the stage offers. `layout.js` gained `FOE_PAD` / `foePadOf(bounds)` (the foe's corner:
+    r 11.5, 12 in) and `FOE_HEADROOM_M`.
+  - **Foe on the table.** A fight stage declares `foes: [{id, label}]` and keeps the corner pad clear (`verify:table` holds every zone, fixture, strip, plate and
+    piece off it). `table3d.js` `foeSpots(n)` seats `FoeLayer3D` bodies in the pad (so a new phase moves the foe), pushes a headroom zone onto the lean zones, and a
+    press on the pad takes nothing. The frame shows a one-line foe plate in the strip. The foe only observes; misses cost Integrity as before.
+  - **Quests.** `q5-assay` (8 stages): tip and read code; the share in a bin; the fulcrum finds a listed mass (Cl 35.5); boron 10.8; a one-pile prediction token;
+    the sealed canister against the mixer dial (heavy = 4); which listed tray; natural or altered. `q6-weigh` (8): carbon crate against pours of 50; build CH₄ on a
+    scale; sixty atoms each of H, C, O on a line; **oxygen pour to match 12 g of carbon's counter (the mole is discovered)**; CO₂; the water drum into scoops;
+    hydrogen to match 36 g of water; drums railed by atoms. `boss-hopper` (5 phases): sort, build a neutral atom, slot a card, balance slag, count a drum; each
+    keeps its `encounter {species, act, intent, hit?, counter?}`. All three lines are gone from `tools/table-legacy.json`.
+  - **Field points** (`three/tallow/stations.js`, real parts of the hosts with `host:` ids): `hopper` "Hopper Draw" (a scoop across the third catch bin of host 5,
+    stand 1.45 m in front) and `sack` "Counted Sack" (host 6's bagging line, stand 2.1 m in front). `verify:tallow` holds both to walkable ground, a clear stand and
+    a solid point; `verify:bench` plays stage 1 of q5 and q6 through the registered point and the drawn site plate (T1 to T3). Hosts 5 and 6 and the Hopper's arena
+    needed no geometry change: their lean, sight and view clearances were already green and `tools/bay-legacy.json` has no Tallow line; the Hopper's tables are
+    built in their own room, so `BOSS_ARENA_SPOTS['boss-hopper']` is unchanged.
+  - **Checks.** `verify:table`: the foe pad on every fight stage. `verify:learn` ("the mass tables"): each sample is a whole pile the planner pours as declared and
+    every graded answer is recomputed from `planPour` and the listed masses. `verify:bench`: all stages at seven viewports through the pointer path, plus "the
+    Hopper on its tables" (foe extents inside the pad, clear of furniture and the free glass, <= 16000 triangles, reactions, miss lunge, disperse, knock-back,
+    relocation between phases).
+  - **Deviations from §4.** (1) `q5` s2 asks the share by abundance trays (25/50/75 in 100), not a typed number; s1 shows the answer as a tray. (2) `q6` s2 is an
+    atom-sized 120 x 64 table with a scratch corner; s6 grades a tally dial (0 to 8, answer 4) beside the scoops. (3) The boss's per-bin `moves` were dropped (no bins
+    widget), and each phase has one foe. (4) The mass tables have no scratch corner. (5) **Deferred: the assay beam, the balance and the scale are painted on the
+    plate (host materials) but have no standing 3D geometry or instanced piles (`fixture3d`)**; the pictures are the same as T2d would draw. Also deferred:
+    `fixture3d`, a recorder on the mass tables, and sound.
+  - **For the user to look at in a browser, per bench.** Tallow, 3D On. **Bench 5** (`Bench 5 - Atomic Mass`, weigh hopper under the belt's discharge): lean in, the
+    assay beam and trays fill the glass, the hopper's belt above; point at the scoop on the third catch bin for `[E] TAKE HOPPER DRAW`, carry it, and the extra
+    sample appears. Stage 3: drag the fulcrum dial and watch the beam tilt; LEVEL lights when the piles balance. **Bench 6** (`Bench 6 - Counting by Weight`, sack
+    scale and elevator): the balance with two pans, drum and counters; `[E]` at the counted sack on the bagging line; stage 4 pour oxygen scoops until the counters
+    match. **Boss arena** (The Hopper): the hopper's body sits in the table's top-left corner pad, clear of the pieces; check it re-seats at each of the five
+    phases, tilts on a miss and disperses on a win. Check all three at 375 px landscape and a desktop.
