@@ -39,7 +39,7 @@ import { BenchViewer3D, engravedPlaque, AMBER, PHOSPHOR } from './bench3d.js';
 import { benchHost, guideTo } from './bench-host.js';
 import { getKit, radiusOf } from '../table/kits/index.js';
 import { SIZES, rectOf } from '../table/snap.js';
-import { plateMap, fixtureLayout, pieceTargets } from '../table/layout.js';
+import { plateMap, fixtureLayout, pieceTargets, foePadOf } from '../table/layout.js';
 import { TableGestures, pendingFetch } from '../table/gestures.js';
 import { lineOf, readY } from '../table/recorder.js';
 import { drawTable, faceOf } from './table2d.js';
@@ -210,10 +210,13 @@ export class Table3D extends BenchViewer3D {
     this.syncSheet();
     this.syncPieces();
     this.syncJoins();
-    this.keys.render(state, this.toolIds);
+    this.keys.render(state, state.tools || this.toolIds);
     this.settleToTargets(this.reduced || first || rebuilt);
 
     this.syncGuide();
+
+    // A fight's foe stands in the table's corner pad: it moves with the board it stands on.
+    if (rebuilt && this.foes?.enc) this.foes.dirty = true;
 
     // The stage's table is the part of the plate in use: frame that.
     const zones = [this.map.zone];
@@ -893,6 +896,20 @@ export class Table3D extends BenchViewer3D {
     if (!u) return;
     if (this.gestures.pourFrom) { this.gestures.pourFrom = null; this.repaintGround(); }
     this.gestures.tapTarget(u);
+  }
+
+  /**
+   * Where a stage that is a fight stands its foes: in the table's own corner pad (`table/layout.js` `FOE_PAD`),
+   * on the plate, which is inside the frame the camera leans to and covers no piece. In the viewer's frame; null
+   * until the table has a board.
+   */
+  foeSpots(n = 1) {
+    if (!this.map || !this.state) return null;
+    const pad = foePadOf(this.state.bounds);
+    return Array.from({ length: n }, (_, i) => {
+      const p = this.map.toPlate({ x: pad.x, y: pad.y + i * pad.r * 2 });
+      return { x: p.x, y: GROUND_Y, z: p.z };
+    });
   }
 
   /** Take a field item: it rides in the carry slot until the player is back at the bench. */

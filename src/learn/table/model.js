@@ -175,7 +175,9 @@ export function createTable(spec, seedKey = '') {
   for (const c of z.containers || []) {
     s.zones.containers[c.id] = {
       id: c.id, label: c.label || c.id, at: { ...c.at }, size: { ...SIZES.container, ...(c.size || {}) },
-      capacity: c.capacity ?? null, contents: { ...(c.contents || {}) }
+      capacity: c.capacity ?? null, contents: { ...(c.contents || {}) },
+      // A container for big pieces (a crate in a pan) declares its own pitch, as a tray does.
+      ...(c.cell ? { cell: c.cell } : {})
     };
   }
   if (z.rail) {
@@ -410,6 +412,8 @@ const HANDLERS = {
     if (!s.fixtures[id]) return fail('no such fixture');
     const row = kit.run(s, id);
     if (s.prediction?.token) s.prediction.tested = true;
+    // A run that could not be done says why (`noop`): a sample tipped twice, a scale with nothing on it.
+    if (row?.noop) return fail(row.noop);
     if (!row) return fail('it read nothing');
     // A reading can also be written on the thing that was read (`stamp: {pieceId: props}`):
     // a tag on a sample that has been tested. The kit says; the reducer only writes.

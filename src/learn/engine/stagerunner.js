@@ -448,6 +448,7 @@ export function createRunner(container, ctx, cfg) {
     // else answers (a stage that grades the reason itself sets `table.opts.explain: false`).
     const last = state.table.last;
     if (last?.verb && last.joined === false && last.reason && state.table.opts?.explain !== false) frame.note(last.reason);
+    else if (last?.verb === 'run' && last.ok === false && last.reason) frame.note(last.reason);
     else if (last?.joined === true || last?.verb === 'split') frame.clearBanner();
     tabletop?.setState?.(state.table);
     cfg.onWidgetChange?.(runner);

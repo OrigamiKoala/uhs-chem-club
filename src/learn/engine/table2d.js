@@ -333,7 +333,8 @@ export class Table2D extends PlateBench {
     this.railGap = null;
     const box = this.plates[0]?.canvas?.parentElement;
     if (box?.style) box.style.aspectRatio = `${state.bounds.w} / ${state.bounds.h}`;
-    this.keys.render(state, this.toolIds);
+    // The keys are the table's own tools (a quest's stages may list different ones; a boss's do).
+    this.keys.render(state, state.tools || this.toolIds);
     if (first) this.layoutAll(); else this.drawAll();
     this.startAnim();
   }
