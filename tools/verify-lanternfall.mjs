@@ -452,6 +452,68 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
       }
       check(found, `${site.id}: a player can walk from the spawn to the bench's approach`, `${site.id}: its approach mark is sealed off from the spawn`);
     }
+    /* THE FIELD POINTS (plan §2.5). A field stage sends the player to a spot on the camp, so each spot is held to what a place
+       the player is sent to owes them: it belongs to a host and is a real piece of it (something solid stands at the point), the
+       place to stand is clear of every collider, level with the ground under the point and joined to the spawn on foot, the point
+       is inside [E] reach from there, and the guide's way (a straight line from the bench's approach) is open ground. */
+    {
+      const { fieldPointsOf } = await import('../src/three/field-points.js');
+      const points = fieldPointsOf(built);
+      check(points.some(p => p.id === 'flume' && p.siteId === 'site-1'), 'the "flume" point feeds site-1 (the wave flume)',
+        'no "flume" field point feeds site-1: q1-wave sends the player to the flume\'s chart recorder');
+      const bad = [];
+      for (const p of points) {
+        const site = world.sites.find(s => s.id === p.host);
+        if (!site) { bad.push(`${p.id}: names host ${p.host}, which is not a site (a point is a piece of a host)`); continue; }
+        if (p.siteId !== site.id || !p.label) bad.push(`${p.id}: no label or the wrong bench`);
+        const near = Math.hypot(p.pos[0] - site.pos[0], p.pos[2] - site.pos[2]);
+        if (near > 12) bad.push(`${p.id}: ${near.toFixed(1)} m from its bench, too far to be this host's own`);
+        const [sx, , sz] = p.stand;
+        if (blocked(sx, sz)) bad.push(`${p.id}: the place to stand is inside a collider`);
+        if (!blocked(p.pos[0], p.pos[2])) bad.push(`${p.id}: nothing solid stands at the point, so it is not a piece of its host`);
+        const g1 = built.getTerrainHeight(sx, sz);
+        const g2 = built.getTerrainHeight(p.pos[0], p.pos[2]);
+        if (Math.abs(g1 - g2) > 0.3 || p.pos[1] - g2 < 0.2 || p.pos[1] - g2 > 2.4) bad.push(`${p.id}: the floor to stand on is not level with the point, or the point floats`);
+        const d = Math.hypot(sx - p.pos[0], sz - p.pos[2]);
+        if (d > p.reach - 0.5) bad.push(`${p.id}: the stand is ${d.toFixed(1)} m from the point, outside its ${p.reach} m reach`);
+        if (!seen[idx(Math.floor((sx - MIN) / CELL), Math.floor((sz - MIN) / CELL))]) bad.push(`${p.id}: the place to stand is on ground the walk cannot reach from the spawn`);
+        // The chevron leads straight from the bench's approach to the stand: every half metre of that line is open ground.
+        const [ax, az] = [site.approachPos[0], site.approachPos[2]];
+        const L = Math.hypot(sx - ax, sz - az);
+        for (let t = 0; t <= L; t += 0.5) {
+          const x = ax + (sx - ax) * t / (L || 1), z = az + (sz - az) * t / (L || 1);
+          if (!seen[idx(Math.floor((x - MIN) / CELL), Math.floor((z - MIN) / CELL))]) { bad.push(`${p.id}: the way from the approach to the stand crosses ground the walk cannot reach at (${x.toFixed(1)}, ${z.toFixed(1)})`); break; }
+        }
+      }
+      check(bad.length === 0, `${points.length} field point(s): each is a piece of its host, with a clear, level place to stand inside reach, reachable on foot, and an open way to it`,
+        `field points:\n         ${bad.join('\n         ')}`);
+    }
+
+    /* A TABLE IS WORKED BY ITS LAMP. Under a clear sky there is still the work lantern over every plate whose quest is a tabletop,
+       a `lampMark` in the pool (so the world's light count does not grow): it hangs over the plate, within its width and depth. */
+    {
+      const { allQuests } = await import('../src/learn/curriculum.js').catch(() => ({ allQuests: () => [] }));
+      const tableQuests = [];
+      for (const q of allQuests().filter(x => x.status === 'live' && x.key.startsWith('unit02/'))) {
+        const mod = await q.module();
+        if ((mod.STAGES || []).length && mod.STAGES.every(st => st.widget?.type === 'table')) tableQuests.push(q.key.split('/')[1]);
+      }
+      const bad = [];
+      for (const site of world.sites.filter(s => tableQuests.includes(s.questId))) {
+        const g = built.siteMarkers.get(site.questId).group;
+        g.updateMatrixWorld(true);
+        const inv = new THREE.Matrix4().copy(g.matrixWorld).invert();
+        const over = built.lamps.some(m => {
+          const p = new THREE.Vector3();
+          m.getWorldPosition(p);
+          p.applyMatrix4(inv);
+          return Math.abs(p.x) < 2.4 && p.z > -1.4 && p.z < 1.0 && p.y > 2.4 && p.y < 4.2;
+        });
+        if (!over) bad.push(`${site.id} (${site.questId}): no lamp hangs over the plate`);
+      }
+      check(bad.length === 0, `every bench whose quest is a tabletop (${tableQuests.length}) has a lamp over its plate`, `tables with no lamp:\n         ${bad.join('\n         ')}`);
+    }
+
     // And the pad: the ship's ramp comes down onto ground the walk can reach.
     const pad = world.landmarks.find(l => l.asset === 'landing-pad');
     {

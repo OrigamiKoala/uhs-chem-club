@@ -1170,7 +1170,9 @@ const dialStage = id => stagesOf(id).reduce((a, b) => {
   return dials(b) > dials(a) ? b : a;
 });
 
-const LF_BENCHES = [
+// A quest that has become a tabletop (T4a: q1-wave, q2-photon, q3-lines) is measured with the real table stages below;
+// what stays here is the instruments some Lanternfall quest still plays (the light bench keeps the cuvette and the Eater's room).
+const LF_BENCHES_ALL = [
   ['q1-wave', 'light bench (waves)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })],
   ['q2-photon', 'light bench (photocell)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })],
   ['q3-lines', 'light bench (spectra)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })],
@@ -1181,6 +1183,7 @@ const LF_BENCHES = [
   ['q8-trends', 'electron bench (atoms)', (c, a) => new ElectronBench3D(null, { world: worldFrame(c, a) })],
   ['q9-absorb', 'light bench (cuvette)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })]
 ];
+const LF_BENCHES = LF_BENCHES_ALL.filter(([id]) => !LF[id].STAGES.every(st => st.widget?.type === 'table'));
 
 {
   const mark = failures;
@@ -1190,7 +1193,7 @@ const LF_BENCHES = [
       check(id, `${label}, dial stage`, build, bench => lay(bench, dialStage(id)));
     }
   }
-  if (failures === mark) ok(`all nine Lanternfall instruments frame every body and control at ${ASPECTS.length} aspects`);
+  if (failures === mark) ok(`all ${LF_BENCHES.length} Lanternfall instruments still played frame every body and control at ${ASPECTS.length} aspects`);
 }
 
 /* EVERY STAGE, THROUGH THE REAL POINTER PATH. */

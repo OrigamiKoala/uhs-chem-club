@@ -1847,24 +1847,182 @@ async function checkDrawn(q, mod) {
   const near = (a, b, tol, what) => { if (Math.abs(a - b) > tol) fail(`${what}: graded ${a}, the real figure is ${b.toFixed(3)}`); };
 
   if (q1) {
-    near(q1.SOLUTIONS[2].decimal, (D.nmToHz(400) * 400e-9) / 1e8, 0.01, 'unit02/q1-wave stage 3 (speed of light, x 10^8)');
-    near(q1.SOLUTIONS[3].decimal, D.nmToHz(600) / 1e14, 0.26, 'unit02/q1-wave stage 4 (frequency of 600 nm)');
-    near(q1.SOLUTIONS[7].decimal, D.nmToHz(589) / 1e14, 0.06, 'unit02/q1-wave stage 8 (sodium)');
-    // The lamps in stage 3 must all give the one product, or the stage teaches nothing.
-    for (const rig of q1.STAGES[2].rigs) near((D.nmToHz(rig.nm) * rig.nm * 1e-9) / 1e8, 3, 0.01, `unit02/q1-wave stage 3 ${rig.id}`);
-    const order = q1.STAGES[4].rigs.slice().sort((a, b) => b.nm - a.nm).map(r => r.id).join();
-    if (order !== q1.SOLUTIONS[4].order.join()) fail('unit02/q1-wave stage 5: the graded order is not lowest frequency first');
+    // THE FIRST LANTERNFALL TABLE (`q1-wave`, the optics kit): every figure a stage grades is the planner's, read off the table.
+    const OPT = await import('../src/learn/table/kits/optics.js');
+    const same = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+    const holds = (c, what) => { if (!c) fail(what); };
+    const start = i => TABLE.createTable(q1.STAGES[i].table, q1.STAGES[i].title);
+    const end = i => TABLE.runScript(start(i), q1.SOLUTIONS[i], { strict: true });
+    const ref = (t, id) => OPT.waveRead(t, id);
+    // 1. the lamp on the dial the solution leaves it at makes more crests a second than Sample A; the dial it starts at does not
+    {
+      const e = end(0);
+      holds(ref(e, 'l').plan.hz > ref(e, 'a').plan.hz, 'unit02/q1-wave stage 1: the lamp does not make more crests a second than Sample A');
+      const placed = TABLE.runScript(start(0), [q1.SOLUTIONS[0][2]], { strict: true });
+      holds(ref(placed, 'l').plan.hz <= ref(placed, 'a').plan.hz, 'unit02/q1-wave stage 1: the lamp already beats Sample A on the dial it starts at');
+      holds(ref(e, 'l').plan.hz > ref(e, 'a').plan.hz && ref(e, 'l').nm < ref(e, 'a').nm, 'unit02/q1-wave stage 1: more crests a second is not closer crests');
+      // the flume's strip is a water wave: its own crest spacing and count
+      const f = TABLE.runScript(start(0), [{ fetch: 'flume' }, q1.SOLUTIONS[0][1]], { strict: true });
+      same(ref(f, 'l').kind, 'water', 'unit02/q1-wave stage 1 (the flume strip reads as a water wave)');
+    }
+    // 2. twice the crest spacing is half the crests a second, and the dial offers exactly that setting
+    {
+      const e = end(1);
+      same(ref(e, 'l').nm, ref(e, 'a').nm * 2, 'unit02/q1-wave stage 2 (twice the crest spacing)');
+      near(ref(e, 'l').plan.hz * 2, ref(e, 'a').plan.hz, ref(e, 'a').plan.hz * 1e-9, 'unit02/q1-wave stage 2 (half the crests a second)');
+      holds(q1.STAGES[1].table.fixtures[1].props.settings.includes(ref(e, 'a').nm * 2), 'unit02/q1-wave stage 2: the dial has no setting at twice the spacing');
+    }
+    // 3. a pulse is timed between two detectors by the planner, and the reading the solution sets is the speed that gap and time give
+    {
+      const e = end(2);
+      const row = e.recorder.rows[0];
+      holds(Boolean(row), 'unit02/q1-wave stage 3: firing the pulse recorded nothing');
+      near(D.pulseNs(row.x), row.y, 1e-9, 'unit02/q1-wave stage 3 (the pulse time is the planner\'s)');
+      near(row.x / (row.y * 1e-9) / 1e8, D.LIGHT_SPEED / 1e8, 0.05, 'unit02/q1-wave stage 3 (gap over time is the speed of light, x 10^8)');
+      same(e.fixtures.speed.dials.n.value, 3, 'unit02/q1-wave stage 3 (the reading is that speed)');
+      holds(start(2).fixtures.speed.dials.n.value !== 3, 'unit02/q1-wave stage 3: the reading starts on the answer');
+      for (const m of start(2).fixtures.rail.props.marks) near(D.pulseNs(m.metres) * 1e-9 * D.LIGHT_SPEED, m.metres, 0.03, `unit02/q1-wave stage 3 (the pulse over ${m.metres} m)`);
+    }
+    // 4. the two reference lamps give one product, and the reading is the frequency that product gives at 600 nm
+    {
+      const t = start(3);
+      for (const id of ['r1', 'r2']) near((D.nmToHz(t.pieces[id].props.nm) * t.pieces[id].props.nm * 1e-9) / 1e8, 3, 0.01, `unit02/q1-wave stage 4 (${id}'s product is the speed of light)`);
+      same(end(3).fixtures.freq.dials.n.value, 5, 'unit02/q1-wave stage 4 (the reading)');
+      near(5, D.nmToHz(600) / 1e14, 0.01, 'unit02/q1-wave stage 4 (frequency of 600 nm)');
+      holds(start(3).fixtures.freq.dials.n.value !== 5, 'unit02/q1-wave stage 4: the reading starts on the answer');
+    }
+    // 5. the rail runs from the lowest frequency to the highest, and a lamp's frequency is the planner's
+    {
+      const t = start(4);
+      const lamps = ['a', 'b', 'c', 'd'].map(id => [id, t.pieces[id].props.nm]);
+      const lowest = lamps.slice().sort((x, y) => y[1] - x[1]).map(x => x[0]).join();
+      same(end(4).zones.rail.order.join(), lowest, 'unit02/q1-wave stage 5 (lowest frequency first)');
+      for (let k = 1; k < lamps.length; k++) holds(D.nmToHz(lamps.slice().sort((x, y) => y[1] - x[1])[k][1]) > D.nmToHz(lamps.slice().sort((x, y) => y[1] - x[1])[k - 1][1]), 'unit02/q1-wave stage 5: a shorter wavelength is not a higher frequency');
+    }
+    // 6. each lamp is under the strip the planner says picks it up, and each strip is the one the band lights
+    {
+      const t = start(5);
+      const e = end(5);
+      for (const id of ['a', 'b', 'c']) {
+        const nm = t.pieces[id].props.nm;
+        same(e.pieces[id].zone, `tray:${OPT.pickedUpBy(nm) === 'eye' ? 'eye' : OPT.pickedUpBy(nm) === 'infrared' ? 'ir' : 'uv'}`, `unit02/q1-wave stage 6 (lamp ${id} at ${nm} nm)`);
+        const read = OPT.bandRead(TABLE.runScript(t, [{ place: { piece: id, to: 'slot:band.src' } }], { strict: true }), 'band');
+        same([read.uv, read.ir, read.shape === 'lines'], [OPT.pickedUpBy(nm) === 'ultraviolet', OPT.pickedUpBy(nm) === 'infrared', OPT.pickedUpBy(nm) === 'eye'], `unit02/q1-wave stage 6 (what the band lights for ${nm} nm)`);
+      }
+    }
+    // 7. a source's frequency is the speed of light over its wavelength, and it stands under the tray that figure is printed on
+    {
+      const t = start(6);
+      const e = end(6);
+      for (const id of ['radio', 'micro', 'xray']) {
+        const hz = D.nmToHz(t.pieces[id].props.nm);
+        const label = t.zones.trays[e.pieces[id].zone.slice(5)].label;
+        const m = /^([\d.]+) x 10\^(\d+)/.exec(label);
+        const printed = Number(m[1]) * 10 ** Number(m[2]);
+        holds(Math.abs(printed / hz - 1) < 0.05, `unit02/q1-wave stage 7: ${id} is under "${label}" but its frequency is ${hz.toExponential(2)}`);
+      }
+      holds(['f8', 'f9', 'f18'].every(id => t.zones.trays[id]), 'unit02/q1-wave stage 7: a tray is missing');
+    }
+    // 8. the lamp in the slot makes 5.1 x 10^14 a second; the other does not
+    {
+      const t = start(7);
+      const e = end(7);
+      const chosen = e.pieces[OPT.seated(e, 'match').id];
+      near(D.nmToHz(chosen.props.nm) / 1e14, 5.1, 0.06, 'unit02/q1-wave stage 8 (the chosen lamp\'s frequency)');
+      const other = ['a', 'b'].find(id => id !== chosen.id);
+      holds(Math.abs(D.nmToHz(t.pieces[other].props.nm) / 1e14 - 5.1) > 0.3, 'unit02/q1-wave stage 8: both lamps are near 5.1');
+      holds(q1.STAGES[7].table.fixtures[0].props.rate === false, 'unit02/q1-wave stage 8: the screen prints the frequency, so the stage is only a reading');
+    }
   }
   if (q2) {
-    near(q2.SOLUTIONS[4].decimal, D.photonJoules(500) / 1e-19, 0.26, 'unit02/q2-photon stage 5 (photon energy at 500 nm)');
-    const worked = D.photonJoules(539) / 1e-19;
-    if (!q2.STAGES[4].reference.some(t => t.includes(worked.toFixed(2)))) fail('unit02/q2-photon stage 5: the worked check is not the real photon energy at 539 nm');
+    // THE SECOND LANTERNFALL TABLE (`q2-photon`, the optics kit): the cup and the meters are `planPhotocell`, read off the table.
+    const OPT = await import('../src/learn/table/kits/optics.js');
+    const same = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+    const holds = (c, what) => { if (!c) fail(what); };
+    const start = i => TABLE.createTable(q2.STAGES[i].table, q2.STAGES[i].title);
+    const end = i => TABLE.runScript(start(i), q2.SOLUTIONS[i], { strict: true });
+    const sweep = (i, metal, brightness = 3) => q2.STAGES[i].table.fixtures[0].props.settings.map(n => D.planPhotocell(metal, n, brightness));
     const wake = ['cs', 'na', 'zn'].map(m => D.thresholdNm(m[0].toUpperCase() + m[1]));
     if (!(wake[0] > wake[1] && wake[1] > wake[2])) fail('unit02/q2-photon: the work functions do not order cesium < sodium < zinc');
-    // Stage 2's dial must have exactly one first setting that frees an electron.
-    const st = q2.STAGES[1].settings;
-    const first = st.findIndex(n => D.planPhotocell('Na', n, 3).count > 0) + 1;
-    if (first !== q2.SOLUTIONS[1].setting) fail(`unit02/q2-photon stage 2: the first freeing setting is ${first}, not the graded one`);
+    // 1. red at full brightness frees nothing; the solution frees something, and it is not the brightest lamp
+    {
+      const t = start(0);
+      const f = t.fixtures.cell;
+      holds(!D.planPhotocell('Na', f.props.settings[f.dials.colour.value - 1], f.dials.brightness.value).freed, 'unit02/q2-photon stage 1: the lamp already frees electrons where it starts');
+      const r = OPT.cellRead(end(0), 'cell');
+      holds(r.freed && r.metal === 'Na', 'unit02/q2-photon stage 1: the solution does not free electrons from sodium');
+      holds(r.brightness < f.dials.brightness.value && r.nm < f.props.settings[0], 'unit02/q2-photon stage 1: the solution is not dimmer and bluer than the start');
+    }
+    // 2. exactly one first setting frees an electron, and the dial finds it
+    {
+      const p = sweep(1, 'Na');
+      const first = p.findIndex(x => x.count > 0) + 1;
+      same(end(1).fixtures.cell.dials.colour.value, first, 'unit02/q2-photon stage 2 (the first freeing setting)');
+      holds(p.slice(0, first - 1).every(x => x.count === 0) && p.slice(first).every(x => x.count > 0), 'unit02/q2-photon stage 2: electrons do not leave at every setting from the threshold on');
+    }
+    // 3. brightness sets the number and not the speed
+    {
+      const f = start(2).fixtures.cell;
+      const lo = D.planPhotocell('Na', 400, f.dials.brightness.value);
+      const e = OPT.cellRead(end(2), 'cell');
+      same(e.count, lo.count * 2, 'unit02/q2-photon stage 3 (twice the count)');
+      same(e.speed, lo.speed, 'unit02/q2-photon stage 3 (the same speed)');
+      holds(lo.count > 0, 'unit02/q2-photon stage 3: the lamp frees nothing at the start');
+    }
+    // 4. frequency sets the speed and not the number; one setting reads the speed the prompt names
+    {
+      const p = sweep(3, 'Na');
+      const freeing = p.filter(x => x.count > 0);
+      holds(freeing.every((x, k) => k === 0 || x.speed > freeing[k - 1].speed), 'unit02/q2-photon stage 4: the speed does not rise with frequency');
+      holds(new Set(freeing.map(x => x.count)).size === 1, 'unit02/q2-photon stage 4: the count changes with frequency');
+      const eights = p.map((x, k) => [Math.abs(x.speed - 8) < 0.05, k + 1]).filter(([ok]) => ok).map(([, k]) => k);
+      same(eights, [end(3).fixtures.cell.dials.colour.value], 'unit02/q2-photon stage 4 (the one setting that reads 8 x 10^5 m/s)');
+      holds(/8 x 10\^5/.test(q2.STAGES[3].prompt), 'unit02/q2-photon stage 4: the prompt does not name the speed the check grades');
+      same(end(3).recorder.rows.length, 1, 'unit02/q2-photon stage 4 (a reading was recorded)');
+    }
+    // 5. the plaque's worked check is the real photon energy at 539 nm and the reading is the energy at 500 nm
+    {
+      const lines = start(4).fixtures.card.props.lines;
+      const worked = D.photonJoules(539) / 1e-19;
+      holds(lines.some(t => t.includes(worked.toFixed(2))), 'unit02/q2-photon stage 5: the worked check is not the real photon energy at 539 nm');
+      holds(lines.some(t => t.includes(`${(D.PLANCK / 1e-34).toFixed(3)} x 10^-34`)), 'unit02/q2-photon stage 5: the plaque does not print the real h');
+      holds(lines.some(t => t.includes(`${(D.nmToHz(500) / 1e14).toFixed(2)} x 10^14`)), 'unit02/q2-photon stage 5: the plaque does not print the frequency at 500 nm');
+      near(end(4).fixtures.energy.dials.n.value, D.photonJoules(500) / 1e-19, 0.26, 'unit02/q2-photon stage 5 (photon energy at 500 nm)');
+      holds(start(4).fixtures.energy.dials.n.value !== end(4).fixtures.energy.dials.n.value, 'unit02/q2-photon stage 5: the reading starts on the answer');
+    }
+    // 6. the plate that wakes at the lowest frequency has the loosest grip, and the rail runs that way
+    {
+      const t = start(5);
+      const settings = t.fixtures.cell.props.settings;
+      const first = m => D.planPhotocell(m, 1, 1) && settings.findIndex(n => D.planPhotocell(m, n, 3).freed) + 1;
+      const order = ['Cs', 'Na', 'Zn'].sort((x, y) => first(x) - first(y)).map(m => m.toLowerCase());
+      same(end(5).zones.rail.order, order, 'unit02/q2-photon stage 6 (loosest grip first)');
+      holds(['Cs', 'Na', 'Zn'].every(m => first(m) > 0), 'unit02/q2-photon stage 6: a plate never wakes on the dial');
+      holds(new Set(['Cs', 'Na', 'Zn'].map(first)).size === 3, 'unit02/q2-photon stage 6: two plates wake at the same setting');
+      same(end(5).recorder.rows.map(r => r.label), ['Cs', 'Na', 'Zn'], 'unit02/q2-photon stage 6 (a reading for each plate)');
+      for (const m of ['Cs', 'Na', 'Zn']) near(D.METALS[m].work, D.METALS[m].work, 0, `${m}'s work function is the table's`);
+    }
+    // 7. a lamp is in the first tray exactly when its photons carry the work function of zinc
+    {
+      const t = start(6);
+      const e = end(6);
+      for (const id of ['a', 'b', 'c']) {
+        const frees = D.planPhotocell('Zn', t.pieces[id].props.nm, t.fixtures.cell.props.brightness).freed;
+        same(e.pieces[id].zone, frees ? 'tray:yes' : 'tray:no', `unit02/q2-photon stage 7 (lamp ${id} at ${t.pieces[id].props.nm} nm)`);
+        const read = OPT.cellRead(TABLE.runScript(t, [{ place: { piece: id, to: 'slot:cell.lamp' } }], { strict: true }), 'cell');
+        same(read.freed, frees, `unit02/q2-photon stage 7 (what the cup does for lamp ${id})`);
+      }
+      holds(['a', 'b', 'c'].some(id => D.planPhotocell('Zn', t.pieces[id].props.nm, 5).freed) && ['a', 'b', 'c'].some(id => !D.planPhotocell('Zn', t.pieces[id].props.nm, 5).freed), 'unit02/q2-photon stage 7: every lamp is in one tray');
+    }
+    // 8. red frees nothing from zinc at any brightness, and the prediction is that
+    {
+      const t = start(7);
+      const settings = t.fixtures.cell.props.settings;
+      for (let b = 1; b <= 5; b++) holds(!D.planPhotocell('Zn', settings[0], b).freed, `unit02/q2-photon stage 8: red frees zinc at brightness ${b}`);
+      holds(D.planPhotocell('Zn', settings[3], 3).freed, 'unit02/q2-photon stage 8: not even the shortest setting frees zinc');
+      same(end(7).prediction.token, 'none', 'unit02/q2-photon stage 8 (the prediction)');
+      holds(end(7).prediction.tested, 'unit02/q2-photon stage 8: the solution never ran the test');
+    }
   }
   if (q3) {
     near(q3.SOLUTIONS[4].decimal, D.photonJoules(486) / 1e-19, 0.06, 'unit02/q3-lines stage 5 (486 nm line)');

@@ -756,8 +756,8 @@ for (const q of live) {
     if (failures === before) ok(`${label}: starts shuffled, ends "${first}" / "${last}", dragging and two taps both reach the answer`);
   });
 }
-// 14 until q3-distance's two became table rails (T3a), 12 until q9-orbitals' one (T3c); the number goes down as each remaining quest converts.
-const ORDER_STAGES_LEFT = 11;
+// 14 until q3-distance's two became table rails (T3a), 12 until q9-orbitals' one (T3c), 11 until q1-wave's one and 10 until q2-photon's (T4a); the number goes down as each remaining quest converts.
+const ORDER_STAGES_LEFT = 9;
 if (rails !== ORDER_STAGES_LEFT) fail(`expected ${ORDER_STAGES_LEFT} order stages across the built quests, found ${rails}`);
 else ok(`${rails} order stages are rails`);
 

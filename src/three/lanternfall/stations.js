@@ -261,14 +261,34 @@ export function buildWaveTank(w, site) {
     k.box(g, [1.2 * s, 0.6 * s, 0.9 * s], M.carved, [x, 0.3 * s, z], [0, r, 0], true);
   }
 
+  // THE CREST RECORDER: a chart recorder on a post in front of the flume's gutter, its pen riding a float in the water through a slot in
+  // the glass and drawing the surface on a paper strip. The strip it feeds out is the field point: `[E]` takes a length of the chart, and
+  // the same wave, drawn in water, is on the bench's table. A real piece of this host, to the right of the bay.
+  {
+    const RX = 3.7, RZ = -2.2;
+    k.footing(g, RX, RZ, 0.3);
+    k.cyl(g, [0.04, 0.05, 0.85, 8], M.darkSteel, [RX, 0.46, RZ], null, true);
+    k.box(g, [0.62, 0.34, 0.34], M.caseDark, [RX, 1.08, RZ], null, true);
+    k.box(g, [0.48, 0.1, 0.02], M.paper, [RX, 1.0, RZ + 0.18]);            // the strip, fed out of the case's lip
+    k.box(g, [0.5, 0.012, 0.16], M.paper, [RX, 0.93, RZ + 0.27], [-0.5, 0, 0]);
+    k.strut(g, [RX, 1.2, RZ - 0.17], [RX, 1.55, Z0 + 1.2], 0.018, M.darkSteel);   // the arm to the float in the water
+    k.cyl(g, [0.07, 0.07, 0.05, 10], M.steel, [RX, 1.36, Z0 + 1.2]);
+    k.tag(g, 'CHART 1', { w: 0.42, h: 0.16 }, [RX, 1.14, RZ + 0.18]);
+  }
+  const fieldPoints = [{
+    id: 'flume', label: 'Flume Strip', lx: 3.7, ly: 1.0, lz: -2.0, half: [0.42, 0.4, 0.4],
+    stand: { lx: 4.1, lz: -1.0 }
+  }];
+
   const colliders = [
     { lx: 0, lz: Z0, hw: 5.95, hd: 1.6 },
     { lx: 6.9, lz: Z0, hw: 0.45, hd: 0.45 },
     { lx: -6.3, lz: Z0, r: 0.25 }, { lx: 6.3, lz: Z0, r: 0.25 },
     { lx: -4.8, lz: -6.6, r: 0.42 },
+    { lx: 3.7, lz: -2.2, hw: 0.4, hd: 0.25 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
-  return { group: g, bench, benchLocal: [0, 0, 0], colliders };
+  return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
 /* ======================================================================

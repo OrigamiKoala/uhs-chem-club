@@ -33,6 +33,12 @@ export function photonEv(nm) { return photonJoules(nm) / EV; }
 /** Wavelength, in nm, of a photon carrying `joules`. */
 export function joulesToNm(joules) { return (PLANCK * LIGHT_SPEED) / joules * 1e9; }
 
+/**
+ * How long, in nanoseconds, light takes to cross `metres` of empty space. The pulse timer on the optical rail reads this and
+ * nothing else: a player divides the distance they set by the time it prints, and gets the speed of light back.
+ */
+export function pulseNs(metres) { return Number(((metres / LIGHT_SPEED) * 1e9).toFixed(1)); }
+
 /** Is this wavelength one the eye answers to? */
 export function isVisible(nm) { return nm >= VISIBLE.min && nm <= VISIBLE.max; }
 
@@ -228,6 +234,21 @@ export function jumpForLine(nm) {
     if (Math.abs(planJump(hi, 2).nm - nm) < 3) return { hi, lo: 2 };
   }
   return null;
+}
+
+/**
+ * Every jump between two rungs of the ladder (rungs 1 to `top`) that makes a line within `tol` nm of `nm`, highest rung first;
+ * empty when no pair of rungs gives it. `jumpForLine` answers only for the jumps that land on rung 2; this asks of all of them,
+ * so "does any drop make this line?" has an honest answer for a line of any other gas.
+ */
+export function jumpsForLine(nm, tol = 3, top = 6) {
+  const out = [];
+  for (let hi = top; hi >= 2; hi--) {
+    for (let lo = hi - 1; lo >= 1; lo--) {
+      if (Math.abs(planJump(hi, lo).nm - nm) < tol) out.push({ hi, lo });
+    }
+  }
+  return out;
 }
 
 /* ------------------------------------------------------------------
