@@ -1,38 +1,43 @@
 /**
  * q5-assay.js — Tallow, site five: THE WEIGHT ON THE CARD.
  *
- * The fifth bench on Tallow. A sample is tipped down a chute, a deflector sorts
- * its atoms by weight into bins, and a balance weighs a whole sample without
- * opening it. It answers the question the catalogue left lying there: a single
- * atom always has a whole-number mass, and almost none of the listed masses are
- * whole numbers.
+ * The fifth bench on Tallow, and the fifth on the TABLETOP (plan `bench-tabletop.md`,
+ * phase T2): the mass kit (`table/kits/mass.js`) on the weigh hopper under the belt's discharge.
+ * A sample card is dropped in the chute and tipped; its atoms land in bins by weight, and a beam
+ * lies under the piles on a fulcrum the player slides along the ruler. The beam lies level where
+ * the fulcrum sits at the average weight of the atoms: the weighted average is a balance point,
+ * found with the hand and never printed. It answers the question the catalogue left lying there:
+ * a single atom always has a whole-number mass, and almost none of the listed masses are whole
+ * numbers.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  tip one kind and watch it split in two  -> A sample is a mix of isotopes
- *   2  run two samples of the same stock       -> Abundance
- *   3  put the listed mass against the bins    -> The listed mass is an average
- *   4  do the weighting on a fresh sample      -> Average atomic mass
- *   5  a sample that lands in one bin          -> Why some masses are whole
- *   6  a sealed sample, weighed whole          -> The average pins the mix
- *   7  name three unlabelled samples           -> The mass names the element
- *   8  three claims of the same stock          -> The mass is a fingerprint
+ *   1  tip one kind and read the code of each bin -> A sample is a mix of isotopes
+ *   2  tip two samples of the same stock          -> Abundance
+ *   3  slide the fulcrum under the piles         -> The listed mass is an average
+ *   4  do the balancing on a fresh sample        -> Average atomic mass
+ *   5  predict a sample that lands in one bin    -> Why some masses are whole
+ *   6  balance a sealed canister with a made-up mix -> The average pins the mix
+ *   7  name three unlabelled samples             -> The mass names the element
+ *   8  three claims of the same stock            -> The mass is a fingerprint
  *   -- debrief: what a listed mass really is, and what comes after Tallow.
  *
  * WHAT THIS BENCH DOES NOT DO. It never counts a heap too large to count, and
  * it never converts a weight into a number of atoms. Counting by weighing —
- * the mole, molar mass and Avogadro's number — belongs to Ligar, and a unit
- * that has only just met the weighted average has no business being handed it.
+ * the mole, molar mass and Avogadro's number — belongs to the next bench, and a unit
+ * that has only just met the weighted average has no business being handed it. Nor does
+ * any instrument here divide: a beam compares, a fulcrum balances, a bin counts.
+ *
+ * FIELD (stage 1). A draw can be taken from the weigh hopper's catch bins: the field point
+ * is a real piece of the host (`tallow/stations.js` `buildWeighHopper`). It is evidence, never a
+ * lock: the stage is answered with the bench's own Sample A, and at T1 to T3 the same fetch is a
+ * drawn site plate.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { AssayFloor } from '../../engine/instruments.js';
-import { LearnFrame, toolNotes } from '../../engine/frame.js';
-import { dialMarkup, bindDial, paintDial } from '../../engine/dial.js';
-import { drawSeesaw } from '../../engine/visual-devices.js';
-import { esc } from '../../../ui/layout.js';
-import { soundscape } from '../../../audio/soundscape.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { massTable, assayRead, balanceRead, mixRead } from '../../table/kits/mass.js';
 
 export const meta = { stageCount: 8 };
 
@@ -49,8 +54,6 @@ export const VOCABULARY = [
 
 const SPEAKER = 'Vess';
 
-const MIX_NAMES = Object.fromEntries(Array.from({ length: 11 }, (_, i) => [i + 1, `${i * 10} heavy in 100`]));
-
 /* ------------------------------------------------------------------
    THE LISTED MASSES
    The figures the player charted at site three, kept here as the bench's
@@ -63,52 +66,59 @@ export const CARD_MASS = {
   'chlorine': 35.5
 };
 
-/* ------------------------------------------------------------------
-   THE KEY LEGEND
-
-   THIS FLOOR HAS NOTHING TO EXPLAIN, AND SAYS NOTHING.
-
-   Tip Sample tips the sample. Read Code reads the code. Weigh Sample
-   weighs the sample. A line under each key restating its own label is
-   not a legend, it is noise between the player and the bench, and it
-   was here for all three. A legend earns its place only where a key
-   does something its label does not say; none of these do.
-   ------------------------------------------------------------------ */
-const TOOL_TEXT = {};
+/**
+ * THIS TABLE HAS NOTHING TO EXPLAIN, AND SAYS NOTHING. "Tip Sample" tips the sample, "Read Code"
+ * reads the code, and the fulcrum is a triangle under a beam. A legend restating a key's own label is
+ * noise between the player and the bench. Kept so the quest contract (`toolNoteFor`) holds.
+ */
+export function toolNoteFor() { return null; }
 
 /**
- * The legend line for one control on one stage, or null if there is none.
- * `stageNumber` is one-based, the way a player counts stages.
+ * The average weight of one atom in a set of bins. NOT WHAT ANY INSTRUMENT ON THIS TABLE REPORTS, AND
+ * THAT IS THE POINT: a beam compares and the fulcrum is found by hand. This is the arithmetic the
+ * balance point equals, written once so a check that refuses a fulcrum and a recomputation in
+ * `verify:learn` cannot drift apart.
  */
-export function toolNoteFor(controlId, stageNumber) {
-  const rows = TOOL_TEXT[controlId];
-  if (!rows) return null;
-  let out = null;
-  for (const r of rows) if (stageNumber >= r.from) out = r;
-  return out ? { key: out.key, what: out.what } : null;
-}
-
-/**
- * The average weight of one piece in a hopper.
- *
- * NOT WHAT THE BALANCE REPORTS, AND THAT IS THE POINT. A balance weighs; the
- * division is the player's. This is kept because it is the arithmetic every
- * stage from four on is grading against, and having it written once means a
- * hint rung that quotes a figure and a check that refuses one cannot drift
- * apart from each other.
- */
-export function averageOf(hopper) {
-  const bins = hopper.bins || [];
-  const count = bins.reduce((n, b) => n + b.n, 0);
+export function averageOf(bins) {
+  const count = (bins || []).reduce((n, b) => n + b.n, 0);
   if (!count) return 0;
-  const mass = bins.reduce((m, b) => m + b.mass * b.n, 0);
-  return Math.round((mass / count) * 100) / 100;
+  return Math.round(((bins || []).reduce((m, b) => m + b.mass * b.n, 0) / count) * 100) / 100;
 }
+
+/* ------------------------------------------------------------------
+   THE TABLES
+   One layout (150 x 72 units): the chute and the loose samples down the left, the assay across the top
+   (the chute's sorter with its piles, ruler, beam and fulcrum), and trays or the other instruments
+   along the bottom.
+   ------------------------------------------------------------------ */
+
+const SAMPLE_X = 14;
+const CHUTE = { id: 'chute', label: 'Chute', at: { x: SAMPLE_X, y: 14 }, size: { w: 20, h: 17 } };
+
+/** A sample card: a hopper of salvage with its declared bins. */
+const sample = (id, label, bins, at, props = {}) => ({
+  id, kind: 'sample', label, at, props: { bins, note: `${bins.reduce((n, b) => n + b.n, 0)} atoms`, ...props }
+});
+
+const assayFixture = (box, extra = {}) => ({
+  id: 'assay', kind: 'assay', label: 'Assay', runLabel: 'Tip Sample', at: box.at, size: box.size, props: { slot: 'chute' }, ...extra
+});
+
+/** The fulcrum: a dial along the ruler, which is the track the knob slides on. */
+const fulcrum = (min, max, value) => ({ pivot: { min, max, step: max - min > 6 ? 0.5 : 0.1, value, label: 'Fulcrum' } });
+
+const trayAt = (id, label, x, y, w, cell = 19, h = 22) => ({ id, label, at: { x, y }, size: { w, h }, cell });
+
+const CL = [{ mass: 35, n: 30 }, { mass: 37, n: 10 }];
+const NE = [{ mass: 20, n: 36 }, { mass: 22, n: 4 }];
+const B = [{ mass: 10, n: 8 }, { mass: 11, n: 32 }];
+
+const trayOf = (t, id) => (t.pieces[id].zone || '').replace('tray:', '');
+const chuteSample = t => assayRead(t, 'assay');
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
-   Exported so `verify:learn` can run SOLUTIONS and MISSES through every
-   `check` without a browser.
+   Exported so `verify:learn` and `verify:table` can run SOLUTIONS and MISSES through every `check`.
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -116,38 +126,38 @@ export const STAGES = [
     title: 'Tip It Out',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench sorts atoms down a chute into separate bins by weight. Use "Tip Sample" to pour atoms and "Read Code" to inspect the atoms in each bin.'
+      body: 'This bench sorts atoms down a chute into bins by weight. Drop a sample in the chute and press "Tip Sample", then read the code of a bin with "Read Code".'
     },
-    prompt: 'Why does the chlorine sample split across two bins instead of landing in one?',
-    controls: ['pour', 'code'],
-    hoppers: [
-      { id: 'h1', label: 'SAMPLE A', code: 'chlorine', note: '40 atoms, sealed at the mine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
-    ],
-    reference: ['chlorine — listed mass 35.5'],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 'mixed', label: 'Two different elements got mixed together', note: 'Two elements in one sample.' },
-        { id: 'weights', label: 'One element, with atoms of two different weights', note: 'Same element, two weights.' },
-        { id: 'fault', label: 'The deflector is broken', note: 'It split a sample that is really all one weight.' }
-      ]
-    },
+    prompt: 'Tray Sample A by how many elements its atoms belong to.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [
+        sample('a', 'SAMPLE A', CL, { x: SAMPLE_X, y: 34 }, { code: 'chlorine' }),
+        { ...sample('draw', 'HOPPER DRAW', CL, { x: SAMPLE_X, y: 49 }, { code: 'chlorine' }), hidden: true, fetchFrom: 'hopper' }
+      ],
+      zones: {
+        slots: [CHUTE],
+        trays: [trayAt('one', 'One element', 88, 56, 38), trayAt('two', 'Two elements', 130, 56, 38)]
+      },
+      fixtures: [
+        assayFixture({ at: { x: 69, y: 23 }, size: { w: 82, h: 42 } }),
+        {
+          id: 'coder', kind: 'coder', label: 'Code', runLabel: 'Read Code', at: { x: 127, y: 23 }, size: { w: 34, h: 42 },
+          props: { assay: 'assay' }, dials: { bin: { min: 1, max: 2, step: 1, value: 1, label: 'Bin' } }
+        }
+      ],
+      fetch: [{ id: 'hopper', label: 'Hopper draw', at: { x: SAMPLE_X, y: 65 } }]
+    }),
     hints: [
-      'Press "Tip Sample", then tap a bin and press "Read Code", and do the same on the other bin.',
-      'The bins are marked 35 and 37, so compare the two names to see whether the atoms are different elements.',
-      'If both bins read the same name the atoms are one element in two weights, and if the names differ they are two elements.'
+      'Drop Sample A in the chute and press "Tip Sample".',
+      'Turn the "Bin" dial to each bin in turn, press "Read Code", and compare what the two bins say.',
+      'If both bins read the same name the atoms are one element, and if the two names differ they are two elements.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
-      }
-      if (state.choice === 'mixed') {
-        return { ok: false, msg: 'Read the name in each bin and compare them: two elements would read two different names.' };
-      }
-      if (state.choice === 'fault') {
-        return { ok: false, msg: 'A broken deflector would scatter the atoms instead of sorting them into two tidy bins.' };
-      }
+      const t = state.table;
+      const here = trayOf(t, 'a');
+      if (!['one', 'two'].includes(here)) return { ok: false, notYet: true, msg: 'Sample A has no tray yet.' };
+      if (here === 'two') return { ok: false, msg: 'Read the code on each bin and compare: two elements would read two different names.' };
       return { ok: true };
     },
     reward: {
@@ -160,34 +170,36 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Run It Twice',
-    prompt: 'How many atoms out of every 100 fall into the lighter weight bin?',
-    controls: ['pour'],
-    hoppers: [
-      { id: 'h1', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
-      { id: 'h2', label: 'SAMPLE B', note: '80 atoms', bins: [{ mass: 35, n: 60 }, { mass: 37, n: 20 }] }
-    ],
-    reference: ['chlorine — listed mass 35.5'],
-    widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Lighter bin, per hundred atoms' },
+    prompt: 'Tray each sample under how many of its atoms in every hundred land in the lighter bin.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [
+        sample('a', 'SAMPLE A', CL, { x: SAMPLE_X, y: 34 }),
+        sample('b', 'SAMPLE B', [{ mass: 35, n: 60 }, { mass: 37, n: 20 }], { x: SAMPLE_X, y: 49 })
+      ],
+      zones: {
+        slots: [CHUTE],
+        trays: [
+          trayAt('s25', '25 in every 100', 47, 56, 34, 17),
+          trayAt('s50', '50 in every 100', 85, 56, 34, 17),
+          trayAt('s75', '75 in every 100', 123, 56, 34, 17)
+        ]
+      },
+      fixtures: [assayFixture({ at: { x: 87, y: 19 }, size: { w: 114, h: 34 } })]
+    }),
     hints: [
-      'Tap a sample to select it, press "Tip Sample", then do the same for the other one.',
-      'Sample A drops 30 of its 40 atoms into the 35 bin, and Sample B drops 60 of its 80.',
-      'Divide the lighter bin\'s tally by the sample\'s total and multiply by 100, then do the same on the other sample to check they agree.'
+      'Drop a sample in the chute and press "Tip Sample", then do the same with the other sample.',
+      'Read the tally over the lighter bin and the number of atoms on the card, for each sample.',
+      'Divide the lighter bin\'s tally by the sample\'s total and scale it to a hundred, then check that both samples agree.'
     ],
     check(state) {
-      if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'Set the counter to the share you measured.' };
-      }
-      if (state.number === 30) {
-        return { ok: false, msg: 'That is a count, not a share: 30 atoms out of 40.' };
-      }
-      if (state.number === 25) {
-        return { ok: false, msg: 'That is the heavier bin\'s share, and the question asks about the lighter bin.' };
-      }
-      if (state.number === 50) {
-        return { ok: false, msg: 'An even split would put the same number in each bin. Compare the two tallies.' };
-      }
-      if (state.number !== 75) {
-        return { ok: false, msg: 'Divide the lighter bin\'s tally by the sample\'s total, then scale that to a hundred.' };
+      const t = state.table;
+      const mine = { a: trayOf(t, 'a'), b: trayOf(t, 'b') };
+      const names = { a: 'Sample A', b: 'Sample B' };
+      for (const id of ['a', 'b']) if (!['s25', 's50', 's75'].includes(mine[id])) return { ok: false, notYet: true, msg: `${names[id]} has no tray yet.` };
+      for (const id of ['a', 'b']) {
+        if (mine[id] === 's25') return { ok: false, msg: `${names[id]}'s tray is the heavier bin's share, and the question asks about the lighter bin.` };
+        if (mine[id] === 's50') return { ok: false, msg: `An even split would put the same number in each bin. Compare ${names[id]}'s two tallies.` };
       }
       return { ok: true };
     },
@@ -201,39 +213,28 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where 35.5 Sits',
-    prompt: 'Where does the listed mass of 35.5 fall relative to the two isotope masses?',
-    controls: ['pour'],
-    hoppers: [
-      { id: 'h1', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] }
-    ],
-    reference: ['chlorine — listed mass 35.5'],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 'half', label: 'Halfway between them', note: 'Halfway from 35 to 37 is 36.' },
-        { id: 'light', label: 'Near 35, because most of the atoms weigh 35', note: 'The common weight pulls it down.' },
-        { id: 'heavy', label: 'Near 37, because heavy atoms count for more', note: 'Weight decides, not how many.' },
-        { id: 'wrong', label: 'Nowhere — 35.5 is simply wrong', note: 'No atom weighs 35.5.' }
+    prompt: 'Find the point where Sample A\'s piles balance on the beam.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [sample('a', 'SAMPLE A', CL, { x: SAMPLE_X, y: 34 })],
+      zones: { slots: [CHUTE] },
+      fixtures: [
+        { id: 'plate', kind: 'plate', label: 'Listed', at: { x: SAMPLE_X, y: 56 }, size: { w: 24, h: 16 }, noRun: true, props: { lines: ['chlorine', 'listed mass', '35.5'] } },
+        assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(34.5, 37.5, 36) })
       ]
-    },
+    }),
     hints: [
-      'Tip it, then read the number on each bin and the tally above it.',
-      'Halfway between 35 and 37 is 36, and 35.5 is not 36, so compare how many atoms landed in each bin.',
-      'Check which side of 36 the listed mass falls on, then check which of the two bins holds more atoms.'
+      'Drop Sample A in the chute, press "Tip Sample", then slide the "Fulcrum" dial along the ruler.',
+      'Watch which end of the beam dips as the fulcrum moves, and where it lies level.',
+      'The beam lies level where the fulcrum is as far from the weight of the atoms on one side as from the other side\'s, counting every atom.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
-      }
-      if (state.choice === 'half') {
-        return { ok: false, msg: 'Halfway between 35 and 37 is 36, and the listed mass is 35.5.' };
-      }
-      if (state.choice === 'heavy') {
-        return { ok: false, msg: 'A heavy atom counts once, the same as a light one. Compare 35.5 with the halfway point and with where most of the atoms landed.' };
-      }
-      if (state.choice === 'wrong') {
-        return { ok: false, msg: '35.5 is not the weight of one atom; it is the average over all of them.' };
+      const r = chuteSample(state.table);
+      if (!r.sample || !r.poured) return { ok: false, notYet: true, msg: 'Tip Sample A into the chute, then slide the fulcrum.' };
+      if (!r.level) {
+        return { ok: false, msg: r.net > 0
+          ? 'The beam dips on the heavy-weight side: the fulcrum sits too far from that side.'
+          : 'The beam dips on the light-weight side: the fulcrum sits too far from that side.' };
       }
       return { ok: true };
     },
@@ -247,28 +248,25 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Work Out the Average',
-    prompt: 'What is the average atomic mass of this boron sample?',
-    controls: ['pour'],
-    hoppers: [
-      { id: 'h3', label: 'SAMPLE A', note: '40 atoms, nothing listed for it', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
-    ],
-    reference: ['boron — listed mass missing'],
-    widget: { type: 'decimal', min: 10.0, max: 11.0, step: 0.1, label: 'Average weight of one atom' },
+    prompt: 'Find the point where this boron sample balances on the beam.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [sample('a', 'SAMPLE A', B, { x: SAMPLE_X, y: 34 }, { note: '40 atoms, nothing listed for it' })],
+      zones: { slots: [CHUTE] },
+      fixtures: [assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(9.5, 11.5, 10.5) })]
+    }),
     hints: [
-      'Press "Tip Sample" and read the tally over each bin.',
-      'Turn each bin\'s tally into a share of the whole sample: its tally divided by the total number of atoms.',
-      'Multiply each bin\'s weight by its share, then add the two results together.'
+      'Drop the sample in the chute, press "Tip Sample", and slide the "Fulcrum" dial until the beam lies level.',
+      'Read the tally over each bin and notice which pile is the bigger.',
+      'Multiply each bin\'s weight by its share of the atoms and add the two results, then check that the fulcrum agrees.'
     ],
     check(state) {
-      const v = state.decimal;
-      if (v === 10.0) {
-        return { ok: false, notYet: true, msg: 'Set the dial to the figure you worked out.' };
-      }
-      if (v === 10.5) {
-        return { ok: false, msg: '10.5 is the plain middle of 10 and 11, but the two bins did not catch equal numbers.' };
-      }
-      if (Math.abs(v - 10.8) > 0.001) {
-        return { ok: false, msg: `${v.toFixed(1)} does not fit the tallies. Multiply each bin\'s weight by its share of the atoms and add the two.` };
+      const r = chuteSample(state.table);
+      if (!r.sample || !r.poured) return { ok: false, notYet: true, msg: 'Tip the sample into the chute, then slide the fulcrum.' };
+      if (!r.level) {
+        const middle = (r.bins[0].mass + r.bins[r.bins.length - 1].mass) / 2;
+        if (r.pivot === middle) return { ok: false, msg: 'The plain middle of the two weights is not where it balances, because the two bins did not catch equal numbers.' };
+        return { ok: false, msg: 'The beam still dips. Weigh each pile by how many atoms stand in it, and keep sliding until it lies level.' };
       }
       return { ok: true };
     },
@@ -282,35 +280,33 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Only One Bin',
-    prompt: 'Why does fluorine have a whole-number atomic mass of 19.0?',
-    controls: ['pour'],
-    hoppers: [
-      { id: 'h4', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 19, n: 40 }] }
-    ],
-    reference: ['fluorine — listed mass 19.0'],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 'one', label: 'Every atom weighs the same, so there is nothing to average', note: 'One weight in, one weight out.' },
-        { id: 'round', label: 'Somebody rounded the number off', note: 'The real figure has decimals.' },
-        { id: 'fault', label: 'The deflector failed to split them', note: 'A split is being missed.' }
-      ]
-    },
+    prompt: 'Predict where the beam will balance under this fluorine sample, then test it.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [sample('a', 'SAMPLE A', [{ mass: 19, n: 40 }], { x: SAMPLE_X, y: 34 })],
+      zones: { slots: [CHUTE] },
+      fixtures: [
+        { id: 'plate', kind: 'plate', label: 'Listed', at: { x: SAMPLE_X, y: 56 }, size: { w: 24, h: 16 }, noRun: true, props: { lines: ['fluorine', 'listed mass', '19.0'] } },
+        assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(18, 20, 19.6) })
+      ],
+      prediction: {
+        slot: { id: 'predict', label: 'It will balance', at: { x: 61, y: 62 }, size: { w: 30, h: 14 } },
+        tokens: [
+          { id: 't-pile', label: 'At the pile\'s weight', at: { x: 99, y: 62 }, r: 7.2 },
+          { id: 't-between', label: 'Between two weights', at: { x: 131, y: 62 }, r: 7.2 }
+        ]
+      }
+    }),
     hints: [
-      'Tip it and count how many bins caught anything at all.',
-      'Compare how this sample lands with how the last two did, which split across two bins.',
-      'Work out the average of a set of atoms that all weigh the same, and ask whether any decimal could come out of it.'
+      'Drop a prediction in its slot, then drop Sample A in the chute and press "Tip Sample".',
+      'Count how many bins caught atoms, and compare with the last two samples, which landed in two.',
+      'Slide the "Fulcrum" dial to where the beam lies level and see whether that place has a pile of its own.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the three answers.' };
-      }
-      if (state.choice === 'round') {
-        return { ok: false, msg: 'Nothing was rounded. Tip it and count how many bins caught anything, then work out what that does to the average.' };
-      }
-      if (state.choice === 'fault') {
-        return { ok: false, msg: 'The deflector split the earlier samples into two bins, so it is working fine.' };
+      const t = state.table;
+      if (!t.prediction.token) return { ok: false, notYet: true, msg: 'Drop a prediction in the slot: where will the beam balance?' };
+      if (t.prediction.token !== 't-pile') {
+        return { ok: false, msg: 'Test it: tip the sample, slide the fulcrum along the ruler and look at where the beam lies level and where the pile stands.' };
       }
       return { ok: true };
     },
@@ -326,32 +322,38 @@ export const STAGES = [
     title: 'Weighed Without Opening It',
     briefing: {
       speaker: SPEAKER,
-      body: 'You now have access to the bench balance. Press "Weigh Sample" to measure the total mass of the sealed canister without opening it.'
+      body: 'Two pans now hang from a beam, with a sealed canister on one. The mix dial makes up a pile of atoms on the other pan.'
     },
-    prompt: 'How many atoms out of 100 in this neon sample have a mass of 20 rather than 22?',
-    controls: ['balance', 'mix'],
-    hoppers: [
-      { id: 'h5', label: 'SAMPLE A', note: 'sealed, 40 atoms, bins cut for weights 20 and 22', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] }
-    ],
-    reference: ['neon — listed mass 20.2'],
-    widget: { type: 'number', min: 0, max: 100, step: 5, label: 'Weight 20, per hundred atoms' },
+    prompt: 'Balance the sealed canister with a mix of 40 atoms of weight 20 and weight 22.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [{ ...sample('can', 'CANISTER', NE, { x: 30, y: 54 }, { sealed: true, note: '40 atoms' }), fixed: true, zone: 'container:pan-l' }],
+      zones: { containers: [{ id: 'pan-l', label: 'Canister pan', at: { x: 30, y: 54 }, size: { w: 30, h: 26 }, cell: 30 }] },
+      fixtures: [
+        {
+          id: 'balance', kind: 'balance', label: 'Balance', at: { x: 75, y: 22 }, size: { w: 130, h: 34 }, noRun: true,
+          props: { unit: 'u', pans: { L: 'container:pan-l', R: { mix: 'mixer' } } }
+        },
+        {
+          id: 'mixer', kind: 'mixer', label: 'Mix', at: { x: 122, y: 54 }, size: { w: 46, h: 24 }, noRun: true,
+          props: { total: 40, light: { mass: 20 }, heavy: { mass: 22 } },
+          dials: { heavy: { min: 0, max: 10, step: 1, value: 0, label: 'Heavy atoms' } }
+        }
+      ]
+    }),
     hints: [
-      'Press "Weigh Sample", then try mixes of light and heavy atoms on the seesaw.',
-      'Slide the mix until the seesaw\'s balance point lines up with the weighed mark.',
-      'Read how many of every hundred atoms are heavy in the mix that lines up, and take that from the hundred.'
+      'Turn the "Heavy atoms" dial and watch the beam tip toward whichever pan is heavier.',
+      'The canister and the mix both hold 40 atoms, so only the weights of the atoms can set them apart.',
+      'Add heavy atoms one at a time and stop at the first mix where neither pan dips.'
     ],
     check(state) {
-      if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'Set the counter to the share you worked out.' };
-      }
-      if (state.number === 50) {
-        return { ok: false, msg: 'An even split would weigh 21 an atom. Weigh the sample and divide by its atoms to see how far it is from 21.' };
-      }
-      if (state.number === 10) {
-        return { ok: false, msg: 'That is the share of the heavy atoms, and the question asks about the light ones.' };
-      }
-      if (state.number !== 90) {
-        return { ok: false, msg: 'Work out how far along from 20 to 22 the weight per atom sits: that fraction of the atoms are the heavy ones.' };
+      const t = state.table;
+      const bal = balanceRead(t, 'balance');
+      if (mixRead(t, 'mixer').heavy === 0) return { ok: false, notYet: true, msg: 'The mix is all light atoms. Turn the dial and watch the beam.' };
+      if (!bal.level) {
+        return { ok: false, msg: bal.lean > 0
+          ? 'The mix pan is heavier than the canister: it holds too many heavy atoms.'
+          : 'The canister pan is heavier than the mix: the mix holds too few heavy atoms.' };
       }
       return { ok: true };
     },
@@ -365,88 +367,75 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Name Three Samples',
-    prompt: 'Match each unknown sample to the element whose listed atomic mass fits.',
-    controls: ['pour', 'balance'],
-    hoppers: [
-      { id: 'ha', label: 'SAMPLE A', note: 'unlabelled, 40 atoms', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] },
-      { id: 'hb', label: 'SAMPLE B', note: 'unlabelled, 40 atoms', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
-      { id: 'hc', label: 'SAMPLE C', note: 'unlabelled, 40 atoms', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
-    ],
-    reference: ['boron — listed mass 10.8', 'neon — listed mass 20.2', 'chlorine — listed mass 35.5'],
-    widget: {
-      type: 'bins',
-      rows: ['ha', 'hb', 'hc'],
-      bins: [
-        { id: 'c05', label: 'boron', note: 'Listed mass 10.8.' },
-        { id: 'c10', label: 'neon', note: 'Listed mass 20.2.' },
-        { id: 'c17', label: 'chlorine', note: 'Listed mass 35.5.' }
-      ]
-    },
+    prompt: 'Tray each unknown sample under the element whose listed mass it balances at.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [
+        sample('a', 'SAMPLE A', NE, { x: SAMPLE_X, y: 34 }),
+        sample('b', 'SAMPLE B', CL, { x: SAMPLE_X, y: 49 }),
+        sample('c', 'SAMPLE C', B, { x: SAMPLE_X, y: 64 })
+      ],
+      zones: {
+        slots: [CHUTE],
+        trays: [
+          trayAt('boron', 'Boron 10.8', 51, 56, 38),
+          trayAt('neon', 'Neon 20.2', 91, 56, 38),
+          trayAt('chlorine', 'Chlorine 35.5', 131, 56, 38)
+        ]
+      },
+      fixtures: [assayFixture({ at: { x: 87, y: 20 }, size: { w: 114, h: 36 } }, { dials: fulcrum(9, 38, 23.5) })]
+    }),
     hints: [
-      'Weigh each sample and divide what the balance reads by the number of atoms.',
-      'A weight per atom is what a listed mass on the plate is too, so the two can be compared directly.',
-      'Calculate total mass divided by 40 for each sample, then match each result to a plate.'
+      'Drop a sample in the chute, press "Tip Sample", and slide the "Fulcrum" dial until the beam lies level.',
+      'Compare the point where each sample balances with the listed masses on the trays.',
+      'The point where a sample balances is its average weight, and it sits at one tray\'s listed mass and no other\'s.'
     ],
     check(state) {
-      const want = { ha: 'c10', hb: 'c17', hc: 'c05' };
-      const labels = { ha: 'Sample A', hb: 'Sample B', hc: 'Sample C' };
-      for (const id of ['ha', 'hb', 'hc']) {
-        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
-      }
-      for (const id of ['ha', 'hb', 'hc']) {
-        if (state.bins[id] !== want[id]) {
-          return { ok: false, msg: `${labels[id]} is filed wrong — divide its total weight by its atom count and match the result.` };
-        }
+      const t = state.table;
+      const want = { a: 'neon', b: 'chlorine', c: 'boron' };
+      const names = { a: 'Sample A', b: 'Sample B', c: 'Sample C' };
+      for (const id of ['a', 'b', 'c']) if (!['boron', 'neon', 'chlorine'].includes(trayOf(t, id))) return { ok: false, notYet: true, msg: `${names[id]} has no tray yet.` };
+      for (const id of ['a', 'b', 'c']) {
+        if (trayOf(t, id) !== want[id]) return { ok: false, msg: `${names[id]} is filed wrong. Find where its piles balance and match that point to a tray's listed mass.` };
       }
       return { ok: true };
     },
     reward: {
       log: 'All three samples named off their weights.',
       title: 'The Mass Names the Element',
-      body: 'Every element has its own isotopes in its own proportions, so its average weight is as good as a name. No two listed masses are the same. Weighing a heap and dividing by the number of atoms named all three samples without opening any of them.'
+      body: 'Every element has its own isotopes in its own proportions, so its average weight is as good as a name. No two listed masses are the same. Balancing a heap named all three samples without opening any of them.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Claims',
-    prompt: 'Classify each sample as matching natural chlorine or having an altered isotope mix.',
-    controls: ['pour', 'balance'],
-    hoppers: [
-      { id: 'j1', label: 'SAMPLE A', note: 'sold as natural chlorine', bins: [{ mass: 35, n: 30 }, { mass: 37, n: 10 }] },
-      { id: 'j2', label: 'SAMPLE B', note: 'sold as natural chlorine', bins: [{ mass: 35, n: 20 }, { mass: 37, n: 20 }] },
-      { id: 'j3', label: 'SAMPLE C', note: 'sold as natural chlorine', bins: [{ mass: 35, n: 38 }, { mass: 37, n: 2 }] }
-    ],
-    reference: ['chlorine — listed mass 35.5'],
-    widget: {
-      type: 'bins',
-      rows: ['j1', 'j2', 'j3'],
-      bins: [
-        { id: 'natural', label: 'Natural chlorine', note: 'Its weight matches the listed mass.' },
-        { id: 'altered', label: 'Not natural', note: 'Its mix of isotopes has been changed.' }
-      ]
-    },
+    prompt: 'Tray each sample as natural chlorine or as having an altered mix of isotopes.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [
+        sample('a', 'SAMPLE A', CL, { x: SAMPLE_X, y: 34 }, { note: 'sold as natural' }),
+        sample('b', 'SAMPLE B', [{ mass: 35, n: 20 }, { mass: 37, n: 20 }], { x: SAMPLE_X, y: 49 }, { note: 'sold as natural' }),
+        sample('c', 'SAMPLE C', [{ mass: 35, n: 38 }, { mass: 37, n: 2 }], { x: SAMPLE_X, y: 64 }, { note: 'sold as natural' })
+      ],
+      zones: {
+        slots: [CHUTE],
+        trays: [trayAt('natural', 'Natural 35.5', 70, 56, 38), trayAt('altered', 'Not natural', 116, 56, 38)]
+      },
+      fixtures: [assayFixture({ at: { x: 87, y: 20 }, size: { w: 114, h: 36 } }, { dials: fulcrum(34.5, 37.5, 36) })]
+    }),
     hints: [
-      'Weigh all three: every one is chlorine, so the name will not tell them apart.',
-      'Natural chlorine is 75 atoms at weight 35 for every 25 at weight 37, which averages 35.5.',
-      'Divide each sample mass by 40 atoms to see which one equals the listed mass of 35.5.'
+      'Drop a sample in the chute, press "Tip Sample", and slide the "Fulcrum" dial until the beam lies level.',
+      'Every sample is chlorine, so the name will not tell them apart: compare where each one balances.',
+      'Natural chlorine balances at its listed mass, and a sample that balances anywhere else has had its mix changed.'
     ],
     check(state) {
-      const want = { j1: 'natural', j2: 'altered', j3: 'altered' };
-      const labels = { j1: 'Sample A', j2: 'Sample B', j3: 'Sample C' };
-      for (const id of ['j1', 'j2', 'j3']) {
-        if (!state.bins[id]) {
-          return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
-        }
-      }
-      if (state.bins.j1 !== want.j1) {
-        return { ok: false, msg: 'Sample A is filed wrong. Weigh it, divide by its 40 atoms, and compare the result with the listed mass.' };
-      }
-      if (state.bins.j2 !== want.j2) {
-        return { ok: false, msg: 'Sample B is filed wrong. Weigh it, divide by its 40 atoms, and compare the result with the listed mass.' };
-      }
-      if (state.bins.j3 !== want.j3) {
-        return { ok: false, msg: 'Sample C is filed wrong. Weigh it, divide by its 40 atoms, and compare the result with the listed mass.' };
+      const t = state.table;
+      const want = { a: 'natural', b: 'altered', c: 'altered' };
+      const names = { a: 'Sample A', b: 'Sample B', c: 'Sample C' };
+      for (const id of ['a', 'b', 'c']) if (!['natural', 'altered'].includes(trayOf(t, id))) return { ok: false, notYet: true, msg: `${names[id]} has no tray yet.` };
+      for (const id of ['a', 'b', 'c']) {
+        if (trayOf(t, id) !== want[id]) return { ok: false, msg: `${names[id]} is filed wrong. Find where its piles balance and compare that point with the listed mass.` };
       }
       return { ok: true };
     },
@@ -544,50 +533,42 @@ export const PRACTICE = [
 ];
 
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    ------------------------------------------------------------------ */
-function blankState(stage) {
-  return {
-    number: stage.widget.type === 'number' ? stage.widget.min : null,
-    decimal: stage.widget.type === 'decimal' ? stage.widget.min : null,
-    choice: null,
-    bins: {},
-    sample: null,
-    bin: null,
-    poured: new Set(),
-    weighed: new Set(),
-    coded: new Set(),
-    mix: 1
-  };
-}
 
-/** The floor state that solves each stage, in order. Checked by verify:learn. */
+const to = (piece, target) => ({ place: { piece, to: target } });
+const tip = piece => [to(piece, 'slot:chute'), { run: 'assay' }];
+const slide = value => ({ setDial: { fixture: 'assay', dial: 'pivot', value } });
+
+/** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  { poured: new Set(['h1']), coded: new Set(['h1:0', 'h1:1']), choice: 'weights' },
-  { poured: new Set(['h1', 'h2']), number: 75 },
-  { poured: new Set(['h1']), choice: 'light' },
-  { poured: new Set(['h3']), decimal: 10.8 },
-  { poured: new Set(['h4']), choice: 'one' },
-  { weighed: new Set(['h5']), number: 90 },
-  { weighed: new Set(['ha', 'hb', 'hc']), bins: { ha: 'c10', hb: 'c17', hc: 'c05' } },
-  { weighed: new Set(['j1', 'j2', 'j3']), bins: { j1: 'natural', j2: 'altered', j3: 'altered' } }
+  [{ fetch: 'hopper' }, ...tip('a'), { run: 'coder' }, { setDial: { fixture: 'coder', dial: 'bin', value: 2 } }, { run: 'coder' }, to('a', 'tray:one')],
+  [...tip('a'), ...tip('b'), to('a', 'tray:s75'), to('b', 'tray:s75')],
+  [...tip('a'), slide(35.5)],
+  [...tip('a'), slide(10.8)],
+  [{ predict: 't-pile' }, ...tip('a'), slide(19)],
+  [{ setDial: { fixture: 'mixer', dial: 'heavy', value: 4 } }],
+  [...tip('a'), slide(20), ...tip('b'), slide(35.5), ...tip('c'), slide(11), to('a', 'tray:neon'), to('b', 'tray:chlorine'), to('c', 'tray:boron')],
+  [...tip('a'), slide(35.5), ...tip('b'), slide(36), ...tip('c'), slide(35), to('a', 'tray:natural'), to('b', 'tray:altered'), to('c', 'tray:altered')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { poured: new Set(['h1']), coded: new Set(['h1:0', 'h1:1']), choice: 'mixed' },
-  { poured: new Set(['h1', 'h2']), number: 25 },
-  { poured: new Set(['h1']), choice: 'half' },
-  { poured: new Set(['h3']), decimal: 10.5 },
-  { poured: new Set(['h4']), choice: 'round' },
-  { weighed: new Set(['h5']), number: 10 },
-  { weighed: new Set(['ha', 'hb', 'hc']), bins: { ha: 'c05', hb: 'c17', hc: 'c10' } },
-  { weighed: new Set(['j1', 'j2', 'j3']), bins: { j1: 'natural', j2: 'natural', j3: 'altered' } }
+  [...tip('a'), { run: 'coder' }, { setDial: { fixture: 'coder', dial: 'bin', value: 2 } }, { run: 'coder' }, to('a', 'tray:two')],
+  [...tip('a'), ...tip('b'), to('a', 'tray:s75'), to('b', 'tray:s25')],
+  [...tip('a'), slide(36)],
+  [...tip('a'), slide(10.5)],
+  [{ predict: 't-between' }, ...tip('a'), slide(19)],
+  [{ setDial: { fixture: 'mixer', dial: 'heavy', value: 1 } }],
+  [...tip('a'), ...tip('b'), ...tip('c'), to('a', 'tray:boron'), to('b', 'tray:chlorine'), to('c', 'tray:neon')],
+  [...tip('a'), ...tip('b'), ...tip('c'), to('a', 'tray:natural'), to('b', 'tray:natural'), to('c', 'tray:altered')]
 ];
 
-/** Build a full floor state for stage `i` from one of the sets above. */
+function blankState() { return {}; }
+
+/** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  return { ...blankState(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -595,396 +576,10 @@ export function stateFor(i, overrides) {
    ================================================================== */
 
 export function mount(container, ctx) {
-  const frame = new LearnFrame(container, {
-    quest: ctx?.quest || { id: 'q5-assay' },
-    world: ctx?.world,
-    stageCount: STAGES.length,
-    rewards: STAGES.map(s => s.reward),
-    onSubmit: () => submit(),
-    onNext: () => next(),
-    onJump: i => loadStage(i),
-    onExit: () => ctx.exit()
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
-  const floor = new AssayFloor(frame.instrumentHost, {
-    onProbe: hit => onProbe(hit),
-    onSelect: id => onSelect(id)
-  });
-
-  let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
-  let cleared = ctx.isComplete ? STAGES.length : ctx.stagesCleared;
-  let state = null;
-  let busy = false;
-  let disposed = false;
-  let unbindMix = null;
-
-  /* ---------------- stage lifecycle ---------------- */
-
-  function loadStage(i) {
-    index = i;
-    const stage = STAGES[i];
-    state = blankState(stage);
-
-    frame.setCleared(cleared);
-    frame.setStage({
-      index: i,
-      title: stage.title,
-      prompt: stage.prompt,
-      briefing: stage.briefing,
-      hints: stage.hints,
-      commitLabel: stage.encounter?.act || 'Commit'
-    });
-
-    floor.setHoppers(stage.hoppers);
-    floor.setSelectable(stage.hoppers.length > 1);
-    if (stage.hoppers.length === 1) onSelect(stage.hoppers[0].id);
-
-    renderControls();
-    renderWidget();
-    renderReadout(null);
-
-    if (stage.briefing && !ctx.isComplete && cleared <= i) frame.showBriefing();
-  }
-
-  function next() {
-    if (index >= STAGES.length - 1) {
-      frame.showDebrief(DEBRIEF, () => ctx.exit());
-      return;
-    }
-    loadStage(index + 1);
-  }
-
-  function submit() {
-    if (busy) return;
-    const stage = STAGES[index];
-    const result = stage.check(state);
-    if (!result.ok) {
-      if (result.notYet) frame.note(result.msg);
-      else frame.miss(result.msg);
-      return;
-    }
-    frame.clearBanner();
-    if (index + 1 > cleared) {
-      cleared = index + 1;
-      ctx.reportStage(index);
-    }
-    frame.setCleared(cleared);
-    frame.clear(stage.reward);
-    if (index === STAGES.length - 1) ctx.reportComplete();
-  }
-
-  /* ---------------- floor controls ---------------- */
-
-  function renderControls() {
-    const stage = STAGES[index];
-    const parts = [];
-
-    if (stage.controls.includes('pour')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="pour">Tip Sample</button>');
-    }
-    if (stage.controls.includes('code')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="code">Read Code</button>');
-    }
-    if (stage.controls.includes('balance')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="balance">Weigh Sample</button>');
-    }
-    if (stage.reference?.length) {
-      parts.push(`
-        <div class="assay-extract">
-          <span class="form-label">Listed masses</span>
-          <ul>${stage.reference.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
-        </div>
-      `);
-    }
-    parts.push(toolNotes(
-      stage.controls.map(id => toolNoteFor(id, index + 1)).filter(Boolean)
-    ));
-
-    if (stage.controls.includes('mix')) {
-      parts.push(dialMarkup({ label: 'Try a mix', min: 1, max: 11, value: state.mix, id: 'mix-dial', scaleLabels: MIX_NAMES }));
-    }
-    frame.setControls(parts.join(''));
-    frame.el.controls.querySelectorAll('[data-tool]').forEach(btn => {
-      btn.addEventListener('click', () => runTool(btn.dataset.tool));
-    });
-    unbindMix?.();
-    unbindMix = stage.controls.includes('mix')
-      ? bindDial(frame.el.controls, { min: 1, max: 11, onChange: v => setMix(v) })
-      : null;
-    if (stage.controls.includes('mix')) paintDial(frame.el.controls, state.mix, { min: 1, max: 11, scaleLabels: MIX_NAMES });
-    paintDevice();
-  }
-
-  function setMix(v) {
-    state.mix = Math.max(1, Math.min(11, v));
-    paintDial(frame.el.controls, state.mix, { min: 1, max: 11, scaleLabels: MIX_NAMES });
-    soundscape.playToggleClack?.();
-    paintDevice();
-  }
-
-  /**
-   * THE SEESAW. The masses along a ruler, the atoms stacked at each, and a balance point
-   * where the average falls. On a tipped sample it is drawn from what landed; on stage 6
-   * it is drawn from the mix the player tries, and the sample leaves its own weighed mark.
-   * Neither is labelled with a figure.
-   */
-  function paintDevice() {
-    const stage = STAGES[index];
-    const hopper = hopperFor(state.sample) || stage.hoppers[0];
-    if (!hopper || hopper.bins.length < 2) { frame.setDevice(null); return; }
-    const mixing = stage.controls.includes('mix');
-    const live = floor.hoppers?.find(h => h.id === hopper.id);
-    const landed = live ? live.landed : [];
-    const poured = landed.some(n => n > 0);
-    if (!mixing && !poured) { frame.setDevice(null); return; }
-    const heavy = (state.mix - 1) * 10;
-    const counts = mixing ? [100 - heavy, heavy] : hopper.bins.map((b, i) => landed[i] || 0);
-    const total = counts.reduce((a, c) => a + c, 0);
-    const avg = total ? hopper.bins.reduce((m, b, i) => m + b.mass * (counts[i] || 0), 0) / total : null;
-    const declared = hopper.bins.reduce((n, b) => n + b.n, 0);
-    const mark = mixing && state.weighed.has(hopper.id)
-      ? hopper.bins.reduce((m, b) => m + b.mass * b.n, 0) / declared : null;
-    frame.setDevice((ctx, w, h) => drawSeesaw(ctx, 6, 6, w - 12, h - 12, hopper.bins.map((b, i) => ({ mass: b.mass, n: counts[i] || 0 })), avg, { mark }));
-  }
-
-  async function runTool(tool) {
-    if (busy) return;
-    if (!state.sample) {
-      frame.note('No sample selected. Tap one of the samples first.');
-      return;
-    }
-    const id = state.sample;
-    const hopper = hopperFor(id);
-
-    if (tool === 'code') {
-      if (state.bin === null) {
-        frame.note('Tap one of the bins first, then read it.');
-        return;
-      }
-      if (!floor.poured(id)) {
-        frame.note('That sample has not been tipped, so its bins are empty.');
-        return;
-      }
-      soundscape.playScanSweep?.();
-      if (!hopper.code) {
-        // The floor never invents a reading. A hopper whose code plate is gone
-        // gets an honest refusal, not a plausible code.
-        renderReadout(null, {
-          head: `Code // ${hopper.label}, bin ${state.bin + 1}`,
-          body: 'No code comes back from this sample. You will have to work out what it is from what it weighs.'
-        });
-        return;
-      }
-      state.coded.add(`${id}:${state.bin}`);
-      renderReadout(null, {
-        head: `Code // ${hopper.label}, bin ${state.bin + 1}`,
-        body: `Every atom in that bin is ${hopper.code}, and each one weighs ${hopper.bins[state.bin].mass}.`
-      });
-      return;
-    }
-
-    if (tool === 'balance') {
-      // A BALANCE WEIGHS. IT DOES NOT DIVIDE.
-      //
-      // It used to report the total, the count, the division and the answer,
-      // which handed the player every stage from six on: press the key, read
-      // 20.2 off the readout, find 20.2 on the reference plate, commit. The one
-      // piece of arithmetic this whole bench exists to teach was being done for
-      // them by the instrument. So it reports the two figures it actually
-      // measures and stops there.
-      const count = hopper.bins.reduce((n, b) => n + b.n, 0);
-      const mass = hopper.bins.reduce((m, b) => m + b.mass * b.n, 0);
-      state.weighed.add(id);
-      soundscape.playScanSweep?.();
-      paintDevice();
-      renderReadout(null, {
-        head: `Balance // ${hopper.label}`,
-        body: `${mass} in total, over ${count} atoms.`
-      });
-      return;
-    }
-
-    if (tool === 'pour') {
-      if (floor.poured(id)) {
-        frame.note(`${hopper.label} has already been tipped, and the tallies above its bins are still there.`);
-        return;
-      }
-      busy = true;
-      frame.clearBanner();
-      frame.setCommitEnabled(false);
-      const shot = await floor.pour(id);
-      state.poured.add(id);
-      paintDevice();
-      soundscape.playPylonWake?.();
-      renderReadout(null, {
-        head: `Chute // ${hopper.label}`,
-        body: `${shot.total} atoms landed: ${shot.totals.map((n, i) => `${n} at weight ${hopper.bins[i].mass}`).join(', ')}.`
-      });
-      busy = false;
-      frame.setCommitEnabled(true);
-    }
-  }
-
-  /* ---------------- floor queries ---------------- */
-
-  function hopperFor(id) {
-    return STAGES[index].hoppers.find(h => h.id === id) || null;
-  }
-
-  /* ---------------- readout ---------------- */
-
-  function onProbe(hit) {
-    state.sample = hit.hopperId;
-    state.bin = hit.bin;
-    floor.setSelected(hit.hopperId);
-    soundscape.playToggleClack?.();
-    renderReadout(hit);
-  }
-
-  function onSelect(id) {
-    state.sample = id;
-    state.bin = null;
-    floor.setSelected(id);
-  }
-
-  function renderReadout(hit, message) {
-    if (message) {
-      frame.setReadout(`
-        <div class="lq-readout-card">
-          <div class="lq-readout-head">${esc(message.head)}</div>
-          <p class="lq-readout-line">${esc(message.body)}</p>
-        </div>
-      `);
-      return;
-    }
-    if (!hit) {
-      frame.setReadout(`
-        <div class="lq-readout-card lq-readout-idle">
-          <div class="lq-readout-head">Bench // standby</div>
-          <p class="lq-readout-line">Each bin catches one weight, marked under it.</p>
-        </div>
-      `);
-      return;
-    }
-    frame.setReadout(`
-      <div class="lq-readout-card">
-        <div class="lq-readout-head">Bin // ${esc(hit.hopperLabel)}, bin ${hit.bin + 1}</div>
-        <div class="lq-readout-code">CATCHES WEIGHT ${esc(String(hit.mass))}</div>
-        <div class="lq-readout-hold">${hit.poured
-          ? `${hit.count} atom${hit.count === 1 ? '' : 's'} landed in it.`
-          : 'Empty. Nothing has been tipped yet.'}</div>
-        <p class="lq-readout-line">A bin only catches atoms of the weight marked under it.</p>
-      </div>
-    `);
-  }
-
-  /* ---------------- answer widgets ---------------- */
-
-  function renderWidget() {
-    const stage = STAGES[index];
-    const w = stage.widget;
-
-    if (w.type === 'number' || w.type === 'decimal') {
-      const dec = w.type === 'decimal';
-      const shown = dec ? state.decimal.toFixed(1) : String(state.number);
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-number">
-            <button type="button" class="btn-secondary quest-btn-sm" data-num="-1" aria-label="Lower">&minus;</button>
-            <span class="lq-number-value" aria-live="polite">${shown}</span>
-            <button type="button" class="btn-secondary quest-btn-sm" data-num="1" aria-label="Raise">+</button>
-          </div>
-          <p class="form-help">Steps of ${dec ? w.step.toFixed(1) : w.step}, between ${dec ? w.min.toFixed(1) : w.min} and ${dec ? w.max.toFixed(1) : w.max}.</p>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-num]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const delta = Number(btn.dataset.num) * (w.step || 1);
-          if (dec) {
-            state.decimal = Math.round(Math.max(w.min, Math.min(w.max, state.decimal + delta)) * 10) / 10;
-            frame.el.widget.querySelector('.lq-number-value').textContent = state.decimal.toFixed(1);
-          } else {
-            state.number = Math.max(w.min, Math.min(w.max, state.number + delta));
-            frame.el.widget.querySelector('.lq-number-value').textContent = String(state.number);
-          }
-          soundscape.playToggleClack?.();
-        });
-      });
-      return;
-    }
-
-    if (w.type === 'choice') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-bin-keys">
-            ${w.options.map(o => `
-              <button type="button" class="choice-option lq-bin-key" data-choice="${o.id}">
-                <span class="lq-bin-label">${esc(o.label)}</span>
-                <span class="lq-bin-note">${esc(o.note)}</span>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-choice]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.choice = btn.dataset.choice;
-          frame.el.widget.querySelectorAll('[data-choice]')
-            .forEach(o => o.classList.toggle('selected', o === btn));
-          soundscape.playToggleClack?.();
-        });
-      });
-      return;
-    }
-
-    if (w.type === 'bins') {
-      const rows = w.rows || stage.hoppers.map(h => h.id);
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">Your answer</span>
-          <div class="lq-bins">
-            ${rows.map(id => `
-              <div class="lq-bin-row" data-hopper="${id}">
-                <span class="lq-bin-sample">${esc(hopperFor(id)?.label || id)}</span>
-                <div class="lq-bin-keys">
-                  ${w.bins.map(b => `
-                    <button type="button" class="choice-option lq-bin-key" data-bin="${b.id}">
-                      <span class="lq-bin-label">${esc(b.label)}</span>
-                      <span class="lq-bin-note">${esc(b.note)}</span>
-                    </button>
-                  `).join('')}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-bin]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const row = btn.closest('[data-hopper]');
-          const hid = row.dataset.hopper;
-          state.bins[hid] = btn.dataset.bin;
-          row.querySelectorAll('[data-bin]').forEach(o => o.classList.toggle('selected', o === btn));
-          const bin = w.bins.find(b => b.id === btn.dataset.bin);
-          floor.setPlateTag(hid, bin ? bin.label : '');
-          soundscape.playToggleClack?.();
-        });
-      });
-    }
-  }
-
-  /* ---------------- go ---------------- */
-
-  loadStage(index);
-
-  return {
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      floor.dispose();
-      frame.dispose();
-    }
-  };
+  runner.start();
+  return { dispose: () => runner.dispose() };
 }

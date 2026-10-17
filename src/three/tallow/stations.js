@@ -616,6 +616,8 @@ export function buildWeighHopper(w, site) {
   for (const rx of [-0.25, 0.25]) k.box(gg, [0.04, 0.09, 2.4], w.darkSteelMat, [rx, 1.47, -0.3], [0.42, 0, 0]);
   k.box(gg, [0.4, 0.3, 0.03], w.darkSteelMat, [0, 1.72, -0.55], [0.42, 0, 0]);
   for (let i = 0; i < 4; i++) k.box(gg, [0.5, 0.42, 0.5], w.bulkMat, [-1.05 + i * 0.7, 0.21, 1.05], null, true);
+  // A sampling scoop laid across the third bin, the way a draw is taken off a catch bin (the field point).
+  k.box(gg, [0.06, 0.03, 0.62], w.pipeMat, [-1.05 + 2 * 0.7 + 0.14, 0.445, 1.05], [0, 0.35, 0]);
 
   // The floor balance: post, dial drum and pan.
   k.box(gg, [0.12, 1.05, 0.12], w.darkSteelMat, [2.3, 0.53, 0.9]);
@@ -638,7 +640,14 @@ export function buildWeighHopper(w, site) {
     { lx: 3.4, lz: 1.5, r: 0.2 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
-  return { group: g, bench, benchLocal: [0, 0, 0], colliders };
+  // THE FIELD POINT: a draw off the third catch bin, where the sorted salt lands. It is a real piece of this host (the bin and
+  // the scoop across it), the player stands in the gap between the bench and the gantry (`stand`, host frame) and `[E]` on it
+  // takes a handful into the carry slot for the bench.
+  const fieldPoints = [{
+    id: 'hopper', label: 'Hopper Draw', lx: -1.05 + 2 * 0.7 - HOPPER.shift, ly: 0.55, lz: z0 + 1.05, half: [0.45, 0.3, 0.4],
+    stand: { lx: -1.05 + 2 * 0.7 - HOPPER.shift, lz: -1.45 }
+  }];
+  return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
 /* ======================================================================
@@ -756,7 +765,14 @@ export function buildBaggingLine(w, site, { feedX = 9.7 } = {}) {
     { lx: -3.3, lz: 1.4, r: 0.2 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
-  return { group: g, bench, benchLocal: [0, 0, 0], colliders };
+  // THE FIELD POINT: the filled sack on the platform scale, which has been counted into. It is a real piece of this host (the sack
+  // on its scale), the player stands on the open ground in front of the scale (`stand`, host frame) and `[E]` on it brings the
+  // counted sack to the bench in the carry slot.
+  const fieldPoints = [{
+    id: 'sack', label: 'Counted Sack', lx: 3.7, ly: 0.95, lz: zL, half: [0.5, 0.4, 0.45],
+    stand: { lx: 3.7, lz: -2.1 }
+  }];
+  return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
 export const HOST_BUILDERS = {
