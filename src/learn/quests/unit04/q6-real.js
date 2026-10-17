@@ -241,6 +241,7 @@ export const STAGES = [
     ],
     widget: {
       type: 'order', label: 'Furthest from one first',
+      rail: { first: 'Greatest departure', last: 'Least departure' },
       items: [{ id: 'a', label: 'Cylinder A' }, { id: 'b', label: 'Cylinder B' }, { id: 'c', label: 'Cylinder C' }]
     },
     hints: [

@@ -63,7 +63,7 @@ const APPROACH = 5.0;
 const PLATE = { hw: 2.4, hd: 0.65 };
 const LANE = { hw: 2.8, from: 0.65, to: 5.6 };
 
-const FLOOR_Y = -5.0;
+const FLOOR_Y = -5.6;
 const SUB = {
   floorY: FLOOR_Y,
   room: { minX: -22.0, maxX: 14.0, minZ: -46.0, maxZ: -31.0 },

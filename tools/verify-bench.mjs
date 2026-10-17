@@ -45,6 +45,12 @@ console.log('Learn benches — facing the player, and inside the glass\n');
 /** The stage camera's vertical field, from `three/stage.js`. */
 const FOV = 55;
 
+/** The viewports the leaned-in view is held to, in px: the six aspects, plus the smallest phone. */
+const LEAN_VIEWPORTS = [
+  ['ultrawide', 2560, 1080], ['16:9', 1920, 1080], ['16:10', 1680, 1050],
+  ['3:2', 1440, 960], ['4:3', 1280, 960], ['phone landscape', 812, 375], ['small phone', 667, 375]
+];
+
 /**
  * Aspects the product supports. 375 px is the one confirmed device floor
  * (PRODUCT.md); a phone entering a world is landscape-locked, so the narrow
@@ -685,15 +691,18 @@ check('q2-core', 'core bench',
   ])
 );
 
-/* The widest stage q4-ledger declares is read out of its own table: stage 8
-   lays four samples beside a standard, FIVE stations end to end, which leaves
-   no plate beside them for a key panel. That is the case the front rail is
-   for, so it is the case measured. */
-const { STAGES: LEDGER_STAGES } = await import('../src/learn/quests/unit01/q4-ledger.js');
+/* The widest stage q4-ledger ever declared, for the core bench it used to stand on (it is a table now, T2, but the core bench
+   is still a real instrument: the hopper boss fights on it): four samples beside a standard, FIVE stations end to end, which
+   leaves no plate beside them for a key panel. That is the case the front rail is for, so it is the case measured. */
 check('q4-ledger', 'ledger bench',
   (camera, anchor) => new CoreBench3D(null, { world: worldFrame(camera, anchor) }),
-  bench => bench.setSpecimens(LEDGER_STAGES.reduce((a, b) =>
-    ((b.specimens?.length || 0) > (a.specimens?.length || 0) ? b : a)).specimens)
+  bench => bench.setSpecimens([
+    { id: 'std', label: 'SAMPLE A', note: '', core: { marked: 8, blank: 8 }, rings: [2, 6] },
+    { id: 'n1', label: 'SAMPLE B', note: '', core: { marked: 8, blank: 10 }, rings: [2, 6], casing: true },
+    { id: 'n2', label: 'SAMPLE C', note: '', core: { marked: 8, blank: 8 }, rings: [2, 8], casing: true },
+    { id: 'n3', label: 'SAMPLE D', note: '', core: { marked: 7, blank: 9 }, rings: [2, 5], casing: true },
+    { id: 'n4', label: 'SAMPLE E', note: '', core: { marked: 8, blank: 8 }, rings: [2, 6], casing: true }
+  ])
 );
 
 /* THE CATALOGUE BOARD. The widest thing this quest puts on the bench is the
@@ -767,9 +776,32 @@ if (!failures) {
    `planPour` says it lands, in the bins it says, with the pieces really placed.
 */
 
-const { STAGES: CAT_STAGES, CARDS } = await import('../src/learn/quests/unit01/q3-catalogue.js');
-const { STAGES: ASSAY_STAGES } = await import('../src/learn/quests/unit01/q5-assay.js');
-const { STAGES: WEIGH_STAGES } = await import('../src/learn/quests/unit01/q6-weigh.js');
+const { CARDS } = await import('../src/learn/quests/unit01/q3-catalogue.js');
+/* The catalogue quest is a card table now (T2), but the board is still a real instrument (the hopper boss files on it),
+   so it is still driven through its own pointer path: the two boards the quest used to declare, a strip and a chart. */
+const CAT_STAGES = [
+  { board: { label: 'Reference strip', strip: true, rows: [['#p1', '#p2', '#p3', '#p4', '#p5', '#p6']] }, masked: true, drawer: ['c11', 'c19', 'c01', 'c18', 'c08', 'c06'] },
+  { board: { label: 'Reference chart', strip: true, columns: ['1', '2', '\u00b7 \u00b7 \u00b7', '13', '14', '15', '16', '17', '18'], rows: [['c01', null, null, null, null, null, null, null, 'c02'], ['c03', 'c04', null, 'c05', 'c06', 'c07', 'c08', 'c09', 'c10'], ['#r1', '#r2', null, '#r3', '#r4', '#r5', '#r6', '#r7', '#r8']] }, drawer: ['c16', 'c11', 'c14', 'c18', 'c12', 'c17', 'c13', 'c15'] },
+  { board: { label: 'Reference chart', columns: ['1', '2', '\u00b7 \u00b7 \u00b7', '13', '14', '15', '16', '17', '18'], rows: [['c01', null, null, null, null, null, null, null, 'c02'], ['c03', '#s1', null, 'c05', 'c06', '#s2', 'c08', 'c09', 'c10']] }, masked: true, drawer: ['c16', 'c04', 'c13', 'c07'] }
+];
+/* The two assay quests are tabletops now (T2: the mass kit), but the assay floor is still a real instrument, so it is still put
+   through its own pour path with the hoppers those quests used to declare (and `AssayFloor3D`'s retirement is T7's). */
+const CL_BINS = [{ mass: 35, n: 30 }, { mass: 37, n: 10 }];
+const ASSAY_STAGES = [
+  { hoppers: [{ id: 'h1', label: 'SAMPLE A', code: 'chlorine', note: '40 atoms', bins: CL_BINS }] },
+  { hoppers: [{ id: 'h1', label: 'SAMPLE A', note: '40 atoms', bins: CL_BINS }, { id: 'h2', label: 'SAMPLE B', note: '80 atoms', bins: [{ mass: 35, n: 60 }, { mass: 37, n: 20 }] }] },
+  { hoppers: [{ id: 'h3', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }] },
+  { hoppers: [{ id: 'h4', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 19, n: 40 }] }] },
+  { hoppers: [
+    { id: 'ha', label: 'SAMPLE A', note: 'unlabelled, 40 atoms', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] },
+    { id: 'hb', label: 'SAMPLE B', note: 'unlabelled, 40 atoms', bins: CL_BINS },
+    { id: 'hc', label: 'SAMPLE C', note: 'unlabelled, 40 atoms', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
+  ] }
+];
+const WEIGH_STAGES = [
+  { hoppers: [{ id: 'h1', label: 'SAMPLE A', code: 'carbon', note: '40 atoms', bins: [{ mass: 12, n: 40 }] }, { id: 'h2', label: 'SAMPLE B', code: 'carbon', note: 'a full crate, gate shut', bulk: true, bins: [{ mass: 12, n: 300 }] }] },
+  { hoppers: [{ id: 'd1', label: 'SAMPLE A', code: 'carbon', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 12, n: 5 }] }, { id: 'd2', label: 'SAMPLE B', code: 'oxygen', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 16, n: 4 }] }, { id: 'd3', label: 'SAMPLE C', code: 'hydrogen', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 1, n: 6 }] }] }
+];
 const { planPour } = await import('../src/learn/engine/assay.js');
 
 /**
@@ -948,127 +980,10 @@ world.scene.updateMatrixWorld(true);
 console.log('');
 checkFacing();
 
-const { STAGES: JOIN_STAGES } = await import('../src/learn/quests/unit03/q1-joins.js');
-const { STAGES: SLAB_STAGES } = await import('../src/learn/quests/unit03/q2-lattice.js');
-const { planJoin } = await import('../src/learn/engine/joinbench.js');
+// Benches one and two (q1-joins, q2-lattice) are TABLETOPS since T1b and T3a: they are measured below with every real
+// table stage. The join bench's pair plates stand on in the warden's room (measured with its foes), and its block plates
+// serve no quest now; they are retired with T7.
 
-const widest = (stages, key) => stages.reduce((a, b) => ((b[key]?.length || 0) > (a[key]?.length || 0) ? b : a));
-
-const before = failures;
-check('q1-joins', 'join bench (pairs)',
-  (camera, anchor) => new JoinBench3D(null, { world: worldFrame(camera, anchor) }),
-  bench => bench.setPlates(widest(JOIN_STAGES, 'pairs').pairs)
-);
-check('q2-lattice', 'join bench (blocks)',
-  (camera, anchor) => new JoinBench3D(null, { world: worldFrame(camera, anchor) }),
-  bench => bench.setPlates(widest(SLAB_STAGES, 'slabs').slabs)
-);
-if (failures === before) {
-  ok(`both Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
-}
-
-/* THE JOIN BENCH, EVERY STAGE, THROUGH THE REAL POINTER PATH.
-
-   The built join bench is a subclass of the drawn one, so its tools are the
-   drawn bench's tools — but what it DRAWS and what a press on it RESOLVES are
-   new, and those are the two things a player would notice. So every stage both
-   quests declare is put on the built bench, and on each plate:
-     - a press closes the jaws exactly when `planJoin` says the pair holds;
-     - a press on each piece IN THE PICTURE, projected from the screen the way
-       a finger arrives, reads back that plate and that piece, never its
-       neighbour and never nothing;
-     - a block struck, heated, cooled and tested shows the state it reports.
-*/
-async function joinStagePasses() {
-  // A probe starts the bench's read sweep on the animation clock. Node has no
-  // frames to give it, and none are needed: the report a probe makes is
-  // synchronous, which is the thing being measured.
-  globalThis.requestAnimationFrame ??= () => 0;
-  globalThis.cancelAnimationFrame ??= () => {};
-  const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
-  const screenPoint = (station, px, py) => {
-    // Screen pixels back to a point on the screen mesh: the inverse of
-    // `screenUnderRay`, so a press lands where the picture put the piece.
-    const mesh = station.screen.mesh;
-    mesh.updateMatrixWorld(true);
-    const size = mesh.geometry.parameters;
-    const local = new THREE.Vector3(
-      (px / station.screen.w - 0.5) * size.width,
-      (0.5 - py / station.screen.h) * size.height,
-      0
-    );
-    return local.applyMatrix4(mesh.matrixWorld);
-  };
-  const pressAt = (bench, p) => {
-    const q = p.clone().project(camera);
-    bench.onPointer3D({ clientX: (q.x + 1) / 2 * 1280, clientY: (1 - q.y) / 2 * 720, preventDefault() {} });
-  };
-
-  for (const [questId, stages, key] of [['q1-joins', JOIN_STAGES, 'pairs'], ['q2-lattice', SLAB_STAGES, 'slabs']]) {
-    const anchor = world.benchAnchor(questId);
-    world.setBenchDeployed(questId, true);
-    let probed = null;
-    const bench = new JoinBench3D(null, {
-      world: worldFrame(camera, anchor),
-      onProbe: hit => { probed = hit; }
-    });
-    let plates = 0;
-    for (let i = 0; i < stages.length; i++) {
-      bench.setPlates(stages[i][key]);
-      // Aim as the deployed bench does, so the screens are where a player sees them.
-      bench.viewer.applyCamera();
-      camera.updateMatrixWorld(true);
-      for (const rec of bench.stations) {
-        plates++;
-        const item = rec.item;
-        const where = `${questId} stage ${i + 1} ${item.label}`;
-        if (!rec.hits?.length) fail(`${where}: the picture drew nothing a press could read`);
-        for (const hit of rec.hits || []) {
-          probed = null;
-          pressAt(bench, screenPoint(rec.station, hit.x, hit.y));
-          if (!probed) fail(`${where}: a press on the ${hit.side} piece read nothing`);
-          else if (probed.plateId !== item.id || probed.side !== hit.side) {
-            fail(`${where}: a press on the ${hit.side} piece read ${probed.plateId}/${probed.side}`);
-          }
-        }
-        if (rec.kind === 'pair') {
-          const type = planJoin(item).type;
-          item.t = 1; item.pressed = type !== 'none';
-          if (type === 'none') item.t = 0;
-          bench.drawAll();
-          const gap = rec.sides.right.jaw.position.x - rec.sides.left.jaw.position.x;
-          const shut = gap < 0.26;
-          if (shut !== (type !== 'none')) {
-            fail(`${where}: the jaws are ${shut ? 'shut' : 'open'} on a pair that ${type === 'none' ? 'will not hold' : 'holds'}`);
-          }
-        } else {
-          for (const state of ['struck', 'molten']) {
-            item.state = state;
-            if (state === 'struck') item.struck = true;
-            bench.drawAll();
-            const glowing = rec.stoneMat.emissiveIntensity > 0;
-            if (glowing !== (state === 'molten')) fail(`${where}: the block glows when ${state}`);
-            const whole = rec.halves.every(h => h.visible);
-            const chips = rec.chips.some(c => c.visible);
-            if (state === 'struck' && item.build === 'clusters' && (whole || !chips)) {
-              fail(`${where}: a block that crumbled is not shown crumbled`);
-            }
-            if (state === 'struck' && item.build === 'web' && !whole) {
-              fail(`${where}: a block that held is shown broken`);
-            }
-          }
-          item.current = true; bench.drawAll();
-          if (rec.lampMat.emissiveIntensity <= 0) fail(`${where}: a current passed and the lamp stayed dark`);
-          item.current = null; item.state = 'intact'; item.struck = false; bench.drawAll();
-        }
-      }
-    }
-    bench.dispose();
-    world.setBenchDeployed(questId, false);
-    ok(`${questId}: all ${stages.length} stages built, ${plates} plates pressed through the real pointer path`);
-  }
-}
-await joinStagePasses();
 
 /* ================================================================ LIGAR, BENCHES THREE TO NINE
 
@@ -1086,7 +1001,8 @@ const { DomainRig3D } = await import('../src/learn/engine/domainrig3d.js');
 const { BoxRack3D: LigarRack3D } = await import('../src/learn/engine/boxrack3d.js');
 
 const LG = {};
-for (const id of ['q3-distance', 'q4-dots', 'q5-resonance', 'q6-shape', 'q7-polarity', 'q8-hybrid', 'q9-orbitals']) {
+// (`q4-dots` is a tabletop since T1b; the pair board stands at bench five and in the warden's room.)
+for (const id of ['q3-distance', 'q5-resonance', 'q6-shape', 'q7-polarity', 'q8-hybrid', 'q9-orbitals']) {
   LG[id] = await import(`../src/learn/quests/unit03/${id}.js`);
 }
 
@@ -1097,15 +1013,17 @@ function layLigar(bench, st) {
   else bench.setPlates(st.rigs, { show: { counts: Boolean(st.counts) }, hand: null });
 }
 
-const LG_BENCHES = [
+// A quest that has become a tabletop (q3-distance and q5-resonance in T3a, q6 to q8 in T3b, the rest in T3c) is measured with the real table
+// stages below; what stays here is the instruments some quest still plays. The warden's room keeps the bond bench and the pair board.
+const LG_BENCHES_ALL = [
   ['q3-distance', 'bond bench', (c, a) => new BondBench3D(null, { world: worldFrame(c, a) })],
-  ['q4-dots', 'pair board', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })],
   ['q5-resonance', 'pair board (resonance)', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })],
   ['q6-shape', 'domain rig (shape)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })],
   ['q7-polarity', 'domain rig (field)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })],
   ['q8-hybrid', 'domain rig (mixer)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })],
   ['q9-orbitals', 'box rack (molecular)', (c, a) => new LigarRack3D(null, { world: worldFrame(c, a) })]
 ];
+const LG_BENCHES = LG_BENCHES_ALL.filter(([id]) => !LG[id].STAGES.every(st => st.widget?.type === 'table'));
 
 {
   const mark = failures;
@@ -1124,7 +1042,8 @@ const LG_BENCHES = [
       check(id, `${label}, ${heads} plate`, build, bench => layLigar(bench, st));
     }
   }
-  if (failures === mark) ok(`all seven later Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
+  if (!LG_BENCHES.length) ok('every Ligar quest is a tabletop (T3c): the bond bench, the pair board, the domain rig, the join bench and the box rack serve no quest, and wait for T7 to retire them');
+  else if (failures === mark) ok(`the later Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
 }
 
 async function ligarLaterPasses() {
@@ -1251,7 +1170,9 @@ const dialStage = id => stagesOf(id).reduce((a, b) => {
   return dials(b) > dials(a) ? b : a;
 });
 
-const LF_BENCHES = [
+// A quest that has become a tabletop (T4a: q1-wave, q2-photon, q3-lines) is measured with the real table stages below;
+// what stays here is the instruments some Lanternfall quest still plays (the light bench keeps the cuvette and the Eater's room).
+const LF_BENCHES_ALL = [
   ['q1-wave', 'light bench (waves)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })],
   ['q2-photon', 'light bench (photocell)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })],
   ['q3-lines', 'light bench (spectra)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })],
@@ -1262,6 +1183,7 @@ const LF_BENCHES = [
   ['q8-trends', 'electron bench (atoms)', (c, a) => new ElectronBench3D(null, { world: worldFrame(c, a) })],
   ['q9-absorb', 'light bench (cuvette)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })]
 ];
+const LF_BENCHES = LF_BENCHES_ALL.filter(([id]) => !LF[id].STAGES.every(st => st.widget?.type === 'table'));
 
 {
   const mark = failures;
@@ -1271,7 +1193,7 @@ const LF_BENCHES = [
       check(id, `${label}, dial stage`, build, bench => lay(bench, dialStage(id)));
     }
   }
-  if (failures === mark) ok(`all nine Lanternfall instruments frame every body and control at ${ASPECTS.length} aspects`);
+  if (failures === mark) ok(`all ${LF_BENCHES.length} Lanternfall instruments still played frame every body and control at ${ASPECTS.length} aspects`);
 }
 
 /* EVERY STAGE, THROUGH THE REAL POINTER PATH. */
@@ -1904,28 +1826,8 @@ console.log('');
 console.log('The foes — spoil standing in the wells\n');
 
 {
-  // LIGAR: the basalt warden, one phase to a bench. (`world` becomes Ligar.)
-  world = new LigarWorld(null);
-  world.scene.updateMatrixWorld(true);
-  const warden = (await import('../src/learn/quests/unit03/boss-warden.js')).STAGES;
-  const ligarCfg = (questId, label, build) => ({
-    questId, label, build: (camera, anchor) => build(camera, anchor),
-    lay: (bench, st) => layLigar(bench, st), items: st => st.rigs || [], select: false
-  });
-  const wardenProbes = {
-    bond: (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { rig: 'hold', lattice: st.rigs.find(r => r.id === f.id).lattice }]]) : [],
-    pair: (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { rig: 'lamps', lit: 1, of: 5 }], [f.id, { rig: 'lamps', lit: 5, of: 5 }]]) : [],
-    rig: (st, enc) => enc ? enc.foes.flatMap(f => {
-      const rig = st.rigs.find(r => r.id === f.id);
-      if (rig.head === 'field') return [[f.id, { rig: 'field', mol: rig.mol, on: true }]];
-      return [[f.id, { rig: 'arms', arms: [{ kind: 'atom', sym: 'H' }, { kind: 'atom', sym: 'H' }, { kind: 'lone' }] }]];
-    }) : [],
-    rack: (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { rig: 'pull', unpaired: 2 }]]) : []
-  };
-  await foePasses(ligarCfg('q3-distance', 'bond bench (the warden)', (c, a) => new BondBench3D(null, { world: worldFrame(c, a) })), [warden[0]], wardenProbes.bond);
-  await foePasses(ligarCfg('q4-dots', 'pair board (the warden)', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })), [warden[1]], wardenProbes.pair);
-  await foePasses(ligarCfg('q6-shape', 'domain rig (the warden)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })), [warden[2], warden[3]], wardenProbes.rig);
-  await foePasses(ligarCfg('q9-orbitals', 'molecular rack (the warden)', (c, a) => new LigarRack3D(null, { world: worldFrame(c, a) })), [warden[4]], wardenProbes.rack);
+  // LIGAR: the basalt warden is five table phases since T3c, with its foe in the table's corner; it is held with the other table bosses
+  // below ("boss-warden on its tables"), not here.
 
   // BELLOWS: the Compressor over the boss's five phases.
   // (`world` becomes Bellows.)
@@ -1996,10 +1898,23 @@ console.log('The foes — spoil standing in the wells\n');
  */
 {
   const BAY = await import('../src/three/bench-bay.js');
-  const { findBayIntrusions } = await import('./lib/overlap.mjs');
+  const { findBayIntrusions, collectBoxes } = await import('./lib/overlap.mjs');
+  const { planLeanIn, PLATE_ZONE } = await import('../src/learn/engine/lean.js');
+  const { sightBlockers, behindCover } = await import('./lib/lean-check.mjs');
+  const { Table3D: TableForKit } = await import('../src/learn/engine/table3d.js');
+  const KITMODEL = await import('../src/learn/table/model.js');
+  const KITFIX = await import('./lib/table-fixture.mjs');
+  KITFIX.registerTestKit();
   const { BellowsWorld } = await import('../src/three/bellows.js');
   const { EmberReachWorld } = await import('../src/three/ember.js');
   console.log('\nthe bench bay, in every world');
+  const posesCache = new Map();
+  /** The whole-plate lean pose at a viewport, solved once. */
+  const leanPlateRef = (vw, vh) => {
+    const k = `${vw}x${vh}`;
+    if (!posesCache.has(k)) posesCache.set(k, planLeanIn({ viewport: { w: vw, h: vh } }));
+    return posesCache.get(k);
+  };
 
   // The screens' envelope contains every panel the frame hangs (PANEL_LAYOUT), tilt and yaw included.
   {
@@ -2098,29 +2013,958 @@ console.log('The foes — spoil standing in the wells\n');
       const frame = new THREE.Matrix4().copy(node.matrixWorld).invert();
       const own = anchor.dormant?.parent;
       if (!own) { fail(`${label} ${questId}: the anchor has no bench to exempt`); continue; }
-      const hits = findBayIntrusions(w.scene, frame, volumes, { skip: o => o === own });
+      const bodies = collectBoxes(w.scene, { frame, skip: o => o === own });
+      const hits = findBayIntrusions(w.scene, frame, volumes, { skip: o => o === own, bodies });
       const byVolume = new Map();
       for (const h of hits) byVolume.set(h.volume, [...(byVolume.get(h.volume) || []), h]);
+
+      // THE LEANED-IN VIEW (plan §2.6.2), from the whole-plate pose at each supported viewport:
+      //   sight  no body stands between the camera and the plate;
+      //   view   past the plate's far edge the frame is the host or the world, never bare sky.
+      // (`lean`, the camera's own air, is the volume above.) The three share one waiver file.
+      {
+        const toWorld = node.matrixWorld;
+        const lift = BAY.PLATE_TOP - 0.895;
+        const blockedBy = [];
+        let bare = null;
+        for (const [name, vw, vh] of LEAN_VIEWPORTS) {
+          const pose = leanPlateRef(vw, vh);
+          const cam = [pose.position[0], pose.position[1] + lift, pose.position[2]];
+          const sb = sightBlockers(bodies, cam, PLATE_ZONE, BAY.PLATE_TOP);
+          if (sb.blocked) blockedBy.push({ body: `${sb.first.name} (${name})`, depth: 0.5, at: sb.first.at });
+          const camera = new THREE.PerspectiveCamera(FOV, vw / vh, 0.05, 80);
+          camera.position.set(...cam);
+          camera.lookAt(pose.target[0], pose.target[1] + lift, pose.target[2]);
+          const bc = behindCover({ bodies, camera, plateY: BAY.PLATE_TOP, farZ: -BAY.BENCH_BAY.depth / 2, toWorld, terrain: (x, z) => w.getTerrainHeight(x, z), safe: pose.safe });
+          if (bc.covered < bc.total) bare = bare || { body: `${bc.total - bc.covered} of ${bc.total} rays past the plate reach no host and no ground (${name})`, depth: 0.5, at: cam.map(n => +n.toFixed(2)) };
+        }
+        if (blockedBy.length) byVolume.set('sight', blockedBy);
+        if (bare) byVolume.set('view', [bare]);
+      }
       const id = `${key}/${questId}`;
       const allowed = new Set(legacy[id] || []);
       if (byVolume.size) found[id] = [...byVolume.keys()].sort();
       for (const [volume, list] of byVolume) {
         if (allowed.has(volume)) { waived++; continue; }
         const h = list[0];
-        fail(`${label} ${questId}: ${h.body} stands ${h.depth.toFixed(2)} m inside the bay's ${volume} volume at (${h.at.join(', ')})` +
+        fail(`${label} ${questId}: ${h.body} ${volume === 'sight' || volume === 'view' ? `spoils the leaned-in ${volume}` : `stands ${h.depth.toFixed(2)} m inside the bay's ${volume} volume`} at (${h.at.join(', ')})` +
           (list.length > 1 ? `, and ${list.length - 1} more` : ''));
       }
       for (const volume of allowed) {
         if (!byVolume.has(volume)) fail(`${label} ${questId}: the ${volume} volume is clear now; delete "${volume}" from tools/bay-legacy.json`);
       }
     }
-    if (failures === before) ok(`${label}: ${n} benches, nothing new stands in any bay`);
+
+    // THE TABLE IS THE HOST'S OWN WORK SURFACE (plan §2.6.1): a tabletop deployed on this world's bench dresses its
+    // fixtures from the materials that bench was built from, never from the bench kit's defaults.
+    {
+      const [qid, anch] = [...w.benchAnchors][0];
+      const hostMats = anch.dormant?.userData?.benchMats;
+      if (!hostMats?.top || !hostMats?.dark) {
+        fail(`${label} ${qid}: the host recorded no materials for its bench (buildBayBench keeps them on the case)`);
+      } else {
+        const dressed = (materials) => {
+          const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+          const t = new TableForKit(null, {
+            world: { scene: w.scene, camera, position: anch.position, rotationY: anch.rotationY, topY: anch.topY, materials }
+          });
+          t.setState(KITMODEL.createTable(KITFIX.TEST_TABLE_WIDE, 'kit'));
+          const offenders = new Set();
+          for (const root of [t.fixtureRoot, t.pieceRoot, t.joinRoot]) {
+            root.traverse(o => {
+              if (!o.isMesh) return;
+              const m = o.material;
+              if (Object.values(hostMats).includes(m) || m.userData?.tableOwned) return;
+              offenders.add(m === t.steelMat || m === t.darkMat ? 'the bench kit' : (m.type || 'a material'));
+            });
+          }
+          const usesKit = [...t.fixtureRoot.children].some(c => c.material === t.steelMat || c.material === t.darkMat);
+          t.dispose();
+          return { offenders: [...offenders], usesKit };
+        };
+        const withKit = dressed(hostMats);
+        if (withKit.offenders.length || withKit.usesKit) fail(`${label} ${qid}: a tabletop on this bench uses ${withKit.offenders.join(', ') || 'the bench kit'}, not the host's own materials`);
+        // The check has teeth: with the host's materials withheld, the same table IS dressed from the bench kit.
+        if (key === 'tallow') {
+          const bare = dressed(null);
+          if (!bare.offenders.includes('the bench kit')) fail('the material-kit check cannot tell a bench-kit table from a host-dressed one');
+        }
+      }
+    }
+    if (failures === before) ok(`${label}: ${n} benches, nothing new stands in any bay or in the leaned-in view, a tabletop dressed from the host's own materials`);
   }
   if (process.env.BAY_WRITE_BASELINE) {
     fs.writeFileSync(legacyPath, JSON.stringify(Object.fromEntries(Object.entries(found).sort()), null, 2) + '\n');
     console.log('       wrote tools/bay-legacy.json');
   }
   console.log(`       ${waived} legacy bench volumes still waived (tools/bay-legacy.json)`);
+}
+
+
+/* ------------------------------------------------------------ the leaned-in tabletop */
+
+/**
+ * THE TABLETOP, LEANED IN (plan `bench-tabletop.md` §2, §3.5). Proved on the
+ * throwaway table (`tools/lib/table-fixture.mjs`), which no quest plays:
+ *   - at every supported viewport the table's whole used zone is inside the free
+ *     glass: below the HUD and the prompt strip, above the foot dock;
+ *   - the smallest piece is at least 28 px across, on the smallest phone too;
+ *   - the camera stands inside the bay's `approach` or `lean` air;
+ *   - a press on a piece takes it, a press on empty table is a look, and the
+ *     throwaway stage's whole solution is played through the REAL pointer path
+ *     (viewer `_onPointerDown`/`Move`/`Up`), by drag and by two taps, and lands
+ *     on the table the reducer reaches;
+ *   - a step stands the player up, `[E]` leans in again, and a world's field
+ *     point (registered through `three/field-points.js`) puts the item in the
+ *     carry slot until the player is back at the bench;
+ *   - fixtures are dressed from the host's own materials, never the bench kit's.
+ */
+{
+  console.log('\nthe leaned-in tabletop, on the throwaway table');
+  const MODEL = await import('../src/learn/table/model.js');
+  const SNAP = await import('../src/learn/table/snap.js');
+  const LAYOUT = await import('../src/learn/table/layout.js');
+  const REG = await import('../src/learn/table/kits/registry.js');
+  const FIX = await import('./lib/table-fixture.mjs');
+  const BAY = await import('../src/three/bench-bay.js');
+  const { Table3D } = await import('../src/learn/engine/table3d.js');
+  const { chromeReserve, PLATE_ZONE, planLeanIn } = await import('../src/learn/engine/lean.js');
+  const FP = await import('../src/three/field-points.js');
+  FIX.registerTestKit();
+
+  const questId = world.benchAnchor('q1-flow') ? 'q1-flow' : [...world.benchAnchors.keys()][0];
+  const anchor = world.benchAnchor(questId);
+  world.setBenchDeployed(questId, true);
+  const mats = anchor.dormant?.userData?.benchMats || null;
+  const frameOf = camera => ({
+    scene: world.scene, camera, position: anchor.position, rotationY: anchor.rotationY, topY: anchor.topY,
+    materials: mats, object: world, walkOwnsHeight: true
+  });
+  const setGlass = (w, h) => { window.innerWidth = w; window.innerHeight = h; };
+  const before = failures;
+  let grabs = 0;
+
+  // The bay's `lean` air must hold every camera the planner can ask for.
+  const lean = BAY.bayBoxes().lean;
+  const inBox = (p, b) => p.every((v, i) => v >= b.min[i] - 1e-6 && v <= b.max[i] + 1e-6);
+  const approach = BAY.bayBoxes().approach;
+  const smallZone = LAYOUT.plateMap(FIX.TEST_TABLE_WIDE.bounds).zone;
+
+  for (const [vpName, vw, vh] of LEAN_VIEWPORTS) {
+    setGlass(vw, vh);
+    const camera = new THREE.PerspectiveCamera(FOV, vw / vh, 0.05, 80);
+    const bench = new Table3D(null, { world: frameOf(camera), onAction: () => {} });
+    const state = MODEL.createTable(FIX.TEST_TABLE_WIDE, 'lean');
+    bench.setState(state);
+    bench.settleLean();
+    const tag = `leaned in @ ${vpName} (${vw}x${vh})`;
+    if (!bench.leaning || !bench.lean?.pose) { fail(`${tag}: the table did not lean in`); bench.dispose(); continue; }
+    if (!bench.lean.pose.fits) fail(`${tag}: the used zone does not fit the free glass`);
+
+    // Through the REAL camera the viewer left, the table's used zone is inside the free glass.
+    const res = chromeReserve(vw, vh);
+    const free = { l: -1 + 2 * res.left / vw, r: 1 - 2 * res.right / vw, b: -1 + 2 * res.bottom / vh, t: 1 - 2 * res.top / vh };
+    camera.updateMatrixWorld(true);
+    const zone = bench.map.zone;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const [x, z] of [[zone.x0, zone.z0], [zone.x1, zone.z0], [zone.x0, zone.z1], [zone.x1, zone.z1]]) {
+      const p = new THREE.Vector3(x, 0.895, z);
+      bench.root.localToWorld(p);
+      p.project(camera);
+      minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+    }
+    const eps = 0.012;
+    if (minX < free.l - eps || maxX > free.r + eps) fail(`${tag}: the table runs out of the free width — x[${minX.toFixed(2)}, ${maxX.toFixed(2)}] free[${free.l.toFixed(2)}, ${free.r.toFixed(2)}]`);
+    if (maxY > free.t + eps) fail(`${tag}: the table runs under the HUD and the prompt strip — top at ${maxY.toFixed(2)}, free to ${free.t.toFixed(2)}`);
+    if (minY < free.b - eps) fail(`${tag}: the table runs under the foot dock — bottom at ${minY.toFixed(2)}, free from ${free.b.toFixed(2)}`);
+    if (maxY > 1 - 2 * res.hud / vh) fail(`${tag}: the table reaches into the HUD band`);
+
+    // The smallest piece, in screen pixels.
+    const kit = REG.getKit(state.kit);
+    let smallest = Infinity;
+    for (const p of Object.values(state.pieces)) {
+      if (p.hidden) continue;
+      const r = REG.radiusOf(kit, p);
+      const a = bench.map.toPlate(p.at);
+      const b = bench.map.toPlate({ x: p.at.x + r, y: p.at.y });
+      const pa = new THREE.Vector3(a.x, 0.895, a.z);
+      const pb = new THREE.Vector3(b.x, 0.895, b.z);
+      bench.root.localToWorld(pa); bench.root.localToWorld(pb);
+      pa.project(camera); pb.project(camera);
+      smallest = Math.min(smallest, 2 * Math.hypot((pb.x - pa.x) * vw / 2, (pb.y - pa.y) * vh / 2));
+    }
+    if (smallest < 28) fail(`${tag}: the smallest piece is ${smallest.toFixed(1)} px across, under 28`);
+
+    // The camera stands in air the bay keeps clear: `approach` or `lean`.
+    const local = bench.root.worldToLocal(camera.position.clone());
+    const inBay = [local.x, local.y + (BAY.PLATE_TOP - 0.895), local.z];
+    if (!inBox(inBay, lean) && !inBox(inBay, approach)) fail(`${tag}: the camera at bay (${inBay.map(n => n.toFixed(2)).join(', ')}) is outside the approach and lean air`);
+    if (vpName === '16:9' || vpName === 'small phone') drive3D(bench, camera, vw, vh, tag);
+    if (vpName === '16:9') await behaviours(bench, camera, vw, vh, tag);
+    bench.dispose();
+  }
+
+  // The half-size zone of the plate's whole width is also held in the lean air (a docked briefing slides it aside).
+  for (const [vpName, vw, vh] of LEAN_VIEWPORTS) {
+    for (const zones of [[PLATE_ZONE], [smallZone]]) {
+      const pose = leanPlate(zones, vw, vh);
+      const bay = [pose.position[0], pose.position[1] + (BAY.PLATE_TOP - 0.895), pose.position[2]];
+      if (!inBox(bay, lean) && !inBox(bay, approach)) fail(`the lean pose at ${vpName} for ${zones[0] === PLATE_ZONE ? 'the whole plate' : 'the throwaway table'} is outside the lean air (bay ${bay.map(n => n.toFixed(2))})`);
+    }
+  }
+  if (!grabs) fail('the pointer path never took hold of anything on the throwaway table');
+  if (failures === before) ok(`the throwaway table leans in at ${LEAN_VIEWPORTS.length} viewports: whole zone in the free glass, smallest piece 28 px or more, camera in the bay's lean air; its solution played through the real pointer path (${grabs} presses took hold), a look, a step, [E] and a field point checked`);
+
+  world.setBenchDeployed(questId, false);
+
+  /** Table units to a client pixel at the current camera. */
+  function px(bench, camera, vw, vh, u) {
+    const pl = bench.map.toPlate(u);
+    const p = new THREE.Vector3(pl.x, 0.895, pl.z);
+    bench.root.localToWorld(p);
+    p.project(camera);
+    return { clientX: (p.x + 1) / 2 * vw, clientY: (1 - p.y) / 2 * vh };
+  }
+  function leanPlate(zones, vw, vh) {
+    return planLeanIn({ zones, viewport: { w: vw, h: vh } });
+  }
+
+  /** Play the throwaway solution through the viewer's own pointer handlers. */
+  function drive3D(bench, camera, vw, vh, tag) {
+    const kit = REG.getKit('bars');
+    const sigOf = s => JSON.stringify(MODEL.signature(s));
+    const direct = MODEL.runScript(MODEL.createTable(FIX.TEST_TABLE_WIDE, 'lean'), FIX.TEST_SOLUTION, { mode: 'direct', strict: true });
+    for (const mode of ['drag', 'tap']) {
+      let state = MODEL.createTable(FIX.TEST_TABLE_WIDE, 'lean');
+      const b2 = new Table3D(null, { world: frameOf(camera), onAction: a => { state = MODEL.apply(state, a); b2.setState(state); b2.settle(); } });
+      b2.setState(state);
+      b2.settleLean();
+      camera.updateMatrixWorld(true);
+      let id = 20;
+      const ev = (u, extra = {}) => ({ ...px(b2, camera, vw, vh, u), pointerId: id, preventDefault() {}, ...extra });
+      const down = u => { id++; const e = ev(u); b2._onPointerDown(e); if (b2.grabbing) grabs++; return e; };
+      const move = u => b2._onPointerMove(ev(u));
+      const up = u => b2._onPointerUp(ev(u));
+      const tap = u => { down(u); up(u); };
+      try {
+        for (const step of FIX.TEST_SOLUTION) {
+          const verb = Object.keys(step)[0];
+          const arg = step[verb];
+          let piece = null, to = null;
+          if (verb === 'place' && arg.to !== undefined) { piece = arg.piece ?? state.carry.held; to = arg.to; }
+          else if (verb === 'join') { piece = arg[0]; to = `piece:${arg[1]}`; }
+          else if (verb === 'predict' && arg) { piece = arg; to = `slot:${state.prediction.slot}`; }
+          if (piece) {
+            const c = { ...state.pieces[piece].at };
+            const p = SNAP.pointFor(state, kit, to, piece);
+            if (mode === 'drag') { down(c); move({ x: (c.x + p.x) / 2, y: (c.y + p.y) / 2 }); move(p); up(p); }
+            else { tap(c); tap(p); }
+          } else if (verb === 'setDial') {
+            const lay = LAYOUT.fixtureLayout(state.fixtures[arg.fixture]);
+            const t = lay.dials.find(x => x.name === arg.dial);
+            const d = state.fixtures[arg.fixture].dials[arg.dial];
+            const x = t.x0 + (arg.value - d.min) / (d.max - d.min) * (t.x1 - t.x0);
+            tap({ x, y: t.y });
+          } else if (verb === 'run') {
+            const r = LAYOUT.fixtureLayout(state.fixtures[typeof arg === 'string' ? arg : arg.fixture]).run;
+            tap({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
+          } else if (verb === 'pour') {
+            const A = state.zones.containers[arg.from];
+            const B = state.zones.containers[arg.to];
+            // One drag from jar to jar pours one step; the script's amount is repeated that many times.
+            for (let k = 0; k < arg.amount; k++) {
+              if (mode === 'drag') { down(A.at); move({ x: (A.at.x + B.at.x) / 2, y: A.at.y }); move(B.at); up(B.at); }
+              else { tap(A.at); tap(B.at); }
+            }
+          } else if (verb === 'lay') {
+            const rows = b2.sheetRows();
+            if (rows.length >= 2 && arg && arg.through) {
+              const a = rows[arg.through[0]].u;
+              const z = rows[arg.through[1]].u;
+              down(a); move({ x: (a.x + z.x) / 2, y: (a.y + z.y) / 2 }); move(z); up(z);
+            } else b2.onAction(step);
+          } else if (verb === 'fetch') {
+            b2.takeField({ id: arg, label: 'Shelf' });
+            b2.flushCarry();
+          } else {
+            b2.onAction(step);
+          }
+        }
+      } catch (e) {
+        fail(`${tag}: playing the solution by ${mode} through the pointer path faulted — ${e.stack?.split('\n').slice(0, 3).join(' ')}`);
+        b2.dispose();
+        continue;
+      }
+      if (sigOf(state) !== sigOf(direct)) {
+        const a = JSON.parse(sigOf(state));
+        const d = JSON.parse(sigOf(direct));
+        const keys = Object.keys(d).filter(k => JSON.stringify(a[k]) !== JSON.stringify(d[k]));
+        fail(`${tag}: the pointer path by ${mode} does not reach the table the script names (differs in ${keys.join(', ')})`);
+      }
+      const bad = MODEL.checkInvariants(state);
+      if (bad.length) fail(`${tag}: the table is unsound after the pointer path by ${mode} — ${bad[0]}`);
+      b2.dispose();
+    }
+  }
+
+  /** A look, a step, `[E]`, a field point, the carry slot. */
+  async function behaviours(bench, camera, vw, vh, tag) {
+    camera.updateMatrixWorld(true);
+    // An empty spot is a look: nothing is grabbed, the view swings and settles back.
+    const e0 = { ...px(bench, camera, vw, vh, { x: 66, y: 28.5 }), pointerId: 91, preventDefault() {} };
+    bench._onPointerDown(e0);
+    if (bench.grabbing) fail(`${tag}: a press on empty table took hold of something`);
+    bench._onPointerMove({ ...e0, clientX: e0.clientX + 40, clientY: e0.clientY + 10 });
+    if (!bench.lean || bench.lean.look.yaw === 0) fail(`${tag}: a drag on empty table is not a look`);
+    bench._onPointerUp({ ...e0, clientX: e0.clientX + 40, clientY: e0.clientY + 10 });
+    for (let i = 0; i < 90; i++) bench.update(1 / 30);
+    if (bench.lean && (bench.lean.look.yaw !== 0 || bench.lean.look.pitch !== 0)) fail(`${tag}: the look did not settle back to the framing`);
+    if (bench.playerControlled) fail(`${tag}: a look handed the camera to the player`);
+
+    // A step stands the player up; [E] at the bench leans in again; Escape / Stand does the same as a step.
+    bench.leaveLean({ walked: true });
+    if (bench.leaning || !bench.playerControlled) fail(`${tag}: a step did not hand the camera back to the walk`);
+    const origin = camera.position.clone();
+    const toPlate = new THREE.Vector3(0, 0.895, 0.2);
+    bench.root.localToWorld(toPlate);
+    const stand = origin.clone().setY(anchor.topY + 0.65);
+    const front = new THREE.Vector3(0, 0, 1.8); bench.root.localToWorld(front);
+    stand.x = front.x; stand.z = front.z;
+    const dir = toPlate.clone().sub(stand).normalize();
+    const e = bench.aimedInteraction(stand, dir, world);
+    if (!e || !/LEAN IN/.test(e.prompt)) fail(`${tag}: [E] at the bench does not offer to lean in`);
+    else { e.act(); bench.settleLean(); if (!bench.leaning) fail(`${tag}: [E] did not lean in`); }
+    bench.leaveLean();
+    if (bench.leaning || bench.playerControlled) fail(`${tag}: Stand did not return the standing aim`);
+    bench.leanIn({ instant: true });
+
+    // A field point: registered by the world, taken with [E] where the camera POINTS, carried, then on the table.
+    const shelf = FP.registerFieldPoint(world, { id: 'shelf', siteId: questId, label: 'Sample Shelf', host: 'throwaway', pos: [anchor.position[0] + 9, anchor.topY + 0.6, anchor.position[2] + 9] });
+    const eye = new THREE.Vector3(shelf.pos[0], shelf.pos[1] + 0.9, shelf.pos[2] + 2);
+    const at = bench.aimedInteraction(eye, new THREE.Vector3(0, -0.1, -1).normalize(), world);
+    if (!at || !/TAKE/.test(at.prompt)) fail(`${tag}: [E] aimed at a registered field point offers nothing`);
+    const away = bench.aimedInteraction(eye, new THREE.Vector3(1, 0, 0), world);
+    if (away && /TAKE/.test(away.prompt)) fail(`${tag}: [E] offers a field point the camera is not pointed at`);
+    const near = bench.aimedInteraction(eye.clone().add(new THREE.Vector3(0, 0, 8)), new THREE.Vector3(0, -0.1, -1).normalize(), world);
+    if (near && /TAKE/.test(near.prompt)) fail(`${tag}: [E] offers a field point out of reach`);
+    let carried = null;
+    bench.onCarry = label => { carried = label; };
+    bench.onAction = a => { bench.state = MODEL.apply(bench.state, a); bench.setState(bench.state); };
+    if (at) at.act();
+    if (!carried) fail(`${tag}: taking a field item left nothing in the carry slot`);
+    if (!bench.state.pieces.w1.hidden) fail(`${tag}: the carried item is on the table before the player is back at the bench`);
+    bench.leaveLean();
+    bench.leanIn({ instant: true });
+    if (carried) fail(`${tag}: leaning in at the bench left the item in the carry slot`);
+    if (bench.state.pieces.w1.hidden) fail(`${tag}: the carried item did not appear on the table back at the bench`);
+    else if (!bench.swarms?.get('seal')?.ids.includes('w1')) fail(`${tag}: an instanced kind's piece is not in its instanced body`);
+    FP.clearFieldPoints(world);
+    try { FP.registerFieldPoint(world, { id: 'free', siteId: questId, label: 'X', pos: [0, 0, 0] }); fail('a field point with no host was accepted'); } catch { /* refused, as it should be */ }
+  }
+}
+
+/* ------------------------------------------------------------ the real table stages */
+
+/**
+ * EVERY REAL TABLE STAGE, LEANED IN, in the world its quest is played in (plan §3.5). The throwaway
+ * table above proves the pipeline; this holds what shipped to the same rules:
+ *   - at every supported viewport the stage's whole table is inside the free glass, below the HUD and
+ *     the prompt strip and above the foot dock, and its smallest piece is 28 px or more across;
+ *   - the camera stands in the bay's `approach` or `lean` air;
+ *   - every piece's face is painted (the kit's `paintPiece` runs on a real canvas) and the table is
+ *     dressed from the host's own materials, never the bench kit's;
+ *   - the stage's whole SOLUTION is played through the viewer's own pointer handlers, by drag and by
+ *     two taps, and lands on the table the reducer reaches (a field step goes through the world's
+ *     registered point, the carry slot and the lean-in);
+ *   - a stage that fetches names a point this world registered, and the plate is not drawn there.
+ */
+{
+  console.log('\nthe real table stages, leaned in');
+  const MODEL = await import('../src/learn/table/model.js');
+  const SNAP = await import('../src/learn/table/snap.js');
+  const LAYOUT = await import('../src/learn/table/layout.js');
+  const REG = await import('../src/learn/table/kits/registry.js');
+  const BAY = await import('../src/three/bench-bay.js');
+  const FP = await import('../src/three/field-points.js');
+  const { Table3D } = await import('../src/learn/engine/table3d.js');
+  const { chromeReserve } = await import('../src/learn/engine/lean.js');
+  const { setBenchHost } = await import('../src/learn/engine/bench-host.js');
+  const { allQuests } = await import('../src/learn/curriculum.js');
+  const WORLD_OF = { unit01: TallowWorld, unit03: LigarWorld, unit02: LanternfallWorld, unit04: BellowsWorld, unit05: EmberReachWorld };
+  const worlds = new Map();
+  const worldFor = unit => {
+    if (!worlds.has(unit)) { const w = new WORLD_OF[unit](null); w.scene.updateMatrixWorld(true); worlds.set(unit, w); }
+    return worlds.get(unit);
+  };
+  const setGlass = (w, h) => { window.innerWidth = w; window.innerHeight = h; };
+  const lean = BAY.bayBoxes().lean;
+  const approach = BAY.bayBoxes().approach;
+  const inBox = (p, b) => p.every((v, i) => v >= b.min[i] - 1e-6 && v <= b.max[i] + 1e-6);
+  const sigOf = s => JSON.stringify(MODEL.signature(s));
+  let stages = 0;
+  let presses = 0;
+
+  for (const q of allQuests().filter(x => x.status === 'live')) {
+    const mod = await q.module();
+    const tableStages = (mod.STAGES || []).map((s, i) => [s, i]).filter(([s]) => s.widget?.type === 'table');
+    if (!tableStages.length) continue;
+    const [unit, questId] = q.key.split('/');
+    // A BOSS is fought away from any bench: the player stands on open ground, so its tables are built in their own room
+    // (the viewer's own scene, the bench kit's own materials) and are held to everything else a table is. A quest with NO
+    // WORLD under it (Kettle) builds its own room too, but a NAMED one (`rooms.js`, `mod.ROOM`): its table is dressed from
+    // that room's materials, never the bench kit's, and the room itself is held to the host's rules below.
+    const boss = q.arena === 'boss';
+    const roomId = mod.ROOM || null;
+    const standalone = boss || !WORLD_OF[unit];
+    const w = standalone ? null : worldFor(unit);
+    const anchor = standalone ? null : w.benchAnchor(questId);
+    if (!standalone && !anchor) { fail(`${q.key}: plays table stages but its world has no bench anchor`); continue; }
+    if (!WORLD_OF[unit] && !roomId) { fail(`${q.key}: has no world to stand in and names no room (export ROOM)`); continue; }
+    const mats = anchor?.dormant?.userData?.benchMats || null;
+    if (!standalone) w.setBenchDeployed(questId, true);
+    const frameOf = camera => (standalone ? null : { scene: w.scene, camera, position: anchor.position, rotationY: anchor.rotationY, topY: anchor.topY, materials: mats, object: w, walkOwnsHeight: true });
+
+    for (const [stage, i] of tableStages) {
+      stages++;
+      const label = `${q.key} stage ${i + 1}`;
+      const before = failures;
+      const spec = stage.table;
+      const kit = REG.getKit(spec.kit);
+
+      // A stage that sends the player out: where this world registered the point, the player walks to it (the
+      // chevron leads there, no plate is drawn or tapped, `[E]` takes it); everywhere else the drawn plate stands in.
+      if (standalone && !boss && (spec.fetch || []).length) fail(`${label}: a quest with no walkable world declares a field stage`);
+      for (const f of standalone ? [] : spec.fetch || []) {
+        const pt = FP.fieldPointById(w, f.id);
+        const guides = [];
+        setBenchHost({ mount() {}, unmount() {}, guide: wp => guides.push(wp) });
+        setGlass(1920, 1080);
+        const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+        let st = MODEL.createTable(spec, stage.title);
+        const b = new Table3D(null, { world: frameOf(camera), onAction: a => { st = MODEL.apply(st, a); b.setState(st); b.settle(); } });
+        b.setState(st);
+        b.settleLean();
+        camera.updateMatrixWorld(true);
+        if (pt) {
+          if (b.showsSite(f.id)) fail(`${label}: the world has the point "${f.id}" but the built table still shows its site plate`);
+          const lead = guides.filter(Boolean).pop();
+          if (!lead || Math.hypot(lead.x - pt.stand[0], lead.z - pt.stand[2]) > 0.01) fail(`${label}: the chevron does not lead to the field point "${f.id}"`);
+          // A tap where the plate would be does nothing: the walk is the way.
+          const plate = f.at;
+          const pl = b.map.toPlate(plate);
+          const pr = new THREE.Vector3(pl.x, 0.895, pl.z);
+          b.root.localToWorld(pr);
+          pr.project(camera);
+          const e = { clientX: (pr.x + 1) / 2 * 1920, clientY: (1 - pr.y) / 2 * 1080, pointerId: 99, preventDefault() {} };
+          b._onPointerDown(e); b._onPointerUp(e);
+          if (Object.values(st.pieces).some(p => p.fetchFrom === f.id && !p.hidden)) fail(`${label}: a tap where the plate would be took the item without the walk`);
+          b.takeField(pt);
+          if (guides[guides.length - 1] !== null) fail(`${label}: the chevron is still leading once the item is carried`);
+          b.flushCarry();
+          if (Object.values(st.pieces).some(p => p.fetchFrom === f.id && p.hidden)) fail(`${label}: the carried item did not reach the table`);
+        } else if (!b.showsSite(f.id)) {
+          fail(`${label}: no field point in this world, yet the built table draws no site plate`);
+        }
+        b.dispose();
+        setBenchHost(null);
+      }
+
+      for (const [vpName, vw, vh] of LEAN_VIEWPORTS) {
+        setGlass(vw, vh);
+        const camera0 = new THREE.PerspectiveCamera(FOV, vw / vh, 0.05, 80);
+        const bench = new Table3D(null, { world: frameOf(camera0), onAction: () => {}, room: roomId });
+        const camera = standalone ? bench.camera : camera0;
+        const state = MODEL.createTable(spec, stage.title);
+        try { bench.setState(state); } catch (e) { fail(`${label} @ ${vpName}: building the built table faulted — ${e.stack?.split('\n').slice(0, 3).join(' ')}`); bench.dispose(); continue; }
+        bench.settleLean();
+        const tag = `${label} leaned in @ ${vpName} (${vw}x${vh})`;
+        if (!bench.leaning || !bench.lean?.pose) { fail(`${tag}: the table did not lean in`); bench.dispose(); continue; }
+        if (!bench.lean.pose.fits) fail(`${tag}: the used zone does not fit the free glass`);
+        const res = chromeReserve(vw, vh);
+        const free = { l: -1 + 2 * res.left / vw, r: 1 - 2 * res.right / vw, b: -1 + 2 * res.bottom / vh, t: 1 - 2 * res.top / vh };
+        camera.updateMatrixWorld(true);
+        const zone = bench.map.zone;
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (const [x, z] of [[zone.x0, zone.z0], [zone.x1, zone.z0], [zone.x0, zone.z1], [zone.x1, zone.z1]]) {
+          const p = new THREE.Vector3(x, 0.895, z);
+          bench.root.localToWorld(p);
+          p.project(camera);
+          minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+        }
+        const eps = 0.012;
+        if (minX < free.l - eps || maxX > free.r + eps) fail(`${tag}: the table runs out of the free width`);
+        if (maxY > free.t + eps) fail(`${tag}: the table runs under the HUD and the prompt strip`);
+        if (minY < free.b - eps) fail(`${tag}: the table runs under the foot dock`);
+
+        // The smallest piece, in screen pixels.
+        let smallest = Infinity;
+        for (const p of Object.values(state.pieces)) {
+          // A fixed piece (an atom on a Lewis slate, a joint) is never grabbed: it is a target, found by the reach
+          // of the piece dropped on it, so it owes no hit size.
+          if (p.hidden || p.fixed) continue;
+          const r = REG.radiusOf(kit, p);
+          const a = bench.map.toPlate(p.at);
+          const b = bench.map.toPlate({ x: p.at.x + r, y: p.at.y });
+          const pa = new THREE.Vector3(a.x, 0.895, a.z);
+          const pb = new THREE.Vector3(b.x, 0.895, b.z);
+          bench.root.localToWorld(pa); bench.root.localToWorld(pb);
+          pa.project(camera); pb.project(camera);
+          smallest = Math.min(smallest, 2 * Math.hypot((pb.x - pa.x) * vw / 2, (pb.y - pa.y) * vh / 2));
+        }
+        if (smallest < 28) fail(`${tag}: the smallest piece is ${smallest.toFixed(1)} px across, under 28`);
+
+        const local = bench.root.worldToLocal(camera.position.clone());
+        const inBay = [local.x, local.y + (BAY.PLATE_TOP - 0.895), local.z];
+        if (!inBox(inBay, lean) && !inBox(inBay, approach)) fail(`${tag}: the camera is outside the approach and lean air`);
+
+        // Every kit-painted piece has a face, and every table is dressed from the host's own materials.
+        if (vpName === '16:9') {
+          const painted = bench.pieceRoot.children.filter(c => c.userData.ring).length;
+          const expect = Object.values(state.pieces).filter(p => !p.hidden && !(p.kind === 'card' || p.token)).length;
+          if (painted < expect) fail(`${tag}: ${painted} of ${expect} pieces were built`);
+          const offenders = new Set();
+          const dress = mats || bench.room?.mats || null;
+          for (const root of [bench.fixtureRoot, bench.pieceRoot, bench.joinRoot]) {
+            root.traverse(o => {
+              if (!o.isMesh) return;
+              const m = o.material;
+              if (dress && (Object.values(dress).includes(m) || m.userData?.tableOwned)) return;
+              offenders.add(m === bench.steelMat || m === bench.darkMat ? 'the bench kit' : (m.type || 'a material'));
+            });
+          }
+          if (roomId && !bench.room) fail(`${tag}: names the room "${roomId}" and was built without it`);
+          if (offenders.size && (!boss || roomId)) fail(`${tag}: dressed from ${[...offenders].join(', ')}, not ${roomId ? `the ${roomId} room's` : "the host's"} own materials`);
+        }
+        bench.dispose();
+      }
+
+      // The solution through the real pointer path, by drag and by two taps.
+      const script = mod.SOLUTIONS[i];
+      setGlass(1920, 1080);
+      for (const mode of ['drag', 'tap']) {
+        const camera0 = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+        let st = MODEL.createTable(spec, stage.title);
+        const b2 = new Table3D(null, { world: frameOf(camera0), onAction: a => { st = MODEL.apply(st, a); b2.setState(st); b2.settle(); }, room: roomId });
+        const camera = standalone ? b2.camera : camera0;
+        b2.setState(st);
+        b2.settleLean();
+        camera.updateMatrixWorld(true);
+        let id = 40;
+        const px = u => {
+          const pl = b2.map.toPlate(u);
+          const p = new THREE.Vector3(pl.x, 0.895, pl.z);
+          b2.root.localToWorld(p);
+          p.project(camera);
+          return { clientX: (p.x + 1) / 2 * 1920, clientY: (1 - p.y) / 2 * 1080 };
+        };
+        const ev = u => ({ ...px(u), pointerId: id, preventDefault() {} });
+        const down = u => { id++; b2._onPointerDown(ev(u)); if (b2.grabbing) presses++; };
+        const move = u => b2._onPointerMove(ev(u));
+        const up = u => b2._onPointerUp(ev(u));
+        const tap = u => { down(u); up(u); };
+        try {
+          for (const step of script) {
+            const verb = Object.keys(step)[0];
+            const arg = step[verb];
+            let piece = null, to = null;
+            if (verb === 'place' && arg.to !== undefined) { piece = arg.piece ?? st.carry.held; to = arg.to; }
+            else if (verb === 'join') { piece = arg[0]; to = `piece:${arg[1]}`; }
+            else if (verb === 'predict' && arg) { piece = arg; to = `slot:${st.prediction.slot}`; }
+            if (piece) {
+              const c = { ...st.pieces[piece].at };
+              const p = SNAP.pointFor(st, kit, to, piece);
+              if (mode === 'drag') { down(c); move({ x: (c.x + p.x) / 2, y: (c.y + p.y) / 2 }); move(p); up(p); }
+              else { tap(c); tap(to.startsWith('piece:') ? { ...st.pieces[to.slice(6)].at } : p); }
+            } else if (verb === 'setDial') {
+              const lay = LAYOUT.fixtureLayout(st.fixtures[arg.fixture]);
+              const t = lay.dials.find(x => x.name === arg.dial);
+              const d = st.fixtures[arg.fixture].dials[arg.dial];
+              tap({ x: t.x0 + (arg.value - d.min) / (d.max - d.min) * (t.x1 - t.x0), y: t.y });
+            } else if (verb === 'run') {
+              const r = LAYOUT.fixtureLayout(st.fixtures[typeof arg === 'string' ? arg : arg.fixture]).run;
+              tap({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
+            } else if (verb === 'fetch') {
+              // Where the world has the point, the player walks to it and presses [E]; here that is the point itself.
+              const pt = w ? FP.fieldPointById(w, arg) : null;
+              if (pt) { if (!b2.takeField(pt)) fail(`${label}: the world's point "${arg}" took nothing`); b2.flushCarry(); }
+              else tap({ ...st.fetch[arg].at });
+            } else {
+              b2.onAction(step);
+            }
+          }
+        } catch (e) {
+          fail(`${label}: playing the solution by ${mode} through the pointer path faulted — ${e.stack?.split('\n').slice(0, 3).join(' ')}`);
+          b2.dispose();
+          continue;
+        }
+        const direct = MODEL.runScript(MODEL.createTable(spec, stage.title), script, { mode: 'direct', strict: true });
+        if (sigOf(st) !== sigOf(direct)) {
+          const a = JSON.parse(sigOf(st));
+          const d = JSON.parse(sigOf(direct));
+          fail(`${label}: the pointer path by ${mode} does not reach the table the script names (differs in ${Object.keys(d).filter(k => JSON.stringify(a[k]) !== JSON.stringify(d[k])).join(', ')})`);
+        }
+        const solved = stage.check({ ...mod.stateFor(i, {}), table: st });
+        if (!solved.ok) fail(`${label}: after the pointer path by ${mode} the stage does not pass (${solved.msg})`);
+        const bad = MODEL.checkInvariants(st);
+        if (bad.length) fail(`${label}: the table is unsound after the pointer path by ${mode} — ${bad[0]}`);
+        b2.dispose();
+      }
+      if (failures === before) ok(`${label}: leans in at ${LEAN_VIEWPORTS.length} viewports (whole table in the free glass, pieces 28 px or more, host materials), solved through the real pointer path by drag and by two taps`);
+    }
+    if (!standalone) w.setBenchDeployed(questId, false);
+  }
+  if (!stages) fail('no real table stage was found to check');
+  else ok(`${stages} real table stage(s) checked on the built table (${presses} presses took hold)`);
+}
+
+/* ------------------------------------------------------------ the bosses on their tables */
+
+/**
+ * A BOSS'S FIGHT, ON A TABLE (plan §2.6 and the T2b and T2c briefs: the Hopper's five phases, the golem's two). Each phase is a table, and the foe stands in the
+ * table's corner pad (`table/layout.js` `FOE_PAD`), watching it. Held here, at every viewport the table is leaned in at:
+ *   - one body per foe the stage names, in the pad, and every pose it can take stays inside the pad: the body never leaves its
+ *     corner, so it can neither stand in the camera's lean air nor over a zone, a fixture, the strip or a piece;
+ *   - the body is in the frame (inside the free glass, under the chrome) wherever the table is;
+ *   - nothing on the table stands under it: every zone, fixture and loose piece of the stage is clear of the pad;
+ *   - its pose is `planFoe`'s and nothing else (the 2D `Encounter` driven for real: a reaction reads back, a committed miss
+ *     lunges, a clear disperses, a replay and a knock-back restore it) and it is a few thousand triangles, no more;
+ *   - a press on the pad is a press on the table, never a take of the foe (a foe only observes).
+ */
+for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hopper.js', null], ['boss-golem', 'unit07/boss-golem.js', 'foundry'], ['boss-warden', 'unit03/boss-warden.js', null]]) {
+  console.log(`\n${bossName} on its tables`);
+  const MODEL = await import('../src/learn/table/model.js');
+  const SNAP = await import('../src/learn/table/snap.js');
+  const LAYOUT = await import('../src/learn/table/layout.js');
+  const REG = await import('../src/learn/table/kits/registry.js');
+  const { Table3D } = await import('../src/learn/engine/table3d.js');
+  const { chromeReserve } = await import('../src/learn/engine/lean.js');
+  const hop = await import(`../src/learn/quests/${bossModule}`);
+  // Every pose the species' planner can answer (`foes.js`): the hopper's and the golem's, and the warden's own.
+  const POSES = bossName === 'boss-warden'
+    ? [['idle'], ['unmoved'], ['gripped'], ['cleaved'], ['splayed'], ['turned'], ['still'], ['locked'], ['free'], ['dispersed']]
+    : [['idle'], ['unmoved'], ['cracked'], ['neutral'], ['balanced'], ['starved'], ['dispersed']];
+  const setGlass = (w, h) => { window.innerWidth = w; window.innerHeight = h; };
+  const before = failures;
+  let fights = 0;
+
+  for (const [i, stage] of hop.STAGES.entries()) {
+    const enc = resolveEncounter(stage);
+    const label = `${bossName} phase ${i + 1}`;
+    if (!enc) { fail(`${label}: declares no encounter`); continue; }
+    if (stage.field || (stage.table.fetch || []).length) fail(`${label}: a boss phase declares a field stage (the walk is suspended while it stands)`);
+    fights++;
+    for (const [vpName, vw, vh] of LEAN_VIEWPORTS) {
+      setGlass(vw, vh);
+      const tag = `${label} @ ${vpName} (${vw}x${vh})`;
+      // The frame runs before the instrument: the encounter has begun when the table stands up.
+      const host = { hidden: true, innerHTML: '', className: '', dataset: {}, querySelectorAll: () => [] };
+      const encounter = new Encounter(host);
+      encounter.begin(enc);
+      const bench = new Table3D(null, { onAction: () => {}, room: bossRoom });
+      const state = MODEL.createTable(stage.table, stage.title);
+      bench.setState(state);
+      bench.settleLean();
+      const camera = bench.camera;
+      camera.updateMatrixWorld(true);
+      const layer = bench.foes;
+      layer.update(0.05);
+      if (layer.bodies.size !== enc.foes.length) { fail(`${tag}: ${enc.foes.length} foes, ${layer.bodies.size} bodies`); bench.dispose(); encounter.dispose(); continue; }
+
+      // The pad, on the plate (viewer frame, metres).
+      const pad = LAYOUT.foePadOf(state.bounds);
+      const a = bench.map.toPlate({ x: pad.rect.x0, y: pad.rect.y0 });
+      const b = bench.map.toPlate({ x: pad.rect.x1, y: pad.rect.y1 });
+      const padBox = { x0: a.x, x1: b.x, z0: a.z, z1: b.z };
+      const inv = new THREE.Matrix4().copy(bench.root.matrixWorld).invert();
+
+      // Every pose, drawn from planFoe's own pose names.
+      const extents = new Map();
+      for (const [pose] of POSES) {
+        layer.sync(snapshotOf(enc, pose));
+        runLayer(layer, pose === 'dispersed' ? 4.2 : 1.2, extents, inv);
+      }
+      layer.sync(snapshotOf(enc, 'idle'));
+      layer.sync({ ...snapshotOf(enc, 'idle'), fight: { ...newFight(), lost: 1 } });
+      runLayer(layer, 1.2, extents, inv);
+      for (const [body, box] of extents) {
+        const eps = 0.02;
+        // (a committed miss makes the body lunge a few centimetres toward the player and back.)
+        if (box.min.x < padBox.x0 - eps || box.max.x > padBox.x1 + eps || box.min.z < padBox.z0 - eps || box.max.z > padBox.z1 + 0.06) {
+          fail(`${tag}: the ${body.species} leaves its corner — x[${box.min.x.toFixed(2)}, ${box.max.x.toFixed(2)}] z[${box.min.z.toFixed(2)}, ${box.max.z.toFixed(2)}] against the pad x[${padBox.x0.toFixed(2)}, ${padBox.x1.toFixed(2)}] z[${padBox.z0.toFixed(2)}, ${padBox.z1.toFixed(2)}]`);
+        }
+        if (box.min.y < 0.885 || box.max.y > 0.895 + 0.36) fail(`${tag}: the ${body.species} spans y[${box.min.y.toFixed(2)}, ${box.max.y.toFixed(2)}] — the plate is at 0.895`);
+      }
+
+      // Nothing stands under it: the table's own furniture and loose pieces are clear of the pad.
+      const kit = REG.getKit(state.kit);
+      const clear = (name, r) => {
+        if (r.x0 < pad.rect.x1 && pad.rect.x0 < r.x1 && r.y0 < pad.rect.y1 && pad.rect.y0 < r.y1) fail(`${tag}: ${name} stands in the foe's corner`);
+      };
+      for (const z of Object.values(state.zones.trays)) clear(`tray ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.tray));
+      for (const z of Object.values(state.zones.slots)) clear(`slot ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.slot));
+      for (const z of Object.values(state.zones.containers)) clear(`container ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.container));
+      for (const z of Object.values(state.fixtures)) clear(`fixture ${z.id}`, LAYOUT.fixtureLayout(z).box);
+      for (const p of Object.values(state.pieces)) { const r = REG.radiusOf(kit, p); clear(`piece ${p.id}`, { x0: p.at.x - r, x1: p.at.x + r, y0: p.at.y - r, y1: p.at.y + r }); }
+      clear('the recorder strip', SNAP.rectOf(state.recorder.box, { w: 30, h: 18 }));
+
+      // In the frame: inside the free glass wherever the table is, and under the chrome.
+      const res = chromeReserve(vw, vh);
+      const free = { l: -1 + 2 * res.left / vw, r: 1 - 2 * res.right / vw, b: -1 + 2 * res.bottom / vh, t: 1 - 2 * res.top / vh };
+      layer.sync(snapshotOf(enc, 'idle'));
+      runLayer(layer, 0.4, new Map(), inv);
+      for (const body of layer.bodies.values()) {
+        const nd = ndcBounds(body.group, camera);
+        if (!nd) { fail(`${tag}: the ${body.species} has no bounds`); continue; }
+        const eps = 0.02;
+        if (nd.minX < free.l - eps || nd.maxX > free.r + eps || nd.maxY > free.t + eps || nd.minY < free.b - eps) {
+          fail(`${tag}: the ${body.species} is outside the free glass — x[${nd.minX.toFixed(2)}, ${nd.maxX.toFixed(2)}] y[${nd.minY.toFixed(2)}, ${nd.maxY.toFixed(2)}] against x[${free.l.toFixed(2)}, ${free.r.toFixed(2)}] y[${free.b.toFixed(2)}, ${free.t.toFixed(2)}]`);
+        }
+      }
+      for (const body of layer.bodies.values()) {
+        const tris = trianglesOf(body.group);
+        if (tris > 16000) fail(`${tag}: the ${body.species} draws ${Math.round(tris)} triangles (budget 16000)`);
+      }
+
+      // A press on the pad is a press on the table: the foe is not a handle.
+      if (vpName === '16:9') {
+        const hits = [];
+        const grab = bench.gestures.wouldGrab({ x: pad.x, y: pad.y });
+        if (grab) fail(`${tag}: a press on the foe's corner takes hold of something`);
+      }
+      bench.dispose();
+      encounter.dispose();
+    }
+
+    // The 2D Encounter driven for real, with a body standing on the table.
+    {
+      setGlass(1920, 1080);
+      const host = { hidden: true, innerHTML: '', className: '', dataset: {}, querySelectorAll: () => [] };
+      const encounter = new Encounter(host);
+      encounter.begin(enc);
+      const bench = new Table3D(null, { onAction: () => {}, room: bossRoom });
+      bench.setState(MODEL.createTable(stage.table, stage.title));
+      const layer = bench.foes;
+      layer.update(0.05);
+      const tag = `${label} (the fight)`;
+      for (const f of enc.foes) {
+        for (const pose of bossName === 'boss-warden' ? ['gripped', 'cleaved', 'unmoved'] : ['cracked', 'neutral', 'unmoved']) {
+          const probe = { pose };
+          const want = planFoe(enc, f, probe);
+          encounter.react(f.id, probe);
+          layer.update(0.05);
+          const body = layer.bodies.get(f.id);
+          if (body.pose !== want.pose) fail(`${tag}: planFoe says "${want.pose}" and the body in the scene is in "${body.pose}"`);
+        }
+      }
+      encounter.onMiss();
+      for (const b of layer.bodies.values()) if (!(b.lunge > 0.99)) fail(`${tag}: a miss through the Encounter did not make the body lunge`);
+      encounter.cancel();
+      encounter.onClear();
+      layer.update(0.05);
+      for (const b of layer.bodies.values()) if (b.pose !== 'dispersed') fail(`${tag}: a clear left the foe in "${b.pose}"`);
+      for (let t = 0; t < 5.5; t += 0.05) layer.update(0.05);
+      for (const b of layer.bodies.values()) if (b.group.visible) fail(`${tag}: a cleared foe is still standing`);
+      encounter.begin(enc);
+      layer.update(0.05);
+      for (const b of layer.bodies.values()) if (!b.group.visible || b.pose !== 'idle') fail(`${tag}: a replayed phase did not restore its foe (${b.pose})`);
+      for (let k = 0; k < 3; k++) encounter.onMiss();
+      encounter.cancel();
+      encounter.paint();
+      layer.update(0.05);
+      for (const b of layer.bodies.values()) if (b.pose !== 'idle') fail(`${tag}: a knock-back left the foe in "${b.pose}"`);
+      // A new phase on the same table puts the foe in the new board's corner (the table is rebuilt, the foe is not left behind).
+      const next = hop.STAGES[(i + 1) % hop.STAGES.length];
+      encounter.begin(resolveEncounter(next));
+      bench.setState(MODEL.createTable(next.table, next.title));
+      layer.update(0.05);
+      const to = bench.foeSpots(1)[0];
+      for (const b of layer.bodies.values()) {
+        if (Math.hypot(b.baseX - to.x, b.baseZ - to.z) > 1e-6) fail(`${tag}: after the phase changed the foe stands at (${b.baseX.toFixed(2)}, ${b.baseZ.toFixed(2)}), not in the new table's corner (${to.x.toFixed(2)}, ${to.z.toFixed(2)})`);
+      }
+      encounter.dispose();
+      layer.update(0.05);
+      if (layer.bodies.size) fail(`${tag}: the foes outlived the encounter`);
+      bench.dispose();
+    }
+  }
+  if (failures === before) ok(`${bossName}: ${fights} phases fought on tables — the foe stands in the table's corner at ${LEAN_VIEWPORTS.length} viewports, every pose inside the pad and inside the glass, clear of every piece of furniture, read back from planFoe`);
+}
+
+/* ------------------------------------------------------------ Kettle's room, from the lean-in view */
+
+/**
+ * A ROOM IS HELD TO WHAT A HOST IS (plan `bench-tabletop.md` §2.6). Kettle has no world to stand in, so at T4 its table builds a
+ * room of its own (`rooms.js`, the foundry). Measured here, in the bay frame, against the bodies the room builds (its own bench
+ * is the one thing exempt, as a host's is):
+ *   - none of the bay's clearance volumes holds a body (plate, work, panels, behind, approach, and the camera's `lean` air);
+ *   - from the lean-in pose at every viewport no body stands between the camera and the plate (`sight`), and past the plate's
+ *     far edge the frame is the room (`view`: a ray grid that reaches a wall, a prop or the floor, never bare sky);
+ *   - there is a lamp over the plate: a lens that is the one lit thing in the room, with the light it throws, inside the plate's
+ *     footprint and out of the camera's air; no other mesh is emissive;
+ *   - the table is dressed from the room's own materials, not the bench kit's (and the check has teeth: with no room the same
+ *     table IS dressed from the bench kit);
+ *   - the room is a few thousand triangles.
+ * And a heap is hundreds of atoms in one draw call: a table with piles of 300 and 200 builds three instanced bodies, not five
+ * hundred meshes, every atom lies inside its container and clear of its neighbours, and a pile drawn down shows fewer.
+ */
+{
+  console.log("\nKettle's room, from the lean-in view");
+  const before = failures;
+  const MODEL = await import('../src/learn/table/model.js');
+  const BAY = await import('../src/three/bench-bay.js');
+  const { Table3D } = await import('../src/learn/engine/table3d.js');
+  const { planLeanIn, PLATE_ZONE } = await import('../src/learn/engine/lean.js');
+  const { collectBoxes, findBayIntrusions } = await import('./lib/overlap.mjs');
+  const { sightBlockers, behindCover } = await import('./lib/lean-check.mjs');
+  const HEAP = await import('../src/learn/table/kits/heap.js');
+  const setGlass = (w, h) => { window.innerWidth = w; window.innerHeight = h; };
+  setGlass(1920, 1080);
+  const lift = BAY.PLATE_TOP - 0.895;
+
+  const room = new Table3D(null, { onAction: () => {}, room: 'foundry' });
+  if (!room.room || room.room.id !== 'foundry') fail('a table asked for the foundry room did not build it');
+  room.scene.updateMatrixWorld(true);
+  const node = new THREE.Group();
+  node.position.set(0, 0.895 - BAY.PLATE_TOP, 0);
+  node.updateMatrixWorld(true);
+  const frame = new THREE.Matrix4().copy(node.matrixWorld).invert();
+  const own = room.benchGroup;
+  const bodies = collectBoxes(room.scene, { frame, skip: o => o === own });
+  if (bodies.length < 20) fail(`the foundry builds only ${bodies.length} bodies round its bench`);
+  const hits = findBayIntrusions(room.scene, frame, BAY.bayBoxes(), { skip: o => o === own, bodies });
+  for (const h of hits.slice(0, 3)) fail(`the foundry: ${h.body} stands ${h.depth.toFixed(2)} m inside the bay's ${h.volume} volume at (${h.at.join(', ')})`);
+
+  // The leaned-in view at every supported viewport: nothing in the way, and a room behind the plate.
+  let rays = 0;
+  for (const [name, vw, vh] of LEAN_VIEWPORTS) {
+    const pose = planLeanIn({ viewport: { w: vw, h: vh } });
+    const cam = [pose.position[0], pose.position[1] + lift, pose.position[2]];
+    const sb = sightBlockers(bodies, cam, PLATE_ZONE, BAY.PLATE_TOP);
+    if (sb.blocked) fail(`the foundry: ${sb.first.name} stands between the camera and the plate at ${name} (${sb.blocked} of ${sb.total} rays)`);
+    const camera = new THREE.PerspectiveCamera(FOV, vw / vh, 0.05, 80);
+    camera.position.set(...cam);
+    camera.lookAt(pose.target[0], pose.target[1] + lift, pose.target[2]);
+    const bc = behindCover({ bodies, camera, plateY: BAY.PLATE_TOP, farZ: -BAY.BENCH_BAY.depth / 2, toWorld: new THREE.Matrix4(), terrain: () => lift, safe: pose.safe });
+    rays += bc.total;
+    if (bc.covered < bc.total) fail(`the foundry at ${name}: ${bc.total - bc.covered} of ${bc.total} rays past the plate reach no wall, no prop and no floor`);
+  }
+
+  // The checks have teeth: a body in the camera's air, a body in the sightline, and a room with no walls and no floor are each found.
+  {
+    const box = (x0, y0, z0, x1, y1, z1) => ({ box: new THREE.Box3(new THREE.Vector3(x0, y0, z0), new THREE.Vector3(x1, y1, z1)), name: 'control', mesh: null });
+    const inAir = findBayIntrusions(room.scene, frame, BAY.bayBoxes(), { skip: o => o === own, bodies: [...bodies, box(-0.3, 3.0, 1.2, 0.3, 3.2, 1.4)] });
+    if (!inAir.some(h => h.volume === 'lean' && h.body === 'control')) fail('a body in the camera\'s air was not found by the lean volume');
+    const pose = planLeanIn({ viewport: { w: 1920, h: 1080 } });
+    const cam = [pose.position[0], pose.position[1] + lift, pose.position[2]];
+    const mid = [cam[0], (cam[1] + BAY.PLATE_TOP) / 2, (cam[2] + 0) / 2];
+    const blocker = box(mid[0] - 0.5, mid[1] - 0.1, mid[2] - 0.3, mid[0] + 0.5, mid[1] + 0.1, mid[2] + 0.3);
+    if (sightBlockers([...bodies, blocker], cam, PLATE_ZONE, BAY.PLATE_TOP).blocked === 0) fail('a body between the camera and the plate was not found by the sight rays');
+    const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+    camera.position.set(...cam);
+    camera.lookAt(pose.target[0], pose.target[1] + lift, pose.target[2]);
+    const bare = behindCover({ bodies: [], camera, plateY: BAY.PLATE_TOP, farZ: -BAY.BENCH_BAY.depth / 2, toWorld: new THREE.Matrix4(), terrain: () => -100, safe: pose.safe });
+    if (!(bare.total > 0 && bare.covered === 0)) fail(`a room with no walls and no floor still covers ${bare.covered} of ${bare.total} rays`);
+  }
+
+  // The lamp over the plate.
+  {
+    const [lx, ly, lz] = room.room.lamp;
+    if (Math.abs(lx) > BAY.BENCH_BAY.width / 2 || Math.abs(lz) > BAY.BENCH_BAY.depth / 2) fail('the foundry lamp does not hang over the plate');
+    if (ly < BAY.WORK_TOP - lift + 0.05) fail(`the foundry lamp hangs at ${ly.toFixed(2)} m, inside the bay's work air`);
+    const key = room.room.key;
+    if (!key || key.isSpotLight !== true || Math.hypot(key.position.x - lx, key.position.z - lz) > 0.3 || key.position.y > ly) fail('the foundry throws its light from somewhere other than its lamp');
+    const lit = [];
+    room.scene.traverse(o => { if (o.isMesh && o.material && o.material.emissiveIntensity > 0 && o.material.emissive?.getHex() > 0) lit.push(o.name || o.material.type); });
+    if (lit.length !== 1 || lit[0] !== 'lamp-lens') fail(`the foundry is lit by ${lit.join(', ') || 'nothing'}, and the one lit thing should be the lamp's own lens`);
+    const lights = [];
+    room.scene.traverse(o => { if (o.isLight) lights.push(o); });
+    if (lights.some(l => l.isPointLight)) fail('the foundry hangs a point light: only the lamp\'s spot lights the plate');
+  }
+
+  // Dressed from its own materials; with no room the same table IS the bench kit's.
+  {
+    const spec = { ...MODEL.createTable(HEAP.heapTable({ pieces: [{ id: 'a', kind: 'atom', label: 'H', at: { x: 20, y: 20 }, props: { el: 'H' } }], zones: { trays: [{ id: 't', label: 'Tray', at: { x: 60, y: 30 } }] }, fixtures: [{ id: 'f', kind: 'tally', label: 'Tally', at: { x: 90, y: 30 }, noRun: true, dials: { n: { min: 0, max: 5, step: 1, value: 0 } } }] }), 'dress') };
+    const dressed = viewer => {
+      viewer.setState(spec);
+      const offenders = new Set();
+      for (const root of [viewer.fixtureRoot, viewer.pieceRoot, viewer.joinRoot]) {
+        root.traverse(o => {
+          if (!o.isMesh) return;
+          const m = o.material;
+          if (viewer.room && (Object.values(viewer.room.mats).includes(m) || m.userData?.tableOwned)) return;
+          if (m.userData?.tableOwned) return;
+          offenders.add(m === viewer.steelMat || m === viewer.darkMat ? 'the bench kit' : (m.type || 'a material'));
+        });
+      }
+      return [...offenders];
+    };
+    const inRoom = dressed(room);
+    if (inRoom.length) fail(`a table in the foundry is dressed from ${inRoom.join(', ')}`);
+    if (room.mats.top === room.steelMat || room.mats.dark === room.darkMat) fail('the foundry table shares a material with the bench kit');
+    const bare = new Table3D(null, { onAction: () => {} });
+    if (!dressed(bare).includes('the bench kit')) fail('the room material check cannot tell a bench-kit table from a foundry one');
+    bare.dispose();
+  }
+
+  if (rays < 100) fail(`only ${rays} rays past the plate were cast across the six aspects, so the foundry's view is not measured`);
+
+  // A room is a few thousand triangles, not tens of thousands.
+  {
+    const tris = trianglesOf(room.root);
+    if (tris > 6000) fail(`the foundry draws ${Math.round(tris)} triangles (budget 6000)`);
+  }
+  room.dispose();
+
+  // Heaps at hundreds of atoms: one draw call a heap.
+  {
+    const spec = HEAP.heapTable({
+      zones: {
+        containers: [
+          HEAP.heap('hh', 'Hydrogen heap', 'H', 300, { x: 30, y: 20 }, { w: 44, h: 28 }),
+          HEAP.heap('oo', 'Oxygen heap', 'O', 200, { x: 80, y: 20 }, { w: 44, h: 28 }),
+          HEAP.product('mm', 'Built', { x: 60, y: 50 }, 150, { w: 44, h: 22 })
+        ]
+      }
+    });
+    const viewer = new Table3D(null, { onAction: () => {}, room: 'foundry' });
+    let state = MODEL.createTable(spec, 'heaps');
+    viewer.setState(state);
+    const piles = [...viewer.piles.values()];
+    if (piles.length !== 3 || !piles.every(m => m.isInstancedMesh)) fail(`three piles built ${piles.length} bodies (instanced: ${piles.every(m => m.isInstancedMesh)})`);
+    let instanced = 0;
+    viewer.fixtureRoot.traverse(o => { if (o.isInstancedMesh) instanced++; });
+    if (instanced !== 3) fail(`five hundred atoms are ${instanced} instanced bodies, not three`);
+    const countOf = id => viewer.piles.get(id).count;
+    if (countOf('hh') !== 300 || countOf('oo') !== 200 || countOf('mm') !== 0) fail(`the piles show ${countOf('hh')}, ${countOf('oo')} and ${countOf('mm')} atoms, not 300, 200 and none`);
+    // Every atom lies inside its container and clear of its neighbours.
+    for (const [id, c] of [['hh', state.zones.containers.hh], ['oo', state.zones.containers.oo]]) {
+      const mesh = viewer.piles.get(id);
+      const r = viewer.map.toPlate({ x: c.at.x - c.size.w / 2, y: c.at.y - c.size.h / 2 });
+      const r2 = viewer.map.toPlate({ x: c.at.x + c.size.w / 2, y: c.at.y + c.size.h / 2 });
+      const m = new THREE.Matrix4();
+      const pts = [];
+      for (let i = 0; i < mesh.count; i++) { mesh.getMatrixAt(i, m); pts.push(new THREE.Vector3().setFromMatrixPosition(m)); }
+      if (pts.some(p => p.x < r.x || p.x > r2.x || p.z < r.z || p.z > r2.z)) fail(`pile ${id}: an atom lies outside its container`);
+      if (pts.some(p => p.y < 0.895)) fail(`pile ${id}: an atom lies below the plate`);
+      let nearest = Infinity;
+      for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) nearest = Math.min(nearest, Math.hypot(pts[i].x - pts[j].x, pts[i].z - pts[j].z));
+      const radius = (HEAP.pileOf(c).r) * viewer.map.s;
+      if (nearest < radius * 1.9) fail(`pile ${id}: two atoms are ${(nearest / radius).toFixed(2)} radii apart`);
+    }
+    // Drawn down, a heap shows fewer atoms and the others stay where they were.
+    const first = new THREE.Matrix4();
+    viewer.piles.get('hh').getMatrixAt(5, first);
+    state = MODEL.apply(state, { pour: { from: 'hh', to: 'mm', what: 'hydrogen', amount: 120 } });
+    viewer.setState(state);
+    if (countOf('hh') !== 180 || countOf('mm') !== 120) fail(`after 120 atoms moved the piles show ${countOf('hh')} and ${countOf('mm')}, not 180 and 120`);
+    const again = new THREE.Matrix4();
+    viewer.piles.get('hh').getMatrixAt(5, again);
+    if (!first.equals(again)) fail('a pile drawn down moved the atoms that were left');
+    if (trianglesOf(viewer.fixtureRoot) > 20000) fail('five hundred atoms draw more than 20000 triangles');
+    viewer.dispose();
+  }
+
+  if (failures === before) ok(`Kettle's foundry holds the bay's volumes clear, has nothing between the camera and the plate and a room behind it at ${LEAN_VIEWPORTS.length} viewports (${rays} rays), one lit lamp over the plate, a table dressed from its own materials; a heap of hundreds is one instanced body`);
 }
 
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);

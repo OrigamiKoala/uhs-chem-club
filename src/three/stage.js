@@ -1019,6 +1019,12 @@ class Stage {
     const origin = cam.getWorldPosition(this._aimOrigin || (this._aimOrigin = new THREE.Vector3()));
     const dir = cam.getWorldDirection(this._aimDir || (this._aimDir = new THREE.Vector3()));
 
+    // At a bench standing in the world, the bench says what [E] does: lean in
+    // over its table, or take a field item (a world's registered field point).
+    if (this.mode === "quest" && this.activeQuestViewer?.inWorld) {
+      return this.activeQuestViewer.aimedInteraction?.(origin, dir, this._deployedWorld) || null;
+    }
+
     const shipTarget = this.mode === "world" ? this.voyage?.parkedAimTarget(this.activeWorld) : null;
     if (shipTarget) {
       const hit = pickAimTarget(origin, dir, [shipTarget]);
@@ -1283,6 +1289,10 @@ class Stage {
       position: anchor.position,
       rotationY: anchor.rotationY,
       topY: anchor.topY,
+      // The world's materials for this bench, when its host recorded them.
+      materials: anchor.dormant?.userData?.benchMats || null,
+      // The world itself, for what it registered at the bench (its field points).
+      object: world,
       // THE PLAYER KEEPS THEIR FEET AT A DEPLOYED BENCH, so the walk owns how
       // high off the ground their head is and the instrument must not write it.
       // The bench used to set the whole camera — position and all — several
@@ -1331,6 +1341,7 @@ class Stage {
       this.activeQuestViewer.dispose();
     }
     this.activeQuestViewer = questViewer;
+    if (this.fpsControls) this.fpsControls.holdBase = false;
     this.activeQuestScene = questViewer ? questViewer.scene : null;
     this.mode = questViewer ? "quest" : "world";
     if (this.fpsControls) {
@@ -1362,6 +1373,7 @@ class Stage {
     this.activeQuestScene = null;
     this.mode = "world";
     if (this.fpsControls) {
+      this.fpsControls.holdBase = false;
       this.fpsControls.enabled = true;
       this.fpsControls.mouseLookLocked = false;
       this.fpsControls.walkKeysAtBench = false;
@@ -1419,8 +1431,10 @@ class Stage {
       // up. A deployed bench is standing on ground that is still underfoot, so
       // W/A/S/D, the terrain clamp and the colliders all keep working while it
       // is being worked; the bench reads the camera rather than writing it.
+      if (this.fpsControls) this.fpsControls.holdBase = Boolean(this.activeQuestViewer.leaning);
       if (this.activeQuestViewer.inWorld && this.fpsControls && this.fpsControls.enabled) {
         this.fpsControls.update(delta);
+        if (typeof this.activeQuestViewer.aimedInteraction === "function") this.syncAimPrompt();
       }
       this.activeQuestViewer.update(delta, time);
       // An instrument deployed on a world the player walked to is standing IN

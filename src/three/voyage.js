@@ -1284,7 +1284,7 @@ export class Voyage {
     const from = st.camera.position;
     // A world with workings answers with the way on foot (surface, portal, doorway by doorway);
     // every other world, and a waypoint with no site, is the straight line it always was.
-    const way = (wp.siteId && world.routeTo?.(wp.siteId, { x: from.x, z: from.z })) || [[from.x, from.z], [wp.x, wp.z]];
+    const way = (wp.siteId && world.routeTo?.(wp.siteId, { x: from.x, z: from.z }, wp.to ? [wp.x, wp.z] : null)) || [[from.x, from.z], [wp.x, wp.z]];
     this.groundGuide.show(world.scene, way, {
       label: (wp.label || '').toUpperCase(),
       heightFn: (x, z) => world.getTerrainHeight(x, z),

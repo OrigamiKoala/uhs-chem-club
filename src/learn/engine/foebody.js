@@ -112,6 +112,10 @@ export function buildBasaltWarden(foe) {
 
   const rig = new THREE.Group();
   group.add(rig);
+  // The warden fights from the corner pad of a table (`table/layout.js` `FOE_PAD`) now that every bench is a tabletop, so it is a
+  // squatter, narrower body than the one that stood in a well: every pose (columns splayed, swung round, spread in the dispersal)
+  // stays inside the pad.
+  group.scale.setScalar(0.58);
 
   const mat = basaltMaterial();
   const jointMat = basaltJointMaterial();
@@ -277,8 +281,8 @@ export function buildRecipeGolem(foe) {
   const bMat = boilerMaterial();
   const brassMat = brassMaterial();
 
-  const bodyH = 0.12;
-  const bodyR = 0.06;
+  const bodyH = 0.09;
+  const bodyR = 0.055;
   const boilerGeo = own(new THREE.CylinderGeometry(bodyR, bodyR * 1.05, bodyH, 16));
   enableAO(boilerGeo);
   const boilerMesh = new THREE.Mesh(boilerGeo, bMat);
@@ -295,25 +299,25 @@ export function buildRecipeGolem(foe) {
   const band1Geo = own(new THREE.TorusGeometry(bodyR + 0.002, 0.004, 6, 20));
   const band1 = new THREE.Mesh(band1Geo, brassMat);
   band1.rotation.x = Math.PI / 2;
-  band1.position.y = 0.045;
+  band1.position.y = 0.04;
   rig.add(band1);
 
   const band2Geo = own(new THREE.TorusGeometry(bodyR + 0.002, 0.004, 6, 20));
   const band2 = new THREE.Mesh(band2Geo, brassMat);
   band2.rotation.x = Math.PI / 2;
-  band2.position.y = 0.095;
+  band2.position.y = 0.08;
   rig.add(band2);
 
   const gaugeGeo = own(new THREE.CylinderGeometry(0.018, 0.018, 0.008, 12));
   const gaugeMesh = new THREE.Mesh(gaugeGeo, brassMat);
   gaugeMesh.rotation.x = Math.PI / 2;
-  gaugeMesh.position.set(0, 0.08, bodyR + 0.005);
+  gaugeMesh.position.set(0, 0.07, bodyR + 0.005);
   rig.add(gaugeMesh);
 
   const needleGeo = own(new THREE.BoxGeometry(0.002, 0.016, 0.002));
   const needleMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
   const needleMesh = new THREE.Mesh(needleGeo, needleMat);
-  needleMesh.position.set(0, 0.08, bodyR + 0.01);
+  needleMesh.position.set(0, 0.07, bodyR + 0.01);
   rig.add(needleMesh);
 
   const ventGeo = own(new THREE.CylinderGeometry(0.012, 0.015, 0.025, 10));
@@ -360,7 +364,7 @@ export function buildRecipeGolem(foe) {
 
       if (body.pose === 'dispersed') {
         const f = Math.min(1, body.since / 2.4);
-        group.position.y = body.baseY - f * 0.03;
+        group.position.y = body.baseY - f * 0.01;
         rig.scale.set(1 + f * 0.25, Math.max(0.001, 1 - f * 0.96), 1 + f * 0.25);
         if (f >= 0.99) { body.gone = true; group.visible = false; }
       }
@@ -369,7 +373,7 @@ export function buildRecipeGolem(foe) {
 
     write(t) {
       const l = body.lunge;
-      group.position.z = body.baseZ + l * 0.08;
+      group.position.z = body.baseZ + l * 0.05;
       group.rotation.y = body.look * 0.3;
 
       const pressurePulse = !body.still ? Math.sin(t * 3.5 + body.phase) * 0.004 : 0;

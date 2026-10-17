@@ -62,6 +62,7 @@ import * as THREE from 'three';
 import tallowData from './world-data/tallow.json' with { type: 'json' };
 import { tierAtLeast } from './tier.js';
 import { buildBayBench } from './bench-bay.js';
+import { registerFieldPoint } from './field-points.js';
 import {
   platedMetal, treadPlate, sedimentaryRock,
   buildMaterial, enableAO,
@@ -458,17 +459,18 @@ export class TallowWorld {
     roof.castShadow = roof.receiveShadow = tierAtLeast('T4');
     g.add(roof);
 
-    // Roof beams, so the ceiling has structure when you look up from the bench.
+    // Roof beams, so the ceiling has structure when you look up from the bench. None crosses the air over
+    // the bench's front (the camera leans in there, `bench-bay.js` `lean`), so the one that would is left
+    // out: the slab above is the roof, and the span between its neighbours is the bench's own bay.
+    const labBench = this.data.sites.find(x => x.id === 'site-2');
     for (let i = 0; i < 5; i++) {
+      const bz = r.minZ + 1.6 + i * ((r.maxZ - r.minZ - 3.2) / 4);
+      if (labBench && bz > labBench.pos[2] - 0.6 && bz < labBench.pos[2] + 3.4) continue;
       const beam = new THREE.Mesh(
         this.own(new THREE.BoxGeometry(r.maxX - r.minX, 0.32, 0.26)),
         this.bulkMat
       );
-      beam.position.set(
-        (r.minX + r.maxX) / 2,
-        this.sub.ceilingY - 0.17,
-        r.minZ + 1.6 + i * ((r.maxZ - r.minZ - 3.2) / 4)
-      );
+      beam.position.set((r.minX + r.maxX) / 2, this.sub.ceilingY - 0.17, bz);
       g.add(beam);
     }
 
@@ -574,6 +576,9 @@ export class TallowWorld {
     const lampGroups = [
       // over the bench: four fixtures, two lights
       ...[-4.5, 4.5].map(dx => ({ fixtures: [-44.2, -41.2].map(lz => [bx + dx, lz]), mark: [bx + dx, -42.7] })),
+      // and one hung over the back of the plate itself, so the table the camera leans in over is lit from above it
+      // (behind the plate and the screens, clear of the air the camera stands in)
+      { fixtures: [[bx, -44.1]], mark: [bx, -44.1] },
       // under the vessels, and at the stair foot
       ...this.data.landmarks.filter(l => l.on === 'roof').map(l => ({ fixtures: [[l.pos[0], l.pos[2] - 3.0]], mark: [l.pos[0], l.pos[2] - 3.0] })),
       { fixtures: [[bx, s.minZ - 0.8]], mark: [bx, s.minZ - 0.8] }
@@ -1719,6 +1724,19 @@ export class TallowWorld {
 
       this.siteMarkers.set(site.questId, { site, group: g, indicator: host.bench.indicator });
       this.registerBenchAnchor(site, g, host.bench, host.benchLocal);
+
+      // The places the player is sent to for this bench (plan §2.5): real pieces of the host, in the world's frame.
+      for (const fp of host.fieldPoints || []) {
+        const c = Math.cos(g.rotation.y), sn = Math.sin(g.rotation.y);
+        const at = (lx, lz) => [g.position.x + lx * c + lz * sn, g.position.z - lx * sn + lz * c];
+        const [px, pz] = at(fp.lx, fp.lz);
+        const [sx, sz] = at(fp.stand.lx, fp.stand.lz);
+        registerFieldPoint(this, {
+          id: fp.id, siteId: site.id, label: fp.label, host: site.id,
+          pos: [px, y + fp.ly, pz], half: fp.half, rotY: g.rotation.y,
+          stand: [sx, y, sz]
+        });
+      }
 
       // The host's colliders are in its own frame; the walk wants them in the world's.
       const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);

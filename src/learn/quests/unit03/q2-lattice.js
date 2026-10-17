@@ -1,36 +1,49 @@
 /**
  * q2-lattice.js — Ligar, bench two: STONE AND WIRE.
  *
- * The same bench as `q1-joins`, loaded with whole blocks instead of pairs. Bench
- * one settled what a bond IS; this one asks what a block of each kind actually
- * DOES — because that is the only reason a bond type matters to anybody holding
- * a piece of salvage.
+ * The second bench on the world and its second TABLETOP (plan `bench-tabletop.md`, phase T3a). Bench one settled
+ * what a bond IS; this one asks what a block of each kind actually DOES, because that is the only reason a bond
+ * type matters to anybody holding a piece of salvage. The table is the ore drift's: blocks on the ledge, a
+ * hotplate that takes a block on its plate, a hammer, a pair of leads that clip across a block, a pair of tongs,
+ * and a grid to build ions into.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
  *   1  heat three blocks until each comes apart  -> the melting point measures the hold
- *   2  strike the salt block and read the face   -> a lattice, and why it shatters
- *   3  current, cold and molten, on two blocks   -> what it takes to conduct
- *   4  strike and melt the vent block            -> molecules, and the weak pull between them
- *   5  the block the blade will not cut          -> a network of covalent bonds
- *   6  which block holds a molecule you can lift -> not everything is made of molecules
- *   7  three sealed blocks, tests only           -> the tests name the build
+ *   2  build a grid of ions and slide a layer    -> a lattice, and why it shatters
+ *   3  a current, cold and molten, on three blocks -> what it takes to conduct
+ *   4  break the vent block down as far as it goes -> molecules, and the weak pull between them
+ *   5  take hold of one atom of the block the blade will not cut -> a network of covalent bonds
+ *   6  lift one molecule out with the tongs      -> not everything is made of molecules
+ *   7  four sealed blocks, tests only            -> the tests name the build
  *   8  pick a liner for a 900 degree vessel      -> why the arches are still standing
  *   -- debrief: what a bond type decides about a material, and what is next.
  *
- * WHAT THIS BENCH DOES NOT DO. It never weighs a block and never counts what is
- * in one. Recipes are bench three and counting by weight is bench four.
+ * THE TABLE (`table/`, `kits/bonds.js`). Nothing here is a switch with an outcome behind it. A block is MOLTEN
+ * exactly while it stands on the hotplate at or past its melting point, so the temperature it gives way at is
+ * found by turning the dial and taking the block off cools it; a blow is the old bench's own mapping from the
+ * build; the leads' lamp is `conductionOf` for the block as it is right now; what the tongs bring out is the
+ * connected group `planSlab` draws round an atom. `SOLUTIONS` and `MISSES` are scripts of the player's own
+ * actions, replayed by `verify:table` by drag and by two taps.
  *
- * `q1-joins` earned bond, ionic and covalent, so those are plain words here.
- * What this quest has to earn is on `VOCABULARY`.
+ * FIELD (stage 1, evidence and never a lock): a block chipped from the drift's own face. At 3D On the player
+ * walks to the seam (`ligar/stations.js` `buildOreDrift`, the field point `chip`); below that the same fetch is
+ * a drawn site plate on the table.
+ *
+ * WHAT THIS BENCH DOES NOT DO. It never weighs a block and never counts what is in one. Recipes are bench
+ * three of Tallow's and counting by weight is its last bench.
+ *
+ * `q1-joins` earned bond, ionic and covalent, so those are plain words here. What this quest has to earn is on
+ * `VOCABULARY`.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { JoinBench } from '../../engine/instruments.js';
-import { LearnFrame, toolNotes } from '../../engine/frame.js';
-import { esc } from '../../../ui/layout.js';
-import { soundscape } from '../../../audio/soundscape.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { conductionOf } from '../../engine/joinbench.js';
+import {
+  bondsTable, slabPiece, hotplate, declOf, groupsOf, smallestPiece, liftCells, liftsOf, gridRead, piecesIn
+} from '../../table/kits/bonds.js';
 
 export const meta = { stageCount: 8 };
 
@@ -48,57 +61,58 @@ export const VOCABULARY = [
 
 const SPEAKER = 'Vess';
 
-/* ------------------------------------------------------------------
-   THE KEY LEGEND
-
-   A KEY WHOSE LABEL SAYS WHAT IT DOES OWES NOTHING.
-
-   Only the keys below carry a line, and each one carries it because
-   its label leaves something out. Everything else on this bench — the
-   keys that were once explained back to the player in their own words —
-   is left to say what it says.
-   ------------------------------------------------------------------ */
-const TOOL_TEXT = {
-  shift: [{
-    from: 2,
-    key: 'Shift a Layer',
-    what: 'Slides one layer of ions by one place to test what happens when like charges meet.'
-  }],
-  heat: [{
-    from: 1,
-    key: 'Heat It',
-    what: 'Raises the heat until the block comes apart, and reports the temperature that took.'
-  }],
-  current: [{
-    from: 3,
-    key: 'Test Current',
-    what: 'Puts a current through the block in the state it is in right now.'
-  }]
-  // Strike It strikes it, and Let It Cool lets it cool.
-};
-
-export function toolNoteFor(controlId, stageNumber) {
-  const rows = TOOL_TEXT[controlId];
-  if (!rows) return null;
-  let out = null;
-  for (const r of rows) if (stageNumber >= r.from) out = r;
-  return out ? { key: out.key, what: out.what } : null;
-}
-
 /**
- * A block plate.
- *
- * `build` is how its atoms, ions or molecules are arranged and it decides the whole picture;
- * `melt` is the one thing the bench is simply told, because a temperature is a
- * measurement and the instrument reports exactly the figure it was given.
+ * The legend lines. A key whose label says what it does owes nothing, and this bench's tools are pieces you
+ * lay on a block (a hammer, a pair of leads, a pair of tongs) and one key ("Slide a Layer"): every one says what
+ * it does. Kept so the quest contract (`toolNoteFor`) holds.
  */
-const slab = (id, label, note, build, melt, tint, extra = {}) =>
-  ({ id, label, note, build, melt, tint, ...extra });
+export function toolNoteFor() { return null; }
 
-const SALT = (id, label) => slab(id, label, 'cut from the salt pan', 'grid', 801, 'bone');
-const VENT = (id, label) => slab(id, label, 'scraped off the vent crust', 'clusters', 115, 'sand', { cluster: 3, groups: 8 });
-const ARCH = (id, label) => slab(id, label, 'cut from a fallen arch', 'web', 1710, 'iron');
-const COPPER = (id, label) => slab(id, label, 'cut from a salvage cable', 'metallic', 1085, 'rust');
+/* ------------------------------------------------------------------
+   THE BLOCKS
+   `melt` is the one thing the bench is simply told, because a temperature is a measurement; everything
+   else a block does is derived from its build (`bonds.js`, `joinbench.js` `planSlab`).
+   ------------------------------------------------------------------ */
+
+const SALT = { build: 'grid', melt: 801, tint: 'bone' };
+const VENT = { build: 'clusters', melt: 115, tint: 'sand', cluster: 3, groups: 8 };
+const ARCH = { build: 'web', melt: 1710, tint: 'iron' };
+const COPPER = { build: 'metallic', melt: 1085, tint: 'rust' };
+const sealed = (d, melt) => ({ ...d, melt, sealed: true });
+
+/* ------------------------------------------------------------------
+   THE TABLES
+   One layout, so the furniture is always where the hand expects it (150 x 72 units): the hotplate across the
+   top left, the blocks along y 48, the tools along y 64, and whatever a stage files things into down the right.
+   ------------------------------------------------------------------ */
+
+const PLATE_AT = { x: 49, y: 19 };
+const PLATE_Y = 26;            // a block's middle when it lies on the plate
+const BENCH_Y = 48;
+const TOOLS_Y = 64;
+const bench = (i, step = 27) => ({ x: 14 + i * step, y: BENCH_Y });
+const toolAt = (id, label, i) => ({ id, kind: id, label, at: { x: 14 + i * 16, y: TOOLS_Y } });
+const hammer = i => toolAt('hammer', 'Hammer', i);
+const leads = i => toolAt('leads', 'Leads', i);
+const tongs = i => toolAt('tongs', 'Tongs', i);
+const plate = max => hotplate('hp', PLATE_AT, { max });
+const tray = (id, label, y, h = 20) => ({ id, label, at: { x: 122, y }, size: { w: 44, h }, cell: 22 });
+const heat = value => ({ setDial: { fixture: 'hp', dial: 'heat', value } });
+
+/** The twelve ions of stage 2: six sodium ions and six chlorine ions in two rows, and a 4 x 3 grid of cells. */
+const IONS = [
+  ...Array.from({ length: 6 }, (_, i) => ({ id: `na${i + 1}`, kind: 'ion', label: 'Na', at: { x: 9 + i * 13.5, y: 38 }, props: { el: 'Na', charge: 1 } })),
+  ...Array.from({ length: 6 }, (_, i) => ({ id: `cl${i + 1}`, kind: 'ion', label: 'Cl', at: { x: 9 + i * 13.5, y: 54 }, props: { el: 'Cl', charge: -1 } }))
+];
+const CELLS = Array.from({ length: 3 }, (_, r) => Array.from({ length: 4 }, (_, c) => `g${r}${c}`));
+const GRID_SLOTS = CELLS.flatMap((row, r) => row.map((id, c) => ({ id, label: '', at: { x: 96 + c * 14, y: 12 + r * 14 }, size: { w: 13.4, h: 13.4 } })));
+
+/** The block standing in a tray, as pieces. */
+const trayOf = (t, id) => piecesIn(t, `tray:${id}`, 'slab');
+/** Which way a block carries a current, from its build alone: cold and molten, only molten, or never. */
+const carries = d => (conductionOf(d, false) ? 'both' : conductionOf(d, true) ? 'molten' : 'never');
+
+const UNTRAYED = 'Tray every block before you commit.';
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -109,34 +123,34 @@ export const STAGES = [
     title: 'Heat All Three',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench holds a block of solid material in a clamp. You can hit it with the hammer, heat it until it comes apart, or let it cool again.'
+      body: 'Slide a block onto the hotplate and turn its dial up to heat it. A block chipped from the drift\'s own face is waiting at the seam.'
     },
-    prompt: 'Determine which mineral block is held together the strongest.',
-    controls: ['strike', 'heat', 'cool'],
-    slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 's1', label: 'Block A', note: 'The block cut from the salt pan.' },
-        { id: 's2', label: 'Block B', note: 'The block scraped off the vent crust.' },
-        { id: 's3', label: 'Block C', note: 'The block cut from a fallen arch.' }
-      ]
-    },
+    prompt: 'Order the three blocks by how much heat each one takes to come apart.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('s1', 'BLOCK A', SALT, bench(0)),
+        slabPiece('s2', 'BLOCK B', VENT, bench(1)),
+        slabPiece('s3', 'BLOCK C', ARCH, bench(2)),
+        { ...slabPiece('s4', 'BLOCK D', COPPER, { x: 122, y: 24 }), hidden: true, fetchFrom: 'chip' }
+      ],
+      zones: { rail: { id: 'rail', at: { x: 49, y: 55 }, size: { w: 92, h: 14 }, first: 'Comes apart first', last: 'Comes apart last', items: ['s1', 's2', 's3'], start: ['s1', 's3', 's2'] } },
+      fixtures: [plate(2000)],
+      fetch: [{ id: 'chip', label: 'Chipped block', at: { x: 128, y: 56 } }]
+    }),
     hints: [
-      'Tap a block to select it, press "Heat It", and do the same for the other two.',
-      'Each block reports the temperature it came apart at, and the harder a block is held together, the more heat that takes.',
-      'Write the three temperatures down side by side and pick the block with the highest one.'
+      'Slide a block onto the hotplate and turn the dial up until the block gives way.',
+      'Try each block on the plate in turn, and note the setting of the dial at which each one comes apart.',
+      'Put the block that gave way at the lowest setting at the left end of the rail and the one that held out longest at the right.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the three blocks.' };
-      }
-      if (state.choice === 's2' || state.choice === 's1') {
-        const picked = state.choice === 's2' ? 'Block B' : 'Block A';
-        return { ok: false, msg: `${picked} is not the one. Heat all three and compare the temperatures they came apart at: the hardest hold takes the most heat.` };
-      }
-      return { ok: true };
+      const t = state.table;
+      const order = t.zones.rail.order;
+      const melt = id => declOf(t.pieces[id]).melt;
+      const want = order.slice().sort((a, b) => melt(a) - melt(b));
+      if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three blocks back on the rail in order.' };
+      if (order.join() === want.join()) return { ok: true };
+      return { ok: false, msg: 'A block is out of place on the rail. Put each one to the heat it gave way at on the hotplate, and compare.' };
     },
     reward: {
       log: 'Block A 801 C. Block B 115 C. Block C 1710 C.',
@@ -148,41 +162,36 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Hit the Salt',
-    prompt: 'Why does the salt block cleave along a flat plane when struck or shifted, while the sulfur block crumbles?',
-    controls: ['strike', 'shift', 'heat', 'cool'],
-    slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B')],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 'grid', label: 'Its ions sit in a repeating pattern of alternating charges, so a blow slides one whole layer and puts like against like', note: 'The pattern decides where it breaks.' },
-        { id: 'crack', label: 'The block was already cracked along that face', note: 'A flaw was there before the blow.' },
-        { id: 'soft', label: 'The material is soft, so the hammer cut straight through it', note: 'Softness decides it.' },
-        { id: 'weak', label: 'Its bonds are the weakest on the bench', note: 'It is the easiest of the two to break.' }
-      ]
-    },
+    prompt: 'Build a grid of all twelve ions with no two of the same charge touching, then slide one layer.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('s1', 'BLOCK A', SALT, { x: 14, y: 14 }),
+        slabPiece('s2', 'BLOCK B', VENT, { x: 41, y: 14 }),
+        { id: 'hammer', kind: 'hammer', label: 'Hammer', at: { x: 66, y: 14 } },
+        ...IONS
+      ],
+      zones: { slots: GRID_SLOTS },
+      fixtures: [{
+        id: 'grid', kind: 'lattice', label: 'Grid', at: { x: 116, y: 59 }, size: { w: 62, h: 16 }, runLabel: 'Slide a Layer',
+        props: { cells: CELLS, layer: 0 }
+      }]
+    }),
     hints: [
-      'Tap Block A and press "Shift a Layer" to see what happens when ions of like charge align.',
-      'Look at what the picture shows in Block A before the blow: every ion marked plus has ions marked minus all round it, in a pattern that repeats.',
-      'Shift a layer of Block A\'s pattern by one place, and see how like charges align and push apart.'
+      'Drag the ions onto the cells of the grid, then press "Slide a Layer".',
+      'Look at the charge marked on each ion as you set it down, and at what stands beside it and below it.',
+      'Alternate the charges along every row and down every column, then slide the top row and read which ions now face each other.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
-      }
-      if (state.choice === 'crack') {
-        return { ok: false, msg: 'Nothing in the picture showed a flaw before the blow, and the face it left runs straight along the pattern.' };
-      }
-      if (state.choice === 'soft') {
-        return { ok: false, msg: 'Block A needed 801 degrees to come apart and Block B only 115, so Block A is not the soft one.' };
-      }
-      if (state.choice === 'weak') {
-        return { ok: false, msg: 'Block B gave way at 115 degrees and crumbled rather than splitting, so Block A is the more strongly held of the two.' };
-      }
+      const g = gridRead(state.table, 'grid');
+      if (g.filled === 0) return { ok: false, notYet: true, msg: 'Put the ions on the grid first.' };
+      if (g.like > 0) return { ok: false, msg: 'Two ions of the same charge are touching. Look at what stands beside and below each ion you have set down.' };
+      if (g.filled < g.total) return { ok: false, notYet: true, msg: 'Every ion goes on the grid before you commit.' };
+      if (!g.slid) return { ok: false, notYet: true, msg: 'The grid is built. Slide a layer along and see what meets.' };
       return { ok: true };
     },
     reward: {
-      log: 'Block A cleaved along one flat face. Block B crumbled.',
+      log: 'The slid layer put like against like.',
       title: 'A Lattice, and Why It Shatters',
       body: 'An ionic solid is not a heap: its ions sit in a repeating three-dimensional grid called a lattice, with every plus surrounded by minuses and every minus by pluses. Knock one layer sideways by a single step and every pair that was pulling is suddenly pushing, so the whole block splits clean along that plane. That is why ionic solids are hard and yet brittle.'
     }
@@ -193,38 +202,32 @@ export const STAGES = [
     title: 'Put a Current Through It',
     briefing: {
       speaker: SPEAKER,
-      body: 'You now have electrical leads connected to the clamp. Use "Run Current" to test whether charge can move through the block.'
+      body: 'The leads clip across the block they lie on, and their lamp is lit while a current passes through that block.'
     },
-    prompt: 'What does an electric current require to flow through a substance?',
-    controls: ['heat', 'current', 'cool'],
-    slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), COPPER('s3', 'BLOCK C')],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 'free', label: 'Ions or electrons, and room for them to move', note: 'Both have to be true at once.' },
-        { id: 'hot', label: 'The block has to be hot', note: 'Heat on its own does it.' },
-        { id: 'metal', label: 'The block has to be a metal', note: 'Nothing else passes a current.' },
-        { id: 'solid', label: 'The block has to be solid, so its atoms touch', note: 'A liquid breaks the path.' }
-      ]
-    },
+    prompt: 'Tray the three blocks by when each one passes a current.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('s1', 'BLOCK A', SALT, bench(0)),
+        slabPiece('s2', 'BLOCK B', VENT, bench(1)),
+        slabPiece('s3', 'BLOCK C', COPPER, bench(2)),
+        leads(0)
+      ],
+      zones: { trays: [tray('both', 'Cold and molten', 14), tray('molten', 'Only when molten', 38), tray('never', 'Never', 62)] },
+      fixtures: [plate(2000)]
+    }),
     hints: [
-      'Test each block cold first, then press "Heat It" on it and test the same block again.',
-      'Block A conducts only molten, Block B never conducts, and metallic Block C conducts both cold and molten.',
-      'Line up the results and find what is true of every block that passed a current.'
+      'Clip the leads onto a block and watch their lamp.',
+      'Test each block cold, then slide it onto the hotplate, turn the dial past where it gives way, and watch the lamp again.',
+      'Tray each block under what its lamp did: lit cold and molten, lit only once molten, or never lit.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
-      }
-      if (state.choice === 'hot') {
-        return { ok: false, msg: 'Block B was molten at 115 degrees and passed nothing, so heat on its own is not enough.' };
-      }
-      if (state.choice === 'metal') {
-        return { ok: false, msg: 'Molten salt conducts without being a metal, so being a metal is not required to pass a current.' };
-      }
-      if (state.choice === 'solid') {
-        return { ok: false, msg: 'Block A passed nothing while it was solid and passed a current once it was melted, which is the wrong way round for that.' };
+      const t = state.table;
+      const ids = ['s1', 's2', 's3'];
+      const where = Object.fromEntries(ids.map(id => [id, ['both', 'molten', 'never'].find(k => trayOf(t, k).some(p => p.id === id)) || null]));
+      if (ids.some(id => !where[id])) return { ok: false, notYet: true, msg: UNTRAYED };
+      if (ids.some(id => where[id] !== carries(declOf(t.pieces[id])))) {
+        return { ok: false, msg: 'A block is under the wrong heading. Clip the leads on it cold, then again once it is on the plate past the heat it gave way at.' };
       }
       return { ok: true };
     },
@@ -238,38 +241,30 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'What Survives the Blow',
-    prompt: 'What breaks apart when a molecular solid crumbles and melts?',
-    controls: ['strike', 'heat', 'cool'],
-    slabs: [VENT('s2', 'BLOCK A'), SALT('s1', 'BLOCK B')],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 'between', label: 'The pull between whole molecules gives way, and the molecules themselves stay in one piece', note: 'Nothing inside a molecule breaks.' },
-        { id: 'inside', label: 'The bonds inside each molecule break first', note: 'The molecules come apart into single atoms.' },
-        { id: 'all', label: 'Everything gives way at once', note: 'Nothing survives it.' },
-        { id: 'layer', label: 'One flat layer slides off the rest', note: 'It splits the way Block B does.' }
+    prompt: 'Break Block A down as far as it will go, then set the tally to the fewest atoms still bonded together in one piece.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('s2', 'BLOCK A', VENT, bench(0)),
+        slabPiece('s1', 'BLOCK B', SALT, bench(1)),
+        hammer(0)
+      ],
+      fixtures: [
+        plate(1000),
+        { id: 'tally', kind: 'tally', label: 'Smallest piece', at: { x: 122, y: 24 }, size: { w: 44, h: 16 }, noRun: true, dials: { atoms: { min: 0, max: 8, step: 1, value: 0, label: 'Atoms' } } }
       ]
-    },
+    }),
     hints: [
-      'Tap Block A, press "Strike It", then press "Heat It" on the same block and look at the picture after each.',
-      'Count the atoms in one of the small molecules before the blow and count them again afterwards.',
-      'Count the atoms in one molecule before the blow, after the blow and after the melt, and compare the three counts.'
+      'Strike the block with the hammer, then slide it onto the hotplate and turn the dial up until it gives way.',
+      'Look at what is left in the block\'s picture after each test, and at how its atoms are grouped.',
+      'Count the atoms in one of the smallest groups that stays joined through both tests, and set the tally to that count.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
-      }
-      if (state.choice === 'inside') {
-        return { ok: false, msg: 'Count the atoms in one of Block A\'s molecules before and after each test, and see whether any molecule lost an atom.' };
-      }
-      if (state.choice === 'all') {
-        return { ok: false, msg: 'Look at Block A\'s picture after the blow and after the melt, and see whether anything in it is still drawn whole.' };
-      }
-      if (state.choice === 'layer') {
-        return { ok: false, msg: 'Splitting along one flat face is what Block B does. Strike Block A and compare how it comes apart.' };
-      }
-      return { ok: true };
+      const t = state.table;
+      const n = t.fixtures.tally.dials.atoms.value;
+      if (n === 0) return { ok: false, notYet: true, msg: 'Set the tally to a number of atoms.' };
+      if (n === smallestPiece(declOf(t.pieces.s2))) return { ok: true };
+      return { ok: false, msg: 'Count again in the picture of Block A after the blow and after the melt: is every piece of it really that small, and does any piece come apart further?' };
     },
     reward: {
       log: 'Block A: the molecules came apart from each other, never from themselves.',
@@ -281,38 +276,34 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Block the Blade Will Not Cut',
-    prompt: 'How is Block A\'s internal structure built differently from separate molecules?',
-    controls: ['strike', 'heat', 'current', 'cool'],
-    slabs: [ARCH('s3', 'BLOCK A'), VENT('s2', 'BLOCK B')],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 'through', label: 'Every atom is bonded to the next all the way through, so there is no plane you can break without breaking bonds', note: 'The whole block is one connected piece.' },
-        { id: 'groups', label: 'It is separate molecules, packed much more tightly than Block B', note: 'Tighter packing, same build.' },
-        { id: 'charged', label: 'It is made of ions held by their charges, the way the salt block is', note: 'The pull between charges is doing it.' },
-        { id: 'layers', label: 'It is stacked in flat layers that grip each other', note: 'Friction between layers holds it.' }
-      ]
+    briefing: {
+      speaker: SPEAKER,
+      body: 'The tongs close on one atom near the middle of a block and lift.'
     },
+    prompt: 'Take hold of one atom of Block A with the tongs, then tray the block by how much came out with it.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('s3', 'BLOCK A', ARCH, bench(0)),
+        slabPiece('s2', 'BLOCK B', VENT, bench(1)),
+        hammer(0), leads(1), tongs(2)
+      ],
+      zones: { trays: [tray('one', 'Just that atom', 14), tray('group', 'A small group', 38), tray('whole', 'The whole block', 62)] },
+      fixtures: [plate(2000)]
+    }),
     hints: [
-      'Tap Block A and press all three keys on it, one after the other.',
-      'The hammer does nothing to Block A, it needs 1710 degrees and passes no current even molten, so look at how its atoms are drawn.',
-      'Pick any atom in Block A\'s picture and follow its bonds from atom to atom, and see whether you ever reach a gap.'
+      'Lay the tongs on Block A and look at what is left in its picture.',
+      'Compare what came out of Block A with the block you started with, and try the same on Block B.',
+      'Tray Block A under the heading that matches how much came out of it.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
-      }
-      if (state.choice === 'groups') {
-        return { ok: false, msg: 'Block B is separate molecules, and it crumbled into them. Strike Block A and look at its picture: does it come apart into molecules?' };
-      }
-      if (state.choice === 'charged') {
-        return { ok: false, msg: 'Test Block A for a current once it is molten, and look for any ion, marked plus or minus, in its picture.' };
-      }
-      if (state.choice === 'layers') {
-        return { ok: false, msg: 'Layers that only grip each other would slide apart under the hammer. Strike Block A and see whether anything slides.' };
-      }
-      return { ok: true };
+      const t = state.table;
+      const at = ['one', 'group', 'whole'].find(k => trayOf(t, k).some(p => p.id === 's3'));
+      if (!at) return { ok: false, notYet: true, msg: 'Tray Block A under what came out with the atom.' };
+      const lift = liftCells(declOf(t.pieces.s3), 'intact');
+      const real = lift.whole ? 'whole' : lift.n === 1 ? 'one' : 'group';
+      if (at === real) return { ok: true };
+      return { ok: false, msg: 'That is not what came out of Block A. Lay the tongs on it and compare what is left in the picture with the block you began with.' };
     },
     reward: {
       log: 'Block A: the blade stopped, 1710 degrees, no current.',
@@ -324,34 +315,32 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Lift One Out',
-    prompt: 'From which of these three blocks could you lift out an individual molecule?',
-    controls: ['strike', 'heat', 'cool'],
-    slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 's1', label: 'Block A', note: 'The block cut from the salt pan.' },
-        { id: 's2', label: 'Block B', note: 'The block scraped off the vent crust.' },
-        { id: 's3', label: 'Block C', note: 'The block cut from a fallen arch.' }
+    prompt: 'Lift an individual molecule out of one of the blocks with the tongs.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('s1', 'BLOCK A', SALT, bench(0)),
+        slabPiece('s2', 'BLOCK B', VENT, bench(1)),
+        slabPiece('s3', 'BLOCK C', ARCH, bench(2)),
+        tongs(0)
       ]
-    },
+    }),
     hints: [
-      'Strike each block, then look at what the picture leaves you holding.',
-      'A molecule is a small cluster of atoms bonded to each other and to nothing else, so look for a picture with gaps in it.',
-      'In each picture, pick one atom and follow its bonds: you can lift a molecule out only where that stops at a small cluster with a gap all round it.'
+      'Lay the tongs on a block and see what comes out with the atom they close on.',
+      'Compare what comes out of each block with the block it came from.',
+      'Lift from each block in turn, and keep the lift that leaves most of its block behind.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the three blocks.' };
-      }
-      if (state.choice === 's1') {
-        return { ok: false, msg: 'Block A is one repeating grid of ions with nothing separate anywhere in it, so there is no single molecule to lift out.' };
-      }
-      if (state.choice === 's3') {
-        return { ok: false, msg: 'Block C is bonded all the way through, so lifting anything out of it means breaking bonds.' };
-      }
-      return { ok: true };
+      const t = state.table;
+      const lifts = liftsOf(t.pieces.tongs);
+      if (!lifts.length) return { ok: false, notYet: true, msg: 'Lay the tongs on a block first.' };
+      // A molecule is one of the separate groups a block is made of while it is whole; a half of a split block is not.
+      const molecule = lifts.some(l => {
+        const groups = groupsOf(declOf(t.pieces[l.slab]));
+        return groups.length > 1 && groups.includes(l.n) && !l.whole;
+      });
+      if (molecule) return { ok: true };
+      return { ok: false, msg: 'Everything in that block came out together, so nothing small can be lifted out of it. Try another block.' };
     },
     reward: {
       log: 'Only Block B holds separate molecules.',
@@ -363,43 +352,41 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Four Sealed Blocks',
-    prompt: 'Identify the internal build of each sealed block.',
-    controls: ['strike', 'heat', 'current', 'cool'],
-    slabs: [
-      slab('x1', 'BLOCK A', 'sealed at the mine, cased shut', 'grid', 1074, 'bone', { sealed: true }),
-      slab('x2', 'BLOCK B', 'sealed at the mine, cased shut', 'clusters', 80, 'sand', { sealed: true, cluster: 3, groups: 8 }),
-      slab('x3', 'BLOCK C', 'sealed at the mine, cased shut', 'web', 3550, 'iron', { sealed: true }),
-      slab('x4', 'BLOCK D', 'sealed at the mine, cased shut', 'metallic', 1085, 'rust', { sealed: true })
-    ],
-    widget: {
-      type: 'bins',
-      rows: ['x1', 'x2', 'x3', 'x4'],
-      bins: [
-        { id: 'ionic', label: 'Ionic lattice', note: 'Ions in a repeating grid.' },
-        { id: 'molecular', label: 'Separate molecules', note: 'A weak pull between one molecule and the next.' },
-        { id: 'network', label: 'Covalent network', note: 'Bonded all the way through.' },
-        { id: 'metallic', label: 'Metallic solid', note: 'Sea of delocalized electrons.' }
-      ]
-    },
+    prompt: 'Tray each sealed block by how its atoms are held together.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('x1', 'BLOCK A', sealed(SALT, 1074), bench(0, 24)),
+        slabPiece('x2', 'BLOCK B', sealed(VENT, 80), bench(1, 24)),
+        slabPiece('x3', 'BLOCK C', sealed(ARCH, 3550), bench(2, 24)),
+        slabPiece('x4', 'BLOCK D', sealed(COPPER, 1085), bench(3, 24)),
+        hammer(0), leads(1)
+      ],
+      zones: {
+        trays: [
+          { id: 'grid', label: 'Ionic lattice', at: { x: 111, y: 16 }, size: { w: 24, h: 22 }, cell: 22 },
+          { id: 'clusters', label: 'Molecules', at: { x: 137, y: 16 }, size: { w: 24, h: 22 }, cell: 22 },
+          { id: 'web', label: 'Network', at: { x: 111, y: 52 }, size: { w: 24, h: 22 }, cell: 22 },
+          { id: 'metallic', label: 'Metallic', at: { x: 137, y: 52 }, size: { w: 24, h: 22 }, cell: 22 }
+        ]
+      },
+      fixtures: [plate(3600)]
+    }),
     hints: [
-      'Nothing resolves inside a cased block, so heat each one, test each one molten, and hit each one.',
-      'A molecular solid melts low and crumbles; an ionic lattice melts high and conducts molten; a metal conducts cold and molten; a network resists heat and never conducts.',
-      'For each block write down three results: melting point, hammer blow, and conductivity.'
+      'Nothing resolves inside a cased block, so heat each one, clip the leads on it, and hit it.',
+      'A molecular solid melts low and crumbles, a lattice melts high and lights the lamp only when molten, a metal lights it cold and molten, and a network resists heat and never lights it.',
+      'For each block note its heat, its blow and its lamp, then tray it under the build that behaves that way.'
     ],
     check(state) {
-      const labels = { x1: 'Block A', x2: 'Block B', x3: 'Block C', x4: 'Block D' };
-      for (const id of ['x1', 'x2', 'x3', 'x4']) {
-        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
-      }
-      const reasons = {
-        x1: 'Block A is filed wrong. Heat it, test it molten and strike it, and compare what it does with how each build behaved earlier.',
-        x2: 'Block B is filed wrong. Heat it, test it molten and strike it, and compare what it does with how each build behaved earlier.',
-        x3: 'Block C is filed wrong. Heat it, test it molten and strike it, and compare what it does with how each build behaved earlier.',
-        x4: 'Block D is filed wrong. Test it cold and molten, and strike it to see how its electrons flow.'
-      };
-      const want = { x1: 'ionic', x2: 'molecular', x3: 'network', x4: 'metallic' };
-      for (const id of ['x1', 'x2', 'x3', 'x4']) {
-        if (state.bins[id] !== want[id]) return { ok: false, msg: reasons[id] };
+      const t = state.table;
+      const ids = ['x1', 'x2', 'x3', 'x4'];
+      const builds = ['grid', 'clusters', 'web', 'metallic'];
+      const where = Object.fromEntries(ids.map(id => [id, builds.find(k => trayOf(t, k).some(p => p.id === id))]));
+      if (ids.some(id => !where[id])) return { ok: false, notYet: true, msg: UNTRAYED };
+      const wrong = ids.filter(id => where[id] !== declOf(t.pieces[id]).build);
+      if (wrong.length) {
+        const name = t.pieces[wrong[0]].label.charAt(0) + t.pieces[wrong[0]].label.slice(1).toLowerCase();
+        return { ok: false, msg: `${name} is filed wrong. Heat it, test it molten and strike it, and compare what it does with how each build behaved earlier.` };
       }
       return { ok: true };
     },
@@ -413,33 +400,30 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Pick the Liner',
-    prompt: 'Which material slab withstands 900°C without conducting any electric current?',
-    controls: ['strike', 'heat', 'current', 'cool'],
-    slabs: [SALT('s1', 'BLOCK A'), VENT('s2', 'BLOCK B'), ARCH('s3', 'BLOCK C')],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 's1', label: 'Block A', note: 'The block cut from the salt pan.' },
-        { id: 's2', label: 'Block B', note: 'The block scraped off the vent crust.' },
-        { id: 's3', label: 'Block C', note: 'The block cut from a fallen arch.' }
-      ]
-    },
+    prompt: 'Put the block that holds at 900 degrees and passes no current in the marked slot.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: [
+        slabPiece('s1', 'BLOCK A', SALT, bench(0)),
+        slabPiece('s2', 'BLOCK B', VENT, bench(1)),
+        slabPiece('s3', 'BLOCK C', ARCH, bench(2)),
+        leads(0)
+      ],
+      zones: { slots: [{ id: 'liner', label: 'Vessel liner', at: { x: 122, y: 30 }, size: { w: 26, h: 20 } }] },
+      fixtures: [plate(2000)]
+    }),
     hints: [
-      'Heat all three and write down the three temperatures, then test each one after it has melted.',
-      'Anything that comes apart below 900 degrees is out before you even reach the current test.',
-      'Eliminate any block that melts below 900 degrees, then check conductivity on whatever remains.'
+      'Slide each block onto the hotplate and turn the dial to 900.',
+      'Look at which blocks are still solid at 900, and clip the leads on those, cold and hot.',
+      'Keep only the block that stays solid at 900 and never lights the lamp, and put it in the slot.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the three blocks.' };
-      }
-      if (state.choice === 's1') {
-        return { ok: false, msg: 'Block A comes apart at 801 degrees, below the 900 the vessel runs at, and once it is molten it passes a current as well.' };
-      }
-      if (state.choice === 's2') {
-        return { ok: false, msg: 'Block B comes apart at 115 degrees. The vessel runs at eight times that.' };
-      }
+      const t = state.table;
+      const held = Object.values(t.pieces).find(p => p.kind === 'slab' && p.zone === 'slot:liner');
+      if (!held) return { ok: false, notYet: true, msg: 'Put a block in the slot.' };
+      const d = declOf(held);
+      if (d.melt <= 900) return { ok: false, msg: 'That block gives way at or below 900 degrees on the hotplate, so it cannot line a vessel that runs that hot.' };
+      if (conductionOf(d, false) || conductionOf(d, true)) return { ok: false, msg: 'That block stays solid at 900 degrees, but the leads\' lamp lights on it, so it would pass a current.' };
       return { ok: true };
     },
     reward: {
@@ -534,74 +518,69 @@ export const PRACTICE = [
 ];
 
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the
+   reducer by direct actions, by drag and by two taps. A block is slid onto the hotplate by setting it down
+   inside the plate (`free:X,Y`), and the dial is turned to a setting; nothing here says what a block does.
    ------------------------------------------------------------------ */
-function blankState() {
-  return {
-    choice: null,
-    bins: {},
-    plate: null,
-    struck: new Set(),
-    heated: new Set(),
-    /** `${id}:solid` / `${id}:molten` — a current test is only as good as the state it was run in. */
-    tested: new Set()
-  };
-}
 
-/** The bench state that solves each stage, in order. Checked by verify:learn. */
+const onPlate = (id, i) => ({ place: { piece: id, to: `free:${[20, 49, 78][i]},${PLATE_Y}` } });
+const into = (piece, trayId) => ({ place: { piece, to: `tray:${trayId}` } });
+const clip = (block) => ({ join: ['leads', block] });
+const blow = (block) => ({ join: ['hammer', block] });
+const grid = (r, c) => `slot:g${r}${c}`;
+/** The checkerboard: a sodium ion where row + column is even, a chlorine ion where it is odd. */
+const CHECKER = (() => {
+  const na = ['na1', 'na2', 'na3', 'na4', 'na5', 'na6'];
+  const cl = ['cl1', 'cl2', 'cl3', 'cl4', 'cl5', 'cl6'];
+  const out = [];
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) out.push({ place: { piece: (r + c) % 2 === 0 ? na.shift() : cl.shift(), to: grid(r, c) } });
+  return out;
+})();
+
+/** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  { heated: new Set(['s1', 's2', 's3']), choice: 's3' },
-  { struck: new Set(['s1', 's2']), choice: 'grid' },
-  {
-    heated: new Set(['s1', 's2']),
-    tested: new Set(['s1:solid', 's1:molten', 's2:solid', 's2:molten']),
-    choice: 'free'
-  },
-  { struck: new Set(['s2']), heated: new Set(['s2']), choice: 'between' },
-  {
-    struck: new Set(['s3']),
-    heated: new Set(['s3']),
-    tested: new Set(['s3:solid', 's3:molten']),
-    choice: 'through'
-  },
-  { struck: new Set(['s1', 's2', 's3']), choice: 's2' },
-  {
-    struck: new Set(['x1', 'x2', 'x3', 'x4']),
-    heated: new Set(['x1', 'x2', 'x3', 'x4']),
-    tested: new Set(['x1:molten', 'x2:molten', 'x3:molten', 'x4:solid']),
-    bins: { x1: 'ionic', x2: 'molecular', x3: 'network', x4: 'metallic' }
-  },
-  { heated: new Set(['s1', 's2', 's3']), choice: 's3' }
+  [
+    { fetch: 'chip' },
+    onPlate('s1', 0), onPlate('s2', 1), onPlate('s3', 2), heat(125), heat(825), heat(1725),
+    { place: { piece: 's2', to: 'rail:0' } }, { place: { piece: 's1', to: 'rail:1' } }, { place: { piece: 's3', to: 'rail:2' } }
+  ],
+  [blow('s1'), blow('s2'), ...CHECKER, { run: 'grid' }],
+  [
+    clip('s1'), onPlate('s1', 0), heat(825), into('s1', 'molten'),
+    clip('s2'), onPlate('s2', 1), into('s2', 'never'),
+    heat(0), clip('s3'), onPlate('s3', 2), heat(1100), into('s3', 'both')
+  ],
+  [blow('s2'), onPlate('s2', 0), heat(125), { setDial: { fixture: 'tally', dial: 'atoms', value: 3 } }],
+  [{ join: ['tongs', 's3'] }, into('s3', 'whole')],
+  [{ join: ['tongs', 's2'] }],
+  [
+    blow('x1'), blow('x2'), blow('x3'), blow('x4'),
+    clip('x1'), onPlate('x1', 0), heat(1100), into('x1', 'grid'),
+    clip('x2'), onPlate('x2', 1), heat(100), into('x2', 'clusters'),
+    clip('x3'), onPlate('x3', 2), heat(1100), into('x3', 'web'),
+    heat(0), clip('x4'), onPlate('x4', 0), into('x4', 'metallic')
+  ],
+  [onPlate('s1', 0), onPlate('s2', 1), onPlate('s3', 2), heat(900), clip('s3'), { place: { piece: 's3', to: 'slot:liner' } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { heated: new Set(['s1', 's2', 's3']), choice: 's1' },
-  { struck: new Set(['s1', 's2']), choice: 'soft' },
-  {
-    heated: new Set(['s1', 's2']),
-    tested: new Set(['s1:solid', 's1:molten', 's2:molten']),
-    choice: 'hot'
-  },
-  { struck: new Set(['s2']), heated: new Set(['s2']), choice: 'inside' },
-  {
-    struck: new Set(['s3']),
-    heated: new Set(['s3']),
-    tested: new Set(['s3:molten']),
-    choice: 'charged'
-  },
-  { struck: new Set(['s1', 's2', 's3']), choice: 's1' },
-  {
-    heated: new Set(['x1', 'x2', 'x3', 'x4']),
-    tested: new Set(['x1:molten', 'x2:molten', 'x3:molten', 'x4:solid']),
-    bins: { x1: 'network', x2: 'molecular', x3: 'ionic', x4: 'metallic' }
-  },
-  { heated: new Set(['s1', 's2', 's3']), choice: 's1' }
+  [{ place: { piece: 's3', to: 'rail:0' } }],
+  [{ place: { piece: 'na1', to: grid(0, 0) } }, { place: { piece: 'na2', to: grid(0, 1) } }],
+  [into('s1', 'both'), into('s2', 'never'), into('s3', 'both')],
+  [blow('s2'), { setDial: { fixture: 'tally', dial: 'atoms', value: 1 } }],
+  [{ join: ['tongs', 's3'] }, into('s3', 'group')],
+  [{ join: ['tongs', 's1'] }],
+  [into('x1', 'web'), into('x2', 'clusters'), into('x3', 'grid'), into('x4', 'metallic')],
+  [{ place: { piece: 's1', to: 'slot:liner' } }]
 ];
+
+function blankState() { return {}; }
 
 /** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  return { ...blankState(), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -609,325 +588,10 @@ export function stateFor(i, overrides) {
    ================================================================== */
 
 export function mount(container, ctx) {
-  const frame = new LearnFrame(container, {
-    quest: ctx?.quest || { id: 'q2-lattice' },
-    world: ctx?.world,
-    stageCount: STAGES.length,
-    rewards: STAGES.map(s => s.reward),
-    onSubmit: () => submit(),
-    onNext: () => next(),
-    onJump: i => loadStage(i),
-    onExit: () => ctx.exit()
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
-  const bench = new JoinBench(frame.instrumentHost, {
-    onProbe: hit => onProbe(hit),
-    onSelect: id => onSelect(id)
-  });
-
-  let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
-  let cleared = ctx.isComplete ? STAGES.length : ctx.stagesCleared;
-  let state = null;
-  let busy = false;
-  let disposed = false;
-
-  /* ---------------- stage lifecycle ---------------- */
-
-  function loadStage(i) {
-    index = i;
-    const stage = STAGES[i];
-    state = blankState();
-
-    frame.setCleared(cleared);
-    frame.setStage({
-      index: i,
-      title: stage.title,
-      prompt: stage.prompt,
-      briefing: stage.briefing,
-      hints: stage.hints,
-      commitLabel: stage.encounter?.act || 'Commit'
-    });
-
-    bench.setPlates(stage.slabs);
-    bench.setSelectable(stage.slabs.length > 1);
-    if (stage.slabs.length === 1) onSelect(stage.slabs[0].id);
-
-    renderControls();
-    renderWidget();
-    renderReadout(null);
-
-    if (stage.briefing && !ctx.isComplete && cleared <= i) frame.showBriefing();
-  }
-
-  function next() {
-    if (index >= STAGES.length - 1) {
-      frame.showDebrief(DEBRIEF, () => ctx.exit());
-      return;
-    }
-    loadStage(index + 1);
-  }
-
-  function submit() {
-    if (busy) return;
-    const stage = STAGES[index];
-    const result = stage.check(state);
-    if (!result.ok) {
-      if (result.notYet) frame.note(result.msg);
-      else frame.miss(result.msg);
-      return;
-    }
-    frame.clearBanner();
-    if (index + 1 > cleared) {
-      cleared = index + 1;
-      ctx.reportStage(index);
-    }
-    frame.setCleared(cleared);
-    frame.clear(stage.reward);
-    if (index === STAGES.length - 1) ctx.reportComplete();
-  }
-
-  /* ---------------- bench controls ---------------- */
-
-  function renderControls() {
-    const stage = STAGES[index];
-    const parts = [];
-
-    if (stage.controls.includes('strike')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="strike">Strike It</button>');
-    }
-    if (stage.controls.includes('shift')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="shift">Shift a Layer</button>');
-    }
-    if (stage.controls.includes('heat')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="heat">Heat It</button>');
-    }
-    if (stage.controls.includes('current')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="current">Test Current</button>');
-    }
-    if (stage.controls.includes('cool')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="cool">Let It Cool</button>');
-    }
-
-    parts.push(toolNotes(
-      stage.controls.map(id => toolNoteFor(id, index + 1)).filter(Boolean)
-    ));
-
-    frame.setControls(parts.join(''));
-    frame.el.controls.querySelectorAll('[data-tool]').forEach(btn => {
-      btn.addEventListener('click', () => runTool(btn.dataset.tool));
-    });
-  }
-
-  function plateFor(id) {
-    return STAGES[index].slabs.find(s => s.id === id) || null;
-  }
-
-  async function runTool(tool) {
-    if (busy) return;
-    if (!state.plate) {
-      frame.note('No block selected. Tap one of the blocks first.');
-      return;
-    }
-    const id = state.plate;
-    const item = plateFor(id);
-    busy = true;
-    frame.clearBanner();
-    frame.setCommitEnabled(false);
-
-    if (tool === 'strike') {
-      const out = await bench.strike(id);
-      state.struck.add(id);
-      soundscape.playBondSnap?.();
-      renderReadout(null, { head: `Hammer // ${item.label}`, body: strikeLine(out, item) });
-    } else if (tool === 'shift') {
-      const out = await bench.shift(id);
-      state.struck.add(id);
-      soundscape.playBondSnap?.();
-      renderReadout(null, { head: `Shift // ${item.label}`, body: shiftLine(out, item) });
-    } else if (tool === 'heat') {
-      const already = bench.molten(id);
-      const out = await bench.heat(id);
-      state.heated.add(id);
-      soundscape.playPylonWake?.();
-      renderReadout(null, {
-        head: `Furnace // ${item.label}`,
-        body: already
-          ? `${item.label} is already molten. It came apart at ${out.temp} degrees.`
-          : `The block holds, then gives way at ${out.temp} degrees and runs molten.`
-      });
-    } else if (tool === 'cool') {
-      const out = await bench.cool(id);
-      soundscape.playToggleClack?.();
-      renderReadout(null, {
-        head: `Furnace // ${item.label}`,
-        body: out.already
-          ? `${item.label} is already solid, so there is nothing to cool.`
-          : 'The furnace goes off and the block sets solid again, exactly as it came in.'
-      });
-    } else if (tool === 'current') {
-      const out = await bench.test(id);
-      state.tested.add(`${id}:${out.molten ? 'molten' : 'solid'}`);
-      soundscape.playScanSweep?.();
-      renderReadout(null, {
-        head: `Probes // ${item.label}`,
-        body: `${out.molten ? 'Molten' : 'Solid'}. ${out.flows
-          ? 'The lamp lights: a current is passing through it.'
-          : 'The lamp stays dark: nothing is passing through it.'}`
-      });
-    }
-
-    busy = false;
-    frame.setCommitEnabled(true);
-  }
-
-  /** What the hammer found, read off the plan and nothing else. */
-  function strikeLine(out, item) {
-    if (out.result === 'molten') {
-      return `${item.label} is already molten, so there is nothing solid left to hit.`;
-    }
-    if (out.result === 'bent') {
-      return 'The hammer dents the block, but the metallic bonds bend and hold together instead of shattering.';
-    }
-    if (out.result === 'cleaved') {
-      return 'The block splits in one go, along a single flat face, and the two halves come away clean.';
-    }
-    if (out.result === 'crumbled') {
-      return 'The block gives way at once and crumbles into small clusters, none of which the blow broke open.';
-    }
-    return 'The hammer rings off it and stops. Nothing moves, and nothing comes away.';
-  }
-
-  function shiftLine(out, item) {
-    if (out.result === 'molten') {
-      return `${item.label} is already molten.`;
-    }
-    if (item.build === 'grid') {
-      return 'Sliding one layer brings like charges face to face: repulsions surge and the block springs apart along that plane!';
-    }
-    return 'The layer slides smoothly without repelling its neighbors.';
-  }
-
-  /* ---------------- readout ---------------- */
-
-  function onProbe(hit) {
-    state.plate = hit.plateId;
-    bench.setSelected(hit.plateId);
-    soundscape.playToggleClack?.();
-    const item = plateFor(hit.plateId);
-    renderReadout(null, { head: `Bench // ${item.label}`, body: standingLine(item) });
-  }
-
-  function onSelect(id) {
-    state.plate = id;
-    bench.setSelected(id);
-  }
-
-  /** Where this block stands right now: only what has actually been measured. */
-  function standingLine(item) {
-    const parts = [];
-    parts.push(bench.molten(item.id)
-      ? `Molten. It came apart at ${item.melt} degrees.`
-      : 'Solid, and nothing has melted it yet.');
-    if (bench.struck(item.id)) parts.push('It has been struck once.');
-    if (item.sealed) parts.push('The case is welded shut, so nothing resolves inside it.');
-    return parts.join(' ');
-  }
-
-  function renderReadout(hit, message) {
-    if (message) {
-      frame.setReadout(`
-        <div class="lq-readout-card">
-          <div class="lq-readout-head">${esc(message.head)}</div>
-          <p class="lq-readout-line">${esc(message.body)}</p>
-        </div>
-      `);
-      return;
-    }
-    frame.setReadout(`
-      <div class="lq-readout-card lq-readout-idle">
-        <div class="lq-readout-head">Bench // standby</div>
-        <p class="lq-readout-line">Each plate holds one block. Tap a block to select it, then use the keys on it.</p>
-      </div>
-    `);
-  }
-
-  /* ---------------- answer widgets ---------------- */
-
-  function renderWidget() {
-    const stage = STAGES[index];
-    const w = stage.widget;
-
-    if (w.type === 'choice') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-bin-keys">
-            ${w.options.map(o => `
-              <button type="button" class="choice-option lq-bin-key" data-choice="${o.id}">
-                <span class="lq-bin-label">${esc(o.label)}</span>
-                <span class="lq-bin-note">${esc(o.note)}</span>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-choice]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.choice = btn.dataset.choice;
-          frame.el.widget.querySelectorAll('[data-choice]')
-            .forEach(o => o.classList.toggle('selected', o === btn));
-          soundscape.playToggleClack?.();
-        });
-      });
-      return;
-    }
-
-    if (w.type === 'bins') {
-      const rows = w.rows || stage.slabs.map(s => s.id);
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">Your answer</span>
-          <div class="lq-bins">
-            ${rows.map(id => `
-              <div class="lq-bin-row" data-plate="${id}">
-                <span class="lq-bin-sample">${esc(plateFor(id)?.label || id)}</span>
-                <div class="lq-bin-keys">
-                  ${w.bins.map(b => `
-                    <button type="button" class="choice-option lq-bin-key" data-bin="${b.id}">
-                      <span class="lq-bin-label">${esc(b.label)}</span>
-                      <span class="lq-bin-note">${esc(b.note)}</span>
-                    </button>
-                  `).join('')}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-bin]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const row = btn.closest('[data-plate]');
-          const pid = row.dataset.plate;
-          state.bins[pid] = btn.dataset.bin;
-          row.querySelectorAll('[data-bin]').forEach(o => o.classList.toggle('selected', o === btn));
-          const bin = w.bins.find(b => b.id === btn.dataset.bin);
-          bench.setPlateTag(pid, bin ? bin.label : '');
-          soundscape.playToggleClack?.();
-        });
-      });
-    }
-  }
-
-  /* ---------------- go ---------------- */
-
-  loadStage(index);
-
-  return {
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      bench.dispose();
-      frame.dispose();
-    }
-  };
+  runner.start();
+  return { dispose: () => runner.dispose() };
 }

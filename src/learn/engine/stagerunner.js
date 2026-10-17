@@ -11,7 +11,7 @@
  * WHAT IT OWNS
  *   - the `LearnFrame` and its stage lifecycle (load, submit, next, debrief),
  *   - the answer widgets, one implementation each: `number`, `decimal`,
- *     `choice`, `bins`, `order`, `pick` and `none`,
+ *     `choice`, `bins`, `order`, `pick`, `table` and `none`,
  *   - the key legend under the keys (`toolNotes`),
  *   - the dial for a tuned lamp, which prints the wavelength it is set to.
  *
@@ -23,11 +23,24 @@
  * The widgets build exactly the state `verify:learn` hands `check()`:
  * `state.number`, `state.decimal`, `state.choice`, `state.bins`, `state.order`
  * and `state.sample`.
+ *
+ * `order` is a rail the player drags pieces along (`railview.js`); the
+ * arrangement on the rail IS `state.order`, and it starts as a fixed shuffle
+ * that is never the declared order (`widget.start` names another start when
+ * the shuffle happens to land on a stage's answer; `verify:table` checks).
+ * `widget.rail: {first, last}` are the plain labels at its left and right end. `table` is the tabletop (`table/`,
+ * `engine/table2d.js`): a stage declares `table: {kit, pieces, zones,
+ * fixtures, tools}` and `check(state)` reads `state.table`, the `TableState`.
+ * Its `choice` mirrors the prediction token, so a prediction is still a choice.
  */
 
 import { LearnFrame, toolNotes } from './frame.js';
 import { resolveEncounter } from './foes.js';
 import { dialMarkup, bindDial, paintDial } from './dial.js';
+import { railMarkup, bindRail } from './railview.js';
+import { startArrangement } from '../table/rail.js';
+import { createTable, apply as applyTable } from '../table/model.js';
+import { Tabletop, benchesAre3D } from './instruments.js';
 import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
 
@@ -39,10 +52,28 @@ export function blankAnswer(stage) {
     decimal: w.type === 'decimal' ? w.min : null,
     choice: null,
     bins: {},
-    order: [],
+    // A rail starts in a fixed shuffle, never the declared order: the answer is
+    // the arrangement as it stands, so an untouched rail must not be right.
+    order: w.type === 'order'
+      ? (w.start ? w.start.slice() : startArrangement(w.items.map(o => o.id), stage.title))
+      : [],
     picks: [],
-    sample: null
+    sample: null,
+    ...(w.type === 'table' ? { table: createTable(stage.table, stage.title) } : {})
   };
+}
+
+/**
+ * The end state of a table stage from a script of actions (a `SOLUTIONS` or
+ * `MISSES` entry), for a quest's `stateFor`. A stage that is not a table
+ * passes its overrides through untouched, so a quest can call this for every
+ * stage.
+ */
+export function stateFromScript(stage, overrides) {
+  if (!Array.isArray(overrides)) return { ...blankAnswer(stage), ...overrides };
+  const base = blankAnswer(stage);
+  const table = overrides.reduce((t, action) => applyTable(t, action), base.table);
+  return { ...base, table, choice: table.prediction?.token ?? null };
 }
 
 /** A decimal kept to the step's own number of places, so 0.1 + 0.2 is 0.3. */
@@ -58,6 +89,8 @@ export function roundTo(x, step) {
  *   STAGES: object[], DEBRIEF: object,
  *   blankState: (stage: object) => object,
  *   setup?: (runner: object) => void,   // builds the instrument, once, before stage one
+ *   tableHost?: () => HTMLElement,       // where a table stage draws (default: the instrument host)
+ *   room?: string,                       // the named room (`rooms.js`) a table stands in where no world is under it
  *   toolNoteFor?: (id: string, stageNumber: number) => object|null,
  *   onLoad: (stage: object, i: number, runner: object) => void,
  *   onDispose?: () => void,
@@ -83,6 +116,8 @@ export function createRunner(container, ctx, cfg) {
   let busy = false;
   let disposed = false;
   let dialTeardowns = [];
+  let railTeardown = null;
+  let tabletop = null;
 
   const runner = {
     frame,
@@ -95,6 +130,8 @@ export function createRunner(container, ctx, cfg) {
     loadStage,
     renderWidget,
     setControls,
+    act,
+    get tabletop() { return tabletop; },
     readout,
     setPairedReadout: (l, r) => frame.setPairedReadout(l, r),
     plotPoint: (x, y) => frame.plotPoint(x, y),
@@ -126,6 +163,7 @@ export function createRunner(container, ctx, cfg) {
 
     cfg.onLoad(stage, i, runner);
     renderWidget();
+    syncTabletop(stage);
 
     if (stage.briefing && !ctx.isComplete && cleared <= i) frame.showBriefing();
   }
@@ -237,7 +275,10 @@ export function createRunner(container, ctx, cfg) {
   function renderWidget() {
     const stage = STAGES[index];
     const w = stage.widget;
-    if (!w || w.type === 'none') { frame.setWidget(''); return; }
+    railTeardown?.();
+    railTeardown = null;
+    // The table is its own picture (the instrument host); it asks no widget.
+    if (!w || w.type === 'none' || w.type === 'table') { frame.setWidget(''); return; }
 
     const changed = () => cfg.onWidgetChange?.(runner);
 
@@ -329,43 +370,16 @@ export function createRunner(container, ctx, cfg) {
     }
 
     if (w.type === 'order') {
-      const paint = () => {
-        frame.el.widget.querySelectorAll('[data-pick]').forEach(btn => {
-          const at = state.order.indexOf(btn.dataset.pick);
-          btn.classList.toggle('selected', at >= 0);
-          btn.setAttribute('aria-pressed', String(at >= 0));
-          const tag = btn.querySelector('.lq-bin-note');
-          if (tag) tag.textContent = at >= 0 ? `Place ${at + 1}` : '';
-        });
-      };
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-bin-keys">
-            ${w.items.map(o => `
-              <button type="button" class="choice-option lq-bin-key" data-pick="${esc(o.id)}" aria-pressed="false">
-                <span class="lq-bin-label">${esc(o.label)}</span>
-                <span class="lq-bin-note"></span>
-              </button>
-            `).join('')}
-          </div>
-          <button type="button" class="btn-secondary quest-btn-sm" data-clear-order>Clear Order</button>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-pick]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = btn.dataset.pick;
-          if (!state.order.includes(id)) state.order.push(id);
-          paint();
-          runner.clack();
-          changed();
-        });
+      frame.setWidget(railMarkup(w, state.order));
+      const rail = bindRail(frame.el.widget, {
+        items: w.items,
+        order: state.order,
+        // The arrangement on the rail is the answer, in the shape every
+        // `check()` already reads.
+        onOrder: order => { state.order = order; },
+        onMoved: () => { runner.clack(); changed(); }
       });
-      frame.el.widget.querySelector('[data-clear-order]')?.addEventListener('click', () => {
-        state.order = [];
-        paint();
-        changed();
-      });
+      railTeardown = rail.dispose;
       return;
     }
 
@@ -421,12 +435,70 @@ export function createRunner(container, ctx, cfg) {
     if (STAGES[index].widget?.type === 'pick') renderWidget();
   };
 
+  /* ---------------- the table ----------------
+
+     A table stage is graded on `state.table`. Every view dispatches here, and
+     `apply` (table/model.js) is the only thing that changes it. */
+
+  /** Dispatch one table action; returns the new `TableState`. */
+  function act(action) {
+    if (!state?.table) return null;
+    state.table = applyTable(state.table, action);
+    state.choice = state.table.prediction?.token ?? null;
+    // A pair that does not hold drifts apart, and the planner's reason is on screen before anything
+    // else answers (a stage that grades the reason itself sets `table.opts.explain: false`).
+    const last = state.table.last;
+    if (last?.verb && last.joined === false && last.reason && state.table.opts?.explain !== false) frame.note(last.reason);
+    else if (last?.verb === 'run' && last.ok === false && last.reason) frame.note(last.reason);
+    else if (last?.joined === true || last?.verb === 'split') frame.clearBanner();
+    tabletop?.setState?.(state.table);
+    cfg.onWidgetChange?.(runner);
+    return state.table;
+  }
+
+  /** Build the tabletop for a table stage, or take it down when the stage is not one. */
+  function syncTabletop(stage) {
+    if (stage.widget?.type !== 'table') {
+      tabletop?.dispose();
+      tabletop = null;
+      frame.setTableMode(false);
+      return;
+    }
+    if (!tabletop) {
+      // BUILT (T4): the card gives way to a prompt strip and a foot dock while the
+      // player is leaned in over the plate (frame.js table mode). Drawn: the
+      // tabletop is part of the deck, as every other widget is.
+      const built = benchesAre3D();
+      if (built) {
+        frame.setTableMode(true, {
+          onStand: () => tabletop?.leaveLean?.(),
+          onLean: () => tabletop?.leanIn?.()
+        });
+      }
+      tabletop = Tabletop(cfg.tableHost ? cfg.tableHost() : frame.instrumentHost, {
+        onAction: action => { runner.clack(); act(action); },
+        // Tools the stage names are keys on the table; the legend is the quest's.
+        tools: stage.table.tools || [],
+        toolHost: built ? frame.el.tableKeys : undefined,
+        onLeanChange: leaning => frame.setLeaning(leaning),
+        onCarry: label => frame.setCarry(label),
+        // A quest with no world under it stands its table in a room of its own (`rooms.js`).
+        room: cfg.room
+      });
+    }
+    tabletop.setState(state.table);
+  }
+
   /* ---------------- go ---------------- */
 
   function dispose() {
     if (disposed) return;
     disposed = true;
     dialTeardowns.forEach(t => t());
+    railTeardown?.();
+    tabletop?.dispose();
+    tabletop = null;
+    frame.setTableMode(false);
     cfg.onDispose?.();
     frame.dispose();
   }

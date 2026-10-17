@@ -1,6 +1,6 @@
 # Bench Tabletop — benches you work with your hands, not machines you answer
 
-**Status:** plan only, nothing built. Drafted 2026-10-16. Phases T0–T7 (§6).
+**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); **T1b built** (Ligar `q1-joins` + `q4-dots`, the Lewis slate; **T1 is complete and waits on the user's review**, which the user has asked us to proceed past); **T2a built** (the card kit, Tallow `q3-catalogue` + `q4-ledger`, the cooler's field point); **T2b built** (the mass kit, Tallow `q5-assay` + `q6-weigh` + `boss-hopper`, the hopper's and the sack's field points, the foe's corner of the table); **T2c built** (the heap kit, a named room, Kettle `q1-recipe` + `boss-golem`: **T2 is complete, and every Tallow and Kettle quest is a table**); **T3a built** (the bonds kit, Ligar `q2-lattice` + `q3-distance` + `q5-resonance`, the ore drift's field point); **T3b built** (the domain kit, Ligar `q6-shape` + `q7-polarity` + `q8-hybrid`, the sump's field point); **T3c built** (the orbital kit, Ligar `q9-orbitals` + `boss-warden`: **T3 is complete, and every Ligar quest is a table**); **T4a built** (the optics kit, Lanternfall `q1-wave` + `q2-photon` + `q3-lines`, the flume's field point); T4b onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
 **This plan now carries the rest of `bench-integration.md`.** That plan's P0–P4 are done (bay contract,
 Tallow, Ligar, Lanternfall); its P5 (Bellows), P6 (Ember Reach) and P7 (records, stills, site copy) are
 folded in here as phases T5–T7, so each remaining world is re-laid and re-benched once, not twice.
@@ -448,3 +448,758 @@ Tallow's, Ligar's and Lanternfall's are described.
   `order` widget and the catalogue strip change in T0, ahead of the quest conversions.
 - 2026-10-16: added (user): `bench-integration.md`'s remaining phases (P5 Bellows, P6 Ember, P7 records)
   folded in as T5–T7; §2.6 makes integrating each bench into its world part of every phase's done.
+- 2026-10-16: **T0a built** (everything in T0 that is not 3D, camera or frame). T0b still owes `table3d.js`,
+  `leanIn()`, the frame's table mode and the `verify:bench` lean-in pose. Shipped, and the API later phases build on:
+  - **`src/learn/table/`** (pure, no DOM, no THREE). `model.js` `createTable(spec, seedKey)` builds a `TableState`
+    from a stage's `table: {kit, bounds?, pieces, zones {trays, slots, containers, rail}, fixtures, tools, prediction?,
+    fetch?, recorder?}` (an unsound declaration throws, so it fails `verify:table`); `apply(state, action)` is the only
+    reducer (returns a new state, never throws, `state.last = {verb, ok, reason?, ...}`); `applyAll`, `runScript(state,
+    script, {mode: 'direct'|'drag'|'tap', strict})`, `expandStep`, `signature(state)` (the table without raw
+    coordinates: two tables are the same when their signatures are), `checkInvariants`, `clusters`, `clusterFormula`,
+    `labelsOf(spec)`, `snapDial`. Units are table units (default `bounds` 100 x 60; the 3D view maps the plate onto them).
+  - **Actions** are one-key objects: `{pick: id|null}`, `{place: {piece?, at | to}}` (`at` = a drag, resolved by
+    `snap.resolveDrop`; `to` = a two-tap target: `tray:ID` `slot:ID` `container:ID` `rail:INDEX` `piece:ID` `free:X,Y`),
+    `{join: [a, b]}` (= place on a piece), `{split: id | [a, b]}`, `{pour: {from, to, what, amount}}`, `{setDial:
+    {fixture, dial, value}}`, `{run: fixtureId}`, `{flip: id}`, `{scale: {piece, factor}}`, `{predict: tokenId|null}`,
+    `{fetch: pointId}`, `{lay: tool|null}`. A drag and a two-tap that mean the same end in the same signature.
+  - **Kit interface** (`kits/registry.js`: `registerKit`, `getKit`, `radiusOf`; `kits/index.js` is where T1 imports
+    `./atoms.js`): `id`, `kinds {kind: {r}}`, `planJoin(a, b, state) -> {holds, reason?, link?}` (never a gatekeeper; a
+    pair that does not hold drifts apart and `last.reason` says why), `canJoin` (derived), `readPiece(id, state)` (DERIVED
+    from structure, so a split undoes a join), `formulaOf(ids, state)`, `chargeOf`, `run(state, fixtureId) -> {x, y,
+    label}|null` (the recorder appends it; nothing else invents a row), `tools {id: {label, press, active?, enabled?,
+    probe}}`, `maxScale`. Joins live in `state.links` (kit `link` data) with `piece.joinedTo` as the index. The throwaway
+    kit and stage that prove all of it are `tools/lib/table-fixture.mjs` (not imported by `src/`).
+  - `snap.js` (zone hit-test with slots before containers before trays before the rail; `joinCandidates` with the
+    planner's answer attached; `resolveDrop`/`pointFor` as inverses; only pieces on open table are join targets, a drop
+    on a zone is a drop into it), `rail.js` (`RailController`, `reorder`, `insertionIndex`, `gapsFor`,
+    `startArrangement`), `recorder.js` (`append`, `lay`, `lineOf`, `readY`, `readX`; a straightedge is two rows or two
+    points), `tools.js` (`BUILTIN_TOOLS.straightedge`, `toolDef`).
+  - **Widget `type: 'table'`** (`stagerunner.js`): `blankAnswer(stage).table` is the `TableState`; `runner.act(action)` is
+    the only way a view changes it and mirrors `state.choice` = the prediction token; `check(state)` reads `state.table`.
+    `SOLUTIONS[i]` / `MISSES[i]` are action scripts (arrays); a quest's `stateFor` calls `stateFromScript(stage, entry)`
+    (non-array entries pass through, so old shapes are untouched). The tabletop is `Tabletop(host, {onAction, tools})` in
+    `instruments.js` (= `Table2D` at every tier until T0b registers the built twin); `cfg.tableHost()` may name another
+    host element. `engine/table2d.js` extends `PlateBench`: press-move-release drags, tap-then-tap-target twin, rail pieces
+    slide apart, dials dragged, Run tapped, tool keys under the canvas; `drawTable`, `fixtureLayout` and the gesture
+    methods (`pointerDown/Move/Up`, in table units) are what `verify:table` drives. Not yet in the view: flip/scale/pour/
+    fetch gestures (T1/T2 bring them with their kits).
+  - **Order rails** (`engine/railview.js`, over `RailController`): all 14 `order` stages in 11 quests are drag-to-reorder
+    with the tap-piece-then-tap-gap twin; "Clear Order" is gone. They still write `state.order`, so every `check()`,
+    `SOLUTIONS` and `MISSES` entry is unchanged. New per-stage fields: `widget.rail: {first, last}` (the plain labels at
+    the left/right end; direction is fixed by them, and `verify:learn` holds them to the vocabulary gate) and optional
+    `widget.start` (used on `q8-trends` s5 and `q3-distance` s5, where the fixed shuffle landed on the answer). The start is
+    a fixed shuffle, never the declared order and never the answer (`verify:table`). Copy that said "tap" for placing
+    (miss messages, two hints) now says "put".
+  - **Catalogue** (`catalogue.js`): drag a card to a slot (ghost follows the pointer; the click that ends a drag is
+    swallowed); `board.strip: true` (declared on `q3-catalogue` s1 and s3) makes a drop on a filled slot push the row
+    along to the nearest gap (right first, then left; a full row returns the displaced card to the drawer); other boards
+    swap or return the card. `fileCard` is pure and shared. **For T0b:** `catalogue3d.js` already files by tap through
+    `fileCard` (twin rule kept, including pushing); dragging a BUILT card is the T0b half.
+  - **`npm run verify:table`** (in `verify`, after `verify:learn`): the throwaway stage is replayed by script, drag, two
+    taps and the drawn tabletop's own gestures; the stage runner is driven; misses, authored outcomes, label leaks, dead
+    tools/dials, layout and drawing are checked; every real `type: 'table'` stage gets the same treatment; the 14 rails
+    (including the DOM widget on a hand-made DOM), the catalogue strip, and the ratchet. **`tools/table-legacy.json`**
+    lists all 44 built quests (38 benches + 6 bosses): listed = unconverted; unlisted = converted, held to at most a
+    quarter of its stages as `choice` (so 2 of 8), each declared `widget.keep: 'reading'` (a prediction is a table token,
+    not a choice); a listed quest whose stages are all tables must have its line deleted; new quests get none.
+- 2026-10-16: **T0b built** (the built side: everything in T0 that is 3D, camera or frame). Nothing is browser-tested; the
+  throwaway table still reaches no quest. Shipped, and the API T1 builds on:
+  - **`BenchViewer3D.leanIn(opts)`** (`bench3d.js`, solver in `engine/lean.js`). `opts {zones?, viewport?, reserve?,
+    pitchDeg?, instant?}`; `zones` are used rectangles in the bench frame in metres (`{x0,x1,z0,z1}`, default `PLATE_ZONE` =
+    the whole 4.8 x 1.3 m plate). Returns the pose `{position, target, pitch, dist, fov, aspect, fits, safe, ndc, key}`.
+    `planLeanIn({zones, viewport, reserve, fov, pitchDeg})` is the pure solver (55 degrees down, the used zones inside the
+    free glass); `chromeReserve(w, h)` models the HUD, strip and dock in px when nothing can be measured (a phone is
+    `w <= 768 || h <= 500`); live, `measureLeanReserve()` reads `.lq-tstrip`, `.lq-tdock` and a docked briefing card and the
+    pose is re-solved at 5 Hz when any of it moves. The camera flies there in 0.45 s (instantly under reduced motion).
+    `leaveLean({walked})`, `settleLean()`, `isLeanSettled()`, `leaning`, `onLeanChange`. A step is seen as a change in the
+    camera's x/z that the lean did not write (`leanWalkIntent`; the walk runs first each frame), hands the camera to the walk
+    and stands the player up; Escape and the dock's Stand key stand up without walking; `[E]` and the Lean In key lean in
+    again. A drag on empty table is a small look that settles back (`leanLook`). While leaning `fitToOpenArea` /
+    `fitDeployedAim` do nothing, `body.bench-leaning` hides the touch sticks (Stand brings them back), and the stage sets
+    `fpsControls.holdBase` so the walk does not read the lean camera as a teleport. Unconverted benches never call any of it.
+    `addGrabbable` takes an optional `accepts(raycaster)`, so one wide hit volume only takes a press where something is there.
+  - **`engine/table3d.js` `Table3D extends BenchViewer3D`**; `Tabletop(host, opts)` returns it at T4 and `Table2D` below
+    (`opts {onAction, tools, toolHost?, onLeanChange?, onCarry?}`; the runner passes the last three at T4). Same contract as
+    `Table2D`: `setState(state)`, `dispose()`, `built = true`. It leans in on its first state with `[map.zone]` and re-frames
+    when a stage changes the table's furniture (`boardSignature`). The table's units land on the plate by `table/layout.js`
+    `plateMap(bounds)` (uniform scale, centred, 6 cm margin), so **declare `bounds` plate-shaped (about 150 x 46) for a table
+    that must hold 28 px pieces on a 667 x 375 phone**; a 100 x 80 table gives about 25 px at its far edge
+    (`TEST_TABLE_WIDE` is the built twin's throwaway). The flat part of the plate is `drawTable(..., {pieces:false,
+    controls:false, sheet:false, crt:false})`, the canvas table's own picture; pieces are puck/card meshes with an engraved
+    legend, lifted 3 cm while held and eased to their place; kinds flagged `instanced` are one InstancedMesh each; joins are
+    rods; jars have walls and a rising fill; a fixture is a rim, a knob per dial and a Run key unless the kit supplies
+    `fixture3d`. Fixtures are dressed from `opts.world.materials` (the host's own, recorded by `buildBayBench` on
+    `dormant.userData.benchMats`, handed over by `stage.benchDeployment().materials`), never the bench kit's.
+  - **`table/gestures.js` `TableGestures`**: what a pointer does on a table, written once for both views (press, slop, drag,
+    rail gap, tap-then-tap twin, dials, Run, pour, the paper strip). `contextKeys(state, kit)` are the keys a held piece or a
+    pending field item offers: **Flip**, **Smaller**, **Larger** (kit kinds flagged `flip` / `scale`) and a fetch key per
+    pending `table.fetch` entry (left out where a world has the point). **Pour** is a drag from one jar to another, or a tap on
+    each, one `kit.pourStep` (default 1). **Straightedge**: drag between two readings on the strip lays it through them, a tap
+    on the strip lifts it. A second quick tap on a held card puts it down (there is no double-tap flip). `table/layout.js`
+    holds `fixtureLayout`, `plateMap`, `pieceTargets`; `engine/table-keys.js` `TableKeys` renders the tool and context keys.
+  - **Recorder sheet**: a paper plane at `recorder.box`, painted by `trendplot.js` (new `pxOf`, `overlay`), the straightedge
+    a bar laid on it; rows come from the kit only. `recorder` accepts `{at, size, xLabel, yLabel, xUnit, yUnit}`. The 2D strip
+    uses `recorder.plotUnits`. `setKeys` / `setReadings` are no-ops on a table: tools are in the dock, readings on the sheet.
+  - **Frame table mode** (`frame.js`): `setTableMode(on, {onStand, onLean})`, `setLeaning(bool)`, `setCarry(label|null)`,
+    `el.tableKeys`. Entering moves the finished nodes (no copy is retyped): a **prompt strip** under the HUD (Leave Bench from
+    the host bar, the objective, the stage dots) and a **foot dock** (Stand / Lean In, Tour, Findings, the table's keys, Hint,
+    Commit), with the miss banner, hints and a reward card on a message plate floating over the dock, so neither bar changes
+    height. The card, fold dock and tool plate are hidden in table mode; `PANEL_LAYOUT` and everything else are as before.
+    The runner turns it on when `benchesAre3D()` and a table stage loads, and off when the stage is not a table.
+    **A quest that plays table stages at T4 must be in `BUILT_BENCHES`** (`instruments.js`) so the host keeps the player on
+    their feet. CSS: `learn.css`, "TABLE MODE".
+  - **Field points (world side only)**: `three/field-points.js` `registerFieldPoint(world, {id, siteId, label, host, pos,
+    half?, rotY?, reach?})` (refuses a point with no `host`), `fieldPointsOf`, `fieldPointById`, `fieldAimTargets(world,
+    {ids})`, `clearFieldPoints`. `[E]` goes through `stage.aimedInteraction` to `viewer.aimedInteraction(origin, dir, world)`
+    (the bench stage now offers `[E] TAKE <item>` for the point the camera is POINTED at, never the nearest, and `[E] LEAN
+    IN` at the plate). **Carry slot**: `takeField(point)` sets `carry` and `onCarry(label)`; the frame's chip reads "Carrying
+    <label>"; `flushCarry()` runs on `leanIn()` and dispatches the reducer's `fetch`, so the piece appears on the table back at
+    the bench. No world registers a point yet (T1 brings Tallow's conveyor tail); `verify:<world>` is to hold each one to
+    "walkable ground, a clear approach, a host or named landmark".
+  - **Checks.** `verify:bench`: the lean-in pose on the throwaway table at seven viewports (2560x1080, 1920x1080, 1680x1050,
+    1440x960, 1280x960, 812x375, 667x375): the whole used zone inside the free glass, below the HUD and strip, above the dock,
+    smallest piece >= 28 px, camera inside the bay's `approach` or `lean` air; the whole solution replayed through the real
+    pointer handlers by drag and by two taps (84 presses), a look, a step, `[E]`, a field point and the carry slot. In the five
+    worlds, per bench: the new **`lean`** box (`bayBoxes().lean`: x +-1.2, y 2.4..4.6, z from the plate's front edge out 2.1 m,
+    the camera's air), **`sight`** (a 9 x 5 grid of segments from each whole-plate pose to the plate must pass through no
+    body), **`view`** (rays through the free glass that land past the plate's far edge must reach a body or the terrain), and a
+    tabletop deployed on the world's first bench must use that bench's own materials (with a negative control).
+    `tools/bay-legacy.json` now also waives, by name, the benches the new camera exposes: `lean` and `sight` for Tallow
+    `q2-core` (the sub-level's roof is at the camera's height) and `q3-catalogue` (the control house roof), Ligar `q9-orbitals`
+    (hoist chamber roof), Lanternfall `q5-numbers` and `q6-filling` (the records tent's ridge), all of Bellows (the six ring
+    gantries, deleted in T5) and Ember (the seven shelters, T6); **T1 clears Tallow, T3 Ligar, T4 Lanternfall**, and the file
+    can only shrink. `verify:table` also drives the shared gestures (pour, flip, scale, fetch, the straightedge) and the frame's
+    table mode and CSS; `verify:run` mounts the throwaway stage through the runner and plays its script (and will do the same
+    for every real `type: 'table'` stage).
+  - **Deferred.** The tray/rail/slot pieces of the built plate are flat pictures with low rims (no tray geometry yet); the field
+    chip and the keys are screen-space; `kit.fixture3d` is a hook with no kit using it yet; `catalogue3d.js` still has no drag;
+    no world has a field point; the pose assumes the stage's table is centred on the plate; pour is one step per gesture.
+  - **For the user to look at in a browser (nothing here is browser-tested)**. There is no quest to open: `Tabletop` is only
+    reached by `type: 'table'` stages, and no quest has one. To see it, temporarily add the throwaway stage (`tools/lib/
+    table-fixture.mjs` `TEST_STAGE` with `TEST_TABLE_WIDE`, and `registerTestKit()`) to a Tallow quest that is in
+    `BUILT_BENCHES`, at 3D On. Then check: (1) on entering, the camera flies over the plate and the table fills the glass between
+    the prompt strip and the dock; on a phone held sideways (667 x 375, 812 x 375) the pieces are big enough to hit; (2) a piece
+    follows the pointer, lifts and settles, the rail's pieces slide apart under a dragged card, tap-then-tap does the same,
+    a drag on bare table swings the view and lets it go; (3) W / the move stick stands you up, the sticks vanish while leaned
+    in and return after Stand, `[E]` at the plate says LEAN IN; (4) the hint, miss banner and reward float over the dock without
+    moving it; Leave Bench still works; (5) the strip prints the readings and the straightedge lies on it; (6) nothing glows,
+    nothing is rounded. Per bench: the lean-in frame should show the host's machinery at the plate's edges and the world beyond
+    it; the waived benches above will show a roof or a gantry over the camera until their phase.
+- 2026-10-16: **T1a built** (first half of T1: the atom kit, Tallow's field point, Tallow `q1-grain` and `q2-core`, their hosts).
+  Nothing here is browser-tested. Shipped, and the API T1b builds on:
+  - **`table/kits/atoms.js`** (registered by `kits/index.js`; id `atoms`). One kit, two scales, one set of rules. **Every join is
+    `joinbench.js` `planJoin` asked against the atoms' CURRENT shells** (the links already standing are applied in order, so a split
+    undoes a join), a drawing is `lewis.js` `planLewis`, the lens picture is `scope.js` `drawScopeField`, the cut and the shake are
+    `planCut` / `planSettle`, the beam is `corebench.js` `planBeam`. No stage declares an outcome and `verify:table` replays every
+    join against the planner. A pair that does not hold drifts apart and `state.last.reason` says why; the runner shows that reason
+    (`frame.note`) unless the stage sets `table.opts.explain: false`.
+  - **THE BOND-SCALE HALF (what T1b converts Ligar onto).** Piece kind `atom`, `props {el: 'Na'}` (optional `shells` prefill, `mask`
+    withholds the symbol, `tint`, `lone`, `dots`, `scratch`). A link is `{type: 'transfer'|'share', giver, moved, pairs, a, b}`: a
+    hand-over (`giver` hands `moved` electrons over; both end charged) or `pairs` shared pairs (1 single, 2 double, 3 triple). Exports:
+    `atomView`, `readPiece(id, state) -> {shells, outer, cap, room, full, lamp ('room'|'full'|'over'), charge}`, `chargeOf(ids, state)`
+    (the needle on a cluster), `closureOf(ids, state) -> {closed, open}` (MgCl is open, MgCl₂ closed: "build until nothing is left open"),
+    `formulaOf` / `countsOf` / `moleculesOf(state)`, `lewisOf(ids, state) -> {mol, placed, read}` (the cluster as drawn, bonds from the
+    links, lone pairs and dots from the atoms' props, so T1b's slate drops only have to set `props.lone` / `props.dots` or add pair pieces
+    that join to an atom), `elementOf`, `shellsFor`. Stage wording: `table.opts.words` is `'plain'` (default: no shell talk in a reason) or
+    `'shells'`; `table.opts.shells` draws each atom's outer electrons on its face. Ne-Ne drifts apart, Na-Cl hands over, two oxygens share
+    two pairs, two nitrogens three, four hydrogens close a carbon and a fifth is refused, MgCl₂ closes: all in `verify:table` "Atom kit".
+  - **THE PARTICLE-SCALE HALF.** Kinds `proton`, `neutron`, `electron` (never joined: `nojoin`), `nucleus` (a fixed lump drawn as the
+    to-scale huddle), `specimen` (rings, counts, a casing, a needle reading, a tested stamp), `detector`, `card`. A shell is a tray with a
+    `cap` (the picture prints `n/cap` and a stencilled `!` lamp, `plates.js` `lampMark`, when it holds more); the charge needle is a
+    `needle` fixture (`needleReading(state, id)`: protons on the nucleus lump or in its zones against electrons in them); the beam is a
+    `beam` fixture with a Run key (`runLabel: 'Fire Beam'`) that reads where the detector sits; the tester is a `tester` fixture that stamps
+    what the sample in its slot does (`stamp` on a run); the reader is a `reader` fixture that prints the name and mass of the atom in its slot.
+  - **THE SAMPLER'S TOOLS ON A TABLE.** `dish` (a sample in `props.sample`, the scope's own declaration; `props.view` makes it open at that
+    power), `lens`, `cutter`, `shaker`. New reducer rules, all in `model.js` and all kit-driven: `kinds.x.tool` (a tool lies ON another piece
+    and comes off when picked up, a piece carried into a zone leaves its tools behind), `planJoin -> {once, set, rest}` (a pass: the cutter
+    writes `cut` on the dish and hangs back where it was), `run -> {stamp}`, `kinds.x.nojoin`, `kinds.x.split` (the held piece offers
+    "Pull Out"), `kit.joinGap` (joined pieces stand a little apart so the join shows), a join stands the joiner beside the target on the first
+    free side (`standBeside`), a tray may declare `cell` (the pitch for big pieces) and `cap`, a fixture `noRun` / `runLabel` / `props`, a
+    dial `labels`, `table.opts`, a fetch entry `at` (below). Painting is the kit's (`paintPiece`, `paintFixture`, `paintLink`, `faceKey`,
+    `printed`, `linkRods`): `table2d.js` `drawTable` and `table3d.js` call the SAME functions, so a face is one picture; the built puck's
+    top is a canvas painted by `paintPiece`.
+  - **The scratch corner** (`scratchCorner`, `atomTable(spec)`): bottom left of every atom-kit table, a bin and four loose atoms (H, O, Na,
+    Cl), never graded (`props.scratch`; `piecesIn`, `moleculesOf` skip it), a fresh one every stage. `verify:table` fails an atom table
+    without it and proves that playing in it changes no stage's answer.
+  - **Field point and carry slot.** `three/tallow/stations.js` `buildSamplePoint` returns `fieldPoints: [{id: 'tail', label: 'Belt Scoop', ...}]`:
+    the scoop across the cross-cut sampler's drum, a real piece of host `site-1`, registered by `tallow.js` through `registerFieldPoint`
+    (host-local to world, with the place to stand). `[E]` on it (aim-target, never the nearest) puts "Belt scoop" in the carry chip; leaning
+    in at the bench puts the dish on the table. The guide chevron leads to the stand (`bench-host.js` `guideTo`, wired in `main.js` to
+    `stage.setWorldWaypoint`; `Table3D.syncGuide` shows it while the world has the point and the item is neither fetched nor carried).
+    **Evidence, never a lock:** the scoop is a second dish for stage 1; the stage is answered with the bench's own dish. **At T1 to T3** the
+    same fetch is a drawn **site plate** on the table (`table.fetch[].at`; a tap on it, `TableGestures.siteAt`); where the world has the
+    point the built table draws no plate and a tap there does nothing (`showsSite`). `verify:tallow` holds each point to: belongs to a site
+    (host), labelled, within 12 m of its bench, the place to stand clear of every collider and level with the ground under the point, the point
+    itself solid (the clearance test can fail), inside `[E]` reach, and walkable from the bench's approach mark (a flood fill over the real colliders).
+  - **`q1-grain` and `q2-core` are table quests** (all 16 stages, no `choice`; their lines are gone from `tools/table-legacy.json`; `PRACTICE`, `VOCABULARY`,
+    the reward cards and every export other benches import (`KINDS`, `POWER_SCALES`, `PARTS`, `behaviourOf`) are unchanged). `q1-grain`: 1 lens over a dish and
+    the power dial (graded on the dial), 2 tray the samples by kinds of atom, 3 read atoms in the reader and tray the ore by element (sodium and
+    magnesium are dressed alike), 4 draw the cutter across four samples and tray the one it cannot split, 5 build one molecule of Sample A from loose
+    atoms (the planner refuses a third hydrogen on an oxygen), 6 build one molecule of each sample (the planner makes H-O-O-H only if the hydrogens
+    go on first, which is its honest answer), 7 pass the shaker under three samples and tray them, 8 tray four samples (lens, cutter and shaker all
+    on the table). `q2-core`: 1 detector round the foil, "Fire Beam", the strip records, a model card in the slot; 2 pick out the particles that carry
+    a +; 3 load electrons until the needle rests on zero; 4 load shells (cap lamp) against three open samples; 5 the tester and three trays; 6 and 8
+    trays against a reference (specimen faces print protons, neutrons and a needle); 7 pull electrons off until the needle reads +2. `SOLUTIONS` and
+    `MISSES` are action scripts; every miss carries a reason and no answer.
+    **Deviation from §4:** `q2-core` s6 and s8 tray prebuilt specimens (they do not build each variant from Sample D); building three atoms in one
+    stage wants the cluster model with shell rings, which is T2/T3's to design with the card table. Stage 1's model cards are a slot, not a `choice`.
+  - **Integration (§2.6).** Sample 1 (conveyor tail): the table is the host's own surface (host materials), a field point on the drum, the lean-in view
+    shows the sampler frame and the yard (the host was already clear of every lean check). Sample 2 (instrument room): the roof slab was inside the lean
+    air, so the room is **0.6 m deeper** (`gen-tallow-layout.mjs` `FLOOR_Y` -5.6, ramp grade 0.62, headroom 4.8), the one roof beam that crossed the air over the
+    bench is left out, and a luminaire and lamp hang over the back of the plate (`lampMark`, no new light in the pool). **Both Tallow waivers are deleted**
+    (`tallow/q2-core` and, since the veranda's front edge now stands at the plate's, `tallow/q3-catalogue`): `tools/bay-legacy.json` has no Tallow line.
+    `bench-bay.js` `lean` now starts at the top of the `approach` air (2.2 m, was 2.4) so the two together hold every camera height: a small table leans in
+    lower and nearer than the whole plate. Tables are 120 x 64 units (`TABLE_BOUNDS`), pieces 5 units or more, which is 28 px at 340 px and at 667 x 375.
+  - **Checks.** `verify:table`: the atom kit section, site-plate gesture, `printed` text, run readable along the solution, `noRun` fixtures, the
+    scratch corner; `verify:bench`: every real table stage on the built table at 7 viewports (whole table in the free glass, pieces 28 px or more, host
+    materials, camera in the lean/approach air) and its whole solution through the real pointer path by drag and by two taps, the field point (chevron,
+    no plate, carry, table); `verify:tallow`: the field points; `verify:run` mounts all 16 stages (and the throwaway); `verify:learn`: a Tallow section holds every declared dish, atom, specimen and nucleus to the real tables and recomputes every graded answer (the lowest resolving power, kinds of atom, elements, the cutter's result, the molecule, the shaker's layers, the beam, protons, shells, the tester, isotopes) from the scope's and the kit's own planners.
+  - **Deferred.** Ligar `q1-joins` and `q4-dots` (T1b: the atom kit's bond half is ready for them); the Lewis slate's pair pieces (T1b); a tray that is a
+    real pan or tray in 3D (still a flat picture with a low rim); `catalogue3d` drag; the card kit (T2); `bake:stills` for the deeper instrument room (T7);
+    the sound of the host while the player works; building each variant atom in `q2-core` s6/s8.
+  - **For the user to look at in a browser (nothing here is browser-tested), per bench.** Tallow, 3D On. **Bench 1** (`Bench 1 - Atoms`, the sample point at the
+    conveyor's tail): stand at the plate and read the briefing (it names the lens and the scoop). Press `[E]` at the plate, or let the table
+    lean in on its own: the camera should fly over the plate with the table filling the glass between the prompt strip and the dock, the host's sampler
+    frame and the yard behind it, no sky and no back of a prop. Stage 1: drag the lens onto SAMPLE A (it rests a little right of the dish, the picture in
+    the lens), drag the power dial's knob (or tap the track) to 4. Press W to stand up: the amber chevron should lead about 4.6 m along the bench's left to **the
+    sampler's drum** (the field point: the scoop across the drum), `[E] TAKE BELT SCOOP` appears when you point at it, the chip reads "Carrying Belt
+    scoop"; back at the plate, lean in again and a second dish (BELT SCOOP) is on the table. Stages 4 and 7: drag the cutter or shaker across a dish: it
+    returns to its hook and the dish's picture changes (the helium puff stays unchanged). Stages 5 and 6: drag an H onto an O, an H onto the same O, then
+    a third H (it should drift away with "Oxygen has no room left."); tap an atom to pick it up and press "Pull Out" in the dock to take it out of its
+    molecule. The scratch corner (bottom left, four loose atoms and a bin) should always be there. Phone, landscape: pieces should be easy to hit, and a
+    drag on bare table should only swing the view. **Bench 2** (`Bench 2 - Inside an Atom`, down the stair between the two evaporators; it is deeper than
+    before): the camera leans in under a roof high enough to clear it, with the bulkhead, the gauge board and the equipment rack at the plate's edges and a
+    lamp over the back of the plate. Stage 1: put the detector in the three places in turn and press "Fire Beam" (a dot per run on the strip, counts printed on
+    the detector); stages 3, 4 and 7: electrons are dragged between trays and the needle moves live (it should read +8 until you add electrons in stage 3), a
+    shell tray that holds too many prints `n/cap` and a `!` lamp; stage 5: drop a sample in the tester's slot and press "Run Tester" (the sample's face
+    prints what it did). At T3 and below (3D Off, or a phone below T4) the same stages draw on the deck as a flat top-down table, with a drawn site plate
+    ("Belt scoop") in the corner of stage 1 that a tap takes. Check nothing glows, nothing is rounded, the keys under the table take presses.
+- 2026-10-17: **T1b built** (second half of T1: Ligar `q1-joins` and `q4-dots` on the atom kit at bond scale, and the hosts they stand in).
+  Nothing here is browser-tested. Shipped, and the API T2 onward builds on:
+  - **`q1-joins` is a table quest** (all 8 stages, no `choice`; its line is gone from `tools/table-legacy.json`; `PRACTICE`, `DEBRIEF`,
+    `VOCABULARY`, every reward title and the quest's stage count are unchanged). A pair is two atoms that start side by side; any atom may be
+    joined to any other (the planner answers, a pair that does not hold drifts apart and says why) and a stage grades only the pairs it handed over
+    (`pairRead`; a stray join to a stranger is refused with a reason, never blocked). 1 put three pairs together and tray what held from what
+    sprang apart; 2 fill every outer shell (the neon pair starts lit); 3 build one pair whose atoms end charged and one that ends neutral (any pairing
+    of Na, Cl, H, H that does it passes); 4 tray four pairs by handed-over / held-between (read from the link the planner made); 5 build the unit in
+    which every outer shell is full, with a unit needle clipped on the magnesium atom (four chlorines on the table, two needed); 6 tray three pairs by
+    the rods between them; 7 tray four pairs as ionic / covalent / no bond (the argon-hydrogen pair is two loose atoms in No bond); 8 fill carbon's
+    shell with hydrogens (six on the table, the fifth is refused). Faces are staged with the words: no charge mark before stage 3 and no shell dots
+    before stage 2 (`table.opts.charges: false`, `table.opts.shells`), a refusal says "room" before it says "shell" (`opts.words`).
+  - **`q4-dots` is a table quest** (all 8 stages, no `choice`; line gone; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, `BUILDS_ON`, titles unchanged).
+    The **Lewis slate** on the atom kit: a molecule's atoms and a joint at every link stand fixed on a `slate` fixture (the board), the tray's pieces
+    `pairs` ("Pair"), `single` ("Single", stage 7 only) and `lift` ("Lift Out") are dragged onto a joint (a shared pair) or an atom (a lone pair or a
+    single electron) and go back to the tray, and the board's one rule (a hydrogen or fluorine shares one pair) is `lewis.js` `addBond`'s refusal,
+    shown as the reason. `slateOf(state, id)` is the reading every stage grades on: `planLewis` of the drawing the pieces' props hold, the tray's count
+    (`TRAY n OF m`), the charge. 1 water; 2 ammonia, methane and hydrogen fluoride on three plates; 3 carbon dioxide; 4 HOF, a triangle of three
+    joints (the player decides which two to fill, so the atom in the middle is what they built, graded by the lamps); 5 the ammonium ion with a charge
+    chip (a fixture whose dial is `charge`) that sets the tray; 6 boron trifluoride, drawn until the tray is empty (the board refuses fluorine's second
+    pair, and boron's lamp stays amber); 7 nitric oxide with a single electron; 8 SF6 (24 deals). A lamp is a ring inside the atom's rim (phosphor lit,
+    amber dashed for boron's six, double for an expanded octet, the stencilled `!` for more than it can hold); each atom prints what stands round it
+    against what it wants (`6/8`). **`boss-warden` is untouched** and still plays the pair board, the join bench, the domain rig and the rack
+    (`verify:run` and the warden's foes in `verify:bench` still pass).
+  - **API additions.** `kits/atoms.js`: `pairRead`, `slateOf`, `slateParts`, `slateLayout`, `SLATE_R`, `JOINT_R`; kinds `joint`, `pairs`, `single`, `lift`
+    (tray pieces are `tool` kinds); fixtures `slate` (board, lines and count) and `chip`; the `needle` fixture takes `props.cluster` (net charge of everything
+    joined to a piece); `opts.charges: false`; a lit ring on any atom whose outer shell is full when `opts.shells`. `table/model.js`: a refused `planJoin` may
+    answer `home: true` and the piece goes back where it hangs (`last.home`). `engine/table3d.js`: `mats.tray` dresses the trays when the host has one.
+  - **Checks.** `verify:table` ("Atom kit"): the unit needle, `pairRead`, the whole slate (every deal agrees with `lewis.js` and a 160-step walk never
+    parts from it, the one rule is refused with its reason and the piece goes home, a single electron on a joint is refused, Lift Out takes a dot first,
+    the chip changes the tray, a loose atom cannot join a slate atom); `verify:learn`: every `q4-dots` slate is its molecule (atoms, joints, tray,
+    no overlaps) and each solution leaves the intended `DRAWINGS` entry, and a "Ligar bench one" block recomputes every `q1-joins` pair, charge, count and
+    tray from `joinbench.js` `planJoin` on the elements' own shells; `verify:bench`: the 16 real stages lean in at 7 viewports and are solved through
+    the real pointer path by drag and by two taps; `verify:run` mounts all 16. Two checks were made to say what they mean: a **fixed** piece (an atom on a
+    slate, a joint) is a target and never grabbed, so it owes no 28 px hit size and may stand on its own fixture; and `verify:table`'s label/answer search
+    now reads a subscript as part of its word ("H₂" is "h2"), where it used to read it as "h" and call every hydrogen label a leak of the formula H₂.
+    `verify:bench` no longer measures the join bench at bench 1 or the pair board at bench 4 (nothing plays them there; they stand on at bench 2, bench 5
+    and in the warden's room and are measured there).
+  - **Deviations from §4.** (1) `q1-joins` s1 "a second pair dragged into a joint makes a double bond": a join is one planner answer, so two oxygens
+    snap with two rods and two nitrogens with three; the player-dealt second pair is `q4-dots`'s slate. (2) `q1-joins` s7 (predict off the catalogue) is
+    join-and-tray graded on what the planner made, with no prediction token (a prediction is asked only on a new case, §2.4, and this is the first
+    time the idea is met); its reward now says "after a few pairs you do not have to press anything". (3) `q4-dots` s4: the atoms are fixed on the
+    slate and the skeleton is the set of joints the player fills, not atoms they place; free atoms with joints of their own is the cluster model T3
+    designs with the domain hub. (4) `q4-dots` s2 no longer files plates under lone-pair counts: drawing all three molecules shows the counts, and
+    the card says them. (5) `q4-dots` s6 is a build, not a "why": the board's refusal is the reason. (6) A pair's partner is its neighbour at the start;
+    there are no "PAIR A" labels.
+  - **Integration (§2.6).** Bench 1 (slab-dressing yard at the quarry's west face) and bench 4 (scale-house desk on the east deck) already cleared the
+    new camera: neither had a `lean`, `sight` or `view` waiver, so `tools/bay-legacy.json` needed no Ligar line deleted (`ligar/q9-orbitals` stays for T3)
+    and no host moved. From the lean-in pose the yard shows the saw bed with its slab, the bridge saw's portal and the two racks of dressed slabs, with the
+    work lamps on their masts either side; the scale house shows its riveted cabin with the dial on its face, the weigh deck on the right and the test
+    weights racked at the left. Both are in daylight, so neither needs a lamp over the plate (a mine table does, in T3). The tables are dressed from
+    Ligar's own materials (the plate steel for pieces, the dark steel for rims and fixtures) and **the trays are basalt rimmed** (`mats.tray`, ore tubs on
+    the ledge). The scratch corner on both tables is checked (playing in it changes no stage's answer); neither quest has a field point, so there is no
+    carry to check at Ligar yet.
+  - **Deferred.** The slate's tray piece deals one pair per drag (SF6 is 24 deals); atoms a player places themselves on a slate; the atoms kit's cluster
+    model with shell rings (T2/T3); `kit.fixture3d` still unused; a tray that is a real tub in 3D (still a flat picture with a low basalt rim).
+  - **For the user to look at in a browser (nothing here is browser-tested), per bench.** Ligar, 3D On, after Tallow is open (every built world is open
+    from the start). **Bench 1** (`Bench 1 - What Holds`, the slab-dressing yard at the quarry's west face; stand at the plate, press `[E]` or let it lean in):
+    the camera should fly over the plate with the table filling the glass between the prompt strip and the dock, the saw bed and the bridge saw's portal
+    behind it, a slab rack at each side, no sky and no back of a prop. Stage 1: drag an atom onto the one it started beside (Na on Cl, then H on H, then Ne
+    on Ne); the first two should stay joined with a rod, the neon pair should drift apart and the banner should say why; tray the pairs; drag
+    on bare table should only swing the view. Stage 2: dots on the rim and a green ring on the atoms whose shell is full (the neon pair at the start). Stage 3:
+    plus and minus marks appear on the faces. Stage 5: the needle box ("Unit charge") reads zero throughout; the magnesium atom's ring lights after the second
+    chlorine. Stage 6: two rods between the oxygens, three between the nitrogens. Stage 8: the fifth hydrogen drifts away and the banner says the carbon's outer shell is already full.
+    The trays should have a stone rim. **Bench 4** (`Bench 4 - Lewis Structures`, the scale-house desk on the east deck): the cabin with its dial behind
+    the desk, the weigh deck on the right. Stage 1: drag the "Pair" piece from the top left onto a joint (the small ring between two atoms) and then onto an
+    atom; it should return to its place each time, "TRAY n OF m" should fall by two, and a lit ring should appear round an atom that has enough; "Lift Out"
+    on a joint or an atom takes one back. Stage 4: a second joint on the hydrogen atom should be refused ("A hydrogen atom has room for one shared pair
+    only.") and the pair should go home. Stage 5: drag the "Tray charge" knob to +1 and the tray should shrink by one. Stage 7: "Single" appears. Stage 8
+    is twenty-four drags. On a phone held sideways: the joints (the smallest targets on any table so far) should still be easy to land a pair on, and a drag
+    that starts on bare table should only swing the view. At 3D Off (or below T4) the same stages draw on the deck as flat top-down tables.
+- 2026-10-17: **T1 closing note (for the user, before T2).** T1 is the pilot, so these are the things the plan wants judged, which no check can: (1) the
+  **feel of dragging** at T4 on a desktop and on a phone held sideways: does a piece follow the pointer and settle, does a press near a piece take it
+  or swing the view (the plan's "drag vs look" risk), is a tap-then-tap fine on a trackpad; the slate asks for the most precise drops yet (a 3 unit joint;
+  the tray piece's own reach is 11 units, so the nearest target wins), and its last stage asks for twenty-four of them. (2) The **lean-in framing**: does
+  it fill the glass with the table between the strip and the dock on every aspect, are the five hosts (Tallow 1 and 2, Ligar 1 and 4) visible behind the
+  plate, is the landscape phone's table readable (pieces 28 px or more; the fixed slate atoms and joints are about 26 and 18 px and are targets, not handles). (3) **Whether
+  the tabletop reads as less confusing** than the stations it replaced: the two pilots with the most to judge are Tallow `q2-core` (build an atom) and
+  Ligar `q4-dots` (electrons from a tray), because they replace the most arithmetic with something to do with the hands. The user has asked us to go
+  on to T2 through T4 without waiting for this; if the review says the drag is wrong, it is wrong in `table/gestures.js` and the two views once, and every
+  quest after T1 inherits the fix. Decisions that would be cheaper to change now than later: the slate's one-pair-per-drag dealing, the choice to fix
+  atoms on a slate, `mats.tray` stone rims on every Ligar table, and the lamp as a ring (not a separate light) on every atom.
+- 2026-10-17: **T2a built** (first third of T2: the card kit, Tallow `q3-catalogue` and `q4-ledger`, the cooler's field point). T2b owes the mass
+  sorter and the two-pan balance (`q5-assay`, `q6-weigh`) and `boss-hopper`; T2c owes Kettle `q1-recipe` and `boss-golem`. Nothing here is
+  browser-tested (the drawn faces were rendered to pictures in Node and read; the built twin is held by `verify:bench`). Shipped, and the API later phases build on:
+  - **`table/kits/cards.js`** (registered by `kits/index.js`; id `cards`). Piece kinds `element` (`props {sym}`; everything on its face is DERIVED: the
+    proton count is `electrons.js` `zOf`, the outer-shell dots `atoms.js` `shellsFor`, what it does is `tradeOf(sym)` read off `joinbench.js`
+    `shellPlan`; `props.mass` is the one datum, `props.hide: ['z'|'mass'|'outer']` withholds a reading, `props.sealed` prints a "?" and nothing else) and
+    `equation` (`props {eq: 'C(s) + O₂(g) → CO₂(g)', dH}`, `flip` = the sides swap and ΔH changes sign, `scale` = every amount and ΔH multiplied, `maxScale`
+    4). Exports: `elementView(piece) -> {sym, z, name, shells, outer, trade, mass, hide, sealed}`, `elementCard(id, sym, at, props)`, `tradeOf`,
+    `parseEquation`, `equationText`, `cardView(piece)` (the card as it reads now), **`netOf(stack) -> {reactants, products, species, dH, text, cancelled}`**
+    (equation cards added, what stands on both sides cancelled, **ΔH is `thermodata.js` `hessStackEnthalpy`'s own sum**: no second implementation),
+    `sameReaction(a, b)`, `stackOf(state, zone)`, `stackNet(state, zone)`, `piecesIn`, `slotCard`, `railOrder`, `testedOf`, and the furniture
+    `cardTable(spec)` (bounds `CARD_BOUNDS` 150 x 64, a parked recorder), `cardSlot(id, at, {label, row})`, `cardTray(id, label, at, cols, rows, pitch)`.
+    Fixtures: `net` (`props {zone, hideDH?}`: prints the cancelled equation and ΔH under a stack; T6's `q5-hess` is the first user), `tester`
+    (`props {slot}`: stamps what the card in its slot does, `run` is `tradeOf`; a sealed card reads nothing). A held equation card offers Flip / Smaller /
+    Larger through the shared `contextKeys`. **Two view hooks arrived with it:** `kinds.x.rect = {hw, hh}` (a card the kit paints is a thin slab with
+    its face painted by the SAME `paintPiece` onto a canvas of its own proportions, `table3d.js` `buildRectPiece`; the drawn table already hands
+    `paintPiece` a centre and a scale), and `slot.row` in a table spec (the slots that share a row are a STRIP: a card dropped on a filled one pushes the row
+    along by `engine/catalogue.js` `fileCard` itself, `model.js` `fileIntoRow`; `verify:table` replays the same drops through `fileCard` and the table
+    and compares). Prediction tokens may carry `r` (a token is as big as its piece). `TableGestures.tapPiece(id, at)`: tapping a piece **on the rail**
+    with a piece in the hand puts it before (left half) or after (right half) the one tapped, so the end of a full rail can be tapped.
+  - **`q3-catalogue` is a card table** (all 8 stages, no `choice`; line gone from `tools/table-legacy.json`; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, the reward cards,
+    `CARDS` (boss-hopper imports it) and every other export unchanged). 1 lay six cards on a strip (a rail: fewest protons / most protons) by protons, the
+    weights printed beside as the trap; 2 set aside the cards where the outer-shell dots fall back to one (18 cards in two wrapped rows, a tray); 3 file the
+    last row of the chart into eight slots that are one strip row (a card dropped on a filled place pushes the row along, `fileCard`), column numbers printed under
+    the slots; 4 give three loose cards (protons withheld, dots visible) the open place in the column their dots match; 5 test cards (drop one in the tester, press
+    "Test Card") and tray every card that will not trade; 6 tray six cards in four trays by what they do; 7 lay a sealed card in the one open place, set
+    its proton count on a stamp and drop a prediction token (a new case: silicon, never measured); 8 file four loose cards into the open places. Every
+    answer is read off the table (`railOrder`, `slotCard`, `piecesIn`, `tradeOf`).
+  - **`q4-ledger` is an atom-kit table at particle scale** (all 8 stages, no `choice`; line gone; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, rewards unchanged except
+    the numbers in stages 1, 2 and 4). A heap of loose protons, neutrons and electrons, "The middle" and "Outside" trays and a needle clipped on both: 1 build an
+    atom particle for particle against Sample A (its middle drawn to scale as a lump, its rings and needle on a specimen) with a **field point**: a draw from the
+    tower's sample cooler (`cooler`, below), a second reference that appears on the table, evidence and never a lock; 2 build sealed Sample B from its label (label
+    plates: the new `plate` fixture prints a sample's lines); 3 tray samples by whether they react like Sample A; 4 build the protons and electrons of a sealed ion from
+    its label and the needle printed on it; 5 take every electron off magnesium's outermost shell (shell trays print `n/cap`; the needle reads +2); 6 fill chlorine's
+    outer shell (one spare electron; the needle goes negative); 7 put the fewest Sample A and B ions on a pad until its needle reads zero (new kind `ion`, `props
+    {el, charge}`, which the needle counts); 8 tray four samples against a reference. **Atoms were made smaller than the old stage had them** (lithium-7 and -6,
+    beryllium, a lithium ion) so a build is 10 to 12 drags and the heap fits the table; the stages teach the same ideas. `needleReading` and `chargeOf` count an
+    `ion`'s own charge.
+  - **Field point `cooler`** (`three/tallow/stations.js` `buildTowerDeck`): the draw-off valve of the sample-bomb rack on the cooler skid, host `site-4`, the player
+    stands 1.3 m in front of the skid (behind the plate, round the bench's side; `verify:tallow` holds it to walkable ground from the approach mark, a clear stand
+    and a solid point). `verify:bench` plays stage 1's `fetch` through the world's registered point (chevron, `[E]`, carry, table) and at T1 to T3 the drawn
+    site plate takes the same fetch.
+  - **Integration (§2.6).** Bench 3 (control house, veranda desk, record wall) already cleared the lean-in camera in T1a (the veranda stands back to the plate, a
+    luminaire hangs over it): **its `lean`/`sight` waiver was already gone** (`tools/bay-legacy.json` has no Tallow line), so there was nothing to delete and no host
+    moved. Bench 4 gained its field point and the table stands on the deck beside the skid with the tower behind it; the sodium lamp on its mast (host-local
+    3.5, 1.5) lights the plate. Both tables are dressed from Tallow's own plate steel (`benchMats`, held by `verify:bench`).
+  - **Checks.** `verify:table`: the card kit section (the quest's `CARDS` are the element: protons, shells, trade; equation parse, flip, scale; a three-card
+    stack nets to methane with ΔH = −74.8 and equals `hessStackEnthalpy`; the stack's net fixture and every card's face are drawn at 340 and 667 px; a strip row is
+    `fileCard` for eight drops, by drag and by tap; held keys), and the catalogue board's own strip rules on synthetic boards (the boss still files on the board).
+    `verify:learn` ("Tallow's tables are real"): every card is its element at the mass the scope weighed; the chart is in order of protons and each column shares
+    its outer shell (helium excepted: its shell is full at two); every graded answer of both quests is recomputed (periods, the tray of cards that will not
+    trade, the trade of each of six cards, silicon's protons and behaviour, each loose card between its neighbours; every build equals its sample, every label's two
+    numbers are its sample's protons and protons plus neutrons, the sealed ion's needle, magnesium's and chlorine's shells, the smallest ratio from the two charges,
+    the four kinds of difference). `verify:bench` plays every stage through the pointer path at seven viewports; its old fixtures for the catalogue board and the
+    core bench (which used `q3`'s and `q4`'s declarations) are now synthetic boards and specimens, since the quests no longer declare any.
+  - **Deviations from §4.** (1) `q3` stage 2 sets cards aside in a tray; the strip is not folded by hand until stage 3, where the last row is laid into
+    the chart (the player lays the row that restarts; there is no separate "fold"). (2) `q3` stage 4 is a filing by outer-shell dots (protons withheld), not a "what
+    do columns share" choice. (3) `q3` stage 7 grades three things on the table (the card in the open place, the stamp's proton count, a prediction token) where the
+    old stage took a number and a choice. (4) `q4` stages 1, 2 and 4 use smaller atoms; the "bins" are a heap of loose particles (no room for three bins on a 120 x 64
+    table beside the scratch corner). (5) `q4` stage 5 has no "Fire Stripper": the player drags the electrons off, as in `q2-core` stage 7 (stage 3 of this quest
+    is a sibling of `q2-core` stage 6 and stage 8 a sibling of `q2-core` stage 8, with a "no difference" sample added). (6) `q4` stage 6 starts from neutral
+    chlorine and needs one electron, not eighteen.
+  - **Deferred.** A card back for element cards (`flip` is only offered on equation cards); `q4`'s labels are text plates, not a card; the recorder is parked on both
+    tables; tray pieces are still flat pictures with low rims in 3D; no sound of the host while the player works.
+  - **For the user to look at in a browser (nothing here is browser-tested), per bench.** Tallow, 3D On. **Bench 3** (`Bench 3 - The Periodic Table`, the control
+    house south of the evaporator row; stand at the veranda desk and press `[E]` or let it lean in): the camera flies over the plate with the card table filling
+    the glass (wider than the atom tables: 150 units, so 2.8 m of the plate), the blockhouse wall and its record board behind it, the veranda's lamp over the plate.
+    Stage 1: drag a card onto the strip (the others slide apart); tap a card, then tap the left or right half of one on the strip. Stage 3: drop a card on a
+    filled place in the bottom row and the row should push along. Stage 5 and 6: drag a card into the tester slot and press "Test Card": the card's face prints
+    what it did. Stage 7: drag the stamp's knob, drop a prediction token in the slot at the right. On a phone held sideways the cards (about 28 px at 340) show
+    their symbol and a number, and their name and weight only when there is room. **Bench 4** (`Bench 4 - Isotopes and Ions`, the cracking tower's deck): the
+    table with the tower behind it and the cooler skid at the left; press W to stand up and the chevron leads round the bench to the skid's bomb rack, where `[E]
+    TAKE COOLER DRAW` appears when you point at it; lean in again and a second reference sample is on the table. Stage 1: drag protons and neutrons into "The
+    middle", electrons into "Outside" and watch the needle; stage 5: electrons off the third shell into "Taken off" (the shell trays print `n/8`); stage 7: the
+    ions' charges are printed on their shoulders and the pad's needle sums them. At T3 and below the same stages draw flat on the deck.
+- 2026-10-17: **T2b built** (second third of T2: the mass kit, Tallow `q5-assay`, `q6-weigh` and `boss-hopper`, field points on hosts 5 and 6, the foe on the table).
+  Nothing here is browser-tested. T2c owes Kettle `q1-recipe` and `boss-golem`, then T2 is complete.
+  - **Mass kit** (`table/kits/mass.js`, id `mass`, extends the atom kit; registered in `kits/index.js`). Honest by construction: a balance weighs, never divides, and
+    every number comes from the pure planners (`assay.js` `planPour` for tallies, `packBin` for piles) and the listed masses (`listedMass`, `speciesMass`).
+    Pieces: `sample` (props `bins [{mass, n}]`, `note`, `code`, `sealed`; its face prints tallies per bin) and `crate` (props `species`, `n` | `grams`, `sealed`).
+    Fixtures: `assay` (props `slot`, dial `pivot`, Run "Tip Sample"; beam moment is Σ n(m − pivot), level when |net| ≤ 1e-6 of the total), `coder` (Run "Read
+    Code", dial `bin`), `balance` (two pans as containers or a `mix`, atom counters per pan, LEVEL lamp, unit `u` = particles or `g` = grams, counter = grams / M x
+    6.02e23), `scale` (one pan, Run "Weigh", feeds the recorder), `mixer` (dial `heavy` of a fixed total) and `tally` (a dial). Builders: `balanceTable({unit,
+    counters, refCrate, drum, steps, capacity, ...})`, `crate()`, `pourSteps()`. Read-outs for the checks: `assayRead`, `mixRead`, `panLoad`, `balanceRead`,
+    `scaleRead`, `counterOf`, `massOfSample`, `countOfSample`. A pour moves one step of a species from a drum (`table.opts.steps`).
+  - **Core changes.** A kit `run` may return `{noop: reason}`; the reducer fails the action with that reason and the runner shows it. Containers take a `cell`
+    (a scoop's size). `state.tools` (not the kit's list) names the keys the stage offers. `layout.js` gained `FOE_PAD` / `foePadOf(bounds)` (the foe's corner:
+    r 11.5, 12 in) and `FOE_HEADROOM_M`.
+  - **Foe on the table.** A fight stage declares `foes: [{id, label}]` and keeps the corner pad clear (`verify:table` holds every zone, fixture, strip, plate and
+    piece off it). `table3d.js` `foeSpots(n)` seats `FoeLayer3D` bodies in the pad (so a new phase moves the foe), pushes a headroom zone onto the lean zones, and a
+    press on the pad takes nothing. The frame shows a one-line foe plate in the strip. The foe only observes; misses cost Integrity as before.
+  - **Quests.** `q5-assay` (8 stages): tip and read code; the share in a bin; the fulcrum finds a listed mass (Cl 35.5); boron 10.8; a one-pile prediction token;
+    the sealed canister against the mixer dial (heavy = 4); which listed tray; natural or altered. `q6-weigh` (8): carbon crate against pours of 50; build CH₄ on a
+    scale; sixty atoms each of H, C, O on a line; **oxygen pour to match 12 g of carbon's counter (the mole is discovered)**; CO₂; the water drum into scoops;
+    hydrogen to match 36 g of water; drums railed by atoms. `boss-hopper` (5 phases): sort, build a neutral atom, slot a card, balance slag, count a drum; each
+    keeps its `encounter {species, act, intent, hit?, counter?}`. All three lines are gone from `tools/table-legacy.json`.
+  - **Field points** (`three/tallow/stations.js`, real parts of the hosts with `host:` ids): `hopper` "Hopper Draw" (a scoop across the third catch bin of host 5,
+    stand 1.45 m in front) and `sack` "Counted Sack" (host 6's bagging line, stand 2.1 m in front). `verify:tallow` holds both to walkable ground, a clear stand and
+    a solid point; `verify:bench` plays stage 1 of q5 and q6 through the registered point and the drawn site plate (T1 to T3). Hosts 5 and 6 and the Hopper's arena
+    needed no geometry change: their lean, sight and view clearances were already green and `tools/bay-legacy.json` has no Tallow line; the Hopper's tables are
+    built in their own room, so `BOSS_ARENA_SPOTS['boss-hopper']` is unchanged.
+  - **Checks.** `verify:table`: the foe pad on every fight stage. `verify:learn` ("the mass tables"): each sample is a whole pile the planner pours as declared and
+    every graded answer is recomputed from `planPour` and the listed masses. `verify:bench`: all stages at seven viewports through the pointer path, plus "the
+    Hopper on its tables" (foe extents inside the pad, clear of furniture and the free glass, <= 16000 triangles, reactions, miss lunge, disperse, knock-back,
+    relocation between phases).
+  - **Deviations from §4.** (1) `q5` s2 asks the share by abundance trays (25/50/75 in 100), not a typed number; s1 shows the answer as a tray. (2) `q6` s2 is an
+    atom-sized 120 x 64 table with a scratch corner; s6 grades a tally dial (0 to 8, answer 4) beside the scoops. (3) The boss's per-bin `moves` were dropped (no bins
+    widget), and each phase has one foe. (4) The mass tables have no scratch corner. (5) **Deferred: the assay beam, the balance and the scale are painted on the
+    plate (host materials) but have no standing 3D geometry or instanced piles (`fixture3d`)**; the pictures are the same as T2d would draw. Also deferred:
+    `fixture3d`, a recorder on the mass tables, and sound.
+  - **For the user to look at in a browser, per bench.** Tallow, 3D On. **Bench 5** (`Bench 5 - Atomic Mass`, weigh hopper under the belt's discharge): lean in, the
+    assay beam and trays fill the glass, the hopper's belt above; point at the scoop on the third catch bin for `[E] TAKE HOPPER DRAW`, carry it, and the extra
+    sample appears. Stage 3: drag the fulcrum dial and watch the beam tilt; LEVEL lights when the piles balance. **Bench 6** (`Bench 6 - Counting by Weight`, sack
+    scale and elevator): the balance with two pans, drum and counters; `[E]` at the counted sack on the bagging line; stage 4 pour oxygen scoops until the counters
+    match. **Boss arena** (The Hopper): the hopper's body sits in the table's top-left corner pad, clear of the pieces; check it re-seats at each of the five
+    phases, tilts on a miss and disperses on a win. Check all three at 375 px landscape and a desktop.
+- 2026-10-17: **T2c built** (last third of T2: the heap kit, Kettle `q1-recipe` and `boss-golem`, the foundry room). **After this every Tallow quest (seven) and
+  both Kettle quests are converted** (`tools/table-legacy.json` lists no `unit01` or `unit07` line). Nothing here is browser-tested; the drawn tables were
+  rendered to pictures in Node and read, the built twin and the room are held by `verify:bench`. Shipped, and the API T3 onward builds on:
+  - **Heap kit** (`table/kits/heap.js`, id `heap`, extends the mass kit, which extends the atom kit: an `atom` still joins exactly as `atoms.js` says).
+    **A heap is a container whose contents are a count** (`heap(id, label, sym, amount, at, size)`: `contents {hydrogen: 18}`, `capacity` = what it started
+    with, `props {still, pile: {el}}`), drawn as a pile of that many dots and never printed as a number; nothing pours from it (`props.still`:
+    `gestures.js` `containerAt` skips still containers, so a press on a heap is a look). `product(...)` is the same for finished molecules, `dock(...)` holds
+    the one molecule a maker copies, `pan(...)` holds what a scale weighs. **The maker** (fixture `maker`, `props {dock, heaps {sym: containerId}, product}`,
+    Run "Make Molecule" / "Make Unit"): the player builds ONE molecule by hand (every join the planner's) and drops it in the dock; a press takes from each
+    heap as many atoms of that kind as the molecule in the dock holds (`countsOf` the cluster, so the recipe is whatever was built, never a number a stage
+    declares) and adds one to the product; a heap that cannot supply another refuses with `"The hydrogen heap holds too few for another."`, an empty or
+    two-piece dock with its own reason. **Share bar** (fixture `share`, dial `share` 0 to 100, props `left`/`right` captions): a hundred equal parts and a
+    marker. **Ledger** (fixture `ledger`, `props.pan`): the weight of each element on a pan, atom by atom from the listed masses. **Tag** (kind `tag`, a small
+    rect plate, `TAG_RECT`): "Runs out first", dropped on a heap. A `scale` with `props.atoms` records a row `{x: molecules made on the pan, y: weight}` on Run, so
+    a weighing before and after a joining is two points on the strip. Pure readers a stage's `check` and `verify:learn` use: `dockRead`, `heldIn`, `heapLeft`,
+    `madeOf`, `tallyOf`, `shareOf`, `panRead`, `ledgerOf`, `atomsIn`, **`limitOf(have, need) -> {made, limiting, left}`** (the arithmetic of a recipe against heaps),
+    `pileSlots`, `pileOf`; furniture `heapTable(spec)`, `HEAP_BOUNDS` (120 x 64, the atom tables'). `atoms.js` `SCOPE_KINDS` gained `k07` (nitrogen, the
+    scope's old Kettle entry) and `mass.js` knows `sodium`.
+  - **Core and view changes.** `model.js`: a container may carry `props` (plain data the kit reads), and a kit's `run` may answer `contents: {containerId: {what: delta}}`,
+    which the reducer applies (the only way a run moves what a container holds; `verify:table` still holds every Run key to "changes the table"). `table2d.js`
+    `drawTable`: a kit may paint a container's contents itself (`kit.paintContainer(ctx, c, state, {X, Y, sc, bodies})`; `view.piles === false` leaves the dots to the
+    built table). `table3d.js`: **one InstancedMesh per pile** (`kit.pileOf(container) -> {n, cap, slots, r, colour}`), laid once on the capacity's slots and shown
+    `n` at a time, so a heap drawn down loses its outermost atoms and the rest stay put (`viewer.piles`; `boardSignature` includes capacity and pile). `pileSlots`
+    is stable in the capacity alone, nearest the middle first, with a mound height for the built pile; `verify:bench` builds piles of 300, 200 and 150 and holds them to
+    three draw calls, every atom inside its container, above the plate and clear of its neighbours, and fewer atoms after a draw.
+  - **Rooms** (`engine/rooms.js`): a quest with no world under it names a room (`export const ROOM = 'foundry'` in the quest module; `createRunner` takes `cfg.room`;
+    `Tabletop` and `BenchViewer3D` take `opts.room`) and the viewer builds that instead of the generic lab bench: `build(viewer) -> {bench, set, mats, lights, key,
+    lamp}`. The viewer's `room.mats` dress the table (`top`, `dark`, `tray`) exactly as a host's `benchMats` do; `buildBench` / `buildLighting` use the room's own
+    bench, set and lamp; a deployed world still wins (`opts.world` first). **The foundry** (Kettle): a cast-iron assay plate 4.8 x 1.3 m on rolled-section legs with an
+    apron and a shelf of ingot moulds, a splash plate along its back (a rail of hung tongs, three brass gauges, a rack of mould boards: the part of the room the lean-in
+    camera always sees beyond the table), a rail track across the floor with a slag cart, a firebrick wall 2.35 m behind the plate with pilasters, plate pipework and a
+    furnace mouth, ore hoppers and ingot stacks out beyond the bench's ends, a crane rail with a hanging ladle, and **one pendant lamp over the plate** (a lens, the one
+    emissive mesh in the room, with the spot that lights the plate), about 3300 triangles in 169 plain meshes (the budget `verify:bench` holds is 6000).
+  - **Quests.** `q1-recipe` (8 stages, no `choice`; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, rewards and stage count unchanged): 1 build one molecule from loose atoms to match three
+    dishes of one substance (the dishes' pictures against the loose atoms by tint and size); 2 draw the shaker under two dishes and tray the one that is not a true compound; 3 weigh
+    atoms loose on the scale's pan, lift them off, join them on the table, put them back and weigh again (the strip keeps molecules made against total weight: the two points
+    sit at one weight); 4 build water in the dock, copy it from two heaps until one cannot supply another, put the "Runs out first" tag on that heap and set the tally to
+    the molecules made (graded on the heaps' own capacities through `limitOf`: **a player who has the answer is never blocked for want of a key press**); 5 weigh the atoms of one
+    molecule one by one and set a bar of a hundred parts at the oxygen's share (88, 89 and 90 pass, the true share being 88.9; the atoms' shares 33, 50 and 67 each get their reason);
+    6 build the molecule whose ledger of weights runs three to eight (carbon dioxide; carbon monoxide has a reason); 7 tray three dishes under the recipe their molecules follow
+    (reference atoms along the side); 8 shake three shipments and tray them against a label. `boss-golem` (2 phases, `encounter` per phase kept, foes only from `planFoe()`, the
+    golem in the table's corner pad, no field stage): 1 the maker again, with sodium chloride and heaps of 9 and 14 (graded on the tally alone); 2 two crates of sodium and chlorine
+    weighed on a scale in grams against the listed molar masses, the tally set to the moles (2). Both lines are gone from `tools/table-legacy.json`.
+  - **Foe body.** The recipe golem's boiler was trimmed (0.09 m tall rather than 0.12, a squatter body) and its lunge and its sink on dispersal match the other table foes (0.05 and
+    0.01 m), so it stays inside the table's foe pad and the free glass at every aspect.
+  - **Checks.** `verify:learn` ("Kettle's tables are real", replacing the old scope-joiner block): the molecule three dishes share and the molecule built, the shaker's layers
+    (`layersOf`), what the pan weighs before and after (the listed masses), the maker's copy against `limitOf` and the heap it empties, the share against 16.0 of 18.0, the ledger's
+    three to eight, each sample's recipe from its own molecule, each shipment against its label, the golem's heaps and drums. `verify:bench`: the real-stage loop now plays a quest
+    with no world (a named room, dressed from the room's own materials, never the bench kit's, no field stage) and the Hopper's fight check runs for the golem (two phases, every
+    pose inside the pad and the glass), plus **"Kettle's room, from the lean-in view"**: the bay's six volumes clear, `sight` and `view` rays at seven viewports (a ray grid that
+    reaches a wall, a prop or the floor beyond the plate), one lit lamp over the plate with its spot, a table in the room's materials with a negative control, a triangle budget,
+    negative controls for the volume, the sightline and a room with no walls, and the instanced piles above.
+  - **Deviations from §4.** (1) **A maker copies the molecule, rather than the player joining every atom of every molecule** (nine molecules of three atoms by hand is 27 drags a
+    stage): the one molecule is still built by hand and every join is the planner's, and the count is what the heaps hold. The heaps are 18 and 11 atoms (the golem's 9 and 14), small
+    enough to count and for a tally dial to reach; the instanced pile is proved at hundreds in `verify:bench`, but no stage asks for a heap of hundreds yet. (2) `q1-recipe` s2 uses
+    trays and the shaker (the old Settle key), as Tallow `q1-grain` s7 does. (3) s3 asks the player to lift the atoms off the pan before joining them (a drop into a container is a
+    drop into the zone, never a join: `snap.js`), so the same atoms are weighed loose and joined. (4) s5 is a share bar, not a typed percent; (5) s7's "crates" are the same dishes as
+    Tallow's samples. (6) `boss-golem` phase 2 weighs and tallies (grams to moles is the calculation the phase is about); it builds nothing. (7) The heap-kit stages 3 to 7 carry no
+    scratch corner (the table has no room for it beside the strip and the heaps); stages 1, 2 and 8 are atom-kit tables and keep it. (8) Kettle has no field stage (§2.5).
+  - **Integration (§2.6).** There is no world to integrate with, so the room is held to what a host is (above): the table is the foundry's own cast-iron plate with firebrick ore
+    tubs for trays; from the lean-in pose at every aspect the frame is the plate with the splash plate (tongs, gauges, mould boards) at its far edge and the floor, the rail track
+    and the wall's base beyond it (at ultrawide the ingot stacks, hoppers and the cart's side too); the `lean` and `sight` boxes are clear; the lamp is over the plate and out of the
+    camera's air. Nothing is in `tools/bay-legacy.json` for Kettle (it has no bay).
+  - **Deferred.** The assay beam, the balance and the scale are still painted on the plate rather than standing (`fixture3d`, as T2b); pans and trays are flat pictures with low rims
+    (a tray of firebrick is a rim colour); no sound for the foundry; the room's lamp is a scene light in the viewer's own scene, not a `lampMark` (the viewer's scene has no
+    `LampPool`); only the one room exists, and a second unwalkable world would add its own to `ROOMS`; `bake:stills` for Kettle; the old scope instrument (`SampleScope3D`) now serves no
+    quest and is retired with T7.
+  - **For the user to look at in a browser, per bench.** Kettle, 3D On (`#/learn/unit07/q1-recipe`; there is no world to walk, the quest opens in its room). **Bench 1**: the camera should
+    fly over a cast-iron plate with the table filling the glass between the prompt strip and the dock, the splash plate with its tongs and gauges along the top, the rail track and a slag
+    cart beyond it, a brick wall's base at the very top at a wide aspect; a pendant lamp should light the plate warm and nothing else should glow. Stage 1: join H onto O twice, the
+    third H should drift away. Stage 3: put three atoms on the pan, press "Weigh", lift them off and join them, put the molecule back and press "Weigh": two points on the strip at the
+    same height. Stage 4 (the one to try first): build water, drop it in the dock, press "Make Molecule" and watch the hydrogen heap lose two dots a press; the press after the hydrogen heap
+    is spent should say why; put the tag on that heap and set the tally. On the built table the heaps are real mounds (one body each); check they read as heaps at 375 px and that a
+    press that misses a piece still only swings the view. Stage 5: the marker is a hundred steps along a 100-unit track, so check it can be set to 89 with a thumb on a phone. Stage 6: the
+    ledger should list carbon and oxygen weights for whatever is on the pan. **Boss** (`#/learn/unit07/boss-golem`): the boiler golem stands in the table's top-right corner pad, clear of
+    every piece, at both phases; a miss should tilt it, a clear should disperse it.
+- 2026-10-17: **T2 closing note (for the user, before T3).** T2 is complete: the card kit, the mass kit and the heap kit; Tallow's seven quests and Kettle's two are tables (nine quests,
+  63 stages, no `choice` left in them). These are the things a check cannot judge and the plan wants looked at: (1) **the three kits' honesty**: every join is
+  `joinbench.js`, every weight a listed mass, every count what a heap or a pan holds, and `verify:learn` recomputes each graded answer from the planners; but the maker (heap kit) is
+  the one place a machine does repeated work, so ask whether "build one, then copy it from the heaps" reads as chemistry (it is meant to read as a recipe) or as a vending machine, and
+  whether stage 4 teaches why one heap runs out. (2) **Standing geometry**: the balance, the assay beam and the scale are pictures on the plate (the same as T2b), so a pour or a weigh
+  has no mass moving in 3D; heaps are real instanced mounds. If the lean-in view looks flat, `kit.fixture3d` is the hook. (3) **Phones**: the share bar asks for a hundred steps along one
+  track, stage 3 of Kettle asks the player to lift atoms off the pan, and the card tables ask for a lot of drags on a 3.7 : 1 plate; these are where a thumb will tell us the model needs
+  a gesture. (4) **The foundry**: the first room built for a bench with no world; if it reads as a good place, the next unwalkable world (Kettle's other quests, then any chart that
+  has no site) gets a room in `rooms.js`, not a bench kit. (5) **Tallow as a whole** is now one process line worked entirely by hand, from the conveyor tail to the sack scale and the
+  Hopper; it is the right place to judge whether the tabletop makes Unit 1 less confusing. T3 (Ligar's remaining nine, bond crank, domain hub, mixer, MO rack) starts from the atom kit and
+  the slate; nothing in T2 changes `PANEL_LAYOUT` or any station-row bench.
+- 2026-10-17: **T3a built** (first third of T3: Ligar `q2-lattice`, `q3-distance` and `q5-resonance`, the bonds kit, the ore drift's field point). T3b owes
+  `q6-shape`, `q7-polarity` and `q8-hybrid` (the domain hub, field plates, mixer), T3c `q9-orbitals` (its `lean`/`sight` waiver in `tools/bay-legacy.json`
+  stays until then) and `boss-warden`, which still plays the old instruments. Nothing here is browser-tested; the drawn tables were rendered to pictures in Node and
+  read, the built twin is held by `verify:bench`. Shipped, and the API T3b onward builds on:
+  - **Bonds kit** (`table/kits/bonds.js`, id `bonds`, extends the atom kit: an `atom`, an `ion` and the Lewis slate work exactly as `atoms.js` says; a thin wrapper
+    over `joinbench.js` `planSlab`/`conductionOf` and `bonddata.js` `PAIRS`/`morse`/`planCurve`/`LATTICES`/`IONS`). **A block** (`slab`, `props.slab` its old declaration:
+    `build`, `melt`, `tint`, `sealed`, `cluster`, `groups`) is MOLTEN exactly while it lies on open table with its middle inside a **hotplate** fixture (one dial, `heat`) at or past
+    its melting point (`slabView`, `plateArea`, `hotplateUnder`): nothing is stored, so the temperature a block gives way at is found by turning the dial and lifting it off cools
+    it. Tool pieces laid on a block: the **hammer** (`once`, writes `struck`; what a blow does is the old bench's own `strikeOf`), the **leads** (stay on the block; their lamp is
+    `conductionOf` for the block as it is now) and the **tongs** (`once`; `liftCells`/`liftOf`: the connected group round the atom nearest the middle, in `planSlab`'s links
+    for the phase the block is in; the tongs log every lift in `props.lifts` and the block rings what has gone). Pure readers: `slabView`, `liftCells`, `liftOf`, `liftsOf`,
+    `groupsOf` (the separate groups a whole block is made of), `smallestPiece`, `strikeOf`. **The lattice grid** (fixture `lattice`, its cells are `slot`s, ions are `ion`
+    pieces): Run "Slide a Layer" toggles `slid` on the top row's ions and `gridRead` reports like and unlike neighbours and which pairs now face a like charge (their ions
+    print the stencilled `!`). **The wells** (fixture `wells`, `props.rows [{id, pair, label, start}]`, one dial a row): a pair's separation is the position of the hand on
+    a track; `kit.dialed` keeps `{lo, hi}` per row (the curve is drawn only over the stretch the hand has been through, `paintWells`, `wellRead`), a `marker` dial draws a level
+    line for a stage that asks for a depth, and a stage's Run key may release a pair (`props.release`): it settles at `PAIRS[...].r0`. `innerZero(pair)` is where squeezing
+    brings the energy back to zero. **Cards**: `salt` (two ions to scale, their charges and centre distance, molten past `LATTICES[...].melts` on a hotplate) and `pairtag`
+    (two atoms and the rods between them). Bounds 150 x 72 (`bondsTable`, `BONDS_BOUNDS`).
+  - **Atom kit / Lewis slate additions** (`atoms.js`): three readers dropped on the slate: `fcstamp` (prints `planLewis`'s own `fc` on an atom, live), `mark` (a dashed ring that
+    stays, or comes off) and `gauge` (on a joint with a pair in it: the length `lewis.js` `gaugeLength` reads off the REAL molecule, not the drawing); `three` ("3 Pairs") deals up
+    to three lone pairs at once; `slateParts(..., {prefill})` starts a slate with a drawing on it (a skeleton to put electrons round, or a finished drawing to read).
+  - **Core changes** (each small, each generic): `snap.js` `joinCandidates` asks `kit.pairable(me, o)` (a block set beside a block is just set down, not a failed join that drifts it
+    off the plate); `model.js` `setDial` calls `kit.dialed(state, fixture, dial)` and writes the fixture props it answers, and a kit `run` may answer `dials: {fixtureId: {dial: value}}`;
+    `layout.js` `fixtureLayout` honours a fixture's `props.margin`, `rowPitch`, `top` and a per-dial `grab` band (`gestures.js` `fixtureHit` uses it: a row of atoms drawn on a track is its
+    handle); `table2d.js` sizes a square token to its words (`ctx.measureText`). The guide for a field point now passes `siteId` and `to`, so Ligar's `routeTo(siteId, from, toPos)`
+    leads doorway by doorway to the place to stand and not to the bench (`voyage.js` `setGroundWaypoint`).
+  - **`q2-lattice`** (8 stages, no `choice`; line gone from `tools/table-legacy.json`; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, every reward and the stage count unchanged): 1 order three blocks
+    on a rail by the setting each gives way at on the hotplate (a block chipped from the drift's seam is the field item, a fourth block that is not ranked); 2 build a 4 x 3 grid of twelve
+    ions with no like charges touching and slide a layer (two blocks and the hammer stand beside it as the evidence); 3 tray three blocks by when the leads' lamp lights (cold and molten,
+    only molten, never); 4 break the vent block down and set a tally to the fewest atoms left bonded in one piece; 5 take hold of one atom of the arch block with the tongs and tray the
+    block by what came out; 6 lift a molecule out of one block (graded on what the tongs log: a separate group of the whole block, never half of a struck one); 7 tray four sealed
+    blocks by build; 8 slot the one liner that holds at 900 degrees and passes no current.
+  - **`q3-distance`** (8 stages, no `choice`; line gone): 1 pull the hydrogen pair apart and leave the hand at the bottom of its well (within a tenth of the bond length, six pm at least);
+    2 set a depth marker against the bottom of the hydrogen-chlorine trace (within 15 kJ/mol); 3 squeeze the pair in until its energy is back at zero; 4 a **prediction** on a new
+    case: three hands on one plot (H-H, Cl-Cl, F-F), place Inside / Between / Outside and "Release Pair C" (it settles at its own bottom); 5 rail three carbon pairs from the longest
+    bond; 6 rail the same pairs from the hardest to pull apart (the opposite order, found); 7 rail three salts by how strongly their ions are held; 8 hotplate two salts and slot the one
+    that needs more heat. `verify:table`'s count of old `order` stages drops from 14 to 12 (`ORDER_STAGES_LEFT`).
+  - **`q5-resonance`** (8 stages, no `choice`; line gone): 1 stamp both atoms of carbon monoxide and mark the one that carries a plus; 2 draw carbon dioxide so every lamp is lit and every charge
+    is zero (the lamps alone cannot choose, the stamp can); 3 draw thiocyanate with its minus on the stronger puller (the drawing is graded on `planLewis`'s `fc` and `vsepr.js` `EN`); 4 gauge
+    both ozone bonds and tray the second by its length against the first (the drawing says double and single, the gauge says alike); 5 nitrate on three slates (skeleton given, `3 Pairs` deals
+    a whole set of lone pairs), graded on three different drawings that each light every lamp; 6 gauge the three nitrate bonds and set an order dial (steps of a twelfth) to what four pairs
+    shared by three bonds come to; 7 tray carbonate's three locked drawings More / Same / Less; 8 water on two slates: only lit drawings are compared and the stage passes when they all agree
+    (the second slate is the try-and-fail). Stages 5 and 7 are on the bonds kit at 150 x 72 (three four-atom slates are wider than the atom table's 120).
+  - **Deviations from §4.** (1) q2's "stack molecules" is the vent block's tally and the tongs (stage 4 and 6), not a second grid. (2) q3 s3 and s4 are an energy level (back at zero) and a
+    prediction rather than "why" choices; q3 has no separate "ruler rail": the rails are the standard rails with the end labels the plan names. (3) Pairs are not dragged between positions on a
+    slate in one gesture: "Lift Out" and "Pair" are two drops. (4) The standing geometry of the hotplate, the wells and the grid is still painted on the plate (the same deferral as T2b, `fixture3d`);
+    pieces and rims are in the host's materials. (5) The old join bench's block plates and the bond bench and pair board serve no stage of these three quests now; the warden's room keeps the
+    bond bench, the pair board and the join bench's pairs, so `verify:bench` measures them there (`LG_BENCHES` drops a quest whose stages are all tables).
+  - **Integration (§2.6).** Bench 2 (ore drift, underground): `lean`/`sight` were already clear (no waiver), the table is dressed from the drift's own plate steel with basalt trays, the hearth,
+    anvil, quench trough and tong rack stand at the sides, a **lamp hangs over the back of the plate** (`ligar/stations.js`, a `lampMark`, no new light in the pool; `verify:ligar` holds it
+    for every underground bench whose quest is a table) and a **chisel and lump hammer** lie on the vein's plinth. **The field point `chip`** ("Seam Chip") is the vein slab on its plinth, a real
+    part of host `site-2`; the place to stand is 1.0 m in front and to the left of the plinth (host frame x 3.2, z 1.0, clear of the trough and the wire drums); `verify:ligar` holds it to: belongs to
+    a site, solid at the point, a clear and level place to stand, inside `[E]` reach, on ground the walk reaches from the pad, and a guide route (`routeTo(site, from, stand)`) that is walkable end to
+    end and ends on the stand; `verify:bench` plays stage 1's fetch through the registered point (chevron to the stand, no site plate, `[E]`, carry, the block on the table). Benches 3 (crusher
+    inspection deck) and 5 (mine substation at the main portal) stand on the surface in daylight and cleared the lean-in camera without a waiver: nothing moved. Every table is dressed from Ligar's
+    own materials (`mats.tray` is basalt).
+  - **Checks.** `verify:table`: all 24 stages (by script, drag, two taps and the drawn tabletop's own gestures, with a miss and no authored outcome each). `verify:learn` ("Ligar bench two" and the
+    rewritten q3 and q5 blocks): every block is a real build with a melting point the dial reaches, a block is molten exactly while it is on a hot plate and cools off it, every graded answer is
+    recomputed from `planSlab`, `conductionOf`, `morse`, `LATTICES` and `planLewis`, the three pairs' orders are opposite, nitrate has exactly three drawings and water exactly one way to light its
+    lamps from its skeleton. `verify:bench`: all 24 stages at seven viewports through the real pointer path by drag and by two taps. `verify:ligar`: the field point and the bench lamp.
+  - **For the user to look at in a browser (nothing here is browser-tested), per bench.** Ligar, 3D On. **Bench 2** (`Bench 2 - Stone and Wire`, the ore drift just inside the main adit): lean in; the
+    plate should fill the glass with the hearth and anvil at the sides and a lamp over the back of the plate. Stage 1: press W to stand up, the chevron should lead through the portal and along the drift to
+    the vein on the right (it ends in front of the plinth, not at the bench), `[E] TAKE SEAM CHIP` appears when you point at the slab, lean in again and a fourth block is on the table. Drag a block
+    onto the hotplate (it lies on the plate while its middle is inside the ruled area), drag the heat dial: the block turns to scattered pieces and reads MOLTEN at its setting and comes back when you
+    lift it. Stage 2: drag ions into the grid, press "Slide a Layer": the `!` marks should appear on the ions that now face a like charge. Stage 3: drop the leads on a block; the lamp ring fills while a
+    current passes. Stage 5 and 6: drop the tongs on a block: it prints how many came out and the block shows rings where they were. **Bench 3** (`Bench 3 - Bond Energy`, the crusher's inspection deck): drag
+    along a pair's track (the whole row of atoms is the handle): the curve draws behind the hand and an amber square rides on it; stage 4 needs a prediction token in its slot before "Release Pair C".
+    **Bench 5** (`Bench 5 - Charge and Resonance`, the mine substation): drop the "Stamp" piece on an atom (its charge prints on its shoulder), "Gauge" on a joint holding a pair (its length prints beside
+    it), "3 Pairs" on an atom. On a phone held sideways check the wells' hand (the knob is small; the row of atoms is the handle), the slates of stage 5 and 7 (150 units wide) and the thin tokens of q3
+    stage 4. At 3D Off the same stages draw flat on the deck, with a drawn "Chipped block" plate in stage 1's corner.
+- 2026-10-17: **T3b built** (second third of T3: Ligar `q6-shape`, `q7-polarity` and `q8-hybrid` on the domain kit, the sump's field point, hosts 6, 7 and 8). T3c owes
+  `q9-orbitals` (its `lean`/`sight` waiver in `tools/bay-legacy.json` stays until then) and `boss-warden`, which still plays the old domain rig, bond bench, pair board and box
+  rack (`verify:bench` still measures the rig there). Nothing here is browser-tested; the drawn tables were rendered to pictures in Node and read, the built twin is held by
+  `verify:bench`. Shipped, and the API T3c onward builds on:
+  - **Domain kit** (`table/kits/domain.js`, id `domain`, `domainTable(spec)` = 150 x 64 units; four files: `domain-hub.js`, `domain-field.js`, `domain-orbitals.js`, and `domain-draw.js`
+    for the shared pictures). A thin wrapper over `vsepr.js` (`planDomains`, `angleBetween`, `domainStrain`, `planDipole`, `planBlend`, `planTwist`); no stage declares an outcome.
+    **Hub.** A `hub` piece (fixed) is a join target. An `arm` (`props {sym, mult}`) or a `balloon` (lone pair) is a TOOL laid on it (`kinds.x.tool`, `target: true`), so dropping one on the hub
+    clips it and dragging it away unclips it. **`kit.settle(state)`** (new, called by `model.js` `apply` and `createTable`) poses every clipped arm at the vector `planDomains` gives
+    it, seen from `openingView(vectors)` (the turn and tilt that keep the arms furthest apart on the plate, a fixed scan) plus the `turner` fixture's dial; the table eases the arms there,
+    which is "clip them on and they push apart". The `protractor` (tool, a pass) remembers the last two arms it touched; `protractorRead` is `angleBetween` of them; `hubRead` gives the plan,
+    the atoms and lone pairs, `hubHeight`. Fixtures: `hubplate` (ARMS, ANGLE and optionally HEIGHT), `turner` (the Turn dial), `marker` (a dial the player sets to a number they read).
+    **Frame.** `frame(id, sym, n, at)` returns a `sockets` fixture and one slot per socket of the n-domain polyhedron (`socketPoints`, labelled End / Middle / Side); `frameRead` reads
+    `vsepr.domainStrain` of what stands in the slots (STRAIN, NEAREST, PAIRS APART on the plate) and whether it is the lowest any arrangement of those domains can have.
+    **Molecule cards** (`mol`, static; `dmol`, put in a field; `tmol`, a `dmol` that can also be flipped) draw `RIG_MOLECULES` (or `props.arms` after a swap) with `molRead` (plan, dipole, angles,
+    shape). **Plates** (`plates` fixture; a card is IN THE FIELD when its middle is inside `gapArea`, on open table, like a block on the hotplate; Run "Switch Field" throws a hidden dial) swing a
+    card so its net pull points at the positive bar when the field is on and `planDipole` says the pulls add; `dmolBehaviour` / `dmolPose` are the readings. Tools: `arrows` (laid on a card:
+    an arrow per bond and NET), `swapper` (a pass: the first outer atom that is not its own element becomes its own, so CCl4 becomes CHCl3), `rod` (laid on a `stream`, which bends toward it
+    exactly when the liquid's molecules are polar). **Orbitals.** An `orb` piece (`props {type, atom, e, axis?, to?, dir?}`) is drawn with its lobes and electrons; `planOrbJoin`: two orbitals on different
+    atoms, each with a single electron, that point at each other (`to`) make a sigma bond, two p orbitals on one axis a pi bond (the link records `type`), anything else is refused with the picture's
+    reason; `bondsBuilt` counts them. A `mixbowl` fixture with a still container is the mixer: `bowlRead` is `planBlend` of the s, p and d in it (lobes where `planDomains` puts that many arms, the
+    p left out standing over). A `twist` fixture's dial turns the far end of a bond (`twistRead`: free where `planTwist` says so, `held` where it does not).
+  - **Core changes** (each small, each generic): `model.js` `kit.settle`; `layout.js` `fixtureLayout` honours `props.hidden` (a dial that carries state with no control); `snap.js` `joinCandidates` lets a tool that
+    is `kinds.x.target` be a join target (a protractor is laid on an arm that is laid on a hub); `vsepr.js` gained `REPULSION`, `domainStrain`, `arrangements`, `bestStrain`, `socketAngle`, `hubHeight` and
+    `planBlend`; `verify:table`: a fixture with `props.backdrop` is a surface things stand on (pieces start on it, zones lie in it).
+  - **`q6-shape`** (8 stages, no `choice`; line gone from `tools/table-legacy.json`; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, rewards unchanged): 1 set a marker to the angle two arms settle at; 2 four arms, 109.5;
+    3 build ammonia's hub so nitrogen sits at the peak of a low pyramid (graded on `hubHeight`: three atoms alone lie flat, so the lone pair has to go on); 4 water's measured angle with both lone pairs on;
+    5 the domains round CO2's carbon (two double-bonded arms are two arms); 6 and 7 the frame: put the lone pair (SF4), then both lone pairs (XeF4), where the strain is least (graded on `frameRead.lowest`, and
+    `verify:learn` holds every lowest arrangement to the planner: round the middle, and opposite); 8 tray three hub cards (XeF2, BF3, XeF4) under the shape their atoms make, the card printing the angles between its atoms.
+  - **`q7-polarity`** (8 stages, none `choice`; two predictions are table tokens): 1 turn HCl (Flip) so its partial negative end faces the positive plate (graded on the pose the field would turn it to);
+    2 tray NaCl, H2 and HCl by how evenly the bond shares (the arrows' NET is the evidence); 3 predict whether CO2 turns, then Switch Field; 4 tray water and CO2 by whether the arrows add or cancel;
+    5 change one atom of CCl4 with a swap tool so that it turns; 6 predict which of NH3 and BF3 turns; 7 tray three molecules polar or nonpolar; 8 (FIELD) lay the rod on three streams and tray those that bend, with a
+    fourth stream drawn from the sump as evidence and never a lock.
+  - **`q8-hybrid`** (8 stages, no `choice`): 1 bond hydrogen atoms to carbon's orbitals as they stand (two bond, a third is refused: the puzzle, found); 2 mix carbon's orbitals for one lobe for each of methane's bonds;
+    3 and 4 tray NH3, H2O, C2H4 and CO2, BF3, HCN by the lobes the centre needs (each card prints the arms the planner counts); 5 build the second bond between ethene's carbons (a lobe on a lobe is the first bond, a
+    leftover p on a leftover p is the second); 6 build every bond of HCN from its orbitals (2 sigma, 2 pi, checked against `countSigmaPi`); 7 turn the far end of ethane's bond and ethene's a quarter turn if they will
+    (graded on what each end did; the double bond's knob turns and the end holds); 8 two bowls with s and p orbitals already in them and a tray of d orbitals: add them until each bowl makes the lobes its card has arms (5 and 6).
+  - **Field point `sump`** (`three/ligar/stations.js` `buildSumpStation`, host `site-7`): the draw-off cock on the sump's front wall with a stub over a catch bucket and the sump's water running from it;
+    the player stands 1.6 m in front of the bucket (host frame x 3.9, z 5.2). `verify:ligar` holds it to the same rules as `chip` and now names it; `verify:bench` plays stage 8's fetch through the registered point
+    (chevron, `[E]`, carry, table) and, at T1 to T3, the drawn site plate.
+  - **Integration (§2.6).** Benches 6 (drill chamber), 7 (sump and pump station) and 8 (survey station) are all underground, so each now hangs **a lamp over its plate** (`w.buildLuminaire(0, 3.7, -1.0)`, a `lampMark`
+    in the pool: the pool is still three lights; `verify:ligar` holds "every underground bench whose quest is a table has a lamp over its plate" for four benches now) and stands an **ore tub with a miner's pick** at
+    the plate's side (outside the bay's x 2.7), each host's table being dressed from Ligar's plate steel with basalt trays as before. `lean`/`sight`/`view` were already clear for all three (no waiver to delete);
+    `tools/bay-legacy.json` still waives only `ligar/q9-orbitals`.
+  - **Checks.** `verify:table`: all 24 stages (script, drag, two taps, the drawn tabletop's gestures, a miss each, no authored outcome, 28 px pieces, nothing starts on another thing). `verify:learn`: each angle graded
+    is `angleBetween` of the arms on the hub, the frame's lowest arrangements are exactly where `planDomains` puts the lone pairs, every molecule the hub can hold settles with arms apart and inside the plate, every
+    polarity answer is `planDipole`, a swap of one chlorine is CHCl3, every bowl is `planBlend`, every bond built is the molecule's own sigma and pi, a single bond turns and a double does not. `verify:bench`: all 24 stages at
+    seven viewports through the real pointer path by drag and two taps, and the sump's point. `verify:ligar`: the lamps and the point.
+  - **Deviations from §4.** (1) `q6` s3 and s8 are graded on a height reading and a tray, not a build of "the lone pair out of the shape"; s6 and s7 grade where a lone pair is put on a frame of sockets (the hub with its arms
+    posed by the planner is stages 1-5), so there are two hub forms. (2) The protractor is touched to two arms in turn (a pass that remembers two), not laid across them. (3) `q7`: stage 1 turns a card with Flip rather than
+    asking which end; stages 3 and 6 are predictions (new cases of an idea worked out); stage 4 is a tray rather than a "why". (4) `q8` s7 grabs a knob, not the bond end itself. (5) Arms and orbitals are 6.3 units across so a
+    thumb takes them at 340 px; hub, balloon and orbital pictures are paintings on pucks (the same deferral as T2b: no standing geometry, `fixture3d` unused).
+  - **Deferred.** The hub's arms are pucks in 3D (rods for bonds, one rod for a balloon), not the old rig's lobes; the bond's far end is not itself grabbed; hybrid names are not printed on the bowl's output;
+    `domainrig.js` and `domainrig3d.js` stay for the warden until T3c.
+  - **For the user to look at in a browser (nothing here is browser-tested), per bench.** Ligar, 3D On. **Bench 6** (`Bench 6 - Molecular Shape`, the drill chamber in hill A): lean in under the new lamp over the back of the
+    plate; the rock-bolt board is behind it, the jumbo's flank to the left and an ore tub with a pick at the right edge. Stage 1: drag an arm onto the hub (the big disc at the left): it clips on and the pair swings to
+    opposite sides; drag the protractor onto one arm then the other and its face and the plate print the angle; the Turn dial swings the picture; set the Angle marker. Stage 3: with three hydrogen atoms HEIGHT reads 0
+    and the lone pair makes it lean. Stage 6 and 7: drop the pieces into the places of the frame and read STRAIN. **Bench 7** (`Bench 7 - Polarity`, the sump and pump station down hill B's decline): the plates
+    stand at the left, trays at the right. Drag a card between the bars and press "Switch Field"; the bars light and a polar card swings round; lay "Arrows" on a card. Stage 8: press W, the chevron leads down the
+    decline to the sump; `[E] TAKE SUMP STREAM` when you point at the cock on the sump's front wall; back at the plate a fourth stream is on the table. **Bench 8** (`Bench 8 - Hybridization`, the junction of three drifts):
+    drop orbitals in the bowl and the lobes draw beside it; drop an orbital on another to overlap them (a refusal says why); stage 7's knob turns ethane's far end and not ethene's. On a phone held sideways the hub
+    and orbital pieces should still be easy to hit, and a stage-6 frame piece should fall in its place. At 3D Off the same stages draw flat on the deck.
+- 2026-10-17: **T3c built** (last third of T3: the orbital kit, Ligar `q9-orbitals` and `boss-warden`, the hoist chamber, the T3 close-out). **After this every Ligar quest (nine
+  benches and the Warden) is a table**, as are all of Tallow and Kettle; `tools/table-legacy.json` lists Lanternfall, Bellows and Ember only, and `tools/bay-legacy.json`
+  has no Tallow, Ligar or Kettle line. Nothing here is browser-tested; the drawn tables are proved in Node and the built twin by `verify:bench`. Shipped, and the API T4 onward builds on:
+  - **Orbital kit** (`table/kits/mo.js`, id `mo`; a thin wrapper over `engine/mo.js` `rowsMO`/`readMO`/`fillMO`/`DIATOMICS`, no second implementation). **The rack**: a `rack` fixture
+    (a backdrop; `rackGeometry(order, at)` is the one place the boxes stand) draws the ladder, the atoms' boxes at the sides and the boxes between them; **each MO box is a container**
+    (`capacity` 2, `contents {electron: n}`, `props.mo {rack, row, idx}`) and the loose electrons are a `supply` container. An electron is POURED: a drag from the jar to a box (or a tap on
+    each), back to lift one out, box to box to move it; the first in a box stands up and the second points down, so a box holds a pair or nothing, and a third is refused with the rack's
+    own reason. `Join Atoms` is the rack's Run key on a stage that starts with the atoms apart (a hidden `merged` dial). **The magnet** (`magnet` fixture) reads `DIATOMICS[mol].unpaired`,
+    the REAL molecule, never the rack; with `props.slot` it tests the gas card in that slot and writes the pull on the card. A `bondtest` fixture prints the listed bond energies; a `marker`
+    is a plain dial. Cards (`mocard`, rect) carry a label and, for a species, its lower/upper counts (`cardCounts`, from `fillMO`). Readers a stage's `check` and `verify:learn` use:
+    `rackOf`, `readOf`, `matchesGround` (row by row, a row's boxes alike), `supplyLeft`, `magnetRead`, `bondTestRead`, `cardPull`, `rackOrder`; builders `moTable` (150 x 64), `moRack`,
+    `moSupply`, `magnet`, `bondTester`, `marker`, `moCard`, `fillSteps` (the pours of a ground state). **Core hooks, small and generic:** `kit.pourRefusal(state, from, to, what)` (why a pour took
+    nothing; `model.js`), `kit.noJarFill(container)` (`table3d.js` draws no slab of fill in a box).
+  - **`q9-orbitals`** (8 stages, no `choice`; line gone from `tools/table-legacy.json`; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, the rewards and the stage-5 lead line are unchanged): 1 put the two new boxes
+    and an atom's box on a rail from lowest to highest energy (`Join Atoms` draws the new boxes, numbered); 2 pour H2's two electrons so the molecule has the least energy; 3 He2's four and a bond-order
+    marker (zero); 4 N2's ten and the marker (three); 5 O2's twelve **so the rack pulls on the magnet as hard as the real sample does** (the player discovers that the last two stand alone); 6 three species cards
+    (O2, O2+, O2-, printed with their lower/upper counts) laid on a rail by bond length; 7 F2's fourteen with a bond tester and a prediction token against an O2 reference card; 8 B2's six, a magnet and a
+    prediction token (the order of the boxes is the other order, so pairing them as oxygen's would predict wrong). Misses carry a reason and no answer; every graded fill is the ground state.
+  - **`boss-warden`** (5 phases, each its own table; `encounter {species, act, intent}` kept per phase, one `foes` entry each, no field stage, the pad clear): 1 `bonds` kit, three plating blocks,
+    a hotplate and the marked place for the one that takes the most heat; 2 `atoms` kit, SF4 on the Lewis slate with the `3 Pairs` tile; 3 `domain` kit, the xenon hub, tray of four fluorines, two
+    lone pairs and a protractor, and the angle marker; 4 `domain` kit, the plates, three molecule cards (CO2, SF4, NH3) and a tray for those that turn; 5 `mo` kit, three gas cards, a magnet with a test
+    slot and the place for the gas it draws in. The foe is the warden, in the table's corner pad, reading no probe (as the Hopper and the golem). **Its body was made squatter** (`foebody.js`, scale 0.58:
+    no well holds a warden any more) so every pose stays in the pad. `BOSS_ARENA_SPOTS['boss-warden']` is unchanged. Its line is gone from `tools/table-legacy.json`.
+  - **The hoist chamber** (bench 9, `ligar/stations.js` `buildHoistChamber`): the winze's kerb, A-frame and sheave moved to the BACK of the chamber (behind the plate), the rope's pylon to z 0.5, so the rope
+    no longer crosses the leaned-in camera's air (the check measures a body's box, so a rope laid diagonally across the lean volume spoils it); a lamp over the plate (`lampMark`, the pool is still three
+    lights), an ore tub and pick at the left of the plate, the skip moved beside the collar. **`tools/bay-legacy.json` has no Ligar line any more** (its `ligar/q9-orbitals` `lean`/`sight` waiver was the last).
+  - **Orphaned drawn instruments (T7 retires them; nothing was deleted).** No quest of any world plays these any more: **`JoinBench`** (`joinbench.js`'s class + `joinbench3d.js`; the pure `planJoin`/`planSlab`/`conductionOf`/`shellPlan` stay in use by the kits),
+    **`BondBench`** (`bondbench.js`, `bondbench3d.js`; `bonddata.js` stays), **`PairBoard`** (`pairboard.js`, `pairboard3d.js`, `paircontrols.js`; `lewis.js` stays), **`DomainRig`** (`domainrig.js`'s class, `domainrig3d.js`, `rigcontrols.js`; `rotateView` and `vsepr.js` stay),
+    and, from T1 and T2, `SampleScope`, `CoreBench`, `CatalogueBoard`, `AssayFloor`. `BoxRack` is NOT orphaned (Lanternfall `q5-numbers`, `q6-filling` and `boss-eater` still play it), but its `molecular` layout
+    (`boxrack.js` `drawMolecular`, `combine`, the MO-aware `act`) is. `verify:bench` no longer builds the Ligar ones ("every Ligar quest is a tabletop"), and its old warden foe passes are replaced by "boss-warden on its tables".
+  - **Checks.** `verify:table`: all 13 new stages (script, drag, two taps, the drawn tabletop's gestures, a miss each, 28 px pieces, nothing on the foe's pad); the `order` count is 11. `verify:learn`: a q9 block (every rack is
+    the molecule's own, a pair per box, a jar of exactly its valence electrons, the ground state is `fillMO`'s, bond orders are the planner's, the magnet's pull is the real one and a pair-up rack would not match it, the rail's
+    answer is the order of the listed lengths, F2 is the weaker bond in the listed data, B2 in oxygen's order reads no unpaired electrons) and a boss-warden block (the hot block, SF4's lamps and sulfur's expanded octet,
+    XeF4's 90 degrees from `angleBetween`, the polar cards from `planDipole`, the magnet's writing on every gas); the 2D encounter plate test declares its own pack of three. `verify:bench`: all 13 stages at seven
+    viewports through the real pointer path (the pours are repeated drags and taps), and "boss-warden on its tables" (every pose in the pad and in the glass, clear of furniture, read back from `planFoe`).
+    `verify:ligar`: "every underground bench whose quest is a table (5) has a lamp over its plate".
+  - **Deviations from §4.** (1) `q9` stage 1 is a rail, not a "what happens" choice; stages 3 and 4 grade a rack plus a marker, not a choice; stage 5 is "match the magnet" (the plan's magnet test), 7 and 8 are
+    predictions on a new case. (2) Which way an arrow points is the order it went in (no Up/Down hand): Hund's rule is therefore not a thing the player is told, and the magnet is how they find it. (3) Stage 6 lays
+    prefilled species cards on the rail (three racks of 11 to 13 electrons would not fit a 150 x 64 table at 28 px pieces); filling is stages 2 to 5, 7 and 8. (4) Warden phase 5 tests gas cards, not three racks, and
+    phase 4 takes molecules to a tray rather than picks plates. (5) The Warden's foe reads no probe (the planner's `hold`, `lamps`, `arms`, `field`, `pull` reactions are still in `foes.js` and still tested, but nothing feeds them).
+  - **Deferred.** The rack's boxes are painted flat with a low rim (no standing geometry, `fixture3d` still unused); the electron jar's electrons are an instanced pile but a box's arrows are flat; no sound; `bake:stills` for
+    the re-laid hoist chamber (T7); the orphaned instruments above.
+  - **For the user to look at in a browser (nothing here is browser-tested), per bench.** Ligar, 3D On. **Bench 9** (`Bench 9 - Molecular Orbitals`, the hoist chamber at the bottom of hill B's decline): the winze's A-frame and its
+    sheave now stand at the back left behind the plate, the winder at the right, the rope running along the back at roof height; a lamp hangs over the plate and an ore tub stands at its left. Lean in: the rack fills the glass
+    with the jar of electrons at its left and the magnet or marker at its right. Stage 1: press "Join Atoms" (two numbered boxes appear), drag the cards along the rail. Stage 2: drag from the jar to the lower box twice (a third is
+    refused). Stage 5: press "Test Sample" (STRENGTH 2) and arrange the twelve electrons until "ALONE IN A BOX" agrees. Stage 6: three cards on the rail. Stage 7 and 8: a prediction token, then the tester or the magnet.
+    On a phone held sideways check that the boxes (14 x 8 units) are easy to drop an electron on, and that a drag from the jar moves one electron per drag. **The Warden** (`#/learn/unit03/boss-warden`, fought at its arena):
+    five tables in turn with the squat warden standing in the table's top-right corner, clear of every piece; a miss should make it lunge, a win disperse it. Phase 2 is nine drags (`3 Pairs` deals the fluorines' lone pairs).
+- 2026-10-17: **T3 closing note (for the user, before T4).** T3 is complete: Ligar's nine benches and the Warden are tables on four kits (atoms and the Lewis slate, bonds, domain, orbital), with two field points
+  in the mine (`chip`, `sump`), a lamp over every underground plate and a mine whose hosts leave the lean-in air clear. What no check can judge and the plan wants looked at: (1) **the mine as a place to work**: each
+  underground table is lit by one lamp over its plate and nothing else; does the lean-in view read as a miner's bench, and are the surface benches (1, 3, 4, 5) in daylight too different? (2) **The rack**: pouring
+  electrons box by box is the plan's "drag" for the MO rack, but an arrow's direction is not the player's choice; if that reads as taking something away, a hand with Up and Down is a small change in `mo.js`. (3) **Stage 5 as
+  "match the magnet"** teaches Hund's rule by contradiction rather than by being told; if a student finds it too indirect the hint ladder is where to add. (4) **Small targets**: the smallest targets on any table so far
+  are the rack's boxes and the slate's joints; the phone check is theirs. (5) **The Warden's squat body** (scale 0.58) is the only 3D art change in T3. T4 (Lanternfall) starts from the same kits plus an optics kit; nothing in T3 changes `PANEL_LAYOUT`
+  or any station-row bench.
+- 2026-10-17: **T4a built** (first part of T4: the optics kit, Lanternfall `q1-wave`, `q2-photon` and `q3-lines`, the flume's field point, benches 1 to 3). T4b owes `q4-cloud`
+  to `q9-absorb` and `boss-eater` (the light bench keeps `q9-absorb` and the Eater; the cloud plate, box rack and electron bench keep the rest; `q5-numbers` and `q6-filling` keep
+  their `lean`/`sight` waivers in `tools/bay-legacy.json`). Nothing here is browser-tested; the drawn tables were rendered to pictures in Node and read, the built twin is held by
+  `verify:bench`. Shipped, and the API T4b onward builds on:
+  - **Optics kit** (`table/kits/optics.js`, id `optics`, tables 150 x 64; `optics-read.js` the pure readers, `optics-draw.js` the painters both views call). A thin wrapper over
+    `lightdata.js` (`planTrace`, `planPrism`, `planPhotocell`, `planJump`, `jumpsForLine`, `pulseNs`; the last two are new): no stage declares what a screen, band, cup or ladder reads.
+    **Pieces never join** (`nojoin`); they are put in slots, trays and on the rail, and a fixture reads whatever stands in the slot it owns (`seated(state, slot)`). Kinds: `lamp`
+    (`props.nm`, or `tuned` = wherever its screen's colour dial has it; its glass is lit only while it stands in a source slot, `litSource`), `water` (the flume's strip: crest
+    spacing in metres and crests a second), `source` (a mast, an oven: read on the log ruler), `plate` (`props.metal`), `tube` (`props.gas`; "Sealed tube" names none), `filament`,
+    `cell` (a cell of cool gas), `strip` (a reference strip: a gas's real lines on the 380 to 750 nm scale), `chip` (a line, `props.nm`), `detector`, `electron`.
+    Fixtures and their builders: `waveScreen` (`wave`: a lamp slot, an optional `colour` dial, wavelength and frequency read-outs, the wave drawn against a 2400 nm ruler;
+    `rate:false` prints no frequency), `logRuler` (`ruler`), `pulseRail` (`pulse`: marks at known metres, a slot each, Run "Fire Pulse" writes `{x: gap, y: pulseNs(gap)}` on the recorder and
+    the timer prints the gap and the time, never the speed), `spectrograph` (`band`: socket, optional cell and reference slots, `detectors` lights the UV and IR strips; `bandRead`
+    gives `{plan, seen, refLines, matched, whole, uv, ir, shape}`), `photocell` (`cell`: holder, a built-in colour dial or a lamp slot, a brightness dial or a fixed one, the beam,
+    the collector, a counting cup, the two meters; `cellRead` is `planPhotocell` of what stands there; `record` adds Run "Record"/"Test"), `energyLadder` + `linesStrip` (`ladder`, `lines`:
+    rungs 1 to 6 and the open top are slots, evenly spaced and marked NOT TO SCALE, one electron stands on rung 1; **`kit.settle` writes the move into the electron's own props**
+    (`at`, `last {hi, lo, nm, up}`, `lines`): a drop keeps the line `planJump` gives, a climb gives out nothing; the strip prints it; a `probe` slot takes a chip and asks `jumpsForLine`),
+    `plaque` (printed reference lines) and `marker` (a dial set to a read figure). `ladderRead`, `rungOf`, `TOP`, `pickedUpBy`, `firstFreeing`, `waveRead`, `rulerRead`, `pulseRead`,
+    `timedLast`, `detectorsOn` are what a stage's `check` and `verify:learn` read.
+  - **Core change** (`table/gestures.js` `pieceAt`): a piece in the hand is taken again only on the piece itself, not within the generous grab reach, so a target beside it (the next
+    rung, 8 units away) can be tapped. Every other kit's `verify:table` and `verify:bench` replays still pass.
+  - **`q1-wave`** (8 stages, no `choice`; `PRACTICE`, `DEBRIEF`, `VOCABULARY` and every reward but stage 3's are as they were): 1 tune a lamp (put in its holder, colour dial) until more crests pass a second than Sample A's, with
+    the flume strip as the **field item**; 2 tune to twice Sample A's crest spacing; 3 put two detectors on marks 0 to 6 m along the rail, fire a pulse, set the speed reading
+    (gap over time: the speed of light is found, not given; stage 4 reads two reference lamps whose products agree); 4 read two reference lamps, set the frequency of 600 nm; 5 four lamps on a rail
+    by frequency (read each in the holder first); 6 tray three lamps under the eye, the infrared strip or the ultraviolet strip (the band lights the strip); 7 tray a mast, an oven and an X-ray tube
+    under the frequency they work at (read on the log ruler); 8 put in the matching slot the lamp that makes 5.1 x 10^14 a second (the screen prints wavelength only). The order stage is now a rail
+    (`ORDER_STAGES_LEFT` 11 -> 10).
+  - **`q2-photon`** (8 stages, no `choice`): 1 free electrons from the sodium plate (plate dragged in, colour and brightness dials); 2 the first setting that frees any; 3 double the cup's count (the brightness
+    dial, a fixed violet lamp); 4 tune until the fastest electron leaves at 8 x 10^5 m/s, "Record" keeps (frequency, speed) on the sheet; 5 the plaque's worked sodium threshold, h, c and a
+    frequency, and a reading for one photon's energy; 6 the three plates on a rail from loosest grip to tightest (each is taken to the holder, swept and recorded; the order stage is a rail,
+    `ORDER_STAGES_LEFT` 10 -> 9); 7 tray the lamps that free zinc (each tried in the lamp slot); 8 **predict** an intense red lamp on zinc (two tokens), then "Test" (`prediction.tested`).
+  - **`q3-lines`** (8 stages, no `choice`): 1 put a filament and a gas tube under the band each makes; 2 slide a reference strip alongside the sealed tube's band until all its lines fall on it;
+    3 the same for the dark lines a cell of cool gas cuts out of the filament's light; 4 **drag the electron down a rung until it gives out the red line**; 5 the 486 nm line's energy (rung
+    energies printed, never the drop's; worked line and constants on a plaque); 6 predict the wavelength of a fifth-to-second drop (four tokens), then make the drop; 7 give the electron more
+    than the whole ladder (the open top slot); 8 put each of three lines in the probe and tray it by whether any pair of rungs makes it (the "why" is the reward card).
+  - **Hosts and the flume's field point (§2.6).** The three tables are dressed from the host's own materials (held by `verify:bench`); all three hosts already hung a lantern over the plate (a `lampMark`, no new
+    light) and cleared `lean`/`sight`/`view`, so no waiver was deleted (`tools/bay-legacy.json` still lists only `lanternfall/q5-numbers` and `q6-filling`, T4b's). **Field point `flume`**
+    ("Flume Strip", `lanternfall/stations.js` `buildWaveTank`): the crest recorder on a post in front of the flume's gutter, host `site-1`, the player stands 1.1 m in front of it to the right of the bay;
+    `lanternfall.js` registers it; the guide is the straight lantern road from the approach. Bench 2 gained a plate case on a trestle (three plates in slots) beside the desk; bench 3 a rack of gas tubes and
+    the spare filament lamp on the sled's bed. `verify:lanternfall` now holds every field point (a piece of its host, a clear level stand inside reach, reachable on foot, an open straight way from the approach)
+    and "every bench whose quest is a tabletop has a lamp over its plate".
+  - **Checks.** `verify:table`: all 24 stages (script, drag, two taps, the drawn tabletop's gestures, a miss each, no authored outcome, 28 px pieces). `verify:learn`: three blocks recompute every graded
+    answer from the planners (crests, the pulse time, strips and lines, `planPhotocell` sweeps, each drop). `verify:bench`: all 24 stages at seven viewports through the real pointer path by drag and two
+    taps, and the flume's point (chevron, `[E]`, carry, table); the old light-bench instruments are measured only for the quests that still play them (`LF_BENCHES`).
+  - **Deviations from §4.** (1) `q1-wave` stage 1 grades a tuning (more crests a second than Sample A), not a "how does the wave change" statement; the finding is on the card. (2) Stage 3's speed is found
+    by timing a pulse, not by wavelength times frequency (that product is stage 4's evidence). (3) `q2-photon` stage 3 asks the count to be doubled and stage 4 a speed to be reached; the "same speed" and "same number"
+    are on the two meters. (4) `q3-lines` stage 3's cell is unnamed and the strip is picked from three, which is the absorption fingerprint. (5) The ladder is evenly spaced (the true spacing of rungs 5 and 6 is under
+    a unit), and says so. (6) Stage 8 of `q3-lines` is a tray, not the "why" choice. (7) The standing 3D geometry of screens, the photocell and the ladder is still painted on the plate in the host's materials
+    (the same `fixture3d` deferral as T2b); waves are drawn at rest.
+  - **For the user to look at in a browser (nothing here is browser-tested), per bench.** Lanternfall, 3D On. **Bench 1** (`Bench 1 - Light Waves`, the wave flume on the south shore): lean in over the plate; the flume
+    and its strobe gantry stand behind it, the lake ice beyond, the work lantern over the back of the plate. Stage 1: press W, the chevron leads to the **crest recorder on its post at the flume's front, right of
+    the bench**; `[E] TAKE FLUME STRIP` when you point at it; lean in again and a strip off the flume's chart is on the table (put it in the Lamp holder: a water wave, 0.90 m between crests, 1.1 a second). Drag the
+    lamp into its holder (the glass lights), drag the Colour knob and watch the wave crowd. Stage 3: drag a detector onto two marks, press "Fire Pulse", the timer prints the gap and the time and the sheet gets a
+    point. Stage 5: take a lamp from the rail into the holder and back; pieces slide apart under it. Stage 6: the band lights UV or IR for the lamps that are past its ends. **Bench 2** (`Bench 2 - Photons`, the photocell
+    housing at the mast's foot): the housing and mast behind, a plate case on a trestle at the right. Drag a plate into the holder, turn Colour and Brightness: the beam changes colour and width, dots cross the tube into
+    the cup, the meters move; "Record" drops a point on the sheet; stage 8's tokens and "Test". **Bench 3** (`Bench 3 - Line Spectra`, the spectrograph sled): the sled and its camp behind, a tube rack on the bed. Plug a
+    source into the socket (the band draws), slide a strip alongside (its lines that fall on the band turn amber), drag the electron up and down the ladder (the strip keeps each line; a climb says it gives out nothing;
+    the arrow shows the move); the rungs are 8 units apart, so on a phone held sideways check the drops are easy to land and that tapping the electron and then the next rung works. Nothing glows and nothing is rounded.

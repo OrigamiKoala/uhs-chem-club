@@ -55,6 +55,7 @@ import { HOST_BUILDERS } from './lanternfall/stations.js';
 import { createLanternfallEffects } from './lanternfall/effects.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
+import { registerFieldPoint } from './field-points.js';
 
 /** The amber filament every lantern in the world burns. A lamp is a lamp. */
 const FILAMENT = 0xd99423;
@@ -323,6 +324,19 @@ export class LanternfallWorld {
 
       this.siteMarkers.set(site.questId, { site, group: g, indicator: host.bench.indicator });
       this.registerBenchAnchor(site, g, host.bench, host.benchLocal);
+
+      // The places the player is sent to for this bench (plan §2.5): real pieces of the host, in the world's frame.
+      for (const fp of host.fieldPoints || []) {
+        const c = Math.cos(g.rotation.y), sn = Math.sin(g.rotation.y);
+        const at = (lx, lz) => [g.position.x + lx * c + lz * sn, g.position.z - lx * sn + lz * c];
+        const [px, pz] = at(fp.lx, fp.lz);
+        const [sx, sz] = at(fp.stand.lx, fp.stand.lz);
+        registerFieldPoint(this, {
+          id: fp.id, siteId: site.id, label: fp.label, host: site.id,
+          pos: [px, g.position.y + fp.ly, pz], half: fp.half, rotY: g.rotation.y,
+          stand: [sx, g.position.y, sz]
+        });
+      }
 
       // The host's colliders are in its own frame; the walk wants them in the world's.
       const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);

@@ -651,6 +651,54 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
         `a route leaves the walkable ground:\n         ${bad.join('\n         ')}`);
     }
 
+    /* THE FIELD POINTS (plan §2.5). A field stage sends the player to a spot in a working, so each spot is held
+       to what a place the player is sent to owes them: it belongs to a host (a site) and is a real piece of it,
+       the place to stand is on ground the walk reaches and outside every collider, the floor there is level with
+       the floor under the point, the point is inside [E] reach, and the guide's route to it (doorway by doorway)
+       is walkable and ends on the stand. */
+    {
+      const { fieldPointsOf } = await import('../src/three/field-points.js');
+      const points = fieldPointsOf(built);
+      check(points.some(p => p.id === 'chip' && p.siteId === 'site-2'), 'the "chip" point feeds site-2 (the ore drift)',
+        'no "chip" field point feeds site-2: q2-lattice sends the player to the seam');
+      check(points.some(p => p.id === 'sump' && p.siteId === 'site-7'), 'the "sump" point feeds site-7 (the sump and pump station)',
+        'no "sump" field point feeds site-7: q7-polarity sends the player to the draw-off on the sump');
+      const bad = [];
+      for (const p of points) {
+        const site = world.sites.find(s => s.id === p.host);
+        if (!site) { bad.push(`${p.id}: names host ${p.host}, which is not a site (a point is a piece of a host)`); continue; }
+        if (p.siteId !== site.id || !p.label) bad.push(`${p.id}: no label or the wrong bench`);
+        const near = Math.hypot(p.pos[0] - site.pos[0], p.pos[2] - site.pos[2]);
+        if (near > 12) bad.push(`${p.id}: ${near.toFixed(1)} m from its bench, too far to be this host's own`);
+        const [sx, , sz] = p.stand;
+        if (blocked(sx, sz)) bad.push(`${p.id}: the place to stand is inside a collider`);
+        if (!blocked(p.pos[0], p.pos[2])) bad.push(`${p.id}: nothing solid stands at the point, so it is not a piece of its host`);
+        const g1 = built.getTerrainHeight(sx, sz);
+        const g2 = built.getTerrainHeight(p.pos[0], p.pos[2]);
+        if (Math.abs(g1 - g2) > 0.3 || p.pos[1] - g2 < 0.2 || p.pos[1] - g2 > 2.4) bad.push(`${p.id}: the floor to stand on is not level with the point, or the point floats`);
+        const d = Math.hypot(sx - p.pos[0], sz - p.pos[2]);
+        if (d > p.reach - 0.5) bad.push(`${p.id}: the stand is ${d.toFixed(1)} m from the point, outside its ${p.reach} m reach`);
+        const i = Math.floor((sx - MIN) / CELL), j = Math.floor((sz - MIN) / CELL);
+        if (!seen[idx(i, j)]) bad.push(`${p.id}: the place to stand is on ground the walk cannot reach from the pad`);
+        const route = built.routeTo(site.id, { x: world.spawn.pos[0], z: world.spawn.pos[2] }, [sx, sz]);
+        if (!route || route.length < 3) bad.push(`${p.id}: no route to the place to stand`);
+        else {
+          const last = route[route.length - 1];
+          if (Math.hypot(last[0] - sx, last[1] - sz) > 0.01) bad.push(`${p.id}: the guide's route ends ${Math.hypot(last[0] - sx, last[1] - sz).toFixed(1)} m from the place to stand`);
+          for (let k = 1; k < route.length - 1; k++) {
+            const [ax, az] = route[k], [bx, bz] = route[k + 1];
+            const L = Math.hypot(bx - ax, bz - az);
+            for (let t = 0; t <= L; t += 0.5) {
+              const x = ax + (bx - ax) * t / (L || 1), z = az + (bz - az) * t / (L || 1);
+              if (!seen[idx(Math.floor((x - MIN) / CELL), Math.floor((z - MIN) / CELL))]) { bad.push(`${p.id}: the route leaves the walkable ground at (${x.toFixed(1)}, ${z.toFixed(1)}): ${JSON.stringify(route.map(q => q.map(n => +n.toFixed(1))))} stand ${sx.toFixed(1)},${sz.toFixed(1)}`); t = L + 1; k = route.length; }
+            }
+          }
+        }
+      }
+      check(bad.length === 0, `${points.length} field point(s): each is a piece of its host, with a clear, level place to stand inside reach, reachable on foot, and a walkable route that ends there`,
+        `field points:\n         ${bad.join('\n         ')}`);
+    }
+
     /* EVERY WALL HOLDS. A point just inside the rock of every wall segment is blocked, and a point a metre
        into the working is free: the walk is held out of the column faces and nowhere else. */
     {
@@ -685,6 +733,20 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
       }
       check(dark.length === 0, `every one of ${plan.tunnels.length} workings is lit by lamps in the pool (${marks.length} lamps in the world)`,
         `workings with no lamps:\n         ${dark.join('\n         ')}`);
+      // EVERY MINE TABLE HAS A LAMP OVER ITS PLATE (plan §2.6). Under a hill only lamps light, and a tabletop is worked with the
+      // eyes on the plate, so a bench whose quest is a table has a lamp hung over it, above the bay's air. (A bench still on the
+      // station row is checked when its quest converts.)
+      {
+        const legacy = JSON.parse(readFileSync(join(root, 'tools/table-legacy.json'), 'utf8')).quests;
+        const tables = world.sites.filter(s => underground(s) && !legacy.includes(`unit03/${s.questId}`));
+        const unlit = [];
+        for (const site of tables) {
+          const a = built.benchAnchor(site.questId);
+          const near = marks.filter(p => Math.hypot(p.x - a.position[0], p.z - a.position[2]) < 1.6 && p.y > a.topY + 1.5 && p.y < a.topY + 3.6);
+          if (!near.length) unlit.push(`${site.id} (${site.questId}) has no lamp over its plate`);
+        }
+        check(unlit.length === 0, `every underground bench whose quest is a table (${tables.length}) has a lamp over its plate`, `mine tables with no lamp over them:\n         ${unlit.join('\n         ')}`);
+      }
       check(built.lampPool.lights.length === 3, 'the lamp pool is still three lights', `the pool has ${built.lampPool.lights.length} lights`);
 
       // And NOTHING ELSE IS LIT: every emissive material is a lamp's diffuser, the forge's coals, or a bench's indicator.

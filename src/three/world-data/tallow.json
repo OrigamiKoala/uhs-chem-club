@@ -22,7 +22,7 @@
     "dustDensity": 0.2
   },
   "sublevel": {
-    "floorY": -5,
+    "floorY": -5.6,
     "room": {
       "minX": -22,
       "maxX": 14,
@@ -604,12 +604,12 @@
       "stage": 2,
       "pos": [
         -4,
-        -5,
+        -5.6,
         -43
       ],
       "approachPos": [
         -4,
-        -3.4,
+        -4,
         -38
       ],
       "label": "Bench 2 - Inside an Atom",
@@ -718,12 +718,12 @@
       "site-2": {
         "pos": [
           -4,
-          -3.4,
+          -4,
           -38
         ],
         "lookAt": [
           -4,
-          -3.8,
+          -4.4,
           -43
         ]
       },

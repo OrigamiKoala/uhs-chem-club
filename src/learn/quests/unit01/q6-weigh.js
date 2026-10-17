@@ -4,36 +4,46 @@
  * one ionic sample became a molecular one, because Tallow comes before Ligar names
  * the formula unit.)
  *
- * The assay floor from Tallow site five, put to the job it was always going to
- * end up doing. Bench three counted molecules because there were few enough to
- * count; a real crate holds more atoms than anyone could count in a lifetime,
- * and every instrument in the yard reports a MASS. This bench is the bridge.
+ * The sixth bench on Tallow, and the sixth on the TABLETOP (plan `bench-tabletop.md`, phase T2): the
+ * mass kit (`table/kits/mass.js`) on the sack scale. Bench three counted molecules because there were
+ * few enough to count; a real crate holds more atoms than anyone could count in a lifetime, and every
+ * instrument in the yard reports a MASS. This bench is the bridge, and the bridge is a two-pan balance
+ * with an ATOM COUNTER on a pan: a balance weighs and never divides, and a counter counts and never
+ * weighs. What the player does is pour, until two pans balance or two counters agree, and read what
+ * is on the pan.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  a crate too full to tip, weighed instead   -> counting by weighing
- *   2  a bin weight against a recipe              -> formula mass
- *   3  three samples of sixty, weighed            -> equal counts weigh in the same ratio
- *   4  measure out a matching count               -> the mole
- *   5  a mole of a compound                       -> molar mass
- *   6  a drum of 72 grams                         -> grams and moles convert both ways
- *   7  two moles of a compound, by kind           -> a recipe reads in moles
- *   8  three drums, which holds the most atoms    -> weight is not count
+ *   1  a crate too full to tip, balanced by scoops of the same atom  -> counting by weighing
+ *   2  build a molecule of methane and weigh it                       -> formula mass
+ *   3  weigh sixty atoms of three elements and lay a line             -> equal counts weigh in the same ratio
+ *   4  pour oxygen until its counter matches 12.0 g of carbon         -> the mole
+ *   5  pour carbon dioxide until its counter matches                  -> molar mass
+ *   6  how many such scoops in a drum of 72 grams                      -> grams and moles convert both ways
+ *   7  pour hydrogen to match the hydrogen in two moles of water       -> a recipe reads in moles
+ *   8  rank three drums by the atoms each holds                        -> weight is not count
  *   -- debrief: why every real measurement is a mass, and what comes after it.
  *
- * `q3-recipe` earned fixed composition, percent composition and the empirical
- * formula, so those are plain words here. What this quest has to earn is on
+ * THE MOLE IS DISCOVERED, NOT SAID. Stage 4 never names it. The counters print a count (6.02 x 10^23 is a
+ * number on a counter) and the player finds that 12.0 grams of carbon and 16 grams of oxygen read the
+ * same; the reward card then names what they found. `q3-recipe` earned fixed composition, percent
+ * composition and the empirical formula, so those are plain words here. What this quest has to earn is on
  * `VOCABULARY`.
+ *
+ * FIELD (stage 1). A counted sack can be brought from the sack-filling scale on the bagging line: the
+ * field point is a real piece of the host (`tallow/stations.js` `buildBaggingLine`). It is evidence,
+ * never a lock: the stage is answered by pouring alone, and at T1 to T3 the same fetch is a drawn
+ * site plate.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { AssayFloor } from '../../engine/instruments.js';
-import { LearnFrame, toolNotes } from '../../engine/frame.js';
-import { dialMarkup, bindDial, paintDial } from '../../engine/dial.js';
-import { drawMoleMap } from '../../engine/visual-devices.js';
-import { esc } from '../../../ui/layout.js';
-import { soundscape } from '../../../audio/soundscape.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { piecesIn, formulaOf, scratchCorner, TABLE_BOUNDS, PARKED_RECORDER } from '../../table/kits/atoms.js';
+import {
+  massTable, balanceTable, crate, pourSteps, balanceRead, counterOf, scaleRead, speciesMass, panLoad
+} from '../../table/kits/mass.js';
+import { lineOf, readY } from '../../table/recorder.js';
 
 export const meta = { stageCount: 8 };
 
@@ -46,22 +56,6 @@ export const VOCABULARY = [
 ];
 
 const SPEAKER = 'Vess';
-
-/**
- * THE COUNT DIAL on stage 4's balance: how many atoms of the selected sample the pan
- * is weighing, from sixty up to the count the stage is about. The balance reports the
- * weight of that many atoms and nothing more; at the last detent the same figure
- * is in grams instead of atomic mass units, and that is the whole discovery.
- */
-export const COUNTS = [60, 6000, 6000000, 6.02e23];
-const COUNT_NAMES = { 1: 'x 60', 2: 'x 6,000', 3: 'x 6 million', 4: 'x 6.02 x 10^23' };
-
-function sci(x) {
-  if (x < 1e6) return x.toLocaleString('en-US', { maximumFractionDigits: 1 });
-  const e = Math.floor(Math.log10(x));
-  const m = x / Math.pow(10, e);
-  return `${Number(m.toFixed(2))} x 10^${e}`;
-}
 
 /* ------------------------------------------------------------------
    THE LISTED MASSES
@@ -76,51 +70,35 @@ export const CARD_MASS = {
   'chlorine': 35.5
 };
 
-/* ------------------------------------------------------------------
-   THE KEY LEGEND
-
-   A KEY WHOSE LABEL SAYS WHAT IT DOES OWES NOTHING.
-
-   Only the keys below carry a line, and each one carries it because
-   its label leaves something out. Everything else on this bench — the
-   keys that were once explained back to the player in their own words —
-   is left to say what it says.
-   ------------------------------------------------------------------ */
-const TOOL_TEXT = {
-  balance: [{
-    from: 1,
-    key: 'Weigh Sample',
-    what: 'Weighs the sample whole, without opening it.'
-  }]
-};
-
-export function toolNoteFor(controlId, stageNumber) {
-  const rows = TOOL_TEXT[controlId];
-  if (!rows) return null;
-  let out = null;
-  for (const r of rows) if (stageNumber >= r.from) out = r;
-  return out ? { key: out.key, what: out.what } : null;
-}
-
-/** What a hopper weighs in total, as the pan reads it. */
-export function totalOf(hopper) {
-  return (hopper.bins || []).reduce((m, b) => m + b.mass * b.n, 0);
-}
-
-/** How many particles (atoms or molecules) a hopper holds. The floor only ever reports this for a sample it could tip. */
-export function countOf(hopper) {
-  return (hopper.bins || []).reduce((n, b) => n + b.n, 0);
-}
+/**
+ * THE KEY LEGEND. A key whose label says what it does owes nothing, and the pieces of this table
+ * are poured and dragged. The one key that is not self-evident is none: "Straightedge" and "Weigh"
+ * say what they do. Kept so the quest contract (`toolNoteFor`) holds.
+ */
+export function toolNoteFor() { return null; }
 
 /**
- * What a hopper's particles are called, counted `n`. A sample of one element
- * holds atoms; a compound declares `particle` ('molecule'; Ligar's ionic samples
- * would say 'formula unit') because a mole is a count of whatever the substance
- * is made of, and the readout has to say which.
+ * What a drum of this much weighs in whole moles, for a check and its recomputation in `verify:learn`:
+ * the grams over the grams in one mole. NOT WHAT ANY INSTRUMENT HERE REPORTS: the player finds the
+ * scoop that matches the carbon pan and counts them.
  */
-export function particleWord(hopper, n = 2) {
-  const one = hopper?.particle || 'atom';
-  return n === 1 ? one : `${one}s`;
+export function molesOf(species, grams) {
+  return grams / speciesMass(species);
+}
+
+/* ------------------------------------------------------------------
+   THE TABLES
+   One layout (150 x 72 units): the balance across the top with its two pans below it at the ends of
+   the beam, the drum or the loose pieces between and beside them.
+   ------------------------------------------------------------------ */
+
+const poured = (t, what) => t.zones.containers['pan-r'].contents[what] || 0;
+
+/** The same count on both counters (to the tolerance of the arithmetic), and something counted. */
+function countersMatch(t) {
+  const l = counterOf(t, 'balance', 'L');
+  const r = counterOf(t, 'balance', 'R');
+  return { l, r, same: r > 0 && Math.abs(l - r) <= 1e-9 * Math.max(l, r) };
 }
 
 /* ------------------------------------------------------------------
@@ -132,124 +110,126 @@ export const STAGES = [
     title: 'Count What You Cannot Tip',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench tips a sample down a chute into bins by weight and counts what lands in each. "Weigh Sample" puts a whole sample on a balance, even one too full to tip.'
+      body: 'This bench has a balance with a sealed crate on one pan. Pour from the drum onto the other pan, and its counter keeps the count.'
     },
-    prompt: 'How many atoms are in the carbon crate based on its measured weight?',
-    controls: ['pour', 'balance'],
-    hoppers: [
-      { id: 'h1', label: 'SAMPLE A', code: 'carbon', note: '40 atoms, kept as the counting standard', bins: [{ mass: 12, n: 40 }] },
-      { id: 'h2', label: 'SAMPLE B', code: 'carbon', note: 'a full crate, gate shut', bulk: true, bins: [{ mass: 12, n: 300 }] }
-    ],
-    reference: ['carbon — listed mass 12.0'],
-    widget: { type: 'number', min: 0, max: 400, step: 50, label: 'Atoms in the full crate' },
+    prompt: 'Find how many atoms the sealed carbon crate holds.',
+    widget: { type: 'table', label: 'The bench' },
+    table: balanceTable({
+      unit: 'u',
+      counters: { R: { label: 'ATOMS' } },
+      refCrate: crate('crate', 'CRATE', { x: 0, y: 0 }, { species: 'carbon', n: 300, sealed: true, note: 'carbon' }),
+      drum: { label: 'Carbon drum', what: 'carbon', amount: 1000 },
+      steps: { carbon: 50 },
+      capacity: 600,
+      extra: {
+        pieces: [{ ...crate('sack', 'SACK', { x: 14, y: 52 }, { species: 'carbon', n: 100, note: 'counted: 100' }), hidden: true, fetchFrom: 'sack' }],
+        fetch: [{ id: 'sack', label: 'Counted sack', at: { x: 75, y: 66 }, size: { w: 22, h: 10 } }]
+      }
+    }),
     hints: [
-      'Tap the open sample, press "Tip Sample", then press "Weigh Sample" on it, and weigh the full crate as well.',
-      'The open sample is 40 atoms weighing 480 in all, and the full crate holds the same element, so each of its atoms weighs the same.',
-      'Divide the total weight of the full crate by the weight of a single atom from the open sample.'
+      'Pour carbon from the drum onto the empty pan and watch which way the beam tips.',
+      'The counter over the pan you pour on reads how many atoms are on it.',
+      'When the two pans balance they hold the same weight of the same kind of atom, so they hold the same number of them.'
     ],
     check(state) {
-      if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
-      }
-      if (state.number === 50) {
-        return { ok: false, msg: 'Weigh both: Sample B is far heavier than Sample A, and Sample A already holds 40.' };
-      }
-      if (state.number !== 300) {
-        return { ok: false, msg: 'Work out what one atom weighs from Sample A, then divide Sample B\'s total by it.' };
+      const t = state.table;
+      const bal = balanceRead(t, 'balance');
+      const have = counterOf(t, 'balance', 'R');
+      if (have === 0) return { ok: false, notYet: true, msg: 'The right pan is empty. Pour some carbon onto it.' };
+      if (!bal.level) {
+        return { ok: false, msg: bal.lean < 0
+          ? 'The crate is the heavier pan, so the right pan holds too few atoms.'
+          : 'The right pan is heavier than the crate, so it holds too many atoms.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Sample B: 3600 on the pan, 300 atoms.',
+      log: 'Crate balanced by the same weight of carbon.',
       title: 'Counting By Weighing',
-      body: 'Nobody counted Sample B and nobody has to: once you know what one atom weighs, a total weight divides straight into a count. A small sample you CAN count hands you the weight of one atom, and from there the biggest crate in the yard is countable. This is how chemists count things far too small to count one by one.'
+      body: 'Nobody counted the crate and nobody has to: atoms of one kind all weigh the same, so a pan that balances it holds the same number of atoms. The scoops you poured were counted, so the crate is counted too. This is how chemists count things far too small to count one by one.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'What One Molecule Weighs',
-    prompt: 'What is the formula weight of one molecule of methane (CH4)?',
-    controls: ['pour', 'balance'],
-    hoppers: [
-      { id: 'h3', label: 'SAMPLE A', note: '40 molecules, one oxygen to two hydrogen', particle: 'molecule', bins: [{ mass: 18, n: 40 }] },
-      { id: 'h4', label: 'SAMPLE B', note: 'a full crate, one carbon to four hydrogen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 16, n: 250 }] }
-    ],
-    reference: ['hydrogen — 1.0', 'carbon — 12.0', 'oxygen — 16.0'],
-    widget: { type: 'number', min: 10, max: 24, step: 1, label: 'Weight of one molecule of the second sample' },
+    prompt: 'Weigh one molecule of methane (CH₄) on the scale.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      bounds: { ...TABLE_BOUNDS },
+      recorder: PARKED_RECORDER,
+      pieces: [
+        { id: 'c', kind: 'atom', label: 'C', at: { x: 14, y: 14 }, props: { el: 'C' } },
+        ...[28, 42, 56, 70].map((x, i) => ({ id: `h${i + 1}`, kind: 'atom', label: 'H', at: { x, y: 14 }, props: { el: 'H' } })),
+        ...scratchCorner().pieces
+      ],
+      zones: {
+        containers: [{ id: 'pan', label: 'Pan', at: { x: 98, y: 45 }, size: { w: 40, h: 24 }, cell: 13 }],
+        trays: [scratchCorner().tray]
+      },
+      fixtures: [
+        { id: 'scale', kind: 'scale', label: 'Scale', at: { x: 98, y: 16 }, size: { w: 44, h: 26 }, noRun: true, props: { pan: 'container:pan', unit: 'u' } },
+        { id: 'plate', kind: 'plate', label: 'Listed', at: { x: 58, y: 30 }, size: { w: 30, h: 16 }, noRun: true, props: { lines: ['hydrogen 1.0', 'carbon 12.0', 'oxygen 16.0'] } }
+      ]
+    }),
     hints: [
-      'Tap the first sample, press "Tip Sample", and read the weight stencilled under the bin that caught everything.',
-      'The first sample\'s bin caught at 18, and its recipe is one oxygen at 16.0 with two hydrogen at 1.0 each, so a molecule weighs what its atoms weigh added up.',
-      'Read the second sample\'s recipe off its label, then add one listed mass from the plate for every atom in it.'
+      'Join hydrogen atoms to the carbon atom, then drag the molecule onto the scale\'s pan.',
+      'Read the weight on the scale and set it beside the listed mass of each atom in the molecule.',
+      'The scale reads the listed masses of every atom on the pan added up, so build the molecule before you read it.'
     ],
     check(state) {
-      if (state.number === 10) {
-        return { ok: false, notYet: true, msg: 'Set the counter to the figure you worked out.' };
-      }
-      if (state.number === 12) {
-        return { ok: false, msg: 'That is the carbon on its own, with none of the four hydrogen counted.' };
-      }
-      if (state.number === 13) {
-        return { ok: false, msg: 'That counts one hydrogen. A molecule of the second sample holds four of them.' };
-      }
-      if (state.number === 18) {
-        return { ok: false, msg: 'That is the first sample. The second sample holds a different recipe, so work its own out.' };
-      }
-      if (state.number !== 16) {
-        return { ok: false, msg: 'Add up one molecule of the second sample: one listed mass for every atom in its recipe.' };
-      }
+      const t = state.table;
+      const atoms = piecesIn(t, 'container:pan', 'atom');
+      if (!atoms.length) return { ok: false, notYet: true, msg: 'The pan is empty. Build the molecule and drag it onto the pan.' };
+      const ids = atoms.map(a => a.id);
+      const together = ids.every(id => t.pieces[id].joinedTo.length > 0);
+      if (!together) return { ok: false, msg: 'The atoms on the pan are not joined into one molecule.' };
+      const formula = formulaOf(ids, t);
+      if (formula !== 'CH₄') return { ok: false, msg: 'That is not methane. Check how many atoms of each kind its formula calls for.' };
       return { ok: true };
     },
     reward: {
-      log: 'First sample caught at 18. Second sample: 16.',
+      log: 'Methane on the scale: one carbon and four hydrogen.',
       title: 'Formula Mass',
-      body: 'The first sample landed in the bin marked 18, which is exactly 16.0 + 1.0 + 1.0: the listed masses of the atoms in one molecule of it, added up. The second sample comes to 12 + 4 = 16 the same way. Adding up the listed masses of every atom in one molecule of a substance gives its formula mass, and there is nothing more to it than that.'
+      body: 'The scale read 12.0 + 1.0 + 1.0 + 1.0 + 1.0, the listed masses of the atoms in one molecule, added up. Adding up the listed masses of every atom in one molecule of a substance gives its formula mass, and there is nothing more to it than that.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Three Samples of Sixty',
-    prompt: 'What pattern do the weighed totals of sixty atoms of each element reveal?',
-    controls: ['pour', 'balance'],
-    hoppers: [
-      { id: 'h5', label: 'SAMPLE A', code: 'hydrogen', note: '60 atoms, counted in', bins: [{ mass: 1, n: 60 }] },
-      { id: 'h6', label: 'SAMPLE B', code: 'carbon', note: '60 atoms, counted in', bins: [{ mass: 12, n: 60 }] },
-      { id: 'h7', label: 'SAMPLE C', code: 'oxygen', note: '60 atoms, counted in', bins: [{ mass: 16, n: 60 }] }
-    ],
-    reference: ['hydrogen — 1.0', 'carbon — 12.0', 'oxygen — 16.0'],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 'ratio', label: 'The three totals stand in the same ratio as the three listed masses', note: 'Weight follows the listed mass exactly.' },
-        { id: 'equal', label: 'They all weigh the same, because the counts are the same', note: 'Same count, same weight.' },
-        { id: 'nothing', label: 'Nothing — three different elements give three unrelated totals', note: 'No relation between them.' },
-        { id: 'sum', label: 'They add up to a round number', note: 'The three totals taken together.' }
-      ]
-    },
+    prompt: 'Weigh sixty atoms of each element and show how the weights relate to the listed masses.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      tools: ['straightedge'],
+      recorder: { at: { x: 60, y: 38 }, size: { w: 56, h: 46 }, xLabel: 'Listed mass of one atom', yLabel: 'Weight of sixty' },
+      pieces: [
+        crate('h', 'HYDROGEN', { x: 14, y: 18 }, { species: 'hydrogen', n: 60, note: '60 atoms' }),
+        crate('c', 'CARBON', { x: 14, y: 36 }, { species: 'carbon', n: 60, note: '60 atoms' }),
+        crate('o', 'OXYGEN', { x: 14, y: 54 }, { species: 'oxygen', n: 60, note: '60 atoms' })
+      ],
+      zones: { slots: [{ id: 'pan', label: 'Scale pan', at: { x: 118, y: 56 }, size: { w: 22, h: 18 } }] },
+      fixtures: [{ id: 'scale', kind: 'scale', label: 'Scale', runLabel: 'Weigh', at: { x: 118, y: 24 }, size: { w: 56, h: 34 }, props: { pan: 'slot:pan', unit: 'u' } }]
+    }),
     hints: [
-      'Tap a sample, press "Tip Sample", and do the same for the other two.',
-      'The three totals came to 60, 720 and 960, so divide each one by the 60 atoms it holds.',
-      'Divide each of the three totals by 60 and set each result beside the listed mass of that element on the plate.'
+      'Drag a crate onto the scale\'s pan and press "Weigh", then do the same for the other two.',
+      'Each reading lands as a point on the strip, with the listed mass of one atom across and the weight of sixty up.',
+      'Press "Straightedge" to lay a line across the points and see whether all three keep to it.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the four answers.' };
-      }
-      if (state.choice === 'equal') {
-        return { ok: false, msg: 'The three totals came to 60, 720 and 960, so equal counts did not give equal weights.' };
-      }
-      if (state.choice === 'nothing') {
-        return { ok: false, msg: 'Divide each total by the 60 atoms it holds, and compare the results with the plate.' };
-      }
-      if (state.choice === 'sum') {
-        return { ok: false, msg: '60, 720 and 960 come to 1740 together, which is nothing in particular.' };
-      }
+      const t = state.table;
+      const rows = t.recorder.rows;
+      const kinds = new Set(rows.map(r => r.label));
+      if (!kinds.size) return { ok: false, notYet: true, msg: 'Nothing has been weighed yet. Put a crate on the pan and weigh it.' };
+      if (kinds.size < 3) return { ok: false, msg: 'Two points always make a line. Weigh the third element too, to see whether it keeps to the line.' };
+      const line = lineOf(t.recorder);
+      if (!line) return { ok: false, notYet: true, msg: 'Lay the straightedge across the points to see how the weights keep to the listed masses.' };
+      const bad = rows.find(r => Math.abs(readY(line, r.x) - r.y) > 1e-6 * r.y);
+      if (bad) return { ok: false, msg: 'The line misses one of the points. Lay it across two points that you trust.' };
       return { ok: true };
     },
     reward: {
-      log: 'Three samples of 60: 60, 720 and 960 on the pan.',
+      log: 'Three samples of 60: 60, 720 and 960 on the scale.',
       title: 'Equal Counts Weigh In the Same Ratio',
       body: 'Three samples holding exactly the same number of atoms weighed 60, 720 and 960 — one, twelve and sixteen times each other, which is the ratio of their listed masses. It has to come out that way: if one carbon atom weighs twelve times one hydrogen atom, any equal counts of the two weigh in that same twelve to one ratio. Run that backwards and you have a way of measuring out equal counts without counting anything.'
     }
@@ -260,34 +240,32 @@ export const STAGES = [
     title: 'Measure Out a Matching Count',
     briefing: {
       speaker: SPEAKER,
-      body: 'A dozen eggs and a dozen bowling balls weigh differently but count the same. Use the count dial on the balance to see how atomic mass units scale up to grams.'
+      body: 'A dozen eggs and a dozen bowling balls weigh differently but count the same. Each pan now has an atom counter, and the drum pours grams.'
     },
-    prompt: 'How many grams of oxygen contain the same number of atoms as 12.0 grams of carbon?',
-    controls: ['pour', 'balance', 'count'],
-    hoppers: [
-      { id: 'h5', label: 'SAMPLE A', code: 'hydrogen', note: '60 atoms, counted in', bins: [{ mass: 1, n: 60 }] },
-      { id: 'h6', label: 'SAMPLE B', code: 'carbon', note: '60 atoms, counted in', bins: [{ mass: 12, n: 60 }] },
-      { id: 'h7', label: 'SAMPLE C', code: 'oxygen', note: '60 atoms, counted in', bins: [{ mass: 16, n: 60 }] }
-    ],
-    reference: ['hydrogen — 1.0', 'carbon — 12.0', 'oxygen — 16.0'],
-    widget: { type: 'number', min: 8, max: 26, step: 1, label: 'Grams of oxygen' },
+    prompt: 'Pour oxygen onto the right pan until its atom counter matches the carbon pan.',
+    widget: { type: 'table', label: 'The bench' },
+    table: balanceTable({
+      unit: 'g',
+      counters: { L: { label: 'ATOMS' }, R: { label: 'ATOMS' } },
+      refCrate: crate('ref', 'CARBON', { x: 0, y: 0 }, { species: 'carbon', grams: 12, note: '12.0 g' }),
+      drum: { label: 'Oxygen drum', what: 'oxygen', amount: 40 },
+      steps: { oxygen: 4 },
+      capacity: 40
+    }),
     hints: [
-      'Tip at least two of the samples and put each total next to the sixty atoms it came from.',
-      'Equal counts weigh in the ratio of the listed masses, so to get equal counts you weigh out the listed masses themselves.',
-      'Set grams of oxygen over 12.0 grams of carbon equal to oxygen\'s listed mass over carbon\'s listed mass, and solve for the grams.'
+      'Pour oxygen from the drum onto the right pan and read both atom counters.',
+      'Watch the beam as the counters get closer: equal counts do not have to weigh the same.',
+      'Keep pouring until the right counter reads exactly what the left one does, then look at what the right pan holds.'
     ],
     check(state) {
-      if (state.number === 8) {
-        return { ok: false, notYet: true, msg: 'Set the counter to the figure you worked out.' };
-      }
-      if (state.number === 12) {
-        return { ok: false, msg: 'Equal weights are not equal counts: an oxygen atom is heavier, so 12.0 grams of it holds fewer atoms than 12.0 grams of carbon.' };
-      }
-      if (state.number === 24) {
-        return { ok: false, msg: 'Doubling works for more of the same element. These are two different elements, so go by their listed masses.' };
-      }
-      if (state.number !== 16) {
-        return { ok: false, msg: 'Equal counts weigh in the ratio of the listed masses. Compare oxygen\'s listed mass with carbon\'s.' };
+      const t = state.table;
+      const c = countersMatch(t);
+      if (c.r === 0) return { ok: false, notYet: true, msg: 'The right pan is empty. Pour some oxygen onto it.' };
+      if (poured(t, 'oxygen') === 12) return { ok: false, msg: 'Equal weights are not equal counts: an oxygen atom is heavier, so the same weight of it holds fewer atoms.' };
+      if (!c.same) {
+        return { ok: false, msg: c.r > c.l
+          ? 'The right counter reads more than the left, so there are too many atoms on the right pan.'
+          : 'The right counter reads less than the left, so there are too few atoms on the right pan.' };
       }
       return { ok: true };
     },
@@ -301,38 +279,36 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'A Mole of a Compound',
-    prompt: 'How many grams of carbon dioxide (CO2) make up one mole of molecules?',
-    controls: ['balance'],
-    hoppers: [
-      { id: 'h8', label: 'SAMPLE A', note: 'a full crate, one carbon to two oxygen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 44, n: 200 }] }
-    ],
-    reference: ['carbon — 12.0', 'oxygen — 16.0'],
-    widget: { type: 'number', min: 0, max: 100, step: 1, label: 'Grams in one mole of CO₂' },
+    prompt: 'Pour carbon dioxide onto the right pan until its count matches the carbon pan.',
+    widget: { type: 'table', label: 'The bench' },
+    table: balanceTable({
+      unit: 'g',
+      counters: { L: { label: 'COUNT' }, R: { label: 'COUNT' } },
+      refCrate: crate('ref', 'CARBON', { x: 0, y: 0 }, { species: 'carbon', grams: 12, note: '12.0 g' }),
+      drum: { label: 'Carbon dioxide drum', what: 'carbon dioxide', amount: 100 },
+      steps: { 'carbon dioxide': 11 },
+      capacity: 66
+    }),
     hints: [
-      'Work out the formula mass of carbon dioxide first: one carbon and two oxygen.',
-      'One mole of an element is its listed mass in grams, and a molecule weighs the listed masses of all its atoms added up.',
-      'Add the listed mass of one carbon (12) to the listed mass of two oxygen (16 + 16) to get the grams in one mole.'
+      'Pour carbon dioxide from the drum onto the right pan and compare the two counters.',
+      'The pan counts molecules, one for each carbon and two oxygen joined together, and the other pan counts atoms.',
+      'Keep pouring until the counters agree, then read how many grams are on the right pan.'
     ],
     check(state) {
-      if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'Set the counter to the molar mass of carbon dioxide.' };
-      }
-      if (state.number === 12) {
-        return { ok: false, msg: '12 grams is carbon alone. Add the mass of both oxygen atoms.' };
-      }
-      if (state.number === 28) {
-        return { ok: false, msg: '28 grams counts only one oxygen atom. Each molecule holds two.' };
-      }
-      if (state.number === 88) {
-        return { ok: false, msg: '88 grams is two moles of carbon dioxide. Calculate for one mole.' };
-      }
-      if (state.number !== 44) {
-        return { ok: false, msg: 'Add the listed mass of carbon (12) and two oxygen atoms (16 + 16).' };
+      const t = state.table;
+      const c = countersMatch(t);
+      if (c.r === 0) return { ok: false, notYet: true, msg: 'The right pan is empty. Pour some carbon dioxide onto it.' };
+      const grams = poured(t, 'carbon dioxide');
+      if (grams === 12) return { ok: false, msg: 'Equal weights are not equal counts: a carbon dioxide molecule is heavier than a carbon atom.' };
+      if (!c.same) {
+        return { ok: false, msg: c.r > c.l
+          ? 'The right counter reads more than the left, so there are too many molecules on the right pan.'
+          : 'The right counter reads less than the left, so there are too few molecules on the right pan.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'One mole of Sample A weighs 44.0 grams.',
+      log: 'One mole of carbon dioxide weighs 44.0 grams.',
       title: 'Molar Mass',
       body: 'The rule does not stop at elements: add up the listed masses of every atom in one molecule of a compound and that many grams of it is one mole of its molecules. Here 12.0 + 16.0 + 16.0 = 44.0, so 44.0 grams holds 6.02 x 10^23 molecules of it. That figure, grams per mole, is called the molar mass, and every substance has one.'
     }
@@ -341,35 +317,37 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'A Drum of Seventy-Two',
-    prompt: 'How many moles of water does the 72-gram drum hold?',
-    controls: ['balance'],
-    hoppers: [
-      { id: 'h9', label: 'SAMPLE A', note: 'one drum, one oxygen to two hydrogen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 18, n: 4 }] }
-    ],
-    reference: ['hydrogen — 1.0', 'oxygen — 16.0'],
-    widget: { type: 'number', min: 0, max: 8, step: 1, label: 'Moles in the drum' },
+    prompt: 'Set the tally to the number of moles of water in the 72-gram drum.',
+    widget: { type: 'table', label: 'The bench' },
+    table: balanceTable({
+      unit: 'g',
+      counters: { L: { label: 'COUNT' }, R: { label: 'COUNT' } },
+      refCrate: crate('ref', 'CARBON', { x: 0, y: 0 }, { species: 'carbon', grams: 12, note: '12.0 g' }),
+      drum: { label: 'Water drum', what: 'water', amount: 72 },
+      steps: { water: 6 },
+      capacity: 72,
+      balanceAt: { x: 65, y: 16 },
+      balanceW: 110,
+      extra: {
+        fixtures: [{ id: 'tally', kind: 'tally', label: 'Tally', at: { x: 134, y: 40 }, size: { w: 26, h: 30 }, noRun: true, dials: { n: { min: 0, max: 8, step: 1, value: 0, label: 'Moles' } } }]
+      }
+    }),
     hints: [
-      'Tap Sample A and press "Weigh Sample" to read what the drum holds.',
-      'Work out what one mole of this compound weighs first, the way you did on the last stage.',
-      'Add up the listed masses in one molecule to get the grams in one mole, then divide the drum\'s reading by that.'
+      'Pour water onto the right pan until its count matches the carbon pan, and note how many grams that takes.',
+      'The drum is made up of equal scoops of that size.',
+      'Divide the drum\'s grams by the grams on the matching pan, and set the tally to the result.'
     ],
     check(state) {
-      if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
-      }
-      if (state.number === 1) {
-        return { ok: false, msg: 'One mole is what one molecule weighs, in grams. Compare that with what the drum reads.' };
-      }
-      if (state.number === 2) {
-        return { ok: false, msg: 'Two moles would weigh twice one mole. Compare that with what the drum reads.' };
-      }
-      if (state.number !== 4) {
-        return { ok: false, msg: 'Work out what one mole weighs from the recipe, then divide the drum\'s reading by it.' };
-      }
+      const t = state.table;
+      const n = t.fixtures.tally.dials.n.value;
+      if (n === 0) return { ok: false, notYet: true, msg: 'The tally is on zero. Set it to the number of matching scoops in the drum.' };
+      if (n === 1) return { ok: false, msg: 'One matching scoop is the amount that balances the carbon pan\'s count. Compare that with what the whole drum holds.' };
+      if (n === 2) return { ok: false, msg: 'Two matching scoops would weigh twice one scoop. Compare that with what the whole drum holds.' };
+      if (n !== molesOf('water', 72)) return { ok: false, msg: 'Work out how many of the matching scoops make up the drum from the grams in one scoop.' };
       return { ok: true };
     },
     reward: {
-      log: 'Drum reads 72. That is 4 moles.',
+      log: 'The drum holds 4 matching scoops: 4 moles.',
       title: 'Grams and Moles Convert Both Ways',
       body: 'The molar mass is the bridge between the two: divide a mass in grams by it to get moles, multiply moles by it to get grams. 72 grams at 18 grams per mole is 4 moles, and those 4 moles hold four times 6.02 x 10^23 molecules. Every real measurement you can take is a mass and every recipe is a count, so this is the conversion that joins the two.'
     }
@@ -378,30 +356,29 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Moles of Each Element',
-    prompt: 'How many moles of hydrogen atoms are present in two moles of water (H2O)?',
-    controls: ['balance'],
-    hoppers: [
-      { id: 'h10', label: 'SAMPLE A', note: 'two drums, one oxygen to two hydrogen, gate shut', particle: 'molecule', bulk: true, bins: [{ mass: 18, n: 2 }] }
-    ],
-    reference: ['hydrogen — 1.0', 'oxygen — 16.0'],
-    widget: { type: 'number', min: 0, max: 8, step: 1, label: 'Moles of hydrogen' },
+    prompt: 'Pour hydrogen onto the right pan until it holds as many hydrogen atoms as two moles of water.',
+    widget: { type: 'table', label: 'The bench' },
+    table: balanceTable({
+      unit: 'g',
+      counters: { L: { label: 'H ATOMS', of: 'H' }, R: { label: 'H ATOMS', of: 'H' } },
+      refCrate: crate('two', 'WATER', { x: 0, y: 0 }, { species: 'water', grams: 36, note: '2 moles' }),
+      drum: { label: 'Hydrogen drum', what: 'hydrogen', amount: 10 },
+      steps: { hydrogen: 1 },
+      capacity: 10
+    }),
     hints: [
-      'Write down the recipe of one molecule first: one oxygen and two hydrogen.',
-      'A ratio does not care what you count in, so two hydrogen per molecule is also two moles of hydrogen for every mole of molecules.',
-      'Multiply the number of moles of the compound by the count of hydrogen atoms in each molecule.'
+      'Pour hydrogen from the drum onto the right pan and watch its hydrogen-atom counter.',
+      'Compare it with the left counter, which counts only the hydrogen atoms in the water.',
+      'Each water molecule holds two hydrogen atoms, so there are more hydrogen atoms in the water than molecules.'
     ],
     check(state) {
-      if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'Set the counter to the number you worked out.' };
-      }
-      if (state.number === 2) {
-        return { ok: false, msg: 'Two is the number of moles of molecules, and of the oxygen in them. Each molecule holds two hydrogen, not one.' };
-      }
-      if (state.number === 1) {
-        return { ok: false, msg: 'One molecule already holds two hydrogen, so one mole of molecules holds two moles of them.' };
-      }
-      if (state.number !== 4) {
-        return { ok: false, msg: 'Each molecule holds two hydrogen, and you have two moles of molecules.' };
+      const t = state.table;
+      const c = countersMatch(t);
+      if (c.r === 0) return { ok: false, notYet: true, msg: 'The right pan is empty. Pour some hydrogen onto it.' };
+      if (!c.same) {
+        return { ok: false, msg: c.r > c.l
+          ? 'The right counter reads more than the left, so there is too much hydrogen on the right pan.'
+          : 'The right counter reads less than the left, so there is too little hydrogen on the right pan.' };
       }
       return { ok: true };
     },
@@ -415,42 +392,38 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Which Drum Holds the Most',
-    prompt: 'Which of the three element drums contains the greatest total count of atoms?',
-    controls: ['balance'],
-    hoppers: [
-      { id: 'd1', label: 'SAMPLE A', code: 'carbon', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 12, n: 5 }] },
-      { id: 'd2', label: 'SAMPLE B', code: 'oxygen', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 16, n: 4 }] },
-      { id: 'd3', label: 'SAMPLE C', code: 'hydrogen', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 1, n: 6 }] }
-    ],
-    reference: ['hydrogen — 1.0', 'carbon — 12.0', 'oxygen — 16.0'],
-    widget: {
-      type: 'choice',
-      label: 'Your answer',
-      options: [
-        { id: 'd1', label: 'Sample A', note: 'Sixty grams of carbon.' },
-        { id: 'd2', label: 'Sample B', note: 'Sixty-four grams of oxygen.' },
-        { id: 'd3', label: 'Sample C', note: 'Six grams of hydrogen.' }
-      ]
-    },
+    prompt: 'Rank the three drums by how many atoms each holds.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [
+        crate('d1', 'CARBON', { x: 0, y: 0 }, { species: 'carbon', grams: 60, note: 'drum' }),
+        crate('d2', 'OXYGEN', { x: 0, y: 0 }, { species: 'oxygen', grams: 64, note: 'drum' }),
+        crate('d3', 'HYDROGEN', { x: 0, y: 0 }, { species: 'hydrogen', grams: 6, note: 'drum' })
+      ],
+      zones: {
+        slots: [{ id: 'weigh', label: 'Scale pan', at: { x: 118, y: 52 }, size: { w: 22, h: 18 } }],
+        rail: { id: 'rail', at: { x: 56, y: 54 }, size: { w: 84, h: 20 }, first: 'fewest atoms', last: 'most atoms', items: ['d1', 'd2', 'd3'], start: ['d1', 'd3', 'd2'] }
+      },
+      fixtures: [{ id: 'scale', kind: 'scale', label: 'Scale', at: { x: 118, y: 22 }, size: { w: 56, h: 34 }, noRun: true, props: { pan: 'slot:weigh', unit: 'g', counter: { label: 'ATOMS' } } }]
+    }),
     hints: [
-      'Tap each drum and press "Weigh Sample" to read what it holds.',
-      'A weight tells you nothing about a count until you divide it by the listed mass of what is in the drum.',
-      'Divide each drum’s mass by its element’s listed mass to compare their mole counts.'
+      'Drag a drum onto the scale\'s pan to read what it weighs and how many atoms it holds, then drag it back to the rail.',
+      'The heaviest drum is not always the one with the most atoms, so compare the counters.',
+      'Put the drums in order of their atom counters, the smallest count at the left end.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the three drums.' };
-      }
-      if (state.choice === 'd2') {
-        return { ok: false, msg: 'Sample B is the heaviest drum, but its atoms are the heaviest too. Divide its weight by its listed mass before comparing.' };
-      }
-      if (state.choice === 'd1') {
-        return { ok: false, msg: 'Divide every drum\'s weight by its listed mass, and compare all three results.' };
+      const t = state.table;
+      const order = t.zones.rail.order;
+      if (order.length < 3) return { ok: false, notYet: true, msg: 'All three drums belong on the rail. Put the drum on the scale back.' };
+      const atoms = id => molesOf(t.pieces[id].props.species, t.pieces[id].props.grams);
+      const want = ['d1', 'd2', 'd3'].sort((a, b) => atoms(a) - atoms(b));
+      if (order.join() !== want.join()) {
+        return { ok: false, msg: 'The drums are not in order of their atom counters. The heaviest drum is not necessarily the one with the most atoms.' };
       }
       return { ok: true };
     },
     reward: {
-      log: 'Sample C: 6 grams, 6 moles, the most atoms on the floor.',
+      log: 'The lightest drum holds the most atoms.',
       title: 'Weight Is Not Count',
       body: 'The lightest drum on the floor holds the most atoms, because a hydrogen atom weighs a sixteenth of what an oxygen atom does. A balance only ever reports mass, so a count is always a mass divided by a molar mass. Every real measurement in chemistry begins with that division and ends with the reverse of it.',
       last: true
@@ -541,48 +514,42 @@ export const PRACTICE = [
 ];
 
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    ------------------------------------------------------------------ */
-function blankState(stage) {
-  return {
-    number: stage.widget.type === 'number' ? stage.widget.min : null,
-    choice: null,
-    bins: {},
-    sample: null,
-    bin: null,
-    count: 1,
-    poured: new Set(),
-    weighed: new Set()
-  };
-}
 
-/** The floor state that solves each stage, in order. Checked by verify:learn. */
+const to = (piece, target) => ({ place: { piece, to: target } });
+const weighIn = piece => [to(piece, 'slot:pan'), { run: 'scale' }];
+const joinTo = (a, b) => ({ join: [a, b] });
+
+/** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  { poured: new Set(['h1']), weighed: new Set(['h1', 'h2']), number: 300 },
-  { poured: new Set(['h3']), number: 16 },
-  { poured: new Set(['h5', 'h6', 'h7']), choice: 'ratio' },
-  { poured: new Set(['h6', 'h7']), number: 16 },
-  { weighed: new Set(['h8']), number: 44 },
-  { weighed: new Set(['h9']), number: 4 },
-  { weighed: new Set(['h10']), number: 4 },
-  { weighed: new Set(['d1', 'd2', 'd3']), choice: 'd3' }
+  [{ fetch: 'sack' }, to('sack', 'container:pan-r'), ...pourSteps('carbon', 50, 4)],
+  [joinTo('h1', 'c'), joinTo('h2', 'c'), joinTo('h3', 'c'), joinTo('h4', 'c'), to('c', 'container:pan')],
+  [...weighIn('h'), ...weighIn('c'), ...weighIn('o'), { lay: { kind: 'straightedge', through: [0, 2] } }],
+  pourSteps('oxygen', 4, 4),
+  pourSteps('carbon dioxide', 11, 4),
+  [...pourSteps('water', 6, 3), { setDial: { fixture: 'tally', dial: 'n', value: 4 } }],
+  pourSteps('hydrogen', 1, 4),
+  [to('d2', 'slot:weigh'), to('d2', 'rail:0'), to('d1', 'slot:weigh'), to('d1', 'rail:1'), to('d3', 'slot:weigh'), to('d3', 'rail:2')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { poured: new Set(['h1']), weighed: new Set(['h1', 'h2']), number: 50 },
-  { poured: new Set(['h3']), number: 18 },
-  { poured: new Set(['h5', 'h6', 'h7']), choice: 'equal' },
-  { poured: new Set(['h6', 'h7']), number: 12 },
-  { weighed: new Set(['h8']), number: 12 },
-  { weighed: new Set(['h9']), number: 1 },
-  { weighed: new Set(['h10']), number: 2 },
-  { weighed: new Set(['d1', 'd2', 'd3']), choice: 'd2' }
+  pourSteps('carbon', 50, 5),
+  [joinTo('h1', 'c'), joinTo('h2', 'c'), to('c', 'container:pan')],
+  [...weighIn('h'), ...weighIn('c'), { lay: { kind: 'straightedge', through: [0, 1] } }],
+  pourSteps('oxygen', 4, 3),
+  pourSteps('carbon dioxide', 11, 2),
+  [...pourSteps('water', 6, 3), { setDial: { fixture: 'tally', dial: 'n', value: 1 } }],
+  pourSteps('hydrogen', 1, 2),
+  [to('d3', 'slot:weigh'), to('d3', 'rail:2')]
 ];
 
-/** Build a full floor state for stage `i` from one of the sets above. */
+function blankState() { return {}; }
+
+/** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  return { ...blankState(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -590,313 +557,12 @@ export function stateFor(i, overrides) {
    ================================================================== */
 
 export function mount(container, ctx) {
-  const frame = new LearnFrame(container, {
-    quest: ctx?.quest || { id: 'q6-weigh' },
-    world: ctx?.world,
-    stageCount: STAGES.length,
-    rewards: STAGES.map(s => s.reward),
-    onSubmit: () => submit(),
-    onNext: () => next(),
-    onJump: i => loadStage(i),
-    onExit: () => ctx.exit()
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
-  const floor = new AssayFloor(frame.instrumentHost, {
-    onProbe: hit => onProbe(hit),
-    onSelect: id => onSelect(id)
-  });
-
-  let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
-  let cleared = ctx.isComplete ? STAGES.length : ctx.stagesCleared;
-  let state = null;
-  let busy = false;
-  let disposed = false;
-  let unbindCount = null;
-
-  /* ---------------- stage lifecycle ---------------- */
-
-  function loadStage(i) {
-    index = i;
-    const stage = STAGES[i];
-    state = blankState(stage);
-
-    frame.setCleared(cleared);
-    frame.setStage({
-      index: i,
-      title: stage.title,
-      prompt: stage.prompt,
-      briefing: stage.briefing,
-      hints: stage.hints,
-      commitLabel: stage.encounter?.act || 'Commit'
-    });
-
-    floor.setHoppers(stage.hoppers);
-    floor.setSelectable(stage.hoppers.length > 1);
-    if (stage.hoppers.length === 1) onSelect(stage.hoppers[0].id);
-
-    renderControls();
-    renderWidget();
-    renderReadout(null);
-
-    if (stage.briefing && !ctx.isComplete && cleared <= i) frame.showBriefing();
-  }
-
-  function next() {
-    if (index >= STAGES.length - 1) {
-      frame.showDebrief(DEBRIEF, () => ctx.exit());
-      return;
-    }
-    loadStage(index + 1);
-  }
-
-  function submit() {
-    if (busy) return;
-    const stage = STAGES[index];
-    const result = stage.check(state);
-    if (!result.ok) {
-      if (result.notYet) frame.note(result.msg);
-      else frame.miss(result.msg);
-      return;
-    }
-    frame.clearBanner();
-    if (index + 1 > cleared) {
-      cleared = index + 1;
-      ctx.reportStage(index);
-    }
-    frame.setCleared(cleared);
-    frame.clear(stage.reward);
-    if (index === STAGES.length - 1) ctx.reportComplete();
-  }
-
-  /* ---------------- floor controls ---------------- */
-
-  function renderControls() {
-    const stage = STAGES[index];
-    const parts = [];
-
-    if (stage.controls.includes('pour')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="pour">Tip Sample</button>');
-    }
-    if (stage.controls.includes('balance')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="balance">Weigh Sample</button>');
-    }
-    if (stage.controls.includes('count')) {
-      parts.push(dialMarkup({ label: 'Count', min: 1, max: COUNTS.length, value: state.count, id: 'count-dial', scaleLabels: COUNT_NAMES }));
-    }
-    if (stage.reference?.length) {
-      parts.push(`
-        <div class="assay-extract">
-          <span class="form-label">Listed masses</span>
-          <ul>${stage.reference.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
-        </div>
-      `);
-    }
-    parts.push(toolNotes(
-      stage.controls.map(id => toolNoteFor(id, index + 1)).filter(Boolean)
-    ));
-
-    frame.setControls(parts.join(''));
-    frame.el.controls.querySelectorAll('[data-tool]').forEach(btn => {
-      btn.addEventListener('click', () => runTool(btn.dataset.tool));
-    });
-    unbindCount?.();
-    unbindCount = stage.controls.includes('count')
-      ? bindDial(frame.el.controls, { min: 1, max: COUNTS.length, onChange: v => setCount(v) })
-      : null;
-    if (stage.controls.includes('count')) paintDial(frame.el.controls, state.count, { min: 1, max: COUNTS.length, scaleLabels: COUNT_NAMES });
-    // Once the word molar has been earned (stage 5), the road between grams, moles and
-    // particles stands on the card. It names the two conversions and prints no molar mass.
-    frame.setDevice(index >= 5 ? (ctx, w, h) => drawMoleMap(ctx, 6, 6, w - 12, h - 12, null, {}) : null);
-  }
-
-  function setCount(v) {
-    state.count = Math.max(1, Math.min(COUNTS.length, v));
-    paintDial(frame.el.controls, state.count, { min: 1, max: COUNTS.length, scaleLabels: COUNT_NAMES });
-    soundscape.playToggleClack?.();
-    if (state.sample) runTool('balance');
-  }
-
-  async function runTool(tool) {
-    if (busy) return;
-    if (!state.sample) {
-      frame.note('No sample selected. Tap one of the samples first.');
-      return;
-    }
-    const id = state.sample;
-    const hopper = hopperFor(id);
-
-    if (tool === 'balance') {
-      state.weighed.add(id);
-      soundscape.playScanSweep?.();
-      if (STAGES[index].controls.includes('count') && !hopper.bulk) {
-        // The balance weighs this many atoms of the sample, and only says what they weigh.
-        const c = COUNTS[state.count - 1];
-        const per = hopper.bins[0].mass;
-        const atMole = state.count === COUNTS.length;
-        renderReadout(null, {
-          head: `Balance // ${hopper.label}`,
-          body: `${sci(c)} atoms weigh ${sci(per * c / (atMole ? 6.02e23 : 1))} ${atMole ? 'grams' : 'atomic mass units'}.`
-        });
-        return;
-      }
-      // A CRATE TOO FULL TO TIP CANNOT BE COUNTED, SO THE PAN DOES NOT SAY IT
-      // WAS. The balance reports the mass it measured and stops there; working
-      // the count out of that mass is the whole job of this bench.
-      renderReadout(null, {
-        head: `Balance // ${hopper.label}`,
-        body: hopper.bulk
-          ? `The pan reads ${fmt(totalOf(hopper))} in all. Nothing on this floor can tell you how many ${particleWord(hopper)} that is.`
-          : `The pan reads ${fmt(totalOf(hopper))} in all, over the ${countOf(hopper)} ${particleWord(hopper, countOf(hopper))} the chute counted.`
-      });
-      return;
-    }
-
-    if (tool === 'pour') {
-      if (hopper.bulk) {
-        frame.note(`${hopper.label} has its gate dogged shut. There is far too much in it for the chute, so weigh it instead.`);
-        return;
-      }
-      if (floor.poured(id)) {
-        frame.note(`${hopper.label} has already been tipped, and the tallies above its bins are still there.`);
-        return;
-      }
-      busy = true;
-      frame.clearBanner();
-      frame.setCommitEnabled(false);
-      const shot = await floor.pour(id);
-      state.poured.add(id);
-      soundscape.playPylonWake?.();
-      renderReadout(null, {
-        head: `Chute // ${hopper.label}`,
-        body: `${shot.total} ${particleWord(hopper, shot.total)} landed: ${shot.totals.map((n, i) => `${n} at weight ${hopper.bins[i].mass}`).join(', ')}. That is ${fmt(totalOf(hopper))} in all.`
-      });
-      busy = false;
-      frame.setCommitEnabled(true);
-    }
-  }
-
-  /** Whole numbers stay whole; 44.5 stays 44.5. */
-  function fmt(n) {
-    return Number.isInteger(n) ? String(n) : n.toFixed(1);
-  }
-
-  function hopperFor(id) {
-    return STAGES[index].hoppers.find(h => h.id === id) || null;
-  }
-
-  /* ---------------- readout ---------------- */
-
-  function onProbe(hit) {
-    state.sample = hit.hopperId;
-    state.bin = hit.bin;
-    floor.setSelected(hit.hopperId);
-    soundscape.playToggleClack?.();
-    renderReadout(hit);
-  }
-
-  function onSelect(id) {
-    state.sample = id;
-    state.bin = null;
-    floor.setSelected(id);
-  }
-
-  function renderReadout(hit, message) {
-    if (message) {
-      frame.setReadout(`
-        <div class="lq-readout-card">
-          <div class="lq-readout-head">${esc(message.head)}</div>
-          <p class="lq-readout-line">${esc(message.body)}</p>
-        </div>
-      `);
-      return;
-    }
-    if (!hit) {
-      frame.setReadout(`
-        <div class="lq-readout-card lq-readout-idle">
-          <div class="lq-readout-head">Floor // standby</div>
-          <p class="lq-readout-line">Tap a sample to select it. A sample with its gate shut will only go on the balance.</p>
-        </div>
-      `);
-      return;
-    }
-    const hopper = hopperFor(hit.hopperId);
-    frame.setReadout(`
-      <div class="lq-readout-card">
-        <div class="lq-readout-head">Bin // ${esc(hit.hopperLabel)}, bin ${hit.bin + 1}</div>
-        <div class="lq-readout-code">CATCHES WEIGHT ${esc(String(hit.mass))}</div>
-        <div class="lq-readout-hold">${hopper?.bulk
-          ? 'Empty. The gate on this one is shut.'
-          : hit.poured
-            ? `${hit.count} ${particleWord(hopper, hit.count)} landed in it.`
-            : 'Empty. Nothing has been tipped yet.'}</div>
-        <p class="lq-readout-line">A bin only catches ${esc(particleWord(hopper))} of the weight marked under it.</p>
-      </div>
-    `);
-  }
-
-  /* ---------------- answer widgets ---------------- */
-
-  function renderWidget() {
-    const stage = STAGES[index];
-    const w = stage.widget;
-
-    if (w.type === 'number') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-number">
-            <button type="button" class="btn-secondary quest-btn-sm" data-num="-1" aria-label="Lower">&minus;</button>
-            <span class="lq-number-value" aria-live="polite">${state.number}</span>
-            <button type="button" class="btn-secondary quest-btn-sm" data-num="1" aria-label="Raise">+</button>
-          </div>
-          <p class="form-help">Steps of ${w.step}, between ${w.min} and ${w.max}.</p>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-num]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.number = Math.max(w.min, Math.min(w.max, state.number + Number(btn.dataset.num) * (w.step || 1)));
-          frame.el.widget.querySelector('.lq-number-value').textContent = String(state.number);
-          soundscape.playToggleClack?.();
-        });
-      });
-      return;
-    }
-
-    if (w.type === 'choice') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-bin-keys">
-            ${w.options.map(o => `
-              <button type="button" class="choice-option lq-bin-key" data-choice="${o.id}">
-                <span class="lq-bin-label">${esc(o.label)}</span>
-                <span class="lq-bin-note">${esc(o.note)}</span>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-choice]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.choice = btn.dataset.choice;
-          frame.el.widget.querySelectorAll('[data-choice]')
-            .forEach(o => o.classList.toggle('selected', o === btn));
-          soundscape.playToggleClack?.();
-        });
-      });
-    }
-  }
-
-  /* ---------------- go ---------------- */
-
-  loadStage(index);
-
-  return {
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      floor.dispose();
-      frame.dispose();
-    }
-  };
+  runner.start();
+  return { dispose: () => runner.dispose() };
 }
+
+export { scaleRead, panLoad };

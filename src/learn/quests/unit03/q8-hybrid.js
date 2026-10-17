@@ -1,30 +1,34 @@
 /**
  * q8-hybrid.js — Ligar, bench eight: HYBRIDIZATION.
  *
- * The domain rig's last two heads. A MIXER blends the hub's s orbital with
- * one, two or three of its p orbitals and shows the lobes that result and the p
- * orbitals left over. A TWIST key turns one end of a bond to find whether it will.
+ * The eighth bench on the world and its sixth TABLETOP (plan `bench-tabletop.md`, phase T3b). An atom's orbitals are pieces
+ * on the plate, drawn with the electrons they hold. They are dropped in a MIXING BOWL, and what comes out is what went in:
+ * as many hybrid lobes as orbitals mixed, pointing where that many arms settle, with the p orbitals left out standing over
+ * as they were. Or they are dropped on each other, and overlap into a bond if the two point at each other and each holds a
+ * single electron. A last bench turns the far end of a bond to find whether it will.
  *
- *   1  why carbon's orbitals cannot explain methane          -> (the puzzle)
- *   2  blend carbon's orbitals to match four arms              -> hybrid orbital, sp3
- *   3  sort NH3, H2O and C2H4 by the lobes they need      -> sp2 (a lone pair is an arm)
- *   4  sort CO2, BF3 and HCN the same way                -> sp (a multiple bond is one arm)
- *   5  how ethene's second bond is built                     -> sigma bond, pi bond
- *   6  count the sigma and pi bonds in HCN                   -> (each arm is one sigma)
- *   7  twist ethane, then ethene                             -> restricted rotation
- *   8  how many orbitals PCl5 and SF6 need                     -> sp3d, sp3d2 (beyond the exam)
+ *   1  bond hydrogen atoms to carbon's orbitals as they stand      -> (the puzzle: two bonds, not four)
+ *   2  mix carbon's orbitals to one lobe for each bond in methane  -> hybrid orbital, sp3
+ *   3  tray NH3, H2O and C2H4 by the lobes their centre needs       -> sp2 (a lone pair is an arm)
+ *   4  tray CO2, BF3 and HCN the same way                           -> sp (a multiple bond is one arm)
+ *   5  build the second bond between ethene's carbons               -> sigma bond, pi bond
+ *   6  build every bond of hydrogen cyanide from its orbitals       -> (each arm is one sigma bond)
+ *   7  turn the far end of ethane's bond and of ethene's            -> restricted rotation
+ *   8  mix orbitals for PCl5's phosphorus and SF6's sulfur          -> sp3d, sp3d2 (beyond the exam)
  *
- * THE MIXER FOLLOWS ONE RULE, which the player finds: as many hybrid lobes as the
- * hub has arms (`vsepr.planMix`). Stage eight carries it past what the mixer can
- * blend, and says so on its card.
+ * THE BOWL FOLLOWS ONE RULE, which the player finds: as many hybrid lobes as the hub has arms (`vsepr.planBlend`; `planMix` is
+ * the same answer without d). Stage eight carries it past what s and p can blend, and says so on its card. Every overlap is the
+ * kit's planner (`kits/domain-orbitals.js`): two orbitals bond only if each holds one electron and they point at each other,
+ * and a pair of p orbitals bonds only if they lie the same way. Every bond that stands is counted by `bondsBuilt`.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { DomainRig } from '../../engine/instruments.js';
-import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
-import { hubKeys, mixKeys, twistKeys, paintRigHand, paintMix, describeRig } from '../../engine/rigcontrols.js';
-import { planMix, planTwist, planDomains, countSigmaPi, RIG_MOLECULES } from '../../engine/vsepr.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { planMix, planBlend, planTwist, planDomains, countSigmaPi, RIG_MOLECULES } from '../../engine/vsepr.js';
+import {
+  domainTable, orbital, mixbowl, twist, bowlRead, bondsBuilt, twistRead, molCard, molRead
+} from '../../table/kits/domain.js';
 
 export const meta = { stageCount: 8 };
 
@@ -42,16 +46,37 @@ export const BUILDS_ON = ['unit03/q6-shape', 'unit03/q4-dots', 'unit02/q6-fillin
 
 const SPEAKER = 'Vess';
 
-const TOOL_TEXT = {
-  mix: { key: 'Blend', what: 'Blends the s orbital with the number of p orbitals that the key names.' },
-  twist: { key: 'Twist', what: 'Turns one end of the bond to see whether it turns.' },
-  protractor: { key: 'Protractor', what: 'Tap two arms to read the angle between them.' }
-};
-export function toolNoteFor(controlId) { return TOOL_TEXT[controlId] || null; }
+/** Every piece says what it is (an orbital with its electrons, a bowl, a dial named "Far End"), so no key needs a legend. */
+export function toolNoteFor() { return null; }
 
-const mixer = (id, label, extra = {}) => ({ id, label, head: 'mixer', hub: 'C', ...extra });
-const twist = (id, label, bond, note) => ({ id, label, head: 'twist', bond, note });
-const show = (id, label, mol, note) => ({ id, label, head: 'show', mol, locked: true, note });
+/* ------------------------------------------------------------------
+   THE TABLES
+   ------------------------------------------------------------------ */
+
+const plate = (id, label, at, size) => ({ id, kind: 'atomplate', label, at, size, noRun: true, dials: {}, props: { backdrop: true } });
+const orb = (id, type, atom, at, o = {}) => orbital(id, type, atom, at, o);
+
+/** The four orbitals of carbon's valence shell as the atom stands: a full s, two single p electrons and an empty p. */
+const carbon = (atom, at, ids, o = {}) => [
+  orb(ids[0], 's', atom, { x: at.x - 14, y: at.y - 10 }, { e: 2, label: 's' }),
+  orb(ids[1], 'p', atom, { x: at.x + 14, y: at.y - 10 }, { e: 1, axis: 'x', label: 'px' }),
+  orb(ids[2], 'p', atom, { x: at.x - 14, y: at.y + 12 }, { e: 1, axis: 'y', label: 'py' }),
+  orb(ids[3], 'p', atom, { x: at.x + 14, y: at.y + 12 }, { e: o.pzE ?? 0, axis: 'z', label: 'pz' })
+];
+
+const RAIL_Y = 54;
+const TWOLOBE = [['two', 'Two lobes'], ['three', 'Three lobes'], ['four', 'Four lobes']];
+
+/** Three molecule cards in a row and the trays under them, one for each number of lobes. */
+function sortTable(mols) {
+  return domainTable({
+    pieces: mols.map(([id, mol], i) => molCard(id, mol, { x: 30 + i * 45, y: 53 }, { show: ['arms'] })),
+    zones: { trays: TWOLOBE.map(([id, label], i) => ({ id, label, at: { x: 26 + i * 50, y: 17 }, size: { w: 48, h: 26 }, cell: 24 })) }
+  });
+}
+
+const LOBES = { two: 2, three: 3, four: 4 };
+const sortedTo = (t, ids) => Object.fromEntries(ids.map(id => [id, Object.keys(LOBES).find(z => t.pieces[id].zone === `tray:${z}`) || null]));
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -62,29 +87,30 @@ export const STAGES = [
     title: 'The Puzzle',
     briefing: {
       speaker: SPEAKER,
-      body: 'Compare the electron orbitals carbon has available with the four identical bonds found in methane.'
+      body: 'Each orbital is drawn with the electrons it holds. Drop a hydrogen atom on an orbital to try to bond with it.'
     },
-    prompt: 'How do carbon’s unhybridized valence electrons compare with the four equivalent bonds in methane?',
-    controls: [],
-    rigs: [mixer('a', 'CARBON', { unpaired: 2, bonds: 4, noMix: true, note: 'a carbon atom as it stands, beside the bonds in CH₄' })],
-    widget: {
-      type: 'choice', label: 'Carbon',
-      options: [
-        { id: 'puzzle', label: 'Its orbitals allow two bonds, but methane has four' },
-        { id: 'four', label: 'Its orbitals allow four bonds, and methane has four' },
-        { id: 'two', label: 'Its orbitals allow two bonds, and methane has two' },
-        { id: 'rev', label: 'Its orbitals allow four bonds, but methane has two' }
-      ]
-    },
+    prompt: 'Bond hydrogen atoms to carbon through its orbitals as they stand, as many as they allow.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [
+        ...carbon('c', { x: 36, y: 32 }, ['cs', 'cpx', 'cpy', 'cpz']),
+        ...[1, 2, 3, 4].map(i => orb(`h${i}`, 's', `h${i}`, { x: 98, y: 12 + (i - 1) * 14 }, { e: 1, label: 'H' })),
+        molCard('ref', 'CH4', { x: 132, y: 30 }, { show: ['arms'] })
+      ],
+      fixtures: [plate('carbon', 'Carbon', { x: 36, y: 32 }, { w: 64, h: 56 })]
+    }),
     hints: [
-      'Read the plate: it shows what carbon has to bond with and how many bonds methane has.',
-      'Compare the number of electrons standing alone in a box with the number of bonds methane needs.',
+      'Drop a hydrogen atom on each of carbon\'s orbitals in turn and see which of them take it.',
+      'Compare the orbitals that take a hydrogen atom with the single electrons drawn in them, and with the four bonds the methane card shows.',
       'Each bond needs one electron from the carbon, so count how many bonds the single electrons allow.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a statement.' };
-      if (state.choice === 'puzzle') return { ok: true };
-      return { ok: false, msg: 'Read both figures on the plate, and match each to the right side of the statement.' };
+      const t = state.table;
+      const mine = bondsBuilt(t).pairs.filter(p => p.a === 'c' || p.b === 'c').length;
+      const room = Object.values(t.pieces).filter(p => p.kind === 'orb' && p.props.atom === 'c' && p.props.e === 1).length;
+      if (!mine) return { ok: false, notYet: true, msg: 'Bond a hydrogen atom to one of the carbon\'s orbitals.' };
+      if (mine >= room) return { ok: true };
+      return { ok: false, msg: 'Another orbital of the carbon still holds a single electron, so it can take a hydrogen atom.' };
     },
     reward: {
       log: 'The orbitals as they stand fall short.',
@@ -94,70 +120,62 @@ export const STAGES = [
   },
 
   /* ---------------------------------------------------------------- 2 */
-  {
-    title: 'Four Lobes',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The mixer blends carbon\'s s orbital with some of its p orbitals and shows the lobes that come out.'
-    },
-    prompt: 'Which blend gives carbon one lobe for each of methane\'s bonds?',
-    controls: ['mix'],
-    rigs: [
-      mixer('a', 'CARBON', { want: 4, note: 'the carbon of CH₄, with four hydrogen atoms to bond' }),
-      show('m1', 'CH₄', 'CH4', 'methane: four single bonds = four domains')
-    ],
-    widget: { type: 'none' },
-    hints: [
-      'Try each blend key and read how many lobes the plate shows.',
-      'Compare the number of lobes with the number of arms the plate says it needs.',
-      'Blend the s orbital with enough p orbitals to make one lobe for every arm.'
-    ],
-    check(state) {
-      if (!state.mix) return { ok: false, notYet: true, msg: 'Blend some orbitals.' };
-      if (state.mix === 3) return { ok: true };
-      return { ok: false, msg: 'The lobes do not match the arms the plate needs.' };
-    },
-    reward: {
-      log: 'An s orbital and three p orbitals make four.',
-      title: 'Hybrid Orbital, sp³',
-      body: 'Blending one s orbital with three p orbitals gives four identical sp3 hybrid orbitals pointing at 109.5 degrees. Lone pairs occupy hybrid orbitals just as bonding pairs do.'
-    }
-  },
+  (() => {
+    const mx = mixbowl('mx', { x: 50, y: 22 }, { hub: 'C' });
+    return {
+      title: 'Four Lobes',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'The bowl blends the orbitals dropped in it, and the lobes that come out are drawn beside it.'
+      },
+      prompt: 'Mix carbon\'s orbitals to give it one lobe for each of the four bonds in methane.',
+      widget: { type: 'table', label: 'The bench' },
+      table: domainTable({
+        pieces: [
+          orb('os', 's', 'c', { x: 14, y: RAIL_Y }, { e: 2, label: 's' }), orb('opx', 'p', 'c', { x: 34, y: RAIL_Y }, { e: 1, axis: 'x', label: 'px' }),
+          orb('opy', 'p', 'c', { x: 54, y: RAIL_Y }, { e: 1, axis: 'y', label: 'py' }), orb('opz', 'p', 'c', { x: 74, y: RAIL_Y }, { e: 0, axis: 'z', label: 'pz' }),
+          molCard('ref', 'CH4', { x: 126, y: 24 }, { show: ['arms'] })
+        ],
+        zones: { containers: [mx.bowl] },
+        fixtures: [mx.fixture]
+      }),
+      hints: [
+        'Drop the s orbital and some of the p orbitals in the bowl and count the lobes that come out.',
+        'Compare the number of lobes with the number of arms on the methane card.',
+        'Blend the s orbital with enough p orbitals to make one lobe for every arm.'
+      ],
+      check(state) {
+        const r = bowlRead(state.table, 'mx');
+        if (!r.held.length) return { ok: false, notYet: true, msg: 'Put some orbitals in the bowl.' };
+        const want = molRead(state.table.pieces.ref).domains;
+        if (r.lobes === want) return { ok: true };
+        return { ok: false, msg: 'The lobes that come out do not match the arms on the methane card.' };
+      },
+      reward: {
+        log: 'An s orbital and three p orbitals make four.',
+        title: 'Hybrid Orbital, sp³',
+        body: 'Blending one s orbital with three p orbitals gives four identical sp3 hybrid orbitals pointing at 109.5 degrees. Lone pairs occupy hybrid orbitals just as bonding pairs do.'
+      }
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Count the Lobes',
-    prompt: 'Sort each molecule by how many hybrid lobes its central atom needs.',
-    controls: [],
-    rigs: [
-      show('m1', 'NH₃', 'NH3', 'ammonia'),
-      show('m2', 'H₂O', 'H2O', 'water'),
-      show('m3', 'C₂H₄', 'C2H4', 'ethene: look at one carbon')
-    ],
-    widget: {
-      type: 'bins',
-      bins: [
-        { id: 'two', label: 'Two lobes', note: '' },
-        { id: 'three', label: 'Three lobes', note: '' },
-        { id: 'four', label: 'Four lobes', note: '' }
-      ],
-      rows: [
-        { id: 'm1', label: 'NH₃' },
-        { id: 'm2', label: 'H₂O' },
-        { id: 'm3', label: 'C₂H₄' }
-      ]
-    },
+    prompt: 'Tray each molecule by how many hybrid lobes its central atom needs.',
+    widget: { type: 'table', label: 'The bench' },
+    table: sortTable([['a', 'NH3'], ['b', 'H2O'], ['c', 'C2H4']]),
     hints: [
-      'Look at the arms on each plate and recall how many lobes the mixer made for each number of arms.',
-      'Compare the plates with lone pairs against the plates with only bonds.',
+      'Read the arms each card counts and recall how many lobes the bowl made for each number of arms.',
+      'Compare the cards with lone pairs on them with the cards that have only bonds.',
       'Count every arm on the central atom, whatever the arm is made of.'
     ],
     check(state) {
-      const want = { m1: 'four', m2: 'four', m3: 'three' };
-      const b = state.bins || {};
-      if (Object.keys(want).some(k => !b[k])) return { ok: false, notYet: true, msg: 'File all three molecules.' };
-      const wrong = Object.keys(want).find(k => b[k] !== want[k]);
-      if (wrong) return { ok: false, msg: `${{ m1: 'NH₃', m2: 'H₂O', m3: 'C₂H₄' }[wrong]} is filed wrongly: count the arms on its central atom, including any that are not bonds.` };
+      const t = state.table;
+      const where = sortedTo(t, ['a', 'b', 'c']);
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Tray all three molecules.' };
+      const wrong = ['a', 'b', 'c'].find(id => LOBES[where[id]] !== molRead(t.pieces[id]).domains);
+      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is under the wrong heading: count the arms on its central atom, including any that are not bonds.` };
       return { ok: true };
     },
     reward: {
@@ -170,37 +188,20 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Fewer Lobes',
-    prompt: 'Sort each molecule by how many hybrid lobes its central atom needs.',
-    controls: [],
-    rigs: [
-      show('m1', 'CO₂', 'CO2', 'carbon dioxide'),
-      show('m2', 'BF₃', 'BF3', 'boron trifluoride'),
-      show('m3', 'HCN', 'HCN', 'hydrogen cyanide')
-    ],
-    widget: {
-      type: 'bins',
-      bins: [
-        { id: 'two', label: 'Two lobes', note: '' },
-        { id: 'three', label: 'Three lobes', note: '' },
-        { id: 'four', label: 'Four lobes', note: '' }
-      ],
-      rows: [
-        { id: 'm1', label: 'CO₂' },
-        { id: 'm2', label: 'BF₃' },
-        { id: 'm3', label: 'HCN' }
-      ]
-    },
+    prompt: 'Tray each molecule by how many hybrid lobes its central atom needs.',
+    widget: { type: 'table', label: 'The bench' },
+    table: sortTable([['a', 'CO2'], ['b', 'BF3'], ['c', 'HCN']]),
     hints: [
-      'Look at the arms on each plate and recall how many lobes the mixer made for each number of arms.',
+      'Read the arms each card counts and recall how many lobes the bowl made for each number of arms.',
       'Compare how a double or triple bond is drawn with how single bonds are drawn.',
       'A double or triple bond is a single arm, however many pairs it holds.'
     ],
     check(state) {
-      const want = { m1: 'two', m2: 'three', m3: 'two' };
-      const b = state.bins || {};
-      if (Object.keys(want).some(k => !b[k])) return { ok: false, notYet: true, msg: 'File all three molecules.' };
-      const wrong = Object.keys(want).find(k => b[k] !== want[k]);
-      if (wrong) return { ok: false, msg: `${{ m1: 'CO₂', m2: 'BF₃', m3: 'HCN' }[wrong]} is filed wrongly: count the arms on its central atom, and remember what a multiple bond counts as.` };
+      const t = state.table;
+      const where = sortedTo(t, ['a', 'b', 'c']);
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Tray all three molecules.' };
+      const wrong = ['a', 'b', 'c'].find(id => LOBES[where[id]] !== molRead(t.pieces[id]).domains);
+      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is under the wrong heading: count the arms on its central atom, and remember what a multiple bond counts as.` };
       return { ok: true };
     },
     reward: {
@@ -213,28 +214,31 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Second Bond',
-    prompt: 'How does the second bond form between the two carbon atoms in ethene?',
-    controls: [],
-    rigs: [twist('a', 'C₂H₄', 'double', 'two carbon atoms joined by a double bond')],
-    widget: {
-      type: 'choice', label: 'The second bond',
-      options: [
-        { id: 'side', label: 'The leftover p orbitals overlap side to side' },
-        { id: 'end', label: 'A second pair of hybrid lobes overlaps end to end' },
-        { id: 'give', label: 'An electron is handed from one carbon to the other' },
-        { id: 'round', label: 'The s orbitals overlap again' }
-      ]
-    },
+    prompt: 'Build the second bond between the two carbon atoms in ethene from their orbitals.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [
+        orb('a1', 'sp2', 'c1', { x: 54, y: 32 }, { e: 1, to: 'c2', dir: 0.3 }), orb('a2', 'sp2', 'c1', { x: 22, y: 18 }, { e: 1, to: 'h', dir: -2.4 }),
+        orb('a3', 'sp2', 'c1', { x: 22, y: 46 }, { e: 1, to: 'h', dir: 2.4 }), orb('ap', 'p', 'c1', { x: 38, y: 32 }, { e: 1, axis: 'z', to: 'c2', label: 'p' }),
+        orb('b1', 'sp2', 'c2', { x: 96, y: 32 }, { e: 1, to: 'c1', dir: Math.PI - 0.3 }), orb('b2', 'sp2', 'c2', { x: 128, y: 18 }, { e: 1, to: 'h', dir: -0.7 }),
+        orb('b3', 'sp2', 'c2', { x: 128, y: 46 }, { e: 1, to: 'h', dir: 0.7 }), orb('bp', 'p', 'c2', { x: 112, y: 32 }, { e: 1, axis: 'z', to: 'c1', label: 'p' })
+      ],
+      fixtures: [plate('c1', 'Carbon 1', { x: 38, y: 32 }, { w: 68, h: 56 }), plate('c2', 'Carbon 2', { x: 112, y: 32 }, { w: 68, h: 56 })]
+    }),
     hints: [
-      'Look at where the overlap is drawn on the plate.',
-      'Compare the line along the bond with the rings above and below it.',
-      'The first bond lies along the line between the atoms, so look for what lies off it.'
+      'Drop an orbital of one carbon on an orbital of the other to see whether the two overlap.',
+      'Compare which orbitals point at each other with the orbital each carbon has left over.',
+      'The first bond lies along the line between the atoms, so look for the orbitals that lie off it.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose how it is built.' };
-      if (state.choice === 'side') return { ok: true };
-      if (state.choice === 'end') return { ok: false, msg: 'Each hybrid lobe is already used in the bond along the line. Look at what the plate shows above and below it.' };
-      return { ok: false, msg: 'Look at where the plate draws the overlap that is not on the line between the atoms.' };
+      const b = bondsBuilt(state.table);
+      const between = b.pairs.filter(p => (p.a === 'c1' && p.b === 'c2') || (p.a === 'c2' && p.b === 'c1'));
+      const end = between.some(p => p.type === 'sigma');
+      const side = between.some(p => p.type === 'pi');
+      if (!between.length) return { ok: false, notYet: true, msg: 'Overlap an orbital of one carbon with an orbital of the other.' };
+      if (end && side) return { ok: true };
+      if (side) return { ok: false, msg: 'The first bond along the line between the two atoms is not made yet.' };
+      return { ok: false, msg: 'The two atoms are joined end to end already. Look at the orbital each carbon has left over.' };
     },
     reward: {
       log: 'End to end, then side to side.',
@@ -246,27 +250,31 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Counting Bonds',
-    prompt: 'How many sigma bonds and pi bonds are present in hydrogen cyanide?',
-    controls: ['protractor'],
-    rigs: [show('a', 'HCN', 'HCN', 'carbon with a hydrogen atom and a nitrogen atom joined by a triple bond')],
-    widget: {
-      type: 'choice', label: 'In HCN',
-      options: [
-        { id: '2-2', label: '2 sigma and 2 pi' },
-        { id: '3-1', label: '3 sigma and 1 pi' },
-        { id: '2-1', label: '2 sigma and 1 pi' },
-        { id: '1-3', label: '1 sigma and 3 pi' }
+    prompt: 'Build every bond in hydrogen cyanide from the orbitals of its three atoms.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [
+        orb('h', 's', 'h', { x: 18, y: 34 }, { e: 1, label: 'H' }),
+        orb('cl_h', 'sp', 'c', { x: 46, y: 32 }, { e: 1, to: 'h', dir: Math.PI }), orb('cl_n', 'sp', 'c', { x: 76, y: 32 }, { e: 1, to: 'n', dir: 0 }),
+        orb('cpy', 'p', 'c', { x: 61, y: 15 }, { e: 1, axis: 'y', to: 'n', label: 'py' }), orb('cpz', 'p', 'c', { x: 61, y: 49 }, { e: 1, axis: 'z', to: 'n', label: 'pz' }),
+        orb('nl_c', 'sp', 'n', { x: 104, y: 32 }, { e: 1, to: 'c', dir: Math.PI }), orb('nl_x', 'sp', 'n', { x: 132, y: 32 }, { e: 2, dir: 0 }),
+        orb('npy', 'p', 'n', { x: 118, y: 15 }, { e: 1, axis: 'y', to: 'c', label: 'py' }), orb('npz', 'p', 'n', { x: 118, y: 49 }, { e: 1, axis: 'z', to: 'c', label: 'pz' })
+      ],
+      fixtures: [
+        plate('ph', 'Hydrogen', { x: 18, y: 32 }, { w: 30, h: 56 }), plate('pc', 'Carbon', { x: 61, y: 32 }, { w: 52, h: 56 }), plate('pn', 'Nitrogen', { x: 118, y: 32 }, { w: 52, h: 56 })
       ]
-    },
+    }),
     hints: [
-      'Read the arms the plate shows, and the bond joining each to carbon.',
-      'Compare the number of arms with the number of bonds each arm is made of.',
-      'Every arm holds one sigma bond, and each pair past the first in it is a pi bond.'
+      'Drop each orbital that holds a single electron on the orbital of another atom that points back at it.',
+      'Compare the orbitals that join end to end with the ones that join side by side, and count what is left over.',
+      'Every arm holds one end-to-end bond, and each pair past the first in it is a side-by-side bond.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a count.' };
-      if (state.choice === '2-2') return { ok: true };
-      return { ok: false, msg: 'Count the arms for the sigma bonds, then count the extra pairs in each arm for the pi bonds.' };
+      const b = bondsBuilt(state.table);
+      const real = countSigmaPi('HCN');
+      if (!b.pairs.length) return { ok: false, notYet: true, msg: 'Overlap some of the orbitals.' };
+      if (b.sigma === real.sigma && b.pi === real.pi) return { ok: true };
+      return { ok: false, msg: 'An orbital that holds a single electron has not been overlapped yet, so a bond is still missing.' };
     },
     reward: {
       log: 'Each arm is one sigma bond.',
@@ -278,26 +286,24 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Twisting',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'A bond torsion tool is now online. Press "Twist" to test whether atoms can spin freely around each type of bond.'
-    },
-    prompt: 'Which molecule allows free rotation around the carbon-carbon bond, ethane or ethene?',
-    controls: ['twist'],
-    rigs: [
-      twist('a', 'C₂H₆', 'single', 'two carbon atoms joined by a single bond'),
-      twist('b', 'C₂H₄', 'double', 'two carbon atoms joined by a double bond')
-    ],
-    widget: { type: 'choice', label: 'Turns freely', options: [{ id: 'a', label: 'C₂H₆' }, { id: 'b', label: 'C₂H₄' }, { id: 'both', label: 'Both' }] },
+    prompt: 'Turn the far end of each bond a quarter turn, if it will.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      fixtures: [twist('tw1', { x: 37, y: 32 }, 'single', { label: 'C₂H₆', size: { w: 62, h: 50 } }), twist('tw2', { x: 105, y: 32 }, 'double', { label: 'C₂H₄', size: { w: 62, h: 50 } })]
+    }),
     hints: [
-      'Press Twist and watch what each plate does.',
-      'Compare which end moves on each plate when it is twisted.',
-      'Pick the one whose far end keeps turning when you twist it.'
+      'Turn the far end of each bond with its dial and watch what each does.',
+      'Compare which dial stays where you put it and which springs back.',
+      'The bond whose far end keeps turning when you twist it is the one that lets it.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a molecule.' };
-      if (state.choice === 'a') return { ok: true };
-      return { ok: false, msg: 'Press Twist and watch which plate lets its far end turn and which will not.' };
+      const t = state.table;
+      const single = twistRead(t, 'tw1');
+      const double = twistRead(t, 'tw2');
+      if (!single.angle && !double.tried) return { ok: false, notYet: true, msg: 'Turn the far end of a bond.' };
+      if (single.angle !== 90) return { ok: false, msg: 'One far end is not a quarter turn round, though its bond would let it go there.' };
+      if (!double.tried) return { ok: false, notYet: true, msg: 'Try turning the other bond\'s far end as well.' };
+      return { ok: true };
     },
     reward: {
       log: 'A single bond turns; a double bond holds.',
@@ -307,40 +313,50 @@ export const STAGES = [
   },
 
   /* ---------------------------------------------------------------- 8 */
-  {
-    title: 'Past Four',
-    prompt: 'How many atomic orbitals must each central atom blend to accommodate five and six domains?',
-    controls: ['protractor'],
-    rigs: [
-      show('a', 'PCl₅', 'PCl5', 'phosphorus with five chlorine atoms'),
-      show('b', 'SF₆', 'SF6', 'sulfur with six fluorine atoms')
-    ],
-    widget: {
-      type: 'choice', label: 'Orbitals to blend',
-      options: [
-        { id: 'dd', label: 'Five for PCl₅ (s, three p and one d) and six for SF₆ (s, three p and two d)' },
-        { id: 'four', label: 'Four for both, an s orbital and three p orbitals' },
-        { id: 'swap', label: 'Six for PCl₅ and five for SF₆' },
-        { id: 'three', label: 'Three for PCl₅ and four for SF₆' }
-      ]
-    },
-    hints: [
-      'Count the arms on each hub.',
-      'Compare the lobes each hub needs with the most that an s orbital and three p orbitals can make.',
-      'Each arm needs one lobe, so count the orbitals that must join the blend beyond the four already used.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose an answer.' };
-      if (state.choice === 'dd') return { ok: true };
-      if (state.choice === 'four') return { ok: false, msg: 'An s orbital and three p orbitals can make four lobes and no more, and these hubs hold more arms.' };
-      return { ok: false, msg: 'Match the number of orbitals to the number of arms on each hub.' };
-    },
-    reward: {
-      log: 'The d orbitals join the blend.',
-      title: 'sp³d and sp³d²',
-      body: 'Five domains need five hybrid orbitals and six need six, so d orbitals join the blend: sp³d for PCl₅ and sp³d² for SF₆. This goes beyond the exam.'
-    }
-  }
+  (() => {
+    const held = (prefix, atom, bowl) => ['s', 'px', 'py', 'pz'].map(k => ({
+      ...orb(`${prefix}${k}`, k[0], atom, { x: 0, y: 0 }, { e: k === 's' ? 2 : k === 'pz' ? 0 : 1, ...(k[0] === 'p' ? { axis: k[1] } : {}), label: k }), zone: `container:${bowl}-bowl`
+    }));
+    const a = mixbowl('ma', { x: 50, y: 16 }, { size: { w: 98, h: 32 }, hub: 'P', label: 'Mixer for PCl₅', dy: 3, out: { x: 76, y: 17, L: 10 } });
+    const b = mixbowl('mb', { x: 50, y: 48 }, { size: { w: 98, h: 32 }, hub: 'S', label: 'Mixer for SF₆', dy: 3, out: { x: 76, y: 49, L: 10 } });
+    return {
+      title: 'Past Four',
+      prompt: 'Mix the orbitals of each central atom to give it one lobe for every arm on its card.',
+      widget: { type: 'table', label: 'The bench' },
+      table: domainTable({
+        pieces: [
+          ...held('a', 'P', 'ma'), ...held('b', 'S', 'mb'),
+          ...[1, 2, 3, 4].map(i => ({ ...orb(`d${i}`, 'd', i < 3 ? 'P' : 'S', { x: 0, y: 0 }, { e: 0, label: 'd' }), zone: 'tray:td' })),
+          molCard('ca', 'PCl5', { x: 111, y: 16 }, { show: ['arms'] }), molCard('cb', 'SF6', { x: 111, y: 48 }, { show: ['arms'] })
+        ],
+        zones: {
+          containers: [a.bowl, b.bowl],
+          trays: [{ id: 'td', label: 'd orbitals', at: { x: 137, y: 32 }, size: { w: 26, h: 26 }, cell: 13 }]
+        },
+        fixtures: [a.fixture, b.fixture]
+      }),
+      hints: [
+        'Read the lobes each bowl makes with the orbitals it holds, then add more orbitals from the tray one at a time.',
+        'Compare the lobes each bowl makes with the arms on its card, and with the most an s orbital and three p orbitals can make.',
+        'Each arm needs one lobe, so count the orbitals that must join the blend beyond the four already used.'
+      ],
+      check(state) {
+        const t = state.table;
+        const ra = bowlRead(t, 'ma');
+        const rb = bowlRead(t, 'mb');
+        if (ra.d + rb.d === 0) return { ok: false, notYet: true, msg: 'Add orbitals from the tray to a bowl.' };
+        const wantA = molRead(t.pieces.ca).domains;
+        const wantB = molRead(t.pieces.cb).domains;
+        if (ra.lobes === wantA && rb.lobes === wantB) return { ok: true };
+        return { ok: false, msg: 'A bowl\'s lobes do not match the arms on its card. An s orbital and three p orbitals can make four lobes and no more.' };
+      },
+      reward: {
+        log: 'The d orbitals join the blend.',
+        title: 'sp³d and sp³d²',
+        body: 'Five domains need five hybrid orbitals and six need six, so d orbitals join the blend: sp³d for PCl₅ and sp³d² for SF₆. This goes beyond the exam.'
+      }
+    };
+  })()
 ];
 
 /* ------------------------------------------------------------------
@@ -426,34 +442,46 @@ export const PRACTICE = [
 ];
 
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
+   direct actions, by drag and by two taps. An orbital is dropped on another (`bond`), in a bowl (`mix`) or a card in a tray
+   (`into`), a knob is turned (`turn`): nothing here says what a bowl makes or whether a bond turns.
    ------------------------------------------------------------------ */
-function blankState() { return { mix: null }; }
 
+const bond = (a, b) => ({ join: [a, b] });
+const mix = (id, bowl) => ({ place: { piece: id, to: `container:${bowl}-bowl` } });
+const into = (id, zone) => ({ place: { piece: id, to: `tray:${zone}` } });
+const turn = (fixture, value) => ({ setDial: { fixture, dial: 'turn', value } });
+
+/** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  { choice: 'puzzle' },
-  { mix: 3 },
-  { bins: { m1: 'four', m2: 'four', m3: 'three' } },
-  { bins: { m1: 'two', m2: 'three', m3: 'two' } },
-  { choice: 'side' },
-  { choice: '2-2' },
-  { choice: 'a' },
-  { choice: 'dd' }
+  [bond('h1', 'cpx'), bond('h2', 'cpy')],
+  ['os', 'opx', 'opy', 'opz'].map(id => mix(id, 'mx')),
+  [into('a', 'four'), into('b', 'four'), into('c', 'three')],
+  [into('a', 'two'), into('b', 'three'), into('c', 'two')],
+  [bond('a1', 'b1'), bond('ap', 'bp')],
+  [bond('h', 'cl_h'), bond('cl_n', 'nl_c'), bond('cpy', 'npy'), bond('cpz', 'npz')],
+  [turn('tw1', 90), turn('tw2', 90)],
+  [mix('d1', 'ma'), mix('d3', 'mb'), mix('d4', 'mb')]
 ];
 
+/** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { choice: 'two' },
-  { mix: 2 },
-  { bins: { m1: 'four', m2: 'three', m3: 'three' } },
-  { bins: { m1: 'two', m2: 'two', m3: 'two' } },
-  { choice: 'end' },
-  { choice: '3-1' },
-  { choice: 'b' },
-  { choice: 'four' }
+  [bond('h1', 'cpx')],
+  [mix('os', 'mx'), mix('opx', 'mx')],
+  [into('a', 'three'), into('b', 'four'), into('c', 'three')],
+  [into('a', 'two'), into('b', 'two'), into('c', 'two')],
+  [bond('a1', 'b1')],
+  [bond('h', 'cl_h'), bond('cl_n', 'nl_c')],
+  [turn('tw1', 60), turn('tw2', 90)],
+  [mix('d3', 'mb'), mix('d4', 'mb')]
 ];
 
+function blankState() { return {}; }
+
+/** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  return { ...blankAnswer(STAGES[i]), ...blankState(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -461,85 +489,13 @@ export function stateFor(i, overrides) {
    ================================================================== */
 
 export function mount(container, ctx) {
-  let rig = null;
-  let runner = null;
-
-  function paintAll() {
-    paintRigHand(runner.frame.el.controls, rig.cfg.hand);
-    paintMix(runner.frame.el.controls, runner.state.mix);
-  }
-
-  /** Every warden answers the plate it was made from: the lobes blended, the arms held, the bond twisted. */
-  function reactAll(quiet = false, twisted = null) {
-    for (const r of runner.stage.rigs) {
-      let probe = null;
-      if (r.head === 'mixer' && runner.state.mix) probe = { rig: 'mix', p: runner.state.mix };
-      else if (r.head === 'show') probe = { rig: 'arms', arms: rig.armsOf(r.id) };
-      else if (r.head === 'twist' && twisted === r.id) probe = { rig: 'twist', bond: r.bond };
-      if (probe) runner.frame.foeReact(r.id, probe, quiet);
-    }
-  }
-
-  function onProbe(hit) {
-    if (hit.kind === 'hand') { paintAll(); return; }
-    if (hit.kind === 'mix') {
-      runner.state.mix = hit.p;
-      const m = planMix(hit.p);
-      runner.readout('Mixer // blended', `${m.lobes} lobes, ${m.leftoverP} ${m.leftoverP === 1 ? 'orbital' : 'orbitals'} left over.`);
-      reactAll(); paintAll();
-    } else if (hit.kind === 'twist') {
-      runner.readout('Bond // twisted', hit.free ? 'The far end turns.' : 'The far end will not turn.');
-      reactAll(false, hit.plateId);
-    } else {
-      const d = describeRig(hit);
-      if (d.body) runner.readout(d.head, d.body);
-      paintAll();
-    }
-  }
-
-  function onTool(tool) {
-    if (tool.startsWith('hand:')) {
-      rig.setHand(tool.slice(5));
-      paintAll();
-    } else if (tool.startsWith('mix:')) {
-      const p = Number(tool.slice(4));
-      rig.setMix(p);
-      onProbe({ kind: 'mix', p });
-    } else if (tool === 'twist') {
-      for (const r of runner.stage.rigs) {
-        const res = rig.twist(r.id);
-        if (res) onProbe({ kind: 'twist', plateId: r.id, ...res });
-      }
-    } else if (tool === 'turn') {
-      rig.turn();
-    }
-  }
-
-  function onLoad(stage, i, r) {
-    rig.setPlates(stage.rigs, { mix: null });
-    rig.setSelectable(false);
-    const parts = [];
-    if (stage.controls.includes('mix')) parts.push(...mixKeys());
-    if (stage.controls.includes('twist')) parts.push(...twistKeys());
-    if (stage.controls.includes('protractor')) parts.push(...hubKeys({ rigs: [] }, { clear: false }).filter(p => p.includes('Protractor')));
-    r.setControls(parts, onTool);
-    paintAll();
-    r.readout(null, null, {
-      idleHead: 'Plate // standby',
-      idle: stage.controls.includes('mix') ? 'Pick a blend.' : stage.controls.includes('twist') ? 'Press Twist.' : 'Read the plate.'
-    });
-    reactAll(true);
-  }
-
-  runner = createRunner(container, ctx, {
+  const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    setup: r => { rig = DomainRig(r.frame.instrumentHost, { onProbe }); },
-    onLoad,
-    onDispose: () => rig?.dispose()
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
   runner.start();
   return { dispose: () => runner.dispose() };
 }
 
-export { planDomains, countSigmaPi, RIG_MOLECULES, planTwist };
+/* Exported for `verify:learn`, which holds every graded figure to the planners. */
+export { planMix, planBlend, planTwist, planDomains, countSigmaPi, RIG_MOLECULES, bondsBuilt, bowlRead, molRead };

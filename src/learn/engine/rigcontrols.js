@@ -1,7 +1,7 @@
 /**
  * rigcontrols.js — The keys and the readout text the domain rig's quests share.
  *
- * `q6-shape`, `q7-polarity` and `q8-hybrid` all work the same rig. The DOM keys
+ * `boss-warden` works the domain rig (`q6-shape`, `q7-polarity` and `q8-hybrid` were tabletops from T3b: `table/kits/domain.js`). The DOM keys
  * here are the source of truth for what is held at every tier (at T4 they are
  * mirrored onto the bench as real keys, `bench-keys.js`), and the tray drawn on
  * the plate does the same job for a finger on the picture. Both land in

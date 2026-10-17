@@ -137,6 +137,7 @@ export const STAGES = [
     ],
     widget: {
       type: 'order', label: 'Fastest first',
+      rail: { first: 'Fastest', last: 'Slowest' },
       items: [{ id: 'a', label: 'Cylinder A' }, { id: 'b', label: 'Cylinder B' }, { id: 'c', label: 'Cylinder C' }]
     },
     hints: [

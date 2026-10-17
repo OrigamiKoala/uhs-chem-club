@@ -5,6 +5,15 @@
 > The instruments, quests and foes here are unchanged. The layout, the hosts, the mine and the light are recorded in
 > `bench-integration.md` (P2/P3 progress note); the generator is `tools/gen-ligar-layout.mjs`, not the `.py` named below.
 
+> **Superseded again, 2026-10-17 (T1b to T3c of `bench-tabletop.md`).** All nine Ligar quests and the Warden are now
+> TABLETOPS (kits `atoms`, `bonds`, `domain` and `mo` under `src/learn/table/kits/`), so the "Instrument" and "Foe" columns
+> below describe what they replaced. The bond bench, pair board, domain rig and join bench (and `boxrack.js`'s `molecular`
+> layout) serve no Ligar quest any more and wait for T7 to retire them. What the mine gained: two field points (`chip` at the
+> ore drift's seam, `sump` at the sump's draw-off), a lamp over the plate of every underground bench and an ore tub with a pick
+> at its side, and a hoist chamber whose winze and rope now stand at the BACK of the chamber (behind the plate) so the
+> leaned-in camera's air is clear (`tools/bay-legacy.json` has no Ligar line). The Warden is five table phases with one foe
+> in the table's corner; its ground (`BOSS_ARENA_SPOTS['boss-warden']`) is unchanged.
+
 **Status: built, 2026-10-10.** Benches three to nine, the Basalt Warden, the four
 instruments they stand on and the five stations that hold them on the ground. This is the
 record of what was built and every place it parted from the plan in

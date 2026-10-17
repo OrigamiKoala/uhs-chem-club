@@ -261,14 +261,34 @@ export function buildWaveTank(w, site) {
     k.box(g, [1.2 * s, 0.6 * s, 0.9 * s], M.carved, [x, 0.3 * s, z], [0, r, 0], true);
   }
 
+  // THE CREST RECORDER: a chart recorder on a post in front of the flume's gutter, its pen riding a float in the water through a slot in
+  // the glass and drawing the surface on a paper strip. The strip it feeds out is the field point: `[E]` takes a length of the chart, and
+  // the same wave, drawn in water, is on the bench's table. A real piece of this host, to the right of the bay.
+  {
+    const RX = 3.7, RZ = -2.2;
+    k.footing(g, RX, RZ, 0.3);
+    k.cyl(g, [0.04, 0.05, 0.85, 8], M.darkSteel, [RX, 0.46, RZ], null, true);
+    k.box(g, [0.62, 0.34, 0.34], M.caseDark, [RX, 1.08, RZ], null, true);
+    k.box(g, [0.48, 0.1, 0.02], M.paper, [RX, 1.0, RZ + 0.18]);            // the strip, fed out of the case's lip
+    k.box(g, [0.5, 0.012, 0.16], M.paper, [RX, 0.93, RZ + 0.27], [-0.5, 0, 0]);
+    k.strut(g, [RX, 1.2, RZ - 0.17], [RX, 1.55, Z0 + 1.2], 0.018, M.darkSteel);   // the arm to the float in the water
+    k.cyl(g, [0.07, 0.07, 0.05, 10], M.steel, [RX, 1.36, Z0 + 1.2]);
+    k.tag(g, 'CHART 1', { w: 0.42, h: 0.16 }, [RX, 1.14, RZ + 0.18]);
+  }
+  const fieldPoints = [{
+    id: 'flume', label: 'Flume Strip', lx: 3.7, ly: 1.0, lz: -2.0, half: [0.42, 0.4, 0.4],
+    stand: { lx: 4.1, lz: -1.0 }
+  }];
+
   const colliders = [
     { lx: 0, lz: Z0, hw: 5.95, hd: 1.6 },
     { lx: 6.9, lz: Z0, hw: 0.45, hd: 0.45 },
     { lx: -6.3, lz: Z0, r: 0.25 }, { lx: 6.3, lz: Z0, r: 0.25 },
     { lx: -4.8, lz: -6.6, r: 0.42 },
+    { lx: 3.7, lz: -2.2, hw: 0.4, hd: 0.25 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
-  return { group: g, bench, benchLocal: [0, 0, 0], colliders };
+  return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
 /* ======================================================================
@@ -318,11 +338,26 @@ export function buildPhotocellMast(w, site) {
   k.box(g, [0.34, 0.26, 0.26], M.caseDark, [tx, 1.48, tz]);
   k.cyl(g, [0.07, 0.07, 0.2, 12], M.glassDark, [tx, 1.48, tz + 0.2], [Math.PI / 2, 0, 0]);
 
+  // THE PLATE CASE on a trestle beside the desk: the three metal plates the photocell is loaded with, each standing in its slot, a
+  // lid thrown back. The table's plates are these; the case is outside the bay, to the right of the desk.
+  {
+    const CX = 3.4, CZ = -0.4;
+    for (const dx of [-0.3, 0.3]) k.box(g, [0.08, 0.8, 0.5], M.darkSteel, [CX + dx, 0.4, CZ]);
+    k.box(g, [0.9, 0.1, 0.5], M.caseDark, [CX, 0.85, CZ], null, true);
+    k.box(g, [0.9, 0.5, 0.05], M.caseDark, [CX, 1.15, CZ - 0.25], [-0.25, 0, 0]);
+    [0x9aa3a8, 0xc6a24a, 0xb9bcc0].forEach((c, i) => {
+      const plate = new THREE.Mesh(w.own(new THREE.BoxGeometry(0.18, 0.2, 0.02)), w.own(new THREE.MeshStandardMaterial({ color: c, roughness: 0.4, metalness: 0.8 })));
+      plate.position.set(CX - 0.28 + i * 0.28, 1.0, CZ);
+      g.add(plate);
+    });
+  }
+
   // The work lantern, hung from the mast on a boom that reaches over the desk.
   k.box(g, [0.1, 0.1, 4.6], M.darkSteel, [0.5, 3.45, -1.9]);
   k.lamp(g, 0.5, 3.25, 0.3);
 
   const colliders = [
+    { lx: 3.4, lz: -0.4, hw: 0.5, hd: 0.3 },
     { lx: 0, lz: -4.9, hw: 0.95, hd: 0.95 },
     { lx: 0, lz: -3.35, hw: 0.95, hd: 0.55 },
     { lx: 4.3, lz: -1.2, hw: 0.42, hd: 0.38 },
@@ -378,6 +413,12 @@ export function buildSpectrographSled(w, site) {
   // The cover, half drawn over the camera end, and the lashing straps.
   k.box(g, [1.8, 0.7, 1.5], M.tarp, [2.2, 1.05, -5.6]);
   for (const sx of [-1, 1]) k.box(g, [0.04, 0.05, 4.2], M.rubber, [sx * 2.0, 0.58, -4.6]);
+
+  // THE TUBE RACK on the bed in front of the slit box: four gas tubes in a wooden rack and the spare filament lamp, the sources the
+  // spectrograph's socket takes.
+  k.box(g, [1.1, 0.06, 0.3], M.timber, [-1.5, 0.58, -2.75]);
+  for (let i = 0; i < 4; i++) k.cyl(g, [0.035, 0.035, 0.36, 8], M.glass, [-1.9 + i * 0.27, 0.79, -2.75]);
+  k.cyl(g, [0.07, 0.07, 0.12, 12], M.caseDark, [-0.78, 0.65, -2.75]);
 
   // Camp 1 round it: two tents, a drum and a crate left where they were set down.
   const camp = buildCamp(w.ctx, 0.3, 11);

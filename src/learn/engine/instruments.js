@@ -50,6 +50,8 @@ import { GasRig as GasRig2D } from './gasrig.js';
 import { GasRig3D } from './gasrig3d.js';
 import { Calorimeter as Calorimeter2D } from './calorimeter.js';
 import { Calorimeter3D } from './calorimeter3d.js';
+import { Table2D } from './table2d.js';
+import { Table3D } from './table3d.js';
 
 /** True when this client is drawing the Learn benches in three dimensions. */
 export function benchesAre3D() {
@@ -73,6 +75,10 @@ export function benchesAre3D() {
  * a beam fired through it and rings standing off it at fixed radii. Those are
  * real positions in space.
  *
+ * (T2, `bench-tabletop.md`: `q3-catalogue` and `q4-ledger` have since become tabletops, the card kit and the atom
+ * kit, played by `table3d.js`, and the hopper boss plays on tables too; the board and the core bench below are real
+ * instruments no quest plays now, kept and checked until T7 retires them.)
+ *
  * THE LAST THREE FOLLOW, AND TWO OF THEM ARE EASIER CASES THAN EITHER.
  *
  * `q4-ledger` is the core bench again, at site four, and needed nothing but its
@@ -83,6 +89,9 @@ export function benchesAre3D() {
  * filing clerk picks up and puts down. There is no picture of a card; there is
  * a card. `catalogue3d.js` builds it the whole way, and filing one is reaching
  * over and moving it — still two taps, never a drag.
+ *
+ * (T2, `bench-tabletop.md`: `q5-assay`, `q6-weigh` and `boss-hopper` are tabletops too, the mass kit; the paragraph below
+ * says what the assay floor was, and it is still a real instrument, so it is still built and checked.)
  *
  * `q5-assay` tips a heap down a chute past a deflector into a row of bins.
  * Those are objects falling into containers at arm's length, so `assay3d.js`
@@ -98,19 +107,21 @@ export function benchesAre3D() {
  */
 const BUILT_BENCHES = new Set([
   // Unit 1 — Tallow
-  'q1-grain',      // the sampler scope   — scope3d.js
-  'q2-core',       // the core bench      — corebench3d.js
-  'q3-catalogue',  // the catalogue board — catalogue3d.js
-  'q4-ledger',     // the core bench again, at site four
-  'q5-assay',      // the assay floor     — assay3d.js
-  'q6-weigh',      // the assay floor again, at site six
+  'q1-grain',      // the tabletop, atom kit — table3d.js (T1; the sampler scope serves no quest now and is retired with T7)
+  'q2-core',       // the tabletop, atom kit — table3d.js (T1; the core bench still serves q4-ledger)
+  'q3-catalogue',  // the tabletop, card kit — table3d.js (T2; the catalogue board is retired with T7)
+  'q4-ledger',     // the tabletop, atom kit — table3d.js (T2; the core bench is retired with T7)
+  'q5-assay',      // the tabletop, mass kit (assay) — table3d.js (T2; the assay floor is retired with T7)
+  'q6-weigh',      // the tabletop, mass kit (two pans and counters), at site six
+  'boss-hopper',   // the hopper: five phases on one table, atom, card and mass kits, its foe in the table's corner
   // Unit 3 — Ligar. The join bench is a subclass of the drawn bench, so its
   // tools are the canvas bench's tools and cannot grade differently.
   'q1-joins',      // the join bench, pair plates — joinbench3d.js
-  'q2-lattice',    // the join bench, slab plates — joinbench3d.js
+  'q2-lattice',    // the tabletop, bonds kit (blocks, hotplate, hammer, leads, tongs, an ion grid) — table3d.js (T3a)
   // Unit 7 — Kettle. Built as Ligar's bench three; Kettle is not yet walkable,
-  // so at T4 it builds its own room around itself.
-  'q1-recipe',     // the sampler scope again     — scope3d.js
+  // so at T4 it builds its own room around itself (`rooms.js`, the foundry).
+  'q1-recipe',     // the tabletop, heap kit — table3d.js (T2c; the sampler scope still serves nothing else here)
+  'boss-golem',    // the golem: two phases on the heap kit and the mass kit, its foe in the table's corner
   // Unit 2 — Lanternfall.
   'q1-wave',       // the light bench, trace and prism heads — lightbench3d.js
   'q2-photon',     // the light bench, photocell head
@@ -122,14 +133,14 @@ const BUILT_BENCHES = new Set([
   'q8-trends',     // the electron bench, atom head and pull meter
   'q9-absorb',     // the light bench, cuvette head
   // Unit 3 — Ligar, benches three to nine.
-  'q3-distance',   // the bond bench, pair and lattice plates — bondbench3d.js
+  'q3-distance',   // the tabletop, bonds kit (a pair pulled apart by hand, pair cards, salts) — table3d.js (T3a)
   'q4-dots',       // the pair board — pairboard3d.js
-  'q5-resonance',  // the pair board again, with the charge tool and the gauge
-  'q6-shape',      // the domain rig, hub plates — domainrig3d.js
-  'q7-polarity',   // the domain rig, field plates
-  'q8-hybrid',     // the domain rig, mixer and twist plates
-  'q9-orbitals',   // the box rack, molecular layout — boxrack3d.js
-  'boss-warden',   // the warden: bond bench, pair board, domain rig and box rack in turn, in its own room
+  'q5-resonance',  // the tabletop, the Lewis slate with a charge stamp, a mark and a bond gauge — table3d.js (T3a)
+  'q6-shape',      // the tabletop, domain kit (a hub arms clip to and push apart on, a protractor, a frame of sockets) — table3d.js (T3b)
+  'q7-polarity',   // the tabletop, domain kit (charged plates, molecule cards, arrows, a swap tool, a charged rod and streams)
+  'q8-hybrid',     // the tabletop, domain kit (a mixing bowl, orbitals overlapped into bonds, a bond whose far end is turned)
+  'q9-orbitals',   // the tabletop, orbital kit (a rack of boxes that electrons are poured into, a magnet that reads the real molecule, cards on a rail) — table3d.js (T3c)
+  'boss-warden',   // the warden: five phases on the bonds, atom, domain and orbital kits, its foe in the table's corner
   // Unit 4 — Bellows. One instrument, six heads: cylinder, mixture, leak, tube, path and record.
   'q1-knocks',     // the gas rig, cylinder head with the speed screen — gasrig3d.js
   'q2-laws',       // the gas rig, cylinders with traces, and the gauge records
@@ -334,7 +345,29 @@ export function Calorimeter(host, opts = {}) {
     : new Calorimeter2D(host, opts);
 }
 
+/**
+ * The tabletop: pieces, trays, a rail, slots, containers and fixtures on the
+ * bench, graded on what is on the table (`table/`, plan `bench-tabletop.md`).
+ * At T4 it is BUILT (`table3d.js`, a `BenchViewer3D` that leans the camera in over
+ * the plate); at T3 and below it is the drawn top-down tabletop (`table2d.js`).
+ * They draw the same `TableState`, share the gestures (`table/gestures.js`) and
+ * send the same reducer actions, so a stage grades identically on both.
+ *
+ * A quest that plays a table stage at T4 must be listed in `BUILT_BENCHES`, so
+ * the host screen keeps the player on their feet at the bench.
+ * @param {HTMLElement} host
+ * @param {{onAction?: (action: object) => void, tools?: string[], toolHost?: HTMLElement,
+ *          onLeanChange?: (leaning: boolean) => void, onCarry?: (label: string|null) => void,
+ *          room?: string}} opts `room` names the room (`rooms.js`) a quest with no world under it stands its table in
+ */
+export function Tabletop(host, opts = {}) {
+  return benchesAre3D()
+    ? new Table3D(host, deployed(opts))
+    : new Table2D(host, opts);
+}
+
 /* Exported so a caller that wants the built instrument by name can have it. */
+export { Table2D, Table3D };
 export { SampleScope3D, CoreBench3D, CatalogueBoard3D, AssayFloor3D, JoinBench3D, LightBench3D, CloudPlate3D, BoxRack3D, ElectronBench3D, BondBench3D, PairBoard3D, DomainRig3D, GasRig3D, Calorimeter3D };
 
 /* Re-exported so a quest module needs exactly one import line for its bench. */

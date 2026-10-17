@@ -1,21 +1,27 @@
 /**
  * boss-hopper.js — Learn world 1 Boss Encounter: The Hopper.
  *
- * The refinery's ore hopper, risen in the salt. Multi-phase synthesis boss
- * that tests every bench on Tallow with fresh samples on real instruments:
- *   Phase 1: Classify hull plates on the SampleScope (element, compound, mixture · q1)
- *   Phase 2: Identify core atom on the CoreBench (atomic number & identity · q2)
- *   Phase 3: Identify cooling gas slot on the CatalogueBoard (periodic table group 18 · q3)
- *   Phase 4: Assay core slag on the AssayFloor (weighted average atomic mass · q5)
- *   Phase 5: Weigh carbon swarm on the WeighFloor (moles & molar mass · q6)
+ * The refinery's ore hopper, risen in the salt. A multi-phase synthesis boss that tests every bench
+ * on Tallow with fresh samples, and (plan `bench-tabletop.md`, phase T2) on the TABLETOP: five phases
+ * on one table, each with the kit its bench uses.
+ *   Phase 1: Sort hull plates into element, compound and mixture    (atom kit, the dish pictures · q1)
+ *   Phase 2: Build a neutral atom to match the sealed core          (atom kit, particles · q2, q4)
+ *   Phase 3: Slot the card that belongs in the open place           (card kit · q3)
+ *   Phase 4: Balance the slag on the beam and name its element      (mass kit, the assay · q5)
+ *   Phase 5: Balance a sealed drum of carbon with scoops            (mass kit, the balance · q6)
+ *
+ * The foe is the hopper itself, watching the table from its corner (`table/layout.js` `FOE_PAD`):
+ * it only observes. Scouting is free, a committed miss costs one of three Integrity, a correct commit
+ * wins at any Integrity, and nothing in a phase's answer is changed by the fight. A boss phase never
+ * declares a field stage: the walk is suspended while the hopper stands.
  *
  * Awards Case File clue: clue_tallow_slag.
  */
 
-import { SampleScope, CoreBench, CatalogueBoard, AssayFloor } from '../../engine/instruments.js';
-import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
-import { KINDS, POWER_SCALES } from './q1-grain.js';
-import { PARTS } from './q2-core.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { atomTable, piecesIn } from '../../table/kits/atoms.js';
+import { cardTable, cardSlot, elementCard, slotCard } from '../../table/kits/cards.js';
+import { massTable, balanceTable, crate, pourSteps, balanceRead } from '../../table/kits/mass.js';
 import { CARDS } from './q3-catalogue.js';
 import { session } from '../../../session.js';
 
@@ -26,20 +32,41 @@ export const BUILDS_ON = [
   'unit01/q4-ledger', 'unit01/q5-assay', 'unit01/q6-weigh'
 ];
 
-const COLUMN_HEADS = ['1', '2', '· · ·', '13', '14', '15', '16', '17', '18'];
-
-const CHART_ROWS = [
-  ['c01', null, null, null, null, null, null, null, 'c02'],
-  ['c03', 'c04', null, 'c05', 'c06', 'c07', 'c08', 'c09', 'c10'],
-  ['c11', 'c12', null, 'c13', 'c14', 'c15', 'c16', 'c17', 'c18']
-];
-
-function chartWithSlots(swaps) {
-  return CHART_ROWS.map(row => row.map(id => (id && swaps[id]) ? `#${swaps[id]}` : id));
-}
-
 /** Every key on these benches says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
+
+/** The hopper, as every phase's foe: one body, watching the table. It reads no probe, it only observes. */
+const HOPPER_FOE = [{ id: 'hopper', label: 'The Hopper' }];
+
+/* ------------------------------------------------------------------
+   THE TABLES
+   Each phase keeps the top-right corner clear for the foe (`FOE_PAD`).
+   ------------------------------------------------------------------ */
+
+const to = (piece, target) => ({ place: { piece, to: target } });
+const trayOf = (t, id) => (t.pieces[id].zone || '').replace('tray:', '');
+const dishTray = (id, label, x, y, w = 38) => ({ id, label, at: { x, y }, size: { w, h: 22 }, cell: 19 });
+const trayAt = (id, label, x, y, w, h, cap) => ({ id, label, at: { x, y }, size: { w, h }, ...(cap != null ? { cap } : {}) });
+
+/** A dish of hull plating, open at the power where atoms resolve: the picture is the evidence. */
+const plate = (id, label, particles, x, y) => ({
+  id, kind: 'dish', label, at: { x, y },
+  props: { sample: { id: `hull-${id}`, floorPower: 4, particles }, view: 4 }
+});
+
+/** The pieces of a built atom: a heap of protons and electrons, the middle and outside trays and the needle. */
+const part = (id, kind, label, x, y) => ({ id, kind, label, at: { x, y } });
+const heap = () => [
+  ...Array.from({ length: 7 }, (_, i) => part(`p${i + 1}`, 'proton', 'Proton', 52 + i * 10, 49)),
+  ...Array.from({ length: 7 }, (_, i) => part(`e${i + 1}`, 'electron', 'Electron', 52 + i * 10, 59))
+];
+const count = (t, zone, kind) => piecesIn(t, zone, kind).length;
+
+/** The chart's second row as it stands, loose cards under it: He, Ne and Ar are all noble gases, and only one fits. */
+const ELEMENT_OF = { c01: 'H', c02: 'He', c03: 'Li', c04: 'Be', c05: 'B', c06: 'C', c07: 'N', c08: 'O', c09: 'F', c10: 'Ne', c18: 'Ar' };
+const card = (id, at) => elementCard(id, ELEMENT_OF[id], at, { mass: CARDS[id].mass });
+const COL_X = c => 13.5 + 15 * c;
+const ROW_Y = 33;
 
 export const STAGES = [
   /* ---------------------------------------------------------------- Phase 1 */
@@ -50,49 +77,43 @@ export const STAGES = [
       speaker: 'Vess',
       body: 'The rogue Hopper has risen in the salt flat, testing every bench from Tallow across five synthesis phases. Strike with the correct chemistry when your telemetry is set; three misses knock the rig back.'
     },
-    bench: 'scope',
-    prompt: 'Classify each sample as an element, a compound, or a mixture.',
-    controls: ['power'],
-    samples: [
-      { id: 'plate1', label: 'SAMPLE A', note: 'dark grey plating', floorPower: 4, particles: [{ kinds: ['k06'], n: 36 }] },
-      { id: 'plate2', label: 'SAMPLE B', note: 'brittle white crystal crust', floorPower: 4, particles: [{ kinds: ['k11', 'k17'], pairs: [{ a: 0, b: 1 }, { a: 2, b: 3 }, { a: 4, b: 5 }, { a: 6, b: 7 }], n: 24 }] },
-      { id: 'plate3', label: 'SAMPLE C', note: 'uneven brown and yellow grit', floorPower: 4, particles: [{ kinds: ['k06'], n: 16 }, { kinds: ['k16'], n: 16 }] }
-    ],
-    widget: {
-      type: 'bins',
-      bins: [
-        { id: 'element', label: 'Element', note: 'One type of atom' },
-        { id: 'compound', label: 'Compound', note: 'Atoms chemically bonded' },
-        { id: 'mixture', label: 'Mixture', note: 'Physically blended' }
+    prompt: 'Tray each hull plate as an element, a compound, or a mixture.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        plate('plate1', 'SAMPLE A', [{ kinds: ['k06'], n: 36 }], 22, 14),
+        plate('plate2', 'SAMPLE B', [{ kinds: ['k11', 'k17'], pairs: [{ a: 0, b: 1 }, { a: 2, b: 3 }, { a: 4, b: 5 }, { a: 6, b: 7 }], n: 24 }], 46, 14),
+        plate('plate3', 'SAMPLE C', [{ kinds: ['k06'], n: 16 }, { kinds: ['k16'], n: 16 }], 70, 14)
       ],
-      rows: [
-        { id: 'plate1', label: 'SAMPLE A' },
-        { id: 'plate2', label: 'SAMPLE B' },
-        { id: 'plate3', label: 'SAMPLE C' }
-      ]
-    },
+      zones: {
+        trays: [
+          dishTray('element', 'Element', 21, 36),
+          dishTray('compound', 'Compound', 60, 36),
+          dishTray('mixture', 'Mixture', 99, 36)
+        ]
+      }
+    }),
+    foes: HOPPER_FOE,
     encounter: {
       species: 'the hopper',
       act: 'Strike Hull',
-      intent: 'The hopper braces three composite plates against your survey beam.',
-      moves: { element: 'Contain', compound: 'Split', mixture: 'Shake' }
+      intent: 'The hopper braces three composite plates against your survey beam.'
     },
     check(state) {
-      const b = state?.bins || {};
-      if (!b.plate1 || !b.plate2 || !b.plate3) {
-        return { ok: false, notYet: true, msg: 'File all three samples before committing your strike.' };
+      const t = state.table;
+      const names = { plate1: 'A', plate2: 'B', plate3: 'C' };
+      const want = { plate1: 'element', plate2: 'compound', plate3: 'mixture' };
+      for (const id of Object.keys(want)) {
+        if (!['element', 'compound', 'mixture'].includes(trayOf(t, id))) return { ok: false, notYet: true, msg: 'Tray all three plates before committing your strike.' };
       }
-      const wrong = [['plate1', 'element', 'A'], ['plate2', 'compound', 'B'], ['plate3', 'mixture', 'C']]
-        .filter(([id, want]) => b[id] !== want).map(([, , name]) => name);
-      if (wrong.length) {
-        return { ok: false, msg: `Sample ${wrong[0]} is filed wrongly: look at which kinds of atoms it holds and whether any of them are joined.` };
-      }
+      const wrong = Object.keys(want).filter(id => trayOf(t, id) !== want[id]).map(id => names[id]);
+      if (wrong.length) return { ok: false, msg: `Sample ${wrong[0]} is filed wrongly: look at which kinds of atoms it holds and whether any of them are joined.` };
       return { ok: true };
     },
     hints: [
-      'Turn the Power dial up until single atoms come into focus.',
-      'Tap atoms in each sample and compare what they are and what each is joined to.',
-      'File each sample by its atoms: one kind alone, different kinds bonded together, or different kinds sitting loose.'
+      'Drag each plate into a tray, and read the picture on it first: the atoms are drawn as they sit.',
+      'For each sample, check how many different kinds of atom it holds and whether any of them are joined.',
+      'One kind alone is an element, different kinds joined together are a compound, and different kinds sitting loose are a mixture.'
     ],
     reward: {
       title: 'Hull Shattered',
@@ -105,28 +126,35 @@ export const STAGES = [
   {
     id: 'phase2',
     title: 'Phase 2 · Core Readout',
-    bench: 'core',
-    prompt: 'Enter the atomic number of this neutral core atom.',
-    controls: ['field'],
-    specimens: [
-      { id: 'a', label: 'SEALED ATOM', note: 'a neutral atom off the salvage', core: { marked: 6, blank: 6 }, rings: [2, 4] }
-    ],
-    widget: { type: 'number', min: 1, max: 20, step: 1, unit: 'atomic number' },
+    prompt: 'Build a neutral atom with the same atomic number as the sealed core.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        { id: 'refc', kind: 'nucleus', label: 'CORE MIDDLE', at: { x: 14, y: 12 }, fixed: true, props: { p: 6, n: 6 } },
+        { id: 'refe', kind: 'specimen', label: 'CORE OUTSIDE', at: { x: 36, y: 12 }, fixed: true, props: { p: 6, n: 6, rings: [2, 4], needle: true } },
+        ...heap()
+      ],
+      zones: { trays: [trayAt('core', 'The middle', 23, 34, 40, 20), trayAt('out', 'Outside', 57, 34, 22, 20)] },
+      fixtures: [{ id: 'needle', kind: 'needle', label: 'Needle', at: { x: 94, y: 33 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } }]
+    }),
+    foes: HOPPER_FOE,
     encounter: {
       species: 'the hopper',
       act: 'Probe Core',
       intent: 'An electromagnetic pulse surges from the central core chamber.'
     },
     check(state) {
-      const n = state?.number;
-      if (n === null || n === undefined) return { ok: false, notYet: true, msg: 'Set the atomic number on the stepper.' };
-      if (n === 12) return { ok: false, msg: 'Twelve is the mass number, not the proton count.' };
-      if (n !== 6) return { ok: false, msg: 'Count the + particles in the middle and the electrons on the shells; in a neutral atom the two counts match, and that count is the atomic number.' };
+      const t = state.table;
+      const p = count(t, 'tray:core', 'proton');
+      const e = count(t, 'tray:out', 'electron');
+      if (p + e === 0) return { ok: false, notYet: true, msg: 'The atom is still empty. Drag protons into the middle and electrons outside.' };
+      if (p !== 6) return { ok: false, msg: 'Count the + discs in the middle of the sealed core again: each marks a proton, and the neutrons are the blank discs.' };
+      if (e !== p) return { ok: false, msg: 'A neutral atom balances its charge, so its electrons match its protons one for one.' };
       return { ok: true };
     },
     hints: [
-      'Switch between the three views and look at what each one shows.',
-      'Count the particles with a + in the middle and the electrons on the shells, then compare the two counts.',
+      'Drag protons from the heap into the middle and electrons outside, and watch the needle.',
+      'Count the discs with a + in the middle of the sealed core and the electrons on its rings, then compare the two counts.',
       'A neutral atom balances its charge, and the atomic number is the count of protons.'
     ],
     reward: {
@@ -140,34 +168,35 @@ export const STAGES = [
   {
     id: 'phase3',
     title: 'Phase 3 · Cooling Manifold',
-    bench: 'catalogue',
-    prompt: 'What atomic number belongs in the open slot on the chart?',
-    controls: [],
-    board: {
-      label: 'Catalogue chart — one slot open',
-      columns: COLUMN_HEADS,
-      rows: chartWithSlots({ c10: 'gap' })
-    },
-    drawer: [],
-    foes: [{ id: 'grid', label: 'Catalogue Grid' }],
-    widget: { type: 'number', min: 1, max: 36, step: 1, unit: 'atomic number' },
+    prompt: 'Slot the card that belongs in the open place on the chart.',
+    widget: { type: 'table', label: 'The bench' },
+    table: cardTable({
+      pieces: [
+        ...[['c03', 0], ['c04', 1], ['c05', 3], ['c06', 4], ['c07', 5], ['c08', 6], ['c09', 7]].map(([id, c]) => ({ ...card(id, { x: COL_X(c), y: ROW_Y }), fixed: true })),
+        card('c02', { x: 28, y: 54 }),
+        card('c10', { x: 58, y: 54 }),
+        card('c18', { x: 88, y: 54 })
+      ],
+      zones: { slots: [cardSlot('gap', { x: COL_X(8), y: ROW_Y }, { label: '18' })] }
+    }),
+    foes: HOPPER_FOE,
     encounter: {
       species: 'the hopper',
       act: 'Vent Coils',
       intent: 'Cooling coils hiss as pressurized gas fills the manifolds.'
     },
     check(state) {
-      const n = state?.number;
-      if (n === null || n === undefined) return { ok: false, notYet: true, msg: 'Set the atomic number on the stepper.' };
-      if (n === 2) return { ok: false, msg: 'That card belongs in the first row, but the open slot is in the second.' };
-      if (n === 18) return { ok: false, msg: 'That card belongs in the third row, but the open slot is in the second.' };
-      if (n !== 10) return { ok: false, msg: 'Read the numbers on the cards beside the open slot and count along the row from a card you can read.' };
+      const held = slotCard(state.table, 'gap');
+      if (!held) return { ok: false, notYet: true, msg: 'The open place is still empty. Drag a loose card onto it.' };
+      if (held === 'c02') return { ok: false, msg: 'That card belongs in the first row, but the open place is in the second.' };
+      if (held === 'c18') return { ok: false, msg: 'That card belongs in the third row, but the open place is in the second.' };
+      if (held !== 'c10') return { ok: false, msg: 'Read the proton counts on the cards beside the open place and count along the row from a card you can read.' };
       return { ok: true };
     },
     hints: [
-      'Tap the cards along the second row and read their numbers.',
-      'The atomic number steps up by one for each slot across the row.',
-      'Count along the row from a card whose number you can read, stepping up by one for each slot.'
+      'Drag a loose card onto the open place in the chart.',
+      'Read the proton count on the card just left of the open place and on each loose card.',
+      'The open place takes the card with one more proton than the card on its left.'
     ],
     reward: {
       title: 'Manifolds Quenched',
@@ -180,36 +209,42 @@ export const STAGES = [
   {
     id: 'phase4',
     title: 'Phase 4 · Slag Assay',
-    bench: 'assay',
-    prompt: 'Match this core slag sample to the element whose average atomic mass it shares.',
-    controls: ['pour', 'balance'],
-    hoppers: [
-      { id: 'hopper', label: 'CORE SLAG', note: 'pulverized core slag, 40 atoms', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
-    ],
-    reference: ['boron — listed mass 10.8', 'neon — listed mass 20.2', 'chlorine — listed mass 35.5'],
-    widget: {
-      type: 'choice',
-      label: 'Matching element',
-      options: [
-        { id: 'boron', label: 'Boron (10.8 u)' },
-        { id: 'neon', label: 'Neon (20.2 u)' },
-        { id: 'chlorine', label: 'Chlorine (35.5 u)' }
-      ]
-    },
+    prompt: 'Tray the core slag under the element whose listed mass it balances at.',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [{
+        id: 'slag', kind: 'sample', label: 'CORE SLAG', at: { x: 14, y: 34 },
+        props: { bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }], note: '40 atoms' }
+      }],
+      zones: {
+        slots: [{ id: 'chute', label: 'Chute', at: { x: 14, y: 14 }, size: { w: 20, h: 17 } }],
+        trays: [
+          { id: 'boron', label: 'Boron 10.8', at: { x: 51, y: 56 }, size: { w: 38, h: 22 }, cell: 19 },
+          { id: 'neon', label: 'Neon 20.2', at: { x: 91, y: 56 }, size: { w: 38, h: 22 }, cell: 19 },
+          { id: 'chlorine', label: 'Chlorine 35.5', at: { x: 131, y: 56 }, size: { w: 38, h: 22 }, cell: 19 }
+        ]
+      },
+      fixtures: [{
+        id: 'assay', kind: 'assay', label: 'Assay', runLabel: 'Tip Sample', at: { x: 78, y: 24 }, size: { w: 96, h: 40 },
+        props: { slot: 'chute' }, dials: { pivot: { min: 9.5, max: 11.5, step: 0.1, value: 10.5, label: 'Fulcrum' } }
+      }]
+    }),
+    foes: HOPPER_FOE,
     encounter: {
       species: 'the hopper',
       act: 'Assay Slag',
       intent: 'Pulverized isotope slag rattles down the sorting chute.'
     },
     check(state) {
-      if (!state?.choice) return { ok: false, notYet: true, msg: 'Select the matching element.' };
-      if (state.choice !== 'boron') return { ok: false, msg: 'Compare the average mass of one atom in the sample with the listed mass of each element.' };
+      const here = trayOf(state.table, 'slag');
+      if (!['boron', 'neon', 'chlorine'].includes(here)) return { ok: false, notYet: true, msg: 'The slag has no tray yet.' };
+      if (here !== 'boron') return { ok: false, msg: 'Compare the point where the slag balances with the listed mass on each tray.' };
       return { ok: true };
     },
     hints: [
-      'Tip the sample down the chute and weigh it on the balance.',
-      'Weigh the sample, then divide the pan\'s total by the count it reports to find the average mass.',
-      'Compare your average with the listed mass printed on each reference line.'
+      'Drop the slag in the chute, press "Tip Sample", and slide the "Fulcrum" dial until the beam lies level.',
+      'Read the tally over each bin, then compare where the beam balances with the listed masses on the trays.',
+      'The point where the slag balances is its average weight, and only one tray lists that mass.'
     ],
     reward: {
       title: 'Slag Identified',
@@ -222,30 +257,40 @@ export const STAGES = [
   {
     id: 'phase5',
     title: 'Phase 5 · Swarm Weight',
-    bench: 'weigh',
-    prompt: 'How many moles of carbon are in the sealed drum?',
-    controls: ['balance'],
-    hoppers: [
-      { id: 'drum', label: 'SEALED DRUM', note: 'a drum of carbon soot, gate shut', particle: 'atom', bulk: true, bins: [{ mass: 12, n: 2 }] }
-    ],
-    reference: ['carbon — molar mass 12.0 g/mol'],
-    widget: { type: 'number', min: 1, max: 10, step: 1, unit: 'moles' },
+    prompt: 'Balance the sealed drum of carbon with scoops of one mole each.',
+    widget: { type: 'table', label: 'The bench' },
+    table: balanceTable({
+      unit: 'g',
+      counters: { R: { label: 'ATOMS' } },
+      refCrate: crate('drum', 'DRUM', { x: 0, y: 0 }, { species: 'carbon', grams: 24, sealed: true, note: 'carbon' }),
+      drum: { label: 'Carbon scoops', what: 'carbon', amount: 60 },
+      steps: { carbon: 12 },
+      capacity: 36,
+      balanceAt: { x: 65, y: 16 },
+      balanceW: 110
+    }),
+    foes: HOPPER_FOE,
     encounter: {
       species: 'the hopper',
       act: 'Weigh Drum',
       intent: 'The hopper ejects a sealed drum of carbon soot.'
     },
     check(state) {
-      const n = state?.number;
-      if (n === null || n === undefined) return { ok: false, notYet: true, msg: 'Set the mole count on the stepper.' };
-      if (n === 24) return { ok: false, msg: 'That is the mass in grams, not a count of moles.' };
-      if (n !== 2) return { ok: false, msg: 'Compare what the pan reads with the grams in one mole of carbon on the plate.' };
+      const t = state.table;
+      const bal = balanceRead(t, 'balance');
+      const scoops = (t.zones.containers['pan-r'].contents.carbon || 0) / 12;
+      if (scoops === 0) return { ok: false, notYet: true, msg: 'The right pan is empty. Pour a scoop of carbon onto it.' };
+      if (!bal.level) {
+        return { ok: false, msg: bal.lean < 0
+          ? 'The drum is the heavier pan, so the scoops on the right do not yet make up its weight.'
+          : 'The scoops on the right outweigh the drum, so there are more of them than it holds.' };
+      }
       return { ok: true };
     },
     hints: [
-      'Weigh the drum and read what the pan says.',
-      'Find the grams in one mole of carbon on the plate.',
-      'Work out how many of those moles the pan\'s reading holds.'
+      'Pour carbon from the scoops onto the right pan and watch which way the beam tips.',
+      'Each scoop is one mole of carbon, and the beam lies level when the pans weigh the same.',
+      'Count the scoops on the right pan at the moment the beam lies level.'
     ],
     reward: {
       title: 'The Hopper Falls',
@@ -255,24 +300,34 @@ export const STAGES = [
   }
 ];
 
+/* ------------------------------------------------------------------
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   ------------------------------------------------------------------ */
+
+const protons = n => Array.from({ length: n }, (_, i) => to(`p${i + 1}`, 'tray:core'));
+const electrons = n => Array.from({ length: n }, (_, i) => to(`e${i + 1}`, 'tray:out'));
+const tipSlag = [to('slag', 'slot:chute'), { run: 'assay' }];
+
 export const SOLUTIONS = [
-  { bins: { plate1: 'element', plate2: 'compound', plate3: 'mixture' } },
-  { number: 6 },
-  { number: 10 },
-  { choice: 'boron' },
-  { number: 2 }
+  [to('plate1', 'tray:element'), to('plate2', 'tray:compound'), to('plate3', 'tray:mixture')],
+  [...protons(6), ...electrons(6)],
+  [to('c10', 'slot:gap')],
+  [...tipSlag, { setDial: { fixture: 'assay', dial: 'pivot', value: 10.8 } }, to('slag', 'tray:boron')],
+  pourSteps('carbon', 12, 2)
 ];
 
 export const MISSES = [
-  { bins: { plate1: 'mixture', plate2: 'element', plate3: 'compound' } },
-  { number: 12 },
-  { number: 2 },
-  { choice: 'neon' },
-  { number: 1 }
+  [to('plate1', 'tray:mixture'), to('plate2', 'tray:element'), to('plate3', 'tray:compound')],
+  [...protons(7), ...electrons(7)],
+  [to('c02', 'slot:gap')],
+  [...tipSlag, to('slag', 'tray:neon')],
+  pourSteps('carbon', 12, 1)
 ];
 
+function blankState() { return {}; }
+
 export function stateFor(i, overrides) {
-  return { ...blankAnswer(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 export const DEBRIEF = {
@@ -357,158 +412,6 @@ export const PRACTICE = [
    ------------------------------------------------------------------ */
 
 export function mount(container, ctx) {
-  let bench = null;
-  let benchKind = null;
-  let runner = null;
-
-  /** The three views of the core bench, named as the bench's own keys name them. */
-  const FIELDS = { whole: 'Whole piece', core: 'The middle', rings: 'Outside' };
-  const NAMED = { marked: 'PROTON', blank: 'NEUTRON', light: 'ELECTRON' };
-
-  const blankState = () => ({ power: 1, field: 'whole', sample: null });
-
-  function setPower(v) {
-    const next = Math.max(1, Math.min(6, v));
-    runner.state.power = next;
-    bench.setPower?.(next);
-    runner.paintDial('power', next, { min: 1, max: 6, text: POWER_SCALES[next] });
-  }
-
-  function setField(field) {
-    runner.state.field = field;
-    bench.setField?.(field);
-    runner.frame.el.controls.querySelectorAll('[data-field]').forEach(b => b.classList.toggle('lit', b.dataset.field === field));
-  }
-
-  function ensureBench(kind, r) {
-    if (benchKind === kind) return;
-    bench?.dispose();
-    const host = r.frame.instrumentHost;
-    if (kind === 'scope') {
-      bench = new SampleScope(host, {
-        kinds: KINDS,
-        onProbe: hit => onProbe(hit),
-        onSelect: () => {},
-        onPower: v => setPower(v),
-        powerRange: { min: 1, max: 6 }
-      });
-    } else if (kind === 'core') {
-      bench = new CoreBench(host, { onProbe: hit => onProbe(hit), onSelect: () => {} });
-    } else if (kind === 'catalogue') {
-      bench = new CatalogueBoard(host, { onProbe: hit => onProbe(hit) });
-    } else {
-      bench = new AssayFloor(host, {
-        onProbe: hit => onProbe(hit),
-        onSelect: id => { runner.state.sample = id; bench.setSelected?.(id); }
-      });
-    }
-    benchKind = kind;
-  }
-
-  /** Every reading is the instrument's own report; none of them names a stage's answer. */
-  function onProbe(hit) {
-    if (!hit) return;
-    if (benchKind === 'scope') {
-      const k = KINDS[hit.kindId];
-      if (!k) return;
-      runner.readout(`Probe // ${hit.sampleLabel}`, `Mass ${k.mass.toFixed(1)}, size ${k.size.toFixed(2)}. ${hit.neighbours === 0
-        ? 'Not joined to anything.'
-        : `Joined to ${hit.neighbours} other ${hit.neighbours === 1 ? 'atom' : 'atoms'}.`}`, { code: k.code });
-    } else if (benchKind === 'core') {
-      const part = PARTS[hit.part];
-      if (!part) return;
-      runner.readout(`Probe // ${hit.specimenLabel}`, part.note, { code: NAMED[hit.part] || part.code });
-    } else if (benchKind === 'catalogue') {
-      const c = CARDS[hit.id || hit];
-      if (c) runner.readout(`Card // ${c.name}`, `${c.code}, listed mass ${c.mass.toFixed(1)}.`);
-    } else if (benchKind === 'assay') {
-      if (hit.mass !== undefined) {
-        runner.readout(`Bin // ${hit.hopperLabel}, bin ${hit.bin + 1}`, `${hit.poured
-          ? `${hit.count} ${hit.count === 1 ? 'atom' : 'atoms'} landed in the bin that catches weight ${hit.mass}.`
-          : `The bin that catches weight ${hit.mass}. Nothing has been tipped yet.`}`);
-      }
-    }
-  }
-
-  async function onTool(tool) {
-    const stage = runner.stage;
-    if (tool.startsWith('field:')) {
-      setField(tool.slice(6));
-      runner.readout(null, null, { idleHead: 'Probe // standby', idle: 'Tap any particle to read it.' });
-      return;
-    }
-    const hopper = stage.hoppers?.[0];
-    if (!hopper) return;
-    const id = hopper.id;
-    const count = hopper.bins.reduce((n, b) => n + b.n, 0);
-    const mass = hopper.bins.reduce((m, b) => m + b.mass * b.n, 0);
-    if (tool === 'pour') {
-      if (bench.poured?.(id)) { runner.frame.note('That sample has already been tipped, and the tallies above its bins are still there.'); return; }
-      const shot = await bench.pour(id);
-      runner.readout(`Chute // ${hopper.label}`, `${shot.total} atoms landed: ${shot.totals.map((n, i) => `${n} at weight ${hopper.bins[i].mass}`).join(', ')}.`);
-    } else if (tool === 'balance') {
-      // A balance weighs. It reports a total, and a count only where the chute has counted.
-      runner.readout(`Balance // ${hopper.label}`, hopper.bulk
-        ? `The pan reads ${mass} in all. Nothing on this floor can tell you how many atoms that is.`
-        : `${mass} in total, over ${count} atoms.`);
-    }
-  }
-
-  function onLoad(stage, i, r) {
-    ensureBench(stage.bench, r);
-    const parts = [];
-    const dials = {};
-    if (stage.bench === 'scope') {
-      bench.setSamples(stage.samples);
-      bench.setPower(r.state.power);
-      bench.setSelectable(false);
-      parts.push(r.dialHtml('power', { label: 'Power', min: 1, max: 6, value: r.state.power, scaleLabels: POWER_SCALES }));
-      dials.power = { min: 1, max: 6, onChange: v => setPower(v) };
-      r.readout(null, null, { idleHead: 'Probe // standby', idle: 'Nothing is in focus yet. Turn the Power dial up.' });
-    } else if (stage.bench === 'core') {
-      bench.setSpecimens(stage.specimens);
-      bench.setSelectable(false);
-      bench.setField('whole');
-      parts.push(`
-        <div class="cb-field" role="group" aria-label="View">
-          <span class="form-label">View</span>
-          ${Object.entries(FIELDS).map(([id, label]) => `<button type="button" class="btn-secondary quest-btn-sm cb-field-key lq-tool" data-tool="field:${id}" data-field="${id}">${label}</button>`).join('')}
-        </div>`);
-      r.readout(null, null, { idleHead: 'Probe // standby', idle: 'The whole atom at its own size. Use the other two keys to look inside it.' });
-    } else if (stage.bench === 'catalogue') {
-      const ids = new Set(stage.drawer || []);
-      for (const row of stage.board?.rows || []) {
-        for (const entry of row) if (entry && !String(entry).startsWith('#')) ids.add(entry);
-      }
-      const cards = {};
-      for (const id of ids) {
-        const c = CARDS[id];
-        if (c) cards[id] = { code: c.code, name: c.name, pips: c.outer };
-      }
-      bench.setStage({ cards, board: stage.board, drawer: [] });
-      r.readout(null, null, { idleHead: 'Catalogue // standby', idle: 'Tap a card to read it.' });
-    } else {
-      bench.setHoppers(stage.hoppers);
-      bench.setSelectable(false);
-      const only = stage.hoppers[0];
-      r.state.sample = only.id;
-      bench.setSelected?.(only.id);
-      if (stage.controls.includes('pour')) parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="pour">Tip Sample</button>');
-      if (stage.controls.includes('balance')) parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="balance">Weigh Sample</button>');
-      if (stage.reference?.length) {
-        parts.push(`
-          <div class="assay-extract">
-            <span class="form-label">Listed masses</span>
-            <ul>${stage.reference.map(t => `<li>${t.replace(/[<>&]/g, '')}</li>`).join('')}</ul>
-          </div>`);
-      }
-      r.readout(null, null, { idleHead: 'Floor // standby', idle: 'Each bin catches one weight, marked under it.' });
-    }
-    r.setControls(parts, onTool, { dials });
-    if (stage.bench === 'scope') runner.paintDial('power', r.state.power, { min: 1, max: 6, text: POWER_SCALES[r.state.power] });
-    if (stage.bench === 'core') setField('whole');
-  }
-
   const bossCtx = {
     ...ctx,
     reportComplete() {
@@ -517,13 +420,12 @@ export function mount(container, ctx) {
     }
   };
 
-  runner = createRunner(container, bossCtx, {
+  const runner = createRunner(container, bossCtx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    setup: () => {},
-    onLoad,
-    onDispose: () => bench?.dispose()
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
 
   runner.start();
   return { dispose: () => runner.dispose() };
 }
+

@@ -1,35 +1,36 @@
 /**
  * boss-warden.js — Learn world 3 elite: THE BASALT WARDEN.
  *
- * The world's last guard, made of everything Ligar measured. Five phases, each on
- * the real instrument of a bench the player has worked, with a new molecule or a
- * new set of salts on the plate and the warden standing in the well, reading it:
+ * The world's last guard, made of everything Ligar measured. Five phases, each on the TABLETOP of a bench the player has
+ * worked (plan `bench-tabletop.md`, phase T3c), with a new molecule or a new set of salts on the table and the warden
+ * standing in the table's corner, watching it:
  *
- *   1  the bond bench      three lattices, and which needs the most heat        (bench 3)
- *   2  the pair board      SF4, every lamp lit, sulfur past eight               (bench 4)
- *   3  the domain rig      XeF4's hub, and the angle between neighbours        (bench 6)
- *   4  the charged plates  which of three molecules turns                       (bench 7)
- *   5  the molecular rack  which of three gases the magnet pulls                (bench 9)
+ *   1  the hotplate        three lattices, and which needs the most heat        (bench 3 · bonds kit)
+ *   2  the pair slate      SF4, every lamp lit, sulfur past eight               (bench 4 · atom kit)
+ *   3  the domain hub      XeF4's hub, and the angle between neighbours         (bench 6 · domain kit)
+ *   4  the charged plates  which of three molecules turns                       (bench 7 · domain kit)
+ *   5  the magnet          which of three gases it draws in                     (bench 9 · orbital kit)
  *
- * The fight keeps every rule a bench stage keeps. A phase prompt states the
- * objective and never the route. A hint rung is one sentence and never the
- * answer. Nothing blocks a correct commit. A miss costs one point of Integrity
- * and three knock the rig back, with every reading and hint still kept.
+ * The fight keeps every rule a bench stage keeps. A phase prompt states the objective and never the route. A hint rung
+ * is one sentence and never the answer. Nothing blocks a correct commit. A miss costs one point of Integrity and three
+ * knock the table back, with every reading and hint still kept. The foe is the warden itself, in the corner pad of each
+ * table (`table/layout.js` `FOE_PAD`): it only observes, and a boss phase never declares a field stage (the walk is
+ * suspended while the warden stands).
  *
- * Clearing it files the Case File clue `clue_ligar_scorch`. The boss pays no XP:
- * the main story never does.
+ * Clearing it files the Case File clue `clue_ligar_scorch`. The boss pays no XP: the main story never does.
  */
 
-import { BondBench, PairBoard, DomainRig, BoxRack } from '../../engine/instruments.js';
-import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
-import { pairKeys, paintPairHand, describeBoard, boardState, litCount } from '../../engine/paircontrols.js';
-import { hubKeys, fieldKeys, paintRigHand, paintToggle, describeRig } from '../../engine/rigcontrols.js';
-import { handKeys, paintHand } from '../../engine/rackcontrols.js';
-import { pullWords } from '../../engine/magnetnotes.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { LATTICES, byLatticeEnergy } from '../../engine/bonddata.js';
-import { MOLECULES, DRAWINGS, planLewis, allLit, blankDrawing } from '../../engine/lewis.js';
-import { planDomains, planDipole, bondAngles } from '../../engine/vsepr.js';
+import { MOLECULES, allLit } from '../../engine/lewis.js';
+import { planDomains, planDipole, bondAngles, angleBetween } from '../../engine/vsepr.js';
 import { DIATOMICS } from '../../engine/mo.js';
+import { bondsTable, saltPiece, hotplate, piecesIn } from '../../table/kits/bonds.js';
+import { atomTable, slateParts, slateLayout, slateOf } from '../../table/kits/atoms.js';
+import {
+  domainTable, hubSet, armPiece, balloonPiece, protractorPiece, marker, markerValue, hubRead, molCard, molRead, plates, arrowsTool
+} from '../../table/kits/domain.js';
+import { moTable, magnet, moCard } from '../../table/kits/mo.js';
 import { session } from '../../../session.js';
 
 export const meta = { stageCount: 5 };
@@ -40,26 +41,54 @@ export const BUILDS_ON = [
 
 const SPEAKER = 'Vess';
 
-const TOOL_TEXT = {
-  hand: { key: 'Where the next pair goes', what: 'Each tap puts two electrons from the tray into the slot between two atoms or onto one atom.' },
-  arms: { key: 'Arms', what: 'Pick an arm, then tap the hub to clip it on.' },
-  protractor: { key: 'Protractor', what: 'Tap two arms to read the angle between them.' },
-  arrows: { key: 'Show Arrows', what: 'Draws an arrow across each bond toward the atom that pulls the pair harder.' },
-  rackhand: { key: 'Up, Down, Remove', what: 'Pick what the next tap on a box does: place an up arrow, place a down arrow, or lift one out.' },
-  magnet: { key: 'Test Sample', what: 'Holds the real molecules to the magnet and reports how hard each is pulled.' }
-};
-export function toolNoteFor(controlId) { return TOOL_TEXT[controlId] || null; }
+/** Every key on these tables says what it does on its cap, so none carries a legend. */
+export function toolNoteFor() { return null; }
 
-const lattice = (id, label, key) => ({ id, label, head: 'lattice', lattice: key, note: 'a block of the warden\'s plating' });
-const slate = (id, label, mol) => ({ id, label, head: 'slate', mol, note: 'the gas the warden vents' });
-const hub = (id, label, sym, stock, note) => ({ id, label, head: 'hub', hub: sym, stock, note });
-const field = (id, label, mol, note) => ({ id, label, head: 'field', mol, note });
-const rack = (id, label, mol) => ({
-  id, label, head: 'rack', layout: 'molecular', mol, order: DIATOMICS[mol].order,
-  molLabel: DIATOMICS[mol].label, atomLabel: DIATOMICS[mol].label.replace(/[₂]/g, ''), note: 'a gas the warden\'s core is cooled with'
-});
-const atoms = (id, sym, n, label) => ({ id, kind: 'atom', sym, mult: 1, n, label });
-const lone = n => ({ id: 'l', kind: 'lone', n, label: 'Lone Pair' });
+/** The warden, as every phase's foe: one body, watching the table. It reads no probe, it only observes. */
+const WARDEN_FOE = [{ id: 'warden', label: 'The Basalt Warden' }];
+
+/* ------------------------------------------------------------------
+   THE TABLES
+   Each phase keeps the top-right corner clear for the foe (`FOE_PAD`).
+   ------------------------------------------------------------------ */
+
+const into = (id, zone, kind = 'slot') => ({ place: { piece: id, to: `${kind}:${zone}` } });
+
+/** The three plating blocks, as the lattices of Ligar's third bench. */
+const PLATING = [['a', 'Plate A', 'NaCl'], ['b', 'Plate B', 'MgO'], ['c', 'Plate C', 'KCl']];
+
+/** Phase 2's table: the tray's tiles down the left and the SF4 slate beside them (the atom kit's, with its scratch corner). */
+function ventTable() {
+  const part = slateParts('a', 'SF4', slateLayout('SF4', 70, 29, 46));
+  const tile = (kind, label, [x, y]) => ({ id: kind, kind, label, at: { x, y } });
+  return atomTable({
+    opts: { words: 'shells', slate: true },
+    pieces: [tile('pairs', 'Pair', [10, 10]), tile('lift', 'Lift Out', [26, 10]), tile('three', '3 Pairs', [10, 26]), ...part.pieces],
+    fixtures: [part.fixture]
+  });
+}
+
+/** Phase 3's table: the xenon hub with its tray of four fluorine atoms, two lone pairs and the protractor, and the angle marker. */
+const HUB_AT = { x: 38, y: 32 };
+function hubTable() {
+  const hs = hubSet('hub', 'Xe', HUB_AT, { label: 'Hub Xe', turner: { x: 100, y: 12 } });
+  const at0 = { x: 0, y: 0 };
+  const inTray = [
+    ...[1, 2, 3, 4].map(i => armPiece(`f${i}`, 'F', at0, 1, 'F')),
+    balloonPiece('l1', at0), balloonPiece('l2', at0),
+    protractorPiece('pr', at0)
+  ].map(p => ({ ...p, zone: 'tray:bin' }));
+  return domainTable({
+    pieces: [hs.piece, ...inTray],
+    zones: { trays: [{ id: 'bin', label: 'Arms', at: { x: 112, y: 51 }, size: { w: 52, h: 26 }, cell: 13 }] },
+    fixtures: [hs.fixture, hs.turner, marker('mark', { x: 100, y: 28 }, { label: 'Angle' })]
+  });
+}
+
+const FIELD_AT = { x: 37, y: 22 };
+
+/** Phase 5's gases: three sealed canisters, the magnet that tests the one in its slot, and the place the gas it draws in goes. */
+const GASES = [['n2', 'N₂', 'N2'], ['o2', 'O₂', 'O2'], ['f2', 'F₂', 'F2']];
 
 /* ------------------------------------------------------------------
    THE FIVE PHASES
@@ -67,31 +96,36 @@ const lone = n => ({ id: 'l', kind: 'lone', n, label: 'Lone Pair' });
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
+    id: 'phase1',
     title: 'Phase 1 · The Plating',
     briefing: {
       speaker: SPEAKER,
-      body: 'This is the warden Ligar guards itself with, and each phase puts one of the benches in front of it again. A miss costs the rig a point of Integrity; three knock it back, and nothing you have read is lost.'
+      body: 'This is the warden Ligar guards itself with, and each phase puts one of the benches in front of it again. A miss costs the table a point of Integrity; three knock it back, and nothing you have read is lost.'
     },
-    bench: 'bond',
-    prompt: 'Which plating block has the highest lattice energy and requires the most heat to melt?',
-    controls: [],
-    rigs: [lattice('a', 'PLATE A', 'NaCl'), lattice('b', 'PLATE B', 'MgO'), lattice('c', 'PLATE C', 'KCl')],
-    widget: { type: 'choice', label: 'The plate', options: [{ id: 'a', label: 'Plate A' }, { id: 'b', label: 'Plate B' }, { id: 'c', label: 'Plate C' }] },
+    prompt: 'Put the plating block that takes the most heat to melt in the marked place.',
+    widget: { type: 'table', label: 'The bench' },
+    table: bondsTable({
+      pieces: PLATING.map(([id, label, lat], i) => saltPiece(id, label, lat, { x: 22 + i * 34, y: 56 })),
+      zones: { slots: [{ id: 'most', label: 'Needs the most heat', at: { x: 122, y: 40 }, size: { w: 26, h: 20 } }] },
+      fixtures: [hotplate('hp', { x: 49, y: 19 }, { w: 92, h: 32, max: 3000, step: 25 })]
+    }),
+    foes: WARDEN_FOE,
     encounter: {
       species: 'basalt warden',
       act: 'Name Plate',
       intent: 'A basalt warden stands over three blocks of its own plating.'
     },
     hints: [
-      'Tap each plate to read its ions and watch how the warden answers.',
+      'Read the ions printed on each plate, or slide one onto the hotplate and turn the dial up until it gives way.',
       'Compare the charges on the ions of the three plates, and then the distance between their centres.',
       'The lattice held hardest by charge and by closeness is the one that takes the most heat.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a plate.' };
-      const hot = byLatticeEnergy(['NaCl', 'MgO', 'KCl'])[0];
-      const id = { NaCl: 'a', MgO: 'b', KCl: 'c' }[hot];
-      if (state.choice === id) return { ok: true };
+      const t = state.table;
+      const held = piecesIn(t, 'slot:most', 'salt')[0];
+      if (!held) return { ok: false, notYet: true, msg: 'Put a plate in the marked place.' };
+      const hot = byLatticeEnergy(PLATING.map(p => p[2]))[0];
+      if (held.props.lattice === hot) return { ok: true };
       return { ok: false, msg: 'A plate that is held less tightly gives its ions up at a lower temperature. Read the ions again.' };
     },
     reward: {
@@ -103,28 +137,27 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 2 */
   {
+    id: 'phase2',
     title: 'Phase 2 · The Vent',
-    bench: 'pair',
     prompt: 'Place all valence electrons for sulfur tetrafluoride until every lamp lights.',
-    controls: ['hand', 'clear'],
-    rigs: [slate('a', 'PLATE A', 'SF4')],
-    widget: { type: 'none' },
+    widget: { type: 'table', label: 'The bench' },
+    table: ventTable(),
+    foes: WARDEN_FOE,
     encounter: {
       species: 'basalt warden',
       act: 'Seal Vent',
       intent: 'The warden vents a thin stream and its seams stand shut.'
     },
     hints: [
-      'Pick where the next pair goes, then fill the slots between the atoms first.',
+      'Drag a pair from the tray onto the joint between two atoms, or onto one atom.',
       'Compare the lamps on the fluorine atoms with the lamp on sulfur as the tray runs down.',
       'Put the pairs that are left after the bonds and the fluorine atoms are done onto sulfur.'
     ],
     check(state) {
-      const mol = MOLECULES.SF4;
-      const read = planLewis(mol, state.boards?.a || blankDrawing(), state.charges?.a ?? 0);
-      if (read.total - read.left === 0) return { ok: false, notYet: true, msg: 'Place the tray\'s electrons on the slate.' };
-      if (allLit(read)) return { ok: true };
-      if (read.left > 0) return { ok: false, msg: 'Electrons are still in the tray, and a lamp is still dark.' };
+      const sl = slateOf(state.table, 'a');
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the tray\'s electrons on the slate.' };
+      if (allLit(sl.read)) return { ok: true };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still in the tray, and a lamp is still dark.' };
       return { ok: false, msg: 'The tray is empty but a lamp is still dark, or an atom has more round it than it can hold.' };
     },
     reward: {
@@ -136,29 +169,33 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   {
+    id: 'phase3',
     title: 'Phase 3 · The Joints',
-    bench: 'rig',
-    prompt: 'What is the bond angle between adjacent fluorine atoms on this XeF4 hub?',
-    controls: ['arms', 'protractor'],
-    rigs: [hub('a', 'HUB A', 'Xe', [atoms('f', 'F', 4, 'Fluorine'), lone(2)], 'xenon with four fluorine atoms and two lone pairs')],
-    widget: {
-      type: 'choice', label: 'Angle',
-      options: [{ id: '90', label: '90°' }, { id: '109.5', label: '109.5°' }, { id: '120', label: '120°' }, { id: '180', label: '180°' }]
-    },
+    prompt: 'Set the angle marker to the angle between neighbouring fluorine atoms on the xenon hub.',
+    widget: { type: 'table', label: 'The bench' },
+    table: hubTable(),
+    foes: WARDEN_FOE,
     encounter: {
       species: 'basalt warden',
       act: 'Read Angle',
       intent: 'The warden stands with its columns held square.'
     },
     hints: [
-      'Clip on the four fluorine atoms and both lone pairs, then use the protractor on two neighbours.',
+      'Drop the four fluorine atoms and both lone pairs on the hub, then lay the protractor on two neighbours.',
       'Compare where the lone pairs settle with where the fluorine atoms settle.',
       'The fluorine atoms lie in a flat square once the lone pairs are opposite each other.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose an angle.' };
-      if (state.choice === '90') return { ok: true };
-      return { ok: false, msg: 'Build the hub and read the protractor between two fluorine atoms that sit next to each other.' };
+      const t = state.table;
+      const r = hubRead(t, 'hub');
+      const v = markerValue(t, 'mark');
+      if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
+      const fs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
+      if (r.lone < 2 || fs.length < 4) return { ok: false, msg: 'Build the hub with everything in the tray on it, then read the protractor between two fluorine atoms that sit next to each other.' };
+      let near = Infinity;
+      for (let i = 0; i < fs.length; i++) for (let j = i + 1; j < fs.length; j++) near = Math.min(near, angleBetween(r.plan, fs[i][1], fs[j][1]));
+      if (Math.abs(v - near) <= 1.5) return { ok: true };
+      return { ok: false, msg: 'Lay the protractor across two fluorine atoms that sit next to each other on the finished hub, and read it again.' };
     },
     reward: {
       title: 'Joints Locked',
@@ -169,35 +206,39 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 4 */
   {
+    id: 'phase4',
     title: 'Phase 4 · The Coolant',
-    bench: 'rig',
-    prompt: 'Select every polar molecule that rotates to align with the electric field.',
-    controls: ['field', 'arrows'],
-    rigs: [
-      field('a', 'PLATE A', 'CO2', 'carbon dioxide'),
-      field('b', 'PLATE B', 'SF4', 'sulfur tetrafluoride'),
-      field('c', 'PLATE C', 'NH3', 'ammonia')
-    ],
-    widget: {
-      type: 'multi', label: 'Turns in the field',
-      options: [{ id: 'a', label: 'Plate A' }, { id: 'b', label: 'Plate B' }, { id: 'c', label: 'Plate C' }]
-    },
+    prompt: 'Put every molecule that turns in the electric field into the tray.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [
+        molCard('a', 'CO2', { x: 14, y: 54 }, { field: true }),
+        molCard('b', 'SF4', { x: 44, y: 54 }, { field: true }),
+        molCard('c', 'NH3', { x: 74, y: 54 }, { field: true }),
+        arrowsTool('ar', { x: 100, y: 10 })
+      ],
+      zones: { trays: [{ id: 'turns', label: 'Turns in the field', at: { x: 112, y: 44 }, size: { w: 62, h: 26 }, cell: 20 }] },
+      fixtures: [plates('pl', FIELD_AT, { size: { w: 70, h: 38 } })]
+    }),
+    foes: WARDEN_FOE,
     encounter: {
       species: 'basalt warden',
       act: 'Pick Turners',
       intent: 'The warden stands between the plates, with a coolant line to each molecule.'
     },
     hints: [
-      'Switch the field on and show the arrows.',
+      'Put each molecule between the plates, switch the field on and lay the arrows on it.',
       'Compare the net arrow on each plate once the bond arrows are added.',
       'A molecule turns when its bond arrows add to a net arrow and stays still when they cancel.'
     ],
     check(state) {
-      if (!state.picks.length) return { ok: false, notYet: true, msg: 'Pick the molecules that turn.' };
-      const want = ['b', 'c'];
-      const got = state.picks.slice().sort();
+      const t = state.table;
+      const ids = ['a', 'b', 'c'];
+      const got = ids.filter(id => t.pieces[id].zone === 'tray:turns');
+      if (!got.length) return { ok: false, notYet: true, msg: 'Put the molecules that turn in the tray.' };
+      const want = ids.filter(id => molRead(t.pieces[id]).polar);
       if (got.join() === want.join()) return { ok: true };
-      return { ok: false, msg: 'Switch the field on and watch which plates do not move, then check your picks against them.' };
+      return { ok: false, msg: 'Switch the field on and watch which molecules do not move, then check the tray against them.' };
     },
     reward: {
       title: 'Coolant Grounded',
@@ -208,27 +249,37 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 5 */
   {
+    id: 'phase5',
     title: 'Phase 5 · The Core',
-    bench: 'rack',
-    prompt: 'Which gas is paramagnetic and drawn toward the magnetic field?',
-    controls: ['rackhand', 'magnet'],
-    counts: true,
-    rigs: [rack('a', 'PLATE A', 'N2'), rack('b', 'PLATE B', 'O2'), rack('c', 'PLATE C', 'F2')],
-    widget: { type: 'pick', label: 'The gas', help: 'Tap a plate on the bench to pick it.' },
+    prompt: 'Put the gas the magnet draws in the marked place.',
+    widget: { type: 'table', label: 'The bench' },
+    table: moTable({
+      pieces: GASES.map(([id, label, mol], i) => moCard(id, label, { x: 20 + i * 34, y: 52 }, { mol })),
+      zones: {
+        slots: [
+          { id: 'test', label: 'Gas to test', at: { x: 36, y: 22 }, size: { w: 36, h: 22 } },
+          { id: 'drawn', label: 'Drawn in', at: { x: 118, y: 42 }, size: { w: 36, h: 22 } }
+        ]
+      },
+      fixtures: [magnet('magnet', { x: 76, y: 22 }, { slot: 'test', size: { w: 34, h: 30 }, label: 'Magnet' })]
+    }),
+    foes: WARDEN_FOE,
     encounter: {
       species: 'basalt warden',
       act: 'Pick Gas',
       intent: 'The warden stands over three gas lines, none of them marked.'
     },
     hints: [
-      'Test the samples with the magnet and fill each rack from the bottom up.',
-      'Compare the electrons standing alone in a box on each rack.',
+      'Put each gas in the test slot and press "Test Sample".',
+      'Compare how hard the magnet pulls on each of the three gases.',
       'Electrons that stand alone in a box are the ones a magnet pulls.'
     ],
     check(state) {
-      if (!state.sample) return { ok: false, notYet: true, msg: 'Tap a plate to pick it.' };
-      if (state.sample === 'b') return { ok: true };
-      return { ok: false, msg: 'Test all three samples with the magnet and compare what each does.' };
+      const t = state.table;
+      const held = piecesIn(t, 'slot:drawn', 'mocard')[0];
+      if (!held) return { ok: false, notYet: true, msg: 'Put a gas in the marked place.' };
+      if (DIATOMICS[held.props.mol].unpaired > 0) return { ok: true };
+      return { ok: false, msg: 'Test all three gases with the magnet and compare what each does.' };
     },
     reward: {
       title: 'Core Exposed',
@@ -237,6 +288,47 @@ export const STAGES = [
     }
   }
 ];
+
+/* ------------------------------------------------------------------
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
+   direct actions, by drag and by two taps. A block or a gas is put in a place, a tray piece is dropped on a joint or an
+   atom, an arm on the hub, a molecule in a tray, a marker is a dial. Nothing here says which block is held hardest or where
+   an arm settles.
+   ------------------------------------------------------------------ */
+
+const deal = (target, n = 1, tool = 'pairs') => Array.from({ length: n }, () => ({ join: [tool, target] }));
+const on = (...ids) => ids.map(id => ({ join: [id, 'hub'] }));
+const read = (a, b) => [{ join: ['pr', a] }, { join: ['pr', b] }];
+const set = value => ({ setDial: { fixture: 'mark', dial: 'value', value } });
+const field = { run: 'pl' };
+const free = (id, x, y) => ({ place: { piece: id, to: `free:${x},${y}` } });
+const between = id => free(id, 37, 22);
+const test = (id) => [into(id, 'test'), { run: 'magnet' }];
+
+/** The bench state that solves each phase, in order. Checked by verify:learn and verify:table. */
+export const SOLUTIONS = [
+  [into('b', 'most')],
+  [...['aj01', 'aj02', 'aj03', 'aj04'].flatMap(j => deal(j)), ...['a1', 'a2', 'a3', 'a4'].flatMap(a => deal(a, 1, 'three')), ...deal('a0')],
+  [...on('f1', 'f2', 'f3', 'f4', 'l1', 'l2'), ...read('f1', 'f2'), set(90)],
+  [between('a'), field, free('a', 14, 54), between('b'), into('b', 'turns', 'tray'), between('c'), into('c', 'turns', 'tray')],
+  [...test('n2'), ...test('o2'), ...test('f2'), into('o2', 'drawn')]
+];
+
+/** A plausible wrong answer per phase. Each must be refused, and must say why. */
+export const MISSES = [
+  [into('a', 'most')],
+  [...['aj01', 'aj02', 'aj03', 'aj04'].flatMap(j => deal(j))],
+  [...on('f1', 'f2', 'f3', 'f4', 'l1', 'l2'), ...read('f1', 'f2'), set(120)],
+  [into('a', 'turns', 'tray'), into('b', 'turns', 'tray')],
+  [into('n2', 'drawn')]
+];
+
+function blankState() { return {}; }
+
+export function stateFor(i, overrides) {
+  return stateFromScript(STAGES[i], overrides);
+}
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -321,171 +413,12 @@ export const PRACTICE = [
   }
 ];
 
-/* ------------------------------------------------------------------
-   BENCH STATE
-   ------------------------------------------------------------------ */
-function blankState(stage) {
-  return stage.bench === 'pair' ? boardState(stage.rigs) : {};
-}
-
-export const SOLUTIONS = [
-  { choice: 'b' },
-  { boards: { a: DRAWINGS.SF4 } },
-  { choice: '90' },
-  { picks: ['b', 'c'] },
-  { sample: 'b' }
-];
-
-export const MISSES = [
-  { choice: 'a' },
-  { boards: { a: { bonds: { '0-1': 1, '0-2': 1, '0-3': 1, '0-4': 1 }, lone: {}, dots: {} } } },
-  { choice: '120' },
-  { picks: ['a', 'b'] },
-  { sample: 'a' }
-];
-
-export function stateFor(i, overrides) {
-  const base = { ...blankAnswer(STAGES[i]), ...blankState(STAGES[i]) };
-  return { ...base, ...overrides, boards: { ...base.boards, ...(overrides?.boards || {}) } };
-}
 
 /* ==================================================================
    THE GAME
    ================================================================== */
 
 export function mount(container, ctx) {
-  let bench = null;
-  let benchKind = null;
-  let runner = null;
-  let fieldOn = false;
-  let arrowsOn = false;
-
-  /** The warden of every plate, told what its plate reads. */
-  function reactAll(quiet = false) {
-    const stage = runner.stage;
-    for (const rig of stage.rigs) {
-      let probe = null;
-      if (rig.head === 'lattice') probe = bench.itemFor(rig.id)?.tapped ? { rig: 'hold', lattice: rig.lattice } : null;
-      else if (rig.head === 'slate') {
-        const read = bench.readOf(rig.id);
-        probe = { rig: 'lamps', lit: litCount(read), of: read.atoms.length };
-      } else if (rig.head === 'hub') probe = { rig: 'arms', arms: bench.armsOf(rig.id) };
-      else if (rig.head === 'field') probe = { rig: 'field', mol: rig.mol, on: fieldOn };
-      else if (rig.head === 'rack') probe = bench.itemFor(rig.id)?.tested ? { rig: 'pull', unpaired: DIATOMICS[rig.mol].unpaired } : null;
-      if (probe) runner.frame.foeReact(rig.id, probe, quiet);
-    }
-  }
-
-  function paintAll() {
-    const host = runner.frame.el.controls;
-    if (benchKind === 'pair') paintPairHand(host, bench.cfg.hand);
-    else if (benchKind === 'rig') { paintRigHand(host, bench.cfg.hand); paintToggle(host, 'field', fieldOn); paintToggle(host, 'arrows', arrowsOn); }
-    else if (benchKind === 'rack') paintHand(host, bench.cfg.hand, false);
-  }
-
-  function onProbe(hit) {
-    if (hit.kind === 'hand') { paintAll(); return; }
-    if (hit.kind === 'lattice') {
-      const item = bench.itemFor(hit.plateId ?? runner.stage.rigs.find(r => r.lattice === hit.lattice)?.id);
-      if (item) item.tapped = true;
-      const c = hit.cation; const a = hit.anion;
-      const q = n => `${n > 0 ? '+' : '−'}${Math.abs(n)}`;
-      runner.readout(`Plate // ${hit.lattice}`, `${c.sym} ${q(c.charge)}, ${c.radius} pm. ${a.sym} ${q(a.charge)}, ${a.radius} pm. Centres ${hit.centres} pm apart.`);
-      reactAll();
-    } else if (hit.kind === 'board') {
-      runner.state.boards[hit.plateId] = hit.placed;
-      const d = describeBoard(hit, bench.itemFor(hit.plateId));
-      runner.readout(d.head, d.body);
-      reactAll(); paintAll();
-    } else if (hit.kind === 'rig' || hit.kind === 'protractor') {
-      const d = describeRig(hit);
-      if (d.body) runner.readout(d.head, d.body);
-      if (hit.kind === 'rig') reactAll();
-      paintAll();
-    } else if (hit.kind === 'field' || hit.kind === 'arrows') {
-      fieldOn = bench.cfg.field; arrowsOn = bench.cfg.arrows;
-      paintAll(); reactAll();
-    } else if (hit.kind === 'rack') {
-      const d = hit.action === 'refused' ? { head: 'Rack // refused', body: hit.reason } : { head: 'Rack // placed', body: 'One electron placed.' };
-      runner.readout(d.head, d.body);
-    }
-  }
-
-  function onTool(tool) {
-    if (tool.startsWith('hand:')) {
-      bench.setHand?.(tool.slice(5));
-      paintAll();
-    } else if (tool === 'clear') {
-      bench.clear?.();
-      for (const rig of runner.stage.rigs) {
-        if (benchKind === 'pair') runner.state.boards[rig.id] = bench.placedOf(rig.id);
-      }
-      reactAll(true);
-    } else if (tool === 'turn') {
-      bench.turn?.();
-    } else if (tool === 'field') {
-      fieldOn = !fieldOn; bench.setField?.(fieldOn); paintAll(); reactAll();
-    } else if (tool === 'arrows') {
-      arrowsOn = !arrowsOn; bench.setArrows?.(arrowsOn); paintAll();
-    } else if (tool === 'magnet-sample') {
-      const lines = [];
-      for (const rig of runner.stage.rigs) {
-        const m = bench.measured?.(rig.id) ?? 0;
-        bench.pull?.(rig.id, m);
-        const item = bench.itemFor(rig.id);
-        if (item) item.tested = true;
-        lines.push(`${rig.label}: ${pullWords(m)}`);
-      }
-      runner.readout('Magnet // samples', lines.join(' '));
-      reactAll();
-    }
-  }
-
-  /** Stand the instrument this phase needs, and take the last phase's down. */
-  function ensureBench(kind, r) {
-    if (benchKind === kind) return;
-    bench?.dispose();
-    const host = r.frame.instrumentHost;
-    if (kind === 'bond') bench = BondBench(host, { onProbe, onSetting: () => {} });
-    else if (kind === 'pair') bench = PairBoard(host, { onProbe });
-    else if (kind === 'rig') bench = DomainRig(host, { onProbe });
-    else bench = BoxRack(host, { onProbe, onSelect: id => runner.pick(id) });
-    benchKind = kind;
-  }
-
-  function onLoad(stage, i, r) {
-    ensureBench(stage.bench, r);
-    fieldOn = false; arrowsOn = false;
-    const parts = [];
-    if (stage.bench === 'bond') {
-      bench.setPlates(stage.rigs, { settings: [], setting: 1 });
-      bench.setSelectable(false);
-      r.readout(null, null, { idleHead: 'Plates // standby', idle: 'Tap a plate to read its ions.' });
-    } else if (stage.bench === 'pair') {
-      bench.setPlates(stage.rigs, { hands: ['bond', 'lone', 'x'] });
-      bench.setSelectable(false);
-      parts.push(...pairKeys({ earned: true }));
-      r.readout(null, null, { idleHead: 'Slate // standby', idle: 'Pick where the next pair goes, then tap the slate.' });
-    } else if (stage.bench === 'rig') {
-      bench.setPlates(stage.rigs, { field: false, arrows: false });
-      bench.setSelectable(false);
-      parts.push(...(stage.controls.includes('field') ? fieldKeys() : hubKeys(stage)));
-      r.readout(null, null, { idleHead: 'Plate // standby', idle: stage.controls.includes('field') ? 'The plates are off. Switch the field on.' : 'Pick an arm, then tap the hub.' });
-    } else {
-      bench.setPlates(stage.rigs, { show: { counts: true }, hand: null });
-      bench.setSelectable(true);
-      parts.push(handKeys({ clear: true, core: false }));
-      parts.push(`
-        <div class="cb-field" role="group" aria-label="Magnet">
-          <button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="magnet-sample">Test Sample</button>
-        </div>`);
-      r.readout(null, null, { idleHead: 'Rack // standby', idle: 'Pick a hand, then tap a box.' });
-    }
-    r.setControls(parts, onTool);
-    paintAll();
-    reactAll(true);
-  }
-
   // Clearing the last phase files the clue. The boss pays no XP, so this is not a rail.
   const bossCtx = {
     ...ctx,
@@ -495,15 +428,14 @@ export function mount(container, ctx) {
     }
   };
 
-  runner = createRunner(container, bossCtx, {
+  const runner = createRunner(container, bossCtx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    setup: () => {},
-    onLoad,
-    onDispose: () => bench?.dispose()
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
 
   runner.start();
   return { dispose: () => runner.dispose() };
 }
 
-export { planDomains, planDipole, bondAngles, LATTICES };
+/* Exported for `verify:learn`, which holds every graded figure to the planners. */
+export { planDomains, planDipole, bondAngles, LATTICES, MOLECULES };

@@ -159,6 +159,7 @@ export const STAGES = [
     widget: {
       type: 'order',
       label: 'Order from lowest to highest entropy',
+      rail: { first: 'Lowest entropy', last: 'Highest entropy' },
       items: [
         choice('ice', 'Ice'),
         choice('water', 'Liquid water'),
@@ -168,10 +169,10 @@ export const STAGES = [
     hints: [
       'Look at how the molecules are placed on each of the three plates.',
       'Compare how many different places each molecule could be in on each plate.',
-      'The more places a molecule can be, the more arrangements there are, so tap the plates from fewest places to most.'
+      'The more places a molecule can be, the more arrangements there are, so put the plates from fewest places to most.'
     ],
     check(state) {
-      if (state.order.length < 3) return { ok: false, notYet: true, msg: 'Tap all three phases.' };
+      if (state.order.length < 3) return { ok: false, notYet: true, msg: 'Put all three phases in order.' };
       if (state.order.join(',') === 'ice,water,steam') return { ok: true };
       return { ok: false, msg: 'Compare how much freedom the molecules have on each plate: the most confined phase has the fewest arrangements.' };
     },

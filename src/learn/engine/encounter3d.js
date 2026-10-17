@@ -60,7 +60,7 @@ export class FoeLayer3D {
     this.dirty = Boolean(this.enc);
 
     if (this.enc) {
-      if (this.viewer.stations.length) this.layout();
+      if (this.viewer.stations.length || this.viewer.foeSpots?.(1)) this.layout();
     }
   }
 
@@ -102,16 +102,22 @@ export class FoeLayer3D {
 
   /* ---------------- standing on the bench ---------------- */
 
-  /** Stand a body in every station's well. Called whenever the stations change. */
+  /**
+   * Stand a body in every station's well. Called whenever the stations change. A TABLETOP has no wells: its
+   * viewer answers `foeSpots(n)` instead (the corner pad of the table, `table/layout.js`), and the foes stand
+   * there, watching the table.
+   */
   layout() {
     if (this.disposed || !this.enc) return;
-    this.dirty = false;
     const stations = this.viewer.stations;
+    const spots = stations.length ? null : this.viewer.foeSpots?.(this.enc.foes.length);
+    if (!stations.length && !spots) return;
+    this.dirty = false;
     const reduced = reducedMotion();
 
     this.enc.foes.forEach((foe, i) => {
-      const st = stations[i];
-      if (!st) return;
+      const st = spots ? null : stations[i];
+      if (!spots && !st) return;
       let body = this.bodies.get(foe.id);
       if (!body) {
         body = buildFoeBody(this.enc.species, foe);
@@ -125,9 +131,15 @@ export class FoeLayer3D {
       body.stationIndex = i;
       body.station = st;
       const perch = PERCH[this.enc.species] || { x: 0, y: 0, z: 0 };
-      body.baseX = st.group.position.x + perch.x;
-      body.baseY = 0.95 + perch.y;
-      body.baseZ = st.group.position.z + perch.z;
+      if (spots) {
+        body.baseX = spots[i].x + perch.x;
+        body.baseY = spots[i].y + perch.y;
+        body.baseZ = spots[i].z + perch.z;
+      } else {
+        body.baseX = st.group.position.x + perch.x;
+        body.baseY = 0.95 + perch.y;
+        body.baseZ = st.group.position.z + perch.z;
+      }
       body.group.position.set(body.baseX, body.baseY, body.baseZ);
     });
     this.group.visible = true;
@@ -153,7 +165,7 @@ export class FoeLayer3D {
 
   update(dt) {
     if (this.disposed || !this.enc) return;
-    if (this.dirty && this.viewer.stations.length) this.layout();
+    if (this.dirty && (this.viewer.stations.length || this.viewer.foeSpots)) this.layout();
     const reduced = reducedMotion();
     const step = Math.min(dt, 0.05);
 

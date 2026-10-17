@@ -80,6 +80,11 @@ export class FpsControls {
     // Set while an instrument is deployed on ground the player is standing on:
     // see `onKeyDown`.
     this.walkKeysAtBench = false;
+    // Set while a deployed bench is leaned in over its plate: the camera is the
+    // bench's pose, far from where the player stands, and that is not a teleport.
+    // The walk keeps its own base position and writes the standing view again the
+    // moment the lean lets go.
+    this.holdBase = false;
 
     // Height & environment
     this.eyeHeight = 1.6;
@@ -510,7 +515,7 @@ export class FpsControls {
     this.totalTime += dt;
 
     // Sync basePosition and orientation with camera if teleported or uninitialized
-    if (!this.hasBasePosition || this.camera.position.distanceTo(this.basePosition) > 1.2) {
+    if (!this.hasBasePosition || (!this.holdBase && this.camera.position.distanceTo(this.basePosition) > 1.2)) {
       this.syncFromCamera();
     }
 
