@@ -1042,7 +1042,8 @@ const LG_BENCHES = LG_BENCHES_ALL.filter(([id]) => !LG[id].STAGES.every(st => st
       check(id, `${label}, ${heads} plate`, build, bench => layLigar(bench, st));
     }
   }
-  if (failures === mark) ok(`the later Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
+  if (!LG_BENCHES.length) ok('every Ligar quest is a tabletop (T3c): the bond bench, the pair board, the domain rig, the join bench and the box rack serve no quest, and wait for T7 to retire them');
+  else if (failures === mark) ok(`the later Ligar instruments frame every body and control at ${ASPECTS.length} aspects`);
 }
 
 async function ligarLaterPasses() {
@@ -1822,28 +1823,8 @@ console.log('');
 console.log('The foes — spoil standing in the wells\n');
 
 {
-  // LIGAR: the basalt warden, one phase to a bench. (`world` becomes Ligar.)
-  world = new LigarWorld(null);
-  world.scene.updateMatrixWorld(true);
-  const warden = (await import('../src/learn/quests/unit03/boss-warden.js')).STAGES;
-  const ligarCfg = (questId, label, build) => ({
-    questId, label, build: (camera, anchor) => build(camera, anchor),
-    lay: (bench, st) => layLigar(bench, st), items: st => st.rigs || [], select: false
-  });
-  const wardenProbes = {
-    bond: (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { rig: 'hold', lattice: st.rigs.find(r => r.id === f.id).lattice }]]) : [],
-    pair: (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { rig: 'lamps', lit: 1, of: 5 }], [f.id, { rig: 'lamps', lit: 5, of: 5 }]]) : [],
-    rig: (st, enc) => enc ? enc.foes.flatMap(f => {
-      const rig = st.rigs.find(r => r.id === f.id);
-      if (rig.head === 'field') return [[f.id, { rig: 'field', mol: rig.mol, on: true }]];
-      return [[f.id, { rig: 'arms', arms: [{ kind: 'atom', sym: 'H' }, { kind: 'atom', sym: 'H' }, { kind: 'lone' }] }]];
-    }) : [],
-    rack: (st, enc) => enc ? enc.foes.flatMap(f => [[f.id, { rig: 'pull', unpaired: 2 }]]) : []
-  };
-  await foePasses(ligarCfg('q3-distance', 'bond bench (the warden)', (c, a) => new BondBench3D(null, { world: worldFrame(c, a) })), [warden[0]], wardenProbes.bond);
-  await foePasses(ligarCfg('q4-dots', 'pair board (the warden)', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })), [warden[1]], wardenProbes.pair);
-  await foePasses(ligarCfg('q6-shape', 'domain rig (the warden)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })), [warden[2], warden[3]], wardenProbes.rig);
-  await foePasses(ligarCfg('q9-orbitals', 'molecular rack (the warden)', (c, a) => new LigarRack3D(null, { world: worldFrame(c, a) })), [warden[4]], wardenProbes.rack);
+  // LIGAR: the basalt warden is five table phases since T3c, with its foe in the table's corner; it is held with the other table bosses
+  // below ("boss-warden on its tables"), not here.
 
   // BELLOWS: the Compressor over the boss's five phases.
   // (`world` becomes Bellows.)
@@ -2646,7 +2627,7 @@ console.log('The foes — spoil standing in the wells\n');
  *     lunges, a clear disperses, a replay and a knock-back restore it) and it is a few thousand triangles, no more;
  *   - a press on the pad is a press on the table, never a take of the foe (a foe only observes).
  */
-for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hopper.js', null], ['boss-golem', 'unit07/boss-golem.js', 'foundry']]) {
+for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hopper.js', null], ['boss-golem', 'unit07/boss-golem.js', 'foundry'], ['boss-warden', 'unit03/boss-warden.js', null]]) {
   console.log(`\n${bossName} on its tables`);
   const MODEL = await import('../src/learn/table/model.js');
   const SNAP = await import('../src/learn/table/snap.js');
@@ -2655,7 +2636,10 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
   const { Table3D } = await import('../src/learn/engine/table3d.js');
   const { chromeReserve } = await import('../src/learn/engine/lean.js');
   const hop = await import(`../src/learn/quests/${bossModule}`);
-  const POSES = [['idle'], ['unmoved'], ['cracked'], ['neutral'], ['balanced'], ['starved'], ['dispersed']];
+  // Every pose the species' planner can answer (`foes.js`): the hopper's and the golem's, and the warden's own.
+  const POSES = bossName === 'boss-warden'
+    ? [['idle'], ['unmoved'], ['gripped'], ['cleaved'], ['splayed'], ['turned'], ['still'], ['locked'], ['free'], ['dispersed']]
+    : [['idle'], ['unmoved'], ['cracked'], ['neutral'], ['balanced'], ['starved'], ['dispersed']];
   const setGlass = (w, h) => { window.innerWidth = w; window.innerHeight = h; };
   const before = failures;
   let fights = 0;
@@ -2760,7 +2744,7 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
       layer.update(0.05);
       const tag = `${label} (the fight)`;
       for (const f of enc.foes) {
-        for (const pose of ['cracked', 'neutral', 'unmoved']) {
+        for (const pose of bossName === 'boss-warden' ? ['gripped', 'cleaved', 'unmoved'] : ['cracked', 'neutral', 'unmoved']) {
           const probe = { pose };
           const want = planFoe(enc, f, probe);
           encounter.react(f.id, probe);

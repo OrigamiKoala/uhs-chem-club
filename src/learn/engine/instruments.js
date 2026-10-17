@@ -133,14 +133,14 @@ const BUILT_BENCHES = new Set([
   'q8-trends',     // the electron bench, atom head and pull meter
   'q9-absorb',     // the light bench, cuvette head
   // Unit 3 — Ligar, benches three to nine.
-  'q3-distance',   // the tabletop, bonds kit (a pair pulled apart by hand, pair cards, salts) — table3d.js (T3a; the bond bench stands on in the warden's room)
+  'q3-distance',   // the tabletop, bonds kit (a pair pulled apart by hand, pair cards, salts) — table3d.js (T3a)
   'q4-dots',       // the pair board — pairboard3d.js
   'q5-resonance',  // the tabletop, the Lewis slate with a charge stamp, a mark and a bond gauge — table3d.js (T3a)
-  'q6-shape',      // the tabletop, domain kit (a hub arms clip to and push apart on, a protractor, a frame of sockets) — table3d.js (T3b; the domain rig stands on in the warden's room)
+  'q6-shape',      // the tabletop, domain kit (a hub arms clip to and push apart on, a protractor, a frame of sockets) — table3d.js (T3b)
   'q7-polarity',   // the tabletop, domain kit (charged plates, molecule cards, arrows, a swap tool, a charged rod and streams)
   'q8-hybrid',     // the tabletop, domain kit (a mixing bowl, orbitals overlapped into bonds, a bond whose far end is turned)
-  'q9-orbitals',   // the box rack, molecular layout — boxrack3d.js
-  'boss-warden',   // the warden: bond bench, pair board, domain rig and box rack in turn, in its own room
+  'q9-orbitals',   // the tabletop, orbital kit (a rack of boxes that electrons are poured into, a magnet that reads the real molecule, cards on a rail) — table3d.js (T3c)
+  'boss-warden',   // the warden: five phases on the bonds, atom, domain and orbital kits, its foe in the table's corner
   // Unit 4 — Bellows. One instrument, six heads: cylinder, mixture, leak, tube, path and record.
   'q1-knocks',     // the gas rig, cylinder head with the speed screen — gasrig3d.js
   'q2-laws',       // the gas rig, cylinders with traces, and the gauge records

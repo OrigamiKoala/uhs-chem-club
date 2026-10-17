@@ -112,6 +112,10 @@ export function buildBasaltWarden(foe) {
 
   const rig = new THREE.Group();
   group.add(rig);
+  // The warden fights from the corner pad of a table (`table/layout.js` `FOE_PAD`) now that every bench is a tabletop, so it is a
+  // squatter, narrower body than the one that stood in a well: every pose (columns splayed, swung round, spread in the dispersal)
+  // stays inside the pad.
+  group.scale.setScalar(0.58);
 
   const mat = basaltMaterial();
   const jointMat = basaltJointMaterial();

@@ -1157,13 +1157,21 @@ async function checkEncounterLayer() {
     /(\bif\s*\(|\breturn\b|&&|\|\||\?[^.])\s*!?\s*\(?this\.encounter/.test(l.replace(/\?\./g, '#.')));
   if (gating.length) fail(`frame.js lets the encounter decide something (${gating[0].trim()}) -- it may only be told things`);
 
-  // THE PLATE, DRAWN FOR REAL on a pack (boss-warden phase 1) and a lone warden
-  // (boss-warden phase 2): one portrait per bench item, Integrity pips that fall
-  // and refill, the reason's beat held back, a reaction taken from the planner,
-  // and a win that disperses everything.
+  // THE PLATE, DRAWN FOR REAL on a pack (three wardens over three lattices) and a lone
+  // warden (one slate): one portrait per bench item, Integrity pips that fall and refill,
+  // the reason's beat held back, a reaction taken from the planner, and a win that
+  // disperses everything. (The Warden's own phases are tables with one foe each since T3c;
+  // the plate still draws a pack for the species that fight over several bench items, so
+  // the pack is declared here, as the old bench declared it.)
   {
     const { Encounter } = await import('../src/learn/engine/encounter.js');
-    const warden = await import('../src/learn/quests/unit03/boss-warden.js');
+    const wardenEnc = { species: 'basalt warden', act: 'Name Plate', intent: 'A basalt warden stands over three blocks of its own plating.' };
+    const warden = {
+      STAGES: [
+        { rigs: [['a', 'NaCl'], ['b', 'MgO'], ['c', 'KCl']].map(([id, lattice]) => ({ id, label: `Plate ${id.toUpperCase()}`, head: 'lattice', lattice })), encounter: wardenEnc },
+        { rigs: [{ id: 'a', label: 'Plate A', head: 'slate', mol: 'SF4' }], encounter: { ...wardenEnc, act: 'Seal Vent' } }
+      ]
+    };
     const host = { hidden: true, className: '', dataset: {}, innerHTML: '' };
     const pips = () => (host.innerHTML.match(/<i class="on">/g) || []).length;
 
@@ -2609,21 +2617,144 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   }
 
   if (q9) {
-    const { DIATOMICS, fillMO, readMO } = MOD;
+    const { DIATOMICS, fillMO, readMO, rowsMO } = MOD;
+    const MO = await import('../src/learn/table/kits/mo.js');
+    const start = i => TABLE.createTable(q9.STAGES[i].table, q9.STAGES[i].title);
+    const end = i => TABLE.runScript(start(i), q9.SOLUTIONS[i], { strict: true });
     for (const [id, d] of Object.entries(DIATOMICS)) {
       const r = readMO(d.order, fillMO(d.order, d.e));
       same(r.unpaired, d.unpaired, `unit03/q9-orbitals: ${id} filled in order measures ${d.unpaired} unpaired`);
     }
     const order = id => readMO(DIATOMICS[id].order, fillMO(DIATOMICS[id].order, DIATOMICS[id].e)).bondOrder;
+    // Every rack on a table is the molecule's own: a container for each of its boxes, a pair at most in each, a jar holding exactly its valence electrons.
+    q9.STAGES.forEach((st, i) => {
+      const t = start(i);
+      for (const f of Object.values(t.fixtures).filter(x => x.kind === 'rack')) {
+        const d = DIATOMICS[f.props.mol];
+        same(f.props.order, d.order, `unit03/q9-orbitals stage ${i + 1} (${f.props.mol}'s order of boxes)`);
+        if (!f.props.live) continue;
+        const boxes = Object.values(t.zones.containers).filter(c => c.props?.mo?.rack === f.props.rack);
+        same(boxes.length, rowsMO(d.order).reduce((n, r) => n + r.boxes, 0), `unit03/q9-orbitals stage ${i + 1} (boxes on ${f.props.mol}'s rack)`);
+        holds(boxes.every(c => c.capacity === 2), `unit03/q9-orbitals stage ${i + 1}: a box that does not hold exactly a pair`);
+        same(MO.supplyLeft(t), d.e, `unit03/q9-orbitals stage ${i + 1} (the jar holds ${f.props.mol}'s valence electrons)`);
+        holds(Object.keys(MO.rackOf(t, f.props.rack)).length === 0, `unit03/q9-orbitals stage ${i + 1}: the rack starts with electrons on it`);
+        // The graded fill is the ground state, and it is the planner's: the rack reads what fillMO says.
+        const e = end(i);
+        same(MO.readOf(e, f.props.rack).total, d.e, `unit03/q9-orbitals stage ${i + 1} (electrons on the rack)`);
+        holds(MO.matchesGround(e, f.props.rack, d.e), `unit03/q9-orbitals stage ${i + 1}: the solution is not the ground state`);
+        same(MO.readOf(e, f.props.rack).config, readMO(d.order, fillMO(d.order, d.e)).config, `unit03/q9-orbitals stage ${i + 1} (the configuration)`);
+      }
+    });
+    // 1. two atomic 1s boxes make one box below them and one above, and the rail's answer lists them so
+    {
+      const rows = rowsMO('1s');
+      holds(!rows[0].anti && rows[1].anti, 'unit03/q9-orbitals stage 1: the lower box is not the bonding one');
+      const f = start(0).fixtures['rack-a'];
+      same(`${f.props.tags.g1s}${f.props.tags.u1s}`, '21', 'unit03/q9-orbitals stage 1 (box 2 is the lower, box 1 the upper)');
+      same(end(0).zones.rail.order.join(), 'box2,atom,box1', 'unit03/q9-orbitals stage 1 (lowest first)');
+    }
+    // 3. 4. bond orders are the planner's, and the marker is set to them
     same(order('He2'), 0, 'unit03/q9-orbitals stage 3 (He2\'s bond order)');
-    same(order('N2'), q9.SOLUTIONS[3].choice, 'unit03/q9-orbitals stage 4 (N2\'s bond order)');
-    if (!(DIATOMICS.O2.unpaired > 0)) fail('unit03/q9-orbitals stage 5: O2 measures no unpaired electrons');
-    const lengths = q9.STAGES[5].rigs.map(r => [r.id, DIATOMICS[r.mol].length, order(r.mol)]).sort((a, b) => a[1] - b[1]);
-    same(lengths.map(l => l[0]).join(), q9.SOLUTIONS[5].order.join(), 'unit03/q9-orbitals stage 6 (shortest bond first)');
-    if (lengths.some((l, k) => k && l[2] >= lengths[k - 1][2])) fail('unit03/q9-orbitals stage 6: a shorter bond does not have the higher bond order');
+    same(end(2).fixtures.order.dials.n.value, MO.readOf(end(2), 'a').bondOrder, 'unit03/q9-orbitals stage 3 (the marker)');
+    same(order('N2'), 3, 'unit03/q9-orbitals stage 4 (N2\'s bond order)');
+    same(end(3).fixtures.order.dials.n.value, order('N2'), 'unit03/q9-orbitals stage 4 (the marker)');
+    for (const i of [2, 3]) holds(start(i).fixtures.order.dials.n.value !== end(i).fixtures.order.dials.n.value, `unit03/q9-orbitals stage ${i + 1}: the marker starts on the answer`);
+    // 5. the magnet reads the REAL molecule; the solution's rack agrees with it, and a rack of pairs would not
+    {
+      if (!(DIATOMICS.O2.unpaired > 0)) fail('unit03/q9-orbitals stage 5: O2 measures no unpaired electrons');
+      const t = end(4);
+      same(MO.magnetRead(t, 'magnet').pull, DIATOMICS.O2.unpaired, 'unit03/q9-orbitals stage 5 (what the magnet read)');
+      same(MO.readOf(t, 'a').unpaired, DIATOMICS.O2.unpaired, 'unit03/q9-orbitals stage 5 (the rack\'s alone-in-a-box count)');
+      const paired = TABLE.runScript(start(4), q9.MISSES[4].filter(a => a.pour), { strict: true });
+      holds(MO.readOf(paired, 'a').unpaired !== DIATOMICS.O2.unpaired, 'unit03/q9-orbitals stage 5: pairing the last two electrons still matches the magnet');
+    }
+    // 6. a shorter bond is a higher bond order, and the rail's answer is that order
+    {
+      const t = start(5);
+      const lengths = ['a', 'b', 'c'].map(id => [id, DIATOMICS[t.pieces[id].props.mol].length, order(t.pieces[id].props.mol)]).sort((a, b) => a[1] - b[1]);
+      same(lengths.map(l => l[0]).join(), end(5).zones.rail.order.join(), 'unit03/q9-orbitals stage 6 (shortest bond first)');
+      if (lengths.some((l, k) => k && l[2] >= lengths[k - 1][2])) fail('unit03/q9-orbitals stage 6: a shorter bond does not have the higher bond order');
+      for (const id of ['a', 'b', 'c']) {
+        const m = DIATOMICS[t.pieces[id].props.mol];
+        const c = MO.cardCounts(t.pieces[id].props.mol);
+        const r = readMO(m.order, fillMO(m.order, m.e));
+        same(`${c.bonding}/${c.anti}`, `${r.bonding}/${r.anti}`, `unit03/q9-orbitals stage 6 (${id}'s printed counts)`);
+      }
+    }
+    // 7. F2 has the lower bond order and the lower listed energy, so the token is 'weaker'
     if (!(order('F2') < order('O2'))) fail('unit03/q9-orbitals stage 7: F2 does not have the lower bond order');
+    if (!(DIATOMICS.F2.energy < DIATOMICS.O2.energy)) fail('unit03/q9-orbitals stage 7: F2 is not the weaker bond in the listed data');
+    same(end(6).prediction.token, 'weaker', 'unit03/q9-orbitals stage 7 (the prediction)');
+    // 8. B2 filled in its own order has two electrons alone; in the oxygen order it would have none, so the order matters
     same(readMO('b2n2', fillMO('b2n2', 6)).unpaired, 2, 'unit03/q9-orbitals stage 8 (B2 filled in the other order)');
     same(readMO('o2f2', fillMO('o2f2', 6)).unpaired, 0, 'unit03/q9-orbitals stage 8 (B2 filled in the oxygen order reads no unpaired electrons, so the order matters)');
+    same(end(7).prediction.token, 'pulled', 'unit03/q9-orbitals stage 8 (the prediction)');
+    same(MO.readOf(end(7), 'a').unpaired, DIATOMICS.B2.unpaired, 'unit03/q9-orbitals stage 8 (the rack agrees with the magnet)');
+  }
+
+  // THE WARDEN: five phases, each on a table of a bench the player has worked, each answer read off the real planners.
+  const warden = await get('boss-warden');
+  if (warden) {
+    const { LATTICES, byLatticeEnergy } = BONDDATA;
+    const { planDomains, planDipole, angleBetween, RIG_MOLECULES } = VSEPR;
+    const ATM = await import('../src/learn/table/kits/atoms.js');
+    const DM = await import('../src/learn/table/kits/domain.js');
+    const MOK = await import('../src/learn/table/kits/mo.js');
+    const { DIATOMICS } = MOD;
+    const start = i => TABLE.createTable(warden.STAGES[i].table, warden.STAGES[i].title);
+    const end = i => TABLE.runScript(start(i), warden.SOLUTIONS[i], { strict: true });
+    // 1. the block held hardest is the one with the highest melting point, and the hotplate's dial reaches it
+    {
+      const t = end(0);
+      const lats = ['a', 'b', 'c'].map(id => start(0).pieces[id].props.lattice);
+      const hot = byLatticeEnergy(lats)[0];
+      same(Object.values(t.pieces).find(p => p.zone === 'slot:most').props.lattice, hot, 'boss-warden phase 1 (the block in the marked place)');
+      same(lats.slice().sort((a, b) => LATTICES[b].melts - LATTICES[a].melts)[0], hot, 'boss-warden phase 1 (the highest lattice energy is the highest melting point)');
+      holds(start(0).fixtures.hp.dials.heat.max >= Math.max(...lats.map(l => LATTICES[l].melts)), 'boss-warden phase 1: the hotplate cannot melt the hardest block');
+    }
+    // 2. sulfur tetrafluoride: the tray runs out, every lamp lights, sulfur holds ten
+    {
+      const sl = ATM.slateOf(end(1), 'a');
+      holds(LEWIS.allLit(sl.read) && sl.left === 0, 'boss-warden phase 2: the solution does not light every lamp with the tray empty');
+      same(sl.read.atoms[0].lamp, 'expanded', 'boss-warden phase 2 (sulfur past eight)');
+      same(sl.total, LEWIS.MOLECULES.SF4.syms.reduce((n, sym) => n + LEWIS.VALENCE[sym], 0), 'boss-warden phase 2 (the tray holds SF4\'s valence electrons)');
+    }
+    // 3. xenon tetrafluoride: neighbours are 90 degrees apart once both lone pairs are on, and the marker is set to what the planner gives
+    {
+      const t = end(2);
+      const r = DM.hubRead(t, 'hub');
+      same(r.atoms, 4, 'boss-warden phase 3 (fluorine atoms on the hub)');
+      same(r.lone, 2, 'boss-warden phase 3 (lone pairs on the hub)');
+      const plan = planDomains(RIG_MOLECULES.XeF4.arms);
+      const fs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm').map(([, i]) => i);
+      const lowest = Math.min(...fs.flatMap((i, k) => fs.slice(k + 1).map(j => angleBetween(r.plan, i, j))));
+      near(DM.markerValue(t, 'mark'), lowest, 1.5, 'boss-warden phase 3 (the angle between neighbours)');
+      same(r.plan.shape, plan.shape, 'boss-warden phase 3 (the hub\'s shape is XeF4\'s)');
+      near(lowest, 90, 0.01, 'boss-warden phase 3 (square planar)');
+    }
+    // 4. the molecules that turn are the ones whose pulls add
+    {
+      const t = end(3);
+      for (const id of ['a', 'b', 'c']) {
+        const mol = t.pieces[id].props.mol;
+        same(t.pieces[id].zone === 'tray:turns', planDipole(mol).polar, `boss-warden phase 4 (${mol})`);
+      }
+    }
+    // 5. the gas the magnet draws in is the one with electrons standing alone, and the magnet read the REAL molecule
+    {
+      const t = end(4);
+      const drawn = Object.values(t.pieces).find(p => p.zone === 'slot:drawn');
+      holds(DIATOMICS[drawn.props.mol].unpaired > 0, 'boss-warden phase 5: the gas in the marked place is not pulled');
+      const others = ['n2', 'o2', 'f2'].map(id => t.pieces[id]);
+      for (const p of others) same(MOK.cardPull(p), DIATOMICS[p.props.mol].unpaired, `boss-warden phase 5 (what the magnet wrote on ${p.label})`);
+      same(others.filter(p => DIATOMICS[p.props.mol].unpaired > 0).length, 1, 'boss-warden phase 5 (exactly one gas is pulled)');
+    }
+    // Every phase is a fight: one warden, the species' own words, no field stage, and its table keeps the corner clear (verify:table holds the pad).
+    warden.STAGES.forEach((st, i) => {
+      same(st.encounter?.species, 'basalt warden', `boss-warden phase ${i + 1} (its species)`);
+      same((st.foes || []).length, 1, `boss-warden phase ${i + 1} (its foes)`);
+      holds(!(st.table.fetch || []).length && !st.field, `boss-warden phase ${i + 1}: a boss phase declares a field stage`);
+    });
   }
 
   if (failures === before) ok('Ligar: every graded bond, drawing, angle, pull and orbital count agrees with the real tables');
