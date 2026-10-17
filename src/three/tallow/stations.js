@@ -496,7 +496,14 @@ export function buildTowerDeck(w, site, { towerBack = 8.5, towerRot = 0.647, tow
     { lx: 3.5, lz: 1.5, r: 0.2 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
-  return { group: g, bench, benchLocal: [0, 0, 0], colliders };
+  // THE FIELD POINT: the draw-off valve on the sample bombs' rack, the way a sample is taken off the tower. It is a
+  // real piece of this host (the rack on the cooler skid), the player stands in front of the skid (`stand`, host
+  // frame) and `[E]` on it draws a sample bomb into the carry slot for the bench.
+  const fieldPoints = [{
+    id: 'cooler', label: 'Cooler Draw', lx: 0.3, ly: 0.95, lz: -3.4, half: [0.6, 0.45, 0.35],
+    stand: { lx: 0.3, lz: -2.1 }
+  }];
+  return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
 /* ======================================================================

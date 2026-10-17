@@ -691,15 +691,18 @@ check('q2-core', 'core bench',
   ])
 );
 
-/* The widest stage q4-ledger declares is read out of its own table: stage 8
-   lays four samples beside a standard, FIVE stations end to end, which leaves
-   no plate beside them for a key panel. That is the case the front rail is
-   for, so it is the case measured. */
-const { STAGES: LEDGER_STAGES } = await import('../src/learn/quests/unit01/q4-ledger.js');
+/* The widest stage q4-ledger ever declared, for the core bench it used to stand on (it is a table now, T2, but the core bench
+   is still a real instrument: the hopper boss fights on it): four samples beside a standard, FIVE stations end to end, which
+   leaves no plate beside them for a key panel. That is the case the front rail is for, so it is the case measured. */
 check('q4-ledger', 'ledger bench',
   (camera, anchor) => new CoreBench3D(null, { world: worldFrame(camera, anchor) }),
-  bench => bench.setSpecimens(LEDGER_STAGES.reduce((a, b) =>
-    ((b.specimens?.length || 0) > (a.specimens?.length || 0) ? b : a)).specimens)
+  bench => bench.setSpecimens([
+    { id: 'std', label: 'SAMPLE A', note: '', core: { marked: 8, blank: 8 }, rings: [2, 6] },
+    { id: 'n1', label: 'SAMPLE B', note: '', core: { marked: 8, blank: 10 }, rings: [2, 6], casing: true },
+    { id: 'n2', label: 'SAMPLE C', note: '', core: { marked: 8, blank: 8 }, rings: [2, 8], casing: true },
+    { id: 'n3', label: 'SAMPLE D', note: '', core: { marked: 7, blank: 9 }, rings: [2, 5], casing: true },
+    { id: 'n4', label: 'SAMPLE E', note: '', core: { marked: 8, blank: 8 }, rings: [2, 6], casing: true }
+  ])
 );
 
 /* THE CATALOGUE BOARD. The widest thing this quest puts on the bench is the
@@ -773,7 +776,14 @@ if (!failures) {
    `planPour` says it lands, in the bins it says, with the pieces really placed.
 */
 
-const { STAGES: CAT_STAGES, CARDS } = await import('../src/learn/quests/unit01/q3-catalogue.js');
+const { CARDS } = await import('../src/learn/quests/unit01/q3-catalogue.js');
+/* The catalogue quest is a card table now (T2), but the board is still a real instrument (the hopper boss files on it),
+   so it is still driven through its own pointer path: the two boards the quest used to declare, a strip and a chart. */
+const CAT_STAGES = [
+  { board: { label: 'Reference strip', strip: true, rows: [['#p1', '#p2', '#p3', '#p4', '#p5', '#p6']] }, masked: true, drawer: ['c11', 'c19', 'c01', 'c18', 'c08', 'c06'] },
+  { board: { label: 'Reference chart', strip: true, columns: ['1', '2', '\u00b7 \u00b7 \u00b7', '13', '14', '15', '16', '17', '18'], rows: [['c01', null, null, null, null, null, null, null, 'c02'], ['c03', 'c04', null, 'c05', 'c06', 'c07', 'c08', 'c09', 'c10'], ['#r1', '#r2', null, '#r3', '#r4', '#r5', '#r6', '#r7', '#r8']] }, drawer: ['c16', 'c11', 'c14', 'c18', 'c12', 'c17', 'c13', 'c15'] },
+  { board: { label: 'Reference chart', columns: ['1', '2', '\u00b7 \u00b7 \u00b7', '13', '14', '15', '16', '17', '18'], rows: [['c01', null, null, null, null, null, null, null, 'c02'], ['c03', '#s1', null, 'c05', 'c06', '#s2', 'c08', 'c09', 'c10']] }, masked: true, drawer: ['c16', 'c04', 'c13', 'c07'] }
+];
 const { STAGES: ASSAY_STAGES } = await import('../src/learn/quests/unit01/q5-assay.js');
 const { STAGES: WEIGH_STAGES } = await import('../src/learn/quests/unit01/q6-weigh.js');
 const { planPour } = await import('../src/learn/engine/assay.js');

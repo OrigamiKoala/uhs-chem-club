@@ -379,6 +379,10 @@ console.log(`Tallow — ${world.name}, ${world.place}\n`);
       const { fieldPointsOf } = await import('../src/three/field-points.js');
       const points = fieldPointsOf(built);
       check(points.length >= 1, `${points.length} field point(s) registered by the hosts`, 'no field point is registered: q1-grain sends the player to the conveyor tail');
+      // Every field stage a quest declares has its point in this world (q1-grain's belt scoop, q4-ledger's cooler draw).
+      for (const [id, site] of [['tail', 'site-1'], ['cooler', 'site-4']]) {
+        check(points.some(p => p.id === id && p.siteId === site), `the "${id}" point feeds ${site}`, `no "${id}" field point feeds ${site}: the quest at that bench sends the player to it`);
+      }
       const R = 0.35;
       const free = (x, z) => !built.colliders.some(c => (c.radius !== undefined
         ? Math.hypot(x - c.x, z - c.z) < c.radius + R

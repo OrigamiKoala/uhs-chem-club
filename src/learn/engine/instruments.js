@@ -75,6 +75,9 @@ export function benchesAre3D() {
  * a beam fired through it and rings standing off it at fixed radii. Those are
  * real positions in space.
  *
+ * (T2, `bench-tabletop.md`: `q3-catalogue` and `q4-ledger` have since become tabletops, the card kit and the atom
+ * kit, played by `table3d.js`; the board and the core bench below still serve the hopper boss.)
+ *
  * THE LAST THREE FOLLOW, AND TWO OF THEM ARE EASIER CASES THAN EITHER.
  *
  * `q4-ledger` is the core bench again, at site four, and needed nothing but its
@@ -102,8 +105,8 @@ const BUILT_BENCHES = new Set([
   // Unit 1 — Tallow
   'q1-grain',      // the tabletop, atom kit — table3d.js (T1; the sampler scope still serves Kettle)
   'q2-core',       // the tabletop, atom kit — table3d.js (T1; the core bench still serves q4-ledger)
-  'q3-catalogue',  // the catalogue board — catalogue3d.js
-  'q4-ledger',     // the core bench again, at site four
+  'q3-catalogue',  // the tabletop, card kit — table3d.js (T2; the catalogue board still serves boss-hopper)
+  'q4-ledger',     // the tabletop, atom kit — table3d.js (T2; the core bench still serves boss-hopper)
   'q5-assay',      // the assay floor     — assay3d.js
   'q6-weigh',      // the assay floor again, at site six
   // Unit 3 — Ligar. The join bench is a subclass of the drawn bench, so its

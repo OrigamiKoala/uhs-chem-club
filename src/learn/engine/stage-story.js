@@ -38,7 +38,7 @@ export const STAGE_STORY = {
     1: 'The raiders scrambled the refinery\'s element cards, and Vess needs them back in order.'
   },
   'q4-ledger': {
-    2: 'A sealed chlorine canister from the raid must be read without opening it.',
+    2: 'A sealed canister from the raid must be read without opening it.',
     5: 'The salt husks run on stolen charge, and Vess means to understand it.'
   },
   'q5-assay': {

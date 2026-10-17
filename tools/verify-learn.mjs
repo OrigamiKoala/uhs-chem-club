@@ -2690,7 +2690,8 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   const A = await import('../src/learn/table/kits/atoms.js');
   const SC = await import('../src/learn/engine/scope.js');
   const get = async id => { const q = getQuest('unit01', id); return q && q.status === 'live' ? q.module() : null; };
-  const [g1, g2] = await Promise.all([get('q1-grain'), get('q2-core')]);
+  const [g1, g2, g3, g4] = await Promise.all([get('q1-grain'), get('q2-core'), get('q3-catalogue'), get('q4-ledger')]);
+  const C = await import('../src/learn/table/kits/cards.js');
   const same = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
   const holds = (c, what) => { if (!c) fail(what); };
   const end = (mod, i) => TABLE.runScript(TABLE.createTable(mod.STAGES[i].table, mod.STAGES[i].title), mod.SOLUTIONS[i], { strict: true });
@@ -2698,7 +2699,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   const idsIn = (t, zone) => piecesOf(t, zone).map(p => p.id).sort();
 
   /* ---- what is declared is real ---- */
-  for (const [qid, mod] of [['q1-grain', g1], ['q2-core', g2]]) {
+  for (const [qid, mod] of [['q1-grain', g1], ['q2-core', g2], ['q4-ledger', g4]]) {
     if (!mod) continue;
     mod.STAGES.forEach((st, i) => {
       const label = `unit01/${qid} stage ${i + 1}`;
@@ -2722,11 +2723,15 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
           });
         }
         if (p.kind === 'nucleus') holds(Number.isInteger(p.props.p) && p.props.p >= 1 && Number.isInteger(p.props.n), `${label}: nucleus ${p.id} is not a real middle`);
+        if (p.kind === 'ion') {
+          try { A.elementOf(p.props.el); } catch { fail(`${label}: ion ${p.id} is "${p.props.el}", not an element`); }
+          holds(Number.isInteger(p.props.charge) && p.props.charge !== 0, `${label}: ion ${p.id} carries no charge`);
+        }
       }
       const ids = new Set(st.table.pieces.map(p => p.id));
       for (const f of st.table.fixtures || []) {
         if (f.kind === 'needle') {
-          holds(ids.has(f.props.nucleus), `${label}: the needle reads a nucleus (${f.props.nucleus}) that is not on the table`);
+          holds(f.props.nucleus === undefined || ids.has(f.props.nucleus), `${label}: the needle reads a nucleus (${f.props.nucleus}) that is not on the table`);
           for (const z of f.props.zones) holds((st.table.zones.trays || []).some(t => `tray:${t.id}` === z), `${label}: the needle reads a zone (${z}) that is not a tray`);
         }
       }
@@ -2851,7 +2856,184 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       for (const id of ['n1', 'n2', 'n3']) same(t.pieces[id].zone, `tray:${kind(id)}`, `unit01/q2-core stage 8 (${t.pieces[id].label})`);
     }
   }
-  if (failures === before) ok('Tallow: every declared dish, atom, specimen and nucleus is real, and every graded answer (power, kinds, elements, cut, molecules, layers, beam, protons, shells, tester, isotopes) agrees with the scope\'s and the kit\'s own planners');
+
+  /* ---- q3-catalogue: every card is its element, and every graded answer is read off the chart ---- */
+  if (g3) {
+    const sym = id => g3.STAGES[0].table.pieces.concat(g3.STAGES[1].table.pieces).find(p => p.id === id)?.props.sym;
+    // The quest's own table of cards is the element, shell for shell (the kit derives; the quest must not drift).
+    for (const [id, c] of Object.entries(g3.CARDS)) {
+      const v = C.elementView({ props: { sym: sym(id) || { c19: 'K' }[id] } });
+      same([v.z, v.outer, v.trade, v.name.toUpperCase()], [c.z, c.outer, c.does === 'holds' ? 'shares' : c.does, c.name], `unit01/q3-catalogue ${id}`);
+    }
+    // Every card on every table is a card of the catalogue, at the mass the scope weighed it.
+    g3.STAGES.forEach((st, i) => {
+      for (const p of st.table.pieces.filter(x => x.kind === 'element' && !x.props.sealed)) {
+        const c = Object.values(g3.CARDS).find(k => k.name === p.label);
+        holds(Boolean(c), `unit01/q3-catalogue stage ${i + 1}: card ${p.id} is "${p.label}", which is not in the catalogue`);
+        if (c) holds(p.props.mass === c.mass, `unit01/q3-catalogue stage ${i + 1}: card ${p.id} carries mass ${p.props.mass}, the catalogue says ${c.mass}`);
+      }
+    });
+    const z = id => g3.CARDS[id].z;
+    const cardAt = (t, slot) => { const p = piecesOf(t, `slot:${slot}`)[0]; return p ? p.id : null; };
+    // 1. fewest protons first
+    {
+      const t = end(g3, 0);
+      const order = t.zones.rail.order;
+      holds(order.every((id, k) => k === 0 || z(order[k - 1]) < z(id)), 'unit01/q3-catalogue stage 1: the strip is not in order of protons');
+      holds(order.length === 6, 'unit01/q3-catalogue stage 1: the strip does not hold all six');
+    }
+    // 2. the pattern starts over where the outer shell is back to one electron after a longer run
+    {
+      const t = end(g3, 1);
+      const all = Object.values(t.pieces).filter(p => p.kind === 'element').sort((a, b) => C.elementView(a).z - C.elementView(b).z);
+      const restarts = all.filter((p, k) => k > 0 && C.elementView(p).outer === 1 && C.elementView(all[k - 1]).outer > 1).map(p => p.id).sort();
+      same(idsIn(t, 'tray:again'), restarts, 'unit01/q3-catalogue stage 2 (the cards where the outer shell is back to one)');
+    }
+    // The chart is the periodic table: ascending protons left to right, then down, and a column shares its outer shell.
+    {
+      const flat = g3.STAGES[2].table.pieces.filter(p => p.kind === 'element' && p.fixed);
+      const placed = [...flat.map(p => ({ id: p.id, ...p.at })), ...g3.STAGES[2].table.zones.slots.map((sl, k) => ({ id: `r${k + 1}`, ...sl.at }))];
+      const rows = [...new Set(placed.map(p => p.y))].sort((a, b) => a - b);
+      const ids = rows.flatMap(y => placed.filter(p => p.y === y).sort((a, b) => a.x - b.x).map(p => p.id));
+      const t3 = end(g3, 2);
+      const zs = ids.map(id => (id.startsWith('r') ? z(cardAt(t3, id)) : z(id)));
+      holds(zs.every((n, k) => k === 0 || n > zs[k - 1]), 'unit01/q3-catalogue stage 3: the chart, read row by row, is not in order of protons');
+      same(zs.length, 18, 'unit01/q3-catalogue stage 3 (the chart holds eighteen cards)');
+      const colOf = x => Math.round((x - 13.5) / 15);
+      const byCol = {};
+      for (const p of placed) (byCol[colOf(p.x)] ||= []).push(p.id.startsWith('r') ? cardAt(t3, p.id) : p.id);
+      // A column shares its outer shell. Helium is the one card whose shell is full at two (it sits over neon and argon).
+      for (const [col, list] of Object.entries(byCol)) holds(new Set(list.filter(id => id !== 'c02').map(id => C.elementView({ props: { sym: sym(id) } }).outer)).size === 1, `unit01/q3-catalogue stage 3: column ${col} does not share one outer shell`);
+    }
+    // 4. each loose card goes in the open place of the column its dots match
+    {
+      const t = end(g3, 3);
+      for (const [slotId, sl] of Object.entries(t.zones.slots)) {
+        const mine = C.elementView(t.pieces[cardAt(t, slotId)]);
+        const above = Object.values(t.pieces).filter(p => p.kind === 'element' && p.fixed && Math.abs(p.at.x - sl.at.x) < 1 && p.at.y < sl.at.y).map(p => C.elementView(p).outer);
+        holds(above.length >= 1 && above.every(o => o === mine.outer), `unit01/q3-catalogue stage 4: the card in ${slotId} does not match the outer shell of its column`);
+      }
+    }
+    // 5 and 6. what the tester finds is the kit's trade, which is read off the outer shell
+    {
+      const t = end(g3, 4);
+      const want = Object.values(t.pieces).filter(p => p.kind === 'element' && C.tradeOf(C.elementView(p).sym) === 'inert').map(p => p.id).sort();
+      same(idsIn(t, 'tray:inert'), want, 'unit01/q3-catalogue stage 5 (every card that will not trade)');
+      const u = end(g3, 5);
+      for (const p of Object.values(u.pieces).filter(x => x.kind === 'element')) same(p.zone, `tray:${C.tradeOf(C.elementView(p).sym)}`, `unit01/q3-catalogue stage 6 (${p.label})`);
+    }
+    // 7. the unmeasured card is silicon: protons between its neighbours, behaviour of the card above
+    {
+      const t = end(g3, 6);
+      const gap = t.zones.slots.gap;
+      const left = Object.values(t.pieces).find(p => p.fixed && Math.abs(p.at.y - gap.at.y) < 1 && Math.abs(p.at.x - (gap.at.x - 15)) < 1);
+      const right = Object.values(t.pieces).find(p => p.fixed && Math.abs(p.at.y - gap.at.y) < 1 && Math.abs(p.at.x - (gap.at.x + 15)) < 1);
+      const above = Object.values(t.pieces).find(p => p.fixed && Math.abs(p.at.x - gap.at.x) < 1 && p.at.y < gap.at.y && p.at.y > gap.at.y - 16);
+      const between = (C.elementView(left).z + C.elementView(right).z) / 2;
+      same(t.fixtures.stamp.dials.protons.value, between, 'unit01/q3-catalogue stage 7 (the protons between its neighbours)');
+      same(t.pieces.sealed.props.sym, 'Si', 'unit01/q3-catalogue stage 7 (the unmeasured card is silicon)');
+      same(C.elementView(t.pieces.sealed).z, between, 'unit01/q3-catalogue stage 7 (the card the chart predicts has that many protons)');
+      same({ 't-gives': 'gives', 't-holds': 'shares', 't-takes': 'takes' }[t.prediction.token], C.tradeOf(C.elementView(above).sym), 'unit01/q3-catalogue stage 7 (it behaves like the card above it)');
+      same(C.tradeOf('Si'), C.tradeOf(C.elementView(above).sym), 'unit01/q3-catalogue stage 7 (silicon behaves like carbon)');
+    }
+    // 8. each loose card sits between a card with one proton fewer and one with one more
+    {
+      const t = end(g3, 7);
+      for (const [slotId, sl] of Object.entries(t.zones.slots)) {
+        const mine = C.elementView(t.pieces[cardAt(t, slotId)]).z;
+        const near = dx => Object.values(t.pieces).find(p => p.kind === 'element' && p.fixed && Math.abs(p.at.y - sl.at.y) < 1 && Math.abs(p.at.x - (sl.at.x + dx)) < 1);
+        // The row's neighbours, across the chart's gap when the slot is beside it.
+        const lo = near(-15) || near(-30);
+        const hi = near(15) || near(30);
+        holds(lo && hi && C.elementView(lo).z === mine - 1 && C.elementView(hi).z === mine + 1, `unit01/q3-catalogue stage 8: the card in ${slotId} (${mine} protons) does not sit between ${mine - 1} and ${mine + 1}`);
+      }
+    }
+  }
+
+  /* ---- q4-ledger: the numbers on every label are the numbers of the sample, and every build is the atom ---- */
+  if (g4) {
+    const prop = (t, id) => t.pieces[id].props;
+    const digitsOf = (lines, key) => Number((lines.find(l => l.startsWith(key)) || '').replace(/\D+/g, ''));
+    const sealedOf = (mod, i, id) => mod.STAGES[i].table.pieces.find(p => p.id === id).props;
+    const n = (t, zone, kind) => piecesOf(t, zone, kind).length;
+    // 1. build the open sample: the lump's protons and neutrons, the ring's electrons
+    {
+      const t = end(g4, 0);
+      const ref = prop(t, 'refc');
+      same([n(t, 'tray:core', 'proton'), n(t, 'tray:core', 'neutron'), n(t, 'tray:out', 'electron')], [ref.p, ref.n, prop(t, 'refe').rings.reduce((a, b) => a + b, 0)], 'unit01/q4-ledger stage 1 (the build matches the sample)');
+      same(prop(t, 'refe').rings, A.shellsFor(ref.p), 'unit01/q4-ledger stage 1 (the open sample is neutral and filled in order)');
+      same(A.needleReading(t, 'needle'), 0, 'unit01/q4-ledger stage 1 (a neutral build reads zero)');
+      same([prop(t, 'draw').p, prop(t, 'draw').n], [ref.p, ref.n], 'unit01/q4-ledger stage 1 (the cooler draw is the same atom as the bench\'s)');
+    }
+    // 2. the label's two numbers are the sealed sample's protons and protons plus neutrons
+    {
+      const t = end(g4, 1);
+      const lines = g4.STAGES[1].table.fixtures.find(f => f.id === 'lb').props.lines;
+      const open = g4.STAGES[1].table.fixtures.find(f => f.id === 'la').props.lines;
+      const sa = prop(t, 'sa');
+      same([digitsOf(open, 'atomic'), digitsOf(open, 'mass')], [sa.p, sa.p + sa.n], 'unit01/q4-ledger stage 2 (the open sample\'s label reads its counts)');
+      const sb = sealedOf(g4, 1, 'sb');
+      same([digitsOf(lines, 'atomic'), digitsOf(lines, 'mass')], [sb.p, sb.p + sb.n], 'unit01/q4-ledger stage 2 (the sealed sample\'s label reads its counts)');
+      same([n(t, 'tray:core', 'proton'), n(t, 'tray:core', 'neutron'), n(t, 'tray:out', 'electron')], [sb.p, sb.n, sb.rings.reduce((a, b) => a + b, 0)], 'unit01/q4-ledger stage 2 (the build matches the sealed sample)');
+      holds(sb.n !== sa.n, 'unit01/q4-ledger stage 2: the sealed sample has the same neutrons as the open one, so its label teaches nothing');
+      same(sb.rings, A.shellsFor(sb.p), 'unit01/q4-ledger stage 2 (the sealed sample is neutral and filled in order)');
+    }
+    // 3. same element: same protons, whatever the neutrons add up to
+    {
+      const t = end(g4, 2);
+      const ref = prop(t, 'ref');
+      for (const id of ['k', 'l', 'm']) same(t.pieces[id].zone, `tray:${prop(t, id).p === ref.p ? 'same' : 'other'}`, `unit01/q4-ledger stage 3 (${t.pieces[id].label})`);
+      for (const id of ['ref', 'k', 'l', 'm']) same(prop(t, id).rings, A.shellsFor(prop(t, id).p), `unit01/q4-ledger stage 3 (${id} is neutral and filled in order)`);
+      holds(prop(t, 'm').p + prop(t, 'm').n === ref.p + ref.n, 'unit01/q4-ledger stage 3: no sample shares Sample A\'s mass number, so weight is no trap');
+    }
+    // 4. the sealed ion: its needle is protons less electrons, and the build is that
+    {
+      const t = end(g4, 3);
+      const sb = sealedOf(g4, 3, 'sb');
+      const q = sb.p - sb.rings.reduce((a, b) => a + b, 0);
+      holds(q !== 0, 'unit01/q4-ledger stage 4: the sealed sample is neutral');
+      same(A.needleReading(t, 'needle'), q, 'unit01/q4-ledger stage 4 (the build\'s needle reads what the sealed sample\'s does)');
+      same([n(t, 'tray:core', 'proton'), n(t, 'tray:out', 'electron')], [sb.p, sb.rings.reduce((a, b) => a + b, 0)], 'unit01/q4-ledger stage 4 (protons and electrons)');
+      same(sb.rings, A.shellsFor(sb.p).slice(0, -1), 'unit01/q4-ledger stage 4 (the ion is the atom less its outer shell)');
+    }
+    // 5 and 6. magnesium's outer shell, then chlorine's, against the real shell pattern
+    {
+      const t = end(g4, 4);
+      const start = TABLE.createTable(g4.STAGES[4].table, 'x');
+      const nuc = prop(start, 'nuc');
+      same(['tray:sh1', 'tray:sh2', 'tray:sh3'].map(zn => n(start, zn, 'electron')), A.shellsFor(nuc.p), 'unit01/q4-ledger stage 5 (the start is the real shell pattern)');
+      same(['tray:sh1', 'tray:sh2', 'tray:sh3'].map(zn => n(t, zn, 'electron')), [...A.shellsFor(nuc.p).slice(0, -1), 0], 'unit01/q4-ledger stage 5 (the outer shell is gone and the shell beneath is full)');
+      same(A.needleReading(t, 'needle'), A.shellsFor(nuc.p).slice(-1)[0], 'unit01/q4-ledger stage 5 (the charge is the outer shell\'s electrons)');
+      const s6 = TABLE.createTable(g4.STAGES[5].table, 'x');
+      const cl = prop(s6, 'nuc');
+      same(['tray:sh1', 'tray:sh2', 'tray:sh3'].map(zn => n(s6, zn, 'electron')), A.shellsFor(cl.p), 'unit01/q4-ledger stage 6 (the start is neutral chlorine)');
+      const u = end(g4, 5);
+      same(['tray:sh1', 'tray:sh2', 'tray:sh3'].map(zn => n(u, zn, 'electron')), [2, 8, 8], 'unit01/q4-ledger stage 6 (the outer shell is full)');
+      same(A.needleReading(u, 'needle'), -1, 'unit01/q4-ledger stage 6 (one more electron than protons)');
+    }
+    // 7. the pad: the smallest whole numbers that cancel the two ions' charges
+    {
+      const t = end(g4, 6);
+      const qa = prop(t, 'a1').charge;
+      const qb = prop(t, 'b1').charge;
+      const g = ((a, b) => { while (b) [a, b] = [b, a % b]; return a; })(Math.abs(qa), Math.abs(qb));
+      same([piecesOf(t, 'tray:pad').filter(p => p.props.el === 'Mg').length, piecesOf(t, 'tray:pad').filter(p => p.props.el === 'Cl').length], [Math.abs(qb) / g, Math.abs(qa) / g], 'unit01/q4-ledger stage 7 (the smallest ratio)');
+      same(A.needleReading(t, 'needle'), 0, 'unit01/q4-ledger stage 7 (the pad reads zero)');
+      holds(qa * (Math.abs(qb) / g) + qb * (Math.abs(qa) / g) === 0, 'unit01/q4-ledger stage 7: the ratio does not cancel');
+      same([qa, qb], [A.shellsFor(12).slice(-1)[0], -(8 - A.shellsFor(17).slice(-1)[0])], 'unit01/q4-ledger stage 7 (magnesium gives its outer two, chlorine takes the one it lacks)');
+    }
+    // 8. isotope, ion or another element, against the reference
+    {
+      const t = end(g4, 7);
+      const ref = prop(t, 'std');
+      const e = id => prop(t, id).rings.reduce((a, b) => a + b, 0);
+      const kind = id => (prop(t, id).p !== ref.p ? 'other' : prop(t, id).n !== ref.n ? 'heavy' : e(id) !== e('std') ? 'charged' : 'match');
+      for (const id of ['n1', 'n2', 'n3', 'n4']) same(t.pieces[id].zone, `tray:${kind(id)}`, `unit01/q4-ledger stage 8 (${t.pieces[id].label})`);
+      same(new Set(['n1', 'n2', 'n3', 'n4'].map(kind)).size, 4, 'unit01/q4-ledger stage 8 (all four kinds of difference appear)');
+      for (const id of ['std', 'n1', 'n2', 'n3', 'n4']) holds(prop(t, id).rings.reduce((a, b) => a + b, 0) <= A.shellsFor(prop(t, id).p).reduce((a, b) => a + b, 0) + 2, `unit01/q4-ledger stage 8 (${id} carries a believable charge)`);
+    }
+  }
+  if (failures === before) ok('Tallow: every declared dish, atom, specimen, nucleus, ion and card is real, and every graded answer (power, kinds, elements, cut, molecules, layers, beam, protons, shells, tester, isotopes, the chart, the periods, the trades, the labels, the ledger\'s builds and ratio) agrees with the scope\'s and the kit\'s own planners');
 }
 
 /* ------------------------------------------------------------------

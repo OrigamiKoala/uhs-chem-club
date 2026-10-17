@@ -1,41 +1,47 @@
 /**
  * q3-catalogue.js — Tallow, site three: THE CATALOGUE NUMBERS.
  *
- * The third game on the Learn road, and the one the last two benches have been
- * setting up. The player already knows the element names and has counted
- * protons on the core bench, so this bench is about ORDER: laying every element
- * out by its proton count and discovering the repeating pattern — the periodic
- * table, Mendeleev-style.
+ * The third game on the Learn road, and the third on the TABLETOP (plan `bench-tabletop.md`, phase
+ * T2): a card table. The player already knows the element names and has counted protons on the core
+ * bench, so this bench is about ORDER: laying every element out by its proton count and discovering
+ * the repeating pattern — the periodic table, Mendeleev-style. The cards are on the veranda desk
+ * of the control house, the record wall beside it; the player does with them what a filing clerk
+ * does, and the SHAPE of the table is something their hands find.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  order six cards by proton count        -> Atomic Number
- *   2  measure how long the pattern runs      -> Periods · the rows
- *   3  lay the third row into the board       -> The Periodic Table
- *   4  read a column instead of a row         -> Groups · the columns
- *   5  find the column that never trades      -> Noble Gases
- *   6  file six cards by what they do         -> Metals and Nonmetals
- *   7  price a card that is not in the drawer -> The chart predicts
- *   8  file four unmarked cards into the chart -> One number orders everything
+ *   1  lay six cards on a strip by proton count         -> Atomic Number
+ *   2  set aside the cards where the pattern restarts   -> Periods · the rows
+ *   3  fold the strip: lay the third row of the chart   -> The Periodic Table
+ *   4  give loose cards the column their dots match     -> Groups · the columns
+ *   5  tray every card that will not trade              -> Noble Gases
+ *   6  tray six cards by what they do                   -> Metals and Nonmetals
+ *   7  place a card nobody measured, and predict it     -> The chart predicts
+ *   8  file four cards into the chart                   -> One number orders everything
  *
- * VOCABULARY IS EARNED, THEN USED. Everything the first two benches taught —
- * proton, neutron, electron, shell, valence, element, isotope, ion — is a plain
- * word here and is used like one. What this bench withholds is its OWN
- * vocabulary, and `VOCABULARY` below says which stage's reward card pays each
- * one out. `verify:learn` fails the build both ways round.
+ * EVERYTHING ON A CARD'S FACE IS READ OFF THE ELEMENT (`table/kits/cards.js`): the proton count is
+ * its atomic number, the dots are its outer-shell electrons (`atoms.js` `shellsFor`), the tester's
+ * answer is `tradeOf` (the outer shell and `joinbench.js` `shellPlan`). Only the mass is data (the
+ * sampler scope weighed it). Filing a row is the catalogue board's own `fileCard` (a card dropped on
+ * a filled place pushes the row along), reached through the table's strip rows. No stage declares an
+ * outcome; `SOLUTIONS` and `MISSES` are scripts of the player's own actions, replayed by `verify:table`.
  *
- * COPY RULE: one briefing, on stage one, saying what the bench does. After that
- * every stage is a plain imperative prompt, three short hints and a reward card.
- * No story rides on top of it.
+ * VOCABULARY IS EARNED, THEN USED. Everything the first two benches taught — proton, neutron,
+ * electron, shell, valence, element, isotope, ion — is a plain word here and is used like one.
+ * What this bench withholds is its OWN vocabulary, and `VOCABULARY` below says which stage's reward
+ * card pays each one out. `verify:learn` fails the build both ways round.
  *
- * This quest pays no XP, writes no Submission and never reaches Standings. It
- * reports through `ctx` and nothing else.
+ * COPY RULE: one briefing, on stage one, saying what the bench does. After that every stage is a
+ * plain imperative prompt, three short hints and a reward card. No story rides on top of it.
+ *
+ * This quest pays no XP, writes no Submission and never reaches Standings. It reports through `ctx`
+ * and nothing else.
  */
 
-import { CatalogueBoard } from '../../engine/instruments.js';
-import { LearnFrame, toolNotes } from '../../engine/frame.js';
-import { esc } from '../../../ui/layout.js';
-import { soundscape } from '../../../audio/soundscape.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import {
+  cardTable, cardSlot, cardTray, elementCard, tradeOf, piecesIn, slotCard, railOrder
+} from '../../table/kits/cards.js';
 
 export const meta = { stageCount: 8 };
 
@@ -58,34 +64,12 @@ export const VOCABULARY = [
 
 const SPEAKER = 'Vess';
 
-/* ------------------------------------------------------------------
-   THE KEY LEGEND
-
-   A CARD INDEX DOES NOT COME WITH A MANUAL.
-
-   This table used to carry three lines: that tapping a card reads it,
-   that tapping a slot files the card in your hand, and that Clear Board
-   clears the board. A player who has picked up a card and put it in a
-   slot has learned all three by doing them once, and reading about it
-   first is slower than trying it. The lines are gone and nothing was
-   lost with them.
-   ------------------------------------------------------------------ */
-const TOOL_TEXT = {
-  clear: [{ from: 1, key: 'Clear Board', what: 'Puts all placed cards back in the drawer.' }],
-  tester: [{ from: 5, key: 'Test Card', what: 'Tests how the active card trades electrons with a partner.' }]
-};
-
 /**
- * The legend line for one control on one stage, or null if there is none.
- * `stageNumber` is one-based, the way a player counts stages.
+ * The legend lines. Every key on this table says what it does ("Test Card"), the rest are cards
+ * dragged and a strip to lay them on, so nothing owes a legend. Kept so the quest contract
+ * (`toolNoteFor`) holds.
  */
-export function toolNoteFor(controlId, stageNumber) {
-  const rows = TOOL_TEXT[controlId];
-  if (!rows) return null;
-  let out = null;
-  for (const r of rows) if (stageNumber >= r.from) out = r;
-  return out ? { key: out.key, what: out.what } : null;
-}
+export function toolNoteFor() { return null; }
 
 /* ------------------------------------------------------------------
    THE CARDS
@@ -128,26 +112,56 @@ export const DOES_TEXT = {
 const RUN_18 = ['c01', 'c02', 'c03', 'c04', 'c05', 'c06', 'c07', 'c08', 'c09',
   'c10', 'c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18'];
 
-/** The chart as it stands once the rows are laid: columns 1, 2, gap, 13-18. */
+/** The chart as it stands once the rows are laid: columns 1, 2, a gap, 13 to 18. */
 const CHART_ROWS = [
   ['c01', null, null, null, null, null, null, null, 'c02'],
   ['c03', 'c04', null, 'c05', 'c06', 'c07', 'c08', 'c09', 'c10'],
   ['c11', 'c12', null, 'c13', 'c14', 'c15', 'c16', 'c17', 'c18']
 ];
 
-const COLUMN_HEADS = ['1', '2', '· · ·', '13', '14', '15', '16', '17', '18'];
+/** The number printed under a column of the chart. */
+const COLUMN_HEADS = ['1', '2', '', '13', '14', '15', '16', '17', '18'];
 
-/** The chart with one entry swapped for a slot the player has to fill. */
-function chartWithSlots(swaps) {
-  return CHART_ROWS.map(row => row.map(id => (id && swaps[id]) ? `#${swaps[id]}` : id));
+/* ------------------------------------------------------------------
+   THE TABLES
+   One card table (150 x 64 units): nine columns at a 15 unit pitch, three chart rows
+   and a band of loose cards under them.
+   ------------------------------------------------------------------ */
+
+const X = c => 13.5 + 15 * c;
+const ROW_Y = [8, 21.5, 35];
+const LOOSE_Y = 54;
+
+/** A card of the catalogue, with the mass the sampler scope weighed for it. */
+const card = (id, at, props = {}) => elementCard(id, ELEMENT_OF[id], at, { mass: CARDS[id].mass, ...props });
+
+/** The element each card is: the card's own name is the only thing that says. */
+const ELEMENT_OF = {
+  c01: 'H', c02: 'He', c03: 'Li', c04: 'Be', c05: 'B', c06: 'C', c07: 'N', c08: 'O', c09: 'F', c10: 'Ne',
+  c11: 'Na', c12: 'Mg', c13: 'Al', c14: 'Si', c15: 'P', c16: 'S', c17: 'Cl', c18: 'Ar', c19: 'K'
+};
+
+/** Chart cards standing where the chart puts them; `skip` leaves some out; `fixed` makes them targets, not handles. */
+function chartCards({ skip = [], fixed = true } = {}) {
+  const out = [];
+  CHART_ROWS.forEach((row, r) => row.forEach((id, c) => {
+    if (id && !skip.includes(id)) out.push({ ...card(id, { x: X(c), y: ROW_Y[r] }), ...(fixed ? { fixed: true } : {}) });
+  }));
+  return out;
 }
+
+/** Loose cards laid in a row along the foot of the table, left to right in the order given. */
+const loose = (ids, props = {}, x0 = 13.5, pitch = 15) => ids.map((id, i) => card(id, { x: x0 + i * pitch, y: LOOSE_Y }, props));
+
+const to = (piece, target) => ({ place: { piece, to: target } });
+const run = id => ({ run: id });
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
 
-   Exported because every `check` is a pure function of the board state,
-   which is what makes them checkable without a browser. `verify:learn`
-   runs SOLUTIONS and MISSES through them.
+   Exported because every `check` is a pure function of the table state, which is
+   what makes them checkable without a browser. `verify:learn` and `verify:table`
+   run SOLUTIONS and MISSES through them.
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
@@ -155,28 +169,25 @@ export const STAGES = [
     title: 'Put Them In Order',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench holds a card for each element, and tapping a card reads it. To file a card, drag it to the slot you want, or tap it and then tap the slot.'
+      body: 'Every element has a card showing its protons, the electrons in its outer shell and its weight. Drag a card onto the strip to lay it there.'
     },
-    prompt: 'File the six cards into the reference strip, from fewest protons on the left to most on the right.',
-    controls: ['reader', 'file', 'clear'],
-    masked: true,
-    board: { label: 'Reference strip', strip: true, rows: [['#p1', '#p2', '#p3', '#p4', '#p5', '#p6']] },
-    drawer: ['c11', 'c19', 'c01', 'c18', 'c08', 'c06'],
-    widget: { type: 'board', label: 'Reference strip' },
-    foes: [{ id: 'grid', label: 'Periodic Grid' }],
+    prompt: 'Lay the six cards on the strip, from fewest protons on the left to most on the right.',
+    widget: { type: 'table', label: 'The desk' },
+    table: cardTable({
+      pieces: ['c11', 'c19', 'c01', 'c18', 'c08', 'c06'].map((id, i) => card(id, { x: 30 + 18 * i, y: 48 })),
+      zones: { rail: { at: { x: 75, y: 22 }, size: { w: 102, h: 14 }, first: 'Fewest protons', last: 'Most protons', items: [] } }
+    }),
     hints: [
-      'Tap a card in the drawer to read it, then drag it to a slot, or tap the slot, to put it there.',
-      'Read all six and note the proton count on each; how heavy a card is does not matter here.',
-      'Write the six proton counts down, sort them smallest to largest, and file the cards in that order from the leftmost slot to the rightmost.'
+      'Drag a card onto the strip, and the cards already there slide apart to make room.',
+      'Read the protons printed on each card; how heavy a card is does not matter here.',
+      'Write the six proton counts down, sort them smallest to largest, and lay the cards in that order from the leftmost place to the rightmost.'
     ],
     check(state) {
       const want = ['c01', 'c06', 'c08', 'c11', 'c18', 'c19'];
-      const slots = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
-      const filed = slots.filter(s => state.board[s]).length;
-      if (filed < 6) {
-        return { ok: false, notYet: true, msg: `Fill all six slots first — ${filed} of them are filled.` };
+      const got = railOrder(state.table);
+      if (got.length < 6) {
+        return { ok: false, notYet: true, msg: `Lay all six cards on the strip first — ${got.length} of them are there.` };
       }
-      const got = slots.map(s => state.board[s]);
       if (got.join() === want.join()) return { ok: true };
       const byMass = ['c01', 'c06', 'c08', 'c11', 'c19', 'c18'];
       if (got.join() === byMass.join()) {
@@ -201,37 +212,33 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Find The Repeat',
-    prompt: 'Tap every card where the pattern starts over.',
-    controls: ['reader'],
-    board: { label: 'All 18 cards, in atomic number order', rows: [RUN_18] },
-    drawer: [],
-    widget: {
-      type: 'pick',
-      label: 'Cards where the pattern starts over',
-      help: 'Tap a card on the board to toggle its selection.'
-    },
+    prompt: 'Set aside every card where the pattern starts over.',
+    widget: { type: 'table', label: 'The desk' },
+    table: cardTable({
+      pieces: RUN_18.map((id, i) => card(id, { x: X(i % 9), y: i < 9 ? 14 : 30 })),
+      zones: { trays: [cardTray('again', 'Where it starts over', { x: 75, y: 53 }, 4, 1)] }
+    }),
     hints: [
-      'Each card carries one mark for every electron in its outer shell.',
-      'Follow the marks along the row and watch how the count changes from card to card.',
-      'Compare each card with the one before it, and tap every card whose marks fall back to a single mark after a longer run.'
+      'Each card carries one dot for every electron in its outer shell.',
+      'Follow the dots along the rows and watch how the count changes from card to card.',
+      'Compare each card with the one before it, and set aside every card whose dots fall back to a single dot after a longer run.'
     ],
     check(state) {
-      if (!state.picked || state.picked.size === 0) {
-        return { ok: false, notYet: true, msg: 'Tap every card where the outer electron count drops back to 1.' };
+      const set = piecesIn(state.table, 'tray:again').map(p => p.id);
+      if (set.length === 0) {
+        return { ok: false, notYet: true, msg: 'Set aside every card where the outer electron count drops back to 1.' };
       }
-      if (state.picked.has('c01')) {
+      if (set.includes('c01')) {
         return { ok: false, msg: 'Hydrogen is where the pattern begins, not where it starts over.' };
       }
-      if (state.picked.size === 1 && (state.picked.has('c03') || state.picked.has('c11'))) {
+      if (set.length === 1 && (set.includes('c03') || set.includes('c11'))) {
         return { ok: false, msg: 'You found one card where the count restarts, but there is another further along.' };
       }
-      if ([...state.picked].some(id => id !== 'c03' && id !== 'c11')) {
-        return { ok: false, msg: 'A selected card does not restart at 1 outer electron. Look for where the mark count drops back to 1.' };
+      if (set.some(id => id !== 'c03' && id !== 'c11')) {
+        return { ok: false, msg: 'A card you set aside does not restart at 1 outer electron. Look for where the dot count drops back to 1.' };
       }
-      if (state.picked.size === 2 && state.picked.has('c03') && state.picked.has('c11')) {
-        return { ok: true };
-      }
-      return { ok: false, msg: 'Tap only the cards where the outer shell count drops back to 1.' };
+      if (set.length === 2) return { ok: true };
+      return { ok: false, msg: 'Set aside only the cards where the outer shell count drops back to 1.' };
     },
     reward: {
       log: 'Repeat measured at 8.',
@@ -243,39 +250,35 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Lay The Last Row',
-    prompt: 'File the eight loose cards from the drawer into the empty bottom row, ordered left to right by atomic number.',
-    controls: ['reader', 'file', 'clear'],
-    board: {
-      label: 'Reference chart',
-      strip: true,
-      columns: COLUMN_HEADS,
-      rows: [
-        CHART_ROWS[0],
-        CHART_ROWS[1],
-        ['#r1', '#r2', null, '#r3', '#r4', '#r5', '#r6', '#r7', '#r8']
-      ]
-    },
-    drawer: ['c16', 'c11', 'c14', 'c18', 'c12', 'c17', 'c13', 'c15'],
-    widget: { type: 'board', label: 'Bottom row' },
-    foes: [{ id: 'grid', label: 'Periodic Grid' }],
+    prompt: 'File the eight loose cards into the empty bottom row, ordered left to right by atomic number.',
+    widget: { type: 'table', label: 'The desk' },
+    table: cardTable({
+      pieces: [
+        ...chartCards({ skip: CHART_ROWS[2].filter(Boolean) }),
+        ...loose(['c16', 'c11', 'c14', 'c18', 'c12', 'c17', 'c13', 'c15'])
+      ],
+      zones: {
+        slots: CHART_ROWS[2].map((id, c) => (id ? cardSlot(`r${CHART_ROWS[2].slice(0, c + 1).filter(Boolean).length}`, { x: X(c), y: ROW_Y[2] }, { label: COLUMN_HEADS[c], row: 'bottom' }) : null)).filter(Boolean)
+      }
+    }),
     hints: [
-      'Drag a card from the drawer to the slot you want, or tap the card and then tap the slot.',
+      'Drag a card from the foot of the table onto a place in the empty row.',
       'SODIUM reads the fewest protons of the eight and ARGON reads the most.',
-      'Put the fewest-proton card in the first slot, then for each next slot find the card with one proton more than the card before it.'
+      'Put the fewest-proton card in the first place, then for each next place find the card with one proton more than the card before it.'
     ],
     check(state) {
       const want = ['c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18'];
-      const slots = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8'];
-      const filed = slots.filter(s => state.board[s]).length;
+      const slots = want.map((_, i) => `r${i + 1}`);
+      const got = slots.map(s => slotCard(state.table, s));
+      const filed = got.filter(Boolean).length;
       if (filed < 8) {
-        return { ok: false, notYet: true, msg: `Fill all eight slots first — ${filed} of them are filled.` };
+        return { ok: false, notYet: true, msg: `Fill all eight places first — ${filed} of them are filled.` };
       }
-      const got = slots.map(s => state.board[s]);
       if (got.join() === want.join()) return { ok: true };
       for (let i = 0; i < got.length; i++) {
         if (got[i] !== want[i]) {
           const here = CARDS[got[i]];
-          return { ok: false, msg: `Slot ${i + 1} holds ${here.name} with ${here.z} protons, which is out of order with its neighbors.` };
+          return { ok: false, msg: `Place ${i + 1} holds ${here.name} with ${here.z} protons, which is out of order with its neighbors.` };
         }
       }
       return { ok: false, msg: 'The row is out of order — read the cards and lay them lowest on the left.' };
@@ -290,38 +293,34 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Read Down, Not Along',
-    prompt: 'What do the cards in one column have in common?',
-    controls: ['reader'],
-    board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
-    drawer: [],
-    widget: {
-      type: 'choice',
-      label: 'What elements in the same column share',
-      options: [
-        { id: 'outer', label: 'Outer-shell electrons', note: 'Every card in the column has the same outer count.' },
-        { id: 'protons', label: 'Proton count', note: 'Their atomic numbers are identical.' },
-        { id: 'mass', label: 'Mass of one atom', note: 'They weigh the same.' },
-        { id: 'shells', label: 'Number of shells', note: 'They have the same number of electron shells.' }
-      ]
-    },
-    foes: [{ id: 'grid', label: 'Periodic Grid' }],
+    prompt: 'File each of the three loose cards in the column it belongs to.',
+    widget: { type: 'table', label: 'The desk' },
+    table: cardTable({
+      pieces: [
+        ...chartCards({ skip: ['c14', 'c16', 'c17'] }),
+        ...[['c16', 3], ['c17', 5], ['c14', 7]].map(([id, c]) => card(id, { x: X(c), y: LOOSE_Y }, { hide: ['z', 'mass'] }))
+      ],
+      zones: {
+        slots: [['s14', 4, '14'], ['s16', 6, '16'], ['s17', 7, '17']].map(([id, c, label]) => cardSlot(id, { x: X(c), y: ROW_Y[2] }, { label }))
+      }
+    }),
     hints: [
-      'Compare cards in the same column, such as Oxygen and Sulfur in group 16.',
-      'Check their proton counts, their masses, their shells, and their outer-shell electrons.',
-      'Read one property on every card in a column and see which stays the same down all three columns.'
+      'Drag a loose card onto an open place and read the dots on the cards above it.',
+      'Compare the outer-shell dots on the loose cards with the dots on the cards in the column above each open place.',
+      'Pick one reading on the cards, follow it down a column to see which one never changes, then give each loose card the open place that matches it.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick what cards in a column share.' };
+      const want = { s14: 'c14', s16: 'c16', s17: 'c17' };
+      const filed = Object.keys(want).filter(s => slotCard(state.table, s)).length;
+      if (filed < 3) {
+        return { ok: false, notYet: true, msg: `Fill all three open places first — ${filed} of them are filled.` };
       }
-      if (state.choice === 'outer') return { ok: true };
-      if (state.choice === 'protons') {
-        return { ok: false, msg: 'Proton counts increase down each column — compare oxygen and sulfur.' };
+      for (const [slot, id] of Object.entries(want)) {
+        if (slotCard(state.table, slot) !== id) {
+          return { ok: false, msg: 'A loose card is in a column whose cards carry a different number of outer-shell dots. Compare the dots down the column.' };
+        }
       }
-      if (state.choice === 'mass') {
-        return { ok: false, msg: 'Atoms get heavier down each column — compare lithium and sodium.' };
-      }
-      return { ok: false, msg: 'Each row down adds another electron shell — elements in the same row share shell count, not columns.' };
+      return { ok: true };
     },
     reward: {
       log: 'Columns share outer-shell electrons.',
@@ -333,38 +332,33 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Ones That Will Not Trade',
-    prompt: 'Which group on the chart never trades an electron?',
-    controls: ['reader', 'tester'],
-    board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
-    drawer: [],
-    widget: {
-      type: 'choice',
-      label: 'The group that never trades',
-      options: [
-        { id: 'g1', label: 'Group 1', note: 'HYDROGEN, LITHIUM, SODIUM.' },
-        { id: 'g14', label: 'Group 14', note: 'CARBON, SILICON.' },
-        { id: 'g17', label: 'Group 17', note: 'FLUORINE, CHLORINE.' },
-        { id: 'g18', label: 'Group 18', note: 'HELIUM, NEON, ARGON.' }
-      ]
-    },
-    foes: [{ id: 'grid', label: 'Periodic Grid' }],
+    prompt: 'Tray every card on the chart that will not trade an electron.',
+    widget: { type: 'table', label: 'The desk' },
+    table: cardTable({
+      pieces: chartCards({ fixed: false }),
+      zones: {
+        trays: [cardTray('inert', 'Will not trade', { x: 36, y: 54 }, 4, 1)],
+        slots: [cardSlot('tester', { x: 92, y: 51 }, { label: 'Card' })]
+      },
+      fixtures: [{ id: 'tester', kind: 'tester', label: 'Tester', runLabel: 'Test Card', at: { x: 126, y: 54 }, size: { w: 36, h: 15 }, props: { slot: 'tester' } }]
+    }),
     hints: [
-      'Select a card from each group and press "Test Card" to see how it trades.',
+      'Drag a card into the tester and press "Test Card" to see how it trades.',
       'Group 1 hands electrons over, group 17 takes them on, and group 14 shares.',
-      'Find the group where "Test Card" reports that it does nothing at all.'
+      'Find the cards for which "Test Card" reports that nothing happens at all, and tray every card in that column.'
     ],
     check(state) {
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick one of the four groups.' };
+      const noble = ['c02', 'c10', 'c18'];
+      const got = piecesIn(state.table, 'tray:inert').map(p => p.id);
+      if (!got.length) return { ok: false, notYet: true, msg: 'The tray is empty. Tray the cards that will not trade.' };
+      const wrong = got.find(id => !noble.includes(id));
+      if (wrong) {
+        return { ok: false, msg: `${CARDS[wrong].name} does trade — ${DOES_TEXT[tradeOf(ELEMENT_OF[wrong])].replace(/\.$/, '').toLowerCase()}. Test it to see.` };
       }
-      if (state.choice === 'g18') return { ok: true };
-      if (state.choice === 'g1') {
-        return { ok: false, msg: 'Group 1 does trade — test lithium or sodium to see them give an electron.' };
+      if (got.length < noble.length) {
+        return { ok: false, msg: 'The cards in the tray do not trade, but cards in the same column behave alike. Another card on the chart will not trade either.' };
       }
-      if (state.choice === 'g17') {
-        return { ok: false, msg: 'Group 17 does trade — test fluorine or chlorine to see them take an electron.' };
-      }
-      return { ok: false, msg: 'Carbon shares electrons with a partner; look for the group whose test reports it will not trade.' };
+      return { ok: true };
     },
     reward: {
       log: 'Group 18 never trades.',
@@ -376,36 +370,36 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Sort Them By What They Do',
-    prompt: 'Classify each of the six cards by what it does with its valence electrons.',
-    controls: ['reader', 'tester'],
-    board: { label: 'Reference chart', columns: COLUMN_HEADS, rows: CHART_ROWS },
-    drawer: [],
-    rows: ['c03', 'c12', 'c08', 'c17', 'c06', 'c10'],
-    widget: {
-      type: 'bins',
-      rows: ['c03', 'c12', 'c08', 'c17', 'c06', 'c10'],
-      bins: [
-        { id: 'gives', label: 'Hands one over', note: 'Gives an electron away.' },
-        { id: 'takes', label: 'Takes one on', note: 'Pulls an electron off a partner.' },
-        { id: 'holds', label: 'Holds on to a partner', note: 'Neither gives nor takes.' },
-        { id: 'none', label: 'Does nothing', note: 'Will not trade at all.' }
-      ]
-    },
-    foes: [{ id: 'grid', label: 'Periodic Grid' }],
+    prompt: 'Tray each of the six cards by what it does with its outer-shell electrons.',
+    widget: { type: 'table', label: 'The desk' },
+    table: cardTable({
+      pieces: ['c03', 'c12', 'c08', 'c17', 'c06', 'c10'].map((id, i) => card(id, { x: 21 + 22 * i, y: 8 })),
+      zones: {
+        trays: [
+          { ...cardTray('gives', 'Hands one over', { x: 19, y: 32 }, 2, 2), size: { w: 33, h: 24 } },
+          { ...cardTray('takes', 'Takes one on', { x: 56, y: 32 }, 2, 2), size: { w: 33, h: 24 } },
+          { ...cardTray('shares', 'Holds on to a partner', { x: 93, y: 32 }, 2, 2), size: { w: 33, h: 24 } },
+          { ...cardTray('inert', 'Does nothing', { x: 130, y: 32 }, 2, 2), size: { w: 33, h: 24 } }
+        ],
+        slots: [cardSlot('tester', { x: 84, y: 53 }, { label: 'Card' })]
+      },
+      fixtures: [{ id: 'tester', kind: 'tester', label: 'Tester', runLabel: 'Test Card', at: { x: 120, y: 54 }, size: { w: 36, h: 15 }, props: { slot: 'tester' } }]
+    }),
     hints: [
-      'Use "Test Card" on the cards to see which ones give, take, share, or do nothing.',
-      'Cards in the same group behave alike, so you can predict unmeasured cards from their column.',
-      'Metals on the left give electrons, nonmetals on the right take them, group 14 shares, and group 18 does nothing.'
+      'Drag a card into the tester and press "Test Card" to see whether it gives, takes, holds or does nothing.',
+      'Cards in the same group behave alike, so you can predict untested cards from their column.',
+      'Cards on the left of the chart give electrons, cards on the right take them, the column under carbon holds on, and the last column does nothing.'
     ],
     check(state) {
-      const want = { c03: 'gives', c12: 'gives', c08: 'takes', c17: 'takes', c06: 'holds', c10: 'none' };
-      for (const id of Object.keys(want)) {
-        if (!state.bins[id]) {
-          return { ok: false, notYet: true, msg: `${CARDS[id].name} has no answer yet.` };
-        }
+      const t = state.table;
+      const ids = ['c03', 'c12', 'c08', 'c17', 'c06', 'c10'];
+      const where = id => (t.pieces[id].zone || '').replace('tray:', '');
+      const trays = ['gives', 'takes', 'shares', 'inert'];
+      for (const id of ids) {
+        if (!trays.includes(where(id))) return { ok: false, notYet: true, msg: `${CARDS[id].name} has no tray yet.` };
       }
-      for (const [id, expect] of Object.entries(want)) {
-        if (state.bins[id] !== expect) {
+      for (const id of ids) {
+        if (where(id) !== tradeOf(ELEMENT_OF[id])) {
           return { ok: false, msg: `${CARDS[id].name} is filed wrong. Test it or compare its column position.` };
         }
       }
@@ -421,44 +415,45 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'The Card That Is Not There',
-    prompt: 'Determine the atomic number and chemical behavior of the missing survey card.',
-    controls: ['reader'],
-    board: {
-      label: 'Reference chart — one slot empty',
-      columns: COLUMN_HEADS,
-      rows: chartWithSlots({ c14: 'gap' })
-    },
-    drawer: [],
-    widget: {
-      type: 'numchoice',
-      label: 'The missing card',
-      min: 0,
-      max: 20,
-      numberLabel: 'Atomic number',
-      choiceLabel: 'What it will do',
-      options: [
-        { id: 'gives', label: 'Hands one over', note: 'Like the cards on the left.' },
-        { id: 'holds', label: 'Holds on to a partner', note: 'Like the rest of its group.' },
-        { id: 'takes', label: 'Takes one on', note: 'Like the cards on the right.' }
-      ]
-    },
-    foes: [{ id: 'grid', label: 'Periodic Grid' }],
+    prompt: 'Place the unmeasured card where the chart says it goes, set its proton count and predict what it does.',
+    widget: { type: 'table', label: 'The desk' },
+    table: cardTable({
+      pieces: [
+        ...chartCards({ skip: ['c14'] }),
+        { ...elementCard('sealed', 'Si', { x: 13.5, y: 53 }, { sealed: true }), label: 'UNMEASURED' }
+      ],
+      zones: { slots: [cardSlot('gap', { x: X(4), y: ROW_Y[2] }, { label: '' })] },
+      fixtures: [{ id: 'stamp', kind: 'stamp', label: 'Stamp', at: { x: 75, y: 8 }, size: { w: 60, h: 12 }, noRun: true, dials: { protons: { min: 0, max: 20, step: 1, value: 0, label: 'Protons' } } }],
+      prediction: {
+        slot: { id: 'predict', label: 'It will', at: { x: 142, y: 55 } },
+        tokens: [
+          { id: 't-gives', label: 'Hands one over', at: { x: 48, y: 57 }, r: 7 },
+          { id: 't-holds', label: 'Holds on to a partner', at: { x: 84, y: 57 }, r: 7 },
+          { id: 't-takes', label: 'Takes one on', at: { x: 120, y: 57 }, r: 7 }
+        ]
+      }
+    }),
     hints: [
-      'Tap the card to the left of the empty slot and the card to its right.',
-      'ALUMINUM is 13 and PHOSPHORUS is 15, and the other card in that column is CARBON.',
+      'Drag the unmeasured card onto the open place, drag the stamp\'s slider to a proton count and drop one prediction in the slot.',
+      'Read the cards on either side of the open place and the card above it.',
       'Find the number between its left and right neighbors, and match its behavior to the card above it.'
     ],
     check(state) {
-      if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'The counter is still on zero — set the number you are claiming.' };
+      const t = state.table;
+      if (slotCard(t, 'gap') !== 'sealed') {
+        return { ok: false, notYet: true, msg: 'Lay the unmeasured card in the open place first.' };
       }
-      if (!state.choice) {
-        return { ok: false, notYet: true, msg: 'Pick what the missing card will do.' };
+      const claim = t.fixtures.stamp.dials.protons.value;
+      if (claim === 0) {
+        return { ok: false, notYet: true, msg: 'The stamp is still on zero — set the proton count you are claiming.' };
       }
-      if (state.number !== 14) {
-        return { ok: false, msg: `${state.number} does not fit that slot. Read the atomic numbers on the cards either side of it.` };
+      if (!t.prediction.token) {
+        return { ok: false, notYet: true, msg: 'Drop a prediction in the slot: what will the card do?' };
       }
-      if (state.choice !== 'holds') {
+      if (claim !== 14) {
+        return { ok: false, msg: `${claim} does not fit that place. Read the proton counts on the cards either side of it.` };
+      }
+      if (t.prediction.token !== 't-holds') {
         return { ok: false, msg: 'A card behaves like the rest of its column — check what the other card in that column does.' };
       }
       return { ok: true };
@@ -473,32 +468,32 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Fill The Chart',
-    prompt: 'File each unmarked mystery card into its correct slot on the chart.',
-    controls: ['reader', 'file', 'clear'],
-    masked: true,
-    board: {
-      label: 'Reference chart — four slots open',
-      columns: COLUMN_HEADS,
-      rows: chartWithSlots({ c04: 's1', c07: 's2', c13: 's3', c16: 's4' })
-    },
-    drawer: ['c16', 'c04', 'c13', 'c07'],
-    widget: { type: 'board', label: 'Open slots' },
-    foes: [{ id: 'grid', label: 'Periodic Grid' }],
+    prompt: 'File each loose card into the open place where it belongs on the chart.',
+    widget: { type: 'table', label: 'The desk' },
+    table: cardTable({
+      pieces: [
+        ...chartCards({ skip: ['c04', 'c07', 'c13', 'c16'] }),
+        ...[['c16', 2], ['c04', 4], ['c13', 6], ['c07', 8]].map(([id, c]) => card(id, { x: X(c), y: LOOSE_Y }))
+      ],
+      zones: {
+        slots: [['s1', 1, 1], ['s2', 5, 1], ['s3', 3, 2], ['s4', 6, 2]].map(([id, c, r]) => cardSlot(id, { x: X(c), y: ROW_Y[r] }))
+      }
+    }),
     hints: [
-      'Tap each card to read it: the readout still gives a proton count with the code missing.',
-      'Read the atomic numbers on the cards either side of each open slot; each slot takes the one number that fits between them.',
-      'For each unmarked card, find the open slot whose neighbors are one below and one above its proton count, and file it there.'
+      'Drag a loose card onto an open place in the chart.',
+      'Read the protons on the cards either side of each open place; each place takes the one number that fits between them.',
+      'For each loose card, find the open place whose neighbors are one below and one above its proton count, and file it there.'
     ],
     check(state) {
       const want = { s1: 'c04', s2: 'c07', s3: 'c13', s4: 'c16' };
-      const filed = Object.keys(want).filter(s => state.board[s]).length;
+      const filed = Object.keys(want).filter(s => slotCard(state.table, s)).length;
       if (filed < 4) {
-        return { ok: false, notYet: true, msg: `Fill all four slots first — ${filed} of them are filled.` };
+        return { ok: false, notYet: true, msg: `Fill all four places first — ${filed} of them are filled.` };
       }
-      for (const [slot, card] of Object.entries(want)) {
-        if (state.board[slot] !== card) {
-          const got = CARDS[state.board[slot]];
-          return { ok: false, msg: `One slot holds a card with ${got.z} protons, which does not fit between its neighbors.` };
+      for (const [slot, id] of Object.entries(want)) {
+        if (slotCard(state.table, slot) !== id) {
+          const got = CARDS[slotCard(state.table, slot)];
+          return { ok: false, msg: `One place holds a card with ${got.z} protons, which does not fit between its neighbors.` };
         }
       }
       return { ok: true };
@@ -597,49 +592,46 @@ export const PRACTICE = [
   }
 ];
 
-/* ------------------------------------------------------------------
-   BENCH STATE
-   ------------------------------------------------------------------ */
-function blankState(stage) {
-  return {
-    board: {},
-    number: stage.widget.type === 'number' || stage.widget.type === 'numchoice' ? stage.widget.min : null,
-    choice: null,
-    bins: {},
-    read: new Set(),
-    picked: new Set(),
-    tested: new Set(),
-    activeCard: null
-  };
-}
 
-/** The board state that solves each stage, in order. Checked by verify:learn. */
+/* ------------------------------------------------------------------
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   ------------------------------------------------------------------ */
+
+/** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  { board: { p1: 'c01', p2: 'c06', p3: 'c08', p4: 'c11', p5: 'c18', p6: 'c19' } },
-  { picked: new Set(['c03', 'c11']) },
-  { board: { r1: 'c11', r2: 'c12', r3: 'c13', r4: 'c14', r5: 'c15', r6: 'c16', r7: 'c17', r8: 'c18' } },
-  { choice: 'outer', read: new Set(['c08', 'c16']) },
-  { choice: 'g18', tested: new Set(['c10', 'c18']), read: new Set(['c10', 'c17']) },
-  { bins: { c03: 'gives', c12: 'gives', c08: 'takes', c17: 'takes', c06: 'holds', c10: 'none' }, tested: new Set(['c03', 'c08']) },
-  { number: 14, choice: 'holds', read: new Set(['c13']) },
-  { board: { s1: 'c04', s2: 'c07', s3: 'c13', s4: 'c16' } }
+  ['c01', 'c06', 'c08', 'c11', 'c18', 'c19'].map((id, i) => to(id, `rail:${i}`)),
+  [to('c03', 'tray:again'), to('c11', 'tray:again')],
+  ['c11', 'c12', 'c13', 'c14', 'c15', 'c16', 'c17', 'c18'].map((id, i) => to(id, `slot:r${i + 1}`)),
+  [to('c14', 'slot:s14'), to('c16', 'slot:s16'), to('c17', 'slot:s17')],
+  [
+    to('c10', 'slot:tester'), run('tester'), to('c18', 'slot:tester'), run('tester'), to('c09', 'slot:tester'), run('tester'),
+    to('c02', 'tray:inert'), to('c10', 'tray:inert'), to('c18', 'tray:inert')
+  ],
+  [
+    to('c03', 'slot:tester'), run('tester'), to('c08', 'slot:tester'), run('tester'), to('c06', 'slot:tester'), run('tester'),
+    to('c03', 'tray:gives'), to('c12', 'tray:gives'), to('c08', 'tray:takes'), to('c17', 'tray:takes'), to('c06', 'tray:shares'), to('c10', 'tray:inert')
+  ],
+  [to('sealed', 'slot:gap'), { setDial: { fixture: 'stamp', dial: 'protons', value: 14 } }, { predict: 't-holds' }],
+  [to('c04', 'slot:s1'), to('c07', 'slot:s2'), to('c13', 'slot:s3'), to('c16', 'slot:s4')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { board: { p1: 'c01', p2: 'c06', p3: 'c08', p4: 'c11', p5: 'c19', p6: 'c18' } },
-  { picked: new Set(['c01', 'c03']) },
-  { board: { r1: 'c11', r2: 'c12', r3: 'c13', r4: 'c15', r5: 'c14', r6: 'c16', r7: 'c17', r8: 'c18' } },
-  { choice: 'protons', read: new Set(['c08', 'c16']) },
-  { choice: 'g17', tested: new Set(['c10']), read: new Set(['c10', 'c17']) },
-  { bins: { c03: 'gives', c12: 'takes', c08: 'takes', c17: 'takes', c06: 'holds', c10: 'none' }, tested: new Set(['c03']) },
-  { number: 14, choice: 'gives', read: new Set(['c13']) },
-  { board: { s1: 'c07', s2: 'c04', s3: 'c13', s4: 'c16' } }
+  ['c01', 'c06', 'c08', 'c11', 'c19', 'c18'].map((id, i) => to(id, `rail:${i}`)),
+  [to('c01', 'tray:again'), to('c03', 'tray:again')],
+  ['c11', 'c12', 'c13', 'c15', 'c14', 'c16', 'c17', 'c18'].map((id, i) => to(id, `slot:r${i + 1}`)),
+  [to('c16', 'slot:s14'), to('c14', 'slot:s16'), to('c17', 'slot:s17')],
+  [to('c09', 'slot:tester'), run('tester'), to('c09', 'tray:inert'), to('c17', 'tray:inert'), to('c02', 'tray:inert')],
+  [to('c03', 'tray:gives'), to('c12', 'tray:takes'), to('c08', 'tray:takes'), to('c17', 'tray:takes'), to('c06', 'tray:shares'), to('c10', 'tray:inert')],
+  [to('sealed', 'slot:gap'), { setDial: { fixture: 'stamp', dial: 'protons', value: 14 } }, { predict: 't-gives' }],
+  [to('c07', 'slot:s1'), to('c04', 'slot:s2'), to('c13', 'slot:s3'), to('c16', 'slot:s4')]
 ];
 
-/** Build a full board state for stage `i` from one of the sets above. */
+function blankState() { return {}; }
+
+/** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  return { ...blankState(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -647,372 +639,10 @@ export function stateFor(i, overrides) {
    ================================================================== */
 
 export function mount(container, ctx) {
-  const frame = new LearnFrame(container, {
-    quest: ctx?.quest || { id: 'q3-catalogue' },
-    world: ctx?.world,
-    stageCount: STAGES.length,
-    rewards: STAGES.map(s => s.reward),
-    onSubmit: () => submit(),
-    onNext: () => next(),
-    onJump: i => loadStage(i),
-    onExit: () => ctx.exit()
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
-  const board = new CatalogueBoard(frame.instrumentHost, {
-    onProbe: id => onProbe(id),
-    onPlace: (slotId, cardId) => onPlace(slotId, cardId),
-    onLift: () => syncBoard()
-  });
-
-  let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
-  let cleared = ctx.isComplete ? STAGES.length : ctx.stagesCleared;
-  let state = null;
-  let disposed = false;
-
-  /* ---------------- stage lifecycle ---------------- */
-
-  function faceFor(id, masked) {
-    const c = CARDS[id];
-    return masked
-      ? { code: c.name, name: 'code missing', pips: null }
-      : { code: c.code, name: c.name, pips: c.outer };
-  }
-
-  function loadStage(i) {
-    index = i;
-    const stage = STAGES[i];
-    state = blankState(stage);
-
-    const ids = new Set(stage.drawer || []);
-    for (const row of stage.board?.rows || []) {
-      for (const entry of row) if (entry && !String(entry).startsWith('#')) ids.add(entry);
-    }
-    const cards = {};
-    for (const id of ids) cards[id] = faceFor(id, Boolean(stage.masked));
-
-    frame.setCleared(cleared);
-    frame.setStage({
-      index: i,
-      title: stage.title,
-      prompt: stage.prompt,
-      briefing: stage.briefing,
-      hints: stage.hints,
-      commitLabel: 'Commit'
-    });
-
-    board.setStage({
-      cards,
-      board: stage.board,
-      drawer: (stage.drawer || []).slice(),
-      drawerLabel: stage.masked ? 'Unmarked cards' : 'Loose cards'
-    });
-
-    renderControls();
-    renderWidget();
-    renderReadout(null);
-
-    if (stage.briefing && !ctx.isComplete && cleared <= i) frame.showBriefing();
-  }
-
-  function next() {
-    if (index >= STAGES.length - 1) {
-      frame.showDebrief(DEBRIEF, () => ctx.exit());
-      return;
-    }
-    loadStage(index + 1);
-  }
-
-  function submit() {
-    const stage = STAGES[index];
-    const result = stage.check(state);
-    if (!result.ok) {
-      if (result.notYet) frame.note(result.msg);
-      else frame.miss(result.msg);
-      return;
-    }
-    frame.clearBanner();
-    if (index + 1 > cleared) {
-      cleared = index + 1;
-      ctx.reportStage(index);
-    }
-    frame.setCleared(cleared);
-    frame.clear(stage.reward);
-    if (index === STAGES.length - 1) ctx.reportComplete();
-  }
-
-  /* ---------------- controls ---------------- */
-
-  function renderControls() {
-    const stage = STAGES[index];
-    const parts = [];
-    if (stage.controls.includes('clear')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="clear">Clear Board</button>');
-    }
-    if (stage.controls.includes('tester')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="tester">Test Card</button>');
-    }
-    // `reader` and `file` are affordances rather than keys: there is no button
-    // for tapping a card. They still carry a legend, because the rule is about
-    // what the player has to be told, not about what has a button.
-    parts.push(toolNotes(
-      stage.controls.map(id => toolNoteFor(id, index + 1)).filter(Boolean)
-    ));
-    frame.setControls(parts.join(''));
-    frame.el.controls.querySelectorAll('[data-tool]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tool = btn.dataset.tool;
-        if (tool === 'clear') {
-          board.clearBoard();
-          syncBoard();
-          soundscape.playToggleClack?.();
-          renderReadout(null);
-        } else if (tool === 'tester') {
-          runTester();
-        }
-      });
-    });
-  }
-
-  function runTester() {
-    const cardId = state.activeCard;
-    if (!cardId) {
-      frame.note('Tap a card on the board first.');
-      return;
-    }
-    const c = CARDS[cardId];
-    if (!c) return;
-    state.tested.add(cardId);
-    board.setTag(cardId, c.does.toUpperCase());
-    soundscape.playBondSnap?.();
-    frame.setReadout(`
-      <div class="lq-readout-card">
-        <div class="lq-readout-head">Tester // ${esc(c.name)}</div>
-        <div class="lq-readout-code">${esc(c.code)}</div>
-        <p class="lq-readout-line">${esc(DOES_TEXT[c.does])}</p>
-      </div>
-    `);
-  }
-
-  /* ---------------- instrument callbacks ---------------- */
-
-  function onProbe(cardId) {
-    state.activeCard = cardId;
-    state.read.add(cardId);
-    soundscape.playScanSweep?.();
-    const stage = STAGES[index];
-    if (stage.widget.type === 'pick') {
-      if (!state.picked) state.picked = new Set();
-      if (state.picked.has(cardId)) {
-        state.picked.delete(cardId);
-        board.setTag(cardId, '');
-      } else {
-        state.picked.add(cardId);
-        board.setTag(cardId, 'PICKED');
-      }
-      renderWidget();
-    }
-    renderReadout(cardId);
-  }
-
-  function onPlace(slotId, cardId) {
-    if (!cardId) {
-      frame.note('Take a card from the drawer first, then tap the slot.');
-      return;
-    }
-    soundscape.playToggleClack?.();
-    syncBoard();
-  }
-
-  function syncBoard() {
-    state.board = board.placements();
-  }
-
-  /* ---------------- readout ---------------- */
-
-  function renderReadout(cardId) {
-    if (!cardId) {
-      frame.setReadout(`
-        <div class="lq-readout-card lq-readout-idle">
-          <div class="lq-readout-head">Card reader // standby</div>
-          <p class="lq-readout-line">Tap any card to read it.</p>
-        </div>
-      `);
-      return;
-    }
-    const c = CARDS[cardId];
-    const masked = Boolean(STAGES[index].masked);
-    frame.setReadout(`
-      <div class="lq-readout-card">
-        <div class="lq-readout-head">Card reader // ${esc(c.name)}</div>
-        <div class="lq-readout-code">${masked ? 'CODE MISSING' : esc(c.code)}</div>
-        ${line('Protons', String(c.z))}
-        ${line('Electrons in the outer shell', String(c.outer))}
-        ${line('Mass of one atom', c.mass.toFixed(1))}
-      </div>
-    `);
-  }
-
-  function line(label, value) {
-    return `
-      <div class="lq-meter cat-line">
-        <span class="lq-meter-label">${esc(label)}</span>
-        <span class="lq-meter-value">${esc(value)}</span>
-      </div>
-    `;
-  }
-
-  /* ---------------- answer widgets ---------------- */
-
-  function renderWidget() {
-    const stage = STAGES[index];
-    const w = stage.widget;
-
-    if (w.type === 'pick') {
-      const pickedNames = [...(state.picked || [])].map(id => CARDS[id]?.name).filter(Boolean);
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <p class="form-help">${esc(w.help || 'Tap a card on the board to toggle its selection.')}</p>
-          <div class="lq-bin-keys">
-            ${pickedNames.length ? pickedNames.map(name => `<span class="choice-option selected lq-bin-key"><span class="lq-bin-label">${esc(name)}</span></span>`).join('') : '<span class="form-help">No cards selected yet.</span>'}
-          </div>
-        </div>
-      `);
-      return;
-    }
-
-    if (w.type === 'board') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <p class="form-help">Fill every slot on the board above, then press Commit.</p>
-        </div>
-      `);
-      return;
-    }
-
-    if (w.type === 'number') {
-      frame.setWidget(numberMarkup(w, state.number));
-      bindNumber(w);
-      return;
-    }
-
-    if (w.type === 'numchoice') {
-      frame.setWidget(`
-        ${numberMarkup({ ...w, label: w.numberLabel }, state.number)}
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.choiceLabel)}</span>
-          <div class="lq-bin-keys">
-            ${w.options.map(o => `
-              <button type="button" class="choice-option lq-bin-key" data-choice="${o.id}">
-                <span class="lq-bin-label">${esc(o.label)}</span>
-                <span class="lq-bin-note">${esc(o.note)}</span>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      bindNumber(w);
-      bindChoice();
-      return;
-    }
-
-    if (w.type === 'choice') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-bin-keys">
-            ${w.options.map(o => `
-              <button type="button" class="choice-option lq-bin-key" data-choice="${o.id}">
-                <span class="lq-bin-label">${esc(o.label)}</span>
-                <span class="lq-bin-note">${esc(o.note)}</span>
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      bindChoice();
-      return;
-    }
-
-    if (w.type === 'bins') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">What each card does</span>
-          <div class="lq-bins">
-            ${w.rows.map(id => `
-              <div class="lq-bin-row" data-row="${id}">
-                <span class="lq-bin-sample">${esc(CARDS[id].name)}</span>
-                <div class="lq-bin-keys">
-                  ${w.bins.map(b => `
-                    <button type="button" class="choice-option lq-bin-key" data-bin="${b.id}">
-                      <span class="lq-bin-label">${esc(b.label)}</span>
-                      <span class="lq-bin-note">${esc(b.note)}</span>
-                    </button>
-                  `).join('')}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-bin]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const row = btn.closest('[data-row]');
-          state.bins[row.dataset.row] = btn.dataset.bin;
-          row.querySelectorAll('[data-bin]').forEach(o => o.classList.toggle('selected', o === btn));
-          const bin = w.bins.find(b => b.id === btn.dataset.bin);
-          board.setTag(row.dataset.row, bin ? bin.label : '');
-          soundscape.playToggleClack?.();
-        });
-      });
-    }
-  }
-
-  function numberMarkup(w, value) {
-    return `
-      <div class="lq-answer">
-        <span class="form-label">${esc(w.label)}</span>
-        <div class="lq-number">
-          <button type="button" class="btn-secondary quest-btn-sm" data-num="-1" aria-label="Lower">&minus;</button>
-          <span class="lq-number-value" aria-live="polite">${value}</span>
-          <button type="button" class="btn-secondary quest-btn-sm" data-num="1" aria-label="Raise">+</button>
-        </div>
-      </div>
-    `;
-  }
-
-  function bindNumber(w) {
-    frame.el.widget.querySelectorAll('[data-num]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        state.number = Math.max(w.min, Math.min(w.max, state.number + Number(btn.dataset.num)));
-        frame.el.widget.querySelector('.lq-number-value').textContent = String(state.number);
-        soundscape.playToggleClack?.();
-      });
-    });
-  }
-
-  function bindChoice() {
-    frame.el.widget.querySelectorAll('[data-choice]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        state.choice = btn.dataset.choice;
-        frame.el.widget.querySelectorAll('[data-choice]')
-          .forEach(o => o.classList.toggle('selected', o === btn));
-        soundscape.playToggleClack?.();
-      });
-    });
-  }
-
-  /* ---------------- go ---------------- */
-
-  loadStage(index);
-
-  return {
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      board.dispose();
-      frame.dispose();
-    }
-  };
+  runner.start();
+  return { dispose: () => runner.dispose() };
 }

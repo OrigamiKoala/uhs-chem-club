@@ -50,6 +50,10 @@
  * three tools, laid on a dish by dragging), nucleus, specimen, detector, card, and the
  * fixtures `scope` (a power dial), `needle`, `beam`, `tester` and `reader`.
  *
+ * T2 adds the `ion` kind (an atom that already carries a charge, `props {el, charge}`, which the charge
+ * needle counts when it lies in the needle's zones) and the `plate` fixture (a label: `props.lines`, one
+ * per row, printed flat), for Tallow `q4-ledger`.
+ *
  * The scope's picture on a lens or a dish is `scope.js` `drawScopeField` itself; the cut
  * and the shake are its `planCut` / `planSettle`. The beam is `corebench.js` `planBeam`.
  */
@@ -255,6 +259,7 @@ export function chargeOf(ids, state) {
     const p = state.pieces[id];
     if (!p) continue;
     if (isAtom(p)) q += atomCharge(p, state);
+    else if (p.kind === 'ion') q += p.props.charge || 0;
     else if (p.kind === 'proton') q += 1;
     else if (p.kind === 'electron') q -= 1;
   }
@@ -368,6 +373,7 @@ export function needleReading(state, fixtureId) {
     if (p.hidden || !p.zone || !zones.has(p.zone)) continue;
     if (p.kind === 'proton') q += 1;
     else if (p.kind === 'electron') q -= 1;
+    else if (p.kind === 'ion') q += p.props.charge || 0;
   }
   return q;
 }
@@ -676,6 +682,17 @@ function paintAtom(ctx, p, state, o) {
   if (rd.lamp === 'over') lampMark(ctx, o.x - o.r * 0.7, o.y - o.r * 0.7, Math.max(9, o.r * 0.7));
 }
 
+/** An ion: its symbol on the element's own tint, and the charge it carries printed on its shoulder. */
+function paintIon(ctx, p, state, o) {
+  const el = elementOf(p.props.el);
+  const tint = TINTS[p.props.tint || el.tint];
+  const q = p.props.charge || 0;
+  disc(ctx, o.x, o.y, o.r, tint.fill, o.lit ? AMBER : tint.rim, o.lit ? 2 : 1);
+  plateText(ctx, el.sym, o.x, o.y + o.r * 0.04, { size: Math.max(9, Math.round(o.r * (el.sym.length > 1 ? 0.84 : 1.0))), weight: 700, align: 'center', base: 'middle', color: INK[p.props.tint || el.tint] });
+  // The charge is always written with its size (2+, 1−), so a single charge is read as plainly as a double.
+  if (q) plateText(ctx, `${Math.abs(q)}${q > 0 ? '+' : '−'}`, o.x + o.r * 0.62, o.y - o.r * 0.62, { size: Math.max(8, Math.round(o.r * 0.6)), weight: 700, align: 'center', base: 'middle', color: AMBER });
+}
+
 function paintParticle(ctx, p, state, o) {
   const sign = p.kind === 'proton' ? '+' : p.kind === 'electron' ? '−' : '';
   const fill = p.kind === 'proton' ? CORE_TINTS.marked : p.kind === 'neutron' ? CORE_TINTS.blank : CORE_TINTS.light;
@@ -946,7 +963,7 @@ function paintDispenser(ctx, p, state, o) {
 }
 
 const PAINTERS = {
-  atom: paintAtom, proton: paintParticle, neutron: paintParticle, electron: paintParticle,
+  atom: paintAtom, ion: paintIon, proton: paintParticle, neutron: paintParticle, electron: paintParticle,
   nucleus: paintNucleus, specimen: paintSpecimen, dish: paintDish, lens: paintLens,
   cutter: paintTool, shaker: paintTool, detector: paintDetector,
   joint: paintJoint, pairs: paintDispenser, single: paintDispenser, lift: paintDispenser
@@ -964,6 +981,7 @@ function printed(p, state) {
   switch (p.kind) {
     case 'lens': return dishUnder(p.id, state) ? '' : p.label;
     case 'atom': return p.props.mask ? '' : p.props.el;
+    case 'ion': return p.props.el;
     case 'joint': return '';
     case 'proton': return '';
     case 'neutron': return '';
@@ -985,6 +1003,7 @@ function faceKey(p, state) {
       return d ? `${d.id}|${d.props.sample.id}|${scopePower(state)}|${d.props.cut || ''}|${d.props.settled ? 1 : 0}` : '';
     }
     case 'joint': return `${p.props.pairs || 0}`;
+    case 'ion': return `${p.props.el}|${p.props.charge || 0}|${p.props.tint || ''}`;
     case 'specimen': return JSON.stringify(p.props);
     case 'nucleus': return `${p.props.p}|${p.props.n}`;
     case 'detector': return `${p.props.count ?? ''}`;
@@ -1090,8 +1109,19 @@ function paintSlate(ctx, f, state, b) {
   if (sl.charge) plateText(ctx, `CHARGE ${sl.charge > 0 ? '+' : '−'}${Math.abs(sl.charge)}`, b.x1 - 4, b.y0 + size * 2.4, { size: Math.max(7, size - 1), weight: 700, align: 'right', color: AMBER });
 }
 
+/** A label plate: the lines of a sample's label, printed flat under the plate's name. */
+function paintPlate(ctx, f, state, b) {
+  const lines = f.props.lines || [];
+  if (!lines.length) return;
+  const top = b.y0 + 5.4 * b.sc;
+  const room = b.y1 - top - 1.2 * b.sc;
+  const size = Math.max(7, Math.min(Math.round(room / lines.length * 0.86), Math.round(3.1 * b.sc)));
+  lines.forEach((text, i) => plateText(ctx, text, b.x0 + 2.2 * b.sc, top + (i + 0.6) * (room / lines.length), { size, base: 'middle', color: i === 0 ? PLATE_COLORS.text : PLATE_COLORS.dust }));
+}
+
 function paintFixture(ctx, f, state, b) {
-  if (f.kind === 'slate') paintSlate(ctx, f, state, b);
+  if (f.kind === 'plate') paintPlate(ctx, f, state, b);
+  else if (f.kind === 'slate') paintSlate(ctx, f, state, b);
   else if (f.kind === 'needle') paintNeedle(ctx, f, state, b);
   else if (f.kind === 'beam') paintBeam(ctx, f, state, b);
   else if (f.kind === 'reader') paintReader(ctx, f, state, b);
@@ -1201,6 +1231,7 @@ export const ATOMS_KIT = {
     proton: { r: R, nojoin: true },
     neutron: { r: R, nojoin: true },
     electron: { r: R, nojoin: true },
+    ion: { r: R, nojoin: true },
     nucleus: { r: 9, nojoin: true },
     specimen: { r: 9, nojoin: true },
     detector: { r: R, nojoin: true },

@@ -1,31 +1,36 @@
 /**
- * q4-ledger.js — Tallow, site four.
+ * q4-ledger.js — Tallow, site four: THE LEDGER.
  *
- * Eight stages on the core bench. The player describes an atom with three
- * numbers — protons, neutrons and charge — and meets mass number, isotope
- * notation, cations and anions as the reward card after each stage.
+ * The fourth game on the Learn road, and the fourth on the TABLETOP (plan `bench-tabletop.md`,
+ * phase T2): the atom kit at PARTICLE scale, on the inspection deck beside the cracking tower's
+ * sample cooler. The player describes an atom with three numbers — protons, neutrons and charge —
+ * by BUILDING it: protons and neutrons are dragged into the middle, electrons onto the outside,
+ * a charge needle reads the build live, and a stage is graded on what is on the table. The reward
+ * card after each stage meets mass number, isotope notation, cations and anions.
  *
- *   1  count protons, neutrons and electrons   -> Mass Number
- *   2  work a sealed sample from its label     -> Isotope Notation
- *   3  say which samples behave alike          -> Isotopes react alike
- *   4  read a needle that is not on zero       -> Net charge
- *   5  strip electrons to reach plus two       -> Cations
- *   6  load an outer shell past neutral        -> Anions
- *   7  cancel two charges to zero              -> Charges cancel in whole numbers
- *   8  file four sealed samples                -> Three numbers describe any atom
+ *   1  build an atom particle for particle              -> Mass Number
+ *   2  build a sealed sample from its label             -> Isotope Notation
+ *   3  tray the samples that react like Sample A        -> Isotopes react alike
+ *   4  build the protons and electrons of a sealed ion  -> Net charge
+ *   5  take the outer shell off magnesium               -> Cations
+ *   6  fill chlorine's outer shell                      -> Anions
+ *   7  put ions on a pad until the needle reads zero    -> Charges cancel in whole numbers
+ *   8  tray four samples against a reference            -> Three numbers describe any atom
  *
- * Counting is the task on stages 1, 2, 4 and 8, so the answer is a number the
- * player enters; the probe is there if they want a reading and is never a gate
- * on a commit. Every specimen is a real nuclide and balances unless a stage has
- * taken something off it.
+ * Every number on the table is a fact of the atom (`table/kits/atoms.js`): the needle is protons
+ * against electrons (and an ion's own charge), a shell tray prints what it holds against what it can,
+ * and nothing is declared. `SOLUTIONS` and `MISSES` are scripts of the player's own actions,
+ * replayed by `verify:table`. The sealed samples read their labels, which are plates of printed lines.
+ *
+ * FIELD (stage 1). A sample can be drawn from the tower's sample cooler; the field point is a real
+ * piece of the host (`tallow/stations.js` `buildTowerDeck`). It is evidence, never a lock: the stage
+ * is answered with the bench's own Sample A, and at T1 to T3 the same fetch is a drawn site plate.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { CoreBench } from '../../engine/instruments.js';
-import { LearnFrame, toolNotes } from '../../engine/frame.js';
-import { esc } from '../../../ui/layout.js';
-import { soundscape } from '../../../audio/soundscape.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { atomTable, piecesIn, needleReading } from '../../table/kits/atoms.js';
 
 export const meta = { stageCount: 8 };
 
@@ -41,234 +46,213 @@ export const VOCABULARY = [
 
 const SPEAKER = 'Vess';
 
-/* ------------------------------------------------------------------
-   THE KEY LEGEND
-   Every control a stage puts on the plate carries one plain sentence saying
-   what it does, for as long as the control is there. `verify:learn` fails the
-   build over a control with no line. Every word used here was earned on an
-   earlier bench, so nothing has to change its wording partway through.
-   ------------------------------------------------------------------ */
-const TOOL_TEXT = {
-  field: [{
-    from: 1,
-    key: 'Whole piece / The middle / Outside',
-    what: 'Three views of the same atom: all of it, the nucleus close up, or the electrons on their shells.'
-  }],
-  meter: [{
-    from: 1,
-    key: 'Read Needle',
-    what: 'Clips the charge meter to the atom: protons push the needle up, electrons pull it down.'
-  }],
-  strip: [{
-    from: 5,
-    key: 'Fire Stripper',
-    what: 'Knocks one electron off the outermost shell. The nucleus is not touched.'
-  }]
-  // Reset Sample is not listed. It resets the sample.
-};
-
 /**
- * The legend line for one control on one stage, or null if there is none.
- * `stageNumber` is one-based, the way a player counts stages.
+ * The legend lines. Every key here is a piece dragged or a label that says what it is, so nothing owes
+ * a legend. Kept so the quest contract (`toolNoteFor`) holds.
  */
-export function toolNoteFor(controlId, stageNumber) {
-  const rows = TOOL_TEXT[controlId];
-  if (!rows) return null;
-  let out = null;
-  for (const r of rows) if (stageNumber >= r.from) out = r;
-  return out ? { key: out.key, what: out.what } : null;
-}
+export function toolNoteFor() { return null; }
 
 /* ------------------------------------------------------------------
    THE PARTS
-   The same three sorts of thing the core bench put a needle on at site
-   two, with the same readings. Nothing has been renamed.
+   Protons and neutrons weigh one each, electrons almost nothing, and a proton and an electron push
+   the needle opposite ways. Nothing on the table has been renamed since the core bench.
    ------------------------------------------------------------------ */
 export const PARTS = {
-  marked: {
-    code: 'PROTON', mass: 1.0, charge: 1,
-    note: 'A proton. Heavy, and it pushes the needle up every time.'
-  },
-  blank: {
-    code: 'NEUTRON', mass: 1.0, charge: 0,
-    note: 'A neutron. The same weight as a proton, but the needle does not move for it at all.'
-  },
-  light: {
-    code: 'ELECTRON', mass: 0.0005, charge: -1,
-    note: 'An electron. Almost weightless, and it pushes the needle the opposite way to a proton.'
-  },
-  core: {
-    code: 'NUCLEUS', mass: null, charge: null,
-    note: 'The whole nucleus at once, packed too tight to separate from here.'
-  },
-  whole: {
-    code: 'WHOLE ATOM', mass: null, charge: null,
-    note: 'The whole atom, edge to edge. Almost all of that width is empty.'
-  }
+  proton: { mass: 1.0, charge: 1 },
+  neutron: { mass: 1.0, charge: 0 },
+  electron: { mass: 0.0005, charge: -1 }
 };
 
-/** How many electrons a specimen is carrying, over all its shells. */
-export function electronCount(spec) {
-  return (spec.rings || []).reduce((n, r) => n + r, 0);
-}
-
 /** What the needle reads: protons against electrons. */
-export function netCharge(spec) {
-  return (spec.core.marked || 0) - electronCount(spec);
+export function netCharge({ p, rings }) { return p - rings.reduce((a, b) => a + b, 0); }
+/** Protons plus neutrons — the figure stamped on a sample label. */
+export function massNumber({ p, n }) { return p + n; }
+
+/* ------------------------------------------------------------------
+   THE TABLES
+   One layout (120 x 64 units): a row of samples along the top, the atom being built in the middle
+   (the middle, the outside and the needle), the heap of loose particles bottom right and the
+   scratch corner bottom left.
+   ------------------------------------------------------------------ */
+
+const NAMES = { proton: 'Proton', neutron: 'Neutron', electron: 'Electron' };
+
+const part = (id, kind, x, y, zone = null) => ({ id, kind, label: NAMES[kind], at: { x, y }, ...(zone ? { zone } : {}) });
+const electrons = (prefix, n, zone, from = 1) => Array.from({ length: n }, (_, i) => part(`${prefix}${from + i}`, 'electron', 0, 0, zone));
+const trayAt = (id, label, x, y, w, h, cap) => ({ id, label, at: { x, y }, size: { w, h }, ...(cap != null ? { cap } : {}) });
+const specimenTray = (id, label, x, y, w = 38) => ({ id, label, at: { x, y }, size: { w, h: 22 }, cell: 19 });
+const specimen = (id, label, x, y, props) => ({ id, kind: 'specimen', label, at: { x, y }, props });
+const nucleus = (id, label, x, y, p, n) => ({ id, kind: 'nucleus', label, at: { x, y }, fixed: true, props: { p, n } });
+const plate = (id, label, x, lines) => ({ id, kind: 'plate', label, at: { x, y: 12 }, size: { w: 34, h: 18 }, noRun: true, props: { lines } });
+
+/**
+ * The heap of loose particles, two rows of six at the bottom right (y 49 and 59, clear of the scratch corner): `groups` is `[[kind, count], ...]`
+ * in the order they lie. Ids run `p1..`, `n1..`, `e1..`.
+ */
+function heap(groups) {
+  const out = [];
+  const seen = { proton: 0, neutron: 0, electron: 0 };
+  let k = 0;
+  for (const [kind, count] of groups) {
+    for (let i = 0; i < count; i++, k++) {
+      seen[kind]++;
+      out.push(part(`${kind[0]}${seen[kind]}`, kind, 60 + (k % 6) * 10, k < 6 ? 49 : 59));
+    }
+  }
+  return out;
 }
 
-/** Protons plus neutrons — the figure stamped on a sample label. */
-export function massNumber(spec) {
-  return (spec.core.marked || 0) + (spec.core.blank || 0);
-}
+/** The atom being built: the middle, the outside and the needle clipped on both. */
+const BUILD = {
+  trays: [trayAt('core', 'The middle', 23, 34, 40, 20), trayAt('out', 'Outside', 57, 34, 22, 20)],
+  needle: { id: 'needle', kind: 'needle', label: 'Needle', at: { x: 94, y: 33 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } }
+};
+
+/** The shell trays of an atom with a nucleus at the top left: one per shell, closest in first. */
+const SHELLS = [
+  trayAt('sh1', 'Shell 1', 14, 38, 20, 16, 2),
+  trayAt('sh2', 'Shell 2', 48, 37, 40, 22, 8),
+  trayAt('sh3', 'Shell 3', 92, 49, 40, 22, 8)
+];
+const SOURCE_TRAY = (label, n) => trayAt('src', label, 98, 18, 40, 30, n);
+const needleFixture = (zones, nuc, at, range) => ({
+  id: 'needle', kind: 'needle', label: 'Needle', at, size: { w: 40, h: 16 }, noRun: true, props: { zones, nucleus: nuc, range }
+});
+
+const count = (t, zone, kind) => piecesIn(t, zone, kind).length;
+const shells = t => ['tray:sh1', 'tray:sh2', 'tray:sh3'].map(z => count(t, z, 'electron'));
+
+/** A sample's reading, the way the table works it out: `{p, n, e}` of a specimen piece. */
+const spec = p => ({ p: p.props.p, n: p.props.n, e: p.props.rings.reduce((a, b) => a + b, 0) });
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
-   Exported so `verify:learn` can run SOLUTIONS and MISSES through every
-   `check` without a browser.
+   Exported so `verify:learn` and `verify:table` can run SOLUTIONS and MISSES through every `check`.
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Three Numbers Off One Atom',
-    field: 'core',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench shows one atom at a time: "The middle" shows its nucleus and "Outside" shows its electrons. "Read Needle" clips on a charge meter to measure charge.'
+      body: 'This bench builds an atom from loose particles: drag them into the middle or outside, and a needle reads the charge. A sample from the tower\'s cooler is waiting at the skid.'
     },
-    prompt: 'Count the protons, neutrons, and electrons of this neutral atom.',
-    controls: ['field', 'meter'],
-    specimens: [
-      { id: 'a', label: 'SAMPLE A', note: 'one atom, mounted', core: { marked: 6, blank: 6 }, rings: [2, 4] }
-    ],
-    widget: {
-      type: 'triple',
-      label: 'Sample A',
-      min: 0, max: 20,
-      fields: ['Protons', 'Neutrons', 'Electrons']
-    },
+    prompt: 'Build an atom that matches Sample A, particle for particle.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        nucleus('refc', 'A MIDDLE', 14, 12, 3, 4),
+        { ...specimen('refe', 'A OUTSIDE', 36, 12, { p: 3, n: 4, rings: [2, 1], needle: true }), fixed: true },
+        { ...specimen('draw', 'COOLER DRAW', 62, 12, { p: 3, n: 4, rings: [2, 1] }), fixed: true, hidden: true, fetchFrom: 'cooler' },
+        ...heap([['proton', 4], ['neutron', 4], ['electron', 4]])
+      ],
+      zones: { trays: BUILD.trays },
+      fixtures: [BUILD.needle],
+      fetch: [{ id: 'cooler', label: 'Cooler draw', at: { x: 100, y: 12 } }]
+    }),
     hints: [
-      'Press "The middle" to count the particles in the middle, then "Outside" to count the electrons.',
-      'In "The middle" a particle with a + is a proton and a blank one is a neutron, while each particle on a shell in "Outside" is an electron.',
-      'Tally the + particles, then the blank ones, then the electrons shell by shell, and check that electrons equal protons, since the needle reads zero.'
+      'Drag a particle from the heap into the middle or outside, and watch the needle.',
+      'In the middle of Sample A a disc with a + is a proton and a blank disc is a neutron, and each dot on a ring outside is an electron.',
+      'Tally the + discs, then the blank ones, then the electrons on the rings, and check that the electrons equal the protons, since the needle reads zero.'
     ],
     check(state) {
-      const [p, n, e] = state.numbers;
-      if (p === 0 && n === 0 && e === 0) {
-        return { ok: false, notYet: true, msg: 'The answer is still blank. Count the three numbers and set them.' };
-      }
-      if (p === 12) {
-        return { ok: false, msg: '12 is every particle in the middle. Only the + particles are protons.' };
-      }
-      if (p !== 6) {
-        return { ok: false, msg: 'Count the + marks again in "The middle". Each + marks a proton.' };
-      }
-      if (n !== 6) {
-        return { ok: false, msg: 'The neutrons are the blank particles in the middle without a +.' };
-      }
-      if (e !== 6) {
-        return { ok: false, msg: 'Count the electrons in "Outside". The needle reads zero, so electrons balance protons.' };
-      }
+      const t = state.table;
+      const p = count(t, 'tray:core', 'proton');
+      const n = count(t, 'tray:core', 'neutron');
+      const e = count(t, 'tray:out', 'electron');
+      if (p + n + e === 0) return { ok: false, notYet: true, msg: 'The atom is still empty. Drag particles into the middle and outside.' };
+      if (p !== 3) return { ok: false, msg: 'Count the + discs in the middle of Sample A again. Each + marks a proton.' };
+      if (n !== 4) return { ok: false, msg: 'The neutrons are the blank discs in the middle without a +.' };
+      if (e !== 3) return { ok: false, msg: 'Count the electrons on the rings outside Sample A. Its needle reads zero, so they balance the protons.' };
       return { ok: true };
     },
     reward: {
-      log: 'Sample A: 6 protons, 6 neutrons, 6 electrons.',
+      log: 'Sample A: 3 protons, 4 neutrons, 3 electrons.',
       title: 'Mass Number',
-      body: 'Electrons weigh almost nothing, so everything an atom weighs is in its nucleus. Add the protons to the neutrons and you get 12, which is called the mass number. This atom is written carbon-12.'
+      body: 'Electrons weigh almost nothing, so everything an atom weighs is in its nucleus. Add the protons to the neutrons and you get 7, which is called the mass number. This atom is written lithium-7.'
     }
   },
 
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Read the Label',
-    field: 'core',
-    prompt: 'How many neutrons and electrons does sealed Sample B hold?',
-    controls: ['field', 'meter'],
-    specimens: [
-      {
-        id: 'r1', label: 'SAMPLE A',
-        note: 'Label: carbon (C), atomic number 6, mass number 12, needle 0. Open.',
-        core: { marked: 6, blank: 6 }, rings: [2, 4]
-      },
-      {
-        id: 'b', label: 'SAMPLE B',
-        note: 'Label: chlorine (Cl), atomic number 17, mass number 37, needle 0. Sealed.',
-        core: { marked: 17, blank: 20 }, rings: [2, 8, 7], casing: true
-      }
-    ],
-    widget: {
-      type: 'pair',
-      label: 'Sample B',
-      min: 0, max: 40,
-      fields: ['Neutrons', 'Electrons']
-    },
+    prompt: 'Build sealed Sample B from its label.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        { ...specimen('sa', 'SAMPLE A', 14, 12, { p: 3, n: 4, rings: [2, 1], counts: true, needle: true }), fixed: true },
+        { ...specimen('sb', 'SAMPLE B', 72, 12, { p: 3, n: 3, rings: [2, 1], casing: true }), fixed: true },
+        ...heap([['proton', 3], ['neutron', 6], ['electron', 3]])
+      ],
+      zones: { trays: BUILD.trays },
+      fixtures: [
+        plate('la', 'Label A', 44, ['lithium (Li)', 'atomic number 3', 'mass number 7', 'needle 0']),
+        plate('lb', 'Label B', 99, ['lithium (Li)', 'atomic number 3', 'mass number 6', 'needle 0']),
+        BUILD.needle
+      ]
+    }),
     hints: [
-      'Count the carbon sample in both views, then compare your counts with the two numbers on its label.',
-      'On the carbon sample the atomic number is the proton count, and the mass number is protons plus neutrons.',
-      'Subtract the atomic number from the mass number to find the neutrons, and match electrons to protons for a zero needle.'
+      'Read the open sample\'s counts against its label, then drag particles from the heap to build the sealed one.',
+      'On the open sample the atomic number is the proton count, and the mass number is the protons and neutrons together.',
+      'Take the atomic number from the mass number to find the neutrons, and match the electrons to the protons for a needle on zero.'
     ],
     check(state) {
-      const [n, e] = state.numbers;
-      if (n === 0 && e === 0) {
-        return { ok: false, notYet: true, msg: 'The answer is still blank. Work the two numbers out from the label.' };
-      }
-      if (n === 37) {
-        return { ok: false, msg: 'That number counts the protons too. Take the protons off it first.' };
-      }
-      if (n !== 20) {
-        return { ok: false, msg: 'Work it out on the carbon sample first: compare the protons and neutrons you counted with the two numbers on its label, then do the same sum with the chlorine label.' };
-      }
-      if (e !== 17) {
-        return { ok: false, msg: 'A needle on zero means the electrons match the protons one for one.' };
-      }
+      const t = state.table;
+      const p = count(t, 'tray:core', 'proton');
+      const n = count(t, 'tray:core', 'neutron');
+      const e = count(t, 'tray:out', 'electron');
+      if (p + n + e === 0) return { ok: false, notYet: true, msg: 'The atom is still empty. Work the three counts out from the label.' };
+      if (p !== 3) return { ok: false, msg: 'Compare the open sample\'s atomic number with the protons you counted on it, then read the atomic number on the sealed label.' };
+      if (n === 6) return { ok: false, msg: 'That number counts the protons too. Take the protons off it first.' };
+      if (n !== 3) return { ok: false, msg: 'Work it out on the open sample first: compare the protons and neutrons you counted with the two numbers on its label, then do the same sum with the sealed label.' };
+      if (e !== 3) return { ok: false, msg: 'A needle on zero means the electrons match the protons one for one.' };
       return { ok: true };
     },
     reward: {
-      log: 'Sample B: 17 protons, 20 neutrons, 17 electrons.',
+      log: 'Sample B: 3 protons, 3 neutrons, 3 electrons.',
       title: 'Isotope Notation',
-      body: 'Two numbers describe any atom: the atomic number, which says which element it is, and the mass number, which says how heavy this one is. Chemists write that as chlorine-37, or as the mass number above the atomic number beside the symbol. Every other count falls out of the pair.'
+      body: 'Two numbers describe any atom: the atomic number, which says which element it is, and the mass number, which says how heavy this one is. Chemists write that as lithium-6, or as the mass number above the atomic number beside the symbol. Every other count falls out of the pair.'
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Which Ones Behave Alike',
-    field: 'rings',
-    prompt: 'Which mineral samples will react the same way as Sample A?',
-    controls: ['field', 'meter'],
-    specimens: [
-      { id: 'ref', label: 'SAMPLE A', note: 'Label: chlorine-35 (³⁵₁₇Cl). Open.', core: { marked: 17, blank: 18 }, rings: [2, 8, 7] },
-      { id: 'k', label: 'SAMPLE B', note: 'Label: chlorine-37 (³⁷₁₇Cl). Open.', core: { marked: 17, blank: 20 }, rings: [2, 8, 7] },
-      { id: 'l', label: 'SAMPLE C', note: 'Label: argon-36 (³⁶₁₈Ar). Open.', core: { marked: 18, blank: 18 }, rings: [2, 8, 8] },
-      { id: 'm', label: 'SAMPLE D', note: 'Label: sulfur-35 (³⁵₁₆S). Open.', core: { marked: 16, blank: 19 }, rings: [2, 8, 6] }
-    ],
-    widget: {
-      type: 'bins',
-      rows: ['k', 'l', 'm'],
-      bins: [
-        { id: 'same', label: 'Reacts the same way', note: 'Behaves like Sample A.' },
-        { id: 'other', label: 'Reacts differently', note: 'Behaves unlike Sample A.' }
-      ]
-    },
+    prompt: 'Tray each sample by whether it reacts the same way as Sample A.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        { ...specimen('ref', 'SAMPLE A', 14, 12, { p: 17, n: 18, rings: [2, 8, 7], counts: true }), fixed: true },
+        specimen('k', 'SAMPLE B', 42, 12, { p: 17, n: 20, rings: [2, 8, 7], counts: true }),
+        specimen('l', 'SAMPLE C', 70, 12, { p: 18, n: 18, rings: [2, 8, 8], counts: true }),
+        specimen('m', 'SAMPLE D', 98, 12, { p: 16, n: 19, rings: [2, 8, 6], counts: true })
+      ],
+      zones: {
+        trays: [
+          specimenTray('same', 'Reacts the same way', 30, 36, 44),
+          specimenTray('other', 'Reacts differently', 82, 36, 44)
+        ]
+      }
+    }),
     hints: [
-      'Compare the labels: the lower number is the atomic number (protons), which sets the element.',
-      'Sample B shares atomic number 17 with Sample A, so it has identical electron shells.',
-      'Atoms with the same atomic number react alike, regardless of mass number.'
+      'Compare the printed counts: the protons say which element a sample is.',
+      'Count the protons and the outer-shell dots on each sample and compare them with Sample A.',
+      'Tray a sample with Sample A only when its protons match, whatever its neutrons add up to.'
     ],
     check(state) {
-      const want = { k: 'same', l: 'other', m: 'other' };
+      const t = state.table;
+      const where = id => (t.pieces[id].zone || '').replace('tray:', '');
+      const ids = ['k', 'l', 'm'];
       const labels = { k: 'Sample B', l: 'Sample C', m: 'Sample D' };
-      for (const id of ['k', 'l', 'm']) {
-        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
-      }
-      if (state.bins.k !== want.k) {
-        return { ok: false, msg: 'Sample B is filed wrong. Read its atomic number (17) on the label: it shares protons and electron shells with Sample A.' };
-      }
-      if (state.bins.l !== want.l) {
-        return { ok: false, msg: 'Sample C is filed wrong. Its atomic number is 18 (argon), a different element.' };
-      }
-      if (state.bins.m !== want.m) {
-        return { ok: false, msg: 'Sample D is filed wrong. Its atomic number is 16 (sulfur), a different element.' };
+      for (const id of ids) if (!['same', 'other'].includes(where(id))) return { ok: false, notYet: true, msg: `${labels[id]} has no tray yet.` };
+      const ref = spec(t.pieces.ref);
+      for (const id of ids) {
+        const alike = spec(t.pieces[id]).p === ref.p;
+        if ((where(id) === 'same') !== alike) {
+          return { ok: false, msg: alike
+            ? `${labels[id]} is in the wrong tray. Compare its protons with Sample A's: they decide which element it is.`
+            : `${labels[id]} is in the wrong tray. Count its protons and compare them with Sample A's.` };
+        }
       }
       return { ok: true };
     },
@@ -282,86 +266,70 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Needle Is Not on Zero',
-    field: 'rings',
-    prompt: 'How many protons and electrons does this sealed sodium ion hold?',
-    controls: ['field', 'meter'],
-    specimens: [
-      { id: 'r2', label: 'SAMPLE A', note: 'Label: lithium (Li), atomic number 3, mass number 7. Open.', core: { marked: 3, blank: 4 }, rings: [2] },
-      {
-        id: 'c', label: 'SAMPLE B',
-        note: 'Label: sodium (Na), atomic number 11, mass number 23. Sealed.',
-        core: { marked: 11, blank: 12 }, rings: [2, 8], casing: true
-      }
-    ],
-    widget: {
-      type: 'pair',
-      label: 'Sample B',
-      min: 0, max: 30,
-      fields: ['Protons', 'Electrons']
-    },
+    prompt: 'Build the protons and electrons of the sealed ion.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        { ...specimen('sa', 'SAMPLE A', 14, 12, { p: 4, n: 5, rings: [2, 2], counts: true, needle: true }), fixed: true },
+        { ...specimen('sb', 'SAMPLE B', 72, 12, { p: 3, n: 4, rings: [2], casing: true, needle: true }), fixed: true },
+        ...heap([['proton', 4], ['electron', 3]])
+      ],
+      zones: { trays: BUILD.trays },
+      fixtures: [
+        plate('la', 'Label A', 44, ['beryllium (Be)', 'atomic number 4', 'mass number 9']),
+        plate('lb', 'Label B', 99, ['lithium (Li)', 'atomic number 3', 'mass number 7']),
+        BUILD.needle
+      ]
+    }),
     hints: [
-      'Press "Read Needle" on the lithium sample, then count its protons and its electrons.',
-      'Lithium is open: check that its needle equals its protons minus its electrons, and that its proton count equals its atomic number.',
-      'Take the sodium protons from its atomic number, read its needle, and take the needle reading away from the protons to get the electrons.'
+      'Drag protons and electrons from the heap into the middle and outside, and compare your needle with the sealed sample\'s.',
+      'On the open sample the needle equals its protons minus its electrons, and its proton count equals its atomic number.',
+      'Take the protons from the sealed label\'s atomic number, read its needle, and take the needle reading away from the protons to get the electrons.'
     ],
     check(state) {
-      const [p, e] = state.numbers;
-      if (p === 0 && e === 0) {
-        return { ok: false, notYet: true, msg: 'The answer is still blank. Set the two counts.' };
-      }
-      if (p !== 11) {
-        return { ok: false, msg: 'Compare the lithium atomic number with the protons you counted on it, then read the atomic number on the sodium label.' };
-      }
-      if (e === 11) {
-        return { ok: false, msg: 'That many electrons would cancel the protons exactly and put the needle on zero. Read the sodium needle.' };
-      }
-      if (e === 12) {
-        return { ok: false, msg: 'More electrons than protons would push the needle below zero. Read the sodium needle.' };
-      }
-      if (e !== 10) {
-        return { ok: false, msg: 'Read the sodium needle: it says how many more protons than electrons it holds.' };
-      }
+      const t = state.table;
+      const p = count(t, 'tray:core', 'proton');
+      const e = count(t, 'tray:out', 'electron');
+      if (p === 0 && e === 0) return { ok: false, notYet: true, msg: 'The atom is still empty. Work out the protons and the electrons.' };
+      if (p !== 3) return { ok: false, msg: 'Compare the open sample\'s atomic number with the protons you counted on it, then read the atomic number on the sealed label.' };
+      if (e === p) return { ok: false, msg: 'That many electrons would cancel the protons exactly and put the needle on zero. Read the sealed sample\'s needle.' };
+      if (e > p) return { ok: false, msg: 'More electrons than protons would push the needle below zero. Read the sealed sample\'s needle.' };
+      if (e !== 2) return { ok: false, msg: 'Read the sealed sample\'s needle: it says how many more protons than electrons it holds.' };
       return { ok: true };
     },
     reward: {
-      log: 'Sample B: 11 protons, 10 electrons, needle plus one.',
+      log: 'Sample B: 3 protons, 2 electrons, needle plus one.',
       title: 'Net Charge',
-      body: 'The needle does one subtraction: protons count up, electrons count down, and what is left over is the net charge. Nothing in the sodium nucleus has changed, so it is still atomic number 11 and still mass number 23. It is simply one electron short.'
+      body: 'The needle does one subtraction: protons count up, electrons count down, and what is left over is the net charge. Nothing in the lithium nucleus has changed, so it is still atomic number 3 and still mass number 7. It is simply one electron short.'
     }
   },
 
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Lose the Outer Shell',
-    field: 'rings',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'You now have an electron stripper on the bench. Use "Fire Stripper" to remove outer electrons, or "Reset Sample" to put them back.'
-    },
-    prompt: 'What charge does magnesium end up with when its outer shell is gone?',
-    controls: ['field', 'meter', 'strip', 'reset'],
-    specimens: [
-      { id: 'd', label: 'SAMPLE A', note: 'magnesium (Mg), atomic number 12, mass number 24. Open.', core: { marked: 12, blank: 12 }, rings: [2, 8, 2] }
-    ],
-    widget: { type: 'number', min: 0, max: 6, label: 'Charge when outer shell is empty' },
+    prompt: 'Take every electron off magnesium\'s outermost shell.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        nucleus('nuc', 'SAMPLE A', 14, 12, 12, 12),
+        ...electrons('e', 2, 'tray:sh1'),
+        ...electrons('e', 8, 'tray:sh2', 3),
+        ...electrons('e', 2, 'tray:sh3', 11)
+      ],
+      zones: { trays: [SOURCE_TRAY('Taken off', 12), ...SHELLS] },
+      fixtures: [needleFixture(['tray:sh1', 'tray:sh2', 'tray:sh3'], 'nuc', { x: 50, y: 13 }, 4)]
+    }),
     hints: [
-      'Magnesium starts with 2 electrons in its outer shell (shell 3).',
-      'Use "Fire Stripper" to knock electrons off and watch the full-shell lamp on the bench.',
-      'Fire one shot at a time and watch the full-shell lamp and the needle after each shot.'
+      'Drag electrons off the shells and into the tray, and watch the needle.',
+      'Magnesium starts with two electrons on its outermost shell, and each tray prints how many it holds against how many it can.',
+      'Take electrons off one at a time and watch the needle after each, and stop when the outer shell is empty and the shell beneath it is still full.'
     ],
     check(state) {
-      if (state.number === 0) {
-        return { ok: false, notYet: true, msg: 'The charge counter is still on zero. Fire the stripper to empty the outer shell and read the needle.' };
-      }
-      if (state.number === 1) {
-        return { ok: false, msg: 'At this charge there is still an electron in shell 3. Strip further to empty that shell.' };
-      }
-      if (state.number === 3) {
-        return { ok: false, msg: 'Stripping past the empty outer shell breaks into a full inner shell and extinguishes the lamp. Stop when the outer shell is empty.' };
-      }
-      if (state.number !== 2) {
-        return { ok: false, msg: 'Count how many electrons sit on magnesium outermost shell, and remove that exact count to reach the full inner shell.' };
-      }
+      const [s1, s2, s3] = shells(state.table);
+      const off = count(state.table, 'tray:src', 'electron');
+      if (off === 0) return { ok: false, notYet: true, msg: 'Nothing has come off yet. Drag electrons off the outer shell and read the needle.' };
+      if (s3 > 0) return { ok: false, msg: 'At this charge there is still an electron on the third shell. Take further electrons off to empty that shell.' };
+      if (s1 < 2 || s2 < 8) return { ok: false, msg: 'Taking more off went past the empty outer shell, into a full inner shell, which puts out its lamp. Stop when the outer shell is empty.' };
       return { ok: true };
     },
     reward: {
@@ -374,44 +342,30 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Fill It Past Neutral',
-    field: 'rings',
     prompt: 'Fill the outer shell of Sample A completely.',
-    controls: ['field', 'meter'],
-    specimens: [
-      { id: 'e', label: 'SAMPLE A', note: 'mounted, all its electrons removed', core: { marked: 17, blank: 18 }, rings: [] }
-    ],
-    target: 'e',
-    widget: {
-      type: 'rings',
-      label: 'Sample A — where the electrons go',
-      total: 18,
-      rings: ['Shell 1 — closest in', 'Shell 2 — middle', 'Shell 3 — furthest out']
-    },
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        nucleus('nuc', 'SAMPLE A', 14, 12, 17, 18),
+        ...electrons('e', 2, 'tray:sh1'),
+        ...electrons('e', 8, 'tray:sh2', 3),
+        ...electrons('e', 7, 'tray:sh3', 11),
+        ...electrons('e', 3, 'tray:src', 18)
+      ],
+      zones: { trays: [SOURCE_TRAY('Spare electrons', 3), ...SHELLS] },
+      fixtures: [needleFixture(['tray:sh1', 'tray:sh2', 'tray:sh3'], 'nuc', { x: 50, y: 13 }, 4)]
+    }),
     hints: [
-      'Use the + keys on the shell rows to put electrons on Sample A.',
-      'A shell holds 2 closest in and 8 after that, and nothing sits further out while a nearer shell has room.',
-      'Add electrons one at a time and watch the full-shell lamp, remembering that an atom can take on more electrons than it has protons.'
+      'Drag a spare electron onto a shell and watch the needle.',
+      'Each tray prints how many electrons it holds against how many it can hold, and an atom can take on more electrons than it has protons.',
+      'Add electrons one at a time and stop when the outermost shell is full, whatever the needle says.'
     ],
     check(state) {
-      const placed = state.rings.reduce((n, r) => n + r, 0);
-      if (placed === 0) {
-        return { ok: false, notYet: true, msg: 'Nothing loaded yet. Use the + keys to put electrons on the shells.' };
-      }
-      if (state.rings[0] > 2) {
-        return { ok: false, msg: 'Too many on Shell 1. The closest shell holds 2 and never more.' };
-      }
-      if (state.rings[1] > 8 || state.rings[2] > 8) {
-        return { ok: false, msg: 'Too many on a shell. After the first, a shell holds 8.' };
-      }
-      if (state.rings[0] < 2 || (state.rings[2] > 0 && state.rings[1] < 8)) {
-        return { ok: false, msg: 'Fill each shell before starting the next one: 2, then 8.' };
-      }
-      if (placed === 17) {
-        return { ok: false, msg: '17 electrons balances the needle to neutral, but the outer shell lamp is not lit yet. Keep loading until the full-shell lamp glows.' };
-      }
-      if (placed !== 18) {
-        return { ok: false, msg: `${placed} electrons are on, and the outer shell still has room. Keep going until it is full, whatever the needle says.` };
-      }
+      const [s1, s2, s3] = shells(state.table);
+      if (s3 > 8 || s2 > 8 || s1 > 2) return { ok: false, msg: 'Too many on a shell. The closest shell holds 2 and each shell after it holds 8.' };
+      const untouched = s3 === 7 && count(state.table, 'tray:src', 'electron') === 3;
+      if (s3 < 8) return { ok: false, notYet: untouched, msg: 'The outer shell still has room, and a needle on zero does not make it full. Keep going until it is full, whatever the needle says.' };
+      if (s1 < 2 || s2 < 8) return { ok: false, msg: 'Fill each shell before starting the next one: 2, then 8.' };
       return { ok: true };
     },
     reward: {
@@ -424,38 +378,30 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Cancel The Charges',
-    field: 'rings',
-    prompt: 'What is the smallest ratio of Sample A and Sample B ions that balances to zero charge?',
-    controls: ['field', 'meter'],
-    specimens: [
-      { id: 's', label: 'SAMPLE A', note: 'magnesium ion (Mg²⁺), charge +2. Open.', core: { marked: 12, blank: 12 }, rings: [2, 8] },
-      { id: 't', label: 'SAMPLE B', note: 'chloride ion (Cl⁻), charge -1. Open.', core: { marked: 17, blank: 18 }, rings: [2, 8, 8] }
-    ],
-    widget: {
-      type: 'chargetray',
-      label: 'Charge Tray'
-    },
+    prompt: 'Put the fewest Sample A and Sample B ions on the pad that balance it to zero charge.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        ...[10, 20, 30].map((x, i) => ({ id: `a${i + 1}`, kind: 'ion', label: 'SAMPLE A', at: { x, y: 11 }, props: { el: 'Mg', charge: 2 } })),
+        ...[56, 66, 76, 86, 96, 106].map((x, i) => ({ id: `b${i + 1}`, kind: 'ion', label: 'SAMPLE B', at: { x, y: 11 }, props: { el: 'Cl', charge: -1 } }))
+      ],
+      zones: { trays: [trayAt('pad', 'Pad', 88, 35, 50, 22)] },
+      fixtures: [{ id: 'needle', kind: 'needle', label: 'Pad charge', at: { x: 30, y: 34 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:pad'], range: 4 } }]
+    }),
     hints: [
-      'Read the needle on each ion: Magnesium is +2 and Chloride is -1.',
-      'Tap ions into the tray: each Mg²⁺ adds +2 and each Cl⁻ adds -1.',
-      'Keep adding ions to the tray until the running total reads zero, using the fewest you can.'
+      'Read the charge printed on each ion, then drag ions onto the pad and watch its needle.',
+      'Every ion of Sample A adds its charge and every ion of Sample B adds its charge, and the pad needle shows the running total.',
+      'Keep adding ions until the needle reads zero, using the fewest you can.'
     ],
     check(state) {
-      const s = state.tray && (state.tray.s > 0 || state.tray.t > 0) ? state.tray.s : (state.numbers?.[0] ?? 0);
-      const t = state.tray && (state.tray.s > 0 || state.tray.t > 0) ? state.tray.t : (state.numbers?.[1] ?? 0);
-      if (s === 0 && t === 0) {
-        return { ok: false, notYet: true, msg: 'The tray is still empty. Tap ions into the tray.' };
-      }
-      if (s === 0 || t === 0) {
-        return { ok: false, msg: 'One sort of ion on its own cannot reach zero. Both positive and negative ions are needed.' };
-      }
-      const net = s * 2 - t;
-      if (net !== 0) {
-        return { ok: false, msg: `The tray charge is ${net > 0 ? '+' : ''}${net}. Add ions until the total charge balances to zero.` };
-      }
-      if (s !== 1 || t !== 2) {
-        return { ok: false, msg: 'That combination balances to zero, but it can be reduced. Divide both counts by a common factor to find the simplest ratio.' };
-      }
+      const t = state.table;
+      const s = piecesIn(t, 'tray:pad').filter(p => p.props.el === 'Mg').length;
+      const u = piecesIn(t, 'tray:pad').filter(p => p.props.el === 'Cl').length;
+      if (s === 0 && u === 0) return { ok: false, notYet: true, msg: 'The pad is still empty. Drag ions onto it.' };
+      if (s === 0 || u === 0) return { ok: false, msg: 'One sort of ion on its own cannot reach zero. Both positive and negative ions are needed.' };
+      const net = needleReading(t, 'needle');
+      if (net !== 0) return { ok: false, msg: `The pad reads ${net > 0 ? '+' : '-'}${Math.abs(net)}. Add ions until the total charge balances to zero.` };
+      if (s !== 1 || u !== 2) return { ok: false, msg: 'That combination balances to zero, but it can be reduced. Divide both counts by a common factor to find the simplest ratio.' };
       return { ok: true };
     },
     reward: {
@@ -468,48 +414,51 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'File Them All',
-    field: 'core',
-    prompt: 'Classify each sample compared to reference oxygen as an isotope, an ion, or a different element.',
-    controls: ['field', 'meter'],
-    specimens: [
-      { id: 'std', label: 'SAMPLE A', note: 'Label: oxygen (O), atomic number 8, mass number 16, needle 0. Open.', core: { marked: 8, blank: 8 }, rings: [2, 6] },
-      { id: 'n1', label: 'SAMPLE B', note: 'Label: oxygen (O), atomic number 8, mass number 18, needle 0. Sealed.', core: { marked: 8, blank: 10 }, rings: [2, 6], casing: true },
-      { id: 'n2', label: 'SAMPLE C', note: 'Label: oxygen (O), atomic number 8, mass number 16, needle minus 2. Sealed.', core: { marked: 8, blank: 8 }, rings: [2, 8], casing: true },
-      { id: 'n3', label: 'SAMPLE D', note: 'Label: nitrogen (N), atomic number 7, mass number 16, needle 0. Sealed.', core: { marked: 7, blank: 9 }, rings: [2, 5], casing: true },
-      { id: 'n4', label: 'SAMPLE E', note: 'Label: oxygen (O), atomic number 8, mass number 16, needle 0. Sealed.', core: { marked: 8, blank: 8 }, rings: [2, 6], casing: true }
-    ],
-    widget: {
-      type: 'bins',
-      rows: ['n1', 'n2', 'n3', 'n4'],
-      bins: [
-        { id: 'match', label: 'No difference', note: 'All three numbers agree.' },
-        { id: 'heavy', label: 'Extra neutrons', note: 'Same element, heavier.' },
-        { id: 'charged', label: 'Carrying a charge', note: 'The electron count is off.' },
-        { id: 'other', label: 'Different element', note: 'The atomic number does not match.' }
-      ]
-    },
+    prompt: 'Tray each sample by how it differs from reference Sample A.',
+    widget: { type: 'table', label: 'The bench' },
+    table: atomTable({
+      pieces: [
+        { ...specimen('std', 'SAMPLE A', 11, 12, { p: 8, n: 8, rings: [2, 6], counts: true, needle: true }), fixed: true },
+        specimen('n1', 'SAMPLE B', 34, 12, { p: 8, n: 10, rings: [2, 6], counts: true, needle: true }),
+        specimen('n2', 'SAMPLE C', 57, 12, { p: 8, n: 8, rings: [2, 8], counts: true, needle: true }),
+        specimen('n3', 'SAMPLE D', 80, 12, { p: 7, n: 9, rings: [2, 5], counts: true, needle: true }),
+        specimen('n4', 'SAMPLE E', 103, 12, { p: 8, n: 8, rings: [2, 6], counts: true, needle: true })
+      ],
+      zones: {
+        trays: [
+          specimenTray('match', 'No difference', 17, 37, 27),
+          specimenTray('heavy', 'Extra neutrons', 46, 37, 27),
+          specimenTray('charged', 'Carrying a charge', 75, 37, 27),
+          specimenTray('other', 'Different element', 104, 37, 27)
+        ]
+      }
+    }),
     hints: [
-      'Count the oxygen reference in both views and check it against its own label.',
-      'The atomic number is the first test: only a sample stamped 8 can match at all.',
-      'Test each sample in order: a different atomic number is a different element, the same number with a bigger mass number is extra neutrons, and the same numbers with the needle off zero is a charge.'
+      'Read the printed counts on reference Sample A and on each sample.',
+      'Compare each sample with the reference one count at a time: protons, then neutrons, then the needle.',
+      'A different proton count is a different element, the same protons with more neutrons is extra neutrons, and the same counts with the needle off zero is a charge.'
     ],
     check(state) {
-      const want = { n1: 'heavy', n2: 'charged', n3: 'other', n4: 'match' };
+      const t = state.table;
+      const where = id => (t.pieces[id].zone || '').replace('tray:', '');
+      const ids = ['n1', 'n2', 'n3', 'n4'];
       const labels = { n1: 'Sample B', n2: 'Sample C', n3: 'Sample D', n4: 'Sample E' };
-      for (const id of ['n1', 'n2', 'n3', 'n4']) {
-        if (!state.bins[id]) return { ok: false, notYet: true, msg: `${labels[id]} has no answer yet.` };
-      }
-      if (state.bins.n1 !== want.n1) {
-        return { ok: false, msg: 'Sample B is filed wrong. Compare its atomic number, its mass number and its needle with the reference, one at a time.' };
-      }
-      if (state.bins.n2 !== want.n2) {
-        return { ok: false, msg: 'Sample C is filed wrong. Compare its atomic number, its mass number and its needle with the reference, one at a time.' };
-      }
-      if (state.bins.n3 !== want.n3) {
-        return { ok: false, msg: 'Sample D is filed wrong. Check its atomic number against the reference before anything else.' };
-      }
-      if (state.bins.n4 !== want.n4) {
-        return { ok: false, msg: 'Sample E is filed wrong. Compare its atomic number, its mass number and its needle with the reference, one at a time.' };
+      const trays = ['match', 'heavy', 'charged', 'other'];
+      for (const id of ids) if (!trays.includes(where(id))) return { ok: false, notYet: true, msg: `${labels[id]} has no tray yet.` };
+      const ref = spec(t.pieces.std);
+      const kind = id => {
+        const s = spec(t.pieces[id]);
+        if (s.p !== ref.p) return 'other';
+        if (s.n !== ref.n) return 'heavy';
+        if (s.p - s.e !== ref.p - ref.e) return 'charged';
+        return 'match';
+      };
+      for (const id of ids) {
+        if (where(id) !== kind(id)) {
+          return { ok: false, msg: id === 'n3'
+            ? 'Sample D is filed wrong. Check its protons against the reference before anything else.'
+            : `${labels[id]} is filed wrong. Compare its protons, its neutrons and its needle with the reference, one at a time.` };
+        }
       }
       return { ok: true };
     },
@@ -520,7 +469,6 @@ export const STAGES = [
       last: true
     }
   }
-
 ];
 
 /* ------------------------------------------------------------------
@@ -605,552 +553,55 @@ export const PRACTICE = [
   }
 ];
 
+
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    ------------------------------------------------------------------ */
-function widgetSlots(stage) {
-  if (stage.widget.type === 'triple') return 3;
-  if (stage.widget.type === 'pair' || stage.widget.type === 'chargetray') return 2;
-  return 0;
-}
 
-function blankState(stage) {
-  return {
-    field: stage.field || 'whole',
-    numbers: Array.from({ length: widgetSlots(stage) }, () => 0),
-    number: stage.widget.type === 'number' ? stage.widget.min : null,
-    choice: null,
-    tray: { s: 0, t: 0 },
-    rings: stage.widget.type === 'rings' ? stage.widget.rings.map(() => 0) : [],
-    bins: {},
-    sample: null,
-    probed: new Set(),
-    metered: new Set(),
-    stripped: {}
-  };
-}
+const to = (piece, target) => ({ place: { piece, to: target } });
+const moveAll = (ids, zone) => ids.map(id => to(id, zone));
+const ids = (prefix, from, upto) => Array.from({ length: upto - from + 1 }, (_, i) => `${prefix}${from + i}`);
 
-/** The bench state that solves each stage, in order. Checked by verify:learn. */
+/** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  { numbers: [6, 6, 6] },
-  { numbers: [20, 17] },
-  { bins: { k: 'same', l: 'other', m: 'other' } },
-  { numbers: [11, 10], metered: new Set(['c', 'r2']) },
-  { number: 2, stripped: { d: 2 } },
-  { rings: [2, 8, 8] },
-  { numbers: [1, 2], metered: new Set(['s', 't']) },
-  { bins: { n1: 'heavy', n2: 'charged', n3: 'other', n4: 'match' } }
+  [{ fetch: 'cooler' }, ...moveAll(ids('p', 1, 3), 'tray:core'), ...moveAll(ids('n', 1, 4), 'tray:core'), ...moveAll(ids('e', 1, 3), 'tray:out')],
+  [...moveAll(ids('p', 1, 3), 'tray:core'), ...moveAll(ids('n', 1, 3), 'tray:core'), ...moveAll(ids('e', 1, 3), 'tray:out')],
+  [to('k', 'tray:same'), to('l', 'tray:other'), to('m', 'tray:other')],
+  [...moveAll(ids('p', 1, 3), 'tray:core'), ...moveAll(ids('e', 1, 2), 'tray:out')],
+  moveAll(['e11', 'e12'], 'tray:src'),
+  [to('e18', 'tray:sh3')],
+  [to('a1', 'tray:pad'), to('b1', 'tray:pad'), to('b2', 'tray:pad')],
+  [to('n1', 'tray:heavy'), to('n2', 'tray:charged'), to('n3', 'tray:other'), to('n4', 'tray:match')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { numbers: [12, 6, 6] },
-  { numbers: [37, 17] },
-  { bins: { k: 'other', l: 'other', m: 'other' } },
-  { numbers: [11, 11], metered: new Set(['c', 'r2']) },
-  { number: 1, stripped: { d: 1 } },
-  { rings: [2, 8, 7] },
-  { numbers: [2, 4], metered: new Set(['s', 't']) },
-  { bins: { n1: 'heavy', n2: 'match', n3: 'other', n4: 'match' } }
+  [...moveAll(ids('p', 1, 4), 'tray:core'), ...moveAll(ids('n', 1, 3), 'tray:core'), ...moveAll(ids('e', 1, 3), 'tray:out')],
+  [...moveAll(ids('p', 1, 3), 'tray:core'), ...moveAll(ids('n', 1, 6), 'tray:core'), ...moveAll(ids('e', 1, 3), 'tray:out')],
+  [to('k', 'tray:other'), to('l', 'tray:other'), to('m', 'tray:same')],
+  [...moveAll(ids('p', 1, 3), 'tray:core'), ...moveAll(ids('e', 1, 3), 'tray:out')],
+  [to('e11', 'tray:src')],
+  moveAll(['e18', 'e19'], 'tray:sh3'),
+  [to('a1', 'tray:pad'), to('a2', 'tray:pad'), to('b1', 'tray:pad'), to('b2', 'tray:pad'), to('b3', 'tray:pad'), to('b4', 'tray:pad')],
+  [to('n1', 'tray:heavy'), to('n2', 'tray:match'), to('n3', 'tray:other'), to('n4', 'tray:match')]
 ];
+
+function blankState() { return {}; }
 
 /** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  return { ...blankState(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
    THE GAME
    ================================================================== */
 
-const FIELD_LABELS = { whole: 'Whole piece', core: 'The middle', rings: 'Outside' };
-
 export function mount(container, ctx) {
-  const frame = new LearnFrame(container, {
-    quest: ctx?.quest || { id: 'q4-ledger' },
-    world: ctx?.world,
-    stageCount: STAGES.length,
-    rewards: STAGES.map(s => s.reward),
-    onSubmit: () => submit(),
-    onNext: () => next(),
-    onJump: i => loadStage(i),
-    onExit: () => ctx.exit()
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
-  const bench = new CoreBench(frame.instrumentHost, {
-    onProbe: hit => onProbe(hit),
-    onSelect: id => onSelect(id)
-  });
-
-  let index = ctx.isComplete ? 0 : Math.min(ctx.stagesCleared, STAGES.length - 1);
-  let cleared = ctx.isComplete ? STAGES.length : ctx.stagesCleared;
-  let state = null;
-  let busy = false;
-  let disposed = false;
-
-  /* ---------------- stage lifecycle ---------------- */
-
-  function loadStage(i) {
-    index = i;
-    const stage = STAGES[i];
-    state = blankState(stage);
-
-    frame.setCleared(cleared);
-    frame.setStage({
-      index: i,
-      title: stage.title,
-      prompt: stage.prompt,
-      briefing: stage.briefing,
-      hints: stage.hints,
-      commitLabel: stage.encounter?.act || 'Commit'
-    });
-
-    bench.setSpecimens(stage.specimens);
-    bench.setField(state.field);
-    const needsTarget = stage.controls.some(c => c === 'meter' || c === 'strip');
-    bench.setSelectable(needsTarget && stage.specimens.length > 1);
-    if (needsTarget && stage.specimens.length === 1) onSelect(stage.specimens[0].id);
-    else if (stage.target) onSelect(stage.target);
-
-    renderControls();
-    renderWidget();
-    renderReadout(null);
-
-    if (stage.briefing && !ctx.isComplete && cleared <= i) frame.showBriefing();
-  }
-
-  function next() {
-    if (index >= STAGES.length - 1) {
-      frame.showDebrief(DEBRIEF, () => ctx.exit());
-      return;
-    }
-    loadStage(index + 1);
-  }
-
-  function submit() {
-    if (busy) return;
-    const stage = STAGES[index];
-    const result = stage.check(state);
-    if (!result.ok) {
-      if (result.notYet) frame.note(result.msg);
-      else frame.miss(result.msg);
-      return;
-    }
-    frame.clearBanner();
-    if (index + 1 > cleared) {
-      cleared = index + 1;
-      ctx.reportStage(index);
-    }
-    frame.setCleared(cleared);
-    frame.clear(stage.reward);
-    if (index === STAGES.length - 1) ctx.reportComplete();
-  }
-
-  /* ---------------- bench controls ---------------- */
-
-  function renderControls() {
-    const stage = STAGES[index];
-    const parts = [];
-
-    if (stage.controls.includes('field')) {
-      parts.push(`
-        <div class="cb-field" role="group" aria-label="View">
-          <span class="form-label">View</span>
-          ${Object.entries(FIELD_LABELS).map(([id, label]) => `
-            <button type="button" class="btn-secondary quest-btn-sm cb-field-key" data-field="${id}">${label}</button>
-          `).join('')}
-        </div>
-      `);
-    }
-    if (stage.controls.includes('meter')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="meter">Read Needle</button>');
-    }
-    if (stage.controls.includes('strip')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="strip">Fire Stripper</button>');
-    }
-    if (stage.controls.includes('reset')) {
-      parts.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="reset">Reset Sample</button>');
-    }
-    parts.push(toolNotes(
-      stage.controls.map(id => toolNoteFor(id, index + 1)).filter(Boolean)
-    ));
-
-    frame.setControls(parts.join(''));
-    const host = frame.el.controls;
-    host.querySelectorAll('[data-field]').forEach(btn => {
-      btn.addEventListener('click', () => setField(btn.dataset.field));
-    });
-    host.querySelectorAll('[data-tool]').forEach(btn => {
-      btn.addEventListener('click', () => runTool(btn.dataset.tool));
-    });
-    paintControls();
-  }
-
-  function paintControls() {
-    frame.el.controls.querySelectorAll('[data-field]').forEach(btn => {
-      btn.classList.toggle('lit', btn.dataset.field === state.field);
-    });
-  }
-
-  function setField(field) {
-    if (field === state.field) return;
-    state.field = field;
-    bench.setField(field);
-    soundscape.playToggleClack?.();
-    paintControls();
-    renderReadout(null);
-  }
-
-  async function runTool(tool) {
-    if (busy) return;
-
-    if (tool === 'reset') {
-      if (!state.sample) return;
-      bench.reset(state.sample);
-      delete state.stripped[state.sample];
-      refreshNeedles();
-      soundscape.playToggleClack?.();
-      renderReadout(null, {
-        head: `Bench // ${labelFor(state.sample)}`,
-        body: 'Every electron is back where it started.'
-      });
-      return;
-    }
-
-    if (!state.sample) {
-      frame.note('Tap a sample on the bench first.');
-      return;
-    }
-    const id = state.sample;
-
-    if (tool === 'meter') {
-      /* THE NEEDLE STAYS ON THE SAMPLE.
-         It used to print one sentence into the readout and leave, so the very
-         stages that are ABOUT the needle asked a player to compare a reading
-         against a thing that had already scrolled away, and driving a sample to
-         a given charge meant carrying a number in your head through four presses
-         of a stripper. A meter you clip to something stays clipped: the gauge is
-         drawn on that sample's own plate, it follows the sample when an electron
-         comes off, and four samples on the bench carry four gauges you can read
-         side by side. `refreshNeedles` below is what keeps them honest. */
-      const net = liveCharge(id);
-      state.metered.add(id);
-      soundscape.playScanSweep?.();
-      refreshNeedles();
-      renderReadout(null, {
-        head: `Needle // ${labelFor(id)}`,
-        body: net === 0
-          ? 'The needle settles on zero and stays there.'
-          : `The needle swings to ${net > 0 ? 'plus' : 'minus'} ${Math.abs(net)} and holds.`
-      });
-      return;
-    }
-
-    if (tool === 'strip') {
-      busy = true;
-      frame.clearBanner();
-      frame.setCommitEnabled(false);
-      const ring = await bench.strip(id);
-      if (ring === null) {
-        renderReadout(null, {
-          head: `Stripper // ${labelFor(id)}`,
-          body: 'There are no electrons left to take off.'
-        });
-      } else {
-        state.stripped[id] = (state.stripped[id] || 0) + 1;
-        soundscape.playBondSnap?.();
-        refreshNeedles();
-        renderReadout(null, {
-          head: `Stripper // ${labelFor(id)}`,
-          body: `One electron knocked clear of shell ${ring + 1}.`
-        });
-      }
-      busy = false;
-      frame.setCommitEnabled(true);
-    }
-  }
-
-  /* ---------------- bench queries ---------------- */
-
-  function specFor(id) {
-    return STAGES[index].specimens.find(s => s.id === id) || null;
-  }
-
-  function labelFor(id) {
-    return specFor(id)?.label || id;
-  }
-
-  /**
-   * Re-read every needle that is clipped to a sample.
-   *
-   * A meter left on a sample keeps measuring it, so anything that changes what
-   * is on a sample has to come through here. The bench does no arithmetic of its
-   * own: it is handed the figure and shows it.
-   */
-  function refreshNeedles() {
-    for (const mid of state.metered) bench.setNeedle(mid, liveCharge(mid));
-  }
-
-  /** The needle reads the specimen as it stands now, stripped electrons included. */
-  function liveCharge(id) {
-    const spec = specFor(id);
-    if (!spec) return 0;
-    return netCharge({ core: spec.core, rings: bench.ringsOf(id) });
-  }
-
-  /* ---------------- readout ---------------- */
-
-  function onProbe(hit) {
-    state.probed.add(hit.part);
-    soundscape.playScanSweep?.();
-    renderReadout(hit);
-  }
-
-  function onSelect(id) {
-    state.sample = id;
-    bench.setSelected(id);
-  }
-
-  function renderReadout(hit, message) {
-    if (message) {
-      frame.setReadout(`
-        <div class="lq-readout-card">
-          <div class="lq-readout-head">${esc(message.head)}</div>
-          <p class="lq-readout-line">${esc(message.body)}</p>
-        </div>
-      `);
-      return;
-    }
-    if (!hit) {
-      frame.setReadout(`
-        <div class="lq-readout-card lq-readout-idle">
-          <div class="lq-readout-head">Probe // standby</div>
-          <p class="lq-readout-line">${state.field === 'whole'
-            ? 'The whole atom at its own size. Use the other two keys to look inside it.'
-            : state.field === 'core'
-              ? 'The nucleus, magnified until the particles come apart. Click any particle to read it.'
-              : 'Pulled back to the electrons on their shells. Click any one to read it.'}</p>
-        </div>
-      `);
-      return;
-    }
-
-    const part = PARTS[hit.part];
-    const spec = specFor(hit.specimenId);
-    frame.setReadout(`
-      <div class="lq-readout-card">
-        <div class="lq-readout-head">Probe // ${esc(hit.specimenLabel)}</div>
-        <div class="lq-readout-code">${esc(part.code)}</div>
-        ${part.charge === null ? '' : chargeChip(part.charge)}
-        ${(hit.part === 'marked' || hit.part === 'blank' || hit.part === 'core') && spec
-          ? `<div class="lq-readout-hold">This nucleus holds ${massNumber(spec)} particles in all.</div>`
-          : ''}
-        ${hit.part === 'light'
-          ? `<div class="lq-readout-hold">On shell ${hit.ring + 1}, counting outward.</div>`
-          : ''}
-        <p class="lq-readout-line">${esc(part.note)}</p>
-      </div>
-    `);
-  }
-
-  /** Printed ink on a hairline, never a glowing block (CLAUDE.md §4). */
-  function chargeChip(charge) {
-    const sign = charge > 0 ? 'plus' : charge < 0 ? 'minus' : 'none';
-    const text = charge > 0 ? 'Needle: plus one' : charge < 0 ? 'Needle: minus one' : 'Needle: no movement';
-    return `<div class="cb-charge" data-sign="${sign}">${text}</div>`;
-  }
-
-  /* ---------------- answer widgets ---------------- */
-
-  function renderWidget() {
-    const stage = STAGES[index];
-    const w = stage.widget;
-
-    if (w.type === 'chargetray') {
-      const countA = state.tray?.s || 0;
-      const countB = state.tray?.t || 0;
-      const netCharge = countA * 2 - countB * 1;
-      const chargeDisplay = netCharge > 0 ? `+${netCharge}` : String(netCharge);
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label || 'Charge Tray')}</span>
-          <p class="form-help">Tap ions into the tray until the total charge balances to zero.</p>
-          <div class="lq-tray-controls" style="display:flex; gap:8px; margin: 8px 0; align-items:center; flex-wrap:wrap;">
-            <button type="button" class="btn-secondary quest-btn-sm" data-tray-add="s">+ Mg²⁺ (+2)</button>
-            <button type="button" class="btn-secondary quest-btn-sm" data-tray-add="t">+ Cl⁻ (&minus;1)</button>
-            <button type="button" class="btn-secondary quest-btn-sm" data-tray-clear="1">Clear Tray</button>
-            <span class="lq-meter-value" style="margin-left:auto; font-weight:bold; color:${netCharge === 0 && (countA > 0 || countB > 0) ? '#e6b450' : 'inherit'};">
-              Total Charge: ${chargeDisplay} ${netCharge === 0 && (countA > 0 || countB > 0) ? '— Balanced!' : ''}
-            </span>
-          </div>
-          <div class="lq-tray-chips" style="display:flex; gap:6px; min-height:36px; padding:6px; background:rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.08); border-radius:4px; flex-wrap:wrap; align-items:center;">
-            ${countA === 0 && countB === 0 ? '<span class="form-help" style="margin:0 4px;">Tray is empty. Tap ions above to add.</span>' : ''}
-            ${Array.from({ length: countA }, () => '<span class="choice-option selected" style="padding:2px 8px; font-size:12px;">Mg²⁺</span>').join('')}
-            ${Array.from({ length: countB }, () => '<span class="choice-option selected" style="padding:2px 8px; font-size:12px;">Cl⁻</span>').join('')}
-          </div>
-          <div class="lq-tray-summary" style="margin-top:6px; font-size:12px; color:rgba(255,255,255,0.6);">
-            Counts: ${countA} Mg²⁺, ${countB} Cl⁻
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-tray-add]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const ion = btn.dataset.trayAdd;
-          if (!state.tray) state.tray = { s: 0, t: 0 };
-          state.tray[ion] = (state.tray[ion] || 0) + 1;
-          state.numbers = [state.tray.s, state.tray.t];
-          soundscape.playToggleClack?.();
-          renderWidget();
-        });
-      });
-      frame.el.widget.querySelectorAll('[data-tray-clear]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.tray = { s: 0, t: 0 };
-          state.numbers = [0, 0];
-          soundscape.playToggleClack?.();
-          renderWidget();
-        });
-      });
-      return;
-    }
-
-    if (w.type === 'triple' || w.type === 'pair') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-build">
-            ${w.fields.map((label, fi) => `
-              <div class="lq-build-row no-dot" data-slot="${fi}">
-                <span class="lq-build-code">${esc(label)}</span>
-                <button type="button" class="btn-secondary quest-btn-sm" data-slot-step="-1" aria-label="Lower ${esc(label)}">&minus;</button>
-                <span class="lq-build-count">0</span>
-                <button type="button" class="btn-secondary quest-btn-sm" data-slot-step="1" aria-label="Raise ${esc(label)}">+</button>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-slot-step]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const row = btn.closest('[data-slot]');
-          const fi = Number(row.dataset.slot);
-          const delta = Number(btn.dataset.slotStep);
-          state.numbers[fi] = Math.max(w.min, Math.min(w.max, state.numbers[fi] + delta));
-          row.querySelector('.lq-build-count').textContent = String(state.numbers[fi]);
-          row.classList.toggle('filled', state.numbers[fi] > 0);
-          soundscape.playToggleClack?.();
-        });
-      });
-      return;
-    }
-
-    if (w.type === 'number') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-number">
-            <button type="button" class="btn-secondary quest-btn-sm" data-num="-1" aria-label="Lower">&minus;</button>
-            <span class="lq-number-value" aria-live="polite">${state.number}</span>
-            <button type="button" class="btn-secondary quest-btn-sm" data-num="1" aria-label="Raise">+</button>
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-num]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.number = Math.max(w.min, Math.min(w.max, state.number + Number(btn.dataset.num)));
-          frame.el.widget.querySelector('.lq-number-value').textContent = String(state.number);
-          soundscape.playToggleClack?.();
-        });
-      });
-      return;
-    }
-
-    if (w.type === 'rings') {
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">${esc(w.label)}</span>
-          <div class="lq-build">
-            ${w.rings.map((label, ri) => `
-              <div class="lq-build-row" data-ring="${ri}">
-                <span class="lq-build-dot" data-tint="bone"></span>
-                <span class="lq-build-code">${esc(label)}</span>
-                <button type="button" class="btn-secondary quest-btn-sm" data-ring-step="-1" aria-label="One fewer on ${esc(label)}">&minus;</button>
-                <span class="lq-build-count">0</span>
-                <button type="button" class="btn-secondary quest-btn-sm" data-ring-step="1" aria-label="One more on ${esc(label)}">+</button>
-              </div>
-            `).join('')}
-          </div>
-          <p class="form-help cb-remaining">${w.total} electrons to place. The + key on a row puts one on that shell, the &minus; key takes one off.</p>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-ring-step]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const row = btn.closest('[data-ring]');
-          const ri = Number(row.dataset.ring);
-          const delta = Number(btn.dataset.ringStep);
-          const placed = state.rings.reduce((n, r) => n + r, 0);
-          if (delta > 0 && placed >= w.total) return;
-          state.rings[ri] = Math.max(0, state.rings[ri] + delta);
-          row.querySelector('.lq-build-count').textContent = String(state.rings[ri]);
-          row.classList.toggle('filled', state.rings[ri] > 0);
-          const left = w.total - state.rings.reduce((n, r) => n + r, 0);
-          frame.el.widget.querySelector('.cb-remaining').textContent =
-            left === 0
-              ? 'All placed. Move them between shells until the outer one is full, then commit.'
-              : `${left} still to place. The + key on a row puts one on that shell, the \u2212 key takes one off.`;
-          if (STAGES[index].target) bench.setRings(STAGES[index].target, state.rings);
-          soundscape.playToggleClack?.();
-        });
-      });
-      return;
-    }
-
-    if (w.type === 'bins') {
-      const rows = w.rows || STAGES[index].specimens.map(s => s.id);
-      frame.setWidget(`
-        <div class="lq-answer">
-          <span class="form-label">Your answer</span>
-          <div class="lq-bins">
-            ${rows.map(id => `
-              <div class="lq-bin-row" data-specimen="${id}">
-                <span class="lq-bin-sample">${esc(labelFor(id))}</span>
-                <div class="lq-bin-keys">
-                  ${w.bins.map(b => `
-                    <button type="button" class="choice-option lq-bin-key" data-bin="${b.id}">
-                      <span class="lq-bin-label">${esc(b.label)}</span>
-                      <span class="lq-bin-note">${esc(b.note)}</span>
-                    </button>
-                  `).join('')}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `);
-      frame.el.widget.querySelectorAll('[data-bin]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const row = btn.closest('[data-specimen]');
-          const sid = row.dataset.specimen;
-          state.bins[sid] = btn.dataset.bin;
-          row.querySelectorAll('[data-bin]').forEach(o => o.classList.toggle('selected', o === btn));
-          const bin = w.bins.find(b => b.id === btn.dataset.bin);
-          bench.setPlateTag(sid, bin ? bin.label : '');
-          soundscape.playToggleClack?.();
-        });
-      });
-    }
-  }
-
-  /* ---------------- go ---------------- */
-
-  loadStage(index);
-
-  return {
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      bench.dispose();
-      frame.dispose();
-    }
-  };
+  runner.start();
+  return { dispose: () => runner.dispose() };
 }
