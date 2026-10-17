@@ -228,7 +228,7 @@ export class TableGestures {
       this.view.dispatch({ place: { piece: g.id, at } });
       return;
     }
-    if (g.kind === 'piece') { this.tapPiece(g.id); return; }
+    if (g.kind === 'piece') { this.tapPiece(g.id, u); return; }
     if (g.kind === 'site') { if (this.siteAt(u) === g.id) this.view.dispatch({ fetch: g.id }); return; }
     if (g.kind === 'jar') { this.jarUp(g, u); return; }
     if (g.kind === 'sheet') { this.sheetUp(g, u); return; }
@@ -243,12 +243,16 @@ export class TableGestures {
    * the target. A card is turned over, or scaled, by the keys a held card offers
    * (`contextKeys`): a second quick tap already means "put it down".
    */
-  tapPiece(id) {
+  tapPiece(id, at = null) {
     const held = this.state.carry.held;
     this.pourFrom = null;
     if (!held) { this.view.dispatch({ pick: id }); return; }
     if (held === id) { this.view.dispatch({ pick: null }); return; }
-    this.tapTarget(this.state.pieces[id].at);
+    // A piece on the rail is a place along it: the held piece goes before it when the tap lands on its left
+    // half and after it on its right, so the end of a full rail can be tapped. Anything else is a target
+    // at the piece itself (a join, or the zone it stands in).
+    const target = this.state.pieces[id];
+    this.tapTarget(at && target.zone === 'rail' ? at : target.at);
   }
 
   /** Tap where the held piece should go: resolved exactly as a drop there would be. */

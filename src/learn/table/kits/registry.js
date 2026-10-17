@@ -65,6 +65,13 @@
  *   paintLink(ctx, link, {a, b, ax, ay, bx, by, sc}) -> boolean   paints a join; false = a plain line
  *   linkRods(link, state) -> number   how many rods the built table lays for a join (default 1)
  *   table.opts       plain data a stage hands its kit (`state.opts`)
+ *
+ * T2 (the card kit, `cards.js`) adds one view hook and one table feature:
+ *   kinds.x.rect     `{hw, hh}` in table units: the piece is a CARD, a thin slab that is wider than it is long and not a puck.
+ *                    The built table paints its face with the same `paintPiece`, on a canvas of those proportions, `sc` pixels
+ *                    to the unit; `kinds.x.r` stays the radius the hand grabs and the layout keeps apart.
+ *   slot.row         (in a table spec's `zones.slots`) slots that share a `row` are a STRIP: a piece dropped on a filled one
+ *                    pushes the row along, by `engine/catalogue.js` `fileCard`, the catalogue board's own rule.
  */
 
 export const DEFAULT_R = 4.5;

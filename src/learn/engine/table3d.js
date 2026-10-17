@@ -592,6 +592,54 @@ export class Table3D extends BenchViewer3D {
     return face;
   }
 
+  /**
+   * A card the kit paints (`kinds.x.rect = {hw, hh}`, in table units): a thin slab with its face drawn by the
+   * SAME `kit.paintPiece` the drawn table calls, onto a canvas of the card's own proportions. The kit paints
+   * a rectangle about the point it is given, `sc` pixels to the unit, as it does on the drawn table.
+   */
+  buildRectPiece(kit, p, rect) {
+    const s = this.map.s;
+    const hw = rect.hw * s;
+    const hh = rect.hh * s;
+    const T = CARD_T * 1.5;
+    const g = new THREE.Group();
+    g.name = `piece-${p.id}`;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(hw * 2, T, hh * 2), this.mats.top);
+    body.position.y = T / 2;
+    body.castShadow = body.receiveShadow = true;
+    g.add(body);
+
+    const K = 36;   // canvas pixels to the table unit
+    const W = Math.round(rect.hw * 2 * K);
+    const H = Math.round(rect.hh * 2 * K);
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#16140f';
+    ctx.fillRect(0, 0, W, H);
+    kit.paintPiece(ctx, p, this.state, { x: W / 2, y: H / 2, r: radiusOf(kit, p) * K, lit: false, sc: K, flat: true });
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    const mat = this.mine(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, metalness: 0.15 }));
+    mat.userData.ownMap = true;
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(hw * 2 * 0.985, hh * 2 * 0.985), mat);
+    face.rotation.x = -Math.PI / 2;
+    face.position.y = T + 0.0008;
+    g.add(face);
+
+    // The mark a held card wears: a ring clear of its corners. A mark, never a light.
+    const reach = Math.hypot(hw, hh);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(reach * 1.06, reach * 1.2, 28), this.mine(new THREE.MeshBasicMaterial({ color: AMBER })));
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.y = 0.0006;
+    ring.visible = false;
+    g.add(ring);
+    g.userData.ring = ring;
+    return g;
+  }
+
   buildPiece(kit, p) {
     const s = this.map.s;
     const rU = radiusOf(kit, p);
@@ -600,6 +648,7 @@ export class Table3D extends BenchViewer3D {
     const square = p.kind === 'card' || Boolean(p.token);
     const g = new THREE.Group();
     g.name = `piece-${p.id}`;
+    if (kit.paintPiece && kit.kinds?.[p.kind]?.rect) return this.buildRectPiece(kit, p, kit.kinds[p.kind].rect);
     if (!square && kit.paintPiece) {
       const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.05, PUCK_T, 28), this.mats.top);
       body.position.y = PUCK_T / 2;

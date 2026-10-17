@@ -405,7 +405,7 @@ export class Table2D extends PlateBench {
   pointerDown(u) { this.gestures.pointerDown(u); }
   pointerMove(u) { this.gestures.pointerMove(u); }
   pointerUp(u) { this.gestures.pointerUp(u); }
-  tapPiece(id) { this.gestures.tapPiece(id); }
+  tapPiece(id, at) { this.gestures.tapPiece(id, at); }
   tapTarget(u) { this.gestures.tapTarget(u); }
 
   dispose() {

@@ -68,6 +68,7 @@ import {
 } from './snap.js';
 import { reorder, startArrangement } from './rail.js';
 import { emptyRecorder, append, lay } from './recorder.js';
+import { fileCard } from '../engine/catalogue.js';
 
 export { clusterOf, itemsIn, zoneKey, parseTo, pointFor };
 
@@ -163,7 +164,14 @@ export function createTable(spec, seedKey = '') {
       ...(t.cell ? { cell: t.cell } : {})
     };
   }
-  for (const t of z.slots || []) s.zones.slots[t.id] = { id: t.id, label: t.label || '', at: { ...t.at }, size: { ...SIZES.slot, ...(t.size || {}) } };
+  // A slot may name a `row`: the slots that share one are a STRIP (a card dropped on a filled one pushes the row
+  // along, `engine/catalogue.js` `fileCard`, the catalogue board's own rule).
+  for (const t of z.slots || []) {
+    s.zones.slots[t.id] = {
+      id: t.id, label: t.label || '', at: { ...t.at }, size: { ...SIZES.slot, ...(t.size || {}) },
+      ...(t.row ? { row: t.row } : {})
+    };
+  }
   for (const c of z.containers || []) {
     s.zones.containers[c.id] = {
       id: c.id, label: c.label || c.id, at: { ...c.at }, size: { ...SIZES.container, ...(c.size || {}) },
@@ -204,7 +212,7 @@ export function createTable(spec, seedKey = '') {
     s.zones.slots[id] = { id, label: slot.label || '', at: { ...slot.at }, size: { ...SIZES.slot, w: 14, h: 10, ...(slot.size || {}) } };
     const tokens = spec.prediction.tokens || [];
     tokens.forEach((t, i) => {
-      addPiece({ id: t.id, kind: 'token', token: true, label: t.label, at: t.at || { x: 12 + i * 20, y: bounds.h - 7 } });
+      addPiece({ id: t.id, kind: 'token', token: true, label: t.label, at: t.at || { x: 12 + i * 20, y: bounds.h - 7 }, ...(t.r ? { r: t.r } : {}) });
     });
     s.prediction = { slot: id, tokens: tokens.map(t => t.id), token: null, tested: false };
   }
@@ -494,6 +502,7 @@ function drop(s, kit, id, t) {
     const key = zoneKey('slot', t.id);
     unlinkAll(s, id);
     leaveZone(s, id);
+    if (s.zones.slots[t.id].row) return fileIntoRow(s, id, s.zones.slots[t.id]);
     for (const o of Object.values(s.pieces)) {
       if (o.zone === key && o.id !== id) { o.zone = null; o.at = { ...o.home }; }
     }
@@ -511,6 +520,36 @@ function drop(s, kit, id, t) {
   p.zone = 'rail';
   relayout(s, 'rail');
   return { placed: 'rail', index: rail.order.indexOf(id) };
+}
+
+/**
+ * A drop on a slot that belongs to a STRIP (`slot.row`). The rule is the catalogue board's own,
+ * `fileCard` with `strip: true`: an empty slot takes the card; a filled one makes room, the cards
+ * from there along shifting one place toward the nearest empty slot on the right, else the left,
+ * and a full row sends the displaced card back where it started. Gaps in the layout are not slots,
+ * so a push crosses them. The board and the table cannot disagree about where a card lands.
+ */
+function fileIntoRow(s, id, slot) {
+  const row = Object.values(s.zones.slots).filter(z => z.row === slot.row).sort((a, b) => a.at.x - b.at.x || a.at.y - b.at.y);
+  const placed = {};
+  for (const z of row) {
+    const o = Object.values(s.pieces).find(p => p.zone === `slot:${z.id}` && p.id !== id);
+    if (o) placed[z.id] = o.id;
+  }
+  const out = fileCard({ rows: [row.map(z => `#${z.id}`)], strip: true }, placed, [], slot.id, id);
+  const now = new Set(Object.values(out.placed));
+  for (const z of row) {
+    for (const o of Object.values(s.pieces)) {
+      if (o.zone === `slot:${z.id}` && !now.has(o.id)) { o.zone = null; o.at = { ...o.home }; }
+    }
+  }
+  for (const z of row) {
+    const pid = out.placed[z.id];
+    if (pid) { s.pieces[pid].zone = `slot:${z.id}`; s.pieces[pid].at = { ...z.at }; }
+  }
+  // A card the row could not hold goes home.
+  for (const pid of out.drawer) { s.pieces[pid].zone = null; s.pieces[pid].at = { ...s.pieces[pid].home }; }
+  return { placed: zoneKey('slot', slot.id), pushed: Object.keys(out.placed).length };
 }
 
 /* ---------------- joins and splits ---------------- */

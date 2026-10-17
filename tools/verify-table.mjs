@@ -787,10 +787,15 @@ console.log('\nCatalogue board — drag filing, a strip pushes along\n');
   }
 
   // The drawn board: a tap and a drag file the same cards, in the same places.
-  const mod = mods.get('unit01/q3-catalogue');
-  for (const [si, solved] of [[0, mod.SOLUTIONS[0].board], [2, mod.SOLUTIONS[2].board]]) {
-    const st = mod.STAGES[si];
-    if (!st.board.strip) fail(`unit01/q3-catalogue stage ${si + 1}: the filing strip is not declared a strip`);
+  // The two boards the catalogue quest used to file on (it is a card table now, T2): a strip of six, and a chart whose
+  // bottom row has a gap in it. The boss still files on the board, so the board's own rules stay held to account.
+  const strips = [
+    { board: { label: 'Reference strip', strip: true, rows: [['#p1', '#p2', '#p3', '#p4', '#p5', '#p6']] }, drawer: ['c11', 'c19', 'c01', 'c18', 'c08', 'c06'], solved: { p1: 'c01', p2: 'c06', p3: 'c08', p4: 'c11', p5: 'c18', p6: 'c19' } },
+    { board: { label: 'Reference chart', strip: true, rows: [['c03', 'c04', null, 'c05'], ['#r1', '#r2', null, '#r3', '#r4', '#r5', '#r6', '#r7', '#r8']] }, drawer: ['c16', 'c11', 'c14', 'c18', 'c12', 'c17', 'c13', 'c15'], solved: { r1: 'c11', r2: 'c12', r3: 'c13', r4: 'c14', r5: 'c15', r6: 'c16', r7: 'c17', r8: 'c18' } }
+  ];
+  for (const [si, solved] of strips.map((x, i) => [i, x.solved])) {
+    const st = { ...strips[si], check: state => ({ ok: same(state.board, strips[si].solved) }) };
+    if (!st.board.strip) fail(`strip ${si + 1}: the filing strip is not declared a strip`);
     const cards = {};
     for (const id of st.drawer) cards[id] = { code: id, name: id };
     const make = () => {
@@ -819,8 +824,8 @@ console.log('\nCatalogue board — drag filing, a strip pushes along\n');
       byDrag.dragUp({ type: 'pointerup', clientX: 80, clientY: 80 });
     }
     for (const [name, b] of [['tap', byTap], ['drag', byDrag]]) {
-      if (JSON.stringify(Object.fromEntries(slots.map(s => [s, b.placements()[s]]))) !== want) fail(`unit01/q3-catalogue stage ${si + 1}: filing by ${name} does not reach the solution (${JSON.stringify(b.placements())})`);
-      if (!st.check({ board: b.placements() }).ok) fail(`unit01/q3-catalogue stage ${si + 1}: filing by ${name} fails check`);
+      if (JSON.stringify(Object.fromEntries(slots.map(s => [s, b.placements()[s]]))) !== want) fail(`strip ${si + 1}: filing by ${name} does not reach the solution (${JSON.stringify(b.placements())})`);
+      if (!st.check({ board: b.placements() }).ok) fail(`strip ${si + 1}: filing by ${name} fails check`);
     }
     // A card dropped on a filled slot pushes along, by tap and by drag alike.
     const a = make();
@@ -836,8 +841,8 @@ console.log('\nCatalogue board — drag filing, a strip pushes along\n');
     b2.dragMove({ clientX: 30, clientY: 30 });
     under = { closest: sel => (sel === '[data-slot]' ? cell('slot', { slot: slot0 }) : null) };
     b2.dragUp({ type: 'pointerup', clientX: 60, clientY: 60 });
-    if (!same(a.placements(), b2.placements()) || a.placements()[slot0] !== second) fail(`unit01/q3-catalogue stage ${si + 1}: a drop on a filled slot is not the same by tap and by drag (${JSON.stringify(a.placements())} vs ${JSON.stringify(b2.placements())})`);
-    if (Object.keys(a.placements()).length !== 2) fail(`unit01/q3-catalogue stage ${si + 1}: pushing the row lost a card`);
+    if (!same(a.placements(), b2.placements()) || a.placements()[slot0] !== second) fail(`strip ${si + 1}: a drop on a filled slot is not the same by tap and by drag (${JSON.stringify(a.placements())} vs ${JSON.stringify(b2.placements())})`);
+    if (Object.keys(a.placements()).length !== 2) fail(`strip ${si + 1}: pushing the row lost a card`);
   }
   if (failures === before) ok('the strip pushes along, never loses a card, and a tap and a drag file alike');
 }
@@ -1042,6 +1047,31 @@ console.log('\nAtom kit — one set of rules, two scales\n');
     }
   }
 
+  // T2: an ion carries its own charge (the needle counts it), and a label plate prints the lines it is given.
+  {
+    const ispec = A.atomTable({
+      pieces: [
+        { id: 'mg1', kind: 'ion', label: 'Mg ion', at: { x: 12, y: 8 }, props: { el: 'Mg', charge: 2 } },
+        { id: 'cl1', kind: 'ion', label: 'Cl ion', at: { x: 24, y: 8 }, props: { el: 'Cl', charge: -1 } },
+        { id: 'cl2', kind: 'ion', label: 'Cl ion', at: { x: 36, y: 8 }, props: { el: 'Cl', charge: -1 } }
+      ],
+      zones: { trays: [{ id: 'pad', label: 'Pad', at: { x: 80, y: 30 }, size: { w: 50, h: 22 } }] },
+      fixtures: [
+        { id: 'needle', kind: 'needle', label: 'Pad charge', at: { x: 30, y: 30 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:pad'], range: 4 } },
+        { id: 'plate', kind: 'plate', label: 'Label', at: { x: 80, y: 8 }, size: { w: 34, h: 18 }, noRun: true, props: { lines: ['lithium (Li)', 'atomic number 3'] } }
+      ]
+    });
+    let u = MODEL.createTable(ispec, 'ions');
+    eq(A.needleReading(u, 'needle'), 0, 'an empty pad reads zero');
+    u = MODEL.applyAll(u, [{ place: { piece: 'mg1', to: 'tray:pad' } }]);
+    eq(A.needleReading(u, 'needle'), 2, 'a magnesium ion on the pad reads +2');
+    u = MODEL.applyAll(u, [{ place: { piece: 'cl1', to: 'tray:pad' } }, { place: { piece: 'cl2', to: 'tray:pad' } }]);
+    eq([A.needleReading(u, 'needle'), A.chargeOf(['mg1', 'cl1', 'cl2'], u)], [0, 0], 'one magnesium and two chloride ions cancel');
+    const ctx = makeCtx(667, 375);
+    drawTable(ctx, 667, 375, u, { shown: Object.fromEntries(Object.values(u.pieces).map(p => [p.id, p.at])) });
+    for (const text of ['Mg', 'Cl', '2+', '1−', 'lithium (Li)', 'atomic number 3']) if (!ctx.stats.text.includes(text)) fail(`atom kit: "${text}" is not drawn on the ion table`);
+  }
+
   // The scratch corner: on every atom-kit table, ignored by every grader.
   for (const q of live) {
     const mod = mods.get(q.key);
@@ -1082,6 +1112,128 @@ console.log('\nAtom kit — one set of rules, two scales\n');
   }
 
   if (failures === before) ok('every join is joinbench\'s planner against the shells as they stand; a pair that does not hold drifts apart with a reason; charge, formula and the Lewis reading are derived (a split undoes them); particles never join; every atom table has its scratch corner and ignores it; the site plate takes the item');
+}
+
+/* ------------------------------------------------------------------
+   3c. THE CARD KIT (`table/kits/cards.js`)
+
+   Element cards read everything off the element; equation cards turn over and scale; a stack
+   of them nets out by Hess's law with the sum Ember's bench already shares; a strip row files by
+   the catalogue board's own `fileCard`. Held to the data and the planners here, on bare tables.
+   ------------------------------------------------------------------ */
+
+console.log('\nCard kit — element cards, equation cards, stacks and strips\n');
+{
+  const before = failures;
+  const C = await import('../src/learn/table/kits/cards.js');
+  const A = await import('../src/learn/table/kits/atoms.js');
+  const TD = await import('../src/learn/engine/thermodata.js');
+  const EL = await import('../src/learn/engine/electrons.js');
+  const q3 = mods.get('unit01/q3-catalogue');
+  const eq = (got, want, msg) => { if (!same(got, want)) fail(`card kit: ${msg} (got ${JSON.stringify(got)}, wanted ${JSON.stringify(want)})`); };
+
+  // Element cards are derived: the quest's own table of cards must agree with the element, shell for shell.
+  const SYM = { c01: 'H', c02: 'He', c03: 'Li', c04: 'Be', c05: 'B', c06: 'C', c07: 'N', c08: 'O', c09: 'F', c10: 'Ne', c11: 'Na', c12: 'Mg', c13: 'Al', c14: 'Si', c15: 'P', c16: 'S', c17: 'Cl', c18: 'Ar', c19: 'K' };
+  for (const [id, c] of Object.entries(q3.CARDS)) {
+    const v = C.elementView({ props: { sym: SYM[id] } });
+    eq([v.z, v.outer, v.trade, v.name.toUpperCase()], [c.z, c.outer, c.does === 'holds' ? 'shares' : c.does, c.name], `${id}: the card's proton count, outer shell, trade and name are the element's`);
+    eq(A.shellsFor(v.z).reduce((a, b) => a + b, 0), c.z, `${id}: the shells hold exactly its protons`);
+  }
+  try { C.elementView({ props: { sym: 'Xx' } }); fail('card kit: a card for an element that does not exist was accepted'); } catch { /* refused */ }
+
+  // Equation cards: read, turned, scaled.
+  const E = (id, eqn, dH, props = {}) => ({ id, kind: 'equation', label: id, at: { x: 20, y: 10 }, props: { eq: eqn, dH, ...props } });
+  const methane = [
+    E('a', 'C(s) + O₂(g) → CO₂(g)', -393.5),
+    E('b', 'H₂(g) + ½O₂(g) → H₂O(l)', -285.8, { scale: 2 }),
+    E('c', 'CH₄(g) + 2 O₂(g) → CO₂(g) + 2 H₂O(l)', -890.3, { flipped: true })
+  ];
+  eq(C.parseEquation('CH₄(g) + 2 O₂(g) → CO₂(g) + 2 H₂O(l)'), { reactants: { 'CH₄(g)': 1, 'O₂(g)': 2 }, products: { 'CO₂(g)': 1, 'H₂O(l)': 2 } }, 'an equation parses');
+  eq(C.parseEquation('C(s) + ½O₂(g) → CO(g)').reactants, { 'C(s)': 1, 'O₂(g)': 0.5 }, 'a half amount parses');
+  const net = C.netOf(methane);
+  eq([net.reactants, net.products], [{ 'C(s)': 1, 'H₂(g)': 2 }, { 'CH₄(g)': 1 }], 'three cards cancel to the formation of methane');
+  eq(net.cancelled.sort(), ['CO₂(g)', 'H₂O(l)', 'O₂(g)'], 'what cancelled is what stood on both sides');
+  eq(net.dH, Math.round(TD.hessStackEnthalpy([{ dH: -393.5, flip: false, mult: 1 }, { dH: -285.8, flip: false, mult: 2 }, { dH: -890.3, flip: true, mult: 1 }]) * 1e6) / 1e6, 'ΔH is the sum the Ember bench already shares');
+  eq(Math.round(net.dH * 10) / 10, -74.8, 'and it is the known value');
+  if (!C.sameReaction(net, C.parseEquation('C(s) + 2 H₂(g) → CH₄(g)'))) fail('card kit: the net reaction is not the target');
+  eq(C.cardView(methane[2]).products['CH₄(g)'], 1, 'a turned card has the sides swapped');
+  eq(C.cardView(methane[2]).dH, 890.3, 'and the sign changed');
+  eq(C.cardView(methane[1]).reactants['O₂(g)'], 1, 'a doubled half is a whole');
+  eq(C.netOf([]).text, '∅ → ∅', 'nothing stacked is nothing');
+  if (C.netOf([E('x', 'A(g) → B(g)', 10), E('y', 'B(g) → A(g)', -10)]).text !== '∅ → ∅') fail('card kit: a card and its reverse do not cancel');
+
+  // On a table: flip and scale are reducer verbs; the stack is the cards in a tray, in the order they went in.
+  const spec = C.cardTable({
+    pieces: [
+      { ...E('a', 'C(s) + O₂(g) → CO₂(g)', -393.5), at: { x: 20, y: 10 } },
+      { ...E('b', 'H₂(g) + ½O₂(g) → H₂O(l)', -285.8), at: { x: 50, y: 10 } },
+      { ...E('c', 'CH₄(g) + 2 O₂(g) → CO₂(g) + 2 H₂O(l)', -890.3), at: { x: 80, y: 10 } },
+      C.elementCard('el', 'Na', { x: 110, y: 10 })
+    ],
+    zones: { trays: [C.cardTray('stack', 'Stack', { x: 60, y: 40 }, 5, 1, 24)] },
+    fixtures: [{ id: 'net', kind: 'net', label: 'Net', at: { x: 120, y: 40 }, size: { w: 50, h: 14 }, noRun: true, props: { zone: 'tray:stack' } }]
+  });
+  const kit = REG.getKit('cards');
+  let t = MODEL.createTable(spec, 'cards');
+  t = MODEL.applyAll(t, [{ place: { piece: 'a', to: 'tray:stack' } }, { place: { piece: 'b', to: 'tray:stack' } }, { place: { piece: 'c', to: 'tray:stack' } }]);
+  eq('CH₄(g)' in C.stackNet(t, 'tray:stack').products, false, 'an unturned stack does not make methane');
+  t = MODEL.applyAll(t, [{ flip: 'c' }, { scale: { piece: 'b', factor: 2 } }]);
+  eq([t.pieces.c.props.flipped, t.pieces.b.props.scale], [true, 2], 'flip and scale reach the card');
+  const made = C.stackNet(t, 'tray:stack');
+  if (!C.sameReaction(made, C.parseEquation('C(s) + 2 H₂(g) → CH₄(g)'))) fail(`card kit: a turned and scaled stack should make methane (made ${made.text})`);
+  eq(Math.round(made.dH * 10) / 10, -74.8, 'the stack\'s ΔH');
+  t = MODEL.apply(t, { scale: { piece: 'b', factor: 9 } });
+  if (t.last.ok !== false) fail('card kit: a card scaled past the kit\'s limit was accepted');
+  t = MODEL.apply(t, { place: { piece: 'a', at: { x: 20, y: 25 } } });
+  eq(C.stackOf(t, 'tray:stack').length, 2, 'taking a card off the stack leaves the others stacked');
+  // A held equation card offers Flip, Smaller and Larger as keys; a held element card offers none (it has no back).
+  {
+    const G = await import('../src/learn/table/gestures.js');
+    const keysFor = id => G.contextKeys(MODEL.apply(t, { pick: id }), kit).map(k => k.label);
+    eq(keysFor('b'), ['Flip', 'Smaller', 'Larger'], 'a held equation card offers its keys');
+    eq(keysFor('el'), [], 'a held element card offers none');
+    const big = MODEL.apply(MODEL.apply(t, { scale: { piece: 'b', factor: 4 } }), { pick: 'b' });
+    eq(G.contextKeys(big, kit).find(k => k.id === 'larger').enabled, false, 'a card at the kit\'s largest scale cannot go larger');
+  }
+  // Both views draw it: the drawn table prints every card, the stack's net and its ΔH.
+  for (const [w2, h2] of [[340, 204], [667, 375]]) {
+    const ctx = makeCtx(w2, h2);
+    drawTable(ctx, w2, h2, t, { shown: Object.fromEntries(Object.values(t.pieces).map(p => [p.id, p.at])) });
+    for (const p of Object.values(t.pieces)) if (!ctx.stats.text.includes(kit.printed(p, t))) fail(`card kit: "${p.label}" is not drawn at ${w2}x${h2}`);
+    if (!ctx.stats.text.some(x => x.startsWith('ΔH'))) fail(`card kit: the net fixture prints no ΔH at ${w2}x${h2}`);
+    if (ctx.stats.nan) fail(`card kit: NaN at ${w2}x${h2}`);
+  }
+
+  // A strip row files the catalogue board's way (fileCard) and a rail the rail's: the same drops, the same places.
+  {
+    const slots = ['a', 'b', 'c', 'd', 'e'];
+    const mk = () => MODEL.createTable(C.cardTable({
+      pieces: ['X', 'Y', 'Z', 'W', 'V', 'U'].map((id, i) => ({ id, kind: 'element', label: id, at: { x: 10 + i * 14, y: 50 }, props: { sym: 'H' } })),
+      zones: { slots: slots.map((id, i) => C.cardSlot(id, { x: 20 + i * 15, y: 20 }, { row: 'r' })) }
+    }), 'strip');
+    let tb = mk();
+    let placed = {};
+    let drawer = ['X', 'Y', 'Z', 'W', 'V', 'U'];
+    // a drag to slot `at` of card `c`, on both the table and the board's pure rule
+    const drop = (c, at) => {
+      tb = MODEL.apply(tb, { place: { piece: c, to: `slot:${at}` } });
+      const r = CATALOGUE.fileCard({ rows: [slots.map(x => `#${x}`)], strip: true }, placed, drawer, at, c);
+      placed = r.placed;
+      drawer = r.drawer;
+      const onTable = Object.fromEntries(slots.map(x => [x, C.slotCard(tb, x)]).filter(([, c2]) => c2));
+      if (!same(onTable, placed)) fail(`card kit: after ${c} to ${at} the table holds ${JSON.stringify(onTable)} but fileCard says ${JSON.stringify(placed)}`);
+      const everyone = [...Object.values(placed), ...drawer].sort();
+      if (everyone.join() !== ['U', 'V', 'W', 'X', 'Y', 'Z'].join()) fail(`card kit: filing ${c} lost or copied a card (${everyone})`);
+    };
+    for (const [c, at] of [['X', 'a'], ['Y', 'b'], ['Z', 'b'], ['W', 'a'], ['V', 'e'], ['U', 'c'], ['X', 'e'], ['Y', 'a']]) drop(c, at);
+    // A tap and a drag end in the same table.
+    const viaDrag = MODEL.runScript(mk(), [{ place: { piece: 'X', to: 'slot:b' } }, { place: { piece: 'Y', to: 'slot:b' } }], { mode: 'drag', strict: true });
+    const viaTap = MODEL.runScript(mk(), [{ place: { piece: 'X', to: 'slot:b' } }, { place: { piece: 'Y', to: 'slot:b' } }], { mode: 'tap', strict: true });
+    if (!same(MODEL.signature(viaDrag), MODEL.signature(viaTap))) fail('card kit: a drop on a filled strip place differs by drag and by tap');
+    eq([C.slotCard(viaDrag, 'b'), C.slotCard(viaDrag, 'c')], ['Y', 'X'], 'a card dropped on a filled place pushes the row along');
+  }
+
+  if (failures === before) ok('element cards are the element (proton count, shells, trade); equation cards turn and scale; a stack nets out with the Ember bench\'s own ΔH sum; a strip files by fileCard, by drag and by tap alike; both views draw it');
 }
 
 /* ------------------------------------------------------------------
