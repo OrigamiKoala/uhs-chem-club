@@ -295,7 +295,7 @@ export function buildBayBench(ctx, opts) {
   g.add(tag);
   ctx.own(tag.geometry, tag.material, tag.material.map);
 
-  if (extras) extras(g, bay);
+  if (extras) extras(dormant, bay);
 
   return { group: g, indicator, dormant, topY: PLATE_TOP };
 }

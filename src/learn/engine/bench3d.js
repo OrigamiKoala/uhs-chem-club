@@ -802,6 +802,7 @@ export class BenchViewer3D {
     const world = opts.world || null;
     this.world = world;
     this.inWorld = Boolean(world);
+    this.fpsControls = world?.fpsControls || null;
 
     // Everything the instrument builds hangs off this one node, which is what
     // makes deploying it into a world a transform rather than a rewrite.
@@ -1442,6 +1443,10 @@ export class BenchViewer3D {
    * @param {number} pitch radians to look down by.
    */
   turnCamera(yaw, pitch) {
+    if (this.fpsControls) {
+      this.fpsControls.rotate(yaw, pitch);
+      return;
+    }
     const e = this._lookEuler || (this._lookEuler = new THREE.Euler(0, 0, 0, 'YXZ'));
     e.setFromQuaternion(this.camera.quaternion);
     e.y -= yaw;
@@ -1507,9 +1512,7 @@ export class BenchViewer3D {
       this.movedWhileDown += Math.abs(dx) + Math.abs(dy);
 
       if (this.leaning) {
-        // Leaned in, a drag on empty table is still a look: the view swings a
-        // little and settles back to its framing when the hand lets go. It never
-        // hands the camera to the player (that is what a step does).
+        // Leaned in: swing a little and settle back on release.
         if (this.movedWhileDown >= 6) this.leanLook(dx, dy);
         return;
       }
@@ -1523,9 +1526,6 @@ export class BenchViewer3D {
         // mouse path is stood down while a bench is up (`mouseLookLocked`), or
         // the two would each apply the drag and the view would turn twice as
         // far as the hand did.
-        // A press that has not travelled yet is still a click on a crate, and
-        // a click must not end the framing: below the same threshold the click
-        // test uses, nothing turns and nothing is handed over.
         if (this.movedWhileDown >= 6) {
           this.playerControlled = true;
           this.turnCamera(dx * 0.0024, dy * 0.0024);
@@ -1576,8 +1576,9 @@ export class BenchViewer3D {
       g.onWheel(e.deltaY, e);
     };
 
-    // Escape stands a leaned-in player back up, unless something else wants it.
+    // Escape stands a leaned-in player back up on standalone bench, unless something else wants it.
     this._onLeanKey = e => {
+      if (this.inWorld) return;
       if (!this.leaning || e.code !== 'Escape') return;
       const modal = typeof document !== 'undefined' && document.getElementById?.('modal-container');
       if (modal && !modal.classList.contains('hidden')) return;
@@ -2365,6 +2366,13 @@ export class BenchViewer3D {
     if (!this.lean) return;
     this.lean.t = 1;
     this.writeLean(0);
+    if (this.inWorld && this.fpsControls) {
+      this._syncedLeanToFps = true;
+      this.fpsControls.syncFromCamera();
+      this.fpsControls.isGrounded = true;
+      this.fpsControls.verticalVelocity = 0;
+      this.fpsControls.velocity.set(0, 0, 0);
+    }
   }
 
   /** Is the camera, right now, the leaned-in pose (flight done)? */
@@ -2420,6 +2428,16 @@ export class BenchViewer3D {
     const L = this.lean;
     const cam = this.camera;
     if (!L) return;
+    if (this.inWorld && this.playerControlled) {
+      if (!this._syncedLeanToFps && this.fpsControls) {
+        this._syncedLeanToFps = true;
+        this.fpsControls.syncFromCamera();
+        this.fpsControls.isGrounded = true;
+        this.fpsControls.verticalVelocity = 0;
+        this.fpsControls.velocity.set(0, 0, 0);
+      }
+      return;
+    }
     const toPos = this._leanP || (this._leanP = new THREE.Vector3());
     const toQuat = this._leanQ || (this._leanQ = new THREE.Quaternion());
     this.leanWorldPose(L.pose, toPos, toQuat);
@@ -2428,6 +2446,13 @@ export class BenchViewer3D {
     const e = t * t * (3 - 2 * t);
     cam.position.lerpVectors(L.fromPos, toPos, e);
     cam.quaternion.slerpQuaternions(L.fromQuat, toQuat, e);
+    if (t >= 1 && this.inWorld && this.fpsControls && !this._syncedLeanToFps) {
+      this._syncedLeanToFps = true;
+      this.fpsControls.syncFromCamera();
+      this.fpsControls.isGrounded = true;
+      this.fpsControls.verticalVelocity = 0;
+      this.fpsControls.velocity.set(0, 0, 0);
+    }
     if (L.look.release) {
       const k = Math.min(1, delta * 6);
       L.look.yaw -= L.look.yaw * k;
@@ -2477,7 +2502,6 @@ export class BenchViewer3D {
   updateLean(delta) {
     const L = this.lean;
     if (!L) return;
-    if (this.inWorld && this.leanWalkIntent()) { this.leaveLean({ walked: true }); return; }
     L.sinceFit += delta;
     if (L.sinceFit > 0.2) {
       L.sinceFit = 0;

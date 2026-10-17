@@ -162,8 +162,8 @@ table, atom kit piloted first, and every reworked bench must also be integrated 
   plate, box rack, electron bench, bond bench, pair board, domain rig), `gasrig.js`, `calorimeter.js`
   (+ `thermodata.js` tables and planners, `thermomount.js` stage loop), `stagerunner.js`
   (shared stage loop and answer widgets `number decimal choice bins order multi pick none`),
-  `frame.js` (rail, Findings, Tour, prompt, readout, answer, Commit, hints, rewards; one exit = host bar
-  `Leave Bench`; `setStage` resets all stage leftovers), `foes.js`/`encounter.js`, `benchlog.js`,
+  `frame.js` (rail, Findings, Tour, prompt, readout, answer, Submit, hints, rewards; one exit = host bar
+  `Leave Bench`; `setStage` resets all stage leftovers; desktop tabletop places progress lamps horizontally), `foes.js`/`encounter.js`, `benchlog.js`,
   `trendplot.js`, `visual-devices.js`, `instruments.js` (dispatcher: canvas vs built).
   Every pure planner (`planSettle`, `planBeam`, `planJoin`, `planCurve`, `planLewis`, `planDomains`,
   `planPhotocell`, …) is the single implementation shared by drawn and built twins.
@@ -176,10 +176,15 @@ table, atom kit piloted first, and every reworked bench must also be integrated 
   Deployed benches are aimed into the glass (`fitDeployedAim`), stop aiming when the player walks
   (`playerWalked`, `walkOwnsHeight`, `mouseLookLocked`, `walkKeysAtBench`), and the briefing docks left
   (`body.bench-deployed`). A **drawn** bench calls `stage.setWalkSuspended(true)`; a built one doesn't.
+  On tabletops (`table3d.js`), players interact with `[E]` to lean in with free look and movement;
+  dormant bench extras (weld bead, swarf, vice in `bench-bay.js`) are parented to `dormant` so they hide cleanly on deployment;
+  scratch corners (H, O, Na+, Cl-) display only when required (`spec.scratch === true`) with staggered bins (`scr-bin` at y:55, atoms at y:50/58.5) clear of trays;
+  sample trays use height 20 and cell 19 at y:33 with scope fixtures and initial sample dishes elevated (y:11-16) to prevent any label or dish overlaps;
+  lens rendering uses elevated base over dishes, polygon offset, and 384px canvas textures to eliminate z-fighting.
 - **Deck layout:** `.lq-prompt` pinned top, `.lq-deck-body` scrolls, `.lq-deck-foot` (banner, Hint,
-  Commit) pinned bottom; `fitDeck()` bounds it; sorting answers render as a matrix (`compactBins`).
+  Submit) pinned bottom; `fitDeck()` bounds it; sorting answers render as a matrix (`compactBins`).
   Overworld card (`.learn-quest-overworld .lq-body`) is flat prose: prompt, reading, keys, run-in reward;
-  `Hide Panel` folds to a `Stage Panel`/`Commit` dock; containers are `pointer-events:none`.
+  `Hide Panel` folds to a `Stage Panel`/`Submit` dock; containers are `pointer-events:none`.
 - **Tour:** no Vess modal opens on a stage. A new instrument gets a Tour (one tool per step, halos shown
   ONLY then via `showInstrumentHalos`, dial once per player, one step per key). Quests call
   `showBriefing()` on stage 1.

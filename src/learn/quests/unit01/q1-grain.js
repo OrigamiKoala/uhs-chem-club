@@ -119,7 +119,7 @@ const dishAt = (id, label, s, x, y, open = false) => ({
   id, kind: 'dish', label, at: { x, y }, props: { sample: s, ...(open ? { view: 1 } : {}) }
 });
 
-const TOOL_HOME = { lens: { x: 60, y: 54 }, cutter: { x: 80, y: 55 }, shaker: { x: 98, y: 55 } };
+const TOOL_HOME = { lens: { x: 64, y: 54 }, cutter: { x: 82, y: 55 }, shaker: { x: 100, y: 55 } };
 const tool = (kind, label) => ({ id: kind, kind, label, at: { ...TOOL_HOME[kind] } });
 
 /** A loose atom. `mask` withholds the symbol, `tint` overrides the element's own. */
@@ -128,13 +128,14 @@ const atomAt = (id, el, x, y, props = {}) => ({ id, kind: 'atom', label: props.m
 /** The lens's power dial: a fixture with no Run key, printing the scale beside its number. */
 const POWER_LABELS = Object.entries(POWER_SCALES).map(([n, s]) => `${n} · ${s}`);
 const scopeFixture = {
-  id: 'scope', kind: 'scope', label: 'Lens', at: { x: 101, y: 16 }, size: { w: 34, h: 16 }, noRun: true,
+  id: 'scope', kind: 'scope', label: 'Lens', at: { x: 101, y: 11 }, size: { w: 34, h: 14 }, noRun: true,
+  props: { top: 7.5 },
   dials: { power: { min: 1, max: 6, step: 1, value: 1, label: 'Power', labels: POWER_LABELS } }
 };
 
 const trayAt = (id, label, x, y, w = 44, h = 14) => ({ id, label, at: { x, y }, size: { w, h } });
 /** A tray for dishes: wide pieces, so a wider pitch and a deeper tray. */
-const dishTray = (id, label, x, y, w = 44) => ({ id, label, at: { x, y }, size: { w, h: 22 }, cell: 19 });
+const dishTray = (id, label, x, y = 33, w = 44) => ({ id, label, at: { x, y }, size: { w, h: 20 }, cell: 19 });
 
 /** Lay `ids` of atoms in a row at y: `row('H', 'H', 'O')` -> positions along the middle. */
 const heap = (y, list, x0 = 14, pitch = 12) => list.map(([id, el], i) => atomAt(id, el, x0 + i * pitch, y));
@@ -158,8 +159,8 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('dishA', 'SAMPLE A', sample('c7', 4, [{ kinds: ['k06'], n: 46 }]), 22, 14),
-        { ...dishAt('scoop', 'BELT SCOOP', sample('c7s', 4, [{ kinds: ['k06'], n: 46 }]), 46, 14), hidden: true, fetchFrom: 'tail' },
+        dishAt('dishA', 'SAMPLE A', sample('c7', 4, [{ kinds: ['k06'], n: 46 }]), 22, 11),
+        { ...dishAt('scoop', 'BELT SCOOP', sample('c7s', 4, [{ kinds: ['k06'], n: 46 }]), 46, 11), hidden: true, fetchFrom: 'tail' },
         tool('lens', 'Lens')
       ],
       fixtures: [scopeFixture],
@@ -192,14 +193,14 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('dishA', 'SAMPLE A', sample('c09', 4, [{ kinds: ['k06'], n: 44 }]), 22, 14),
-        dishAt('dishB', 'SAMPLE B', sample('c14', 4, [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }]), 46, 14),
+        dishAt('dishA', 'SAMPLE A', sample('c09', 4, [{ kinds: ['k06'], n: 44 }]), 22, 11),
+        dishAt('dishB', 'SAMPLE B', sample('c14', 4, [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }]), 46, 11),
         tool('lens', 'Lens')
       ],
       zones: {
         trays: [
-          dishTray('one', 'One kind of atom', 30, 36),
-          dishTray('more', 'More than one kind', 82, 36)
+          dishTray('one', 'One kind of atom', 30, 33),
+          dishTray('more', 'More than one kind', 82, 33)
         ]
       },
       fixtures: [scopeFixture]
@@ -233,23 +234,23 @@ export const STAGES = [
     table: atomTable({
       pieces: [
         // Sodium and magnesium are dressed alike on purpose: only the reader tells them apart.
-        atomAt('a1', 'Na', 12, 12, { mask: true, tint: 'pale' }),
-        atomAt('a2', 'C', 24, 12, { mask: true }),
-        atomAt('a3', 'Mg', 36, 12, { mask: true, tint: 'pale' }),
-        atomAt('a4', 'Mg', 12, 24, { mask: true, tint: 'pale' }),
-        atomAt('a5', 'Na', 24, 24, { mask: true, tint: 'pale' }),
-        atomAt('a6', 'C', 36, 24, { mask: true })
+        atomAt('a1', 'Na', 12, 10, { mask: true, tint: 'pale' }),
+        atomAt('a2', 'C', 24, 10, { mask: true }),
+        atomAt('a3', 'Mg', 36, 10, { mask: true, tint: 'pale' }),
+        atomAt('a4', 'Mg', 12, 21, { mask: true, tint: 'pale' }),
+        atomAt('a5', 'Na', 24, 21, { mask: true, tint: 'pale' }),
+        atomAt('a6', 'C', 36, 21, { mask: true })
       ],
       zones: {
-        slots: [{ id: 'rd', label: 'Reader', at: { x: 60, y: 17 } }],
+        slots: [{ id: 'rd', label: 'Reader', at: { x: 60, y: 16 } }],
         trays: [
-          trayAt('t1', 'Tray 1', 17, 38, 26, 14),
-          trayAt('t2', 'Tray 2', 45, 38, 26, 14),
-          trayAt('t3', 'Tray 3', 73, 38, 26, 14),
-          trayAt('t4', 'Tray 4', 101, 38, 26, 14)
+          trayAt('t1', 'Tray 1', 17, 34, 26, 14),
+          trayAt('t2', 'Tray 2', 45, 34, 26, 14),
+          trayAt('t3', 'Tray 3', 73, 34, 26, 14),
+          trayAt('t4', 'Tray 4', 101, 34, 26, 14)
         ]
       },
-      fixtures: [{ id: 'reader', kind: 'reader', label: 'Reader', at: { x: 92, y: 17 }, size: { w: 34, h: 16 }, noRun: true, props: { slot: 'rd' } }]
+      fixtures: [{ id: 'reader', kind: 'reader', label: 'Reader', at: { x: 92, y: 16 }, size: { w: 34, h: 14 }, noRun: true, props: { slot: 'rd' } }]
     }),
     hints: [
       'Drop an atom in the reader slot to see its name and its mass.',
@@ -291,13 +292,13 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('t1', 'SAMPLE A', sample('t1', 1, [{ kinds: ['k06'], n: 20 }], 1.5), 14, 14, true),
-        dishAt('t2', 'SAMPLE B', sample('t2', 1, [{ ...CLUSTER_A, n: 1 }], 3.6), 36, 14, true),
-        dishAt('t3', 'SAMPLE C', sample('t3', 1, [{ ...PAIR_LIGHT, n: 1 }], 3.6), 58, 14, true),
-        dishAt('t4', 'SAMPLE D', sample('t4', 1, [{ kinds: ['k02'], n: 1 }], 3.6), 80, 14, true),
+        dishAt('t1', 'SAMPLE A', sample('t1', 1, [{ kinds: ['k06'], n: 20 }], 1.5), 14, 11, true),
+        dishAt('t2', 'SAMPLE B', sample('t2', 1, [{ ...CLUSTER_A, n: 1 }], 3.6), 36, 11, true),
+        dishAt('t3', 'SAMPLE C', sample('t3', 1, [{ ...PAIR_LIGHT, n: 1 }], 3.6), 58, 11, true),
+        dishAt('t4', 'SAMPLE D', sample('t4', 1, [{ kinds: ['k02'], n: 1 }], 3.6), 80, 11, true),
         tool('cutter', 'Cutter')
       ],
-      zones: { trays: [dishTray('safe', 'Will not split', 60, 36)] }
+      zones: { trays: [dishTray('safe', 'Will not split', 60, 33)] }
     }),
     hints: [
       'Drag the cutter across each dish in turn and watch the picture.',
@@ -324,7 +325,7 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('dishA', 'SAMPLE A', sample('v9', 4, [{ ...CLUSTER_A, n: 20 }], 1.5), 22, 14),
+        dishAt('dishA', 'SAMPLE A', sample('v9', 4, [{ ...CLUSTER_A, n: 20 }], 1.5), 22, 11),
         ...heap(36, [['c1', 'C'], ['h1', 'H'], ['o1', 'O'], ['h2', 'H'], ['o2', 'O'], ['h3', 'H'], ['h4', 'H']]),
         tool('lens', 'Lens')
       ],
@@ -357,8 +358,8 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('dishA', 'SAMPLE A', sample('vA', 4, [{ ...CLUSTER_A, n: 16 }], 1.5), 22, 14),
-        dishAt('dishB', 'SAMPLE B', sample('vB', 4, [{ ...CLUSTER_B, n: 14 }], 1.5), 46, 14),
+        dishAt('dishA', 'SAMPLE A', sample('vA', 4, [{ ...CLUSTER_A, n: 16 }], 1.5), 22, 11),
+        dishAt('dishB', 'SAMPLE B', sample('vB', 4, [{ ...CLUSTER_B, n: 14 }], 1.5), 46, 11),
         ...heap(36, [['h1', 'H'], ['o1', 'O'], ['h2', 'H'], ['o2', 'O'], ['h3', 'H'], ['o3', 'O'], ['h4', 'H']]),
         tool('lens', 'Lens')
       ],
@@ -395,15 +396,15 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('p1', 'SAMPLE A', sample('p1', 1, [{ kinds: ['k16'], n: 16 }]), 22, 14, true),
-        dishAt('p2', 'SAMPLE B', sample('p2', 1, [{ ...CLUSTER_A, n: 14 }]), 46, 14, true),
-        dishAt('p3', 'SAMPLE C', sample('p3', 1, [{ kinds: ['k11'], n: 9 }, { kinds: ['k06'], n: 9 }]), 70, 14, true),
+        dishAt('p1', 'SAMPLE A', sample('p1', 1, [{ kinds: ['k16'], n: 16 }]), 22, 11, true),
+        dishAt('p2', 'SAMPLE B', sample('p2', 1, [{ ...CLUSTER_A, n: 14 }]), 46, 11, true),
+        dishAt('p3', 'SAMPLE C', sample('p3', 1, [{ kinds: ['k11'], n: 9 }, { kinds: ['k06'], n: 9 }]), 70, 11, true),
         tool('shaker', 'Shaker')
       ],
       zones: {
         trays: [
-          dishTray('one', 'Single substance', 30, 36),
-          dishTray('mixed', 'Mixture', 82, 36)
+          dishTray('one', 'Single substance', 30, 33),
+          dishTray('mixed', 'Mixture', 82, 33)
         ]
       }
     }),
@@ -434,19 +435,19 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('m1', 'SAMPLE A', sample('m1', 4, [{ kinds: ['k06'], n: 24 }]), 12, 14),
-        dishAt('m2', 'SAMPLE B', sample('m2', 4, [{ ...CLUSTER_A, n: 18 }]), 32, 14),
-        dishAt('m3', 'SAMPLE C', sample('m3', 4, [{ kinds: ['k06'], n: 12 }, { kinds: ['k16'], n: 12 }]), 52, 14),
-        dishAt('m4', 'SAMPLE D', sample('m4', 4, [{ ...PAIR_LIGHT, n: 18 }]), 72, 14),
+        dishAt('m1', 'SAMPLE A', sample('m1', 4, [{ kinds: ['k06'], n: 24 }]), 12, 11),
+        dishAt('m2', 'SAMPLE B', sample('m2', 4, [{ ...CLUSTER_A, n: 18 }]), 32, 11),
+        dishAt('m3', 'SAMPLE C', sample('m3', 4, [{ kinds: ['k06'], n: 12 }, { kinds: ['k16'], n: 12 }]), 52, 11),
+        dishAt('m4', 'SAMPLE D', sample('m4', 4, [{ ...PAIR_LIGHT, n: 18 }]), 72, 11),
         tool('lens', 'Lens'),
         tool('cutter', 'Cutter'),
         tool('shaker', 'Shaker')
       ],
       zones: {
         trays: [
-          dishTray('element', 'Element', 21, 36, 38),
-          dishTray('compound', 'Compound', 60, 36, 38),
-          dishTray('mixed', 'Mixture', 99, 36, 38)
+          dishTray('element', 'Element', 21, 33, 38),
+          dishTray('compound', 'Compound', 60, 33, 38),
+          dishTray('mixed', 'Mixture', 99, 33, 38)
         ]
       },
       fixtures: [scopeFixture]

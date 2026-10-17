@@ -275,7 +275,7 @@ export class LearnFrame {
 
         <div class="lq-dock-bar hidden" id="lq-dock-bar">
           <button type="button" class="btn-secondary quest-btn-sm lq-reopen-btn stage-reopen-btn" data-act="open-panel" title="Open stage panel" aria-label="Open stage panel">Stage Panel</button>
-          <button type="button" class="btn-primary quest-btn-sm lq-dock-commit" data-act="submit" title="Commit answer">Commit</button>
+          <button type="button" class="btn-primary quest-btn-sm lq-dock-commit" data-act="submit" title="Submit answer">Submit</button>
         </div>
 
         <div class="lq-body">
@@ -309,7 +309,7 @@ export class LearnFrame {
               <div class="lq-banner" role="status" aria-live="polite"></div>
               <div class="lq-actions">
                 <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>
-                <button type="button" class="btn-primary lq-commit" data-act="submit">Commit</button>
+                <button type="button" class="btn-primary lq-commit" data-act="submit">Submit</button>
               </div>
             </div>
           </aside>
@@ -445,6 +445,9 @@ export class LearnFrame {
     // phase because the page that scrolls is a container, not the window.
     this.el.deck = q('.lq-deck');
     this.onFit = () => {
+      if (this.tableWantOn != null) {
+        this.setTableMode(this.tableWantOn, this.tableCbs);
+      }
       if (this.fitQueued) return;
       this.fitQueued = true;
       requestAnimationFrame(() => { this.fitQueued = false; this.fitDeck(); });
@@ -658,11 +661,15 @@ export class LearnFrame {
    */
   setTableMode(on, cbs = {}) {
     if (this.disposed && on) return;
-    if (on === Boolean(this.tableMode)) { if (on) this.tableCbs = cbs; return; }
+    this.tableWantOn = on;
+    if (cbs) this.tableCbs = cbs;
+    const isMobile = typeof window !== 'undefined' && (window.innerWidth <= 768 || window.matchMedia?.('(max-width: 768px)').matches);
+    const effectiveOn = on && !isMobile;
+    if (effectiveOn === Boolean(this.tableMode)) return;
     const root = this.container.querySelector('.lq');
     if (!root) return;
 
-    if (!on) {
+    if (!effectiveOn) {
       for (const m of (this.tableMoved || []).reverse()) {
         if (m.parent) m.parent.insertBefore(m.node, m.next && m.next.parentNode === m.parent ? m.next : null);
       }
@@ -672,13 +679,11 @@ export class LearnFrame {
       this.el.tableStrip = this.el.tableDock = this.el.tableKeys = this.el.tableMsg = this.el.stand = this.el.carry = null;
       root.classList.remove('lq-table-mode');
       this.tableMode = false;
-      this.tableCbs = null;
       this.updateStageActions();
       return;
     }
 
     this.tableMode = true;
-    this.tableCbs = cbs;
     this.tableMoved = [];
     const move = (node, to) => {
       if (!node || !to) return;
@@ -696,7 +701,6 @@ export class LearnFrame {
       <div class="lq-tmsg"></div>
       <div class="lq-tdock-row">
         <div class="lq-tdock-left">
-          <button type="button" class="btn-secondary quest-btn-sm lq-stand" data-act="stand">Stand</button>
           <span class="lq-carry" hidden></span>
         </div>
         <div class="lq-tkeys"></div>
@@ -707,7 +711,7 @@ export class LearnFrame {
     this.el.tableDock = dock;
     this.el.tableMsg = q('.lq-tmsg');
     this.el.tableKeys = q('.lq-tkeys');
-    this.el.stand = q('.lq-stand');
+    this.el.stand = null;
     this.el.carry = q('.lq-carry');
 
     // The one exit stays where it always was in spirit: the host bar's Leave Bench.
@@ -726,7 +730,6 @@ export class LearnFrame {
     root.appendChild(dock);
     root.classList.add('lq-table-mode');
     this.updateStageActions();
-    this.setLeaning(true);
   }
 
   /** The Stand / Lean In key follows whether the player is leaned over the table. */
@@ -793,7 +796,7 @@ export class LearnFrame {
     // rebuilt; the docked one is the same node for the life of the frame, so its
     // action, label and enabled state are reset by hand. A docked key left on
     // "next" from the stage before skipped the stage it was pressed on.
-    const commitLabel = stage.commitLabel || 'Commit';
+    const commitLabel = stage.commitLabel || 'Submit';
     this.encounter.begin(stage.encounter || null, { index: stage.index, count: this.stageCount });
     this.el.actions.innerHTML = `
       <button type="button" class="btn-secondary lq-hint-key" data-act="hint">Hint</button>

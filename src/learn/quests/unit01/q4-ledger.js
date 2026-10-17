@@ -110,9 +110,9 @@ const BUILD = {
 
 /** The shell trays of an atom with a nucleus at the top left: one per shell, closest in first. */
 const SHELLS = [
-  trayAt('sh1', 'Shell 1', 14, 38, 20, 16, 2),
-  trayAt('sh2', 'Shell 2', 48, 37, 40, 22, 8),
-  trayAt('sh3', 'Shell 3', 92, 49, 40, 22, 8)
+  trayAt('sh1', 'Shell 1', 14, 34, 20, 16, 2),
+  trayAt('sh2', 'Shell 2', 48, 34, 40, 20, 8),
+  trayAt('sh3', 'Shell 3', 92, 49, 40, 20, 8)
 ];
 const SOURCE_TRAY = (label, n) => trayAt('src', label, 98, 18, 40, 30, n);
 const needleFixture = (zones, nuc, at, range) => ({

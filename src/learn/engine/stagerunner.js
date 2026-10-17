@@ -155,7 +155,7 @@ export function createRunner(container, ctx, cfg) {
       prompt: stage.prompt,
       briefing: stage.briefing,
       hints: stage.hints,
-      commitLabel: 'Commit',
+      commitLabel: 'Submit',
       // A stage that declares an `encounter` is a fight (foes.js); one that does
       // not plays exactly as it always has.
       encounter: resolveEncounter(stage)

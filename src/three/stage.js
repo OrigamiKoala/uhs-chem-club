@@ -1293,6 +1293,7 @@ class Stage {
       materials: anchor.dormant?.userData?.benchMats || null,
       // The world itself, for what it registered at the bench (its field points).
       object: world,
+      fpsControls: this.fpsControls,
       // THE PLAYER KEEPS THEIR FEET AT A DEPLOYED BENCH, so the walk owns how
       // high off the ground their head is and the instrument must not write it.
       // The bench used to set the whole camera — position and all — several
@@ -1431,7 +1432,7 @@ class Stage {
       // up. A deployed bench is standing on ground that is still underfoot, so
       // W/A/S/D, the terrain clamp and the colliders all keep working while it
       // is being worked; the bench reads the camera rather than writing it.
-      if (this.fpsControls) this.fpsControls.holdBase = Boolean(this.activeQuestViewer.leaning);
+      if (this.fpsControls) this.fpsControls.holdBase = false;
       if (this.activeQuestViewer.inWorld && this.fpsControls && this.fpsControls.enabled) {
         this.fpsControls.update(delta);
         if (typeof this.activeQuestViewer.aimedInteraction === "function") this.syncAimPrompt();

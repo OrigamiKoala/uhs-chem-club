@@ -3422,7 +3422,7 @@ body.bench-deployed .modal-container .modal-card {
    lights amber; nothing blooms. Pieces take `touch-action: none` so a finger
    drags rather than scrolls, and everything here keeps pointer-events: auto.
    =================================================================== */
-.lq-rail { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+.lq-rail-answer .lq-rail { display: flex; flex-direction: column; gap: 5px; width: 100%; }
 
 .lq-rail-ends {
   display: flex;
@@ -3636,6 +3636,9 @@ body.bench-deployed .modal-container .modal-card {
 /* Stage dots: small, so a strip of eight does not crowd the objective out. */
 .lq-tstrip .lq-rail {
   flex: none;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
   gap: 4px;
   padding: 0 !important;
   max-width: none !important;
@@ -3645,7 +3648,14 @@ body.bench-deployed .modal-container .modal-card {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
-.lq-tstrip .lq-lamp { width: 12px; min-width: 12px; height: 12px; min-height: 12px; padding: 0; }
+.lq-tstrip .lq-lamp {
+  width: 14px;
+  min-width: 14px;
+  height: 14px;
+  min-height: 14px;
+  padding: 0;
+  display: flex !important;
+}
 .lq-tstrip .lq-lamp em { display: none; }
 
 .lq-tdock {
@@ -3715,6 +3725,8 @@ body.bench-deployed .modal-container .modal-card {
 .lq-tmsg .lq-reward-body { margin: 0 !important; font-size: 0.82rem; line-height: 1.4; }
 
 @media (max-width: 768px) {
-  .lq-tstrip { min-height: 46px; }
-  .lq-tdock { min-height: 50px; }
+  .lq-tstrip,
+  .lq-tdock { display: none !important; }
+  .learn-quest-overworld .lq.lq-table-mode .lq-body,
+  .learn-quest-overworld .lq.lq-table-mode .lq-dock-bar { display: flex !important; }
 }

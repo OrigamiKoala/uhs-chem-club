@@ -615,10 +615,18 @@ function scopePower(state) {
 }
 
 /** The dish a lens lies on, or null. */
-export function dishUnder(lensId, state) {
+export function dishUnder(lensId, state, at) {
   const lens = state.pieces[lensId];
   if (!lens) return null;
   for (const n of lens.joinedTo) if (state.pieces[n]?.kind === 'dish') return state.pieces[n];
+  const pos = at || lens.at;
+  if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') {
+    for (const p of Object.values(state.pieces)) {
+      if (p.kind === 'dish' && p.at && !p.hidden) {
+        if (Math.hypot(p.at.x - pos.x, p.at.y - pos.y) <= 12) return p;
+      }
+    }
+  }
   return null;
 }
 
@@ -842,7 +850,7 @@ function paintDish(ctx, p, state, o) {
 }
 
 function paintLens(ctx, p, state, o) {
-  const dish = dishUnder(p.id, state);
+  const dish = dishUnder(p.id, state, o?.at);
   disc(ctx, o.x, o.y, o.r, '#0d0c0a', o.lit ? AMBER : PLATE_COLORS.dust, o.lit ? 2.5 : 2);
   if (dish) scopePicture(ctx, o.x, o.y, o.r * 0.9, dish, scopePower(state));
   else {
@@ -1081,7 +1089,7 @@ function printed(p, state) {
   }
 }
 
-function faceKey(p, state) {
+function faceKey(p, state, at) {
   switch (p.kind) {
     case 'atom': {
       if (p.props.slate) { const a = slateAtom(p, state); return `slate|${p.props.el}|${a.lone}|${a.dots}|${a.around}|${a.lamp}|${p.props.stamped ? a.fc : ''}|${p.props.marked ? 1 : 0}`; }
@@ -1090,7 +1098,7 @@ function faceKey(p, state) {
     }
     case 'dish': return `${p.props.sample.id}|${p.props.cut || ''}|${p.props.settled ? 1 : 0}|${p.props.view ?? ''}`;
     case 'lens': {
-      const d = dishUnder(p.id, state);
+      const d = dishUnder(p.id, state, at);
       return d ? `${d.id}|${d.props.sample.id}|${scopePower(state)}|${d.props.cut || ''}|${d.props.settled ? 1 : 0}` : '';
     }
     case 'joint': return `${p.props.pairs || 0}|${p.props.measured ? 1 : 0}`;
@@ -1372,11 +1380,13 @@ const SCRATCH_ATOMS = ['H', 'O', 'Na', 'Cl'];
  * `{pieces, tray}`. It occupies x 2..46, y 47..62 of a 120 x 64 table (the bottom left).
  */
 export function scratchCorner({ x = 0, y = 0 } = {}) {
-  const pieces = SCRATCH_ATOMS.map((el, i) => ({
-    id: `scr-${i + 1}`, kind: 'atom', label: el, at: { x: x + 31 + (i % 2) * 11, y: y + 49 + Math.floor(i / 2) * 10 },
-    props: { el, scratch: true }
-  }));
-  const tray = { id: 'scr-bin', label: 'Bin', at: { x: x + 13, y: y + 55 }, size: { w: 22, h: 14 } };
+  const pieces = [
+    { id: 'scr-1', kind: 'atom', label: 'H', at: { x: x + 28, y: y + 50 }, props: { el: 'H', scratch: true } },
+    { id: 'scr-2', kind: 'atom', label: 'O', at: { x: x + 40, y: y + 50 }, props: { el: 'O', scratch: true } },
+    { id: 'scr-3', kind: 'atom', label: 'Na', at: { x: x + 34, y: y + 58.5 }, props: { el: 'Na', scratch: true } },
+    { id: 'scr-4', kind: 'atom', label: 'Cl', at: { x: x + 46, y: y + 58.5 }, props: { el: 'Cl', scratch: true } }
+  ];
+  const tray = { id: 'scr-bin', label: 'Bin', at: { x: x + 12, y: y + 55 }, size: { w: 20, h: 14 } };
   return { pieces, tray };
 }
 
@@ -1388,16 +1398,22 @@ export const TABLE_BOUNDS = Object.freeze({ w: 120, h: 64 });
  * `recorder` and keeps it.
  */
 export function atomTable(spec) {
-  const scratch = scratchCorner();
+  const pieces = [...(spec.pieces || [])];
   const z = spec.zones || {};
+  const trays = [...(z.trays || [])];
+  if (spec.scratch) {
+    const scratch = scratchCorner();
+    pieces.push(...scratch.pieces);
+    trays.push(scratch.tray);
+  }
   return {
     kit: ATOMS_KIT_ID,
     bounds: { ...TABLE_BOUNDS },
     tools: [],
     recorder: PARKED_RECORDER,
     ...spec,
-    pieces: [...(spec.pieces || []), ...scratch.pieces],
-    zones: { ...z, trays: [...(z.trays || []), scratch.tray] }
+    pieces,
+    zones: { ...z, trays }
   };
 }
 
