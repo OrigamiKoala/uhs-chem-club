@@ -716,6 +716,8 @@ export class LearnFrame {
     move(this.el.rail, strip);
     move(this.el.stageActions, q('.lq-tdock-left'));
     move(this.el.actions, q('.lq-tdock-right'));
+    // A fight's plate (Integrity, what the foe says) rides in the strip, one line: the foe's body is on the table itself.
+    move(this.el.foe, strip);
     move(this.el.banner, this.el.tableMsg);
     move(this.el.hints, this.el.tableMsg);
     move(this.el.widget, this.el.tableMsg);

@@ -76,7 +76,8 @@ export function benchesAre3D() {
  * real positions in space.
  *
  * (T2, `bench-tabletop.md`: `q3-catalogue` and `q4-ledger` have since become tabletops, the card kit and the atom
- * kit, played by `table3d.js`; the board and the core bench below still serve the hopper boss.)
+ * kit, played by `table3d.js`, and the hopper boss plays on tables too; the board and the core bench below are real
+ * instruments no quest plays now, kept and checked until T7 retires them.)
  *
  * THE LAST THREE FOLLOW, AND TWO OF THEM ARE EASIER CASES THAN EITHER.
  *
@@ -88,6 +89,9 @@ export function benchesAre3D() {
  * filing clerk picks up and puts down. There is no picture of a card; there is
  * a card. `catalogue3d.js` builds it the whole way, and filing one is reaching
  * over and moving it — still two taps, never a drag.
+ *
+ * (T2, `bench-tabletop.md`: `q5-assay`, `q6-weigh` and `boss-hopper` are tabletops too, the mass kit; the paragraph below
+ * says what the assay floor was, and it is still a real instrument, so it is still built and checked.)
  *
  * `q5-assay` tips a heap down a chute past a deflector into a row of bins.
  * Those are objects falling into containers at arm's length, so `assay3d.js`
@@ -105,10 +109,11 @@ const BUILT_BENCHES = new Set([
   // Unit 1 — Tallow
   'q1-grain',      // the tabletop, atom kit — table3d.js (T1; the sampler scope still serves Kettle)
   'q2-core',       // the tabletop, atom kit — table3d.js (T1; the core bench still serves q4-ledger)
-  'q3-catalogue',  // the tabletop, card kit — table3d.js (T2; the catalogue board still serves boss-hopper)
-  'q4-ledger',     // the tabletop, atom kit — table3d.js (T2; the core bench still serves boss-hopper)
-  'q5-assay',      // the assay floor     — assay3d.js
-  'q6-weigh',      // the assay floor again, at site six
+  'q3-catalogue',  // the tabletop, card kit — table3d.js (T2; the catalogue board is retired with T7)
+  'q4-ledger',     // the tabletop, atom kit — table3d.js (T2; the core bench is retired with T7)
+  'q5-assay',      // the tabletop, mass kit (assay) — table3d.js (T2; the assay floor is retired with T7)
+  'q6-weigh',      // the tabletop, mass kit (two pans and counters), at site six
+  'boss-hopper',   // the hopper: five phases on one table, atom, card and mass kits, its foe in the table's corner
   // Unit 3 — Ligar. The join bench is a subclass of the drawn bench, so its
   // tools are the canvas bench's tools and cannot grade differently.
   'q1-joins',      // the join bench, pair plates — joinbench3d.js

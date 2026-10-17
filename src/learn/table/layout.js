@@ -37,12 +37,14 @@ export function fixtureLayout(f) {
 
 /**
  * THE FOE PAD. A stage that is a fight (a boss phase) has a foe watching the table, and it stands in a corner of the
- * table's own bounds so it is inside the frame the camera leans to and covers no piece: the top right, `r` units across
- * from its centre, `inset` units in from each edge. A boss phase keeps that square clear of every zone, fixture,
+ * table's own bounds so it is inside the frame the camera leans to and covers no piece: the top right, `r` units from its centre, `inset` units in from each edge. A boss phase keeps that square clear of every zone, fixture,
  * strip and loose piece; `verify:table` and `verify:bench` hold it to that. The foe's body is `foebody.js`'s, a few
  * centimetres across, so the pad is a quarter of a metre of the plate and never in the way of a hand.
  */
-export const FOE_PAD = Object.freeze({ r: 9.5, inset: 10.5 });
+export const FOE_PAD = Object.freeze({ r: 11.5, inset: 12 });
+
+/** How far above the table's far edge, in metres, a foe's body can stand in the picture: the frame leaves room for it. */
+export const FOE_HEADROOM_M = 0.14;
 
 /** The pad on a table of `bounds`: its centre and its rectangle, in table units. */
 export function foePadOf(bounds) {

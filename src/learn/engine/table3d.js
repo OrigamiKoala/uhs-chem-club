@@ -39,7 +39,7 @@ import { BenchViewer3D, engravedPlaque, AMBER, PHOSPHOR } from './bench3d.js';
 import { benchHost, guideTo } from './bench-host.js';
 import { getKit, radiusOf } from '../table/kits/index.js';
 import { SIZES, rectOf } from '../table/snap.js';
-import { plateMap, fixtureLayout, pieceTargets, foePadOf } from '../table/layout.js';
+import { plateMap, fixtureLayout, pieceTargets, foePadOf, FOE_HEADROOM_M } from '../table/layout.js';
 import { TableGestures, pendingFetch } from '../table/gestures.js';
 import { lineOf, readY } from '../table/recorder.js';
 import { drawTable, faceOf } from './table2d.js';
@@ -220,6 +220,12 @@ export class Table3D extends BenchViewer3D {
 
     // The stage's table is the part of the plate in use: frame that.
     const zones = [this.map.zone];
+    if (this.foes?.enc) {
+      // A fight's foe stands in the top corner and rises above the table's far edge in the picture: frame the room for it.
+      const z = this.map.zone;
+      const pad = this.map.metres(foePadOf(state.bounds).r * 2);
+      zones.push({ x0: z.x1 - pad, x1: z.x1, z0: z.z0 - FOE_HEADROOM_M, z1: z.z0 });
+    }
     if (first) {
       this.leanIn({ zones });
     } else if (rebuilt) {

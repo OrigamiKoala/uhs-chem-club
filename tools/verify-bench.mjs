@@ -784,8 +784,24 @@ const CAT_STAGES = [
   { board: { label: 'Reference chart', strip: true, columns: ['1', '2', '\u00b7 \u00b7 \u00b7', '13', '14', '15', '16', '17', '18'], rows: [['c01', null, null, null, null, null, null, null, 'c02'], ['c03', 'c04', null, 'c05', 'c06', 'c07', 'c08', 'c09', 'c10'], ['#r1', '#r2', null, '#r3', '#r4', '#r5', '#r6', '#r7', '#r8']] }, drawer: ['c16', 'c11', 'c14', 'c18', 'c12', 'c17', 'c13', 'c15'] },
   { board: { label: 'Reference chart', columns: ['1', '2', '\u00b7 \u00b7 \u00b7', '13', '14', '15', '16', '17', '18'], rows: [['c01', null, null, null, null, null, null, null, 'c02'], ['c03', '#s1', null, 'c05', 'c06', '#s2', 'c08', 'c09', 'c10']] }, masked: true, drawer: ['c16', 'c04', 'c13', 'c07'] }
 ];
-const { STAGES: ASSAY_STAGES } = await import('../src/learn/quests/unit01/q5-assay.js');
-const { STAGES: WEIGH_STAGES } = await import('../src/learn/quests/unit01/q6-weigh.js');
+/* The two assay quests are tabletops now (T2: the mass kit), but the assay floor is still a real instrument, so it is still put
+   through its own pour path with the hoppers those quests used to declare (and `AssayFloor3D`'s retirement is T7's). */
+const CL_BINS = [{ mass: 35, n: 30 }, { mass: 37, n: 10 }];
+const ASSAY_STAGES = [
+  { hoppers: [{ id: 'h1', label: 'SAMPLE A', code: 'chlorine', note: '40 atoms', bins: CL_BINS }] },
+  { hoppers: [{ id: 'h1', label: 'SAMPLE A', note: '40 atoms', bins: CL_BINS }, { id: 'h2', label: 'SAMPLE B', note: '80 atoms', bins: [{ mass: 35, n: 60 }, { mass: 37, n: 20 }] }] },
+  { hoppers: [{ id: 'h3', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }] },
+  { hoppers: [{ id: 'h4', label: 'SAMPLE A', note: '40 atoms', bins: [{ mass: 19, n: 40 }] }] },
+  { hoppers: [
+    { id: 'ha', label: 'SAMPLE A', note: 'unlabelled, 40 atoms', bins: [{ mass: 20, n: 36 }, { mass: 22, n: 4 }] },
+    { id: 'hb', label: 'SAMPLE B', note: 'unlabelled, 40 atoms', bins: CL_BINS },
+    { id: 'hc', label: 'SAMPLE C', note: 'unlabelled, 40 atoms', bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }] }
+  ] }
+];
+const WEIGH_STAGES = [
+  { hoppers: [{ id: 'h1', label: 'SAMPLE A', code: 'carbon', note: '40 atoms', bins: [{ mass: 12, n: 40 }] }, { id: 'h2', label: 'SAMPLE B', code: 'carbon', note: 'a full crate, gate shut', bulk: true, bins: [{ mass: 12, n: 300 }] }] },
+  { hoppers: [{ id: 'd1', label: 'SAMPLE A', code: 'carbon', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 12, n: 5 }] }, { id: 'd2', label: 'SAMPLE B', code: 'oxygen', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 16, n: 4 }] }, { id: 'd3', label: 'SAMPLE C', code: 'hydrogen', note: 'one drum, gate shut', bulk: true, bins: [{ mass: 1, n: 6 }] }] }
+];
 const { planPour } = await import('../src/learn/engine/assay.js');
 
 /**
@@ -2520,12 +2536,15 @@ console.log('The foes — spoil standing in the wells\n');
     const tableStages = (mod.STAGES || []).map((s, i) => [s, i]).filter(([s]) => s.widget?.type === 'table');
     if (!tableStages.length) continue;
     const [unit, questId] = q.key.split('/');
+    // A BOSS is fought away from any bench: the player stands on open ground, so its tables are built in their own room
+    // (the viewer's own scene, the bench kit's own materials) and are held to everything else a table is.
+    const boss = q.arena === 'boss';
     const w = worldFor(unit);
-    const anchor = w.benchAnchor(questId);
-    if (!anchor) { fail(`${q.key}: plays table stages but its world has no bench anchor`); continue; }
-    const mats = anchor.dormant?.userData?.benchMats || null;
-    w.setBenchDeployed(questId, true);
-    const frameOf = camera => ({ scene: w.scene, camera, position: anchor.position, rotationY: anchor.rotationY, topY: anchor.topY, materials: mats, object: w, walkOwnsHeight: true });
+    const anchor = boss ? null : w.benchAnchor(questId);
+    if (!boss && !anchor) { fail(`${q.key}: plays table stages but its world has no bench anchor`); continue; }
+    const mats = anchor?.dormant?.userData?.benchMats || null;
+    if (!boss) w.setBenchDeployed(questId, true);
+    const frameOf = camera => (boss ? null : { scene: w.scene, camera, position: anchor.position, rotationY: anchor.rotationY, topY: anchor.topY, materials: mats, object: w, walkOwnsHeight: true });
 
     for (const [stage, i] of tableStages) {
       stages++;
@@ -2536,7 +2555,7 @@ console.log('The foes — spoil standing in the wells\n');
 
       // A stage that sends the player out: where this world registered the point, the player walks to it (the
       // chevron leads there, no plate is drawn or tapped, `[E]` takes it); everywhere else the drawn plate stands in.
-      for (const f of spec.fetch || []) {
+      for (const f of boss ? [] : spec.fetch || []) {
         const pt = FP.fieldPointById(w, f.id);
         const guides = [];
         setBenchHost({ mount() {}, unmount() {}, guide: wp => guides.push(wp) });
@@ -2573,8 +2592,9 @@ console.log('The foes — spoil standing in the wells\n');
 
       for (const [vpName, vw, vh] of LEAN_VIEWPORTS) {
         setGlass(vw, vh);
-        const camera = new THREE.PerspectiveCamera(FOV, vw / vh, 0.05, 80);
-        const bench = new Table3D(null, { world: frameOf(camera), onAction: () => {} });
+        const camera0 = new THREE.PerspectiveCamera(FOV, vw / vh, 0.05, 80);
+        const bench = new Table3D(null, { world: frameOf(camera0), onAction: () => {} });
+        const camera = boss ? bench.camera : camera0;
         const state = MODEL.createTable(spec, stage.title);
         try { bench.setState(state); } catch (e) { fail(`${label} @ ${vpName}: building the built table faulted — ${e.stack?.split('\n').slice(0, 3).join(' ')}`); bench.dispose(); continue; }
         bench.settleLean();
@@ -2632,7 +2652,7 @@ console.log('The foes — spoil standing in the wells\n');
               offenders.add(m === bench.steelMat || m === bench.darkMat ? 'the bench kit' : (m.type || 'a material'));
             });
           }
-          if (offenders.size) fail(`${tag}: dressed from ${[...offenders].join(', ')}, not the host's own materials`);
+          if (offenders.size && !boss) fail(`${tag}: dressed from ${[...offenders].join(', ')}, not the host's own materials`);
         }
         bench.dispose();
       }
@@ -2641,9 +2661,10 @@ console.log('The foes — spoil standing in the wells\n');
       const script = mod.SOLUTIONS[i];
       setGlass(1920, 1080);
       for (const mode of ['drag', 'tap']) {
-        const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
+        const camera0 = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
         let st = MODEL.createTable(spec, stage.title);
-        const b2 = new Table3D(null, { world: frameOf(camera), onAction: a => { st = MODEL.apply(st, a); b2.setState(st); b2.settle(); } });
+        const b2 = new Table3D(null, { world: frameOf(camera0), onAction: a => { st = MODEL.apply(st, a); b2.setState(st); b2.settle(); } });
+        const camera = boss ? b2.camera : camera0;
         b2.setState(st);
         b2.settleLean();
         camera.updateMatrixWorld(true);
@@ -2709,10 +2730,180 @@ console.log('The foes — spoil standing in the wells\n');
       }
       if (failures === before) ok(`${label}: leans in at ${LEAN_VIEWPORTS.length} viewports (whole table in the free glass, pieces 28 px or more, host materials), solved through the real pointer path by drag and by two taps`);
     }
-    w.setBenchDeployed(questId, false);
+    if (!boss) w.setBenchDeployed(questId, false);
   }
   if (!stages) fail('no real table stage was found to check');
   else ok(`${stages} real table stage(s) checked on the built table (${presses} presses took hold)`);
+}
+
+/* ------------------------------------------------------------ the Hopper on its tables */
+
+/**
+ * THE HOPPER'S FIGHT, ON A TABLE (plan §2.6 and the T2b brief). Each of the five phases is a table, and the foe stands in the
+ * table's corner pad (`table/layout.js` `FOE_PAD`), watching it. Held here, at every viewport the table is leaned in at:
+ *   - one body per foe the stage names, in the pad, and every pose it can take stays inside the pad: the body never leaves its
+ *     corner, so it can neither stand in the camera's lean air nor over a zone, a fixture, the strip or a piece;
+ *   - the body is in the frame (inside the free glass, under the chrome) wherever the table is;
+ *   - nothing on the table stands under it: every zone, fixture and loose piece of the stage is clear of the pad;
+ *   - its pose is `planFoe`'s and nothing else (the 2D `Encounter` driven for real: a reaction reads back, a committed miss
+ *     lunges, a clear disperses, a replay and a knock-back restore it) and it is a few thousand triangles, no more;
+ *   - a press on the pad is a press on the table, never a take of the foe (a foe only observes).
+ */
+{
+  console.log('\nthe Hopper on its tables');
+  const MODEL = await import('../src/learn/table/model.js');
+  const SNAP = await import('../src/learn/table/snap.js');
+  const LAYOUT = await import('../src/learn/table/layout.js');
+  const REG = await import('../src/learn/table/kits/registry.js');
+  const { Table3D } = await import('../src/learn/engine/table3d.js');
+  const { chromeReserve } = await import('../src/learn/engine/lean.js');
+  const hop = await import('../src/learn/quests/unit01/boss-hopper.js');
+  const POSES = [['idle'], ['unmoved'], ['cracked'], ['neutral'], ['dispersed']];
+  const setGlass = (w, h) => { window.innerWidth = w; window.innerHeight = h; };
+  const before = failures;
+  let fights = 0;
+
+  for (const [i, stage] of hop.STAGES.entries()) {
+    const enc = resolveEncounter(stage);
+    const label = `boss-hopper phase ${i + 1}`;
+    if (!enc) { fail(`${label}: declares no encounter`); continue; }
+    if (stage.field || (stage.table.fetch || []).length) fail(`${label}: a boss phase declares a field stage (the walk is suspended while it stands)`);
+    fights++;
+    for (const [vpName, vw, vh] of LEAN_VIEWPORTS) {
+      setGlass(vw, vh);
+      const tag = `${label} @ ${vpName} (${vw}x${vh})`;
+      // The frame runs before the instrument: the encounter has begun when the table stands up.
+      const host = { hidden: true, innerHTML: '', className: '', dataset: {}, querySelectorAll: () => [] };
+      const encounter = new Encounter(host);
+      encounter.begin(enc);
+      const bench = new Table3D(null, { onAction: () => {} });
+      const state = MODEL.createTable(stage.table, stage.title);
+      bench.setState(state);
+      bench.settleLean();
+      const camera = bench.camera;
+      camera.updateMatrixWorld(true);
+      const layer = bench.foes;
+      layer.update(0.05);
+      if (layer.bodies.size !== enc.foes.length) { fail(`${tag}: ${enc.foes.length} foes, ${layer.bodies.size} bodies`); bench.dispose(); encounter.dispose(); continue; }
+
+      // The pad, on the plate (viewer frame, metres).
+      const pad = LAYOUT.foePadOf(state.bounds);
+      const a = bench.map.toPlate({ x: pad.rect.x0, y: pad.rect.y0 });
+      const b = bench.map.toPlate({ x: pad.rect.x1, y: pad.rect.y1 });
+      const padBox = { x0: a.x, x1: b.x, z0: a.z, z1: b.z };
+      const inv = new THREE.Matrix4().copy(bench.root.matrixWorld).invert();
+
+      // Every pose, drawn from planFoe's own pose names.
+      const extents = new Map();
+      for (const [pose] of POSES) {
+        layer.sync(snapshotOf(enc, pose));
+        runLayer(layer, pose === 'dispersed' ? 4.2 : 1.2, extents, inv);
+      }
+      layer.sync(snapshotOf(enc, 'idle'));
+      layer.sync({ ...snapshotOf(enc, 'idle'), fight: { ...newFight(), lost: 1 } });
+      runLayer(layer, 1.2, extents, inv);
+      for (const [body, box] of extents) {
+        const eps = 0.02;
+        // (a committed miss makes the body lunge a few centimetres toward the player and back.)
+        if (box.min.x < padBox.x0 - eps || box.max.x > padBox.x1 + eps || box.min.z < padBox.z0 - eps || box.max.z > padBox.z1 + 0.06) {
+          fail(`${tag}: the ${body.species} leaves its corner — x[${box.min.x.toFixed(2)}, ${box.max.x.toFixed(2)}] z[${box.min.z.toFixed(2)}, ${box.max.z.toFixed(2)}] against the pad x[${padBox.x0.toFixed(2)}, ${padBox.x1.toFixed(2)}] z[${padBox.z0.toFixed(2)}, ${padBox.z1.toFixed(2)}]`);
+        }
+        if (box.min.y < 0.885 || box.max.y > 0.895 + 0.36) fail(`${tag}: the ${body.species} spans y[${box.min.y.toFixed(2)}, ${box.max.y.toFixed(2)}] — the plate is at 0.895`);
+      }
+
+      // Nothing stands under it: the table's own furniture and loose pieces are clear of the pad.
+      const kit = REG.getKit(state.kit);
+      const clear = (name, r) => {
+        if (r.x0 < pad.rect.x1 && pad.rect.x0 < r.x1 && r.y0 < pad.rect.y1 && pad.rect.y0 < r.y1) fail(`${tag}: ${name} stands in the foe's corner`);
+      };
+      for (const z of Object.values(state.zones.trays)) clear(`tray ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.tray));
+      for (const z of Object.values(state.zones.slots)) clear(`slot ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.slot));
+      for (const z of Object.values(state.zones.containers)) clear(`container ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.container));
+      for (const z of Object.values(state.fixtures)) clear(`fixture ${z.id}`, LAYOUT.fixtureLayout(z).box);
+      for (const p of Object.values(state.pieces)) { const r = REG.radiusOf(kit, p); clear(`piece ${p.id}`, { x0: p.at.x - r, x1: p.at.x + r, y0: p.at.y - r, y1: p.at.y + r }); }
+      clear('the recorder strip', SNAP.rectOf(state.recorder.box, { w: 30, h: 18 }));
+
+      // In the frame: inside the free glass wherever the table is, and under the chrome.
+      const res = chromeReserve(vw, vh);
+      const free = { l: -1 + 2 * res.left / vw, r: 1 - 2 * res.right / vw, b: -1 + 2 * res.bottom / vh, t: 1 - 2 * res.top / vh };
+      layer.sync(snapshotOf(enc, 'idle'));
+      runLayer(layer, 0.4, new Map(), inv);
+      for (const body of layer.bodies.values()) {
+        const nd = ndcBounds(body.group, camera);
+        if (!nd) { fail(`${tag}: the ${body.species} has no bounds`); continue; }
+        const eps = 0.02;
+        if (nd.minX < free.l - eps || nd.maxX > free.r + eps || nd.maxY > free.t + eps || nd.minY < free.b - eps) {
+          fail(`${tag}: the ${body.species} is outside the free glass — x[${nd.minX.toFixed(2)}, ${nd.maxX.toFixed(2)}] y[${nd.minY.toFixed(2)}, ${nd.maxY.toFixed(2)}] against x[${free.l.toFixed(2)}, ${free.r.toFixed(2)}] y[${free.b.toFixed(2)}, ${free.t.toFixed(2)}]`);
+        }
+      }
+      for (const body of layer.bodies.values()) {
+        const tris = trianglesOf(body.group);
+        if (tris > 16000) fail(`${tag}: the ${body.species} draws ${Math.round(tris)} triangles (budget 16000)`);
+      }
+
+      // A press on the pad is a press on the table: the foe is not a handle.
+      if (vpName === '16:9') {
+        const hits = [];
+        const grab = bench.gestures.wouldGrab({ x: pad.x, y: pad.y });
+        if (grab) fail(`${tag}: a press on the foe's corner takes hold of something`);
+      }
+      bench.dispose();
+      encounter.dispose();
+    }
+
+    // The 2D Encounter driven for real, with a body standing on the table.
+    {
+      setGlass(1920, 1080);
+      const host = { hidden: true, innerHTML: '', className: '', dataset: {}, querySelectorAll: () => [] };
+      const encounter = new Encounter(host);
+      encounter.begin(enc);
+      const bench = new Table3D(null, { onAction: () => {} });
+      bench.setState(MODEL.createTable(stage.table, stage.title));
+      const layer = bench.foes;
+      layer.update(0.05);
+      const tag = `${label} (the fight)`;
+      for (const f of enc.foes) {
+        for (const pose of ['cracked', 'neutral', 'unmoved']) {
+          const probe = { pose };
+          const want = planFoe(enc, f, probe);
+          encounter.react(f.id, probe);
+          layer.update(0.05);
+          const body = layer.bodies.get(f.id);
+          if (body.pose !== want.pose) fail(`${tag}: planFoe says "${want.pose}" and the body in the scene is in "${body.pose}"`);
+        }
+      }
+      encounter.onMiss();
+      for (const b of layer.bodies.values()) if (!(b.lunge > 0.99)) fail(`${tag}: a miss through the Encounter did not make the body lunge`);
+      encounter.cancel();
+      encounter.onClear();
+      layer.update(0.05);
+      for (const b of layer.bodies.values()) if (b.pose !== 'dispersed') fail(`${tag}: a clear left the foe in "${b.pose}"`);
+      for (let t = 0; t < 5.5; t += 0.05) layer.update(0.05);
+      for (const b of layer.bodies.values()) if (b.group.visible) fail(`${tag}: a cleared foe is still standing`);
+      encounter.begin(enc);
+      layer.update(0.05);
+      for (const b of layer.bodies.values()) if (!b.group.visible || b.pose !== 'idle') fail(`${tag}: a replayed phase did not restore its foe (${b.pose})`);
+      for (let k = 0; k < 3; k++) encounter.onMiss();
+      encounter.cancel();
+      encounter.paint();
+      layer.update(0.05);
+      for (const b of layer.bodies.values()) if (b.pose !== 'idle') fail(`${tag}: a knock-back left the foe in "${b.pose}"`);
+      // A new phase on the same table puts the foe in the new board's corner (the table is rebuilt, the foe is not left behind).
+      const next = hop.STAGES[(i + 1) % hop.STAGES.length];
+      encounter.begin(resolveEncounter(next));
+      bench.setState(MODEL.createTable(next.table, next.title));
+      layer.update(0.05);
+      const to = bench.foeSpots(1)[0];
+      for (const b of layer.bodies.values()) {
+        if (Math.hypot(b.baseX - to.x, b.baseZ - to.z) > 1e-6) fail(`${tag}: after the phase changed the foe stands at (${b.baseX.toFixed(2)}, ${b.baseZ.toFixed(2)}), not in the new table's corner (${to.x.toFixed(2)}, ${to.z.toFixed(2)})`);
+      }
+      encounter.dispose();
+      layer.update(0.05);
+      if (layer.bodies.size) fail(`${tag}: the foes outlived the encounter`);
+      bench.dispose();
+    }
+  }
+  if (failures === before) ok(`boss-hopper: ${fights} phases fought on tables — the foe stands in the table's corner at ${LEAN_VIEWPORTS.length} viewports, every pose inside the pad and inside the glass, clear of every piece of furniture, read back from planFoe`);
 }
 
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);

@@ -46,6 +46,7 @@ const SNAP = await import('../src/learn/table/snap.js');
 const RAIL = await import('../src/learn/table/rail.js');
 const REC = await import('../src/learn/table/recorder.js');
 const TOOLS = await import('../src/learn/table/tools.js');
+const LAYOUT = await import('../src/learn/table/layout.js');
 const REG = await import('../src/learn/table/kits/registry.js');
 const RUNNER = await import('../src/learn/engine/stagerunner.js');
 const { Table2D, drawTable, fixtureLayout } = await import('../src/learn/engine/table2d.js');
@@ -197,6 +198,19 @@ function checkTableStage(label, stage, solution, misses) {
       const [nb, b] = rects[j];
       if (a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1) fail(`${label}: ${na} overlaps ${nb}`);
     }
+  }
+
+  // A stage that is a fight keeps the table's top-right corner clear for its foe (`layout.js` `FOE_PAD`): no zone, fixture,
+  // strip or plate stands in it and no piece starts in it, so the body watches the table without covering any of it.
+  if (stage.encounter) {
+    const pad = LAYOUT.foePadOf(t0.bounds);
+    const hits = r => r.x0 < pad.rect.x1 && pad.rect.x0 < r.x1 && r.y0 < pad.rect.y1 && pad.rect.y0 < r.y1;
+    for (const [name, r] of rects) if (hits(r)) fail(`${label}: ${name} stands in the foe's corner`);
+    for (const p of Object.values(t0.pieces)) {
+      const r = REG.radiusOf(kit, p);
+      if (hits({ x0: p.at.x - r, x1: p.at.x + r, y0: p.at.y - r, y1: p.at.y + r })) fail(`${label}: piece ${p.id} stands in the foe's corner`);
+    }
+    if (!(stage.foes || []).length) fail(`${label}: a fight on a table names its foe (stage.foes)`);
   }
 
   // The solution, three ways, every step taking, every state sound.
