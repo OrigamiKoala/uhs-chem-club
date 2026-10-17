@@ -136,9 +136,9 @@ const BUILT_BENCHES = new Set([
   'q3-distance',   // the tabletop, bonds kit (a pair pulled apart by hand, pair cards, salts) — table3d.js (T3a; the bond bench stands on in the warden's room)
   'q4-dots',       // the pair board — pairboard3d.js
   'q5-resonance',  // the tabletop, the Lewis slate with a charge stamp, a mark and a bond gauge — table3d.js (T3a)
-  'q6-shape',      // the domain rig, hub plates — domainrig3d.js
-  'q7-polarity',   // the domain rig, field plates
-  'q8-hybrid',     // the domain rig, mixer and twist plates
+  'q6-shape',      // the tabletop, domain kit (a hub arms clip to and push apart on, a protractor, a frame of sockets) — table3d.js (T3b; the domain rig stands on in the warden's room)
+  'q7-polarity',   // the tabletop, domain kit (charged plates, molecule cards, arrows, a swap tool, a charged rod and streams)
+  'q8-hybrid',     // the tabletop, domain kit (a mixing bowl, orbitals overlapped into bonds, a bond whose far end is turned)
   'q9-orbitals',   // the box rack, molecular layout — boxrack3d.js
   'boss-warden',   // the warden: bond bench, pair board, domain rig and box rack in turn, in its own room
   // Unit 4 — Bellows. One instrument, six heads: cylinder, mixture, leak, tube, path and record.

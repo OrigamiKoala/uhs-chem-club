@@ -1013,7 +1013,7 @@ function layLigar(bench, st) {
   else bench.setPlates(st.rigs, { show: { counts: Boolean(st.counts) }, hand: null });
 }
 
-// A quest that has become a tabletop (q3-distance and q5-resonance in T3a, the rest in T3b and T3c) is measured with the real table
+// A quest that has become a tabletop (q3-distance and q5-resonance in T3a, q6 to q8 in T3b, the rest in T3c) is measured with the real table
 // stages below; what stays here is the instruments some quest still plays. The warden's room keeps the bond bench and the pair board.
 const LG_BENCHES_ALL = [
   ['q3-distance', 'bond bench', (c, a) => new BondBench3D(null, { world: worldFrame(c, a) })],

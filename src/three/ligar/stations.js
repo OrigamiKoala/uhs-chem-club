@@ -730,8 +730,21 @@ export function buildDrillChamber(w, site) {
     void jx;
   }
   k.chamberLamps(g);
+  // THE BENCH LAMP: under a hill only lamps light, and a bench is worked with the eyes on the plate, so one hangs over the back of it,
+  // above the bay's air. A `lampMark` in the pool, no light of its own.
+  g.add(w.buildLuminaire(0, 3.7, -1.0, UNDERGROUND_LAMP));
+  // AN ORE TUB AND A MINER'S PICK at the side of the plate, the host's own tools within the table's reach: the lean-in view shows them at the edge of the plate.
+  const tub = (x, z, d = 1) => {
+    k.cyl(g, [0.34, 0.28, 0.5, 14], w.drumMat, [x, 0.25, z], null, true);
+    k.cyl(g, [0.35, 0.35, 0.05, 14], w.darkSteelMat, [x, 0.5, z]);
+    pile(w, g, x, z, 0.2, 0x3a11 + Math.round(x * 7), 0.12, 6).position.y = 0.52;
+    k.strut(g, [x + d * 0.3, 0.45, z - 0.05], [x + d * 0.5, 1.05, z - 0.3], 0.025, w.timberMat, 6);
+    k.box(g, [0.34, 0.05, 0.05], w.pipeMat, [x + d * 0.5, 1.07, z - 0.3], [0, 0.5 * d, 0.2]);
+  };
+  tub(3.1, -0.9);
 
   const colliders = [
+    { lx: 3.1, lz: -0.9, r: 0.5 },
     { lx: -4.1, lz: 0.9, hw: 1.3, hd: 1.9 },
     { lx: -4.1, lz: 3.0, hw: 0.9, hd: 0.8 },
     { lx: 4.0, lz: 0.9, hw: 0.5, hd: 0.4 },
@@ -791,14 +804,43 @@ export function buildSumpStation(w, site) {
   k.box(g, [0.04, 1.2, 0.9], M.glass, [5.0, 1.4, 5.2]);
   k.box(g, [10.0, 0.05, 0.3], w.darkSteelMat, [0, 3.55, -2.6]);
   k.chamberLamps(g);
+  g.add(w.buildLuminaire(0, 3.7, -1.0, UNDERGROUND_LAMP));
+  // AN ORE TUB AND A MINER'S PICK at the side of the plate, the host's own tools within the table's reach: the lean-in view shows them at the edge of the plate.
+  const tub = (x, z, d = 1) => {
+    k.cyl(g, [0.34, 0.28, 0.5, 14], w.drumMat, [x, 0.25, z], null, true);
+    k.cyl(g, [0.35, 0.35, 0.05, 14], w.darkSteelMat, [x, 0.5, z]);
+    pile(w, g, x, z, 0.2, 0x3a11 + Math.round(x * 7), 0.12, 6).position.y = 0.52;
+    k.strut(g, [x + d * 0.3, 0.45, z - 0.05], [x + d * 0.5, 1.05, z - 0.3], 0.025, w.timberMat, 6);
+    k.box(g, [0.34, 0.05, 0.05], w.pipeMat, [x + d * 0.5, 1.07, z - 0.3], [0, 0.5 * d, 0.2]);
+  };
+  tub(-3.3, -1.0, -1);
+
+  // THE DRAW-OFF: a cock on the sump's front wall with a stub over a catch bucket, and the sump's own water running from it in a thin
+  // stream. A real piece of this host (the bleed on the sump), the player stands in front of it (`stand`, host frame) and `[E]` on it
+  // draws a stream from the sump for the bench.
+  {
+    const dx = 3.9, dz = 3.6;
+    k.strut(g, [dx, 1.3, dz - 0.1], [dx, 1.3, dz + 0.45], 0.045, w.pipeMat, 8);
+    k.cyl(g, [0.075, 0.075, 0.12, 12], M.brass, [dx, 1.3, dz + 0.2], [Math.PI / 2, 0, 0]);
+    k.box(g, [0.16, 0.04, 0.04], M.brass, [dx, 1.4, dz + 0.2]);
+    k.cyl(g, [0.012, 0.012, 0.85, 6], M.water, [dx, 0.82, dz + 0.45]);
+    k.cyl(g, [0.22, 0.18, 0.34, 14], w.drumMat, [dx, 0.17, dz + 0.45], null, true);
+    k.box(g, [0.4, 0.02, 0.4], M.water, [dx, 0.3, dz + 0.45]).scale.set(0.8, 1, 0.8);
+  }
+  const fieldPoints = [{
+    id: 'sump', label: 'Sump Stream', lx: 3.9, ly: 1.3, lz: 3.45, half: [0.45, 0.5, 0.5],
+    stand: { lx: 3.9, lz: 5.2 }
+  }];
 
   const colliders = [
+    { lx: -3.3, lz: -1.0, r: 0.5 },
+    { lx: 3.9, lz: 4.05, r: 0.3 },
     { lx: 3.9, lz: 2.2, hw: 1.2, hd: 1.5 },
     { lx: -4.0, lz: -0.6, r: 0.6 },
     { lx: -4.0, lz: 1.6, r: 0.6 },
     { lx: 5.1, lz: 5.2, hw: 0.2, hd: 0.55 }
   ];
-  return { group: g, bench, benchLocal: [0, 0, 0], colliders };
+  return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
 /* ======================================================================
@@ -857,8 +899,19 @@ export function buildSurveyStation(w, site) {
   k.box(g, [0.7, 0.3, 0.05], w.plateMat, [0, 3.2, -2.75]);
   k.tag(g, 'SV-08', { w: 0.46, h: 0.18 }, [0, 3.2, -2.71]);
   k.chamberLamps(g);
+  g.add(w.buildLuminaire(0, 3.7, -1.0, UNDERGROUND_LAMP));
+  // AN ORE TUB AND A MINER'S PICK at the side of the plate, the host's own tools within the table's reach: the lean-in view shows them at the edge of the plate.
+  const tub = (x, z, d = 1) => {
+    k.cyl(g, [0.34, 0.28, 0.5, 14], w.drumMat, [x, 0.25, z], null, true);
+    k.cyl(g, [0.35, 0.35, 0.05, 14], w.darkSteelMat, [x, 0.5, z]);
+    pile(w, g, x, z, 0.2, 0x3a11 + Math.round(x * 7), 0.12, 6).position.y = 0.52;
+    k.strut(g, [x + d * 0.3, 0.45, z - 0.05], [x + d * 0.5, 1.05, z - 0.3], 0.025, w.timberMat, 6);
+    k.box(g, [0.34, 0.05, 0.05], w.pipeMat, [x + d * 0.5, 1.07, z - 0.3], [0, 0.5 * d, 0.2]);
+  };
+  tub(3.05, 1.7);
 
   const colliders = [
+    { lx: 3.05, lz: 1.7, r: 0.5 },
     { lx: 3.8, lz: -0.4, r: 0.6 },
     { lx: -3.9, lz: -0.6, hw: 0.9, hd: 0.6 },
     { lx: -4.7, lz: -1.7, r: 0.35 },
