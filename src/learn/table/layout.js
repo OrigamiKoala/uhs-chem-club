@@ -24,7 +24,8 @@ export function sitePlate(entry) {
  */
 export function fixtureLayout(f) {
   const r = rectOf(f, SIZES.fixture);
-  const names = Object.keys(f.dials);
+  // A dial may carry state with no control of its own (`props.hidden`): a switch that only its Run key throws.
+  const names = Object.keys(f.dials).filter(n => !f.props?.hidden?.includes(n));
   // A fixture may set its own margin and the pitch between its dials' tracks (a well whose atoms are drawn
   // on the track needs room for them); the defaults are every other fixture's.
   const m = f.props?.margin ?? 3;

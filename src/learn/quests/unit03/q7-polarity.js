@@ -1,30 +1,36 @@
 /**
  * q7-polarity.js — Ligar, bench seven: POLARITY.
  *
- * The domain rig again, with two charged plates. A molecule is put between them,
- * the field is switched on, and a molecule whose bond pulls do not cancel swings
- * round to line up. An arrow tool draws each bond's pull and their sum.
+ * The seventh bench on the world and its fifth TABLETOP (plan `bench-tabletop.md`, phase T3b). Two charged plates stand
+ * on the plate with a gap between them, and a molecule is a card that is put there. Switch Field charges the plates, and a
+ * molecule whose bond pulls do not cancel swings round to line up with the field; one whose pulls cancel stays as it stood.
+ * The ARROWS tool, laid on a molecule, draws each bond's pull and their sum. A charged rod is laid on a stream of liquid.
  *
- *   1  which end of H-Cl is more negative               -> partial charge, polar bond
- *   2  sort three bonds by how unevenly they share       -> nonpolar covalent, polar covalent
- *   3  whether CO2 turns, with two polar bonds           -> molecular dipole
- *   4  why H2O turns and CO2 does not                    -> bond dipole
- *   5  CCl4 against CHCl3                                -> (symmetry cancels)
- *   6  NH3 against BF3                                   -> (a lone pair breaks symmetry)
- *   7  sort three molecules by the field                 -> (the field sorts them)
- *   8  which liquids a charged rod will bend             -> (polar liquids bend)
+ *   1  turn H-Cl so its partial negative end faces the positive plate   -> partial charge, polar bond
+ *   2  tray three bonds by how evenly they share                        -> nonpolar covalent, polar covalent
+ *   3  predict whether CO2 turns, then switch the field on              -> molecular dipole
+ *   4  tray water and carbon dioxide by whether their arrows add        -> bond dipole
+ *   5  change one atom of CCl4 so it turns                              -> (symmetry cancels)
+ *   6  predict which of NH3 and BF3 turns, then switch the field on     -> (a lone pair breaks symmetry)
+ *   7  tray three molecules polar or nonpolar                           -> (the field sorts them)
+ *   8  tray the streams a charged rod bends                             -> (polar liquids bend)
  *
- * EVERY TURN IS `vsepr.planDipole`: the bond pulls are electronegativity
- * differences along the arm vectors `planDomains` settled, summed. A warden on
- * each plate turns, or shivers, exactly as its molecule does.
+ * EVERY TURN IS `vsepr.planDipole`: the bond pulls are electronegativity differences along the arm vectors `planDomains`
+ * settled, summed. A card between the bars is drawn swung round when the field is on and its pulls add up, as they say, and
+ * not otherwise (`kits/domain-field.js`). A stream bends toward the rod exactly when its molecules' pulls add up.
+ *
+ * FIELD (stage 8, evidence and never a lock): a stream drawn from the sump, in the pump station down the decline. At 3D On
+ * the player walks to the sump (`ligar/stations.js` `buildSumpStation`, the field point `sump`); below that the same fetch
+ * is a drawn site plate on the table.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { DomainRig } from '../../engine/instruments.js';
-import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
-import { fieldKeys, paintToggle } from '../../engine/rigcontrols.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { RIG_MOLECULES, planDipole, bondKind } from '../../engine/vsepr.js';
+import {
+  domainTable, plates, molCard, molOf, molRead, streamPiece, arrowsTool, rodTool, swapTool, dmolBehaviour, platesAround, fieldIsOn, platesOf
+} from '../../table/kits/domain.js';
 
 export const meta = { stageCount: 8 };
 
@@ -41,12 +47,22 @@ export const BUILDS_ON = ['unit03/q6-shape', 'unit03/q1-joins', 'unit02/q8-trend
 
 const SPEAKER = 'Vess';
 
-const TOOL_TEXT = {
-  arrows: { key: 'Show Arrows', what: 'Draws an arrow across each bond toward the atom that pulls the pair harder.' }
-};
-export function toolNoteFor(controlId) { return TOOL_TEXT[controlId] || null; }
+/** Every piece says what it is ("Arrows", "Charged Rod", "Swap H") and the field key is named by what it does, so no key needs a legend. */
+export function toolNoteFor() { return null; }
 
-const field = (id, label, mol, note) => ({ id, label, head: 'field', mol, note });
+/* ------------------------------------------------------------------
+   THE TABLES
+   The plates at the left, a molecule a card. A stage that sorts has its trays in a column at the right; a stage that does not
+   has the tools there. Cards start in a row under the plates (or, where the stage is a test, already between them).
+   ------------------------------------------------------------------ */
+
+const PLATES_BIG = { at: { x: 52, y: 25 }, size: { w: 100, h: 48 } };
+const PLATES_SHORT = { at: { x: 37, y: 20 }, size: { w: 70, h: 38 } };
+
+const rowAt = (i, y = 53) => ({ x: 15 + i * 28, y });
+/** The trays stand in a grid at the right of the plates: two across, as many down as the stage needs. */
+const TRAY_SPOTS = [{ x: 100, y: 15 }, { x: 133, y: 15 }, { x: 100, y: 45 }, { x: 133, y: 45 }];
+const grid = labels => labels.map(([id, label], i) => ({ id, label, at: { ...TRAY_SPOTS[i] }, size: { w: 32, h: 26 }, cell: 26 }));
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -57,21 +73,24 @@ export const STAGES = [
     title: 'Which End',
     briefing: {
       speaker: SPEAKER,
-      body: 'A molecule stands between two charged plates, the left one positive and the right one negative. Switch Field charges them, and Show Arrows draws the pull across each bond.'
+      body: 'Switch Field charges the two plates, the left one positive and the right one negative. The arrows tool, laid on a molecule, draws the pull across each bond.'
     },
-    prompt: 'Which end of the hydrogen chloride bond carries the partial negative charge?',
-    controls: ['field', 'arrows'],
-    rigs: [field('a', 'PLATE A', 'HCl', 'hydrogen 2.20 and chlorine 3.16 on the electronegativity scale')],
-    widget: { type: 'choice', label: 'The more negative end', options: [{ id: 'h', label: 'The hydrogen end' }, { id: 'cl', label: 'The chlorine end' }] },
+    prompt: 'Turn the hydrogen chloride molecule so that its partial negative end faces the positive plate.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [molCard('a', 'HCl', rowAt(0), { turn: true }), arrowsTool('ar', { x: 130, y: 14 })],
+      fixtures: [plates('pl', PLATES_BIG.at, { size: PLATES_BIG.size })]
+    }),
     hints: [
-      'Switch the field on and watch which way the molecule turns.',
-      'Compare the pull numbers — electronegativities — in the plate\'s note with the end that swings toward the positive plate.',
-      'The end that pulls the shared pair harder is the end drawn toward the positive plate.'
+      'Put the molecule between the plates and switch the field on to see which way it swings.',
+      'Compare the arrow across the bond, and the end that swings toward the positive plate, with each atom\'s pull.',
+      'The end that pulls the shared pair harder is the end that swings toward the positive plate.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose an end.' };
-      if (state.choice === 'cl') return { ok: true };
-      return { ok: false, msg: 'Switch the field on: a negative end is drawn toward the positive plate.' };
+      const b = dmolBehaviour(state.table.pieces.a, state.table);
+      if (!b.around) return { ok: false, notYet: true, msg: 'Put the molecule between the plates.' };
+      if (b.aligned) return { ok: true };
+      return { ok: false, msg: 'Switch the field on: the molecule swings round, so it is not set the way the field wants it.' };
     },
     reward: {
       log: 'The harder puller takes the minus.',
@@ -84,28 +103,29 @@ export const STAGES = [
   {
     title: 'Three Bonds',
     prompt: 'Classify each bond by how evenly it shares its electron pair.',
-    controls: ['field', 'arrows'],
-    rigs: [
-      field('a', 'PLATE A', 'NaCl', 'sodium 0.93 and chlorine 3.16 on the electronegativity scale'),
-      field('b', 'PLATE B', 'H2', 'two hydrogen atoms, 2.20 each'),
-      field('c', 'PLATE C', 'HCl', 'hydrogen 2.20 and chlorine 3.16 on the electronegativity scale')
-    ],
-    widget: {
-      type: 'bins', label: 'How the pair is shared',
-      rows: [{ id: 'a', label: 'Plate A' }, { id: 'b', label: 'Plate B' }, { id: 'c', label: 'Plate C' }],
-      bins: [{ id: 'even', label: 'Evenly' }, { id: 'uneven', label: 'Unevenly' }, { id: 'given', label: 'Handed over' }]
-    },
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [
+        molCard('a', 'NaCl', rowAt(0), { field: true }),
+        molCard('b', 'H2', rowAt(1), { field: true }),
+        molCard('c', 'HCl', rowAt(2), { field: true }),
+        arrowsTool('ar', { x: 133, y: 45 })
+      ],
+      zones: { trays: grid([['even', 'Evenly'], ['uneven', 'Unevenly'], ['given', 'Handed over']]) },
+      fixtures: [plates('pl', PLATES_SHORT.at, { size: PLATES_SHORT.size })]
+    }),
     hints: [
-      'Switch the field on for each plate and show the arrows.',
-      'Compare the size of the pull on each plate using the net figure the arrows give.',
-      'Rank the three by the size of the pull and file them from none, through some, to nearly all.'
+      'Put each molecule between the plates, lay the arrows on it and read the net pull.',
+      'Compare the size of the net pull on each card.',
+      'Rank the three by the size of the pull and tray them from none, through some, to nearly all.'
     ],
     check(state) {
-      const rows = ['a', 'b', 'c'];
-      if (rows.some(r => !state.bins[r])) return { ok: false, notYet: true, msg: 'File all three bonds.' };
+      const t = state.table;
       const want = { a: 'given', b: 'even', c: 'uneven' };
-      if (rows.every(r => state.bins[r] === want[r])) return { ok: true };
-      return { ok: false, msg: 'Compare the pull on each plate: the bond that pulls most is not shared like the one that pulls least.' };
+      const where = Object.fromEntries(Object.keys(want).map(id => [id, ['even', 'uneven', 'given'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Tray all three bonds.' };
+      if (Object.keys(want).every(id => where[id] === want[id])) return { ok: true };
+      return { ok: false, msg: 'Compare the pull on each card: the bond that pulls most is not shared like the one that pulls least.' };
     },
     reward: {
       log: 'A spectrum from even to handed over.',
@@ -117,19 +137,31 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Two Pulls, No Turn',
-    prompt: 'Does the linear carbon dioxide molecule align with the electric field?',
-    controls: ['field', 'arrows'],
-    rigs: [field('a', 'PLATE A', 'CO2', 'carbon 2.55 and oxygen 3.44 on the electronegativity scale')],
-    widget: { type: 'choice', label: 'In the field', options: [{ id: 'turns', label: 'It turns' }, { id: 'still', label: 'It does not turn' }] },
+    prompt: 'Predict whether the linear carbon dioxide molecule turns between the plates, then switch the field on.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [molCard('a', 'CO2', rowAt(0), { field: true }), arrowsTool('ar', { x: 60, y: 53 })],
+      fixtures: [plates('pl', PLATES_SHORT.at, { size: PLATES_SHORT.size })],
+      prediction: {
+        slot: { id: 'predict', label: 'In the field', at: { x: 125, y: 12 }, size: { w: 26, h: 12 } },
+        tokens: [{ id: 'turns', label: 'Turns', at: { x: 100, y: 34 }, r: 6.5 }, { id: 'stays', label: 'Does not turn', at: { x: 118, y: 52 }, r: 6.5 }]
+      }
+    }),
     hints: [
-      'Switch the field on and watch the molecule.',
-      'Show the arrows and compare the pull of one bond with the pull of the other.',
+      'Put the prediction in its place, lay the arrows on the molecule and switch the field on.',
+      'Compare the pull of one bond with the pull of the other, and the direction each arrow points.',
       'Equal pulls in exactly opposite directions leave nothing to turn the molecule.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose what it does.' };
-      if (state.choice === 'still') return { ok: true };
-      return { ok: false, msg: 'Switch the field on and watch. Show the arrows and read the net figure.' };
+      const t = state.table;
+      const token = t.prediction.token;
+      if (!token) return { ok: false, notYet: true, msg: 'Place a prediction first.' };
+      const real = molRead(t.pieces.a).polar ? 'turns' : 'stays';
+      if (token === real) return { ok: true };
+      const tested = platesOf(t).some(fieldIsOn) && platesAround(t.pieces.a, t);
+      return tested
+        ? { ok: false, msg: 'With the field on, the molecule did not move. Lay the arrows on it and compare the two bond pulls.' }
+        : { ok: false, msg: 'Switch the field on with the molecule between the plates, then compare it with the prediction.' };
     },
     reward: {
       log: 'Polar bonds, no net pull.',
@@ -141,32 +173,24 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Bent and Straight',
-    prompt: 'Why does water rotate to align with an electric field while carbon dioxide does not?',
-    controls: ['field', 'arrows'],
-    rigs: [
-      field('a', 'PLATE A', 'H2O', 'hydrogen 2.20 and oxygen 3.44 on the electronegativity scale'),
-      field('b', 'PLATE B', 'CO2', 'carbon 2.55 and oxygen 3.44 on the electronegativity scale')
-    ],
-    widget: {
-      type: 'choice', label: 'Because',
-      options: [
-        { id: 'add', label: 'The bent molecule\'s bond pulls add up, and the straight molecule\'s cancel' },
-        { id: 'polar', label: 'Water\'s bonds are polar and carbon dioxide\'s are not' },
-        { id: 'lone', label: 'Carbon dioxide has lone pairs and water does not' },
-        { id: 'size', label: 'Carbon dioxide is the bigger molecule' }
-      ]
-    },
+    prompt: 'Tray each molecule by whether its bond arrows add up to a net arrow or cancel.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [molCard('a', 'H2O', rowAt(0), { field: true }), molCard('b', 'CO2', rowAt(1), { field: true }), arrowsTool('ar', { x: 133, y: 45 })],
+      zones: { trays: grid([['add', 'Arrows add up'], ['cancel', 'Arrows cancel']]) },
+      fixtures: [plates('pl', PLATES_SHORT.at, { size: PLATES_SHORT.size })]
+    }),
     hints: [
-      'Switch the field on for both plates and show the arrows.',
-      'Compare the directions of the two bond arrows on each plate with the arrow they add up to.',
+      'Put each molecule between the plates, lay the arrows on it and switch the field on.',
+      'Compare the directions of the bond arrows on each card with the arrow they add up to.',
       'Arrows pointing different ways add to a net arrow, while arrows pointing straight against each other cancel.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a reason.' };
-      if (state.choice === 'add') return { ok: true };
-      if (state.choice === 'polar') return { ok: false, msg: 'Show the arrows on the carbon dioxide plate: both of its bonds pull.' };
-      if (state.choice === 'lone') return { ok: false, msg: 'A lone pair adds no arrow of its own. Compare the bond arrows on the two plates.' };
-      return { ok: false, msg: 'Size does not decide whether a molecule turns. Compare the arrows on the two plates.' };
+      const t = state.table;
+      const where = Object.fromEntries(['a', 'b'].map(id => [id, ['add', 'cancel'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Tray both molecules.' };
+      if (['a', 'b'].every(id => where[id] === (molRead(t.pieces[id]).polar ? 'add' : 'cancel'))) return { ok: true };
+      return { ok: false, msg: 'A molecule is under the wrong heading. Lay the arrows on each and compare the direction of the bond arrows with the arrow they add up to.' };
     },
     reward: {
       log: 'Arrows add or cancel.',
@@ -178,23 +202,31 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'One Hydrogen',
-    prompt: 'Which molecule has a net molecular dipole that aligns with the electric field, CCl4 or CHCl3?',
-    controls: ['field', 'arrows'],
-    rigs: [
-      field('a', 'PLATE A', 'CCl4', 'carbon 2.55 and chlorine 3.16 on the electronegativity scale'),
-      field('b', 'PLATE B', 'CHCl3', 'carbon 2.55, hydrogen 2.20 and chlorine 3.16 on the electronegativity scale')
-    ],
-    widget: { type: 'choice', label: 'The one that turns', options: [{ id: 'a', label: 'CCl₄' }, { id: 'b', label: 'CHCl₃' }, { id: 'both', label: 'Both' }, { id: 'neither', label: 'Neither' }] },
+    briefing: {
+      speaker: SPEAKER,
+      body: 'A swap tool, laid on a molecule, changes one of its outer atoms to the atom the tool names.'
+    },
+    prompt: 'Change one atom of the carbon tetrachloride molecule so that it turns in the field.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [
+        molCard('a', 'CCl4', rowAt(0), { field: true, extra: { hub: 'C', arms: RIG_MOLECULES.CCl4.arms.map(a => ({ ...a })) } }),
+        arrowsTool('ar', { x: 130, y: 14 }), swapTool('swh', 'H', { x: 130, y: 34 }), swapTool('swc', 'Cl', { x: 130, y: 54 })
+      ],
+      fixtures: [plates('pl', PLATES_BIG.at, { size: PLATES_BIG.size })]
+    }),
     hints: [
-      'Switch the field on for both plates.',
-      'Compare the four bonds on one plate with the four on the other, one atom at a time.',
+      'Lay a swap tool on the molecule to change one of its outer atoms, then switch the field on.',
+      'Compare the net pull of the molecule before and after the swap, with the arrows laid on it.',
       'A molecule only fails to turn when every pull on one side is matched by an equal pull on the other.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose an answer.' };
-      if (state.choice === 'b') return { ok: true };
-      if (state.choice === 'a') return { ok: false, msg: 'Switch the field on for both plates and watch which one does not move.' };
-      return { ok: false, msg: 'Switch the field on for both plates and watch them.' };
+      const read = molRead(state.table.pieces.a);
+      const changed = read.arms.filter(a => a.kind === 'atom' && a.sym !== 'Cl').length;
+      if (changed === 0) return { ok: false, notYet: true, msg: 'Swap one of the outer atoms.' };
+      if (changed > 1) return { ok: false, msg: 'More than one atom has changed. Swap the others back until only one differs.' };
+      if (read.polar) return { ok: true };
+      return { ok: false, msg: 'With that atom changed the pulls still cancel. Switch the field on and watch whether the molecule moves.' };
     },
     reward: {
       log: 'One different atom breaks the balance.',
@@ -206,26 +238,38 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Flat and Pyramid',
-    prompt: 'Which molecule rotates to align with the electric field, NH3 or BF3?',
-    controls: ['field', 'arrows'],
-    rigs: [
-      field('a', 'PLATE A', 'NH3', 'nitrogen 3.04 and hydrogen 2.20 on the electronegativity scale'),
-      field('b', 'PLATE B', 'BF3', 'boron 2.04 and fluorine 3.98 on the electronegativity scale')
-    ],
-    widget: {
-      type: 'choice', label: 'The one that turns',
-      options: [{ id: 'a', label: 'NH₃ only' }, { id: 'b', label: 'BF₃ only' }, { id: 'both', label: 'Both' }, { id: 'neither', label: 'Neither' }]
-    },
+    prompt: 'Predict which of ammonia and boron trifluoride turns between the plates, then switch the field on.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [
+        molCard('a', 'NH3', rowAt(0), { field: true }), molCard('b', 'BF3', rowAt(1), { field: true }),
+        arrowsTool('ar', { x: 80, y: 53 })
+      ],
+      fixtures: [plates('pl', { x: 44, y: 21 }, { size: { w: 84, h: 40 } })],
+      prediction: {
+        slot: { id: 'predict', label: 'The one that turns', at: { x: 119, y: 12 }, size: { w: 26, h: 12 } },
+        tokens: [
+          { id: 'nh3', label: 'NH₃ only', at: { x: 101, y: 36 }, r: 6.5 }, { id: 'bf3', label: 'BF₃ only', at: { x: 133, y: 36 }, r: 6.5 },
+          { id: 'both', label: 'Both', at: { x: 104, y: 54 }, r: 6.5 }, { id: 'neither', label: 'Neither', at: { x: 134, y: 54 }, r: 6.5 }
+        ]
+      }
+    }),
     hints: [
-      'Switch the field on for both plates and show the arrows.',
-      'Compare where the bond arrows point on each plate, flat in a plane or leaning to one side.',
+      'Lay the arrows on both molecules, then switch the field on.',
+      'Compare where the bond arrows point on each card, flat in a plane or leaning to one side.',
       'Bonds that lie in a plane round the centre can cancel, while bonds that lean to one side cannot.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose an answer.' };
-      if (state.choice === 'a') return { ok: true };
-      if (state.choice === 'b') return { ok: false, msg: 'Boron’s bonds are the strong ones, but ask whether they pull in one direction.' };
-      return { ok: false, msg: 'Switch the field on for both plates and watch what each does.' };
+      const t = state.table;
+      const token = t.prediction.token;
+      if (!token) return { ok: false, notYet: true, msg: 'Place a prediction first.' };
+      const turns = ['a', 'b'].filter(id => molRead(t.pieces[id]).polar);
+      const real = turns.length === 2 ? 'both' : turns.length === 0 ? 'neither' : turns[0] === 'a' ? 'nh3' : 'bf3';
+      if (token === real) return { ok: true };
+      const tested = platesOf(t).some(fieldIsOn) && ['a', 'b'].every(id => platesAround(t.pieces[id], t));
+      return tested
+        ? { ok: false, msg: 'With the field on, one molecule swung round and the other did not. Lay the arrows on both and compare where the bond arrows point.' }
+        : { ok: false, msg: 'Switch the field on with both molecules between the plates, then compare them with the prediction.' };
     },
     reward: {
       log: 'A lone pair makes the bonds lean one way.',
@@ -238,28 +282,27 @@ export const STAGES = [
   {
     title: 'Three Molecules',
     prompt: 'Classify each of the three molecules as polar or nonpolar.',
-    controls: ['field', 'arrows'],
-    rigs: [
-      field('a', 'PLATE A', 'XeF4', 'xenon 2.60 and fluorine 3.98 on the electronegativity scale'),
-      field('b', 'PLATE B', 'SF4', 'sulfur 2.58 and fluorine 3.98 on the electronegativity scale'),
-      field('c', 'PLATE C', 'CHCl3', 'carbon 2.55, hydrogen 2.20 and chlorine 3.16 on the electronegativity scale')
-    ],
-    widget: {
-      type: 'bins', label: 'In the field',
-      rows: [{ id: 'a', label: 'Plate A' }, { id: 'b', label: 'Plate B' }, { id: 'c', label: 'Plate C' }],
-      bins: [{ id: 'polar', label: 'Polar' }, { id: 'nonpolar', label: 'Nonpolar' }]
-    },
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [
+        molCard('a', 'XeF4', rowAt(0), { field: true }), molCard('b', 'SF4', rowAt(1), { field: true }), molCard('c', 'CHCl3', rowAt(2), { field: true }),
+        arrowsTool('ar', { x: 133, y: 45 })
+      ],
+      zones: { trays: grid([['polar', 'Polar'], ['nonpolar', 'Nonpolar']]) },
+      fixtures: [plates('pl', PLATES_SHORT.at, { size: PLATES_SHORT.size })]
+    }),
     hints: [
-      'Switch the field on for each plate and show the arrows.',
-      'Compare the net arrow on each plate, if there is one, after the bond arrows are added.',
-      'File a molecule as polar when its bond arrows add to a net arrow and as nonpolar when they cancel.'
+      'Put each molecule between the plates, lay the arrows on it and switch the field on.',
+      'Compare the net pull on each card, if there is one, after the bond arrows are added.',
+      'Tray a molecule as polar when its bond arrows add to a net arrow and as nonpolar when they cancel.'
     ],
     check(state) {
-      const rows = ['a', 'b', 'c'];
-      if (rows.some(r => !state.bins[r])) return { ok: false, notYet: true, msg: 'File all three molecules.' };
-      const want = { a: 'nonpolar', b: 'polar', c: 'polar' };
-      if (rows.every(r => state.bins[r] === want[r])) return { ok: true };
-      return { ok: false, msg: 'Switch the field on for the plate you are unsure of and watch whether it turns.' };
+      const t = state.table;
+      const ids = ['a', 'b', 'c'];
+      const where = Object.fromEntries(ids.map(id => [id, ['polar', 'nonpolar'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Tray all three molecules.' };
+      if (ids.every(id => where[id] === (molRead(t.pieces[id]).polar ? 'polar' : 'nonpolar'))) return { ok: true };
+      return { ok: false, msg: 'A molecule is under the wrong heading. Switch the field on for the one you are unsure of and watch whether it turns.' };
     },
     reward: {
       log: 'The field sorts molecules.',
@@ -271,29 +314,34 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'The Charged Rod',
-    prompt: 'Which of the liquid streams will deflect when a charged rod is brought near?',
-    controls: ['field', 'arrows'],
-    rigs: [
-      field('ccl4', 'PLATE A', 'CCl4', 'a liquid of CCl₄ molecules'),
-      field('chcl3', 'PLATE B', 'CHCl3', 'a liquid of CHCl₃ molecules'),
-      field('h2o', 'PLATE C', 'H2O', 'a liquid of H₂O molecules')
-    ],
-    widget: {
-      type: 'multi', label: 'Bent by the rod',
-      options: [{ id: 'ccl4', label: 'CCl₄' }, { id: 'chcl3', label: 'CHCl₃' }, { id: 'h2o', label: 'H₂O' }]
+    briefing: {
+      speaker: SPEAKER,
+      body: 'Lay the charged rod on a stream to bring it close. A stream drawn from the sump is waiting at the pumps.'
     },
+    prompt: 'Put the streams that a charged rod bends into the tray.',
+    widget: { type: 'table', label: 'The bench' },
+    table: domainTable({
+      pieces: [
+        streamPiece('s1', 'CCl4', { x: 24, y: 22 }), streamPiece('s2', 'CHCl3', { x: 56, y: 22 }), streamPiece('s3', 'H2O', { x: 88, y: 22 }),
+        { ...streamPiece('s4', 'H2O', { x: 120, y: 22 }, { note: 'Sump' }), hidden: true, fetchFrom: 'sump' },
+        rodTool('rod', { x: 138, y: 14 })
+      ],
+      zones: { trays: [{ id: 'bent', label: 'Bent by the rod', at: { x: 62, y: 50 }, size: { w: 90, h: 24 }, cell: 20 }] },
+      fetch: [{ id: 'sump', label: 'Sump stream', at: { x: 124, y: 54 } }]
+    }),
     hints: [
-      'Switch the field on for each liquid\'s molecules.',
-      'Compare which of the molecules turn in the field.',
+      'Lay the charged rod on one stream at a time and watch which way the stream runs.',
+      'Compare the streams that bend with what the molecules of each liquid do in the field.',
       'A charged rod bends the stream of a liquid whose molecules turn in the field.'
     ],
     check(state) {
-      if (!state.picks.length) return { ok: false, notYet: true, msg: 'Pick the liquids the rod will bend.' };
-      const want = ['chcl3', 'h2o'];
-      const got = state.picks.slice().sort();
-      if (got.join() === want.join()) return { ok: true };
-      if (got.includes('ccl4')) return { ok: false, msg: 'One of those liquids has molecules that do not turn in the field.' };
-      return { ok: false, msg: 'Another liquid has molecules that turn in the field.' };
+      const t = state.table;
+      const ids = ['s1', 's2', 's3'];
+      const bent = ids.filter(id => t.pieces[id].zone === 'tray:bent');
+      const want = ids.filter(id => molRead(t.pieces[id]).polar);
+      if (!bent.length) return { ok: false, notYet: true, msg: 'Put the streams the rod bends into the tray.' };
+      if (bent.join() === want.join()) return { ok: true };
+      return { ok: false, msg: 'A stream in the tray is not bent by the rod, or one that bends is not there. Lay the rod on each stream and watch.' };
     },
     reward: {
       log: 'Polar liquids bend; nonpolar ones do not.',
@@ -386,34 +434,46 @@ export const PRACTICE = [
 ];
 
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
+   direct actions, by drag and by two taps. A molecule is put between the plates (`gap`), the arrows or a swap laid on it, the
+   field switched, a card put in a tray: nothing here says what a molecule does in a field.
    ------------------------------------------------------------------ */
+
+const gap = (id, x = 37, y = 21) => ({ place: { piece: id, to: `free:${x},${y}` } });
+const lay = (toolId, id) => ({ join: [toolId, id] });
+const field = { run: 'pl' };
+const into = (id, zone) => ({ place: { piece: id, to: `tray:${zone}` } });
+
+/** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
+export const SOLUTIONS = [
+  [gap('a'), { flip: 'a' }],
+  [gap('a'), lay('ar', 'a'), into('a', 'given'), gap('b'), lay('ar', 'b'), into('b', 'even'), gap('c'), lay('ar', 'c'), into('c', 'uneven')],
+  [gap('a'), lay('ar', 'a'), field, { predict: 'stays' }],
+  [gap('a'), lay('ar', 'a'), into('a', 'add'), gap('b'), lay('ar', 'b'), into('b', 'cancel')],
+  [gap('a', 52, 27), lay('swh', 'a'), lay('ar', 'a'), field],
+  [gap('a', 32, 21), gap('b', 62, 21), lay('ar', 'a'), field, { predict: 'nh3' }],
+  [gap('a'), lay('ar', 'a'), into('a', 'nonpolar'), gap('b'), lay('ar', 'b'), into('b', 'polar'), gap('c'), lay('ar', 'c'), into('c', 'polar')],
+  [{ fetch: 'sump' }, lay('rod', 's1'), lay('rod', 's2'), lay('rod', 's3'), into('s2', 'bent'), into('s3', 'bent')]
+];
+
+/** A plausible wrong answer per stage. Each must be refused, and must say why. */
+export const MISSES = [
+  [gap('a')],
+  [into('a', 'uneven'), into('b', 'even'), into('c', 'given')],
+  [gap('a'), field, { predict: 'turns' }],
+  [into('a', 'cancel'), into('b', 'add')],
+  [gap('a', 52, 27), lay('swh', 'a'), lay('swh', 'a')],
+  [gap('a', 32, 21), gap('b', 62, 21), field, { predict: 'both' }],
+  [into('a', 'polar'), into('b', 'polar'), into('c', 'nonpolar')],
+  [into('s1', 'bent'), into('s3', 'bent')]
+];
+
 function blankState() { return {}; }
 
-export const SOLUTIONS = [
-  { choice: 'cl' },
-  { bins: { a: 'given', b: 'even', c: 'uneven' } },
-  { choice: 'still' },
-  { choice: 'add' },
-  { choice: 'b' },
-  { choice: 'a' },
-  { bins: { a: 'nonpolar', b: 'polar', c: 'polar' } },
-  { picks: ['chcl3', 'h2o'] }
-];
-
-export const MISSES = [
-  { choice: 'h' },
-  { bins: { a: 'uneven', b: 'even', c: 'given' } },
-  { choice: 'turns' },
-  { choice: 'polar' },
-  { choice: 'a' },
-  { choice: 'b' },
-  { bins: { a: 'polar', b: 'polar', c: 'nonpolar' } },
-  { picks: ['ccl4', 'h2o'] }
-];
-
+/** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  return { ...blankAnswer(STAGES[i]), ...blankState(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -421,71 +481,13 @@ export function stateFor(i, overrides) {
    ================================================================== */
 
 export function mount(container, ctx) {
-  let rig = null;
-  let runner = null;
-  let fieldOn = false;
-  let arrowsOn = false;
-
-  function paintAll() {
-    paintToggle(runner.frame.el.controls, 'field', fieldOn);
-    paintToggle(runner.frame.el.controls, 'arrows', arrowsOn);
-  }
-
-  /** Every warden answers the field its molecule stands in. */
-  function reactAll(quiet = false) {
-    for (const r of runner.stage.rigs) {
-      runner.frame.foeReact(r.id, { rig: 'field', mol: r.mol, on: fieldOn }, quiet);
-    }
-  }
-
-  function readNow() {
-    const rows = runner.stage.rigs.map(r => {
-      const d = planDipole(r.mol);
-      return `${r.label}: ${fieldOn ? (d.polar ? 'turned to line up' : 'did not turn') : 'field off'}${arrowsOn ? `, net pull ${d.mag.toFixed(2)}` : ''}`;
-    });
-    runner.readout('Plates // reading', `${rows.join('. ')}.`);
-  }
-
-  function onProbe(hit) {
-    if (hit.kind === 'field' || hit.kind === 'arrows') {
-      fieldOn = rig.cfg.field; arrowsOn = rig.cfg.arrows;
-      paintAll(); reactAll(); readNow();
-    }
-  }
-
-  function onTool(tool) {
-    if (tool === 'field') {
-      fieldOn = !fieldOn;
-      rig.setField(fieldOn);
-      paintAll(); reactAll(); readNow();
-    } else if (tool === 'arrows') {
-      arrowsOn = !arrowsOn;
-      rig.setArrows(arrowsOn);
-      paintAll(); readNow();
-    } else if (tool === 'turn') {
-      rig.turn();
-    }
-  }
-
-  function onLoad(stage, i, r) {
-    fieldOn = false; arrowsOn = false;
-    rig.setPlates(stage.rigs, { field: false, arrows: false });
-    rig.setSelectable(false);
-    r.setControls(fieldKeys(), onTool);
-    paintAll();
-    r.readout(null, null, { idleHead: 'Plates // standby', idle: 'The plates are off. Switch the field on.' });
-    reactAll(true);
-  }
-
-  runner = createRunner(container, ctx, {
+  const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    setup: r => { rig = DomainRig(r.frame.instrumentHost, { onProbe }); },
-    onLoad,
-    onDispose: () => rig?.dispose()
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
   runner.start();
   return { dispose: () => runner.dispose() };
 }
 
-export { RIG_MOLECULES, planDipole, bondKind };
+/* Exported for `verify:learn`, which holds every graded figure to the planners. */
+export { RIG_MOLECULES, planDipole, bondKind, molOf, molRead };

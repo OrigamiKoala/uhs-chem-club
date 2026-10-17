@@ -2137,6 +2137,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   const [q3, q4, q5, q6, q7, q8, q9] = await Promise.all(['q3-distance', 'q4-dots', 'q5-resonance', 'q6-shape', 'q7-polarity', 'q8-hybrid', 'q9-orbitals'].map(get));
   const same = (a, b, what) => { if (String(a) !== String(b)) fail(`${what}: graded ${a}, the real answer is ${b}`); };
   const near = (a, b, tol, what) => { if (Math.abs(a - b) > tol) fail(`${what}: graded ${a}, the real figure is ${b}`); };
+  const holds = (c, what) => { if (!c) fail(what); };
 
   if (q3) {
     const { PAIRS, LATTICES, morse, byLatticeEnergy, coulombIndex } = BONDDATA;
@@ -2372,66 +2373,237 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   }
 
   if (q6) {
-    const { planDomains, bondAngles, SHAPES, RIG_MOLECULES } = VSEPR;
-    const armsOf = rig => rig.stock.flatMap(s => Array.from({ length: s.n }, () => (s.kind === 'lone' ? { kind: 'lone' } : { kind: 'atom', sym: s.sym, mult: s.mult || 1 })));
-    const stagePlan = (st, id = 'a') => planDomains(armsOf(st.rigs.find(r => r.id === id)));
-    same(bondAngles(stagePlan(q6.STAGES[0])).join(), q6.SOLUTIONS[0].choice, 'unit03/q6-shape stage 1 (two arms)');
-    same(bondAngles(stagePlan(q6.STAGES[1])).join(), q6.SOLUTIONS[1].choice, 'unit03/q6-shape stage 2 (four arms)');
-    same(stagePlan(q6.STAGES[2]).shape, 'trigonal pyramidal', 'unit03/q6-shape stage 3 (NH3)');
-    same(bondAngles(stagePlan(q6.STAGES[3])).join(), q6.SOLUTIONS[3].choice, 'unit03/q6-shape stage 4 (water)');
-    same(stagePlan(q6.STAGES[4]).n, q6.SOLUTIONS[4].choice, 'unit03/q6-shape stage 5 (CO2\'s domains)');
-    // Stage 6: the lone pair on SF4's hub sits round the middle: 90 degrees to the two axial arms, 120 to the other two.
-    const sf4 = stagePlan(q6.STAGES[5], 'b');
-    const lonev = sf4.vectors.find(v => v.kind === 'lone').v;
-    const ang = v => Math.round(Math.acos(lonev[0] * v[0] + lonev[1] * v[1] + lonev[2] * v[2]) * 180 / Math.PI);
-    same(sf4.vectors.filter(v => v.kind === 'atom').map(v => ang(v.v)).sort().join(), '120,120,90,90', 'unit03/q6-shape stage 6 (the lone pair\'s angles to the atoms)');
-    // Stage 7: XeF4's two lone pairs sit opposite each other.
-    const xe = stagePlan(q6.STAGES[6], 'b');
-    const [la, lb] = xe.vectors.filter(v => v.kind === 'lone').map(v => v.v);
-    near(la[0] * lb[0] + la[1] * lb[1] + la[2] * lb[2], -1, 1e-9, 'unit03/q6-shape stage 7 (the lone pairs of XeF4 are opposite)');
-    same(xe.shape, 'square planar', 'unit03/q6-shape stage 7 (XeF4)');
-    // Stage 8: the shape the atoms make, not the shape the domains make.
-    const want = { a: 'linear', b: 'trigonal planar', c: 'square planar' };
-    const got = Object.fromEntries(['a', 'b', 'c'].map(id => [id, stagePlan(q6.STAGES[7], id).shape]));
-    same(JSON.stringify(got), JSON.stringify(want), 'unit03/q6-shape stage 8 (molecular geometry)');
-    same(SHAPES['2-3'].electron, 'trigonal bipyramidal', 'unit03/q6-shape stage 8 card (XeF2\'s electron geometry)');
-    void RIG_MOLECULES;
+    const { planDomains, bondAngles, SHAPES, RIG_MOLECULES, angleBetween, domainStrain, arrangements, bestStrain, IDEAL } = VSEPR;
+    const DOM = await import('../src/learn/table/kits/domain.js');
+    const end = i => TABLE.runScript(TABLE.createTable(q6.STAGES[i].table, q6.STAGES[i].title), q6.SOLUTIONS[i], { strict: true });
+    const dial = (t, id) => t.fixtures[id].dials.value.value;
+    // 1, 2, 4. an angle is set against what the planner settles the arms at, and the arms the stage hands over are the ones that settle
+    {
+      const t1 = end(0); const r1 = DOM.hubRead(t1, 'hub');
+      same(r1.n, 2, 'unit03/q6-shape stage 1 (two arms are on the hub)');
+      near(dial(t1, 'mark'), angleBetween(r1.plan, 0, 1), 1.5, 'unit03/q6-shape stage 1 (two arms, degrees)');
+      const t2 = end(1); const r2 = DOM.hubRead(t2, 'hub');
+      same(r2.n, 4, 'unit03/q6-shape stage 2 (four arms are on the hub)');
+      same(bondAngles(r2.plan).join(), '109.5', 'unit03/q6-shape stage 2 (four arms, every pair)');
+      near(dial(t2, 'mark'), 109.5, 1.5, 'unit03/q6-shape stage 2 (the marker)');
+      const t4 = end(3); const r4 = DOM.hubRead(t4, 'hub');
+      same(bondAngles(r4.plan).join(), '104.5', 'unit03/q6-shape stage 4 (water)');
+      near(dial(t4, 'mark'), 104.5, 1.5, 'unit03/q6-shape stage 4 (the marker)');
+      same(DOM.hubRead(end(4), 'hub').n, dial(end(4), 'mark'), 'unit03/q6-shape stage 5 (CO2\'s domains)');
+    }
+    // 3. ammonia's atoms are a pyramid only with its lone pair on the hub; without it they lie flat
+    {
+      const r3 = DOM.hubRead(end(2), 'hub');
+      same(r3.shape, 'trigonal pyramidal', 'unit03/q6-shape stage 3 (NH3)');
+      holds(r3.height > 0.1, 'unit03/q6-shape stage 3: the atoms of the solution do not lean');
+      const flat = planDomains([{ kind: 'atom', sym: 'H' }, { kind: 'atom', sym: 'H' }, { kind: 'atom', sym: 'H' }]);
+      same(VSEPR.hubHeight(flat), 0, 'unit03/q6-shape stage 3 (three atoms alone lie flat)');
+    }
+    // 6, 7. the frame: where a lone pair sits is whatever makes the strain least, and that is where the planner puts it
+    {
+      const lowest = (a, l) => {
+        const arr = arrangements(a, l).map(k => ({ k, s: domainStrain(k) }));
+        const best = Math.min(...arr.map(x => x.s));
+        return arr.filter(x => x.s - best < 1e-3);
+      };
+      const lonesAt = (n, k) => k.map((c, i) => (c === 'lone' ? IDEAL[n][i] : null)).filter(Boolean);
+      // five domains, one lone pair: every lowest arrangement puts it round the middle (y = 0), and so does planDomains
+      const five = lowest(4, 1);
+      holds(five.length === 3 && five.every(x => Math.abs(lonesAt(5, x.k)[0][1]) < 1e-9), 'unit03/q6-shape stage 6: the lowest strain is not the lone pair round the middle');
+      const sf4 = planDomains(RIG_MOLECULES.SF4.arms);
+      holds(Math.abs(sf4.vectors.find(v => v.kind === 'lone').v[1]) < 1e-9, 'unit03/q6-shape stage 6: planDomains does not put the lone pair round the middle');
+      // six domains, two lone pairs: every lowest arrangement puts them opposite, and so does planDomains
+      const six = lowest(4, 2);
+      holds(six.length === 3 && six.every(x => { const [a, b] = lonesAt(6, x.k); return Math.abs(a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + 1) < 1e-9; }), 'unit03/q6-shape stage 7: the lowest strain is not the lone pairs opposite');
+      const xe = planDomains(RIG_MOLECULES.XeF4.arms);
+      const [la, lb] = xe.vectors.filter(v => v.kind === 'lone').map(v => v.v);
+      near(la[0] * lb[0] + la[1] * lb[1] + la[2] * lb[2], -1, 1e-9, 'unit03/q6-shape stage 7 (the lone pairs of XeF4 are opposite)');
+      same(xe.shape, 'square planar', 'unit03/q6-shape stage 7 (XeF4)');
+      // a lone pair in the middle reads fewer close atoms than at an end; the solution is lowest, the miss is not
+      for (const [i, n] of [[5, 5], [6, 6]]) {
+        const good = DOM.frameRead(end(i), 'fr');
+        holds(good.full && good.lowest, `unit03/q6-shape stage ${i + 1}: the solution is not the lowest strain`);
+        const bad = DOM.frameRead(TABLE.runScript(TABLE.createTable(q6.STAGES[i].table, q6.STAGES[i].title), q6.MISSES[i], { strict: true }), 'fr');
+        holds(bad.full && !bad.lowest && bad.strain > good.strain, `unit03/q6-shape stage ${i + 1}: the miss is not higher in strain`);
+        same(good.n, n, `unit03/q6-shape stage ${i + 1} (the frame's sockets)`);
+      }
+      // the frame's slots are the polyhedron: sockets far enough apart to hold a piece each, all inside the frame
+      for (const [i, n] of [[5, 5], [6, 6]]) {
+        const t = TABLE.createTable(q6.STAGES[i].table, q6.STAGES[i].title);
+        const s = Object.values(t.zones.slots);
+        const fx = Object.values(t.fixtures)[0];
+        holds(s.length === n, `unit03/q6-shape stage ${i + 1}: ${s.length} sockets for ${n} domains`);
+        for (const a of s) {
+          holds(Math.abs(a.at.x - fx.at.x) + 6 < fx.size.w / 2 && Math.abs(a.at.y - fx.at.y) + 6 < fx.size.h / 2, `unit03/q6-shape stage ${i + 1}: socket ${a.id} is not inside the frame`);
+          for (const b of s) if (a !== b && Math.hypot(a.at.x - b.at.x, a.at.y - b.at.y) < 12.6) fail(`unit03/q6-shape stage ${i + 1}: sockets ${a.id} and ${b.id} are too close for two pieces`);
+        }
+      }
+    }
+    // Every molecule the hub can hold settles with its arms apart and inside the plate: a piece each, never one on another.
+    {
+      const specs = Object.entries(RIG_MOLECULES).filter(([, m]) => m.arms.length >= 1);
+      for (const [id, m] of specs) {
+        const hs = DOM.hubSet('hub', m.hub, { x: 40, y: 32 }, { turner: { x: 108, y: 35 } });
+        const arms = m.arms.map((a, i) => (a.kind === 'lone' ? DOM.balloonPiece(`x${i}`, { x: 100, y: 10 }) : DOM.armPiece(`x${i}`, a.sym, { x: 100, y: 10 }, a.mult || 1)));
+        let t = TABLE.createTable(DOM.domainTable({ pieces: [hs.piece, ...arms], fixtures: [hs.fixture, hs.turner] }), id);
+        for (const a of arms) t = TABLE.apply(t, { join: [a.id, 'hub'] });
+        const at = arms.map(a => t.pieces[a.id].at);
+        const box = TABLE.createTable(DOM.domainTable({ pieces: [], fixtures: [hs.fixture] }), id).fixtures['hub-plate'];
+        at.forEach((p, i) => {
+          holds(Math.abs(p.x - 40) + DOM.ARM_R <= box.size.w / 2 && Math.abs(p.y - 32) + DOM.ARM_R <= box.size.h / 2, `kit: ${id}'s arm ${i + 1} settles outside its plate`);
+          for (let j = i + 1; j < at.length; j++) if (Math.hypot(p.x - at[j].x, p.y - at[j].y) < 2 * DOM.ARM_R - 0.1) fail(`kit: ${id}'s arms ${i + 1} and ${j + 1} settle on top of each other`);
+          if (Math.hypot(p.x - 40, p.y - 32) < DOM.HUB_R + DOM.ARM_R - 0.5) fail(`kit: ${id}'s arm ${i + 1} settles on the hub`);
+        });
+      }
+    }
+    // 8. the shape the atoms make, not the shape the domains make
+    {
+      const shapes = { a: 'linear', b: 'trigonal planar', c: 'square planar' };
+      const t = end(7);
+      for (const id of ['a', 'b', 'c']) {
+        const read = q6.molRead(t.pieces[id]);
+        same(read.shape, shapes[id], `unit03/q6-shape stage 8 (${id}: molecular geometry)`);
+        same(t.pieces[id].zone, `tray:${{ 'linear': 'linear', 'trigonal planar': 'planar', 'square planar': 'square' }[read.shape]}`, `unit03/q6-shape stage 8 (${id}: the tray the solution uses)`);
+      }
+      same(SHAPES['2-3'].electron, 'trigonal bipyramidal', 'unit03/q6-shape stage 8 card (XeF2\'s electron geometry)');
+      same(SHAPES['4-2'].electron, 'octahedral', 'unit03/q6-shape stage 8 (XeF4\'s electron geometry is not its shape)');
+    }
   }
 
   if (q7) {
-    const { planDipole, EN } = VSEPR;
+    const { planDipole, EN, bondKind } = VSEPR;
+    const DOM = await import('../src/learn/table/kits/domain.js');
     const polar = m => planDipole(m).polar;
-    if (!(EN.Cl > EN.H)) fail('unit03/q7-polarity stage 1: chlorine does not pull harder than hydrogen');
-    const mags = Object.fromEntries(['NaCl', 'H2', 'HCl'].map(m => [m, planDipole(m).mag]));
-    if (!(mags.NaCl > mags.HCl && mags.HCl > mags.H2 && mags.H2 === 0)) fail('unit03/q7-polarity stage 2: the three bonds are not ordered by their pull');
-    same(polar('CO2'), false, 'unit03/q7-polarity stage 3 (CO2 turns)');
-    same(`${polar('H2O')}/${polar('CO2')}`, 'true/false', 'unit03/q7-polarity stage 4 (water against carbon dioxide)');
-    same(`${polar('CCl4')}/${polar('CHCl3')}`, 'false/true', 'unit03/q7-polarity stage 5');
-    same(`${polar('NH3')}/${polar('BF3')}`, 'true/false', 'unit03/q7-polarity stage 6');
-    for (const [id, bid] of Object.entries(q7.SOLUTIONS[6].bins)) {
-      const mol = q7.STAGES[6].rigs.find(r => r.id === id).mol;
-      same(bid, polar(mol) ? 'polar' : 'nonpolar', `unit03/q7-polarity stage 7 (${mol})`);
+    const end = i => TABLE.runScript(TABLE.createTable(q7.STAGES[i].table, q7.STAGES[i].title), q7.SOLUTIONS[i], { strict: true });
+    const start = i => TABLE.createTable(q7.STAGES[i].table, q7.STAGES[i].title);
+    // 1. chlorine pulls harder; the card is set so that it stays when the field comes on, and it does not start that way
+    {
+      if (!(EN.Cl > EN.H)) fail('unit03/q7-polarity stage 1: chlorine does not pull harder than hydrogen');
+      holds(DOM.dmolBehaviour(end(0).pieces.a, end(0)).aligned, 'unit03/q7-polarity stage 1: the solution is not set the way the field wants it');
+      const s0 = start(0);
+      const put = TABLE.apply(s0, { place: { piece: 'a', to: 'free:37,21' } });
+      holds(!DOM.dmolBehaviour(put.pieces.a, put).aligned, 'unit03/q7-polarity stage 1: the card starts already set the way the field wants it');
     }
-    const bent = q7.SOLUTIONS[7].picks.slice().sort();
-    const real = q7.STAGES[7].rigs.filter(r => polar(r.mol)).map(r => r.id).sort();
-    same(bent.join(), real.join(), 'unit03/q7-polarity stage 8 (the liquids a charged rod bends)');
+    // 2. three bonds, in order of how unevenly they share
+    {
+      const t = end(1);
+      const kind = { a: 'ionic', b: 'nonpolar', c: 'polar' };
+      for (const id of ['a', 'b', 'c']) {
+        const m = q7.molOf(t.pieces[id]);
+        same(bondKind(m.hub, m.arms[0].sym), kind[id], `unit03/q7-polarity stage 2 (${m.hub}-${m.arms[0].sym})`);
+        same(t.pieces[id].zone, `tray:${{ ionic: 'given', nonpolar: 'even', polar: 'uneven' }[kind[id]]}`, `unit03/q7-polarity stage 2 (${id} is trayed by its bond)`);
+      }
+      const mags = Object.fromEntries(['NaCl', 'H2', 'HCl'].map(m => [m, planDipole(m).mag]));
+      if (!(mags.NaCl > mags.HCl && mags.HCl > mags.H2 && mags.H2 === 0)) fail('unit03/q7-polarity stage 2: the three bonds are not ordered by their pull');
+    }
+    // 3. 4. 6. 7. who turns
+    same(polar('CO2'), false, 'unit03/q7-polarity stage 3 (CO2 turns)');
+    same(end(2).prediction.token, 'stays', 'unit03/q7-polarity stage 3 (the prediction)');
+    same(`${polar('H2O')}/${polar('CO2')}`, 'true/false', 'unit03/q7-polarity stage 4 (water against carbon dioxide)');
+    same([end(3).pieces.a.zone, end(3).pieces.b.zone].join(), 'tray:add,tray:cancel', 'unit03/q7-polarity stage 4 (the trays)');
+    same(`${polar('NH3')}/${polar('BF3')}`, 'true/false', 'unit03/q7-polarity stage 6');
+    same(end(5).prediction.token, 'nh3', 'unit03/q7-polarity stage 6 (the prediction)');
+    // 5. one atom of CCl4 changed: the molecule that cancelled does not, and the swap is the planner's own (CHCl3)
+    {
+      same(polar('CCl4'), false, 'unit03/q7-polarity stage 5 (CCl4 cancels)');
+      const r = q7.molRead(end(4).pieces.a);
+      same(r.label, 'CHCl₃', 'unit03/q7-polarity stage 5 (one chlorine swapped for hydrogen)');
+      same(r.polar, polar('CHCl3'), 'unit03/q7-polarity stage 5 (the swapped molecule is as CHCl3 is)');
+      holds(r.polar, 'unit03/q7-polarity stage 5: the swapped molecule does not turn');
+    }
+    const t7 = end(6);
+    for (const [id, mol] of [['a', 'XeF4'], ['b', 'SF4'], ['c', 'CHCl3']]) same(t7.pieces[id].zone, `tray:${polar(mol) ? 'polar' : 'nonpolar'}`, `unit03/q7-polarity stage 7 (${mol})`);
+    // 8. the streams that bend are the ones whose molecules turn
+    {
+      const t = end(7);
+      const real = ['s1', 's2', 's3'].filter(id => polar(t.pieces[id].props.mol));
+      same(['s1', 's2', 's3'].filter(id => t.pieces[id].zone === 'tray:bent').join(), real.join(), 'unit03/q7-polarity stage 8 (the liquids a charged rod bends)');
+      holds(polar(t.pieces.s4.props.mol), 'unit03/q7-polarity stage 8: the stream from the sump does not bend');
+    }
+    // The gap the cards are put in holds a card, in every stage that has plates.
+    q7.STAGES.forEach((st, i) => {
+      for (const f of Object.values(start(i).fixtures).filter(x => x.kind === 'plates')) {
+        const g = DOM.gapArea(f);
+        holds(g.x1 - g.x0 >= 2 * DOM.MOL_RECT.hw + 2 && g.y1 - g.y0 >= 2 * DOM.MOL_RECT.hh - 1, `unit03/q7-polarity stage ${i + 1}: the gap between the plates is too small for a card`);
+      }
+    });
   }
 
   if (q8) {
-    const { planMix, planTwist, planDomains, countSigmaPi, RIG_MOLECULES } = VSEPR;
-    same(planMix(q8.SOLUTIONS[1].mix).lobes, 4, 'unit03/q8-hybrid stage 2 (sp3 makes four lobes)');
-    // Stages 3 and 4 sort molecules by the lobes the central atom needs: one lobe per arm of the hub on the plate.
-    for (const i of [2, 3]) {
-      const names = { two: 2, three: 3, four: 4 };
-      for (const row of q8.STAGES[i].widget.rows) {
-        const plate = q8.STAGES[i].rigs.find(r => r.id === row.id);
-        same(names[q8.SOLUTIONS[i].bins[row.id]], planDomains(RIG_MOLECULES[plate.mol].arms).n, `unit03/q8-hybrid stage ${i + 1} (${plate.mol} needs the graded number of lobes)`);
+    const { planMix, planBlend, planTwist, planDomains, countSigmaPi, RIG_MOLECULES, SKELETONS } = VSEPR;
+    const DOM = await import('../src/learn/table/kits/domain.js');
+    const end = i => TABLE.runScript(TABLE.createTable(q8.STAGES[i].table, q8.STAGES[i].title), q8.SOLUTIONS[i], { strict: true });
+    const start = i => TABLE.createTable(q8.STAGES[i].table, q8.STAGES[i].title);
+    // 1. carbon as it stands has two single electrons, so it takes two hydrogen atoms and refuses a third; methane has four arms
+    {
+      const t0 = start(0);
+      const singles = Object.values(t0.pieces).filter(p => p.kind === 'orb' && p.props.atom === 'c' && p.props.e === 1).length;
+      same(singles, 2, 'unit03/q8-hybrid stage 1 (carbon\'s single electrons)');
+      same(planDomains(RIG_MOLECULES.CH4.arms).n, 4, 'unit03/q8-hybrid stage 1 (methane\'s arms)');
+      const t = end(0);
+      same(DOM.bondsBuilt(t).sigma, 2, 'unit03/q8-hybrid stage 1 (two bonds made)');
+      const third = TABLE.apply(t, { join: ['h3', 'cpz'] });
+      holds(!third.last.joined, 'unit03/q8-hybrid stage 1: a hydrogen atom bonded to carbon\'s empty orbital');
+      const fourth = TABLE.apply(t, { join: ['h3', 'cs'] });
+      holds(!fourth.last.joined, 'unit03/q8-hybrid stage 1: a hydrogen atom bonded to carbon\'s full s orbital');
+    }
+    // 2. 8. what a bowl makes is as many lobes as orbitals mixed
+    {
+      same(planBlend(1, 3, 0).lobes, planDomains(RIG_MOLECULES.CH4.arms).n, 'unit03/q8-hybrid stage 2 (sp3 makes four lobes)');
+      same(planMix(3).lobes, 4, 'unit03/q8-hybrid stage 2 (planMix agrees)');
+      same(DOM.bowlRead(end(1), 'mx').hybrid, 'sp3', 'unit03/q8-hybrid stage 2 (the bowl)');
+      same(planBlend(0, 3, 0).lobes, 0, 'unit03/q8-hybrid: p orbitals alone blend into nothing new');
+      same(DOM.bowlRead(end(7), 'ma').lobes, planDomains(RIG_MOLECULES.PCl5.arms).n, 'unit03/q8-hybrid stage 8 (PCl5\'s lobes)');
+      same(DOM.bowlRead(end(7), 'mb').lobes, planDomains(RIG_MOLECULES.SF6.arms).n, 'unit03/q8-hybrid stage 8 (SF6\'s lobes)');
+      same(`${DOM.bowlRead(end(7), 'ma').hybrid}/${DOM.bowlRead(end(7), 'mb').hybrid}`, 'sp3d/sp3d2', 'unit03/q8-hybrid stage 8 (the names the card earns)');
+      for (const i of [1, 7]) for (const f of Object.values(start(i).fixtures).filter(x => x.kind === 'mixbowl')) {
+        const bowl = start(i).zones.containers[f.props.zone];
+        const cols = Math.max(1, Math.floor(bowl.size.w / bowl.cell));
+        const rows = Math.max(1, Math.floor(bowl.size.h / bowl.cell));
+        holds(cols * rows >= 6, `unit03/q8-hybrid stage ${i + 1}: ${f.id}'s bowl holds ${cols * rows} orbitals, fewer than the six an atom has`);
       }
     }
-    q8.STAGES.forEach((st, i) => { if (st.rigs[0].want != null && q8.SOLUTIONS[i].mix) same(planMix(q8.SOLUTIONS[i].mix).lobes, st.rigs[0].want, `unit03/q8-hybrid stage ${i + 1} (lobes match the arms wanted)`); });
-    const sp = countSigmaPi('HCN');
-    same(`${sp.sigma}-${sp.pi}`, q8.SOLUTIONS[5].choice, 'unit03/q8-hybrid stage 6 (sigma and pi bonds in HCN)');
-    same(planTwist(q8.STAGES[6].rigs.find(r => r.id === q8.SOLUTIONS[6].choice).bond).free, true, 'unit03/q8-hybrid stage 7 (the bond that turns)');
+    // 3. 4. the lobes follow the arms, and each card prints the arms the planner counts
+    for (const i of [2, 3]) {
+      const t = end(i);
+      for (const id of ['a', 'b', 'c']) same({ two: 2, three: 3, four: 4 }[t.pieces[id].zone.slice(5)], planDomains(RIG_MOLECULES[t.pieces[id].props.mol].arms).n, `unit03/q8-hybrid stage ${i + 1} (${t.pieces[id].props.mol} needs the graded number of lobes)`);
+    }
+    // 5. 6. ethene and hydrogen cyanide: each atom has the orbitals the planner says, and the bonds that can be built are the molecule's own
+    {
+      const ethene = planDomains(RIG_MOLECULES.C2H4.arms);
+      same(`${ethene.n}/${planMix(ethene.n - 1).leftoverP}`, '3/1', 'unit03/q8-hybrid stage 5 (an ethene carbon: three lobes and one p left over)');
+      const t5 = start(4);
+      for (const c of ['c1', 'c2']) {
+        const mine = Object.values(t5.pieces).filter(p => p.props.atom === c);
+        same(`${mine.filter(p => p.props.type === 'sp2').length}/${mine.filter(p => p.props.type === 'p').length}`, '3/1', `unit03/q8-hybrid stage 5 (${c}'s orbitals)`);
+      }
+      const b5 = DOM.bondsBuilt(end(4));
+      same(`${b5.sigma}/${b5.pi}`, `1/${SKELETONS.C2H4.find(b => b[0] === 'C' && b[1] === 'C')[2] - 1}`, 'unit03/q8-hybrid stage 5 (the carbons\' own bonds: one end to end, the rest side by side)');
+      const hcn = planDomains(RIG_MOLECULES.HCN.arms);
+      same(`${hcn.n}/${planMix(hcn.n - 1).leftoverP}`, '2/2', 'unit03/q8-hybrid stage 6 (HCN\'s carbon: two lobes and two p left over)');
+      const t6 = start(5);
+      const of = a => Object.values(t6.pieces).filter(p => p.props.atom === a);
+      same(`${of('c').filter(p => p.props.type === 'sp').length}/${of('c').filter(p => p.props.type === 'p').length}`, '2/2', 'unit03/q8-hybrid stage 6 (carbon\'s orbitals)');
+      same(`${of('n').filter(p => p.props.type === 'sp').length}/${of('n').filter(p => p.props.type === 'p').length}`, '2/2', 'unit03/q8-hybrid stage 6 (nitrogen\'s orbitals: a lobe for its bond and one for its lone pair)');
+      const sp = countSigmaPi('HCN');
+      const e6 = end(5);
+      const b6 = DOM.bondsBuilt(e6);
+      same(`${b6.sigma}-${b6.pi}`, `${sp.sigma}-${sp.pi}`, 'unit03/q8-hybrid stage 6 (sigma and pi bonds in HCN)');
+      holds(Object.values(e6.pieces).every(p => p.kind !== 'orb' || p.props.e !== 1 || DOM.bondedOrb(e6, p)), 'unit03/q8-hybrid stage 6: an orbital with a single electron is left unbonded in the solution');
+      // The lone pair's lobe, an empty or full orbital and a mismatched pair of p orbitals are all refused by the planner.
+      const tryJoin = (a, b) => TABLE.apply(start(5), { join: [a, b] }).last.joined;
+      holds(!tryJoin('nl_x', 'cl_n'), 'unit03/q8-hybrid stage 6: the lone pair\'s lobe bonded');
+      holds(!tryJoin('cpy', 'npz'), 'unit03/q8-hybrid stage 6: p orbitals on different axes overlapped side by side');
+      holds(!tryJoin('h', 'cl_n'), 'unit03/q8-hybrid stage 6: hydrogen bonded to the lobe that points at nitrogen');
+    }
+    // 7. a single bond turns and a double bond does not
+    {
+      const t = end(6);
+      same(DOM.twistRead(t, 'tw1').free, planTwist('single').free, 'unit03/q8-hybrid stage 7 (the single bond turns)');
+      same(DOM.twistRead(t, 'tw2').free, planTwist('double').free, 'unit03/q8-hybrid stage 7 (the double bond holds)');
+      same(DOM.twistRead(t, 'tw1').angle, 90, 'unit03/q8-hybrid stage 7 (ethane\'s far end is a quarter turn round)');
+      same(DOM.twistRead(t, 'tw2').angle, 0, 'unit03/q8-hybrid stage 7 (ethene\'s far end has not moved)');
+    }
     same(planDomains(RIG_MOLECULES.PCl5.arms).n, 5, 'unit03/q8-hybrid stage 8 (PCl5\'s domains)');
     same(planDomains(RIG_MOLECULES.SF6.arms).n, 6, 'unit03/q8-hybrid stage 8 (SF6\'s domains)');
   }

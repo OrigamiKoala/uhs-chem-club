@@ -170,15 +170,17 @@ function checkTableStage(label, stage, solution, misses) {
     ...Object.values(t0.zones.containers).map(z => [`container ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.container)]),
     ...(t0.zones.rail ? [['the rail', SNAP.rectOf(t0.zones.rail, SNAP.SIZES.rail)]] : []),
     ['the recorder strip', SNAP.rectOf(t0.recorder.box, { w: 30, h: 18 })],
-    ...Object.values(t0.fixtures).map(z => [`fixture ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.fixture)]),
+    // A fixture that is `props.backdrop` is a surface things stand on (an atom's plate, a mixing bowl's, a frame of sockets):
+    // pieces start on it and zones lie in it. It must still be wholly on the table and keep clear of every other fixture.
+    ...Object.values(t0.fixtures).map(z => [`fixture ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.fixture), Boolean(z.props?.backdrop)]),
     ...Object.values(t0.fetch).filter(z => z.at).map(z => [`site plate ${z.id}`, SNAP.rectOf(z, SNAP.SIZES.site)])
   ];
   // A piece that starts loose starts on open table: clear of every zone and of its neighbours.
   const loose = Object.values(t0.pieces).filter(p => !p.zone);
   for (const p of loose) {
-    for (const [name, r] of rects) {
-      // A fixed piece stands ON a fixture by design (the atoms of a slate stand on its board).
-      if (p.fixed && name.startsWith('fixture ')) continue;
+    for (const [name, r, backdrop] of rects) {
+      // A fixed piece stands ON a fixture by design (the atoms of a slate stand on its board), and so does anything on a backdrop.
+      if ((p.fixed || backdrop) && name.startsWith('fixture ')) continue;
       if (p.at.x > r.x0 && p.at.x < r.x1 && p.at.y > r.y0 && p.at.y < r.y1) fail(`${label}: loose piece ${p.id} starts inside ${name}`);
     }
   }
@@ -194,8 +196,10 @@ function checkTableStage(label, stage, solution, misses) {
   }
   for (let i = 0; i < rects.length; i++) {
     for (let j = i + 1; j < rects.length; j++) {
-      const [na, a] = rects[i];
-      const [nb, b] = rects[j];
+      const [na, a, ba] = rects[i];
+      const [nb, b, bb] = rects[j];
+      // A zone may lie on a backdrop fixture (a bowl in a mixer); two fixtures never overlap.
+      if ((ba && !nb.startsWith('fixture ')) || (bb && !na.startsWith('fixture '))) continue;
       if (a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1) fail(`${label}: ${na} overlaps ${nb}`);
     }
   }

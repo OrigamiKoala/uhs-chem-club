@@ -185,7 +185,9 @@ export function joinCandidates(state, kit, id, at) {
     // another is just set down.
     if (kit.kinds?.[me.kind]?.nojoin || kit.kinds?.[o.kind]?.nojoin) continue;
     // A tool (a lens, a cutter) is laid ON things; nothing is ever laid on a tool.
-    if (kit.kinds?.[o.kind]?.tool) continue;
+    // (A tool that is itself a target, `kinds.x.target`, is the exception: an arm clipped to a hub is laid on it, and a
+    // protractor is laid on the arm.)
+    if (kit.kinds?.[o.kind]?.tool && !kit.kinds[o.kind].target) continue;
     // A kit may say that two pieces have nothing to do with each other (`kit.pairable`): a block set down
     // beside a block is just set down, where a hammer set on it is a blow.
     if (kit.pairable && !kit.pairable(me, o, state)) continue;

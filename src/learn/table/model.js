@@ -237,6 +237,7 @@ export function createTable(spec, seedKey = '') {
     if (p.zone && p.zone !== 'rail') validateZone(s, p.zone);
   }
   for (const key of new Set(Object.values(s.pieces).map(p => p.zone).filter(k => k && k !== 'rail'))) relayout(s, key);
+  getKit(spec.kit).settle?.(s);
   return s;
 }
 
@@ -323,6 +324,10 @@ export function apply(state, action) {
   const { ok = true, ...info } = r;
   s.last = { verb, ok, ...info };
   syncPrediction(s);
+  // A kit may pose pieces after any action (`kit.settle(state)`): arms pushed apart round a hub, a knob a locked bond
+  // sends back. It reads the table as it now stands and writes positions and dials only, deterministically; it may say
+  // why in `state.last.reason`.
+  if (kit.settle) kit.settle(s);
   return s;
 }
 

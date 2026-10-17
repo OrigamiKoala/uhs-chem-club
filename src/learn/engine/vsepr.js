@@ -263,3 +263,88 @@ export function planTwist(kind) {
   if (kind === 'double') return { free: false, held: 1, why: 'The side-to-side overlap is broken by any turn.' };
   return { free: false, held: 2, why: 'Two side-to-side overlaps hold it.' };
 }
+
+/* ------------------------------------------------------------------
+   THE STRAIN OF AN ARRANGEMENT (the table's frame hubs)
+   ------------------------------------------------------------------ */
+
+/**
+ * How hard the domains of an arrangement push on each other. `kinds[k]` is what stands at socket k of the ideal
+ * polyhedron for `kinds.length` domains (`IDEAL`): 'atom', 'lone' or null (empty). Every pair repels as one over the
+ * cube of the straight distance between them, and a pair that holds a lone pair repels harder: a lone pair is held by
+ * one nucleus and spreads wide, so lone-lone pushes hardest and bonding-bonding least. This is the textbook ranking
+ * and it is all the rule there is; where a lone pair SITS is whatever this makes smallest, which is what
+ * `planDomains` hands a lone pair without being asked (`LONE_ORDER`) and `verify:learn` holds the two to each other.
+ */
+export const REPULSION = Object.freeze({ bond: 1, mixed: 1.4, lone: 2, power: 3 });
+
+export function domainStrain(kinds) {
+  const n = kinds.length;
+  const sockets = IDEAL[Math.min(6, n)] || IDEAL[6];
+  let total = 0;
+  for (let i = 0; i < n; i++) {
+    if (!kinds[i]) continue;
+    for (let j = i + 1; j < n; j++) {
+      if (!kinds[j]) continue;
+      const d = Math.hypot(sockets[i][0] - sockets[j][0], sockets[i][1] - sockets[j][1], sockets[i][2] - sockets[j][2]);
+      const w = kinds[i] === 'lone' && kinds[j] === 'lone' ? REPULSION.lone : (kinds[i] === 'lone' || kinds[j] === 'lone') ? REPULSION.mixed : REPULSION.bond;
+      total += w / Math.pow(d, REPULSION.power);
+    }
+  }
+  return Math.round(total * 1e6) / 1e6;
+}
+
+/** Every distinct way of standing `atoms` bonding domains and `lone` lone pairs on the sockets of `atoms + lone` domains. */
+export function arrangements(atoms, lone) {
+  const n = atoms + lone;
+  const out = [];
+  const pick = (start, left, cur) => {
+    if (left === 0) { out.push(Array.from({ length: n }, (_, k) => (cur.includes(k) ? 'lone' : 'atom'))); return; }
+    for (let k = start; k < n; k++) pick(k + 1, left - 1, [...cur, k]);
+  };
+  pick(0, lone, []);
+  return out;
+}
+
+/** The smallest strain any arrangement of these domains can have. */
+export function bestStrain(atoms, lone) {
+  return Math.min(...arrangements(atoms, lone).map(domainStrain));
+}
+
+/** The socket index pairs `[i, j]` of a polyhedron whose domains are `degrees` apart (to the nearest degree). */
+export function socketAngle(n, i, j) {
+  const s = IDEAL[Math.min(6, n)] || IDEAL[6];
+  const c = Math.max(-1, Math.min(1, dot(s[i], s[j])));
+  return Math.round((Math.acos(c) / RAD) * 2) / 2;
+}
+
+/**
+ * How far the hub sits from the plane through the tips of its three atoms, in units of an arm. Flat (0) for three
+ * atoms that lie in a plane with the hub in it; above it for a pyramid. Null for any other count of atoms.
+ */
+export function hubHeight(plan) {
+  const t = plan.vectors.filter(v => v.kind === 'atom').map(v => v.v);
+  if (t.length !== 3) return null;
+  const a = [t[1][0] - t[0][0], t[1][1] - t[0][1], t[1][2] - t[0][2]];
+  const b = [t[2][0] - t[0][0], t[2][1] - t[0][1], t[2][2] - t[0][2]];
+  const n = [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const m = Math.hypot(n[0], n[1], n[2]);
+  if (m < 1e-9) return 0;
+  return Math.round((Math.abs(dot(n, t[0])) / m) * 1000) / 1000;
+}
+
+/* ------------------------------------------------------------------
+   THE MIXER, ALL THE WAY UP (s, p and d orbitals into a bowl)
+   ------------------------------------------------------------------ */
+
+/**
+ * What a bowl of orbitals makes: one s with `p` p orbitals and `d` d orbitals blend into as many hybrid lobes as
+ * orbitals went in (an s is needed: p orbitals alone do not blend into anything new). `leftoverP` is what was left
+ * out of the three p orbitals an atom has, so `planMix(p)` is the same answer with no d.
+ */
+export function planBlend(s, p, d = 0) {
+  const blends = s === 1 && p + d >= 1 && p <= 3 && d <= 2;
+  const lobes = blends ? 1 + p + d : 0;
+  const hybrid = blends ? ({ 2: 'sp', 3: 'sp2', 4: 'sp3', 5: 'sp3d', 6: 'sp3d2' }[lobes] || null) : null;
+  return { s, p, d, blends, lobes, hybrid, leftoverP: 3 - p, angle: blends && !d ? ({ 2: 180, 3: 120, 4: 109.5 }[lobes] ?? null) : null };
+}
