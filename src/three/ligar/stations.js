@@ -633,6 +633,9 @@ export function buildOreDrift(w, site) {
   }
   // THE ROOF's way for the flue and the lamps.
   k.chamberLamps(g);
+  // THE BENCH LAMP: under a hill only lamps light, and a bench is worked with the eyes on the plate, so one hangs over the back of it,
+  // above the bay's air (the camera's lean-in view stands in front of it). A `lampMark` in the pool, no light of its own.
+  g.add(w.buildLuminaire(0, 3.7, -1.0, UNDERGROUND_LAMP));
 
   // THE CHISEL AND THE LUMP HAMMER lying on the vein's plinth: where a block is chipped from the seam.
   k.box(g, [0.5, 0.05, 0.07], w.pipeMat, [3.9, 0.52, 0.34], [0, 0.3, 0]);

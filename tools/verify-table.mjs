@@ -752,7 +752,9 @@ for (const q of live) {
     if (failures === before) ok(`${label}: starts shuffled, ends "${first}" / "${last}", dragging and two taps both reach the answer`);
   });
 }
-if (rails !== 14) fail(`expected 14 order stages across the built quests, found ${rails}`);
+// 14 until q3-distance's two became table rails (T3a); the number goes down as each remaining quest converts.
+const ORDER_STAGES_LEFT = 12;
+if (rails !== ORDER_STAGES_LEFT) fail(`expected ${ORDER_STAGES_LEFT} order stages across the built quests, found ${rails}`);
 else ok(`${rails} order stages are rails`);
 
 // The rail's pure rules.

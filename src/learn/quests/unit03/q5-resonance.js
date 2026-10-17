@@ -1,30 +1,36 @@
 /**
  * q5-resonance.js — Ligar, bench five: FORMAL CHARGE AND RESONANCE.
  *
- * The pair board again, with two tools it did not offer at bench four: a CHARGE
- * tool that stencils the charge each atom carries, and a GAUGE that reads the
- * measured length of a bond. The gauge reads the real molecule and not the
- * drawing, which is what makes ozone a discovery: the drawing says one double
- * bond and one single, and the gauge says both are the same.
+ * The Lewis slate again (`q4-dots`), and its third TABLETOP (plan `bench-tabletop.md`, phase T3a), with three
+ * readers that deal nothing: a CHARGE STAMP that prints, on any atom it is dropped on, the charge the atom carries in
+ * the drawing as it stands; a PLUS MARK the player leaves on the atom they mean; and a BOND GAUGE that clamps across a
+ * bond and reads how long it measures in the real molecule. The gauge reads the molecule and not the drawing, which
+ * is what makes ozone a discovery: the drawing says one double bond and one single, and the gauge says both are the same.
  *
- *   1  the atom that owns one electron too few           -> formal charge
- *   2  the better of two drawings of carbon dioxide        -> (charges near zero)
- *   3  the better of two drawings of thiocyanate           -> (negative on the stronger puller)
- *   4  ozone's two bonds, drawn one way and measured       -> resonance
- *   5  every place nitrate's double bond can go            -> resonance structures
- *   6  the order of each nitrate bond                      -> fractional bond order
- *   7  which carbonate drawing counts most                 -> delocalized electrons
- *   8  why water has no resonance                          -> (nothing to move)
+ *   1  mark the atom of carbon monoxide that carries a positive charge   -> formal charge
+ *   2  draw carbon dioxide in its most stable form                       -> (charges near zero)
+ *   3  draw thiocyanate with its minus on the stronger puller            -> (negative on the stronger puller)
+ *   4  tray ozone's second bond by its measured length                   -> resonance
+ *   5  draw every equivalent drawing of nitrate, one to a slate         -> resonance structures
+ *   6  set the order of each nitrate bond                                -> fractional bond order
+ *   7  tray carbonate's three drawings against each other                -> delocalized electrons
+ *   8  find every different drawing of water                             -> (nothing to move)
+ *
+ * THE TABLE (`table/`, `kits/atoms.js`). The slate is the one `q4-dots` deals on: the dealing is `lewis.js` `addBond` /
+ * `addLone` / `addDot` / `removeOne`, the reading is `planLewis` (`slateOf`), and a charge is `planLewis`'s own `fc`, so the
+ * picture and the grade are one function. A skeleton may stand on a slate when a stage begins (`slateParts` `prefill`),
+ * and a drawing may be fixed on it to be read. Nothing here authors an outcome: `SOLUTIONS` and `MISSES` are scripts of
+ * the player's own drops, replayed by `verify:table` by drag and by two taps. `boss-warden` still plays the pair board
+ * (`pairboard.js`), which this quest no longer uses.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { PairBoard } from '../../engine/instruments.js';
-import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
-import { pairKeys, paintPairHand, paintCharges, describeBoard, boardState } from '../../engine/paircontrols.js';
-import {
-  MOLECULES, DRAWINGS, planLewis, allLit, drawing, blankDrawing, distinctDrawings, drawingKey, linkKey, gaugeLength
-} from '../../engine/lewis.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { atomTable, slateOf, slateParts, slateLayout, piecesIn } from '../../table/kits/atoms.js';
+import { bondsTable } from '../../table/kits/bonds.js';
+import { MOLECULES, DRAWINGS, allLit, drawing, drawingKey, gaugeLength, linkKey, planLewis } from '../../engine/lewis.js';
+import { EN } from '../../engine/vsepr.js';
 
 export const meta = { stageCount: 8 };
 
@@ -40,13 +46,53 @@ export const BUILDS_ON = ['unit03/q4-dots', 'unit03/q3-distance', 'unit02/q8-tre
 
 const SPEAKER = 'Vess';
 
-const TOOL_TEXT = {
-  gauge: { key: 'Read Length', what: 'Tap a bond to read how long it measures in the real molecule.' }
-};
-export function toolNoteFor(controlId) { return TOOL_TEXT[controlId] || null; }
+/**
+ * The legend lines. The stamp, the mark and the gauge are pieces you drop on the thing they read, and the briefing that
+ * introduces each one says what it does once; a piece whose label says what it does owes nothing. Kept so the quest contract holds.
+ */
+export function toolNoteFor() { return null; }
 
-const slate = (id, label, mol, extra = {}) => ({ id, label, head: 'slate', mol, ...extra });
-const fixed = (id, label, mol, prefill, extra = {}) => slate(id, label, mol, { prefill, locked: true, ...extra });
+/* ------------------------------------------------------------------
+   THE TABLES (120 x 64 units)
+   The tray's pieces stand along the top (every stage: the ones it uses), the slates in the middle, the scratch corner
+   bottom left. A slate's atoms and joints are fixed (they are targets, never grabbed); the pieces are the only things that move.
+   ------------------------------------------------------------------ */
+
+const OPTS = { words: 'shells', slate: true };
+const tile = (kind, label, [x, y]) => ({ id: kind, kind, label, at: { x, y } });
+const PAIR = (at) => tile('pairs', 'Pair', at);
+const LIFT = (at) => tile('lift', 'Lift Out', at);
+const THREE = (at) => tile('three', '3 Pairs', at);
+const STAMP = (at) => tile('fcstamp', 'Stamp', at);
+const MARK = (at) => tile('mark', 'Mark', at);
+const GAUGE = (at) => tile('gauge', 'Gauge', at);
+
+/**
+ * One stage's table: its slates (`[id, molecule, cx, cy, size, prefill?, pos?]`), the pieces on top and any extra furniture.
+ * Three slates of a four-atom ion are wider than a 120-unit table: such a stage is `wide` (150 x 72, on the bonds kit, which is the
+ * atom kit with more room and no scratch corner), and its pieces are a little larger so that a thumb still lands on them.
+ */
+function slateTable(slates, { pieces = [], fixtures = [], zones = {}, wide = false } = {}) {
+  const all = [...pieces];
+  const boards = [];
+  for (const [id, mol, cx, cy, size, prefill, pos] of slates) {
+    const part = slateParts(id, mol, slateLayout(mol, cx, cy, size, pos || null), { prefill: prefill || null });
+    all.push(...part.pieces);
+    boards.push(part.fixture);
+  }
+  if (wide) return bondsTable({ opts: OPTS, pieces: all.map(p => (p.fixed ? p : { ...p, r: 6.5 })), fixtures: [...boards, ...fixtures], zones });
+  return atomTable({ opts: OPTS, pieces: all, fixtures: [...boards, ...fixtures], zones });
+}
+
+/** The skeleton of a molecule: one shared pair on every link and nothing else. */
+const skeleton = mol => drawing(Object.fromEntries(MOLECULES[mol].links.map(([i, j]) => [linkKey(i, j), 1])));
+
+/** A slate's reading as a drawing: whether it is finished, which drawing it is, and the charge each atom carries. */
+function drawn(t, id, base = 0) {
+  const sl = slateOf(t, id);
+  return { sl, lit: allLit(sl.read), key: drawingKey(sl.mol, sl.placed), fcs: sl.read.atoms.map(a => a.fc), dealt: sl.used - base, empty: sl.used - base === 0 };
+}
+const markedAtoms = (t, id) => slateOf(t, id).atoms.filter(a => t.pieces[a].props.marked);
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -57,24 +103,24 @@ export const STAGES = [
     title: 'Who Owns What',
     briefing: {
       speaker: SPEAKER,
-      body: 'Use "Show Charges" to inspect the electrical charge each atom carries in a drawing. Drawings can also be fixed on the slate so they can only be read.'
+      body: 'Drop the stamp on an atom and it prints the charge that atom carries. A mark stays on the atom you put it on.'
     },
-    prompt: 'Which atom in carbon monoxide carries a positive formal charge?',
-    controls: ['charges'],
-    rigs: [fixed('a', 'DRAWING A', 'CO', DRAWINGS.CO)],
-    widget: {
-      type: 'choice', label: 'The atom',
-      options: [{ id: 'c', label: 'Carbon' }, { id: 'o', label: 'Oxygen' }]
-    },
+    prompt: 'Mark the atom in carbon monoxide that carries a positive charge.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'CO', 84, 26, 52, DRAWINGS.CO]], { pieces: [STAMP([10, 10]), MARK([26, 10])] }),
     hints: [
-      'Switch on the charges and read the number beside each atom.',
+      'Drop the stamp on each atom of the drawing and read the number it prints.',
       'Compare the electrons each atom brings with the electrons it owns, counting a bond as one and a lone pair as two.',
-      'An atom that owns one electron fewer than it brought reads positive.'
+      'An atom that owns one electron fewer than it brought reads positive, so put the mark on that one.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose an atom.' };
-      if (state.choice === 'o') return { ok: true };
-      return { ok: false, msg: 'That atom owns one electron more than it brought, not one fewer.' };
+      const t = state.table;
+      const sl = slateOf(t, 'a');
+      const marked = markedAtoms(t, 'a');
+      if (!marked.length) return { ok: false, notYet: true, msg: 'Put the mark on an atom.' };
+      const plus = sl.atoms.filter((id, i) => sl.read.atoms[i].fc > 0);
+      if (marked.length === plus.length && marked.every(id => plus.includes(id))) return { ok: true };
+      return { ok: false, msg: 'The mark is on an atom that owns as many electrons as it brought, or more: stamp both atoms and compare what they print.' };
     },
     reward: {
       log: 'Brought minus owned.',
@@ -86,22 +132,20 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Two Drawings',
-    prompt: 'Which drawing of carbon dioxide is more stable based on formal charges?',
-    controls: ['charges'],
-    rigs: [
-      fixed('a', 'DRAWING A', 'CO2', DRAWINGS.CO2_triple),
-      fixed('b', 'DRAWING B', 'CO2', DRAWINGS.CO2_double)
-    ],
-    widget: { type: 'choice', label: 'The better drawing', options: [{ id: 'a', label: 'Drawing A' }, { id: 'b', label: 'Drawing B' }] },
+    prompt: 'Draw carbon dioxide in the most stable way it can be drawn.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'CO2', 84, 26, 52]], { pieces: [PAIR([10, 10]), LIFT([26, 10]), STAMP([42, 10])] }),
     hints: [
-      'Switch on the charges and read both drawings.',
-      'Compare the charges on the atoms of each drawing.',
-      'Prefer the drawing whose atoms carry charges closest to zero.'
+      'Deal pairs onto the slate until every lamp is lit, then drop the stamp on each atom.',
+      'Light the lamps a second way, stamp the atoms again, and compare the charges the two drawings give.',
+      'Prefer the drawing whose stamped charges sit closest to zero.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a drawing.' };
-      if (state.choice === 'b') return { ok: true };
-      return { ok: false, msg: 'Both drawings light every lamp, so the lamps cannot choose. Compare what the charges say.' };
+      const d = drawn(state.table, 'a');
+      if (d.empty) return { ok: false, notYet: true, msg: 'Deal the tray\'s electrons onto the slate.' };
+      if (!d.lit) return { ok: false, msg: 'A lamp is still dark, or the tray still holds electrons: light every lamp first.' };
+      if (d.fcs.every(q => q === 0)) return { ok: true };
+      return { ok: false, msg: 'Every lamp is lit, but the lamps cannot choose between drawings. Stamp the atoms: another way of lighting them leaves the charges nearer zero.' };
     },
     reward: {
       log: 'Charges near zero win.',
@@ -113,22 +157,24 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where the Minus Goes',
-    prompt: 'Which drawing of thiocyanate places the negative formal charge on the more electronegative atom?',
-    controls: ['charges'],
-    rigs: [
-      fixed('a', 'DRAWING A', 'SCN', DRAWINGS.SCN_s),
-      fixed('b', 'DRAWING B', 'SCN', DRAWINGS.SCN_n)
-    ],
-    widget: { type: 'choice', label: 'The better drawing', options: [{ id: 'a', label: 'Drawing A' }, { id: 'b', label: 'Drawing B' }] },
+    prompt: 'Draw thiocyanate with its negative charge on the atom that pulls electrons harder.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'SCN', 84, 26, 52]], { pieces: [PAIR([10, 10]), LIFT([26, 10]), STAMP([42, 10])] }),
     hints: [
-      'Switch on the charges and read both drawings.',
-      'Compare which atom carries the negative charge in each drawing, and how hard that atom pulls on electrons.',
+      'Deal pairs onto the slate until every lamp is lit, and stamp the atoms to see where the minus sits.',
+      'Light the lamps a second way and compare which atom carries the negative charge in each drawing.',
       'Choose the drawing that puts the negative charge on the atom that pulls electrons harder.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a drawing.' };
-      if (state.choice === 'b') return { ok: true };
-      return { ok: false, msg: 'Both drawings carry one minus. Compare which atom each puts it on.' };
+      const t = state.table;
+      const d = drawn(t, 'a');
+      if (d.empty) return { ok: false, notYet: true, msg: 'Deal the tray\'s electrons onto the slate.' };
+      if (!d.lit) return { ok: false, msg: 'A lamp is still dark, or the tray still holds electrons: light every lamp first.' };
+      const syms = d.sl.mol.syms;
+      const minus = d.fcs.map((q, i) => [q, i]).filter(([q]) => q < 0).map(([, i]) => i);
+      const pullers = Math.max(...syms.map(s => EN[s]));
+      if (minus.length === 1 && d.fcs.every(q => Math.abs(q) <= 1) && EN[syms[minus[0]]] === pullers) return { ok: true };
+      return { ok: false, msg: 'Every lamp is lit, but the minus sits on the atom that pulls less. Stamp the atoms and compare which atom each drawing puts it on.' };
     },
     reward: {
       log: 'The minus goes where the pull is.',
@@ -142,26 +188,33 @@ export const STAGES = [
     title: 'Same Length',
     briefing: {
       speaker: SPEAKER,
-      body: 'You now have a bond length gauge. Use "Read Length" to measure the actual distance between atoms in the real molecule.'
+      body: 'The gauge clamps across a bond and reads how long that bond measures in the real molecule.'
     },
-    prompt: 'How do the measured bond lengths of the two oxygen-oxygen bonds in ozone compare?',
-    controls: ['hand', 'gauge', 'clear'],
-    rigs: [slate('a', 'PLATE A', 'O3')],
-    widget: {
-      type: 'choice', label: 'The two bonds',
-      options: [
-        { id: 'same', label: 'They are the same length' },
-        { id: 'long', label: 'One is longer than the other' }
-      ]
-    },
+    prompt: 'Tray the second oxygen-oxygen bond of ozone by how its measured length compares with the first.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'O3', 80, 22, 44, DRAWINGS.O3]], {
+      pieces: [GAUGE([10, 10]), { id: 'second', kind: 'card', label: 'Bond 2', at: { x: 28, y: 36 } }],
+      zones: {
+        trays: [
+          { id: 'shorter', label: 'Shorter', at: { x: 62, y: 53 }, size: { w: 18, h: 14 } },
+          { id: 'same', label: 'Same', at: { x: 83, y: 53 }, size: { w: 18, h: 14 } },
+          { id: 'longer', label: 'Longer', at: { x: 104, y: 53 }, size: { w: 18, h: 14 } }
+        ]
+      }
+    }),
     hints: [
-      'Draw ozone so every lamp is lit, then read each bond with the gauge.',
-      'Compare the two lengths the gauge gives with what your drawing says about the two bonds.',
-      'A double bond and a single bond would not normally measure alike, so check what the gauge says before you trust the drawing.'
+      'Drop the gauge on each bond of the drawing and read what it measures.',
+      'Compare the two readings with each other, and with what the drawing says about the two bonds.',
+      'A double bond and a single bond would not normally measure alike, so tray the second bond by what the gauge says and not by the drawing.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose how they compare.' };
-      if (state.choice === 'same') return { ok: true };
+      const t = state.table;
+      const at = ['shorter', 'same', 'longer'].find(k => piecesIn(t, `tray:${k}`).some(p => p.id === 'second'));
+      if (!at) return { ok: false, notYet: true, msg: 'Tray the second bond.' };
+      const mol = MOLECULES.O3;
+      const [a, b] = [gaugeLength(mol, DRAWINGS.O3, '0-1'), gaugeLength(mol, DRAWINGS.O3, '0-2')];
+      const real = b < a ? 'shorter' : b > a ? 'longer' : 'same';
+      if (at === real) return { ok: true };
       return { ok: false, msg: 'Read both bonds with the gauge and compare what it says with what the drawing says.' };
     },
     reward: {
@@ -174,27 +227,28 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'Three Places',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'You can now save valid arrangements to a catalogue. Tap "File Drawing" whenever all lamps light up to record that candidate structure.'
-    },
-    prompt: 'File every equivalent resonance structure of the nitrate ion.',
-    controls: ['hand', 'record', 'clear'],
-    rigs: [slate('a', 'PLATE A', 'NO3')],
-    widget: { type: 'none' },
+    prompt: 'Draw every equivalent resonance structure of nitrate, one to a slate.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([
+      ['a', 'NO3', 25, 36, 42, skeleton('NO3')],
+      ['b', 'NO3', 75, 36, 42, skeleton('NO3')],
+      ['c', 'NO3', 125, 36, 42, skeleton('NO3')]
+    ], { wide: true, pieces: [PAIR([10, 63]), LIFT([30, 63]), THREE([50, 63])] }),
     hints: [
-      'Draw nitrate so every lamp is lit, then file the drawing.',
-      'Compare each filed drawing with the next and see which oxygen atom carries the double bond in each.',
-      'File one drawing for every oxygen atom that can hold the double bond.'
+      'Deal pairs onto a slate until every lamp is lit, then do the same on the next slate.',
+      'Compare the slates with each other and see which oxygen atom carries the double bond on each.',
+      'Put the double bond on a different oxygen atom on each of the three slates.'
     ],
     check(state) {
-      const mol = MOLECULES.NO3;
-      const filed = state.recorded?.a || [];
-      if (!filed.length) return { ok: false, notYet: true, msg: 'File a drawing to start the set.' };
-      const good = distinctDrawings(mol, filed);
-      if (good.length >= 3) return { ok: true };
-      if (good.length < filed.length) return { ok: false, msg: 'A filed drawing does not light every lamp. Only drawings that do count.' };
-      return { ok: false, msg: 'There is another place the double bond could go that you have not filed.' };
+      const t = state.table;
+      const slates = ['a', 'b', 'c'].map(id => drawn(t, id, 6));
+      if (slates.every(s => s.empty)) return { ok: false, notYet: true, msg: 'Deal the tray\'s electrons onto a slate.' };
+      if (slates.some(s => !s.empty && !s.lit)) return { ok: false, msg: 'A drawing does not light every lamp. Only drawings that do count.' };
+      const lit = slates.filter(s => s.lit);
+      const good = new Set(lit.map(s => s.key));
+      if (good.size >= 3) return { ok: true };
+      if (lit.length > good.size) return { ok: false, msg: 'Two slates hold the same drawing. Each needs the double bond in a different place.' };
+      return { ok: false, notYet: true, msg: 'There is another place the double bond could go that you have not drawn.' };
     },
     reward: {
       log: 'The same ion, three drawings.',
@@ -206,28 +260,29 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Four Over Three',
-    prompt: 'What is the effective bond order of each nitrogen-oxygen bond in the nitrate resonance hybrid?',
-    controls: ['gauge'],
-    rigs: [fixed('a', 'DRAWING A', 'NO3', DRAWINGS.NO3_a)],
-    handGauge: true,
-    widget: {
-      type: 'choice', label: 'Each bond',
-      options: [
-        { id: '1', label: '1' },
-        { id: '4/3', label: '1⅓' },
-        { id: '3/2', label: '1½' },
-        { id: '2', label: '2' }
-      ]
-    },
+    prompt: 'Set the dial to the order of each nitrogen-oxygen bond in the real nitrate ion.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([['a', 'NO3', 44, 30, 44, DRAWINGS.NO3_a]], {
+      pieces: [GAUGE([10, 8])],
+      fixtures: [{
+        id: 'order', kind: 'tally', label: 'Each bond', at: { x: 94, y: 24 }, size: { w: 40, h: 16 }, noRun: true,
+        dials: { order: { min: 1, max: 2, step: 1 / 12, value: 1, label: 'Order', labels: Array.from({ length: 13 }, (_, k) => (1 + k / 12).toFixed(2)) } }
+      }]
+    }),
     hints: [
-      'Read the gauge on all three bonds of the drawing.',
+      'Drop the gauge on all three bonds of the drawing and compare the readings.',
       'Compare the number of shared pairs in the whole ion with the number of bonds that hold them.',
-      'Share the pairs equally among the bonds that hold them.'
+      'Share the pairs equally among the bonds that hold them, and set the dial to that.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a bond order.' };
-      if (state.choice === '4/3') return { ok: true };
-      if (state.choice === '1' || state.choice === '2') return { ok: false, msg: 'The gauge reads the three bonds alike, so a whole number does not describe them.' };
+      const t = state.table;
+      const v = t.fixtures.order.dials.order.value;
+      if (v === 1) return { ok: false, notYet: true, msg: 'Set the dial to a bond order.' };
+      const sl = slateOf(t, 'a');
+      const bonds = Object.values(sl.placed.bonds).filter(n => n > 0);
+      const order = bonds.reduce((a, n) => a + n, 0) / bonds.length;
+      if (Math.abs(v - order) <= 0.02) return { ok: true };
+      if (Math.abs(v - Math.round(v)) < 0.01) return { ok: false, msg: 'The gauge reads the three bonds alike, so a whole number does not describe them.' };
       return { ok: false, msg: 'Count the shared pairs in the whole drawing and share them among the bonds.' };
     },
     reward: {
@@ -240,28 +295,37 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Which Counts Most',
-    prompt: 'Which of carbonate\'s three resonance drawings contributes most to its actual structure?',
-    controls: [],
-    rigs: [
-      fixed('a', 'DRAWING A', 'CO3', DRAWINGS.CO3_a),
-      fixed('b', 'DRAWING B', 'CO3', DRAWINGS.CO3_b),
-      fixed('c', 'DRAWING C', 'CO3', DRAWINGS.CO3_c)
-    ],
-    widget: {
-      type: 'choice', label: 'The drawing that counts most',
-      options: [
-        { id: 'a', label: 'Drawing A' }, { id: 'b', label: 'Drawing B' }, { id: 'c', label: 'Drawing C' },
-        { id: 'all', label: 'None more than any other' }
-      ]
-    },
+    prompt: 'Tray each of carbonate\'s three drawings by how much it counts toward the real ion, against the others.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([
+      ['a', 'CO3', 25, 30, 42, DRAWINGS.CO3_a],
+      ['b', 'CO3', 75, 30, 42, DRAWINGS.CO3_b],
+      ['c', 'CO3', 125, 30, 42, DRAWINGS.CO3_c]
+    ], {
+      wide: true,
+      pieces: [
+        { id: 'ta', kind: 'card', label: 'A', at: { x: 25, y: 52 } },
+        { id: 'tb', kind: 'card', label: 'B', at: { x: 75, y: 52 } },
+        { id: 'tc', kind: 'card', label: 'C', at: { x: 125, y: 52 } }
+      ],
+      zones: {
+        trays: [
+          { id: 'more', label: 'More', at: { x: 30, y: 64 }, size: { w: 44, h: 14 }, cell: 14 },
+          { id: 'same', label: 'Same', at: { x: 75, y: 64 }, size: { w: 44, h: 14 }, cell: 14 },
+          { id: 'less', label: 'Less', at: { x: 120, y: 64 }, size: { w: 44, h: 14 }, cell: 14 }
+        ]
+      }
+    }),
     hints: [
       'Compare the three drawings side by side.',
       'Look for anything that differs between them apart from which oxygen atom carries the double bond.',
       'Drawings that are the same except for where one thing sits count equally.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose an answer.' };
-      if (state.choice === 'all') return { ok: true };
+      const t = state.table;
+      const where = ['ta', 'tb', 'tc'].map(id => ['more', 'same', 'less'].find(k => piecesIn(t, `tray:${k}`).some(p => p.id === id)) || null);
+      if (where.some(w => !w)) return { ok: false, notYet: true, msg: 'Tray all three drawings.' };
+      if (where.every(w => w === 'same')) return { ok: true };
       return { ok: false, msg: 'Compare the three drawings: is any one of them different from the others in anything but its position?' };
     },
     reward: {
@@ -274,28 +338,26 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Nothing to Move',
-    prompt: 'Why does water have no resonance structures?',
-    controls: [],
-    rigs: [fixed('a', 'DRAWING A', 'H2O', DRAWINGS.H2O)],
-    widget: {
-      type: 'choice', label: 'Because',
-      options: [
-        { id: 'nothing', label: 'It has no double bond whose electrons could be drawn elsewhere' },
-        { id: 'few', label: 'It has too few atoms' },
-        { id: 'lone', label: 'Its oxygen has no lone pairs' },
-        { id: 'strong', label: 'Its bonds are too strong' }
-      ]
-    },
+    prompt: 'Find every different drawing of water that lights all its lamps, one to a slate.',
+    widget: { type: 'table', label: 'The bench' },
+    table: slateTable([
+      ['a', 'H2O', 30, 30, 40, skeleton('H2O')],
+      ['b', 'H2O', 80, 30, 40, skeleton('H2O')]
+    ], { pieces: [PAIR([10, 6]), LIFT([26, 6]), STAMP([42, 6])] }),
     hints: [
-      'Look at every bond in the drawing of water.',
-      'Compare what could be moved in water with what was moved in nitrate.',
-      'Check whether moving any pair in the drawing would give a second structure that still lights every lamp.'
+      'Deal the tray\'s electrons onto a slate until every lamp is lit.',
+      'Try the second slate a different way, moving what you can, and see whether every lamp still lights.',
+      'Check whether moving any pair in the drawing gives a second drawing that still lights every lamp.'
     ],
     check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a reason.' };
-      if (state.choice === 'nothing') return { ok: true };
-      if (state.choice === 'lone') return { ok: false, msg: 'Count the lone pairs on the oxygen in the drawing.' };
-      return { ok: false, msg: 'Neither the number of atoms nor the strength of a bond decides whether a second drawing exists. Ask what could move.' };
+      const t = state.table;
+      const slates = ['a', 'b'].map(id => drawn(t, id, 4));
+      if (slates.every(s => s.empty)) return { ok: false, notYet: true, msg: 'Deal the tray\'s electrons onto a slate.' };
+      // A slate that did not light is an attempt that failed, which is what the stage is for: only lit drawings are compared.
+      const lit = slates.filter(s => s.lit);
+      if (!lit.length) return { ok: false, msg: 'No slate has every lamp lit and the tray empty yet. Look at which atom has too few round it and which has too many.' };
+      if (new Set(lit.map(s => s.key)).size === 1) return { ok: true };
+      return { ok: false, msg: 'The two slates hold different drawings, and each lights every lamp: check the bonds again.' };
     },
     reward: {
       log: 'A drawing with nothing to move.',
@@ -388,39 +450,50 @@ export const PRACTICE = [
 ];
 
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN DROPS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the
+   reducer by direct actions, by drag and by two taps. A deal is a tray piece dropped on a joint (`<slate>j<i><j>`) or on
+   an atom (`<slate><i>`); a reader is dropped on the atom or the joint it reads.
    ------------------------------------------------------------------ */
-function blankState(stage) {
-  return boardState(stage.rigs);
-}
 
-const NO3_SET = [DRAWINGS.NO3_a, DRAWINGS.NO3_b, DRAWINGS.NO3_c];
+const deal = (target, n = 1, tool = 'pairs') => Array.from({ length: n }, () => ({ join: [tool, target] }));
+const use = (tool, target) => ({ join: [tool, target] });
+const to = (piece, tray) => ({ place: { piece, to: `tray:${tray}` } });
+/** Nitrate on slate `s` with its second shared pair on oxygen `k` (1 to 3): the skeleton stands, the rest is dealt. */
+const nitrate = (s, k) => [
+  ...deal(`${s}j0${k}`), ...deal(`${s}${k}`, 2),
+  ...[1, 2, 3].filter(o => o !== k).flatMap(o => deal(`${s}${o}`, 1, 'three'))
+];
 
+/** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  { choice: 'o' },
-  { choice: 'b' },
-  { choice: 'b' },
-  { choice: 'same' },
-  { recorded: { a: NO3_SET } },
-  { choice: '4/3' },
-  { choice: 'all' },
-  { choice: 'nothing' }
+  [use('fcstamp', 'a0'), use('fcstamp', 'a1'), use('mark', 'a1')],
+  [...deal('aj01', 2), ...deal('aj12', 2), ...deal('a0', 2), ...deal('a2', 2), use('fcstamp', 'a0'), use('fcstamp', 'a1'), use('fcstamp', 'a2')],
+  [...deal('aj01', 2), ...deal('aj12', 2), ...deal('a0', 2), ...deal('a2', 2), use('fcstamp', 'a0'), use('fcstamp', 'a2')],
+  [use('gauge', 'aj01'), use('gauge', 'aj02'), to('second', 'same')],
+  [...nitrate('a', 1), ...nitrate('b', 2), ...nitrate('c', 3)],
+  [use('gauge', 'aj01'), use('gauge', 'aj02'), use('gauge', 'aj03'), { setDial: { fixture: 'order', dial: 'order', value: 4 / 3 } }],
+  [to('ta', 'same'), to('tb', 'same'), to('tc', 'same')],
+  [...deal('a0', 2), ...deal('b1'), ...deal('b0'), use('fcstamp', 'a0')]
 ];
 
+/** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { choice: 'c' },
-  { choice: 'a' },
-  { choice: 'a' },
-  { choice: 'long' },
-  { recorded: { a: [DRAWINGS.NO3_a, DRAWINGS.NO3_b] } },
-  { choice: '2' },
-  { choice: 'a' },
-  { choice: 'lone' }
+  [use('fcstamp', 'a0'), use('mark', 'a0')],
+  [...deal('aj01', 3), ...deal('aj12'), ...deal('a0'), ...deal('a2', 3)],
+  [...deal('aj01'), ...deal('aj12', 3), ...deal('a0', 3), ...deal('a2')],
+  [use('gauge', 'aj01'), to('second', 'longer')],
+  [...nitrate('a', 1), ...nitrate('b', 1)],
+  [use('gauge', 'aj01'), { setDial: { fixture: 'order', dial: 'order', value: 1.5 } }],
+  [to('ta', 'more'), to('tb', 'same'), to('tc', 'same')],
+  [...deal('a1'), ...deal('b1')]
 ];
 
+function blankState() { return {}; }
+
+/** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  const base = { ...blankAnswer(STAGES[i]), ...blankState(STAGES[i]) };
-  return { ...base, ...overrides, boards: { ...base.boards, ...(overrides?.boards || {}) }, recorded: { ...base.recorded, ...(overrides?.recorded || {}) } };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -428,106 +501,12 @@ export function stateFor(i, overrides) {
    ================================================================== */
 
 export function mount(container, ctx) {
-  let board = null;
-  let runner = null;
-  let chargesOn = false;
-
-  function paintAll() {
-    paintPairHand(runner.frame.el.controls, board.cfg.hand);
-    paintCharges(runner.frame.el.controls, chargesOn);
-  }
-
-  /** Every crawler answers the plate it was made from: the lamps, or the charges if they are on. */
-  function reactAll(quiet = false) {
-    for (const rig of runner.stage.rigs) {
-      const read = board.readOf(rig.id);
-      if (!read) continue;
-      const probe = chargesOn
-        ? { kind: 'charges', zero: read.atoms.filter(a => a.fc === 0).length, of: read.atoms.length }
-        : { kind: 'lamps', lit: read.atoms.filter(a => ['full', 'amber', 'expanded'].includes(a.lamp)).length, of: read.atoms.length };
-      runner.frame.foeReact(rig.id, probe, quiet);
-    }
-  }
-
-  function onProbe(hit) {
-    if (hit.kind === 'hand') { paintAll(); return; }
-    if (hit.kind === 'board') {
-      runner.state.boards[hit.plateId] = hit.placed;
-      const d = describeBoard(hit, board.itemFor(hit.plateId));
-      runner.readout(d.head, d.body);
-      reactAll();
-      paintAll();
-    } else if (hit.kind === 'gauge') {
-      runner.readout('Gauge // reading', hit.length != null ? `That bond measures ${hit.length} pm in the real molecule.` : hit.none);
-    }
-  }
-
-  function onTool(tool) {
-    if (tool.startsWith('hand:')) {
-      board.setHand(tool.split(':')[1]);
-      paintAll();
-    } else if (tool === 'charges') {
-      chargesOn = !chargesOn;
-      board.setCharges(chargesOn);
-      paintAll();
-      reactAll();
-    } else if (tool === 'clear') {
-      board.clear();
-      for (const rig of runner.stage.rigs) runner.state.boards[rig.id] = board.placedOf(rig.id);
-      runner.readout('Slate // cleared', 'The slate is back to how the stage handed it over.');
-      reactAll(true);
-    } else if (tool === 'record') {
-      const id = runner.stage.rigs[0].id;
-      const read = board.readOf(id);
-      if (!allLit(read)) {
-        runner.readout('Slate // not filed', read.left > 0 ? 'Electrons are still in the tray.' : 'A lamp is still dark.');
-        return;
-      }
-      const res = board.record(id);
-      runner.state.recorded[id] = board.recordedOf(id);
-      runner.readout(res.action === 'filed' ? 'Slate // filed' : 'Slate // not filed', res.action === 'filed' ? `${res.count} ${res.count === 1 ? 'drawing' : 'drawings'} filed.` : res.reason);
-    }
-  }
-
-  function onLoad(stage, i, r) {
-    chargesOn = false;
-    const hands = ['bond', 'lone'];
-    if (stage.controls.includes('gauge') || stage.handGauge) hands.push('gauge');
-    hands.push('x');
-    board.setPlates(stage.rigs, { hands: stage.rigs.every(rg => rg.locked) ? (stage.handGauge ? ['gauge'] : []) : hands, charges: false });
-    board.setSelectable(false);
-    if (stage.handGauge) board.setHand('gauge');
-    const parts = pairKeys({
-      earned: true,
-      charges: stage.controls.includes('charges'),
-      gauge: stage.controls.includes('gauge'),
-      record: stage.controls.includes('record'),
-      clear: !stage.rigs.every(rg => rg.locked)
-    });
-    // A stage of fixed drawings has no hand to pick: the keys it offers are the tools alone.
-    const keep = stage.rigs.every(rg => rg.locked) ? parts.filter(p => !p.includes('aria-label="Hand"')) : parts;
-    if (stage.handGauge) keep.unshift(`
-      <div class="cb-field" role="group" aria-label="Hand">
-        <button type="button" class="btn-secondary quest-btn-sm cb-field-key" data-tool="hand:gauge" data-hand="gauge">Read Length</button>
-      </div>`);
-    r.setControls(keep, onTool);
-    paintAll();
-    r.readout(null, null, {
-      idleHead: 'Slate // standby',
-      idle: stage.rigs.every(rg => rg.locked) ? 'These drawings are fixed. Read them.' : 'Pick where the next pair goes, then tap the slate.'
-    });
-    reactAll(true);
-  }
-
-  runner = createRunner(container, ctx, {
+  const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    setup: r => { board = PairBoard(r.frame.instrumentHost, { onProbe }); },
-    onLoad,
-    onDispose: () => board?.dispose()
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
   runner.start();
   return { dispose: () => runner.dispose() };
 }
 
-export { planLewis, drawingKey, linkKey, gaugeLength, blankDrawing, drawing };
+export { planLewis, drawingKey, linkKey, gaugeLength };

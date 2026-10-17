@@ -245,7 +245,9 @@ export function drawTable(ctx, w, h, state, view = {}) {
     ctx.strokeStyle = lit ? AMBER : PLATE_COLORS.dust;
     ctx.lineWidth = lit ? 2 : 1;
     if (square) {
-      const half = Math.max(r, (label.length * 3.1 + 8) / 2);
+      // As wide as its words: a token that says "Between A and B" is a card that holds it.
+      ctx.font = `500 ${Math.max(9, Math.min(12, r * 0.7))}px "JetBrains Mono", "Quantico", monospace`;
+      const half = Math.max(r, (Math.max(label.length * 3.1, ctx.measureText ? ctx.measureText(label).width : 0) + 8) / 2);
       ctx.fillRect(X(c.x) - half, Y(c.y) - r, half * 2, r * 2);
       ctx.strokeRect(X(c.x) - half + 0.5, Y(c.y) - r + 0.5, half * 2 - 1, r * 2 - 1);
     } else {

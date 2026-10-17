@@ -731,6 +731,20 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
       }
       check(dark.length === 0, `every one of ${plan.tunnels.length} workings is lit by lamps in the pool (${marks.length} lamps in the world)`,
         `workings with no lamps:\n         ${dark.join('\n         ')}`);
+      // EVERY MINE TABLE HAS A LAMP OVER ITS PLATE (plan §2.6). Under a hill only lamps light, and a tabletop is worked with the
+      // eyes on the plate, so a bench whose quest is a table has a lamp hung over it, above the bay's air. (A bench still on the
+      // station row is checked when its quest converts.)
+      {
+        const legacy = JSON.parse(readFileSync(join(root, 'tools/table-legacy.json'), 'utf8')).quests;
+        const tables = world.sites.filter(s => underground(s) && !legacy.includes(`unit03/${s.questId}`));
+        const unlit = [];
+        for (const site of tables) {
+          const a = built.benchAnchor(site.questId);
+          const near = marks.filter(p => Math.hypot(p.x - a.position[0], p.z - a.position[2]) < 1.6 && p.y > a.topY + 1.5 && p.y < a.topY + 3.6);
+          if (!near.length) unlit.push(`${site.id} (${site.questId}) has no lamp over its plate`);
+        }
+        check(unlit.length === 0, `every underground bench whose quest is a table (${tables.length}) has a lamp over its plate`, `mine tables with no lamp over them:\n         ${unlit.join('\n         ')}`);
+      }
       check(built.lampPool.lights.length === 3, 'the lamp pool is still three lights', `the pool has ${built.lampPool.lights.length} lights`);
 
       // And NOTHING ELSE IS LIT: every emissive material is a lamp's diffuser, the forge's coals, or a bench's indicator.

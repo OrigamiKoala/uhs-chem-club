@@ -974,7 +974,7 @@ function paintJoint(ctx, p, state, o) {
     const len = sl ? gaugeLength(sl.mol, sl.placed, lewisKey(p.props.i, p.props.j)) : null;
     if (len != null) {
       const side = ang > -Math.PI / 2 && ang <= Math.PI / 2 ? -1 : 1;
-      plateText(ctx, `${len} pm`, o.x - Math.sin(ang) * o.r * 2.9 * side, o.y + Math.cos(ang) * o.r * 2.9 * side, { size: Math.max(7, Math.round(o.r * 1.35)), weight: 700, align: 'center', base: 'middle', color: AMBER });
+      plateText(ctx, `${len} pm`, o.x - Math.sin(ang) * o.r * 2.6 * side, o.y + Math.cos(ang) * o.r * 2.6 * side, { size: Math.max(7, Math.round(o.r * 1.05)), weight: 700, align: 'center', base: 'middle', color: AMBER });
     }
   }
   if (!n) {

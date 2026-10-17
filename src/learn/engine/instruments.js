@@ -117,7 +117,7 @@ const BUILT_BENCHES = new Set([
   // Unit 3 — Ligar. The join bench is a subclass of the drawn bench, so its
   // tools are the canvas bench's tools and cannot grade differently.
   'q1-joins',      // the join bench, pair plates — joinbench3d.js
-  'q2-lattice',    // the join bench, slab plates — joinbench3d.js
+  'q2-lattice',    // the tabletop, bonds kit (blocks, hotplate, hammer, leads, tongs, an ion grid) — table3d.js (T3a)
   // Unit 7 — Kettle. Built as Ligar's bench three; Kettle is not yet walkable,
   // so at T4 it builds its own room around itself (`rooms.js`, the foundry).
   'q1-recipe',     // the tabletop, heap kit — table3d.js (T2c; the sampler scope still serves nothing else here)
@@ -133,9 +133,9 @@ const BUILT_BENCHES = new Set([
   'q8-trends',     // the electron bench, atom head and pull meter
   'q9-absorb',     // the light bench, cuvette head
   // Unit 3 — Ligar, benches three to nine.
-  'q3-distance',   // the bond bench, pair and lattice plates — bondbench3d.js
+  'q3-distance',   // the tabletop, bonds kit (a pair pulled apart by hand, pair cards, salts) — table3d.js (T3a; the bond bench stands on in the warden's room)
   'q4-dots',       // the pair board — pairboard3d.js
-  'q5-resonance',  // the pair board again, with the charge tool and the gauge
+  'q5-resonance',  // the tabletop, the Lewis slate with a charge stamp, a mark and a bond gauge — table3d.js (T3a)
   'q6-shape',      // the domain rig, hub plates — domainrig3d.js
   'q7-polarity',   // the domain rig, field plates
   'q8-hybrid',     // the domain rig, mixer and twist plates

@@ -1,6 +1,6 @@
 # Bench Tabletop — benches you work with your hands, not machines you answer
 
-**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); **T1b built** (Ligar `q1-joins` + `q4-dots`, the Lewis slate; **T1 is complete and waits on the user's review**, which the user has asked us to proceed past); **T2a built** (the card kit, Tallow `q3-catalogue` + `q4-ledger`, the cooler's field point); **T2b built** (the mass kit, Tallow `q5-assay` + `q6-weigh` + `boss-hopper`, the hopper's and the sack's field points, the foe's corner of the table); **T2c built** (the heap kit, a named room, Kettle `q1-recipe` + `boss-golem`: **T2 is complete, and every Tallow and Kettle quest is a table**); T3 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
+**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); **T1b built** (Ligar `q1-joins` + `q4-dots`, the Lewis slate; **T1 is complete and waits on the user's review**, which the user has asked us to proceed past); **T2a built** (the card kit, Tallow `q3-catalogue` + `q4-ledger`, the cooler's field point); **T2b built** (the mass kit, Tallow `q5-assay` + `q6-weigh` + `boss-hopper`, the hopper's and the sack's field points, the foe's corner of the table); **T2c built** (the heap kit, a named room, Kettle `q1-recipe` + `boss-golem`: **T2 is complete, and every Tallow and Kettle quest is a table**); **T3a built** (the bonds kit, Ligar `q2-lattice` + `q3-distance` + `q5-resonance`, the ore drift's field point; T3b and T3c owe `q6`–`q9` and `boss-warden`); T4 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
 **This plan now carries the rest of `bench-integration.md`.** That plan's P0–P4 are done (bay contract,
 Tallow, Ligar, Lanternfall); its P5 (Bellows), P6 (Ember Reach) and P7 (records, stills, site copy) are
 folded in here as phases T5–T7, so each remaining world is re-laid and re-benched once, not twice.
@@ -959,3 +959,73 @@ Tallow's, Ligar's and Lanternfall's are described.
   has no site) gets a room in `rooms.js`, not a bench kit. (5) **Tallow as a whole** is now one process line worked entirely by hand, from the conveyor tail to the sack scale and the
   Hopper; it is the right place to judge whether the tabletop makes Unit 1 less confusing. T3 (Ligar's remaining nine, bond crank, domain hub, mixer, MO rack) starts from the atom kit and
   the slate; nothing in T2 changes `PANEL_LAYOUT` or any station-row bench.
+- 2026-10-17: **T3a built** (first third of T3: Ligar `q2-lattice`, `q3-distance` and `q5-resonance`, the bonds kit, the ore drift's field point). T3b owes
+  `q6-shape`, `q7-polarity` and `q8-hybrid` (the domain hub, field plates, mixer), T3c `q9-orbitals` (its `lean`/`sight` waiver in `tools/bay-legacy.json`
+  stays until then) and `boss-warden`, which still plays the old instruments. Nothing here is browser-tested; the drawn tables were rendered to pictures in Node and
+  read, the built twin is held by `verify:bench`. Shipped, and the API T3b onward builds on:
+  - **Bonds kit** (`table/kits/bonds.js`, id `bonds`, extends the atom kit: an `atom`, an `ion` and the Lewis slate work exactly as `atoms.js` says; a thin wrapper
+    over `joinbench.js` `planSlab`/`conductionOf` and `bonddata.js` `PAIRS`/`morse`/`planCurve`/`LATTICES`/`IONS`). **A block** (`slab`, `props.slab` its old declaration:
+    `build`, `melt`, `tint`, `sealed`, `cluster`, `groups`) is MOLTEN exactly while it lies on open table with its middle inside a **hotplate** fixture (one dial, `heat`) at or past
+    its melting point (`slabView`, `plateArea`, `hotplateUnder`): nothing is stored, so the temperature a block gives way at is found by turning the dial and lifting it off cools
+    it. Tool pieces laid on a block: the **hammer** (`once`, writes `struck`; what a blow does is the old bench's own `strikeOf`), the **leads** (stay on the block; their lamp is
+    `conductionOf` for the block as it is now) and the **tongs** (`once`; `liftCells`/`liftOf`: the connected group round the atom nearest the middle, in `planSlab`'s links
+    for the phase the block is in; the tongs log every lift in `props.lifts` and the block rings what has gone). Pure readers: `slabView`, `liftCells`, `liftOf`, `liftsOf`,
+    `groupsOf` (the separate groups a whole block is made of), `smallestPiece`, `strikeOf`. **The lattice grid** (fixture `lattice`, its cells are `slot`s, ions are `ion`
+    pieces): Run "Slide a Layer" toggles `slid` on the top row's ions and `gridRead` reports like and unlike neighbours and which pairs now face a like charge (their ions
+    print the stencilled `!`). **The wells** (fixture `wells`, `props.rows [{id, pair, label, start}]`, one dial a row): a pair's separation is the position of the hand on
+    a track; `kit.dialed` keeps `{lo, hi}` per row (the curve is drawn only over the stretch the hand has been through, `paintWells`, `wellRead`), a `marker` dial draws a level
+    line for a stage that asks for a depth, and a stage's Run key may release a pair (`props.release`): it settles at `PAIRS[...].r0`. `innerZero(pair)` is where squeezing
+    brings the energy back to zero. **Cards**: `salt` (two ions to scale, their charges and centre distance, molten past `LATTICES[...].melts` on a hotplate) and `pairtag`
+    (two atoms and the rods between them). Bounds 150 x 72 (`bondsTable`, `BONDS_BOUNDS`).
+  - **Atom kit / Lewis slate additions** (`atoms.js`): three readers dropped on the slate: `fcstamp` (prints `planLewis`'s own `fc` on an atom, live), `mark` (a dashed ring that
+    stays, or comes off) and `gauge` (on a joint with a pair in it: the length `lewis.js` `gaugeLength` reads off the REAL molecule, not the drawing); `three` ("3 Pairs") deals up
+    to three lone pairs at once; `slateParts(..., {prefill})` starts a slate with a drawing on it (a skeleton to put electrons round, or a finished drawing to read).
+  - **Core changes** (each small, each generic): `snap.js` `joinCandidates` asks `kit.pairable(me, o)` (a block set beside a block is just set down, not a failed join that drifts it
+    off the plate); `model.js` `setDial` calls `kit.dialed(state, fixture, dial)` and writes the fixture props it answers, and a kit `run` may answer `dials: {fixtureId: {dial: value}}`;
+    `layout.js` `fixtureLayout` honours a fixture's `props.margin`, `rowPitch`, `top` and a per-dial `grab` band (`gestures.js` `fixtureHit` uses it: a row of atoms drawn on a track is its
+    handle); `table2d.js` sizes a square token to its words (`ctx.measureText`). The guide for a field point now passes `siteId` and `to`, so Ligar's `routeTo(siteId, from, toPos)`
+    leads doorway by doorway to the place to stand and not to the bench (`voyage.js` `setGroundWaypoint`).
+  - **`q2-lattice`** (8 stages, no `choice`; line gone from `tools/table-legacy.json`; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, every reward and the stage count unchanged): 1 order three blocks
+    on a rail by the setting each gives way at on the hotplate (a block chipped from the drift's seam is the field item, a fourth block that is not ranked); 2 build a 4 x 3 grid of twelve
+    ions with no like charges touching and slide a layer (two blocks and the hammer stand beside it as the evidence); 3 tray three blocks by when the leads' lamp lights (cold and molten,
+    only molten, never); 4 break the vent block down and set a tally to the fewest atoms left bonded in one piece; 5 take hold of one atom of the arch block with the tongs and tray the
+    block by what came out; 6 lift a molecule out of one block (graded on what the tongs log: a separate group of the whole block, never half of a struck one); 7 tray four sealed
+    blocks by build; 8 slot the one liner that holds at 900 degrees and passes no current.
+  - **`q3-distance`** (8 stages, no `choice`; line gone): 1 pull the hydrogen pair apart and leave the hand at the bottom of its well (within a tenth of the bond length, six pm at least);
+    2 set a depth marker against the bottom of the hydrogen-chlorine trace (within 15 kJ/mol); 3 squeeze the pair in until its energy is back at zero; 4 a **prediction** on a new
+    case: three hands on one plot (H-H, Cl-Cl, F-F), place Inside / Between / Outside and "Release Pair C" (it settles at its own bottom); 5 rail three carbon pairs from the longest
+    bond; 6 rail the same pairs from the hardest to pull apart (the opposite order, found); 7 rail three salts by how strongly their ions are held; 8 hotplate two salts and slot the one
+    that needs more heat. `verify:table`'s count of old `order` stages drops from 14 to 12 (`ORDER_STAGES_LEFT`).
+  - **`q5-resonance`** (8 stages, no `choice`; line gone): 1 stamp both atoms of carbon monoxide and mark the one that carries a plus; 2 draw carbon dioxide so every lamp is lit and every charge
+    is zero (the lamps alone cannot choose, the stamp can); 3 draw thiocyanate with its minus on the stronger puller (the drawing is graded on `planLewis`'s `fc` and `vsepr.js` `EN`); 4 gauge
+    both ozone bonds and tray the second by its length against the first (the drawing says double and single, the gauge says alike); 5 nitrate on three slates (skeleton given, `3 Pairs` deals
+    a whole set of lone pairs), graded on three different drawings that each light every lamp; 6 gauge the three nitrate bonds and set an order dial (steps of a twelfth) to what four pairs
+    shared by three bonds come to; 7 tray carbonate's three locked drawings More / Same / Less; 8 water on two slates: only lit drawings are compared and the stage passes when they all agree
+    (the second slate is the try-and-fail). Stages 5 and 7 are on the bonds kit at 150 x 72 (three four-atom slates are wider than the atom table's 120).
+  - **Deviations from §4.** (1) q2's "stack molecules" is the vent block's tally and the tongs (stage 4 and 6), not a second grid. (2) q3 s3 and s4 are an energy level (back at zero) and a
+    prediction rather than "why" choices; q3 has no separate "ruler rail": the rails are the standard rails with the end labels the plan names. (3) Pairs are not dragged between positions on a
+    slate in one gesture: "Lift Out" and "Pair" are two drops. (4) The standing geometry of the hotplate, the wells and the grid is still painted on the plate (the same deferral as T2b, `fixture3d`);
+    pieces and rims are in the host's materials. (5) The old join bench's block plates and the bond bench and pair board serve no stage of these three quests now; the warden's room keeps the
+    bond bench, the pair board and the join bench's pairs, so `verify:bench` measures them there (`LG_BENCHES` drops a quest whose stages are all tables).
+  - **Integration (§2.6).** Bench 2 (ore drift, underground): `lean`/`sight` were already clear (no waiver), the table is dressed from the drift's own plate steel with basalt trays, the hearth,
+    anvil, quench trough and tong rack stand at the sides, a **lamp hangs over the back of the plate** (`ligar/stations.js`, a `lampMark`, no new light in the pool; `verify:ligar` holds it
+    for every underground bench whose quest is a table) and a **chisel and lump hammer** lie on the vein's plinth. **The field point `chip`** ("Seam Chip") is the vein slab on its plinth, a real
+    part of host `site-2`; the place to stand is 1.0 m in front and to the left of the plinth (host frame x 3.2, z 1.0, clear of the trough and the wire drums); `verify:ligar` holds it to: belongs to
+    a site, solid at the point, a clear and level place to stand, inside `[E]` reach, on ground the walk reaches from the pad, and a guide route (`routeTo(site, from, stand)`) that is walkable end to
+    end and ends on the stand; `verify:bench` plays stage 1's fetch through the registered point (chevron to the stand, no site plate, `[E]`, carry, the block on the table). Benches 3 (crusher
+    inspection deck) and 5 (mine substation at the main portal) stand on the surface in daylight and cleared the lean-in camera without a waiver: nothing moved. Every table is dressed from Ligar's
+    own materials (`mats.tray` is basalt).
+  - **Checks.** `verify:table`: all 24 stages (by script, drag, two taps and the drawn tabletop's own gestures, with a miss and no authored outcome each). `verify:learn` ("Ligar bench two" and the
+    rewritten q3 and q5 blocks): every block is a real build with a melting point the dial reaches, a block is molten exactly while it is on a hot plate and cools off it, every graded answer is
+    recomputed from `planSlab`, `conductionOf`, `morse`, `LATTICES` and `planLewis`, the three pairs' orders are opposite, nitrate has exactly three drawings and water exactly one way to light its
+    lamps from its skeleton. `verify:bench`: all 24 stages at seven viewports through the real pointer path by drag and by two taps. `verify:ligar`: the field point and the bench lamp.
+  - **For the user to look at in a browser (nothing here is browser-tested), per bench.** Ligar, 3D On. **Bench 2** (`Bench 2 - Stone and Wire`, the ore drift just inside the main adit): lean in; the
+    plate should fill the glass with the hearth and anvil at the sides and a lamp over the back of the plate. Stage 1: press W to stand up, the chevron should lead through the portal and along the drift to
+    the vein on the right (it ends in front of the plinth, not at the bench), `[E] TAKE SEAM CHIP` appears when you point at the slab, lean in again and a fourth block is on the table. Drag a block
+    onto the hotplate (it lies on the plate while its middle is inside the ruled area), drag the heat dial: the block turns to scattered pieces and reads MOLTEN at its setting and comes back when you
+    lift it. Stage 2: drag ions into the grid, press "Slide a Layer": the `!` marks should appear on the ions that now face a like charge. Stage 3: drop the leads on a block; the lamp ring fills while a
+    current passes. Stage 5 and 6: drop the tongs on a block: it prints how many came out and the block shows rings where they were. **Bench 3** (`Bench 3 - Bond Energy`, the crusher's inspection deck): drag
+    along a pair's track (the whole row of atoms is the handle): the curve draws behind the hand and an amber square rides on it; stage 4 needs a prediction token in its slot before "Release Pair C".
+    **Bench 5** (`Bench 5 - Charge and Resonance`, the mine substation): drop the "Stamp" piece on an atom (its charge prints on its shoulder), "Gauge" on a joint holding a pair (its length prints beside
+    it), "3 Pairs" on an atom. On a phone held sideways check the wells' hand (the knob is small; the row of atoms is the handle), the slates of stage 5 and 7 (150 units wide) and the thin tokens of q3
+    stage 4. At 3D Off the same stages draw flat on the deck, with a drawn "Chipped block" plate in stage 1's corner.

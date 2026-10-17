@@ -1013,7 +1013,9 @@ function layLigar(bench, st) {
   else bench.setPlates(st.rigs, { show: { counts: Boolean(st.counts) }, hand: null });
 }
 
-const LG_BENCHES = [
+// A quest that has become a tabletop (q3-distance and q5-resonance in T3a, the rest in T3b and T3c) is measured with the real table
+// stages below; what stays here is the instruments some quest still plays. The warden's room keeps the bond bench and the pair board.
+const LG_BENCHES_ALL = [
   ['q3-distance', 'bond bench', (c, a) => new BondBench3D(null, { world: worldFrame(c, a) })],
   ['q5-resonance', 'pair board (resonance)', (c, a) => new PairBoard3D(null, { world: worldFrame(c, a) })],
   ['q6-shape', 'domain rig (shape)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })],
@@ -1021,6 +1023,7 @@ const LG_BENCHES = [
   ['q8-hybrid', 'domain rig (mixer)', (c, a) => new DomainRig3D(null, { world: worldFrame(c, a) })],
   ['q9-orbitals', 'box rack (molecular)', (c, a) => new LigarRack3D(null, { world: worldFrame(c, a) })]
 ];
+const LG_BENCHES = LG_BENCHES_ALL.filter(([id]) => !LG[id].STAGES.every(st => st.widget?.type === 'table'));
 
 {
   const mark = failures;

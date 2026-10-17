@@ -510,8 +510,8 @@ function paintSalt(ctx, p, state, o) {
     for (let i = 0; i < 8; i++) {
       const cat = i % 2 === 0;
       const ion = cat ? v.cation : v.anion;
-      const rr = ion.radius * k * 0.62;
-      disc(ctx, x0 + w * 0.12 + rand() * w * 0.76, y0 + picH * 0.16 + rand() * picH * 0.68, rr, tintOf(ion.sym));
+      const rr = ion.radius * k * 0.4;
+      disc(ctx, x0 + w * 0.2 + rand() * w * 0.6, y0 + picH * 0.25 + rand() * picH * 0.5, rr, tintOf(ion.sym));
     }
   } else {
     const cr = v.cation.radius * k;
@@ -523,12 +523,10 @@ function paintSalt(ctx, p, state, o) {
     sign(ctx, cx, cy, Math.max(cr, 3), 1);
     disc(ctx, ax, cy, ar, tintOf(v.anion.sym));
     sign(ctx, ax, cy, Math.max(ar, 3), -1);
-    // The charges, written: a 2 where an ion carries two.
-    const tag = (ion, x, r) => {
-      if (Math.abs(ion.charge) > 1) fitted(ctx, `${Math.abs(ion.charge)}${ion.charge > 0 ? '+' : '−'}`, x, cy - r - Math.max(4, h * 0.05), r * 3, { size: Math.max(6, Math.round(h * 0.12)), weight: 700, color: AMBER });
-    };
-    tag(v.cation, cx, cr);
-    tag(v.anion, ax, ar);
+    // The charges, written in the corners: a 2 where an ion carries two.
+    const mark = ion => `${Math.abs(ion.charge)}${ion.charge > 0 ? '+' : '−'}`;
+    fitted(ctx, mark(v.cation), x0 + 3, y0 + h * 0.12, w * 0.3, { size: Math.max(6, Math.round(h * 0.13)), weight: 700, align: 'left', color: AMBER });
+    fitted(ctx, mark(v.anion), x0 + w - 3, y0 + h * 0.12, w * 0.3, { size: Math.max(6, Math.round(h * 0.13)), weight: 700, align: 'right', color: AMBER });
   }
   const size = Math.max(7, Math.round(h * 0.15));
   fitted(ctx, p.label, o.x, y0 + h * 0.71, w * 0.9, { size: Math.max(7, Math.round(h * 0.18)), weight: 700, color: PLATE_COLORS.text });
@@ -540,7 +538,8 @@ function miniPair(ctx, pairId, cx, cy, k) {
   const p = PAIRS[pairId];
   const ra = DISC_RADIUS[p.a] * k;
   const rb = DISC_RADIUS[p.b] * k;
-  const half = (ra + rb) / 2;
+  // The two atoms stand a little apart, so the rods between them (one for each shared pair) can be counted.
+  const half = (ra + rb) * 0.68;
   const ax = cx - half;
   const bx = cx + half;
   ctx.strokeStyle = PLATE_COLORS.dust;
@@ -764,13 +763,15 @@ function paintWells(ctx, f, state, b) {
     let started = false;
     const a = Math.max(1, Math.round(row.lo));
     const z = Math.round(row.hi);
+    // The part of the curve above the plot (the nuclei pressing together) is left off the edge, not drawn flat along it.
     for (let d = a; d <= z; d += 1) {
-      const e = Math.min(hi, morse(pair, d));
+      const e = morse(pair, d);
+      if (e > hi) { started = false; continue; }
       const x = X(d);
       const y = Y(e);
       if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
     }
-    if (started) ctx.stroke();
+    ctx.stroke();
     ctx.setLineDash?.([]);
     // Where the hand has the pair now: a small square on the curve, and the reading.
     const e = Math.min(hi, morse(pair, row.gap));
@@ -796,13 +797,15 @@ function paintWells(ctx, f, state, b) {
     const row = read.rows[0];
     const pair = PAIRS[row.pair];
     const t = fixtureTrack(f);
-    const k = (b.X(t.x1) - b.X(t.x0)) / dmax;
+    // The atoms are drawn to one scale of their own (`props.discK`, units a picometre of radius), so a bigger atom is a bigger disc;
+    // the hand moves the near one along the track, and the track is the plot's own separation axis.
+    const k = (f.props.discK ?? 0.085) * b.sc;
     const ay = b.Y(t.y);
     const ra = DISC_RADIUS[pair.a] * k;
     const rb = DISC_RADIUS[pair.b] * k;
     const tint = sym => TINTS[{ H: 'bone', C: 'iron', N: 'pale', O: 'rust', F: 'sand', Cl: 'sand' }[sym] || 'bone'];
     const ax = b.X(t.x0);
-    const bx = ax + row.gap * k;
+    const bx = ax + (row.gap / dmax) * (b.X(t.x1) - b.X(t.x0));
     ctx.strokeStyle = PLATE_COLORS.steel;
     ctx.lineWidth = Math.max(1, Math.min(ra, rb) * 0.2);
     for (let i = 0; i < pair.order; i++) {
