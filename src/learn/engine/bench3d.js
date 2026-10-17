@@ -1514,8 +1514,8 @@ export class BenchViewer3D {
       this.lastPointer = { x: e.clientX, y: e.clientY };
       this.movedWhileDown += Math.abs(dx) + Math.abs(dy);
 
-      if (this.leaning) {
-        // Leaned in: swing a little and settle back on release.
+      if (this.leaning && !this.fpsControls) {
+        // Leaned in on standalone / headless bench: swing a little and settle back on release.
         if (this.movedWhileDown >= 6) this.leanLook(dx, dy);
         return;
       }
@@ -1530,6 +1530,7 @@ export class BenchViewer3D {
         // the two would each apply the drag and the view would turn twice as
         // far as the hand did.
         if (this.movedWhileDown >= 6) {
+          if (this.leaning) this.leaveLean({ walked: true });
           this.playerControlled = true;
           this.turnCamera(dx * 0.0024, dy * 0.0024);
         }
@@ -1584,7 +1585,7 @@ export class BenchViewer3D {
       if (!this.leaning || e.code !== 'Escape') return;
       const modal = typeof document !== 'undefined' && document.getElementById?.('modal-container');
       if (modal && !modal.classList.contains('hidden')) return;
-      this.leaveLean();
+      this.leaveLean({ walked: this.inWorld });
     };
     window.addEventListener('keydown', this._onLeanKey);
 
@@ -2546,7 +2547,8 @@ export class BenchViewer3D {
       const walking = this.leanWalkIntent() || Boolean(this.fpsControls && (
         this.fpsControls.moveForward || this.fpsControls.moveBackward ||
         this.fpsControls.moveLeft || this.fpsControls.moveRight ||
-        this.fpsControls.velocity.lengthSq() > 0.001
+        this.fpsControls.velocity.lengthSq() > 0.001 ||
+        this.fpsControls.isPointerLocked
       ));
       if (walking) {
         this.leaveLean({ walked: true });

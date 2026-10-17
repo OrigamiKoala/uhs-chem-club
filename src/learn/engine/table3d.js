@@ -234,9 +234,7 @@ export class Table3D extends BenchViewer3D {
     }
     this.leanZones = zones;
     if (first) {
-      if (!this.opts.startStanding) {
-        this.leanIn({ zones });
-      }
+      this.leanIn({ zones });
     } else if (rebuilt) {
       if (this.leaning) this.leanIn({});
     }
