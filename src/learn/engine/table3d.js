@@ -302,7 +302,7 @@ export class Table3D extends BenchViewer3D {
       const r = rectOf(c, SIZES.container);
       this.rim(r, 0.04, 0.007, mats.top);
       // A pile's contents are its atoms (below), not a level: no slab of fill over them.
-      if (kit.pileOf?.(c)) continue;
+      if (kit.pileOf?.(c) || kit.noJarFill?.(c)) continue;
       const fill = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.mine(new THREE.MeshStandardMaterial({ color: PHOSPHOR, roughness: 0.55, metalness: 0.1 })));
       const p = this.map.toPlate({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
       fill.position.set(p.x, GROUND_Y, p.z);

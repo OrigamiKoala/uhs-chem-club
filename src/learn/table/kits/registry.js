@@ -66,6 +66,11 @@
  *   linkRods(link, state) -> number   how many rods the built table lays for a join (default 1)
  *   table.opts       plain data a stage hands its kit (`state.opts`)
  *
+ * T3c (the orbital kit, `mo.js`) adds a refusal and a jar the built table leaves bare:
+ *   pourRefusal(state, from, to, what) -> string|null   why a pour into `to` took nothing, when it was refused for a reason of the kit's own
+ *                    (a box that already holds its pair) instead of the reducer's plain "it is full"
+ *   noJarFill(container) -> boolean   true for a container the built table draws no slab of fill in (its contents are painted on its face)
+ *
  * T2 (the card kit, `cards.js`) adds one view hook and one table feature:
  *   kinds.x.rect     `{hw, hh}` in table units: the piece is a CARD, a thin slab that is wider than it is long and not a puck.
  *                    The built table paints its face with the same `paintPiece`, on a canvas of those proportions, `sc` pixels

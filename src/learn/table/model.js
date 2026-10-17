@@ -400,7 +400,8 @@ const HANDLERS = {
     const held = Object.values(to.contents).reduce((a, b) => a + b, 0);
     const room = to.capacity == null ? Infinity : to.capacity - held;
     const moved = round(Math.min(Number(arg.amount) || 0, have, room));
-    if (moved <= 0) return fail(have <= 0 ? 'there is none to pour' : 'it is full');
+    // A kit may say why a container will not take more (`kit.pourRefusal`): a box that already holds its pair.
+    if (moved <= 0) return fail(have <= 0 ? 'there is none to pour' : (kit.pourRefusal?.(s, from, to, arg.what) || 'it is full'));
     from.contents[arg.what] = round(have - moved);
     if (from.contents[arg.what] <= 0) delete from.contents[arg.what];
     to.contents[arg.what] = round((to.contents[arg.what] || 0) + moved);

@@ -954,20 +954,22 @@ export function buildHoistChamber(w, site) {
     }
     k.cyl(g, [0.14, 0.14, 0.04, 16], M.face, [wx + 0.2, 0.9, 2.88], [Math.PI / 2, 0, 0]);
     // The fairlead pylon the rope leaves the drum over.
-    k.column(g, 3.5, 0.9, 3.2, { h: 0.16, w: 0.12 });
-    k.ring(g, 0.22, 0.03, w.pipeMat, [3.5, 3.1, 0.9], 'x');
+    k.column(g, 3.5, 0.5, 3.2, { h: 0.16, w: 0.12 });
+    k.ring(g, 0.22, 0.03, w.pipeMat, [3.5, 3.1, 0.5], 'x');
   }
 
   // THE WINZE AND ITS HEADGEAR at the left: a steel kerb round the collar, the void inside it, an A-frame, the sheave.
   {
-    const cx = -3.9, cz = 3.2;
+    // The collar stands at the BACK of the chamber, behind the plate (z < -0.65), so the rope to the drum runs behind the bench and
+    // not across the air the leaned-in camera stands in; the A-frame's feet are outside the work volume (|x| > 2.7).
+    const cx = -3.9, cz = -0.9;
     for (const [bx, bz, w2, d2] of [[cx - 0.75, cz, 0.12, 1.5], [cx + 0.75, cz, 0.12, 1.5], [cx, cz - 0.75, 1.5, 0.12], [cx, cz + 0.75, 1.5, 0.12]]) {
       k.box(g, [w2, 0.8, d2], w.drumMat, [bx, 0.4, bz], null, true);
     }
     k.box(g, [1.5, 0.02, 1.5], M.black, [cx, 0.08, cz]);
     for (const [px, pz] of [[cx - 0.8, cz - 0.8], [cx + 0.8, cz - 0.8], [cx - 0.8, cz + 0.8], [cx + 0.8, cz + 0.8]]) k.cyl(g, [0.03, 0.03, 0.9, 6], w.pipeMat, [px, 1.2, pz]);
     // The A-frame: two raking legs each side and a cross-tie, the sheave between the apexes.
-    for (const sx of [-5.1, -2.75]) {
+    for (const sx of [-5.15, -2.9]) {
       k.strut(g, [sx, 0, cz - 0.6], [-3.9 + (sx > -3.9 ? -0.2 : 0.2), 3.75, cz], 0.06, w.darkSteelMat, 8);
       k.strut(g, [sx, 0, cz + 0.6], [-3.9 + (sx > -3.9 ? -0.2 : 0.2), 3.75, cz], 0.06, w.darkSteelMat, 8);
     }
@@ -977,25 +979,38 @@ export function buildHoistChamber(w, site) {
       const a = (i / 6) * Math.PI;
       k.box(g, [0.03, 0.03, 1.0], w.darkSteelMat, [-3.9, 3.75 + Math.sin(a) * 0.0, cz], [a, 0, 0]);
     }
-    // THE ROPE: from the drum over the pylon, high across the chamber, over the sheave and down into the winze.
-    k.strut(g, [3.5, 3.2, 0.9], [-3.9, 4.22, cz], 0.022, M.rope, 6);
+    // THE ROPE: from the drum over the pylon, high across the back of the chamber, over the sheave and down into the winze.
+    k.strut(g, [3.5, 3.2, 0.5], [-3.9, 4.22, cz], 0.022, M.rope, 6);
     k.strut(g, [-3.9, 4.22, cz], [-3.9, 0.0, cz], 0.022, M.rope, 6);
     // The skip standing beside the collar, a tub on its own sledge.
-    k.cyl(g, [0.42, 0.34, 0.7, 14], w.drumMat, [-4.3, 0.4, 5.0], null, true);
-    k.box(g, [1.0, 0.06, 0.8], w.timberMat, [-4.3, 0.03, 5.0]);
+    k.cyl(g, [0.42, 0.34, 0.7, 14], w.drumMat, [-4.3, 0.4, 1.4], null, true);
+    k.box(g, [1.0, 0.06, 0.8], w.timberMat, [-4.3, 0.03, 1.4]);
   }
   k.box(g, [0.7, 0.3, 0.05], w.plateMat, [0, 3.0, -2.75]);
   k.tag(g, 'HC-09', { w: 0.46, h: 0.18 }, [0, 3.0, -2.71]);
   k.chamberLamps(g);
+  // THE BENCH LAMP: under a hill only lamps light, and a bench is worked with the eyes on the plate, so one hangs over the back of it,
+  // above the bay's air. A `lampMark` in the pool, no light of its own.
+  g.add(w.buildLuminaire(0, 3.7, -1.0, UNDERGROUND_LAMP));
+  // AN ORE TUB AND A MINER'S PICK at the side of the plate, the host's own tools within the table's reach: the lean-in view shows them at the edge of the plate.
+  const tub = (x, z, d = 1) => {
+    k.cyl(g, [0.34, 0.28, 0.5, 14], w.drumMat, [x, 0.25, z], null, true);
+    k.cyl(g, [0.35, 0.35, 0.05, 14], w.darkSteelMat, [x, 0.5, z]);
+    pile(w, g, x, z, 0.2, 0x3a11 + Math.round(x * 7), 0.12, 6).position.y = 0.52;
+    k.strut(g, [x + d * 0.3, 0.45, z - 0.05], [x + d * 0.5, 1.05, z - 0.3], 0.025, w.timberMat, 6);
+    k.box(g, [0.34, 0.05, 0.05], w.pipeMat, [x + d * 0.5, 1.07, z - 0.3], [0, 0.5 * d, 0.2]);
+  };
+  tub(-3.2, 1.2, -1);
 
   const colliders = [
+    { lx: -3.2, lz: 1.2, r: 0.5 },
     { lx: 4.3, lz: 0.4, hw: 0.95, hd: 1.9 },
     { lx: 4.5, lz: 3.3, hw: 0.5, hd: 0.45 },
-    { lx: 3.5, lz: 0.9, r: 0.3 },
-    { lx: -3.9, lz: 3.2, hw: 0.95, hd: 0.95 },
-    { lx: -5.1, lz: 3.2, r: 0.3 },
-    { lx: -2.75, lz: 3.2, r: 0.3 },
-    { lx: -4.3, lz: 5.0, r: 0.5 }
+    { lx: 3.5, lz: 0.5, r: 0.3 },
+    { lx: -3.9, lz: -0.9, hw: 0.95, hd: 0.95 },
+    { lx: -5.15, lz: -0.9, r: 0.3 },
+    { lx: -2.9, lz: -0.9, r: 0.3 },
+    { lx: -4.3, lz: 1.4, r: 0.5 }
   ];
   return { group: g, bench, benchLocal: [0, 0, 0], colliders };
 }
