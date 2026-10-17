@@ -3037,6 +3037,172 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
 }
 
 /* ------------------------------------------------------------------
+   THE MASS TABLES (plan `bench-tabletop.md`, T2b): `q5-assay`, `q6-weigh` and the Hopper's last phases. A table can
+   declare a sample the bench would never hold, so every graded answer is recomputed here from the planners and the
+   listed masses (assay.js `planPour`, the scope's table of what it weighed), not from the numbers the stage's check
+   carries: the weighted average a fulcrum finds, the share in a bin, the mix that balances a canister, the atoms a crate
+   holds, the grams that match a count, the moles in a drum.
+   ------------------------------------------------------------------ */
+{
+  const before = failures;
+  const M = await import('../src/learn/table/kits/mass.js');
+  const AS = await import('../src/learn/engine/assay.js');
+  const A = await import('../src/learn/table/kits/atoms.js');
+  const get = async id => { const q = getQuest('unit01', id); return q && q.status === 'live' ? q.module() : null; };
+  const [q5, q6, bh] = await Promise.all([get('q5-assay'), get('q6-weigh'), get('boss-hopper')]);
+  const same = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+  const near = (a, b, what) => { if (!(Math.abs(a - b) < 1e-9 * Math.max(1, Math.abs(b)))) fail(`${what}: graded ${a}, the real answer is ${b}`); };
+  const holds = (c, what) => { if (!c) fail(what); };
+  const end = (mod, i) => TABLE.runScript(TABLE.createTable(mod.STAGES[i].table, mod.STAGES[i].title), mod.SOLUTIONS[i], { strict: true });
+  const declared = (mod, i, id) => mod.STAGES[i].table.pieces.find(p => p.id === id);
+  /** The weighted average of a declared sample, worked from the planner's own pour. */
+  const avgOf = piece => {
+    const bins = piece.props.bins;
+    const { totals, total } = AS.planPour({ id: piece.id, bins });
+    return bins.reduce((m, b, k) => m + b.mass * totals[k], 0) / total;
+  };
+  const listed = label => Number(String(label).match(/(\d+\.\d)/)?.[1]);
+
+  if (q5) {
+    // Every sample is a real pile: whole bins of whole masses, and the pour lands what is declared.
+    q5.STAGES.forEach((st, i) => {
+      for (const p of st.table.pieces.filter(x => x.kind === 'sample')) {
+        for (const b of p.props.bins) holds(Number.isInteger(b.mass) && Number.isInteger(b.n) && b.n >= 1, `unit01/q5-assay stage ${i + 1}: ${p.label} has a bin that is not a whole pile`);
+        same(AS.planPour({ id: p.id, bins: p.props.bins }).totals, p.props.bins.map(b => b.n), `unit01/q5-assay stage ${i + 1} (${p.label}: the pour lands what is declared)`);
+      }
+    });
+    // 1. both bins read the same element
+    holds(declared(q5, 0, 'a').props.code === 'chlorine' && declared(q5, 0, 'a').props.bins.length === 2, 'unit01/q5-assay stage 1: Sample A is not one element in two weights');
+    same(end(q5, 0).pieces.a.zone, 'tray:one', 'unit01/q5-assay stage 1 (one element)');
+    // 2. the same share in the lighter bin whatever the size of the scoop
+    {
+      const share = id => { const b = declared(q5, 1, id).props.bins; return b[0].n / b.reduce((n, x) => n + x.n, 0) * 100; };
+      near(share('a'), share('b'), 'unit01/q5-assay stage 2 (two scoops of one stock give one share)');
+      const t = end(q5, 1);
+      for (const id of ['a', 'b']) same(Number(q5.STAGES[1].table.zones.trays.find(z => `tray:${z.id}` === t.pieces[id].zone).label.match(/^(\d+)/)[1]), share(id), `unit01/q5-assay stage 2 (${id}'s tray)`);
+    }
+    // 3 and 4. the fulcrum finds the weighted average, and the dial can reach it
+    for (const [i, listedMass] of [[2, 35.5], [3, null]]) {
+      const piece = declared(q5, i, 'a');
+      const avg = avgOf(piece);
+      const t = end(q5, i);
+      near(t.fixtures.assay.dials.pivot.value, avg, `unit01/q5-assay stage ${i + 1} (the fulcrum rests at the average)`);
+      near(M.assayRead(t, 'assay').net, 0, `unit01/q5-assay stage ${i + 1} (the beam lies level)`);
+      const d = q5.STAGES[i].table.fixtures.find(f => f.id === 'assay').dials.pivot;
+      holds(Math.abs((avg - d.min) / d.step - Math.round((avg - d.min) / d.step)) < 1e-9, `unit01/q5-assay stage ${i + 1}: the fulcrum's steps never land on the average`);
+      if (listedMass != null) near(avg, listedMass, `unit01/q5-assay stage ${i + 1} (the plate's listed mass is the average)`);
+      holds(Math.abs(avg - d.value) > d.step, `unit01/q5-assay stage ${i + 1}: the fulcrum starts at the answer`);
+    }
+    // 5. a sample in one bin balances at that bin's own weight: a prediction on a new case
+    {
+      const piece = declared(q5, 4, 'a');
+      holds(piece.props.bins.length === 1, 'unit01/q5-assay stage 5: the new case is not a sample in one bin');
+      near(avgOf(piece), piece.props.bins[0].mass, 'unit01/q5-assay stage 5 (the one pile balances at its own weight)');
+      same(end(q5, 4).prediction.token, 't-pile', 'unit01/q5-assay stage 5 (the prediction)');
+    }
+    // 6. the canister's mix: 40 atoms, the heavy count whose weight is the canister's
+    {
+      const can = declared(q5, 5, 'can');
+      const mixer = q5.STAGES[5].table.fixtures.find(f => f.id === 'mixer').props;
+      const heavy = [...Array(mixer.total + 1).keys()].filter(h => (mixer.total - h) * mixer.light.mass + h * mixer.heavy.mass === M.massOfSample(can));
+      same(heavy, [end(q5, 5).fixtures.mixer.dials.heavy.value], 'unit01/q5-assay stage 6 (the one mix that balances the canister)');
+      same(M.countOfSample(can), mixer.total, 'unit01/q5-assay stage 6 (the canister and the mix hold the same number of atoms)');
+    }
+    // 7 and 8. which tray: the nearest listed mass, and natural chlorine
+    {
+      const t = end(q5, 6);
+      for (const id of ['a', 'b', 'c']) {
+        const avg = avgOf(declared(q5, 6, id));
+        const trays = q5.STAGES[6].table.zones.trays.map(z => [z.id, listed(z.label)]);
+        const nearest = trays.sort((x, y) => Math.abs(x[1] - avg) - Math.abs(y[1] - avg))[0];
+        same(t.pieces[id].zone, `tray:${nearest[0]}`, `unit01/q5-assay stage 7 (${id})`);
+        holds(Math.abs(nearest[1] - avg) < 0.05, `unit01/q5-assay stage 7: ${id} balances at ${avg.toFixed(2)}, which no tray lists`);
+      }
+      const t8 = end(q5, 7);
+      for (const id of ['a', 'b', 'c']) same(t8.pieces[id].zone, `tray:${Math.abs(avgOf(declared(q5, 7, id)) - 35.5) < 0.05 ? 'natural' : 'altered'}`, `unit01/q5-assay stage 8 (${id})`);
+    }
+  }
+
+  if (q6) {
+    const m = M.speciesMass;
+    // the listed masses are the scope's
+    same([M.listedMass('H'), M.listedMass('C'), M.listedMass('O')], [1, 12, 16], 'mass kit (the listed masses the scope weighed)');
+    // 1. a sealed crate balanced by scoops of the same atom: the pan's count is the crate's
+    {
+      const t = end(q6, 0);
+      near(M.counterOf(t, 'balance', 'R'), t.pieces.crate.props.n, 'unit01/q6-weigh stage 1 (the pan\'s counter is the crate\'s count)');
+      near(M.balanceRead(t, 'balance').diff, 0, 'unit01/q6-weigh stage 1 (the pans balance)');
+      holds(declared(q6, 0, 'sack').props.n < t.pieces.crate.props.n, 'unit01/q6-weigh stage 1: the counted sack is the whole crate');
+    }
+    // 2. what one molecule of methane weighs is the listed masses added up
+    {
+      const t = end(q6, 1);
+      near(M.scaleRead(t, 'scale').weight, 12 + 4 * 1, 'unit01/q6-weigh stage 2 (the scale reads the listed masses added up)');
+      same(A.formulaOf(Object.values(t.pieces).filter(p => p.zone === 'container:pan' && p.kind === 'atom').map(p => p.id), t), 'CH₄', 'unit01/q6-weigh stage 2 (the molecule on the pan)');
+    }
+    // 3. equal counts weigh in the ratio of their listed masses
+    {
+      const t = end(q6, 2);
+      for (const r of t.recorder.rows) near(r.y / r.x, 60, `unit01/q6-weigh stage 3 (${r.label}: sixty atoms weigh sixty times one)`);
+      same(t.recorder.rows.map(r => r.x).sort((a, b) => a - b), [1, 12, 16], 'unit01/q6-weigh stage 3 (the three listed masses)');
+    }
+    // 4 to 7. the grams whose count matches 12.0 g of carbon are the molar mass; a drum is that many of them
+    {
+      const L = 6.02e23;
+      const grams = (t, what) => t.zones.containers['pan-r'].contents[what];
+      near(grams(end(q6, 3), 'oxygen'), 12 / m('carbon') * m('oxygen'), 'unit01/q6-weigh stage 4 (grams of oxygen with the carbon pan\'s count)');
+      near(m('carbon dioxide'), 12 + 16 + 16, 'unit01/q6-weigh stage 5 (a molecule of carbon dioxide)');
+      near(grams(end(q6, 4), 'carbon dioxide'), 44, 'unit01/q6-weigh stage 5 (grams of carbon dioxide with the carbon pan\'s count)');
+      near(grams(end(q6, 5), 'water'), m('water'), 'unit01/q6-weigh stage 6 (grams of water that match the count)');
+      near(72 / m('water'), end(q6, 5).fixtures.tally.dials.n.value, 'unit01/q6-weigh stage 6 (the scoops in the drum)');
+      near(M.counterOf(end(q6, 3), 'balance', 'L'), L, 'unit01/q6-weigh stage 4 (12.0 g of carbon is one count)');
+      const t7 = end(q6, 6);
+      near(grams(t7, 'hydrogen'), (36 / m('water')) * 2 * M.listedMass('H'), 'unit01/q6-weigh stage 7 (the grams of hydrogen that match the hydrogen in 36 g of water)');
+      near(M.counterOf(t7, 'balance', 'L'), 2 * 2 * L, 'unit01/q6-weigh stage 7 (two moles of water hold four moles of hydrogen atoms)');
+    }
+    // 8. rank by atoms, not by weight: the heaviest drum is not the one with the most
+    {
+      const drums = ['d1', 'd2', 'd3'].map(id => ({ id, atoms: declared(q6, 7, id).props.grams / m(declared(q6, 7, id).props.species), grams: declared(q6, 7, id).props.grams }));
+      same(end(q6, 7).zones.rail.order, drums.slice().sort((a, b) => a.atoms - b.atoms).map(d => d.id), 'unit01/q6-weigh stage 8 (the rail, fewest atoms to most)');
+      holds(drums.slice().sort((a, b) => b.grams - a.grams)[0].id !== drums.slice().sort((a, b) => b.atoms - a.atoms)[0].id, 'unit01/q6-weigh stage 8: the heaviest drum holds the most atoms, so weight is no trap');
+    }
+  }
+
+  if (bh) {
+    // 1. element / compound / mixture from what each plate declares
+    {
+      const t = end(bh, 0);
+      const kind = p => {
+        const es = new Set(p.props.sample.particles.flatMap(e => e.kinds));
+        if (es.size === 1) return 'element';
+        return p.props.sample.particles.every(e => (e.pairs || []).length) ? 'compound' : 'mixture';
+      };
+      for (const id of ['plate1', 'plate2', 'plate3']) same(t.pieces[id].zone, `tray:${kind(declared(bh, 0, id))}`, `unit01/boss-hopper phase 1 (${id})`);
+    }
+    // 2. the atom built has the sealed core's protons, and is neutral
+    {
+      const t = end(bh, 1);
+      same([t.pieces.refc.props.p, t.pieces.refe.props.p], [6, 6], 'unit01/boss-hopper phase 2 (the sealed core is one atom)');
+      same([Object.values(t.pieces).filter(p => p.zone === 'tray:core' && p.kind === 'proton').length, Object.values(t.pieces).filter(p => p.zone === 'tray:out' && p.kind === 'electron').length], [6, 6], 'unit01/boss-hopper phase 2 (protons and electrons)');
+      same(t.pieces.refe.props.rings, A.shellsFor(6), 'unit01/boss-hopper phase 2 (the core is neutral and filled in order)');
+    }
+    // 3. the open place takes the card one proton past its left neighbour
+    {
+      const CC = await import('../src/learn/table/kits/cards.js');
+      const t = end(bh, 2);
+      const z = id => CC.elementView(t.pieces[id]).z;
+      same(z(CC.slotCard(t, 'gap')), z('c09') + 1, 'unit01/boss-hopper phase 3 (one proton past fluorine)');
+    }
+    // 4. the slag balances at boron's listed mass
+    near(avgOf(declared(bh, 3, 'slag')), 10.8, 'unit01/boss-hopper phase 4 (the slag\'s average)');
+    same(end(bh, 3).pieces.slag.zone, 'tray:boron', 'unit01/boss-hopper phase 4 (the slag\'s tray)');
+    // 5. the drum is that many scoops of one mole
+    near(end(bh, 4).zones.containers['pan-r'].contents.carbon / M.speciesMass('carbon'), 24 / 12, 'unit01/boss-hopper phase 5 (two scoops of one mole balance the drum)');
+  }
+  if (failures === before) ok('the mass tables: every sample is a whole pile the planner pours as declared, and every graded answer (the share in a bin, the weighted average a fulcrum finds, the mix that balances a canister, the atoms a crate holds, the grams that match a count, the moles in a drum, the rank by atoms, the Hopper\'s sort, core, card, slag and drum) agrees with assay.js and the listed masses');
+}
+
+/* ------------------------------------------------------------------
    LIGAR'S FIRST BENCH ON A TABLE (plan `bench-tabletop.md`, T1b). `q1-joins` declares atoms, and a
    declaration can say a thing the bench never would. Every atom is a real element, and every answer
    a stage grades is recomputed here from `joinbench.js` `planJoin` run on the elements' own shells,
