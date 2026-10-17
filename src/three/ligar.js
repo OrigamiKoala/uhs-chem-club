@@ -95,6 +95,7 @@ import {
 } from './ligar/plant.js';
 import { createLigarEffects } from './ligar/effects.js';
 import { HOST_BUILDERS } from './ligar/stations.js';
+import { registerFieldPoint } from './field-points.js';
 import { makeMinePlan, hillDistance } from './ligar/mine-plan.js';
 import { buildMine } from './ligar/mine.js';
 import { LampPool } from './lamp-pool.js';
@@ -1606,6 +1607,19 @@ export class LigarWorld {
       this.siteMarkers.set(site.questId, { site, group: g, indicator: host.bench.indicator });
       this.registerBenchAnchor(site, g, host.bench, host.benchLocal);
 
+      // The places the player is sent to for this bench (plan §2.5): real pieces of the host, in the world's frame.
+      for (const fp of host.fieldPoints || []) {
+        const c = Math.cos(g.rotation.y), sn = Math.sin(g.rotation.y);
+        const at = (lx, lz) => [g.position.x + lx * c + lz * sn, g.position.z - lx * sn + lz * c];
+        const [px, pz] = at(fp.lx, fp.lz);
+        const [sx, sz] = at(fp.stand.lx, fp.stand.lz);
+        registerFieldPoint(this, {
+          id: fp.id, siteId: site.id, label: fp.label, host: site.id,
+          pos: [px, g.position.y + fp.ly, pz], half: fp.half, rotY: g.rotation.y,
+          stand: [sx, g.position.y, sz]
+        });
+      }
+
       // The host's colliders are in its own frame; the walk wants them in the world's.
       const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);
       for (const c of host.colliders) {
@@ -1631,11 +1645,12 @@ export class LigarWorld {
    * straight on the open ground, through a portal and doorway by doorway underground. The guide
    * arrow follows it (`three/guide-arrow.js`); a world with no workings answers with the straight line.
    */
-  routeTo(siteId, fromPos) {
+  routeTo(siteId, fromPos, toPos = null) {
     const site = this.data.sites.find(s => s.id === siteId);
     if (!site) return null;
     const from = Array.isArray(fromPos) ? fromPos : [fromPos.x, fromPos.z];
-    const to = site.approachPos;
+    // The bench's approach mark, or (a field point's place to stand) a spot inside the same working.
+    const to = toPos ? [toPos[0], 0, toPos[1]] : site.approachPos;
     return this.mine.routeTo(from[0], from[1], to[0], to[2]);
   }
 

@@ -634,6 +634,19 @@ export function buildOreDrift(w, site) {
   // THE ROOF's way for the flue and the lamps.
   k.chamberLamps(g);
 
+  // THE CHISEL AND THE LUMP HAMMER lying on the vein's plinth: where a block is chipped from the seam.
+  k.box(g, [0.5, 0.05, 0.07], w.pipeMat, [3.9, 0.52, 0.34], [0, 0.3, 0]);
+  k.box(g, [0.34, 0.1, 0.1], w.pipeMat, [3.5, 0.55, 0.38], [0, 0, 0]);
+  k.cyl(g, [0.025, 0.025, 0.4, 6], w.timberMat, [3.3, 0.54, 0.38], [0, 0, Math.PI / 2]);
+
+  // THE FIELD POINT: the seam in the vein, where a block is chipped for the bench. A real piece of this host (the
+  // vein slab on its plinth), the player stands in front of it (`stand`, host frame) and `[E]` on it puts a chipped
+  // block in the carry slot.
+  const fieldPoints = [{
+    id: 'chip', label: 'Seam Chip', lx: 3.9, ly: 1.1, lz: -0.3, half: [0.6, 0.75, 0.6],
+    stand: { lx: 3.2, lz: 1.0 }
+  }];
+
   const colliders = [
     { lx: HX, lz: HZ, hw: 1.0, hd: 0.7 },
     { lx: HX - 0.6, lz: HZ - 1.5, hw: 0.3, hd: 0.55 },
@@ -644,7 +657,7 @@ export function buildOreDrift(w, site) {
     { lx: 4.3, lz: 5.2, hw: 0.5, hd: 0.4 },
     { lx: 4.5, lz: -1.5, hw: 0.55, hd: 0.8 }
   ];
-  return { group: g, bench, benchLocal: [0, 0, 0], colliders };
+  return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
 /* ======================================================================
