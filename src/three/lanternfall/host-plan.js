@@ -39,13 +39,13 @@ export const HOST_PLAN = {
   },
   'site-5': {
     structure: 'records-tent', kind: 'rack', skin: 'desk', plate: 'BN-05',
-    // The south half of the records tent: canopy, walls and the board's front face (the eave reaches z 3.4).
-    extent: [-5.7, 5.7, -3.6, 3.6]
+    // The south half of the records tent: canopy, walls and the board's front face (the eave stops at the plate's line, z 0.5).
+    extent: [-5.7, 5.7, -3.6, 0.7]
   },
   'site-6': {
     structure: 'records-tent', kind: 'rack', skin: 'desk', plate: 'BN-06',
     // The north half, the same tent turned round: it shares the board and the ridge with bench 5.
-    extent: [-5.7, 5.7, -3.6, 3.6]
+    extent: [-5.7, 5.7, -3.6, 0.7]
   },
   'site-7': {
     structure: 'detector-mast', kind: 'electron', skin: 'deck', plate: 'BN-07',

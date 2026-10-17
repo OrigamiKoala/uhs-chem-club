@@ -515,12 +515,16 @@ export function buildCrawlerLab(w, site) {
 }
 
 /* ======================================================================
-   5 AND 6. THE RECORDS TENT — one canopy, a board with two faces
-   Two benches back to back under one ridge. Each builder makes its half: the
-   canopy from the ridge to its eave, the side walls, and the board's face toward
-   its bench. The halves meet at the ridge (z = -3.5) and the board's spine.
-   Bench 5's face is a wall board of milled boxes in ladder rows; bench 6's is a
-   ladder of shelves with a token on each.
+   5 AND 6. THE RECORDS TENT — one ridge, a board with two faces
+   Two benches back to back under one ridge (`TENT_SPAN` apart, bench to bench). Each builder makes its
+   half: the canopy from the ridge forward to an eave that stops at the plate's own line, the side walls,
+   and the board's face toward its bench. The halves meet at the ridge (z = -3.5, the same line in the
+   world from both) and at the board's spine. THE CANOPY ENDS AT THE PLATE (z 0.5), because a player
+   leaned in over the table has the camera 2 m in front of it and 3 to 4 m up, and a roof over that air
+   is a roof over the camera (plan `bench-tabletop.md` §2.6): the tent is open at its mouth, the bench
+   stands in the doorway, and the lamp hangs from the eave over the plate.
+   Bench 5's face is a wall board of milled boxes in ladder rows; bench 6's is a ladder of shelves with
+   a token on each.
    ====================================================================== */
 
 function buildRecordsHalf(w, site, planId) {
@@ -532,20 +536,23 @@ function buildRecordsHalf(w, site, planId) {
   const bench = buildLfBench(w.ctx, { kind: 'rack', plate: HOST_PLAN[planId].plate, skin: HOST_PLAN[planId].skin });
   g.add(bench.group);
 
-  // THE CANOPY: a roof panel rising from the eave (z 3.4, 3.3 m) to the ridge (z -3.5, 4.2 m),
-  // with rafters under it, a ridge beam and an eave beam, and a post at each corner. All of it
-  // above 3.2 m, so it stands over the bay's work volume and not in it.
-  const slope = Math.atan2(0.9, 6.9);
-  const len = Math.hypot(6.9, 0.9);
-  k.box(g, [11.0, 0.05, len], M.tarp, [0, 3.75, -0.05], [slope, 0, 0]);
-  for (let i = -3; i <= 3; i++) k.box(g, [0.08, 0.1, len], M.darkSteel, [i * 1.55, 3.69, -0.05], [slope, 0, 0]);
+  // THE CANOPY: a roof panel rising from the eave (z 0.5, 3.3 m) to the ridge (z -3.5, 4.2 m),
+  // with rafters under it, a ridge beam and an eave beam, and a post at each corner. It ends at the
+  // plate's line, so nothing of it stands over the lean-in camera's air in front of the plate.
+  const EAVE = 0.5;
+  const RUN = EAVE + 3.5;
+  const slope = Math.atan2(0.9, RUN);
+  const len = Math.hypot(RUN, 0.9);
+  const midZ = (EAVE - 3.5) / 2;
+  k.box(g, [11.0, 0.05, len], M.tarp, [0, 3.75, midZ], [slope, 0, 0]);
+  for (let i = -3; i <= 3; i++) k.box(g, [0.08, 0.1, len], M.darkSteel, [i * 1.55, 3.69, midZ], [slope, 0, 0]);
   k.box(g, [11.0, 0.14, 0.14], M.darkSteel, [0, 4.14, -3.45]);
-  k.box(g, [11.0, 0.12, 0.12], M.darkSteel, [0, 3.25, 3.38]);
+  k.box(g, [11.0, 0.12, 0.12], M.darkSteel, [0, 3.25, EAVE - 0.06]);
   for (const sx of [-1, 1]) {
-    k.post(g, sx * 5.3, 3.3, 3.3, 0.14);
+    k.post(g, sx * 5.3, EAVE - 0.1, 3.3, 0.14);
     k.post(g, sx * 5.3, -3.3, 4.2, 0.14);
-    // The side walls: canvas hung from the eave, short of the front so the tent stays open at its mouth.
-    k.box(g, [0.05, 3.1, 5.3], M.tarp, [sx * 5.3, 1.6, -0.65]);
+    // The side walls: canvas hung from the eave, so the tent is open at its mouth.
+    k.box(g, [0.05, 3.1, 3.7], M.tarp, [sx * 5.3, 1.6, (EAVE - 0.1 - 3.3) / 2]);
   }
 
   // THE BOARD: two panels on a frame, 0.9 m between them. This half builds the face toward its
@@ -579,8 +586,8 @@ function buildRecordsHalf(w, site, planId) {
   // stack through the roof on the east. Bench 6's half: a plan table and stool, a rack of charts.
   const colliders = [
     { lx: 0, lz: -3.0, hw: 2.9, hd: 0.55 },
-    { lx: -5.3, lz: -0.65, hw: 0.12, hd: 2.7 }, { lx: 5.3, lz: -0.65, hw: 0.12, hd: 2.7 },
-    { lx: -5.3, lz: 3.3, r: 0.22 }, { lx: 5.3, lz: 3.3, r: 0.22 },
+    { lx: -5.3, lz: -1.4, hw: 0.12, hd: 1.85 }, { lx: 5.3, lz: -1.4, hw: 0.12, hd: 1.85 },
+    { lx: -5.3, lz: 0.4, r: 0.22 }, { lx: 5.3, lz: 0.4, r: 0.22 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
   if (first) {
@@ -601,8 +608,8 @@ function buildRecordsHalf(w, site, planId) {
     colliders.push({ lx: -4.1, lz: -1.1, hw: 0.9, hd: 0.55 }, { lx: 4.7, lz: -1.2, hw: 0.5, hd: 1.1 });
   }
 
-  // The work lantern, hung from the roof on a chain over the bench.
-  k.strut(g, [0, 3.68, 0.3], [0, 3.28, 0.3], 0.012, M.darkSteel);
+  // The work lantern, hung from the eave on a chain over the bench.
+  k.strut(g, [0, 3.32, 0.3], [0, 3.28, 0.3], 0.012, M.darkSteel);
   k.lamp(g, 0, 3.15, 0.3);
 
   return { group: g, bench, benchLocal: [0, 0, 0], colliders };
