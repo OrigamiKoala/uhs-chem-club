@@ -1,6 +1,6 @@
 # Bench Tabletop — benches you work with your hands, not machines you answer
 
-**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); **T1b built** (Ligar `q1-joins` + `q4-dots`, the Lewis slate; **T1 is complete and waits on the user's review**, which the user has asked us to proceed past); T2 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
+**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); **T1b built** (Ligar `q1-joins` + `q4-dots`, the Lewis slate; **T1 is complete and waits on the user's review**, which the user has asked us to proceed past); **T2a built** (the card kit, Tallow `q3-catalogue` + `q4-ledger`, the cooler's field point); T2b (`q5-assay`, `q6-weigh`, `boss-hopper`) and T2c (Kettle) next; T3 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
 **This plan now carries the rest of `bench-integration.md`.** That plan's P0–P4 are done (bay contract,
 Tallow, Ligar, Lanternfall); its P5 (Bellows), P6 (Ember Reach) and P7 (records, stills, site copy) are
 folded in here as phases T5–T7, so each remaining world is re-laid and re-benched once, not twice.
@@ -756,3 +756,79 @@ Tallow's, Ligar's and Lanternfall's are described.
   on to T2 through T4 without waiting for this; if the review says the drag is wrong, it is wrong in `table/gestures.js` and the two views once, and every
   quest after T1 inherits the fix. Decisions that would be cheaper to change now than later: the slate's one-pair-per-drag dealing, the choice to fix
   atoms on a slate, `mats.tray` stone rims on every Ligar table, and the lamp as a ring (not a separate light) on every atom.
+- 2026-10-17: **T2a built** (first third of T2: the card kit, Tallow `q3-catalogue` and `q4-ledger`, the cooler's field point). T2b owes the mass
+  sorter and the two-pan balance (`q5-assay`, `q6-weigh`) and `boss-hopper`; T2c owes Kettle `q1-recipe` and `boss-golem`. Nothing here is
+  browser-tested (the drawn faces were rendered to pictures in Node and read; the built twin is held by `verify:bench`). Shipped, and the API later phases build on:
+  - **`table/kits/cards.js`** (registered by `kits/index.js`; id `cards`). Piece kinds `element` (`props {sym}`; everything on its face is DERIVED: the
+    proton count is `electrons.js` `zOf`, the outer-shell dots `atoms.js` `shellsFor`, what it does is `tradeOf(sym)` read off `joinbench.js`
+    `shellPlan`; `props.mass` is the one datum, `props.hide: ['z'|'mass'|'outer']` withholds a reading, `props.sealed` prints a "?" and nothing else) and
+    `equation` (`props {eq: 'C(s) + O₂(g) → CO₂(g)', dH}`, `flip` = the sides swap and ΔH changes sign, `scale` = every amount and ΔH multiplied, `maxScale`
+    4). Exports: `elementView(piece) -> {sym, z, name, shells, outer, trade, mass, hide, sealed}`, `elementCard(id, sym, at, props)`, `tradeOf`,
+    `parseEquation`, `equationText`, `cardView(piece)` (the card as it reads now), **`netOf(stack) -> {reactants, products, species, dH, text, cancelled}`**
+    (equation cards added, what stands on both sides cancelled, **ΔH is `thermodata.js` `hessStackEnthalpy`'s own sum**: no second implementation),
+    `sameReaction(a, b)`, `stackOf(state, zone)`, `stackNet(state, zone)`, `piecesIn`, `slotCard`, `railOrder`, `testedOf`, and the furniture
+    `cardTable(spec)` (bounds `CARD_BOUNDS` 150 x 64, a parked recorder), `cardSlot(id, at, {label, row})`, `cardTray(id, label, at, cols, rows, pitch)`.
+    Fixtures: `net` (`props {zone, hideDH?}`: prints the cancelled equation and ΔH under a stack; T6's `q5-hess` is the first user), `tester`
+    (`props {slot}`: stamps what the card in its slot does, `run` is `tradeOf`; a sealed card reads nothing). A held equation card offers Flip / Smaller /
+    Larger through the shared `contextKeys`. **Two view hooks arrived with it:** `kinds.x.rect = {hw, hh}` (a card the kit paints is a thin slab with
+    its face painted by the SAME `paintPiece` onto a canvas of its own proportions, `table3d.js` `buildRectPiece`; the drawn table already hands
+    `paintPiece` a centre and a scale), and `slot.row` in a table spec (the slots that share a row are a STRIP: a card dropped on a filled one pushes the row
+    along by `engine/catalogue.js` `fileCard` itself, `model.js` `fileIntoRow`; `verify:table` replays the same drops through `fileCard` and the table
+    and compares). Prediction tokens may carry `r` (a token is as big as its piece). `TableGestures.tapPiece(id, at)`: tapping a piece **on the rail**
+    with a piece in the hand puts it before (left half) or after (right half) the one tapped, so the end of a full rail can be tapped.
+  - **`q3-catalogue` is a card table** (all 8 stages, no `choice`; line gone from `tools/table-legacy.json`; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, the reward cards,
+    `CARDS` (boss-hopper imports it) and every other export unchanged). 1 lay six cards on a strip (a rail: fewest protons / most protons) by protons, the
+    weights printed beside as the trap; 2 set aside the cards where the outer-shell dots fall back to one (18 cards in two wrapped rows, a tray); 3 file the
+    last row of the chart into eight slots that are one strip row (a card dropped on a filled place pushes the row along, `fileCard`), column numbers printed under
+    the slots; 4 give three loose cards (protons withheld, dots visible) the open place in the column their dots match; 5 test cards (drop one in the tester, press
+    "Test Card") and tray every card that will not trade; 6 tray six cards in four trays by what they do; 7 lay a sealed card in the one open place, set
+    its proton count on a stamp and drop a prediction token (a new case: silicon, never measured); 8 file four loose cards into the open places. Every
+    answer is read off the table (`railOrder`, `slotCard`, `piecesIn`, `tradeOf`).
+  - **`q4-ledger` is an atom-kit table at particle scale** (all 8 stages, no `choice`; line gone; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, rewards unchanged except
+    the numbers in stages 1, 2 and 4). A heap of loose protons, neutrons and electrons, "The middle" and "Outside" trays and a needle clipped on both: 1 build an
+    atom particle for particle against Sample A (its middle drawn to scale as a lump, its rings and needle on a specimen) with a **field point**: a draw from the
+    tower's sample cooler (`cooler`, below), a second reference that appears on the table, evidence and never a lock; 2 build sealed Sample B from its label (label
+    plates: the new `plate` fixture prints a sample's lines); 3 tray samples by whether they react like Sample A; 4 build the protons and electrons of a sealed ion from
+    its label and the needle printed on it; 5 take every electron off magnesium's outermost shell (shell trays print `n/cap`; the needle reads +2); 6 fill chlorine's
+    outer shell (one spare electron; the needle goes negative); 7 put the fewest Sample A and B ions on a pad until its needle reads zero (new kind `ion`, `props
+    {el, charge}`, which the needle counts); 8 tray four samples against a reference. **Atoms were made smaller than the old stage had them** (lithium-7 and -6,
+    beryllium, a lithium ion) so a build is 10 to 12 drags and the heap fits the table; the stages teach the same ideas. `needleReading` and `chargeOf` count an
+    `ion`'s own charge.
+  - **Field point `cooler`** (`three/tallow/stations.js` `buildTowerDeck`): the draw-off valve of the sample-bomb rack on the cooler skid, host `site-4`, the player
+    stands 1.3 m in front of the skid (behind the plate, round the bench's side; `verify:tallow` holds it to walkable ground from the approach mark, a clear stand
+    and a solid point). `verify:bench` plays stage 1's `fetch` through the world's registered point (chevron, `[E]`, carry, table) and at T1 to T3 the drawn
+    site plate takes the same fetch.
+  - **Integration (§2.6).** Bench 3 (control house, veranda desk, record wall) already cleared the lean-in camera in T1a (the veranda stands back to the plate, a
+    luminaire hangs over it): **its `lean`/`sight` waiver was already gone** (`tools/bay-legacy.json` has no Tallow line), so there was nothing to delete and no host
+    moved. Bench 4 gained its field point and the table stands on the deck beside the skid with the tower behind it; the sodium lamp on its mast (host-local
+    3.5, 1.5) lights the plate. Both tables are dressed from Tallow's own plate steel (`benchMats`, held by `verify:bench`).
+  - **Checks.** `verify:table`: the card kit section (the quest's `CARDS` are the element: protons, shells, trade; equation parse, flip, scale; a three-card
+    stack nets to methane with ΔH = −74.8 and equals `hessStackEnthalpy`; the stack's net fixture and every card's face are drawn at 340 and 667 px; a strip row is
+    `fileCard` for eight drops, by drag and by tap; held keys), and the catalogue board's own strip rules on synthetic boards (the boss still files on the board).
+    `verify:learn` ("Tallow's tables are real"): every card is its element at the mass the scope weighed; the chart is in order of protons and each column shares
+    its outer shell (helium excepted: its shell is full at two); every graded answer of both quests is recomputed (periods, the tray of cards that will not
+    trade, the trade of each of six cards, silicon's protons and behaviour, each loose card between its neighbours; every build equals its sample, every label's two
+    numbers are its sample's protons and protons plus neutrons, the sealed ion's needle, magnesium's and chlorine's shells, the smallest ratio from the two charges,
+    the four kinds of difference). `verify:bench` plays every stage through the pointer path at seven viewports; its old fixtures for the catalogue board and the
+    core bench (which used `q3`'s and `q4`'s declarations) are now synthetic boards and specimens, since the quests no longer declare any.
+  - **Deviations from §4.** (1) `q3` stage 2 sets cards aside in a tray; the strip is not folded by hand until stage 3, where the last row is laid into
+    the chart (the player lays the row that restarts; there is no separate "fold"). (2) `q3` stage 4 is a filing by outer-shell dots (protons withheld), not a "what
+    do columns share" choice. (3) `q3` stage 7 grades three things on the table (the card in the open place, the stamp's proton count, a prediction token) where the
+    old stage took a number and a choice. (4) `q4` stages 1, 2 and 4 use smaller atoms; the "bins" are a heap of loose particles (no room for three bins on a 120 x 64
+    table beside the scratch corner). (5) `q4` stage 5 has no "Fire Stripper": the player drags the electrons off, as in `q2-core` stage 7 (stage 3 of this quest
+    is a sibling of `q2-core` stage 6 and stage 8 a sibling of `q2-core` stage 8, with a "no difference" sample added). (6) `q4` stage 6 starts from neutral
+    chlorine and needs one electron, not eighteen.
+  - **Deferred.** A card back for element cards (`flip` is only offered on equation cards); `q4`'s labels are text plates, not a card; the recorder is parked on both
+    tables; tray pieces are still flat pictures with low rims in 3D; no sound of the host while the player works.
+  - **For the user to look at in a browser (nothing here is browser-tested), per bench.** Tallow, 3D On. **Bench 3** (`Bench 3 - The Periodic Table`, the control
+    house south of the evaporator row; stand at the veranda desk and press `[E]` or let it lean in): the camera flies over the plate with the card table filling
+    the glass (wider than the atom tables: 150 units, so 2.8 m of the plate), the blockhouse wall and its record board behind it, the veranda's lamp over the plate.
+    Stage 1: drag a card onto the strip (the others slide apart); tap a card, then tap the left or right half of one on the strip. Stage 3: drop a card on a
+    filled place in the bottom row and the row should push along. Stage 5 and 6: drag a card into the tester slot and press "Test Card": the card's face prints
+    what it did. Stage 7: drag the stamp's knob, drop a prediction token in the slot at the right. On a phone held sideways the cards (about 28 px at 340) show
+    their symbol and a number, and their name and weight only when there is room. **Bench 4** (`Bench 4 - Isotopes and Ions`, the cracking tower's deck): the
+    table with the tower behind it and the cooler skid at the left; press W to stand up and the chevron leads round the bench to the skid's bomb rack, where `[E]
+    TAKE COOLER DRAW` appears when you point at it; lean in again and a second reference sample is on the table. Stage 1: drag protons and neutrons into "The
+    middle", electrons into "Outside" and watch the needle; stage 5: electrons off the third shell into "Taken off" (the shell trays print `n/8`); stage 7: the
+    ions' charges are printed on their shoulders and the pad's needle sums them. At T3 and below the same stages draw flat on the deck.
+
