@@ -1,6 +1,6 @@
 # Bench Tabletop — benches you work with your hands, not machines you answer
 
-**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); T1b (Ligar `q1-joins` + `q4-dots`) and T2 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
+**Status:** T0 built (T0a: pure model, drawn tabletop, `table` widget, order rails, catalogue drag, `verify:table`; T0b: `leanIn()`, `table3d.js`, the frame's table mode, the recorder sheet, field points, the lean checks); **T1a built** (the atom kit, Tallow's field point, Tallow `q1-grain` + `q2-core`, their hosts); **T1b built** (Ligar `q1-joins` + `q4-dots`, the Lewis slate; **T1 is complete and waits on the user's review**, which the user has asked us to proceed past); T2 onward not started. Drafted 2026-10-16. Phases T0–T7 (§6).
 **This plan now carries the rest of `bench-integration.md`.** That plan's P0–P4 are done (bay contract,
 Tallow, Ligar, Lanternfall); its P5 (Bellows), P6 (Ember Reach) and P7 (records, stills, site copy) are
 folded in here as phases T5–T7, so each remaining world is re-laid and re-benched once, not twice.
@@ -674,3 +674,85 @@ Tallow's, Ligar's and Lanternfall's are described.
     shell tray that holds too many prints `n/cap` and a `!` lamp; stage 5: drop a sample in the tester's slot and press "Run Tester" (the sample's face
     prints what it did). At T3 and below (3D Off, or a phone below T4) the same stages draw on the deck as a flat top-down table, with a drawn site plate
     ("Belt scoop") in the corner of stage 1 that a tap takes. Check nothing glows, nothing is rounded, the keys under the table take presses.
+- 2026-10-17: **T1b built** (second half of T1: Ligar `q1-joins` and `q4-dots` on the atom kit at bond scale, and the hosts they stand in).
+  Nothing here is browser-tested. Shipped, and the API T2 onward builds on:
+  - **`q1-joins` is a table quest** (all 8 stages, no `choice`; its line is gone from `tools/table-legacy.json`; `PRACTICE`, `DEBRIEF`,
+    `VOCABULARY`, every reward title and the quest's stage count are unchanged). A pair is two atoms that start side by side; any atom may be
+    joined to any other (the planner answers, a pair that does not hold drifts apart and says why) and a stage grades only the pairs it handed over
+    (`pairRead`; a stray join to a stranger is refused with a reason, never blocked). 1 put three pairs together and tray what held from what
+    sprang apart; 2 fill every outer shell (the neon pair starts lit); 3 build one pair whose atoms end charged and one that ends neutral (any pairing
+    of Na, Cl, H, H that does it passes); 4 tray four pairs by handed-over / held-between (read from the link the planner made); 5 build the unit in
+    which every outer shell is full, with a unit needle clipped on the magnesium atom (four chlorines on the table, two needed); 6 tray three pairs by
+    the rods between them; 7 tray four pairs as ionic / covalent / no bond (the argon-hydrogen pair is two loose atoms in No bond); 8 fill carbon's
+    shell with hydrogens (six on the table, the fifth is refused). Faces are staged with the words: no charge mark before stage 3 and no shell dots
+    before stage 2 (`table.opts.charges: false`, `table.opts.shells`), a refusal says "room" before it says "shell" (`opts.words`).
+  - **`q4-dots` is a table quest** (all 8 stages, no `choice`; line gone; `PRACTICE`, `DEBRIEF`, `VOCABULARY`, `BUILDS_ON`, titles unchanged).
+    The **Lewis slate** on the atom kit: a molecule's atoms and a joint at every link stand fixed on a `slate` fixture (the board), the tray's pieces
+    `pairs` ("Pair"), `single` ("Single", stage 7 only) and `lift` ("Lift Out") are dragged onto a joint (a shared pair) or an atom (a lone pair or a
+    single electron) and go back to the tray, and the board's one rule (a hydrogen or fluorine shares one pair) is `lewis.js` `addBond`'s refusal,
+    shown as the reason. `slateOf(state, id)` is the reading every stage grades on: `planLewis` of the drawing the pieces' props hold, the tray's count
+    (`TRAY n OF m`), the charge. 1 water; 2 ammonia, methane and hydrogen fluoride on three plates; 3 carbon dioxide; 4 HOF, a triangle of three
+    joints (the player decides which two to fill, so the atom in the middle is what they built, graded by the lamps); 5 the ammonium ion with a charge
+    chip (a fixture whose dial is `charge`) that sets the tray; 6 boron trifluoride, drawn until the tray is empty (the board refuses fluorine's second
+    pair, and boron's lamp stays amber); 7 nitric oxide with a single electron; 8 SF6 (24 deals). A lamp is a ring inside the atom's rim (phosphor lit,
+    amber dashed for boron's six, double for an expanded octet, the stencilled `!` for more than it can hold); each atom prints what stands round it
+    against what it wants (`6/8`). **`boss-warden` is untouched** and still plays the pair board, the join bench, the domain rig and the rack
+    (`verify:run` and the warden's foes in `verify:bench` still pass).
+  - **API additions.** `kits/atoms.js`: `pairRead`, `slateOf`, `slateParts`, `slateLayout`, `SLATE_R`, `JOINT_R`; kinds `joint`, `pairs`, `single`, `lift`
+    (tray pieces are `tool` kinds); fixtures `slate` (board, lines and count) and `chip`; the `needle` fixture takes `props.cluster` (net charge of everything
+    joined to a piece); `opts.charges: false`; a lit ring on any atom whose outer shell is full when `opts.shells`. `table/model.js`: a refused `planJoin` may
+    answer `home: true` and the piece goes back where it hangs (`last.home`). `engine/table3d.js`: `mats.tray` dresses the trays when the host has one.
+  - **Checks.** `verify:table` ("Atom kit"): the unit needle, `pairRead`, the whole slate (every deal agrees with `lewis.js` and a 160-step walk never
+    parts from it, the one rule is refused with its reason and the piece goes home, a single electron on a joint is refused, Lift Out takes a dot first,
+    the chip changes the tray, a loose atom cannot join a slate atom); `verify:learn`: every `q4-dots` slate is its molecule (atoms, joints, tray,
+    no overlaps) and each solution leaves the intended `DRAWINGS` entry, and a "Ligar bench one" block recomputes every `q1-joins` pair, charge, count and
+    tray from `joinbench.js` `planJoin` on the elements' own shells; `verify:bench`: the 16 real stages lean in at 7 viewports and are solved through
+    the real pointer path by drag and by two taps; `verify:run` mounts all 16. Two checks were made to say what they mean: a **fixed** piece (an atom on a
+    slate, a joint) is a target and never grabbed, so it owes no 28 px hit size and may stand on its own fixture; and `verify:table`'s label/answer search
+    now reads a subscript as part of its word ("H₂" is "h2"), where it used to read it as "h" and call every hydrogen label a leak of the formula H₂.
+    `verify:bench` no longer measures the join bench at bench 1 or the pair board at bench 4 (nothing plays them there; they stand on at bench 2, bench 5
+    and in the warden's room and are measured there).
+  - **Deviations from §4.** (1) `q1-joins` s1 "a second pair dragged into a joint makes a double bond": a join is one planner answer, so two oxygens
+    snap with two rods and two nitrogens with three; the player-dealt second pair is `q4-dots`'s slate. (2) `q1-joins` s7 (predict off the catalogue) is
+    join-and-tray graded on what the planner made, with no prediction token (a prediction is asked only on a new case, §2.4, and this is the first
+    time the idea is met); its reward now says "after a few pairs you do not have to press anything". (3) `q4-dots` s4: the atoms are fixed on the
+    slate and the skeleton is the set of joints the player fills, not atoms they place; free atoms with joints of their own is the cluster model T3
+    designs with the domain hub. (4) `q4-dots` s2 no longer files plates under lone-pair counts: drawing all three molecules shows the counts, and
+    the card says them. (5) `q4-dots` s6 is a build, not a "why": the board's refusal is the reason. (6) A pair's partner is its neighbour at the start;
+    there are no "PAIR A" labels.
+  - **Integration (§2.6).** Bench 1 (slab-dressing yard at the quarry's west face) and bench 4 (scale-house desk on the east deck) already cleared the
+    new camera: neither had a `lean`, `sight` or `view` waiver, so `tools/bay-legacy.json` needed no Ligar line deleted (`ligar/q9-orbitals` stays for T3)
+    and no host moved. From the lean-in pose the yard shows the saw bed with its slab, the bridge saw's portal and the two racks of dressed slabs, with the
+    work lamps on their masts either side; the scale house shows its riveted cabin with the dial on its face, the weigh deck on the right and the test
+    weights racked at the left. Both are in daylight, so neither needs a lamp over the plate (a mine table does, in T3). The tables are dressed from
+    Ligar's own materials (the plate steel for pieces, the dark steel for rims and fixtures) and **the trays are basalt rimmed** (`mats.tray`, ore tubs on
+    the ledge). The scratch corner on both tables is checked (playing in it changes no stage's answer); neither quest has a field point, so there is no
+    carry to check at Ligar yet.
+  - **Deferred.** The slate's tray piece deals one pair per drag (SF6 is 24 deals); atoms a player places themselves on a slate; the atoms kit's cluster
+    model with shell rings (T2/T3); `kit.fixture3d` still unused; a tray that is a real tub in 3D (still a flat picture with a low basalt rim).
+  - **For the user to look at in a browser (nothing here is browser-tested), per bench.** Ligar, 3D On, after Tallow is open (every built world is open
+    from the start). **Bench 1** (`Bench 1 - What Holds`, the slab-dressing yard at the quarry's west face; stand at the plate, press `[E]` or let it lean in):
+    the camera should fly over the plate with the table filling the glass between the prompt strip and the dock, the saw bed and the bridge saw's portal
+    behind it, a slab rack at each side, no sky and no back of a prop. Stage 1: drag an atom onto the one it started beside (Na on Cl, then H on H, then Ne
+    on Ne); the first two should stay joined with a rod, the neon pair should drift apart and the banner should say why; tray the pairs; drag
+    on bare table should only swing the view. Stage 2: dots on the rim and a green ring on the atoms whose shell is full (the neon pair at the start). Stage 3:
+    plus and minus marks appear on the faces. Stage 5: the needle box ("Unit charge") reads zero throughout; the magnesium atom's ring lights after the second
+    chlorine. Stage 6: two rods between the oxygens, three between the nitrogens. Stage 8: the fifth hydrogen drifts away and the banner says the carbon's outer shell is already full.
+    The trays should have a stone rim. **Bench 4** (`Bench 4 - Lewis Structures`, the scale-house desk on the east deck): the cabin with its dial behind
+    the desk, the weigh deck on the right. Stage 1: drag the "Pair" piece from the top left onto a joint (the small ring between two atoms) and then onto an
+    atom; it should return to its place each time, "TRAY n OF m" should fall by two, and a lit ring should appear round an atom that has enough; "Lift Out"
+    on a joint or an atom takes one back. Stage 4: a second joint on the hydrogen atom should be refused ("A hydrogen atom has room for one shared pair
+    only.") and the pair should go home. Stage 5: drag the "Tray charge" knob to +1 and the tray should shrink by one. Stage 7: "Single" appears. Stage 8
+    is twenty-four drags. On a phone held sideways: the joints (the smallest targets on any table so far) should still be easy to land a pair on, and a drag
+    that starts on bare table should only swing the view. At 3D Off (or below T4) the same stages draw on the deck as flat top-down tables.
+- 2026-10-17: **T1 closing note (for the user, before T2).** T1 is the pilot, so these are the things the plan wants judged, which no check can: (1) the
+  **feel of dragging** at T4 on a desktop and on a phone held sideways: does a piece follow the pointer and settle, does a press near a piece take it
+  or swing the view (the plan's "drag vs look" risk), is a tap-then-tap fine on a trackpad; the slate asks for the most precise drops yet (a 3 unit joint;
+  the tray piece's own reach is 11 units, so the nearest target wins), and its last stage asks for twenty-four of them. (2) The **lean-in framing**: does
+  it fill the glass with the table between the strip and the dock on every aspect, are the five hosts (Tallow 1 and 2, Ligar 1 and 4) visible behind the
+  plate, is the landscape phone's table readable (pieces 28 px or more; the fixed slate atoms and joints are about 26 and 18 px and are targets, not handles). (3) **Whether
+  the tabletop reads as less confusing** than the stations it replaced: the two pilots with the most to judge are Tallow `q2-core` (build an atom) and
+  Ligar `q4-dots` (electrons from a tray), because they replace the most arithmetic with something to do with the hands. The user has asked us to go
+  on to T2 through T4 without waiting for this; if the review says the drag is wrong, it is wrong in `table/gestures.js` and the two views once, and every
+  quest after T1 inherits the fix. Decisions that would be cheaper to change now than later: the slate's one-pair-per-drag dealing, the choice to fix
+  atoms on a slate, `mats.tray` stone rims on every Ligar table, and the lamp as a ring (not a separate light) on every atom.
