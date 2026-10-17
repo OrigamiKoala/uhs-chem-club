@@ -228,15 +228,24 @@ export function pointFor(state, kit, to, id) {
   if (t.kind === 'tray') return { ...state.zones.trays[t.id].at };
   if (t.kind === 'container') return { ...state.zones.containers[t.id].at };
   if (t.kind === 'piece') {
-    // Just touching the target, on whichever side is open table and nearest it.
+    // Just touching the target, on whichever side is open table and nearest it. Of every side that would land on the
+    // target, the one that lands on it by the widest margin over the next piece is taken, so a pointer a hair off still
+    // lands on the target (a joint standing between two atoms is only ever a hair from one of them).
     const o = state.pieces[t.id];
     const reach = (radiusOf(kit, o) + radiusOf(kit, state.pieces[id])) * 0.8;
     const spokes = [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7, 0.7], [-0.7, 0.7], [0.7, -0.7], [-0.7, -0.7]];
-    for (const [dx, dy] of spokes) {
-      const p = { x: o.at.x + dx * reach, y: o.at.y + dy * reach };
-      if (!zoneAt(state, p) && joinCandidates(state, kit, id, p)[0]?.id === t.id) return p;
+    let best = null;
+    for (const k of [1, 0.75]) {
+      for (const [dx, dy] of spokes) {
+        const p = { x: o.at.x + dx * reach * k, y: o.at.y + dy * reach * k };
+        if (zoneAt(state, p)) continue;
+        const list = joinCandidates(state, kit, id, p);
+        if (list[0]?.id !== t.id) continue;
+        const margin = list[1] ? list[1].dist - list[0].dist : Infinity;
+        if (!best || margin > best.margin + 1e-9) best = { p, margin };
+      }
     }
-    return { x: o.at.x + reach, y: o.at.y };
+    return best ? best.p : { x: o.at.x + reach, y: o.at.y };
   }
   if (t.kind === 'rail') {
     const rail = state.zones.rail;
