@@ -2366,6 +2366,7 @@ export class BenchViewer3D {
         pose, t: 0, tween: opts.instant ? 0 : Math.min(tween, 0.25), key: pose.key,
         fromPos: cam.position.clone(), fromQuat: cam.quaternion.clone()
       });
+      this.playerControlled = false;
     }
     if (this.lean.tween === 0) this.settleLean();
     if (first) this.onLeanChange?.(true);
@@ -2376,6 +2377,7 @@ export class BenchViewer3D {
   settleLean() {
     if (!this.lean) return;
     this.lean.t = 1;
+    this.playerControlled = false;
     this.writeLean(0);
     if (this.inWorld && this.fpsControls) {
       this._syncedLeanToFps = true;
@@ -2544,12 +2546,11 @@ export class BenchViewer3D {
     }
 
     if (this.inWorld && this.leaning) {
-      const walking = this.leanWalkIntent() || Boolean(this.fpsControls && (
+      const walking = this.fpsControls ? Boolean(
         this.fpsControls.moveForward || this.fpsControls.moveBackward ||
         this.fpsControls.moveLeft || this.fpsControls.moveRight ||
-        this.fpsControls.velocity.lengthSq() > 0.001 ||
-        this.fpsControls.isPointerLocked
-      ));
+        this.fpsControls.velocity.lengthSq() > 0.001
+      ) : this.leanWalkIntent();
       if (walking) {
         this.leaveLean({ walked: true });
         this.playerControlled = true;

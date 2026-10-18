@@ -1147,6 +1147,7 @@ class Stage {
 
     const data = world.data;
     const site = focusSiteId ? data.sites.find(s => s.id === focusSiteId) : null;
+    const anchor = site ? world.benchAnchor?.(site.questId) : null;
 
     let px, pz, lookX, lookZ;
     if (playerPos && lookAtPos) {
@@ -1154,6 +1155,12 @@ class Stage {
       pz = playerPos[2];
       lookX = lookAtPos[0];
       lookZ = lookAtPos[2];
+    } else if (anchor) {
+      const rotY = anchor.rotationY || 0;
+      px = anchor.position[0] + 1.1 * Math.sin(rotY);
+      pz = anchor.position[2] + 1.1 * Math.cos(rotY);
+      lookX = anchor.position[0];
+      lookZ = anchor.position[2];
     } else if (site) {
       px = site.approachPos[0];
       pz = site.approachPos[2];
@@ -1169,8 +1176,8 @@ class Stage {
     const groundY = world.getTerrainHeight(px, pz);
     const eyeHeight = this.fpsControls ? this.fpsControls.eyeHeight : 1.6;
     const eyeY = groundY + eyeHeight;
-    const lookGroundY = world.getTerrainHeight(lookX, lookZ);
-    const lookY = lookGroundY + eyeHeight;
+    const lookGroundY = anchor ? anchor.topY : (world.getTerrainHeight(lookX, lookZ) + eyeHeight);
+    const lookY = anchor ? anchor.topY : lookGroundY;
 
     this.camera.position.set(px, eyeY, pz);
     this.camera.lookAt(lookX, lookY, lookZ);

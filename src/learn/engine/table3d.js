@@ -187,9 +187,11 @@ export class Table3D extends BenchViewer3D {
   /* ---------------- the state ---------------- */
 
   /** Take a new state: pieces ease to where it puts them, the board follows it. */
-  setState(state) {
+  setState(state, opts = {}) {
     if (this.disposed) return;
     const first = !this.state;
+    const stageChanged = Boolean(opts.newStage || (opts.stageIndex != null && opts.stageIndex !== this.stageIndex));
+    if (opts.stageIndex != null) this.stageIndex = opts.stageIndex;
     this.state = state;
     const key = this.boardSignature(state);
     const rebuilt = key !== this.boardKey;
@@ -233,10 +235,8 @@ export class Table3D extends BenchViewer3D {
       zones.push({ x0: z.x1 - pad, x1: z.x1, z0: z.z0 - FOE_HEADROOM_M, z1: z.z0 });
     }
     this.leanZones = zones;
-    if (first) {
-      this.leanIn({ zones });
-    } else if (rebuilt) {
-      if (this.leaning) this.leanIn({});
+    if (first || rebuilt || stageChanged) {
+      this.leanIn({ instant: true, zones });
     }
   }
 

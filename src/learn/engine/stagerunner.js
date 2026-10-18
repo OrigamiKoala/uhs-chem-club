@@ -486,7 +486,7 @@ export function createRunner(container, ctx, cfg) {
         room: cfg.room
       });
     }
-    tabletop.setState(state.table);
+    tabletop.setState(state.table, { stageIndex: index, newStage: true });
   }
 
   /* ---------------- go ---------------- */
