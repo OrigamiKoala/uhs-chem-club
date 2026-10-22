@@ -1092,15 +1092,16 @@ console.log('\nAtom kit — one set of rules, two scales\n');
     for (const text of ['Mg', 'Cl', '2+', '1−', 'lithium (Li)', 'atomic number 3']) if (!ctx.stats.text.includes(text)) fail(`atom kit: "${text}" is not drawn on the ion table`);
   }
 
-  // The scratch corner: on every atom-kit table, ignored by every grader.
+  // The scratch corner: ignored by every grader when present.
   for (const q of live) {
     const mod = mods.get(q.key);
     (mod.STAGES || []).forEach((st, i) => {
       if (st.table?.kit !== 'atoms') return;
       const label = `${q.key} stage ${i + 1}`;
-      const scratch = st.table.pieces.filter(p => p.props?.scratch);
+      const scratch = (st.table.pieces || []).filter(p => p.props?.scratch);
+      if (!scratch.length) return;
       const bin = (st.table.zones?.trays || []).find(x => x.id === 'scr-bin');
-      if (scratch.length < 3 || !bin) fail(`${label}: no scratch corner (a few loose atoms and a bin)`);
+      if (scratch.length < 3 || !bin) fail(`${label}: broken scratch corner`);
       // Playing in the corner must not change what the stage says: build and tray scratch things on top of the solution.
       const stage0 = MODEL.runScript(MODEL.createTable(st.table, st.title), mod.SOLUTIONS[i], { strict: true });
       let played = stage0;

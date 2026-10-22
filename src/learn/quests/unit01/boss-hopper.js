@@ -45,7 +45,7 @@ const HOPPER_FOE = [{ id: 'hopper', label: 'The Hopper' }];
 
 const to = (piece, target) => ({ place: { piece, to: target } });
 const trayOf = (t, id) => (t.pieces[id].zone || '').replace('tray:', '');
-const dishTray = (id, label, x, y, w = 38) => ({ id, label, at: { x, y }, size: { w, h: 22 }, cell: 19 });
+const dishTray = (id, label, x, y = 36, w = 38) => ({ id, label, at: { x, y }, size: { w, h: 22 }, cell: 19 });
 const trayAt = (id, label, x, y, w, h, cap) => ({ id, label, at: { x, y }, size: { w, h }, ...(cap != null ? { cap } : {}) });
 
 /** A dish of hull plating, open at the power where atoms resolve: the picture is the evidence. */

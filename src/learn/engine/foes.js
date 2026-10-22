@@ -296,7 +296,7 @@ export function resolveEncounter(stage) {
   return {
     species: e.species,
     speciesName: species.name,
-    act: e.act || 'Commit',
+    act: e.act || 'Submit',
     intent: e.intent || '',
     hit: e.hit || species.hit,
     counter: e.counter || species.counter,

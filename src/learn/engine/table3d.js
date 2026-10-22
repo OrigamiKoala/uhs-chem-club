@@ -38,6 +38,7 @@ import * as THREE from 'three';
 import { BenchViewer3D, engravedPlaque, AMBER, PHOSPHOR } from './bench3d.js';
 import { benchHost, guideTo } from './bench-host.js';
 import { getKit, radiusOf } from '../table/kits/index.js';
+import { dishUnder } from '../table/kits/atoms.js';
 import { SIZES, rectOf } from '../table/snap.js';
 import { plateMap, fixtureLayout, pieceTargets, foePadOf, FOE_HEADROOM_M } from '../table/layout.js';
 import { TableGestures, pendingFetch } from '../table/gestures.js';
@@ -53,7 +54,7 @@ const PLATE_Y = PLATE_SURFACE_Y;
 /** The flat picture lies this far above the plate; everything stands on it. */
 const GROUND_Y = PLATE_Y + 0.0015;
 /** How far a piece in the hand (or on the pointer) is lifted. */
-const LIFT = 0.03;
+const LIFT = 0.045;
 const PUCK_T = 0.022;
 const CARD_T = 0.010;
 
@@ -117,6 +118,7 @@ export class Table3D extends BenchViewer3D {
     this.gestures = new TableGestures(this);
     // The world the bench stands in, for its field points (`three/field-points.js`).
     this.worldObject = opts.world?.object || null;
+    if (opts.world?.dormant) opts.world.dormant.visible = false;
     this.keys = new TableKeys(opts.toolHost || this.host || document.body, a => this.onAction?.(a), {
       // Where the world has the point, the player walks to it; a key would only be a shortcut past it.
       skipFetch: id => Boolean(fieldPointById(this.worldObject, id))
@@ -185,9 +187,11 @@ export class Table3D extends BenchViewer3D {
   /* ---------------- the state ---------------- */
 
   /** Take a new state: pieces ease to where it puts them, the board follows it. */
-  setState(state) {
+  setState(state, opts = {}) {
     if (this.disposed) return;
     const first = !this.state;
+    const stageChanged = Boolean(opts.newStage || (opts.stageIndex != null && opts.stageIndex !== this.stageIndex));
+    if (opts.stageIndex != null) this.stageIndex = opts.stageIndex;
     this.state = state;
     const key = this.boardSignature(state);
     const rebuilt = key !== this.boardKey;
@@ -230,11 +234,9 @@ export class Table3D extends BenchViewer3D {
       const pad = this.map.metres(foePadOf(state.bounds).r * 2);
       zones.push({ x0: z.x1 - pad, x1: z.x1, z0: z.z0 - FOE_HEADROOM_M, z1: z.z0 });
     }
-    if (first) {
-      this.leanIn({ zones });
-    } else if (rebuilt) {
-      this.leanZones = zones;
-      if (this.leaning) this.leanIn({});
+    this.leanZones = zones;
+    if (first || rebuilt || stageChanged) {
+      this.leanIn({ instant: true, zones });
     }
   }
 
@@ -622,7 +624,8 @@ export class Table3D extends BenchViewer3D {
   /** What makes a piece look the way it does; a change rebuilds only that piece. */
   pieceSignature(kit, p) {
     const f = faceOf(kit, p, this.state);
-    return `${p.kind}|${radiusOf(kit, p)}|${f.text}|${f.badge}|${f.flipped ? 1 : 0}|${p.token ? 1 : 0}|${kit.faceKey ? kit.faceKey(p, this.state) : ''}`;
+    const at = this.drag?.id === p.id ? this.drag.at : (this.shown[p.id] || p.at);
+    return `${p.kind}|${radiusOf(kit, p)}|${f.text}|${f.badge}|${f.flipped ? 1 : 0}|${p.token ? 1 : 0}|${kit.faceKey ? kit.faceKey(p, this.state, at) : ''}`;
   }
 
   /**
@@ -630,18 +633,26 @@ export class Table3D extends BenchViewer3D {
    * becomes the puck's top. What is drawn on a piece is what the drawn table draws on it.
    */
   paintedFace(kit, p, r, thick) {
-    const N = 192;
+    const N = 384;
     const canvas = document.createElement('canvas');
     canvas.width = N;
     canvas.height = N;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#16140f';
     ctx.fillRect(0, 0, N, N);
-    kit.paintPiece(ctx, p, this.state, { x: N / 2, y: N / 2, r: N * 0.47, lit: false, sc: (N * 0.47) / radiusOf(kit, p), flat: true });
+    const at = this.drag?.id === p.id ? this.drag.at : (this.shown[p.id] || p.at);
+    kit.paintPiece(ctx, p, this.state, { x: N / 2, y: N / 2, r: N * 0.47, lit: false, sc: (N * 0.47) / radiusOf(kit, p), flat: true, at });
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 4;
-    const mat = this.mine(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, metalness: 0.15 }));
+    const mat = this.mine(new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 0.85,
+      metalness: 0.15,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1
+    }));
     mat.userData.ownMap = true;
     const face = new THREE.Mesh(new THREE.CircleGeometry(r * 0.96, 36), mat);
     face.rotation.x = -Math.PI / 2;
@@ -902,9 +913,12 @@ export class Table3D extends BenchViewer3D {
   /** Put each piece's mesh where its eased position says. */
   placePieces() {
     for (const [id, e] of this.entries) {
-      const at = this.drag?.id === id ? this.drag.at : (this.shown[id] || this.state.pieces[id].at);
+      const p = this.state.pieces[id];
+      const at = this.drag?.id === id ? this.drag.at : (this.shown[id] || p.at);
       const pl = this.map.toPlate(at);
-      e.group.position.set(pl.x, GROUND_Y + (this.lifts[id] || 0), pl.z);
+      const isLensOverDish = p?.kind === 'lens' && Boolean(dishUnder(id, this.state, at));
+      const baseElev = isLensOverDish ? (PUCK_T + 0.004) : 0;
+      e.group.position.set(pl.x, GROUND_Y + baseElev + (this.lifts[id] || 0), pl.z);
     }
     const m = this._swarmM || (this._swarmM = new THREE.Matrix4());
     for (const sw of this.swarms?.values() || []) {
@@ -932,6 +946,17 @@ export class Table3D extends BenchViewer3D {
       const want = (this.drag?.id === id || held === id) ? LIFT : 0;
       const l = this.lifts[id] || 0;
       this.lifts[id] = Math.abs(want - l) < 0.0005 ? want : l + (want - l) * k;
+    }
+    if (this.drag) {
+      const dp = this.state.pieces[this.drag.id];
+      if (dp) {
+        const kit = getKit(this.state.kit);
+        const sig = this.pieceSignature(kit, dp);
+        const e = this.entries.get(this.drag.id);
+        if (e && e.sig !== sig) {
+          this.syncPieces();
+        }
+      }
     }
     this.placePieces();
   }

@@ -123,16 +123,16 @@ const electrons = (prefix, n, zone, from = 1) =>
 
 const trayAt = (id, label, x, y, w, h, cap) => ({ id, label, at: { x, y }, size: { w, h }, ...(cap != null ? { cap } : {}) });
 /** A tray for specimens: wide pieces, so a wider pitch and a deeper tray. */
-const specimenTray = (id, label, x, y, w = 38) => ({ id, label, at: { x, y }, size: { w, h: 22 }, cell: 19 });
+const specimenTray = (id, label, x, y = 33, w = 38) => ({ id, label, at: { x, y }, size: { w, h: 20 }, cell: 19 });
 
 const specimen = (id, label, x, y, props) => ({ id, kind: 'specimen', label, at: { x, y }, props });
 const nucleus = (id, label, x, y, p, n) => ({ id, kind: 'nucleus', label, at: { x, y }, fixed: true, props: { p, n } });
 
 /** The shell trays of an atom with a nucleus at the top left: one per shell, closest in first. */
 const SHELLS = [
-  trayAt('sh1', 'Shell 1', 14, 38, 20, 16, 2),
-  trayAt('sh2', 'Shell 2', 48, 37, 40, 22, 8),
-  trayAt('sh3', 'Shell 3', 92, 49, 40, 22, 8)
+  trayAt('sh1', 'Shell 1', 14, 34, 20, 16, 2),
+  trayAt('sh2', 'Shell 2', 48, 34, 40, 20, 8),
+  trayAt('sh3', 'Shell 3', 92, 49, 40, 20, 8)
 ];
 const SOURCE_TRAY = (label, n) => trayAt('src', label, 98, 18, 40, 30, n);
 
@@ -391,8 +391,8 @@ export const STAGES = [
       ],
       zones: {
         trays: [
-          specimenTray('same', 'Same element as Sample A', 30, 36, 44),
-          specimenTray('other', 'A different element', 82, 36, 44)
+          specimenTray('same', 'Same element as Sample A', 30, 33, 44),
+          specimenTray('other', 'A different element', 82, 33, 44)
         ]
       }
     }),
@@ -473,9 +473,9 @@ export const STAGES = [
       ],
       zones: {
         trays: [
-          specimenTray('heavy', 'Isotope', 21, 36),
-          specimenTray('charged', 'Ion', 60, 36),
-          specimenTray('other', 'Different element', 99, 36)
+          specimenTray('heavy', 'Isotope', 21, 33),
+          specimenTray('charged', 'Ion', 60, 33),
+          specimenTray('other', 'Different element', 99, 33)
         ]
       }
     }),
