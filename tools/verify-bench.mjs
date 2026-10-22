@@ -1163,12 +1163,11 @@ function lay(bench, st) {
   else bench.setPlates(itemsOf(st), cfg);
 }
 
-// A quest that has become a tabletop no longer plays its old instrument; the Lantern-Eater (converted in T4d) still does, on the
-// electron bench's spectrum head, the box rack and the light bench, so its phases are measured on those benches, at the converted
-// quest's own site.
-const BOSS_BENCH = { 'q7-pes': st => st.bench === 'pes', 'q9-absorb': st => st.bench === 'light' && st.rigs.some(r => r.head === 'plot'), 'q6-filling': st => st.bench === 'rack' };
+// Every Lanternfall quest is a tabletop now (T4d: the Lantern-Eater was the last to play the light bench, the box rack and the electron
+// bench), so `stagesOf` is empty for all of them and the old-instrument passes below have nothing left to measure; they stay so that a
+// quest that is ever written for the old instruments again is still held to them.
 const isTable = id => LF[id].STAGES.every(st => st.widget?.type === 'table');
-const stagesOf = id => (isTable(id) ? (BOSS_BENCH[id] ? LF['boss-eater'].STAGES.filter(BOSS_BENCH[id]) : []) : LF[id].STAGES);
+const stagesOf = id => (isTable(id) ? [] : LF[id].STAGES);
 const widestStage = id => stagesOf(id).reduce((a, b) => (itemsOf(b).length > itemsOf(a).length ? b : a));
 const dialStage = id => stagesOf(id).reduce((a, b) => {
   const dials = st => (st.settings ? 1 : 0) + (st.brightnessDial ? 1 : 0);
@@ -1198,7 +1197,7 @@ const LF_BENCHES = LF_BENCHES_ALL.filter(([id]) => stagesOf(id).length);
       check(id, `${label}, dial stage`, build, bench => lay(bench, dialStage(id)));
     }
   }
-  if (failures === mark) ok(`all ${LF_BENCHES.length} Lanternfall instruments still played frame every body and control at ${ASPECTS.length} aspects`);
+  if (failures === mark) ok(LF_BENCHES.length ? `all ${LF_BENCHES.length} Lanternfall instruments still played frame every body and control at ${ASPECTS.length} aspects` : 'every Lanternfall quest is a tabletop: none plays the old light bench, cloud plate, box rack or electron bench (their passes stand empty)');
 }
 
 /* EVERY STAGE, THROUGH THE REAL POINTER PATH. */
@@ -2635,7 +2634,7 @@ console.log('The foes — spoil standing in the wells\n');
  *     lunges, a clear disperses, a replay and a knock-back restore it) and it is a few thousand triangles, no more;
  *   - a press on the pad is a press on the table, never a take of the foe (a foe only observes).
  */
-for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hopper.js', null], ['boss-golem', 'unit07/boss-golem.js', 'foundry'], ['boss-warden', 'unit03/boss-warden.js', null]]) {
+for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hopper.js', null], ['boss-golem', 'unit07/boss-golem.js', 'foundry'], ['boss-warden', 'unit03/boss-warden.js', null], ['boss-eater', 'unit02/boss-eater.js', null]]) {
   console.log(`\n${bossName} on its tables`);
   const MODEL = await import('../src/learn/table/model.js');
   const SNAP = await import('../src/learn/table/snap.js');
@@ -2647,7 +2646,9 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
   // Every pose the species' planner can answer (`foes.js`): the hopper's and the golem's, and the warden's own.
   const POSES = bossName === 'boss-warden'
     ? [['idle'], ['unmoved'], ['gripped'], ['cleaved'], ['splayed'], ['turned'], ['still'], ['locked'], ['free'], ['dispersed']]
-    : [['idle'], ['unmoved'], ['cracked'], ['neutral'], ['balanced'], ['starved'], ['dispersed']];
+    : bossName === 'boss-eater'
+      ? [['idle'], ['unmoved'], ['absorbed'], ['ionized'], ['dispersed']]
+      : [['idle'], ['unmoved'], ['cracked'], ['neutral'], ['balanced'], ['starved'], ['dispersed']];
   const setGlass = (w, h) => { window.innerWidth = w; window.innerHeight = h; };
   const before = failures;
   let fights = 0;
@@ -2752,7 +2753,7 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
       layer.update(0.05);
       const tag = `${label} (the fight)`;
       for (const f of enc.foes) {
-        for (const pose of bossName === 'boss-warden' ? ['gripped', 'cleaved', 'unmoved'] : ['cracked', 'neutral', 'unmoved']) {
+        for (const pose of bossName === 'boss-warden' ? ['gripped', 'cleaved', 'unmoved'] : bossName === 'boss-eater' ? ['absorbed', 'ionized', 'unmoved'] : ['cracked', 'neutral', 'unmoved']) {
           const probe = { pose };
           const want = planFoe(enc, f, probe);
           encounter.react(f.id, probe);

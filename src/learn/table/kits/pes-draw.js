@@ -180,7 +180,8 @@ function paintBuild(ctx, f, state, b) {
   const w = f.size.w;
   const cx = F.x(w / 2);
   const cy = F.y(f.size.h - 16);
-  const R = F.len(Math.min(w * 0.4, 13));
+  // (a build that is shorter than the usual 46 units draws a smaller atom, so its rings stay clear of the dials above them)
+  const R = F.len(Math.max(6, Math.min(w * 0.4, 13, f.size.h - 32)));
   const shells = read.electrons ? ringsFor(read.electrons) : [];
   if (shells.length) rings(ctx, cx, cy, R, shells, Math.max(1.3, F.len(0.7)));
   else { ctx.strokeStyle = RIM; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke(); }

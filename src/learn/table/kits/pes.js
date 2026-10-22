@@ -98,9 +98,9 @@ export function chamber(id, at, sources, { energyDial = false, rings = false, mo
 }
 
 /** An atom to build: protons in the middle and electrons round them, on two dials. Its peaks lie over a chamber that names it as `model`. */
-export function buildFixture(id, at, { max = 13, label = 'Build an atom' } = {}) {
+export function buildFixture(id, at, { max = 13, label = 'Build an atom', size = { w: 36, h: 46 } } = {}) {
   return {
-    id, kind: 'build', label, at: { ...at }, size: { w: 36, h: 46 }, noRun: true,
+    id, kind: 'build', label, at: { ...at }, size: { ...size }, noRun: true,
     dials: {
       protons: { min: 0, max, step: 1, value: 0, label: 'Protons' },
       electrons: { min: 0, max, step: 1, value: 0, label: 'Electrons' }
