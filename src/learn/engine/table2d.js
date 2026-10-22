@@ -388,7 +388,7 @@ export class Table2D extends PlateBench {
   }
 
   /** Take a new state; pieces ease to wherever it puts them. */
-  setState(state) {
+  setState(state, opts = {}) {
     const first = !this.state;
     this.state = state;
     for (const id of Object.keys(this.shown)) if (!state.pieces[id]) delete this.shown[id];
@@ -401,7 +401,7 @@ export class Table2D extends PlateBench {
     const box = this.plates[0]?.canvas?.parentElement;
     if (box?.style) box.style.aspectRatio = `${state.bounds.w} / ${state.bounds.h}`;
     // The keys are the table's own tools (a quest's stages may list different ones; a boss's do).
-    this.keys.render(state, state.tools || this.toolIds);
+    this.keys.render(state, state.tools || this.toolIds, { undo: opts.undo });
     if (first) this.layoutAll(); else this.drawAll();
     this.startAnim();
   }

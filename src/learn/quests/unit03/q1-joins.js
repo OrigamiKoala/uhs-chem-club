@@ -116,24 +116,24 @@ export const STAGES = [
     title: 'Press Them Together',
     briefing: {
       speaker: SPEAKER,
-      body: 'Drag one atom onto another to press the two together. The loose atoms in the corner are yours to play with.'
+      body: 'Drag one atom onto another to press the two together; the loose atoms in the corner are yours to play with. Press Submit when the table shows your answer.'
     },
-    prompt: 'Tray the pairs of atoms that hold together apart from the pairs that spring apart.',
+    prompt: 'Press each pair of atoms together, then sort the pairs into the two trays by whether they stayed together.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_1,
       pieces: pairsAt(12, [14, 54, 94], P1),
-      zones: { trays: [trayAt('held', 'Held', 40, 34, 44), trayAt('apart', 'Sprang apart', 96, 34, 24)] }
+      zones: { trays: [trayAt('held', 'Stayed together', 40, 34, 44), trayAt('apart', 'Came apart', 96, 34, 24)] }
     }),
     hints: [
       'Drag an atom onto the one it started beside and let go.',
       'Watch each pair after you let go: one stays joined and another drifts back apart.',
-      'Press all three pairs, then tray the ones that stayed joined apart from the ones that did not.'
+      'Press all three pairs, then put the ones that stayed joined in one tray and the ones that did not in the other.'
     ],
     check(state) {
       const t = state.table;
       const pairs = readPairs(t, P1, ['held', 'apart']);
-      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Tray all three pairs before you commit.' };
+      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all three pairs into the trays before you submit.' };
       if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
       if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
       // Held pairs stay joined; a pair that sprang apart is two loose atoms.
@@ -142,7 +142,7 @@ export const STAGES = [
         return { ok: false, msg: 'A pair is under the wrong heading. Press it together again and watch whether the two atoms stay joined.' };
       }
       if (pairs.some((p, i) => p.joined !== want[i])) {
-        return { ok: false, msg: 'A pair under Held has to be joined, and one under Sprang apart has to be two loose atoms.' };
+        return { ok: false, msg: 'A pair in the Stayed together tray has to be joined, and one in the Came apart tray has to be two loose atoms.' };
       }
       return { ok: true };
     },
@@ -227,22 +227,22 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Which Way It Goes',
-    prompt: 'Tray each pair of atoms by whether electrons are handed over or shared between them.',
+    prompt: 'Sort each pair of atoms into a tray by whether its electrons are handed over or shared.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_3,
       pieces: [...pairsAt(9, [14, 70], P4.slice(0, 2)), ...pairsAt(24, [14, 70], P4.slice(2))],
-      zones: { trays: [trayAt('handed', 'Handed over', 66, 49, 26, 22), trayAt('shared', 'Held between', 98, 49, 26, 22)] }
+      zones: { trays: [trayAt('handed', 'Handed over', 66, 49, 26, 22), trayAt('shared', 'Shared', 98, 49, 26, 22)] }
     }),
     hints: [
       'Join each pair, then look at what moved between its two atoms.',
       'In one kind of join an electron crosses over and charges appear; in the other a pair settles between the atoms.',
-      'Tray the pairs where charges appeared apart from the pairs where a pair of electrons sits between.'
+      'Put the pairs where charges appeared in one tray, and the pairs where a pair of electrons sits between the atoms in the other.'
     ],
     check(state) {
       const t = state.table;
       const pairs = readPairs(t, P4, ['handed', 'shared']);
-      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Tray all four pairs before you commit.' };
+      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all four pairs into the trays before you submit.' };
       if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
       if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
       if (pairs.some(p => !p.joined)) return { ok: false, msg: 'A pair in a tray has not been pressed together, so nothing is known about it yet.' };
@@ -296,7 +296,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'More Than One Pair',
-    prompt: 'Tray each pair of atoms by how many electron pairs end up held between them.',
+    prompt: 'Sort each pair of atoms into a tray by how many electron pairs are held between them.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_3,
@@ -306,12 +306,12 @@ export const STAGES = [
     hints: [
       'Join each pair and count the rods between its two atoms.',
       'Compare how many places each kind of atom has open on its outer shell before the join.',
-      'Each rod is one shared pair, so tray each pair under the number of rods you counted.'
+      'Each rod is one shared pair, so put each pair in the tray for the number of rods you counted.'
     ],
     check(state) {
       const t = state.table;
       const pairs = readPairs(t, P6, ['one', 'two', 'three']);
-      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Tray all three pairs before you commit.' };
+      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all three pairs into the trays before you submit.' };
       if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
       if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
       if (pairs.some(p => !p.joined)) return { ok: false, msg: 'A pair in a tray has not been pressed together, so there is nothing between its atoms to count.' };
@@ -331,7 +331,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Read It Off the Catalogue',
-    prompt: 'Tray each pair of atoms by what kind of bond it forms, or none.',
+    prompt: 'Sort each pair of atoms into a tray by the kind of bond it forms, or none.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_3,
@@ -346,7 +346,7 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const pairs = readPairs(t, P7, ['ionic', 'covalent', 'none']);
-      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Tray all four pairs before you commit.' };
+      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all four pairs into the trays before you submit.' };
       if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
       if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
       const want = ['ionic', 'covalent', 'none', 'ionic'];

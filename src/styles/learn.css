@@ -2528,7 +2528,7 @@ body.touch-walking .lq-dock-bar {
    ========================================================================== */
 body.bench-deployed .modal-container {
   justify-content: flex-start;
-  align-items: stretch;
+  align-items: flex-start;
   background: rgba(6, 5, 4, 0.34);
   padding: calc(var(--hud-h, 64px) + 12px) 1rem 1rem;
 }

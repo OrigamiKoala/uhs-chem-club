@@ -63,6 +63,9 @@ export function blankAnswer(stage) {
   };
 }
 
+/** What a move changes about a table, as one string: everything but what the last action said and what is in the hand. */
+const tableBody = t => JSON.stringify({ ...t, last: null, carry: null });
+
 /**
  * The end state of a table stage from a script of actions (a `SOLUTIONS` or
  * `MISSES` entry), for a quest's `stateFor`. A stage that is not a table
@@ -118,6 +121,12 @@ export function createRunner(container, ctx, cfg) {
   let dialTeardowns = [];
   let railTeardown = null;
   let tabletop = null;
+  // UNDO. Every action returns a new table, so taking one back is keeping the one before it: `history` is the tables this stage has been
+  // through (oldest first), `holdBase` the table a piece was lifted from, so that Undo takes a whole move back, not just its first tap.
+  let history = [];
+  let holdBase = null;
+  let lastDial = null;
+  const UNDO_DEPTH = 60;
 
   const runner = {
     frame,
@@ -144,6 +153,9 @@ export function createRunner(container, ctx, cfg) {
 
   function loadStage(i) {
     index = i;
+    history = [];
+    holdBase = null;
+    lastDial = null;
     const stage = STAGES[i];
     state = { ...blankAnswer(stage), ...cfg.blankState(stage) };
 
@@ -440,10 +452,58 @@ export function createRunner(container, ctx, cfg) {
      A table stage is graded on `state.table`. Every view dispatches here, and
      `apply` (table/model.js) is the only thing that changes it. */
 
+  /** Put a table on the bench again (an undo, a restart) and tell everything that shows it. */
+  function showTable(table) {
+    state.table = table;
+    state.choice = table.prediction?.token ?? null;
+    frame.clearBanner();
+    tabletop?.setState?.(state.table, { undo: history.length });
+    cfg.onWidgetChange?.(runner);
+    return state.table;
+  }
+
+  /** Take the last move back: a piece in the hand is put down where it was first, then the move before it. */
+  function undo() {
+    const prev = holdBase || history.pop();
+    holdBase = null;
+    lastDial = null;
+    return prev ? showTable(prev) : state.table;
+  }
+
+  /** Clear the table to how the stage opened. The table it had is kept, so even this can be undone. */
+  function restart() {
+    const stage = STAGES[index];
+    history.push(holdBase || state.table);
+    holdBase = null;
+    lastDial = null;
+    return showTable(createTable(stage.table, stage.title));
+  }
+
   /** Dispatch one table action; returns the new `TableState`. */
   function act(action) {
     if (!state?.table) return null;
-    state.table = applyTable(state.table, action);
+    const verb = action && typeof action === 'object' ? Object.keys(action)[0] : null;
+    if (verb === 'undo') return undo();
+    if (verb === 'restart') return restart();
+    const before = state.table;
+    const after = applyTable(before, action);
+    if (verb === 'pick') {
+      // The start of a move: remember the table it began from.
+      if (action.pick && !before.carry.held) holdBase = before;
+      else if (!action.pick && holdBase && !after.carry.held) holdBase = null;
+    } else {
+      const moved = tableBody(before) !== tableBody(after);
+      // A dial dragged is many `setDial`s in a second: one step back, not forty.
+      const dialKey = verb === 'setDial' ? `${action.setDial.fixture}.${action.setDial.dial}` : null;
+      const same = dialKey && lastDial && lastDial.key === dialKey && Date.now() - lastDial.t < 1500;
+      if (moved && !same) {
+        history.push(holdBase || before);
+        if (history.length > UNDO_DEPTH) history.shift();
+      }
+      lastDial = dialKey ? { key: dialKey, t: Date.now() } : null;
+      holdBase = null;
+    }
+    state.table = after;
     state.choice = state.table.prediction?.token ?? null;
     // A pair that does not hold drifts apart, and the planner's reason is on screen before anything
     // else answers (a stage that grades the reason itself sets `table.opts.explain: false`).
@@ -451,7 +511,7 @@ export function createRunner(container, ctx, cfg) {
     if (last?.verb && last.joined === false && last.reason && state.table.opts?.explain !== false) frame.note(last.reason);
     else if (last?.verb === 'run' && last.ok === false && last.reason) frame.note(last.reason);
     else if (last?.joined === true || last?.verb === 'split') frame.clearBanner();
-    tabletop?.setState?.(state.table);
+    tabletop?.setState?.(state.table, { undo: history.length });
     cfg.onWidgetChange?.(runner);
     return state.table;
   }
@@ -483,17 +543,31 @@ export function createRunner(container, ctx, cfg) {
         onLeanChange: leaning => frame.setLeaning(leaning),
         onCarry: label => frame.setCarry(label),
         // A quest with no world under it stands its table in a room of its own (`rooms.js`).
-        room: cfg.room
+        room: cfg.room,
+        // Whose benches these are (`unit03`): a kit dresses its pieces in that world's own gear (`ligar-props.js`).
+        skin: ctx?.world?.id || null
       });
     }
-    tabletop.setState(state.table, { stageIndex: index, newStage: true });
+    tabletop.setState(state.table, { stageIndex: index, newStage: true, undo: history.length });
   }
+
+  // Ctrl+Z (or Cmd+Z) is Undo on a table, wherever the focus is except a field being typed in.
+  const onUndoKey = e => {
+    if (!(e.key === 'z' || e.key === 'Z') || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
+    if (!state?.table || STAGES[index]?.widget?.type !== 'table') return;
+    const tag = e.target?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    e.preventDefault?.();
+    act({ undo: true });
+  };
+  if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('keydown', onUndoKey);
 
   /* ---------------- go ---------------- */
 
   function dispose() {
     if (disposed) return;
     disposed = true;
+    if (typeof window !== 'undefined' && window.removeEventListener) window.removeEventListener('keydown', onUndoKey);
     dialTeardowns.forEach(t => t());
     railTeardown?.();
     tabletop?.dispose();

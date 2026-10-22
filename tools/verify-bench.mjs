@@ -2169,9 +2169,9 @@ console.log('The foes — spoil standing in the wells\n');
     const res = chromeReserve(vw, vh);
     const free = { l: -1 + 2 * res.left / vw, r: 1 - 2 * res.right / vw, b: -1 + 2 * res.bottom / vh, t: 1 - 2 * res.top / vh };
     camera.updateMatrixWorld(true);
-    const zone = bench.map.zone;
+    const zones = bench.leanZones || [bench.map.zone];
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    for (const [x, z] of [[zone.x0, zone.z0], [zone.x1, zone.z0], [zone.x0, zone.z1], [zone.x1, zone.z1]]) {
+    for (const zone of zones) for (const [x, z] of [[zone.x0, zone.z0], [zone.x1, zone.z0], [zone.x0, zone.z1], [zone.x1, zone.z1]]) {
       const p = new THREE.Vector3(x, 0.895, z);
       bench.root.localToWorld(p);
       p.project(camera);
@@ -2445,7 +2445,7 @@ console.log('The foes — spoil standing in the wells\n');
         setGlass(1920, 1080);
         const camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
         let st = MODEL.createTable(spec, stage.title);
-        const b = new Table3D(null, { world: frameOf(camera), onAction: a => { st = MODEL.apply(st, a); b.setState(st); b.settle(); } });
+        const b = new Table3D(null, { skin: unit, world: frameOf(camera), onAction: a => { st = MODEL.apply(st, a); b.setState(st); b.settle(); } });
         b.setState(st);
         b.settleLean();
         camera.updateMatrixWorld(true);
@@ -2476,7 +2476,7 @@ console.log('The foes — spoil standing in the wells\n');
       for (const [vpName, vw, vh] of LEAN_VIEWPORTS) {
         setGlass(vw, vh);
         const camera0 = new THREE.PerspectiveCamera(FOV, vw / vh, 0.05, 80);
-        const bench = new Table3D(null, { world: frameOf(camera0), onAction: () => {}, room: roomId });
+        const bench = new Table3D(null, { skin: unit, world: frameOf(camera0), onAction: () => {}, room: roomId });
         const camera = standalone ? bench.camera : camera0;
         const state = MODEL.createTable(spec, stage.title);
         try { bench.setState(state); } catch (e) { fail(`${label} @ ${vpName}: building the built table faulted — ${e.stack?.split('\n').slice(0, 3).join(' ')}`); bench.dispose(); continue; }
@@ -2487,9 +2487,9 @@ console.log('The foes — spoil standing in the wells\n');
         const res = chromeReserve(vw, vh);
         const free = { l: -1 + 2 * res.left / vw, r: 1 - 2 * res.right / vw, b: -1 + 2 * res.bottom / vh, t: 1 - 2 * res.top / vh };
         camera.updateMatrixWorld(true);
-        const zone = bench.map.zone;
+        const zones = bench.leanZones || [bench.map.zone];
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-        for (const [x, z] of [[zone.x0, zone.z0], [zone.x1, zone.z0], [zone.x0, zone.z1], [zone.x1, zone.z1]]) {
+        for (const zone of zones) for (const [x, z] of [[zone.x0, zone.z0], [zone.x1, zone.z0], [zone.x0, zone.z1], [zone.x1, zone.z1]]) {
           const p = new THREE.Vector3(x, 0.895, z);
           bench.root.localToWorld(p);
           p.project(camera);
@@ -2548,7 +2548,7 @@ console.log('The foes — spoil standing in the wells\n');
       for (const mode of ['drag', 'tap']) {
         const camera0 = new THREE.PerspectiveCamera(FOV, 16 / 9, 0.05, 80);
         let st = MODEL.createTable(spec, stage.title);
-        const b2 = new Table3D(null, { world: frameOf(camera0), onAction: a => { st = MODEL.apply(st, a); b2.setState(st); b2.settle(); }, room: roomId });
+        const b2 = new Table3D(null, { skin: unit, world: frameOf(camera0), onAction: a => { st = MODEL.apply(st, a); b2.setState(st); b2.settle(); }, room: roomId });
         const camera = standalone ? b2.camera : camera0;
         b2.setState(st);
         b2.settleLean();

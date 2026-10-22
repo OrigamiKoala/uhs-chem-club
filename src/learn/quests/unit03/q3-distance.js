@@ -27,6 +27,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import { PAIRS, LATTICES, planCurve, byLatticeEnergy, coulombIndex, IONS } from '../../engine/bonddata.js';
 import { bondsTable, hotplate, pairTag, saltPiece, wellRead, innerZero, piecesIn } from '../../table/kits/bonds.js';
 
@@ -76,7 +77,7 @@ const nearBottom = (row, tol) => Math.abs(row.gap - row.r0) <= tol;
 const tolFor = pair => Math.max(6, Math.round(PAIRS[pair].r0 * 0.1));
 const moved = row => row.lo !== row.hi;
 
-const RAIL = (items, start, first, last) => ({ id: 'rail', at: { x: 49, y: 63 }, size: { w: 90, h: 12 }, first, last, items, start });
+const RAIL = (items, start, first, last) => ({ id: 'rail', at: { x: 49, y: 64 }, size: { w: 90, h: 12 }, first, last, items, start });
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -87,7 +88,7 @@ export const STAGES = [
     title: 'The Bottom',
     briefing: {
       speaker: SPEAKER,
-      body: 'The two atoms are held by a hand on the track: drag it to pull them apart or push them together, and the plot keeps every point the hand passes through. What the plot draws is energy against separation.'
+      body: 'Drag the hand along the track to pull the two atoms apart or push them together; the plot shows energy against separation at every point it passes. Press Submit when the table shows your answer.'
     },
     prompt: 'Pull the hydrogen pair apart and let go where its energy is lowest.',
     widget: { type: 'table', label: 'The bench' },
@@ -341,6 +342,14 @@ export const STAGES = [
     }
   }
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag the hand along its track.'],
+  5: ['Pull each pair along its track,', 'then drag the cards into order.'],
+  6: ['Pull each pair along its track,', 'then drag the cards into order.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

@@ -58,7 +58,7 @@ function rackTable(mol, { counts = false, jar = JAR_AT, extra = [], pieces = [],
   const rack = moRack('a', mol, RACK_AT, { counts });
   return moTable({
     pieces,
-    zones: { ...zones, containers: [moSupply('supply', 'Electrons', jar, DIATOMICS[mol].e), ...rack.containers] },
+    zones: { ...zones, containers: [moSupply('supply', 'Electrons', jar, DIATOMICS[mol].e, jar.y < 20 ? { w: 28, h: 19 } : undefined), ...rack.containers] },
     fixtures: [rack.fixture, ...extra],
     ...(prediction ? { prediction } : {})
   });
@@ -87,7 +87,7 @@ export const STAGES = [
       title: 'Two Become Two',
       briefing: {
         speaker: SPEAKER,
-        body: 'This bench models how atoms bond together. Press "Join Atoms" to see how atomic energy levels combine when a molecule forms.'
+        body: 'This bench shows how atomic energy levels combine when a molecule forms: press "Join Atoms" to see it happen. Press Submit when the table shows your answer.'
       },
       prompt: 'Put the molecule\'s two boxes and one atom\'s box in order of energy.',
       widget: { type: 'table', label: 'The bench' },
@@ -275,7 +275,7 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: rackTable('F2', {
       counts: true,
-      jar: { x: 15, y: 14 },
+      jar: { x: 15, y: 14.6 },
       pieces: [moCard('ref', 'O₂', { x: 134, y: 36 }, { mol: 'O2', counts: true }, { fixed: true })],
       extra: [bondTester('tester', { x: 134, y: 14 }, ['O2', 'F2'])],
       prediction: {
@@ -312,7 +312,7 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: rackTable('B2', {
       counts: true,
-      jar: { x: 15, y: 14 },
+      jar: { x: 15, y: 14.6 },
       extra: [magnet('magnet', { x: 134, y: 16 }, { mol: 'B2', size: { w: 28, h: 28 } })],
       prediction: {
         slot: { id: 'predict', label: 'B₂', at: SLOT_AT, size: { w: 26, h: 10 } },
@@ -340,6 +340,7 @@ export const STAGES = [
     }
   }
 ];
+
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

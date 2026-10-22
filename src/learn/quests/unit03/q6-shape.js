@@ -25,6 +25,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import { RIG_MOLECULES, planDomains, bondAngles, angleBetween, SHAPES } from '../../engine/vsepr.js';
 import {
   domainTable, hubSet, armPiece, balloonPiece, protractorPiece, marker, markerValue, hubRead, frame, frameRead, molCard, molRead, piecesIn
@@ -69,7 +70,7 @@ function hubTable({ sym, arms, label = 'Hub A', marker: mk = null, gauge = false
   const hs = hubSet('hub', sym, HUB_AT, { label, gauge, turner: { x: 108, y: 35 } });
   const inTray = arms.map(a => ({ ...a, zone: 'tray:bin' }));
   return domainTable({
-    pieces: [hs.piece, ...inTray, ...(protractor ? [protractorPiece('pr', { x: 141, y: 15 })] : [])],
+    pieces: [hs.piece, ...inTray, ...(protractor ? [protractorPiece('pr', { x: 139.5, y: 15 }, 'Reads an angle')] : [])],
     zones: { trays: [binTray('Arms')] },
     fixtures: [hs.fixture, hs.turner, ...(mk ? [marker('mark', { x: 108, y: 54 }, mk)] : [])]
   });
@@ -101,7 +102,7 @@ export const STAGES = [
     title: 'Two Arms',
     briefing: {
       speaker: SPEAKER,
-      body: 'Arms clip onto the hub when you drop them on it, and they push each other as far apart as they can get. Lay the protractor on one arm and then on another to read the angle between them.'
+      body: 'Drop an arm on the hub and it pushes the others as far apart as they can get; lay the protractor on one arm and then another to read the angle between them. Press Submit when the table shows your answer.'
     },
     prompt: 'Set the angle marker to the angle two arms make when they push as far apart as they can.',
     widget: { type: 'table', label: 'The bench' },
@@ -299,7 +300,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Shapes',
-    prompt: 'Tray each hub under the shape that its atoms make.',
+    prompt: 'Sort each hub into the tray for the shape its atoms make.',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [
@@ -325,9 +326,9 @@ export const STAGES = [
       const t = state.table;
       const want = { a: 'linear', b: 'planar', c: 'square' };
       const placed = Object.fromEntries(Object.keys(want).map(id => [id, ['linear', 'planar', 'square', 'octa'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
-      if (Object.values(placed).some(z => !z)) return { ok: false, notYet: true, msg: 'Tray every hub.' };
+      if (Object.values(placed).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort every hub into a tray.' };
       if (Object.keys(want).every(id => placed[id] === want[id])) return { ok: true };
-      return { ok: false, msg: 'One hub is trayed under the shape of all its domains. Look at where the atoms alone sit.' };
+      return { ok: false, msg: 'One hub is in the tray for the shape of all its domains. Look at where the atoms alone sit.' };
     },
     reward: {
       log: 'Domains and atoms name different shapes.',
@@ -336,6 +337,12 @@ export const STAGES = [
     }
   }
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  3: ['The lone pair goes on the hub too.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

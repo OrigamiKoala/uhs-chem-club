@@ -62,10 +62,10 @@ export function labelLines(state, kind, zone) {
   }
   const r = rectOf(zone, kind === 'slot' ? SIZES.slot : kind === 'container' ? SIZES.container : SIZES.tray);
   if (kind === 'slot') {
-    return zone.label ? [{ x: r.x0 + r.w / 2, baseline: r.y1 + LABEL.slotBelow, align: 'center', text: zone.label, size: fitSize(zone.label, Math.max(r.w, 22)) }] : [];
+    return zone.label?.trim() ? [{ x: r.x0 + r.w / 2, baseline: r.y1 + LABEL.slotBelow, align: 'center', text: zone.label, size: fitSize(zone.label, Math.max(r.w, 22)) }] : [];
   }
   const out = [];
-  if (zone.label) out.push({ x: r.x0 + 1.2, baseline: r.y0 - LABEL.above, align: 'left', text: zone.label, size: fitSize(zone.label, r.w - 1.2) });
+  if (zone.label?.trim()) out.push({ x: r.x0 + 1.2, baseline: r.y0 - LABEL.above, align: 'left', text: zone.label, size: fitSize(zone.label, r.w - 1.2) });
   return out;
 }
 

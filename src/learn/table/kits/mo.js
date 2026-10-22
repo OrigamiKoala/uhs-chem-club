@@ -28,6 +28,7 @@ import { pileSlots } from './heap.js';
 import { PLATE_COLORS, plateText } from '../../engine/plates.js';
 import { rowsMO, readMO, fillMO, boxKeyMO, DIATOMICS } from '../../engine/mo.js';
 import { rectOf, SIZES } from '../snap.js';
+import { LIGAR_SKIN, buildEnamelTile, ligarDeck } from '../../engine/ligar-props.js';
 
 export const MO_KIT_ID = 'mo';
 
@@ -444,12 +445,20 @@ function faceKey(p) {
    THE KIT
    ------------------------------------------------------------------ */
 
+/** An orbital card is an enamelled tile with a lip at its foot, standing where the rack can hold it (`ligar-props.js`). */
+function piece3d(p, state, c) {
+  if (c.skin !== LIGAR_SKIN) return null;
+  return p.kind === 'mocard' ? buildEnamelTile(c, { lip: true }) : null;
+}
+
 export const MO_KIT = {
   id: MO_KIT_ID,
   kinds: {
     mocard: { r: 9, rect: CARD_RECT, nojoin: true }
   },
   run,
+  piece3d,
+  deck3d: ligarDeck,
   pourRefusal,
   pileOf,
   noJarFill,

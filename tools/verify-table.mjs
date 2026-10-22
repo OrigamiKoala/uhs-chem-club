@@ -483,6 +483,55 @@ try {
   if (failures === before) ok('the stage runner builds the table, applies actions, mirrors the prediction as the choice, and grades state.table');
 }
 
+// UNDO. Every move can be taken back, a move being a whole drag or a whole two taps; Start Over clears the table and can be undone too.
+{
+  const before = failures;
+  try {
+    const stage = FIX.TEST_STAGE;
+    const ctx = { world: {}, quest: {}, stagesCleared: 0, isComplete: false, reportStage() {}, reportComplete() {}, exit() {} };
+    const runner = RUNNER.createRunner(stub(), ctx, { STAGES: [stage], DEBRIEF: {}, blankState: () => ({}), onLoad() {} });
+    runner.start();
+    const body = t => JSON.stringify({ ...t, last: null, carry: null });
+    const start = body(runner.state.table);
+    runner.act({ undo: true });
+    if (body(runner.state.table) !== start) fail('undo with nothing to undo changed the table');
+    const steps = FIX.TEST_SOLUTION;
+    const seen = [start];
+    for (const step of steps) {
+      for (const action of MODEL.expandStep(runner.state.table, step, 'tap')) runner.act(action);
+      seen.push(body(runner.state.table));
+    }
+    const solved = body(runner.state.table);
+    // A step is one move (two taps are one move): undoing walks back through the tables each step ended in.
+    const moved = seen.filter((b, i) => i === 0 || b !== seen[i - 1]);
+    for (let i = moved.length - 2; i >= 0; i--) {
+      runner.act({ undo: true });
+      if (body(runner.state.table) !== moved[i]) { fail(`undo ${moved.length - 1 - i}: the table is not the one before that move`); break; }
+    }
+    runner.act({ restart: true });
+    if (body(runner.state.table) !== start) fail('Start Over did not give back the opening table');
+    runner.act({ undo: true });
+    if (body(runner.state.table) !== start) fail('undoing nothing after a Start Over from the opening table changed it');
+    // Play it again, start over, then take the start-over back: the played table returns.
+    for (const step of steps) for (const action of MODEL.expandStep(runner.state.table, step, 'tap')) runner.act(action);
+    if (body(runner.state.table) !== solved) fail('replaying after an undo reached a different table');
+    runner.act({ restart: true });
+    runner.act({ undo: true });
+    if (body(runner.state.table) !== solved) fail('undoing a Start Over did not bring the played table back');
+    // A piece in the hand is put down first: pick, then undo, leaves nothing held.
+    const a = Object.values(runner.state.table.pieces).find(p => !p.fixed && !p.hidden);
+    runner.act({ restart: true });
+    runner.act({ pick: a.id });
+    if (runner.state.table.carry.held !== a.id) fail('pick did not take the piece in the hand');
+    runner.act({ undo: true });
+    if (runner.state.table.carry.held) fail('undo left a piece in the hand');
+    runner.dispose();
+  } catch (e) {
+    fail(`undo and start over: ${e.stack?.split('\n').slice(0, 3).join(' ')}`);
+  }
+  if (failures === before) ok('Undo takes back each move in turn, Start Over gives back the opening table and can itself be undone, and a piece in the hand is put down first');
+}
+
 // A rail's gestures, a recorder's straightedge, and a script that cannot take, on the same table.
 {
   const t0 = MODEL.createTable(FIX.TEST_TABLE, 'x');

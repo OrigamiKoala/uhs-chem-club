@@ -49,6 +49,42 @@ export function pieceRect(kit, p, at = p.at) {
 }
 
 /**
+ * What a table occupies, as one rectangle in table units: every zone and the words printed on it, every fixture, note and caption,
+ * the site plates, and every piece where it starts, with `pad` units of room to work in round it, never less than `minW` x `minH`
+ * (a bench of three atoms in a row still has a table to build on), and never past the table's edge. The built table frames THIS, not
+ * the whole mat, so what is on the table fills the glass and a mat that is mostly empty is not.
+ */
+export function usedRect(state, kit, { pad = 10, minW = 70, minH = 34, extra = [] } = {}) {
+  const { w, h } = state.bounds;
+  let x0 = Infinity; let y0 = Infinity; let x1 = -Infinity; let y1 = -Infinity;
+  const add = r => { x0 = Math.min(x0, r.x0); y0 = Math.min(y0, r.y0); x1 = Math.max(x1, r.x1); y1 = Math.max(y1, r.y1); };
+  for (const t of Object.values(state.zones.trays)) { add(rectOf(t, SIZES.tray)); labelRects(state, 'tray', t).forEach(add); }
+  for (const t of Object.values(state.zones.slots)) { add(rectOf(t, SIZES.slot)); labelRects(state, 'slot', t).forEach(add); }
+  for (const t of Object.values(state.zones.containers)) { add(rectOf(t, SIZES.container)); labelRects(state, 'container', t).forEach(add); }
+  if (state.zones.rail) { add(rectOf(state.zones.rail, SIZES.rail)); labelRects(state, 'rail', state.zones.rail).forEach(add); }
+  for (const f of Object.values(state.fixtures)) add(rectOf(f, SIZES.fixture));
+  for (const f of Object.values(state.fetch)) if (f.at) add(rectOf(f, SIZES.site));
+  for (const n of state.notes || []) add(noteRect(n));
+  for (const p of Object.values(state.pieces)) {
+    if (p.hidden) continue;
+    add(pieceRect(kit, p));
+    if (p.caption) add(captionRect(kit, p));
+  }
+  for (const r of extra) add(r);
+  if (!Number.isFinite(x0)) return { x0: 0, y0: 0, x1: w, y1: h };
+  x0 -= pad; y0 -= pad; x1 += pad; y1 += pad;
+  const grow = (lo, hi, min, max) => {
+    if (hi - lo < min) { const c = (lo + hi) / 2; lo = c - min / 2; hi = c + min / 2; }
+    if (lo < 0) { hi = Math.min(max, hi - lo); lo = 0; }
+    if (hi > max) { lo = Math.max(0, lo - (hi - max)); hi = max; }
+    return [Math.max(0, lo), Math.min(max, hi)];
+  };
+  [x0, x1] = grow(x0, x1, Math.min(minW, w), w);
+  [y0, y1] = grow(y0, y1, Math.min(minH, h), h);
+  return { x0, y0, x1, y1 };
+}
+
+/**
  * Every problem with a table's layout, as strings. `opts.legacy` waives the checks a quest on
  * the ratchet is not yet held to (every label strip and note, and the gap between pieces).
  */

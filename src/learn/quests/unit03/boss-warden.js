@@ -60,10 +60,11 @@ const PLATING = [['a', 'Plate A', 'NaCl'], ['b', 'Plate B', 'MgO'], ['c', 'Plate
 /** Phase 2's table: the tray's tiles down the left and the SF4 slate beside them (the atom kit's, with its scratch corner). */
 function ventTable() {
   const part = slateParts('a', 'SF4', slateLayout('SF4', 70, 29, 46));
-  const tile = (kind, label, [x, y]) => ({ id: kind, kind, label, at: { x, y } });
+  const CAPTION = { pairs: 'Adds a pair', lift: 'Takes one back', three: 'Adds three' };
+  const tile = (kind, label, [x, y]) => ({ id: kind, kind, label, at: { x, y }, caption: CAPTION[kind] });
   return atomTable({
     opts: { words: 'shells', slate: true },
-    pieces: [tile('pairs', 'Pair', [10, 10]), tile('lift', 'Lift Out', [26, 10]), tile('three', '3 Pairs', [10, 26]), ...part.pieces],
+    pieces: [tile('pairs', 'Pair', [12, 10]), tile('lift', 'Lift Out', [34, 10]), tile('three', '3 Pairs', [12, 26]), ...part.pieces],
     fixtures: [part.fixture]
   });
 }
@@ -71,7 +72,7 @@ function ventTable() {
 /** Phase 3's table: the xenon hub with its tray of four fluorine atoms, two lone pairs and the protractor, and the angle marker. */
 const HUB_AT = { x: 38, y: 32 };
 function hubTable() {
-  const hs = hubSet('hub', 'Xe', HUB_AT, { label: 'Hub Xe', turner: { x: 100, y: 12 } });
+  const hs = hubSet('hub', 'Xe', HUB_AT, { label: 'Hub Xe', turner: { x: 100, y: 10.5 } });
   const at0 = { x: 0, y: 0 };
   const inTray = [
     ...[1, 2, 3, 4].map(i => armPiece(`f${i}`, 'F', at0, 1, 'F')),
@@ -81,7 +82,7 @@ function hubTable() {
   return domainTable({
     pieces: [hs.piece, ...inTray],
     zones: { trays: [{ id: 'bin', label: 'Arms', at: { x: 112, y: 51 }, size: { w: 52, h: 26 }, cell: 13 }] },
-    fixtures: [hs.fixture, hs.turner, marker('mark', { x: 100, y: 28 }, { label: 'Angle' })]
+    fixtures: [hs.fixture, hs.turner, marker('mark', { x: 100, y: 25.5 }, { label: 'Angle', size: { w: 44, h: 14 } })]
   });
 }
 
@@ -100,7 +101,7 @@ export const STAGES = [
     title: 'Phase 1 · The Plating',
     briefing: {
       speaker: SPEAKER,
-      body: 'This is the warden Ligar guards itself with, and each phase puts one of the benches in front of it again. A miss costs the table a point of Integrity; three knock it back, and nothing you have read is lost.'
+      body: 'Each phase puts one of Ligar\'s benches in front of the warden again; a miss costs a point of Integrity, three knock you back, and nothing you have read is lost. Press Submit when the table shows your answer.'
     },
     prompt: 'Put the plating block that takes the most heat to melt in the marked place.',
     widget: { type: 'table', label: 'The bench' },
@@ -149,16 +150,16 @@ export const STAGES = [
       intent: 'The warden vents a thin stream and its seams stand shut.'
     },
     hints: [
-      'Drag a pair from the tray onto the joint between two atoms, or onto one atom.',
-      'Compare the lamps on the fluorine atoms with the lamp on sulfur as the tray runs down.',
+      'Drag the Pair tile onto the gap between two atoms, or onto one atom.',
+      'Compare the lamps on the fluorine atoms with the lamp on sulfur as the electrons run out.',
       'Put the pairs that are left after the bonds and the fluorine atoms are done onto sulfur.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the tray\'s electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
       if (allLit(sl.read)) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still in the tray, and a lamp is still dark.' };
-      return { ok: false, msg: 'The tray is empty but a lamp is still dark, or an atom has more round it than it can hold.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and a lamp is still dark.' };
+      return { ok: false, msg: 'Every electron is placed but a lamp is still dark, or an atom has more round it than it can hold.' };
     },
     reward: {
       title: 'Vent Sealed',
@@ -191,7 +192,7 @@ export const STAGES = [
       const v = markerValue(t, 'mark');
       if (!v) return { ok: false, notYet: true, msg: 'Set the marker to an angle you have read.' };
       const fs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm');
-      if (r.lone < 2 || fs.length < 4) return { ok: false, msg: 'Build the hub with everything in the tray on it, then read the protractor between two fluorine atoms that sit next to each other.' };
+      if (r.lone < 2 || fs.length < 4) return { ok: false, msg: 'Build the hub with everything from the Arms tray on it, then read the protractor between two fluorine atoms that sit next to each other.' };
       let near = Infinity;
       for (let i = 0; i < fs.length; i++) for (let j = i + 1; j < fs.length; j++) near = Math.min(near, angleBetween(r.plan, fs[i][1], fs[j][1]));
       if (Math.abs(v - near) <= 1.5) return { ok: true };
@@ -212,12 +213,12 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [
-        molCard('a', 'CO2', { x: 14, y: 54 }, { field: true }),
-        molCard('b', 'SF4', { x: 44, y: 54 }, { field: true }),
-        molCard('c', 'NH3', { x: 74, y: 54 }, { field: true }),
+        molCard('a', 'CO2', { x: 14, y: 53 }, { field: true }),
+        molCard('b', 'SF4', { x: 42, y: 53 }, { field: true }),
+        molCard('c', 'NH3', { x: 70, y: 53 }, { field: true }),
         arrowsTool('ar', { x: 100, y: 10 })
       ],
-      zones: { trays: [{ id: 'turns', label: 'Turns in the field', at: { x: 112, y: 44 }, size: { w: 62, h: 26 }, cell: 20 }] },
+      zones: { trays: [{ id: 'turns', label: 'Turns in the field', at: { x: 114, y: 44 }, size: { w: 58, h: 26 }, cell: 20 }] },
       fixtures: [plates('pl', FIELD_AT, { size: { w: 70, h: 38 } })]
     }),
     foes: WARDEN_FOE,
@@ -235,7 +236,7 @@ export const STAGES = [
       const t = state.table;
       const ids = ['a', 'b', 'c'];
       const got = ids.filter(id => t.pieces[id].zone === 'tray:turns');
-      if (!got.length) return { ok: false, notYet: true, msg: 'Put the molecules that turn in the tray.' };
+      if (!got.length) return { ok: false, notYet: true, msg: 'Put the molecules that turn into the tray.' };
       const want = ids.filter(id => molRead(t.pieces[id]).polar);
       if (got.join() === want.join()) return { ok: true };
       return { ok: false, msg: 'Switch the field on and watch which molecules do not move, then check the tray against them.' };
@@ -258,7 +259,7 @@ export const STAGES = [
       zones: {
         slots: [
           { id: 'test', label: 'Gas to test', at: { x: 36, y: 22 }, size: { w: 36, h: 22 } },
-          { id: 'drawn', label: 'Drawn in', at: { x: 118, y: 42 }, size: { w: 36, h: 22 } }
+          { id: 'drawn', label: 'Drawn in', at: { x: 124, y: 42 }, size: { w: 36, h: 22 } }
         ]
       },
       fixtures: [magnet('magnet', { x: 76, y: 22 }, { slot: 'test', size: { w: 34, h: 30 }, label: 'Magnet' })]
@@ -311,7 +312,7 @@ export const SOLUTIONS = [
   [into('b', 'most')],
   [...['aj01', 'aj02', 'aj03', 'aj04'].flatMap(j => deal(j)), ...['a1', 'a2', 'a3', 'a4'].flatMap(a => deal(a, 1, 'three')), ...deal('a0')],
   [...on('f1', 'f2', 'f3', 'f4', 'l1', 'l2'), ...read('f1', 'f2'), set(90)],
-  [between('a'), field, free('a', 14, 54), between('b'), into('b', 'turns', 'tray'), between('c'), into('c', 'turns', 'tray')],
+  [between('a'), field, free('a', 14, 53), between('b'), into('b', 'turns', 'tray'), between('c'), into('c', 'turns', 'tray')],
   [...test('n2'), ...test('o2'), ...test('f2'), into('o2', 'drawn')]
 ];
 

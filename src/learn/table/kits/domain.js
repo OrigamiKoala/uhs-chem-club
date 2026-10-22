@@ -25,6 +25,9 @@ import {
   planOrbJoin, paintOrbKind, printedOrb, faceKeyOrb, paintOrbLink, orbLinkRods, paintOrbFixture, ORB_R
 } from './domain-orbitals.js';
 import { piecesIn } from './atoms.js';
+import {
+  LIGAR_SKIN, buildHubBall, buildArmBall, buildBalloonLobe, buildProtractor, buildEnamelTile, buildProbe, buildToolCap, ligarDeck
+} from '../../engine/ligar-props.js';
 
 export const DOMAIN_KIT_ID = 'domain';
 
@@ -83,6 +86,22 @@ function paintFixture(ctx, f, state, b) {
   return paintHubFixture(ctx, f, state, b) || paintFieldFixture(ctx, f, state, b) || paintOrbFixture(ctx, f, state, b);
 }
 
+/** A piece as the solid thing it is (`ligar-props.js`): a hub is a cast ball, an arm a ball on a stem, a molecule an enamelled tile. */
+function piece3d(p, state, c) {
+  if (c.skin !== LIGAR_SKIN) return null;
+  switch (p.kind) {
+    case 'hub': { const f = c.faceInfo({ physical: true }); return buildHubBall(c, { face: f.mat, body: f.body }); }
+    case 'arm': { const f = c.faceInfo({ physical: true }); return buildArmBall(c, { face: f.mat, body: f.body, mult: p.props.mult || 1 }); }
+    case 'balloon': return buildBalloonLobe(c);
+    case 'protractor': return buildProtractor(c, { face: c.face() });
+    case 'mol': case 'dmol': case 'tmol': case 'stream': return buildEnamelTile(c, {});
+    case 'arrows': return buildProbe(c, { text: p.label });
+    case 'rod': return buildProbe(c, { text: p.label, rod: true });
+    case 'swapper': case 'orb': return buildToolCap(c, { face: c.face() });
+    default: return null;
+  }
+}
+
 export const DOMAIN_KIT = {
   id: DOMAIN_KIT_ID,
   joinGap: 1.25,
@@ -90,20 +109,22 @@ export const DOMAIN_KIT = {
     hub: { r: HUB_R },
     arm: { r: ARM_R, tool: true, target: true },
     balloon: { r: ARM_R, tool: true, target: true },
-    protractor: { r: 6.5, tool: true },
+    protractor: { r: 6.5, tool: true, onTop: true },
     mol: { r: 9, rect: MOL_RECT, nojoin: true },
     dmol: { r: 9, rect: MOL_RECT },
     tmol: { r: 9, rect: MOL_RECT, flip: true },
     stream: { r: 9, rect: STREAM_RECT },
-    arrows: { r: 6.5, tool: true },
-    rod: { r: 6.5, tool: true },
-    swapper: { r: 6.5, tool: true },
+    arrows: { r: 6.5, tool: true, onTop: true },
+    rod: { r: 6.5, tool: true, onTop: true },
+    swapper: { r: 6.5, tool: true, onTop: true },
     orb: { r: ORB_R }
   },
   planJoin,
   pairable,
   run,
   settle,
+  piece3d,
+  deck3d: ligarDeck,
   paintPiece,
   printed,
   faceKey,

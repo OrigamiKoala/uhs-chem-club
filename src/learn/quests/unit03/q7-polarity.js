@@ -27,6 +27,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import { RIG_MOLECULES, planDipole, bondKind } from '../../engine/vsepr.js';
 import {
   domainTable, plates, molCard, molOf, molRead, streamPiece, arrowsTool, rodTool, swapTool, dmolBehaviour, platesAround, fieldIsOn, platesOf
@@ -56,12 +57,12 @@ export function toolNoteFor() { return null; }
    has the tools there. Cards start in a row under the plates (or, where the stage is a test, already between them).
    ------------------------------------------------------------------ */
 
-const PLATES_BIG = { at: { x: 52, y: 25 }, size: { w: 100, h: 48 } };
+const PLATES_BIG = { at: { x: 52, y: 21 }, size: { w: 100, h: 40 } };
 const PLATES_SHORT = { at: { x: 37, y: 20 }, size: { w: 70, h: 38 } };
 
 const rowAt = (i, y = 53) => ({ x: 15 + i * 28, y });
 /** The trays stand in a grid at the right of the plates: two across, as many down as the stage needs. */
-const TRAY_SPOTS = [{ x: 100, y: 15 }, { x: 133, y: 15 }, { x: 100, y: 45 }, { x: 133, y: 45 }];
+const TRAY_SPOTS = [{ x: 100, y: 19 }, { x: 133, y: 19 }, { x: 100, y: 50 }, { x: 133, y: 50 }];
 const grid = labels => labels.map(([id, label], i) => ({ id, label, at: { ...TRAY_SPOTS[i] }, size: { w: 32, h: 26 }, cell: 26 }));
 
 /* ------------------------------------------------------------------
@@ -73,7 +74,7 @@ export const STAGES = [
     title: 'Which End',
     briefing: {
       speaker: SPEAKER,
-      body: 'Switch Field charges the two plates, the left one positive and the right one negative. The arrows tool, laid on a molecule, draws the pull across each bond.'
+      body: 'Switch Field charges the two plates, the left one positive and the right one negative; the arrows tool, laid on a molecule, draws the pull across each bond. Press Submit when the table shows your answer.'
     },
     prompt: 'Turn the hydrogen chloride molecule so that its partial negative end faces the positive plate.',
     widget: { type: 'table', label: 'The bench' },
@@ -117,13 +118,13 @@ export const STAGES = [
     hints: [
       'Put each molecule between the plates, lay the arrows on it and read the net pull.',
       'Compare the size of the net pull on each card.',
-      'Rank the three by the size of the pull and tray them from none, through some, to nearly all.'
+      'Rank the three by the size of the pull and sort them from none, through some, to nearly all.'
     ],
     check(state) {
       const t = state.table;
       const want = { a: 'given', b: 'even', c: 'uneven' };
       const where = Object.fromEntries(Object.keys(want).map(id => [id, ['even', 'uneven', 'given'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
-      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Tray all three bonds.' };
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all three bonds into trays.' };
       if (Object.keys(want).every(id => where[id] === want[id])) return { ok: true };
       return { ok: false, msg: 'Compare the pull on each card: the bond that pulls most is not shared like the one that pulls least.' };
     },
@@ -173,7 +174,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Bent and Straight',
-    prompt: 'Tray each molecule by whether its bond arrows add up to a net arrow or cancel.',
+    prompt: 'Sort each molecule into a tray by whether its bond arrows add up to a net arrow or cancel.',
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [molCard('a', 'H2O', rowAt(0), { field: true }), molCard('b', 'CO2', rowAt(1), { field: true }), arrowsTool('ar', { x: 133, y: 45 })],
@@ -188,7 +189,7 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const where = Object.fromEntries(['a', 'b'].map(id => [id, ['add', 'cancel'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
-      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Tray both molecules.' };
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort both molecules into trays.' };
       if (['a', 'b'].every(id => where[id] === (molRead(t.pieces[id]).polar ? 'add' : 'cancel'))) return { ok: true };
       return { ok: false, msg: 'A molecule is under the wrong heading. Lay the arrows on each and compare the direction of the bond arrows with the arrow they add up to.' };
     },
@@ -211,7 +212,7 @@ export const STAGES = [
     table: domainTable({
       pieces: [
         molCard('a', 'CCl4', rowAt(0), { field: true, extra: { hub: 'C', arms: RIG_MOLECULES.CCl4.arms.map(a => ({ ...a })) } }),
-        arrowsTool('ar', { x: 130, y: 14 }), swapTool('swh', 'H', { x: 130, y: 34 }), swapTool('swc', 'Cl', { x: 130, y: 54 })
+        arrowsTool('ar', { x: 130, y: 12 }), swapTool('swh', 'H', { x: 130, y: 30 }), swapTool('swc', 'Cl', { x: 130, y: 48 })
       ],
       fixtures: [plates('pl', PLATES_BIG.at, { size: PLATES_BIG.size })]
     }),
@@ -294,13 +295,13 @@ export const STAGES = [
     hints: [
       'Put each molecule between the plates, lay the arrows on it and switch the field on.',
       'Compare the net pull on each card, if there is one, after the bond arrows are added.',
-      'Tray a molecule as polar when its bond arrows add to a net arrow and as nonpolar when they cancel.'
+      'Sort a molecule as polar when its bond arrows add to a net arrow and as nonpolar when they cancel.'
     ],
     check(state) {
       const t = state.table;
       const ids = ['a', 'b', 'c'];
       const where = Object.fromEntries(ids.map(id => [id, ['polar', 'nonpolar'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
-      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Tray all three molecules.' };
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all three molecules into trays.' };
       if (ids.every(id => where[id] === (molRead(t.pieces[id]).polar ? 'polar' : 'nonpolar'))) return { ok: true };
       return { ok: false, msg: 'A molecule is under the wrong heading. Switch the field on for the one you are unsure of and watch whether it turns.' };
     },
@@ -322,11 +323,11 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: domainTable({
       pieces: [
-        streamPiece('s1', 'CCl4', { x: 24, y: 22 }), streamPiece('s2', 'CHCl3', { x: 56, y: 22 }), streamPiece('s3', 'H2O', { x: 88, y: 22 }),
-        { ...streamPiece('s4', 'H2O', { x: 120, y: 22 }, { note: 'Sump' }), hidden: true, fetchFrom: 'sump' },
-        rodTool('rod', { x: 138, y: 14 })
+        streamPiece('s1', 'CCl4', { x: 24, y: 21 }), streamPiece('s2', 'CHCl3', { x: 56, y: 21 }), streamPiece('s3', 'H2O', { x: 88, y: 21 }),
+        { ...streamPiece('s4', 'H2O', { x: 120, y: 21 }, { note: 'Sump' }), hidden: true, fetchFrom: 'sump' },
+        rodTool('rod', { x: 136, y: 14 })
       ],
-      zones: { trays: [{ id: 'bent', label: 'Bent by the rod', at: { x: 62, y: 50 }, size: { w: 90, h: 24 }, cell: 20 }] },
+      zones: { trays: [{ id: 'bent', label: 'Bent by the rod', at: { x: 62, y: 51 }, size: { w: 90, h: 24 }, cell: 20 }] },
       fetch: [{ id: 'sump', label: 'Sump stream', at: { x: 124, y: 54 } }]
     }),
     hints: [
@@ -350,6 +351,13 @@ export const STAGES = [
     }
   }
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag the molecule between the plates,', 'then press Switch Field.'],
+  8: ['Lay the rod on a stream.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
