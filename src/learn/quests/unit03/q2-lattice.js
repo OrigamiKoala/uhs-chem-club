@@ -40,6 +40,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import { conductionOf } from '../../engine/joinbench.js';
 import {
   bondsTable, slabPiece, hotplate, declOf, groupsOf, smallestPiece, liftCells, liftsOf, gridRead, piecesIn
@@ -88,15 +89,17 @@ const sealed = (d, melt) => ({ ...d, melt, sealed: true });
 
 const PLATE_AT = { x: 49, y: 19 };
 const PLATE_Y = 26;            // a block's middle when it lies on the plate
-const BENCH_Y = 48;
-const TOOLS_Y = 64;
+const BENCH_Y = 44;
+const TOOLS_Y = 61;
 const bench = (i, step = 27) => ({ x: 14 + i * step, y: BENCH_Y });
-const toolAt = (id, label, i) => ({ id, kind: id, label, at: { x: 14 + i * 16, y: TOOLS_Y } });
+/** What each tool does, printed under the place it hangs (`caption`): a bench that has to be known before it can be used is a bad bench. */
+const CAPTION = { hammer: 'Strikes a block', leads: 'Tests a block', tongs: 'Lifts an atom' };
+const toolAt = (id, label, i) => ({ id, kind: id, label, at: { x: 14 + i * 28, y: TOOLS_Y }, caption: CAPTION[id] });
 const hammer = i => toolAt('hammer', 'Hammer', i);
 const leads = i => toolAt('leads', 'Leads', i);
 const tongs = i => toolAt('tongs', 'Tongs', i);
 const plate = max => hotplate('hp', PLATE_AT, { max });
-const tray = (id, label, y, h = 20) => ({ id, label, at: { x: 122, y }, size: { w: 44, h }, cell: 22 });
+const tray = (id, label, y, h = 18) => ({ id, label, at: { x: 122, y }, size: { w: 44, h }, cell: 22 });
 const heat = value => ({ setDial: { fixture: 'hp', dial: 'heat', value } });
 
 /** The twelve ions of stage 2: six sodium ions and six chlorine ions in two rows, and a 4 x 3 grid of cells. */
@@ -112,7 +115,7 @@ const trayOf = (t, id) => piecesIn(t, `tray:${id}`, 'slab');
 /** Which way a block carries a current, from its build alone: cold and molten, only molten, or never. */
 const carries = d => (conductionOf(d, false) ? 'both' : conductionOf(d, true) ? 'molten' : 'never');
 
-const UNTRAYED = 'Tray every block before you commit.';
+const UNTRAYED = 'Sort every block into a tray before you submit.';
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -123,7 +126,7 @@ export const STAGES = [
     title: 'Heat All Three',
     briefing: {
       speaker: SPEAKER,
-      body: 'Slide a block onto the hotplate and turn its dial up to heat it. A block chipped from the drift\'s own face is waiting at the seam.'
+      body: 'Drag a block onto the hotplate and turn its dial to heat it; a block chipped from the drift\'s own face is waiting at the seam. Press Submit when the table shows your answer.'
     },
     prompt: 'Order the three blocks by how much heat each one takes to come apart.',
     widget: { type: 'table', label: 'The bench' },
@@ -204,7 +207,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'The leads clip across the block they lie on, and their lamp is lit while a current passes through that block.'
     },
-    prompt: 'Tray the three blocks by when each one passes a current.',
+    prompt: 'Sort the three blocks into trays by when each one passes a current.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -213,13 +216,13 @@ export const STAGES = [
         slabPiece('s3', 'BLOCK C', COPPER, bench(2)),
         leads(0)
       ],
-      zones: { trays: [tray('both', 'Cold and molten', 14), tray('molten', 'Only when molten', 38), tray('never', 'Never', 62)] },
+      zones: { trays: [tray('both', 'Cold and molten', 14), tray('molten', 'Only when molten', 37), tray('never', 'Never', 60)] },
       fixtures: [plate(2000)]
     }),
     hints: [
       'Clip the leads onto a block and watch their lamp.',
       'Test each block cold, then slide it onto the hotplate, turn the dial past where it gives way, and watch the lamp again.',
-      'Tray each block under what its lamp did: lit cold and molten, lit only once molten, or never lit.'
+      'Put each block in the tray for what its lamp did: lit cold and molten, lit only once molten, or never lit.'
     ],
     check(state) {
       const t = state.table;
@@ -280,7 +283,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'The tongs close on one atom near the middle of a block and lift.'
     },
-    prompt: 'Take hold of one atom of Block A with the tongs, then tray the block by how much came out with it.',
+    prompt: 'Take hold of one atom of Block A with the tongs, then sort the block into the tray for how much came out with it.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -288,18 +291,18 @@ export const STAGES = [
         slabPiece('s2', 'BLOCK B', VENT, bench(1)),
         hammer(0), leads(1), tongs(2)
       ],
-      zones: { trays: [tray('one', 'Just that atom', 14), tray('group', 'A small group', 38), tray('whole', 'The whole block', 62)] },
+      zones: { trays: [tray('one', 'Just that atom', 14), tray('group', 'A small group', 37), tray('whole', 'The whole block', 60)] },
       fixtures: [plate(2000)]
     }),
     hints: [
       'Lay the tongs on Block A and look at what is left in its picture.',
       'Compare what came out of Block A with the block you started with, and try the same on Block B.',
-      'Tray Block A under the heading that matches how much came out of it.'
+      'Put Block A in the tray that matches how much came out of it.'
     ],
     check(state) {
       const t = state.table;
       const at = ['one', 'group', 'whole'].find(k => trayOf(t, k).some(p => p.id === 's3'));
-      if (!at) return { ok: false, notYet: true, msg: 'Tray Block A under what came out with the atom.' };
+      if (!at) return { ok: false, notYet: true, msg: 'Sort Block A into the tray for what came out with the atom.' };
       const lift = liftCells(declOf(t.pieces.s3), 'intact');
       const real = lift.whole ? 'whole' : lift.n === 1 ? 'one' : 'group';
       if (at === real) return { ok: true };
@@ -352,7 +355,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Four Sealed Blocks',
-    prompt: 'Tray each sealed block by how its atoms are held together.',
+    prompt: 'Sort each sealed block into a tray by how its atoms are held together.',
     widget: { type: 'table', label: 'The bench' },
     table: bondsTable({
       pieces: [
@@ -373,9 +376,9 @@ export const STAGES = [
       fixtures: [plate(3600)]
     }),
     hints: [
-      'Nothing resolves inside a cased block, so heat each one, clip the leads on it, and hit it.',
+      'You cannot see inside a sealed block, so heat each one, clip the leads on it, and hit it.',
       'A molecular solid melts low and crumbles, a lattice melts high and lights the lamp only when molten, a metal lights it cold and molten, and a network resists heat and never lights it.',
-      'For each block note its heat, its blow and its lamp, then tray it under the build that behaves that way.'
+      'For each block note its heat, its blow and its lamp, then put it in the tray for the build that behaves that way.'
     ],
     check(state) {
       const t = state.table;
@@ -434,6 +437,13 @@ export const STAGES = [
     }
   }
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag a block onto the hotplate,', 'then turn the heat dial.'],
+  3: ['Drop the leads on a block;', 'the lamp lights while current passes.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

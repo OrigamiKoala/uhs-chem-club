@@ -25,6 +25,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import { planMix, planBlend, planTwist, planDomains, countSigmaPi, RIG_MOLECULES } from '../../engine/vsepr.js';
 import {
   domainTable, orbital, mixbowl, twist, bowlRead, bondsBuilt, twistRead, molCard, molRead
@@ -71,7 +72,7 @@ const TWOLOBE = [['two', 'Two lobes'], ['three', 'Three lobes'], ['four', 'Four 
 function sortTable(mols) {
   return domainTable({
     pieces: mols.map(([id, mol], i) => molCard(id, mol, { x: 30 + i * 45, y: 53 }, { show: ['arms'] })),
-    zones: { trays: TWOLOBE.map(([id, label], i) => ({ id, label, at: { x: 26 + i * 50, y: 17 }, size: { w: 48, h: 26 }, cell: 24 })) }
+    zones: { trays: TWOLOBE.map(([id, label], i) => ({ id, label, at: { x: 26 + i * 50, y: 20 }, size: { w: 48, h: 26 }, cell: 24 })) }
   });
 }
 
@@ -87,7 +88,7 @@ export const STAGES = [
     title: 'The Puzzle',
     briefing: {
       speaker: SPEAKER,
-      body: 'Each orbital is drawn with the electrons it holds. Drop a hydrogen atom on an orbital to try to bond with it.'
+      body: 'Each orbital is drawn with the electrons it holds: drop a hydrogen atom on an orbital to try to bond with it. Press Submit when the table shows your answer.'
     },
     prompt: 'Bond hydrogen atoms to carbon through its orbitals as they stand, as many as they allow.',
     widget: { type: 'table', label: 'The bench' },
@@ -162,7 +163,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Count the Lobes',
-    prompt: 'Tray each molecule by how many hybrid lobes its central atom needs.',
+    prompt: 'Sort each molecule into a tray by how many hybrid lobes its central atom needs.',
     widget: { type: 'table', label: 'The bench' },
     table: sortTable([['a', 'NH3'], ['b', 'H2O'], ['c', 'C2H4']]),
     hints: [
@@ -173,7 +174,7 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const where = sortedTo(t, ['a', 'b', 'c']);
-      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Tray all three molecules.' };
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all three molecules into trays.' };
       const wrong = ['a', 'b', 'c'].find(id => LOBES[where[id]] !== molRead(t.pieces[id]).domains);
       if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is under the wrong heading: count the arms on its central atom, including any that are not bonds.` };
       return { ok: true };
@@ -188,7 +189,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Fewer Lobes',
-    prompt: 'Tray each molecule by how many hybrid lobes its central atom needs.',
+    prompt: 'Sort each molecule into a tray by how many hybrid lobes its central atom needs.',
     widget: { type: 'table', label: 'The bench' },
     table: sortTable([['a', 'CO2'], ['b', 'BF3'], ['c', 'HCN']]),
     hints: [
@@ -199,7 +200,7 @@ export const STAGES = [
     check(state) {
       const t = state.table;
       const where = sortedTo(t, ['a', 'b', 'c']);
-      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Tray all three molecules.' };
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all three molecules into trays.' };
       const wrong = ['a', 'b', 'c'].find(id => LOBES[where[id]] !== molRead(t.pieces[id]).domains);
       if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is under the wrong heading: count the arms on its central atom, and remember what a multiple bond counts as.` };
       return { ok: true };
@@ -358,6 +359,12 @@ export const STAGES = [
     };
   })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  2: ['Drop orbitals in the bowl to mix them.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

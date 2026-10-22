@@ -214,6 +214,20 @@ table, atom kit piloted first, and every reworked bench must also be integrated 
   recursion otherwise, leaving the stage UI up and the router dead); `disposeLearnQuest` and `LearnFrame.dispose` guard every step.
   The star map draws planets, names and rings only (no acts, no light-years, scattered positions); Tallow's crates are chipped, rusted
   and rounded (`createSalvageCrateTexture`, `boxUVs`).
+  **Ligar's tables are dressed in the mine's own gear** (2026-10-22 audit; Ligar is off `tools/layout-legacy.json`): `engine/ligar-props.js`
+  builds the model atom (a polished ball in an iron collar, its painted face printed on the crown), the ore block (a rough-hewn body of its own
+  rock with a sawn, glazed face carrying the kit's picture), the salt specimen, the pair tag, a club hammer, clip leads, tongs, the stamped
+  tool caps, the hub and its arms, the enamel tiles that molecules, streams and orbital cards stand on, and the frames instruments are set in
+  (`buildBoardDeck` a timber survey board, `buildHotplateDeck` a cast-iron plate). `Table3D` asks for them only when its `skin` is the world's id
+  (`stagerunner` passes `ctx.world.id`), through the same optional kit hooks as Lanternfall plus `deck3d(f, {w, d, mats, skin})`, and `piece3d`'s
+  context carries `skin` and `faceInfo()` (the face and the colour it carries). A piece's group may set `userData.joinY` and a join is then a
+  steel rod between the middles of two solids. The mat runs the length of the bench and is lit a little from within (`emissive`, so a mine at dusk
+  does not print black on black); the lean-in frames `usedRect` (`table/audit.js`: what is on the table plus room to work), not the whole mat.
+  **Every table has Undo and Start Over** in the foot dock (`stagerunner.js`: `history`, `holdBase`; one move is a whole drag or two taps, a dial
+  dragged is one step, Start Over is itself undoable); `verify:table` replays it. A tool laid on a block is on top (`onTop`) and can always be
+  lifted off. **Words:** the trays are *sorted into* ("Sort each pair into a tray by ..."), never "trayed"; the Lewis slate says "N OF M LEFT",
+  not "TRAY"; a bond sits in "the gap between two atoms", never a "joint"; every loose tool carries a caption that says what it does and every
+  stage-one briefing ends "Press Submit when the table shows your answer."
 - **Deck layout:** `.lq-prompt` pinned top, `.lq-deck-body` scrolls, `.lq-deck-foot` (banner, Hint,
   Submit) pinned bottom; `fitDeck()` bounds it; sorting answers render as a matrix (`compactBins`).
   Overworld card (`.learn-quest-overworld .lq-body`) is flat prose: prompt, reading, keys, run-in reward;

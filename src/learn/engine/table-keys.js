@@ -29,8 +29,14 @@ export class TableKeys {
     this.state = null;
   }
 
-  render(state, toolIds) {
+  /**
+   * @param {object} state the table
+   * @param {string[]} toolIds the stage's tools
+   * @param {{undo?: number}} [extra] `undo`: how many moves can be taken back (Undo and Start Over are on while there are any)
+   */
+  render(state, toolIds, extra = {}) {
     this.state = state;
+    if (extra.undo !== undefined) this.undoDepth = extra.undo;
     const host = this.host;
     if (!host || !state) return;
     if (!this.bar || this.bar.parentElement !== host) {
@@ -62,6 +68,10 @@ export class TableKeys {
       if (k.id.startsWith('fetch:') && this.skipFetch?.(k.id.slice(6))) continue;
       keys.push({ id: k.id, label: k.label, on: false, enabled: k.enabled, action: () => k.action });
     }
+    // Whatever the player did, they can take it back: the last move, or all of it. (The runner owns the history.)
+    const depth = this.undoDepth || 0;
+    keys.push({ id: 'undo', label: 'Undo', on: false, enabled: depth > 0 || Boolean(state.carry?.held), action: () => ({ undo: true }) });
+    keys.push({ id: 'restart', label: 'Start Over', on: false, enabled: depth > 0, action: () => ({ restart: true }) });
     this.keys = keys;
     this.bar.innerHTML = keys.map(k =>
       `<button type="button" class="btn-secondary quest-btn-sm lq-tool${k.on ? ' selected' : ''}" data-table-key="${escText(k.id)}" aria-pressed="${k.on}"${k.enabled ? '' : ' disabled'}>${escText(k.label)}</button>`

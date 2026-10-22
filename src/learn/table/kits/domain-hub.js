@@ -395,7 +395,7 @@ export function hubSet(id, sym, at, { label = 'Hub', size = { w: 66, h: 60 }, ga
 
 export const armPiece = (id, sym, at, mult = 1, label = null) => ({ id, kind: 'arm', label: label || sym, at, props: { sym, mult } });
 export const balloonPiece = (id, at) => ({ id, kind: 'balloon', label: 'Lone Pair', at, props: {} });
-export const protractorPiece = (id, at) => ({ id, kind: 'protractor', label: 'Protractor', at, props: {} });
+export const protractorPiece = (id, at, caption) => ({ id, kind: 'protractor', label: 'Protractor', at, props: {}, ...(caption ? { caption } : {}) });
 
 /** An angle marker: one dial the player sets to a number they read off the protractor. */
 export function marker(id, at, { label = 'Angle', max = 180, step = 1, size = { w: 44, h: 16 } } = {}) {

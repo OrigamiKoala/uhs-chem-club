@@ -81,7 +81,7 @@ function planeHit(cam, ndcX, ndcY, y) {
  *   zones?: {x0: number, x1: number, z0: number, z1: number}[],
  *   viewport: {w: number, h: number},
  *   reserve?: {top: number, bottom: number, left: number, right: number},
- *   fov?: number, pitchDeg?: number, margin?: number, y?: number
+ *   fov?: number, pitchDeg?: number, margin?: number, y?: number, minDist?: number, frontZ?: number
  * }} o
  * @returns {{
  *   position: number[], target: number[], pitch: number, dist: number,
@@ -97,6 +97,9 @@ export function planLeanIn(o) {
   const fov = o.fov || 55;
   const pitch = (o.pitchDeg ?? LEAN.pitchDeg) * DEG;
   const margin = o.margin ?? LEAN.margin;
+  // How near the camera may come: a small used zone is framed from no closer than the bay's lean air allows (the caller says).
+  const minDist = Math.max(LEAN.minDist, o.minDist ?? 0);
+  const frontZ = o.frontZ ?? null;
   const y = o.y ?? PLATE_SURFACE_Y;
 
   // The free glass, as NDC, shrunk by the margin.
@@ -154,7 +157,9 @@ export function planLeanIn(o) {
     const b = planeHit(cam, sx, sy, y);
     T.x += a.x - b.x;
     T.z += a.z - b.z;
-    dist = Math.min(LEAN.maxDist, Math.max(LEAN.minDist, dist * (1 + (k - 1) * 0.9)));
+    // Never closer than the camera may stand: not nearer than `minDist`, and (`frontZ`) always in front of the plate, never over it.
+    const front = frontZ == null ? 0 : (frontZ - T.z) / Math.cos(pitch);
+    dist = Math.min(LEAN.maxDist, Math.max(minDist, front, dist * (1 + (k - 1) * 0.9)));
   }
   place();
   measure();

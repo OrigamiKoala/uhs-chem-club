@@ -12,7 +12,7 @@
  */
 
 import { SIZES, rectOf, railPositions } from './snap.js';
-import { radiusOf } from './kits/registry.js';
+import { radiusOf, getKit } from './kits/registry.js';
 
 /**
  * WORDS ON THE PLATE. A zone's label, a stage's note and a tool's caption are printed on the
@@ -47,6 +47,21 @@ export function fitSize(text, maxW, size = LABEL.size) {
   return w <= maxW ? size : Math.max(LABEL.min, size * maxW / w);
 }
 
+/** Half the height of the tallest piece that stands on a rail: a card or a block is taller than the strip it is laid along. */
+function railHalf(state, zone) {
+  let half = 0;
+  try {
+    const kit = getKit(state.kit);
+    for (const id of zone.order || zone.items || []) {
+      const p = state.pieces?.[id];
+      if (!p) continue;
+      const k = kit.kinds?.[p.kind];
+      half = Math.max(half, k?.rect ? k.rect.hh : radiusOf(kit, p));
+    }
+  } catch (e) { /* a state with no kit: the strip itself */ }
+  return half;
+}
+
 /**
  * Where a zone's words are printed: `{x, baseline, align, text, size}` for each. A tray, a container and the rail carry their
  * label over their left end (the rail its two ends); a slot's name stands under it, centred. A word longer than its zone is set
@@ -56,16 +71,19 @@ export function labelLines(state, kind, zone) {
   if (kind === 'rail') {
     const r = rectOf(zone, SIZES.rail);
     const out = [];
-    if (zone.first) out.push({ x: r.x0, baseline: r.y0 - LABEL.above, align: 'left', text: zone.first, size: fitSize(zone.first, r.w / 2 - 1) });
-    if (zone.last) out.push({ x: r.x1, baseline: r.y0 - LABEL.above, align: 'right', text: zone.last, size: fitSize(zone.last, r.w / 2 - 1) });
+    // The ends are named above the PIECES on the rail, which may be taller than the rail's own strip (a block, a card): a word printed
+    // under a piece that stands on it is a word nobody reads.
+    const top = Math.min(r.y0, zone.at.y - railHalf(state, zone));
+    if (zone.first) out.push({ x: r.x0, baseline: top - LABEL.above, align: 'left', text: zone.first, size: fitSize(zone.first, r.w / 2 - 1) });
+    if (zone.last) out.push({ x: r.x1, baseline: top - LABEL.above, align: 'right', text: zone.last, size: fitSize(zone.last, r.w / 2 - 1) });
     return out;
   }
   const r = rectOf(zone, kind === 'slot' ? SIZES.slot : kind === 'container' ? SIZES.container : SIZES.tray);
   if (kind === 'slot') {
-    return zone.label ? [{ x: r.x0 + r.w / 2, baseline: r.y1 + LABEL.slotBelow, align: 'center', text: zone.label, size: fitSize(zone.label, Math.max(r.w, 22)) }] : [];
+    return zone.label?.trim() ? [{ x: r.x0 + r.w / 2, baseline: r.y1 + LABEL.slotBelow, align: 'center', text: zone.label, size: fitSize(zone.label, Math.max(r.w, 22)) }] : [];
   }
   const out = [];
-  if (zone.label) out.push({ x: r.x0 + 1.2, baseline: r.y0 - LABEL.above, align: 'left', text: zone.label, size: fitSize(zone.label, r.w - 1.2) });
+  if (zone.label?.trim()) out.push({ x: r.x0 + 1.2, baseline: r.y0 - LABEL.above, align: 'left', text: zone.label, size: fitSize(zone.label, r.w - 1.2) });
   return out;
 }
 

@@ -2528,7 +2528,7 @@ body.touch-walking .lq-dock-bar {
    ========================================================================== */
 body.bench-deployed .modal-container {
   justify-content: flex-start;
-  align-items: stretch;
+  align-items: flex-start;
   background: rgba(6, 5, 4, 0.34);
   padding: calc(var(--hud-h, 64px) + 12px) 1rem 1rem;
 }
@@ -3734,4 +3734,15 @@ body.bench-deployed .modal-container .modal-card {
   .lq-tdock { display: none !important; }
   .learn-quest-overworld .lq.lq-table-mode .lq-body,
   .learn-quest-overworld .lq.lq-table-mode .lq-dock-bar { display: flex !important; }
+}
+
+/* At a bench the host bar and prompt strip stand under the header; the boss plate hangs below them, at the right, so it never covers the
+   prompt, and is kept narrow enough to leave the table's left side clear. */
+body.bench-deployed .boss-hud,
+body.bench-leaning .boss-hud {
+  top: calc(var(--hud-h, 56px) + 92px);
+  left: auto;
+  right: 12px;
+  transform: none;
+  width: min(340px, calc(100vw - 24px));
 }

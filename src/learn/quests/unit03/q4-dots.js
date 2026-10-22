@@ -35,6 +35,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import { atomTable, slateOf, slateParts, slateLayout } from '../../table/kits/atoms.js';
 import { MOLECULES, DRAWINGS, planLewis, allLit, trayFor } from '../../engine/lewis.js';
 
@@ -71,8 +72,10 @@ export function toolNoteFor() { return null; }
 
 const OPTS = { words: 'shells', slate: true };
 
-const tile = (kind, label, [x, y]) => ({ id: kind, kind, label, at: { x, y } });
-const TILES = { pairs: [10, 10], lift: [26, 10], single: [42, 10] };
+/** What each tool does, printed under the place it hangs. */
+const CAPTION = { pairs: 'Adds a pair', lift: 'Takes one back', single: 'Adds one' };
+const tile = (kind, label, [x, y]) => ({ id: kind, kind, label, at: { x, y }, caption: CAPTION[kind] });
+const TILES = { pairs: [10, 10], lift: [32, 10], single: [54, 10] };
 
 /**
  * One stage's table: its slates (`[id, molecule, cx, cy, size, pos?, chip?]`), the tray's pieces (`tiles`
@@ -107,22 +110,22 @@ export const STAGES = [
     title: 'Water\'s Electrons',
     briefing: {
       speaker: SPEAKER,
-      body: 'The tray holds every electron the molecule has, two to a pair: drag a pair onto a joint between atoms or onto one atom. A ring lights round an atom when enough electrons stand round it.'
+      body: 'Drag the Pair tile onto the gap between two atoms to share a pair, or onto one atom to leave it there; a ring lights round an atom when enough electrons stand round it. Press Submit when the table shows your answer.'
     },
     prompt: 'Place all valence electrons on the slate so that every atom satisfies the octet rule.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'H2O', 84, 26, 52]]),
+    table: slateTable([['a', 'H2O', 82, 28, 62]]),
     hints: [
-      'Drag a pair from the tray onto the joint between two atoms, or onto one atom.',
+      'Drag the Pair tile onto the gap between two atoms, or onto one atom.',
       'Compare each atom\'s count with its lamp: hydrogen wants two and the others eight.',
-      'Fill the joints between atoms first, then put whatever is left in the tray onto the atom whose lamp is still dark.'
+      'Fill the gaps between atoms first, then put whatever electrons are left onto the atom whose lamp is still dark.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the tray\'s electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
       if (allLit(sl.read)) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still in the tray, and a lamp is still dark.' };
-      return { ok: false, msg: 'The tray is empty but a lamp is still dark. Look at which atom has too few round it and which has too many.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and a lamp is still dark.' };
+      return { ok: false, msg: 'Every electron is placed but a lamp is still dark. Look at which atom has too few round it and which has too many.' };
     },
     reward: {
       log: 'Every electron placed, every lamp lit.',
@@ -136,18 +139,18 @@ export const STAGES = [
     title: 'What Is Left Over',
     prompt: 'Place the electrons of ammonia, methane and hydrogen fluoride so that every lamp is lit.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'NH3', 26, 22.5, 37, NH3_POS], ['b', 'CH4', 98, 24, 29, CH4_POS], ['c', 'HF', 64, 12, 38]], { tiles: { pairs: [57, 32], lift: [72, 32] } }),
+    table: slateTable([['a', 'NH3', 26, 22.5, 37, NH3_POS], ['b', 'CH4', 98, 24, 29, CH4_POS], ['c', 'HF', 64, 12, 38]], { tiles: { pairs: [64, 28], lift: [64, 47] } }),
     hints: [
       'Draw each molecule on its own plate until every lamp is lit.',
-      'Compare what the tray still holds on each plate once its joints are filled, and where that ends up.',
-      'Count what the atom brings, take away the electrons its joints use, and what remains sits on it as pairs.'
+      'Compare how many electrons are left on each plate once its bonds are filled, and where they end up.',
+      'Count what the atom brings, take away the electrons its bonds use, and what remains sits on it as pairs.'
     ],
     check(state) {
       const plates = ['a', 'b', 'c'].map(id => slateOf(state.table, id));
-      if (plates.every(p => p.used === 0)) return { ok: false, notYet: true, msg: 'Place the tray\'s electrons on the slates.' };
+      if (plates.every(p => p.used === 0)) return { ok: false, notYet: true, msg: 'Place the electrons on the slates.' };
       if (plates.every(p => allLit(p.read))) return { ok: true };
       if (plates.some(p => p.used === 0)) return { ok: false, notYet: true, msg: 'A plate has no electrons on it yet.' };
-      return { ok: false, msg: 'A lamp is still dark on one of the plates. Check the tray under each one, and the count on each atom.' };
+      return { ok: false, msg: 'A lamp is still dark on one of the plates. Check the electrons left on each one, and the count on each atom.' };
     },
     reward: {
       log: 'Valence electrons set the count.',
@@ -161,18 +164,18 @@ export const STAGES = [
     title: 'Two Pairs Short',
     prompt: 'Place all valence electrons for carbon dioxide so that every atom satisfies the octet rule.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'CO2', 84, 26, 52]]),
+    table: slateTable([['a', 'CO2', 80, 28, 68]]),
     hints: [
-      'Put a pair in each joint first and see which lamps stay dark.',
+      'Put a pair in each gap first and see which lamps stay dark.',
       'Compare the lamp on carbon with the lamps on the oxygen atoms once their own pairs are down.',
-      'Where an atom is short, lift a pair off its neighbour with "Lift Out" and put it in the joint between them.'
+      'Where an atom is short, lift a pair off its neighbour with "Lift Out" and put it in the gap between them.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the tray\'s electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
       if (allLit(sl.read)) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still in the tray, and a lamp is still dark.' };
-      return { ok: false, msg: 'The tray is empty but a lamp is still dark. An atom with a pair to spare could share it.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and a lamp is still dark.' };
+      return { ok: false, msg: 'Every electron is placed but a lamp is still dark. An atom with a pair to spare could share it.' };
     },
     reward: {
       log: 'Neighbours share a second pair.',
@@ -184,20 +187,20 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'The Middle',
-    prompt: 'Build hypofluorous acid, HOF, so that every lamp is lit and the tray is empty.',
+    prompt: 'Build hypofluorous acid, HOF, so that every lamp is lit and no electron is left.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'HOF', 84, 30, 56, HOF_POS]]),
+    table: slateTable([['a', 'HOF', 82, 32, 62, HOF_POS]]),
     hints: [
-      'Try filling the joints between each pair of atoms and see which lamps light.',
+      'Try filling the gaps between each pair of atoms and see which lamps light.',
       'Compare how many shared pairs each atom is allowed to take on this board.',
       'The atom the others attach to must be allowed more than a single shared pair.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the tray\'s electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
       if (allLit(sl.read)) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still in the tray, and a lamp is still dark.' };
-      return { ok: false, msg: 'The tray is empty but a lamp is still dark. Try the pairs in a different set of joints: an atom with room for one shared pair only cannot join the other two.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and a lamp is still dark.' };
+      return { ok: false, msg: 'Every electron is placed but a lamp is still dark. Try the pairs in a different set of gaps: an atom with room for one shared pair only cannot join the other two.' };
     },
     reward: {
       log: 'The atom that joins the others.',
@@ -211,56 +214,56 @@ export const STAGES = [
     title: 'One Electron Fewer',
     briefing: {
       speaker: SPEAKER,
-      body: 'You can now change the total charge of the electron tray. Turn the charge chip to take electrons out of the tray or add them.'
+      body: 'You can now change how many electrons there are to place: turn the charge chip to take electrons away or add them.'
     },
     prompt: 'Set the charge chip and place all valence electrons for the ammonium ion until every lamp lights.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'NH4', 84, 32, 56, null, 'chip']], {
+    table: slateTable([['a', 'NH4', 82, 34, 62, null, 'chip']], {
       fixtures: [{
-        id: 'chip', kind: 'chip', label: 'Tray charge', at: { x: 27, y: 32 }, size: { w: 34, h: 16 }, noRun: true,
+        id: 'chip', kind: 'chip', label: 'Ion charge', at: { x: 27, y: 32 }, size: { w: 34, h: 16 }, noRun: true,
         dials: { charge: { min: -2, max: 2, step: 1, value: 0, label: 'Charge', labels: ['−2', '−1', '0', '+1', '+2'] } }
       }]
     }),
     hints: [
       'Try the drawing with the charge chip as it is and see what is left over.',
-      'Compare the number of electrons in the tray with the number the lamps need.',
-      'Turn the charge chip until the tray holds the electrons the lamps need.'
+      'Compare the number of electrons to place with the number the lamps need.',
+      'Turn the charge chip until the electrons to place match what the lamps need.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the tray\'s electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
       if (allLit(sl.read) && sl.charge === 1) return { ok: true };
-      if (sl.total % 2 === 1) return { ok: false, msg: 'The tray holds an odd number of electrons, and a pair cannot be made from a single one left over.' };
-      if (sl.charge !== 1) return { ok: false, msg: 'The lamps can be lit, but the tray is not the one this ion has: the charge sets how many electrons it keeps.' };
-      return { ok: false, msg: 'Electrons are still in the tray, or a lamp is still dark.' };
+      if (sl.total % 2 === 1) return { ok: false, msg: 'There is an odd number of electrons, and a pair cannot be made from a single one left over.' };
+      if (sl.charge !== 1) return { ok: false, msg: 'The lamps can be lit, but this is not the number of electrons the ion has: the charge sets how many it keeps.' };
+      return { ok: false, msg: 'Electrons are still left to place, or a lamp is still dark.' };
     },
     reward: {
-      log: 'The tray changes with the charge.',
+      log: 'The electron count changes with the charge.',
       title: 'Polyatomic Ion',
-      body: 'Atoms bonded together that carry an overall charge form a polyatomic ion. Each positive charge takes one electron out of the tray.'
+      body: 'Atoms bonded together that carry an overall charge form a polyatomic ion. Each positive charge takes one electron away.'
     }
   },
 
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'The Amber Lamp',
-    prompt: 'Place every electron in boron trifluoride so that the tray is empty and no atom holds more than it can.',
+    prompt: 'Place every electron in boron trifluoride so that no electron is left and no atom holds more than it can.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'BF3', 84, 32, 54]]),
+    table: slateTable([['a', 'BF3', 82, 34, 62]]),
     hints: [
-      'Fill the joints and then the pairs on the atoms until the tray is empty.',
+      'Fill the bonds and then the pairs on the atoms until no electron is left.',
       'Compare how many shared pairs boron can take with how many each fluorine atom is willing to share.',
       'Count the shared pairs round boron when every fluorine atom takes exactly one.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the tray\'s electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
       const lamps = sl.read.atoms.map(a => a.lamp);
       if (lamps.includes('over')) return { ok: false, msg: 'An atom has more round it than it can hold.' };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still in the tray.' };
-      if (sl.read.atoms.slice(1).some(a => a.lamp !== 'full')) return { ok: false, msg: 'The tray is empty, but a fluorine lamp is still dark.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
+      if (sl.read.atoms.slice(1).some(a => a.lamp !== 'full')) return { ok: false, msg: 'Every electron is placed, but a fluorine lamp is still dark.' };
       if (lamps[0] === 'amber') return { ok: true };
-      return { ok: false, msg: 'The tray is empty, but the electrons are not placed the way the board allows: look at what the atoms beside boron will take.' };
+      return { ok: false, msg: 'Every electron is placed, but not the way the board allows: look at what the atoms beside boron will take.' };
     },
     reward: {
       log: 'Boron stops at six.',
@@ -276,23 +279,23 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'Single places one electron where a pair would place two.'
     },
-    prompt: 'Place every electron in the tray to complete the Lewis structure for nitric oxide.',
+    prompt: 'Place every electron to complete the Lewis structure for nitric oxide.',
     widget: { type: 'table', label: 'The bench' },
     table: slateTable([['a', 'NO', 84, 26, 66]], { single: true }),
     hints: [
-      'Place pairs until the tray will not give another, then see what is left in it.',
-      'Compare the electrons in the tray with how many a whole number of pairs can use.',
+      'Place pairs until no whole pair is left, then see what remains.',
+      'Compare the electrons you have with how many a whole number of pairs can use.',
       'Put the electron that has no partner on the atom that has room for it, with "Single".'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the tray\'s electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
       const over = sl.read.atoms.some(a => a.lamp === 'over');
       const dots = sl.read.atoms.reduce((n, a) => n + a.dots, 0);
       if (sl.left === 0 && !over && dots === 1) return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still in the tray.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place.' };
       if (over) return { ok: false, msg: 'An atom has more round it than it can hold.' };
-      return { ok: false, msg: 'The tray is empty, but the electrons are not all placed the way they have to be. One of them cannot be half of a pair.' };
+      return { ok: false, msg: 'Every electron is placed, but not all the way they have to be. One of them cannot be half of a pair.' };
     },
     reward: {
       log: 'An electron with no partner.',
@@ -306,18 +309,18 @@ export const STAGES = [
     title: 'Past Eight',
     prompt: 'Distribute all valence electrons so that sulfur forms an expanded octet in SF6.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'SF6', 84, 33, 60]]),
+    table: slateTable([['a', 'SF6', 82, 33, 61]]),
     hints: [
-      'Put a shared pair in every joint, then see what the tray still holds.',
-      'Compare the fluorine lamps with the lamp on sulfur as the tray runs out.',
+      'Put a shared pair in every bond, then see how many electrons are left.',
+      'Compare the fluorine lamps with the lamp on sulfur as the electrons run out.',
       'Give each fluorine atom the lone pairs it needs and let sulfur keep the shared pairs it ends up with.'
     ],
     check(state) {
       const sl = slateOf(state.table, 'a');
-      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the tray\'s electrons on the slate.' };
+      if (sl.used === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the slate.' };
       if (allLit(sl.read) && sl.read.atoms[0].lamp === 'expanded') return { ok: true };
-      if (sl.left > 0) return { ok: false, msg: 'Electrons are still in the tray, and a lamp is still dark.' };
-      return { ok: false, msg: 'The tray is empty but a lamp is still dark, or an atom has more than it can hold.' };
+      if (sl.left > 0) return { ok: false, msg: 'Electrons are still left to place, and a lamp is still dark.' };
+      return { ok: false, msg: 'Every electron is placed but a lamp is still dark, or an atom has more than it can hold.' };
     },
     reward: {
       log: 'Sulfur goes past eight.',
@@ -326,6 +329,13 @@ export const STAGES = [
     }
   }
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag a Pair onto the gap between two atoms,', 'or onto one atom.'],
+  3: ['Lift Out takes a pair back off an atom.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

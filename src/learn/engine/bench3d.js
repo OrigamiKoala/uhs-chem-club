@@ -2312,7 +2312,7 @@ export class BenchViewer3D {
     const viewport = opts.viewport || this.leanViewport();
     const reserve = opts.reserve || this.measureLeanReserve(viewport);
     const zones = opts.zones || this.leanZones || [PLATE_ZONE];
-    const pose = planLeanIn({ zones, viewport, reserve, fov: this.camera.fov || 55, pitchDeg: opts.pitchDeg });
+    const pose = planLeanIn({ zones, viewport, reserve, fov: this.camera.fov || 55, pitchDeg: opts.pitchDeg, minDist: opts.minDist ?? this.leanMinDist, frontZ: opts.frontZ ?? this.leanFrontZ });
     pose.key = JSON.stringify([viewport, reserve, zones]);
     return pose;
   }

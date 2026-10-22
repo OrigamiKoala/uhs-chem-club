@@ -48,6 +48,9 @@ import { PAIRS, IONS, LATTICES, DISC_RADIUS, morse, planCurve, energySpan, centr
 import { PLATE_COLORS, plateText, lampMark, mulberry32, hashId } from '../../engine/plates.js';
 import { SIZES, rectOf } from '../snap.js';
 import { fixtureLayout } from '../layout.js';
+import {
+  LIGAR_SKIN, buildOreBlock, buildSaltSpecimen, buildPairTag, buildHammer, buildLeads, buildTongs, ligarDeck
+} from '../../engine/ligar-props.js';
 
 export const BONDS_KIT_ID = 'bonds';
 const AMBER = PLATE_COLORS.amber;
@@ -848,6 +851,51 @@ function paintFixture(ctx, f, state, b) {
    THE KIT
    ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------
+   THE SOLID THINGS (`ligar-props.js`): what the built table stands on the bench
+   ------------------------------------------------------------------ */
+
+/** How tall a block of ore stands (metres): a tool laid on it rests on its face. */
+const BLOCK_TOP = 0.078;
+
+function piece3d(p, state, c) {
+  if (c.skin !== LIGAR_SKIN) return null;
+  switch (p.kind) {
+    case 'slab': {
+      // The magnified picture stands up: the atoms `planSlab` lays (the same cells the flat picture paints, less any the tongs lifted) are
+      // little balls under the glass, a plus or a minus on each ion.
+      const v = slabView(p, state);
+      const lay = v.d.sealed ? null : planSlab(v.d, v.phase);
+      const gone = new Set(v.lifted);
+      const atoms = lay ? lay.cells.map((cell, i) => ({ x: cell.x, y: cell.y, sign: cell.sign || 0, gone: gone.has(i) })) : [];
+      return buildOreBlock(c, { tint: v.d.tint, sealed: Boolean(v.d.sealed), molten: v.molten, seedId: p.id, atoms, cols: lay?.cols || 0, rows: lay?.rows || 0, ions: v.d.build === 'grid' });
+    }
+    case 'salt': return buildSaltSpecimen(c, { seedId: p.id, molten: saltView(p, state).molten });
+    case 'pairtag': return buildPairTag(c, { seedId: p.id });
+    case 'hammer': return buildHammer(c);
+    case 'tongs': return buildTongs(c, { text: p.label });
+    case 'leads': {
+      const slabId = p.joinedTo.find(id => state.pieces[id]?.kind === 'slab');
+      const v = slabId ? slabView(state.pieces[slabId], state) : null;
+      return buildLeads(c, { lit: Boolean(v?.current), text: p.label });
+    }
+    default: return ATOMS_KIT.piece3d(p, state, c);
+  }
+}
+
+/** How high a hotplate's face stands (metres): a block or a salt set on it rests there, not on the mat beside it. */
+const PLATE_TOP = 0.03;
+
+/** A tool lying on a block rests on the block's face; a block on the hotplate rests on the plate, not on the table. */
+function restHeight(p, state) {
+  if (BLOCK_TOOLS.has(p.kind)) {
+    const on = p.joinedTo.map(id => state.pieces[id]).find(o => o?.kind === 'slab');
+    return on ? BLOCK_TOP + (hotplateUnder(on, state) ? PLATE_TOP : 0) : 0;
+  }
+  return (p.kind === 'slab' || p.kind === 'salt') && hotplateUnder(p, state) ? PLATE_TOP : 0;
+}
+
+
 export const BONDS_KIT = {
   ...ATOMS_KIT,
   id: BONDS_KIT_ID,
@@ -857,14 +905,18 @@ export const BONDS_KIT = {
     slab: { r: SLAB_R, rect: SLAB_RECT },
     salt: { r: SLAB_R, rect: SALT_RECT, nojoin: true },
     pairtag: { r: 7, rect: PAIRTAG_RECT, nojoin: true },
-    hammer: { r: TOOL_R, tool: true },
-    leads: { r: TOOL_R, tool: true },
-    tongs: { r: TOOL_R, tool: true }
+    // A tool laid on a block is the top thing there (`onTop`): a press on it takes it, never the block under it.
+    hammer: { r: TOOL_R, tool: true, onTop: true },
+    leads: { r: TOOL_R, tool: true, onTop: true },
+    tongs: { r: TOOL_R, tool: true, onTop: true }
   },
   planJoin,
   pairable,
   run,
   dialed,
+  piece3d,
+  restHeight,
+  deck3d: ligarDeck,
   paintPiece,
   printed,
   faceKey,

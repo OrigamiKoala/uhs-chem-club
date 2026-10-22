@@ -20,12 +20,12 @@ import { mulberry32 } from './plates.js';
 
 /** The tones of a mat: a base, the paint printed on it, and the dust that settles in it. */
 export const MAT = Object.freeze({
-  base: '#34332e',
-  mottleLight: '#403f39',
-  mottleDark: '#2a2925',
-  scuff: '#5a574e',
-  paint: '#cbc4b0',
-  paintDim: '#8f8a7a',
+  base: '#4a4842',
+  mottleLight: '#57554d',
+  mottleDark: '#3c3b36',
+  scuff: '#6e6a5e',
+  paint: '#e2dbc7',
+  paintDim: '#a39d8b',
   shadow: 'rgba(14, 13, 11, 0.75)',
   edge: '#1f1e1b'
 });
@@ -70,7 +70,7 @@ export function paintMat(ctx, w, h, seed = 1) {
     const light = rnd() > 0.45;
     const g = ctx.createRadialGradient?.(x, y, 0, x, y, r);
     if (g) {
-      g.addColorStop(0, light ? 'rgba(88, 86, 76, 0.20)' : 'rgba(10, 10, 8, 0.22)');
+      g.addColorStop(0, light ? 'rgba(120, 117, 104, 0.20)' : 'rgba(10, 10, 8, 0.2)');
       g.addColorStop(1, 'rgba(0, 0, 0, 0)');
       ctx.fillStyle = g;
       ctx.fillRect(x - r, y - r, r * 2, r * 2);

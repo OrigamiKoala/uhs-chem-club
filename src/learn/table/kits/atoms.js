@@ -59,6 +59,7 @@
  */
 
 import { registerKit } from './registry.js';
+import { LIGAR_SKIN, buildAtomBall, buildToolCap, buildJointSocket, ligarDeck } from '../../engine/ligar-props.js';
 import { planJoin as planPair, shellPlan } from '../../engine/joinbench.js';
 import {
   VALENCE, MOLECULES, planLewis, linkKey as lewisKey, addBond, addLone, addDot, removeOne, gaugeLength
@@ -1306,7 +1307,7 @@ function paintSlate(ctx, f, state, b) {
   }
   ctx.setLineDash?.([]);
   const size = Math.max(8, Math.round(2.3 * b.sc));
-  plateText(ctx, `TRAY ${sl.left} OF ${sl.total}`, b.x1 - 4, b.y0 + size * 1.1, { size, weight: 700, align: 'right', color: sl.left === 0 ? PLATE_COLORS.dim : PLATE_COLORS.phosphor });
+  plateText(ctx, `${sl.left} OF ${sl.total} LEFT`, b.x1 - 4, b.y0 + size * 1.1, { size, weight: 700, align: 'right', color: sl.left === 0 ? PLATE_COLORS.dim : PLATE_COLORS.phosphor });
   if (sl.charge) plateText(ctx, `CHARGE ${sl.charge > 0 ? '+' : '−'}${Math.abs(sl.charge)}`, b.x1 - 4, b.y0 + size * 2.4, { size: Math.max(7, size - 1), weight: 700, align: 'right', color: AMBER });
 }
 
@@ -1436,6 +1437,20 @@ function run(state, fixtureId) {
   return null;
 }
 
+/**
+ * A piece as the solid thing it is, where a world has gear for it (`ligar-props.js`): a model atom is a polished ball in a collar, a
+ * pair of electrons a stamped cap, the sockets on a board brass rings. Other worlds keep the shared bead (null).
+ */
+function piece3d(p, state, c) {
+  if (c.skin !== LIGAR_SKIN) return null;
+  switch (p.kind) {
+    case 'atom': case 'ion': { const f = c.faceInfo({ physical: true }); return buildAtomBall(c, { face: f.mat, body: f.body, flat: Boolean(p.props.slate) }); }
+    case 'joint': return buildJointSocket(c, { face: c.face() });
+    case 'pairs': case 'single': case 'lift': case 'three': case 'fcstamp': case 'mark': case 'gauge': return buildToolCap(c, { face: c.face() });
+    default: return null;
+  }
+}
+
 export const ATOMS_KIT = {
   id: ATOMS_KIT_ID,
   joinGap: 1.28,
@@ -1468,6 +1483,8 @@ export const ATOMS_KIT = {
   chargeOf,
   readPiece,
   run,
+  piece3d,
+  deck3d: ligarDeck,
   paintPiece,
   printed,
   faceKey,

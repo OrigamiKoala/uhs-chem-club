@@ -40,7 +40,8 @@ import { benchHost, guideTo } from './bench-host.js';
 import { getKit, radiusOf } from '../table/kits/index.js';
 import { dishUnder } from '../table/kits/atoms.js';
 import { SIZES, rectOf } from '../table/snap.js';
-import { plateMap, fixtureLayout, pieceTargets, foePadOf, FOE_HEADROOM_M, cardHalf } from '../table/layout.js';
+import { plateMap, fixtureLayout, pieceTargets, foePadOf, FOE_HEADROOM_M, cardHalf, PLATE_M } from '../table/layout.js';
+import { usedRect } from '../table/audit.js';
 import { TableGestures, pendingFetch } from '../table/gestures.js';
 import { lineOf, readY } from '../table/recorder.js';
 import { drawTable, faceOf } from './table2d.js';
@@ -50,7 +51,8 @@ import {
   buildTray, buildSlot, buildJar, buildDeck, buildKnob, buildKey,
   buildBead, buildPuck, buildDish, buildLens, buildCutter, buildCard, buildCase
 } from './table-props.js';
-import { makeLabMaterials, buildInstrumentCase, buildSocket } from './lab-props.js';
+import { makeLabMaterials, buildInstrumentCase, buildSocket, buildTrack } from './lab-props.js';
+import { makeLigarMaterials, LIGAR_SKIN } from './ligar-props.js';
 import { hashId } from './plates.js';
 import { TableKeys } from './table-keys.js';
 import { TrendPlot } from './trendplot.js';
@@ -107,14 +109,22 @@ export class Table3D extends BenchViewer3D {
 
     // The materials a world dresses its bench in; the bench kit's own otherwise.
     this.worldKit = Boolean(opts.world?.materials);
+    // Whose gear the table is dressed in (a world's id): a kit asks for its own props when it is this world's.
+    this.skin = opts.skin || null;
     // ...or a named room's (Kettle's foundry: its cast-iron plate, its blackened rims, its firebrick ore tubs);
     // the bench kit's own only where there is neither a host nor a room.
     this.mats = opts.world?.materials || this.room?.mats || { top: this.steelMat, dark: this.darkMat };
     // What the host does not supply (enamel, brass, rubber, glass): made once, freed with the table (`table-props.js`).
-    this.kitMats = { ...makeKitMaterials(), ...makeLabMaterials() };
+    this.kitMats = { ...makeKitMaterials(), ...makeLabMaterials(), ...(this.skin === LIGAR_SKIN ? makeLigarMaterials() : {}) };
     // Shared by every piece of the table and made by it: `freeGroup` leaves them (a rebuilt piece must not free its
     // neighbours' enamel), and `dispose` frees them once.
     for (const m of Object.values(this.kitMats)) { m.userData.tableOwned = true; m.userData.shared = true; }
+
+    // A small used zone is framed from no closer than the bay's lean air lets the camera stand (its floor is 2.2 m, so 1.55 m along the
+    // 55 degree view): a bench of three atoms in a row is centred in the glass, not blown up into the camera's face.
+    this.leanMinDist = 1.6;
+    // ...and always in front of the plate's front edge (0.65 m from its middle), never over it, wherever the used zone sits.
+    this.leanFrontZ = 0.72;
 
     this.table = new THREE.Group();
     this.table.name = 'tabletop';
@@ -136,6 +146,19 @@ export class Table3D extends BenchViewer3D {
     });
 
     this.hitMat = this.own(new THREE.MeshBasicMaterial({ visible: false }));
+
+    // A hand over something that can be taken is a hand that can take it: the cursor says so (and never captures: it is only drawn).
+    this._hover = e => {
+      const t = this._pointerTarget || this.domElement;
+      if (!t || !this.state || !this.map || this.disposed || e.target !== t) return;
+      let hot = false;
+      try {
+        const u = this.unitsAt(e);
+        hot = Boolean(u && this.gestures.wouldGrab(u));
+      } catch (err) { hot = false; }
+      t.style.cursor = this.drag ? 'grabbing' : hot ? 'grab' : '';
+    };
+    window.addEventListener('pointermove', this._hover);
 
     const renderHost = benchHost();
     this.mountScene = opts.mountScene || (v => renderHost.mount(v));
@@ -232,7 +255,7 @@ export class Table3D extends BenchViewer3D {
     this.syncSheet();
     this.syncPieces();
     this.syncJoins();
-    this.keys.render(state, state.tools || this.toolIds);
+    this.keys.render(state, state.tools || this.toolIds, { undo: opts.undo });
     this.settleToTargets(this.reduced || first || rebuilt);
 
     this.syncGuide();
@@ -240,13 +263,19 @@ export class Table3D extends BenchViewer3D {
     // A fight's foe stands in the table's corner pad: it moves with the board it stands on.
     if (rebuilt && this.foes?.enc) this.foes.dirty = true;
 
-    // The stage's table is the part of the plate in use: frame that.
-    const zones = [this.map.zone];
-    if (this.foes?.enc) {
-      // A fight's foe stands in the top corner and rises above the table's far edge in the picture: frame the room for it.
-      const z = this.map.zone;
-      const pad = this.map.metres(foePadOf(state.bounds).r * 2);
-      zones.push({ x0: z.x1 - pad, x1: z.x1, z0: z.z0 - FOE_HEADROOM_M, z1: z.z0 });
+    // The stage's table is the part of the plate in use: frame that (what is on it, and room to work), not the whole mat. A fight's foe
+    // stands in the table's top corner (`FOE_PAD`), so that corner is in use too, and the body rises above the table's far edge there.
+    const fight = Boolean(this.foes?.enc);
+    const foePad = fight ? foePadOf(state.bounds).rect : null;
+    const u = usedRect(state, getKit(state.kit), { extra: foePad ? [foePad] : [] });
+    const za = this.map.toPlate({ x: u.x0, y: u.y0 });
+    const zb = this.map.toPlate({ x: u.x1, y: u.y1 });
+    const zones = [{ x0: za.x, x1: zb.x, z0: za.z, z1: zb.z }];
+    if (fight) {
+      const pa = this.map.toPlate({ x: foePad.x0, y: foePad.y0 });
+      const pb = this.map.toPlate({ x: foePad.x1, y: foePad.y1 });
+      zones.push({ x0: pa.x, x1: pb.x, z0: pa.z - FOE_HEADROOM_M, z1: pa.z });
+      void pb;
     }
     this.leanZones = zones;
     if (first || rebuilt || stageChanged) {
@@ -300,7 +329,8 @@ export class Table3D extends BenchViewer3D {
     this.matSeed = (hashId(`${state.kit}|${this.stageIndex ?? 0}`) % 997) + 1;
     const plane = new THREE.Mesh(
       new THREE.PlaneGeometry(state.bounds.w * s, state.bounds.h * s),
-      this.mine(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.04 }))
+      // A little of the picture is its own: a mat in a world lit low (a mine, a dusk) would otherwise print as black on black.
+      this.mine(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.86, metalness: 0.04, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: this.skin ? 0.34 : 0.18 }))
     );
     plane.rotation.x = -Math.PI / 2;
     plane.position.set(0, GROUND_Y, 0);
@@ -308,8 +338,11 @@ export class Table3D extends BenchViewer3D {
     plane.name = 'tabletop-ground';
     this.fixtureRoot.add(plane);
     // The mat is a thing with an edge, laid on the plate: a rounded slab a little wider than the table, its border rubbed dark.
+    // Where a world has gear of its own the mat runs the length of the bench (a work mat across the whole plate), so what stands round the
+    // printed table is a calm rubber margin and not the bare plate's grain.
+    const matW = this.skin ? Math.max(state.bounds.w * s + 0.05, PLATE_M.w - 0.3) : state.bounds.w * s + 0.05;
     const matSlab = new THREE.Mesh(
-      roundedSlab(state.bounds.w * s + 0.05, state.bounds.h * s + 0.05, MAT_T, 0.03, 0.002),
+      roundedSlab(matW, state.bounds.h * s + 0.05, MAT_T, 0.03, 0.002),
       this.kitMats.rubber
     );
     matSlab.position.set(0, PLATE_Y, 0);
@@ -320,7 +353,7 @@ export class Table3D extends BenchViewer3D {
     // Trays and slots are objects on the mat: pressed-metal walls and a lining, in the host's own metal where it has one
     // (`mats.tray`: Ligar's are basalt). A word on them is printed on the mat beside them, not on a wall.
     const wallMat = mats.tray || this.kitMats.tin;
-    const lining = this.kitMats.lining;
+    const lining = this.kitMats.ligLining || this.kitMats.lining;
     const place = (obj, r) => {
       const a = this.map.toPlate({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
       obj.position.set(a.x, GROUND_Y, a.z);
@@ -333,16 +366,29 @@ export class Table3D extends BenchViewer3D {
     for (const t of Object.values(state.zones.slots)) {
       const r = rectOf(t, SIZES.slot);
       // A kit may say what a slot is (`kit.slot3d`: a lamp's cup, a plate's clips, a tube's cradle, a rung); the shared socket otherwise.
-      const role = kit.slot3d?.(t, state);
+      const role = kit.slot3d?.(t, state, { skin: this.skin });
       const own = role ? buildSocket(role, r.w * s, r.h * s, { mats: this.kitMats }) : null;
       place(own || buildSlot(r.w * s, r.h * s, { wallMat: mats.dark || wallMat, liningMat: lining }), r);
+    }
+
+    // A rail the pieces are put in order along is a real rail where a world has gear for it: a steel track with end stops, laid under
+    // the line the table prints, so a piece set on it stands in a groove and not on a drawing.
+    if (state.zones.rail && this.skin && this.kitMats.ligSteel) {
+      const rr = rectOf(state.zones.rail, SIZES.rail);
+      const trk = buildTrack(rr.w * s, { mats: this.kitMats, width: 0.034 });
+      place(trk, { x0: rr.x0, x1: rr.x1, y0: state.zones.rail.at.y, y1: state.zones.rail.at.y });
     }
 
     // Jars: low walls and a fill that rises with what they hold.
     this.jars = new Map();
     for (const c of Object.values(state.zones.containers)) {
       const r = rectOf(c, SIZES.container);
-      place(buildJar(r.w * s, r.h * s, { wallMat: mats.top, liningMat: lining }), r);
+      // A box whose contents are painted on its face (`kit.noJarFill`: an orbital box and the arrows in it) is a low socket, not a jar:
+      // a five-centimetre wall would hide the near half of what is drawn inside it from the leaned-in camera.
+      const flat = kit.noJarFill?.(c) && !kit.pileOf?.(c);
+      place(flat
+        ? buildSlot(r.w * s, r.h * s, { wallMat: mats.top, liningMat: lining })
+        : buildJar(r.w * s, r.h * s, { wallMat: mats.top, liningMat: lining }), r);
       // A pile's contents are its atoms (below), not a level: no slab of fill over them.
       if (kit.pileOf?.(c) || kit.noJarFill?.(c)) continue;
       const fill = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.mine(new THREE.MeshStandardMaterial({ color: PHOSPHOR, roughness: 0.55, metalness: 0.1 })));
@@ -381,14 +427,17 @@ export class Table3D extends BenchViewer3D {
       // A kit may case its instruments (`kit.deckStyle`): a cast bezel, screws and a sheet of glass over the picture.
       const dw = (lay.box.x1 - lay.box.x0) * s;
       const dd = (lay.box.y1 - lay.box.y0) * s;
-      const deck = kit.deckStyle?.(f) === 'instrument' ? buildInstrumentCase(dw, dd, { mats: this.kitMats }) : buildDeck(dw, dd, { mat: mats.dark });
+      // A kit may build the frame an instrument is set in itself (`kit.deck3d`: Ligar's survey boards and cast hotplate); else a cast
+      // bezel under glass (`kit.deckStyle`), else the shared low frame.
+      const deck = kit.deck3d?.(f, { w: dw, d: dd, mats: this.kitMats, skin: this.skin })
+        || (kit.deckStyle?.(f, { skin: this.skin }) === 'instrument' ? buildInstrumentCase(dw, dd, { mats: this.kitMats }) : buildDeck(dw, dd, { mat: mats.dark }));
       const dc = this.map.toPlate({ x: (lay.box.x0 + lay.box.x1) / 2, y: (lay.box.y0 + lay.box.y1) / 2 });
       deck.position.set(dc.x, GROUND_Y, dc.z);
       this.fixtureRoot.add(deck);
       const DECK_TOP = GROUND_Y;
       // A kit may dress an instrument with solid parts of its own (`kit.dress3d`: a glass envelope, a rail, a prism) on top of what
       // the flat picture shows; the controls below are still the table's.
-      const dress = kit.dress3d?.(f, state, { THREE, scale: s, mats: this.kitMats, toPlate: this.map.toPlate, own: m => this.mine(m), box: lay.box, ground: GROUND_Y });
+      const dress = kit.dress3d?.(f, state, { THREE, scale: s, mats: this.kitMats, toPlate: this.map.toPlate, own: m => this.mine(m), box: lay.box, ground: GROUND_Y, skin: this.skin });
       if (dress) this.fixtureRoot.add(dress);
       const own = kit.fixture3d?.(f, { THREE, scale: s, mats, toPlate: this.map.toPlate, plaque: (t, w, h, o) => this.plaque(t, w, h, o) });
       if (own?.group) {
@@ -397,12 +446,13 @@ export class Table3D extends BenchViewer3D {
         continue;
       }
       const knobs = {};
-      const knobR = Math.min(0.026, s * 1.6);
+      // A world with gear of its own turns a bigger knob in a wider groove: a dial that is hard to see is a dial nobody turns.
+      const knobR = this.skin ? Math.min(0.036, s * 2.2) : Math.min(0.026, s * 1.6);
       for (const d of lay.dials) {
         const a = this.map.toPlate({ x: d.x0, y: d.y });
         const b = this.map.toPlate({ x: d.x1, y: d.y });
         // The groove the knob rides in: a dark slot cut in the deck, with a lit edge along it.
-        const groove = new THREE.Mesh(new THREE.BoxGeometry(b.x - a.x + knobR, 0.004, 0.012), this.kitMats.lining);
+        const groove = new THREE.Mesh(new THREE.BoxGeometry(b.x - a.x + knobR, 0.004, this.skin ? 0.02 : 0.012), this.kitMats.lining);
         groove.position.set((a.x + b.x) / 2, DECK_TOP + 0.001, a.z);
         groove.receiveShadow = true;
         this.fixtureRoot.add(groove);
@@ -520,7 +570,7 @@ export class Table3D extends BenchViewer3D {
     const g = this.ground;
     if (!g || !this.state) return;
     drawTable(g.ctx, g.W, g.H, this.state, {
-      look: 'mat', seed: this.matSeed, pieces: false, controls: false, sheet: false, crt: false, piles: false, pourFrom: this.gestures.pourFrom,
+      look: 'mat', seed: this.matSeed, pieces: false, controls: false, sheet: false, crt: false, piles: false, pourFrom: this.gestures.pourFrom, drag: this.drag, screens: Boolean(this.skin),
       // Where the world has the field point, the player walks to it; a plate would only be a shortcut past it.
       sites: id => this.showsSite(id)
     });
@@ -848,7 +898,13 @@ export class Table3D extends BenchViewer3D {
       own: m => this.mine(m),
       label: (text, w, h, o = {}) => this.labelMesh(text, w, h, o),
       paint: (w, h, fn, o = {}) => this.paintMesh(w, h, fn, o),
-      face: (o = {}) => this.faceMaterial(kit, p, { rect: kind?.rect || null, ...o }).mat
+      face: (o = {}) => this.faceMaterial(kit, p, { rect: kind?.rect || null, ...o }).mat,
+      // The painted face with the colour it carries (a ball is of a piece with the disc printed on it).
+      faceInfo: (o = {}) => {
+        const f = this.faceMaterial(kit, p, { rect: kind?.rect || null, ...o });
+        return { mat: f.mat, body: this.faceColour(f.canvas, f.N) };
+      },
+      skin: this.skin
     });
     if (solid) {
       g.add(solid);
@@ -999,7 +1055,11 @@ export class Table3D extends BenchViewer3D {
     this.joinRoot.name = 'tabletop-joins';
     this.table.add(this.joinRoot);
     this.joinRods = [];
-    const geo = new THREE.CylinderGeometry(0.009, 0.009, 1, 8);
+    // A world with gear of its own (`skin`) joins its pieces with a bright steel rod at the height of their centres; elsewhere a
+    // thin dark rod laid along the table.
+    const gear = this.skin && this.kitMats.ligSteel;
+    const geo = new THREE.CylinderGeometry(gear ? 0.0072 : 0.009, gear ? 0.0072 : 0.009, 1, 10);
+    const rodMat = gear ? this.kitMats.ligSteel : this.mats.dark;
     for (const key of Object.keys(this.state.links)) {
       const [a, b] = key.split('|');
       const pa = this.state.pieces[a];
@@ -1008,16 +1068,18 @@ export class Table3D extends BenchViewer3D {
       // A kit may draw a join as several rods (a double bond is two) or as none (a lens resting on a sample).
       const n = kit.linkRods ? kit.linkRods(this.state.links[key], this.state) : 1;
       for (let i = 0; i < n; i++) {
-        const rod = new THREE.Mesh(geo, this.mats.dark);
+        const rod = new THREE.Mesh(geo, rodMat);
         rod.castShadow = true;
         this.joinRoot.add(rod);
-        this.joinRods.push({ rod, a, b, off: (i - (n - 1) / 2) * 0.026 });
+        this.joinRods.push({ rod, a, b, off: (i - (n - 1) / 2) * (gear ? 0.02 : 0.026) });
       }
     }
     this.layJoins();
   }
 
   layJoins() {
+    const up = new THREE.Vector3(0, 1, 0);
+    const dir = new THREE.Vector3();
     for (const { rod, a, b, off } of this.joinRods || []) {
       const ea = this.entries.get(a)?.group;
       const eb = this.entries.get(b)?.group;
@@ -1025,12 +1087,26 @@ export class Table3D extends BenchViewer3D {
       rod.visible = true;
       const A = ea.position;
       const B = eb.position;
-      const len = Math.hypot(B.x - A.x, B.z - A.z);
-      rod.scale.set(1, Math.max(0.001, len), 1);
+      const flat = Math.hypot(B.x - A.x, B.z - A.z);
       // Parallel rods sit either side of the line between the two centres.
-      const nx = len > 1e-6 ? -(B.z - A.z) / len : 0;
-      const nz = len > 1e-6 ? (B.x - A.x) / len : 0;
+      const nx = flat > 1e-6 ? -(B.z - A.z) / flat : 0;
+      const nz = flat > 1e-6 ? (B.x - A.x) / flat : 0;
+      const ja = ea.userData.joinY;
+      const jb = eb.userData.joinY;
+      if (ja != null && jb != null) {
+        // Between the middles of two solid things, tilted if one stands higher than the other.
+        const pa = new THREE.Vector3(A.x + nx * (off || 0), A.y + ja, A.z + nz * (off || 0));
+        const pb = new THREE.Vector3(B.x + nx * (off || 0), B.y + jb, B.z + nz * (off || 0));
+        dir.subVectors(pb, pa);
+        const len = dir.length();
+        rod.scale.set(1, Math.max(0.001, len), 1);
+        rod.position.copy(pa).addScaledVector(dir, 0.5);
+        rod.quaternion.setFromUnitVectors(up, len > 1e-9 ? dir.normalize() : up);
+        continue;
+      }
+      rod.scale.set(1, Math.max(0.001, flat), 1);
       rod.position.set((A.x + B.x) / 2 + nx * (off || 0), Math.max(A.y, B.y) + 0.012, (A.z + B.z) / 2 + nz * (off || 0));
+      rod.quaternion.identity();
       rod.rotation.set(0, 0, 0);
       rod.rotation.z = Math.PI / 2;
       rod.rotation.y = -Math.atan2(B.z - A.z, B.x - A.x);
@@ -1219,7 +1295,7 @@ export class Table3D extends BenchViewer3D {
       kind: 'stations',
       name: 'The table',
       shortDesc: 'Drag the pieces',
-      desc: 'Drag a piece to move it. Tap a piece, then tap where it goes, to do the same without dragging.',
+      desc: 'Drag a piece to move it, or tap a piece and then tap where it goes. Undo takes back your last move and Start Over clears the table.',
       tag: 'DRAG OR TAP'
     }];
   }
@@ -1236,6 +1312,8 @@ export class Table3D extends BenchViewer3D {
     // `activeQuestViewer`, which is this. Flag it first, so that second call returns instead of calling
     // `unmountScene` again without end (a stack overflow that left the stage UI up and every nav key dead).
     this.disposed = true;
+    window.removeEventListener('pointermove', this._hover);
+    try { const t = this._pointerTarget || this.domElement; if (t) t.style.cursor = ''; } catch (err) { /* gone */ }
     if (this.guided) guideTo(null);
     this.guided = null;
     this.unGrab?.();

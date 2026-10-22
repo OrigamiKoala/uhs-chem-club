@@ -399,7 +399,7 @@ export const molCard = (id, mol, at, { show = [], field = false, turn = false, e
 /** A stream of a liquid of one molecule. */
 export const streamPiece = (id, mol, at, extra = {}) => ({ id, kind: 'stream', label: RIG_MOLECULES[mol].label, at, props: { mol, ...extra } });
 
-export const arrowsTool = (id, at) => ({ id, kind: 'arrows', label: 'Arrows', at, props: {} });
-export const rodTool = (id, at) => ({ id, kind: 'rod', label: 'Charged Rod', at, props: {} });
-export const swapTool = (id, sym, at) => ({ id, kind: 'swapper', label: `Swap ${sym}`, at, props: { sym } });
+export const arrowsTool = (id, at) => ({ id, kind: 'arrows', label: 'Arrows', at, props: {}, caption: 'Shows each pull' });
+export const rodTool = (id, at) => ({ id, kind: 'rod', label: 'Charged Rod', at, props: {}, caption: 'Holds a charge' });
+export const swapTool = (id, sym, at) => ({ id, kind: 'swapper', label: `Swap ${sym}`, at, props: { sym }, caption: 'Swaps an atom' });
 

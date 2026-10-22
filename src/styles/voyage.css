@@ -100,6 +100,14 @@
 
 .voyage-guide[hidden] { display: none; }
 
+/* Leaned in over a table, the prompt strip stands where the plate does: the plate drops under it, to the left, so it never covers the
+   words of the question. */
+body.bench-leaning .voyage-guide {
+  top: calc(var(--hud-h) + 72px);
+  left: 16px;
+  transform: none;
+}
+
 .voyage-guide-dial { width: 30px; height: 30px; flex: none; }
 .voyage-guide-ring { fill: var(--plate-100); stroke: var(--plate-600); stroke-width: 1; }
 .voyage-guide-chev { fill: var(--accent-amber); }
