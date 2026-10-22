@@ -1,10 +1,9 @@
 /**
  * boss-compressor.js — Learn world 4 elite: THE COMPRESSOR.
  *
- * The machine that runs every pump on the cloud deck, gone rogue. It is made of
- * everything Bellows measured, and each of its five phases puts the gas rig back
- * in front of the player with a new gas, a new tank or a new pinhole on the plate,
- * and the compressor standing in the well reading it:
+ * The machine that runs every pump on the cloud deck, gone rogue. It is made of everything Bellows measured. Five phases, each on the
+ * TABLETOP of a bench the player has worked (plan `bench-tabletop.md`, phase T5), on the gas kit (`table/kits/gas.js`), with the
+ * compressor standing in the table's corner, watching it:
  *
  *   1  the intake   set the piston until the gauge reads four times its first reading   (bench 2)
  *   2  the heater   the volume a free piston reaches at a temperature the dial lacks    (benches 2, 3)
@@ -12,18 +11,20 @@
  *   4  the blend    the partial pressure of one gas in a mixture                        (bench 4)
  *   5  the seals    an unmarked gas, named by racing its leak against nitrogen          (bench 5)
  *
- * The fight keeps every rule a bench stage keeps. A phase prompt states the
- * objective and never the route. A hint rung is one sentence and never the
- * answer. Nothing blocks a correct commit. A miss costs one point of Integrity
- * and three knock the rig back, with every reading and hint still kept.
+ * The fight keeps every rule a bench stage keeps. A phase prompt states the objective and never the route. A hint rung is one sentence
+ * and never the answer. Nothing blocks a correct commit. A miss costs one point of Integrity and three knock the table back, with every
+ * reading and hint still kept. The foe is the compressor itself, in the corner pad of each table (`table/layout.js` `FOE_PAD`): it only
+ * observes, and a boss phase never declares a field stage (the walk is suspended while the compressor stands).
  *
- * Clearing it files the Case File clue `clue_bellows_warm`. The boss pays no XP:
- * the main story never does.
+ * Clearing it files the Case File clue `clue_bellows_warm`. The boss pays no XP: the main story never does.
  */
 
-import { mountGas, gasState } from '../../engine/gasmount.js';
-import { blankAnswer } from '../../engine/stagerunner.js';
-import { readOf, volumeIdeal, GASES, R } from '../../engine/gasdata.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
+import {
+  gasTable, rig, tank, pinhole, chip, markerFixture, plaqueFixture, markerRead, cylRead, tankRead, whereIs,
+  pressureIdeal, volumeIdeal, halfTime, GASES, R, sig
+} from '../../table/kits/gas.js';
 import { session } from '../../../session.js';
 
 export const meta = { stageCount: 5 };
@@ -32,205 +33,289 @@ export const BUILDS_ON = ['unit04/q2-laws', 'unit04/q3-ideal', 'unit04/q4-mixtur
 
 const SPEAKER = 'Vess';
 
-/** A key whose label says what it does carries no legend. */
+/** Every key on these tables says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
 
-const cyl = (id, label, gas, extra = {}) => ({
-  id, label, head: 'cylinder', gas, n: 1, T: 300, V: 20, hold: 'dial', ...extra
-});
-const tank = (id, label, parts, extra = {}) => ({ id, label, head: 'mixture', parts, V: 10, T: 300, ...extra });
-const leak = (id, label, gas, extra = {}) => ({ id, label, head: 'leak', gas, dots: 24, ...extra });
-const choice = (id, label) => ({ id, label });
+/** The compressor, as every phase's foe: one body, watching the table. It reads no probe, it only observes. */
+const COMPRESSOR_FOE = [{ id: 'compressor', label: 'The Compressor' }];
 
-const BASE = { scale: 'kpa', units: true, labels: { gauge: 'PRESSURE' }, tempUnit: 'both' };
+const widget = { type: 'table', label: 'The bench' };
+const RIG = 'rig';
+const PIN = 'pin';
+const T0 = 300;
+
+/* ------------------------------------------------------------------
+   THE TABLES
+   Each phase keeps the top-right corner clear for the foe (`FOE_PAD`: x from 126.5, y to 23.5 on a 150 x 64 table).
+   ------------------------------------------------------------------ */
+
+/** Phase 1: the intake's cylinder, the room it starts in, and the factor the gauge is asked to climb. */
+const INTAKE_VOLUMES = [5, 10, 20, 40];
+const INTAKE_START = 3;
+const INTAKE_FACTOR = 4;
+/** Phase 2: the helium's weight on the free piston, the temperature asked for, and how it is read. */
+const HEATER_TEMPS = [300, 450, 600, 900];
+const HEATER_P = 101.3;
+const HEATER_ASKED = 750;
+/** Phase 3: the sealed tank's oxygen. */
+const TANK_O2 = { n: 0.75, V: 15 };
+/** Phase 4: the blend, and the gas whose own push is asked. */
+const BLEND = { parts: [{ gas: 'He', n: 1.5 }, { gas: 'Ne', n: 0.5 }], V: 24.94, T: T0 };
+/** Phase 5: the unmarked seal's gas, and the gases it might be. */
+const SEAL = 'Kr';
+const CANDIDATES = ['Ne', 'Ar', 'Kr', 'Xe'];
+
+const rigAtHome = (at, o) => rig(RIG, at, o);
+const cyl = (id, label, gas, extra = {}) => ({ id, label, gas, n: 1, T: T0, V: 20, hold: 'dial', ...extra });
+
+/** The reward card of each stage: the idea just worked out, named (unchanged by the conversion to a table). */
+
+/** The reward card of each stage: the idea just worked out, named (unchanged by the conversion to a table). */
+const STAGE_REWARDS = [
+  {
+      reward: {
+        log: 'The pressure set to four times its first reading.',
+        title: 'Intake Choked',
+        body: 'A quarter of the room gives four times the pressure: Boyle\'s law, with the temperature held. The compressor\'s intake can be starved by the same law that fills it.'
+      }
+  },
+  {
+      reward: {
+        log: 'A volume found between two settings.',
+        title: 'Heater Choked',
+        body: 'At a steady pressure the volume goes in step with the kelvin temperature, so a volume at a temperature the dial lacks follows from any one it has. The compressor\'s heater was running to a formula.'
+      }
+  },
+  {
+      reward: {
+        log: 'The mass of a gas found from its gauge.',
+        title: 'Tank Weighed',
+        body: 'The gas law gives the moles in a sealed tank from its gauge, and the molar mass turns the moles into grams. The compressor\'s tank was weighed without being opened.'
+      }
+  },
+  {
+      reward: {
+        log: 'The partial pressure of one gas in a blend.',
+        title: 'Blend Split',
+        body: 'Each gas in a blend pushes as if alone, so its partial pressure is its mole fraction times the total. The compressor\'s blend was read gas by gas.'
+      }
+  },
+  {
+      reward: {
+        log: 'An unmarked gas named by its leak.',
+        title: 'Compressor Still',
+        body: 'The square of the ratio of effusion times equals the ratio of molar masses. The leak rate identifies the mystery gas as krypton.',
+        last: true
+      }
+  }
+];
 
 /* ------------------------------------------------------------------
    THE FIVE PHASES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  {
-    title: 'Phase 1 · The Intake',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'This is the compressor that runs every pump on the deck, and each phase puts one of the benches in front of it again. A miss costs the rig a point of Integrity; three knock it back, and nothing you have read is lost.'
-    },
-    prompt: 'Bring the pressure to four times its starting value.',
-    controls: ['volume'],
-    volumes: [5, 10, 20, 40], volumeStart: 3,
-    ...BASE,
-    vmax: 40, gaugeMax: 600,
-    rigs: [cyl('a', 'INTAKE', 'N2', { note: 'the compressor\'s intake cylinder, under a piston' })],
-    widget: { type: 'none' },
-    encounter: {
-      species: 'the compressor',
-      act: 'Set Piston',
-      intent: 'The compressor cycles at a steady stroke over its intake.'
-    },
-    hints: [
-      'Turn the volume dial and read the gauge at each setting.',
-      'Compare the reading at each setting with the reading the phase began on.',
-      'Find the setting at which the room has fallen by the same factor that the pressure must climb.'
-    ],
-    check(state) {
-      const start = readOf(STAGES[0], 'a', {}).P;
-      const now = readOf(STAGES[0], 'a', { volume: state.volume }).P;
-      if (Math.abs(now - start) < 1e-6) return { ok: false, notYet: true, msg: 'The gauge still reads what it did when the phase began.' };
-      if (Math.abs(now / start - 4) < 0.01) return { ok: true };
-      return now / start < 4
-        ? { ok: false, msg: 'The gauge is still short of what the phase asks for.' }
-        : { ok: false, msg: 'The gauge has gone past what the phase asks for.' };
-    },
-    reward: {
-      title: 'Intake Choked',
-      body: 'A quarter of the room gives four times the pressure: Boyle\'s law, with the temperature held. The compressor\'s intake can be starved by the same law that fills it.',
-      log: 'The pressure set to four times its first reading.'
-    }
-  },
+  (() => {
+    const r = rigAtHome({ x: 44, y: 32 }, {
+      cyls: [cyl('a', 'INTAKE', 'N2')], volumes: INTAKE_VOLUMES, volumeStart: INTAKE_START, vmax: 40, show: { temperature: false, amount: false }
+    });
+    const began = sig(pressureIdeal(1, T0, INTAKE_VOLUMES[INTAKE_START - 1]), 3);
+    return {
+      id: 'phase1',
+      title: 'Phase 1 · The Intake',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'This is the compressor that runs every pump on the deck, and each phase puts one of the benches in front of it again. A miss costs the table a point of Integrity; three knock it back, and nothing you have read is lost.'
+      },
+      prompt: 'Bring the gauge to four times the figure on the plaque.',
+      widget,
+      table: gasTable({ fixtures: [r, plaqueFixture('began', 'The gauge began at', { x: 106, y: 36 }, [`${began} kPa`], { w: 44 })] }),
+      foes: COMPRESSOR_FOE,
+      encounter: {
+        species: 'the compressor',
+        act: 'Set Piston',
+        intent: 'The compressor cycles at a steady stroke over its intake.'
+      },
+      hints: [
+        'Turn the Piston dial and read the gauge at each setting.',
+        'Compare the reading at each setting with the figure on the plaque.',
+        'Find the setting at which the room has fallen by the same factor that the pressure must climb.'
+      ],
+      check(state) {
+        const t = state.table;
+        const q = cylRead(t, RIG, 0);
+        const start = pressureIdeal(1, T0, INTAKE_VOLUMES[INTAKE_START - 1]);
+        if (Math.abs(q.P - start) < 1e-6) return { ok: false, notYet: true, msg: 'The gauge still reads what it did when the phase began.' };
+        if (Math.abs(q.P / start - INTAKE_FACTOR) < 0.01) return { ok: true };
+        return q.P / start < INTAKE_FACTOR
+          ? { ok: false, msg: 'The gauge is still short of what the phase asks for.' }
+          : { ok: false, msg: 'The gauge has gone past what the phase asks for.' };
+      },
+      ...STAGE_REWARDS[0]
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 2 */
-  {
-    title: 'Phase 2 · The Heater',
-    prompt: 'At constant pressure, what volume will this helium sample reach at 750 K to the nearest 5 L?',
-    controls: ['temp'],
-    temps: [300, 450, 600, 900], tempStart: 1, tempList: 'K',
-    ...BASE,
-    thermoLo: -50, thermoHi: 700, vmax: 80, gaugeMax: 200,
-    rigs: [cyl('a', 'HEATER', 'He', { hold: 'P', P0: 101.3, note: 'the compressor\'s heater cylinder, under a free piston' })],
-    widget: { type: 'number', label: 'Volume at 750 K, in litres', min: 20, max: 100, step: 5 },
-    encounter: {
-      species: 'the compressor',
-      act: 'Give Volume',
-      intent: 'The compressor swells its heater cylinder against the weight on the piston.'
-    },
-    hints: [
-      'Turn the temperature dial and read the volume at each of its settings.',
-      'Compare the volumes at the two settings either side of 750 K with their temperatures.',
-      'Scale a volume you can read by the ratio of 750 K to the kelvin temperature of that reading.'
-    ],
-    check(state) {
-      if (state.number === null || state.number === undefined) return { ok: false, notYet: true, msg: 'Set the volume.' };
-      const a = STAGES[1].rigs[0];
-      const want = volumeIdeal(a.n, 750, a.P0);
-      if (Math.abs(state.number - want) <= 2.5) return { ok: true };
-      return { ok: false, msg: 'The dial has no setting at that temperature, so the volume has to be worked out from the ones it does have.' };
-    },
-    reward: {
-      title: 'Heater Choked',
-      body: 'At a steady pressure the volume goes in step with the kelvin temperature, so a volume at a temperature the dial lacks follows from any one it has. The compressor\'s heater was running to a formula.',
-      log: 'A volume found between two settings.'
-    }
-  },
+  (() => {
+    const r = rigAtHome({ x: 44, y: 32 }, {
+      cyls: [cyl('a', 'HEATER', 'He', { hold: 'P', P0: HEATER_P })], temps: HEATER_TEMPS, tempList: 'K', tempStart: 1, vmax: 80,
+      show: { gauge: true, amount: false, kelvin: true, temperature: false }
+    });
+    return {
+      id: 'phase2',
+      title: 'Phase 2 · The Heater',
+      prompt: 'At constant pressure, what volume will this helium reach at 750 K, to the nearest 5 L?',
+      widget,
+      table: gasTable({ fixtures: [r, markerFixture('vol', 'Volume at 750 K', { x: 106, y: 36 }, { min: 0, max: 100, step: 5, start: 0, unit: 'L', w: 50 })] }),
+      foes: COMPRESSOR_FOE,
+      encounter: {
+        species: 'the compressor',
+        act: 'Give Volume',
+        intent: 'The compressor swells its heater cylinder against the weight on the piston.'
+      },
+      hints: [
+        'Turn the Heater dial and read the volume at each of its settings.',
+        'Compare the volumes at the settings either side of 750 K with their temperatures.',
+        'Scale a volume you can read by the ratio of 750 K to the kelvin temperature of that reading.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = markerRead(t, 'vol');
+        if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to the volume.' };
+        const want = volumeIdeal(1, HEATER_ASKED, HEATER_P);
+        if (Math.abs(v - want) <= 2.5) return { ok: true };
+        return { ok: false, msg: 'The dial has no setting at that temperature, so the volume has to be worked out from the ones it does have.' };
+      },
+      ...STAGE_REWARDS[1]
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 3 */
-  {
-    title: 'Phase 3 · The Tank',
-    prompt: 'Calculate the total mass of oxygen in grams inside the sealed tank.',
-    controls: ['temp'],
-    temps: [300, 350, 400], tempStart: 1, tempList: 'K',
-    ...BASE,
-    show: { mass: true },
-    reference: ['R = 8.31 kPa·L per mol·K', 'Molar mass of oxygen: 32.0 g/mol'],
-    vmax: 15, gaugeMax: 250,
-    rigs: [cyl('a', 'TANK', 'O2', { n: 0.75, V: 15, hold: 'V', sealed: true, note: 'the compressor\'s sealed tank' })],
-    widget: { type: 'number', label: 'Grams of oxygen', min: 0, max: 60, step: 2 },
-    encounter: {
-      species: 'the compressor',
-      act: 'Give Mass',
-      intent: 'The compressor keeps its tank shut and shows only its gauge.'
-    },
-    hints: [
-      'Read the gauge, the volume and the thermometer, and heat the tank to take a second reading.',
-      'Check that the amount of gas you work out is the same at both temperatures.',
-      'Work out the moles from the gas law and multiply them by the molar mass of oxygen.'
-    ],
-    check(state) {
-      if (state.number === null || state.number === undefined) return { ok: false, notYet: true, msg: 'Set the mass.' };
-      const r = readOf(STAGES[2], 'a', {});
-      if (Math.abs(state.number - r.mass) < 1) return { ok: true };
-      return { ok: false, msg: 'The gas law gives moles, and the mass is a separate step from them; check both steps.' };
-    },
-    reward: {
-      title: 'Tank Weighed',
-      body: 'The gas law gives the moles in a sealed tank from its gauge, and the molar mass turns the moles into grams. The compressor\'s tank was weighed without being opened.',
-      log: 'The mass of a gas found from its gauge.'
-    }
-  },
+  (() => {
+    const r = rigAtHome({ x: 44, y: 32 }, {
+      cyls: [cyl('a', 'TANK', 'O2', { n: TANK_O2.n, V: TANK_O2.V, hold: 'V', sealed: true })], temps: [300, 350, 400], tempList: 'K', tempStart: 1, vmax: 15,
+      show: { amount: false }
+    });
+    return {
+      id: 'phase3',
+      title: 'Phase 3 · The Tank',
+      prompt: 'Calculate the total mass of oxygen in grams inside the sealed tank.',
+      widget,
+      table: gasTable({
+        fixtures: [
+          r,
+          plaqueFixture('ref', 'What you may use', { x: 100, y: 14 }, ['R = 8.31 kPa·L per mol·K', 'Molar mass of oxygen: 32.0 g/mol'], { w: 46 }),
+          markerFixture('grams', 'Grams of oxygen', { x: 106, y: 46 }, { min: 0, max: 60, step: 2, start: 0, unit: 'g', w: 50 })
+        ]
+      }),
+      foes: COMPRESSOR_FOE,
+      encounter: {
+        species: 'the compressor',
+        act: 'Give Mass',
+        intent: 'The compressor keeps its tank shut and shows only its gauge.'
+      },
+      hints: [
+        'Read the gauge, the volume and the thermometer, and heat the tank to take a second reading.',
+        'Check that the amount of gas you work out is the same at both temperatures.',
+        'Work out the moles from the gas law and multiply them by the molar mass of oxygen.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = markerRead(t, 'grams');
+        if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to the mass.' };
+        const want = TANK_O2.n * GASES.O2.M;
+        if (Math.abs(v - want) < 1) return { ok: true };
+        return { ok: false, msg: 'The gas law gives moles, and the mass is a separate step from them; check both steps.' };
+      },
+      ...STAGE_REWARDS[2]
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 4 */
-  {
-    title: 'Phase 4 · The Blend',
-    prompt: 'What partial pressure in kilopascals does helium contribute to this mixture?',
-    controls: [],
-    ...BASE,
-    labels: { gauge: 'PRESSURE', share: 'MOLE FRACTION' },
-    show: { share: true },
-    gaugeMax: 300,
-    rigs: [tank('a', 'BLEND', [{ gas: 'He', n: 1.5 }, { gas: 'Ne', n: 0.5 }], { V: 24.94, note: 'the compressor\'s blending tank' })],
-    widget: { type: 'number', label: 'Helium pushes with, in kPa', min: 0, max: 200, step: 10 },
-    encounter: {
-      species: 'the compressor',
-      act: 'Give Share',
-      intent: 'The compressor holds its blending tank at one steady push.'
-    },
-    hints: [
-      'Read the gauge for the whole tank and the mole fraction of each gas.',
-      'Compare the share of the moles that helium makes up with the share of the push it must make.',
-      'Multiply the mole fraction of helium by the total pressure on the gauge.'
-    ],
-    check(state) {
-      if (state.number === null || state.number === undefined) return { ok: false, notYet: true, msg: 'Set the pressure.' };
-      const m = readOf(STAGES[3], 'a', {});
-      const want = m.rows.find(r => r.gas === 'He').P;
-      if (Math.abs(state.number - want) < 5) return { ok: true };
-      return { ok: false, msg: 'A gas in a blend pushes with only its own share of the total on the gauge.' };
-    },
-    reward: {
-      title: 'Blend Split',
-      body: 'Each gas in a blend pushes as if alone, so its partial pressure is its mole fraction times the total. The compressor\'s blend was read gas by gas.',
-      log: 'The partial pressure of one gas in a blend.'
-    }
-  },
+  (() => {
+    return {
+      id: 'phase4',
+      title: 'Phase 4 · The Blend',
+      prompt: 'What partial pressure in kilopascals does helium contribute to this mixture?',
+      widget,
+      table: gasTable({
+        pieces: [tank('t', 'BLEND', { x: 44, y: 32 }, { parts: BLEND.parts, V: BLEND.V, T: BLEND.T, partsPlate: true, plate: false, gaugeMax: 300 })],
+        fixtures: [markerFixture('push', 'Helium pushes with', { x: 106, y: 36 }, { min: 0, max: 200, step: 10, start: 0, unit: 'kPa', w: 50 })]
+      }),
+      foes: COMPRESSOR_FOE,
+      encounter: {
+        species: 'the compressor',
+        act: 'Give Share',
+        intent: 'The compressor holds its blending tank at one steady push.'
+      },
+      hints: [
+        'Read the gauge for the whole tank and the moles of each gas printed on its face.',
+        'Compare the share of the moles that helium makes up with the share of the push it must make.',
+        'Multiply the share of the moles that is helium by the total pressure on the gauge.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = markerRead(t, 'push');
+        if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to the pressure.' };
+        const want = tankRead(t.pieces.t).rows.find(r => r.gas === 'He').P;
+        if (Math.abs(v - want) < 5) return { ok: true };
+        return { ok: false, msg: 'A gas in a blend pushes with only its own share of the total on the gauge.' };
+      },
+      ...STAGE_REWARDS[3]
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 5 */
-  {
-    title: 'Phase 5 · The Seals',
-    prompt: 'Identify the unknown escaping gas by comparing its effusion rate to nitrogen.',
-    controls: ['time'],
-    times: [0, 1, 2, 3, 4, 5, 6, 7, 8], timeStart: 1,
-    ...BASE,
-    show: { half: true },
-    reference: ['Molar masses — what one mole weighs — in g/mol: N₂ 28.0, Ne 20.2, Ar 39.9, Kr 83.8, Xe 131'],
-    rigs: [
-      leak('a', 'SEAL A', 'N2', { note: 'a seal known to hold nitrogen' }),
-      leak('b', 'SEAL B', 'Kr', { sealed: true, note: 'an unmarked seal' })
-    ],
-    widget: {
-      type: 'choice', label: 'The escaping gas is',
-      options: [choice('Ne', 'Ne'), choice('Ar', 'Ar'), choice('Kr', 'Kr'), choice('Xe', 'Xe')]
-    },
-    encounter: {
-      species: 'the compressor',
-      act: 'Name Gas',
-      intent: 'A pinhole hisses in the compressor\'s flank, and nothing says what is leaving it.'
-    },
-    hints: [
-      'Turn the time dial and read the time each seal takes to be half empty.',
-      'Compare the two times as a ratio and square it.',
-      'Multiply the molar mass of nitrogen by the square of the ratio of the times.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a gas.' };
-      if (state.choice === 'Kr') return { ok: true };
-      return { ok: false, msg: 'The rates go as the root of the molar mass, so square the ratio of the times before comparing it with the masses listed.' };
-    },
-    reward: {
-      title: 'Compressor Still',
-      body: 'The square of the ratio of effusion times equals the ratio of molar masses. The leak rate identifies the mystery gas as krypton.',
-      log: 'An unmarked gas named by its leak.'
-    }
-  }
+  (() => {
+    const p = pinhole(PIN, { x: 38, y: 30 }, {
+      chambers: [{ id: 'a', gas: 'N2', label: 'SEAL A' }, { id: 'b', gas: SEAL, label: 'SEAL B', sealed: true }],
+      times: [0, 1, 2, 3, 4, 5, 6, 7, 8], timeStart: 1, showHalf: true, record: false
+    });
+    const trays = CANDIDATES.map((g, i) => ({ id: g.toLowerCase(), label: GASES[g].name[0].toUpperCase() + GASES[g].name.slice(1), at: { x: 88 + i * 16, y: 38 }, size: { w: 15, h: 22 }, cell: 13 }));
+    return {
+      id: 'phase5',
+      title: 'Phase 5 · The Seals',
+      prompt: 'Race the unmarked seal against nitrogen, then put its chip in the tray of the gas escaping.',
+      widget,
+      table: gasTable({
+        pieces: [chip('u', 'SEAL B', { x: 104, y: 55 })],
+        fixtures: [p, plaqueFixture('ref', 'Molar mass, g per mole', { x: 100, y: 11 }, ['N2 28.0  Ne 20.2  Ar 39.9', 'Kr 83.8  Xe 131'], { w: 46 })],
+        zones: { trays }
+      }),
+      foes: COMPRESSOR_FOE,
+      encounter: {
+        species: 'the compressor',
+        act: 'Name Gas',
+        intent: 'A pinhole hisses in the compressor\'s flank, and nothing says what is leaving it.'
+      },
+      hints: [
+        'Turn the Stopwatch dial and read the time each seal takes to be half empty.',
+        'Compare the two times as a ratio and square it.',
+        'Multiply the molar mass of nitrogen by the square of the ratio of the times.'
+      ],
+      check(state) {
+        const t = state.table;
+        const tray = whereIs(t, 'u');
+        if (!CANDIDATES.map(g => g.toLowerCase()).includes(tray)) return { ok: false, notYet: true, msg: 'Put the chip in the tray of the gas you think it is.' };
+        const guess = GASES.N2.M * (halfTime(SEAL, T0) / halfTime('N2', T0)) ** 2;
+        const want = CANDIDATES.slice().sort((a, b) => Math.abs(GASES[a].M - guess) - Math.abs(GASES[b].M - guess))[0].toLowerCase();
+        if (tray === want) return { ok: true };
+        return { ok: false, msg: 'The rates go as the root of the molar mass, so square the ratio of the times before comparing it with the masses listed.' };
+      },
+      ...STAGE_REWARDS[4]
+    };
+  })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Turn the Piston dial and read the gauge.'],
+  2: ['Turn the Heater dial, work out the volume,', 'then set the marker.'],
+  3: ['Turn the Heater dial, work out the mass,', 'then set the marker.'],
+  4: ['Read the tank, then set the marker.'],
+  5: ['Turn the Stopwatch dial, read the times,', 'then put the chip in a tray.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -315,29 +400,38 @@ export const PRACTICE = [
   }
 ];
 
+
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct
+   actions, by drag and by two taps. Nothing here says what a reading is.
    ------------------------------------------------------------------ */
+
+const put = (piece, to) => ({ place: { piece, to } });
+const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
+
+/** The bench state that solves each phase, in order. Checked by verify:learn and verify:table. */
+export const SOLUTIONS = [
+  [dial(RIG, 'volume', 1)],
+  [dial(RIG, 'temp', 3), dial('vol', 'value', 60)],
+  [dial(RIG, 'temp', 2), dial('grams', 'value', 24)],
+  [dial('push', 'value', 150)],
+  [dial(PIN, 'time', 4), put('u', 'tray:kr')]
+];
+
+/** A plausible wrong answer per phase. Each must be refused, and must say why. */
+export const MISSES = [
+  [dial(RIG, 'volume', 2)],
+  [dial('vol', 'value', 40)],
+  [dial('grams', 'value', 12)],
+  [dial('push', 'value', 50)],
+  [dial(PIN, 'time', 4), put('u', 'tray:ar')]
+];
+
 function blankState() { return {}; }
 
-export const SOLUTIONS = [
-  { volume: 1 },
-  { number: 60 },
-  { number: 24 },
-  { number: 150 },
-  { choice: 'Kr' }
-];
-
-export const MISSES = [
-  { volume: 2 },
-  { number: 40 },
-  { number: 12 },
-  { number: 50 },
-  { choice: 'Ar' }
-];
-
 export function stateFor(i, overrides) {
-  return { ...blankAnswer(STAGES[i]), ...gasState(STAGES[i]), ...blankState(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -353,8 +447,13 @@ export function mount(container, ctx) {
       session.recordClue?.(DEBRIEF.clueAwarded);
     }
   };
-  return mountGas(container, bossCtx, { STAGES, DEBRIEF, toolNoteFor, blankState });
+  const runner = createRunner(container, bossCtx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
+  });
+  runner.start();
+  return { dispose: () => runner.dispose() };
 }
 
-/* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { readOf, volumeIdeal, GASES, R };
+/* Exported for `verify:learn`, which holds every graded figure to the planners. */
+export { pressureIdeal, volumeIdeal, halfTime, GASES, R, tankRead };

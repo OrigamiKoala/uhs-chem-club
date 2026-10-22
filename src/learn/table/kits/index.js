@@ -23,3 +23,4 @@ import './shells.js';
 import './pes.js';
 import './trends.js';
 import './cuvette.js';
+import './gas.js';

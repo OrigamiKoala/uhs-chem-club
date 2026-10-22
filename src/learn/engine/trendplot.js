@@ -110,7 +110,7 @@ export class TrendPlot {
     for (let i = 0; i <= yTicks; i++) {
       const yVal = yMin + (ySpan * i) / yTicks;
       const yPos = padT + ph - (ph * i) / yTicks;
-      ctx.fillText(String(Math.round(yVal)), padL - 4, yPos);
+      ctx.fillText(this.spec.yDigits ? yVal.toFixed(this.spec.yDigits) : String(Math.round(yVal)), padL - 4, yPos);
       ctx.strokeStyle = '#1a1816';
       ctx.beginPath();
       ctx.moveTo(padL, yPos);
@@ -124,7 +124,7 @@ export class TrendPlot {
     for (let i = 0; i <= xTicks; i++) {
       const xVal = xMin + (xSpan * i) / xTicks;
       const xPos = padL + (pw * i) / xTicks;
-      ctx.fillText(String(Math.round(xVal)), xPos, padT + ph + 4);
+      ctx.fillText(this.spec.xDigits ? xVal.toFixed(this.spec.xDigits) : String(Math.round(xVal)), xPos, padT + ph + 4);
       ctx.strokeStyle = '#1a1816';
       ctx.beginPath();
       ctx.moveTo(xPos, padT);

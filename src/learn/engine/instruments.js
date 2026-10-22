@@ -141,14 +141,14 @@ const BUILT_BENCHES = new Set([
   'q8-hybrid',     // the tabletop, domain kit (a mixing bowl, orbitals overlapped into bonds, a bond whose far end is turned)
   'q9-orbitals',   // the tabletop, orbital kit (a rack of boxes that electrons are poured into, a magnet that reads the real molecule, cards on a rail) — table3d.js (T3c)
   'boss-warden',   // the warden: five phases on the bonds, atom, domain and orbital kits, its foe in the table's corner
-  // Unit 4 — Bellows. One instrument, six heads: cylinder, mixture, leak, tube, path and record.
-  'q1-knocks',     // the gas rig, cylinder head with the speed screen — gasrig3d.js
-  'q2-laws',       // the gas rig, cylinders with traces, and the gauge records
-  'q3-ideal',      // the gas rig, cylinders with the scale and the readings
-  'q4-mixtures',   // the gas rig, mixture tanks
-  'q5-speed',      // the gas rig, speed screen, pinhole, tube and path
-  'q6-real',       // the gas rig, real-gas cylinders
-  'boss-compressor', // the compressor: cylinders, tanks and the pinhole in turn
+  // Unit 4 — Bellows. Every Bellows quest is a tabletop (T5); the gas rig serves none.
+  'q1-knocks',     // the tabletop, gas kit (a cylinder with a piston, knock counter and speed screen, tanks sorted by what moves with the gauge, a reference gauge, a paper strip) — table3d.js (T5)
+  'q2-laws',       // the tabletop, gas kit (a free piston and a rigid one, predictions, a marker, a rail of curve cards sorted into trays) — table3d.js (T5)
+  'q3-ideal',      // the tabletop, gas kit (the recorder and a straightedge for R, a scale under a tank, a pellet dropped in acid) — table3d.js (T5)
+  'q4-mixtures',   // the tabletop, gas kit (tanks opened into a common tank, a trap that pulls one gas out) — table3d.js (T5)
+  'q5-speed',      // the tabletop, gas kit (the speed screen, a pinhole, a tube and one particle's walk, the stack's leak sample) — table3d.js (T5)
+  'q6-real',       // the tabletop, gas kit (real-gas cylinders printing PV / nRT and the two corrections, the cold box's draw-off) — table3d.js (T5)
+  'boss-compressor', // the compressor: five phases on the gas kit, its foe in the table's corner
   // Unit 5 — Ember Reach. One instrument, seven heads: contact, cup, diagram, bonds, hess, box and gibbs.
   'q1-flow',       // the calorimeter, contact and cup heads — calorimeter3d.js
   'q2-calorimetry',// the calorimeter, cup head

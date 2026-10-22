@@ -72,8 +72,10 @@ export function buildCompressorTower(ctx) {
   const g = new THREE.Group();
   g.userData.vents = [];
 
-  const plinth = part(ctx, new THREE.CylinderGeometry(11.4, 11.8, 1.1, 8), ctx.M.darkSteel, 0, 0.55, 0, { cast: true });
-  plinth.rotation.y = Math.PI / 8;
+  // The octagon's turn is baked into its vertices, so its box is the plinth's own and not the loose box of a turned one.
+  const plinthGeo = new THREE.CylinderGeometry(11.4, 11.8, 1.1, 8);
+  plinthGeo.rotateY(Math.PI / 8);
+  const plinth = part(ctx, plinthGeo, ctx.M.darkSteel, 0, 0.55, 0, { cast: true });
   g.add(plinth);
   const block = part(ctx, new THREE.CylinderGeometry(7.0, 7.6, 14, 28), ctx.M.steel, 0, 8.1, 0, { cast: true });
   g.add(block);

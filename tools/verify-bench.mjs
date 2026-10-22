@@ -1310,12 +1310,15 @@ for (const id of ['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed',
 function layGas(bench, st) {
   bench.setRigs(st.rigs, GASDATA.benchCfg(st, {}));
 }
+// A Bellows quest that has become a tabletop is measured with the real table stages below; only the quests that still play the old
+// gas rig are held to its framing and its pointer path.
+const BW_OLD = id => !BW[id].STAGES.every(st => st.widget?.type === 'table');
 const gasStages = id => BW[id].STAGES;
 const gasWidest = id => gasStages(id).reduce((a, b) => (b.rigs.length > a.rigs.length ? b : a));
 const gasDials = st => (st.volumes?.length > 1 ? 1 : 0) + (st.temps?.length > 1 ? 1 : 0) + (st.times?.length > 1 ? 1 : 0);
 const gasDialStage = id => gasStages(id).reduce((a, b) => (gasDials(b) > gasDials(a) ? b : a));
 
-const BW_BENCHES = ['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed', 'q6-real'].map(id => [
+const BW_BENCHES = ['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed', 'q6-real'].filter(BW_OLD).map(id => [
   id, `gas rig (${id})`, (c, a) => new GasRig3D(null, { world: worldFrame(c, a) })
 ]);
 
@@ -1327,7 +1330,7 @@ const BW_BENCHES = ['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed
       check(id, `${label}, dial stage`, build, bench => layGas(bench, gasDialStage(id)));
     }
   }
-  if (failures === mark) ok(`the gas rig frames every body and control at ${ASPECTS.length} aspects on all six Bellows benches`);
+  if (failures === mark) ok(BW_BENCHES.length ? `the gas rig frames every body and control at ${ASPECTS.length} aspects on the ${BW_BENCHES.length} Bellows benches that still play it` : 'no Bellows bench plays the old gas rig any more: every one is a tabletop, measured below');
 }
 
 /* EVERY STAGE, THROUGH THE REAL POINTER PATH. */
@@ -1345,7 +1348,7 @@ async function bellowsPasses() {
   };
   const center = h => (h.r !== undefined ? [h.x, h.y] : [(h.x0 + h.x1) / 2, (h.y0 + h.y1) / 2]);
 
-  for (const id of ['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed', 'q6-real']) {
+  for (const id of ['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed', 'q6-real'].filter(BW_OLD)) {
     const anchor = world.benchAnchor(id);
     world.setBenchDeployed(id, true);
     let probed = null;
@@ -1833,35 +1836,8 @@ console.log('The foes — spoil standing in the wells\n');
   // LIGAR: the basalt warden is five table phases since T3c, with its foe in the table's corner; it is held with the other table bosses
   // below ("boss-warden on its tables"), not here.
 
-  // BELLOWS: the Compressor over the boss's five phases.
-  // (`world` becomes Bellows.)
-  world = new BellowsWorld(null);
-  world.scene.updateMatrixWorld(true);
-  const gasProbes = (st, enc) => {
-    if (!enc) return [];
-    const cfg = GASDATA.benchCfg(st, {});
-    const out = [];
-    for (const f of enc.foes) {
-      const rig = st.rigs.find(r => r.id === f.id);
-      const rest = rig.head === 'mixture'
-        ? (() => { const m = GASDATA.mixtureState(rig, cfg); return { P: GASDATA.planMixture(rig.parts, m.T, m.V).P, V: m.V }; })()
-        : (() => { const r = GASDATA.planGas(rig, cfg); return { P: r.P, V: r.V }; })();
-      if (rig.head === 'cylinder' || rig.head === 'mixture') {
-        out.push([f.id, { kind: 'gas', item: rig, cfg, rest }]);
-        const hot = rig.head === 'cylinder' ? { ...rig, n: (rig.n || 1) * 3 } : { ...rig, parts: rig.parts.map(p => ({ ...p, n: p.n * 3 })) };
-        out.push([f.id, { kind: 'gas', item: hot, cfg, rest }]);
-      } else if (rig.head === 'leak') out.push([f.id, { kind: 'leak', gas: rig.gas, seconds: 6 }]);
-      else if (rig.head === 'tube') out.push([f.id, { kind: 'tube', gas: rig.gas, seconds: 6, length: rig.length || 8 }]);
-      else if (rig.head === 'path') out.push([f.id, { kind: 'path', hits: 6 }]);
-    }
-    return out;
-  };
-  const bellowsCfg = (questId, label) => ({
-    questId, label, build: (camera, anchor) => new GasRig3D(null, { world: worldFrame(camera, anchor) }),
-    lay: (bench, st) => layGas(bench, st), items: st => st.rigs || [], select: false
-  });
-  // The Compressor has no site of its own; its five phases stand on the first bench's plate.
-  await foePasses(bellowsCfg('q1-knocks', 'gas rig (the Compressor)'), BW['boss-compressor'].STAGES, gasProbes);
+  // BELLOWS: the Compressor is five table phases since T5, with its foe in the table's corner; it is held with the other table bosses
+  // below ("boss-compressor on its tables"), not here.
 
   // EMBER REACH: the Crucible over the boss's five phases, on the first bench's plate.
   // (`world` becomes Ember Reach.)
@@ -2634,7 +2610,7 @@ console.log('The foes — spoil standing in the wells\n');
  *     lunges, a clear disperses, a replay and a knock-back restore it) and it is a few thousand triangles, no more;
  *   - a press on the pad is a press on the table, never a take of the foe (a foe only observes).
  */
-for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hopper.js', null], ['boss-golem', 'unit07/boss-golem.js', 'foundry'], ['boss-warden', 'unit03/boss-warden.js', null], ['boss-eater', 'unit02/boss-eater.js', null]]) {
+for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hopper.js', null], ['boss-golem', 'unit07/boss-golem.js', 'foundry'], ['boss-warden', 'unit03/boss-warden.js', null], ['boss-eater', 'unit02/boss-eater.js', null], ['boss-compressor', 'unit04/boss-compressor.js', null]]) {
   console.log(`\n${bossName} on its tables`);
   const MODEL = await import('../src/learn/table/model.js');
   const SNAP = await import('../src/learn/table/snap.js');
@@ -2648,7 +2624,9 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
     ? [['idle'], ['unmoved'], ['gripped'], ['cleaved'], ['splayed'], ['turned'], ['still'], ['locked'], ['free'], ['dispersed']]
     : bossName === 'boss-eater'
       ? [['idle'], ['unmoved'], ['absorbed'], ['ionized'], ['dispersed']]
-      : [['idle'], ['unmoved'], ['cracked'], ['neutral'], ['balanced'], ['starved'], ['dispersed']];
+      : bossName === 'boss-compressor'
+        ? [['idle'], ['unmoved'], ['laboured'], ['easy'], ['venting'], ['steady'], ['dispersed']]
+        : [['idle'], ['unmoved'], ['cracked'], ['neutral'], ['balanced'], ['starved'], ['dispersed']];
   const setGlass = (w, h) => { window.innerWidth = w; window.innerHeight = h; };
   const before = failures;
   let fights = 0;
@@ -2753,7 +2731,7 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
       layer.update(0.05);
       const tag = `${label} (the fight)`;
       for (const f of enc.foes) {
-        for (const pose of bossName === 'boss-warden' ? ['gripped', 'cleaved', 'unmoved'] : bossName === 'boss-eater' ? ['absorbed', 'ionized', 'unmoved'] : ['cracked', 'neutral', 'unmoved']) {
+        for (const pose of bossName === 'boss-warden' ? ['gripped', 'cleaved', 'unmoved'] : bossName === 'boss-eater' ? ['absorbed', 'ionized', 'unmoved'] : bossName === 'boss-compressor' ? ['laboured', 'venting', 'unmoved'] : ['cracked', 'neutral', 'unmoved']) {
           const probe = { pose };
           const want = planFoe(enc, f, probe);
           encounter.react(f.id, probe);

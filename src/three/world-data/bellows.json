@@ -179,16 +179,6 @@
     {
       "asset": "lamp-post",
       "pos": [
-        -17.22,
-        0,
-        -31.61
-      ],
-      "radius": 0.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "lamp-post",
-      "pos": [
         -23.82,
         0,
         -26.99
@@ -287,87 +277,44 @@
       "minTier": "T3"
     },
     {
-      "asset": "lamp-post",
+      "asset": "gasholder",
       "pos": [
-        -6.25,
+        61.36,
         0,
-        35.45
+        20.13
       ],
-      "radius": 0.6,
+      "radius": 7.6,
+      "rotY": 2.89,
       "minTier": "T3"
     },
     {
       "asset": "gasholder",
       "pos": [
-        20.9,
+        -56.02,
         0,
-        -52.14
+        16.39
       ],
-      "radius": 6.5,
-      "rotY": 1.25,
+      "radius": 7.6,
+      "rotY": 3.58,
       "minTier": "T3"
     },
     {
       "asset": "gasholder",
       "pos": [
-        -40.55,
+        61.18,
         0,
-        -47.47
+        -20.2
       ],
-      "radius": 6.5,
-      "rotY": 4.99,
-      "minTier": "T3"
-    },
-    {
-      "asset": "gasholder",
-      "pos": [
-        55.86,
-        0,
-        31.21
-      ],
-      "radius": 6.5,
-      "rotY": 3.62,
-      "minTier": "T3"
-    },
-    {
-      "asset": "gasholder",
-      "pos": [
-        -59.61,
-        0,
-        8.48
-      ],
-      "radius": 6.5,
-      "rotY": 3.78,
-      "minTier": "T3"
-    },
-    {
-      "asset": "gasholder",
-      "pos": [
-        50.77,
-        0,
-        -29.08
-      ],
-      "radius": 6.5,
-      "rotY": 2.66,
-      "minTier": "T3"
-    },
-    {
-      "asset": "gasholder",
-      "pos": [
-        -1.65,
-        0,
-        -59.13
-      ],
-      "radius": 6.5,
-      "rotY": 0.35,
+      "radius": 7.6,
+      "rotY": 2.7,
       "minTier": "T3"
     },
     {
       "asset": "vent-stack",
       "pos": [
-        -15.63,
+        21.8,
         0,
-        -16.88
+        -14.29
       ],
       "radius": 2.6,
       "minTier": "T3"
@@ -375,29 +322,9 @@
     {
       "asset": "vent-stack",
       "pos": [
-        -22.76,
+        -25.85,
         0,
-        6.54
-      ],
-      "radius": 2.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "vent-stack",
-      "pos": [
-        18.35,
-        0,
-        8.97
-      ],
-      "radius": 2.6,
-      "minTier": "T3"
-    },
-    {
-      "asset": "vent-stack",
-      "pos": [
-        11.64,
-        0,
-        -23.71
+        14.86
       ],
       "radius": 2.6,
       "minTier": "T3"
@@ -405,44 +332,55 @@
     {
       "asset": "pipe-rack",
       "pos": [
-        -61.51,
+        -50.69,
         0,
-        29.99
+        -35.69
       ],
       "radius": 8,
-      "rotY": 2.76,
+      "rotY": 1.12,
       "minTier": "T3"
     },
     {
       "asset": "pipe-rack",
       "pos": [
-        58.04,
+        -68.85,
         0,
-        15.61
+        0.03
       ],
       "radius": 8,
-      "rotY": 1.77,
+      "rotY": 0.06,
       "minTier": "T3"
     },
     {
-      "asset": "pipe-rack",
+      "asset": "scoop-pylon",
       "pos": [
-        -21.51,
+        -55.88,
         0,
-        -59.93
+        48.54
       ],
-      "radius": 8,
+      "radius": 2.6,
+      "rotY": 3.89,
+      "minTier": "T3"
+    },
+    {
+      "asset": "scoop-pylon",
+      "pos": [
+        -24.09,
+        0,
+        -67.12
+      ],
+      "radius": 2.6,
       "rotY": 3.14,
       "minTier": "T3"
     },
     {
-      "asset": "pipe-rack",
+      "asset": "scoop-pylon",
       "pos": [
-        -58.78,
+        -66.92,
         0,
-        -18.2
+        -20.72
       ],
-      "radius": 8,
+      "radius": 2.6,
       "rotY": 2.81,
       "minTier": "T3"
     },
@@ -453,129 +391,107 @@
         0,
         -39.24
       ],
-      "radius": 2,
+      "radius": 2.6,
       "rotY": 4.25,
       "minTier": "T3"
     },
     {
       "asset": "scoop-pylon",
       "pos": [
-        69.61,
+        -62.58,
         0,
-        17.93
+        -34.75
       ],
-      "radius": 2,
-      "rotY": 4.2,
+      "radius": 2.6,
+      "rotY": 2.58,
       "minTier": "T3"
     },
     {
       "asset": "scoop-pylon",
       "pos": [
-        -5.08,
+        70.36,
         0,
-        -70.69
+        -5.29
       ],
-      "radius": 2,
-      "rotY": 1.65,
-      "minTier": "T3"
-    },
-    {
-      "asset": "scoop-pylon",
-      "pos": [
-        54.54,
-        0,
-        -48.31
-      ],
-      "radius": 2,
-      "rotY": 5.39,
-      "minTier": "T3"
-    },
-    {
-      "asset": "scoop-pylon",
-      "pos": [
-        -69.42,
-        0,
-        -14.33
-      ],
-      "radius": 2,
-      "rotY": 3.87,
-      "minTier": "T3"
-    },
-    {
-      "asset": "scoop-pylon",
-      "pos": [
-        71.14,
-        0,
-        9.3
-      ],
-      "radius": 2,
+      "radius": 2.6,
       "rotY": 4.36,
       "minTier": "T3"
     },
     {
       "asset": "scoop-pylon",
       "pos": [
-        -12.44,
+        38.08,
         0,
-        -68.48
+        -61.47
       ],
-      "radius": 2,
-      "rotY": 1.8,
+      "radius": 2.6,
+      "rotY": 3.2,
       "minTier": "T3"
     },
     {
       "asset": "scoop-pylon",
       "pos": [
-        -16.6,
+        -15.97,
         0,
-        -71.2
+        -71.09
       ],
-      "radius": 2,
-      "rotY": 1.84,
+      "radius": 2.6,
+      "rotY": 3.32,
       "minTier": "T3"
     },
     {
       "asset": "bladder-moor",
       "pos": [
-        -25.04,
+        58.08,
         0,
-        57.62
+        7.76
       ],
       "radius": 3.8,
-      "rotY": 0.3,
+      "rotY": 0.97,
       "minTier": "T3"
     },
     {
       "asset": "bladder-moor",
       "pos": [
-        59.94,
+        -58.25,
         0,
-        -2.99
+        -7.16
       ],
       "radius": 3.8,
-      "rotY": 5.45,
+      "rotY": 0.13,
       "minTier": "T3"
     },
     {
       "asset": "bladder-moor",
       "pos": [
-        -55.14,
+        56.75,
         0,
-        -39.79
+        39.62
       ],
       "radius": 3.8,
-      "rotY": 4.11,
+      "rotY": 4.78,
       "minTier": "T3"
     },
     {
       "asset": "crate-stack",
       "pos": [
-        -36.71,
+        46.12,
         0,
-        -58.28
+        -46.72
       ],
       "radius": 2.6,
-      "rotY": 0.34,
+      "rotY": 4.09,
+      "minTier": "T4"
+    },
+    {
+      "asset": "crate-stack",
+      "pos": [
+        52.08,
+        0,
+        -4.34
+      ],
+      "radius": 2.6,
+      "rotY": 4.59,
       "minTier": "T4"
     },
     {
@@ -592,12 +508,12 @@
     {
       "asset": "crate-stack",
       "pos": [
-        -9.91,
+        -10.42,
         0,
-        32.81
+        -68.15
       ],
       "radius": 2.6,
-      "rotY": 1.46,
+      "rotY": 5.99,
       "minTier": "T4"
     },
     {
@@ -643,17 +559,6 @@
       "radius": 2.6,
       "rotY": 5.09,
       "minTier": "T4"
-    },
-    {
-      "asset": "crate-stack",
-      "pos": [
-        -71.52,
-        0,
-        -5.57
-      ],
-      "radius": 2.6,
-      "rotY": 0.23,
-      "minTier": "T4"
     }
   ],
   "sites": [
@@ -662,17 +567,17 @@
       "questId": "q1-knocks",
       "stage": 1,
       "pos": [
-        38.14,
+        -29.57,
         0,
-        25.72
+        35.24
       ],
       "approachPos": [
-        34.32,
+        -26.61,
         1.6,
-        23.15
+        31.72
       ],
       "label": "Bench 1 - Pressure and Temperature",
-      "structure": "knock-hut",
+      "structure": "gauge-gallery",
       "built": true
     },
     {
@@ -680,17 +585,17 @@
       "questId": "q2-laws",
       "stage": 2,
       "pos": [
-        45.3,
+        -14.48,
         0,
-        -7.99
+        -2.55
       ],
       "approachPos": [
-        40.77,
+        -19.01,
         1.6,
-        -7.19
+        -3.35
       ],
       "label": "Bench 2 - The Gas Laws",
-      "structure": "piston-bay",
+      "structure": "piston-deck",
       "built": true
     },
     {
@@ -698,17 +603,17 @@
       "questId": "q3-ideal",
       "stage": 3,
       "pos": [
-        27.04,
+        -22,
         0,
-        -37.21
+        -38.11
       ],
       "approachPos": [
-        24.33,
+        -19.7,
         1.6,
-        -33.49
+        -34.13
       ],
       "label": "Bench 3 - Ideal Gas Law",
-      "structure": "scale-hall",
+      "structure": "metering-skid",
       "built": true
     },
     {
@@ -716,17 +621,17 @@
       "questId": "q4-mixtures",
       "stage": 4,
       "pos": [
-        -6.4,
+        11.91,
         0,
-        -45.55
+        -44.43
       ],
       "approachPos": [
-        -5.76,
+        10.72,
         1.6,
-        -41
+        -39.99
       ],
       "label": "Bench 4 - Partial Pressures",
-      "structure": "blend-house",
+      "structure": "blending-manifold",
       "built": true
     },
     {
@@ -734,17 +639,17 @@
       "questId": "q5-speed",
       "stage": 5,
       "pos": [
-        -36.25,
+        36.04,
         0,
-        -28.32
+        -25.24
       ],
       "approachPos": [
-        -32.62,
+        32.27,
         1.6,
-        -25.49
+        -22.6
       ],
       "label": "Bench 5 - Speed and Escape",
-      "structure": "pinhole-gallery",
+      "structure": "leak-station",
       "built": true
     },
     {
@@ -752,17 +657,17 @@
       "questId": "q6-real",
       "stage": 6,
       "pos": [
-        -45.75,
+        15.76,
         0,
-        4.81
+        -2.78
       ],
       "approachPos": [
-        -41.17,
+        20.29,
         1.6,
-        4.33
+        -3.58
       ],
       "label": "Bench 6 - Real Gases",
-      "structure": "cold-room",
+      "structure": "cold-box",
       "built": true
     }
   ],
@@ -782,74 +687,74 @@
     "stillCamera": {
       "site-1": {
         "pos": [
-          34.32,
+          -26.61,
           1.6,
-          23.15
+          31.72
         ],
         "lookAt": [
-          38.14,
+          -29.57,
           1.2,
-          25.72
+          35.24
         ]
       },
       "site-2": {
         "pos": [
-          40.77,
+          -19.01,
           1.6,
-          -7.19
+          -3.35
         ],
         "lookAt": [
-          45.3,
+          -14.48,
           1.2,
-          -7.99
+          -2.55
         ]
       },
       "site-3": {
         "pos": [
-          24.33,
+          -19.7,
           1.6,
-          -33.49
+          -34.13
         ],
         "lookAt": [
-          27.04,
+          -22,
           1.2,
-          -37.21
+          -38.11
         ]
       },
       "site-4": {
         "pos": [
-          -5.76,
+          10.72,
           1.6,
-          -41
+          -39.99
         ],
         "lookAt": [
-          -6.4,
+          11.91,
           1.2,
-          -45.55
+          -44.43
         ]
       },
       "site-5": {
         "pos": [
-          -32.62,
+          32.27,
           1.6,
-          -25.49
+          -22.6
         ],
         "lookAt": [
-          -36.25,
+          36.04,
           1.2,
-          -28.32
+          -25.24
         ]
       },
       "site-6": {
         "pos": [
-          -41.17,
+          20.29,
           1.6,
-          4.33
+          -3.58
         ],
         "lookAt": [
-          -45.75,
+          15.76,
           1.2,
-          4.81
+          -2.78
         ]
       }
     }
@@ -862,15 +767,7 @@
       "site-4",
       "site-5",
       "site-6"
-    ],
-    "siteDescriptions": {
-      "site-1": "Bench 1 of six, standing on the ring of deck round the Compressor, the first on the walk from the landing pad.",
-      "site-2": "Bench 2 of six, standing on the ring of deck round the Compressor, a short walk from the one before it.",
-      "site-3": "Bench 3 of six, standing on the ring of deck round the Compressor, a short walk from the one before it.",
-      "site-4": "Bench 4 of six, standing on the ring of deck round the Compressor, a short walk from the one before it.",
-      "site-5": "Bench 5 of six, standing on the ring of deck round the Compressor, a short walk from the one before it.",
-      "site-6": "Bench 6 of six, standing on the ring of deck round the Compressor, a short walk from the one before it."
-    }
+    ]
   },
   "tracks": []
 }

@@ -11,6 +11,7 @@ import { encounterSnapshot } from './bench-host.js';
 import { soundscape } from '../../audio/soundscape.js';
 
 /** Where in the well's frame each species stands, by instrument head. */
+// Where a body stands relative to its station's well. A tabletop's corner pad has no well, so a body stands at the pad's centre.
 const PERCH = {
   'the compressor': { x: 0, y: 0, z: 0.1 }
 };
@@ -130,7 +131,7 @@ export class FoeLayer3D {
       }
       body.stationIndex = i;
       body.station = st;
-      const perch = PERCH[this.enc.species] || { x: 0, y: 0, z: 0 };
+      const perch = (!spots && PERCH[this.enc.species]) || { x: 0, y: 0, z: 0 };
       if (spots) {
         body.baseX = spots[i].x + perch.x;
         body.baseY = spots[i].y + perch.y;

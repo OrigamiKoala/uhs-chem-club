@@ -23,7 +23,13 @@ export const emptyRecorder = (box = null) => ({
   tool: null,
   box: { at: { ...(box?.at || RECORDER_BOX.at) }, size: { ...(box?.size || RECORDER_BOX.size) } },
   // What the two axes are called, when a stage says (the paper strip prints them).
-  axes: { xLabel: box?.xLabel || '', yLabel: box?.yLabel || '', xUnit: box?.xUnit || '', yUnit: box?.yUnit || '' }
+  // `range` ({xMin, xMax, yMin, yMax}) fixes what the paper strip shows, so a line can be carried on past the readings to where it
+  // meets an axis (a stage whose answer is "where does it reach zero"); without it the strip fits its readings. `xDigits`/`yDigits`
+  // are the decimals its scale prints.
+  axes: {
+    xLabel: box?.xLabel || '', yLabel: box?.yLabel || '', xUnit: box?.xUnit || '', yUnit: box?.yUnit || '',
+    range: box?.range ? { ...box.range } : null, xDigits: box?.xDigits ?? 0, yDigits: box?.yDigits ?? 0
+  }
 });
 
 const finite = v => typeof v === 'number' && Number.isFinite(v);
@@ -94,12 +100,18 @@ export function plotUnits(rec) {
   r.h = rec.box.size.h;
   const xs = rec.rows.map(p => p.x);
   const ys = rec.rows.map(p => p.y);
+  const rg = rec.axes?.range || null;
   const lo = a => Math.min(...a);
-  const span = a => (Math.max(...a) - Math.min(...a)) || 1;
+  const xlo = rg ? rg.xMin : lo(xs);
+  const xhi = rg ? rg.xMax : Math.max(...xs);
+  const ylo = rg ? rg.yMin : lo(ys);
+  const yhi = rg ? rg.yMax : Math.max(...ys);
+  const xspan = (xhi - xlo) || 1;
+  const yspan = (yhi - ylo) || 1;
   return {
     r,
-    ux: x => r.x0 + 2 + ((x - lo(xs)) / span(xs)) * (r.w - 4),
-    uy: y => r.y1 - 2 - ((y - lo(ys)) / span(ys)) * (r.h - 4),
-    xlo: lo(xs), xhi: Math.max(...xs)
+    ux: x => r.x0 + 2 + ((x - xlo) / xspan) * (r.w - 4),
+    uy: y => r.y1 - 2 - ((y - ylo) / yspan) * (r.h - 4),
+    xlo, xhi
   };
 }

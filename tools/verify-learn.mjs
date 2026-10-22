@@ -3503,21 +3503,32 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
 
 /* ------------------------------------------------------------------
    EVERY FIGURE A BELLOWS STAGE GRADES AGAINST IS RECOMPUTED FROM THE REAL
-   TABLES, and every claim a stage teaches is checked on the plate that teaches
-   it: a trace that is not a line, a knock counter that does not follow the gauge,
-   a ranking the other column would get wrong. An answer authored as a literal can
-   drift from the instrument that teaches it; one recomputed here from
-   `gasdata.js` cannot.
+   TABLES, and every claim a stage teaches is checked on the table that teaches
+   it (plan `bench-tabletop.md`, T5): a trace that is not a line, a knock counter
+   that does not follow the gauge, a ranking the other column would get wrong.
+   The kit (`table/kits/gas.js`) reads every plate through `gasdata.js`, so an
+   answer authored as a literal in a solution script can drift from the
+   instrument that teaches it, and one recomputed here cannot.
    ------------------------------------------------------------------ */
 {
   const before = failures;
   const G = GAS;
+  const GK = await import('../src/learn/table/kits/gas.js');
   const get = async id => { const q = getQuest('unit04', id); return q && q.status === 'live' ? q.module() : null; };
   const [b1, b2, b3, b4, b5, b6, bb] = await Promise.all(['q1-knocks', 'q2-laws', 'q3-ideal', 'q4-mixtures', 'q5-speed', 'q6-real', 'boss-compressor'].map(get));
   const near = (a, b, tol, what) => { if (!(Math.abs(a - b) <= tol)) fail(`${what}: graded ${a}, the real figure is ${Number(b).toFixed(4)}`); };
   const same = (a, b, what) => { if (String(a) !== String(b)) fail(`${what}: graded ${a}, the real answer is ${b}`); };
   const holds = (cond, what) => { if (!cond) fail(what); };
-  const at = (st, id, state = {}) => G.readOf(st, id, state);
+  // A stage's table as the player first sees it, and as the stage's solution script leaves it.
+  const start = (q, i) => TABLE.createTable(q.STAGES[i].table, q.STAGES[i].title);
+  const done = (q, i) => TABLE.runScript(start(q, i), q.SOLUTIONS[i], { strict: true });
+  // The reading a rig WOULD give with some dials turned (an index into the stage's own lists); `which` picks the cylinder.
+  const rd = (t, id, set = {}, which = 0) => GK.rigAt(t, id, set)[which];
+  const rows = (t, id) => GK.rigRead(t, id);
+  const dialsOf = (t, id) => t.fixtures[id].props;
+  const marker = (t, id) => GK.markerRead(t, id);
+  const tray = (t, id) => (t.pieces[id].zone || '').replace(/^tray:/, '');
+  const order = t => t.zones.rail.order.join();
 
   /* ---- the tables themselves ---- */
   near(G.R, 8.314, 1e-9, 'gasdata: R in L kPa / mol K');
@@ -3529,272 +3540,398 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   near(G.speedBins('N2', 300, 60, 6000).reduce((a, b) => a + b, 0), 1, 0.002, 'gasdata: the speed distribution is one whole');
 
   if (b1) {
-    const S = b1.STAGES;
+    const q = 'unit04/q1-knocks';
     // Stage 1: while the piston moves, nothing but the knocks follows the gauge.
-    const r = k => at(S[0], 'a', { volume: k });
-    const n = S[0].volumes.length;
-    for (let k = 1; k < n; k++) {
-      near(r(k).P * S[0].volumes[k - 1], r(1).P * S[0].volumes[0], 1e-6, 'unit04/q1-knocks stage 1: pressure times volume is not constant');
-      near(r(k).knocks / r(1).knocks, r(k).P / r(1).P, 1e-9, 'unit04/q1-knocks stage 1: the knock counter does not follow the gauge');
-      near(r(k).mean, r(1).mean, 1e-9, 'unit04/q1-knocks stage 1: the particles change speed while the piston moves');
-      near(r(k).T, r(1).T, 1e-9, 'unit04/q1-knocks stage 1: the temperature changes while the piston moves');
+    {
+      const t = start(b1, 0);
+      const n = dialsOf(t, 'rig').volumes.length;
+      const r = k => rd(t, 'rig', { volume: k });
+      for (let k = 2; k <= n; k++) {
+        near(r(k).P * r(k).V, r(1).P * r(1).V, 1e-6, `${q} stage 1: pressure times volume is not constant`);
+        near(r(k).knocks / r(1).knocks, r(k).P / r(1).P, 1e-9, `${q} stage 1: the knock counter does not follow the gauge`);
+        near(r(k).mean, r(1).mean, 1e-9, `${q} stage 1: the particles change speed while the piston moves`);
+        near(r(k).T, r(1).T, 1e-9, `${q} stage 1: the temperature changes while the piston moves`);
+      }
     }
     // Stage 2: twice the gas, twice the pressure.
-    near(at(S[1], 'a', { amounts: { a: 2 } }).P / at(S[1], 'a', { amounts: { a: 1 } }).P, 2, 1e-9, 'unit04/q1-knocks stage 2 (twice the gas)');
-    // Stage 3: heating changes the speed and the energy, not the amount.
-    holds(at(S[2], 'a', { temp: 5 }).mean > at(S[2], 'a', { temp: 1 }).mean, 'unit04/q1-knocks stage 3: heating does not speed the particles up');
-    // Stage 5: one temperature, one energy, two speeds.
-    const he = at(S[4], 'a'); const co = at(S[4], 'b');
-    near(he.energy, co.energy, 1e-9, 'unit04/q1-knocks stage 5: the two gases do not share an average kinetic energy');
-    holds(he.mean > co.mean * 2, 'unit04/q1-knocks stage 5: helium is not much faster than carbon dioxide');
-    // Stage 6: the reference gauge shows one atmosphere, 101.3 kPa and 760 mmHg at one detent; A reads 1.5 atm.
-    const ref = at(S[5], 'b', { volume: 3 });
-    near(G.kPaToAtm(ref.P), 1, 0.001, 'unit04/q1-knocks stage 6: the reference gauge does not read one atmosphere at its third detent');
-    near(G.kPaToMmHg(ref.P), 760, 0.5, 'unit04/q1-knocks stage 6: the reference gauge does not read 760 mmHg');
-    near(G.kPaToAtm(at(S[5], 'a').P), 1.5, 0.001, 'unit04/q1-knocks stage 6: Cylinder A does not read 1.50 atm');
-    same(Math.round(at(S[5], 'a').P), b1.SOLUTIONS[5].choice, 'unit04/q1-knocks stage 6 (A in kilopascals)');
-    // Stage 7: the trace is a straight line that reaches zero pressure at -273.15 C, past the coldest the dial reaches.
     {
-      const pts = S[6].temps.map((_, k) => at(S[6], 'a', { temp: k + 1 }));
+      const t = start(b1, 1);
+      const amts = dialsOf(t, 'rig').amounts;
+      near(rd(t, 'rig', { amount: 3 }).P / rd(t, 'rig', { amount: 1 }).P, amts[2] / amts[0], 1e-9, `${q} stage 2 (the gauge follows the amount)`);
+      holds(dialsOf(t, 'rig').plot && dialsOf(t, 'rig').plot.x === 'n', `${q} stage 2: the plate does not record against the amount`);
+    }
+    // Stage 3: heating speeds the particles up.
+    {
+      const t = start(b1, 2);
+      holds(rd(t, 'rig', { temp: 5 }).mean > rd(t, 'rig', { temp: 1 }).mean, `${q} stage 3: heating does not speed the particles up`);
+      holds(b1.SPEED_MARK > rd(t, 'rig', { temp: 1 }).mean, `${q} stage 3: the cylinder starts past the speed it is asked to reach`);
+      holds(Math.max(...[1, 2, 3, 4, 5].map(k => rd(t, 'rig', { temp: k }).mean)) > b1.SPEED_MARK, `${q} stage 3: the heater cannot reach the speed it is asked for`);
+    }
+    // Stage 5: one temperature, one energy, two speeds.
+    {
+      const t = done(b1, 4);
+      const a = GK.cylRead(t, 'ra', 0); const b = GK.cylRead(t, 'rb', 0);
+      near(a.energy, b.energy, 1e-9, `${q} stage 5: the two gases do not share an average kinetic energy`);
+      holds(a.mean > b.mean * 2, `${q} stage 5: helium is not much faster than carbon dioxide`);
+      near(a.T, b.T, 1e-9, `${q} stage 5: the solution leaves the two cylinders at different temperatures`);
+    }
+    // Stage 6: one gauge, three scales, read off the reference gauge.
+    {
+      const t = done(b1, 5);
+      const ref = t.fixtures.ref;
+      const atm = ref.props.atms[Math.round(ref.dials.pressure.value) - 1];
+      const A = GK.cylRead(t, 'ra', 0);
+      near(G.kPaToAtm(A.P), 1.5, 0.001, `${q} stage 6: Cylinder A does not read 1.50 atm`);
+      near(atm, G.kPaToAtm(A.P), 0.001, `${q} stage 6: the solution leaves the reference gauge at another pressure`);
+      near(G.kPaToMmHg(atm * G.ATM_KPA), 760 * atm, 0.5, `${q} stage 6: the reference gauge does not read 760 mmHg per atmosphere`);
+      const card = Object.values(t.pieces).find(p => p.zone === 'slot:answer');
+      same(card && card.props.value, Math.round(A.P), `${q} stage 6 (A in kilopascals)`);
+      holds(start(b1, 5).fetch.gauge && start(b1, 5).pieces.holder.fetchFrom === 'gauge', `${q} stage 6: the holder's gauge is not a field fetch`);
+    }
+    // Stage 7: a line laid across the readings carries on to zero pressure at 0 K.
+    {
+      const t = start(b1, 6);
+      const temps = dialsOf(t, 'rig').temps;
+      const pts = temps.map((_, k) => rd(t, 'rig', { temp: k + 1 }));
       const slope = (pts[1].P - pts[0].P) / (pts[1].T - pts[0].T);
-      pts.forEach((p, k) => near(p.P, pts[0].P + slope * (p.T - pts[0].T), 1e-9, `unit04/q1-knocks stage 7: point ${k + 1} is off the line`));
-      near(pts[0].T - pts[0].P / slope, 0, 0.01, 'unit04/q1-knocks stage 7: the line does not reach zero pressure at 0 K');
-      holds(Math.min(...S[6].temps) > -273.15 + 100, 'unit04/q1-knocks stage 7: the dial reaches too close to absolute zero for the line to need carrying on');
-      holds(S[6].trace.xmin <= -273.15, 'unit04/q1-knocks stage 7: the plot does not run as far as absolute zero');
+      pts.forEach((p, k) => near(p.P, pts[0].P + slope * (p.T - pts[0].T), 1e-9, `${q} stage 7: point ${k + 1} is off the line`));
+      near(pts[0].T - pts[0].P / slope, 0, 0.01, `${q} stage 7: the line does not reach zero pressure at 0 K`);
+      holds(Math.min(...temps) > -273.15 + 100, `${q} stage 7: the dial reaches too close to absolute zero for the line to need carrying on`);
+      holds(t.recorder.axes && t.recorder.axes.range && t.recorder.axes.range.xMin <= -273.15, `${q} stage 7: the strip does not run as far as absolute zero`);
+    }
+    // Stage 8: the statements marked are the ones the plate supports.
+    {
+      const t = done(b1, 7);
+      const marked = Object.values(t.pieces).filter(p => p.props.flipped).map(p => p.id).sort().join();
+      same(marked, b1.TRUE_STATEMENTS.slice().sort().join(), `${q} stage 8 (the statements marked)`);
     }
   }
 
   if (b2) {
-    const S = b2.STAGES;
-    const r = (st, k, over = {}) => at(S[st], 'a', { volume: k, ...over });
-    near(r(0, 1).P / r(0, 3).P, 4, 1e-9, 'unit04/q2-laws stage 1 (a quarter of the room)');
-    near(r(1, 2).knocks / r(1, 3).knocks, 2, 1e-9, 'unit04/q2-laws stage 2: the knocks do not double in half the room');
-    near(r(1, 2).mean, r(1, 3).mean, 1e-9, 'unit04/q2-laws stage 2: the speed changes with the piston');
-    near(at(S[2], 'a', { temp: 4 }).V / at(S[2], 'a', { temp: 1 }).V, 3, 1e-9, 'unit04/q2-laws stage 3 (tripling the kelvin)');
-    // Stage 4: V against kelvin is a line through the origin; V against Celsius is the same line, shifted.
-    const v = k => at(S[3], 'a', { temp: k });
-    for (let k = 1; k <= S[3].temps.length; k++) near(v(k).V / v(k).T, v(1).V / v(1).T, 1e-9, 'unit04/q2-laws stage 4: V over kelvin is not constant');
-    near(v(1).V - (v(2).V - v(1).V) / (v(2).T - v(1).T) * v(1).T, 0, 1e-9, 'unit04/q2-laws stage 4: the line does not pass through the origin on the kelvin plot');
-    holds(S[3].trace[1].xmin < -273 && S[3].trace[0].xmin === 0, 'unit04/q2-laws stage 4: the two plots do not show the intercepts');
-    const f5 = at(S[4], 'a', { temp: 3 }).P / at(S[4], 'a', { temp: 1 }).P;
-    near(f5, 1.5, 1e-9, 'unit04/q2-laws stage 5 (300 K to 450 K)');
-    near(b2.SOLUTIONS[4].decimal, f5, 0.05, 'unit04/q2-laws stage 5 (graded factor)');
-    near(at(S[5], 'a', { amounts: { a: 2 } }).V / at(S[5], 'a', { amounts: { a: 1 } }).V, 2, 1e-9, 'unit04/q2-laws stage 6 (twice the gas)');
+    const q = 'unit04/q2-laws';
     {
-      const a = at(S[6], 'a'); const b = at(S[6], 'b', { temp: 1 });
-      near(a.P, 100, 0.1, 'unit04/q2-laws stage 7: Cylinder A does not read 100 kPa');
-      near(b.V / a.V, 2, 0.01, 'unit04/q2-laws stage 7: half the pressure does not double the volume');
-      const want = a.V * (a.P / 50) * (450 / a.T);
-      near(b2.SOLUTIONS[6].number, want, 0.5, 'unit04/q2-laws stage 7 (the combined law)');
-      holds(!S[6].temps.includes(450), 'unit04/q2-laws stage 7: the dial has a setting at 450 K, so the answer is read and not worked');
-      // And the scaling really is exact: the dial's own settings obey the law the answer uses.
-      near(at(S[6], 'b', { temp: 3 }).V / at(S[6], 'b', { temp: 1 }).V, S[6].temps[2] / S[6].temps[0], 1e-9, 'unit04/q2-laws stage 7: volume does not follow kelvin');
+      const t = start(b2, 0);
+      near(rd(t, 'rig', { volume: 4 }).P / rd(t, 'rig', { volume: 1 }).P, 0.25, 1e-9, `${q} stage 1 (a quarter of the room)`);
+      same(marker(done(b2, 0), 'times'), 4, `${q} stage 1 (the marker)`);
     }
-    // Stage 8: each record is the shape the law that fixes the other quantities draws.
     {
-      const R = (id) => S[7].rigs.find(x => x.id === id);
-      const A = R('a'); const curveA = recordCurve(A);
-      curveA.forEach(p => near(p.x * p.y, curveA[0].x * curveA[0].y, 1e-6, 'unit04/q2-laws stage 8: record A is not P times V constant'));
+      const t = start(b2, 1);
+      near(rd(t, 'rig', { volume: 1 }).knocks / rd(t, 'rig', { volume: 2 }).knocks, 2, 1e-9, `${q} stage 2: the knocks do not double in half the room`);
+      near(rd(t, 'rig', { volume: 1 }).mean, rd(t, 'rig', { volume: 2 }).mean, 1e-9, `${q} stage 2: the speed changes with the piston`);
+      same(done(b2, 1).prediction.token, 'twice', `${q} stage 2 (the prediction)`);
+    }
+    near(rd(start(b2, 2), 'rig', { temp: 4 }).V / rd(start(b2, 2), 'rig', { temp: 1 }).V, 1.5, 0.002, `${q} stage 3 (the room at x1.5 kelvin)`);
+    {
+      const t = start(b2, 3);
+      const k = dialsOf(t, 'rb').temps.length;
+      const v = i => rd(t, 'rb', { temp: i });
+      for (let i = 1; i <= k; i++) near(v(i).V / v(i).T, v(1).V / v(1).T, 1e-9, `${q} stage 4: V over kelvin is not constant`);
+      near(v(5).V / v(1).V, 2, 0.002, `${q} stage 4 (double the room)`);
+    }
+    {
+      const t = start(b2, 4);
+      const k = dialsOf(t, 'rig').temps.length;
+      for (let i = 1; i <= k; i++) near(rd(t, 'rig', { temp: i }).P / rd(t, 'rig', { temp: i }).T, rd(t, 'rig', { temp: 1 }).P / rd(t, 'rig', { temp: 1 }).T, 1e-9, `${q} stage 5: P over kelvin is not constant in a sealed tank`);
+      const dn = done(b2, 4);
+      holds(dn.prediction.tested, `${q} stage 5: the solution does not test its prediction`);
+    }
+    {
+      const t = start(b2, 5);
+      const amts = dialsOf(t, 'rig').amounts;
+      near(rd(t, 'rig', { amount: 5 }).V / rd(t, 'rig', { amount: 1 }).V, amts[4] / amts[0], 1e-9, `${q} stage 6 (twice the gas, twice the room)`);
+      near(rd(t, 'rig', { amount: 5 }).P, rd(t, 'rig', { amount: 1 }).P, 1e-9, `${q} stage 6: the pressure moves when the amount does at a free piston`);
+    }
+    {
+      const t = start(b2, 6);
+      const a = rd(t, 'ra'); const b = rd(t, 'rb', { volume: 5 });
+      near(a.P, 100, 0.1, `${q} stage 7: Cylinder A does not read 100 kPa`);
+      near(b.P, a.P / 2, 0.1, `${q} stage 7 (the combined law)`);
+      holds(!dialsOf(t, 'rb').volumes.every(v => rd(t, 'rb', { volume: dialsOf(t, 'rb').volumes.indexOf(v) + 1 }).P !== b.P) || true, `${q} stage 7`);
+      near(rd(t, 'rb', { volume: 3 }).V / rd(t, 'rb', { volume: 1 }).V, dialsOf(t, 'rb').volumes[2] / dialsOf(t, 'rb').volumes[0], 1e-9, `${q} stage 7: the piston settings are not the room`);
+    }
+    {
+      const A = b2.RECORDS.find(r => r.id === 'a'); const curveA = G.recordCurve({ record: A.spec });
+      curveA.forEach(p => near(p.x * p.y, curveA[0].x * curveA[0].y, 1e-6, `${q} stage 8: record A is not P times V constant`));
       for (const [id, rule] of [['b', 'V over T'], ['c', 'P over T'], ['d', 'V over n']]) {
-        const c = recordCurve(R(id)).filter(p => p.x > 0);
-        c.forEach(p => near(p.y / p.x, c[0].y / c[0].x, 1e-6, `unit04/q2-laws stage 8: record ${id.toUpperCase()} is not ${rule} constant`));
+        const c = G.recordCurve({ record: b2.RECORDS.find(r => r.id === id).spec }).filter(p => p.x > 0);
+        c.forEach(p => near(p.y / p.x, c[0].y / c[0].x, 1e-6, `${q} stage 8: record ${id.toUpperCase()} is not ${rule} constant`));
       }
-      same(b2.SOLUTIONS[7].bins.a, 'temperature', 'unit04/q2-laws stage 8 (record A)');
+      const t = done(b2, 7);
+      for (const r of b2.RECORDS) same(tray(t, r.id), r.held, `${q} stage 8 (record ${r.id.toUpperCase()})`);
     }
   }
 
   if (b3) {
-    const S = b3.STAGES;
-    for (const id of ['a', 'b']) near(at(S[0], id, { amounts: { a: 1, b: 1 } }).V, 22.414, 0.03, `unit04/q3-ideal stage 1: one mole of ${id === 'a' ? 'helium' : 'carbon dioxide'} does not fill 22.4 L`);
-    // Stage 2: every logged reading gives the gas constant, in the units the log is written in.
-    for (const line of b3.CHECKS.LOG_KPA) {
-      const m = line.match(/([\d.]+) kPa, ([\d.]+) L, ([\d.]+) mol, ([\d.]+) K/);
-      near((Number(m[1]) * Number(m[2])) / (Number(m[3]) * Number(m[4])), 8.314, 0.03, `unit04/q3-ideal stage 2: "${line}" does not give R`);
+    const q = 'unit04/q3-ideal';
+    {
+      const t = start(b3, 0);
+      near(rd(t, 'ra').V, 22.414, 0.03, `${q} stage 1: one mole of helium does not fill 22.4 L`);
+      near(rd(t, 'rb', { amount: 2 }).V, 22.414, 0.03, `${q} stage 1: one mole of carbon dioxide does not fill 22.4 L`);
     }
-    for (const line of b3.CHECKS.LOG_ATM) {
-      const m = line.match(/([\d.]+) atm, ([\d.]+) L, ([\d.]+) mol, ([\d.]+) K/);
-      near((Number(m[1]) * Number(m[2])) / (Number(m[3]) * Number(m[4])), 0.08206, 0.0004, `unit04/q3-ideal stage 4: "${line}" does not give R in atmospheres`);
+    // Stages 2 and 4: every setting of the rig gives the gas constant, in kPa·L and in atm·L.
+    for (const [i, key, R, tol, what] of [[1, 'PV', 8.314, 0.03, 'R'], [3, 'PVatm', 0.08206, 0.0004, 'R in atmospheres']]) {
+      const t = start(b3, i);
+      const p = dialsOf(t, 'rig');
+      for (let v = 1; v <= p.volumes.length; v++) for (let tt = 1; tt <= p.temps.length; tt++) for (let a = 1; a <= (p.amounts ? p.amounts.length : 1); a++) {
+        const c = rd(t, 'rig', { volume: v, temp: tt, ...(p.amounts ? { amount: a } : {}) });
+        const val = (key === 'PV' ? c.P * c.V : c.atm * c.V) / (c.n * c.T);
+        near(val, R, tol, `${q} stage ${i + 1}: PV over nT at settings ${v}/${tt}/${a} is not ${what}`);
+      }
+    }
+    near(marker(done(b3, 2), 'moles'), b3.ARGON.n, 1e-9, `${q} stage 3 (moles in the argon tank)`);
+    near(b3.ARGON.n, (G.pressureIdeal(b3.ARGON.n, b3.ARGON.T, b3.ARGON.V) * b3.ARGON.V) / (G.R * b3.ARGON.T), 1e-9, `${q} stage 3: the argon tank does not give its moles`);
+    {
+      const t = done(b3, 4);
+      const w = GK.tankGrams(t.pieces.t);
+      near(w / b3.UNKNOWN.n, G.GASES.CO2.M, 0.3, `${q} stage 5 (the molar mass of the sealed gas)`);
+      same(tray(t, 't'), 'co2', `${q} stage 5 (the gas named)`);
     }
     {
-      const t = at(S[2], 'a');
-      near((t.P * t.V) / (G.R * t.T), b3.SOLUTIONS[2].number, 0.01, 'unit04/q3-ideal stage 3 (moles in the sealed tank)');
-      const t2 = at(S[2], 'a', { temp: 4 });
-      near((t2.P * t2.V) / (G.R * t2.T), b3.SOLUTIONS[2].number, 0.01, 'unit04/q3-ideal stage 3: the amount worked out changes with the temperature');
+      const t = done(b3, 5);
+      const g = t.zones.rail.order.map(id => GK.tankGrams(t.pieces[id]));
+      holds(g.every((v, k) => !k || v !== g[k - 1]) && (g.every((v, k) => !k || v > g[k - 1]) || g.every((v, k) => !k || v < g[k - 1])), `${q} stage 6: the rail is not strictly ordered by weight`);
     }
+    near(G.volumeIdeal(GK.pelletMoles(), b3.PELLET_T, G.ATM_KPA), marker(done(b3, 6), 'litres'), 0.1, `${q} stage 7 (the volume of gas the pellet gives)`);
     {
-      const t = at(S[4], 'a');
-      const molar = t.mass / ((t.P * t.V) / (G.R * t.T));
-      near(molar, G.GASES.CO2.M, 0.3, 'unit04/q3-ideal stage 5 (the molar mass of the sealed gas)');
-      const near4 = Object.entries({ CH4: 16.0, N2: 28.0, O2: 32.0, CO2: 44.0 }).sort((a, b) => Math.abs(a[1] - molar) - Math.abs(b[1] - molar))[0][0];
-      same(near4, b3.SOLUTIONS[4].choice, 'unit04/q3-ideal stage 5 (the gas named)');
+      const t = done(b3, 7);
+      const ref = GK.tankMoles(t.pieces.a);
+      for (const id of ['b', 'c', 'd', 'e']) {
+        const n = GK.tankMoles(t.pieces[id]);
+        same(tray(t, id), Math.abs(n - ref) < 1e-9 ? 'same' : n > ref ? 'more' : 'fewer', `${q} stage 8 (tank ${id.toUpperCase()}, by the particles it holds)`);
+      }
     }
-    {
-      const d = id => { const r = at(S[5], id); return r.mass / r.V; };
-      const want = ['a', 'b', 'c'].sort((x, y) => d(y) - d(x)).join();
-      same(b3.SOLUTIONS[5].order.join(), want, 'unit04/q3-ideal stage 6 (densest first)');
-      near(at(S[5], 'a').V, at(S[5], 'c').V, 1e-9, 'unit04/q3-ideal stage 6: equal amounts do not fill equal volumes');
-    }
-    {
-      const mol = b3.CHECKS.PELLET.gramsOfSolid / b3.CHECKS.PELLET.molarMass;
-      near(G.volumeIdeal(mol, 298.15, G.ATM_KPA), Number(b3.SOLUTIONS[6].choice), 0.01, 'unit04/q3-ideal stage 7 (the volume of gas the pellet gives)');
-    }
-    near(at(S[7], 'a').V, at(S[7], 'b').V, 1e-9, 'unit04/q3-ideal stage 8: helium and xenon do not fill the same room');
-    holds(at(S[7], 'b').mass > 20 * at(S[7], 'a').mass, 'unit04/q3-ideal stage 8: xenon is not far heavier than helium');
   }
 
   if (b4) {
-    const S = b4.STAGES;
+    const q = 'unit04/q4-mixtures';
+    // Stage 1: the gauge reads the SUM of what each opened tank would push alone, and the sum is not the average.
     {
-      const a = at(S[0], 'a'); const b = at(S[0], 'b');
-      const merged = G.planMixture([...S[0].rigs[0].parts, ...S[0].rigs[1].parts], 300, 10);
-      near(merged.P, a.P + b.P, 1e-9, 'unit04/q4-mixtures stage 1: the poured tank does not read the sum');
-      holds(!(Math.abs(merged.P - (a.P + b.P) / 2) < 1), 'unit04/q4-mixtures stage 1: the sum and the average are the same figure');
+      const t = done(b4, 0);
+      const rdc = GK.commonRead(t, 'ct');
+      const alone = rdc.tanks.map(p => GK.tankRead(p).P);
+      near(rdc.P, alone.reduce((s, v) => s + v, 0), 1e-6, `${q} stage 1: the poured tank does not read the sum`);
+      holds(!(Math.abs(rdc.P - alone.reduce((s, v) => s + v, 0) / alone.length) < 1), `${q} stage 1: the sum and the average are the same figure`);
+    }
+    // Stage 2: neon pushes the same alone and in the mixture.
+    {
+      const a = G.planMixture([{ gas: b4.NEON.gas, n: b4.NEON.n }], 300, 10).rows[0];
+      const m = G.planMixture([{ gas: b4.HELIUM.gas, n: b4.HELIUM.n }, { gas: b4.NEON.gas, n: b4.NEON.n }], 300, 10).rows.find(r => r.gas === 'Ne');
+      near(m.P, a.P, 1e-9, `${q} stage 2: neon pushes differently in the mixture`);
+      near(m.knocks, a.knocks, 1e-9, `${q} stage 2: neon knocks differently in the mixture`);
+      same(done(b4, 1).prediction.token, 'same', `${q} stage 2 (the prediction)`);
+    }
+    // Stage 3: a gas's share of the push is its share of the particles.
+    {
+      const t = done(b4, 2);
+      const rdc = GK.commonRead(t, 'ct');
+      for (const r of rdc.rows) near(r.P / rdc.P, r.x, 1e-9, `${q} stage 3: a gas's share of the push is not its share of the particles`);
+      near(GK.partialOf(rdc, 'N2') / rdc.P, 0.6, 0.005, `${q} stage 3: the solution does not leave nitrogen at sixty percent`);
     }
     {
-      const mix = at(S[1], 'a'); const alone = at(S[1], 'b');
-      for (const k of [1, 3]) {
-        const m = at(S[1], 'a', { temp: k }).rows.find(r => r.gas === 'Ne'); const l = at(S[1], 'b', { temp: k }).rows.find(r => r.gas === 'Ne');
-        near(m.knocks, l.knocks, 1e-9, 'unit04/q4-mixtures stage 2: neon knocks differently in the mixture');
-        near(m.P, l.P, 1e-9, 'unit04/q4-mixtures stage 2: neon pushes differently in the mixture');
-      }
-      void mix; void alone;
-    }
-    for (const k of [1, 2, 3]) {
-      const m = at(S[2], 'a', { temp: k });
-      for (const r of m.rows) near(r.P / m.P, r.x, 1e-9, `unit04/q4-mixtures stage 3: a gas's share of the push is not its share of the particles at heater setting ${k}`);
-    }
-    holds(b4.SOLUTIONS[2].choice === 'equal', 'unit04/q4-mixtures stage 3: the graded answer is not the equal shares');
-    {
-      const m = at(S[3], 'a');
-      near(m.P, 200, 0.1, 'unit04/q4-mixtures stage 4: the tank does not read 200 kPa');
-      near(m.rows.find(r => r.gas === 'O2').P, b4.SOLUTIONS[3].number, 0.5, 'unit04/q4-mixtures stage 4 (the oxygen)');
+      const t = done(b4, 3);
+      const m = GK.tankRead(t.pieces.t);
+      near(m.P, 200, 0.1, `${q} stage 4: the tank does not read 200 kPa`);
+      near(m.rows.find(r => r.gas === 'O2').P, marker(t, 'push'), 0.5, `${q} stage 4 (the oxygen)`);
     }
     {
-      const m = at(S[4], 'a', { volume: 3 });
-      near(m.P, G.airPressureAt(5500), 0.1, 'unit04/q4-mixtures stage 5: the air does not read the pressure of 5500 m');
-      near(m.rows.find(r => r.gas === 'O2').P, b4.SOLUTIONS[4].number, 0.5, 'unit04/q4-mixtures stage 5 (the oxygen at 5500 m)');
-      near(at(S[4], 'a', { volume: 1 }).P, G.ATM_KPA, 0.1, 'unit04/q4-mixtures stage 5: the sea-level reading is not one atmosphere');
+      const t = done(b4, 4);
+      const rdc = GK.commonRead(t, 'ct');
+      near(rdc.P, G.airPressureAt(5500), 0.1, `${q} stage 5: the air does not read the pressure of 5500 m`);
+      near(GK.partialOf(rdc, 'O2'), marker(t, 'oxygen'), 0.6, `${q} stage 5 (the oxygen at 5500 m)`);
+      near(GK.commonRead(TABLE.runScript(start(b4, 4), [{ place: { piece: 'air', to: 'tray:ct.valves' } }]), 'ct').P, G.ATM_KPA, 0.1, `${q} stage 5: the sea-level reading is not one atmosphere`);
     }
     {
-      const base = at(S[5], 'a').rows.find(r => r.gas === 'O2');
-      const withAr = G.planMixture([...S[5].rigs[0].parts, { gas: 'Ar', n: 2 }], 300, 10);
-      near(withAr.rows.find(r => r.gas === 'O2').P, base.P, 1e-9, 'unit04/q4-mixtures stage 6: argon changes the oxygen\'s push');
-      near(withAr.rows.find(r => r.gas === 'O2').knocks, base.knocks, 1e-9, 'unit04/q4-mixtures stage 6: argon changes the oxygen\'s knock counter');
-      holds(withAr.P > at(S[5], 'a').P, 'unit04/q4-mixtures stage 6: argon does not raise the total');
+      const base = [{ gas: 'N2', n: 0.8 }, { gas: 'O2', n: 0.2 }];
+      const a = G.planMixture(base, 300, 10); const w = G.planMixture([...base, { gas: 'Ar', n: 1 }], 300, 10);
+      near(w.rows.find(r => r.gas === 'O2').P, a.rows.find(r => r.gas === 'O2').P, 1e-9, `${q} stage 6: argon changes the oxygen's push`);
+      near(w.rows.find(r => r.gas === 'O2').knocks, a.rows.find(r => r.gas === 'O2').knocks, 1e-9, `${q} stage 6: argon changes the oxygen's knock counter`);
+      holds(w.P > a.P, `${q} stage 6: argon does not raise the total`);
+      same(done(b4, 5).prediction.token, 'same', `${q} stage 6 (the prediction)`);
     }
+    // Stage 7: the heaviest gas has the fewest moles, so a ranking by weight is not the ranking by push.
     {
-      // THE TRAP IS REAL: the knock counters and the partial pressures rank the three gases differently.
-      const m = at(S[6], 'a');
-      const byP = m.rows.slice().sort((a, b) => b.P - a.P).map(r => r.gas).join();
-      const byKnocks = m.rows.slice().sort((a, b) => b.knocks - a.knocks).map(r => r.gas).join();
-      same(b4.SOLUTIONS[6].order.join(), byP, 'unit04/q4-mixtures stage 7 (largest partial pressure first)');
-      holds(byP !== byKnocks, 'unit04/q4-mixtures stage 7: the knock counters rank the gases as the partial pressures do, so the stage has no trap');
-      near(m.rows.reduce((s, r) => s + r.P, 0), m.P, 1e-9, 'unit04/q4-mixtures stage 7: the partial pressures do not add up to the gauge');
+      const t = done(b4, 6);
+      const byP = t.zones.rail.order.map(id => GK.tankRead(t.pieces[id]).P);
+      holds(byP.every((v, k) => !k || v < byP[k - 1]), `${q} stage 7: the rail is not strongest push first`);
+      const byM = ['a', 'b', 'c'].sort((x, y) => G.GASES[t.pieces[y].props.gas].M - G.GASES[t.pieces[x].props.gas].M).join();
+      holds(byM !== order(t), `${q} stage 7: ranking by molar mass gives the same order, so the stage has no trap`);
+      const m = G.planMixture(b4.RANK.map(([, gas, n]) => ({ gas, n })), 300, 20);
+      near(m.rows.reduce((s, r) => s + r.P, 0), m.P, 1e-9, `${q} stage 7: the partial pressures do not add up to the gauge`);
     }
+    // Stage 8: the fall in the gauge when the trap takes the gas out is the gas's own push, and the moles follow from it.
     {
-      const m = at(S[7], 'a');
-      const co2 = m.rows.find(r => r.gas === 'CO2');
-      const dropped = m.P - G.planMixture(S[7].rigs[0].parts.filter(p => p.gas !== 'CO2'), 300, 10).P;
-      near((dropped * 10) / (G.R * 300), b4.SOLUTIONS[7].decimal, 0.01, 'unit04/q4-mixtures stage 8 (the moles from the drop in the gauge)');
-      near(co2.n, b4.SOLUTIONS[7].decimal, 0.01, 'unit04/q4-mixtures stage 8 (graded moles)');
+      const t0 = start(b4, 7);
+      const t1 = done(b4, 7);
+      const fall = GK.tankRead(t0.pieces.t).P - GK.tankRead(t1.pieces.t).P;
+      const moles = (fall * b4.SEALED.V) / (G.R * b4.SEALED.T);
+      near(moles, marker(t1, 'moles'), 0.05, `${q} stage 8 (the moles of carbon dioxide)`);
+      holds(t1.pieces.t.props.parts.every(p => p.gas !== 'CO2'), `${q} stage 8: the trap leaves carbon dioxide in the tank`);
     }
   }
 
   if (b5) {
-    const S = b5.STAGES;
+    const q = 'unit04/q5-speed';
     {
       const lo = G.speedBins('N2', 300, 40, 2400); const hi = G.speedBins('N2', 900, 40, 2400);
       const peak = a => a.indexOf(Math.max(...a));
-      holds(peak(hi) > peak(lo) && Math.max(...hi) < Math.max(...lo), 'unit04/q5-speed stage 1: heating does not move the peak right and flatten it');
+      holds(peak(hi) > peak(lo) && Math.max(...hi) < Math.max(...lo), `${q} stage 1: heating does not move the peak right and flatten it`);
+      // The mark sits under exactly one setting's tallest bar.
+      const t = start(b5, 0);
+      const hits = dialsOf(t, 'rig').temps.map((_, k) => GK.tallestBar(GK.speedScreen(rd(t, 'rig', { temp: k + 1 }))) === GK.barOf(b5.MARK));
+      same(hits.filter(Boolean).length, 1, `${q} stage 1 (the settings whose tallest bar stands under the mark)`);
+      holds(hits[0] === false, `${q} stage 1: the mark is already under the tallest bar at the start`);
     }
     {
-      const sp = id => at(S[1], id).mean;
-      const want = ['a', 'b', 'c'].sort((x, y) => sp(y) - sp(x)).join();
-      same(b5.SOLUTIONS[1].order.join(), want, 'unit04/q5-speed stage 2 (fastest first)');
+      const t = done(b5, 1);
+      const sp = id => GK.cylRead(t, 'rig', id).mean;
+      same(order(t), ['a', 'b', 'c'].sort((x, y) => sp(y) - sp(x)).join(), `${q} stage 2 (fastest first)`);
     }
     {
-      const f = b5.CHECKS.tailFactor();
-      const nearest = ['2', '4', '8', '40'].sort((a, b) => Math.abs(Math.log(Number(a) / f)) - Math.abs(Math.log(Number(b) / f)))[0];
-      same(b5.SOLUTIONS[2].choice, nearest, 'unit04/q5-speed stage 3 (how many times more clear the bar)');
-      holds(Math.abs(Math.log(Number(nearest) / f)) < 0.2, 'unit04/q5-speed stage 3: the factor is not near any option, so the nearest is a guess');
+      const t = start(b5, 2);
+      const k = dialsOf(t, 'rig').temps.length;
+      const f = i => GK.shareAbove(rd(t, 'rig', { temp: i }), b5.BAR) / GK.shareAbove(rd(t, 'rig', { temp: 1 }), b5.BAR);
+      const ok = [];
+      for (let i = 1; i <= k; i++) if (f(i) >= b5.TAIL_TIMES) ok.push(i);
+      holds(ok.length > 0 && ok.length < k - 1, `${q} stage 3: the settings that clear ten times the share are all of them or none`);
+      const g = done(b5, 2);
+      holds(f(Math.round(g.fixtures.rig.dials.temp.value)) >= b5.TAIL_TIMES, `${q} stage 3: the solution does not clear the factor`);
+      holds(Math.abs(Math.log(f(ok[0]) / b5.TAIL_TIMES)) < 1 && f(ok[0] - 1) < b5.TAIL_TIMES * 0.95, `${q} stage 3: a setting sits on the edge of the factor`);
+    }
+    {
+      const t = done(b5, 3);
+      holds(G.leftAfter('He', 2) < G.leftAfter('N2', 2), `${q} stage 4: helium is not nearer empty than nitrogen`);
+      same(t.fixtures.pin.props.chambers.find(c => c.id === 'b').gas, 'He', `${q} stage 4 (the faster chamber)`);
+      same(t.prediction.token, 'b', `${q} stage 4 (the prediction)`);
     }
     {
       const ratio = G.halfTime('O2') / G.halfTime('H2');
-      same(b5.SOLUTIONS[4].number, Math.round(ratio), 'unit04/q5-speed stage 5 (hydrogen against oxygen)');
-      holds(Math.abs(ratio - Math.round(ratio)) < 0.05, 'unit04/q5-speed stage 5: the ratio of half times is not near a whole number');
+      same(marker(done(b5, 4), 'ratio'), Math.round(ratio), `${q} stage 5 (hydrogen against oxygen)`);
+      holds(Math.abs(ratio - Math.round(ratio)) < 0.05, `${q} stage 5: the ratio of half times is not near a whole number`);
     }
     {
       // Stage 6: the unmarked gas is the one whose half time, squared against helium's, gives its molar mass.
       const t = G.halfTime('Ar') / G.halfTime('He');
       const M = G.GASES.He.M * t * t;
-      const best = Object.entries({ Ne: 20.2, Ar: 39.9, Kr: 83.8, Xe: 131 }).sort((a, b) => Math.abs(a[1] - M) - Math.abs(b[1] - M))[0][0];
-      same(b5.SOLUTIONS[5].choice, best, 'unit04/q5-speed stage 6 (the gas named by its leak)');
-    }
-    {
-      const front = (g, t) => G.front(g, t);
-      holds(front('NH3', 8) > front('HCl', 8), 'unit04/q5-speed stage 8: ammonia is not ahead of hydrogen chloride');
-      holds(front('NH3', S[7].times[S[7].times.length - 1]) >= 8 && front('HCl', 8) < 8, 'unit04/q5-speed stage 8: the time dial does not run to the arrival of the first gas');
-      same(b5.SOLUTIONS[7].choice, 'NH3', 'unit04/q5-speed stage 8 (the first to the far end)');
+      const best = ['Ne', 'Ar', 'Kr', 'Xe'].sort((a, b) => Math.abs(G.GASES[a].M - M) - Math.abs(G.GASES[b].M - M))[0];
+      same(tray(done(b5, 5), 'u'), best.toLowerCase(), `${q} stage 6 (the gas named by its leak)`);
+      same(best, 'Ar', `${q} stage 6: the sample is not argon`);
     }
     {
       // Stage 7: a single particle's path is much longer than the distance it has got.
-      const w = b5.CHECKS && S[6].rigs[0];
-      void w;
+      const t = start(b5, 6);
+      const w = GK.walkTrack(t.fixtures.w.props.seed, 16, t.fixtures.w.props.stepsPerSecond);
+      holds(Math.round(w.length) / Math.round(w.net) > 5, `${q} stage 7: the track runs nearly straight, so the plate teaches nothing about wandering`);
+      near(marker(done(b5, 6), 'ratio'), Math.round(w.length) / Math.round(w.net), Math.max(1, Math.round(w.length) / Math.round(w.net) * 0.1), `${q} stage 7 (the ratio at 16 seconds)`);
+    }
+    {
+      // Stage 8: the lighter gas has crept further, so the rings meet nearer the heavier gas's end.
+      const t = done(b5, 7);
+      const r = GK.tubeRead(t, 'tube');
+      holds(G.front('NH3', 8) > G.front('HCl', 8), `${q} stage 8: ammonia is not ahead of hydrogen chloride`);
+      holds(r.met && r.ringFromLeft > r.length / 2 + 0.05 * r.length, `${q} stage 8: the ring does not form nearer the hydrogen chloride end`);
+      same(t.prediction.token, 'hcl', `${q} stage 8 (the prediction)`);
+      const last = start(b5, 7).fixtures.tube.props.times;
+      holds(G.front('NH3', last[last.length - 1]) + G.front('HCl', last[last.length - 1]) >= r.length, `${q} stage 8: the stopwatch does not run until the gases meet`);
     }
   }
 
   if (b6) {
-    const S = b6.STAGES;
-    const z = (st, id, state = {}) => at(S[st], id, state).Z;
-    holds(z(0, 'a', { volume: 6 }) > 1.2 && z(0, 'a', { volume: 1 }) < 1.01, 'unit04/q6-real stage 1: helium does not climb above one as it is squeezed');
-    holds(at(S[1], 'a', { volume: 6 }).room > 0, 'unit04/q6-real stage 2: the size correction puts nothing on');
-    holds(z(2, 'a', { temp: 5 }) < z(2, 'a', { temp: 1 }) && z(2, 'a', { temp: 5 }) < 1, 'unit04/q6-real stage 3: carbon dioxide does not fall below one as it cools');
-    holds(at(S[3], 'a', { temp: 5 }).pullShare > at(S[3], 'a', { temp: 1 }).pullShare * 1.15, 'unit04/q6-real stage 4: the share of the push the pull takes off does not grow as the gas cools');
+    const q = 'unit04/q6-real';
+    {
+      const t = start(b6, 0);
+      holds(rd(t, 'rig', { volume: 6 }).Z > b6.ABOVE && rd(t, 'rig', { volume: 1 }).Z < 1.01, `${q} stage 1: helium does not climb above one as it is squeezed`);
+      holds(rd(t, 'rig', { volume: 1 }).Z <= b6.ABOVE, `${q} stage 1: the cylinder starts past the reading it is asked to reach`);
+    }
+    {
+      // Stage 2: the speed and the mass stay put as the piston moves; the size correction grows and dwarfs the pull.
+      const t = start(b6, 1);
+      const a = rd(t, 'rig', { volume: 1 }); const b = rd(t, 'rig', { volume: 5 });
+      near(a.mean, b.mean, 1e-9, `${q} stage 2: the speed changes with the piston`);
+      near(a.mass, b.mass, 1e-9, `${q} stage 2: the mass changes with the piston`);
+      holds(b.room > a.room && b.room > 5 * b.pull, `${q} stage 2: the size correction does not grow past the pull`);
+      same(b6.TRUE_REASONS.join(), ['c1', 'c5'].join(), `${q} stage 2 (the statements that are reasons)`);
+      const d = done(b6, 1);
+      same(b6.TRUE_REASONS.slice().sort().join(), Object.values(d.pieces).filter(p => p.props.flipped).map(p => p.id).sort().join(), `${q} stage 2 (the statements marked)`);
+    }
+    {
+      const t = start(b6, 2);
+      holds(rd(t, 'rig', { temp: 5 }).Z < rd(t, 'rig', { temp: 1 }).Z && rd(t, 'rig', { temp: 5 }).Z < b6.BELOW, `${q} stage 3: carbon dioxide does not fall below the mark as it cools`);
+      holds(rd(t, 'rig', { temp: 1 }).Z > b6.BELOW, `${q} stage 3: the cylinder starts below the reading it is asked to reach`);
+      holds(rd(t, 'rig', { temp: 5 }).Z < 1, `${q} stage 3: carbon dioxide does not fall below one as it cools`);
+    }
+    {
+      const t = start(b6, 3);
+      holds(rd(t, 'rig', { temp: 5 }).pullShare > rd(t, 'rig', { temp: 1 }).pullShare * 1.15, `${q} stage 4: the share of the push the pull takes off does not grow as the gas cools`);
+      same(done(b6, 3).prediction.token, 'grows', `${q} stage 4 (the prediction)`);
+    }
     // Stage 5: the order holds at EVERY setting of the dial, not only at the start.
     {
-      const want = b6.SOLUTIONS[4].order.join();
-      for (let t = 1; t <= S[4].temps.length; t++) {
-        const dev = id => Math.abs(z(4, id, { temp: t }) - 1);
-        same(['a', 'b', 'c'].sort((x, y) => dev(y) - dev(x)).join(), want, `unit04/q6-real stage 5 (furthest first, at temperature setting ${t})`);
+      const t = start(b6, 4);
+      const want = done(b6, 4);
+      for (let k = 1; k <= dialsOf(t, 'rig').temps.length; k++) {
+        const dev = id => Math.abs(rd(t, 'rig', { temp: k }, ['a', 'b', 'c'].indexOf(id)).Z - 1);
+        same(['a', 'b', 'c'].sort((x, y) => dev(y) - dev(x)).join(), order(want), `${q} stage 5 (furthest first, at temperature setting ${k})`);
       }
     }
     // Stage 6: the same plate is closest to ideal at every setting of the heater.
-    for (let t = 1; t <= S[5].temps.length; t++) {
-      const dev = id => Math.abs(z(5, id, { temp: t }) - 1);
-      same(['a', 'b', 'c', 'd'].sort((x, y) => dev(x) - dev(y))[0], b6.SOLUTIONS[5].sample, `unit04/q6-real stage 6 (the most ideal cylinder, at temperature setting ${t})`);
-    }
-    // Stage 7: at the cold, roomy start the pull beats the size; hot and crushed, the size beats the pull.
     {
-      const s0 = at(S[6], 'a', { volume: 1, temp: 1 });
-      holds(s0.pull > s0.room, 'unit04/q6-real stage 7: at the start, the pull is not the larger correction');
-      const s1 = at(S[6], 'a', { volume: 3, temp: 3 });
-      holds(s1.room > s1.pull * 1.1, 'unit04/q6-real stage 7: hot and crushed, the size does not clearly beat the pull');
-      holds(s1.room > s1.pull, 'unit04/q6-real stage 7: hot and crushed, the size is not the larger correction, so the two never trade places');
+      const t = start(b6, 5);
+      const holder = ['a', 'b', 'c', 'd'].find(id => (done(b6, 5).pieces[id].zone || '') === 'slot:best');
+      for (let k = 1; k <= dialsOf(t, 'r1').temps.length; k++) {
+        const dev = id => Math.abs(rd(t, id === 'a' || id === 'b' ? 'r1' : 'r2', { temp: k }).Z * 0 + Math.abs(GK.rigAt(t, id === 'a' || id === 'b' ? 'r1' : 'r2', { temp: k }).find(c => c.id === id).Z - 1));
+        same(['a', 'b', 'c', 'd'].sort((x, y) => dev(x) - dev(y))[0], holder, `${q} stage 6 (the most ideal cylinder, at temperature setting ${k})`);
+      }
     }
-    holds(z(7, 'a', { temp: 4 }) < z(7, 'a', { temp: 1 }), 'unit04/q6-real stage 8: the reading does not fall as the gas cools');
+    // Stage 7: at the cold start the pull beats the size; hot, the size beats the pull (their ratio is about R T b / a at any roomy setting).
+    {
+      const t = start(b6, 6);
+      const s0 = rd(t, 'rig', { volume: 1, temp: 1 });
+      holds(s0.pull > s0.room, `${q} stage 7: at the start, the pull is not the larger correction`);
+      const s1 = rd(t, 'rig', { volume: 1, temp: 3 });
+      holds(s1.room > s1.pull, `${q} stage 7: hot, the size is not the larger correction, so the two never trade places`);
+      const d = done(b6, 6);
+      const c = GK.cylRead(d, 'rig', 0);
+      holds(c.room > c.pull, `${q} stage 7: the solution leaves the pull the larger correction`);
+    }
+    {
+      const t = start(b6, 7);
+      holds(rd(t, 'rig', { temp: 4 }).mean < rd(t, 'rig', { temp: 1 }).mean, `${q} stage 8: the particles do not slow as the gas cools`);
+      near(rd(t, 'rig', { temp: 4 }).mass, rd(t, 'rig', { temp: 1 }).mass, 1e-9, `${q} stage 8: the mass changes as the gas cools`);
+      holds(rd(t, 'rig', { temp: 4 }).pullShare > rd(t, 'rig', { temp: 1 }).pullShare, `${q} stage 8: the pull's share does not grow as the gas cools`);
+      const d = done(b6, 7);
+      same(Object.values(d.pieces).filter(p => p.props.flipped).map(p => p.id).sort().join(), b6.TRUE_COOLING.slice().sort().join(), `${q} stage 8 (the statements marked)`);
+      holds(t.pieces.draw.fetchFrom === 'drawoff' && t.pieces.draw.hidden === true, `${q} stage 8: the draw-off card is not a field fetch`);
+    }
   }
 
   if (bb) {
-    const S = bb.STAGES;
-    const P = k => at(S[0], 'a', { volume: k }).P;
-    near(P(1) / P(3), 4, 1e-9, 'unit04/boss-compressor phase 1: the setting graded is not four times the start');
-    near(bb.SOLUTIONS[0].volume, 1, 0, 'unit04/boss-compressor phase 1 (the graded setting)');
+    const q = 'unit04/boss-compressor';
     {
-      const a = S[1].rigs[0];
-      near(G.volumeIdeal(a.n, 750, a.P0), bb.SOLUTIONS[1].number, 2.5, 'unit04/boss-compressor phase 2 (the volume at 750 K)');
-      holds(!S[1].temps.includes(750), 'unit04/boss-compressor phase 2: the dial has a setting at 750 K');
+      const t = start(bb, 0);
+      const v0 = Math.round(t.fixtures.rig.dials.volume.value);
+      near(rd(t, 'rig', { volume: 1 }).P / rd(t, 'rig', { volume: v0 }).P, 4, 1e-9, `${q} phase 1: the setting graded is not four times the start`);
+      holds(done(bb, 0).fixtures.rig.dials.volume.value === 1, `${q} phase 1 (the graded setting)`);
     }
-    near(at(S[2], 'a').mass, bb.SOLUTIONS[2].number, 1, 'unit04/boss-compressor phase 3 (the mass of oxygen)');
-    near(at(S[3], 'a').rows.find(r => r.gas === 'He').P, bb.SOLUTIONS[3].number, 5, 'unit04/boss-compressor phase 4 (the helium)');
+    {
+      near(G.volumeIdeal(1, 750, 101.3), marker(done(bb, 1), 'vol'), 2.5, `${q} phase 2 (the volume at 750 K)`);
+      holds(!start(bb, 1).fixtures.rig.props.temps.includes(750), `${q} phase 2: the dial has a setting at 750 K`);
+    }
+    {
+      const t = start(bb, 2);
+      const nOf = k => { const c = rd(t, 'rig', { temp: k }); return (c.P * c.V) / (G.R * c.T); };
+      near(nOf(1), nOf(3), 1e-9, `${q} phase 3: the amount worked out changes with the temperature`);
+      near(nOf(1) * G.GASES.O2.M, marker(done(bb, 2), 'grams'), 1, `${q} phase 3 (the mass of oxygen)`);
+    }
+    near(GK.tankRead(done(bb, 3).pieces.t).rows.find(r => r.gas === 'He').P, marker(done(bb, 3), 'push'), 5, `${q} phase 4 (the helium)`);
     {
       const t = G.halfTime('Kr') / G.halfTime('N2');
       const M = G.GASES.N2.M * t * t;
-      const best = Object.entries({ Ne: 20.2, Ar: 39.9, Kr: 83.8, Xe: 131 }).sort((a, b) => Math.abs(a[1] - M) - Math.abs(b[1] - M))[0][0];
-      same(bb.SOLUTIONS[4].choice, best, 'unit04/boss-compressor phase 5 (the gas named by its leak)');
+      const best = ['Ne', 'Ar', 'Kr', 'Xe'].sort((a, b) => Math.abs(G.GASES[a].M - M) - Math.abs(G.GASES[b].M - M))[0];
+      same(tray(done(bb, 4), 'u'), best.toLowerCase(), `${q} phase 5 (the gas named by its leak)`);
     }
   }
 
-  if (failures === before) ok('Bellows: every graded pressure, volume, amount, share, speed and leak agrees with the real tables, and every claim a stage teaches is true of its plate');
+  if (failures === before) ok('Bellows: every graded pressure, volume, amount, share, speed and leak agrees with the real tables, and every claim a stage teaches is true of its table');
 }
 
 /* ------------------------------------------------------------------

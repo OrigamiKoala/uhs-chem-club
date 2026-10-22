@@ -40,7 +40,7 @@ import { PlateBench, PLATE_COLORS, plateText, raster, aperture, mulberry32, hash
 import {
   GASES, planGas, stateOf, speedBins, fractionAbove, leftAfter, halfTime, front,
   planMixture, mixtureState, dotsFor, sig, litres, kPaToAtm, kPaToMmHg, ATM_KPA, toCelsius,
-  pressureIdeal, volumeIdeal, speeds, R
+  pressureIdeal, volumeIdeal, speeds, R, recordCurve
 } from './gasdata.js';
 import { drawShareBars } from './visual-devices.js';
 
@@ -882,25 +882,7 @@ function drawPath(ctx, w, h, item, cfg, seconds) {
    THE RECORD
    ------------------------------------------------------------------ */
 
-/** The curve a record plots: pairs of (x, y) from the ideal law with the other quantities held. */
-export function recordCurve(item, points = 40) {
-  const { x, y, fixed = {}, xmin, xmax } = item.record;
-  const out = [];
-  for (let i = 0; i <= points; i++) {
-    const xv = xmin + ((xmax - xmin) * i) / points;
-    const st = { n: fixed.n ?? 1, T: fixed.T ?? 300, V: fixed.V ?? 10, P: fixed.P ?? ATM_KPA };
-    if (x === 'V') st.V = Math.max(xv, 1e-6);
-    if (x === 'T') st.T = xv;
-    if (x === 'n') st.n = xv;
-    if (x === 'P') st.P = xv;
-    // Whichever of P and V is not plotted and not fixed is the one the law solves for.
-    if (y === 'P') st.P = pressureIdeal(st.n, st.T, st.V);
-    else if (y === 'V') st.V = volumeIdeal(st.n, st.T, st.P);
-    else if (y === 'T') st.T = (st.P * st.V) / (st.n * R);
-    out.push({ x: xv, y: y === 'P' ? st.P : y === 'V' ? st.V : y === 'T' ? st.T : st.n });
-  }
-  return out;
-}
+export { recordCurve };
 
 function drawRecord(ctx, w, h, item, cfg) {
   const { small, pad } = sizes(w, h);

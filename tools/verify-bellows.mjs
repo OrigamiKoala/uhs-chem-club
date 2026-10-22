@@ -30,6 +30,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+import { HOST_PLAN, LANE } from '../src/three/bellows/host-plan.js';
 const world = JSON.parse(readFileSync(join(root, 'src/three/world-data/bellows.json'), 'utf8'));
 
 let failures = 0;
@@ -62,16 +63,28 @@ console.log(`Bellows — ${world.name}, ${world.place}\n`);
 }
 
 {
+  // A host's real extent (host-plan.js) and its lane stand clear of every free prop: the Compressor is the one body a tower host stands against.
+  const rectOf = (site, [x0, x1, z0, z1]) => {
+    const a = Math.atan2(site.approachPos[0] - site.pos[0], site.approachPos[2] - site.pos[2]);
+    const c = Math.cos(a), sn = Math.sin(a);
+    const pts = [[x0, z0], [x1, z0], [x0, z1], [x1, z1]].map(([lx, lz]) => [site.pos[0] + lx * c + lz * sn, site.pos[2] - lx * sn + lz * c]);
+    return { minX: Math.min(...pts.map(p => p[0])), maxX: Math.max(...pts.map(p => p[0])), minZ: Math.min(...pts.map(p => p[1])), maxZ: Math.max(...pts.map(p => p[1])) };
+  };
+  const rd = (x, z, r) => Math.hypot(Math.max(r.minX - x, 0, x - r.maxX), Math.max(r.minZ - z, 0, z - r.maxZ));
   const clashes = [];
   for (const s of world.sites) {
-    for (const l of world.landmarks) {
-      const d = dist(s.pos, l.pos);
-      if (d < l.radius + 4.2) clashes.push(`${s.id} is inside ${l.asset} (${d.toFixed(2)}u)`);
+    const plan = HOST_PLAN[s.id];
+    if (!plan || plan.structure !== s.structure) { clashes.push(`${s.id}: no host plan, or it names a different structure than the layout`); continue; }
+    for (const [name, r] of [['host', rectOf(s, plan.extent)], ['lane', rectOf(s, [-LANE.hw, LANE.hw, LANE.from, LANE.to])]]) {
+      for (const l of world.landmarks) {
+        if (l.asset === 'compressor-tower' && plan.anchor === 'tower') continue;
+        if (rd(l.pos[0], l.pos[2], r) < l.radius) clashes.push(`${s.id}'s ${name} is inside ${l.asset}@${l.pos[0]},${l.pos[2]}`);
+      }
     }
   }
   check(clashes.length === 0,
-    `${world.sites.length} sites stand clear of every prop`,
-    `sites clash with props:\n         ${clashes.join('\n         ')}`);
+    `${world.sites.length} hosts and their lanes stand clear of every free prop`,
+    `hosts clash with props:\n         ${clashes.join('\n         ')}`);
 }
 
 {
@@ -143,9 +156,6 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
     }
   }
   check(blocked.length === 0, 'every site is reachable with all T4 decoration removed', `approach marks blocked at T3:\n         ${blocked.join('\n         ')}`);
-  const t1 = world.t1.siteDescriptions;
-  check(world.sites.every(s => typeof t1[s.id] === 'string' && t1[s.id].length > 20),
-    'every site has a description a player with no 3D view can use', 'a site has no T1 description');
   check(world.sites.every(s => world.t2.stillCamera[s.id]), 'every site has a still framing for the baked tier', 'a site has no T2 still camera');
 }
 
@@ -153,7 +163,7 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
 
 {
   const WITHHELD = ['nucleophile', 'electrophile', 'carbonyl', 'carbocation', 'alkyl', 'ester', 'epoxide', 'isopropyl'];
-  const strings = [world.name, world.place, world.oneLine, ...world.sites.map(s => s.label), ...Object.values(world.t1.siteDescriptions)];
+  const strings = [world.name, world.place, world.oneLine, ...world.sites.map(s => s.label)];
   const bad = [];
   for (const str of strings) {
     for (const word of WITHHELD) if (new RegExp(`\\b${word}s?\\b`, 'i').test(str)) bad.push(`"${str}" contains "${word}"`);
@@ -372,6 +382,128 @@ const chartQuests = [...chart.matchAll(/id:\s*'(q\d+-[a-z]+)',\s*title:\s*'([^']
       }
       check(found, `${site.id}: a player can walk from the spawn to the bench's approach`, `${site.id}: its approach mark is sealed off from the spawn`);
     }
+    /* A HOST STANDS INSIDE THE EXTENT IT DECLARES. `host-plan.js` is what the layout generator keeps everything else out of, so a body
+       that stands outside it would be stood in by the scatter. And the declaration is not slack: no side is more than 2.5 m wider than
+       what is built. */
+    {
+      const off = [];
+      for (const site of world.sites) {
+        const marker = built.siteMarkers.get(site.questId);
+        const plan = HOST_PLAN[site.id];
+        if (!marker || !plan) { off.push(`${site.id}: no host group`); continue; }
+        const g = marker.group;
+        g.updateMatrixWorld(true);
+        const inv = new THREE.Matrix4().copy(g.matrixWorld).invert();
+        const total = new THREE.Box3();
+        g.traverse(o => {
+          if (!o.isMesh || !o.geometry) return;
+          if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+          total.union(o.geometry.boundingBox.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)));
+        });
+        const [x0, x1, z0, z1] = plan.extent;
+        const slack = 0.25;
+        const sides = [['left', total.min.x, x0, -1], ['right', total.max.x, x1, 1], ['back', total.min.z, z0, -1], ['front', total.max.z, z1, 1]];
+        for (const [name, got, want, dir] of sides) {
+          if (dir * (got - want) > slack) off.push(`${site.id} (${plan.structure}) stands ${(dir * (got - want)).toFixed(2)} m outside its declared extent on the ${name}`);
+          else if (dir * (want - got) > 2.5) off.push(`${site.id} (${plan.structure}) declares ${(dir * (want - got)).toFixed(2)} m more than it builds on the ${name}`);
+        }
+      }
+      check(off.length === 0, 'every host stands inside the extent host-plan.js declares, and the declaration is tight',
+        `hosts out of step with host-plan.js:\n         ${off.join('\n         ')}`);
+    }
+
+    /* A TOWER HOST STANDS AGAINST THE COMPRESSOR. The plate is no nearer its plinth than the bay's behind air (1.95 m), and the host's own
+       bodies stop short of it. */
+    {
+      const bad = [];
+      for (const site of world.sites.filter(s => HOST_PLAN[s.id]?.anchor === 'tower')) {
+        const anchor = built.benchAnchor(site.questId);
+        const back = Math.hypot(anchor.position[0], anchor.position[2]) - 0.65 - 11.8;
+        if (back < 1.95) bad.push(`${site.id}: the plate's back edge is ${back.toFixed(2)} m from the Compressor's plinth (the bay needs 1.95)`);
+      }
+      check(bad.length === 0, 'the tower hosts leave the bay\'s behind air between the plate and the Compressor', bad.join('\n         '));
+    }
+
+    /* THE BOSS'S GROUND IS OPEN. The Compressor is fought on the way in from the spawn. */
+    {
+      const { BOSS_ARENA_SPOTS } = await import('../src/learn/engine/boss-arena.js');
+      const spot = BOSS_ARENA_SPOTS['boss-compressor'];
+      const R = 6.5;
+      const hit = built.colliders.filter(c => {
+        const cx = c.radius != null ? c.x : (c.minX + c.maxX) / 2, cz = c.radius != null ? c.z : (c.minZ + c.maxZ) / 2;
+        const ext = c.radius != null ? c.radius : Math.hypot(c.maxX - c.minX, c.maxZ - c.minZ) / 2;
+        // The Compressor's own plinth is the boss's backdrop; everything else is kept off the arena disc and the corridor in.
+        if (c.radius != null && c.radius > 11) return false;
+        return Math.hypot(cx - spot.bossPos[0], cz - spot.bossPos[2]) < ext + R ||
+          (Math.abs(cx - spot.playerPos[0]) < ext + 3 && cz > spot.bossPos[2] && cz < spot.playerPos[2] + 4);
+      });
+      check(hit.length === 0, 'the compressor\'s ground is open: nothing stands in the arena or the way in',
+        `${hit.length} colliders stand on the boss's ground, e.g. ${JSON.stringify(hit[0])}`);
+    }
+
+    /* THE FIELD POINTS (plan section 2.5). A field stage sends the player to a spot on the plant, so each spot is held to what a place the
+       player is sent to owes them: it belongs to a host and is a real piece of it (something solid stands at the point), the place to stand
+       is clear of every collider, level with the ground under the point and joined to the spawn on foot, the point is inside [E] reach from
+       there, and the guide's way (a straight line from the bench's approach) is open ground. */
+    {
+      const { fieldPointsOf } = await import('../src/three/field-points.js');
+      const points = fieldPointsOf(built);
+      const want = [['gauge', 'site-1', 'the holder\'s pedestal gauge'], ['bleed', 'site-5', 'the vent stack\'s bleed valve'], ['drawoff', 'site-6', 'the cold box\'s draw-off']];
+      for (const [id, host, what] of want) {
+        check(points.some(p => p.id === id && p.siteId === host), `the "${id}" point feeds ${host} (${what})`, `no "${id}" field point feeds ${host}`);
+      }
+      const bad = [];
+      for (const p of points) {
+        const site = world.sites.find(s => s.id === p.host);
+        if (!site) { bad.push(`${p.id}: names host ${p.host}, which is not a site (a point is a piece of a host)`); continue; }
+        if (p.siteId !== site.id || !p.label) bad.push(`${p.id}: no label or the wrong bench`);
+        const near = Math.hypot(p.pos[0] - site.pos[0], p.pos[2] - site.pos[2]);
+        if (near > 12) bad.push(`${p.id}: ${near.toFixed(1)} m from its bench, too far to be this host's own`);
+        const [sx, , sz] = p.stand;
+        if (blocked(sx, sz)) bad.push(`${p.id}: the place to stand is inside a collider`);
+        if (!blocked(p.pos[0], p.pos[2])) bad.push(`${p.id}: nothing solid stands at the point, so it is not a piece of its host`);
+        const g1 = built.getTerrainHeight(sx, sz);
+        const g2 = built.getTerrainHeight(p.pos[0], p.pos[2]);
+        if (Math.abs(g1 - g2) > 0.3 || p.pos[1] - g2 < 0.2 || p.pos[1] - g2 > 2.4) bad.push(`${p.id}: the floor to stand on is not level with the point, or the point floats`);
+        const d = Math.hypot(sx - p.pos[0], sz - p.pos[2]);
+        if (d > p.reach - 0.5) bad.push(`${p.id}: the stand is ${d.toFixed(1)} m from the point, outside its ${p.reach} m reach`);
+        if (!seen[idx(Math.floor((sx - MIN) / CELL), Math.floor((sz - MIN) / CELL))]) bad.push(`${p.id}: the place to stand is on ground the walk cannot reach from the spawn`);
+        const [ax, az] = [site.approachPos[0], site.approachPos[2]];
+        const L = Math.hypot(sx - ax, sz - az);
+        for (let t = 0; t <= L; t += 0.5) {
+          const x = ax + (sx - ax) * t / (L || 1), z = az + (sz - az) * t / (L || 1);
+          if (!seen[idx(Math.floor((x - MIN) / CELL), Math.floor((z - MIN) / CELL))]) { bad.push(`${p.id}: the way from the approach to the stand crosses ground the walk cannot reach at (${x.toFixed(1)}, ${z.toFixed(1)})`); break; }
+        }
+      }
+      check(bad.length === 0, `${points.length} field point(s): each is a piece of its host, with a clear, level place to stand inside reach, reachable on foot, and an open way to it`,
+        `field points:\n         ${bad.join('\n         ')}`);
+    }
+
+    /* A TABLE IS WORKED BY ITS LAMP. There is a work lamp over every plate whose quest is a tabletop, a `lampMark` in the pool (so the
+       world's light count does not grow): it hangs over the plate, within its width and depth. */
+    {
+      const { allQuests } = await import('../src/learn/curriculum.js').catch(() => ({ allQuests: () => [] }));
+      const tableQuests = [];
+      for (const q of allQuests().filter(x => x.status === 'live' && x.key.startsWith('unit04/'))) {
+        const mod = await q.module();
+        if ((mod.STAGES || []).length && mod.STAGES.every(st => st.widget?.type === 'table')) tableQuests.push(q.key.split('/')[1]);
+      }
+      const bad = [];
+      for (const site of world.sites.filter(s => tableQuests.includes(s.questId))) {
+        const g = built.siteMarkers.get(site.questId).group;
+        g.updateMatrixWorld(true);
+        const inv = new THREE.Matrix4().copy(g.matrixWorld).invert();
+        const over = built.lamps.some(m => {
+          const p = new THREE.Vector3();
+          m.getWorldPosition(p);
+          p.applyMatrix4(inv);
+          return Math.abs(p.x) < 2.4 && p.z > -1.4 && p.z < 1.0 && p.y > 2.4 && p.y < 4.2;
+        });
+        if (!over) bad.push(`${site.id} (${site.questId}): no lamp hangs over the plate`);
+      }
+      check(bad.length === 0, `every bench whose quest is a tabletop (${tableQuests.length}) has a lamp over its plate`, `tables with no lamp:\n         ${bad.join('\n         ')}`);
+    }
+
     // And the pad: the ship's ramp comes down onto ground the walk can reach.
     const pad = world.landmarks.find(l => l.asset === 'landing-pad');
     {

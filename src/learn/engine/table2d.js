@@ -102,7 +102,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
   const words = (t, x, y, o = {}) => {
     const px = Math.max(o.minPx || 9, (o.size || LABEL.size) * sc);
     if (mat) paintStencil(ctx, t, X(x), Y(y), { size: px, align: o.align, base: o.base, color: o.color || ink.label, maxW: o.maxW ? o.maxW * sc : 0 });
-    else plateText(ctx, t, X(x), Y(y), { size: px, ...o, color: o.color || ink.label });
+    else plateText(ctx, t, X(x), Y(y), { ...o, size: px, color: o.color || ink.label, ...(o.maxW ? { maxW: o.maxW * sc } : {}) });
   };
   const text = (t, x, y, o = {}) => plateText(ctx, t, X(x), Y(y), { size: Math.max(9, 2.6 * sc), ...o });
 
@@ -335,11 +335,17 @@ function drawRecorder(ctx, state, X, Y, sc) {
   const py = y => Y(pu.uy(y));
   const line = lineOf(rec);
   if (line) {
+    // Kept inside the strip: a line carried on past the readings never runs over the scale.
+    ctx.save?.();
+    ctx.beginPath();
+    ctx.rect(X(r.x0), Y(r.y0), r.w * sc, r.h * sc);
+    ctx.clip?.();
     ctx.strokeStyle = AMBER;
     ctx.beginPath();
     ctx.moveTo(px(pu.xlo), py(readY(line, pu.xlo)));
     ctx.lineTo(px(pu.xhi), py(readY(line, pu.xhi)));
     ctx.stroke();
+    ctx.restore?.();
   }
   ctx.fillStyle = PLATE_COLORS.dust;
   for (const row of rec.rows) ctx.fillRect(px(row.x) - 1.5, py(row.y) - 1.5, 3, 3);

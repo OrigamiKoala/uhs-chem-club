@@ -1,28 +1,4 @@
 {
-  "bellows/q1-knocks": [
-    "lean",
-    "sight"
-  ],
-  "bellows/q2-laws": [
-    "lean",
-    "sight"
-  ],
-  "bellows/q3-ideal": [
-    "lean",
-    "sight"
-  ],
-  "bellows/q4-mixtures": [
-    "lean",
-    "sight"
-  ],
-  "bellows/q5-speed": [
-    "lean",
-    "sight"
-  ],
-  "bellows/q6-real": [
-    "lean",
-    "sight"
-  ],
   "ember/q1-flow": [
     "lean",
     "sight"

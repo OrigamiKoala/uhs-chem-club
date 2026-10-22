@@ -48,7 +48,8 @@ import {
   buildCompressorTower, buildGasholder, buildScoopPylon, buildPipeRack, buildVentStack,
   buildCrateStack, buildMooredBladder, buildLampPost, buildCommsMast, buildLandingPad, buildCloudHeads
 } from './bellows/props.js';
-import { buildSite } from './bellows/sites.js';
+import { HOST_BUILDERS } from './bellows/stations.js';
+import { registerFieldPoint } from './field-points.js';
 import { createBellowsEffects } from './bellows/effects.js';
 import { LampPool } from './lamp-pool.js';
 import { paceShadow, holdShadowUntilAsked } from './shadow-pace.js';
@@ -86,7 +87,7 @@ export class BellowsWorld {
     this.initSky();
     this.initDeck();
     this.initLandmarks();
-    this.initSites();
+    this.initHosts();
     this.initEffects();
     this.initLampPool();
     this.bakeStatics();
@@ -156,6 +157,10 @@ export class BellowsWorld {
     M.brass = new THREE.MeshStandardMaterial({ color: 0xb08d4c, roughness: 0.4, metalness: 0.9 });
     M.skin = new THREE.MeshStandardMaterial({ color: 0x3b3b41, roughness: 0.82, metalness: 0.05 });
     M.crate = new THREE.MeshStandardMaterial({ color: 0x6a7684, roughness: 0.85, metalness: 0.2 });
+    // THE ONE CLEAN THING on a weathered plant: the cased instrument keeps its own bright paint and bare metal.
+    M.case = new THREE.MeshStandardMaterial({ color: 0xe6ebf1, roughness: 0.5, metalness: 0.25 });
+    M.caseDark = new THREE.MeshStandardMaterial({ color: 0x2d3744, roughness: 0.55, metalness: 0.4 });
+    M.rubber = new THREE.MeshStandardMaterial({ color: 0x1b1d21, roughness: 0.95, metalness: 0 });
     M.cloud = new THREE.MeshStandardMaterial({ color: 0xf2f5fa, roughness: 1, metalness: 0 });
     M.rime = new THREE.MeshStandardMaterial({ color: 0xdfe8f2, roughness: 0.6, metalness: 0 });
 
@@ -306,28 +311,51 @@ export class BellowsWorld {
     return Math.atan2(ax, az);
   }
 
-  /** A point in a site's own frame, in world terms. */
-  siteToWorld(site, lx, lz) {
-    const a = this.siteFacing(site);
-    const c = Math.cos(a);
-    const s = Math.sin(a);
-    return [site.pos[0] + lx * c + lz * s, site.pos[2] - lx * s + lz * c];
-  }
-
-  initSites() {
+  /**
+   * Build every host: the piece of the gas works a bench belongs to (stations.js), placed at its site and
+   * turned to face its approach. The bench is a part of its host, one object, so a bench is never bolted to
+   * anything but the machine it is for.
+   */
+  initHosts() {
     this.siteColliders = [];
     for (const site of this.data.sites) {
-      const built = buildSite(this.ctx, site);
-      const y = this.getTerrainHeight(site.pos[0], site.pos[2]);
-      built.group.position.set(site.pos[0], y, site.pos[2]);
-      built.group.rotation.y = this.siteFacing(site);
-      this.scene.add(built.group);
+      const build = HOST_BUILDERS[site.id];
+      if (!build || !site.built) continue;
+      const host = build(this);
+      const g = host.group;
+      g.position.set(site.pos[0], this.getTerrainHeight(site.pos[0], site.pos[2]), site.pos[2]);
+      g.rotation.y = this.siteFacing(site);
+      this.scene.add(g);
 
-      this.siteMarkers.set(site.questId, { site, group: built.group, indicator: built.bench.indicator });
-      this.registerBenchAnchor(site, built.group, built.bench, built.benchLocal);
-      for (const c of built.colliders) {
-        const [x, z] = this.siteToWorld(site, c.x, c.z);
-        this.siteColliders.push({ x, z, radius: c.radius });
+      this.siteMarkers.set(site.questId, { site, group: g, indicator: host.bench.indicator });
+      this.registerBenchAnchor(site, g, host.bench, host.benchLocal);
+
+      // The places the player is sent to for this bench (plan section 2.5): real pieces of the host, in the world's frame.
+      const cos = Math.cos(g.rotation.y), sin = Math.sin(g.rotation.y);
+      const at = (lx, lz) => [g.position.x + lx * cos + lz * sin, g.position.z - lx * sin + lz * cos];
+      for (const fp of host.fieldPoints || []) {
+        const [px, pz] = at(fp.lx, fp.lz);
+        const [sx, sz] = at(fp.stand.lx, fp.stand.lz);
+        registerFieldPoint(this, {
+          id: fp.id, siteId: site.id, label: fp.label, host: site.id,
+          pos: [px, g.position.y + fp.ly, pz], half: fp.half, rotY: g.rotation.y,
+          stand: [sx, g.position.y, sz]
+        });
+      }
+
+      // The host's colliders are in its own frame; the walk wants them in the world's. A host is turned to face its approach, and
+      // a turned box would collide as the larger box that holds it, so a box is laid as a row of discs along its long side.
+      for (const c of host.colliders) {
+        if (c.r !== undefined) { const [x, z] = at(c.lx, c.lz); this.siteColliders.push({ x, z, radius: c.r }); continue; }
+        const long = Math.max(c.hw, c.hd);
+        const short = Math.min(c.hw, c.hd);
+        const n = Math.max(1, Math.ceil((long * 2) / (short * 1.3)));
+        const step = n > 1 ? (long * 2 - short * 2) / (n - 1) : 0;
+        for (let i = 0; i < n; i++) {
+          const o = n > 1 ? -long + short + i * step : 0;
+          const [x, z] = c.hw >= c.hd ? at(c.lx + o, c.lz) : at(c.lx, c.lz + o);
+          this.siteColliders.push({ x, z, radius: short });
+        }
       }
     }
   }

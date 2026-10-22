@@ -147,7 +147,7 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
 `docs/plans/bench-integration.md` (benches fold into each world's equipment, Ligar gets a mine): P0, the
 shared groundwork (bay contract, one bench builder, signs gone), P1 (Tallow re-laid, six hosts) and P2/P3
 (Ligar: four surface hosts, two hills, a mine of five chambers) and P4 (Lanternfall: nine hosts in an aurora expedition's
-camp) are done; P5–P7 (Bellows, Ember, records) moved into `docs/plans/bench-tabletop.md` (plan only): benches
+camp) are done; P5 (Bellows: six hosts on the plant, the ring gantries gone) was built with T5 of `docs/plans/bench-tabletop.md`; P6–P7 (Ember, records) moved into it (plan only): benches
 become open tabletops (drag, snap, pour, arrange, predict-then-test, T4 field fetches) graded on what is on the
 table, atom kit piloted first, and every reworked bench must also be integrated into its world (its §2.6).
 
@@ -265,9 +265,12 @@ table, atom kit piloted first, and every reworked bench must also be integrated 
   in a working's box (8 roofed volumes per hill, 2 hills; falloff at portals), so a phone with no shadow map is as
   dark as a desktop with one. `LigarWorld.routeTo(siteId, from)` is the guide's way in (portal, doorways); the
   waypoint carries `siteId`. Generator: `tools/gen-ligar-layout.mjs` (JS: floors are laid from the real height
-  field). Bellows `q1-knocks` … `q6-real` on one gas rig with six heads; knock
-  counter is the real impact rate; sealed plates print no amount/gas; words plain until earned on the
-  dials too. Ember Reach `q1-flow` … `q7-gibbs` on one calorimeter with seven heads (contact, cup, diagram,
+  field). Bellows `q1-knocks` … `q6-real` + `boss-compressor` are tables on the gas kit
+  (`table/kits/gas.js`: cylinder rigs, tanks and a common tank, a scale, a pinhole, a tube, a walk; every reading goes
+  through `gasdata.js`'s planners); knock counter is the real impact rate; sealed tanks print no gas; words plain until earned.
+  The benches are the plant's working points (`bellows/stations.js`, footprints in `bellows/host-plan.js`): 1 gauge gallery on a
+  gasholder, 2 the Compressor's piston deck, 3 metering skid, 4 blending manifold, 5 leak-test station at a vent stack, 6 the liquefier's
+  cold box; field points `gauge`, `bleed`, `drawoff`; the Compressor's arena is kept on open ground. `GasRig` is orphaned (T7 retires it). Ember Reach `q1-flow` … `q7-gibbs` on one calorimeter with seven heads (contact, cup, diagram,
   bonds, hess, box, gibbs): a plate prints what the instrument reads, so a rig carries `hideVerdict`,
   `hideHeat`, `hideCost`, `hideNet`, `hideSum`, `hideWays`, `hideLaw`, `hideTug` or `hideCrossing` whenever
   the stage asks for that reading; non-round answers are a `choice` of four numbers whose wrong ones are real
@@ -301,7 +304,7 @@ table, atom kit piloted first, and every reworked bench must also be integrated 
   instrument slot each world dresses itself, the key rail and one indicator. `BENCH_BAY`/`bayBoxes()` are the
   clearance volumes (plate, work = measured instrument reach, panels, behind, approach) in the bench frame;
   `verify:bench` fails any world body inside one except what `tools/bay-legacy.json` still waives (a
-  ratchet: a rebuilt bench's line must be deleted, and new hosts get none; Tallow's, Ligar's and Lanternfall's are
+  ratchet: a rebuilt bench's line must be deleted, and new hosts get none; Tallow's, Ligar's, Lanternfall's and Bellows' are
   empty, the rest are Ember's old shelters). A host leaves the bay empty by standing machinery to the
   sides (|x| > 2.8), behind the plate (z < -2) or above 2.4 m. **Only lamps are lit**; a lamp is a `lampMark` in a
   `LampPool` (fixed light count — a changed count recompiles every material), never a `PointLight`.

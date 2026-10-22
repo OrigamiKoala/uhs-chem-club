@@ -12,6 +12,72 @@ LOOK is unseen.
 This is the record of what was built and every place it parted from the plan in
 `learn-quests.md` ("World 4 — Bellows").
 
+## T5 (2026-10-22): the benches are built into the plant, and every quest is a table
+
+**This section supersedes what follows wherever they disagree.** The sections below record the first build: six gantries on a ring, one gas
+rig with six heads, a gas bladder on every stage. T5 of `bench-tabletop.md` (with the integration phase P5 of `bench-integration.md`) replaced
+all three. What the older text still describes correctly is the deck, the sky, the cloud sea, the lamp pool, the Compressor's plinth and
+mover, and the gas tables in `gasdata.js`; what it no longer describes is where a bench stands, what a bench is, and what fights.
+
+**The hosts** (`three/bellows/stations.js`, one builder per bench through `buildBayBench`, footprints as pure data in `three/bellows/host-plan.js`,
+shared by the generator, the world and `verify:bellows`). The host proposals of `bench-integration.md` §6 were taken as confirmed on the user's
+instruction to implement T5; they are built as proposed.
+
+| Bench | Quest | Host | Anchor |
+| --- | --- | --- | --- |
+| 1 | `q1-knocks` | gauge gallery on a gasholder's flank | free, 46 m ring at −40° |
+| 2 | `q2-laws` | the Compressor's piston deck: two glass cylinders flanking the plate, pipework to the plinth | the tower, 14.7 m out |
+| 3 | `q3-ideal` | metering skid beside a gasholder, a platform scale at the plate | free, 44 m at −150° |
+| 4 | `q4-mixtures` | blending manifold on a pipe rack, a storage tank at each end | free, 46 m at 165° |
+| 5 | `q5-speed` | leak-test station at the foot of a vent stack | free, 44 m at 125° |
+| 6 | `q6-real` | the liquefier's frosted cold box, coil and dewar, between the plate and the Compressor | the tower, 16 m out |
+
+Each host carries a lamp mast over its plate (the only light), the cased gas rig as the dormant instrument (`M.case`, the one clean thing on
+a weathered plant), and nothing in the bay. `sites.js` and the six ring gantries are deleted. Round props are collision discs and boxes are
+rows of discs, so a host's colliders never block a field point's lane. **`tools/bay-legacy.json` no longer lists any Bellows line** (what is
+left is Ember's, T6).
+
+**The layout** (`tools/gen-bellows-layout.mjs`, rewritten): `SITE_DEFS` give each host an angle and radius; the generator turns the host's
+extent to the world, keeps every other landmark out of it and out of its lane, scatters the remaining gasholders (3), vent stacks (2), pipe
+racks (2) and pylons from what is left, keeps the Compressor's arena on open ground (boss at [0, 20], player at [0, 34], a 14 m wide corridor
+from z 13 to 38, checked by `verify:bellows` as `boss-compressor` ground), and refuses to write unless every self-check passes. **`t1.siteDescriptions`
+is gone**: grep showed nothing but the verifiers read it. `world-data/bellows.json` holds 51 landmarks.
+
+**Field points** (`three/field-points.js`, registered by the hosts): `gauge` "Holder Gauge" at bench 1's gasholder (a card with the holder's
+three-ring reading, `q1-knocks` stage 6), `bleed` "Stack Leak" at bench 5's vent stack (the unmarked sample, `q5-speed` stage 6) and `drawoff`
+"Cold Draw-off" at bench 6's cold box (a sample of liquid carbon dioxide, `q6-real` stage 8). All three are evidence, never a lock: a stage is
+solvable without them.
+
+**The quests** are tables on the gas kit (`table/kits/gas.js`, with `gas-read.js` the pure readers, `gas-draw.js` the painters and
+`engine/gas-props.js` the solids: tanks, a pellet dish, glass barrels and lids). The kit is a thin wrapper on `gasdata.js`'s planners
+(`planGas`, `planMixture`, `speedBins`, `fractionAbove`, `leftAfter`, `halfTime`, `front`, `pressureVdw`; `recordCurve` moved there from
+`gasrig.js`), never a second implementation. Its pieces are tanks, statement and number cards, curve cards, speed histograms, a pellet, chips
+and a trap; its fixtures are cylinder rigs (a piston dial, a heater, an amount dial, readouts, the speed screen), the common tank, the scale, the pinhole, the tube, one
+particle's walk, the reference gauge, plaques and markers. **There are no bladders**: the compressor is the only foe, standing in the corner pad of each of
+its five tables, and it only observes. Where a stage once asked "why?" as a four-way choice, it now marks the statements a plate supports
+(`q6-real` stages 2 and 8) or predicts and tests (`q4` stages 2 and 6, `q5` stages 4 and 8, `q6` stage 4).
+
+**Changes of substance, for the user's review:**
+
+- `q6-real` stage 7 was written to teach "cold and roomy: the pull dominates; crushed: the size dominates". The van der Waals constants say
+  otherwise: for carbon dioxide the two corrections trade places with the TEMPERATURE (their ratio is about RTb/a at any roomy setting), so a
+  hot gas is the one the size of its particles governs. The stage now asks for a setting where the size beats the pull, its reward card says the
+  true thing, and `verify:learn` holds the claim to the planner.
+- `q5-speed` stage 8 asks where the two gases meet rather than which arrives first: the ring forms 59 cm from the ammonia end of a 100 cm tube.
+- `q5-speed` stage 1 is a target (heat until the tallest bar stands under the mark) rather than a four-way choice; `q5` stage 3 asks for ten
+  times the 27 °C share rather than a factor from a list.
+- `table2d.js` `words()` mis-sized text drawn with a size and a width; `recorder.js` gained a fixed `range` and axis digits (the strip of `q1-knocks`
+  stage 7 runs past absolute zero); `trendplot.js` takes the digits for its tick labels.
+
+**Orphaned, not deleted (T7 retires them):** `GasRig` (`gasrig.js`, `gasrig3d.js`) and `gasmount.js`; `verify:bench` keeps its old gas-rig
+pass for any quest that is not a table (none is) and `verify:learn` keeps its gas-rig plate checks for any stage that declares gas `rigs` (none does).
+
+**Nothing here is browser-tested.** To look at in a browser: `#/learn/unit04` (3D On). Bench 1: the gasholder behind the plate and the gallery's gauges at either side; the
+sealed rig under its case until `[E]`; then every stage in turn, the fetch of `gauge` in stage 6. Bench 2: the two glass cylinders at the plate's flanks
+and the Compressor close behind. Bench 3: the weighing scale at the plate; tanks go on its pan. Bench 4: tanks dragged into the place under the
+common tank. Bench 5: the stack's sample (fetch `bleed` first in stage 6). Bench 6: the draw-off (stage 8). The boss: five tables with the compressor in the
+top-right corner. On a phone, the cards' text is the small target; the common tank's lines and the cylinders' readouts are close-set.
+
 ## What exists
 
 | Bench | Quest | Plates | Foe |

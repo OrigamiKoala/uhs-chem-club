@@ -670,12 +670,15 @@ export class Table3D extends BenchViewer3D {
       if (hi <= lo) hi = lo + 1;
       return [lo, hi];
     };
-    const [xMin, xMax] = range(xs);
-    const [yMin, yMax] = range(ys);
     const ax = rec.axes || {};
+    // A stage may fix what the strip shows (`recorder.range`), so a line laid across the readings runs on to where it meets an axis.
+    const fixed = ax.range || null;
+    const [xMin, xMax] = fixed ? [fixed.xMin, fixed.xMax] : range(xs);
+    const [yMin, yMax] = fixed ? [fixed.yMin, fixed.yMax] : range(ys);
     sh.plot.setSpec({
       xMin, xMax, yMin, yMax,
-      xLabel: ax.xLabel || '', yLabel: ax.yLabel || '', xUnit: ax.xUnit || '', yUnit: ax.yUnit || ''
+      xLabel: ax.xLabel || '', yLabel: ax.yLabel || '', xUnit: ax.xUnit || '', yUnit: ax.yUnit || '',
+      xDigits: ax.xDigits || 0, yDigits: ax.yDigits || 0
     });
     sh.plot.points = rec.rows.map((r, i) => ({ x: r.x, y: r.y, active: i === rec.rows.length - 1 }));
     const line = lineOf(rec);
@@ -683,12 +686,20 @@ export class Table3D extends BenchViewer3D {
       ? (ctx, pl) => {
           const a = pl.pxOf(xMin, readY(line, xMin));
           const b = pl.pxOf(xMax, readY(line, xMax));
+          // Kept inside the strip's axes: a line carried on past the readings never runs over the scale.
+          const tl = pl.pxOf(xMin, yMax);
+          const br = pl.pxOf(xMax, yMin);
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+          ctx.clip();
           ctx.strokeStyle = '#e59b24';
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
           ctx.stroke();
+          ctx.restore();
         }
       : null;
     sh.plot.draw();

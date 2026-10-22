@@ -341,6 +341,33 @@ export function airPressureAt(heightM) {
 }
 
 /* ------------------------------------------------------------------
+   THE RECORD (a plotted curve of the ideal law)
+   ------------------------------------------------------------------ */
+
+/**
+ * The curve a record plots: pairs of (x, y) from the ideal law with the other quantities held. `item.record` is
+ * `{x, y, fixed: {n, T, V, P}, xmin, xmax}` where x and y are 'V', 'P', 'T' or 'n'. Whichever of P and V is not plotted and
+ * not fixed is the one the law solves for.
+ */
+export function recordCurve(item, points = 40) {
+  const { x, y, fixed = {}, xmin, xmax } = item.record;
+  const out = [];
+  for (let i = 0; i <= points; i++) {
+    const xv = xmin + ((xmax - xmin) * i) / points;
+    const st = { n: fixed.n ?? 1, T: fixed.T ?? 300, V: fixed.V ?? 10, P: fixed.P ?? ATM_KPA };
+    if (x === 'V') st.V = Math.max(xv, 1e-6);
+    if (x === 'T') st.T = xv;
+    if (x === 'n') st.n = xv;
+    if (x === 'P') st.P = xv;
+    if (y === 'P') st.P = pressureIdeal(st.n, st.T, st.V);
+    else if (y === 'V') st.V = volumeIdeal(st.n, st.T, st.P);
+    else if (y === 'T') st.T = (st.P * st.V) / (st.n * R);
+    out.push({ x: xv, y: y === 'P' ? st.P : y === 'V' ? st.V : y === 'T' ? st.T : st.n });
+  }
+  return out;
+}
+
+/* ------------------------------------------------------------------
    FORMATTING THE PLATES SHARE
    ------------------------------------------------------------------ */
 

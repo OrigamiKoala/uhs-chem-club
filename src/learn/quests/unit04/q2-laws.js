@@ -1,37 +1,33 @@
 /**
  * q2-laws.js — Bellows, bench two: THE GAS LAWS.
  *
- * Bench one found out what a gauge measures. This one changes ONE thing on the rig
- * at a time and reads how the others answer, which is the whole of how the gas
- * laws were found: squeeze it, warm it in a sealed tank, warm it under a free
- * piston, add to it. Each law arrives on the card after the player has watched it
- * happen, and the last stage puts all of them in one sum.
+ * The Compressor's piston deck, and the second of Bellows' TABLETOPS (plan `bench-tabletop.md`, phase T5), on the gas kit
+ * (`table/kits/gas.js`). Bench one found out what a gauge measures. This one changes ONE thing on the rig at a time and reads how the
+ * others answer, which is the whole of how the gas laws were found: squeeze it, warm it in a sealed tank, warm it under a free piston,
+ * add to it. Each law arrives on the card after the player has watched it happen, and the last stage puts all of them in one sum.
  *
  *   1  a quarter of the room, the same temperature         -> Boyle's law
- *   2  why the knocks double when the room halves          -> inversely proportional
- *   3  tripling the kelvin temperature at steady pressure  -> Charles's law
- *   4  why the line reaches zero in kelvin and not in °C   -> (the kelvin scale is a count from zero)
+ *   2  what the knock counter does when the room halves    -> inversely proportional
+ *   3  growing the kelvin temperature at steady pressure   -> Charles's law
+ *   4  doubling the volume: the Celsius number or kelvin   -> (the kelvin scale is a count from zero)
  *   5  heating a sealed tank by half again                 -> Gay-Lussac's law
- *   6  doubling the gas at the same temperature and weight -> Avogadro's law
+ *   6  adding gas under the weighted piston                -> Avogadro's law
  *   7  pressure and temperature both changed               -> combined gas law
  *   8  four gauge records, sorted by what each held fixed  -> (the four relations as one gas)
  *
- * THE EVIDENCE IS ON THE BENCH. Stage 2 shows the knock counter doubling while the
- * average speed and the particle count do not move. Stage 4 draws the SAME line
- * twice, on a kelvin axis and on a Celsius axis, and only one of them meets the
- * origin. Stage 7 puts the answer between two detents of the dial, so it can only
- * be reached by scaling a reading, and never by reading one.
- *
- * EVERY STAGE BUT THE LAST IS A FIGHT against gas bladders: they sag, hold, swell
- * and strain with the push, or with the room when the piston is free. Stage 8
- * files four plotted records, which are not bodies, so it plays without a foe.
+ * THE EVIDENCE IS ON THE BENCH. Stage 2's knock counter doubles while the average speed and the particle count do not move. Stage 4 prints
+ * the temperature in degrees only, so the doubling cannot be read off a number: it has to be reached by counting from where the
+ * particles stop. Stage 7 puts the answer on a dial setting, so it is found by watching Cylinder B's gauge meet half of Cylinder A's.
+ * Stage 8's records are drawn from the ideal law with the other quantities held, never from the cylinder's own readings.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { mountGas, gasState } from '../../engine/gasmount.js';
-import { blankAnswer } from '../../engine/stagerunner.js';
-import { readOf, GASES, R } from '../../engine/gasdata.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
+import {
+  gasTable, rig, chip, curveCard, markerFixture, markerRead, rigAt, cylRead, whereIs, knocks, recordCurve
+} from '../../table/kits/gas.js';
 
 export const meta = { stageCount: 8 };
 
@@ -49,335 +45,364 @@ export const BUILDS_ON = ['unit04/q1-knocks'];
 
 const SPEAKER = 'Vess';
 
-/** A key whose label says what it does carries no legend. */
+/** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
 
 /* ------------------------------------------------------------------
-   THE PLATES
+   THE TABLES
    ------------------------------------------------------------------ */
 
-const cyl = (id, label, gas, extra = {}) => ({
-  id, label, head: 'cylinder', gas, n: 1, T: 300, V: 20, hold: 'dial', ...extra
-});
-const rec = (id, label, record) => ({ id, label, head: 'record', record, note: 'a gauge record' });
-const choice = (id, label) => ({ id, label });
+const widget = { type: 'table', label: 'The bench' };
+const RIG = 'rig';
 
-/** Common to every stage: pressure in kPa, the thermometer in kelvin and degrees. */
-const BASE = { scale: 'kpa', units: true, labels: { gauge: 'PRESSURE' }, tempUnit: 'both' };
+/** The piston's detents in litres, even steps so the barrel is as long as the room in it. */
+const QUARTER = [8, 16, 24, 32];
+const HALF = [10, 20, 30, 40];
+const BIG = [20, 30, 40, 50, 60, 70, 80];
+
+/** The four records of stage 8: what is plotted, what is held, and the quantity or quantities a record keeps steady. */
+export const RECORDS = [
+  { id: 'a', held: 'temperature', spec: { x: 'V', y: 'P', fixed: { n: 1, T: 300 }, xmin: 2, xmax: 40, ymin: 0, ymax: 1300, xName: 'room', yName: 'pressure' } },
+  { id: 'b', held: 'pressure', spec: { x: 'T', y: 'V', fixed: { n: 1, P: 101.3 }, xmin: 0, xmax: 600, ymin: 0, ymax: 50, xName: 'temperature', yName: 'room' } },
+  { id: 'c', held: 'volume', spec: { x: 'T', y: 'P', fixed: { n: 1, V: 10 }, xmin: 0, xmax: 600, ymin: 0, ymax: 500, xName: 'temperature', yName: 'pressure' } },
+  { id: 'd', held: 'both', spec: { x: 'n', y: 'V', fixed: { T: 300, P: 101.3 }, xmin: 0, xmax: 4, ymin: 0, ymax: 100, xName: 'amount', yName: 'room' } }
+];
+
+/** The reward card of each stage: the idea just worked out, named (unchanged by the conversion to a table). */
+const STAGE_REWARDS = [
+  {
+      reward: {
+        log: 'A quarter of the room, four times the pressure.',
+        title: 'Boyle\'s Law',
+        body: 'At a fixed temperature, the pressure of a gas rises as its volume falls, and pressure times volume stays the same. This is Boyle\'s law.'
+      }
+  },
+  {
+      reward: {
+        log: 'The same particles knock more often in less room.',
+        title: 'Inversely Proportional',
+        body: 'With the same particles in half the room, each one reaches the wall twice as often, so the knocks double. Pressure and volume are inversely proportional: as one falls the other rises by the same factor.'
+      }
+  },
+  {
+      reward: {
+        log: 'The volume follows the kelvin temperature.',
+        title: 'Charles\'s Law',
+        body: 'At a steady pressure, the volume of a gas is proportional to its kelvin temperature: three times the kelvin, three times the volume. This is Charles\'s law.'
+      }
+  },
+  {
+      reward: {
+        log: 'Volume is in proportion to the temperature only from absolute zero.',
+        title: 'Why Kelvin',
+        body: 'Volume at a steady pressure is proportional to the temperature only when the temperature is counted from absolute zero, as kelvin is. The zero of the Celsius scale is just where water freezes, so the same line does not pass through it.'
+      }
+  },
+  {
+      reward: {
+        log: 'The pressure follows the kelvin temperature.',
+        title: 'Gay-Lussac\'s Law',
+        body: 'At a fixed volume, the pressure of a gas is proportional to its kelvin temperature, so heating a sealed tank raises the pressure in step. This is Gay-Lussac\'s law.'
+      }
+  },
+  {
+      reward: {
+        log: 'Twice the gas fills twice the room.',
+        title: 'Avogadro\'s Law',
+        body: 'At the same temperature and pressure, the volume of a gas is proportional to the amount of gas: equal amounts fill equal volumes. This is Avogadro\'s law.'
+      }
+  },
+  {
+      reward: {
+        log: 'Pressure and temperature, together.',
+        title: 'Combined Gas Law',
+        body: 'When pressure, volume and temperature all change, the quantity pressure times volume over kelvin temperature stays the same for a fixed amount of gas. This is the combined gas law, and the laws before it are the cases where one quantity is held fixed.'
+      }
+  },
+  {
+      reward: {
+        log: 'Four changes, one gas.',
+        title: 'One Gas, Four Changes',
+        body: 'Each record is the same gas answering a different change: a curve when only the volume and pressure move, and straight lines through zero when the pressure or the volume is held. Together they are one relation between pressure, volume, temperature and amount.',
+        last: true
+      }
+  }
+];
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  {
-    title: 'A Quarter of the Room',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'This bench changes one thing at a time and keeps the rest fixed, so what you read is how the others answer. The dials turn the piston and the heater, and the keys add gas.'
-    },
-    prompt: 'What happens to gas pressure when the volume is compressed to one quarter at constant temperature?',
-    pair: ['V', 'P'],
-    trendPlot: { xLabel: 'Room', xUnit: 'L', yLabel: 'Pressure', yUnit: 'kPa', xMin: 0, xMax: 45, yMin: 0, yMax: 550 },
-    controls: ['volume'],
-    volumes: [5, 10, 20, 40], volumeStart: 3,
-    ...BASE,
-    vmax: 40, gaugeMax: 600,
-    rigs: [cyl('a', 'CYLINDER A', 'N2', { note: 'a cylinder of nitrogen at a steady temperature' })],
-    widget: {
-      type: 'choice', label: 'A quarter of the room',
-      options: [
-        choice('quadruples', 'The pressure becomes four times as large'),
-        choice('doubles', 'The pressure doubles'),
-        choice('quarter', 'The pressure falls to a quarter'),
-        choice('same', 'The pressure stays the same')
-      ]
-    },
-    hints: [
-      'Turn the volume dial and read the pressure at each setting.',
-      'Compare the reading at the largest room with the reading when the room is a quarter as large.',
-      'Divide the new pressure by the old one and compare that factor with the factor the volume changed by.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose what happens.' };
-      if (state.choice === 'quadruples') return { ok: true };
-      if (state.choice === 'doubles') return { ok: false, msg: 'Halving the room is the step before this one; here the room shrinks by a factor of four.' };
-      if (state.choice === 'quarter') return { ok: false, msg: 'Less room makes the gauge climb, so the reading cannot fall.' };
-      return { ok: false, msg: 'The gauge moves when the piston does; read it at both settings.' };
-    },
-    reward: {
-      log: 'A quarter of the room, four times the pressure.',
-      title: "Boyle's Law",
-      body: "At a fixed temperature, the pressure of a gas rises as its volume falls, and pressure times volume stays the same. This is Boyle's law."
-    }
-  },
+  (() => {
+    const r = rig(RIG, { x: 36, y: 25 }, { cyls: [{ id: 'a', label: 'Cylinder A', gas: 'N2', n: 1, hold: 'dial', V: 32, T: 300 }], volumes: QUARTER, volumeStart: 4, vmax: 32 });
+    return {
+      title: 'A Quarter of the Room',
+      briefing: { speaker: SPEAKER, body: 'This bench changes one thing at a time on a cylinder of nitrogen. Press Submit when the table shows your answer.' },
+      prompt: 'Squeeze the gas to a quarter of its room, then set the marker to how many times the gauge has risen.',
+      widget,
+      table: gasTable({ fixtures: [r, markerFixture('times', 'The gauge has risen', { x: 112, y: 28 }, { min: 1, max: 8, step: 1, start: 1, unit: 'times', w: 50 })] }),
+      hints: [
+        'Turn the Piston dial and watch the gauge as the room gets smaller.',
+        'Compare the gauge at the biggest room with the gauge at the smallest.',
+        'Divide the later reading by the earlier one to see how many times larger it is.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = markerRead(t, 'times');
+        if (v === 1) return { ok: false, notYet: true, msg: 'Squeeze the gas, then set the marker to how many times the gauge has risen.' };
+        const a = rigAt(t, RIG, { volume: 4 })[0].P;
+        const b = rigAt(t, RIG, { volume: 1 })[0].P;
+        if (v === Math.round(b / a)) return { ok: true };
+        return { ok: false, msg: 'Compare the gauge with the whole room and with a quarter of it: how many times larger is the second reading than the first?' };
+      },
+      ...STAGE_REWARDS[0]
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 2 */
-  {
-    title: 'The Same Particles',
-    prompt: 'Why does compressing gas into half its volume double the pressure at constant temperature?',
-    controls: ['volume'],
-    volumes: [5, 10, 20, 40], volumeStart: 3,
-    ...BASE,
-    show: { speed: true },
-    vmax: 40, gaugeMax: 600,
-    rigs: [cyl('a', 'CYLINDER A', 'He', { note: 'a cylinder of helium at a steady temperature' })],
-    widget: {
-      type: 'choice', label: 'Because',
-      options: [
-        choice('hits', 'Each particle reaches the wall twice as often, so the knocks come twice as often'),
-        choice('faster', 'The particles move twice as fast'),
-        choice('more', 'There are twice as many particles'),
-        choice('heavier', 'The particles get heavier')
-      ]
-    },
-    hints: [
-      'Turn the volume dial and watch the knock counter, the average speed and the particles in the window together.',
-      'Compare which of those readings change as the piston moves with which stay where they were.',
-      'Find the reading that changes by the same factor as the pressure while the speed and the particle count do not.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a reason.' };
-      if (state.choice === 'hits') return { ok: true };
-      if (state.choice === 'faster') return { ok: false, msg: 'The average speed reads the same at every setting of the piston.' };
-      if (state.choice === 'more') return { ok: false, msg: 'The window holds the same number of particles at every setting of the piston.' };
-      return { ok: false, msg: 'Nothing on the plate changes the mass of the gas when the piston moves.' };
-    },
-    reward: {
-      log: 'The same particles knock more often in less room.',
-      title: 'Inversely Proportional',
-      body: 'With the same particles in half the room, each one reaches the wall twice as often, so the knocks double. Pressure and volume are inversely proportional: as one falls the other rises by the same factor.'
-    }
-  },
+  (() => {
+    const r = rig(RIG, { x: 36, y: 25 }, {
+      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'He', n: 1, hold: 'dial', V: 40, T: 300 }], volumes: HALF, volumeStart: 4, vmax: 40,
+      show: { knocks: true, speed: true }, words: { speed: 'SPEED' }, plot: { x: 'V', y: 'knocks' }
+    });
+    const token = (id, label, x) => ({ id, label, at: { x, y: 56 }, r: 7 });
+    return {
+      title: 'The Same Particles',
+      prompt: 'Predict how the knock counter changes when the piston halves the room, then test it.',
+      widget,
+      table: gasTable({
+        fixtures: [r],
+        prediction: {
+          slot: { id: 'predict', label: 'Knocks, half the room', at: { x: 111, y: 38 }, size: { w: 30, h: 12 } },
+          tokens: [token('twice', 'Twice as often', 83), token('same', 'As often as before', 111), token('half', 'Half as often', 139)]
+        }
+      }, { recorder: { at: { x: 111, y: 20 }, size: { w: 38, h: 22 }, xLabel: 'Room', xUnit: 'L', yLabel: 'Knocks', yUnit: '' } }),
+      hints: [
+        'Place a prediction, then halve the room with the Piston dial and press Record.',
+        'Compare the knock counter before and after the piston moves.',
+        'Work out how often a particle reaches the wall when it has half as far to go.'
+      ],
+      check(state) {
+        const t = state.table;
+        const token = t.prediction.token;
+        if (!token) return { ok: false, notYet: true, msg: 'Place a prediction first.' };
+        const full = rigAt(t, RIG, { volume: 4 })[0].knocks;
+        const half = rigAt(t, RIG, { volume: 2 })[0].knocks;
+        const ratio = half / full;
+        const want = ratio > 1.5 ? 'twice' : ratio < 0.75 ? 'half' : 'same';
+        if (token === want) return { ok: true };
+        if (t.prediction.tested) return { ok: false, msg: 'The knock counter did not change by that factor: compare its reading at the full room with its reading at half.' };
+        return { ok: false, msg: 'Halve the room with the Piston dial, press Record, and compare the knock counter with your prediction.' };
+      },
+      ...STAGE_REWARDS[1]
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 3 */
-  {
-    title: 'Under a Weight',
-    prompt: 'What happens to gas volume when you triple the kelvin temperature at constant pressure?',
-    controls: ['temp'],
-    temps: [200, 300, 400, 600], tempStart: 1, tempList: 'K',
-    ...BASE,
-    trace: { x: 'T', y: 'V', xmin: 0, xmax: 700, ymin: 0, ymax: 60, xticks: [0, 200, 400, 600] },
-    inset: 'trace',
-    thermoLo: -100, thermoHi: 400,
-    vmax: 50, gaugeMax: 200,
-    rigs: [cyl('a', 'CYLINDER A', 'He', { hold: 'P', P0: 101.3, note: 'a cylinder of helium under a free piston' })],
-    widget: {
-      type: 'choice', label: 'Three times the kelvin',
-      options: [
-        choice('triples', 'The volume becomes three times as large'),
-        choice('doubles', 'The volume doubles'),
-        choice('third', 'The volume falls to a third'),
-        choice('same', 'The volume stays the same')
-      ]
-    },
-    hints: [
-      'Turn the temperature dial up from the lowest setting and read the volume at each.',
-      'Compare the volume at the lowest temperature with the volume at the highest, and the two kelvin figures with each other.',
-      'Divide the larger volume by the smaller one and compare that factor with the factor the kelvin temperature changed by.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose what happens.' };
-      if (state.choice === 'triples') return { ok: true };
-      if (state.choice === 'doubles') return { ok: false, msg: 'Compare the kelvin figures at the two settings: the temperature has not merely doubled.' };
-      if (state.choice === 'third') return { ok: false, msg: 'Heating pushes the piston out, so the volume cannot fall.' };
-      return { ok: false, msg: 'The piston moves when the heater does; read the volume at both settings.' };
-    },
-    reward: {
-      log: 'The volume follows the kelvin temperature.',
-      title: "Charles's Law",
-      body: "At a steady pressure, the volume of a gas is proportional to its kelvin temperature: three times the kelvin, three times the volume. This is Charles's law."
-    }
-  },
+  (() => {
+    const temps = [27, 77, 127, 177, 227, 327];
+    const r = rig(RIG, { x: 36, y: 25 }, {
+      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'He', n: 1, hold: 'P', V: 20, T: 300.15, P0: 101.325 }], temps, tempList: 'C', tempStart: 1, vmax: 60,
+      show: { kelvin: true }
+    });
+    return {
+      title: 'Under a Weight',
+      briefing: { speaker: SPEAKER, body: 'A steady weight now rests on the piston, so the gas can take whatever room it needs.' },
+      prompt: 'Warm the gas until its volume has grown by half.',
+      widget,
+      table: gasTable({ fixtures: [r] }),
+      hints: [
+        'Turn the Heater dial up one setting at a time and watch the volume.',
+        'Compare the volume at each setting with the volume at the start.',
+        'Divide the volume now by the volume at the start, and stop when that factor is the one asked for.'
+      ],
+      check(state) {
+        const t = state.table;
+        if (Math.round(t.fixtures[RIG].dials.temp.value) === 1) return { ok: false, notYet: true, msg: 'The heater is where it started: turn it and watch the volume.' };
+        const first = rigAt(t, RIG, { temp: 1 })[0].V;
+        const now = cylRead(t, RIG, 0).V;
+        const ratio = now / first;
+        if (Math.abs(ratio - 1.5) < 0.015) return { ok: true };
+        return { ok: false, msg: ratio < 1.5 ? 'The volume has not yet grown by half: divide the volume now by the volume at the start.' : 'The volume has grown by more than half: divide the volume now by the volume at the start.' };
+      },
+      ...STAGE_REWARDS[2]
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 4 */
-  {
-    title: 'Which Scale',
-    prompt: 'Why does the volume trendline meet zero at 0 K rather than 0 °C?',
-    controls: ['temp', 'clear'],
-    temps: [100, 200, 300, 400, 500, 600], tempStart: 3, tempList: 'K',
-    ...BASE,
-    trace: [
-      { x: 'T', y: 'V', xmin: 0, xmax: 700, ymin: 0, ymax: 60, xticks: [0, 200, 400, 600] },
-      { x: 'TC', y: 'V', xmin: -300, xmax: 400, ymin: 0, ymax: 60, xticks: [-300, -100, 100, 300] }
-    ],
-    inset: 'trace',
-    thermoLo: -200, thermoHi: 400,
-    vmax: 50, gaugeMax: 200,
-    rigs: [cyl('a', 'CYLINDER A', 'He', { hold: 'P', P0: 101.3, note: 'a cylinder of helium under a free piston' })],
-    widget: {
-      type: 'choice', label: 'Because',
-      options: [
-        choice('motion', 'Zero kelvin is where the particles would have no motion left, and 0 °C is only where water freezes'),
-        choice('wrong', 'The Celsius readings on the plate are wrong'),
-        choice('always', 'A line like this passes through zero on every scale'),
-        choice('liquid', 'The gas turns into a liquid at 0 °C')
-      ]
-    },
-    hints: [
-      'Step the temperature dial through every setting and look at both plots.',
-      'Compare where the line meets the volume axis on the kelvin plot with where it meets it on the Celsius plot.',
-      'Ask which of the two scales has its zero at the temperature where the particles would have no motion left.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose a reason.' };
-      if (state.choice === 'motion') return { ok: true };
-      if (state.choice === 'wrong') return { ok: false, msg: 'Both plots are drawn from the same readings; only the scale along the bottom differs.' };
-      if (state.choice === 'always') return { ok: false, msg: 'Look at the two plots: the same line meets the axis at different places on them.' };
-      return { ok: false, msg: 'Nothing on the plate turns the gas into a liquid, and the line does not change at that point.' };
-    },
-    reward: {
-      log: 'Volume is in proportion to the temperature only from absolute zero.',
-      title: 'Why Kelvin',
-      body: 'Volume at a steady pressure is proportional to the temperature only when the temperature is counted from absolute zero, as kelvin is. The zero of the Celsius scale is just where water freezes, so the same line does not pass through it.'
-    }
-  },
+  (() => {
+    const base = { gas: 'He', n: 1, hold: 'P', V: 20, T: 300.15, P0: 101.325 };
+    const a = rig('ra', { x: 20, y: 25 }, { cyls: [{ id: 'a', label: 'Cylinder A', ...base }], vmax: 60, compact: true, w: 34, show: { gauge: false } });
+    const b = rig('rb', { x: 58, y: 25 }, { cyls: [{ id: 'a', label: 'Cylinder B', ...base }], temps: [27, 50, 100, 200, 327, 400], tempList: 'C', tempStart: 1, vmax: 60, compact: true, w: 34, show: { gauge: false } });
+    return {
+      title: 'Which Scale',
+      prompt: 'Set Cylinder B\'s heater so that its volume is twice the volume of Cylinder A.',
+      widget,
+      table: gasTable({ fixtures: [a, b] }),
+      hints: [
+        'Turn Cylinder B\'s Heater dial and watch its volume beside Cylinder A\'s.',
+        'Compare the two volumes at each setting, and the temperature Cylinder B prints.',
+        'Count the temperature from where the particles stop, as the first bench showed.'
+      ],
+      check(state) {
+        const t = state.table;
+        if (Math.round(t.fixtures.rb.dials.temp.value) === 1) return { ok: false, notYet: true, msg: 'Cylinder B\'s heater is where it started: turn it and watch the volume.' };
+        const va = cylRead(t, 'ra', 0).V;
+        const vb = cylRead(t, 'rb', 0).V;
+        if (Math.abs(vb / va - 2) < 0.02) return { ok: true };
+        return { ok: false, msg: 'Cylinder B\'s volume is not yet twice Cylinder A\'s: divide one volume by the other at each setting.' };
+      },
+      ...STAGE_REWARDS[3]
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 5 */
-  {
-    title: 'A Sealed Tank',
-    prompt: 'By what factor does the pressure rise when a sealed tank is heated from 300 K to 450 K?',
-    pair: ['T', 'P'],
-    trendPlot: { xLabel: 'Temperature', xUnit: 'K', yLabel: 'Pressure', yUnit: 'kPa', xMin: 250, xMax: 650, yMin: 0, yMax: 550 },
-    controls: ['temp'],
-    temps: [300, 375, 450, 600], tempStart: 1, tempList: 'K',
-    ...BASE,
-    vmax: 10, gaugeMax: 700,
-    rigs: [cyl('a', 'TANK A', 'N2', { V: 10, hold: 'V', note: 'a sealed rigid tank of nitrogen' })],
-    widget: { type: 'decimal', label: 'The pressure is multiplied by', min: 0.5, max: 3, step: 0.1 },
-    hints: [
-      'Set the temperature dial to 300 K and read the pressure, then set it to 450 K and read it again.',
-      'Compare the two pressures as a ratio, and the two kelvin temperatures as a ratio.',
-      'Divide the pressure at 450 K by the pressure at 300 K to find the factor.'
-    ],
-    check(state) {
-      if (state.decimal === null || state.decimal === undefined) return { ok: false, notYet: true, msg: 'Set the factor.' };
-      const a = readOf(STAGES[4], 'a', { temp: 1 });
-      const b = readOf(STAGES[4], 'a', { temp: 3 });
-      const want = Math.round((b.P / a.P) * 10) / 10;
-      if (Math.abs(state.decimal - want) < 0.05) return { ok: true };
-      if (state.decimal <= 1) return { ok: false, msg: 'Heating a sealed tank raises the reading, so the factor must be larger than one.' };
-      return { ok: false, msg: 'Read the pressure at both temperatures on the gauge and divide the larger by the smaller.' };
-    },
-    reward: {
-      log: 'The pressure follows the kelvin temperature.',
-      title: "Gay-Lussac's Law",
-      body: "At a fixed volume, the pressure of a gas is proportional to its kelvin temperature, so heating a sealed tank raises the pressure in step. This is Gay-Lussac's law."
-    }
-  },
+  (() => {
+    const r = rig(RIG, { x: 36, y: 25 }, {
+      cyls: [{ id: 'a', label: 'Tank A', gas: 'N2', n: 1, hold: 'V', V: 10, T: 300 }], temps: [300, 375, 450, 600], tempList: 'K', tempStart: 1, vmax: 10, plot: { x: 'T', y: 'P' }
+    });
+    const token = (id, label, x) => ({ id, label, at: { x, y: 56 }, r: 7 });
+    return {
+      title: 'A Sealed Tank',
+      prompt: 'Predict what the gauge does when the sealed tank is heated from 300 K to 450 K, then test it.',
+      widget,
+      table: gasTable({
+        fixtures: [r],
+        prediction: {
+          slot: { id: 'predict', label: 'The gauge, at 450 K', at: { x: 111, y: 38 }, size: { w: 30, h: 12 } },
+          tokens: [token('half', 'Half again', 83), token('double', 'Doubles', 111), token('quarter', 'A quarter more', 139)]
+        }
+      }, { recorder: { at: { x: 111, y: 20 }, size: { w: 38, h: 22 }, xLabel: 'Temperature', xUnit: 'K', yLabel: 'Gauge', yUnit: 'kPa' } }),
+      hints: [
+        'Place a prediction, then turn the Heater dial to 450 K and press Record.',
+        'Compare the gauge at 450 K with the gauge at 300 K.',
+        'Divide the later gauge reading by the first and compare the result with your prediction.'
+      ],
+      check(state) {
+        const t = state.table;
+        const token = t.prediction.token;
+        if (!token) return { ok: false, notYet: true, msg: 'Place a prediction first.' };
+        const ratio = rigAt(t, RIG, { temp: 3 })[0].P / rigAt(t, RIG, { temp: 1 })[0].P;
+        const want = Math.abs(ratio - 1.5) < 0.03 ? 'half' : Math.abs(ratio - 2) < 0.03 ? 'double' : 'quarter';
+        if (token === want) return { ok: true };
+        if (t.prediction.tested) return { ok: false, msg: 'The gauge did not change by that factor: compare its reading at 450 K with its reading at 300 K.' };
+        return { ok: false, msg: 'Turn the Heater dial to 450 K, press Record, and compare the gauge with your prediction.' };
+      },
+      ...STAGE_REWARDS[4]
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 6 */
-  {
-    title: 'Feeding the Piston',
-    prompt: 'What happens to gas volume when you double the amount of gas at constant temperature and pressure?',
-    pair: ['n', 'V'],
-    trendPlot: { xLabel: 'Amount', xUnit: 'mol', yLabel: 'Room', yUnit: 'L', xMin: 0, xMax: 5, yMin: 0, yMax: 150 },
-    controls: ['add', 'remove', 'reset'],
-    step: 1, nMin: 1, nMax: 4,
-    ...BASE,
-    vmax: 100, gaugeMax: 200,
-    rigs: [cyl('a', 'CYLINDER A', 'Ne', { hold: 'P', P0: 101.3, note: 'a cylinder of neon under a free piston' })],
-    widget: {
-      type: 'choice', label: 'Twice the gas',
-      options: [
-        choice('doubles', 'The volume doubles'),
-        choice('halves', 'The volume halves'),
-        choice('same', 'The volume stays the same'),
-        choice('triples', 'The volume becomes three times as large')
-      ]
-    },
-    hints: [
-      'Add gas one step at a time and read the volume before and after each.',
-      'Compare the volume with one mole in the cylinder against the volume with two.',
-      'Divide the larger volume by the smaller to find the factor, and compare it with the factor the amount changed by.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Choose what happens.' };
-      if (state.choice === 'doubles') return { ok: true };
-      if (state.choice === 'halves') return { ok: false, msg: 'Gas fed in under a free piston pushes it out, so the room cannot shrink.' };
-      if (state.choice === 'same') return { ok: false, msg: 'The piston moves when gas is added; read the volume before and after.' };
-      return { ok: false, msg: 'Compare the amounts on the plate before and after: the amount did not go up by that factor.' };
-    },
-    reward: {
-      log: 'Twice the gas fills twice the room.',
-      title: "Avogadro's Law",
-      body: "At the same temperature and pressure, the volume of a gas is proportional to the amount of gas: equal amounts fill equal volumes. This is Avogadro's law."
-    }
-  },
+  (() => {
+    const r = rig(RIG, { x: 36, y: 25 }, {
+      cyls: [{ id: 'a', label: 'Cylinder A', gas: 'Ne', hold: 'P', V: 20, T: 300, P0: 101.325 }], amounts: [1, 1.5, 2, 2.5, 3], amountStart: 1, vmax: 80
+    });
+    return {
+      title: 'Feeding the Piston',
+      prompt: 'Sort each reading by whether it changes when gas is added under the weighted piston.',
+      widget,
+      table: gasTable({
+        pieces: [['pressure', 'PRESSURE'], ['volume', 'VOLUME'], ['temp', 'TEMPERATURE']].map(([id, label], i) => chip(id, label, { x: 11 + i * 17, y: 52 })),
+        fixtures: [r],
+        zones: {
+          trays: [
+            { id: 'changes', label: 'Changes', at: { x: 101, y: 17 }, size: { w: 58, h: 21 }, cell: 19 },
+            { id: 'stays', label: 'Stays the same', at: { x: 101, y: 52 }, size: { w: 58, h: 21 }, cell: 19 }
+          ]
+        }
+      }),
+      hints: [
+        'Turn the Gas in dial and watch every reading on the cylinder.',
+        'Compare which readings change and which stay the same as gas is added under the weighted piston.',
+        'Put each reading in the tray for what it did while you added gas.'
+      ],
+      check(state) {
+        const t = state.table;
+        const ids = ['pressure', 'volume', 'temp'];
+        if (!ids.every(id => whereIs(t, id) === 'changes' || whereIs(t, id) === 'stays')) return { ok: false, notYet: true, msg: 'Put every reading in a tray.' };
+        const a = rigAt(t, RIG, { amount: 1 })[0];
+        const b = rigAt(t, RIG, { amount: 5 })[0];
+        const changes = { pressure: Math.abs(a.P - b.P) > 1e-6, volume: Math.abs(a.V - b.V) > 1e-6, temp: Math.abs(a.T - b.T) > 1e-6 };
+        for (const id of ids) {
+          if (whereIs(t, id) !== (changes[id] ? 'changes' : 'stays')) return { ok: false, msg: `Add gas again and watch the ${id === 'temp' ? 'temperature' : id}: does it change?` };
+        }
+        return { ok: true };
+      },
+      ...STAGE_REWARDS[5]
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 7 */
-  {
-    title: 'Everything at Once',
-    prompt: 'What volume does Cylinder A reach if its pressure is halved while temperature rises to 450 K?',
-    controls: ['temp'],
-    temps: [300, 400, 500, 600], tempStart: 1, tempList: 'K',
-    ...BASE,
-    show: { knocks: false },
-    vmax: 100, gaugeMax: 200,
-    rigs: [
-      cyl('a', 'CYLINDER A', 'N2', { n: 0.802, V: 20, hold: 'V', follow: false, note: 'a cylinder of nitrogen as it stands' }),
-      cyl('b', 'CYLINDER B', 'N2', { n: 0.802, hold: 'P', P0: 50, note: 'the same gas under half the weight' })
-    ],
-    widget: { type: 'number', label: 'Volume of A, in litres', min: 20, max: 100, step: 5 },
-    hints: [
-      'Turn the temperature dial and read the volume of Cylinder B at each of its settings.',
-      'Compare Cylinder A with Cylinder B at the same temperature to see what halving the pressure does, then see what the temperature does to B.',
-      'Take the volume of A and multiply it by the factor the pressure change brings and by the ratio of the two kelvin temperatures.'
-    ],
-    check(state) {
-      if (state.number === null || state.number === undefined) return { ok: false, notYet: true, msg: 'Set the volume.' };
-      const a = readOf(STAGES[6], 'a', {});
-      const want = a.V * (a.P / 50) * (450 / a.T);
-      if (Math.abs(state.number - want) < 2.5) return { ok: true };
-      return { ok: false, msg: 'Two things change here, the pressure and the temperature, and each moves the volume on its own; account for both.' };
-    },
-    reward: {
-      log: 'Pressure and temperature, together.',
-      title: 'Combined Gas Law',
-      body: 'When pressure, volume and temperature all change, the quantity pressure times volume over kelvin temperature stays the same for a fixed amount of gas. This is the combined gas law, and the laws before it are the cases where one quantity is held fixed.'
-    }
-  },
+  (() => {
+    const a = rig('ra', { x: 20, y: 25 }, { cyls: [{ id: 'a', label: 'Cylinder A', gas: 'N2', n: 0.802, hold: 'V', V: 20, T: 300 }], vmax: 80, compact: true, w: 34, show: { kelvin: true, temperature: false } });
+    const b = rig('rb', { x: 58, y: 25 }, { cyls: [{ id: 'a', label: 'Cylinder B', gas: 'N2', n: 0.802, hold: 'dial', V: 20, T: 450 }], volumes: BIG, volumeStart: 1, vmax: 80, compact: true, w: 34, show: { kelvin: true, temperature: false } });
+    return {
+      title: 'Everything at Once',
+      prompt: 'Set Cylinder B\'s piston so its gauge reads half of Cylinder A\'s while it stays at 450 K.',
+      widget,
+      table: gasTable({ fixtures: [a, b] }),
+      hints: [
+        'Turn Cylinder B\'s Piston dial and watch its gauge beside Cylinder A\'s.',
+        'Compare Cylinder B\'s gauge with half of Cylinder A\'s at each setting.',
+        'Stop on the setting where Cylinder B\'s gauge reads half of Cylinder A\'s.'
+      ],
+      check(state) {
+        const t = state.table;
+        if (Math.round(t.fixtures.rb.dials.volume.value) === 1) return { ok: false, notYet: true, msg: 'Cylinder B\'s piston is where it started: turn it and watch its gauge.' };
+        const pa = cylRead(t, 'ra', 0).P;
+        const pb = cylRead(t, 'rb', 0).P;
+        if (Math.abs(pb - pa / 2) < 0.006 * pa) return { ok: true };
+        return { ok: false, msg: pb > pa / 2 ? 'Cylinder B\'s gauge is still above half of Cylinder A\'s: give the gas more room.' : 'Cylinder B\'s gauge is below half of Cylinder A\'s: give the gas less room.' };
+      },
+      ...STAGE_REWARDS[6]
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 8 */
-  {
-    title: 'Four Records',
-    prompt: 'Sort each plotted record by the variable that was held constant during measurement.',
-    controls: [],
-    rigs: [
-      rec('a', 'RECORD A', { x: 'V', y: 'P', fixed: { n: 1, T: 300 }, xmin: 2, xmax: 40, ymin: 0, ymax: 1300, xticks: [2, 10, 20, 30, 40] }),
-      rec('b', 'RECORD B', { x: 'T', y: 'V', fixed: { n: 1, P: 101.3 }, xmin: 0, xmax: 600, ymin: 0, ymax: 50, xticks: [0, 200, 400, 600] }),
-      rec('c', 'RECORD C', { x: 'T', y: 'P', fixed: { n: 1, V: 10 }, xmin: 0, xmax: 600, ymin: 0, ymax: 500, xticks: [0, 200, 400, 600] }),
-      rec('d', 'RECORD D', { x: 'n', y: 'V', fixed: { T: 300, P: 101.3 }, xmin: 0, xmax: 4, ymin: 0, ymax: 100, xticks: [0, 1, 2, 3, 4] })
-    ],
-    widget: {
-      type: 'bins', label: 'Held fixed',
-      rows: [{ id: 'a', label: 'Record A' }, { id: 'b', label: 'Record B' }, { id: 'c', label: 'Record C' }, { id: 'd', label: 'Record D' }],
-      bins: [
-        { id: 'temperature', label: 'Temperature' },
-        { id: 'pressure', label: 'Pressure' },
-        { id: 'volume', label: 'Volume' },
-        { id: 'both', label: 'Pressure and temperature' }
-      ]
-    },
-    hints: [
-      'Read the two quantities each record plots against each other.',
-      'Compare the quantity a record leaves out of its axes with what the gas laws say moves with the two it plots.',
-      'For each record, say which law draws that shape, then name the quantity that law holds fixed.'
-    ],
-    check(state) {
-      const need = ['a', 'b', 'c', 'd'];
-      if (need.some(id => !state.bins[id])) return { ok: false, notYet: true, msg: 'File all four records.' };
-      const want = { a: 'temperature', b: 'pressure', c: 'volume', d: 'both' };
-      if (need.every(id => state.bins[id] === want[id])) return { ok: true };
-      return { ok: false, msg: 'Check each record against the law that draws that shape, and ask what that law holds fixed.' };
-    },
-    reward: {
-      log: 'Four changes, one gas.',
-      title: 'One Gas, Four Changes',
-      body: 'Each record is the same gas answering a different change: a curve when only the volume and pressure move, and straight lines through zero when the pressure or the volume is held. Together they are one relation between pressure, volume, temperature and amount.'
-    }
-  }
+  (() => {
+    const tray = (id, label, x) => ({ id, label, at: { x, y: 24 }, size: { w: 34, h: 28 }, cell: 25 });
+    return {
+      title: 'Four Records',
+      prompt: 'Put each plotted record in the tray for the quantity it held steady.',
+      widget,
+      table: gasTable({
+        pieces: RECORDS.map((r, i) => curveCard(r.id, `RECORD ${r.id.toUpperCase()}`, { x: 19 + i * 36, y: 51 }, r.spec)),
+        zones: {
+          trays: [tray('temperature', 'Temperature', 19), tray('pressure', 'Pressure', 55), tray('volume', 'Volume', 91), tray('both', 'Temperature and pressure', 127)]
+        }
+      }),
+      hints: [
+        'Read the two quantities on the axes of each record.',
+        'Find the quantities of a gas that are not on an axis, and ask which of them the record keeps steady.',
+        'Put each record in the tray for the quantity or quantities that stayed the same while the others were plotted.'
+      ],
+      check(state) {
+        const t = state.table;
+        const ids = RECORDS.map(r => r.id);
+        if (!ids.every(id => (t.pieces[id].zone || '').startsWith('tray:'))) return { ok: false, notYet: true, msg: 'Put every record in a tray.' };
+        for (const r of RECORDS) {
+          if (whereIs(t, r.id) !== r.held) return { ok: false, msg: 'Read the two axes of that record and ask which of pressure, volume and temperature is left out, and which of those the curve keeps steady.' };
+        }
+        return { ok: true };
+      },
+      ...STAGE_REWARDS[7]
+    };
+  })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Turn the Piston dial, then set the marker.'],
+  2: ['Place a prediction, turn the Piston dial,', 'then press Record.'],
+  3: ['Turn the Heater dial to warm the gas.'],
+  4: ['Turn Cylinder B\'s Heater dial.'],
+  5: ['Place a prediction, turn the Heater dial,', 'then press Record.'],
+  6: ['Turn the Gas in dial; drag each chip into a tray.'],
+  7: ['Turn Cylinder B\'s Piston dial.'],
+  8: ['Drag each record into a tray.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -461,35 +486,45 @@ export const PRACTICE = [
   }
 ];
 
+
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct actions,
+   by drag and by two taps. Nothing here says what a reading is.
    ------------------------------------------------------------------ */
-function blankState() { return {}; }
+
+const put = (piece, to) => ({ place: { piece, to } });
+const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
+const sort = spec => Object.entries(spec).map(([id, tray]) => put(id, `tray:${tray}`));
 
 export const SOLUTIONS = [
-  { choice: 'quadruples' },
-  { choice: 'hits' },
-  { choice: 'triples' },
-  { choice: 'motion' },
-  { decimal: 1.5 },
-  { choice: 'doubles' },
-  { number: 60 },
-  { bins: { a: 'temperature', b: 'pressure', c: 'volume', d: 'both' } }
+  [dial(RIG, 'volume', 1), dial(RIG, 'volume', 4), dial(RIG, 'volume', 1), dial('times', 'value', 4)],
+  [{ predict: 'twice' }, dial(RIG, 'volume', 2), { run: RIG }],
+  [dial(RIG, 'temp', 4)],
+  [dial('rb', 'temp', 5)],
+  [{ predict: 'half' }, dial(RIG, 'temp', 3), { run: RIG }],
+  [dial(RIG, 'amount', 5), ...sort({ volume: 'changes', pressure: 'stays', temp: 'stays' })],
+  [dial('rb', 'volume', 5)],
+  [...sort({ a: 'temperature', b: 'pressure', c: 'volume', d: 'both' })]
 ];
 
+/** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { choice: 'doubles' },
-  { choice: 'faster' },
-  { choice: 'doubles' },
-  { choice: 'wrong' },
-  { decimal: 2 },
-  { choice: 'triples' },
-  { number: 40 },
-  { bins: { a: 'pressure', b: 'temperature', c: 'volume', d: 'both' } }
+  [dial(RIG, 'volume', 1), dial('times', 'value', 2)],
+  [{ predict: 'half' }, dial(RIG, 'volume', 2), { run: RIG }],
+  [dial(RIG, 'temp', 3)],
+  [dial('rb', 'temp', 2)],
+  [{ predict: 'double' }, dial(RIG, 'temp', 3), { run: RIG }],
+  [dial(RIG, 'amount', 5), ...sort({ volume: 'changes', pressure: 'changes', temp: 'stays' })],
+  [dial('rb', 'volume', 3)],
+  [...sort({ a: 'pressure', b: 'temperature', c: 'volume', d: 'both' })]
 ];
 
+function blankState() { return {}; }
+
+/** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  return { ...blankAnswer(STAGES[i]), ...gasState(STAGES[i]), ...blankState(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -497,8 +532,13 @@ export function stateFor(i, overrides) {
    ================================================================== */
 
 export function mount(container, ctx) {
-  return mountGas(container, ctx, { STAGES, DEBRIEF, toolNoteFor, blankState });
+  const runner = createRunner(container, ctx, {
+    STAGES, DEBRIEF, blankState, toolNoteFor,
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
+  });
+  runner.start();
+  return { dispose: () => runner.dispose() };
 }
 
-/* Exported for `verify:learn`, which holds every graded figure to the real tables. */
-export const CHECKS = { readOf, GASES, R };
+/* Exported for `verify:learn`, which holds every graded figure to the planners. */
+export { rigAt, cylRead, knocks, recordCurve };
