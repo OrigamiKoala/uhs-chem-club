@@ -82,7 +82,7 @@ const HIGH_MSG = 'An electron is sitting higher on the ladder than it needs to b
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   (() => {
-    const rack = moRack('a', 'H2', { x: 62, y: 21 }, { live: false, merged: false, tags: { u1s: '1', g1s: '2' }, size: { w: 86, h: 42 } });
+    const rack = moRack('a', 'H2', { x: 62, y: 18.5 }, { live: false, merged: false, tags: { u1s: '1', g1s: '2' }, size: { w: 84, h: 37 } });
     return {
       title: 'Two Become Two',
       briefing: {
