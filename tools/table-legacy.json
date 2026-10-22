@@ -2,7 +2,6 @@
   "note": "Quests not yet converted to a tabletop (plan docs/plans/bench-tabletop.md). Converting a quest deletes its line; a new quest gets none. A quest not listed here is held to the converted rules by verify:table: at most a quarter of its stages may stay choice, each an unbuildable reading (widget.keep: reading).",
   "quests": [
     "unit02/boss-eater",
-    "unit02/q6-filling",
     "unit02/q7-pes",
     "unit02/q8-trends",
     "unit02/q9-absorb",

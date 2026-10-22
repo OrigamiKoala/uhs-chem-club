@@ -91,14 +91,14 @@ const rect = (r, kind, extra = {}) => ({ r, rect: RECTS[kind], ...extra });
 export const SHELLS_KIT = {
   id: SHELLS_KIT_ID,
   kinds: {
-    box: rect(3.2, 'box'),
+    box: rect(3, 'box'),
     up: { r: 6.5, tool: true },
     down: { r: 6.5, tool: true },
     lift: { r: 6.5, tool: true },
     etok: rect(7, 'etok'),
-    ccard: rect(7, 'ccard', { nojoin: true }),
+    ccard: rect(6.5, 'ccard', { nojoin: true }),
     tag: rect(7, 'tag', { nojoin: true }),
-    estrip: rect(9, 'estrip', { nojoin: true })
+    estrip: rect(8, 'estrip', { nojoin: true })
   },
   planJoin,
   /** Only a box is ever a target: a piece set down beside another piece is just set down. */
@@ -129,10 +129,10 @@ export function shellsTable(spec, { w = 150 } = {}) {
  */
 export function shelf(rackId, rows, at, { pre = null, locked = false, target = null, finder = null, show = null, reach = false, readout = true, core = null, labels = true } = {}) {
   const n = rows.length;
-  const pitch = n >= 7 ? 6.5 : n >= 5 ? 8 : 12;
+  const pitch = n >= 7 ? 6.2 : n >= 5 ? 8 : 12;
   const maxBoxes = Math.max(...rows.map(r => boxesOf(rowOf(r).l)));
   const w = Math.max(62, 22 + maxBoxes * BOX_PITCH_X + 4 + (reach ? 22 : 0));
-  const head = readout ? 12 : 8;
+  const head = readout ? 10 : 8;
   const h = Math.round((head + n * pitch + 4) * 10) / 10;
   const x0 = at.x - w / 2;
   const cx = x0 + 22 + (maxBoxes * BOX_PITCH_X) / 2;
@@ -159,7 +159,7 @@ export function shelf(rackId, rows, at, { pre = null, locked = false, target = n
   });
   return {
     fixture: {
-      id: `shelf-${rackId}`, kind: 'shelf', label: 'Rack', at: { ...at }, size: { w, h }, noRun: true, dials: {},
+      id: `shelf-${rackId}`, kind: 'shelf', label: ' ', at: { ...at }, size: { w, h }, noRun: true, dials: {},
       props: { backdrop: true, rack: rackId, rows, ...(show ? { show } : {}), ...(finder ? { finder } : {}), ...(reach ? { reach: true } : {}), ...(core ? { core } : {}), readout, labels }
     },
     boxes,
@@ -226,9 +226,9 @@ export function addressStrip(id, at, { fields = ['n', 'l', 'ml', 'ms'], show = f
 }
 
 /** The magnet. `sample` is an element or ion symbol (`MEASURED`): it reports that REAL sample. Without one, `rack` names the rack it reports. */
-export function magnet(id, at, { sample = null, rack = 'rack', size = { w: 30, h: 32 }, label = 'Magnet', runLabel = null } = {}) {
+export function magnet(id, at, { sample = null, rack = 'rack', size = { w: 30, h: 36 }, label = null, runLabel = null } = {}) {
   return {
-    id, kind: 'magnet', label, at: { ...at }, size, runLabel: runLabel || (sample != null ? 'Test Sample' : 'Test Rack'),
+    id, kind: 'magnet', label: label || (sample != null ? 'Sample' : 'Rack'), at: { ...at }, size, runLabel: runLabel || (sample != null ? 'Test Sample' : 'Test Rack'),
     dials: { pull: { min: 0, max: 9, step: 1, value: 0 } },
     props: { hidden: ['pull'], ...(sample != null ? { sample } : { rack }) }
   };

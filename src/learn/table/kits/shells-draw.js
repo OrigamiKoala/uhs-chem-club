@@ -49,11 +49,11 @@ function arrow(ctx, x, y, len, up, color) {
    ------------------------------------------------------------------ */
 
 export const RECTS = Object.freeze({
-  box: { hw: 3.2, hh: 3.2 },
+  box: { hw: 3, hh: 3 },
   etok: { hw: 17, hh: 6.5 },
-  ccard: { hw: 14, hh: 6.5 },
+  ccard: { hw: 11, hh: 6.5 },
   tag: { hw: 8, hh: 6.5 },
-  estrip: { hw: 12, hh: 9 }
+  estrip: { hw: 8, hh: 8 }
 });
 
 function slab(ctx, o, hw, hh, tone = '#2a2620') {
@@ -239,10 +239,10 @@ function paintShelf(ctx, f, state, b) {
   // The reading, always on the plate.
   if (f.props.readout !== false) {
     const core = f.props.core && state.fixtures[f.props.core]?.dials.core.value >= 1;
-    say(ctx, `PLACED ${read.total}`, F.x(2), F.y(5.6), sz, { color: PHOS, weight: 700 });
-    say(ctx, `ALONE IN A BOX ${read.unpaired}`, F.x(f.size.w - 2), F.y(5.6), sz, { align: 'right', color: PHOS, weight: 700 });
+    say(ctx, `PLACED ${read.total}`, F.x(2), F.y(4.2), sz, { color: PHOS, weight: 700 });
+    say(ctx, `ALONE IN A BOX ${read.unpaired}`, F.x(f.size.w - 2), F.y(4.2), sz, { align: 'right', color: PHOS, weight: 700 });
     const written = core ? read.short : read.config;
-    say(ctx, written || 'NOTHING PLACED', F.x(f.size.w / 2), F.y(10.4), F.size(2.8, 7), { align: 'center', color: written ? DUST : DIM, weight: 600, maxW: F.len(f.size.w - 4) });
+    say(ctx, written || 'NOTHING PLACED', F.x(f.size.w / 2), F.y(8.4), F.size(2.6, 7), { align: 'center', color: written ? DUST : DIM, weight: 600, maxW: F.len(f.size.w - 4) });
   }
   if (f.props.finder) {
     const lit = finderLight(state, f.props.finder);
@@ -304,27 +304,27 @@ function paintMagnet(ctx, f, state, b) {
   const read = magnetRead(state, f.id);
   const w = f.size.w;
   const cx = F.x(w / 2);
-  const top = F.y(5.5);
-  const r = Math.min(F.len(w * 0.2), F.len(6));
+  const top = F.y(7);
+  const r = Math.min(F.len(w * 0.17), F.len(4.6));
   ctx.strokeStyle = STEEL;
-  ctx.lineWidth = Math.max(2, F.sc * 1.4);
+  ctx.lineWidth = Math.max(2, F.sc * 1.2);
   ctx.beginPath();
-  ctx.moveTo(cx - r, top + r * 1.6); ctx.lineTo(cx - r, top + r);
+  ctx.moveTo(cx - r, top + r * 1.5); ctx.lineTo(cx - r, top + r);
   ctx.arc(cx, top + r, r, Math.PI, 0);
-  ctx.lineTo(cx + r, top + r * 1.6);
+  ctx.lineTo(cx + r, top + r * 1.5);
   ctx.stroke();
   ctx.lineWidth = 1;
   ctx.fillStyle = DUST;
-  ctx.fillRect(cx - r - F.sc, top + r * 1.6, 2 * F.sc, 1.4 * F.sc);
-  ctx.fillRect(cx + r - F.sc, top + r * 1.6, 2 * F.sc, 1.4 * F.sc);
-  let l1 = read.target === 'sample' ? 'SAMPLE NOT TESTED' : 'RACK NOT TESTED';
+  ctx.fillRect(cx - r - F.sc, top + r * 1.5, 2 * F.sc, 1.3 * F.sc);
+  ctx.fillRect(cx + r - F.sc, top + r * 1.5, 2 * F.sc, 1.3 * F.sc);
+  let l1 = read.target === 'sample' ? 'NOT TESTED' : 'NOT TESTED';
   let l2 = '';
   if (read.tested) {
     l1 = read.pull > 0 ? 'PULLED IN' : 'PUSHED OUT';
     l2 = read.pull > 0 ? `STRENGTH ${read.pull}` : 'SLIGHTLY';
   }
-  say(ctx, l1, cx, top + r * 3.2, F.size(2.3, 7), { align: 'center', color: read.tested ? AMBER : DIM, weight: 700, maxW: F.len(w - 3) });
-  if (l2) say(ctx, l2, cx, top + r * 3.2 + F.size(2.3, 7) * 1.5, F.size(2.3, 7), { align: 'center', color: AMBER, weight: 700, maxW: F.len(w - 3) });
+  say(ctx, l1, cx, F.y(18.2), F.size(2.4, 7), { align: 'center', color: read.tested ? AMBER : DIM, weight: 700, maxW: F.len(w - 3) });
+  if (l2) say(ctx, l2, cx, F.y(22.4), F.size(2.4, 7), { align: 'center', color: AMBER, weight: 700, maxW: F.len(w - 3) });
 }
 
 function paintFixture(ctx, f, state, b) {

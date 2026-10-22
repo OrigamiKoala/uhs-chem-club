@@ -2397,16 +2397,67 @@ async function checkDrawn(q, mod) {
       if (/[+]/.test(sym)) continue;
       if (EL.unpairedOfConfig(EL.groundConfig(EL.zOf(sym))) !== m) fail(`the magnet's measured count for ${sym} disagrees with its ground-state configuration`);
     }
-    // Chromium: the rule's answer and the measured one differ, and the graded arrangement is the measured one.
-    const cr = EL.readRack(q6.SOLUTIONS[7].rack);
-    if (cr.pull !== EL.MEASURED.Cr) fail('unit02/q6-filling stage 8: the graded arrangement does not match the measured pull of chromium');
-    const rule = EL.readRack(q6.MISSES[7].rack);
-    if (rule.pull === EL.MEASURED.Cr) fail('unit02/q6-filling stage 8: the rule-following arrangement already matches the magnet, so the stage teaches nothing');
-    if (EL.readRack(q6.SOLUTIONS[3].rack).counts['4s'] !== 1) fail('unit02/q6-filling stage 4: the graded nineteenth electron is not in 4s');
-    const strips = q6.STAGES[5].rigs;
-    for (const s of strips) {
-      const want = EL.blockOf(EL.zOf(s.sym));
-      if (q6.SOLUTIONS[5].bins[s.id] !== want) fail(`unit02/q6-filling stage 6: ${s.sym} is graded into the wrong block`);
+    // THE SIXTH LANTERNFALL TABLE (`q6-filling`, the address and filling kit): every graded rack is `electrons.js`'s own reading.
+    const SHL = await import('../src/learn/table/kits/shells.js');
+    const same6 = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+    const holds6 = (c, what) => { if (!c) fail(what); };
+    const start6 = i => TABLE.createTable(q6.STAGES[i].table, q6.STAGES[i].title);
+    const end6 = i => TABLE.runScript(start6(i), q6.SOLUTIONS[i], { strict: true });
+    const miss6 = i => TABLE.runScript(start6(i), q6.MISSES[i], { strict: true });
+    // 1. carbon's six electrons, lowest rows first
+    same6(SHL.readOf(end6(0), 'rack').counts, EL.groundConfig(6), 'unit02/q6-filling stage 1 (carbon\'s rack)');
+    holds6(SHL.readOf(end6(0), 'rack').laddered, 'unit02/q6-filling stage 1: the graded rack is not laddered');
+    holds6(!SHL.readOf(miss6(0), 'rack').laddered && SHL.readOf(miss6(0), 'rack').total === 6, 'unit02/q6-filling stage 1: the miss is not six electrons with a lower row left open');
+    // 2. Hund: carbon's p electrons in separate boxes pull as hard as the sample; paired in one box they do not
+    {
+      const t = end6(1);
+      same6(SHL.rackPull(t, 'rack'), EL.MEASURED.C, 'unit02/q6-filling stage 2 (the rack\'s pull)');
+      same6(EL.unpairedOfConfig(EL.groundConfig(6)), EL.MEASURED.C, 'unit02/q6-filling stage 2 (Hund\'s rule and the magnet agree for carbon)');
+      holds6(SHL.rackPull(miss6(1), 'rack') !== EL.MEASURED.C, 'unit02/q6-filling stage 2: paired p electrons already match the magnet');
+      same6(SHL.rackOf(start6(1), 'rack'), EL.rackFor(4), 'unit02/q6-filling stage 2 (the 1s and 2s electrons already in place)');
+      holds6(TABLE.apply(start6(1), { place: { piece: 'lift', to: `piece:${SHL.boxPieceId('rack', '1s', 0)}` } }).last.joined === false, 'unit02/q6-filling stage 2: a locked electron can be lifted out');
+      same6(TABLE.apply(t, { run: 'msample' }).fixtures.msample.dials.pull.value, 1 + EL.MEASURED.C, 'unit02/q6-filling stage 2 (Test Sample)');
+    }
+    // 3. oxygen's configuration, as the rack writes it
+    {
+      const t = end6(2);
+      same6(SHL.readOf(t, 'rack').config, EL.configString(EL.groundConfig(8)), 'unit02/q6-filling stage 3 (oxygen\'s configuration)');
+      same6(t.pieces.p4.label, SHL.readOf(t, 'rack').config, 'unit02/q6-filling stage 3 (the card in the slot)');
+      same6(t.pieces.p4.zone, 'slot:reads', 'unit02/q6-filling stage 3 (the slot)');
+      const cards = Object.values(start6(2).pieces).filter(p => p.kind === 'ccard').map(p => p.label);
+      same6(cards.filter(c => c === EL.configString(EL.groundConfig(8))).length, 1, 'unit02/q6-filling stage 3 (exactly one card reads what the rack reads)');
+    }
+    // 4. potassium's last electron goes in 4s, below 3d
+    same6(SHL.readOf(end6(3), 'rack').counts, EL.groundConfig(19), 'unit02/q6-filling stage 4 (potassium\'s rack)');
+    holds6(EL.LADDER.findIndex(r => r.id === '4s') < EL.LADDER.findIndex(r => r.id === '3d'), 'unit02/q6-filling stage 4: 4s is not below 3d on the ladder');
+    same6(q6.ROWS.indexOf('4s') < q6.ROWS.indexOf('3d'), true, 'unit02/q6-filling stage 4 (the rack\'s rows put 4s below 3d)');
+    // 5. iron in short form
+    {
+      const t = end6(4);
+      same6(SHL.readOf(t, 'rack').short, EL.shortString(EL.groundConfig(26)), 'unit02/q6-filling stage 5 (iron in short form)');
+      same6(t.pieces.ar.label, '[Ar] 4s² 3d⁶', 'unit02/q6-filling stage 5 (the card)');
+      same6(t.fixtures.core.dials.core.value, 1, 'unit02/q6-filling stage 5 (the core switch)');
+      same6(SHL.readOf(t, 'rack').counts, EL.groundConfig(26), 'unit02/q6-filling stage 5 (iron\'s rack)');
+    }
+    // 6. every strip is sorted by where its last electron went
+    for (const sym of q6.SYMS) {
+      const want = EL.blockOf(EL.zOf(sym));
+      same6(end6(5).pieces[`e-${sym.toLowerCase()}`].zone, `tray:${want}`, `unit02/q6-filling stage 6 (${sym} is in the ${want} block)`);
+    }
+    same6(q6.SYMS.map(s => EL.blockOf(EL.zOf(s))), ['s', 'p', 'd', 'f', 'p', 'd'], 'unit02/q6-filling stage 6 (the blocks)');
+    // 7. Fe2+ loses its 4s electrons; the magnet measures the real ion and the rack agrees
+    {
+      const t = end6(6);
+      same6(SHL.readOf(t, 'rack').counts, Object.fromEntries(Object.entries(EL.groundConfig(26)).filter(([k]) => k !== '4s')), 'unit02/q6-filling stage 7 (iron(II)\'s rack)');
+      same6(SHL.rackPull(t, 'rack'), EL.MEASURED['Fe2+'], 'unit02/q6-filling stage 7 (the rack and the magnet agree for iron(II))');
+      holds6(SHL.readOf(miss6(6), 'rack').counts['4s'] === 2, 'unit02/q6-filling stage 7: the miss does not leave the 4s electrons behind');
+    }
+    // 8. chromium: the rule's answer and the measured one differ, and the graded arrangement is the measured one
+    {
+      same6(SHL.rackPull(end6(7), 'rack'), EL.MEASURED.Cr, 'unit02/q6-filling stage 8 (the graded pull)');
+      holds6(SHL.rackPull(miss6(7), 'rack') !== EL.MEASURED.Cr, 'unit02/q6-filling stage 8: the rule-following arrangement already matches the magnet, so the stage teaches nothing');
+      same6(SHL.readOf(end6(7), 'rack').total, 24, 'unit02/q6-filling stage 8 (chromium has 24 electrons)');
+      same6(SHL.readOf(miss6(7), 'rack').counts, { ...EL.groundConfig(24), '4s': 2, '3d': 4 }, 'unit02/q6-filling stage 8 (the rule\'s arrangement)');
     }
   }
   if (q7) {
