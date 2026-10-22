@@ -664,12 +664,20 @@ export function buildDetectorMast(w, site) {
   g.add(mast);
   k.cable(g, [[3.4, 0.3, AZ], [5.0, 0.2, -4.3], [5.7, 0.4, -4.6], [5.8, 5.0, -4.6]], 0.03);
 
+  // The specimen rack: two shelves of cased specimens on the platform's right-hand end, where the cards for the table come from.
+  for (const y of [0.55, 1.05]) k.box(g, [1.3, 0.05, 0.5], M.darkSteel, [4.3, y, -2.9]);
+  for (const x of [3.7, 4.9]) k.box(g, [0.06, 1.1, 0.5], M.darkSteel, [x, 0.58, -2.9]);
+  for (let i = 0; i < 4; i++) k.box(g, [0.24, 0.28, 0.36], i % 2 ? M.caseDark : M.case, [3.95 + i * 0.3, 0.72, -2.9]);
+  for (let i = 0; i < 3; i++) k.box(g, [0.26, 0.26, 0.36], M.caseDark, [4.0 + i * 0.32, 1.2, -2.9]);
+  k.tag(g, 'SPEC 7', { w: 0.46, h: 0.17 }, [4.3, 1.42, -2.64]);
+
   // The work lantern, on a post at the right-hand front corner with an arm over the bench.
   k.lampMast(g, 3.3, 0.9, { h: 3.6, arm: [-2.6, -0.6] });
 
   const colliders = [
     { lx: 0, lz: PZ, hw: 4.5, hd: 2.3 },
     { lx: -4.3, lz: AZ, hw: 0.5, hd: 0.4 },
+    { lx: 4.3, lz: -2.9, hw: 0.65, hd: 0.3 },
     { lx: 6.2, lz: -4.6, hw: 0.95, hd: 0.95 },
     { lx: 3.3, lz: 0.9, r: 0.25 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
@@ -741,6 +749,18 @@ export function buildTileStore(w, site) {
   camp.position.set(9.5, 0, -5.5);
   g.add(camp);
 
+  // THE SPRING SCALE: a tripod at the store's left end with a spring balance hung from its head, where the
+  // cards for the table are pulled and weighed.
+  {
+    const TX = -3.9, TZ = -1.5;
+    for (const a of [0, 2.094, 4.189]) k.strut(g, [TX, 1.7, TZ], [TX + Math.cos(a + 0.5) * 0.7, 0.03, TZ + Math.sin(a + 0.5) * 0.7], 0.025, M.darkSteel);
+    k.cyl(g, [0.025, 0.025, 0.5, 8], M.steel, [TX, 1.4, TZ]);
+    k.cyl(g, [0.07, 0.07, 0.4, 12], M.case, [TX, 1.05, TZ]);
+    k.strut(g, [TX, 0.85, TZ], [TX, 0.6, TZ], 0.01, M.rubber);
+    k.box(g, [0.18, 0.18, 0.18], M.darkSteel, [TX, 0.5, TZ]);
+    k.tag(g, 'GAUGE 8', { w: 0.48, h: 0.18 }, [TX, 1.4, TZ + 0.2]);
+  }
+
   // The work lantern, on a boom out of the racking over the bench.
   k.box(g, [0.1, 0.1, 3.4], M.darkSteel, [0.8, 3.35, -1.2]);
   k.lamp(g, 0.8, 3.15, 0.4);
@@ -749,6 +769,7 @@ export function buildTileStore(w, site) {
     { lx: 0, lz: RZ, hw: 3.75, hd: 0.4 },
     { lx: -4.9, lz: -0.9, hw: 0.55, hd: 0.45 }, { lx: 4.9, lz: -0.9, hw: 0.55, hd: 0.45 },
     { lx: -5.2, lz: -2.0, r: 0.35 },
+    { lx: -3.9, lz: -1.5, r: 0.45 },
     { lx: -5.8, lz: -2.4, r: 0.25 }, { lx: 5.8, lz: -2.4, r: 0.25 }, { lx: -5.8, lz: -6.8, r: 0.25 }, { lx: 5.8, lz: -6.8, r: 0.25 },
     { lx: 9.5 - 1.15, lz: -5.5 - 0.4, r: 1.2 }, { lx: 9.5 + 1.05, lz: -5.5 + 0.5, r: 1.0 }, { lx: 9.5 + 0.2, lz: -5.5 - 1.25, r: 0.4 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
@@ -805,6 +826,25 @@ export function buildWaterHole(w, site) {
   k.cyl(g, [0.1, 0.1, 0.3, 12], M.glass, [hx, 0.5, hz]);
   k.box(g, [0.5, 0.35, 0.4], M.darkSteel, [hx - 1.0, 0.55, hz + 1.3], null, true);
 
+  // THE SAMPLING WINCH: a post on the ice west of the hole with a hand winch on it, its line run up and over the tripod's pulley and down to the
+  // bucket. The bucket is drawn up here and the lake water in it is the field point: `[E]` takes a cuvette of it for the blank. A real piece of this
+  // host, behind and to the left of the bay.
+  {
+    const WX = -4.0, WZ = -4.1;
+    k.footing(g, WX, WZ, 0.3);
+    k.cyl(g, [0.05, 0.06, 1.05, 8], M.darkSteel, [WX, 0.55, WZ], null, true);
+    k.box(g, [0.5, 0.3, 0.36], M.caseDark, [WX, 1.18, WZ], null, true);
+    k.cyl(g, [0.11, 0.11, 0.34, 12], M.steel, [WX + 0.34, 1.18, WZ], [0, 0, Math.PI / 2]);
+    k.strut(g, [WX + 0.5, 1.18, WZ], [WX + 0.5, 1.02, WZ - 0.12], 0.018, M.darkSteel);              // the crank
+    k.strut(g, [WX + 0.2, 1.3, WZ], apex, 0.012, M.rubber);                                            // the line to the tripod's head
+    k.cyl(g, [0.09, 0.09, 0.22, 12], M.glass, [WX - 0.45, 0.2, WZ + 0.05]);                            // the bucket, drawn up beside the post
+    k.tag(g, 'LAKE 9', { w: 0.42, h: 0.16 }, [WX, 1.18, WZ + 0.19]);
+  }
+  const fieldPoints = [{
+    id: 'hole', label: 'Ice Hole Water', lx: -4.0, ly: 1.1, lz: -4.1, half: [0.5, 0.5, 0.5],
+    stand: { lx: -4.9, lz: -3.2 }
+  }];
+
   // The work lantern, hung from the tripod's head on a wire over the bench.
   k.strut(g, apex, [0.4, 3.45, 0.2], 0.012, M.darkSteel);
   k.lamp(g, 0.4, 3.3, 0.2);
@@ -812,9 +852,10 @@ export function buildWaterHole(w, site) {
   const colliders = [
     { lx: SX, lz: -3.6, hw: 1.9, hd: 1.1 },
     { lx: hx, lz: hz, r: 1.95 },
+    { lx: -4.0, lz: -4.1, hw: 0.4, hd: 0.3 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
-  return { group: g, bench, benchLocal: [0, 0, 0], colliders };
+  return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
 /** The host builder for each site, by site id. */
