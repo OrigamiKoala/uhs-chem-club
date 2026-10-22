@@ -1397,3 +1397,39 @@ Tallow was fixed first; this pass applies the same invariants to all nine Lanter
   are captioned.
 - **Not done.** The spectrograph and ruler have no solid parts of their own beyond the case; the flat wave screens are still pictures
   (the 2D wave is the lesson); no browser pass was run (the owner tests), only `verify:*` in Node.
+
+## Ligar audit pass (2026-10-22)
+
+The same audit faults (squares with textures, a weird layout, confusing words, tools that explain nothing, nothing to take a mistake back with),
+applied to all nine Ligar benches and the Basalt Warden. `unit03/*` is off `tools/layout-legacy.json`; `npm run verify` is the check, and the
+look has been seen only in a software-GL headless browser (no real GPU), so the owner's pass is still the judge of it.
+
+- **Solid things.** `engine/ligar-props.js` (new). A model atom is a polished ball in a turned iron collar with its painted face printed on the
+  crown (a spherical cap mapped flat), so the symbol, the outer electrons and the lamp ring are the drawn table's own picture; an ore block is a
+  rough-hewn body of its own rock (a rounded box roughened by noise, strata and grain in vertex colours) with a sawn, glazed face in a worn brass
+  bezel that carries the kit's picture of what is inside it; a salt is a card with a cut crystal; a pair tag a riveted brass tag; the hammer a club
+  hammer with an ash handle; the leads a cased lamp and two cables to crocodile clips; the tongs two forged arms on a rivet; the slate's tools
+  stamped brass caps; the hub a cast ball with sockets, an arm a ball on a stem (a brass band per shared pair), a lone pair a lobe on a post;
+  molecules, streams and orbital cards stand on enamelled steel tiles; instruments are set in timber survey boards (iron corner straps, bolts, a
+  pane of glass) and the hotplate in cast iron on lugs; an order rail is a steel track. A tool laid on a block stands on the block's face
+  (`restHeight`), a block on the hotplate on the plate. Reached through the kits' optional hooks, only when the table's `skin` is the world's id
+  (`stagerunner` passes `ctx.world.id`); other worlds are untouched. New hooks: `deck3d(f, {w, d, mats, skin})`; `piece3d`'s context gains `skin` and
+  `faceInfo()`; `slot3d` and `deckStyle` receive `{skin}`. A group's `userData.joinY` makes a join a steel rod between the middles of two solids.
+- **The table.** The mat is lighter and is lit a little from within (a mine at dusk printed black on black); it runs the length of the bench so
+  the plate's grain is not the frame's loudest thing; trays and jars have a pale stone floor; an orbital box is a low socket, not a five-centimetre
+  jar that hid the near half of the arrows in it; the lean-in frames `usedRect` (what is on the table, its words and a hand's room to work) so a
+  bench of three atoms in a row fills the glass and is centred in it; a hand over something that can be taken shows a grab cursor.
+- **Layout** (61 failures of the audit, all fixed in the quests' own tables): trays moved clear of their label strips and the table's edge,
+  rails and tokens re-stacked, boss tables re-seated, blank labels (`' '`) no longer claim a label strip (`layout.js`), every loose tool has a
+  caption and room for it.
+- **Words.** "Tray" is not a verb ("Sort each pair into a tray by ..."); the trays are named for what is in them ("Stayed together", "Came apart",
+  "Handed over", "Shared"); a bond sits in "the gap between two atoms", never a "joint"; the Lewis slate says "6 OF 8 LEFT", not "TRAY 6 OF 8";
+  "resolves" is gone; every stage-one briefing ends "Press Submit when the table shows your answer."; stages print how-to lines
+  (`applyNotes`) where there is a clear strip; every loose tool says what it does in a caption (Strikes a block, Tests a block, Lifts an atom,
+  Adds a pair, Takes one back, Prints charge, Shows each pull, Holds a charge, Swaps an atom, Reads an angle).
+- **Taking it back.** Every table (both views) has **Undo** and **Start Over** in the foot dock, and Ctrl+Z: the runner keeps the tables a stage
+  has been through (`history`), a move is a whole drag or two taps, a dial dragged is one step, a piece in the hand is put down first, Start
+  Over is itself undoable (`verify:table` replays all of it). Tools on a block are `onTop` (hammer, leads, tongs, protractor, arrows, rod,
+  swapper), so a tool laid on a block can always be lifted off it again and a press never takes the block under it.
+- **Not done.** The hub's arms still stand in the table plane (a projected star), not in the air; the flat pictures (lattice grid, energy plot,
+  slates, rack) are still pictures under glass; the briefing card's tour, the world's timber and the host bench were not touched; no real-GPU pass.

@@ -120,6 +120,12 @@ export class Table3D extends BenchViewer3D {
     // neighbours' enamel), and `dispose` frees them once.
     for (const m of Object.values(this.kitMats)) { m.userData.tableOwned = true; m.userData.shared = true; }
 
+    // A small used zone is framed from no closer than the bay's lean air lets the camera stand (its floor is 2.2 m, so 1.55 m along the
+    // 55 degree view): a bench of three atoms in a row is centred in the glass, not blown up into the camera's face.
+    this.leanMinDist = 1.6;
+    // ...and always in front of the plate's front edge (0.65 m from its middle), never over it, wherever the used zone sits.
+    this.leanFrontZ = 0.72;
+
     this.table = new THREE.Group();
     this.table.name = 'tabletop';
     this.root.add(this.table);
@@ -440,12 +446,13 @@ export class Table3D extends BenchViewer3D {
         continue;
       }
       const knobs = {};
-      const knobR = Math.min(0.026, s * 1.6);
+      // A world with gear of its own turns a bigger knob in a wider groove: a dial that is hard to see is a dial nobody turns.
+      const knobR = this.skin ? Math.min(0.036, s * 2.2) : Math.min(0.026, s * 1.6);
       for (const d of lay.dials) {
         const a = this.map.toPlate({ x: d.x0, y: d.y });
         const b = this.map.toPlate({ x: d.x1, y: d.y });
         // The groove the knob rides in: a dark slot cut in the deck, with a lit edge along it.
-        const groove = new THREE.Mesh(new THREE.BoxGeometry(b.x - a.x + knobR, 0.004, 0.012), this.kitMats.lining);
+        const groove = new THREE.Mesh(new THREE.BoxGeometry(b.x - a.x + knobR, 0.004, this.skin ? 0.02 : 0.012), this.kitMats.lining);
         groove.position.set((a.x + b.x) / 2, DECK_TOP + 0.001, a.z);
         groove.receiveShadow = true;
         this.fixtureRoot.add(groove);
@@ -563,7 +570,7 @@ export class Table3D extends BenchViewer3D {
     const g = this.ground;
     if (!g || !this.state) return;
     drawTable(g.ctx, g.W, g.H, this.state, {
-      look: 'mat', seed: this.matSeed, pieces: false, controls: false, sheet: false, crt: false, piles: false, pourFrom: this.gestures.pourFrom,
+      look: 'mat', seed: this.matSeed, pieces: false, controls: false, sheet: false, crt: false, piles: false, pourFrom: this.gestures.pourFrom, drag: this.drag, screens: Boolean(this.skin),
       // Where the world has the field point, the player walks to it; a plate would only be a shortcut past it.
       sites: id => this.showsSite(id)
     });
@@ -1277,7 +1284,7 @@ export class Table3D extends BenchViewer3D {
       kind: 'stations',
       name: 'The table',
       shortDesc: 'Drag the pieces',
-      desc: 'Drag a piece to move it. Tap a piece, then tap where it goes, to do the same without dragging.',
+      desc: 'Drag a piece to move it, or tap a piece and then tap where it goes. Undo takes back your last move and Start Over clears the table.',
       tag: 'DRAG OR TAP'
     }];
   }

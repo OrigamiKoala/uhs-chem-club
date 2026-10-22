@@ -114,7 +114,7 @@ export const STAGES = [
     },
     prompt: 'Place all valence electrons on the slate so that every atom satisfies the octet rule.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'H2O', 84, 26, 52]]),
+    table: slateTable([['a', 'H2O', 82, 28, 62]]),
     hints: [
       'Drag the Pair tile onto the gap between two atoms, or onto one atom.',
       'Compare each atom\'s count with its lamp: hydrogen wants two and the others eight.',
@@ -164,7 +164,7 @@ export const STAGES = [
     title: 'Two Pairs Short',
     prompt: 'Place all valence electrons for carbon dioxide so that every atom satisfies the octet rule.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'CO2', 84, 26, 52]]),
+    table: slateTable([['a', 'CO2', 80, 28, 68]]),
     hints: [
       'Put a pair in each gap first and see which lamps stay dark.',
       'Compare the lamp on carbon with the lamps on the oxygen atoms once their own pairs are down.',
@@ -189,7 +189,7 @@ export const STAGES = [
     title: 'The Middle',
     prompt: 'Build hypofluorous acid, HOF, so that every lamp is lit and no electron is left.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'HOF', 84, 30, 56, HOF_POS]]),
+    table: slateTable([['a', 'HOF', 82, 32, 62, HOF_POS]]),
     hints: [
       'Try filling the gaps between each pair of atoms and see which lamps light.',
       'Compare how many shared pairs each atom is allowed to take on this board.',
@@ -218,7 +218,7 @@ export const STAGES = [
     },
     prompt: 'Set the charge chip and place all valence electrons for the ammonium ion until every lamp lights.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'NH4', 84, 32, 56, null, 'chip']], {
+    table: slateTable([['a', 'NH4', 82, 34, 62, null, 'chip']], {
       fixtures: [{
         id: 'chip', kind: 'chip', label: 'Ion charge', at: { x: 27, y: 32 }, size: { w: 34, h: 16 }, noRun: true,
         dials: { charge: { min: -2, max: 2, step: 1, value: 0, label: 'Charge', labels: ['−2', '−1', '0', '+1', '+2'] } }
@@ -249,7 +249,7 @@ export const STAGES = [
     title: 'The Amber Lamp',
     prompt: 'Place every electron in boron trifluoride so that no electron is left and no atom holds more than it can.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'BF3', 84, 32, 54]]),
+    table: slateTable([['a', 'BF3', 82, 34, 62]]),
     hints: [
       'Fill the bonds and then the pairs on the atoms until no electron is left.',
       'Compare how many shared pairs boron can take with how many each fluorine atom is willing to share.',
@@ -309,7 +309,7 @@ export const STAGES = [
     title: 'Past Eight',
     prompt: 'Distribute all valence electrons so that sulfur forms an expanded octet in SF6.',
     widget: { type: 'table', label: 'The bench' },
-    table: slateTable([['a', 'SF6', 84, 33, 60]]),
+    table: slateTable([['a', 'SF6', 82, 33, 61]]),
     hints: [
       'Put a shared pair in every bond, then see how many electrons are left.',
       'Compare the fluorine lamps with the lamp on sulfur as the electrons run out.',

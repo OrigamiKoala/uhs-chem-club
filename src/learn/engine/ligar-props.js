@@ -171,6 +171,8 @@ const ORE = Object.freeze({
   pale: 0x8f8678
 });
 export const oreColour = tint => ORE[tint] ?? ORE.bone;
+/** The balls inside a block, in the block's own muted tones (the kit's TINTS): the atoms of a halite, a sulfur, a network solid, a copper. */
+const ORE_BALL = Object.freeze({ bone: 0xb8afa0, sand: 0xc39a63, iron: 0x6b625a, rust: 0x9c5423, pale: 0x8f8678 });
 
 /* ------------------------------------------------------------------ atoms */
 
@@ -179,11 +181,12 @@ export const oreColour = tint => ORE[tint] ?? ORE.bone;
  * table paints (the symbol, the outer electrons round its rim, the ring that lights when the shell is full); the ball is what it is
  * stuck to. `body` is the colour the painted disc carries, so the ball is of a piece with its face.
  */
-export function buildAtomBall(c, { face, body }) {
+export function buildAtomBall(c, { face, body, flat = false }) {
   const { hw, mats: m } = c;
   const g = new THREE.Group();
   const R = hw;
-  const ky = 0.9;
+  // An atom fixed on a board stands lower (a squat ball): a tall one would hide the readings printed behind it from the leaned-in view.
+  const ky = flat ? 0.55 : 0.9;
   const collarH = R * 0.16;
   // The collar it stands in: a turned iron ring with a bright lip, so a ball does not roll and is plainly a thing set down.
   g.add(mesh(lathe([[R * 0.46, 0], [R * 0.74, 0], [R * 0.8, collarH * 0.45], [R * 0.74, collarH], [R * 0.5, collarH * 1.1], [R * 0.46, collarH]], 28), m.ligIron, { receive: true }));
@@ -218,7 +221,7 @@ export function buildAtomBall(c, { face, body }) {
  *
  * `molten` softens the block's outline, as a thing at heat is; the heat itself is on the hotplate under it.
  */
-export function buildOreBlock(c, { tint = 'bone', sealed = false, molten = false, seedId = 'x' }) {
+export function buildOreBlock(c, { tint = 'bone', sealed = false, molten = false, seedId = 'x', atoms = [], cols = 0, rows = 0, ions = false }) {
   const { hw, hh, mats: m } = c;
   const g = new THREE.Group();
   const seed = (hashId(seedId) % 9973) + 1;
@@ -241,21 +244,74 @@ export function buildOreBlock(c, { tint = 'bone', sealed = false, molten = false
     g.add(mesh(rockGeometry({ w, h: bodyH, d, seed, colour, round: 0.02, rough: molten ? 0.002 : 0.007 }), c.own(rock)));
   }
   // The sawn face: a flat window cut into the top, polished, with the kit's card on it (the lattice as it is now, the block's name,
-  // what has been done to it, the lamp the leads light), set in a worn brass bezel under a pane of glass.
+  // what has been done to it, the lamp the leads light), set in a worn brass bezel under a pane of glass. The atoms of the picture stand
+  // up under the glass as little balls, so what is drawn is also something seen from the side.
   const fw = w * 0.9;
   const fd = d * 0.88;
-  const rim = mesh(roundedSlab(fw + 0.014, fd + 0.014, 0.006, 0.006, 0.0018), m.ligBrassWorn);
-  rim.position.set(0, bodyH - 0.002, 0);
+  const glassY = bodyH + 0.0125;
+  const rim = mesh(wallGeometry(fw + 0.02, fd + 0.02, 0.008, 0.0125, 0.006, 0.0015), m.ligBrassWorn);
+  rim.position.set(0, bodyH - 0.0005, 0);
   g.add(rim);
+  const base = mesh(roundedSlab(fw + 0.012, fd + 0.012, 0.005, 0.005, 0.0015), m.ligEnamelBlack);
+  base.position.set(0, bodyH - 0.001, 0);
+  g.add(base);
   const pic = mesh(new THREE.PlaneGeometry(fw, fd), c.face(), { cast: false });
   pic.rotation.x = -Math.PI / 2;
   pic.position.set(0, bodyH + 0.0045, 0);
   g.add(pic);
+  if (atoms.length && cols) {
+    // The picture's own mapping (`paintSlabPicture`): the card is 756 x 576 px at the table's scale, the picture the top 72% of it, inset by
+    // 7% of its smaller side; a ball's radius is a share of what a cell has to itself.
+    const W = 756; const H = 576;
+    const picW = W - 3; const picH = H * 0.72 - 1.5;
+    const pad = Math.max(2, Math.min(picW, picH) * 0.07);
+    const rPx = Math.max(1.4, Math.min((picW - pad * 2) / (cols * 2.7), (picH - pad * 2) / (rows * 2.7)));
+    const r3 = rPx / W * fw * 1.05;
+    const live = atoms.filter(a => !a.gone);
+    const ballGeo = new THREE.SphereGeometry(1, 14, 10);
+    const ballMat = c.own(new THREE.MeshStandardMaterial({ roughness: 0.38, metalness: 0.12 }));
+    const balls = new THREE.InstancedMesh(ballGeo, ballMat, Math.max(1, live.length));
+    balls.castShadow = false;
+    const mtx = new THREE.Matrix4(); const col = new THREE.Color();
+    const tintCol = new THREE.Color(ORE_BALL[tint] ?? ORE_BALL.bone);
+    live.forEach((a, i) => {
+      const u = (1.5 + pad + a.x * (picW - pad * 2)) / W;
+      const v = (1.5 + pad + a.y * (picH - pad * 2)) / H;
+      mtx.compose(new THREE.Vector3((u - 0.5) * fw, bodyH + 0.0045 + r3 * 0.9, (v - 0.5) * fd), new THREE.Quaternion(), new THREE.Vector3(r3, r3, r3));
+      balls.setMatrixAt(i, mtx);
+      // An ion is lighter for a plus and darker for a minus, and wears the sign; a molecule's atoms all one tone.
+      col.copy(tintCol).multiplyScalar(ions ? (a.sign > 0 ? 1.25 : 0.7) : 1);
+      balls.setColorAt(i, col);
+    });
+    balls.count = live.length;
+    balls.instanceMatrix.needsUpdate = true;
+    if (balls.instanceColor) balls.instanceColor.needsUpdate = true;
+    g.add(balls);
+    if (ions) {
+      // The sign on top of each ion: a bar for a minus, a cross for a plus, in dark ink (never told by colour alone).
+      const bar = new THREE.BoxGeometry(1, 0.0006, 0.22);
+      const barMat = c.own(new THREE.MeshBasicMaterial({ color: 0x15130f }));
+      const strokes = live.reduce((n, a) => n + (a.sign > 0 ? 2 : 1), 0);
+      const marks = new THREE.InstancedMesh(bar, barMat, Math.max(1, strokes));
+      let k = 0;
+      live.forEach(a => {
+        const u = (1.5 + pad + a.x * (picW - pad * 2)) / W;
+        const v = (1.5 + pad + a.y * (picH - pad * 2)) / H;
+        const x = (u - 0.5) * fw; const z = (v - 0.5) * fd; const y = bodyH + 0.0045 + r3 * 1.78;
+        const put = rot => { mtx.compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, rot, 0)), new THREE.Vector3(r3 * 0.9, r3 * 0.9, r3 * 0.9)); marks.setMatrixAt(k++, mtx); };
+        put(0);
+        if (a.sign > 0) put(Math.PI / 2);
+      });
+      marks.count = k;
+      marks.instanceMatrix.needsUpdate = true;
+      g.add(marks);
+    }
+  }
   const pane = mesh(new THREE.PlaneGeometry(fw, fd), m.labPane, { cast: false, receive: false });
   pane.rotation.x = -Math.PI / 2;
-  pane.position.set(0, bodyH + 0.0062, 0);
+  pane.position.set(0, glassY, 0);
   g.add(pane);
-  return done(g, bodyH + 0.007);
+  return done(g, glassY + 0.001);
 }
 
 /** A small panel lamp: a brass collar and a lens, lit amber while `on` (a mark of light, not a light). */
@@ -403,40 +459,51 @@ export function buildLeads(c, { lit = false, text = '' }) {
 }
 
 /**
- * A pair of tongs: two forged arms crossed at a rivet, grips at the back, serrated jaws at the front, lying along x with the jaws to
- * the left. Laid on a block the jaws close on its middle.
+ * A pair of tongs: two forged arms crossed at a rivet, rubber sleeves on the grips, serrated jaws at the front, lying along x with the
+ * jaws to the left. Laid on a block the jaws close on its middle.
  */
 export function buildTongs(c, { text = '' }) {
   const { hw, hh, mats: m } = c;
   const g = new THREE.Group();
   const L = hw * 1.9;
-  const t = 0.009;
+  const t = 0.012;
   const jawL = L * 0.3;
   const pivotX = -L / 2 + L * 0.42;
+  const wA = Math.min(0.022, hh * 0.26);
   for (const s of [-1, 1]) {
-    // One arm: a flat bar from the jaw (on its own side of the axis) across the pivot to a grip on the far side.
+    // One arm: a flat bar from the jaw (on its own side of the axis) across the pivot to a grip on the far side; heavier at the jaw.
     const shape = new THREE.Shape();
-    const wA = Math.min(0.016, hh * 0.2);
-    shape.moveTo(-L / 2, s * 0.001);
-    shape.lineTo(-L / 2 + jawL, s * 0.001 + s * wA * 0.2);
+    shape.moveTo(-L / 2, s * 0.002);
+    shape.lineTo(-L / 2 + jawL * 0.5, s * (0.002 + wA * 0.5));
+    shape.lineTo(-L / 2 + jawL, s * (wA * 0.34));
     shape.lineTo(pivotX, -s * wA * 0.1);
     shape.lineTo(L / 2, -s * hh * 0.5);
     shape.lineTo(L / 2, -s * hh * 0.5 - s * wA * 0.8);
     shape.lineTo(pivotX, -s * wA * 0.1 - s * wA * 0.8);
-    shape.lineTo(-L / 2 + jawL, s * 0.001 + s * wA * 0.2 + s * wA * 0.8);
-    shape.lineTo(-L / 2, s * 0.001 + s * wA * 0.9);
+    shape.lineTo(-L / 2 + jawL, s * wA * 0.34 + s * wA * 0.8);
+    shape.lineTo(-L / 2 + jawL * 0.5, s * (0.002 + wA * 0.5) + s * wA * 0.9);
+    shape.lineTo(-L / 2, s * 0.002 + s * wA * 0.9);
     shape.closePath();
-    const geo = new THREE.ExtrudeGeometry(shape, { depth: t, bevelEnabled: true, bevelThickness: 0.0012, bevelSize: 0.0012, bevelSegments: 1 });
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: t, bevelEnabled: true, bevelThickness: 0.0018, bevelSize: 0.0018, bevelSegments: 2 });
     geo.rotateX(-Math.PI / 2);
-    const arm = mesh(geo, s > 0 ? m.ligIron : m.ligSteel);
-    arm.position.set(0, s > 0 ? 0.002 : 0.002 + t, 0);
+    const arm = mesh(geo, m.ligIron);
+    arm.position.set(0, s > 0 ? 0.002 : 0.002 + t + 0.001, 0);
     g.add(arm);
+    // The jaw's teeth: a short row of serrations on the inner face.
+    for (let i = 0; i < 4; i++) {
+      const tooth = mesh(new THREE.BoxGeometry(0.004, t * 0.9, 0.003), m.ligSteel, { receive: false });
+      tooth.position.set(-L / 2 + 0.008 + i * 0.011, (s > 0 ? 0.002 : 0.002 + t + 0.001) + t / 2, -s * 0.0035);
+      g.add(tooth);
+    }
+    // The grip: a rubber sleeve over the end of the handle.
+    const sleeve = mesh(roundedSlab(L * 0.3, wA * 1.5, t + 0.006, 0.006, 0.0018), m.ligRubber);
+    sleeve.position.set(L / 2 - L * 0.15, (s > 0 ? 0.002 : 0.002 + t + 0.001) - 0.003, s * (hh * 0.5 + wA * 0.4));
+    g.add(sleeve);
   }
-  // The rivet, and rubber sleeves on the grips.
-  g.add(at(mesh(new THREE.CylinderGeometry(0.0068, 0.0068, t * 2 + 0.005, 14), m.labBrass), pivotX, 0.002 + t, 0));
-  for (const s of [-1, 1]) g.add(at(mesh(roundedSlab(L * 0.26, 0.015, 0.02, 0.005, 0.0014), m.ligRubber), L / 2 - L * 0.13, 0.002 + (s > 0 ? 0 : t) - 0.003, -s * hh * 0.5 - s * 0.006));
+  // The rivet.
+  g.add(at(mesh(new THREE.CylinderGeometry(0.008, 0.008, t * 2 + 0.008, 14), m.labBrass), pivotX, 0.002 + t, 0));
   void text;
-  return done(g, 0.03);
+  return done(g, 0.04);
 }
 
 /* ------------------------------------------------------------------ the slate and the tool tiles */

@@ -1444,7 +1444,7 @@ function run(state, fixtureId) {
 function piece3d(p, state, c) {
   if (c.skin !== LIGAR_SKIN) return null;
   switch (p.kind) {
-    case 'atom': case 'ion': { const f = c.faceInfo({ physical: true }); return buildAtomBall(c, { face: f.mat, body: f.body }); }
+    case 'atom': case 'ion': { const f = c.faceInfo({ physical: true }); return buildAtomBall(c, { face: f.mat, body: f.body, flat: Boolean(p.props.slate) }); }
     case 'joint': return buildJointSocket(c, { face: c.face() });
     case 'pairs': case 'single': case 'lift': case 'three': case 'fcstamp': case 'mark': case 'gauge': return buildToolCap(c, { face: c.face() });
     default: return null;

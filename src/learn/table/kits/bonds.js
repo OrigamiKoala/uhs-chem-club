@@ -856,14 +856,19 @@ function paintFixture(ctx, f, state, b) {
    ------------------------------------------------------------------ */
 
 /** How tall a block of ore stands (metres): a tool laid on it rests on its face. */
-const BLOCK_TOP = 0.072;
+const BLOCK_TOP = 0.078;
 
 function piece3d(p, state, c) {
   if (c.skin !== LIGAR_SKIN) return null;
   switch (p.kind) {
     case 'slab': {
+      // The magnified picture stands up: the atoms `planSlab` lays (the same cells the flat picture paints, less any the tongs lifted) are
+      // little balls under the glass, a plus or a minus on each ion.
       const v = slabView(p, state);
-      return buildOreBlock(c, { tint: v.d.tint, sealed: Boolean(v.d.sealed), molten: v.molten, seedId: p.id });
+      const lay = v.d.sealed ? null : planSlab(v.d, v.phase);
+      const gone = new Set(v.lifted);
+      const atoms = lay ? lay.cells.map((cell, i) => ({ x: cell.x, y: cell.y, sign: cell.sign || 0, gone: gone.has(i) })) : [];
+      return buildOreBlock(c, { tint: v.d.tint, sealed: Boolean(v.d.sealed), molten: v.molten, seedId: p.id, atoms, cols: lay?.cols || 0, rows: lay?.rows || 0, ions: v.d.build === 'grid' });
     }
     case 'salt': return buildSaltSpecimen(c, { seedId: p.id, molten: saltView(p, state).molten });
     case 'pairtag': return buildPairTag(c, { seedId: p.id });

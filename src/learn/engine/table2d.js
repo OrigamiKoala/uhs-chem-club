@@ -95,7 +95,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
   const { sc, ox, oy } = fit(w, h, state.bounds);
   const X = x => ox + x * sc;
   const Y = y => oy + y * sc;
-  const holding = state.carry.held;
+  const holding = state.carry.held || view.drag?.id || null;
   const showPieces = view.pieces !== false;
   const ink = { label: mat ? MAT.paint : PLATE_COLORS.dust, dim: mat ? MAT.paintDim : PLATE_COLORS.dim, text: mat ? MAT.paint : PLATE_COLORS.text };
   /** A line of words at table units, `size` units tall; shrunk to `maxW` units rather than cut. */
@@ -129,8 +129,10 @@ export function drawTable(ctx, w, h, state, view = {}) {
   };
   for (const t of Object.values(state.zones.trays)) {
     const r = rectOf(t, SIZES.tray);
-    // The built table stands a real tray here (walls, a lining); the flat picture keeps only its words and the count.
+    // The built table stands a real tray here (walls, a lining); the flat picture keeps only its words and the count, and, while a piece
+    // is in the hand, a bright ring just outside the walls: the places it can be put down.
     if (!mat) outline(r, Boolean(holding));
+    else if (holding) outline({ x0: r.x0 - 1, y0: r.y0 - 1, x1: r.x1 + 1, y1: r.y1 + 1, w: r.w + 2, h: r.h + 2 }, true);
     zoneWords('tray', t);
     if (t.cap != null) {
       const n = Object.values(state.pieces).filter(p => p.zone === `tray:${t.id}` && !p.hidden).length;
@@ -219,6 +221,12 @@ export function drawTable(ctx, w, h, state, view = {}) {
   /* fixtures */
   for (const f of Object.values(state.fixtures)) {
     const lay = fixtureLayout(f);
+    // An instrument set in a board is a screen under glass: dark, so what it prints (a trace, a count, a reading) has something to stand out of.
+    if (mat && view.screens) {
+      ctx.fillStyle = 'rgba(14, 13, 11, 0.86)';
+      roundRectPath(ctx, X(lay.box.x0), Y(lay.box.y0), lay.box.w * sc, lay.box.h * sc, Math.max(2, sc * 0.9));
+      ctx.fill();
+    }
     outline(lay.box, false, false);
     words(f.label, lay.box.x0 + 1.5, lay.box.y0 + 3.6, { size: 2.6, color: ink.label });
     // A kit paints what a fixture shows (a needle, a beam's path, a reading) in the box, flat:
