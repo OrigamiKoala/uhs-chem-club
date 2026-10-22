@@ -182,6 +182,7 @@ export const SPECIES = {
     hit: 'The compressor vents its last charge and its pistons stand still.',
     lines: {
       idle: () => 'Its pistons run at their old stroke.',
+      unmoved: () => 'Its pistons keep their stroke.',
       laboured: () => 'Its pistons labour against a rising push.',
       easy: () => 'Its pistons run light.',
       venting: () => 'A pinhole hisses in its flank and its tank sinks.',
@@ -200,7 +201,8 @@ export const SPECIES = {
         const left = leftAfter(probe.gas, probe.seconds);
         return { pose: left >= BLADDER.FULL ? 'idle' : 'venting', left };
       }
-      return null;
+      // On a table the compressor only watches, like the other table bosses: it takes the pose it is handed.
+      return { pose: probe?.pose || 'unmoved' };
     }
   },
 
