@@ -1166,9 +1166,9 @@ function lay(bench, st) {
 // A quest that has become a tabletop no longer plays its old instrument; the Lantern-Eater (converted in T4d) still does, on the
 // electron bench's spectrum head, the box rack and the light bench, so its phases are measured on those benches, at the converted
 // quest's own site.
-const BOSS_BENCH = { 'q7-pes': 'pes', 'q9-absorb': 'light', 'q6-filling': 'rack' };
+const BOSS_BENCH = { 'q7-pes': st => st.bench === 'pes', 'q9-absorb': st => st.bench === 'light' && st.rigs.some(r => r.head === 'plot'), 'q6-filling': st => st.bench === 'rack' };
 const isTable = id => LF[id].STAGES.every(st => st.widget?.type === 'table');
-const stagesOf = id => (isTable(id) ? (BOSS_BENCH[id] ? LF['boss-eater'].STAGES.filter(st => st.bench === BOSS_BENCH[id]) : []) : LF[id].STAGES);
+const stagesOf = id => (isTable(id) ? (BOSS_BENCH[id] ? LF['boss-eater'].STAGES.filter(BOSS_BENCH[id]) : []) : LF[id].STAGES);
 const widestStage = id => stagesOf(id).reduce((a, b) => (itemsOf(b).length > itemsOf(a).length ? b : a));
 const dialStage = id => stagesOf(id).reduce((a, b) => {
   const dials = st => (st.settings ? 1 : 0) + (st.brightnessDial ? 1 : 0);

@@ -1845,6 +1845,8 @@ async function checkDrawn(q, mod) {
   const q3 = getQuest('unit02', 'q3-lines') && await getQuest('unit02', 'q3-lines').module?.();
   const q9 = getQuest('unit02', 'q9-absorb') && await getQuest('unit02', 'q9-absorb').module?.();
   const near = (a, b, tol, what) => { if (Math.abs(a - b) > tol) fail(`${what}: graded ${a}, the real figure is ${b.toFixed(3)}`); };
+  const COLOUR_NAMES = CUV => CUV.COLOURS.map(c => c.id);
+  const STAGE_STATE = (q, i, script) => TABLE.createTable(q.STAGES[i].table, q.STAGES[i].title) && { table: TABLE.createTable(q.STAGES[i].table, q.STAGES[i].title), bins: {}, order: [] };
 
   if (q1) {
     // THE FIRST LANTERNFALL TABLE (`q1-wave`, the optics kit): every figure a stage grades is the planner's, read off the table.
@@ -2106,12 +2108,98 @@ async function checkDrawn(q, mod) {
     }
   }
   if (q9) {
-    const last = q9.STAGES[7].rigs[0];
-    near(D.planAbsorb('cuso4', 630, 1, 0.005) * 1, last.unknownAbs, 1e-6, 'unit02/q9-absorb stage 8 (sealed reading)');
-    near(q9.SOLUTIONS[7].decimal, 5, 1e-9, 'unit02/q9-absorb stage 8 (5 mmol/L)');
-    // The sweep's largest reading must be the graded setting.
-    const sweep = q9.STAGES[3].settings.map(n => D.planAbsorb('cuso4', n, 1, 0.01));
-    if (sweep.indexOf(Math.max(...sweep)) + 1 !== q9.SOLUTIONS[3].setting) fail('unit02/q9-absorb stage 4: the graded wavelength is not the peak of the sweep');
+    // THE NINTH LANTERNFALL TABLE (`q9-absorb`, the cuvette kit): every reading is `planAbsorb`, every graded figure is recomputed.
+    const CUV = await import('../src/learn/table/kits/cuvette.js');
+    const same9 = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+    const holds9 = (c, what) => { if (!c) fail(what); };
+    const start9 = i => TABLE.createTable(q9.STAGES[i].table, q9.STAGES[i].title);
+    const end9 = i => TABLE.runScript(start9(i), q9.SOLUTIONS[i], { strict: true });
+    // A drop is a fixed strength: drops are concentration, and a cuvette holds no more than the bench's limit.
+    same9(CUV.concOf({ props: { drops: 3 } }), 0.006, 'unit02/q9-absorb (three drops)');
+    {
+      const t = start9(4);
+      let u = t;
+      for (let k = 0; k < CUV.MAX_DROPS + 1; k++) u = TABLE.apply(u, { join: ['drop', 'b'] });
+      same9(u.pieces.b.props.drops, CUV.MAX_DROPS, 'unit02/q9-absorb (a full cuvette takes no more)');
+      holds9(u.last.ok === false || u.last.reason, 'unit02/q9-absorb: a seventh drop is not refused with a reason');
+      const poured = TABLE.apply(TABLE.apply(t, { join: ['drop', 'b'] }), { join: ['empty', 'b'] });
+      same9(poured.pieces.b.props.drops, 0, 'unit02/q9-absorb (the empty tool pours a cuvette out)');
+      const sealed = TABLE.apply(start9(7), { join: ['drop', 'sealed'] });
+      same9(sealed.pieces.sealed.props.conc, 0.005, 'unit02/q9-absorb (a sealed sample takes no drops)');
+    }
+    // 1. each kind of light does what the planner says to the molecule
+    {
+      const r = k => CUV.planRegion('HCl', k).motion;
+      same9([r('microwave'), r('infrared'), r('uv-visible')], ['spins', 'vibrates', 'jumps'], 'unit02/q9-absorb stage 1 (the three motions)');
+      const t = end9(0);
+      same9(['microwave', 'infrared', 'uv'].map(k => Object.values(t.pieces).find(p => p.zone === `slot:${k}`).id), ['spins', 'stretches', 'jumps'], 'unit02/q9-absorb stage 1 (the slots)');
+      same9([1, 2, 3].map(v => CUV.regionRead(TABLE.apply(start9(0), { setDial: { fixture: 'sp', dial: 'region', value: v } }), 'sp').motion), ['spins', 'vibrates', 'jumps'], 'unit02/q9-absorb stage 1 (the dial shows each motion)');
+    }
+    // 2. the readings are on the right sides of the visible band
+    {
+      const t = end9(1);
+      for (const id of ['r1', 'r2', 'r3']) {
+        const nm = t.pieces[id].props.nm;
+        same9(t.pieces[id].zone, `tray:${{ microwave: 'microwave', infrared: 'infrared', ultraviolet: 'ultraviolet' }[D.regionOf(nm)]}`, `unit02/q9-absorb stage 2 (${id})`);
+      }
+      same9(['r1', 'r2', 'r3'].map(id => CUV.fmtWave(t.pieces[id].props.nm)), ['3 cm', '30 \u00b5m', '300 nm'], 'unit02/q9-absorb stage 2 (the printed wavelengths)');
+      holds9(D.VISIBLE.min === 380 && D.VISIBLE.max === 750, 'unit02/q9-absorb stage 2: the plate prints the wrong visible band');
+    }
+    // 3. the colour missing from copper's light is the one its peak sits in, and the strip is darkest there
+    {
+      same9(CUV.missingColour('cuso4').id, 'orange', 'unit02/q9-absorb stage 3 (the missing colour)');
+      const dark = [...Array(371)].map((_, i) => 380 + i).sort((x, y) => CUV.gotThrough('cuso4', 0.01, x) - CUV.gotThrough('cuso4', 0.01, y))[0];
+      same9(CUV.colourOfNm(dark).id, 'orange', 'unit02/q9-absorb stage 3 (the darkest part of the strip)');
+      same9(end9(2).pieces['c-orange'].zone, 'slot:taken', 'unit02/q9-absorb stage 3 (the chip)');
+      same9(COLOUR_NAMES(CUV), ['violet', 'blue', 'green', 'yellow', 'orange', 'red'], 'unit02/q9-absorb stage 3 (the six chips)');
+    }
+    // 4. the largest reading of the sweep is the graded setting
+    {
+      const sweep = CUV.COPPER_SWEEP.map(n => D.planAbsorb('cuso4', n, 1, q9.COPPER));
+      same9(Math.round(end9(3).fixtures.sp.dials.nm.value), sweep.indexOf(Math.max(...sweep)) + 1, 'unit02/q9-absorb stage 4 (the setting)');
+      same9(CUV.COPPER_SWEEP[4], 630, 'unit02/q9-absorb stage 4 (the peak is at 630 nm)');
+      same9(end9(3).recorder.rows.map(r => r.x), [550, 600, 630, 680], 'unit02/q9-absorb stage 4 (the sheet plots against wavelength)');
+    }
+    // 5. doubling the strength doubles the reading; the origin is the lake's
+    {
+      const t = end9(4);
+      near(CUV.absorbOf(t.pieces.b), 2 * CUV.absorbOf(t.pieces.a), 1e-9, 'unit02/q9-absorb stage 5 (twice the reading)');
+      same9(t.pieces.b.props.drops, 4, 'unit02/q9-absorb stage 5 (Cuvette B)');
+      same9(t.recorder.rows.map(r => [r.x, r.y]), [[0, 0], [4, 0.1], [8, 0.2]], 'unit02/q9-absorb stage 5 (the sheet: lake water, A, B)');
+      holds9(q9.STAGES[4].table.fetch.length === 1 && start9(4).pieces.lake.hidden, 'unit02/q9-absorb stage 5: the lake water is not a field item');
+      holds9(q9.STAGES[4].check(STAGE_STATE(q9, 4, [[]])).ok === false, 'unit02/q9-absorb stage 5: an untouched bench passes without the field item');
+    }
+    // 6. twice the path doubles the reading
+    {
+      near(D.planAbsorb('cuso4', 630, 2, 0.008), 2 * D.planAbsorb('cuso4', 630, 1, 0.008), 1e-3, 'unit02/q9-absorb stage 6 (twice the path)');
+      same9(CUV.PATHS[Math.round(end9(5).fixtures.sp.dials.path.value) - 1], 2, 'unit02/q9-absorb stage 6 (the path)');
+    }
+    // 7. both doubled makes the reading four times: a product, not a sum
+    {
+      const t = end9(6);
+      near(CUV.absorbOf(t.pieces.b, 630, 2) / CUV.absorbOf(t.pieces.a, 630, 1), 4, 1e-6, 'unit02/q9-absorb stage 7 (four times)');
+      same9(t.prediction.token, 'x4', 'unit02/q9-absorb stage 7 (the prediction)');
+      holds9(t.prediction.tested, 'unit02/q9-absorb stage 7: the solution does not test its prediction');
+    }
+    // 8. the standards fall on a line through zero, the sealed reading is one more point on it, and the marker reads its concentration back
+    {
+      const t = end9(7);
+      const rows = t.recorder.rows;
+      same9(rows.map(r => r.x), [2, 4, 6], 'unit02/q9-absorb stage 8 (the standards)');
+      const slope = rows[0].y / rows[0].x;
+      holds9(rows.every(r => Math.abs(r.y / r.x - slope) < 1e-6), 'unit02/q9-absorb stage 8: the standards are not on a line through zero');
+      const sealed = D.planAbsorb('cuso4', 630, 1, q9.SEALED_CONC);
+      near(sealed / slope, 5, 1e-3, 'unit02/q9-absorb stage 8 (the sealed reading read back off the line)');
+      near(t.fixtures.conc.dials.value.value, 5, 1e-9, 'unit02/q9-absorb stage 8 (5 mmol/L)');
+      holds9(t.pieces.sealed.props.read === sealed, 'unit02/q9-absorb stage 8: the sealed cuvette\'s face does not keep its reading');
+      holds9(!t.recorder.rows.some(r => r.label === 'SEALED SAMPLE'), 'unit02/q9-absorb stage 8: the sealed sample is plotted, which would print its strength');
+      holds9(t.recorder.tool?.kind === 'straightedge', 'unit02/q9-absorb stage 8: the solution lays no straightedge');
+    }
+    // Permanganate takes in near 525 nm, as measured.
+    {
+      const pm = [450, 500, 525, 550, 600].map(n => D.planAbsorb('kmno4', n, 1, 0.001));
+      same9(pm.indexOf(Math.max(...pm)), 2, 'unit02/q9-absorb (permanganate peaks at 525 nm)');
+    }
   }
   const q4 = getQuest('unit02', 'q4-cloud') && await getQuest('unit02', 'q4-cloud').module?.();
   if (q4) {

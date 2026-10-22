@@ -22,3 +22,4 @@ import './cloud.js';
 import './shells.js';
 import './pes.js';
 import './trends.js';
+import './cuvette.js';

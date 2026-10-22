@@ -131,7 +131,7 @@ const BUILT_BENCHES = new Set([
   'q6-filling',    // the tabletop, address and filling kit (arrows dealt into boxes, two magnets, written forms, element strips) — table3d.js (T4b)
   'q7-pes',        // the tabletop, spectrum kit (a chamber that fires light at a specimen, electrons piling into a strip of energy bins, an atom built to match, a configuration written) — table3d.js (T4c; the electron bench's spectrum head serves only the Lantern-Eater now)
   'q8-trends',     // the tabletop, trends kit (scale-model atoms, a spring gauge, a size gauge, a stripper and a rail) — table3d.js (T4c)
-  'q9-absorb',     // the light bench, cuvette head
+  'q9-absorb',     // the tabletop, cuvette kit (cuvettes filled drop by drop, a spectrometer read live, a sheet and a straightedge, lake water from the ice hole) — table3d.js (T4c; the light bench's cuvette head serves only the Lantern-Eater now)
   // Unit 3 — Ligar, benches three to nine.
   'q3-distance',   // the tabletop, bonds kit (a pair pulled apart by hand, pair cards, salts) — table3d.js (T3a)
   'q4-dots',       // the pair board — pairboard3d.js
