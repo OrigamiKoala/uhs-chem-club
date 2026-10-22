@@ -221,7 +221,7 @@ export function waveScreen(id, label, at, { settings = null, start = 1, rate = t
       dials: settings ? { colour: { min: 1, max: settings.length, step: 1, value: start, label: 'Colour', labels: settings.map(n => `${n} nm`) } } : {},
       props: { backdrop: true, slot: slotId, settings, rate, left: 24 }
     },
-    slots: [slot(slotId, { x: x0 + 12.5, y: y0 + sz.h - 9.5 }, { w: 22, h: 14 }, 'Lamp holder')]
+    slots: [slot(slotId, { x: x0 + 12.5, y: y0 + sz.h - 9.5 }, { w: 22, h: 14 })]
   };
 }
 
@@ -232,7 +232,7 @@ export function logRuler(id, label, at, { size = { w: 76, h: 34 } } = {}) {
   const slotId = `${id}.src`;
   return {
     fixture: { id, kind: 'ruler', label, at: { ...at }, size, noRun: true, dials: {}, props: { backdrop: true, slot: slotId, left: 31 } },
-    slots: [slot(slotId, { x: x0 + 14.5, y: y0 + size.h - 9.5 }, { w: 28, h: 14 }, 'Source holder')]
+    slots: [slot(slotId, { x: x0 + 14.5, y: y0 + size.h - 9.5 }, { w: 28, h: 14 })]
   };
 }
 
@@ -240,7 +240,7 @@ export function logRuler(id, label, at, { size = { w: 76, h: 34 } } = {}) {
  * The pulse timer: a rail with marks at known distances from the lamp, a slot at each, and a Run key that fires a pulse down it.
  * Detectors stood on two marks are timed against each other; the timer prints the gap and the time, never the speed.
  */
-export function pulseRail(id, label, at, { marks, size = { w: 132, h: 36 }, runLabel = 'Fire Pulse' }) {
+export function pulseRail(id, label, at, { marks, size = { w: 132, h: 39 }, runLabel = 'Fire Pulse' }) {
   const x0 = at.x - size.w / 2;
   const y0 = at.y - size.h / 2;
   const lineY = 12;

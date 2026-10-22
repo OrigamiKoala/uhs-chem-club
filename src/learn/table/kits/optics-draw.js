@@ -290,8 +290,18 @@ function readout(ctx, F, x, y, w, h, name, value, o = {}) {
   say(ctx, value, F.x(x + w - 1.2), F.y(y + h * 0.72), F.size(h * 0.3, 8), { align: 'right', color: o.color || PHOS, weight: 700, maxW: F.len(w - 2.4) });
 }
 
+/** The word over a holder, inside the instrument's own picture: a label printed under it would straddle the case's rim. */
+function holderWord(ctx, F, state, f, slotId, text) {
+  const s = state.zones.slots[slotId];
+  if (!s) return;
+  const cx = s.at.x - f.at.x + f.size.w / 2;
+  const top = s.at.y - f.at.y + f.size.h / 2 - (s.size?.h ?? 14) / 2;
+  say(ctx, text, F.x(cx), F.y(top - 2.2), F.size(2.3, 6), { align: 'center', color: DIM, weight: 700 });
+}
+
 function paintWave(ctx, f, state, b) {
   const F = frameOf(b);
+  holderWord(ctx, F, state, f, f.props.slot, 'LAMP HOLDER');
   const w = f.size.w;
   const h = f.size.h;
   const read = waveRead(state, f.id);
@@ -357,6 +367,7 @@ function paintWave(ctx, f, state, b) {
 
 function paintRuler(ctx, f, state, b) {
   const F = frameOf(b);
+  holderWord(ctx, F, state, f, f.props.slot, 'SOURCE HOLDER');
   const w = f.size.w;
   const h = f.size.h;
   const read = rulerRead(state, f.id);

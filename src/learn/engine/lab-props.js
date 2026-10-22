@@ -127,33 +127,34 @@ export function buildLamp(c, { lit = false, rgb = null, text = '' } = {}) {
   const bodyH = Math.min(0.05, hh * 0.46);
   const bw = hw * 1.4;
   const bd = hh * 1.86;
-  const bx = hw - hw * 0.14 - bw / 2;
+  // The light leaves to the right, the way it runs on every bench (a source on the left, the instrument it feeds on the right).
+  const bx = -hw + hw * 0.14 + bw / 2;
   g.add(at(mesh(roundedSlab(bw, bd, bodyH, hh * 0.3, 0.003), m.labAnodised), bx, 0, 0));
   // The barrel: a steel sleeve at the front, taller than the case, with a brass bezel and the lens in it.
   const br = Math.min(hh * 0.66, 0.05);
   const bl = hw * 0.62;
   const cy = br * 0.95;
-  g.add(at(lying(br, br, bl, m.labSteel, 32), -hw + bl / 2, cy, 0));
-  g.add(at(ringX(br * 0.9, br * 0.08, m.labBrass, 32), -hw + 0.002, cy, 0));
+  g.add(at(lying(br, br, bl, m.labSteel, 32), hw - bl / 2, cy, 0));
+  g.add(at(ringX(br * 0.9, br * 0.08, m.labBrass, 32), hw - 0.002, cy, 0));
   const lensMat = lit && rgb ? glowing(c, rgb, 1.0) : m.labSmoke;
   const lens = mesh(new THREE.CircleGeometry(br * 0.84, 32), lensMat, { cast: false });
-  lens.rotation.y = -Math.PI / 2;
-  lens.position.set(-hw - 0.0004, cy, 0);
+  lens.rotation.y = Math.PI / 2;
+  lens.position.set(hw + 0.0004, cy, 0);
   g.add(lens);
   // A collar where the sleeve meets the case.
-  g.add(at(lying(br * 1.08, br * 1.08, hw * 0.07, m.labCast, 32), -hw + bl - hw * 0.02, cy, 0));
+  g.add(at(lying(br * 1.08, br * 1.08, hw * 0.07, m.labCast, 32), hw - bl + hw * 0.02, cy, 0));
   // Vents along the back of the top, and the engraved name.
   const vents = new THREE.Group();
   ribs(vents, 5, bw * 0.46, bd * 0.12, bodyH, m.labRubber, 0.003);
-  vents.position.set(bx + bw * 0.1, 0, -bd * 0.3);
+  vents.position.set(bx - bw * 0.1, 0, -bd * 0.3);
   g.add(vents);
   if (text) {
     const tag = c.label(text, bw * 0.62, Math.min(hh * 0.62, 0.06));
-    tag.position.set(bx + bw * 0.12, bodyH + 0.0006, bd * 0.06);
+    tag.position.set(bx - bw * 0.12, bodyH + 0.0006, bd * 0.06);
     g.add(tag);
   }
   // The lead out of the back.
-  g.add(at(lying(0.006, 0.006, hw * 0.16, m.labRubber, 10), hw - hw * 0.08, bodyH * 0.45, 0));
+  g.add(at(lying(0.006, 0.006, hw * 0.16, m.labRubber, 10), -hw + hw * 0.08, bodyH * 0.45, 0));
   return done(g, cy + br);
 }
 

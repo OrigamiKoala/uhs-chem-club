@@ -165,7 +165,7 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 3 */
   (() => {
-    const rail = pulseRail('rail', 'Pulse timer', { x: 68, y: 22 }, {
+    const rail = pulseRail('rail', 'Pulse timer', { x: 68, y: 21.5 }, {
       marks: [{ metres: 0, label: '0 m' }, { metres: 1.5, label: '1.5 m' }, { metres: 3, label: '3.0 m' }, { metres: 4.5, label: '4.5 m' }, { metres: 6, label: '6.0 m' }]
     });
     return {
@@ -174,8 +174,8 @@ export const STAGES = [
       widget,
       table: opticsTable({
         pieces: [
-          detector('d1', 'Detector 1', { x: 30, y: 52 }),
-          detector('d2', 'Detector 2', { x: 58, y: 52 })
+          detector('d1', 'Detector 1', { x: 30, y: 49 }),
+          detector('d2', 'Detector 2', { x: 58, y: 49 })
         ],
         fixtures: [rail.fixture, marker('speed', 'Your reading', { x: 100, y: 53 }, { label: 'Speed (x 10^8 m/s)', min: 0, max: 6, step: 0.5, value: 0, size: { w: 52, h: 16 } })],
         zones: { slots: rail.slots },
@@ -401,7 +401,7 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Drag the lamp into its holder.', 'Turn the Colour dial to tune it.'],
-  3: ['Stand one detector on each of two marks,', 'then press Fire Pulse to time the light between them.'],
+  3: ['Stand a detector on each of two marks,', 'then press Fire Pulse.'],
   4: ['Put a lamp in the holder to read its screen.'],
   5: ['Read a lamp in the holder, then put it back.'],
   6: ['Try each lamp in the socket.'],
