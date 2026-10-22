@@ -1140,7 +1140,7 @@ console.log('');
 checkFacing();
 
 const LF = {};
-for (const id of ['q1-wave', 'q2-photon', 'q3-lines', 'q4-cloud', 'q5-numbers', 'q6-filling', 'q7-pes', 'q8-trends', 'q9-absorb']) {
+for (const id of ['q1-wave', 'q2-photon', 'q3-lines', 'q4-cloud', 'q5-numbers', 'q6-filling', 'q7-pes', 'q8-trends', 'q9-absorb', 'boss-eater']) {
   LF[id] = await import(`../src/learn/quests/unit02/${id}.js`);
 }
 
@@ -1163,7 +1163,12 @@ function lay(bench, st) {
   else bench.setPlates(itemsOf(st), cfg);
 }
 
-const stagesOf = id => LF[id].STAGES;
+// A quest that has become a tabletop no longer plays its old instrument; the Lantern-Eater (converted in T4d) still does, on the
+// electron bench's spectrum head, the box rack and the light bench, so its phases are measured on those benches, at the converted
+// quest's own site.
+const BOSS_BENCH = { 'q7-pes': 'pes', 'q9-absorb': 'light', 'q6-filling': 'rack' };
+const isTable = id => LF[id].STAGES.every(st => st.widget?.type === 'table');
+const stagesOf = id => (isTable(id) ? (BOSS_BENCH[id] ? LF['boss-eater'].STAGES.filter(st => st.bench === BOSS_BENCH[id]) : []) : LF[id].STAGES);
 const widestStage = id => stagesOf(id).reduce((a, b) => (itemsOf(b).length > itemsOf(a).length ? b : a));
 const dialStage = id => stagesOf(id).reduce((a, b) => {
   const dials = st => (st.settings ? 1 : 0) + (st.brightnessDial ? 1 : 0);
@@ -1183,7 +1188,7 @@ const LF_BENCHES_ALL = [
   ['q8-trends', 'electron bench (atoms)', (c, a) => new ElectronBench3D(null, { world: worldFrame(c, a) })],
   ['q9-absorb', 'light bench (cuvette)', (c, a) => new LightBench3D(null, { world: worldFrame(c, a) })]
 ];
-const LF_BENCHES = LF_BENCHES_ALL.filter(([id]) => !LF[id].STAGES.every(st => st.widget?.type === 'table'));
+const LF_BENCHES = LF_BENCHES_ALL.filter(([id]) => stagesOf(id).length);
 
 {
   const mark = failures;
@@ -2964,7 +2969,40 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
     viewer.dispose();
   }
 
-  if (failures === before) ok(`Kettle's foundry holds the bay's volumes clear, has nothing between the camera and the plate and a room behind it at ${LEAN_VIEWPORTS.length} viewports (${rays} rays), one lit lamp over the plate, a table dressed from its own materials; a heap of hundreds is one instanced body`);
+  // A spectrum's electrons are one instanced body: a column under every bin of the strip, the electrons that fell shown and the rest not.
+  {
+    const PESQ = await import('../src/learn/quests/unit02/q7-pes.js');
+    const PESK = await import('../src/learn/table/kits/pes.js');
+    const viewer = new Table3D(null, { onAction: () => {}, room: 'foundry' });
+    let state = MODEL.createTable(PESQ.STAGES[1].table, 'pes');
+    viewer.setState(state);
+    const mesh = viewer.piles.get('ch');
+    if (!mesh || !mesh.isInstancedMesh) fail('the strip of a chamber stands no instanced body');
+    else {
+      let bodies = 0;
+      viewer.fixtureRoot.traverse(o => { if (o.isInstancedMesh) bodies++; });
+      if (bodies !== 1) fail(`one strip is ${bodies} instanced bodies, not one`);
+      const shown = () => { const m = new THREE.Matrix4(); let n = 0; for (let i = 0; i < mesh.count; i++) { mesh.getMatrixAt(i, m); if (m.elements[0] > 1e-6) n++; } return n; };
+      if (shown() !== 0) fail(`an unfired strip shows ${shown()} electrons`);
+      state = MODEL.runScript(state, [{ place: { piece: 'b', to: 'slot:ch.spec' } }, { run: 'ch' }], { strict: true });
+      viewer.setState(state);
+      if (shown() !== 3) fail(`lithium fired shows ${shown()} electrons on the strip, not 3`);
+      const m = new THREE.Matrix4();
+      const pts = [];
+      for (let i = 0; i < mesh.count; i++) { mesh.getMatrixAt(i, m); if (m.elements[0] > 1e-6) pts.push(new THREE.Vector3().setFromMatrixPosition(m)); }
+      const f = state.fixtures.ch;
+      const a = viewer.map.toPlate({ x: f.at.x - f.size.w / 2, y: f.at.y - f.size.h / 2 });
+      const b = viewer.map.toPlate({ x: f.at.x + f.size.w / 2, y: f.at.y + f.size.h / 2 });
+      if (pts.some(p => p.x < a.x || p.x > b.x || p.z < a.z || p.z > b.z)) fail('an electron of the strip lies outside its chamber');
+      if (pts.some(p => p.y < 0.895)) fail('an electron of the strip lies below the plate');
+      let nearest = Infinity;
+      for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) nearest = Math.min(nearest, Math.hypot(pts[i].x - pts[j].x, pts[i].z - pts[j].z));
+      if (pts.length > 1 && nearest < PESK.chamberPiles(state)[0].r * viewer.map.s * 1.9) fail('two electrons of the strip stand on each other');
+    }
+    viewer.dispose();
+  }
+
+  if (failures === before) ok(`Kettle's foundry holds the bay's volumes clear, has nothing between the camera and the plate and a room behind it at ${LEAN_VIEWPORTS.length} viewports (${rays} rays), one lit lamp over the plate, a table dressed from its own materials; a heap of hundreds is one instanced body, and so is a spectrum's strip`);
 }
 
 console.log(`\n${failures === 0 ? 'BENCHES OK' : failures + ' PROBLEM(S) FOUND'}`);

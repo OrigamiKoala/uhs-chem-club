@@ -2461,16 +2461,100 @@ async function checkDrawn(q, mod) {
     }
   }
   if (q7) {
-    // Every spectrum on the bench adds up to the electrons its element has.
-    for (const st of q7.STAGES) for (const rig of st.rigs) {
-      const total = (EL.planPES(rig.sym) || []).reduce((n, p) => n + p.height, 0);
-      if (total !== EL.zOf(rig.sym)) fail(`unit02/q7-pes: ${rig.sym}'s peaks add up to ${total}, not ${EL.zOf(rig.sym)}`);
+    // THE SEVENTH LANTERNFALL TABLE (`q7-pes`, the spectrum kit): every peak is `electrons.js` `planPES`, every graded figure is recomputed.
+    const PES = await import('../src/learn/table/kits/pes.js');
+    const same7 = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+    const holds7 = (c, what) => { if (!c) fail(what); };
+    const start7 = i => TABLE.createTable(q7.STAGES[i].table, q7.STAGES[i].title);
+    const end7 = i => TABLE.runScript(start7(i), q7.SOLUTIONS[i], { strict: true });
+    // Every spectrum on the bench adds up to the electrons its element has, and its peaks land in distinct bins of the strip.
+    for (const sym of ['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al']) {
+      const peaks = EL.planPES(sym);
+      const total = peaks.reduce((n, p) => n + p.height, 0);
+      if (total !== EL.zOf(sym)) fail(`unit02/q7-pes: ${sym}'s peaks add up to ${total}, not ${EL.zOf(sym)}`);
+      const bins = peaks.map(p => PES.binOf(p.energy));
+      if (new Set(bins).size !== bins.length) fail(`unit02/q7-pes: two of ${sym}'s peaks fall in one bin of the strip`);
+      if (peaks.some(p => p.height > PES.STACK)) fail(`unit02/q7-pes: a peak of ${sym} is taller than the strip's pile`);
+      holds7(peaks[peaks.length - 1].energy >= PES.AXIS.lo && peaks[0].energy <= PES.AXIS.hi, `unit02/q7-pes: ${sym}'s peaks run off the strip's scale`);
+      holds7(PES.freedBy(sym, PES.energyAt(PES.TOP_STEP)).length === peaks.length, `unit02/q7-pes: the strongest light does not free every electron of ${sym}`);
     }
-    const heights = EL.planPES('O').map(p => p.height).join();
-    if (heights !== '2,2,4') fail('unit02/q7-pes stage 5: oxygen\'s spectrum is not 2, 2 and 4');
-    const ne = EL.BINDING.Ne['1s'], f = EL.BINDING.F['1s'];
-    if (!(ne > f)) fail('unit02/q7-pes stage 6: neon\'s 1s peak must sit further along than fluorine\'s');
-    if (!(EL.BINDING.B['2s'] > EL.BINDING.B['2p'])) fail('unit02/q7-pes stage 4: boron\'s 2s must be held tighter than its 2p');
+    same7(EL.planPES('O').map(p => p.height), [2, 2, 4], 'unit02/q7-pes stage 5 (oxygen\'s heights)');
+    holds7(EL.BINDING.Ne['1s'] > EL.BINDING.F['1s'] && EL.BINDING.F['1s'] > EL.BINDING.O['1s'], 'unit02/q7-pes stage 6: the inner peaks must run oxygen, fluorine, neon');
+    holds7(EL.BINDING.B['2s'] > EL.BINDING.B['2p'], 'unit02/q7-pes stage 4: boron\'s 2s must be held tighter than its 2p');
+    // Fire: the piles are the planner's, the printout is the same spectrum, and the strip's piles are one instanced body.
+    {
+      let t = start7(1);
+      t = TABLE.runScript(t, [{ place: { piece: 'b', to: 'slot:ch.spec' } }, { run: 'ch' }], { strict: true });
+      const r = PES.chamberRead(t, 'ch');
+      same7(r.piles, PES.pilesOf(EL.planPES('Li')), 'unit02/q7-pes stage 2 (the piles Li makes)');
+      same7(r.electrons, 3, 'unit02/q7-pes stage 2 (lithium\'s electrons)');
+      holds7(t.pieces.b.props.printed && !t.pieces.a.props.printed, 'unit02/q7-pes stage 2: only the fired card keeps a printout');
+      const piles = PES.chamberPiles(t);
+      holds7(piles.length === 1 && piles[0].cap === PES.BINS * PES.STACK && piles[0].shown.filter(Boolean).length === 3, 'unit02/q7-pes: the strip does not stand exactly the electrons that fell');
+      const empty = PES.chamberPiles(start7(1))[0];
+      holds7(empty.shown.every(x => !x), 'unit02/q7-pes: an unfired strip already holds electrons');
+      holds7(TABLE.apply(start7(1), { run: 'ch' }).last.ok === false, 'unit02/q7-pes: firing an empty chamber does not refuse');
+    }
+    // 1. rail: the specimen whose electrons are held with the least energy first
+    same7(end7(0).zones.rail.order, ['a', 'b'], 'unit02/q7-pes stage 1 (the rail)');
+    holds7(PES.holdOf('H') < PES.holdOf('He'), 'unit02/q7-pes stage 1: hydrogen must hold its electron more loosely than helium');
+    // 2. the tally is the total of Sample B's heights, and Sample A's card says its own total
+    same7(PES.markerRead(end7(1), 'tally'), PES.electronsIn(EL.planPES(q7.STAGES[1].table.pieces.find(p => p.id === 'b').props.sym)), 'unit02/q7-pes stage 2 (the tally)');
+    same7(PES.electronsIn(EL.planPES('He')), 2, 'unit02/q7-pes stage 2 (Sample A\'s card says two electrons)');
+    // 3. exactly one electron comes off lithium at the graded setting, and it is the loosest
+    {
+      const r = PES.chamberRead(end7(2), 'ch');
+      same7(r.freedNow.map(p => p.row), ['2s'], 'unit02/q7-pes stage 3 (what comes off)');
+      same7(r.electronsNow, 1, 'unit02/q7-pes stage 3 (electrons freed)');
+      const settings = [];
+      for (let i = 1; i <= PES.TOP_STEP; i++) if (PES.freedBy('Li', PES.energyAt(i)).length === 1) settings.push(i);
+      holds7(settings.length >= 2, 'unit02/q7-pes stage 3: only one light setting frees one electron');
+      holds7(PES.chamberRead(start7(2), 'ch').electronsNow === 3, 'unit02/q7-pes stage 3: the light starts already freeing one electron');
+      same7(PES.shellsOf('Li'), [2, 1], 'unit02/q7-pes stage 3 (lithium\'s rings)');
+    }
+    // 4. boron's outer ring is two rows (a subshell each) and the graded light frees both and not the 1s
+    {
+      same7(q7.ringRows('B', 1).sort(), ['2p', '2s'], 'unit02/q7-pes stage 4 (the outer ring\'s rows)');
+      const r = PES.chamberRead(end7(3), 'ch');
+      same7(r.freedNow.map(p => p.row).sort(), ['2p', '2s'], 'unit02/q7-pes stage 4 (what comes off)');
+      same7(r.electronsNow, PES.shellsOf('B')[1], 'unit02/q7-pes stage 4 (the outer ring has as many electrons as come off)');
+      same7(Object.keys(PES.chamberRead(start7(3), 'ch').piles).length, 0, 'unit02/q7-pes stage 4 (nothing is on the strip until fired)');
+      same7(Object.keys(r.piles).length, 2, 'unit02/q7-pes stage 4 (two piles from one ring)');
+    }
+    // 5. the build that matches is oxygen; its outlines are exactly the sealed specimen's piles
+    {
+      const t = TABLE.runScript(end7(4), [{ run: 'ch' }], { strict: true });
+      const b = PES.buildRead(t, 'build');
+      same7(b.sym, 'O', 'unit02/q7-pes stage 5 (the build)');
+      holds7(b.whole, 'unit02/q7-pes stage 5: the graded build is no whole atom');
+      holds7(PES.sameSpectrum(b.peaks, EL.planPES('O')) && JSON.stringify(PES.pilesOf(b.peaks)) === JSON.stringify(PES.chamberRead(t, 'ch').piles), 'unit02/q7-pes stage 5: the build\'s outlines are not the sealed piles');
+      for (const [p, e] of [[8, 7], [7, 7], [9, 9]]) {
+        const w = PES.buildRead(TABLE.runScript(start7(4), [{ setDial: { fixture: 'build', dial: 'protons', value: p } }, { setDial: { fixture: 'build', dial: 'electrons', value: e } }]), 'build');
+        holds7(!(w.whole && w.sym === 'O'), `unit02/q7-pes stage 5: ${p} protons and ${e} electrons already pass`);
+      }
+    }
+    // 6. the innermost peaks run oxygen, fluorine, neon; the cards print their protons
+    {
+      same7(end7(5).zones.rail.order, ['o', 'f', 'n'], 'unit02/q7-pes stage 6 (the rail)');
+      const t = start7(5);
+      for (const id of ['o', 'f', 'n']) holds7(t.pieces[id].props.note === `${EL.zOf(t.pieces[id].props.sym)} protons`, `unit02/q7-pes stage 6: ${id}'s card does not print its protons`);
+    }
+    // 7. Mg, Al, Na by their electrons and their last peak
+    {
+      const e = end7(6);
+      for (const [id, tray] of [['x', 'mg'], ['y', 'al'], ['z', 'na']]) {
+        same7(e.pieces[id].zone, `tray:${tray}`, `unit02/q7-pes stage 7 (${id})`);
+        same7(EL.zOf(e.pieces[id].props.sym), { na: 11, mg: 12, al: 13 }[tray], `unit02/q7-pes stage 7 (${id}'s electrons)`);
+      }
+      same7(EL.planPES('Na').slice(-1)[0].height, 1, 'unit02/q7-pes stage 7 (sodium\'s loosest pile is a single electron)');
+      same7(EL.planPES('Al').length, 5, 'unit02/q7-pes stage 7 (aluminum has an extra pile)');
+    }
+    // 8. the configuration written is nitrogen's, and the rows are the ladder's
+    {
+      same7(PES.writtenRead(end7(7), 'write').counts, { '1s': 2, '2s': 2, '2p': 3, '3s': 0, '3p': 0 }, 'unit02/q7-pes stage 8 (the page)');
+      same7(PES.writerTarget('N'), EL.groundConfig(7) && { '1s': 2, '2s': 2, '2p': 3, '3s': 0, '3p': 0 }, 'unit02/q7-pes stage 8 (nitrogen\'s target)');
+      same7(EL.planPES('N').map(p => `${p.row}${p.height}`), ['1s2', '2s2', '2p3'], 'unit02/q7-pes stage 8 (the strip)');
+    }
   }
   if (q8) {
     const B = await import('../src/learn/engine/electronbench.js');

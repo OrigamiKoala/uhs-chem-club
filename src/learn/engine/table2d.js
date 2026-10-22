@@ -181,7 +181,7 @@ export function drawTable(ctx, w, h, state, view = {}) {
     text(f.label, lay.box.x0 + 1.5, lay.box.y0 + 3.6, { color: PLATE_COLORS.dust });
     // A kit paints what a fixture shows (a needle, a beam's path, a reading) in the box, flat:
     // the built table paints it into the plate's own picture, so the two cannot differ.
-    kit.paintFixture?.(ctx, f, state, { x0: X(lay.box.x0), y0: Y(lay.box.y0), x1: X(lay.box.x1), y1: Y(lay.box.y1), sc, X, Y, lay });
+    kit.paintFixture?.(ctx, f, state, { x0: X(lay.box.x0), y0: Y(lay.box.y0), x1: X(lay.box.x1), y1: Y(lay.box.y1), sc, X, Y, lay, bodies: view.piles === false });
     // A dial's name and where it stands are printed on the plate in both views; only its track and
     // knob are the drawn table's own (the built table stands a real knob on it).
     for (const d of lay.dials) {

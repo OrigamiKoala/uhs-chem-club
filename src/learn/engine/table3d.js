@@ -317,32 +317,20 @@ export class Table3D extends BenchViewer3D {
     // Piles: a heap is hundreds of atoms and ONE draw call. A kit says which containers are piles and where each
     // atom lies (`kit.pileOf`); the instanced body is laid once on those slots and `syncPiles` shows the first
     // `n` of them, so a heap drawn down loses its outermost atoms and the rest stay where they were.
+    // A kit may also stand piles that belong to no container (`kit.pilesOf(state)`: the electrons that fall into the
+    // bins of a spectrum), each `{id, at, n, cap, slots, r, colour}` with its slots relative to `at`.
     this.piles = new Map();
-    for (const c of Object.values(state.zones.containers)) {
-      const pile = kit.pileOf?.(c);
-      if (!pile) continue;
-      const rM = pile.r * s;
-      const geo = new THREE.IcosahedronGeometry(1, 0);
-      const mat = this.mine(new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.15 }));
-      const mesh = new THREE.InstancedMesh(geo, mat, pile.cap);
-      mesh.name = `pile-${c.id}`;
+    for (const { id, at, pile } of this.pileSources(kit, state)) {
+      const mesh = new THREE.InstancedMesh(
+        new THREE.IcosahedronGeometry(1, 0),
+        this.mine(new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.15 })),
+        pile.cap
+      );
+      mesh.name = `pile-${id}`;
       mesh.castShadow = true;
-      const m = new THREE.Matrix4();
-      const q = new THREE.Quaternion();
-      const col = new THREE.Color(pile.colour);
-      pile.slots.forEach((slot, i) => {
-        const p = this.map.toPlate({ x: c.at.x + slot.x, y: c.at.y + slot.y });
-        // The mound: the middle stands higher than the edge, and every atom rests on the bed or on the ones under it.
-        const lift = rM * 0.8 + slot.h * rM * 2.2;
-        m.compose(new THREE.Vector3(p.x, GROUND_Y + lift, p.z), q, new THREE.Vector3(rM, rM * 0.82, rM));
-        mesh.setMatrixAt(i, m);
-        mesh.setColorAt(i, col);
-      });
-      mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-      mesh.count = pile.n;
+      this.layPile(mesh, at, pile);
       this.fixtureRoot.add(mesh);
-      this.piles.set(c.id, mesh);
+      this.piles.set(id, mesh);
     }
 
     // Fixtures: a kit may build its own (`kit.fixture3d`); otherwise a rim, a track and knob per dial, and a Run key.
@@ -504,14 +492,65 @@ export class Table3D extends BenchViewer3D {
     }
   }
 
+  /** Every pile on the table: a container that is one (`kit.pileOf`) and any a kit stands on its own (`kit.pilesOf`). */
+  pileSources(kit, state) {
+    const out = [];
+    for (const c of Object.values(state.zones.containers)) {
+      const pile = kit.pileOf?.(c);
+      if (pile) out.push({ id: c.id, at: c.at, pile });
+    }
+    for (const p of kit.pilesOf?.(state) || []) out.push({ id: p.id, at: p.at, pile: p });
+    return out;
+  }
+
+  /**
+   * Lay a pile's atoms on its slots. The mound: the middle stands higher than the edge, and every atom rests on the bed
+   * or on the ones under it. A pile whose atoms are not a prefix of its slots (a column in each bin of a spectrum) says
+   * which stand with `pile.shown`; the rest are given no size.
+   */
+  layPile(mesh, at, pile) {
+    const s = this.map.s;
+    const rM = pile.r * s;
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const col = new THREE.Color(pile.colour);
+    pile.slots.forEach((slot, i) => {
+      const p = this.map.toPlate({ x: at.x + slot.x, y: at.y + slot.y });
+      const lift = rM * 0.8 + slot.h * rM * 2.2;
+      const on = !pile.shown || pile.shown[i];
+      m.compose(new THREE.Vector3(p.x, GROUND_Y + lift, p.z), q, on ? new THREE.Vector3(rM, rM * 0.82, rM) : new THREE.Vector3(0, 0, 0));
+      mesh.setMatrixAt(i, m);
+      mesh.setColorAt(i, col);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.count = pile.shown ? pile.cap : pile.n;
+    mesh.userData.shown = pile.shown ? pile.shown.join('') : null;
+  }
+
+  /** Every pile on the table: a container that is one (`kit.pileOf`) and any a kit stands on its own (`kit.pilesOf`). */
+  pileSources(kit, state) {
+    const out = [];
+    for (const c of Object.values(state.zones.containers)) {
+      const pile = kit.pileOf?.(c);
+      if (pile) out.push({ id: c.id, at: c.at, pile });
+    }
+    for (const p of kit.pilesOf?.(state) || []) out.push({ id: p.id, at: p.at, pile: p });
+    return out;
+  }
+
   /** Show as many atoms of each pile as its container holds. */
   syncPiles() {
     if (!this.piles?.size) return;
     const kit = getKit(this.state.kit);
-    for (const [id, mesh] of this.piles) {
-      const c = this.state.zones.containers[id];
-      const pile = c && kit.pileOf?.(c);
-      if (pile) mesh.count = Math.min(pile.n, mesh.instanceMatrix.count);
+    for (const { id, at, pile } of this.pileSources(kit, this.state)) {
+      const mesh = this.piles.get(id);
+      if (!mesh) continue;
+      if (pile.shown) {
+        if (mesh.userData.shown !== pile.shown.join('')) this.layPile(mesh, at, pile);
+      } else {
+        mesh.count = Math.min(pile.n, mesh.instanceMatrix.count);
+      }
     }
   }
 

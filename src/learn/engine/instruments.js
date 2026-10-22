@@ -129,7 +129,7 @@ const BUILT_BENCHES = new Set([
   'q4-cloud',      // the tabletop, cloud kit (a probe plate, rings, films, a ring track, clouds turned on axis pegs) — table3d.js (T4b; the cloud plate is retired with T7)
   'q5-numbers',    // the tabletop, address and filling kit (a rack of boxes, an address strip, electron tokens) — table3d.js (T4b)
   'q6-filling',    // the tabletop, address and filling kit (arrows dealt into boxes, two magnets, written forms, element strips) — table3d.js (T4b)
-  'q7-pes',        // the electron bench, spectrum head — electronbench3d.js
+  'q7-pes',        // the tabletop, spectrum kit (a chamber that fires light at a specimen, electrons piling into a strip of energy bins, an atom built to match, a configuration written) — table3d.js (T4c; the electron bench's spectrum head serves only the Lantern-Eater now)
   'q8-trends',     // the electron bench, atom head and pull meter
   'q9-absorb',     // the light bench, cuvette head
   // Unit 3 — Ligar, benches three to nine.
