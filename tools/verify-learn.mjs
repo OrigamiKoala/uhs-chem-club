@@ -2136,20 +2136,104 @@ async function checkDrawn(q, mod) {
       if (!O.ringFits(O.RING_CIRCUMFERENCE_PM / n, O.RING_CIRCUMFERENCE_PM).fits) fail(`orbitals: ${n} whole wavelengths should fit the ring`);
     }
     if (O.ringFits(O.RING_CIRCUMFERENCE_PM / 2.5, O.RING_CIRCUMFERENCE_PM).fits) fail('orbitals: two and a half wavelengths must not fit the ring');
-    const fits = q4.STAGES[2].settings.filter(n => O.ringFits(n, O.RING_CIRCUMFERENCE_PM).fits).map(String).sort().join();
-    if (fits !== q4.SOLUTIONS[2].picks.slice().sort().join()) fail('unit02/q4-cloud stage 3: the graded wavelengths are not the ones that fit the ring');
-    // Stage 7's shapes are the real ones.
-    const shapes = { a: 'two lobes', b: 'four lobes', c: 'two lobes and a ring', d: 'four lobes', e: 'four lobes' };
-    const binFor = { 'two lobes': 'two', 'four lobes': 'four', 'two lobes and a ring': 'ring' };
-    for (const c of q4.STAGES[6].clouds) {
-      if (binFor[O.shapeOf(c.orbital)] !== q4.SOLUTIONS[6].bins[c.id] || binFor[shapes[c.id]] !== q4.SOLUTIONS[6].bins[c.id]) {
-        fail(`unit02/q4-cloud stage 7: plate ${c.id} is graded against the wrong shape`);
+    // THE FOURTH LANTERNFALL TABLE (`q4-cloud`, the cloud kit): every count is the planner's, every graded figure is recomputed.
+    const CLD = await import('../src/learn/table/kits/cloud.js');
+    const same = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+    const holds = (c, what) => { if (!c) fail(what); };
+    const start = i => TABLE.createTable(q4.STAGES[i].table, q4.STAGES[i].title);
+    const end = i => TABLE.runScript(start(i), q4.SOLUTIONS[i], { strict: true });
+    // 1. a ring that holds about nine in ten of fifty-plus shots, and a smaller one that does not
+    {
+      const r = CLD.ringRead(end(0), 'a');
+      holds(r.fired === 500 && r.share >= q4.NINE_IN_TEN[0] && r.share <= q4.NINE_IN_TEN[1], 'unit02/q4-cloud stage 1: the solution\'s ring does not hold nine in ten of the shots');
+      const small = CLD.ringRead(TABLE.apply(end(0), { setDial: { fixture: 'a', dial: 'ring', value: 40 } }), 'a');
+      holds(small.share < q4.NINE_IN_TEN[0], 'unit02/q4-cloud stage 1: a ring a third as wide already holds nine in ten');
+      const few = CLD.ringRead(TABLE.runScript(start(0), [{ run: 'a' }, { setDial: { fixture: 'a', dial: 'ring', value: 140 } }], { strict: true }), 'a');
+      holds(few.fired === 1, 'unit02/q4-cloud stage 1: one press does not fire exactly one shot');
+      const fifty = TABLE.runScript(start(0), [{ setDial: { fixture: 'a', dial: 'burst', value: 2 } }, { run: 'a' }], { strict: true });
+      holds(CLD.shotsOf(fifty, 'a') === 50, 'unit02/q4-cloud stage 1: the middle exposure is not fifty shots');
+      // the first fifty of five hundred are the same fifty (a plate builds, it does not reshuffle)
+      const pts = CLD.pointsOf('1s', 1);
+      same(O.sampleOrbital('1s', 50, 1), pts.slice(0, 50), 'unit02/q4-cloud stage 1 (the first fifty shots are the first fifty of five hundred)');
+    }
+    // 2. four films of one area; the round one catches the most, for any seed
+    {
+      for (const k of Object.keys(CLD.FILMS)) near(CLD.filmArea(k), CLD.FILM_AREA_PM2, CLD.FILM_AREA_PM2 * 0.03, `unit02/q4-cloud stage 2 (the ${k} film's area)`);
+      for (const seed of [1, 2, 3, 4, 5]) {
+        const pts = CLD.pointsOf('1s', seed).map(p => ({ a: p.x, b: p.y }));
+        const caught = k => pts.filter(p => CLD.filmHolds(k, p.a * CLD.BOHR_PM, p.b * CLD.BOHR_PM)).length;
+        const disc = caught('disc');
+        for (const k of ['ring', 'lobes', 'hollow']) holds(disc >= caught(k) + 20, `unit02/q4-cloud stage 2: with seed ${seed} the round film does not clearly beat the ${k} film (${disc} v ${caught(k)})`);
+      }
+      const t = end(1);
+      same(t.pieces.f2.zone, 'slot:a.film', 'unit02/q4-cloud stage 2 (the film on the plate)');
+      same(t.pieces.f2.props.shape, 'disc', 'unit02/q4-cloud stage 2 (the film that is laid)');
+      const caught = Object.keys(CLD.FILMS).map(k => CLD.catchOf(t, 'a', k));
+      holds(CLD.filmRead(t, 'a').caught === Math.max(...caught), 'unit02/q4-cloud stage 2: the solution does not catch the most');
+    }
+    // 3. the strings that close are the ones a whole number of whose wavelengths go round
+    {
+      const t = end(2);
+      for (const pm of q4.RING_STRINGS) {
+        const fits = O.ringFits(pm, O.RING_CIRCUMFERENCE_PM).fits;
+        same(t.pieces[`s${pm}`].zone, fits ? 'tray:closes' : 'tray:smears', `unit02/q4-cloud stage 3 (the ${pm} pm string)`);
+      }
+      same(q4.RING_STRINGS.filter(pm => O.ringFits(pm, O.RING_CIRCUMFERENCE_PM).fits), [332, 166, 111], 'unit02/q4-cloud stage 3 (the strings that close)');
+      const on = TABLE.apply(start(2), { place: { piece: 's332', to: 'slot:track.tile' } });
+      same(CLD.trackRead(on, 'track').fits, true, 'unit02/q4-cloud stage 3 (a string put on the track reads its own fit)');
+    }
+    // 4. the shell with no shots is the 2s node, found among shots on both sides of it, and the first cloud has shots there
+    {
+      const t = end(3);
+      const b = CLD.ringRead(t, 'b');
+      const want = CLD.nodePm('2s');
+      near(b.rpm, want, q4.NODE_TOLERANCE_PM, 'unit02/q4-cloud stage 4 (the ring at the node)');
+      same(b.count, 0, 'unit02/q4-cloud stage 4 (shots in the node\'s shell)');
+      holds(CLD.ringRead(t, 'a').count >= 1, 'unit02/q4-cloud stage 4: the first cloud is as empty at that distance as the second');
+      const around = d => CLD.ringRead(TABLE.apply(t, { setDial: { fixture: 'b', dial: 'ring', value: b.rpm + d } }), 'b').count;
+      holds(around(-30) > 0 && around(30) > 0, 'unit02/q4-cloud stage 4: the empty shell is not between shots');
+      holds(O.nodeRadii('1s').length === 0, 'unit02/q4-cloud stage 4: the first cloud has a node');
+    }
+    // 5. exactly the views along the node plane leave a slice empty; the slab is across the line of sight
+    {
+      const c = end(4);
+      const empty = [];
+      for (let turn = 0; turn <= 11; turn++) for (let tilt = -3; tilt <= 3; tilt++) {
+        let u = TABLE.apply(c, { setDial: { fixture: 'view', dial: 'turn', value: turn } });
+        u = TABLE.apply(u, { setDial: { fixture: 'view', dial: 'tilt', value: tilt } });
+        const r = CLD.plateRead(u, 'c');
+        if (r.shown.length <= q4.EMPTY_SLICE * r.fired) empty.push(`${turn}:${tilt}`);
+      }
+      same(empty, ['0:0', '6:0'], 'unit02/q4-cloud stage 5 (the views whose slice is empty)');
+      holds(CLD.plateRead(start(4), 'c').turn === 1 && CLD.plateRead(start(4), 'c').tilt === 1, 'unit02/q4-cloud stage 5: the view does not start oblique');
+    }
+    // 6. three axes, four clouds, one direction twice
+    {
+      const t = end(5);
+      same(['c1', 'c2', 'c3', 'c4'].map(id => CLD.axisOf(t.pieces[id].props.orbital)).sort(), ['x', 'y', 'z', 'z'], 'unit02/q4-cloud stage 6 (the four clouds\' axes)');
+      for (const a of ['x', 'y', 'z']) {
+        const id = ['c1', 'c2', 'c3', 'c4'].find(x => t.pieces[x].zone === `slot:peg-${a}`);
+        same(CLD.axisOf(t.pieces[id].props.orbital), a, `unit02/q4-cloud stage 6 (the cloud on the ${a} peg)`);
       }
     }
-    // Stage 6: three distinct directions among four plates.
-    const dirs = new Set(q4.STAGES[5].clouds.map(c => c.orbital));
-    if (dirs.size !== q4.SOLUTIONS[5].number) fail('unit02/q4-cloud stage 6: the plates do not show exactly the graded number of directions');
-
+    // 7. every card is sorted by the shape `orbitals.js` names
+    {
+      const t = end(6);
+      const binFor = { 'two lobes': 'two', 'four lobes': 'four', 'two lobes and a ring': 'ring' };
+      for (const id of ['ka', 'kb', 'kc', 'kd', 'ke']) same(t.pieces[id].zone, `tray:${binFor[O.shapeOf(t.pieces[id].props.orbital)]}`, `unit02/q4-cloud stage 7 (${t.pieces[id].label})`);
+      same(['ka', 'kb', 'kc', 'kd', 'ke'].map(id => O.shapeOf(t.pieces[id].props.orbital)), ['two lobes', 'four lobes', 'two lobes and a ring', 'four lobes', 'four lobes'], 'unit02/q4-cloud stage 7 (the shapes)');
+    }
+    // 8. the trade is a trade: the product of the two blurs is the same at every level, and it sits above the floor
+    {
+      const levels = [1, 2, 3, 4, 5].map(l => CLD.blurAt(l));
+      for (const b of levels) near(b.dx * b.dv, levels[0].dx * levels[0].dv, 2500, 'unit02/q4-cloud stage 8 (the product of the blurs at every level)');
+      holds(levels[4].dx < levels[0].dx && levels[4].dv > levels[0].dv, 'unit02/q4-cloud stage 8: a sharper position does not blur the speed more');
+      // hbar / 2 m_e, in pm km/s: 1.0546e-34 / (2 * 9.109e-31) m^2/s = 5.79e-5 m^2/s = 5.79e4 pm km/s
+      holds(levels[0].dx * levels[0].dv >= 5.79e4, 'unit02/q4-cloud stage 8: the gauge\'s product sits below the uncertainty floor');
+      same(CLD.trackReason().includes('position and a speed'), true, 'unit02/q4-cloud stage 8 (the track key gives the bench\'s reason)');
+      const t = TABLE.apply(start(7), { run: 'track' });
+      holds(t.last.ok === false && t.last.reason === CLD.trackReason(), 'unit02/q4-cloud stage 8: Track Electron does not refuse with the reason');
+    }
     // The turned cloud is the same cloud: a turn changes nothing but the side it is seen from.
     const CP = await import('../src/learn/engine/cloudplate.js');
     const pts = O.sampleOrbital('2pz', 400, 1);
@@ -2169,11 +2253,6 @@ async function checkDrawn(q, mod) {
     // Slicing a turned cloud keeps the slab across the line of sight.
     const sliced = CP.projectDots(pts, 400, 'turn', true, CP.DEFAULT_VIEW);
     if (!sliced.length || sliced.some(q => Math.abs(q.c) > CP.SLICE_HALF + 1e-9)) fail('unit02/q4-cloud: the slice of a turned cloud is not a slab across the view');
-    // Stages 5 to 7 are turning plates with turn keys; the earlier ones stay flat.
-    for (const i of [4, 5, 6]) {
-      const st = q4.STAGES[i];
-      if (!st.controls.includes('turn') || st.clouds.some(c => c.plane !== 'turn')) fail(`unit02/q4-cloud stage ${i + 1}: should be turning plates with turn keys`);
-    }
   }
   {
     // The lead lines: sparse by design. Every built bench has an opening stake, no boss has any, and none points at a stage that is not there.
