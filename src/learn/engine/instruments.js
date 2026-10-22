@@ -126,9 +126,9 @@ const BUILT_BENCHES = new Set([
   'q1-wave',       // the light bench, trace and prism heads — lightbench3d.js
   'q2-photon',     // the light bench, photocell head
   'q3-lines',      // the light bench, prism head and the energy ladder
-  'q4-cloud',      // the cloud plate — cloudplate3d.js
-  'q5-numbers',    // the box rack, address layout — boxrack3d.js
-  'q6-filling',    // the box rack, atomic layout
+  'q4-cloud',      // the tabletop, cloud kit (a probe plate, rings, films, a ring track, clouds turned on axis pegs) — table3d.js (T4b; the cloud plate is retired with T7)
+  'q5-numbers',    // the tabletop, address and filling kit (a rack of boxes, an address strip, electron tokens) — table3d.js (T4b)
+  'q6-filling',    // the tabletop, address and filling kit (arrows dealt into boxes, two magnets, written forms, element strips) — table3d.js (T4b)
   'q7-pes',        // the electron bench, spectrum head — electronbench3d.js
   'q8-trends',     // the electron bench, atom head and pull meter
   'q9-absorb',     // the light bench, cuvette head
