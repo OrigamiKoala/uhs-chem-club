@@ -164,7 +164,7 @@ export const STAGES = [
         ...scratchCorner().pieces
       ],
       zones: {
-        containers: [{ id: 'pan', label: 'Pan', at: { x: 98, y: 45 }, size: { w: 40, h: 24 }, cell: 13 }],
+        containers: [{ id: 'pan', label: 'Pan', at: { x: 98, y: 50 }, size: { w: 40, h: 24 }, cell: 13 }],
         trays: [scratchCorner().tray]
       },
       fixtures: [

@@ -34,13 +34,17 @@ import { PlateBench, PLATE_COLORS, plateText, raster, aperture, lampMark } from 
 import { getKit, radiusOf } from '../table/kits/index.js';
 import { SIZES, rectOf, railPositions } from '../table/snap.js';
 import { lineOf, readY, plotUnits } from '../table/recorder.js';
-import { fixtureLayout, pieceTargets, sitePlate } from '../table/layout.js';
+import { fixtureLayout, pieceTargets, sitePlate, LABEL, labelLines, captionLine } from '../table/layout.js';
+import { paintMat, paintStencil, roundRectPath, MAT } from './table-surface.js';
 import { TableGestures } from '../table/gestures.js';
 import { TableKeys } from './table-keys.js';
 
 export { fixtureLayout, lampMark };
 
 const AMBER = PLATE_COLORS.amber;
+
+/** How far above its track a dial's words are printed, in table units: clear of the knob that rides on it. */
+const DIAL_WORDS_ABOVE = 2.2;
 
 /* ------------------------------------------------------------------
    THE PICTURE (pure over a 2D context, drawn in Node by verify:table)
@@ -78,8 +82,14 @@ export function faceOf(kit, piece, state) {
  * paper strip. Zones, labels and jar levels are drawn once, here, for both.
  */
 export function drawTable(ctx, w, h, state, view = {}) {
-  ctx.fillStyle = PLATE_COLORS.bg;
-  ctx.fillRect(0, 0, w, h);
+  // `view.look === 'mat'` is the built table's ground: a worked mat with its words printed on it like paint. Anything else is the drawn
+  // tabletop's phosphor plate. The two print the same words in the same places; only the paint differs.
+  const mat = view.look === 'mat';
+  if (mat) paintMat(ctx, w, h, view.seed || 1);
+  else {
+    ctx.fillStyle = PLATE_COLORS.bg;
+    ctx.fillRect(0, 0, w, h);
+  }
   if (!state) return [];
   const kit = getKit(state.kit);
   const { sc, ox, oy } = fit(w, h, state.bounds);
@@ -87,58 +97,82 @@ export function drawTable(ctx, w, h, state, view = {}) {
   const Y = y => oy + y * sc;
   const holding = state.carry.held;
   const showPieces = view.pieces !== false;
+  const ink = { label: mat ? MAT.paint : PLATE_COLORS.dust, dim: mat ? MAT.paintDim : PLATE_COLORS.dim, text: mat ? MAT.paint : PLATE_COLORS.text };
+  /** A line of words at table units, `size` units tall; shrunk to `maxW` units rather than cut. */
+  const words = (t, x, y, o = {}) => {
+    const px = Math.max(o.minPx || 9, (o.size || LABEL.size) * sc);
+    if (mat) paintStencil(ctx, t, X(x), Y(y), { size: px, align: o.align, base: o.base, color: o.color || ink.label, maxW: o.maxW ? o.maxW * sc : 0 });
+    else plateText(ctx, t, X(x), Y(y), { size: px, ...o, color: o.color || ink.label });
+  };
   const text = (t, x, y, o = {}) => plateText(ctx, t, X(x), Y(y), { size: Math.max(9, 2.6 * sc), ...o });
 
   /* zones */
   ctx.lineWidth = 1;
   const outline = (r, lit, dashed = true) => {
+    if (mat) {
+      // Painted on the mat: a solid line, rounded at the corners, brighter while a piece is in the hand.
+      roundRectPath(ctx, Math.round(X(r.x0)) + 0.5, Math.round(Y(r.y0)) + 0.5, Math.round(r.w * sc), Math.round(r.h * sc), Math.max(2, sc * 0.9));
+      ctx.strokeStyle = lit ? MAT.paint : MAT.paintDim;
+      ctx.lineWidth = Math.max(1.5, sc * 0.22);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      return;
+    }
     ctx.setLineDash?.(dashed ? [4, 3] : []);
     ctx.strokeStyle = lit ? PLATE_COLORS.steel : PLATE_COLORS.rim;
     ctx.strokeRect(Math.round(X(r.x0)) + 0.5, Math.round(Y(r.y0)) + 0.5, Math.round(r.w * sc), Math.round(r.h * sc));
     ctx.setLineDash?.([]);
   };
+  /** A zone's words, where `layout.js` says they are printed. */
+  const zoneWords = (kind, z, dim = true) => {
+    for (const l of labelLines(state, kind, z)) words(l.text, l.x, l.baseline, { size: l.size, align: l.align, color: dim ? ink.label : ink.text });
+  };
   for (const t of Object.values(state.zones.trays)) {
     const r = rectOf(t, SIZES.tray);
-    outline(r, Boolean(holding));
-    text(t.label, r.x0 + 1.2, r.y0 - 1, { color: PLATE_COLORS.dim });
+    // The built table stands a real tray here (walls, a lining); the flat picture keeps only its words and the count.
+    if (!mat) outline(r, Boolean(holding));
+    zoneWords('tray', t);
     if (t.cap != null) {
       const n = Object.values(state.pieces).filter(p => p.zone === `tray:${t.id}` && !p.hidden).length;
-      text(`${n}/${t.cap}`, r.x1 - 1.2, r.y0 - 1, { align: 'right', color: n > t.cap ? AMBER : PLATE_COLORS.dim });
+      words(`${n}/${t.cap}`, r.x1 - 1.2, r.y0 - LABEL.above, { align: 'right', color: n > t.cap ? AMBER : ink.dim });
       if (n > t.cap) lampMark(ctx, X(r.x1) - 7, Y(r.y0) + 7, Math.max(10, 2.6 * sc));
     }
   }
   for (const c of Object.values(state.zones.containers)) {
     const r = rectOf(c, SIZES.container);
-    outline(r, Boolean(holding) || view.pourFrom === c.id, false);
+    if (!mat) outline(r, Boolean(holding) || view.pourFrom === c.id, false);
     // A kit may draw a container's contents itself (a heap is a pile of dots, not a level and a number):
     // `view.piles === false` leaves the dots to the built table, which stands them up.
     if (kit.paintContainer?.(ctx, c, state, { X, Y, sc, bodies: view.piles === false })) {
-      text(c.label, r.x0 + 1.2, r.y0 - 1, { color: PLATE_COLORS.dim });
+      zoneWords('container', c);
       continue;
     }
     const total = Object.values(c.contents).reduce((a, b) => a + b, 0);
     const cap = c.capacity || Math.max(total, 1);
     const level = Math.min(1, total / cap);
-    ctx.fillStyle = PLATE_COLORS.dim;
-    ctx.fillRect(X(r.x0) + 1, Y(r.y1) - level * r.h * sc, r.w * sc - 2, level * r.h * sc - 1);
-    text(c.label, r.x0 + 1.2, r.y0 - 1, { color: PLATE_COLORS.dim });
-    if (total > 0) text(String(Math.round(total * 100) / 100), r.x0 + r.w / 2, r.y0 + r.h / 2, { align: 'center', base: 'middle', color: PLATE_COLORS.text });
+    if (!mat) {
+      ctx.fillStyle = PLATE_COLORS.dim;
+      ctx.fillRect(X(r.x0) + 1, Y(r.y1) - level * r.h * sc, r.w * sc - 2, level * r.h * sc - 1);
+    }
+    zoneWords('container', c);
+    if (total > 0) words(String(Math.round(total * 100) / 100), r.x0 + r.w / 2, r.y0 + r.h / 2, { align: 'center', base: 'middle', color: ink.text });
   }
   for (const s of Object.values(state.zones.slots)) {
     const r = rectOf(s, SIZES.slot);
     outline(r, Boolean(holding));
-    if (s.label) text(s.label, r.x0 + r.w / 2, r.y1 + 3.4, { align: 'center', color: PLATE_COLORS.dim });
+    zoneWords('slot', s);
   }
   const rail = state.zones.rail;
   if (rail) {
     const r = rectOf(rail, SIZES.rail);
-    ctx.strokeStyle = PLATE_COLORS.rim;
+    ctx.strokeStyle = mat ? MAT.paintDim : PLATE_COLORS.rim;
+    ctx.lineWidth = mat ? Math.max(1.5, sc * 0.22) : 1;
     ctx.beginPath();
     ctx.moveTo(X(r.x0), Y(rail.at.y) + 0.5);
     ctx.lineTo(X(r.x1), Y(rail.at.y) + 0.5);
     ctx.stroke();
-    if (rail.first) text(rail.first, r.x0, r.y0 - 1, { color: PLATE_COLORS.dim });
-    if (rail.last) text(rail.last, r.x1, r.y0 - 1, { align: 'right', color: PLATE_COLORS.dim });
+    ctx.lineWidth = 1;
+    zoneWords('rail', rail);
     if (holding) {
       // The gaps a held piece can be tapped into: one under every place it could go.
       const n = rail.order.filter(o => o !== holding).length;
@@ -170,15 +204,23 @@ export function drawTable(ctx, w, h, state, view = {}) {
       ctx.beginPath();
       ctx.arc(X(r.x1 - 5.5), Y(r.y0 + 6.2), Math.max(3, 1.3 * sc), 0, Math.PI * 2);
       ctx.fill();
-      text(f.label, r.x0 + 1.2, r.y1 - 1.6, { color: waiting ? PLATE_COLORS.dust : PLATE_COLORS.dim });
+      words(f.label, r.x0 + 1.2, r.y1 - 1.6, { size: 2.6, color: waiting ? ink.label : ink.dim });
     }
+  }
+
+  /* what a stage prints on the plate: its notes, and a caption under every tool's place */
+  for (const n of state.notes || []) words(n.text, n.at.x, n.at.y, { size: n.size || LABEL.note, align: n.align || 'left', color: ink.dim });
+  for (const p of Object.values(state.pieces)) {
+    if (!p.caption || p.hidden) continue;
+    const c = captionLine(kit, p);
+    words(c.text, c.x, c.baseline, { size: c.size, align: 'center', color: ink.dim, maxW: 40 });
   }
 
   /* fixtures */
   for (const f of Object.values(state.fixtures)) {
     const lay = fixtureLayout(f);
     outline(lay.box, false, false);
-    text(f.label, lay.box.x0 + 1.5, lay.box.y0 + 3.6, { color: PLATE_COLORS.dust });
+    words(f.label, lay.box.x0 + 1.5, lay.box.y0 + 3.6, { size: 2.6, color: ink.label });
     // A kit paints what a fixture shows (a needle, a beam's path, a reading) in the box, flat:
     // the built table paints it into the plate's own picture, so the two cannot differ.
     kit.paintFixture?.(ctx, f, state, { x0: X(lay.box.x0), y0: Y(lay.box.y0), x1: X(lay.box.x1), y1: Y(lay.box.y1), sc, X, Y, lay, bodies: view.piles === false });
@@ -198,7 +240,24 @@ export function drawTable(ctx, w, h, state, view = {}) {
         ctx.fillRect(kx - 3, Y(d.y) - 5, 6, 10);
       }
       const shown = dial.labels ? dial.labels[Math.round((dial.value - dial.min) / (dial.step || 1))] ?? dial.value : dial.value;
-      text(`${dial.label || d.name} ${shown}`, d.x0, d.y - 1.2, { color: PLATE_COLORS.dust, size: Math.max(9, 2.3 * sc) });
+      // The words stand well clear above the track, where the knob never covers them (the built knob is a real cylinder).
+      words(`${dial.label || d.name} ${shown}`, d.x0, Math.max(d.y - DIAL_WORDS_ABOVE, lay.box.y0 + 6.3), { size: 2.4, color: ink.text, maxW: d.x1 - d.x0 });
+      // A tick under every step of a stepped dial, so the knob has places to be and the player sees how many.
+      if (mat && dial.step && dial.max > dial.min) {
+        const n = Math.round((dial.max - dial.min) / dial.step);
+        if (n > 0 && n <= 12) {
+          ctx.strokeStyle = MAT.paintDim;
+          ctx.lineWidth = Math.max(1, sc * 0.16);
+          for (let i = 0; i <= n; i++) {
+            const tx = X(d.x0 + (i / n) * (d.x1 - d.x0));
+            ctx.beginPath();
+            ctx.moveTo(tx, Y(d.y) + sc * 1.3);
+            ctx.lineTo(tx, Y(d.y) + sc * 2.3);
+            ctx.stroke();
+          }
+          ctx.lineWidth = 1;
+        }
+      }
     }
     if (view.controls === false) continue;
     if (!lay.run) continue;

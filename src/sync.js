@@ -36,15 +36,18 @@ let failures = 0;
 let lastPull = 0;
 let started = false;
 
+/** A guest's state never leaves this device; only a real account syncs. */
+const canSync = () => Boolean(session.token) && !session.isGuest;
+
 function schedule(delay = DEBOUNCE_MS) {
-  if (!session.token) return;
+  if (!canSync()) return;
   clearTimeout(timer);
   timer = setTimeout(push, delay);
 }
 
 /** Send this device's state up and adopt the server's merged answer. */
 export async function push() {
-  if (!session.token) return;
+  if (!canSync()) return;
   if (inflight) { again = true; return; }
   const doc = session.buildStateDoc();
   if (session.lastRemoteState && docsEqual(doc, session.lastRemoteState)) return;
@@ -64,7 +67,7 @@ export async function push() {
 
 /** Fetch the server's copy and merge it in. Throttled; `force` skips the gap. */
 export async function pull(force = false) {
-  if (!session.token) return;
+  if (!canSync()) return;
   const now = Date.now();
   if (!force && now - lastPull < PULL_MIN_GAP_MS) return;
   lastPull = now;
@@ -78,7 +81,7 @@ export async function pull(force = false) {
 
 /** Leaving the page: send what is pending without waiting for the debounce. */
 function flush() {
-  if (!session.token) return;
+  if (!canSync()) return;
   const doc = session.buildStateDoc();
   if (session.lastRemoteState && docsEqual(doc, session.lastRemoteState)) return;
   try {

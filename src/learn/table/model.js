@@ -101,7 +101,9 @@ export function labelsOf(spec) {
     ...(spec.fixtures || []).flatMap(f => [f.label, f.runLabel, ...Object.values(f.dials || {}).map(d => d.label)]),
     spec.prediction?.slot?.label,
     ...(spec.prediction?.tokens || []).map(t => t.label),
-    ...(spec.fetch || []).map(f => f.label)
+    ...(spec.fetch || []).map(f => f.label),
+    ...(spec.notes || []).map(n => n.text),
+    ...(spec.pieces || []).map(p => p.caption)
   ].filter(Boolean);
 }
 
@@ -134,6 +136,9 @@ export function createTable(spec, seedKey = '') {
     carry: { held: null, field: null },
     prediction: null,
     tools: [...(spec.tools || [])],
+    // Printed on the plate (`{at, text}`): how a stage tells the player what its tools and its answer do, where the
+    // hand is looking. Plain text the drawn and the built table both print; never a tooltip, never read by a check.
+    notes: (spec.notes || []).map(n => ({ at: { ...n.at }, text: String(n.text), ...(n.size ? { size: n.size } : {}), ...(n.align ? { align: n.align } : {}) })),
     fetch: {},
     // Plain data the kit may read (`state.opts`): a stage's wording mode, say.
     opts: { ...(spec.opts || {}) },
@@ -151,6 +156,8 @@ export function createTable(spec, seedKey = '') {
       ...(p.hidden ? { hidden: true } : {}),
       ...(p.fixed ? { fixed: true } : {}),
       ...(p.token ? { token: true } : {}),
+      // A line printed on the plate under where the piece hangs (a tool's one-line use), see `drawTable`.
+      ...(p.caption ? { caption: p.caption } : {}),
       ...(p.fetchFrom ? { fetchFrom: p.fetchFrom } : {})
     };
   };
@@ -452,7 +459,8 @@ const HANDLERS = {
       const kept = kit.dialed ? kit.dialed(s, f, Object.keys(set)[0]) : null;
       if (kept?.props) Object.assign(f.props, kept.props);
     }
-    s.recorder = append(s.recorder, row);
+    // A run can print several readings at once (`rows`: a beam with a detector at each angle reads all of them).
+    for (const r of row.rows || [row]) s.recorder = append(s.recorder, r);
     return { row };
   },
 

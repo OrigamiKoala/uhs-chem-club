@@ -40,10 +40,18 @@ import { benchHost, guideTo } from './bench-host.js';
 import { getKit, radiusOf } from '../table/kits/index.js';
 import { dishUnder } from '../table/kits/atoms.js';
 import { SIZES, rectOf } from '../table/snap.js';
-import { plateMap, fixtureLayout, pieceTargets, foePadOf, FOE_HEADROOM_M } from '../table/layout.js';
+import { plateMap, fixtureLayout, pieceTargets, foePadOf, FOE_HEADROOM_M, cardHalf } from '../table/layout.js';
 import { TableGestures, pendingFetch } from '../table/gestures.js';
 import { lineOf, readY } from '../table/recorder.js';
 import { drawTable, faceOf } from './table2d.js';
+import { weatherFace } from './table-surface.js';
+import {
+  DISH_H, PUCK_H, CARD_H, makeKitMaterials, jitter, shade, roundedSlab,
+  buildTray, buildSlot, buildJar, buildDeck, buildKnob, buildKey,
+  buildBead, buildPuck, buildDish, buildLens, buildCutter, buildCard, buildCase
+} from './table-props.js';
+import { makeLabMaterials, buildInstrumentCase, buildSocket } from './lab-props.js';
+import { hashId } from './plates.js';
 import { TableKeys } from './table-keys.js';
 import { TrendPlot } from './trendplot.js';
 import { PLATE_SURFACE_Y } from './lean.js';
@@ -51,18 +59,16 @@ import { pickAimTarget, aimBox } from '../../three/aim-target.js';
 import { fieldAimTargets, fieldPointById } from '../../three/field-points.js';
 
 const PLATE_Y = PLATE_SURFACE_Y;
-/** The flat picture lies this far above the plate; everything stands on it. */
-const GROUND_Y = PLATE_Y + 0.0015;
+/** The work mat the table is printed on stands this proud of the plate. */
+const MAT_T = 0.006;
+/** The flat picture lies on the mat; everything stands on it. */
+const GROUND_Y = PLATE_Y + MAT_T + 0.001;
 /** How far a piece in the hand (or on the pointer) is lifted. */
 const LIFT = 0.045;
-const PUCK_T = 0.022;
-const CARD_T = 0.010;
+const PUCK_T = PUCK_H;
+const CARD_T = CARD_H;
 
-/** Half the width of a card, in table units: wide enough for its label, never under its radius. */
-export function cardHalf(text, r) {
-  return Math.min(r * 4, Math.max(r, 0.5 * (String(text).length * 1.15 + 3.5)));
-}
-
+export { cardHalf };
 export class Table3D extends BenchViewer3D {
   /**
    * @param {HTMLElement} host where the drawn tabletop would go (unused, emptied)
@@ -104,6 +110,11 @@ export class Table3D extends BenchViewer3D {
     // ...or a named room's (Kettle's foundry: its cast-iron plate, its blackened rims, its firebrick ore tubs);
     // the bench kit's own only where there is neither a host nor a room.
     this.mats = opts.world?.materials || this.room?.mats || { top: this.steelMat, dark: this.darkMat };
+    // What the host does not supply (enamel, brass, rubber, glass): made once, freed with the table (`table-props.js`).
+    this.kitMats = { ...makeKitMaterials(), ...makeLabMaterials() };
+    // Shared by every piece of the table and made by it: `freeGroup` leaves them (a rebuilt piece must not free its
+    // neighbours' enamel), and `dispose` frees them once.
+    for (const m of Object.values(this.kitMats)) { m.userData.tableOwned = true; m.userData.shared = true; }
 
     this.table = new THREE.Group();
     this.table.name = 'tabletop';
@@ -135,6 +146,9 @@ export class Table3D extends BenchViewer3D {
   }
 
   /* ---------------- the view contract TableGestures reads ---------------- */
+
+  /** The height the table's things stand on, in the bench frame: the mat's face. Pointer rays are cast onto it. */
+  get groundY() { return GROUND_Y; }
 
   posOf(id) { return this.shown[id]; }
   dispatch(action) { this.onAction?.(action); }
@@ -283,26 +297,52 @@ export class Table3D extends BenchViewer3D {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 4;
     this.ground = { canvas, ctx: canvas.getContext('2d', { willReadFrequently: true }), tex, W, H };
+    this.matSeed = (hashId(`${state.kit}|${this.stageIndex ?? 0}`) % 997) + 1;
     const plane = new THREE.Mesh(
       new THREE.PlaneGeometry(state.bounds.w * s, state.bounds.h * s),
-      this.mine(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95, metalness: 0.1 }))
+      this.mine(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.04 }))
     );
     plane.rotation.x = -Math.PI / 2;
     plane.position.set(0, GROUND_Y, 0);
     plane.receiveShadow = true;
     plane.name = 'tabletop-ground';
     this.fixtureRoot.add(plane);
+    // The mat is a thing with an edge, laid on the plate: a rounded slab a little wider than the table, its border rubbed dark.
+    const matSlab = new THREE.Mesh(
+      roundedSlab(state.bounds.w * s + 0.05, state.bounds.h * s + 0.05, MAT_T, 0.03, 0.002),
+      this.kitMats.rubber
+    );
+    matSlab.position.set(0, PLATE_Y, 0);
+    matSlab.receiveShadow = true;
+    matSlab.name = 'tabletop-mat';
+    this.fixtureRoot.add(matSlab);
 
-    // Low rims round trays and slots: they are things on the host's work surface.
-    // A host may dress its trays in a material of its own (`mats.tray`: Ligar's are basalt, ore tubs on the ledge).
-    for (const t of Object.values(state.zones.trays)) this.rim(rectOf(t, SIZES.tray), 0.012, 0.006, mats.tray || mats.dark);
-    for (const t of Object.values(state.zones.slots)) this.rim(rectOf(t, SIZES.slot), 0.006, 0.004, mats.dark);
+    // Trays and slots are objects on the mat: pressed-metal walls and a lining, in the host's own metal where it has one
+    // (`mats.tray`: Ligar's are basalt). A word on them is printed on the mat beside them, not on a wall.
+    const wallMat = mats.tray || this.kitMats.tin;
+    const lining = this.kitMats.lining;
+    const place = (obj, r) => {
+      const a = this.map.toPlate({ x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2 });
+      obj.position.set(a.x, GROUND_Y, a.z);
+      this.fixtureRoot.add(obj);
+    };
+    for (const t of Object.values(state.zones.trays)) {
+      const r = rectOf(t, SIZES.tray);
+      place(buildTray(r.w * s, r.h * s, { wallMat, liningMat: lining }), r);
+    }
+    for (const t of Object.values(state.zones.slots)) {
+      const r = rectOf(t, SIZES.slot);
+      // A kit may say what a slot is (`kit.slot3d`: a lamp's cup, a plate's clips, a tube's cradle, a rung); the shared socket otherwise.
+      const role = kit.slot3d?.(t, state);
+      const own = role ? buildSocket(role, r.w * s, r.h * s, { mats: this.kitMats }) : null;
+      place(own || buildSlot(r.w * s, r.h * s, { wallMat: mats.dark || wallMat, liningMat: lining }), r);
+    }
 
     // Jars: low walls and a fill that rises with what they hold.
     this.jars = new Map();
     for (const c of Object.values(state.zones.containers)) {
       const r = rectOf(c, SIZES.container);
-      this.rim(r, 0.04, 0.007, mats.top);
+      place(buildJar(r.w * s, r.h * s, { wallMat: mats.top, liningMat: lining }), r);
       // A pile's contents are its atoms (below), not a level: no slab of fill over them.
       if (kit.pileOf?.(c) || kit.noJarFill?.(c)) continue;
       const fill = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.mine(new THREE.MeshStandardMaterial({ color: PHOSPHOR, roughness: 0.55, metalness: 0.1 })));
@@ -337,7 +377,19 @@ export class Table3D extends BenchViewer3D {
     this.fixtures = new Map();
     for (const f of Object.values(state.fixtures)) {
       const lay = fixtureLayout(f);
-      this.rim(lay.box, 0.02, 0.008, mats.dark);
+      // A deck under the instrument: a low plate, its edges broken, that the dials and the readings are set into.
+      // A kit may case its instruments (`kit.deckStyle`): a cast bezel, screws and a sheet of glass over the picture.
+      const dw = (lay.box.x1 - lay.box.x0) * s;
+      const dd = (lay.box.y1 - lay.box.y0) * s;
+      const deck = kit.deckStyle?.(f) === 'instrument' ? buildInstrumentCase(dw, dd, { mats: this.kitMats }) : buildDeck(dw, dd, { mat: mats.dark });
+      const dc = this.map.toPlate({ x: (lay.box.x0 + lay.box.x1) / 2, y: (lay.box.y0 + lay.box.y1) / 2 });
+      deck.position.set(dc.x, GROUND_Y, dc.z);
+      this.fixtureRoot.add(deck);
+      const DECK_TOP = GROUND_Y;
+      // A kit may dress an instrument with solid parts of its own (`kit.dress3d`: a glass envelope, a rail, a prism) on top of what
+      // the flat picture shows; the controls below are still the table's.
+      const dress = kit.dress3d?.(f, state, { THREE, scale: s, mats: this.kitMats, toPlate: this.map.toPlate, own: m => this.mine(m), box: lay.box, ground: GROUND_Y });
+      if (dress) this.fixtureRoot.add(dress);
       const own = kit.fixture3d?.(f, { THREE, scale: s, mats, toPlate: this.map.toPlate, plaque: (t, w, h, o) => this.plaque(t, w, h, o) });
       if (own?.group) {
         this.fixtureRoot.add(own.group);
@@ -345,31 +397,33 @@ export class Table3D extends BenchViewer3D {
         continue;
       }
       const knobs = {};
-      const knobGeo = new THREE.CylinderGeometry(0.02, 0.022, 0.026, 16);
+      const knobR = Math.min(0.026, s * 1.6);
       for (const d of lay.dials) {
         const a = this.map.toPlate({ x: d.x0, y: d.y });
         const b = this.map.toPlate({ x: d.x1, y: d.y });
-        const track = new THREE.Mesh(new THREE.BoxGeometry(b.x - a.x, 0.004, 0.008), mats.dark);
-        track.position.set((a.x + b.x) / 2, GROUND_Y + 0.002, a.z);
-        this.fixtureRoot.add(track);
-        const knob = new THREE.Mesh(knobGeo, mats.top);
-        knob.castShadow = true;
-        knob.position.set(a.x, GROUND_Y + 0.013, a.z);
+        // The groove the knob rides in: a dark slot cut in the deck, with a lit edge along it.
+        const groove = new THREE.Mesh(new THREE.BoxGeometry(b.x - a.x + knobR, 0.004, 0.012), this.kitMats.lining);
+        groove.position.set((a.x + b.x) / 2, DECK_TOP + 0.001, a.z);
+        groove.receiveShadow = true;
+        this.fixtureRoot.add(groove);
+        const knob = buildKnob(knobR, { capMat: this.kitMats.brass, notchMat: this.kitMats.rubber });
+        knob.position.set(a.x, DECK_TOP, a.z);
         this.fixtureRoot.add(knob);
-        knobs[d.name] = { knob, a, b };
+        knobs[d.name] = { knob, a, b, top: DECK_TOP };
       }
       if (!lay.run) { this.fixtures.set(f.id, { knobs }); continue; }
       const rp = this.map.toPlate({ x: (lay.run.x0 + lay.run.x1) / 2, y: (lay.run.y0 + lay.run.y1) / 2 });
-      const cap = new THREE.Mesh(new THREE.BoxGeometry((lay.run.x1 - lay.run.x0) * s, 0.016, (lay.run.y1 - lay.run.y0) * s), mats.top);
-      cap.position.set(rp.x, GROUND_Y + 0.008, rp.z);
-      cap.castShadow = true;
+      const kw = (lay.run.x1 - lay.run.x0) * s;
+      const kd = (lay.run.y1 - lay.run.y0) * s;
+      const cap = buildKey(kw, kd, { capMat: this.kitMats.enamelDark });
+      cap.position.set(rp.x, DECK_TOP, rp.z);
       this.fixtureRoot.add(cap);
       const label = new THREE.Mesh(
-        new THREE.PlaneGeometry((lay.run.x1 - lay.run.x0) * s * 0.9, (lay.run.y1 - lay.run.y0) * s * 0.8),
+        new THREE.PlaneGeometry(kw * 0.86, kd * 0.72),
         this.mine(new THREE.MeshStandardMaterial({ map: this.plaque(f.runLabel || 'Run', Math.max(128, Math.round((lay.run.x1 - lay.run.x0) * 14)), 64, {}), roughness: 0.85, metalness: 0.2 }))
       );
       label.rotation.x = -Math.PI / 2;
-      label.position.set(rp.x, GROUND_Y + 0.0165, rp.z);
+      label.position.set(rp.x, DECK_TOP + 0.0165, rp.z);
       this.fixtureRoot.add(label);
       this.fixtures.set(f.id, { knobs });
     }
@@ -417,7 +471,7 @@ export class Table3D extends BenchViewer3D {
       o.geometry?.dispose?.();
       const mats = Array.isArray(o.material) ? o.material : (o.material ? [o.material] : []);
       for (const m of mats) {
-        if (!m.userData?.tableOwned) continue;
+        if (!m.userData?.tableOwned || m.userData.shared) continue;
         // A face the kit painted is this table's own canvas: free it with the piece.
         if (m.userData.ownMap) m.map?.dispose?.();
         m.dispose();
@@ -466,7 +520,7 @@ export class Table3D extends BenchViewer3D {
     const g = this.ground;
     if (!g || !this.state) return;
     drawTable(g.ctx, g.W, g.H, this.state, {
-      pieces: false, controls: false, sheet: false, crt: false, piles: false, pourFrom: this.gestures.pourFrom,
+      look: 'mat', seed: this.matSeed, pieces: false, controls: false, sheet: false, crt: false, piles: false, pourFrom: this.gestures.pourFrom,
       // Where the world has the field point, the player walks to it; a plate would only be a shortcut past it.
       sites: id => this.showsSite(id)
     });
@@ -516,7 +570,8 @@ export class Table3D extends BenchViewer3D {
     const col = new THREE.Color(pile.colour);
     pile.slots.forEach((slot, i) => {
       const p = this.map.toPlate({ x: at.x + slot.x, y: at.y + slot.y });
-      const lift = rM * 0.8 + slot.h * rM * 2.2;
+      // A slot may say its height in table units (`slot.hu`: a dot of a cloud, hanging at its depth) instead of in bead heights.
+      const lift = rM * 0.8 + (slot.hu != null ? slot.hu * s : slot.h * rM * 2.2);
       const on = !pile.shown || pile.shown[i];
       m.compose(new THREE.Vector3(p.x, GROUND_Y + lift, p.z), q, on ? new THREE.Vector3(rM, rM * 0.82, rM) : new THREE.Vector3(0, 0, 0));
       mesh.setMatrixAt(i, m);
@@ -525,7 +580,7 @@ export class Table3D extends BenchViewer3D {
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     mesh.count = pile.shown ? pile.cap : pile.n;
-    mesh.userData.shown = pile.shown ? pile.shown.join('') : null;
+    mesh.userData.shown = pile.shown ? (pile.key ?? pile.shown.join('')) : null;
   }
 
   /** Every pile on the table: a container that is one (`kit.pileOf`) and any a kit stands on its own (`kit.pilesOf`). */
@@ -547,7 +602,8 @@ export class Table3D extends BenchViewer3D {
       const mesh = this.piles.get(id);
       if (!mesh) continue;
       if (pile.shown) {
-        if (mesh.userData.shown !== pile.shown.join('')) this.layPile(mesh, at, pile);
+        // `pile.key` names what the slots depend on when it is more than which are shown (a turning cloud moves every dot).
+        if (mesh.userData.shown !== (pile.key ?? pile.shown.join(''))) this.layPile(mesh, at, pile);
       } else {
         mesh.count = Math.min(pile.n, mesh.instanceMatrix.count);
       }
@@ -668,151 +724,191 @@ export class Table3D extends BenchViewer3D {
   }
 
   /**
-   * A kit-painted face: the SAME `kit.paintPiece` the drawn table calls, onto a canvas that
-   * becomes the puck's top. What is drawn on a piece is what the drawn table draws on it.
+   * A kit-painted face: the SAME `kit.paintPiece` the drawn table calls, onto a canvas that becomes a material. What is
+   * drawn on a piece is what the drawn table draws on it, weathered a little (`weatherFace`) so it has been handled.
+   * `rect` ({hw, hh} in table units) paints a card's proportions; otherwise a square canvas holds a disc.
+   * @returns {{mat: THREE.Material, canvas: HTMLCanvasElement, N: number}}
    */
-  paintedFace(kit, p, r, thick) {
-    const N = 384;
-    const canvas = document.createElement('canvas');
-    canvas.width = N;
-    canvas.height = N;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#16140f';
-    ctx.fillRect(0, 0, N, N);
-    const at = this.drag?.id === p.id ? this.drag.at : (this.shown[p.id] || p.at);
-    kit.paintPiece(ctx, p, this.state, { x: N / 2, y: N / 2, r: N * 0.47, lit: false, sc: (N * 0.47) / radiusOf(kit, p), flat: true, at });
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 4;
-    const mat = this.mine(new THREE.MeshStandardMaterial({
-      map: tex,
-      roughness: 0.85,
-      metalness: 0.15,
-      polygonOffset: true,
-      polygonOffsetFactor: -1,
-      polygonOffsetUnits: -1
-    }));
-    mat.userData.ownMap = true;
-    const face = new THREE.Mesh(new THREE.CircleGeometry(r * 0.96, 36), mat);
-    face.rotation.x = -Math.PI / 2;
-    face.position.y = thick + 0.0008;
-    return face;
-  }
-
-  /**
-   * A card the kit paints (`kinds.x.rect = {hw, hh}`, in table units): a thin slab with its face drawn by the
-   * SAME `kit.paintPiece` the drawn table calls, onto a canvas of the card's own proportions. The kit paints
-   * a rectangle about the point it is given, `sc` pixels to the unit, as it does on the drawn table.
-   */
-  buildRectPiece(kit, p, rect) {
-    const s = this.map.s;
-    const hw = rect.hw * s;
-    const hh = rect.hh * s;
-    const T = CARD_T * 1.5;
-    const g = new THREE.Group();
-    g.name = `piece-${p.id}`;
-    const body = new THREE.Mesh(new THREE.BoxGeometry(hw * 2, T, hh * 2), this.mats.top);
-    body.position.y = T / 2;
-    body.castShadow = body.receiveShadow = true;
-    g.add(body);
-
-    const K = 36;   // canvas pixels to the table unit
-    const W = Math.round(rect.hw * 2 * K);
-    const H = Math.round(rect.hh * 2 * K);
+  faceMaterial(kit, p, { N = 384, rect = null, physical = false } = {}) {
+    const rU = radiusOf(kit, p);
+    const K = 36;
+    const W = rect ? Math.round(rect.hw * 2 * K) : N;
+    const H = rect ? Math.round(rect.hh * 2 * K) : N;
     const canvas = document.createElement('canvas');
     canvas.width = W;
     canvas.height = H;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     ctx.fillStyle = '#16140f';
     ctx.fillRect(0, 0, W, H);
-    kit.paintPiece(ctx, p, this.state, { x: W / 2, y: H / 2, r: radiusOf(kit, p) * K, lit: false, sc: K, flat: true });
+    const at = this.drag?.id === p.id ? this.drag.at : (this.shown[p.id] || p.at);
+    if (rect) kit.paintPiece(ctx, p, this.state, { x: W / 2, y: H / 2, r: rU * K, lit: false, sc: K, flat: true });
+    else kit.paintPiece(ctx, p, this.state, { x: N / 2, y: N / 2, r: N * 0.47, lit: false, sc: (N * 0.47) / rU, flat: true, at });
+    weatherFace(ctx, Math.max(W, H), hashId(p.id), 0.7);
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 4;
-    const mat = this.mine(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, metalness: 0.15 }));
+    const opts = { map: tex, roughness: 0.62, metalness: 0.06, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 };
+    const mat = this.mine(physical
+      ? new THREE.MeshPhysicalMaterial({ ...opts, roughness: 0.5, clearcoat: 0.45, clearcoatRoughness: 0.4 })
+      : new THREE.MeshStandardMaterial(opts));
     mat.userData.ownMap = true;
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(hw * 2 * 0.985, hh * 2 * 0.985), mat);
-    face.rotation.x = -Math.PI / 2;
-    face.position.y = T + 0.0008;
-    g.add(face);
+    return { mat, canvas, N: W };
+  }
 
-    // The mark a held card wears: a ring clear of its corners. A mark, never a light.
-    const reach = Math.hypot(hw, hh);
-    const ring = new THREE.Mesh(new THREE.RingGeometry(reach * 1.06, reach * 1.2, 28), this.mine(new THREE.MeshBasicMaterial({ color: AMBER })));
+  /** The colour a painted face has a little in from its rim: a bead's skirt matches it. Bone where the canvas cannot say (Node). */
+  faceColour(canvas, N) {
+    try {
+      const d = canvas.getContext('2d').getImageData(Math.round(N * 0.2), Math.round(N * 0.5), 1, 1).data;
+      if (d[3] > 0 && (d[0] || d[1] || d[2])) return new THREE.Color(`rgb(${d[0]}, ${d[1]}, ${d[2]})`).multiplyScalar(0.82);
+    } catch (e) { /* no pixels to read */ }
+    return new THREE.Color(0xa59c86);
+  }
+
+  /** A mark a held piece wears: a ring clear of its edge. A mark, never a light. */
+  heldRing(g, reach) {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(reach * 1.06, reach * 1.2, 40), this.mine(new THREE.MeshBasicMaterial({ color: AMBER })));
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 0.0006;
     ring.visible = false;
     g.add(ring);
     g.userData.ring = ring;
-    return g;
+  }
+
+  /** An engraved legend as a flat mesh, `w` x `h` metres, face up (a name on a housing, a tag on a carrier). */
+  labelMesh(text, w, h, o = {}) {
+    const s = this.map.s;
+    const px = Math.max(96, Math.round(w / s * 14));
+    const py = Math.max(48, Math.round(h / s * 14));
+    const mat = this.mine(new THREE.MeshStandardMaterial({
+      map: this.plaque(text, px, py, { bg: o.bg || '#2a2620', dim: o.dim }), roughness: 0.82, metalness: 0.1,
+      polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1
+    }));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+    m.rotation.x = -Math.PI / 2;
+    m.receiveShadow = true;
+    return m;
+  }
+
+  /** A flat mesh a kit painted itself: `fn(ctx, W, H)` draws on a canvas `w` x `h` metres across, weathered a little. */
+  paintMesh(w, h, fn, o = {}) {
+    const K = o.px || 512;
+    const W = Math.max(64, Math.round(K * Math.min(1, w / Math.max(w, h))));
+    const H = Math.max(32, Math.round(W * h / w));
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.fillStyle = o.bg || '#16140f';
+    ctx.fillRect(0, 0, W, H);
+    fn(ctx, W, H);
+    weatherFace(ctx, Math.max(W, H), hashId(o.seed || 'paint'), 0.5);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    const mat = this.mine(new THREE.MeshStandardMaterial({
+      map: tex, roughness: 0.7, metalness: 0.06, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1
+    }));
+    mat.userData.ownMap = true;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+    m.rotation.x = -Math.PI / 2;
+    m.receiveShadow = true;
+    return m;
   }
 
   buildPiece(kit, p) {
     const s = this.map.s;
     const rU = radiusOf(kit, p);
     const r = rU * s;
+    const kind = kit.kinds?.[p.kind];
     const f = faceOf(kit, p, this.state);
     const square = p.kind === 'card' || Boolean(p.token);
     const g = new THREE.Group();
     g.name = `piece-${p.id}`;
-    if (kit.paintPiece && kit.kinds?.[p.kind]?.rect) return this.buildRectPiece(kit, p, kit.kinds[p.kind].rect);
-    if (!square && kit.paintPiece) {
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.05, PUCK_T, 28), this.mats.top);
-      body.position.y = PUCK_T / 2;
-      body.castShadow = body.receiveShadow = true;
-      g.add(body);
-      g.add(this.paintedFace(kit, p, r, PUCK_T));
-      const ring = new THREE.Mesh(new THREE.RingGeometry(r * 1.16, r * 1.3, 28), this.mine(new THREE.MeshBasicMaterial({ color: AMBER })));
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.0006;
-      ring.visible = false;
-      g.add(ring);
-      g.userData.ring = ring;
+    const k = this.kitMats;
+    const tone = (mat, amount = 0.07) => {
+      const m = this.mine(mat.clone());
+      m.color.multiplyScalar(jitter(p.id, amount));
+      return m;
+    };
+
+    // A piece the kit builds itself (`kit.piece3d`): a lamp, a tube, a cuvette are solid things, not cards with a picture on them.
+    const solid = kit.piece3d?.(p, this.state, {
+      hw: kind?.rect ? kind.rect.hw * s : r, hh: kind?.rect ? kind.rect.hh * s : r, s, mats: k,
+      own: m => this.mine(m),
+      label: (text, w, h, o = {}) => this.labelMesh(text, w, h, o),
+      paint: (w, h, fn, o = {}) => this.paintMesh(w, h, fn, o),
+      face: (o = {}) => this.faceMaterial(kit, p, { rect: kind?.rect || null, ...o }).mat
+    });
+    if (solid) {
+      g.add(solid);
+      this.heldRing(g, kind?.rect ? Math.hypot(kind.rect.hw, kind.rect.hh) * s : r);
       return g;
     }
-    const text = f.badge ? `${f.text} ${f.badge}` : f.text;
-    let labelW;
-    let labelH;
-    let thick;
-    if (square) {
-      const half = cardHalf(text, rU) * s;
-      thick = CARD_T;
-      const body = new THREE.Mesh(new THREE.BoxGeometry(half * 2, thick, r * 2), p.token ? this.mats.dark : this.mats.top);
-      body.position.y = thick / 2;
-      body.castShadow = body.receiveShadow = true;
-      g.add(body);
-      labelW = half * 2 * 0.94;
-      labelH = r * 2 * 0.84;
-    } else {
-      thick = PUCK_T;
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.05, thick, 20), this.mats.top);
-      body.position.y = thick / 2;
-      body.castShadow = body.receiveShadow = true;
-      g.add(body);
-      labelW = r * 1.7;
-      labelH = r * 1.0;
+
+    // A card the kit paints: a rounded slab with the face stuck on.
+    if (kit.paintPiece && kind?.rect) {
+      const { mat } = this.faceMaterial(kit, p, { rect: kind.rect });
+      g.add(buildCard(kind.rect.hw * s, kind.rect.hh * s, mat, tone(k.paper)));
+      this.heldRing(g, Math.hypot(kind.rect.hw, kind.rect.hh) * s);
+      return g;
     }
-    // The legend on the face: a flipped card is struck dim, a scaled one carries its multiplier.
+
+    if (!square && kit.paintPiece) {
+      // A lens: a ring and a glass; the picture is the glass, and only over a dish.
+      if (p.kind === 'lens') {
+        const over = dishUnder(p.id, this.state, this.drag?.id === p.id ? this.drag.at : (this.shown[p.id] || p.at));
+        const face = over ? this.faceMaterial(kit, p, { N: 512 }).mat : null;
+        g.add(buildLens(r, face, { brass: k.brass, glass: k.glass, grip: k.rubber }));
+        this.heldRing(g, r);
+        return g;
+      }
+      if (p.kind === 'cutter') {
+        g.add(buildCutter(r, { rubber: k.rubber, blade: k.blade, brass: k.brass }));
+        this.heldRing(g, r);
+        return g;
+      }
+      if (p.kind === 'dish') {
+        const { mat } = this.faceMaterial(kit, p, { N: 512 });
+        g.add(buildDish(r, mat, { enamel: tone(k.enamel, 0.04), rim: k.enamelDark }));
+        this.heldRing(g, r);
+        return g;
+      }
+      if (p.kind === 'detector') {
+        const { mat } = this.faceMaterial(kit, p);
+        g.add(buildCase(r, r, mat, this.mats.dark));
+        this.heldRing(g, r * 1.2);
+        return g;
+      }
+      const bead = kind && !kind.tool && ['atom', 'proton', 'neutron', 'electron', 'ion'].includes(p.kind);
+      if (bead) {
+        const { mat, canvas, N } = this.faceMaterial(kit, p, { physical: true });
+        g.add(buildBead(r, mat, this.mine(new THREE.MeshStandardMaterial({ color: this.faceColour(canvas, N), roughness: 0.55, metalness: 0.05 }))));
+        this.heldRing(g, r);
+        return g;
+      }
+      const { mat } = this.faceMaterial(kit, p);
+      g.add(buildPuck(r, PUCK_T, mat, tone(this.mats.top, 0.05)));
+      this.heldRing(g, r);
+      return g;
+    }
+
+    // A piece the kit does not paint: its label on a card or a coin.
+    const text = f.badge ? `${f.text} ${f.badge}` : f.text;
+    const labelW = square ? cardHalf(text, rU) * s * 2 * 0.94 : r * 1.7;
+    const labelH = square ? r * 2 * 0.84 : r * 1.0;
     const px = Math.max(96, Math.round(labelW / s * 14));
     const py = Math.max(48, Math.round(labelH / s * 14));
-    const mat = this.mine(new THREE.MeshStandardMaterial({
+    const face = this.mine(new THREE.MeshStandardMaterial({
       map: this.plaque(text, px, py, { dim: f.flipped, bg: f.flipped ? '#0d0c0a' : (p.token ? '#1d1b17' : '#2a2620') }),
-      roughness: 0.85, metalness: 0.2
+      roughness: 0.82, metalness: 0.1
     }));
-    const label = new THREE.Mesh(new THREE.PlaneGeometry(labelW, labelH), mat);
-    label.rotation.x = -Math.PI / 2;
-    label.position.y = thick + 0.0008;
-    g.add(label);
-    // The ring a held piece wears: amber is a signal, so it is a mark and not a light.
-    const ring = new THREE.Mesh(
-      new THREE.RingGeometry(r * 1.16, r * 1.3, 24),
-      this.mine(new THREE.MeshBasicMaterial({ color: AMBER }))
-    );
-    ring.rotation.x = -Math.PI / 2;
-    ring.position.y = 0.0006;
-    ring.visible = false;
-    g.add(ring);
-    g.userData.ring = ring;
+    if (square) {
+      const half = cardHalf(text, rU) * s;
+      g.add(buildCard(half, r, face, p.token ? this.mats.dark : tone(k.paper)));
+    } else {
+      g.add(buildPuck(r, PUCK_T, face, tone(this.mats.top, 0.05)));
+    }
+    this.heldRing(g, square ? Math.hypot(cardHalf(text, rU) * s, r) : r);
     return g;
   }
 
@@ -956,7 +1052,8 @@ export class Table3D extends BenchViewer3D {
       const at = this.drag?.id === id ? this.drag.at : (this.shown[id] || p.at);
       const pl = this.map.toPlate(at);
       const isLensOverDish = p?.kind === 'lens' && Boolean(dishUnder(id, this.state, at));
-      const baseElev = isLensOverDish ? (PUCK_T + 0.004) : 0;
+      // A kit may say how high a piece rests where it is (`kit.restHeight`: a dropper laid over a cuvette rests on its rim).
+      const baseElev = isLensOverDish ? DISH_H + 0.002 : (getKit(this.state.kit).restHeight?.(p, this.state, at) || 0);
       e.group.position.set(pl.x, GROUND_Y + baseElev + (this.lifts[id] || 0), pl.z);
     }
     const m = this._swarmM || (this._swarmM = new THREE.Matrix4());
@@ -1124,6 +1221,10 @@ export class Table3D extends BenchViewer3D {
 
   dispose() {
     if (this.disposed) return;
+    // The table IS the viewer the stage holds: handing it back (`unmountScene`) makes the stage dispose its
+    // `activeQuestViewer`, which is this. Flag it first, so that second call returns instead of calling
+    // `unmountScene` again without end (a stack overflow that left the stage UI up and every nav key dead).
+    this.disposed = true;
     if (this.guided) guideTo(null);
     this.guided = null;
     this.unGrab?.();
@@ -1134,7 +1235,8 @@ export class Table3D extends BenchViewer3D {
     this.plaques.clear();
     this.freeGroup(this.table);
     this.entries.clear();
-    this.unmountScene?.(this);
+    for (const m of Object.values(this.kitMats || {})) m.dispose?.();
+    try { this.unmountScene?.(this); } catch (err) { console.error('Table unmount failed:', err); }
     super.dispose();
   }
 }

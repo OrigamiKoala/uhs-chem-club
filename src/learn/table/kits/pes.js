@@ -44,6 +44,8 @@ export const PES_KIT = {
   pilesOf: chamberPiles,
   paintPiece,
   paintFixture,
+  slot3d: () => 'chamber',
+  deckStyle: () => 'instrument',
   printed: p => String(p.label),
   faceKey
 };
@@ -73,8 +75,8 @@ export const specimen = (id, label, sym, at, { note = '', zone = null } = {}) =>
  * the strip the electrons fall into. `sources` are the ids of the specimen cards that may be fired (the strip's caption names the one
  * that was); `rings` draws the specimen's own rings beside the holder; `model` names a build fixture whose atom lies over the strip.
  */
-export function chamber(id, at, sources, { energyDial = false, rings = false, model = null, axisLabel = 'ENERGY TO REMOVE, MJ/mol', label = 'Chamber' } = {}) {
-  const size = { w: 110, h: 44 };
+export function chamber(id, at, sources, { energyDial = false, rings = false, model = null, axisLabel = 'ENERGY TO REMOVE, MJ/mol', label = 'Chamber', h = 44 } = {}) {
+  const size = { w: 110, h };
   const slotId = `${id}.spec`;
   const x0 = at.x - size.w / 2;
   const y0 = at.y - size.h / 2;
@@ -88,10 +90,11 @@ export function chamber(id, at, sources, { energyDial = false, rings = false, mo
       },
       props: {
         backdrop: true, slot: slotId, sources: sources.slice(), axisLabel, rings, ...(model ? { model } : {}),
-        hidden: energyDial ? ['shown', 'at'] : ['energy', 'shown', 'at'], stripLeft: 21, baseAt: 27, dotStep: 2.2
+        hidden: energyDial ? ['shown', 'at'] : ['energy', 'shown', 'at'], stripLeft: 27, baseAt: 27, dotStep: 2.2
       }
     },
-    slots: [{ id: slotId, label: 'Chamber', at: { x: x0 + 11, y: y0 + 16 }, size: { w: 11, h: 11 } }],
+    // The holder is as wide as the specimen card that stands in it (22 units).
+    slots: [{ id: slotId, label: 'Holder', at: { x: x0 + 13, y: y0 + 15 }, size: { w: 24, h: 16 } }],
     size,
     slotId
   };

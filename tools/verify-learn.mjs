@@ -3935,8 +3935,8 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     // 2. the protons are the + ones
     {
       const t = end(g2, 1);
-      const tray = piecesOf(t, 'tray:plus');
-      holds(tray.every(p => p.kind === 'proton') && tray.length === Object.values(t.pieces).filter(p => p.kind === 'proton').length, 'unit01/q2-core stage 2: the tray is not every proton and only protons');
+      const marked = Object.values(t.pieces).filter(p => p.props.flipped);
+      holds(marked.every(p => p.kind === 'proton') && marked.length === Object.values(t.pieces).filter(p => p.kind === 'proton').length, 'unit01/q2-core stage 2: the marked particles are not every proton and only protons');
     }
     // 3 and 7. the needle is protons against electrons, and neutral means equal
     {

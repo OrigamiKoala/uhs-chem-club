@@ -16,7 +16,9 @@
 
 import { registerKit } from './registry.js';
 import { paintPiece, paintFixture, faceKey, RECTS } from './cloud-draw.js';
-import { SHOT_STEPS, MAX_SHOTS, trackReason, FILMS } from './cloud-read.js';
+import { buildPlateFrame } from '../../engine/lab-props.js';
+import { SHOT_STEPS, MAX_SHOTS, trackReason, FILMS, plateRead } from './cloud-read.js';
+import { fixtureLayout } from '../layout.js';
 
 export const CLOUD_KIT_ID = 'cloud';
 export const CLOUD_BOUNDS_H = 64;
@@ -40,6 +42,48 @@ function run(state, fixtureId) {
 
 const rect = (r, kind) => ({ r, rect: RECTS[kind], nojoin: true });
 
+/**
+ * The dots of every cloud plate, as beads standing over its picture (`table3d.js` `pilesOf`): a turning cloud is a real solid, each dot
+ * hanging at its depth, and the view dials turn it. A flat plate (no view) keeps its dots on the surface, as the plate shows them.
+ */
+function pilesOf(state) {
+  const out = [];
+  for (const f of Object.values(state.fixtures)) {
+    if (f.kind !== 'cloud') continue;
+    const read = plateRead(state, f.id);
+    const lay = fixtureLayout(f);
+    const dialRows = lay.dials;
+    const picTop = (dialRows.length ? dialRows[dialRows.length - 1].y - lay.box.y0 : 6) + 3.6;
+    const pic = f.props.pic ?? 34;
+    const half = f.props.extent ?? 5;
+    const k = pic / (2 * half);
+    const cx = lay.box.x0 + 2.5 + pic / 2;
+    const cy = lay.box.y0 + picTop + pic / 2;
+    const turning = read.plane === 'turn';
+    const slots = [];
+    const shown = [];
+    for (let i = 0; i < MAX_SHOTS; i++) {
+      const d = read.shown[i];
+      if (d) {
+        slots.push({ x: cx + d.a * k - f.at.x, y: cy - d.b * k - f.at.y, hu: turning ? (Math.max(-1, Math.min(1, d.c / half)) + 1) / 2 * 6.5 : 0, h: 0 });
+        shown.push(true);
+      } else { slots.push({ x: 0, y: 0, hu: 0, h: 0 }); shown.push(false); }
+    }
+    out.push({
+      id: f.id, at: { x: f.at.x, y: f.at.y }, cap: MAX_SHOTS, n: read.shown.length, slots, shown,
+      key: `${read.fired}|${read.turn}|${read.tilt}|${read.slice ? 1 : 0}|${read.orbital}`, r: Math.max(0.42, pic * 0.0135), colour: '#78a142'
+    });
+  }
+  return out;
+}
+
+/** A plate or a tile in its frame; a film is bare acetate. */
+function piece3d(p, state, c) {
+  if (p.kind === 'cloud' || p.kind === 'tile') return buildPlateFrame(c, { face: c.face(), frame: true });
+  if (p.kind === 'film') return buildPlateFrame(c, { face: c.face(), frame: false });
+  return null;
+}
+
 export const CLOUD_KIT = {
   id: CLOUD_KIT_ID,
   kinds: {
@@ -50,6 +94,10 @@ export const CLOUD_KIT = {
   run,
   paintPiece,
   paintFixture,
+  piece3d,
+  pilesOf,
+  slot3d: () => 'holder',
+  deckStyle: () => 'instrument',
   printed: p => String(p.label),
   faceKey
 };

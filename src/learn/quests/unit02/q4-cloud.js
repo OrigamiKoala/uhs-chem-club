@@ -31,6 +31,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import {
   cloudTable, cloudPlate, viewFixture, ringTrack, blurGauge, tracker, cloudCard, ringTile, filmPiece,
   plateRead, ringRead, filmRead, trackRead, blurRead, blurAt, catchOf, axisOf, nodePm, shapeOf, FILMS, ringFits, RING_CIRCUMFERENCE_PM, BOHR_PM,
@@ -96,7 +97,7 @@ export const STAGES = [
       title: 'One Shot, Fifty Shots',
       briefing: {
         speaker: SPEAKER,
-        body: 'This detector fires pulses to find an electron\'s location and leaves a glowing dot. Repeated shots reveal the pattern where the electron spends its time.'
+        body: 'Each press of Fire sends a pulse that finds an electron and leaves a dot, and many shots reveal where it spends its time. Press Submit when the table shows your answer.'
       },
       prompt: 'Set the counting ring to hold about nine in ten of Sample A\'s shots.',
       widget,
@@ -180,7 +181,7 @@ export const STAGES = [
         fixtures: [track.fixture],
         zones: {
           slots: track.slots,
-          trays: [tray('closes', 'Closes into one ring', { x: 110, y: 28 }, { w: 66, h: 20 }, 20), tray('smears', 'Smears into a band', { x: 110, y: 52 }, { w: 66, h: 20 }, 20)]
+          trays: [tray('closes', 'Closes into one ring', { x: 110, y: 31 }, { w: 66, h: 18 }, 20), tray('smears', 'Smears into a band', { x: 110, y: 55 }, { w: 66, h: 18 }, 20)]
         }
       }),
       hints: [
@@ -334,9 +335,9 @@ export const STAGES = [
         fixtures: [v],
         zones: {
           trays: [
-            tray('two', 'Two lobes', { x: 22, y: 38 }, { w: 38, h: 22 }),
-            tray('four', 'Four lobes', { x: 72, y: 38 }, { w: 57, h: 22 }),
-            tray('ring', 'Two lobes and a ring', { x: 123, y: 38 }, { w: 38, h: 22 })
+            tray('two', 'Two lobes', { x: 22, y: 43 }, { w: 38, h: 22 }),
+            tray('four', 'Four lobes', { x: 72, y: 43 }, { w: 57, h: 22 }),
+            tray('ring', 'Two lobes and a ring', { x: 123, y: 43 }, { w: 38, h: 22 })
           ]
         }
       }),
@@ -370,7 +371,7 @@ export const STAGES = [
     const a = cloudPlate('a', 'SAMPLE A', { x: 34, y: 30 }, '1s');
     const gauge = blurGauge('blur', { x: 88, y: 22 });
     const track = tracker('track', { x: 90, y: 53 });
-    const token = (id, label, y) => ({ id, label, at: { x: 128, y }, r: 7 });
+    const token = (id, label, y) => ({ id, label, at: { x: 128, y }, r: 6.5 });
     return {
       title: 'No Path',
       briefing: {
@@ -384,7 +385,7 @@ export const STAGES = [
         fixtures: [a.fixture, gauge, track],
         prediction: {
           slot: { id: 'predict', label: 'The speed blur', at: { x: 128, y: 10 }, size: { w: 24, h: 12 } },
-          tokens: [token('grows', 'It grows', 26), token('shrinks', 'It shrinks', 40), token('stays', 'It stays', 54)]
+          tokens: [token('grows', 'It grows', 29.5), token('shrinks', 'It shrinks', 43.5), token('stays', 'It stays', 57.5)]
         }
       }),
       hints: [
@@ -411,6 +412,16 @@ export const STAGES = [
     };
   })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  2: ['Lay a film on the plate to count the dots it catches.'],
+  3: ['Try a string on the track.'],
+  5: ['Turn the View dials to see the cloud from another side.'],
+  7: ['Turn and tilt the view, then drag each cloud into a tray.'],
+  8: ['Place a prediction, then turn the Precision dial.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

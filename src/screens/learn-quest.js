@@ -40,11 +40,17 @@ export function disposeLearnQuest() {
   } catch (err) {
     console.error('Learn quest dispose failed:', err);
   }
-  if (stage.mode === 'quest') stage.exitQuestScene();
+  // Each step is guarded and `active` is always cleared: a fault in one of them must never leave the quest
+  // standing, because the router calls this before every navigation and would fault on every one after it.
+  try {
+    if (stage.mode === 'quest') stage.exitQuestScene();
+  } catch (err) {
+    console.error('Leaving the quest scene failed:', err);
+  }
   document.body.classList.remove('bench-deployed');
   // Whatever stood the walk down, give it back. The router calls this on every
   // navigation away from a quest route, including back out onto the flat.
-  stage.setWalkSuspended?.(false);
+  try { stage.setWalkSuspended?.(false); } catch (err) { console.error('Restoring the walk failed:', err); }
   setBenchSite(null);
   active = null;
 }

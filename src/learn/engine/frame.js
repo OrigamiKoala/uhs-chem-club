@@ -1367,21 +1367,22 @@ export class LearnFrame {
       this.activeBriefingTx.destroy();
       this.activeBriefingTx = null;
     }
-    this.viewerUnsub?.();
-    activeBenchViewer()?.hideInstrumentHalos();
-    this.setTableMode(false);
-    this.container.removeEventListener('click', this.onClick);
-    this.a11yObserver?.disconnect();
-    this.a11yObserver = null;
-    this.benchKeys?.dispose();
-    this.benchKeys = null;
-    this.benchReadings?.dispose();
-    this.benchReadings = null;
-    this.encounter?.dispose();
-    window.removeEventListener('resize', this.onFit);
-    window.removeEventListener('scroll', this.onFit, { capture: true });
-    closeModal();
-    this.retirePanels();
+    // Every step is guarded, and the stage's own bars (the prompt strip and foot dock of table mode) are taken
+    // down whatever else faults: a half-disposed frame left them standing over the world with nothing behind them.
+    const guard = fn => { try { fn(); } catch (err) { console.error('Frame teardown step failed:', err); } };
+    guard(() => this.viewerUnsub?.());
+    guard(() => activeBenchViewer()?.hideInstrumentHalos());
+    guard(() => this.setTableMode(false));
+    guard(() => this.container.removeEventListener('click', this.onClick));
+    guard(() => { this.a11yObserver?.disconnect(); this.a11yObserver = null; });
+    guard(() => { this.benchKeys?.dispose(); this.benchKeys = null; });
+    guard(() => { this.benchReadings?.dispose(); this.benchReadings = null; });
+    guard(() => this.encounter?.dispose());
+    guard(() => window.removeEventListener('resize', this.onFit));
+    guard(() => window.removeEventListener('scroll', this.onFit, { capture: true }));
+    guard(() => closeModal());
+    guard(() => this.retirePanels());
+    guard(() => { this.el.tableStrip?.remove(); this.el.tableDock?.remove(); });
     this.container.innerHTML = '';
   }
 }

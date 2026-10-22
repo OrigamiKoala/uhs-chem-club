@@ -218,3 +218,7 @@ Beyond that, no formal accessibility standard has been established. T1 exists so
 student on hardware with no WebGL can solve every stage through native form controls,
 which is an inclusion commitment in practice. A keyboard, screen-reader or
 reduced-motion bar would be a new decision, not an existing one.
+
+## Usability floor for every bench (added after the 2026-10-09 audit)
+
+Working out the game must be easier than the chemistry. A first-time player, with no gaming experience, must be able to operate every tool from what is on the table, answer without hunting for Submit, undo any mistake where it was made, and leave a bench (Leave Bench, the nav keys) at any point and after the debrief. Moving things for its own sake is not play.

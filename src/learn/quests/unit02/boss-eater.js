@@ -262,16 +262,16 @@ export const STAGES = [
         pieces: [
           cuvette('s1', 'STANDARD 1', { x: 14, y: 53 }, { drops: 0 }), cuvette('s2', 'STANDARD 2', { x: 36, y: 53 }, { drops: 0 }), cuvette('s3', 'STANDARD 3', { x: 58, y: 53 }, { drops: 0 }),
           cuvette('sealed', 'SEALED SAMPLE', { x: 80, y: 53 }, { conc: SEALED_CONC, sealed: true }),
-          dropper('drop', { x: 106, y: 56 }), rinser('empty', { x: 126, y: 56 })
+          dropper('drop', { x: 106, y: 52.5 }), rinser('empty', { x: 126, y: 52.5 })
         ],
         fixtures: [
           sp.fixture,
-          plaqueFixture('drop-note', 'One drop = 2 mmol/L', { x: 122, y: 29 }, [], { w: 50 }),
-          markerFixture('conc', 'Sealed sample (mmol/L)', { x: 122, y: 42 }, { max: 12, step: 0.5, w: 44 })
+          plaqueFixture('drop-note', 'One drop = 2 mmol/L', { x: 102, y: 25.2 }, [], { w: 48 }),
+          markerFixture('conc', 'Sealed sample (mmol/L)', { x: 122, y: 38.4 }, { max: 12, step: 0.5, w: 44 })
         ],
         zones: { slots: sp.slots },
         tools: ['straightedge']
-      }, { recorder: REC }),
+      }, { recorder: { ...REC, at: { x: 108, y: 11 } } }),
       foes: EATER_FOE,
       encounter: {
         species: 'the lantern-eater',

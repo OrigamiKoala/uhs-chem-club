@@ -533,13 +533,48 @@ export function createSalvageCrateTexture(size = 512, guildCode = 'MM', serial =
   ctx.fillText(guildCode, size * 0.5, size * 0.33);
   ctx.font = `700 ${Math.round(size * 0.1)}px "Share Tech Mono", monospace`;
   ctx.fillText(serial, size * 0.5, size * 0.78);
-  ctx.globalCompositeOperation = 'destination-out';
   ctx.globalAlpha = 1;
-  for (let i = 0; i < 130; i++) {
+  ctx.restore();
+
+  // WORN, NOT NEW. Paint chips (never holes: a cleared pixel renders black) show bare metal and rust where the crate was knocked;
+  // rust runs down from every chip and from the strapping; grime darkens the lower half; the corners are rubbed bright.
+  ctx.save();
+  for (let i = 0; i < 90; i++) {
+    const x = rand() * size;
+    const y = rand() * size;
+    const r = 2 + rand() * 9;
+    ctx.fillStyle = rand() > 0.45 ? 'rgba(118, 66, 34, 0.7)' : 'rgba(150, 146, 132, 0.6)';
     ctx.beginPath();
-    ctx.arc(rand() * size, rand() * size, 2 + rand() * 7, 0, Math.PI * 2);
+    ctx.ellipse(x, y, r, r * (0.5 + rand() * 0.6), rand() * Math.PI, 0, Math.PI * 2);
     ctx.fill();
+    if (rand() > 0.55) {
+      const len = size * (0.06 + rand() * 0.22);
+      const g = ctx.createLinearGradient(0, y, 0, y + len);
+      g.addColorStop(0, 'rgba(104, 56, 28, 0.5)');
+      g.addColorStop(1, 'rgba(104, 56, 28, 0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(x - r * 0.4, y, r * 0.8, len);
+    }
   }
+  for (const y of [size * 0.45, size * 0.55]) {
+    for (let i = 0; i < 12; i++) {
+      const x = rand() * size;
+      const len = size * (0.05 + rand() * 0.18);
+      const g = ctx.createLinearGradient(0, y, 0, y + len);
+      g.addColorStop(0, 'rgba(96, 52, 26, 0.45)');
+      g.addColorStop(1, 'rgba(96, 52, 26, 0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(x, y, 2 + rand() * 4, len);
+    }
+  }
+  const grime = ctx.createLinearGradient(0, 0, 0, size);
+  grime.addColorStop(0, 'rgba(20, 16, 10, 0)');
+  grime.addColorStop(1, 'rgba(20, 16, 10, 0.38)');
+  ctx.fillStyle = grime;
+  ctx.fillRect(0, 0, size, size);
+  ctx.strokeStyle = 'rgba(206, 198, 178, 0.35)';
+  ctx.lineWidth = Math.max(2, size * 0.012);
+  ctx.strokeRect(size * 0.01, size * 0.01, size * 0.98, size * 0.98);
   ctx.restore();
 
   // Salt crusted along the bottom edge where the crate sits in the pan.

@@ -114,6 +114,7 @@ export class TableGestures {
     const s = this.state;
     const kit = this.kit;
     let best = null;
+    let top = null;
     for (const p of Object.values(s.pieces)) {
       if (p.hidden) continue;
       const c = this.view.posOf(p.id) || p.at;
@@ -123,8 +124,44 @@ export class TableGestures {
       const reach = Math.max(radiusOf(kit, p) * generous, this.view.pxToUnits(GRAB_MIN_PX));
       const d = Math.hypot(c.x - u.x, c.y - u.y);
       if (d <= reach && (!best || d < best.d)) best = { id: p.id, d };
+      // A tool that lies ON another piece (a lens over its dish: `kinds.x.onTop`) is the top thing there: a press on its own
+      // body takes it, never the piece underneath, so it can always be picked up again.
+      if (kit.kinds?.[p.kind]?.onTop && p.joinedTo.length && d <= radiusOf(kit, p) && (!top || d < top.d)) top = { id: p.id, d };
     }
+    if (top) return top.id;
     return best ? best.id : null;
+  }
+
+  /**
+   * The bond under a point: a join between two pieces the kit lets be pulled apart (`kinds.x.split`), pressed in the gap
+   * between their bodies. A tap there breaks it (`split`), so a join made by mistake is undone where it was made.
+   * Never while a piece is in the hand: that tap belongs to where the piece goes.
+   */
+  linkAt(u) {
+    const s = this.state;
+    const kit = this.kit;
+    if (s.carry.held) return null;
+    for (const key of Object.keys(s.links)) {
+      if (s.links[key]?.tool) continue;
+      const [a, b] = key.split('|');
+      const pa = s.pieces[a];
+      const pb = s.pieces[b];
+      if (!pa || !pb || pa.hidden || pb.hidden) continue;
+      if (!kit.kinds?.[pa.kind]?.split || !kit.kinds?.[pb.kind]?.split) continue;
+      const A = this.view.posOf(a) || pa.at;
+      const B = this.view.posOf(b) || pb.at;
+      const dx = B.x - A.x;
+      const dy = B.y - A.y;
+      const len = Math.hypot(dx, dy);
+      if (len < 1e-6) continue;
+      const t = ((u.x - A.x) * dx + (u.y - A.y) * dy) / (len * len);
+      const along = t * len;
+      // Only the gap between the two bodies: a press on an atom is a press on the atom.
+      if (along <= radiusOf(kit, pa) * 0.85 || along >= len - radiusOf(kit, pb) * 0.85) continue;
+      const across = Math.hypot(u.x - (A.x + t * dx), u.y - (A.y + t * dy));
+      if (across <= Math.max(1.4, this.view.pxToUnits(12))) return { a, b };
+    }
+    return null;
   }
 
   fixtureHit(u) {
@@ -168,6 +205,7 @@ export class TableGestures {
   /** Would a press at `u` take hold of something? (The built view asks, so an empty spot stays a look.) */
   wouldGrab(u) {
     if (this.fixtureHit(u)) return true;
+    if (this.linkAt(u)) return true;
     const id = this.pieceAt(u);
     if (id && !this.state.pieces[id].fixed) return true;
     if (this.onSheet(u)) return true;
@@ -182,6 +220,8 @@ export class TableGestures {
     const fh = this.fixtureHit(u);
     if (fh?.kind === 'dial') { this.gesture = { kind: 'dial', ...fh }; this.dialTo(fh, u); return; }
     if (fh?.kind === 'run') { this.gesture = { kind: 'run', fixture: fh.fixture }; return; }
+    const bond = this.linkAt(u);
+    if (bond) { this.gesture = { kind: 'bond', ...bond }; return; }
     const id = this.pieceAt(u);
     if (id && !this.state.pieces[id].fixed) {
       const c = this.view.posOf(id) || this.state.pieces[id].at;
@@ -227,6 +267,11 @@ export class TableGestures {
       if (hit?.kind === 'run' && hit.fixture === g.fixture) this.view.dispatch({ run: g.fixture });
       return;
     }
+    if (g.kind === 'bond') {
+      const now = this.linkAt(u);
+      if (now && now.a === g.a && now.b === g.b) this.view.dispatch({ split: [g.a, g.b] });
+      return;
+    }
     if (g.kind === 'piece' && g.moved) {
       const at = this.view.dragAt?.() || { x: u.x + g.off.x, y: u.y + g.off.y };
       this.view.setDrag?.(null, null);
@@ -251,6 +296,8 @@ export class TableGestures {
   tapPiece(id, at = null) {
     const held = this.state.carry.held;
     this.pourFrom = null;
+    // A piece that is only MARKED, never carried (`props.markable`: a particle the player tags), is flipped by a tap: one touch, no carrying.
+    if (!held && this.state.pieces[id]?.props?.markable) { this.view.dispatch({ flip: id }); return; }
     if (!held) { this.view.dispatch({ pick: id }); return; }
     if (held === id) { this.view.dispatch({ pick: null }); return; }
     // A piece on the rail is a place along it: the held piece goes before it when the tap lands on its left

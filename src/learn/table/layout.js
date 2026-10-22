@@ -12,6 +12,82 @@
  */
 
 import { SIZES, rectOf, railPositions } from './snap.js';
+import { radiusOf } from './kits/registry.js';
+
+/**
+ * WORDS ON THE PLATE. A zone's label, a stage's note and a tool's caption are printed on the
+ * table itself, by `drawTable`, so they have a ground of their own: a strip a label owns, which
+ * nothing else may stand on (`audit.js`). The drawn table and the built one print them from here,
+ * so the room a word is given is the room it takes.
+ *
+ *   size    the text's height, in table units (a unit is about 4 cm on the plate)
+ *   adv     one character's advance as a share of `size` (the plate's monospace face)
+ *   above   how far above its zone a tray's, a container's or the rail's label stands
+ */
+export const LABEL = Object.freeze({ size: 3, min: 2.1, adv: 0.62, above: 1.1, slotBelow: 3.9, note: 2.6, caption: 2.3 });
+
+/** The width in table units of `text` printed at `size`. */
+export const textUnits = (text, size = LABEL.size) => String(text).length * size * LABEL.adv;
+
+/** A card's half width, in table units: wide enough for its words, never under its radius, never over four radii. */
+export function cardHalf(text, r) {
+  return Math.min(r * 4, Math.max(r, 0.5 * (String(text).length * 1.15 + 3.5)));
+}
+
+/** The box a line of `text` fills, `align`ed about x, with its baseline at y. */
+export function lineBox(text, x, baseline, size = LABEL.size, align = 'left') {
+  const w = textUnits(text, size);
+  const x0 = align === 'left' ? x : align === 'right' ? x - w : x - w / 2;
+  return { x0, x1: x0 + w, y0: baseline - size * 1.05, y1: baseline + size * 0.3 };
+}
+
+/** The size a word is set at to stand in `maxW` units: the label size, shrunk to fit and never below `LABEL.min`. */
+export function fitSize(text, maxW, size = LABEL.size) {
+  const w = textUnits(text, size);
+  return w <= maxW ? size : Math.max(LABEL.min, size * maxW / w);
+}
+
+/**
+ * Where a zone's words are printed: `{x, baseline, align, text, size}` for each. A tray, a container and the rail carry their
+ * label over their left end (the rail its two ends); a slot's name stands under it, centred. A word longer than its zone is set
+ * smaller to stand in it (never below `LABEL.min`: past that the label is too long and `audit.js` says so).
+ */
+export function labelLines(state, kind, zone) {
+  if (kind === 'rail') {
+    const r = rectOf(zone, SIZES.rail);
+    const out = [];
+    if (zone.first) out.push({ x: r.x0, baseline: r.y0 - LABEL.above, align: 'left', text: zone.first, size: fitSize(zone.first, r.w / 2 - 1) });
+    if (zone.last) out.push({ x: r.x1, baseline: r.y0 - LABEL.above, align: 'right', text: zone.last, size: fitSize(zone.last, r.w / 2 - 1) });
+    return out;
+  }
+  const r = rectOf(zone, kind === 'slot' ? SIZES.slot : kind === 'container' ? SIZES.container : SIZES.tray);
+  if (kind === 'slot') {
+    return zone.label ? [{ x: r.x0 + r.w / 2, baseline: r.y1 + LABEL.slotBelow, align: 'center', text: zone.label, size: fitSize(zone.label, Math.max(r.w, 22)) }] : [];
+  }
+  const out = [];
+  if (zone.label) out.push({ x: r.x0 + 1.2, baseline: r.y0 - LABEL.above, align: 'left', text: zone.label, size: fitSize(zone.label, r.w - 1.2) });
+  return out;
+}
+
+/** The strips of table a zone's words are printed on. */
+export function labelRects(state, kind, zone) {
+  return labelLines(state, kind, zone).map(l => lineBox(l.text, l.x, l.baseline, l.size, l.align));
+}
+
+/** What a stage's note occupies. */
+export function noteRect(n) {
+  const size = n.size || LABEL.note;
+  return lineBox(n.text, n.at.x, n.at.y, size, n.align || 'left');
+}
+
+/** Where a tool's caption is printed: under the place the tool hangs, centred on it. */
+export function captionLine(kit, p) {
+  return { x: p.home.x, baseline: p.home.y + radiusOf(kit, p) + LABEL.caption * 1.5, align: 'center', size: LABEL.caption, text: p.caption };
+}
+export function captionRect(kit, p) {
+  const c = captionLine(kit, p);
+  return lineBox(c.text, c.x, c.baseline, c.size, 'center');
+}
 
 /** A field entry's drawn site plate, in table units, or null when the stage draws none. */
 export function sitePlate(entry) {

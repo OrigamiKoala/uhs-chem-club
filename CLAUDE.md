@@ -65,6 +65,10 @@ tokens and primitives; the SCOURED PLATE prose below stays the authority), `docs
   data, `latest` sections take the newer). The game plays from localStorage and never waits; sync never
   surfaces errors or touches the session. `/HoloClosed$/` flags don't travel. Sign-out wipes per-player
   state. XP, quest progress, inventory and roster are NOT in the doc.
+- **Guest mode (`session.startGuest()`, `session.isGuest`):** saves entirely to `localStorage` and
+  never writes or syncs to Google Sheets (`sync.js` ignores guests, and `guest.js` answers account APIs
+  locally). Whenever an agent is testing some part of the frontend and they need to pass the login screen,
+  they should use guest mode (click `#landing-guest-btn` / `#login-guest-btn` "Continue as Guest" or call `session.startGuest()`).
 - **XP:** paid once per stage; flat (no attempt multiplier); hints free; completion idempotent; progress
   never regresses (`Math.max`); a finished quest replays free. Clean-solve streak pays nothing. Guild
   score is a mean (`mean(xp>0) × (0.75 + 0.5×active/roster)`), never a sum, and is never labelled "XP".
@@ -104,8 +108,8 @@ tokens and primitives; the SCOURED PLATE prose below stays the authority), `docs
 
 **Client (`src/`):** `main.js` boots stage/HUD/router immediately, fetches `bootstrap` in background.
 `router.js` hash router (`ROUTES` gating, `ROUTE_NAV`, `PARAM_ROUTES` for `/learn/:worldId[/:questId]`,
-`tryVoyage`; leaving a quest calls `disposeLearnQuest()`). `session.js` (token, player, XP, flags, learn
-state; the only XP curve: 45·(N−1)², cap level 12). `api.js` thin POST wrapper. `sync.js` +
+`tryVoyage`; leaving a quest calls `disposeLearnQuest()`). `session.js` (token, guest mode, player, XP, flags, learn
+state; the only XP curve: 45·(N−1)², cap level 12). `guest.js` (intercepts calls in guest mode, mocks account routes locally from localStorage without Sheet traffic). `api.js` thin POST wrapper. `sync.js` +
 `shared/statemerge.js`. `ui/` (`layout.js` `pageHeader` — every screen builds its header from it;
 `modal.js`, `toast.js`, `transmission.js`, `cinematic.js`, `galaxy-map.js`). `story/` (`quest1.js` single
 source for Quest 1 narrative, `saga.js`, `lore.js`, `story-modal.js`). `screens/` one render function per
@@ -185,6 +189,31 @@ table, atom kit piloted first, and every reworked bench must also be integrated 
   tabletop prompt strip (`.lq-tstrip`) enforces `flex: 1 1 auto !important` on `.lq-prompt`, and `margin-left: auto !important; align-self: center !important;` on `.lq-rail` so stage squares stay right-aligned and vertically centered;
   lens rendering uses elevated base over dishes, polygon offset, and 384px canvas textures to eliminate z-fighting, with rest:{x:0,y:0} for concentric centered snapping;
   table gestures use strict closer distance (`d < best.d`) so sample dishes and centered resting tools resolve properly on drag/tap.
+- **Tabletop objects and layout (the 2026-10 audit).** A built table is not boxes with textures: `engine/table-props.js` builds
+  every solid (rounded slabs with a broken edge, lathed dishes/beads/pucks/knobs, an assembled lens and cutter, trays with walls and a
+  lining), `engine/table-surface.js` paints the worn mat (the plate's ground, `drawTable` `look: 'mat'`) and weathers faces; shared
+  materials are `tableOwned` + `shared`. The mat stands 6 mm proud: pointer rays cast onto `bench.groundY`, never the plate. **Words are
+  paint on the table with a strip of their own** (`table/layout.js` `LABEL`, `labelLines`, `fitSize`: shrunk to the zone, never below
+  `LABEL.min`; stage `notes` and a tool's `caption` are printed there too) and `table/audit.js` (run by `verify:table`, ratchet
+  `tools/layout-legacy.json`: new quests get no line) fails any overlap of a zone, label, note, fixture or piece. Tallow (`unit01`) and
+  Lanternfall (`unit02`) are clean.
+  **Kits build their own solids** (Lanternfall, 2026-10-22): `engine/lab-props.js` builds the lamp housings, discharge tubes, bulbs,
+  gas cells, metal coupons, detector heads, cuvettes, droppers, sockets, instrument cases, the photocell's glass dome and the pulse
+  track; `Table3D` calls the kit's optional hooks `piece3d(p, state, ctx)` (a solid for a piece, `null` for the card), `slot3d(zone, state)`
+  (what socket a slot is: `lamp holder cradle rung well chamber mark`), `deckStyle(f)` (`'instrument'`: a cast bezel, screws and a pane of
+  glass over the flat picture), `dress3d(f, state, ctx)` (solid parts over a fixture's picture), `restHeight(p, state, at)` (a tool laid
+  over a cuvette rests on its rim) and `pilesOf` (the cloud plates' dots are real beads at their depth, so the view dials turn a solid).
+  A stage's how-to lines are `applyNotes(STAGES, {n: [lines]})` (`table/notes.js`): it finds a clear strip (smaller type, then line by
+  line) and `verify:table` fails on any line left without one. Lanternfall reads in real terms (shell, subshell, orbital, spin), never
+  floors and bunks, and every stage-one briefing ends "Press Submit when the table shows your answer."
+  Interaction: a lens lying on a dish is on top (`kinds.x.onTop`); tapping the gap between joined atoms breaks the join
+  (`gestures.linkAt`, `kinds.x.split`); `props.markable` pieces are flipped (ringed) by one tap, not carried; a beam fixture may list
+  fixed `detectors` and a `run` may return several `rows`. Tallow stage 1 hangs the lens, power dial and cutter on a right-hand shelf with
+  captions; stage 7 is "make a mixture and a compound" (the shaker is gone); `q2-core` stage 1 has three fixed detectors and drawn model
+  cards. `Table3D.dispose()` must flag itself disposed before `unmountScene(this)` (the stage disposes its active viewer: infinite
+  recursion otherwise, leaving the stage UI up and the router dead); `disposeLearnQuest` and `LearnFrame.dispose` guard every step.
+  The star map draws planets, names and rings only (no acts, no light-years, scattered positions); Tallow's crates are chipped, rusted
+  and rounded (`createSalvageCrateTexture`, `boxUVs`).
 - **Deck layout:** `.lq-prompt` pinned top, `.lq-deck-body` scrolls, `.lq-deck-foot` (banner, Hint,
   Submit) pinned bottom; `fitDeck()` bounds it; sorting answers render as a matrix (`compactBins`).
   Overworld card (`.learn-quest-overworld .lq-body`) is flat prose: prompt, reading, keys, run-in reward;
@@ -311,7 +340,7 @@ Epilogue (`QUEST1_EPILOGUE`) is duplicated in `Quests.gs`, the proxy and `quest.
 
 ## Player journey
 
-`#/` landing → `#/demo` (stage 1, no account) → `#/register` → `#/onboarding` (a player with a guild slot
+`#/` landing (with "Continue as Guest") → `#/demo` (stage 1, no account) → `#/register` or `#/login` ("Continue as Guest" for local-only play) → `#/onboarding` (a player with a guild slot
 never sees the picker) → `#/bridge` → `#/quest`, `#/leaderboard`, `#/inventory`, `#/quarters`,
 `#/settings`, `#/admin`, `#/learn…`, `#/drills`, `#/casefile`, `#/contracts`, `#/crew/:id`. Nav labels
 match page titles: BRIDGE, STAR MAP, LEARN, STANDINGS, INVENTORY, CREW. Star Map has Story (galaxy chart,

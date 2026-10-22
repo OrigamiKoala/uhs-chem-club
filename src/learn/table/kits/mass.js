@@ -607,7 +607,7 @@ registerKit(MASS_KIT);
 /** A mass table is the card table's size (150 x 72): a balance, its pans and a row of trays need the width, and a piece is still 28 px or more on a phone. */
 export const MASS_BOUNDS = Object.freeze({ w: 150, h: 72 });
 /** Where the paper strip parks on a mass table that never prints on it. */
-export const MASS_RECORDER = Object.freeze({ at: { x: 147, y: 69.8 }, size: { w: 6, h: 4.4 } });
+export const MASS_RECORDER = Object.freeze({ at: { x: 149.5, y: 71.5 }, size: { w: 1, h: 1 } });
 
 /** A stage's declaration with the mass kit's defaults: the kit, the bounds, a parked recorder strip. */
 export function massTable(spec) {
@@ -617,7 +617,7 @@ export function massTable(spec) {
 /** A crate or a drum: a rect piece standing in a pan, sealed or open (`props {species, n | grams, sealed?, note?}`). */
 export const crate = (id, label, at, props) => ({ id, kind: 'crate', label, at, props });
 
-const PANS_Y = 45;
+const PANS_Y = 48;
 const pan = (id, label, at, extra = {}) => ({ id, label, at, size: { w: 30, h: 24 }, cell: 30, ...extra });
 
 /**

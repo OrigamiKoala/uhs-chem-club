@@ -29,6 +29,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import {
   trendsTable, atomCard, electronPiece, springFixture, sizerFixture, stripFixture,
   springRead, sizeRead, stripRead, pullOf, hardestPull, feelsOf, costOf, itemOf, sizeNow, planPull, shellsOf, outerShell,
@@ -96,7 +97,7 @@ export const STAGES = [
       title: 'What Makes the Pull',
       briefing: {
         speaker: SPEAKER,
-        body: 'This bench models atoms to scale and measures the pull on their electrons. Put an atom in the holder and press "Tug Electron" to read the pull on the electron the dial names.'
+        body: 'This bench models atoms to scale and measures the pull on their electrons: put an atom in the holder and press "Tug Electron" to read the pull. Press Submit when the table shows your answer.'
       },
       prompt: 'Put the atom that holds one of its electrons hardest of all in the tray.',
       widget,
@@ -137,7 +138,7 @@ export const STAGES = [
       table: trendsTable({
         pieces: row([['li', 'Li'], ['na', 'Na'], ['be', 'Be'], ['mg', 'Mg']]),
         fixtures: [sp.fixture],
-        zones: { slots: sp.slots, trays: [tray('one', 'Feels +1', { x: 125, y: 14 }, 44), tray('two', 'Feels +2', { x: 125, y: 40 }, 44)] }
+        zones: { slots: sp.slots, trays: [tray('one', 'Feels +1', { x: 125, y: 16 }, 44), tray('two', 'Feels +2', { x: 125, y: 43 }, 44)] }
       }),
       hints: [
         'Put each atom in the holder with the dial on its outermost electron and read every line.',
@@ -199,7 +200,7 @@ export const STAGES = [
   (() => {
     const sp = springFixture(SPRING, { x: 33, y: 19 }, { show: { between: true, feel: true }, feelWord: 'EFF. NUCLEAR CHARGE' });
     const sz = sizerFixture(SIZER, { x: 88, y: 15 }, { measure: true, w: 40 });
-    const token = (id, label, y) => ({ id, label, at: { x: 130, y }, r: 7 });
+    const token = (id, label, y) => ({ id, label, at: { x: 130, y }, r: 6.5 });
     return {
       title: 'Down a Group',
       prompt: 'Predict how a potassium atom\'s size compares with a sodium atom\'s.',
@@ -210,7 +211,7 @@ export const STAGES = [
         zones: { slots: [...sp.slots, ...sz.slots] },
         prediction: {
           slot: { id: 'predict', label: 'Size of K', at: { x: 130, y: 10 }, size: { w: 24, h: 12 } },
-          tokens: [token('larger', 'Larger', 26), token('smaller', 'Smaller', 40), token('equal', 'Equal', 54)]
+          tokens: [token('larger', 'Larger', 29.5), token('smaller', 'Smaller', 43.5), token('equal', 'Equal', 57.5)]
         }
       }),
       hints: [
@@ -250,7 +251,7 @@ export const STAGES = [
       table: trendsTable({
         pieces: [
           atomCard('na1', 'SODIUM A', 'Na', rowAt(0)), atomCard('na2', 'SODIUM B', 'Na', rowAt(1)), atomCard('cl', 'CHLORINE', 'Cl', rowAt(2)),
-          electronPiece('e', { x: 96, y: ROW_Y })
+          electronPiece('e', { x: 96, y: ROW_Y - 2 })
         ],
         fixtures: [st.fixture, sz.fixture],
         zones: { slots: [...st.slots, ...sz.slots], rail: railAt('Smallest size', 'Largest size') }
@@ -319,7 +320,7 @@ export const STAGES = [
       prompt: 'Strip electrons from magnesium until the next one would cost many times more than the last.',
       widget,
       table: trendsTable({
-        pieces: [atomCard('mg', 'MAGNESIUM', 'Mg', rowAt(0)), electronPiece('e', { x: 40, y: ROW_Y })],
+        pieces: [atomCard('mg', 'MAGNESIUM', 'Mg', rowAt(0)), electronPiece('e', { x: 40, y: ROW_Y - 2 })],
         fixtures: [st.fixture],
         zones: { slots: st.slots }
       }, { recorder: { at: { x: 120, y: 30 }, size: { w: 30, h: 18 }, xLabel: 'Electrons stripped', yLabel: 'Cost', yUnit: 'kJ/mol' } }),
@@ -381,6 +382,13 @@ export const STAGES = [
     };
   })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag an atom into the holder, then press Tug Electron.'],
+  3: ['Lay an atom in the size gauge to read its size.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

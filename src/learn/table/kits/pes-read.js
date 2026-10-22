@@ -157,7 +157,7 @@ export const markerRead = (state, id) => Math.round(state.fixtures[id].dials.val
 /** The strip of a chamber fixture: where bin 0 starts, how wide a bin is, where the piles stand and how tall one electron is. */
 export function stripOf(f) {
   const r = rectOf(f, SIZES.fixture);
-  const left = f.props.stripLeft ?? 21;
+  const left = f.props.stripLeft ?? 27;
   const pitch = (r.w - left - 1.5) / BINS;
   const step = f.props.dotStep ?? 2.2;
   const base = r.y0 + (f.props.baseAt ?? 27);

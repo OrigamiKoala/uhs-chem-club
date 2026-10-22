@@ -1,5 +1,5 @@
 /**
- * login.js — Returning player sign-in.
+ * login.js — Returning player sign-in, or "Continue as Guest" (local-only save).
  */
 
 import { api } from '../api.js';
@@ -49,6 +49,11 @@ export function renderLogin(container) {
           </button>
         </form>
 
+        <button type="button" id="login-guest-btn" class="btn-secondary" style="width: 100%; margin-top: 0.75rem;">
+          <span>Continue as Guest</span>
+        </button>
+        <p class="form-help" style="display: block; text-align: center; margin-top: 0.5rem;">Guest progress is saved on this device only.</p>
+
         <div class="m-foot m-foot-center" style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-secondary);">
           <a href="#/register" class="link-accent">Create account</a>
         </div>
@@ -61,6 +66,13 @@ export function renderLogin(container) {
   const submitBtn = container.querySelector('#login-submit-btn');
 
   bindPasswordReveal(container);
+
+  // Guest mode: the whole game, saved only in this browser's localStorage.
+  container.querySelector('#login-guest-btn').addEventListener('click', () => {
+    gameMode.autoEnter();
+    session.startGuest();
+    window.location.hash = session.teamId ? '#/bridge' : '#/onboarding';
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();

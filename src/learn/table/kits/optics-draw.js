@@ -67,11 +67,12 @@ function frameOf(b) {
 /** Sizes of the kit's rectangular pieces, in table units (half width, half height). */
 export const RECTS = Object.freeze({
   lamp: { hw: 10.5, hh: 6.5 },
-  plate: { hw: 8, hh: 8 },
+  plate: { hw: 7, hh: 7 },
   tube: { hw: 12, hh: 6.5 },
-  strip: { hw: 14, hh: 6.5 },
+  strip: { hw: 12, hh: 6.5 },
+  electron: { hw: 3.2, hh: 3.1 },
   chip: { hw: 9, hh: 5.5 },
-  detector: { hw: 11, hh: 6.5 },
+  detector: { hw: 9.5, hh: 6.5 },
   cell: { hw: 11, hh: 6.5 },
   filament: { hw: 11, hh: 6.5 },
   water: { hw: 11, hh: 6.5 },
@@ -86,6 +87,12 @@ function nmNow(state, p) {
     return f ? lampNm(f, p) : null;
   }
   return p.props.nm ?? null;
+}
+
+/** Whether a lamp piece is lit and at what wavelength: what the built table colours its lens by. */
+export function lampLook(state, p) {
+  const nm = nmNow(state, p);
+  return { nm, lit: litSource(state, p) && nm != null, rgb: nm != null ? wavelengthRgb(nm) : null };
 }
 
 /** The slab every card-shaped piece is cut from: a dark face with a hairline edge, amber while held. */
@@ -232,15 +239,17 @@ function paintDetector(ctx, p, state, o) {
 }
 
 function paintElectron(ctx, p, state, o) {
+  // A small bead that sits on a rung: smaller than the grab radius, so six rungs fit a ladder and a finger still finds it.
+  const r = RECTS.electron.hh * o.sc;
   ctx.fillStyle = INK;
   ctx.beginPath();
-  ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+  ctx.arc(o.x, o.y, r, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = o.lit ? AMBER : PHOS;
   ctx.lineWidth = o.lit ? 2 : 1.5;
   ctx.stroke();
   ctx.lineWidth = 1;
-  say(ctx, p.label, o.x, o.y, o.r * 0.9, { align: 'center', weight: 700, color: PHOS });
+  say(ctx, p.label, o.x, o.y, r * 1.1, { align: 'center', weight: 700, color: PHOS });
 }
 
 function paintPiece(ctx, p, state, o) {
@@ -552,7 +561,7 @@ function paintCellFixture(ctx, f, state, b) {
   const tubeY = f.props.tubeTop ?? top;
   const tubeH = f.props.tubeH ?? 15;
   const mh = f.props.meterH ?? 10;
-  const tx0 = 20;
+  const tx0 = f.props.tx0 ?? 20;
   const tx1 = w - 24;
   const mid = tubeY + tubeH / 2;
   // The lamp's beam, from the left, as wide as the brightness and as coloured as the wavelength.
@@ -561,7 +570,7 @@ function paintCellFixture(ctx, f, state, b) {
   if (read.nm != null) {
     ctx.fillStyle = rgbCss(wavelengthRgb(read.nm) || [184, 175, 160], 0.45 + read.brightness * 0.1);
     const bt = 0.8 + read.brightness * 0.7;
-    const from = f.props.lamp ? 22 : 2;
+    const from = f.props.lamp ? tx0 - 4 : 2;
     ctx.fillRect(F.x(from), F.y(mid - bt / 2), F.len(tx0 + 6 - from), F.len(bt));
   }
   // The collector at the far end, and the electrons crossing the tube from the plate to it.

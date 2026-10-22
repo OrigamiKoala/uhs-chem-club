@@ -246,7 +246,7 @@ function paintShelf(ctx, f, state, b) {
   }
   if (f.props.finder) {
     const lit = finderLight(state, f.props.finder);
-    if (lit.none) say(ctx, 'NO ROOM HAS THIS ADDRESS', F.x(f.size.w / 2), F.y(5.6), sz, { align: 'center', color: AMBER, weight: 700, maxW: F.len(f.size.w - 4) });
+    if (lit.none) say(ctx, 'NO ORBITAL HAS THIS ADDRESS', F.x(f.size.w / 2), F.y(5.6), sz, { align: 'center', color: AMBER, weight: 700, maxW: F.len(f.size.w - 4) });
   }
   if (!rows.length) return;
   // The energy arrow up the left edge.

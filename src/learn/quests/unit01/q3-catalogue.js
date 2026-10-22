@@ -332,7 +332,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 5 */
   {
     title: 'The Ones That Will Not Trade',
-    prompt: 'Tray every card on the chart that will not trade an electron.',
+    prompt: 'Put every card on the chart that will not trade an electron in the tray.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: chartCards({ fixed: false }),
@@ -370,7 +370,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Sort Them By What They Do',
-    prompt: 'Tray each of the six cards by what it does with its outer-shell electrons.',
+    prompt: 'Sort each of the six cards by what it does with its outer-shell electrons.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: ['c03', 'c12', 'c08', 'c17', 'c06', 'c10'].map((id, i) => card(id, { x: 21 + 22 * i, y: 8 })),
@@ -381,7 +381,7 @@ export const STAGES = [
           { ...cardTray('shares', 'Holds on to a partner', { x: 93, y: 32 }, 2, 2), size: { w: 33, h: 24 } },
           { ...cardTray('inert', 'Does nothing', { x: 130, y: 32 }, 2, 2), size: { w: 33, h: 24 } }
         ],
-        slots: [cardSlot('tester', { x: 84, y: 53 }, { label: 'Card' })]
+        slots: [cardSlot('tester', { x: 84, y: 51.5 }, { label: 'Card' })]
       },
       fixtures: [{ id: 'tester', kind: 'tester', label: 'Tester', runLabel: 'Test Card', at: { x: 120, y: 54 }, size: { w: 36, h: 15 }, props: { slot: 'tester' } }]
     }),
@@ -425,7 +425,7 @@ export const STAGES = [
       zones: { slots: [cardSlot('gap', { x: X(4), y: ROW_Y[2] }, { label: '' })] },
       fixtures: [{ id: 'stamp', kind: 'stamp', label: 'Stamp', at: { x: 75, y: 8 }, size: { w: 60, h: 12 }, noRun: true, dials: { protons: { min: 0, max: 20, step: 1, value: 0, label: 'Protons' } } }],
       prediction: {
-        slot: { id: 'predict', label: 'It will', at: { x: 142, y: 55 } },
+        slot: { id: 'predict', label: 'It will', at: { x: 142, y: 53 } },
         tokens: [
           { id: 't-gives', label: 'Hands one over', at: { x: 48, y: 57 }, r: 7 },
           { id: 't-holds', label: 'Holds on to a partner', at: { x: 84, y: 57 }, r: 7 },

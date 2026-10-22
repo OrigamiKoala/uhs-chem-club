@@ -9,6 +9,7 @@
 
 import { session } from '../session.js';
 import { stage } from '../three/stage.js';
+import { gameMode } from '../game-mode.js';
 import { esc } from '../ui/layout.js';
 import { soundscape } from '../audio/soundscape.js';
 
@@ -62,6 +63,9 @@ export function renderLanding(container) {
               <a href="#/demo" class="btn-secondary" style="text-decoration: none;">
                 Try Demo
               </a>
+              <button type="button" id="landing-guest-btn" class="btn-secondary">
+                Continue as Guest
+              </button>
               <div class="m-foot" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.8rem; font-family: var(--font-mono); font-size: 0.72rem;">
                 <a href="#/login" class="link-accent">Sign in</a>
                 <button type="button" id="landing-sound-btn" class="btn-chip" style="font-size: 0.65rem;">
@@ -75,6 +79,15 @@ export function renderLanding(container) {
       </div>
     </div>
   `;
+
+  const guestBtn = container.querySelector('#landing-guest-btn');
+  if (guestBtn) {
+    guestBtn.addEventListener('click', () => {
+      gameMode.autoEnter();
+      session.startGuest();
+      window.location.hash = session.teamId ? '#/bridge' : '#/onboarding';
+    });
+  }
 
   const signoutBtn = container.querySelector('#landing-signout-btn');
   if (signoutBtn) {

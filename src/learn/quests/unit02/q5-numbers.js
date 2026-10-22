@@ -2,20 +2,20 @@
  * q5-numbers.js — Lanternfall, bench five: QUANTUM NUMBERS.
  *
  * **BEYOND THE EXAM.** The AP exam does not assess quantum-number assignment, and the stage-one card says so. The bench is one
- * face of the records tent's board: a rack of milled boxes in ladder rows and an ADDRESS STRIP, four cells the player sets (floor,
- * suite type, room, bunk), and the box the address names lights on the rack, or nothing lights and the board says no room has that
+ * face of the records tent's board: a rack of milled boxes in ladder rows and an ADDRESS STRIP, four cells the player sets (shell,
+ * subshell, orbital, spin), and the box the address names lights on the rack, or nothing lights and the board says no orbital has that
  * address. So an address is FOUND (set it, see where the light goes) and WRITTEN (set the cells until the lit box is the ringed
  * one) and never read off a label.
  *
  * The fifth of Lanternfall's TABLETOPS (plan `bench-tabletop.md`, phase T4b), on the address and filling kit (`table/kits/shells.js`).
  * Arrows are dealt into boxes by hand, as the Lewis slate deals pairs; an electron token carries its own address and stands in the
- * room that address names, or the rack refuses it with the rule shown (a refusal with a reason, never a gatekeeper for a correct
+ * orbital that address names, or the rack refuses it with the rule shown (a refusal with a reason, never a gatekeeper for a correct
  * answer).
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  match how far the lit floor's cloud reaches      -> principal quantum number
- *   2  which suite types the second floor offers        -> angular momentum quantum number
+ *   1  match how far the lit shell's cloud reaches      -> principal quantum number
+ *   2  which subshells the second shell offers        -> angular momentum quantum number
  *   3  an electron in the box an address names          -> magnetic quantum number
  *   4  two electrons in one box                         -> spin
  *   5  four candidates placed on the rack               -> the Pauli exclusion principle
@@ -30,6 +30,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import {
   shellsTable, shelf, hand, tag, electronToken, addressStrip, marker,
   readOf, rackOf, addressOfFinder, finderLight, placedTokens, addressOfToken, sameAddress, findRoom, validAddress, shellCapacity, reachPm,
@@ -101,25 +102,25 @@ export const STAGES = [
       title: 'The First Number',
       briefing: {
         speaker: SPEAKER,
-        body: 'Think of an electron\'s state as an apartment address: floor (n), suite type (l), room (ml), and bunk (ms). Set a cell of the address strip, and the rack lights what that address names.'
+        body: 'Every electron has an address of four numbers: shell (n), subshell (l), orbital (ml) and the direction of its arrow (ms); set a cell of the address strip and the rack lights what it names. Press Submit when the table shows your answer.'
       },
-      prompt: 'Set the floor number so that its s row reaches out about 300 pm.',
+      prompt: 'Set the shell number so that its s row reaches out about 300 pm.',
       widget,
       table: shellsTable({ pieces: rack.boxes, fixtures: [rack.fixture, strip] }),
       hints: [
-        'Drag the floor knob and watch which rows light and how far their clouds reach.',
+        'Drag the shell knob and watch which rows light and how far their clouds reach.',
         'Compare the distance printed beside each lit row with the distance the prompt asks for.',
-        'Set the floor whose s row prints a distance closest to the one the prompt names.'
+        'Set the shell whose s row prints a distance closest to the one the prompt names.'
       ],
       check(state) {
         const t = state.table;
         if (addressOfFinder(t, 'addr').n === 2) return { ok: true };
-        return { ok: false, msg: 'The lit row\'s cloud reaches a different distance: set the floor and read how far it reaches.' };
+        return { ok: false, msg: 'The lit row\'s cloud reaches a different distance: set the shell and read how far it reaches.' };
       },
       reward: {
-        log: 'The floor number counts shells outward.',
-        title: 'Principal Quantum Number (Floor)',
-        body: 'The first number on every box, n, is the floor (principal quantum number): it sets how far out the cloud reaches and roughly how much energy its electron has. Every room on one floor shares the same n, which counts up from 1. This bench is an optional Deep Dive.'
+        log: 'The shell number counts outward.',
+        title: 'Principal Quantum Number (Shell)',
+        body: 'The first number on every box, n, is the shell (principal quantum number): it sets how far out the cloud reaches and roughly how much energy its electron has. Every orbital in one shell shares the same n, which counts up from 1. This bench is an optional Deep Dive.'
       }
     };
   })(),
@@ -128,37 +129,37 @@ export const STAGES = [
   (() => {
     const rack = shelf('rack', ROWS_N3, { x: 40, y: 32 }, { finder: 'addr', readout: false, labels: false });
     const strip = addressStrip('addr', { x: 114, y: 15 }, { fields: ['n', 'l'], show: ['n', 'l'], range: { l: [0, 3] }, start: { n: 1, l: 0 } });
-    const tags = [0, 1, 2, 3].map(l => tag(`l${l}`, `l = ${l}`, { x: 84 + l * 18, y: 31 }));
+    const tags = [0, 1, 2, 3].map(l => tag(`l${l}`, `l = ${l}`, { x: 84 + l * 18, y: 33 }));
     return {
       title: 'The Second Number',
-      prompt: 'Put each suite type in the tray that says whether the second floor has a room of that type.',
+      prompt: 'Put each subshell type in the tray that says whether the second shell has an orbital of that type.',
       widget,
       table: shellsTable({
         pieces: [...rack.boxes, ...tags],
         fixtures: [rack.fixture, strip],
-        zones: { trays: [tray('lights', 'A room lights', { x: 97, y: 50 }, { w: 34, h: 17 }, 16), tray('none', 'No room lights', { x: 133, y: 50 }, { w: 32, h: 17 }, 16)] }
+        zones: { trays: [tray('lights', 'An orbital lights', { x: 97, y: 53 }, { w: 34, h: 17 }, 16), tray('none', 'No orbital lights', { x: 131, y: 53 }, { w: 26, h: 17 }, 16)] }
       }),
       hints: [
-        'Set the floor cell to the second floor, then step the type cell through every setting and see which settings light a row.',
+        'Set the shell cell to 2, then step the subshell cell through every setting and see which settings light a row.',
         'Compare the shape drawn beside each lit row with the cloud shapes from the cloud plate.',
-        'Put a suite type in the first tray only if it lights a row on that floor, and in the second if it lights nothing.'
+        'Put a subshell type in the first tray only if it lights a row in that shell, and in the second if it lights nothing.'
       ],
       check(state) {
         const t = state.table;
         const ids = [0, 1, 2, 3].map(l => `l${l}`);
-        if (!ids.every(id => inTray(t, id))) return { ok: false, notYet: true, msg: 'Put every suite type in a tray.' };
+        if (!ids.every(id => inTray(t, id))) return { ok: false, notYet: true, msg: 'Put every subshell type in a tray.' };
         for (let l = 0; l <= 3; l++) {
           const has = findRoom({ n: 2, l, ml: 0 }).exists;
           if (where(t, `l${l}`) !== (has ? 'lights' : 'none')) {
-            return { ok: false, msg: 'Hold the floor cell on the second floor, step the type cell through every setting, and tray each type by whether a row lights.' };
+            return { ok: false, msg: 'Hold the shell cell on 2, step the subshell cell through every setting, and put each type in a tray by whether a row lights.' };
           }
         }
         return { ok: true };
       },
       reward: {
-        log: 'The second number sets the room type.',
-        title: 'Angular Momentum Number (Room Type)',
-        body: 'The second number, l, is the suite type (angular momentum number): it sets the shape, with l = 0 for round (s) and 1 for two-lobed (p). On floor n, l runs from 0 up to n - 1, so floor 2 offers s and p suites.'
+        log: 'The second number sets the subshell.',
+        title: 'Angular Momentum Number (Subshell)',
+        body: 'The second number, l, is the subshell (angular momentum number): it sets the shape, with l = 0 for round (s) and 1 for two-lobed (p). In shell n, l runs from 0 up to n - 1, so shell 2 offers s and p subshells.'
       }
     };
   })(),
@@ -176,9 +177,9 @@ export const STAGES = [
         fixtures: [rack.fixture, strip]
       }),
       hints: [
-        'Set the suite cell, then the room cell, and see which box lights.',
-        'Try room numbers either side of zero and notice which way along the row they run.',
-        'Compare where room number zero lights with where each number either side of it lights, then put the electron in the lit box.'
+        'Set the subshell cell, then the orbital cell, and see which box lights.',
+        'Try orbital numbers either side of zero and notice which way along the row they run.',
+        'Compare where orbital number zero lights with where each number either side of it lights, then put the electron in the lit box.'
       ],
       check(state) {
         const t = state.table;
@@ -190,9 +191,9 @@ export const STAGES = [
         return { ok: false, msg: 'The electron is not in the box that address names: set the address on the strip and see which box lights.' };
       },
       reward: {
-        log: 'The third number numbers the rooms.',
-        title: 'Magnetic Quantum Number (Room)',
-        body: 'The third number, ml, is the room number (magnetic quantum number): it picks the orientation, running from -l to +l, giving 2l + 1 rooms per suite. A d suite has five rooms, p has three, and s has one.'
+        log: 'The third number picks the orbital.',
+        title: 'Magnetic Quantum Number (Orbital)',
+        body: 'The third number, ml, is the orbital number (magnetic quantum number): it picks the orientation, running from -l to +l, giving 2l + 1 orbitals per subshell. A d subshell has five orbitals, p has three, and s has one.'
       }
     };
   })(),
@@ -204,7 +205,7 @@ export const STAGES = [
       title: 'Two in One Box',
       briefing: {
         speaker: SPEAKER,
-        body: 'Each room has a bunk bed holding two electrons: top bunk (+1/2, up arrow) and bottom bunk (-1/2, down arrow).'
+        body: 'Each orbital box holds two electrons, one drawn as an up arrow (+1/2) and one as a down arrow (-1/2).'
       },
       prompt: 'Pack two electrons into a single orbital box.',
       widget,
@@ -221,8 +222,8 @@ export const STAGES = [
       },
       reward: {
         log: 'A second arrow the same way is refused. Opposite is fine.',
-        title: 'Spin (The Bunk)',
-        body: 'The fourth number, ms, is the spin (the bunk): +1/2 for an up arrow and -1/2 for a down arrow. A room holds two electrons at most, and only when their spins are opposite.'
+        title: 'Spin',
+        body: 'The fourth number, ms, is the spin: +1/2 for an up arrow and -1/2 for a down arrow. An orbital holds two electrons at most, and only when their spins are opposite.'
       }
     };
   })(),
@@ -253,7 +254,7 @@ export const STAGES = [
         if (away.length !== 1) return { ok: false, notYet: true, msg: 'Put exactly one electron, the one the rack will not take, in the tray.' };
         const out = addressOfToken(t.pieces[away[0]]);
         if (placed.length === 3 && placed.some(id => sameAddress(addressOfToken(t.pieces[id]), out))) return { ok: true };
-        return { ok: false, msg: 'That electron can stand on the rack. Try to place every candidate, and tray the one that cannot go.' };
+        return { ok: false, msg: 'That electron can stand on the rack. Try to place every candidate, and put the one that cannot go in the tray.' };
       },
       reward: {
         log: 'Two electrons cannot share the same address.',
@@ -307,21 +308,21 @@ export const STAGES = [
       table: shellsTable({ pieces: rack.boxes, fixtures: [rack.fixture, strip] }),
       hints: [
         'Set the cells of the address strip until the box that lights is the ringed one.',
-        'The lit box gives the floor, suite and room, and the arrow inside the ringed box gives the bunk.',
-        'The room number counts from the middle box of the row, and the bunk follows the direction the arrow points.'
+        'The lit box gives the shell, subshell and orbital, and the arrow inside the ringed box gives the fourth number.',
+        'The orbital number counts from the middle box of the row, and the last number follows the direction the arrow points.'
       ],
       check(state) {
         const t = state.table;
         const a = addressOfFinder(t, 'addr');
         if (a.n === 1 && a.l === 0 && a.ml === 0 && a.ms === 0.5) return { ok: false, notYet: true, msg: 'Set the address first.' };
-        if (!findRoom(a).exists) return { ok: false, msg: 'No room has the address you set. Set one the strip lights, then compare it with the ringed box.' };
+        if (!findRoom(a).exists) return { ok: false, msg: 'No orbital has the address you set. Set one the strip lights, then compare it with the ringed box.' };
         if (!sameAddress(a, RINGED)) return { ok: false, msg: 'That address does not name the ringed electron. Set it, see where the light goes, and check which way the arrow in the box points.' };
         return { ok: true };
       },
       reward: {
         log: 'Every electron has four numbers, and no two match.',
         title: 'Every Electron Has an Address',
-        body: 'Four numbers give every electron its unique address: floor (n), room type (l), room (ml), and bunk (ms). Nitrogen\'s three 2p electrons sit in three separate rooms, so each has an address of its own.'
+        body: 'Four numbers give every electron its unique address: shell (n), subshell (l), orbital (ml) and spin (ms). Nitrogen\'s three 2p electrons sit in three separate orbitals, so each has an address of its own.'
       }
     };
   })(),
@@ -331,17 +332,17 @@ export const STAGES = [
     const rack = shelf('rack', ROWS_N3, { x: 36, y: 32 }, { show: { n: true, l: true, ml: true, ms: true }, readout: false });
     return {
       title: 'Sets That Cannot Exist',
-      prompt: 'Place the four listed electrons on the rack, and put the ones with no room in the tray.',
+      prompt: 'Place the four listed electrons on the rack, and put the ones with no orbital in the tray.',
       widget,
       table: shellsTable({
         pieces: [...rack.boxes, ...tokensOf(SETS, COLUMN(88))],
         fixtures: [rack.fixture],
-        zones: { trays: [tray('no', 'No room has this address', { x: 132, y: 32 }, { w: 30, h: 40 }, 20)] }
+        zones: { trays: [tray('no', 'No such orbital', { x: 132, y: 32 }, { w: 30, h: 40 }, 20)] }
       }),
       hints: [
         'Drop each listed electron on the rack and see whether it stands, and what the board says when it does not.',
         'Compare the addresses that stand with the ones that are refused, number against number.',
-        'Find the largest suite type each floor lights, and the largest room number each suite type lights.'
+        'Find the largest subshell each shell lights, and the largest orbital number each subshell lights.'
       ],
       check(state) {
         const t = state.table;
@@ -350,20 +351,31 @@ export const STAGES = [
         for (const k of Object.keys(SETS)) {
           const id = `t${k}`;
           const fits = validAddress(SETS[k]);
-          if (fits && !(t.pieces[id].props.placed && !inTray(t, id))) return { ok: false, msg: 'An electron that has a room is not on the rack: try each listed electron.' };
-          if (!fits && !inTray(t, id)) return { ok: false, msg: 'An electron that has no room is not in the tray: try each listed electron on the rack and tray the ones it refuses.' };
+          if (fits && !(t.pieces[id].props.placed && !inTray(t, id))) return { ok: false, msg: 'An electron that has an orbital is not on the rack: try each listed electron.' };
+          if (!fits && !inTray(t, id)) return { ok: false, msg: 'An electron that has no orbital is not in the tray: try each listed electron on the rack and put the ones it refuses in the tray.' };
         }
         return { ok: true };
       },
       reward: {
         log: 'l below n, and ml no further than l from zero.',
         title: 'The Allowed Values',
-        body: 'For each floor n, room types l run from 0 to n - 1, and for each suite l, room numbers ml run from -l to +l. An address outside those ranges does not name a room in the building.',
+        body: 'For each shell n, subshells l run from 0 to n - 1, and for each subshell l, orbital numbers ml run from -l to +l. An address outside those ranges does not name an orbital.',
         last: true
       }
     };
   })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Turn the Shell dial and watch the rack.'],
+  3: ['Drag an arrow onto the lit box to place an electron.', 'Lift Out takes one off again.'],
+  4: ['Drag an Up arrow and a Down arrow onto one box.'],
+  5: ['Drag each electron onto the rack. The rack refuses', 'any it cannot hold, and says why.'],
+  6: ['Drop arrows on boxes until the rack takes no more.'],
+  7: ['Set the dials until the ringed box lights.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

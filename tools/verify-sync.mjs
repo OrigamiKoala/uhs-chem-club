@@ -219,6 +219,57 @@ function randomDoc() {
     ? ok('sign-out clears notebook, practice and flags from the device') : fail('sign-out left per-player state behind');
 }
 
+/* ---- guest mode: localStorage only, nothing reaches the Sheet ---- */
+{
+  const { session } = await import('../src/session.js');
+  const { apiCall } = await import('../src/api.js');
+  const { sync } = await import('../src/sync.js');
+  const calls = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, opts = {}) => {
+    calls.push({ url, body: JSON.parse(opts.body || '{}') });
+    return { json: async () => ({ ok: true, data: {} }) };
+  };
+
+  session.clear();
+  session.startGuest();
+  session.isGuest && session.isSignedIn && session.player?.display_name === 'Guest'
+    ? ok('"Continue as Guest" signs in a local guest') : fail('startGuest did not produce a signed-in guest');
+
+  session.addXp(25);
+  session.recordProgress('q1', 1);
+  session.recordNotebook('guest:entry');
+  const me = await apiCall('player/me');
+  me && me.player === session.player && me.xp === undefined
+    ? ok('player/me is answered locally and cannot roll back XP') : fail('guest player/me wrong');
+  let refused = null;
+  try { await apiCall('state/save', { state: session.buildStateDoc() }); } catch (e) { refused = e; }
+  refused?.code === 'GUEST_LOCAL' ? ok('guest state/save is refused locally') : fail('guest state/save was not refused');
+  try { await apiCall('quest/grade', { questId: 'q1', stageIndex: 0, payload: {} }); } catch (e) {}
+  try { await apiCall('learn/stage', { worldId: 'unit01', questId: 'q1-grain', stageIndex: 0 }); } catch (e) {}
+  await sync.push();
+  calls.length === 0 ? ok('a guest sends no account call and no sync push over the network') : fail(`guest reached the network: ${calls.map(c => c.url).join(', ')}`);
+  await apiCall('leaderboard');
+  calls.length === 1 && calls[0].url === '/api/leaderboard' && calls[0].body.token === undefined
+    ? ok('guest public reads go out without a token') : fail('guest public read carried a token or went astray');
+  const comp1 = await apiCall('quest/complete', { questId: 'q1' });
+  const comp2 = await apiCall('quest/complete', { questId: 'q1' });
+  !comp1.alreadyCompleted && comp2.alreadyCompleted ? ok('guest quest completion is banked once') : fail('guest quest completion is not idempotent');
+
+  session.clear();
+  !session.isGuest && session.getNotebook().length === 0 && session.xp === 0 && localStorage.getItem('avalon_notebook') === null
+    ? ok('guest sign-out clears the live per-player keys') : fail('guest sign-out left live state behind');
+  session.setToken('real-account-token');
+  session.loadPlayerState();
+  session.getNotebook().length === 0 ? ok('a real account after a guest starts clean') : fail('guest state leaked into a real account');
+  session.clear();
+  session.startGuest();
+  session.hasNotebookEntry('guest:entry') && session.xp === 25 && session.progress.some(p => p.quest_id === 'q1')
+    ? ok('continuing as guest again restores the parked save') : fail(`guest save not restored (xp ${session.xp})`);
+  session.clear();
+  globalThis.fetch = realFetch;
+}
+
 /* ---- no XP in the sync path ---- */
 {
   for (const f of ['src/sync.js', 'src/shared/statemerge.js']) {

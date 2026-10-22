@@ -15,7 +15,7 @@
  * with the rule shown (no room has that address, or two electrons would share all four numbers). A refusal is a reason, never a
  * gatekeeper for a correct answer: the planner is asked about anything the player attempts.
  *
- * THE ADDRESS STRIP (fixture `finder`) is four cells the player sets (floor, suite type, room, bunk); the box the address names
+ * THE ADDRESS STRIP (fixture `finder`) is four cells the player sets (shell, subshell, orbital, spin); the box the address names
  * lights on the rack, or nothing lights and the board says no room has that address. THE MAGNET (fixture `magnet`) reports the REAL
  * sample's pull (`MEASURED`), or, on the `rack` magnet, what the arrangement standing on the rack would do.
  */
@@ -67,7 +67,7 @@ function planJoin(a, b, state) {
       return refuse('Two electrons in one atom cannot share all four numbers, and one already stands at this address.');
     }
     const spin = addr.ms > 0 ? 'up' : 'down';
-    return { holds: true, once: true, set: { a: { placed: true } }, reason: `The electron stands in its room, pointing ${spin}.` };
+    return { holds: true, once: true, set: { a: { placed: true } }, reason: `The electron stands in its orbital, pointing ${spin}.` };
   }
   return refuse('That goes on the rack.');
 }
@@ -106,6 +106,7 @@ export const SHELLS_KIT = {
   run,
   paintPiece,
   paintFixture,
+  deckStyle: () => 'instrument',
   printed: p => (p.kind === 'box' ? '' : String(p.label)),
   faceKey
 };
@@ -179,10 +180,10 @@ export const rackOfCounts = counts => rackFor(0, { counts });
 /** An arrow to deal: `up` or `down`, and `lift` to take one out. `label` renames it (a stage that deals one kind of electron). */
 export const hand = (id, kind, at, label = null) => ({ id, kind, label: label || { up: 'Up', down: 'Down', lift: 'Lift Out' }[kind], at, props: {} });
 
-/** A small card with a short label (a suite type), to be put in a tray. */
+/** A small card with a short label (a subshell type), to be put in a tray. */
 export const tag = (id, label, at) => ({ id, kind: 'tag', label, at, props: {} });
 
-/** An electron that carries its address: floor n, suite type l, room ml, bunk ms (+1/2 up, -1/2 down). */
+/** An electron that carries its address: shell n, subshell l, orbital ml, spin ms (+1/2 up, -1/2 down). */
 export const electronToken = (id, letter, at, address) => ({
   id, kind: 'etok', label: `${letter}: n${address.n} l${address.l} ml${address.ml} ${address.ms > 0 ? '+1/2' : '-1/2'}`.replace('+1/2', '+½').replace('-1/2', '-½'),
   at, props: { ...address }
@@ -199,7 +200,7 @@ export const elementStrip = (id, sym, at) => ({ id, kind: 'estrip', label: sym, 
    ------------------------------------------------------------------ */
 
 const FINDER_RANGE = { n: [1, 3], l: [0, 3], ml: [-3, 3] };
-const FINDER_LABEL = { n: 'Floor (n)', l: 'Type (l)', ml: 'Room (ml)', ms: 'Bunk (ms)' };
+const FINDER_LABEL = { n: 'Shell (n)', l: 'Subshell (l)', ml: 'Orbital (ml)', ms: 'Spin (ms)' };
 
 /**
  * The address strip: a cell for each of `fields` (set by dragging its knob), and the box the address names lights on the rack

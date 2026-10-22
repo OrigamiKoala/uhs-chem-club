@@ -93,7 +93,7 @@ export function averageOf(bins) {
    ------------------------------------------------------------------ */
 
 const SAMPLE_X = 14;
-const CHUTE = { id: 'chute', label: 'Chute', at: { x: SAMPLE_X, y: 14 }, size: { w: 20, h: 17 } };
+const CHUTE = { id: 'chute', label: 'Chute', at: { x: SAMPLE_X, y: 12 }, size: { w: 20, h: 17 } };
 
 /** A sample card: a hopper of salvage with its declared bins. */
 const sample = (id, label, bins, at, props = {}) => ({
@@ -128,7 +128,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'This bench sorts atoms down a chute into bins by weight. Drop a sample in the chute and press "Tip Sample", then read the code of a bin with "Read Code".'
     },
-    prompt: 'Tray Sample A by how many elements its atoms belong to.',
+    prompt: 'Sort Sample A by how many elements its atoms belong to.',
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
       pieces: [
@@ -137,7 +137,7 @@ export const STAGES = [
       ],
       zones: {
         slots: [CHUTE],
-        trays: [trayAt('one', 'One element', 88, 56, 38), trayAt('two', 'Two elements', 130, 56, 38)]
+        trays: [trayAt('one', 'One element', 88, 60, 38), trayAt('two', 'Two elements', 130, 60, 38)]
       },
       fixtures: [
         assayFixture({ at: { x: 69, y: 23 }, size: { w: 82, h: 42 } }),
@@ -170,7 +170,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'Run It Twice',
-    prompt: 'Tray each sample under how many of its atoms in every hundred land in the lighter bin.',
+    prompt: 'Sort each sample under how many of its atoms in every hundred land in the lighter bin.',
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
       pieces: [
@@ -290,7 +290,7 @@ export const STAGES = [
         assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(18, 20, 19.6) })
       ],
       prediction: {
-        slot: { id: 'predict', label: 'It will balance', at: { x: 61, y: 62 }, size: { w: 30, h: 14 } },
+        slot: { id: 'predict', label: 'It will balance', at: { x: 61, y: 58 }, size: { w: 30, h: 14 } },
         tokens: [
           { id: 't-pile', label: 'At the pile\'s weight', at: { x: 99, y: 62 }, r: 7.2 },
           { id: 't-between', label: 'Between two weights', at: { x: 131, y: 62 }, r: 7.2 }
@@ -327,8 +327,8 @@ export const STAGES = [
     prompt: 'Balance the sealed canister with a mix of 40 atoms of weight 20 and weight 22.',
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
-      pieces: [{ ...sample('can', 'CANISTER', NE, { x: 30, y: 54 }, { sealed: true, note: '40 atoms' }), fixed: true, zone: 'container:pan-l' }],
-      zones: { containers: [{ id: 'pan-l', label: 'Canister pan', at: { x: 30, y: 54 }, size: { w: 30, h: 26 }, cell: 30 }] },
+      pieces: [{ ...sample('can', 'CANISTER', NE, { x: 30, y: 58 }, { sealed: true, note: '40 atoms' }), fixed: true, zone: 'container:pan-l' }],
+      zones: { containers: [{ id: 'pan-l', label: 'Canister pan', at: { x: 30, y: 58 }, size: { w: 30, h: 26 }, cell: 30 }] },
       fixtures: [
         {
           id: 'balance', kind: 'balance', label: 'Balance', at: { x: 75, y: 22 }, size: { w: 130, h: 34 }, noRun: true,
@@ -367,7 +367,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'Name Three Samples',
-    prompt: 'Tray each unknown sample under the element whose listed mass it balances at.',
+    prompt: 'Sort each unknown sample under the element whose listed mass it balances at.',
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
       pieces: [
@@ -410,7 +410,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Three Claims',
-    prompt: 'Tray each sample as natural chlorine or as having an altered mix of isotopes.',
+    prompt: 'Sort each sample as natural chlorine or as having an altered mix of isotopes.',
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
       pieces: [

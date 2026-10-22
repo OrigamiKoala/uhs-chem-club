@@ -32,6 +32,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import {
   cuvetteTable, cuvette, dropper, rinser, chip, motionCard, readingCard, spectro, plaqueFixture, markerFixture,
   spectroRead, regionRead, absorbOf, concOf, missingColour, colourOfNm, chipIn, lightOf, fmtWave, markerRead, planAbsorb, planRegion, regionOf,
@@ -84,7 +85,7 @@ export const STAGES = [
       title: 'What Each Light Does',
       briefing: {
         speaker: SPEAKER,
-        body: 'This bench shines radiation through a cuvette to measure how much of it a sample takes in. Turn the light dial to choose the kind of radiation and watch the molecule.'
+        body: 'This bench shines radiation through a cuvette to see how much a sample takes in; turn the Light dial to choose the radiation and watch the molecule. Press Submit when the table shows your answer.'
       },
       prompt: 'Put each kind of light beside the motion it makes in the molecule.',
       widget,
@@ -237,7 +238,7 @@ export const STAGES = [
       table: cuvetteTable({
         pieces: [
           cuvette('a', 'CUVETTE A', { x: 14, y: 53 }, { drops: 2 }), cuvette('b', 'CUVETTE B', { x: 36, y: 53 }, { drops: 0 }),
-          dropper('drop', { x: 62, y: 53 }), rinser('empty', { x: 84, y: 53 }),
+          dropper('drop', { x: 62, y: 51 }), rinser('empty', { x: 84, y: 51 }),
           cuvette('lake', 'LAKE WATER', { x: 106, y: 54 }, { conc: 0, blank: true, fetchFrom: 'hole', hidden: true })
         ],
         fixtures: [sp.fixture, plaqueFixture('drop-note', 'One drop = 2 mmol/L', { x: 122, y: 29 }, [], { w: 50 })],
@@ -353,12 +354,12 @@ export const STAGES = [
         pieces: [
           cuvette('s1', 'STANDARD 1', { x: 14, y: 53 }, { drops: 0 }), cuvette('s2', 'STANDARD 2', { x: 36, y: 53 }, { drops: 0 }), cuvette('s3', 'STANDARD 3', { x: 58, y: 53 }, { drops: 0 }),
           cuvette('sealed', 'SEALED SAMPLE', { x: 80, y: 53 }, { conc: SEALED_CONC, sealed: true }),
-          dropper('drop', { x: 106, y: 56 }), rinser('empty', { x: 126, y: 56 })
+          dropper('drop', { x: 106, y: 52.5 }), rinser('empty', { x: 126, y: 52.5 })
         ],
-        fixtures: [sp.fixture, plaqueFixture('drop-note', 'One drop = 2 mmol/L', { x: 122, y: 29 }, [], { w: 50 }), markerFixture('conc', 'Sealed sample (mmol/L)', { x: 122, y: 42 }, { max: 8, step: 0.5, w: 44 })],
+        fixtures: [sp.fixture, plaqueFixture('drop-note', 'One drop = 2 mmol/L', { x: 122, y: 25.2 }, [], { w: 50 }), markerFixture('conc', 'Sealed sample (mmol/L)', { x: 122, y: 38.4 }, { max: 8, step: 0.5, w: 44 })],
         zones: { slots: sp.slots },
         tools: ['straightedge']
-      }, { recorder: recorder('Concentration', 'mmol/L') }),
+      }, { recorder: { ...recorder('Concentration', 'mmol/L'), at: { x: 112, y: 11 } } }),
       hints: [
         'Fill the standards with drops, slide each into the beam and press "Record", then put the sealed sample in the beam and read it.',
         'Lay the straightedge across the standards\' points and find where the sealed sample\'s reading falls along the line.',
@@ -380,6 +381,16 @@ export const STAGES = [
     };
   })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Turn the Light dial and watch the molecule.'],
+  3: ['Put the cuvette in the holder to see the light', 'that gets through it.'],
+  4: ['Put a cuvette in the holder and turn the', 'Wavelength dial.'],
+  5: ['Lay the dropper on a cuvette to add a drop;', 'lay Empty on one to start again.'],
+  6: ['Turn the Path dial and press Record.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

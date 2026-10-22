@@ -117,3 +117,9 @@ All four are `PlateBench` subclasses (`engine/plates.js`) with a built twin thro
   the player to write.
 - **Every graded figure is recomputed.** `verify:learn` rebuilds each answer from the tables
   in `lightdata.js`, `orbitals.js` and `electrons.js`.
+
+## The 2026-10-22 bench audit pass
+
+Every Lanternfall bench now stands solid parts on its table (`engine/lab-props.js`), has its layout held by `verify:table`'s audit,
+reads in real terms and prints how to use it (`table/notes.js`). The record of what changed and what was left is in
+`docs/plans/bench-tabletop.md`, "Lanternfall audit pass".

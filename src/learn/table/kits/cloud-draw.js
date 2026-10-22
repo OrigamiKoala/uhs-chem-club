@@ -76,7 +76,7 @@ function drawAxes(ctx, x0, y0, size, view) {
  * Dots in a square of side `size` pixels at (x0, y0), `half` bohr from the middle to an edge. `dots` are `{a, b, c}` projected;
  * a turning cloud shades near dots bigger and brighter than far ones (depth is all a flat picture of a solid has).
  */
-export function paintDots(ctx, x0, y0, size, half, dots, { turning = false, view = null, rings = true, circleOne = false } = {}) {
+export function paintDots(ctx, x0, y0, size, half, dots, { turning = false, view = null, rings = true, circleOne = false, bodies = false } = {}) {
   const k = size / (2 * half);
   const cx = x0 + size / 2;
   const cy = y0 + size / 2;
@@ -99,7 +99,8 @@ export function paintDots(ctx, x0, y0, size, half, dots, { turning = false, view
   }
   const dot = Math.max(1.4, size * 0.014);
   ctx.fillStyle = PHOS;
-  for (const p of dots) {
+  // The built table stands every dot up as a bead of its own (`cloud.js` `pilesOf`): the flat picture keeps the frame and the rings.
+  for (const p of bodies ? [] : dots) {
     if (turning) {
       const near = Math.max(0, Math.min(1, (p.c / half + 1) / 2));
       ctx.globalAlpha = 0.3 + 0.7 * near;
@@ -238,7 +239,7 @@ function paintPlate(ctx, f, state, b) {
   const pic = f.props.pic ?? 34;
   const turning = read.plane === 'turn';
   const g = paintDots(ctx, F.x(2.5), F.y(picTop), F.len(pic), f.props.extent ?? 5, read.shown, {
-    turning, view: read.view, circleOne: f.props.circleOne !== false
+    turning, view: read.view, circleOne: f.props.circleOne !== false, bodies: b.bodies
   });
   // The counting ring, and the film's outline, over the picture.
   const ring = ringRead(state, f.id);

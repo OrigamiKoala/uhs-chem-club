@@ -71,6 +71,7 @@ import {
   hazardStripe, mergeStatic
 } from './materials/pbr-kit.js';
 import { createSalvageCrateTexture } from './materials/tallow-textures.js';
+import { roundedSlab, boxUVs } from '../learn/engine/table-props.js';
 import {
   createTallowSkyDome, createTallowCelestials, createTallowLights, followTallowShadow,
   createTallowEnvironment, applyTallowAir, tallowSkyUniforms, TSKY
@@ -904,8 +905,12 @@ export class TallowWorld {
       }));
     });
 
-    const crateGeo = this.own(new THREE.BoxGeometry(1.15, 0.9, 1.15));
-    const lipGeo = this.own(new THREE.BoxGeometry(1.22, 0.07, 1.22));
+    // A crate has been handled for forty years: its edges are broken and rounded, never a sharp box.
+    const crateGeo = this.own(roundedSlab(1.15, 1.15, 0.9, 0.07, 0.035));
+    crateGeo.translate(0, -0.45, 0);
+    boxUVs(crateGeo, 1.15, 0.9, 1.15);
+    const lipGeo = this.own(roundedSlab(1.22, 1.22, 0.07, 0.06, 0.02));
+    lipGeo.translate(0, -0.035, 0);
 
     for (const lm of this.data.landmarks) {
       if (lm.asset !== 'crate-stack') continue;
@@ -921,6 +926,10 @@ export class TallowWorld {
         // Stacks settle: each crate sits slightly off the one below it.
         c.position.set((rand() - 0.5) * 0.14, 0.45 + i * 0.97, (rand() - 0.5) * 0.14);
         c.rotation.y = (rand() - 0.5) * 0.16;
+        // Knocked about: a lean, and a little out of square in size.
+        c.rotation.x = (rand() - 0.5) * 0.05;
+        c.rotation.z = (rand() - 0.5) * 0.05;
+        c.scale.set(0.97 + rand() * 0.07, 0.95 + rand() * 0.08, 0.97 + rand() * 0.07);
         c.castShadow = c.receiveShadow = tierAtLeast('T4');
         g.add(c);
 

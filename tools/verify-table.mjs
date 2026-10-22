@@ -35,6 +35,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { auditTable } from '../src/learn/table/audit.js';
 import { installUiStub, stub } from './lib/ui-stub.mjs';
 import { makeCtx } from './lib/ctx-stub.mjs';
 
@@ -54,6 +55,9 @@ const RAILVIEW = await import('../src/learn/engine/railview.js');
 const CATALOGUE = await import('../src/learn/engine/catalogue.js');
 const FIX = await import('./lib/table-fixture.mjs');
 
+const LAYOUT_LEGACY = new Set(JSON.parse(readFileSync(new URL('./layout-legacy.json', import.meta.url), 'utf8')));
+const layoutClean = new Set();
+const layoutDirty = new Set();
 let failures = 0;
 const fail = msg => { console.log(`  FAIL ${msg}`); failures++; };
 const ok = msg => console.log(`  ok   ${msg}`);
@@ -202,6 +206,17 @@ function checkTableStage(label, stage, solution, misses) {
       if ((ba && !nb.startsWith('fixture ')) || (bb && !na.startsWith('fixture '))) continue;
       if (a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1) fail(`${label}: ${na} overlaps ${nb}`);
     }
+  }
+
+  // THE LAYOUT AUDIT (`table/audit.js`): nothing overlaps a zone, a label, a note or a fixture. Quests on the ratchet
+  // (`tools/layout-legacy.json`) are not yet held to it; a quest NOT on it is, and a new quest gets no line.
+  if (label.includes(' stage ')) {
+    const questKey = label.split(' stage ')[0];
+    const legacy = LAYOUT_LEGACY.has(questKey);
+    const problems = auditTable(t0, kit, {});
+    if (!legacy) for (const m of problems) fail(`${label}: layout — ${m}`);
+    if (legacy && !problems.length) layoutClean.add(questKey);
+    if (legacy && problems.length) layoutDirty.add(questKey);
   }
 
   // A stage that is a fight keeps the table's top-right corner clear for its foe (`layout.js` `FOE_PAD`): no zone, fixture,
@@ -404,6 +419,9 @@ function driveView(table, script, mode) {
         tap(c);
         tap(to.startsWith('piece:') ? { ...state.pieces[to.slice(6)].at } : p);
       }
+    } else if (verb === 'flip' && state.pieces[arg]?.props?.markable) {
+      // A marked kind is flipped by one tap on it.
+      tap({ ...state.pieces[arg].at });
     } else if (verb === 'fetch' && state.fetch[arg]?.at) {
       // At T1 to T3 the field point is a site plate on the table: a tap on it takes the item.
       tap({ ...state.fetch[arg].at });
@@ -1298,6 +1316,24 @@ console.log('\nLegacy ratchet — tools/table-legacy.json\n');
     if (!tableStages.length) fail(`${q.key} is not listed in table-legacy.json but has no table stage: new quests get no line, and old ones keep theirs until converted`);
   }
   if (failures === before) ok(`${live.length} built quests: ${listed.size} unconverted (listed), ${live.length - listed.size} converted; ${tables} real table stage(s) checked`);
+}
+
+console.log('\nLayout ratchet — tools/layout-legacy.json\n');
+{
+  const before = failures;
+  const built = new Set(live.map(q => q.key));
+  for (const key of LAYOUT_LEGACY) {
+    if (!built.has(key)) fail(`layout-legacy.json lists ${key}, which is not a built quest`);
+    else if (layoutClean.has(key) && !layoutDirty.has(key)) fail(`${key} passes the layout audit: delete its line from layout-legacy.json`);
+  }
+  if (failures === before) ok(`layout audit: ${built.size - LAYOUT_LEGACY.size} quests held to it, ${LAYOUT_LEGACY.size} still on the ratchet`);
+}
+
+console.log('\nPrinted how-to lines — table/notes.js\n');
+{
+  const { lostNotes } = await import('../src/learn/table/notes.js');
+  for (const m of lostNotes) fail(`a how-to line found no clear strip on its table — ${m}`);
+  if (!lostNotes.length) ok('every how-to line a quest asks to print has a clear strip on its table');
 }
 
 console.log(failures ? `\n${failures} PROBLEM(S) FOUND` : '\nTABLETOP OK');

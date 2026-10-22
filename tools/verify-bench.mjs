@@ -2224,7 +2224,7 @@ console.log('The foes — spoil standing in the wells\n');
   /** Table units to a client pixel at the current camera. */
   function px(bench, camera, vw, vh, u) {
     const pl = bench.map.toPlate(u);
-    const p = new THREE.Vector3(pl.x, 0.895, pl.z);
+    const p = new THREE.Vector3(pl.x, bench.groundY, pl.z);
     bench.root.localToWorld(p);
     p.project(camera);
     return { clientX: (p.x + 1) / 2 * vw, clientY: (1 - p.y) / 2 * vh };
@@ -2456,7 +2456,7 @@ console.log('The foes — spoil standing in the wells\n');
           // A tap where the plate would be does nothing: the walk is the way.
           const plate = f.at;
           const pl = b.map.toPlate(plate);
-          const pr = new THREE.Vector3(pl.x, 0.895, pl.z);
+          const pr = new THREE.Vector3(pl.x, b.groundY, pl.z);
           b.root.localToWorld(pr);
           pr.project(camera);
           const e = { clientX: (pr.x + 1) / 2 * 1920, clientY: (1 - pr.y) / 2 * 1080, pointerId: 99, preventDefault() {} };
@@ -2556,7 +2556,7 @@ console.log('The foes — spoil standing in the wells\n');
         let id = 40;
         const px = u => {
           const pl = b2.map.toPlate(u);
-          const p = new THREE.Vector3(pl.x, 0.895, pl.z);
+          const p = new THREE.Vector3(pl.x, b2.groundY, pl.z);
           b2.root.localToWorld(p);
           p.project(camera);
           return { clientX: (p.x + 1) / 2 * 1920, clientY: (1 - p.y) / 2 * 1080 };
@@ -2914,10 +2914,11 @@ for (const [bossName, bossModule, bossRoom] of [['boss-hopper', 'unit01/boss-hop
 
   if (rays < 100) fail(`only ${rays} rays past the plate were cast across the six aspects, so the foundry's view is not measured`);
 
-  // A room is a few thousand triangles, not tens of thousands.
+  // A room is a few thousand triangles, not tens of thousands; the table laid in it (turned dishes, beads and trays with
+  // broken edges, `table-props.js`) is the rest.
   {
     const tris = trianglesOf(room.root);
-    if (tris > 6000) fail(`the foundry draws ${Math.round(tris)} triangles (budget 6000)`);
+    if (tris > 9000) fail(`the foundry draws ${Math.round(tris)} triangles (budget 9000)`);
   }
   room.dispose();
 

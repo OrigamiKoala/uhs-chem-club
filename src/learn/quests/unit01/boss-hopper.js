@@ -45,7 +45,7 @@ const HOPPER_FOE = [{ id: 'hopper', label: 'The Hopper' }];
 
 const to = (piece, target) => ({ place: { piece, to: target } });
 const trayOf = (t, id) => (t.pieces[id].zone || '').replace('tray:', '');
-const dishTray = (id, label, x, y = 36, w = 38) => ({ id, label, at: { x, y }, size: { w, h: 22 }, cell: 19 });
+const dishTray = (id, label, x, y = 38, w = 38) => ({ id, label, at: { x, y }, size: { w, h: 22 }, cell: 19 });
 const trayAt = (id, label, x, y, w, h, cap) => ({ id, label, at: { x, y }, size: { w, h }, ...(cap != null ? { cap } : {}) });
 
 /** A dish of hull plating, open at the power where atoms resolve: the picture is the evidence. */
@@ -77,19 +77,19 @@ export const STAGES = [
       speaker: 'Vess',
       body: 'The rogue Hopper has risen in the salt flat, testing every bench from Tallow across five synthesis phases. Strike with the correct chemistry when your telemetry is set; three misses knock the rig back.'
     },
-    prompt: 'Tray each hull plate as an element, a compound, or a mixture.',
+    prompt: 'Sort each hull plate as an element, a compound, or a mixture.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        plate('plate1', 'SAMPLE A', [{ kinds: ['k06'], n: 36 }], 22, 14),
-        plate('plate2', 'SAMPLE B', [{ kinds: ['k11', 'k17'], pairs: [{ a: 0, b: 1 }, { a: 2, b: 3 }, { a: 4, b: 5 }, { a: 6, b: 7 }], n: 24 }], 46, 14),
-        plate('plate3', 'SAMPLE C', [{ kinds: ['k06'], n: 16 }, { kinds: ['k16'], n: 16 }], 70, 14)
+        plate('plate1', 'SAMPLE A', [{ kinds: ['k06'], n: 36 }], 22, 12),
+        plate('plate2', 'SAMPLE B', [{ kinds: ['k11', 'k17'], pairs: [{ a: 0, b: 1 }, { a: 2, b: 3 }, { a: 4, b: 5 }, { a: 6, b: 7 }], n: 24 }], 46, 12),
+        plate('plate3', 'SAMPLE C', [{ kinds: ['k06'], n: 16 }, { kinds: ['k16'], n: 16 }], 70, 12)
       ],
       zones: {
         trays: [
-          dishTray('element', 'Element', 21, 36),
-          dishTray('compound', 'Compound', 60, 36),
-          dishTray('mixture', 'Mixture', 99, 36)
+          dishTray('element', 'Element', 21, 38),
+          dishTray('compound', 'Compound', 60, 38),
+          dishTray('mixture', 'Mixture', 99, 38)
         ]
       }
     }),
@@ -104,7 +104,7 @@ export const STAGES = [
       const names = { plate1: 'A', plate2: 'B', plate3: 'C' };
       const want = { plate1: 'element', plate2: 'compound', plate3: 'mixture' };
       for (const id of Object.keys(want)) {
-        if (!['element', 'compound', 'mixture'].includes(trayOf(t, id))) return { ok: false, notYet: true, msg: 'Tray all three plates before committing your strike.' };
+        if (!['element', 'compound', 'mixture'].includes(trayOf(t, id))) return { ok: false, notYet: true, msg: 'Put all three plates in a tray before committing your strike.' };
       }
       const wrong = Object.keys(want).filter(id => trayOf(t, id) !== want[id]).map(id => names[id]);
       if (wrong.length) return { ok: false, msg: `Sample ${wrong[0]} is filed wrongly: look at which kinds of atoms it holds and whether any of them are joined.` };
@@ -130,12 +130,12 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        { id: 'refc', kind: 'nucleus', label: 'CORE MIDDLE', at: { x: 14, y: 12 }, fixed: true, props: { p: 6, n: 6 } },
-        { id: 'refe', kind: 'specimen', label: 'CORE OUTSIDE', at: { x: 36, y: 12 }, fixed: true, props: { p: 6, n: 6, rings: [2, 4], needle: true } },
+        { id: 'refc', kind: 'nucleus', label: 'CORE MIDDLE', at: { x: 14, y: 11 }, fixed: true, props: { p: 6, n: 6 } },
+        { id: 'refe', kind: 'specimen', label: 'CORE OUTSIDE', at: { x: 36, y: 11 }, fixed: true, props: { p: 6, n: 6, rings: [2, 4], needle: true } },
         ...heap()
       ],
       zones: { trays: [trayAt('core', 'The middle', 23, 34, 40, 20), trayAt('out', 'Outside', 57, 34, 22, 20)] },
-      fixtures: [{ id: 'needle', kind: 'needle', label: 'Needle', at: { x: 94, y: 33 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } }]
+      fixtures: [{ id: 'needle', kind: 'needle', label: 'Charge needle', at: { x: 94, y: 34 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } }]
     }),
     foes: HOPPER_FOE,
     encounter: {
@@ -209,7 +209,7 @@ export const STAGES = [
   {
     id: 'phase4',
     title: 'Phase 4 · Slag Assay',
-    prompt: 'Tray the core slag under the element whose listed mass it balances at.',
+    prompt: 'Sort the core slag under the element whose listed mass it balances at.',
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
       pieces: [{
@@ -217,11 +217,11 @@ export const STAGES = [
         props: { bins: [{ mass: 10, n: 8 }, { mass: 11, n: 32 }], note: '40 atoms' }
       }],
       zones: {
-        slots: [{ id: 'chute', label: 'Chute', at: { x: 14, y: 14 }, size: { w: 20, h: 17 } }],
+        slots: [{ id: 'chute', label: 'Chute', at: { x: 14, y: 12 }, size: { w: 20, h: 17 } }],
         trays: [
-          { id: 'boron', label: 'Boron 10.8', at: { x: 51, y: 56 }, size: { w: 38, h: 22 }, cell: 19 },
-          { id: 'neon', label: 'Neon 20.2', at: { x: 91, y: 56 }, size: { w: 38, h: 22 }, cell: 19 },
-          { id: 'chlorine', label: 'Chlorine 35.5', at: { x: 131, y: 56 }, size: { w: 38, h: 22 }, cell: 19 }
+          { id: 'boron', label: 'Boron 10.8', at: { x: 51, y: 60 }, size: { w: 38, h: 22 }, cell: 19 },
+          { id: 'neon', label: 'Neon 20.2', at: { x: 91, y: 60 }, size: { w: 38, h: 22 }, cell: 19 },
+          { id: 'chlorine', label: 'Chlorine 35.5', at: { x: 131, y: 60 }, size: { w: 38, h: 22 }, cell: 19 }
         ]
       },
       fixtures: [{

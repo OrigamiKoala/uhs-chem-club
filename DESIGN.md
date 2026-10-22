@@ -767,3 +767,9 @@ console is not raised at all and the quest keeps the 2D stage deck, which is the
   `main.js` is the only source.
 - **Don't** fix a phone bug in `main.css` or `holo.css`. Phone rules live in the
   `max-width: 760px` sheets so desktop cannot be collateral damage.
+
+## Bench objects: invariants (added after the 2026-10-09 audit)
+
+- A built bench object has a broken edge (bevel or lathe), a seeded colour jitter and a weathered face; a sharp textured box is a defect. The table's ground is a worn mat, not flat black. Builders live in `src/learn/engine/table-props.js` and `table-surface.js`.
+- Words printed on the table are paint on the mat, big enough to read at 667 px, and own a strip nothing else may stand on. A word is shrunk to its zone, never cut by a rim.
+- Tools are drawn as what they are, hang in one place, and carry a one-line caption.

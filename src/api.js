@@ -3,6 +3,7 @@
  */
 
 import { session } from './session.js';
+import { guestCall } from './guest.js';
 
 /**
  * Signing a player out is destructive — it drops their token, their cached
@@ -16,11 +17,18 @@ let unauthorizedStrikes = 0;
 const UNAUTHORIZED_STRIKES_TO_SIGN_OUT = 2;
 
 export async function apiCall(route, body = {}) {
+  // A guest's progress lives only in localStorage: guest.js answers account
+  // routes locally and sends public ones without a token.
+  if (session.isGuest) return guestCall(route, body, post);
+
   const payload = { ...body };
   if (session.token && payload.token === undefined) {
     payload.token = session.token;
   }
+  return post(route, payload);
+}
 
+async function post(route, payload) {
   let res;
   try {
     res = await fetch(`/api/${route}`, {
@@ -41,7 +49,8 @@ export async function apiCall(route, body = {}) {
   }
 
   if (!result.ok) {
-    if (result.error?.code === 'UNAUTHORIZED') {
+    // A tokenless call (a guest's public read) says nothing about any session.
+    if (result.error?.code === 'UNAUTHORIZED' && payload.token) {
       unauthorizedStrikes++;
       if (unauthorizedStrikes >= UNAUTHORIZED_STRIKES_TO_SIGN_OUT) {
         unauthorizedStrikes = 0;

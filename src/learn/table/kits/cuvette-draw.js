@@ -103,6 +103,21 @@ function paintTool(ctx, p, state, o) {
   say(ctx, p.label, o.x, o.y, Math.max(7, 2 * o.sc), { align: 'center', weight: 700, maxW: box.w - 3 });
 }
 
+/** What the built table needs of a cuvette: how full its column is and how deeply it is tinted (an rgb triple and a 0 to 1 depth). */
+export function cuvetteLook(p) {
+  const conc = concOf(p);
+  const level = p.props.sealed || p.props.blank || p.props.conc != null ? 0.8 : Math.min(1, (p.props.drops || 0) / 6);
+  const depth = Math.min(0.85, conc / 0.012);
+  return { level: conc > 0 || p.props.blank ? level : 0, tint: conc > 0 ? { rgb: [60, 120, 170], depth } : null };
+}
+
+/** The words on a cuvette's foot: its name over its drops or its reading, painted on a flat legend of `W` x `H` pixels. */
+export function paintLegend(ctx, p, W, H) {
+  say(ctx, p.label, W / 2, H * 0.32, H * 0.38, { align: 'center', weight: 700, maxW: W - 8 });
+  if (!p.props.sealed && p.props.conc == null) say(ctx, `${p.props.drops || 0} DROPS`, W / 2, H * 0.74, H * 0.3, { align: 'center', color: DUST, maxW: W - 8 });
+  else if (p.props.read != null) say(ctx, p.props.read.toFixed(3), W / 2, H * 0.74, H * 0.3, { align: 'center', color: PHOS, weight: 700, maxW: W - 8 });
+}
+
 const PAINTERS = { cuvette: paintCuvette, chip: paintChip, motion: paintMotion, reading: paintReading, dropper: paintTool, rinse: paintTool };
 
 export function paintPiece(ctx, p, state, o) {

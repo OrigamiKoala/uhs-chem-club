@@ -14,7 +14,8 @@
 
 import { registerKit } from './registry.js';
 import { BUILTIN_TOOLS } from '../tools.js';
-import { paintPiece, paintFixture, faceKey, RECTS } from './cuvette-draw.js';
+import { paintPiece, paintFixture, faceKey, RECTS, cuvetteLook, paintLegend } from './cuvette-draw.js';
+import { buildCuvette, buildDropper, buildRinseBottle, CUVETTE_TOP } from '../../engine/lab-props.js';
 import {
   seatedIn, spectroRead, concOf, MAX_DROPS, COPPER_SWEEP, PATHS, REGIONS
 } from './cuvette-read.js';
@@ -56,6 +57,25 @@ function planJoin(a, b) {
 
 const rect = (r, kind) => ({ r, rect: RECTS[kind], nojoin: true });
 
+/** A cuvette, a dropper or a rinse bottle as the solid thing it is; a card for the rest. */
+function piece3d(p, state, c) {
+  if (p.kind === 'cuvette') {
+    const look = cuvetteLook(p);
+    const legend = c.paint(c.hw * 1.56, 0.04, (ctx, W, H) => paintLegend(ctx, p, W, H), { seed: `${p.id}|${p.label}|${p.props.drops || 0}|${p.props.read ?? ''}`, px: 384 });
+    return buildCuvette(c, { level: look.level, tint: look.tint, legend });
+  }
+  if (p.kind === 'dropper') return buildDropper(c);
+  if (p.kind === 'rinse') return buildRinseBottle(c);
+  return null;
+}
+
+/** A tool laid over a cuvette rests on its rim. */
+function restHeight(p, state, at) {
+  if (p.kind !== 'dropper' && p.kind !== 'rinse') return 0;
+  const over = Object.values(state.pieces).some(q => q.kind === 'cuvette' && !q.hidden && Math.abs(q.at.x - at.x) < 9 && Math.abs(q.at.y - at.y) < 10);
+  return over ? CUVETTE_TOP + 0.004 : 0;
+}
+
 export const CUVETTE_KIT = {
   id: CUVETTE_KIT_ID,
   kinds: {
@@ -86,6 +106,10 @@ export const CUVETTE_KIT = {
   run,
   paintPiece,
   paintFixture,
+  piece3d,
+  restHeight,
+  slot3d: (zone, state) => (Object.values(state.fixtures).some(f => f.kind === 'spectro' && f.props.slot === zone.id) ? 'well' : null),
+  deckStyle: () => 'instrument',
   printed: p => String(p.label),
   faceKey
 };
@@ -107,8 +131,9 @@ export const cuvette = (id, label, at, { drops = 0, conc = null, sealed = false,
   props: { solute, ...(conc != null ? { conc } : { drops }), ...(sealed ? { sealed: true } : {}), ...(blank ? { blank: true } : {}) }
 });
 
-export const dropper = (id, at, label = 'Add Drop') => ({ id, kind: 'dropper', label, at, props: {} });
-export const rinser = (id, at, label = 'Empty') => ({ id, kind: 'rinse', label, at, props: {} });
+// A tool says what it does, printed under the place it hangs: a dropper is not told from a wash bottle by its shape alone.
+export const dropper = (id, at, label = 'Add Drop') => ({ id, kind: 'dropper', label, at, props: {}, caption: 'Add Drop' });
+export const rinser = (id, at, label = 'Empty') => ({ id, kind: 'rinse', label, at, props: {}, caption: 'Empty' });
 export const chip = (id, label, nm, at) => ({ id, kind: 'chip', label, at, props: { nm } });
 export const motionCard = (id, label, at) => ({ id, kind: 'motion', label, at, props: {} });
 export const readingCard = (id, label, nm, at) => ({ id, kind: 'reading', label, at, props: { nm } });
@@ -149,7 +174,8 @@ export function spectro(id, at, {
         ...(region ? { molecule } : {}), hidden, readAt: 24
       }
     },
-    slots: region ? [] : [{ id: slotId, label: 'Beam', at: { x: x0 + 10.5, y: y0 + h - 11 }, size: { w: 11, h: 11 } }],
+    // The cuvette stands in a well as wide as its stand (18 units).
+    slots: region ? [] : [{ id: slotId, label: '', at: { x: x0 + 11, y: y0 + h - 12.5 }, size: { w: 20, h: 22 } }],
     size,
     slotId
   };

@@ -1365,3 +1365,35 @@ Tallow's, Ligar's and Lanternfall's are described.
     chamber, the camp's hosts) and the site copy is untouched: both are T7. (8) **Orphans** are listed above and kept on purpose, so T7 can retire them in one commit once Bellows and Ember no longer need the station-row layout. (9) The Learn track still pays no XP and nothing in `src/learn/` calls `session.addXp`, `api.gradeStage`, `api.completeQuest` or `session.recordProgress` (`verify:learn` holds that).
   - **What remains.** **T5 (Bellows)** and **T6 (Ember Reach)** each re-lay the world, build the hosts and convert their quests (six plus the Compressor; seven plus the Crucible) on a gas kit and a heat kit, after confirming the host proposals in `bench-integration.md` sections 6 and 7 with the user; T6 also empties `tools/bay-legacy.json`.
     **T7** retires the orphans and the station-row layout (`bench3d.js`, `PANEL_LAYOUT`, `fitDeployedAim`'s standing aim), re-bakes stills, brings the per-world records up to date, marks `bench-integration.md` complete and rewrites `CLAUDE.md` per section 8. **`CLAUDE.md` has not been edited** (section 8 says not before everything is built).
+
+## Design invariants added after the 2026-10-09 user audit (apply to T5, T6 and every later bench)
+
+1. **The bench teaches itself.** Every tool hangs in a named place with one plain line printed under it (`caption`); every table that joins, marks or removes things prints how (`notes`). The briefing on stage 1 says how to answer ("Press Submit"). A player must never need prior knowledge of the game to operate a tool.
+2. **Real words, real objects.** No invented answer labels ("hard crust", "tiny lump"); an answer card carries a drawing of what it names. A lens looks like a lens, a cutter like a blade. If a tool's effect needs explaining to be understood (the old shaker's "layers"), replace it with something the player can see and build.
+3. **No busywork.** A gesture must be the thinking, not the carrying: marking a particle is one tap, not a drag into a tray. Instruments that exist only to be moved (one detector shuffled between places) become fixed, one per reading.
+4. **Everything is undoable where it was done.** A join is broken by tapping it. A tool lying on a piece is the top thing there and can always be picked up (`kinds.x.onTop`).
+5. **Layout is audited, not eyeballed.** `table/audit.js` holds every stage's opening table: nothing overlaps a zone, a label strip (`layout.js` `LABEL`), a note or a fixture, and labels fit their zone (set smaller to fit, never below `LABEL.min`). New quests get no line on `tools/layout-legacy.json` (a ratchet to be created when the remaining quests are wired in).
+6. **Solid things have broken edges.** Built pieces come from `engine/table-props.js` (rounded slabs, lathed bodies, assembled tools), never a textured box or cylinder; the plate is a worn mat (`table-surface.js`), faces are weathered. Triangle budgets in `verify:bench` are the cost cap.
+7. **Teardown must not depend on luck.** A viewer that hands itself back to the stage (`unmountScene(this)`) flags itself disposed first; `disposeLearnQuest` and `LearnFrame.dispose` guard every step so a fault never leaves the stage UI up or the router dead.
+
+## Lanternfall audit pass (2026-10-22)
+
+The user audit of 2026-10-09 named general faults (squares with textures, weird layout, confusing words, tools that explain nothing, busywork).
+Tallow was fixed first; this pass applies the same invariants to all nine Lanternfall benches and the Lantern-Eater.
+
+- **Solid things.** `engine/lab-props.js` (new) builds the optics, cloud, spectrum, trends and cuvette kits' pieces and fixtures from the
+  invariant-6 vocabulary: a lamp is a housing with a lens barrel (lit in the colour of its light), a gas tube a glass tube between brass
+  caps on a name card, a filament a glass bulb on a screw base, a cell a flanged glass cylinder with a stopcock, a plate a coupon of its own
+  metal on a bakelite carrier, a detector a cast head with a sensor snout, a cuvette a glass cell on a steel foot with a liquid column,
+  a dropper a pipette with a rubber bulb. Slots are sockets (lamp cup, plate clips, tube cradle, ladder rung, sample well, chamber,
+  rail mark); every instrument has a cast case with screws and a pane of glass over its picture; the photocell has a glass dome, the pulse
+  timer a track, the ladder uprights; the cloud plates stand their dots up as beads at their depth. `Table3D` reaches them through
+  optional kit hooks (`piece3d`, `slot3d`, `deckStyle`, `dress3d`, `restHeight`, `pilesOf`), so a kit that supplies none looks as before.
+- **Layout.** `unit02/*` is off `tools/layout-legacy.json`. Slots are as wide as the widest thing that stands in them; the ladder's
+  electron is a small ball (a `rect` kind with a larger grab radius) so six rungs fit; the spectrograph's slots pack from the left;
+  trays, tokens and tools were moved clear of labels, captions and fixtures; q7 stage 7's answers are three trays down the right.
+- **Words.** `q5-numbers` and the address kit say shell, subshell, orbital and spin (the apartment words are gone); every stage-one
+  briefing says how to answer; stages print how-to lines (`table/notes.js`, `applyNotes`); the cuvette bench's tools and the electron tool
+  are captioned.
+- **Not done.** The spectrograph and ruler have no solid parts of their own beyond the case; the flat wave screens are still pictures
+  (the 2D wave is the lesson); no browser pass was run (the owner tests), only `verify:*` in Node.

@@ -27,6 +27,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import {
   shellsTable, shelf, hand, configCard, elementStrip, magnet, coreSwitch,
   readOf, rackOf, rackPull, rackFor, groundConfig, readRack, isLaddered, blockOf, zOf, symbolOf, MEASURED, boxPieceId, configString, shortString
@@ -85,7 +86,7 @@ export const STAGES = [
       title: 'Six for Carbon',
       briefing: {
         speaker: SPEAKER,
-        body: 'This bench files electrons into orbital boxes by energy, lowest first. Drop an arrow on a box to place an electron there.'
+        body: 'This bench files electrons into orbital boxes by energy, lowest first: drop an arrow on a box to place an electron there. Press Submit when the rack shows your answer.'
       },
       prompt: 'Build a ground-state carbon atom by placing its six electrons on the rack.',
       widget,
@@ -356,6 +357,13 @@ export const STAGES = [
     };
   })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag an arrow onto a box to place an electron.', 'Lift Out takes one off again.'],
+  2: ['Press Test Sample, then Test Rack, and compare the pulls.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

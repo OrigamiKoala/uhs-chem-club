@@ -167,9 +167,9 @@ function paintChamber(ctx, f, state, b) {
   // The specimen's own rings, beside its holder, when the stage gives them.
   if (f.props.rings) {
     const sym = read.sym;
-    const cx = F.x(11);
-    const cy = F.y(strip.box.h - 8.4);
-    if (sym) rings(ctx, cx, cy, F.len(6.2), shellsOf(sym), Math.max(1.2, F.len(0.55)));
+    const cx = F.x(13);
+    const cy = F.y(strip.box.h - 7.6);
+    if (sym) rings(ctx, cx, cy, F.len(5.6), shellsOf(sym), Math.max(1.2, F.len(0.55)));
     else say(ctx, 'NO SPECIMEN', cx, cy, F.size(2.1, 6), { align: 'center', color: DIM });
   }
 }

@@ -29,6 +29,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import { planJump, jumpsForLine, photonJoules, LINES, bohrJoules } from '../../engine/lightdata.js';
 import {
   opticsTable, spectrograph, energyLadder, linesStrip, plaque, marker, filament, gasTube, coolCell, refStrip, lineChip,
@@ -85,7 +86,7 @@ export const STAGES = [
       title: 'Filament and Tube',
       briefing: {
         speaker: SPEAKER,
-        body: 'A source put in the socket has its light spread by a prism across a scale in nanometres. The band it makes is the picture to read.'
+        body: 'A source put in the socket has its light spread by a prism across a scale in nanometres, and the band it makes is the picture to read. Press Submit when the table shows your answer.'
       },
       prompt: 'Put each light source under the kind of band it makes.',
       widget,
@@ -380,6 +381,16 @@ export const STAGES = [
     };
   })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag a source into the socket,', 'then under the band it makes.'],
+  2: ['Put the tube in the socket, then slide a reference', 'strip into the alongside slot.'],
+  3: ['Put the filament in the socket and the cell in front of it,', 'then slide a reference strip alongside.'],
+  4: ['Drag the electron to another rung.', 'Any light that leaves is written on the strip.'],
+  7: ['Drag the electron up past the top rung.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

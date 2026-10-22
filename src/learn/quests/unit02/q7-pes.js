@@ -29,6 +29,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import {
   pesTable, specimen, chamber, buildFixture, writerFixture, tallyFixture, plaqueFixture,
   chamberRead, buildRead, writtenRead, writerTarget, markerRead, freedBy, holdOf, electronsIn, spectrumOf, shellsOf,
@@ -84,7 +85,7 @@ export const STAGES = [
       title: 'Two Spectra',
       briefing: {
         speaker: SPEAKER,
-        body: 'This bench fires light at a specimen to knock its electrons off, and sorts them into a strip by the energy each one was held with. Put a specimen in the chamber and press "Fire Light".'
+        body: 'This bench fires light at a specimen to knock its electrons off and sorts them into a strip by the energy each was held with: put a specimen in the holder and press "Fire Light". Press Submit when the table shows your answer.'
       },
       prompt: 'Rank the two specimens by how much energy it takes to knock their electrons off, lowest first.',
       widget,
@@ -285,18 +286,19 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 7 */
   (() => {
-    const ch = chamber(CHAMBER, CH, ['x', 'y', 'z'], { axisLabel: 'BINDING ENERGY, MJ/mol' });
-    const tray = (id, label, y) => ({ id, label, at: { x: 131, y }, size: { w: 34, h: 9 }, cell: 9 });
+    // A shorter chamber leaves a band under it for the samples and the plate of electron counts; the answers are three trays down the right.
+    const ch = chamber(CHAMBER, { x: 57, y: 21 }, ['x', 'y', 'z'], { axisLabel: 'BINDING ENERGY, MJ/mol', h: 38 });
+    const tray = (id, label, y) => ({ id, label, at: { x: 131, y }, size: { w: 26, h: 15 }, cell: 22 });
     return {
       title: 'Three Neighbours',
       prompt: 'Match each spectrum to sodium, magnesium, or aluminum.',
       widget,
       table: pesTable({
         pieces: [
-          specimen('x', 'SAMPLE X', 'Mg', { x: 22, y: 54 }), specimen('y', 'SAMPLE Y', 'Al', { x: 52, y: 54 }), specimen('z', 'SAMPLE Z', 'Na', { x: 82, y: 54 })
+          specimen('x', 'SAMPLE X', 'Mg', { x: 14, y: 53 }), specimen('y', 'SAMPLE Y', 'Al', { x: 40, y: 53 }), specimen('z', 'SAMPLE Z', 'Na', { x: 66, y: 53 })
         ],
-        fixtures: [ch.fixture, plaqueFixture('electrons', 'Electrons in an atom', { x: 131, y: 14 }, ['Sodium: 11', 'Magnesium: 12', 'Aluminum: 13'], { w: 36 })],
-        zones: { slots: ch.slots, trays: [tray('na', 'Sodium', 31), tray('mg', 'Magnesium', 42), tray('al', 'Aluminum', 53)] }
+        fixtures: [ch.fixture, plaqueFixture('electrons', 'Electrons in an atom', { x: 98, y: 53 }, ['Sodium: 11', 'Magnesium: 12', 'Aluminum: 13'], { w: 34 })],
+        zones: { slots: ch.slots, trays: [tray('na', 'Sodium', 14), tray('mg', 'Magnesium', 34), tray('al', 'Aluminum', 54)] }
       }),
       hints: [
         'Fire each sample and add up the heights of the piles on its strip.',
@@ -355,6 +357,15 @@ export const STAGES = [
     };
   })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Put a specimen in the holder.'],
+  3: ['Turn the Light energy dial, then press Fire Light.'],
+  5: ['Set the Protons and Electrons dials: your atom\'s peaks', 'appear on the strip as outlines.'],
+  7: ['Fire each sample, then drag it to a tray.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

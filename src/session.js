@@ -36,6 +36,21 @@ const STATE_META_KEY = 'avalon_state_meta';
 /** Per-device UI toggles: never synced, or closing a hologram here would close it everywhere. */
 const DEVICE_FLAG = /HoloClosed$/;
 
+/**
+ * Guest mode. A guest holds this sentinel instead of a server token, so every
+ * `session.token && session.player` gate lets them in, while `api.js` routes
+ * their calls to `guest.js` and `sync.js` never pushes. Nothing a guest does
+ * reaches the Sheet; their save is the same localStorage cache an account uses.
+ */
+export const GUEST_TOKEN = 'guest';
+/** Where a guest's save waits while they are signed out (sign-out wipes the live keys). */
+const GUEST_SAVE_KEY = 'avalon_guest_save';
+/** Every per-player key a guest's save is made of. */
+const GUEST_KEYS = [
+  USER_KEY, 'avalon_xp', 'avalon_level', 'avalon_q1_stage_reached', LEARN_KEY,
+  FLAGS_KEY, NOTEBOOK_KEY, PRACTICE_KEY, STATE_META_KEY, COMMENDATIONS_KEY, LOADOUT_KEY, MARKS_KEY
+];
+
 export {
   MAX_LEVEL,
   LEVEL_THRESHOLDS,
@@ -110,6 +125,28 @@ class SessionManager {
     try {
       const s = localStorage.getItem(SOUND_KEY);
       if (s) this.sound = { ...this.sound, ...JSON.parse(s) };
+    } catch (e) {}
+    this.loadPlayerState();
+
+    // Restore cached config & teams
+    try {
+      const cachedCfg = localStorage.getItem(CONFIG_KEY);
+      if (cachedCfg) this.config = JSON.parse(cachedCfg);
+      const cachedTeams = localStorage.getItem(TEAMS_KEY);
+      if (cachedTeams) {
+        const parsed = JSON.parse(cachedTeams);
+        this.teams = Array.isArray(parsed) ? parsed.map(normalizeTeamObj) : [];
+      }
+    } catch (e) {
+      console.warn('Failed restoring cached config/teams:', e);
+    }
+
+    this.loadUserCache();
+  }
+
+  /** Read the per-player cache (flags, learn, notebook, practice, loadout...) from localStorage. */
+  loadPlayerState() {
+    try {
       const f = localStorage.getItem(FLAGS_KEY);
       if (f) {
         this.flags = { ...this.flags, ...JSON.parse(f) };
@@ -144,20 +181,10 @@ class SessionManager {
     } catch (e) {}
     if (!Array.isArray(this.notebook)) this.notebook = [];
     if (!this.practice || typeof this.practice !== 'object') this.practice = {};
+  }
 
-    // Restore cached config & teams
-    try {
-      const cachedCfg = localStorage.getItem(CONFIG_KEY);
-      if (cachedCfg) this.config = JSON.parse(cachedCfg);
-      const cachedTeams = localStorage.getItem(TEAMS_KEY);
-      if (cachedTeams) {
-        const parsed = JSON.parse(cachedTeams);
-        this.teams = Array.isArray(parsed) ? parsed.map(normalizeTeamObj) : [];
-      }
-    } catch (e) {
-      console.warn('Failed restoring cached config/teams:', e);
-    }
-
+  /** Read the cached profile, XP, inventory and quest progress from localStorage. */
+  loadUserCache() {
     // Restore user session if token exists
     if (this.token) {
       const cachedUser = localStorage.getItem(USER_KEY);
@@ -199,6 +226,51 @@ class SessionManager {
 
   get isSignedIn() {
     return Boolean(this.token && this.player);
+  }
+
+  /** True while playing as a guest: everything stays in localStorage, nothing reaches the Sheet. */
+  get isGuest() {
+    return this.token === GUEST_TOKEN;
+  }
+
+  /**
+   * Continue as a guest. Brings back the save a guest left on this device when
+   * they last signed out, or starts a fresh one; the caller then routes to the
+   * bridge (or onboarding, for a guest who has not picked a guild).
+   */
+  startGuest() {
+    let saved = null;
+    try { saved = JSON.parse(safeRead(GUEST_SAVE_KEY) || 'null'); } catch (e) {}
+    if (saved && typeof saved === 'object') {
+      for (const k of GUEST_KEYS) {
+        try {
+          if (typeof saved[k] === 'string') localStorage.setItem(k, saved[k]);
+          else localStorage.removeItem(k);
+        } catch (e) {}
+      }
+      try { localStorage.removeItem(GUEST_SAVE_KEY); } catch (e) {}
+    }
+    this.setToken(GUEST_TOKEN);
+    this.resetPlayerState();
+    this.loadPlayerState();
+    this.loadUserCache();
+    if (!this.player) {
+      this.player = { player_id: 'guest', display_name: 'Guest', display_name_lc: 'guest', role: '', team_id: '' };
+    }
+    this.isAdmin = false;
+    this.saveSession();
+    this.notify();
+  }
+
+  /** Signing a guest out: park their save, so the next "Continue as Guest" here picks it up. */
+  stashGuest() {
+    this.saveSession();
+    const save = {};
+    for (const k of GUEST_KEYS) {
+      const v = safeRead(k);
+      if (v !== null) save[k] = v;
+    }
+    try { localStorage.setItem(GUEST_SAVE_KEY, JSON.stringify(save)); } catch (e) {}
   }
 
   get teamId() {
@@ -879,8 +951,8 @@ class SessionManager {
     return this.flags ? this.flags[key] : undefined;
   }
 
-  clear() {
-    this.token = null;
+  /** Forget the player in memory (storage untouched): the blank slate both sign-out and guest entry start from. */
+  resetPlayerState() {
     this.player = null;
     this.team = null;
     this.xp = 0;
@@ -888,6 +960,22 @@ class SessionManager {
     this.isAdmin = false;
     this.inventory = [];
     this.progress = [];
+    this.learn = { saga: { beatsSeen: [], clues: [] } };
+    this.flags = { sessionZeroDone: false };
+    this.notebook = [];
+    this.practice = {};
+    this.commendations = [];
+    this.cleanStages = [];
+    this.loadout = {};
+    this.stateMeta = { loadoutAt: 0, settingsAt: 0 };
+    this.lastRemoteState = null;
+  }
+
+  clear() {
+    // A guest's save has no server copy, so it is parked rather than lost.
+    if (this.isGuest) this.stashGuest();
+    this.token = null;
+    this.resetPlayerState();
     this.sessionFlags = {};
     if (typeof sessionStorage !== 'undefined') {
       try { sessionStorage.removeItem('avalon_session_flags'); } catch (e) {}
@@ -897,20 +985,11 @@ class SessionManager {
     localStorage.removeItem('avalon_xp');
     localStorage.removeItem('avalon_level');
     localStorage.removeItem('avalon_q1_stage_reached');
-    this.learn = { saga: { beatsSeen: [], clues: [] } };
     localStorage.removeItem(LEARN_KEY);
     // Everything else that belongs to the signed-in player goes too: a shared
     // school computer must not hand one student's flags, notebook or practice
     // record to the next. The server holds the master copy and restores it at
     // the next sign-in.
-    this.flags = { sessionZeroDone: false };
-    this.notebook = [];
-    this.practice = {};
-    this.commendations = [];
-    this.cleanStages = [];
-    this.loadout = {};
-    this.stateMeta = { loadoutAt: 0, settingsAt: 0 };
-    this.lastRemoteState = null;
     for (const k of [FLAGS_KEY, NOTEBOOK_KEY, PRACTICE_KEY, STATE_META_KEY, COMMENDATIONS_KEY, LOADOUT_KEY, MARKS_KEY]) {
       try { localStorage.removeItem(k); } catch (e) {}
     }

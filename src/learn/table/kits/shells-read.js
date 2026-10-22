@@ -85,7 +85,7 @@ export function addressOfFinder(state, finderId) {
 }
 
 /**
- * What an address lights on the rack: the whole floor (a finder that shows only `n`), a suite's row (`n` and `l`), or one box (all three).
+ * What an address lights on the rack: the whole shell (a finder that shows only `n`), a subshell's row (`n` and `l`), or one box (all three).
  * `none` when no room has the address.
  */
 export function finderLight(state, finderId) {
@@ -104,10 +104,10 @@ export function finderLight(state, finderId) {
 /** Why no room has an address (the rule, never the answer to a stage), or null when a room does. */
 export function whyNoRoom(a) {
   if (validAddress(a)) return null;
-  if (!(a.n >= 1)) return 'A floor number starts at 1.';
-  if (!(a.l >= 0 && a.l < a.n)) return 'A suite type has to be smaller than its floor number.';
-  if (!(Math.abs(a.ml) <= a.l)) return 'A room number cannot be farther from zero than its suite type.';
-  return 'A bunk is up or down, and nothing else.';
+  if (!(a.n >= 1)) return 'A shell number starts at 1.';
+  if (!(a.l >= 0 && a.l < a.n)) return 'A subshell number has to be smaller than its shell number.';
+  if (!(Math.abs(a.ml) <= a.l)) return 'An orbital number cannot be farther from zero than its subshell number.';
+  return 'An arrow points up or down, and nothing else.';
 }
 
 /* ------------------------------------------------------------------
@@ -115,7 +115,7 @@ export function whyNoRoom(a) {
    ------------------------------------------------------------------ */
 
 /**
- * How far out, in pm, the cloud of floor `n` and suite type `l` reaches on average: the real hydrogen-like mean distance, (a0 / 2)(3 n^2 - l (l + 1)).
+ * How far out, in pm, the cloud of shell `n` and subshell `l` reaches on average: the real hydrogen-like mean distance, (a0 / 2)(3 n^2 - l (l + 1)).
  * `verify:learn` holds it to the mean of the sampled dots.
  */
 export const reachPm = (n, l) => Math.round(((BOHR_PM / 2) * (3 * n * n - l * (l + 1))) / 10) * 10;

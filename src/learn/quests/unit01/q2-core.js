@@ -10,8 +10,8 @@
  * hands, and the concept arrives immediately afterwards as a reward card, connecting
  * the player's observation to the real chemistry:
  *
- *   1  fire a beam at a foil, detector where you put it -> The Nucleus · Mostly Empty Space
- *   2  pick out the particles that carry a +            -> Protons & Neutrons
+ *   1  fire a beam at a foil, three detectors count it  -> The Nucleus · Mostly Empty Space
+ *   2  mark the particles that carry a +                -> Protons & Neutrons
  *   3  load electrons until the needle rests on zero    -> Electrons & Electrical Neutrality
  *   4  load electrons onto shells                       -> Electron Shells & The Bohr Model
  *   5  test samples and tray them by what they do       -> Valence Electrons & Reactivity
@@ -113,8 +113,8 @@ export { behaviourOf };
 const NAMES = { proton: 'Proton', neutron: 'Neutron', electron: 'Electron' };
 const SPECK = { proton: 'Marked', neutron: 'Blank', electron: 'Outer' };
 
-const part = (id, kind, x, y, named = true, zone = null) => ({
-  id, kind, label: (named ? NAMES : SPECK)[kind], at: { x, y }, ...(zone ? { zone } : {})
+const part = (id, kind, x, y, named = true, zone = null, props = null) => ({
+  id, kind, label: (named ? NAMES : SPECK)[kind], at: { x, y }, ...(zone ? { zone } : {}), ...(props ? { props } : {})
 });
 
 /** `n` electrons ids `${prefix}1..n` stacked into a zone (the zone lays them out). */
@@ -123,31 +123,28 @@ const electrons = (prefix, n, zone, from = 1) =>
 
 const trayAt = (id, label, x, y, w, h, cap) => ({ id, label, at: { x, y }, size: { w, h }, ...(cap != null ? { cap } : {}) });
 /** A tray for specimens: wide pieces, so a wider pitch and a deeper tray. */
-const specimenTray = (id, label, x, y = 33, w = 38) => ({ id, label, at: { x, y }, size: { w, h: 20 }, cell: 19 });
+const specimenTray = (id, label, x, y = 38, w = 38) => ({ id, label, at: { x, y }, size: { w, h: 20 }, cell: 19 });
 
 const specimen = (id, label, x, y, props) => ({ id, kind: 'specimen', label, at: { x, y }, props });
 const nucleus = (id, label, x, y, p, n) => ({ id, kind: 'nucleus', label, at: { x, y }, fixed: true, props: { p, n } });
 
 /** The shell trays of an atom with a nucleus at the top left: one per shell, closest in first. */
 const SHELLS = [
-  trayAt('sh1', 'Shell 1', 14, 34, 20, 16, 2),
-  trayAt('sh2', 'Shell 2', 48, 34, 40, 20, 8),
-  trayAt('sh3', 'Shell 3', 92, 49, 40, 20, 8)
+  trayAt('sh1', 'Shell 1', 14, 46, 20, 16, 2),
+  trayAt('sh2', 'Shell 2', 48, 46, 40, 20, 8),
+  trayAt('sh3', 'Shell 3', 98, 54, 40, 20, 8)
 ];
-const SOURCE_TRAY = (label, n) => trayAt('src', label, 98, 18, 40, 30, n);
+const SOURCE_TRAY = (label, n) => trayAt('src', label, 98, 24, 40, 30, n);
 
 const needleFixture = (zones, nuc, at, range) => ({
-  id: 'needle', kind: 'needle', label: 'Needle', at, size: { w: 40, h: 16 }, noRun: true, props: { zones, nucleus: nuc, range }
+  id: 'needle', kind: 'needle', label: 'Charge needle', at, size: { w: 40, h: 16 }, noRun: true, props: { zones, nucleus: nuc, range }
 });
 
 const inZone = (t, zone, kind) => piecesIn(t, zone, kind).length;
 const placedOn = (t, zones) => zones.reduce((n, z) => n + inZone(t, z, 'electron'), 0);
 
-/** The beam's three detector places, with the angle each one sits at from the beam's line. */
-const BEAM = {
-  specimen: 'a',
-  angles: { far: 0, side: 35, back: 180 }
-};
+/** The beam's three detectors (fixed pieces), with the angle each one sits at from the beam's line. */
+const BEAM_DETECTORS = { detAhead: 0, detSide: 35, detBack: 180 };
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
@@ -158,39 +155,40 @@ export const STAGES = [
     title: 'Fire Through It',
     briefing: {
       speaker: SPEAKER,
-      body: 'This bench probes inside a single atom. Set the detector beside the foil and press "Fire Beam" to see where the shots land.'
+      body: 'This bench probes inside a single atom: press "Fire Beam" to send shots at the foil, and each detector counts the shots that reach it. Lay the model card that fits what you see in the slot, then press Submit.'
     },
-    prompt: 'Which model describes what the atom is made of?',
+    prompt: 'Which model of the atom fits where the shots go?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
-      recorder: { at: { x: 96, y: 26 }, size: { w: 34, h: 20 }, xLabel: 'Angle', yLabel: 'Hits' },
+      recorder: { at: { x: 98, y: 20 }, size: { w: 36, h: 24 }, xLabel: 'Angle', yLabel: 'Hits' },
       pieces: [
-        { id: 'det', kind: 'detector', label: 'Detector', at: { x: 56, y: 52 } },
-        { id: 'solid', kind: 'card', label: 'All solid', at: { x: 76, y: 55 } },
-        { id: 'hollow', kind: 'card', label: 'Hard crust', at: { x: 92, y: 55 } },
-        { id: 'core', kind: 'card', label: 'Tiny lump', at: { x: 108, y: 55 } }
+        // Three detectors, one at every angle the beam is read at: nothing to carry about the table.
+        { id: 'detBack', kind: 'detector', label: 'Back', at: { x: 28, y: 36 }, fixed: true },
+        { id: 'detSide', kind: 'detector', label: 'Side', at: { x: 62, y: 15 }, fixed: true },
+        { id: 'detAhead', kind: 'detector', label: 'Ahead', at: { x: 64, y: 29 }, fixed: true },
+        { id: 'solid', kind: 'model', label: 'Solid all through', at: { x: 16, y: 54 }, props: { model: 'solid' } },
+        { id: 'hollow', kind: 'model', label: 'Hollow shell', at: { x: 40, y: 54 }, props: { model: 'shell' } },
+        { id: 'core', kind: 'model', label: 'Tiny dense center', at: { x: 64, y: 54 }, props: { model: 'core' } }
       ],
       zones: {
-        slots: [
-          { id: 'back', label: 'Beam side', at: { x: 12, y: 8 } },
-          { id: 'side', label: 'Side', at: { x: 30, y: 8 } },
-          { id: 'far', label: 'Far side', at: { x: 54, y: 32 } },
-          { id: 'model', label: 'Model', at: { x: 94, y: 43 } }
-        ]
+        slots: [{ id: 'model', label: 'Your model', at: { x: 98, y: 46 }, size: { w: 28, h: 20 } }]
       },
-      fixtures: [{ id: 'beam', kind: 'beam', label: 'Beam', runLabel: 'Fire Beam', at: { x: 22, y: 33 }, size: { w: 40, h: 22 }, props: BEAM }]
+      fixtures: [{
+        id: 'beam', kind: 'beam', label: 'Beam and foil', runLabel: 'Fire Beam', at: { x: 38, y: 26 }, size: { w: 68, h: 38 },
+        props: { specimen: 'a', detectors: BEAM_DETECTORS, source: { x: 10, y: 26 }, foil: { x: 46, y: 26 } }
+      }]
     }),
     hints: [
-      'Drop the detector in one of the places round the foil and press "Fire Beam".',
-      'Move the detector to each place in turn and compare the counts the strip records.',
-      'Consider what arrangement of mass allows almost every shot to pass while an occasional shot rebounds, then lay the matching card in the slot.'
+      'Press "Fire Beam" and read the count on each detector and on the strip.',
+      'Compare how many shots go straight on with how many are turned aside or come back.',
+      'Consider what arrangement of matter lets nearly every shot through while an occasional shot rebounds, then lay the matching card in the slot.'
     ],
     check(state) {
       const model = piecesIn(state.table, 'slot:model')[0];
       if (!model) return { ok: false, notYet: true, msg: 'Lay a model card in the slot.' };
       if (model.id === 'core') return { ok: true };
       if (model.id === 'solid') return { ok: false, msg: 'Solid matter would have stopped the beam. Most of the shots went straight through.' };
-      return { ok: false, msg: 'A hard crust would have deflected shots at the edges. These passed clean through the edges, and one bounced off the dead center.' };
+      return { ok: false, msg: 'A hollow shell would have turned shots aside at its edges. These passed clean through the edges, and one bounced off the dead center.' };
     },
     reward: {
       log: 'Most shots through, 2 deflected, 1 straight back.',
@@ -204,9 +202,9 @@ export const STAGES = [
     title: 'What Is in the Middle',
     briefing: {
       speaker: SPEAKER,
-      body: 'The middle of the atom is laid out flat, so every particle is in view and none hides behind another.'
+      body: 'The middle of the atom is laid out flat, so every particle is in view and none hides behind another. Tap a particle to mark it, and tap it again to unmark it.'
     },
-    prompt: 'Pick out every particle in the middle that carries a +.',
+    prompt: 'Mark every particle in the middle that carries a +.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -214,22 +212,21 @@ export const STAGES = [
           'proton', 'neutron', 'proton', 'neutron',
           'neutron', 'proton', 'proton', 'proton',
           'neutron', 'neutron', 'proton', 'neutron'
-        ].map((kind, i) => part(`sp${i + 1}`, kind, 14 + (i % 4) * 11, 10 + Math.floor(i / 4) * 11, false))
-      ],
-      zones: { trays: [trayAt('plus', 'With a +', 92, 30, 40, 26)] }
+        ].map((kind, i) => part(`sp${i + 1}`, kind, 34 + (i % 4) * 15, 14 + Math.floor(i / 4) * 15, false, null, { markable: true }))
+      ]
     }),
     hints: [
-      'Drag a particle into the tray to set it aside.',
+      'Tap a particle to mark it with a ring, and tap it again to take the ring off.',
       'Look at each particle\'s face: some carry a stencilled + and some are blank.',
-      'Go across the huddle row by row and tray only the particles with a +, then check that your tray holds only those.'
+      'Go across the huddle row by row and mark only the particles with a +, then check that no blank one is marked.'
     ],
     check(state) {
       const t = state.table;
-      const tray = piecesIn(t, 'tray:plus');
-      if (!tray.length) return { ok: false, notYet: true, msg: 'The tray is empty. Set aside the particles that carry a +.' };
-      if (tray.some(p => p.kind !== 'proton')) return { ok: false, msg: 'The tray holds a blank particle. Set aside only the ones that carry a +.' };
-      const left = Object.values(t.pieces).filter(p => p.kind === 'proton' && !p.props.scratch && p.zone !== 'tray:plus');
-      if (left.length) return { ok: false, msg: 'A + particle is still on the table. Every one that carries a + belongs in the tray.' };
+      const parts = Object.values(t.pieces).filter(p => (p.kind === 'proton' || p.kind === 'neutron') && !p.props.scratch);
+      const marked = parts.filter(p => p.props.flipped);
+      if (!marked.length) return { ok: false, notYet: true, msg: 'Nothing is marked yet. Tap the particles that carry a +.' };
+      if (marked.some(p => p.kind !== 'proton')) return { ok: false, msg: 'A blank particle is marked. Mark only the ones that carry a +.' };
+      if (parts.some(p => p.kind === 'proton' && !p.props.flipped)) return { ok: false, msg: 'A + particle is still unmarked. Every one that carries a + needs a ring.' };
       return { ok: true };
     },
     reward: {
@@ -244,7 +241,7 @@ export const STAGES = [
     title: 'The Charge Balance',
     briefing: {
       speaker: SPEAKER,
-      body: 'A charge detector is now clipped to the atom: its needle leans toward plus or toward minus.'
+      body: 'A charge needle is clipped to the atom: it reads the atom\'s total electric charge, leaning to + when protons outnumber electrons and to − when electrons do. Move electrons into the outside tray and watch it.'
     },
     prompt: 'Make Sample D electrically neutral.',
     widget: { type: 'table', label: 'The bench' },
@@ -254,7 +251,7 @@ export const STAGES = [
         ...electrons('e', 10, 'tray:src')
       ],
       zones: {
-        trays: [SOURCE_TRAY('Electrons', 12), trayAt('out', 'Outside', 86, 47, 40, 22)]
+        trays: [SOURCE_TRAY('Electrons', 12), trayAt('out', 'Outside the nucleus', 80, 54, 52, 20)]
       },
       fixtures: [needleFixture(['tray:out'], 'nuc', { x: 30, y: 38 }, 10)]
     }),
@@ -328,7 +325,7 @@ export const STAGES = [
       speaker: SPEAKER,
       body: 'The bench is now equipped with a reaction tester. Drop a sample in its slot and press "Run Tester" to see if it trades electrons.'
     },
-    prompt: 'Tray the two cased samples by whether they give, take, or keep their electrons.',
+    prompt: 'Sort the two cased samples by whether they give, take, or keep their electrons.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -381,7 +378,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 6 */
   {
     title: 'Same Weight, Different Atom',
-    prompt: 'Tray Samples B and C as the same element as Sample A or a different one.',
+    prompt: 'Sort Samples B and C as the same element as Sample A or a different one.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -391,8 +388,8 @@ export const STAGES = [
       ],
       zones: {
         trays: [
-          specimenTray('same', 'Same element as Sample A', 30, 33, 44),
-          specimenTray('other', 'A different element', 82, 33, 44)
+          specimenTray('same', 'Same element as Sample A', 30, 38, 44),
+          specimenTray('other', 'A different element', 82, 38, 44)
         ]
       }
     }),
@@ -462,7 +459,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Tell Them Apart',
-    prompt: 'Tray each sample as an isotope, an ion or a different element from reference Sample D.',
+    prompt: 'Sort each sample as an isotope, an ion or a different element from reference Sample D.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -473,9 +470,9 @@ export const STAGES = [
       ],
       zones: {
         trays: [
-          specimenTray('heavy', 'Isotope', 21, 33),
-          specimenTray('charged', 'Ion', 60, 33),
-          specimenTray('other', 'Different element', 99, 33)
+          specimenTray('heavy', 'Isotope', 21, 38),
+          specimenTray('charged', 'Ion', 60, 38),
+          specimenTray('other', 'Different element', 99, 38)
         ]
       }
     }),
@@ -611,8 +608,8 @@ const ids = (prefix, from, upto) => Array.from({ length: upto - from + 1 }, (_, 
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [to('det', 'slot:far'), run('beam'), to('det', 'slot:side'), run('beam'), to('det', 'slot:back'), run('beam'), to('core', 'slot:model')],
-  [1, 3, 6, 7, 8, 11].map(i => to(`sp${i}`, 'tray:plus')),
+  [run('beam'), to('core', 'slot:model')],
+  [1, 3, 6, 7, 8, 11].map(i => ({ flip: `sp${i}` })),
   moveAll(ids('e', 1, 8), 'tray:out'),
   [...moveAll(ids('e', 1, 2), 'tray:sh1'), ...moveAll(ids('e', 3, 10), 'tray:sh2'), to('e11', 'tray:sh3')],
   [
@@ -627,8 +624,8 @@ export const SOLUTIONS = [
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [to('det', 'slot:far'), run('beam'), to('hollow', 'slot:model')],
-  [1, 3, 6, 7, 8, 9].map(i => to(`sp${i}`, 'tray:plus')),
+  [run('beam'), to('hollow', 'slot:model')],
+  [1, 3, 6, 7, 8, 9].map(i => ({ flip: `sp${i}` })),
   moveAll(ids('e', 1, 5), 'tray:out'),
   [...moveAll(ids('e', 1, 3), 'tray:sh1'), ...moveAll(ids('e', 4, 11), 'tray:sh2')],
   [to('s4', 'slot:tester'), run('tester'), to('s5', 'slot:tester'), run('tester'), to('s4', 'tray:inert'), to('s5', 'tray:takes')],

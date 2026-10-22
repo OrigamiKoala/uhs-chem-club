@@ -70,6 +70,8 @@ export const TRENDS_KIT = {
   run,
   paintPiece,
   paintFixture,
+  slot3d: () => 'holder',
+  deckStyle: () => 'instrument',
   printed: p => String(p.label),
   faceKey
 };
@@ -91,7 +93,7 @@ export const atomCard = (id, label, sym, at, { zone = null, charge = 0 } = {}) =
 });
 
 /** The loose electron that puts one back on an atom. */
-export const electronPiece = (id, at, label = 'Add Electron') => ({ id, kind: 'electron', label, at, props: {} });
+export const electronPiece = (id, at, label = 'Add Electron') => ({ id, kind: 'electron', label, at, props: {}, caption: 'Add Electron' });
 
 /** The spring gauge: a holder, a dial naming which electron, the readings the stage shows, and a Tug Electron key. */
 export function springFixture(id, at, { show = {}, feelWord = 'CHARGE IT FEELS', label = 'Spring gauge' } = {}) {

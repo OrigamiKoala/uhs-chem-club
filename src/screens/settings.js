@@ -97,7 +97,8 @@ export function renderSettings(container) {
         </div>
       </div>
 
-      <!-- Section: Privacy & Standings -->
+      <!-- Section: Privacy & Standings (accounts only: a guest is never on a board) -->
+      ${session.isGuest ? '' : `
       <div class="glass-panel" style="margin-bottom: 1.5rem;">
         <h2 class="section-title" style="margin-bottom: 1.25rem;">Privacy & Standings</h2>
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
@@ -139,6 +140,7 @@ export function renderSettings(container) {
           </button>
         </form>
       </div>
+      `}
     </div>
   `;
 
@@ -211,7 +213,7 @@ export function renderSettings(container) {
   const pwError = container.querySelector('#pw-error');
   const pwBtn = container.querySelector('#pw-btn');
 
-  pwForm.addEventListener('submit', async (e) => {
+  pwForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     pwError.classList.add('hidden');
     pwBtn.disabled = true;

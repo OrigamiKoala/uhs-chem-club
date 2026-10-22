@@ -31,6 +31,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import { planPhotocell, photonJoules, thresholdNm } from '../../engine/lightdata.js';
 import {
   opticsTable, photocell, metalPlate, lamp, plaque, marker, cellRead, firstFreeing, seated
@@ -89,7 +90,7 @@ export const STAGES = [
       title: 'A Plate That Will Not Give',
       briefing: {
         speaker: SPEAKER,
-        body: 'A lamp shines on a metal plate in a vacuum tube, and the electrons it frees run into a cup. The meters show how many leave each second and how fast the fastest one flies.'
+        body: 'A lamp shines on a metal plate in a vacuum tube, and the electrons it frees run into a cup; the meters show how many leave each second and how fast. Press Submit when the table shows your answer.'
       },
       prompt: 'Get electrons to break free from the sodium plate.',
       widget,
@@ -313,7 +314,7 @@ export const STAGES = [
           lamp('c', 'Lamp C', { x: 88, y: 55 }, 250)
         ],
         fixtures: [cell.fixture],
-        zones: { slots: cell.slots, trays: [tray('yes', 'Frees electrons', 14), tray('no', 'Frees none', 40)] }
+        zones: { slots: cell.slots, trays: [tray('yes', 'Frees electrons', 16), tray('no', 'Frees none', 42)] }
       }),
       hints: [
         'Drag a lamp into the lamp slot and watch the cup beside the zinc plate.',
@@ -380,6 +381,15 @@ export const STAGES = [
     };
   })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag the plate into the holder.', 'Turn the dials and watch the cup.'],
+  3: ['Turn the Brightness dial and watch the cup.'],
+  6: ['Try each plate in the holder.'],
+  7: ['Try each lamp in the lamp slot.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

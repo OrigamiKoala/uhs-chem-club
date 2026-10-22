@@ -83,7 +83,7 @@ const trayAt = (id, label, x, y, w, h, cap) => ({ id, label, at: { x, y }, size:
 const specimenTray = (id, label, x, y, w = 38) => ({ id, label, at: { x, y }, size: { w, h: 22 }, cell: 19 });
 const specimen = (id, label, x, y, props) => ({ id, kind: 'specimen', label, at: { x, y }, props });
 const nucleus = (id, label, x, y, p, n) => ({ id, kind: 'nucleus', label, at: { x, y }, fixed: true, props: { p, n } });
-const plate = (id, label, x, lines) => ({ id, kind: 'plate', label, at: { x, y: 12 }, size: { w: 34, h: 18 }, noRun: true, props: { lines } });
+const plate = (id, label, x, lines) => ({ id, kind: 'plate', label, at: { x, y: 11 }, size: { w: 34, h: 16 }, noRun: true, props: { lines } });
 
 /**
  * The heap of loose particles, two rows of six at the bottom right (y 49 and 59, clear of the scratch corner): `groups` is `[[kind, count], ...]`
@@ -105,18 +105,18 @@ function heap(groups) {
 /** The atom being built: the middle, the outside and the needle clipped on both. */
 const BUILD = {
   trays: [trayAt('core', 'The middle', 23, 34, 40, 20), trayAt('out', 'Outside', 57, 34, 22, 20)],
-  needle: { id: 'needle', kind: 'needle', label: 'Needle', at: { x: 94, y: 33 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } }
+  needle: { id: 'needle', kind: 'needle', label: 'Needle', at: { x: 94, y: 34 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:core', 'tray:out'], range: 4 } }
 };
 
 /** The shell trays of an atom with a nucleus at the top left: one per shell, closest in first. */
 const SHELLS = [
-  trayAt('sh1', 'Shell 1', 14, 34, 20, 16, 2),
-  trayAt('sh2', 'Shell 2', 48, 34, 40, 20, 8),
-  trayAt('sh3', 'Shell 3', 92, 49, 40, 20, 8)
+  trayAt('sh1', 'Shell 1', 14, 46, 20, 16, 2),
+  trayAt('sh2', 'Shell 2', 48, 46, 40, 20, 8),
+  trayAt('sh3', 'Shell 3', 98, 54, 40, 20, 8)
 ];
-const SOURCE_TRAY = (label, n) => trayAt('src', label, 98, 18, 40, 30, n);
+const SOURCE_TRAY = (label, n) => trayAt('src', label, 98, 24, 40, 30, n);
 const needleFixture = (zones, nuc, at, range) => ({
-  id: 'needle', kind: 'needle', label: 'Needle', at, size: { w: 40, h: 16 }, noRun: true, props: { zones, nucleus: nuc, range }
+  id: 'needle', kind: 'needle', label: 'Charge needle', at, size: { w: 40, h: 16 }, noRun: true, props: { zones, nucleus: nuc, range }
 });
 
 const count = (t, zone, kind) => piecesIn(t, zone, kind).length;
@@ -141,9 +141,9 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        nucleus('refc', 'A MIDDLE', 14, 12, 3, 4),
-        { ...specimen('refe', 'A OUTSIDE', 36, 12, { p: 3, n: 4, rings: [2, 1], needle: true }), fixed: true },
-        { ...specimen('draw', 'COOLER DRAW', 62, 12, { p: 3, n: 4, rings: [2, 1] }), fixed: true, hidden: true, fetchFrom: 'cooler' },
+        nucleus('refc', 'A MIDDLE', 14, 11, 3, 4),
+        { ...specimen('refe', 'A OUTSIDE', 36, 11, { p: 3, n: 4, rings: [2, 1], needle: true }), fixed: true },
+        { ...specimen('draw', 'COOLER DRAW', 62, 11, { p: 3, n: 4, rings: [2, 1] }), fixed: true, hidden: true, fetchFrom: 'cooler' },
         ...heap([['proton', 4], ['neutron', 4], ['electron', 4]])
       ],
       zones: { trays: BUILD.trays },
@@ -180,8 +180,8 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        { ...specimen('sa', 'SAMPLE A', 14, 12, { p: 3, n: 4, rings: [2, 1], counts: true, needle: true }), fixed: true },
-        { ...specimen('sb', 'SAMPLE B', 72, 12, { p: 3, n: 3, rings: [2, 1], casing: true }), fixed: true },
+        { ...specimen('sa', 'SAMPLE A', 14, 11, { p: 3, n: 4, rings: [2, 1], counts: true, needle: true }), fixed: true },
+        { ...specimen('sb', 'SAMPLE B', 72, 11, { p: 3, n: 3, rings: [2, 1], casing: true }), fixed: true },
         ...heap([['proton', 3], ['neutron', 6], ['electron', 3]])
       ],
       zones: { trays: BUILD.trays },
@@ -218,14 +218,14 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Which Ones Behave Alike',
-    prompt: 'Tray each sample by whether it reacts the same way as Sample A.',
+    prompt: 'Sort each sample by whether it reacts the same way as Sample A.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        { ...specimen('ref', 'SAMPLE A', 14, 12, { p: 17, n: 18, rings: [2, 8, 7], counts: true }), fixed: true },
-        specimen('k', 'SAMPLE B', 42, 12, { p: 17, n: 20, rings: [2, 8, 7], counts: true }),
-        specimen('l', 'SAMPLE C', 70, 12, { p: 18, n: 18, rings: [2, 8, 8], counts: true }),
-        specimen('m', 'SAMPLE D', 98, 12, { p: 16, n: 19, rings: [2, 8, 6], counts: true })
+        { ...specimen('ref', 'SAMPLE A', 14, 11, { p: 17, n: 18, rings: [2, 8, 7], counts: true }), fixed: true },
+        specimen('k', 'SAMPLE B', 42, 11, { p: 17, n: 20, rings: [2, 8, 7], counts: true }),
+        specimen('l', 'SAMPLE C', 70, 11, { p: 18, n: 18, rings: [2, 8, 8], counts: true }),
+        specimen('m', 'SAMPLE D', 98, 11, { p: 16, n: 19, rings: [2, 8, 6], counts: true })
       ],
       zones: {
         trays: [
@@ -237,7 +237,7 @@ export const STAGES = [
     hints: [
       'Compare the printed counts: the protons say which element a sample is.',
       'Count the protons and the outer-shell dots on each sample and compare them with Sample A.',
-      'Tray a sample with Sample A only when its protons match, whatever its neutrons add up to.'
+      'Put a sample with Sample A only when its protons match, whatever its neutrons add up to.'
     ],
     check(state) {
       const t = state.table;
@@ -270,8 +270,8 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        { ...specimen('sa', 'SAMPLE A', 14, 12, { p: 4, n: 5, rings: [2, 2], counts: true, needle: true }), fixed: true },
-        { ...specimen('sb', 'SAMPLE B', 72, 12, { p: 3, n: 4, rings: [2], casing: true, needle: true }), fixed: true },
+        { ...specimen('sa', 'SAMPLE A', 14, 11, { p: 4, n: 5, rings: [2, 2], counts: true, needle: true }), fixed: true },
+        { ...specimen('sb', 'SAMPLE B', 72, 11, { p: 3, n: 4, rings: [2], casing: true, needle: true }), fixed: true },
         ...heap([['proton', 4], ['electron', 3]])
       ],
       zones: { trays: BUILD.trays },
@@ -311,7 +311,7 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        nucleus('nuc', 'SAMPLE A', 14, 12, 12, 12),
+        nucleus('nuc', 'SAMPLE A', 14, 11, 12, 12),
         ...electrons('e', 2, 'tray:sh1'),
         ...electrons('e', 8, 'tray:sh2', 3),
         ...electrons('e', 2, 'tray:sh3', 11)
@@ -346,7 +346,7 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        nucleus('nuc', 'SAMPLE A', 14, 12, 17, 18),
+        nucleus('nuc', 'SAMPLE A', 14, 11, 17, 18),
         ...electrons('e', 2, 'tray:sh1'),
         ...electrons('e', 8, 'tray:sh2', 3),
         ...electrons('e', 7, 'tray:sh3', 11),
@@ -414,22 +414,22 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'File Them All',
-    prompt: 'Tray each sample by how it differs from reference Sample A.',
+    prompt: 'Sort each sample by how it differs from reference Sample A.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        { ...specimen('std', 'SAMPLE A', 11, 12, { p: 8, n: 8, rings: [2, 6], counts: true, needle: true }), fixed: true },
-        specimen('n1', 'SAMPLE B', 34, 12, { p: 8, n: 10, rings: [2, 6], counts: true, needle: true }),
-        specimen('n2', 'SAMPLE C', 57, 12, { p: 8, n: 8, rings: [2, 8], counts: true, needle: true }),
-        specimen('n3', 'SAMPLE D', 80, 12, { p: 7, n: 9, rings: [2, 5], counts: true, needle: true }),
-        specimen('n4', 'SAMPLE E', 103, 12, { p: 8, n: 8, rings: [2, 6], counts: true, needle: true })
+        { ...specimen('std', 'SAMPLE A', 11, 11, { p: 8, n: 8, rings: [2, 6], counts: true, needle: true }), fixed: true },
+        specimen('n1', 'SAMPLE B', 34, 11, { p: 8, n: 10, rings: [2, 6], counts: true, needle: true }),
+        specimen('n2', 'SAMPLE C', 57, 11, { p: 8, n: 8, rings: [2, 8], counts: true, needle: true }),
+        specimen('n3', 'SAMPLE D', 80, 11, { p: 7, n: 9, rings: [2, 5], counts: true, needle: true }),
+        specimen('n4', 'SAMPLE E', 103, 11, { p: 8, n: 8, rings: [2, 6], counts: true, needle: true })
       ],
       zones: {
         trays: [
           specimenTray('match', 'No difference', 17, 37, 27),
-          specimenTray('heavy', 'Extra neutrons', 46, 37, 27),
-          specimenTray('charged', 'Carrying a charge', 75, 37, 27),
-          specimenTray('other', 'Different element', 104, 37, 27)
+          specimenTray('heavy', 'More neutrons', 46, 37, 27),
+          specimenTray('charged', 'Has a charge', 75, 37, 27),
+          specimenTray('other', 'Other element', 104, 37, 27)
         ]
       }
     }),

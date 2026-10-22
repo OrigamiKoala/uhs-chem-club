@@ -684,9 +684,17 @@ function scopePicture(ctx, x, y, r, dish, power) {
 /** A strip of printed text along the foot of a disc, on a dark ground, so a picture never hides its name. */
 function footLabel(ctx, x, y, r, text, size) {
   const h = size * 1.35;
+  // The word is shrunk to the strip it stands on, never cut by the rim of the thing it names.
+  const room = r * 1.62;
+  let px = size;
+  if (ctx.measureText) {
+    ctx.font = `500 ${px}px "JetBrains Mono", "Quantico", monospace`;
+    const w = ctx.measureText(text).width;
+    if (w > room && w > 0) px = Math.max(6, Math.floor(size * room / w));
+  }
   ctx.fillStyle = 'rgba(13, 12, 10, 0.78)';
   ctx.fillRect(x - r * 0.86, y + r * 0.58 - h / 2, r * 1.72, h);
-  plateText(ctx, text, x, y + r * 0.58, { size, align: 'center', base: 'middle', color: PLATE_COLORS.text });
+  plateText(ctx, text, x, y + r * 0.58, { size: px, align: 'center', base: 'middle', color: PLATE_COLORS.text });
 }
 
 function paintAtom(ctx, p, state, o) {
@@ -739,8 +747,53 @@ function paintIon(ctx, p, state, o) {
 function paintParticle(ctx, p, state, o) {
   const sign = p.kind === 'proton' ? '+' : p.kind === 'electron' ? '−' : '';
   const fill = p.kind === 'proton' ? CORE_TINTS.marked : p.kind === 'neutron' ? CORE_TINTS.blank : CORE_TINTS.light;
-  disc(ctx, o.x, o.y, o.r, fill.fill, o.lit ? AMBER : fill.rim, o.lit ? 2 : 1);
+  // A particle the player has MARKED (a tap, `flip`) wears a ring: a mark, not a light.
+  const marked = Boolean(p.props.flipped);
+  disc(ctx, o.x, o.y, o.r, fill.fill, o.lit || marked ? AMBER : fill.rim, o.lit || marked ? 2.5 : 1);
   if (sign) stencil(ctx, o.x, o.y, o.r, sign);
+  if (marked) {
+    ctx.strokeStyle = AMBER;
+    ctx.lineWidth = Math.max(1.4, o.r * 0.14);
+    ctx.beginPath();
+    ctx.arc(o.x, o.y, o.r * 0.78, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+/**
+ * A model card (`q2-core` stage 1): a small drawing of one way an atom could be built, and its name under it. The drawing is
+ * of the MODEL, not of any result: what the beam does is what the player weighs it against.
+ */
+function paintModel(ctx, p, state, o) {
+  const hw = 11 * o.sc;
+  const hh = 8 * o.sc;
+  const x0 = o.x - hw;
+  const y0 = o.y - hh;
+  ctx.fillStyle = '#2a2620';
+  ctx.fillRect(x0, y0, hw * 2, hh * 2);
+  ctx.strokeStyle = o.lit ? AMBER : PLATE_COLORS.dust;
+  ctx.lineWidth = o.lit ? 2 : 1;
+  ctx.strokeRect(x0 + 0.5, y0 + 0.5, hw * 2 - 1, hh * 2 - 1);
+  const cx = o.x;
+  const cy = y0 + hh * 0.9;
+  const R = hh * 0.62;
+  const kind = p.props.model;
+  ctx.fillStyle = '#b8afa0';
+  ctx.strokeStyle = '#b8afa0';
+  if (kind === 'solid') {
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+  } else if (kind === 'shell') {
+    ctx.lineWidth = Math.max(2, R * 0.26);
+    ctx.beginPath(); ctx.arc(cx, cy, R * 0.88, 0, Math.PI * 2); ctx.stroke();
+  } else {
+    ctx.lineWidth = Math.max(1, R * 0.07);
+    ctx.setLineDash?.([Math.max(2, R * 0.12), Math.max(2, R * 0.12)]);
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash?.([]);
+    ctx.beginPath(); ctx.arc(cx, cy, Math.max(1.6, R * 0.12), 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.lineWidth = 1;
+  plateText(ctx, p.label, o.x, y0 + hh * 1.78, { size: Math.max(8, Math.round(2.4 * o.sc)), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.text, maxW: hw * 1.9 });
 }
 
 /** The lump at the middle of an atom, to scale: a huddle with a stencilled plus on every proton. */
@@ -1062,7 +1115,7 @@ function paintDispenser(ctx, p, state, o) {
 
 const PAINTERS = {
   atom: paintAtom, ion: paintIon, proton: paintParticle, neutron: paintParticle, electron: paintParticle,
-  nucleus: paintNucleus, specimen: paintSpecimen, dish: paintDish, lens: paintLens,
+  nucleus: paintNucleus, specimen: paintSpecimen, dish: paintDish, lens: paintLens, model: paintModel,
   cutter: paintTool, shaker: paintTool, detector: paintDetector,
   joint: paintJoint, pairs: paintDispenser, single: paintDispenser, lift: paintDispenser,
   three: paintDispenser, fcstamp: paintDispenser, mark: paintDispenser, gauge: paintDispenser
@@ -1106,6 +1159,8 @@ function faceKey(p, state, at) {
     case 'specimen': return JSON.stringify(p.props);
     case 'nucleus': return `${p.props.p}|${p.props.n}`;
     case 'detector': return `${p.props.count ?? ''}`;
+    case 'proton': case 'neutron': return p.props.flipped ? 'marked' : '';
+    case 'model': return p.label;
     default: return '';
   }
 }
@@ -1141,11 +1196,57 @@ function paintNeedle(ctx, f, state, b) {
   ctx.moveTo(cx, cy);
   ctx.lineTo(cx + Math.cos(a) * R * 0.92, cy + Math.sin(a) * R * 0.92);
   ctx.stroke();
+  // The ends of the scale are named, so the needle needs no explaining: plus to one side, minus to the other, nothing in the middle.
+  const endSize = Math.max(9, Math.round(h * 0.22));
+  plateText(ctx, '−', cx + Math.cos(-Math.PI / 2 - sweep) * R * 1.0 - endSize * 0.9, cy + Math.sin(-Math.PI / 2 - sweep) * R + endSize * 0.1, { size: endSize, weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
+  plateText(ctx, '+', cx + Math.cos(-Math.PI / 2 + sweep) * R * 1.0 + endSize * 0.9, cy + Math.sin(-Math.PI / 2 + sweep) * R + endSize * 0.1, { size: endSize, weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
   const text = q === 0 ? '0' : `${q > 0 ? '+' : '−'}${Math.abs(q)}`;
   plateText(ctx, text, b.x1 - 4, b.y0 + h * 0.3, { size: Math.max(10, Math.round(h * 0.26)), weight: 700, align: 'right', base: 'middle', color: q === 0 ? PLATE_COLORS.dust : AMBER });
 }
 
+/**
+ * The beam and its foil, drawn as the experiment is laid out: the source on the left, the dashed path of the shots, the foil
+ * edge-on, and a guide from the foil to each detector with the angle it stands at. Used when the fixture lists its detectors.
+ */
+function paintBeamLayout(ctx, f, state, b) {
+  const { source, foil } = f.props;
+  const unit = Math.max(1, b.sc);
+  ctx.fillStyle = PLATE_COLORS.steel;
+  ctx.fillRect(b.X(source.x - 3), b.Y(source.y - 4), 6 * unit, 8 * unit);
+  ctx.strokeStyle = PLATE_COLORS.dust;
+  ctx.lineWidth = Math.max(1, unit * 0.2);
+  ctx.setLineDash?.([unit * 0.9, unit * 0.9]);
+  ctx.beginPath();
+  ctx.moveTo(b.X(source.x + 3), b.Y(source.y));
+  ctx.lineTo(b.X(foil.x), b.Y(foil.y));
+  ctx.stroke();
+  // The guides to the detectors, dimmer than the beam.
+  ctx.strokeStyle = PLATE_COLORS.dim;
+  for (const [id, angle] of Object.entries(f.props.detectors)) {
+    const d = state.pieces[id];
+    if (!d) continue;
+    ctx.beginPath();
+    ctx.moveTo(b.X(foil.x), b.Y(foil.y));
+    ctx.lineTo(b.X(d.at.x), b.Y(d.at.y));
+    ctx.stroke();
+    const mx = foil.x + (d.at.x - foil.x) * 0.5;
+    const my = foil.y + (d.at.y - foil.y) * 0.5;
+    plateText(ctx, `${angle}°`, b.X(mx), b.Y(my + (d.at.y < foil.y ? -1.6 : 3.2)), { size: Math.max(8, Math.round(2.3 * unit)), align: 'center', color: PLATE_COLORS.dust });
+  }
+  ctx.setLineDash?.([]);
+  // The foil, edge on.
+  ctx.strokeStyle = AMBER;
+  ctx.lineWidth = Math.max(2, unit * 0.4);
+  ctx.beginPath();
+  ctx.moveTo(b.X(foil.x), b.Y(foil.y - 8));
+  ctx.lineTo(b.X(foil.x), b.Y(foil.y + 8));
+  ctx.stroke();
+  plateText(ctx, 'Foil', b.X(foil.x), b.Y(foil.y - 10), { size: Math.max(8, Math.round(2.3 * unit)), align: 'center', color: PLATE_COLORS.dust });
+  plateText(ctx, 'Beam', b.X(source.x), b.Y(source.y - 6), { size: Math.max(8, Math.round(2.3 * unit)), align: 'center', color: PLATE_COLORS.dust });
+}
+
 function paintBeam(ctx, f, state, b) {
+  if (f.props.detectors) { paintBeamLayout(ctx, f, state, b); return; }
   const w = b.x1 - b.x0;
   const h = b.y1 - b.y0;
   const y = b.y0 + h * 0.56;
@@ -1306,13 +1407,25 @@ function run(state, fixtureId) {
   const f = state.fixtures[fixtureId];
   if (!f) return null;
   if (f.kind === 'beam') {
+    const c = beamCounts(f.props.specimen);
+    const countAt = angle => (angle === 0 ? c.through : angle === 180 ? c.back : c.wide);
+    // A beam with a detector at every angle (`props.detectors`: piece id -> angle) reads them all at once and prints a point for each.
+    if (f.props.detectors) {
+      const rows = [];
+      const stamp = {};
+      for (const [id, angle] of Object.entries(f.props.detectors)) {
+        const count = countAt(angle);
+        rows.push({ x: angle, y: count, label: `${count} of ${c.shots}` });
+        stamp[id] = { count };
+      }
+      return rows.length ? { ...rows[0], rows, stamp } : null;
+    }
     const det = Object.values(state.pieces).find(p => p.kind === 'detector' && p.zone && p.zone.startsWith('slot:') && !p.hidden);
     if (!det) return null;
     const slot = det.zone.slice(5);
     const angle = f.props.angles?.[slot];
     if (angle == null) return null;
-    const c = beamCounts(f.props.specimen);
-    const count = angle === 0 ? c.through : angle === 180 ? c.back : c.wide;
+    const count = countAt(angle);
     return { x: angle, y: count, label: `${count} of ${c.shots}`, stamp: { [det.id]: { count } } };
   }
   if (f.kind === 'tester') {
@@ -1332,10 +1445,11 @@ export const ATOMS_KIT = {
     neutron: { r: R, nojoin: true },
     electron: { r: R, nojoin: true },
     ion: { r: R, nojoin: true },
-    nucleus: { r: 9, nojoin: true },
-    specimen: { r: 9, nojoin: true },
+    nucleus: { r: 8, nojoin: true },
+    specimen: { r: 8, nojoin: true },
     detector: { r: R, nojoin: true },
     card: { r: R, nojoin: true },
+    model: { r: 9, nojoin: true, rect: { hw: 11, hh: 8 } },
     joint: { r: JOINT_R },
     pairs: { r: R, tool: true },
     single: { r: R, tool: true },
@@ -1344,8 +1458,8 @@ export const ATOMS_KIT = {
     fcstamp: { r: R, tool: true },
     mark: { r: R, tool: true },
     gauge: { r: R, tool: true },
-    dish: { r: 9 },
-    lens: { r: 9, tool: true },
+    dish: { r: 8 },
+    lens: { r: 9, tool: true, onTop: true },
     cutter: { r: 6.5, tool: true },
     shaker: { r: 6.5, tool: true }
   },
@@ -1424,6 +1538,6 @@ export function piecesIn(state, zone, kind = null) {
 }
 
 /** Where the paper strip parks on a table that never prints on it: a corner nothing else uses. */
-export const PARKED_RECORDER = Object.freeze({ at: { x: 117, y: 61 }, size: { w: 6, h: 4 } });
+export const PARKED_RECORDER = Object.freeze({ at: { x: 119.5, y: 63.5 }, size: { w: 1, h: 1 } });
 
 export { VALENCE };

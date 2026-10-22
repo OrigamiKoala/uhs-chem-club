@@ -4,30 +4,34 @@
  * The first game on the Learn road, and the first on a TABLETOP (plan
  * `bench-tabletop.md`, phase T1). Eight stages on the sample point at the
  * conveyor's tail: samples in dishes, a lens that lies over a dish and shows what
- * it is made of, a cutter drawn across one, a shaker passed under one, loose
- * atoms that join when they are put together, and trays to sort into. A stage is
- * graded on what is on the table when Commit is pressed.
+ * it is made of, a cutter drawn across one, loose atoms that join when they are put
+ * together, and trays to sort into. A stage is graded on what is on the table when
+ * Submit is pressed.
  *
  * WORDS ARE FREE, PHENOMENA ARE DISCOVERED. Every atom on this bench is called by
  * its real element name from stage one. What the player discovers is never the
- * word; it is the observation: one powder holds a single element, bonded groups
- * survive the cutter, shaking sorts some samples into layers and not others, and
- * two atoms put together hold or do not hold, which the planner decides and no
- * stage declares.
+ * word; it is the observation: one powder holds a single element, joined groups
+ * survive the cutter, the same atoms lie loose in a mixture and joined in a
+ * compound, and two atoms put together hold or do not hold, which the planner
+ * decides and no stage declares.
  *
- *   1  find the lowest power where the grain resolves   -> Atoms
- *   2  tray the samples by how many kinds of atom       -> Elements and Mixtures
- *   3  read the ore's atoms and tray them by element    -> Every Element Has Its Own Atom
- *   4  draw the cutter across four samples              -> Atoms Do Not Split
- *   5  build one molecule of Sample A                   -> Water, H2O
- *   6  build one molecule of each sample                -> Compounds
- *   7  pass the shaker under three samples              -> Why Mixtures Separate
- *   8  tray four samples as element, compound, mixture  -> Elements, Compounds, and Mixtures
+ * THE TOOLS SAY WHAT THEY DO. Each tool hangs on the shelf at the right of the table with one
+ * plain line printed under it (`caption`), and the stages that join atoms print how to join
+ * and how to undo a join (`notes`). A tool the player cannot work out is a bug in the bench.
+ *
+ *   1  find the lowest power where single particles show -> Atoms
+ *   2  sort the samples by how many kinds of atom        -> Elements and Mixtures
+ *   3  read the ore's atoms and sort them by element     -> Every Element Has Its Own Atom
+ *   4  draw the cutter across four samples               -> Atoms Do Not Split
+ *   5  build one molecule of Sample A                    -> Water, H2O
+ *   6  build one molecule of each sample                 -> Compounds
+ *   7  make a mixture and a compound from the same atoms -> Mixture or Compound?
+ *   8  sort four samples as element, compound, mixture   -> Elements, Compounds, and Mixtures
  *   -- debrief: what the element numbers mean & preview of the atomic core.
  *
  * THE TABLE (`table/`, `kits/atoms.js`). Everything that happens is the kit asking a
  * pure planner: the lens draws `scope.js` `drawScopeField`, the cutter is `planCut`,
- * the shaker is `planSettle`, and a join is `joinbench.js` `planJoin`. No stage here
+ * and a join is `joinbench.js` `planJoin`. No stage here
  * declares an outcome; `SOLUTIONS` and `MISSES` are scripts of the player's own
  * actions, replayed by `verify:table` by drag and by two taps.
  *
@@ -108,37 +112,49 @@ export const VOCABULARY = [
 
 /* ------------------------------------------------------------------
    THE TABLES
-   One layout, so the furniture is always where the hand expects it (120 x 64 units):
-   the dishes and the lens dial along the top, the work and the trays in the middle, the
-   scratch corner bottom left, and the tools hung bottom right.
+   One layout (120 x 64 units), so the furniture is always where the hand expects it:
+     the work (dishes, trays, loose atoms) on the left, x 2 to 88;
+     the TOOL SHELF on the right, x 90 to 118: the lens, its power dial, the cutter, each
+     with its one line printed under it, and the field plate where a scoop is taken.
+   A dish is 16 units across, a tray holds two of them with room, and nothing stands on
+   the words printed beside it (`table/audit.js`, held by `verify:table`).
    ------------------------------------------------------------------ */
+
+const SHELF = 104;
 
 const sample = (id, floorPower, particles, magnify) => ({ id, floorPower, ...(magnify ? { magnify } : {}), particles });
 
-const dishAt = (id, label, s, x, y, open = false) => ({
+const dishAt = (id, label, s, x, y = 12, open = false) => ({
   id, kind: 'dish', label, at: { x, y }, props: { sample: s, ...(open ? { view: 1 } : {}) }
 });
 
-const TOOL_HOME = { lens: { x: 64, y: 54 }, cutter: { x: 82, y: 55 }, shaker: { x: 100, y: 55 } };
-const tool = (kind, label) => ({ id: kind, kind, label, at: { ...TOOL_HOME[kind] } });
+const TOOL_HOME = { lens: { x: SHELF, y: 10 }, cutter: { x: SHELF, y: 52 } };
+const CAPTIONS = { lens: 'Drag over a dish', cutter: 'Drag across a dish' };
+const tool = (kind, label) => ({ id: kind, kind, label, at: { ...TOOL_HOME[kind] }, caption: CAPTIONS[kind] });
 
 /** A loose atom. `mask` withholds the symbol, `tint` overrides the element's own. */
 const atomAt = (id, el, x, y, props = {}) => ({ id, kind: 'atom', label: props.mask ? 'Atom' : el, at: { x, y }, props: { el, ...props } });
 
-/** The lens's power dial: a fixture with no Run key, printing the scale beside its number. */
-const POWER_LABELS = Object.entries(POWER_SCALES).map(([n, s]) => `${n} · ${s}`);
+/** The lens's power dial: a fixture with no Run key, printing what each step shows. */
+const POWER_LABELS = Object.entries(POWER_SCALES).map(([n, s]) => `${n} (${s})`);
 const scopeFixture = {
-  id: 'scope', kind: 'scope', label: 'Lens', at: { x: 101, y: 11 }, size: { w: 34, h: 14 }, noRun: true,
-  props: { top: 7.5 },
+  id: 'scope', kind: 'scope', label: 'Lens', at: { x: SHELF, y: 36 }, size: { w: 28, h: 16 }, noRun: true,
+  props: { top: 10.5 },
   dials: { power: { min: 1, max: 6, step: 1, value: 1, label: 'Power', labels: POWER_LABELS } }
 };
 
-const trayAt = (id, label, x, y, w = 44, h = 14) => ({ id, label, at: { x, y }, size: { w, h } });
-/** A tray for dishes: wide pieces, so a wider pitch and a deeper tray. */
-const dishTray = (id, label, x, y = 33, w = 44) => ({ id, label, at: { x, y }, size: { w, h: 20 }, cell: 19 });
+/** A tray for dishes, a tray of one row: two dishes with room. */
+const dishTray = (id, label, x, y = 34, w = 40, h = 17) => ({ id, label, at: { x, y }, size: { w, h }, cell: 17 });
+const trayAt = (id, label, x, y, w = 26, h = 16) => ({ id, label, at: { x, y }, size: { w, h } });
+
+/** What a table that joins atoms tells the player about joins. Printed on the plate, at the foot of the work. */
+const JOIN_NOTES = [
+  { at: { x: 4, y: 57.5 }, text: 'Drop one atom onto another to join them.' },
+  { at: { x: 4, y: 61.5 }, text: 'Tap the join between two atoms to break it.' }
+];
 
 /** Lay `ids` of atoms in a row at y: `row('H', 'H', 'O')` -> positions along the middle. */
-const heap = (y, list, x0 = 14, pitch = 12) => list.map(([id, el], i) => atomAt(id, el, x0 + i * pitch, y));
+const heap = (y, list, x0 = 12, pitch = 12) => list.map(([id, el], i) => atomAt(id, el, x0 + i * pitch, y));
 
 const power = (t) => t.fixtures.scope?.dials.power.value;
 const lensOver = (t) => dishUnder('lens', t);
@@ -153,31 +169,31 @@ export const STAGES = [
     title: 'Zoom In',
     briefing: {
       speaker: SPEAKER,
-      body: 'Drag the lens over a dish and turn the power dial to bring the particles in the sample into view. A scoop from the belt is waiting at the conveyor tail.'
+      body: 'Drag the lens onto the dish and slide the power dial: higher power shows a smaller part of the sample, bigger. Press Submit when the dial is where you want it.'
     },
-    prompt: 'What is the lowest power where individual particles resolve?',
+    prompt: 'Set the lens to the lowest power at which you can see separate particles in Sample A.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('dishA', 'SAMPLE A', sample('c7', 4, [{ kinds: ['k06'], n: 46 }]), 22, 11),
-        { ...dishAt('scoop', 'BELT SCOOP', sample('c7s', 4, [{ kinds: ['k06'], n: 46 }]), 46, 11), hidden: true, fetchFrom: 'tail' },
+        dishAt('dishA', 'SAMPLE A', sample('c7', 4, [{ kinds: ['k06'], n: 46 }]), 24),
+        { ...dishAt('scoop', 'BELT SCOOP', sample('c7s', 4, [{ kinds: ['k06'], n: 46 }]), 50), hidden: true, fetchFrom: 'tail' },
         tool('lens', 'Lens')
       ],
       fixtures: [scopeFixture],
-      fetch: [{ id: 'tail', label: 'Belt scoop', at: { x: 100, y: 56 } }]
+      fetch: [{ id: 'tail', label: 'Belt scoop', at: { x: SHELF - 2, y: 55 } }]
     }),
     hints: [
-      'Drag the lens onto a dish, then turn the power dial up one step at a time and watch the picture change.',
-      'At low power you see solid clumps, and at high power you see separate round atoms.',
-      'Find the first power where you can pick out single atoms, then turn down one step and check that the picture there is still clumps.'
+      'Drag the lens onto the dish, then slide the power dial up one step at a time and watch the picture change.',
+      'At low power the sample looks like solid clumps, and at high power you can tell round particles apart.',
+      'Find the first power where you can pick out single particles, then step down one and check that the picture there is still clumps.'
     ],
     check(state) {
       const t = state.table;
       const p = power(t);
       if (p === 4) return { ok: true };
-      if (!lensOver(t)) return { ok: false, notYet: true, msg: 'Drag the lens over a dish to look through it.' };
+      if (!lensOver(t)) return { ok: false, notYet: true, msg: 'Drag the lens over the dish to look through it.' };
       if (p < 4) return { ok: false, msg: 'Too low. At that power the sample still looks like solid clumps.' };
-      return { ok: false, msg: 'Too high. That power shows the same atoms, just bigger — go back to the first power where they appear.' };
+      return { ok: false, msg: 'Too high. That power shows the same particles, just bigger. Go back to the first power where they appear.' };
     },
     reward: {
       log: 'Atoms resolved at power 4.',
@@ -189,18 +205,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'One Kind or Two?',
-    prompt: 'Tray the samples by how many kinds of atom each one holds.',
+    prompt: 'Sort the samples by how many different kinds of atom each one holds.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('dishA', 'SAMPLE A', sample('c09', 4, [{ kinds: ['k06'], n: 44 }]), 22, 11),
-        dishAt('dishB', 'SAMPLE B', sample('c14', 4, [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }]), 46, 11),
+        dishAt('dishA', 'SAMPLE A', sample('c09', 4, [{ kinds: ['k06'], n: 44 }]), 24),
+        dishAt('dishB', 'SAMPLE B', sample('c14', 4, [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }]), 48),
         tool('lens', 'Lens')
       ],
       zones: {
         trays: [
-          dishTray('one', 'One kind of atom', 30, 33),
-          dishTray('more', 'More than one kind', 82, 33)
+          dishTray('one', 'One kind of atom', 24),
+          dishTray('more', 'More than one kind', 66)
         ]
       },
       fixtures: [scopeFixture]
@@ -208,14 +224,14 @@ export const STAGES = [
     hints: [
       'Drag the lens onto a sample and turn the power up until single atoms show.',
       'Compare the two pictures atom by atom: every atom in one sample matches, and the other sample holds two different atoms.',
-      'Look across a whole picture and note the tint and size of each atom, then tray the sample whose atoms all match.'
+      'Look across a whole picture and note the tint and size of each atom, then put the sample whose atoms all match in the first tray.'
     ],
     check(state) {
       const t = state.table;
       const one = dishIn(t, 'one');
       const more = dishIn(t, 'more');
-      if (!one.length && !more.length) return { ok: false, notYet: true, msg: 'Tray both samples before you commit.' };
-      if (one.length + more.length < 2) return { ok: false, notYet: true, msg: 'Tray both samples before you commit.' };
+      if (!one.length && !more.length) return { ok: false, notYet: true, msg: 'Put both samples in a tray before you submit.' };
+      if (one.length + more.length < 2) return { ok: false, notYet: true, msg: 'Put both samples in a tray before you submit.' };
       if (one.join() === 'dishA' && more.join() === 'dishB') return { ok: true };
       return { ok: false, msg: 'Look again: one of them holds dark carbon atoms and pale sodium atoms together, so it is in the wrong tray.' };
     },
@@ -235,22 +251,23 @@ export const STAGES = [
       pieces: [
         // Sodium and magnesium are dressed alike on purpose: only the reader tells them apart.
         atomAt('a1', 'Na', 12, 10, { mask: true, tint: 'pale' }),
-        atomAt('a2', 'C', 24, 10, { mask: true }),
-        atomAt('a3', 'Mg', 36, 10, { mask: true, tint: 'pale' }),
-        atomAt('a4', 'Mg', 12, 21, { mask: true, tint: 'pale' }),
-        atomAt('a5', 'Na', 24, 21, { mask: true, tint: 'pale' }),
-        atomAt('a6', 'C', 36, 21, { mask: true })
+        atomAt('a2', 'C', 26, 10, { mask: true }),
+        atomAt('a3', 'Mg', 40, 10, { mask: true, tint: 'pale' }),
+        atomAt('a4', 'Mg', 12, 24, { mask: true, tint: 'pale' }),
+        atomAt('a5', 'Na', 26, 24, { mask: true, tint: 'pale' }),
+        atomAt('a6', 'C', 40, 24, { mask: true })
       ],
       zones: {
-        slots: [{ id: 'rd', label: 'Reader', at: { x: 60, y: 16 } }],
+        slots: [{ id: 'rd', label: 'Reader slot', at: { x: 66, y: 12 } }],
         trays: [
-          trayAt('t1', 'Tray 1', 17, 48, 26, 16),
-          trayAt('t2', 'Tray 2', 45, 48, 26, 16),
-          trayAt('t3', 'Tray 3', 73, 48, 26, 16),
-          trayAt('t4', 'Tray 4', 101, 48, 26, 16)
+          trayAt('t1', 'Tray 1', 17, 50, 26, 16),
+          trayAt('t2', 'Tray 2', 45, 50, 26, 16),
+          trayAt('t3', 'Tray 3', 73, 50, 26, 16),
+          trayAt('t4', 'Tray 4', 101, 50, 26, 16)
         ]
       },
-      fixtures: [{ id: 'reader', kind: 'reader', label: 'Reader', at: { x: 92, y: 16 }, size: { w: 34, h: 14 }, noRun: true, props: { slot: 'rd' } }]
+      fixtures: [{ id: 'reader', kind: 'reader', label: 'Reader', at: { x: 98, y: 14 }, size: { w: 36, h: 14 }, noRun: true, props: { slot: 'rd' } }],
+      notes: [{ at: { x: 4, y: 36 }, text: 'Put an atom in the reader slot to read its name and mass.' }]
     }),
     hints: [
       'Drop an atom in the reader slot to see its name and its mass.',
@@ -261,7 +278,7 @@ export const STAGES = [
       const t = state.table;
       const atoms = Object.values(t.pieces).filter(p => p.kind === 'atom' && !p.props.scratch);
       const filed = atoms.filter(p => p.zone && p.zone.startsWith('tray:'));
-      if (filed.length < atoms.length) return { ok: false, notYet: true, msg: 'Every atom needs a tray before you commit.' };
+      if (filed.length < atoms.length) return { ok: false, notYet: true, msg: 'Every atom needs a tray before you submit.' };
       const byTray = {};
       for (const p of filed) (byTray[p.zone] ||= new Set()).add(p.props.el);
       if (Object.values(byTray).some(s => s.size > 1)) {
@@ -286,19 +303,19 @@ export const STAGES = [
     title: 'What the Blade Cannot Cut',
     briefing: {
       speaker: SPEAKER,
-      body: 'The cutter slices a sample into smaller pieces when you draw it across a dish. Try it on each one to see what the blade can divide.'
+      body: 'The cutter is a blade: drag it across a dish and it slices that sample into smaller pieces, if it can. Try it on each sample and watch what happens.'
     },
-    prompt: 'Tray the one sample that the cutter cannot split.',
+    prompt: 'Find the one sample the cutter cannot split, and put it in the tray.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('t1', 'SAMPLE A', sample('t1', 1, [{ kinds: ['k06'], n: 20 }], 1.5), 14, 11, true),
-        dishAt('t2', 'SAMPLE B', sample('t2', 1, [{ ...CLUSTER_A, n: 1 }], 3.6), 36, 11, true),
-        dishAt('t3', 'SAMPLE C', sample('t3', 1, [{ ...PAIR_LIGHT, n: 1 }], 3.6), 58, 11, true),
-        dishAt('t4', 'SAMPLE D', sample('t4', 1, [{ kinds: ['k02'], n: 1 }], 3.6), 80, 11, true),
+        dishAt('t1', 'SAMPLE A', sample('t1', 1, [{ kinds: ['k06'], n: 20 }], 1.5), 14, 12, true),
+        dishAt('t2', 'SAMPLE B', sample('t2', 1, [{ ...CLUSTER_A, n: 1 }], 3.6), 36, 12, true),
+        dishAt('t3', 'SAMPLE C', sample('t3', 1, [{ ...PAIR_LIGHT, n: 1 }], 3.6), 58, 12, true),
+        dishAt('t4', 'SAMPLE D', sample('t4', 1, [{ kinds: ['k02'], n: 1 }], 3.6), 80, 12, true),
         tool('cutter', 'Cutter')
       ],
-      zones: { trays: [dishTray('safe', 'Will not split', 60, 33)] }
+      zones: { trays: [dishTray('safe', 'Will not split', 47, 38, 40)] }
     }),
     hints: [
       'Drag the cutter across each dish in turn and watch the picture.',
@@ -325,11 +342,12 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('dishA', 'SAMPLE A', sample('v9', 4, [{ ...CLUSTER_A, n: 20 }], 1.5), 22, 11),
+        dishAt('dishA', 'SAMPLE A', sample('v9', 4, [{ ...CLUSTER_A, n: 20 }], 1.5), 24),
         ...heap(36, [['c1', 'C'], ['h1', 'H'], ['o1', 'O'], ['h2', 'H'], ['o2', 'O'], ['h3', 'H'], ['h4', 'H']]),
         tool('lens', 'Lens')
       ],
-      fixtures: [scopeFixture]
+      fixtures: [scopeFixture],
+      notes: JOIN_NOTES
     }),
     hints: [
       'Drag the lens over Sample A and raise the power until one molecule is clear, then drag one loose atom onto another to join them.',
@@ -358,12 +376,13 @@ export const STAGES = [
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('dishA', 'SAMPLE A', sample('vA', 4, [{ ...CLUSTER_A, n: 16 }], 1.5), 22, 11),
-        dishAt('dishB', 'SAMPLE B', sample('vB', 4, [{ ...CLUSTER_B, n: 14 }], 1.5), 46, 11),
+        dishAt('dishA', 'SAMPLE A', sample('vA', 4, [{ ...CLUSTER_A, n: 16 }], 1.5), 24),
+        dishAt('dishB', 'SAMPLE B', sample('vB', 4, [{ ...CLUSTER_B, n: 14 }], 1.5), 48),
         ...heap(36, [['h1', 'H'], ['o1', 'O'], ['h2', 'H'], ['o2', 'O'], ['h3', 'H'], ['o3', 'O'], ['h4', 'H']]),
         tool('lens', 'Lens')
       ],
-      fixtures: [scopeFixture]
+      fixtures: [scopeFixture],
+      notes: JOIN_NOTES
     }),
     hints: [
       'Drag the lens over each sample and raise the power until a single molecule is clear.',
@@ -373,7 +392,7 @@ export const STAGES = [
     check(state) {
       const mols = moleculesOf(state.table);
       const has = (h, o) => mols.some(m => m.counts.H === h && m.counts.O === o && Object.keys(m.counts).length === 2);
-      if (!mols.length) return { ok: false, notYet: true, msg: 'Build a molecule of each sample before you commit.' };
+      if (!mols.length) return { ok: false, notYet: true, msg: 'Build a molecule of each sample before you submit.' };
       if (has(2, 1) && has(2, 2)) return { ok: true };
       if (!has(2, 1)) return { ok: false, msg: 'No molecule on the table matches Sample A yet. Count the oxygen atoms in one of its molecules.' };
       return { ok: false, msg: 'No molecule on the table matches Sample B yet. Count the oxygen atoms in one of its molecules.' };
@@ -387,73 +406,76 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 7 */
   {
-    title: 'Shake It Out',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The shaker table sorts loose atoms by weight. Draw it under a dish to see if a sample separates into layers.'
-    },
-    prompt: 'Tray each sample as a single substance or a mixture.',
+    title: 'Mixture or Compound?',
+    prompt: 'Make a mixture and a compound from the hydrogen and oxygen atoms.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('p1', 'SAMPLE A', sample('p1', 1, [{ kinds: ['k16'], n: 16 }]), 22, 11, true),
-        dishAt('p2', 'SAMPLE B', sample('p2', 1, [{ ...CLUSTER_A, n: 14 }]), 46, 11, true),
-        dishAt('p3', 'SAMPLE C', sample('p3', 1, [{ kinds: ['k11'], n: 9 }, { kinds: ['k06'], n: 9 }]), 70, 11, true),
-        tool('shaker', 'Shaker')
+        ...heap(14, [['h1', 'H'], ['o1', 'O'], ['h2', 'H'], ['o2', 'O'], ['h3', 'H'], ['h4', 'H']])
       ],
       zones: {
         trays: [
-          dishTray('one', 'Single substance', 30, 33),
-          dishTray('mixed', 'Mixture', 82, 33)
+          trayAt('mix', 'Mixture', 24, 48, 40, 24),
+          trayAt('comp', 'Compound', 68, 48, 40, 24)
         ]
-      }
+      },
+      notes: [
+        { at: { x: 4, y: 24.5 }, text: 'Drop one atom onto another to join them.' },
+        { at: { x: 4, y: 29 }, text: 'Tap the join between two atoms to break it.' }
+      ]
     }),
     hints: [
-      'Drag the shaker under each dish and watch how its particles land.',
-      'Heavier atoms sink and lighter atoms float, separating loose mixtures into layers.',
-      'Count the layers in each sample: one layer is a single substance, while several layers indicate a mixture.'
+      'Drag atoms into each tray, and drop an atom onto another atom to join the two.',
+      'Look at what sits in each tray: are the atoms joined together, or only lying side by side?',
+      'Leave the atoms in the Mixture tray unjoined, and join atoms into a group before you drop them in the Compound tray.'
     ],
     check(state) {
       const t = state.table;
-      const one = dishIn(t, 'one');
-      const mixed = dishIn(t, 'mixed');
-      if (one.length + mixed.length < 3) return { ok: false, notYet: true, msg: 'Tray all three samples before you commit.' };
-      if (one.join() === 'p1,p2' && mixed.join() === 'p3') return { ok: true };
-      return { ok: false, msg: 'At least one is in the wrong tray. One layer means one substance; two layers mean a mixture.' };
+      const atoms = Object.values(t.pieces).filter(p => p.kind === 'atom' && !p.props.scratch);
+      const inTray = z => atoms.filter(p => p.zone === `tray:${z}`);
+      const mix = inTray('mix');
+      const comp = inTray('comp');
+      if (!mix.length || !comp.length) return { ok: false, notYet: true, msg: 'Put atoms in both trays before you submit.' };
+      const els = list => new Set(list.map(p => p.props.el));
+      const joinedWithin = list => list.some(p => p.joinedTo.some(n => list.some(q => q.id === n)));
+      if (els(mix).size < 2) return { ok: false, msg: 'A mixture needs more than one kind of atom. Put hydrogen and oxygen in the Mixture tray.' };
+      if (joinedWithin(mix)) return { ok: false, msg: 'Atoms in the Mixture tray are joined to each other. In a mixture they only lie side by side.' };
+      const molecule = moleculesOf(t).some(m => Object.keys(m.counts).length > 1 && m.ids.every(id => t.pieces[id].zone === 'tray:comp'));
+      if (!molecule) return { ok: false, msg: 'The Compound tray holds no joined group of different atoms. Join hydrogen and oxygen before you put them in.' };
+      return { ok: true };
     },
     reward: {
-      log: 'Sample C separated into sodium and carbon layers.',
-      title: 'Why Mixtures Separate',
-      body: 'Shaking separates a mixture because nothing holds the different substances together. A compound stays together because chemical bonds hold its atoms.'
+      log: 'Same atoms: loose in a mixture, joined in a compound.',
+      title: 'Mixture or Compound?',
+      body: 'The same atoms make a mixture when they lie loose beside each other and a compound when they are joined. Loose atoms can be separated again, but joined atoms cannot be pulled apart without breaking the joins.'
     }
   },
 
   /* ---------------------------------------------------------------- 8 */
   {
     title: 'Sort Them All',
-    prompt: 'Tray each sample as an element, a compound or a mixture.',
+    prompt: 'Sort each sample as an element, a compound or a mixture.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('m1', 'SAMPLE A', sample('m1', 4, [{ kinds: ['k06'], n: 24 }]), 12, 11),
-        dishAt('m2', 'SAMPLE B', sample('m2', 4, [{ ...CLUSTER_A, n: 18 }]), 32, 11),
-        dishAt('m3', 'SAMPLE C', sample('m3', 4, [{ kinds: ['k06'], n: 12 }, { kinds: ['k16'], n: 12 }]), 52, 11),
-        dishAt('m4', 'SAMPLE D', sample('m4', 4, [{ ...PAIR_LIGHT, n: 18 }]), 72, 11),
+        dishAt('m1', 'SAMPLE A', sample('m1', 4, [{ kinds: ['k06'], n: 24 }]), 11),
+        dishAt('m2', 'SAMPLE B', sample('m2', 4, [{ ...CLUSTER_A, n: 18 }]), 31),
+        dishAt('m3', 'SAMPLE C', sample('m3', 4, [{ kinds: ['k06'], n: 12 }, { kinds: ['k16'], n: 12 }]), 51),
+        dishAt('m4', 'SAMPLE D', sample('m4', 4, [{ ...PAIR_LIGHT, n: 18 }]), 71),
         tool('lens', 'Lens'),
-        tool('cutter', 'Cutter'),
-        tool('shaker', 'Shaker')
+        tool('cutter', 'Cutter')
       ],
       zones: {
         trays: [
-          dishTray('element', 'Element', 21, 33, 38),
-          dishTray('compound', 'Compound', 60, 33, 38),
-          dishTray('mixed', 'Mixture', 99, 33, 38)
+          { id: 'element', label: 'Element', at: { x: 16, y: 44 }, size: { w: 26, h: 33 }, cell: 17 },
+          { id: 'compound', label: 'Compound', at: { x: 45, y: 44 }, size: { w: 26, h: 33 }, cell: 17 },
+          { id: 'mixed', label: 'Mixture', at: { x: 74, y: 44 }, size: { w: 26, h: 33 }, cell: 17 }
         ]
       },
       fixtures: [scopeFixture]
     }),
     hints: [
-      'Drag the lens over each sample, and draw the cutter and the shaker across any you are unsure of.',
+      'Drag the lens over each sample and turn the power up until separate atoms show, and use the cutter on any you are unsure of.',
       'For each sample, check two things: how many different names its atoms read, and whether its atoms are joined in groups or sit loose.',
       'One element only is an element even in joined pairs, while different elements joined together make a compound and sitting loose make a mixture.'
     ],
@@ -461,7 +483,7 @@ export const STAGES = [
       const t = state.table;
       const where = {};
       for (const tray of ['element', 'compound', 'mixed']) for (const id of dishIn(t, tray)) where[id] = tray;
-      if (['m1', 'm2', 'm3', 'm4'].some(id => !where[id])) return { ok: false, notYet: true, msg: 'Tray all four samples before you commit.' };
+      if (['m1', 'm2', 'm3', 'm4'].some(id => !where[id])) return { ok: false, notYet: true, msg: 'Put all four samples in a tray before you submit.' };
       const want = { m1: 'element', m2: 'compound', m3: 'mixed', m4: 'element' };
       const wrong = Object.keys(want).filter(k => where[k] !== want[k]);
       if (!wrong.length) return { ok: true };
@@ -546,7 +568,7 @@ export const PRACTICE = [
       { id: 'd', label: 'A molecule' }
     ],
     answer: 'b',
-    explanation: 'Different atoms that are not bonded make a mixture, which is why shaking can separate them.'
+    explanation: 'Different atoms that are not bonded make a mixture, and because nothing holds them together they can be separated again.'
   },
   {
     question: 'Hydrogen peroxide (H₂O₂) is two H atoms bonded to two O atoms, always in that ratio. What is H₂O₂?',
@@ -569,13 +591,15 @@ export const PRACTICE = [
    ------------------------------------------------------------------ */
 
 const lay = (toolId, dish) => ({ place: { piece: toolId, to: `piece:${dish}` } });
+/** Take the lens off its dish and hang it back on the shelf: a dish under a lens is picked up by its lens. */
+const lift = { place: { piece: 'lens', to: `free:${TOOL_HOME.lens.x},${TOOL_HOME.lens.y}` } };
 const tray = (piece, id) => ({ place: { piece, to: `tray:${id}` } });
 const dial = value => ({ setDial: { fixture: 'scope', dial: 'power', value } });
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
   [{ fetch: 'tail' }, lay('lens', 'dishA'), dial(4)],
-  [lay('lens', 'dishA'), dial(4), tray('dishA', 'one'), lay('lens', 'dishB'), tray('dishB', 'more')],
+  [lay('lens', 'dishA'), dial(4), lift, tray('dishA', 'one'), lay('lens', 'dishB'), lift, tray('dishB', 'more')],
   [
     { place: { piece: 'a1', to: 'slot:rd' } }, tray('a1', 't1'),
     { place: { piece: 'a3', to: 'slot:rd' } }, tray('a3', 't2'),
@@ -590,12 +614,9 @@ export const SOLUTIONS = [
   ],
   [lay('lens', 'dishA'), dial(4), { join: ['h1', 'o1'] }, { join: ['h2', 'o1'] }],
   [lay('lens', 'dishA'), dial(4), { join: ['h1', 'o1'] }, { join: ['h2', 'o1'] }, { join: ['h3', 'o2'] }, { join: ['h4', 'o3'] }, { join: ['o2', 'o3'] }],
+  [tray('h1', 'mix'), tray('o1', 'mix'), { join: ['h2', 'o2'] }, tray('h2', 'comp')],
   [
-    { place: { piece: 'shaker', to: 'piece:p1' } }, { place: { piece: 'shaker', to: 'piece:p2' } }, { place: { piece: 'shaker', to: 'piece:p3' } },
-    tray('p1', 'one'), tray('p2', 'one'), tray('p3', 'mixed')
-  ],
-  [
-    lay('lens', 'm1'), dial(4), { place: { piece: 'cutter', to: 'piece:m2' } }, { place: { piece: 'shaker', to: 'piece:m3' } },
+    lay('lens', 'm1'), dial(4), lift, { place: { piece: 'cutter', to: 'piece:m2' } },
     tray('m1', 'element'), tray('m2', 'compound'), tray('m3', 'mixed'), tray('m4', 'element')
   ]
 ];
@@ -603,12 +624,12 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [lay('lens', 'dishA'), dial(6)],
-  [lay('lens', 'dishA'), tray('dishA', 'more'), tray('dishB', 'one')],
+  [lay('lens', 'dishA'), lift, tray('dishA', 'more'), tray('dishB', 'one')],
   [{ place: { piece: 'a1', to: 'slot:rd' } }, tray('a1', 't1'), tray('a3', 't1'), tray('a4', 't2'), tray('a5', 't2'), tray('a2', 't3'), tray('a6', 't3')],
   [{ place: { piece: 'cutter', to: 'piece:t2' } }, tray('t2', 'safe')],
   [{ join: ['h1', 'o1'] }],
   [{ join: ['h1', 'o1'] }, { join: ['h2', 'o1'] }],
-  [{ place: { piece: 'shaker', to: 'piece:p2' } }, tray('p1', 'one'), tray('p2', 'mixed'), tray('p3', 'mixed')],
+  [{ join: ['h1', 'o1'] }, tray('h1', 'mix'), tray('h2', 'comp'), tray('o2', 'comp')],
   [tray('m1', 'element'), tray('m2', 'compound'), tray('m3', 'mixed'), tray('m4', 'compound')]
 ];
 

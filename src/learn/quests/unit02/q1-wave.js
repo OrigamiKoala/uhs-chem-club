@@ -32,6 +32,7 @@
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { applyNotes } from '../../table/notes.js';
 import { fmtLength } from '../../engine/lightbench.js';
 import { planTrace } from '../../engine/lightdata.js';
 import {
@@ -90,7 +91,7 @@ export const STAGES = [
       title: 'Red to Violet',
       briefing: {
         speaker: SPEAKER,
-        body: 'A lamp put in a holder draws its light as a wave, and its colour dial tunes it; 10^14 means 1 followed by 14 zeros. The wave flume on the shore draws the same picture in water.'
+        body: 'A lamp put in its holder draws its light as a wave, and the Colour dial tunes it; 10^14 means 1 followed by 14 zeros. Press Submit when the table shows your answer.'
       },
       prompt: 'Tune the lamp so that more crests pass each second than pass for Sample A.',
       widget,
@@ -396,6 +397,18 @@ export const STAGES = [
     };
   })()
 ];
+
+/** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
+const NOTES = {
+  1: ['Drag the lamp into its holder.', 'Turn the Colour dial to tune it.'],
+  3: ['Stand one detector on each of two marks,', 'then press Fire Pulse to time the light between them.'],
+  4: ['Put a lamp in the holder to read its screen.'],
+  5: ['Read a lamp in the holder, then put it back.'],
+  6: ['Try each lamp in the socket.'],
+  7: ['Put a source in the holder to read it,', 'then drag it under the figure it matches.'],
+  8: ['Put a lamp in the holder to read it,', 'then drag it to the matching slot.']
+};
+applyNotes(STAGES, NOTES);
 
 /* ------------------------------------------------------------------
    THE DEBRIEF

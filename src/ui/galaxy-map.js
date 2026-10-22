@@ -102,14 +102,15 @@ export function layoutSystems(list) {
   const rng = mulberry32(hashString('avalon-galaxy-v1'));
   for (let i = 0; i < n; i++) {
     const t = n > 1 ? i / (n - 1) : 0;
-    const r = R0 + (R1 - R0) * t + (rng() - 0.5) * 16;
-    const th = -2.35 + turn * t + (rng() - 0.5) * 0.1;
+    // Scattered, not strung on a curve: each world is pushed well off the spiral by its own jitter, in radius and in bearing.
+    const r = R0 + (R1 - R0) * t + (rng() - 0.5) * 52;
+    const th = -2.35 + turn * t + (rng() - 0.5) * 0.34;
     out.push({
       id: list[i].id,
       index: i,
       act: list[i].act || 'act1',
-      x: CORE.x + Math.cos(th) * r * 1.42,
-      y: CORE.y + Math.sin(th) * r * 0.95
+      x: CORE.x + Math.cos(th) * r * 1.42 + (rng() - 0.5) * 26,
+      y: CORE.y + Math.sin(th) * r * 0.95 + (rng() - 0.5) * 20
     });
   }
   return out;
@@ -416,13 +417,6 @@ function drawLanes(ctx, view, w, h, lanes, nodeById, time, animate) {
       const y = (1 - f) * (1 - f) * p0.y + 2 * (1 - f) * f * p1.y + f * f * p2.y;
       ctx.fillStyle = COLORS.amber;
       ctx.fillRect(x - 1.2, y - 1.2, 2.4, 2.4);
-    }
-    // Distance when there is room to read it.
-    if (view.k / fitScale(w, h) >= 1.5) {
-      ctx.fillStyle = COLORS.textMuted;
-      ctx.font = fontFor(9);
-      ctx.textAlign = 'center';
-      ctx.fillText(`${laneLightYears(l)} ly`, mx, my - 8);
     }
     ctx.restore();
   }
@@ -794,9 +788,7 @@ export function drawGalaxy(ctx, state) {
   nodes.forEach(n => { nodeById[n.id] = n; });
 
   drawBackdrop(ctx, view, w, h, time, animate);
-  drawGraticule(ctx, view, w, h);
   drawCore(ctx, view, w, h, time, animate);
-  drawActLabels(ctx, view, w, h, nodes, acts);
   drawLanes(ctx, view, w, h, lanes, nodeById, time, animate);
 
   const planetR = planetPx(view, w, h);
@@ -812,7 +804,6 @@ export function drawGalaxy(ctx, state) {
     });
   }
   drawCompass(ctx, w, h);
-  drawScale(ctx, view, w, h);
 
   // Plate border.
   ctx.strokeStyle = COLORS.lineStrong;
