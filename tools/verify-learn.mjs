@@ -2303,26 +2303,89 @@ async function checkDrawn(q, mod) {
   const q5 = getQuest('unit02', 'q5-numbers') && await getQuest('unit02', 'q5-numbers').module?.();
   const EL = await import('../src/learn/engine/electrons.js');
   if (q5) {
-    // The four numbers: every set the stage calls impossible is, and every other is possible.
-    const bad = Object.entries(q5.CHECKS.SETS).filter(([, s]) => !EL.validAddress(s)).map(([k]) => k).sort().join();
-    if (bad !== q5.SOLUTIONS[7].picks.slice().sort().join()) fail('unit02/q5-numbers stage 8: the graded impossible sets are not the ones the rules rule out');
-    const dup = Object.entries(q5.CHECKS.FOUR_ELECTRONS);
-    const pair = dup.flatMap(([a, x], i) => dup.slice(i + 1).filter(([, y]) => EL.sameAddress(x, y)).map(([b]) => a + b));
-    if (pair.join() !== q5.SOLUTIONS[4].choice) fail('unit02/q5-numbers stage 5: the graded pair is not the one sharing all four numbers');
-    if (EL.shellCapacity(3) !== q5.SOLUTIONS[5].number) fail('unit02/q5-numbers stage 6: the third shell does not hold the graded number');
-    // Stage 3: the address in the prompt lights the box at the graded place along its row.
-    const room3 = EL.findRoom({ n: 3, l: 2, ml: 1 });
-    if (!room3.exists || room3.row !== '3d' || ['first', 'second', 'third', 'fourth'][room3.idx] !== q5.SOLUTIONS[2].choice) fail('unit02/q5-numbers stage 3: the address in the prompt does not light the graded box');
-    if (EL.boxesOf(2) !== 5) fail('unit02/q5-numbers: a d row does not have five boxes');
-    // Stage 7: the ringed box is where the graded address points, and its arrow is the graded bunk.
-    const ring = q5.STAGES[6].rigs[0];
-    const room7 = EL.findRoom(q5.SOLUTIONS[6].addr);
-    if (room7.row !== ring.target.row || room7.idx !== ring.target.idx) fail('unit02/q5-numbers stage 7: the graded address does not light the ringed box');
-    const arrow = EL.rackFor(7)[`${ring.target.row}:${ring.target.idx}`];
-    if ((arrow === 'u' ? 0.5 : -0.5) !== q5.SOLUTIONS[6].addr.ms || arrow.length !== 1) fail('unit02/q5-numbers stage 7: the ringed box does not hold the one arrow the graded bunk names');
-    // Every finder stage: the finder never lights a box for an address the rules rule out.
+    // THE FIFTH LANTERNFALL TABLE (`q5-numbers`, the address and filling kit): the rules are `electrons.js`'s, every graded figure is recomputed.
+    const same = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+    const holds = (c, what) => { if (!c) fail(what); };
+    const SHL = await import('../src/learn/table/kits/shells.js');
+    const O5 = await import('../src/learn/engine/orbitals.js');
+    const start = i => TABLE.createTable(q5.STAGES[i].table, q5.STAGES[i].title);
+    const end = i => TABLE.runScript(start(i), q5.SOLUTIONS[i], { strict: true });
+    // every set the stage calls impossible is, and every other is possible; the finder and the rules agree
     for (const [k, set] of Object.entries(q5.CHECKS.SETS)) {
       if (EL.findRoom(set).exists !== EL.validAddress(set)) fail(`unit02/q5-numbers: the finder and the rules disagree about set ${k}`);
+      const why = SHL.whyNoRoom(set);
+      if ((why === null) !== EL.validAddress(set)) fail(`unit02/q5-numbers: the refusal's reason and the rules disagree about set ${k}`);
+    }
+    same(Object.entries(q5.CHECKS.SETS).filter(([, s]) => !EL.validAddress(s)).map(([k]) => k), ['b', 'c'], 'unit02/q5-numbers stage 8 (the sets that cannot exist)');
+    // 1. the distance the lit row prints is the real mean distance of its cloud, and floor 2 is the one that reaches about 300 pm
+    for (const [id, n, l] of [['1s', 1, 0], ['2s', 2, 0], ['2p', 2, 1], ['3s', 3, 0]]) {
+      const pts = O5.sampleOrbital(id === '2p' ? '2pz' : id, 3000, 1);
+      const mean = pts.reduce((a, q) => a + Math.hypot(q.x, q.y, q.z), 0) / pts.length * O5.BOHR_PM;
+      near(SHL.reachPm(n, l), mean, mean * 0.08 + 10, `unit02/q5-numbers stage 1 (the ${id} cloud's reach in pm)`);
+    }
+    const reaches = [1, 2, 3].map(n => SHL.reachPm(n, 0));
+    same(reaches.map(r => Math.abs(r - 300)).indexOf(Math.min(...reaches.map(r => Math.abs(r - 300)))) + 1, 2, 'unit02/q5-numbers stage 1 (the floor whose s row reaches about 300 pm)');
+    same(SHL.addressOfFinder(end(0), 'addr').n, 2, 'unit02/q5-numbers stage 1 (the graded floor)');
+    // 2. floor 2 offers s and p and nothing more
+    for (let l = 0; l <= 3; l++) same(EL.findRoom({ n: 2, l, ml: 0 }).exists, l <= 1, `unit02/q5-numbers stage 2 (suite type ${l} on floor 2)`);
+    same([0, 1, 2, 3].map(l => end(1).pieces[`l${l}`].zone), ['tray:lights', 'tray:lights', 'tray:none', 'tray:none'], 'unit02/q5-numbers stage 2 (the trays)');
+    // 3. the address in the prompt lights the box the graded electron stands in
+    {
+      const room = EL.findRoom({ n: 3, l: 2, ml: 1 });
+      same([room.row, room.idx], ['3d', 3], 'unit02/q5-numbers stage 3 (the room the address names)');
+      same(SHL.rackOf(end(2), 'rack'), { '3d:3': 'u' }, 'unit02/q5-numbers stage 3 (what the rack holds)');
+      const lit = SHL.finderLight(end(2), 'addr');
+      same([lit.box.row, lit.box.idx], ['3d', 3], 'unit02/q5-numbers stage 3 (the box the finder lights)');
+      holds(EL.boxesOf(2) === 5, 'unit02/q5-numbers: a d row does not have five boxes');
+    }
+    // 4. a box takes one arrow of each direction, and the rack refuses a second of the same
+    {
+      const t0 = start(3);
+      const b = id => `piece:${SHL.boxPieceId('rack', '1s', 0)}`;
+      const once = TABLE.apply(t0, { place: { piece: 'up', to: b() } });
+      const twice = TABLE.apply(once, { place: { piece: 'up', to: b() } });
+      holds(twice.last.joined === false && /one|each|most/i.test(twice.last.reason || ''), 'unit02/q5-numbers stage 4: a second arrow the same way is not refused with a reason');
+      same(SHL.rackOf(twice, 'rack'), { '1s:0': 'u' }, 'unit02/q5-numbers stage 4 (the refused arrow stays out)');
+      same(SHL.rackOf(end(3), 'rack'), { '1s:0': 'ud' }, 'unit02/q5-numbers stage 4 (a pair in one box)');
+    }
+    // 5. exactly one pair of the four shares all four numbers, and the rack refuses whichever of them comes second
+    {
+      const dup = Object.entries(q5.CHECKS.FOUR_ELECTRONS);
+      const pair = dup.flatMap(([a, x], i) => dup.slice(i + 1).filter(([, y]) => EL.sameAddress(x, y)).map(([b]) => a + b));
+      same(pair, ['ac'], 'unit02/q5-numbers stage 5 (the pair that shares all four numbers)');
+      const t = end(4);
+      same(['ta', 'tb', 'tc', 'td'].map(id => Boolean(t.pieces[id].props.placed) && !t.pieces[id].zone), [true, true, false, true], 'unit02/q5-numbers stage 5 (the three on the rack)');
+      same(t.pieces.tc.zone, 'tray:no', 'unit02/q5-numbers stage 5 (the refused electron in the tray)');
+      const swap = TABLE.runScript(start(4), [
+        { place: { piece: 'tc', to: `piece:${SHL.boxPieceId('rack', '2p', 1)}` } }, { place: { piece: 'ta', to: `piece:${SHL.boxPieceId('rack', '2p', 1)}` } }
+      ], { strict: true });
+      holds(swap.last.joined === false && /four numbers/.test(swap.last.reason), 'unit02/q5-numbers stage 5: placing C first does not make A the refused one, with the rule as its reason');
+    }
+    // 6. the third shell is nine boxes of two, and the marker is what the board counts
+    {
+      const t = end(5);
+      same(Object.values(t.pieces).filter(p => p.kind === 'box').length, 9, 'unit02/q5-numbers stage 6 (boxes in the third shell)');
+      same(SHL.readOf(t, 'rack').total, EL.shellCapacity(3), 'unit02/q5-numbers stage 6 (electrons the full shell holds)');
+      same(t.fixtures.count.dials.n.value, EL.shellCapacity(3), 'unit02/q5-numbers stage 6 (the marker)');
+      holds(q5.STAGES[5].table.fixtures.find(f => f.id === 'count').dials.n.value !== 18, 'unit02/q5-numbers stage 6: the marker starts on the answer');
+    }
+    // 7. the ringed box is where the graded address points, and its arrow is the graded bunk
+    {
+      const ringed = q5.STAGES[6].table.pieces.find(p => p.props?.target);
+      const room7 = EL.findRoom(q5.CHECKS.RINGED);
+      same([room7.row, room7.idx], [ringed.props.row, ringed.props.idx], 'unit02/q5-numbers stage 7 (the ringed box)');
+      same(SHL.rackOf(start(6), 'rack')[`${ringed.props.row}:${ringed.props.idx}`], 'u', 'unit02/q5-numbers stage 7 (the arrow in the ringed box)');
+      same(q5.CHECKS.RINGED.ms, 0.5, 'unit02/q5-numbers stage 7 (the bunk the arrow names)');
+      const n7 = EL.rackFor(7);
+      for (const k of new Set([...Object.keys(n7), ...Object.keys(SHL.rackOf(start(6), 'rack'))])) same(SHL.rackOf(start(6), 'rack')[k], n7[k], `unit02/q5-numbers stage 7 (nitrogen's box ${k})`);
+    }
+    // 8. every listed electron that has a room stands, and every other is refused with the rule
+    {
+      const t = end(7);
+      same(['ta', 'tb', 'tc', 'td'].map(id => Boolean(t.pieces[id].props.placed) && !t.pieces[id].zone), [true, false, false, true], 'unit02/q5-numbers stage 8 (the electrons that stand)');
+      same(['tb', 'tc'].map(id => t.pieces[id].zone), ['tray:no', 'tray:no'], 'unit02/q5-numbers stage 8 (the electrons with no room)');
+      const refused = TABLE.apply(start(7), { place: { piece: 'tb', to: `piece:${SHL.boxPieceId('rack', '3d', 0)}` } });
+      holds(refused.last.joined === false && Boolean(refused.last.reason), 'unit02/q5-numbers stage 8: an address with no room is not refused with a reason');
     }
   }
   if (q6) {

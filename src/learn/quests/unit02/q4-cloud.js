@@ -368,8 +368,8 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 8 */
   (() => {
     const a = cloudPlate('a', 'SAMPLE A', { x: 34, y: 30 }, '1s');
-    const gauge = blurGauge('blur', { x: 88, y: 24 });
-    const track = tracker('track', { x: 90, y: 52 });
+    const gauge = blurGauge('blur', { x: 88, y: 22 });
+    const track = tracker('track', { x: 90, y: 53 });
     const token = (id, label, y) => ({ id, label, at: { x: 128, y }, r: 7 });
     return {
       title: 'No Path',

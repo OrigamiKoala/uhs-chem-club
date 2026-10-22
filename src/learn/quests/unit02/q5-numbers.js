@@ -1,39 +1,40 @@
 /**
  * q5-numbers.js — Lanternfall, bench five: QUANTUM NUMBERS.
  *
- * **BEYOND THE EXAM.** The AP exam does not assess quantum-number assignment, and
- * the stage-one card says so. The box rack in its `address` layout carries an
- * ADDRESS FINDER: four cells the player sets (floor, suite type, room, bunk),
- * and the box the address names lights on the rack, or nothing lights and the
- * strip says no room has that address. So an address is FOUND (set it, see where
- * the light goes) and WRITTEN (set the cells until the lit box is the ringed one)
- * and never read off a label. Stages four and five keep the labelled board: spin
- * and the exclusion rule are things to see on a box with two arrows in it.
+ * **BEYOND THE EXAM.** The AP exam does not assess quantum-number assignment, and the stage-one card says so. The bench is one
+ * face of the records tent's board: a rack of milled boxes in ladder rows and an ADDRESS STRIP, four cells the player sets (floor,
+ * suite type, room, bunk), and the box the address names lights on the rack, or nothing lights and the board says no room has that
+ * address. So an address is FOUND (set it, see where the light goes) and WRITTEN (set the cells until the lit box is the ringed
+ * one) and never read off a label.
+ *
+ * The fifth of Lanternfall's TABLETOPS (plan `bench-tabletop.md`, phase T4b), on the address and filling kit (`table/kits/shells.js`).
+ * Arrows are dealt into boxes by hand, as the Lewis slate deals pairs; an electron token carries its own address and stands in the
+ * room that address names, or the rack refuses it with the rule shown (a refusal with a reason, never a gatekeeper for a correct
+ * answer).
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  what the floor number does to the lit cloud    -> principal quantum number
- *   2  which shapes the second shell offers           -> angular momentum quantum number
- *   3  finding the box an address names               -> magnetic quantum number
- *   4  two electrons in one box                       -> spin
- *   5  four sets, two of which cannot both be there   -> the Pauli exclusion principle
- *   6  how many electrons the third shell holds       -> 2n squared
- *   7  writing the address of a ringed electron       -> every electron has an address
- *   8  which sets of numbers light no box             -> the allowed values
+ *   1  match how far the lit floor's cloud reaches      -> principal quantum number
+ *   2  which suite types the second floor offers        -> angular momentum quantum number
+ *   3  an electron in the box an address names          -> magnetic quantum number
+ *   4  two electrons in one box                         -> spin
+ *   5  four candidates placed on the rack               -> the Pauli exclusion principle
+ *   6  the third shell filled, and counted              -> 2n squared
+ *   7  writing the address of a ringed electron         -> every electron has an address
+ *   8  four listed addresses, tried on the rack         -> the allowed values
  *
- * The rack never says an arrangement is wrong. It refuses exactly one thing, a
- * second electron of the same direction in one box, and the player is left to
- * work out what that has to mean.
+ * The rack never says an arrangement is wrong. It refuses exactly two things: a second arrow of the same direction in one box, and
+ * an electron that cannot stand where its address says, and the player is left to work out what that has to mean.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { BoxRack } from '../../engine/instruments.js';
-import { finderStart } from '../../engine/boxrack.js';
-import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
-import { handKeys, paintHand, describeAct } from '../../engine/rackcontrols.js';
-import { validAddress, sameAddress, findRoom } from '../../engine/electrons.js';
-import { esc } from '../../../ui/layout.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import {
+  shellsTable, shelf, hand, tag, electronToken, addressStrip, marker,
+  readOf, rackOf, addressOfFinder, finderLight, placedTokens, addressOfToken, sameAddress, findRoom, validAddress, shellCapacity, reachPm,
+  boxPieceId, arrowsOf
+} from '../../table/kits/shells.js';
 
 export const meta = { stageCount: 8 };
 
@@ -49,37 +50,27 @@ export const BUILDS_ON = ['unit02/q4-cloud'];
 
 const SPEAKER = 'Vess';
 
-const TOOL_TEXT = {
-  hand: { key: 'Up, Down, Remove', what: 'Pick what the next tap on a box does: place an up arrow, place a down arrow, or lift one out.' }
-};
+/** Every piece on this bench says what it does on its face (Up, Down, Lift Out), so none carries a legend. */
+export function toolNoteFor() { return null; }
 
-export function toolNoteFor(controlId) { return TOOL_TEXT[controlId] || null; }
+const widget = { type: 'table', label: 'The bench' };
 
-/* Which of the four numbers the board has printed so far. */
-const SHOW = [
-  { n: true, l: false, ml: false, ms: false },
-  { n: true, l: true, ml: false, ms: false },
-  { n: true, l: true, ml: true, ms: false },
-  { n: true, l: true, ml: true, ms: true }
-];
+const tray = (id, label, at, size, cell = 17) => ({ id, label, at, size, cell });
+const where = (t, id) => (t.pieces[id].zone || '').replace(/^(tray|slot):/, '');
+const inTray = (t, id) => (t.pieces[id].zone || '').startsWith('tray:');
 
 const ROWS_N3 = ['1s', '2s', '2p', '3s', '3p', '3d'];
 
-const rackPlate = (rows, extra = {}) => ({
-  id: 'rack', label: 'RACK', head: 'rack', layout: 'address', rows, note: 'the orbital boxes, lowest energy at the bottom', ...extra
-});
-
-/** The electrons a quest lists as sets of four numbers, written as the board prints them. */
-const fmtSet = s => `n = ${s.n}, l = ${s.l}, ml = ${s.ml > 0 ? '+' : ''}${s.ml}, ms = ${s.ms > 0 ? '+1/2' : '-1/2'}`;
-
-const FOUR_ELECTRONS = {
+/** The four candidates stage five lists, as the address each carries. */
+export const FOUR_ELECTRONS = {
   a: { n: 2, l: 1, ml: 0, ms: 0.5 },
   b: { n: 2, l: 1, ml: 0, ms: -0.5 },
   c: { n: 2, l: 1, ml: 0, ms: 0.5 },
   d: { n: 2, l: 1, ml: 1, ms: 0.5 }
 };
 
-const SETS = {
+/** The four sets stage eight lists. */
+export const SETS = {
   a: { n: 2, l: 1, ml: -1, ms: 0.5 },
   b: { n: 3, l: 3, ml: 0, ms: -0.5 },
   c: { n: 2, l: 1, ml: 2, ms: 0.5 },
@@ -87,293 +78,291 @@ const SETS = {
 };
 
 /** The electron stage seven rings: nitrogen's up arrow in the right-hand 2p box. */
-const RINGED = { n: 2, l: 1, ml: 1, ms: 0.5 };
+export const RINGED = { n: 2, l: 1, ml: 1, ms: 0.5 };
+
+/** Nitrogen's seven electrons, as a rack. */
+const NITROGEN = { '1s:0': 'ud', '2s:0': 'ud', '2p:0': 'u', '2p:1': 'u', '2p:2': 'u' };
+
+const tokensOf = (sets, at) => Object.entries(sets).map(([k, a], i) => electronToken(`t${k}`, k.toUpperCase(), at(i), a));
+const COLUMN = x => i => ({ x, y: 10 + i * 14 });
+
+/** Hands for a stage: Up, Down and Lift Out in a row. */
+const hands = (x, y, pitch = 18) => [hand('up', 'up', { x, y }), hand('down', 'down', { x: x + pitch, y }), hand('lift', 'lift', { x: x + 2 * pitch, y })];
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  {
-    title: 'The First Number',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Think of an electron\'s state as an apartment address: floor (n), suite type (l), room (ml), and bunk (ms). Tap the arrows on a cell of the address strip to change it, and the rack lights what that address names.'
-    },
-    prompt: 'What property of the electron cloud does the floor number (n) set?',
-    controls: [],
-    show: 0,
-    cloudsBeside: true,
-    rows: ['1s', '2s', '2p', '3s'],
-    rigs: [rackPlate(['1s', '2s', '2p', '3s'], { finder: { show: ['n'], fields: ['n'] } })],
-    widget: {
-      type: 'choice', label: 'What it tracks',
-      options: [
-        { id: 'size', label: 'How far out the cloud reaches' },
-        { id: 'dir', label: 'Which way the electron is pointing' },
-        { id: 'count', label: 'How many boxes the row has' },
-        { id: 'who', label: 'Which element the box belongs to' }
-      ]
-    },
-    hints: [
-      'Tap the arrows on the floor cell and watch which rows light and the cloud drawn beside them.',
-      'Compare the cloud beside the rows lit for floor 1 with the one lit for floor 3.',
-      'Line the floors up in order and describe what happens to the lit cloud from one floor to the next.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick what it tracks.' };
-      if (state.choice !== 'size') {
-        return { ok: false, msg: 'Step the floor cell through every floor and watch what changes about the lit cloud, then test your answer against it.' };
+  (() => {
+    const rack = shelf('rack', ['1s', '2s', '2p', '3s'], { x: 50, y: 31 }, { finder: 'addr', reach: true, readout: false });
+    const strip = addressStrip('addr', { x: 118, y: 20 }, { fields: ['n'], show: ['n'], start: { n: 1 } });
+    return {
+      title: 'The First Number',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Think of an electron\'s state as an apartment address: floor (n), suite type (l), room (ml), and bunk (ms). Set a cell of the address strip, and the rack lights what that address names.'
+      },
+      prompt: 'Set the floor number so that its s row reaches out about 300 pm.',
+      widget,
+      table: shellsTable({ pieces: rack.boxes, fixtures: [rack.fixture, strip] }),
+      hints: [
+        'Drag the floor knob and watch which rows light and how far their clouds reach.',
+        'Compare the distance printed beside each lit row with the distance the prompt asks for.',
+        'Set the floor whose s row prints a distance closest to the one the prompt names.'
+      ],
+      check(state) {
+        const t = state.table;
+        if (addressOfFinder(t, 'addr').n === 2) return { ok: true };
+        return { ok: false, msg: 'The lit row\'s cloud reaches a different distance: set the floor and read how far it reaches.' };
+      },
+      reward: {
+        log: 'The floor number counts shells outward.',
+        title: 'Principal Quantum Number (Floor)',
+        body: 'The first number on every box, n, is the floor (principal quantum number): it sets how far out the cloud reaches and roughly how much energy its electron has. Every room on one floor shares the same n, which counts up from 1. This bench is an optional Deep Dive.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'The floor number counts shells outward.',
-      title: 'Principal Quantum Number (Floor)',
-      body: 'The first number on every box, n, is the floor (principal quantum number): it sets how far out the cloud reaches and roughly how much energy its electron has. Every room on one floor shares the same n, which counts up from 1. This bench is an optional Deep Dive.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 2 */
-  {
-    title: 'The Second Number',
-    prompt: 'Which room types (orbital shapes) does the second floor offer?',
-    controls: [],
-    show: 1,
-    rows: ['1s', '2s', '2p', '3s', '3p', '3d'],
-    rigs: [rackPlate(['1s', '2s', '2p', '3s', '3p', '3d'], { finder: { show: ['n', 'l'], fields: ['n', 'l'] } })],
-    widget: {
-      type: 'choice', label: 'The shapes on offer',
-      options: [
-        { id: 'sp', label: 'Round and two-lobed (s and p)' },
-        { id: 'sd', label: 'Round and four-lobed (s and d)' },
-        { id: 'pd', label: 'Two-lobed and four-lobed (p and d)' },
-        { id: 'spd', label: 'Round, two-lobed and four-lobed (s, p and d)' }
-      ]
-    },
-    hints: [
-      'Set the floor cell to the second floor, then tap through the suite cell and see which settings light a row.',
-      'Match the shape drawn beside the suite cell to the cloud shapes from the cloud plate.',
-      'Keep only the suite types that light a row on that floor, and leave out the ones that light nothing.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the shapes.' };
-      if (state.choice !== 'sp') {
-        return { ok: false, msg: 'Hold the floor cell on the second floor, step the suite cell through every setting, and keep only the shapes that light a row.' };
+  (() => {
+    const rack = shelf('rack', ROWS_N3, { x: 40, y: 32 }, { finder: 'addr', readout: false, labels: false });
+    const strip = addressStrip('addr', { x: 114, y: 15 }, { fields: ['n', 'l'], show: ['n', 'l'], range: { l: [0, 3] }, start: { n: 1, l: 0 } });
+    const tags = [0, 1, 2, 3].map(l => tag(`l${l}`, `l = ${l}`, { x: 84 + l * 18, y: 31 }));
+    return {
+      title: 'The Second Number',
+      prompt: 'Put each suite type in the tray that says whether the second floor has a room of that type.',
+      widget,
+      table: shellsTable({
+        pieces: [...rack.boxes, ...tags],
+        fixtures: [rack.fixture, strip],
+        zones: { trays: [tray('lights', 'A room lights', { x: 97, y: 50 }, { w: 34, h: 17 }, 16), tray('none', 'No room lights', { x: 133, y: 50 }, { w: 32, h: 17 }, 16)] }
+      }),
+      hints: [
+        'Set the floor cell to the second floor, then step the type cell through every setting and see which settings light a row.',
+        'Compare the shape drawn beside each lit row with the cloud shapes from the cloud plate.',
+        'Put a suite type in the first tray only if it lights a row on that floor, and in the second if it lights nothing.'
+      ],
+      check(state) {
+        const t = state.table;
+        const ids = [0, 1, 2, 3].map(l => `l${l}`);
+        if (!ids.every(id => inTray(t, id))) return { ok: false, notYet: true, msg: 'Put every suite type in a tray.' };
+        for (let l = 0; l <= 3; l++) {
+          const has = findRoom({ n: 2, l, ml: 0 }).exists;
+          if (where(t, `l${l}`) !== (has ? 'lights' : 'none')) {
+            return { ok: false, msg: 'Hold the floor cell on the second floor, step the type cell through every setting, and tray each type by whether a row lights.' };
+          }
+        }
+        return { ok: true };
+      },
+      reward: {
+        log: 'The second number sets the room type.',
+        title: 'Angular Momentum Number (Room Type)',
+        body: 'The second number, l, is the suite type (angular momentum number): it sets the shape, with l = 0 for round (s) and 1 for two-lobed (p). On floor n, l runs from 0 up to n - 1, so floor 2 offers s and p suites.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'The second number sets the room type.',
-      title: 'Angular Momentum Number (Room Type)',
-      body: 'The second number, l, is the suite type (angular momentum number): it sets the shape, with l = 0 for round (s) and 1 for two-lobed (p). On floor n, l runs from 0 up to n - 1, so floor 2 offers s and p suites.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 3 */
-  {
-    title: 'The Third Number',
-    prompt: 'Which box does the address n = 3, l = 2, ml = +1 name?',
-    controls: [],
-    show: 2,
-    rows: ['3s', '3p', '3d'],
-    rigs: [rackPlate(['3s', '3p', '3d'], {
-      finder: { show: ['n', 'l', 'ml'], fields: ['l', 'ml'], range: { n: [3, 3], l: [0, 2], ml: [-2, 2] }, start: { n: 3, l: 0, ml: 0 } }
-    })],
-    widget: {
-      type: 'choice', label: 'The box it names',
-      options: [
-        { id: 'first', label: 'The first box from the left of its row' },
-        { id: 'second', label: 'The second box from the left of its row' },
-        { id: 'third', label: 'The third box from the left of its row' },
-        { id: 'fourth', label: 'The fourth box from the left of its row' }
-      ]
-    },
-    hints: [
-      'Set the suite cell, then the room cell, and see which box lights.',
-      'Try room numbers either side of zero and notice which way along the row they run.',
-      'Compare where room number zero lights with where each number either side of it lights.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the box.' };
-      if (state.choice !== 'fourth') {
-        return { ok: false, msg: 'Set the address on the strip and see which box lights, then compare its place along the row with your answer.' };
+  (() => {
+    const rack = shelf('rack', ['3s', '3p', '3d'], { x: 42, y: 30 }, { finder: 'addr', readout: false, labels: false });
+    const strip = addressStrip('addr', { x: 112, y: 18 }, { fields: ['l', 'ml'], show: ['n', 'l', 'ml'], range: { l: [0, 2], ml: [-2, 2] }, start: { n: 3, l: 0, ml: 0 } });
+    return {
+      title: 'The Third Number',
+      prompt: 'Put an electron in the box that the address n = 3, l = 2, ml = +1 names.',
+      widget,
+      table: shellsTable({
+        pieces: [...rack.boxes, hand('el', 'up', { x: 100, y: 46 }, 'Electron'), hand('lift', 'lift', { x: 124, y: 46 })],
+        fixtures: [rack.fixture, strip]
+      }),
+      hints: [
+        'Set the suite cell, then the room cell, and see which box lights.',
+        'Try room numbers either side of zero and notice which way along the row they run.',
+        'Compare where room number zero lights with where each number either side of it lights, then put the electron in the lit box.'
+      ],
+      check(state) {
+        const t = state.table;
+        const read = readOf(t, 'rack');
+        if (read.total === 0) return { ok: false, notYet: true, msg: 'Put an electron in a box.' };
+        const room = findRoom({ n: 3, l: 2, ml: 1 });
+        const key = `${room.row}:${room.idx}`;
+        if (read.total === 1 && rackOf(t, 'rack')[key]) return { ok: true };
+        return { ok: false, msg: 'The electron is not in the box that address names: set the address on the strip and see which box lights.' };
+      },
+      reward: {
+        log: 'The third number numbers the rooms.',
+        title: 'Magnetic Quantum Number (Room)',
+        body: 'The third number, ml, is the room number (magnetic quantum number): it picks the orientation, running from -l to +l, giving 2l + 1 rooms per suite. A d suite has five rooms, p has three, and s has one.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'The third number numbers the rooms.',
-      title: 'Magnetic Quantum Number (Room)',
-      body: 'The third number, ml, is the room number (magnetic quantum number): it picks the orientation, running from -l to +l, giving 2l + 1 rooms per suite. A d suite has five rooms, p has three, and s has one.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 4 */
-  {
-    title: 'Two in One Box',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Each room has a bunk bed holding two electrons: top bunk (+1/2, up arrow) and bottom bunk (-1/2, down arrow).'
-    },
-    prompt: 'Pack two electrons into a single orbital box.',
-    controls: ['hand'],
-    show: 3,
-    rows: ['1s', '2s', '2p'],
-    rigs: [rackPlate(['1s', '2s', '2p'])],
-    widget: { type: 'none' },
-    hints: [
-      'Pick "Up" from the hand keys, then tap a box, and look at what the board prints.',
-      'Try tapping the same box again with "Up", then with "Down", and compare what the rack does each time.',
-      'Place one electron with "Up" in a box, then place a second in that same box with "Down".'
-    ],
-    check(state) {
-      const doubled = Object.values(state.rack || {}).some(v => v.length === 2);
-      if (!doubled) {
-        return { ok: false, msg: 'No box holds two electrons yet. Try to put a second one into a box that already has one.' };
+  (() => {
+    const rack = shelf('rack', ['1s', '2s', '2p'], { x: 38, y: 32 }, { show: { n: true, l: true, ml: true, ms: true } });
+    return {
+      title: 'Two in One Box',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Each room has a bunk bed holding two electrons: top bunk (+1/2, up arrow) and bottom bunk (-1/2, down arrow).'
+      },
+      prompt: 'Pack two electrons into a single orbital box.',
+      widget,
+      table: shellsTable({ pieces: [...rack.boxes, ...hands(92, 32)], fixtures: [rack.fixture] }),
+      hints: [
+        'Drop "Up" on a box and look at what the board prints.',
+        'Try dropping "Up" on the same box again, then "Down", and compare what the rack does each time.',
+        'Place one electron with "Up" in a box, then place a second in that same box with "Down".'
+      ],
+      check(state) {
+        const doubled = Object.values(rackOf(state.table, 'rack')).some(v => v.length === 2);
+        if (!doubled) return { ok: false, msg: 'No box holds two electrons yet. Try to put a second one into a box that already has one.' };
+        return { ok: true };
+      },
+      reward: {
+        log: 'A second arrow the same way is refused. Opposite is fine.',
+        title: 'Spin (The Bunk)',
+        body: 'The fourth number, ms, is the spin (the bunk): +1/2 for an up arrow and -1/2 for a down arrow. A room holds two electrons at most, and only when their spins are opposite.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'A second arrow the same way is refused. Opposite is fine.',
-      title: 'Spin (The Bunk)',
-      body: 'The fourth number, ms, is the spin (the bunk): +1/2 for an up arrow and -1/2 for a down arrow. A room holds two electrons at most, and only when their spins are opposite.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 5 */
-  {
-    title: 'The Impossible Pair',
-    prompt: 'Which two candidate electrons can never coexist in the same atom?',
-    controls: ['hand'],
-    show: 3,
-    rows: ['1s', '2s', '2p'],
-    reference: Object.entries(FOUR_ELECTRONS).map(([k, s]) => `Electron ${k.toUpperCase()}: ${fmtSet(s)}`),
-    rigs: [rackPlate(['1s', '2s', '2p'])],
-    widget: {
-      type: 'choice', label: 'The pair that cannot coexist',
-      options: [
-        { id: 'ac', label: 'Electrons A and C' },
-        { id: 'ab', label: 'Electrons A and B' },
-        { id: 'ad', label: 'Electrons A and D' },
-        { id: 'bd', label: 'Electrons B and D' }
-      ]
-    },
-    hints: [
-      'Place a pair of electrons in the rack to see which arrangements the board allows and which it refuses.',
-      'Compare the four numbers of each pair of electrons and look for a pair that has none of them different.',
-      'Check every pair for two electrons that would have to sit in the same box pointing the same way.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the pair.' };
-      if (state.choice !== 'ac') {
-        return { ok: false, msg: 'A pair can share an address only if all four of its numbers match. Compare the numbers pair by pair.' };
+  (() => {
+    const rack = shelf('rack', ['1s', '2s', '2p'], { x: 36, y: 32 }, { show: { n: true, l: true, ml: true, ms: true } });
+    return {
+      title: 'The Impossible Pair',
+      prompt: 'Place the four candidate electrons on the rack, and put the one the rack refuses in the tray.',
+      widget,
+      table: shellsTable({
+        pieces: [...rack.boxes, ...tokensOf(FOUR_ELECTRONS, COLUMN(88))],
+        fixtures: [rack.fixture],
+        zones: { trays: [tray('no', 'Cannot be placed', { x: 132, y: 32 }, { w: 30, h: 40 }, 20)] }
+      }),
+      hints: [
+        'Drop a candidate electron on the rack and see where it stands and what the board says.',
+        'Compare the four numbers of each candidate and look for two that have none of them different.',
+        'Place all four in turn, and put in the tray the one the rack will not take because its address is already in use.'
+      ],
+      check(state) {
+        const t = state.table;
+        const ids = ['ta', 'tb', 'tc', 'td'];
+        const placed = ids.filter(id => t.pieces[id].props.placed && !inTray(t, id));
+        const away = ids.filter(id => inTray(t, id));
+        if (placed.length === 0 && away.length === 0) return { ok: false, notYet: true, msg: 'Place the candidates on the rack.' };
+        if (away.length !== 1) return { ok: false, notYet: true, msg: 'Put exactly one electron, the one the rack will not take, in the tray.' };
+        const out = addressOfToken(t.pieces[away[0]]);
+        if (placed.length === 3 && placed.some(id => sameAddress(addressOfToken(t.pieces[id]), out))) return { ok: true };
+        return { ok: false, msg: 'That electron can stand on the rack. Try to place every candidate, and tray the one that cannot go.' };
+      },
+      reward: {
+        log: 'Two electrons cannot share the same address.',
+        title: 'The Pauli Exclusion Principle',
+        body: 'No two electrons in one atom can share all four quantum numbers: this is the Pauli exclusion principle. The next bench, electron configuration, builds entirely on this rule.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Two electrons cannot share the same address.',
-      title: 'The Pauli Exclusion Principle',
-      body: 'No two electrons in one atom can share all four quantum numbers: this is the Pauli exclusion principle. The next bench, electron configuration, builds entirely on this rule.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 6 */
-  {
-    title: 'A Full Shell',
-    prompt: 'How many electrons can the third shell hold when completely filled?',
-    controls: ['hand'],
-    show: 3,
-    rows: ROWS_N3.slice(3),
-    rigs: [rackPlate(['3s', '3p', '3d'])],
-    widget: { type: 'number', label: 'Electrons in the third shell', min: 2, max: 32, step: 2 },
-    hints: [
-      'Fill every box in the rows of the third shell with as many electrons as the board will take.',
-      'Count the boxes in all the rows of the third shell, and how many electrons each box can hold.',
-      'Multiply the number of boxes in the shell by the two electrons each box takes.'
-    ],
-    check(state) {
-      if (state.number === 2) return { ok: false, notYet: true, msg: 'Set the number of electrons you counted.' };
-      if (state.number !== 18) {
-        return { ok: false, msg: 'Fill the rack until it refuses another electron, then count what is on it.' };
+  (() => {
+    const rack = shelf('rack', ['3s', '3p', '3d'], { x: 40, y: 32 }, { show: { n: true, l: true, ml: true, ms: true } });
+    const count = marker('count', 'Electrons in the third shell', { x: 114, y: 48 }, { min: 2, max: 32, step: 2, value: 2, size: { w: 46, h: 12 } });
+    return {
+      title: 'A Full Shell',
+      prompt: 'Fill every box of the third shell, then set the marker to the number of electrons it holds.',
+      widget,
+      table: shellsTable({ pieces: [...rack.boxes, ...hands(90, 20)], fixtures: [rack.fixture, count] }),
+      hints: [
+        'Fill every box in the rows of the third shell with as many electrons as the board will take.',
+        'Count the boxes in all the rows of the third shell, and how many electrons each box can hold.',
+        'Multiply the number of boxes in the shell by the two electrons each box takes, and set the marker to the board\'s count.'
+      ],
+      check(state) {
+        const t = state.table;
+        const r = readOf(t, 'rack');
+        const boxes = Object.values(t.pieces).filter(p => p.kind === 'box');
+        if (r.total === 0) return { ok: false, notYet: true, msg: 'Put electrons in the boxes of the third shell.' };
+        if (!boxes.every(b => arrowsOf(t, b).length === 2)) return { ok: false, msg: 'Some boxes in the third shell still have room: fill the rack until it refuses another electron.' };
+        const marked = t.fixtures.count.dials.n.value;
+        if (marked === 2) return { ok: false, notYet: true, msg: 'Set the marker to the number of electrons you counted.' };
+        if (marked !== r.total) return { ok: false, msg: 'The marker should read the number of electrons the rack holds: count them.' };
+        return { ok: true };
+      },
+      reward: {
+        log: 'The shell takes as many as its boxes allow.',
+        title: '2n Squared',
+        body: 'A shell holds 2n² electrons: 2 in the first, 8 in the second and 18 in the third. The count is the number of boxes in the shell, n², times the two spins each box allows.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'The shell takes as many as its boxes allow.',
-      title: '2n Squared',
-      body: 'A shell holds 2n² electrons: 2 in the first, 8 in the second and 18 in the third. The count is the number of boxes in the shell, n², times the two spins each box allows.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 7 */
-  {
-    title: 'An Address for Nitrogen',
-    prompt: 'Write the address of the electron in the ringed box of nitrogen.',
-    controls: [],
-    show: 3,
-    rows: ['1s', '2s', '2p'],
-    rigs: [rackPlate(['1s', '2s', '2p'], {
-      label: 'SAMPLE A', sample: 'N', fillGround: true, note: 'N, seven electrons',
-      target: { row: '2p', idx: 2 },
-      finder: { show: ['n', 'l', 'ml', 'ms'], fields: ['n', 'l', 'ml', 'ms'] }
-    })],
-    widget: { type: 'none' },
-    hints: [
-      'Set the cells of the address strip until the box that lights is the ringed one.',
-      'The lit box gives the floor, suite and room, and the arrow inside the ringed box gives the bunk.',
-      'The room number counts from the middle box of the row, and the bunk follows the direction the arrow points.'
-    ],
-    check(state) {
-      const a = state.addr || {};
-      if (sameAddress(a, finderStart(this.rigs[0].finder))) return { ok: false, notYet: true, msg: 'Set the address first.' };
-      if (!findRoom(a).exists) return { ok: false, msg: 'No room has the address you set. Set one the strip lights, then compare it with the ringed box.' };
-      if (!sameAddress(a, RINGED)) {
-        return { ok: false, msg: 'That address does not name the ringed electron. Set it, see where the light goes, and check which way the arrow in the box points.' };
+  (() => {
+    const rack = shelf('rack', ['1s', '2s', '2p'], { x: 40, y: 32 }, { pre: NITROGEN, target: { row: '2p', idx: 2 }, finder: 'addr', readout: false, labels: false });
+    const strip = addressStrip('addr', { x: 112, y: 26 }, { fields: ['n', 'l', 'ml', 'ms'], show: ['n', 'l', 'ml', 'ms'], start: { n: 1, l: 0, ml: 0, ms: 0.5 } });
+    return {
+      title: 'An Address for Nitrogen',
+      prompt: 'Write the address of the electron in the ringed box of nitrogen.',
+      widget,
+      table: shellsTable({ pieces: rack.boxes, fixtures: [rack.fixture, strip] }),
+      hints: [
+        'Set the cells of the address strip until the box that lights is the ringed one.',
+        'The lit box gives the floor, suite and room, and the arrow inside the ringed box gives the bunk.',
+        'The room number counts from the middle box of the row, and the bunk follows the direction the arrow points.'
+      ],
+      check(state) {
+        const t = state.table;
+        const a = addressOfFinder(t, 'addr');
+        if (a.n === 1 && a.l === 0 && a.ml === 0 && a.ms === 0.5) return { ok: false, notYet: true, msg: 'Set the address first.' };
+        if (!findRoom(a).exists) return { ok: false, msg: 'No room has the address you set. Set one the strip lights, then compare it with the ringed box.' };
+        if (!sameAddress(a, RINGED)) return { ok: false, msg: 'That address does not name the ringed electron. Set it, see where the light goes, and check which way the arrow in the box points.' };
+        return { ok: true };
+      },
+      reward: {
+        log: 'Every electron has four numbers, and no two match.',
+        title: 'Every Electron Has an Address',
+        body: 'Four numbers give every electron its unique address: floor (n), room type (l), room (ml), and bunk (ms). Nitrogen\'s three 2p electrons sit in three separate rooms, so each has an address of its own.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Every electron has four numbers, and no two match.',
-      title: 'Every Electron Has an Address',
-      body: 'Four numbers give every electron its unique address: floor (n), room type (l), room (ml), and bunk (ms). Nitrogen\'s three 2p electrons sit in three separate rooms, so each has an address of its own.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 8 */
-  {
-    title: 'Sets That Cannot Exist',
-    prompt: 'Which listed addresses violate the quantum rules?',
-    controls: [],
-    show: 3,
-    rows: ROWS_N3,
-    reference: Object.entries(SETS).map(([k, s]) => `Set ${k.toUpperCase()}: ${fmtSet(s)}`),
-    rigs: [rackPlate(ROWS_N3, {
-      finder: { show: ['n', 'l', 'ml', 'ms'], fields: ['n', 'l', 'ml', 'ms'] }
-    })],
-    widget: {
-      type: 'multi', label: 'Sets that cannot exist',
-      options: Object.keys(SETS).map(k => ({ id: k, label: `Set ${k.toUpperCase()}` }))
-    },
-    hints: [
-      'Set each listed address on the strip and see whether a box lights.',
-      'Compare the addresses that light a box with the ones that light nothing, number against number.',
-      'Find the largest suite type each floor lights, and the largest room number each suite type lights.'
-    ],
-    check(state) {
-      if (!state.picks.length) return { ok: false, notYet: true, msg: 'Pick the sets that cannot exist.' };
-      const bad = Object.entries(SETS).filter(([, s]) => !validAddress(s)).map(([k]) => k).sort().join();
-      if (state.picks.slice().sort().join() !== bad) {
-        return { ok: false, msg: 'Set every listed address on the strip, not just the first one that looks odd, and keep only the ones that light nothing.' };
+  (() => {
+    const rack = shelf('rack', ROWS_N3, { x: 36, y: 32 }, { show: { n: true, l: true, ml: true, ms: true }, readout: false });
+    return {
+      title: 'Sets That Cannot Exist',
+      prompt: 'Place the four listed electrons on the rack, and put the ones with no room in the tray.',
+      widget,
+      table: shellsTable({
+        pieces: [...rack.boxes, ...tokensOf(SETS, COLUMN(88))],
+        fixtures: [rack.fixture],
+        zones: { trays: [tray('no', 'No room has this address', { x: 132, y: 32 }, { w: 30, h: 40 }, 20)] }
+      }),
+      hints: [
+        'Drop each listed electron on the rack and see whether it stands, and what the board says when it does not.',
+        'Compare the addresses that stand with the ones that are refused, number against number.',
+        'Find the largest suite type each floor lights, and the largest room number each suite type lights.'
+      ],
+      check(state) {
+        const t = state.table;
+        const ids = Object.keys(SETS).map(k => `t${k}`);
+        if (!ids.some(id => t.pieces[id].props.placed || inTray(t, id))) return { ok: false, notYet: true, msg: 'Try the listed electrons on the rack.' };
+        for (const k of Object.keys(SETS)) {
+          const id = `t${k}`;
+          const fits = validAddress(SETS[k]);
+          if (fits && !(t.pieces[id].props.placed && !inTray(t, id))) return { ok: false, msg: 'An electron that has a room is not on the rack: try each listed electron.' };
+          if (!fits && !inTray(t, id)) return { ok: false, msg: 'An electron that has no room is not in the tray: try each listed electron on the rack and tray the ones it refuses.' };
+        }
+        return { ok: true };
+      },
+      reward: {
+        log: 'l below n, and ml no further than l from zero.',
+        title: 'The Allowed Values',
+        body: 'For each floor n, room types l run from 0 to n - 1, and for each suite l, room numbers ml run from -l to +l. An address outside those ranges does not name a room in the building.',
+        last: true
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'l below n, and ml no further than l from zero.',
-      title: 'The Allowed Values',
-      body: 'For each floor n, room types l run from 0 to n - 1, and for each suite l, room numbers ml run from -l to +l. An address outside those ranges does not name a room in the building.',
-      last: true
-    }
-  }
+    };
+  })()
 ];
 
 /* ------------------------------------------------------------------
@@ -459,117 +448,58 @@ export const PRACTICE = [
 ];
 
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct
+   actions, by drag and by two taps. Cells are set, arrows and electrons dropped on boxes, cards put in trays. Nothing here says
+   which box an address names or whether a room has it.
    ------------------------------------------------------------------ */
-function blankState(stage) {
-  const finder = stage?.rigs?.[0]?.finder;
-  return { rack: {}, addr: finder ? finderStart(finder) : null };
-}
+
+const put = (piece, to) => ({ place: { piece, to } });
+const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
+const onBox = (piece, row, idx) => put(piece, `piece:${boxPieceId('rack', row, idx)}`);
 
 export const SOLUTIONS = [
-  { choice: 'size' },
-  { choice: 'sp' },
-  { choice: 'fourth' },
-  { rack: { '1s:0': 'ud' } },
-  { choice: 'ac' },
-  { number: 18 },
-  { addr: RINGED },
-  { picks: ['b', 'c'] }
+  [dial('addr', 'n', 2)],
+  [dial('addr', 'n', 2), dial('addr', 'l', 2), dial('addr', 'l', 1), put('l0', 'tray:lights'), put('l1', 'tray:lights'), put('l2', 'tray:none'), put('l3', 'tray:none')],
+  [dial('addr', 'l', 2), dial('addr', 'ml', 1), onBox('el', '3d', 3)],
+  [onBox('up', '1s', 0), onBox('down', '1s', 0)],
+  [onBox('ta', '2p', 1), onBox('tb', '2p', 1), onBox('tc', '2p', 1), onBox('td', '2p', 2), put('tc', 'tray:no')],
+  [].concat(...[['3s', 0], ['3p', 0], ['3p', 1], ['3p', 2], ['3d', 0], ['3d', 1], ['3d', 2], ['3d', 3], ['3d', 4]].map(([r, i]) => [onBox('up', r, i), onBox('down', r, i)])).concat([dial('count', 'n', 18)]),
+  [dial('addr', 'n', 2), dial('addr', 'l', 1), dial('addr', 'ml', 1)],
+  [onBox('ta', '2p', 1), onBox('tb', '2p', 1), onBox('tc', '2p', 1), onBox('td', '2p', 1), put('tb', 'tray:no'), put('tc', 'tray:no')]
 ];
 
+/** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { choice: 'count' },
-  { choice: 'sd' },
-  { choice: 'third' },
-  { rack: { '1s:0': 'u' } },
-  { choice: 'ab' },
-  { number: 8 },
-  { addr: { n: 2, l: 1, ml: -1, ms: 0.5 } },
-  { picks: ['a', 'b'] }
+  [dial('addr', 'n', 3)],
+  [dial('addr', 'n', 2), put('l0', 'tray:lights'), put('l1', 'tray:lights'), put('l2', 'tray:lights'), put('l3', 'tray:none')],
+  [dial('addr', 'l', 2), dial('addr', 'ml', 0), onBox('el', '3d', 2)],
+  [onBox('up', '1s', 0)],
+  [onBox('ta', '2p', 1), onBox('tb', '2p', 1), onBox('tc', '2p', 1), onBox('td', '2p', 2), put('tb', 'tray:no')],
+  [onBox('up', '3s', 0), onBox('down', '3s', 0), dial('count', 'n', 8)],
+  [dial('addr', 'n', 2), dial('addr', 'l', 1), dial('addr', 'ml', -1)],
+  [onBox('ta', '2p', 1), onBox('tb', '2p', 1), onBox('tc', '2p', 1), onBox('td', '2p', 1), put('ta', 'tray:no'), put('tb', 'tray:no')]
 ];
 
-export function stateFor(i, overrides) {
-  return { ...blankAnswer(STAGES[i]), ...blankState(STAGES[i]), ...overrides };
-}
+function blankState() { return {}; }
 
-/** Held to the board's own arithmetic by the verifier. */
-export const CHECKS = { FOUR_ELECTRONS, SETS, RINGED, sameAddress, findRoom };
+/** Build a full bench state for stage `i` from one of the sets above. */
+export function stateFor(i, overrides) {
+  return stateFromScript(STAGES[i], overrides);
+}
 
 /* ==================================================================
    THE GAME
    ================================================================== */
 
 export function mount(container, ctx) {
-  let rack = null;
-  let runner = null;
-
-  function onProbe(hit) {
-    const stage = runner.stage;
-    if (hit.kind === 'hand') {
-      paintHand(runner.frame.el.controls, hit.hand);
-      return;
-    }
-    if (hit.kind === 'addr') {
-      runner.state.addr = hit.addr;
-      if (hit.found.exists) {
-        runner.readout('Strip // address', 'A box is lit for this address.');
-      } else {
-        runner.readout('Strip // address', 'No room has this address.');
-      }
-      return;
-    }
-    if (hit.kind === 'rack') {
-      runner.state.rack = hit.rack;
-      const item = rack.itemFor(hit.plateId);
-      const d = describeAct(hit, item);
-      runner.readout(d.head, d.body);
-      paintHand(runner.frame.el.controls, rack.cfg.hand);
-      void stage;
-    }
-  }
-
-  function onTool(tool) {
-    if (tool.startsWith('hand:')) {
-      rack.setHand(tool.split(':')[1]);
-      paintHand(runner.frame.el.controls, rack.cfg.hand);
-    } else if (tool === 'clear') {
-      rack.clear();
-      runner.state.rack = {};
-      runner.readout('Rack // cleared', 'Every box is empty again.');
-    }
-  }
-
-  function onLoad(stage, i, r) {
-    rack.setPlates(stage.rigs, { show: SHOW[stage.show], clouds: Boolean(stage.cloudsBeside), hand: null });
-    rack.setSelectable(false);
-    r.state.rack = rack.rackOf('rack');
-    r.state.addr = rack.addrOf('rack');
-
-    const parts = [];
-    if (stage.controls.includes('hand')) parts.push(handKeys({ clear: true }));
-    if (stage.reference?.length) {
-      parts.push(`
-        <div class="assay-extract">
-          <span class="form-label">The sets</span>
-          <ul>${stage.reference.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
-        </div>
-      `);
-    }
-    r.setControls(parts, onTool);
-    paintHand(r.frame.el.controls, null);
-    r.readout(null, null, {
-      idleHead: 'Rack // standby',
-      idle: stage.controls.includes('hand') ? 'Pick a hand, then tap a box.' : stage.rigs[0].finder ? 'Tap the arrows on the address strip.' : 'Read the numbers printed on the board.'
-    });
-  }
-
-  runner = createRunner(container, ctx, {
+  const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    setup: r => { rack = BoxRack(r.frame.instrumentHost, { onProbe }); },
-    onLoad,
-    onDispose: () => rack?.dispose()
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
   runner.start();
   return { dispose: () => runner.dispose() };
 }
+
+/** Held to the board's own arithmetic by the verifier. */
+export const CHECKS = { FOUR_ELECTRONS, SETS, RINGED, sameAddress, findRoom, shellCapacity, reachPm, finderLight, placedTokens };
