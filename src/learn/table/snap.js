@@ -247,6 +247,8 @@ export function pointFor(state, kit, to, id) {
         if (!best || margin > best.margin + 1e-9) best = { p, margin };
       }
     }
+    // A target too small to stand beside without a neighbour being nearer (a box in a row of boxes) is dropped on at its middle.
+    if (!best && !zoneAt(state, o.at) && joinCandidates(state, kit, id, o.at)[0]?.id === t.id) return { ...o.at };
     return best ? best.p : { x: o.at.x + reach, y: o.at.y };
   }
   if (t.kind === 'rail') {

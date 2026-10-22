@@ -52,13 +52,5 @@
   "ember/q7-gibbs": [
     "lean",
     "sight"
-  ],
-  "lanternfall/q5-numbers": [
-    "lean",
-    "sight"
-  ],
-  "lanternfall/q6-filling": [
-    "lean",
-    "sight"
   ]
 }

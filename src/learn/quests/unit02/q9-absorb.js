@@ -1,11 +1,13 @@
 /**
  * q9-absorb.js — Lanternfall, bench nine: SPECTROSCOPY.
  *
- * The light bench's cuvette head, the last thing Lanternfall asks and the one
- * a chemist actually uses. The first eight benches asked what light does to an
- * atom; this one asks what a solution does to a beam, and how much. It runs from
- * what each kind of light does to a molecule, through why a copper solution is
- * blue, to Beer-Lambert and a calibration line.
+ * The cuvette sled, the last thing Lanternfall asks and the one a chemist actually uses. The first eight benches asked what light does to an
+ * atom; this one asks what a solution does to a beam, and how much. It runs from what each kind of light does to a molecule, through why a
+ * copper solution is blue, to Beer-Lambert and a calibration line.
+ *
+ * The ninth of Lanternfall's TABLETOPS (plan `bench-tabletop.md`, phase T4c), on the cuvette kit (`table/kits/cuvette.js`). Cuvettes are filled
+ * by hand with a dropper (a drop is a fixed strength, so drops are concentration), slid into the spectrometer's beam and read live; "Record" drops
+ * a point on the sheet; the straightedge is laid across the points for the calibration line. It is beyond the exam, and says so.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
@@ -18,19 +20,23 @@
  *   7  the rule connecting the three                              -> the Beer-Lambert law
  *   8  the concentration of a sealed sample                       -> the calibration curve
  *
- * Every number on the bench is A = epsilon x b x c, asked of `planAbsorb` in
- * `lightdata.js`: copper(II) sulfate absorbs near 630 nm and permanganate near
- * 525 nm, as measured. Stage 8's line is drawn from three standards and the
- * sealed sample's reading is one more point on the same relation, so nothing
- * on the bench is authored twice.
+ * Every number on the bench is A = epsilon x b x c, asked of `planAbsorb` in `lightdata.js`: copper(II) sulfate absorbs near 630 nm and
+ * permanganate near 525 nm, as measured. Stage 8's line is drawn from the standards the player fills and the sealed sample's reading is one more
+ * point on the same relation, so nothing on the bench is authored twice.
+ *
+ * FIELD (stage 5). A blank can be drawn at the hole cut through the lake ice: lake water in a cuvette, which reads nothing, and puts the origin
+ * on the sheet. It is evidence, never a lock; the field point is a real piece of the host (`lanternfall/stations.js` `buildWaterHole`), and at
+ * T1 to T3 the same fetch is a drawn site plate.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { LightBench } from '../../engine/instruments.js';
-import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
-import { planAbsorb } from '../../engine/lightdata.js';
-import { fmtLength } from '../../engine/lightbench.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import {
+  cuvetteTable, cuvette, dropper, rinser, chip, motionCard, readingCard, spectro, plaqueFixture, markerFixture,
+  spectroRead, regionRead, absorbOf, concOf, missingColour, colourOfNm, chipIn, lightOf, fmtWave, markerRead, planAbsorb, planRegion, regionOf,
+  COLOURS, COPPER_SWEEP, PATHS, REGIONS, DROP, MAX_DROPS, SOLUTES, gotThrough
+} from '../../table/kits/cuvette.js';
 
 export const meta = { stageCount: 8 };
 
@@ -46,349 +52,333 @@ export const BUILDS_ON = ['unit02/q1-wave', 'unit02/q3-lines'];
 
 const SPEAKER = 'Vess';
 
+/** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
 
-const PLAIN = { absorb: 'Dimming' };
-const EARNED = { absorb: 'Absorbance' };
+/* ------------------------------------------------------------------
+   THE TABLES
+   ------------------------------------------------------------------ */
 
-/** The copper dial: every step on the way up to, and past, the peak at 630 nm. */
-const COPPER_SWEEP = [450, 500, 550, 600, 630, 680, 730];
+const widget = { type: 'table', label: 'The bench' };
+const SP = 'sp';
+const BEAM = `slot:${SP}.cuv`;
+const SPEC_AT = { x: 39, y: 22 };
 
-/** Stage 8's three standards, read at the peak through 1 cm, and the sealed sample. */
-const STANDARDS = [0.002, 0.004, 0.006].map(conc => ({ conc, abs: planAbsorb('cuso4', 630, 1, conc) }));
-const SEALED_CONC = 0.005;
-const SEALED_ABS = planAbsorb('cuso4', 630, 1, SEALED_CONC);
+/** What the copper solutions of this quest are made of, and the strengths the stages ask for (mol/L). */
+export const SEALED_CONC = 0.005;
+export const COPPER = 0.01;
 
-const CU = (id, conc, extra = {}) => ({
-  id, label: extra.label || `SAMPLE ${id.toUpperCase()}`, head: 'cuvette', solute: 'cuso4', conc,
-  shows: `${conc} mol/L`, note: extra.note || 'copper(II) sulfate solution', ...extra
-});
+const where = (t, id) => (t.pieces[id].zone || '').replace(/^(tray|slot):/, '');
+const REC = { at: { x: 112, y: 13 }, size: { w: 30, h: 18 } };
+const recorder = (xLabel, xUnit) => ({ ...REC, xLabel, xUnit, yLabel: 'Reading', yUnit: '' });
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  {
-    title: 'What Each Light Does',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'This bench shines radiation through cuvettes to measure how much light gets absorbed. Different wavelengths make the molecules spin, vibrate, or jump.'
-    },
-    prompt: 'What physical motion does each region of light trigger in the molecule?',
-    labels: PLAIN,
-    controls: ['region'],
-    mode: 'region',
-    region: 'uv-visible',
-    rigs: [
-      { id: 'mol', label: 'HYDROGEN CHLORIDE', head: 'cuvette', molecule: 'HCl', note: 'HCl, one molecule shown' }
-    ],
-    widget: {
-      type: 'bins', label: 'What it does',
-      rows: [
-        { id: 'microwave', label: 'Microwave' },
-        { id: 'infrared', label: 'Infrared' },
-        { id: 'uv', label: 'Ultraviolet and visible' }
+  (() => {
+    const sp = spectro(SP, SPEC_AT, { region: true, label: 'Light and a molecule' });
+    const slot = (id, label, y) => ({ id, label, at: { x: 124, y }, size: { w: 11, h: 11 } });
+    return {
+      title: 'What Each Light Does',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'This bench shines radiation through a cuvette to measure how much of it a sample takes in. Turn the light dial to choose the kind of radiation and watch the molecule.'
+      },
+      prompt: 'Put each kind of light beside the motion it makes in the molecule.',
+      widget,
+      table: cuvetteTable({
+        pieces: [
+          motionCard('stretches', 'Stretches and bends its bonds', { x: 18, y: 53 }),
+          motionCard('jumps', 'Moves an electron up a level', { x: 54, y: 53 }),
+          motionCard('spins', 'Spins the molecule', { x: 90, y: 53 })
+        ],
+        fixtures: [sp.fixture],
+        zones: { slots: [slot('microwave', 'Microwave', 10), slot('infrared', 'Infrared', 27), slot('uv', 'UV and visible', 44)] }
+      }),
+      hints: [
+        'Turn the light dial through its three settings and watch what the molecule does.',
+        'Compare how the molecule moves under each setting, and note which movement belongs to which kind of light.',
+        'Match the whole molecule turning to the longest waves, the bond changing length to the middle ones, and the electron to the shortest.'
       ],
-      bins: [
-        { id: 'spins', label: 'Spins the molecule', note: '' },
-        { id: 'stretches', label: 'Stretches and bends its bonds', note: '' },
-        { id: 'jumps', label: 'Moves an electron up a level', note: '' }
-      ]
-    },
-    hints: [
-      'Press each of the three light keys in turn and watch what the molecule does in the cuvette.',
-      'Compare how the molecule moves under each kind of light, and note which movement belongs to which key.',
-      'Match the whole molecule turning to the longest waves, the bond changing length to the middle ones, and the electron to the shortest.'
-    ],
-    check(state) {
-      const rows = ['microwave', 'infrared', 'uv'];
-      if (rows.some(r => !state.bins[r])) return { ok: false, notYet: true, msg: 'Match all three kinds of light.' };
-      const want = { microwave: 'spins', infrared: 'stretches', uv: 'jumps' };
-      for (const r of rows) {
-        if (state.bins[r] !== want[r]) {
-          return { ok: false, msg: 'Press that kind of light\'s key and watch what the molecule does before you match it.' };
+      check(state) {
+        const t = state.table;
+        const want = { microwave: 'spins', infrared: 'stretches', uv: 'jumps' };
+        const seat = k => Object.values(t.pieces).find(p => p.zone === `slot:${k}`)?.id || null;
+        if (Object.keys(want).some(k => !seat(k))) return { ok: false, notYet: true, msg: 'Match all three kinds of light.' };
+        for (const k of Object.keys(want)) {
+          if (seat(k) !== want[k]) return { ok: false, msg: 'Turn the light dial to that kind of light and watch what the molecule does before you match it.' };
         }
+        return { ok: true };
+      },
+      reward: {
+        log: 'Three lights, three movements.',
+        title: 'Molecular Spectroscopy',
+        body: 'Microwaves make a molecule spin, infrared makes its bonds stretch and bend, and ultraviolet or visible light lifts an electron to a higher energy level. Reading which light a substance takes in, and how much, is molecular spectroscopy.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Three lights, three movements.',
-      title: 'Molecular Spectroscopy',
-      body: 'Microwaves make a molecule spin, infrared makes its bonds stretch and bend, and ultraviolet or visible light lifts an electron to a higher energy level. Reading which light a substance takes in, and how much, is molecular spectroscopy.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 2 */
-  {
-    title: 'Three Readings',
-    prompt: 'Match each recorded absorption wavelength to the region of light that caused it.',
-    labels: PLAIN,
-    controls: [],
-    rigs: [
-      { id: 'r1', label: 'READING 1', head: 'scale', nm: 3e7, note: 'a molecule takes in light of this wavelength' },
-      { id: 'r2', label: 'READING 2', head: 'scale', nm: 3e4, note: 'a molecule takes in light of this wavelength' },
-      { id: 'r3', label: 'READING 3', head: 'scale', nm: 300, note: 'a molecule takes in light of this wavelength' }
-    ],
-    widget: {
-      type: 'bins', label: 'The light that caused it',
-      rows: [
-        { id: 'r1', label: 'Reading 1' },
-        { id: 'r2', label: 'Reading 2' },
-        { id: 'r3', label: 'Reading 3' }
+  (() => {
+    const tray = (id, label, x) => ({ id, label, at: { x, y: 30 }, size: { w: 36, h: 22 }, cell: 25 });
+    return {
+      title: 'Three Readings',
+      prompt: 'Put each recorded wavelength in the tray for the kind of light that caused it.',
+      widget,
+      table: cuvetteTable({
+        pieces: [readingCard('r1', 'READING 1', 3e7, { x: 16, y: 53 }), readingCard('r2', 'READING 2', 3e4, { x: 44, y: 53 }), readingCard('r3', 'READING 3', 300, { x: 72, y: 53 })],
+        fixtures: [plaqueFixture('visible', 'Visible light', { x: 36, y: 8 }, ['380 to 750 nm'], { w: 62 })],
+        zones: { trays: [tray('microwave', 'Microwave', 32), tray('infrared', 'Infrared', 76), tray('ultraviolet', 'Ultraviolet', 120)] }
+      }),
+      hints: [
+        'Read the wavelength printed on each card.',
+        'Compare each wavelength with the band of visible light on the plate, and with the order of the spectrum from the first bench.',
+        'The longest wavelength belongs to the lowest-energy light and the shortest to the highest.'
       ],
-      bins: [
-        { id: 'microwave', label: 'Microwave', note: '' },
-        { id: 'infrared', label: 'Infrared', note: '' },
-        { id: 'uv', label: 'Ultraviolet', note: '' }
-      ]
-    },
-    hints: [
-      'Tap each reading on its ruler to read the wavelength it was taken at.',
-      'Compare each wavelength with the visible band shaded on the ruler, and with the order of the spectrum from the first bench.',
-      'The longest wavelength belongs to the lowest-energy light and the shortest to the highest.'
-    ],
-    check(state) {
-      const rows = ['r1', 'r2', 'r3'];
-      if (rows.some(r => !state.bins[r])) return { ok: false, notYet: true, msg: 'Match all three readings.' };
-      const want = { r1: 'microwave', r2: 'infrared', r3: 'uv' };
-      for (const r of rows) {
-        if (state.bins[r] !== want[r]) {
-          return { ok: false, msg: 'Read each wavelength on its ruler and place it against the order of the electromagnetic spectrum.' };
+      check(state) {
+        const t = state.table;
+        const ids = ['r1', 'r2', 'r3'];
+        if (!ids.every(id => (t.pieces[id].zone || '').startsWith('tray:'))) return { ok: false, notYet: true, msg: 'Put every reading in a tray.' };
+        for (const id of ids) {
+          const want = lightOf(t.pieces[id].props.nm);
+          if (where(t, id) !== (want === 'uv' ? 'ultraviolet' : want)) return { ok: false, msg: 'Read each wavelength against the band of visible light and the order of the electromagnetic spectrum.' };
         }
+        return { ok: true };
+      },
+      reward: {
+        log: 'Longer waves, smaller movements.',
+        title: 'Bigger Change, Shorter Wave',
+        body: 'The longer the wavelength a molecule takes in, the smaller the change it makes: a spin takes the least energy, a vibration more, and lifting an electron the most. That is why a single molecule needs three different instruments to be read in full.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Longer waves, smaller movements.',
-      title: 'Bigger Change, Shorter Wave',
-      body: 'The longer the wavelength a molecule takes in, the smaller the change it makes: a spin takes the least energy, a vibration more, and lifting an electron the most. That is why a single molecule needs three different instruments to be read in full.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 3 */
-  {
-    title: 'Why Copper Looks Blue',
-    prompt: 'Why does the copper(II) sulfate solution look blue in white light?',
-    labels: PLAIN,
-    controls: [],
-    after: true,
-    rigs: [CU('a', 0.01, { label: 'COPPER SOLUTION', nm: 550, note: 'copper(II) sulfate solution, white light behind it' })],
-    widget: {
-      type: 'choice', label: 'Why it looks blue',
-      options: [
-        { id: 'takes', label: 'It takes orange light out of white light, and what is left looks blue' },
-        { id: 'gives', label: 'It gives out blue light of its own' },
-        { id: 'blue', label: 'It takes blue light out of white light and keeps it' },
-        { id: 'mirror', label: 'It reflects only blue light and passes the rest' }
-      ]
-    },
-    hints: [
-      'Look at the strip under the cuvette, which shows the light that gets through it.',
-      'Compare the colours missing from that strip with the colour the solution looks.',
-      'Find where the strip is darkest, then name the colour of the spectrum that sits at that place.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the reason.' };
-      if (state.choice !== 'takes') {
-        return { ok: false, msg: 'Compare the light that gets through the cuvette with white light, and see which colours are missing.' };
+  (() => {
+    const sp = spectro(SP, SPEC_AT, { strip: true, label: 'White light through the cuvette' });
+    const chips = COLOURS.map((c, i) => chip(`c-${c.id}`, c.label, c.nm, { x: 14 + i * 22, y: 53 }));
+    return {
+      title: 'Why Copper Looks Blue',
+      prompt: 'Which colour does the copper solution take out of white light?',
+      widget,
+      table: cuvetteTable({
+        pieces: [cuvette('cu', 'COPPER', { x: 0, y: 0 }, { conc: COPPER, zone: BEAM }), ...chips],
+        fixtures: [sp.fixture],
+        zones: { slots: [...sp.slots, { id: 'taken', label: 'Taken out', at: { x: 118, y: 24 }, size: { w: 11, h: 11 } }] }
+      }),
+      hints: [
+        'Look at the strip, which shows the light that gets through the cuvette.',
+        'Compare the colours missing from that strip with the colour the solution looks.',
+        'Find where the strip is darkest, then put the chip for the colour of the spectrum at that place in the slot.'
+      ],
+      check(state) {
+        const t = state.table;
+        const c = chipIn(t, 'taken');
+        if (!c) return { ok: false, notYet: true, msg: 'Put a colour chip in the slot.' };
+        if (c.id === missingColour('cuso4').id) return { ok: true };
+        return { ok: false, msg: 'That colour still gets through: compare the strip with white light and find the colour that is missing.' };
+      },
+      reward: {
+        log: 'Orange missing, so the rest looks blue.',
+        title: 'Complementary Colour',
+        body: 'A solution looks like the colour opposite the one it takes in: copper(II) sulfate removes orange and leaves blue. The colour you see is the complementary colour of the light that is missing.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Orange missing, so the rest looks blue.',
-      title: 'Complementary Colour',
-      body: 'A solution looks like the colour opposite the one it takes in: copper(II) sulfate removes orange and leaves blue. The colour you see is the complementary colour of the light that is missing.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 4 */
-  {
-    title: 'The Best Wavelength',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'You can now adjust the incident wavelength. Turn the dial to find the wavelength where the solution absorbs light most strongly.'
-    },
-    prompt: 'Find the wavelength setting that gives the maximum absorbance for the solution.',
-    labels: EARNED,
-    controls: ['tune'],
-    settings: COPPER_SWEEP,
-    start: 1,
-    rigs: [CU('a', 0.01, { label: 'COPPER SOLUTION', tuned: true })],
-    widget: { type: 'none' },
-    hints: [
-      'Turn the dial and watch the dimming reading as the wavelength changes.',
-      'Compare the reading at every setting, including the ones either side of the largest.',
-      'Stop the dial on the setting where the reading is greater than at every other.'
-    ],
-    check(state) {
-      if (state.setting === 1) {
-        return { ok: false, notYet: true, msg: 'The lamp is where it started. Sweep it and watch the reading.' };
-      }
-      if (state.setting !== 5) {
+  (() => {
+    const sp = spectro(SP, SPEC_AT, { tune: true, xAxis: 'nm', label: 'Spectrometer' });
+    return {
+      title: 'The Best Wavelength',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'You can now adjust the wavelength of the light. Turn the dial to find where the solution dims the beam most.'
+      },
+      prompt: 'Set the wavelength at which the solution dims the beam most.',
+      widget,
+      table: cuvetteTable({
+        pieces: [cuvette('cu', 'COPPER', { x: 0, y: 0 }, { conc: COPPER, zone: BEAM })],
+        fixtures: [sp.fixture],
+        zones: { slots: sp.slots }
+      }, { recorder: recorder('Wavelength', 'nm') }),
+      hints: [
+        'Turn the wavelength dial and watch the dimming reading as it changes.',
+        'Press "Record" at every setting, including the ones either side of the largest, and compare the points on the sheet.',
+        'Stop the dial on the setting where the reading is greater than at every other.'
+      ],
+      check(state) {
+        const t = state.table;
+        const start = 2;
+        const now = Math.round(t.fixtures[SP].dials.nm.value);
+        const reads = COPPER_SWEEP.map(nm => planAbsorb('cuso4', nm, 1, COPPER));
+        const best = reads.indexOf(Math.max(...reads)) + 1;
+        if (now === start && t.recorder.rows.length === 0) return { ok: false, notYet: true, msg: 'The lamp is where it started. Sweep it and watch the reading.' };
+        if (now === best) return { ok: true };
         return { ok: false, msg: 'This is not the setting with the biggest reading. Compare the readings either side of it.' };
+      },
+      reward: {
+        log: 'The reading peaks near 630 nm.',
+        title: 'Absorbance',
+        body: 'How much the cuvette dims a beam is its absorbance, and it is largest at the wavelength the solution takes in best. Measuring at that peak gives the biggest and most reliable reading.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'The reading peaks near 630 nm.',
-      title: 'Absorbance',
-      body: 'How much the cuvette dims a beam is its absorbance, and it is largest at the wavelength the solution takes in best. Measuring at that peak gives the biggest and most reliable reading.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 5 */
-  {
-    title: 'Doubling the Concentration',
-    prompt: 'What happens to the absorbance reading when concentration doubles?',
-    trendPlot: { xLabel: 'Concentration', xUnit: 'mmol/L', yLabel: 'Absorbance', yUnit: '', xMin: 0, xMax: 18, yMin: 0, yMax: 0.5 },
-    labels: EARNED,
-    controls: [],
-    rigs: [
-      CU('a', 0.004, { nm: 630 }),
-      CU('b', 0.008, { nm: 630 }),
-      CU('c', 0.016, { nm: 630 })
-    ],
-    widget: {
-      type: 'choice', label: 'What it does',
-      options: [
-        { id: 'doubles', label: 'It doubles' },
-        { id: 'halves', label: 'It halves' },
-        { id: 'same', label: 'It stays the same' },
-        { id: 'squares', label: 'It is multiplied by itself' }
-      ]
-    },
-    hints: [
-      'Read the absorbance on each of the three cuvettes.',
-      'Compare each reading with the one before it, alongside how the concentrations compare.',
-      'Divide the reading on the second cuvette by the reading on the first and set that beside how its concentration compares.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick what doubling does.' };
-      if (state.choice !== 'doubles') {
-        return { ok: false, msg: 'Compare the readings on two cuvettes whose concentrations differ by a factor of two.' };
+  (() => {
+    const sp = spectro(SP, SPEC_AT, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrometer' });
+    return {
+      title: 'Doubling the Concentration',
+      prompt: 'Fill Cuvette B so that it takes in twice as much light as Cuvette A.',
+      widget,
+      table: cuvetteTable({
+        pieces: [
+          cuvette('a', 'CUVETTE A', { x: 14, y: 53 }, { drops: 2 }), cuvette('b', 'CUVETTE B', { x: 36, y: 53 }, { drops: 0 }),
+          dropper('drop', { x: 62, y: 53 }), rinser('empty', { x: 84, y: 53 }),
+          cuvette('lake', 'LAKE WATER', { x: 106, y: 54 }, { conc: 0, blank: true, fetchFrom: 'hole', hidden: true })
+        ],
+        fixtures: [sp.fixture, plaqueFixture('drop-note', 'One drop = 2 mmol/L', { x: 122, y: 29 }, [], { w: 50 })],
+        zones: { slots: sp.slots },
+        fetch: [{ id: 'hole', label: 'Ice Hole Water', at: { x: 124, y: 45 } }]
+      }, { recorder: recorder('Concentration', 'mmol/L') }),
+      hints: [
+        'Lay "Add Drop" on a cuvette to fill it, then slide it into the beam and read it.',
+        'Compare the reading of Cuvette A with the readings of Cuvette B as you add drops to it.',
+        'Add drops to Cuvette B and read it each time until its reading is twice Cuvette A\'s.'
+      ],
+      check(state) {
+        const t = state.table;
+        const a = absorbOf(t.pieces.a);
+        const b = absorbOf(t.pieces.b);
+        if (!(concOf(t.pieces.b) > 0)) return { ok: false, notYet: true, msg: 'Cuvette B is empty: fill it and read it.' };
+        if (a > 0 && Math.abs(b - 2 * a) < 0.0005) return { ok: true };
+        return { ok: false, msg: b > 2 * a ? 'Cuvette B takes in more than twice as much as Cuvette A: read both and take drops out.' : 'Cuvette B takes in less than twice as much as Cuvette A: read both and add drops.' };
+      },
+      reward: {
+        log: 'Twice the concentration, twice the absorbance.',
+        title: 'A Straight Line Through Zero',
+        body: 'Twice the concentration gave twice the absorbance, and four times gave four times. That is what you would expect if each absorbing particle in the beam takes out its own share of the light.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Twice the concentration, twice the absorbance.',
-      title: 'A Straight Line Through Zero',
-      body: 'Twice the concentration gave twice the absorbance, and four times gave four times. That is what you would expect if each absorbing particle in the beam takes out its own share of the light.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 6 */
-  {
-    title: 'Doubling the Path',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'You can now change the cuvette path length. Select different path keys to see how beam distance affects absorption.'
-    },
-    prompt: 'What happens to the absorbance when light travels twice as far through the solution?',
-    trendPlot: { xLabel: 'Path', xUnit: 'cm', yLabel: 'Absorbance', yUnit: '', xMin: 0, xMax: 5, yMin: 0, yMax: 1 },
-    labels: EARNED,
-    controls: ['path'],
-    path: 1,
-    rigs: [CU('a', 0.008, { label: 'COPPER SOLUTION', nm: 630 })],
-    widget: {
-      type: 'choice', label: 'What it does',
-      options: [
-        { id: 'doubles', label: 'It doubles' },
-        { id: 'halves', label: 'It halves' },
-        { id: 'same', label: 'It stays the same' },
-        { id: 'squares', label: 'It is multiplied by itself' }
-      ]
-    },
-    hints: [
-      'Press each path key and watch the cuvette and the reading.',
-      'Compare the reading at each path length with the reading at the one before it.',
-      'Note how the reading at two centimetres compares with the reading at one, and at four with two.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick what doubling the path does.' };
-      if (state.choice !== 'doubles') {
-        return { ok: false, msg: 'Switch between two paths whose lengths differ by a factor of two and compare the readings.' };
+  (() => {
+    const sp = spectro(SP, SPEC_AT, { pathDial: true, xAxis: 'path', word: 'ABSORBANCE', label: 'Spectrometer' });
+    return {
+      title: 'Doubling the Path',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'You can now change the path the light takes through the cuvette. Turn the path dial to see how the distance changes the reading.'
+      },
+      prompt: 'Set the path so the reading is twice the reading through one centimetre.',
+      widget,
+      table: cuvetteTable({
+        pieces: [cuvette('cu', 'COPPER', { x: 0, y: 0 }, { conc: 0.008, zone: BEAM })],
+        fixtures: [sp.fixture],
+        zones: { slots: sp.slots }
+      }, { recorder: recorder('Path', 'cm') }),
+      hints: [
+        'Turn the path dial and watch the cuvette and the reading.',
+        'Press "Record" at each path length and compare the reading with the one before it.',
+        'Note how the reading at each longer path compares with the reading at one centimetre.'
+      ],
+      check(state) {
+        const t = state.table;
+        const path = PATHS[Math.round(t.fixtures[SP].dials.path.value) - 1];
+        const one = planAbsorb('cuso4', 630, 1, 0.008);
+        const now = planAbsorb('cuso4', 630, path, 0.008);
+        if (path === 1) return { ok: false, notYet: true, msg: 'The path is still one centimetre: change it and watch the reading.' };
+        if (Math.abs(now - 2 * one) < 0.0005) return { ok: true };
+        return { ok: false, msg: 'That path does not give twice the one-centimetre reading: compare the readings at two paths whose lengths differ by a factor of two.' };
+      },
+      reward: {
+        log: 'Twice the path, twice the absorbance.',
+        title: 'Same Effect, Another Way',
+        body: 'Light that passes through twice as many absorbing particles loses twice as much, whether they are crowded into a stronger solution or spread along a longer path. Path length and concentration enter the absorbance in exactly the same way.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Twice the path, twice the absorbance.',
-      title: 'Same Effect, Another Way',
-      body: 'Light that passes through twice as many absorbing particles loses twice as much, whether they are crowded into a stronger solution or spread along a longer path. Path length and concentration enter the absorbance in exactly the same way.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 7 */
-  {
-    title: 'The Rule',
-    prompt: 'Which equation expresses how absorbance depends on path length and concentration?',
-    labels: EARNED,
-    controls: ['path'],
-    path: 1,
-    rigs: [
-      CU('a', 0.004, { nm: 630 }),
-      CU('b', 0.008, { nm: 630 })
-    ],
-    widget: {
-      type: 'choice', label: 'The rule',
-      options: [
-        { id: 'prod', label: 'A = ε × b × c' },
-        { id: 'quot', label: 'A = ε ÷ (b × c)' },
-        { id: 'sum', label: 'A = ε + b + c' },
-        { id: 'ratio', label: 'A = ε × b ÷ c' }
-      ]
-    },
-    hints: [
-      'Use the path keys and the two cuvettes to collect readings with different paths and concentrations.',
-      'Check each candidate rule against the readings from the last two stages, and discard any that moves the wrong way.',
-      'The absorbance must rise by the same factor as the path and by the same factor as the concentration, so it must be their product times a constant.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the rule.' };
-      if (state.choice !== 'prod') {
-        return { ok: false, msg: 'Test the rule against the readings: absorbance rose when concentration rose, and rose when path rose.' };
+  (() => {
+    const sp = spectro(SP, SPEC_AT, { pathDial: true, xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrometer' });
+    const token = (id, label, x) => ({ id, label, at: { x, y: 53 }, r: 7 });
+    return {
+      title: 'The Rule',
+      prompt: 'Predict how Cuvette B read through two centimetres compares with Cuvette A read through one.',
+      widget,
+      table: cuvetteTable({
+        pieces: [cuvette('a', 'CUVETTE A', { x: 14, y: 53 }, { drops: 2 }), cuvette('b', 'CUVETTE B', { x: 36, y: 53 }, { drops: 4 })],
+        fixtures: [sp.fixture],
+        zones: { slots: sp.slots },
+        prediction: {
+          slot: { id: 'predict', label: 'B against A', at: { x: 128, y: 30 }, size: { w: 24, h: 12 } },
+          tokens: [token('x1', 'x1', 80), token('x2', 'x2', 94), token('x3', 'x3', 108), token('x4', 'x4', 122)]
+        }
+      }),
+      hints: [
+        'Place a prediction, then read Cuvette A through one centimetre and Cuvette B through two.',
+        'Check your prediction against what you found when the concentration doubled and when the path doubled.',
+        'The reading must rise by the same factor as the path and by the same factor as the concentration, so both factors apply together.'
+      ],
+      check(state) {
+        const t = state.table;
+        const token = t.prediction.token;
+        if (!token) return { ok: false, notYet: true, msg: 'Place a prediction for the ratio first.' };
+        const ratio = absorbOf(t.pieces.b, 630, 2) / absorbOf(t.pieces.a, 630, 1);
+        if (token === `x${Math.round(ratio)}`) return { ok: true };
+        if (t.prediction.tested) return { ok: false, msg: 'The two readings do not stand in the ratio you predicted.' };
+        return { ok: false, msg: 'Read Cuvette A through one centimetre and Cuvette B through two, and compare the readings with your prediction.' };
+      },
+      reward: {
+        log: 'A = epsilon times b times c.',
+        title: 'The Beer-Lambert Law',
+        body: 'Absorbance is proportional to path length and to concentration: A = εbc, where ε is a constant for the substance at that wavelength. This is the Beer-Lambert law, and it turns a reading of light into a measurement of how much is dissolved.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'A = epsilon times b times c.',
-      title: 'The Beer-Lambert Law',
-      body: 'Absorbance is proportional to path length and to concentration: A = εbc, where ε is a constant for the substance at that wavelength. This is the Beer-Lambert law, and it turns a reading of light into a measurement of how much is dissolved.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 8 */
-  {
-    title: 'The Sealed Sample',
-    prompt: 'Determine the concentration of the sealed copper solution using the calibration line.',
-    labels: EARNED,
-    controls: [],
-    rigs: [
-      {
-        id: 'cal', label: 'STANDARDS AND SEALED SAMPLE', head: 'plot', points: STANDARDS, unknownAbs: SEALED_ABS,
-        maxConc: 0.008, maxAbs: 0.2, note: 'three standards at 1 cm, and one sealed reading'
+  (() => {
+    const sp = spectro(SP, SPEC_AT, { xAxis: 'conc', word: 'ABSORBANCE', label: 'Spectrometer' });
+    return {
+      title: 'The Sealed Sample',
+      prompt: 'Determine the concentration of the sealed copper solution using the calibration line.',
+      widget,
+      table: cuvetteTable({
+        pieces: [
+          cuvette('s1', 'STANDARD 1', { x: 14, y: 53 }, { drops: 0 }), cuvette('s2', 'STANDARD 2', { x: 36, y: 53 }, { drops: 0 }), cuvette('s3', 'STANDARD 3', { x: 58, y: 53 }, { drops: 0 }),
+          cuvette('sealed', 'SEALED SAMPLE', { x: 80, y: 53 }, { conc: SEALED_CONC, sealed: true }),
+          dropper('drop', { x: 106, y: 56 }), rinser('empty', { x: 126, y: 56 })
+        ],
+        fixtures: [sp.fixture, plaqueFixture('drop-note', 'One drop = 2 mmol/L', { x: 122, y: 29 }, [], { w: 50 }), markerFixture('conc', 'Sealed sample (mmol/L)', { x: 122, y: 42 }, { max: 8, step: 0.5, w: 44 })],
+        zones: { slots: sp.slots },
+        tools: ['straightedge']
+      }, { recorder: recorder('Concentration', 'mmol/L') }),
+      hints: [
+        'Fill the standards with drops, slide each into the beam and press "Record", then put the sealed sample in the beam and read it.',
+        'Lay the straightedge across the standards\' points and find where the sealed sample\'s reading falls along the line.',
+        'Read across from the sealed reading to the line, then straight down to the concentration scale, and set the marker there.'
+      ],
+      check(state) {
+        const t = state.table;
+        const v = markerRead(t, 'conc');
+        if (v === 0) return { ok: false, notYet: true, msg: 'Set the concentration you read off the line.' };
+        if (v === SEALED_CONC * 1000) return { ok: true };
+        return { ok: false, msg: 'Follow the sealed sample\'s reading across to the line through the standards, then down to the concentration scale.' };
+      },
+      reward: {
+        log: 'The line through the standards gave the sealed reading back.',
+        title: 'Calibration Curve',
+        body: 'Standards of known concentration give a line of absorbance against concentration, and an unknown sample\'s reading is read back off that line. This calibration curve is how a chemist measures how much of a coloured substance is dissolved.',
+        last: true
       }
-    ],
-    widget: { type: 'decimal', label: 'Concentration (mmol/L)', min: 0, max: 8, step: 0.5 },
-    hints: [
-      'Read the three standards\' points and the sealed sample\'s absorbance off the plot.',
-      'Find where the sealed sample\'s absorbance falls along the line drawn through the standards.',
-      'Read across from the sealed absorbance to the line, then straight down to the concentration scale.'
-    ],
-    check(state) {
-      if (state.decimal === 0) return { ok: false, notYet: true, msg: 'Set the concentration you read off the plot.' };
-      if (state.decimal !== 5) {
-        return { ok: false, msg: 'Follow the dashed level across to the line through the standards, then down to the concentration scale.' };
-      }
-      return { ok: true };
-    },
-    reward: {
-      log: 'The line through the standards gave the sealed reading back.',
-      title: 'Calibration Curve',
-      body: 'Standards of known concentration give a line of absorbance against concentration, and an unknown sample\'s reading is read back off that line. This calibration curve is how a chemist measures how much of a coloured substance is dissolved.',
-      last: true
-    }
-  }
+    };
+  })()
 ];
 
 /* ------------------------------------------------------------------
@@ -474,41 +464,48 @@ export const PRACTICE = [
 ];
 
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct actions, by drag
+   and by two taps. Light is chosen, cuvettes are filled with drops, slid into the beam and recorded, the straightedge is laid, a marker is set.
+   Nothing here says what a reading is.
    ------------------------------------------------------------------ */
-function blankState(stage) {
-  return {
-    setting: stage.start ?? null,
-    path: stage.path ?? 1,
-    region: stage.region ?? 'uv-visible',
-    seen: new Set()
-  };
-}
+
+const put = (piece, to) => ({ place: { piece, to } });
+const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
+const drops = (id, n) => Array.from({ length: n }, () => ({ join: ['drop', id] }));
+const read = id => [put(id, BEAM), { run: SP }];
 
 export const SOLUTIONS = [
-  { bins: { microwave: 'spins', infrared: 'stretches', uv: 'jumps' } },
-  { bins: { r1: 'microwave', r2: 'infrared', r3: 'uv' } },
-  { choice: 'takes' },
-  { setting: 5 },
-  { choice: 'doubles' },
-  { choice: 'doubles' },
-  { choice: 'prod' },
-  { decimal: 5 }
+  [dial(SP, 'region', 1), dial(SP, 'region', 2), dial(SP, 'region', 3), put('spins', 'slot:microwave'), put('stretches', 'slot:infrared'), put('jumps', 'slot:uv')],
+  [put('r1', 'tray:microwave'), put('r2', 'tray:infrared'), put('r3', 'tray:ultraviolet')],
+  [put('c-orange', 'slot:taken')],
+  [dial(SP, 'nm', 3), { run: SP }, dial(SP, 'nm', 4), { run: SP }, dial(SP, 'nm', 5), { run: SP }, dial(SP, 'nm', 6), { run: SP }, dial(SP, 'nm', 5)],
+  [{ fetch: 'hole' }, ...read('lake'), ...read('a'), ...drops('b', 4), ...read('b')],
+  [dial(SP, 'path', 1), { run: SP }, dial(SP, 'path', 2), { run: SP }],
+  [{ predict: 'x4' }, ...read('a'), put('b', BEAM), dial(SP, 'path', 2), { run: SP }],
+  [
+    ...drops('s1', 1), ...drops('s2', 2), ...drops('s3', 3), ...read('s1'), ...read('s2'), ...read('s3'),
+    { lay: { kind: 'straightedge', through: [0, 2] } }, ...read('sealed'), dial('conc', 'value', 5)
+  ]
 ];
 
+/** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { bins: { microwave: 'stretches', infrared: 'spins', uv: 'jumps' } },
-  { bins: { r1: 'uv', r2: 'infrared', r3: 'microwave' } },
-  { choice: 'gives' },
-  { setting: 3 },
-  { choice: 'squares' },
-  { choice: 'same' },
-  { choice: 'sum' },
-  { decimal: 4 }
+  [put('stretches', 'slot:microwave'), put('spins', 'slot:infrared'), put('jumps', 'slot:uv')],
+  [put('r1', 'tray:ultraviolet'), put('r2', 'tray:infrared'), put('r3', 'tray:microwave')],
+  [put('c-blue', 'slot:taken')],
+  [dial(SP, 'nm', 3), { run: SP }, dial(SP, 'nm', 4), { run: SP }],
+  [...read('a'), ...drops('b', 2), ...read('b')],
+  [dial(SP, 'path', 3), { run: SP }],
+  [{ predict: 'x3' }, ...read('a'), put('b', BEAM), dial(SP, 'path', 2), { run: SP }],
+  [...drops('s1', 1), ...drops('s2', 2), ...drops('s3', 3), ...read('s1'), ...read('s2'), ...read('s3'), { lay: { kind: 'straightedge', through: [0, 2] } }, ...read('sealed'), dial('conc', 'value', 4)]
 ];
 
+function blankState() { return {}; }
+
+/** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  return { ...blankAnswer(STAGES[i]), ...blankState(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -516,127 +513,13 @@ export function stateFor(i, overrides) {
    ================================================================== */
 
 export function mount(container, ctx) {
-  let bench = null;
-  let runner = null;
-
-  const REGION_KEYS = [
-    ['microwave', 'Microwave'], ['infrared', 'Infrared'], ['uv-visible', 'Ultraviolet and visible']
-  ];
-  const PATH_KEYS = [1, 2, 4];
-
-  function nmNow() {
-    const st = runner.stage.settings;
-    return st ? st[runner.state.setting - 1] : null;
-  }
-
-  function paintSetting() {
-    const st = runner.stage.settings;
-    if (!st) return;
-    runner.paintDial('setting', runner.state.setting, { min: 1, max: st.length, text: `${st[runner.state.setting - 1]} nm` });
-  }
-
-  function paintKeys() {
-    const host = runner.frame.el.controls;
-    host.querySelectorAll('[data-region]').forEach(b => b.classList.toggle('selected', b.dataset.region === runner.state.region));
-    host.querySelectorAll('[data-path]').forEach(b => b.classList.toggle('selected', Number(b.dataset.path) === runner.state.path));
-  }
-
-  /** The reading under the present settings, in the instrument's own words. */
-  function readNow() {
-    const stage = runner.stage;
-    if (stage.mode === 'region') {
-      runner.readout(null, null, { idleHead: 'Cuvette // standby', idle: 'Choose a kind of light.' });
-      return;
-    }
-    const rigs = stage.rigs.filter(r => r.head === 'cuvette' && r.solute);
-    if (!rigs.length) return;
-    const word = stage.labels.absorb;
-    const rows = rigs.map(r => {
-      const nm = r.tuned ? nmNow() : r.nm;
-      const a = planAbsorb(r.solute, nm, runner.state.path, r.conc);
-      // The plot gets one dot for every reading the bench reports: the cuvettes it
-      // holds on stage 5 (against concentration), the paths it is set to on stage 6.
-      if (stage.trendPlot) runner.plotPoint(stage.trendPlot.xLabel === 'Path' ? runner.state.path : r.conc * 1000, a);
-      return `${r.label}: ${word} ${a.toFixed(3)} at ${nm} nm, ${runner.state.path} cm`;
-    });
-    runner.readout('Cuvette // reading', rows.join('. ') + '.');
-  }
-
-  function setSetting(v) {
-    runner.state.setting = v;
-    bench.setSetting(v);
-    paintSetting();
-    readNow();
-  }
-
-  function onTool(tool) {
-    const [kind, value] = tool.split(':');
-    if (kind === 'region') {
-      runner.state.region = value;
-      bench.setRegion(value);
-    } else if (kind === 'path') {
-      runner.state.path = Number(value);
-      bench.setPath(runner.state.path);
-    }
-    paintKeys();
-    readNow();
-  }
-
-  function onProbe(hit) {
-    if (hit.kind === 'scale') {
-      runner.readout(`Ruler // ${hit.plateLabel}`, `Taken in at ${fmtLength(hit.nm)}.`);
-    }
-  }
-
-  function onLoad(stage, i, r) {
-    bench.setRigs(stage.rigs, {
-      settings: stage.settings || [],
-      setting: r.state.setting || 1,
-      path: r.state.path,
-      region: r.state.region,
-      mode: stage.mode || null,
-      after: Boolean(stage.after),
-      labels: stage.labels
-    });
-    bench.setSelectable(false);
-
-    const parts = [];
-    const dials = {};
-    if (stage.settings) {
-      parts.push(r.dialHtml('setting', { label: 'Wavelength', min: 1, max: stage.settings.length, value: r.state.setting }));
-      dials.setting = { min: 1, max: stage.settings.length, onChange: v => setSetting(v) };
-    }
-    if (stage.controls.includes('region')) {
-      parts.push(`
-        <div class="cb-field" role="group" aria-label="Light">
-          <span class="form-label">Light</span>
-          ${REGION_KEYS.map(([id, label]) => `<button type="button" class="btn-secondary quest-btn-sm cb-field-key" data-tool="region:${id}" data-region="${id}">${label}</button>`).join('')}
-        </div>
-      `);
-    }
-    if (stage.controls.includes('path')) {
-      parts.push(`
-        <div class="cb-field" role="group" aria-label="Path">
-          <span class="form-label">Path</span>
-          ${PATH_KEYS.map(cm => `<button type="button" class="btn-secondary quest-btn-sm cb-field-key" data-tool="path:${cm}" data-path="${cm}">${cm} cm</button>`).join('')}
-        </div>
-      `);
-    }
-    r.setControls(parts, onTool, { dials });
-    paintSetting();
-    paintKeys();
-    readNow();
-  }
-
-  runner = createRunner(container, ctx, {
+  const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    setup: r => {
-      bench = LightBench(r.frame.instrumentHost, { onProbe, onSetting: v => setSetting(v) });
-    },
-    onLoad,
-    onDispose: () => bench?.dispose()
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
   runner.start();
   return { dispose: () => runner.dispose() };
 }
+
+/* Exported for `verify:learn`, which holds every graded figure to the planners. */
+export { spectroRead, regionRead, absorbOf, concOf, missingColour, colourOfNm, chipIn, lightOf, fmtWave, markerRead, planAbsorb, planRegion, regionOf, COLOURS, COPPER_SWEEP, PATHS, REGIONS, DROP, MAX_DROPS, SOLUTES, gotThrough };

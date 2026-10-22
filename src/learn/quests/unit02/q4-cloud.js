@@ -1,37 +1,41 @@
 /**
  * q4-cloud.js — Lanternfall, bench four: ORBITALS.
  *
- * The cloud plate (`engine/cloudplate.js`). Bench three ended on a ladder that
- * breaks for helium, because an electron is not a bead on a rung, and this is
- * where it is. A probe finds the electron once per shot and leaves a dot; one
- * shot is a dot and five hundred are a shape, drawn from the real hydrogen-like
- * |psi|^2 and reproducible shot for shot.
+ * The particle probe, on the crawler's lab bench. Bench three ended on a ladder that breaks for helium, because an electron is
+ * not a bead on a rung, and this is where it is. A probe finds the electron once per shot and leaves a dot; one shot is a dot
+ * and five hundred are a shape, drawn from the real hydrogen-like |psi|^2 and reproducible shot for shot.
+ *
+ * The fourth of Lanternfall's TABLETOPS (plan `bench-tabletop.md`, phase T4b), on the cloud kit (`table/kits/cloud.js`). Each press
+ * of a plate's Run key drops a dot (the exposure dial says one shot, fifty or five hundred); a counting ring set on the plate
+ * counts what is inside it or what lies in its shell; films of one area, laid on a plate, count what they catch; strings of
+ * different wavelengths are put round the ring track and sorted by whether they close; clouds are turned and tilted from the one
+ * view the table shares, put on the peg of the axis their lobes lie along and into trays by shape.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  one shot, then fifty                        -> probability
- *   2  five hundred shots                          -> orbital
- *   3  a wave that has to fit a ring               -> standing wave, wave-particle duality
- *   4  a second cloud, bigger and hollower         -> node
- *   5  a cloud with two lobes, turned in the hand  -> p orbital, beside s orbital
- *   6  the ways a p cloud can point                -> three p orbitals
- *   7  five clouds sorted by shape                 -> d orbitals
+ *   1  one shot, then fifty, then ring where most fall    -> probability
+ *   2  four outlines of one area laid on the plate        -> orbital
+ *   3  strings sorted by whether they close on a ring     -> standing wave, wave-particle duality
+ *   4  a second cloud, bigger, with an empty shell        -> node
+ *   5  a cloud turned until a slice through it is empty   -> p orbital, beside s orbital
+ *   6  the pegs a two-lobed cloud lies along              -> three p orbitals
+ *   7  five clouds sorted by shape                        -> d orbitals
+ *   8  predict the speed blur when the position sharpens  -> the uncertainty principle
  *
- * From stage five a cloud is a SOLID the player turns (`plane: 'turn'`): the
- * three flat views it replaced asked for a spatial skill this audience has not
- * got yet, and the turn keys let them find the side a shape shows itself from.
- *   8  asking the bench to draw a path             -> the uncertainty principle
+ * From stage five a cloud is a SOLID the player turns (the view dials): the three flat views it replaced asked for a spatial
+ * skill this audience has not got yet, and the turn dials let them find the side a shape shows itself from.
  *
- * THE BENCH NEVER DRAWS A PATH. `track()` exists only to refuse, with the
- * reason, because stage eight is the player finding out why.
+ * THE BENCH NEVER DRAWS A PATH. The Track Electron key exists only to refuse, with the reason (`cloudplate.js` `trackRefusal`).
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
-import { CloudPlate } from '../../engine/instruments.js';
-import { TURN_STEP } from '../../engine/cloudplate.js';
-import { createRunner, blankAnswer } from '../../engine/stagerunner.js';
-import { ringFits, RING_CIRCUMFERENCE_PM } from '../../engine/orbitals.js';
+import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import {
+  cloudTable, cloudPlate, viewFixture, ringTrack, blurGauge, tracker, cloudCard, ringTile, filmPiece,
+  plateRead, ringRead, filmRead, trackRead, blurRead, blurAt, catchOf, axisOf, nodePm, shapeOf, FILMS, ringFits, RING_CIRCUMFERENCE_PM, BOHR_PM,
+  SLICE_HALF
+} from '../../table/kits/cloud.js';
 
 export const meta = { stageCount: 8 };
 
@@ -52,324 +56,360 @@ export const BUILDS_ON = ['unit02/q2-photon', 'unit02/q3-lines'];
 
 const SPEAKER = 'Vess';
 
+/** Every key on this bench says what it does on its cap, so none carries a legend. */
+export function toolNoteFor() { return null; }
+
 /* ------------------------------------------------------------------
-   THE KEY LEGEND. Only the keys whose labels leave something out.
+   THE TABLES
    ------------------------------------------------------------------ */
-const TOOL_TEXT = {
-  slice: { key: 'Slice', what: 'Shows only the dots within a thin slab through the middle.' },
-  track: { key: 'Track Electron', what: 'Asks the bench to follow the electron along a path.' }
-};
 
-export function toolNoteFor(controlId) { return TOOL_TEXT[controlId] || null; }
+const widget = { type: 'table', label: 'The bench' };
 
-const RING_SETTINGS = [332, 250, 200, 166, 140, 111];
-const RING_WIDGET = RING_SETTINGS.map(n => ({ id: String(n), label: `${n} pm` }));
+const tray = (id, label, at, size, cell = 19) => ({ id, label, at, size, cell });
+const where = (t, id) => (t.pieces[id].zone || '').replace(/^(tray|slot):/, '');
+const inTray = (t, id) => (t.pieces[id].zone || '').startsWith('tray:');
+
+/** The ring track's six strings, in pm: 1, 1.33, 1.66, 2, 2.37 and 3 wavelengths go round it. */
+const RING_STRINGS = [332, 250, 200, 166, 140, 111];
+
+/** The share of a plate's shots a counting ring may hold and still be "nine in ten". */
+const NINE_IN_TEN = [0.85, 0.97];
+
+const MIN_SHOTS = 50;
+const ENOUGH_SHOTS = 200;
+
+/** How much of the cloud a slice may leave on the plate and still be "almost nothing". */
+const EMPTY_SLICE = 0.06;
+
+/** The half width, in pm, the node a stage asks for may be set within. */
+const NODE_TOLERANCE_PM = 12;
+
 
 /* ------------------------------------------------------------------
    THE EIGHT STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  {
-    title: 'One Shot, Fifty Shots',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'This detector fires pulses to find an electron\'s location and leaves a glowing dot. Repeated shots reveal the pattern where the electron spends its time.'
-    },
-    prompt: 'Where does Sample A\'s electron appear when probed repeatedly?',
-    controls: ['fire'],
-    extent: 5,
-    clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],
-    widget: {
-      type: 'choice', label: 'Where it is',
-      options: [
-        { id: 'fixed', label: 'In one fixed place near the middle' },
-        { id: 'cloud', label: 'Somewhere new each time it is looked for, most often near the middle' },
-        { id: 'orbit', label: 'Circling the middle on a fixed path' },
-        { id: 'even', label: 'Spread evenly over the whole plate' }
-      ]
-    },
-    hints: [
-      'Press "Fire One Shot" a few times, then "Fire 50 Shots", and watch where the dots land.',
-      'Compare where each new shot lands with where the one before it landed, and where most of them gather.',
-      'Note whether successive shots repeat a position, and which part of the plate collects the most dots after fifty.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick where the electron is.' };
-      if (state.choice !== 'cloud') {
-        return { ok: false, msg: 'Fire several single shots and compare where they land, then fire fifty and see where the dots gather.' };
+  (() => {
+    const a = cloudPlate('a', 'SAMPLE A', { x: 50, y: 31 }, '1s', { ring: 'disc', ringMax: 300, ringStep: 10 });
+    return {
+      title: 'One Shot, Fifty Shots',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'This detector fires pulses to find an electron\'s location and leaves a glowing dot. Repeated shots reveal the pattern where the electron spends its time.'
+      },
+      prompt: 'Set the counting ring to hold about nine in ten of Sample A\'s shots.',
+      widget,
+      table: cloudTable({ pieces: [], fixtures: [a.fixture] }, { w: 100 }),
+      hints: [
+        'Press "Fire" with the exposure at one shot, then at fifty, and watch where the dots land.',
+        'Compare where each new shot lands with where the one before it landed, and read how many fall inside the ring.',
+        'Take at least fifty shots, then widen the ring until about nine in every ten of them fall inside it and no more.'
+      ],
+      check(state) {
+        const t = state.table;
+        const r = ringRead(t, 'a');
+        if (r.fired < MIN_SHOTS) return { ok: false, notYet: true, msg: 'Fire more shots first: a few dots say little about where the rest will fall.' };
+        if (r.rpm === 0) return { ok: false, notYet: true, msg: 'Set the counting ring on the plate.' };
+        if (r.share < NINE_IN_TEN[0]) return { ok: false, msg: 'Too many shots fall outside the ring: read how many are inside it and set it again.' };
+        if (r.share > NINE_IN_TEN[1]) return { ok: false, msg: 'The ring holds nearly every shot: read how many are inside it and set it again.' };
+        return { ok: true };
+      },
+      reward: {
+        log: 'One shot: one place. The next: another.',
+        title: 'Probability',
+        body: 'One shot finds the electron in one place and the next shot finds it somewhere else. Only after many shots does a pattern appear, so all that can be said about where it is is the probability of finding it in each place.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'One shot: one place. The next: another.',
-      title: 'Probability',
-      body: 'One shot finds the electron in one place and the next shot finds it somewhere else. Only after many shots does a pattern appear, so all that can be said about where it is is the probability of finding it in each place.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 2 */
-  {
-    title: 'Five Hundred Shots',
-    prompt: 'What overall shape emerges from the glowing swarm of dots?',
-    controls: ['fire'],
-    extent: 5,
-    clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],
-    widget: {
-      type: 'choice', label: 'The shape',
-      options: [
-        { id: 'round', label: 'A round, fuzzy cloud, densest at the middle' },
-        { id: 'ring', label: 'A thin ring at one distance from the middle' },
-        { id: 'lobes', label: 'Two lobes with a gap between them' },
-        { id: 'disc', label: 'A flat disc of even density' }
-      ]
-    },
-    hints: [
-      'Press "Fire 500 Shots" and look at the whole plate.',
-      'Compare how thickly the dots lie at the middle with how thickly they lie farther out.',
-      'Describe the outline the dots make and the part of it where they are densest.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the shape.' };
-      if (state.choice !== 'round') {
-        return { ok: false, msg: 'Fire all 500 shots and look at the outline of the dots, and at how thickly they lie at different distances.' };
+  (() => {
+    const a = cloudPlate('a', 'SAMPLE A', { x: 36, y: 31 }, '1s', { film: true });
+    const at = [[98, 16], [124, 16], [98, 44], [124, 44]];
+    const shapes = ['ring', 'disc', 'hollow', 'lobes'];
+    return {
+      title: 'Five Hundred Shots',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Each film is an outline with the same area as the others. Laid on the plate, a film counts the dots it catches.'
+      },
+      prompt: 'Find the film that catches the most of Sample A\'s dots.',
+      widget,
+      table: cloudTable({
+        pieces: shapes.map((s, i) => filmPiece(`f${i + 1}`, `FILM ${'ABCD'[i]}`, { x: at[i][0], y: at[i][1] }, s)),
+        fixtures: [a.fixture],
+        zones: { slots: a.slots }
+      }),
+      hints: [
+        'Fire the full five hundred shots, then lay a film on the plate and read how many dots it catches.',
+        'Compare the count each film catches and look at where on the plate the dots lie thickest.',
+        'Lay each of the four films in turn, note its count, and keep the film that catches the most.'
+      ],
+      check(state) {
+        const t = state.table;
+        const f = filmRead(t, 'a');
+        if (f.fired < ENOUGH_SHOTS) return { ok: false, notYet: true, msg: 'Fire more shots first: a film cannot be judged from a few dots.' };
+        if (!f.shape) return { ok: false, notYet: true, msg: 'Lay a film on the plate.' };
+        const best = Math.max(...Object.keys(FILMS).map(k => catchOf(t, 'a', k)));
+        if (f.caught === best) return { ok: true };
+        return { ok: false, msg: 'Another film catches more of the dots: lay each one on the plate and compare the counts.' };
+      },
+      reward: {
+        log: 'A fuzzy ball, densest in the middle.',
+        title: 'Orbital',
+        body: 'The cloud of dots is a picture of where the electron is likely to be found, and a region like it is called an orbital. This one, round and densest at the middle, is the lowest orbital an electron can have.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'A fuzzy ball, densest in the middle.',
-      title: 'Orbital',
-      body: 'The cloud of dots is a picture of where the electron is likely to be found, and a region like it is called an orbital. This one, round and densest at the middle, is the lowest orbital an electron can have.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 3 */
-  {
-    title: 'Waves That Fit',
-    prompt: 'Which wavelengths loop smoothly around the ring without cancelling themselves out?',
-    controls: ['tune'],
-    settings: RING_SETTINGS,
-    start: 2,
-    clouds: [{ id: 'ring', label: 'THE RING', head: 'ring', tuned: true, note: 'a wave on a circular track' }],
-    widget: { type: 'multi', label: 'Wavelengths that fit', options: RING_WIDGET },
-    hints: [
-      'Turn the wavelength dial through every setting and watch what the wave does on the track.',
-      'Compare a setting where the wave draws one clean ring with a setting where the laps smear into a band.',
-      'A wavelength fits only if a whole number of them go round the track, so divide the track length by each wavelength.'
-    ],
-    check(state) {
-      if (!state.picks.length) return { ok: false, notYet: true, msg: 'Pick the wavelengths that fit.' };
-      const want = RING_SETTINGS.filter(n => ringFits(n, RING_CIRCUMFERENCE_PM).fits).map(String).sort().join();
-      if (state.picks.slice().sort().join() !== want) {
-        return { ok: false, msg: 'Turn the dial to each setting in your list and check the ring closes cleanly, then check the settings you left out.' };
+  (() => {
+    const track = ringTrack('track', { x: 37, y: 40 });
+    const tiles = RING_STRINGS.map((pm, i) => ringTile(`s${pm}`, { x: 20 + i * 22, y: 9 }, pm));
+    return {
+      title: 'Waves That Fit',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'A string put on the ring track is drawn round it, lap after lap.'
+      },
+      prompt: 'Sort the six strings by whether they close into one clean ring on the track.',
+      widget,
+      table: cloudTable({
+        pieces: tiles,
+        fixtures: [track.fixture],
+        zones: {
+          slots: track.slots,
+          trays: [tray('closes', 'Closes into one ring', { x: 110, y: 28 }, { w: 66, h: 20 }, 20), tray('smears', 'Smears into a band', { x: 110, y: 52 }, { w: 66, h: 20 }, 20)]
+        }
+      }),
+      hints: [
+        'Drag a string onto the track and look at what the laps do.',
+        'Compare a string whose laps draw one clean ring with one whose laps smear into a band.',
+        'A string closes only if a whole number of its wavelengths go round the track, so divide the track length by each wavelength.'
+      ],
+      check(state) {
+        const t = state.table;
+        const ids = RING_STRINGS.map(pm => `s${pm}`);
+        if (!ids.every(id => inTray(t, id))) return { ok: false, notYet: true, msg: 'Put every string in a tray.' };
+        for (const pm of RING_STRINGS) {
+          const fits = ringFits(pm, RING_CIRCUMFERENCE_PM).fits;
+          if (where(t, `s${pm}`) !== (fits ? 'closes' : 'smears')) {
+            return { ok: false, msg: 'A string is in the wrong tray: put it on the track and check whether its laps agree, then check the strings you did not test.' };
+          }
+        }
+        return { ok: true };
+      },
+      reward: {
+        log: 'Only whole numbers of waves survive the lap.',
+        title: 'Standing Wave',
+        body: 'A wave on a ring survives only if a whole number of wavelengths fits, because otherwise each lap cancels the one before. Electrons are held to the same rule, which is why they behave as waves as well as particles: wave-particle duality.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Only whole numbers of waves survive the lap.',
-      title: 'Standing Wave',
-      body: 'A wave on a ring survives only if a whole number of wavelengths fits, because otherwise each lap cancels the one before. Electrons are held to the same rule, which is why they behave as waves as well as particles: wave-particle duality.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 4 */
-  {
-    title: 'Bigger and Emptier',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'You can now view interior cross-sections. Press "Slice" to inspect only the dots within a thin slice through the middle.'
-    },
-    prompt: 'How does Sample B\'s cloud differ from Sample A\'s?',
-    controls: ['fire', 'slice'],
-    extent: 14,
-    clouds: [
-      { id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' },
-      { id: 'b', label: 'SAMPLE B', head: 'cloud', orbital: '2s', note: 'one electron in an atom with more energy' }
-    ],
-    widget: {
-      type: 'choice', label: 'How they compare',
-      options: [
-        { id: 'bigger', label: 'B is bigger, and has an empty shell where no dots fall' },
-        { id: 'faint', label: 'B is the same size as A, only fainter' },
-        { id: 'smaller', label: 'B is smaller and denser than A' },
-        { id: 'even', label: 'B is bigger, and its dots fill every distance evenly' }
-      ]
-    },
-    hints: [
-      'Press "Fire 500 Shots" and then "Slice", and compare the two plates.',
-      'Compare how far out each cloud reaches, and look in the larger one for a distance at which no dots fall.',
-      'Count the dots in a thin ring around the middle at several distances in Sample B and look for the distance with none.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick how they compare.' };
-      if (state.choice !== 'bigger') {
-        return { ok: false, msg: 'Fire the full 500 at both, use the slice, and compare how far out each cloud reaches and whether any distance is left empty.' };
+  (() => {
+    const a = cloudPlate('a', 'SAMPLE A', { x: 36, y: 31 }, '1s', { ring: 'band', ringMax: 300, ringStep: 5, slice: true, extent: 8 });
+    const b = cloudPlate('b', 'SAMPLE B', { x: 104, y: 31 }, '2s', { ring: 'band', ringMax: 300, ringStep: 5, slice: true, extent: 8 });
+    return {
+      title: 'Bigger and Emptier',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'The ring now counts the shots that lie at its distance from the middle, and Slice shows only a thin slab through the middle.'
+      },
+      prompt: 'Find the distance from the middle at which Sample B has a shell with no shots in it.',
+      widget,
+      table: cloudTable({ pieces: [], fixtures: [a.fixture, b.fixture] }),
+      hints: [
+        'Press "Fire" with the exposure at five hundred shots, then turn Slice on and look at both plates.',
+        'Compare how far out each cloud reaches, and turn the ring through the distances while you read the count in its shell.',
+        'Step the ring outward from the middle and stop where the count in the shell falls to nothing between two distances that have shots.'
+      ],
+      check(state) {
+        const t = state.table;
+        const r = ringRead(t, 'b');
+        if (r.fired < ENOUGH_SHOTS) return { ok: false, notYet: true, msg: 'Fire more shots at Sample B first: an empty shell cannot be found among a few dots.' };
+        const want = nodePm('2s');
+        if (Math.abs(r.rpm - want) <= NODE_TOLERANCE_PM) return { ok: true };
+        if (r.count === 0) return { ok: false, msg: 'A shell can be empty because the cloud has not reached it, or because nothing is found there: look for a distance with shots on both sides of it.' };
+        return { ok: false, msg: 'Shots lie in the shell at that distance: turn the ring through the distances and read the count in each.' };
+      },
+      reward: {
+        log: 'The bigger cloud has a shell with nothing in it.',
+        title: 'Node',
+        body: 'The second cloud is larger than the first and has a shell where the electron is never found, which is called a node. Each step up in energy makes the cloud bigger and adds a node.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'The bigger cloud has a shell with nothing in it.',
-      title: 'Node',
-      body: 'The second cloud is larger than the first and has a shell where the electron is never found, which is called a node. Each step up in energy makes the cloud bigger and adds a node.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 5 */
-  {
-    title: 'Two Lobes',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'From here the plate shows the whole cloud in three dimensions. Press "Turn Left", "Turn Right", "Tilt Up" and "Tilt Down" to look at it from other sides, or drag across the plate.'
-    },
-    prompt: 'What shape does this cloud form, and where are dots never found?',
-    controls: ['fire', 'slice', 'turn'],
-    extent: 12,
-    clouds: [{ id: 'c', label: 'SAMPLE C', head: 'cloud', orbital: '2pz', plane: 'turn', note: 'one electron in an atom with more energy' }],
-    widget: {
-      type: 'choice', label: 'The shape',
-      options: [
-        { id: 'lobes', label: 'Two lobes either side of the middle, with no dots on the flat plane between them' },
-        { id: 'ball', label: 'One round cloud, with no dots at the very centre' },
-        { id: 'ring', label: 'A ring round the middle, with no dots inside it' },
-        { id: 'four', label: 'Four lobes, with no dots along the axes' }
-      ]
-    },
-    hints: [
-      'Press "Fire 500 Shots", then turn the cloud to look at it from several sides.',
-      'Compare the sides, noting the direction in which the dots gather and the flat plane they never cross.',
-      'Turn the cloud until you look along the gap, then press "Slice" and see whether the middle goes empty.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the shape.' };
-      if (state.choice !== 'lobes') {
-        return { ok: false, msg: 'Fire all 500 shots and turn the cloud: look at where the dots gather and at what is missing from each side.' };
+  (() => {
+    const c = cloudPlate('c', 'SAMPLE C', { x: 36, y: 31 }, '2pz', { view: 'view', extent: 12 });
+    const v = viewFixture('view', { x: 104, y: 22 }, { slice: true });
+    return {
+      title: 'Two Lobes',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'From here the plate shows the whole cloud as a solid you can turn and tilt. Slice keeps only the dots within a thin slab through the middle, across your line of sight.'
+      },
+      prompt: 'Find the view in which a slice through the middle of Sample C shows almost no dots.',
+      widget,
+      table: cloudTable({ pieces: [], fixtures: [c.fixture, v] }),
+      hints: [
+        'Press "Fire" with the exposure at five hundred shots, then turn and tilt the view to look at the cloud from other sides.',
+        'Compare the sides, noting the direction in which the dots gather and the flat plane they never cross.',
+        'Turn the cloud until you look along the gap between its lobes, then switch Slice on and see whether the middle goes empty.'
+      ],
+      check(state) {
+        const t = state.table;
+        const r = plateRead(t, 'c');
+        if (r.fired < ENOUGH_SHOTS) return { ok: false, notYet: true, msg: 'Fire more shots first: an empty slice cannot be found among a few dots.' };
+        if (!r.slice) return { ok: false, msg: 'The slice is off, so every dot is showing: switch it on and look again.' };
+        if (r.shown.length <= EMPTY_SLICE * r.fired) return { ok: true };
+        return { ok: false, msg: 'That slice still holds dots: turn and tilt the view and watch how many are left in it.' };
+      },
+      reward: {
+        log: 'Two lobes, and a flat plane with nothing in it.',
+        title: 'p Orbital',
+        body: 'A p orbital has two lobes with a node between them, a flat plane through the nucleus where the electron is never found. The round orbitals met so far are s orbitals, and the two-lobed ones are p orbitals.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Two lobes, and a flat plane with nothing in it.',
-      title: 'p Orbital',
-      body: 'A p orbital has two lobes with a node between them, a flat plane through the nucleus where the electron is never found. The round orbitals met so far are s orbitals, and the two-lobed ones are p orbitals.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 6 */
-  {
-    title: 'Ways to Point',
-    prompt: 'How many distinct directions can this two-lobed cloud point along?',
-    controls: ['turn'],
-    extent: 12,
-    clouds: [
-      { id: 'c', label: 'SAMPLE C', head: 'cloud', orbital: '2px', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy' },
-      { id: 'd', label: 'SAMPLE D', head: 'cloud', orbital: '2pz', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy' },
-      { id: 'e', label: 'SAMPLE E', head: 'cloud', orbital: '2py', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy' },
-      { id: 'f', label: 'SAMPLE F', head: 'cloud', orbital: '2pz', plane: 'turn', fired: 500, seed: 3, note: 'one electron in an atom with more energy' }
-    ],
-    widget: { type: 'number', label: 'Ways the two-lobed shape can point', min: 1, max: 6, step: 1 },
-    hints: [
-      'Turn the samples and find the line each one\'s two lobes lie along.',
-      'Compare the four samples and note which of them point the same way as another.',
-      'Count the different directions the lobes point along, not the number of samples on the bench.'
-    ],
-    check(state) {
-      if (state.number === 1) return { ok: false, notYet: true, msg: 'Set the number of directions you found.' };
-      if (state.number !== 3) {
-        return { ok: false, msg: 'Count the directions the lobes point along, and do not count a direction twice because two samples share it.' };
+  (() => {
+    const orbitals = ['2px', '2pz', '2py', '2pz'];
+    const cards = orbitals.map((o, i) => cloudCard(`c${i + 1}`, `SAMPLE ${'CDEF'[i]}`, { x: 16 + i * 22, y: 12 }, o, { seed: i === 3 ? 3 : 1 }));
+    const v = viewFixture('view', { x: 125, y: 17 });
+    const peg = (axis, x) => ({ id: `peg-${axis}`, label: `Along ${axis}`, at: { x, y: 46 }, size: { w: 18, h: 18 } });
+    return {
+      title: 'Ways to Point',
+      prompt: 'Put each cloud on the axis it lies along; a cloud that repeats a direction goes in the tray.',
+      widget,
+      table: cloudTable({
+        pieces: cards,
+        fixtures: [v],
+        zones: {
+          slots: [peg('x', 24), peg('y', 52), peg('z', 80)],
+          trays: [tray('same', 'Same way as one on a peg', { x: 121, y: 47 }, { w: 42, h: 22 })]
+        }
+      }),
+      hints: [
+        'Turn and tilt the view and find the line each cloud\'s two lobes lie along.',
+        'Compare the four clouds and note which of them point the same way as another.',
+        'Put one cloud on each axis peg, and put any cloud that points the same way as one already on a peg in the tray.'
+      ],
+      check(state) {
+        const t = state.table;
+        const ids = ['c1', 'c2', 'c3', 'c4'];
+        const pegged = ['x', 'y', 'z'].map(a => ({ axis: a, id: ids.find(id => t.pieces[id].zone === `slot:peg-${a}`) }));
+        if (pegged.some(p => !p.id) || !ids.every(id => t.pieces[id].zone)) return { ok: false, notYet: true, msg: 'Put each cloud on a peg or in the tray.' };
+        for (const p of pegged) {
+          if (axisOf(t.pieces[p.id].props.orbital) !== p.axis) return { ok: false, msg: 'A peg holds a cloud that lies along another axis: turn the view until its lobes line up with an axis.' };
+        }
+        const spare = ids.filter(id => !pegged.some(p => p.id === id));
+        if (!spare.every(id => inTray(t, id))) return { ok: false, notYet: true, msg: 'A cloud is still off the pegs and out of the tray.' };
+        return { ok: true };
+      },
+      reward: {
+        log: 'Along x, along y, along z. No more.',
+        title: 'Three p Orbitals',
+        body: 'The two-lobed shape can point along x, along y or along z, which makes three p orbitals of equal energy in every shell from the second up. With the single s orbital they make up the whole of the second shell.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Along x, along y, along z. No more.',
-      title: 'Three p Orbitals',
-      body: 'The two-lobed shape can point along x, along y or along z, which makes three p orbitals of equal energy in every shell from the second up. With the single s orbital they make up the whole of the second shell.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 7 */
-  {
-    title: 'Five Clouds',
-    prompt: 'Classify each of these five clouds by its shape.',
-    controls: ['turn'],
-    extent: 24,
-    clouds: [
-      { id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '3pz', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy still' },
-      { id: 'b', label: 'SAMPLE B', head: 'cloud', orbital: '3dxy', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy still' },
-      { id: 'c', label: 'SAMPLE C', head: 'cloud', orbital: '3dz2', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy still' },
-      { id: 'd', label: 'SAMPLE D', head: 'cloud', orbital: '3dx2y2', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy still' },
-      { id: 'e', label: 'SAMPLE E', head: 'cloud', orbital: '3dyz', plane: 'turn', fired: 500, note: 'one electron in an atom with more energy still' }
-    ],
-    widget: {
-      type: 'bins', label: 'Shape of each cloud',
-      rows: ['a', 'b', 'c', 'd', 'e'].map(id => ({ id, label: `Sample ${id.toUpperCase()}` })),
-      bins: [
-        { id: 'two', label: 'Two lobes', note: '' },
-        { id: 'four', label: 'Four lobes', note: '' },
-        { id: 'ring', label: 'Two lobes and a ring', note: '' }
-      ]
-    },
-    hints: [
-      'Turn the clouds together and find the side from which each shape shows most clearly.',
-      'Compare each plate with the two-lobed shape you already know, and look for extra lobes or a ring.',
-      'Count the lobes from the clearest side of each plate, and look for a ring round the middle of the two-lobed one.'
-    ],
-    check(state) {
-      const rows = ['a', 'b', 'c', 'd', 'e'];
-      if (rows.some(r => !state.bins[r])) return { ok: false, notYet: true, msg: 'Sort all five clouds.' };
-      const want = { a: 'two', b: 'four', c: 'ring', d: 'four', e: 'four' };
-      for (const r of rows) {
-        if (state.bins[r] !== want[r]) {
-          return { ok: false, msg: 'Turn the clouds and count the lobes from the clearest side before you sort it.' };
+  (() => {
+    const orbitals = ['3pz', '3dxy', '3dz2', '3dx2y2', '3dyz'];
+    const cards = orbitals.map((o, i) => cloudCard(`k${'abcde'[i]}`, `SAMPLE ${'ABCDE'[i]}`, { x: 12 + i * 21, y: 11 }, o, { extent: 24 }));
+    const v = viewFixture('view', { x: 128, y: 15 });
+    return {
+      title: 'Five Clouds',
+      prompt: 'Put each cloud in the tray that names its shape.',
+      widget,
+      table: cloudTable({
+        pieces: cards,
+        fixtures: [v],
+        zones: {
+          trays: [
+            tray('two', 'Two lobes', { x: 22, y: 38 }, { w: 38, h: 22 }),
+            tray('four', 'Four lobes', { x: 72, y: 38 }, { w: 57, h: 22 }),
+            tray('ring', 'Two lobes and a ring', { x: 123, y: 38 }, { w: 38, h: 22 })
+          ]
         }
+      }),
+      hints: [
+        'Turn and tilt the view to find the side from which each shape shows most clearly.',
+        'Compare each cloud with the two-lobed shape you already know, and look for extra lobes or a ring.',
+        'Count the lobes from the clearest side of each cloud, and look for a ring round the middle of the two-lobed one.'
+      ],
+      check(state) {
+        const t = state.table;
+        const ids = ['ka', 'kb', 'kc', 'kd', 'ke'];
+        if (!ids.every(id => inTray(t, id))) return { ok: false, notYet: true, msg: 'Put all five clouds in a tray.' };
+        const name = { 'two lobes': 'two', 'four lobes': 'four', 'two lobes and a ring': 'ring' };
+        for (const id of ids) {
+          if (where(t, id) !== name[shapeOf(t.pieces[id].props.orbital)]) {
+            return { ok: false, msg: 'Turn the clouds and count the lobes from the clearest side before you tray a cloud.' };
+          }
+        }
+        return { ok: true };
+      },
+      reward: {
+        log: 'Four lobes, four lobes, four lobes, and one with a ring.',
+        title: 'd Orbitals',
+        body: 'From the third shell up there are five d orbitals: four have four lobes, and one is a two-lobed shape with a ring round its middle. They matter most in the transition metals, which this world will reach before it ends.'
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Four lobes, four lobes, four lobes, and one with a ring.',
-      title: 'd Orbitals',
-      body: 'From the third shell up there are five d orbitals: four have four lobes, and one is a two-lobed shape with a ring round its middle. They matter most in the transition metals, which this world will reach before it ends.'
-    }
-  },
+    };
+  })(),
 
   /* ---------------------------------------------------------------- 8 */
-  {
-    title: 'No Path',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Like a long-exposure photograph of moths round a lantern, an orbital shows where an electron spends time, not a path. Adjust the precision dial to balance position blur and speed blur.'
-    },
-    prompt: 'Why is it impossible for the bench to trace a neat, definite electron path?',
-    controls: ['precision', 'fire', 'track'],
-    precision: [1, 2, 3, 4, 5],
-    extent: 5,
-    clouds: [{ id: 'a', label: 'SAMPLE A', head: 'cloud', orbital: '1s', note: 'one electron in an atom' }],
-    widget: {
-      type: 'choice', label: 'Why',
-      options: [
-        { id: 'both', label: 'Its position and its speed cannot both be known exactly, so there is no path to draw' },
-        { id: 'fast', label: 'The electron moves too fast for the screen to draw its path' },
-        { id: 'rest', label: 'The electron has no path because it is at rest' },
-        { id: 'dots', label: 'A path would need more dots than the bench can show' }
-      ]
-    },
-    hints: [
-      'Fire a few shots, press "Track Electron", and read what the bench says.',
-      'Compare what a path would need to know at one moment with what the bench is able to know.',
-      'Ask whether position and speed can both be fixed exactly at once, and what the bench says happens to one when the other is fixed.'
-    ],
-    check(state) {
-      if (!state.choice) return { ok: false, notYet: true, msg: 'Pick the reason.' };
-      if (state.choice !== 'both') {
-        return { ok: false, msg: 'Ask the bench to track the electron and read its reason, then test your answer against it.' };
+  (() => {
+    const a = cloudPlate('a', 'SAMPLE A', { x: 34, y: 30 }, '1s');
+    const gauge = blurGauge('blur', { x: 88, y: 22 });
+    const track = tracker('track', { x: 90, y: 53 });
+    const token = (id, label, y) => ({ id, label, at: { x: 128, y }, r: 7 });
+    return {
+      title: 'No Path',
+      briefing: {
+        speaker: SPEAKER,
+        body: 'Like a long-exposure photograph of moths round a lantern, an orbital shows where an electron spends time, not a path. The precision dial sets how sharply the bench fixes where the electron is.'
+      },
+      prompt: 'Predict what happens to the speed blur when the position blur is made smaller, then test it.',
+      widget,
+      table: cloudTable({
+        pieces: [],
+        fixtures: [a.fixture, gauge, track],
+        prediction: {
+          slot: { id: 'predict', label: 'The speed blur', at: { x: 128, y: 10 }, size: { w: 24, h: 12 } },
+          tokens: [token('grows', 'It grows', 26), token('shrinks', 'It shrinks', 40), token('stays', 'It stays', 54)]
+        }
+      }),
+      hints: [
+        'Place a prediction, then turn the precision dial and read the two blurs.',
+        'Compare the position blur and the speed blur at the lowest and the highest precision.',
+        'Turn the dial toward a sharper position and watch which way the speed blur moves, then press "Track Electron" and read why.'
+      ],
+      check(state) {
+        const t = state.table;
+        const token = t.prediction.token;
+        if (!token) return { ok: false, notYet: true, msg: 'Place a prediction for the speed blur first.' };
+        // Sharper position is the higher precision level; the speed blur at each level is the gauge's own.
+        const dv = blurAt(5).dv - blurAt(1).dv;
+        const real = dv > 0 ? 'grows' : dv < 0 ? 'shrinks' : 'stays';
+        if (token === real) return { ok: true };
+        return { ok: false, msg: 'Turn the precision dial toward a sharper position and read the speed blur before and after.' };
+      },
+      reward: {
+        log: 'Fix where it is and its speed blurs.',
+        title: 'Uncertainty Principle',
+        body: 'The more exactly the bench fixes where an electron is, the less exactly it can know how fast it is going, and the other way round. This is the uncertainty principle, and it is why an electron is pictured as a cloud of probability and never as a path.',
+        last: true
       }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Fix where it is and its speed blurs.',
-      title: 'Uncertainty Principle',
-      body: 'The more exactly the bench fixes where an electron is, the less exactly it can know how fast it is going, and the other way round. This is the uncertainty principle, and it is why an electron is pictured as a cloud of probability and never as a path.',
-      last: true
-    }
-  }
+    };
+  })()
 ];
 
 /* ------------------------------------------------------------------
@@ -455,36 +495,45 @@ export const PRACTICE = [
 ];
 
 /* ------------------------------------------------------------------
-   BENCH STATE
+   SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct
+   actions, by drag and by two taps. Shots are fired, rings and views set, films and strings put where they go. Nothing here says
+   what a plate counts or a ring closes.
    ------------------------------------------------------------------ */
-function blankState(stage) {
-  return { setting: stage?.start ?? null, slice: false, precision: stage?.precision ? 3 : null };
-}
+
+const put = (piece, to) => ({ place: { piece, to } });
+const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
+const fire = id => [dial(id, 'burst', 3), { run: id }];
+const goes = (id, tray) => [put(id, 'slot:track.tile'), put(id, `tray:${tray}`)];
 
 export const SOLUTIONS = [
-  { choice: 'cloud' },
-  { choice: 'round' },
-  { picks: ['332', '166', '111'] },
-  { choice: 'bigger' },
-  { choice: 'lobes' },
-  { number: 3 },
-  { bins: { a: 'two', b: 'four', c: 'ring', d: 'four', e: 'four' } },
-  { choice: 'both' }
+  [...fire('a'), dial('a', 'ring', 140)],
+  [...fire('a'), put('f2', 'slot:a.film')],
+  [].concat(...RING_STRINGS.map(pm => goes(`s${pm}`, ringFits(pm, RING_CIRCUMFERENCE_PM).fits ? 'closes' : 'smears'))),
+  [...fire('a'), dial('a', 'slice', 1), ...fire('b'), dial('b', 'slice', 1), dial('b', 'ring', 105)],
+  [...fire('c'), dial('view', 'turn', 0), dial('view', 'tilt', 0), dial('view', 'slice', 1)],
+  [put('c1', 'slot:peg-x'), put('c2', 'slot:peg-z'), put('c3', 'slot:peg-y'), put('c4', 'tray:same')],
+  [put('ka', 'tray:two'), put('kb', 'tray:four'), put('kc', 'tray:ring'), put('kd', 'tray:four'), put('ke', 'tray:four')],
+  [{ predict: 'grows' }, dial('blur', 'level', 5)]
 ];
 
+/** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  { choice: 'orbit' },
-  { choice: 'ring' },
-  { picks: ['332', '250', '166'] },
-  { choice: 'faint' },
-  { choice: 'ball' },
-  { number: 4 },
-  { bins: { a: 'two', b: 'four', c: 'four', d: 'four', e: 'two' } },
-  { choice: 'fast' }
+  [...fire('a'), dial('a', 'ring', 40)],
+  [...fire('a'), put('f1', 'slot:a.film')],
+  [].concat(...RING_STRINGS.map(pm => goes(`s${pm}`, 'closes'))),
+  [...fire('b'), dial('b', 'ring', 60)],
+  [...fire('c'), dial('view', 'slice', 1)],
+  [put('c1', 'slot:peg-y'), put('c2', 'slot:peg-z'), put('c3', 'slot:peg-x'), put('c4', 'tray:same')],
+  [put('ka', 'tray:four'), put('kb', 'tray:four'), put('kc', 'tray:four'), put('kd', 'tray:two'), put('ke', 'tray:four')],
+  [{ predict: 'shrinks' }, dial('blur', 'level', 5)]
 ];
 
+function blankState() { return {}; }
+
+/** Build a full bench state for stage `i` from one of the sets above. */
 export function stateFor(i, overrides) {
-  return { ...blankAnswer(STAGES[i]), ...blankState(STAGES[i]), ...overrides };
+  return stateFromScript(STAGES[i], overrides);
 }
 
 /* ==================================================================
@@ -492,131 +541,13 @@ export function stateFor(i, overrides) {
    ================================================================== */
 
 export function mount(container, ctx) {
-  let plate = null;
-  let runner = null;
-
-  function paintSetting() {
-    const st = runner.stage.settings;
-    if (!st) return;
-    runner.paintDial('setting', runner.state.setting, { min: 1, max: st.length, text: `${st[runner.state.setting - 1]} pm` });
-  }
-
-  function paintKeys() {
-    runner.frame.el.controls.querySelectorAll('[data-tool="slice"]').forEach(b => {
-      b.classList.toggle('selected', runner.state.slice);
-      b.setAttribute('aria-pressed', String(runner.state.slice));
-    });
-  }
-
-  function setSetting(v) {
-    runner.state.setting = v;
-    plate.setRing(v);
-    paintSetting();
-  }
-
-  function shotsNow() {
-    const first = runner.stage.clouds.find(c => c.head !== 'ring');
-    return first ? plate.shots(first.id) : 0;
-  }
-
-  function onTool(tool) {
-    if (tool.startsWith('fire:')) {
-      plate.fire(Number(tool.split(':')[1]));
-      runner.readout('Plate // shots', `Every plate has taken ${shotsNow()} shots.`);
-    } else if (tool === 'clear') {
-      plate.clear();
-      runner.readout('Plate // shots', 'Every plate is clear.');
-    } else if (tool === 'slice') {
-      runner.state.slice = !runner.state.slice;
-      plate.setSlice(runner.state.slice);
-      runner.readout('Plate // slice', runner.state.slice
-        ? 'Showing only the dots within a thin slab through the middle.'
-        : 'Showing every dot, from front to back.');
-      paintKeys();
-    } else if (tool.startsWith('turn:')) {
-      const way = tool.split(':')[1];
-      if (way === 'reset') plate.resetView();
-      else if (way === 'left') plate.turn(-TURN_STEP, 0);
-      else if (way === 'right') plate.turn(TURN_STEP, 0);
-      else if (way === 'up') plate.turn(0, -TURN_STEP);
-      else if (way === 'down') plate.turn(0, TURN_STEP);
-    } else if (tool === 'track') {
-      const r = plate.track();
-      runner.readout('Track // refused', r.reason);
-    }
-  }
-
-  function onLoad(stage, i, r) {
-    plate.setPlates(stage.clouds, {
-      extent: stage.extent ?? 12,
-      settings: stage.settings || [],
-      setting: r.state.setting || 1,
-      precision: r.state.precision ?? (stage.precision ? 3 : null)
-    });
-    plate.setSelectable(false);
-
-    const parts = [];
-    const dials = {};
-    if (stage.settings) {
-      parts.push(r.dialHtml('setting', { label: 'Wavelength', min: 1, max: stage.settings.length, value: r.state.setting }));
-      dials.setting = { min: 1, max: stage.settings.length, onChange: v => setSetting(v) };
-    }
-    if (stage.precision) {
-      parts.push(r.dialHtml('precision', { label: 'Precision', min: 1, max: stage.precision.length, value: r.state.precision || 3 }));
-      dials.precision = {
-        min: 1, max: stage.precision.length,
-        onChange: v => {
-          r.state.precision = v;
-          plate.setPrecision(v);
-          r.paintDial('precision', v, { min: 1, max: stage.precision.length, text: `Level ${v}` });
-          const dx = Math.round(150 / v);
-          const dv = Math.round(v * 770);
-          r.readout('Precision // trade-off', `Position blur ±${dx} pm, speed blur ±${dv} km/s. Floor cannot be breached.`);
-        }
-      };
-    }
-    const keys = [];
-    if (stage.controls.includes('fire')) {
-      keys.push(
-        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="fire:1">Fire One Shot</button>',
-        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="fire:50">Fire 50 Shots</button>',
-        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="fire:500">Fire 500 Shots</button>',
-        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="clear">Clear Plate</button>'
-      );
-    }
-    if (stage.controls.includes('slice')) {
-      keys.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="slice" aria-pressed="false">Slice</button>');
-    }
-    if (stage.controls.includes('turn')) {
-      keys.push(
-        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="turn:left">Turn Left</button>',
-        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="turn:right">Turn Right</button>',
-        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="turn:up">Tilt Up</button>',
-        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="turn:down">Tilt Down</button>',
-        '<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="turn:reset">Reset View</button>'
-      );
-    }
-    if (stage.controls.includes('track')) {
-      keys.push('<button type="button" class="btn-secondary quest-btn-sm lq-tool" data-tool="track">Track Electron</button>');
-    }
-    if (keys.length) parts.push(`<div class="cb-field" role="group" aria-label="Plate">${keys.join('')}</div>`);
-
-    r.setControls(parts, onTool, { dials });
-    paintSetting();
-    if (stage.precision) {
-      r.paintDial('precision', r.state.precision || 3, { min: 1, max: stage.precision.length, text: `Level ${r.state.precision || 3}` });
-    }
-    paintKeys();
-    r.readout(null, null, { idleHead: 'Plate // standby', idle: stage.controls.includes('fire') ? 'Fire some shots.' : 'Look at the plate.' });
-  }
-
-  runner = createRunner(container, ctx, {
+  const runner = createRunner(container, ctx, {
     STAGES, DEBRIEF, blankState, toolNoteFor,
-    setup: r => { plate = CloudPlate(r.frame.instrumentHost, { onProbe: () => {}, onSetting: v => setSetting(v) }); },
-    onLoad,
-    onDispose: () => plate?.dispose()
+    onLoad() { /* the table is the stage; there are no keys or readouts to lay out */ }
   });
-
   runner.start();
   return { dispose: () => runner.dispose() };
 }
+
+/* Exported for `verify:learn`, which holds every graded figure to the planners. */
+export { plateRead, ringRead, filmRead, trackRead, blurRead, blurAt, catchOf, axisOf, nodePm, shapeOf, FILMS, ringFits, RING_CIRCUMFERENCE_PM, BOHR_PM, SLICE_HALF, NODE_TOLERANCE_PM, NINE_IN_TEN, EMPTY_SLICE, RING_STRINGS };
