@@ -2557,28 +2557,99 @@ async function checkDrawn(q, mod) {
     }
   }
   if (q8) {
+    // THE EIGHTH LANTERNFALL TABLE (`q8-trends`, the trends kit): the pull is `planPull`, the sizes and costs are the measured tables.
+    const TRD = await import('../src/learn/table/kits/trends.js');
+    const same8 = (a, b, what) => { if (JSON.stringify(a) !== JSON.stringify(b)) fail(`${what}: graded ${JSON.stringify(a)}, the real answer is ${JSON.stringify(b)}`); };
+    const holds8 = (c, what) => { if (!c) fail(what); };
+    const start8 = i => TABLE.createTable(q8.STAGES[i].table, q8.STAGES[i].title);
+    const end8 = i => TABLE.runScript(start8(i), q8.SOLUTIONS[i], { strict: true });
     const B = await import('../src/learn/engine/electronbench.js');
-    const sizes = ['li', 'be', 'b', 'c'].map(s => EL.RADIUS[s[0].toUpperCase() + s.slice(1)]);
-    if (sizes.some((v, i) => i && v >= sizes[i - 1])) fail('unit02/q8-trends stage 3: the graded order is not largest radius first');
-    const ions = { naplus: EL.ION_RADIUS['Na+'], clminus: EL.ION_RADIUS['Cl-'], na: EL.ION_RADIUS.Na };
-    const ord = q8.SOLUTIONS[4].order.map(k => ions[k]);
-    if (ord.some((v, i) => i && v <= ord[i - 1])) fail('unit02/q8-trends stage 5: the graded order is not smallest first');
-    const ies = ['Li', 'B', 'Be'].map(s => EL.IONIZATION[s]);
-    if (ies.some((v, i) => i && v <= ies[i - 1])) fail('unit02/q8-trends stage 6: the graded order is not the order of the real ionization energies');
-    const jump = EL.MG_SUCCESSIVE;
-    if (!(jump[2] / jump[1] > 4 && jump[1] / jump[0] < 3)) fail('unit02/q8-trends stage 7: magnesium\'s successive energies do not jump after the second');
-    // Stage 8: the pull on the outermost electron orders the atoms the way electronegativity does.
-    const pulls = ['na', 'c', 'n', 'f'].map(k => {
-      const sym = k[0].toUpperCase() + k.slice(1);
-      const shells = B.shellsOf(sym);
-      return B.planPull({ z: EL.zOf(sym), shells, radius: EL.RADIUS[sym] }, shells.length - 1).pull;
-    });
-    if (pulls.some((v, i) => i && v <= pulls[i - 1])) fail('unit02/q8-trends stage 8: the pull meter does not order the atoms weakest first');
-    const en = ['Na', 'C', 'N', 'F'].map(s => EL.ELECTRONEGATIVITY[s]);
-    if (en.some((v, i) => i && v <= en[i - 1])) fail('unit02/q8-trends stage 8: the real electronegativities do not order the atoms the same way');
-    // Stage 2: sodium's outer electron feels +1 of its +11.
-    const na = B.planPull({ z: 11, shells: [2, 8, 1], radius: 186 }, 2);
-    if (na.zeff !== 1 || na.between !== 10) fail('unit02/q8-trends stage 2: sodium\'s outer electron should feel +1 with ten electrons between');
+    const item = sym => ({ z: EL.zOf(sym), shells: B.shellsOf(sym), radius: EL.RADIUS[sym] ?? EL.ION_RADIUS[sym] });
+    // The radii run the way the trends do: shrinking across a row, growing down a group, an ion unlike its atom.
+    const R = s => EL.RADIUS[s];
+    holds8(R('Li') > R('Be') && R('Be') > R('B') && R('B') > R('C'), 'unit02/q8-trends stage 3: the radii must shrink across the row');
+    holds8(R('K') > R('Na') && R('Na') > R('Li'), 'unit02/q8-trends stage 4: the radii must grow down the group');
+    holds8(EL.ION_RADIUS['Na+'] < EL.ION_RADIUS['Cl-'] && EL.ION_RADIUS['Cl-'] < EL.ION_RADIUS.Na, 'unit02/q8-trends stage 5: Na+ < Cl- < Na');
+    // 1. the electron held hardest of all is magnesium's innermost, and the best outermost electron is another atom's: the stage is about both
+    {
+      const hard = ['Li', 'Na', 'Be', 'Mg'].map(s => [s, TRD.hardestPull(s)]).sort((a, b) => b[1] - a[1]);
+      same8(hard[0][0], 'Mg', 'unit02/q8-trends stage 1 (the hardest pull)');
+      const outer = ['Li', 'Na', 'Be', 'Mg'].map(s => [s, B.planPull(item(s), B.shellsOf(s).length - 1).pull]).sort((a, b) => b[1] - a[1]);
+      holds8(outer[0][0] !== 'Mg', 'unit02/q8-trends stage 1: the outermost electrons give the same answer as the innermost, so the stage teaches nothing about distance');
+      const t = end8(0);
+      same8(['li', 'na', 'be', 'mg'].filter(id => t.pieces[id].zone === 'tray:hard'), ['mg'], 'unit02/q8-trends stage 1 (the tray)');
+      const r = TRD.springRead(TABLE.runScript(start8(0), [{ setDial: { fixture: 'sp', dial: 'which', value: 2 } }, { place: { piece: 'mg', to: 'slot:sp.atom' } }]), 'sp');
+      same8(r.pull, B.planPull(item('Mg'), 0).pull, 'unit02/q8-trends stage 1 (the spring gauge reads the planner\'s pull)');
+    }
+    // 2. sodium's outer electron feels +1 of its +11 with ten between; lithium feels +1, beryllium and magnesium +2
+    {
+      const na = B.planPull({ z: 11, shells: [2, 8, 1], radius: 186 }, 2);
+      holds8(na.zeff === 1 && na.between === 10, 'unit02/q8-trends stage 2: sodium\'s outer electron should feel +1 with ten electrons between');
+      same8(['Li', 'Na', 'Be', 'Mg'].map(TRD.feelsOf), [1, 1, 2, 2], 'unit02/q8-trends stage 2 (the charges felt)');
+      const t = end8(1);
+      same8(['li', 'na', 'be', 'mg'].map(id => t.pieces[id].zone), ['tray:one', 'tray:one', 'tray:two', 'tray:two'], 'unit02/q8-trends stage 2 (the trays)');
+    }
+    // 3. the rail runs largest first, and the card of each atom is drawn at its real radius
+    {
+      const t = end8(2);
+      const sizes = t.zones.rail.order.map(id => TRD.sizeNow(t.pieces[id]));
+      holds8(sizes.every((v, i) => !i || v < sizes[i - 1]), 'unit02/q8-trends stage 3: the graded order is not largest radius first');
+      same8(t.zones.rail.order, ['li', 'be', 'b', 'c'], 'unit02/q8-trends stage 3 (the rail)');
+      const g = TRD.sizeRead(TABLE.apply(start8(2), { place: { piece: 'li', to: 'slot:sz.atom' } }), 'sz');
+      same8(g.radius, EL.RADIUS.Li, 'unit02/q8-trends stage 3 (the size gauge)');
+    }
+    // 4. the prediction is the real comparison, and the gauge only reads once it is pressed
+    {
+      const t = end8(3);
+      same8(t.prediction.token, 'larger', 'unit02/q8-trends stage 4 (the prediction)');
+      holds8(t.prediction.tested, 'unit02/q8-trends stage 4: the solution does not test its prediction');
+      holds8(TRD.sizeNow(t.pieces.k) > TRD.sizeNow(t.pieces.na), 'unit02/q8-trends stage 4: potassium is not larger than sodium');
+      same8(B.shellsOf('K').length - B.shellsOf('Na').length, 1, 'unit02/q8-trends stage 4 (one more ring)');
+      same8(TRD.feelsOf('K'), TRD.feelsOf('Na'), 'unit02/q8-trends stage 4 (the same charge felt)');
+      holds8(q8.STAGES[3].table.prediction.tokens.length === 3, 'unit02/q8-trends stage 4: three predictions');
+    }
+    // 5. a stripped atom is its ion, a chlorine with one more is Cl-, and the three sort smallest first
+    {
+      const t = end8(4);
+      same8(['na1', 'na2', 'cl'].map(id => TRD.itemOf(t.pieces[id]).charge), [0, 1, -1], 'unit02/q8-trends stage 5 (the charges)');
+      same8(t.zones.rail.order.map(id => TRD.sizeNow(t.pieces[id])), [EL.ION_RADIUS['Na+'], EL.ION_RADIUS['Cl-'], EL.ION_RADIUS.Na], 'unit02/q8-trends stage 5 (the sizes)');
+      same8(TRD.shellsNow('Na', 1), [2, 8], 'unit02/q8-trends stage 5 (Na+ has lost its outer shell)');
+      same8(TRD.shellsNow('Cl', -1), [2, 8, 8], 'unit02/q8-trends stage 5 (Cl- has a full outer shell)');
+      const twice = TABLE.runScript(start8(4), [{ join: ['e', 'cl'] }, { join: ['e', 'cl'] }]);
+      holds8(twice.last.ok === false || TRD.itemOf(twice.pieces.cl).charge === -1, 'unit02/q8-trends stage 5: a chlorine takes a second extra electron');
+    }
+    // 6. the costs are the measured first ionization energies; the rail is cheapest first and boron dips below beryllium
+    {
+      const ies = ['Li', 'B', 'Be'].map(s => EL.IONIZATION[s]);
+      holds8(ies.every((v, i) => !i || v > ies[i - 1]), 'unit02/q8-trends stage 6: the graded order is not the order of the real ionization energies');
+      const t = end8(5);
+      same8(t.zones.rail.order, ['li', 'b', 'be'], 'unit02/q8-trends stage 6 (the rail)');
+      same8(['li', 'be', 'b'].map(id => t.pieces[id].props.lastCost), [520, 899, 801], 'unit02/q8-trends stage 6 (what each strip read)');
+      holds8(EL.IONIZATION.B < EL.IONIZATION.Be, 'unit02/q8-trends stage 6: boron must dip below beryllium');
+    }
+    // 7. magnesium's successive energies jump after the second and the bench reads no further than the third
+    {
+      const jump = EL.MG_SUCCESSIVE;
+      holds8(jump[2] / jump[1] > 4 && jump[1] / jump[0] < 3, 'unit02/q8-trends stage 7: magnesium\'s successive energies do not jump after the second');
+      const t = end8(6);
+      same8(t.pieces.mg.props.charge, 2, 'unit02/q8-trends stage 7 (magnesium stripped twice)');
+      same8(t.recorder.rows.map(r => r.y), [738, 1451], 'unit02/q8-trends stage 7 (the sheet)');
+      const more = TABLE.runScript(start8(6), [{ place: { piece: 'mg', to: 'slot:st.atom' } }, { run: 'st' }, { run: 'st' }, { run: 'st' }, { run: 'st' }]);
+      holds8(more.last.ok === false && more.pieces.mg.props.charge === 3, 'unit02/q8-trends stage 7: the bench reads a fourth electron it has not measured');
+      const back = TABLE.runScript(more, [{ place: { piece: 'mg', to: 'free:60,30' } }, { join: ['e', 'mg'] }], { strict: true });
+      same8(back.pieces.mg.props.charge, 2, 'unit02/q8-trends stage 7 (an electron laid back)');
+    }
+    // 8. the pull on the outermost electron orders the atoms the way electronegativity does
+    {
+      const pulls = ['na', 'c', 'n', 'f'].map(k => {
+        const s = k[0].toUpperCase() + k.slice(1);
+        return B.planPull(item(s), B.shellsOf(s).length - 1).pull;
+      });
+      holds8(pulls.every((v, i) => !i || v > pulls[i - 1]), 'unit02/q8-trends stage 8: the pull meter does not order the atoms weakest first');
+      const en = ['Na', 'C', 'N', 'F'].map(s => EL.ELECTRONEGATIVITY[s]);
+      holds8(en.every((v, i) => !i || v > en[i - 1]), 'unit02/q8-trends stage 8: the real electronegativities do not order the atoms the same way');
+      same8(end8(7).zones.rail.order, ['na', 'c', 'n', 'f'], 'unit02/q8-trends stage 8 (the rail)');
+    }
   }
   if (failures === before) ok('Lanternfall: every graded figure is recomputed from the real tables and agrees');
 }

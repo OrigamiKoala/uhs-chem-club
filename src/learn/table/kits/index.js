@@ -21,3 +21,4 @@ import './optics.js';
 import './cloud.js';
 import './shells.js';
 import './pes.js';
+import './trends.js';
