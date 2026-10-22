@@ -3738,10 +3738,11 @@ body.bench-deployed .modal-container .modal-card {
 
 /* At a bench the host bar and prompt strip stand under the header; the boss plate hangs below them, at the right, so it never covers the
    prompt, and is kept narrow enough to leave the table's left side clear. */
-body.bench-deployed .boss-hud {
+body.bench-deployed .boss-hud,
+body.bench-leaning .boss-hud {
   top: calc(var(--hud-h, 56px) + 92px);
   left: auto;
   right: 12px;
   transform: none;
-  width: min(300px, calc(100vw - 24px));
+  width: min(340px, calc(100vw - 24px));
 }

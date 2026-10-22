@@ -1431,5 +1431,10 @@ look has been seen only in a software-GL headless browser (no real GPU), so the 
   has been through (`history`), a move is a whole drag or two taps, a dial dragged is one step, a piece in the hand is put down first, Start
   Over is itself undoable (`verify:table` replays all of it). Tools on a block are `onTop` (hammer, leads, tongs, protractor, arrows, rod,
   swapper), so a tool laid on a block can always be lifted off it again and a press never takes the block under it.
+- **Later passes.** A lattice block's atoms are real balls under its pane (`buildOreBlock`, instanced); slate atoms are squat (`flat`) so the
+  readouts show; a tray lights while a piece is held over it; rail end-labels are printed above the tallest piece on the rail (`railHalf`);
+  the lean-in keeps the camera inside the bay's lean air (`leanMinDist`, `leanFrontZ`); fixtures that are screens fill their box dark; the guide
+  chevron and a boss's health plate stand under the prompt strip at a bench (`body.bench-leaning`). The exit flow was run in a browser: Close
+  Channel leaves no strip or dock, the hash returns to the world and the nav works.
 - **Not done.** The hub's arms still stand in the table plane (a projected star), not in the air; the flat pictures (lattice grid, energy plot,
   slates, rack) are still pictures under glass; the briefing card's tour, the world's timber and the host bench were not touched; no real-GPU pass.
