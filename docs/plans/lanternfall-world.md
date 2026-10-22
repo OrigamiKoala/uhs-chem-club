@@ -15,6 +15,27 @@ outright, so the "page first, ground later" recommendation was not followed).
 > (`three/lanternfall/stations.js`), laid out by the rewritten generator. The instruments
 > and the rest of this record stand.
 
+> **Superseded again (2026-10-22): the benches are tabletops.** Phase T4 of `bench-tabletop.md` (T4a to T4d) made every
+> Lanternfall quest, the Lantern-Eater included, a TABLE played from the lean-in view: loose pieces, slots, trays, rails and
+> fixtures on the bench plate, graded on what is on the table, on six kits (`table/kits/optics.js`, `cloud.js`, `shells.js`,
+> `pes.js`, `trends.js`, `cuvette.js`). **None of the four instruments in "The four instruments" below is played by any quest
+> now**; their files stay until T7 retires them (see the orphan list in the plan's T4d note). What changed on the hosts, all inside
+> the camp described by `bench-integration.md` P4 and held by `verify:lanternfall` and `verify:bench`:
+>
+> - **Two field points** (`fieldPoint`s registered in `three/lanternfall.js`, each a real part of its host): `flume` ("Flume
+>   Strip", the crest recorder on a post in front of bench 1's gutter, `q1-wave` stage 1) and `hole` ("Ice Hole Water", a hand
+>   sampling winch on a post on the ice west of bench 9's hole, `q9-absorb` stage 5). The guide arrow follows the lantern road.
+> - **Bench 1** gained the crest recorder post; **bench 2** a plate case on a trestle beside the desk; **bench 3** a rack of gas
+>   tubes and a spare filament lamp on the sled's bed; **bench 7** a specimen rack on the arc's platform; **bench 8** a hanging
+>   spring scale at the end of the store; **bench 9** the winch. Benches 1 to 9 each hang a work lantern over the plate
+>   (a `lampMark` in the `LampPool`; the light count is unchanged).
+> - **The records tent** (benches 5 and 6) was re-roofed: the eave ends at the plate's line (z 0.5) so the canopy no longer runs
+>   over the leaned-in camera, the tent is a gable open at its mouth, and the ridge is still one world line from both halves
+>   (`TENT_SPAN` 7.0; the declared extent of each half is `[-5.7, 5.7, -3.6, 0.7]`). This removed the last Lanternfall lines from
+>   `tools/bay-legacy.json`.
+> - **The Lantern-Eater** is fought at `BOSS_ARENA_SPOTS['boss-eater']`, unchanged, with each phase's table standing in its own
+>   room and the eater in the table's corner pad; `verify:lanternfall` still holds that ground open.
+
 ## What stands where
 
 Nine benches on a ring of radius 52 m round a frozen lake of radius 24 m, spaced 37° apart,

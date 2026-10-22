@@ -114,27 +114,27 @@ const BUILT_BENCHES = new Set([
   'q5-assay',      // the tabletop, mass kit (assay) — table3d.js (T2; the assay floor is retired with T7)
   'q6-weigh',      // the tabletop, mass kit (two pans and counters), at site six
   'boss-hopper',   // the hopper: five phases on one table, atom, card and mass kits, its foe in the table's corner
-  // Unit 3 — Ligar. The join bench is a subclass of the drawn bench, so its
-  // tools are the canvas bench's tools and cannot grade differently.
-  'q1-joins',      // the join bench, pair plates — joinbench3d.js
+  // Unit 3 — Ligar. Every Ligar quest is a tabletop (T1b to T3c); the join bench, pair board, bond bench and domain rig serve none.
+  'q1-joins',      // the tabletop, atom kit at bond scale — table3d.js (T1b)
   'q2-lattice',    // the tabletop, bonds kit (blocks, hotplate, hammer, leads, tongs, an ion grid) — table3d.js (T3a)
   // Unit 7 — Kettle. Built as Ligar's bench three; Kettle is not yet walkable,
   // so at T4 it builds its own room around itself (`rooms.js`, the foundry).
   'q1-recipe',     // the tabletop, heap kit — table3d.js (T2c; the sampler scope still serves nothing else here)
   'boss-golem',    // the golem: two phases on the heap kit and the mass kit, its foe in the table's corner
   // Unit 2 — Lanternfall.
-  'q1-wave',       // the light bench, trace and prism heads — lightbench3d.js
-  'q2-photon',     // the light bench, photocell head
-  'q3-lines',      // the light bench, prism head and the energy ladder
+  'q1-wave',       // the tabletop, optics kit (a flume strip, lamps in a holder, a wave screen, detectors on a pulse rail, a rail of lamps) — table3d.js (T4a)
+  'q2-photon',     // the tabletop, optics kit (metal plates in the photocell's holder, colour and brightness dials, a counting cup, a sheet) — table3d.js (T4a)
+  'q3-lines',      // the tabletop, optics kit (a socket and a band, reference strips, the energy ladder and the strip its drops write on) — table3d.js (T4a)
   'q4-cloud',      // the tabletop, cloud kit (a probe plate, rings, films, a ring track, clouds turned on axis pegs) — table3d.js (T4b; the cloud plate is retired with T7)
   'q5-numbers',    // the tabletop, address and filling kit (a rack of boxes, an address strip, electron tokens) — table3d.js (T4b)
   'q6-filling',    // the tabletop, address and filling kit (arrows dealt into boxes, two magnets, written forms, element strips) — table3d.js (T4b)
-  'q7-pes',        // the tabletop, spectrum kit (a chamber that fires light at a specimen, electrons piling into a strip of energy bins, an atom built to match, a configuration written) — table3d.js (T4c; the electron bench's spectrum head serves only the Lantern-Eater now)
+  'q7-pes',        // the tabletop, spectrum kit (a chamber that fires light at a specimen, electrons piling into a strip of energy bins, an atom built to match, a configuration written) — table3d.js (T4c)
   'q8-trends',     // the tabletop, trends kit (scale-model atoms, a spring gauge, a size gauge, a stripper and a rail) — table3d.js (T4c)
-  'q9-absorb',     // the tabletop, cuvette kit (cuvettes filled drop by drop, a spectrometer read live, a sheet and a straightedge, lake water from the ice hole) — table3d.js (T4c; the light bench's cuvette head serves only the Lantern-Eater now)
+  'q9-absorb',     // the tabletop, cuvette kit (cuvettes filled drop by drop, a spectrometer read live, a sheet and a straightedge, lake water from the ice hole) — table3d.js (T4c)
+  'boss-eater',    // the lantern-eater: five phases on the optics, filling, spectrum and cuvette kits, its foe in the table's corner (T4d)
   // Unit 3 — Ligar, benches three to nine.
   'q3-distance',   // the tabletop, bonds kit (a pair pulled apart by hand, pair cards, salts) — table3d.js (T3a)
-  'q4-dots',       // the pair board — pairboard3d.js
+  'q4-dots',       // the tabletop, the Lewis slate on the atom kit — table3d.js (T1b)
   'q5-resonance',  // the tabletop, the Lewis slate with a charge stamp, a mark and a bond gauge — table3d.js (T3a)
   'q6-shape',      // the tabletop, domain kit (a hub arms clip to and push apart on, a protractor, a frame of sockets) — table3d.js (T3b)
   'q7-polarity',   // the tabletop, domain kit (charged plates, molecule cards, arrows, a swap tool, a charged rod and streams)
