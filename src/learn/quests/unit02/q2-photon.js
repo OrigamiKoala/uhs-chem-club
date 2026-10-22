@@ -142,7 +142,7 @@ export const STAGES = [
         const v = r.fixture.dials.colour.value;
         const first = firstFreeing(r.fixture.props.settings, 'Na', 3);
         if (v === first) return { ok: true };
-        if (v === 1) return { ok: false, notYet: true, msg: 'The lamp is where it started. Set it, then Commit.' };
+        if (v === 1) return { ok: false, notYet: true, msg: 'The lamp is where it started. Set it, then press Submit.' };
         if (v < first) return { ok: false, msg: 'No electron leaves the plate at this setting. Keep turning toward violet.' };
         return { ok: false, msg: 'Electrons already leave at the setting before this one. Look for where they first appear.' };
       },

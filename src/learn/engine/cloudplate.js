@@ -39,6 +39,26 @@ import {
 
 export { sampleOrbital, ringFits, RING_CIRCUMFERENCE_PM };
 
+/**
+ * THE TRADE THE UNCERTAINTY PRINCIPLE MAKES, at precision level `level` (1 to 5): the blur in position (pm) and in speed
+ * (km/s). Their product is the same at every level, and sits a factor of two above the floor (Dx . Dv >= h / 4 pi m, about
+ * 5.8 x 10^4 pm km/s). One function: the drawn plate and the tabletop's blur gauge both print these.
+ */
+export function blurAt(level) {
+  return { dx: Math.round(150 / level), dv: Math.round(level * 770) };
+}
+
+/**
+ * The refusal the bench gives when asked to follow an electron along a path: there is no path to follow, and this is why.
+ * ONE sentence, one source: `CloudPlate.track()` and the tabletop's Track Electron key both read it.
+ */
+export function trackRefusal() {
+  return {
+    refused: true,
+    reason: 'Tracking needs a position and a speed at the same moment. Fixing the position blurs the speed, and fixing the speed blurs the position.'
+  };
+}
+
 /** The most shots a plate holds. Every drawn picture is the first N of these. */
 export const MAX_SHOTS = 500;
 
@@ -204,9 +224,7 @@ function drawCloud(ctx, w, h, item, cfg, o) {
     drawPanel(ctx, (w - size) / 2, top + (avail - size) / 2, size, item, item.plane || 'xy', cfg, o);
   }
   if (cfg.precision != null) {
-    const prec = cfg.precision || 3;
-    const dx = Math.round(150 / prec);
-    const dv = Math.round(prec * 770);
+    const { dx, dv } = blurAt(cfg.precision || 3);
     plateText(ctx, `POSITION BLUR Δx: ±${dx} pm`, 8, h - 22, { size: small * 0.85, color: PLATE_COLORS.amber, weight: 700 });
     plateText(ctx, `SPEED BLUR Δv: ±${dv} km/s`, 8, h - 8, { size: small * 0.85, color: PLATE_COLORS.amber, weight: 700 });
     plateText(ctx, 'FLOOR: Δx · Δp ≥ ℏ/2', w - 8, h - 8, { align: 'right', size: small * 0.85, color: PLATE_COLORS.dim, weight: 700 });
@@ -214,31 +232,15 @@ function drawCloud(ctx, w, h, item, cfg, o) {
   return [{ key: 'cloud', x0: 0, y0: top, x1: w, y1: h }];
 }
 
-function drawRing(ctx, w, h, item, cfg, o) {
-  const settings = cfg.settings || [];
-  const wl = settings[Math.max(0, (cfg.setting || 1) - 1)];
-  const small = Math.max(9, h * 0.05);
-  const cx = w / 2;
-  const cy = h * 0.54;
-  const R = Math.min(w, h) * 0.3;
-  const circ = 2 * Math.PI * R;
-
-  // The track.
-  ctx.strokeStyle = PLATE_COLORS.rim;
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
-  plateText(ctx, 'NUCLEUS', cx, cy + small * 0.3, { align: 'center', size: small, color: PLATE_COLORS.dim });
-  ctx.fillStyle = PLATE_COLORS.steel;
-  ctx.beginPath(); ctx.arc(cx, cy, Math.max(2.5, R * 0.04), 0, Math.PI * 2); ctx.fill();
-
-  if (wl == null) return [];
-  // The wave, drawn round the track, lap on lap. A wavelength that fits repeats
-  // itself exactly and leaves one crisp ring; any other leaves each lap a
-  // little out of step with the last, and the laps smear into a band.
+/**
+ * The de Broglie wave drawn round a circular track of radius `R` at (`cx`, `cy`), lap on lap. A wavelength that fits
+ * repeats itself exactly and leaves one crisp ring; any other leaves each lap a little out of step with the last, and the
+ * laps smear into a band. ONE function: the drawn plate and the tabletop's ring both call it.
+ */
+export function strokeRingWave(ctx, cx, cy, R, wl, { lineWidth = 1.2, laps = 6 } = {}) {
   const n = RING_CIRCUMFERENCE_PM / wl;
   const A = R * 0.14;
-  const laps = 6;
-  ctx.lineWidth = Math.max(1.2, h * 0.006);
+  ctx.lineWidth = lineWidth;
   for (let lap = 0; lap < laps; lap++) {
     ctx.strokeStyle = PLATE_COLORS.phosphor;
     ctx.globalAlpha = 0.9 / Math.sqrt(laps) + 0.08;
@@ -256,7 +258,26 @@ function drawRing(ctx, w, h, item, cfg, o) {
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
-  void circ;
+}
+
+function drawRing(ctx, w, h, item, cfg, o) {
+  const settings = cfg.settings || [];
+  const wl = settings[Math.max(0, (cfg.setting || 1) - 1)];
+  const small = Math.max(9, h * 0.05);
+  const cx = w / 2;
+  const cy = h * 0.54;
+  const R = Math.min(w, h) * 0.3;
+
+  // The track.
+  ctx.strokeStyle = PLATE_COLORS.rim;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+  plateText(ctx, 'NUCLEUS', cx, cy + small * 0.3, { align: 'center', size: small, color: PLATE_COLORS.dim });
+  ctx.fillStyle = PLATE_COLORS.steel;
+  ctx.beginPath(); ctx.arc(cx, cy, Math.max(2.5, R * 0.04), 0, Math.PI * 2); ctx.fill();
+
+  if (wl == null) return [];
+  strokeRingWave(ctx, cx, cy, R, wl, { lineWidth: Math.max(1.2, h * 0.006) });
 
   plateText(ctx, `WAVELENGTH ${wl} pm`, 8, h * 0.08, { size: small * 1.15, color: PLATE_COLORS.phosphor, weight: 700 });
   plateText(ctx, `TRACK ${RING_CIRCUMFERENCE_PM.toFixed(0)} pm ROUND`, w - 8, h * 0.08, { align: 'right', size: small, color: PLATE_COLORS.dim });
@@ -363,10 +384,7 @@ export class CloudPlate extends PlateBench {
    * method that joins two shots, and none will be added.
    */
   track() {
-    return {
-      refused: true,
-      reason: 'Tracking needs a position and a speed at the same moment. Fixing the position blurs the speed, and fixing the speed blurs the position.'
-    };
+    return trackRefusal();
   }
 
   draw(ctx, w, h, item, o) {
