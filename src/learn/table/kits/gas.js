@@ -20,12 +20,13 @@
  */
 
 import { registerKit } from './registry.js';
-import { paintPiece, paintFixture, faceKey, RECTS, paintLegend, rigGeometry, tankFace, wrap } from './gas-draw.js';
+import { paintPiece, paintFixture, faceKey, RECTS, paintLegend, tankFace, wrap } from './gas-draw.js';
 import {
-  rigRun, pinholeRead, tubeRead, secondsOf, seatedIn, GASES, tankRead, commonRead
+  rigRun, boxRead, pinholeRead, tubeRead, secondsOf, seatedIn, GASES, tankRead, commonRead, valueOf
 } from './gas-read.js';
-import { buildTank, buildPelletDish, buildBarrel, buildLid } from '../../engine/gas-props.js';
-import { buildSocket } from '../../engine/lab-props.js';
+import { gasDress } from './gas-3d.js';
+import { buildTank, buildPelletDish } from '../../engine/gas-props.js';
+import { registerGasTour } from '../tour-bellows.js';
 
 export const GAS_KIT_ID = 'gas';
 export const GAS_BOUNDS = Object.freeze({ w: 150, h: 64 });
@@ -40,6 +41,14 @@ function run(state, fixtureId) {
   const f = state.fixtures[fixtureId];
   if (!f || f.noRun) return null;
   if (f.kind === 'rig') return rigRun(state, fixtureId);
+  if (f.kind === 'box') {
+    const plot = f.props.plot;
+    if (!plot) return null;
+    const q = boxRead(state, fixtureId);
+    const x = valueOf(q, plot.x);
+    const y = valueOf(q, plot.y);
+    return Number.isFinite(x) && Number.isFinite(y) ? { x: Math.round(x * 1e6) / 1e6, y: Math.round(y * 1e6) / 1e6, label: 'box' } : null;
+  }
   if (f.kind === 'pinhole') {
     const r = pinholeRead(state, fixtureId);
     const c = r.chambers[f.props.recordIndex || 0];
@@ -90,39 +99,15 @@ function piece3d(p, state, c) {
   return null;
 }
 
-/** A glass barrel over every cylinder's picture, a lid over the chambers and the common tank, a tube over the tube: the glass is solid, the gas is the picture. */
+/** The glass over every vessel's picture, and the crowd of moving particles inside it (`gas-3d.js`); the picture beneath is the table's own. */
 function dress3d(f, state, c) {
-  const { scale: s, toPlate, box } = c;
-  const group = new c.THREE.Group();
-  const put = (obj, ux, uy, y = 0) => { const p = toPlate({ x: ux, y: uy }); obj.position.set(p.x, c.ground + y, p.z); group.add(obj); return obj; };
-  if (f.kind === 'rig') {
-    const g = rigGeometry(f, { box, dials: Object.keys(f.dials).filter(n => !f.props.hidden?.includes(n)).map((n, i) => ({ y: box.y0 + 8 + i * 5 })) });
-    for (const cj of g.cyls) {
-      const b = cj.barrel;
-      const len = (b.x1 - b.x0) * s;
-      put(buildBarrel(len, (b.y1 - b.y0) * s * 1.05, { mats: c.mats }), (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, 0.002);
-    }
-  } else if (f.kind === 'pinhole') {
-    const n = (f.props.chambers || []).length;
-    const lastDial = Object.keys(f.dials).length ? box.y0 + 8 + (Object.keys(f.dials).length - 1) * 5 : box.y0 + 8;
-    const cw = (f.size.w - 4) / n;
-    const h = f.props.chamberH ?? 12;
-    for (let i = 0; i < n; i++) put(buildLid((cw - 2) * s, h * s, 0.03, { mats: c.mats }), box.x0 + 2 + i * cw + (cw - 2) / 2, lastDial + 4 + h / 2, 0.002);
-  } else if (f.kind === 'tube') {
-    const lastDial = Object.keys(f.dials).length ? box.y0 + 8 + (Object.keys(f.dials).length - 1) * 5 : box.y0 + 8;
-    put(buildLid((f.size.w - 8) * s, 5.6 * s, 0.026, { mats: c.mats }), box.x0 + f.size.w / 2, lastDial + 5 + 2.7, 0.002);
-  } else if (f.kind === 'common') {
-    const w = f.size.w * 0.44;
-    put(buildLid(w * s, (f.props.tankH ?? 17) * s, 0.04, { mats: c.mats }), box.x0 + f.size.w * 0.52 + w / 2, box.y0 + 8.5 + (f.props.tankH ?? 17) / 2, 0.002);
-  }
-  return group.children.length ? group : null;
+  return gasDress(f, state, c);
 }
 
 function slotRole(zone, state) {
   return Object.values(state.fixtures).some(f => f.kind === 'scale' && f.props.slot === zone.id) ? 'well'
     : Object.values(state.fixtures).some(f => f.kind === 'rig' && f.props.pellet === zone.id) ? 'cradle' : null;
 }
-void buildSocket;
 
 export const GAS_KIT = {
   id: GAS_KIT_ID,
@@ -151,6 +136,7 @@ export const GAS_KIT = {
 };
 
 registerKit(GAS_KIT);
+registerGasTour();
 
 /** A stage's declaration with the gas kit's defaults: the kit, the bounds, a parked recorder strip. */
 export function gasTable(spec, { w = GAS_BOUNDS.w, recorder = null } = {}) {
@@ -204,14 +190,15 @@ export function rig(id, at, o = {}) {
   const {
     cyls, volumes = null, volumeStart = 1, temps = null, tempList = 'K', tempStart = 1, amounts = null, amountStart = 1,
     show = {}, plot = null, vmax = 40, units = 'kpa', compact = false, w = null, h = null, speedScreen = false, bar = null, target = null,
-    words = null, pellet = null, label = 'Cylinder', runLabel = 'Record', rowH = null, screenH = null, speedMax = 2400, screenRef = null, T = null
+    words = null, pellet = null, label = 'Cylinder', runLabel = 'Record', rowH = null, screenH = null, speedMax = 2400, screenRef = null, T = null,
+    trueSize = false
   } = o;
   const dials = {};
   if (volumes) dials.volume = { min: 1, max: volumes.length, step: 1, value: volumeStart, label: 'Piston', labels: volumes.map(v => `${v} L`) };
   if (temps) dials.temp = { min: 1, max: temps.length, step: 1, value: tempStart, label: 'Heater', labels: temps.map(t => tempLabel(t, tempList)) };
   if (amounts) dials.amount = { min: 1, max: amounts.length, step: 1, value: amountStart, label: 'Gas in', labels: amounts.map(n => `${n} mol`) };
   const nd = Object.keys(dials).length;
-  const key = ['gauge', 'volume', 'temperature', 'amount', 'knocks', 'speed', 'energy', 'kelvin', 'z', 'mass', 'room', 'pull', 'pullShare'];
+  const key = ['gauge', 'ideal', 'volume', 'temperature', 'amount', 'knocks', 'speed', 'energy', 'kelvin', 'z', 'mass', 'room', 'pull', 'pullShare'];
   const on = k => (['gauge', 'volume', 'temperature', 'amount'].includes(k) ? show[k] !== false : Boolean(show[k]));
   const lines = key.filter(on).length;
   const cols = o.cols ?? (compact || speedScreen ? 1 : 2);
@@ -229,11 +216,28 @@ export function rig(id, at, o = {}) {
     ...(volumes ? { volumes } : {}), ...(temps ? { temps, tempList } : {}), ...(amounts ? { amounts } : {}),
     show, vmax, units, compact, speedScreen, speedMax, rowH: pitch, cols,
     ...(plot ? { plot } : {}), ...(bar != null ? { bar } : {}), ...(target != null ? { target } : {}), ...(words ? { words } : {}),
-    ...(pellet ? { pellet } : {}), ...(screenH ? { screenH } : {}), ...(screenRef != null ? { screenRef } : {}), ...(T != null ? { T } : {})
+    ...(pellet ? { pellet } : {}), ...(screenH ? { screenH } : {}), ...(screenRef != null ? { screenRef } : {}), ...(T != null ? { T } : {}),
+    ...(trueSize ? { trueSize: true } : {})
   };
   return {
     id, kind: 'rig', label: o.title || (compact ? ' ' : 'Cylinder and piston'), at: { ...at }, size: { w: width, h: Math.round(height * 10) / 10 }, dials,
     ...(runKey ? { runLabel } : { noRun: true }), props
+  };
+}
+
+/**
+ * A sealed box of one gas with a gauge on its roof, its side wall and its floor, and (when `temps` is given) a heater dial. `units: 'plain'`
+ * prints the gauges as bare figures until a card has named the unit. `plot` is what Record writes: `{x, y}`, each one of TC T P.
+ */
+export function box(id, at, { gas = 'N2', n = 1, V = 10, T = 300, temps = null, tempList = 'C', tempStart = 1, plot = null, units = 'kpa', gaugeMax = 600, w = 56, side = 17, runLabel = 'Record', label = 'Sealed box' } = {}) {
+  const dials = {};
+  if (temps) dials.temp = { min: 1, max: temps.length, step: 1, value: tempStart, label: 'Heater', labels: temps.map(t => tempLabel(t, tempList)) };
+  const nd = Object.keys(dials).length;
+  const lastDial = nd ? 8 + (nd - 1) * 5 : 6;
+  const h = Math.round((lastDial + 9 + side + 6.4 + (plot ? 6.4 : 0)) * 10) / 10;
+  return {
+    id, kind: 'box', label, at: { ...at }, size: { w, h }, dials, ...(plot ? { runLabel } : { noRun: true }),
+    props: { gas, n, V, T, ...(temps ? { temps, tempList } : {}), gaugeMax, units, side, ...(plot ? { plot } : {}) }
   };
 }
 
@@ -282,14 +286,22 @@ export function commonTank(id, at, { of = `${id}.valves`, V = 10, T = 300, volum
  * A pinhole: chambers of gas, each with a hole in its wall, and a stopwatch dial. `chambers` are `{id, gas, label, sealed}`; `times` the
  * seconds the dial steps through. `showHalf` prints the time each takes to half-empty. Record writes the share left of chamber `recordIndex`.
  */
-export function pinhole(id, at, { chambers, times, timeStart = 1, showHalf = false, w = null, h = null, recordIndex = 0, record = true, runLabel = 'Record', chamberH = 12 } = {}) {
+export function pinhole(id, at, { chambers, times, timeStart = 1, showHalf = false, w = null, h = null, recordIndex = 0, record = true, runLabel = 'Record', chamberH = 12, picks = null, T = 300 } = {}) {
   const dials = { time: { min: 1, max: times.length, step: 1, value: timeStart, label: 'Stopwatch', labels: times.map(t => `${t} s`) } };
+  // A gas dial (`picks: { ref: { gases, label, start } }`): a chamber that names it (`pick: 'ref'`) holds whichever gas the dial stands at.
+  for (const [name, p] of Object.entries(picks || {})) {
+    dials[name] = { min: 1, max: p.gases.length, step: 1, value: p.start ?? 1, label: p.label || 'Gas', labels: p.gases.map(g => GASES[g].name) };
+  }
+  const nd = Object.keys(dials).length;
   const width = w ?? (chambers.length > 1 ? 66 : 44);
-  const height = h ?? (8 + 3.6 + 4 + chamberH + 6 + (showHalf ? 4.5 : 0) + (record ? 6.4 : 2.4));
+  const height = h ?? (8 + (nd - 1) * 5 + 3.6 + 4 + chamberH + 6 + (showHalf ? 4.5 : 0) + (record ? 6.4 : 2.4));
   return {
     id, kind: 'pinhole', label: 'Pinhole', at: { ...at }, size: { w: width, h: Math.round(height * 10) / 10 }, dials,
     ...(record ? { runLabel } : { noRun: true }),
-    props: { chambers, times, showHalf, recordIndex, chamberH, T: 300 }
+    props: {
+      chambers: chambers.map(c => (typeof c.pick === 'string' ? { ...c, pick: { dial: c.pick, gases: picks[c.pick].gases.slice() } } : c)),
+      times, showHalf, recordIndex, chamberH, T
+    }
   };
 }
 

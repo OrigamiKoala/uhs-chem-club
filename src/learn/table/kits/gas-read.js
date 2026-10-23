@@ -66,7 +66,8 @@ export function rigRead(state, id) {
     const n = amountOf(state, f, c);
     const item = { gas: c.gas, n, T: c.T ?? 300, V: c.V ?? 20, hold: c.hold || 'dial', P0: c.P0, vdw: c.vdw, follow: c.follow };
     const q = planGas(item, cfg);
-    return { ...q, id: c.id, label: c.label || c.id, sym: GASES[c.gas].sym, name: GASES[c.gas].name, n, dots: dotsFor(n || 0.0001), pelletDish: f.props.pellet || null };
+    // `ideal` is what the plain gas law says the gauge should read at this room, amount and temperature: the real gas (`vdw`) is held to it.
+    return { ...q, id: c.id, label: c.label || c.id, sym: GASES[c.gas].sym, name: GASES[c.gas].name, n, dots: dotsFor(n || 0.0001), pelletDish: f.props.pellet || null, ideal: pressureIdeal(n, q.T, q.V), gasKey: c.gas };
   });
 }
 
@@ -104,6 +105,7 @@ export function valueOf(q, key) {
     case 'nT': return q.n * q.T;
     case 'invV': return 1 / q.V;
     case 'pullShare': return q.pullShare * 100;
+    case 'ideal': return q.ideal;
     default: return NaN;
   }
 }
@@ -133,6 +135,26 @@ export function rigRun(state, id) {
   const y = valueOf(q, plot.y);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
   return { x: Math.round(x * 1e6) / 1e6, y: Math.round(y * 1e6) / 1e6, label: q.label };
+}
+
+/* ------------------------------------------------------------------
+   THE SEALED BOX: one gas, a heater, and a gauge on each of three walls
+   ------------------------------------------------------------------ */
+
+/** The walls a box carries a gauge on, in the order the picture prints them. */
+export const BOX_WALLS = Object.freeze([['roof', 'ROOF'], ['side', 'SIDE WALL'], ['floor', 'FLOOR']]);
+
+/**
+ * The box under its heater dial, read: the gas (`planGas`, one cylinder held at its room) and the push on each wall. The gas knocks every
+ * wall the same, because its particles go every way alike, so the three gauges are one figure; nothing here chooses that, the planner's
+ * single pressure is read at all three. (The weight of a gas is far too small to show on a gauge, which is why the floor is no different.)
+ */
+export function boxRead(state, id) {
+  const f = state.fixtures[id];
+  const p = f.props;
+  const cfg = { temps: p.temps || [], temp: f.dials.temp ? Math.round(f.dials.temp.value) : 1, tempList: p.tempList || 'C', volumes: [], volume: 1 };
+  const q = planGas({ gas: p.gas, n: p.n ?? 1, T: p.T ?? 300, V: p.V ?? 10, hold: 'V' }, cfg);
+  return { ...q, id, sym: GASES[p.gas].sym, dots: dotsFor(q.n), gasKey: p.gas, walls: BOX_WALLS.map(([wid, label]) => ({ id: wid, label, P: q.P })) };
 }
 
 /* ------------------------------------------------------------------
@@ -224,10 +246,11 @@ export function pinholeRead(state, id) {
   const T = f.props.T ?? 300;
   return {
     seconds: t,
-    chambers: (f.props.chambers || []).map(c => ({
-      ...c, sym: GASES[c.gas].sym, name: GASES[c.gas].name,
-      left: leftAfter(c.gas, t, T), half: halfTime(c.gas, T)
-    }))
+    chambers: (f.props.chambers || []).map(c => {
+      // A chamber may carry a gas dial (`pick`): the gas is the one the dial stands at, so a reference can be set to match a sample.
+      const gas = c.pick ? c.pick.gases[Math.round(f.dials[c.pick.dial].value) - 1] : c.gas;
+      return { ...c, gas, sym: GASES[gas].sym, name: GASES[gas].name, left: leftAfter(gas, t, T), half: halfTime(gas, T) };
+    })
   };
 }
 
