@@ -102,7 +102,7 @@ export const STAGE_STORY = {
     5: 'A sealed tank from the raiders\' cargo pod has been left out on the deck.'
   },
   'q3-ideal': {
-    5: 'A hiss sounds behind an unmarked hatch.'
+    3: 'Four of the holders are jammed, and Vess must know which hold more gas than the reference.'
   },
   'q4-mixtures': {
     6: 'The Fifth slips quiet argon into the blend.'

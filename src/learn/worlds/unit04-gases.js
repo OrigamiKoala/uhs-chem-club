@@ -48,7 +48,7 @@ export const UNIT_04 = {
       title: 'The Ideal Gas Law',
       line: 'Count sealed tanks with one equation.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit04/q3-ideal.js')
     },
