@@ -21,7 +21,9 @@
 import { registerKit } from './registry.js';
 import { paintPiece, paintFixture, faceKey, RECTS, contentTop, wrap, wrapN } from './heat-draw.js';
 import { buildIngot, buildTin, buildCupWall, buildThermometer } from '../../engine/heat-props.js';
-import { cupRead, wellRead, plotRead, warmRead, cellsOpen, occupiedCells, loggedArrangements, shakesOf, shakeCells, targetMap, BOND_ENTHALPIES, cardTerms, fmtEqn } from './heat-read.js';
+import { buildBathDress, buildPairDress, buildBondChip, buildPhaseCard, buildCellsDress, buildChamberDress, buildParticle } from '../../engine/heat-solids.js';
+import { cupRead, wellRead, plotRead, warmRead, cellsOpen, occupiedCells, loggedArrangements, shakesOf, shakeCells, targetMap, BOND_ENTHALPIES, cardTerms, fmtEqn, seatedIn } from './heat-read.js';
+import './heat-tour.js';
 
 export const HEAT_KIT_ID = 'heat';
 export const HEAT_BOUNDS = Object.freeze({ w: 150, h: 64 });
@@ -78,24 +80,102 @@ function planJoin(a, b) {
   return { holds: false, home: true, reason: 'Nothing here joins: put a piece in a place.' };
 }
 
-/** A block of metal is an ingot; a charge of chemicals is a tin; the cards are cards. */
+/**
+ * A block of metal is an ingot; a charge of chemicals is a tin; a bond chip carries its two atoms as solids; a phase card is a glass box of
+ * twelve particles; a particle is a bead. The other cards are cards.
+ */
 function piece3d(p, state, c) {
   if (p.kind === 'block') return buildIngot(c);
   if (p.kind === 'charge') return buildTin(c);
+  if (p.kind === 'bond') return buildBondChip(c, p.props.which);
+  if (p.kind === 'phase') return buildPhaseCard(c, p);
+  if (p.kind === 'ptc') return buildParticle(c);
   return null;
 }
 
-/** A lagged wall round every cup's bath, and a glass thermometer standing in it: the glass and the metal are solid, the bath is the picture. */
+const clamp01 = v => Math.max(0, Math.min(1, v));
+
+/**
+ * Solid parts over an instrument's picture, each following the same reading the picture prints:
+ *   a cup: a lagged wall round the bath, the bath itself (tinted by which way it moved, as deep as its mass) and a glass thermometer whose
+ *     fluid stands as high as the reading;
+ *   a well: the two atoms, as far apart as the crank has pulled them, and the rod between them thinning as the bond goes;
+ *   cells: a low wall round each cell and the gate across the row; a chamber: its walls and the beads of the last shake.
+ */
 function dress3d(f, state, c) {
-  if (f.kind !== 'cup') return null;
   const { scale: s, toPlate, box } = c;
   const nd = Object.keys(f.dials).length;
   const top = contentTop(nd);
   const group = new c.THREE.Group();
   const put = (obj, ux, uy, y = 0) => { const q = toPlate({ x: ux, y: uy }); obj.position.set(q.x, c.ground + y, q.z); group.add(obj); return obj; };
-  put(buildCupWall(20 * s, 16 * s, { mats: c.mats }), box.x0 + 13, box.y0 + top + 23.5, 0.002);
-  put(buildThermometer(0.2, { mats: c.mats }), box.x0 + 28.5, box.y0 + top + 30, 0.002);
-  return group;
+
+  if (f.kind === 'cup') {
+    const wx = box.x0 + 13;
+    const wy = box.y0 + top + 23.5;
+    put(buildCupWall(20 * s, 16 * s, { mats: c.mats }), wx, wy, 0.002);
+    const tx = box.x0 + 28.5;
+    const ty = box.y0 + top + 30;
+    put(buildThermometer(0.2, { mats: c.mats }), tx, ty, 0.002);
+    const bath = buildBathDress(20 * s, 16 * s, { own: c.own, thermoAt: { x: (tx - wx) * s, z: (ty - wy) * s } });
+    put(bath, wx, wy, 0.002);
+    group.userData.update = (fx, st) => {
+      const r = cupRead(st, fx.id);
+      bath.userData.set({
+        level: Math.min(1, 0.45 + (r.mWater / (fx.props.vmax || 220)) * 0.5),
+        tint: r.Tf > r.T0 + 0.05 ? 'warm' : r.Tf < r.T0 - 0.05 ? 'cool' : 'still',
+        frac: clamp01(Math.max(0.02, r.Tf / 100)),
+        ink: r.Tf > 45 ? 'warm' : r.Tf < 15 ? 'cool' : 'mid'
+      });
+    };
+    return group;
+  }
+
+  if (f.kind === 'well') {
+    const atoms = f.props.atoms?.length ? f.props.atoms : ['H', 'H'];
+    const pair = buildPairDress(atoms, 2.4 * s, { own: c.own });
+    put(pair, box.x0 + f.size.w / 2, box.y0 + top + 6, 0.002);
+    group.userData.update = (fx, st) => {
+      const r = wellRead(st, fx.id);
+      pair.userData.set({ gap: (2 + r.frac * (fx.size.w - 20)) * s, strength: 1 - r.frac });
+    };
+    return group;
+  }
+
+  if (f.kind === 'cells') {
+    const p = f.props;
+    const cw = p.pitch ?? 13;
+    const row = box.x0 + (p.x0 ?? 4) + (p.cells * cw - 0.8) / 2;
+    const dress = buildCellsDress(p.cells, p.leftCells, (cw - 0.8) * s, (p.ch ?? 13) * s, cw * s, { mats: c.mats });
+    put(dress, row, box.y0 + top + 1 + (p.ch ?? 13) / 2, 0.002);
+    group.userData.update = (fx, st) => dress.userData.set({ open: cellsOpen(st, fx.id).open });
+    return group;
+  }
+
+  if (f.kind === 'chamber') {
+    const p = f.props;
+    const cw = 8.2;
+    const dress = buildChamberDress(p.cells, p.particles, cw * s, 9 * s, { mats: c.mats, own: c.own });
+    put(dress, box.x0 + 3 + (p.cells * cw - 0.8) / 2, box.y0 + top + 1 + 4.5, 0.002);
+    group.userData.update = (fx, st) => {
+      const k = shakesOf(st, fx.id);
+      dress.userData.set({ cells: k[k.length - 1] || [] });
+    };
+    return group;
+  }
+
+  return null;
+}
+
+/**
+ * A tin that has been in a cup keeps what the bath did (`props.rise`, in degrees), so the readings can be compared once the tins are out
+ * again and laid on a rail or in a tray. The reading is the cup's own (`cupRead`), taken whenever a tin stands in a cup's mouth.
+ */
+function settle(state) {
+  for (const f of Object.values(state.fixtures)) {
+    if (f.kind !== 'cup') continue;
+    const item = seatedIn(state, f.props.slot);
+    if (item && item.kind === 'charge') item.props.rise = Math.round(cupRead(state, f.id).dT * 10) / 10;
+  }
 }
 
 export const HEAT_KIT = {
@@ -123,6 +203,7 @@ export const HEAT_KIT = {
   paintFixture,
   piece3d,
   dress3d,
+  settle,
   deckStyle: () => 'instrument',
   slot3d: () => 'well',
   // What a piece's face prints as one line of words: a card its first line (long words break in two), an equation card its equation.
@@ -291,12 +372,12 @@ export function chamberFixture(id, at, { cells = 8, particles = 4, title = 'Cham
 
 /** The plot of ΔG against temperature for a reaction of the given ΔH (kJ/mol) and ΔS (J/(mol·K)), and the dial that walks along it. */
 export function plotFixture(id, at, o = {}) {
-  const { dH, dS, Ts, tempStart = 1, hideDG = false, hideTug = false, hideCrossing = true, title = 'Free energy', w = 60, record = false, runLabel = 'Record', eq = '' } = o;
+  const { dH, dS, Ts, tempStart = 1, hideDG = false, hideTug = false, hideCrossing = true, title = 'Free energy', w = 60, record = false, runLabel = 'Record', eq = '', words = false } = o;
   return {
     id, kind: 'plot', label: title, at: { ...at }, size: { w, h: Math.round((contentTop(1) + 28) * 10) / 10 },
     dials: { temp: { min: 1, max: Ts.length, step: 1, value: tempStart, label: 'Temperature', labels: Ts.map(T => `${T} K`) } },
     ...(record ? { runLabel } : { noRun: true }),
-    props: { dH, dS, Ts, hideDG, hideTug, hideCrossing, eq }
+    props: { dH, dS, Ts, hideDG, hideTug, hideCrossing, eq, words }
   };
 }
 
@@ -334,3 +415,4 @@ export function selectorFixture(id, label, at, { options, start = 1, w = 46 } = 
 }
 
 export * from './heat-read.js';
+export * from './heat-parts.js';
