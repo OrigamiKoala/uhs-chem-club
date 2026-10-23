@@ -108,7 +108,8 @@ export const STAGE_STORY = {
     1: 'The Fifth fed a second gas into the station\'s fuel line, and Vess needs to see what each gas is doing.'
   },
   'q5-speed': {
-    4: 'A pinhole leak is bleeding gas out of the station.'
+    1: 'A pinhole leak is bleeding gas out of the station, and Vess wants to know who loses it first.',
+    3: 'Something is leaking from the vent stack, and Vess needs to name it.'
   },
   'q6-real': {
     1: 'The Fifth packed the station tanks tighter than any gas law was meant for.'

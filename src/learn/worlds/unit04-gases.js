@@ -66,7 +66,7 @@ export const UNIT_04 = {
       title: 'Speed and Escape',
       line: 'Race gases through holes and tubes.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit04/q5-speed.js')
     },
