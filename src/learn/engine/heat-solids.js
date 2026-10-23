@@ -29,7 +29,7 @@ const at = (obj, x = 0, y = 0, z = 0) => { obj.position.set(x, y, z); return obj
 const std = (own, color, roughness = 0.6, metalness = 0.1, extra = {}) => own(new THREE.MeshStandardMaterial({ color, roughness, metalness, ...extra }));
 
 /** The inks the bath and the column take: the plate's warm and cold, and its amber between. */
-export const BATH_INK = Object.freeze({ warm: '#c0652b', cool: '#6f8fb0', still: '#78a142' });
+export const BATH_INK = Object.freeze({ warm: '#c0652b', cool: '#6f8fb0', still: '#78a142', metal: '#77797a' });
 const COLUMN_INK = Object.freeze({ warm: '#c0652b', cool: '#6f8fb0', mid: '#d99423' });
 
 /* ------------------------------------------------------------------ the cup's bath and its thermometer */

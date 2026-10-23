@@ -119,12 +119,11 @@ export const STAGE_STORY = {
     4: 'The shelters\' emergency kits hold warmers, packs and tablets, and Vess is checking each one.'
   },
   'q2-calorimetry': {
-    1: 'The geothermal cooling jackets need a calibrated water bath before the main valves open.',
-    8: 'A technician left the cover off the reserve bath.'
+    1: 'The cooling jackets can hold water or iron, and Vess must choose before the main valves open.',
+    3: 'A fitting from the siphon line carries no stamp, and Vess wants its metal named.'
   },
   'q3-enthalpy': {
-    1: 'The Fifth left fuel canisters along the ridge, and Vess needs to know what each charge delivers.',
-    8: 'Three fuel tanks stand ready for the ascent skiff.'
+    2: 'The ascent skiff can lift only so much fuel, so Vess must pick its tank with care.'
   },
   'q4-bonds': {
     1: 'The siphon’s cracking coil pulls gas molecules apart over the vent.',

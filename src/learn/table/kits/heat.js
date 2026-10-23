@@ -122,7 +122,7 @@ function dress3d(f, state, c) {
       const r = cupRead(st, fx.id);
       bath.userData.set({
         level: Math.min(1, 0.45 + (r.mWater / (fx.props.vmax || 220)) * 0.5),
-        tint: r.Tf > r.T0 + 0.05 ? 'warm' : r.Tf < r.T0 - 0.05 ? 'cool' : 'still',
+        tint: Math.abs(r.c - 4.184) > 0.01 ? 'metal' : r.Tf > r.T0 + 0.05 ? 'warm' : r.Tf < r.T0 - 0.05 ? 'cool' : 'still',
         frac: clamp01(Math.max(0.02, r.Tf / 100)),
         ink: r.Tf > 45 ? 'warm' : r.Tf < 15 ? 'cool' : 'mid'
       });
@@ -174,7 +174,11 @@ function settle(state) {
   for (const f of Object.values(state.fixtures)) {
     if (f.kind !== 'cup') continue;
     const item = seatedIn(state, f.props.slot);
-    if (item && item.kind === 'charge') item.props.rise = Math.round(cupRead(state, f.id).dT * 10) / 10;
+    if (!item) continue;
+    const r = cupRead(state, f.id);
+    if (item.kind === 'charge') item.props.rise = Math.round(r.dT * 10) / 10;
+    // A block that has been in the bath keeps how far the bath rose and how far the block fell.
+    if (item.kind === 'block') item.props.trial = { rise: Math.round(r.dT * 10) / 10, fall: Math.round((item.props.T - r.Tf) * 10) / 10 };
   }
 }
 

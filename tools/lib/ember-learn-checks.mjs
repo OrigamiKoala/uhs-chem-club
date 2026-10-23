@@ -11,6 +11,15 @@
 
 /** Words a refusal may not carry on a stage: the rule or the answer the stage is asking the player to find. Per quest, per stage (1-based). */
 const LEAKS = {
+  'q3-enthalpy': {
+    1: [/\b160\b/, /divid/i, /per mole.*8,?000/i],
+    3: [/per gram/i, /weigh/i, /lightest/i, /\bmass\b/i]
+  },
+  'q2-calorimetry': {
+    2: [/tenth/i, /less energy/i, /\bsmaller\b/i, /needs? (a )?(smaller|lower)/i],
+    3: [/\bcopper\b/i, /\bc\b.*\b0\.\d/i, /\bmass\b/i],
+    4: [/multipl/i, /4\.184/, /\bmass\b/i]
+  },
   'q1-flow': {
     1: [/halfway/i, /\baverage\b/i, /\bmiddle\b/i],
     3: [/\bmass\b/i, /\bweight\b/i, /particles/i, /amount/i, /\btank\b.*\b(more|most)\b/i],
@@ -96,6 +105,77 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       const t = done(e1, 3);
       holds(['warmer', 'cold', 'fizz', 'lime'].every(id => t.pieces[id].props.rise != null), `${q} stage 4: a tin that has been in the cup does not keep its reading`);
       holds(t.pieces.fizz.props.rise < 0, `${q} stage 4: the fizzing tablet does not cool the bath`);
+    }
+  }
+
+  /* ---- q2-calorimetry ---- */
+  const e2 = mods['q2-calorimetry'];
+  if (e2) {
+    const q = 'unit05/q2-calorimetry';
+    holds(e2.STAGES.length === 4, `${q} should have four stages`);
+    {
+      const t = done(e2, 1);
+      near(HK.cupRead(t, 'iron').dT, HK.cupRead(t, 'water').dT, 0.1, `${q} stage 2 (equal rises)`);
+      holds(HK.cupRead(t, 'iron').joules < HK.cupRead(t, 'water').joules / 5, `${q} stage 2: the iron does not need far less heat than the water`);
+      // The wrong model is on the table: the same heat in both cups raises the iron far further than the water.
+      const s0 = start(e2, 1);
+      holds(HK.cupRead(s0, 'iron').dT > 5 * HK.cupRead(s0, 'water').dT, `${q} stage 2: at the same heat the iron does not rise far further than the water`);
+      holds(Boolean(e2.STAGES[0].predict) && !Object.values(start(e2, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
+    }
+    {
+      // The fitting is copper: the c the bath's rise gives is the listed copper value, and no other metal on the plate is as near.
+      const t = run(start(e2, 2), [{ place: { piece: 'fitting', to: 'slot:cup.mouth' } }]);
+      const r = HK.cupRead(t, 'cup'); const b = t.pieces.fitting.props;
+      const c = TD.blockSpecificHeat(b.m, b.T, r.mWater, r.T0, r.Tf);
+      const list = { al: TD.SPECIFIC_HEATS.aluminum.c, fe: TD.SPECIFIC_HEATS.iron.c, cu: TD.SPECIFIC_HEATS.copper.c, ag: TD.SPECIFIC_HEATS.silver.c };
+      const nearest = Object.keys(list).sort((x, y) => Math.abs(list[x] - c) - Math.abs(list[y] - c))[0];
+      same(nearest, 'cu', `${q} stage 3 (the metal the measured c names)`);
+      holds(Math.abs(list.fe - c) > 0.04, `${q} stage 3: iron is too near copper to tell apart`);
+      holds(Boolean(t.pieces.fitting.props.trial), `${q} stage 3: a block that has been in the bath does not keep its trial`);
+      same(e2.STAGES[2].check(e2.stateFor(2, e2.SOLUTIONS[2])).ok, true, `${q} stage 3 (the solution)`);
+    }
+    {
+      const t = run(start(e2, 3), [{ place: { piece: 'mix', to: 'slot:cup.mouth' } }]);
+      near(e2.CHECKS.Q_STAGE4, HK.cupRead(t, 'cup').q, 1, `${q} stage 4 (the heat the bath caught)`);
+      near(HK.markerRead(done(e2, 3), 'joules'), HK.cupRead(t, 'cup').q, 25, `${q} stage 4 (the marker)`);
+    }
+  }
+
+  /* ---- q3-enthalpy ---- */
+  const e3 = mods['q3-enthalpy'];
+  if (e3) {
+    const q = 'unit05/q3-enthalpy';
+    {
+      // The cup caught 8 kJ from 0.05 mol: 160 kJ for every mole, and the chart that is right drops by exactly that.
+      const t = run(start(e3, 0), [{ place: { piece: 'powder', to: 'slot:cup.mouth' } }]);
+      const r = HK.cupRead(t, 'cup');
+      near(-r.q / 1000 / r.moles, -160, 0.5, `${q} stage 1 (ΔH from the bath's gain)`);
+      near(HK.shelvesRead(done(e3, 0), 'chart').dH, -r.q / 1000 / r.moles * -1 * -1, 0.5, `${q} stage 1 (the chart set)`);
+      holds(Boolean(e3.CHECKS.AFTER.includes(-160)) && HK.shelvesRead(done(e3, 0), 'chart').down, `${q} stage 1: the chart set does not drop`);
+    }
+    {
+      // The prediction's cards print heat per mole, and the biggest per mole is not the biggest per gram.
+      const perMole = id => -TD.FUELS[id].dHc;
+      const perGram = id => -TD.FUELS[id].dHc / TD.FUELS[id].molarMass;
+      const ids = e3.CHECKS.FUEL_IDS;
+      const top = f => [...ids].sort((x, y) => f(y) - f(x))[0];
+      same(top(perMole), 'methane', `${q} stage 2 (the biggest figure per mole)`);
+      same(top(perGram), 'hydrogen', `${q} stage 3 (the biggest figure per gram)`);
+      holds(e3.CHECKS.BY_GRAM.join() === [...ids].sort((x, y) => perGram(x) - perGram(y)).join(), `${q} stage 3 (the order by the gram)`);
+      holds(e3.CHECKS.BY_GRAM.join() !== [...ids].sort((x, y) => perMole(x) - perMole(y)).join(), `${q} stage 3: the order by the gram is the order by the mole`);
+      holds(Boolean(e3.STAGES[1].predict) && !Object.values(start(e3, 1).fixtures).length, `${q} stage 2: the predict stage shows an instrument`);
+      // Each tin's reading in the tank is the planner's, and the tank stays on the thermometer's scale.
+      let t = start(e3, 2);
+      for (const id of ids) {
+        t = run(t, [{ place: { piece: id, to: 'slot:cup.mouth' } }]);
+        const r = HK.cupRead(t, 'cup');
+        near(t.pieces[id].props.rise, r.dT, 0.06, `${q} stage 3 (${id}'s reading kept on its tin)`);
+        near(r.dT, e3.CHECKS.riseOf(id), 0.01, `${q} stage 3 (${id}'s rise)`);
+        holds(r.Tf < 100, `${q} stage 3: ${id} takes the thermometer off its scale`);
+      }
+      const hi = HK.cupRead(run(start(e3, 2), [{ place: { piece: 'hydrogen', to: 'slot:cup.mouth' } }]), 'cup').dT;
+      holds(hi > 2 * e3.CHECKS.riseOf('methanol'), `${q} stage 3: the readings are too close to rank by eye`);
+      same(done(e3, 2).zones.rail.order.join(), e3.CHECKS.BY_GRAM.join(), `${q} stage 3 (the rail)`);
     }
   }
 

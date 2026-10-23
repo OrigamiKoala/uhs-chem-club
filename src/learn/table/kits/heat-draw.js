@@ -339,7 +339,7 @@ function paintCup(ctx, f, state, b) {
   ctx.fillStyle = '#100f0c';
   ctx.fillRect(F.x(cx0), F.y(cy0), F.len(cx1 - cx0), F.len(cy1 - cy0));
   const level = Math.min(1, 0.45 + (r.mWater / (p.vmax || 220)) * 0.5);
-  ctx.fillStyle = r.Tf > r.T0 + 0.05 ? 'rgba(192,101,43,0.30)' : r.Tf < r.T0 - 0.05 ? 'rgba(111,143,176,0.32)' : 'rgba(111,143,63,0.22)';
+  ctx.fillStyle = Math.abs(r.c - 4.184) > 0.01 ? 'rgba(119,121,122,0.45)' : r.Tf > r.T0 + 0.05 ? 'rgba(192,101,43,0.30)' : r.Tf < r.T0 - 0.05 ? 'rgba(111,143,176,0.32)' : 'rgba(111,143,63,0.22)';
   ctx.fillRect(F.x(cx0), F.y(cy1 - (cy1 - cy0) * level), F.len(cx1 - cx0), F.len((cy1 - cy0) * level));
   ctx.strokeStyle = STEEL; ctx.lineWidth = 2;
   ctx.strokeRect(Math.round(F.x(cx0)) + 0.5, Math.round(F.y(cy0)) + 0.5, Math.round(F.len(cx1 - cx0)), Math.round(F.len(cy1 - cy0)));

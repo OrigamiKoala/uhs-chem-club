@@ -40,7 +40,7 @@ export const UNIT_05 = {
       title: 'Calorimetry',
       line: 'Catch a reaction’s heat in a weighed water bath and turn a thermometer rise into joules and kilojoules per mole.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit05/q2-calorimetry.js')
     },
@@ -49,7 +49,7 @@ export const UNIT_05 = {
       title: 'Enthalpy of Reaction',
       line: 'Express heat per mole with the system’s sign, flip and scale thermochemical equations, and compare fuels per gram.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 3,
       status: 'live',
       module: () => import('../quests/unit05/q3-enthalpy.js')
     },
