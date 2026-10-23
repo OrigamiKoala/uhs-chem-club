@@ -2740,7 +2740,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   const holds = (c, what) => { if (!c) fail(what); };
 
   if (q3) {
-    const { PAIRS, LATTICES, morse, byLatticeEnergy, coulombIndex } = BONDDATA;
+    const { PAIRS, LATTICES, morse } = BONDDATA;
     const BOND = await import('../src/learn/table/kits/bonds.js');
     const tableOf = i => TABLE.createTable(q3.STAGES[i].table, q3.STAGES[i].title);
     const endOf = i => TABLE.runScript(tableOf(i), q3.SOLUTIONS[i], { strict: true });
@@ -2758,13 +2758,8 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
         }
       }
     });
-    // 1 and 3. where the hand is left is graded against the real curve
+    // 1. where the hand is left is graded against the real curve
     near(BOND.wellRead(endOf(0), 'w').rows[0].gap, PAIRS['H-H'].r0, Math.max(6, PAIRS['H-H'].r0 * 0.1), 'unit03/q3-distance stage 1 (the bottom of H-H, pm)');
-    {
-      const zero = BOND.wellRead(endOf(2), 'w').rows[0].gap;
-      near(morse('H-H', zero), 0, 0.2 * PAIRS['H-H'].de, 'unit03/q3-distance stage 3 (energy where the hand is left)');
-      if (!(zero < PAIRS['H-H'].r0)) fail('unit03/q3-distance stage 3: the hand is not left inside the bottom');
-    }
     // 2. the marker is set to the depth of the H-Cl well, on its own steps
     {
       const t = endOf(1);
@@ -2773,39 +2768,31 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const d = t.fixtures.w.dials.depth;
       if (!(d.max >= PAIRS['H-Cl'].de * 1.1)) fail('unit03/q3-distance stage 2: the marker cannot reach below the bottom of the well');
     }
-    // 4. the bigger the atoms, the further out the bottom: A < C < B, so "between" is the true prediction
+    // 3. the predict stage holds the guesses and no instrument; the wrong idea (more pairs sit further apart) is a card
+    {
+      const t0 = tableOf(2);
+      holds(q3.STAGES[2].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q3-distance stage 3: the predict stage shows an instrument');
+      holds(['further', 'same', 'closer'].every(id => t0.pieces[id]?.kind === 'guess') && Object.keys(t0.pieces).length === 3, 'unit03/q3-distance stage 3: the guesses are the three cards and nothing else');
+    }
+    // 4. the more pairs, the shorter the bond and the deeper the well: the true answer is the opposite of the wrong card
     {
       const t = endOf(3);
-      const r = BOND.wellRead(t, 'w');
-      if (!(r.row('a').r0 < r.row('c').r0 && r.row('c').r0 < r.row('b').r0)) fail('unit03/q3-distance stage 4: fluorine\'s bottom does not sit between hydrogen\'s and chlorine\'s');
-      same(t.prediction.token, 'between', 'unit03/q3-distance stage 4 (the prediction)');
-      near(r.row('c').gap, PAIRS['F-F'].r0, 2, 'unit03/q3-distance stage 4 (a released pair settles at its own bottom)');
+      const order = t.zones.rail.order.map(id => PAIRS[t.pieces[id].props.pair]);
+      same(order.map(p => p.r0).join(), order.map(p => p.r0).slice().sort((a, b) => b - a).join(), 'unit03/q3-distance stage 4 (longest bond first)');
+      holds(order.map(p => p.order).join() === '1,2,3', 'unit03/q3-distance stage 4: the rail is not single, double, triple');
+      holds(order.every((p, k) => !k || p.de > order[k - 1].de), 'unit03/q3-distance stage 4: a shorter bond is not a deeper well');
+      same(new Set(order.map(p => p.a + p.b)).size, 1, 'unit03/q3-distance stage 4 (all three pairs are carbon with carbon)');
     }
-    // 5 and 6. the same three pairs, longest first and then hardest to pull apart first: the two orders are opposite
+    // 5. salts, most heat first: the real melting points, the hotplate reaches them, and charge over distance agrees
     {
-      const rail = i => { const t = endOf(i); return t.zones.rail.order.map(id => PAIRS[t.pieces[id].props.pair]); };
-      const longest = rail(4);
-      same(longest.map(p => p.r0).join(), longest.map(p => p.r0).slice().sort((a, b) => b - a).join(), 'unit03/q3-distance stage 5 (longest bond first)');
-      const deepest = rail(5);
-      same(deepest.map(p => p.de).join(), deepest.map(p => p.de).slice().sort((a, b) => b - a).join(), 'unit03/q3-distance stage 6 (hardest to pull apart first)');
-      if (deepest.some((p, k) => k && p.r0 <= deepest[k - 1].r0)) fail('unit03/q3-distance stage 6: the shorter bonds are not the deeper wells');
-    }
-    // 7. lattices, strongest first, and charge over distance agrees with the real energies
-    {
-      const t = endOf(6);
+      const t = endOf(4);
       const graded = t.zones.rail.order.map(id => t.pieces[id].props.lattice);
-      same(graded.join(), byLatticeEnergy(graded).join(), 'unit03/q3-distance stage 7 (lattices, strongest first)');
-      same(graded.slice().sort((a, b) => coulombIndex(b) - coulombIndex(a)).join(), graded.join(), 'unit03/q3-distance stage 7: charge over distance orders the lattices as the real energies do');
-    }
-    // 8. the salt that melts higher goes in the slot, and the hotplate reaches both melting points
-    {
-      const t = endOf(7);
-      const slot = Object.values(t.pieces).find(p => p.zone === 'slot:more');
-      const hot = Object.values(t.pieces).filter(p => p.kind === 'salt').sort((a, b) => LATTICES[b.props.lattice].melts - LATTICES[a.props.lattice].melts)[0];
-      same(slot.id, hot.id, 'unit03/q3-distance stage 8 (the higher melting point)');
-      if (!(t.fixtures.hp.dials.heat.max >= LATTICES[hot.props.lattice].melts + t.fixtures.hp.dials.heat.step)) fail('unit03/q3-distance stage 8: the hotplate cannot reach the melting point');
-      const [a, b] = Object.values(t.pieces).filter(p => p.kind === 'salt').map(p => LATTICES[p.props.lattice].melts).sort((x, y) => x - y);
-      if (!(b - a > t.fixtures.hp.dials.heat.step)) fail('unit03/q3-distance stage 8: the two salts melt within one step of the dial');
+      same(graded.join(), graded.slice().sort((a, b) => LATTICES[b].melts - LATTICES[a].melts).join(), 'unit03/q3-distance stage 5 (salts, most heat first)');
+      same(graded.slice().sort((a, b) => BONDDATA.coulombIndex(b) - BONDDATA.coulombIndex(a)).join(), graded.join(), 'unit03/q3-distance stage 5: charge over distance orders the salts as the real melting points do');
+      const heat = t.fixtures.hp.dials.heat;
+      const melts = graded.map(l => LATTICES[l].melts).sort((x, y) => x - y);
+      if (!(heat.max >= melts[2] + heat.step)) fail('unit03/q3-distance stage 5: the hotplate cannot reach the highest melting point');
+      for (let k = 1; k < 3; k++) if (!(melts[k] - melts[k - 1] > heat.step)) fail('unit03/q3-distance stage 5: two salts melt within one step of the dial');
     }
   }
 

@@ -72,7 +72,8 @@ export const STAGE_STORY = {
     5: 'The trapped miners need a liner that holds at 900 degrees without shocking anyone.'
   },
   'q3-distance': {
-    6: 'The miners need to know which seam will fight the drill the hardest.'
+    2: 'The breaker charge has to carry at least the energy that pulls a seam gas apart.',
+    4: 'Three seam gases hold carbon atoms together, and Vess needs to know how close.'
   },
   'q4-dots': {
     1: 'The blast filled the tunnel with unknown gases, and Vess must draw each one to know which is safe.',

@@ -49,7 +49,7 @@ export const UNIT_03 = {
       title: 'Bond Energy',
       line: 'Measure bonds to size the breaker charge.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q3-distance.js')
     },
