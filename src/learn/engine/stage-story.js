@@ -65,7 +65,7 @@ export const STAGE_STORY = {
     1: 'The records tent\'s magnet reads the real sample, and Vess wants the board to match it.'
   },
   'q7-pes': {
-    5: 'The Fifth left an unlabelled specimen at the tower, and its spectrum is the only clue to what it is.'
+    3: 'The Fifth left an unlabelled specimen at the tower, and its spectrum is the only clue to what it is.'
   },
   'q9-absorb': {
     8: 'The Fifth may have fouled the sealed tank, and its colour is the only gauge Vess has.'

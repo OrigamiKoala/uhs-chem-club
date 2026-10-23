@@ -27,6 +27,9 @@ export const LANTERNFALL_TOUR = {
     'shells:finder': { title: 'Address strip', text: 'Each cell is one number of a box\'s address. Drag a cell\'s knob to change it. The box the address names lights up on the rack, and if no box has that address, nothing lights.', dials: false },
     'shells:magnet': { title: 'Magnet', text: 'A magnet reads how hard something is pulled. Press "{run}" to read the pull. Electrons that stand alone, pointing the same way, add to the pull, and two pointing opposite ways cancel.', dials: false },
     'shells:marker': { title: 'Marker', text: 'Use the dial to set the number you have counted. Whatever it reads when you press Submit is your answer.', dials: false },
+    'pes:pes': { title: 'Chamber and strip', text: 'Put a specimen card in the holder and press "{run}". Light knocks electrons off the atom, and each lands on the strip at the energy it took to remove it; electrons removed at the same energy pile up. A "Light energy" dial, where there is one, sets how strong the light is, and a light only takes off the electrons it has enough energy for.', dials: false },
+    'pes:build': { title: 'Build an atom', text: 'Set the Protons and Electrons dials to build an atom. The peaks that atom would make are drawn over the strip as outlines, so you can see whether they cover the specimen\'s piles.', dials: false },
+    'pes:writer': { title: 'Page of rows', text: 'Each dial is one row of an atom, lowest energy at the top. Set it to the number of electrons you think that row holds.', dials: false },
     'cloud:wavering': { title: 'Ring track', text: 'A circular track. Drag a string onto it and the string is drawn round the ring, lap after lap, so you can see whether the laps land on each other or pile up in a band.' }
   },
   pieces: {
@@ -50,6 +53,7 @@ export const LANTERNFALL_TOUR = {
     'shells:lift': ['Lift Out', 'Drag it onto a box to take one electron out of it.'],
     'shells:etok': ['Electron cards', 'Each card is one electron with its address printed on it. Drag it onto the rack and it stands in the box its address names, or the rack says why it cannot.'],
     'shells:ccard': ['Written forms', 'Each card is a way of writing down an arrangement of electrons. Drag one into the slot to say which one you think the rack reads.'],
+    'pes:spec': ['Specimens', 'Each card is a sample of one kind of atom. Put it in the holder and fire the light at it; the card keeps a printout of what its strip showed.'],
     'cloud:tile': ['Strings', 'Each string has its own wavelength, printed on it. Drag one onto the track to see whether it closes into one ring.'],
     'cloud:film': ['Films', 'Each film is an outline cut from clear plastic, and all of them cover the same area. Lay one on the plate and it counts the dots inside its outline.']
   }

@@ -5,48 +5,56 @@
  * in a strip graded in energy, and they pile up. The result is the configuration drawn out, and it is the strongest evidence this world
  * offers that the rows you filled on the last bench are real: one peak per row, as tall as the row is full.
  *
- * The seventh of Lanternfall's TABLETOPS (plan `bench-tabletop.md`, phase T4c), on the spectrum kit (`table/kits/pes.js`). A specimen
- * card is put in the chamber and "Fire Light" drops its electrons into the bins of a strip (instanced piles in the built view); the
- * card keeps a printout of what it showed, so several can be ranked on a rail or filed in trays; the light's energy is a dial from the
- * third stage, because the least energy that frees an electron is how tightly it was held; an atom is built to match a sealed spectrum
- * (its own peaks lie over the strip as outlines); a configuration is written row by row.
+ * The seventh of Lanternfall's TABLETOPS (plan `bench-tabletop.md`, phase T4c), on the spectrum kit (`table/kits/pes.js`), reworked on
+ * 2026-10-23 around ONE CLICK and pitched for a first reader: knocking electrons off with light, and asking how much it takes. A
+ * specimen card is put in the chamber and "Fire Light" drops its electrons into the bins of a strip (instanced beads at `3D On`); the
+ * card keeps a printout of what it showed, so several can be ranked on a rail; the light's energy is a dial, because the least energy
+ * that frees an electron is how tightly it was held; an atom is built to match a sealed spectrum; a configuration is written row by row.
+ * This is optional depth beyond a first course, and the stage-two card says so.
+ *
+ * THE CLICK. Every electron of an atom looks alike, so a player expects a light either to take them all or none. The guess (all three of
+ * lithium's, one, or two) is asked with no chamber on the table, and then the weakest light that frees anything frees just one: the
+ * outer electron is held loosely and the two nearest the middle are held far harder.
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  hydrogen's and helium's spectra            -> photoelectron spectrum
- *   2  what the height of a peak counts           -> (height is a count)
- *   3  lithium's one loose electron               -> binding energy
- *   4  boron's outer ring, two peaks              -> subshells
- *   5  a sealed specimen, from its heights        -> (heights add to the atomic number)
- *   6  oxygen, fluorine and neon's inner peaks    -> (more protons, a tighter hold)
- *   7  three spectra, matched to three elements   -> (one electron more at a time)
- *   8  the configuration a sealed spectrum shows  -> the spectrum is the configuration
+ *   1  PREDICT: how many of lithium's electrons the weakest freeing light takes (no chamber) -> a guess before the evidence
+ *   2  TEST: set the light to the weakest energy that frees any                               -> binding energy
+ *   3  build the atom whose peaks match a sealed specimen's                                    -> the photoelectron spectrum
+ *   4  oxygen, fluorine and neon ranked by how hard they hold their innermost electrons       -> more charge, tighter hold
+ *   5  write down the configuration a sealed spectrum shows                                    -> the spectrum is the configuration
  *
- * THE ROWS' NAMES ARE NEVER ON THE BENCH until stage eight, whose answer they are. A peak is a position and a height and nothing
- * else; the strip's scale says "energy to remove" until the word for it is earned.
+ * THE ROWS' NAMES ARE NEVER ON THE BENCH until stage five, whose answer they are. A peak is a position and a height and nothing
+ * else; the strip's scale says "energy to remove" until the word for it is earned (stage 2).
+ *
+ * Cut on 2026-10-23 (problems doc T6, T7): the first two spectra and the tally (stage 3 teaches that heights are counts), boron's two
+ * subshells (a subshell is a second idea on top of the first), and the three third-row neighbours (stage 5 again at a larger count).
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { remember, recall } from '../../engine/predict.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  pesTable, specimen, chamber, buildFixture, writerFixture, tallyFixture, plaqueFixture,
-  chamberRead, buildRead, writtenRead, writerTarget, markerRead, freedBy, holdOf, electronsIn, spectrumOf, shellsOf,
+  pesTable, specimen, chamber, buildFixture, writerFixture,
+  chamberRead, buildRead, writtenRead, writerTarget, freedBy, holdOf, electronsIn, spectrumOf, shellsOf,
   ENERGY_STEPS, TOP_STEP, WRITER_ROWS, BINS, binOf, pilesOf, energyAt, LADDER, groundConfig, zOf
 } from '../../table/kits/pes.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
-  { term: /\bphotoelectron spectr(?:um|a)\b/i, introducedAt: 1 },
-  { term: /\bbinding energy\b/i, introducedAt: 3 },
-  { term: /\bsubshells?\b/i, introducedAt: 4 }
+  { term: /\bphotoelectron spectr(?:um|a)\b/i, introducedAt: 3 },
+  { term: /\bbinding energy\b/i, introducedAt: 2 }
 ];
 
 export const BUILDS_ON = ['unit02/q6-filling', 'unit02/q2-photon'];
 
 const SPEAKER = 'Vess';
+
+const QUEST_KEY = 'unit02/q7-pes';
+const GUESS_LABEL = { all: 'All three together', one: 'Just one', two: 'Two of them' };
 
 /** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
@@ -60,103 +68,69 @@ const CH = { x: 57, y: 25 };
 const CHAMBER = 'ch';
 const SLOT = `slot:${CHAMBER}.spec`;
 
-const where = (t, id) => (t.pieces[id].zone || '').replace(/^(tray|slot):/, '');
 const railOf = t => t.zones.rail.order.slice();
-const inTray = (t, id) => (t.pieces[id].zone || '').startsWith('tray:');
 
-/** The row ids of ring `ring` (0 is the innermost) of element `sym`: the rows whose electrons sit in that shell. */
-export function ringRows(sym, ring) {
-  const counts = groundConfig(zOf(sym));
-  const ns = [...new Set(LADDER.filter(r => counts[r.id]).map(r => r.n))].sort((a, b) => a - b);
-  return LADDER.filter(r => counts[r.id] && r.n === ns[ring]).map(r => r.id);
+/** The weakest light step that frees any electron of `sym`. */
+export function weakestStep(sym) {
+  for (let i = 1; i <= TOP_STEP; i++) if (freedBy(sym, energyAt(i)).length > 0) return i;
+  return null;
 }
 
-/** The cards on a rail along the bottom, one per specimen. */
-const cards = (list, y = 54, x0 = 24, pitch = 28) => list.map(([id, label, sym, note], i) => specimen(id, label, sym, { x: x0 + i * pitch, y }, { note }));
-
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  (() => {
-    const ch = chamber(CHAMBER, CH, ['a', 'b']);
-    return {
-      title: 'Two Spectra',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'This bench fires light at a specimen to knock its electrons off and sorts them into a strip by the energy each was held with: put a specimen in the holder and press "Fire Light". Press Submit when the table shows your answer.'
-      },
-      prompt: 'Rank the two specimens by how much energy it takes to knock their electrons off, lowest first.',
-      widget,
-      table: pesTable({
-        pieces: [specimen('a', 'SAMPLE A', 'H', { x: 0, y: 0 }), specimen('b', 'SAMPLE B', 'He', { x: 0, y: 0 })],
-        fixtures: [ch.fixture],
-        zones: { slots: ch.slots, rail: { id: 'rail', at: { x: 62, y: 54 }, size: { w: 84, h: 12 }, first: 'Comes off most easily', last: 'Comes off least easily', items: ['a', 'b'], start: ['b', 'a'] } }
-      }),
-      hints: [
-        'Drag a specimen into the chamber and press "Fire Light", then do the same with the other.',
-        'Compare where each specimen\'s pile stands along the strip, and how tall it is.',
-        'Put on the rail first the specimen whose pile stands nearer the low-energy end of the strip.'
-      ],
-      check(state) {
-        const t = state.table;
-        const order = railOf(t);
-        if (order.length < 2) return { ok: false, notYet: true, msg: 'Put both specimens on the rail.' };
-        const want = ['a', 'b'].slice().sort((p, q) => holdOf(t.pieces[p].props.sym) - holdOf(t.pieces[q].props.sym));
-        if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'The rail runs from the electrons that come off most easily: fire each specimen and see which pile stands further along the strip.' };
-      },
-      reward: {
-        log: 'A taller pile, further along the strip.',
-        title: 'Photoelectron Spectrum',
-        body: 'Counting how many electrons come off at each energy gives a photoelectron spectrum. The position of a peak says how much energy it takes to remove those electrons, and its height says how many of them there are. Spectra are drawn with the highest energy at the left.'
+  {
+    title: 'Lithium\'s Three',
+    // A PREDICT STAGE: the chamber is not on the table yet. The guess is made first, here, and comes back with the test.
+    predict: true,
+    prompt: 'Lithium has three electrons: when the weakest light that frees any of them shines, how many come off?',
+    widget,
+    table: pesTable({
+      pieces: [],
+      fixtures: [],
+      zones: {},
+      prediction: {
+        slot: { id: 'predict', label: 'My prediction', at: { x: 75, y: 22 }, size: { w: 30, h: 14 } },
+        tokens: [
+          { id: 'all', label: 'All three', at: { x: 38, y: 48 }, r: 7 },
+          { id: 'two', label: 'Two', at: { x: 75, y: 48 }, r: 7 },
+          { id: 'one', label: 'Just one', at: { x: 112, y: 48 }, r: 7 }
+        ]
       }
-    };
-  })(),
+    }),
+    hints: [
+      'Drag one of the three guesses into the slot.',
+      'Think about whether the three electrons of an atom are all held the same way, or whether some sit closer in.',
+      'There is no wrong guess yet; commit to the one you would bet on.'
+    ],
+    check(state) {
+      if (!state.table.prediction?.token) return { ok: false, notYet: true, msg: 'Put a guess in the slot.' };
+      return { ok: true };
+    },
+    onClear(state) {
+      const token = state.table.prediction?.token;
+      if (token) remember(QUEST_KEY, token);
+    },
+    reward: {
+      log: 'Prediction locked in.',
+      title: 'A Guess to Test',
+      body: 'If every electron were held the same way, a light would take all of them or none. Next, a chamber will fire light of any strength at lithium.'
+    }
+  },
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const ch = chamber(CHAMBER, CH, ['a', 'b']);
-    return {
-      title: 'What Height Counts',
-      prompt: 'Set the tally to the number of electrons in Sample B.',
-      widget,
-      table: pesTable({
-        pieces: [specimen('a', 'SAMPLE A', 'He', { x: 22, y: 54 }, { note: 'two electrons' }), specimen('b', 'SAMPLE B', 'Li', { x: 54, y: 54 })],
-        fixtures: [ch.fixture, tallyFixture('tally', 'Electrons in Sample B', { x: 131, y: 14 }, 8, { w: 36 })],
-        zones: { slots: ch.slots }
-      }),
-      hints: [
-        'Fire both specimens and read the piles each one makes.',
-        'Compare the heights of Sample A\'s piles with the two electrons its card says it holds.',
-        'Add up the heights of every pile on Sample B\'s strip and set the tally to that total.'
-      ],
-      check(state) {
-        const t = state.table;
-        const n = markerRead(t, 'tally');
-        if (n === 0) return { ok: false, notYet: true, msg: 'Set the tally.' };
-        if (n === electronsIn(spectrumOf('Li'))) return { ok: true };
-        return { ok: false, msg: 'The tally does not match the piles: compare Sample A\'s piles with its two electrons, then count Sample B\'s the same way.' };
-      },
-      reward: {
-        log: 'The heights add up to the electrons.',
-        title: 'Height Is a Count',
-        body: 'A peak is exactly as tall as the number of electrons that came out at its energy, so the heights on a plate always add up to all the electrons in the atom. Position says how tightly they were held, and height says how many there were.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 3 */
-  (() => {
     const ch = chamber(CHAMBER, CH, ['a'], { energyDial: true, rings: true });
     return {
-      title: 'Lithium\'s Loose Electron',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'You can now set the energy of the light. An electron only comes off if the light carries at least the energy it is held with.'
+      title: 'The Weakest Light',
+      get prompt() {
+        const guess = recall(QUEST_KEY);
+        return guess && GUESS_LABEL[guess]
+          ? `You predicted "${GUESS_LABEL[guess]}": set the light to the weakest energy that frees any of lithium's electrons.`
+          : 'Set the light to the weakest energy that frees any of lithium\'s electrons.';
       },
-      prompt: 'Set the light so that exactly one of lithium\'s electrons comes off.',
       widget,
       table: pesTable({
         pieces: [specimen('a', 'LITHIUM', 'Li', { x: 0, y: 0 }, { zone: SLOT })],
@@ -164,61 +138,35 @@ export const STAGES = [
         zones: { slots: ch.slots }
       }),
       hints: [
-        'Turn the light\'s energy down, press "Fire Light" and watch which piles are left.',
-        'Compare the ring picture beside the chamber with the piles that appear at each setting.',
-        'Step the energy down until the strip holds a single electron and stop on the setting that frees it.'
+        'Use the Light energy dial and "Fire Light", and watch the strip.',
+        'Compare the ring picture beside the holder with the piles that appear at each setting.',
+        'Step the energy down from the top until nothing is left on the strip, and stop on the setting just above that.'
       ],
       check(state) {
         const t = state.table;
         const r = chamberRead(t, CHAMBER);
-        if (r.electronsNow === 1) return { ok: true };
-        if (r.electronsNow === 0) return { ok: false, msg: 'That light frees no electron at all: turn the energy up until one comes off.' };
-        return { ok: false, msg: `That light frees ${r.electronsNow} electrons: turn the energy down and fire again until a single electron comes off.` };
+        const want = weakestStep('Li');
+        const v = Math.round(t.fixtures[CHAMBER].dials.energy.value);
+        if (v === want) return { ok: true };
+        if (r.electronsNow === 0) return { ok: false, msg: 'That light frees no electron at all.' };
+        return { ok: false, msg: 'A weaker light than this one already frees an electron.' };
       },
-      reward: {
-        log: 'The outer electron is the loosely held one.',
-        title: 'Binding Energy',
-        body: 'The energy needed to remove an electron is its binding energy, and the closer an electron sits to the nucleus the more tightly it is bound. The closer an electron sits to the nucleus, the further its peak sits toward the high-energy end.'
+      get reward() {
+        const guess = recall(QUEST_KEY);
+        const verdict = !guess || !GUESS_LABEL[guess] ? '' : guess === 'one'
+          ? 'You predicted just one, and the strip agreed. '
+          : 'The strip did not agree with your prediction, which is how a guess gets better. ';
+        return {
+          log: 'The outer electron is the loosely held one.',
+          title: 'Binding Energy',
+          body: `${verdict}The energy needed to remove an electron is its binding energy, and the closer an electron sits to the nucleus the more tightly it is bound. Lithium's outer electron comes off with far less than the two beside the nucleus.`,
+          model: { type: 'atom', p: 3, n: 4, caption: 'Lithium: two electrons on the shell close to the middle, held tightly, and one on the shell outside, held loosely. Not to scale.' }
+        };
       }
     };
   })(),
 
-  /* ---------------------------------------------------------------- 4 */
-  (() => {
-    const ch = chamber(CHAMBER, CH, ['a'], { energyDial: true, rings: true, axisLabel: 'BINDING ENERGY, MJ/mol' });
-    return {
-      title: 'Boron\'s Second Shell',
-      prompt: 'Set the light so that every electron of boron\'s outer ring comes off and none of the inner ring.',
-      widget,
-      table: pesTable({
-        pieces: [specimen('a', 'BORON', 'B', { x: 0, y: 0 }, { zone: SLOT })],
-        fixtures: [ch.fixture],
-        zones: { slots: ch.slots }
-      }),
-      hints: [
-        'Turn the light\'s energy and press "Fire Light" at several settings, watching the piles.',
-        'Compare the number of electrons on the outer ring with the number the strip shows, and count the piles they make.',
-        'Raise the energy from the lowest setting until the strip holds all the outer ring\'s electrons, and stop before the inner ring joins them.'
-      ],
-      check(state) {
-        const t = state.table;
-        const r = chamberRead(t, CHAMBER);
-        const outer = ringRows('B', 1);
-        const rows = r.freedNow.map(p => p.row).sort();
-        if (rows.join() === outer.slice().sort().join()) return { ok: true };
-        const inner = ringRows('B', 0);
-        if (rows.some(id => inner.includes(id))) return { ok: false, msg: 'That light is strong enough to free the inner ring as well: turn the energy down.' };
-        return { ok: false, msg: 'Some of the outer ring\'s electrons are still held: turn the energy up, fire again and count what comes off.' };
-      },
-      reward: {
-        log: 'One shell, two rows, two peaks.',
-        title: 'Subshells',
-        body: 'Within one shell the electrons sit in rows of different shapes, called subshells, and each subshell gives its own peak. In boron the 2s subshell is held a little more tightly than 2p, so its two electrons make the taller peak, a little further along.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 5 */
+  /* ---------------------------------------------------------------- 3 */
   (() => {
     const ch = chamber(CHAMBER, CH, ['x'], { model: 'build', axisLabel: 'BINDING ENERGY, MJ/mol' });
     return {
@@ -231,7 +179,7 @@ export const STAGES = [
         zones: { slots: ch.slots }
       }),
       hints: [
-        'Press "Fire Light" on the sealed specimen, then turn the build\'s dials and watch the outlines over the strip.',
+        'Use "Fire Light" on the sealed specimen, then the Protons and Electrons dials of the build.',
         'Compare the outlines the build makes with the piles on the strip, and what the heights add up to.',
         'A whole atom has as many electrons as protons, so build the one whose outlines cover every pile.'
       ],
@@ -240,18 +188,19 @@ export const STAGES = [
         const b = buildRead(t, 'build');
         if (!b.protons && !b.electrons) return { ok: false, notYet: true, msg: 'Build an atom with the dials.' };
         if (b.whole && b.sym === 'O') return { ok: true };
-        if (!b.whole) return { ok: false, msg: 'The build has a different number of protons and electrons, so it is no whole atom: make them equal and compare the outlines.' };
-        return { ok: false, msg: 'The outlines of that atom do not cover the sealed specimen\'s piles: compare their heights and try another.' };
+        if (!b.whole) return { ok: false, msg: 'The build has a different number of protons and electrons.' };
+        return { ok: false, msg: 'The outlines of that atom do not cover the sealed specimen\'s piles.' };
       },
       reward: {
         log: 'The heights summed to the atomic number.',
-        title: 'Reading an Unknown',
-        body: 'The heights add up to the number of electrons, and in a neutral atom that equals its atomic number. Peaks of 2, 2 and 4 therefore belong to the element with eight electrons, which is oxygen.'
+        title: 'The Photoelectron Spectrum',
+        body: 'Counting how many electrons come off at each energy gives a photoelectron spectrum: a peak\'s position says how tightly those electrons were held, and its height says how many there are. The heights add up to all the electrons, and in a neutral atom that equals its atomic number, so peaks of 2, 2 and 4 belong to oxygen.',
+        model: { type: 'rack', z: 8, caption: 'Oxygen\'s three peaks as three rows: 2 electrons, 2 electrons and 4 electrons.' }
       }
     };
   })(),
 
-  /* ---------------------------------------------------------------- 6 */
+  /* ---------------------------------------------------------------- 4 */
   (() => {
     const ch = chamber(CHAMBER, CH, ['o', 'f', 'n'], { axisLabel: 'BINDING ENERGY, MJ/mol' });
     return {
@@ -264,8 +213,8 @@ export const STAGES = [
         zones: { slots: ch.slots, rail: { id: 'rail', at: { x: 62, y: 54 }, size: { w: 84, h: 12 }, first: 'Held loosest', last: 'Held tightest', items: ['o', 'f', 'n'], start: ['n', 'o', 'f'] } }
       }),
       hints: [
-        'Fire each specimen and look at the pile that stands furthest to the left.',
-        'Compare the position of that pile on each strip with the number of protons on each card.',
+        'Use "Fire Light" with each specimen in the holder.',
+        'Compare the position of the pile that stands furthest toward the high-energy end with the number of protons on each card.',
         'Lay the specimens on the rail in the order of their innermost piles, the one nearest the low-energy end first.'
       ],
       check(state) {
@@ -274,7 +223,12 @@ export const STAGES = [
         if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three specimens on the rail.' };
         const want = ['o', 'f', 'n'].slice().sort((p, q) => holdOf(t.pieces[p].props.sym) - holdOf(t.pieces[q].props.sym));
         if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'The rail runs from the loosest hold: fire each specimen and compare how far along the strip its innermost pile stands.' };
+        for (let k = 0; k < order.length - 1; k++) {
+          if (holdOf(t.pieces[order[k]].props.sym) > holdOf(t.pieces[order[k + 1]].props.sym)) {
+            return { ok: false, msg: `${t.pieces[order[k]].label} stands left of ${t.pieces[order[k + 1]].label}, and its innermost pile stands further toward the high-energy end.` };
+          }
+        }
+        return { ok: false, msg: 'The rail does not run the way the innermost piles stand.' };
       },
       reward: {
         log: 'A bigger nuclear charge holds the same shell harder.',
@@ -284,46 +238,7 @@ export const STAGES = [
     };
   })(),
 
-  /* ---------------------------------------------------------------- 7 */
-  (() => {
-    // A shorter chamber leaves a band under it for the samples and the plate of electron counts; the answers are three trays down the right.
-    const ch = chamber(CHAMBER, { x: 57, y: 21 }, ['x', 'y', 'z'], { axisLabel: 'BINDING ENERGY, MJ/mol', h: 38 });
-    const tray = (id, label, y) => ({ id, label, at: { x: 131, y }, size: { w: 26, h: 15 }, cell: 22 });
-    return {
-      title: 'Three Neighbours',
-      prompt: 'Match each spectrum to sodium, magnesium, or aluminum.',
-      widget,
-      table: pesTable({
-        pieces: [
-          specimen('x', 'SAMPLE X', 'Mg', { x: 14, y: 53 }), specimen('y', 'SAMPLE Y', 'Al', { x: 40, y: 53 }), specimen('z', 'SAMPLE Z', 'Na', { x: 66, y: 53 })
-        ],
-        fixtures: [ch.fixture, plaqueFixture('electrons', 'Electrons in an atom', { x: 98, y: 53 }, ['Sodium: 11', 'Magnesium: 12', 'Aluminum: 13'], { w: 34 })],
-        zones: { slots: ch.slots, trays: [tray('na', 'Sodium', 14), tray('mg', 'Magnesium', 34), tray('al', 'Aluminum', 54)] }
-      }),
-      hints: [
-        'Fire each sample and add up the heights of the piles on its strip.',
-        'Compare the total for each sample with the electrons the plate gives for each element, and look at the pile at the low-energy end.',
-        'The sample with the fewest electrons has a single electron in its loosest pile, and the one with the most has an extra pile beside it.'
-      ],
-      check(state) {
-        const t = state.table;
-        const ids = ['x', 'y', 'z'];
-        if (!ids.every(id => inTray(t, id))) return { ok: false, notYet: true, msg: 'Put every sample in a tray.' };
-        const want = { x: 'mg', y: 'al', z: 'na' };
-        for (const id of ids) {
-          if (where(t, id) !== want[id]) return { ok: false, msg: 'Count the electrons in each spectrum and look at how the outermost pile changes from one element to the next.' };
-        }
-        return { ok: true };
-      },
-      reward: {
-        log: 'One more electron each time; one more peak at the end.',
-        title: 'One More at a Time',
-        body: 'Across the third row each new element adds one electron to the outer row, so the last peak grows from one electron to two and then a new, separate peak appears beside it. The inner peaks barely change, which is why the outer ones carry the chemistry.'
-      }
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
+  /* ---------------------------------------------------------------- 5 */
   (() => {
     const ch = chamber(CHAMBER, CH, ['c'], { axisLabel: 'BINDING ENERGY, MJ/mol' });
     return {
@@ -336,7 +251,7 @@ export const STAGES = [
         zones: { slots: ch.slots }
       }),
       hints: [
-        'Press "Fire Light" and read the height of every pile on the strip.',
+        'Use "Fire Light" and the dial of each row on the page.',
         'Order the piles from the one held most tightly to the one held least, which is the order the rows fill in.',
         'Set each row of the page to the height of the next pile along, starting with the most tightly held.'
       ],
@@ -346,12 +261,13 @@ export const STAGES = [
         if (w.total === 0) return { ok: false, notYet: true, msg: 'Write the electrons in each row.' };
         const want = writerTarget('N');
         if (WRITER_ROWS.every(r => w.counts[r] === want[r])) return { ok: true };
-        return { ok: false, msg: 'The page does not match the strip: list the piles in order of how tightly they are held and write each height beside the next row.' };
+        return { ok: false, msg: 'The page and the strip do not agree, row by row.' };
       },
       reward: {
         log: 'Peak by peak, the spectrum is the arrangement.',
         title: 'The Spectrum Is the Configuration',
         body: 'A photoelectron spectrum is the electron configuration drawn out: each peak is a row, and its height is how many electrons the row holds. Read from the most tightly held peak to the least, it spells the configuration row by row.',
+        model: { type: 'rack', z: 7, caption: 'Nitrogen\'s rows, lowest at the bottom: 2, 2 and 3 electrons, the three in the top row standing alone.' },
         last: true
       }
     };
@@ -360,10 +276,8 @@ export const STAGES = [
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Put a specimen in the holder.'],
-  3: ['Turn the Light energy dial, then press Fire Light.'],
-  5: ['Set the Protons and Electrons dials: your atom\'s peaks', 'appear on the strip as outlines.'],
-  7: ['Fire each sample, then drag it to a tray.']
+  2: ['Turn the Light energy dial, then press Fire Light.'],
+  3: ['Set the Protons and Electrons dials: your atom\'s peaks', 'appear on the strip as outlines.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -375,7 +289,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'A photoelectron spectrum has one peak for every subshell: its height is how many electrons the subshell holds and its position is how tightly they are held. It is the configuration measured instead of written.'
+      body: 'A photoelectron spectrum has one peak for every row of electrons: its height is how many electrons the row holds and its position is how tightly they are held. It is the configuration measured instead of written.'
     },
     {
       heading: 'Why It Is Worth It',
@@ -395,13 +309,13 @@ export const PRACTICE = [
   {
     question: 'In a photoelectron spectrum, what does the height of a peak represent?',
     options: [
-      { id: 'a', label: 'The number of electrons in that subshell' },
+      { id: 'a', label: 'The number of electrons in that row' },
       { id: 'b', label: 'The energy of the electrons' },
       { id: 'c', label: 'The speed of the electrons' },
       { id: 'd', label: 'The size of the atom' }
     ],
     answer: 'a',
-    explanation: 'Peak height is proportional to the number of electrons removed at that binding energy, which is the number in that subshell. Position gives the binding energy.'
+    explanation: 'Peak height is proportional to the number of electrons removed at that binding energy, which is the number in that row. Position gives the binding energy.'
   },
   {
     question: 'A photoelectron spectrum shows three peaks, with relative heights 2, 2 and 3. Which element is it?',
@@ -426,70 +340,55 @@ export const PRACTICE = [
     explanation: 'Both have two 1s electrons at about the same distance. Neon\'s nuclear charge is greater by one proton, so those electrons are bound more tightly.'
   },
   {
-    question: 'The binding energy of the 2p electrons in an atom is lower than that of its 2s electrons. This is because:',
+    question: 'Lithium\'s spectrum has a small peak at a low binding energy and a tall peak at a high one. Which electrons make the low peak?',
     options: [
-      { id: 'a', label: 'The 2p electrons are on average farther from the nucleus and partly shielded by the 2s' },
-      { id: 'b', label: 'The 2p electrons have no charge' },
-      { id: 'c', label: 'The 2p electrons are in a lower shell' },
-      { id: 'd', label: 'The 2s electrons are heavier' }
+      { id: 'a', label: 'The single outer electron, which is held loosely' },
+      { id: 'b', label: 'The two inner electrons' },
+      { id: 'c', label: 'All three electrons' },
+      { id: 'd', label: 'None; the low peak is noise' }
     ],
     answer: 'a',
-    explanation: 'A 2p electron sits slightly farther out on average and feels some shielding from 2s electrons, so it is held less tightly than a 2s electron.'
+    explanation: 'The outer electron is far from the nucleus and shielded by the two inner ones, so little energy removes it. The inner pair needs much more.'
   },
   {
-    question: 'How many peaks would the photoelectron spectrum of sodium (1s² 2s² 2p⁶ 3s¹) show?',
+    question: 'The 2p electrons in an atom come off with less energy than its 2s electrons. This is because:',
     options: [
-      { id: 'a', label: '4' },
-      { id: 'b', label: '3' },
-      { id: 'c', label: '11' },
-      { id: 'd', label: '1' }
+      { id: 'a', label: 'They are held a little less tightly, so their peak sits at a lower binding energy' },
+      { id: 'b', label: 'They are lighter' },
+      { id: 'c', label: 'They are in a different atom' },
+      { id: 'd', label: 'They have no charge' }
     ],
     answer: 'a',
-    explanation: 'One peak for every occupied subshell: 1s, 2s, 2p and 3s make four peaks, with heights 2, 2, 6 and 1.'
+    explanation: 'In the same shell a p row is held a little less tightly than the s row, so its peak sits closer to the low-energy end.'
   }
 ];
 
 /* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
-   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct actions,
-   by drag and by two taps. Specimens are put in the chamber and fired, the light is turned, atoms are built, rows are written. Nothing
-   here says what a strip shows or what a spectrum is.
+   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct
+   actions, by drag and by two taps. Specimens are put in the chamber and fired, dials are turned, atoms are built and written.
+   Nothing here says what a strip shows.
    ------------------------------------------------------------------ */
 
 const put = (piece, to) => ({ place: { piece, to } });
 const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
-const fire = id => ({ run: id });
-const load = id => [put(id, SLOT), fire(CHAMBER)];
-
-/** The light's setting that frees exactly the electrons of `rows` of `sym`, or null (the lowest setting that does). */
-export function settingFor(sym, rows) {
-  for (let i = 1; i <= TOP_STEP; i++) {
-    if (freedBy(sym, energyAt(i)).map(p => p.row).sort().join() === rows.slice().sort().join()) return i;
-  }
-  return null;
-}
+const writeRows = counts => WRITER_ROWS.map(r => dial('write', r, counts[r] || 0));
 
 export const SOLUTIONS = [
-  [...load('a'), ...load('b'), put('a', 'rail:0'), put('b', 'rail:1')],
-  [...load('a'), ...load('b'), dial('tally', 'value', 3)],
-  [dial(CHAMBER, 'energy', settingFor('Li', ['2s'])), fire(CHAMBER)],
-  [dial(CHAMBER, 'energy', settingFor('B', ringRows('B', 1))), fire(CHAMBER)],
-  [fire(CHAMBER), dial('build', 'protons', 8), dial('build', 'electrons', 8)],
-  [...load('o'), ...load('f'), ...load('n'), put('o', 'rail:0'), put('f', 'rail:1'), put('n', 'rail:2')],
-  [...load('x'), ...load('y'), ...load('z'), put('x', 'tray:mg'), put('y', 'tray:al'), put('z', 'tray:na')],
-  [fire(CHAMBER), dial('write', '1s', 2), dial('write', '2s', 2), dial('write', '2p', 3)]
+  [{ predict: 'one' }],
+  [dial(CHAMBER, 'energy', weakestStep('Li')), { run: CHAMBER }],
+  [{ run: CHAMBER }, dial('build', 'protons', 8), dial('build', 'electrons', 8)],
+  [put('o', `slot:${CHAMBER}.spec`), { run: CHAMBER }, put('f', `slot:${CHAMBER}.spec`), { run: CHAMBER }, put('n', `slot:${CHAMBER}.spec`), { run: CHAMBER }, put('o', 'rail:0'), put('f', 'rail:1'), put('n', 'rail:2')],
+  [{ run: CHAMBER }, ...writeRows({ '1s': 2, '2s': 2, '2p': 3 })]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [...load('a'), ...load('b'), put('b', 'rail:0'), put('a', 'rail:1')],
-  [...load('a'), ...load('b'), dial('tally', 'value', 2)],
-  [fire(CHAMBER)],
-  [dial(CHAMBER, 'energy', settingFor('B', ['2p'])), fire(CHAMBER)],
-  [fire(CHAMBER), dial('build', 'protons', 7), dial('build', 'electrons', 7)],
-  [...load('o'), ...load('f'), ...load('n'), put('n', 'rail:0'), put('f', 'rail:1'), put('o', 'rail:2')],
-  [...load('x'), ...load('y'), ...load('z'), put('x', 'tray:na'), put('y', 'tray:mg'), put('z', 'tray:al')],
-  [fire(CHAMBER), dial('write', '1s', 2), dial('write', '2s', 3), dial('write', '2p', 2)]
+  [],
+  [dial(CHAMBER, 'energy', 9)],
+  [{ run: CHAMBER }, dial('build', 'protons', 9), dial('build', 'electrons', 9)],
+  [put('n', 'rail:0')],
+  [{ run: CHAMBER }, ...writeRows({ '1s': 2, '2s': 3, '2p': 2 })]
 ];
 
 function blankState() { return {}; }
@@ -513,4 +412,4 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
-export { chamberRead, buildRead, writtenRead, writerTarget, markerRead, freedBy, holdOf, electronsIn, spectrumOf, shellsOf, ENERGY_STEPS, TOP_STEP, WRITER_ROWS, BINS, binOf, pilesOf, energyAt };
+export { holdOf, electronsIn, spectrumOf, shellsOf, ENERGY_STEPS, TOP_STEP, WRITER_ROWS, BINS, binOf, pilesOf, energyAt, LADDER, groundConfig, zOf, freedBy, QUEST_KEY };
