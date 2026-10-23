@@ -3156,25 +3156,24 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       same(lats.slice().sort((a, b) => LATTICES[b].melts - LATTICES[a].melts)[0], hot, 'boss-warden phase 1 (the highest lattice energy is the highest melting point)');
       holds(start(0).fixtures.hp.dials.heat.max >= Math.max(...lats.map(l => LATTICES[l].melts)), 'boss-warden phase 1: the hotplate cannot melt the hardest block');
     }
-    // 2. sulfur tetrafluoride: the tray runs out, every lamp lights, sulfur holds ten
+    // 2. hydrogen cyanide: the tray runs out, every lamp lights, and carbon shares three pairs with nitrogen (a triple bond)
     {
       const sl = ATM.slateOf(end(1), 'a');
       holds(LEWIS.allLit(sl.read) && sl.left === 0, 'boss-warden phase 2: the solution does not light every lamp with the tray empty');
-      same(sl.read.atoms[0].lamp, 'expanded', 'boss-warden phase 2 (sulfur past eight)');
-      same(sl.total, LEWIS.MOLECULES.SF4.syms.reduce((n, sym) => n + LEWIS.VALENCE[sym], 0), 'boss-warden phase 2 (the tray holds SF4\'s valence electrons)');
+      same(sl.total, LEWIS.MOLECULES.HCN.syms.reduce((n, sym) => n + LEWIS.VALENCE[sym], 0), 'boss-warden phase 2 (the tray holds HCN\'s valence electrons)');
+      same(sl.placed.bonds['1-2'], 3, 'boss-warden phase 2 (carbon and nitrogen share three pairs)');
     }
-    // 3. xenon tetrafluoride: neighbours are 90 degrees apart once both lone pairs are on, and the marker is set to what the planner gives
+    // 3. ammonia: three hydrogens and a lone pair, and the marker is set to the angle the planner settles them at
     {
       const t = end(2);
       const r = DM.hubRead(t, 'hub');
-      same(r.atoms, 4, 'boss-warden phase 3 (fluorine atoms on the hub)');
-      same(r.lone, 2, 'boss-warden phase 3 (lone pairs on the hub)');
-      const plan = planDomains(RIG_MOLECULES.XeF4.arms);
-      const fs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm').map(([, i]) => i);
-      const lowest = Math.min(...fs.flatMap((i, k) => fs.slice(k + 1).map(j => angleBetween(r.plan, i, j))));
-      near(DM.markerValue(t, 'mark'), lowest, 1.5, 'boss-warden phase 3 (the angle between neighbours)');
-      same(r.plan.shape, plan.shape, 'boss-warden phase 3 (the hub\'s shape is XeF4\'s)');
-      near(lowest, 90, 0.01, 'boss-warden phase 3 (square planar)');
+      same(r.atoms, 3, 'boss-warden phase 3 (hydrogen atoms on the hub)');
+      same(r.lone, 1, 'boss-warden phase 3 (lone pairs on the hub)');
+      const plan = planDomains(RIG_MOLECULES.NH3.arms);
+      const hs = r.arms.map((a, i) => [a, i]).filter(([a]) => a.kind === 'arm').map(([, i]) => i);
+      near(DM.markerValue(t, 'mark'), angleBetween(r.plan, hs[0], hs[1]), 1.5, 'boss-warden phase 3 (the angle between hydrogens)');
+      same(r.plan.shape, plan.shape, 'boss-warden phase 3 (the hub\'s shape is NH3\'s)');
+      near(angleBetween(r.plan, hs[0], hs[1]), 107, 0.01, 'boss-warden phase 3 (107 degrees)');
     }
     // 4. the molecules that turn are the ones whose pulls add
     {
