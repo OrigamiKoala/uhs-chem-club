@@ -90,7 +90,7 @@ export const STAGE_STORY = {
     4: 'The wash water waits while the charged rod tests each stream.'
   },
   'q9-orbitals': {
-    5: 'The air the miners breathe is the next thing the magnet must test.'
+    2: 'The air the miners breathe is the next thing the magnet must test.'
   },
 
   /* ---- Bellows: let the pressure out of the fuel station ---- */

@@ -313,7 +313,8 @@ function paintRack(ctx, f, state, b) {
     ctx.setLineDash?.([]);
     // The boxes between them: a row's name at its left, a box (empty here: the electrons are its container's) for each.
     for (const r of g.rows) {
-      plateText(ctx, r.row.label, X(f.at.x - r.width / 2 - 2), Y(r.y) + size * 0.35, {
+      // A plain rack names a row by what it does (a row that holds the atoms together, a row that pushes them apart) until a card earns the real names.
+      plateText(ctx, f.props.plain ? (r.row.anti ? 'PUSHES' : 'HOLDS') : r.row.label, X(f.at.x - r.width / 2 - 2), Y(r.y) + size * 0.35, {
         size: size * 1.1, align: 'right', weight: 700, color: r.row.anti ? PLATE_COLORS.dust : PHOS
       });
       for (const box of r.boxes) {
@@ -485,7 +486,7 @@ export function moTable(spec) {
  * `live` puts the readings on it (electrons placed, alone in a box), `counts` adds the lower and upper tallies, `merged: false`
  * starts with the atoms apart and a Run key that joins them, `tags` writes a name in a row's boxes.
  */
-export function moRack(rackId, mol, at, { live = true, counts = false, merged = true, tags = null, size = RACK_SIZE, atom = null } = {}) {
+export function moRack(rackId, mol, at, { live = true, counts = false, merged = true, tags = null, size = RACK_SIZE, atom = null, plain = false } = {}) {
   const d = DIATOMICS[mol];
   const g = rackGeometry(d.order, at);
   const containers = [];
@@ -503,7 +504,7 @@ export function moRack(rackId, mol, at, { live = true, counts = false, merged = 
     id: `rack-${rackId}`, kind: 'rack', label: d.label, at: { ...at }, size: { ...size },
     ...(merged ? { noRun: true } : { runLabel: 'Join Atoms' }),
     dials: { merged: { min: 0, max: 1, step: 1, value: merged ? 1 : 0 } },
-    props: { backdrop: true, hidden: ['merged'], rack: rackId, mol, order: d.order, atom: atom ?? atomOf(mol), live, counts, ...(tags ? { tags } : {}) }
+    props: { backdrop: true, hidden: ['merged'], rack: rackId, mol, order: d.order, atom: atom ?? atomOf(mol), live, counts, ...(plain ? { plain: true } : {}), ...(tags ? { tags } : {}) }
   };
   return { containers, fixture, geometry: g };
 }

@@ -103,7 +103,7 @@ export const UNIT_03 = {
       title: 'Molecular Orbitals',
       line: "Fill electron boxes to read the warden's core.",
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 3,
       status: 'live',
       optional: true,
       module: () => import('../quests/unit03/q9-orbitals.js')

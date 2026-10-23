@@ -3091,7 +3091,6 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const r = readMO(d.order, fillMO(d.order, d.e));
       same(r.unpaired, d.unpaired, `unit03/q9-orbitals: ${id} filled in order measures ${d.unpaired} unpaired`);
     }
-    const order = id => readMO(DIATOMICS[id].order, fillMO(DIATOMICS[id].order, DIATOMICS[id].e)).bondOrder;
     // Every rack on a table is the molecule's own: a container for each of its boxes, a pair at most in each, a jar holding exactly its valence electrons.
     q9.STAGES.forEach((st, i) => {
       const t = start(i);
@@ -3109,53 +3108,32 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
         same(MO.readOf(e, f.props.rack).total, d.e, `unit03/q9-orbitals stage ${i + 1} (electrons on the rack)`);
         holds(MO.matchesGround(e, f.props.rack, d.e), `unit03/q9-orbitals stage ${i + 1}: the solution is not the ground state`);
         same(MO.readOf(e, f.props.rack).config, readMO(d.order, fillMO(d.order, d.e)).config, `unit03/q9-orbitals stage ${i + 1} (the configuration)`);
+        holds(f.props.plain === true, `unit03/q9-orbitals stage ${i + 1}: the rack prints a row name the bench has not earned`);
       }
     });
-    // 1. two atomic 1s boxes make one box below them and one above, and the rail's answer lists them so
+    // 1. the predict stage holds the guesses and no instrument; the expected answer (a gas is not magnetic) is a card
     {
-      const rows = rowsMO('1s');
-      holds(!rows[0].anti && rows[1].anti, 'unit03/q9-orbitals stage 1: the lower box is not the bonding one');
-      const f = start(0).fixtures['rack-a'];
-      same(`${f.props.tags.g1s}${f.props.tags.u1s}`, '21', 'unit03/q9-orbitals stage 1 (box 2 is the lower, box 1 the upper)');
-      same(end(0).zones.rail.order.join(), 'box2,atom,box1', 'unit03/q9-orbitals stage 1 (lowest first)');
+      const t0 = start(0);
+      holds(q9.STAGES[0].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q9-orbitals stage 1: the predict stage shows an instrument');
+      holds(['pulled', 'nothing', 'pushed'].every(id => t0.pieces[id]?.kind === 'guess') && Object.keys(t0.pieces).length === 3, 'unit03/q9-orbitals stage 1: the guesses are the three cards and nothing else');
     }
-    // 3. 4. bond orders are the planner's, and the marker is set to them
-    same(order('He2'), 0, 'unit03/q9-orbitals stage 3 (He2\'s bond order)');
-    same(end(2).fixtures.order.dials.n.value, MO.readOf(end(2), 'a').bondOrder, 'unit03/q9-orbitals stage 3 (the marker)');
-    same(order('N2'), 3, 'unit03/q9-orbitals stage 4 (N2\'s bond order)');
-    same(end(3).fixtures.order.dials.n.value, order('N2'), 'unit03/q9-orbitals stage 4 (the marker)');
-    for (const i of [2, 3]) holds(start(i).fixtures.order.dials.n.value !== end(i).fixtures.order.dials.n.value, `unit03/q9-orbitals stage ${i + 1}: the marker starts on the answer`);
-    // 5. the magnet reads the REAL molecule; the solution's rack agrees with it, and a rack of pairs would not
+    // 2. the magnet reads the REAL molecule: two of the four gases are pulled, two are not
     {
-      if (!(DIATOMICS.O2.unpaired > 0)) fail('unit03/q9-orbitals stage 5: O2 measures no unpaired electrons');
-      const t = end(4);
-      same(MO.magnetRead(t, 'magnet').pull, DIATOMICS.O2.unpaired, 'unit03/q9-orbitals stage 5 (what the magnet read)');
-      same(MO.readOf(t, 'a').unpaired, DIATOMICS.O2.unpaired, 'unit03/q9-orbitals stage 5 (the rack\'s alone-in-a-box count)');
-      const paired = TABLE.runScript(start(4), q9.MISSES[4].filter(a => a.pour), { strict: true });
-      holds(MO.readOf(paired, 'a').unpaired !== DIATOMICS.O2.unpaired, 'unit03/q9-orbitals stage 5: pairing the last two electrons still matches the magnet');
+      const t = end(1);
+      const gases = ['n2', 'o2', 'f2', 'b2'];
+      for (const id of gases) same(t.pieces[id].zone, `tray:${DIATOMICS[t.pieces[id].props.mol].unpaired > 0 ? 'pulled' : 'ignored'}`, `unit03/q9-orbitals stage 2 (${id})`);
+      holds(gases.filter(id => DIATOMICS[t.pieces[id].props.mol].unpaired > 0).length === 2, 'unit03/q9-orbitals stage 2: the gases are not two pulled and two not');
+      holds(gases.every(id => MO.cardPull(t.pieces[id]) !== null), 'unit03/q9-orbitals stage 2: the magnet did not test a gas');
     }
-    // 6. a shorter bond is a higher bond order, and the rail's answer is that order
+    // 3. the magnet reads the REAL molecule; the solution's rack agrees with it, and a rack of pairs would not
     {
-      const t = start(5);
-      const lengths = ['a', 'b', 'c'].map(id => [id, DIATOMICS[t.pieces[id].props.mol].length, order(t.pieces[id].props.mol)]).sort((a, b) => a[1] - b[1]);
-      same(lengths.map(l => l[0]).join(), end(5).zones.rail.order.join(), 'unit03/q9-orbitals stage 6 (shortest bond first)');
-      if (lengths.some((l, k) => k && l[2] >= lengths[k - 1][2])) fail('unit03/q9-orbitals stage 6: a shorter bond does not have the higher bond order');
-      for (const id of ['a', 'b', 'c']) {
-        const m = DIATOMICS[t.pieces[id].props.mol];
-        const c = MO.cardCounts(t.pieces[id].props.mol);
-        const r = readMO(m.order, fillMO(m.order, m.e));
-        same(`${c.bonding}/${c.anti}`, `${r.bonding}/${r.anti}`, `unit03/q9-orbitals stage 6 (${id}'s printed counts)`);
-      }
+      if (!(DIATOMICS.O2.unpaired > 0)) fail('unit03/q9-orbitals stage 3: O2 measures no unpaired electrons');
+      const t = end(2);
+      same(MO.magnetRead(t, 'magnet').pull, DIATOMICS.O2.unpaired, 'unit03/q9-orbitals stage 3 (what the magnet read)');
+      same(MO.readOf(t, 'a').unpaired, DIATOMICS.O2.unpaired, 'unit03/q9-orbitals stage 3 (the rack\'s alone-in-a-box count)');
+      const paired = TABLE.runScript(start(2), q9.MISSES[2].filter(a => a.pour), { strict: true });
+      holds(MO.readOf(paired, 'a').unpaired !== DIATOMICS.O2.unpaired, 'unit03/q9-orbitals stage 3: pairing the last two electrons still matches the magnet');
     }
-    // 7. F2 has the lower bond order and the lower listed energy, so the token is 'weaker'
-    if (!(order('F2') < order('O2'))) fail('unit03/q9-orbitals stage 7: F2 does not have the lower bond order');
-    if (!(DIATOMICS.F2.energy < DIATOMICS.O2.energy)) fail('unit03/q9-orbitals stage 7: F2 is not the weaker bond in the listed data');
-    same(end(6).prediction.token, 'weaker', 'unit03/q9-orbitals stage 7 (the prediction)');
-    // 8. B2 filled in its own order has two electrons alone; in the oxygen order it would have none, so the order matters
-    same(readMO('b2n2', fillMO('b2n2', 6)).unpaired, 2, 'unit03/q9-orbitals stage 8 (B2 filled in the other order)');
-    same(readMO('o2f2', fillMO('o2f2', 6)).unpaired, 0, 'unit03/q9-orbitals stage 8 (B2 filled in the oxygen order reads no unpaired electrons, so the order matters)');
-    same(end(7).prediction.token, 'pulled', 'unit03/q9-orbitals stage 8 (the prediction)');
-    same(MO.readOf(end(7), 'a').unpaired, DIATOMICS.B2.unpaired, 'unit03/q9-orbitals stage 8 (the rack agrees with the magnet)');
   }
 
   // THE WARDEN: five phases, each on a table of a bench the player has worked, each answer read off the real planners.

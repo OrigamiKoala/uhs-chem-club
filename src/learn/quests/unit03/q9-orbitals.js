@@ -1,346 +1,169 @@
 /**
- * q9-orbitals.js — Ligar, bench nine: MOLECULAR ORBITALS. Beyond the exam, and the
- * briefing and the first card say so.
+ * q9-orbitals.js — Ligar, bench nine: MOLECULAR ORBITALS. Beyond a first course, and the bench says so.
  *
- * The ninth bench on the world and its seventh TABLETOP (plan `bench-tabletop.md`, phase T3c). The box rack, worked with
- * the hands: the two atoms' boxes stand at the sides and the boxes they make between them stand in the middle, lowest energy
- * at the bottom. Each box is a container; electrons are poured into it from a jar by a drag (or a tap on the jar and then the
- * box) and a box takes one arrow of each direction and no more. The magnet measures the REAL molecule, never the player's
- * arrangement, and a rank of cards on a rail is how the species are put in order of bond length.
+ * The ninth bench on the world and its seventh TABLETOP (plan `bench-tabletop.md`, phase T3c). The magnet and the box rack, worked
+ * with the hands. The magnet measures the REAL molecule, never the player's arrangement; the rack's boxes stand at the sides (the
+ * atoms') and in the middle (the boxes the atoms make between them), lowest energy at the bottom, and each box is a container that
+ * electrons are poured into from a jar by a drag (or a tap on the jar and then the box) and that takes one arrow of each direction and
+ * no more. A rack is a ladder of energy, so it is drawn flat, square-on.
  *
- *   1  put the molecule's two boxes and an atom's box in order     -> bonding orbital, antibonding orbital
- *   2  place H2's two electrons                                     -> (electrons fill from the bottom)
- *   3  He2's four electrons, and the bond order they give           -> (bond order is zero)
- *   4  N2's ten electrons, and the bond order they give             -> (a triple bond is order three)
- *   5  O2's twelve, until the rack pulls as hard as the sample      -> (Lewis cannot explain it)
- *   6  rank O2+, O2 and O2- by bond length                          -> (higher order, shorter bond)
- *   7  predict F2's bond against O2's, and test it                  -> (more antibonding electrons)
- *   8  predict whether B2 is pulled, in the other order             -> (the order switch)
+ * THE CLICK (2026-10-23 rollout). Nobody expects a gas to be pulled by a magnet. So the quest asks whether a magnet pulls oxygen (the
+ * expected answer is a card), then sorts four gases by what a magnet does, and oxygen and diboron are pulled. Only then does the rack
+ * explain it: pour oxygen's electrons into the boxes until the rack pulls on the magnet as hard as the real sample does, which only
+ * happens when two electrons stand alone in separate boxes.
  *
- * EVERY COUNT IS `mo.readMO`; every unpaired figure the magnet gives is the real one in `mo.DIATOMICS`, every ground state
- * is `mo.fillMO`, and `verify:learn` checks the graded fills against all three.
+ *   1  PREDICT: does a magnet pull on oxygen?                      (no instrument; the expected answer is a card)
+ *   2  sort four gases by whether the magnet pulls on them          -> some gases are pulled, which a drawing of pairs cannot say
+ *   3  fill oxygen's boxes until the rack pulls like the sample     -> molecular orbitals: bonding and antibonding
+ *
+ * Re-pitched and cut (2026-10-23): the bond-order marker for H2, He2 and N2, the three oxygens ranked by length, fluorine's weak link,
+ * and diboron's other order of boxes. They are AP bookkeeping about WHICH numbers a bond has; this bench keeps the one thing a
+ * first-course student can not get from a Lewis drawing and can see for themselves, a gas that a magnet pulls. The rack names its rows
+ * by what they do (holds, pushes) until the last reward earns "bonding" and "antibonding".
+ *
+ * EVERY COUNT IS `mo.readMO`; every unpaired figure the magnet gives is the real one in `mo.DIATOMICS`, every ground state is
+ * `mo.fillMO`, and `verify:learn` checks the graded fills against all three.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
-import { DIATOMICS, fillMO, readMO, bondOrderOf } from '../../engine/mo.js';
+import { DIATOMICS } from '../../engine/mo.js';
 import {
-  moTable, moRack, moSupply, magnet, bondTester, marker, moCard, fillSteps,
-  readOf, matchesGround, supplyLeft, magnetRead, bondTestRead
+  moTable, moRack, moSupply, magnet, moCard, fillSteps, readOf, matchesGround, magnetRead
 } from '../../table/kits/mo.js';
+import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 3 };
 
 export const VOCABULARY = [
-  { term: /\bantibonding\b/i, introducedAt: 1 },
-  { term: /\bbonding orbitals?\b/i, introducedAt: 1 },
-  { term: /\bmolecular orbitals?\b/i, introducedAt: 1 }
+  { term: /\bantibonding\b/i, introducedAt: 3 },
+  { term: /\bbonding orbitals?\b/i, introducedAt: 3 },
+  { term: /\bmolecular orbitals?\b/i, introducedAt: 3 }
 ];
 
 export const BUILDS_ON = ['unit03/q8-hybrid', 'unit02/q6-filling', 'unit03/q3-distance'];
 
 const SPEAKER = 'Vess';
 
+/** The key the player's guess is kept under (`engine/predict.js`), and the cards it is chosen from. */
+const QUEST_KEY = 'unit03/q9-orbitals';
+const GUESSES = [
+  ['pulled', 'the magnet pulls the oxygen', ['The magnet pulls', 'the oxygen', 'toward it']],
+  ['nothing', 'the magnet does nothing to the oxygen', ['The magnet does', 'nothing to', 'the oxygen']],
+  ['pushed', 'the magnet pushes the oxygen away', ['The magnet pushes', 'the oxygen', 'away']]
+];
+
 /** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
 
 /* ------------------------------------------------------------------
    THE TABLES
-   The rack stands in the middle of a 150 x 64 table; the jar of electrons stands at its left and the magnet or the marker at its right.
    ------------------------------------------------------------------ */
 
 const RACK_AT = { x: 74, y: 32 };
 const JAR_AT = { x: 15, y: 40 };
 
-/** A table with one rack, its jar of electrons and whatever fixtures stand beside it. */
-function rackTable(mol, { counts = false, jar = JAR_AT, extra = [], pieces = [], zones = {}, prediction = null } = {}) {
-  const rack = moRack('a', mol, RACK_AT, { counts });
-  return moTable({
-    pieces,
-    zones: { ...zones, containers: [moSupply('supply', 'Electrons', jar, DIATOMICS[mol].e, jar.y < 20 ? { w: 28, h: 19 } : undefined), ...rack.containers] },
-    fixtures: [rack.fixture, ...extra],
-    ...(prediction ? { prediction } : {})
-  });
-}
-
-/** The three tokens (or two) of a prediction, stacked under the jar of electrons. */
-const tokenAt = (id, label, y) => ({ id, label, at: { x: 15, y }, r: 6.5 });
-const SLOT_AT = { x: 134, y: 53 };
-
-const ROW_ID = 'rail';
-const rail = (items, start, first, last, size = { w: 128, h: 20 }, at = { x: 75, y: 53 }) => ({ id: ROW_ID, at, size, first, last, items, start });
-
-/** What a stage's check reads: the electrons on rack `a`, and what they should be. */
-const rackRead = t => readOf(t, 'a');
-const COUNT_MSG = 'Count the electrons on the rack against the number the molecule has.';
-const HIGH_MSG = 'An electron is sitting higher on the ladder than it needs to be.';
+/** The gases of stage 2: a sample card each, in a row along the bottom. */
+const GASES = [['n2', 'N₂', 'N2'], ['o2', 'O₂', 'O2'], ['f2', 'F₂', 'F2'], ['b2', 'B₂', 'B2']];
 
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE THREE STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  (() => {
-    const rack = moRack('a', 'H2', { x: 62, y: 18.5 }, { live: false, merged: false, tags: { u1s: '1', g1s: '2' }, size: { w: 84, h: 37 } });
-    return {
-      title: 'Two Become Two',
-      briefing: {
-        speaker: SPEAKER,
-        body: 'This bench shows how atomic energy levels combine when a molecule forms: press "Join Atoms" to see it happen. Press Submit when the table shows your answer.'
-      },
-      prompt: 'Put the molecule\'s two boxes and one atom\'s box in order of energy.',
-      widget: { type: 'table', label: 'The bench' },
-      table: moTable({
-        pieces: [
-          moCard('box1', 'Box 1', { x: 30, y: 53 }),
-          moCard('box2', 'Box 2', { x: 75, y: 53 }),
-          moCard('atom', 'Atom\'s box', { x: 120, y: 53 })
-        ],
-        zones: { rail: rail(['box1', 'box2', 'atom'], ['atom', 'box1', 'box2'], 'Lowest energy', 'Highest energy', { w: 128, h: 20 }) },
-        fixtures: [rack.fixture]
-      }),
-      hints: [
-        'Press "Join Atoms" and read where the numbered boxes stand on the ladder.',
-        'Compare the height of each numbered box with the height of the boxes the atoms started with.',
-        'Drag the cards along the rail so the lowest box comes first and the highest comes last.'
-      ],
-      check(state) {
-        const order = state.table.zones.rail.order;
-        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three boxes on the rail in order.' };
-        if (order.join() === ['box2', 'atom', 'box1'].join()) return { ok: true };
-        if (order[1] !== 'atom') return { ok: false, msg: 'Press Join Atoms, then compare the height of the atom\'s box with the heights of the two new boxes.' };
-        return { ok: false, msg: 'Read the numbers on the two new boxes against their heights on the ladder.' };
-      },
-      reward: {
-        log: 'Two atomic boxes make two molecular ones.',
-        title: 'Bonding and Antibonding Orbitals',
-        body: 'When two atoms\' orbitals combine they make two molecular orbitals: a bonding orbital below the originals and an antibonding orbital above them. Electrons in the lower box hold the atoms together, and electrons in the upper box push them apart.'
-      }
-    };
-  })(),
+  predictStage({
+    key: QUEST_KEY,
+    title: 'A Magnet and a Gas',
+    prompt: 'A strong magnet is held beside a sealed flask of oxygen gas: what does it do to the oxygen?',
+    cards: GUESSES,
+    hints: [
+      'Use the three cards and the slot.',
+      'Picture the gases you know that metal fridge magnets stick to, and the gases they ignore.',
+      'There is no wrong guess yet; commit to the card you would bet on.'
+    ],
+    reward: {
+      title: 'A Guess Comes First',
+      body: 'Your guess is locked in, and the next bench tests it. Put each gas beside the magnet and see how hard it pulls.'
+    }
+  }),
 
   /* ---------------------------------------------------------------- 2 */
   {
-    title: 'Two Electrons',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Drag from the jar of electrons to a box, or tap the jar and then the box. Dragging from a box back to the jar lifts one out.'
+    title: 'Four Gases',
+    get prompt() {
+      return testPrompt(QUEST_KEY, GUESSES, 'sort each gas by whether the magnet pulls on it.');
     },
-    prompt: 'Place H₂\'s two electrons so the molecule has as little energy as it can.',
     widget: { type: 'table', label: 'The bench' },
-    table: rackTable('H2'),
+    table: moTable({
+      pieces: GASES.map(([id, label, mol], i) => moCard(id, label, { x: 20 + i * 34, y: 52 }, { mol })),
+      zones: {
+        slots: [{ id: 'test', label: 'Gas to test', at: { x: 30, y: 21 }, size: { w: 36, h: 22 } }],
+        trays: [
+          { id: 'pulled', label: 'Pulled', at: { x: 118, y: 14 }, size: { w: 44, h: 14 }, cell: 22 },
+          { id: 'ignored', label: 'Not pulled', at: { x: 118, y: 34 }, size: { w: 44, h: 14 }, cell: 22 }
+        ]
+      },
+      fixtures: [magnet('magnet', { x: 76, y: 22 }, { slot: 'test', size: { w: 34, h: 30 }, label: 'Magnet' })]
+    }),
     hints: [
-      'Drag an electron from the jar into a box, or tap the jar and then the box.',
-      'Compare the two boxes by how high they sit on the ladder.',
-      'Each electron goes in the lowest box that has room, and a box takes one arrow of each direction.'
+      'Use the gas cards, the test slot, "Test Sample" and the two trays.',
+      'Compare how hard the magnet pulls on each of the four gases.',
+      'Put each gas in the test slot, press "Test Sample", and file the gas by what the magnet did.'
     ],
     check(state) {
       const t = state.table;
-      const r = rackRead(t);
-      if (r.total === 0) return { ok: false, notYet: true, msg: 'Place the two electrons on the rack.' };
-      if (r.total !== DIATOMICS.H2.e) return { ok: false, msg: COUNT_MSG };
-      if (matchesGround(t, 'a', DIATOMICS.H2.e)) return { ok: true };
-      return { ok: false, msg: HIGH_MSG };
+      const ids = GASES.map(g => g[0]);
+      const where = Object.fromEntries(ids.map(id => [id, ['pulled', 'ignored'].find(z => t.pieces[id].zone === `tray:${z}`) || null]));
+      if (Object.values(where).some(z => !z)) return { ok: false, notYet: true, msg: 'Sort all four gases into trays.' };
+      const wrong = ids.find(id => where[id] !== (DIATOMICS[t.pieces[id].props.mol].unpaired > 0 ? 'pulled' : 'ignored'));
+      if (wrong) return { ok: false, msg: `${t.pieces[wrong].label} is under a heading the magnet did not show.` };
+      return { ok: true };
     },
-    reward: {
-      log: 'Both go in the lower box.',
-      title: 'Electrons Fill From the Bottom',
-      body: 'Both electrons go in the bonding orbital, paired. The molecule is lower in energy than the separate atoms, so the atoms stay together.'
+    get reward() {
+      return {
+        log: 'Oxygen and diboron were pulled. Nitrogen and fluorine were not.',
+        title: 'Some Gases Are Magnetic',
+        body: `${verdictLine(QUEST_KEY, 'pulled')}Oxygen gas is pulled by a magnet, which is strange for a gas made of ordinary pairs of atoms. A Lewis drawing with every electron in a pair cannot say why, so the next bench looks for what a drawing misses.`
+      };
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
-  {
-    title: 'Four Electrons',
-    prompt: 'Place He₂\'s four electrons, then set the marker to the bond order the boxes give.',
-    widget: { type: 'table', label: 'The bench' },
-    table: rackTable('He2', { counts: true, extra: [marker('order', 'Bond order', { x: 134, y: 34 }, { max: 4, value: 1 })] }),
-    hints: [
-      'Pour the four electrons into the boxes from the bottom of the ladder up, then turn the marker.',
-      'Compare the electrons in the lower box with those in the upper one.',
-      'Half the difference between the electrons in the lower boxes and those in the upper ones is the bond order.'
-    ],
-    check(state) {
-      const t = state.table;
-      const r = rackRead(t);
-      if (r.total === 0) return { ok: false, notYet: true, msg: 'Place the four electrons on the rack.' };
-      if (r.total !== DIATOMICS.He2.e) return { ok: false, msg: COUNT_MSG };
-      if (!matchesGround(t, 'a', DIATOMICS.He2.e)) return { ok: false, msg: HIGH_MSG };
-      if (t.fixtures.order.dials.n.value === r.bondOrder) return { ok: true };
-      return { ok: false, msg: 'Read the counts for the lower and the upper box, then work out the marker from them.' };
-    },
-    reward: {
-      log: 'Nothing gained, so nothing holds.',
-      title: 'Bond Order From the Boxes',
-      body: 'Half the difference between the electrons in bonding orbitals and those in antibonding orbitals is the bond order. He₂ has two of each, so its bond order is zero and the molecule does not form.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 4 */
-  {
-    title: 'Ten Electrons',
-    prompt: 'Fill N₂\'s boxes with its ten electrons and set the marker to the bond order.',
-    widget: { type: 'table', label: 'The bench' },
-    table: rackTable('N2', { counts: true, extra: [marker('order', 'Bond order', { x: 134, y: 34 }, { max: 4, value: 1 })] }),
-    hints: [
-      'Pour the ten electrons in from the bottom of the ladder up, one to each box in a row before pairing.',
-      'Compare the electrons in the lower boxes with those in the upper ones.',
-      'Half the difference between the two counts is the bond order.'
-    ],
-    check(state) {
-      const t = state.table;
-      const r = rackRead(t);
-      if (r.total === 0) return { ok: false, notYet: true, msg: 'Place the ten electrons on the rack.' };
-      if (r.total !== DIATOMICS.N2.e) return { ok: false, msg: COUNT_MSG };
-      if (!matchesGround(t, 'a', DIATOMICS.N2.e)) return { ok: false, msg: HIGH_MSG };
-      if (t.fixtures.order.dials.n.value === r.bondOrder) return { ok: true };
-      return { ok: false, msg: 'Read the counts for the lower and the upper boxes before halving the difference.' };
-    },
-    reward: {
-      log: 'Eight below, two above.',
-      title: 'A Triple Bond in Boxes',
-      body: 'Nitrogen has eight electrons in bonding boxes and two in antibonding ones, so its bond order is three: the triple bond a Lewis structure draws.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 5 */
-  {
-    title: 'Oxygen and the Magnet',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The magnet holds the real molecule to its field, whatever the rack shows. Press "Test Sample" to see how hard it pulls.'
-    },
-    prompt: 'Arrange O₂\'s twelve electrons so the rack pulls on the magnet as hard as the real sample does.',
-    widget: { type: 'table', label: 'The bench' },
-    table: rackTable('O2', { counts: true, extra: [magnet('magnet', { x: 134, y: 36 }, { mol: 'O2' })] }),
-    hints: [
-      'Pour the twelve electrons in from the bottom of the ladder up, and test the sample with the magnet.',
-      'Compare the boxes in the top row of the electrons you placed: how many hold one arrow, and how many two.',
-      'Electrons standing alone in a box are pulled by a magnet, and pairs are not.'
-    ],
-    check(state) {
-      const t = state.table;
-      const r = rackRead(t);
-      if (r.total === 0) return { ok: false, notYet: true, msg: 'Place the twelve electrons on the rack.' };
-      if (r.total !== DIATOMICS.O2.e) return { ok: false, msg: COUNT_MSG };
-      if (r.unpaired !== magnetRead(t, 'magnet').real) return { ok: false, msg: 'Test the sample with the magnet and compare it with how the electrons sit on your rack.' };
-      if (matchesGround(t, 'a', DIATOMICS.O2.e)) return { ok: true };
-      return { ok: false, msg: HIGH_MSG };
-    },
-    reward: {
-      log: 'Two electrons stand alone.',
-      title: 'Oxygen Is Paramagnetic',
-      body: 'The last two electrons of O₂ go one each into two separate antibonding boxes, so oxygen is paramagnetic — pulled by a magnet. A Lewis structure with every electron paired could not have said so.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 6 */
-  {
-    title: 'Three Oxygens',
-    prompt: 'Rank the three oxygen species by bond length, shortest first.',
-    widget: { type: 'table', label: 'The bench' },
-    table: moTable({
-      pieces: [
-        moCard('a', 'O₂', { x: 30, y: 32 }, { mol: 'O2', counts: true }),
-        moCard('b', 'O₂⁺', { x: 75, y: 32 }, { mol: 'O2p', counts: true }),
-        moCard('c', 'O₂⁻', { x: 120, y: 32 }, { mol: 'O2m', counts: true })
+  (() => {
+    const rack = moRack('a', 'O2', RACK_AT, { plain: true });
+    return {
+      title: 'Oxygen\'s Boxes',
+      prompt: 'Pour oxygen\'s twelve electrons into the boxes until the rack pulls on the magnet as hard as the real sample does.',
+      widget: { type: 'table', label: 'The bench' },
+      table: moTable({
+        zones: { containers: [moSupply('supply', 'Electrons', JAR_AT, DIATOMICS.O2.e), ...rack.containers] },
+        fixtures: [rack.fixture, magnet('magnet', { x: 134, y: 36 }, { mol: 'O2' })]
+      }),
+      hints: [
+        'Use the jar of electrons, the boxes and the magnet.',
+        'Compare the boxes in the top row of the electrons you placed: how many hold one arrow, and how many two.',
+        'Pour the electrons in from the bottom of the ladder up, putting one in each box of a row before pairing any, and test the sample with the magnet.'
       ],
-      zones: { rail: rail(['a', 'b', 'c'], ['a', 'c', 'b'], 'Shortest bond', 'Longest bond', { w: 132, h: 26 }, { x: 75, y: 32 }) }
-    }),
-    hints: [
-      'Drag each card along the rail to put the three in order.',
-      'Compare the electrons in the lower and the upper boxes on each card.',
-      'The bond with the highest bond order is the shortest.'
-    ],
-    check(state) {
-      const t = state.table;
-      const order = t.zones.rail.order;
-      if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three species on the rail in order.' };
-      const want = order.slice().sort((x, y) => DIATOMICS[t.pieces[x].props.mol].length - DIATOMICS[t.pieces[y].props.mol].length);
-      if (order.join() === want.join()) return { ok: true };
-      return { ok: false, msg: 'Work out the bond order of each card from its counts, then ask which order pulls the atoms closest.' };
-    },
-    reward: {
-      log: 'A higher order is a shorter bond.',
-      title: 'Higher Order, Shorter Bond',
-      body: 'Taking an electron out of an antibonding box raises the bond order and shortens the bond, and adding one lowers it and lengthens the bond. O₂⁺ has the highest order of the three and O₂⁻ the lowest.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 7 */
-  {
-    title: 'A Weak Link',
-    prompt: 'Predict how the fluorine-fluorine bond compares in strength with the oxygen-oxygen bond.',
-    widget: { type: 'table', label: 'The bench' },
-    table: rackTable('F2', {
-      counts: true,
-      jar: { x: 15, y: 14.6 },
-      pieces: [moCard('ref', 'O₂', { x: 134, y: 36 }, { mol: 'O2', counts: true }, { fixed: true })],
-      extra: [bondTester('tester', { x: 134, y: 14 }, ['O2', 'F2'])],
-      prediction: {
-        slot: { id: 'predict', label: 'F₂ bond', at: SLOT_AT, size: { w: 26, h: 10 } },
-        tokens: [tokenAt('stronger', 'Stronger', 31), tokenAt('weaker', 'Weaker', 44), tokenAt('same', 'The same', 57)]
+      check(state) {
+        const t = state.table;
+        const r = readOf(t, 'a');
+        if (r.total === 0) return { ok: false, notYet: true, msg: 'Place the electrons on the rack.' };
+        if (r.total !== DIATOMICS.O2.e) return { ok: false, msg: 'The rack holds a different number of electrons than the molecule has.' };
+        if (r.unpaired !== magnetRead(t, 'magnet').real) return { ok: false, msg: 'The rack and the magnet do not agree about how many electrons stand alone.' };
+        if (matchesGround(t, 'a', DIATOMICS.O2.e)) return { ok: true };
+        return { ok: false, msg: 'An electron is sitting higher on the ladder than it needs to be.' };
+      },
+      reward: {
+        log: 'Two electrons stand alone.',
+        title: 'Molecular Orbitals',
+        body: 'When two atoms join, their orbitals combine into molecular orbitals: the lower boxes hold the atoms together, the bonding orbitals, and the upper ones push them apart, the antibonding orbitals. Oxygen\'s last two electrons go one each into two separate upper boxes, so they stand alone and a magnet pulls them.',
+        model: { type: 'molecule', name: 'oxygen', caption: 'Oxygen: two atoms held by a double bond, with two electrons standing alone. Drag to turn it.' },
+        last: true
       }
-    }),
-    hints: [
-      'Pour the fourteen electrons into F₂\'s boxes, then press "Test Bond" to read both molecules.',
-      'Compare the electrons in the upper boxes on the F₂ rack with those on the O₂ card.',
-      'Each electron in an upper box cancels the hold of one in a lower box, so count the lower boxes against the upper ones for each molecule.'
-    ],
-    check(state) {
-      const t = state.table;
-      const token = t.prediction.token;
-      if (!token) return { ok: false, notYet: true, msg: 'Place a prediction for the F₂ bond first.' };
-      const real = DIATOMICS.F2.energy < DIATOMICS.O2.energy ? 'weaker' : DIATOMICS.F2.energy > DIATOMICS.O2.energy ? 'stronger' : 'same';
-      if (token === real) return { ok: true };
-      if (bondTestRead(t, 'tester').tested) return { ok: false, msg: 'The tester\'s figures for the two molecules do not match your prediction.' };
-      if (rackRead(t).total === 0) return { ok: false, msg: 'Fill F₂\'s boxes and run the tester, then compare the two molecules.' };
-      return { ok: false, msg: 'Run the tester and compare the F₂ rack with the O₂ card.' };
-    },
-    reward: {
-      log: 'Every extra antibonding electron costs a bond.',
-      title: 'Weaker With Each Antibonding Electron',
-      body: 'F₂ fills both antibonding π boxes completely, so its bond order is only one. Each antibonding electron cancels the hold of a bonding one, and the weak F–F bond is the result.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    title: 'The Other Order',
-    prompt: 'Predict whether diboron is pulled toward the magnet.',
-    widget: { type: 'table', label: 'The bench' },
-    table: rackTable('B2', {
-      counts: true,
-      jar: { x: 15, y: 14.6 },
-      extra: [magnet('magnet', { x: 134, y: 16 }, { mol: 'B2', size: { w: 28, h: 28 } })],
-      prediction: {
-        slot: { id: 'predict', label: 'B₂', at: SLOT_AT, size: { w: 26, h: 10 } },
-        tokens: [tokenAt('pulled', 'Pulled in', 31), tokenAt('pushed', 'Pushed out', 44)]
-      }
-    }),
-    hints: [
-      'Pour the six electrons in from the bottom of the ladder up, and test the sample with the magnet.',
-      'Compare the order of the boxes on this rack with the order on the oxygen rack.',
-      'Fill the boxes in the order this rack shows, and see where the last two electrons land.'
-    ],
-    check(state) {
-      const t = state.table;
-      const token = t.prediction.token;
-      if (!token) return { ok: false, notYet: true, msg: 'Place a prediction for diboron first.' };
-      const real = DIATOMICS.B2.unpaired > 0 ? 'pulled' : 'pushed';
-      if (token === real) return { ok: true };
-      if (magnetRead(t, 'magnet').tested) return { ok: false, msg: 'The sample on the magnet did not do what you predicted.' };
-      return { ok: false, msg: 'Fill the rack in the order it shows and compare it with what the magnet says.' };
-    },
-    reward: {
-      log: 'The boxes swap order below oxygen.',
-      title: 'The Order Switch',
-      body: 'In molecules up to nitrogen the side-to-side π boxes sit below the end-on one, because the 2s and 2p boxes mix. B₂\'s last two electrons then go into separate π boxes, so B₂ is paramagnetic — pulled by a magnet. This is beyond the exam.'
-    }
-  }
+    };
+  })()
 ];
-
 
 /* ------------------------------------------------------------------
    THE DEBRIEF
@@ -350,7 +173,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Atomic boxes combine into molecular ones, half of them bonding and half antibonding, and electrons fill them from the bottom up. Half the difference between the bonding electrons and the antibonding ones is the bond order, and it sets length, strength and whether the molecule exists at all.'
+      body: 'Atomic boxes combine into molecular ones, half of them bonding and half antibonding, and electrons fill them from the bottom up, one to a box before any pair up. Oxygen\'s last two electrons stand alone, and that is why a magnet pulls it.'
     },
     {
       heading: 'Why It Is Worth It',
@@ -427,36 +250,27 @@ export const PRACTICE = [
 /* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
    A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by
-   direct actions, by drag and by two taps. Electrons are poured from the jar into boxes (`fillSteps` pours a ground state,
-   one box at a time), cards are put on the rail, a prediction is a token, a marker is a dial. Nothing here says what a rack reads.
+   direct actions, by drag and by two taps. A gas card is put in the test slot and the magnet run, then filed; electrons are
+   poured from the jar into boxes (`fillSteps` pours a ground state, one box at a time). Nothing here says what a rack reads.
    ------------------------------------------------------------------ */
 
 const pour = (to, n = 1, from = 'supply') => ({ pour: { from, to: `a.${to}`, what: 'electron', amount: n } });
-const at = (piece, index) => ({ place: { piece, to: `rail:${index}` } });
-const bondOrder = value => ({ setDial: { fixture: 'order', dial: 'n', value } });
+const guess = id => ({ place: { piece: id, to: 'slot:guess' } });
+const test = id => [{ place: { piece: id, to: 'slot:test' } }, { run: 'magnet' }];
+const file = (id, zone) => ({ place: { piece: id, to: `tray:${zone}` } });
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [{ run: 'rack-a' }, at('box2', 0), at('atom', 1), at('box1', 2)],
-  fillSteps('a', DIATOMICS.H2.order, DIATOMICS.H2.e),
-  [...fillSteps('a', DIATOMICS.He2.order, DIATOMICS.He2.e), bondOrder(0)],
-  [...fillSteps('a', DIATOMICS.N2.order, DIATOMICS.N2.e), bondOrder(3)],
-  [...fillSteps('a', DIATOMICS.O2.order, DIATOMICS.O2.e), { run: 'magnet' }],
-  [at('b', 0), at('a', 1), at('c', 2)],
-  [...fillSteps('a', DIATOMICS.F2.order, DIATOMICS.F2.e), { run: 'tester' }, { predict: 'weaker' }],
-  [...fillSteps('a', DIATOMICS.B2.order, DIATOMICS.B2.e), { predict: 'pulled' }, { run: 'magnet' }]
+  [guess('pulled')],
+  [...test('n2'), file('n2', 'ignored'), ...test('o2'), file('o2', 'pulled'), ...test('f2'), file('f2', 'ignored'), ...test('b2'), file('b2', 'pulled')],
+  [...fillSteps('a', DIATOMICS.O2.order, DIATOMICS.O2.e), { run: 'magnet' }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [{ run: 'rack-a' }, at('atom', 0), at('box1', 1), at('box2', 2)],
-  [pour('u1s:0', 2)],
-  [...fillSteps('a', DIATOMICS.He2.order, DIATOMICS.He2.e), bondOrder(2)],
-  [...fillSteps('a', DIATOMICS.N2.order, DIATOMICS.N2.e), bondOrder(2)],
-  [pour('g2s:0', 2), pour('u2s:0', 2), pour('g2p:0', 2), pour('p2p:0', 2), pour('p2p:1', 2), pour('q2p:0', 2), { run: 'magnet' }],
-  [at('a', 0), at('b', 1), at('c', 2)],
-  [{ run: 'tester' }, { predict: 'stronger' }],
-  [{ run: 'magnet' }, { predict: 'pushed' }]
+  [],
+  [file('n2', 'pulled'), file('o2', 'ignored'), file('f2', 'ignored'), file('b2', 'pulled')],
+  [pour('g2s:0', 2), pour('u2s:0', 2), pour('g2p:0', 2), pour('p2p:0', 2), pour('p2p:1', 2), pour('q2p:0', 2), { run: 'magnet' }]
 ];
 
 function blankState() { return {}; }
@@ -480,4 +294,4 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
-export { bondOrderOf, fillMO, readMO, supplyLeft };
+export { DIATOMICS };
