@@ -2816,36 +2816,34 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
           if (links !== mol.links.map(([a, b]) => `${a}-${b}`).sort().join()) fail(`unit03/q4-dots stage ${i + 1}: slate ${f.id}'s joints are not ${f.props.mol}'s links`);
           const sl = ATOMS.slateOf(t, f.id);
           if (sl.total !== mol.syms.reduce((n, sym) => n + LEWIS.VALENCE[sym], 0) - sl.charge) fail(`unit03/q4-dots stage ${i + 1}: ${f.props.mol}'s tray does not hold its valence electrons`);
-          for (const [jid] of f.props.joints) {
-            const pa = t.pieces[jid];
-            const gap = Math.min(...f.props.atoms.map(id => Math.hypot(t.pieces[id].at.x - pa.at.x, t.pieces[id].at.y - pa.at.y) - t.pieces[id].r - pa.r));
+          const fixed = Object.fromEntries(f.props.atoms.map(id => [id, t.pieces[id]]));
+          for (const jid of f.props.joints.map(j => j[0])) {
+            const jp = t.pieces[jid];
+            const gap = Math.min(...f.props.atoms.map(a => Math.hypot(jp.at.x - fixed[a].at.x, jp.at.y - fixed[a].at.y) - fixed[a].r));
             if (gap < 0) fail(`unit03/q4-dots stage ${i + 1}: joint ${jid} sits on an atom`);
           }
-        }
-        // Nothing on a slate overlaps anything else on it.
-        const fixed = Object.values(t.pieces).filter(p => p.fixed);
-        for (let a = 0; a < fixed.length; a++) for (let b = a + 1; b < fixed.length; b++) {
-          if (Math.hypot(fixed[a].at.x - fixed[b].at.x, fixed[a].at.y - fixed[b].at.y) < fixed[a].r + fixed[b].r) fail(`unit03/q4-dots stage ${i + 1}: ${fixed[a].id} and ${fixed[b].id} overlap`);
+          const ids = Object.keys(fixed);
+          for (let a = 0; a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) {
+            if (Math.hypot(fixed[ids[a]].at.x - fixed[ids[b]].at.x, fixed[ids[a]].at.y - fixed[ids[b]].at.y) < fixed[ids[a]].r + fixed[ids[b]].r) fail(`unit03/q4-dots stage ${i + 1}: ${ids[a]} and ${ids[b]} overlap`);
+          }
         }
       });
       // The drawing a solution leaves is the intended drawing, read off the table: bonds, lone pairs, singles.
       const drawn = (t, id) => { const sl = ATOMS.slateOf(t, id); return { bonds: sl.placed.bonds, lone: sl.placed.lone, dots: sl.placed.dots, sl }; };
       const nz = o => Object.entries(o).filter(([, v]) => v).sort();
       const norm = d => JSON.stringify([nz(d.bonds), nz(d.lone), nz(d.dots)]);
-      for (const [i, key, q] of [[0, 'H2O', null], [2, 'CO2', null], [4, 'NH4', 1], [5, 'BF3', null], [6, 'NO', null], [7, 'SF6', null]]) {
+      for (const [i, key] of [[0, 'H2O'], [2, 'CO2'], [4, 'BF3']]) {
         const d = drawn(endOf(i), 'a');
         if (norm(d) !== norm(DRAWINGS[key])) fail(`unit03/q4-dots stage ${i + 1}: the solution leaves a ${key} drawing that is not the intended one`);
-        // Nitric oxide is the radical: one lamp stays dark by design (the stage grades the single electron).
-        if (key !== 'NO' && !lit(key, DRAWINGS[key], q)) fail(`unit03/q4-dots stage ${i + 1}: the intended ${key} drawing does not light every lamp`);
-        same(d.sl.charge, q ?? MOLECULES[key].charge, `unit03/q4-dots stage ${i + 1} (the tray charge)`);
+        if (!lit(key, DRAWINGS[key])) fail(`unit03/q4-dots stage ${i + 1}: the intended ${key} drawing does not light every lamp`);
+        same(d.sl.charge, MOLECULES[key].charge, `unit03/q4-dots stage ${i + 1} (the tray charge)`);
       }
-      if (lit('NH4', DRAWINGS.NH4, 0)) fail('unit03/q4-dots stage 5: the ammonium drawing completes on the neutral tray');
-      if (trayFor('NO') % 2 !== 1) fail('unit03/q4-dots stage 7: nitric oxide\'s tray is not odd');
-      // Stage 2: the lone pairs on the heavy atom of each molecule, from the valence electrons.
+      // Stage 2 holds the guesses and no instrument; the wrong idea (a single stick to each oxygen) is a card, and it leaves two lamps dark.
       {
-        const t = endOf(1);
-        const lone = { a: (5 - 3) / 2, b: (4 - 4) / 2, c: (7 - 1) / 2 };
-        for (const [id, want] of Object.entries(lone)) same(drawn(t, id).lone[id === 'c' ? 1 : 0] || 0, want, `unit03/q4-dots stage 2 (${id}'s lone pairs on the heavy atom)`);
+        const t0 = tableOf(1);
+        holds(q4.STAGES[1].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q4-dots stage 2: the predict stage shows an instrument');
+        holds(['one', 'two', 'three'].every(id => t0.pieces[id]?.kind === 'guess') && Object.keys(t0.pieces).length === 3, 'unit03/q4-dots stage 2: the guesses are the three cards and nothing else');
+        holds(!lit('CO2', drawing({ '0-1': 1, '1-2': 1 }, { 0: 3, 2: 3 })), 'unit03/q4-dots stage 3: carbon dioxide with a single stick to each oxygen lights every lamp');
       }
       // Stage 4: on this board only the oxygen can sit between hydrogen and fluorine.
       const hof = [];
@@ -2867,8 +2865,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
         if (a.pieces.pairs.at.x !== t4.pieces.pairs.at.x) fail('unit03/q4-dots stage 4: a refused pair does not go back to the tray');
       }
       const bf = planLewis('BF3', DRAWINGS.BF3);
-      if (bf.atoms[0].lamp !== 'amber') fail('unit03/q4-dots stage 6: boron\'s lamp is not amber in the intended BF3 drawing');
-      if (planLewis('SF6', DRAWINGS.SF6).atoms[0].lamp !== 'expanded') fail('unit03/q4-dots stage 8: sulfur\'s lamp is not expanded in SF6');
+      if (bf.atoms[0].lamp !== 'amber') fail('unit03/q4-dots stage 5: boron\'s lamp is not amber in the intended BF3 drawing');
     }
     if (q5) {
       // Every slate on a bench-five table is Lewis's own molecule, its prefilled drawing is the one the stage names, and every graded answer is

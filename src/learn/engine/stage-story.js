@@ -77,7 +77,7 @@ export const STAGE_STORY = {
   },
   'q4-dots': {
     1: 'The blast filled the tunnel with unknown gases, and Vess must draw each one to know which is safe.',
-    8: 'A heavy gas pools at the tunnel floor where the miners kneel.'
+    3: 'A heavy gas pools at the tunnel floor where the miners kneel.'
   },
   'q5-resonance': {
     1: 'The cutters will trust only the drawing that matches the measured rock.',

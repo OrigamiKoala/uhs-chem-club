@@ -58,7 +58,7 @@ export const UNIT_03 = {
       title: 'Lewis Structures',
       line: 'Draw molecules to map the weak seams.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q4-dots.js')
     },
