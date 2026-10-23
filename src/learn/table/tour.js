@@ -50,7 +50,7 @@ const PIECE = {
   dish: ['Sample dishes', 'Each dish holds a sample of material, which you can look inside with the lens.', t => (hasTrays(t) ? ' Drag a dish into a tray to put it in that group.' : '')],
   lens: ['Lens', 'Drag the lens on top of a dish to see a magnified picture of what is inside it.'],
   cutter: ['Cutter', 'Drag the cutter across a dish. It cuts the sample into smaller pieces if it can be cut, and leaves it alone if it cannot.'],
-  atom: ['Atoms', 'Drag one atom on top of another to join them into one group that moves together. Tap the line between two joined atoms to break them apart.'],
+  atom: ['Atoms', 'Drag one atom on top of another to join them into one group that moves together. Tap the line between two joined atoms to break them apart.', t => ligarAtomSentence(t)],
   proton: ['Particles', 'Drag a particle onto the atom to add it, or drag it off to take it away.', t => (hasNeedle(t) ? ' The charge needle changes as you add or remove them.' : '')],
   neutron: null,
   electron: null,
@@ -63,12 +63,28 @@ const PIECE = {
   element: ['Element cards', 'Each card is one element. It shows how many protons it has, one dot for each electron in its outer shell, and its weight.'],
   sample: ['Samples', 'Each sample is a pile of atoms. Drag one onto the chute to tip it out.'],
   crate: ['Crates', 'Each crate holds a stock of one kind of atom. Drag a crate onto a pan to weigh it against the other pan, or onto the scale to read what it weighs.'],
-  token: null
+  token: null,
+  /* ---- LIGAR (unit03) ---- */
+  guess: ['Guess cards', 'Each card is one idea of what will happen.', t => ligarGuessSentence(t)]
 };
 
 /** Tool keys the table can carry on its foot dock. */
 const TOOL = {
   straightedge: ['Straightedge', 'Press "Straightedge" to lay a line across the points on the strip, so you can see whether they fall in a straight line.']
+};
+
+/* ---- LIGAR (unit03): what the Tour adds for the pieces of Ligar's benches ---- */
+
+/** What the dots and rings on an atom's face mean, once a stage shows them (Ligar's atom benches). */
+const ligarAtomSentence = t => (t.opts?.shells
+  ? ' The dots round an atom\'s rim are the electrons on its outer shell, and a ring lights when that shell is full.'
+    + (t.opts.charges === false ? '' : ' After a join, a + or − on an atom\'s face is the charge it carries.')
+  : '');
+
+/** The slot a guess goes in: only your guess, never marked right or wrong, and the next bench tests it. */
+const ligarGuessSentence = t => {
+  const slot = Object.values(t.zones?.slots || {}).find(z => z.label);
+  return ` Drag the card you would bet on into the "${slot ? slot.label : 'prediction'}" slot. It is only your guess: nothing is marked right or wrong, and the next bench tests it.`;
 };
 
 const hasTrays = t => Object.keys(t.zones?.trays || {}).some(id => !id.startsWith('scr-'));

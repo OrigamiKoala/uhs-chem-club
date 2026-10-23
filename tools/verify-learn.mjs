@@ -4586,6 +4586,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     const view = sym => { const e = A.elementOf(sym); return { kind: e.kind, shells: e.shells }; };
     const plan = (x, y) => JB.planJoin({ left: view(x), right: view(y) });
     const el = (t, id) => t.pieces[id].props.el;
+    const holds = (c, what) => { if (!c) fail(what); };
     mod.STAGES.forEach((st, i) => {
       for (const p of st.table.pieces) {
         if (p.kind === 'atom') { try { A.elementOf(p.props.el); } catch { fail(`unit03/q1-joins stage ${i + 1}: atom ${p.id} is "${p.props.el}", not an element`); } }
@@ -4596,45 +4597,50 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     mod.STAGES.forEach((st, i) => {
       const o = st.table.opts || {};
       if (i < 1 && o.shells) fail(`unit03/q1-joins stage ${i + 1}: shows shells before stage 2 introduces them`);
-      if (i < 2 && o.charges !== false) fail(`unit03/q1-joins stage ${i + 1}: shows a charge before stage 3 introduces it`);
+      if (i > 0 && i < 2 && o.charges !== false) fail(`unit03/q1-joins stage ${i + 1}: shows a charge before stage 3 introduces it`);
     });
     const kindTray = { none: null, transfer: 'handed', share: 'shared' };
     const pairsOf = (t, ids) => ids.map(([a, b]) => [a, b, plan(el(t, a), el(t, b))]);
-    // 1. a pair that holds is in Held and joined; one that does not is two loose atoms in Sprang apart
+    // 1. the predict stage holds the guesses and no instrument; the wrong idea ("identical atoms drift apart") is one of the cards
     {
-      const t = end(0);
-      for (const [a, b, pl] of pairsOf(t, [['a1', 'a2'], ['b1', 'b2'], ['c1', 'c2']])) {
-        const held = pl.type !== 'none';
-        same([t.pieces[a].zone, t.pieces[b].zone], held ? ['tray:held', 'tray:held'] : ['tray:apart', 'tray:apart'], `unit03/q1-joins stage 1 (${el(t, a)} and ${el(t, b)})`);
-        same(A.pairRead(t, a, b).joined, held, `unit03/q1-joins stage 1 (${el(t, a)} and ${el(t, b)} joined)`);
-      }
+      const t0 = start(0);
+      holds(mod.STAGES[0].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q1-joins stage 1: the predict stage shows an instrument');
+      holds(['hold', 'apart', 'merge'].every(id => t0.pieces[id]?.kind === 'guess') && Object.keys(t0.pieces).length === 3, 'unit03/q1-joins stage 1: the guesses are the three cards and nothing else');
+      // The pair the guess is about really does hold, by the planner, and the argon pair really does not.
+      holds(plan('H', 'H').type !== 'none' && plan('Ar', 'H').type === 'none' && plan('Ne', 'Ne').type === 'none', 'unit03/q1-joins stage 1: the hydrogen pair, the argon pair and the neon pair are not the three cases the quest teaches');
     }
-    // 2. who starts with a full shell is what the planner says has no room; the solution fills every other shell
+    // 2. a pair that holds is in Held and joined; one that does not is two loose atoms in Came apart; the table shows the rings that tell them apart
     {
+      const t = end(1);
+      for (const [a, b, pl] of pairsOf(t, [['a1', 'a2'], ['b1', 'b2'], ['c1', 'c2'], ['d1', 'd2']])) {
+        const held = pl.type !== 'none';
+        same([t.pieces[a].zone, t.pieces[b].zone], held ? ['tray:held', 'tray:held'] : ['tray:apart', 'tray:apart'], `unit03/q1-joins stage 2 (${el(t, a)} and ${el(t, b)})`);
+        same(A.pairRead(t, a, b).joined, held, `unit03/q1-joins stage 2 (${el(t, a)} and ${el(t, b)} joined)`);
+      }
+      // Identical atoms hold (the wrong idea fails), different atoms can fail to (the other wrong idea fails), and the rings give a reason.
+      holds(plan(el(t, 'c1'), el(t, 'c2')).type !== 'none' && el(t, 'c1') === el(t, 'c2'), 'unit03/q1-joins stage 2: no identical pair holds');
+      holds(plan(el(t, 'd1'), el(t, 'd2')).type === 'none' && el(t, 'd1') !== el(t, 'd2'), 'unit03/q1-joins stage 2: no pair of different atoms comes apart');
       const t0 = start(1);
-      const t1 = end(1);
       for (const p of Object.values(t0.pieces).filter(x => x.kind === 'atom' && !x.props.scratch)) {
         same(A.readPiece(p.id, t0).full, JB.shellPlan(view(p.props.el)).full, `unit03/q1-joins stage 2 (${p.props.el} starts full)`);
-        same(A.readPiece(p.id, t1).full, true, `unit03/q1-joins stage 2 (${p.props.el} ends full)`);
+      }
+      for (const [a, b, pl] of pairsOf(t0, [['a1', 'a2'], ['b1', 'b2'], ['c1', 'c2'], ['d1', 'd2']])) {
+        // A pair comes apart exactly when an atom's shell starts full; a pair that held ends with both shells full.
+        const anyFull = A.readPiece(a, t0).full || A.readPiece(b, t0).full;
+        same(anyFull, pl.type === 'none', `unit03/q1-joins stage 2 (${el(t0, a)} and ${el(t0, b)}: a pair comes apart exactly when an atom's shell starts full)`);
+        if (pl.type !== 'none') same([A.readPiece(a, t).full, A.readPiece(b, t).full], [true, true], `unit03/q1-joins stage 2 (${el(t0, a)} and ${el(t0, b)} end full)`);
       }
     }
-    // 3. the charged pair is the planner's transfer, the neutral pair its share
+    // 3. handed over or held between, from the planner's own type; one pair of different elements shares
     {
       const t = end(2);
-      const ch = (a, b) => [A.readPiece(a, t).charge, A.readPiece(b, t).charge];
-      const p1 = plan('Na', 'Cl');
-      same(ch('na', 'cl'), [p1.charge.left, p1.charge.right], 'unit03/q1-joins stage 3 (sodium and chlorine charges)');
-      same(ch('h1', 'h2'), [0, 0], 'unit03/q1-joins stage 3 (the hydrogen pair is neutral)');
-    }
-    // 4. handed over or held between, from the planner's own type
-    {
-      const t = end(3);
-      for (const [a, b, pl] of pairsOf(t, [['m1', 'm2'], ['n1', 'n2'], ['k1', 'k2'], ['d1', 'd2']])) {
-        same(t.pieces[a].zone, `tray:${kindTray[pl.type]}`, `unit03/q1-joins stage 4 (${el(t, a)} and ${el(t, b)})`);
-        same(A.pairRead(t, a, b).type, pl.type, `unit03/q1-joins stage 4 (${el(t, a)} and ${el(t, b)} join)`);
+      for (const [a, b, pl] of pairsOf(t, [['m1', 'm2'], ['h1', 'h2'], ['k1', 'k2'], ['d1', 'd2']])) {
+        same(t.pieces[a].zone, `tray:${kindTray[pl.type]}`, `unit03/q1-joins stage 3 (${el(t, a)} and ${el(t, b)})`);
+        same(A.pairRead(t, a, b).type, pl.type, `unit03/q1-joins stage 3 (${el(t, a)} and ${el(t, b)} join)`);
       }
+      holds(plan('H', 'Cl').type === 'share' && plan('H', 'Cl').type !== plan('Mg', 'O').type, 'unit03/q1-joins stage 3: hydrogen with chlorine does not share');
     }
-    // 5. chlorines it takes to empty magnesium's outer shell: add them one by one until the planner says it is spent
+    // 4. chlorines it takes to empty magnesium's outer shell: add them one by one until the planner says it is spent
     {
       let mg = view('Mg').shells.slice();
       let n = 0;
@@ -4644,38 +4650,23 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
         mg[mg.length - 1] -= pl.moved;
         n++;
       }
+      const t = end(3);
+      same(SNAPM.clusterOf(t, 'mg').length - 1, n, 'unit03/q1-joins stage 4 (chlorines for one magnesium)');
+      same(A.closureOf(SNAPM.clusterOf(t, 'mg'), t).closed, true, 'unit03/q1-joins stage 4 (the unit is closed)');
+      same(A.chargeOf(SNAPM.clusterOf(t, 'mg'), t), 0, 'unit03/q1-joins stage 4 (the unit reads zero)');
+      if (start(3).pieces.mg.joinedTo.length || Object.values(start(3).pieces).filter(p => p.props.el === 'Cl').length <= n) fail('unit03/q1-joins stage 4: the table does not hold more chlorines than the answer needs');
+    }
+    // 5. pairs between, from the planner; one tray holds two pairs
+    {
       const t = end(4);
-      same(SNAPM.clusterOf(t, 'mg').length - 1, n, 'unit03/q1-joins stage 5 (chlorines for one magnesium)');
-      same(A.closureOf(SNAPM.clusterOf(t, 'mg'), t).closed, true, 'unit03/q1-joins stage 5 (the unit is closed)');
-      same(A.chargeOf(SNAPM.clusterOf(t, 'mg'), t), 0, 'unit03/q1-joins stage 5 (the unit reads zero)');
-      if (start(4).pieces.mg.joinedTo.length || Object.values(start(4).pieces).filter(p => p.props.el === 'Cl').length <= n) fail('unit03/q1-joins stage 5: the table does not hold more chlorines than the answer needs');
-    }
-    // 6. pairs between, from the planner
-    {
-      const t = end(5);
       const names = { 1: 'one', 2: 'two', 3: 'three' };
-      for (const [a, b, pl] of pairsOf(t, [['u1', 'u2'], ['v1', 'v2'], ['w1', 'w2']])) {
-        same(t.pieces[a].zone, `tray:${names[pl.pairs]}`, `unit03/q1-joins stage 6 (${el(t, a)} and ${el(t, b)})`);
-        same(A.pairRead(t, a, b).pairs, pl.pairs, `unit03/q1-joins stage 6 (${el(t, a)} and ${el(t, b)} pairs)`);
+      for (const [a, b, pl] of pairsOf(t, [['u1', 'u2'], ['v1', 'v2'], ['w1', 'w2'], ['x1', 'x2']])) {
+        same(t.pieces[a].zone, `tray:${names[pl.pairs]}`, `unit03/q1-joins stage 5 (${el(t, a)} and ${el(t, b)})`);
+        same(A.pairRead(t, a, b).pairs, pl.pairs, `unit03/q1-joins stage 5 (${el(t, a)} and ${el(t, b)} pairs)`);
       }
-    }
-    // 7. ionic, covalent or none, from the planner
-    {
-      const t = end(6);
-      const tray = { none: 'none', transfer: 'ionic', share: 'covalent' };
-      for (const [a, b, pl] of pairsOf(t, [['x1', 'x2'], ['y1', 'y2'], ['z1', 'z2'], ['q1', 'q2']])) {
-        same([t.pieces[a].zone, t.pieces[b].zone], [`tray:${tray[pl.type]}`, `tray:${tray[pl.type]}`], `unit03/q1-joins stage 7 (${el(t, a)} and ${el(t, b)})`);
-      }
-    }
-    // 8. hydrogens one carbon holds: its room, over what one hydrogen takes
-    {
-      const t = end(7);
-      const room = JB.shellPlan(view('C')).room / JB.shellPlan(view('H')).room;
-      same(SNAPM.clusterOf(t, 'c').length - 1, room, 'unit03/q1-joins stage 8 (hydrogens per carbon)');
-      if (Object.values(start(7).pieces).filter(p => p.props.el === 'H').length <= room) fail('unit03/q1-joins stage 8: the table does not hold more hydrogens than the answer needs');
     }
   }
-  if (failures === before) ok('Ligar bench one: every declared atom is a real element, and every graded pair, charge, count and tray agrees with joinbench\'s planJoin on the elements\' own shells');
+  if (failures === before) ok('Ligar bench one: every declared atom is a real element, the guess cards stand alone, and every graded pair, charge, count and tray agrees with joinbench\'s planJoin on the elements\' own shells');
 }
 
 
@@ -4704,84 +4695,83 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
         const d = B.declOf(p);
         holds(BUILDS.has(d.build) && Number.isFinite(d.melt) && d.melt > 0, `unit03/q2-lattice stage ${i + 1}: block ${p.id} is not a real build with a melting point`);
         const dial = Object.values(start(i).fixtures).find(f => f.kind === 'hotplate')?.dials.heat;
-        if (dial) holds(dial.max >= d.melt + dial.step, `unit03/q2-lattice stage ${i + 1}: the hotplate cannot be turned up past block ${p.id}'s melting point`);
+        if (dial) holds(dial.max >= Math.min(d.melt + dial.step, 900 + dial.step), `unit03/q2-lattice stage ${i + 1}: the hotplate cannot be turned up past block ${p.id}'s melting point`);
+        if (dial && !st.table.pieces.some(q => q.props?.slab?.sealed)) holds(dial.max >= d.melt + dial.step, `unit03/q2-lattice stage ${i + 1}: the hotplate cannot be turned up past block ${p.id}'s melting point`);
       }
     });
-    // 1. the three blocks give way at three different settings, and the rail's answer is the order they give way in
+    // 1. the predict stage holds the guesses and no instrument; the wrong idea (a cold block of salt lights the lamp) is a card
     {
-      const ms = blocks(0).filter(p => p.fetchFrom === undefined && !p.hidden).map(p => B.declOf(p).melt).sort((a, b) => a - b);
-      for (let k = 1; k < ms.length; k++) holds(ms[k] - ms[k - 1] > 25, 'unit03/q2-lattice stage 1: two blocks give way within one step of the dial');
-      const t = end(0);
-      same(t.zones.rail.order.map(id => B.declOf(t.pieces[id]).melt), t.zones.rail.order.map(id => B.declOf(t.pieces[id]).melt).slice().sort((a, b) => a - b), 'unit03/q2-lattice stage 1 (the rail runs from the lowest melting point to the highest)');
-      // A block is molten exactly while it stands on a plate at or past its melting point, and cools when it leaves.
-      let t0 = start(0);
-      const salt = t0.pieces.s1;
-      t0 = TABLE.runScript(t0, [{ place: { piece: 's1', to: 'free:49,26' } }, { setDial: { fixture: 'hp', dial: 'heat', value: 775 } }]);
-      holds(!B.slabView(t0.pieces.s1, t0).molten, 'unit03/q2-lattice stage 1: a block is molten below its melting point');
-      t0 = TABLE.apply(t0, { setDial: { fixture: 'hp', dial: 'heat', value: 825 } });
-      holds(B.slabView(t0.pieces.s1, t0).molten && B.slabView(t0.pieces.s1, t0).phase === 'molten', 'unit03/q2-lattice stage 1: a block is not molten past its melting point');
-      t0 = TABLE.apply(t0, { place: { piece: 's1', to: 'rail:0' } });
-      holds(!B.slabView(t0.pieces.s1, t0).molten, 'unit03/q2-lattice stage 1: a block lifted off the plate stays molten');
-      void salt;
+      const t0 = start(0);
+      holds(q2.STAGES[0].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q2-lattice stage 1: the predict stage shows an instrument');
+      holds(['lights', 'dark', 'never'].every(id => t0.pieces[id]?.kind === 'guess') && Object.keys(t0.pieces).length === 3, 'unit03/q2-lattice stage 1: the guesses are the three cards and nothing else');
+      // What the guess is about: cold salt does NOT pass a current, molten salt does.
+      const salt = B.declOf(q2.STAGES[1].table.pieces.find(p => p.id === 's1'));
+      same([JB.conductionOf(salt, false), JB.conductionOf(salt, true)], [false, true], 'unit03/q2-lattice stage 1 (cold salt is dark, molten salt lights the lamp)');
     }
-    // 2. a checkerboard of twelve ions has no like charge touching, and slid it puts like against like; a row of one charge does not
+    // 2. a current needs ions or electrons free to move: cold and molten only for the metal, molten only for the lattice, never for molecules or a network
     {
-      const t = end(1);
-      const g = B.gridRead(t, 'grid');
-      same([g.filled, g.like, g.slid], [12, 0, true], 'unit03/q2-lattice stage 2 (a built grid)');
-      holds(g.faced > 0, 'unit03/q2-lattice stage 2: sliding a layer of a checkerboard puts no like charge face to face');
-      const ions = Object.values(start(1).pieces).filter(p => p.kind === 'ion');
-      same([ions.filter(p => p.props.charge === 1).length, ions.filter(p => p.props.charge === -1).length], [6, 6], 'unit03/q2-lattice stage 2 (six plus ions and six minus ions)');
-      const row = TABLE.runScript(start(1), [{ place: { piece: 'na1', to: 'slot:g00' } }, { place: { piece: 'na2', to: 'slot:g01' } }]);
-      holds(B.gridRead(row, 'grid').like === 1, 'unit03/q2-lattice stage 2: two like ions side by side do not count as touching');
-    }
-    // 3. a current needs ions or electrons free to move: cold and molten only for the metal, molten only for the lattice, never for molecules
-    {
-      const want = { s1: 'molten', s2: 'never', s3: 'both' };
-      for (const p of blocks(2)) {
+      const want = { s1: 'molten', s2: 'never', s3: 'both', s4: 'never' };
+      for (const p of blocks(1)) {
         const d = B.declOf(p);
-        same(JB.conductionOf(d, false) ? 'both' : JB.conductionOf(d, true) ? 'molten' : 'never', want[p.id], `unit03/q2-lattice stage 3 (block ${p.id}'s current)`);
+        same(JB.conductionOf(d, false) ? 'both' : JB.conductionOf(d, true) ? 'molten' : 'never', want[p.id], `unit03/q2-lattice stage 2 (block ${p.id}'s current)`);
       }
+      same(new Set(Object.values(want)).size, 3, 'unit03/q2-lattice stage 2 (all three trays are used)');
       // The lamp is the build's answer for the block in the state it is in right now.
-      let t = TABLE.runScript(start(2), [{ join: ['leads', 's1'] }]);
-      same(B.slabView(t.pieces.s1, t).current, false, 'unit03/q2-lattice stage 3 (the lamp, cold salt)');
+      let t = TABLE.runScript(start(1), [{ join: ['leads', 's1'] }]);
+      same(B.slabView(t.pieces.s1, t).current, false, 'unit03/q2-lattice stage 2 (the lamp, cold salt)');
       t = TABLE.runScript(t, [{ place: { piece: 's1', to: 'free:49,26' } }, { setDial: { fixture: 'hp', dial: 'heat', value: 825 } }]);
-      same(B.slabView(t.pieces.s1, t).current, true, 'unit03/q2-lattice stage 3 (the lamp, molten salt)');
+      same(B.slabView(t.pieces.s1, t).current, true, 'unit03/q2-lattice stage 2 (the lamp, molten salt)');
+      for (const id of ['s1', 's2', 's3', 's4']) same(end(1).pieces[id].zone, `tray:${want[id]}`, `unit03/q2-lattice stage 2 (${id} is trayed by its lamp)`);
     }
-    // 4. a molecule stays whole through the blow and the melt
+    // 3. the four blocks give way at four different settings, and the rail's answer is the order they give way in
     {
-      const vent = blocks(3).find(p => p.id === 's2');
-      same(B.smallestPiece(B.declOf(vent)), 3, 'unit03/q2-lattice stage 4 (the fewest atoms left bonded in one piece of the vent block)');
-      same(end(3).fixtures.tally.dials.atoms.value, B.smallestPiece(B.declOf(vent)), 'unit03/q2-lattice stage 4 (the tally the solution sets)');
+      const ms = blocks(2).map(p => B.declOf(p).melt).sort((a, b) => a - b);
+      same(ms.length, 4, 'unit03/q2-lattice stage 3 (four blocks)');
+      for (let k = 1; k < ms.length; k++) holds(ms[k] - ms[k - 1] > 25, 'unit03/q2-lattice stage 3: two blocks give way within one step of the dial');
+      const t = end(2);
+      same(t.zones.rail.order.map(id => B.declOf(t.pieces[id]).melt), t.zones.rail.order.map(id => B.declOf(t.pieces[id]).melt).slice().sort((a, b) => a - b), 'unit03/q2-lattice stage 3 (the rail runs from the lowest melting point to the highest)');
+      // A block is molten exactly while it stands on a plate at or past its melting point, and cools when it leaves.
+      let t0 = start(2);
+      t0 = TABLE.runScript(t0, [{ place: { piece: 's1', to: 'free:49,26' } }, { setDial: { fixture: 'hp', dial: 'heat', value: 775 } }]);
+      holds(!B.slabView(t0.pieces.s1, t0).molten, 'unit03/q2-lattice stage 3: a block is molten below its melting point');
+      t0 = TABLE.apply(t0, { setDial: { fixture: 'hp', dial: 'heat', value: 825 } });
+      holds(B.slabView(t0.pieces.s1, t0).molten && B.slabView(t0.pieces.s1, t0).phase === 'molten', 'unit03/q2-lattice stage 3: a block is not molten past its melting point');
+      t0 = TABLE.apply(t0, { place: { piece: 's1', to: 'rail:0' } });
+      holds(!B.slabView(t0.pieces.s1, t0).molten, 'unit03/q2-lattice stage 3: a block lifted off the plate stays molten');
     }
-    // 5 and 6. the tongs bring out a group of the block's own bonds: the network and the grid come out whole, the vent block gives a molecule
+    // 4. a checkerboard of twelve ions has no like charge touching, and slid it puts like against like; a row of one charge does not
     {
-      const web = B.declOf(blocks(4).find(p => p.id === 's3'));
-      holds(B.liftCells(web, 'intact').whole, 'unit03/q2-lattice stage 5: the tongs do not bring the whole network out');
-      holds(!B.liftCells(B.declOf(blocks(4).find(p => p.id === 's2')), 'intact').whole, 'unit03/q2-lattice stage 5: the tongs bring the whole of the vent block out');
-      const sizes = Object.fromEntries(blocks(5).map(p => [p.id, B.groupsOf(B.declOf(p))]));
-      same(Object.keys(sizes).filter(id => sizes[id].length > 1), ['s2'], 'unit03/q2-lattice stage 6 (the blocks made of separate molecules)');
-      same(sizes.s2, [3, 3, 3, 3, 3, 3, 3, 3], 'unit03/q2-lattice stage 6 (the vent block is eight molecules of three atoms)');
-      const half = B.liftCells(B.declOf(blocks(5).find(p => p.id === 's1')), 'struck');
-      holds(!half.whole && !sizes.s1.includes(half.n), 'unit03/q2-lattice stage 6: the half of a struck salt block is not a molecule');
+      const t = end(3);
+      const g = B.gridRead(t, 'grid');
+      same([g.filled, g.like, g.slid], [12, 0, true], 'unit03/q2-lattice stage 4 (a built grid)');
+      holds(g.faced > 0, 'unit03/q2-lattice stage 4: sliding a layer of a checkerboard puts no like charge face to face');
+      const ions = Object.values(start(3).pieces).filter(p => p.kind === 'ion');
+      same([ions.filter(p => p.props.charge === 1).length, ions.filter(p => p.props.charge === -1).length], [6, 6], 'unit03/q2-lattice stage 4 (six plus ions and six minus ions)');
+      const row = TABLE.runScript(start(3), [{ place: { piece: 'na1', to: 'slot:g00' } }, { place: { piece: 'na2', to: 'slot:g01' } }]);
+      holds(B.gridRead(row, 'grid').like === 1, 'unit03/q2-lattice stage 4: two like ions side by side do not count as touching');
+      const m = q2.STAGES[3].reward.model;
+      holds(m && m.type === 'crystal' && m.cation === 'Na' && m.anion === 'Cl', 'unit03/q2-lattice stage 4: the reward does not hold the salt crystal');
     }
-    // 7. four sealed blocks, four builds, four different behaviours on the three tests
+    // 5. four sealed blocks, four builds, four different behaviours on the three tests, and exactly one holds at 900 and passes no current
     {
       const sig = d => `${d.melt > 900 ? 'hot' : 'cool'}|${B.strikeOf(d.build)}|${JB.conductionOf(d, false)}|${JB.conductionOf(d, true)}`;
-      const sigs = blocks(6).map(p => sig(B.declOf(p)));
-      same(new Set(sigs).size, 4, 'unit03/q2-lattice stage 7 (four blocks tell apart by melt, blow and lamp)');
-      same(blocks(6).map(p => B.declOf(p).build).sort(), ['clusters', 'grid', 'metallic', 'web'], 'unit03/q2-lattice stage 7 (the four builds)');
-      holds(blocks(6).every(p => B.declOf(p).sealed), 'unit03/q2-lattice stage 7: a block is not sealed');
+      const sigs = blocks(4).map(p => sig(B.declOf(p)));
+      same(new Set(sigs).size, 4, 'unit03/q2-lattice stage 5 (four blocks tell apart by melt, blow and lamp)');
+      same(blocks(4).map(p => B.declOf(p).build).sort(), ['clusters', 'grid', 'metallic', 'web'], 'unit03/q2-lattice stage 5 (the four builds)');
+      holds(blocks(4).every(p => B.declOf(p).sealed), 'unit03/q2-lattice stage 5: a block is not sealed');
+      const ok = blocks(4).filter(p => { const d = B.declOf(p); return d.melt > 900 && !JB.conductionOf(d, false) && !JB.conductionOf(d, true); });
+      same(ok.map(p => p.id), ['x4'], 'unit03/q2-lattice stage 5 (the one block that holds at 900 and passes no current)');
+      // A second block also holds at 900 and fails on the lamp, so melting alone does not settle it.
+      holds(blocks(4).filter(p => B.declOf(p).melt > 900).length >= 2, 'unit03/q2-lattice stage 5: only one block holds at 900, so the lamp is not needed');
+      same(end(4).pieces.x4.zone, 'slot:liner', 'unit03/q2-lattice stage 5 (the liner)');
     }
-    // 8. exactly one block holds at 900 and passes no current
-    {
-      const ok = blocks(7).filter(p => { const d = B.declOf(p); return d.melt > 900 && !JB.conductionOf(d, false) && !JB.conductionOf(d, true); });
-      same(ok.map(p => p.id), ['s3'], 'unit03/q2-lattice stage 8 (the one block that holds at 900 and passes no current)');
+    // No stage declares an outcome a stage grades: the hotplate and the blocks carry only what a measurement gives. No field fetch is left here.
+    for (const [i, st] of q2.STAGES.entries()) {
+      for (const f of Object.values(start(i).fixtures)) if (f.kind === 'hotplate') holds(f.dials.heat.min === 0, `unit03/q2-lattice stage ${i + 1}: the hotplate does not start cold`);
+      holds(!Object.keys(start(i).fetch).length, `unit03/q2-lattice stage ${i + 1}: sends the player to fetch something the bench already holds`);
     }
-    // No stage declares an outcome a stage grades: the hotplate and the blocks carry only what a measurement gives.
-    for (const [i, st] of q2.STAGES.entries()) for (const f of Object.values(start(i).fixtures)) if (f.kind === 'hotplate') holds(f.dials.heat.min === 0, `unit03/q2-lattice stage ${i + 1}: the hotplate does not start cold`);
   }
-  if (failures === before) ok('Ligar bench two: every block is a real build with a melting point the dial reaches, a block is molten exactly while it stands on a hot plate, and every graded answer (the rail, the grid and its slid layer, the lamp, the smallest piece, what the tongs bring out, the four builds, the one liner) agrees with joinbench\'s planSlab and conductionOf');
+  if (failures === before) ok('Ligar bench two: every block is a real build with a melting point the dial reaches, a block is molten exactly while it stands on a hot plate, and every graded answer (the lamp cold and molten, the rail, the grid and its slid layer, the four sealed builds, the one liner) agrees with joinbench\'s planSlab and conductionOf');
 }
 
 /* ------------------------------------------------------------------

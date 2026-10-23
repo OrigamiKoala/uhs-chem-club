@@ -64,12 +64,12 @@ export const STAGE_STORY = {
 
   /* ---- Ligar: clear the rescue pass ---- */
   'q1-joins': {
-    1: 'The Fifth blast scattered rubble across the rescue tunnel mouth.',
-    8: 'The trapped miners ration air while the tunnel gas keeps its recipe.'
+    1: 'The Fifth\'s blast scattered rubble across the rescue tunnel, and Vess needs to know what holds it together.',
+    4: 'The breakers pack their charges by the recipe, so a wrong count wastes them.'
   },
   'q2-lattice': {
-    1: 'The rescue tunnel needs the toughest boulder marked before the breakers start.',
-    8: 'The trapped miners need a liner that holds at 900 degrees without shocking anyone.'
+    1: 'Some of the rubble is rock salt, and Vess wants to know if it is safe near the wiring.',
+    5: 'The trapped miners need a liner that holds at 900 degrees without shocking anyone.'
   },
   'q3-distance': {
     6: 'The miners need to know which seam will fight the drill the hardest.'

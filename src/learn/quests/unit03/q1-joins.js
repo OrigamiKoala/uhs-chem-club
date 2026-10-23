@@ -1,38 +1,34 @@
 /**
  * q1-joins.js — Ligar, bench one: WHAT HOLDS.
  *
- * The first bench on the second world, and its first TABLETOP (plan `bench-tabletop.md`, phase
- * T1b). Tallow spent five benches on one atom at a time; this one hands the player loose atoms
- * and asks them to put two together. A pair that holds snaps (an electron visibly crosses, or a
- * pair of electrons settles in the joint); a pair that does not drifts apart when let go. A
- * stage is graded on what is on the table when Commit is pressed.
+ * The first bench on the second world, and its first TABLETOP (plan `bench-tabletop.md`, phase T1b). Tallow spent six benches on one
+ * atom at a time; this one hands the player loose atoms and asks them to put two together. A pair that holds snaps (an electron
+ * visibly crosses, or a pair of electrons settles in the joint); a pair that does not drifts apart when let go. A stage is graded on
+ * what is on the table when Submit is pressed.
  *
- * THE ORDER IS THE WHOLE DESIGN:
+ * THE CLICK (2026-10-23 rollout). Most students arrive believing that atoms only join when they are DIFFERENT ("two of the same
+ * thing have nothing to trade"). So the quest opens on a prediction about two hydrogen atoms (the wrong idea is a card), and the very
+ * next bench presses four pairs: the hydrogen pair holds, a pair of different atoms (argon with hydrogen) comes apart, and the rings
+ * on the atoms' rims show why. Only then is the word "bond" given.
  *
- *   1  put three pairs together and tray what held       -> a join has a name: a bond
- *   2  fill the outer shell of every atom                -> a bond fills the outer shell
- *   3  build a charged pair and a neutral pair           -> handed over, or held between
- *   4  tray four pairs by what moved                     -> ionic and covalent
- *   5  build a unit with every outer shell full          -> the counts fix the ratio
- *   6  tray three pairs by the pairs between them        -> double and triple bonds
- *   7  tray four pairs by the kind of bond, or none      -> the catalogue decides it
- *   8  fill carbon's outer shell                         -> the counts fix the recipe
+ *   1  PREDICT: do two hydrogen atoms stay together?            (no instrument; the wrong idea is a card)
+ *   2  press four pairs, sort the ones that stayed together     -> a bond fills the outer shell
+ *   3  sort four pairs by whether an electron was handed or held -> ionic and covalent
+ *   4  build a unit whose shells are all full and whose needle reads zero -> the counts fix the ratio
+ *   5  sort four pairs by the number of pairs between them      -> double and triple bonds
  *   -- debrief: two ways to join, and why a compound has only one recipe.
  *
- * THE TABLE (`table/`, `kits/atoms.js`, the bond-scale half). Whether a pair holds is
- * `joinbench.js` `planJoin` asked against the atoms' shells as they stand; no stage declares an
- * outcome and none refuses a join: any pair may be tried, and what happens is shown. `SOLUTIONS`
- * and `MISSES` are scripts of the player's own actions, replayed by `verify:table` by drag and by
- * two taps. Words are plain until earned: the faces carry no charge until stage 3 and no shell
- * until stage 2, and a refusal says "room" before it says "shell".
+ * Cut as repeats of those ideas (the pairs and the trays changed, the idea did not): "fill the outer shell of every atom" (stage 2
+ * shows the rings), "build a charged pair and a neutral pair" (stage 3 sorts them), "read it off the catalogue" and "build the recipe"
+ * (stages 3 and 4 already hold both).
  *
- * WHAT THIS BENCH DOES NOT DO. It never weighs anything and it never counts a heap. What a
- * compound weighs, and how you count atoms too small to count, are benches four and five of this
- * world.
+ * THE TABLE (`table/`, `kits/atoms.js`, the bond-scale half). Whether a pair holds is `joinbench.js` `planJoin` asked against the
+ * atoms' shells as they stand; no stage declares an outcome and none refuses a join: any pair may be tried, and what happens is shown.
+ * `SOLUTIONS` and `MISSES` are scripts of the player's own actions, replayed by `verify:table` by drag and by two taps. Words are
+ * plain until earned: the faces carry no charge until stage 3, and a refusal says what the table shows, never why.
  *
- * Everything Tallow taught is a plain word here: atom, element, compound, molecule, proton,
- * neutron, electron, shell, valence, isotope, ion, cation, anion, metal, nonmetal. What this
- * quest has to earn is on `VOCABULARY`.
+ * Everything Tallow taught is a plain word here: atom, element, proton, neutron, electron, shell, valence, isotope, ion, cation, anion,
+ * metal, nonmetal. What this quest has to earn is on `VOCABULARY`.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
@@ -40,25 +36,34 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { atomTable, pairRead, readPiece, closureOf, moleculesOf } from '../../table/kits/atoms.js';
 import { clusterOf } from '../../table/snap.js';
+import { predictStage, testPrompt, verdictLine } from './_ligar.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 5 };
 
 /**
  * When each withheld word is earned.
  *
  * The specific entries come FIRST, because the schedule is searched in order
  * and the first term that matches a word decides when that word is sayable.
- * Put `bond` at the top and "double bond" would silently inherit stage one.
+ * Put `bond` at the top and "double bond" would silently inherit stage two.
  */
 export const VOCABULARY = [
-  { term: /\bdouble bonds?\b/i, introducedAt: 6 },
-  { term: /\btriple bonds?\b/i, introducedAt: 6 },
-  { term: /\bionic\b/i, introducedAt: 4 },
-  { term: /\bcovalent\b/i, introducedAt: 4 },
-  { term: /\bbond(s|ed|ing)?\b/i, introducedAt: 1 }
+  { term: /\bdouble bonds?\b/i, introducedAt: 5 },
+  { term: /\btriple bonds?\b/i, introducedAt: 5 },
+  { term: /\bionic\b/i, introducedAt: 3 },
+  { term: /\bcovalent\b/i, introducedAt: 3 },
+  { term: /\bbond(s|ed|ing)?\b/i, introducedAt: 2 }
 ];
 
 const SPEAKER = 'Vess';
+
+/** The key the player's guess is kept under (`engine/predict.js`), and the cards it is chosen from. */
+const QUEST_KEY = 'unit03/q1-joins';
+const GUESSES = [
+  ['hold', 'the hydrogen atoms stay together', ['They stay together', 'Something holds', 'the two']],
+  ['apart', 'the hydrogen atoms drift apart', ['They drift apart', 'Identical atoms', 'have nothing to swap']],
+  ['merge', 'the hydrogen atoms merge', ['They merge', 'into one bigger', 'atom']]
+];
 
 /**
  * The legend lines. A key whose label says what it does owes nothing, and this bench has no keys:
@@ -69,16 +74,15 @@ export function toolNoteFor() { return null; }
 /* ------------------------------------------------------------------
    THE TABLES
    One layout, so the furniture is always where the hand expects it (120 x 64 units): the atoms in
-   pairs along the top (a pair stands close, the next pair further off), the trays under them, and
-   the scratch corner bottom left. A pair is two atoms that start side by side; the table lets any
-   atom join any other, and a stage only grades the pairs it handed over.
+   pairs along the top (a pair stands close, the next pair further off) and the trays under them. A pair
+   is two atoms that start side by side; the table lets any atom join any other, and a stage only grades
+   the pairs it handed over.
    ------------------------------------------------------------------ */
 
 const atomAt = (id, el, x, y) => ({ id, kind: 'atom', label: el, at: { x, y }, props: { el } });
 const trayAt = (id, label, x, y, w = 26, h = 14) => ({ id, label, at: { x, y }, size: { w, h } });
 
-/** What the faces show, by stage: the charge arrives with stage 3, the shell with stage 2. */
-const OPTS_1 = { words: 'plain', charges: false };
+/** What the faces show: the rings of an outer shell from stage 2 on, the charge once a join has handed an electron (stage 3). */
 const OPTS_2 = { words: 'shells', shells: true, charges: false };
 const OPTS_3 = { words: 'shells', shells: true };
 
@@ -100,298 +104,173 @@ function readPairs(t, list, trays) {
   });
 }
 
-const STRAY = 'An atom is joined to one it did not start beside. Pull it out and join each atom to its own partner.';
+const STRAY = 'An atom is joined to one it did not start beside.';
 
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE FIVE STAGES
    ------------------------------------------------------------------ */
-const P1 = [['a1', 'Na', 'a2', 'Cl'], ['b1', 'Ne', 'b2', 'Ne'], ['c1', 'H', 'c2', 'H']];
-const P4 = [['m1', 'Mg', 'm2', 'O'], ['n1', 'O', 'n2', 'O'], ['k1', 'K', 'k2', 'F'], ['d1', 'C', 'd2', 'H']];
-const P6 = [['u1', 'H', 'u2', 'H'], ['v1', 'O', 'v2', 'O'], ['w1', 'N', 'w2', 'N']];
-const P7 = [['x1', 'Ca', 'x2', 'S'], ['y1', 'C', 'y2', 'O'], ['z1', 'Ar', 'z2', 'H'], ['q1', 'Al', 'q2', 'Cl']];
+const P2 = [['a1', 'Na', 'a2', 'Cl'], ['b1', 'Ne', 'b2', 'Ne'], ['c1', 'H', 'c2', 'H'], ['d1', 'Ar', 'd2', 'H']];
+const P3 = [['m1', 'Mg', 'm2', 'O'], ['h1', 'H', 'h2', 'Cl'], ['k1', 'K', 'k2', 'F'], ['d1', 'C', 'd2', 'H']];
+const P5 = [['u1', 'H', 'u2', 'H'], ['v1', 'O', 'v2', 'O'], ['w1', 'N', 'w2', 'N'], ['x1', 'F', 'x2', 'F']];
 
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  {
-    title: 'Press Them Together',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Drag one atom onto another to press the two together; the loose atoms in the corner are yours to play with. Press Submit when the table shows your answer.'
-    },
-    prompt: 'Press each pair of atoms together, then sort the pairs into the two trays by whether they stayed together.',
-    widget: { type: 'table', label: 'The bench' },
-    table: atomTable({
-      opts: OPTS_1,
-      pieces: pairsAt(12, [14, 54, 94], P1),
-      zones: { trays: [trayAt('held', 'Stayed together', 40, 34, 44), trayAt('apart', 'Came apart', 96, 34, 24)] }
-    }),
+  predictStage({
+    key: QUEST_KEY,
+    title: 'Two of the Same',
+    prompt: 'When two hydrogen atoms are pressed together, what do you think happens?',
+    cards: GUESSES,
     hints: [
-      'Drag an atom onto the one it started beside and let go.',
-      'Watch each pair after you let go: one stays joined and another drifts back apart.',
-      'Press all three pairs, then put the ones that stayed joined in one tray and the ones that did not in the other.'
+      'Use the three cards and the slot.',
+      'Picture two identical atoms pressed together, and ask what they have to give each other.',
+      'There is no wrong guess yet; commit to the card you would bet on.'
     ],
-    check(state) {
-      const t = state.table;
-      const pairs = readPairs(t, P1, ['held', 'apart']);
-      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all three pairs into the trays before you submit.' };
-      if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
-      if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
-      // Held pairs stay joined; a pair that sprang apart is two loose atoms.
-      const want = [true, false, true];
-      if (pairs.some((p, i) => (p.tray === 'held') !== want[i])) {
-        return { ok: false, msg: 'A pair is under the wrong heading. Press it together again and watch whether the two atoms stay joined.' };
-      }
-      if (pairs.some((p, i) => p.joined !== want[i])) {
-        return { ok: false, msg: 'A pair in the Stayed together tray has to be joined, and one in the Came apart tray has to be two loose atoms.' };
-      }
-      return { ok: true };
-    },
     reward: {
-      log: 'Sodium and chlorine held. Neon and neon sprang apart. Hydrogen and hydrogen held.',
-      title: 'What Holds Is Called a Bond',
-      body: 'Two atoms that stay together after you let go are held by a chemical bond, and the first and last pairs each made one. The middle pair made nothing at all. Every solid thing on this planet is atoms held to other atoms by bonds.'
+      title: 'A Guess Comes First',
+      body: 'Your guess is locked in, and the next bench tests it. Press the atoms together and see what they do.'
     }
-  },
+  }),
 
   /* ---------------------------------------------------------------- 2 */
   {
-    title: 'Why B Would Not Hold',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The dots round an atom\'s rim are the electrons on its outer shell. A ring lights inside the rim when that shell is full.'
+    title: 'Press Them Together',
+    get prompt() {
+      return testPrompt(QUEST_KEY, GUESSES, 'press each pair together, then sort it by whether it stayed together.');
     },
-    prompt: 'Fill the outer shell of every atom on the table.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_2,
-      pieces: pairsAt(14, [14, 54, 94], P1)
+      pieces: pairsAt(12, [10, 40, 70, 100], P2),
+      zones: { trays: [trayAt('held', 'Stayed together', 36, 38, 44, 16), trayAt('apart', 'Came apart', 92, 38, 44, 16)] }
     }),
     hints: [
-      'Drag an atom onto another and watch the dots on its rim.',
-      'Compare the rings: a lit one means that atom\'s outer shell is full, and some atoms start lit.',
-      'Join atoms until every ring is lit, and leave alone any atom that already has one.'
+      'Use the atoms and the two trays.',
+      'Compare the rim of each atom, and the ring on it, in the pairs that held and the pairs that drifted apart.',
+      'Press every pair once and watch it after you let go, then file each pair by what it did.'
     ],
     check(state) {
       const t = state.table;
-      const atoms = Object.values(t.pieces).filter(p => p.kind === 'atom' && !p.props.scratch);
-      const open = atoms.filter(p => !readPiece(p.id, t).full);
-      if (!open.length) return { ok: true };
-      if (!Object.values(t.links).length) return { ok: false, notYet: true, msg: 'Press some atoms together first.' };
-      return { ok: false, msg: 'An atom\'s outer shell is not full yet: the ring on its face is dark.' };
+      const pairs = readPairs(t, P2, ['held', 'apart']);
+      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all four pairs into the trays before you submit.' };
+      if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
+      if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
+      // Held pairs stay joined; a pair that sprang apart is two loose atoms.
+      const want = [true, false, true, false];
+      if (pairs.some((p, i) => p.tray === 'held' && !p.joined)) return { ok: false, msg: 'A pair in "Stayed together" is not joined.' };
+      if (pairs.some((p, i) => p.tray === 'apart' && p.joined)) return { ok: false, msg: 'A pair in "Came apart" is joined.' };
+      if (pairs.some((p, i) => (p.tray === 'held') !== want[i])) return { ok: false, msg: 'A pair in "Came apart" has not been pressed together.' };
+      return { ok: true };
     },
-    reward: {
-      log: 'The neon atoms started full. Every join filled a shell.',
-      title: 'A Bond Fills the Outer Shell',
-      body: 'Both atoms of every pair that joined came out of the press with a full outer shell. For most atoms a full outer shell holds eight electrons, or two for the innermost shell. The neon pair began with both outer shells full, so neither atom needed a bond.'
+    get reward() {
+      return {
+        log: 'Sodium with chlorine held. Neon with neon came apart. Hydrogen with hydrogen held. Argon with hydrogen came apart.',
+        title: 'What Holds Is Called a Bond',
+        body: `${verdictLine(QUEST_KEY, 'hold')}Two atoms that stay together after you let go are held by a chemical bond, and each bond that formed left both atoms with a full outer shell. A pair with an atom whose shell was already full came apart.`,
+        model: { type: 'molecule', name: 'hydrogen', caption: 'Two hydrogen atoms held by one bond, as a ball-and-stick model.' }
+      };
     }
   },
 
   /* ---------------------------------------------------------------- 3 */
   {
     title: 'Where the Electron Went',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'A plus or a minus on an atom\'s face is the charge it carries after a join.'
-    },
-    prompt: 'Build one pair whose atoms end up charged and one pair whose atoms end up neutral.',
+    prompt: 'Sort each pair of atoms into a tray by whether an electron was handed over or the two share a pair.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_3,
-      pieces: [atomAt('na', 'Na', 24, 14), atomAt('cl', 'Cl', 48, 14), atomAt('h1', 'H', 80, 14), atomAt('h2', 'H', 104, 14)]
+      pieces: pairsAt(12, [10, 40, 70, 100], P3),
+      zones: { trays: [trayAt('handed', 'Handed over', 36, 38, 44, 16), trayAt('shared', 'Shared', 92, 38, 44, 16)] }
     }),
     hints: [
-      'Join two atoms and read the plus or minus that appears on each face.',
-      'Compare a pair whose faces show a plus and a minus with a pair whose faces show nothing at all.',
-      'Try other pairings of the four atoms until one pair is charged and the other is not.'
+      'Use the atoms and the two trays.',
+      'Compare the faces of a pair after you press it with what sits in the gap between the two atoms.',
+      'In one kind of join an electron crosses over and charges appear; in the other a pair settles between the atoms.'
     ],
     check(state) {
       const t = state.table;
-      const mols = moleculesOf(t);
-      const charge = m => m.ids.map(id => readPiece(id, t).charge);
-      const pairsOnly = mols.filter(m => m.ids.length === 2);
-      const charged = pairsOnly.filter(m => charge(m).every(q => q !== 0));
-      const neutral = pairsOnly.filter(m => charge(m).every(q => q === 0));
-      if (!mols.length) return { ok: false, notYet: true, msg: 'Join some atoms first.' };
-      if (charged.length && neutral.length) return { ok: true };
-      if (!charged.length && !neutral.length) return { ok: false, msg: 'Neither pair is finished yet: join the atoms two by two.' };
-      if (!charged.length) return { ok: false, msg: 'No pair on the table has charged atoms. Try a different pairing of the atoms.' };
-      return { ok: false, msg: 'No pair on the table is neutral. Try a different pairing of the atoms.' };
-    },
-    reward: {
-      log: 'One pair read plus one and minus one. The other read zero and zero.',
-      title: 'Two Ways to Fill a Shell',
-      body: 'In one pair an atom handed an electron over, which left a cation — an atom missing an electron — reading plus one and an anion — an atom holding an extra electron — reading minus one, and the pull between those opposite charges is what holds them together. In the other pair neither atom would give one up, so the two hold a pair of electrons between them and each of them counts that pair as its own. Every bond you will ever meet is one of those two.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 4 */
-  {
-    title: 'Which Way It Goes',
-    prompt: 'Sort each pair of atoms into a tray by whether its electrons are handed over or shared.',
-    widget: { type: 'table', label: 'The bench' },
-    table: atomTable({
-      opts: OPTS_3,
-      pieces: [...pairsAt(9, [14, 70], P4.slice(0, 2)), ...pairsAt(24, [14, 70], P4.slice(2))],
-      zones: { trays: [trayAt('handed', 'Handed over', 66, 49, 26, 22), trayAt('shared', 'Shared', 98, 49, 26, 22)] }
-    }),
-    hints: [
-      'Join each pair, then look at what moved between its two atoms.',
-      'In one kind of join an electron crosses over and charges appear; in the other a pair settles between the atoms.',
-      'Put the pairs where charges appeared in one tray, and the pairs where a pair of electrons sits between the atoms in the other.'
-    ],
-    check(state) {
-      const t = state.table;
-      const pairs = readPairs(t, P4, ['handed', 'shared']);
+      const pairs = readPairs(t, P3, ['handed', 'shared']);
       if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all four pairs into the trays before you submit.' };
       if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
       if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
-      if (pairs.some(p => !p.joined)) return { ok: false, msg: 'A pair in a tray has not been pressed together, so nothing is known about it yet.' };
+      if (pairs.some(p => !p.joined)) return { ok: false, msg: 'A pair in a tray has not been pressed together.' };
       const want = ['transfer', 'share', 'transfer', 'share'];
       const tray = { transfer: 'handed', share: 'shared' };
-      if (pairs.some((p, i) => p.type !== want[i] || p.tray !== tray[want[i]])) {
-        return { ok: false, msg: 'A pair is under the wrong heading. Look at what moved between its two atoms, and at the charges on their faces.' };
+      const bad = pairs.findIndex((p, i) => p.tray !== tray[want[i]]);
+      if (bad >= 0) {
+        return { ok: false, msg: pairs[bad].tray === 'handed' ? 'A pair in "Handed over" has no charges on its faces.' : 'A pair in "Shared" shows a plus and a minus on its faces.' };
       }
       return { ok: true };
     },
     reward: {
       log: 'Two pairs handed over, two held between.',
       title: 'Ionic and Covalent',
-      body: 'A metal and a nonmetal hand electrons over and are then held by the pull between the ions that makes, which is an ionic bond. Two nonmetals both refuse to give one up, so they hold pairs between them instead, which is a covalent bond. Which one you get is decided by the two elements, and the catalogue already says which elements are metals.'
+      body: 'A metal and a nonmetal hand electrons over and are held by the pull between the charges that makes, which is an ionic bond. Two nonmetals each refuse to give one up, so they hold pairs between them instead, which is a covalent bond.',
+      model: { type: 'atoms', items: [{ p: 11, n: 12, charge: 1, label: 'Sodium ion' }, { p: 17, n: 18, charge: -1, label: 'Chloride ion' }], caption: 'An ionic pair: sodium handed one electron to chlorine. Not to scale.' }
     }
   },
 
-  /* ---------------------------------------------------------------- 5 */
+  /* ---------------------------------------------------------------- 4 */
   {
     title: 'How Many It Takes',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The needle reads the net charge of everything joined to the magnesium atom.'
-    },
     prompt: 'Build a unit in which every atom\'s outer shell is full and the needle reads zero.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_3,
       pieces: [atomAt('mg', 'Mg', 24, 22), atomAt('cl1', 'Cl', 60, 14), atomAt('cl2', 'Cl', 78, 14), atomAt('cl3', 'Cl', 96, 14), atomAt('cl4', 'Cl', 60, 30)],
-      fixtures: [{ id: 'needle', kind: 'needle', label: 'Unit charge', at: { x: 99, y: 38 }, size: { w: 34, h: 16 }, noRun: true, props: { cluster: 'mg', range: 3 } }]
+      fixtures: [{ id: 'needle', kind: 'needle', label: 'Charge of the unit', at: { x: 99, y: 38 }, size: { w: 34, h: 16 }, noRun: true, props: { cluster: 'mg', range: 3 } }]
     }),
     hints: [
-      'Drag chlorine atoms onto the magnesium atom one at a time and watch its face.',
-      'Magnesium keeps handing electrons over until its outer shell is gone, and each chlorine takes only so many.',
+      'Use the chlorine atoms and the needle.',
+      'Compare the face of the magnesium atom after each chlorine joins it with the needle.',
       'Add one chlorine at a time and stop when the magnesium atom has nothing left to give.'
     ],
     check(state) {
       const t = state.table;
       const unit = clusterOf(t, 'mg');
       if (unit.length === 1) return { ok: false, notYet: true, msg: 'Join something to the magnesium atom first.' };
-      if (!closureOf(unit, t).closed) return { ok: false, msg: 'An atom in the unit has an outer shell that is not full yet: look for the dark ring on its face.' };
+      if (!closureOf(unit, t).closed) return { ok: false, msg: 'An atom in the unit has a dark ring on its face.' };
       return { ok: true };
     },
     reward: {
       log: 'Magnesium took chlorines until nothing was left to give.',
       title: 'The Counts Fix the Ratio',
-      body: 'A magnesium atom has two electrons to hand over and a chlorine atom takes exactly one each, so it takes two chlorines to clear one magnesium and cancel the charges to zero. A sodium atom has only one to give, so it needs only one partner. The ratio in an ionic compound falls straight out of the counts on the outer shells.'
+      body: 'A magnesium atom has two electrons to hand over and a chlorine atom takes exactly one each, so it takes two chlorines to clear one magnesium and cancel the charges to zero. The ratio in an ionic compound falls straight out of the counts on the outer shells.',
+      model: { type: 'atoms', items: [{ p: 17, n: 18, charge: -1, label: 'Chloride' }, { p: 12, n: 12, charge: 2, label: 'Magnesium ion' }, { p: 17, n: 18, charge: -1, label: 'Chloride' }], caption: 'One magnesium ion with two chloride ions: +2 against two of −1. Not to scale.' }
     }
   },
 
-  /* ---------------------------------------------------------------- 6 */
+  /* ---------------------------------------------------------------- 5 */
   {
     title: 'More Than One Pair',
     prompt: 'Sort each pair of atoms into a tray by how many electron pairs are held between them.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       opts: OPTS_3,
-      pieces: pairsAt(12, [14, 54, 94], P6),
-      zones: { trays: [trayAt('one', 'One pair', 22, 34), trayAt('two', 'Two pairs', 60, 34), trayAt('three', 'Three pairs', 98, 34)] }
+      pieces: pairsAt(12, [10, 40, 70, 100], P5),
+      zones: { trays: [trayAt('one', 'One pair', 24, 38, 28, 16), trayAt('two', 'Two pairs', 60, 38, 28, 16), trayAt('three', 'Three pairs', 96, 38, 28, 16)] }
     }),
     hints: [
-      'Join each pair and count the rods between its two atoms.',
-      'Compare how many places each kind of atom has open on its outer shell before the join.',
-      'Each rod is one shared pair, so put each pair in the tray for the number of rods you counted.'
+      'Use the atoms and the three trays.',
+      'Compare the number of rods between the two atoms of a pair after you press it.',
+      'Each rod is one shared pair, so file each pair by the number of rods you counted.'
     ],
     check(state) {
       const t = state.table;
-      const pairs = readPairs(t, P6, ['one', 'two', 'three']);
-      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all three pairs into the trays before you submit.' };
+      const pairs = readPairs(t, P5, ['one', 'two', 'three']);
+      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all four pairs into the trays before you submit.' };
       if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
       if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
-      if (pairs.some(p => !p.joined)) return { ok: false, msg: 'A pair in a tray has not been pressed together, so there is nothing between its atoms to count.' };
-      const want = ['one', 'two', 'three'];
-      if (pairs.some((p, i) => p.tray !== want[i])) {
-        return { ok: false, msg: 'A pair has a different number of electron pairs in the middle: count them between its atoms.' };
-      }
+      if (pairs.some(p => !p.joined)) return { ok: false, msg: 'A pair in a tray has not been pressed together.' };
+      const want = ['one', 'two', 'three', 'one'];
+      const bad = pairs.findIndex((p, i) => p.tray !== want[i]);
+      if (bad >= 0) return { ok: false, msg: `A pair in the "${{ one: 'One pair', two: 'Two pairs', three: 'Three pairs' }[pairs[bad].tray]}" tray has a different number of rods between its atoms.` };
       return { ok: true };
     },
     reward: {
       log: 'One pair, two pairs, three pairs.',
       title: 'Double and Triple Bonds',
-      body: 'An atom with two places to fill holds two pairs with its partner, and one with three places holds three, because each shared pair fills one place on each side at once. One shared pair is a single bond, two is a double bond and three is a triple bond. The more pairs a join holds, the shorter and the stronger it is.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 7 */
-  {
-    title: 'Read It Off the Catalogue',
-    prompt: 'Sort each pair of atoms into a tray by the kind of bond it forms, or none.',
-    widget: { type: 'table', label: 'The bench' },
-    table: atomTable({
-      opts: OPTS_3,
-      pieces: pairsAt(10, [10, 40, 70, 100], P7),
-      zones: { trays: [trayAt('ionic', 'Ionic', 30, 31, 50), trayAt('covalent', 'Covalent', 72, 31), trayAt('none', 'No bond', 102, 31, 24)] }
-    }),
-    hints: [
-      'Press each pair together and look at what happened, if anything.',
-      'Look at which atom of a pair is a metal, and whether either outer shell starts full.',
-      'Go pair by pair: if either atom has a full outer shell it makes no bond; otherwise a metal with a nonmetal is ionic and two nonmetals are covalent.'
-    ],
-    check(state) {
-      const t = state.table;
-      const pairs = readPairs(t, P7, ['ionic', 'covalent', 'none']);
-      if (pairs.some(p => !p.filed)) return { ok: false, notYet: true, msg: 'Sort all four pairs into the trays before you submit.' };
-      if (pairs.some(p => p.split)) return { ok: false, msg: 'The two atoms of a pair belong in the same tray.' };
-      if (pairs.some(p => p.stray)) return { ok: false, msg: STRAY };
-      const want = ['ionic', 'covalent', 'none', 'ionic'];
-      const type = { ionic: 'transfer', covalent: 'share', none: null };
-      if (pairs.some((p, i) => p.tray !== want[i] || p.type !== type[want[i]])) {
-        return { ok: false, msg: 'A pair is under the wrong heading. Read both atoms: is either one a metal, and is either outer shell already full?' };
-      }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Two ionic, one covalent, one that will not join.',
-      title: 'The Catalogue Decides It',
-      body: 'A metal with a nonmetal gives an ionic bond, two nonmetals give a covalent bond, and an atom whose outer shell is already full gives no bond at all. After a few pairs you do not have to press anything to know which is which. Where two elements sit in the catalogue is enough to say what they will do.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    title: 'Build the Recipe',
-    prompt: 'Fill carbon\'s outer shell using only hydrogen atoms.',
-    widget: { type: 'table', label: 'The bench' },
-    table: atomTable({
-      opts: OPTS_3,
-      pieces: [
-        atomAt('c', 'C', 24, 18),
-        ...['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].map((id, k) => atomAt(id, 'H', 52 + k * 12, 14 + (k % 2) * 14))
-      ]
-    }),
-    hints: [
-      'Drag hydrogen atoms onto the carbon atom one at a time.',
-      'Watch the ring on the carbon atom and the dots on its rim after each one.',
-      'Keep adding until the carbon atom\'s ring is lit, and see how many hydrogen atoms that took.'
-    ],
-    check(state) {
-      const t = state.table;
-      const unit = clusterOf(t, 'c');
-      if (unit.length === 1) return { ok: false, notYet: true, msg: 'Join some hydrogen atoms to the carbon atom first.' };
-      if (!readPiece('c', t).full) return { ok: false, msg: 'The carbon atom still has room: the ring on its face is dark.' };
-      if (unit.some(id => t.pieces[id].props.el !== 'C' && t.pieces[id].props.el !== 'H')) return { ok: false, msg: 'Something other than hydrogen is joined to the carbon atom.' };
-      return { ok: true };
-    },
-    reward: {
-      log: 'Carbon took hydrogens until its shell was full.',
-      title: 'The Counts Fix the Recipe',
-      body: 'A carbon atom has four open spots and each hydrogen fills one, so one carbon holds exactly four of them. A compound has one fixed recipe because the outer shells leave it no choice.',
+      body: 'An atom with two places to fill holds two pairs with its partner, and one with three places holds three, because each shared pair fills one place on each side at once. One shared pair is a single bond, two is a double bond and three is a triple bond.',
+      model: { type: 'molecule', name: 'carbon dioxide', caption: 'Carbon dioxide: each oxygen is held to the carbon by two shared pairs, a double bond.' },
       last: true
     }
   }
@@ -413,7 +292,7 @@ export const DEBRIEF = {
     },
     {
       heading: 'Next',
-      body: 'The arches outside are standing on joins like these. The next bench takes a whole block of each element and asks what it does when you hit it, heat it and put a current through it.'
+      body: 'The rubble round the tunnel mouth is made of joins like these. The next bench takes a whole block of each kind and asks what it does when you hit it, heat it and put a current through it.'
     }
   ]
 };
@@ -490,41 +369,42 @@ export const PRACTICE = [
 
 const tray = (piece, id) => ({ place: { piece, to: `tray:${id}` } });
 const join = (a, b) => ({ join: [a, b] });
+const to = (piece, zone) => ({ place: { piece, to: `slot:${zone}` } });
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [join('a1', 'a2'), join('c1', 'c2'), join('b1', 'b2'), tray('a1', 'held'), tray('c1', 'held'), tray('b1', 'apart'), tray('b2', 'apart')],
-  [join('a1', 'a2'), join('c1', 'c2'), join('b1', 'b2')],
-  [join('h1', 'h2'), join('na', 'cl')],
+  [to('hold', 'guess')],
   [
-    join('m1', 'm2'), join('n1', 'n2'), join('k1', 'k2'), join('d1', 'd2'),
-    tray('m1', 'handed'), tray('k1', 'handed'), tray('n1', 'shared'), tray('d1', 'shared')
+    join('a1', 'a2'), join('c1', 'c2'), join('b1', 'b2'), join('d1', 'd2'),
+    tray('a1', 'held'), tray('c1', 'held'), tray('b1', 'apart'), tray('b2', 'apart'), tray('d1', 'apart'), tray('d2', 'apart')
+  ],
+  [
+    join('m1', 'm2'), join('h1', 'h2'), join('k1', 'k2'), join('d1', 'd2'),
+    tray('m1', 'handed'), tray('k1', 'handed'), tray('h1', 'shared'), tray('d1', 'shared')
   ],
   [join('cl1', 'mg'), join('cl2', 'mg')],
-  [join('u1', 'u2'), join('v1', 'v2'), join('w1', 'w2'), tray('u1', 'one'), tray('v1', 'two'), tray('w1', 'three')],
   [
-    join('x1', 'x2'), join('y1', 'y2'), join('z1', 'z2'), join('q1', 'q2'),
-    tray('x1', 'ionic'), tray('q1', 'ionic'), tray('y1', 'covalent'), tray('z1', 'none'), tray('z2', 'none')
-  ],
-  [join('h1', 'c'), join('h2', 'c'), join('h3', 'c'), join('h4', 'c'), join('h5', 'c')]
+    join('u1', 'u2'), join('v1', 'v2'), join('w1', 'w2'), join('x1', 'x2'),
+    tray('u1', 'one'), tray('v1', 'two'), tray('w1', 'three'), tray('x1', 'one')
+  ]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [join('a1', 'a2'), join('c1', 'c2'), join('b1', 'b2'), tray('a1', 'held'), tray('c1', 'held'), tray('b1', 'held'), tray('b2', 'held')],
-  [join('a1', 'a2')],
-  [join('h1', 'h2')],
+  [],
   [
-    join('m1', 'm2'), join('n1', 'n2'), join('k1', 'k2'), join('d1', 'd2'),
-    tray('m1', 'handed'), tray('k1', 'handed'), tray('n1', 'handed'), tray('d1', 'shared')
+    join('a1', 'a2'), join('c1', 'c2'), join('b1', 'b2'), join('d1', 'd2'),
+    tray('a1', 'held'), tray('c1', 'apart'), tray('b1', 'apart'), tray('b2', 'apart'), tray('d1', 'apart'), tray('d2', 'apart')
+  ],
+  [
+    join('m1', 'm2'), join('h1', 'h2'), join('k1', 'k2'), join('d1', 'd2'),
+    tray('m1', 'handed'), tray('k1', 'handed'), tray('h1', 'handed'), tray('d1', 'shared')
   ],
   [join('cl1', 'mg')],
-  [join('u1', 'u2'), join('v1', 'v2'), join('w1', 'w2'), tray('u1', 'one'), tray('v1', 'one'), tray('w1', 'three')],
   [
-    join('x1', 'x2'), join('y1', 'y2'), join('z1', 'z2'), join('q1', 'q2'),
-    tray('x1', 'ionic'), tray('q1', 'ionic'), tray('y1', 'covalent'), tray('z1', 'covalent'), tray('z2', 'covalent')
-  ],
-  [join('h1', 'c'), join('h2', 'c'), join('h3', 'c')]
+    join('u1', 'u2'), join('v1', 'v2'), join('w1', 'w2'), join('x1', 'x2'),
+    tray('u1', 'one'), tray('v1', 'one'), tray('w1', 'three'), tray('x1', 'one')
+  ]
 ];
 
 function blankState() { return {}; }

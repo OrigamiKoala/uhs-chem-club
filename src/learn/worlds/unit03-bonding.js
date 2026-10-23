@@ -31,16 +31,16 @@ export const UNIT_03 = {
       title: 'What Holds',
       line: 'Test what grips the blast rubble.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q1-joins.js')
     },
     {
       id: 'q2-lattice',
       title: 'Stone and Wire',
-      line: 'Break boulders and pick the rescue liner.',
+      line: 'Test the rubble and pick the rescue liner.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q2-lattice.js')
     },

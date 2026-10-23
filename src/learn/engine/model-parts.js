@@ -12,6 +12,8 @@
  */
 
 import { shellsFor } from '../table/kits/atoms.js';
+// LIGAR: the shapes, crystals and lobes of Ligar's reward cards live in their own file (added, not altered).
+import { ligarParts, ligarCaption, LIGAR_MOLECULES } from './model-parts-ligar.js';
 
 /** Display colours, in the plate's weathered palette. */
 const COLOR = { H: '#d8d2c4', C: '#4a4640', O: '#a0522d', Na: '#cfc8b8', Cl: '#c9b66a', proton: '#d99423', neutron: '#8c8376', electron: '#dcd6cc', bond: '#8c8376', ring: '#544e46' };
@@ -76,7 +78,7 @@ export const MOLECULES = {
 };
 
 export function moleculeParts(spec) {
-  const m = MOLECULES[spec.name];
+  const m = MOLECULES[spec.name] || LIGAR_MOLECULES[spec.name];
   if (!m) throw new Error(`model: no molecule "${spec.name}"`);
   const spheres = m.atoms.map(([el, x, y, z]) => ({ pos: [x, y, z], r: RADIUS[el] || 0.35, color: COLOR[el] || COLOR.H, kind: el }));
   const bonds = m.bonds.map(([a, b, order]) => ({ a: m.atoms[a].slice(1), b: m.atoms[b].slice(1), order }));
@@ -85,6 +87,8 @@ export function moleculeParts(spec) {
 
 /** The parts of any model spec, side by side where it lists several atoms. */
 export function modelParts(spec) {
+  const ligar = ligarParts(spec);
+  if (ligar) return ligar;
   if (spec.type === 'molecule') return moleculeParts(spec);
   if (spec.type === 'atoms') {
     const n = spec.items.length;
@@ -107,7 +111,9 @@ export function modelParts(spec) {
 /** The words under a model: the spec's own caption, else the counts it was built from. */
 export function captionOf(spec) {
   if (spec.caption) return spec.caption;
-  if (spec.type === 'molecule') return `${MOLECULES[spec.name]?.formula || spec.name}, as a ball-and-stick model.`;
+  const ligar = ligarCaption(spec);
+  if (ligar) return ligar;
+  if (spec.type === 'molecule') return `${(MOLECULES[spec.name] || LIGAR_MOLECULES[spec.name])?.formula || spec.name}, as a ball-and-stick model.`;
   const one = it => `${it.label ? `${it.label}: ` : ''}${it.p} protons, ${it.n} neutrons, ${shellsOf(it.p, it.charge || 0).reduce((a, b) => a + b, 0)} electrons`;
   if (spec.type === 'atoms') return spec.items.map(one).join('. ') + '.';
   return `${one(spec)}.`;

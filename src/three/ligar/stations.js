@@ -642,13 +642,9 @@ export function buildOreDrift(w, site) {
   k.box(g, [0.34, 0.1, 0.1], w.pipeMat, [3.5, 0.55, 0.38], [0, 0, 0]);
   k.cyl(g, [0.025, 0.025, 0.4, 6], w.timberMat, [3.3, 0.54, 0.38], [0, 0, Math.PI / 2]);
 
-  // THE FIELD POINT: the seam in the vein, where a block is chipped for the bench. A real piece of this host (the
-  // vein slab on its plinth), the player stands in front of it (`stand`, host frame) and `[E]` on it puts a chipped
-  // block in the carry slot.
-  const fieldPoints = [{
-    id: 'chip', label: 'Seam Chip', lx: 3.9, ly: 1.1, lz: -0.3, half: [0.6, 0.75, 0.6],
-    stand: { lx: 3.2, lz: 1.0 }
-  }];
+  // NO FIELD POINT. The seam chip was retired (2026-10-23 rollout): it carried a block the bench already held, so it was pure carrying
+  // (a fetch stays only where what is fetched is new evidence).
+  const fieldPoints = [];
 
   const colliders = [
     { lx: HX, lz: HZ, hw: 1.0, hd: 0.7 },
@@ -827,10 +823,8 @@ export function buildSumpStation(w, site) {
     k.cyl(g, [0.22, 0.18, 0.34, 14], w.drumMat, [dx, 0.17, dz + 0.45], null, true);
     k.box(g, [0.4, 0.02, 0.4], M.water, [dx, 0.3, dz + 0.45]).scale.set(0.8, 1, 0.8);
   }
-  const fieldPoints = [{
-    id: 'sump', label: 'Sump Stream', lx: 3.9, ly: 1.3, lz: 3.45, half: [0.45, 0.5, 0.5],
-    stand: { lx: 3.9, lz: 5.2 }
-  }];
+  // NO FIELD POINT. The sump stream was retired (2026-10-23 rollout): it was the same water as the stream already on the bench.
+  const fieldPoints = [];
 
   const colliders = [
     { lx: -3.3, lz: -1.0, r: 0.5 },

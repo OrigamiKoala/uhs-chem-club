@@ -62,6 +62,8 @@ const AMBER = PLATE_COLORS.amber;
 export const SLAB_RECT = Object.freeze({ hw: 10.5, hh: 8 });
 export const SALT_RECT = Object.freeze({ hw: 11, hh: 8 });
 export const PAIRTAG_RECT = Object.freeze({ hw: 9, hh: 6.2 });
+/** A guess card (Ligar's predict stages): wide enough for three short lines. */
+export const GUESS_RECT = Object.freeze({ hw: 14, hh: 8 });
 const SLAB_R = 8.5;
 const TOOL_R = 6.5;
 
@@ -626,8 +628,25 @@ function paintBlockTool(ctx, p, state, o) {
   plateText(ctx, p.label, o.x, o.y + o.r * 0.58, { size: Math.max(7, Math.round(o.r * 0.36)), weight: 700, align: 'center', base: 'middle', color: '#16140f' });
 }
 
+/**
+ * LIGAR: A GUESS CARD (piece kind `guess`). A prediction is a card laid in a slot on a bench that holds no instrument (`engine/predict.js`),
+ * and it is a few plain words on a plate, not a picture: `props.lines` is the wording split across at most three lines. It is never graded.
+ */
+function paintGuess(ctx, p, state, o) {
+  const hw = GUESS_RECT.hw * o.sc;
+  const hh = GUESS_RECT.hh * o.sc;
+  const x0 = o.x - hw;
+  const y0 = o.y - hh;
+  frame(ctx, x0, y0, hw * 2, hh * 2, '#2a2620', o.lit);
+  const lines = (p.props.lines && p.props.lines.length ? p.props.lines : [p.label]).slice(0, 3);
+  const size = Math.max(7, Math.round(hh * (lines.length > 2 ? 0.27 : 0.32)));
+  lines.forEach((text, i) => {
+    fitted(ctx, text, o.x, y0 + hh * 2 * ((i + 0.5) / lines.length), hw * 1.8, { size, weight: i === 0 ? 700 : 500, color: i === 0 ? PLATE_COLORS.text : PLATE_COLORS.dust });
+  });
+}
+
 const PAINTERS = {
-  slab: paintSlab, salt: paintSalt, pairtag: paintPairTag, leads: paintLeads, hammer: paintBlockTool, tongs: paintBlockTool
+  slab: paintSlab, salt: paintSalt, pairtag: paintPairTag, leads: paintLeads, hammer: paintBlockTool, tongs: paintBlockTool, guess: paintGuess
 };
 
 function paintPiece(ctx, p, state, o) {
@@ -643,6 +662,8 @@ function paintPiece(ctx, p, state, o) {
 }
 
 function printed(p, state) {
+  // A guess card prints its wording across lines: the first line is what a test looks for.
+  if (p.kind === 'guess') return String(p.props.lines?.[0] || p.label);
   if (PAINTERS[p.kind]) return String(p.label);
   return ATOMS_KIT.printed(p, state);
 }
@@ -905,6 +926,7 @@ export const BONDS_KIT = {
     slab: { r: SLAB_R, rect: SLAB_RECT },
     salt: { r: SLAB_R, rect: SALT_RECT, nojoin: true },
     pairtag: { r: 7, rect: PAIRTAG_RECT, nojoin: true },
+    guess: { r: 9, rect: GUESS_RECT, nojoin: true },
     // A tool laid on a block is the top thing there (`onTop`): a press on it takes it, never the block under it.
     hammer: { r: TOOL_R, tool: true, onTop: true },
     leads: { r: TOOL_R, tool: true, onTop: true },
@@ -936,6 +958,9 @@ export function bondsTable(spec) {
 
 /** A block piece: `decl` is the old bench's own slab declaration (`build`, `melt`, `tint`, `sealed`, `cluster`, `groups`). */
 export const slabPiece = (id, label, decl, at, extra = {}) => ({ id, kind: 'slab', label, at, props: { slab: decl }, ...extra });
+
+/** A guess card for a predict stage: `lines` is its wording on up to three lines, `label` the same words in one (the Tour and the prompt use it). */
+export const guessCard = (id, label, lines, at) => ({ id, kind: 'guess', label, at, props: { lines } });
 
 /** A salt piece (`lattice` is a `bonddata.LATTICES` id). */
 export const saltPiece = (id, label, lattice, at, extra = {}) => ({ id, kind: 'salt', label, at, props: { lattice }, ...extra });
