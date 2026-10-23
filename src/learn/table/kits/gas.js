@@ -198,7 +198,7 @@ export function rig(id, at, o = {}) {
   if (temps) dials.temp = { min: 1, max: temps.length, step: 1, value: tempStart, label: 'Heater', labels: temps.map(t => tempLabel(t, tempList)) };
   if (amounts) dials.amount = { min: 1, max: amounts.length, step: 1, value: amountStart, label: 'Gas in', labels: amounts.map(n => `${n} mol`) };
   const nd = Object.keys(dials).length;
-  const key = ['gauge', 'ideal', 'volume', 'temperature', 'amount', 'knocks', 'speed', 'energy', 'kelvin', 'z', 'mass', 'room', 'pull', 'pullShare'];
+  const key = ['gauge', 'ideal', 'off', 'volume', 'temperature', 'amount', 'knocks', 'speed', 'energy', 'kelvin', 'z', 'mass', 'room', 'pull', 'pullShare'];
   const on = k => (['gauge', 'volume', 'temperature', 'amount'].includes(k) ? show[k] !== false : Boolean(show[k]));
   const lines = key.filter(on).length;
   const cols = o.cols ?? (compact || speedScreen ? 1 : 2);

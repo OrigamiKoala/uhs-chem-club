@@ -112,7 +112,8 @@ export const STAGE_STORY = {
     3: 'Something is leaking from the vent stack, and Vess needs to name it.'
   },
   'q6-real': {
-    1: 'The Fifth packed the station tanks tighter than any gas law was meant for.'
+    1: 'The Fifth packed the station tanks tighter than any gas law was meant for.',
+    4: 'The liquefier at the cold box turns gases to liquid, and some turn far more easily than others.'
   },
 
   /* ---- Ember Reach: trace the Fifth Guild's geothermal siphon ---- */

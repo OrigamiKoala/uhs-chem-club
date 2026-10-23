@@ -75,7 +75,7 @@ export const UNIT_04 = {
       title: 'Real Gases',
       line: 'Find where the gas law stops holding.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit04/q6-real.js')
     },

@@ -260,12 +260,12 @@ export function rigGeometry(f, lay) {
   };
 }
 
-export const KEYS = ['gauge', 'ideal', 'volume', 'temperature', 'kelvin', 'amount', 'knocks', 'speed', 'energy', 'z', 'mass', 'room', 'pull', 'pullShare'];
+export const KEYS = ['gauge', 'ideal', 'off', 'volume', 'temperature', 'kelvin', 'amount', 'knocks', 'speed', 'energy', 'z', 'mass', 'room', 'pull', 'pullShare'];
 
 /** The readouts a cylinder prints, in order, as `[label, value, tone]`. A stage turns each on with `show` (gauge, volume, temperature, amount are on). */
 export function rigLines(q, f) {
   const show = f.props.show || {};
-  const w = { gauge: 'GAUGE', ideal: 'GAS LAW SAYS', volume: 'VOLUME', temperature: 'TEMPERATURE', kelvin: 'KELVIN', amount: 'AMOUNT', knocks: 'KNOCKS', speed: 'SPEED', energy: 'ENERGY OF MOTION', z: 'PV / nRT', mass: 'GAS MASS', room: 'ROOM TAKEN', pull: 'PULL', pullShare: 'PULL SHARE', ...(f.props.words || {}) };
+  const w = { gauge: 'GAUGE', ideal: 'GAS LAW SAYS', off: 'OFF THE LAW', volume: 'VOLUME', temperature: 'TEMPERATURE', kelvin: 'KELVIN', amount: 'AMOUNT', knocks: 'KNOCKS', speed: 'SPEED', energy: 'ENERGY OF MOTION', z: 'PV / nRT', mass: 'GAS MASS', room: 'ROOM TAKEN', pull: 'PULL', pullShare: 'PULL SHARE', ...(f.props.words || {}) };
   const on = k => (k === 'gauge' || k === 'volume' || k === 'temperature' || k === 'amount' ? show[k] !== false : Boolean(show[k]));
   const units = f.props.units || 'kpa';
   const out = [];
@@ -278,6 +278,10 @@ export function rigLines(q, f) {
       if (units === 'rings') v = `${sig(q.atm, 3)} atm`;
       // Until a card has named the unit, a gauge prints its figure and nothing else.
       if (units === 'plain') v = `${sig(q.P, 3)}`;
+    } else if (k === 'off') {
+      // How far the real gauge sits from what the gas law says, as a share of it; the sign says which side.
+      const pct = q.ideal > 0 ? ((q.P - q.ideal) / q.ideal) * 100 : 0;
+      v = `${pct > 0.05 ? '+' : pct < -0.05 ? '−' : ''}${Math.round(Math.abs(pct))} %`;
     } else if (k === 'ideal') v = units === 'plain' ? `${sig(q.ideal, 3)}` : `${sig(q.ideal, 3)} kPa`;
     else if (k === 'volume') v = `${litres(q.V)} L`;
     else if (k === 'temperature') v = `${Math.round(q.tC)} °C`;
