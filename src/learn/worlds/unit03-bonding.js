@@ -76,7 +76,7 @@ export const UNIT_03 = {
       title: 'Molecular Shape',
       line: 'Read shapes to place the breakthrough.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q6-shape.js')
     },

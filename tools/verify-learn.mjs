@@ -2912,71 +2912,45 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   }
 
   if (q6) {
-    const { planDomains, bondAngles, SHAPES, RIG_MOLECULES, angleBetween, domainStrain, arrangements, bestStrain, IDEAL } = VSEPR;
+    const { planDomains, bondAngles, RIG_MOLECULES, angleBetween } = VSEPR;
     const DOM = await import('../src/learn/table/kits/domain.js');
     const end = i => TABLE.runScript(TABLE.createTable(q6.STAGES[i].table, q6.STAGES[i].title), q6.SOLUTIONS[i], { strict: true });
     const dial = (t, id) => t.fixtures[id].dials.value.value;
-    // 1, 2, 4. an angle is set against what the planner settles the arms at, and the arms the stage hands over are the ones that settle
+    // 1, 3, 5. an angle is set against what the planner settles the arms at, and the arms the stage hands over are the ones that settle
     {
       const t1 = end(0); const r1 = DOM.hubRead(t1, 'hub');
       same(r1.n, 2, 'unit03/q6-shape stage 1 (two arms are on the hub)');
       near(dial(t1, 'mark'), angleBetween(r1.plan, 0, 1), 1.5, 'unit03/q6-shape stage 1 (two arms, degrees)');
-      const t2 = end(1); const r2 = DOM.hubRead(t2, 'hub');
-      same(r2.n, 4, 'unit03/q6-shape stage 2 (four arms are on the hub)');
-      same(bondAngles(r2.plan).join(), '109.5', 'unit03/q6-shape stage 2 (four arms, every pair)');
-      near(dial(t2, 'mark'), 109.5, 1.5, 'unit03/q6-shape stage 2 (the marker)');
-      const t4 = end(3); const r4 = DOM.hubRead(t4, 'hub');
-      same(bondAngles(r4.plan).join(), '104.5', 'unit03/q6-shape stage 4 (water)');
-      near(dial(t4, 'mark'), 104.5, 1.5, 'unit03/q6-shape stage 4 (the marker)');
-      same(DOM.hubRead(end(4), 'hub').n, dial(end(4), 'mark'), 'unit03/q6-shape stage 5 (CO2\'s domains)');
+      const t3 = end(2); const r3 = DOM.hubRead(t3, 'hub');
+      same(r3.n, 4, 'unit03/q6-shape stage 3 (four arms are on the hub)');
+      same(bondAngles(r3.plan).join(), '109.5', 'unit03/q6-shape stage 3 (four arms, every pair)');
+      near(dial(t3, 'mark'), 109.5, 1.5, 'unit03/q6-shape stage 3 (the marker)');
+      const t5 = end(4); const r5 = DOM.hubRead(t5, 'hub');
+      same(bondAngles(r5.plan).join(), '104.5', 'unit03/q6-shape stage 5 (water)');
+      near(dial(t5, 'mark'), 104.5, 1.5, 'unit03/q6-shape stage 5 (the marker)');
     }
-    // 3. ammonia's atoms are a pyramid only with its lone pair on the hub; without it they lie flat
+    // 2. the predict stage holds the guesses and no instrument; the flat idea (a plus sign at 90 degrees) is a card, and four arms do not settle there
     {
-      const r3 = DOM.hubRead(end(2), 'hub');
-      same(r3.shape, 'trigonal pyramidal', 'unit03/q6-shape stage 3 (NH3)');
-      holds(r3.height > 0.1, 'unit03/q6-shape stage 3: the atoms of the solution do not lean');
+      const t0 = TABLE.createTable(q6.STAGES[1].table, q6.STAGES[1].title);
+      holds(q6.STAGES[1].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q6-shape stage 2: the predict stage shows an instrument');
+      holds(['cross', 'solid', 'triangle'].every(id => t0.pieces[id]?.kind === 'guess') && Object.keys(t0.pieces).length === 3, 'unit03/q6-shape stage 2: the guesses are the three cards and nothing else');
+      const four = planDomains(RIG_MOLECULES.CH4.arms);
+      const [va, vb, vc] = four.vectors.map(v => v.v);
+      const triple = va[0] * (vb[1] * vc[2] - vb[2] * vc[1]) - va[1] * (vb[0] * vc[2] - vb[2] * vc[0]) + va[2] * (vb[0] * vc[1] - vb[1] * vc[0]);
+      holds(angleBetween(four, 0, 1) > 100 && Math.abs(triple) > 0.1, 'unit03/q6-shape stage 2: four arms do not leave the flat');
+    }
+    // 4. ammonia's atoms are a pyramid only with its lone pair on the hub; without it they lie flat
+    {
+      const r4 = DOM.hubRead(end(3), 'hub');
+      same(r4.shape, 'trigonal pyramidal', 'unit03/q6-shape stage 4 (NH3)');
+      holds(r4.height > 0.1, 'unit03/q6-shape stage 4: the atoms of the solution do not lean');
       const flat = planDomains([{ kind: 'atom', sym: 'H' }, { kind: 'atom', sym: 'H' }, { kind: 'atom', sym: 'H' }]);
-      same(VSEPR.hubHeight(flat), 0, 'unit03/q6-shape stage 3 (three atoms alone lie flat)');
+      same(VSEPR.hubHeight(flat), 0, 'unit03/q6-shape stage 4 (three atoms alone lie flat)');
     }
-    // 6, 7. the frame: where a lone pair sits is whatever makes the strain least, and that is where the planner puts it
-    {
-      const lowest = (a, l) => {
-        const arr = arrangements(a, l).map(k => ({ k, s: domainStrain(k) }));
-        const best = Math.min(...arr.map(x => x.s));
-        return arr.filter(x => x.s - best < 1e-3);
-      };
-      const lonesAt = (n, k) => k.map((c, i) => (c === 'lone' ? IDEAL[n][i] : null)).filter(Boolean);
-      // five domains, one lone pair: every lowest arrangement puts it round the middle (y = 0), and so does planDomains
-      const five = lowest(4, 1);
-      holds(five.length === 3 && five.every(x => Math.abs(lonesAt(5, x.k)[0][1]) < 1e-9), 'unit03/q6-shape stage 6: the lowest strain is not the lone pair round the middle');
-      const sf4 = planDomains(RIG_MOLECULES.SF4.arms);
-      holds(Math.abs(sf4.vectors.find(v => v.kind === 'lone').v[1]) < 1e-9, 'unit03/q6-shape stage 6: planDomains does not put the lone pair round the middle');
-      // six domains, two lone pairs: every lowest arrangement puts them opposite, and so does planDomains
-      const six = lowest(4, 2);
-      holds(six.length === 3 && six.every(x => { const [a, b] = lonesAt(6, x.k); return Math.abs(a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + 1) < 1e-9; }), 'unit03/q6-shape stage 7: the lowest strain is not the lone pairs opposite');
-      const xe = planDomains(RIG_MOLECULES.XeF4.arms);
-      const [la, lb] = xe.vectors.filter(v => v.kind === 'lone').map(v => v.v);
-      near(la[0] * lb[0] + la[1] * lb[1] + la[2] * lb[2], -1, 1e-9, 'unit03/q6-shape stage 7 (the lone pairs of XeF4 are opposite)');
-      same(xe.shape, 'square planar', 'unit03/q6-shape stage 7 (XeF4)');
-      // a lone pair in the middle reads fewer close atoms than at an end; the solution is lowest, the miss is not
-      for (const [i, n] of [[5, 5], [6, 6]]) {
-        const good = DOM.frameRead(end(i), 'fr');
-        holds(good.full && good.lowest, `unit03/q6-shape stage ${i + 1}: the solution is not the lowest strain`);
-        const bad = DOM.frameRead(TABLE.runScript(TABLE.createTable(q6.STAGES[i].table, q6.STAGES[i].title), q6.MISSES[i], { strict: true }), 'fr');
-        holds(bad.full && !bad.lowest && bad.strain > good.strain, `unit03/q6-shape stage ${i + 1}: the miss is not higher in strain`);
-        same(good.n, n, `unit03/q6-shape stage ${i + 1} (the frame's sockets)`);
-      }
-      // the frame's slots are the polyhedron: sockets far enough apart to hold a piece each, all inside the frame
-      for (const [i, n] of [[5, 5], [6, 6]]) {
-        const t = TABLE.createTable(q6.STAGES[i].table, q6.STAGES[i].title);
-        const s = Object.values(t.zones.slots);
-        const fx = Object.values(t.fixtures)[0];
-        holds(s.length === n, `unit03/q6-shape stage ${i + 1}: ${s.length} sockets for ${n} domains`);
-        for (const a of s) {
-          holds(Math.abs(a.at.x - fx.at.x) + 6 < fx.size.w / 2 && Math.abs(a.at.y - fx.at.y) + 6 < fx.size.h / 2, `unit03/q6-shape stage ${i + 1}: socket ${a.id} is not inside the frame`);
-          for (const b of s) if (a !== b && Math.hypot(a.at.x - b.at.x, a.at.y - b.at.y) < 12.6) fail(`unit03/q6-shape stage ${i + 1}: sockets ${a.id} and ${b.id} are too close for two pieces`);
-        }
-      }
+    // The shapes the reward cards stand up are the ones the planner settles.
+    for (const [i, mol] of [[0, 'CO2'], [2, 'CH4'], [3, 'NH3'], [4, 'H2O']]) {
+      const m = q6.STAGES[i].reward.model;
+      same(m && m.type === 'shape' && m.mol, mol, `unit03/q6-shape stage ${i + 1} (the reward model)`);
     }
     // Every molecule the hub can hold settles with its arms apart and inside the plate: a piece each, never one on another.
     {
@@ -2994,18 +2968,6 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
           if (Math.hypot(p.x - 40, p.y - 32) < DOM.HUB_R + DOM.ARM_R - 0.5) fail(`kit: ${id}'s arm ${i + 1} settles on the hub`);
         });
       }
-    }
-    // 8. the shape the atoms make, not the shape the domains make
-    {
-      const shapes = { a: 'linear', b: 'trigonal planar', c: 'square planar' };
-      const t = end(7);
-      for (const id of ['a', 'b', 'c']) {
-        const read = q6.molRead(t.pieces[id]);
-        same(read.shape, shapes[id], `unit03/q6-shape stage 8 (${id}: molecular geometry)`);
-        same(t.pieces[id].zone, `tray:${{ 'linear': 'linear', 'trigonal planar': 'planar', 'square planar': 'square' }[read.shape]}`, `unit03/q6-shape stage 8 (${id}: the tray the solution uses)`);
-      }
-      same(SHAPES['2-3'].electron, 'trigonal bipyramidal', 'unit03/q6-shape stage 8 card (XeF2\'s electron geometry)');
-      same(SHAPES['4-2'].electron, 'octahedral', 'unit03/q6-shape stage 8 (XeF4\'s electron geometry is not its shape)');
     }
   }
 
