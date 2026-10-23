@@ -64,10 +64,10 @@ export const UNIT_03 = {
     },
     {
       id: 'q5-resonance',
-      title: 'Charge and Resonance',
-      line: 'Judge each drawing to find the weakest charge.',
+      title: 'Resonance',
+      line: 'Measure the bonds the drawings disagree about.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 3,
       status: 'live',
       module: () => import('../quests/unit03/q5-resonance.js')
     },

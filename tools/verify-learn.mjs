@@ -2868,12 +2868,11 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       if (bf.atoms[0].lamp !== 'amber') fail('unit03/q4-dots stage 5: boron\'s lamp is not amber in the intended BF3 drawing');
     }
     if (q5) {
-      // Every slate on a bench-five table is Lewis's own molecule, its prefilled drawing is the one the stage names, and every graded answer is
-      // recomputed here from `planLewis` and the real tables, never from the numbers a stage's check carries.
+      // Every slate on a bench-five table is Lewis's own molecule, and every graded answer is recomputed here from `planLewis`, the drawings
+      // and the real lengths, never from the numbers a stage's check carries.
       const ATOMS = await import('../src/learn/table/kits/atoms.js');
       const tableOf = i => TABLE.createTable(q5.STAGES[i].table, q5.STAGES[i].title);
       const endOf = i => TABLE.runScript(tableOf(i), q5.SOLUTIONS[i], { strict: true });
-      const fc = (mol, d) => planLewis(mol, d).atoms.map(a => a.fc);
       q5.STAGES.forEach((st, i) => {
         for (const f of Object.values(tableOf(i).fixtures).filter(x => x.kind === 'slate')) {
           const mol = MOLECULES[f.props.mol];
@@ -2882,76 +2881,32 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
           if (JSON.stringify(els) !== JSON.stringify(mol.syms)) fail(`unit03/q5-resonance stage ${i + 1}: slate ${f.id}'s atoms are not ${f.props.mol}'s`);
         }
       });
-      // 1. carbon monoxide's drawing: the atom with one electron too few is oxygen, and the mark ends on it
+      // 1. the predict stage holds the guesses and no instrument
       {
-        const co = fc('CO', DRAWINGS.CO);
-        if (co[1] !== 1 || co[0] !== -1) fail('unit03/q5-resonance stage 1: oxygen is not +1 and carbon -1 in the CO drawing');
-        const t = endOf(0);
-        same(ATOMS.slateOf(t, 'a').atoms.filter(id => t.pieces[id].props.marked).join(), 'a1', 'unit03/q5-resonance stage 1 (the atom that owns one electron too few)');
-        same(t.pieces.a0.props.stamped && t.pieces.a1.props.stamped, true, 'unit03/q5-resonance stage 1 (the stamp is on both atoms)');
+        const t0 = tableOf(0);
+        holds(q5.STAGES[0].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q5-resonance stage 1: the predict stage shows an instrument');
+        holds(['double', 'same', 'single'].every(id => t0.pieces[id]?.kind === 'guess') && Object.keys(t0.pieces).length === 3, 'unit03/q5-resonance stage 1: the guesses are the three cards and nothing else');
       }
-      // 2. carbon dioxide lights every lamp two ways, and only the double-double one leaves every charge at zero
+      // 2. ozone's drawing says one double bond and one single; the gauge reads the molecule, and both bonds are the same length
       {
-        const sumAbs = a => a.reduce((n, v) => n + Math.abs(v), 0);
-        if (!(sumAbs(fc('CO2', DRAWINGS.CO2_double)) < sumAbs(fc('CO2', DRAWINGS.CO2_triple)))) fail('unit03/q5-resonance stage 2: the double-bonded drawing does not have charges nearer zero');
-        if (!lit('CO2', DRAWINGS.CO2_double) || !lit('CO2', DRAWINGS.CO2_triple)) fail('unit03/q5-resonance stage 2: both drawings must light every lamp, or the lamps would choose');
-        const s = ATOMS.slateOf(endOf(1), 'a');
-        same(s.read.atoms.map(a => a.fc).join(), '0,0,0', 'unit03/q5-resonance stage 2 (the drawing the solution leaves)');
-      }
-      // 3. thiocyanate: two drawings light every lamp, one with the minus on sulfur and one on nitrogen; the graded one has it on the stronger puller
-      {
-        for (const d of [DRAWINGS.SCN_n, DRAWINGS.SCN_s]) if (!lit('SCN', d)) fail('unit03/q5-resonance stage 3: a thiocyanate drawing does not light every lamp');
-        const s = ATOMS.slateOf(endOf(2), 'a');
-        const neg = s.read.atoms.filter(a => a.fc < 0);
-        if (neg.length !== 1 || neg[0].sym !== 'N' || !(VSEPR.EN.N > VSEPR.EN.S)) fail('unit03/q5-resonance stage 3: the solution does not put the minus on the more electronegative atom');
-        const other = planLewis('SCN', DRAWINGS.SCN_s).atoms.find(a => a.fc < 0);
-        if (other.sym !== 'S') fail('unit03/q5-resonance stage 3: the other drawing does not put the minus on sulfur');
-      }
-      // 4. the measured lengths of ozone are equal, and the gauge reads them off the real molecule and not the drawing
-      {
-        const o3 = MOLECULES.O3.lengths;
-        if (o3['0-1'] !== o3['0-2']) fail('unit03/q5-resonance stage 4: ozone\'s two measured bonds are not the same length');
         const d = DRAWINGS.O3;
-        if (d.bonds['0-1'] === d.bonds['0-2']) fail('unit03/q5-resonance stage 4: the drawing does not show one double bond and one single (the contrast the gauge breaks)');
-        same(endOf(3).pieces.second.zone, 'tray:same', 'unit03/q5-resonance stage 4 (the second bond is the same length)');
+        if (d.bonds['0-1'] === d.bonds['0-2']) fail('unit03/q5-resonance stage 2: the drawing does not show one double bond and one single (the contrast the gauge breaks)');
+        const o3 = { '0-1': LEWIS.gaugeLength('O3', d, '0-1'), '0-2': LEWIS.gaugeLength('O3', d, '0-2') };
+        if (o3['0-1'] !== o3['0-2']) fail('unit03/q5-resonance stage 2: ozone\'s two measured bonds are not the same length');
+        if (!lit('O3', d)) fail('unit03/q5-resonance stage 2: the ozone drawing does not light every lamp');
+        const t = endOf(1);
+        same(t.fixtures.len.dials.len.value, o3['0-2'], 'unit03/q5-resonance stage 2 (the dial is the second bond\'s measured length)');
+        const dial = tableOf(1).fixtures.len.dials.len;
+        holds(dial.min < o3['0-2'] && dial.max > o3['0-2'] && dial.value !== o3['0-2'], 'unit03/q5-resonance stage 2: the dial does not range over the measured length, or starts on it');
       }
-      // 5 and 6. nitrate has three drawings, each lit on its slate, all different; four pairs share three bonds
+      // 3. ozone lights every lamp two different ways, and the two slates the solution leaves are those two
       {
-        const t = endOf(4);
-        const keys = ['a', 'b', 'c'].map(id => { const s = ATOMS.slateOf(t, id); return { lit: LEWIS.allLit(s.read), key: LEWIS.drawingKey(s.mol, s.placed) }; });
-        if (keys.some(k => !k.lit)) fail('unit03/q5-resonance stage 5: a slate the solution drew does not light every lamp');
-        same(new Set(keys.map(k => k.key)).size, 3, 'unit03/q5-resonance stage 5 (nitrate\'s three drawings)');
-        same(LEWIS.distinctDrawings('NO3', [DRAWINGS.NO3_a, DRAWINGS.NO3_b, DRAWINGS.NO3_c]).length, 3, 'unit03/q5-resonance stage 5 (the real count of nitrate\'s drawings)');
-        const pairs = Object.values(DRAWINGS.NO3_a.bonds).reduce((a, b) => a + b, 0);
-        near(endOf(5).fixtures.order.dials.order.value, pairs / Object.keys(DRAWINGS.NO3_a.bonds).length, 0.02, 'unit03/q5-resonance stage 6 (the order of each nitrate bond)');
-        const g = MOLECULES.NO3.lengths;
-        if (new Set(Object.values(g)).size !== 1) fail('unit03/q5-resonance stage 6: nitrate\'s three measured bonds are not all the same length');
-        const d = tableOf(5).fixtures.order.dials.order;
-        if (!(d.min === 1 && d.max === 2)) fail('unit03/q5-resonance stage 6: the dial does not run from a single bond to a double');
-      }
-      // 7. carbonate's three drawings are equivalent: three drawings, one family, counted equally
-      {
-        same(LEWIS.distinctDrawings('CO3', [DRAWINGS.CO3_a, DRAWINGS.CO3_b, DRAWINGS.CO3_c]).length, 3, 'unit03/q5-resonance stage 7 (carbonate\'s drawings)');
-        const fcs = [DRAWINGS.CO3_a, DRAWINGS.CO3_b, DRAWINGS.CO3_c].map(d => fc('CO3', d).slice().sort().join());
-        same(new Set(fcs).size, 1, 'unit03/q5-resonance stage 7 (the three drawings carry the same charges)');
-        for (const id of ['ta', 'tb', 'tc']) same(endOf(6).pieces[id].zone, 'tray:same', `unit03/q5-resonance stage 7 (${id})`);
-      }
-      // 8. water has one drawing: no second way lights every lamp
-      {
-        if (Object.keys(DRAWINGS.H2O.bonds).some(k => DRAWINGS.H2O.bonds[k] > 1)) fail('unit03/q5-resonance stage 8: water\'s drawing has a double bond');
-        const mol = MOLECULES.H2O;
-        const skeleton = LEWIS.drawing({ '0-1': 1, '0-2': 1 });
-        // Every way of dealing the remaining two pairs: onto atoms or into joints.
-        let lits = new Set();
-        const spots = [{ k: 'lone', i: 0 }, { k: 'lone', i: 1 }, { k: 'lone', i: 2 }, { k: 'bond', i: '0-1' }, { k: 'bond', i: '0-2' }];
-        for (const p of spots) for (const q of spots) {
-          const d = LEWIS.drawing({ ...skeleton.bonds }, {}, {});
-          for (const sp of [p, q]) { if (sp.k === 'lone') d.lone[sp.i] = (d.lone[sp.i] || 0) + 1; else d.bonds[sp.i] += 1; }
-          if (LEWIS.allLit(planLewis('H2O', d))) lits.add(LEWIS.drawingKey('H2O', d) + JSON.stringify(d.lone));
-        }
-        same(lits.size, 1, 'unit03/q5-resonance stage 8 (the number of ways to light every lamp of water from its skeleton)');
-        same(ATOMS.slateOf(endOf(7), 'a').read.atoms.map(a => a.lamp).join(), 'full,full,full', 'unit03/q5-resonance stage 8 (the solution lights water)');
-        void mol;
+        const keys = new Set([LEWIS.drawingKey('O3', drawing({ '0-1': 2, '0-2': 1 }, { 0: 1, 1: 2, 2: 3 })), LEWIS.drawingKey('O3', drawing({ '0-1': 1, '0-2': 2 }, { 0: 1, 1: 3, 2: 2 }))]);
+        holds(keys.size === 2 && lit('O3', drawing({ '0-1': 1, '0-2': 2 }, { 0: 1, 1: 3, 2: 2 })), 'unit03/q5-resonance stage 3: ozone does not light every lamp two ways');
+        const t = endOf(2);
+        const got = ['a', 'b'].map(id => LEWIS.drawingKey('O3', ATOMS.slateOf(t, id).placed));
+        same([...new Set(got)].length, 2, 'unit03/q5-resonance stage 3 (the two slates hold different drawings)');
+        holds(got.every(k => keys.has(k)) && ['a', 'b'].every(id => allLit(ATOMS.slateOf(t, id).read)), 'unit03/q5-resonance stage 3: a slate the solution drew is not one of ozone\'s two drawings');
       }
     }
   }

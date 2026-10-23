@@ -80,8 +80,7 @@ export const STAGE_STORY = {
     3: 'A heavy gas pools at the tunnel floor where the miners kneel.'
   },
   'q5-resonance': {
-    1: 'The cutters will trust only the drawing that matches the measured rock.',
-    8: 'The map closes on water, the last molecule on the slate.'
+    1: 'The cutters will trust only the drawing that matches the measured gas.'
   },
   'q6-shape': {
     1: 'The breakers cannot cut until they know what shape each tunnel gas takes.'

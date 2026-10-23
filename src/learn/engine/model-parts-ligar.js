@@ -27,6 +27,7 @@ const dim = el => RADIUS[el] || 0.35;
 export const LIGAR_MOLECULES = {
   hydrogen: { atoms: [['H', -0.4, 0, 0], ['H', 0.4, 0, 0]], bonds: [[0, 1, 1]], formula: 'H₂' },
   nitrogen: { atoms: [['N', -0.56, 0, 0], ['N', 0.56, 0, 0]], bonds: [[0, 1, 3]], formula: 'N₂' },
+  ozone: { atoms: [['O', 0, 0.55, 0], ['O', -0.94, -0.35, 0], ['O', 0.94, -0.35, 0]], bonds: [[0, 1, 1.5], [0, 2, 1.5]], formula: 'O₃' },
   oxygen: { atoms: [['O', -0.6, 0, 0], ['O', 0.6, 0, 0]], bonds: [[0, 1, 2]], formula: 'O₂' },
   ethene: {
     atoms: [['C', -0.67, 0, 0], ['C', 0.67, 0, 0], ['H', -1.24, 0.92, 0], ['H', -1.24, -0.92, 0], ['H', 1.24, 0.92, 0], ['H', 1.24, -0.92, 0]],
