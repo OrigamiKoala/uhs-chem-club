@@ -105,7 +105,7 @@ export const STAGE_STORY = {
     3: 'Four of the holders are jammed, and Vess must know which hold more gas than the reference.'
   },
   'q4-mixtures': {
-    1: 'The Fifth fed a second gas into the station\'s fuel line, and Vess needs to see what each gas is doing.'
+    1: 'The Fifth fed a second gas into the fuel line, and Vess must see what each gas does.'
   },
   'q5-speed': {
     1: 'A pinhole leak is bleeding gas out of the station, and Vess wants to know who loses it first.',

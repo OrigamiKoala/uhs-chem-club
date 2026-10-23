@@ -201,7 +201,7 @@ export const STAGES = [
         const card = cardIn(t, 'answer');
         if (!card) return { ok: false, notYet: true, msg: 'Put a card in the slot.' };
         if (Math.abs(card.props.value - R) < 0.01) return { ok: true };
-        return { ok: false, msg: 'Divide pressure times room by amount times kelvin for one recorded reading: it does not come to that card.' };
+        return { ok: false, msg: 'The recorded readings do not come to the number on that card.' };
       },
       reward: {
         log: 'One number ties every reading together.',
