@@ -18,7 +18,12 @@ export const LANTERNFALL_TOUR = {
     'optics:ladder': { title: 'Energy ladder', text: 'The rungs are the only energies the electron of a hydrogen atom can have, and it starts on the lowest. Drag the electron to another rung. When it drops, the strip beside it records the light that leaves, and the rungs crowd closer together as they climb.', dials: false },
     'optics:lines': { title: 'Lines strip', text: 'This strip writes down the light each drop of the electron gives out, as lines on the same scale as the band. A climb gives out nothing, so nothing is written.', dials: false },
     'optics:plaque': { title: null, text: 'A printed plate of facts. You only read it; there is nothing to press.' },
-    'optics:marker': { title: 'Reading', text: 'Use the dial to set the number you have worked out. Whatever it reads when you press Submit is your answer.', dials: false }
+    'optics:marker': { title: 'Reading', text: 'Use the dial to set the number you have worked out. Whatever it reads when you press Submit is your answer.', dials: false },
+
+    /* ---- cloud ---- */
+    'cloud:cloud': { title: 'Plate', text: 'The plate shows where a probe finds an electron. Set the "Exposure" dial to one, fifty or five hundred shots, then press "{run}": every shot leaves a dot, and the dots from earlier shots stay. Where a slot sits beside the plate, a film laid in it counts the dots inside its outline.', dials: false },
+    'cloud:view': { title: 'View', text: 'The View turns and tilts every cloud on the table at once, so you can look at a cloud from another side. A "Slice" switch, where there is one, keeps only the dots in a thin slab through the middle of the cloud.', dials: false },
+    'cloud:wavering': { title: 'Ring track', text: 'A circular track. Drag a string onto it and the string is drawn round the ring, lap after lap, so you can see whether the laps land on each other or pile up in a band.' }
   },
   pieces: {
     /* ---- optics ---- */
@@ -31,6 +36,11 @@ export const LANTERNFALL_TOUR = {
     'optics:cell': ['Gas cells', 'A cell of cool gas. Drag it into the cell holder, in front of the filament, to see what the gas does to the filament\'s light.'],
     'optics:strip': ['Reference strips', 'Each glass strip has the lines of one gas printed on it. Drag one into the alongside slot; the lines that fall on a line of the band light up.'],
     'optics:chip': ['Line chips', 'Each chip carries one line, as a wavelength. Drag it into the probe slot to ask the ladder which drop could make it.'],
-    'optics:electron': ['Electron', 'The electron of the atom. Drag it up or down the ladder from rung to rung.']
+    'optics:electron': ['Electron', 'The electron of the atom. Drag it up or down the ladder from rung to rung.'],
+
+    /* ---- cloud ---- */
+    'cloud:cloud': ['Clouds', 'Each card shows the dots that many probe shots left for one electron. Turn the View to see it from another side, then drag the card where it belongs.'],
+    'cloud:tile': ['Strings', 'Each string has its own wavelength, printed on it. Drag one onto the track to see whether it closes into one ring.'],
+    'cloud:film': ['Films', 'Each film is an outline cut from clear plastic, and all of them cover the same area. Lay one on the plate and it counts the dots inside its outline.']
   }
 };

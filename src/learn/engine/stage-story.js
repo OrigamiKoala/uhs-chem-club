@@ -55,6 +55,9 @@ export const STAGE_STORY = {
   'q3-lines': {
     3: 'The Fifth left sealed gas tubes among the beacons, and Vess must name what is in them.'
   },
+  'q4-cloud': {
+    1: 'The beacon lamps are tuned to electrons, and Vess wants to know where one actually is.'
+  },
   'q7-pes': {
     5: 'The Fifth left an unlabelled specimen at the tower, and its spectrum is the only clue to what it is.'
   },
