@@ -12,6 +12,7 @@
  */
 
 import { shellsFor } from '../table/kits/atoms.js';
+import { emberModelParts, emberCaption } from './model-parts-ember.js';
 
 /** Display colours, in the plate's weathered palette. */
 const COLOR = { H: '#d8d2c4', C: '#4a4640', O: '#a0522d', Na: '#cfc8b8', Cl: '#c9b66a', proton: '#d99423', neutron: '#8c8376', electron: '#dcd6cc', bond: '#8c8376', ring: '#544e46' };
@@ -85,6 +86,8 @@ export function moleculeParts(spec) {
 
 /** The parts of any model spec, side by side where it lists several atoms. */
 export function modelParts(spec) {
+  const ember = emberModelParts(spec); // Ember Reach's molecules and boxes (model-parts-ember.js)
+  if (ember) return ember;
   if (spec.type === 'molecule') return moleculeParts(spec);
   if (spec.type === 'atoms') {
     const n = spec.items.length;
@@ -107,6 +110,8 @@ export function modelParts(spec) {
 /** The words under a model: the spec's own caption, else the counts it was built from. */
 export function captionOf(spec) {
   if (spec.caption) return spec.caption;
+  const emberWords = emberCaption(spec);
+  if (emberWords) return emberWords;
   if (spec.type === 'molecule') return `${MOLECULES[spec.name]?.formula || spec.name}, as a ball-and-stick model.`;
   const one = it => `${it.label ? `${it.label}: ` : ''}${it.p} protons, ${it.n} neutrons, ${shellsOf(it.p, it.charge || 0).reduce((a, b) => a + b, 0)} electrons`;
   if (spec.type === 'atoms') return spec.items.map(one).join('. ') + '.';
