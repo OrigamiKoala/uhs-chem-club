@@ -11,6 +11,11 @@
 
 /** Words a refusal may not carry on a stage: the rule or the answer the stage is asking the player to find. Per quest, per stage (1-based). */
 const LEAKS = {
+  'q4-bonds': {
+    2: [/\b436\b/, /positive/i, /\bplus\b/i, /\+/],
+    3: [/starting/i, /reactant/i, /product/i],
+    5: [/larger|bigger|greater/i, /\bcool/i, /\bsubtract|minus/i]
+  },
   'q3-enthalpy': {
     1: [/\b160\b/, /divid/i, /per mole.*8,?000/i],
     3: [/per gram/i, /weigh/i, /lightest/i, /\bmass\b/i]
@@ -176,6 +181,37 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       const hi = HK.cupRead(run(start(e3, 2), [{ place: { piece: 'hydrogen', to: 'slot:cup.mouth' } }]), 'cup').dT;
       holds(hi > 2 * e3.CHECKS.riseOf('methanol'), `${q} stage 3: the readings are too close to rank by eye`);
       same(done(e3, 2).zones.rail.order.join(), e3.CHECKS.BY_GRAM.join(), `${q} stage 3 (the rail)`);
+    }
+  }
+
+  /* ---- q4-bonds ---- */
+  const e4 = mods['q4-bonds'];
+  if (e4) {
+    const q = 'unit05/q4-bonds';
+    holds(e4.STAGES.length === 5, `${q} should have five stages`);
+    {
+      const t = run(start(e4, 1), [{ setDial: { fixture: 'crank', dial: 'pull', value: 7 } }]);
+      near(HK.wellRead(t, 'crank').E, TD.BOND_ENTHALPIES['H-H'].dH, 1e-9, `${q} stage 2 (the cost of H–H)`);
+      near(HK.markerRead(done(e4, 1), 'change'), TD.BOND_ENTHALPIES['H-H'].dH, 1e-9, `${q} stage 2 (the energy change set)`);
+      const fall = run(start(e4, 1), []);
+      holds(fall.fixtures.crank.props.forming !== true, `${q} stage 2: the crank is the falling one`);
+      const back = TABLE.createTable({ ...e4.STAGES[1].table, fixtures: [{ ...e4.STAGES[1].table.fixtures[0], props: { ...e4.STAGES[1].table.fixtures[0].props, forming: true } }] }, 'x');
+      near(HK.wellRead(run(back, [{ setDial: { fixture: 'crank', dial: 'pull', value: 7 } }]), 'crank').released, TD.BOND_ENTHALPIES['H-H'].dH, 1e-9, `${q}: falling back gives out what pulling took in`);
+      holds(Boolean(e4.STAGES[0].predict) && !Object.values(start(e4, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
+    }
+    {
+      const t = done(e4, 2);
+      near(HK.ledgerRead(t, 'ledger').net, e4.CHECKS.CH4_SUMS.net, 1e-9, `${q} stage 3 (the sorted ledger's net)`);
+      near(e4.CHECKS.CH4_SUMS.net, -802, 1e-9, `${q} stage 3 (burning methane)`);
+      holds(HK.ledgerRead(t, 'ledger').formed > HK.ledgerRead(t, 'ledger').broken, `${q} stage 3: the new bonds do not pay back more than the old cost`);
+    }
+    {
+      const t = start(e4, 4);
+      const r = HK.ledgerRead(t, 'ledger');
+      near(r.net, e4.CHECKS.NO_SUMS.net, 1e-9, `${q} stage 5 (the ledger as laid)`);
+      holds(r.net > 0 && r.broken > r.formed, `${q} stage 5: the reaction in air does not climb`);
+      same(e4.STAGES[4].check(e4.stateFor(4, e4.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
+      holds(Boolean(e4.STAGES[3].predict) && !Object.values(start(e4, 3).fixtures).length, `${q} stage 4: the predict stage shows an instrument`);
     }
   }
 

@@ -58,7 +58,7 @@ export const UNIT_05 = {
       title: 'Bond Enthalpies',
       line: 'Climb uphill to break reactant bonds into free atoms, drop downhill as product bonds snap together, and compare the two.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit05/q4-bonds.js')
     },

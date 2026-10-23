@@ -126,8 +126,7 @@ export const STAGE_STORY = {
     2: 'The ascent skiff can lift only so much fuel, so Vess must pick its tank with care.'
   },
   'q4-bonds': {
-    1: 'The siphon’s cracking coil pulls gas molecules apart over the vent.',
-    6: 'A scorched ledger beside the burner asks where the flame’s energy truly originates.'
+    1: 'The Fifth\'s cracking coil pulls gas molecules apart over the vent, and Vess wants to know what that costs.'
   },
   'q5-hess': {
     1: 'The direct vent shaft is sealed, so Vess must chart a multi-step route to the same depth.',
