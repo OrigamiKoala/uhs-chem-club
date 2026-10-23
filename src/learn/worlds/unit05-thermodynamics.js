@@ -31,7 +31,7 @@ export const UNIT_05 = {
       title: 'Heat and Temperature',
       line: 'Touch a hot block to a cold one, watch both thermometers settle, and mark which way energy crossed the boundary.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit05/q1-flow.js')
     },

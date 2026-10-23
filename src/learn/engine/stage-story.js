@@ -115,8 +115,8 @@ export const STAGE_STORY = {
 
   /* ---- Ember Reach: trace the Fifth Guild's geothermal siphon ---- */
   'q1-flow': {
-    1: 'Two basalt manifold blocks glow beside the caldera rim, waiting for Vess to bridge them.',
-    8: 'Four unmarked vent lines hiss into the station.'
+    2: 'A shelter\'s heating valve is frozen shut, and Vess has two ways to thaw it.',
+    4: 'The shelters\' emergency kits hold warmers, packs and tablets, and Vess is checking each one.'
   },
   'q2-calorimetry': {
     1: 'The geothermal cooling jackets need a calibrated water bath before the main valves open.',
