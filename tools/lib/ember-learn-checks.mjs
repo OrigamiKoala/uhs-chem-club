@@ -11,6 +11,11 @@
 
 /** Words a refusal may not carry on a stage: the rule or the answer the stage is asking the player to find. Per quest, per stage (1-based). */
 const LEAKS = {
+  'q5-hess': {
+    2: [/state function/i, /\bsame total\b/i, /path|route.*(cannot|never)/i],
+    3: [/\bflip|turn|double|scale|larger/i, /cancel/i],
+    4: [/products? (less|minus)/i, /\bsubtract/i, /elements/i]
+  },
   'q4-bonds': {
     2: [/\b436\b/, /positive/i, /\bplus\b/i, /\+/],
     3: [/starting/i, /reactant/i, /product/i],
@@ -212,6 +217,38 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       holds(r.net > 0 && r.broken > r.formed, `${q} stage 5: the reaction in air does not climb`);
       same(e4.STAGES[4].check(e4.stateFor(4, e4.SOLUTIONS[4])).ok, true, `${q} stage 5 (the solution)`);
       holds(Boolean(e4.STAGES[3].predict) && !Object.values(start(e4, 3).fixtures).length, `${q} stage 4: the predict stage shows an instrument`);
+    }
+  }
+
+  /* ---- q5-hess ---- */
+  const e5 = mods['q5-hess'];
+  if (e5) {
+    const q = 'unit05/q5-hess';
+    const num = label => Number(String(label).replace('−', '-').replace('+', ''));
+    const picked = t => num(t.fixtures.answer.props.options[Math.round(t.fixtures.answer.dials.value.value) - 1]);
+    holds(Boolean(e5.STAGES[0].predict) && !Object.values(start(e5, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
+    {
+      const t = done(e5, 1);
+      const A = HK.stackRead(t, 'routeA'); const B = HK.stackRead(t, 'routeB');
+      holds(A.matches && B.matches, `${q} stage 2: a route does not add up to the reaction wanted`);
+      near(A.dH, B.dH, 1e-9, `${q} stage 2: the two routes do not share a total`);
+      near(A.dH, TD.FORMATION_TABLE['CO2(g)'].dHf, 0.05, `${q} stage 2 (the total is the formation of CO2)`);
+      holds(A.cards.length !== B.cards.length, `${q} stage 2: the two routes use the same number of steps`);
+    }
+    {
+      const t = done(e5, 2);
+      const r = HK.stackRead(t, 'wanted');
+      holds(r.matches, `${q} stage 3: the solution's stack does not add up to the reaction wanted`);
+      near(r.dH, TD.FORMATION_TABLE['CH4(g)'].dHf, 0.1, `${q} stage 3 (building methane)`);
+      near(picked(t), r.dH, 0.05, `${q} stage 3 (the number set)`);
+      holds(t.pieces.c3.props.flipped && t.pieces.c2.props.scale === 2, `${q} stage 3: the solution does not turn one card and double another`);
+    }
+    {
+      const t = done(e5, 3);
+      const r = HK.stackRead(t, 'wanted');
+      holds(r.matches, `${q} stage 4: the solution's stack does not add up to the reaction wanted`);
+      near(r.dH, TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'dHf'), 0.05, `${q} stage 4 (products less reactants)`);
+      near(picked(t), r.dH, 0.05, `${q} stage 4 (the number set)`);
     }
   }
 

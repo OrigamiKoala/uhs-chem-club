@@ -67,7 +67,7 @@ export const UNIT_05 = {
       title: "Hess's Law and Formation",
       line: 'Stack reaction steps on an enthalpy altitude ladder and measure compounds from the elemental sea-level baseline.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit05/q5-hess.js')
     },

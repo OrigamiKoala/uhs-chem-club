@@ -129,8 +129,7 @@ export const STAGE_STORY = {
     1: 'The Fifth\'s cracking coil pulls gas molecules apart over the vent, and Vess wants to know what that costs.'
   },
   'q5-hess': {
-    1: 'The direct vent shaft is sealed, so Vess must chart a multi-step route to the same depth.',
-    8: 'One last sealed flue pipe hides its formation mark.'
+    1: 'The direct vent shaft is sealed, so Vess must work out its heat from the routes that are open.'
   },
   'q6-entropy': {
     2: 'A burst bypass valve scatters vent gas into an evacuated chamber.',
