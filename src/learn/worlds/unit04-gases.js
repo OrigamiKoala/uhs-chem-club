@@ -39,7 +39,7 @@ export const UNIT_04 = {
       title: 'The Gas Laws',
       line: 'Squeeze, heat, and feed gas to find its laws.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit04/q2-laws.js')
     },
