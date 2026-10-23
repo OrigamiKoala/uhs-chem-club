@@ -57,7 +57,7 @@ export const UNIT_04 = {
       title: 'Partial Pressures',
       line: "Split a tank's push gas by gas.",
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit04/q4-mixtures.js')
     },

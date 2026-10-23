@@ -22,7 +22,7 @@
 import { registerKit } from './registry.js';
 import { paintPiece, paintFixture, faceKey, RECTS, paintLegend, tankFace, wrap } from './gas-draw.js';
 import {
-  rigRun, boxRead, pinholeRead, tubeRead, secondsOf, seatedIn, GASES, tankRead, commonRead, valueOf
+  rigRun, boxRead, pinholeRead, tubeRead, secondsOf, seatedIn, GASES, tankRead, commonRead, valueOf, molesIdeal
 } from './gas-read.js';
 import { gasDress } from './gas-3d.js';
 import { buildTank, buildPelletDish } from '../../engine/gas-props.js';
@@ -153,8 +153,8 @@ const piece = (kind, id, label, at, props = {}, extra = {}) => ({ id, kind, labe
  * A tank. Give it its gas and either its amount (`n`) or what its gauge reads (`P`), with its room (`V`, litres) and temperature (`T`,
  * kelvin). `parts` makes it a tank of several gases. `sealed` prints a question mark where the gas goes.
  */
-export const tank = (id, label, at, { gas, n, P, V = 10, T = 300, parts, sealed = false, plate = false, gaugeMax = 600, showAmount = false, noGauge = false, hidden = false, zone = null, fetchFrom = null, fixed = false } = {}) =>
-  piece('tank', id, label, at, { ...(parts ? { parts } : { gas }), ...(n != null ? { n } : {}), ...(P != null ? { P } : {}), V, T, sealed, plate, gaugeMax, showAmount, noGauge },
+export const tank = (id, label, at, { gas, n, P, V = 10, T = 300, parts, sealed = false, plate = false, gaugeMax = 600, showAmount = false, noGauge = false, printMass = false, hidden = false, zone = null, fetchFrom = null, fixed = false } = {}) =>
+  piece('tank', id, label, at, { ...(parts ? { parts } : { gas }), ...(n != null ? { n } : {}), ...(P != null ? { P } : {}), V, T, sealed, plate, gaugeMax, showAmount, noGauge, ...(printMass ? { mass: (n != null ? n : molesIdeal(P, V, T)) * (parts ? parts.reduce((a, x) => a + x.n * GASES[x.gas].M, 0) / parts.reduce((a, x) => a + x.n, 0) : GASES[gas].M) } : {}) },
     { ...(hidden ? { hidden: true } : {}), ...(zone ? { zone } : {}), ...(fetchFrom ? { fetchFrom } : {}), ...(fixed ? { fixed: true } : {}), r: 7 });
 /** A card with a statement or a reading printed on it. */
 export const stmt = (id, label, at, extra = {}) => piece('stmt', id, label, at, {}, { r: 6.4, ...extra });

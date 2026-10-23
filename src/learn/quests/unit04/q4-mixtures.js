@@ -1,27 +1,22 @@
 /**
  * q4-mixtures.js — Bellows, bench four: PARTIAL PRESSURES.
  *
- * The blending manifold on its pipe rack, and the fourth of Bellows' TABLETOPS (plan `bench-tabletop.md`, phase T5), on the gas kit
- * (`table/kits/gas.js`). Every earlier bench held one gas. This one puts several in a tank and asks what each is doing. The answer is the
- * least expected thing about a gas: nothing. Each pushes as if the others were not there, so a tank's reading is a sum and any one gas's
- * share of it can be found, counted, ranked and even pulled out.
+ * The blending manifold on its pipe rack, on the gas kit (`table/kits/gas.js`). Every earlier bench held one gas. This one puts several in
+ * a tank and asks what each is doing. The answer is the least expected thing about a gas: nothing. Each pushes as if the others were not
+ * there, so a tank's reading is a sum, and any one gas's share of it can be found, counted and ranked.
  *
- * A TANK is a piece with its own gauge; standing in the place under the COMMON TANK it has opened its valve into it, so its gas is in the
- * room the common tank has, at the temperature it has. The common tank's gauge is the sum of what each gas would push alone, because that is
- * what the gas law gives for each; the bench never states it as a rule.
+ * THE CLICK. Players expect crowds to crowd: add a second gas to a tank and the first must be squeezed, or must push harder. Stage 1
+ * asks for that guess about neon and a helium let in beside it (a predict stage, no instrument); stage 2 opens the two tanks into the
+ * common tank, which prints the push of each gas by its own shape of particle, and neon's push does not move. Only then is it named.
  *
- *   1  open tanks into the common tank and watch the gauge  -> partial pressure, Dalton's law
- *   2  how a gas in a mixture pushes against the same gas alone -> (each gas ignores the others)
- *   3  one gas's share of the particles                       -> mole fraction
- *   4  a gas's share of the push, from its share of the moles -> (partial pressure = mole fraction x total)
- *   5  the oxygen in the air at altitude                      -> (thin air is the same mixture at a lower total)
- *   6  adding a gas that reacts with nothing                  -> (every other partial pressure stays put)
- *   7  three gases ranked by their push                       -> (the moles decide, not the weight)
- *   8  the moles of one gas in a sealed tank                  -> (a trap shows one partial pressure)
+ *   1  PREDICT: neon's own push when helium joins it
+ *   2  TEST: open the tanks, read each gas's own push           -> Partial Pressure, Dalton's law
+ *   3  open tanks until nitrogen is 60 percent of the push      -> Mole Fraction
+ *   4  open each tank in turn, rank them by push                -> (the moles decide, never the weight)
+ *   5  sort what changes as the air gets thinner                -> Thin Air
  *
- * THE EVIDENCE IS ON THE BENCH. Each tank prints its own gauge, and the common tank prints the push of each gas in it by a stencilled shape,
- * never by colour. Stage 7 is built to catch the obvious mistake: its heaviest gas has the fewest moles, so a heavy gas does not push the
- * hardest and only the moles decide.
+ * (Cut as repeats: the pour-until-400 stage, which the test of stage 2 already shows; the push of one gas from a share, which stage 3
+ * reads off the tank; adding argon, which is stage 2 again; and the trap that pulls one gas out, which was the same counting.)
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
@@ -29,22 +24,23 @@
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
 import { applyNotes } from '../../table/notes.js';
 import {
-  gasTable, tank, trapTool, commonTank, markerFixture, plaqueFixture, markerRead, commonRead, partialOf, tankRead, whereIs,
-  planMixture, GASES, R, AIR, airPressureAt, pressureIdeal
+  gasTable, tank, chip, commonTank, commonRead, partialOf, tankRead, whereIs, planMixture, AIR, GASES
 } from '../../table/kits/gas.js';
+import { widget, put, dial, sort, cardIn, predictStage, youPredicted, guessOf } from './_shared.js';
+import { stmt } from '../../table/kits/gas.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 5 };
 
 export const VOCABULARY = [
-  { term: /\bpartial pressures?\b/i, introducedAt: 1 },
-  { term: /\bdalton.?s law\b/i, introducedAt: 1 },
+  { term: /\bpartial pressures?\b/i, introducedAt: 2 },
+  { term: /\bdalton.?s law\b/i, introducedAt: 2 },
   { term: /\bmole fractions?\b/i, introducedAt: 3 }
 ];
 
-/** The gas law, pressure and the mole are plain words here. */
+/** The gas laws, pressure, the mole and the push are plain words here. */
 export const BUILDS_ON = ['unit04/q3-ideal', 'unit04/q2-laws'];
 
-const SPEAKER = 'Vess';
+export const QUEST_KEY = 'unit04/q4-mixtures';
 
 /** Every key on this bench says what it does on its cap, so none carries a legend. */
 export function toolNoteFor() { return null; }
@@ -53,159 +49,97 @@ export function toolNoteFor() { return null; }
    THE TABLES
    ------------------------------------------------------------------ */
 
-const widget = { type: 'table', label: 'The bench' };
 const CT = 'ct';
 const VALVES = `${CT}.valves`;
 const OPEN = `tray:${VALVES}`;
 
-/** The tanks the bench opens: each is the same size as the common tank, so its own gauge is what its gas pushes there. */
+/** The tanks the bench opens: each the size of the common tank, so its own gauge is what its gas pushes there. */
 const T0 = 300;
 const V0 = 10;
 export const HELIUM = { gas: 'He', n: 1 };
 export const NEON = { gas: 'Ne', n: 0.6 };
-export const NITROGEN = { gas: 'N2', n: 0.3 };
-/** Stage 3's four tanks, stage 4's sealed mixture, and stage 5's air at four heights. */
+export const GUESSES = [['same', 'The same'], ['lower', 'Lower'], ['higher', 'Higher']];
+/** Stage 3's four tanks: nitrogen is 60 percent of the moles with the helium and the neon, or with the carbon dioxide alone. */
 export const SHARE = [['a', 'He', 0.5], ['b', 'Ne', 0.5], ['c', 'N2', 1.5], ['d', 'CO2', 1.0]];
-export const BLEND = { parts: [{ gas: 'N2', n: 3 }, { gas: 'O2', n: 1 }], V: 49.88, T: 300 };
+/** Stage 4's tanks (20 L, 300 K): the heaviest gas has fewer moles than the lightest. */
+export const RANK = [['a', 'N2', 1.0], ['b', 'CO2', 0.5], ['c', 'He', 1.5], ['d', 'Xe', 0.6]];
+export const RANK_V = 20;
+/** Stage 5: the same air at four heights, and the room (litres) it takes at each. */
 export const HEIGHTS = [23.62, 33.76, 45.46, 67.74];
 export const HEIGHT_NAMES = ['Sea level', '3000 m', '5500 m', '8850 m'];
 export const AIR_T = 288.15;
 export const AIR_PARTS = AIR.map(a => ({ gas: a.gas, n: a.n / 100 }));
-/** Stage 7's three tanks: the heaviest gas has the fewest moles. */
-export const RANK = [['a', 'N2', 1.0], ['b', 'CO2', 0.5], ['c', 'He', 1.5]];
-/** Stage 8's sealed tank of two gases, and the one a trap takes out. */
-export const SEALED = { parts: [{ gas: 'N2', n: 0.4 }, { gas: 'CO2', n: 0.2 }], V: 10, T: 300 };
 
 const t10 = (id, label, at, gas, n, extra = {}) => tank(id, label, at, { gas, n, V: V0, T: T0, gaugeMax: 400, ...extra });
 
-/** The reward card of each stage: the idea just worked out, named (unchanged by the conversion to a table). */
-const STAGE_REWARDS = [
-  {
-      reward: {
-        log: 'The tank reads what the two gases read added together.',
-        title: 'Partial Pressure and Dalton\'s Law',
-        body: 'Each gas in a mixture pushes as hard as it would if it were alone in the tank, and that share is its partial pressure. The total pressure is the sum of the partial pressures, which is Dalton\'s law.'
-      }
-  },
-  {
-      reward: {
-        log: 'A gas ignores the gas beside it.',
-        title: 'Each Gas Alone',
-        body: 'A gas in a mixture knocks on the walls exactly as often as it would alone, because the particles are so far apart that they hardly notice one another. That is why the partial pressures simply add.'
-      }
-  },
-  {
-      reward: {
-        log: 'A gas\'s share of the particles is its share of the push.',
-        title: 'Mole Fraction',
-        body: 'The share of the moles that belong to one gas is its mole fraction: the moles of the gas over the total moles. A gas pushes with the same share of the total pressure, and the mole fractions in a mixture add up to one.'
-      }
-  },
-  {
-      reward: {
-        log: 'A share of the moles is a share of the push.',
-        title: 'Partial Pressure From a Share',
-        body: 'The partial pressure of a gas is its mole fraction times the total pressure. A gas that makes up a quarter of the moles makes up a quarter of the push.'
-      }
-  },
-  {
-      reward: {
-        log: 'Thin air has the same mixture at a lower total.',
-        title: 'Thin Air',
-        body: 'At altitude the air is the same mixture but its total pressure is lower, so the partial pressure of oxygen falls with it. A climber is short of oxygen because its partial pressure is low, not because its mole fraction has changed.'
-      }
-  },
-  {
-      reward: {
-        log: 'Argon adds its own push and takes nothing from the oxygen.',
-        title: 'Gases Ignore One Another',
-        body: 'A gas that reacts with nothing adds its own partial pressure to the total and leaves every other partial pressure where it was. Each gas in a mixture behaves as if it had the whole tank to itself.'
-      }
-  },
-  {
-      reward: {
-        log: 'The moles decide the push.',
-        title: 'Moles Decide the Push',
-        body: 'At one temperature in one tank, the gas with the most moles has the largest partial pressure, whatever its particles weigh. Light particles knock more often and heavy ones knock harder, and the two balance out.'
-      }
-  },
-  {
-      reward: {
-        log: 'One gas counted by taking it out.',
-        title: 'Counting One Gas',
-        body: 'Taking one gas out of a mixture and watching the gauge fall gives that gas\'s partial pressure, and the gas law turns that into moles. Partial pressures let you count each gas in a tank you cannot see into.',
-        last: true
-      }
-  }
-];
-
 /* ------------------------------------------------------------------
-   THE EIGHT STAGES
+   THE FIVE STAGES
    ------------------------------------------------------------------ */
 export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
-  (() => {
-    const ct = commonTank(CT, { x: 36, y: 30 }, { V: V0, T: T0, of: VALVES });
-    return {
-      title: 'Pouring Together',
-      briefing: { speaker: SPEAKER, body: 'Each tank has its own gauge, and a tank put in the place under the common tank opens its valve into it. Press Submit when the table shows your answer.' },
-      prompt: 'Open tanks into the common tank until its gauge reads about 400 kPa.',
-      widget,
-      table: gasTable({
-        pieces: [t10('a', 'TANK A', { x: 92, y: 18 }, HELIUM.gas, HELIUM.n), t10('b', 'TANK B', { x: 114, y: 18 }, NEON.gas, NEON.n), t10('c', 'TANK C', { x: 136, y: 18 }, NITROGEN.gas, NITROGEN.n)],
-        fixtures: [ct.fixture],
-        zones: { trays: [ct.tray] }
-      }),
-      hints: [
-        'Put a tank in the place under the common tank and watch its gauge.',
-        'Compare the common tank\'s gauge with the gauges of the tanks you have opened into it.',
-        'Open another tank, or take one out, until the common tank\'s gauge reads what the prompt asks.'
-      ],
-      check(state) {
-        const t = state.table;
-        const rd = commonRead(t, CT);
-        if (!rd.tanks.length) return { ok: false, notYet: true, msg: 'Open a tank into the common tank first.' };
-        if (Math.abs(rd.P - 400) <= 8) return { ok: true };
-        return { ok: false, msg: 'The common tank\'s gauge does not read 400 kPa yet: compare it with the gauges of the tanks you have opened into it.' };
-      },
-      ...STAGE_REWARDS[0]
-    };
-  })(),
+  predictStage({
+    key: QUEST_KEY,
+    title: 'Guess the Crowd',
+    prompt: 'Neon pushes on a tank\'s walls by itself, then helium is let into the same tank: what happens to neon\'s own push?',
+    items: GUESSES,
+    hints: [
+      'Use the three cards and the slot.',
+      'Picture two kinds of particle in one tank: do they get in each other\'s way on the walls?',
+      'There is no wrong guess yet; commit to the card you would bet on.'
+    ],
+    reward: {
+      log: 'Prediction locked in.',
+      title: 'A Guess Worth Testing',
+      body: 'Two tanks and a common tank that reads each gas separately are about to be set out, and neon\'s own figure will say whether the guess holds.'
+    }
+  }),
 
   /* ---------------------------------------------------------------- 2 */
   (() => {
-    const ct = commonTank(CT, { x: 36, y: 31 }, { V: V0, T: T0, of: VALVES, show: { partials: true }, words: 2, record: true });
-    const token = (id, label, x) => ({ id, label, at: { x, y: 57 }, r: 7 });
+    const ct = commonTank(CT, { x: 36, y: 30 }, { V: V0, T: T0, of: VALVES, show: { partials: true }, words: 2 });
     return {
       title: 'Each Alone',
-      prompt: 'Predict what neon\'s push becomes when helium is let into its tank, then test it.',
+      get prompt() {
+        return youPredicted(QUEST_KEY, GUESSES, 'open both tanks, then lay the card for what neon\'s own push did.', 'Open both tanks, then lay the card for what neon\'s own push did.');
+      },
       widget,
       table: gasTable({
-        pieces: [t10('a', 'TANK A', { x: 92, y: 14 }, HELIUM.gas, HELIUM.n), t10('b', 'TANK B', { x: 114, y: 14 }, NEON.gas, NEON.n)],
+        pieces: [
+          t10('a', 'TANK A', { x: 92, y: 12 }, HELIUM.gas, HELIUM.n), t10('b', 'TANK B', { x: 114, y: 12 }, NEON.gas, NEON.n),
+          stmt('same', 'The same', { x: 90, y: 45 }), stmt('lower', 'Lower', { x: 128, y: 45 }), stmt('higher', 'Higher', { x: 109, y: 57.5 })
+        ],
         fixtures: [ct.fixture],
-        zones: { trays: [ct.tray] },
-        prediction: {
-          slot: { id: 'predict', label: 'Neon\'s push in the mix', at: { x: 111, y: 36 }, size: { w: 30, h: 12 } },
-          tokens: [token('same', 'The same', 90), token('lower', 'Lower', 112), token('higher', 'Higher', 134)]
-        }
+        zones: { trays: [ct.tray], slots: [{ id: 'show', label: 'What neon\'s push did', at: { x: 109, y: 29 }, size: { w: 38, h: 12 } }] }
       }),
       hints: [
-        'Place a prediction, then open Tank B into the common tank, then Tank A, and press Record.',
-        'Compare neon\'s push in the common tank with Tank B\'s own gauge.',
-        'Look at whether letting helium in changed the push the common tank prints for neon.'
+        'Drag Tank B, then Tank A, into the place under the common tank.',
+        'Compare neon\'s figure in the common tank with Tank B\'s own gauge.',
+        'Lay the card that says what neon\'s figure did when the second tank was opened.'
       ],
       check(state) {
         const t = state.table;
-        const token = t.prediction.token;
-        if (!token) return { ok: false, notYet: true, msg: 'Place a prediction first.' };
+        const card = cardIn(t, 'show');
+        if (!card) return { ok: false, notYet: true, msg: 'Lay a card in the slot.' };
         const alone = planMixture([{ gas: NEON.gas, n: NEON.n }], T0, V0).rows[0].P;
         const mixed = planMixture([{ gas: HELIUM.gas, n: HELIUM.n }, { gas: NEON.gas, n: NEON.n }], T0, V0).rows.find(r => r.gas === NEON.gas).P;
         const want = Math.abs(mixed - alone) < 1e-6 ? 'same' : mixed < alone ? 'lower' : 'higher';
-        if (token === want) return { ok: true };
-        if (t.prediction.tested) return { ok: false, msg: 'The common tank\'s figure for neon does not follow that prediction: compare it with Tank B\'s own gauge.' };
-        return { ok: false, msg: 'Open Tank B and then Tank A into the common tank, press Record, and compare neon\'s push with your prediction.' };
+        if (card.id === want) return { ok: true };
+        return { ok: false, msg: `Neon's own push is no ${card.id === 'lower' ? 'lower' : 'higher'} with the helium in the tank.` };
       },
-      ...STAGE_REWARDS[1]
+      get reward() {
+        const g = guessOf(QUEST_KEY, GUESSES);
+        const verdict = !g ? '' : g.id === 'same' ? 'You predicted this one, and the tank agreed. ' : 'The tank did not agree with your prediction, which is how a guess gets better. ';
+        return {
+          log: 'Neon pushes the same alone and in the mix.',
+          title: 'Partial Pressure',
+          body: `${verdict}Each gas pushes as hard as it would if it were alone in the tank, and that share is its partial pressure. The gauge's total is just the partial pressures added together, which is Dalton's law.`,
+          model: {
+            type: 'gas',
+            boxes: [{ label: 'One tank', w: 3.2, parts: [{ kind: 'He', n: 12 }, { kind: 'Ne', n: 7 }] }],
+            caption: 'Helium (12 particles) and neon (7) in one tank: each knocks the walls as if the other were not there. Not to scale.'
+          }
+        };
+      }
     };
   })(),
 
@@ -223,191 +157,126 @@ export const STAGES = [
         zones: { trays: [ct.tray] }
       }),
       hints: [
-        'Open one tank at a time and watch the share each gas takes of the push.',
+        'Drag tanks into the place under the common tank, or out of it.',
         'Compare each gas\'s share of the push with the share of the moles it has among the tanks you opened.',
-        'Choose tanks whose moles of nitrogen are sixty percent of all the moles in the common tank.'
+        'Choose tanks whose moles of nitrogen are the share asked for of all the moles in the common tank.'
       ],
       check(state) {
         const t = state.table;
         const rd = commonRead(t, CT);
         if (!rd.tanks.length) return { ok: false, notYet: true, msg: 'Open a tank into the common tank first.' };
         const n2 = partialOf(rd, 'N2');
-        if (n2 > 0 && Math.abs(n2 / rd.P - 0.6) < 0.005) return { ok: true };
-        return { ok: false, msg: 'Nitrogen\'s share of the push is not yet sixty percent: compare it with nitrogen\'s share of the moles you have opened.' };
+        const share = rd.P > 0 ? n2 / rd.P : 0;
+        if (n2 > 0 && Math.abs(share - 0.6) < 0.005) return { ok: true };
+        return { ok: false, msg: share < 0.6 ? 'Nitrogen\'s share of the push is below the share asked for.' : 'Nitrogen\'s share of the push is above the share asked for.' };
       },
-      ...STAGE_REWARDS[2]
+      reward: {
+        log: 'A gas\'s share of the moles is its share of the push.',
+        title: 'Mole Fraction',
+        body: 'The share of the moles that belong to one gas is its mole fraction: the moles of the gas over the total moles. A gas pushes with the same share of the total pressure, and the mole fractions in a mixture add up to one.'
+      }
     };
   })(),
 
   /* ---------------------------------------------------------------- 4 */
   (() => {
+    const ct = commonTank(CT, { x: 36, y: 30 }, { V: RANK_V, T: T0, of: VALVES, show: { partials: true }, words: 2 });
+    const tanks = RANK.map(([id, gas, n], i) => tank(id, `TANK ${id.toUpperCase()}`, { x: 0, y: 0 }, { gas, n, V: RANK_V, T: T0, noGauge: true, printMass: true, plate: false }));
     return {
-      title: 'A Gas\'s Own Push',
-      prompt: 'Set the marker to how hard the oxygen in the sealed tank pushes on its own, in kilopascals.',
+      title: 'Rank by Push',
+      prompt: 'Put the four tanks on the strip from the gas that pushes hardest to the gas that pushes least.',
       widget,
       table: gasTable({
-        pieces: [tank('t', 'TANK A', { x: 30, y: 30 }, { parts: BLEND.parts, V: BLEND.V, T: BLEND.T, partsPlate: true, plate: false, gaugeMax: 300 })],
-        fixtures: [markerFixture('push', 'Oxygen pushes with', { x: 100, y: 30 }, { min: 0, max: 200, step: 10, start: 0, unit: 'kPa', w: 56 })]
+        pieces: tanks,
+        fixtures: [ct.fixture],
+        zones: {
+          trays: [ct.tray],
+          rail: { id: 'rail', at: { x: 108, y: 48 }, size: { w: 80, h: 16 }, first: 'Pushes hardest', last: 'Pushes least', items: ['a', 'b', 'c', 'd'], start: ['a', 'b', 'c', 'd'] }
+        }
       }),
       hints: [
-        'Read the tank\'s gauge and the moles of each gas printed on its face.',
-        'Compare the moles of oxygen with all the moles in the tank.',
-        'Take the same share of the gauge reading as oxygen has of the moles.'
+        'Drag a tank into the place under the common tank to read its push, and drag it back to the strip.',
+        'Compare the pushes of tanks that fill the same room at the same temperature, not their weights.',
+        'Put the tank with the largest push at the strong end of the strip and the smallest at the other end.'
       ],
       check(state) {
         const t = state.table;
-        const v = markerRead(t, 'push');
-        if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to the oxygen\'s push.' };
-        const want = tankRead(t.pieces.t).rows.find(r => r.gas === 'O2').P;
-        if (Math.abs(v - want) <= 5) return { ok: true };
-        return { ok: false, msg: 'Work out oxygen\'s share of the moles, then take that share of the tank\'s gauge reading.' };
+        const order = t.zones.rail.order;
+        if (order.length < 4) return { ok: false, notYet: true, msg: 'Put all four tanks on the strip.' };
+        const want = ['a', 'b', 'c', 'd'].sort((x, y) => tankRead(t.pieces[y]).P - tankRead(t.pieces[x]).P);
+        if (order.join() === want.join()) return { ok: true };
+        return { ok: false, msg: 'Two neighbouring tanks on the strip are the wrong way round.' };
       },
-      ...STAGE_REWARDS[3]
+      reward: {
+        log: 'The moles decide the push.',
+        title: 'Moles Decide the Push',
+        body: 'At one temperature in one tank, the gas with the most moles has the largest partial pressure, whatever its particles weigh. Light particles knock more often and heavy ones knock harder, and the two balance out.'
+      }
     };
   })(),
 
   /* ---------------------------------------------------------------- 5 */
   (() => {
-    const ct = commonTank(CT, { x: 36, y: 31 }, { V: HEIGHTS[0], T: AIR_T, of: VALVES, volumes: HEIGHTS, volumeStart: 1, volumeNames: HEIGHT_NAMES, volumeLabel: 'Height', show: { partials: true }, words: 3 });
+    const ct = commonTank(CT, { x: 36, y: 32 }, {
+      V: HEIGHTS[0], T: AIR_T, of: VALVES, volumes: HEIGHTS, volumeStart: 1, volumeNames: HEIGHT_NAMES, volumeLabel: 'Height', show: { partials: true, share: true }, words: 3
+    });
+    const things = [['o2share', 'OXYGEN SHARE'], ['o2push', 'OXYGEN PUSH'], ['total', 'TOTAL PUSH'], ['n2share', 'NITROGEN SHARE']];
     return {
       title: 'Up the Mountain',
-      prompt: 'Set the marker to the oxygen\'s own push in the air at 5,500 metres, in kilopascals.',
-      widget,
-      table: gasTable({
-        pieces: [tank('air', 'AIR', { x: 96, y: 16 }, { parts: AIR_PARTS, V: HEIGHTS[0], T: AIR_T, plate: true, gaugeMax: 150 })],
-        fixtures: [ct.fixture, markerFixture('oxygen', 'Oxygen pushes with', { x: 112, y: 46 }, { min: 0, max: 30, step: 1, start: 0, unit: 'kPa', w: 56 })],
-        zones: { trays: [ct.tray] }
-      }),
-      hints: [
-        'Open the tank of air into the common tank and turn the Height dial.',
-        'Compare the oxygen\'s push at sea level with its push at 5,500 metres.',
-        'Read the oxygen\'s push with the Height dial at 5,500 metres and set the marker to it.'
-      ],
-      check(state) {
-        const t = state.table;
-        const v = markerRead(t, 'oxygen');
-        if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to the oxygen\'s push at that height.' };
-        const want = planMixture(AIR_PARTS, AIR_T, HEIGHTS[2]).rows.find(r => r.gas === 'O2').P;
-        if (Math.abs(v - want) <= 0.6) return { ok: true };
-        return { ok: false, msg: 'Open the air into the common tank, set the Height dial to 5,500 metres, and read oxygen\'s own push there.' };
-      },
-      ...STAGE_REWARDS[4]
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 6 */
-  (() => {
-    const ct = commonTank(CT, { x: 36, y: 32 }, { V: V0, T: T0, of: VALVES, show: { partials: true }, words: 3, record: true });
-    const token = (id, label, x) => ({ id, label, at: { x, y: 57 }, r: 7 });
-    return {
-      title: 'A Gas That Reacts With Nothing',
-      prompt: 'Predict what oxygen\'s push becomes when argon is let into the common tank, then test it.',
+      prompt: 'Turn the Height dial, then sort each reading by whether it falls as the air gets thinner.',
       widget,
       table: gasTable({
         pieces: [
-          tank('air', 'TANK A', { x: 0, y: 0 }, { parts: [{ gas: 'N2', n: 0.8 }, { gas: 'O2', n: 0.2 }], V: V0, T: T0, partsPlate: true, gaugeMax: 400, zone: OPEN }),
-          t10('ar', 'TANK B', { x: 92, y: 14 }, 'Ar', 1.0)
+          tank('air', 'AIR', { x: 0, y: 0 }, { parts: AIR_PARTS, V: HEIGHTS[0], T: AIR_T, plate: true, gaugeMax: 150, zone: OPEN }),
+          ...things.map(([id, label], i) => chip(id, label, { x: 84 + (i % 2) * 20, y: 12 + Math.floor(i / 2) * 13 }))
         ],
         fixtures: [ct.fixture],
-        zones: { trays: [ct.tray] },
-        prediction: {
-          slot: { id: 'predict', label: 'Oxygen\'s push, with argon', at: { x: 111, y: 36 }, size: { w: 30, h: 12 } },
-          tokens: [token('same', 'The same', 90), token('lower', 'Lower', 112), token('higher', 'Higher', 134)]
+        zones: {
+          trays: [
+            ct.tray,
+            { id: 'falls', label: 'Falls as you climb', at: { x: 90, y: 49 }, size: { w: 36, h: 22 }, cell: 17 },
+            { id: 'stays', label: 'Stays put', at: { x: 128, y: 49 }, size: { w: 28, h: 22 }, cell: 15 }
+          ]
         }
       }),
       hints: [
-        'Place a prediction, then open the argon tank into the common tank and press Record.',
-        'Compare the push the common tank prints for oxygen before and after the argon goes in.',
-        'Look at whether any gas already in the common tank pushes differently once argon is added.'
+        'Use the "Height" dial.',
+        'Compare each reading at sea level with the same reading at the greatest height.',
+        'A reading goes in "Falls as you climb" only if it is lower at the greatest height than at sea level.'
       ],
       check(state) {
         const t = state.table;
-        const token = t.prediction.token;
-        if (!token) return { ok: false, notYet: true, msg: 'Place a prediction first.' };
-        const before = planMixture([{ gas: 'N2', n: 0.8 }, { gas: 'O2', n: 0.2 }], T0, V0).rows.find(r => r.gas === 'O2').P;
-        const after = planMixture([{ gas: 'N2', n: 0.8 }, { gas: 'O2', n: 0.2 }, { gas: 'Ar', n: 1.0 }], T0, V0).rows.find(r => r.gas === 'O2').P;
-        const want = Math.abs(after - before) < 1e-6 ? 'same' : after < before ? 'lower' : 'higher';
-        if (token === want) return { ok: true };
-        if (t.prediction.tested) return { ok: false, msg: 'The common tank\'s figure for oxygen does not follow that prediction: compare it before and after the argon goes in.' };
-        return { ok: false, msg: 'Open the argon tank into the common tank, press Record, and compare oxygen\'s push with your prediction.' };
+        if (!things.every(([id]) => ['falls', 'stays'].includes(whereIs(t, id)))) return { ok: false, notYet: true, msg: 'Put every reading in a tray.' };
+        if (Math.round(t.fixtures[CT].dials.volume.value) === 1) return { ok: false, notYet: true, msg: 'The Height dial is where it started: turn it and watch the readings.' };
+        const at = k => commonRead({ ...t, fixtures: { ...t.fixtures, [CT]: { ...t.fixtures[CT], dials: { ...t.fixtures[CT].dials, volume: { ...t.fixtures[CT].dials.volume, value: k } } } } }, CT);
+        const lo = at(1);
+        const hi = at(HEIGHTS.length);
+        const share = (r, g) => partialOf(r, g) / r.P;
+        const falls = {
+          o2share: share(hi, 'O2') < share(lo, 'O2') - 1e-6, o2push: partialOf(hi, 'O2') < partialOf(lo, 'O2') - 1e-6,
+          total: hi.P < lo.P - 1e-6, n2share: share(hi, 'N2') < share(lo, 'N2') - 1e-6
+        };
+        if (things.some(([id]) => whereIs(t, id) === 'falls' && !falls[id])) return { ok: false, msg: 'The "Falls as you climb" tray holds a reading that is no lower at the top than at sea level.' };
+        if (things.some(([id]) => whereIs(t, id) === 'stays' && falls[id])) return { ok: false, msg: 'The "Stays put" tray holds a reading that is lower at the top than at sea level.' };
+        return { ok: true };
       },
-      ...STAGE_REWARDS[5]
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 7 */
-  (() => {
-    const mk = ([id, gas, n], i) => tank(id, `TANK ${id.toUpperCase()}`, { x: 40 + i * 35, y: 54 }, { gas, n, V: 20, T: 300, plate: true, gaugeMax: 300 });
-    return {
-      title: 'Rank by Push',
-      prompt: 'Put the three tanks on the rail from the gas that pushes hardest to the gas that pushes least.',
-      widget,
-      table: gasTable({
-        pieces: RANK.map(mk),
-        zones: { rail: { id: 'rail', at: { x: 75, y: 30 }, size: { w: 100, h: 20 }, first: 'Pushes hardest', last: 'Pushes least', items: ['a', 'b', 'c'], start: ['a', 'b', 'c'] } }
-      }),
-      hints: [
-        'Read each tank\'s gauge, and the gas and the room printed on its plate.',
-        'Compare the gauges of tanks that fill the same room at the same temperature.',
-        'Put the tank with the highest gauge at the strong end of the rail and the lowest at the other end.'
-      ],
-      check(state) {
-        const t = state.table;
-        const order = t.zones.rail.order;
-        if (order.length < 3) return { ok: false, notYet: true, msg: 'Put all three tanks on the rail.' };
-        const want = ['a', 'b', 'c'].sort((x, y) => tankRead(t.pieces[y]).P - tankRead(t.pieces[x]).P);
-        if (order.join() === want.join()) return { ok: true };
-        return { ok: false, msg: 'Compare the three gauges: tanks that fill the same room at the same temperature push in proportion to what is inside them.' };
-      },
-      ...STAGE_REWARDS[6]
-    };
-  })(),
-
-  /* ---------------------------------------------------------------- 8 */
-  (() => {
-    return {
-      title: 'Pulling One Out',
-      prompt: 'Trap the carbon dioxide out of the sealed tank, then set the marker to the moles of carbon dioxide that were in it.',
-      widget,
-      table: gasTable({
-        pieces: [
-          tank('t', 'TANK A', { x: 30, y: 28 }, { parts: SEALED.parts, V: SEALED.V, T: SEALED.T, sealed: true, plate: true, gaugeMax: 300 }),
-          trapTool('trap', 'CO₂ TRAP', { x: 30, y: 50 }, 'CO2')
-        ],
-        fixtures: [
-          plaqueFixture('ref', 'The gas constant', { x: 100, y: 14 }, ['R = 8.31 kPa·L per mol·K'], { w: 52 }),
-          markerFixture('moles', 'Moles of carbon dioxide', { x: 100, y: 42 }, { min: 0, max: 1, step: 0.05, start: 0, unit: 'mol', w: 56 })
-        ]
-      }),
-      hints: [
-        'Lay the trap on the tank and watch the tank\'s gauge.',
-        'Compare the gauge before and after the trap, and the room and temperature on the plate.',
-        'Divide the drop in the gauge times the room by the constant times the temperature.'
-      ],
-      check(state) {
-        const t = state.table;
-        const v = markerRead(t, 'moles');
-        if (v === 0) return { ok: false, notYet: true, msg: 'Set the marker to the moles you worked out.' };
-        if (!t.pieces.t.props.parts.every(p => p.gas !== 'CO2')) return { ok: false, msg: 'The carbon dioxide is still in the tank: lay the trap on it and watch the gauge fall.' };
-        const want = SEALED.parts.find(p => p.gas === 'CO2').n;
-        if (Math.abs(v - want) <= 0.05) return { ok: true };
-        return { ok: false, msg: 'Check the working: take the fall in the gauge, multiply by the room, then divide by the constant times the temperature.' };
-      },
-      ...STAGE_REWARDS[7]
+      reward: {
+        log: 'Thin air has the same mixture at a lower push.',
+        title: 'Thin Air',
+        body: 'Higher up, the air is the same mixture but thinner, so oxygen\'s partial pressure falls with the total while its share stays at the same mole fraction. A climber is short of oxygen because that push is low, not because the mixture has changed.',
+        last: true
+      }
     };
   })()
 ];
 
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
-  1: ['Drag a tank into the place under the', 'common tank to open it.'],
-  2: ['Place a prediction, open the tanks,', 'then press Record.'],
+  1: ['Drag one card into the slot.'],
+  2: ['Open both tanks, then drag a card in.'],
   3: ['Drag tanks into the place under the common tank,', 'or take them out again.'],
-  4: ['Set the marker to the figure you work out.'],
-  5: ['Open the air, turn the Height dial,', 'then set the marker.'],
-  6: ['Place a prediction, open Tank B,', 'then press Record.'],
-  7: ['Drag each tank into its place on the rail.'],
-  8: ['Lay the trap on the tank, then set the marker.']
+  4: ['Open one tank at a time to read its push,', 'then put it back on the strip.'],
+  5: ['Turn the Height dial, then drag each chip', 'into a tray.']
 };
 applyNotes(STAGES, NOTES);
 
@@ -415,19 +284,19 @@ applyNotes(STAGES, NOTES);
    THE DEBRIEF
    ------------------------------------------------------------------ */
 export const DEBRIEF = {
-  speaker: SPEAKER,
+  speaker: 'Vess',
   sections: [
     {
       heading: 'What You Found',
-      body: 'Every gas in a mixture pushes exactly as it would alone, so the total is a sum, each share follows its moles, and a gas that reacts with nothing changes nothing but the total.'
+      body: 'Every gas in a tank pushes as if it were alone, and the gauge adds the pushes up. A gas\'s share of the push is its share of the particles, and the moles, not the weight, decide who pushes hardest.'
     },
     {
       heading: 'Why It Is Worth It',
-      body: 'Air, breathing gas, a gas collected over a liquid and the exhaust of a reaction are all mixtures. Partial pressures are how each one is counted.'
+      body: 'The station\'s air is a mixture, and so is the fuel in its lines. Splitting a tank\'s push gas by gas is how a crew sees what has been added to it.'
     },
     {
       heading: 'Next',
-      body: 'The next bench slows the particles down for a closer look, and finds out how fast each one goes and how soon it escapes.'
+      body: 'The next bench asks how fast the particles of each gas go, and what that does when a gas finds a hole.'
     }
   ]
 };
@@ -437,93 +306,83 @@ export const DEBRIEF = {
    ------------------------------------------------------------------ */
 export const PRACTICE = [
   {
-    question: 'A tank holds nitrogen at a partial pressure of 3.0 atm and oxygen at a partial pressure of 1.0 atm. What is the total pressure?',
-    options: [
-      { id: 'a', label: '4.0 atm' },
-      { id: 'b', label: '3.0 atm' },
-      { id: 'c', label: '2.0 atm' },
-      { id: 'd', label: '3.5 atm' }
-    ],
-    answer: 'a',
-    explanation: 'By Dalton’s law the total pressure is the sum of the partial pressures: 3.0 + 1.0 = 4.0 atm.'
-  },
-  {
-    question: 'A mixture is 2.0 mol of helium and 3.0 mol of neon. What is the mole fraction of helium?',
-    options: [
-      { id: 'a', label: '0.40' },
-      { id: 'b', label: '0.60' },
-      { id: 'c', label: '0.67' },
-      { id: 'd', label: '2.0' }
-    ],
-    answer: 'a',
-    explanation: 'The mole fraction is the moles of helium over the total moles: 2.0 / (2.0 + 3.0) = 0.40.'
-  },
-  {
-    question: 'The total pressure of a gas mixture is 200 kPa and oxygen makes up 25 % of its moles. What is the partial pressure of oxygen?',
-    options: [
-      { id: 'a', label: '50 kPa' },
-      { id: 'b', label: '25 kPa' },
-      { id: 'c', label: '150 kPa' },
-      { id: 'd', label: '175 kPa' }
-    ],
-    answer: 'a',
-    explanation: 'The partial pressure is the mole fraction times the total pressure: 0.25 × 200 = 50 kPa.'
-  },
-  {
-    question: 'Why is the air at the top of a high mountain hard to breathe, when it is still about 21 % oxygen?',
-    options: [
-      { id: 'a', label: 'The total pressure is lower, so the partial pressure of oxygen is lower' },
-      { id: 'b', label: 'The mole fraction of oxygen falls with height' },
-      { id: 'c', label: 'The oxygen particles are heavier' },
-      { id: 'd', label: 'The nitrogen pushes the oxygen out' }
-    ],
-    answer: 'a',
-    explanation: 'The mixture is the same at every height, but the total pressure falls, and each gas’s partial pressure falls with it.'
-  },
-  {
-    question: 'Argon, which reacts with nothing, is pumped into a sealed tank of nitrogen and oxygen at constant temperature. What happens to the partial pressure of the oxygen?',
+    question: 'Helium is added to a tank that already holds neon, at the same temperature. What happens to the neon\'s partial pressure?',
     options: [
       { id: 'a', label: 'It stays the same' },
-      { id: 'b', label: 'It rises' },
-      { id: 'c', label: 'It falls' },
-      { id: 'd', label: 'It becomes equal to the argon’s' }
+      { id: 'b', label: 'It rises, because the tank is more crowded' },
+      { id: 'c', label: 'It falls, because the helium takes up room' },
+      { id: 'd', label: 'It becomes the same as the helium\'s' }
     ],
     answer: 'a',
-    explanation: 'Each gas behaves as if the others were not there, so only the total pressure rises.'
+    explanation: 'Each gas pushes as if it were alone, so adding helium adds its own push and leaves the neon\'s where it was.'
+  },
+  {
+    question: 'A tank holds 0.4 mol of nitrogen and 0.1 mol of oxygen and reads 250 kPa. What is the partial pressure of the oxygen?',
+    options: [
+      { id: 'a', label: '50 kPa' },
+      { id: 'b', label: '100 kPa' },
+      { id: 'c', label: '200 kPa' },
+      { id: 'd', label: '25 kPa' }
+    ],
+    answer: 'a',
+    explanation: 'Oxygen is 0.1 of 0.5 mol, a mole fraction of 0.2, and 0.2 × 250 = 50 kPa.'
+  },
+  {
+    question: 'Two gases are in tanks of the same size at the same temperature. Tank X has more moles but lighter particles. Which pushes harder?',
+    options: [
+      { id: 'a', label: 'Tank X, the one with more moles' },
+      { id: 'b', label: 'The tank with the heavier particles' },
+      { id: 'c', label: 'They push equally' },
+      { id: 'd', label: 'It depends on the gas' }
+    ],
+    answer: 'a',
+    explanation: 'In the same room at the same temperature, the push goes with the number of moles, whatever the particles weigh.'
+  },
+  {
+    question: 'Climbing a mountain, you feel short of breath. What has happened to the mole fraction of oxygen in the air?',
+    options: [
+      { id: 'a', label: 'It is the same; the total pressure is lower' },
+      { id: 'b', label: 'It is much lower' },
+      { id: 'c', label: 'It is much higher' },
+      { id: 'd', label: 'It has dropped to zero' }
+    ],
+    answer: 'a',
+    explanation: 'The air is the same mixture, about 21 percent oxygen, but thinner, so oxygen\'s partial pressure falls with the total.'
+  },
+  {
+    question: 'The gauge of a mixture reads 300 kPa. Gas A pushes with 120 kPa and gas B with 100 kPa; there is one more gas, C. What is C\'s partial pressure?',
+    options: [
+      { id: 'a', label: '80 kPa' },
+      { id: 'b', label: '100 kPa' },
+      { id: 'c', label: '120 kPa' },
+      { id: 'd', label: '520 kPa' }
+    ],
+    answer: 'a',
+    explanation: 'The partial pressures add up to the total (Dalton\'s law): 300 − 120 − 100 = 80 kPa.'
   }
 ];
 
-
 /* ------------------------------------------------------------------
    SOLUTIONS AND MISSES — SCRIPTS OF THE PLAYER'S OWN ACTIONS
-   A solution is what a player does, not what the table ends as: `verify:table` replays each one through the reducer by direct actions,
-   by drag and by two taps. Nothing here says what a reading is.
    ------------------------------------------------------------------ */
 
-const put = (piece, to) => ({ place: { piece, to } });
-const dial = (fixture, name, value) => ({ setDial: { fixture, dial: name, value } });
-
 export const SOLUTIONS = [
-  [put('a', OPEN), put('b', OPEN)],
-  [{ predict: 'same' }, put('b', OPEN), put('a', OPEN), { run: CT }],
+  [put('same', 'slot:predict')],
+  [put('b', OPEN), put('a', OPEN), put('same', 'slot:show')],
   [put('c', OPEN), put('a', OPEN), put('b', OPEN)],
-  [dial('push', 'value', 50)],
-  [put('air', OPEN), dial(CT, 'volume', 3), dial('oxygen', 'value', 11)],
-  [{ predict: 'same' }, put('ar', OPEN), { run: CT }],
-  [put('c', 'rail:0'), put('a', 'rail:1'), put('b', 'rail:2')],
-  [put('trap', 'piece:t'), dial('moles', 'value', 0.2)]
+  [
+    put('c', OPEN), put('c', 'rail:0'), put('a', OPEN), put('a', 'rail:1'), put('d', OPEN), put('d', 'rail:2'), put('b', OPEN), put('b', 'rail:3')
+  ],
+  [dial(CT, 'volume', 4), ...sort({ o2share: 'stays', n2share: 'stays', o2push: 'falls', total: 'falls' })]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [put('a', OPEN)],
-  [{ predict: 'lower' }, put('b', OPEN), put('a', OPEN), { run: CT }],
-  [put('a', OPEN), put('b', OPEN), put('c', OPEN), put('d', OPEN)],
-  [dial('push', 'value', 150)],
-  [put('air', OPEN), dial(CT, 'volume', 1), dial('oxygen', 'value', 21)],
-  [{ predict: 'lower' }, put('ar', OPEN), { run: CT }],
-  [put('a', 'rail:0'), put('b', 'rail:1'), put('c', 'rail:2')],
-  [dial('moles', 'value', 0.6)]
+  [],
+  [put('b', OPEN), put('a', OPEN), put('lower', 'slot:show')],
+  [put('c', OPEN)],
+  [put('d', 'rail:0'), put('b', 'rail:1'), put('a', 'rail:2'), put('c', 'rail:3')],
+  [dial(CT, 'volume', 4), ...sort({ o2share: 'falls', n2share: 'stays', o2push: 'falls', total: 'falls' })]
 ];
 
 function blankState() { return {}; }
@@ -547,4 +406,4 @@ export function mount(container, ctx) {
 }
 
 /* Exported for `verify:learn`, which holds every graded figure to the planners. */
-export { commonRead, partialOf, tankRead, planMixture, GASES, R, AIR, airPressureAt, pressureIdeal };
+export { commonRead, partialOf, tankRead, planMixture, GASES };
