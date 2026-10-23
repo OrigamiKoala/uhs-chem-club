@@ -76,7 +76,7 @@ export const UNIT_05 = {
       title: 'Entropy',
       line: 'Open the stopcock on a partitioned chamber, count the ways particles can spread out, and read ΔS° across phases and reactions.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit05/q6-entropy.js')
     },
@@ -85,7 +85,7 @@ export const UNIT_05 = {
       title: 'Free Energy',
       line: 'Balance ΔH against −TΔS on the plotter, find the temperature where ice melts, and drive an uphill reaction by coupling.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit05/q7-gibbs.js')
     },

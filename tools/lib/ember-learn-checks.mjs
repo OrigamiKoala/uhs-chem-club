@@ -11,6 +11,16 @@
 
 /** Words a refusal may not carry on a stage: the rule or the answer the stage is asking the player to find. Per quest, per stage (1-based). */
 const LEAKS = {
+  'q7-gibbs': {
+    2: [/\b250\b/, /lowest/i, /spreading|spread/i, /sign/i],
+    3: [/cross/i, /flips?/i],
+    4: [/\b273\b/, /zero/i, /divid/i]
+  },
+  'q6-entropy': {
+    2: [/outnumber/i, /\bmost\b/i, /\bspread\b/i, /\b70\b|\b68\b/],
+    3: [/\bgas\b/i, /\bmoles?\b/i, /room/i],
+    4: [/room|faster|motion|streak/i]
+  },
   'q5-hess': {
     2: [/state function/i, /\bsame total\b/i, /path|route.*(cannot|never)/i],
     3: [/\bflip|turn|double|scale|larger/i, /cancel/i],
@@ -249,6 +259,76 @@ export async function checkEmber({ TABLE, getQuest, fail, ok, sentenceLiterals }
       holds(r.matches, `${q} stage 4: the solution's stack does not add up to the reaction wanted`);
       near(r.dH, TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'dHf'), 0.05, `${q} stage 4 (products less reactants)`);
       near(picked(t), r.dH, 0.05, `${q} stage 4 (the number set)`);
+    }
+  }
+
+  /* ---- q6-entropy ---- */
+  const e6 = mods['q6-entropy'];
+  if (e6) {
+    const q = 'unit05/q6-entropy';
+    const P = await import('../../src/learn/table/kits/heat-parts.js');
+    holds(Boolean(e6.STAGES[0].predict) && !Object.values(start(e6, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
+    {
+      // After many shakes the particles are spread over both halves far more often than crowded into one.
+      const t = run(start(e6, 1), Array.from({ length: 60 }, () => ({ run: 'chamber' })));
+      const counts = [0, 0, 0, 0, 0];
+      for (const sh of HK.shakesOf(t, 'chamber')) counts[sh.filter(c => c <= 4).length]++;
+      holds(counts[2] > counts[4] * 2 && counts[2] > counts[0] * 2 && counts[1] + counts[2] + counts[3] >= 54, `${q} stage 2: the shakes do not favour the spread-out arrangements (${counts.join(' ')})`);
+      near(e6.CHECKS.TOTAL_WAYS, HK.waysOf(8, 4), 0, `${q} stage 2 (the arrangements of four in eight)`);
+      holds(e6.STAGES[1].check(e6.stateFor(1, e6.SOLUTIONS[1])).ok === true, `${q} stage 2: the solution does not pass`);
+    }
+    {
+      // The gas decides: the equations on the cards, counted.
+      const gas = eq => (eq.match(/\(g\)/g) || []).length;
+      const t = start(e6, 2);
+      holds(gas('CaO(s) + CO₂(g)') > gas('CaCO₃(s)') && gas('2 NH₃(g)') < gas('N₂(g) + 3 H₂(g)'), `${q} stage 3: the gas count does not decide the signs`);
+      holds(t.pieces.lime.label.includes('CO₂(g)') && t.pieces.haber.label.includes('NH₃(g)'), `${q} stage 3: the equations on the cards are not the ones counted`);
+      holds(TD.standardReactionChange([{ id: 'CaO(s)' }, { id: 'CO2(g)' }], [{ id: 'CaCO3(s)' }], 'S0') > 0 && TD.standardReactionChange([{ id: 'NH3(g)', n: 2 }], [{ id: 'N2(g)' }, { id: 'H2(g)', n: 3 }], 'S0') < 0, `${q} stage 3: the entropy table disagrees with the gas count`);
+    }
+    {
+      // The four boxes are ranked by the room each particle has and by its motion, and the real entropies agree.
+      const t = done(e6, 3);
+      same(t.zones.rail.order.join(), 'ice,cold,hot,steam', `${q} stage 4`);
+      const vol = (ph, T) => { const d = P.phaseDots(ph, T); const span = k => Math.max(...d.map(p => p[k])) - Math.min(...d.map(p => p[k])); return span('u') * span('v') * span('w'); };
+      holds(vol('solid', -10) < vol('liquid', 10) && vol('liquid', 10) < vol('gas', 110), `${q} stage 4: the boxes do not give more room from solid to liquid to gas`);
+      holds(P.phaseDots('liquid', 10)[0].tail < P.phaseDots('liquid', 80)[0].tail, `${q} stage 4: the hot water's particles do not move faster than the cold water's`);
+      holds(P.phaseDots('solid', -10).length === 12 && P.phaseDots('gas', 110).length === 12, `${q} stage 4: the boxes do not hold the same twelve particles`);
+      const S = TD.FORMATION_TABLE;
+      holds(S['H2O(s)'].S0 < S['H2O(l)'].S0 && S['H2O(l)'].S0 < S['H2O(g)'].S0, `${q} stage 4: the entropy table disagrees with the order`);
+      holds(TD.entropyOfHeating(100, 4.184, 10, 80) > 0, `${q} stage 4: warming does not raise the entropy`);
+    }
+  }
+
+  /* ---- q7-gibbs ---- */
+  const e7 = mods['q7-gibbs'];
+  if (e7) {
+    const q = 'unit05/q7-gibbs';
+    const { SALT, SALT_FIRST, ICE, T_ICE } = e7.CHECKS;
+    holds(Boolean(e7.STAGES[0].predict) && !Object.values(start(e7, 0).fixtures).length, `${q} stage 1: the predict stage shows an instrument`);
+    {
+      // The salt takes heat in at every setting, and still its net goes below zero once it is warm enough.
+      const t = start(e7, 1);
+      const dGs = SALT.Ts.map((T, k) => HK.plotAt(t, 'plot', k + 1));
+      holds(dGs.every(r => r.dH > 0), `${q} stage 2: the salt does not take heat in at every setting`);
+      holds(dGs[0].dG > 0 && dGs[dGs.length - 1].dG < 0, `${q} stage 2: the net does not change sign across the dial`);
+      holds(dGs.filter(r => r.dG < 0).length >= 2, `${q} stage 2: only one setting reads below zero`);
+      same(SALT_FIRST, 250, `${q} stage 2 (the coldest setting below zero)`);
+      holds(TD.crossingTemperature(SALT.dH, SALT.dS) < SALT_FIRST && TD.crossingTemperature(SALT.dH, SALT.dS) > SALT.Ts[1], `${q} stage 2: the crossing is not between two settings`);
+      same(HK.plotRead(done(e7, 1), 'plot').T, SALT_FIRST, `${q} stage 2 (the setting graded)`);
+      holds(HK.plotRead(done(e7, 1), 'plot').dG < 0, `${q} stage 2: the graded setting is not below zero`);
+    }
+    {
+      const t = start(e7, 2);
+      for (const [id, want] of Object.entries({ 'both-help': 'always', 'both-oppose': 'never', 'high-t': 'high', 'low-t': 'low' })) {
+        const { dH, dS } = t.pieces[id].props;
+        const lo = TD.gibbsFreeEnergy(dH, dS, 100) < 0; const hi = TD.gibbsFreeEnergy(dH, dS, 600) < 0;
+        same(lo && hi ? 'always' : !lo && !hi ? 'never' : hi ? 'high' : 'low', want, `${q} stage 3 (${id})`);
+      }
+    }
+    {
+      near(T_ICE, 273, 1, `${q} stage 4 (the melting point)`);
+      near(HK.markerRead(done(e7, 3), 'T'), T_ICE, 2, `${q} stage 4 (the marker)`);
+      holds(ICE.Ts.includes(273) && HK.plotAt(start(e7, 3), 'plot', ICE.Ts.indexOf(273) + 1).dG < 0.05, `${q} stage 4: the dial has no setting at the melting point`);
     }
   }
 

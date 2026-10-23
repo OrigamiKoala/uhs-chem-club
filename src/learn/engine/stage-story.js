@@ -132,12 +132,10 @@ export const STAGE_STORY = {
     1: 'The direct vent shaft is sealed, so Vess must work out its heat from the routes that are open.'
   },
   'q6-entropy': {
-    2: 'A burst bypass valve scatters vent gas into an evacuated chamber.',
-    7: 'The caldera’s limestone rim cracks into escaping gas.'
+    1: 'A burst bypass valve scatters vent gas into an empty chamber, and Vess wants to know where it ends up.'
   },
   'q7-gibbs': {
-    1: 'Some vent pipes run without pumps while others stall the moment the current drops.',
-    8: 'The Crucible’s outer lock waits for the right furnace setting.'
+    1: 'The shelters\' cold packs chill the water they dissolve in, and Vess wants to know why they work at all.'
   },
 
   /* ---- Kettle: halt the robot foundry ---- */

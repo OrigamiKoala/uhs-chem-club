@@ -243,8 +243,8 @@ export const bondChip = (id, bond, at, { label = null, dH = null, count = 1, not
 };
 /** A small energy diagram: before on the left, after on the right. */
 export const shelfCard = (id, label, at, { dH, from = '', to = '' }, extra = {}) => piece('shelf', id, label, at, { dH, from, to }, extra);
-/** A picture of a sample's particles: `phase` is 'solid', 'liquid' or 'gas'. */
-export const phaseCard = (id, label, at, phase, extra = {}) => piece('phase', id, label, at, { phase }, extra);
+/** A box of a sample's particles: `phase` is 'solid', 'liquid' or 'gas', `T` the temperature in °C that sets how fast they move. */
+export const phaseCard = (id, label, at, phase, extra = {}, T = null) => piece('phase', id, label, at, { phase, ...(T != null ? { T } : {}) }, extra);
 /** A card with a statement on it. */
 export const stmt = (id, label, at, extra = {}) => piece('stmt', id, label, at, {}, extra);
 /** A short card of words (two lines of 17 characters): a part of the bench, a change. */
