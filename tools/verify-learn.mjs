@@ -3021,82 +3021,65 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   }
 
   if (q8) {
-    const { planMix, planBlend, planTwist, planDomains, countSigmaPi, RIG_MOLECULES, SKELETONS } = VSEPR;
+    const { planMix, planBlend, planTwist, planDomains, RIG_MOLECULES, SKELETONS } = VSEPR;
     const DOM = await import('../src/learn/table/kits/domain.js');
     const end = i => TABLE.runScript(TABLE.createTable(q8.STAGES[i].table, q8.STAGES[i].title), q8.SOLUTIONS[i], { strict: true });
     const start = i => TABLE.createTable(q8.STAGES[i].table, q8.STAGES[i].title);
-    // 1. carbon as it stands has two single electrons, so it takes two hydrogen atoms and refuses a third; methane has four arms
+    // 1. the predict stage holds the guesses and no instrument; the wrong idea (carbon takes four straight away) is a card
     {
       const t0 = start(0);
-      const singles = Object.values(t0.pieces).filter(p => p.kind === 'orb' && p.props.atom === 'c' && p.props.e === 1).length;
-      same(singles, 2, 'unit03/q8-hybrid stage 1 (carbon\'s single electrons)');
-      same(planDomains(RIG_MOLECULES.CH4.arms).n, 4, 'unit03/q8-hybrid stage 1 (methane\'s arms)');
-      const t = end(0);
-      same(DOM.bondsBuilt(t).sigma, 2, 'unit03/q8-hybrid stage 1 (two bonds made)');
-      const third = TABLE.apply(t, { join: ['h3', 'cpz'] });
-      holds(!third.last.joined, 'unit03/q8-hybrid stage 1: a hydrogen atom bonded to carbon\'s empty orbital');
-      const fourth = TABLE.apply(t, { join: ['h3', 'cs'] });
-      holds(!fourth.last.joined, 'unit03/q8-hybrid stage 1: a hydrogen atom bonded to carbon\'s full s orbital');
+      holds(q8.STAGES[0].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q8-hybrid stage 1: the predict stage shows an instrument');
+      holds(['four', 'three', 'two'].every(id => t0.pieces[id]?.kind === 'guess') && Object.keys(t0.pieces).length === 3, 'unit03/q8-hybrid stage 1: the guesses are the three cards and nothing else');
     }
-    // 2. 8. what a bowl makes is as many lobes as orbitals mixed
+    // 2. carbon as it stands has two single electrons, so it takes two hydrogen atoms and refuses a third; methane has four arms
     {
-      same(planBlend(1, 3, 0).lobes, planDomains(RIG_MOLECULES.CH4.arms).n, 'unit03/q8-hybrid stage 2 (sp3 makes four lobes)');
-      same(planMix(3).lobes, 4, 'unit03/q8-hybrid stage 2 (planMix agrees)');
-      same(DOM.bowlRead(end(1), 'mx').hybrid, 'sp3', 'unit03/q8-hybrid stage 2 (the bowl)');
+      const t0 = start(1);
+      const singles = Object.values(t0.pieces).filter(p => p.kind === 'orb' && p.props.atom === 'c' && p.props.e === 1).length;
+      same(singles, 2, 'unit03/q8-hybrid stage 2 (carbon\'s single electrons)');
+      same(planDomains(RIG_MOLECULES.CH4.arms).n, 4, 'unit03/q8-hybrid stage 2 (methane\'s arms)');
+      const t = end(1);
+      same(DOM.bondsBuilt(t).sigma, 2, 'unit03/q8-hybrid stage 2 (two bonds made)');
+      const third = TABLE.apply(t, { join: ['h3', 'cpz'] });
+      holds(!third.last.joined, 'unit03/q8-hybrid stage 2: a hydrogen atom bonded to carbon\'s empty orbital');
+      const fourth = TABLE.apply(t, { join: ['h3', 'cs'] });
+      holds(!fourth.last.joined, 'unit03/q8-hybrid stage 2: a hydrogen atom bonded to carbon\'s full s orbital');
+    }
+    // 3. what a bowl makes is as many lobes as orbitals mixed, and the bowl holds all of an atom's orbitals
+    {
+      same(planBlend(1, 3, 0).lobes, planDomains(RIG_MOLECULES.CH4.arms).n, 'unit03/q8-hybrid stage 3 (sp3 makes four lobes)');
+      same(planMix(3).lobes, 4, 'unit03/q8-hybrid stage 3 (planMix agrees)');
+      same(DOM.bowlRead(end(2), 'mx').hybrid, 'sp3', 'unit03/q8-hybrid stage 3 (the bowl)');
       same(planBlend(0, 3, 0).lobes, 0, 'unit03/q8-hybrid: p orbitals alone blend into nothing new');
-      same(DOM.bowlRead(end(7), 'ma').lobes, planDomains(RIG_MOLECULES.PCl5.arms).n, 'unit03/q8-hybrid stage 8 (PCl5\'s lobes)');
-      same(DOM.bowlRead(end(7), 'mb').lobes, planDomains(RIG_MOLECULES.SF6.arms).n, 'unit03/q8-hybrid stage 8 (SF6\'s lobes)');
-      same(`${DOM.bowlRead(end(7), 'ma').hybrid}/${DOM.bowlRead(end(7), 'mb').hybrid}`, 'sp3d/sp3d2', 'unit03/q8-hybrid stage 8 (the names the card earns)');
-      for (const i of [1, 7]) for (const f of Object.values(start(i).fixtures).filter(x => x.kind === 'mixbowl')) {
-        const bowl = start(i).zones.containers[f.props.zone];
+      for (const f of Object.values(start(2).fixtures).filter(x => x.kind === 'mixbowl')) {
+        const bowl = start(2).zones.containers[f.props.zone];
         const cols = Math.max(1, Math.floor(bowl.size.w / bowl.cell));
         const rows = Math.max(1, Math.floor(bowl.size.h / bowl.cell));
-        holds(cols * rows >= 6, `unit03/q8-hybrid stage ${i + 1}: ${f.id}'s bowl holds ${cols * rows} orbitals, fewer than the six an atom has`);
+        holds(cols * rows >= 4, `unit03/q8-hybrid stage 3: ${f.id}'s bowl holds ${cols * rows} orbitals, fewer than the four carbon has`);
       }
+      const m = q8.STAGES[2].reward.model;
+      same(m && m.type === 'lobes' && m.n, planMix(3).lobes, 'unit03/q8-hybrid stage 3 (the reward model stands up the lobes the bowl made)');
     }
-    // 3. 4. the lobes follow the arms, and each card prints the arms the planner counts
-    for (const i of [2, 3]) {
-      const t = end(i);
-      for (const id of ['a', 'b', 'c']) same({ two: 2, three: 3, four: 4 }[t.pieces[id].zone.slice(5)], planDomains(RIG_MOLECULES[t.pieces[id].props.mol].arms).n, `unit03/q8-hybrid stage ${i + 1} (${t.pieces[id].props.mol} needs the graded number of lobes)`);
-    }
-    // 5. 6. ethene and hydrogen cyanide: each atom has the orbitals the planner says, and the bonds that can be built are the molecule's own
+    // 4. ethene: each carbon has three lobes and a p left over, and the bonds that can be built are the molecule's own
     {
       const ethene = planDomains(RIG_MOLECULES.C2H4.arms);
-      same(`${ethene.n}/${planMix(ethene.n - 1).leftoverP}`, '3/1', 'unit03/q8-hybrid stage 5 (an ethene carbon: three lobes and one p left over)');
-      const t5 = start(4);
+      same(`${ethene.n}/${planMix(ethene.n - 1).leftoverP}`, '3/1', 'unit03/q8-hybrid stage 4 (an ethene carbon: three lobes and one p left over)');
+      const t4 = start(3);
       for (const c of ['c1', 'c2']) {
-        const mine = Object.values(t5.pieces).filter(p => p.props.atom === c);
-        same(`${mine.filter(p => p.props.type === 'sp2').length}/${mine.filter(p => p.props.type === 'p').length}`, '3/1', `unit03/q8-hybrid stage 5 (${c}'s orbitals)`);
+        const mine = Object.values(t4.pieces).filter(p => p.props.atom === c);
+        same(`${mine.filter(p => p.props.type === 'sp2').length}/${mine.filter(p => p.props.type === 'p').length}`, '3/1', `unit03/q8-hybrid stage 4 (${c}'s orbitals)`);
+        holds(mine.filter(p => p.props.type === 'sp2').every(p => p.label === 'lobe'), `unit03/q8-hybrid stage 4: ${c}'s lobes carry a name the bench has not earned`);
       }
-      const b5 = DOM.bondsBuilt(end(4));
-      same(`${b5.sigma}/${b5.pi}`, `1/${SKELETONS.C2H4.find(b => b[0] === 'C' && b[1] === 'C')[2] - 1}`, 'unit03/q8-hybrid stage 5 (the carbons\' own bonds: one end to end, the rest side by side)');
-      const hcn = planDomains(RIG_MOLECULES.HCN.arms);
-      same(`${hcn.n}/${planMix(hcn.n - 1).leftoverP}`, '2/2', 'unit03/q8-hybrid stage 6 (HCN\'s carbon: two lobes and two p left over)');
-      const t6 = start(5);
-      const of = a => Object.values(t6.pieces).filter(p => p.props.atom === a);
-      same(`${of('c').filter(p => p.props.type === 'sp').length}/${of('c').filter(p => p.props.type === 'p').length}`, '2/2', 'unit03/q8-hybrid stage 6 (carbon\'s orbitals)');
-      same(`${of('n').filter(p => p.props.type === 'sp').length}/${of('n').filter(p => p.props.type === 'p').length}`, '2/2', 'unit03/q8-hybrid stage 6 (nitrogen\'s orbitals: a lobe for its bond and one for its lone pair)');
-      const sp = countSigmaPi('HCN');
-      const e6 = end(5);
-      const b6 = DOM.bondsBuilt(e6);
-      same(`${b6.sigma}-${b6.pi}`, `${sp.sigma}-${sp.pi}`, 'unit03/q8-hybrid stage 6 (sigma and pi bonds in HCN)');
-      holds(Object.values(e6.pieces).every(p => p.kind !== 'orb' || p.props.e !== 1 || DOM.bondedOrb(e6, p)), 'unit03/q8-hybrid stage 6: an orbital with a single electron is left unbonded in the solution');
-      // The lone pair's lobe, an empty or full orbital and a mismatched pair of p orbitals are all refused by the planner.
-      const tryJoin = (a, b) => TABLE.apply(start(5), { join: [a, b] }).last.joined;
-      holds(!tryJoin('nl_x', 'cl_n'), 'unit03/q8-hybrid stage 6: the lone pair\'s lobe bonded');
-      holds(!tryJoin('cpy', 'npz'), 'unit03/q8-hybrid stage 6: p orbitals on different axes overlapped side by side');
-      holds(!tryJoin('h', 'cl_n'), 'unit03/q8-hybrid stage 6: hydrogen bonded to the lobe that points at nitrogen');
+      const b4 = DOM.bondsBuilt(end(3));
+      same(`${b4.sigma}/${b4.pi}`, `1/${SKELETONS.C2H4.find(b => b[0] === 'C' && b[1] === 'C')[2] - 1}`, 'unit03/q8-hybrid stage 4 (the carbons\' own bonds: one end to end, the rest side by side)');
     }
-    // 7. a single bond turns and a double bond does not
+    // 5. a single bond turns and a double bond does not
     {
-      const t = end(6);
-      same(DOM.twistRead(t, 'tw1').free, planTwist('single').free, 'unit03/q8-hybrid stage 7 (the single bond turns)');
-      same(DOM.twistRead(t, 'tw2').free, planTwist('double').free, 'unit03/q8-hybrid stage 7 (the double bond holds)');
-      same(DOM.twistRead(t, 'tw1').angle, 90, 'unit03/q8-hybrid stage 7 (ethane\'s far end is a quarter turn round)');
-      same(DOM.twistRead(t, 'tw2').angle, 0, 'unit03/q8-hybrid stage 7 (ethene\'s far end has not moved)');
+      const t = end(4);
+      same(DOM.twistRead(t, 'tw1').free, planTwist('single').free, 'unit03/q8-hybrid stage 5 (the single bond turns)');
+      same(DOM.twistRead(t, 'tw2').free, planTwist('double').free, 'unit03/q8-hybrid stage 5 (the double bond holds)');
+      same(DOM.twistRead(t, 'tw1').angle, 90, 'unit03/q8-hybrid stage 5 (ethane\'s far end is a quarter turn round)');
+      same(DOM.twistRead(t, 'tw2').angle, 0, 'unit03/q8-hybrid stage 5 (ethene\'s far end has not moved)');
     }
-    same(planDomains(RIG_MOLECULES.PCl5.arms).n, 5, 'unit03/q8-hybrid stage 8 (PCl5\'s domains)');
-    same(planDomains(RIG_MOLECULES.SF6.arms).n, 6, 'unit03/q8-hybrid stage 8 (SF6\'s domains)');
   }
 
   if (q9) {

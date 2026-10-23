@@ -94,7 +94,7 @@ export const UNIT_03 = {
       title: 'Hybridization',
       line: 'Blend orbitals to explain the rigid seams.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 5,
       status: 'live',
       module: () => import('../quests/unit03/q8-hybrid.js')
     },
