@@ -4177,45 +4177,53 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   /* ---- q2-core: every graded answer from the counts ---- */
   if (g2) {
     const sp = (t, id) => t.pieces[id].props;
-    // 1. the beam: nearly everything through, a few turned aside, one straight back
+    // 1. the predict stage holds the guesses and no instrument; 2. the beam: nearly everything through, a few turned aside, one straight back
     {
-      const c = A.beamCounts(g2.STAGES[0].table.fixtures.find(f => f.kind === 'beam').props.specimen);
-      holds(c.through / c.shots > 0.9 && c.back >= 1 && c.wide >= 1, 'unit01/q2-core stage 1: the beam does not show mostly-empty with one hard lump');
-      same(end(g2, 0).pieces.core.zone, 'slot:model', 'unit01/q2-core stage 1 (the model laid)');
+      const t0 = TABLE.createTable(g2.STAGES[0].table, 'x');
+      holds(g2.STAGES[0].predict === true && !Object.values(t0.fixtures).length, 'unit01/q2-core stage 1: the predict stage shows an instrument');
+      holds(['solid', 'even', 'core'].every(id => t0.pieces[id]) && !Object.values(t0.pieces).some(p => p.kind === 'detector'), 'unit01/q2-core stage 1: the guesses are the three model cards and nothing else');
     }
-    // 2. the protons are the + ones
     {
-      const t = end(g2, 1);
-      const marked = Object.values(t.pieces).filter(p => p.props.flipped);
-      holds(marked.every(p => p.kind === 'proton') && marked.length === Object.values(t.pieces).filter(p => p.kind === 'proton').length, 'unit01/q2-core stage 2: the marked particles are not every proton and only protons');
+      const c = A.beamCounts(g2.STAGES[1].table.fixtures.find(f => f.kind === 'beam').props.specimen);
+      holds(c.through / c.shots > 0.9 && c.back >= 1 && c.wide >= 1, 'unit01/q2-core stage 2: the beam does not show mostly-empty with one hard lump');
+      same(end(g2, 1).pieces.core.zone, 'slot:model', 'unit01/q2-core stage 2 (the model laid)');
+      // The detectors keep every hit: a second firing adds a full pass to each tally rather than overwriting it.
+      const twice = TABLE.runScript(TABLE.createTable(g2.STAGES[1].table, 'x'), [{ run: 'beam' }, { run: 'beam' }], { strict: true });
+      same([twice.pieces.detBack.props.count, twice.pieces.detBack.props.shots], [c.back * 2, c.shots * 2], 'unit01/q2-core stage 2 (the Back detector keeps both firings)');
+      holds(Boolean(twice.pieces.even) && twice.pieces.even.props.model === 'spread', 'unit01/q2-core stage 2: the soft-and-even model is not a card on the bench');
     }
-    // 3 and 7. the needle is protons against electrons, and neutral means equal
+    // 3. the charged plates bend exactly the specks that carry a charge, and the answer is that split
     {
       const t = end(g2, 2);
+      const specks = Object.values(t.pieces).filter(p => p.kind === 'speck');
+      holds(specks.length >= 6 && specks.some(p => Number(p.props.charge)) && specks.some(p => !Number(p.props.charge)), 'unit01/q2-core stage 3: the specks do not hold both kinds');
+      for (const p of specks) same(p.zone, Number(p.props.charge) ? 'tray:bends' : 'tray:straight', `unit01/q2-core stage 3 (${p.id} goes where the plates sent it)`);
+      holds(specks.every(p => p.props.deflect === (Number(p.props.charge) ? 'bent' : 'straight')), 'unit01/q2-core stage 3: a speck is tagged against what the plates did');
+    }
+    // 3. the needle is protons against electrons, and neutral means equal
+    {
+      const t = end(g2, 3);
       const lump = t.pieces.nuc.props;
-      same(piecesOf(t, 'tray:out', 'electron').length, lump.p, 'unit01/q2-core stage 3 (a neutral atom has as many electrons as protons)');
-      const u = end(g2, 6);
-      same(A.needleReading(u, 'needle'), 2, 'unit01/q2-core stage 7 (the needle after the electrons come off)');
-      same(['tray:sh1', 'tray:sh2', 'tray:sh3'].map(z => piecesOf(TABLE.createTable(g2.STAGES[6].table, 'x'), z, 'electron').length), A.shellsFor(g2.STAGES[6].table.pieces.find(p => p.id === 'nuc').props.p), 'unit01/q2-core stage 7 (the start is the real shell pattern)');
+      same(piecesOf(t, 'tray:out', 'electron').length, lump.p, 'unit01/q2-core stage 4 (a neutral atom has as many electrons as protons)');
     }
     // 4. shells fill in order: the graded loading is the real pattern, and so are the open samples
     {
-      const t = end(g2, 3);
-      same(['tray:sh1', 'tray:sh2', 'tray:sh3'].map(z => piecesOf(t, z, 'electron').length), A.shellsFor(t.pieces.nuc.props.p), 'unit01/q2-core stage 4 (the shells of Sample D)');
-      for (const id of ['r1', 'r2', 'r3']) same(sp(t, id).rings, A.shellsFor(sp(t, id).p), `unit01/q2-core stage 4 (open sample ${id} is neutral and filled in order)`);
+      const t = end(g2, 4);
+      same(['tray:sh1', 'tray:sh2', 'tray:sh3'].map(z => piecesOf(t, z, 'electron').length), A.shellsFor(t.pieces.nuc.props.p), 'unit01/q2-core stage 5 (the shells of Sample D)');
+      for (const id of ['r1', 'r2', 'r3']) same(sp(t, id).rings, A.shellsFor(sp(t, id).p), `unit01/q2-core stage 5 (open sample ${id} is neutral and filled in order)`);
     }
     // 5. what the tester finds
     {
-      const t = end(g2, 4);
-      for (const id of ['s4', 's5']) same(t.pieces[id].zone, `tray:${A.behaviourOf(sp(t, id).rings)}`, `unit01/q2-core stage 5 (${t.pieces[id].label})`);
-      same(['s1', 's2', 's3'].map(id => A.behaviourOf(sp(t, id).rings)), ['gives', 'takes', 'inert'], 'unit01/q2-core stage 5 (the open samples show all three behaviours)');
+      const t = end(g2, 5);
+      for (const id of ['s4', 's5']) same(t.pieces[id].zone, `tray:${A.behaviourOf(sp(t, id).rings)}`, `unit01/q2-core stage 6 (${t.pieces[id].label})`);
+      same(['s1', 's2', 's3'].map(id => A.behaviourOf(sp(t, id).rings)), ['gives', 'takes', 'inert'], 'unit01/q2-core stage 6 (the open samples show all three behaviours)');
     }
     // 6. same element: same proton count
     {
-      const t = end(g2, 5);
-      for (const [id, tray] of [['sb', 'same'], ['sc', 'other']]) same(t.pieces[id].zone, `tray:${sp(t, id).p === sp(t, 'sa').p ? 'same' : 'other'}`, `unit01/q2-core stage 6 (${t.pieces[id].label})`);
-      holds(sp(t, 'sb').p + sp(t, 'sb').n === sp(t, 'sc').p + sp(t, 'sc').n, 'unit01/q2-core stage 6: the two suspects do not weigh the same');
-      for (const id of ['sa', 'sb', 'sc']) same(sp(t, id).rings.reduce((a, b) => a + b, 0), sp(t, id).p, `unit01/q2-core stage 6 (${id} is neutral)`);
+      const t = end(g2, 6);
+      for (const [id, tray] of [['sb', 'same'], ['sc', 'other'], ['sd', 'other'], ['se', 'same']]) same(t.pieces[id].zone, `tray:${sp(t, id).p === sp(t, 'sa').p ? 'same' : 'other'}`, `unit01/q2-core stage 7 (${t.pieces[id].label})`);
+      holds(sp(t, 'sb').p + sp(t, 'sb').n === sp(t, 'sc').p + sp(t, 'sc').n && sp(t, 'sc').p + sp(t, 'sc').n === sp(t, 'sd').p + sp(t, 'sd').n, 'unit01/q2-core stage 7: the three lookalikes do not weigh the same');
+      for (const id of ['sa', 'sb', 'sc', 'sd', 'se']) same(sp(t, id).rings.reduce((a, b) => a + b, 0), sp(t, id).p, `unit01/q2-core stage 7 (${id} is neutral)`);
     }
     // 8. isotope, ion or another element, against the reference
     {
@@ -4223,7 +4231,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const ref = sp(t, 'sd');
       const e = id => sp(t, id).rings.reduce((a, b) => a + b, 0);
       const kind = id => (sp(t, id).p !== ref.p ? 'other' : sp(t, id).n !== ref.n && e(id) === e('sd') ? 'heavy' : e(id) !== e('sd') && sp(t, id).n === ref.n ? 'charged' : '?');
-      for (const id of ['n1', 'n2', 'n3']) same(t.pieces[id].zone, `tray:${kind(id)}`, `unit01/q2-core stage 8 (${t.pieces[id].label})`);
+      for (const id of ['n1', 'n2', 'n3', 'n4']) same(t.pieces[id].zone, `tray:${kind(id)}`, `unit01/q2-core stage 8 (${t.pieces[id].label})`);
     }
   }
 
@@ -4303,20 +4311,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       same(t.fixtures.stamp.dials.protons.value, between, 'unit01/q3-catalogue stage 7 (the protons between its neighbours)');
       same(t.pieces.sealed.props.sym, 'Si', 'unit01/q3-catalogue stage 7 (the unmeasured card is silicon)');
       same(C.elementView(t.pieces.sealed).z, between, 'unit01/q3-catalogue stage 7 (the card the chart predicts has that many protons)');
-      same({ 't-gives': 'gives', 't-holds': 'shares', 't-takes': 'takes' }[t.prediction.token], C.tradeOf(C.elementView(above).sym), 'unit01/q3-catalogue stage 7 (it behaves like the card above it)');
       same(C.tradeOf('Si'), C.tradeOf(C.elementView(above).sym), 'unit01/q3-catalogue stage 7 (silicon behaves like carbon)');
-    }
-    // 8. each loose card sits between a card with one proton fewer and one with one more
-    {
-      const t = end(g3, 7);
-      for (const [slotId, sl] of Object.entries(t.zones.slots)) {
-        const mine = C.elementView(t.pieces[cardAt(t, slotId)]).z;
-        const near = dx => Object.values(t.pieces).find(p => p.kind === 'element' && p.fixed && Math.abs(p.at.y - sl.at.y) < 1 && Math.abs(p.at.x - (sl.at.x + dx)) < 1);
-        // The row's neighbours, across the chart's gap when the slot is beside it.
-        const lo = near(-15) || near(-30);
-        const hi = near(15) || near(30);
-        holds(lo && hi && C.elementView(lo).z === mine - 1 && C.elementView(hi).z === mine + 1, `unit01/q3-catalogue stage 8: the card in ${slotId} (${mine} protons) does not sit between ${mine - 1} and ${mine + 1}`);
-      }
     }
   }
 
@@ -4333,7 +4328,6 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       same([n(t, 'tray:core', 'proton'), n(t, 'tray:core', 'neutron'), n(t, 'tray:out', 'electron')], [ref.p, ref.n, prop(t, 'refe').rings.reduce((a, b) => a + b, 0)], 'unit01/q4-ledger stage 1 (the build matches the sample)');
       same(prop(t, 'refe').rings, A.shellsFor(ref.p), 'unit01/q4-ledger stage 1 (the open sample is neutral and filled in order)');
       same(A.needleReading(t, 'needle'), 0, 'unit01/q4-ledger stage 1 (a neutral build reads zero)');
-      same([prop(t, 'draw').p, prop(t, 'draw').n], [ref.p, ref.n], 'unit01/q4-ledger stage 1 (the cooler draw is the same atom as the bench\'s)');
     }
     // 2. the label's two numbers are the sealed sample's protons and protons plus neutrons
     {
@@ -4444,6 +4438,12 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     // 1. both bins read the same element
     holds(declared(q5, 0, 'a').props.code === 'chlorine' && declared(q5, 0, 'a').props.bins.length === 2, 'unit01/q5-assay stage 1: Sample A is not one element in two weights');
     same(end(q5, 0).pieces.a.zone, 'tray:one', 'unit01/q5-assay stage 1 (one element)');
+    {
+      // Sample B is two elements, and only its per-bin codes say so.
+      const b = declared(q5, 0, 'b');
+      holds(new Set(b.props.bins.map(x => x.code)).size === 2 && !b.props.code, 'unit01/q5-assay stage 1: Sample B is not two elements told apart by their bin codes');
+      same(end(q5, 0).pieces.b.zone, 'tray:two', 'unit01/q5-assay stage 1 (two elements)');
+    }
     // 2. the same share in the lighter bin whatever the size of the scoop
     {
       const share = id => { const b = declared(q5, 1, id).props.bins; return b[0].n / b.reduce((n, x) => n + x.n, 0) * 100; };
@@ -4465,31 +4465,25 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
     }
     // 5. a sample in one bin balances at that bin's own weight: a prediction on a new case
     {
-      const piece = declared(q5, 4, 'a');
-      holds(piece.props.bins.length === 1, 'unit01/q5-assay stage 5: the new case is not a sample in one bin');
-      near(avgOf(piece), piece.props.bins[0].mass, 'unit01/q5-assay stage 5 (the one pile balances at its own weight)');
-      same(end(q5, 4).prediction.token, 't-pile', 'unit01/q5-assay stage 5 (the prediction)');
+      const piece = declared(q5, 5, 'a');
+      holds(piece.props.bins.length === 1, 'unit01/q5-assay stage 6: the new case is not a sample in one bin');
+      near(avgOf(piece), piece.props.bins[0].mass, 'unit01/q5-assay stage 6 (the one pile balances at its own weight)');
+      // Stage 5 asks for the guess alone: no chute, no beam, no fulcrum on the table.
+      const t5 = TABLE.createTable(q5.STAGES[4].table, 'x');
+      holds(q5.STAGES[4].predict === true && !Object.values(t5.fixtures).some(f => f.kind === 'assay') && Boolean(t5.prediction), 'unit01/q5-assay stage 5: the predict stage shows the instrument');
     }
     // 6. the canister's mix: 40 atoms, the heavy count whose weight is the canister's
     {
-      const can = declared(q5, 5, 'can');
-      const mixer = q5.STAGES[5].table.fixtures.find(f => f.id === 'mixer').props;
+      const can = declared(q5, 6, 'can');
+      const mixer = q5.STAGES[6].table.fixtures.find(f => f.id === 'mixer').props;
       const heavy = [...Array(mixer.total + 1).keys()].filter(h => (mixer.total - h) * mixer.light.mass + h * mixer.heavy.mass === M.massOfSample(can));
-      same(heavy, [end(q5, 5).fixtures.mixer.dials.heavy.value], 'unit01/q5-assay stage 6 (the one mix that balances the canister)');
-      same(M.countOfSample(can), mixer.total, 'unit01/q5-assay stage 6 (the canister and the mix hold the same number of atoms)');
+      same(heavy, [end(q5, 6).fixtures.mixer.dials.heavy.value], 'unit01/q5-assay stage 7 (the one mix that balances the canister)');
+      same(M.countOfSample(can), mixer.total, 'unit01/q5-assay stage 7 (the canister and the mix hold the same number of atoms)');
     }
-    // 7 and 8. which tray: the nearest listed mass, and natural chlorine
+    // 7. natural chlorine
     {
-      const t = end(q5, 6);
-      for (const id of ['a', 'b', 'c']) {
-        const avg = avgOf(declared(q5, 6, id));
-        const trays = q5.STAGES[6].table.zones.trays.map(z => [z.id, listed(z.label)]);
-        const nearest = trays.sort((x, y) => Math.abs(x[1] - avg) - Math.abs(y[1] - avg))[0];
-        same(t.pieces[id].zone, `tray:${nearest[0]}`, `unit01/q5-assay stage 7 (${id})`);
-        holds(Math.abs(nearest[1] - avg) < 0.05, `unit01/q5-assay stage 7: ${id} balances at ${avg.toFixed(2)}, which no tray lists`);
-      }
-      const t8 = end(q5, 7);
-      for (const id of ['a', 'b', 'c']) same(t8.pieces[id].zone, `tray:${Math.abs(avgOf(declared(q5, 7, id)) - 35.5) < 0.05 ? 'natural' : 'altered'}`, `unit01/q5-assay stage 8 (${id})`);
+      const t7 = end(q5, 7);
+      for (const id of ['a', 'b', 'c']) same(t7.pieces[id].zone, `tray:${Math.abs(avgOf(declared(q5, 7, id)) - 35.5) < 0.05 ? 'natural' : 'altered'}`, `unit01/q5-assay stage 8 (${id})`);
     }
   }
 

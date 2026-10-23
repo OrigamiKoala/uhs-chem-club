@@ -64,7 +64,7 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   Every pure planner (`planSettle`, `planBeam`, `planJoin`, `planCurve`, `planLewis`, `planDomains`,
   `planPhotocell`, `planGas`, `planMixture`, `thermodata.js` planners, …) is the single implementation shared by drawn and built twins.
 - **Built twin at T4** (`table3d.js`, a subclass of `BenchViewer3D` in `bench3d.js`): leans the camera in over the bench plate
-  (`leanIn({ instant: true, zones })`, solved in `lean.js`) to frame the used area (`usedRect`) of the table; `addGrabbable`
+  (`leanIn({ instant: true, zones })`, solved in `lean.js`) to frame the used area (`usedRect`) of the table (solved once per stage/rebuild, and again only when the set of visible pieces changes, so lifting or moving a piece never moves the camera); `addGrabbable`
   hands presses to pieces and controls before the view; foes are `FoeLayer3D` bodies (`foebody.js`, `encounter3d.js`) standing in the table's corner that only observe.
   Deployed benches are aimed into the glass (`fitDeployedAim`), stop aiming when the player walks
   (`playerWalked`, `walkOwnsHeight`, `mouseLookLocked`, `walkKeysAtBench`), and the briefing docks left
@@ -99,8 +99,31 @@ iff a quest has a module). Plans: `docs/plans/learn-track.md`, `learn-quests.md`
   Interaction: a lens lying on a dish is on top (`kinds.x.onTop`); tapping the gap between joined atoms breaks the join
   (`gestures.linkAt`, `kinds.x.split`); `props.markable` pieces are flipped (ringed) by one tap, not carried; a beam fixture may list
   fixed `detectors` and a `run` may return several `rows`. Tallow stage 1 hangs the lens, power dial and cutter on a right-hand shelf with
-  captions; stage 7 is "make a mixture and a compound" (the shaker is gone); `q2-core` stage 1 has three fixed detectors and drawn model
-  cards. `Table3D.dispose()` must flag itself disposed before `unmountScene(this)` (the stage disposes its active viewer: infinite
+  captions; stage 7 is "make a mixture and a compound" (the shaker is gone); `q2-core` stage 1 has three fixed detectors, a
+  prediction slot (what will the Back detector count?, never graded) and model cards for solid / soft-and-even / tiny dense center.
+  **Detectors keep every hit:** `atoms.js` `run()` adds each firing's pass to the detector's `count` and `shots`, so the rare rebound builds
+  up over firings. At `3D On` the beam bench is dressed in solid parts (`atoms.js` `dress3d`: `lab-props.js` `buildScatterFoil` /
+  `buildBeamSource`). A mass-kit sample's bins may carry their own `code`, so one sample can read two elements.
+  **Tallow rollout record (2026-10-22):** fetches that carried a copy of the bench's own sample were cut (q1-grain scoop, q4-ledger cooler
+  draw, q5-assay hopper draw, and their Tallow field points); only q6-weigh's counted sack remains. Stages cut as repeats: q2-core "take
+  electrons off" (q4-ledger stage 5 teaches it; "ion" is earned by the last stage), q3-catalogue "fill the chart", q5-assay "name three
+  samples" (the Hopper's slag phase asks it). Guessable sorts gained cases (q1-grain stage 2: four samples, one with two hidden atoms;
+  q2-core stage 6: five suspects; stage 7: a gained electron; q5-assay stage 1: a two-element sample). Miss messages name what the table
+  shows that disagrees and no longer give the reasoning; hint rung 1 names the control and no longer explains how to operate it.
+  **Charged plates (`q2-core` stage 3):** `speck` pieces carry only a hidden `props.charge`; the `field` fixture (a backdrop with a bed tray
+  and a "Switch On" key) tags each speck in the bed `bent` or `straight` from that charge (`atoms.js` `run()`), draws the two paths with their
+  counts (`paintField`) and stands two plates in 3D (`dress3d`, `lab-props.js` `buildChargePlate`). Stage briefings were removed from the Tallow
+  benches: the Tour (`table/tour.js`) explains every tool, now also the drum and the pan counters.
+  **Predict first (2026-10-23):** `q2-core` stage 1 is a predict stage (three model cards and a "My prediction" slot, no instrument) and stage 2
+  fires the beam; `q5-assay` stage 5 predicts the one-bin balance and stage 6 tests it. The guess rides `engine/predict.js` (a synced session
+  flag), and the test stage's `prompt` and `reward` are getters that read it. `q3-catalogue` stage 7 lost its behaviour token (no instrument
+  tests it). Stage totals are now 330. **Reward models:** `reward.model` specs on `q1-grain` 5-6, `q2-core` 2/3/5/7, `q4-ledger` 2/5 and
+  `q6-weigh` 2/5; geometry in `engine/model-parts.js`, viewer `ui/model-viewer.js`.
+  **The Tour** (`Tour` key, and stage-one briefings) is built from the table, not the viewer: `table/tour.js` `tourSteps(table, {intro})`
+  gives one step per fixture and per kind of piece on the stage, `frame.setTourSteps` holds them, and `frame.showBriefing` runs them (bare:
+  unmet ones only, flags `tour_<kit>_<what>`; `force`: all). It works at `3D Off` too.
+  **Story animations:** `src/story/quest-story.js` (data), `src/ui/story-scenes.js` (2D painters, pure functions of `t`) and
+  `src/ui/story-anim.js` (the player) give each Tallow quest one animation after its debrief, once, hooked in `stagerunner.js` `next()`. `Table3D.dispose()` must flag itself disposed before `unmountScene(this)` (the stage disposes its active viewer: infinite
   recursion otherwise, leaving the stage UI up and the router dead); `disposeLearnQuest` and `LearnFrame.dispose` guard every step.
   The star map draws planets, names and rings only (no acts, no light-years, scattered positions); Tallow's crates are chipped, rusted
   and rounded (`createSalvageCrateTexture`, `boxUVs`).

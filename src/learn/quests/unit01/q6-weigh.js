@@ -108,10 +108,6 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Count What You Cannot Tip',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'This bench has a balance with a sealed crate on one pan. Pour from the drum onto the other pan, and its counter keeps the count.'
-    },
     prompt: 'Find how many atoms the sealed carbon crate holds.',
     widget: { type: 'table', label: 'The bench' },
     table: balanceTable({
@@ -127,7 +123,7 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Pour carbon from the drum onto the empty pan and watch which way the beam tips.',
+      'Use the drum and the right pan.',
       'The counter over the pan you pour on reads how many atoms are on it.',
       'When the two pans balance they hold the same weight of the same kind of atom, so they hold the same number of them.'
     ],
@@ -138,8 +134,8 @@ export const STAGES = [
       if (have === 0) return { ok: false, notYet: true, msg: 'The right pan is empty. Pour some carbon onto it.' };
       if (!bal.level) {
         return { ok: false, msg: bal.lean < 0
-          ? 'The crate is the heavier pan, so the right pan holds too few atoms.'
-          : 'The right pan is heavier than the crate, so it holds too many atoms.' };
+          ? 'The crate is the heavier pan.'
+          : 'The right pan is the heavier pan.' };
       }
       return { ok: true };
     },
@@ -173,7 +169,7 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Join hydrogen atoms to the carbon atom, then drag the molecule onto the scale\'s pan.',
+      'Use the atoms, their joins and the scale\'s pan.',
       'Read the weight on the scale and set it beside the listed mass of each atom in the molecule.',
       'The scale reads the listed masses of every atom on the pan added up, so build the molecule before you read it.'
     ],
@@ -185,11 +181,12 @@ export const STAGES = [
       const together = ids.every(id => t.pieces[id].joinedTo.length > 0);
       if (!together) return { ok: false, msg: 'The atoms on the pan are not joined into one molecule.' };
       const formula = formulaOf(ids, t);
-      if (formula !== 'CH₄') return { ok: false, msg: 'That is not methane. Check how many atoms of each kind its formula calls for.' };
+      if (formula !== 'CH₄') return { ok: false, msg: 'The molecule on the pan holds a different count of atoms than methane does.' };
       return { ok: true };
     },
     reward: {
       log: 'Methane on the scale: one carbon and four hydrogen.',
+      model: { type: 'molecule', name: 'methane', caption: 'CH₄: one carbon atom (dark) and four hydrogen atoms (pale).' },
       title: 'Formula Mass',
       body: 'The scale read 12.0 + 1.0 + 1.0 + 1.0 + 1.0, the listed masses of the atoms in one molecule, added up. Adding up the listed masses of every atom in one molecule of a substance gives its formula mass, and there is nothing more to it than that.'
     }
@@ -212,7 +209,7 @@ export const STAGES = [
       fixtures: [{ id: 'scale', kind: 'scale', label: 'Scale', runLabel: 'Weigh', at: { x: 118, y: 24 }, size: { w: 56, h: 34 }, props: { pan: 'slot:pan', unit: 'u' } }]
     }),
     hints: [
-      'Drag a crate onto the scale\'s pan and press "Weigh", then do the same for the other two.',
+      'Use the crates, the scale\'s pan and "Weigh".',
       'Each reading lands as a point on the strip, with the listed mass of one atom across and the weight of sixty up.',
       'Press "Straightedge" to lay a line across the points and see whether all three keep to it.'
     ],
@@ -221,11 +218,11 @@ export const STAGES = [
       const rows = t.recorder.rows;
       const kinds = new Set(rows.map(r => r.label));
       if (!kinds.size) return { ok: false, notYet: true, msg: 'Nothing has been weighed yet. Put a crate on the pan and weigh it.' };
-      if (kinds.size < 3) return { ok: false, msg: 'Two points always make a line. Weigh the third element too, to see whether it keeps to the line.' };
+      if (kinds.size < 3) return { ok: false, msg: 'Only two elements have been weighed.' };
       const line = lineOf(t.recorder);
       if (!line) return { ok: false, notYet: true, msg: 'Lay the straightedge across the points to see how the weights keep to the listed masses.' };
       const bad = rows.find(r => Math.abs(readY(line, r.x) - r.y) > 1e-6 * r.y);
-      if (bad) return { ok: false, msg: 'The line misses one of the points. Lay it across two points that you trust.' };
+      if (bad) return { ok: false, msg: 'The line misses one of the points.' };
       return { ok: true };
     },
     reward: {
@@ -238,10 +235,6 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'Measure Out a Matching Count',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'A dozen eggs and a dozen bowling balls weigh differently but count the same. Each pan now has an atom counter, and the drum pours grams.'
-    },
     prompt: 'Pour oxygen onto the right pan until its atom counter matches the carbon pan.',
     widget: { type: 'table', label: 'The bench' },
     table: balanceTable({
@@ -253,7 +246,7 @@ export const STAGES = [
       capacity: 40
     }),
     hints: [
-      'Pour oxygen from the drum onto the right pan and read both atom counters.',
+      'Use the drum and the right pan.',
       'Watch the beam as the counters get closer: equal counts do not have to weigh the same.',
       'Keep pouring until the right counter reads exactly what the left one does, then look at what the right pan holds.'
     ],
@@ -261,11 +254,11 @@ export const STAGES = [
       const t = state.table;
       const c = countersMatch(t);
       if (c.r === 0) return { ok: false, notYet: true, msg: 'The right pan is empty. Pour some oxygen onto it.' };
-      if (poured(t, 'oxygen') === 12) return { ok: false, msg: 'Equal weights are not equal counts: an oxygen atom is heavier, so the same weight of it holds fewer atoms.' };
+      if (poured(t, 'oxygen') === 12) return { ok: false, msg: 'The right pan holds 12 g, and the two counters do not agree.' };
       if (!c.same) {
         return { ok: false, msg: c.r > c.l
-          ? 'The right counter reads more than the left, so there are too many atoms on the right pan.'
-          : 'The right counter reads less than the left, so there are too few atoms on the right pan.' };
+          ? 'The right counter reads more than the left.'
+          : 'The right counter reads less than the left.' };
       }
       return { ok: true };
     },
@@ -290,7 +283,7 @@ export const STAGES = [
       capacity: 66
     }),
     hints: [
-      'Pour carbon dioxide from the drum onto the right pan and compare the two counters.',
+      'Use the drum and the right pan.',
       'The pan counts molecules, one for each carbon and two oxygen joined together, and the other pan counts atoms.',
       'Keep pouring until the counters agree, then read how many grams are on the right pan.'
     ],
@@ -299,16 +292,17 @@ export const STAGES = [
       const c = countersMatch(t);
       if (c.r === 0) return { ok: false, notYet: true, msg: 'The right pan is empty. Pour some carbon dioxide onto it.' };
       const grams = poured(t, 'carbon dioxide');
-      if (grams === 12) return { ok: false, msg: 'Equal weights are not equal counts: a carbon dioxide molecule is heavier than a carbon atom.' };
+      if (grams === 12) return { ok: false, msg: 'The right pan holds 12 g, and the two counters do not agree.' };
       if (!c.same) {
         return { ok: false, msg: c.r > c.l
-          ? 'The right counter reads more than the left, so there are too many molecules on the right pan.'
-          : 'The right counter reads less than the left, so there are too few molecules on the right pan.' };
+          ? 'The right counter reads more than the left.'
+          : 'The right counter reads less than the left.' };
       }
       return { ok: true };
     },
     reward: {
       log: 'One mole of carbon dioxide weighs 44.0 grams.',
+      model: { type: 'molecule', name: 'carbon dioxide', caption: 'CO₂: one carbon atom (dark) between two oxygen atoms (red-brown).' },
       title: 'Molar Mass',
       body: 'The rule does not stop at elements: add up the listed masses of every atom in one molecule of a compound and that many grams of it is one mole of its molecules. Here 12.0 + 16.0 + 16.0 = 44.0, so 44.0 grams holds 6.02 x 10^23 molecules of it. That figure, grams per mole, is called the molar mass, and every substance has one.'
     }
@@ -333,17 +327,16 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Pour water onto the right pan until its count matches the carbon pan, and note how many grams that takes.',
+      'Use the drum, the right pan and the tally.',
       'The drum is made up of equal scoops of that size.',
       'Divide the drum\'s grams by the grams on the matching pan, and set the tally to the result.'
     ],
     check(state) {
       const t = state.table;
       const n = t.fixtures.tally.dials.n.value;
-      if (n === 0) return { ok: false, notYet: true, msg: 'The tally is on zero. Set it to the number of matching scoops in the drum.' };
-      if (n === 1) return { ok: false, msg: 'One matching scoop is the amount that balances the carbon pan\'s count. Compare that with what the whole drum holds.' };
-      if (n === 2) return { ok: false, msg: 'Two matching scoops would weigh twice one scoop. Compare that with what the whole drum holds.' };
-      if (n !== molesOf('water', 72)) return { ok: false, msg: 'Work out how many of the matching scoops make up the drum from the grams in one scoop.' };
+      if (n === 0) return { ok: false, notYet: true, msg: 'The tally is on zero.' };
+      if (n < molesOf('water', 72)) return { ok: false, msg: 'The drum holds more matching scoops than the tally says.' };
+      if (n !== molesOf('water', 72)) return { ok: false, msg: 'The drum holds fewer matching scoops than the tally says.' };
       return { ok: true };
     },
     reward: {
@@ -367,7 +360,7 @@ export const STAGES = [
       capacity: 10
     }),
     hints: [
-      'Pour hydrogen from the drum onto the right pan and watch its hydrogen-atom counter.',
+      'Use the drum and the right pan.',
       'Compare it with the left counter, which counts only the hydrogen atoms in the water.',
       'Each water molecule holds two hydrogen atoms, so there are more hydrogen atoms in the water than molecules.'
     ],
@@ -377,8 +370,8 @@ export const STAGES = [
       if (c.r === 0) return { ok: false, notYet: true, msg: 'The right pan is empty. Pour some hydrogen onto it.' };
       if (!c.same) {
         return { ok: false, msg: c.r > c.l
-          ? 'The right counter reads more than the left, so there is too much hydrogen on the right pan.'
-          : 'The right counter reads less than the left, so there is too little hydrogen on the right pan.' };
+          ? 'The right counter reads more than the left.'
+          : 'The right counter reads less than the left.' };
       }
       return { ok: true };
     },
@@ -407,7 +400,7 @@ export const STAGES = [
       fixtures: [{ id: 'scale', kind: 'scale', label: 'Scale', at: { x: 118, y: 22 }, size: { w: 56, h: 34 }, noRun: true, props: { pan: 'slot:weigh', unit: 'g', counter: { label: 'ATOMS' } } }]
     }),
     hints: [
-      'Drag a drum onto the scale\'s pan to read what it weighs and how many atoms it holds, then drag it back to the rail.',
+      'Use the scale\'s pan and the rail.',
       'The heaviest drum is not always the one with the most atoms, so compare the counters.',
       'Put the drums in order of their atom counters, the smallest count at the left end.'
     ],
@@ -418,7 +411,7 @@ export const STAGES = [
       const atoms = id => molesOf(t.pieces[id].props.species, t.pieces[id].props.grams);
       const want = ['d1', 'd2', 'd3'].sort((a, b) => atoms(a) - atoms(b));
       if (order.join() !== want.join()) {
-        return { ok: false, msg: 'The drums are not in order of their atom counters. The heaviest drum is not necessarily the one with the most atoms.' };
+        return { ok: false, msg: 'The rail is not in order of the atom counters.' };
       }
       return { ok: true };
     },

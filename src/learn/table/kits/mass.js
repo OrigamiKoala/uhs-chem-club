@@ -536,8 +536,10 @@ function readCode(state, f) {
   const sample = sampleIn(state, state.fixtures[f.props.assay].props.slot);
   if (!sample || !sample.props.poured) return { noop: 'Tip a sample into the chute first.' };
   const i = f.dials.bin.value - 1;
-  if (!sample.props.code) return { noop: 'No code comes back from this sample.' };
-  return { stamp: { [sample.id]: { read: { ...(sample.props.read || {}), [i]: sample.props.code } } } };
+  // A bin may carry its own code (a sample of two elements reads two names); else the sample's one code answers for all.
+  const code = binsOf(sample)[i]?.code || sample.props.code;
+  if (!code) return { noop: 'No code comes back from this sample.' };
+  return { stamp: { [sample.id]: { read: { ...(sample.props.read || {}), [i]: code } } } };
 }
 
 /** "Weigh": a row for the strip, the listed mass of one particle against what the pan reads. */

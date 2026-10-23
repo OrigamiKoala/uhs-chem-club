@@ -75,7 +75,7 @@ export const STAGES = [
     title: 'Phase 1 · Hull Plates',
     briefing: {
       speaker: 'Vess',
-      body: 'The rogue Hopper has risen in the salt flat, testing every bench from Tallow across five synthesis phases. Strike with the correct chemistry when your telemetry is set; three misses knock the rig back.'
+      body: 'The Hopper has risen out of the salt flat. Each of its five phases is a bench you have already used, and three wrong answers knock the rig back.'
     },
     prompt: 'Sort each hull plate as an element, a compound, or a mixture.',
     widget: { type: 'table', label: 'The bench' },
@@ -107,13 +107,13 @@ export const STAGES = [
         if (!['element', 'compound', 'mixture'].includes(trayOf(t, id))) return { ok: false, notYet: true, msg: 'Put all three plates in a tray before committing your strike.' };
       }
       const wrong = Object.keys(want).filter(id => trayOf(t, id) !== want[id]).map(id => names[id]);
-      if (wrong.length) return { ok: false, msg: `Sample ${wrong[0]} is filed wrongly: look at which kinds of atoms it holds and whether any of them are joined.` };
+      if (wrong.length) return { ok: false, msg: `Sample ${wrong[0]}\'s tray does not match its picture.` };
       return { ok: true };
     },
     hints: [
-      'Drag each plate into a tray, and read the picture on it first: the atoms are drawn as they sit.',
+      'Use the three trays.',
       'For each sample, check how many different kinds of atom it holds and whether any of them are joined.',
-      'One kind alone is an element, different kinds joined together are a compound, and different kinds sitting loose are a mixture.'
+      'Settle how many kinds of atom a plate holds first, and only then whether any are joined.'
     ],
     reward: {
       title: 'Hull Shattered',
@@ -148,12 +148,12 @@ export const STAGES = [
       const p = count(t, 'tray:core', 'proton');
       const e = count(t, 'tray:out', 'electron');
       if (p + e === 0) return { ok: false, notYet: true, msg: 'The atom is still empty. Drag protons into the middle and electrons outside.' };
-      if (p !== 6) return { ok: false, msg: 'Count the + discs in the middle of the sealed core again: each marks a proton, and the neutrons are the blank discs.' };
-      if (e !== p) return { ok: false, msg: 'A neutral atom balances its charge, so its electrons match its protons one for one.' };
+      if (p !== 6) return { ok: false, msg: 'Your protons do not match the sealed core\'s.' };
+      if (e !== p) return { ok: false, msg: 'Your needle does not read 0.' };
       return { ok: true };
     },
     hints: [
-      'Drag protons from the heap into the middle and electrons outside, and watch the needle.',
+      'Use the heap, the two trays and the needle.',
       'Count the discs with a + in the middle of the sealed core and the electrons on its rings, then compare the two counts.',
       'A neutral atom balances its charge, and the atomic number is the count of protons.'
     ],
@@ -188,13 +188,13 @@ export const STAGES = [
     check(state) {
       const held = slotCard(state.table, 'gap');
       if (!held) return { ok: false, notYet: true, msg: 'The open place is still empty. Drag a loose card onto it.' };
-      if (held === 'c02') return { ok: false, msg: 'That card belongs in the first row, but the open place is in the second.' };
-      if (held === 'c18') return { ok: false, msg: 'That card belongs in the third row, but the open place is in the second.' };
-      if (held !== 'c10') return { ok: false, msg: 'Read the proton counts on the cards beside the open place and count along the row from a card you can read.' };
+      if (held === 'c02') return { ok: false, msg: 'That card sits in a different row from the open place.' };
+      if (held === 'c18') return { ok: false, msg: 'That card sits in a different row from the open place.' };
+      if (held !== 'c10') return { ok: false, msg: 'That card\'s proton count does not fit between the neighbours of the open place.' };
       return { ok: true };
     },
     hints: [
-      'Drag a loose card onto the open place in the chart.',
+      'Use the loose cards and the open place.',
       'Read the proton count on the card just left of the open place and on each loose card.',
       'The open place takes the card with one more proton than the card on its left.'
     ],
@@ -238,11 +238,11 @@ export const STAGES = [
     check(state) {
       const here = trayOf(state.table, 'slag');
       if (!['boron', 'neon', 'chlorine'].includes(here)) return { ok: false, notYet: true, msg: 'The slag has no tray yet.' };
-      if (here !== 'boron') return { ok: false, msg: 'Compare the point where the slag balances with the listed mass on each tray.' };
+      if (here !== 'boron') return { ok: false, msg: 'The slag does not balance at that tray\'s listed mass.' };
       return { ok: true };
     },
     hints: [
-      'Drop the slag in the chute, press "Tip Sample", and slide the "Fulcrum" dial until the beam lies level.',
+      'Use "Tip Sample" and the "Fulcrum" dial.',
       'Read the tally over each bin, then compare where the beam balances with the listed masses on the trays.',
       'The point where the slag balances is its average weight, and only one tray lists that mass.'
     ],
@@ -282,13 +282,13 @@ export const STAGES = [
       if (scoops === 0) return { ok: false, notYet: true, msg: 'The right pan is empty. Pour a scoop of carbon onto it.' };
       if (!bal.level) {
         return { ok: false, msg: bal.lean < 0
-          ? 'The drum is the heavier pan, so the scoops on the right do not yet make up its weight.'
-          : 'The scoops on the right outweigh the drum, so there are more of them than it holds.' };
+          ? 'The drum is the heavier pan.'
+          : 'The scoops on the right are the heavier pan.' };
       }
       return { ok: true };
     },
     hints: [
-      'Pour carbon from the scoops onto the right pan and watch which way the beam tips.',
+      'Use the scoops and the right pan.',
       'Each scoop is one mole of carbon, and the beam lies level when the pans weigh the same.',
       'Count the scoops on the right pan at the moment the beam lies level.'
     ],

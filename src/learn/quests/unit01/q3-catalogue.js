@@ -16,8 +16,10 @@
  *   4  give loose cards the column their dots match     -> Groups · the columns
  *   5  tray every card that will not trade              -> Noble Gases
  *   6  tray six cards by what they do                   -> Metals and Nonmetals
- *   7  place a card nobody measured, and predict it     -> The chart predicts
- *   8  file four cards into the chart                   -> One number orders everything
+ *   7  place a card nobody measured, and stamp its protons -> The chart predicts
+ *
+ * (A stage 8, "file four cards into the chart", repeated stages 3, 4 and 7 with no new idea and was cut;
+ * its closing line, that one number orders everything, now ends the debrief.)
  *
  * EVERYTHING ON A CARD'S FACE IS READ OFF THE ELEMENT (`table/kits/cards.js`): the proton count is
  * its atomic number, the dots are its outer-shell electrons (`atoms.js` `shellsFor`), the tester's
@@ -31,7 +33,7 @@
  * What this bench withholds is its OWN vocabulary, and `VOCABULARY` below says which stage's reward
  * card pays each one out. `verify:learn` fails the build both ways round.
  *
- * COPY RULE: one briefing, on stage one, saying what the bench does. After that every stage is a
+ * COPY RULE: no briefing: the Tour explains every tool on the table. Every stage is a
  * plain imperative prompt, three short hints and a reward card. No story rides on top of it.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings. It reports through `ctx`
@@ -43,7 +45,7 @@ import {
   cardTable, cardSlot, cardTray, elementCard, tradeOf, piecesIn, slotCard, railOrder
 } from '../../table/kits/cards.js';
 
-export const meta = { stageCount: 8 };
+export const meta = { stageCount: 7 };
 
 /**
  * When each withheld word is earned. `introducedAt` is the stage whose REWARD
@@ -167,10 +169,6 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Put Them In Order',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Every element has a card showing its protons, the electrons in its outer shell and its weight. Drag a card onto the strip to lay it there.'
-    },
     prompt: 'Lay the six cards on the strip, from fewest protons on the left to most on the right.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
@@ -178,7 +176,7 @@ export const STAGES = [
       zones: { rail: { at: { x: 75, y: 22 }, size: { w: 102, h: 14 }, first: 'Fewest protons', last: 'Most protons', items: [] } }
     }),
     hints: [
-      'Drag a card onto the strip, and the cards already there slide apart to make room.',
+      'Use the strip along the top.',
       'Read the protons printed on each card; how heavy a card is does not matter here.',
       'Write the six proton counts down, sort them smallest to largest, and lay the cards in that order from the leftmost place to the rightmost.'
     ],
@@ -191,16 +189,16 @@ export const STAGES = [
       if (got.join() === want.join()) return { ok: true };
       const byMass = ['c01', 'c06', 'c08', 'c11', 'c19', 'c18'];
       if (got.join() === byMass.join()) {
-        return { ok: false, msg: 'That is the order they weigh, not the order of their proton counts. Read the proton count on each card and order by that alone.' };
+        return { ok: false, msg: 'The cards are in the order of their weights.' };
       }
       for (let i = 1; i < got.length; i++) {
         const a = CARDS[got[i - 1]];
         const b = CARDS[got[i]];
         if (a && b && a.z > b.z) {
-          return { ok: false, msg: `${a.name} and ${b.name} are in the wrong order. Compare their proton counts.` };
+          return { ok: false, msg: `${a.name} (${a.z} protons) sits before ${b.name} (${b.z} protons).` };
         }
       }
-      return { ok: false, msg: 'Something is out of order — read the proton counts again and put the smallest on the left.' };
+      return { ok: false, msg: 'Two neighbouring cards are out of order by proton count.' };
     },
     reward: {
       log: 'Six cards laid in count order.',
@@ -262,7 +260,7 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Drag a card from the foot of the table onto a place in the empty row.',
+      'Use the loose cards and the empty places in the row.',
       'SODIUM reads the fewest protons of the eight and ARGON reads the most.',
       'Put the fewest-proton card in the first place, then for each next place find the card with one proton more than the card before it.'
     ],
@@ -305,7 +303,7 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Drag a loose card onto an open place and read the dots on the cards above it.',
+      'Use the open places under the columns.',
       'Compare the outer-shell dots on the loose cards with the dots on the cards in the column above each open place.',
       'Pick one reading on the cards, follow it down a column to see which one never changes, then give each loose card the open place that matches it.'
     ],
@@ -317,7 +315,7 @@ export const STAGES = [
       }
       for (const [slot, id] of Object.entries(want)) {
         if (slotCard(state.table, slot) !== id) {
-          return { ok: false, msg: 'A loose card is in a column whose cards carry a different number of outer-shell dots. Compare the dots down the column.' };
+          return { ok: false, msg: 'A loose card\'s dots differ from the dots on the cards in its column.' };
         }
       }
       return { ok: true };
@@ -343,7 +341,7 @@ export const STAGES = [
       fixtures: [{ id: 'tester', kind: 'tester', label: 'Tester', runLabel: 'Test Card', at: { x: 126, y: 54 }, size: { w: 36, h: 15 }, props: { slot: 'tester' } }]
     }),
     hints: [
-      'Drag a card into the tester and press "Test Card" to see how it trades.',
+      'Use the tester and "Test Card".',
       'Group 1 hands electrons over, group 17 takes them on, and group 14 shares.',
       'Find the cards for which "Test Card" reports that nothing happens at all, and tray every card in that column.'
     ],
@@ -356,7 +354,7 @@ export const STAGES = [
         return { ok: false, msg: `${CARDS[wrong].name} does trade — ${DOES_TEXT[tradeOf(ELEMENT_OF[wrong])].replace(/\.$/, '').toLowerCase()}. Test it to see.` };
       }
       if (got.length < noble.length) {
-        return { ok: false, msg: 'The cards in the tray do not trade, but cards in the same column behave alike. Another card on the chart will not trade either.' };
+        return { ok: false, msg: 'A card that will not trade is still on the chart.' };
       }
       return { ok: true };
     },
@@ -386,7 +384,7 @@ export const STAGES = [
       fixtures: [{ id: 'tester', kind: 'tester', label: 'Tester', runLabel: 'Test Card', at: { x: 120, y: 54 }, size: { w: 36, h: 15 }, props: { slot: 'tester' } }]
     }),
     hints: [
-      'Drag a card into the tester and press "Test Card" to see whether it gives, takes, holds or does nothing.',
+      'Use the tester and "Test Card".',
       'Cards in the same group behave alike, so you can predict untested cards from their column.',
       'Cards on the left of the chart give electrons, cards on the right take them, the column under carbon holds on, and the last column does nothing.'
     ],
@@ -400,7 +398,7 @@ export const STAGES = [
       }
       for (const id of ids) {
         if (where(id) !== tradeOf(ELEMENT_OF[id])) {
-          return { ok: false, msg: `${CARDS[id].name} is filed wrong. Test it or compare its column position.` };
+          return { ok: false, msg: `${CARDS[id].name}\'s tray does not match what the tester shows it doing.` };
         }
       }
       return { ok: true };
@@ -415,7 +413,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 7 */
   {
     title: 'The Card That Is Not There',
-    prompt: 'Place the unmeasured card where the chart says it goes, set its proton count and predict what it does.',
+    prompt: 'Place the unmeasured card where the chart says it goes, and set its proton count.',
     widget: { type: 'table', label: 'The desk' },
     table: cardTable({
       pieces: [
@@ -423,20 +421,12 @@ export const STAGES = [
         { ...elementCard('sealed', 'Si', { x: 13.5, y: 53 }, { sealed: true }), label: 'UNMEASURED' }
       ],
       zones: { slots: [cardSlot('gap', { x: X(4), y: ROW_Y[2] }, { label: '' })] },
-      fixtures: [{ id: 'stamp', kind: 'stamp', label: 'Stamp', at: { x: 75, y: 8 }, size: { w: 60, h: 12 }, noRun: true, dials: { protons: { min: 0, max: 20, step: 1, value: 0, label: 'Protons' } } }],
-      prediction: {
-        slot: { id: 'predict', label: 'It will', at: { x: 142, y: 53 } },
-        tokens: [
-          { id: 't-gives', label: 'Hands one over', at: { x: 48, y: 57 }, r: 7 },
-          { id: 't-holds', label: 'Holds on to a partner', at: { x: 84, y: 57 }, r: 7 },
-          { id: 't-takes', label: 'Takes one on', at: { x: 120, y: 57 }, r: 7 }
-        ]
-      }
+      fixtures: [{ id: 'stamp', kind: 'stamp', label: 'Stamp', at: { x: 75, y: 8 }, size: { w: 60, h: 12 }, noRun: true, dials: { protons: { min: 0, max: 20, step: 1, value: 0, label: 'Protons' } } }]
     }),
     hints: [
-      'Drag the unmeasured card onto the open place, drag the stamp\'s slider to a proton count and drop one prediction in the slot.',
+      'Use the open place and the stamp.',
       'Read the cards on either side of the open place and the card above it.',
-      'Find the number between its left and right neighbors, and match its behavior to the card above it.'
+      'Find the number that sits between its left and right neighbors.'
     ],
     check(state) {
       const t = state.table;
@@ -447,61 +437,15 @@ export const STAGES = [
       if (claim === 0) {
         return { ok: false, notYet: true, msg: 'The stamp is still on zero — set the proton count you are claiming.' };
       }
-      if (!t.prediction.token) {
-        return { ok: false, notYet: true, msg: 'Drop a prediction in the slot: what will the card do?' };
-      }
       if (claim !== 14) {
-        return { ok: false, msg: `${claim} does not fit that place. Read the proton counts on the cards either side of it.` };
-      }
-      if (t.prediction.token !== 't-holds') {
-        return { ok: false, msg: 'A card behaves like the rest of its column — check what the other card in that column does.' };
+        return { ok: false, msg: `${claim} protons does not sit between the neighbours of that place.` };
       }
       return { ok: true };
     },
     reward: {
       log: 'Missing card worked out: 14.',
       title: 'A Chart That Predicts',
-      body: 'You just described an atom nobody at this bench has ever measured, using nothing but the shape of the chart. The card that belongs in that slot is silicon, atomic number 14. Mendeleev did exactly this with three empty slots in 1871 and was proved right on all three.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 8 */
-  {
-    title: 'Fill The Chart',
-    prompt: 'File each loose card into the open place where it belongs on the chart.',
-    widget: { type: 'table', label: 'The desk' },
-    table: cardTable({
-      pieces: [
-        ...chartCards({ skip: ['c04', 'c07', 'c13', 'c16'] }),
-        ...[['c16', 2], ['c04', 4], ['c13', 6], ['c07', 8]].map(([id, c]) => card(id, { x: X(c), y: LOOSE_Y }))
-      ],
-      zones: {
-        slots: [['s1', 1, 1], ['s2', 5, 1], ['s3', 3, 2], ['s4', 6, 2]].map(([id, c, r]) => cardSlot(id, { x: X(c), y: ROW_Y[r] }))
-      }
-    }),
-    hints: [
-      'Drag a loose card onto an open place in the chart.',
-      'Read the protons on the cards either side of each open place; each place takes the one number that fits between them.',
-      'For each loose card, find the open place whose neighbors are one below and one above its proton count, and file it there.'
-    ],
-    check(state) {
-      const want = { s1: 'c04', s2: 'c07', s3: 'c13', s4: 'c16' };
-      const filed = Object.keys(want).filter(s => slotCard(state.table, s)).length;
-      if (filed < 4) {
-        return { ok: false, notYet: true, msg: `Fill all four places first — ${filed} of them are filled.` };
-      }
-      for (const [slot, id] of Object.entries(want)) {
-        if (slotCard(state.table, slot) !== id) {
-          const got = CARDS[slotCard(state.table, slot)];
-          return { ok: false, msg: `One place holds a card with ${got.z} protons, which does not fit between its neighbors.` };
-        }
-      }
-      return { ok: true };
-    },
-    reward: {
-      log: 'Chart filled. Nineteen cards, all in place.',
-      title: 'One Number Orders Everything',
-      body: 'Every card on this chart was placed by one measurement: how many protons sit in its nucleus. The row it lands in, the group it joins, and whether it gives, takes, holds or does nothing all follow from that one number. That is why the periodic table is the reference chemists reach for first.',
+      body: 'You just described an atom nobody at this bench has ever measured, using nothing but the shape of the chart. The card that belongs in that slot is silicon, atomic number 14. Mendeleev did exactly this with three empty slots in 1871 and was proved right on all three.',
       last: true
     }
   }
@@ -517,7 +461,7 @@ export const DEBRIEF = {
   sections: [
     {
       heading: 'What You Found',
-      body: 'Every kind of atom has an atomic number, which is simply how many protons it has. Put them in that order and a pattern repeats, which is what the periodic table is.'
+      body: 'Every kind of atom has an atomic number, which is simply how many protons it has. Put them in that order and a pattern repeats, which is what the periodic table is. One number orders everything: the row an atom lands in, the group it joins, and what it does with its outer electrons.'
     },
     {
       heading: 'Rows and Columns',
@@ -611,8 +555,7 @@ export const SOLUTIONS = [
     to('c03', 'slot:tester'), run('tester'), to('c08', 'slot:tester'), run('tester'), to('c06', 'slot:tester'), run('tester'),
     to('c03', 'tray:gives'), to('c12', 'tray:gives'), to('c08', 'tray:takes'), to('c17', 'tray:takes'), to('c06', 'tray:shares'), to('c10', 'tray:inert')
   ],
-  [to('sealed', 'slot:gap'), { setDial: { fixture: 'stamp', dial: 'protons', value: 14 } }, { predict: 't-holds' }],
-  [to('c04', 'slot:s1'), to('c07', 'slot:s2'), to('c13', 'slot:s3'), to('c16', 'slot:s4')]
+  [to('sealed', 'slot:gap'), { setDial: { fixture: 'stamp', dial: 'protons', value: 14 } }]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
@@ -623,8 +566,7 @@ export const MISSES = [
   [to('c16', 'slot:s14'), to('c14', 'slot:s16'), to('c17', 'slot:s17')],
   [to('c09', 'slot:tester'), run('tester'), to('c09', 'tray:inert'), to('c17', 'tray:inert'), to('c02', 'tray:inert')],
   [to('c03', 'tray:gives'), to('c12', 'tray:takes'), to('c08', 'tray:takes'), to('c17', 'tray:takes'), to('c06', 'tray:shares'), to('c10', 'tray:inert')],
-  [to('sealed', 'slot:gap'), { setDial: { fixture: 'stamp', dial: 'protons', value: 14 } }, { predict: 't-gives' }],
-  [to('c07', 'slot:s1'), to('c04', 'slot:s2'), to('c13', 'slot:s3'), to('c16', 'slot:s4')]
+  [to('sealed', 'slot:gap'), { setDial: { fixture: 'stamp', dial: 'protons', value: 13 } }]
 ];
 
 function blankState() { return {}; }

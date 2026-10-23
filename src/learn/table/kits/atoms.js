@@ -69,6 +69,7 @@ import { buildUnits, drawScopeField, planSettle, planCut, TINTS } from '../../en
 import { planBeam, packCore, CORE_TINTS } from '../../engine/corebench.js';
 import { zOf, nameOf } from '../../engine/electrons.js';
 import { PLATE_COLORS, plateText, mulberry32, hashId, lampMark } from '../../engine/plates.js';
+import { buildScatterFoil, buildBeamSource, buildChargePlate } from '../../engine/lab-props.js';
 
 export const ATOMS_KIT_ID = 'atoms';
 
@@ -762,7 +763,17 @@ function paintParticle(ctx, p, state, o) {
 }
 
 /**
- * A model card (`q2-core` stage 1): a small drawing of one way an atom could be built, and its name under it. The drawing is
+ * A speck (`q2-core` stage 3): a particle from the middle of an atom with nothing printed on it. What it is only shows when it has
+ * been through the charged plates, and then it wears the tag of what happened: bent or straight.
+ */
+function paintSpeck(ctx, p, state, o) {
+  const tag = p.props.deflect || '';
+  disc(ctx, o.x, o.y, o.r, '#6a645a', o.lit ? AMBER : '#8c8376', o.lit ? 2.5 : 1);
+  if (tag) plateText(ctx, tag, o.x, o.y, { size: Math.max(7, Math.round(o.r * 0.4)), weight: 700, align: 'center', base: 'middle', color: '#16140f' });
+}
+
+/**
+ * A model card (`q2-core` stage 2): a small drawing of one way an atom could be built, and its name under it. The drawing is
  * of the MODEL, not of any result: what the beam does is what the player weighs it against.
  */
 function paintModel(ctx, p, state, o) {
@@ -786,6 +797,19 @@ function paintModel(ctx, p, state, o) {
   } else if (kind === 'shell') {
     ctx.lineWidth = Math.max(2, R * 0.26);
     ctx.beginPath(); ctx.arc(cx, cy, R * 0.88, 0, Math.PI * 2); ctx.stroke();
+  } else if (kind === 'spread') {
+    // A soft ball with its + charge scattered evenly through it: a rim, and a regular grid of dots.
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+    const dot = Math.max(1, R * 0.07);
+    for (let gx = -2; gx <= 2; gx++) {
+      for (let gy = -2; gy <= 2; gy++) {
+        const dx = gx * R * 0.4;
+        const dy = gy * R * 0.4;
+        if (Math.hypot(dx, dy) > R * 0.85) continue;
+        ctx.beginPath(); ctx.arc(cx + dx, cy + dy, dot, 0, Math.PI * 2); ctx.fill();
+      }
+    }
   } else {
     ctx.lineWidth = Math.max(1, R * 0.07);
     ctx.setLineDash?.([Math.max(2, R * 0.12), Math.max(2, R * 0.12)]);
@@ -883,7 +907,8 @@ function paintSpecimen(ctx, p, state, o) {
     plateText(ctx, `needle ${q === 0 ? '0' : `${q > 0 ? '+' : '−'}${Math.abs(q)}`}`, o.x, o.y - o.r * 0.8, { size: Math.max(7, Math.round(o.r * 0.3)), weight: 700, align: 'center', base: 'middle', color: q === 0 ? PLATE_COLORS.dust : AMBER });
   }
   if (p.props.tested) {
-    const t = { gives: 'gives one', takes: 'takes one', inert: 'no trade' }[p.props.tested] || '';
+    // Short on the disc (its full reading is on the tester's own screen, where there is room to read it).
+    const t = { gives: 'gives', takes: 'takes', inert: 'no trade' }[p.props.tested] || '';
     plateText(ctx, t, o.x, o.y - o.r * 0.8, { size: Math.max(7, Math.round(o.r * 0.32)), weight: 700, align: 'center', base: 'middle', color: AMBER });
   }
   footLabel(ctx, o.x, o.y, o.r, p.label, Math.max(7, Math.round(o.r * 0.36)));
@@ -950,6 +975,9 @@ function paintDetector(ctx, p, state, o) {
   }
   if (p.props.count != null) {
     plateText(ctx, String(p.props.count), o.x, o.y + o.r * 0.1, { size: Math.max(9, Math.round(o.r * 0.7)), weight: 700, align: 'center', base: 'middle', color: AMBER });
+    if (p.props.shots) {
+      plateText(ctx, `of ${p.props.shots}`, o.x, o.y - o.r * 0.62, { size: Math.max(7, Math.round(o.r * 0.32)), align: 'center', base: 'middle', color: PLATE_COLORS.dust });
+    }
   }
   plateText(ctx, p.label, o.x, o.y + o.r * 0.72, { size: Math.max(7, Math.round(o.r * 0.34)), align: 'center', base: 'middle', color: PLATE_COLORS.text });
 }
@@ -1115,7 +1143,7 @@ function paintDispenser(ctx, p, state, o) {
 }
 
 const PAINTERS = {
-  atom: paintAtom, ion: paintIon, proton: paintParticle, neutron: paintParticle, electron: paintParticle,
+  atom: paintAtom, ion: paintIon, proton: paintParticle, neutron: paintParticle, electron: paintParticle, speck: paintSpeck,
   nucleus: paintNucleus, specimen: paintSpecimen, dish: paintDish, lens: paintLens, model: paintModel,
   cutter: paintTool, shaker: paintTool, detector: paintDetector,
   joint: paintJoint, pairs: paintDispenser, single: paintDispenser, lift: paintDispenser,
@@ -1137,6 +1165,7 @@ function printed(p, state) {
     case 'ion': return p.props.el;
     case 'joint': return '';
     case 'proton': return '';
+    case 'speck': return p.props.deflect || '';
     case 'neutron': return '';
     case 'electron': return '';
     default: return p.label;
@@ -1159,7 +1188,8 @@ function faceKey(p, state, at) {
     case 'ion': return `${p.props.el}|${p.props.charge || 0}|${p.props.tint || ''}`;
     case 'specimen': return JSON.stringify(p.props);
     case 'nucleus': return `${p.props.p}|${p.props.n}`;
-    case 'detector': return `${p.props.count ?? ''}`;
+    case 'detector': return `${p.props.count ?? ''}|${p.props.shots ?? ''}`;
+    case 'speck': return p.props.deflect || '';
     case 'proton': case 'neutron': return p.props.flipped ? 'marked' : '';
     case 'model': return p.label;
     default: return '';
@@ -1207,7 +1237,7 @@ function paintNeedle(ctx, f, state, b) {
 
 /**
  * The beam and its foil, drawn as the experiment is laid out: the source on the left, the dashed path of the shots, the foil
- * edge-on, and a guide from the foil to each detector with the angle it stands at. Used when the fixture lists its detectors.
+ * edge-on, and a guide from the foil to each detector (named on the detector; no angles, which are noise here). Used when the fixture lists its detectors.
  */
 function paintBeamLayout(ctx, f, state, b) {
   const { source, foil } = f.props;
@@ -1230,9 +1260,6 @@ function paintBeamLayout(ctx, f, state, b) {
     ctx.moveTo(b.X(foil.x), b.Y(foil.y));
     ctx.lineTo(b.X(d.at.x), b.Y(d.at.y));
     ctx.stroke();
-    const mx = foil.x + (d.at.x - foil.x) * 0.5;
-    const my = foil.y + (d.at.y - foil.y) * 0.5;
-    plateText(ctx, `${angle}°`, b.X(mx), b.Y(my + (d.at.y < foil.y ? -1.6 : 3.2)), { size: Math.max(8, Math.round(2.3 * unit)), align: 'center', color: PLATE_COLORS.dust });
   }
   ctx.setLineDash?.([]);
   // The foil, edge on.
@@ -1321,11 +1348,60 @@ function paintPlate(ctx, f, state, b) {
   lines.forEach((text, i) => plateText(ctx, text, b.x0 + 2.2 * b.sc, top + (i + 0.6) * (room / lines.length), { size, base: 'middle', color: i === 0 ? PLATE_COLORS.text : PLATE_COLORS.dust }));
 }
 
+/**
+ * The charged plates: a + plate along the top, a − plate along the bottom, and the bed between them where specks are laid. Once the
+ * field has been switched on, the two paths the specks took are drawn with how many took each.
+ */
+function paintField(ctx, f, state, b) {
+  const unit = Math.max(1, b.sc);
+  const w = b.x1 - b.x0;
+  const size = Math.max(8, Math.round(2.4 * unit));
+  const bar = Math.max(3, 1.6 * unit);
+  // The plates sit clear of the instrument's name (top left) and of its key (bottom right), with a sign at the right-hand end of each.
+  const topY = b.y0 + 5.5 * unit;
+  const botY = b.y1 - 7.0 * unit;
+  const x0 = b.x0 + 1.5 * unit;
+  const x1 = b.x1 - 6 * unit;
+  ctx.fillStyle = PLATE_COLORS.steel;
+  ctx.fillRect(x0, topY, x1 - x0, bar);
+  ctx.fillRect(x0, botY, x1 - x0, bar);
+  plateText(ctx, '+', b.x1 - 3 * unit, topY + bar / 2, { size: Math.round(size * 1.6), weight: 700, align: 'center', base: 'middle', color: AMBER });
+  plateText(ctx, '−', b.x1 - 3 * unit, botY + bar / 2, { size: Math.round(size * 1.6), weight: 700, align: 'center', base: 'middle', color: PLATE_COLORS.dust });
+  const specks = Object.values(state.pieces).filter(p => p.kind === 'speck' && p.props.deflect);
+  if (!specks.length) return;
+  const bent = specks.filter(p => p.props.deflect === 'bent').length;
+  const straight = specks.length - bent;
+  plateText(ctx, `${bent} bent, ${straight} straight`, b.x0 + w / 2, botY - 2.2 * unit, { size, align: 'center', base: 'middle', color: AMBER });
+}
+
+/** What the tester says a sample does with its outer electrons, in the words the trays use. */
+export const TRADE_TEXT = { gives: 'Gives one away', takes: 'Takes one on', inert: 'Will not trade' };
+
+/**
+ * The tester's screen: the reading of the sample in its slot, in words, with the sample's name. It is blank until a sample has been
+ * tested, so the player can see the key has done something and what it found.
+ */
+function paintTester(ctx, f, state, b) {
+  const unit = Math.max(1, b.sc);
+  const held = Object.values(state.pieces).find(p => p.kind === 'specimen' && p.zone === `slot:${f.props.slot}` && !p.hidden);
+  const reading = held?.props.tested ? TRADE_TEXT[held.props.tested] : '';
+  ctx.fillStyle = 'rgba(13, 12, 10, 0.7)';
+  ctx.fillRect(b.x0 + 1.5 * unit, b.y0 + 5 * unit, (b.x1 - b.x0) - 3 * unit, 6 * unit);
+  if (reading) {
+    plateText(ctx, `${held.label}`, b.x0 + 2.5 * unit, b.y0 + 6.9 * unit, { size: Math.max(7, Math.round(2.0 * unit)), align: 'left', base: 'middle', color: PLATE_COLORS.dust });
+    plateText(ctx, reading, b.x0 + 2.5 * unit, b.y0 + 9.4 * unit, { size: Math.max(8, Math.round(2.7 * unit)), weight: 700, align: 'left', base: 'middle', color: AMBER });
+  } else {
+    plateText(ctx, held ? 'press the key' : 'no sample', b.x0 + 2.5 * unit, b.y0 + 8 * unit, { size: Math.max(7, Math.round(2.2 * unit)), align: 'left', base: 'middle', color: PLATE_COLORS.dim });
+  }
+}
+
 function paintFixture(ctx, f, state, b) {
   if (f.kind === 'plate') paintPlate(ctx, f, state, b);
   else if (f.kind === 'slate') paintSlate(ctx, f, state, b);
   else if (f.kind === 'needle') paintNeedle(ctx, f, state, b);
   else if (f.kind === 'beam') paintBeam(ctx, f, state, b);
+  else if (f.kind === 'field') paintField(ctx, f, state, b);
+  else if (f.kind === 'tester') paintTester(ctx, f, state, b);
   else if (f.kind === 'reader') paintReader(ctx, f, state, b);
 }
 
@@ -1411,14 +1487,20 @@ function run(state, fixtureId) {
     const c = beamCounts(f.props.specimen);
     const countAt = angle => (angle === 0 ? c.through : angle === 180 ? c.back : c.wide);
     // A beam with a detector at every angle (`props.detectors`: piece id -> angle) reads them all at once and prints a point for each.
+    // A detector KEEPS every hit: each firing is another full pass of shots, so the tally and the shot total both grow, and the rare
+    // shot that comes straight back builds up over firings instead of being one event.
     if (f.props.detectors) {
       const rows = [];
       const stamp = {};
       for (const [id, angle] of Object.entries(f.props.detectors)) {
-        const count = countAt(angle);
-        rows.push({ x: angle, y: count, label: `${count} of ${c.shots}` });
-        stamp[id] = { count };
+        const before = state.pieces[id]?.props || {};
+        const count = (before.count || 0) + countAt(angle);
+        const shots = (before.shots || 0) + c.shots;
+        rows.push({ x: angle, y: count, label: `${count} of ${shots}` });
+        stamp[id] = { count, shots };
       }
+      // A bench with no strip (`props.quiet`) reads onto its detectors alone.
+      if (f.props.quiet) return { stamp };
       return rows.length ? { ...rows[0], rows, stamp } : null;
     }
     const det = Object.values(state.pieces).find(p => p.kind === 'detector' && p.zone && p.zone.startsWith('slot:') && !p.hidden);
@@ -1428,6 +1510,15 @@ function run(state, fixtureId) {
     if (angle == null) return null;
     const count = countAt(angle);
     return { x: angle, y: count, label: `${count} of ${c.shots}`, stamp: { [det.id]: { count } } };
+  }
+  if (f.kind === 'field') {
+    // The charged plates: whatever lies in the bed is sent between them. A speck with an electric charge is pulled toward the plate of
+    // the opposite sign and is tagged `bent`; a speck with none goes straight on. The speck only says what charge it carries.
+    const bed = Object.values(state.pieces).filter(p => p.kind === 'speck' && !p.hidden && p.zone === f.props.bed);
+    if (!bed.length) return { noop: 'Lay some specks in the bed first.' };
+    const stamp = {};
+    for (const p of bed) stamp[p.id] = { deflect: Number(p.props.charge) ? 'bent' : 'straight' };
+    return { stamp };
   }
   if (f.kind === 'tester') {
     const held = Object.values(state.pieces).find(p => p.kind === 'specimen' && p.zone === `slot:${f.props.slot}` && !p.hidden);
@@ -1451,12 +1542,45 @@ function piece3d(p, state, c) {
   }
 }
 
+/**
+ * Solid parts for the beam bench: the foil stands in the beam as the thin object it is, a frame with a few small nuclei in a wide empty
+ * pane, and the source is a cast block with a bore. The flat picture the table prints (the dashed path, the angles, the detectors) stays
+ * the table's own; this only stands the experiment up in space, where "mostly empty, with a hard lump here and there" can be seen.
+ */
+function dress3d(f, state, c) {
+  if (f.kind === 'field') {
+    // Two plates standing along the bed: the + one in brass, the − one in steel, so the pull between them is something you can see.
+    const g = new c.THREE.Group();
+    const { scale: s, toPlate, ground, box } = c;
+    // The same bars the flat picture prints: clear of the instrument's name and key, short of the right-hand end where the signs stand.
+    const len = (box.x1 - box.x0 - 7.5) * s;
+    const cx = (box.x0 + box.x1) / 2 - 2.25;
+    const top = toPlate({ x: cx, y: box.y0 + 6.3 });
+    const bottom = toPlate({ x: cx, y: box.y1 - 6.2 });
+    const plus = buildChargePlate(len, { mats: c.mats, brass: true });
+    plus.position.set(top.x, ground + 0.001, top.z);
+    const minus = buildChargePlate(len, { mats: c.mats, brass: false });
+    minus.position.set(bottom.x, ground + 0.001, bottom.z);
+    g.add(plus, minus);
+    return g;
+  }
+  if (f.kind !== 'beam' || !f.props.detectors) return null;
+  const { scale: s, toPlate, ground } = c;
+  const group = new c.THREE.Group();
+  const place = (obj, ux, uy, y = 0) => { const p = toPlate({ x: ux, y: uy }); obj.position.set(p.x, ground + y, p.z); group.add(obj); return obj; };
+  const { foil, source } = f.props;
+  place(buildScatterFoil(16 * s, 11 * s, { mats: c.mats }), foil.x, foil.y, 0.001);
+  place(buildBeamSource(5 * s, { mats: c.mats }), source.x, source.y, 0.001);
+  return group;
+}
+
 export const ATOMS_KIT = {
   id: ATOMS_KIT_ID,
   joinGap: 1.28,
   kinds: {
     atom: { r: R, split: true },
     proton: { r: R, nojoin: true },
+    speck: { r: R, nojoin: true },
     neutron: { r: R, nojoin: true },
     electron: { r: R, nojoin: true },
     ion: { r: R, nojoin: true },
@@ -1484,6 +1608,7 @@ export const ATOMS_KIT = {
   readPiece,
   run,
   piece3d,
+  dress3d,
   deck3d: ligarDeck,
   paintPiece,
   printed,

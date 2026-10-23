@@ -22,31 +22,26 @@
  * A stage with no entry has no lead.
  */
 export const STAGE_STORY = {
-  /* ---- Tallow: take the salt guards apart and save the refinery ---- */
+  /* ---- Tallow: is the Fifth's alchemy rumour true, and what are they putting in the salt? ---- */
   'q1-grain': {
-    1: 'Raiders scattered grey powder across the refinery yard during the attack.',
-    4: 'The raiders\' salt husks shrug off the cutter, and Vess needs to know why.',
-    5: 'The refinery runs on water, and Vess needs the exact recipe for one molecule of it.',
-    8: 'The sorted crates go back on the shelves, and the yard ledger finally balances.'
+    1: 'Raiders scattered grey powder across the refinery yard, and Vess needs to know if it is something new.',
+    4: 'The raiders\' salt husks shrug off the cutter, and Vess needs to know why.'
   },
   'q2-core': {
-    1: 'A strange atom from the wreckage hides something tiny and heavy at its center.',
-    3: 'A sealed canister from the raiders refuses to open, and Vess needs to know what is inside.',
-    7: 'Vess needs a charged cell strong enough to crack a salt husk.'
+    1: 'The canteen says the Fifth can turn salt into gold, and Vess wants to know how an atom is built.'
   },
   'q3-catalogue': {
-    1: 'The raiders scrambled the refinery\'s element cards, and Vess needs them back in order.'
+    1: 'Vess wants to know which elements belong on a salt flat, and which would be out of place.'
   },
   'q4-ledger': {
-    2: 'A sealed canister from the raid must be read without opening it.',
-    5: 'The salt husks run on stolen charge, and Vess means to understand it.'
+    2: 'A sealed canister from the raid must be read without opening it.'
   },
   'q5-assay': {
-    1: 'A chlorine shipment splits across two bins, and the mix needs an explanation.',
+    1: 'A sample of the raiders\' salt has come off the pan, and Vess needs to know what is in it.',
     8: 'Three sellers claim natural chlorine, but only one tells the truth.'
   },
   'q6-weigh': {
-    2: 'Vess has to estimate how much cargo the raiders stole.',
+    1: 'The stores are sealed crates and drums, and Vess means to count them without opening one.',
     6: 'A sealed drum waits on the dock with its papers lost.'
   },
 

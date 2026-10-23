@@ -266,6 +266,11 @@ export class Table3D extends BenchViewer3D {
 
     // The stage's table is the part of the plate in use: frame that (what is on it, and room to work), not the whole mat. A fight's foe
     // stands in the table's top corner (`FOE_PAD`), so that corner is in use too, and the body rises above the table's far edge there.
+    // The frame is fixed by what is ON the table, not where the pieces happen to be: lifting a piece, or setting it down somewhere else, must never
+    // move the camera. So it is solved once per stage / rebuild, and again only when pieces are added or taken away.
+    const frameKey = `${this.foes?.enc ? 'fight' : ''}:${Object.values(state.pieces).filter(p => !p.hidden).map(p => p.id).sort().join('|')}`;
+    if (!(first || rebuilt || stageChanged) && this.leanZones && frameKey === this.leanFrameKey) return;
+    this.leanFrameKey = frameKey;
     const fight = Boolean(this.foes?.enc);
     const foePad = fight ? foePadOf(state.bounds).rect : null;
     const u = usedRect(state, getKit(state.kit), { extra: foePad ? [foePad] : [] });

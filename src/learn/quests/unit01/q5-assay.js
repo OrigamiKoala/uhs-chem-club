@@ -12,14 +12,16 @@
  *
  * THE ORDER IS THE WHOLE DESIGN:
  *
- *   1  tip one kind and read the code of each bin -> A sample is a mix of isotopes
+ *   1  tip two samples and read the code of each bin -> A sample is a mix of isotopes
  *   2  tip two samples of the same stock          -> Abundance
  *   3  slide the fulcrum under the piles         -> The listed mass is an average
  *   4  do the balancing on a fresh sample        -> Average atomic mass
- *   5  predict a sample that lands in one bin    -> Why some masses are whole
- *   6  balance a sealed canister with a made-up mix -> The average pins the mix
- *   7  name three unlabelled samples             -> The mass names the element
+ *   5  PREDICT: where will a one-bin sample balance (no instrument yet) -> Predict, then test
+ *   6  TEST: tip it and find the balance point    -> Why some masses are whole (the guess is never graded)
+ *   7  balance a sealed canister with a made-up mix -> The average pins the mix
  *   8  three claims of the same stock            -> The mass is a fingerprint
+ *      (A stage that named three unlabelled samples by their balance point repeated stages 3 and 4
+ *      with a tray at the end, and was cut. The Hopper's slag phase still asks it.)
  *   -- debrief: what a listed mass really is, and what comes after Tallow.
  *
  * WHAT THIS BENCH DOES NOT DO. It never counts a heap too large to count, and
@@ -28,15 +30,14 @@
  * that has only just met the weighted average has no business being handed it. Nor does
  * any instrument here divide: a beam compares, a fulcrum balances, a bin counts.
  *
- * FIELD (stage 1). A draw can be taken from the weigh hopper's catch bins: the field point
- * is a real piece of the host (`tallow/stations.js` `buildWeighHopper`). It is evidence, never a
- * lock: the stage is answered with the bench's own Sample A, and at T1 to T3 the same fetch is a
- * drawn site plate.
+ * NO FIELD FETCH. Stage 1 once sent the player to the hopper's catch bins for a draw that was
+ * the same chlorine as Sample A, so the walk carried nothing and was retired (problems doc U3).
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
 
 import { createRunner, stateFromScript } from '../../engine/stagerunner.js';
+import { remember, recall } from '../../engine/predict.js';
 import { massTable, assayRead, balanceRead, mixRead } from '../../table/kits/mass.js';
 
 export const meta = { stageCount: 8 };
@@ -93,6 +94,10 @@ export function averageOf(bins) {
    ------------------------------------------------------------------ */
 
 const SAMPLE_X = 14;
+
+/** The key the player's guess is kept under (`engine/predict.js`) and what each token is called in the test's prompt. */
+const QUEST_KEY = 'unit01/q5-assay';
+const TOKEN_LABEL = { 't-pile': 'At the pile\'s weight', 't-between': 'Between two weights' };
 const CHUTE = { id: 'chute', label: 'Chute', at: { x: SAMPLE_X, y: 12 }, size: { w: 20, h: 17 } };
 
 /** A sample card: a hopper of salvage with its declared bins. */
@@ -124,16 +129,13 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Tip It Out',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'This bench sorts atoms down a chute into bins by weight. Drop a sample in the chute and press "Tip Sample", then read the code of a bin with "Read Code".'
-    },
-    prompt: 'Sort Sample A by how many elements its atoms belong to.',
+    prompt: 'How many elements do the atoms of each sample belong to?',
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
       pieces: [
         sample('a', 'SAMPLE A', CL, { x: SAMPLE_X, y: 34 }, { code: 'chlorine' }),
-        { ...sample('draw', 'HOPPER DRAW', CL, { x: SAMPLE_X, y: 49 }, { code: 'chlorine' }), hidden: true, fetchFrom: 'hopper' }
+        // Two elements, one name per bin: the code is what tells it apart, not the look of the heap.
+        sample('b', 'SAMPLE B', [{ mass: 23, n: 20, code: 'sodium' }, { mass: 35, n: 20, code: 'chlorine' }], { x: SAMPLE_X, y: 49 })
       ],
       zones: {
         slots: [CHUTE],
@@ -145,25 +147,26 @@ export const STAGES = [
           id: 'coder', kind: 'coder', label: 'Code', runLabel: 'Read Code', at: { x: 127, y: 23 }, size: { w: 34, h: 42 },
           props: { assay: 'assay' }, dials: { bin: { min: 1, max: 2, step: 1, value: 1, label: 'Bin' } }
         }
-      ],
-      fetch: [{ id: 'hopper', label: 'Hopper draw', at: { x: SAMPLE_X, y: 65 } }]
+      ]
     }),
     hints: [
-      'Drop Sample A in the chute and press "Tip Sample".',
-      'Turn the "Bin" dial to each bin in turn, press "Read Code", and compare what the two bins say.',
-      'If both bins read the same name the atoms are one element, and if the two names differ they are two elements.'
+      'Use "Tip Sample", the "Bin" dial and "Read Code".',
+      'Read the code of every bin of a sample and compare what the bins say.',
+      'If every bin reads the same name the atoms are one element, and if the names differ they are more than one.'
     ],
     check(state) {
       const t = state.table;
-      const here = trayOf(t, 'a');
-      if (!['one', 'two'].includes(here)) return { ok: false, notYet: true, msg: 'Sample A has no tray yet.' };
-      if (here === 'two') return { ok: false, msg: 'Read the code on each bin and compare: two elements would read two different names.' };
+      for (const [id, name] of [['a', 'Sample A'], ['b', 'Sample B']]) {
+        if (!['one', 'two'].includes(trayOf(t, id))) return { ok: false, notYet: true, msg: `${name} has no tray yet.` };
+      }
+      if (trayOf(t, 'a') === 'two') return { ok: false, msg: 'Both bins of Sample A read the same name.' };
+      if (trayOf(t, 'b') === 'one') return { ok: false, msg: 'The two bins of Sample B read different names.' };
       return { ok: true };
     },
     reward: {
-      log: 'Sample A: 30 atoms at 35, 10 at 37, all chlorine.',
+      log: 'Sample A: 30 atoms at 35, 10 at 37, all chlorine. Sample B: sodium and chlorine.',
       title: 'A Sample Is a Mix of Isotopes',
-      body: 'Both bins read chlorine, so every atom holds 17 protons and every atom is the same element. The 35s and the 37s differ only in neutrons, which makes them isotopes of each other. A natural sample of an element is a mixture of its isotopes, and this is what that looks like.'
+      body: 'Both bins of Sample A read chlorine, so every atom holds 17 protons, and the 35s and the 37s differ only in neutrons, which makes them isotopes of each other. Sample B\'s bins read two different names, so that one is two elements. A natural sample of one element is a mixture of its isotopes.'
     }
   },
 
@@ -188,7 +191,7 @@ export const STAGES = [
       fixtures: [assayFixture({ at: { x: 87, y: 19 }, size: { w: 114, h: 34 } })]
     }),
     hints: [
-      'Drop a sample in the chute and press "Tip Sample", then do the same with the other sample.',
+      'Use "Tip Sample" on each sample.',
       'Read the tally over the lighter bin and the number of atoms on the card, for each sample.',
       'Divide the lighter bin\'s tally by the sample\'s total and scale it to a hundred, then check that both samples agree.'
     ],
@@ -198,8 +201,8 @@ export const STAGES = [
       const names = { a: 'Sample A', b: 'Sample B' };
       for (const id of ['a', 'b']) if (!['s25', 's50', 's75'].includes(mine[id])) return { ok: false, notYet: true, msg: `${names[id]} has no tray yet.` };
       for (const id of ['a', 'b']) {
-        if (mine[id] === 's25') return { ok: false, msg: `${names[id]}'s tray is the heavier bin's share, and the question asks about the lighter bin.` };
-        if (mine[id] === 's50') return { ok: false, msg: `An even split would put the same number in each bin. Compare ${names[id]}'s two tallies.` };
+        if (mine[id] === 's25') return { ok: false, msg: `The lighter bin of ${names[id]} holds more than 25 in every 100.` };
+        if (mine[id] === 's50') return { ok: false, msg: `The two tallies of ${names[id]} are not equal.` };
       }
       return { ok: true };
     },
@@ -224,7 +227,7 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Drop Sample A in the chute, press "Tip Sample", then slide the "Fulcrum" dial along the ruler.',
+      'Use "Tip Sample" and the "Fulcrum" dial.',
       'Watch which end of the beam dips as the fulcrum moves, and where it lies level.',
       'The beam lies level where the fulcrum is as far from the weight of the atoms on one side as from the other side\'s, counting every atom.'
     ],
@@ -233,8 +236,8 @@ export const STAGES = [
       if (!r.sample || !r.poured) return { ok: false, notYet: true, msg: 'Tip Sample A into the chute, then slide the fulcrum.' };
       if (!r.level) {
         return { ok: false, msg: r.net > 0
-          ? 'The beam dips on the heavy-weight side: the fulcrum sits too far from that side.'
-          : 'The beam dips on the light-weight side: the fulcrum sits too far from that side.' };
+          ? 'The beam dips on the heavy-weight side.'
+          : 'The beam dips on the light-weight side.' };
       }
       return { ok: true };
     },
@@ -256,7 +259,7 @@ export const STAGES = [
       fixtures: [assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(9.5, 11.5, 10.5) })]
     }),
     hints: [
-      'Drop the sample in the chute, press "Tip Sample", and slide the "Fulcrum" dial until the beam lies level.',
+      'Use "Tip Sample" and the "Fulcrum" dial.',
       'Read the tally over each bin and notice which pile is the bigger.',
       'Multiply each bin\'s weight by its share of the atoms and add the two results, then check that the fulcrum agrees.'
     ],
@@ -265,8 +268,8 @@ export const STAGES = [
       if (!r.sample || !r.poured) return { ok: false, notYet: true, msg: 'Tip the sample into the chute, then slide the fulcrum.' };
       if (!r.level) {
         const middle = (r.bins[0].mass + r.bins[r.bins.length - 1].mass) / 2;
-        if (r.pivot === middle) return { ok: false, msg: 'The plain middle of the two weights is not where it balances, because the two bins did not catch equal numbers.' };
-        return { ok: false, msg: 'The beam still dips. Weigh each pile by how many atoms stand in it, and keep sliding until it lies level.' };
+        if (r.pivot === middle) return { ok: false, msg: 'The beam dips at the middle of the two weights.' };
+        return { ok: false, msg: 'The beam still dips.' };
       }
       return { ok: true };
     },
@@ -279,8 +282,52 @@ export const STAGES = [
 
   /* ---------------------------------------------------------------- 5 */
   {
+    title: 'Predict the Balance',
+    // A PREDICT STAGE: the chute, the bins and the fulcrum are not on the table yet. The guess is made first and comes back with the test.
+    predict: true,
+    prompt: 'Where will the beam balance under this fluorine sample?',
+    widget: { type: 'table', label: 'The bench' },
+    table: massTable({
+      pieces: [{ ...sample('a', 'SAMPLE A', [{ mass: 19, n: 40 }], { x: SAMPLE_X, y: 34 }), fixed: true }],
+      fixtures: [
+        { id: 'plate', kind: 'plate', label: 'Listed', at: { x: SAMPLE_X, y: 56 }, size: { w: 24, h: 16 }, noRun: true, props: { lines: ['fluorine', 'listed mass', '19.0'] } }
+      ],
+      prediction: {
+        slot: { id: 'predict', label: 'My prediction', at: { x: 87, y: 24 }, size: { w: 34, h: 16 } },
+        tokens: [
+          { id: 't-pile', label: 'At the pile\'s weight', at: { x: 64, y: 52 }, r: 7.2 },
+          { id: 't-between', label: 'Between two weights', at: { x: 110, y: 52 }, r: 7.2 }
+        ]
+      }
+    }),
+    hints: [
+      'Use the two tokens and the prediction slot.',
+      'Compare this sample with the last two, which landed in two bins, and ask how many bins this one will fill.',
+      'There is no wrong guess yet; commit to the one you would bet on.'
+    ],
+    check(state) {
+      if (!state.table.prediction.token) return { ok: false, notYet: true, msg: 'Drop a token in the slot: where will the beam balance?' };
+      return { ok: true };
+    },
+    onClear(state) {
+      if (state.table.prediction.token) remember(QUEST_KEY, state.table.prediction.token);
+    },
+    reward: {
+      log: 'Prediction locked in.',
+      title: 'Predict, Then Test',
+      body: 'A prediction made before the test is the only kind a test can prove wrong. Next, the beam will answer yours.'
+    }
+  },
+
+  /* ---------------------------------------------------------------- 6 */
+  {
     title: 'Only One Bin',
-    prompt: 'Predict where the beam will balance under this fluorine sample, then test it.',
+    get prompt() {
+      const guess = recall(QUEST_KEY);
+      return TOKEN_LABEL[guess]
+        ? `You predicted "${TOKEN_LABEL[guess]}": where does the beam balance under this fluorine sample?`
+        : 'Where does the beam balance under this fluorine sample?';
+    },
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
       pieces: [sample('a', 'SAMPLE A', [{ mass: 19, n: 40 }], { x: SAMPLE_X, y: 34 })],
@@ -288,42 +335,35 @@ export const STAGES = [
       fixtures: [
         { id: 'plate', kind: 'plate', label: 'Listed', at: { x: SAMPLE_X, y: 56 }, size: { w: 24, h: 16 }, noRun: true, props: { lines: ['fluorine', 'listed mass', '19.0'] } },
         assayFixture({ at: { x: 87, y: 24 }, size: { w: 114, h: 44 } }, { dials: fulcrum(18, 20, 19.6) })
-      ],
-      prediction: {
-        slot: { id: 'predict', label: 'It will balance', at: { x: 61, y: 58 }, size: { w: 30, h: 14 } },
-        tokens: [
-          { id: 't-pile', label: 'At the pile\'s weight', at: { x: 99, y: 62 }, r: 7.2 },
-          { id: 't-between', label: 'Between two weights', at: { x: 131, y: 62 }, r: 7.2 }
-        ]
-      }
+      ]
     }),
     hints: [
-      'Drop a prediction in its slot, then drop Sample A in the chute and press "Tip Sample".',
+      'Use "Tip Sample" and the "Fulcrum" dial.',
       'Count how many bins caught atoms, and compare with the last two samples, which landed in two.',
       'Slide the "Fulcrum" dial to where the beam lies level and see whether that place has a pile of its own.'
     ],
     check(state) {
-      const t = state.table;
-      if (!t.prediction.token) return { ok: false, notYet: true, msg: 'Drop a prediction in the slot: where will the beam balance?' };
-      if (t.prediction.token !== 't-pile') {
-        return { ok: false, msg: 'Test it: tip the sample, slide the fulcrum along the ruler and look at where the beam lies level and where the pile stands.' };
-      }
+      const r = chuteSample(state.table);
+      if (!r.sample || !r.poured) return { ok: false, notYet: true, msg: 'Tip the sample, then slide the fulcrum.' };
+      if (!r.level) return { ok: false, msg: 'The beam is not level at the fulcrum.' };
       return { ok: true };
     },
-    reward: {
-      log: 'Sample A: one weight only, 19.0 confirmed.',
-      title: 'Why Some Masses Are Whole',
-      body: 'A few elements occur as only one isotope, so there is nothing to weight and the listed mass comes out whole. That means the decimal on a listed mass is information, not untidiness. It tells you the element turns up as a mixture of isotopes, and roughly where in that mixture the weight sits.'
+    get reward() {
+      const guess = recall(QUEST_KEY);
+      const verdict = !TOKEN_LABEL[guess] ? '' : guess === 't-pile'
+        ? 'You predicted this, and the beam agreed. '
+        : 'The beam did not agree with your prediction, which is how a guess gets better. ';
+      return {
+        log: 'Sample A: one weight only, 19.0 confirmed.',
+        title: 'Why Some Masses Are Whole',
+        body: `${verdict}All 40 atoms stand in one pile, so the beam levels at that pile's own weight and the listed mass comes out whole.`
+      };
     }
   },
 
-  /* ---------------------------------------------------------------- 6 */
+  /* ---------------------------------------------------------------- 7 */
   {
     title: 'Weighed Without Opening It',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Two pans now hang from a beam, with a sealed canister on one. The mix dial makes up a pile of atoms on the other pan.'
-    },
     prompt: 'Balance the sealed canister with a mix of 40 atoms of weight 20 and weight 22.',
     widget: { type: 'table', label: 'The bench' },
     table: massTable({
@@ -342,7 +382,7 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Turn the "Heavy atoms" dial and watch the beam tip toward whichever pan is heavier.',
+      'Use the "Heavy atoms" dial.',
       'The canister and the mix both hold 40 atoms, so only the weights of the atoms can set them apart.',
       'Add heavy atoms one at a time and stop at the first mix where neither pan dips.'
     ],
@@ -352,8 +392,8 @@ export const STAGES = [
       if (mixRead(t, 'mixer').heavy === 0) return { ok: false, notYet: true, msg: 'The mix is all light atoms. Turn the dial and watch the beam.' };
       if (!bal.level) {
         return { ok: false, msg: bal.lean > 0
-          ? 'The mix pan is heavier than the canister: it holds too many heavy atoms.'
-          : 'The canister pan is heavier than the mix: the mix holds too few heavy atoms.' };
+          ? 'The mix pan is the heavier pan.'
+          : 'The canister pan is the heavier pan.' };
       }
       return { ok: true };
     },
@@ -361,49 +401,6 @@ export const STAGES = [
       log: 'Sample A averages 20.2: 90 atoms light, 10 heavy.',
       title: 'The Average Pins the Mix',
       body: 'The weighting runs both ways: the abundances give you the average, and the average plus the two weights gives you the abundances. That is how a sealed sample is identified without being opened. It is also how the isotope proportions of the elements were first measured.'
-    }
-  },
-
-  /* ---------------------------------------------------------------- 7 */
-  {
-    title: 'Name Three Samples',
-    prompt: 'Sort each unknown sample under the element whose listed mass it balances at.',
-    widget: { type: 'table', label: 'The bench' },
-    table: massTable({
-      pieces: [
-        sample('a', 'SAMPLE A', NE, { x: SAMPLE_X, y: 34 }),
-        sample('b', 'SAMPLE B', CL, { x: SAMPLE_X, y: 49 }),
-        sample('c', 'SAMPLE C', B, { x: SAMPLE_X, y: 64 })
-      ],
-      zones: {
-        slots: [CHUTE],
-        trays: [
-          trayAt('boron', 'Boron 10.8', 51, 56, 38),
-          trayAt('neon', 'Neon 20.2', 91, 56, 38),
-          trayAt('chlorine', 'Chlorine 35.5', 131, 56, 38)
-        ]
-      },
-      fixtures: [assayFixture({ at: { x: 87, y: 20 }, size: { w: 114, h: 36 } }, { dials: fulcrum(9, 38, 23.5) })]
-    }),
-    hints: [
-      'Drop a sample in the chute, press "Tip Sample", and slide the "Fulcrum" dial until the beam lies level.',
-      'Compare the point where each sample balances with the listed masses on the trays.',
-      'The point where a sample balances is its average weight, and it sits at one tray\'s listed mass and no other\'s.'
-    ],
-    check(state) {
-      const t = state.table;
-      const want = { a: 'neon', b: 'chlorine', c: 'boron' };
-      const names = { a: 'Sample A', b: 'Sample B', c: 'Sample C' };
-      for (const id of ['a', 'b', 'c']) if (!['boron', 'neon', 'chlorine'].includes(trayOf(t, id))) return { ok: false, notYet: true, msg: `${names[id]} has no tray yet.` };
-      for (const id of ['a', 'b', 'c']) {
-        if (trayOf(t, id) !== want[id]) return { ok: false, msg: `${names[id]} is filed wrong. Find where its piles balance and match that point to a tray's listed mass.` };
-      }
-      return { ok: true };
-    },
-    reward: {
-      log: 'All three samples named off their weights.',
-      title: 'The Mass Names the Element',
-      body: 'Every element has its own isotopes in its own proportions, so its average weight is as good as a name. No two listed masses are the same. Balancing a heap named all three samples without opening any of them.'
     }
   },
 
@@ -425,7 +422,7 @@ export const STAGES = [
       fixtures: [assayFixture({ at: { x: 87, y: 20 }, size: { w: 114, h: 36 } }, { dials: fulcrum(34.5, 37.5, 36) })]
     }),
     hints: [
-      'Drop a sample in the chute, press "Tip Sample", and slide the "Fulcrum" dial until the beam lies level.',
+      'Use "Tip Sample" and the "Fulcrum" dial on each sample.',
       'Every sample is chlorine, so the name will not tell them apart: compare where each one balances.',
       'Natural chlorine balances at its listed mass, and a sample that balances anywhere else has had its mix changed.'
     ],
@@ -435,7 +432,7 @@ export const STAGES = [
       const names = { a: 'Sample A', b: 'Sample B', c: 'Sample C' };
       for (const id of ['a', 'b', 'c']) if (!['natural', 'altered'].includes(trayOf(t, id))) return { ok: false, notYet: true, msg: `${names[id]} has no tray yet.` };
       for (const id of ['a', 'b', 'c']) {
-        if (trayOf(t, id) !== want[id]) return { ok: false, msg: `${names[id]} is filed wrong. Find where its piles balance and compare that point with the listed mass.` };
+        if (trayOf(t, id) !== want[id]) return { ok: false, msg: `${names[id]}'s tray does not match where its piles balance.` };
       }
       return { ok: true };
     },
@@ -542,25 +539,25 @@ const slide = value => ({ setDial: { fixture: 'assay', dial: 'pivot', value } })
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [{ fetch: 'hopper' }, ...tip('a'), { run: 'coder' }, { setDial: { fixture: 'coder', dial: 'bin', value: 2 } }, { run: 'coder' }, to('a', 'tray:one')],
+  [...tip('a'), { run: 'coder' }, { setDial: { fixture: 'coder', dial: 'bin', value: 2 } }, { run: 'coder' }, to('a', 'tray:one'), ...tip('b'), { run: 'coder' }, { setDial: { fixture: 'coder', dial: 'bin', value: 2 } }, { run: 'coder' }, to('b', 'tray:two')],
   [...tip('a'), ...tip('b'), to('a', 'tray:s75'), to('b', 'tray:s75')],
   [...tip('a'), slide(35.5)],
   [...tip('a'), slide(10.8)],
-  [{ predict: 't-pile' }, ...tip('a'), slide(19)],
+  [{ predict: 't-pile' }],
+  [...tip('a'), slide(19)],
   [{ setDial: { fixture: 'mixer', dial: 'heavy', value: 4 } }],
-  [...tip('a'), slide(20), ...tip('b'), slide(35.5), ...tip('c'), slide(11), to('a', 'tray:neon'), to('b', 'tray:chlorine'), to('c', 'tray:boron')],
   [...tip('a'), slide(35.5), ...tip('b'), slide(36), ...tip('c'), slide(35), to('a', 'tray:natural'), to('b', 'tray:altered'), to('c', 'tray:altered')]
 ];
 
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
-  [...tip('a'), { run: 'coder' }, { setDial: { fixture: 'coder', dial: 'bin', value: 2 } }, { run: 'coder' }, to('a', 'tray:two')],
+  [...tip('a'), { run: 'coder' }, { setDial: { fixture: 'coder', dial: 'bin', value: 2 } }, { run: 'coder' }, to('a', 'tray:two'), to('b', 'tray:two')],
   [...tip('a'), ...tip('b'), to('a', 'tray:s75'), to('b', 'tray:s25')],
   [...tip('a'), slide(36)],
   [...tip('a'), slide(10.5)],
-  [{ predict: 't-between' }, ...tip('a'), slide(19)],
+  [],
+  [...tip('a')],
   [{ setDial: { fixture: 'mixer', dial: 'heavy', value: 1 } }],
-  [...tip('a'), ...tip('b'), ...tip('c'), to('a', 'tray:boron'), to('b', 'tray:chlorine'), to('c', 'tray:neon')],
   [...tip('a'), ...tip('b'), ...tip('c'), to('a', 'tray:natural'), to('b', 'tray:natural'), to('c', 'tray:altered')]
 ];
 

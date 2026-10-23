@@ -35,10 +35,9 @@
  * declares an outcome; `SOLUTIONS` and `MISSES` are scripts of the player's own
  * actions, replayed by `verify:table` by drag and by two taps.
  *
- * FIELD (T4). Stage 1 sends the player to the conveyor tail for a scoop: a field
- * point on the sample point's cross-cut sampler. It is evidence and never a lock; the
- * stage is answered at the bench either way. At T1 to T3 the same stage draws a site
- * plate on the table, and a tap on it is the same `fetch`.
+ * NO FIELD FETCH. Stage 1 once sent the player to the conveyor tail for a scoop that held the same
+ * atoms, in the same count, as Sample A. That was carrying, not evidence, so it was retired
+ * (problems doc U3): a fetch stays only where what is fetched is new evidence.
  *
  * This quest pays no XP, writes no Submission and never reaches Standings. It
  * reports through `ctx` and nothing else.
@@ -167,24 +166,18 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Zoom In',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'Drag the lens onto the dish and slide the power dial: higher power shows a smaller part of the sample, bigger. Press Submit when the dial is where you want it.'
-    },
-    prompt: 'Set the lens to the lowest power at which you can see separate particles in Sample A.',
+    prompt: 'At what lowest power do separate particles show in Sample A?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
         dishAt('dishA', 'SAMPLE A', sample('c7', 4, [{ kinds: ['k06'], n: 46 }]), 24),
-        { ...dishAt('scoop', 'BELT SCOOP', sample('c7s', 4, [{ kinds: ['k06'], n: 46 }]), 50), hidden: true, fetchFrom: 'tail' },
         tool('lens', 'Lens')
       ],
-      fixtures: [scopeFixture],
-      fetch: [{ id: 'tail', label: 'Belt scoop', at: { x: SHELF - 2, y: 55 } }]
+      fixtures: [scopeFixture]
     }),
     hints: [
-      'Drag the lens onto the dish, then slide the power dial up one step at a time and watch the picture change.',
-      'At low power the sample looks like solid clumps, and at high power you can tell round particles apart.',
+      'Use the lens and its "Power" dial.',
+      'Compare the picture at neighbouring powers: what changes between them, and what only gets bigger?',
       'Find the first power where you can pick out single particles, then step down one and check that the picture there is still clumps.'
     ],
     check(state) {
@@ -205,38 +198,42 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 2 */
   {
     title: 'One Kind or Two?',
-    prompt: 'Sort the samples by how many different kinds of atom each one holds.',
+    prompt: 'Which samples hold only one kind of atom?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
-        dishAt('dishA', 'SAMPLE A', sample('c09', 4, [{ kinds: ['k06'], n: 44 }]), 24),
-        dishAt('dishB', 'SAMPLE B', sample('c14', 4, [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }]), 48),
+        dishAt('dishA', 'SAMPLE A', sample('c09', 4, [{ kinds: ['k06'], n: 44 }]), 8),
+        dishAt('dishB', 'SAMPLE B', sample('c14', 4, [{ kinds: ['k06'], n: 26 }, { kinds: ['k11'], n: 18 }]), 29),
+        dishAt('dishC', 'SAMPLE C', sample('c21', 4, [{ kinds: ['k06'], n: 30 }, { kinds: ['k11'], n: 14 }]), 50),
+        dishAt('dishD', 'SAMPLE D', sample('c33', 4, [{ kinds: ['k11'], n: 42 }]), 71),
         tool('lens', 'Lens')
       ],
       zones: {
         trays: [
-          dishTray('one', 'One kind of atom', 24),
-          dishTray('more', 'More than one kind', 66)
+          dishTray('one', 'One kind of atom', 22, 34, 40),
+          dishTray('more', 'More than one kind', 66, 34, 40)
         ]
       },
       fixtures: [scopeFixture]
     }),
     hints: [
-      'Drag the lens onto a sample and turn the power up until single atoms show.',
-      'Compare the two pictures atom by atom: every atom in one sample matches, and the other sample holds two different atoms.',
-      'Look across a whole picture and note the tint and size of each atom, then put the sample whose atoms all match in the first tray.'
+      'Use the lens on each sample, at a power where single atoms show.',
+      'Compare the atoms within one picture by tint and size.',
+      'A sample belongs in the first tray only if every atom you can find in it matches every other.'
     ],
     check(state) {
       const t = state.table;
       const one = dishIn(t, 'one');
       const more = dishIn(t, 'more');
-      if (!one.length && !more.length) return { ok: false, notYet: true, msg: 'Put both samples in a tray before you submit.' };
-      if (one.length + more.length < 2) return { ok: false, notYet: true, msg: 'Put both samples in a tray before you submit.' };
-      if (one.join() === 'dishA' && more.join() === 'dishB') return { ok: true };
-      return { ok: false, msg: 'Look again: one of them holds dark carbon atoms and pale sodium atoms together, so it is in the wrong tray.' };
+      if (!one.length && !more.length) return { ok: false, notYet: true, msg: 'Put all four samples in a tray before you submit.' };
+      if (one.length + more.length < 4) return { ok: false, notYet: true, msg: 'Put all four samples in a tray before you submit.' };
+      if (one.join() === 'dishA,dishD' && more.join() === 'dishB,dishC') return { ok: true };
+      const bad = [...one.filter(id => id === 'dishB' || id === 'dishC').map(() => 'One kind of atom'), ...more.filter(id => id === 'dishA' || id === 'dishD').map(() => 'More than one kind')];
+      const trays = [...new Set(bad)];
+      return { ok: false, msg: `The "${trays[0]}" tray holds a sample whose atoms do not fit its label${trays.length > 1 ? ', and so does the other tray' : ''}.` };
     },
     reward: {
-      log: 'Sample A is carbon only. Sample B mixes carbon and sodium.',
+      log: 'A and D hold one kind of atom each. B and C mix carbon and sodium.',
       title: 'Elements and Mixtures',
       body: 'A substance made of only one kind of atom is called an element. Different atoms sitting together without joining make a mixture.'
     }
@@ -281,8 +278,10 @@ export const STAGES = [
       if (filed.length < atoms.length) return { ok: false, notYet: true, msg: 'Every atom needs a tray before you submit.' };
       const byTray = {};
       for (const p of filed) (byTray[p.zone] ||= new Set()).add(p.props.el);
-      if (Object.values(byTray).some(s => s.size > 1)) {
-        return { ok: false, msg: 'A tray holds atoms of more than one element. The pale ones look alike, so read their masses.' };
+      const mixedTray = Object.entries(byTray).find(([, set]) => set.size > 1);
+      if (mixedTray) {
+        const label = t.zones.trays[mixedTray[0].replace('tray:', '')]?.label || mixedTray[0];
+        return { ok: false, msg: `${label} holds atoms of more than one element.` };
       }
       const homes = {};
       for (const [zone, set] of Object.entries(byTray)) for (const el of set) (homes[el] ||= []).push(zone);
@@ -301,11 +300,7 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 4 */
   {
     title: 'What the Blade Cannot Cut',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'The cutter is a blade: drag it across a dish and it slices that sample into smaller pieces, if it can. Try it on each sample and watch what happens.'
-    },
-    prompt: 'Find the one sample the cutter cannot split, and put it in the tray.',
+    prompt: 'Which one sample can the cutter not split?',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
@@ -318,15 +313,15 @@ export const STAGES = [
       zones: { trays: [dishTray('safe', 'Will not split', 47, 38, 40)] }
     }),
     hints: [
-      'Drag the cutter across each dish in turn and watch the picture.',
-      'Joined groups break into separate pieces, but one sample does not change at all.',
-      'Pick the sample whose picture remains completely unchanged after cutting.'
+      'Use the cutter on every dish in turn.',
+      'Compare each picture before and after the cut: some change, and one does not.',
+      'Pick the sample whose picture is exactly as it was after cutting.'
     ],
     check(state) {
       const safe = dishIn(state.table, 'safe');
       if (!safe.length) return { ok: false, notYet: true, msg: 'Put a sample in the tray first.' };
       if (safe.join() === 't4') return { ok: true };
-      return { ok: false, msg: 'That one came apart under the blade. Pick the sample the cutter left exactly as it was.' };
+      return { ok: false, msg: 'That sample\'s picture changed after the cut.' };
     },
     reward: {
       log: 'A single helium atom will not divide.',
@@ -350,7 +345,7 @@ export const STAGES = [
       notes: JOIN_NOTES
     }),
     hints: [
-      'Drag the lens over Sample A and raise the power until one molecule is clear, then drag one loose atom onto another to join them.',
+      'Use the lens on Sample A, then join loose atoms.',
       'Every molecule here is the same, so read just one: the atom in the middle and each atom joined to it.',
       'Join one atom for every atom in that one molecule, by name: the middle one plus each joined one, and nothing else.'
     ],
@@ -358,14 +353,15 @@ export const STAGES = [
       const mols = moleculesOf(state.table);
       if (!mols.length) return { ok: false, notYet: true, msg: 'Join some atoms together first.' };
       if (mols.some(m => m.counts.H === 2 && m.counts.O === 1 && Object.keys(m.counts).length === 2)) return { ok: true };
-      if (mols.some(m => m.counts.C)) return { ok: false, msg: 'There is no carbon in this sample. Read the atoms in one molecule through the lens.' };
-      if (mols.some(m => m.counts.H && m.counts.O)) return { ok: false, msg: 'Right elements, wrong numbers. Count the middle atom and the ones joined to it.' };
-      return { ok: false, msg: 'One of the two elements is missing. Read the middle atom and the joined ones separately.' };
+      if (mols.some(m => m.counts.C)) return { ok: false, msg: 'A molecule on the table holds carbon, and the lens shows none in Sample A.' };
+      if (mols.some(m => m.counts.H && m.counts.O)) return { ok: false, msg: 'Your molecule and the lens picture disagree on how many atoms of one element it holds.' };
+      return { ok: false, msg: 'Your molecule holds one element; the lens picture shows two.' };
     },
     reward: {
       log: 'Copy built: 1 x oxygen, 2 x hydrogen.',
       title: 'Water, H2O',
-      body: 'Each water molecule contains one oxygen atom joined to two hydrogen atoms. A fixed combination of atoms defines a molecule.'
+      body: 'Each water molecule contains one oxygen atom joined to two hydrogen atoms. A fixed combination of atoms defines a molecule.',
+      model: { type: 'molecule', name: 'water' }
     }
   },
 
@@ -385,22 +381,23 @@ export const STAGES = [
       notes: JOIN_NOTES
     }),
     hints: [
-      'Drag the lens over each sample and raise the power until a single molecule is clear.',
-      'Both samples use only hydrogen and oxygen, and the difference is how many oxygen atoms each molecule holds.',
-      'Copy one molecule from each sample, joining the atoms the way the lens shows them, and join the hydrogen atoms before the oxygen atoms.'
+      'Use the lens on each sample, then join loose atoms.',
+      'Both samples use only hydrogen and oxygen, so compare how each molecule is put together, not what it is made of.',
+      'Copy one molecule from each sample, joining the atoms the way the lens shows them.'
     ],
     check(state) {
       const mols = moleculesOf(state.table);
       const has = (h, o) => mols.some(m => m.counts.H === h && m.counts.O === o && Object.keys(m.counts).length === 2);
       if (!mols.length) return { ok: false, notYet: true, msg: 'Build a molecule of each sample before you submit.' };
       if (has(2, 1) && has(2, 2)) return { ok: true };
-      if (!has(2, 1)) return { ok: false, msg: 'No molecule on the table matches Sample A yet. Count the oxygen atoms in one of its molecules.' };
-      return { ok: false, msg: 'No molecule on the table matches Sample B yet. Count the oxygen atoms in one of its molecules.' };
+      if (!has(2, 1)) return { ok: false, msg: 'No molecule on the table matches one molecule of Sample A in the lens.' };
+      return { ok: false, msg: 'No molecule on the table matches one molecule of Sample B in the lens.' };
     },
     reward: {
       log: 'Sample A: H2O. Sample B: H2O2.',
       title: 'Compounds',
-      body: 'Two or more different elements bonded together make a compound. Changing the recipe produces a different substance with different properties.'
+      body: 'Two or more different elements bonded together make a compound. Changing the recipe produces a different substance with different properties.',
+      model: { type: 'molecule', name: 'peroxide', caption: 'H₂O₂: the same two elements as water, joined in a different recipe.' }
     }
   },
 
@@ -425,9 +422,9 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Drag atoms into each tray, and drop an atom onto another atom to join the two.',
+      'Use both trays, and join atoms by dropping one on another.',
       'Look at what sits in each tray: are the atoms joined together, or only lying side by side?',
-      'Leave the atoms in the Mixture tray unjoined, and join atoms into a group before you drop them in the Compound tray.'
+      'Each tray must hold the arrangement that matches its label, and both are made from the same atoms.'
     ],
     check(state) {
       const t = state.table;
@@ -438,10 +435,10 @@ export const STAGES = [
       if (!mix.length || !comp.length) return { ok: false, notYet: true, msg: 'Put atoms in both trays before you submit.' };
       const els = list => new Set(list.map(p => p.props.el));
       const joinedWithin = list => list.some(p => p.joinedTo.some(n => list.some(q => q.id === n)));
-      if (els(mix).size < 2) return { ok: false, msg: 'A mixture needs more than one kind of atom. Put hydrogen and oxygen in the Mixture tray.' };
-      if (joinedWithin(mix)) return { ok: false, msg: 'Atoms in the Mixture tray are joined to each other. In a mixture they only lie side by side.' };
+      if (els(mix).size < 2) return { ok: false, msg: 'The Mixture tray holds one kind of atom.' };
+      if (joinedWithin(mix)) return { ok: false, msg: 'Atoms in the Mixture tray are joined to each other.' };
       const molecule = moleculesOf(t).some(m => Object.keys(m.counts).length > 1 && m.ids.every(id => t.pieces[id].zone === 'tray:comp'));
-      if (!molecule) return { ok: false, msg: 'The Compound tray holds no joined group of different atoms. Join hydrogen and oxygen before you put them in.' };
+      if (!molecule) return { ok: false, msg: 'The Compound tray holds no joined group of different atoms.' };
       return { ok: true };
     },
     reward: {
@@ -475,9 +472,9 @@ export const STAGES = [
       fixtures: [scopeFixture]
     }),
     hints: [
-      'Drag the lens over each sample and turn the power up until separate atoms show, and use the cutter on any you are unsure of.',
+      'Use the lens on each sample, and the cutter on any you are unsure of.',
       'For each sample, check two things: how many different names its atoms read, and whether its atoms are joined in groups or sit loose.',
-      'One element only is an element even in joined pairs, while different elements joined together make a compound and sitting loose make a mixture.'
+      'Joining is not what separates the trays: ask how many kinds of atom the sample holds first, and only then whether they are joined.'
     ],
     check(state) {
       const t = state.table;
@@ -487,10 +484,9 @@ export const STAGES = [
       const want = { m1: 'element', m2: 'compound', m3: 'mixed', m4: 'element' };
       const wrong = Object.keys(want).filter(k => where[k] !== want[k]);
       if (!wrong.length) return { ok: true };
-      if (wrong.length === 1) {
-        return { ok: false, msg: 'One is in the wrong tray. Check whether it holds one element or several, and whether they are bonded.' };
-      }
-      return { ok: false, msg: 'More than one is in the wrong tray. One element is an element even when its atoms are bonded in pairs.' };
+      const names = { element: 'Element', compound: 'Compound', mixed: 'Mixture' };
+      const trays = [...new Set(wrong.map(k => names[where[k]]))];
+      return { ok: false, msg: `The ${trays.join(' and ')} ${trays.length > 1 ? 'trays hold' : 'tray holds'} a sample whose picture does not fit.` };
     },
     reward: {
       log: 'All four filed correctly.',
@@ -598,8 +594,8 @@ const dial = value => ({ setDial: { fixture: 'scope', dial: 'power', value } });
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [{ fetch: 'tail' }, lay('lens', 'dishA'), dial(4)],
-  [lay('lens', 'dishA'), dial(4), lift, tray('dishA', 'one'), lay('lens', 'dishB'), lift, tray('dishB', 'more')],
+  [lay('lens', 'dishA'), dial(4)],
+  [lay('lens', 'dishA'), dial(4), lift, tray('dishA', 'one'), lay('lens', 'dishB'), lift, tray('dishB', 'more'), tray('dishC', 'more'), tray('dishD', 'one')],
   [
     { place: { piece: 'a1', to: 'slot:rd' } }, tray('a1', 't1'),
     { place: { piece: 'a3', to: 'slot:rd' } }, tray('a3', 't2'),
@@ -624,7 +620,7 @@ export const SOLUTIONS = [
 /** A plausible wrong answer per stage. Each must be refused, and must say why. */
 export const MISSES = [
   [lay('lens', 'dishA'), dial(6)],
-  [lay('lens', 'dishA'), lift, tray('dishA', 'more'), tray('dishB', 'one')],
+  [lay('lens', 'dishA'), lift, tray('dishA', 'one'), tray('dishB', 'more'), tray('dishC', 'one'), tray('dishD', 'one')],
   [{ place: { piece: 'a1', to: 'slot:rd' } }, tray('a1', 't1'), tray('a3', 't1'), tray('a4', 't2'), tray('a5', 't2'), tray('a2', 't3'), tray('a6', 't3')],
   [{ place: { piece: 'cutter', to: 'piece:t2' } }, tray('t2', 'safe')],
   [{ join: ['h1', 'o1'] }],

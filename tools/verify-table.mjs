@@ -1179,27 +1179,134 @@ console.log('\nAtom kit — one set of rules, two scales\n');
     });
   }
 
-  // The drawn site plate (T1 to T3): a tap on it takes the item, the same fetch the world's [E] does.
+  // The drawn site plate (T1 to T3): a tap on it takes the item, the same fetch the world's [E] does. The one field fetch left in
+  // Tallow is q6-weigh's counted sack (the belt scoop, cooler draw and hopper draw carried nothing new and were retired).
   {
-    const q1 = mods.get('unit01/q1-grain');
-    const st = q1.STAGES[0];
+    const q6 = mods.get('unit01/q6-weigh');
+    const st = q6.STAGES[0];
     let state = MODEL.createTable(st.table, st.title);
     const view = new Table2D(stub(), { tools: [], onAction: a => { state = MODEL.apply(state, a); view.setState(state); view.settle(); } });
     view.setState(state);
     view.settle();
     const plate = Object.values(state.fetch)[0];
-    if (!plate?.at) fail('q1-grain stage 1 draws no site plate for its field point');
+    if (!plate?.at) fail('q6-weigh stage 1 draws no site plate for its field point');
     else {
-      if (state.pieces.scoop.hidden !== true) fail('the scoop is on the table before the point was visited');
+      if (state.pieces.sack.hidden !== true) fail('the sack is on the table before the point was visited');
       view.pointerDown({ ...plate.at });
       view.pointerUp({ ...plate.at });
-      if (state.pieces.scoop.hidden) fail('a tap on the drawn site plate took nothing');
-      const keys = (await import('../src/learn/table/gestures.js')).contextKeys(MODEL.createTable(st.table, st.title), REG.getKit('atoms'));
+      if (state.pieces.sack.hidden) fail('a tap on the drawn site plate took nothing');
+      const keys = (await import('../src/learn/table/gestures.js')).contextKeys(MODEL.createTable(st.table, st.title), REG.getKit(st.table.kit));
       if (keys.some(k => k.id.startsWith('fetch:'))) fail('a stage with a drawn site plate also offers a fetch key');
+    }
+    // The retired fetches stay retired: a fetch must bring evidence, so none of the three may come back.
+    for (const [q, n] of [['q1-grain', 0], ['q4-ledger', 0], ['q5-assay', 0]]) {
+      const t = MODEL.createTable(mods.get(`unit01/${q}`).STAGES[n].table, 'x');
+      if (Object.keys(t.fetch).length) fail(`${q} stage ${n + 1} sends the player to fetch something the bench already holds`);
     }
   }
 
   if (failures === before) ok('every join is joinbench\'s planner against the shells as they stand; a pair that does not hold drifts apart with a reason; charge, formula and the Lewis reading are derived (a split undoes them); particles never join; every atom table has its scratch corner and ignores it; the site plate takes the item');
+}
+
+/* ------------------------------------------------------------------
+   THE TOUR (`table/tour.js`): every instrument and kind of piece on a stage's table is explained
+   ------------------------------------------------------------------ */
+
+console.log('\nTour — every tool on a table has a step that says what it is and how to use it\n');
+{
+  const before = failures;
+  const { tourSteps, TOUR_KINDS } = await import('../src/learn/table/tour.js');
+  let stages = 0;
+  let unknown = new Set();
+  for (const [key, mod] of mods) {
+    mod.STAGES.forEach((st, i) => {
+      if (st.widget?.type !== 'table') return;
+      stages++;
+      const label = `${key} stage ${i + 1}`;
+      const t = MODEL.createTable(st.table, st.title);
+      const steps = tourSteps(t, { intro: st.briefing?.body || '' });
+      const names = steps.map(s => s.name);
+      if (!steps.length) fail(`${label}: the Tour is empty`);
+      for (const s of steps) {
+        if (!s.name || !s.desc || /undefined|\{run\}/.test(s.desc)) fail(`${label}: Tour step "${s.name}" has no usable text`);
+        if (key.startsWith('unit01/') && (s.desc.match(/[.!?](?=\s|$)/g) || []).length > 4) fail(`${label}: Tour step "${s.name}" is over four sentences`);
+      }
+      // The Tour speaks in words the quest has earned by this stage, like every other line the player reads.
+      for (const v of mod.VOCABULARY || []) {
+        if (v.introducedAt > i) for (const s of steps) if (!s.flag.startsWith(`tour_${t.kit}_`) || s.flag.includes('_bench_') ? false : v.term.test(`${s.name} ${s.desc}`)) fail(`${label}: Tour step "${s.name}" uses a word the quest has not earned yet (${v.term})`);
+      }
+      if (new Set(steps.map(s => s.flag)).size !== steps.length) fail(`${label}: two Tour steps share a once-only flag`);
+      for (const f of Object.values(t.fixtures)) {
+        if (f.props?.backdrop) continue;
+        if (!steps.some(s => s.flag.startsWith(`tour_${t.kit}_fx_${f.kind}`))) fail(`${label}: the instrument "${f.label}" is not in the Tour`);
+        if (key.startsWith('unit01/') && !TOUR_KINDS.fixtures.includes(f.kind)) unknown.add(`${key}:${f.kind}`);
+      }
+      for (const tool of t.tools) if (!steps.some(s => s.flag.endsWith(`tool_${tool}`))) fail(`${label}: the tool "${tool}" is not in the Tour`);
+    });
+  }
+  if (unknown.size) fail(`Tallow instruments with no words of their own in the Tour: ${[...unknown].join(', ')}`);
+  if (failures === before) ok(`${stages} table stages: each instrument and tool has its own Tour step, in plain words`);
+}
+
+/* ------------------------------------------------------------------
+   PREDICT FIRST: a prediction is its own part of the bench, made before the instrument is on the table
+   ------------------------------------------------------------------ */
+
+console.log('\nPredict first — the guess is made on a bench with no instrument, then tested on the next\n');
+{
+  const before = failures;
+  let predicts = 0;
+  for (const [key, mod] of mods) {
+    if (!key.startsWith('unit01/')) continue; // the other worlds follow as the rollout reaches them
+    mod.STAGES.forEach((st, i) => {
+      if (st.widget?.type !== 'table') return;
+      const t = MODEL.createTable(st.table, st.title);
+      const label = `${key} stage ${i + 1}`;
+      if (t.prediction && !st.predict) fail(`${label}: asks for a prediction token on a stage that is not a predict stage`);
+      if (!st.predict) return;
+      predicts++;
+      if (Object.values(t.fixtures).some(f => !f.noRun || Object.keys(f.dials).length)) fail(`${label}: a predict stage has a runnable or adjustable instrument on the table`);
+      if (t.tools.length) fail(`${label}: a predict stage carries a tool`);
+      if (i === mod.STAGES.length - 1) fail(`${label}: a predict stage with no stage after it to test the guess`);
+      const next = mod.STAGES[i + 1];
+      if (next && (next.predict || next.widget?.type !== 'table' || !Object.values(MODEL.createTable(next.table, next.title).fixtures).some(f => !f.noRun))) fail(`${label}: the stage after a predict stage must bring the instrument`);
+      if (typeof next?.prompt !== 'string') fail(`${label}: the test stage has no prompt`);
+    });
+  }
+  if (failures === before) ok(`${predicts} predict stages: each holds the guess alone and is followed by the stage that tests it`);
+}
+
+/* ------------------------------------------------------------------
+   MODELS: a reward card may carry a solid model, built from the numbers it was given
+   ------------------------------------------------------------------ */
+
+console.log('\nModels — what a reward card shows is built from its own counts\n');
+{
+  const before = failures;
+  const MP = await import('../src/learn/engine/model-parts.js');
+  let n = 0;
+  for (const [key, mod] of mods) {
+    mod.STAGES.forEach((st, i) => {
+      const m = st.reward?.model;
+      if (!m) return;
+      n++;
+      const label = `${key} stage ${i + 1}`;
+      let parts;
+      try { parts = MP.modelParts(m); } catch (err) { fail(`${label}: the reward model does not build (${err.message})`); return; }
+      if (!parts.spheres.length) fail(`${label}: the reward model has nothing in it`);
+      if (m.type === 'atom' || m.type === 'atoms') {
+        for (const it of (m.type === 'atom' ? [m] : m.items)) {
+          const e = MP.shellsOf(it.p, it.charge || 0).reduce((a, b) => a + b, 0);
+          const wantE = it.p - (it.charge || 0);
+          if (m.focus !== 'nucleus' && e !== wantE) fail(`${label}: ${it.p} protons with charge ${it.charge || 0} should show ${wantE} electrons, not ${e}`);
+        }
+        const total = (m.type === 'atom' ? [m] : m.items).reduce((a, it) => a + it.p + it.n, 0);
+        if (parts.spheres.length !== total) fail(`${label}: the nucleus shows ${parts.spheres.length} particles, not ${total}`);
+      }
+      if (!MP.captionOf(m)) fail(`${label}: the reward model has no words under it`);
+    });
+  }
+  if (failures === before) ok(`${n} reward models: each builds, and its particles and electrons are the counts it was given`);
 }
 
 /* ------------------------------------------------------------------

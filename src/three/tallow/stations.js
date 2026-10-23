@@ -230,13 +230,9 @@ export function buildSamplePoint(w, site) {
     { lx: 3.3, lz: 1.3, r: 0.2 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
-  // THE FIELD POINT: the scoop across the sampler's drum, the way the belt's own cut is taken. It is a
-  // real piece of this host (the drum and its scoop), the player stands in front of it (`stand`, host
-  // frame), and `[E]` on it puts a scoop of the belt in the carry slot for the bench.
-  const fieldPoints = [{
-    id: 'tail', label: 'Belt Scoop', lx: -4.5, ly: 0.95, lz: 0.85, half: [0.55, 0.45, 0.55],
-    stand: { lx: -4.5, lz: 2.4 }
-  }];
+  // NO FIELD POINT. The belt scoop was retired: it carried the same atoms the bench already held, so it was pure
+  // carrying (a fetch stays only where what is fetched is new evidence).
+  const fieldPoints = [];
   return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
@@ -496,13 +492,8 @@ export function buildTowerDeck(w, site, { towerBack = 8.5, towerRot = 0.647, tow
     { lx: 3.5, lz: 1.5, r: 0.2 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
-  // THE FIELD POINT: the draw-off valve on the sample bombs' rack, the way a sample is taken off the tower. It is a
-  // real piece of this host (the rack on the cooler skid), the player stands in front of the skid (`stand`, host
-  // frame) and `[E]` on it draws a sample bomb into the carry slot for the bench.
-  const fieldPoints = [{
-    id: 'cooler', label: 'Cooler Draw', lx: 0.3, ly: 0.95, lz: -3.4, half: [0.6, 0.45, 0.35],
-    stand: { lx: 0.3, lz: -2.1 }
-  }];
+  // NO FIELD POINT. The cooler draw was retired: the sample it carried matched the reference already on the bench.
+  const fieldPoints = [];
   return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 
@@ -640,13 +631,8 @@ export function buildWeighHopper(w, site) {
     { lx: 3.4, lz: 1.5, r: 0.2 },
     { lx: 0, lz: 0, hw: 2.4, hd: 0.65 }
   ];
-  // THE FIELD POINT: a draw off the third catch bin, where the sorted salt lands. It is a real piece of this host (the bin and
-  // the scoop across it), the player stands in the gap between the bench and the gantry (`stand`, host frame) and `[E]` on it
-  // takes a handful into the carry slot for the bench.
-  const fieldPoints = [{
-    id: 'hopper', label: 'Hopper Draw', lx: -1.05 + 2 * 0.7 - HOPPER.shift, ly: 0.55, lz: z0 + 1.05, half: [0.45, 0.3, 0.4],
-    stand: { lx: -1.05 + 2 * 0.7 - HOPPER.shift, lz: -1.45 }
-  }];
+  // NO FIELD POINT. The hopper draw was retired: it was the same chlorine as the sample already on the bench.
+  const fieldPoints = [];
   return { group: g, bench, benchLocal: [0, 0, 0], colliders, fieldPoints };
 }
 

@@ -22,9 +22,8 @@
  * and nothing is declared. `SOLUTIONS` and `MISSES` are scripts of the player's own actions,
  * replayed by `verify:table`. The sealed samples read their labels, which are plates of printed lines.
  *
- * FIELD (stage 1). A sample can be drawn from the tower's sample cooler; the field point is a real
- * piece of the host (`tallow/stations.js` `buildTowerDeck`). It is evidence, never a lock: the stage
- * is answered with the bench's own Sample A, and at T1 to T3 the same fetch is a drawn site plate.
+ * NO FIELD FETCH. Stage 1 once sent the player to the tower's sample cooler for a draw that was
+ * Sample A again, so the walk carried nothing and was retired (problems doc U3).
  *
  * This quest pays no XP, writes no Submission and never reaches Standings.
  */
@@ -133,25 +132,19 @@ export const STAGES = [
   /* ---------------------------------------------------------------- 1 */
   {
     title: 'Three Numbers Off One Atom',
-    briefing: {
-      speaker: SPEAKER,
-      body: 'This bench builds an atom from loose particles: drag them into the middle or outside, and a needle reads the charge. A sample from the tower\'s cooler is waiting at the skid.'
-    },
     prompt: 'Build an atom that matches Sample A, particle for particle.',
     widget: { type: 'table', label: 'The bench' },
     table: atomTable({
       pieces: [
         nucleus('refc', 'A MIDDLE', 14, 11, 3, 4),
         { ...specimen('refe', 'A OUTSIDE', 36, 11, { p: 3, n: 4, rings: [2, 1], needle: true }), fixed: true },
-        { ...specimen('draw', 'COOLER DRAW', 62, 11, { p: 3, n: 4, rings: [2, 1] }), fixed: true, hidden: true, fetchFrom: 'cooler' },
         ...heap([['proton', 4], ['neutron', 4], ['electron', 4]])
       ],
       zones: { trays: BUILD.trays },
-      fixtures: [BUILD.needle],
-      fetch: [{ id: 'cooler', label: 'Cooler draw', at: { x: 100, y: 12 } }]
+      fixtures: [BUILD.needle]
     }),
     hints: [
-      'Drag a particle from the heap into the middle or outside, and watch the needle.',
+      'Use the heap, the two trays and the needle.',
       'In the middle of Sample A a disc with a + is a proton and a blank disc is a neutron, and each dot on a ring outside is an electron.',
       'Tally the + discs, then the blank ones, then the electrons on the rings, and check that the electrons equal the protons, since the needle reads zero.'
     ],
@@ -161,9 +154,9 @@ export const STAGES = [
       const n = count(t, 'tray:core', 'neutron');
       const e = count(t, 'tray:out', 'electron');
       if (p + n + e === 0) return { ok: false, notYet: true, msg: 'The atom is still empty. Drag particles into the middle and outside.' };
-      if (p !== 3) return { ok: false, msg: 'Count the + discs in the middle of Sample A again. Each + marks a proton.' };
-      if (n !== 4) return { ok: false, msg: 'The neutrons are the blank discs in the middle without a +.' };
-      if (e !== 3) return { ok: false, msg: 'Count the electrons on the rings outside Sample A. Its needle reads zero, so they balance the protons.' };
+      if (p !== 3) return { ok: false, msg: 'Your middle holds a different number of protons than Sample A\'s.' };
+      if (n !== 4) return { ok: false, msg: 'Your middle holds a different number of neutrons than Sample A\'s.' };
+      if (e !== 3) return { ok: false, msg: 'Your outside holds a different number of electrons than Sample A\'s.' };
       return { ok: true };
     },
     reward: {
@@ -192,7 +185,7 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Read the open sample\'s counts against its label, then drag particles from the heap to build the sealed one.',
+      'Use the two labels, the heap and the two trays.',
       'On the open sample the atomic number is the proton count, and the mass number is the protons and neutrons together.',
       'Take the atomic number from the mass number to find the neutrons, and match the electrons to the protons for a needle on zero.'
     ],
@@ -202,14 +195,14 @@ export const STAGES = [
       const n = count(t, 'tray:core', 'neutron');
       const e = count(t, 'tray:out', 'electron');
       if (p + n + e === 0) return { ok: false, notYet: true, msg: 'The atom is still empty. Work the three counts out from the label.' };
-      if (p !== 3) return { ok: false, msg: 'Compare the open sample\'s atomic number with the protons you counted on it, then read the atomic number on the sealed label.' };
-      if (n === 6) return { ok: false, msg: 'That number counts the protons too. Take the protons off it first.' };
-      if (n !== 3) return { ok: false, msg: 'Work it out on the open sample first: compare the protons and neutrons you counted with the two numbers on its label, then do the same sum with the sealed label.' };
-      if (e !== 3) return { ok: false, msg: 'A needle on zero means the electrons match the protons one for one.' };
+      if (p !== 3) return { ok: false, msg: 'Your protons do not match the atomic number on Label B.' };
+      if (n !== 3) return { ok: false, msg: `Your ${p} protons and ${n} neutrons make mass number ${p + n}, and Label B reads 6.` };
+      if (e !== 3) return { ok: false, msg: 'Your needle does not match the needle on Label B.' };
       return { ok: true };
     },
     reward: {
       log: 'Sample B: 3 protons, 3 neutrons, 3 electrons.',
+      model: { type: 'atoms', items: [{ p: 3, n: 4, label: 'Lithium-7' }, { p: 3, n: 3, label: 'Lithium-6' }], caption: 'Lithium-7 and lithium-6: 3 protons and 3 electrons each, 4 neutrons against 3. Not to scale.' },
       title: 'Isotope Notation',
       body: 'Two numbers describe any atom: the atomic number, which says which element it is, and the mass number, which says how heavy this one is. Chemists write that as lithium-6, or as the mass number above the atomic number beside the symbol. Every other count falls out of the pair.'
     }
@@ -235,8 +228,8 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Compare the printed counts: the protons say which element a sample is.',
-      'Count the protons and the outer-shell dots on each sample and compare them with Sample A.',
+      'Use the two trays and the printed counts.',
+      'Compare the protons and the outer-shell dots on each sample with Sample A.',
       'Put a sample with Sample A only when its protons match, whatever its neutrons add up to.'
     ],
     check(state) {
@@ -249,9 +242,7 @@ export const STAGES = [
       for (const id of ids) {
         const alike = spec(t.pieces[id]).p === ref.p;
         if ((where(id) === 'same') !== alike) {
-          return { ok: false, msg: alike
-            ? `${labels[id]} is in the wrong tray. Compare its protons with Sample A's: they decide which element it is.`
-            : `${labels[id]} is in the wrong tray. Count its protons and compare them with Sample A's.` };
+          return { ok: false, msg: `${labels[id]}'s tray does not agree with how its proton count compares with Sample A's.` };
         }
       }
       return { ok: true };
@@ -282,7 +273,7 @@ export const STAGES = [
       ]
     }),
     hints: [
-      'Drag protons and electrons from the heap into the middle and outside, and compare your needle with the sealed sample\'s.',
+      'Use the heap, the two trays and the needle.',
       'On the open sample the needle equals its protons minus its electrons, and its proton count equals its atomic number.',
       'Take the protons from the sealed label\'s atomic number, read its needle, and take the needle reading away from the protons to get the electrons.'
     ],
@@ -291,10 +282,10 @@ export const STAGES = [
       const p = count(t, 'tray:core', 'proton');
       const e = count(t, 'tray:out', 'electron');
       if (p === 0 && e === 0) return { ok: false, notYet: true, msg: 'The atom is still empty. Work out the protons and the electrons.' };
-      if (p !== 3) return { ok: false, msg: 'Compare the open sample\'s atomic number with the protons you counted on it, then read the atomic number on the sealed label.' };
-      if (e === p) return { ok: false, msg: 'That many electrons would cancel the protons exactly and put the needle on zero. Read the sealed sample\'s needle.' };
-      if (e > p) return { ok: false, msg: 'More electrons than protons would push the needle below zero. Read the sealed sample\'s needle.' };
-      if (e !== 2) return { ok: false, msg: 'Read the sealed sample\'s needle: it says how many more protons than electrons it holds.' };
+      if (p !== 3) return { ok: false, msg: 'Your protons do not match the atomic number on Label B.' };
+      if (e === p) return { ok: false, msg: 'Your needle reads 0, and Sample B\'s needle does not.' };
+      if (e > p) return { ok: false, msg: 'Your needle reads below 0, and Sample B\'s does not.' };
+      if (e !== 2) return { ok: false, msg: 'Your needle does not match Sample B\'s needle.' };
       return { ok: true };
     },
     reward: {
@@ -320,20 +311,21 @@ export const STAGES = [
       fixtures: [needleFixture(['tray:sh1', 'tray:sh2', 'tray:sh3'], 'nuc', { x: 50, y: 13 }, 4)]
     }),
     hints: [
-      'Drag electrons off the shells and into the tray, and watch the needle.',
+      'Use the shells, the tray beside them and the needle.',
       'Magnesium starts with two electrons on its outermost shell, and each tray prints how many it holds against how many it can.',
       'Take electrons off one at a time and watch the needle after each, and stop when the outer shell is empty and the shell beneath it is still full.'
     ],
     check(state) {
       const [s1, s2, s3] = shells(state.table);
       const off = count(state.table, 'tray:src', 'electron');
-      if (off === 0) return { ok: false, notYet: true, msg: 'Nothing has come off yet. Drag electrons off the outer shell and read the needle.' };
-      if (s3 > 0) return { ok: false, msg: 'At this charge there is still an electron on the third shell. Take further electrons off to empty that shell.' };
-      if (s1 < 2 || s2 < 8) return { ok: false, msg: 'Taking more off went past the empty outer shell, into a full inner shell, which puts out its lamp. Stop when the outer shell is empty.' };
+      if (off === 0) return { ok: false, notYet: true, msg: 'Nothing has come off yet.' };
+      if (s3 > 0) return { ok: false, msg: 'An electron is still on the third shell.' };
+      if (s1 < 2 || s2 < 8) return { ok: false, msg: 'An inner shell has lost electrons, and its lamp is out.' };
       return { ok: true };
     },
     reward: {
       log: 'Magnesium outer shell gone at plus two.',
+      model: { type: 'atom', p: 12, n: 12, charge: 2, caption: 'A magnesium ion with a charge of +2: 12 protons and 10 electrons, on shells of 2 and 8. Not to scale.' },
       title: 'Cations and Full Shells',
       body: 'Magnesium has two valence electrons. When it loses both, its remaining outermost shell has a full octet of eight, lighting the full-shell lamp at a +2 charge. Removing a third electron requires breaking into a full inner shell.'
     }
@@ -356,16 +348,16 @@ export const STAGES = [
       fixtures: [needleFixture(['tray:sh1', 'tray:sh2', 'tray:sh3'], 'nuc', { x: 50, y: 13 }, 4)]
     }),
     hints: [
-      'Drag a spare electron onto a shell and watch the needle.',
+      'Use the spare electrons, the shells and the needle.',
       'Each tray prints how many electrons it holds against how many it can hold, and an atom can take on more electrons than it has protons.',
       'Add electrons one at a time and stop when the outermost shell is full, whatever the needle says.'
     ],
     check(state) {
       const [s1, s2, s3] = shells(state.table);
-      if (s3 > 8 || s2 > 8 || s1 > 2) return { ok: false, msg: 'Too many on a shell. The closest shell holds 2 and each shell after it holds 8.' };
+      if (s3 > 8 || s2 > 8 || s1 > 2) return { ok: false, msg: 'A shell holds more than its tray allows.' };
       const untouched = s3 === 7 && count(state.table, 'tray:src', 'electron') === 3;
-      if (s3 < 8) return { ok: false, notYet: untouched, msg: 'The outer shell still has room, and a needle on zero does not make it full. Keep going until it is full, whatever the needle says.' };
-      if (s1 < 2 || s2 < 8) return { ok: false, msg: 'Fill each shell before starting the next one: 2, then 8.' };
+      if (s3 < 8) return { ok: false, notYet: untouched, msg: 'The outer shell is not full yet.' };
+      if (s1 < 2 || s2 < 8) return { ok: false, msg: 'An inner shell has room while a shell beyond it holds electrons.' };
       return { ok: true };
     },
     reward: {
@@ -389,7 +381,7 @@ export const STAGES = [
       fixtures: [{ id: 'needle', kind: 'needle', label: 'Pad charge', at: { x: 30, y: 34 }, size: { w: 44, h: 18 }, noRun: true, props: { zones: ['tray:pad'], range: 4 } }]
     }),
     hints: [
-      'Read the charge printed on each ion, then drag ions onto the pad and watch its needle.',
+      'Use the ions and the pad with its needle.',
       'Every ion of Sample A adds its charge and every ion of Sample B adds its charge, and the pad needle shows the running total.',
       'Keep adding ions until the needle reads zero, using the fewest you can.'
     ],
@@ -398,10 +390,10 @@ export const STAGES = [
       const s = piecesIn(t, 'tray:pad').filter(p => p.props.el === 'Mg').length;
       const u = piecesIn(t, 'tray:pad').filter(p => p.props.el === 'Cl').length;
       if (s === 0 && u === 0) return { ok: false, notYet: true, msg: 'The pad is still empty. Drag ions onto it.' };
-      if (s === 0 || u === 0) return { ok: false, msg: 'One sort of ion on its own cannot reach zero. Both positive and negative ions are needed.' };
+      if (s === 0 || u === 0) return { ok: false, msg: 'The pad holds one sort of ion, and its needle cannot reach 0 with that.' };
       const net = needleReading(t, 'needle');
-      if (net !== 0) return { ok: false, msg: `The pad reads ${net > 0 ? '+' : '-'}${Math.abs(net)}. Add ions until the total charge balances to zero.` };
-      if (s !== 1 || u !== 2) return { ok: false, msg: 'That combination balances to zero, but it can be reduced. Divide both counts by a common factor to find the simplest ratio.' };
+      if (net !== 0) return { ok: false, msg: `The pad reads ${net > 0 ? '+' : '-'}${Math.abs(net)}.` };
+      if (s !== 1 || u !== 2) return { ok: false, msg: 'That combination balances, and a smaller one does too.' };
       return { ok: true };
     },
     reward: {
@@ -434,7 +426,7 @@ export const STAGES = [
       }
     }),
     hints: [
-      'Read the printed counts on reference Sample A and on each sample.',
+      'Use the four trays and the printed counts.',
       'Compare each sample with the reference one count at a time: protons, then neutrons, then the needle.',
       'A different proton count is a different element, the same protons with more neutrons is extra neutrons, and the same counts with the needle off zero is a charge.'
     ],
@@ -455,9 +447,7 @@ export const STAGES = [
       };
       for (const id of ids) {
         if (where(id) !== kind(id)) {
-          return { ok: false, msg: id === 'n3'
-            ? 'Sample D is filed wrong. Check its protons against the reference before anything else.'
-            : `${labels[id]} is filed wrong. Compare its protons, its neutrons and its needle with the reference, one at a time.` };
+          return { ok: false, msg: `${labels[id]}'s tray does not match how it differs from the reference.` };
         }
       }
       return { ok: true };
@@ -564,7 +554,7 @@ const ids = (prefix, from, upto) => Array.from({ length: upto - from + 1 }, (_, 
 
 /** The bench state that solves each stage, in order. Checked by verify:learn and verify:table. */
 export const SOLUTIONS = [
-  [{ fetch: 'cooler' }, ...moveAll(ids('p', 1, 3), 'tray:core'), ...moveAll(ids('n', 1, 4), 'tray:core'), ...moveAll(ids('e', 1, 3), 'tray:out')],
+  [...moveAll(ids('p', 1, 3), 'tray:core'), ...moveAll(ids('n', 1, 4), 'tray:core'), ...moveAll(ids('e', 1, 3), 'tray:out')],
   [...moveAll(ids('p', 1, 3), 'tray:core'), ...moveAll(ids('n', 1, 3), 'tray:core'), ...moveAll(ids('e', 1, 3), 'tray:out')],
   [to('k', 'tray:same'), to('l', 'tray:other'), to('m', 'tray:other')],
   [...moveAll(ids('p', 1, 3), 'tray:core'), ...moveAll(ids('e', 1, 2), 'tray:out')],

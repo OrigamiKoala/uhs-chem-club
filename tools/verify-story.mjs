@@ -219,6 +219,60 @@ ok('spine beat prerequisite unlock logic validated');
   ok(`${ids.length} lore ids all resolve, in story order, with nothing authored outside the story files`);
 }
 
+// 9. Quest story animations: at most one per quest, after it; short captions; a scene that exists and paints.
+{
+  const { QUEST_STORY } = await import('../src/story/quest-story.js');
+  const { SCENES, paintScene } = await import('../src/ui/story-scenes.js');
+  const quests = new Map();
+  for (const w of WORLDS) for (const q of w.quests) quests.set(`${w.id}/${q.id}`, q);
+  const stub = () => {
+    const calls = { n: 0, nan: 0 };
+    const target = new Proxy({}, {
+      get: (_, k) => (k === 'calls' ? calls : (...args) => { calls.n++; if (args.some(a => typeof a === 'number' && !Number.isFinite(a))) calls.nan++; }),
+      set: () => true
+    });
+    return target;
+  };
+  let played = 0;
+  for (const [key, st] of Object.entries(QUEST_STORY)) {
+    const q = quests.get(key);
+    if (!q) { fail(`story animation "${key}" names no quest`); continue; }
+    if (!SCENES[st.scene]) fail(`story animation "${key}" names scene "${st.scene}", which has no painter`);
+    if (!Array.isArray(st.captions) || st.captions.length < 2 || st.captions.length > 4) fail(`story animation "${key}" needs 2 to 4 captions`);
+    for (const c of st.captions || []) {
+      if (c.trim().split(/\s+/).length > 24) fail(`story animation "${key}" caption is over 24 words: "${c}"`);
+      if (sentenceCount(c) > 2) fail(`story animation "${key}" caption is over 2 sentences: "${c}"`);
+      if (/!/.test(c) || /\p{Extended_Pictographic}/u.test(c)) fail(`story animation "${key}" caption carries "!" or an emoji: "${c}"`);
+    }
+    if (typeof st.filed !== 'string' || !/^Filed: /.test(st.filed) || sentenceCount(st.filed) !== 1 || st.filed.trim().split(/\s+/).length > 24) fail(`story animation "${key}" needs one \"Filed: ...\" sentence of at most 24 words`);
+    for (const t of [0, 0.5, 1]) {
+      const ctx = stub();
+      paintScene(st.scene, ctx, 960, 540, t);
+      if (!ctx.calls.n) fail(`story animation "${key}" paints nothing at t=${t}`);
+      if (ctx.calls.nan) fail(`story animation "${key}" draws NaN at t=${t}`);
+    }
+    played++;
+  }
+  // The words a quest's story may use are the words its own bench has earned: no term that a LATER quest of the world introduces.
+  for (const w of WORLDS) {
+    const mods2 = [];
+    for (const q of w.quests) { const m = q.module ? await q.module().catch(() => null) : null; mods2.push([q, m]); }
+    mods2.forEach(([q, m], qi) => {
+      const st = QUEST_STORY[`${w.id}/${q.id}`];
+      if (!st) return;
+      const own = new Set(((m && m.VOCABULARY) || []).map(v => v.term.source));
+      for (let k = 0; k < qi; k++) for (const v of ((mods2[k][1] && mods2[k][1].VOCABULARY) || [])) own.add(v.term.source);
+      const later = [];
+      for (let k = qi + 1; k < mods2.length; k++) for (const v of ((mods2[k][1] && mods2[k][1].VOCABULARY) || [])) if (!own.has(v.term.source)) later.push(v.term);
+      for (const c of [...st.captions, st.filed]) for (const t of later) if (t.test(c)) fail(`story animation "${w.id}/${q.id}" uses a word a later bench introduces (${t}): "${c}"`);
+    });
+  }
+  // Every built Tallow quest, bench or boss, has its one animation.
+  const tallow = WORLDS.find(w => w.id === 'unit01');
+  for (const q of tallow.quests) if (!QUEST_STORY[`unit01/${q.id}`]) fail(`unit01/${q.id} has no story animation`);
+  if (Object.keys(QUEST_STORY).length === played) ok(`${played} story animations: one per quest, short captions, every scene paints at the start, the middle and the end`);
+}
+
 if (failures > 0) {
   console.log(`\nSTORY INTEGRITY FAILED (${failures} errors)`);
   process.exit(1);

@@ -40,6 +40,7 @@ import { dialMarkup, bindDial, paintDial } from './dial.js';
 import { railMarkup, bindRail } from './railview.js';
 import { startArrangement } from '../table/rail.js';
 import { createTable, apply as applyTable } from '../table/model.js';
+import { tourSteps } from '../table/tour.js';
 import { Tabletop, benchesAre3D } from './instruments.js';
 import { esc } from '../../ui/layout.js';
 import { soundscape } from '../../audio/soundscape.js';
@@ -177,12 +178,19 @@ export function createRunner(container, ctx, cfg) {
     renderWidget();
     syncTabletop(stage);
 
-    if (stage.briefing && !ctx.isComplete && cleared <= i) frame.showBriefing();
+    // The Tour opens by itself on a stage that brings a tool the player has not met (and only then); a briefing opens it on any stage.
+    if ((stage.briefing || stage.widget?.type === 'table') && !ctx.isComplete && cleared <= i) frame.showBriefing();
   }
 
   function next() {
     if (index >= STAGES.length - 1) {
-      frame.showDebrief(cfg.DEBRIEF, () => ctx.exit());
+      // The quest's one story animation plays after its debrief, the first time only (`story/quest-story.js`), then the player leaves.
+      const leave = () => ctx.exit();
+      frame.showDebrief(cfg.DEBRIEF, () => {
+        const key = ctx.world && ctx.quest ? `${ctx.world.id}/${ctx.quest.id}` : null;
+        if (!key || typeof document === 'undefined') { leave(); return; }
+        import('../../ui/story-anim.js').then(m => (m.storyPending(key) ? m.playQuestStory(key) : null)).catch(() => {}).then(leave);
+      });
       return;
     }
     loadStage(index + 1);
@@ -202,6 +210,8 @@ export function createRunner(container, ctx, cfg) {
       cleared = index + 1;
       ctx.reportStage(index);
     }
+    // A predict stage keeps the guess for the stage that tests it (`predict.js`).
+    try { stage.onClear?.(state); } catch (err) { /* a guess is never worth a failed stage */ }
     frame.setCleared(cleared);
     frame.clear(stage.reward);
     if (index === STAGES.length - 1) ctx.reportComplete();
@@ -519,6 +529,7 @@ export function createRunner(container, ctx, cfg) {
   /** Build the tabletop for a table stage, or take it down when the stage is not one. */
   function syncTabletop(stage) {
     if (stage.widget?.type !== 'table') {
+      frame.setTourSteps(null);
       tabletop?.dispose();
       tabletop = null;
       frame.setTableMode(false);
@@ -549,6 +560,8 @@ export function createRunner(container, ctx, cfg) {
       });
     }
     tabletop.setState(state.table, { stageIndex: index, newStage: true, undo: history.length });
+    // The Tour explains each instrument and kind of piece on this stage's table, and the opening line of its briefing.
+    frame.setTourSteps(tourSteps(state.table, stage.encounter ? { intro: stage.briefing?.body || '', speaker: stage.briefing?.speaker || 'Vess' } : {}));
   }
 
   // Ctrl+Z (or Cmd+Z) is Undo on a table, wherever the focus is except a field being typed in.

@@ -51,7 +51,7 @@ export const UNIT_01 = {
       title: 'The Periodic Table',
       line: 'Lay every element in order and read the repeating pattern.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 7,
       status: 'live',
       module: () => import('../quests/unit01/q3-catalogue.js')
     },

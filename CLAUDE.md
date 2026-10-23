@@ -16,8 +16,8 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
 - **Every drag has a two-tap twin.** Any piece or tool that can be dragged into place can also be picked up with a tap and put down with a second tap where it goes.
 - **Ordering is dragging into place on a rail, never clicking in sequence.** Rank, sequence and sorting stages are rails or slots arranged by dragging pieces into order.
 - **Snaps are physics, never a gatekeeper.** Snaps seat pieces into sockets, wells, clamps and rails by proximity and physical alignment; they do not reject or hide a move.
-- **A prediction is asked on each quest's click stage and on a new case of an idea already worked out, never on every stage.** A prediction stage commits a hypothesis that is immediately tested on the table (Run).
-- **A field stage is evidence, never a lock, at most one per quest, never on a boss.** An in-world observation or measurement is supplementary evidence; never a prerequisite lock.
+- **A prediction is asked on each quest's click stage and on a new case of an idea already worked out, never on every stage.** A prediction stage commits a hypothesis that is immediately tested on the table (Run); the guess is the player's own, recorded and contrasted by the bench, never graded (the stage is graded on what the test showed).
+- **A field stage is evidence, never a lock, at most one per quest, never on a boss.** An in-world observation or measurement is supplementary evidence; never a prerequisite lock. A fetch must bring NEW evidence (a counted reference, a sample the bench lacks); one that carries a copy of what the bench already holds is cut.
 - **Plain labels until the word is earned, then the real term. Never a code word.** No ciphers or invented
   words that are later swapped for the real one. Every term is defined where first met (briefing, an earlier
   reward card, or an inline gloss). Analogies to real life are fine.
@@ -39,6 +39,11 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
   named place with one plain caption printed under it (≤ ~18 words, drawn on the table, never a tooltip). A
   key whose label doesn't say what it does gets the same plain legend. A prompt/hint that names a control
   quotes it: `Press "Fire Beam"`. (The audit showed even a "Cutter" was not self-evident.)
+- **The Tour explains every tool on the stage's table**, one step per instrument and kind of piece, in earned words
+  (`src/learn/table/tour.js`, fed to the frame by `stagerunner.js`; a bare call shows only steps the player has not
+  met, the Tour key replays all). Each step is written in three beats (what it is, what to do with it, what it
+  tells you) in everyday words, and names the tool the way the player sees it. It says how a tool works, never which move solves the stage. `verify:table` fails on
+  an instrument or tool with no step, and on an unearned word. A new kit kind gets its words in `tour.js`.
 - **Tools are introduced right before the stage that needs them.** Stage 1's briefing (one per quest, ≤2
   sentences) names only the initial tools; `TOOL_TEXT` entries set `from:` to the exact stage.
 - **Nothing blocks a player who has the right answer.** A stage may refuse a blank answer, or a wrong one
@@ -95,9 +100,38 @@ and primitives; the SCOURED PLATE prose below stays the authority. Story: `docs/
   **One owner for the `X` key** (the `stage.js` window listener).
 - **Flat things are drawn flat; spatial things are 3D objects.** A spectrum, graph or plot is a flat picture
   (same `draw*Field` as the canvas bench, shown square-on or as a 2D panel). Where shape or position is the
-  idea (orbitals, molecular shape, lattices, scattering) the 3D object is the instrument. Either way **the
+  idea (orbitals, molecular shape, lattices, scattering) the 3D object is the instrument: a kit stands it up
+  with `kit.dress3d` / `fixture3d` / `piece3d` (Tallow's beam bench: a foil frame with nuclei in a wide empty
+  pane, and a source block, `lab-props.js` `buildScatterFoil` / `buildBeamSource`). Either way **the
   picture is honest**: what is drawn is what is graded. The 3D and drawn benches expose
   the same API and plan through the same pure functions, so a stage grades identically on both.
+- **NEVER have too many things going on.** One decision per stage; only what that decision needs is on the bench
+  (a few pieces, one instrument, its one key). No second task stacked on the first, no extra strip, readout, label or
+  angle the answer does not use. When a stage is crowded, remove; do not explain. (`q2-core` stage 1 once stacked a
+  prediction, a strip and a model choice and was cut back to one: lay a model, fire the beam.)
+- **Discover it, never read it off.** No stage asks the player to report what is visible on the table (printed +, labels).
+  The property under study starts hidden and an instrument reveals it (`q2-core` stage 3: identical specks, the
+  `field` fixture's charged plates, sort by bent or straight). The Tour replaces stage briefings on benches, every
+  sentence must earn its place, and a Tour step says what an action is for, not only how to do it.
+- **Predict first, in a separate part of the bench.** A prediction is a `predict: true` stage that shows only the
+  question and the guesses (cards, tokens, a slot) and NO instrument, tool or runnable control; it cannot be
+  submitted blank. The NEXT stage brings the instrument and the locked guess back in its prompt and reward
+  (`engine/predict.js`: `remember` in the predict stage's `onClear`, `recall` in getters on the test stage). The
+  guess is never graded and cannot be changed after the result. Tallow: `q2-core` stages 1+2 (predict the atom, then
+  fire the beam) and `q5-assay` stages 5+6. `verify:table` ("Predict first") holds it for `unit01`; other worlds follow.
+- **What is discovered is held in 3D.** A reward about how something is built carries `reward.model` (atom, atoms side
+  by side, molecule; `engine/model-parts.js`), mounted under the card by `ui/model-viewer.js` (one small renderer, drag to
+  turn, flat canvas at `3D Off`). Counts come from the spec; `verify:table` ("Models") checks them. Add models wherever
+  a bench or reward is about shape or position.
+- **The story is the investigation.** One thread per bench: a lead line (`stage-story.js`, plain, on a first stage),
+  evidence the bench itself measured, and a `Filed:` line ending the quest's animation that the next bench picks up.
+  Only earned words, no jargon, no atmosphere, no invented numbers or events, nothing that restates the lesson.
+  `verify:story` fails a caption using a word a later bench introduces.
+- **A quest ends on one story animation, never more** (`src/story/quest-story.js`, painters in
+  `src/ui/story-scenes.js`, player `src/ui/story-anim.js`, hooked in `stagerunner.js` after the debrief). 2 to 4
+  captions of at most 2 sentences and 24 words, tying what was measured to the Fifth / the alchemy rumour / the
+  Case File; first completion only (synced flag `storyAnim:<world>/<quest>`); skippable; never before or between
+  stages; reduced motion and `3D Off` show the last frame. `verify:story` holds it. Built for Tallow (7).
 - **The comms panel is the only screen bolted to the bench** (`PANEL_LAYOUT`: comms only, fixed position; never animate a panel height).
 - **`mountConsole` is the last statement in the Charge Gardens stage render** (it moves the deck into
   CSS3D; later `container.querySelector` calls return null). Use `q()`/`qa()` in `quest.js`.

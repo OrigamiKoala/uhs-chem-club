@@ -750,6 +750,7 @@ export class LearnFrame {
       this.activeBriefingTx = null;
     }
     this.stage = stage;
+    this.dropModel();
     if (stage.briefing?.body) this.benchIntro = stage.briefing.body;
     if (stage.reward) this.findings[stage.index] = stage.reward;
     this.misses = 0;
@@ -1021,6 +1022,16 @@ export class LearnFrame {
     `;
     this.el.commit = this.el.actions.querySelector('.lq-commit');
     this.reveal(this.el.widget.firstElementChild);
+    // Once the player has found out how something is built, they get to turn it over in their hands (`ui/model-viewer.js`).
+    this.dropModel();
+    if (reward.model) {
+      const host = this.el.widget.querySelector('.lq-reward');
+      const spec = reward.model;
+      import('../../ui/model-viewer.js').then(m => {
+        if (this.disposed || !host?.isConnected) return;
+        this.modelView = m.mountModel(host, spec);
+      }).catch(err => console.error('Model failed to mount:', err));
+    }
     const dockCommit = this.el.dockCommit;
     if (dockCommit) {
       dockCommit.textContent = reward.last ? 'Finish' : 'Next Stage';
@@ -1105,8 +1116,26 @@ export class LearnFrame {
    * stage that introduces nothing new opens straight onto the bench. `force`
    * replays all of it.
    */
+  /** The steps the Tour gives for the table on this stage (`table/tour.js`), or null when the stage is not a table. */
+  setTourSteps(steps) {
+    this.tourSteps = steps && steps.length ? steps : null;
+  }
+
   showBriefing(force = false) {
     const viewer = activeBenchViewer();
+    if (this.tourSteps) {
+      // A table explains every instrument and kind of piece it holds, one step each. In the built world the bench has to be
+      // standing first, so the tour waits for it as it always has.
+      if (benchesAre3D() && !viewer) { this.tourPending = force; return; }
+      // Opening by itself: only what this player has not met. Replayed with the Tour key: this stage's tools, without the lines that
+      // are true of every table and were said once at the start.
+      let steps = this.tourSteps.filter(st => (force ? !st.once : !session.hasFlag(st.flag)));
+      if (!steps.length && force) steps = this.tourSteps;
+      if (!steps.length) return;
+      if (!force) steps.forEach(st => session.setFlag(st.flag, true));
+      this.runTour(steps);
+      return;
+    }
     if (!viewer?.getAvailableInstruments) {
       if (benchesAre3D()) this.tourPending = force;
       return;
@@ -1141,6 +1170,11 @@ export class LearnFrame {
     if (!steps.length) return;
     if (!force) steps.forEach(st => session.setFlag(st.flag, true));
 
+    this.runTour(steps);
+  }
+
+  /** Step through `steps` (`{name, desc, kind?, id?}`) in the modal, with Back, Skip and Next. */
+  runTour(steps) {
     let i = 0;
     const leave = () => {
       activeBenchViewer()?.hideInstrumentHalos();
@@ -1150,7 +1184,7 @@ export class LearnFrame {
     const render = () => {
       const st = steps[i];
       const last = i === steps.length - 1;
-      activeBenchViewer()?.showInstrumentHalos(st.kind, st.id);
+      if (st.kind) activeBenchViewer()?.showInstrumentHalos(st.kind, st.id);
       showModal(`
         <div class="lq-brief-card">
           <div class="lq-brief-head">
@@ -1342,8 +1376,15 @@ export class LearnFrame {
     render();
   }
 
+  /** Give back the reward model's renderer, if one is standing. */
+  dropModel() {
+    try { this.modelView?.dispose(); } catch (err) { /* gone */ }
+    this.modelView = null;
+  }
+
   dispose() {
     this.disposed = true;
+    this.dropModel();
     if (this.activeBriefingTx?.destroy) {
       this.activeBriefingTx.destroy();
       this.activeBriefingTx = null;

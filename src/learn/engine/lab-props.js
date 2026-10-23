@@ -628,3 +628,46 @@ export function buildUprights(spanX, spanZ, { mats: m }) {
   }
   return done(g, 0.07);
 }
+
+
+/* ------------------------------------------------------------------ the scattering rig (Tallow `q2-core`) */
+
+/**
+ * A foil standing edge-on to the beam: a steel frame, a clear pane, and in the pane a lattice of nuclei, each a tiny dense brass bead
+ * set far apart from its neighbours. The spacing is the point: the picture the player is weighing a model against is mostly empty
+ * space with small hard lumps in it, and a shot that goes through has the whole pane to go through. `span` is the frame's width
+ * across the beam (m), `rise` its height. The foil lies in the x = 0 plane, so a beam travelling along x meets it face on.
+ */
+export function buildScatterFoil(span, rise, { mats: m }) {
+  const g = new THREE.Group();
+  const bar = 0.006;
+  const depth = 0.012;
+  for (const sy of [0, rise]) g.add(at(mesh(new THREE.BoxGeometry(depth, bar, span + bar), m.labSteel), 0, sy + bar / 2, 0));
+  for (const sz of [-1, 1]) g.add(at(mesh(new THREE.BoxGeometry(depth, rise, bar), m.labSteel), 0, rise / 2 + bar / 2, sz * span / 2));
+  g.add(at(mesh(new THREE.BoxGeometry(depth * 0.25, rise, span), m.labPane, { cast: false, receive: false }), 0, rise / 2 + bar / 2, 0));
+  const cols = 6;
+  const rows = 4;
+  const bead = new THREE.SphereGeometry(Math.min(span, rise) * 0.018, 10, 8);
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      g.add(at(mesh(bead, m.labBrass, { receive: false }), 0, bar + (j + 0.5) * (rise - bar) / rows, -span / 2 + (i + 0.5) * span / cols));
+    }
+  }
+  return done(g, rise + bar);
+}
+
+/** The beam's source: a cast block with a bore, its muzzle facing +x. */
+export function buildBeamSource(len, { mats: m }) {
+  const g = new THREE.Group();
+  g.add(at(mesh(roundedSlab(len, len * 0.7, len * 0.55, len * 0.12, 0.002), m.labCast), 0, 0, 0));
+  g.add(at(lying(len * 0.12, len * 0.12, len * 0.5, m.labAnodised), len * 0.42, len * 0.3, 0));
+  return done(g, len * 0.55);
+}
+
+/** A charged plate: a long standing bar, brass for the + plate and steel for the − plate, with a foot at each end. */
+export function buildChargePlate(len, { mats: m, brass = false }) {
+  const g = new THREE.Group();
+  g.add(at(mesh(roundedSlab(len, 0.012, 0.05, 0.003, 0.0012), brass ? m.labBrass : m.labSteel), 0, 0, 0));
+  for (const sx of [-1, 1]) g.add(at(mesh(roundedSlab(0.03, 0.03, 0.01, 0.004, 0.0015), m.labCast), sx * (len / 2 - 0.02), 0, 0));
+  return done(g, 0.05);
+}
