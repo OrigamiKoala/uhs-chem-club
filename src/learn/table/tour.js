@@ -13,6 +13,8 @@
  * fails on a tool the Tour does not mention.
  */
 
+import { LANTERNFALL_TOUR } from './tour-lanternfall.js';
+
 /** What a dial does, by its label. */
 const DIAL = {
   Power: 'The "Power" dial sets how much the lens magnifies: a higher power shows a smaller part of the sample, but bigger.',
@@ -70,6 +72,10 @@ const PIECE = {
 const TOOL = {
   straightedge: ['Straightedge', 'Press "Straightedge" to lay a line across the points on the strip, so you can see whether they fall in a straight line.']
 };
+
+// Lanternfall's instruments and pieces have their own words (`tour-lanternfall.js`), keyed `<kit>:<kind>`.
+Object.assign(FIXTURE, LANTERNFALL_TOUR.fixtures);
+Object.assign(PIECE, LANTERNFALL_TOUR.pieces);
 
 const hasTrays = t => Object.keys(t.zones?.trays || {}).some(id => !id.startsWith('scr-'));
 /** The slot a choice goes in, named as the table names it: whatever is in it when Submit is pressed is the answer. */
@@ -138,7 +144,10 @@ export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
   for (const p of Object.values(table.pieces || {})) {
     if (p.props?.scratch || p.hidden) continue;
     let kind = p.kind;
-    if (kind === 'neutron' || kind === 'electron') kind = 'proton';
+    // A kit may have its own words for a kind (`<kit>:<kind>`, Lanternfall's lamps, plates and cards); they come before the shared ones.
+    const own = PIECE[`${kit}:${kind}`];
+    if (own) kind = `${kit}:${kind}`;
+    else if (kind === 'neutron' || kind === 'electron') kind = 'proton';
     if (seen.has(kind)) continue;
     seen.add(kind);
     // Parts the instrument's own step already explains.
@@ -151,7 +160,7 @@ export function tourSteps(table, { intro = '', speaker = 'Vess' } = {}) {
       continue;
     }
     const entry = PIECE[kind];
-    if (entry) add(`pc_${kind}`, entry[0], entry[1] + (entry[2] ? entry[2](table) : ''));
+    if (entry) add(`pc_${kind.replace(':', '_')}`, entry[0], entry[1] + (entry[2] ? entry[2](table) : ''));
     else add(`pc_${kind}`, p.label || kind, `${p.label || 'This piece'}: drag it to move it, or tap it once and then tap the place you want it to go.`);
   }
 

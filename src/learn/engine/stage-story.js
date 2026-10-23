@@ -47,7 +47,7 @@ export const STAGE_STORY = {
 
   /* ---- Lanternfall: relight the beacon towers ---- */
   'q1-wave': {
-    2: 'The Fifth Guild dimmed the beacons, so every spare lamp must be measured.'
+    1: 'The Fifth dimmed the beacons, so every spare lamp must be measured.'
   },
   'q2-photon': {
     1: 'The beacon plates have stopped answering the lamps, and Vess needs to know why.'

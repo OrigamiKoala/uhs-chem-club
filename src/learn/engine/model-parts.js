@@ -9,9 +9,11 @@
  *   { type: 'atom', p, n, charge?, focus?: 'nucleus', caption? }       one atom: a nucleus and its electrons on shells
  *   { type: 'atoms', items: [{ p, n, charge?, label? }], caption? }    atoms side by side (isotopes, ions)
  *   { type: 'molecule', name, caption? }                               a ball-and-stick molecule
+ *   Lanternfall's wave, photons, ladder, orbital, rack, radii and cuvette are in `model-parts-lanternfall.js`.
  */
 
 import { shellsFor } from '../table/kits/atoms.js';
+import { LANTERNFALL_MODELS, lanternfallCaption } from './model-parts-lanternfall.js';
 
 /** Display colours, in the plate's weathered palette. */
 const COLOR = { H: '#d8d2c4', C: '#4a4640', O: '#a0522d', Na: '#cfc8b8', Cl: '#c9b66a', proton: '#d99423', neutron: '#8c8376', electron: '#dcd6cc', bond: '#8c8376', ring: '#544e46' };
@@ -85,6 +87,7 @@ export function moleculeParts(spec) {
 
 /** The parts of any model spec, side by side where it lists several atoms. */
 export function modelParts(spec) {
+  if (LANTERNFALL_MODELS[spec.type]) return LANTERNFALL_MODELS[spec.type](spec);
   if (spec.type === 'molecule') return moleculeParts(spec);
   if (spec.type === 'atoms') {
     const n = spec.items.length;
@@ -107,6 +110,7 @@ export function modelParts(spec) {
 /** The words under a model: the spec's own caption, else the counts it was built from. */
 export function captionOf(spec) {
   if (spec.caption) return spec.caption;
+  if (LANTERNFALL_MODELS[spec.type]) return lanternfallCaption(spec);
   if (spec.type === 'molecule') return `${MOLECULES[spec.name]?.formula || spec.name}, as a ball-and-stick model.`;
   const one = it => `${it.label ? `${it.label}: ` : ''}${it.p} protons, ${it.n} neutrons, ${shellsOf(it.p, it.charge || 0).reduce((a, b) => a + b, 0)} electrons`;
   if (spec.type === 'atoms') return spec.items.map(one).join('. ') + '.';

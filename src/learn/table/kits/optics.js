@@ -20,7 +20,7 @@
 
 import { registerKit } from './registry.js';
 import { pulseNs, nmToHz } from '../../engine/lightdata.js';
-import { detectorsOn, pulseRead, cellRead, settleLadder, TOP } from './optics-read.js';
+import { detectorsOn, pulseRead, cellRead, settleLadder, TOP, seated } from './optics-read.js';
 import { paintPiece, faceKey, paintFixture, RECTS, lampLook } from './optics-draw.js';
 import { litSource } from './optics-read.js';
 import {
@@ -44,8 +44,11 @@ function run(state, fixtureId) {
   if (f.kind === 'pulse') {
     const d = detectorsOn(state, f.id);
     if (d.length < 2) return { noop: 'Both detectors have to stand on the rail before a pulse can be timed.' };
+    // A rail with a lamp holder (`props.lamp`) times the lamp that stands in it, so the same gap can be timed for two colours.
+    const src = f.props.lamp ? seated(state, f.props.lamp) : null;
+    if (f.props.lamp && !src) return { noop: 'A lamp has to stand in the holder before a pulse can be sent.' };
     const read = pulseRead(state, f.id);
-    return { x: read.gap, y: read.ns, label: 'pulse', dials: { [f.id]: { gap: read.gap, ns: read.ns } } };
+    return { x: read.gap, y: read.ns, label: src ? src.label : 'pulse', dials: { [f.id]: { gap: read.gap, ns: read.ns } } };
   }
   if (f.kind === 'cell') {
     const read = cellRead(state, f.id);
@@ -71,6 +74,7 @@ function slotRole(zone, state) {
     if (f.kind === 'wave' && pr.slot === id) return 'lamp';
     if (f.kind === 'ruler' && pr.slot === id) return 'lamp';
     if (f.kind === 'pulse' && pr.marks?.some(m => m.slot === id)) return 'mark';
+    if (f.kind === 'pulse' && pr.lamp === id) return 'lamp';
     if (f.kind === 'band') {
       if (pr.src === id || pr.cell === id) return 'cradle';
       if (pr.ref === id) return 'holder';
@@ -210,7 +214,7 @@ const slot = (id, at, size = { w: 22, h: 14 }, label = '') => ({ id, label, at, 
  * A screen: a lamp put in its slot draws its wave, with its wavelength and (unless `rate: false`) the crests that pass each
  * second. `settings` gives a colour dial for a TUNED lamp, red end first (the dial's value is the position, 1 to n).
  */
-export function waveScreen(id, label, at, { settings = null, start = 1, rate = true, size = null } = {}) {
+export function waveScreen(id, label, at, { settings = null, start = 1, rate = true, size = null, plain = false } = {}) {
   const sz = size || { w: 70, h: settings ? 40 : 33 };
   const x0 = at.x - sz.w / 2;
   const y0 = at.y - sz.h / 2;
@@ -219,7 +223,7 @@ export function waveScreen(id, label, at, { settings = null, start = 1, rate = t
     fixture: {
       id, kind: 'wave', label, at: { ...at }, size: sz, noRun: true,
       dials: settings ? { colour: { min: 1, max: settings.length, step: 1, value: start, label: 'Colour', labels: settings.map(n => `${n} nm`) } } : {},
-      props: { backdrop: true, slot: slotId, settings, rate, left: 24 }
+      props: { backdrop: true, slot: slotId, settings, rate, left: 24, ...(plain ? { plain: true } : {}) }
     },
     slots: [slot(slotId, { x: x0 + 12.5, y: y0 + sz.h - 9.5 }, { w: 22, h: 14 })]
   };
@@ -240,18 +244,24 @@ export function logRuler(id, label, at, { size = { w: 76, h: 34 } } = {}) {
  * The pulse timer: a rail with marks at known distances from the lamp, a slot at each, and a Run key that fires a pulse down it.
  * Detectors stood on two marks are timed against each other; the timer prints the gap and the time, never the speed.
  */
-export function pulseRail(id, label, at, { marks, size = { w: 132, h: 39 }, runLabel = 'Fire Pulse' }) {
+export function pulseRail(id, label, at, { marks, size = { w: 132, h: 39 }, runLabel = 'Fire Pulse', lamp: lampHolder = false }) {
   const x0 = at.x - size.w / 2;
   const y0 = at.y - size.h / 2;
   const lineY = 12;
-  const placed = marks.map((m, i) => ({ slot: `${id}.m${i}`, metres: m.metres, dx: 14 + i * 20, label: m.label }));
+  // With a lamp holder at the near end the marks start further along the rail, so the lamp's holder is clear of them.
+  const first = lampHolder ? 38 : 14;
+  const placed = marks.map((m, i) => ({ slot: `${id}.m${i}`, metres: m.metres, dx: first + i * 20, label: m.label }));
+  const lampId = `${id}.lamp`;
   return {
     fixture: {
       id, kind: 'pulse', label, at: { ...at }, size, runLabel,
       dials: { gap: { min: 0, max: 12, step: 0.1, value: 0 }, ns: { min: 0, max: 100, step: 0.1, value: 0 } },
-      props: { backdrop: true, hidden: ['gap', 'ns'], lineY, marks: placed.map(({ slot: s, metres, dx }) => ({ slot: s, metres, dx })) }
+      props: { backdrop: true, hidden: ['gap', 'ns'], lineY, ...(lampHolder ? { lamp: lampId } : {}), marks: placed.map(({ slot: s, metres, dx }) => ({ slot: s, metres, dx })) }
     },
-    slots: placed.map(m => slot(m.slot, { x: x0 + m.dx, y: y0 + lineY + 12 }, { w: 20, h: 14 }, m.label))
+    slots: [
+      ...(lampHolder ? [slot(lampId, { x: x0 + 13, y: y0 + lineY + 12 }, { w: 22, h: 14 }, 'Lamp')] : []),
+      ...placed.map(m => slot(m.slot, { x: x0 + m.dx, y: y0 + lineY + 12 }, { w: 20, h: 14 }, m.label))
+    ]
   };
 }
 

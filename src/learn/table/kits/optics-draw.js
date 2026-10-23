@@ -317,8 +317,10 @@ function paintWave(ctx, f, state, b) {
       readout(ctx, F, x0, top, showRate ? rw * 0.42 : rw, rh, 'WAVELENGTH', `${read.metres.toFixed(2)} m`);
       if (showRate) readout(ctx, F, x0 + rw * 0.44, top, rw * 0.56, rh, 'FREQUENCY', `${read.hz.toFixed(1)} /s`);
     } else {
-      readout(ctx, F, x0, top, showRate ? rw * 0.4 : rw, rh, 'WAVELENGTH', `${fmtSig(read.nm)} nm`);
-      if (showRate) readout(ctx, F, x0 + rw * 0.42, top, rw * 0.58, rh, 'FREQUENCY', e14Text(read.e14));
+      // Plain words until the card that earns them has been read (`plain` on the fixture).
+      const plain = Boolean(f.props.plain);
+      readout(ctx, F, x0, top, showRate ? rw * 0.4 : rw, rh, plain ? 'CREST TO CREST' : 'WAVELENGTH', `${fmtSig(read.nm)} nm`);
+      if (showRate) readout(ctx, F, x0 + rw * 0.42, top, rw * 0.58, rh, plain ? 'CRESTS A SECOND' : 'FREQUENCY', e14Text(read.e14));
     }
   } else {
     well(ctx, F.x(x0), F.y(top), F.len(rw), F.len(rh));
@@ -409,15 +411,17 @@ function paintPulse(ctx, f, state, b) {
   const marks = marksOf(f);
   const lineY = f.props.lineY ?? 12;
   const lastDx = marks.length ? marks[marks.length - 1].dx : f.size.w - 24;
-  // The lamp at the near end and the rail the pulse runs down.
-  ctx.fillStyle = INK;
-  ctx.fillRect(F.x(2), F.y(lineY - 4), F.len(8), F.len(8));
-  ctx.strokeStyle = DUST;
-  ctx.strokeRect(F.x(2) + 0.5, F.y(lineY - 4) + 0.5, F.len(8) - 1, F.len(8) - 1);
-  say(ctx, 'LAMP', F.x(6), F.y(lineY + 7), F.size(2.2, 6), { align: 'center', color: DIM });
+  // The lamp at the near end and the rail the pulse runs down (a rail with a holder of its own shows the holder instead).
+  if (!f.props.lamp) {
+    ctx.fillStyle = INK;
+    ctx.fillRect(F.x(2), F.y(lineY - 4), F.len(8), F.len(8));
+    ctx.strokeStyle = DUST;
+    ctx.strokeRect(F.x(2) + 0.5, F.y(lineY - 4) + 0.5, F.len(8) - 1, F.len(8) - 1);
+    say(ctx, 'LAMP', F.x(6), F.y(lineY + 7), F.size(2.2, 6), { align: 'center', color: DIM });
+  }
   ctx.strokeStyle = STEEL;
   ctx.beginPath();
-  ctx.moveTo(F.x(10), F.y(lineY));
+  ctx.moveTo(F.x(f.props.lamp ? 26 : 10), F.y(lineY));
   ctx.lineTo(F.x(lastDx + 8), F.y(lineY));
   for (const m of marks) {
     ctx.moveTo(F.x(m.dx), F.y(lineY - 1.6));

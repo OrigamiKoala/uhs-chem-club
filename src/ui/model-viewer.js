@@ -130,9 +130,14 @@ export function mountModel(host, spec) {
     const mats = new Map();
     const mat = color => { if (!mats.has(color)) mats.set(color, new THREE.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0.15 })); return mats.get(color); };
     const geos = [];
-    const sphere = (r, seg = 20) => { const g = new THREE.SphereGeometry(r, seg, Math.round(seg * 0.7)); geos.push(g); return g; };
+    const sphereGeos = new Map();
+    const sphere = (r, seg = 20) => {
+      const key = `${r}|${seg}`;
+      if (!sphereGeos.has(key)) { const g = new THREE.SphereGeometry(r, seg, Math.max(4, Math.round(seg * 0.7))); geos.push(g); sphereGeos.set(key, g); }
+      return sphereGeos.get(key);
+    };
     for (const s of parts.spheres) {
-      const m = new THREE.Mesh(sphere(s.r), mat(s.color));
+      const m = new THREE.Mesh(sphere(s.r, s.seg || 20), mat(s.color));
       m.position.set(...s.pos);
       group.add(m);
     }

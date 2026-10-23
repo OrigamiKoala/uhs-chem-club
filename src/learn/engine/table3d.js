@@ -428,6 +428,8 @@ export class Table3D extends BenchViewer3D {
 
     // Fixtures: a kit may build its own (`kit.fixture3d`); otherwise a rim, a track and knob per dial, and a Run key.
     this.fixtures = new Map();
+    // Solid parts that follow the state (`dress3d` group with `userData.sync(fixture, state)`: a wave that lengthens as the dial turns).
+    this.dressSync = [];
     for (const f of Object.values(state.fixtures)) {
       const lay = fixtureLayout(f);
       // A deck under the instrument: a low plate, its edges broken, that the dials and the readings are set into.
@@ -445,7 +447,10 @@ export class Table3D extends BenchViewer3D {
       // A kit may dress an instrument with solid parts of its own (`kit.dress3d`: a glass envelope, a rail, a prism) on top of what
       // the flat picture shows; the controls below are still the table's.
       const dress = kit.dress3d?.(f, state, { THREE, scale: s, mats: this.kitMats, toPlate: this.map.toPlate, own: m => this.mine(m), box: lay.box, ground: GROUND_Y, skin: this.skin });
-      if (dress) this.fixtureRoot.add(dress);
+      if (dress) {
+        this.fixtureRoot.add(dress);
+        if (typeof dress.userData?.sync === 'function') this.dressSync.push({ id: f.id, sync: dress.userData.sync });
+      }
       const own = kit.fixture3d?.(f, { THREE, scale: s, mats, toPlate: this.map.toPlate, plaque: (t, w, h, o) => this.plaque(t, w, h, o) });
       if (own?.group) {
         this.fixtureRoot.add(own.group);
@@ -670,6 +675,10 @@ export class Table3D extends BenchViewer3D {
   syncFixtures() {
     if (!this.fixtures) return;
     const kit = getKit(this.state.kit);
+    for (const d of this.dressSync || []) {
+      const fx = this.state.fixtures[d.id];
+      if (fx) d.sync(fx, this.state);
+    }
     for (const f of Object.values(this.state.fixtures)) {
       const rec = this.fixtures.get(f.id);
       if (!rec) continue;
