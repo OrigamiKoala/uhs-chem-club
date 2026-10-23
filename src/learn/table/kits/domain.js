@@ -19,8 +19,11 @@ import {
   HUB_R, ARM_R
 } from './domain-hub.js';
 import {
-  planFieldJoin, fieldPairable, runPlates, paintFieldKind, printedField, faceKeyField, paintFieldFixture, MOL_RECT, STREAM_RECT
+  planFieldJoin, fieldPairable, runPlates, paintFieldKind, printedField, faceKeyField, paintFieldFixture, MOL_RECT, STREAM_RECT,
+  molRead, dmolPose, restVectors, viewFor, isFieldMol, arrowsOn
 } from './domain-field.js';
+import { buildMolModel } from '../../engine/ligar-mol3d.js';
+import { YAW0 } from './domain-draw.js';
 import {
   planOrbJoin, paintOrbKind, printedOrb, faceKeyOrb, paintOrbLink, orbLinkRods, paintOrbFixture, ORB_R
 } from './domain-orbitals.js';
@@ -94,7 +97,24 @@ function piece3d(p, state, c) {
     case 'arm': { const f = c.faceInfo({ physical: true }); return buildArmBall(c, { face: f.mat, body: f.body, mult: p.props.mult || 1 }); }
     case 'balloon': return buildBalloonLobe(c);
     case 'protractor': return buildProtractor(c, { face: c.face() });
-    case 'mol': case 'dmol': case 'tmol': case 'stream': return buildEnamelTile(c, {});
+    case 'mol': case 'dmol': case 'tmol': {
+      // The card is a tile with the molecule standing on it, built from the vectors the flat picture projects.
+      const tile = buildEnamelTile(c, {});
+      const read = molRead(p);
+      const pose = isFieldMol(p) ? dmolPose(p, state) : { vectors: restVectors(p, read), view: viewFor(read), turned: false };
+      const net = read.polar ? read.dip.net.map(x => x / read.dip.mag) : null;
+      const model = buildMolModel(c, {
+        hub: read.hub,
+        vectors: pose.vectors,
+        // The flat picture seen from its own turn; a molecule swung by the field lies true to the plates.
+        yaw: pose.turned ? 0 : (read.plan.n === 1 ? pose.view.yaw : YAW0),
+        arrows: arrowsOn(state, p) ? read.dip.arrows : null,
+        net: arrowsOn(state, p) && net ? (pose.turned ? [-1, 0, 0] : (p.props.flipped ? [-net[0], net[1], -net[2]] : net)) : null
+      }, tile.userData.height);
+      tile.add(model);
+      return tile;
+    }
+    case 'stream': return buildEnamelTile(c, {});
     case 'arrows': return buildProbe(c, { text: p.label });
     case 'rod': return buildProbe(c, { text: p.label, rod: true });
     case 'swapper': case 'orb': return buildToolCap(c, { face: c.face() });

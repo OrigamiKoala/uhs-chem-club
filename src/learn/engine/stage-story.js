@@ -87,7 +87,7 @@ export const STAGE_STORY = {
   },
   'q7-polarity': {
     1: 'The Fifth left tunnel gases that cling to the rescue gear, and Vess must learn why.',
-    8: 'The wash water waits while the charged rod tests each stream.'
+    4: 'The wash water waits while the charged rod tests each stream.'
   },
   'q9-orbitals': {
     5: 'The air the miners breathe is the next thing the magnet must test.'

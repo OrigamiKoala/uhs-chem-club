@@ -85,7 +85,7 @@ export const UNIT_03 = {
       title: 'Polarity',
       line: 'Sort molecules by how the field turns them.',
       arena: 'bench',
-      stageCount: 8,
+      stageCount: 4,
       status: 'live',
       module: () => import('../quests/unit03/q7-polarity.js')
     },

@@ -2972,7 +2972,7 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
   }
 
   if (q7) {
-    const { planDipole, EN, bondKind } = VSEPR;
+    const { planDipole, EN } = VSEPR;
     const DOM = await import('../src/learn/table/kits/domain.js');
     const polar = m => planDipole(m).polar;
     const end = i => TABLE.runScript(TABLE.createTable(q7.STAGES[i].table, q7.STAGES[i].title), q7.SOLUTIONS[i], { strict: true });
@@ -2985,42 +2985,32 @@ if (failures === copyFailures) ok('copy is emoji-free and within length');
       const put = TABLE.apply(s0, { place: { piece: 'a', to: 'free:37,21' } });
       holds(!DOM.dmolBehaviour(put.pieces.a, put).aligned, 'unit03/q7-polarity stage 1: the card starts already set the way the field wants it');
     }
-    // 2. three bonds, in order of how unevenly they share
+    // 2. the predict stage holds the guesses and no instrument; the obvious answer (strong polar bonds, so it turns) is a card, and it is wrong
     {
-      const t = end(1);
-      const kind = { a: 'ionic', b: 'nonpolar', c: 'polar' };
-      for (const id of ['a', 'b', 'c']) {
-        const m = q7.molOf(t.pieces[id]);
-        same(bondKind(m.hub, m.arms[0].sym), kind[id], `unit03/q7-polarity stage 2 (${m.hub}-${m.arms[0].sym})`);
-        same(t.pieces[id].zone, `tray:${{ ionic: 'given', nonpolar: 'even', polar: 'uneven' }[kind[id]]}`, `unit03/q7-polarity stage 2 (${id} is trayed by its bond)`);
-      }
-      const mags = Object.fromEntries(['NaCl', 'H2', 'HCl'].map(m => [m, planDipole(m).mag]));
-      if (!(mags.NaCl > mags.HCl && mags.HCl > mags.H2 && mags.H2 === 0)) fail('unit03/q7-polarity stage 2: the three bonds are not ordered by their pull');
+      const t0 = start(1);
+      holds(q7.STAGES[1].predict === true && !Object.values(t0.fixtures).length && !t0.tools.length, 'unit03/q7-polarity stage 2: the predict stage shows an instrument');
+      holds(['turns', 'stays'].every(id => t0.pieces[id]?.kind === 'guess') && Object.keys(t0.pieces).length === 2, 'unit03/q7-polarity stage 2: the guesses are the two cards and nothing else');
+      same(polar('CO2'), false, 'unit03/q7-polarity stage 2 (carbon dioxide does not turn)');
+      holds(planDipole('CO2').arrows.every(a => Math.abs(a.d) > 0.8), 'unit03/q7-polarity stage 2: carbon dioxide\'s bonds are not strongly polar');
     }
-    // 3. 4. 6. 7. who turns
-    same(polar('CO2'), false, 'unit03/q7-polarity stage 3 (CO2 turns)');
-    same(end(2).prediction.token, 'stays', 'unit03/q7-polarity stage 3 (the prediction)');
-    same(`${polar('H2O')}/${polar('CO2')}`, 'true/false', 'unit03/q7-polarity stage 4 (water against carbon dioxide)');
-    same([end(3).pieces.a.zone, end(3).pieces.b.zone].join(), 'tray:add,tray:cancel', 'unit03/q7-polarity stage 4 (the trays)');
-    same(`${polar('NH3')}/${polar('BF3')}`, 'true/false', 'unit03/q7-polarity stage 6');
-    same(end(5).prediction.token, 'nh3', 'unit03/q7-polarity stage 6 (the prediction)');
-    // 5. one atom of CCl4 changed: the molecule that cancelled does not, and the swap is the planner's own (CHCl3)
+    // 3. five molecules, sorted by the planner's own dipole: the rule of thumb (polar bonds, so polar) fails for two, and the bonds of every one are polar
     {
-      same(polar('CCl4'), false, 'unit03/q7-polarity stage 5 (CCl4 cancels)');
-      const r = q7.molRead(end(4).pieces.a);
-      same(r.label, 'CHCl₃', 'unit03/q7-polarity stage 5 (one chlorine swapped for hydrogen)');
-      same(r.polar, polar('CHCl3'), 'unit03/q7-polarity stage 5 (the swapped molecule is as CHCl3 is)');
-      holds(r.polar, 'unit03/q7-polarity stage 5: the swapped molecule does not turn');
+      const t = end(2);
+      const mols = ['a', 'b', 'c', 'd', 'e'].map(id => [id, t.pieces[id].props.mol]);
+      for (const [id, mol] of mols) same(t.pieces[id].zone, `tray:${polar(mol) ? 'turns' : 'stays'}`, `unit03/q7-polarity stage 3 (${mol})`);
+      holds(mols.filter(([, m]) => polar(m)).length === 3 && mols.filter(([, m]) => !polar(m)).length === 2, 'unit03/q7-polarity stage 3: the sort is not three that turn and two that stay');
+      holds(mols.every(([, m]) => planDipole(m).arrows.some(a => Math.abs(a.d) > 0.3)), 'unit03/q7-polarity stage 3: a molecule has no polar bond, so it does not test the rule of thumb');
+      holds(mols.some(([, m]) => !polar(m) && planDipole(m).arrows.length > 2), 'unit03/q7-polarity stage 3: no symmetrical molecule with three or more polar bonds');
     }
-    const t7 = end(6);
-    for (const [id, mol] of [['a', 'XeF4'], ['b', 'SF4'], ['c', 'CHCl3']]) same(t7.pieces[id].zone, `tray:${polar(mol) ? 'polar' : 'nonpolar'}`, `unit03/q7-polarity stage 7 (${mol})`);
-    // 8. the streams that bend are the ones whose molecules turn
+    // 4. the streams that bend are the ones whose molecules turn
     {
-      const t = end(7);
+      const t = end(3);
       const real = ['s1', 's2', 's3'].filter(id => polar(t.pieces[id].props.mol));
-      same(['s1', 's2', 's3'].filter(id => t.pieces[id].zone === 'tray:bent').join(), real.join(), 'unit03/q7-polarity stage 8 (the liquids a charged rod bends)');
-      holds(polar(t.pieces.s4.props.mol), 'unit03/q7-polarity stage 8: the stream from the sump does not bend');
+      same(['s1', 's2', 's3'].filter(id => t.pieces[id].zone === 'tray:bent').join(), real.join(), 'unit03/q7-polarity stage 4 (the liquids a charged rod bends)');
+      holds(!Object.keys(start(3).fetch).length, 'unit03/q7-polarity stage 4: sends the player to fetch something the bench already holds');
     }
+    // The shapes the reward cards stand up are real rig molecules.
+    for (const [i, mol] of [[0, 'HCl'], [2, 'H2O']]) same(q7.STAGES[i].reward.model?.mol ?? q7.STAGES[i].reward.model, mol, `unit03/q7-polarity stage ${i + 1} (the reward model)`);
     // The gap the cards are put in holds a card, in every stage that has plates.
     q7.STAGES.forEach((st, i) => {
       for (const f of Object.values(start(i).fixtures).filter(x => x.kind === 'plates')) {
