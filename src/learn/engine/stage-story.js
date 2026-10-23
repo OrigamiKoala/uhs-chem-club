@@ -61,6 +61,9 @@ export const STAGE_STORY = {
   'q5-numbers': {
     1: 'The Fifth scrambled the records tent\'s board, and every box on it must be found by its address.'
   },
+  'q6-filling': {
+    1: 'The records tent\'s magnet reads the real sample, and Vess wants the board to match it.'
+  },
   'q7-pes': {
     5: 'The Fifth left an unlabelled specimen at the tower, and its spectrum is the only clue to what it is.'
   },

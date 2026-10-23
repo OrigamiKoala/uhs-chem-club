@@ -23,6 +23,10 @@ export const LANTERNFALL_TOUR = {
     /* ---- cloud ---- */
     'cloud:cloud': { title: 'Plate', text: 'The plate shows where a probe finds an electron. Set the "Exposure" dial to one, fifty or five hundred shots, then press "{run}": every shot leaves a dot, and the dots from earlier shots stay. Where a slot sits beside the plate, a film laid in it counts the dots inside its outline.', dials: false },
     'cloud:view': { title: 'View', text: 'The View turns and tilts every cloud on the table at once, so you can look at a cloud from another side. A "Slice" switch, where there is one, keeps only the dots in a thin slab through the middle of the cloud.', dials: false },
+    'shells:shelf': { title: 'Rack', text: 'The rack is a ladder of boxes with the lowest energy at the bottom. Whatever electrons stand in a box are drawn in it as arrows pointing up or down. Drop an arrow on a box to put an electron there.', dials: false },
+    'shells:finder': { title: 'Address strip', text: 'Each cell is one number of a box\'s address. Drag a cell\'s knob to change it. The box the address names lights up on the rack, and if no box has that address, nothing lights.', dials: false },
+    'shells:magnet': { title: 'Magnet', text: 'A magnet reads how hard something is pulled. Press "{run}" to read the pull. Electrons that stand alone, pointing the same way, add to the pull, and two pointing opposite ways cancel.', dials: false },
+    'shells:marker': { title: 'Marker', text: 'Use the dial to set the number you have counted. Whatever it reads when you press Submit is your answer.', dials: false },
     'cloud:wavering': { title: 'Ring track', text: 'A circular track. Drag a string onto it and the string is drawn round the ring, lap after lap, so you can see whether the laps land on each other or pile up in a band.' }
   },
   pieces: {
@@ -40,6 +44,12 @@ export const LANTERNFALL_TOUR = {
 
     /* ---- cloud ---- */
     'cloud:cloud': ['Clouds', 'Each card shows the dots that many probe shots left for one electron. Turn the View to see it from another side, then drag the card where it belongs.'],
+    'shells:box': ['Boxes', 'Each box is one orbital. The arrows in it are its electrons.'],
+    'shells:up': ['Up arrow', 'Drag it onto a box to put an electron there pointing up.'],
+    'shells:down': ['Down arrow', 'Drag it onto a box to put an electron there pointing down.'],
+    'shells:lift': ['Lift Out', 'Drag it onto a box to take one electron out of it.'],
+    'shells:etok': ['Electron cards', 'Each card is one electron with its address printed on it. Drag it onto the rack and it stands in the box its address names, or the rack says why it cannot.'],
+    'shells:ccard': ['Written forms', 'Each card is a way of writing down an arrangement of electrons. Drag one into the slot to say which one you think the rack reads.'],
     'cloud:tile': ['Strings', 'Each string has its own wavelength, printed on it. Drag one onto the track to see whether it closes into one ring.'],
     'cloud:film': ['Films', 'Each film is an outline cut from clear plastic, and all of them cover the same area. Lay one on the plate and it counts the dots inside its outline.']
   }
