@@ -58,6 +58,9 @@ export const STAGE_STORY = {
   'q4-cloud': {
     1: 'The beacon lamps are tuned to electrons, and Vess wants to know where one actually is.'
   },
+  'q5-numbers': {
+    1: 'The Fifth scrambled the records tent\'s board, and every box on it must be found by its address.'
+  },
   'q7-pes': {
     5: 'The Fifth left an unlabelled specimen at the tower, and its spectrum is the only clue to what it is.'
   },
