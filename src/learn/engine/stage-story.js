@@ -64,6 +64,9 @@ export const STAGE_STORY = {
   'q6-filling': {
     1: 'The records tent\'s magnet reads the real sample, and Vess wants the board to match it.'
   },
+  'q8-trends': {
+    1: 'Vess has to sort the camp\'s metal stock by how big and how tightly held its atoms are.'
+  },
   'q7-pes': {
     3: 'The Fifth left an unlabelled specimen at the tower, and its spectrum is the only clue to what it is.'
   },

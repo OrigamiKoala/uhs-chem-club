@@ -32,7 +32,7 @@ export const UNIT_02 = {
     { id: 'q5-numbers', title: 'Quantum Numbers', line: 'Give every electron its address.', arena: 'bench', stageCount: 5, status: 'live', optional: true, module: () => import('../quests/unit02/q5-numbers.js') },
     { id: 'q6-filling', title: 'Electron Configuration', line: 'Fill each atom the way nature does.', arena: 'bench', stageCount: 5, status: 'live', module: () => import('../quests/unit02/q6-filling.js') },
     { id: 'q7-pes', title: 'Photoelectron Spectroscopy', line: 'Knock electrons out to weigh each shell.', arena: 'bench', stageCount: 5, status: 'live', module: () => import('../quests/unit02/q7-pes.js') },
-    { id: 'q8-trends', title: 'Periodic Trends', line: 'Chart how hard each atom pulls its electrons.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit02/q8-trends.js') },
+    { id: 'q8-trends', title: 'Periodic Trends', line: 'Chart how hard each atom pulls its electrons.', arena: 'bench', stageCount: 5, status: 'live', module: () => import('../quests/unit02/q8-trends.js') },
     { id: 'q9-absorb', title: 'Spectroscopy', line: 'Measure what murky water does to light.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit02/q9-absorb.js') },
     { id: 'boss-eater', title: 'The Lantern-Eater', line: 'Starve the Lantern-Eater and take its lens.', arena: 'boss', stageCount: 5, status: 'live', module: () => import('../quests/unit02/boss-eater.js') }
   ]
