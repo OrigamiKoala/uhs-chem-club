@@ -26,7 +26,7 @@ export const UNIT_02 = {
 
   quests: [
     { id: 'q1-wave', title: 'Light as a Wave', line: 'Tune spare lamps while the beacons stay dark.', arena: 'bench', stageCount: 4, status: 'live', module: () => import('../quests/unit02/q1-wave.js') },
-    { id: 'q2-photon', title: 'Photons', line: 'Test why the moths drink violet and shun red.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit02/q2-photon.js') },
+    { id: 'q2-photon', title: 'Photons', line: 'Test why the moths drink violet and shun red.', arena: 'bench', stageCount: 5, status: 'live', module: () => import('../quests/unit02/q2-photon.js') },
     { id: 'q3-lines', title: 'Line Spectra', line: 'Read each beacon gas by its lines.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit02/q3-lines.js') },
     { id: 'q4-cloud', title: 'Orbitals', line: 'Map where the beacon electrons hide.', arena: 'bench', stageCount: 8, status: 'live', module: () => import('../quests/unit02/q4-cloud.js') },
     { id: 'q5-numbers', title: 'Quantum Numbers', line: 'Give every electron its address.', arena: 'bench', stageCount: 8, status: 'live', optional: true, module: () => import('../quests/unit02/q5-numbers.js') },

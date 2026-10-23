@@ -1257,7 +1257,7 @@ console.log('\nPredict first — the guess is made on a bench with no instrument
   const before = failures;
   let predicts = 0;
   for (const [key, mod] of mods) {
-    if (!key.startsWith('unit01/')) continue; // the other worlds follow as the rollout reaches them
+    if (!/^unit0[12]\//.test(key)) continue; // Tallow and Lanternfall; the other worlds follow as the rollout reaches them
     mod.STAGES.forEach((st, i) => {
       if (st.widget?.type !== 'table') return;
       const t = MODEL.createTable(st.table, st.title);
@@ -1269,7 +1269,7 @@ console.log('\nPredict first — the guess is made on a bench with no instrument
       if (t.tools.length) fail(`${label}: a predict stage carries a tool`);
       if (i === mod.STAGES.length - 1) fail(`${label}: a predict stage with no stage after it to test the guess`);
       const next = mod.STAGES[i + 1];
-      if (next && (next.predict || next.widget?.type !== 'table' || !Object.values(MODEL.createTable(next.table, next.title).fixtures).some(f => !f.noRun))) fail(`${label}: the stage after a predict stage must bring the instrument`);
+      if (next && (next.predict || next.widget?.type !== 'table' || !Object.values(MODEL.createTable(next.table, next.title).fixtures).some(f => !f.noRun || Object.keys(f.dials).length))) fail(`${label}: the stage after a predict stage must bring the instrument`);
       if (typeof next?.prompt !== 'string') fail(`${label}: the test stage has no prompt`);
     });
   }

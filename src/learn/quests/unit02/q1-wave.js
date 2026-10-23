@@ -192,12 +192,12 @@ export const STAGES = [
       widget,
       table: opticsTable({
         pieces: [
-          detector('d1', 'Detector 1', { x: 24, y: 49 }),
-          detector('d2', 'Detector 2', { x: 48, y: 49 }),
-          lamp('red', 'Red lamp', { x: 76, y: 49 }, 700),
-          lamp('violet', 'Violet lamp', { x: 100, y: 49 }, 400)
+          detector('d1', 'Detector 1', { x: 13, y: 50 }),
+          detector('d2', 'Detector 2', { x: 33, y: 50 }),
+          lamp('red', 'Red lamp', { x: 57, y: 50 }, 700),
+          lamp('violet', 'Violet lamp', { x: 80, y: 50 }, 400)
         ],
-        fixtures: [rail.fixture, marker('speed', 'Your reading', { x: 125, y: 53 }, { label: 'Speed (x 10^8 m/s)', min: 0, max: 6, step: 0.5, value: 0, size: { w: 44, h: 16 } })],
+        fixtures: [rail.fixture, marker('speed', 'Your reading', { x: 112, y: 52 }, { label: 'Speed (x 10^8 m/s)', min: 0, max: 6, step: 0.5, value: 0, size: { w: 36, h: 16 } })],
         zones: { slots: rail.slots },
         recorder: { at: { x: 140, y: 52 }, size: { w: 18, h: 18 }, xLabel: 'Gap', xUnit: 'm', yLabel: 'Time', yUnit: 'ns' }
       }),
@@ -232,7 +232,7 @@ export const STAGES = [
   (() => {
     const ruler = logRuler('ruler', 'Ruler', { x: 45, y: 19 });
     const source = ([id, label, nm, kind]) => (kind === 'lamp' ? lamp(id, label, { x: 20, y: 52 }, nm) : radiator(id, label, { x: 20, y: 52 }, nm));
-    const rail = { id: 'rail', at: { x: 76, y: 53 }, size: { w: 140, h: 15 }, first: 'Lowest frequency', last: 'Highest frequency', items: ['xray', 'red', 'radio', 'violet', 'micro'], start: ['xray', 'red', 'radio', 'violet', 'micro'] };
+    const rail = { id: 'rail', at: { x: 74, y: 53 }, size: { w: 134, h: 15 }, first: 'Lowest frequency', last: 'Highest frequency', items: ['xray', 'red', 'radio', 'violet', 'micro'], start: ['xray', 'red', 'radio', 'violet', 'micro'] };
     return {
       title: 'One Scale',
       prompt: 'Put the five sources on the rail from lowest frequency to highest.',
@@ -273,7 +273,7 @@ export const STAGES = [
 /** How-to lines printed on the plate (`table/notes.js` places each block clear of everything else on the table). */
 const NOTES = {
   1: ['Drag the lamp into its holder.', 'Turn the Colour dial to tune it.'],
-  3: ['Put a lamp in the holder and a detector on each of two marks,', 'then press Fire Pulse.'],
+  3: ['Set a lamp and two detectors, then press Fire Pulse.'],
   4: ['Drag a source into the ruler\'s holder to read it,', 'then back onto the rail.']
 };
 applyNotes(STAGES, NOTES);

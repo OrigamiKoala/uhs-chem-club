@@ -259,7 +259,7 @@ export function pulseRail(id, label, at, { marks, size = { w: 132, h: 39 }, runL
       props: { backdrop: true, hidden: ['gap', 'ns'], lineY, ...(lampHolder ? { lamp: lampId } : {}), marks: placed.map(({ slot: s, metres, dx }) => ({ slot: s, metres, dx })) }
     },
     slots: [
-      ...(lampHolder ? [slot(lampId, { x: x0 + 13, y: y0 + lineY + 12 }, { w: 22, h: 14 }, 'Lamp')] : []),
+      ...(lampHolder ? [slot(lampId, { x: x0 + 13, y: y0 + lineY + 12 }, { w: 22, h: 14 }, 'Lamp holder')] : []),
       ...placed.map(m => slot(m.slot, { x: x0 + m.dx, y: y0 + lineY + 12 }, { w: 20, h: 14 }, m.label))
     ]
   };
